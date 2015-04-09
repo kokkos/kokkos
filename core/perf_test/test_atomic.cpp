@@ -489,7 +489,7 @@ int main(int argc, char* argv[])
      Test<unsigned long long int>(loop,test,"unsigned long long int ");
     }
     if(type==10) {
-     Test<float>(loop,test,"float                  ");
+     //Test<float>(loop,test,"float                  ");
     }
     if(type==11) {
      Test<double>(loop,test,"double                 ");
