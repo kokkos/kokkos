@@ -341,8 +341,7 @@ struct ViewOffset< ShapeType , LayoutLeft
       shape_type::N1 = 0 ;
       S0 = 0 ;
 
-      if      ( 0 == n0 ) {}
-      else if (                n1 ) { shape_type::N1 = n1 ; S0 = rhs.stride_1(); }
+      if      (                n1 ) { shape_type::N1 = n1 ; S0 = rhs.stride_1(); }
       else if ( 2 < S::rank && n2 ) { shape_type::N1 = n2 ; S0 = rhs.stride_2(); }
       else if ( 3 < S::rank && n3 ) { shape_type::N1 = n3 ; S0 = rhs.stride_3(); }
       else if ( 4 < S::rank && n4 ) { shape_type::N1 = n4 ; S0 = rhs.stride_4(); }
@@ -824,8 +823,7 @@ struct ViewOffset< ShapeType , LayoutRight
       shape_type::N1 = nR ;
       SR = 0 ;
 
-      if ( 0 == nR ) {}
-      else if (                n0 ) { shape_type::N0 = n0 ; SR = rhs.stride_0(); }
+      if      (                n0 ) { shape_type::N0 = n0 ; SR = rhs.stride_0(); }
       else if ( 2 < S::rank && n1 ) { shape_type::N0 = n1 ; SR = rhs.stride_1(); }
       else if ( 3 < S::rank && n2 ) { shape_type::N0 = n2 ; SR = rhs.stride_2(); }
       else if ( 4 < S::rank && n3 ) { shape_type::N0 = n3 ; SR = rhs.stride_3(); }

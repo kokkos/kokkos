@@ -271,6 +271,18 @@ void test_left_3()
   for ( int i = 0 ; i < int(x2c.dimension_0()) ; ++i ) {
     ASSERT_TRUE( & x2c(i,j) == & xm(i,2+j) );
   }
+
+  Kokkos::View<int**,Kokkos::LayoutLeft,Space> x2_n1 =
+    Kokkos::subview( xm , std::pair<int,int>(1,1) , Kokkos::ALL() );
+
+  ASSERT_TRUE( x2_n1.dimension_0() == 0 );
+  ASSERT_TRUE( x2_n1.dimension_1() == xm.dimension_1() );
+
+  Kokkos::View<int**,Kokkos::LayoutLeft,Space> x2_n2 =
+    Kokkos::subview( xm , Kokkos::ALL() , std::pair<int,int>(1,1) );
+
+  ASSERT_TRUE( x2_n2.dimension_0() == xm.dimension_0() );
+  ASSERT_TRUE( x2_n2.dimension_1() == 0 );
 }
 
 //----------------------------------------------------------------------------
@@ -418,6 +430,18 @@ void test_right_3()
   for ( int i = 0 ; i < int(x2.dimension_0()) ; ++i ) {
     ASSERT_TRUE( & x2(i,j) == & xm(i,2+j) );
   }
+
+  Kokkos::View<int**,Kokkos::LayoutRight,Space> x2_n1 =
+    Kokkos::subview( xm , std::pair<int,int>(1,1) , Kokkos::ALL() );
+
+  ASSERT_TRUE( x2_n1.dimension_0() == 0 );
+  ASSERT_TRUE( x2_n1.dimension_1() == xm.dimension_1() );
+
+  Kokkos::View<int**,Kokkos::LayoutRight,Space> x2_n2 =
+    Kokkos::subview( xm , Kokkos::ALL() , std::pair<int,int>(1,1) );
+
+  ASSERT_TRUE( x2_n2.dimension_0() == xm.dimension_0() );
+  ASSERT_TRUE( x2_n2.dimension_1() == 0 );
 }
 
 //----------------------------------------------------------------------------
