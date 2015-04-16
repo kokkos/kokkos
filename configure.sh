@@ -37,6 +37,9 @@ case $key in
     --arch*)
     KOKKOS_ARCH="${key#*=}"
     ;;    
+    --cxxflags*)
+    CXXFLAGS="${key#*=}"
+    ;;
     --debug|-dbg)
     KOKKOS_DEBUG=yes
     ;;
@@ -64,6 +67,9 @@ case $key in
     echo ""
     echo "--compiler=/Path/To/Compiler set the compiler"
     echo "--debug,-dbg:                enable Debugging"
+    echo "--cxxflags=[FLAGS]           overwrite CXXFLAGS for library build and test build"
+    echo "                               This will still set certain required flags via"
+    echo "                               KOKKOS_CXXFLAGS (such as -fopenmp, --std=c++11, etc.)"
     echo "--with-gtest=/Path/To/Gtest: set path to gtest (used in unit and performance tests"  
     ;;      
     *)
@@ -94,6 +100,9 @@ KOKKOS_OPTIONS="${KOKKOS_OPTIONS} KOKKOS_DEBUG=${KOKKOS_DEBUG}"
 fi
 if [ ${#CUDA_PATH} -gt 0 ]; then
 KOKKOS_OPTIONS="${KOKKOS_OPTIONS} CUDA_PATH=${CUDA_PATH}"
+fi
+if [ ${#CXXFLAGS} -gt 0 ]; then
+KOKKOS_OPTIONS="${KOKKOS_OPTIONS} CXXFLAGS=\"${CXXFLAGS}\""
 fi
 if [ ${#GTEST_PATH} -gt 0 ]; then
 KOKKOS_OPTIONS="${KOKKOS_OPTIONS} GTEST_PATH=${GTEST_PATH}"

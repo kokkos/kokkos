@@ -22,7 +22,7 @@ else
 	LINKFLAGS ?=  
 endif
 
-CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/containers/performance_tests
+KOKKOS_CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/containers/performance_tests
 
 TEST_TARGETS = 
 TARGETS = 
