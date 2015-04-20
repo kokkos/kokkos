@@ -692,6 +692,14 @@ struct ViewOffset< ShapeType , LayoutRight
   KOKKOS_INLINE_FUNCTION
   size_type stride_0() const { return shape_type::N7 * shape_type::N6 * shape_type::N5 * shape_type::N4 * shape_type::N3 * shape_type::N2 * shape_type::N1 ; }
 
+  // rank 1
+  template <typename I0>
+  KOKKOS_FORCEINLINE_FUNCTION
+  size_type operator()( I0 const& i0) const
+    {
+      return i0 ;
+    }
+
   // rank 2
   template <typename I0, typename I1>
   KOKKOS_FORCEINLINE_FUNCTION
