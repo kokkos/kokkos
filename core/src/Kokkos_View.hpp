@@ -56,7 +56,7 @@
 #include <impl/Kokkos_ViewOffset.hpp>
 #include <impl/Kokkos_ViewSupport.hpp>
 #include <impl/Kokkos_Tags.hpp>
-
+#include <type_traits>
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -629,6 +629,9 @@ public:
     {
       typedef Impl::ViewAllocProp< traits , AllocationProperties > Alloc ;
 
+      static_assert(!std::is_same<typename traits::array_layout, LayoutStride>::value,
+                         "LayoutStride does not support View constructor which takes dimensions directly!");
+
       m_offset_map.assign( n0, n1, n2, n3, n4, n5, n6, n7, n8 );
       if(Alloc::AllowPadding)
         m_offset_map.set_padding();
@@ -978,10 +981,11 @@ public:
   // (3) the memory space is valid for the access
   //------------------------------------
   // rank 1:
+  // Specialisation for LayoutLeft and LayoutRight since we know its stride 1
 
   template< typename iType0 >
   KOKKOS_FORCEINLINE_FUNCTION
-  typename Impl::ViewEnableArrayOper< reference_type , traits, typename traits::array_layout, 1, iType0 >::type
+  typename Impl::ViewEnableArrayOper< reference_type , traits, LayoutLeft, 1, iType0 >::type
     operator[] ( const iType0 & i0 ) const
     {
       KOKKOS_ASSERT_SHAPE_BOUNDS_1( m_offset_map, i0 );
@@ -992,7 +996,7 @@ public:
 
   template< typename iType0 >
   KOKKOS_FORCEINLINE_FUNCTION
-  typename Impl::ViewEnableArrayOper< reference_type , traits, typename traits::array_layout, 1, iType0 >::type
+  typename Impl::ViewEnableArrayOper< reference_type , traits,  LayoutLeft, 1, iType0 >::type
     operator() ( const iType0 & i0 ) const
     {
       KOKKOS_ASSERT_SHAPE_BOUNDS_1( m_offset_map, i0 );
@@ -1003,7 +1007,7 @@ public:
 
   template< typename iType0 >
   KOKKOS_FORCEINLINE_FUNCTION
-  typename Impl::ViewEnableArrayOper< reference_type , traits, typename traits::array_layout, 1, iType0 >::type
+  typename Impl::ViewEnableArrayOper< reference_type , traits, LayoutLeft, 1, iType0 >::type
     at( const iType0 & i0 , const int , const int , const int ,
         const int , const int , const int , const int ) const
     {
@@ -1011,6 +1015,89 @@ public:
       KOKKOS_RESTRICT_EXECUTION_TO_DATA( typename traits::memory_space , ptr_on_device() );
 
       return m_ptr_on_device[ i0 ];
+    }
+
+  template< typename iType0 >
+  KOKKOS_FORCEINLINE_FUNCTION
+  typename Impl::ViewEnableArrayOper< reference_type , traits, LayoutRight, 1, iType0 >::type
+    operator[] ( const iType0 & i0 ) const
+    {
+      KOKKOS_ASSERT_SHAPE_BOUNDS_1( m_offset_map, i0 );
+      KOKKOS_RESTRICT_EXECUTION_TO_DATA( typename traits::memory_space , ptr_on_device() );
+
+      return m_ptr_on_device[ i0 ];
+    }
+
+  template< typename iType0 >
+  KOKKOS_FORCEINLINE_FUNCTION
+  typename Impl::ViewEnableArrayOper< reference_type , traits,  LayoutRight, 1, iType0 >::type
+    operator() ( const iType0 & i0 ) const
+    {
+      KOKKOS_ASSERT_SHAPE_BOUNDS_1( m_offset_map, i0 );
+      KOKKOS_RESTRICT_EXECUTION_TO_DATA( typename traits::memory_space , ptr_on_device() );
+
+      return m_ptr_on_device[ i0 ];
+    }
+
+  template< typename iType0 >
+  KOKKOS_FORCEINLINE_FUNCTION
+  typename Impl::ViewEnableArrayOper< reference_type , traits, LayoutRight, 1, iType0 >::type
+    at( const iType0 & i0 , const int , const int , const int ,
+        const int , const int , const int , const int ) const
+    {
+      KOKKOS_ASSERT_SHAPE_BOUNDS_1( m_offset_map, i0 );
+      KOKKOS_RESTRICT_EXECUTION_TO_DATA( typename traits::memory_space , ptr_on_device() );
+
+      return m_ptr_on_device[ i0 ];
+    }
+
+  template< typename iType0 >
+  KOKKOS_FORCEINLINE_FUNCTION
+  typename Impl::ViewEnableArrayOper< reference_type , traits,
+                 typename Impl::if_c<
+                   Impl::is_same<typename traits::array_layout, LayoutRight>::value ||
+                   Impl::is_same<typename traits::array_layout, LayoutLeft>::value ,
+                   void, typename traits::array_layout>::type,
+                 1, iType0 >::type
+    operator[] ( const iType0 & i0 ) const
+    {
+      KOKKOS_ASSERT_SHAPE_BOUNDS_1( m_offset_map, i0 );
+      KOKKOS_RESTRICT_EXECUTION_TO_DATA( typename traits::memory_space , ptr_on_device() );
+
+      return m_ptr_on_device[ m_offset_map(i0) ];
+    }
+
+  template< typename iType0 >
+  KOKKOS_FORCEINLINE_FUNCTION
+  typename Impl::ViewEnableArrayOper< reference_type , traits,
+                 typename Impl::if_c<
+                   Impl::is_same<typename traits::array_layout, LayoutRight>::value ||
+                   Impl::is_same<typename traits::array_layout, LayoutLeft>::value ,
+                   void, typename traits::array_layout>::type,
+                 1, iType0 >::type
+    operator() ( const iType0 & i0 ) const
+    {
+      KOKKOS_ASSERT_SHAPE_BOUNDS_1( m_offset_map, i0 );
+      KOKKOS_RESTRICT_EXECUTION_TO_DATA( typename traits::memory_space , ptr_on_device() );
+
+      return m_ptr_on_device[ m_offset_map(i0) ];
+    }
+
+  template< typename iType0 >
+  KOKKOS_FORCEINLINE_FUNCTION
+  typename Impl::ViewEnableArrayOper< reference_type , traits,
+                 typename Impl::if_c<
+                   Impl::is_same<typename traits::array_layout, LayoutRight>::value ||
+                   Impl::is_same<typename traits::array_layout, LayoutLeft>::value ,
+                   void, typename traits::array_layout>::type,
+                 1, iType0 >::type
+    at( const iType0 & i0 , const int , const int , const int ,
+        const int , const int , const int , const int ) const
+    {
+      KOKKOS_ASSERT_SHAPE_BOUNDS_1( m_offset_map, i0 );
+      KOKKOS_RESTRICT_EXECUTION_TO_DATA( typename traits::memory_space , ptr_on_device() );
+
+      return m_ptr_on_device[ m_offset_map(i0) ];
     }
 
   // rank 2:
@@ -1404,7 +1491,23 @@ void deep_copy( const View<DT,DL,DD,DM,Impl::ViewDefault> & dst ,
     else {
       // Destination view's execution space must be able to directly access source memory space
       // in order for the ViewRemap functor run in the destination memory space's execution space.
-      Impl::ViewRemap< dst_type , src_type >( dst , src );
+      size_t stride[8];
+      src.stride(stride);
+      size_t size_stride = stride[0]*src.dimension_0();
+      size_t size_dim = src.dimension_0();
+      for(int i = 1; i<src.rank; i++) {
+        if(stride[i]*src.dimension(i)>size_stride)
+          size_stride = stride[i]*src.dimension(i);
+        size_dim*=src.dimension(i);
+      }
+
+      if(size_stride == size_dim) {
+        const size_t nbytes = sizeof(typename dst_type::value_type) * dst.capacity();
+
+        Impl::DeepCopy< dst_memory_space , src_memory_space >( dst.ptr_on_device() , src.ptr_on_device() , nbytes );
+      } else {
+        Impl::ViewRemap< dst_type , src_type >( dst , src );
+      }
     }
   }
 }
@@ -1454,7 +1557,8 @@ void deep_copy( const View< DT, DL, DD, DM, DS > & dst ,
 
 template< class T , class L , class D , class M , class S >
 typename Impl::enable_if<(
-    View<T,L,D,M,S>::is_managed
+    View<T,L,D,M,S>::is_managed &&
+    !Impl::is_same<L,LayoutStride>::value
   ), typename View<T,L,D,M,S>::HostMirror >::type
 inline
 create_mirror( const View<T,L,D,M,S> & src )
@@ -1479,6 +1583,35 @@ create_mirror( const View<T,L,D,M,S> & src )
                          src.dimension_7() );
 }
 
+template< class T , class L , class D , class M , class S >
+typename Impl::enable_if<(
+    View<T,L,D,M,S>::is_managed &&
+    Impl::is_same<L,LayoutStride>::value
+  ), typename View<T,L,D,M,S>::HostMirror >::type
+inline
+create_mirror( const View<T,L,D,M,S> & src )
+{
+  typedef View<T,L,D,M,S>                  view_type ;
+  typedef typename view_type::HostMirror    host_view_type ;
+
+  // 'view' is managed therefore we can allocate a
+  // compatible host_view through the ordinary constructor.
+
+  std::string label = src.tracker().label();
+  label.append("_mirror");
+  LayoutStride layout;
+  src.stride(layout.stride);
+  layout.dimension[0] = src.dimension_0();
+  layout.dimension[1] = src.dimension_1();
+  layout.dimension[2] = src.dimension_2();
+  layout.dimension[3] = src.dimension_3();
+  layout.dimension[4] = src.dimension_4();
+  layout.dimension[5] = src.dimension_5();
+  layout.dimension[6] = src.dimension_6();
+  layout.dimension[7] = src.dimension_7();
+
+  return host_view_type( label , layout );
+}
 template< class T , class L , class D , class M , class S >
 typename Impl::enable_if<(
     View<T,L,D,M,S>::is_managed &&
