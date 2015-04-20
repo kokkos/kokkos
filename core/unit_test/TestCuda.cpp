@@ -162,6 +162,17 @@ TEST_F( cuda, view_api )
 #endif
 }
 
+TEST_F( cuda, view_subview_auto_1d_left ) {
+  TestViewSubview::test_auto_1d< Kokkos::LayoutLeft,Kokkos::Cuda >();
+}
+
+TEST_F( cuda, view_subview_auto_1d_right ) {
+  TestViewSubview::test_auto_1d< Kokkos::LayoutRight,Kokkos::Cuda >();
+}
+
+TEST_F( cuda, view_subview_auto_1d_stride ) {
+  TestViewSubview::test_auto_1d< Kokkos::LayoutStride,Kokkos::Cuda >();
+}
 
 TEST_F( cuda, view_subview_left_0 ) {
   TestViewSubview::test_left_0< Kokkos::CudaUVMSpace >();

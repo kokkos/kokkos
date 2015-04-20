@@ -103,6 +103,18 @@ TEST_F( openmp, view_api) {
 }
 
 
+TEST_F( openmp, view_subview_auto_1d_left ) {
+  TestViewSubview::test_auto_1d< Kokkos::LayoutLeft,Kokkos::OpenMP >();
+}
+
+TEST_F( openmp, view_subview_auto_1d_right ) {
+  TestViewSubview::test_auto_1d< Kokkos::LayoutRight,Kokkos::OpenMP >();
+}
+
+TEST_F( openmp, view_subview_auto_1d_stride ) {
+  TestViewSubview::test_auto_1d< Kokkos::LayoutStride,Kokkos::OpenMP >();
+}
+
 TEST_F( openmp, view_subview_left_0 ) {
   TestViewSubview::test_left_0< Kokkos::OpenMP >();
 }
