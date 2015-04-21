@@ -1,7 +1,5 @@
 #!/bin/bash
 
-bash <<"%EOF%"
-
 KOKKOS_DEVICES=""
 
 while [[ $# > 0 ]]
@@ -159,5 +157,4 @@ echo -e "\tmake -f ${KOKKOS_PATH}/containers/performance_tests/Makefile ${KOKKOS
 echo -e "\tcd algorithms/unit_tests; \\" >> Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_OPTIONS} test" >> Makefile
 
-%EOF%
 
