@@ -401,7 +401,11 @@ template< class FunctorType >
 inline
 void parallel_reduce( const size_t        work_count
                     , const FunctorType & functor
-                    , typename Kokkos::Impl::FunctorValueTraits< FunctorType , void >::reference_type result
+                    , typename Kokkos::Impl::FunctorValueTraits<
+                         typename Impl::if_c<Impl::is_execution_policy<FunctorType>::value ||
+                                             Impl::is_integral<FunctorType>::value,
+                            void,FunctorType>::type
+                         , void >::reference_type result
                     , typename Impl::enable_if< true
 #ifdef KOKKOS_HAVE_CUDA
                               && ! Impl::is_same<

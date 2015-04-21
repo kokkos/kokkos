@@ -85,6 +85,12 @@ struct FunctorValueTraits
   unsigned value_size( const FunctorType & ) { return 0 ; }
 };
 
+template<class ArgTag>
+struct FunctorValueTraits<void, ArgTag,false>
+{
+  typedef void reference_type;
+};
+
 /** \brief  FunctorType::value_type is explicitly declared so use it.
  *
  * Two options for declaration
