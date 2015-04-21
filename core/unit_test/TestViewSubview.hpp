@@ -66,7 +66,7 @@ struct getView<Kokkos::LayoutStride,Space> {
     Kokkos::View<double**,Kokkos::LayoutStride,Space> get(int n, int m) {
       const int rank = 2 ;
       const int order[] = { 0, 1 };
-      const unsigned dim[] = { n, m };
+      const unsigned dim[] = { unsigned(n), unsigned(m) };
       Kokkos::LayoutStride stride = Kokkos::LayoutStride::order_dimensions( rank , order , dim );
       return Kokkos::View<double**,Kokkos::LayoutStride,Space>("G",stride);
   }
