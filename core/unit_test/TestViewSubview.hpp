@@ -165,6 +165,60 @@ void test_auto_1d ()
   }
 }
 
+template<class LD, class LS, class Space>
+void test_1d_strided_assignment_impl(bool a, bool b, bool c, bool d, int n, int m) {
+  Kokkos::View<double**,LS,Space> l2d("l2d",n,m);
+
+  int col = n>2?2:0;
+  int row = m>2?2:0;
+
+
+  if(a) {
+    Kokkos::View<double*,LD,Space> l1da = Kokkos::subview(l2d,Kokkos::ALL(),row);
+    ASSERT_TRUE( & l1da(0) == & l2d(0,row) );
+    if(n>1)
+      ASSERT_TRUE( & l1da(1) == & l2d(1,row) );
+  }
+  if(b && n>13) {
+    Kokkos::View<double*,LD,Space> l1db = Kokkos::subview(l2d,std::pair<unsigned,unsigned>(2,13),row);
+    ASSERT_TRUE( & l1db(0) == & l2d(2,row) );
+    ASSERT_TRUE( & l1db(1) == & l2d(3,row) );
+  }
+  if(c) {
+    Kokkos::View<double*,LD,Space> l1dc = Kokkos::subview(l2d,col,Kokkos::ALL());
+    ASSERT_TRUE( & l1dc(0) == & l2d(col,0) );
+    if(m>1)
+      ASSERT_TRUE( & l1dc(1) == & l2d(col,1) );
+  }
+  if(d && m>13) {
+    Kokkos::View<double*,LD,Space> l1dd = Kokkos::subview(l2d,col,std::pair<unsigned,unsigned>(2,13));
+    ASSERT_TRUE( & l1dd(0) == & l2d(col,2) );
+    ASSERT_TRUE( & l1dd(1) == & l2d(col,3) );
+  }
+
+}
+
+template<class Space >
+void test_1d_strided_assignment() {
+  test_1d_strided_assignment_impl<Kokkos::LayoutStride,Kokkos::LayoutLeft,Space>(true,true,true,true,17,3);
+  test_1d_strided_assignment_impl<Kokkos::LayoutStride,Kokkos::LayoutRight,Space>(true,true,true,true,17,3);
+
+  test_1d_strided_assignment_impl<Kokkos::LayoutLeft,Kokkos::LayoutLeft,Space>(true,true,false,false,17,3);
+  test_1d_strided_assignment_impl<Kokkos::LayoutRight,Kokkos::LayoutLeft,Space>(true,true,false,false,17,3);
+  test_1d_strided_assignment_impl<Kokkos::LayoutLeft,Kokkos::LayoutRight,Space>(false,false,true,true,17,3);
+  test_1d_strided_assignment_impl<Kokkos::LayoutRight,Kokkos::LayoutRight,Space>(false,false,true,true,17,3);
+
+  test_1d_strided_assignment_impl<Kokkos::LayoutLeft,Kokkos::LayoutLeft,Space>(true,true,false,false,17,1);
+  test_1d_strided_assignment_impl<Kokkos::LayoutLeft,Kokkos::LayoutLeft,Space>(true,true,true,true,1,17);
+  test_1d_strided_assignment_impl<Kokkos::LayoutRight,Kokkos::LayoutLeft,Space>(true,true,true,true,1,17);
+  test_1d_strided_assignment_impl<Kokkos::LayoutRight,Kokkos::LayoutLeft,Space>(true,true,false,false,17,1);
+
+  test_1d_strided_assignment_impl<Kokkos::LayoutLeft,Kokkos::LayoutRight,Space>(true,true,true,true,17,1);
+  test_1d_strided_assignment_impl<Kokkos::LayoutLeft,Kokkos::LayoutRight,Space>(false,false,true,true,1,17);
+  test_1d_strided_assignment_impl<Kokkos::LayoutRight,Kokkos::LayoutRight,Space>(false,false,true,true,1,17);
+  test_1d_strided_assignment_impl<Kokkos::LayoutRight,Kokkos::LayoutRight,Space>(true,true,true,true,17,1);
+}
+
 template< class Space >
 void test_left_0()
 {

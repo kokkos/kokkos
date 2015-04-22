@@ -104,6 +104,10 @@ TEST_F( serial, view_subview_auto_1d_stride ) {
   TestViewSubview::test_auto_1d< Kokkos::LayoutStride,Kokkos::Serial >();
 }
 
+TEST_F( serial, view_subview_assign_strided ) {
+  TestViewSubview::test_1d_strided_assignment< Kokkos::Serial >();
+}
+
 TEST_F( serial, view_subview_left_0 ) {
   TestViewSubview::test_left_0< Kokkos::Serial >();
 }
