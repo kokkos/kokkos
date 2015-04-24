@@ -75,6 +75,8 @@ unsigned padded_sizeof_derived( unsigned sizeof_derived )
     ( sizeof_derived % sizeof(Task*) ? sizeof(Task*) - sizeof_derived % sizeof(Task*) : 0 );
 }
 
+// int lock_alloc_dealloc = 0 ;
+
 } // namespace
 
 void Task::deallocate( void * ptr )
@@ -84,9 +86,13 @@ void Task::deallocate( void * ptr )
 
   // lock
 
+  // while ( ! Kokkos::atomic_compare_exchange_strong( & lock_alloc_dealloc , 0 , 1 ) );
+
   free( ptr );
 
   // unlock
+
+  // Kokkos::atomic_compare_exchange_strong( & lock_alloc_dealloc , 1 , 0 );
 }
 
 void * Task::allocate( const unsigned arg_sizeof_derived
@@ -97,9 +103,13 @@ void * Task::allocate( const unsigned arg_sizeof_derived
 
   // lock
 
+  // while ( ! Kokkos::atomic_compare_exchange_strong( & lock_alloc_dealloc , 0 , 1 ) );
+
   void * const ptr = malloc( padded_sizeof_derived( arg_sizeof_derived ) + arg_dependence_capacity * sizeof(Task*) );
 
   // unlock
+
+  // Kokkos::atomic_compare_exchange_strong( & lock_alloc_dealloc , 1 , 0 );
 
   return ptr ;
 }
@@ -110,44 +120,48 @@ Task::~TaskMember()
 }
 
 
-Task::TaskMember( const function_verify_type   arg_verify
-                , const function_dealloc_type  arg_dealloc
-                , const function_apply_type    arg_apply
-                , volatile int &               arg_active_count
-                , const unsigned               arg_sizeof_derived
-                , const unsigned               arg_dependence_capacity
+Task::TaskMember( const function_verify_type        arg_verify
+                , const function_dealloc_type       arg_dealloc
+                , const function_apply_single_type  arg_apply_single
+                , const function_apply_team_type    arg_apply_team
+                , volatile int &                    arg_active_count
+                , const unsigned                    arg_sizeof_derived
+                , const unsigned                    arg_dependence_capacity
                 )
   : m_dealloc( arg_dealloc )
   , m_verify(  arg_verify )
-  , m_apply(   arg_apply )
+  , m_apply_single( arg_apply_single )
+  , m_apply_team( arg_apply_team )
+  , m_active_count( arg_active_count )
+  , m_qfeb(0)
   , m_dep( (Task **)( ((unsigned char *) this) + padded_sizeof_derived( arg_sizeof_derived ) ) )
   , m_dep_capacity( arg_dependence_capacity )
   , m_dep_size( 0 )
   , m_ref_count( 0 )
   , m_state( Kokkos::Experimental::TASK_STATE_CONSTRUCTING )
-  , m_active_count( arg_active_count )
-  , m_qfeb(0)
 {
   qthread_empty( & m_qfeb ); // Set to full when complete
   for ( unsigned i = 0 ; i < arg_dependence_capacity ; ++i ) m_dep[i] = 0 ;
 }
 
-Task::TaskMember( const function_dealloc_type  arg_dealloc
-                , const function_apply_type    arg_apply
-                , volatile int &               arg_active_count
-                , const unsigned               arg_sizeof_derived
-                , const unsigned               arg_dependence_capacity
+Task::TaskMember( const function_dealloc_type       arg_dealloc
+                , const function_apply_single_type  arg_apply_single
+                , const function_apply_team_type    arg_apply_team
+                , volatile int &                    arg_active_count
+                , const unsigned                    arg_sizeof_derived
+                , const unsigned                    arg_dependence_capacity
                 )
   : m_dealloc( arg_dealloc )
   , m_verify(  & Task::verify_type<void> )
-  , m_apply(   arg_apply )
+  , m_apply_single( arg_apply_single )
+  , m_apply_team( arg_apply_team )
+  , m_active_count( arg_active_count )
+  , m_qfeb(0)
   , m_dep( (Task **)( ((unsigned char *) this) + padded_sizeof_derived( arg_sizeof_derived ) ) )
   , m_dep_capacity( arg_dependence_capacity )
   , m_dep_size( 0 )
   , m_ref_count( 0 )
   , m_state( Kokkos::Experimental::TASK_STATE_CONSTRUCTING )
-  , m_active_count( arg_active_count )
-  , m_qfeb(0)
 {
   qthread_empty( & m_qfeb ); // Set to full when complete
   for ( unsigned i = 0 ; i < arg_dependence_capacity ; ++i ) m_dep[i] = 0 ;
@@ -180,24 +194,28 @@ void Task::assign( Task ** const lhs , Task * rhs , const bool no_throw )
   static const char msg_error_dependences[] = ": destroy task that has dependences" ;
   static const char msg_error_exception[]   = ": caught internal exception" ;
 
-  const char * msg_error = 0 ;
+  if ( rhs ) { Kokkos::atomic_fetch_add( & (*rhs).m_ref_count , 1 ); }
 
-  try {
+  Task * const lhs_val = Kokkos::atomic_exchange( lhs , rhs );
 
-    if ( *lhs ) {
+  if ( lhs_val ) {
 
-      const int count = Kokkos::atomic_fetch_add( & (**lhs).m_ref_count , -1 );
+    const int count = Kokkos::atomic_fetch_add( & (*lhs_val).m_ref_count , -1 );
+
+    const char * msg_error = 0 ;
+
+    try {
 
       if ( 1 == count ) {
 
         // Reference count at zero, delete it
 
         // Should only be deallocating a completed task
-        if ( (**lhs).m_state == Kokkos::Experimental::TASK_STATE_COMPLETE ) {
+        if ( (*lhs_val).m_state == Kokkos::Experimental::TASK_STATE_COMPLETE ) {
 
           // A completed task should not have dependences...
-          for ( int i = 0 ; i < (**lhs).m_dep_size && 0 == msg_error ; ++i ) {
-            if ( (**lhs).m_dep[i] ) msg_error = msg_error_dependences ;
+          for ( int i = 0 ; i < (*lhs_val).m_dep_size && 0 == msg_error ; ++i ) {
+            if ( (*lhs_val).m_dep[i] ) msg_error = msg_error_dependences ;
           }
         }
         else {
@@ -206,33 +224,29 @@ void Task::assign( Task ** const lhs , Task * rhs , const bool no_throw )
 
         if ( 0 == msg_error ) {
           // Get deletion function and apply it
-          const Task::function_dealloc_type d = (**lhs).m_dealloc ;
+          const Task::function_dealloc_type d = (*lhs_val).m_dealloc ;
 
-          (*d)( *lhs );
+          (*d)( lhs_val );
         }
       }
       else if ( count <= 0 ) {
         msg_error = msg_error_count ;
       }
     }
-
-    if ( 0 == msg_error && rhs ) { Kokkos::atomic_fetch_add( & (*rhs).m_ref_count , 1 ); }
-
-    *lhs = rhs ;
-  }
-  catch( ... ) {
-    if ( 0 == msg_error ) msg_error = msg_error_exception ;
-  }
-
-  if ( 0 != msg_error ) {
-    if ( no_throw ) {
-      std::cerr << msg_error_header << msg_error << std::endl ;
-      std::cerr.flush();
+    catch( ... ) {
+      if ( 0 == msg_error ) msg_error = msg_error_exception ;
     }
-    else {
-      std::string msg(msg_error_header);
-      msg.append(msg_error);
-      throw std::runtime_error( msg );
+
+    if ( 0 != msg_error ) {
+      if ( no_throw ) {
+        std::cerr << msg_error_header << msg_error << std::endl ;
+        std::cerr.flush();
+      }
+      else {
+        std::string msg(msg_error_header);
+        msg.append(msg_error);
+        throw std::runtime_error( msg );
+      }
     }
   }
 }
@@ -245,33 +259,87 @@ aligned_t Task::qthread_func( void * arg )
 {
   Task * const task = reinterpret_cast< Task * >(arg);
 
-  task->m_state = Kokkos::Experimental::TASK_STATE_EXECUTING ;
+  // First member of the team change state to executing.
+  // Use compare-exchange to avoid race condition with a respawn.
+  Kokkos::atomic_compare_exchange_strong( & task->m_state
+                                        , int(Kokkos::Experimental::TASK_STATE_WAITING)
+                                        , int(Kokkos::Experimental::TASK_STATE_EXECUTING)
+                                        );
 
-  (*task->m_apply)( task );
+  bool close_out = false ;
 
-  if ( task->m_state == Kokkos::Experimental::TASK_STATE_EXECUTING ) {
-    // Task did not respawn, is complete
-    task->m_state = Kokkos::Experimental::TASK_STATE_COMPLETE ;
+  if ( task->m_apply_team ) {
 
-    // Release dependences before allowing dependent tasks to run.
-    // Otherwise their is a thread race condition for removing dependences.
-    for ( int i = 0 ; i < task->m_dep_size ; ++i ) {
-      assign( & task->m_dep[i] , 0 );
-    }
+    Kokkos::Impl::QthreadTeamPolicyMember member ;
 
-    // Set qthread FEB to full so that dependent tasks are allowed to execute
-    qthread_fill( & task->m_qfeb );
+    (*task->m_apply_team)( task , member );
+
+fprintf( stdout
+       , "task 0x%.12lx finished by worker(%d.%d) member(%d:%d)\n"
+       , reinterpret_cast<unsigned long>(task)
+       , qthread_shep()
+       , qthread_worker_local(NULL)
+       , member.team_rank()
+       , member.team_size()
+       );
+fflush(stdout);
+
+    member.team_barrier();
+
+    close_out = member.team_rank() == 0 ;
+  }
+  else {
+    (*task->m_apply_single)( task );
+
+    close_out = true ;
   }
 
-  // Decrement active task count before returning.
-  Kokkos::atomic_decrement( & task->m_active_count );
+  if ( close_out ) {
+
+    if ( task->m_state == ( Kokkos::Experimental::TASK_STATE_WAITING | Kokkos::Experimental::TASK_STATE_EXECUTING ) ) {
+      // Task respawned, set state to waiting and reschedule the task
+      task->m_state = Kokkos::Experimental::TASK_STATE_WAITING ;
+      task->schedule();
+    }
+    else {
+
+      // Task did not respawn, is complete
+      task->m_state = Kokkos::Experimental::TASK_STATE_COMPLETE ;
+
+      // Release dependences before allowing dependent tasks to run.
+      // Otherwise there is a thread race condition for removing dependences.
+      for ( int i = 0 ; i < task->m_dep_size ; ++i ) {
+        assign( & task->m_dep[i] , 0 );
+      }
+
+      // Set qthread FEB to full so that dependent tasks are allowed to execute
+      qthread_fill( & task->m_qfeb );
+    }
+
+    // Decrement active task count before returning.
+    Kokkos::atomic_decrement( & task->m_active_count );
+  }
 
   return 0 ;
+}
+
+void Task::respawn()
+{
+  // Change state from pure executing to ( waiting | executing )
+  // to avoid confusion with simply waiting.
+  Kokkos::atomic_compare_exchange_strong( & m_state
+                                        , int(Kokkos::Experimental::TASK_STATE_EXECUTING)
+                                        , int(Kokkos::Experimental::TASK_STATE_WAITING |
+                                              Kokkos::Experimental::TASK_STATE_EXECUTING)
+                                        );
 }
 
 void Task::schedule()
 {
   // Is waiting for execution
+
+  // Increment active task count before spawning.
+  Kokkos::atomic_increment( & m_active_count );
 
   // spawn in qthread.  must malloc the precondition array and give to qthread.
   // qthread will eventually free this allocation so memory will not be leaked.
@@ -285,19 +353,46 @@ void Task::schedule()
     qprecon[i+1] = & m_dep[i]->m_qfeb ; // Qthread precondition flag
   }
 
-  m_state = Kokkos::Experimental::TASK_STATE_WAITING ;
+  if ( m_apply_single ) {
+    qthread_spawn( & Task::qthread_func /* function */
+                 , this                 /* function argument */
+                 , 0
+                 , NULL
+                 , m_dep_size , qprecon /* dependences */
+                 , NO_SHEPHERD
+                 , QTHREAD_SPAWN_SIMPLE /* allows optimization for non-blocking task */
+                 );
+  }
+  else {
+    // If more than one shepherd spawn on a shepherd other than this shepherd
+    const int num_shepherd            = qthread_num_shepherds();
+    const int num_worker_per_shepherd = qthread_num_workers_local(NO_SHEPHERD);
+    const int this_shepherd           = qthread_shep();
 
-  // Increment active task count before spawning.
-  Kokkos::atomic_increment( & m_active_count );
+    int spawn_shepherd = ( this_shepherd + 1 ) % num_shepherd ;
 
-  qthread_spawn( & Task::qthread_func /* function */
-               , this                 /* function argument */
-               , 0
-               , NULL
-               , m_dep_size , qprecon /* dependences */
-               , NO_SHEPHERD
-               , QTHREAD_SPAWN_SIMPLE /* allows optimization for non-blocking task */
-               );
+fprintf( stdout
+       , "task 0x%.12lx worker(%d.%d) spawning on shepherd(%d) clone(%d)\n"
+       , reinterpret_cast<unsigned long>(this)
+       , qthread_shep()
+       , qthread_worker_local(NULL)
+       , spawn_shepherd
+       , num_worker_per_shepherd - 1
+       );
+fflush(stdout);
+
+    qthread_spawn_cloneable
+      ( & Task::qthread_func
+      , this
+      , 0
+      , NULL
+      , m_dep_size , qprecon /* dependences */
+      , spawn_shepherd
+      // , unsigned( QTHREAD_SPAWN_SIMPLE | QTHREAD_SPAWN_LOCAL_PRIORITY )
+      , unsigned( QTHREAD_SPAWN_LOCAL_PRIORITY )
+      , num_worker_per_shepherd - 1
+      );
+  }
 }
 
 } // namespace Impl

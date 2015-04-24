@@ -231,6 +231,19 @@ public:
 
   template< class Type >
   inline
+  void shepherd_broadcast( Type & value , const int team_size , const int team_rank ) const
+    {
+      if ( m_shepherd_base ) {
+        Type * const shared_value = m_shepherd_base[0]->shepherd_team_scratch_value<Type>();
+        if ( m_shepherd_worker_rank == team_rank ) { *shared_value = value ; }
+        memory_fence();
+        shepherd_barrier( team_size );
+        value = *shared_value ;
+      }
+    }
+
+  template< class Type >
+  inline
   Type shepherd_reduce( const int team_size , const Type & value ) const
     {
       *shepherd_team_scratch_value<Type>() = value ;
@@ -393,6 +406,8 @@ public:
   inline int shepherd_worker_size() const { return m_shepherd_worker_size ; }
   inline int shepherd_rank() const { return m_shepherd_rank ; }
   inline int shepherd_size() const { return m_shepherd_size ; }
+
+  static int worker_per_shepherd();
 };
 
 } /* namespace Impl */
@@ -433,6 +448,14 @@ public:
     {}
 #else
     { m_exec.shepherd_barrier( m_team_size ); }
+#endif
+
+  template< typename Type >
+  KOKKOS_INLINE_FUNCTION Type team_broadcast( const Type & value , int rank ) const
+#if ! defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+    { return Type(); }
+#else
+    { return m_exec.template shepherd_broadcast<Type>( value , m_team_size , rank ); }
 #endif
 
   template< typename Type >
@@ -482,6 +505,11 @@ public:
 #else
     { return m_exec.template shepherd_scan<Type>( m_team_size , value , global_accum ); }
 #endif
+
+  //----------------------------------------
+  // Private driver for task-team parallel
+
+  QthreadTeamPolicyMember();
 
   //----------------------------------------
   // Private for the driver ( for ( member_type i(exec,team); i ; i.next_team() ) { ... }

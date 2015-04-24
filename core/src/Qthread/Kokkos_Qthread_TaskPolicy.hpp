@@ -80,22 +80,24 @@ class TaskMember< Kokkos::Qthread , void , void >
 {
 public:
 
-  typedef void         (* function_apply_type)  ( TaskMember * );
+  typedef void         (* function_apply_single_type) ( TaskMember * );
+  typedef void         (* function_apply_team_type)   ( TaskMember * , Kokkos::Impl::QthreadTeamPolicyMember & );
   typedef void         (* function_dealloc_type)( TaskMember * );
   typedef TaskMember * (* function_verify_type) ( TaskMember * );
 
 private:
 
-  const function_dealloc_type  m_dealloc ;       ///< Deallocation
-  const function_verify_type   m_verify ;        ///< Result type verification
-  const function_apply_type    m_apply ;         ///< Apply function
-  TaskMember ** const          m_dep ;           ///< Dependences
-  const int                    m_dep_capacity ;  ///< Capacity of dependences
-  int                          m_dep_size ;      ///< Actual count of dependences
-  int                          m_ref_count ;     ///< Reference count
-  int                          m_state ;         ///< State of the task
-  int volatile &               m_active_count ;  ///< Count of active tasks on this policy
-  aligned_t                    m_qfeb ;          ///< Qthread full/empty bit
+  const function_dealloc_type       m_dealloc ;       ///< Deallocation
+  const function_verify_type        m_verify ;        ///< Result type verification
+  const function_apply_single_type  m_apply_single ;  ///< Apply function
+  const function_apply_team_type    m_apply_team ;    ///< Apply function
+  int volatile &                    m_active_count ;  ///< Count of active tasks on this policy
+  aligned_t                         m_qfeb ;          ///< Qthread full/empty bit
+  TaskMember ** const               m_dep ;           ///< Dependences
+  const int                         m_dep_capacity ;  ///< Capacity of dependences
+  int                               m_dep_size ;      ///< Actual count of dependences
+  int                               m_ref_count ;     ///< Reference count
+  int                               m_state ;         ///< State of the task
 
   TaskMember() /* = delete */ ;
   TaskMember( const TaskMember & ) /* = delete */ ;
@@ -118,25 +120,29 @@ private:
       deallocate( (void *) ptr );
     }
 
+  void schedule();
+
 protected :
 
   ~TaskMember();
 
   // Used by TaskMember< Qthread , ResultType , void >
-  TaskMember( const function_verify_type   arg_verify
-            , const function_dealloc_type  arg_dealloc
-            , const function_apply_type    arg_apply
-            , volatile int &               arg_active_count
-            , const unsigned               arg_sizeof_derived
-            , const unsigned               arg_dependence_capacity
+  TaskMember( const function_verify_type        arg_verify
+            , const function_dealloc_type       arg_dealloc
+            , const function_apply_single_type  arg_apply_single
+            , const function_apply_team_type    arg_apply_team
+            , volatile int &                    arg_active_count
+            , const unsigned                    arg_sizeof_derived
+            , const unsigned                    arg_dependence_capacity
             );
 
   // Used for TaskMember< Qthread , void , void >
-  TaskMember( const function_dealloc_type  arg_dealloc
-            , const function_apply_type    arg_apply
-            , volatile int &               arg_active_count
-            , const unsigned               arg_sizeof_derived
-            , const unsigned               arg_dependence_capacity
+  TaskMember( const function_dealloc_type       arg_dealloc
+            , const function_apply_single_type  arg_apply_single
+            , const function_apply_team_type    arg_apply_team
+            , volatile int &                    arg_active_count
+            , const unsigned                    arg_sizeof_derived
+            , const unsigned                    arg_dependence_capacity
             );
 
 public:
@@ -183,9 +189,9 @@ public:
   /** \brief  Allocate and construct a single-thread task */
   template< class DerivedTaskType >
   static
-  TaskMember * create( const typename DerivedTaskType::functor_type &  arg_functor
-                     , volatile int &                                  arg_active_count
-                     , const unsigned                                  arg_dependence_capacity )
+  TaskMember * create_single( const typename DerivedTaskType::functor_type &  arg_functor
+                            , volatile int &                                  arg_active_count
+                            , const unsigned                                  arg_dependence_capacity )
     {
       typedef typename DerivedTaskType::functor_type  functor_type ;
       typedef typename functor_type::value_type       value_type ;
@@ -194,6 +200,7 @@ public:
         new( allocate( sizeof(DerivedTaskType) , arg_dependence_capacity ) )
           DerivedTaskType( & TaskMember::template deallocate< DerivedTaskType >
                          , & TaskMember::template apply_single< functor_type , value_type >
+                         , 0
                          , arg_active_count
                          , sizeof(DerivedTaskType)
                          , arg_dependence_capacity
@@ -202,7 +209,35 @@ public:
       return static_cast< TaskMember * >( task );
     }
 
-  void schedule();
+  /** \brief  Allocate and construct a team-thread task */
+  template< class DerivedTaskType >
+  static
+  TaskMember * create_team( const typename DerivedTaskType::functor_type &  arg_functor
+                          , volatile int &                                  arg_active_count
+                          , const unsigned                                  arg_dependence_capacity )
+    {
+      typedef typename DerivedTaskType::functor_type  functor_type ;
+      typedef typename functor_type::value_type       value_type ;
+
+      DerivedTaskType * const task =
+        new( allocate( sizeof(DerivedTaskType) , arg_dependence_capacity ) )
+          DerivedTaskType( & TaskMember::template deallocate< DerivedTaskType >
+                         , 0
+                         , & TaskMember::template apply_team< functor_type , value_type >
+                         , arg_active_count
+                         , sizeof(DerivedTaskType)
+                         , arg_dependence_capacity
+                         , arg_functor );
+
+      return static_cast< TaskMember * >( task );
+    }
+
+  void respawn();
+  void spawn()
+    {
+       m_state = Kokkos::Experimental::TASK_STATE_WAITING ;
+       schedule();
+    }
 
   //----------------------------------------
 
@@ -286,6 +321,32 @@ public:
 
       Kokkos::Impl::FunctorApply< FunctorType , void , void >::apply( (FunctorType &) m );
     }
+
+  //----------------------------------------
+
+  template< class FunctorType , class ResultType >
+  KOKKOS_INLINE_FUNCTION static
+  void apply_team( typename Kokkos::Impl::enable_if< ! Kokkos::Impl::is_same< ResultType , void >::value , TaskMember * >::type t
+                 , Kokkos::Impl::QthreadTeamPolicyMember & member )
+    {
+      typedef TaskMember< Kokkos::Qthread , ResultType , FunctorType > derived_type ;
+
+      derived_type & m = * static_cast< derived_type * >( t );
+
+      m.FunctorType::apply( member , m.m_result );
+    }
+
+  template< class FunctorType , class ResultType >
+  KOKKOS_INLINE_FUNCTION static
+  void apply_team( typename Kokkos::Impl::enable_if< Kokkos::Impl::is_same< ResultType , void >::value , TaskMember * >::type t
+                 , Kokkos::Impl::QthreadTeamPolicyMember & member )
+    {
+      typedef TaskMember< Kokkos::Qthread , ResultType , FunctorType > derived_type ;
+
+      derived_type & m = * static_cast< derived_type * >( t );
+
+      m.FunctorType::apply( member );
+    }
 };
 
 //----------------------------------------------------------------------------
@@ -313,25 +374,27 @@ public:
 protected:
 
   typedef TaskMember< Kokkos::Qthread , void , void >  task_root_type ;
-  typedef task_root_type::function_dealloc_type       function_dealloc_type ;
-  typedef task_root_type::function_apply_type         function_apply_type ;
+  typedef task_root_type::function_dealloc_type        function_dealloc_type ;
+  typedef task_root_type::function_apply_single_type   function_apply_single_type ;
+  typedef task_root_type::function_apply_team_type     function_apply_team_type ;
 
   inline
-  TaskMember( const function_dealloc_type  arg_dealloc
-            , const function_apply_type    arg_apply
-            , volatile int &               arg_active_count
-            , const unsigned               arg_sizeof_derived
-            , const unsigned               arg_dependence_capacity
+  TaskMember( const function_dealloc_type       arg_dealloc
+            , const function_apply_single_type  arg_apply_single
+            , const function_apply_team_type    arg_apply_team
+            , volatile int &                    arg_active_count
+            , const unsigned                    arg_sizeof_derived
+            , const unsigned                    arg_dependence_capacity
             )
     : task_root_type( & task_root_type::template verify_type< ResultType >
                     , arg_dealloc
-                    , arg_apply
+                    , arg_apply_single
+                    , arg_apply_team
                     , arg_active_count
                     , arg_sizeof_derived
                     , arg_dependence_capacity )
     , m_result()
     {}
-
 };
 
 template< class ResultType , class FunctorType >
@@ -345,18 +408,25 @@ public:
 
   typedef TaskMember< Kokkos::Qthread , void , void >        task_root_type ;
   typedef TaskMember< Kokkos::Qthread , ResultType , void >  task_base_type ;
-  typedef task_root_type::function_dealloc_type             function_dealloc_type ;
-  typedef task_root_type::function_apply_type               function_apply_type ;
+  typedef task_root_type::function_dealloc_type              function_dealloc_type ;
+  typedef task_root_type::function_apply_single_type         function_apply_single_type ;
+  typedef task_root_type::function_apply_team_type           function_apply_team_type ;
 
   inline
-  TaskMember( const function_dealloc_type  arg_dealloc
-            , const function_apply_type    arg_apply
-            , volatile int &               arg_active_count
-            , const unsigned               arg_sizeof_derived
-            , const unsigned               arg_dependence_capacity
-            , const functor_type &         arg_functor
+  TaskMember( const function_dealloc_type       arg_dealloc
+            , const function_apply_single_type  arg_apply_single
+            , const function_apply_team_type    arg_apply_team
+            , volatile int &                    arg_active_count
+            , const unsigned                    arg_sizeof_derived
+            , const unsigned                    arg_dependence_capacity
+            , const functor_type &              arg_functor
             )
-    : task_base_type( arg_dealloc , arg_apply , arg_active_count , arg_sizeof_derived , arg_dependence_capacity )
+    : task_base_type( arg_dealloc
+                    , arg_apply_single
+                    , arg_apply_team
+                    , arg_active_count
+                    , arg_sizeof_derived
+                    , arg_dependence_capacity )
     , functor_type( arg_functor )
     {}
 };
@@ -446,7 +516,7 @@ public:
     spawn( const Future< ValueType , execution_space > & f ) const
       {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-        f.m_task->schedule();
+        f.m_task->spawn();
 #endif
         return f ;
       }
@@ -462,7 +532,29 @@ public:
       typedef Impl::TaskMember< execution_space , value_type , FunctorType >  task_type ;
       return Future< value_type , execution_space >(
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-        task_root_type::create< task_type >
+        task_root_type::create_single< task_type >
+          ( functor
+          , m_active_count
+          , ( ~0u == dependence_capacity ? m_default_dependence_capacity : dependence_capacity )
+          )
+#endif
+        );
+    }
+
+  // Create thread-team task
+
+  template< class FunctorType >
+  KOKKOS_INLINE_FUNCTION
+  Future< typename FunctorType::value_type , execution_space >
+  create_team( const FunctorType & functor
+             , const unsigned dependence_capacity = ~0u ) const
+    {
+      typedef typename FunctorType::value_type  value_type ;
+      typedef Impl::TaskMember< execution_space , value_type , FunctorType >  task_type ;
+
+      return Future< value_type , execution_space >(
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+        task_root_type::create_team< task_type >
           ( functor
           , m_active_count
           , ( ~0u == dependence_capacity ? m_default_dependence_capacity : dependence_capacity )
@@ -534,7 +626,7 @@ public:
   template< class FunctorType >
   void respawn( FunctorType * task_functor ) const
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-    { get_task_root(task_functor)->schedule(); }
+    { get_task_root(task_functor)->respawn(); }
 #else
     {}
 #endif

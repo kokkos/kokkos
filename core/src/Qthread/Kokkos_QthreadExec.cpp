@@ -288,6 +288,11 @@ void verify_is_process( const char * const label , bool not_active = false )
 
 }
 
+int QthreadExec::worker_per_shepherd()
+{
+  return s_number_workers_per_shepherd ;
+}
+
 QthreadExec::QthreadExec()
 {
   const int shepherd_rank        = qthread_shep();
@@ -352,7 +357,7 @@ void QthreadExec::resize_worker_scratch( const int reduce_size , const int share
     const int main_shep = qthread_shep();
 
     // Have each worker resize its memory for proper first-touch
-#if 1
+#if 0
     for ( int jshep = 0 ; jshep < s_number_shepherds ; ++jshep ) {
     for ( int i = jshep != main_shep ? 0 : 1 ; i < s_number_workers_per_shepherd ; ++i ) {
       qthread_fork_to( driver_resize_worker_scratch , NULL , NULL , jshep );
@@ -412,7 +417,7 @@ void QthreadExec::exec_all( Qthread & , QthreadExecFunctionPointer func , const 
  
   const int main_shep = qthread_shep();
 
-#if 1
+#if 0
   for ( int jshep = 0 , iwork = 0 ; jshep < s_number_shepherds ; ++jshep ) {
   for ( int i = jshep != main_shep ? 0 : 1 ; i < s_number_workers_per_shepherd ; ++i , ++iwork ) {
     qthread_fork_to( driver_exec_all , NULL , NULL , jshep );
@@ -446,6 +451,24 @@ void QthreadExec::exec_all( Qthread & , QthreadExecFunctionPointer func , const 
 void * QthreadExec::exec_all_reduce_result()
 {
   return s_exec[0]->m_scratch_alloc ;
+}
+
+} /* namespace Impl */
+} /* namespace Kokkos */
+
+namespace Kokkos {
+namespace Impl {
+
+QthreadTeamPolicyMember::QthreadTeamPolicyMember()
+  : m_exec( **worker_exec() )
+  , m_team_shared(0,0)
+  , m_team_size( s_number_workers_per_shepherd )
+  , m_team_rank( m_exec.shepherd_worker_rank() )
+  , m_league_size(1)
+  , m_league_end(1)
+  , m_league_rank(0)
+{
+  m_exec.shared_reset( m_team_shared );
 }
 
 } /* namespace Impl */

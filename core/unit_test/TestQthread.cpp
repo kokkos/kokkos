@@ -270,10 +270,11 @@ TEST_F( qthread , task_policy )
 }
 
 #if defined( KOKKOS_HAVE_CXX11 )
-// TEST_F( qthread , task_team )
-// {
-//   TestTaskPolicy::test_task_team< Kokkos::Qthread >(1000);
-// }
+TEST_F( qthread , task_team )
+{
+  std::cout << "qthread.task_team test disabled due to unresolved error causing the test to hang." << std::endl ;
+  // TestTaskPolicy::test_task_team< Kokkos::Qthread >(1000);
+}
 #endif
 
 //----------------------------------------------------------------------------
