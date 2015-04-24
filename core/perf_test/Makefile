@@ -14,12 +14,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	CXX = nvcc_wrapper
 	CXXFLAGS ?= -O3
 	LINK = $(CXX)
-	LINKFLAGS ?= -lpthread
+	LDFLAGS ?= -lpthread
 else
 	CXX ?= g++
 	CXXFLAGS ?= -O3
 	LINK ?= $(CXX)
-	LINKFLAGS ?=  -lpthread
+	LDFLAGS ?=  -lpthread
 endif
 
 KOKKOS_CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/core/perf_test
@@ -37,10 +37,10 @@ TEST_TARGETS += test-atomic
 
 
 KokkosCore_PerformanceTest: $(OBJ_PERF) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ_PERF) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_PerformanceTest
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_PERF) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_PerformanceTest
 
 KokkosCore_PerformanceTest_Atomics: $(OBJ_ATOMICS) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ_ATOMICS) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_PerformanceTest_Atomics
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_ATOMICS) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_PerformanceTest_Atomics
 
 test-performance: KokkosCore_PerformanceTest
 	./KokkosCore_PerformanceTest

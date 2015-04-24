@@ -14,12 +14,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	CXX = nvcc_wrapper
 	CXXFLAGS ?= -O3
 	LINK = $(CXX)
-	LINKFLAGS ?= -lpthread
+	LDFLAGS ?= -lpthread
 else
 	CXX ?= g++
 	CXXFLAGS ?= -O3
 	LINK ?= $(CXX)
-	LINKFLAGS ?= -lpthread
+	LDFLAGS ?= -lpthread
 endif
 
 KOKKOS_CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/algorithms/unit_tests
@@ -52,16 +52,16 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
 endif
 
 KokkosAlgorithms_UnitTest_Cuda: $(OBJ_CUDA) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ_CUDA) $(KOKKOS_LIBS) $(LIB) -o KokkosAlgorithms_UnitTest_Cuda
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_CUDA) $(KOKKOS_LIBS) $(LIB) -o KokkosAlgorithms_UnitTest_Cuda
 
 KokkosAlgorithms_UnitTest_Threads: $(OBJ_THREADS) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ_THREADS) $(KOKKOS_LIBS) $(LIB) -o KokkosAlgorithms_UnitTest_Threads
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_THREADS) $(KOKKOS_LIBS) $(LIB) -o KokkosAlgorithms_UnitTest_Threads
 	
 KokkosAlgorithms_UnitTest_OpenMP: $(OBJ_OPENMP) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ_OPENMP) $(KOKKOS_LIBS) $(LIB) -o KokkosAlgorithms_UnitTest_OpenMP
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_OPENMP) $(KOKKOS_LIBS) $(LIB) -o KokkosAlgorithms_UnitTest_OpenMP
 
 KokkosAlgorithms_UnitTest_Serial: $(OBJ_SERIAL) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ_SERIAL) $(KOKKOS_LIBS) $(LIB) -o KokkosAlgorithms_UnitTest_Serial
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_SERIAL) $(KOKKOS_LIBS) $(LIB) -o KokkosAlgorithms_UnitTest_Serial
 
 test-cuda: KokkosAlgorithms_UnitTest_Cuda
 	./KokkosAlgorithms_UnitTest_Cuda

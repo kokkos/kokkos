@@ -14,12 +14,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	CXX = nvcc_wrapper
 	CXXFLAGS ?= -O3
 	LINK = $(CXX)
-	LINKFLAGS ?= -lpthread
+	LDFLAGS ?= -lpthread
 else
 	CXX ?= g++
 	CXXFLAGS ?= -O3
 	LINK ?= $(CXX)
-	LINKFLAGS ?= -lpthread
+	LDFLAGS ?= -lpthread
 endif
 
 KOKKOS_CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/core/unit_test
@@ -71,28 +71,28 @@ TEST_TARGETS += test-default
 
 
 KokkosCore_UnitTest_Cuda: $(OBJ_CUDA) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ_CUDA) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_Cuda
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_CUDA) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_Cuda
 
 KokkosCore_UnitTest_Threads: $(OBJ_THREADS) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ_THREADS) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_Threads
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_THREADS) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_Threads
 	
 KokkosCore_UnitTest_OpenMP: $(OBJ_OPENMP) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ_OPENMP) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_OpenMP
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_OPENMP) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_OpenMP
 
 KokkosCore_UnitTest_Serial: $(OBJ_SERIAL) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ_SERIAL) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_Serial
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_SERIAL) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_Serial
 
 KokkosCore_UnitTest_Qthread: $(OBJ_QTHREAD) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ_QTHREAD) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_Qthread
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_QTHREAD) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_Qthread
 
 KokkosCore_UnitTest_HWLOC: $(OBJ_HWLOC) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ_HWLOC) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_HWLOC
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_HWLOC) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_HWLOC
 
 KokkosCore_UnitTest_AllocationTracker: $(OBJ_ALLOCATIONTRACKER) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ_ALLOCATIONTRACKER) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_AllocationTracker
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_ALLOCATIONTRACKER) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_AllocationTracker
 
 KokkosCore_UnitTest_Default: $(OBJ_DEFAULT) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ_DEFAULT) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_Default
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_DEFAULT) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_Default
 
 test-cuda: KokkosCore_UnitTest_Cuda
 	./KokkosCore_UnitTest_Cuda
