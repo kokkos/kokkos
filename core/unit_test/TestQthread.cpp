@@ -173,7 +173,7 @@ TEST_F( qthread , atomics )
   ASSERT_TRUE( ( TestAtomic::Loop<float,Kokkos::Qthread>(100,2) ) );
   ASSERT_TRUE( ( TestAtomic::Loop<float,Kokkos::Qthread>(100,3) ) );
 
-#if defined( KOKKOS_HAVE_CXX11 )
+#if defined( KOKKOS_ENABLE_ASM )
   ASSERT_TRUE( ( TestAtomic::Loop<Kokkos::complex<double> ,Kokkos::Qthread>(100,1) ) );
   ASSERT_TRUE( ( TestAtomic::Loop<Kokkos::complex<double> ,Kokkos::Qthread>(100,2) ) );
   ASSERT_TRUE( ( TestAtomic::Loop<Kokkos::complex<double> ,Kokkos::Qthread>(100,3) ) );
