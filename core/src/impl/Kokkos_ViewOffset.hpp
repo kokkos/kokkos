@@ -1212,7 +1212,8 @@ struct ViewOffset< ShapeType , LayoutStride
   // rank 1
   template <typename I0 >
   KOKKOS_FORCEINLINE_FUNCTION
-  size_type operator()( I0 const& i0 ) const
+  typename std::enable_if< (std::is_integral<I0>::value) && (shape_type::rank==1),size_type>::type
+    operator()( I0 const& i0) const
     {
       return i0 * S[0] ;
     }
@@ -1220,21 +1221,24 @@ struct ViewOffset< ShapeType , LayoutStride
   // rank 2
   template <typename I0, typename I1>
   KOKKOS_FORCEINLINE_FUNCTION
-  size_type operator()( I0 const& i0, I1 const& i1 ) const
+  typename std::enable_if< (std::is_integral<I0>::value) && (shape_type::rank==2),size_type>::type
+    operator()( I0 const& i0, I1 const& i1 ) const
     {
       return i0 * S[0] + i1 * S[1] ;
     }
 
   template <typename I0, typename I1, typename I2>
   KOKKOS_FORCEINLINE_FUNCTION
-  size_type operator()( I0 const& i0, I1 const& i1, I2 const& i2 ) const
+  typename std::enable_if< (std::is_integral<I0>::value) && (shape_type::rank==3),size_type>::type
+    operator()( I0 const& i0, I1 const& i1, I2 const& i2 ) const
     {
       return i0 * S[0] + i1 * S[1] + i2 * S[2] ;
     }
 
   template <typename I0, typename I1, typename I2, typename I3>
   KOKKOS_FORCEINLINE_FUNCTION
-  size_type operator()( I0 const& i0, I1 const& i1, I2 const& i2 , I3 const& i3 ) const
+  typename std::enable_if< (std::is_integral<I0>::value) && (shape_type::rank==4),size_type>::type
+    operator()( I0 const& i0, I1 const& i1, I2 const& i2 , I3 const& i3 ) const
     {
       return i0 * S[0] + i1 * S[1] + i2 * S[2] + i3 * S[3] ;
     }
@@ -1242,7 +1246,8 @@ struct ViewOffset< ShapeType , LayoutStride
   template < typename I0, typename I1, typename I2, typename I3
             ,typename I4 >
   KOKKOS_FORCEINLINE_FUNCTION
-  size_type operator()( I0 const& i0, I1 const& i1, I2 const& i2 , I3 const& i3, I4 const& i4 ) const
+  typename std::enable_if< (std::is_integral<I0>::value) && (shape_type::rank==5),size_type>::type
+    operator()( I0 const& i0, I1 const& i1, I2 const& i2 , I3 const& i3, I4 const& i4 ) const
     {
       return i0 * S[0] + i1 * S[1] + i2 * S[2] + i3 * S[3] + i4 * S[4] ;
     }
@@ -1250,7 +1255,8 @@ struct ViewOffset< ShapeType , LayoutStride
   template < typename I0, typename I1, typename I2, typename I3
             ,typename I4, typename I5 >
   KOKKOS_FORCEINLINE_FUNCTION
-  size_type operator()( I0 const& i0, I1 const& i1, I2 const& i2 , I3 const& i3, I4 const& i4, I5 const& i5 ) const
+  typename std::enable_if< (std::is_integral<I0>::value) && (shape_type::rank==6),size_type>::type
+    operator()( I0 const& i0, I1 const& i1, I2 const& i2 , I3 const& i3, I4 const& i4, I5 const& i5 ) const
     {
       return i0 * S[0] + i1 * S[1] + i2 * S[2] + i3 * S[3] + i4 * S[4] + i5 * S[5] ;
     }
@@ -1258,7 +1264,8 @@ struct ViewOffset< ShapeType , LayoutStride
   template < typename I0, typename I1, typename I2, typename I3
             ,typename I4, typename I5, typename I6 >
   KOKKOS_FORCEINLINE_FUNCTION
-  size_type operator()( I0 const& i0, I1 const& i1, I2 const& i2 , I3 const& i3, I4 const& i4, I5 const& i5, I6 const& i6 ) const
+  typename std::enable_if< (std::is_integral<I0>::value) && (shape_type::rank==7),size_type>::type
+    operator()( I0 const& i0, I1 const& i1, I2 const& i2 , I3 const& i3, I4 const& i4, I5 const& i5, I6 const& i6 ) const
     {
       return i0 * S[0] + i1 * S[1] + i2 * S[2] + i3 * S[3] + i4 * S[4] + i5 * S[5] + i6 * S[6] ;
     }
@@ -1266,7 +1273,8 @@ struct ViewOffset< ShapeType , LayoutStride
   template < typename I0, typename I1, typename I2, typename I3
             ,typename I4, typename I5, typename I6, typename I7 >
   KOKKOS_FORCEINLINE_FUNCTION
-  size_type operator()( I0 const& i0, I1 const& i1, I2 const& i2 , I3 const& i3, I4 const& i4, I5 const& i5, I6 const& i6, I7 const& i7 ) const
+  typename std::enable_if< (std::is_integral<I0>::value) && (shape_type::rank==8),size_type>::type
+    operator()( I0 const& i0, I1 const& i1, I2 const& i2 , I3 const& i3, I4 const& i4, I5 const& i5, I6 const& i6, I7 const& i7 ) const
     {
       return i0 * S[0] + i1 * S[1] + i2 * S[2] + i3 * S[3] + i4 * S[4] + i5 * S[5] + i6 * S[6] + i7 * S[7] ;
     }

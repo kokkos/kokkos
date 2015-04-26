@@ -465,7 +465,7 @@ View( const View< SrcDataType , SrcArg1Type , SrcArg2Type , SrcArg3Type , Impl::
                                         , R4::begin( arg4 )
                                         , R5::begin( arg5 )
                                         , R6::begin( arg6 )
-                                        , 0 );
+                                        );
       m_tracker = src.m_tracker ;
     }
   }
@@ -543,8 +543,7 @@ View( const View< SrcDataType , SrcArg1Type , SrcArg2Type , SrcArg3Type , Impl::
                                         , R3::begin( arg3 )
                                         , R4::begin( arg4 )
                                         , R5::begin( arg5 )
-                                        , 0
-                                        , 0 );
+                                        );
       m_tracker = src.m_tracker ;
     }
   }
@@ -619,9 +618,7 @@ View( const View< SrcDataType , SrcArg1Type , SrcArg2Type , SrcArg3Type , Impl::
                                         , R2::begin( arg2 )
                                         , R3::begin( arg3 )
                                         , R4::begin( arg4 )
-                                        , 0
-                                        , 0
-                                        , 0 );
+                                        );
       m_tracker = src.m_tracker ;
     }
   }
@@ -692,10 +689,7 @@ View( const View< SrcDataType , SrcArg1Type , SrcArg2Type , SrcArg3Type , Impl::
                                         , R1::begin( arg1 )
                                         , R2::begin( arg2 )
                                         , R3::begin( arg3 )
-                                        , 0
-                                        , 0
-                                        , 0
-                                        , 0 );
+                                        );
       m_tracker = src.m_tracker ;
     }
   }
@@ -757,7 +751,7 @@ View( const View< SrcDataType , SrcArg1Type , SrcArg2Type , SrcArg3Type , Impl::
                         src.m_offset_map( R0::begin( arg0 )
                                         , R1::begin( arg1 )
                                         , R2::begin( arg2 )
-                                        , 0 , 0 , 0 , 0 , 0 );
+                                        );
       m_tracker = src.m_tracker ;
     }
   }
@@ -815,7 +809,7 @@ View( const View< SrcDataType , SrcArg1Type , SrcArg2Type , SrcArg3Type , Impl::
       m_ptr_on_device = src.m_ptr_on_device +
                         src.m_offset_map( R0::begin( arg0 )
                                         , R1::begin( arg1 )
-                                        , 0 , 0 , 0 , 0 , 0 , 0 );
+                                        );
       m_tracker = src.m_tracker ;
     }
   }
@@ -869,7 +863,7 @@ View( const View< SrcDataType , SrcArg1Type , SrcArg2Type , SrcArg3Type , Impl::
 
       m_ptr_on_device = src.m_ptr_on_device +
                         src.m_offset_map( R0::begin( arg0 )
-                                        , 0 , 0 , 0 , 0 , 0 , 0 , 0 );
+                                        );
       m_tracker = src.m_tracker ;
     }
   }
