@@ -132,7 +132,7 @@ Task::TaskMember( const function_verify_type        arg_verify
   , m_verify(  arg_verify )
   , m_apply_single( arg_apply_single )
   , m_apply_team( arg_apply_team )
-  , m_active_count( arg_active_count )
+  , m_active_count( & arg_active_count )
   , m_qfeb(0)
   , m_dep( (Task **)( ((unsigned char *) this) + padded_sizeof_derived( arg_sizeof_derived ) ) )
   , m_dep_capacity( arg_dependence_capacity )
@@ -155,7 +155,7 @@ Task::TaskMember( const function_dealloc_type       arg_dealloc
   , m_verify(  & Task::verify_type<void> )
   , m_apply_single( arg_apply_single )
   , m_apply_team( arg_apply_team )
-  , m_active_count( arg_active_count )
+  , m_active_count( & arg_active_count )
   , m_qfeb(0)
   , m_dep( (Task **)( ((unsigned char *) this) + padded_sizeof_derived( arg_sizeof_derived ) ) )
   , m_dep_capacity( arg_dependence_capacity )
@@ -266,6 +266,8 @@ aligned_t Task::qthread_func( void * arg )
                                         , int(Kokkos::Experimental::TASK_STATE_EXECUTING)
                                         );
 
+  // It is a single thread's responsibility to close out
+  // this task's execution.
   bool close_out = false ;
 
   if ( task->m_apply_team ) {
@@ -296,6 +298,11 @@ fflush(stdout);
 
   if ( close_out ) {
 
+    // When dependent tasks run there would be a race
+    // condition between destroying this task and
+    // querying the active count pointer from this task.
+    int volatile * active_count = task->m_active_count ;
+
     if ( task->m_state == ( Kokkos::Experimental::TASK_STATE_WAITING | Kokkos::Experimental::TASK_STATE_EXECUTING ) ) {
       // Task respawned, set state to waiting and reschedule the task
       task->m_state = Kokkos::Experimental::TASK_STATE_WAITING ;
@@ -312,12 +319,13 @@ fflush(stdout);
         assign( & task->m_dep[i] , 0 );
       }
 
-      // Set qthread FEB to full so that dependent tasks are allowed to execute
+      // Set qthread FEB to full so that dependent tasks are allowed to execute.
+      // This 'task' may be deleted immediately following this function call.
       qthread_fill( & task->m_qfeb );
     }
 
     // Decrement active task count before returning.
-    Kokkos::atomic_decrement( & task->m_active_count );
+    Kokkos::atomic_decrement( active_count );
   }
 
   return 0 ;
@@ -339,7 +347,7 @@ void Task::schedule()
   // Is waiting for execution
 
   // Increment active task count before spawning.
-  Kokkos::atomic_increment( & m_active_count );
+  Kokkos::atomic_increment( m_active_count );
 
   // spawn in qthread.  must malloc the precondition array and give to qthread.
   // qthread will eventually free this allocation so memory will not be leaked.
