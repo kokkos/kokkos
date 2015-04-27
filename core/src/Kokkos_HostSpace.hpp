@@ -102,6 +102,10 @@ public:
   typedef Impl::AlignedAllocator allocator ;
 #endif
 
+
+  static bool lock_address(void* ptr);
+  static void unlock_address(void* ptr);
+
   /** \brief  Allocate a contiguous block of memory.
    *
    *  The input label is associated with the block of memory.
