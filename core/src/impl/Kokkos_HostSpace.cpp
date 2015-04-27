@@ -51,6 +51,7 @@
 #include <Kokkos_HostSpace.hpp>
 #include <impl/Kokkos_BasicAllocators.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <Kokkos_Atomic.hpp>
 
 /*--------------------------------------------------------------------------*/
 
@@ -137,3 +138,22 @@ Impl::AllocationTracker HostSpace::allocate_and_track( const std::string & label
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+namespace Kokkos {
+namespace {
+  const unsigned HOST_SPACE_ATOMIC_MASK = 0xFFFF;
+  static int HOST_SPACE_ATOMIC_LOCKS[HOST_SPACE_ATOMIC_MASK+1];
+}
+
+bool HostSpace::lock_address(void* ptr) {
+  return 0 == atomic_compare_exchange( &HOST_SPACE_ATOMIC_LOCKS[
+                                    ( size_t(ptr) >> 2 ) & HOST_SPACE_ATOMIC_MASK] ,
+                                  0 , 1);
+}
+
+void HostSpace::unlock_address(void* ptr) {
+   atomic_exchange( &HOST_SPACE_ATOMIC_LOCKS[
+                      ( size_t(ptr) >> 2 ) & HOST_SPACE_ATOMIC_MASK] ,
+                    0);
+}
+
+}

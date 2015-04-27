@@ -68,6 +68,7 @@
 #define KOKKOS_ATOMIC_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_HostSpace.hpp>
 #include <impl/Kokkos_Traits.hpp>
 
 //----------------------------------------------------------------------------

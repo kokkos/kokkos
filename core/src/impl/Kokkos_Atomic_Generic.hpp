@@ -202,77 +202,49 @@ T atomic_oper_fetch( const Oper& op, volatile T * const dest ,
   return newval.t ;
 }
 
-/*template < class Oper, typename T >
+template < class Oper, typename T >
 KOKKOS_INLINE_FUNCTION
 T atomic_fetch_oper( const Oper& op, volatile T * const dest ,
-  typename ::Kokkos::Impl::enable_if< sizeof(T) == sizeof(short) , const T >::type val )
+  typename ::Kokkos::Impl::enable_if<
+                ( sizeof(T) != 4 )
+             && ( sizeof(T) != 8 )
+          #if defined(KOKKOS_ENABLE_ASM) && !defined(__CUDA_ARCH__)
+             && ( sizeof(T) != 16 )
+          #endif
+           , const T >::type val )
 {
-  union { short i ; T t ; } oldval , assume , newval ;
 
-  oldval.t = *dest ;
-
-  do {
-    assume.i = oldval.i ;
-    newval.t = Oper::apply(assume.t, val) ;
-    oldval.i = ::Kokkos::atomic_compare_exchange( (short*)dest , assume.i , newval.i );
-  } while ( assume.i != oldval.i );
-
-  return oldval.t ;
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+  while( !HostSpace::lock_address( (void*) dest ) );
+  T return_val = *dest;
+  *dest = Oper::apply(return_val, val);
+  HostSpace::unlock_address( (void*) dest );
+  return return_val;
+#else
+#endif
 }
 
 template < class Oper, typename T >
 KOKKOS_INLINE_FUNCTION
 T atomic_oper_fetch( const Oper& op, volatile T * const dest ,
-  typename ::Kokkos::Impl::enable_if< sizeof(T) == sizeof(short), const T >::type val )
+  typename ::Kokkos::Impl::enable_if<
+                ( sizeof(T) != 4 )
+             && ( sizeof(T) != 8 )
+          #if defined(KOKKOS_ENABLE_ASM) && !defined(__CUDA_ARCH__)
+             && ( sizeof(T) != 16 )
+          #endif
+           , const T >::type& val )
 {
-  union { short i ; T t ; } oldval , assume , newval ;
 
-  oldval.t = *dest ;
-
-  do {
-    assume.i = oldval.i ;
-    newval.t = Oper::apply(assume.t, val) ;
-    oldval.i = ::Kokkos::atomic_compare_exchange( (short*)dest , assume.i , newval.i );
-  } while ( assume.i != oldval.i );
-
-  return newval.t ;
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+  while( !HostSpace::lock_address( (void*) dest ) );
+  T return_val = Oper::apply(*dest, val);
+  *dest = return_val;
+  HostSpace::unlock_address( (void*) dest );
+  return return_val;
+#else
+#endif
 }
-
-template < class Oper, typename T >
-KOKKOS_INLINE_FUNCTION
-T atomic_fetch_oper( const Oper& op, volatile T * const dest ,
-  typename ::Kokkos::Impl::enable_if< sizeof(T) == sizeof(char) , const T >::type val )
-{
-  union { char i ; T t ; } oldval , assume , newval ;
-
-  oldval.t = *dest ;
-
-  do {
-    assume.i = oldval.i ;
-    newval.t = Oper::apply(assume.t, val) ;
-    oldval.i = ::Kokkos::atomic_compare_exchange( (char*)dest , assume.i , newval.i );
-  } while ( assume.i != oldval.i );
-
-  return oldval.t ;
-}
-
-template < class Oper, typename T >
-KOKKOS_INLINE_FUNCTION
-T atomic_oper_fetch( const Oper& op, volatile T * const dest ,
-  typename ::Kokkos::Impl::enable_if< sizeof(T) == sizeof(char), const T >::type val )
-{
-  union { char i ; T t ; } oldval , assume , newval ;
-
-  oldval.t = *dest ;
-
-  do {
-    assume.i = oldval.i ;
-    newval.t = Oper::apply(assume.t, val) ;
-    oldval.i = ::Kokkos::atomic_compare_exchange( (char*)dest , assume.i , newval.i );
-  } while ( assume.i != oldval.i );
-
-  return newval.t ;
-}*/
 
 }
 }

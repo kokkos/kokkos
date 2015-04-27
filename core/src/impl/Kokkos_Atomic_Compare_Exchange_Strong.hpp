@@ -210,6 +210,28 @@ T atomic_compare_exchange( volatile T * const dest, const T compare, const T val
 
 #endif
 
+template < typename T >
+KOKKOS_INLINE_FUNCTION
+T atomic_compare_exchange( volatile T * const dest , const T compare ,
+    typename ::Kokkos::Impl::enable_if<
+                  ( sizeof(T) != 4 )
+               && ( sizeof(T) != 8 )
+            #if defined(KOKKOS_ENABLE_ASM) && !defined(__CUDA_ARCH__)
+               && ( sizeof(T) != 16 )
+            #endif
+             , const T >::type& val )
+{
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+  while( !HostSpace::lock_address( (void*) dest ) );
+  T return_val = *dest;
+  if( return_val == compare )
+    *dest = val;
+  HostSpace::unlock_address( (void*) dest );
+  return return_val;
+#else
+#endif
+}
+
 
 template <typename T>
 KOKKOS_INLINE_FUNCTION
