@@ -91,7 +91,7 @@ private:
   const function_verify_type        m_verify ;        ///< Result type verification
   const function_apply_single_type  m_apply_single ;  ///< Apply function
   const function_apply_team_type    m_apply_team ;    ///< Apply function
-  int volatile &                    m_active_count ;  ///< Count of active tasks on this policy
+  int volatile * const              m_active_count ;  ///< Count of active tasks on this policy
   aligned_t                         m_qfeb ;          ///< Qthread full/empty bit
   TaskMember ** const               m_dep ;           ///< Dependences
   const int                         m_dep_capacity ;  ///< Capacity of dependences
