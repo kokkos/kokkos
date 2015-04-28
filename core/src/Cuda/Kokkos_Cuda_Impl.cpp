@@ -483,7 +483,7 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
   }
 
   // Init the array for used for arbitrarily sized atomics
-  CudaSpace::init_lock_array();
+  Impl::init_lock_array_cuda_space();
 
 }
 

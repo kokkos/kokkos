@@ -209,26 +209,27 @@ namespace {
   }
 }
 
-void CudaSpace::init_lock_array() {
+namespace Impl {
+void init_lock_array_cuda_space() {
   static int is_initialized = 0;
   if(! is_initialized)
     init_lock_array_kernel<<<(CUDA_SPACE_ATOMIC_MASK+255)/256,256>>>();
 }
 
 __device__
-bool CudaSpace::lock_address(void* ptr) {
+bool lock_address_cuda_space(void* ptr) {
   return 0 == atomic_compare_exchange( &CUDA_SPACE_ATOMIC_LOCKS[
                                     ( size_t(ptr) >> 2 ) & CUDA_SPACE_ATOMIC_MASK] ,
                                   0 , 1);
 }
 
 __device__
-void CudaSpace::unlock_address(void* ptr) {
+void unlock_address_cuda_space(void* ptr) {
    atomic_exchange( &CUDA_SPACE_ATOMIC_LOCKS[
                       ( size_t(ptr) >> 2 ) & CUDA_SPACE_ATOMIC_MASK] ,
                     0);
 }
-
+}
 }
 #endif // KOKKOS_HAVE_CUDA
 

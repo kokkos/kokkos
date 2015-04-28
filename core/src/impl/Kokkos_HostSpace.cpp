@@ -144,23 +144,25 @@ namespace {
   static int HOST_SPACE_ATOMIC_LOCKS[HOST_SPACE_ATOMIC_MASK+1];
 }
 
-void HostSpace::init_lock_array() {
+namespace Impl {
+void init_lock_array_host_space() {
   static int is_initialized = 0;
   if(! is_initialized)
     for(int i = 0; i<HOST_SPACE_ATOMIC_MASK+1; i++)
       HOST_SPACE_ATOMIC_LOCKS[i] = 0;
 }
 
-bool HostSpace::lock_address(void* ptr) {
+bool lock_address_host_space(void* ptr) {
   return 0 == atomic_compare_exchange( &HOST_SPACE_ATOMIC_LOCKS[
                                     ( size_t(ptr) >> 2 ) & HOST_SPACE_ATOMIC_MASK] ,
                                   0 , 1);
 }
 
-void HostSpace::unlock_address(void* ptr) {
+void unlock_address_host_space(void* ptr) {
    atomic_exchange( &HOST_SPACE_ATOMIC_LOCKS[
                       ( size_t(ptr) >> 2 ) & HOST_SPACE_ATOMIC_MASK] ,
                     0);
 }
 
+}
 }
