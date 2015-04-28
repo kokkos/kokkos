@@ -657,6 +657,10 @@ void ThreadsExec::initialize( unsigned thread_count ,
 
     Kokkos::Impl::throw_runtime_exception( msg.str() );
   }
+
+  // Init the array for used for arbitrarily sized atomics
+  HostSpace::init_lock_array();
+
 }
 
 //----------------------------------------------------------------------------

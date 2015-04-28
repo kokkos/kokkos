@@ -243,6 +243,15 @@ T atomic_oper_fetch( const Oper& op, volatile T * const dest ,
   HostSpace::unlock_address( (void*) dest );
   return return_val;
 #else
+  // This is a way to (hopefully) avoid dead lock in a warp
+  bool done = false;
+  while (! done ) {
+    if( CudaSpace::lock_address( (void*) dest ) ) {
+      T return_val = Oper::apply(*dest, val);
+      *dest = return_val;
+      CudaSpace::unlock_address( (void*) dest );
+    }
+  }
 #endif
 }
 

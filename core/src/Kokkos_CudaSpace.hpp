@@ -84,7 +84,30 @@ public:
    */
   static Impl::AllocationTracker allocate_and_track( const std::string & label, const size_t size );
 
+  /// \brief Initialize lock array for arbitrary size atomics.
+  ///
+  /// Arbitrary atomics are implemented using a hash table of locks
+  /// where the hash value is derived from the address of the
+  /// object for which an atomic operation is performed.
+  /// This function initializes the locks to zero (unset).
+  static void init_lock_array();
 
+  /// \brief Aquire a lock for the address
+  ///
+  /// This function tries to aquire the lock for the hash value derived
+  /// from the provided ptr. If the lock is successfully aquired the
+  /// function returns true. Otherwise it returns false.
+  __device__
+  static bool lock_address(void* ptr);
+
+  /// \brief Release lock for the address
+  ///
+  /// This function releases the lock for the hash value derived
+  /// from the provided ptr. This function should only be called
+  /// after previously successfully aquiring a lock with
+  /// lock_address.
+  __device__
+  static void unlock_address(void* ptr);
   /*--------------------------------*/
   /** \brief  Cuda specific function to attached texture object to an allocation.
    *          Output the texture object, base pointer, and offset from the input pointer.

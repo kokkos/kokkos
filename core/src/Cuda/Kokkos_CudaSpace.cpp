@@ -196,6 +196,39 @@ Impl::AllocationTracker CudaHostPinnedSpace::allocate_and_track( const std::stri
 
 } // namespace Kokkos
 
+namespace Kokkos {
+namespace {
+  const unsigned CUDA_SPACE_ATOMIC_MASK = 0x1FFFF;
+  __device__ int CUDA_SPACE_ATOMIC_LOCKS[CUDA_SPACE_ATOMIC_MASK+1];
 
+  __global__ void init_lock_array_kernel() {
+    unsigned i = blockIdx.x*blockDim.x + threadIdx.x;
+
+    if(i<CUDA_SPACE_ATOMIC_MASK+1)
+      CUDA_SPACE_ATOMIC_LOCKS[i] = 0;
+  }
+}
+
+void CudaSpace::init_lock_array() {
+  static int is_initialized = 0;
+  if(! is_initialized)
+    init_lock_array_kernel<<<(CUDA_SPACE_ATOMIC_MASK+255)/256,256>>>();
+}
+
+__device__
+bool CudaSpace::lock_address(void* ptr) {
+  return 0 == atomic_compare_exchange( &CUDA_SPACE_ATOMIC_LOCKS[
+                                    ( size_t(ptr) >> 2 ) & CUDA_SPACE_ATOMIC_MASK] ,
+                                  0 , 1);
+}
+
+__device__
+void CudaSpace::unlock_address(void* ptr) {
+   atomic_exchange( &CUDA_SPACE_ATOMIC_LOCKS[
+                      ( size_t(ptr) >> 2 ) & CUDA_SPACE_ATOMIC_MASK] ,
+                    0);
+}
+
+}
 #endif // KOKKOS_HAVE_CUDA
 

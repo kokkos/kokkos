@@ -139,6 +139,10 @@ public:
     (void) use_numa_count;
     (void) use_cores_per_numa;
     (void) allow_asynchronous_threadpool;
+
+    // Init the array of locks used for arbitrarily sized atomics
+    HostSpace::init_lock_array();
+
   }
 
   static int is_initialized() { return 1 ; }
