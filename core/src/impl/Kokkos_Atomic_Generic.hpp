@@ -208,19 +208,29 @@ T atomic_fetch_oper( const Oper& op, volatile T * const dest ,
   typename ::Kokkos::Impl::enable_if<
                 ( sizeof(T) != 4 )
              && ( sizeof(T) != 8 )
-          #if defined(KOKKOS_ENABLE_ASM) && !defined(__CUDA_ARCH__)
+          #if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
              && ( sizeof(T) != 16 )
           #endif
            , const T >::type val )
 {
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-  while( !HostSpace::lock_address( (void*) dest ) );
+  while( !Impl::lock_address_host_space( (void*) dest ) );
   T return_val = *dest;
   *dest = Oper::apply(return_val, val);
-  HostSpace::unlock_address( (void*) dest );
+  Impl::unlock_address_host_space( (void*) dest );
   return return_val;
 #else
+  // This is a way to (hopefully) avoid dead lock in a warp
+  bool done = false;
+  while (! done ) {
+    if( Impl::lock_address_cuda_space( (void*) dest ) ) {
+      T return_val = *dest;
+      *dest = Oper::apply(return_val, val);;
+      Impl::unlock_address_cuda_space( (void*) dest );
+    }
+  }
+  return return_val;
 #endif
 }
 
@@ -230,28 +240,29 @@ T atomic_oper_fetch( const Oper& op, volatile T * const dest ,
   typename ::Kokkos::Impl::enable_if<
                 ( sizeof(T) != 4 )
              && ( sizeof(T) != 8 )
-          #if defined(KOKKOS_ENABLE_ASM) && !defined(__CUDA_ARCH__)
+          #if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
              && ( sizeof(T) != 16 )
           #endif
            , const T >::type& val )
 {
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-  while( !HostSpace::lock_address( (void*) dest ) );
+  while( !Impl::lock_address_host_space( (void*) dest ) );
   T return_val = Oper::apply(*dest, val);
   *dest = return_val;
-  HostSpace::unlock_address( (void*) dest );
+  Impl::unlock_address_host_space( (void*) dest );
   return return_val;
 #else
   // This is a way to (hopefully) avoid dead lock in a warp
   bool done = false;
   while (! done ) {
-    if( CudaSpace::lock_address( (void*) dest ) ) {
+    if( Impl::lock_address_cuda_space( (void*) dest ) ) {
       T return_val = Oper::apply(*dest, val);
       *dest = return_val;
-      CudaSpace::unlock_address( (void*) dest );
+      Impl::unlock_address_cuda_space( (void*) dest );
     }
   }
+  return return_val;
 #endif
 }
 

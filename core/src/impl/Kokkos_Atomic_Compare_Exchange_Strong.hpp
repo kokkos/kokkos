@@ -98,11 +98,11 @@ T atomic_compare_exchange( volatile T * const dest , const T & compare ,
   // This is a way to (hopefully) avoid dead lock in a warp
   bool done = false;
   while (! done ) {
-    if( CudaSpace::lock_address( (void*) dest ) ) {
+    if( Impl::lock_address_cuda_space( (void*) dest ) ) {
       return_val = *dest;
       if( return_val == compare )
         *dest = val;
-      CudaSpace::unlock_address( (void*) dest );
+      Impl::unlock_address_cuda_space( (void*) dest );
     }
   }
   return return_val;
@@ -213,11 +213,11 @@ T atomic_compare_exchange( volatile T * const dest , const T compare ,
             #endif
              , const T >::type& val )
 {
-  while( !HostSpace::lock_address( (void*) dest ) );
+  while( !Impl::lock_address_host_space( (void*) dest ) );
   T return_val = *dest;
   if( return_val == compare )
     *dest = val;
-  HostSpace::unlock_address( (void*) dest );
+  Impl::unlock_address_host_space( (void*) dest );
   return return_val;
 }
 //----------------------------------------------------------------------------
