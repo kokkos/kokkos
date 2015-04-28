@@ -45,6 +45,8 @@
 
 namespace TestAtomic {
 
+// Struct for testing arbitrary size atomics
+
 template<int N>
 struct SuperScalar {
   double val[N];
@@ -92,14 +94,14 @@ struct SuperScalar {
   KOKKOS_INLINE_FUNCTION
   SuperScalar& operator += (const double& src) {
     for(int i=0; i<N; i++)
-      val[i] += 1.0*i*src;
+      val[i] += 1.0*(i+1)*src;
     return *this;
   }
 
   KOKKOS_INLINE_FUNCTION
   SuperScalar& operator += (const SuperScalar& src) {
     for(int i=0; i<N; i++)
-      val[i] += 1.0*i*src.val[i];
+      val[i] += src.val[i];
     return *this;
   }
 
@@ -124,7 +126,7 @@ struct SuperScalar {
   KOKKOS_INLINE_FUNCTION
   SuperScalar(const double& src) {
     for(int i=0; i<N; i++)
-      val[i] = 1.0 * i * src;
+      val[i] = 1.0 * (i+1) * src;
   }
 
 };

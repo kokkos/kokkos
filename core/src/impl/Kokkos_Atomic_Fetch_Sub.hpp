@@ -97,6 +97,30 @@ T atomic_fetch_sub( volatile T * const dest ,
   return oldval.t ;
 }
 
+
+//----------------------------------------------------------------------------
+
+template < typename T >
+__inline__ __device__
+T atomic_fetch_sub( volatile T * const dest ,
+    typename ::Kokkos::Impl::enable_if<
+                  ( sizeof(T) != 4 )
+               && ( sizeof(T) != 8 )
+             , const T >::type& val )
+{
+  T return_val;
+  // This is a way to (hopefully) avoid dead lock in a warp
+  bool done = false;
+  while (! done ) {
+    if( CudaSpace::lock_address( (void*) dest ) ) {
+      return_val = *dest;
+      *dest = return_val - val;
+      CudaSpace::unlock_address( (void*) dest );
+    }
+  }
+  return return_val;
+}
+
 //----------------------------------------------------------------------------
 
 #elif defined(KOKKOS_ATOMICS_USE_GCC) || defined(KOKKOS_ATOMICS_USE_INTEL)
@@ -158,6 +182,24 @@ T atomic_fetch_sub( volatile T * const dest ,
   return oldval.t ;
 }
 
+
+//----------------------------------------------------------------------------
+
+template < typename T >
+inline
+T atomic_fetch_sub( volatile T * const dest ,
+    typename ::Kokkos::Impl::enable_if<
+                  ( sizeof(T) != 4 )
+               && ( sizeof(T) != 8 )
+             , const T >::type& val )
+{
+  while( !HostSpace::lock_address( (void*) dest ) );
+  T return_val = *dest;
+  *dest = return_val - val;
+  HostSpace::unlock_address( (void*) dest );
+  return return_val;
+}
+
 //----------------------------------------------------------------------------
 
 #elif defined( KOKKOS_ATOMICS_USE_OMP31 )
@@ -175,29 +217,6 @@ T atomic_fetch_sub( volatile T * const dest , const T val )
 }
 
 #endif
-
-//----------------------------------------------------------------------------
-
-template < typename T >
-KOKKOS_INLINE_FUNCTION
-T atomic_fetch_SUB( volatile T * const dest ,
-    typename ::Kokkos::Impl::enable_if<
-                  ( sizeof(T) != 4 )
-               && ( sizeof(T) != 8 )
-            #if defined(KOKKOS_ENABLE_ASM) && !defined(__CUDA_ARCH__)
-               && ( sizeof(T) != 16 )
-            #endif
-             , const T >::type& val )
-{
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-  while( !HostSpace::lock_address( (void*) dest ) );
-  T return_val = *dest;
-  *dest = return_val - val;
-  HostSpace::unlock_address( (void*) dest );
-  return return_val;
-#else
-#endif
-}
 
 // Simpler version of atomic_fetch_sub without the fetch
 template <typename T>
