@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -76,6 +76,7 @@ struct AllocationRecord
             + sizeof(void*)                   // alloc_ptr
             + sizeof(uint64_t)                // alloc_size
             + sizeof(AllocatorAttributeBase*) // attribute
+            + sizeof(AllocatorDestroyBase*)   // destroy
             + sizeof(uint32_t)                // node_index
             + sizeof(uint32_t)                // ref_count
    , LABEL_LENGTH = 128 - OFFSET
@@ -85,6 +86,7 @@ struct AllocationRecord
   void * const                   alloc_ptr;
   const uint64_t                 alloc_size;
   AllocatorAttributeBase * const attribute;
+  AllocatorDestroyBase   * const destroy;
   const int32_t                  node_index;
   volatile uint32_t              ref_count;
   const char                     label[LABEL_LENGTH];
@@ -100,6 +102,7 @@ struct AllocationRecord
     , alloc_ptr(arg_alloc_ptr)
     , alloc_size(arg_alloc_size)
     , attribute(NULL)
+    , destroy(NULL)
     , node_index(arg_node_index)
     , ref_count(1)
     , label() // zero fill
@@ -110,6 +113,10 @@ struct AllocationRecord
 
   ~AllocationRecord()
   {
+    if (destroy) {
+      destroy->apply(alloc_ptr, alloc_size );
+      delete destroy;
+    }
     if (attribute) {
       delete attribute;
     }
@@ -144,6 +151,18 @@ struct AllocationRecord
       result = NULL == atomic_compare_exchange(  const_cast<AllocatorAttributeBase **>(&attribute)
                                                , reinterpret_cast<AllocatorAttributeBase *>(NULL)
                                                , attr );
+    }
+
+    return result;
+  }
+
+  bool set_destroy( AllocatorDestroyBase * des )
+  {
+    bool result = false;
+    if (attribute == NULL) {
+      result = NULL == atomic_compare_exchange(  const_cast<AllocatorDestroyBase **>(&destroy)
+                                               , reinterpret_cast<AllocatorDestroyBase *>(NULL)
+                                               , des );
     }
 
     return result;
@@ -716,10 +735,27 @@ bool AllocationTracker::set_attribute( AllocatorAttributeBase * attr ) const
   return result;
 }
 
+bool AllocationTracker::set_destroy( AllocatorDestroyBase * des ) const
+{
+  bool result = false;
+  if (m_alloc_rec & REF_COUNT_MASK) {
+    result = to_alloc_rec(m_alloc_rec)->set_destroy(des);
+  }
+  return result;
+}
+
 AllocatorAttributeBase * AllocationTracker::attribute() const
 {
   if (m_alloc_rec & REF_COUNT_MASK) {
     return to_alloc_rec(m_alloc_rec)->attribute;
+  }
+  return NULL;
+}
+
+AllocatorDestroyBase * AllocationTracker::destroy() const
+{
+  if (m_alloc_rec & REF_COUNT_MASK) {
+    return to_alloc_rec(m_alloc_rec)->destroy;
   }
   return NULL;
 }
