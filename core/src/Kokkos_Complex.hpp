@@ -75,6 +75,11 @@ public:
     re_ (src.re_), im_ (src.im_)
   {}
 
+  //! Copy constructor from volatile.
+  KOKKOS_INLINE_FUNCTION complex (const volatile complex<RealType>& src) :
+    re_ (src.re_), im_ (src.im_)
+  {}
+
   /// \brief Conversion constructor from std::complex.
   ///
   /// This constructor cannot be called in a CUDA device function,
