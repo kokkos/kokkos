@@ -117,7 +117,7 @@ struct ViewAssignment< ViewDefault , ViewDefault , void >
     size_t strides[8];
     src.stride(strides);
     if(strides[0]!=1) {
-      throw_runtime_exception("Trying to assign strided 1D View to LayoutRight or LayoutLeft which is not stride-1");
+      abort("Trying to assign strided 1D View to LayoutRight or LayoutLeft which is not stride-1");
     }
     dst.m_offset_map.assign( src.dimension_0(), 0, 0, 0, 0, 0, 0, 0, 0 );
 
