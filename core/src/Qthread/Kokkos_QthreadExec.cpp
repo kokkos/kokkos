@@ -156,6 +156,10 @@ void Qthread::initialize( int thread_count )
   }
 
   Impl::QthreadExec::resize_worker_scratch( 256 , 256 );
+
+  // Init the array for used for arbitrarily sized atomics
+  Impl::init_lock_array_host_space();
+
 }
 
 void Qthread::finalize()

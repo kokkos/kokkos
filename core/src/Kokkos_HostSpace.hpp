@@ -57,6 +57,34 @@
 #include <impl/Kokkos_BasicAllocators.hpp>
 
 /*--------------------------------------------------------------------------*/
+namespace Kokkos {
+namespace Impl {
+
+/// \brief Initialize lock array for arbitrary size atomics.
+///
+/// Arbitrary atomics are implemented using a hash table of locks
+/// where the hash value is derived from the address of the
+/// object for which an atomic operation is performed.
+/// This function initializes the locks to zero (unset).
+void init_lock_array_host_space();
+
+/// \brief Aquire a lock for the address
+///
+/// This function tries to aquire the lock for the hash value derived
+/// from the provided ptr. If the lock is successfully aquired the
+/// function returns true. Otherwise it returns false.
+bool lock_address_host_space(void* ptr);
+
+/// \brief Release lock for the address
+///
+/// This function releases the lock for the hash value derived
+/// from the provided ptr. This function should only be called
+/// after previously successfully aquiring a lock with
+/// lock_address.
+void unlock_address_host_space(void* ptr);
+
+} // namespace Impl
+} // namespace Kokkos
 
 namespace Kokkos {
 
@@ -132,6 +160,7 @@ template<>
 struct DeepCopy<HostSpace,HostSpace> {
   DeepCopy( void * dst , const void * src , size_t n );
 };
+
 
 } // namespace Impl
 } // namespace Kokkos

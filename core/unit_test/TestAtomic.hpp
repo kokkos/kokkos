@@ -45,6 +45,102 @@
 
 namespace TestAtomic {
 
+// Struct for testing arbitrary size atomics
+
+template<int N>
+struct SuperScalar {
+  double val[N];
+
+  KOKKOS_INLINE_FUNCTION
+  SuperScalar() {
+    for(int i=0; i<N; i++)
+      val[i] = 0.0;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  SuperScalar(const SuperScalar& src) {
+    for(int i=0; i<N; i++)
+      val[i] = src.val[i];
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  SuperScalar(const volatile SuperScalar& src) {
+    for(int i=0; i<N; i++)
+      val[i] = src.val[i];
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  SuperScalar& operator = (const SuperScalar& src) {
+    for(int i=0; i<N; i++)
+      val[i] = src.val[i];
+    return *this;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  volatile SuperScalar& operator = (const SuperScalar& src) volatile  {
+    for(int i=0; i<N; i++)
+      val[i] = src.val[i];
+    return *this;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  SuperScalar operator + (const SuperScalar& src) {
+    SuperScalar tmp = *this;
+    for(int i=0; i<N; i++)
+      tmp.val[i] += src.val[i];
+    return tmp;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  SuperScalar& operator += (const double& src) {
+    for(int i=0; i<N; i++)
+      val[i] += 1.0*(i+1)*src;
+    return *this;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  SuperScalar& operator += (const SuperScalar& src) {
+    for(int i=0; i<N; i++)
+      val[i] += src.val[i];
+    return *this;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  bool operator == (const SuperScalar& src) {
+    bool compare = true;
+    for(int i=0; i<N; i++)
+      compare = compare && ( val[i] == src.val[i]);
+    return compare;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  bool operator != (const SuperScalar& src) {
+    bool compare = true;
+    for(int i=0; i<N; i++)
+      compare = compare && ( val[i] == src.val[i]);
+    return !compare;
+  }
+
+
+
+  KOKKOS_INLINE_FUNCTION
+  SuperScalar(const double& src) {
+    for(int i=0; i<N; i++)
+      val[i] = 1.0 * (i+1) * src;
+  }
+
+};
+
+template<int N>
+std::ostream& operator<<(std::ostream& os, const SuperScalar<N>& dt)
+{
+    os << "{ ";
+    for(int i=0;i<N-1;i++)
+       os << dt.val[i] << ", ";
+    os << dt.val[N-1] << "}";
+    return os;
+}
+
 template<class T,class DEVICE_TYPE>
 struct ZeroFunctor {
   typedef DEVICE_TYPE execution_space;

@@ -97,6 +97,30 @@ T atomic_fetch_sub( volatile T * const dest ,
   return oldval.t ;
 }
 
+
+//----------------------------------------------------------------------------
+
+template < typename T >
+__inline__ __device__
+T atomic_fetch_sub( volatile T * const dest ,
+    typename ::Kokkos::Impl::enable_if<
+                  ( sizeof(T) != 4 )
+               && ( sizeof(T) != 8 )
+             , const T >::type& val )
+{
+  T return_val;
+  // This is a way to (hopefully) avoid dead lock in a warp
+  bool done = false;
+  while (! done ) {
+    if( Impl::lock_address_cuda_space( (void*) dest ) ) {
+      return_val = *dest;
+      *dest = return_val - val;
+      Impl::unlock_address_cuda_space( (void*) dest );
+    }
+  }
+  return return_val;
+}
+
 //----------------------------------------------------------------------------
 
 #elif defined(KOKKOS_ATOMICS_USE_GCC) || defined(KOKKOS_ATOMICS_USE_INTEL)
@@ -158,6 +182,24 @@ T atomic_fetch_sub( volatile T * const dest ,
   return oldval.t ;
 }
 
+
+//----------------------------------------------------------------------------
+
+template < typename T >
+inline
+T atomic_fetch_sub( volatile T * const dest ,
+    typename ::Kokkos::Impl::enable_if<
+                  ( sizeof(T) != 4 )
+               && ( sizeof(T) != 8 )
+             , const T >::type& val )
+{
+  while( !Impl::lock_address_host_space( (void*) dest ) );
+  T return_val = *dest;
+  *dest = return_val - val;
+  Impl::unlock_address_host_space( (void*) dest );
+  return return_val;
+}
+
 //----------------------------------------------------------------------------
 
 #elif defined( KOKKOS_ATOMICS_USE_OMP31 )
@@ -175,8 +217,6 @@ T atomic_fetch_sub( volatile T * const dest , const T val )
 }
 
 #endif
-
-//----------------------------------------------------------------------------
 
 // Simpler version of atomic_fetch_sub without the fetch
 template <typename T>

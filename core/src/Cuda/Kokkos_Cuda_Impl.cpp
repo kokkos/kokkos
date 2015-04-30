@@ -481,6 +481,10 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
     }
     Kokkos::Impl::throw_runtime_exception( msg.str() );
   }
+
+  // Init the array for used for arbitrarily sized atomics
+  Impl::init_lock_array_cuda_space();
+
 }
 
 //----------------------------------------------------------------------------
