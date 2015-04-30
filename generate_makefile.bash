@@ -34,6 +34,9 @@ case $key in
     --with-gtest*)
     GTEST_PATH="${key#*=}"
     ;;
+    --with-hwloc*)
+    HWLOC_PATH="${key#*=}"
+    ;;
     --arch*)
     KOKKOS_ARCH="${key#*=}"
     ;;    
@@ -77,6 +80,7 @@ case $key in
     echo "                               This will still set certain required flags via"
     echo "                               KOKKOS_LDFLAGS (such as -fopenmp, -lpthread, etc.)"
     echo "--with-gtest=/Path/To/Gtest: set path to gtest (used in unit and performance tests"  
+    echo "--with-hwloc=/Path/To/Hwloc: set path to hwloc"  
     ;;      
     *)
             # unknown option
@@ -119,7 +123,9 @@ else
 GTEST_PATH=${KOKKOS_PATH}/tpls/gtest
 KOKKOS_OPTIONS="${KOKKOS_OPTIONS} GTEST_PATH=${GTEST_PATH}"
 fi
-
+if [ ${#HWLOC_PATH} -gt 0 ]; then
+KOKKOS_OPTIONS="${KOKKOS_OPTIONS} HWLOC_PATH=${HWLOC_PATH} KOKKOS_USE_TPLS=hwloc"
+fi
 mkdir core
 mkdir core/unit_test
 mkdir core/perf_test
