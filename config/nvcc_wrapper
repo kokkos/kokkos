@@ -78,7 +78,7 @@ do
     shift
     ;;
   #strip of pedantic because it produces endless warnings about #LINE added by the preprocessor
-  -pedantic|-Wpedantic)
+  -pedantic|-Wpedantic|-ansi)
     ;;
   #strip -Xcompiler because we add it
   -Xcompiler)
