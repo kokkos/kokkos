@@ -277,10 +277,10 @@ aligned_t Task::qthread_func( void * arg )
     (*task->m_apply_team)( task , member );
 
 fprintf( stdout
-       , "task 0x%.12lx finished by worker(%d.%d) member(%d:%d)\n"
-       , reinterpret_cast<unsigned long>(task)
+       , "worker(%d.%d) task 0x%.12lx executed by member(%d:%d)\n"
        , qthread_shep()
        , qthread_worker_local(NULL)
+       , reinterpret_cast<unsigned long>(task)
        , member.team_rank()
        , member.team_size()
        );
@@ -304,6 +304,17 @@ fflush(stdout);
     int volatile * active_count = task->m_active_count ;
 
     if ( task->m_state == ( Kokkos::Experimental::TASK_STATE_WAITING | Kokkos::Experimental::TASK_STATE_EXECUTING ) ) {
+
+#if 0
+fprintf( stdout
+       , "worker(%d.%d) task 0x%.12lx respawn\n"
+       , qthread_shep()
+       , qthread_worker_local(NULL)
+       , reinterpret_cast<unsigned long>(task)
+       );
+fflush(stdout);
+#endif
+
       // Task respawned, set state to waiting and reschedule the task
       task->m_state = Kokkos::Experimental::TASK_STATE_WAITING ;
       task->schedule();
@@ -327,6 +338,16 @@ fflush(stdout);
     // Decrement active task count before returning.
     Kokkos::atomic_decrement( active_count );
   }
+
+#if 0
+fprintf( stdout
+       , "worker(%d.%d) task 0x%.12lx return\n"
+       , qthread_shep()
+       , qthread_worker_local(NULL)
+       , reinterpret_cast<unsigned long>(task)
+       );
+fflush(stdout);
+#endif
 
   return 0 ;
 }
@@ -380,10 +401,10 @@ void Task::schedule()
     int spawn_shepherd = ( this_shepherd + 1 ) % num_shepherd ;
 
 fprintf( stdout
-       , "task 0x%.12lx worker(%d.%d) spawning on shepherd(%d) clone(%d)\n"
-       , reinterpret_cast<unsigned long>(this)
+       , "worker(%d.%d) task 0x%.12lx spawning on shepherd(%d) clone(%d)\n"
        , qthread_shep()
        , qthread_worker_local(NULL)
+       , reinterpret_cast<unsigned long>(this)
        , spawn_shepherd
        , num_worker_per_shepherd - 1
        );

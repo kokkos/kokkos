@@ -302,12 +302,12 @@ void Task::schedule()
 
 void Task::assign( Task ** const lhs_ptr , Task * rhs )
 {
+  // Increment rhs reference count.
+  if ( rhs ) { atomic_increment( & rhs->m_ref_count ); }
+
   // Assign the pointer and retrieve the previous value.
 
   Task * const old_lhs = atomic_exchange( lhs_ptr , rhs );
-
-  // Increment rhs reference count.
-  if ( rhs ) { atomic_increment( & rhs->m_ref_count ); }
 
   if ( old_lhs ) {
 
@@ -315,8 +315,10 @@ void Task::assign( Task ** const lhs_ptr , Task * rhs )
     // If reference count is zero task must be complete, then delete task.
     // Task is ready for deletion when  wait == s_denied
 
-    int    const count = atomic_fetch_add( & (old_lhs->m_ref_count) , -1 ) - 1 ;
-    Task * const wait  = *((Task * const volatile *) & old_lhs->m_wait );
+    int const count = atomic_fetch_add( & (old_lhs->m_ref_count) , -1 ) - 1 ;
+
+    // if 'count != 0' then 'old_lhs' may be deallocated before dereferencing
+    Task * const wait = count == 0 ? *((Task * const volatile *) & old_lhs->m_wait ) : (Task*) 0 ;
 
     if ( count < 0 || ( count == 0 && wait != s_denied ) ) {
 
@@ -333,6 +335,7 @@ void Task::assign( Task ** const lhs_ptr , Task * rhs )
     }
 
     if ( count == 0 ) {
+      // When 'count == 0' this thread has exclusive access to 'old_lhs'
       const Task::function_dealloc_type d = old_lhs->m_dealloc ;
       (*d)( old_lhs );
     }

@@ -70,6 +70,10 @@ public:
 
 private:
 
+  // Needed to disambiguate references to base class variables
+  // without triggering a false-positive on Intel compiler warning #955.
+  typedef TaskMember< Kokkos::Threads , void , void > SelfType ;
+
   function_dealloc_type  m_dealloc ;      ///< Deallocation
   function_verify_type   m_verify ;       ///< Result type verification
   function_team_type     m_team ;         ///< Apply function
@@ -213,11 +217,9 @@ public:
                  , Kokkos::Impl::ThreadsExecTeamMember & member
                  )
     {
-      typedef typename DerivedTaskType::functor_type  functor_type ;
-
       DerivedTaskType & self = * static_cast< DerivedTaskType * >(t);
 
-      self.functor_type::apply( member );
+      self.DerivedTaskType::functor_type::apply( member );
     }
 
   /** \brief  Allocate and construct a task */
@@ -231,11 +233,9 @@ public:
                  , Kokkos::Impl::ThreadsExecTeamMember & member
                  )
     {
-      typedef typename DerivedTaskType::functor_type  functor_type ;
-
       DerivedTaskType & self = * static_cast< DerivedTaskType * >(t);
 
-      self.functor_type::apply( member , self.m_result );
+      self.DerivedTaskType::functor_type::apply( member , self.m_result );
     }
 
   //----------------------------------------
@@ -258,16 +258,16 @@ public:
         new( allocate( derived_size + sizeof(TaskMember*) * arg_dependence_capacity ) )
           DerivedTaskType( arg_functor );
 
-      task->TaskMember::m_dealloc      = & TaskMember::template deallocate< DerivedTaskType > ;
-      task->TaskMember::m_verify       = & TaskMember::template verify_type< typename DerivedTaskType::value_type > ;
-      task->TaskMember::m_team         = arg_apply_team ;
-      task->TaskMember::m_serial       = arg_apply_single ;
-      task->TaskMember::m_dep          = (TaskMember**)( ((unsigned char *)task) + derived_size );
-      task->TaskMember::m_dep_capacity = arg_dependence_capacity ;
-      task->TaskMember::m_shmem_size   = arg_team_shmem ;
-      task->TaskMember::m_state        = TASK_STATE_CONSTRUCTING ;
+      task->SelfType::m_dealloc      = & TaskMember::template deallocate< DerivedTaskType > ;
+      task->SelfType::m_verify       = & TaskMember::template verify_type< typename DerivedTaskType::value_type > ;
+      task->SelfType::m_team         = arg_apply_team ;
+      task->SelfType::m_serial       = arg_apply_single ;
+      task->SelfType::m_dep          = (TaskMember**)( ((unsigned char *)task) + derived_size );
+      task->SelfType::m_dep_capacity = arg_dependence_capacity ;
+      task->SelfType::m_shmem_size   = arg_team_shmem ;
+      task->SelfType::m_state        = TASK_STATE_CONSTRUCTING ;
 
-      for ( unsigned i = 0 ; i < arg_dependence_capacity ; ++i ) task->TaskMember::m_dep[i] = 0 ;
+      for ( unsigned i = 0 ; i < arg_dependence_capacity ; ++i ) task->SelfType::m_dep[i] = 0 ;
 
       return static_cast< TaskMember * >( task );
     }
