@@ -64,6 +64,10 @@
 #include <KokkosCore_config.h>
 #endif
 
+#ifndef KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE
+#define KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE 1
+#endif
+
 //----------------------------------------------------------------------------
 /** Pick up compiler specific #define macros:
  *
