@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -198,17 +198,6 @@ void * AlignedAllocator::reallocate(void * old_ptr, size_t old_size, size_t new_
   #define NO_MMAP
 #endif
 
-// huge page tables
-#if !defined( NO_MMAP )
-  #if defined( MAP_HUGETLB )
-    #define MMAP_FLAGS_HUGE (MMAP_FLAGS | MAP_HUGETLB )
-  #elif defined( MMAP_FLAGS )
-    #define MMAP_FLAGS_HUGE MMAP_FLAGS
-  #endif
-  // threshold to use huge pages
-  #define MMAP_USE_HUGE_PAGES (1u << 27)
-#endif
-
 // read write access to private memory
 #if !defined( NO_MMAP )
   #define MMAP_PROTECTION (PROT_READ | PROT_WRITE)
@@ -220,17 +209,12 @@ void* PageAlignedAllocator::allocate( size_t size )
   void *ptr = NULL;
   if (size) {
 #if !defined NO_MMAP
-    if ( size < MMAP_USE_HUGE_PAGES ) {
-      ptr = mmap( NULL, size, MMAP_PROTECTION, MMAP_FLAGS, -1 /*file descriptor*/, 0 /*offset*/);
-    } else {
-      ptr = mmap( NULL, size, MMAP_PROTECTION, MMAP_FLAGS_HUGE, -1 /*file descriptor*/, 0 /*offset*/);
-    }
+    ptr = mmap( NULL, size, MMAP_PROTECTION, MMAP_FLAGS, -1 /*file descriptor*/, 0 /*offset*/);
     if (ptr == MAP_FAILED) {
       ptr = NULL;
     }
 #else
     static const size_t page_size = 4096; // TODO: read in from sysconf( _SC_PAGE_SIZE )
-
     ptr = raw_aligned_allocate( size, page_size);
 #endif
     if (!ptr)
