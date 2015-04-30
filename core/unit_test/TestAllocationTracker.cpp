@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -53,7 +53,7 @@
 
 namespace Test {
 
-class alocation_tracker : public ::testing::Test {
+class allocation_tracker : public ::testing::Test {
 protected:
   static void SetUpTestCase()
   {
@@ -66,7 +66,7 @@ protected:
   }
 };
 
-TEST_F( alocation_tracker, simple)
+TEST_F( allocation_tracker, simple)
 {
   using namespace Kokkos::Impl;
 
@@ -113,7 +113,7 @@ TEST_F( alocation_tracker, simple)
   }
 }
 
-TEST_F( alocation_tracker, force_leaks)
+TEST_F( allocation_tracker, force_leaks)
 {
 // uncomment to force memory leaks
 #if 0
@@ -123,7 +123,7 @@ TEST_F( alocation_tracker, force_leaks)
 #endif
 }
 
-TEST_F( alocation_tracker, disable_reference_counting)
+TEST_F( allocation_tracker, disable_reference_counting)
 {
   using namespace Kokkos::Impl;
   // test ref count and label
@@ -140,6 +140,61 @@ TEST_F( alocation_tracker, disable_reference_counting)
     EXPECT_EQ(1u, trackers[0].ref_count());
     EXPECT_EQ(std::string("Test"), std::string(trackers[0].label()));
   }
+}
+
+namespace {
+
+struct Foo {
+
+  int * destroy_count;
+
+  Foo( int  *count )
+    : destroy_count( count )
+  {}
+
+  ~Foo()
+  {
+    Kokkos::atomic_fetch_add( destroy_count, 1 );
+  }
+
+};
+
+struct DestroyFoo
+{
+  void operator()( void * alloc_ptr, uint64_t alloc_size ) const
+  {
+    Foo * ptr = reinterpret_cast<Foo *>(alloc_ptr);
+    uint64_t size = alloc_size / sizeof(Foo);
+
+    for (uint64_t i=0; i < size; ++i) {
+      (ptr + i)->~Foo();
+    }
+  }
+};
+
+}
+
+TEST_F( allocation_tracker, destroy)
+{
+  using namespace Kokkos::Impl;
+
+  const int size = 10;
+  int destroy_count = 0;
+
+  {
+    AllocationTracker tracker( MallocAllocator(), size * sizeof(Foo), "Test" );
+
+    Foo * f = reinterpret_cast<Foo *>(tracker.alloc_ptr());
+    // placement new
+    for (int i=0; i < size; ++i) {
+      new (f + i) Foo(&destroy_count);
+    }
+
+    DestroyFoo destroy_foo;
+    tracker.set_destroy( destroy_foo );
+  }
+
+  EXPECT_EQ( size, destroy_count );
 }
 
 } // namespace Test
