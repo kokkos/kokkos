@@ -141,6 +141,7 @@ Impl::AllocationTracker HostSpace::allocate_and_track( const std::string & label
 namespace Kokkos {
 namespace {
   const unsigned HOST_SPACE_ATOMIC_MASK = 0xFFFF;
+  const unsigned HOST_SPACE_ATOMIC_XOR_MASK = 0x5A39;
   static int HOST_SPACE_ATOMIC_LOCKS[HOST_SPACE_ATOMIC_MASK+1];
 }
 
@@ -154,13 +155,13 @@ void init_lock_array_host_space() {
 
 bool lock_address_host_space(void* ptr) {
   return 0 == atomic_compare_exchange( &HOST_SPACE_ATOMIC_LOCKS[
-                                    ( size_t(ptr) >> 2 ) & HOST_SPACE_ATOMIC_MASK] ,
+      (( size_t(ptr) >> 2 ) & HOST_SPACE_ATOMIC_MASK) ^ HOST_SPACE_ATOMIC_XOR_MASK] ,
                                   0 , 1);
 }
 
 void unlock_address_host_space(void* ptr) {
    atomic_exchange( &HOST_SPACE_ATOMIC_LOCKS[
-                      ( size_t(ptr) >> 2 ) & HOST_SPACE_ATOMIC_MASK] ,
+      (( size_t(ptr) >> 2 ) & HOST_SPACE_ATOMIC_MASK) ^ HOST_SPACE_ATOMIC_XOR_MASK] ,
                     0);
 }
 
