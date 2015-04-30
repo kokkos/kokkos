@@ -31,6 +31,10 @@ case $key in
     --with-serial)
     KOKKOS_DEVICES="${KOKKOS_DEVICES},Serial"    
     ;;
+    --with-devices*)
+    DEVICES="${key#*=}"
+    KOKKOS_DEVICES="${KOKKOS_DEVICES},${DEVICES}"
+    ;;
     --with-gtest*)
     GTEST_PATH="${key#*=}"
     ;;
@@ -60,6 +64,7 @@ case $key in
     echo "--with-openmp:               enable OpenMP backend"
     echo "--with-pthread:              enable Pthreads backend"
     echo "--with-serial:               enable Serial backend"
+    echo "--with-devices:              explicitly add a set of backends"
     echo ""
     echo "--arch=[OPTIONS]:            set target architectures. Options are:"
     echo "                               SNB = Intel Sandy/Ivy Bridge CPUs"
@@ -90,8 +95,6 @@ shift
 done
 
 KOKKOS_OPTIONS="KOKKOS_PATH=${KOKKOS_PATH}"
-
-
 
 if [ ${#COMPILER} -gt 0 ]; then
 KOKKOS_OPTIONS="${KOKKOS_OPTIONS} CXX=${COMPILER}"
@@ -137,7 +140,7 @@ mkdir algorithms/unit_tests
 mkdir algorithms/performance_tests
 
  
-
+echo "Generating Makefile with options " ${KOKKOS_OPTIONS}
 echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > Makefile
 echo "" >> Makefile
 echo "lib:" >> Makefile
