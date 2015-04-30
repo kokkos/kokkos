@@ -144,22 +144,6 @@ TEST_F( allocation_tracker, disable_reference_counting)
 
 namespace {
 
-template <typename T>
-class Destroy
-  : public Kokkos::Impl::AllocatorDestroyBase
-{
-public:
-  virtual void apply( void * alloc_ptr, uint64_t alloc_size )
-  {
-    T * ptr = reinterpret_cast<T *>(alloc_ptr);
-    uint64_t size = alloc_size / sizeof(T);
-
-    for (uint64_t i=0; i < size; ++i) {
-      (ptr + i)->~T();
-    }
-  }
-};
-
 struct Foo {
 
   int * destroy_count;
@@ -173,6 +157,19 @@ struct Foo {
     Kokkos::atomic_fetch_add( destroy_count, 1 );
   }
 
+};
+
+struct DestroyFoo
+{
+  void operator()( void * alloc_ptr, uint64_t alloc_size ) const
+  {
+    Foo * ptr = reinterpret_cast<Foo *>(alloc_ptr);
+    uint64_t size = alloc_size / sizeof(Foo);
+
+    for (uint64_t i=0; i < size; ++i) {
+      (ptr + i)->~Foo();
+    }
+  }
 };
 
 }
@@ -193,7 +190,8 @@ TEST_F( allocation_tracker, destroy)
       new (f + i) Foo(&destroy_count);
     }
 
-    tracker.set_destroy( new Destroy<Foo>() );
+    DestroyFoo destroy_foo;
+    tracker.set_destroy( destroy_foo );
   }
 
   EXPECT_EQ( size, destroy_count );

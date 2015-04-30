@@ -357,6 +357,40 @@ public:
 };
 
 //-----------------------------------------------------------------------------
+// AllocatorDestroy
+//-----------------------------------------------------------------------------
+
+
+/// class AllocatorDestroyBase
+class AllocatorDestroyBase
+{
+public:
+
+  virtual void destroy( void * alloc_ptr, uint64_t alloc_size ) = 0;
+
+  virtual ~AllocatorDestroyBase() {}
+};
+
+template <typename T>
+class AllocatorDestroy : public AllocatorDestroyBase
+{
+public:
+
+  AllocatorDestroy( const T & func )
+    : m_func( func )
+  {}
+
+  virtual void destroy( void * alloc_ptr, uint64_t alloc_size )
+  {
+    m_func(alloc_ptr, alloc_size );
+  }
+
+private:
+  T m_func;
+};
+
+
+//-----------------------------------------------------------------------------
 // AllocationTracker
 //-----------------------------------------------------------------------------
 
@@ -554,7 +588,12 @@ public:
   /// the alloc_ptr and alloc_size and then deleted
   /// when the record is destroyed
   /// the dstroy ptr can only be set once
-  bool set_destroy( AllocatorDestroyBase * arg_destroy) const;
+  template <typename DestroyFunctor>
+  bool set_destroy( DestroyFunctor const & func ) const
+  {
+    AllocatorDestroy<DestroyFunctor> * destroy = new AllocatorDestroy<DestroyFunctor>(func);
+    return set_destroy_impl( destroy );
+  }
 
   /// get the attribute ptr from the allocation record
   AllocatorDestroyBase * destroy() const;
@@ -564,6 +603,8 @@ public:
   void reallocate( size_t size ) const;
 
 private:
+
+  bool set_destroy_impl( AllocatorDestroyBase * arg_destroy) const;
 
   static AllocationTracker find( void const * ptr, AllocatorBase const * arg_allocator );
 

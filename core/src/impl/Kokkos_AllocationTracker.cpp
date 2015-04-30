@@ -114,7 +114,7 @@ struct AllocationRecord
   ~AllocationRecord()
   {
     if (destroy) {
-      destroy->apply(alloc_ptr, alloc_size );
+      destroy->destroy(alloc_ptr, alloc_size );
       delete destroy;
     }
     if (attribute) {
@@ -735,7 +735,7 @@ bool AllocationTracker::set_attribute( AllocatorAttributeBase * attr ) const
   return result;
 }
 
-bool AllocationTracker::set_destroy( AllocatorDestroyBase * des ) const
+bool AllocationTracker::set_destroy_impl( AllocatorDestroyBase * des ) const
 {
   bool result = false;
   if (m_alloc_rec & REF_COUNT_MASK) {
