@@ -3,6 +3,7 @@ KOKKOS_PATH = ../..
 GTEST_PATH = ../../TPL/gtest
 
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test
+TEST_HEADERS = $(wildcard $(KOKKOS_PATH)/core/unit_test/*.hpp)
 
 default: build_all
 	echo "End Build"
@@ -128,7 +129,7 @@ clean: kokkos-clean
 
 # Compilation rules
 
-%.o:%.cpp $(KOKKOS_CPP_DEPENDS)
+%.o:%.cpp $(KOKKOS_CPP_DEPENDS) $(TEST_HEADERS)
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) $(EXTRA_INC) -c $<
 
 gtest-all.o:$(GTEST_PATH)/gtest/gtest-all.cc 
