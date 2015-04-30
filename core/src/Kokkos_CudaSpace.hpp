@@ -108,7 +108,7 @@ namespace Impl {
 /// where the hash value is derived from the address of the
 /// object for which an atomic operation is performed.
 /// This function initializes the locks to zero (unset).
-static void init_lock_array_cuda_space();
+void init_lock_array_cuda_space();
 
 /// \brief Aquire a lock for the address
 ///
@@ -116,7 +116,7 @@ static void init_lock_array_cuda_space();
 /// from the provided ptr. If the lock is successfully aquired the
 /// function returns true. Otherwise it returns false.
 __device__
-static bool lock_address_cuda_space(void* ptr);
+bool lock_address_cuda_space(void* ptr);
 
 /// \brief Release lock for the address
 ///
@@ -125,7 +125,7 @@ static bool lock_address_cuda_space(void* ptr);
 /// after previously successfully aquiring a lock with
 /// lock_address.
 __device__
-static void unlock_address_cuda_space(void* ptr);
+void unlock_address_cuda_space(void* ptr);
 
 }
 } // namespace Kokkos
