@@ -172,7 +172,7 @@ void test_1d_strided_assignment_impl(bool a, bool b, bool c, bool d, int n, int 
   int col = n>2?2:0;
   int row = m>2?2:0;
 
-
+  if(Kokkos::Impl::VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,Space>::value) {
   if(a) {
     Kokkos::View<double*,LD,Space> l1da = Kokkos::subview(l2d,Kokkos::ALL(),row);
     ASSERT_TRUE( & l1da(0) == & l2d(0,row) );
@@ -194,6 +194,7 @@ void test_1d_strided_assignment_impl(bool a, bool b, bool c, bool d, int n, int 
     Kokkos::View<double*,LD,Space> l1dd = Kokkos::subview(l2d,col,std::pair<unsigned,unsigned>(2,13));
     ASSERT_TRUE( & l1dd(0) == & l2d(col,2) );
     ASSERT_TRUE( & l1dd(1) == & l2d(col,3) );
+  }
   }
 
 }
