@@ -41,7 +41,7 @@
 //@HEADER
 */
 
-#include <Kokkos_Atomic.hpp>
+#include <Kokkos_Core.hpp>
 
 namespace TestAtomic {
 
@@ -71,6 +71,13 @@ struct SuperScalar {
 
   KOKKOS_INLINE_FUNCTION
   SuperScalar& operator = (const SuperScalar& src) {
+    for(int i=0; i<N; i++)
+      val[i] = src.val[i];
+    return *this;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  SuperScalar& operator = (const volatile SuperScalar& src) {
     for(int i=0; i<N; i++)
       val[i] = src.val[i];
     return *this;
