@@ -134,8 +134,6 @@ do
   shift
 done
 
-cuda_args="$cuda_args -rdc true"
-
 #Add default host compiler if necessary
 if [ $ccbin_set -ne 1 ]; then
   cuda_args="$cuda_args -ccbin $default_compiler"
