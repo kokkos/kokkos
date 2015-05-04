@@ -66,9 +66,13 @@ OBJ_ALLOCATIONTRACKER = TestAllocationTracker.o UnitTestMain.o gtest-all.o
 TARGETS += KokkosCore_UnitTest_AllocationTracker
 TEST_TARGETS += test-allocationtracker
 
-OBJ_DEFAULT = TestDefaultDeviceType.o TestDefaultDeviceTypeInit.o UnitTestMain.o gtest-all.o
+OBJ_DEFAULT = TestDefaultDeviceType.o UnitTestMain.o gtest-all.o
 TARGETS += KokkosCore_UnitTest_Default
 TEST_TARGETS += test-default
+
+OBJ_DEFAULTINIT = TestDefaultDeviceTypeInit.o UnitTestMain.o gtest-all.o
+TARGETS += KokkosCore_UnitTest_DefaultInit
+TEST_TARGETS += test-default-init
 
 
 KokkosCore_UnitTest_Cuda: $(OBJ_CUDA) $(KOKKOS_LINK_DEPENDS)
@@ -95,6 +99,9 @@ KokkosCore_UnitTest_AllocationTracker: $(OBJ_ALLOCATIONTRACKER) $(KOKKOS_LINK_DE
 KokkosCore_UnitTest_Default: $(OBJ_DEFAULT) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_DEFAULT) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_Default
 
+KokkosCore_UnitTest_DefaultInit: $(OBJ_DEFAULTINIT) $(KOKKOS_LINK_DEPENDS)
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_DEFAULTINIT) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_DefaultInit
+
 test-cuda: KokkosCore_UnitTest_Cuda
 	./KokkosCore_UnitTest_Cuda
 
@@ -119,6 +126,8 @@ test-allocationtracker: KokkosCore_UnitTest_AllocationTracker
 test-default: KokkosCore_UnitTest_Default
 	./KokkosCore_UnitTest_Default
 	
+test-default-init: KokkosCore_UnitTest_DefaultInit
+	./KokkosCore_UnitTest_DefaultInit
 
 build_all: $(TARGETS)
 
