@@ -115,6 +115,33 @@
 
 //----------------------------------------------------------------------------
 
+// Forward decalaration of functions supporting arbitrary sized atomics
+// This is necessary since Kokkos_Atomic.hpp is internally included very early
+// through Kokkos_HostSpace.hpp as well as the allocation tracker.
+#ifdef KOKKOS_HAVE_CUDA
+namespace Kokkos {
+namespace Impl {
+/// \brief Aquire a lock for the address
+///
+/// This function tries to aquire the lock for the hash value derived
+/// from the provided ptr. If the lock is successfully aquired the
+/// function returns true. Otherwise it returns false.
+__device__ inline
+bool lock_address_cuda_space(void* ptr);
+
+/// \brief Release lock for the address
+///
+/// This function releases the lock for the hash value derived
+/// from the provided ptr. This function should only be called
+/// after previously successfully aquiring a lock with
+/// lock_address.
+__device__ inline
+void unlock_address_cuda_space(void* ptr);
+}
+}
+#endif
+
+
 namespace Kokkos {
 template <typename T>
 KOKKOS_INLINE_FUNCTION

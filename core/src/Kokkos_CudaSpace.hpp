@@ -110,23 +110,14 @@ namespace Impl {
 /// This function initializes the locks to zero (unset).
 void init_lock_array_cuda_space();
 
-/// \brief Aquire a lock for the address
+/// \brief Retrieve the pointer to the lock array for arbitrary size atomics.
 ///
-/// This function tries to aquire the lock for the hash value derived
-/// from the provided ptr. If the lock is successfully aquired the
-/// function returns true. Otherwise it returns false.
-__device__
-bool lock_address_cuda_space(void* ptr);
-
-/// \brief Release lock for the address
-///
-/// This function releases the lock for the hash value derived
-/// from the provided ptr. This function should only be called
-/// after previously successfully aquiring a lock with
-/// lock_address.
-__device__
-void unlock_address_cuda_space(void* ptr);
-
+/// Arbitrary atomics are implemented using a hash table of locks
+/// where the hash value is derived from the address of the
+/// object for which an atomic operation is performed.
+/// This function retrieves the lock array pointer.
+/// If the array is not yet allocated it will do so.
+int* lock_array_cuda_space_ptr();
 }
 } // namespace Kokkos
 
