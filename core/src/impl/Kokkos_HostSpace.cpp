@@ -149,7 +149,7 @@ namespace Impl {
 void init_lock_array_host_space() {
   static int is_initialized = 0;
   if(! is_initialized)
-    for(int i = 0; i<HOST_SPACE_ATOMIC_MASK+1; i++)
+    for(int i = 0; i < static_cast<int> (HOST_SPACE_ATOMIC_MASK+1); i++)
       HOST_SPACE_ATOMIC_LOCKS[i] = 0;
 }
 
