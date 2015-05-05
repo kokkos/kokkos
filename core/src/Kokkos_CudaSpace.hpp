@@ -117,7 +117,7 @@ void init_lock_array_cuda_space();
 /// object for which an atomic operation is performed.
 /// This function retrieves the lock array pointer.
 /// If the array is not yet allocated it will do so.
-int* lock_array_cuda_space_ptr();
+int* lock_array_cuda_space_ptr(bool deallocate = false);
 }
 } // namespace Kokkos
 

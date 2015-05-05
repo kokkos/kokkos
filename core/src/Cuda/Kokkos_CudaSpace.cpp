@@ -207,14 +207,20 @@ namespace {
 }
 
 namespace Impl {
-int* lock_array_cuda_space_ptr() {
+int* lock_array_cuda_space_ptr(bool deallocate) {
   static int* ptr = NULL;
-  if(ptr==NULL) cudaMalloc(&ptr,sizeof(int)*(CUDA_SPACE_ATOMIC_MASK+1));
+  if(deallocate) {
+    cudaFree(ptr);
+    ptr = NULL;
+  }
+
+  if(ptr==NULL && !deallocate)
+    cudaMalloc(&ptr,sizeof(int)*(CUDA_SPACE_ATOMIC_MASK+1));
   return ptr;
 }
 
 void init_lock_array_cuda_space() {
-  static int is_initialized = 0;
+  int is_initialized = 0;
   if(! is_initialized) {
     int* lock_array_ptr = lock_array_cuda_space_ptr();
     cudaMemcpyToSymbol( kokkos_impl_cuda_atomic_lock_array , & lock_array_ptr , sizeof(int*) );

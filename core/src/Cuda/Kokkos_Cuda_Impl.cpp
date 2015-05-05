@@ -546,6 +546,7 @@ void CudaInternal::finalize()
 {
   if ( 0 != m_scratchSpace || 0 != m_scratchFlags ) {
 
+    lock_array_cuda_space_ptr(true);
     if ( m_stream ) {
       for ( size_type i = 1 ; i < m_streamCount ; ++i ) {
         cudaStreamDestroy( m_stream[i] );
