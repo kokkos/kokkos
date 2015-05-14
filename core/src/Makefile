@@ -70,12 +70,13 @@ build-makefile-kokkos:
 	echo "KOKKOS_CPPFLAGS = $(KOKKOS_CPPFLAGS)" >> Makefile.kokkos
 	echo "KOKKOS_LINK_DEPENDS  = $(KOKKOS_LINK_DEPENDS)" >> Makefile.kokkos
 	echo "KOKKOS_LIBS = $(KOKKOS_LIBS)" >> Makefile.kokkos
-	echo "KOKKOS_LD_FLAGS = $(KOKKOS_LDFLAGS)" >> Makefile.kokkos
+	echo "KOKKOS_LDFLAGS = $(KOKKOS_LDFLAGS)" >> Makefile.kokkos
 	sed \
-		-e 's|\.\./\.\./core/src|$(PREFIX)/include|g' \
-		-e 's|\.\./\.\./containers/src|$(PREFIX)/include|g' \
-		-e 's|\.\./\.\./algorithms/src|$(PREFIX)/include|g' \
+		-e 's|$(KOKKOS_PATH)/core/src|$(PREFIX)/include|g' \
+		-e 's|$(KOKKOS_PATH)/containers/src|$(PREFIX)/include|g' \
+		-e 's|$(KOKKOS_PATH)/algorithms/src|$(PREFIX)/include|g' \
 		-e 's|-L$(PWD)|-L$(PREFIX)/lib|g' \
+		-e 's|= libkokkos.a|= $(PREFIX)/lib/libkokkos.a|g' \
 		-e 's|= KokkosCore_config.h|= $(PREFIX)/include/KokkosCore_config.h|g' Makefile.kokkos \
 		> Makefile.kokkos.tmp
 	mv -f Makefile.kokkos.tmp Makefile.kokkos
