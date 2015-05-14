@@ -186,7 +186,7 @@ void OpenMP::initialize( unsigned thread_count ,
   #pragma omp parallel
   {
     #pragma omp atomic
-    nthreads++
+    nthreads++;
   }
 
   static int omp_max_threads = nthreads;
