@@ -154,7 +154,7 @@ public:
    *  If the 'use_' arguments are not supplied the hwloc is queried
    *  to use all available cores.
    */
-  static void initialize( unsigned threads_count = 1 ,
+  static void initialize( unsigned threads_count = 0 ,
                           unsigned use_numa_count = 0 ,
                           unsigned use_cores_per_numa = 0 ,
                           bool allow_asynchronous_threadpool = false );
