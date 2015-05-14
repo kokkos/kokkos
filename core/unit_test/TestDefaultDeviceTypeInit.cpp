@@ -191,6 +191,11 @@ namespace Impl {
           expected_nthreads = 1;
 
       }
+      #ifdef KOKKOS_HAVE_SERIAL
+      if(Kokkos::Impl::is_same<Kokkos::DefaultExecutionSpace,Kokkos::Serial>::value ||
+         Kokkos::Impl::is_same<Kokkos::DefaultHostExecutionSpace,Kokkos::Serial>::value ) 
+        expected_nthreads = 1;
+      #endif
     }
 
     int expected_numa = argstruct.num_numa;
@@ -200,6 +205,11 @@ namespace Impl {
       } else {
         expected_numa = 1;
       }
+      #ifdef KOKKOS_HAVE_SERIAL
+      if(Kokkos::Impl::is_same<Kokkos::DefaultExecutionSpace,Kokkos::Serial>::value ||
+         Kokkos::Impl::is_same<Kokkos::DefaultHostExecutionSpace,Kokkos::Serial>::value )
+        expected_numa = 1;
+      #endif
     }
     ASSERT_EQ(Kokkos::HostSpace::execution_space::thread_pool_size(),expected_nthreads);
 
