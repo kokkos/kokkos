@@ -50,6 +50,7 @@
 
 //----------------------------------------------------------------------------
 
+#include <TestSharedAlloc.hpp>
 #include <TestViewImpl.hpp>
 
 #include <TestViewAPI.hpp>
@@ -78,6 +79,10 @@ protected:
   static void SetUpTestCase() {}
   static void TearDownTestCase() {}
 };
+
+TEST_F( serial , impl_shared_alloc ) {
+  test_shared_alloc< Kokkos::HostSpace , Kokkos::Serial >();
+}
 
 TEST_F( serial, view_impl) {
   test_view_impl< Kokkos::Serial >();
@@ -385,5 +390,6 @@ TEST_F( serial , team_vector )
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Serial >(10) ) );
 }
 #endif
+
 } // namespace test
 

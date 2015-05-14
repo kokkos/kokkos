@@ -136,6 +136,180 @@ Impl::AllocationTracker HostSpace::allocate_and_track( const std::string & label
 } // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
+
+namespace Kokkos {
+namespace {
+Kokkos::Experimental::Impl::SharedAllocationRecord< void , void > s_root_record ;
+}
+
+HostSpace::HostSpace()
+  : m_root_record( & s_root_record )
+{
+}
+
+void * HostSpace::allocate( const size_t arg_alloc_size ) const
+{
+  constexpr size_t alignment = 128 ;
+
+  void * ptr = NULL;
+  if ( arg_alloc_size ) {
+#if defined( __INTEL_COMPILER ) && !defined ( KOKKOS_HAVE_CUDA )
+    ptr = _mm_malloc( arg_alloc_size , alignment );
+
+#elif ( defined( _POSIX_C_SOURCE ) && _POSIX_C_SOURCE >= 200112L ) || \
+    ( defined( _XOPEN_SOURCE )   && _XOPEN_SOURCE   >= 600 )
+
+    posix_memalign( & ptr, alignment , arg_alloc_size );
+
+#else
+    // Over-allocate to and round up to guarantee proper alignment.
+    size_t size_padded = arg_alloc_size + alignment + sizeof(void *);
+    void * alloc_ptr = malloc( size_padded );
+
+    if (alloc_ptr) {
+      uintptr_t address = reinterpret_cast<uintptr_t>(alloc_ptr);
+      // offset enough to record the alloc_ptr
+      address += sizeof(void *);
+      uintptr_t rem = address % alignment;
+      uintptr_t offset = rem ? (alignment - rem) : 0u;
+      address += offset;
+      ptr = reinterpret_cast<void *>(address);
+      // record the alloc'd pointer
+      address -= sizeof(void *);
+      *reinterpret_cast<void **>(address) = alloc_ptr;
+    }
+#endif
+  }
+  return ptr;
+}
+
+void HostSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_alloc_size */ ) const
+{
+  if ( arg_alloc_ptr ) {
+#if defined( __INTEL_COMPILER ) && !defined ( KOKKOS_HAVE_CUDA )
+    _mm_free( arg_alloc_ptr );
+
+#elif ( defined( _POSIX_C_SOURCE ) && _POSIX_C_SOURCE >= 200112L ) || \
+      ( defined( _XOPEN_SOURCE )   && _XOPEN_SOURCE   >= 600 )
+    free( arg_alloc_ptr );
+#else
+    // get the alloc'd pointer
+    void * alloc_ptr = *(reinterpret_cast<void **>(ptr) -1);
+    free( alloc_ptr );
+#endif
+  }
+}
+
+} // namespace Kokkos
+
+namespace Kokkos {
+namespace Experimental {
+namespace Impl {
+
+void
+SharedAllocationRecord< Kokkos::HostSpace , void >::
+deallocate( SharedAllocationRecord< void , void > * arg_rec )
+{
+  delete static_cast<SharedAllocationRecord*>(arg_rec);
+}
+
+SharedAllocationRecord< Kokkos::HostSpace , void >::
+~SharedAllocationRecord()
+{
+  m_space.deallocate( SharedAllocationRecord< void , void >::m_alloc_ptr
+                    , SharedAllocationRecord< void , void >::m_alloc_size
+                    );
+}
+
+SharedAllocationRecord< Kokkos::HostSpace , void >::
+SharedAllocationRecord( const Kokkos::HostSpace & arg_space
+                      , const std::string       & arg_label
+                      , const size_t              arg_alloc_size
+                      , const SharedAllocationRecord< void , void >::function_type arg_dealloc
+                      )
+  // Pass through allocated [ SharedAllocationHeader , user_memory ]
+  // Pass through deallocation function
+  : SharedAllocationRecord< void , void >
+      ( arg_space.m_root_record
+      , reinterpret_cast<SharedAllocationHeader*>( arg_space.allocate( sizeof(SharedAllocationHeader) + arg_alloc_size ) )
+      , sizeof(SharedAllocationHeader) + arg_alloc_size
+      , arg_dealloc
+      )
+  , m_space( arg_space )
+{
+  // Fill in the Header information
+  RecordBase::m_alloc_ptr->m_record = static_cast< SharedAllocationRecord< void , void > * >( this );
+
+  strncpy( RecordBase::m_alloc_ptr->m_label
+          , arg_label.c_str()
+          , SharedAllocationHeader::maximum_label_length
+          );
+}
+
+SharedAllocationRecord< Kokkos::HostSpace , void > *
+SharedAllocationRecord< Kokkos::HostSpace , void >::get_record( void * alloc_ptr )
+{
+  using Header     = SharedAllocationHeader ;
+  using RecordBase = SharedAllocationRecord< void , void > ;
+  using RecordHost = SharedAllocationRecord< Kokkos::HostSpace , void > ;
+
+  SharedAllocationHeader const * const head   = Header::get_header( alloc_ptr );
+  RecordHost                   * const record = static_cast< RecordHost * >( head->m_record );
+
+  if ( record->m_alloc_ptr != head ) {
+    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void >::get_record ERROR" ) );
+  }
+
+  return record ;
+}
+
+// Iterate records to print orphaned memory ...
+void SharedAllocationRecord< Kokkos::HostSpace , void >::
+print_records( std::ostream & s , const Kokkos::HostSpace & space , bool detail )
+{
+  SharedAllocationRecord< void , void > * r = space.m_root_record ;
+
+  char buffer[256] ;
+
+  if ( detail ) {
+    do {
+      snprintf( buffer , 256 , "Host addr( 0x%.12lx ) list( 0x%.12lx 0x%.12lx ) extent[ 0x%.12lx + %.8ld ] count(%d) dealloc(0x%.12lx) %s\n"
+              , reinterpret_cast<unsigned long>( r )
+              , reinterpret_cast<unsigned long>( r->m_prev )
+              , reinterpret_cast<unsigned long>( r->m_next )
+              , reinterpret_cast<unsigned long>( r->m_alloc_ptr )
+              , r->m_alloc_size
+              , r->m_count
+              , reinterpret_cast<unsigned long>( r->m_dealloc )
+              , ( r->m_alloc_ptr ? r->m_alloc_ptr->label() : "" )
+              );
+      std::cout << buffer ;
+      r = r->m_next ;
+    } while ( r != space.m_root_record );
+  }
+  else {
+    do {
+      if ( r->m_alloc_ptr ) {
+        snprintf( buffer , 256 , "Host [ 0x%.12lx + %ld ] %s\n"
+                , reinterpret_cast< unsigned long >( r->data() )
+                , r->size()
+                , r->m_alloc_ptr->label()
+                );
+      }
+      else {
+        snprintf( buffer , 256 , "Host [ 0 + 0 ]\n" );
+      }
+      std::cout << buffer ;
+      r = r->m_next ;
+    } while ( r != space.m_root_record );
+  }
+}
+
+} // namespace Impl
+} // namespace Experimental
+} // namespace Kokkos
+
+/*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {

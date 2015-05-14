@@ -53,6 +53,7 @@
 
 //----------------------------------------------------------------------------
 
+#include <TestSharedAlloc.hpp>
 #include <TestViewImpl.hpp>
 
 #include <TestViewAPI.hpp>
@@ -128,6 +129,10 @@ protected:
 
 TEST_F( threads , init ) {
   ;
+}
+
+TEST_F( threads , impl_shared_alloc ) {
+  test_shared_alloc< Kokkos::HostSpace , Kokkos::Threads >();
 }
 
 TEST_F( threads, view_impl) {

@@ -44,13 +44,14 @@
 #ifndef KOKKOS_CUDASPACE_HPP
 #define KOKKOS_CUDASPACE_HPP
 
+#include <Kokkos_Core_fwd.hpp>
+
 #if defined( KOKKOS_HAVE_CUDA )
 
 #include <iosfwd>
 #include <typeinfo>
 #include <string>
 
-#include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_HostSpace.hpp>
 
 #include <impl/Kokkos_AllocationTracker.hpp>
@@ -96,9 +97,33 @@ public:
 #endif
 
   /*--------------------------------*/
+
+  CudaSpace();
+  CudaSpace( const CudaSpace & rhs ) = default ;
+  CudaSpace & operator = ( const CudaSpace & rhs ) = default ;
+  ~CudaSpace() = default ;
+
+  /**\brief  Allocate memory in the cuda space */
+  void * allocate( const size_t arg_alloc_size ) const ;
+
+  /**\brief  Deallocate memory in the cuda space */
+  void deallocate( void * const arg_alloc_ptr
+                 , const size_t arg_alloc_size ) const ;
+
+  /*--------------------------------*/
   /** \brief  Error reporting for HostSpace attempt to access CudaSpace */
   static void access_error();
   static void access_error( const void * const );
+
+private:
+
+  /**\brief  Root record for tracked allocations from this HostSpace instance */
+  using Record = Kokkos::Experimental::Impl::SharedAllocationRecord< void , void > ;
+
+  Record  * m_root_record ;
+  int       m_device ;
+
+  friend class Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > ;
 };
 
 namespace Impl {
@@ -390,9 +415,77 @@ struct VerifyExecutionCanAccessMemorySpace< Kokkos::HostSpace , Kokkos::CudaHost
   KOKKOS_INLINE_FUNCTION static void verify( const void * ) {}
 };
 
+} // namespace Impl
+} // namespace Kokkos
+
+//----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+namespace Kokkos {
+namespace Experimental {
+namespace Impl {
+
+template<>
+class SharedAllocationRecord< Kokkos::CudaSpace , void >
+  : public SharedAllocationRecord< void , void >
+{
+private:
+
+  friend Kokkos::CudaSpace ;
+
+  using RecordBase = SharedAllocationRecord< void , void > ;
+
+  SharedAllocationRecord( const SharedAllocationRecord & ) = delete ;
+  SharedAllocationRecord & operator = ( const SharedAllocationRecord & ) = delete ;
+
+  static void deallocate( RecordBase * );
+
+  void attach_texture_object( const unsigned sizeof_alias );
+
+  const Kokkos::CudaSpace m_space ;
+  ::cudaTextureObject_t   m_tex_obj ;
+
+protected:
+
+  ~SharedAllocationRecord();
+  SharedAllocationRecord() : RecordBase() , m_space() , m_tex_obj(0) {}
+
+  SharedAllocationRecord( const Kokkos::CudaSpace        & arg_space
+                        , const std::string              & arg_label
+                        , const size_t                     arg_alloc_size
+                        , const RecordBase::function_type  arg_dealloc = & deallocate
+                        );
+
+public:
+
+  static SharedAllocationRecord * allocate( const Kokkos::CudaSpace &  arg_space
+                                          , const std::string       &  arg_label
+                                          , const size_t               arg_alloc_size
+                                          )
+    { return new SharedAllocationRecord( arg_space , arg_label , arg_alloc_size ); }
+
+  template< typename AliasType >
+  inline
+  ::cudaTextureObject_t attach_texture_object()
+    {
+      static_assert( std::is_literal_type< AliasType >::value &&
+                     ( std::is_same< AliasType , int >::value ||
+                       std::is_same< AliasType , ::int2 >::value ||
+                       std::is_same< AliasType , ::int4 >::value )
+                   , "Cuda texture fetch only supported for alias types of int, ::int2, or ::int4" );
+
+      if ( m_tex_obj != 0 ) attach_texture_object( sizeof(AliasType) );
+
+      return m_tex_obj ;
+    }
+
+  static SharedAllocationRecord * get_record( void * arg_alloc_ptr );
+
+  static void print_records( std::ostream & , const Kokkos::CudaSpace & , bool detail = false );
+};
+
 } // namespace Impl
+} // namespace Experimental
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------

@@ -53,6 +53,7 @@
 
 //----------------------------------------------------------------------------
 
+#include <TestSharedAlloc.hpp>
 #include <TestViewImpl.hpp>
 #include <TestAtomic.hpp>
 
@@ -137,6 +138,9 @@ TEST_F( cuda, spaces )
   }
 }
 
+TEST_F( cuda , impl_shared_alloc ) {
+  test_shared_alloc< Kokkos::CudaSpace , Kokkos::Threads >();
+}
 
 TEST_F( cuda, view_impl )
 {
