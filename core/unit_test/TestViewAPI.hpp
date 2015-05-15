@@ -185,14 +185,14 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 8 >
     long offset ;
 
     offset = -1 ;
-    for ( unsigned i7 = 0 ; i7 < lsh.N7 ; ++i7 )
-    for ( unsigned i6 = 0 ; i6 < lsh.N6 ; ++i6 )
-    for ( unsigned i5 = 0 ; i5 < lsh.N5 ; ++i5 )
-    for ( unsigned i4 = 0 ; i4 < lsh.N4 ; ++i4 )
-    for ( unsigned i3 = 0 ; i3 < lsh.N3 ; ++i3 )
-    for ( unsigned i2 = 0 ; i2 < lsh.N2 ; ++i2 )
-    for ( unsigned i1 = 0 ; i1 < lsh.N1 ; ++i1 )
-    for ( unsigned i0 = 0 ; i0 < lsh.N0 ; ++i0 )
+    for ( unsigned i7 = 0 ; i7 < unsigned(lsh.N7) ; ++i7 )
+    for ( unsigned i6 = 0 ; i6 < unsigned(lsh.N6) ; ++i6 )
+    for ( unsigned i5 = 0 ; i5 < unsigned(lsh.N5) ; ++i5 )
+    for ( unsigned i4 = 0 ; i4 < unsigned(lsh.N4) ; ++i4 )
+    for ( unsigned i3 = 0 ; i3 < unsigned(lsh.N3) ; ++i3 )
+    for ( unsigned i2 = 0 ; i2 < unsigned(lsh.N2) ; ++i2 )
+    for ( unsigned i1 = 0 ; i1 < unsigned(lsh.N1) ; ++i1 )
+    for ( unsigned i0 = 0 ; i0 < unsigned(lsh.N0) ; ++i0 )
     {
       const long j = & left( i0, i1, i2, i3, i4, i5, i6, i7 ) -
                      & left(  0,  0,  0,  0,  0,  0,  0,  0 );
@@ -206,14 +206,14 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 8 >
     }
 
     offset = -1 ;
-    for ( unsigned i0 = 0 ; i0 < rsh.N0 ; ++i0 )
-    for ( unsigned i1 = 0 ; i1 < rsh.N1 ; ++i1 )
-    for ( unsigned i2 = 0 ; i2 < rsh.N2 ; ++i2 )
-    for ( unsigned i3 = 0 ; i3 < rsh.N3 ; ++i3 )
-    for ( unsigned i4 = 0 ; i4 < rsh.N4 ; ++i4 )
-    for ( unsigned i5 = 0 ; i5 < rsh.N5 ; ++i5 )
-    for ( unsigned i6 = 0 ; i6 < rsh.N6 ; ++i6 )
-    for ( unsigned i7 = 0 ; i7 < rsh.N7 ; ++i7 )
+    for ( unsigned i0 = 0 ; i0 < unsigned(rsh.N0) ; ++i0 )
+    for ( unsigned i1 = 0 ; i1 < unsigned(rsh.N1) ; ++i1 )
+    for ( unsigned i2 = 0 ; i2 < unsigned(rsh.N2) ; ++i2 )
+    for ( unsigned i3 = 0 ; i3 < unsigned(rsh.N3) ; ++i3 )
+    for ( unsigned i4 = 0 ; i4 < unsigned(rsh.N4) ; ++i4 )
+    for ( unsigned i5 = 0 ; i5 < unsigned(rsh.N5) ; ++i5 )
+    for ( unsigned i6 = 0 ; i6 < unsigned(rsh.N6) ; ++i6 )
+    for ( unsigned i7 = 0 ; i7 < unsigned(rsh.N7) ; ++i7 )
     {
       const long j = & right( i0, i1, i2, i3, i4, i5, i6, i7 ) -
                      & right(  0,  0,  0,  0,  0,  0,  0,  0 );
@@ -292,13 +292,13 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 7 >
     long offset ;
 
     offset = -1 ;
-    for ( unsigned i6 = 0 ; i6 < lsh.N6 ; ++i6 )
-    for ( unsigned i5 = 0 ; i5 < lsh.N5 ; ++i5 )
-    for ( unsigned i4 = 0 ; i4 < lsh.N4 ; ++i4 )
-    for ( unsigned i3 = 0 ; i3 < lsh.N3 ; ++i3 )
-    for ( unsigned i2 = 0 ; i2 < lsh.N2 ; ++i2 )
-    for ( unsigned i1 = 0 ; i1 < lsh.N1 ; ++i1 )
-    for ( unsigned i0 = 0 ; i0 < lsh.N0 ; ++i0 )
+    for ( unsigned i6 = 0 ; i6 < unsigned(lsh.N6) ; ++i6 )
+    for ( unsigned i5 = 0 ; i5 < unsigned(lsh.N5) ; ++i5 )
+    for ( unsigned i4 = 0 ; i4 < unsigned(lsh.N4) ; ++i4 )
+    for ( unsigned i3 = 0 ; i3 < unsigned(lsh.N3) ; ++i3 )
+    for ( unsigned i2 = 0 ; i2 < unsigned(lsh.N2) ; ++i2 )
+    for ( unsigned i1 = 0 ; i1 < unsigned(lsh.N1) ; ++i1 )
+    for ( unsigned i0 = 0 ; i0 < unsigned(lsh.N0) ; ++i0 )
     {
       const long j = & left( i0, i1, i2, i3, i4, i5, i6 ) -
                      & left(  0,  0,  0,  0,  0,  0,  0 );
@@ -307,13 +307,13 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 7 >
     }
 
     offset = -1 ;
-    for ( unsigned i0 = 0 ; i0 < rsh.N0 ; ++i0 )
-    for ( unsigned i1 = 0 ; i1 < rsh.N1 ; ++i1 )
-    for ( unsigned i2 = 0 ; i2 < rsh.N2 ; ++i2 )
-    for ( unsigned i3 = 0 ; i3 < rsh.N3 ; ++i3 )
-    for ( unsigned i4 = 0 ; i4 < rsh.N4 ; ++i4 )
-    for ( unsigned i5 = 0 ; i5 < rsh.N5 ; ++i5 )
-    for ( unsigned i6 = 0 ; i6 < rsh.N6 ; ++i6 )
+    for ( unsigned i0 = 0 ; i0 < unsigned(rsh.N0) ; ++i0 )
+    for ( unsigned i1 = 0 ; i1 < unsigned(rsh.N1) ; ++i1 )
+    for ( unsigned i2 = 0 ; i2 < unsigned(rsh.N2) ; ++i2 )
+    for ( unsigned i3 = 0 ; i3 < unsigned(rsh.N3) ; ++i3 )
+    for ( unsigned i4 = 0 ; i4 < unsigned(rsh.N4) ; ++i4 )
+    for ( unsigned i5 = 0 ; i5 < unsigned(rsh.N5) ; ++i5 )
+    for ( unsigned i6 = 0 ; i6 < unsigned(rsh.N6) ; ++i6 )
     {
       const long j = & right( i0, i1, i2, i3, i4, i5, i6 ) -
                      & right(  0,  0,  0,  0,  0,  0,  0 );
@@ -387,12 +387,12 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 6 >
     long offset ;
 
     offset = -1 ;
-    for ( unsigned i5 = 0 ; i5 < lsh.N5 ; ++i5 )
-    for ( unsigned i4 = 0 ; i4 < lsh.N4 ; ++i4 )
-    for ( unsigned i3 = 0 ; i3 < lsh.N3 ; ++i3 )
-    for ( unsigned i2 = 0 ; i2 < lsh.N2 ; ++i2 )
-    for ( unsigned i1 = 0 ; i1 < lsh.N1 ; ++i1 )
-    for ( unsigned i0 = 0 ; i0 < lsh.N0 ; ++i0 )
+    for ( unsigned i5 = 0 ; i5 < unsigned(lsh.N5) ; ++i5 )
+    for ( unsigned i4 = 0 ; i4 < unsigned(lsh.N4) ; ++i4 )
+    for ( unsigned i3 = 0 ; i3 < unsigned(lsh.N3) ; ++i3 )
+    for ( unsigned i2 = 0 ; i2 < unsigned(lsh.N2) ; ++i2 )
+    for ( unsigned i1 = 0 ; i1 < unsigned(lsh.N1) ; ++i1 )
+    for ( unsigned i0 = 0 ; i0 < unsigned(lsh.N0) ; ++i0 )
     {
       const long j = & left( i0, i1, i2, i3, i4, i5 ) -
                      & left(  0,  0,  0,  0,  0,  0 );
@@ -401,12 +401,12 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 6 >
     }
 
     offset = -1 ;
-    for ( unsigned i0 = 0 ; i0 < rsh.N0 ; ++i0 )
-    for ( unsigned i1 = 0 ; i1 < rsh.N1 ; ++i1 )
-    for ( unsigned i2 = 0 ; i2 < rsh.N2 ; ++i2 )
-    for ( unsigned i3 = 0 ; i3 < rsh.N3 ; ++i3 )
-    for ( unsigned i4 = 0 ; i4 < rsh.N4 ; ++i4 )
-    for ( unsigned i5 = 0 ; i5 < rsh.N5 ; ++i5 )
+    for ( unsigned i0 = 0 ; i0 < unsigned(rsh.N0) ; ++i0 )
+    for ( unsigned i1 = 0 ; i1 < unsigned(rsh.N1) ; ++i1 )
+    for ( unsigned i2 = 0 ; i2 < unsigned(rsh.N2) ; ++i2 )
+    for ( unsigned i3 = 0 ; i3 < unsigned(rsh.N3) ; ++i3 )
+    for ( unsigned i4 = 0 ; i4 < unsigned(rsh.N4) ; ++i4 )
+    for ( unsigned i5 = 0 ; i5 < unsigned(rsh.N5) ; ++i5 )
     {
       const long j = & right( i0, i1, i2, i3, i4, i5 ) -
                      & right(  0,  0,  0,  0,  0,  0 );
@@ -487,11 +487,11 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 5 >
     long offset ;
 
     offset = -1 ;
-    for ( unsigned i4 = 0 ; i4 < lsh.N4 ; ++i4 )
-    for ( unsigned i3 = 0 ; i3 < lsh.N3 ; ++i3 )
-    for ( unsigned i2 = 0 ; i2 < lsh.N2 ; ++i2 )
-    for ( unsigned i1 = 0 ; i1 < lsh.N1 ; ++i1 )
-    for ( unsigned i0 = 0 ; i0 < lsh.N0 ; ++i0 )
+    for ( unsigned i4 = 0 ; i4 < unsigned(lsh.N4) ; ++i4 )
+    for ( unsigned i3 = 0 ; i3 < unsigned(lsh.N3) ; ++i3 )
+    for ( unsigned i2 = 0 ; i2 < unsigned(lsh.N2) ; ++i2 )
+    for ( unsigned i1 = 0 ; i1 < unsigned(lsh.N1) ; ++i1 )
+    for ( unsigned i0 = 0 ; i0 < unsigned(lsh.N0) ; ++i0 )
     {
       const long j = & left( i0, i1, i2, i3, i4 ) -
                      & left(  0,  0,  0,  0,  0 );
@@ -503,11 +503,11 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 5 >
     }
 
     offset = -1 ;
-    for ( unsigned i0 = 0 ; i0 < rsh.N0 ; ++i0 )
-    for ( unsigned i1 = 0 ; i1 < rsh.N1 ; ++i1 )
-    for ( unsigned i2 = 0 ; i2 < rsh.N2 ; ++i2 )
-    for ( unsigned i3 = 0 ; i3 < rsh.N3 ; ++i3 )
-    for ( unsigned i4 = 0 ; i4 < rsh.N4 ; ++i4 )
+    for ( unsigned i0 = 0 ; i0 < unsigned(rsh.N0) ; ++i0 )
+    for ( unsigned i1 = 0 ; i1 < unsigned(rsh.N1) ; ++i1 )
+    for ( unsigned i2 = 0 ; i2 < unsigned(rsh.N2) ; ++i2 )
+    for ( unsigned i3 = 0 ; i3 < unsigned(rsh.N3) ; ++i3 )
+    for ( unsigned i4 = 0 ; i4 < unsigned(rsh.N4) ; ++i4 )
     {
       const long j = & right( i0, i1, i2, i3, i4 ) -
                      & right(  0,  0,  0,  0,  0 );
@@ -584,10 +584,10 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 4 >
     long offset ;
 
     offset = -1 ;
-    for ( unsigned i3 = 0 ; i3 < lsh.N3 ; ++i3 )
-    for ( unsigned i2 = 0 ; i2 < lsh.N2 ; ++i2 )
-    for ( unsigned i1 = 0 ; i1 < lsh.N1 ; ++i1 )
-    for ( unsigned i0 = 0 ; i0 < lsh.N0 ; ++i0 )
+    for ( unsigned i3 = 0 ; i3 < unsigned(lsh.N3) ; ++i3 )
+    for ( unsigned i2 = 0 ; i2 < unsigned(lsh.N2) ; ++i2 )
+    for ( unsigned i1 = 0 ; i1 < unsigned(lsh.N1) ; ++i1 )
+    for ( unsigned i0 = 0 ; i0 < unsigned(lsh.N0) ; ++i0 )
     {
       const long j = & left( i0, i1, i2, i3 ) -
                      & left(  0,  0,  0,  0 );
@@ -596,10 +596,10 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 4 >
     }
 
     offset = -1 ;
-    for ( unsigned i0 = 0 ; i0 < rsh.N0 ; ++i0 )
-    for ( unsigned i1 = 0 ; i1 < rsh.N1 ; ++i1 )
-    for ( unsigned i2 = 0 ; i2 < rsh.N2 ; ++i2 )
-    for ( unsigned i3 = 0 ; i3 < rsh.N3 ; ++i3 )
+    for ( unsigned i0 = 0 ; i0 < unsigned(rsh.N0) ; ++i0 )
+    for ( unsigned i1 = 0 ; i1 < unsigned(rsh.N1) ; ++i1 )
+    for ( unsigned i2 = 0 ; i2 < unsigned(rsh.N2) ; ++i2 )
+    for ( unsigned i3 = 0 ; i3 < unsigned(rsh.N3) ; ++i3 )
     {
       const long j = & right( i0, i1, i2, i3 ) -
                      & right(  0,  0,  0,  0 );
@@ -680,9 +680,9 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 3 >
     long offset ;
 
     offset = -1 ;
-    for ( unsigned i2 = 0 ; i2 < lsh.N2 ; ++i2 )
-    for ( unsigned i1 = 0 ; i1 < lsh.N1 ; ++i1 )
-    for ( unsigned i0 = 0 ; i0 < lsh.N0 ; ++i0 )
+    for ( unsigned i2 = 0 ; i2 < unsigned(lsh.N2) ; ++i2 )
+    for ( unsigned i1 = 0 ; i1 < unsigned(lsh.N1) ; ++i1 )
+    for ( unsigned i0 = 0 ; i0 < unsigned(lsh.N0) ; ++i0 )
     {
       const long j = & left( i0, i1, i2 ) -
                      & left(  0,  0,  0 );
@@ -693,9 +693,9 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 3 >
     }
 
     offset = -1 ;
-    for ( unsigned i0 = 0 ; i0 < rsh.N0 ; ++i0 )
-    for ( unsigned i1 = 0 ; i1 < rsh.N1 ; ++i1 )
-    for ( unsigned i2 = 0 ; i2 < rsh.N2 ; ++i2 )
+    for ( unsigned i0 = 0 ; i0 < unsigned(rsh.N0) ; ++i0 )
+    for ( unsigned i1 = 0 ; i1 < unsigned(rsh.N1) ; ++i1 )
+    for ( unsigned i2 = 0 ; i2 < unsigned(rsh.N2) ; ++i2 )
     {
       const long j = & right( i0, i1, i2 ) -
                      & right(  0,  0,  0 );
@@ -705,9 +705,9 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 3 >
       if ( & right(i0,i1,i2) != & right_stride(i0,i1,i2) ) { update |= 8 ; }
     }
 
-    for ( unsigned i0 = 0 ; i0 < lsh.N0 ; ++i0 )
-    for ( unsigned i1 = 0 ; i1 < lsh.N1 ; ++i1 )
-    for ( unsigned i2 = 0 ; i2 < lsh.N2 ; ++i2 )
+    for ( unsigned i0 = 0 ; i0 < unsigned(lsh.N0) ; ++i0 )
+    for ( unsigned i1 = 0 ; i1 < unsigned(lsh.N1) ; ++i1 )
+    for ( unsigned i2 = 0 ; i2 < unsigned(lsh.N2) ; ++i2 )
     {
       if ( & left(i0,i1,i2)  != & left.at(i0,i1,i2,0,0,0,0,0) )  { update |= 3 ; }
       if ( & right(i0,i1,i2) != & right.at(i0,i1,i2,0,0,0,0,0) ) { update |= 3 ; }
@@ -779,8 +779,8 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 2 >
     long offset ;
 
     offset = -1 ;
-    for ( unsigned i1 = 0 ; i1 < lsh.N1 ; ++i1 )
-    for ( unsigned i0 = 0 ; i0 < lsh.N0 ; ++i0 )
+    for ( unsigned i1 = 0 ; i1 < unsigned(lsh.N1) ; ++i1 )
+    for ( unsigned i0 = 0 ; i0 < unsigned(lsh.N0) ; ++i0 )
     {
       const long j = & left( i0, i1 ) -
                      & left(  0,  0 );
@@ -789,8 +789,8 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 2 >
     }
 
     offset = -1 ;
-    for ( unsigned i0 = 0 ; i0 < rsh.N0 ; ++i0 )
-    for ( unsigned i1 = 0 ; i1 < rsh.N1 ; ++i1 )
+    for ( unsigned i0 = 0 ; i0 < unsigned(rsh.N0) ; ++i0 )
+    for ( unsigned i1 = 0 ; i1 < unsigned(rsh.N1) ; ++i1 )
     {
       const long j = & right( i0, i1 ) -
                      & right(  0,  0 );
@@ -798,8 +798,8 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 2 >
       offset = j ;
     }
 
-    for ( unsigned i0 = 0 ; i0 < lsh.N0 ; ++i0 )
-    for ( unsigned i1 = 0 ; i1 < lsh.N1 ; ++i1 )
+    for ( unsigned i0 = 0 ; i0 < unsigned(lsh.N0) ; ++i0 )
+    for ( unsigned i1 = 0 ; i1 < unsigned(lsh.N1) ; ++i1 )
     {
       if ( & left(i0,i1)  != & left.at(i0,i1,0,0,0,0,0,0) )  { update |= 3 ; }
       if ( & right(i0,i1) != & right.at(i0,i1,0,0,0,0,0,0) ) { update |= 3 ; }
@@ -875,7 +875,7 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 1 >
   KOKKOS_INLINE_FUNCTION
   void operator()( const size_type , value_type & update ) const
   {
-    for ( unsigned i0 = 0 ; i0 < lsh.N0 ; ++i0 )
+    for ( unsigned i0 = 0 ; i0 < unsigned(lsh.N0) ; ++i0 )
     {
       if ( & left(i0)  != & left.at(i0,0,0,0,0,0,0,0) )  { update |= 3 ; }
       if ( & right(i0) != & right.at(i0,0,0,0,0,0,0,0) ) { update |= 3 ; }

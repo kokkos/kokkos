@@ -215,8 +215,10 @@ T atomic_compare_exchange( volatile T * const dest , const T compare ,
 {
   while( !Impl::lock_address_host_space( (void*) dest ) );
   T return_val = *dest;
-  if( return_val == compare )
-    *dest = val;
+  if( return_val == compare ) {
+    const T tmp = *dest = val;
+    (void) tmp;
+  }
   Impl::unlock_address_host_space( (void*) dest );
   return return_val;
 }

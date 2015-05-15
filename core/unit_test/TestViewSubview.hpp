@@ -153,13 +153,13 @@ void test_auto_1d ()
       ASSERT_TRUE(X_h(i,j) == ZERO);
     }
 
-    for (size_type j = 0; j < numCols; ++j) {
-      auto X_j = Kokkos::subview (X, Kokkos::ALL (), j);
-      fill_1D<decltype(X_j),Space> f5(X_j, ONE);
-      Kokkos::parallel_for(X_j.dimension_0(),f5);
+    for (size_type jj = 0; jj < numCols; ++jj) {
+      auto X_jj = Kokkos::subview (X, Kokkos::ALL (), jj);
+      fill_1D<decltype(X_jj),Space> f5(X_jj, ONE);
+      Kokkos::parallel_for(X_jj.dimension_0(),f5);
       Kokkos::deep_copy (X_h, X);
       for (size_type i = 0; i < numRows; ++i) {
-        ASSERT_TRUE(X_h(i,j) == ONE);
+        ASSERT_TRUE(X_h(i,jj) == ONE);
       }
     }
   }

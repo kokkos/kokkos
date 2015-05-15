@@ -398,8 +398,8 @@ private:
             , const iType & arg_size
             )
     {
-      const iType end = arg_begin + ( ( arg_end - arg_begin + arg_size - 1 ) / arg_size ) * ( arg_rank + 1 );
-      return end < arg_end ? end : arg_end ;
+      const iType end_ = arg_begin + ( ( arg_end - arg_begin + arg_size - 1 ) / arg_size ) * ( arg_rank + 1 );
+      return end_ < arg_end ? end_ : arg_end ;
     }
 
 public:

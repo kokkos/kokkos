@@ -226,7 +226,8 @@ T atomic_exchange( volatile T * const dest ,
 {
   while( !Impl::lock_address_host_space( (void*) dest ) );
   T return_val = *dest;
-  *dest = val;
+  const T tmp = *dest = val;
+  (void) tmp;
   Impl::unlock_address_host_space( (void*) dest );
   return return_val;
 }

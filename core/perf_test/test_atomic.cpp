@@ -48,7 +48,7 @@
 #include <Kokkos_Core.hpp>
 #include <impl/Kokkos_Timer.hpp>
 
-typedef Kokkos::DefaultExecutionSpace execution_space;
+typedef Kokkos::DefaultExecutionSpace exec_space;
 
 #define RESET		0
 #define BRIGHT 		1
@@ -108,17 +108,17 @@ struct AddFunctor{
 
 template<class T>
 T AddLoop(int loop) {
-  struct ZeroFunctor<T,execution_space> f_zero;
-  typename ZeroFunctor<T,execution_space>::type data("Data");
-  typename ZeroFunctor<T,execution_space>::h_type h_data("HData");
+  struct ZeroFunctor<T,exec_space> f_zero;
+  typename ZeroFunctor<T,exec_space>::type data("Data");
+  typename ZeroFunctor<T,exec_space>::h_type h_data("HData");
   f_zero.data = data;
   Kokkos::parallel_for(1,f_zero);
-  execution_space::fence();
+  exec_space::fence();
 
-  struct AddFunctor<T,execution_space> f_add;
+  struct AddFunctor<T,exec_space> f_add;
   f_add.data = data;
   Kokkos::parallel_for(loop,f_add);
-  execution_space::fence();
+  exec_space::fence();
 
   Kokkos::deep_copy(h_data,data);
   T val = h_data();
@@ -139,18 +139,18 @@ struct AddNonAtomicFunctor{
 
 template<class T>
 T AddLoopNonAtomic(int loop) {
-  struct ZeroFunctor<T,execution_space> f_zero;
-  typename ZeroFunctor<T,execution_space>::type data("Data");
-  typename ZeroFunctor<T,execution_space>::h_type h_data("HData");
+  struct ZeroFunctor<T,exec_space> f_zero;
+  typename ZeroFunctor<T,exec_space>::type data("Data");
+  typename ZeroFunctor<T,exec_space>::h_type h_data("HData");
 
   f_zero.data = data;
   Kokkos::parallel_for(1,f_zero);
-  execution_space::fence();
+  exec_space::fence();
 
-  struct AddNonAtomicFunctor<T,execution_space> f_add;
+  struct AddNonAtomicFunctor<T,exec_space> f_add;
   f_add.data = data;
   Kokkos::parallel_for(loop,f_add);
-  execution_space::fence();
+  exec_space::fence();
 
   Kokkos::deep_copy(h_data,data);
   T val = h_data();
@@ -192,17 +192,17 @@ struct CASFunctor{
 
 template<class T>
 T CASLoop(int loop) {
-  struct ZeroFunctor<T,execution_space> f_zero;
-  typename ZeroFunctor<T,execution_space>::type data("Data");
-  typename ZeroFunctor<T,execution_space>::h_type h_data("HData");
+  struct ZeroFunctor<T,exec_space> f_zero;
+  typename ZeroFunctor<T,exec_space>::type data("Data");
+  typename ZeroFunctor<T,exec_space>::h_type h_data("HData");
   f_zero.data = data;
   Kokkos::parallel_for(1,f_zero);
-  execution_space::fence();
+  exec_space::fence();
 
-  struct CASFunctor<T,execution_space> f_cas;
+  struct CASFunctor<T,exec_space> f_cas;
   f_cas.data = data;
   Kokkos::parallel_for(loop,f_cas);
-  execution_space::fence();
+  exec_space::fence();
 
   Kokkos::deep_copy(h_data,data);
   T val = h_data();
@@ -235,17 +235,17 @@ struct CASNonAtomicFunctor{
 
 template<class T>
 T CASLoopNonAtomic(int loop) {
-  struct ZeroFunctor<T,execution_space> f_zero;
-  typename ZeroFunctor<T,execution_space>::type data("Data");
-  typename ZeroFunctor<T,execution_space>::h_type h_data("HData");
+  struct ZeroFunctor<T,exec_space> f_zero;
+  typename ZeroFunctor<T,exec_space>::type data("Data");
+  typename ZeroFunctor<T,exec_space>::h_type h_data("HData");
   f_zero.data = data;
   Kokkos::parallel_for(1,f_zero);
-  execution_space::fence();
+  exec_space::fence();
 
-  struct CASNonAtomicFunctor<T,execution_space> f_cas;
+  struct CASNonAtomicFunctor<T,exec_space> f_cas;
   f_cas.data = data;
   Kokkos::parallel_for(loop,f_cas);
-  execution_space::fence();
+  exec_space::fence();
 
   Kokkos::deep_copy(h_data,data);
   T val = h_data();
@@ -291,24 +291,24 @@ struct ExchFunctor{
 
 template<class T>
 T ExchLoop(int loop) {
-  struct ZeroFunctor<T,execution_space> f_zero;
-  typename ZeroFunctor<T,execution_space>::type data("Data");
-  typename ZeroFunctor<T,execution_space>::h_type h_data("HData");
+  struct ZeroFunctor<T,exec_space> f_zero;
+  typename ZeroFunctor<T,exec_space>::type data("Data");
+  typename ZeroFunctor<T,exec_space>::h_type h_data("HData");
   f_zero.data = data;
   Kokkos::parallel_for(1,f_zero);
-  execution_space::fence();
+  exec_space::fence();
 
-  typename ZeroFunctor<T,execution_space>::type data2("Data");
-  typename ZeroFunctor<T,execution_space>::h_type h_data2("HData");
+  typename ZeroFunctor<T,exec_space>::type data2("Data");
+  typename ZeroFunctor<T,exec_space>::h_type h_data2("HData");
   f_zero.data = data2;
   Kokkos::parallel_for(1,f_zero);
-  execution_space::fence();
+  exec_space::fence();
 
-  struct ExchFunctor<T,execution_space> f_exch;
+  struct ExchFunctor<T,exec_space> f_exch;
   f_exch.data = data;
   f_exch.data2 = data2;
   Kokkos::parallel_for(loop,f_exch);
-  execution_space::fence();
+  exec_space::fence();
 
   Kokkos::deep_copy(h_data,data);
   Kokkos::deep_copy(h_data2,data2);
@@ -334,24 +334,24 @@ struct ExchNonAtomicFunctor{
 
 template<class T>
 T ExchLoopNonAtomic(int loop) {
-  struct ZeroFunctor<T,execution_space> f_zero;
-  typename ZeroFunctor<T,execution_space>::type data("Data");
-  typename ZeroFunctor<T,execution_space>::h_type h_data("HData");
+  struct ZeroFunctor<T,exec_space> f_zero;
+  typename ZeroFunctor<T,exec_space>::type data("Data");
+  typename ZeroFunctor<T,exec_space>::h_type h_data("HData");
   f_zero.data = data;
   Kokkos::parallel_for(1,f_zero);
-  execution_space::fence();
+  exec_space::fence();
 
-  typename ZeroFunctor<T,execution_space>::type data2("Data");
-  typename ZeroFunctor<T,execution_space>::h_type h_data2("HData");
+  typename ZeroFunctor<T,exec_space>::type data2("Data");
+  typename ZeroFunctor<T,exec_space>::h_type h_data2("HData");
   f_zero.data = data2;
   Kokkos::parallel_for(1,f_zero);
-  execution_space::fence();
+  exec_space::fence();
 
-  struct ExchNonAtomicFunctor<T,execution_space> f_exch;
+  struct ExchNonAtomicFunctor<T,exec_space> f_exch;
   f_exch.data = data;
   f_exch.data2 = data2;
   Kokkos::parallel_for(loop,f_exch);
-  execution_space::fence();
+  exec_space::fence();
 
   Kokkos::deep_copy(h_data,data);
   Kokkos::deep_copy(h_data2,data2);
@@ -431,7 +431,7 @@ void Loop(int loop, int test, const char* type_name) {
   bool passed = true;
   if(resSerial!=res) passed = false;
   if(!passed) textcolor(RESET,BLACK,YELLOW);
-  printf("%s Test %i %s  --- Loop: %i Value (S,A,NA): %e %e %e Time: %7.4lf %7.4lf %7.4lf Size of Type %i)",type_name,test,passed?"PASSED":"FAILED",loop,1.0*resSerial,1.0*res,1.0*resNonAtomic,time1,time2,time3,(int)sizeof(T));
+  printf("%s Test %i %s  --- Loop: %i Value (S,A,NA): %e %e %e Time: %7.4e %7.4e %7.4e Size of Type %i)",type_name,test,passed?"PASSED":"FAILED",loop,1.0*resSerial,1.0*res,1.0*resNonAtomic,time1,time2,time3,(int)sizeof(T));
   if(!passed) textcolor_standard();
   printf("\n");
 }

@@ -274,7 +274,8 @@ T atomic_fetch_add( volatile T * const dest ,
 {
   while( !Impl::lock_address_host_space( (void*) dest ) );
   T return_val = *dest;
-  *dest = return_val + val;
+  const T tmp = *dest = return_val + val;
+  (void) tmp;
   Impl::unlock_address_host_space( (void*) dest );
   return return_val;
 }
