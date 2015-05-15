@@ -1,0 +1,237 @@
+#!/bin/bash
+
+KOKKOS_PATH=${HOME}/kokkos
+
+GCC472_PATH=/home/projects/x86-64/gcc/4.7.2
+GCC492_PATH=/home/projects/x86-64/gcc/4.9.2
+GCC510_PATH=/home/projects/x86-64/gcc/5.1.0
+
+INTEL1401_PATH=/opt/intel/composer_xe_2013_sp1.1.106
+INTEL1501_PATH=/opt/intel/composer_xe_2015.1.133
+
+CLANG370_PATH=/home/projects/x86-64/clang/3.6.0
+CLANG370_PATH=/home/projects/x86-64/clang/3.7.0
+
+CUDA65_PATH=/home/projects/x86-64/cuda/6.5.14
+CUDA70_PATH=/home/projects/x86-64/cuda/7.0.28
+
+HWLOC_GCC472_PATH=/home/projects/x86-64/hwloc/1.10.0/gcc/4.7.2
+HWLOC_GCC492_PATH=/home/projects/x86-64/hwloc/1.10.0/gcc/4.9.2
+HWLOC_GCC510_PATH=/home/projects/x86-64/hwloc/1.10.0/gcc/5.1.0
+
+HWLOC_INTEL1401_PATH=/home/projects/x86-64/hwloc/1.10.0/intel/14.0.1
+HWLOC_INTEL1501_PATH=/home/projects/x86-64/hwloc/1.10.0/intel/15.0.1
+
+HWLOC_CLANG360_PATH=/home/projects/x86-64/hwloc/1.10.0/clang/3.6.0
+HWLOC_CLANG370_PATH=/home/projects/x86-64/hwloc/1.10.0/clang/3.7.0
+
+GCC_BUILD_LIST_RELEASE="OpenMP Pthread Serial OpenMP_Serial Pthread_Serial"
+INTEL_BUILD_LIST_RELEASE="OpenMP Pthread Serial OpenMP_Serial Pthread_Serial"
+CLANG_BUILD_LIST_RELEASE="Pthread Serial Pthread_Serial"
+CUDA_BUILD_LIST_RELEASE="Cuda_OpenMP Cuda_Pthread Cuda_Serial"
+
+GCC_WARNING_FLAGS="-Wall -Wshadow -pedantic -Werror -Wsign-compare -Wtype-limits -Wignored-qualifiers -Wempty-body -Wclobbered -Wuninitialized"
+CLANG_WARNING_FLAGS="-Wall -Wshadow -pedantic -Werror -Wsign-compare -Wtype-limits -Wuninitialized"
+INTEL_WARNING_FLAGS="-Wall -Wshadow -pedantic -Werror -Wsign-compare -Wtype-limits -Wuninitialized"
+
+TEST_GCC=1
+TEST_INTEL=1
+TEST_CLANG=1
+TEST_CUDA=1
+
+ENV_PATH=${PATH}
+
+mkdir TestAll
+cd TestAll
+
+while [[ $# > 0 ]]
+do
+key="$1"
+case $key in
+--kokkos-path*)
+KOKKOS_PATH="${key#*=}"
+;;
+--no-gcc)
+TEST_GCC=0
+;;
+--no-intel)
+TEST_INTEL=0
+;;
+--no-clang)
+TEST_CLANG=0
+;;
+--no-cuda)
+TEST_CUDA=0
+;;
+esac
+shift
+done
+
+if [ ${TEST_GCC} -eq 1 ]
+then
+
+mkdir gcc
+mkdir gcc/4.7.2
+mkdir gcc/4.9.2
+mkdir gcc/5.1.0
+
+export OMP_NUM_THREADS=4
+
+cd gcc/4.7.2
+for build in ${GCC_BUILD_LIST_RELEASE}
+do
+  mkdir ${build}-release
+  cd ${build}-release
+    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${GCC472_PATH}/bin/g++ --kokkos-path=${KOKKOS_PATH} -cxxflags="-O3 ${GCC_WARNING_FLAGS}"
+    make build-test &> ../../test_gcc_4.7.2_${build}_release.build
+    make test &> ../../test_gcc_4.7.2_${build}_release.run
+  cd ..
+  
+  mkdir ${build}-hwloc-release
+  cd ${build}-hwloc-release
+    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${GCC472_PATH}/bin/g++ --kokkos-path=${KOKKOS_PATH} -cxxflags="-O3 ${GCC_WARNING_FLAGS}" --with-hwloc=${HWLOC_GCC472_PATH}
+    make build-test &> ../../test_gcc_4.7.2_${build}_hwloc_release.build
+    make test &> ../../test_gcc_4.7.2_${build}_hwloc_release.run
+  cd ..
+done
+cd ../..
+
+cd gcc/5.1.0
+for build in ${GCC_BUILD_LIST_RELEASE}
+do
+  mkdir ${build}-release
+  cd ${build}-release
+    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${GCC510_PATH}/bin/g++ --kokkos-path=${KOKKOS_PATH} -cxxflags="-O3 ${GCC_WARNING_FLAGS}"
+    make build-test &> ../../test_gcc_5.1.0_${build}_release.build
+    make test &> ../../test_gcc_5.1.0_${build}_release.run
+  cd ..
+  
+  mkdir ${build}-hwloc-release
+  cd ${build}-hwloc-release
+    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${GCC510_PATH}/bin/g++ --kokkos-path=${KOKKOS_PATH} -cxxflags="-O3 ${GCC_WARNING_FLAGS}" --with-hwloc=${HWLOC_GCC510_PATH}
+    make build-test &> ../../test_gcc_5.1.0_${build}_hwloc_release.build
+    make test &> ../../test_gcc_5.1.0_${build}_hwloc_release.run
+  cd ..
+done
+
+cd ../..
+fi
+
+if [ ${TEST_INTEL} -eq 1 ]
+then
+
+mkdir intel
+mkdir intel/14.0.1
+mkdir intel/15.0.1
+
+export PATH=${GCC472_PATH}/bin:${ENV_PATH}
+export OMP_NUM_THREADS=4
+
+cd intel/14.0.1
+for build in ${INTEL_BUILD_LIST_RELEASE}
+do
+  mkdir ${build}-release
+  cd ${build}-release
+    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${INTEL1401_PATH}/bin/intel64/icpc --kokkos-path=${KOKKOS_PATH} -cxxflags="-O3 ${INTEL_WARNING_FLAGS}"
+    make build-test &> ../../test_intel_14.0.1_${build}_release.build
+    make test &> ../../test_intel_14.0.1_${build}_release.run
+  cd ..
+
+  mkdir ${build}-hwloc-release
+  cd ${build}-hwloc-release
+    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${INTEL1401_PATH}/bin/intel64/icpc --kokkos-path=${KOKKOS_PATH} -cxxflags="-O3 ${INTEL_WARNING_FLAGS}" --with-hwloc=${HWLOC_INTEL1401_PATH}
+    make build-test &> ../../test_intel_14.0.1_${build}_hwloc_release.build
+    make test &> ../../test_intel_14.0.1_${build}_hwloc_release.run
+  cd ..
+done
+cd ../..
+
+cd intel/15.0.1
+for build in ${INTEL_BUILD_LIST_RELEASE}
+do
+  mkdir ${build}-release
+  cd ${build}-release
+    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${INTEL1501_PATH}/bin/intel64/icpc --kokkos-path=${KOKKOS_PATH} -cxxflags="-O3 ${INTEL_WARNING_FLAGS}"
+    make build-test &> ../../test_intel_15.0.1_${build}_release.build
+    make test &> ../../test_intel_15.0.1_${build}_release.run
+  cd ..
+
+  mkdir ${build}-hwloc-release
+  cd ${build}-hwloc-release
+    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${INTEL1501_PATH}/bin/intel64/icpc --kokkos-path=${KOKKOS_PATH} -cxxflags="-O3 ${INTEL_WARNING_FLAGS}" --with-hwloc=${HWLOC_INTEL1501_PATH}
+    make build-test &> ../../test_intel_15.0.1_${build}_hwloc_release.build
+    make test &> ../../test_intel_15.0.1_${build}_hwloc_release.run
+  cd ..
+done
+
+cd ../..
+PATH=${ENV_PATH}
+fi
+
+if [ ${TEST_CLANG} -eq 1 ]
+then
+
+mkdir clang
+mkdir clang/3.6.0
+mkdir clang/3.7.0
+
+cd clang/3.7.0
+for build in ${CLANG_BUILD_LIST_RELEASE}
+do
+  mkdir ${build}-release
+  cd ${build}-release
+    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${CLANG370_PATH}/bin/clang++ --kokkos-path=${KOKKOS_PATH} -cxxflags="-O3 ${CLANG_WARNING_FLAGS}"
+    make build-test &> ../../test_clang_3.7.0_${build}_release.build
+    make test &> ../../test_clang_3.7.0_${build}_release.run
+  cd ..
+  
+  mkdir ${build}-hwloc-release
+  cd ${build}-hwloc-release
+    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${CLANG370_PATH}/bin/clang++ --kokkos-path=${KOKKOS_PATH} -cxxflags="-O3 ${CLANG_WARNING_FLAGS}" --with-hwloc=${HWLOC_CLANG370_PATH}
+    make build-test &> ../../test_clang_3.7.0_${build}_hwloc_release.build
+    make test &> ../../test_clang_3.7.0_${build}_hwloc_release.run
+  cd ..
+done
+cd ../..
+
+fi
+
+if [ ${TEST_CUDA} -eq 1 ]
+then
+
+mkdir cuda
+mkdir cuda/6.5
+mkdir cuda/7.0
+
+cd cuda/6.5
+PATH=${CUDA65_PATH}/bin:${ENV_PATH}
+for build in ${CUDA_BUILD_LIST_RELEASE}
+do
+  export NVCC_WRAPPER_DEFAULT_COMPILER=${GCC472_PATH}/bin/g++
+  mkdir ${build}-release
+  cd ${build}-release
+    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --with-cuda=${CUDA65_PATH} --compiler=${KOKKOS_PATH}/config/nvcc_wrapper --kokkos-path=${KOKKOS_PATH} -cxxflags="-O3"
+    make build-test &> ../../test_cuda_6.5_${build}_release.build
+    make test &> ../../test_cuda_6.5_${build}_release.run
+  cd ..
+done
+PATH=${ENV_PATH}
+cd ../..
+
+cd cuda/7.0
+PATH=${CUDA70_PATH}/bin:${ENV_PATH}
+for build in ${CUDA_BUILD_LIST_RELEASE}
+do
+  export NVCC_WRAPPER_DEFAULT_COMPILER=${GCC472_PATH}/bin/g++
+  mkdir ${build}-release
+  cd ${build}-release
+    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --with-cuda=${CUDA70_PATH} --compiler=${KOKKOS_PATH}/config/nvcc_wrapper --kokkos-path=${KOKKOS_PATH} -cxxflags="-O3"
+    make build-test &> ../../test_cuda_7.0_${build}_release.build
+    make test &> ../../test_cuda_7.0_${build}_release.run
+  cd ..  
+done
+PATH=${ENV_PATH}
+cd ../..
+
+fi
+
