@@ -217,7 +217,9 @@ T atomic_compare_exchange( volatile T * const dest , const T compare ,
   T return_val = *dest;
   if( return_val == compare ) {
     const T tmp = *dest = val;
+    #ifndef KOKKOS_COMPILER_CLANG
     (void) tmp;
+    #endif
   }
   Impl::unlock_address_host_space( (void*) dest );
   return return_val;

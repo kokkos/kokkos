@@ -227,7 +227,9 @@ T atomic_exchange( volatile T * const dest ,
   while( !Impl::lock_address_host_space( (void*) dest ) );
   T return_val = *dest;
   const T tmp = *dest = val;
+  #ifndef KOKKOS_COMPILER_CLANG
   (void) tmp;
+  #endif
   Impl::unlock_address_host_space( (void*) dest );
   return return_val;
 }
