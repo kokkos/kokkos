@@ -27,10 +27,25 @@ hcedwar(at)sandia.gov and crtrott(at)sandia.gov
 ====Requirements============================================================
 ============================================================================
 
-Compilers (officially supported):
-  GCC 4.7.2 or higher
-  Intel 14.0 or higher
-  CUDA 6.5 or higher
+Primary tested compilers are:
+  GCC 4.7.2
+  GCC 5.1.0
+  Intel 14.0.1
+  Intel 15.0.1
+  Clang 3.7.0
+
+Secondary tested compilers are:
+  CUDA 6.5
+  CUDA 7.0
+
+Primary tested compiler are passing in release mode
+with warnings as errors. We are using the following set 
+of flags:
+GCC:   -Wall -Wshadow -pedantic -Werror -Wsign-compare -Wtype-limits 
+       -Wignored-qualifiers -Wempty-body -Wclobbered -Wuninitialized
+Intel: -Wall -Wshadow -pedantic -Werror -Wsign-compare -Wtype-limits -Wuninitialized
+Clang: -Wall -Wshadow -pedantic -Werror -Wsign-compare -Wtype-limits -Wuninitialized
+
 
 ============================================================================
 ====Getting started=========================================================
