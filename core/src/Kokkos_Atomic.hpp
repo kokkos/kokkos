@@ -267,7 +267,7 @@ const char * atomic_query_version()
 //----------------------------------------------------------------------------
 // This atomic-style macro should be an inlined function, not a macro
 
-#if defined( KOKKOS_COMPILER_GNU )
+#if defined( KOKKOS_COMPILER_GNU ) && !defined(__PGIC__)
 
   #define KOKKOS_NONTEMPORAL_PREFETCH_LOAD(addr) __builtin_prefetch(addr,0,0)
   #define KOKKOS_NONTEMPORAL_PREFETCH_STORE(addr) __builtin_prefetch(addr,1,0)
