@@ -41,6 +41,19 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 0)
 endif
 endif
 
+KOKKOS_INTERNAL_COMPILER_PGI := $(shell $(CXX) --version | grep PGI | wc -l)
+
+ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
+  KOKKOS_INTERNAL_OPENMP_FLAG := -mp 
+else
+  KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
+endif
+
+ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
+  KOKKOS_INTERNAL_CXX11_FLAG := --c++11
+else
+  KOKKOS_INTERNAL_CXX11_FLAG := --std=c++11
+endif
 # Check for other Execution Spaces
 
 KOKKOS_INTERNAL_USE_CUDA := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Cuda | wc -l))
@@ -125,7 +138,7 @@ endif
 
 tmp := $(shell echo "/* General Settings */" >> KokkosCore_config.tmp)
 ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX11), 1)
-	KOKKOS_CXXFLAGS += --std=c++11
+	KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX11_FLAG)
 	tmp := $(shell echo "\#define KOKKOS_HAVE_CXX11 1" >> KokkosCore_config.tmp )
 endif
 
@@ -232,11 +245,11 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/OpenMP/*.cpp)
 	KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/OpenMP/*.hpp)
 	ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
-		KOKKOS_CXXFLAGS += -Xcompiler -fopenmp
+		KOKKOS_CXXFLAGS += -Xcompiler $(KOKKOS_INTERNAL_OPENMP_FLAG)
 	else
-		KOKKOS_CXXFLAGS += -fopenmp
+		KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_OPENMP_FLAG)
 	endif
-	KOKKOS_LDFLAGS += -fopenmp
+	KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_OPENMP_FLAG)
 endif
 
 
