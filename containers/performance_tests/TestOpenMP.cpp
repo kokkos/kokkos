@@ -85,7 +85,7 @@ protected:
   {
     Kokkos::OpenMP::finalize();
 
-    omp_set_num_threads(0);
+    omp_set_num_threads(1);
 
     ASSERT_EQ( 1 , omp_get_max_threads() );
   }

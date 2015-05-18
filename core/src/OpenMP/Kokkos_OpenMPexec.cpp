@@ -291,7 +291,7 @@ void OpenMP::finalize()
   Impl::OpenMPexec::m_pool_topo[1] = 0 ;
   Impl::OpenMPexec::m_pool_topo[2] = 0 ;
 
-  omp_set_num_threads(0);
+  omp_set_num_threads(1);
 
   if ( Impl::s_using_hwloc ) {
     hwloc::unbind_this_thread();
