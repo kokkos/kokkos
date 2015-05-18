@@ -311,7 +311,8 @@
           defined(__powerpc64__) || \
           defined(__POWERPC__) || \
           defined(__ppc__) || \
-          defined(__ppc64__) )
+          defined(__ppc64__) || \
+          defined(__PGIC__) )
     #define KOKKOS_ENABLE_ASM 1
   #endif
 
