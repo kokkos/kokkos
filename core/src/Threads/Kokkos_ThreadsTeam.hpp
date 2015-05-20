@@ -372,10 +372,10 @@ public:
     , m_team_base(0)
     , m_team_shared(0,0)
     , m_team_shared_size(0)
-    , m_team_size(0)
+    , m_team_size(1)
     , m_team_rank(0)
     , m_team_rank_rev(0)
-    , m_league_size(0)
+    , m_league_size(1)
     , m_league_end(0)
     , m_league_rank(0)
     {}

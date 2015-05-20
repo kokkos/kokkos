@@ -58,9 +58,10 @@ namespace Kokkos {
 namespace Experimental {
 
 TaskPolicy< Kokkos::Serial >::member_type &
-TaskPolicy< Kokkos::Serial >::member_null()
+TaskPolicy< Kokkos::Serial >::member_single()
 {
-  static member_type s(0,0,0); return s ;
+  static member_type s(0,1,0); 
+  return s ;
 }
 
 } // namespace Experimental

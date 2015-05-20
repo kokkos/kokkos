@@ -122,7 +122,7 @@ TaskPolicy< Kokkos::Threads >::TaskPolicy
 }
 
 TaskPolicy< Kokkos::Threads >::member_type &
-TaskPolicy< Kokkos::Threads >::member_null()
+TaskPolicy< Kokkos::Threads >::member_single()
 {
   static member_type s ;
   return s ;

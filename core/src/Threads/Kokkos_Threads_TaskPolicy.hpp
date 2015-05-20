@@ -388,12 +388,6 @@ private:
   int m_default_dependence_capacity ;
   int m_team_size ;    ///< Fixed size of a task-team
 
-#if defined( KOKKOS_HAVE_CXX11 )
-  TaskPolicy & operator = ( const TaskPolicy & ) = delete ;
-#else
-  TaskPolicy & operator = ( const TaskPolicy & );
-#endif
-
   template< class FunctorType >
   static inline
   const task_root_type * get_task_root( const FunctorType * f )
@@ -432,6 +426,12 @@ public:
     : m_default_dependence_capacity( arg_default_dependence_capacity )
     , m_team_size( rhs.m_team_size )
     {}
+
+  TaskPolicy & operator = ( const TaskPolicy &rhs ) {
+    m_default_dependence_capacity = rhs.m_default_dependence_capacity;
+    m_team_size = rhs.m_team_size;
+    return *this;
+  }
 
   // Create serial-thread task
 
@@ -567,7 +567,7 @@ public:
 
   //----------------------------------------
 
-  static member_type & member_null();
+  static member_type & member_single();
 
   friend void wait( TaskPolicy< Kokkos::Threads > & );
 };

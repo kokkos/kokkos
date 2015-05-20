@@ -625,8 +625,6 @@ private:
 
   typedef Impl::TaskMember< execution_space , void , void > task_root_type ;
 
-  TaskPolicy & operator = ( const TaskPolicy & ) /* = delete */ ;
-
   template< class FunctorType >
   static inline
   const task_root_type * get_task_root( const FunctorType * f )
@@ -643,7 +641,7 @@ private:
       return static_cast< task_root_type * >( static_cast< task_type * >(f) );
     }
 
-  const unsigned m_default_dependence_capacity ;
+  unsigned m_default_dependence_capacity ;
 
 public:
 
@@ -662,6 +660,12 @@ public:
   TaskPolicy( const TaskPolicy &
             , const unsigned arg_default_dependence_capacity )
     : m_default_dependence_capacity( arg_default_dependence_capacity ) {}
+
+  TaskPolicy & operator = ( const TaskPolicy &rhs ) 
+    {
+      m_default_dependence_capacity = rhs.m_default_dependence_capacity;
+      return *this;
+    }
 
   //----------------------------------------
 
@@ -824,7 +828,7 @@ public:
 
   //----------------------------------------
 
-  static member_type & member_null();
+  static member_type & member_single();
 };
 
 inline
