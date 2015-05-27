@@ -14,8 +14,8 @@ GTC 2015:
   http://on-demand.gputechconf.com/gtc/2015/video/S5166.html
   http://on-demand.gputechconf.com/gtc/2015/presentation/S5166-H-Carter-Edwards.pdf
 
-A comprehensive programming guide is currently under preparation and should be 
-available within the next few weeks.
+A programming guide can be found under doc/Kokkos_PG.pdf. This is an initial version 
+and feedback is greatly appreciated.
 
 For questions please send an email to 
 kokkos-users@software.sandia.gov
