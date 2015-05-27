@@ -40,6 +40,7 @@ TEST_CLANG=1
 TEST_CUDA=1
 
 ENV_PATH=${PATH}
+ENV_LDPATH=${LD_LIBRARY_PATH}
 
 mkdir TestAll
 cd TestAll
@@ -78,6 +79,8 @@ mkdir gcc/5.1.0
 export OMP_NUM_THREADS=4
 
 cd gcc/4.7.2
+export PATH=${GCC472_PATH}/bin:${ENV_PATH}
+export LD_LIBRARY_PATH=${GCC472_PATH}/lib64:${ENV_LDPATH}
 for build in ${GCC_BUILD_LIST_RELEASE}
 do
   mkdir ${build}-release
@@ -97,6 +100,8 @@ done
 cd ../..
 
 cd gcc/5.1.0
+export PATH=${GCC510_PATH}/bin:${ENV_PATH}
+export LD_LIBRARY_PATH=${GCC510_PATH}/lib64:${ENV_LDPATH}
 for build in ${GCC_BUILD_LIST_RELEASE}
 do
   mkdir ${build}-release
@@ -124,8 +129,12 @@ mkdir intel
 mkdir intel/14.0.1
 mkdir intel/15.0.1
 
-export PATH=${GCC472_PATH}/bin:${ENV_PATH}
 export OMP_NUM_THREADS=4
+
+export PATH=${GCC472_PATH}/bin:${ENV_PATH}
+export LD_LIBRARY_PATH=${GCC472_PATH}/lib64:${INTEL1401_PATH}/compiler/lib/intel64:${ENV_LDPATH}
+source ${INTEL1401_PATH}/bin/compilervars.sh
+
 
 cd intel/14.0.1
 for build in ${INTEL_BUILD_LIST_RELEASE}
@@ -146,6 +155,9 @@ do
 done
 cd ../..
 
+export PATH=${GCC472_PATH}/bin:${ENV_PATH}
+export LD_LIBRARY_PATH=${GCC472_PATH}/lib64:${INTEL1501_PATH}/compiler/lib/intel64:${ENV_LDPATH}
+source ${INTEL1501_PATH}/bin/compilervars.sh
 cd intel/15.0.1
 for build in ${INTEL_BUILD_LIST_RELEASE}
 do
@@ -170,6 +182,9 @@ fi
 
 if [ ${TEST_CLANG} -eq 1 ]
 then
+
+export PATH=${GCC472_PATH}/bin:${ENV_PATH}
+export LD_LIBRARY_PATH=${GCC472_PATH}/lib64:${ENV_LDPATH}
 
 mkdir clang
 mkdir clang/3.6.0
@@ -204,7 +219,8 @@ mkdir cuda/6.5
 mkdir cuda/7.0
 
 cd cuda/6.5
-PATH=${CUDA65_PATH}/bin:${ENV_PATH}
+export PATH=${CUDA65_PATH}/bin:${ENV_PATH}
+export LD_LIBRARY_PATH=${GCC472_PATH}/lib64:${CUDA65_PATH}/lib64:${ENV_LDPATH}
 for build in ${CUDA_BUILD_LIST_RELEASE}
 do
   export NVCC_WRAPPER_DEFAULT_COMPILER=${GCC472_PATH}/bin/g++
@@ -219,7 +235,8 @@ PATH=${ENV_PATH}
 cd ../..
 
 cd cuda/7.0
-PATH=${CUDA70_PATH}/bin:${ENV_PATH}
+export PATH=${CUDA70_PATH}/bin:${ENV_PATH}
+export LD_LIBRARY_PATH=${GCC472_PATH}/lib64:${CUDA70_PATH}/lib64:${ENV_LDPATH}
 for build in ${CUDA_BUILD_LIST_RELEASE}
 do
   export NVCC_WRAPPER_DEFAULT_COMPILER=${GCC472_PATH}/bin/g++
