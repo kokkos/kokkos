@@ -58,6 +58,9 @@
 #include <iostream>
 #include <iomanip>
 
+/* Enable clean up of memory leaks */
+#define CLEAN_UP_MEMORY_LEAKS 0
+
 namespace Kokkos { namespace Impl {
 
 namespace {
@@ -359,10 +362,16 @@ struct AllocationRecordPool
             alloc_rec->print( oss );
             string_vec.push_back( oss.str() );
 
+#if CLEAN_UP_MEMORY_LEAKS
+/* Cleaning up memory leaks prevents memory error detection tools
+ * from reporting the original source of allocation, which can
+ * impede debugging with such tools.
+ */
             try {
               destroy(alloc_rec);
             }
             catch(...) {}
+#endif
           }
         }
 
