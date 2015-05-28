@@ -171,13 +171,10 @@ public:
   Cuda();
   explicit Cuda( const int instance_id );
 
-#if defined( KOKKOS_HAVE_CXX11 )
-  Cuda & operator = ( const Cuda & ) = delete ;
-#else
-private:
-  Cuda & operator = ( const Cuda & );
-public:
-#endif
+  Cuda( const Cuda & ) = default ;
+  Cuda( Cuda && ) = default ;
+  Cuda & operator = ( const Cuda & ) = default ;
+  Cuda & operator = ( Cuda && ) = default ;
 
   //--------------------------------------------------------------------------
   //! \name Device-specific functions
@@ -206,11 +203,16 @@ public:
    */
   static std::vector<unsigned> detect_device_arch();
 
+  cudaStream_t cuda_stream() const { return m_stream ; }
+  int          cuda_device() const { return m_device ; }
+
   //@}
   //--------------------------------------------------------------------------
 
-  const cudaStream_t m_stream ;
-  const int          m_device ;
+private:
+
+  cudaStream_t m_stream ;
+  int          m_device ;
 };
 
 } // namespace Kokkos

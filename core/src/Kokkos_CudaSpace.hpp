@@ -117,11 +117,7 @@ public:
 
 private:
 
-  /**\brief  Root record for tracked allocations from this HostSpace instance */
-  using Record = Kokkos::Experimental::Impl::SharedAllocationRecord< void , void > ;
-
-  Record  * m_root_record ;
-  int       m_device ;
+  int  m_device ; ///< Which Cuda device
 
   friend class Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > ;
 };
@@ -442,6 +438,8 @@ private:
 
   void attach_texture_object( const unsigned sizeof_alias );
 
+  static RecordBase s_root_record ;
+
   const Kokkos::CudaSpace m_space ;
   ::cudaTextureObject_t   m_tex_obj ;
 
@@ -457,6 +455,16 @@ protected:
                         );
 
 public:
+
+  inline
+  std::string get_label() const
+    {
+      SharedAllocationHeader head ;
+
+      Kokkos::Impl::DeepCopy< Kokkos::HostSpace , Kokkos::CudaSpace >( & head , RecordBase::head() , sizeof(SharedAllocationHeader) );
+
+      return std::string( head.m_label );
+    }
 
   static SharedAllocationRecord * allocate( const Kokkos::CudaSpace &  arg_space
                                           , const std::string       &  arg_label

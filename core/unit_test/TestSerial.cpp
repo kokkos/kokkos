@@ -51,6 +51,8 @@
 //----------------------------------------------------------------------------
 
 #include <TestSharedAlloc.hpp>
+#include <TestViewMapping.hpp>
+
 #include <TestViewImpl.hpp>
 
 #include <TestViewAPI.hpp>
@@ -82,6 +84,12 @@ protected:
 
 TEST_F( serial , impl_shared_alloc ) {
   test_shared_alloc< Kokkos::HostSpace , Kokkos::Serial >();
+}
+
+TEST_F( serial , impl_view_mapping ) {
+  test_view_mapping< Kokkos::Serial >();
+  test_view_mapping_subview< Kokkos::Serial >();
+  test_view_mapping_operator< Kokkos::Serial >();
 }
 
 TEST_F( serial, view_impl) {

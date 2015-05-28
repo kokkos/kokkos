@@ -94,6 +94,31 @@ if ( ! ok ) {
   return ok ; 
 }
 
+SharedAllocationRecord<void,void> *
+SharedAllocationRecord<void,void>::find( SharedAllocationRecord<void,void> * const arg_root , void * const arg_data_ptr )
+{
+  constexpr static SharedAllocationRecord * zero = 0 ;
+
+  SharedAllocationRecord * root_next = 0 ;
+
+  // Lock the list:
+  while ( ( root_next = Kokkos::atomic_exchange( & arg_root->m_next , 0 ) ) == 0 );
+
+  // Iterate searching for the record with this data pointer
+
+  SharedAllocationRecord * r = root_next ;
+
+  while ( ( r != arg_root ) && ( r->data() != arg_data_ptr ) ) { r = r->m_next ; }
+
+  if ( r == arg_root ) { r = 0 ; }
+
+  if ( zero != Kokkos::atomic_exchange( & arg_root->m_next , root_next ) ) {
+    Kokkos::Impl::throw_runtime_exception("Kokkos::Experimental::Impl::SharedAllocationRecord failed locking/unlocking");
+  }
+
+  return r ;
+}
+
 
 /**\brief  Construct and insert into 'arg_root' tracking set.
  *         use_count is zero.

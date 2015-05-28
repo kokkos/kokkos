@@ -166,9 +166,6 @@ public:
 
 private:
 
-  /**\brief  Root record for tracked allocations from this HostSpace instance */
-  Kokkos::Experimental::Impl::SharedAllocationRecord< void , void >  * m_root_record ;
-
   friend class Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > ;
 
 };
@@ -197,6 +194,9 @@ private:
 
   static void deallocate( RecordBase * );
 
+  /**\brief  Root record for tracked allocations from this HostSpace instance */
+  static RecordBase s_root_record ;
+
   const Kokkos::HostSpace m_space ;
 
 protected:
@@ -211,6 +211,12 @@ protected:
                         );
 
 public:
+
+  inline
+  std::string get_label() const
+    {
+      return std::string( RecordBase::head()->m_label );
+    }
 
   KOKKOS_INLINE_FUNCTION static
   SharedAllocationRecord * allocate( const Kokkos::HostSpace &  arg_space

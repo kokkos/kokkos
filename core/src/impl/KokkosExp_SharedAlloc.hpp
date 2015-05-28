@@ -51,19 +51,16 @@ class SharedAllocationRecord ;
 class SharedAllocationHeader {
 private:
 
-  template< class , class > friend class SharedAllocationRecord ;
-
   using Record = SharedAllocationRecord<void,void> ;
 
   static constexpr unsigned maximum_label_length = ( 1u << 7 /* 128 */ ) - sizeof(Record*);
+
+  template< class , class > friend class SharedAllocationRecord ;
 
   Record * m_record ;
   char     m_label[ maximum_label_length ];
 
 public:
-
-  KOKKOS_INLINE_FUNCTION
-  const char * label() { return m_label ; }
 
   /* Given user memory get pointer to the header */
   KOKKOS_INLINE_FUNCTION static
@@ -115,6 +112,11 @@ public:
     , m_count( 0 )
     {}
 
+  static constexpr unsigned maximum_label_length = SharedAllocationHeader::maximum_label_length ;
+
+  KOKKOS_INLINE_FUNCTION
+  const SharedAllocationHeader * head() const { return m_alloc_ptr ; }
+
   /* User's memory begins at the end of the header */
   KOKKOS_INLINE_FUNCTION
   void * data() { return reinterpret_cast<void*>( m_alloc_ptr + 1 ); }
@@ -130,6 +132,9 @@ public:
 
   /* Decrement use count. If 1->0 then remove from the tracking list and invoke m_dealloc */
   static SharedAllocationRecord * decrement( SharedAllocationRecord * );
+
+  /* Given a root record and data pointer find the record */
+  static SharedAllocationRecord * find( SharedAllocationRecord * const , void * const );
 
   /*  Sanity check for the whole set of records to which the input record belongs.
    *  Locks the set's insert/erase operations until the sanity check is complete.
@@ -153,8 +158,6 @@ class SharedAllocationRecord : public SharedAllocationRecord< MemorySpace , void
 {
 private:
 
-  DestroyFunctor  m_destroy ;
-
   static void deallocate( SharedAllocationRecord<void,void> * record_ptr )
     { delete static_cast<SharedAllocationRecord<MemorySpace,DestroyFunctor>*>(record_ptr); }
 
@@ -164,11 +167,14 @@ private:
                         )
     /*  Allocate user memory as [ SharedAllocationHeader , user_memory ] */
     : SharedAllocationRecord< MemorySpace , void >( arg_space , arg_label , arg_alloc , & deallocate )
+    , m_destroy()
     {}
 
   ~SharedAllocationRecord() { m_destroy.destroy_shared_allocation(); }
 
 public:
+
+  DestroyFunctor  m_destroy ;
 
   // Allocate with a zero use count.  Incrementing the use count from zero to one
   // inserts the record into the tracking list.  Decrementing the count from one to zero
@@ -185,18 +191,6 @@ public:
       return (SharedAllocationRecord *) 0 ;
 #endif
     }
-
-  inline
-  void set_destroy( const DestroyFunctor & arg_destroy )
-    {
-      if ( SharedAllocationRecord<void,void>::use_count() == 0 ) {
-        // Still have exclusive access to this record
-        m_destroy = arg_destroy ;
-      }
-      else {
-        // Cannot change destroy function object after tracking has begun
-      }
-    }
 };
 
 class SharedAllocationTracker {
@@ -206,6 +200,7 @@ private:
 
   constexpr static Record * null_record = (Record *) 0x01ul ;
 
+  // The allocation record resides in Host memory space
   Record * m_record ;
 
   KOKKOS_INLINE_FUNCTION
@@ -214,15 +209,32 @@ private:
 
   KOKKOS_INLINE_FUNCTION
   void increment() const
-    { if ( ! ( reinterpret_cast<unsigned long>(m_record) & 0x01ul ) ) Record::increment( m_record ); }
+    {
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+      if ( ! ( reinterpret_cast<unsigned long>(m_record) & 0x01ul ) ) Record::increment( m_record );
+#endif
+    }
 
   KOKKOS_INLINE_FUNCTION
   void decrement() const
-    { if ( ! ( reinterpret_cast<unsigned long>(m_record) & 0x01ul ) ) Record::decrement( m_record ); }
+    {
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+       if ( ! ( reinterpret_cast<unsigned long>(m_record) & 0x01ul ) ) Record::decrement( m_record );
+#endif
+    }
 
 public:
 
   constexpr SharedAllocationTracker() : m_record( null_record ) {}
+
+  template< class MemorySpace >
+  constexpr
+  SharedAllocationRecord< MemorySpace , void > & get_record()
+    { return * static_cast< SharedAllocationRecord< MemorySpace , void > * >( m_record ); }
+
+  template< class MemorySpace >
+  std::string get_label() const
+    { return static_cast< SharedAllocationRecord< MemorySpace , void > * >( m_record )->get_label(); }
 
   KOKKOS_INLINE_FUNCTION
   SharedAllocationTracker( Record * arg_record )

@@ -138,12 +138,8 @@ Impl::AllocationTracker HostSpace::allocate_and_track( const std::string & label
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
-namespace {
-Kokkos::Experimental::Impl::SharedAllocationRecord< void , void > s_root_record ;
-}
 
 HostSpace::HostSpace()
-  : m_root_record( & s_root_record )
 {
 }
 
@@ -206,6 +202,9 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+SharedAllocationRecord< void , void >
+SharedAllocationRecord< Kokkos::HostSpace , void >::s_root_record ;
+
 void
 SharedAllocationRecord< Kokkos::HostSpace , void >::
 deallocate( SharedAllocationRecord< void , void > * arg_rec )
@@ -230,7 +229,7 @@ SharedAllocationRecord( const Kokkos::HostSpace & arg_space
   // Pass through allocated [ SharedAllocationHeader , user_memory ]
   // Pass through deallocation function
   : SharedAllocationRecord< void , void >
-      ( arg_space.m_root_record
+      ( & SharedAllocationRecord< Kokkos::HostSpace , void >::s_root_record
       , reinterpret_cast<SharedAllocationHeader*>( arg_space.allocate( sizeof(SharedAllocationHeader) + arg_alloc_size ) )
       , sizeof(SharedAllocationHeader) + arg_alloc_size
       , arg_dealloc
@@ -267,7 +266,7 @@ SharedAllocationRecord< Kokkos::HostSpace , void >::get_record( void * alloc_ptr
 void SharedAllocationRecord< Kokkos::HostSpace , void >::
 print_records( std::ostream & s , const Kokkos::HostSpace & space , bool detail )
 {
-  SharedAllocationRecord< void , void > * r = space.m_root_record ;
+  SharedAllocationRecord< void , void > * r = & s_root_record ;
 
   char buffer[256] ;
 
@@ -281,11 +280,11 @@ print_records( std::ostream & s , const Kokkos::HostSpace & space , bool detail 
               , r->m_alloc_size
               , r->m_count
               , reinterpret_cast<unsigned long>( r->m_dealloc )
-              , ( r->m_alloc_ptr ? r->m_alloc_ptr->label() : "" )
+              , ( r->m_alloc_ptr ? r->m_alloc_ptr->m_label : "" )
               );
       std::cout << buffer ;
       r = r->m_next ;
-    } while ( r != space.m_root_record );
+    } while ( r != & s_root_record );
   }
   else {
     do {
@@ -293,7 +292,7 @@ print_records( std::ostream & s , const Kokkos::HostSpace & space , bool detail 
         snprintf( buffer , 256 , "Host [ 0x%.12lx + %ld ] %s\n"
                 , reinterpret_cast< unsigned long >( r->data() )
                 , r->size()
-                , r->m_alloc_ptr->label()
+                , r->m_alloc_ptr->m_label
                 );
       }
       else {
@@ -301,7 +300,7 @@ print_records( std::ostream & s , const Kokkos::HostSpace & space , bool detail 
       }
       std::cout << buffer ;
       r = r->m_next ;
-    } while ( r != space.m_root_record );
+    } while ( r != & s_root_record );
   }
 }
 

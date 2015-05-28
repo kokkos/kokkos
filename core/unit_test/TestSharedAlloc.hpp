@@ -129,7 +129,7 @@ void test_shared_alloc()
 
       RecordFull * rec = RecordFull::allocate( s , name , size * ( i + 1 ) );
 
-      rec->set_destroy( counter );
+      rec->m_destroy = counter ;
 
       r[i] = rec ;
       h[i] = Header::get_header( r[i]->data() );
@@ -163,7 +163,7 @@ void test_shared_alloc()
       // ... Construction of the allocated { rec->data() , rec->size() }
 
       // Copy destruction function object into the allocation record
-      rec->set_destroy( SharedAllocDestroy( & destroy_count ) );
+      rec->m_destroy = SharedAllocDestroy( & destroy_count );
 
       // Start tracking, increments the use count from 0 to 1
       Tracker track( rec );
