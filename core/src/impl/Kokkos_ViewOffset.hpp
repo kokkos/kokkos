@@ -133,9 +133,9 @@ struct ViewOffset< ShapeType , LayoutLeft
 
 
   KOKKOS_INLINE_FUNCTION
-  void assign( size_t n0 , unsigned n1 , unsigned n2 , unsigned n3
-             , unsigned n4 , unsigned n5 , unsigned n6 , unsigned n7
-             , unsigned = 0 )
+  void assign( size_t n0 , size_t n1 , size_t n2 , size_t n3
+             , size_t n4 , size_t n5 , size_t n6 , size_t n7
+             , size_t = 0 )
     { shape_type::assign( *this , n0, n1, n2, n3, n4, n5, n6, n7 ); }
 
   template< class ShapeRHS >
@@ -362,9 +362,9 @@ struct ViewOffset< ShapeType , LayoutLeft
 
 
   KOKKOS_INLINE_FUNCTION
-  void assign( size_t n0 , unsigned n1 , unsigned n2 , unsigned n3
-             , unsigned n4 , unsigned n5 , unsigned n6 , unsigned n7
-             , unsigned = 0 )
+  void assign( size_t n0 , size_t n1 , size_t n2 , size_t n3
+             , size_t n4 , size_t n5 , size_t n6 , size_t n7
+             , size_t = 0 )
     { shape_type::assign( *this , n0, n1, n2, n3, n4, n5, n6, n7 ); S0 = shape_type::N0 ; }
 
   template< class ShapeRHS >
@@ -605,13 +605,13 @@ struct ViewOffset< ShapeType , LayoutRight
 
   template< unsigned R >
   KOKKOS_INLINE_FUNCTION
-  void assign( unsigned n )
+  void assign( size_t n )
     { assign_shape_dimension<R>( *this , n ); }
 
   KOKKOS_INLINE_FUNCTION
-  void assign( unsigned n0 , unsigned n1 , unsigned n2 , unsigned n3
-             , unsigned n4 , unsigned n5 , unsigned n6 , unsigned n7
-             , unsigned = 0 )
+  void assign( size_t n0 , size_t n1 , size_t n2 , size_t n3
+             , size_t n4 , size_t n5 , size_t n6 , size_t n7
+             , size_t = 0 )
     { shape_type::assign( *this , n0, n1, n2, n3, n4, n5, n6, n7 ); }
 
   template< class ShapeRHS >
@@ -853,13 +853,13 @@ struct ViewOffset< ShapeType , LayoutRight
 
   template< unsigned R >
   KOKKOS_INLINE_FUNCTION
-  void assign( unsigned n )
+  void assign( size_t n )
     { assign_shape_dimension<R>( *this , n ); }
 
   KOKKOS_INLINE_FUNCTION
-  void assign( unsigned n0 , unsigned n1 , unsigned n2 , unsigned n3
-             , unsigned n4 , unsigned n5 , unsigned n6 , unsigned n7
-             , unsigned = 0 )
+  void assign( size_t n0 , size_t n1 , size_t n2 , size_t n3
+             , size_t n4 , size_t n5 , size_t n6 , size_t n7
+             , size_t = 0 )
     {
       shape_type::assign( *this , n0, n1, n2, n3, n4, n5, n6, n7 );
       SR = size_type(shape_type::N1) * shape_type::N2 * shape_type::N3 * shape_type::N4 * shape_type::N5 * shape_type::N6 * shape_type::N7 ;
@@ -1094,7 +1094,7 @@ struct ViewOffset< ShapeType , LayoutStride
 
   template< unsigned R >
   KOKKOS_INLINE_FUNCTION
-  void assign( unsigned n )
+  void assign( size_t n )
     { assign_shape_dimension<R>( *this , n ); }
 
   template< class ShapeRHS , class Layout >
