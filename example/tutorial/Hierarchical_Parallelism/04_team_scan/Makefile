@@ -7,7 +7,7 @@ default: build
 ifeq ($(CUDA), yes)
 CXX = nvcc_wrapper
 CXXFLAGS = -O3
-LINK = nvcc_wrapper
+LINK = ${CXX}
 LINKFLAGS = 
 EXE = $(SRC:.cpp=.cuda)
 KOKKOS_DEVICES = "Cuda,OpenMP"
@@ -15,7 +15,7 @@ KOKKOS_ARCH = "SNB,Kepler35"
 else
 CXX = g++
 CXXFLAGS = -O3
-LINK = g++
+LINK = ${CXX}
 LINKFLAGS =  
 EXE = $(SRC:.cpp=.host)
 KOKKOS_DEVICES = "OpenMP"
