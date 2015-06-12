@@ -426,7 +426,7 @@ public:
   KOKKOS_FORCEINLINE_FUNCTION
   scalar_operator_reference_type operator()() const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, 0, 0, 0, 0, 0, 0, 0, 0 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, 0, 0, 0, 0, 0, 0, 0, 0 );
       return scalar_operator_reference_type( m_map.reference() );
     }
 
@@ -436,7 +436,7 @@ public:
             , const int i1 = 0 , const int i2 = 0 , const int i3 = 0
             , const int i4 = 0 , const int i5 = 0 , const int i6 = 0 , const int i7 = 0 ) const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 );
       return m_map.reference();
     }
 
@@ -448,7 +448,7 @@ public:
                           ), reference_type >::type
   operator[]( const I0 & i0 ) const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, i0, 0, 0, 0, 0, 0, 0, 0 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, i0, 0, 0, 0, 0, 0, 0, 0 );
       return m_map.reference(i0);
     }
 
@@ -458,7 +458,7 @@ public:
                           ), reference_type >::type
   operator()( const I0 & i0 ) const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, i0, 0, 0, 0, 0, 0, 0, 0 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, i0, 0, 0, 0, 0, 0, 0, 0 );
       return m_map.reference(i0);
     }
 
@@ -470,7 +470,7 @@ public:
             , const int i2 = 0 , const int i3 = 0
             , const int i4 = 0 , const int i5 = 0 , const int i6 = 0 , const int i7 = 0 ) const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 );
       return m_map.reference(i0);
     }
 
@@ -484,7 +484,7 @@ public:
                           ), reference_type >::type
   operator()( const I0 & i0 , const I1 & i1 ) const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, i0, i1, 0, 0, 0, 0, 0, 0 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, i0, i1, 0, 0, 0, 0, 0, 0 );
       return m_map.reference(i0,i1);
     }
 
@@ -499,7 +499,7 @@ public:
             , const int i3 = 0
             , const int i4 = 0 , const int i5 = 0 , const int i6 = 0 , const int i7 = 0 ) const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 );
       return m_map.reference(i0,i1);
     }
 
@@ -514,7 +514,7 @@ public:
                           ), reference_type >::type
   operator()( const I0 & i0 , const I1 & i1 , const I2 & i2 ) const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, i0, i1, i2, 0, 0, 0, 0, 0 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, i0, i1, i2, 0, 0, 0, 0, 0 );
       return m_map.reference(i0,i1,i2);
     }
 
@@ -529,7 +529,7 @@ public:
                                       ), const int >::type i3
             , const int i4 = 0 , const int i5 = 0 , const int i6 = 0 , const int i7 = 0 ) const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 );
       return m_map.reference(i0,i1,i2);
     }
 
@@ -545,7 +545,7 @@ public:
                           ), reference_type >::type
   operator()( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3 ) const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, i0, i1, i2, i3, 0, 0, 0, 0 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, i0, i1, i2, i3, 0, 0, 0, 0 );
       return m_map.reference(i0,i1,i2,i3);
     }
 
@@ -561,7 +561,7 @@ public:
                                       ), const int >::type i4
             , const int i5 = 0 , const int i6 = 0 , const int i7 = 0 ) const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 );
       return m_map.reference(i0,i1,i2,i3);
     }
 
@@ -580,7 +580,7 @@ public:
   operator()( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3
             , const I4 & i4 ) const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, i0, i1, i2, i3, i4, 0, 0, 0 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, i0, i1, i2, i3, i4, 0, 0, 0 );
       return m_map.reference(i0,i1,i2,i3,i4);
     }
 
@@ -599,7 +599,7 @@ public:
                                       ), const int >::type i5
             , const int i6 = 0 , const int i7 = 0 ) const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 );
       return m_map.reference(i0,i1,i2,i3,i4);
     }
 
@@ -619,7 +619,7 @@ public:
   operator()( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3
             , const I4 & i4 , const I5 & i5 ) const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, i0, i1, i2, i3, i4, i5, 0, 0 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, i0, i1, i2, i3, i4, i5, 0, 0 );
       return m_map.reference(i0,i1,i2,i3,i4,i5);
     }
 
@@ -638,7 +638,7 @@ public:
                                       ), const int >::type i6
             , const int i7 = 0 ) const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 );
       return m_map.reference(i0,i1,i2,i3,i4,i5);
     }
 
@@ -659,7 +659,7 @@ public:
   operator()( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3
             , const I4 & i4 , const I5 & i5 , const I6 & i6 ) const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, i0, i1, i2, i3, i4, i5, i6, 0 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, i0, i1, i2, i3, i4, i5, i6, 0 );
       return m_map.reference(i0,i1,i2,i3,i4,i5,i6);
     }
 
@@ -678,7 +678,7 @@ public:
                                       ), const int >::type i7
             ) const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 );
       return m_map.reference(i0,i1,i2,i3,i4,i5,i6);
     }
 
@@ -700,7 +700,7 @@ public:
   operator()( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3
             , const I4 & i4 , const I5 & i5 , const I6 & i6 , const I7 & i7 ) const
     {
-      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 )
+      KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( typename traits::memory_space, m_map, Rank, i0, i1, i2, i3, i4, i5, i6, i7 );
       return m_map.reference(i0,i1,i2,i3,i4,i5,i6,i7);
     }
 

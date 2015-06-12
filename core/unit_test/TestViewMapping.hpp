@@ -65,7 +65,7 @@ void test_view_range( const size_t N , const RangeType & range , const size_t be
 }
 
 
-template< class HostExecSpace >
+template< class ExecSpace >
 void test_view_mapping()
 {
   typedef Kokkos::Experimental::Impl::ViewDimension<>  dim_0 ;
@@ -506,8 +506,8 @@ void test_view_mapping()
   {
     constexpr int N = 10 ;
 
-    using T = Kokkos::Experimental::View<int*,HostExecSpace> ;
-    using C = Kokkos::Experimental::View<const int*,HostExecSpace> ;
+    using T = Kokkos::Experimental::View<int*,ExecSpace> ;
+    using C = Kokkos::Experimental::View<const int*,ExecSpace> ;
 
     int data[N] ;
 
@@ -534,7 +534,7 @@ void test_view_mapping()
     ASSERT_TRUE( ( std::is_same< typename T::const_value_type     , const int >::value ) );
     ASSERT_TRUE( ( std::is_same< typename T::non_const_value_type , int >::value ) );
 
-    ASSERT_TRUE( ( std::is_same< typename T::memory_space , typename HostExecSpace::memory_space >::value ) );
+    ASSERT_TRUE( ( std::is_same< typename T::memory_space , typename ExecSpace::memory_space >::value ) );
     ASSERT_TRUE( ( std::is_same< typename T::reference_type , int & >::value ) );
 
     ASSERT_EQ( T::Rank , 1 );
@@ -551,31 +551,33 @@ void test_view_mapping()
     ASSERT_TRUE( ( std::is_same< typename C::const_value_type     , const int >::value ) );
     ASSERT_TRUE( ( std::is_same< typename C::non_const_value_type , int >::value ) );
 
-    ASSERT_TRUE( ( std::is_same< typename C::memory_space , typename HostExecSpace::memory_space >::value ) );
+    ASSERT_TRUE( ( std::is_same< typename C::memory_space , typename ExecSpace::memory_space >::value ) );
     ASSERT_TRUE( ( std::is_same< typename C::reference_type , const int & >::value ) );
 
     ASSERT_EQ( C::Rank , 1 );
 
     ASSERT_EQ( vr1.dimension_0() , N );
 
-    for ( int i = 0 ; i < N ; ++i ) data[i] = i + 1 ;
-    for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( vr1[i] , i + 1 );
-    for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( cr1[i] , i + 1 );
+    if ( Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename ExecSpace::memory_space , Kokkos::HostSpace >::value ) {
+      for ( int i = 0 ; i < N ; ++i ) data[i] = i + 1 ;
+      for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( vr1[i] , i + 1 );
+      for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( cr1[i] , i + 1 );
 
-    {
-      T tmp( vr1 );
-      for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( tmp[i] , i + 1 );
-      for ( int i = 0 ; i < N ; ++i ) vr1(i) = i + 2 ;
-      for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( tmp[i] , i + 2 );
+      {
+        T tmp( vr1 );
+        for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( tmp[i] , i + 1 );
+        for ( int i = 0 ; i < N ; ++i ) vr1(i) = i + 2 ;
+        for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( tmp[i] , i + 2 );
+      }
+
+      for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( vr1[i] , i + 2 );
     }
-
-    for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( vr1[i] , i + 2 );
   }
 
   {
     constexpr int N = 10 ;
-    using T = Kokkos::Experimental::View<int*,HostExecSpace> ;
-    using C = Kokkos::Experimental::View<const int*,HostExecSpace> ;
+    using T = Kokkos::Experimental::View<int*,ExecSpace> ;
+    using C = Kokkos::Experimental::View<const int*,ExecSpace> ;
 
     T vr1("vr1",N);
     C cr1(vr1);
@@ -592,105 +594,129 @@ void test_view_mapping()
     ASSERT_TRUE( ( std::is_same< typename T::const_value_type     , const int >::value ) );
     ASSERT_TRUE( ( std::is_same< typename T::non_const_value_type , int >::value ) );
 
-    ASSERT_TRUE( ( std::is_same< typename T::memory_space , typename HostExecSpace::memory_space >::value ) );
+    ASSERT_TRUE( ( std::is_same< typename T::memory_space , typename ExecSpace::memory_space >::value ) );
     ASSERT_TRUE( ( std::is_same< typename T::reference_type , int & >::value ) );
     ASSERT_EQ( T::Rank , 1 );
  
     ASSERT_EQ( vr1.dimension_0() , N );
 
-    for ( int i = 0 ; i < N ; ++i ) vr1(i) = i + 1 ;
-    for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( vr1[i] , i + 1 );
-    for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( cr1[i] , i + 1 );
+    if ( Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename ExecSpace::memory_space , Kokkos::HostSpace >::value ) {
+      for ( int i = 0 ; i < N ; ++i ) vr1(i) = i + 1 ;
+      for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( vr1[i] , i + 1 );
+      for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( cr1[i] , i + 1 );
 
-    {
-      T tmp( vr1 );
-      for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( tmp[i] , i + 1 );
-      for ( int i = 0 ; i < N ; ++i ) vr1(i) = i + 2 ;
-      for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( tmp[i] , i + 2 );
+      {
+        T tmp( vr1 );
+        for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( tmp[i] , i + 1 );
+        for ( int i = 0 ; i < N ; ++i ) vr1(i) = i + 2 ;
+        for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( tmp[i] , i + 2 );
+      }
+
+      for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( vr1[i] , i + 2 );
     }
-
-    for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( vr1[i] , i + 2 );
   }
 }
 
-template< class HostExecSpace >
+template< class ExecSpace >
+struct TestViewMappingSubview {
+
+  constexpr static int AN = 10 ;
+  using AT = Kokkos::Experimental::View<int*,ExecSpace> ;
+  using AS = Kokkos::Experimental::Subview< AT , true > ;
+
+  constexpr static int BN0 = 10 , BN1 = 11 , BN2 = 12 ;
+  using BT = Kokkos::Experimental::View<int***,ExecSpace> ;
+  using BS = Kokkos::Experimental::Subview< BT , true , true , true > ;
+
+  constexpr static int CN0 = 10 , CN1 = 11 , CN2 = 12 ;
+  using CT = Kokkos::Experimental::View<int***[13][14],ExecSpace> ;
+  using CS = Kokkos::Experimental::Subview< CT , true , true , true , false , false > ;
+
+  constexpr static int DN0 = 10 , DN1 = 11 , DN2 = 12 ;
+  using DT = Kokkos::Experimental::View<int***[13][14],ExecSpace> ;
+  using DS = Kokkos::Experimental::Subview< DT , false , true , true , true , false > ;
+
+  AT Aa ;
+  AS Ab ;
+  BT Ba ;
+  BS Bb ;
+  CT Ca ;
+  CS Cb ;
+  DT Da ;
+  DS Db ;
+
+  TestViewMappingSubview()
+    : Aa("Aa",AN)
+    , Ab( Kokkos::Experimental::subview( Aa , std::pair<int,int>(1,AN-1) ) )
+    , Ba("Ba",BN0,BN1,BN2)
+    , Bb( Kokkos::Experimental::subview( Ba
+                                        , std::pair<int,int>(1,BN0-1)
+                                        , std::pair<int,int>(1,BN1-1)
+                                        , std::pair<int,int>(1,BN2-1)
+                                        ) )
+    , Ca("Ca",CN0,CN1,CN2)
+    , Cb( Kokkos::Experimental::subview( Ca
+                                        , std::pair<int,int>(1,CN0-1)
+                                        , std::pair<int,int>(1,CN1-1)
+                                        , std::pair<int,int>(1,CN2-1)
+                                        , 1
+                                        , 2
+                                        ) )
+    , Da("Da",DN0,DN1,DN2)
+    , Db( Kokkos::Experimental::subview( Da
+                                        , 1
+                                        , std::pair<int,int>(1,DN0-1)
+                                        , std::pair<int,int>(1,DN1-1)
+                                        , std::pair<int,int>(1,DN2-1)
+                                        , 2
+                                        ) )
+    {
+    }
+
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const int , long & error_count ) const
+    {
+      for ( int i = 1 ; i < AN-1 ; ++i ) if( & Aa[i] != & Ab[i-1] ) ++error_count ;
+
+      for ( int i2 = 1 ; i2 < BN2-1 ; ++i2 ) {
+      for ( int i1 = 1 ; i1 < BN1-1 ; ++i1 ) {
+      for ( int i0 = 1 ; i0 < BN0-1 ; ++i0 ) {
+        if ( & Ba(i0,i1,i2) != & Bb(i0-1,i1-1,i2-1) ) ++error_count ;
+      }}}
+
+      for ( int i2 = 1 ; i2 < CN2-1 ; ++i2 ) {
+      for ( int i1 = 1 ; i1 < CN1-1 ; ++i1 ) {
+      for ( int i0 = 1 ; i0 < CN0-1 ; ++i0 ) {
+        if ( & Ca(i0,i1,i2,1,2) != & Cb(i0-1,i1-1,i2-1) ) ++error_count ;
+      }}}
+
+      for ( int i2 = 1 ; i2 < DN2-1 ; ++i2 ) {
+      for ( int i1 = 1 ; i1 < DN1-1 ; ++i1 ) {
+      for ( int i0 = 1 ; i0 < DN0-1 ; ++i0 ) {
+        if ( & Da(1,i0,i1,i2,2) != & Db(i0-1,i1-1,i2-1) ) ++error_count ;
+      }}}
+    }
+
+  static void run()
+  {
+    TestViewMappingSubview self ;
+
+    ASSERT_EQ( self.Da.stride_1() , self.Db.stride_0() );
+    ASSERT_EQ( self.Da.stride_2() , self.Db.stride_1() );
+    ASSERT_EQ( self.Da.stride_3() , self.Db.stride_2() );
+
+    long error_count = -1 ;
+    Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >(0,1) , self , error_count );
+    ASSERT_EQ( error_count , 0 );
+  }
+
+};
+
+template< class ExecSpace >
 void test_view_mapping_subview()
 {
-  {
-    constexpr int N = 10 ;
-    using T = Kokkos::Experimental::View<int*,HostExecSpace> ;
-    using S = Kokkos::Experimental::Subview< T , true > ;
-
-    T a("a",N);
-    S b = Kokkos::Experimental::subview( a , std::pair<int,int>(1,N-1) );
-
-    for ( int i = 1 ; i < N-1 ; ++i ) ASSERT_EQ( & a[i] , & b[i-1] );
-  }
-
-  {
-    constexpr int N0 = 10 , N1 = 11 , N2 = 12 ;
-    using T = Kokkos::Experimental::View<int***,HostExecSpace> ;
-    using S = Kokkos::Experimental::Subview< T , true , true , true > ;
-
-    T a("a",N0,N1,N2);
-    S b = Kokkos::Experimental::subview( a
-                                       , std::pair<int,int>(1,N0-1)
-                                       , std::pair<int,int>(1,N1-1)
-                                       , std::pair<int,int>(1,N2-1)
-                                       );
-
-    for ( int i2 = 1 ; i2 < N2-1 ; ++i2 ) {
-    for ( int i1 = 1 ; i1 < N1-1 ; ++i1 ) {
-    for ( int i0 = 1 ; i0 < N0-1 ; ++i0 ) {
-      ASSERT_EQ( & a(i0,i1,i2) , & b(i0-1,i1-1,i2-1) );
-    }}}
-  }
-
-  {
-    constexpr int N0 = 10 , N1 = 11 , N2 = 12 ;
-    using T = Kokkos::Experimental::View<int***[13][14],HostExecSpace> ;
-    using S = Kokkos::Experimental::Subview< T , true , true , true , false , false > ;
-
-    T a("a",N0,N1,N2);
-    S b = Kokkos::Experimental::subview( a
-                                       , std::pair<int,int>(1,N0-1)
-                                       , std::pair<int,int>(1,N1-1)
-                                       , std::pair<int,int>(1,N2-1)
-                                       , 1
-                                       , 2
-                                       );
-
-    for ( int i2 = 1 ; i2 < N2-1 ; ++i2 ) {
-    for ( int i1 = 1 ; i1 < N1-1 ; ++i1 ) {
-    for ( int i0 = 1 ; i0 < N0-1 ; ++i0 ) {
-      ASSERT_EQ( & a(i0,i1,i2,1,2) , & b(i0-1,i1-1,i2-1) );
-    }}}
-  }
-
-  {
-    constexpr int N0 = 10 , N1 = 11 , N2 = 12 ;
-    using T = Kokkos::Experimental::View<int***[13][14],HostExecSpace> ;
-    using S = Kokkos::Experimental::Subview< T , false , true , true , true , false > ;
-
-    T a("a",N0,N1,N2);
-    S b = Kokkos::Experimental::subview( a
-                                       , 1
-                                       , std::pair<int,int>(1,N0-1)
-                                       , std::pair<int,int>(1,N1-1)
-                                       , std::pair<int,int>(1,N2-1)
-                                       , 2
-                                       );
-
-    ASSERT_EQ( a.stride_1() , b.stride_0() );
-    ASSERT_EQ( a.stride_2() , b.stride_1() );
-    ASSERT_EQ( a.stride_3() , b.stride_2() );
-
-    for ( int i2 = 1 ; i2 < N2-1 ; ++i2 ) {
-    for ( int i1 = 1 ; i1 < N1-1 ; ++i1 ) {
-    for ( int i0 = 1 ; i0 < N0-1 ; ++i0 ) {
-      ASSERT_EQ( & a(1,i0,i1,i2,2) , & b(i0-1,i1-1,i2-1) );
-    }}}
-  }
+  TestViewMappingSubview< ExecSpace >::run();
 }
 
 /*--------------------------------------------------------------------------*/
@@ -772,11 +798,40 @@ struct TestViewMapOperator {
         test_right(i,error_count);
     }
 
-  TestViewMapOperator() : v( "Test" , 10 , 9 , 8 , 7 , 6 , 5 , 4 , 3 ) { }
+  constexpr static size_t N0 = 10 ;
+  constexpr static size_t N1 =  9 ;
+  constexpr static size_t N2 =  8 ;
+  constexpr static size_t N3 =  7 ;
+  constexpr static size_t N4 =  6 ;
+  constexpr static size_t N5 =  5 ;
+  constexpr static size_t N6 =  4 ;
+  constexpr static size_t N7 =  3 ;
+
+  TestViewMapOperator() : v( "Test" , N0, N1, N2, N3, N4, N5, N6, N7 ) {}
 
   static void run()
     {
       TestViewMapOperator self ;
+
+      ASSERT_EQ( self.v.dimension_0() , ( 0 < ViewType::rank ? N0 : 1 ) );
+      ASSERT_EQ( self.v.dimension_1() , ( 1 < ViewType::rank ? N1 : 1 ) );
+      ASSERT_EQ( self.v.dimension_2() , ( 2 < ViewType::rank ? N2 : 1 ) );
+      ASSERT_EQ( self.v.dimension_3() , ( 3 < ViewType::rank ? N3 : 1 ) );
+      ASSERT_EQ( self.v.dimension_4() , ( 4 < ViewType::rank ? N4 : 1 ) );
+      ASSERT_EQ( self.v.dimension_5() , ( 5 < ViewType::rank ? N5 : 1 ) );
+      ASSERT_EQ( self.v.dimension_6() , ( 6 < ViewType::rank ? N6 : 1 ) );
+      ASSERT_EQ( self.v.dimension_7() , ( 7 < ViewType::rank ? N7 : 1 ) );
+
+      ASSERT_LE( self.v.dimension_0()*
+                 self.v.dimension_1()*
+                 self.v.dimension_2()*
+                 self.v.dimension_3()*
+                 self.v.dimension_4()*
+                 self.v.dimension_5()*
+                 self.v.dimension_6()*
+                 self.v.dimension_7()
+               , self.v.extent() );
+
       long error_count ;
       Kokkos::RangePolicy< typename ViewType::execution_space > range(0,self.v.dimension_0());
       Kokkos::parallel_reduce( range , self , error_count );

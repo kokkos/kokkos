@@ -692,7 +692,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_1() { return m_dim.N1 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_2() { return m_dim.N2 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_3() { return m_dim.N3 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() { return m_dim.N3 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() { return m_dim.N4 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_5() { return m_dim.N5 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_6() { return m_dim.N6 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_7() { return m_dim.N7 ; }
@@ -904,7 +904,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_1() { return m_dim.N1 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_2() { return m_dim.N2 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_3() { return m_dim.N3 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() { return m_dim.N3 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() { return m_dim.N4 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_5() { return m_dim.N5 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_6() { return m_dim.N6 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_7() { return m_dim.N7 ; }
@@ -1151,7 +1151,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_1() { return m_dim.N1 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_2() { return m_dim.N2 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_3() { return m_dim.N3 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() { return m_dim.N3 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() { return m_dim.N4 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_5() { return m_dim.N5 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_6() { return m_dim.N6 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_7() { return m_dim.N7 ; }
@@ -1362,7 +1362,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_1() { return m_dim.N1 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_2() { return m_dim.N2 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_3() { return m_dim.N3 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() { return m_dim.N3 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() { return m_dim.N4 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_5() { return m_dim.N5 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_6() { return m_dim.N6 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_7() { return m_dim.N7 ; }
@@ -1776,7 +1776,7 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_1() { return m_dim.N1 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_2() { return m_dim.N2 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_3() { return m_dim.N3 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() { return m_dim.N3 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() { return m_dim.N4 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_5() { return m_dim.N5 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_6() { return m_dim.N6 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_7() { return m_dim.N7 ; }
@@ -2473,12 +2473,12 @@ private:
                                                            value_type ********
                     >::type >::type >::type >::type >::type >::type >::type >::type ;
 
+public:
+
   using traits_type =
     Kokkos::Experimental::ViewTraits< data_type , array_layout
                                     , typename Traits::device_type
                                     , typename Traits::memory_traits > ;
-
-public:
 
   using type = Kokkos::Experimental::View< data_type
                                          , array_layout
@@ -2626,7 +2626,20 @@ class Error_view_scalar_reference_to_non_scalar_view ;
 } /* namespace Experimental */
 } /* namespace Kokkos */
 
-#define KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( MAP , RANK , I0 , I1 , I2 , I3 , I4 , I5 , I6 , I7 ) /* */
+#if defined( KOKKOS_EXPRESSION_CHECK )
+
+#define KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( SPACE , MAP , RANK , I0 , I1 , I2 , I3 , I4 , I5 , I6 , I7 ) \
+  Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< \
+    Kokkos::Impl::ActiveExecutionMemorySpace , SPACE >::verify( MAP.data() ); \
+  /* array bounds checking */
+
+#else
+
+#define KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( SPACE , MAP , RANK , I0 , I1 , I2 , I3 , I4 , I5 , I6 , I7 ) \
+  Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< \
+    Kokkos::Impl::ActiveExecutionMemorySpace , SPACE >::verify( MAP.data() )
+
+#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
