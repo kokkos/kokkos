@@ -1,26 +1,26 @@
-Kokkos implements a programming model in C++ for writing performance portable 
+Kokkos implements a programming model in C++ for writing performance portable
 applications targeting all major HPC platforms. For that purpose it provides
-abstractions for both parallel execution of code and data management. 
-Kokkos is designed to target complex node architectures with N-level memory 
+abstractions for both parallel execution of code and data management.
+Kokkos is designed to target complex node architectures with N-level memory
 hierarchies and multiple types of execution resources. It currently can use
-OpenMP, Pthreads and CUDA as backend programming models. 
+OpenMP, Pthreads and CUDA as backend programming models.
 
 The core developers of Kokkos are Carter Edwards and Christian Trott
 at the Computer Science Research Institute of the Sandia National
-Laboratories. 
+Laboratories.
 
 To learn more about Kokkos consider watching one of our presentations:
 GTC 2015:
   http://on-demand.gputechconf.com/gtc/2015/video/S5166.html
   http://on-demand.gputechconf.com/gtc/2015/presentation/S5166-H-Carter-Edwards.pdf
 
-A programming guide can be found under doc/Kokkos_PG.pdf. This is an initial version 
+A programming guide can be found under doc/Kokkos_PG.pdf. This is an initial version
 and feedback is greatly appreciated.
 
-For questions please send an email to 
+For questions please send an email to
 kokkos-users@software.sandia.gov
 
-For non-public questions send an email to 
+For non-public questions send an email to
 hcedwar(at)sandia.gov and crtrott(at)sandia.gov
 
 ============================================================================
@@ -39,9 +39,9 @@ Secondary tested compilers are:
   CUDA 7.0
 
 Primary tested compiler are passing in release mode
-with warnings as errors. We are using the following set 
+with warnings as errors. We are using the following set
 of flags:
-GCC:   -Wall -Wshadow -pedantic -Werror -Wsign-compare -Wtype-limits 
+GCC:   -Wall -Wshadow -pedantic -Werror -Wsign-compare -Wtype-limits
        -Wignored-qualifiers -Wempty-body -Wclobbered -Wuninitialized
 Intel: -Wall -Wshadow -pedantic -Werror -Wsign-compare -Wtype-limits -Wuninitialized
 Clang: -Wall -Wshadow -pedantic -Werror -Wsign-compare -Wtype-limits -Wuninitialized
@@ -52,10 +52,10 @@ Clang: -Wall -Wshadow -pedantic -Werror -Wsign-compare -Wtype-limits -Wuninitial
 ============================================================================
 
 In the 'example/tutorial' directory you will find step by step tutorial
-examples which explain many of the features of Kokkos. They work with 
+examples which explain many of the features of Kokkos. They work with
 simple Makefiles. To build with g++ and OpenMP simply type 'make openmp'
 in the 'example/tutorial' directory. This will build all examples in the
-subfolders. 
+subfolders.
 
 ============================================================================
 ====Running Unit Tests======================================================
@@ -67,7 +67,7 @@ KOKKOS_PATH/generate_makefile.bash --kokkos-path=KOKKOS_PATH
 make build-test
 make test
 
-Run KOKKOS_PATH/generate_makefile.bash --help for more detailed options such as 
+Run KOKKOS_PATH/generate_makefile.bash --help for more detailed options such as
 changing the device type for which to build.
 
 ============================================================================
@@ -80,7 +80,7 @@ KOKKOS_PATH/generate_makefile.bash --kokkos-path=KOKKOS_PATH --prefix=INSTALL_PA
 make lib
 make install
 
-KOKKOS_PATH/generate_makefile.bash --help for more detailed options such as 
+KOKKOS_PATH/generate_makefile.bash --help for more detailed options such as
 changing the device type for which to build.
 
 ============================================================================
