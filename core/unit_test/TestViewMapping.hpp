@@ -862,6 +862,57 @@ void test_view_mapping_operator()
   TestViewMapOperator< Kokkos::Experimental::View<int*******,Kokkos::LayoutRight,ExecSpace> >::run();
 }
 
+/*--------------------------------------------------------------------------*/
+
+template< class ExecSpace >
+struct TestViewMappingAtomic {
+  using mem_trait = Kokkos::MemoryTraits< Kokkos::Atomic > ;
+
+  using T      = Kokkos::Experimental::View< int * , ExecSpace > ;
+  using T_atom = Kokkos::Experimental::View< int * , ExecSpace , mem_trait > ;
+
+  T      x ;
+  T_atom x_atom ;
+
+  constexpr static size_t N = 100000 ;
+
+  struct TagInit {};
+  struct TagUpdate {};
+  struct TagVerify {};
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const TagInit & , const int i ) const
+    { x(i) = i ; }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const TagUpdate & , const int i ) const
+    { x_atom(i%2) += 1 ; }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const TagVerify & , const int i , long & error_count ) const
+    {
+       if ( i < 2 ) { if ( x(i) != i + N / 2 ) ++error_count ; }
+       else         { if ( x(i) != i ) ++error_count ; }
+    }
+
+  TestViewMappingAtomic()
+    : x("x",N)
+    , x_atom( x )
+    {}
+
+  static void run()
+    {
+      ASSERT_TRUE( T::reference_type_is_lvalue );
+      ASSERT_FALSE( T_atom::reference_type_is_lvalue );
+
+      TestViewMappingAtomic self ;
+      Kokkos::parallel_for( Kokkos::RangePolicy< ExecSpace , TagInit >(0,N) , self );
+      Kokkos::parallel_for( Kokkos::RangePolicy< ExecSpace , TagUpdate >(0,N) , self );
+      long error_count = -1 ;
+      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace , TagVerify >(0,N) , self , error_count );
+      ASSERT_EQ( 0 , error_count );
+    }
+};
 
 
 } /* namespace Test */

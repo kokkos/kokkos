@@ -150,6 +150,7 @@ TEST_F( cuda , impl_view_mapping )
   test_view_mapping< Kokkos::Cuda >();
   test_view_mapping_subview< Kokkos::Cuda >();
   test_view_mapping_operator< Kokkos::Cuda >();
+  TestViewMappingAtomic< Kokkos::Cuda >::run();
 }
 
 

@@ -225,6 +225,7 @@ private:
 
 public:
 
+  KOKKOS_INLINE_FUNCTION
   constexpr SharedAllocationTracker() : m_record( null_record ) {}
 
   template< class MemorySpace >

@@ -2101,6 +2101,27 @@ struct ViewDataHandle {
   }
 };
 
+template< class Traits >
+struct ViewDataHandle< Traits ,
+  typename std::enable_if<( std::is_same< typename Traits::non_const_value_type
+                                        , typename Traits::value_type >::value
+                            &&
+                            Traits::memory_traits::Atomic
+                          )>::type >
+{
+  using value_type  = typename Traits::value_type ;
+  using handle_type = typename Kokkos::Impl::AtomicViewDataHandle< Traits > ;
+  using return_type = typename Kokkos::Impl::AtomicDataElement< Traits > ;
+  using track_type  = Kokkos::Experimental::Impl::SharedAllocationTracker ;
+
+  KOKKOS_INLINE_FUNCTION
+  static handle_type create_handle( value_type * arg_data_ptr
+                                  , track_type const & /*arg_tracker*/ )
+  {
+    return handle_type( arg_data_ptr );
+  }
+};
+
 }}} // namespace Kokkos::Experimental::Impl
 
 //----------------------------------------------------------------------------
@@ -2284,10 +2305,17 @@ public:
 
   //----------------------------------------
 
-  ~ViewMapping() = default ;
-  ViewMapping() = default ;
-  ViewMapping( const ViewMapping & ) = default ;
-  ViewMapping & operator = ( const ViewMapping & ) = default ;
+  KOKKOS_INLINE_FUNCTION ~ViewMapping() {}
+  KOKKOS_INLINE_FUNCTION ViewMapping() : m_handle(), m_offset() {}
+  KOKKOS_INLINE_FUNCTION ViewMapping( const ViewMapping & rhs )
+    : m_handle( rhs.m_handle ), m_offset( rhs.m_offset ) {}
+  KOKKOS_INLINE_FUNCTION ViewMapping & operator = ( const ViewMapping & rhs )
+    { m_handle = rhs.m_handle ; m_offset = rhs.m_offset ; return *this ; }
+
+  KOKKOS_INLINE_FUNCTION ViewMapping( ViewMapping && rhs )
+    : m_handle( rhs.m_handle ), m_offset( rhs.m_offset ) {}
+  KOKKOS_INLINE_FUNCTION ViewMapping & operator = ( ViewMapping && rhs )
+    { m_handle = rhs.m_handle ; m_offset = rhs.m_offset ; return *this ; }
 
   template< bool AllowPadding >
   KOKKOS_INLINE_FUNCTION

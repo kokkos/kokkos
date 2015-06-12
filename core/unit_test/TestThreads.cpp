@@ -141,6 +141,7 @@ TEST_F( openmp , impl_view_mapping ) {
   test_view_mapping< Kokkos::Threads >();
   test_view_mapping_subview< Kokkos::Threads >();
   test_view_mapping_operator< Kokkos::Threads >();
+  TestViewMappingAtomic< Kokkos::Threads >::run();
 }
 
 

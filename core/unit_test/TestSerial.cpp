@@ -90,6 +90,7 @@ TEST_F( serial , impl_view_mapping ) {
   test_view_mapping< Kokkos::Serial >();
   test_view_mapping_subview< Kokkos::Serial >();
   test_view_mapping_operator< Kokkos::Serial >();
+  TestViewMappingAtomic< Kokkos::Serial >::run();
 }
 
 TEST_F( serial, view_impl) {
