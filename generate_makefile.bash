@@ -94,6 +94,15 @@ esac
 shift
 done
 
+# If KOKKOS_PATH undefined, assume parent dir of this
+# script is the KOKKOS_PATH
+if [ -z "$KOKKOS_PATH" ]; then
+    KOKKOS_PATH=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+else
+    # Ensure KOKKOS_PATH is abs path
+    KOKKOS_PATH=$( cd $KOKKOS_PATH && pwd )
+fi
+
 KOKKOS_OPTIONS="KOKKOS_PATH=${KOKKOS_PATH}"
 
 if [ ${#COMPILER} -gt 0 ]; then

@@ -63,7 +63,7 @@ subfolders.
 
 To run the unit tests create a build directory and run the following commands
 
-KOKKOS_PATH/generate_makefile.bash --kokkos-path=KOKKOS_PATH
+KOKKOS_PATH/generate_makefile.bash
 make build-test
 make test
 
@@ -76,7 +76,7 @@ changing the device type for which to build.
 
 To install Kokkos as a library create a build directory and run the following
 
-KOKKOS_PATH/generate_makefile.bash --kokkos-path=KOKKOS_PATH --prefix=INSTALL_PATH
+KOKKOS_PATH/generate_makefile.bash --prefix=INSTALL_PATH
 make lib
 make install
 
