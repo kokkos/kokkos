@@ -148,7 +148,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 endif
 	KOKKOS_CXXFLAGS += -g 
 	KOKKOS_LDFLAGS += -g -ldl
-	tmp := $(shell echo "\#define KOKKOS_EXPRESSION_CHECK 1" >> KokkosCore_config.tmp )
+	tmp := $(shell echo "\#define KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK 1" >> KokkosCore_config.tmp )
 	tmp := $(shell echo "\#define KOKKOS_HAVE_DEBUG 1" >> KokkosCore_config.tmp )
 endif
 

@@ -52,7 +52,7 @@
  *  KOKKOS_HAVE_QTHREAD             Kokkos::Qthread execution space
  *  KOKKOS_HAVE_OPENMP              Kokkos::OpenMP  execution space
  *  KOKKOS_HAVE_HWLOC               HWLOC library is available
- *  KOKKOS_HAVE_EXPRESSION_CHECK    insert array bounds checks, is expensive!
+ *  KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK    insert array bounds checks, is expensive!
  *  KOKKOS_HAVE_CXX11               enable C++11 features
  *
  *  KOKKOS_HAVE_MPI                 negotiate MPI/execution space interactions
