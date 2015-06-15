@@ -170,4 +170,61 @@ const void* kokkos_realloc(const void* old_ptr, size_t size) {
 } // namespace Kokkos
 #endif
 
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+namespace Experimental {
+
+template< class Space = typename Kokkos::DefaultExecutionSpace::memory_space >
+inline
+void * kokkos_malloc( const size_t arg_alloc_size )
+{
+  using MemorySpace = typename Space::memory_space ;
+  using RecordBase  = Kokkos::Experimental::Impl::SharedAllocationRecord< void , void > ;
+  using RecordHost  = Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void > ;
+
+  RecordHost * const r = RecordHost::allocate( MemorySpace() , "kokkos_malloc" , arg_alloc_size );
+
+  RecordBase::increment( r );
+
+  return r->data();
+}
+
+template< class Space = typename Kokkos::DefaultExecutionSpace::memory_space >
+inline
+void kokkos_free( void * arg_alloc )
+{
+  using MemorySpace = typename Space::memory_space ;
+  using RecordBase  = Kokkos::Experimental::Impl::SharedAllocationRecord< void , void > ;
+  using RecordHost  = Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void > ;
+
+  RecordHost * const r = RecordHost::get_record( arg_alloc );
+
+  RecordBase::decrement( r );
+}
+
+template< class Space = typename Kokkos::DefaultExecutionSpace::memory_space >
+inline
+void * kokkos_realloc( void * arg_alloc , const size_t arg_alloc_size )
+{
+  using MemorySpace = typename Space::memory_space ;
+  using RecordBase  = Kokkos::Experimental::Impl::SharedAllocationRecord< void , void > ;
+  using RecordHost  = Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void > ;
+
+  RecordHost * const r_old = RecordHost::get_record( arg_alloc );
+  RecordHost * const r_new = RecordHost::allocate( MemorySpace() , "kokkos_malloc" , arg_alloc_size );
+
+  Kokkos::Impl::DeepCopy<MemorySpace,MemorySpace>( r_new->data() , r_old->data()
+                                                 , std::min( r_old->size() , r_new->size() ) );
+
+  RecordBase::increment( r_new );
+  RecordBase::decrement( r_old );
+
+  return r_new->data();
+}
+
+} // namespace Experimental
+} // namespace Kokkos
+
 #endif

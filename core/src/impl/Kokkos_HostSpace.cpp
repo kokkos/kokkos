@@ -41,9 +41,55 @@
 //@HEADER
 */
 
-#include <memory.h>
+
+#include <Kokkos_Macros.hpp>
+
+/*--------------------------------------------------------------------------*/
+
+#if defined( __INTEL_COMPILER ) && ! defined ( KOKKOS_HAVE_CUDA )
+
+// Intel specialized allocator does not interoperate with CUDA memory allocation
+
+#define KOKKOS_INTEL_MM_ALLOC_AVAILABLE
+
+#endif
+
+/*--------------------------------------------------------------------------*/
+
+#if ( defined( _POSIX_C_SOURCE ) && _POSIX_C_SOURCE >= 200112L ) || \
+    ( defined( _XOPEN_SOURCE )   && _XOPEN_SOURCE   >= 600 )
+
+#define KOKKOS_POSIX_MEMALIGN_AVAILABLE
+
+#include <unistd.h>
+#include <sys/mman.h>
+
+/* mmap flags for private anonymous memory allocation */
+
+#if defined( MAP_ANONYMOUS ) && defined( MAP_PRIVATE )
+  #define KOKKOS_POSIX_MMAP_FLAGS (MAP_PRIVATE | MAP_ANONYMOUS)
+#elif defined( MAP_ANON ) && defined( MAP_PRIVATE )
+  #define KOKKOS_POSIX_MMAP_FLAGS (MAP_PRIVATE | MAP_ANON)
+#endif
+
+// mmap flags for huge page tables
+#if defined( KOKKOS_POSIX_MMAP_FLAGS )
+  #if defined( MAP_HUGETLB )
+    #define KOKKOS_POSIX_MMAP_FLAGS_HUGE (KOKKOS_POSIX_MMAP_FLAGS | MAP_HUGETLB )
+  #else
+    #define KOKKOS_POSIX_MMAP_FLAGS_HUGE KOKKOS_POSIX_MMAP_FLAGS
+  #endif
+#endif
+
+#endif
+
+/*--------------------------------------------------------------------------*/
+
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <memory.h>
+
 #include <iostream>
 #include <sstream>
 #include <cstring>
@@ -139,60 +185,163 @@ Impl::AllocationTracker HostSpace::allocate_and_track( const std::string & label
 
 namespace Kokkos {
 
+/* Default allocation mechanism */
 HostSpace::HostSpace()
+  : m_alloc_mech(
+#if defined( KOKKOS_INTEL_MM_ALLOC_AVAILABLE )
+      HostSpace::INTEL_MM_ALLOC
+#elif defined( KOKKOS_POSIX_MMAP_FLAGS )
+      HostSpace::POSIX_MMAP
+#elif defined( KOKKOS_POSIX_MEMALIGN_AVAILABLE )
+      HostSpace::POSIX_MEMALIGN
+#else
+      HostSpace::STD_MALLOC
+#endif
+    )
+{}
+
+/* Default allocation mechanism */
+HostSpace::HostSpace( const HostSpace::AllocationMechanism & arg_alloc_mech )
+  : m_alloc_mech( HostSpace::STD_MALLOC )
 {
+  if ( arg_alloc_mech == STD_MALLOC ) {
+    m_alloc_mech = HostSpace::STD_MALLOC ;
+  }
+#if defined( KOKKOS_INTEL_MM_ALLOC_AVAILABLE )
+  else if ( arg_alloc_mech == HostSpace::INTEL_MM_ALLOC ) {
+    m_alloc_mech = HostSpace::INTEL_MM_ALLOC ;
+  }
+#elif defined( KOKKOS_POSIX_MEMALIGN_AVAILABLE )
+  else if ( arg_alloc_mech == HostSpace::POSIX_MEMALIGN ) {
+    m_alloc_mech = HostSpace::POSIX_MEMALIGN ;
+  }
+#elif defined( KOKKOS_POSIX_MMAP_FLAGS )
+  else if ( arg_alloc_mech == HostSpace::POSIX_MMAP ) {
+    m_alloc_mech = HostSpace::POSIX_MMAP ;
+  }
+#endif
+  else {
+    const char * const mech =
+      ( arg_alloc_mech == HostSpace::INTEL_MM_ALLOC ) ? "INTEL_MM_ALLOC" : (
+      ( arg_alloc_mech == HostSpace::POSIX_MEMALIGN ) ? "POSIX_MEMALIGN" : (
+      ( arg_alloc_mech == HostSpace::POSIX_MMAP     ) ? "POSIX_MMAP" : "" ));
+
+    std::string msg ;
+    msg.append("Kokkos::HostSpace ");
+    msg.append(mech);
+    msg.append(" is not available" );
+    Kokkos::Impl::throw_runtime_exception( msg );
+  }
 }
 
 void * HostSpace::allocate( const size_t arg_alloc_size ) const
 {
-  constexpr size_t alignment = 128 ;
+  static_assert( sizeof(void*) == sizeof(uintptr_t)
+               , "Error sizeof(void*) != sizeof(uintptr_t)" );
+
+  static_assert( Kokkos::Impl::power_of_two< Kokkos::Impl::MEMORY_ALIGNMENT >::value
+               , "Memory alignment must be power of two" );
+
+  constexpr size_t alignment = Kokkos::Impl::MEMORY_ALIGNMENT ;
+  constexpr size_t alignment_mask = alignment - 1 ;
 
   void * ptr = NULL;
+
   if ( arg_alloc_size ) {
-#if defined( __INTEL_COMPILER ) && !defined ( KOKKOS_HAVE_CUDA )
-    ptr = _mm_malloc( arg_alloc_size , alignment );
 
-#elif ( defined( _POSIX_C_SOURCE ) && _POSIX_C_SOURCE >= 200112L ) || \
-    ( defined( _XOPEN_SOURCE )   && _XOPEN_SOURCE   >= 600 )
+    if ( m_alloc_mech == STD_MALLOC ) {
+      // Over-allocate to and round up to guarantee proper alignment.
+      size_t size_padded = arg_alloc_size + sizeof(void*) + alignment ;
 
-    posix_memalign( & ptr, alignment , arg_alloc_size );
+      void * alloc_ptr = malloc( size_padded );
 
-#else
-    // Over-allocate to and round up to guarantee proper alignment.
-    size_t size_padded = arg_alloc_size + alignment + sizeof(void *);
-    void * alloc_ptr = malloc( size_padded );
+      if (alloc_ptr) {
+        uintptr_t address = reinterpret_cast<uintptr_t>(alloc_ptr);
 
-    if (alloc_ptr) {
-      uintptr_t address = reinterpret_cast<uintptr_t>(alloc_ptr);
-      // offset enough to record the alloc_ptr
-      address += sizeof(void *);
-      uintptr_t rem = address % alignment;
-      uintptr_t offset = rem ? (alignment - rem) : 0u;
-      address += offset;
-      ptr = reinterpret_cast<void *>(address);
-      // record the alloc'd pointer
-      address -= sizeof(void *);
-      *reinterpret_cast<void **>(address) = alloc_ptr;
+        // offset enough to record the alloc_ptr
+        address += sizeof(void *);
+        uintptr_t rem = address % alignment;
+        uintptr_t offset = rem ? (alignment - rem) : 0u;
+        address += offset;
+        ptr = reinterpret_cast<void *>(address);
+        // record the alloc'd pointer
+        address -= sizeof(void *);
+        *reinterpret_cast<void **>(address) = alloc_ptr;
+      }
+    }
+
+#if defined( KOKKOS_INTEL_MM_ALLOC_AVAILABLE )
+    else if ( m_alloc_mech == INTEL_MM_ALLOC ) {
+      ptr = _mm_malloc( arg_alloc_size , alignment );
+    }
+#endif
+
+#if defined( KOKKOS_POSIX_MEMALIGN_AVAILABLE )
+    else if ( m_alloc_mech == POSIX_MEMALIGN ) {
+      posix_memalign( & ptr, alignment , arg_alloc_size );
+    }
+#endif
+
+#if defined( KOKKOS_POSIX_MMAP_FLAGS )
+    else if ( m_alloc_mech == POSIX_MMAP ) {
+      constexpr size_t use_huge_pages = (1u << 27);
+      constexpr int    prot  = PROT_READ | PROT_WRITE ;
+      const     int    flags = arg_alloc_size < use_huge_pages
+                             ? KOKKOS_POSIX_MMAP_FLAGS
+                             : KOKKOS_POSIX_MMAP_FLAGS_HUGE ;
+
+      // read write access to private memory
+
+      ptr = mmap( NULL /* address hint, if NULL OS kernel chooses address */
+                , arg_alloc_size /* size in bytes */
+                , prot           /* memory protection */
+                , flags          /* visibility of updates */
+                , -1 /* file descriptor */
+                ,  0 /* offset */
+                );
+
+/* Associated reallocation:
+       ptr = mremap( old_ptr , old_size , new_size , MREMAP_MAYMOVE );
+*/
     }
 #endif
   }
+
+  if ( reinterpret_cast<uintptr_t>(ptr) & alignment_mask ) {
+    Kokkos::Impl::throw_runtime_exception( "Kokkos::HostSpace aligned allocation failed" );
+  }
+
   return ptr;
 }
 
-void HostSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_alloc_size */ ) const
+
+void HostSpace::deallocate( void * const arg_alloc_ptr , const size_t arg_alloc_size ) const
 {
   if ( arg_alloc_ptr ) {
-#if defined( __INTEL_COMPILER ) && !defined ( KOKKOS_HAVE_CUDA )
-    _mm_free( arg_alloc_ptr );
 
-#elif ( defined( _POSIX_C_SOURCE ) && _POSIX_C_SOURCE >= 200112L ) || \
-      ( defined( _XOPEN_SOURCE )   && _XOPEN_SOURCE   >= 600 )
-    free( arg_alloc_ptr );
-#else
-    // get the alloc'd pointer
-    void * alloc_ptr = *(reinterpret_cast<void **>(ptr) -1);
-    free( alloc_ptr );
+    if ( m_alloc_mech == STD_MALLOC ) {
+      void * alloc_ptr = *(reinterpret_cast<void **>(arg_alloc_ptr) -1);
+      free( alloc_ptr );
+    }    
+
+#if defined( KOKKOS_INTEL_MM_ALLOC_AVAILABLE )
+    else if ( m_alloc_mech == INTEL_MM_ALLOC ) {
+      _mm_free( arg_alloc_ptr );
+    }
 #endif
+
+#if defined( KOKKOS_POSIX_MEMALIGN_AVAILABLE )
+    else if ( m_alloc_mech == POSIX_MEMALIGN ) {
+      free( arg_alloc_ptr );
+    }
+#endif
+
+#if defined( KOKKOS_POSIX_MMAP_FLAGS )
+    else if ( m_alloc_mech == POSIX_MMAP ) {
+      munmap( arg_alloc_ptr , arg_alloc_size );
+    }
+#endif
+
   }
 }
 

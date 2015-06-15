@@ -157,6 +157,13 @@ public:
   HostSpace & operator = ( const HostSpace & ) = default ;
   ~HostSpace() = default ;
 
+  /**\brief  Non-default memory space instance to choose allocation mechansim, if available */
+
+  enum AllocationMechanism { STD_MALLOC , POSIX_MEMALIGN , POSIX_MMAP , INTEL_MM_ALLOC };
+
+  explicit
+  HostSpace( const AllocationMechanism & );
+
   /**\brief  Allocate memory in the host space */
   void * allocate( const size_t arg_alloc_size ) const ;
 
@@ -166,8 +173,9 @@ public:
 
 private:
 
-  friend class Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > ;
+  AllocationMechanism  m_alloc_mech ;
 
+  friend class Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > ;
 };
 
 } // namespace Kokkos
@@ -238,60 +246,6 @@ public:
 };
 
 } // namespace Impl
-} // namespace Experimental
-} // namespace Kokkos
-
-namespace Kokkos {
-namespace Experimental {
-
-template< class > void * kokkos_malloc( const size_t );
-template< class > void * kokkos_realloc( void * , const size_t );
-template< class > void   kokkos_free(    void * );
-
-template<>
-inline
-void * kokkos_malloc< Kokkos::HostSpace >( const size_t arg_alloc_size )
-{
-  using RecordBase = Kokkos::Experimental::Impl::SharedAllocationRecord< void , void > ;
-  using RecordHost = Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > ;
-
-  RecordHost * const r = RecordHost::allocate( Kokkos::HostSpace() , "kokkos_malloc" , arg_alloc_size );
-
-  RecordBase::increment( r );
-
-  return r->data();
-}
-
-template<>
-inline
-void kokkos_free< Kokkos::HostSpace >( void * arg_alloc )
-{
-  using RecordBase = Kokkos::Experimental::Impl::SharedAllocationRecord< void , void > ;
-  using RecordHost = Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > ;
-
-  RecordHost * const r = RecordHost::get_record( arg_alloc );
-
-  RecordBase::decrement( r );
-}
-
-template<>
-inline
-void * kokkos_realloc< Kokkos::HostSpace >( void * arg_alloc , const size_t arg_alloc_size )
-{
-  using RecordBase = Kokkos::Experimental::Impl::SharedAllocationRecord< void , void > ;
-  using RecordHost = Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > ;
-
-  RecordHost * const r_old = RecordHost::get_record( arg_alloc );
-  RecordHost * const r_new = RecordHost::allocate( Kokkos::HostSpace() , "kokkos_malloc" , arg_alloc_size );
-
-  std::memcpy( r_new->data() , r_old->data() , std::min( r_old->size() , r_new->size() ) );
-
-  RecordBase::increment( r_new );
-  RecordBase::decrement( r_old );
-
-  return r_new->data();
-}
-
 } // namespace Experimental
 } // namespace Kokkos
 
