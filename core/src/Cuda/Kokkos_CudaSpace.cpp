@@ -209,8 +209,7 @@ void * CudaSpace::allocate( const size_t arg_alloc_size ) const
 
   CUDA_SAFE_CALL( cudaMalloc( &ptr, arg_alloc_size ) );
 
-  return ptr;
- ;
+  return ptr ;
 }
 
 void CudaSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_alloc_size */ ) const
@@ -233,6 +232,9 @@ void
 SharedAllocationRecord< Kokkos::CudaSpace , void >::
 attach_texture_object( const unsigned sizeof_alias )
 {
+  // Only valid for 300 <= __CUDA_ARCH__
+  // otherwise return zero.
+
   struct cudaResourceDesc resDesc ;
   struct cudaTextureDesc  texDesc ;
   
@@ -243,8 +245,8 @@ attach_texture_object( const unsigned sizeof_alias )
   resDesc.res.linear.desc        = ( sizeof_alias ==  4 ?  cudaCreateChannelDesc< int >() :
                                    ( sizeof_alias ==  8 ?  cudaCreateChannelDesc< ::int2 >() :
                                   /* sizeof_alias == 16 */ cudaCreateChannelDesc< ::int4 >() ) );
-  resDesc.res.linear.sizeInBytes = RecordBase::size();
-  resDesc.res.linear.devPtr      = RecordBase::data();
+  resDesc.res.linear.sizeInBytes = RecordBase::m_alloc_size ;
+  resDesc.res.linear.devPtr      = RecordBase::m_alloc_ptr ;
 
   CUDA_SAFE_CALL( cudaCreateTextureObject( & m_tex_obj , & resDesc, & texDesc, NULL ) );
 }
@@ -278,6 +280,7 @@ SharedAllocationRecord( const Kokkos::CudaSpace & arg_space
       , sizeof(SharedAllocationHeader) + arg_alloc_size
       , arg_dealloc
       )
+  , m_tex_obj( 0 )
   , m_space( arg_space )
 {
   SharedAllocationHeader head ;

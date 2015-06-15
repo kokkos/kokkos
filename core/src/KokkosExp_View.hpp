@@ -401,7 +401,7 @@ public:
 
   using reference_type = typename map_type::reference_type ;
 
-  enum { reference_type_is_lvalue = std::is_lvalue_reference< reference_type >::value };
+  enum { reference_type_is_lvalue_reference = std::is_lvalue_reference< reference_type >::value };
 
   KOKKOS_INLINE_FUNCTION constexpr size_t extent() { return m_map.extent(); }
   KOKKOS_INLINE_FUNCTION constexpr bool   extent_is_contiguous() { return m_map.extent_is_contiguous(); }
@@ -735,7 +735,7 @@ public:
       using SrcTraits = typename View<RT,R1,R2,R3>::traits ;
       using Mapping   = Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits > ;
       static_assert( Mapping::is_assignable , "Incompatible View copy construction" );
-      Mapping::assign( m_map , rhs.m_map );
+      Mapping::assign( m_map , rhs.m_map , rhs.m_track );
     }
 
   template< class RT , class R1 , class R2 , class R3 >
@@ -747,7 +747,7 @@ public:
       using SrcTraits = typename View<RT,R1,R2,R3>::traits ;
       using Mapping   = Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits > ;
       static_assert( Mapping::is_assignable , "Incompatible View move construction" );
-      Mapping::assign( m_map , rhs.m_map );
+      Mapping::assign( m_map , rhs.m_map , rhs.m_track );
     }
 
   template< class RT , class R1 , class R2 , class R3 >
@@ -757,7 +757,7 @@ public:
       using SrcTraits = typename View<RT,R1,R2,R3>::traits ;
       using Mapping   = Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits > ;
       static_assert( Mapping::is_assignable , "Incompatible View copy assignment" );
-      Mapping::assign( m_map , rhs.m_map );
+      Mapping::assign( m_map , rhs.m_map , rhs.m_track );
       m_track.operator=( rhs.m_track );
       return *this ;
     }
@@ -769,7 +769,7 @@ public:
       using SrcTraits = typename View<RT,R1,R2,R3>::traits ;
       using Mapping   = Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits > ;
       static_assert( Mapping::is_assignable , "Incompatible View move assignment" );
-      Mapping::assign( m_map , rhs.m_map );
+      Mapping::assign( m_map , rhs.m_map , rhs.m_track );
       m_track.operator=( rhs.m_track );
       return *this ;
     }

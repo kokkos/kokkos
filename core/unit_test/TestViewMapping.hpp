@@ -724,7 +724,7 @@ void test_view_mapping_subview()
 template< class ViewType >
 struct TestViewMapOperator {
 
-  static_assert( ViewType::reference_type_is_lvalue
+  static_assert( ViewType::reference_type_is_lvalue_reference
                , "Test only valid for lvalue reference type" );
 
   const ViewType v ;
@@ -902,8 +902,8 @@ struct TestViewMappingAtomic {
 
   static void run()
     {
-      ASSERT_TRUE( T::reference_type_is_lvalue );
-      ASSERT_FALSE( T_atom::reference_type_is_lvalue );
+      ASSERT_TRUE( T::reference_type_is_lvalue_reference );
+      ASSERT_FALSE( T_atom::reference_type_is_lvalue_reference );
 
       TestViewMappingAtomic self ;
       Kokkos::parallel_for( Kokkos::RangePolicy< ExecSpace , TagInit >(0,N) , self );

@@ -2078,8 +2078,8 @@ struct ViewDataHandle {
   using track_type  = Kokkos::Experimental::Impl::SharedAllocationTracker ;
 
   KOKKOS_INLINE_FUNCTION
-  static handle_type create_handle( value_type * arg_data_ptr
-                                  , track_type const & /*arg_tracker*/ )
+  static handle_type assign( value_type * arg_data_ptr
+                           , track_type const & /*arg_tracker*/ )
   {
 #if 0
 
@@ -2115,8 +2115,8 @@ struct ViewDataHandle< Traits ,
   using track_type  = Kokkos::Experimental::Impl::SharedAllocationTracker ;
 
   KOKKOS_INLINE_FUNCTION
-  static handle_type create_handle( value_type * arg_data_ptr
-                                  , track_type const & /*arg_tracker*/ )
+  static handle_type assign( value_type * arg_data_ptr
+                           , track_type const & /*arg_tracker*/ )
   {
     return handle_type( arg_data_ptr );
   }
@@ -2393,6 +2393,8 @@ public:
 template< class DstTraits , class SrcTraits >
 class ViewMapping< DstTraits , SrcTraits ,
   typename std::enable_if<(
+    std::is_same< typename DstTraits::memory_space , typename SrcTraits::memory_space >::value
+    &&
     std::is_same< typename DstTraits::specialize , void >::value
     &&
     (
@@ -2414,11 +2416,12 @@ public:
 
   enum { is_assignable = true };
 
-  using DstType = ViewMapping< DstTraits , void , void > ;
-  using SrcType = ViewMapping< SrcTraits , void , void > ;
+  using TrackType = Kokkos::Experimental::Impl::SharedAllocationTracker ;
+  using DstType   = ViewMapping< DstTraits , void , void > ;
+  using SrcType   = ViewMapping< SrcTraits , void , void > ;
 
   KOKKOS_INLINE_FUNCTION
-  static void assign( DstType & dst , const SrcType & src )
+  static void assign( DstType & dst , const SrcType & src , const TrackType & src_track )
     {
       static_assert( std::is_same< typename DstTraits::value_type , typename SrcTraits::value_type >::value ||
                      std::is_same< typename DstTraits::value_type , typename SrcTraits::const_value_type >::value
@@ -2434,10 +2437,9 @@ public:
                    , "View assignment must have compatible layout or have rank <= 1" );
 
       using dst_offset_type = typename DstType::offset_type ;
-      using dst_handle_type = typename DstType::handle_type ;
 
       dst.m_offset = dst_offset_type( src.m_offset );
-      dst.m_handle = dst_handle_type( src.m_handle );
+      dst.m_handle = Kokkos::Experimental::Impl::ViewDataHandle< DstTraits >::assign( src.m_handle , src_track );
     }
 };
 

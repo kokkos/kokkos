@@ -253,6 +253,10 @@ struct VerifyExecutionCanAccessMemorySpace
 
 #include <Cuda/Kokkos_CudaExec.hpp>
 #include <Cuda/Kokkos_Cuda_View.hpp>
+
+#include <KokkosExp_View.hpp>
+#include <Cuda/KokkosExp_Cuda_View.hpp>
+
 #include <Cuda/Kokkos_Cuda_Parallel.hpp>
 
 //----------------------------------------------------------------------------

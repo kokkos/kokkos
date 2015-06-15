@@ -140,6 +140,8 @@ TEST_F( cuda, spaces )
   }
 }
 
+//----------------------------------------------------------------------------
+
 TEST_F( cuda , impl_shared_alloc )
 {
   test_shared_alloc< Kokkos::CudaSpace , Kokkos::DefaultHostExecutionSpace >();
@@ -153,6 +155,61 @@ TEST_F( cuda , impl_view_mapping )
   TestViewMappingAtomic< Kokkos::Cuda >::run();
 }
 
+template< class MemSpace >
+struct TestViewCudaTexture {
+
+  enum { N = 1000 };
+
+  using V = Kokkos::Experimental::View<double*,MemSpace> ;
+  using T = Kokkos::Experimental::View<const double*, MemSpace, Kokkos::MemoryRandomAccess > ;
+
+  V m_base ;
+  T m_tex ;
+
+  struct TagInit {};
+  struct TagTest {};
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const TagInit & , const int i ) const { m_base[i] = i + 1 ; }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const TagTest & , const int i , long & error_count ) const
+    { if ( m_tex[i] != i + 1 ) ++error_count ; }
+
+  TestViewCudaTexture()
+    : m_base("base",N)
+    , m_tex( m_base )
+    {}
+
+  static void run()
+    {
+      EXPECT_TRUE( ( std::is_same< typename V::reference_type
+                                 , double &
+                                 >::value ) );
+
+      EXPECT_TRUE( ( std::is_same< typename T::reference_type
+                                 , const double
+                                 >::value ) );
+
+      EXPECT_TRUE(  V::reference_type_is_lvalue_reference ); // An ordinary view
+      EXPECT_FALSE( T::reference_type_is_lvalue_reference ); // Texture fetch returns by value
+
+      TestViewCudaTexture self ;
+      Kokkos::parallel_for( Kokkos::RangePolicy< Kokkos::Cuda , TagInit >(0,N) , self );
+      long error_count = -1 ;
+      Kokkos::parallel_reduce( Kokkos::RangePolicy< Kokkos::Cuda , TagTest >(0,N) , self , error_count );
+      EXPECT_EQ( error_count , 0 );
+    }
+};
+
+
+TEST_F( cuda , impl_view_texture )
+{
+  TestViewCudaTexture< Kokkos::CudaSpace >::run();
+  // TestViewCudaTexture< Kokkos::CudaUVMSpace >::run();
+}
+
+//----------------------------------------------------------------------------
 
 TEST_F( cuda, view_impl )
 {
