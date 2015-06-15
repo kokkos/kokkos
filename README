@@ -87,7 +87,7 @@ changing the device type for which to build.
 ====CMakeFiles==============================================================
 ============================================================================
 
-The CMake files contained in this repository reqyure Tribits and are used
+The CMake files contained in this repository require Tribits and are used
 for integration with Trilinos. They do not currently support a standalone
 CMake build.
 

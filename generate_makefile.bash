@@ -12,7 +12,7 @@ case $key in
     ;;
     --prefix*)
     PREFIX="${key#*=}"
-    ;;    
+    ;;
     --with-cuda)
     KOKKOS_DEVICES="${KOKKOS_DEVICES},Cuda"
     CUDA_PATH_NVCC=`which nvcc`
@@ -23,13 +23,13 @@ case $key in
     CUDA_PATH="${key#*=}"
     ;;
     --with-openmp)
-    KOKKOS_DEVICES="${KOKKOS_DEVICES},OpenMP"    
+    KOKKOS_DEVICES="${KOKKOS_DEVICES},OpenMP"
     ;;
     --with-pthread)
-    KOKKOS_DEVICES="${KOKKOS_DEVICES},Pthread"    
+    KOKKOS_DEVICES="${KOKKOS_DEVICES},Pthread"
     ;;
     --with-serial)
-    KOKKOS_DEVICES="${KOKKOS_DEVICES},Serial"    
+    KOKKOS_DEVICES="${KOKKOS_DEVICES},Serial"
     ;;
     --with-devices*)
     DEVICES="${key#*=}"
@@ -43,7 +43,7 @@ case $key in
     ;;
     --arch*)
     KOKKOS_ARCH="${key#*=}"
-    ;;    
+    ;;
     --cxxflags*)
     CXXFLAGS="${key#*=}"
     ;;
@@ -55,7 +55,7 @@ case $key in
     ;;
     --compiler*)
     COMPILER="${key#*=}"
-    ;; 
+    ;;
     --help)
     echo "Kokkos configure options:"
     echo "--kokkos-path=/Path/To/Kokkos: Path to the Kokkos root directory"
@@ -84,9 +84,10 @@ case $key in
     echo "--ldflags=[FLAGS]            overwrite LDFLAGS for library build and test build"
     echo "                               This will still set certain required flags via"
     echo "                               KOKKOS_LDFLAGS (such as -fopenmp, -lpthread, etc.)"
-    echo "--with-gtest=/Path/To/Gtest: set path to gtest (used in unit and performance tests"  
-    echo "--with-hwloc=/Path/To/Hwloc: set path to hwloc"  
-    ;;      
+    echo "--with-gtest=/Path/To/Gtest: set path to gtest (used in unit and performance tests"
+    echo "--with-hwloc=/Path/To/Hwloc: set path to hwloc"
+    exit 0
+    ;;
     *)
             # unknown option
     ;;
@@ -148,7 +149,7 @@ mkdir algorithms
 mkdir algorithms/unit_tests
 mkdir algorithms/performance_tests
 
- 
+
 echo "Generating Makefile with options " ${KOKKOS_OPTIONS}
 echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > Makefile
 echo "" >> Makefile
