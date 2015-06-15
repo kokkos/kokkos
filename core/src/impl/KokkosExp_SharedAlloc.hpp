@@ -119,7 +119,7 @@ public:
 
   /* User's memory begins at the end of the header */
   KOKKOS_INLINE_FUNCTION
-  void * data() { return reinterpret_cast<void*>( m_alloc_ptr + 1 ); }
+  void * data() const { return reinterpret_cast<void*>( m_alloc_ptr + 1 ); }
 
   /* User's memory begins at the end of the header */
   constexpr size_t size() { return m_alloc_size - sizeof(SharedAllocationHeader) ; }
@@ -140,6 +140,12 @@ public:
    *  Locks the set's insert/erase operations until the sanity check is complete.
    */
   static bool is_sane( SharedAllocationRecord * );
+
+  /*  Print host-accessible records */
+  static void print_host_accessible_records( std::ostream &
+                                           , const char * const space_name
+                                           , const SharedAllocationRecord * const root
+                                           , const bool detail );
 };
 
 /*

@@ -219,6 +219,55 @@ decrement( SharedAllocationRecord< void , void > * arg_record )
   return arg_record ;
 }
 
+void
+SharedAllocationRecord< void , void >::
+print_host_accessible_records( std::ostream & s
+                             , const char * const space_name
+                             , const SharedAllocationRecord * const root
+                             , const bool detail )
+{
+  const SharedAllocationRecord< void , void > * r = root ;
+
+  char buffer[256] ;
+
+  if ( detail ) {
+    do {
+
+      snprintf( buffer , 256 , "%s addr( 0x%.12lx ) list( 0x%.12lx 0x%.12lx ) extent[ 0x%.12lx + %.8ld ] count(%d) dealloc(0x%.12lx) %s\n"
+              , space_name
+              , reinterpret_cast<unsigned long>( r )
+              , reinterpret_cast<unsigned long>( r->m_prev )
+              , reinterpret_cast<unsigned long>( r->m_next )
+              , reinterpret_cast<unsigned long>( r->m_alloc_ptr )
+              , r->m_alloc_size
+              , r->m_count
+              , reinterpret_cast<unsigned long>( r->m_dealloc )
+              , r->m_alloc_ptr->m_label
+              );
+      std::cout << buffer ;
+      r = r->m_next ;
+    } while ( r != root );
+  }
+  else {
+    do {
+      if ( r->m_alloc_ptr ) {
+
+        snprintf( buffer , 256 , "%s [ 0x%.12lx + %ld ] %s\n"
+                , space_name
+                , reinterpret_cast< unsigned long >( r->data() )
+                , r->size()
+                , r->m_alloc_ptr->m_label
+                );
+      }
+      else {
+        snprintf( buffer , 256 , "%s [ 0 + 0 ]\n" , space_name );
+      }
+      std::cout << buffer ;
+      r = r->m_next ;
+    } while ( r != root );
+  }
+}
+
 } /* namespace Impl */
 } /* namespace Experimental */
 } /* namespace Kokkos */

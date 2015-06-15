@@ -266,42 +266,7 @@ SharedAllocationRecord< Kokkos::HostSpace , void >::get_record( void * alloc_ptr
 void SharedAllocationRecord< Kokkos::HostSpace , void >::
 print_records( std::ostream & s , const Kokkos::HostSpace & space , bool detail )
 {
-  SharedAllocationRecord< void , void > * r = & s_root_record ;
-
-  char buffer[256] ;
-
-  if ( detail ) {
-    do {
-      snprintf( buffer , 256 , "Host addr( 0x%.12lx ) list( 0x%.12lx 0x%.12lx ) extent[ 0x%.12lx + %.8ld ] count(%d) dealloc(0x%.12lx) %s\n"
-              , reinterpret_cast<unsigned long>( r )
-              , reinterpret_cast<unsigned long>( r->m_prev )
-              , reinterpret_cast<unsigned long>( r->m_next )
-              , reinterpret_cast<unsigned long>( r->m_alloc_ptr )
-              , r->m_alloc_size
-              , r->m_count
-              , reinterpret_cast<unsigned long>( r->m_dealloc )
-              , ( r->m_alloc_ptr ? r->m_alloc_ptr->m_label : "" )
-              );
-      std::cout << buffer ;
-      r = r->m_next ;
-    } while ( r != & s_root_record );
-  }
-  else {
-    do {
-      if ( r->m_alloc_ptr ) {
-        snprintf( buffer , 256 , "Host [ 0x%.12lx + %ld ] %s\n"
-                , reinterpret_cast< unsigned long >( r->data() )
-                , r->size()
-                , r->m_alloc_ptr->m_label
-                );
-      }
-      else {
-        snprintf( buffer , 256 , "Host [ 0 + 0 ]\n" );
-      }
-      std::cout << buffer ;
-      r = r->m_next ;
-    } while ( r != & s_root_record );
-  }
+  SharedAllocationRecord< void , void >::print_host_accessible_records( s , "HostSpace" , & s_root_record , detail );
 }
 
 } // namespace Impl

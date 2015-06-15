@@ -119,7 +119,7 @@ private:
 
   int  m_device ; ///< Which Cuda device
 
-  friend class Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > ;
+  // friend class Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > ;
 };
 
 namespace Impl {
@@ -182,6 +182,25 @@ public:
                                     , ::cudaChannelFormatDesc const & desc
                                    );
 #endif
+  /*--------------------------------*/
+
+  CudaUVMSpace();
+  CudaUVMSpace( const CudaUVMSpace & rhs ) = default ;
+  CudaUVMSpace & operator = ( const CudaUVMSpace & rhs ) = default ;
+  ~CudaUVMSpace() = default ;
+
+  /**\brief  Allocate memory in the cuda space */
+  void * allocate( const size_t arg_alloc_size ) const ;
+
+  /**\brief  Deallocate memory in the cuda space */
+  void deallocate( void * const arg_alloc_ptr
+                 , const size_t arg_alloc_size ) const ;
+
+  /*--------------------------------*/
+
+private:
+
+  int  m_device ; ///< Which Cuda device
 };
 
 } // namespace Kokkos
@@ -215,6 +234,21 @@ public:
    */
   static Impl::AllocationTracker allocate_and_track( const std::string & label, const size_t size );
 
+  /*--------------------------------*/
+
+  CudaHostPinnedSpace();
+  CudaHostPinnedSpace( const CudaHostPinnedSpace & rhs ) = default ;
+  CudaHostPinnedSpace & operator = ( const CudaHostPinnedSpace & rhs ) = default ;
+  ~CudaHostPinnedSpace() = default ;
+
+  /**\brief  Allocate memory in the cuda space */
+  void * allocate( const size_t arg_alloc_size ) const ;
+
+  /**\brief  Deallocate memory in the cuda space */
+  void deallocate( void * const arg_alloc_ptr
+                 , const size_t arg_alloc_size ) const ;
+
+  /*--------------------------------*/
 };
 
 } // namespace Kokkos
@@ -427,7 +461,7 @@ class SharedAllocationRecord< Kokkos::CudaSpace , void >
 {
 private:
 
-  friend Kokkos::CudaSpace ;
+  friend class SharedAllocationRecord< Kokkos::CudaUVMSpace , void > ;
 
   using RecordBase = SharedAllocationRecord< void , void > ;
 
@@ -436,7 +470,10 @@ private:
 
   static void deallocate( RecordBase * );
 
-  void attach_texture_object( const unsigned sizeof_alias );
+  static ::cudaTextureObject_t
+  attach_texture_object( const unsigned sizeof_alias
+                       , void * const   alloc_ptr
+                       , const size_t   alloc_size ); 
 
   static RecordBase s_root_record ;
 
@@ -456,21 +493,12 @@ protected:
 
 public:
 
-  inline
-  std::string get_label() const
-    {
-      SharedAllocationHeader head ;
-
-      Kokkos::Impl::DeepCopy< Kokkos::HostSpace , Kokkos::CudaSpace >( & head , RecordBase::head() , sizeof(SharedAllocationHeader) );
-
-      return std::string( head.m_label );
-    }
+  std::string get_label() const ;
 
   static SharedAllocationRecord * allocate( const Kokkos::CudaSpace &  arg_space
                                           , const std::string       &  arg_label
                                           , const size_t               arg_alloc_size
-                                          )
-    { return new SharedAllocationRecord( arg_space , arg_label , arg_alloc_size ); }
+                                          );
 
   template< typename AliasType >
   inline
@@ -481,7 +509,11 @@ public:
                        std::is_same< AliasType , ::int4 >::value )
                    , "Cuda texture fetch only supported for alias types of int, ::int2, or ::int4" );
 
-      if ( m_tex_obj == 0 ) attach_texture_object( sizeof(AliasType) );
+      if ( m_tex_obj == 0 ) {
+        m_tex_obj = attach_texture_object( sizeof(AliasType)
+                                         , (void*) RecordBase::m_alloc_ptr
+                                         , RecordBase::m_alloc_size );
+      }
 
       return m_tex_obj ;
     }
@@ -498,6 +530,120 @@ public:
 
   static void print_records( std::ostream & , const Kokkos::CudaSpace & , bool detail = false );
 };
+
+
+template<>
+class SharedAllocationRecord< Kokkos::CudaUVMSpace , void >
+  : public SharedAllocationRecord< void , void >
+{
+private:
+
+  using RecordBase = SharedAllocationRecord< void , void > ;
+
+  SharedAllocationRecord( const SharedAllocationRecord & ) = delete ;
+  SharedAllocationRecord & operator = ( const SharedAllocationRecord & ) = delete ;
+
+  static void deallocate( RecordBase * );
+
+  static RecordBase s_root_record ;
+
+  ::cudaTextureObject_t      m_tex_obj ;
+  const Kokkos::CudaUVMSpace m_space ;
+
+protected:
+
+  ~SharedAllocationRecord();
+  SharedAllocationRecord() : RecordBase(), m_tex_obj(0), m_space() {}
+
+  SharedAllocationRecord( const Kokkos::CudaUVMSpace     & arg_space
+                        , const std::string              & arg_label
+                        , const size_t                     arg_alloc_size
+                        , const RecordBase::function_type  arg_dealloc = & deallocate
+                        );
+
+public:
+
+  std::string get_label() const ;
+
+  static SharedAllocationRecord * allocate( const Kokkos::CudaUVMSpace &  arg_space
+                                          , const std::string          &  arg_label
+                                          , const size_t                  arg_alloc_size
+                                          );
+
+  template< typename AliasType >
+  inline
+  ::cudaTextureObject_t attach_texture_object()
+    {
+      static_assert( ( std::is_same< AliasType , int >::value ||
+                       std::is_same< AliasType , ::int2 >::value ||
+                       std::is_same< AliasType , ::int4 >::value )
+                   , "Cuda texture fetch only supported for alias types of int, ::int2, or ::int4" );
+
+      if ( m_tex_obj == 0 ) {
+        m_tex_obj = SharedAllocationRecord< Kokkos::CudaSpace , void >::
+          attach_texture_object( sizeof(AliasType)
+                               , (void*) RecordBase::m_alloc_ptr
+                               , RecordBase::m_alloc_size );
+      }
+
+      return m_tex_obj ;
+    }
+
+  template< typename AliasType >
+  inline
+  int attach_texture_object_offset( const AliasType * const ptr )
+    {
+      // Texture object is attached to the entire allocation range
+      return ptr - reinterpret_cast<AliasType*>( RecordBase::m_alloc_ptr );
+    }
+
+  static SharedAllocationRecord * get_record( void * arg_alloc_ptr );
+
+  static void print_records( std::ostream & , const Kokkos::CudaUVMSpace & , bool detail = false );
+};
+
+template<>
+class SharedAllocationRecord< Kokkos::CudaHostPinnedSpace , void >
+  : public SharedAllocationRecord< void , void >
+{
+private:
+
+  using RecordBase = SharedAllocationRecord< void , void > ;
+
+  SharedAllocationRecord( const SharedAllocationRecord & ) = delete ;
+  SharedAllocationRecord & operator = ( const SharedAllocationRecord & ) = delete ;
+
+  static void deallocate( RecordBase * );
+
+  static RecordBase s_root_record ;
+
+  const Kokkos::CudaHostPinnedSpace m_space ;
+
+protected:
+
+  ~SharedAllocationRecord();
+  SharedAllocationRecord() : RecordBase(), m_space() {}
+
+  SharedAllocationRecord( const Kokkos::CudaHostPinnedSpace     & arg_space
+                        , const std::string              & arg_label
+                        , const size_t                     arg_alloc_size
+                        , const RecordBase::function_type  arg_dealloc = & deallocate
+                        );
+
+public:
+
+  std::string get_label() const ;
+
+  static SharedAllocationRecord * allocate( const Kokkos::CudaHostPinnedSpace &  arg_space
+                                          , const std::string          &  arg_label
+                                          , const size_t                  arg_alloc_size
+                                          );
+
+  static SharedAllocationRecord * get_record( void * arg_alloc_ptr );
+
+  static void print_records( std::ostream & , const Kokkos::CudaHostPinnedSpace & , bool detail = false );
+};
+
 
 } // namespace Impl
 } // namespace Experimental

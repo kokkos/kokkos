@@ -144,7 +144,9 @@ TEST_F( cuda, spaces )
 
 TEST_F( cuda , impl_shared_alloc )
 {
-  test_shared_alloc< Kokkos::CudaSpace , Kokkos::DefaultHostExecutionSpace >();
+  test_shared_alloc< Kokkos::CudaSpace , Kokkos::HostSpace::execution_space >();
+  test_shared_alloc< Kokkos::CudaUVMSpace , Kokkos::HostSpace::execution_space >();
+  test_shared_alloc< Kokkos::CudaHostPinnedSpace , Kokkos::HostSpace::execution_space >();
 }
 
 TEST_F( cuda , impl_view_mapping )
@@ -206,7 +208,54 @@ struct TestViewCudaTexture {
 TEST_F( cuda , impl_view_texture )
 {
   TestViewCudaTexture< Kokkos::CudaSpace >::run();
-  // TestViewCudaTexture< Kokkos::CudaUVMSpace >::run();
+  TestViewCudaTexture< Kokkos::CudaUVMSpace >::run();
+}
+
+template< class MemSpace , class ExecSpace >
+struct TestViewCudaAccessible {
+
+  enum { N = 1000 };
+
+  using V = Kokkos::Experimental::View<double*,MemSpace> ;
+
+  V m_base ;
+
+  struct TagInit {};
+  struct TagTest {};
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const TagInit & , const int i ) const { m_base[i] = i + 1 ; }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const TagTest & , const int i , long & error_count ) const
+    { if ( m_base[i] != i + 1 ) ++error_count ; }
+
+  TestViewCudaAccessible()
+    : m_base("base",N)
+    {}
+
+  static void run()
+    {
+      TestViewCudaAccessible self ;
+      Kokkos::parallel_for( Kokkos::RangePolicy< typename MemSpace::execution_space , TagInit >(0,N) , self );
+      MemSpace::execution_space::fence();
+      // Next access is a different execution space, must complete prior kernel.
+      long error_count = -1 ;
+      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace , TagTest >(0,N) , self , error_count );
+      EXPECT_EQ( error_count , 0 );
+    }
+};
+
+
+TEST_F( cuda , impl_view_accessible )
+{
+  TestViewCudaAccessible< Kokkos::CudaSpace , Kokkos::Cuda >::run();
+
+  TestViewCudaAccessible< Kokkos::CudaUVMSpace , Kokkos::Cuda >::run();
+  TestViewCudaAccessible< Kokkos::CudaUVMSpace , Kokkos::HostSpace::execution_space >::run();
+
+  TestViewCudaAccessible< Kokkos::CudaHostPinnedSpace , Kokkos::Cuda >::run();
+  TestViewCudaAccessible< Kokkos::CudaHostPinnedSpace , Kokkos::HostSpace::execution_space >::run();
 }
 
 //----------------------------------------------------------------------------
