@@ -162,5 +162,9 @@ struct VerifyExecutionCanAccessMemorySpace< Space , Space >
   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< \
     Kokkos::Impl::ActiveExecutionMemorySpace , DATA_SPACE >::verify()
 
+namespace Kokkos {
+  void fence();
+}
+
 #endif /* #ifndef KOKKOS_CORE_FWD_HPP */
 

@@ -43,3 +43,10 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 Kokkos_OpenMPexec.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/OpenMP/Kokkos_OpenMPexec.cpp
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/OpenMP/Kokkos_OpenMPexec.cpp
 endif
+
+ifeq ($(KOKKOS_INTERNAL_ENABLE_PROFILING_COLLECT_KERNEL_DATA), 1)
+KokkosP_Basic_Profiler_DataBase.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/profiler/src/KokkosP_Basic_Profiler_DataBase.cpp
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/profiler/src/KokkosP_Basic_Profiler_DataBase.cpp
+KokkosP_Basic_Profiler.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/profiler/src/KokkosP_Basic_Profiler.cpp
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/profiler/src/KokkosP_Basic_Profiler.cpp
+endif

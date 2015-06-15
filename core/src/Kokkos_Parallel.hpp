@@ -59,7 +59,9 @@
 #ifdef KOKKOS_HAVE_DEBUG
 #include<iostream>
 #endif
-
+#ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
+#include <KokkosP_Basic_Profiler.hpp>
+#endif
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -219,7 +221,17 @@ void parallel_for( const std::string & str
   std::cout << "KOKKOS_DEBUG Start parallel_for kernel: " << str << std::endl;
   #endif
 
+  #ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
+  Kokkos::fence();
+  KokkosP::Experimental::profile_begin_kernel(str,"DefaultExec");
+  #endif
+
   parallel_for(policy,functor);
+
+  #ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
+  Kokkos::fence();
+  KokkosP::Experimental::profile_end_kernel(str,"DefaultExec");
+  #endif
 
   #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
   Kokkos::fence();
@@ -458,7 +470,17 @@ void parallel_reduce( const std::string & str
   std::cout << "KOKKOS_DEBUG Start parallel_reduce kernel: " << str << std::endl;
   #endif
 
+  #ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
+  Kokkos::fence();
+  KokkosP::Experimental::profile_begin_kernel(str,"DefaultExec");
+  #endif
+
   parallel_reduce(policy,functor,result);
+
+  #ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
+  Kokkos::fence();
+  KokkosP::Experimental::profile_end_kernel(str,"DefaultExec");
+  #endif
 
   #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
   Kokkos::fence();
@@ -479,7 +501,17 @@ void parallel_reduce( const std::string & str
   std::cout << "KOKKOS_DEBUG Start parallel_reduce kernel: " << str << std::endl;
   #endif
 
+  #ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
+  Kokkos::fence();
+  KokkosP::Experimental::profile_begin_kernel(str,"DefaultExec");
+  #endif
+
   parallel_reduce(policy,functor,result);
+
+  #ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
+  Kokkos::fence();
+  KokkosP::Experimental::profile_end_kernel(str,"DefaultExec");
+  #endif
 
   #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
   Kokkos::fence();
@@ -499,7 +531,17 @@ void parallel_reduce( const std::string & str
   std::cout << "KOKKOS_DEBUG Start parallel_reduce kernel: " << str << std::endl;
   #endif
 
+  #ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
+  Kokkos::fence();
+  KokkosP::Experimental::profile_begin_kernel(str,"DefaultExec");
+  #endif
+
   parallel_reduce(policy,functor);
+
+  #ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
+  Kokkos::fence();
+  KokkosP::Experimental::profile_end_kernel(str,"DefaultExec");
+  #endif
 
   #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
   Kokkos::fence();
@@ -705,7 +747,17 @@ void parallel_scan( const std::string& str
   std::cout << "KOKKOS_DEBUG Start parallel_scan kernel: " << str << std::endl;
   #endif
 
+  #ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
+  Kokkos::fence();
+  KokkosP::Experimental::profile_begin_kernel(str,"DefaultExec");
+  #endif
+
   parallel_scan(policy,functor);
+
+  #ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
+  Kokkos::fence();
+  KokkosP::Experimental::profile_end_kernel(str,"DefaultExec");
+  #endif
 
   #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
   Kokkos::fence();

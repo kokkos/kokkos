@@ -9,8 +9,10 @@ KOKKOS_ARCH ?= ""
 KOKKOS_DEBUG ?= "no"
 #Options: hwloc,librt
 KOKKOS_USE_TPLS ?= ""
-#Options: c++98,c++11
+#Options: c++11
 KOKKOS_CXX_STANDARD ?= "c++11"
+#Options: kernel_times
+KOKKOS_PROFILING ?= ""
 
 #Default settings specific options
 #Options: force_uvm,use_ldg,rdc
@@ -19,6 +21,7 @@ KOKKOS_CUDA_OPTIONS ?= ""
 # Check for general settings
 
 KOKKOS_INTERNAL_ENABLE_DEBUG := $(strip $(shell echo $(KOKKOS_DEBUG) | grep "yes" | wc -l))
+KOKKOS_INTERNAL_ENABLE_PROFILING_COLLECT_KERNEL_DATA := $(strip $(shell echo $(KOKKOS_PROFILING) | grep "kernel_times" | wc -l))
 KOKKOS_INTERNAL_ENABLE_CXX11 := $(strip $(shell echo $(KOKKOS_CXX_STANDARD) | grep "c++11" | wc -l))
 
 # Check for external libraries
@@ -112,6 +115,8 @@ KOKKOS_CPPFLAGS = -I./ -I$(KOKKOS_PATH)/core/src -I$(KOKKOS_PATH)/containers/src
 KOKKOS_CXXFLAGS =
 KOKKOS_LIBS = -lkokkos 
 KOKKOS_LDFLAGS = -L$(shell pwd)
+KOKKOS_SRC = 
+KOKKOS_HEADERS =
 
 #Generating the KokkosCore_config.h file
 
@@ -152,6 +157,12 @@ endif
 	KOKKOS_LDFLAGS += -g -ldl
 	tmp := $(shell echo "\#define KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK 1" >> KokkosCore_config.tmp )
 	tmp := $(shell echo "\#define KOKKOS_HAVE_DEBUG 1" >> KokkosCore_config.tmp )
+endif
+ifeq ($(KOKKOS_INTERNAL_ENABLE_PROFILING_COLLECT_KERNEL_DATA), 1)
+  tmp := $(shell echo "\#define KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA 1" >> KokkosCore_config.tmp )
+  KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/profiler/src/*.hpp)
+  KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/profiler/src/*.cpp)
+  KOKKOS_CPPFLAGS += -I$(KOKKOS_PATH)/profiler/src
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HWLOC), 1)
@@ -227,13 +238,13 @@ ifneq ($(KOKKOS_INTERNAL_NEW_CONFIG), 0)
 endif
 
 
-KOKKOS_HEADERS = $(wildcard $(KOKKOS_PATH)/core/src/*.hpp)
+KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/*.hpp)
 KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/impl/*.hpp)
 KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/containers/src/*.hpp)
 KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/containers/src/impl/*.hpp)
 KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/algorithms/src/*.hpp)
 
-KOKKOS_SRC = $(wildcard $(KOKKOS_PATH)/core/src/impl/*.cpp)
+KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/impl/*.cpp)
 KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/containers/src/impl/*.cpp)
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
