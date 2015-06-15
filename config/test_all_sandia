@@ -183,8 +183,8 @@ fi
 if [ ${TEST_CLANG} -eq 1 ]
 then
 
-export PATH=${GCC472_PATH}/bin:${ENV_PATH}
-export LD_LIBRARY_PATH=${GCC472_PATH}/lib64:${ENV_LDPATH}
+export PATH=${GCC510_PATH}/bin:${ENV_PATH}
+export LD_LIBRARY_PATH=${GCC510_PATH}/lib64:${ENV_LDPATH}
 
 mkdir clang
 mkdir clang/3.6.0
