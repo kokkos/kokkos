@@ -615,6 +615,25 @@ void test_view_mapping()
       for ( int i = 0 ; i < N ; ++i ) ASSERT_EQ( vr1[i] , i + 2 );
     }
   }
+
+  {
+    using namespace Kokkos::Experimental ;
+    using memory_space = typename ExecSpace::memory_space ;
+    using V = View<int*,memory_space> ;
+
+    constexpr int N = 10 ;
+
+    memory_space mem_space ;
+
+    V v( "v" , N );
+    V va( view_alloc() , N );
+    V vb( view_alloc( "vb" ) , N );
+    V vc( view_alloc( "vc" , AllowPadding ) , N );
+    V vd( view_alloc( "vd" , WithoutInitializing ) , N );
+    V ve( view_alloc( "ve" , WithoutInitializing , AllowPadding ) , N );
+    V vf( view_alloc( "vf" , mem_space , WithoutInitializing , AllowPadding ) , N );
+
+  }
 }
 
 template< class ExecSpace >

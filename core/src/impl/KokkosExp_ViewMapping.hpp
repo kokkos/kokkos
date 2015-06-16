@@ -2605,51 +2605,6 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template< class Traits , class Prop , class Enable = void >
-struct ViewAllocationProperties ;
-
-template< class Traits , class Prop >
-struct ViewAllocationProperties< Traits , Prop ,
-  typename std::enable_if<(
-    // std::string
-    std::is_same< Prop , std::string >::value
-    ||
-    // char[N]
-    ( std::is_same< typename std::remove_all_extents<Prop>::type , char >::value &&
-      1 == std::rank<Prop>::value &&
-      0 <  std::extent<Prop>::value )
-  )>::type >
-{
-  using execution_space = typename Traits::execution_space ;
-  using memory_space    = typename Traits::memory_space ;
-
-  constexpr bool initialize() { return true ; }
-
-  constexpr std::integral_constant<bool,true> allow_padding()
-    { return std::integral_constant<bool,true>(); }
-
-  const std::string & label() const { return m_label ; }
-
-  memory_space memory_space_instance() const { return memory_space(); }
-  execution_space execution_space_instance() const { return execution_space(); }
-
-  ViewAllocationProperties( const Prop & arg_label ) : m_label( arg_label ) {}
-
-private:
-
-  const std::string m_label ;
-
-};
-
-}}} /* namespace Kokkos::Experimental::Impl */
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
-
 class Error_view_scalar_reference_to_non_scalar_view ;
 
 } /* namespace Impl */

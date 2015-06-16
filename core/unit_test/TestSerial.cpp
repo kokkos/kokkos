@@ -78,8 +78,14 @@ namespace Test {
 
 class serial : public ::testing::Test {
 protected:
-  static void SetUpTestCase() {}
-  static void TearDownTestCase() {}
+  static void SetUpTestCase()
+    {
+      Kokkos::HostSpace::execution_space::initialize();
+    }
+  static void TearDownTestCase()
+    {
+      Kokkos::HostSpace::execution_space::finalize();
+    }
 };
 
 TEST_F( serial , impl_shared_alloc ) {

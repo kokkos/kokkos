@@ -304,14 +304,394 @@ template< class DataType
         , class Arg3 = void /* MemoryTraits */ >
 class View ;
 
+} /* namespace Experimental */
+} /* namespace Kokkos */
 
-template< class >
-struct ViewAllocProp {
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
+namespace Kokkos {
+namespace Experimental {
 
+struct WithoutInitializing_t {};
+struct AllowPadding_t {};
+
+namespace {
+constexpr WithoutInitializing_t WithoutInitializing = WithoutInitializing_t();
+constexpr AllowPadding_t        AllowPadding        = AllowPadding_t();
+}
+
+template< class ... Parameters >
+struct ViewAllocProp ;
+
+template<>
+struct ViewAllocProp<> {
+
+  struct NullSpace {};
+
+  using allow_padding_t = std::false_type ;
+  using initialize_t    = std::true_type ;
+  using memory_space    = NullSpace ;
+  using execution_space = NullSpace ;
+
+  const std::string      label ;
+  const memory_space     memory ;
+  const execution_space  execution ;
+  const allow_padding_t  allow_padding ;
+  const initialize_t     initialize ;
+
+  ViewAllocProp()
+    : label()
+    , memory()
+    , execution()
+    , allow_padding()
+    , initialize()
+    {}
+
+  ViewAllocProp( const ViewAllocProp & arg_prop )
+    : label( arg_prop.label )
+    , memory()
+    , execution()
+    , allow_padding()
+    , initialize()
+    {}
+
+  ViewAllocProp( const std::string & arg_label , const ViewAllocProp & arg_prop = ViewAllocProp() )
+    : label( arg_label )
+    , memory()
+    , execution()
+    , allow_padding()
+    , initialize()
+    {}
+};
+
+template< class ... Parameters >
+struct ViewAllocProp< WithoutInitializing_t , Parameters ... >
+{
+  using base_prop_type = ViewAllocProp< Parameters ... > ;
+
+  using allow_padding_t = typename base_prop_type::allow_padding_t ;
+  using initialize_t    = std::false_type ;
+  using memory_space    = typename base_prop_type::memory_space ;
+  using execution_space = typename base_prop_type::execution_space ;
+
+  const std::string      label ;
+  const memory_space     memory ;
+  const execution_space  execution ;
+  const allow_padding_t  allow_padding ;
+  const initialize_t     initialize ;
+
+  ViewAllocProp( const base_prop_type & arg_prop = base_prop_type() )
+    : label( arg_prop.label  )
+    , memory( arg_prop.memory )
+    , execution( arg_prop.execution )
+    , allow_padding()
+    , initialize()
+    {}
+
+  ViewAllocProp( const std::string & arg_label , const ViewAllocProp & arg_prop )
+    : label( arg_label )
+    , memory( arg_prop.memory )
+    , execution( arg_prop.execution )
+    , allow_padding()
+    , initialize()
+    {}
+};
+
+template< class ... Parameters >
+struct ViewAllocProp< AllowPadding_t , Parameters ... >
+{
+  using base_prop_type = ViewAllocProp< Parameters ... > ;
+
+  using allow_padding_t = std::true_type ;
+  using initialize_t    = typename base_prop_type::initialize_t ;
+  using memory_space    = typename base_prop_type::memory_space ;
+  using execution_space = typename base_prop_type::execution_space ;
+
+  const std::string label ;
+  const memory_space     memory ;
+  const execution_space  execution ;
+  const allow_padding_t  allow_padding ;
+  const initialize_t     initialize ;
+
+  ViewAllocProp( const base_prop_type & arg_prop = base_prop_type() )
+    : label( arg_prop.label  )
+    , memory( arg_prop.memory )
+    , execution( arg_prop.execution )
+    , allow_padding()
+    , initialize()
+    {}
+
+  ViewAllocProp( const std::string & arg_label , const ViewAllocProp & arg_prop )
+    : label( arg_label )
+    , memory( arg_prop.memory )
+    , execution( arg_prop.execution )
+    , allow_padding()
+    , initialize()
+    {}
+};
+
+template< class Space , class ... Parameters >
+struct ViewAllocProp< Space , Parameters ... >
+{
+  enum { is_exec = Kokkos::Impl::is_execution_space< Space >::value };
+  enum { is_mem  = Kokkos::Impl::is_memory_space< Space >::value };
+
+  static_assert( is_exec || is_mem , "View allocation given unknown parameter" );
+
+  using base_prop_type = ViewAllocProp< Parameters ... > ;
+
+  using allow_padding_t = typename base_prop_type::allow_padding_t ;
+  using initialize_t    = typename base_prop_type::initialize_t ;
+  using memory_space    = typename std::conditional< is_mem  , Space , typename base_prop_type::memory_space >::type ;
+  using execution_space = typename std::conditional< is_exec , Space , typename base_prop_type::execution_space >::type ;
+
+  const std::string      label ;
+  const memory_space     memory ;
+  const execution_space  execution ;
+  const allow_padding_t  allow_padding ;
+  const initialize_t     initialize ;
+
+  template< class S >
+  ViewAllocProp( const S & arg_space
+               , typename std::enable_if
+                   < std::is_same<S,memory_space>::value
+                   , const base_prop_type &
+                   >::type arg_prop = base_prop_type()
+               )
+    : label( arg_prop.label )
+    , memory( arg_space )
+    , execution( arg_prop.execution )
+    , allow_padding()
+    , initialize()
+    {}
+
+  template< class S >
+  ViewAllocProp( const S & arg_space
+               , typename std::enable_if
+                   < std::is_same<S,execution_space>::value
+                   , const base_prop_type &
+                   >::type arg_prop = base_prop_type()
+               )
+    : label( arg_prop.label )
+    , memory( arg_prop.memory )
+    , execution( arg_space )
+    , allow_padding()
+    , initialize()
+    {}
+
+  ViewAllocProp( const std::string & arg_label , const ViewAllocProp & arg_prop )
+    : label( arg_label )
+    , memory( arg_prop.memory )
+    , execution( arg_prop.execution )
+    , allow_padding()
+    , initialize()
+    {}
+};
+
+template< class ExecSpace , class MemSpace >
+struct ViewAllocProp< Kokkos::Device< ExecSpace , MemSpace > , std::string >
+{
+  using base_prop_type = ViewAllocProp<> ;
+
+  using allow_padding_t = typename base_prop_type::allow_padding_t ;
+  using initialize_t    = typename base_prop_type::initialize_t ;
+  using memory_space    = MemSpace ;
+  using execution_space = ExecSpace ;
+
+  const std::string      label ;
+  const memory_space     memory ;
+  const execution_space  execution ;
+  const allow_padding_t  allow_padding ;
+  const initialize_t     initialize ;
+
+  ViewAllocProp( const std::string & arg_label )
+    : label( arg_label )
+    , memory()
+    , execution()
+    , allow_padding()
+    , initialize()
+    {}
+};
+
+template< class ExecSpace , class MemSpace , unsigned N >
+struct ViewAllocProp< Kokkos::Device< ExecSpace , MemSpace > , char[N] >
+{
+  using base_prop_type = ViewAllocProp<> ;
+
+  using allow_padding_t = typename base_prop_type::allow_padding_t ;
+  using initialize_t    = typename base_prop_type::initialize_t ;
+  using memory_space    = MemSpace ;
+  using execution_space = ExecSpace ;
+
+  const std::string      label ;
+  const memory_space     memory ;
+  const execution_space  execution ;
+  const allow_padding_t  allow_padding ;
+  const initialize_t     initialize ;
+
+  ViewAllocProp( const char * const arg_label )
+    : label( arg_label )
+    , memory()
+    , execution()
+    , allow_padding()
+    , initialize()
+    {}
+};
+
+template< class ExecSpace , class MemSpace , class ... Parameters >
+struct ViewAllocProp< Kokkos::Device< ExecSpace , MemSpace >
+                    , ViewAllocProp< Parameters ... >
+                    >
+{
+  using base_prop_type = ViewAllocProp< Parameters ... > ;
+
+  using allow_padding_t = typename base_prop_type::allow_padding_t ;
+  using initialize_t    = typename base_prop_type::initialize_t ;
+  using memory_space    = MemSpace ;
+
+  using execution_space =
+    typename std::conditional
+      < Kokkos::Impl::is_execution_space< typename base_prop_type::execution_space >::value
+      , typename base_prop_type::execution_space
+      , ExecSpace
+      >::type ;
+
+  static_assert( std::is_same< typename base_prop_type::memory_space , ViewAllocProp<>::NullSpace >::value ||
+                 std::is_same< typename base_prop_type::memory_space , memory_space >::value
+               , "View allocation given incompatible memory space" );
+
+  static_assert( Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename execution_space::memory_space
+                                                                  , memory_space >::value
+               , "View allocation given incompatible execution space" );
+
+  const std::string      label ;
+  const memory_space     memory ;
+  const execution_space  execution ;
+  const allow_padding_t  allow_padding ;
+  const initialize_t     initialize ;
+
+  // If the input properties have a memory or execution space then copy construct those spaces
+  // otherwise default construct those spaces.
+
+  template< class P >
+  ViewAllocProp( const P & arg_prop
+               , typename std::enable_if
+                   < std::is_same< P , base_prop_type >::value &&
+                     Kokkos::Impl::is_memory_space< typename P::memory_space >::value &&
+                     Kokkos::Impl::is_execution_space< typename P::memory_space >::value
+                   >::type * = 0 )
+    : label( arg_prop.label )
+    , memory( arg_prop.memory )
+    , execution( arg_prop.execution )
+    , allow_padding()
+    , initialize()
+    {}
+
+  template< class P >
+  ViewAllocProp( const P & arg_prop
+               , typename std::enable_if
+                   < std::is_same< P , base_prop_type >::value &&
+                     Kokkos::Impl::is_memory_space< typename P::memory_space >::value &&
+                     ! Kokkos::Impl::is_execution_space< typename P::execution_space >::value
+                   >::type * = 0 )
+    : label( arg_prop.label )
+    , memory( arg_prop.memory )
+    , execution()
+    , allow_padding()
+    , initialize()
+    {}
+
+  template< class P >
+  ViewAllocProp( const P & arg_prop
+               , typename std::enable_if
+                   < std::is_same< P , base_prop_type >::value &&
+                     ! Kokkos::Impl::is_memory_space< typename P::memory_space >::value &&
+                     Kokkos::Impl::is_execution_space< typename P::execution_space >::value
+                   >::type * = 0 )
+    : label( arg_prop.label )
+    , memory()
+    , execution( arg_prop.execution )
+    , allow_padding()
+    , initialize()
+    {}
+
+  template< class P >
+  ViewAllocProp( const P & arg_prop
+               , typename std::enable_if
+                   < std::is_same< P , base_prop_type >::value &&
+                     ! Kokkos::Impl::is_memory_space< typename P::memory_space >::value &&
+                     ! Kokkos::Impl::is_execution_space< typename P::execution_space >::value
+                   >::type * = 0 )
+    : label( arg_prop.label )
+    , memory()
+    , execution()
+    , allow_padding()
+    , initialize()
+    {}
 };
 
 
+
+
+ViewAllocProp<>
+inline
+view_alloc(void)
+{ return ViewAllocProp<>(); }
+
+template< class ... Args >
+inline
+ViewAllocProp< Args ... >
+view_alloc( const std::string & arg_label , Args ... args )
+{
+  return ViewAllocProp< Args ... >( arg_label , view_alloc( args ... ) );
+}
+
+template< class ... Args >
+inline
+ViewAllocProp< Args ... >
+view_alloc( const char * const arg_label , Args ... args )
+{
+  return ViewAllocProp< Args ... >( arg_label , view_alloc( args ... ) );
+}
+
+template< class ... Args >
+inline
+ViewAllocProp< WithoutInitializing_t , Args ... >
+view_alloc( const WithoutInitializing_t & , Args ... args )
+{
+  return ViewAllocProp< WithoutInitializing_t, Args ... >( view_alloc( args ... ) );
+}
+
+template< class ... Args >
+inline
+ViewAllocProp< AllowPadding_t , Args ... >
+view_alloc( const AllowPadding_t & , Args ... args )
+{
+  return ViewAllocProp< AllowPadding_t, Args ... >( view_alloc( args ... ) );
+}
+
+template< class Space , class ... Args >
+inline
+typename std::enable_if
+  < Kokkos::Impl::is_memory_space< Space >::value
+  , ViewAllocProp< Space , Args ... >
+  >::type
+view_alloc( const Space & space , Args ... args )
+{
+  return ViewAllocProp< Space , Args ... >( space , view_alloc( args ... ) );
+};
+
+template< class Space , class ... Args >
+inline
+typename std::enable_if
+  < Kokkos::Impl::is_execution_space< Space >::value
+  , ViewAllocProp< Space , Args ... >
+  >::type
+view_alloc( const Space & space , Args ... args )
+{
+  return ViewAllocProp< Space , Args ... >( space , view_alloc( args ... ) );
+};
 
 } /* namespace Experimental */
 } /* namespace Kokkos */
@@ -809,37 +1189,39 @@ public:
     : m_track()
     , m_map()
     {
-      using alloc_prop      = Kokkos::Experimental::Impl::ViewAllocationProperties< traits , Prop > ;
-      using destroy_functor = DestroyFunctor< typename alloc_prop::execution_space > ;
+      // Merge the < execution_space , memory_space > into the properties.
+      using alloc_prop = ViewAllocProp< typename traits::device_type , Prop > ;
+
+      using execution_space = typename alloc_prop::execution_space ;
       using memory_space    = typename traits::memory_space ;
+      using destroy_functor = DestroyFunctor< execution_space > ;
       using record_type     = Kokkos::Experimental::Impl::SharedAllocationRecord< memory_space , destroy_functor > ;
 
       static_assert( traits::is_managed , "View allocation constructor requires managed memory" );
 
-      // Construct allocation properties from input property argument
-      alloc_prop prop( arg_prop );
+      const alloc_prop prop( arg_prop );
 
       // Query the mapping for byte-size of allocation.
-      const size_t alloc_size = map_type::memory_extent( prop.allow_padding()
+      const size_t alloc_size = map_type::memory_extent( prop.allow_padding
                                                        , arg_N0 , arg_N1 , arg_N2 , arg_N3
                                                        , arg_N4 , arg_N5 , arg_N6 , arg_N7 );
 
       // Allocate memory from the memory space.
-      record_type * const record = record_type::allocate( prop.memory_space_instance() , prop.label() , alloc_size );
+      record_type * const record = record_type::allocate( prop.memory , prop.label , alloc_size );
 
       // Construct the mapping object prior to start of tracking
       // to assign destroy functor and possibly initialize.
       m_map = map_type( record->data()
-                      , prop.allow_padding()
+                      , prop.allow_padding
                       , arg_N0 , arg_N1 , arg_N2 , arg_N3
                       , arg_N4 , arg_N5 , arg_N6 , arg_N7 );
 
       // Copy the destroy functor into the allocation record before initiating tracking.
       record->m_destroy.m_map   = m_map ;
-      record->m_destroy.m_space = prop.execution_space_instance();
+      record->m_destroy.m_space = prop.execution ;
 
-      if ( prop.initialize() ) {
-        m_map.construct( prop.execution_space_instance() );
+      if ( prop.initialize.value ) {
+        m_map.construct( prop.execution );
       }
 
       // Destory functor assigned and initialization complete, start tracking
