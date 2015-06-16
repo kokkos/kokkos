@@ -11,7 +11,7 @@ KOKKOS_DEBUG ?= "no"
 KOKKOS_USE_TPLS ?= ""
 #Options: c++11
 KOKKOS_CXX_STANDARD ?= "c++11"
-#Options: kernel_times
+#Options: kernel_times,aggregate_mpi
 KOKKOS_PROFILING ?= ""
 
 #Default settings specific options
@@ -22,6 +22,7 @@ KOKKOS_CUDA_OPTIONS ?= ""
 
 KOKKOS_INTERNAL_ENABLE_DEBUG := $(strip $(shell echo $(KOKKOS_DEBUG) | grep "yes" | wc -l))
 KOKKOS_INTERNAL_ENABLE_PROFILING_COLLECT_KERNEL_DATA := $(strip $(shell echo $(KOKKOS_PROFILING) | grep "kernel_times" | wc -l))
+KOKKOS_INTERNAL_ENABLE_PROFILING_AGGREGATE_MPI := $(strip $(shell echo $(KOKKOS_PROFILING) | grep "aggregate_mpi" | wc -l))
 KOKKOS_INTERNAL_ENABLE_CXX11 := $(strip $(shell echo $(KOKKOS_CXX_STANDARD) | grep "c++11" | wc -l))
 
 # Check for external libraries
@@ -164,6 +165,9 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_PROFILING_COLLECT_KERNEL_DATA), 1)
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/profiler/src/*.cpp)
   KOKKOS_CPPFLAGS += -I$(KOKKOS_PATH)/profiler/src
 endif
+ifeq ($(KOKKOS_INTERNAL_ENABLE_PROFILING_AGGREGATE_MPI), 1)
+  tmp := $(shell echo "\#define KOKKOS_ENABLE_PROFILING_AGGREGATE_MPI 1" >> KokkosCore_config.tmp )
+endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HWLOC), 1)
 	KOKKOS_CPPFLAGS += -I$(HWLOC_PATH)/include
@@ -175,6 +179,7 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_LIBRT), 1)
 	tmp := $(shell echo "\#define KOKKOS_USE_LIBRT 1" >> KokkosCore_config.tmp )
 	tmp := $(shell echo "\#define PREC_TIMER 1" >> KokkosCore_config.tmp )
+  tmp := $(shell echo "\#define KOKKOSP_ENABLE_RTLIB 1" >> KokkosCore_config.tmp )
 	KOKKOS_LIBS += -lrt
 endif
 
@@ -237,6 +242,11 @@ ifneq ($(KOKKOS_INTERNAL_NEW_CONFIG), 0)
 	tmp := $(shell cp KokkosCore_config.tmp KokkosCore_config.h)
 endif
 
+KOKKOS_INTERNAL_LS_PROFILERCONFIG := $(shell ls KokkosProfiler_config.h)
+ifneq ($(KOKKOS_INTERNAL_LS_PROFILERCONFIG), KokkosProfiler_config.h)
+  tmp := $(shell touch KokkosProfiler_config.h)
+endif
+
 
 KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/*.hpp)
 KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/impl/*.hpp)
@@ -284,7 +294,7 @@ KOKKOS_OBJ_LINK = $(notdir $(KOKKOS_OBJ))
 include $(KOKKOS_PATH)/Makefile.targets
 
 kokkos-clean:
-	rm -f $(KOKKOS_OBJ_LINK) KokkosCore_config.h KokkosCore_config.tmp libkokkos.a
+	rm -f $(KOKKOS_OBJ_LINK) KokkosCore_config.h KokkosProfiler_config.h KokkosCore_config.tmp libkokkos.a
 
 libkokkos.a: $(KOKKOS_OBJ_LINK) $(KOKKOS_SRC) $(KOKKOS_HEADERS)
 	ar cr libkokkos.a $(KOKKOS_OBJ_LINK)
