@@ -42,6 +42,11 @@
 */
 
 #include <KokkosP_Basic_Profiler_DataBase.hpp>
+#include <KokkosProfiler_config.h>
+
+#if KOKKOSP_ENABLE_PROFILING_AGGREGATE_MPI
+#include <mpi.h>
+#endif
 
 namespace KokkosP {
 namespace Experimental {
@@ -87,14 +92,42 @@ void KernelEntry::add_time(const double& time) {
 }
 
 void KernelEntry::print() const {
-  std::cout << "KOKKOS_PROFILE: Entry: " << std::endl;
-  std::cout << "KOKKOS_PROFILE:   Exec Space:  " << exec_space << std::endl;
-  std::cout << "KOKKOS_PROFILE:   Kernel Name: " << kernel_name << std::endl;
-  std::cout << "KOKKOS_PROFILE:   # of calls:  " << num_calls << std::endl;
-  std::cout << "KOKKOS_PROFILE:   Avg Time:    " << time_total/num_calls << std::endl;
-  std::cout << "KOKKOS_PROFILE:   Min Time:    " << time_min << std::endl;
-  std::cout << "KOKKOS_PROFILE:   Max Time:    " << time_max << std::endl;
+  #if KOKKOS_ENABLE_PROFILING_AGGREGATE_MPI
+  int nprocs = 0;
+  int me = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &me);
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+  double mpi_time_total = 0.0;
+  MPI_Allreduce(&mpi_time_total, &time_total, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  mpi_time_total = mpi_time_total/nprocs;
+
+  double mpi_time_min = 0.0;
+  MPI_Allreduce(&mpi_time_min, &time_min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+
+  double mpi_time_max = 0.0;
+  MPI_Allreduce(&mpi_time_max, &time_max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+
+  if(me == 0) {
+    std::cout << "KOKKOS_PROFILE: Entry: " << std::endl;
+    std::cout << "KOKKOS_PROFILE:   Exec Space:    " << exec_space << std::endl;
+    std::cout << "KOKKOS_PROFILE:   Kernel Name:   " << kernel_name << std::endl;
+    std::cout << "KOKKOS_PROFILE:   # of calls:    " << num_calls << std::endl;
+    std::cout << "KOKKOS_PROFILE:   Tot Time (s) : " << mpi_time_total << std::endl;
+    std::cout << "KOKKOS_PROFILE:   Avg Time (ms): " << mpi_time_total/num_calls << std::endl;
+    std::cout << "KOKKOS_PROFILE:   Min Time (ms): " << mpi_time_min << std::endl;
+    std::cout << "KOKKOS_PROFILE:   Max Time (ms): " << mpi_time_max << std::endl;
+  }
+  #else
+  std::cout << "KOKKOS_PROFILE: Entry: " << std::endl;
+  std::cout << "KOKKOS_PROFILE:   Exec Space:    " << exec_space << std::endl;
+  std::cout << "KOKKOS_PROFILE:   Kernel Name:   " << kernel_name << std::endl;
+  std::cout << "KOKKOS_PROFILE:   # of calls:    " << num_calls << std::endl;
+  std::cout << "KOKKOS_PROFILE:   Tot Time (s) : " << time_total << std::endl;
+  std::cout << "KOKKOS_PROFILE:   Avg Time (ms): " << time_total/num_calls << std::endl;
+  std::cout << "KOKKOS_PROFILE:   Min Time (ms): " << time_min << std::endl;
+  std::cout << "KOKKOS_PROFILE:   Max Time (ms): " << time_max << std::endl;
+  #endif
 }
 
 KernelEntry* get_kernel_list_head (KernelEntry* start) {

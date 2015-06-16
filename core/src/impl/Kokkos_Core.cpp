@@ -47,9 +47,7 @@
 #include <cstring>
 #include <iostream>
 #include <cstdlib>
-#ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
-#include <KokkosP_Basic_Profiler.hpp>
-#endif
+#include <Kokkos_Profiler.hpp>
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
@@ -142,7 +140,7 @@ void initialize_internal(const InitArguments& args)
   }
 #endif
 #ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
-KokkosP::Experimental::profile_initialize();
+KokkosP::Experimental::profiler_initialize();
 #endif
 }
 
@@ -183,7 +181,7 @@ void finalize_internal( const bool all_spaces = false )
   }
 #endif
 #ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
-KokkosP::Experimental::profile_finalize();
+KokkosP::Experimental::profiler_finalize();
 #endif
 
 }

@@ -40,27 +40,19 @@
 // ************************************************************************
 //@HEADER
 */
+#include <Kokkos_Profiler.hpp>
 
-#ifndef KOKKOSP_BASIC_PROFILER_HPP_
-#define KOKKOSP_BASIC_PROFILER_HPP_
-
-#include <iostream>
-#include <string>
-
-namespace KokkosP {
-
+namespace Kokkos {
 namespace Experimental {
-
-extern void profiler_begin_kernel(const std::string& kernel_name, const std::string& exec_space);
-
-extern void profiler_end_kernel(const std::string& kernel_name, const std::string& exec_space);
-
-extern void profiler_initialize();
-
-extern void profiler_finalize();
-
+void initialize() {
+#ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
+  KokkosP::Experimental::profiler_initialize();
+#endif
+}
+void finalize() {
+#ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
+  KokkosP::Experimental::profiler_finalize();
+#endif
 }
 }
-
-#endif // KOKKOSP_BASIC_PROFILER_HPP_
-
+}

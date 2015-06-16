@@ -43,25 +43,85 @@
 
 #include <iostream>
 #include <string>
-#include <impl/Kokkos_Timer.hpp>
 #include <KokkosP_Basic_Profiler.hpp>
 #include <KokkosP_Basic_Profiler_DataBase.hpp>
+
+#include <stddef.h>
+
+#ifdef _MSC_VER
+#undef KOKKOS_USE_LIBRT
+#include <gettimeofday.c>
+#else
+#ifdef KOKKOS_USE_LIBRT
+#include <ctime>
+#else
+#include <sys/time.h>
+#endif
+#endif
 
 namespace KokkosP {
 namespace Experimental {
 
-Kokkos::Impl::Timer* get_timer() {
-  static Kokkos::Impl::Timer timer;
+/** \brief  Time since construction */
+
+class Timer {
+private:
+  #ifdef KOKKOS_USE_LIBRT
+  struct timespec m_old;
+  #else
+  struct timeval m_old ;
+  #endif
+  Timer( const Timer & );
+  Timer & operator = ( const Timer & );
+public:
+
+  inline
+  void reset() {
+    #ifdef KOKKOS_USE_LIBRT
+    clock_gettime(CLOCK_REALTIME, &m_old);
+    #else
+    gettimeofday( & m_old , ((struct timezone *) NULL ) );
+    #endif
+  }
+
+  inline
+  ~Timer() {}
+
+  inline
+  Timer() { reset(); }
+
+  inline
+  double seconds() const
+  {
+    #ifdef KOKKOS_USE_LIBRT
+      struct timespec m_new;
+      clock_gettime(CLOCK_REALTIME, &m_new);
+
+      return ( (double) ( m_new.tv_sec  - m_old.tv_sec ) ) +
+             ( (double) ( m_new.tv_nsec - m_old.tv_nsec ) * 1.0e-9 );
+    #else
+      struct timeval m_new ;
+
+      ::gettimeofday( & m_new , ((struct timezone *) NULL ) );
+
+      return ( (double) ( m_new.tv_sec  - m_old.tv_sec ) ) +
+             ( (double) ( m_new.tv_usec - m_old.tv_usec ) * 1.0e-6 );
+    #endif
+  }
+};
+
+Timer* get_timer() {
+  static Timer timer;
   return &timer;
 }
 
-void profile_begin_kernel(const std::string& kernel_name, const std::string& exec_space) {
-  Kokkos::Impl::Timer* timer = get_timer();
+void profiler_begin_kernel(const std::string& kernel_name, const std::string& exec_space) {
+  Timer* timer = get_timer();
   timer->reset();
 }
 
-void profile_end_kernel(const std::string& kernel_name, const std::string& exec_space) {
-  Kokkos::Impl::Timer* timer = get_timer();
+void profiler_end_kernel(const std::string& kernel_name, const std::string& exec_space) {
+  Timer* timer = get_timer();
   double time = timer->seconds();
 
   KernelEntry* entry = get_kernel_list_head();
@@ -82,10 +142,10 @@ void profile_end_kernel(const std::string& kernel_name, const std::string& exec_
     entry->next = new KernelEntry(entry,time,kernel_name,exec_space);
 }
 
-void profile_initialize() {
+void profiler_initialize() {
 }
 
-void profile_finalize() {
+void profiler_finalize() {
   KernelEntry* entry = get_kernel_list_head();
   while( entry != NULL ) {
     entry->print();
