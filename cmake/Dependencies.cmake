@@ -5,6 +5,7 @@ SET(SUBPACKAGES_DIRS_CLASSIFICATIONS_OPTREQS
   Core                  core              PS       REQUIRED
   Containers            containers        PS       OPTIONAL
   Algorithms            algorithms        PS       OPTIONAL
+  Profiler              profile           EX       OPTIONAL
   Example               example           EX       OPTIONAL
   )
 
