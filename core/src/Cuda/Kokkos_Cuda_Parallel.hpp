@@ -1497,6 +1497,7 @@ inline
 void parallel_reduce( const ExecPolicy  & policy
                     , const FunctorTypeIn & functor_in
                     , const ViewType    & result_view
+                    , const std::string& str = "" 
                     , typename Impl::enable_if<
                       ( Impl::is_view<ViewType>::value && ! Impl::is_integral< ExecPolicy >::value &&
                         Impl::is_same<typename ExecPolicy::execution_space,Kokkos::Cuda>::value
@@ -1515,6 +1516,7 @@ inline
 void parallel_reduce( const ExecPolicy  & policy
                     , const FunctorTypeIn & functor_in
                     , ResultType& result_ref
+                    , const std::string& str = "" 
                     , typename Impl::enable_if<
                       ( ! Impl::is_view<ResultType>::value &&
                         ! Impl::IsNonTrivialReduceFunctor<FunctorTypeIn>::value &&
@@ -1550,6 +1552,7 @@ inline
 void parallel_reduce( const ExecPolicy  & policy
                     , const FunctorType & functor
                     , typename Kokkos::Impl::FunctorValueTraits< FunctorType , typename ExecPolicy::work_tag >::reference_type result_ref
+                    , const std::string& str = "" 
                     , typename Impl::enable_if<
                       (   Impl::IsNonTrivialReduceFunctor<FunctorType>::value &&
                         ! Impl::is_integral< ExecPolicy >::value  &&
@@ -1583,6 +1586,7 @@ inline
 void parallel_reduce( const size_t        work_count
                     , const FunctorTypeIn & functor_in
                     , const ViewType    & result_view
+                    , const std::string& str = "" 
                     , typename Impl::enable_if<( Impl::is_view<ViewType>::value &&
                                                  Impl::is_same<
                           typename Impl::FunctorPolicyExecutionSpace< FunctorTypeIn , void >::execution_space,
@@ -1609,6 +1613,7 @@ inline
 void parallel_reduce( const size_t        work_count
                     , const FunctorTypeIn & functor_in
                     , ResultType& result
+                    , const std::string& str = "" 
                     , typename Impl::enable_if< ! Impl::is_view<ResultType>::value &&
                                                 ! Impl::IsNonTrivialReduceFunctor<FunctorTypeIn>::value &&
                                                 Impl::is_same<
@@ -1651,6 +1656,7 @@ inline
 void parallel_reduce( const size_t        work_count
                     , const FunctorType & functor
                     , typename Kokkos::Impl::FunctorValueTraits< FunctorType , void >::reference_type result
+                    , const std::string& str = "" 
                     , typename Impl::enable_if< Impl::IsNonTrivialReduceFunctor<FunctorType>::value &&
                                                 Impl::is_same<
                              typename Impl::FunctorPolicyExecutionSpace< FunctorType , void >::execution_space,
