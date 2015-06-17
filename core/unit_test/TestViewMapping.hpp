@@ -667,7 +667,37 @@ void test_view_mapping()
     ASSERT_TRUE( offset.extent_is_contiguous() );
 
     Kokkos::Experimental::Impl::ViewMapping< traits_t , void >  v( (int*) 0 , std::false_type() , stride );
+  }
 
+  {
+    using V = Kokkos::Experimental::View<int**,ExecSpace> ;
+    using M = typename V::HostMirror ;
+
+    constexpr int N0 = 10 ;
+    constexpr int N1 = 11 ;
+
+    V a("a",N0,N1);
+    M b = Kokkos::Experimental::create_mirror(a);
+    M c = Kokkos::Experimental::create_mirror_view(a);
+
+    for ( int i0 = 0 ; i0 < N0 ; ++i0 )
+    for ( int i1 = 0 ; i1 < N1 ; ++i1 )
+      b(i0,i1) = 1 + i0 + i1 * N0 ;
+
+    Kokkos::Experimental::deep_copy( a , b );
+    Kokkos::Experimental::deep_copy( c , a );
+
+    for ( int i0 = 0 ; i0 < N0 ; ++i0 )
+    for ( int i1 = 0 ; i1 < N1 ; ++i1 )
+      ASSERT_EQ( b(i0,i1) , c(i0,i1) );
+
+    Kokkos::Experimental::resize( b , 5 , 6 );
+    Kokkos::Experimental::realloc( c , 5 , 6 );
+
+    ASSERT_EQ( b.dimension_0() , 5 );
+    ASSERT_EQ( b.dimension_1() , 6 );
+    ASSERT_EQ( c.dimension_0() , 5 );
+    ASSERT_EQ( c.dimension_1() , 6 );
   }
 }
 

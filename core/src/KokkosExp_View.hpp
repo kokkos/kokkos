@@ -1699,11 +1699,11 @@ void deep_copy( const View<DT,D1,D2,D3> & dst ,
 
       const size_t nbytes = sizeof(typename dst_type::value_type) * dst.extent();
 
-      Impl::DeepCopy< dst_memory_space , src_memory_space >( dst.data() , src.data() , nbytes );
+      Kokkos::Impl::DeepCopy< dst_memory_space , src_memory_space >( dst.data() , src.data() , nbytes );
     }
     else if ( DstExecCanAccessSrc ) {
       // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
-      Impl::ViewRemap< dst_type , src_type >( dst , src );
+      Kokkos::Experimental::Impl::ViewRemap< dst_type , src_type >( dst , src );
     }
     else {
       Kokkos::Impl::throw_runtime_exception("deep_copy given views that would require a temporary allocation");
@@ -1723,9 +1723,9 @@ namespace Experimental {
 template< class T , class A1, class A2, class A3 >
 inline
 typename Kokkos::Experimental::View<T,A1,A2,A3>::HostMirror
-create_mirror( const View<T,A1,A2,A3> & src
+create_mirror( const Kokkos::Experimental::View<T,A1,A2,A3> & src
              , typename std::enable_if<
-                 ! std::is_same< typename ViewTraits<T,A1,A2,A3>::array_layout
+                 ! std::is_same< typename Kokkos::Experimental::ViewTraits<T,A1,A2,A3>::array_layout
                                , Kokkos::LayoutStride >::value
                >::type * = 0
              )
@@ -1747,9 +1747,9 @@ create_mirror( const View<T,A1,A2,A3> & src
 template< class T , class A1, class A2, class A3 >
 inline
 typename Kokkos::Experimental::View<T,A1,A2,A3>::HostMirror
-create_mirror( const View<T,A1,A2,A3> & src
+create_mirror( const Kokkos::Experimental::View<T,A1,A2,A3> & src
              , typename std::enable_if<
-                 std::is_same< typename ViewTraits<T,A1,A2,A3>::array_layout
+                 std::is_same< typename Kokkos::Experimental::ViewTraits<T,A1,A2,A3>::array_layout
                              , Kokkos::LayoutStride >::value
                >::type * = 0
              )
@@ -1783,10 +1783,10 @@ create_mirror( const View<T,A1,A2,A3> & src
 template< class T , class A1 , class A2 , class A3 >
 inline
 typename Kokkos::Experimental::View<T,A1,A2,A3>::HostMirror
-create_mirror_view( const View<T,A1,A2,A3> & src
+create_mirror_view( const Kokkos::Experimental::View<T,A1,A2,A3> & src
                   , typename std::enable_if<(
-                      std::is_same< typename ViewTraits<T,A1,A2,A3>::memory_space
-                                  , typename ViewTraits<T,A1,A2,A3>::HostMirror::memory_space
+                      std::is_same< typename Kokkos::Experimental::ViewTraits<T,A1,A2,A3>::memory_space
+                                  , typename Kokkos::Experimental::ViewTraits<T,A1,A2,A3>::host_mirror_space
                                   >::value
                     )>::type * = 0 
                   )
@@ -1797,15 +1797,15 @@ create_mirror_view( const View<T,A1,A2,A3> & src
 template< class T , class A1 , class A2 , class A3 >
 inline
 typename Kokkos::Experimental::View<T,A1,A2,A3>::HostMirror
-create_mirror_view( const View<T,A1,A2,A3> & src
+create_mirror_view( const Kokkos::Experimental::View<T,A1,A2,A3> & src
                   , typename std::enable_if<(
-                      ! std::is_same< typename ViewTraits<T,A1,A2,A3>::memory_space
-                                    , typename ViewTraits<T,A1,A2,A3>::HostMirror::memory_space
+                      ! std::is_same< typename Kokkos::Experimental::ViewTraits<T,A1,A2,A3>::memory_space
+                                    , typename Kokkos::Experimental::ViewTraits<T,A1,A2,A3>::host_mirror_space
                                     >::value
                     )>::type * = 0 
                   )
 {
-  return create_mirror( src ); ;
+  return Kokkos::Experimental::create_mirror( src );
 }
 
 } /* namespace Experimental */
@@ -1820,7 +1820,7 @@ namespace Experimental {
 /** \brief  Resize a view with copying old data to new data at the corresponding indices. */
 template< class T , class A1 , class A2 , class A3 >
 inline
-void resize( View<T,A1,A2,A3> & v ,
+void resize( Kokkos::Experimental::View<T,A1,A2,A3> & v ,
              const size_t n0 = 0 ,
              const size_t n1 = 0 ,
              const size_t n2 = 0 ,
@@ -1830,9 +1830,9 @@ void resize( View<T,A1,A2,A3> & v ,
              const size_t n6 = 0 ,
              const size_t n7 = 0 )
 {
-  using view_type = View<T,A1,A2,A3> ;
+  using view_type = Kokkos::Experimental::View<T,A1,A2,A3> ;
 
-  static_assert( ViewTraits<T,A1,A2,A3>::is_managed , "Can only resize managed views" );
+  static_assert( Kokkos::Experimental::ViewTraits<T,A1,A2,A3>::is_managed , "Can only resize managed views" );
 
   view_type v_resized( v.label(), n0, n1, n2, n3, n4, n5, n6, n7 );
 
@@ -1844,7 +1844,7 @@ void resize( View<T,A1,A2,A3> & v ,
 /** \brief  Resize a view with copying old data to new data at the corresponding indices. */
 template< class T , class A1 , class A2 , class A3 >
 inline
-void realloc( View<T,A1,A2,A3> & v ,
+void realloc( Kokkos::Experimental::View<T,A1,A2,A3> & v ,
               const size_t n0 = 0 ,
               const size_t n1 = 0 ,
               const size_t n2 = 0 ,
@@ -1854,9 +1854,9 @@ void realloc( View<T,A1,A2,A3> & v ,
               const size_t n6 = 0 ,
               const size_t n7 = 0 )
 {
-  using view_type = View<T,A1,A2,A3> ;
+  using view_type = Kokkos::Experimental::View<T,A1,A2,A3> ;
 
-  static_assert( ViewTraits<T,A1,A2,A3>::is_managed , "Can only realloc managed views" );
+  static_assert( Kokkos::Experimental::ViewTraits<T,A1,A2,A3>::is_managed , "Can only realloc managed views" );
 
   const std::string label = v.label();
 
@@ -1866,15 +1866,6 @@ void realloc( View<T,A1,A2,A3> & v ,
 
 } /* namespace Experimental */
 } /* namespace Kokkos */
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-#if 0
-
-#include <impl/Kokkos_Atomic_View.hpp>
-
-#endif /* #if 0 */
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
