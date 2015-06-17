@@ -92,21 +92,21 @@ void KernelEntry::add_time(const double& time) {
 }
 
 void KernelEntry::print() const {
-  #if KOKKOS_ENABLE_PROFILING_AGGREGATE_MPI
+  #if KOKKOSP_ENABLE_PROFILING_AGGREGATE_MPI
   int nprocs = 0;
   int me = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &me);
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
   double mpi_time_total = 0.0;
-  MPI_Allreduce(&mpi_time_total, &time_total, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&time_total, &mpi_time_total, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   mpi_time_total = mpi_time_total/nprocs;
 
   double mpi_time_min = 0.0;
-  MPI_Allreduce(&mpi_time_min, &time_min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  MPI_Allreduce(&time_min, &mpi_time_min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
 
   double mpi_time_max = 0.0;
-  MPI_Allreduce(&mpi_time_max, &time_max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+  MPI_Allreduce(&time_max, &mpi_time_max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
 
   if(me == 0) {
     std::cout << "KOKKOS_PROFILE: Entry: " << std::endl;
