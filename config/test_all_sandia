@@ -1,49 +1,43 @@
-#!/bin/bash
+#!/bin/bash -e
 
-KOKKOS_PATH=${HOME}/kokkos
+#
+# Global config
+#
 
-GCC472_PATH=/home/projects/x86-64/gcc/4.7.2
-GCC492_PATH=/home/projects/x86-64/gcc/4.9.2
-GCC510_PATH=/home/projects/x86-64/gcc/5.1.0
+COMPILER_ROOT="/home/projects/x86-64"
 
-INTEL1401_PATH=/opt/intel/composer_xe_2013_sp1.1.106
-INTEL1501_PATH=/opt/intel/composer_xe_2015.1.133
+GCC_BUILD_LIST="OpenMP,Pthread,Serial,OpenMP_Serial,Pthread_Serial"
+INTEL_BUILD_LIST="OpenMP,Pthread,Serial,OpenMP_Serial,Pthread_Serial"
+CLANG_BUILD_LIST="Pthread,Serial,Pthread_Serial"
+CUDA_BUILD_LIST="Cuda_OpenMP,Cuda_Pthread,Cuda_Serial"
 
-CLANG370_PATH=/home/projects/x86-64/clang/3.6.0
-CLANG370_PATH=/home/projects/x86-64/clang/3.7.0
+GCC_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limits,-Wignored-qualifiers,-Wempty-body,-Wclobbered,-Wuninitialized"
+CLANG_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limits,-Wuninitialized"
+INTEL_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limits,-Wuninitialized"
+CUDA_WARNING_FLAGS="" #TODO fix
 
-CUDA65_PATH=/home/projects/x86-64/cuda/6.5.14
-CUDA70_PATH=/home/projects/x86-64/cuda/7.0.28
+# Format: (compiler compiler-install-loc build-list exe-name warning-flag)
+COMPILERS=("gcc/4.7.2 $COMPILER_ROOT/gcc/4.7.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "gcc/4.9.2 $COMPILER_ROOT/gcc/4.9.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "gcc/5.1.0 $COMPILER_ROOT/gcc/5.1.0 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "intel/14.0.1 /opt/intel/composer_xe_2013_sp1.1.106 $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+           "intel/15.0.1 /opt/intel/composer_xe_2015.1.133 $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+           "clang/3.6.0 $COMPILER_ROOT/clang/3.6.0 $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+           "clang/3.7.0 $COMPILER_ROOT/clang/3.7.0 $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+           "cuda/6.5.14 $COMPILER_ROOT/cuda/6.5.14 $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
+           "cuda/7.0.28 $COMPILER_ROOT/cuda/7.0.28 $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
+           )
 
-HWLOC_GCC472_PATH=/home/projects/x86-64/hwloc/1.10.0/gcc/4.7.2
-HWLOC_GCC492_PATH=/home/projects/x86-64/hwloc/1.10.0/gcc/4.9.2
-HWLOC_GCC510_PATH=/home/projects/x86-64/hwloc/1.10.0/gcc/5.1.0
+HWLOCPATH=/home/projects/x86-64/hwloc/1.10.0
 
-HWLOC_INTEL1401_PATH=/home/projects/x86-64/hwloc/1.10.0/intel/14.0.1
-HWLOC_INTEL1501_PATH=/home/projects/x86-64/hwloc/1.10.0/intel/15.0.1
+export OMP_NUM_THREADS=4
 
-HWLOC_CLANG360_PATH=/home/projects/x86-64/hwloc/1.10.0/clang/3.6.0
-HWLOC_CLANG370_PATH=/home/projects/x86-64/hwloc/1.10.0/clang/3.7.0
+#
+# Handle arguments
+#
 
-GCC_BUILD_LIST_RELEASE="OpenMP Pthread Serial OpenMP_Serial Pthread_Serial"
-INTEL_BUILD_LIST_RELEASE="OpenMP Pthread Serial OpenMP_Serial Pthread_Serial"
-CLANG_BUILD_LIST_RELEASE="Pthread Serial Pthread_Serial"
-CUDA_BUILD_LIST_RELEASE="Cuda_OpenMP Cuda_Pthread Cuda_Serial"
-
-GCC_WARNING_FLAGS="-Wall -Wshadow -pedantic -Werror -Wsign-compare -Wtype-limits -Wignored-qualifiers -Wempty-body -Wclobbered -Wuninitialized"
-CLANG_WARNING_FLAGS="-Wall -Wshadow -pedantic -Werror -Wsign-compare -Wtype-limits -Wuninitialized"
-INTEL_WARNING_FLAGS="-Wall -Wshadow -pedantic -Werror -Wsign-compare -Wtype-limits -Wuninitialized"
-
-TEST_GCC=1
-TEST_INTEL=1
-TEST_CLANG=1
-TEST_CUDA=1
-
-ENV_PATH=${PATH}
-ENV_LDPATH=${LD_LIBRARY_PATH}
-
-mkdir TestAll
-cd TestAll
+DEBUG=False
+ARGS=""
 
 while [[ $# > 0 ]]
 do
@@ -52,203 +46,202 @@ case $key in
 --kokkos-path*)
 KOKKOS_PATH="${key#*=}"
 ;;
---no-gcc)
-TEST_GCC=0
+--debug*)
+DEBUG=True
 ;;
---no-intel)
-TEST_INTEL=0
+--help)
+echo "test_all_sandia <ARGS> <OPTIONS>:"
+echo "--kokkos-path=/Path/To/Kokkos: Path to the Kokkos root directory"
+echo "    Defaults to root repo containing this script"
+echo "--debug: Run tests in debug. Defaults to False"
+echo ""
+echo "ARGS: list of expressions matching compilers to test"
+echo ""
+echo "Examples:"
+echo
+exit 0
 ;;
---no-clang)
-TEST_CLANG=0
-;;
---no-cuda)
-TEST_CUDA=0
+*)
+# args, just append
+ARGS="$ARGS $1"
 ;;
 esac
 shift
 done
 
-if [ ${TEST_GCC} -eq 1 ]
-then
-
-mkdir gcc
-mkdir gcc/4.7.2
-mkdir gcc/4.9.2
-mkdir gcc/5.1.0
-
-export OMP_NUM_THREADS=4
-
-cd gcc/4.7.2
-export PATH=${GCC472_PATH}/bin:${ENV_PATH}
-export LD_LIBRARY_PATH=${GCC472_PATH}/lib64:${ENV_LDPATH}
-for build in ${GCC_BUILD_LIST_RELEASE}
-do
-  mkdir ${build}-release
-  cd ${build}-release
-    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${GCC472_PATH}/bin/g++ --kokkos-path=${KOKKOS_PATH} --cxxflags="-O3 ${GCC_WARNING_FLAGS}"
-    make build-test &> ../../test_gcc_4.7.2_${build}_release.build
-    make test &> ../../test_gcc_4.7.2_${build}_release.run
-  cd ..
-  
-  mkdir ${build}-hwloc-release
-  cd ${build}-hwloc-release
-    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${GCC472_PATH}/bin/g++ --kokkos-path=${KOKKOS_PATH} --cxxflags="-O3 ${GCC_WARNING_FLAGS}" --with-hwloc=${HWLOC_GCC472_PATH}
-    make build-test &> ../../test_gcc_4.7.2_${build}_hwloc_release.build
-    make test &> ../../test_gcc_4.7.2_${build}_hwloc_release.run
-  cd ..
-done
-cd ../..
-
-cd gcc/5.1.0
-export PATH=${GCC510_PATH}/bin:${ENV_PATH}
-export LD_LIBRARY_PATH=${GCC510_PATH}/lib64:${ENV_LDPATH}
-for build in ${GCC_BUILD_LIST_RELEASE}
-do
-  mkdir ${build}-release
-  cd ${build}-release
-    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${GCC510_PATH}/bin/g++ --kokkos-path=${KOKKOS_PATH} --cxxflags="-O3 ${GCC_WARNING_FLAGS}"
-    make build-test &> ../../test_gcc_5.1.0_${build}_release.build
-    make test &> ../../test_gcc_5.1.0_${build}_release.run
-  cd ..
-  
-  mkdir ${build}-hwloc-release
-  cd ${build}-hwloc-release
-    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${GCC510_PATH}/bin/g++ --kokkos-path=${KOKKOS_PATH} --cxxflags="-O3 ${GCC_WARNING_FLAGS}" --with-hwloc=${HWLOC_GCC510_PATH}
-    make build-test &> ../../test_gcc_5.1.0_${build}_hwloc_release.build
-    make test &> ../../test_gcc_5.1.0_${build}_hwloc_release.run
-  cd ..
-done
-
-cd ../..
+# set kokkos path
+if [ -z "$KOKKOS_PATH" ]; then
+    KOKKOS_PATH=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )
+else
+    # Ensure KOKKOS_PATH is abs path
+    KOKKOS_PATH=$( cd $KOKKOS_PATH && pwd )
 fi
 
-if [ ${TEST_INTEL} -eq 1 ]
-then
-
-mkdir intel
-mkdir intel/14.0.1
-mkdir intel/15.0.1
-
-export OMP_NUM_THREADS=4
-
-export PATH=${GCC472_PATH}/bin:${ENV_PATH}
-export LD_LIBRARY_PATH=${GCC472_PATH}/lib64:${INTEL1401_PATH}/compiler/lib/intel64:${ENV_LDPATH}
-source ${INTEL1401_PATH}/bin/compilervars.sh
-
-
-cd intel/14.0.1
-for build in ${INTEL_BUILD_LIST_RELEASE}
-do
-  mkdir ${build}-release
-  cd ${build}-release
-    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${INTEL1401_PATH}/bin/intel64/icpc --kokkos-path=${KOKKOS_PATH} --cxxflags="-O3 ${INTEL_WARNING_FLAGS}"
-    make build-test &> ../../test_intel_14.0.1_${build}_release.build
-    make test &> ../../test_intel_14.0.1_${build}_release.run
-  cd ..
-
-  mkdir ${build}-hwloc-release
-  cd ${build}-hwloc-release
-    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${INTEL1401_PATH}/bin/intel64/icpc --kokkos-path=${KOKKOS_PATH} --cxxflags="-O3 ${INTEL_WARNING_FLAGS}" --with-hwloc=${HWLOC_INTEL1401_PATH}
-    make build-test &> ../../test_intel_14.0.1_${build}_hwloc_release.build
-    make test &> ../../test_intel_14.0.1_${build}_hwloc_release.run
-  cd ..
-done
-cd ../..
-
-export PATH=${GCC472_PATH}/bin:${ENV_PATH}
-export LD_LIBRARY_PATH=${GCC472_PATH}/lib64:${INTEL1501_PATH}/compiler/lib/intel64:${ENV_LDPATH}
-source ${INTEL1501_PATH}/bin/compilervars.sh
-cd intel/15.0.1
-for build in ${INTEL_BUILD_LIST_RELEASE}
-do
-  mkdir ${build}-release
-  cd ${build}-release
-    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${INTEL1501_PATH}/bin/intel64/icpc --kokkos-path=${KOKKOS_PATH} --cxxflags="-O3 ${INTEL_WARNING_FLAGS}"
-    make build-test &> ../../test_intel_15.0.1_${build}_release.build
-    make test &> ../../test_intel_15.0.1_${build}_release.run
-  cd ..
-
-  mkdir ${build}-hwloc-release
-  cd ${build}-hwloc-release
-    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${INTEL1501_PATH}/bin/intel64/icpc --kokkos-path=${KOKKOS_PATH} --cxxflags="-O3 ${INTEL_WARNING_FLAGS}" --with-hwloc=${HWLOC_INTEL1501_PATH}
-    make build-test &> ../../test_intel_15.0.1_${build}_hwloc_release.build
-    make test &> ../../test_intel_15.0.1_${build}_hwloc_release.run
-  cd ..
-done
-
-cd ../..
-PATH=${ENV_PATH}
+# set build type
+if [ "$DEBUG" = "True" ]; then
+    BUILD_TYPE=debug
+else
+    BUILD_TYPE=release
 fi
 
-if [ ${TEST_CLANG} -eq 1 ]
-then
-
-export PATH=${GCC510_PATH}/bin:${ENV_PATH}
-export LD_LIBRARY_PATH=${GCC510_PATH}/lib64:${ENV_LDPATH}
-
-mkdir clang
-mkdir clang/3.6.0
-mkdir clang/3.7.0
-
-cd clang/3.7.0
-for build in ${CLANG_BUILD_LIST_RELEASE}
-do
-  mkdir ${build}-release
-  cd ${build}-release
-    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${CLANG370_PATH}/bin/clang++ --kokkos-path=${KOKKOS_PATH} --cxxflags="-O3 ${CLANG_WARNING_FLAGS}"
-    make build-test &> ../../test_clang_3.7.0_${build}_release.build
-    make test &> ../../test_clang_3.7.0_${build}_release.run
-  cd ..
-  
-  mkdir ${build}-hwloc-release
-  cd ${build}-hwloc-release
-    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --compiler=${CLANG370_PATH}/bin/clang++ --kokkos-path=${KOKKOS_PATH} --cxxflags="-O3 ${CLANG_WARNING_FLAGS}" --with-hwloc=${HWLOC_CLANG370_PATH}
-    make build-test &> ../../test_clang_3.7.0_${build}_hwloc_release.build
-    make test &> ../../test_clang_3.7.0_${build}_hwloc_release.run
-  cd ..
-done
-cd ../..
-
+# If no args provided, do all compilers
+if [ -z "$ARGS" ]; then
+    ARGS='?'
 fi
 
-if [ ${TEST_CUDA} -eq 1 ]
-then
-
-mkdir cuda
-mkdir cuda/6.5
-mkdir cuda/7.0
-
-cd cuda/6.5
-export PATH=${CUDA65_PATH}/bin:${ENV_PATH}
-export LD_LIBRARY_PATH=${GCC472_PATH}/lib64:${CUDA65_PATH}/lib64:${ENV_LDPATH}
-for build in ${CUDA_BUILD_LIST_RELEASE}
-do
-  export NVCC_WRAPPER_DEFAULT_COMPILER=${GCC472_PATH}/bin/g++
-  mkdir ${build}-release
-  cd ${build}-release
-    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --with-cuda=${CUDA65_PATH} --compiler=${KOKKOS_PATH}/config/nvcc_wrapper --kokkos-path=${KOKKOS_PATH} --cxxflags="-O3"
-    make build-test &> ../../test_cuda_6.5_${build}_release.build
-    make test &> ../../test_cuda_6.5_${build}_release.run
-  cd ..
+# Process args to figure out which compilers to test
+COMPILERS_TO_TEST=""
+for ARG in $ARGS; do
+    for COMPILER_DATA in "${COMPILERS[@]}"; do
+        arr=($COMPILER_DATA)
+        COMPILER=${arr[0]}
+        if [[ "$COMPILER" = $ARG* ]]; then
+            if [[ "$COMPILERS_TO_TEST" != *${COMPILER}* ]]; then
+                COMPILERS_TO_TEST="$COMPILERS_TO_TEST $COMPILER"
+            else
+                echo "Tried to add $COMPILER twice"
+            fi
+        fi
+    done
 done
-PATH=${ENV_PATH}
-cd ../..
 
-cd cuda/7.0
-export PATH=${CUDA70_PATH}/bin:${ENV_PATH}
-export LD_LIBRARY_PATH=${GCC472_PATH}/lib64:${CUDA70_PATH}/lib64:${ENV_LDPATH}
-for build in ${CUDA_BUILD_LIST_RELEASE}
-do
-  export NVCC_WRAPPER_DEFAULT_COMPILER=${GCC472_PATH}/bin/g++
-  mkdir ${build}-release
-  cd ${build}-release
-    ${KOKKOS_PATH}/generate_makefile.bash --with-devices="${build}" --with-cuda=${CUDA70_PATH} --compiler=${KOKKOS_PATH}/config/nvcc_wrapper --kokkos-path=${KOKKOS_PATH} --cxxflags="-O3"
-    make build-test &> ../../test_cuda_7.0_${build}_release.build
-    make test &> ../../test_cuda_7.0_${build}_release.run
-  cd ..  
+#
+# Functions
+#
+
+# Do not call directly
+get_compiler_data() {
+    compiler=$1
+    item=$2
+
+    for compiler_data in "${COMPILERS[@]}" ; do
+        arr=($compiler_data)
+        if [ "$compiler" = "${arr[0]}" ]; then
+            echo "${arr[$item]}" | tr , ' '
+            return 0
+        fi
+    done
+
+    # Not found
+    echo "Unreconized compiler $compiler" >&2
+    exit 1
+}
+
+#
+# For all getters, usage: <GETTER> <COMPILER>
+#
+
+get_compiler_install_loc() {
+    get_compiler_data $1 1
+}
+
+get_compiler_build_list() {
+    get_compiler_data $1 2
+}
+
+get_compiler_exe_name() {
+    get_compiler_data $1 3
+}
+
+get_compiler_warning_flags() {
+    get_compiler_data $1 4
+}
+
+# single_build_and_test <COMPILER> <BUILD> <BUILD_TYPE>
+# Run in a subshell
+single_build_and_test() {
+    # Use sane var names
+    local compiler=$1; local build=$2; local build_type=$3; local log_loc=$4
+
+    local compiler_install_loc=$(get_compiler_install_loc $compiler)
+    local compiler_warning_flags=$(get_compiler_warning_flags $compiler)
+    local compiler_exe=$(get_compiler_exe_name $compiler)
+
+    if [[ "$build_type" = hwloc* ]]; then
+        local extra_args="--with-hwloc=$HWLOCPATH/$compiler"
+    fi
+
+    if [[ "$build_type" = *debug* ]]; then
+        local extra_args="$extra_args --debug"
+        local cxxflags="-g $compiler_warning_flags"
+    else
+        local cxxflags="-O3 $compiler_warning_flags"
+    fi
+
+    local desc=$(echo "${compiler}-${build}-${build_type}" | sed 's:/:-:g')
+    echo "  Doing build: $desc"
+
+    mkdir "${build}-$build_type"
+    cd "${build}-$build_type"
+    echo ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$build --compiler="$compiler_install_loc/bin/$compiler_exe" --cxxflags="$cxxflags" "$extra_args" &> ${desc}.configure.log || { echo "FAILED: ${desc}.configure" >&2 && return 0; }
+    echo make build-test &> ${desc}.build.log || { echo "FAILED: ${desc}.build" >&2 && return 0; }
+    echo make test &> ${desc}.test.log || { echo "FAILED: ${desc}.test" >&2 && return 0; }
+    return 0
+}
+
+setup_env() {
+    local compiler=$1
+    local compiler_install_loc=$(get_compiler_install_loc $compiler)
+    local compiler_exe=$(get_compiler_exe_name $compiler)
+
+    if [[ "$compiler" = intel* ]]; then
+        source $compiler_install_loc/bin/compilervars.sh # confirm this is really necessary
+        setup_env gcc/4.7.2 # confirm this is really necessary
+    fi
+
+    if [[ "$compiler" = cuda* ]]; then
+        setup_env gcc/4.7.2
+    fi
+
+    if [[ "$compiler" = gcc* ]]; then
+        # In case was called in order to set up CUDA
+        export NVCC_WRAPPER_DEFAULT_COMPILER=$compiler_install_loc/bin/$compiler_exe
+    fi
+
+    export PATH=$compiler_install_loc/bin:$PATH
+    export LD_LIBRARY_PATH=$compiler_install_loc/lib64:$compiler_install_loc/compiler/lib/intel64:$LD_LIBRARY_PATH
+}
+
+# build_and_test_all <COMPILER>
+# Be sure to run as subshell to not corrupt environment
+build_and_test_all() {
+    # Get compiler data
+    local compiler=$1
+    local compiler_build_list=$(get_compiler_build_list $compiler)
+
+    # set up env
+    mkdir -p $compiler
+    cd $compiler
+    setup_env $compiler
+
+    # do builds
+    for build in $compiler_build_list
+    do
+        (single_build_and_test $compiler $build $BUILD_TYPE)
+
+        # If not cuda, do a hwloc test too
+        if [[ "$compiler" != cuda* ]]; then
+            (single_build_and_test $compiler $build "hwloc-$BUILD_TYPE")
+        fi
+    done
+
+    return 0
+}
+
+#
+# Main
+#
+
+/bin/rm -rf TestAll
+mkdir TestAll
+cd TestAll
+
+for COMPILER in $COMPILERS_TO_TEST; do
+    echo "Testing compiler $COMPILER"
+    (build_and_test_all $COMPILER)
 done
-PATH=${ENV_PATH}
-cd ../..
 
-fi
-
+# TODO: would be great if we could do non-zero exit if any test failed,
+# unfortunately, it's very hard in bash to have functions that exit with
+# non-zero numbers coexist with set -e
+exit 0
