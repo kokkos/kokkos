@@ -1842,6 +1842,14 @@ public:
   ViewOffset( const ViewOffset & ) = default ;
   ViewOffset & operator = ( const ViewOffset & ) = default ;
 
+  KOKKOS_INLINE_FUNCTION
+  ViewOffset( const Kokkos::LayoutStride & rhs )
+    : m_dim( rhs.dimension[0] , rhs.dimension[1] , rhs.dimension[2] , rhs.dimension[3]
+           , rhs.dimension[4] , rhs.dimension[5] , rhs.dimension[6] , rhs.dimension[7] )
+    , m_stride( rhs.stride[0] , rhs.stride[1] , rhs.stride[2] , rhs.stride[3]
+              , rhs.stride[4] , rhs.stride[5] , rhs.stride[6] , rhs.stride[7] )
+    {}
+
   template< class DimRHS , class LayoutRHS >
   KOKKOS_INLINE_FUNCTION
   constexpr ViewOffset( const ViewOffset< DimRHS , LayoutRHS , void > & rhs )
@@ -2303,6 +2311,15 @@ public:
       return ( offset_type( padding(), N0, N1, N2, N3, N4, N5, N6, N7 ).extent() * MemoryExtentSize + MemoryExtentMask ) & ~size_t(MemoryExtentMask);
     }
 
+  /** \brief  Extent, in bytes, of the required memory */
+  template< bool AllowPadding >
+  KOKKOS_INLINE_FUNCTION
+  constexpr static size_t memory_extent( const std::integral_constant<bool,AllowPadding> &
+                                       , const typename Traits::array_layout & layout )
+    {
+      return ( offset_type( layout ).extent() * MemoryExtentSize + MemoryExtentMask ) & ~size_t(MemoryExtentMask);
+    }
+
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION ~ViewMapping() {}
@@ -2326,6 +2343,15 @@ public:
     : m_handle( reinterpret_cast< handle_type >( ptr ) )
     , m_offset( std::integral_constant< unsigned , AllowPadding ? sizeof(typename Traits::value_type) : 0 >()
               , N0, N1, N2, N3, N4, N5, N6, N7 )
+    {}
+
+  template< bool AllowPadding >
+  KOKKOS_INLINE_FUNCTION
+  ViewMapping( void * ptr
+             , const std::integral_constant<bool,AllowPadding> &
+             , const typename Traits::array_layout & layout )
+    : m_handle( reinterpret_cast< handle_type >( ptr ) )
+    , m_offset( layout )
     {}
 
   //----------------------------------------

@@ -632,6 +632,41 @@ void test_view_mapping()
     V vd( view_alloc( "vd" , WithoutInitializing ) , N );
     V ve( view_alloc( "ve" , WithoutInitializing , AllowPadding ) , N );
     V vf( view_alloc( "vf" , mem_space , WithoutInitializing , AllowPadding ) , N );
+    V vg( view_alloc( mem_space , "vg" , WithoutInitializing , AllowPadding ) , N );
+    V vh( view_alloc( WithoutInitializing , AllowPadding ) , N );
+    V vi( view_alloc( WithoutInitializing ) , N );
+    V vj( view_alloc( std::string("vj") , AllowPadding ) , N );
+    V vk( view_alloc( mem_space , std::string("vk") , AllowPadding ) , N );
+  }
+
+  {
+    using traits_t = Kokkos::Experimental::ViewTraits<int***,Kokkos::LayoutStride,ExecSpace> ;
+    using dims_t   = Kokkos::Experimental::Impl::ViewDimension<0,0,0> ;
+    using offset_t = Kokkos::Experimental::Impl::ViewOffset< dims_t , Kokkos::LayoutStride > ;
+
+    Kokkos::LayoutStride stride ;
+
+    stride.dimension[0] = 3 ;
+    stride.dimension[1] = 4 ;
+    stride.dimension[2] = 5 ;
+    stride.stride[0] = 4 ;
+    stride.stride[1] = 1 ;
+    stride.stride[2] = 12 ;
+
+    const offset_t offset( stride );
+
+    ASSERT_EQ( offset.dimension_0() , 3 );
+    ASSERT_EQ( offset.dimension_1() , 4 );
+    ASSERT_EQ( offset.dimension_2() , 5 );
+
+    ASSERT_EQ( offset.stride_0() , 4 );
+    ASSERT_EQ( offset.stride_1() , 1 );
+    ASSERT_EQ( offset.stride_2() , 12 );
+
+    ASSERT_EQ( offset.extent() , 60 );
+    ASSERT_TRUE( offset.extent_is_contiguous() );
+
+    Kokkos::Experimental::Impl::ViewMapping< traits_t , void >  v( (int*) 0 , std::false_type() , stride );
 
   }
 }

@@ -311,11 +311,11 @@ attach_texture_object( const unsigned sizeof_alias
 std::string
 SharedAllocationRecord< Kokkos::CudaSpace , void >::get_label() const
 {
-  SharedAllocationHeader head ;
+  SharedAllocationHeader header ;
 
-  Kokkos::Impl::DeepCopy< Kokkos::HostSpace , Kokkos::CudaSpace >( & head , RecordBase::head() , sizeof(SharedAllocationHeader) );
+  Kokkos::Impl::DeepCopy< Kokkos::HostSpace , Kokkos::CudaSpace >( & header , RecordBase::head() , sizeof(SharedAllocationHeader) );
 
-  return std::string( head.m_label );
+  return std::string( header.m_label );
 }
 
 std::string
@@ -422,18 +422,18 @@ SharedAllocationRecord( const Kokkos::CudaSpace & arg_space
   , m_tex_obj( 0 )
   , m_space( arg_space )
 {
-  SharedAllocationHeader head ;
+  SharedAllocationHeader header ;
 
   // Fill in the Header information
-  head.m_record = static_cast< SharedAllocationRecord< void , void > * >( this );
+  header.m_record = static_cast< SharedAllocationRecord< void , void > * >( this );
 
-  strncpy( head.m_label
+  strncpy( header.m_label
           , arg_label.c_str()
           , SharedAllocationHeader::maximum_label_length
           );
 
   // Copy to device memory
-  Kokkos::Impl::DeepCopy<CudaSpace,HostSpace>::DeepCopy( RecordBase::m_alloc_ptr , & head , sizeof(SharedAllocationHeader) );
+  Kokkos::Impl::DeepCopy<CudaSpace,HostSpace>::DeepCopy( RecordBase::m_alloc_ptr , & header , sizeof(SharedAllocationHeader) );
 }
 
 SharedAllocationRecord< Kokkos::CudaUVMSpace , void >::

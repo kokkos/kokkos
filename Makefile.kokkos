@@ -113,7 +113,13 @@ endif
 #Generating the list of Flags
 
 KOKKOS_CPPFLAGS = -I./ -I$(KOKKOS_PATH)/core/src -I$(KOKKOS_PATH)/containers/src -I$(KOKKOS_PATH)/algorithms/src
+# No warnings:
 KOKKOS_CXXFLAGS =
+# INTEL and CLANG warnings:
+#KOKKOS_CXXFLAGS = -Wall -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
+# GCC warnings:
+#KOKKOS_CXXFLAGS = -Wall -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized -Wignored-qualifiers -Wempty-body -Wclobbered
+
 KOKKOS_LIBS = -lkokkos 
 KOKKOS_LDFLAGS = -L$(shell pwd)
 KOKKOS_SRC = 
