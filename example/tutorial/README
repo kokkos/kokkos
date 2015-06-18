@@ -1,6 +1,11 @@
 Build the examples by typing in each directory: 
-make all -j 16
-make all -j 16 CUDA=yes
+make -j 16
+
+To specify a target device:
+make openmp -j 16
+make pthreads -j 16
+make serial -j 16
+make cuda -j 16
 
 The lambda variants can not be build with CUDA=yes at the moment, since
 CUDA does not support lambdas from the host. 

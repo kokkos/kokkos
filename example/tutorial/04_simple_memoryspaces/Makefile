@@ -3,8 +3,8 @@ SRC = $(wildcard *.cpp)
 
 default: build
 	echo "Start Build"
-	
-ifeq ($(CUDA), yes)
+
+ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
 CXX = nvcc_wrapper
 CXXFLAGS = -O3
 LINK = ${CXX}
@@ -41,6 +41,3 @@ clean: kokkos-clean
 
 %.o:%.cpp $(KOKKOS_CPP_DEPENDS)
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) $(EXTRA_INC) -c $<
-
-
-
