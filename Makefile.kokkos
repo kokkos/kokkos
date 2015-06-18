@@ -3,7 +3,7 @@
 #Options: OpenMP,Serial,Pthreads,Cuda
 #KOKKOS_DEVICES ?= "OpenMP"
 KOKKOS_DEVICES ?= "Pthreads"
-#Options: KNC,SNB,HSW,Kepler,Kepler30,Kepler35,Kepler37,Maxwell,Maxwell50,ARMv8,BGQ,Power7,Power8
+#Options: KNC,SNB,HSW,Kepler,Kepler30,Kepler32,Kepler35,Kepler37,Maxwell,Maxwell50,Maxwell52,Maxwell53,ARMv8,BGQ,Power7,Power8
 KOKKOS_ARCH ?= ""
 #Options: yes,no
 KOKKOS_DEBUG ?= "no"
@@ -71,15 +71,30 @@ KOKKOS_INTERNAL_USE_ARCH_HSW := $(strip $(shell echo $(KOKKOS_ARCH) | grep HSW |
 
 #NVIDIA based
 KOKKOS_INTERNAL_USE_ARCH_KEPLER30 := $(strip $(shell echo $(KOKKOS_ARCH) | grep Kepler30 | wc -l))
+KOKKOS_INTERNAL_USE_ARCH_KEPLER32 := $(strip $(shell echo $(KOKKOS_ARCH) | grep Kepler32 | wc -l))
 KOKKOS_INTERNAL_USE_ARCH_KEPLER35 := $(strip $(shell echo $(KOKKOS_ARCH) | grep Kepler35 | wc -l))
 KOKKOS_INTERNAL_USE_ARCH_KEPLER37 := $(strip $(shell echo $(KOKKOS_ARCH) | grep Kepler37 | wc -l))
 KOKKOS_INTERNAL_USE_ARCH_MAXWELL50 := $(strip $(shell echo $(KOKKOS_ARCH) | grep Maxwell50 | wc -l))
-KOKKOS_INTERNAL_USE_ARCH_NVIDIA := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_KEPLER30)+$(KOKKOS_INTERNAL_USE_ARCH_KEPLER35)+$(KOKKOS_INTERNAL_USE_ARCH_KEPLER37)+$(KOKKOS_INTERNAL_USE_ARCH_MAXWELL50) | bc))
+KOKKOS_INTERNAL_USE_ARCH_MAXWELL52 := $(strip $(shell echo $(KOKKOS_ARCH) | grep Maxwell52 | wc -l))
+KOKKOS_INTERNAL_USE_ARCH_MAXWELL53 := $(strip $(shell echo $(KOKKOS_ARCH) | grep Maxwell53 | wc -l))
+KOKKOS_INTERNAL_USE_ARCH_NVIDIA := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_KEPLER30)  \
+                                                      + $(KOKKOS_INTERNAL_USE_ARCH_KEPLER32)  \
+                                                      + $(KOKKOS_INTERNAL_USE_ARCH_KEPLER35)  \
+                                                      + $(KOKKOS_INTERNAL_USE_ARCH_KEPLER37)  \
+                                                      + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL50) \
+                                                      + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL52) \
+                                                      + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL53) | bc))
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_NVIDIA), 0)
 KOKKOS_INTERNAL_USE_ARCH_MAXWELL50 := $(strip $(shell echo $(KOKKOS_ARCH) | grep Maxwell | wc -l))
 KOKKOS_INTERNAL_USE_ARCH_KEPLER35 := $(strip $(shell echo $(KOKKOS_ARCH) | grep Kepler | wc -l))
-KOKKOS_INTERNAL_USE_ARCH_NVIDIA := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_KEPLER30)+$(KOKKOS_INTERNAL_USE_ARCH_KEPLER35)+$(KOKKOS_INTERNAL_USE_ARCH_KEPLER37)+$(KOKKOS_INTERNAL_USE_ARCH_MAXWELL50) | bc))
+KOKKOS_INTERNAL_USE_ARCH_NVIDIA := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_KEPLER30)  \
+                                                      + $(KOKKOS_INTERNAL_USE_ARCH_KEPLER32)  \
+                                                      + $(KOKKOS_INTERNAL_USE_ARCH_KEPLER35)  \
+                                                      + $(KOKKOS_INTERNAL_USE_ARCH_KEPLER37)  \
+                                                      + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL50) \
+                                                      + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL52) \
+                                                      + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL53) | bc))
 endif
 
 #ARM based
@@ -212,17 +227,26 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KNC), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
-ifeq ($(KOKKOS_INTERNAL_USE_KEPLER30), 1)
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER30), 1)
 	KOKKOS_CXXFLAGS += -arch=sm_30
 endif
-ifeq ($(KOKKOS_INTERNAL_USE_KEPLER35), 1)
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER32), 1)
+	KOKKOS_CXXFLAGS += -arch=sm_32
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER35), 1)
 	KOKKOS_CXXFLAGS += -arch=sm_35
 endif
-ifeq ($(KOKKOS_INTERNAL_USE_KEPLER37), 1)
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER37), 1)
 	KOKKOS_CXXFLAGS += -arch=sm_37
 endif
-ifeq ($(KOKKOS_INTERNAL_USE_MAXWELL50), 1)
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL50), 1)
 	KOKKOS_CXXFLAGS += -arch=sm_50
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL52), 1)
+	KOKKOS_CXXFLAGS += -arch=sm_52
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL53), 1)
+	KOKKOS_CXXFLAGS += -arch=sm_53
 endif
 endif
  
