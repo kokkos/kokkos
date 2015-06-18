@@ -44,7 +44,7 @@
 #include <KokkosP_Basic_Profiler_DataBase.hpp>
 #include <KokkosProfiler_config.h>
 
-#if KOKKOSP_ENABLE_PROFILING_AGGREGATE_MPI
+#ifdef KOKKOSP_ENABLE_PROFILING_AGGREGATE_MPI
 #include <mpi.h>
 #endif
 
@@ -92,7 +92,7 @@ void KernelEntry::add_time(const double& time) {
 }
 
 void KernelEntry::print() const {
-  #if KOKKOSP_ENABLE_PROFILING_AGGREGATE_MPI
+  #ifdef KOKKOSP_ENABLE_PROFILING_AGGREGATE_MPI
   int nprocs = 0;
   int me = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &me);
