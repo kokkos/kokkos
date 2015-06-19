@@ -18,16 +18,16 @@ CLANG_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limi
 INTEL_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limits,-Wuninitialized"
 CUDA_WARNING_FLAGS=""
 
-# Format: (compiler compiler-install-loc build-list exe-name warning-flag)
-COMPILERS=("gcc/4.7.2 $COMPILER_ROOT/gcc/4.7.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-           "gcc/4.9.2 $COMPILER_ROOT/gcc/4.9.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-           "gcc/5.1.0 $COMPILER_ROOT/gcc/5.1.0 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-           "intel/14.0.1 /opt/intel/composer_xe_2013_sp1.1.106 $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-           "intel/15.0.1 /opt/intel/composer_xe_2015.1.133 $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-           "clang/3.6.0 $COMPILER_ROOT/clang/3.6.0 $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-           "clang/3.7.0 $COMPILER_ROOT/clang/3.7.0 $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-           "cuda/6.5.14 $COMPILER_ROOT/cuda/6.5.14 $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
-           "cuda/7.0.28 $COMPILER_ROOT/cuda/7.0.28 $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
+# Format: (compiler module-list build-list exe-name warning-flag)
+COMPILERS=("gcc/4.7.2 gcc/4.7.2,hwloc/1.10.0/host/gnu/4.7.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "gcc/4.9.2 gcc/4.9.2,hwloc/1.10.0/host/gnu/4.9.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "gcc/5.1.0 gcc/5.1.0,hwloc/1.10.0/host/gnu/5.1.0 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "intel/14.0.1 todo $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+           "intel/15.0.1 todo $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+           "clang/3.6.0 clang/3.6.0 $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+           "clang/3.7.0 clang/3.7.0 $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+           "cuda/6.5.14 cuda/6.5.14,nvcc-wrapper/gnu,gcc/4.7.2 $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
+           "cuda/7.0.28 cuda/7.0.28,nvcc-wrapper/gnu,gcc/4.7.2 $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
            )
 
 HWLOCPATH=/home/projects/x86-64/hwloc/1.10.0
@@ -161,7 +161,7 @@ get_compiler_data() {
 # For all getters, usage: <GETTER> <COMPILER>
 #
 
-get_compiler_install_loc() {
+get_compiler_modules() {
     get_compiler_data $1 1
 }
 
@@ -184,13 +184,24 @@ run_cmd() {
     fi
 }
 
+report_and_log_test_result() {
+    if [ "$1" = "0" ]; then
+	echo "PASSED $2"
+	TEST_RESULTS="${TEST_RESULTS}\nPASSED $2"
+    else
+	echo "FAILED $2" >&2
+	TEST_RESULTS="${TEST_RESULTS}\nFAILED $2 ($3)"
+	NUM_FAILED+=1
+    fi
+}
+
 # single_build_and_test <COMPILER> <BUILD> <BUILD_TYPE>
-# Run in a subshell
 single_build_and_test() {
     # Use sane var names
     local compiler=$1; local build=$2; local build_type=$3;
 
-    local compiler_install_loc=$(get_compiler_install_loc $compiler)
+    cd $ROOT_DIR/$compiler
+
     local compiler_warning_flags=$(get_compiler_warning_flags $compiler)
     local compiler_exe=$(get_compiler_exe_name $compiler)
 
@@ -211,37 +222,25 @@ single_build_and_test() {
     mkdir "${build}-$build_type"
     cd "${build}-$build_type"
 
-    run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$build --compiler=\"$compiler_install_loc/bin/$compiler_exe\" --cxxflags=\"$cxxflags\" \"$extra_args\" 2>&1 | tee ${desc}.configure.log || { echo "FAILED: ${desc}.configure" >&2 && return 0; }
-    run_cmd make build-test 2>&1 | tee ${desc}.build.log || { echo "FAILED: ${desc}.build" >&2 && return 0; }
-    run_cmd make test 2>&1 | tee ${desc}.test.log || { echo "FAILED: ${desc}.test" >&2 && return 0; }
+    run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$build --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" \"$extra_args\" 2>&1 | tee ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
+    run_cmd make build-test 2>&1 | tee ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
+    run_cmd make test 2>&1 | tee ${desc}.test.log || { report_and_log_test_result 1 ${desc} test && return 0; }
+    report_and_log_test_result 0 $desc
     return 0
 }
 
 setup_env() {
     local compiler=$1
-    local compiler_install_loc=$(get_compiler_install_loc $compiler)
-    local compiler_exe=$(get_compiler_exe_name $compiler)
+    local compiler_modules=$(get_compiler_modules $compiler)
 
-    if [[ "$compiler" = intel* ]]; then
-        source $compiler_install_loc/bin/compilervars.sh # confirm this is really necessary
-        setup_env gcc/4.7.2 # confirm this is really necessary
-    fi
+    module purge
 
-    if [[ "$compiler" = cuda* ]]; then
-        setup_env gcc/4.7.2
-    fi
-
-    if [[ "$compiler" = gcc* ]]; then
-        # In case was called in order to set up CUDA
-        export NVCC_WRAPPER_DEFAULT_COMPILER=$compiler_install_loc/bin/$compiler_exe
-    fi
-
-    export PATH=$compiler_install_loc/bin:$PATH
-    export LD_LIBRARY_PATH=$compiler_install_loc/lib64:$compiler_install_loc/compiler/lib/intel64:$LD_LIBRARY_PATH
+    for mod in "$compiler_modules"; do
+	module load $mod
+    done
 }
 
 # build_and_test_all <COMPILER>
-# Be sure to run as subshell to not corrupt environment
 build_and_test_all() {
     # Get compiler data
     local compiler=$1
@@ -252,18 +251,18 @@ build_and_test_all() {
     fi
 
     # set up env
+    cd $ROOT_DIR
     mkdir -p $compiler
-    cd $compiler
     setup_env $compiler
 
     # do builds
     for build in $compiler_build_list
     do
-        (single_build_and_test $compiler $build $BUILD_TYPE)
+	single_build_and_test $compiler $build $BUILD_TYPE
 
         # If not cuda, do a hwloc test too
         if [[ "$compiler" != cuda* ]]; then
-            (single_build_and_test $compiler $build "hwloc-$BUILD_TYPE")
+            single_build_and_test $compiler $build "hwloc-$BUILD_TYPE"
         fi
     done
 
@@ -278,12 +277,17 @@ build_and_test_all() {
 mkdir TestAll
 cd TestAll
 
+TEST_RESULTS=""
+declare -i NUM_FAILED=0
+ROOT_DIR=$(pwd)
 for COMPILER in $COMPILERS_TO_TEST; do
     echo "Testing compiler $COMPILER"
-    (build_and_test_all $COMPILER)
+    build_and_test_all $COMPILER
 done
 
-# TODO: would be great if we could do non-zero exit if any test failed,
-# unfortunately, it's very hard in bash to have functions that exit with
-# non-zero numbers coexist with set -e
-exit 0
+echo "#######################################################"
+echo "RESULT SUMMARY"
+echo "#######################################################"
+echo -e $TEST_RESULTS
+
+exit $NUM_FAILED

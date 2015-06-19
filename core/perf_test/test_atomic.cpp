@@ -427,12 +427,12 @@ void Loop(int loop, int test, const char* type_name) {
   time1*=1e6/loop;
   time2*=1e6/loop;
   time3*=1e6/loop;
-  textcolor_standard();
+  //textcolor_standard();
   bool passed = true;
   if(resSerial!=res) passed = false;
-  if(!passed) textcolor(RESET,BLACK,YELLOW);
+  //if(!passed) textcolor(RESET,BLACK,YELLOW);
   printf("%s Test %i %s  --- Loop: %i Value (S,A,NA): %e %e %e Time: %7.4e %7.4e %7.4e Size of Type %i)",type_name,test,passed?"PASSED":"FAILED",loop,1.0*resSerial,1.0*res,1.0*resNonAtomic,time1,time2,time3,(int)sizeof(T));
-  if(!passed) textcolor_standard();
+  //if(!passed) textcolor_standard();
   printf("\n");
 }
 
