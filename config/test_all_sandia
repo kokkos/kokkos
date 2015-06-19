@@ -22,15 +22,13 @@ CUDA_WARNING_FLAGS=""
 COMPILERS=("gcc/4.7.2 gcc/4.7.2,hwloc/1.10.0/host/gnu/4.7.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
            "gcc/4.9.2 gcc/4.9.2,hwloc/1.10.0/host/gnu/4.9.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
            "gcc/5.1.0 gcc/5.1.0,hwloc/1.10.0/host/gnu/5.1.0 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-           "intel/14.0.1 todo $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-           "intel/15.0.1 todo $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+           "intel/13.0.1 intel/13.SP1.1.106,hwloc/1.10.0/host/gnu/4.7.2 $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+           "intel/15.0.0 intel/2015.0.090,hwloc/1.10.0/host/gnu/4.7.2 $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
            "clang/3.6.0 clang/3.6.0 $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
            "clang/3.7.0 clang/3.7.0 $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
            "cuda/6.5.14 cuda/6.5.14,nvcc-wrapper/gnu,gcc/4.7.2 $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
            "cuda/7.0.28 cuda/7.0.28,nvcc-wrapper/gnu,gcc/4.7.2 $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
            )
-
-HWLOCPATH=/home/projects/x86-64/hwloc/1.10.0
 
 export OMP_NUM_THREADS=4
 
@@ -206,7 +204,7 @@ single_build_and_test() {
     local compiler_exe=$(get_compiler_exe_name $compiler)
 
     if [[ "$build_type" = hwloc* ]]; then
-        local extra_args="--with-hwloc=$HWLOCPATH/$compiler"
+        local extra_args="--with-hwloc=$HWLOC_ROOT"
     fi
 
     if [[ "$build_type" = *debug* ]]; then
