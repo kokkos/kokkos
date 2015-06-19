@@ -4,6 +4,8 @@
 # Global config
 #
 
+set -o pipefail
+
 COMPILER_ROOT="/home/projects/x86-64"
 
 GCC_BUILD_LIST="OpenMP,Pthread,Serial,OpenMP_Serial,Pthread_Serial"
@@ -14,7 +16,7 @@ CUDA_BUILD_LIST="Cuda_OpenMP,Cuda_Pthread,Cuda_Serial"
 GCC_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limits,-Wignored-qualifiers,-Wempty-body,-Wclobbered,-Wuninitialized"
 CLANG_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limits,-Wuninitialized"
 INTEL_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limits,-Wuninitialized"
-CUDA_WARNING_FLAGS="" #TODO fix
+CUDA_WARNING_FLAGS=""
 
 # Format: (compiler compiler-install-loc build-list exe-name warning-flag)
 COMPILERS=("gcc/4.7.2 $COMPILER_ROOT/gcc/4.7.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
@@ -38,6 +40,8 @@ export OMP_NUM_THREADS=4
 
 DEBUG=False
 ARGS=""
+CUSTOM_BUILD_LIST=""
+DRYRUN=False
 
 while [[ $# > 0 ]]
 do
@@ -46,18 +50,44 @@ case $key in
 --kokkos-path*)
 KOKKOS_PATH="${key#*=}"
 ;;
+--build-list*)
+CUSTOM_BUILD_LIST="${key#*=}"
+;;
 --debug*)
 DEBUG=True
+;;
+--dry-run*)
+DRYRUN=True
 ;;
 --help)
 echo "test_all_sandia <ARGS> <OPTIONS>:"
 echo "--kokkos-path=/Path/To/Kokkos: Path to the Kokkos root directory"
 echo "    Defaults to root repo containing this script"
 echo "--debug: Run tests in debug. Defaults to False"
+echo "--dry-run: Just print what would be executed"
+echo "--build-list=BUILD,BUILD,BUILD..."
+echo "    Provide a comma-separated list of builds instead of running all builds"
+echo "    Valid items:"
+echo "      OpenMP, Pthread, Serial, OpenMP_Serial, Pthread_Serial"
+echo "      Cuda_OpenMP, Cuda_Pthread, Cuda_Serial"
 echo ""
 echo "ARGS: list of expressions matching compilers to test"
 echo ""
 echo "Examples:"
+echo "  Run all tests"
+echo "  % test_all_sandia"
+echo ""
+echo "  Run all gcc tests"
+echo "  % test_all_sandia gcc"
+echo ""
+echo "  Run all gcc/4.7.2 and all intel tests"
+echo "  % test_all_sandia gcc/4.7.2 intel"
+echo ""
+echo "  Run all tests in debug"
+echo "  % test_all_sandia --debug"
+echo ""
+echo "  Run gcc/4.7.2 and only do OpenMP and OpenMP_Serial builds"
+echo "  % test_all_sandia gcc/4.7.2 --build-list=OpenMP,OpenMP_Serial"
 echo
 exit 0
 ;;
@@ -147,11 +177,18 @@ get_compiler_warning_flags() {
     get_compiler_data $1 4
 }
 
+run_cmd() {
+    echo "RUNNING: $*"
+    if [ "$DRYRUN" != "True" ]; then
+	eval "$*"
+    fi
+}
+
 # single_build_and_test <COMPILER> <BUILD> <BUILD_TYPE>
 # Run in a subshell
 single_build_and_test() {
     # Use sane var names
-    local compiler=$1; local build=$2; local build_type=$3; local log_loc=$4
+    local compiler=$1; local build=$2; local build_type=$3;
 
     local compiler_install_loc=$(get_compiler_install_loc $compiler)
     local compiler_warning_flags=$(get_compiler_warning_flags $compiler)
@@ -173,9 +210,10 @@ single_build_and_test() {
 
     mkdir "${build}-$build_type"
     cd "${build}-$build_type"
-    echo ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$build --compiler="$compiler_install_loc/bin/$compiler_exe" --cxxflags="$cxxflags" "$extra_args" &> ${desc}.configure.log || { echo "FAILED: ${desc}.configure" >&2 && return 0; }
-    echo make build-test &> ${desc}.build.log || { echo "FAILED: ${desc}.build" >&2 && return 0; }
-    echo make test &> ${desc}.test.log || { echo "FAILED: ${desc}.test" >&2 && return 0; }
+
+    run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$build --compiler=\"$compiler_install_loc/bin/$compiler_exe\" --cxxflags=\"$cxxflags\" \"$extra_args\" 2>&1 | tee ${desc}.configure.log || { echo "FAILED: ${desc}.configure" >&2 && return 0; }
+    run_cmd make build-test 2>&1 | tee ${desc}.build.log || { echo "FAILED: ${desc}.build" >&2 && return 0; }
+    run_cmd make test 2>&1 | tee ${desc}.test.log || { echo "FAILED: ${desc}.test" >&2 && return 0; }
     return 0
 }
 
@@ -207,7 +245,11 @@ setup_env() {
 build_and_test_all() {
     # Get compiler data
     local compiler=$1
-    local compiler_build_list=$(get_compiler_build_list $compiler)
+    if [ -z "$CUSTOM_BUILD_LIST" ]; then
+	local compiler_build_list=$(get_compiler_build_list $compiler)
+    else
+	local compiler_build_list=$(echo "$CUSTOM_BUILD_LIST" | tr , ' ')
+    fi
 
     # set up env
     mkdir -p $compiler
