@@ -32,6 +32,9 @@ COMPILERS=("gcc/4.7.2 gcc/4.7.2,hwloc/1.10.0/host/gnu/4.7.2 $GCC_BUILD_LIST g++ 
 
 export OMP_NUM_THREADS=4
 
+export MODULEPATH=/home/projects/modulefiles:/usr/share/Modules/modulefiles:/etc/modulefiles
+export MODULESHOME=/home/projects/modules/3.2.10/Modules/3.2.10
+
 #
 # Handle arguments
 #
