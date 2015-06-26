@@ -19,21 +19,20 @@ INTEL_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limi
 CUDA_WARNING_FLAGS=""
 
 # Format: (compiler module-list build-list exe-name warning-flag)
-COMPILERS=("gcc/4.7.2 gcc/4.7.2,hwloc/1.10.0/host/gnu/4.7.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-           "gcc/4.9.2 gcc/4.9.2,hwloc/1.10.0/host/gnu/4.9.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-           "gcc/5.1.0 gcc/5.1.0,hwloc/1.10.0/host/gnu/5.1.0 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-           "intel/13.0.1 intel/13.SP1.1.106,hwloc/1.10.0/host/gnu/4.7.2 $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-           "intel/15.0.0 intel/2015.0.090,hwloc/1.10.0/host/gnu/4.7.2 $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-           "clang/3.6.0 clang/3.6.0 $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-           "clang/3.7.0 clang/3.7.0 $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-           "cuda/6.5.14 cuda/6.5.14,nvcc-wrapper/gnu,gcc/4.7.2 $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
-           "cuda/7.0.28 cuda/7.0.28,nvcc-wrapper/gnu,gcc/4.7.2 $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
+COMPILERS=("gcc/4.7.2 gcc/4.7.2/base,hwloc/1.10.0/host/gnu/4.7.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "gcc/4.9.2 gcc/4.9.2/base,hwloc/1.10.0/host/gnu/4.9.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "gcc/5.1.0 gcc/5.1.0/base,hwloc/1.10.0/host/gnu/5.1.0 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "intel/14.0.4 intel/14.0.4/base,hwloc/1.10.0/host/gnu/4.7.2 $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+           "intel/15.0.2 intel/15.0.2/base,hwloc/1.10.0/host/gnu/4.7.2 $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+           "clang/3.6.1 clang/3.6.1/base $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+           "cuda/6.5.14 cuda/6.5.14,nvcc-wrapper/gnu,gcc/4.7.2/base $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
+           "cuda/7.0.28 cuda/7.0.28,nvcc-wrapper/gnu,gcc/4.7.2/base $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
            )
 
 export OMP_NUM_THREADS=4
 
-export MODULEPATH=/home/projects/modulefiles:/usr/share/Modules/modulefiles:/etc/modulefiles
-export MODULESHOME=/home/projects/modules/3.2.10/Modules/3.2.10
+export SEMS_MODULE_ROOT=/projects/modulefiles
+module use /projects/modulefiles/rhel6-x86_64/sems/compiler
 
 #
 # Handle arguments
