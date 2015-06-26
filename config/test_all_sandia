@@ -20,6 +20,7 @@ CUDA_WARNING_FLAGS=""
 
 # Format: (compiler module-list build-list exe-name warning-flag)
 COMPILERS=("gcc/4.7.2 gcc/4.7.2/base,hwloc/1.10.0/host/gnu/4.7.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "gcc/4.8.4 gcc/4.9.2/base,hwloc/1.10.0/host/gnu/4.9.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
            "gcc/4.9.2 gcc/4.9.2/base,hwloc/1.10.0/host/gnu/4.9.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
            "gcc/5.1.0 gcc/5.1.0/base,hwloc/1.10.0/host/gnu/5.1.0 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
            "intel/14.0.4 intel/14.0.4/base,hwloc/1.10.0/host/gnu/4.7.2 $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
@@ -33,6 +34,8 @@ export OMP_NUM_THREADS=4
 
 export SEMS_MODULE_ROOT=/projects/modulefiles
 module use /projects/modulefiles/rhel6-x86_64/sems/compiler
+
+SCRIPT_KOKKOS_ROOT=$( cd "$( dirname "$0" )" && cd .. && pwd )
 
 #
 # Handle arguments
@@ -99,9 +102,10 @@ esac
 shift
 done
 
+
 # set kokkos path
 if [ -z "$KOKKOS_PATH" ]; then
-    KOKKOS_PATH=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )
+    KOKKOS_PATH=$SCRIPT_KOKKOS_ROOT
 else
     # Ensure KOKKOS_PATH is abs path
     KOKKOS_PATH=$( cd $KOKKOS_PATH && pwd )
