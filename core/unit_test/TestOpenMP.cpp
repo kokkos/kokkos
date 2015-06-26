@@ -53,6 +53,9 @@
 #include <TestViewAPI.hpp>
 #include <TestViewSubview.hpp>
 
+#include <TestSharedAlloc.hpp>
+#include <TestViewMapping.hpp>
+
 #include <TestRange.hpp>
 #include <TestTeam.hpp>
 #include <TestReduce.hpp>
@@ -93,6 +96,17 @@ protected:
   }
 };
 
+
+TEST_F( openmp , impl_shared_alloc ) {
+  test_shared_alloc< Kokkos::HostSpace , Kokkos::OpenMP >();
+}
+
+TEST_F( openmp , impl_view_mapping ) {
+  test_view_mapping< Kokkos::OpenMP >();
+  test_view_mapping_subview< Kokkos::OpenMP >();
+  test_view_mapping_operator< Kokkos::OpenMP >();
+  TestViewMappingAtomic< Kokkos::OpenMP >::run();
+}
 
 TEST_F( openmp, view_impl) {
   test_view_impl< Kokkos::OpenMP >();

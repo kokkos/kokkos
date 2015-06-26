@@ -44,13 +44,14 @@
 #ifndef KOKKOS_CUDASPACE_HPP
 #define KOKKOS_CUDASPACE_HPP
 
+#include <Kokkos_Core_fwd.hpp>
+
 #if defined( KOKKOS_HAVE_CUDA )
 
 #include <iosfwd>
 #include <typeinfo>
 #include <string>
 
-#include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_HostSpace.hpp>
 
 #include <impl/Kokkos_AllocationTracker.hpp>
@@ -96,9 +97,29 @@ public:
 #endif
 
   /*--------------------------------*/
+
+  CudaSpace();
+  CudaSpace( const CudaSpace & rhs ) = default ;
+  CudaSpace & operator = ( const CudaSpace & rhs ) = default ;
+  ~CudaSpace() = default ;
+
+  /**\brief  Allocate memory in the cuda space */
+  void * allocate( const size_t arg_alloc_size ) const ;
+
+  /**\brief  Deallocate memory in the cuda space */
+  void deallocate( void * const arg_alloc_ptr
+                 , const size_t arg_alloc_size ) const ;
+
+  /*--------------------------------*/
   /** \brief  Error reporting for HostSpace attempt to access CudaSpace */
   static void access_error();
   static void access_error( const void * const );
+
+private:
+
+  int  m_device ; ///< Which Cuda device
+
+  // friend class Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > ;
 };
 
 namespace Impl {
@@ -161,6 +182,25 @@ public:
                                     , ::cudaChannelFormatDesc const & desc
                                    );
 #endif
+  /*--------------------------------*/
+
+  CudaUVMSpace();
+  CudaUVMSpace( const CudaUVMSpace & rhs ) = default ;
+  CudaUVMSpace & operator = ( const CudaUVMSpace & rhs ) = default ;
+  ~CudaUVMSpace() = default ;
+
+  /**\brief  Allocate memory in the cuda space */
+  void * allocate( const size_t arg_alloc_size ) const ;
+
+  /**\brief  Deallocate memory in the cuda space */
+  void deallocate( void * const arg_alloc_ptr
+                 , const size_t arg_alloc_size ) const ;
+
+  /*--------------------------------*/
+
+private:
+
+  int  m_device ; ///< Which Cuda device
 };
 
 } // namespace Kokkos
@@ -194,6 +234,21 @@ public:
    */
   static Impl::AllocationTracker allocate_and_track( const std::string & label, const size_t size );
 
+  /*--------------------------------*/
+
+  CudaHostPinnedSpace();
+  CudaHostPinnedSpace( const CudaHostPinnedSpace & rhs ) = default ;
+  CudaHostPinnedSpace & operator = ( const CudaHostPinnedSpace & rhs ) = default ;
+  ~CudaHostPinnedSpace() = default ;
+
+  /**\brief  Allocate memory in the cuda space */
+  void * allocate( const size_t arg_alloc_size ) const ;
+
+  /**\brief  Deallocate memory in the cuda space */
+  void deallocate( void * const arg_alloc_ptr
+                 , const size_t arg_alloc_size ) const ;
+
+  /*--------------------------------*/
 };
 
 } // namespace Kokkos
@@ -390,6 +445,10 @@ struct VerifyExecutionCanAccessMemorySpace< Kokkos::HostSpace , Kokkos::CudaHost
   KOKKOS_INLINE_FUNCTION static void verify( const void * ) {}
 };
 
+} // namespace Impl
+} // namespace Kokkos
+
+//----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
