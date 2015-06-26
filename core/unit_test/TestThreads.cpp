@@ -53,9 +53,6 @@
 
 //----------------------------------------------------------------------------
 
-#include <TestSharedAlloc.hpp>
-#include <TestViewMapping.hpp>
-
 #include <TestViewImpl.hpp>
 
 #include <TestViewAPI.hpp>

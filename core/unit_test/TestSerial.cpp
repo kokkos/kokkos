@@ -50,9 +50,6 @@
 
 //----------------------------------------------------------------------------
 
-#include <TestSharedAlloc.hpp>
-#include <TestViewMapping.hpp>
-
 #include <TestViewImpl.hpp>
 
 #include <TestViewAPI.hpp>
@@ -78,26 +75,9 @@ namespace Test {
 
 class serial : public ::testing::Test {
 protected:
-  static void SetUpTestCase()
-    {
-      Kokkos::HostSpace::execution_space::initialize();
-    }
-  static void TearDownTestCase()
-    {
-      Kokkos::HostSpace::execution_space::finalize();
-    }
+  static void SetUpTestCase() {}
+  static void TearDownTestCase() {}
 };
-
-TEST_F( serial , impl_shared_alloc ) {
-  test_shared_alloc< Kokkos::HostSpace , Kokkos::Serial >();
-}
-
-TEST_F( serial , impl_view_mapping ) {
-  test_view_mapping< Kokkos::Serial >();
-  test_view_mapping_subview< Kokkos::Serial >();
-  test_view_mapping_operator< Kokkos::Serial >();
-  TestViewMappingAtomic< Kokkos::Serial >::run();
-}
 
 TEST_F( serial, view_impl) {
   test_view_impl< Kokkos::Serial >();
@@ -405,6 +385,5 @@ TEST_F( serial , team_vector )
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Serial >(10) ) );
 }
 #endif
-
 } // namespace test
 

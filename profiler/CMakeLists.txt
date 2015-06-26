@@ -3,7 +3,7 @@
 TRIBITS_SUBPACKAGE(Profiler)
 
 TRIBITS_ADD_OPTION_AND_DEFINE(
-  KokkosP_ENABLE_Profiling_Aggregate_MPI
+  KokkosProfiler_ENABLE_Profiling_Aggregate_MPI
   KOKKOSP_ENABLE_PROFILING_AGGREGATE_MPI
   "Enable MPI aggregation of profiling data in Kokkos."
   ${Kokkos_ENABLE_MPI}
@@ -11,7 +11,7 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
 
 IF( KokkosProfiler_ENABLE_RTlib )
   set (KOKKOSP_ENABLE_RTLIB ON)
-ENDIF
+ENDIF()
 
 ADD_SUBDIRECTORY(src)
 

@@ -1507,7 +1507,11 @@ void parallel_reduce( const ExecPolicy  & policy
   typedef typename Kokkos::Impl::if_c<FunctorHasValueType, FunctorTypeIn, Impl::CudaFunctorAdapter<FunctorTypeIn,ExecPolicy,typename ViewType::value_type> >::type FunctorType;
   FunctorType functor = Impl::if_c<FunctorHasValueType,FunctorTypeIn,FunctorType>::select(functor_in,FunctorType(functor_in));
 
+  Kokkos::Experimental::Profiler::begin_kernel<FunctorType,ExecPolicy>(1,str);
+
   (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( functor , policy , result_view );
+
+  Kokkos::Experimental::Profiler::end_kernel<FunctorType,ExecPolicy>(1,str);
 }
 
 // general policy and pod or array of pod output
@@ -1543,7 +1547,11 @@ void parallel_reduce( const ExecPolicy  & policy
                , 1
                );
 
+  Kokkos::Experimental::Profiler::begin_kernel<FunctorType,ExecPolicy>(1,str);
+
   (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( FunctorType(functor_in) , policy , result_view );
+
+  Kokkos::Experimental::Profiler::end_kernel<FunctorType,ExecPolicy>(1,str);
 }
 
 // general policy and pod or array of pod output
@@ -1577,7 +1585,11 @@ void parallel_reduce( const ExecPolicy  & policy
                , ValueTraits::value_count( functor )
                );
 
+  Kokkos::Experimental::Profiler::begin_kernel<FunctorType,ExecPolicy>(1,str);
+
   (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( functor , policy , result_view );
+
+  Kokkos::Experimental::Profiler::end_kernel<FunctorType,ExecPolicy>(1,str);
 }
 
 // integral range policy and view ouput
@@ -1604,7 +1616,12 @@ void parallel_reduce( const size_t        work_count
 
   FunctorType functor = Impl::if_c<FunctorHasValueType,FunctorTypeIn,FunctorType>::select(functor_in,FunctorType(functor_in));
 
+  Kokkos::Experimental::Profiler::begin_kernel<FunctorType,ExecPolicy>(1,str);
+
   (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( functor , ExecPolicy(0,work_count) , result_view );
+
+  Kokkos::Experimental::Profiler::end_kernel<FunctorType,ExecPolicy>(1,str);
+
 }
 
 // integral range policy and pod or array of pod output
@@ -1648,7 +1665,11 @@ void parallel_reduce( const size_t        work_count
                , 1
                );
 
+  Kokkos::Experimental::Profiler::begin_kernel<FunctorType,ExecPolicy>(1,str);
+
   (void) Impl::ParallelReduce< FunctorType , ExecPolicy >( FunctorType(functor_in) , ExecPolicy(0,work_count) , result_view );
+
+  Kokkos::Experimental::Profiler::end_kernel<FunctorType,ExecPolicy>(1,str);
 }
 
 template< class FunctorType>
@@ -1690,7 +1711,11 @@ void parallel_reduce( const size_t        work_count
                , ValueTraits::value_count( functor )
                );
 
+  Kokkos::Experimental::Profiler::begin_kernel<FunctorType,ExecPolicy>(1,str);
+
   (void) Impl::ParallelReduce< FunctorType , ExecPolicy >( functor , ExecPolicy(0,work_count) , result_view );
+
+  Kokkos::Experimental::Profiler::end_kernel<FunctorType,ExecPolicy>(1,str);
 }
 
 } // namespace Kokkos
