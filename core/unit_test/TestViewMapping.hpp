@@ -48,7 +48,6 @@
 #include <iostream>
 
 #include <Kokkos_Core.hpp>
-#include <KokkosExp_View.hpp>
 
 /*--------------------------------------------------------------------------*/
 
@@ -57,7 +56,7 @@ namespace Test {
 template< class RangeType >
 void test_view_range( const size_t N , const RangeType & range , const size_t begin , const size_t dim )
 {
-  using query = Kokkos::Experimental::Impl::ViewOffsetRange< RangeType > ;
+  typedef Kokkos::Experimental::Impl::ViewOffsetRange< RangeType >  query ;
 
   ASSERT_EQ( query::begin( range ) , begin );
   ASSERT_EQ( query::dimension( N , range ) , dim );
@@ -178,7 +177,7 @@ void test_view_mapping()
 
   //----------------------------------------
 
-  using stride_s0_s0_s0 = Kokkos::Experimental::Impl::ViewOffset< dim_s0_s0_s0 , Kokkos::LayoutStride > ;
+  typedef Kokkos::Experimental::Impl::ViewOffset< dim_s0_s0_s0 , Kokkos::LayoutStride >  stride_s0_s0_s0 ;
 
   //----------------------------------------
   // Static dimension
@@ -473,7 +472,7 @@ void test_view_mapping()
   // view data analysis
 
   {
-    using a_const_int_r1 = Kokkos::Experimental::Impl::ViewDataAnalysis< const int[] > ;
+    typedef Kokkos::Experimental::Impl::ViewDataAnalysis< const int[] >  a_const_int_r1 ;
 
     ASSERT_TRUE( ( std::is_same< typename a_const_int_r1::specialize , void >::value ));
     ASSERT_TRUE( ( std::is_same< typename a_const_int_r1::dimension , Kokkos::Experimental::Impl::ViewDimension<0> >::value ));
@@ -486,7 +485,7 @@ void test_view_mapping()
     ASSERT_TRUE( ( std::is_same< typename a_const_int_r1::non_const_type , int [] >::value ));
     ASSERT_TRUE( ( std::is_same< typename a_const_int_r1::non_const_value_type , int >::value ));
 
-    using a_const_int_r3 = Kokkos::Experimental::Impl::ViewDataAnalysis< const int**[4] > ;
+    typedef Kokkos::Experimental::Impl::ViewDataAnalysis< const int**[4] >  a_const_int_r3 ;
 
     ASSERT_TRUE( ( std::is_same< typename a_const_int_r3::specialize , void >::value ));
     ASSERT_TRUE( ( std::is_same< typename a_const_int_r3::dimension , Kokkos::Experimental::Impl::ViewDimension<0,0,4> >::value ));
@@ -506,8 +505,8 @@ void test_view_mapping()
   {
     constexpr int N = 10 ;
 
-    using T = Kokkos::Experimental::View<int*,ExecSpace> ;
-    using C = Kokkos::Experimental::View<const int*,ExecSpace> ;
+    typedef Kokkos::Experimental::View<int*,ExecSpace>        T ;
+    typedef Kokkos::Experimental::View<const int*,ExecSpace>  C ;
 
     int data[N] ;
 
@@ -576,8 +575,8 @@ void test_view_mapping()
 
   {
     constexpr int N = 10 ;
-    using T = Kokkos::Experimental::View<int*,ExecSpace> ;
-    using C = Kokkos::Experimental::View<const int*,ExecSpace> ;
+    typedef Kokkos::Experimental::View<int*,ExecSpace>        T ;
+    typedef Kokkos::Experimental::View<const int*,ExecSpace>  C ;
 
     T vr1("vr1",N);
     C cr1(vr1);
@@ -618,8 +617,9 @@ void test_view_mapping()
 
   {
     using namespace Kokkos::Experimental ;
-    using memory_space = typename ExecSpace::memory_space ;
-    using V = View<int*,memory_space> ;
+
+    typedef typename ExecSpace::memory_space  memory_space ;
+    typedef View<int*,memory_space>           V ;
 
     constexpr int N = 10 ;
 
@@ -640,9 +640,9 @@ void test_view_mapping()
   }
 
   {
-    using traits_t = Kokkos::Experimental::ViewTraits<int***,Kokkos::LayoutStride,ExecSpace> ;
-    using dims_t   = Kokkos::Experimental::Impl::ViewDimension<0,0,0> ;
-    using offset_t = Kokkos::Experimental::Impl::ViewOffset< dims_t , Kokkos::LayoutStride > ;
+    typedef Kokkos::Experimental::ViewTraits<int***,Kokkos::LayoutStride,ExecSpace>  traits_t ;
+    typedef Kokkos::Experimental::Impl::ViewDimension<0,0,0>                         dims_t ;
+    typedef Kokkos::Experimental::Impl::ViewOffset< dims_t , Kokkos::LayoutStride >  offset_t ;
 
     Kokkos::LayoutStride stride ;
 
@@ -670,8 +670,8 @@ void test_view_mapping()
   }
 
   {
-    using V = Kokkos::Experimental::View<int**,ExecSpace> ;
-    using M = typename V::HostMirror ;
+    typedef Kokkos::Experimental::View<int**,ExecSpace>  V ;
+    typedef typename V::HostMirror  M ;
 
     constexpr int N0 = 10 ;
     constexpr int N1 = 11 ;
@@ -705,20 +705,20 @@ template< class ExecSpace >
 struct TestViewMappingSubview {
 
   constexpr static int AN = 10 ;
-  using AT = Kokkos::Experimental::View<int*,ExecSpace> ;
-  using AS = Kokkos::Experimental::Subview< AT , true > ;
+  typedef Kokkos::Experimental::View<int*,ExecSpace>  AT ;
+  typedef Kokkos::Experimental::Subview< AT , true >  AS ;
 
   constexpr static int BN0 = 10 , BN1 = 11 , BN2 = 12 ;
-  using BT = Kokkos::Experimental::View<int***,ExecSpace> ;
-  using BS = Kokkos::Experimental::Subview< BT , true , true , true > ;
+  typedef Kokkos::Experimental::View<int***,ExecSpace>  BT ;
+  typedef Kokkos::Experimental::Subview< BT , true , true , true >  BS ;
 
   constexpr static int CN0 = 10 , CN1 = 11 , CN2 = 12 ;
-  using CT = Kokkos::Experimental::View<int***[13][14],ExecSpace> ;
-  using CS = Kokkos::Experimental::Subview< CT , true , true , true , false , false > ;
+  typedef Kokkos::Experimental::View<int***[13][14],ExecSpace>  CT ;
+  typedef Kokkos::Experimental::Subview< CT , true , true , true , false , false >  CS ;
 
   constexpr static int DN0 = 10 , DN1 = 11 , DN2 = 12 ;
-  using DT = Kokkos::Experimental::View<int***[13][14],ExecSpace> ;
-  using DS = Kokkos::Experimental::Subview< DT , false , true , true , true , false > ;
+  typedef Kokkos::Experimental::View<int***[13][14],ExecSpace>  DT ;
+  typedef Kokkos::Experimental::Subview< DT , false , true , true , true , false >  DS ;
 
   AT Aa ;
   AS Ab ;
@@ -825,7 +825,7 @@ struct TestViewMapOperator {
       const size_t n6 = v.dimension_6();
       const size_t n7 = v.dimension_7();
 
-      size_t offset = 0 ;
+      long offset = 0 ;
 
       for ( size_t i7 = 0 ; i7 < n7 ; ++i7 )
       for ( size_t i6 = 0 ; i6 < n6 ; ++i6 )
@@ -840,7 +840,7 @@ struct TestViewMapOperator {
         offset = d ;
       }
 
-      if ( v.extent() <= offset ) ++error_count ;
+      if ( v.extent() <= size_t(offset) ) ++error_count ;
     }
 
   KOKKOS_INLINE_FUNCTION
@@ -855,7 +855,7 @@ struct TestViewMapOperator {
       const size_t n6 = v.dimension_6();
       const size_t n7 = v.dimension_7();
 
-      size_t offset = 0 ;
+      long offset = 0 ;
 
       for ( size_t i1 = 0 ; i1 < n1 ; ++i1 )
       for ( size_t i2 = 0 ; i2 < n2 ; ++i2 )
@@ -870,7 +870,7 @@ struct TestViewMapOperator {
         offset = d ;
       }
 
-      if ( v.extent() <= offset ) ++error_count ;
+      if ( v.extent() <= size_t(offset) ) ++error_count ;
     }
 
   KOKKOS_INLINE_FUNCTION
@@ -950,10 +950,10 @@ void test_view_mapping_operator()
 
 template< class ExecSpace >
 struct TestViewMappingAtomic {
-  using mem_trait = Kokkos::MemoryTraits< Kokkos::Atomic > ;
+  typedef Kokkos::MemoryTraits< Kokkos::Atomic >  mem_trait ;
 
-  using T      = Kokkos::Experimental::View< int * , ExecSpace > ;
-  using T_atom = Kokkos::Experimental::View< int * , ExecSpace , mem_trait > ;
+  typedef Kokkos::Experimental::View< int * , ExecSpace > T ;
+  typedef Kokkos::Experimental::View< int * , ExecSpace , mem_trait >  T_atom ;
 
   T      x ;
   T_atom x_atom ;
@@ -975,8 +975,8 @@ struct TestViewMappingAtomic {
   KOKKOS_INLINE_FUNCTION
   void operator()( const TagVerify & , const int i , long & error_count ) const
     {
-       if ( i < 2 ) { if ( x(i) != i + N / 2 ) ++error_count ; }
-       else         { if ( x(i) != i ) ++error_count ; }
+       if ( i < 2 ) { if ( x(i) != int(i + N / 2) ) ++error_count ; }
+       else         { if ( x(i) != int(i) ) ++error_count ; }
     }
 
   TestViewMappingAtomic()

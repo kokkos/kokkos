@@ -195,7 +195,7 @@ private:
 
   friend Kokkos::HostSpace ;
 
-  using RecordBase = SharedAllocationRecord< void , void > ;
+  typedef SharedAllocationRecord< void , void >  RecordBase ;
 
   SharedAllocationRecord( const SharedAllocationRecord & ) = delete ;
   SharedAllocationRecord & operator = ( const SharedAllocationRecord & ) = delete ;

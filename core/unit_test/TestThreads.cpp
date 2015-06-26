@@ -137,7 +137,7 @@ TEST_F( threads , impl_shared_alloc ) {
   test_shared_alloc< Kokkos::HostSpace , Kokkos::Threads >();
 }
 
-TEST_F( openmp , impl_view_mapping ) {
+TEST_F( threads , impl_view_mapping ) {
   test_view_mapping< Kokkos::Threads >();
   test_view_mapping_subview< Kokkos::Threads >();
   test_view_mapping_operator< Kokkos::Threads >();

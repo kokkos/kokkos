@@ -355,8 +355,8 @@ template< long dN0 , long dN1 , long dN2 , long dN3 , long dN4 , long dN5 , long
 struct ViewDimensionAssignable< ViewDimension<dN0,dN1,dN2,dN3,dN4,dN5,dN6,dN7>
                               , ViewDimension<sN0,sN1,sN2,sN3,sN4,sN5,sN6,sN7> >
 {
-  using dst = ViewDimension<dN0,dN1,dN2,dN3,dN4,dN5,dN6,dN7> ;
-  using src = ViewDimension<sN0,sN1,sN2,sN3,sN4,sN5,sN6,sN7> ;
+  typedef ViewDimension<dN0,dN1,dN2,dN3,dN4,dN5,dN6,dN7>  dst ;
+  typedef ViewDimension<sN0,sN1,sN2,sN3,sN4,sN5,sN6,sN7>  src ;
 
   enum { value = dst::rank == src::rank &&
                  dst::rank_dynamic >= src::rank_dynamic &&
@@ -378,77 +378,84 @@ struct ViewDimensionInsert ;
 template< class Dim , unsigned N >
 struct ViewDimensionInsert< Dim , N , 0 >
 {
-  using type = ViewDimension< N
-                            , 0 < Dim::rank ? Dim::N0 : -1 
-                            , 1 < Dim::rank ? Dim::N1 : -1 
-                            , 2 < Dim::rank ? Dim::N2 : -1 
-                            , 3 < Dim::rank ? Dim::N3 : -1 
-                            , 4 < Dim::rank ? Dim::N4 : -1 
-                            , 5 < Dim::rank ? Dim::N5 : -1 
-                            , 6 < Dim::rank ? Dim::N6 : -1 > ;
+  typedef ViewDimension< N
+                       , 0 < Dim::rank ? Dim::N0 : -1 
+                       , 1 < Dim::rank ? Dim::N1 : -1 
+                       , 2 < Dim::rank ? Dim::N2 : -1 
+                       , 3 < Dim::rank ? Dim::N3 : -1 
+                       , 4 < Dim::rank ? Dim::N4 : -1 
+                       , 5 < Dim::rank ? Dim::N5 : -1 
+                       , 6 < Dim::rank ? Dim::N6 : -1
+                       >  type ;
 };
 
 template< class Dim , unsigned N >
 struct ViewDimensionInsert< Dim , N , 1 >
 {
-  using type = ViewDimension< 0 , N
-                            , 1 < Dim::rank ? Dim::N1 : -1 
-                            , 2 < Dim::rank ? Dim::N2 : -1 
-                            , 3 < Dim::rank ? Dim::N3 : -1 
-                            , 4 < Dim::rank ? Dim::N4 : -1 
-                            , 5 < Dim::rank ? Dim::N5 : -1 
-                            , 6 < Dim::rank ? Dim::N6 : -1 > ;
+  typedef ViewDimension< 0 , N
+                       , 1 < Dim::rank ? Dim::N1 : -1 
+                       , 2 < Dim::rank ? Dim::N2 : -1 
+                       , 3 < Dim::rank ? Dim::N3 : -1 
+                       , 4 < Dim::rank ? Dim::N4 : -1 
+                       , 5 < Dim::rank ? Dim::N5 : -1 
+                       , 6 < Dim::rank ? Dim::N6 : -1
+                       >  type ;
 };
 
 template< class Dim , unsigned N >
 struct ViewDimensionInsert< Dim , N , 2 >
 {
-  using type = ViewDimension< 0 , 0 , N
-                            , 2 < Dim::rank ? Dim::N2 : -1 
-                            , 3 < Dim::rank ? Dim::N3 : -1 
-                            , 4 < Dim::rank ? Dim::N4 : -1 
-                            , 5 < Dim::rank ? Dim::N5 : -1 
-                            , 6 < Dim::rank ? Dim::N6 : -1 > ;
+  typedef ViewDimension< 0 , 0 , N
+                       , 2 < Dim::rank ? Dim::N2 : -1 
+                       , 3 < Dim::rank ? Dim::N3 : -1 
+                       , 4 < Dim::rank ? Dim::N4 : -1 
+                       , 5 < Dim::rank ? Dim::N5 : -1 
+                       , 6 < Dim::rank ? Dim::N6 : -1
+                       >  type ;
 };
 
 template< class Dim , unsigned N >
 struct ViewDimensionInsert< Dim , N , 3 >
 {
-  using type = ViewDimension< 0 , 0 , 0 , N
-                            , 3 < Dim::rank ? Dim::N3 : -1 
-                            , 4 < Dim::rank ? Dim::N4 : -1 
-                            , 5 < Dim::rank ? Dim::N5 : -1 
-                            , 6 < Dim::rank ? Dim::N6 : -1 > ;
+  typedef ViewDimension< 0 , 0 , 0 , N
+                       , 3 < Dim::rank ? Dim::N3 : -1 
+                       , 4 < Dim::rank ? Dim::N4 : -1 
+                       , 5 < Dim::rank ? Dim::N5 : -1 
+                       , 6 < Dim::rank ? Dim::N6 : -1
+                       >  type ;
 };
 
 template< class Dim , unsigned N >
 struct ViewDimensionInsert< Dim , N , 4 >
 {
-  using type = ViewDimension< 0 , 0 , 0 , 0 , N
-                            , 4 < Dim::rank ? Dim::N4 : -1 
-                            , 5 < Dim::rank ? Dim::N5 : -1 
-                            , 6 < Dim::rank ? Dim::N6 : -1 > ;
+  typedef ViewDimension< 0 , 0 , 0 , 0 , N
+                       , 4 < Dim::rank ? Dim::N4 : -1 
+                       , 5 < Dim::rank ? Dim::N5 : -1 
+                       , 6 < Dim::rank ? Dim::N6 : -1
+                       >  type ;
 };
 
 template< class Dim , unsigned N >
 struct ViewDimensionInsert< Dim , N , 5 >
 {
-  using type = ViewDimension< 0 , 0 , 0 , 0 , 0 , N
-                            , 5 < Dim::rank ? Dim::N5 : -1 
-                            , 6 < Dim::rank ? Dim::N6 : -1 > ;
+  typedef ViewDimension< 0 , 0 , 0 , 0 , 0 , N
+                       , 5 < Dim::rank ? Dim::N5 : -1 
+                       , 6 < Dim::rank ? Dim::N6 : -1
+                       >  type ;
 };
 
 template< class Dim , unsigned N >
 struct ViewDimensionInsert< Dim , N , 6 >
 {
-  using type = ViewDimension< 0 , 0 , 0 , 0 , 0 , 0 , N
-                            , 6 < Dim::rank ? Dim::N6 : -1 > ;
+  typedef ViewDimension< 0 , 0 , 0 , 0 , 0 , 0 , N
+                       , 6 < Dim::rank ? Dim::N6 : -1
+                       >  type ;
 };
 
 template< class Dim , unsigned N >
 struct ViewDimensionInsert< Dim , N , 7 >
 {
-  using type = ViewDimension< 0 , 0 , 0 , 0 , 0 , 0 , 0 , N > ;
+  typedef ViewDimension< 0 , 0 , 0 , 0 , 0 , 0 , 0 , N >  type ;
 };
 
 }}} // namespace Kokkos::Experimental::Impl
@@ -475,21 +482,21 @@ namespace Impl {
 template< class T >
 struct ViewDataAnalysis
 {
-  using specialize = void ; // No specialization
+  typedef void  specialize ; // No specialization
 
-  using dimension = ViewDimension<> ;
+  typedef ViewDimension<>  dimension ;
 
-  using type               = T ;
-  using value_type         = T ;
-  using array_scalar_type = T ;
+  typedef T  type ;
+  typedef T  value_type ;
+  typedef T  array_scalar_type ;
 
-  using const_type               = typename std::add_const< T >::type ;
-  using const_value_type         = typename std::add_const< T >::type ;
-  using const_array_scalar_type = typename std::add_const< T >::type ;
+  typedef typename std::add_const< T >::type  const_type ;
+  typedef typename std::add_const< T >::type  const_value_type ;
+  typedef typename std::add_const< T >::type  const_array_scalar_type ;
 
-  using non_const_type               = typename std::remove_const< T >::type ;
-  using non_const_value_type         = typename std::remove_const< T >::type ;
-  using non_const_array_scalar_type = typename std::remove_const< T >::type ;
+  typedef typename std::remove_const< T >::type  non_const_type ;
+  typedef typename std::remove_const< T >::type  non_const_value_type ;
+  typedef typename std::remove_const< T >::type  non_const_array_scalar_type ;
 };
 
 template< class T >
@@ -497,25 +504,25 @@ struct ViewDataAnalysis< T * >
 {
 private:
 
-  using nested = ViewDataAnalysis< T > ;
+  typedef ViewDataAnalysis< T >  nested ;
 
 public:
 
-  using specialize = typename nested::specialize ;
+  typedef typename nested::specialize  specialize ;
 
-  using dimension = typename ViewDimensionInsert< typename nested::dimension , 0 >::type ;
+  typedef typename ViewDimensionInsert< typename nested::dimension , 0 >::type  dimension ;
 
-  using type               = typename nested::type * ;
-  using value_type         = typename nested::value_type ;
-  using array_scalar_type = typename nested::array_scalar_type * ;
+  typedef typename nested::type *               type ;
+  typedef typename nested::value_type           value_type ;
+  typedef typename nested::array_scalar_type *  array_scalar_type ;
 
-  using const_type               = typename nested::const_type * ;
-  using const_value_type         = typename nested::const_value_type ;
-  using const_array_scalar_type = typename nested::const_array_scalar_type * ;
+  typedef typename nested::const_type *               const_type ;
+  typedef typename nested::const_value_type           const_value_type ;
+  typedef typename nested::const_array_scalar_type *  const_array_scalar_type ;
 
-  using non_const_type               = typename nested::non_const_type * ;
-  using non_const_value_type         = typename nested::non_const_value_type ;
-  using non_const_array_scalar_type = typename nested::non_const_array_scalar_type * ;
+  typedef typename nested::non_const_type *               non_const_type ;
+  typedef typename nested::non_const_value_type           non_const_value_type ;
+  typedef typename nested::non_const_array_scalar_type *  non_const_array_scalar_type ;
 };
 
 template< class T >
@@ -523,25 +530,25 @@ struct ViewDataAnalysis< T [] >
 {
 private:
 
-  using nested = ViewDataAnalysis< T > ;
+  typedef ViewDataAnalysis< T >  nested ;
 
 public:
 
-  using specialize = typename nested::specialize ;
+  typedef typename nested::specialize  specialize ;
 
-  using dimension = typename ViewDimensionInsert< typename nested::dimension , 0 >::type ;
+  typedef typename ViewDimensionInsert< typename nested::dimension , 0 >::type  dimension ;
 
-  using type               = typename nested::type [] ;
-  using value_type         = typename nested::value_type ;
-  using array_scalar_type = typename nested::array_scalar_type [] ;
+  typedef typename nested::type               type [] ;
+  typedef typename nested::value_type         value_type ;
+  typedef typename nested::array_scalar_type  array_scalar_type [] ;
 
-  using const_type               = typename nested::const_type [] ;
-  using const_value_type         = typename nested::const_value_type ;
-  using const_array_scalar_type = typename nested::const_array_scalar_type [] ;
+  typedef typename nested::const_type               const_type [] ;
+  typedef typename nested::const_value_type         const_value_type ;
+  typedef typename nested::const_array_scalar_type  const_array_scalar_type [] ;
 
-  using non_const_type               = typename nested::non_const_type [] ;
-  using non_const_value_type         = typename nested::non_const_value_type ;
-  using non_const_array_scalar_type = typename nested::non_const_array_scalar_type [] ;
+  typedef typename nested::non_const_type               non_const_type [] ;
+  typedef typename nested::non_const_value_type         non_const_value_type ;
+  typedef typename nested::non_const_array_scalar_type  non_const_array_scalar_type [] ;
 };
 
 template< class T , unsigned N >
@@ -549,25 +556,25 @@ struct ViewDataAnalysis< T[N] >
 {
 private:
 
-  using nested = ViewDataAnalysis< T > ;
+  typedef ViewDataAnalysis< T >  nested ;
 
 public:
 
-  using specialize = typename nested::specialize ;
+  typedef typename nested::specialize  specialize ;
 
-  using dimension = typename ViewDimensionInsert< typename nested::dimension , N >::type ;
+  typedef typename ViewDimensionInsert< typename nested::dimension , N >::type  dimension ;
 
-  using type               = typename nested::type [N] ;
-  using value_type         = typename nested::value_type ;
-  using array_scalar_type = typename nested::array_scalar_type [N] ;
+  typedef typename nested::type               type [N] ;
+  typedef typename nested::value_type         value_type ;
+  typedef typename nested::array_scalar_type  array_scalar_type [N] ;
 
-  using const_type               = typename nested::const_type [N] ;
-  using const_value_type         = typename nested::const_value_type ;
-  using const_array_scalar_type = typename nested::const_array_scalar_type [N] ;
+  typedef typename nested::const_type               const_type [N] ;
+  typedef typename nested::const_value_type         const_value_type ;
+  typedef typename nested::const_array_scalar_type  const_array_scalar_type [N] ;
 
-  using non_const_type               = typename nested::non_const_type [N] ;
-  using non_const_value_type         = typename nested::non_const_value_type ;
-  using non_const_array_scalar_type = typename nested::non_const_array_scalar_type [N] ;
+  typedef typename nested::non_const_type               non_const_type [N] ;
+  typedef typename nested::non_const_value_type         non_const_value_type ;
+  typedef typename nested::non_const_array_scalar_type  non_const_array_scalar_type [N] ;
 };
 
 }}} // namespace Kokkos::Experimental::Impl
@@ -1658,7 +1665,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutStride
                  , typename std::enable_if<( 0 < Dimension::rank )>::type >
 {
 private:
-  using stride_type = ViewStride< Dimension::rank > ;
+  typedef ViewStride< Dimension::rank >  stride_type ;
 public:
 
   typedef size_t                size_type ;
@@ -2080,10 +2087,10 @@ namespace Impl {
 template< class Traits , class Enable = void >
 struct ViewDataHandle {
 
-  using value_type  = typename Traits::value_type ;
-  using handle_type = typename Traits::value_type * ;
-  using return_type = typename Traits::value_type & ;
-  using track_type  = Kokkos::Experimental::Impl::SharedAllocationTracker ;
+  typedef typename Traits::value_type   value_type  ;
+  typedef typename Traits::value_type * handle_type ;
+  typedef typename Traits::value_type & return_type ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationTracker  track_type  ;
 
   KOKKOS_INLINE_FUNCTION
   static handle_type assign( value_type * arg_data_ptr
@@ -2117,10 +2124,10 @@ struct ViewDataHandle< Traits ,
                             Traits::memory_traits::Atomic
                           )>::type >
 {
-  using value_type  = typename Traits::value_type ;
-  using handle_type = typename Kokkos::Impl::AtomicViewDataHandle< Traits > ;
-  using return_type = typename Kokkos::Impl::AtomicDataElement< Traits > ;
-  using track_type  = Kokkos::Experimental::Impl::SharedAllocationTracker ;
+  typedef typename Traits::value_type  value_type ;
+  typedef typename Kokkos::Impl::AtomicViewDataHandle< Traits >  handle_type ;
+  typedef typename Kokkos::Impl::AtomicDataElement< Traits >     return_type ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationTracker    track_type  ;
 
   KOKKOS_INLINE_FUNCTION
   static handle_type assign( value_type * arg_data_ptr
@@ -2170,14 +2177,15 @@ private:
   template< class , bool , bool , bool , bool , bool , bool , bool , bool , class > friend struct SubviewMapping ;
   template< class , class , class , class > friend class Kokkos::Experimental::View ;
 
-  using offset_type = ViewOffset< typename Traits::dimension
-                                , typename Traits::array_layout
-                                , void > ;
+  typedef ViewOffset< typename Traits::dimension
+                    , typename Traits::array_layout
+                    , void
+                    >  offset_type ;
 
-  using handle_type = typename ViewDataHandle< Traits >::handle_type ;
+  typedef typename ViewDataHandle< Traits >::handle_type  handle_type ;
 
-  offset_type  m_offset ;
   handle_type  m_handle ;
+  offset_type  m_offset ;
 
 public:
 
@@ -2219,12 +2227,12 @@ public:
   /** \brief  Is the mapped range extent contiguous */
   KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() { return m_offset.extent_is_contiguous(); }
 
-  using reference_type = typename ViewDataHandle< Traits >::return_type ;
+  typedef typename ViewDataHandle< Traits >::return_type  reference_type ;
 
   /** \brief  If data references are lvalue_reference than can query pointer to memory */
   KOKKOS_INLINE_FUNCTION constexpr typename Traits::value_type * data()
     {
-      using ptr_type = typename Traits::value_type * ;
+      typedef typename Traits::value_type * ptr_type ;
 
       return std::is_lvalue_reference< reference_type >::value
              ? (ptr_type) m_handle
@@ -2307,7 +2315,7 @@ public:
                                        , const size_t N0 , const size_t N1 , const size_t N2 , const size_t N3
                                        , const size_t N4 , const size_t N5 , const size_t N6 , const size_t N7 )
     {
-      using padding = std::integral_constant< unsigned , AllowPadding ? MemoryExtentSize : 0 > ;
+      typedef std::integral_constant< unsigned , AllowPadding ? MemoryExtentSize : 0 >  padding ;
       return ( offset_type( padding(), N0, N1, N2, N3, N4, N5, N6, N7 ).extent() * MemoryExtentSize + MemoryExtentMask ) & ~size_t(MemoryExtentMask);
     }
 
@@ -2368,14 +2376,14 @@ public:
   KOKKOS_FORCEINLINE_FUNCTION
   void operator()( const FunctorTagConstructNonScalar & , const size_t i ) const
     { 
-      using value_type = typename Traits::value_type ;
+      typedef typename Traits::value_type  value_type ;
       new( & m_handle[i] ) value_type();
     }
 
   KOKKOS_FORCEINLINE_FUNCTION
   void operator()( const FunctorTagDestructNonScalar & , const size_t i ) const
     { 
-      using value_type = typename Traits::value_type ;
+      typedef typename Traits::value_type  value_type ;
       & (m_handle[i])->~value_type();
     }
 
@@ -2442,9 +2450,9 @@ public:
 
   enum { is_assignable = true };
 
-  using TrackType = Kokkos::Experimental::Impl::SharedAllocationTracker ;
-  using DstType   = ViewMapping< DstTraits , void , void > ;
-  using SrcType   = ViewMapping< SrcTraits , void , void > ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationTracker  TrackType ;
+  typedef ViewMapping< DstTraits , void , void >  DstType ;
+  typedef ViewMapping< SrcTraits , void , void >  SrcType ;
 
   KOKKOS_INLINE_FUNCTION
   static void assign( DstType & dst , const SrcType & src , const TrackType & src_track )
@@ -2462,7 +2470,7 @@ public:
                      ( DstTraits::dimension::rank == 1 && DstTraits::dimension::rank_dynamic == 1 )
                    , "View assignment must have compatible layout or have rank <= 1" );
 
-      using dst_offset_type = typename DstType::offset_type ;
+      typedef typename DstType::offset_type  dst_offset_type ;
 
       dst.m_offset = dst_offset_type( src.m_offset );
       dst.m_handle = Kokkos::Experimental::Impl::ViewDataHandle< DstTraits >::assign( src.m_handle , src_track );
@@ -2502,8 +2510,7 @@ private:
                   7 == rank ? R6 : R7 ))))))) };
 
   // Subview's layout
-  using array_layout =
-    typename std::conditional<
+  typedef typename std::conditional<
       ( /* Same array layout IF */
         ( rank == 0 ) /* output rank zero */
         ||
@@ -2514,32 +2521,34 @@ private:
         // OutputRank 1 or 2, InputLayout Right, Interval [InputRank-1]
         // because single stride one or second index has a stride.
         ( rank <= 2 && R0_rev && std::is_same< typename Traits::array_layout , Kokkos::LayoutRight >::value )
-      ), typename Traits::array_layout , Kokkos::LayoutStride >::type ;
+      ), typename Traits::array_layout , Kokkos::LayoutStride
+      >::type array_layout ;
 
-  using value_type = typename Traits::value_type ;
+  typedef typename Traits::value_type  value_type ;
 
-  using data_type = typename std::conditional< rank == 0 , value_type ,
-                    typename std::conditional< rank == 1 , value_type * ,
-                    typename std::conditional< rank == 2 , value_type ** ,
-                    typename std::conditional< rank == 3 , value_type *** ,
-                    typename std::conditional< rank == 4 , value_type **** ,
-                    typename std::conditional< rank == 5 , value_type ***** ,
-                    typename std::conditional< rank == 6 , value_type ****** ,
-                    typename std::conditional< rank == 7 , value_type ******* ,
-                                                           value_type ********
-                    >::type >::type >::type >::type >::type >::type >::type >::type ;
+  typedef typename std::conditional< rank == 0 , value_type ,
+          typename std::conditional< rank == 1 , value_type * ,
+          typename std::conditional< rank == 2 , value_type ** ,
+          typename std::conditional< rank == 3 , value_type *** ,
+          typename std::conditional< rank == 4 , value_type **** ,
+          typename std::conditional< rank == 5 , value_type ***** ,
+          typename std::conditional< rank == 6 , value_type ****** ,
+          typename std::conditional< rank == 7 , value_type ******* ,
+                                                 value_type ********
+          >::type >::type >::type >::type >::type >::type >::type >::type
+     data_type ;
 
 public:
 
-  using traits_type =
+  typedef 
     Kokkos::Experimental::ViewTraits< data_type , array_layout
                                     , typename Traits::device_type
-                                    , typename Traits::memory_traits > ;
+                                    , typename Traits::memory_traits > traits_type ;
 
-  using type = Kokkos::Experimental::View< data_type
-                                         , array_layout
-                                         , typename Traits::device_type
-                                         , typename Traits::memory_traits > ;
+  typedef Kokkos::Experimental::View< data_type
+                                    , array_layout
+                                    , typename Traits::device_type
+                                    , typename Traits::memory_traits > type ;
 
   template< class T0 , class T1 , class T2 , class T3
           , class T4 , class T5 , class T6 , class T7 >
@@ -2556,20 +2565,20 @@ public:
                     , T7 const & arg7
                     )
     {
-      using DstType = ViewMapping< traits_type , void , void > ;
-      using SrcType = ViewMapping< Traits , void , void > ;
+      typedef ViewMapping< traits_type , void , void >  DstType ;
+      typedef ViewMapping< Traits , void , void >       SrcType ;
 
-      using dst_offset_type = typename DstType::offset_type ;
-      using dst_handle_type = typename DstType::handle_type ;
+      typedef typename DstType::offset_type  dst_offset_type ;
+      typedef typename DstType::handle_type  dst_handle_type ;
 
-      using V0 = Kokkos::Experimental::Impl::ViewOffsetRange<T0> ;
-      using V1 = Kokkos::Experimental::Impl::ViewOffsetRange<T1> ;
-      using V2 = Kokkos::Experimental::Impl::ViewOffsetRange<T2> ;
-      using V3 = Kokkos::Experimental::Impl::ViewOffsetRange<T3> ;
-      using V4 = Kokkos::Experimental::Impl::ViewOffsetRange<T4> ;
-      using V5 = Kokkos::Experimental::Impl::ViewOffsetRange<T5> ;
-      using V6 = Kokkos::Experimental::Impl::ViewOffsetRange<T6> ;
-      using V7 = Kokkos::Experimental::Impl::ViewOffsetRange<T7> ;
+      typedef Kokkos::Experimental::Impl::ViewOffsetRange<T0>  V0 ;
+      typedef Kokkos::Experimental::Impl::ViewOffsetRange<T1>  V1 ;
+      typedef Kokkos::Experimental::Impl::ViewOffsetRange<T2>  V2 ;
+      typedef Kokkos::Experimental::Impl::ViewOffsetRange<T3>  V3 ;
+      typedef Kokkos::Experimental::Impl::ViewOffsetRange<T4>  V4 ;
+      typedef Kokkos::Experimental::Impl::ViewOffsetRange<T5>  V5 ;
+      typedef Kokkos::Experimental::Impl::ViewOffsetRange<T6>  V6 ;
+      typedef Kokkos::Experimental::Impl::ViewOffsetRange<T7>  V7 ;
 
       dst.m_offset = dst_offset_type
         ( src.m_offset
@@ -2616,10 +2625,10 @@ template< class D , class A1, class A2, class A3
 struct SubviewType< Kokkos::Experimental::View< D , A1, A2, A3 > , R0 , R1 , R2 , R3 , R4 , R5 , R6 , R7 >
 {
 private:
-  using traits  = Kokkos::Experimental::ViewTraits< D , A1 , A2 , A3 > ;
-  using mapping = Kokkos::Experimental::Impl::SubviewMapping< traits , R0 , R1 , R2 , R3 , R4 , R5 , R6 , R7 > ;
+  typedef Kokkos::Experimental::ViewTraits< D , A1 , A2 , A3 >  traits ;
+  typedef Kokkos::Experimental::Impl::SubviewMapping< traits , R0 , R1 , R2 , R3 , R4 , R5 , R6 , R7 >  mapping ;
 public:
-  using type    = typename mapping::type ;
+  typedef typename mapping::type  type ;
 };
 
 }}} // namespace Kokkos::Experimental::Impl

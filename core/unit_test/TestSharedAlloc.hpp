@@ -72,22 +72,22 @@ void test_shared_alloc()
 {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
 
-  using Header     = Kokkos::Experimental::Impl::SharedAllocationHeader ;
-  using RecordBase = Kokkos::Experimental::Impl::SharedAllocationRecord< void , void > ;
-  using RecordMemS = Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void > ;
-  using RecordFull = Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , SharedAllocDestroy > ;
-  using Tracker    = Kokkos::Experimental::Impl::SharedAllocationTracker ;
+  typedef const Kokkos::Experimental::Impl::SharedAllocationHeader   Header ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationTracker  Tracker ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< void , void >                       RecordBase ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void >                RecordMemS ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , SharedAllocDestroy >  RecordFull ;
 
   MemorySpace s ;
 
   const size_t N = 1200 ;
   const size_t size = 8 ;
 
-  RecordMemS   * rarray[ N ];
-  Header const * harray[ N ];
+  RecordMemS * rarray[ N ];
+  Header     * harray[ N ];
 
-  RecordMemS   ** const r = rarray ;
-  Header const ** const h = harray ;
+  RecordMemS ** const r = rarray ;
+  Header     ** const h = harray ;
 
   Kokkos::RangePolicy< ExecutionSpace > range(0,N);
   

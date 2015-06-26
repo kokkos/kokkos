@@ -62,10 +62,10 @@ struct ViewAllocProp<> {
 
   struct NullSpace {};
 
-  using allow_padding_t = std::false_type ;
-  using initialize_t    = std::true_type ;
-  using memory_space    = NullSpace ;
-  using execution_space = NullSpace ;
+  typedef std::false_type  allow_padding_t ;
+  typedef std::true_type   initialize_t ;
+  typedef NullSpace        memory_space ;
+  typedef NullSpace        execution_space ;
 
   const std::string      label ;
   const memory_space     memory ;
@@ -93,12 +93,12 @@ struct ViewAllocProp<> {
 template< class ... Parameters >
 struct ViewAllocProp< const char * , Parameters ... >
 {
-  using base_prop_type = ViewAllocProp< Parameters ... > ;
+  typedef ViewAllocProp< Parameters ... >  base_prop_type ;
 
-  using allow_padding_t = typename base_prop_type::allow_padding_t ;
-  using initialize_t    = typename base_prop_type::initialize_t ;
-  using memory_space    = typename base_prop_type::memory_space ;
-  using execution_space = typename base_prop_type::execution_space ;
+  typedef typename base_prop_type::allow_padding_t  allow_padding_t ;
+  typedef typename base_prop_type::initialize_t     initialize_t ;
+  typedef typename base_prop_type::memory_space     memory_space ;
+  typedef typename base_prop_type::execution_space  execution_space ;
 
   const std::string      label ;
   const memory_space     memory ;
@@ -118,12 +118,12 @@ struct ViewAllocProp< const char * , Parameters ... >
 template< class ... Parameters >
 struct ViewAllocProp< std::string , Parameters ... >
 {
-  using base_prop_type = ViewAllocProp< Parameters ... > ;
+  typedef ViewAllocProp< Parameters ... >  base_prop_type ;
 
-  using allow_padding_t = typename base_prop_type::allow_padding_t ;
-  using initialize_t    = typename base_prop_type::initialize_t ;
-  using memory_space    = typename base_prop_type::memory_space ;
-  using execution_space = typename base_prop_type::execution_space ;
+  typedef typename base_prop_type::allow_padding_t  allow_padding_t ;
+  typedef typename base_prop_type::initialize_t     initialize_t ;
+  typedef typename base_prop_type::memory_space     memory_space ;
+  typedef typename base_prop_type::execution_space  execution_space ;
 
   const std::string      label ;
   const memory_space     memory ;
@@ -144,12 +144,12 @@ struct ViewAllocProp< std::string , Parameters ... >
 template< class ... Parameters >
 struct ViewAllocProp< WithoutInitializing_t , Parameters ... >
 {
-  using base_prop_type = ViewAllocProp< Parameters ... > ;
+  typedef ViewAllocProp< Parameters ... >  base_prop_type ;
 
-  using allow_padding_t = typename base_prop_type::allow_padding_t ;
-  using initialize_t    = std::false_type ;
-  using memory_space    = typename base_prop_type::memory_space ;
-  using execution_space = typename base_prop_type::execution_space ;
+  typedef typename base_prop_type::allow_padding_t  allow_padding_t ;
+  typedef std::false_type                           initialize_t ;
+  typedef typename base_prop_type::memory_space     memory_space ;
+  typedef typename base_prop_type::execution_space  execution_space ;
 
   const std::string      label ;
   const memory_space     memory ;
@@ -169,12 +169,12 @@ struct ViewAllocProp< WithoutInitializing_t , Parameters ... >
 template< class ... Parameters >
 struct ViewAllocProp< AllowPadding_t , Parameters ... >
 {
-  using base_prop_type = ViewAllocProp< Parameters ... > ;
+  typedef ViewAllocProp< Parameters ... >  base_prop_type ;
 
-  using allow_padding_t = std::true_type ;
-  using initialize_t    = typename base_prop_type::initialize_t ;
-  using memory_space    = typename base_prop_type::memory_space ;
-  using execution_space = typename base_prop_type::execution_space ;
+  typedef std::true_type                            allow_padding_t ;
+  typedef typename base_prop_type::initialize_t     initialize_t ;
+  typedef typename base_prop_type::memory_space     memory_space ;
+  typedef typename base_prop_type::execution_space  execution_space ;
 
   const std::string label ;
   const memory_space     memory ;
@@ -199,12 +199,12 @@ struct ViewAllocProp< Space , Parameters ... >
 
   static_assert( is_exec || is_mem , "View allocation given unknown parameter" );
 
-  using base_prop_type = ViewAllocProp< Parameters ... > ;
+  typedef ViewAllocProp< Parameters ... >  base_prop_type ;
 
-  using allow_padding_t = typename base_prop_type::allow_padding_t ;
-  using initialize_t    = typename base_prop_type::initialize_t ;
-  using memory_space    = typename std::conditional< is_mem  , Space , typename base_prop_type::memory_space >::type ;
-  using execution_space = typename std::conditional< is_exec , Space , typename base_prop_type::execution_space >::type ;
+  typedef typename base_prop_type::allow_padding_t  allow_padding_t ;
+  typedef typename base_prop_type::initialize_t     initialize_t ;
+  typedef typename std::conditional< is_mem  , Space , typename base_prop_type::memory_space >::type     memory_space ;
+  typedef typename std::conditional< is_exec , Space , typename base_prop_type::execution_space >::type  execution_space ;
 
   const std::string      label ;
   const memory_space     memory ;
@@ -238,12 +238,12 @@ struct ViewAllocProp< Space , Parameters ... >
 template< class ExecSpace , class MemSpace >
 struct ViewAllocProp< Kokkos::Device< ExecSpace , MemSpace > , std::string >
 {
-  using base_prop_type = ViewAllocProp<> ;
+  typedef ViewAllocProp<>  base_prop_type ;
 
-  using allow_padding_t = typename base_prop_type::allow_padding_t ;
-  using initialize_t    = typename base_prop_type::initialize_t ;
-  using memory_space    = MemSpace ;
-  using execution_space = ExecSpace ;
+  typedef typename base_prop_type::allow_padding_t  allow_padding_t ;
+  typedef typename base_prop_type::initialize_t     initialize_t ;
+  typedef MemSpace   memory_space ;
+  typedef ExecSpace  execution_space ;
 
   const std::string      label ;
   const memory_space     memory ;
@@ -263,12 +263,12 @@ struct ViewAllocProp< Kokkos::Device< ExecSpace , MemSpace > , std::string >
 template< class ExecSpace , class MemSpace , unsigned N >
 struct ViewAllocProp< Kokkos::Device< ExecSpace , MemSpace > , char[N] >
 {
-  using base_prop_type = ViewAllocProp<> ;
+  typedef ViewAllocProp<>  base_prop_type ;
 
-  using allow_padding_t = typename base_prop_type::allow_padding_t ;
-  using initialize_t    = typename base_prop_type::initialize_t ;
-  using memory_space    = MemSpace ;
-  using execution_space = ExecSpace ;
+  typedef typename base_prop_type::allow_padding_t  allow_padding_t ;
+  typedef typename base_prop_type::initialize_t     initialize_t ;
+  typedef MemSpace   memory_space ;
+  typedef ExecSpace  execution_space  ;
 
   const std::string      label ;
   const memory_space     memory ;
@@ -290,18 +290,18 @@ struct ViewAllocProp< Kokkos::Device< ExecSpace , MemSpace >
                     , ViewAllocProp< Parameters ... >
                     >
 {
-  using base_prop_type = ViewAllocProp< Parameters ... > ;
+  typedef ViewAllocProp< Parameters ... >  base_prop_type ;
 
-  using allow_padding_t = typename base_prop_type::allow_padding_t ;
-  using initialize_t    = typename base_prop_type::initialize_t ;
-  using memory_space    = MemSpace ;
+  typedef typename base_prop_type::allow_padding_t  allow_padding_t ;
+  typedef typename base_prop_type::initialize_t     initialize_t ;
+  typedef MemSpace  memory_space ;
 
-  using execution_space =
+  typedef
     typename std::conditional
       < Kokkos::Impl::is_execution_space< typename base_prop_type::execution_space >::value
       , typename base_prop_type::execution_space
       , ExecSpace
-      >::type ;
+      >::type  execution_space ;
 
   static_assert( std::is_same< typename base_prop_type::memory_space , ViewAllocProp<>::NullSpace >::value ||
                  std::is_same< typename base_prop_type::memory_space , memory_space >::value

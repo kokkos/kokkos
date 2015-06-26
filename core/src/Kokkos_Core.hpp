@@ -67,6 +67,7 @@
 
 #include <Kokkos_Pair.hpp>
 #include <Kokkos_View.hpp>
+#include <KokkosExp_View.hpp>
 #include <Kokkos_Vectorization.hpp>
 #include <Kokkos_Atomic.hpp>
 #include <Kokkos_hwloc.hpp>
@@ -180,9 +181,9 @@ template< class Space = typename Kokkos::DefaultExecutionSpace::memory_space >
 inline
 void * kokkos_malloc( const size_t arg_alloc_size )
 {
-  using MemorySpace = typename Space::memory_space ;
-  using RecordBase  = Kokkos::Experimental::Impl::SharedAllocationRecord< void , void > ;
-  using RecordHost  = Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void > ;
+  typedef typename Space::memory_space  MemorySpace ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< void , void >         RecordBase ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void >  RecordHost ;
 
   RecordHost * const r = RecordHost::allocate( MemorySpace() , "kokkos_malloc" , arg_alloc_size );
 
@@ -195,9 +196,9 @@ template< class Space = typename Kokkos::DefaultExecutionSpace::memory_space >
 inline
 void kokkos_free( void * arg_alloc )
 {
-  using MemorySpace = typename Space::memory_space ;
-  using RecordBase  = Kokkos::Experimental::Impl::SharedAllocationRecord< void , void > ;
-  using RecordHost  = Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void > ;
+  typedef typename Space::memory_space  MemorySpace ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< void , void >         RecordBase ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void >  RecordHost ;
 
   RecordHost * const r = RecordHost::get_record( arg_alloc );
 
@@ -208,9 +209,9 @@ template< class Space = typename Kokkos::DefaultExecutionSpace::memory_space >
 inline
 void * kokkos_realloc( void * arg_alloc , const size_t arg_alloc_size )
 {
-  using MemorySpace = typename Space::memory_space ;
-  using RecordBase  = Kokkos::Experimental::Impl::SharedAllocationRecord< void , void > ;
-  using RecordHost  = Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void > ;
+  typedef typename Space::memory_space  MemorySpace ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< void , void >         RecordBase ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void >  RecordHost ;
 
   RecordHost * const r_old = RecordHost::get_record( arg_alloc );
   RecordHost * const r_new = RecordHost::allocate( MemorySpace() , "kokkos_malloc" , arg_alloc_size );

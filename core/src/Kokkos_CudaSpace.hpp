@@ -463,7 +463,7 @@ private:
 
   friend class SharedAllocationRecord< Kokkos::CudaUVMSpace , void > ;
 
-  using RecordBase = SharedAllocationRecord< void , void > ;
+  typedef SharedAllocationRecord< void , void >  RecordBase ;
 
   SharedAllocationRecord( const SharedAllocationRecord & ) = delete ;
   SharedAllocationRecord & operator = ( const SharedAllocationRecord & ) = delete ;
@@ -538,7 +538,7 @@ class SharedAllocationRecord< Kokkos::CudaUVMSpace , void >
 {
 private:
 
-  using RecordBase = SharedAllocationRecord< void , void > ;
+  typedef SharedAllocationRecord< void , void >  RecordBase ;
 
   SharedAllocationRecord( const SharedAllocationRecord & ) = delete ;
   SharedAllocationRecord & operator = ( const SharedAllocationRecord & ) = delete ;
@@ -608,7 +608,7 @@ class SharedAllocationRecord< Kokkos::CudaHostPinnedSpace , void >
 {
 private:
 
-  using RecordBase = SharedAllocationRecord< void , void > ;
+  typedef SharedAllocationRecord< void , void >  RecordBase ;
 
   SharedAllocationRecord( const SharedAllocationRecord & ) = delete ;
   SharedAllocationRecord & operator = ( const SharedAllocationRecord & ) = delete ;
