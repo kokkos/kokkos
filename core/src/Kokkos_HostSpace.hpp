@@ -44,19 +44,24 @@
 #ifndef KOKKOS_HOSTSPACE_HPP
 #define KOKKOS_HOSTSPACE_HPP
 
+#include <cstring>
+#include <string>
 #include <iosfwd>
 #include <typeinfo>
-#include <string>
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 
-#include <impl/Kokkos_AllocationTracker.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_Error.hpp>
+
+#include <impl/Kokkos_AllocationTracker.hpp>
 #include <impl/Kokkos_BasicAllocators.hpp>
 
+#include <impl/KokkosExp_SharedAlloc.hpp>
+
 /*--------------------------------------------------------------------------*/
+
 namespace Kokkos {
 namespace Impl {
 
@@ -143,9 +148,105 @@ public:
   static int in_parallel();
 
   static void register_in_parallel( int (*)() );
+
+  /*--------------------------------*/
+
+  /**\brief  Default memory space instance */
+  HostSpace();
+  HostSpace( const HostSpace & rhs ) = default ;
+  HostSpace & operator = ( const HostSpace & ) = default ;
+  ~HostSpace() = default ;
+
+  /**\brief  Non-default memory space instance to choose allocation mechansim, if available */
+
+  enum AllocationMechanism { STD_MALLOC , POSIX_MEMALIGN , POSIX_MMAP , INTEL_MM_ALLOC };
+
+  explicit
+  HostSpace( const AllocationMechanism & );
+
+  /**\brief  Allocate memory in the host space */
+  void * allocate( const size_t arg_alloc_size ) const ;
+
+  /**\brief  Deallocate memory in the host space */
+  void deallocate( void * const arg_alloc_ptr 
+                 , const size_t arg_alloc_size ) const ;
+
+private:
+
+  AllocationMechanism  m_alloc_mech ;
+
+  friend class Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > ;
 };
 
+} // namespace Kokkos
 
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+namespace Experimental {
+namespace Impl {
+
+template<>
+class SharedAllocationRecord< Kokkos::HostSpace , void >
+  : public SharedAllocationRecord< void , void >
+{
+private:
+
+  friend Kokkos::HostSpace ;
+
+  typedef SharedAllocationRecord< void , void >  RecordBase ;
+
+  SharedAllocationRecord( const SharedAllocationRecord & ) = delete ;
+  SharedAllocationRecord & operator = ( const SharedAllocationRecord & ) = delete ;
+
+  static void deallocate( RecordBase * );
+
+  /**\brief  Root record for tracked allocations from this HostSpace instance */
+  static RecordBase s_root_record ;
+
+  const Kokkos::HostSpace m_space ;
+
+protected:
+
+  ~SharedAllocationRecord();
+  SharedAllocationRecord() = default ;
+
+  SharedAllocationRecord( const Kokkos::HostSpace        & arg_space
+                        , const std::string              & arg_label
+                        , const size_t                     arg_alloc_size
+                        , const RecordBase::function_type  arg_dealloc = & deallocate
+                        );
+
+public:
+
+  inline
+  std::string get_label() const
+    {
+      return std::string( RecordBase::head()->m_label );
+    }
+
+  KOKKOS_INLINE_FUNCTION static
+  SharedAllocationRecord * allocate( const Kokkos::HostSpace &  arg_space
+                                   , const std::string       &  arg_label
+                                   , const size_t               arg_alloc_size
+                                   )
+    {
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+      return new SharedAllocationRecord( arg_space , arg_label , arg_alloc_size );
+#else
+      return (SharedAllocationRecord *) 0 ;
+#endif
+    }
+
+
+  static SharedAllocationRecord * get_record( void * arg_alloc_ptr );
+
+  static void print_records( std::ostream & , const Kokkos::HostSpace & , bool detail = false );
+};
+
+} // namespace Impl
+} // namespace Experimental
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
@@ -160,7 +261,6 @@ template<>
 struct DeepCopy<HostSpace,HostSpace> {
   DeepCopy( void * dst , const void * src , size_t n );
 };
-
 
 } // namespace Impl
 } // namespace Kokkos

@@ -114,13 +114,16 @@
 #error "#include <cuda.h> did not define CUDA_VERSION"
 #endif
 
-#if ( CUDA_VERSION < 4010 )
-#error "Cuda version 4.1 or greater required"
+#if ( CUDA_VERSION < 6050 )
+// CUDA supports (inofficially) C++11 in device code starting with
+// version 6.5. This includes auto type and device code internal
+// lambdas.
+#error "Cuda version 6.5 or greater required"
 #endif
 
-#if defined( __CUDA_ARCH__ ) && ( __CUDA_ARCH__ < 200 )
+#if defined( __CUDA_ARCH__ ) && ( __CUDA_ARCH__ < 300 )
 /*  Compiling with CUDA compiler for device code. */
-#error "Cuda device capability >= 2.0 is required"
+#error "Cuda device capability >= 3.0 is required"
 #endif
 
 #endif /* #if defined( KOKKOS_HAVE_CUDA ) && defined( __CUDACC__ ) */
@@ -157,14 +160,6 @@
   // Device code is compile to 'ptx'.
   #define KOKKOS_COMPILER_NVCC __NVCC__
 
-  #if defined( KOKKOS_HAVE_CXX11 ) && defined (KOKKOS_HAVE_CUDA)
-    // CUDA supports (inofficially) C++11 in device code starting with
-    // version 6.5. This includes auto type and device code internal
-    // lambdas.
-    #if ( CUDA_VERSION < 6050 )
-      #error "NVCC does not support C++11"
-    #endif
-  #endif
 #else
 #if defined( KOKKOS_HAVE_CXX11 ) && ! defined( KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA )
     // CUDA (including version 6.5) does not support giving lambdas as
