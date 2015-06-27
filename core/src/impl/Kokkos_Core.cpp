@@ -47,7 +47,7 @@
 #include <cstring>
 #include <iostream>
 #include <cstdlib>
-#include <Kokkos_Profiler.hpp>
+
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
@@ -139,8 +139,9 @@ void initialize_internal(const InitArguments& args)
     //std::cout << "Kokkos::initialize() fyi: Cuda enabled and initialized" << std::endl ;
   }
 #endif
-#ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
-KokkosP::Experimental::profiler_initialize();
+
+#ifdef KOKKOSP_ENABLE_PROFILING
+    KokkosP::initialize();
 #endif
 }
 
@@ -180,8 +181,9 @@ void finalize_internal( const bool all_spaces = false )
       Kokkos::Serial::finalize();
   }
 #endif
-#ifdef KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
-KokkosP::Experimental::profiler_finalize();
+
+#ifdef KOKKOSP_ENABLE_PROFILING
+    KokkosP::finalize();
 #endif
 
 }

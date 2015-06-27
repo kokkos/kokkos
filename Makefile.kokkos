@@ -148,11 +148,6 @@ tmp := $(shell date >> KokkosCore_config.tmp)
 tmp := $(shell echo "----------------------------------------------*/" >> KokkosCore_config.tmp)
 
 
-tmp := $(shell echo "/* ---------------------------------------------" > KokkosProfiler_config.tmp)
-tmp := $(shell echo "Makefile constructed configuration:" >> KokkosProfiler_config.tmp)
-tmp := $(shell date >> KokkosProfiler_config.tmp)
-tmp := $(shell echo "----------------------------------------------*/" >> KokkosProfiler_config.tmp)
-
 tmp := $(shell echo "/* Execution Spaces */" >> KokkosCore_config.tmp)
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	tmp := $(shell echo '\#define KOKKOS_HAVE_OPENMP 1' >> KokkosCore_config.tmp) 
@@ -184,15 +179,6 @@ endif
 	KOKKOS_LDFLAGS += -g -ldl
 	tmp := $(shell echo "\#define KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK 1" >> KokkosCore_config.tmp )
 	tmp := $(shell echo "\#define KOKKOS_HAVE_DEBUG 1" >> KokkosCore_config.tmp )
-endif
-ifeq ($(KOKKOS_INTERNAL_ENABLE_PROFILING_COLLECT_KERNEL_DATA), 1)
-  tmp := $(shell echo "\#define KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA 1" >> KokkosCore_config.tmp )
-  KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/profiler/src/*.hpp)
-  KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/profiler/src/*.cpp)
-  KOKKOS_CPPFLAGS += -I$(KOKKOS_PATH)/profiler/src
-endif
-ifeq ($(KOKKOS_INTERNAL_ENABLE_PROFILING_AGGREGATE_MPI), 1)
-  tmp := $(shell echo "\#define KOKKOSP_ENABLE_PROFILING_AGGREGATE_MPI 1" >> KokkosProfiler_config.tmp )
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HWLOC), 1)
@@ -277,18 +263,6 @@ ifneq ($(KOKKOS_INTERNAL_NEW_CONFIG), 0)
 	tmp := $(shell cp KokkosCore_config.tmp KokkosCore_config.h)
 endif
 
-KOKKOS_INTERNAL_LS_PROFILERCONFIG := $(shell ls KokkosProfiler_config.h)
-ifeq ($(KOKKOS_INTERNAL_LS_PROFILERCONFIG), KokkosProfiler_config.h)
-KOKKOS_INTERNAL_NEW_PROFILERCONFIG := $(strip $(shell diff KokkosProfiler_config.h KokkosProfiler_config.tmp | grep define | wc -l))
-else
-KOKKOS_INTERNAL_NEW_PROFILERCONFIG := 1
-endif
-
-ifneq ($(KOKKOS_INTERNAL_NEW_PROFILERCONFIG), 0)
-        tmp := $(shell cp KokkosProfiler_config.tmp KokkosProfiler_config.h)
-endif
-
-
 KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/*.hpp)
 KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/impl/*.hpp)
 KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/containers/src/*.hpp)
@@ -335,7 +309,7 @@ KOKKOS_OBJ_LINK = $(notdir $(KOKKOS_OBJ))
 include $(KOKKOS_PATH)/Makefile.targets
 
 kokkos-clean:
-	rm -f $(KOKKOS_OBJ_LINK) KokkosCore_config.h KokkosProfiler_config.h KokkosCore_config.tmp libkokkos.a
+	rm -f $(KOKKOS_OBJ_LINK) KokkosCore_config.h KokkosCore_config.tmp libkokkos.a
 
 libkokkos.a: $(KOKKOS_OBJ_LINK) $(KOKKOS_SRC) $(KOKKOS_HEADERS)
 	ar cr libkokkos.a $(KOKKOS_OBJ_LINK)

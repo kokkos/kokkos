@@ -84,12 +84,12 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
   OFF
   )
 
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_Profiling_Collect_Kernel_Data
-  KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
-  "Enable profiling support for kernel data collections in Kokkos."
-  "${${PROJECT_NAME}_ENABLE_KokkosProfiler}"
-  )
+#TRIBITS_ADD_OPTION_AND_DEFINE(
+#  Kokkos_ENABLE_Profiling_Collect_Kernel_Data
+#  KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
+#  "Enable profiling support for kernel data collections in Kokkos."
+#  "${${PROJECT_NAME}_ENABLE_KokkosProfiler}"
+#  )
 
 # placeholder for future device...
 TRIBITS_ADD_OPTION_AND_DEFINE(
