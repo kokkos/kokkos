@@ -59,6 +59,11 @@
 #include <Cuda/Kokkos_Cuda_ReduceScan.hpp>
 #include <Cuda/Kokkos_Cuda_Internal.hpp>
 #include <Kokkos_Vectorization.hpp>
+
+#ifdef KOKKOSP_ENABLE_PROFILING
+#include <KokkosP_Interface.hpp>
+#endif
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -1507,11 +1512,16 @@ void parallel_reduce( const ExecPolicy  & policy
   typedef typename Kokkos::Impl::if_c<FunctorHasValueType, FunctorTypeIn, Impl::CudaFunctorAdapter<FunctorTypeIn,ExecPolicy,typename ViewType::value_type> >::type FunctorType;
   FunctorType functor = Impl::if_c<FunctorHasValueType,FunctorTypeIn,FunctorType>::select(functor_in,FunctorType(functor_in));
 
-  Kokkos::Experimental::Profiler::begin_kernel<FunctorType,ExecPolicy>(1,str);
-
+#ifdef KOKKOSP_ENABLE_PROFILING
+    uint64_t kpID = 0;
+    KokkosP::beginParallelScan(str, &kpID);
+#endif
+    
   (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( functor , policy , result_view );
-
-  Kokkos::Experimental::Profiler::end_kernel<FunctorType,ExecPolicy>(1,str);
+    
+#ifdef KOKKOSP_ENABLE_PROFILING
+    KokkosP::endParallelScan(kpID);
+#endif
 }
 
 // general policy and pod or array of pod output
@@ -1547,11 +1557,16 @@ void parallel_reduce( const ExecPolicy  & policy
                , 1
                );
 
-  Kokkos::Experimental::Profiler::begin_kernel<FunctorType,ExecPolicy>(1,str);
-
+#ifdef KOKKOSP_ENABLE_PROFILING
+    uint64_t kpID = 0;
+    KokkosP::beginParallelScan(str, &kpID);
+#endif
+    
   (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( FunctorType(functor_in) , policy , result_view );
-
-  Kokkos::Experimental::Profiler::end_kernel<FunctorType,ExecPolicy>(1,str);
+    
+#ifdef KOKKOSP_ENABLE_PROFILING
+    KokkosP::endParallelScan(kpID);
+#endif
 }
 
 // general policy and pod or array of pod output
@@ -1585,11 +1600,16 @@ void parallel_reduce( const ExecPolicy  & policy
                , ValueTraits::value_count( functor )
                );
 
-  Kokkos::Experimental::Profiler::begin_kernel<FunctorType,ExecPolicy>(1,str);
-
+#ifdef KOKKOSP_ENABLE_PROFILING
+    uint64_t kpID = 0;
+    KokkosP::beginParallelScan(str, &kpID);
+#endif
+    
   (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( functor , policy , result_view );
-
-  Kokkos::Experimental::Profiler::end_kernel<FunctorType,ExecPolicy>(1,str);
+    
+#ifdef KOKKOSP_ENABLE_PROFILING
+    KokkosP::endParallelScan(kpID);
+#endif
 }
 
 // integral range policy and view ouput
@@ -1616,11 +1636,16 @@ void parallel_reduce( const size_t        work_count
 
   FunctorType functor = Impl::if_c<FunctorHasValueType,FunctorTypeIn,FunctorType>::select(functor_in,FunctorType(functor_in));
 
-  Kokkos::Experimental::Profiler::begin_kernel<FunctorType,ExecPolicy>(1,str);
-
+#ifdef KOKKOSP_ENABLE_PROFILING
+    uint64_t kpID = 0;
+    KokkosP::beginParallelScan(str, &kpID);
+#endif
+    
   (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( functor , ExecPolicy(0,work_count) , result_view );
 
-  Kokkos::Experimental::Profiler::end_kernel<FunctorType,ExecPolicy>(1,str);
+#ifdef KOKKOSP_ENABLE_PROFILING
+    KokkosP::endParallelScan(kpID);
+#endif
 
 }
 
@@ -1665,11 +1690,16 @@ void parallel_reduce( const size_t        work_count
                , 1
                );
 
-  Kokkos::Experimental::Profiler::begin_kernel<FunctorType,ExecPolicy>(1,str);
-
+#ifdef KOKKOSP_ENABLE_PROFILING
+    uint64_t kpID = 0;
+    KokkosP::beginParallelScan(str, &kpID);
+#endif
+    
   (void) Impl::ParallelReduce< FunctorType , ExecPolicy >( FunctorType(functor_in) , ExecPolicy(0,work_count) , result_view );
-
-  Kokkos::Experimental::Profiler::end_kernel<FunctorType,ExecPolicy>(1,str);
+    
+#ifdef KOKKOSP_ENABLE_PROFILING
+    KokkosP::endParallelScan(kpID);
+#endif
 }
 
 template< class FunctorType>
@@ -1711,11 +1741,16 @@ void parallel_reduce( const size_t        work_count
                , ValueTraits::value_count( functor )
                );
 
-  Kokkos::Experimental::Profiler::begin_kernel<FunctorType,ExecPolicy>(1,str);
-
+#ifdef KOKKOSP_ENABLE_PROFILING
+    uint64_t kpID = 0;
+    KokkosP::beginParallelScan(str, &kpID);
+#endif
+    
   (void) Impl::ParallelReduce< FunctorType , ExecPolicy >( functor , ExecPolicy(0,work_count) , result_view );
-
-  Kokkos::Experimental::Profiler::end_kernel<FunctorType,ExecPolicy>(1,str);
+    
+#ifdef KOKKOSP_ENABLE_PROFILING
+    KokkosP::endParallelScan(kpID);
+#endif
 }
 
 } // namespace Kokkos
