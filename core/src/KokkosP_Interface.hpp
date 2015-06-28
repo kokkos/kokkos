@@ -55,13 +55,15 @@
 #include <stdlib.h>
 #endif
 
+#define KOKKOSP_INTERFACE_VERSION 20150628
+
 #ifdef KOKKOSP_ENABLE_PROFILING
 namespace KokkosP {
-    typedef void (*initFunction)(const int);
+    typedef void (*initFunction)(const int, const uint64_t);
     typedef void (*finalizeFunction)();
     typedef void (*beginFunction)(const char*, uint64_t*);
     typedef void (*endFunction)(uint64_t);
-    
+
     static initFunction initProfileLibrary = NULL;
     static finalizeFunction finalizeProfileLibrary = NULL;
     static beginFunction beginForCallee = NULL;
@@ -70,14 +72,16 @@ namespace KokkosP {
     static endFunction endForCallee = NULL;
     static endFunction endScanCallee = NULL;
     static endFunction endReduceCallee = NULL;
-    
+
+    bool profileLibraryLoaded();
+
     void beginParallelFor(const std::string& kernelPrefix, uint64_t* kernelID);
     void endParallelFor(const uint64_t kernelID);
     void beginParallelScan(const std::string& kernelPrefix, uint64_t* kernelID);
     void endParallelScan(const uint64_t kernelID);
     void beginParallelReduce(const std::string& kernelPrefix, uint64_t* kernelID);
     void endParallelReduce(const uint64_t kernelID);
-    
+
     void initialize();
     void finalize();
 }

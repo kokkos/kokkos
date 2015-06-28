@@ -46,14 +46,17 @@
 #ifdef KOKKOSP_ENABLE_PROFILING
 
 namespace KokkosP {
-    
+    bool profileLibraryLoaded() {
+       	return (NULL != initProfileLibrary);
+    }
+
     void beginParallelFor(const std::string& kernelPrefix, uint64_t* kernelID) {
         if(NULL != beginForCallee) {
             Kokkos::fence();
             (*beginForCallee)(kernelPrefix.c_str(), kernelID);
         }
     };
-    
+
     void endParallelFor(const uint64_t kernelID) {
         if(NULL != endForCallee) {
             Kokkos::fence();
@@ -67,7 +70,7 @@ namespace KokkosP {
             (*beginScanCallee)(kernelPrefix.c_str(), kernelID);
         }
     };
-    
+
     void endParallelScan(const uint64_t kernelID) {
         if(NULL != endScanCallee) {
             Kokkos::fence();
@@ -91,18 +94,18 @@ namespace KokkosP {
     
     void initialize() {
         void* firstProfileLibrary;
-        
+
         char* profileLibraryName = getenv("KOKKOS_PROFILE_LIBRARY");
 
         if(NULL != profileLibraryName) {
             firstProfileLibrary = dlopen(profileLibraryName, RTLD_NOW | RTLD_GLOBAL);
-        
+
             if(NULL == firstProfileLibrary) {
                 std::cerr << "Error: Unable to load KokkosP library: " <<
                 profileLibraryName << std::endl;
             } else {
                 std::cout << "KOKKOSP: Library Loaded: " << profileLibraryName << std::endl;
-                
+
                 beginForCallee = (beginFunction) dlsym(firstProfileLibrary, "kokkosp_begin_parallel_for");
                 beginScanCallee = (beginFunction) dlsym(firstProfileLibrary, "kokkosp_begin_parallel_scan");
                 beginReduceCallee = (beginFunction) dlsym(firstProfileLibrary, "kokkosp_begin_parallel_reduce");
@@ -110,14 +113,14 @@ namespace KokkosP {
                 endScanCallee = (endFunction) dlsym(firstProfileLibrary, "kokkosp_end_parallel_scan");
                 endForCallee = (endFunction) dlsym(firstProfileLibrary, "kokkosp_end_parallel_for");
                 endReduceCallee = (endFunction) dlsym(firstProfileLibrary, "kokkosp_end_parallel_reduce");
-                
+
                 initProfileLibrary = (initFunction) dlsym(firstProfileLibrary, "kokkosp_init_library");
                 finalizeProfileLibrary = (finalizeFunction) dlsym(firstProfileLibrary, "kokkosp_finalize_library");
             }
         }
-        
+
         if(NULL != initProfileLibrary) {
-            (*initProfileLibrary)(0);
+            (*initProfileLibrary)(0, (uint64_t) KOKKOSP_INTERFACE_VERSION);
         }
     };
 

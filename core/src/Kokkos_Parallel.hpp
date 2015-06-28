@@ -200,15 +200,17 @@ void parallel_for( const ExecPolicy  & policy
 {
 #ifdef KOKKOSP_ENABLE_PROFILING
     uint64_t kpID = 0;
-//    KokkosP::beginParallelFor<FunctorType, ExecPolicy>(str, &kpID);
-     KokkosP::beginParallelFor(str, &kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+     	KokkosP::beginParallelFor(str, &kpID);
+     }
 #endif
 
     (void) Impl::ParallelFor< FunctorType , ExecPolicy >( Impl::CopyWithoutTracking::apply(functor) , policy );
    
 #ifdef KOKKOSP_ENABLE_PROFILING
-//    KokkosP::endParallelFor<FunctorType, ExecPolicy>(kpID);
+     if(KokkosP::profileLibraryLoaded()) {
         KokkosP::endParallelFor(kpID);
+     }
 #endif
 }
 
@@ -226,13 +228,17 @@ void parallel_for( const size_t        work_count
 
 #ifdef KOKKOSP_ENABLE_PROFILING
   uint64_t kpID = 0;
-  KokkosP::beginParallelFor(str, &kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+  	KokkosP::beginParallelFor(str, &kpID);
+     }
 #endif
     
   (void) Impl::ParallelFor< FunctorType , policy >( Impl::CopyWithoutTracking::apply(functor) , policy(0,work_count) );
 
 #ifdef KOKKOSP_ENABLE_PROFILING
-    KokkosP::endParallelFor(kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+	KokkosP::endParallelFor(kpID);
+     }
 #endif
 }
 
@@ -320,13 +326,17 @@ void parallel_reduce( const ExecPolicy  & policy
 
 #ifdef KOKKOSP_ENABLE_PROFILING
   uint64_t kpID = 0;
-  KokkosP::beginParallelReduce(str, &kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+  	KokkosP::beginParallelReduce(str, &kpID);
+     }
 #endif
-    
-  (void) Impl::ParallelReduce< FunctorType , ExecPolicy >( Impl::CopyWithoutTracking::apply(functor) , policy , result_view );
+
+     (void) Impl::ParallelReduce< FunctorType , ExecPolicy >( Impl::CopyWithoutTracking::apply(functor) , policy , result_view );
 
 #ifdef KOKKOSP_ENABLE_PROFILING
-  KokkosP::endParallelReduce(kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+	KokkosP::endParallelReduce(kpID);
+     }
 #endif
 }
 
@@ -359,13 +369,17 @@ void parallel_reduce( const size_t        work_count
 
 #ifdef KOKKOSP_ENABLE_PROFILING
   uint64_t kpID = 0;
-  KokkosP::beginParallelReduce(str, &kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+  	KokkosP::beginParallelReduce(str, &kpID);
+     }
 #endif
     
   (void) Impl::ParallelReduce< FunctorType , policy >( Impl::CopyWithoutTracking::apply(functor) , policy(0,work_count) , result_view );
 
 #ifdef KOKKOSP_ENABLE_PROFILING
-  KokkosP::endParallelReduce(kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+	KokkosP::endParallelReduce(kpID);
+     }
 #endif
 
 }
@@ -387,13 +401,17 @@ void parallel_reduce( const ExecPolicy  & policy
     
 #ifdef KOKKOSP_ENABLE_PROFILING
   uint64_t kpID = 0;
-  KokkosP::beginParallelReduce(str, &kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+	KokkosP::beginParallelReduce(str, &kpID);
+     }
 #endif
     
   (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( Impl::CopyWithoutTracking::apply(functor) , policy , Impl::CopyWithoutTracking::apply(result_view) );
 
 #ifdef KOKKOSP_ENABLE_PROFILING
-  KokkosP::endParallelReduce(kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+	KokkosP::endParallelReduce(kpID);
+     }
 #endif
 
 }
@@ -440,13 +458,17 @@ void parallel_reduce( const ExecPolicy  & policy
 
 #ifdef KOKKOSP_ENABLE_PROFILING
   uint64_t kpID = 0;
-  KokkosP::beginParallelReduce(str, &kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+	KokkosP::beginParallelReduce(str, &kpID);
+     }
 #endif
     
   (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( Impl::CopyWithoutTracking::apply(functor) , policy , Impl::CopyWithoutTracking::apply(result_view) );
 
 #ifdef KOKKOSP_ENABLE_PROFILING
-  KokkosP::endParallelReduce(kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+	KokkosP::endParallelReduce(kpID);
+     }
 #endif
 
 }
@@ -474,13 +496,17 @@ void parallel_reduce( const size_t        work_count
 
 #ifdef KOKKOSP_ENABLE_PROFILING
   uint64_t kpID = 0;
-  KokkosP::beginParallelReduce(str, &kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+	KokkosP::beginParallelReduce(str, &kpID);
+     }
 #endif
 
   (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( Impl::CopyWithoutTracking::apply(functor) , ExecPolicy(0,work_count) , Impl::CopyWithoutTracking::apply(result_view) );
     
 #ifdef KOKKOSP_ENABLE_PROFILING
-  KokkosP::endParallelReduce(kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+	KokkosP::endParallelReduce(kpID);
+     }
 #endif
 
 }
@@ -531,13 +557,17 @@ void parallel_reduce( const size_t        work_count
 
 #ifdef KOKKOSP_ENABLE_PROFILING
   uint64_t kpID = 0;
-  KokkosP::beginParallelReduce(str, &kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+	KokkosP::beginParallelReduce(str, &kpID);
+     }
 #endif
 
   (void) Impl::ParallelReduce< FunctorType , policy >( Impl::CopyWithoutTracking::apply(functor) , policy(0,work_count) , Impl::CopyWithoutTracking::apply(result_view) );
 
 #ifdef KOKKOSP_ENABLE_PROFILING
-  KokkosP::endParallelReduce(kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+	KokkosP::endParallelReduce(kpID);
+     }
 #endif
 
 }
@@ -776,13 +806,17 @@ void parallel_scan( const ExecutionPolicy & policy
 {
 #ifdef KOKKOSP_ENABLE_PROFILING
   uint64_t kpID = 0;
-  KokkosP::beginParallelScan(str, &kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+	KokkosP::beginParallelScan(str, &kpID);
+     }
 #endif
 
   Impl::ParallelScan< FunctorType , ExecutionPolicy > scan( Impl::CopyWithoutTracking::apply(functor) , policy );
 
 #ifdef KOKKOSP_ENABLE_PROFILING
-  KokkosP::endParallelScan(kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+	KokkosP::endParallelScan(kpID);
+     }
 #endif
 
 }
@@ -801,13 +835,17 @@ void parallel_scan( const size_t        work_count
 
 #ifdef KOKKOSP_ENABLE_PROFILING
   uint64_t kpID = 0;
-  KokkosP::beginParallelScan(str, &kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+	KokkosP::beginParallelScan(str, &kpID);
+     }
 #endif
     
   (void) Impl::ParallelScan< FunctorType , policy >( Impl::CopyWithoutTracking::apply(functor) , policy(0,work_count) );
 
 #ifdef KOKKOSP_ENABLE_PROFILING
-  KokkosP::endParallelScan(kpID);
+     if(KokkosP::profileLibraryLoaded()) {
+	KokkosP::endParallelScan(kpID);
+     }
 #endif
 
 }
