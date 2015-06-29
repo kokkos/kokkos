@@ -62,6 +62,7 @@
 
 #ifdef KOKKOSP_ENABLE_PROFILING
 #include <KokkosP_Interface.hpp>
+#include <typeinfo>
 #endif
 
 //----------------------------------------------------------------------------
@@ -1515,7 +1516,7 @@ void parallel_reduce( const ExecPolicy  & policy
 #ifdef KOKKOSP_ENABLE_PROFILING
     uint64_t kpID = 0;
      if(KokkosP::profileLibraryLoaded()) {
-	KokkosP::beginParallelScan(str, &kpID);
+	KokkosP::beginParallelScan("" == str ? typeid(FunctorType).name() : str, &kpID);
      }
 #endif
     
@@ -1564,7 +1565,7 @@ void parallel_reduce( const ExecPolicy  & policy
 #ifdef KOKKOSP_ENABLE_PROFILING
     uint64_t kpID = 0;
      if(KokkosP::profileLibraryLoaded()) {
-	KokkosP::beginParallelScan(str, &kpID);
+	KokkosP::beginParallelScan("" == str ? typeid(FunctorType).name() : str, &kpID);
      }
 #endif
     
@@ -1611,7 +1612,7 @@ void parallel_reduce( const ExecPolicy  & policy
 #ifdef KOKKOSP_ENABLE_PROFILING
     uint64_t kpID = 0;
      if(KokkosP::profileLibraryLoaded()) {
-	KokkosP::beginParallelScan(str, &kpID);
+	KokkosP::beginParallelScan("" == str ? typeid(FunctorType).name() : str, &kpID);
      }
 #endif
     
@@ -1651,7 +1652,7 @@ void parallel_reduce( const size_t        work_count
 #ifdef KOKKOSP_ENABLE_PROFILING
     uint64_t kpID = 0;
      if(KokkosP::profileLibraryLoaded()) {
-	KokkosP::beginParallelScan(str, &kpID);
+	KokkosP::beginParallelScan("" == str ? typeid(FunctorType).name() : str, &kpID);
      }
 #endif
     
@@ -1709,7 +1710,7 @@ void parallel_reduce( const size_t        work_count
 #ifdef KOKKOSP_ENABLE_PROFILING
     uint64_t kpID = 0;
      if(KokkosP::profileLibraryLoaded()) {
-	KokkosP::beginParallelScan(str, &kpID);
+	KokkosP::beginParallelScan("" == str ? typeid(FunctorType).name() : str, &kpID);
      }
 #endif
     
@@ -1764,7 +1765,7 @@ void parallel_reduce( const size_t        work_count
 #ifdef KOKKOSP_ENABLE_PROFILING
     uint64_t kpID = 0;
      if(KokkosP::profileLibraryLoaded()) {
-	KokkosP::beginParallelScan(str, &kpID);
+	KokkosP::beginParallelScan("" == str ? typeid(FunctorType).name() : str, &kpID);
      }
 #endif
     
