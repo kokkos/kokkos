@@ -204,7 +204,9 @@ private:
 
   typedef SharedAllocationRecord<void,void>  Record ;
 
-  constexpr static unsigned long DO_NOT_DEREF_FLAG = 0x01ul;
+  enum : unsigned long {
+    DO_NOT_DEREF_FLAG = 0x01ul
+  };
 
   // The allocation record resides in Host memory space
   Record * m_record ;
