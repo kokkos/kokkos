@@ -9,6 +9,9 @@ The core developers of Kokkos are Carter Edwards and Christian Trott
 at the Computer Science Research Institute of the Sandia National
 Laboratories.
 
+The KokkosP interface and associated tools are developed by the Application
+Performance Team and Kokkos core developers at Sandia National Laboratories.
+
 To learn more about Kokkos consider watching one of our presentations:
 GTC 2015:
   http://on-demand.gputechconf.com/gtc/2015/video/S5166.html
