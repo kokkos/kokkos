@@ -415,23 +415,23 @@ public:
 
   enum { Rank = map_type::Rank };
 
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_0() { return m_map.dimension_0(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_1() { return m_map.dimension_1(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_2() { return m_map.dimension_2(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_3() { return m_map.dimension_3(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_4() { return m_map.dimension_4(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_5() { return m_map.dimension_5(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_6() { return m_map.dimension_6(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_7() { return m_map.dimension_7(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_0() const { return m_map.dimension_0(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_1() const { return m_map.dimension_1(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_2() const { return m_map.dimension_2(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_3() const { return m_map.dimension_3(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_4() const { return m_map.dimension_4(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_5() const { return m_map.dimension_5(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_6() const { return m_map.dimension_6(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_7() const { return m_map.dimension_7(); }
 
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_0() { return m_map.stride_0(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_1() { return m_map.stride_1(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_2() { return m_map.stride_2(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_3() { return m_map.stride_3(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_4() { return m_map.stride_4(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_5() { return m_map.stride_5(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_6() { return m_map.stride_6(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_7() { return m_map.stride_7(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_0() const { return m_map.stride_0(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_1() const { return m_map.stride_1(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_2() const { return m_map.stride_2(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_3() const { return m_map.stride_3(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_4() const { return m_map.stride_4(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_5() const { return m_map.stride_5(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_6() const { return m_map.stride_6(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_7() const { return m_map.stride_7(); }
 
   //----------------------------------------
   // Range extent
@@ -440,9 +440,9 @@ public:
 
   enum { reference_type_is_lvalue_reference = std::is_lvalue_reference< reference_type >::value };
 
-  KOKKOS_INLINE_FUNCTION constexpr size_t extent() { return m_map.extent(); }
-  KOKKOS_INLINE_FUNCTION constexpr bool   extent_is_contiguous() { return m_map.extent_is_contiguous(); }
-  KOKKOS_INLINE_FUNCTION constexpr typename traits::value_type * data() { return m_map.data(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t extent() const { return m_map.extent(); }
+  KOKKOS_INLINE_FUNCTION constexpr bool   extent_is_contiguous() const { return m_map.extent_is_contiguous(); }
+  KOKKOS_INLINE_FUNCTION constexpr typename traits::value_type * data() const { return m_map.data(); }
 
   //----------------------------------------
 
@@ -931,7 +931,7 @@ public:
 
   //----------------------------------------
   // Memory extent required to wrap these dimensions.
-  constexpr static size_t memory_extent( const size_t arg_N0 = 0
+  static constexpr size_t memory_extent( const size_t arg_N0 = 0
                                        , const size_t arg_N1 = 0
                                        , const size_t arg_N2 = 0
                                        , const size_t arg_N3 = 0

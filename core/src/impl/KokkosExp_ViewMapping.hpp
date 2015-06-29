@@ -609,18 +609,18 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
   // rank 1
   template< typename I0 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0 ) { return i0 ; }
+  size_type operator()( I0 const & i0 ) const { return i0 ; }
 
   // rank 2
   template < typename I0 , typename I1 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0 , I1 const & i1 )
+  size_type operator()( I0 const & i0 , I1 const & i1 ) const
     { return i0 + m_dim.N0 * i1 ; }
 
   //rank 3
   template < typename I0, typename I1, typename I2 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2 )
+  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2 ) const
   {
     return i0 + m_dim.N0 * ( i1 + m_dim.N1 * i2 );
   }
@@ -628,7 +628,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
   //rank 4
   template < typename I0, typename I1, typename I2, typename I3 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3 )
+  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3 ) const
   {
     return i0 + m_dim.N0 * (
            i1 + m_dim.N1 * (
@@ -640,7 +640,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
            , typename I4 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4 )
+                      , I4 const & i4 ) const
   {
     return i0 + m_dim.N0 * (
            i1 + m_dim.N1 * (
@@ -653,7 +653,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
            , typename I4, typename I5 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4, I5 const & i5 )
+                      , I4 const & i4, I5 const & i5 ) const
   {
     return i0 + m_dim.N0 * (
            i1 + m_dim.N1 * (
@@ -667,7 +667,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
            , typename I4, typename I5, typename I6 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4, I5 const & i5, I6 const & i6 )
+                      , I4 const & i4, I5 const & i5, I6 const & i6 ) const
   {
     return i0 + m_dim.N0 * (
            i1 + m_dim.N1 * (
@@ -682,7 +682,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
            , typename I4, typename I5, typename I6, typename I7 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4, I5 const & i5, I6 const & i6, I7 const & i7 )
+                      , I4 const & i4, I5 const & i5, I6 const & i6, I7 const & i7 ) const
   {
     return i0 + m_dim.N0 * (
            i1 + m_dim.N1 * (
@@ -695,36 +695,36 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
 
   //----------------------------------------
 
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() { return m_dim.N0 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_1() { return m_dim.N1 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_2() { return m_dim.N2 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_3() { return m_dim.N3 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() { return m_dim.N4 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_5() { return m_dim.N5 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_6() { return m_dim.N6 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_7() { return m_dim.N7 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const { return m_dim.N0 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_1() const { return m_dim.N1 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_2() const { return m_dim.N2 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_3() const { return m_dim.N3 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() const { return m_dim.N4 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_5() const { return m_dim.N5 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_6() const { return m_dim.N6 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_7() const { return m_dim.N7 ; }
 
   /* Cardinality of the domain index space */
   KOKKOS_INLINE_FUNCTION
-  constexpr size_type size()
+  constexpr size_type size() const
     { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 * m_dim.N7 ; }
 
   /* Extent of the range space */
   KOKKOS_INLINE_FUNCTION
-  constexpr size_type extent()
+  constexpr size_type extent() const
     { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 * m_dim.N7 ; }
 
-  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() { return true ; }
+  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() const { return true ; }
 
   /* Strides of dimensions */
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_0() { return 1 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_1() { return m_dim.N0 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_2() { return m_dim.N0 * m_dim.N1 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_3() { return m_dim.N0 * m_dim.N1 * m_dim.N2 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_4() { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_5() { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_6() { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_7() { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_0() const { return 1 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_1() const { return m_dim.N0 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_2() const { return m_dim.N0 * m_dim.N1 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_3() const { return m_dim.N0 * m_dim.N1 * m_dim.N2 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_4() const { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_5() const { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_6() const { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_7() const { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 ; }
 
   // Stride with [ rank ] value is the total length
   template< typename iType >
@@ -821,18 +821,18 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
   // rank 1
   template< typename I0 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0 ) { return i0 ; }
+  size_type operator()( I0 const & i0 ) const { return i0 ; }
 
   // rank 2
   template < typename I0 , typename I1 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0 , I1 const & i1 )
+  size_type operator()( I0 const & i0 , I1 const & i1 ) const
     { return i0 + m_stride * i1 ; }
 
   //rank 3
   template < typename I0, typename I1, typename I2 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2 )
+  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2 ) const
   {
     return i0 + m_stride * ( i1 + m_dim.N1 * i2 );
   }
@@ -840,7 +840,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
   //rank 4
   template < typename I0, typename I1, typename I2, typename I3 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3 )
+  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3 ) const
   {
     return i0 + m_stride * (
            i1 + m_dim.N1 * (
@@ -852,7 +852,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
            , typename I4 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4 )
+                      , I4 const & i4 ) const
   {
     return i0 + m_stride * (
            i1 + m_dim.N1 * (
@@ -865,7 +865,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
            , typename I4, typename I5 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4, I5 const & i5 )
+                      , I4 const & i4, I5 const & i5 ) const
   {
     return i0 + m_stride * (
            i1 + m_dim.N1 * (
@@ -879,7 +879,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
            , typename I4, typename I5, typename I6 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4, I5 const & i5, I6 const & i6 )
+                      , I4 const & i4, I5 const & i5, I6 const & i6 ) const
   {
     return i0 + m_stride * (
            i1 + m_dim.N1 * (
@@ -894,7 +894,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
            , typename I4, typename I5, typename I6, typename I7 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4, I5 const & i5, I6 const & i6, I7 const & i7 )
+                      , I4 const & i4, I5 const & i5, I6 const & i6, I7 const & i7 ) const
   {
     return i0 + m_stride * (
            i1 + m_dim.N1 * (
@@ -907,36 +907,36 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
 
   //----------------------------------------
 
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() { return m_dim.N0 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_1() { return m_dim.N1 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_2() { return m_dim.N2 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_3() { return m_dim.N3 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() { return m_dim.N4 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_5() { return m_dim.N5 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_6() { return m_dim.N6 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_7() { return m_dim.N7 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const { return m_dim.N0 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_1() const { return m_dim.N1 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_2() const { return m_dim.N2 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_3() const { return m_dim.N3 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() const { return m_dim.N4 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_5() const { return m_dim.N5 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_6() const { return m_dim.N6 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_7() const { return m_dim.N7 ; }
 
   /* Cardinality of the domain index space */
   KOKKOS_INLINE_FUNCTION
-  constexpr size_type size()
+  constexpr size_type size() const
     { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 * m_dim.N7 ; }
 
   /* Extent of the range space */
   KOKKOS_INLINE_FUNCTION
-  constexpr size_type extent()
+  constexpr size_type extent() const
     { return m_stride * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 * m_dim.N7 ; }
 
-  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() { return m_stride == m_dim.N0 ; }
+  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() const { return m_stride == m_dim.N0 ; }
 
   /* Strides of dimensions */
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_0() { return 1 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_1() { return m_stride ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_2() { return m_stride * m_dim.N1 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_3() { return m_stride * m_dim.N1 * m_dim.N2 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_4() { return m_stride * m_dim.N1 * m_dim.N2 * m_dim.N3 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_5() { return m_stride * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_6() { return m_stride * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_7() { return m_stride * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_0() const { return 1 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_1() const { return m_stride ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_2() const { return m_stride * m_dim.N1 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_3() const { return m_stride * m_dim.N1 * m_dim.N2 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_4() const { return m_stride * m_dim.N1 * m_dim.N2 * m_dim.N3 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_5() const { return m_stride * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_6() const { return m_stride * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_7() const { return m_stride * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 ; }
 
   // Stride with [ rank ] value is the total length
   template< typename iType >
@@ -968,7 +968,7 @@ private:
     enum { div_ok = div ? div : 1 }; // To valid modulo zero in constexpr
 
     KOKKOS_INLINE_FUNCTION
-    constexpr static size_t stride( size_t const N )
+    static constexpr size_t stride( size_t const N )
       {
         return ( align && ( Kokkos::Impl::MEMORY_ALIGNMENT_THRESHOLD * align < N ) && ( N % div_ok ) )
                ? N + align - ( N % div_ok ) : N ;
@@ -1068,18 +1068,18 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
   // rank 1
   template< typename I0 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0 ) { return i0 ; }
+  size_type operator()( I0 const & i0 ) const { return i0 ; }
 
   // rank 2
   template < typename I0 , typename I1 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0 , I1 const & i1 )
+  size_type operator()( I0 const & i0 , I1 const & i1 ) const
     { return i1 + m_dim.N1 * i0 ; }
 
   //rank 3
   template < typename I0, typename I1, typename I2 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2 )
+  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2 ) const
   {
     return i2 + m_dim.N2 * ( i1 + m_dim.N1 * ( i0 ));
   }
@@ -1087,7 +1087,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
   //rank 4
   template < typename I0, typename I1, typename I2, typename I3 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3 )
+  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3 ) const
   {
     return i3 + m_dim.N3 * (
            i2 + m_dim.N2 * (
@@ -1099,7 +1099,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
            , typename I4 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4 )
+                      , I4 const & i4 ) const
   {
     return i4 + m_dim.N4 * (
            i3 + m_dim.N3 * (
@@ -1112,7 +1112,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
            , typename I4, typename I5 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4, I5 const & i5 )
+                      , I4 const & i4, I5 const & i5 ) const
   {
     return i5 + m_dim.N5 * (
            i4 + m_dim.N4 * (
@@ -1126,7 +1126,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
            , typename I4, typename I5, typename I6 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4, I5 const & i5, I6 const & i6 )
+                      , I4 const & i4, I5 const & i5, I6 const & i6 ) const
   {
     return i6 + m_dim.N6 * (
            i5 + m_dim.N5 * (
@@ -1141,7 +1141,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
            , typename I4, typename I5, typename I6, typename I7 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4, I5 const & i5, I6 const & i6, I7 const & i7 )
+                      , I4 const & i4, I5 const & i5, I6 const & i6, I7 const & i7 ) const
   {
     return i7 + m_dim.N7 * (
            i6 + m_dim.N6 * (
@@ -1154,36 +1154,36 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
 
   //----------------------------------------
 
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() { return m_dim.N0 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_1() { return m_dim.N1 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_2() { return m_dim.N2 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_3() { return m_dim.N3 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() { return m_dim.N4 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_5() { return m_dim.N5 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_6() { return m_dim.N6 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_7() { return m_dim.N7 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const { return m_dim.N0 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_1() const { return m_dim.N1 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_2() const { return m_dim.N2 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_3() const { return m_dim.N3 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() const { return m_dim.N4 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_5() const { return m_dim.N5 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_6() const { return m_dim.N6 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_7() const { return m_dim.N7 ; }
 
   /* Cardinality of the domain index space */
   KOKKOS_INLINE_FUNCTION
-  constexpr size_type size()
+  constexpr size_type size() const
     { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 * m_dim.N7 ; }
 
   /* Extent of the range space */
   KOKKOS_INLINE_FUNCTION
-  constexpr size_type extent()
+  constexpr size_type extent() const
     { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 * m_dim.N7 ; }
 
-  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() { return true ; }
+  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() const { return true ; }
 
   /* Strides of dimensions */
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_7() { return 1 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_6() { return m_dim.N7 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_5() { return m_dim.N7 * m_dim.N6 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_4() { return m_dim.N7 * m_dim.N6 * m_dim.N5 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_3() { return m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_2() { return m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 * m_dim.N3 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_1() { return m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 * m_dim.N3 * m_dim.N2 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_0() { return m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 * m_dim.N3 * m_dim.N2 * m_dim.N1 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_7() const { return 1 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_6() const { return m_dim.N7 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_5() const { return m_dim.N7 * m_dim.N6 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_4() const { return m_dim.N7 * m_dim.N6 * m_dim.N5 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_3() const { return m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_2() const { return m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 * m_dim.N3 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_1() const { return m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 * m_dim.N3 * m_dim.N2 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_0() const { return m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 * m_dim.N3 * m_dim.N2 * m_dim.N1 ; }
 
   // Stride with [ rank ] value is the total length
   template< typename iType >
@@ -1281,24 +1281,24 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
   // rank 1
   template< typename I0 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0 ) { return i0 ; }
+  size_type operator()( I0 const & i0 ) const { return i0 ; }
 
   // rank 2
   template < typename I0 , typename I1 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0 , I1 const & i1 )
+  size_type operator()( I0 const & i0 , I1 const & i1 ) const
   { return i1 + i0 * m_stride ; }
 
   //rank 3
   template < typename I0, typename I1, typename I2 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2 )
+  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2 ) const
   { return i2 + m_dim.N2 * ( i1 ) + i0 * m_stride ; }
 
   //rank 4
   template < typename I0, typename I1, typename I2, typename I3 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3 )
+  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3 ) const
   {
     return i3 + m_dim.N3 * (
            i2 + m_dim.N2 * ( i1 )) +
@@ -1310,7 +1310,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
            , typename I4 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4 )
+                      , I4 const & i4 ) const
   {
     return i4 + m_dim.N4 * (
            i3 + m_dim.N3 * (
@@ -1323,7 +1323,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
            , typename I4, typename I5 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4, I5 const & i5 )
+                      , I4 const & i4, I5 const & i5 ) const
   {
     return i5 + m_dim.N5 * (
            i4 + m_dim.N4 * (
@@ -1337,7 +1337,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
            , typename I4, typename I5, typename I6 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4, I5 const & i5, I6 const & i6 )
+                      , I4 const & i4, I5 const & i5, I6 const & i6 ) const
   {
     return i6 + m_dim.N6 * (
            i5 + m_dim.N5 * (
@@ -1352,7 +1352,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
            , typename I4, typename I5, typename I6, typename I7 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4, I5 const & i5, I6 const & i6, I7 const & i7 )
+                      , I4 const & i4, I5 const & i5, I6 const & i6, I7 const & i7 ) const
   {
     return i7 + m_dim.N7 * (
            i6 + m_dim.N6 * (
@@ -1365,37 +1365,37 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
 
   //----------------------------------------
 
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() { return m_dim.N0 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_1() { return m_dim.N1 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_2() { return m_dim.N2 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_3() { return m_dim.N3 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() { return m_dim.N4 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_5() { return m_dim.N5 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_6() { return m_dim.N6 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_7() { return m_dim.N7 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const { return m_dim.N0 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_1() const { return m_dim.N1 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_2() const { return m_dim.N2 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_3() const { return m_dim.N3 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() const { return m_dim.N4 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_5() const { return m_dim.N5 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_6() const { return m_dim.N6 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_7() const { return m_dim.N7 ; }
 
   /* Cardinality of the domain index space */
   KOKKOS_INLINE_FUNCTION
-  constexpr size_type size()
+  constexpr size_type size() const
     { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 * m_dim.N7 ; }
 
   /* Extent of the range space */
   KOKKOS_INLINE_FUNCTION
-  constexpr size_type extent()
+  constexpr size_type extent() const
     { return m_dim.N0 * m_stride ; }
 
-  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous()
+  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() const
     { return m_stride == m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 * m_dim.N3 * m_dim.N2 * m_dim.N1 ; }
 
   /* Strides of dimensions */
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_7() { return 1 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_6() { return m_dim.N7 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_5() { return m_dim.N7 * m_dim.N6 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_4() { return m_dim.N7 * m_dim.N6 * m_dim.N5 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_3() { return m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_2() { return m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 * m_dim.N3 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_1() { return m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 * m_dim.N3 * m_dim.N2 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_0() { return m_stride ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_7() const { return 1 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_6() const { return m_dim.N7 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_5() const { return m_dim.N7 * m_dim.N6 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_4() const { return m_dim.N7 * m_dim.N6 * m_dim.N5 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_3() const { return m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_2() const { return m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 * m_dim.N3 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_1() const { return m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 * m_dim.N3 * m_dim.N2 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_0() const { return m_stride ; }
 
   // Stride with [ rank ] value is the total length
   template< typename iType >
@@ -1428,7 +1428,7 @@ private:
     enum { div_ok = div ? div : 1 }; // To valid modulo zero in constexpr
 
     KOKKOS_INLINE_FUNCTION
-    constexpr static size_t stride( size_t const N )
+    static constexpr size_t stride( size_t const N )
     {
       return ( align && ( Kokkos::Impl::MEMORY_ALIGNMENT_THRESHOLD * align < N ) && ( N % div_ok ) )
              ? N + align - ( N % div_ok ) : N ;
@@ -1680,7 +1680,7 @@ public:
   // rank 1
   template< typename I0 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0 )
+  size_type operator()( I0 const & i0 ) const
   {
     return i0 * m_stride.S0 ;
   }
@@ -1688,7 +1688,7 @@ public:
   // rank 2
   template < typename I0 , typename I1 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0 , I1 const & i1 )
+  size_type operator()( I0 const & i0 , I1 const & i1 ) const
   {
     return i0 * m_stride.S0 +
            i1 * m_stride.S1 ;
@@ -1697,7 +1697,7 @@ public:
   //rank 3
   template < typename I0, typename I1, typename I2 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2 )
+  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2 ) const
   {
     return i0 * m_stride.S0 +
            i1 * m_stride.S1 +
@@ -1707,7 +1707,7 @@ public:
   //rank 4
   template < typename I0, typename I1, typename I2, typename I3 >
   KOKKOS_INLINE_FUNCTION constexpr
-  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3 )
+  size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3 ) const
   {
     return i0 * m_stride.S0 +
            i1 * m_stride.S1 +
@@ -1720,7 +1720,7 @@ public:
            , typename I4 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4 )
+                      , I4 const & i4 ) const
   {
     return i0 * m_stride.S0 +
            i1 * m_stride.S1 +
@@ -1734,7 +1734,7 @@ public:
            , typename I4, typename I5 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4, I5 const & i5 )
+                      , I4 const & i4, I5 const & i5 ) const
   {
     return i0 * m_stride.S0 +
            i1 * m_stride.S1 +
@@ -1749,7 +1749,7 @@ public:
            , typename I4, typename I5, typename I6 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4, I5 const & i5, I6 const & i6 )
+                      , I4 const & i4, I5 const & i5, I6 const & i6 ) const
   {
     return i0 * m_stride.S0 +
            i1 * m_stride.S1 +
@@ -1765,7 +1765,7 @@ public:
            , typename I4, typename I5, typename I6, typename I7 >
   KOKKOS_INLINE_FUNCTION constexpr
   size_type operator()( I0 const & i0, I1 const & i1, I2 const & i2, I3 const & i3
-                      , I4 const & i4, I5 const & i5, I6 const & i6, I7 const & i7 )
+                      , I4 const & i4, I5 const & i5, I6 const & i6, I7 const & i7 ) const
   {
     return i0 * m_stride.S0 +
            i1 * m_stride.S1 +
@@ -1779,31 +1779,31 @@ public:
 
   //----------------------------------------
 
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() { return m_dim.N0 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_1() { return m_dim.N1 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_2() { return m_dim.N2 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_3() { return m_dim.N3 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() { return m_dim.N4 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_5() { return m_dim.N5 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_6() { return m_dim.N6 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_7() { return m_dim.N7 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const { return m_dim.N0 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_1() const { return m_dim.N1 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_2() const { return m_dim.N2 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_3() const { return m_dim.N3 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_4() const { return m_dim.N4 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_5() const { return m_dim.N5 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_6() const { return m_dim.N6 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type dimension_7() const { return m_dim.N7 ; }
 
   /* Cardinality of the domain index space */
   KOKKOS_INLINE_FUNCTION
-  constexpr size_type size()
+  constexpr size_type size() const
     { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 * m_dim.N7 ; }
 
 private:
 
   KOKKOS_INLINE_FUNCTION
-  constexpr size_type Max( size_type lhs , size_type rhs )
+  static constexpr size_type Max( size_type lhs , size_type rhs )
     { return lhs < rhs ? rhs : lhs ; }
 
 public:
 
   /* Extent of the range space, largest stride * dimension */
   KOKKOS_INLINE_FUNCTION
-  constexpr size_type extent()
+  constexpr size_type extent() const
     {
       return Max( m_dim.N0 * m_stride.S0 ,
              Max( m_dim.N1 * m_stride.S1 ,
@@ -1815,17 +1815,17 @@ public:
                   m_dim.N7 * m_stride.S7 )))))));
     }
 
-  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() { return extent() == size(); }
+  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() const { return extent() == size(); }
 
   /* Strides of dimensions */
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_0() { return m_stride.S0 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_1() { return m_stride.S1 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_2() { return m_stride.S2 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_3() { return m_stride.S3 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_4() { return m_stride.S4 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_5() { return m_stride.S5 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_6() { return m_stride.S6 ; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type stride_7() { return m_stride.S7 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_0() const { return m_stride.S0 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_1() const { return m_stride.S1 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_2() const { return m_stride.S2 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_3() const { return m_stride.S3 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_4() const { return m_stride.S4 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_5() const { return m_stride.S5 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_6() const { return m_stride.S6 ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type stride_7() const { return m_stride.S7 ; }
 
   // Stride with [ rank ] value is the total length
   template< typename iType >
@@ -1875,7 +1875,7 @@ public:
 private:
 
   KOKKOS_INLINE_FUNCTION
-  constexpr static unsigned
+  static constexpr unsigned
     count_non_zero( const size_t aN0 = 0 
                   , const size_t aN1 = 0 
                   , const size_t aN2 = 0 
@@ -1898,7 +1898,7 @@ private:
 
   template< unsigned Rank , unsigned I >
   KOKKOS_INLINE_FUNCTION
-  constexpr static size_t
+  static constexpr size_t
     get_non_zero( const size_t aN0
                 , const size_t aN1
                 , const size_t aN2
@@ -1921,7 +1921,7 @@ private:
   
   template< unsigned Rank , unsigned I , class DimRHS , class LayoutRHS >
   KOKKOS_INLINE_FUNCTION
-  constexpr static size_t
+  static constexpr size_t
     get_non_zero( const size_t aN0 , const size_t aN1 , const size_t aN2 , const size_t aN3
                 , const size_t aN4 , const size_t aN5 , const size_t aN6 , const size_t aN7
                 , const ViewOffset< DimRHS , LayoutRHS , void > & rhs )
@@ -2096,23 +2096,7 @@ struct ViewDataHandle {
   static handle_type assign( value_type * arg_data_ptr
                            , track_type const & /*arg_tracker*/ )
   {
-#if 0
-
-    // Query allocation record specialized for this memory space:
-
-    Kokkos::Experimental::Impl::SharedAllocationRecord< typename Traits::memory_space , void > & record
-      = arg_tracker.get_record< typename Traits::memory_space >();
-
-    // Record has pointer to original allocation
-
-    unsigned offset = arg_data_ptr - reinterpret_cast<value_type*>( record.
-
-    // Record has space-dependent attributes, such as
-    ::cudaTextureObject tex = record.attached_texture_object< value_type >();
-   
-#endif
-
-    return handle_type(arg_data_ptr);
+    return handle_type( arg_data_ptr );
   }
 };
 
@@ -2194,23 +2178,23 @@ public:
 
   enum { Rank = Traits::dimension::rank };
 
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_0() { return m_offset.dimension_0(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_1() { return m_offset.dimension_1(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_2() { return m_offset.dimension_2(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_3() { return m_offset.dimension_3(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_4() { return m_offset.dimension_4(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_5() { return m_offset.dimension_5(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_6() { return m_offset.dimension_6(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_7() { return m_offset.dimension_7(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_0() const { return m_offset.dimension_0(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_1() const { return m_offset.dimension_1(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_2() const { return m_offset.dimension_2(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_3() const { return m_offset.dimension_3(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_4() const { return m_offset.dimension_4(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_5() const { return m_offset.dimension_5(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_6() const { return m_offset.dimension_6(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_7() const { return m_offset.dimension_7(); }
 
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_0() { return m_offset.stride_0(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_1() { return m_offset.stride_1(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_2() { return m_offset.stride_2(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_3() { return m_offset.stride_3(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_4() { return m_offset.stride_4(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_5() { return m_offset.stride_5(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_6() { return m_offset.stride_6(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_7() { return m_offset.stride_7(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_0() const { return m_offset.stride_0(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_1() const { return m_offset.stride_1(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_2() const { return m_offset.stride_2(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_3() const { return m_offset.stride_3(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_4() const { return m_offset.stride_4(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_5() const { return m_offset.stride_5(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_6() const { return m_offset.stride_6(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_7() const { return m_offset.stride_7(); }
 
   /*
   KOKKOS_INLINE_FUNCTION
@@ -2222,15 +2206,15 @@ public:
   // Range extent
 
   /** \brief  Extent of the mapped range */
-  KOKKOS_INLINE_FUNCTION constexpr size_t extent() { return m_offset.extent(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t extent() const { return m_offset.extent(); }
 
   /** \brief  Is the mapped range extent contiguous */
-  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() { return m_offset.extent_is_contiguous(); }
+  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() const { return m_offset.extent_is_contiguous(); }
 
   typedef typename ViewDataHandle< Traits >::return_type  reference_type ;
 
   /** \brief  If data references are lvalue_reference than can query pointer to memory */
-  KOKKOS_INLINE_FUNCTION constexpr typename Traits::value_type * data()
+  KOKKOS_INLINE_FUNCTION constexpr typename Traits::value_type * data() const
     {
       typedef typename Traits::value_type * ptr_type ;
 
@@ -2303,7 +2287,7 @@ private:
 public:
 
   /** \brief  Extent, in bytes, of the referenced memory */
-  KOKKOS_INLINE_FUNCTION constexpr size_t memory_extent()
+  KOKKOS_INLINE_FUNCTION constexpr size_t memory_extent() const
     {
       return ( m_offset.extent() * sizeof(typename Traits::value_type) + MemoryExtentMask ) & ~size_t(MemoryExtentMask);
     }
@@ -2311,7 +2295,7 @@ public:
   /** \brief  Extent, in bytes, of the required memory */
   template< bool AllowPadding >
   KOKKOS_INLINE_FUNCTION
-  constexpr static size_t memory_extent( const std::integral_constant<bool,AllowPadding> &
+  static constexpr size_t memory_extent( const std::integral_constant<bool,AllowPadding> &
                                        , const size_t N0 , const size_t N1 , const size_t N2 , const size_t N3
                                        , const size_t N4 , const size_t N5 , const size_t N6 , const size_t N7 )
     {
@@ -2322,7 +2306,7 @@ public:
   /** \brief  Extent, in bytes, of the required memory */
   template< bool AllowPadding >
   KOKKOS_INLINE_FUNCTION
-  constexpr static size_t memory_extent( const std::integral_constant<bool,AllowPadding> &
+  static constexpr size_t memory_extent( const std::integral_constant<bool,AllowPadding> &
                                        , const typename Traits::array_layout & layout )
     {
       return ( offset_type( layout ).extent() * MemoryExtentSize + MemoryExtentMask ) & ~size_t(MemoryExtentMask);

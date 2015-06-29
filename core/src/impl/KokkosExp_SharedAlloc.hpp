@@ -51,7 +51,7 @@ class SharedAllocationRecord ;
 class SharedAllocationHeader {
 private:
 
-  using Record = SharedAllocationRecord<void,void> ;
+  typedef SharedAllocationRecord<void,void>  Record ;
 
   static constexpr unsigned maximum_label_length = ( 1u << 7 /* 128 */ ) - sizeof(Record*);
 
@@ -76,7 +76,7 @@ protected:
 
   template< class , class > friend class SharedAllocationRecord ;
 
-  using function_type = void (*)( SharedAllocationRecord<void,void> * );
+  typedef void (* function_type )( SharedAllocationRecord<void,void> * );
 
   SharedAllocationHeader * const m_alloc_ptr ;
   size_t                   const m_alloc_size ;
@@ -122,7 +122,7 @@ public:
   void * data() const { return reinterpret_cast<void*>( m_alloc_ptr + 1 ); }
 
   /* User's memory begins at the end of the header */
-  constexpr size_t size() { return m_alloc_size - sizeof(SharedAllocationHeader) ; }
+  constexpr size_t size() const { return m_alloc_size - sizeof(SharedAllocationHeader) ; }
 
   /* Cannot be 'constexpr' because 'm_count' is volatile */
   int use_count() const { return m_count ; }
@@ -202,9 +202,9 @@ public:
 class SharedAllocationTracker {
 private:
 
-  using Record = SharedAllocationRecord<void,void> ;
+  typedef SharedAllocationRecord<void,void>  Record ;
 
-  constexpr static Record * null_record = (Record *) 0x01ul ;
+  constexpr static Record * null_record = reinterpret_cast< Record * >( 0x01ul );
 
   // The allocation record resides in Host memory space
   Record * m_record ;
@@ -236,7 +236,7 @@ public:
 
   template< class MemorySpace >
   constexpr
-  SharedAllocationRecord< MemorySpace , void > & get_record()
+  SharedAllocationRecord< MemorySpace , void > & get_record() const
     { return * static_cast< SharedAllocationRecord< MemorySpace , void > * >( m_record ); }
 
   template< class MemorySpace >
