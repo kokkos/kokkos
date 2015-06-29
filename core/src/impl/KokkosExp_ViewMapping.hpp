@@ -2566,7 +2566,6 @@ public:
                     )
     {
       typedef ViewMapping< traits_type , void , void >  DstType ;
-      typedef ViewMapping< Traits , void , void >       SrcType ;
 
       typedef typename DstType::offset_type  dst_offset_type ;
       typedef typename DstType::handle_type  dst_handle_type ;

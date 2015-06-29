@@ -397,9 +397,8 @@ SharedAllocationRecord( const Kokkos::HostSpace & arg_space
 SharedAllocationRecord< Kokkos::HostSpace , void > *
 SharedAllocationRecord< Kokkos::HostSpace , void >::get_record( void * alloc_ptr )
 {
-  using Header     = SharedAllocationHeader ;
-  using RecordBase = SharedAllocationRecord< void , void > ;
-  using RecordHost = SharedAllocationRecord< Kokkos::HostSpace , void > ;
+  typedef SharedAllocationHeader  Header ;
+  typedef SharedAllocationRecord< Kokkos::HostSpace , void >  RecordHost ;
 
   SharedAllocationHeader const * const head   = Header::get_header( alloc_ptr );
   RecordHost                   * const record = static_cast< RecordHost * >( head->m_record );
