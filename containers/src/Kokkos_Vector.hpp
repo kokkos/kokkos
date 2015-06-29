@@ -76,9 +76,13 @@ private:
 
 
 public:
+#ifdef KOKKOS_CUDA_USE_UVM
+  KOKKOS_INLINE_FUNCTION Scalar& operator() (int i) const {return DV::h_view(i);};
+  KOKKOS_INLINE_FUNCTION Scalar& operator[] (int i) const {return DV::h_view(i);};
+#else
   inline Scalar& operator() (int i) const {return DV::h_view(i);};
   inline Scalar& operator[] (int i) const {return DV::h_view(i);};
-
+#endif
 
   /* Member functions which behave like std::vector functions */
 

@@ -203,6 +203,7 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_CUDA_USE_UVM), 1)
 	tmp := $(shell echo "\#define KOKKOS_CUDA_USE_UVM 1" >> KokkosCore_config.tmp )
+  tmp := $(shell echo "\#define KOKKOS_USE_CUDA_UVM 1" >> KokkosCore_config.tmp )
 endif
 
 ifeq ($(KOKKOS_INTERNAL_CUDA_USE_RELOC), 1)
