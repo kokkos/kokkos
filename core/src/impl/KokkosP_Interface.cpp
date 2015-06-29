@@ -44,6 +44,7 @@
 #include <KokkosP_Interface.hpp>
 
 #ifdef KOKKOSP_ENABLE_PROFILING
+#include <string.h>
 
 namespace KokkosP {
     bool profileLibraryLoaded() {
@@ -95,9 +96,10 @@ namespace KokkosP {
     void initialize() {
         void* firstProfileLibrary;
 
-        char* profileLibraryName = getenv("KOKKOS_PROFILE_LIBRARY");
+        char* envProfileLibrary  = getenv("KOKKOS_PROFILE_LIBRARY");
+	char* profileLibraryName = strtok(envProfileLibrary, ";");
 
-        if(NULL != profileLibraryName) {
+        if( (NULL != profileLibraryName) && (strcmp(profileLibraryName, "") != 0) ) {
             firstProfileLibrary = dlopen(profileLibraryName, RTLD_NOW | RTLD_GLOBAL);
 
             if(NULL == firstProfileLibrary) {
