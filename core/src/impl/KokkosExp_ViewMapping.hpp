@@ -2466,7 +2466,7 @@ public:
 
 /** \brief  View mapping for non-specialized data type and standard layout */
 template< class Traits , bool R0 , bool R1 , bool R2 , bool R3 , bool R4 , bool R5 , bool R6 , bool R7 >
-class SubviewMapping< Traits, R0, R1, R2, R3, R4, R5, R6, R7 ,
+struct SubviewMapping< Traits, R0, R1, R2, R3, R4, R5, R6, R7 ,
   typename std::enable_if<(
     std::is_same< typename Traits::specialize , void >::value
     &&

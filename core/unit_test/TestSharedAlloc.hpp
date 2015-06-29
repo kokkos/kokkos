@@ -78,6 +78,8 @@ void test_shared_alloc()
   typedef Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void >                RecordMemS ;
   typedef Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , SharedAllocDestroy >  RecordFull ;
 
+  static_assert( sizeof(Tracker) == sizeof(int*), "SharedAllocationTracker has wrong size!" );
+
   MemorySpace s ;
 
   const size_t N = 1200 ;

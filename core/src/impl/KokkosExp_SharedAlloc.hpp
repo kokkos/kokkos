@@ -199,25 +199,26 @@ public:
     }
 };
 
-class SharedAllocationTracker {
+union SharedAllocationTracker {
 private:
 
   typedef SharedAllocationRecord<void,void>  Record ;
 
-  constexpr static Record * null_record = reinterpret_cast< Record * >( 0x01ul );
+  constexpr static unsigned long DO_NOT_DEREF_FLAG = 0x01ul;
 
   // The allocation record resides in Host memory space
   Record * m_record ;
+  unsigned long m_record_bits;
 
   KOKKOS_INLINE_FUNCTION
   static Record * disable( Record * rec )
-    { return reinterpret_cast<Record*>( reinterpret_cast<unsigned long>( rec ) & 0x01 ); }
+    { return reinterpret_cast<Record*>( reinterpret_cast<unsigned long>( rec ) & DO_NOT_DEREF_FLAG ); }
 
   KOKKOS_INLINE_FUNCTION
   void increment() const
     {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-      if ( ! ( reinterpret_cast<unsigned long>(m_record) & 0x01ul ) ) Record::increment( m_record );
+      if ( ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) Record::increment( m_record );
 #endif
     }
 
@@ -225,14 +226,14 @@ private:
   void decrement() const
     {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-       if ( ! ( reinterpret_cast<unsigned long>(m_record) & 0x01ul ) ) Record::decrement( m_record );
+       if ( ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) Record::decrement( m_record );
 #endif
     }
 
 public:
 
   KOKKOS_INLINE_FUNCTION
-  constexpr SharedAllocationTracker() : m_record( null_record ) {}
+  constexpr SharedAllocationTracker() : m_record_bits( DO_NOT_DEREF_FLAG ) {}
 
   template< class MemorySpace >
   constexpr
@@ -256,7 +257,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   SharedAllocationTracker( SharedAllocationTracker && rhs )
-    : m_record( rhs.m_record ) { rhs.m_record = null_record ; }
+    : m_record( rhs.m_record ) { rhs.m_record_bits = DO_NOT_DEREF_FLAG ; }
 
   KOKKOS_INLINE_FUNCTION
   SharedAllocationTracker & operator = ( const SharedAllocationTracker & rhs )
@@ -271,7 +272,7 @@ public:
   SharedAllocationTracker & operator = ( SharedAllocationTracker && rhs )
     {
       m_record = rhs.m_record ;
-      rhs.m_record = null_record ;
+      rhs.m_record_bits = DO_NOT_DEREF_FLAG ;
       return *this ;
     }
 };
