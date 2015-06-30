@@ -25,9 +25,10 @@ COMPILERS=("gcc/4.7.2 gcc/4.7.2/base,hwloc/1.10.0/host/gnu/4.7.2 $GCC_BUILD_LIST
            "gcc/5.1.0 gcc/5.1.0/base,hwloc/1.10.0/host/gnu/5.1.0 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
            "intel/14.0.4 intel/14.0.4/base,hwloc/1.10.0/host/gnu/4.7.2 $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
            "intel/15.0.2 intel/15.0.2/base,hwloc/1.10.0/host/gnu/4.7.2 $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+           "clang/3.5.2 clang/3.5.2/base $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
            "clang/3.6.1 clang/3.6.1/base $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
            "cuda/6.5.14 cuda/6.5.14,nvcc-wrapper/gnu,gcc/4.7.2/base $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
-           "cuda/7.0.28 cuda/7.0.28,nvcc-wrapper/gnu,gcc/4.7.2/base $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
+           "cuda/7.0.28 cuda/7.0.18,nvcc-wrapper/gnu,gcc/4.7.2/base $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
            )
 
 export OMP_NUM_THREADS=4
@@ -239,8 +240,12 @@ setup_env() {
 
     module purge
 
-    for mod in "$compiler_modules"; do
+    for mod in $compiler_modules; do
 	module load $mod
+        # It is ridiculously hard to check for the success of a loaded
+        # module. Module does not return error codes and piping to grep
+        # causes module to run in a subshell.
+        module list 2>&1 | grep "$mod"
     done
 }
 
