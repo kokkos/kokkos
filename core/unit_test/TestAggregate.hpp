@@ -171,6 +171,8 @@ public:
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
 namespace Kokkos {
 namespace Impl {
 
@@ -675,6 +677,8 @@ public:
 
 } // namespace Kokkos
 
+#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
+
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
@@ -683,6 +687,9 @@ namespace Test {
 template< class DeviceType >
 int TestViewAggregate()
 {
+
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
   typedef Kokkos::View< Test::Array<double,32> * , DeviceType > a32_type ;
   typedef typename a32_type::array_type a32_base_type ;
 
@@ -698,9 +705,12 @@ int TestViewAggregate()
   a32_base = a32 ;
   a0_base = a0 ;
 
+#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
+
   return 0 ;
 }
 
 }
+
 
 #endif /* #ifndef TEST_AGGREGATE_HPP */

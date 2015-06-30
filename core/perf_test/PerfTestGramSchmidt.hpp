@@ -71,8 +71,8 @@ struct InvNorm2 : public Kokkos::DotSingle< VectorView > {
   void final( value_type & result ) const
   {
     result = sqrt( result );
-    *Rjj = result ;
-    *inv = ( 0 < result ) ? 1.0 / result : 0 ;
+    Rjj() = result ;
+    inv() = ( 0 < result ) ? 1.0 / result : 0 ;
   }
 };
 
@@ -106,8 +106,8 @@ struct DotM : public Kokkos::Dot< VectorView > {
   KOKKOS_INLINE_FUNCTION
   void final( value_type & result ) const
   {
-     *Rjk  = result ;
-     *tmp  = - result ;
+     Rjk()  = result ;
+     tmp()  = - result ;
   }
 };
 
@@ -147,7 +147,11 @@ struct ModifiedGramSchmidt
   static double factorization( const multivector_type Q_ ,
                                const multivector_type R_ )
   {
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+    using Kokkos::Experimental::ALL ;
+#else
     const Kokkos::ALL ALL ;
+#endif
     const size_type count  = Q_.dimension_1();
     value_view tmp("tmp");
     value_view one("one");

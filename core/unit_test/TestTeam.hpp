@@ -288,7 +288,7 @@ public:
   {
     if ( 0 == ind.league_rank() && 0 == ind.team_rank() ) {
       const long int thread_count = ind.league_size() * ind.team_size();
-      *total = ( thread_count * ( thread_count + 1 ) ) / 2 ;
+      total() = ( thread_count * ( thread_count + 1 ) ) / 2 ;
     }
 
     // Team max:

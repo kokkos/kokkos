@@ -326,6 +326,9 @@ namespace Experimental {
 
 namespace {
 
+constexpr Kokkos::Experimental::Impl::ALL_t
+  ALL = Kokkos::Experimental::Impl::ALL_t();
+
 constexpr Kokkos::Experimental::Impl::WithoutInitializing_t
   WithoutInitializing = Kokkos::Experimental::Impl::WithoutInitializing_t();
 
@@ -443,6 +446,11 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t extent() const { return m_map.extent(); }
   KOKKOS_INLINE_FUNCTION constexpr bool   extent_is_contiguous() const { return m_map.extent_is_contiguous(); }
   KOKKOS_INLINE_FUNCTION constexpr typename traits::value_type * data() const { return m_map.data(); }
+
+  // Deprecated, use 'extent_is_contigous()' instead
+  KOKKOS_INLINE_FUNCTION constexpr bool   is_contiguous() const { return m_map.extent_is_contiguous(); }
+  // Deprecated, use 'data()' instead
+  KOKKOS_INLINE_FUNCTION constexpr typename traits::value_type * ptr_on_device() const { return m_map.data(); }
 
   //----------------------------------------
 
@@ -975,14 +983,14 @@ public:
   // Shared scratch memory constructor
 
   static inline
-  unsigned shmem_size( const unsigned arg_N0 = 0 ,
-                       const unsigned arg_N1 = 0 ,
-                       const unsigned arg_N2 = 0 ,
-                       const unsigned arg_N3 = 0 ,
-                       const unsigned arg_N4 = 0 ,
-                       const unsigned arg_N5 = 0 ,
-                       const unsigned arg_N6 = 0 ,
-                       const unsigned arg_N7 = 0 )
+  size_t shmem_size( const size_t arg_N0 = 0 ,
+                     const size_t arg_N1 = 0 ,
+                     const size_t arg_N2 = 0 ,
+                     const size_t arg_N3 = 0 ,
+                     const size_t arg_N4 = 0 ,
+                     const size_t arg_N5 = 0 ,
+                     const size_t arg_N6 = 0 ,
+                     const size_t arg_N7 = 0 )
   {
     return map_type::memory_extent( std::integral_constant<bool,false>()
                                   , arg_N0 , arg_N1 , arg_N2 , arg_N3
@@ -991,14 +999,14 @@ public:
 
   explicit KOKKOS_INLINE_FUNCTION
   View( const typename traits::execution_space::scratch_memory_space & arg_space
-      , const unsigned arg_N0 = 0 
-      , const unsigned arg_N1 = 0
-      , const unsigned arg_N2 = 0
-      , const unsigned arg_N3 = 0
-      , const unsigned arg_N4 = 0
-      , const unsigned arg_N5 = 0
-      , const unsigned arg_N6 = 0
-      , const unsigned arg_N7 = 0 )
+      , const size_t arg_N0 = 0 
+      , const size_t arg_N1 = 0
+      , const size_t arg_N2 = 0
+      , const size_t arg_N3 = 0
+      , const size_t arg_N4 = 0
+      , const size_t arg_N5 = 0
+      , const size_t arg_N6 = 0
+      , const size_t arg_N7 = 0 )
     : m_track() // No memory tracking
     , m_map( arg_space.get_shmem( map_type::memory_extent( std::integral_constant<bool,false>()
                                                          , arg_N0 , arg_N1 , arg_N2 , arg_N3
@@ -1529,8 +1537,10 @@ struct ViewFill {
     : output( arg_out ), input( arg_in )
     {
       typedef typename OutputView::execution_space  execution_space ;
-      Kokkos::RangePolicy< execution_space > range( 0 , output.dimension_0() );
-      Kokkos::parallel_for( range , *this );
+      typedef Kokkos::RangePolicy< execution_space > Policy ;
+
+      (void) Kokkos::Impl::ParallelFor< ViewFill , Policy >( *this , Policy( 0 , output.dimension_0() ) );
+
       execution_space::fence();
     }
 };
@@ -1570,8 +1580,8 @@ struct ViewRemap {
     , n7( std::min( (size_t)arg_out.dimension_7() , (size_t)arg_in.dimension_7() ) )
     {
       typedef typename OutputView::execution_space execution_space ;
-      Kokkos::RangePolicy< execution_space > range( 0 , n0 );
-      Kokkos::parallel_for( range , *this );
+      typedef Kokkos::RangePolicy< execution_space > Policy ;
+      (void) Kokkos::Impl::ParallelFor< ViewRemap , Policy >( *this , Policy( 0 , n0 ) );
     }
 
   KOKKOS_INLINE_FUNCTION
@@ -1622,7 +1632,7 @@ void deep_copy( ST & dst , const View<ST,S1,S2,S3> & src )
 
   typedef ViewTraits<ST,S1,S2,S3>            src_traits ;
   typedef typename src_traits::memory_space  src_memory_space ;
-  Kokkos::Experimental::Impl::DeepCopy< HostSpace , src_memory_space >( & dst , src.data() , sizeof(ST) );
+  Kokkos::Impl::DeepCopy< HostSpace , src_memory_space >( & dst , src.data() , sizeof(ST) );
 }
 
 //----------------------------------------------------------------------------
@@ -1663,11 +1673,13 @@ inline
 void deep_copy( const View<DT,D1,D2,D3> & dst ,
                 const View<ST,S1,S2,S3> & src ,
                 typename std::enable_if<(
-                  // Same type and destination is not constant:
+                  // destination is non-const.
                   std::is_same< typename ViewTraits<DT,D1,D2,D3>::value_type ,
-                                typename ViewTraits<ST,S1,S2,S3>::non_const_value_type >::value
+                                typename ViewTraits<DT,D1,D2,D3>::non_const_value_type >::value
                   &&
-                  // Same rank:
+                  // Same non-zero rank:
+                  ( unsigned(ViewTraits<DT,D1,D2,D3>::rank) != 0 )
+                  &&
                   ( unsigned(ViewTraits<DT,D1,D2,D3>::rank) ==
                     unsigned(ViewTraits<ST,S1,S2,S3>::rank) )
                   &&
@@ -1687,14 +1699,16 @@ void deep_copy( const View<DT,D1,D2,D3> & dst ,
   enum { DstExecCanAccessSrc =
    Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename dst_execution_space::memory_space , src_memory_space >::value };
 
-  if ( dst.data() != src.data() ) {
+  if ( (void *) dst.data() != (void*) src.data() ) {
 
     // Concern: If overlapping views then a parallel copy will be erroneous.
     // ...
 
-    // If equal layout, equal dimensions, equal extent, and contiguous memory then can byte-wise copy
+    // If same type, equal layout, equal dimensions, equal extent, and contiguous memory then can byte-wise copy
 
-    if ( std::is_same< typename ViewTraits<DT,D1,D2,D3>::array_layout ,
+    if ( std::is_same< typename ViewTraits<DT,D1,D2,D3>::value_type ,
+                       typename ViewTraits<ST,S1,S2,S3>::non_const_value_type >::value &&
+         std::is_same< typename ViewTraits<DT,D1,D2,D3>::array_layout ,
                        typename ViewTraits<ST,S1,S2,S3>::array_layout >::value &&
          dst.extent_is_contiguous() &&
          src.extent_is_contiguous() &&
@@ -1877,6 +1891,40 @@ void realloc( Kokkos::Experimental::View<T,A1,A2,A3> & v ,
 
 } /* namespace Experimental */
 } /* namespace Kokkos */
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
+namespace Kokkos {
+
+template< class D , class A1 = void , class A2 = void , class A3 = void >
+using ViewTraits = Kokkos::Experimental::ViewTraits<D,A1,A2,A3> ;
+
+template< class D , class A1 = void , class A2 = void , class A3 = void , class S = void >
+using View = Kokkos::Experimental::View<D,A1,A2,A3> ;
+
+using Kokkos::Experimental::deep_copy ;
+using Kokkos::Experimental::create_mirror ;
+using Kokkos::Experimental::create_mirror_view ;
+using Kokkos::Experimental::subview ;
+using Kokkos::Experimental::resize ;
+using Kokkos::Experimental::realloc ;
+
+namespace Impl {
+
+using Kokkos::Experimental::is_view ;
+
+class ViewDefault {};
+
+}
+
+} /* namespace Kokkos */
+
+#include <impl/Kokkos_Atomic_View.hpp>
+
+#endif /* #if defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

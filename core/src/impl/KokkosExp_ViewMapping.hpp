@@ -50,6 +50,17 @@
 #include <Kokkos_Pair.hpp>
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_Traits.hpp>
+#include <impl/Kokkos_Atomic_View.hpp>
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+namespace Impl {
+
+template< class FunctorType , class ExecPolicy > class ParallelFor ;
+
+}} /* namespace Kokkos::Impl */
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -775,6 +786,18 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
                    , "ViewOffset LayoutLeft and LayoutRight are only compatible when rank == 1" );
     }
 
+  template< class DimRHS >
+  KOKKOS_INLINE_FUNCTION
+  ViewOffset( const ViewOffset< DimRHS , Kokkos::LayoutStride , void > & rhs )
+    : m_dim( rhs.m_dim.N0, 0, 0, 0, 0, 0, 0, 0 )
+    {
+      static_assert( DimRHS::rank == 1 && dimension_type::rank == 1 && dimension_type::rank_dynamic == 1
+                   , "ViewOffset LayoutLeft and LayoutStride are only compatible when rank == 1" );
+      if ( rhs.m_stride.S0 != 1 ) {
+        Kokkos::abort("Kokkos::Experimental::ViewOffset assignment of LayoutLeft from LayoutStride  requires stride == 1" );
+      }
+    }
+
   //----------------------------------------
   // Subview construction
 
@@ -796,8 +819,6 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
                      ( 1 == dimension_type::rank && 1 == dimension_type::rank_dynamic && 1 <= DimRHS::rank )
                    , "ViewOffset subview construction requires compatible rank" );
     }
-
-  //----------------------------------------
 };
 
 //----------------------------------------------------------------------------
@@ -1044,8 +1065,6 @@ public:
                      ( 2 <= DimRHS::rank )
                    , "ViewOffset subview construction requires compatible rank" );
     }
-
-  //----------------------------------------
 };
 
 //----------------------------------------------------------------------------
@@ -1235,6 +1254,18 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
                    , "ViewOffset LayoutRight and LayoutLeft are only compatible when rank == 1" );
     }
 
+  template< class DimRHS >
+  KOKKOS_INLINE_FUNCTION
+  ViewOffset( const ViewOffset< DimRHS , Kokkos::LayoutStride , void > & rhs )
+    : m_dim( rhs.m_dim.N0, 0, 0, 0, 0, 0, 0, 0 )
+    {
+      static_assert( DimRHS::rank == 1 && dimension_type::rank == 1 && dimension_type::rank_dynamic == 1
+                   , "ViewOffset LayoutLeft and LayoutStride are only compatible when rank == 1" );
+      if ( rhs.m_stride.S0 != 1 ) {
+        Kokkos::abort("Kokkos::Experimental::ViewOffset assignment of LayoutRight from LayoutStride  requires stride == 1" );
+      }
+    }
+
   //----------------------------------------
   // Subview construction
 
@@ -1256,8 +1287,6 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
                      ( 1 == dimension_type::rank && 1 == dimension_type::rank_dynamic && 1 <= DimRHS::rank )
                    , "ViewOffset subview construction requires compatible rank" );
     }
-
-  //----------------------------------------
 };
 
 //----------------------------------------------------------------------------
@@ -1475,7 +1504,7 @@ public:
 
   template< class DimRHS >
   KOKKOS_INLINE_FUNCTION
-  constexpr ViewOffset( const ViewOffset< DimRHS , Kokkos::LayoutLeft , void > & rhs
+  constexpr ViewOffset( const ViewOffset< DimRHS , Kokkos::LayoutRight , void > & rhs
                       , const size_t aN0
                       , const size_t aN1
                       , const size_t aN2
@@ -1500,7 +1529,7 @@ public:
              ( 5 == DimRHS::rank ? aN4 :
              ( 6 == DimRHS::rank ? aN5 :
              ( 7 == DimRHS::rank ? aN6 : aN7 ))))))
-           , 0, 0, 0, 0, 0 )
+           , 0, 0, 0, 0, 0, 0 )
     , m_stride( ( 1 < DimRHS::rank && aN0 ? rhs.stride_0() :
                 ( 2 < DimRHS::rank && aN1 ? rhs.stride_1() :
                 ( 3 < DimRHS::rank && aN2 ? rhs.stride_2() :
@@ -1519,8 +1548,6 @@ public:
                      ( 2 <= DimRHS::rank )
                    , "ViewOffset subview construction requires compatible rank" );
     }
-
-  //----------------------------------------
 };
 
 //----------------------------------------------------------------------------
@@ -1985,6 +2012,8 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+struct ALL_t {};
+
 template< class T >
 struct ViewOffsetRange {
 
@@ -2005,14 +2034,14 @@ struct ViewOffsetRange<void> {
 };
 
 template<>
-struct ViewOffsetRange< Kokkos::ALL > {
+struct ViewOffsetRange< Kokkos::Experimental::Impl::ALL_t > {
   enum { is_range = true };
 
   KOKKOS_INLINE_FUNCTION static
-  size_t dimension( size_t const n , ALL const & ) { return n ; }
+  size_t dimension( size_t const n , Experimental::Impl::ALL_t const & ) { return n ; }
 
   KOKKOS_INLINE_FUNCTION static
-  size_t begin( ALL const & ) { return 0 ; }
+  size_t begin( Experimental::Impl::ALL_t const & ) { return 0 ; }
 };
 
 template< typename iType >
@@ -2368,7 +2397,7 @@ public:
   void operator()( const FunctorTagDestructNonScalar & , const size_t i ) const
     { 
       typedef typename Traits::value_type  value_type ;
-      & (m_handle[i])->~value_type();
+      ( & (m_handle[i]) )->~value_type();
     }
 
   template< class ExecSpace >
@@ -2376,8 +2405,9 @@ public:
                            std::is_scalar< typename Traits::value_type >::value >::type
   construct( const ExecSpace & space ) const
     {
-      Kokkos::RangePolicy< ExecSpace , FunctorTagConstructScalar , size_t > policy( 0 , m_offset.extent() );
-      Kokkos::parallel_for( policy , *this );
+      typedef Kokkos::RangePolicy< ExecSpace , FunctorTagConstructScalar , size_t > Policy ;
+
+      (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_offset.extent() ) );
     }
 
   template< class ExecSpace >
@@ -2385,8 +2415,9 @@ public:
                            ! std::is_scalar< typename Traits::value_type >::value >::type
   construct( const ExecSpace & space ) const
     {
-      Kokkos::RangePolicy< ExecSpace , FunctorTagConstructNonScalar , size_t > policy( 0 , m_offset.extent() );
-      Kokkos::parallel_for( policy , *this );
+      typedef Kokkos::RangePolicy< ExecSpace , FunctorTagConstructNonScalar , size_t > Policy ;
+
+      (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_offset.extent() ) );
     }
 
   template< class ExecSpace >
@@ -2399,8 +2430,9 @@ public:
                            ! std::is_scalar< typename Traits::value_type >::value >::type
   destroy( const ExecSpace & space ) const
     {
-      Kokkos::RangePolicy< ExecSpace , FunctorTagDestructNonScalar , size_t > policy( 0 , m_offset.extent() );
-      Kokkos::parallel_for( policy , *this );
+      typedef Kokkos::RangePolicy< ExecSpace , FunctorTagDestructNonScalar , size_t > Policy ;
+
+      (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_offset.extent() ) );
     }
 };
 
@@ -2483,15 +2515,15 @@ private:
   enum { rank = unsigned(R0) + unsigned(R1) + unsigned(R2) + unsigned(R3)
               + unsigned(R4) + unsigned(R5) + unsigned(R6) + unsigned(R7) };
 
-  // Reverse
-  enum { R0_rev = 0 == rank ? false : (
-                  1 == rank ? R0 : (
-                  2 == rank ? R1 : (
-                  3 == rank ? R2 : (
-                  4 == rank ? R3 : (
-                  5 == rank ? R4 : (
-                  6 == rank ? R5 : (
-                  7 == rank ? R6 : R7 ))))))) };
+  // Whether right-most rank is a range.
+  enum { R0_rev = 0 == Traits::rank ? false : (
+                  1 == Traits::rank ? R0 : (
+                  2 == Traits::rank ? R1 : (
+                  3 == Traits::rank ? R2 : (
+                  4 == Traits::rank ? R3 : (
+                  5 == Traits::rank ? R4 : (
+                  6 == Traits::rank ? R5 : (
+                  7 == Traits::rank ? R6 : R7 ))))))) };
 
   // Subview's layout
   typedef typename std::conditional<

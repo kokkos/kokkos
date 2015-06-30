@@ -51,6 +51,19 @@
 
 /*--------------------------------------------------------------------------*/
 
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
+namespace Test {
+
+template < class Device >
+void test_view_impl() {}
+
+}
+
+#else
+
+/*--------------------------------------------------------------------------*/
+
 namespace Test {
 
 struct DummyMemorySpace
@@ -269,6 +282,8 @@ void test_view_impl()
 }
 
 } /* namespace Test */
+
+#endif
 
 /*--------------------------------------------------------------------------*/
 

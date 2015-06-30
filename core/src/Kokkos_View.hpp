@@ -49,6 +49,8 @@
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
 #include <impl/Kokkos_StaticAssert.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_Shape.hpp>
@@ -57,6 +59,7 @@
 #include <impl/Kokkos_ViewSupport.hpp>
 #include <impl/Kokkos_Tags.hpp>
 #include <type_traits>
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -1891,6 +1894,18 @@ subview( const View<D,A1,A2,A3,S> & src ,
 
 #include <impl/Kokkos_ViewDefault.hpp>
 #include <impl/Kokkos_Atomic_View.hpp>
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+#else
+
+#include <impl/Kokkos_ViewOffset.hpp>
+#include <impl/Kokkos_ViewSupport.hpp>
+
+#endif /* #if defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
+
+#include <KokkosExp_View.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
