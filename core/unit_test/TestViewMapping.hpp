@@ -464,7 +464,7 @@ void test_view_mapping()
     constexpr int N = 1000 ;
 
     test_view_range( N , N / 2 , N / 2 , 0 );
-    test_view_range( N , Kokkos::ALL() , 0 , N );
+    test_view_range( N , Kokkos::Experimental::ALL , 0 , N );
     test_view_range( N , std::pair<int,int>( N / 4 , 10 + N / 4 ) , N / 4 , 10 );
     test_view_range( N , Kokkos::pair<int,int>( N / 4 , 10 + N / 4 ) , N / 4 , 10 );
   }
@@ -719,6 +719,19 @@ struct TestViewMappingSubview {
   constexpr static int DN0 = 10 , DN1 = 11 , DN2 = 12 ;
   typedef Kokkos::Experimental::View<int***[13][14],ExecSpace>  DT ;
   typedef Kokkos::Experimental::Subview< DT , false , true , true , true , false >  DS ;
+
+
+  typedef Kokkos::Experimental::View<int***[13][14],Kokkos::LayoutLeft,ExecSpace>  DLT ;
+  typedef Kokkos::Experimental::Subview< DLT , true , false , false , false , false >  DLS1 ;
+
+  static_assert( DLS1::rank == 1 && std::is_same< typename DLS1::array_layout , Kokkos::LayoutLeft >::value
+               , "Subview layout error for rank 1 subview of left-most range of LayoutLeft" );
+
+  typedef Kokkos::Experimental::View<int***[13][14],Kokkos::LayoutRight,ExecSpace>  DRT ;
+  typedef Kokkos::Experimental::Subview< DRT , false , false , false , false , true >  DRS1 ;
+
+  static_assert( DRS1::rank == 1 && std::is_same< typename DRS1::array_layout , Kokkos::LayoutRight >::value
+               , "Subview layout error for rank 1 subview of right-most range of LayoutRight" );
 
   AT Aa ;
   AS Ab ;

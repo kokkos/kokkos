@@ -59,6 +59,9 @@ public:
 
   void run_test()
   {
+
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
     Kokkos::View<int* ,Arg1> invalid;
     ASSERT_EQ(0u, invalid.tracker().ref_count() );
 
@@ -83,6 +86,9 @@ public:
       }
       ASSERT_EQ(1u, a.tracker().ref_count() );
     }
+
+#endif
+
   }
 };
 

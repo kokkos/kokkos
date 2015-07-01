@@ -45,7 +45,13 @@
 
 #include <Kokkos_Core.hpp>
 
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
 #include <impl/Kokkos_ViewTileLeft.hpp>
+#include <TestTile.hpp>
+
+#endif
+
 #include <impl/Kokkos_Serial_TaskPolicy.hpp>
 
 //----------------------------------------------------------------------------
@@ -59,7 +65,6 @@
 #include <TestViewOfClass.hpp>
 #include <TestViewSubview.hpp>
 #include <TestAtomic.hpp>
-#include <TestTile.hpp>
 #include <TestRange.hpp>
 #include <TestTeam.hpp>
 #include <TestReduce.hpp>
@@ -305,6 +310,8 @@ TEST_F( serial , atomics )
 
 //----------------------------------------------------------------------------
 
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
 TEST_F( serial, tile_layout )
 {
   TestTile::test< Kokkos::Serial , 1 , 1 >( 1 , 1 );
@@ -329,6 +336,8 @@ TEST_F( serial, tile_layout )
   TestTile::test< Kokkos::Serial , 8 , 8 >( 9 , 9 );
   TestTile::test< Kokkos::Serial , 8 , 8 >( 9 , 11 );
 }
+
+#endif
 
 //----------------------------------------------------------------------------
 

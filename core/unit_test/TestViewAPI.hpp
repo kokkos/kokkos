@@ -50,6 +50,22 @@
 
 /*--------------------------------------------------------------------------*/
 
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
+namespace Test {
+
+template< typename T, class DeviceType >
+class TestViewAPI {
+public:
+  TestViewAPI() {}
+};
+
+}
+
+#else
+
+/*--------------------------------------------------------------------------*/
+
 namespace Test {
 
 template< class T , class L , class D , class M , class S >
@@ -1282,6 +1298,8 @@ public:
 };
 
 } // namespace Test
+
+#endif
 
 /*--------------------------------------------------------------------------*/
 

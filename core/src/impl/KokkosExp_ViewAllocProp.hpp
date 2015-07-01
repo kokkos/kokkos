@@ -140,7 +140,6 @@ struct ViewAllocProp< std::string , Parameters ... >
     {}
 };
 
-
 template< class ... Parameters >
 struct ViewAllocProp< WithoutInitializing_t , Parameters ... >
 {
@@ -278,6 +277,35 @@ struct ViewAllocProp< Kokkos::Device< ExecSpace , MemSpace > , char[N] >
 
   ViewAllocProp( const char * const arg_label )
     : label( arg_label )
+    , memory()
+    , execution()
+    , allow_padding()
+    , initialize()
+    {}
+};
+
+
+// Deprecate in favor of view_alloc( Kokkos::WithoutInitializing )
+template< class ExecSpace , class MemSpace >
+struct ViewAllocProp< Kokkos::Device< ExecSpace , MemSpace >
+                    , Kokkos::ViewAllocateWithoutInitializing
+                    >
+{
+  typedef ViewAllocProp<>  base_prop_type ;
+
+  typedef typename base_prop_type::allow_padding_t  allow_padding_t ;
+  typedef std::false_type                           initialize_t ;
+  typedef MemSpace   memory_space ;
+  typedef ExecSpace  execution_space  ;
+
+  const std::string      label ;
+  const memory_space     memory ;
+  const execution_space  execution ;
+  const allow_padding_t  allow_padding ;
+  const initialize_t     initialize ;
+
+  ViewAllocProp( const Kokkos::ViewAllocateWithoutInitializing & arg )
+    : label( arg.label )
     , memory()
     , execution()
     , allow_padding()
