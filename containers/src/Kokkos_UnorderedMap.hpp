@@ -476,7 +476,7 @@ public:
   /// kernel.
   KOKKOS_INLINE_FUNCTION
   size_type hash_capacity() const
-  { return m_hash_lists.size(); }
+  { return m_hash_lists.dimension_0(); }
 
   //---------------------------------------------------------------------------
   //---------------------------------------------------------------------------
@@ -506,13 +506,13 @@ public:
     int volatile & failed_insert_ref = m_scalars((int)failed_insert_idx) ;
 
     const size_type hash_value = m_hasher(k);
-    const size_type hash_list = hash_value % m_hash_lists.size();
+    const size_type hash_list = hash_value % m_hash_lists.dimension_0();
 
     size_type * curr_ptr   = & m_hash_lists[ hash_list ];
     size_type new_index    = invalid_index ;
 
     // Force integer multiply to long
-    size_type index_hint = static_cast<size_type>( (static_cast<double>(hash_list) * capacity()) / m_hash_lists.size());
+    size_type index_hint = static_cast<size_type>( (static_cast<double>(hash_list) * capacity()) / m_hash_lists.dimension_0());
 
     size_type find_attempts = 0;
 
@@ -644,7 +644,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   size_type find( const key_type & k) const
   {
-    size_type curr = 0u < capacity() ? m_hash_lists( m_hasher(k) % m_hash_lists.size() ) : invalid_index ;
+    size_type curr = 0u < capacity() ? m_hash_lists( m_hasher(k) % m_hash_lists.dimension_0() ) : invalid_index ;
 
     KOKKOS_NONTEMPORAL_PREFETCH_LOAD(&m_keys[curr != invalid_index ? curr : 0]);
     while (curr != invalid_index && !m_equal_to( m_keys[curr], k) ) {
@@ -749,21 +749,21 @@ public:
       tmp.m_equal_to = src.m_equal_to;
       tmp.m_size = src.size();
       tmp.m_available_indexes = bitset_type( src.capacity() );
-      tmp.m_hash_lists        = size_type_view( ViewAllocateWithoutInitializing("UnorderedMap hash list"), src.m_hash_lists.size() );
-      tmp.m_next_index        = size_type_view( ViewAllocateWithoutInitializing("UnorderedMap next index"), src.m_next_index.size() );
-      tmp.m_keys              = key_type_view( ViewAllocateWithoutInitializing("UnorderedMap keys"), src.m_keys.size() );
-      tmp.m_values            = value_type_view( ViewAllocateWithoutInitializing("UnorderedMap values"), src.m_values.size() );
+      tmp.m_hash_lists        = size_type_view( ViewAllocateWithoutInitializing("UnorderedMap hash list"), src.m_hash_lists.dimension_0() );
+      tmp.m_next_index        = size_type_view( ViewAllocateWithoutInitializing("UnorderedMap next index"), src.m_next_index.dimension_0() );
+      tmp.m_keys              = key_type_view( ViewAllocateWithoutInitializing("UnorderedMap keys"), src.m_keys.dimension_0() );
+      tmp.m_values            = value_type_view( ViewAllocateWithoutInitializing("UnorderedMap values"), src.m_values.dimension_0() );
       tmp.m_scalars           = scalars_view("UnorderedMap scalars");
 
       Kokkos::deep_copy(tmp.m_available_indexes, src.m_available_indexes);
 
       typedef Kokkos::Impl::DeepCopy< typename execution_space::memory_space, typename SDevice::memory_space > raw_deep_copy;
 
-      raw_deep_copy(tmp.m_hash_lists.ptr_on_device(), src.m_hash_lists.ptr_on_device(), sizeof(size_type)*src.m_hash_lists.size());
-      raw_deep_copy(tmp.m_next_index.ptr_on_device(), src.m_next_index.ptr_on_device(), sizeof(size_type)*src.m_next_index.size());
-      raw_deep_copy(tmp.m_keys.ptr_on_device(), src.m_keys.ptr_on_device(), sizeof(key_type)*src.m_keys.size());
+      raw_deep_copy(tmp.m_hash_lists.ptr_on_device(), src.m_hash_lists.ptr_on_device(), sizeof(size_type)*src.m_hash_lists.dimension_0());
+      raw_deep_copy(tmp.m_next_index.ptr_on_device(), src.m_next_index.ptr_on_device(), sizeof(size_type)*src.m_next_index.dimension_0());
+      raw_deep_copy(tmp.m_keys.ptr_on_device(), src.m_keys.ptr_on_device(), sizeof(key_type)*src.m_keys.dimension_0());
       if (!is_set) {
-        raw_deep_copy(tmp.m_values.ptr_on_device(), src.m_values.ptr_on_device(), sizeof(impl_value_type)*src.m_values.size());
+        raw_deep_copy(tmp.m_values.ptr_on_device(), src.m_values.ptr_on_device(), sizeof(impl_value_type)*src.m_values.dimension_0());
       }
       raw_deep_copy(tmp.m_scalars.ptr_on_device(), src.m_scalars.ptr_on_device(), sizeof(int)*num_scalars );
 

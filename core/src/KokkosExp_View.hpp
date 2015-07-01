@@ -1918,6 +1918,18 @@ using Kokkos::Experimental::is_view ;
 
 class ViewDefault {};
 
+template< class SrcViewType
+        , class Arg0Type
+        , class Arg1Type
+        , class Arg2Type
+        , class Arg3Type
+        , class Arg4Type
+        , class Arg5Type
+        , class Arg6Type
+        , class Arg7Type
+        >
+struct ViewSubview /* { typedef ... type ; } */ ;
+
 }
 
 } /* namespace Kokkos */

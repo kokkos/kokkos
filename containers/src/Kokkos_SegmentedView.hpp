@@ -48,6 +48,8 @@
 #include <impl/Kokkos_Error.hpp>
 #include <cstdio>
 
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
 namespace Kokkos {
 namespace Experimental {
 
@@ -382,7 +384,9 @@ public:
 
   template< typename iType0 >
   KOKKOS_FORCEINLINE_FUNCTION
-  typename Kokkos::Impl::ViewEnableArrayOper< typename traits::value_type & , traits, typename traits::array_layout, 1, iType0 >::type
+  typename std::enable_if<( std::is_integral<iType0>::value && traits::rank == 1 )
+                         , typename traits::value_type &
+                         >::type
     operator() ( const iType0 & i0 ) const
     {
       return segments_[i0>>segment_length_log2](i0&(segment_length_m1_));
@@ -390,8 +394,11 @@ public:
 
   template< typename iType0 , typename iType1 >
   KOKKOS_FORCEINLINE_FUNCTION
-  typename Kokkos::Impl::ViewEnableArrayOper< typename traits::value_type & , traits, typename traits::array_layout, 2,
-               iType0 , iType1>::type
+  typename std::enable_if<( std::is_integral<iType0>::value &&
+                            std::is_integral<iType1>::value &&
+                            traits::rank == 2 )
+                         , typename traits::value_type &
+                         >::type
     operator() ( const iType0 & i0 , const iType1 & i1 ) const
     {
       return segments_[i0>>segment_length_log2](i0&(segment_length_m1_),i1);
@@ -399,8 +406,12 @@ public:
 
   template< typename iType0 , typename iType1 , typename iType2 >
   KOKKOS_FORCEINLINE_FUNCTION
-  typename Kokkos::Impl::ViewEnableArrayOper< typename traits::value_type & , traits, typename traits::array_layout, 3,
-               iType0 , iType1 , iType2 >::type
+  typename std::enable_if<( std::is_integral<iType0>::value &&
+                            std::is_integral<iType1>::value &&
+                            std::is_integral<iType2>::value &&
+                            traits::rank == 3 )
+                         , typename traits::value_type &
+                         >::type
     operator() ( const iType0 & i0 , const iType1 & i1 , const iType2 & i2 ) const
     {
       return segments_[i0>>segment_length_log2](i0&(segment_length_m1_),i1,i2);
@@ -408,8 +419,13 @@ public:
 
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3 >
   KOKKOS_FORCEINLINE_FUNCTION
-  typename Kokkos::Impl::ViewEnableArrayOper< typename traits::value_type & , traits, typename traits::array_layout, 4,
-               iType0 , iType1 , iType2 , iType3 >::type
+  typename std::enable_if<( std::is_integral<iType0>::value &&
+                            std::is_integral<iType1>::value &&
+                            std::is_integral<iType2>::value &&
+                            std::is_integral<iType3>::value &&
+                            traits::rank == 4 )
+                         , typename traits::value_type &
+                         >::type
     operator() ( const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 ) const
     {
       return segments_[i0>>segment_length_log2](i0&(segment_length_m1_),i1,i2,i3);
@@ -418,8 +434,14 @@ public:
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3 ,
             typename iType4 >
   KOKKOS_FORCEINLINE_FUNCTION
-  typename Kokkos::Impl::ViewEnableArrayOper< typename traits::value_type & , traits, typename traits::array_layout, 5,
-               iType0 , iType1 , iType2 , iType3 , iType4 >::type
+  typename std::enable_if<( std::is_integral<iType0>::value &&
+                            std::is_integral<iType1>::value &&
+                            std::is_integral<iType2>::value &&
+                            std::is_integral<iType3>::value &&
+                            std::is_integral<iType4>::value &&
+                            traits::rank == 5 )
+                         , typename traits::value_type &
+                         >::type
     operator() ( const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 ,
                  const iType4 & i4 ) const
     {
@@ -429,8 +451,15 @@ public:
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3 ,
             typename iType4 , typename iType5 >
   KOKKOS_FORCEINLINE_FUNCTION
-  typename Kokkos::Impl::ViewEnableArrayOper< typename traits::value_type & , traits, typename traits::array_layout, 6,
-               iType0 , iType1 , iType2 , iType3 , iType4 , iType5>::type
+  typename std::enable_if<( std::is_integral<iType0>::value &&
+                            std::is_integral<iType1>::value &&
+                            std::is_integral<iType2>::value &&
+                            std::is_integral<iType3>::value &&
+                            std::is_integral<iType4>::value &&
+                            std::is_integral<iType5>::value &&
+                            traits::rank == 6 )
+                         , typename traits::value_type &
+                         >::type
     operator() ( const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 ,
                  const iType4 & i4 , const iType5 & i5 ) const
     {
@@ -440,8 +469,16 @@ public:
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3 ,
             typename iType4 , typename iType5 , typename iType6 >
   KOKKOS_FORCEINLINE_FUNCTION
-  typename Kokkos::Impl::ViewEnableArrayOper< typename traits::value_type & , traits, typename traits::array_layout, 7,
-               iType0 , iType1 , iType2 , iType3 , iType4 , iType5 , iType6>::type
+  typename std::enable_if<( std::is_integral<iType0>::value &&
+                            std::is_integral<iType1>::value &&
+                            std::is_integral<iType2>::value &&
+                            std::is_integral<iType3>::value &&
+                            std::is_integral<iType4>::value &&
+                            std::is_integral<iType5>::value &&
+                            std::is_integral<iType6>::value &&
+                            traits::rank == 7 )
+                         , typename traits::value_type &
+                         >::type
     operator() ( const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 ,
                  const iType4 & i4 , const iType5 & i5 , const iType6 & i6 ) const
     {
@@ -451,8 +488,17 @@ public:
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3 ,
             typename iType4 , typename iType5 , typename iType6 , typename iType7 >
   KOKKOS_FORCEINLINE_FUNCTION
-  typename Kokkos::Impl::ViewEnableArrayOper< typename traits::value_type & , traits, typename traits::array_layout, 8,
-               iType0 , iType1 , iType2 , iType3 , iType4 , iType5 , iType6 , iType7>::type
+  typename std::enable_if<( std::is_integral<iType0>::value &&
+                            std::is_integral<iType1>::value &&
+                            std::is_integral<iType2>::value &&
+                            std::is_integral<iType3>::value &&
+                            std::is_integral<iType4>::value &&
+                            std::is_integral<iType5>::value &&
+                            std::is_integral<iType6>::value &&
+                            std::is_integral<iType7>::value &&
+                            traits::rank == 8 )
+                         , typename traits::value_type &
+                         >::type
     operator() ( const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 ,
                  const iType4 & i4 , const iType5 & i5 , const iType6 & i6 , const iType7 & i7 ) const
     {
@@ -479,5 +525,7 @@ struct delete_segmented_view {
 }
 }
 }
+
+#endif
 
 #endif
