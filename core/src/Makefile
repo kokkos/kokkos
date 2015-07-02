@@ -4,7 +4,7 @@ PREFIX ?= /usr/local/lib/kokkos
 
 default: messages build-lib
 	echo "End Build"
-	
+
 
 include $(KOKKOS_PATH)/Makefile.kokkos
 
@@ -90,6 +90,7 @@ build-lib: build-makefile-kokkos $(KOKKOS_LINK_DEPENDS)
 
 mkdir: 
 	mkdir -p $(PREFIX)
+	mkdir -p $(PREFIX)/bin
 	mkdir -p $(PREFIX)/include
 	mkdir -p $(PREFIX)/lib
 	mkdir -p $(PREFIX)/include/impl
@@ -97,7 +98,7 @@ mkdir:
 copy-cuda: mkdir
 	mkdir -p $(PREFIX)/include/Cuda
 	cp $(KOKKOS_HEADERS_CUDA) $(PREFIX)/include/Cuda
-	
+
 copy-threads: mkdir
 	mkdir -p $(PREFIX)/include/Threads
 	cp $(KOKKOS_HEADERS_THREADS) $(PREFIX)/include/Threads
@@ -111,13 +112,14 @@ copy-openmp: mkdir
 	cp $(KOKKOS_HEADERS_OPENMP) $(PREFIX)/include/OpenMP
 
 install: mkdir $(CONDITIONAL_COPIES) build-lib 
+	cp $(KOKKOS_PATH)/config/nvcc_wrapper $(PREFIX)/bin
 	cp $(KOKKOS_HEADERS_INCLUDE) $(PREFIX)/include
 	cp $(KOKKOS_HEADERS_INCLUDE_IMPL) $(PREFIX)/include/impl
 	cp Makefile.kokkos $(PREFIX)
 	cp libkokkos.a $(PREFIX)/lib
 	cp KokkosCore_config.h $(PREFIX)/include
 
-  
+
 
 clean: kokkos-clean
 	rm Makefile.kokkos
