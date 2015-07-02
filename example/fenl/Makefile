@@ -39,6 +39,10 @@ $(EXE_EXAMPLE_FENL) : $(OBJ_EXAMPLE_FENL) $(KOKKOS_LINK_DEPENDS)
 
 build_all : $(TARGETS)
 
+
+test : build_all
+
+
 # Compilation rules
 
 %.o:%.cpp $(KOKKOS_CPP_DEPENDS) $(EXAMPLE_HEADERS)
