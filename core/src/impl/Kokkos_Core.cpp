@@ -141,7 +141,7 @@ void initialize_internal(const InitArguments& args)
 #endif
 
 #ifdef KOKKOSP_ENABLE_PROFILING
-    KokkosP::initialize();
+    Kokkos::Experimental::initialize();
 #endif
 }
 
@@ -183,7 +183,7 @@ void finalize_internal( const bool all_spaces = false )
 #endif
 
 #ifdef KOKKOSP_ENABLE_PROFILING
-    KokkosP::finalize();
+    Kokkos::Experimental::finalize();
 #endif
 
 }

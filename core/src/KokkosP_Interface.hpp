@@ -58,7 +58,9 @@
 #define KOKKOSP_INTERFACE_VERSION 20150628
 
 #ifdef KOKKOSP_ENABLE_PROFILING
-namespace KokkosP {
+namespace Kokkos {
+  namespace Experimental {
+
     typedef void (*initFunction)(const int, const uint64_t);
     typedef void (*finalizeFunction)();
     typedef void (*beginFunction)(const char*, uint64_t*);
@@ -84,6 +86,8 @@ namespace KokkosP {
 
     void initialize();
     void finalize();
+    
+  }
 }
 
 #endif

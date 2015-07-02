@@ -46,7 +46,8 @@
 #ifdef KOKKOSP_ENABLE_PROFILING
 #include <string.h>
 
-namespace KokkosP {
+namespace Kokkos {
+  namespace Experimental {
     bool profileLibraryLoaded() {
        	return (NULL != initProfileLibrary);
     }
@@ -131,6 +132,7 @@ namespace KokkosP {
             (*finalizeProfileLibrary)();
         }
     };
+  }
 }
 
 #endif
