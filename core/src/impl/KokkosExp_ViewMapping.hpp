@@ -720,12 +720,12 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
   constexpr size_type size() const
     { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 * m_dim.N7 ; }
 
-  /* Extent of the range space */
+  /* Span of the range space */
   KOKKOS_INLINE_FUNCTION
-  constexpr size_type extent() const
+  constexpr size_type span() const
     { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 * m_dim.N7 ; }
 
-  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() const { return true ; }
+  KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const { return true ; }
 
   /* Strides of dimensions */
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_0() const { return 1 ; }
@@ -942,12 +942,12 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
   constexpr size_type size() const
     { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 * m_dim.N7 ; }
 
-  /* Extent of the range space */
+  /* Span of the range space */
   KOKKOS_INLINE_FUNCTION
-  constexpr size_type extent() const
+  constexpr size_type span() const
     { return m_stride * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 * m_dim.N7 ; }
 
-  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() const { return m_stride == m_dim.N0 ; }
+  KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const { return m_stride == m_dim.N0 ; }
 
   /* Strides of dimensions */
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_0() const { return 1 ; }
@@ -1187,12 +1187,12 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
   constexpr size_type size() const
     { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 * m_dim.N7 ; }
 
-  /* Extent of the range space */
+  /* Span of the range space */
   KOKKOS_INLINE_FUNCTION
-  constexpr size_type extent() const
+  constexpr size_type span() const
     { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 * m_dim.N7 ; }
 
-  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() const { return true ; }
+  KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const { return true ; }
 
   /* Strides of dimensions */
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_7() const { return 1 ; }
@@ -1408,12 +1408,12 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
   constexpr size_type size() const
     { return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 * m_dim.N6 * m_dim.N7 ; }
 
-  /* Extent of the range space */
+  /* Span of the range space */
   KOKKOS_INLINE_FUNCTION
-  constexpr size_type extent() const
+  constexpr size_type span() const
     { return m_dim.N0 * m_stride ; }
 
-  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() const
+  KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const
     { return m_stride == m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 * m_dim.N3 * m_dim.N2 * m_dim.N1 ; }
 
   /* Strides of dimensions */
@@ -1828,9 +1828,9 @@ private:
 
 public:
 
-  /* Extent of the range space, largest stride * dimension */
+  /* Span of the range space, largest stride * dimension */
   KOKKOS_INLINE_FUNCTION
-  constexpr size_type extent() const
+  constexpr size_type span() const
     {
       return Max( m_dim.N0 * m_stride.S0 ,
              Max( m_dim.N1 * m_stride.S1 ,
@@ -1842,7 +1842,7 @@ public:
                   m_dim.N7 * m_stride.S7 )))))));
     }
 
-  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() const { return extent() == size(); }
+  KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const { return span() == size(); }
 
   /* Strides of dimensions */
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_0() const { return m_stride.S0 ; }
@@ -1867,7 +1867,7 @@ public:
       if ( 5 < dimension_type::rank ) { s[5] = m_stride.S5 ; }
       if ( 6 < dimension_type::rank ) { s[6] = m_stride.S6 ; }
       if ( 7 < dimension_type::rank ) { s[7] = m_stride.S7 ; }
-      s[dimension_type::rank] = extent();
+      s[dimension_type::rank] = span();
     }
 
   //----------------------------------------
@@ -2232,13 +2232,13 @@ public:
   */
 
   //----------------------------------------
-  // Range extent
+  // Range span
 
-  /** \brief  Extent of the mapped range */
-  KOKKOS_INLINE_FUNCTION constexpr size_t extent() const { return m_offset.extent(); }
+  /** \brief  Span of the mapped range */
+  KOKKOS_INLINE_FUNCTION constexpr size_t span() const { return m_offset.span(); }
 
-  /** \brief  Is the mapped range extent contiguous */
-  KOKKOS_INLINE_FUNCTION constexpr bool extent_is_contiguous() const { return m_offset.extent_is_contiguous(); }
+  /** \brief  Is the mapped range span contiguous */
+  KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const { return m_offset.span_is_contiguous(); }
 
   typedef typename ViewDataHandle< Traits >::return_type  reference_type ;
 
@@ -2310,35 +2310,35 @@ public:
 
 private:
 
-  enum { MemoryExtentMask = 8 - 1 /* Force alignment on 8 byte boundary */ };
-  enum { MemoryExtentSize = sizeof(typename Traits::value_type) };
+  enum { MemorySpanMask = 8 - 1 /* Force alignment on 8 byte boundary */ };
+  enum { MemorySpanSize = sizeof(typename Traits::value_type) };
 
 public:
 
-  /** \brief  Extent, in bytes, of the referenced memory */
-  KOKKOS_INLINE_FUNCTION constexpr size_t memory_extent() const
+  /** \brief  Span, in bytes, of the referenced memory */
+  KOKKOS_INLINE_FUNCTION constexpr size_t memory_span() const
     {
-      return ( m_offset.extent() * sizeof(typename Traits::value_type) + MemoryExtentMask ) & ~size_t(MemoryExtentMask);
+      return ( m_offset.span() * sizeof(typename Traits::value_type) + MemorySpanMask ) & ~size_t(MemorySpanMask);
     }
 
-  /** \brief  Extent, in bytes, of the required memory */
+  /** \brief  Span, in bytes, of the required memory */
   template< bool AllowPadding >
   KOKKOS_INLINE_FUNCTION
-  static constexpr size_t memory_extent( const std::integral_constant<bool,AllowPadding> &
-                                       , const size_t N0 , const size_t N1 , const size_t N2 , const size_t N3
-                                       , const size_t N4 , const size_t N5 , const size_t N6 , const size_t N7 )
+  static constexpr size_t memory_span( const std::integral_constant<bool,AllowPadding> &
+                                     , const size_t N0 , const size_t N1 , const size_t N2 , const size_t N3
+                                      , const size_t N4 , const size_t N5 , const size_t N6 , const size_t N7 )
     {
-      typedef std::integral_constant< unsigned , AllowPadding ? MemoryExtentSize : 0 >  padding ;
-      return ( offset_type( padding(), N0, N1, N2, N3, N4, N5, N6, N7 ).extent() * MemoryExtentSize + MemoryExtentMask ) & ~size_t(MemoryExtentMask);
+      typedef std::integral_constant< unsigned , AllowPadding ? MemorySpanSize : 0 >  padding ;
+      return ( offset_type( padding(), N0, N1, N2, N3, N4, N5, N6, N7 ).span() * MemorySpanSize + MemorySpanMask ) & ~size_t(MemorySpanMask);
     }
 
-  /** \brief  Extent, in bytes, of the required memory */
+  /** \brief  Span, in bytes, of the required memory */
   template< bool AllowPadding >
   KOKKOS_INLINE_FUNCTION
-  static constexpr size_t memory_extent( const std::integral_constant<bool,AllowPadding> &
+  static constexpr size_t memory_span( const std::integral_constant<bool,AllowPadding> &
                                        , const typename Traits::array_layout & layout )
     {
-      return ( offset_type( layout ).extent() * MemoryExtentSize + MemoryExtentMask ) & ~size_t(MemoryExtentMask);
+      return ( offset_type( layout ).span() * MemorySpanSize + MemorySpanMask ) & ~size_t(MemorySpanMask);
     }
 
   //----------------------------------------
@@ -2407,7 +2407,7 @@ public:
     {
       typedef Kokkos::RangePolicy< ExecSpace , FunctorTagConstructScalar , size_t > Policy ;
 
-      (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_offset.extent() ) );
+      (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_offset.span() ) );
     }
 
   template< class ExecSpace >
@@ -2417,7 +2417,7 @@ public:
     {
       typedef Kokkos::RangePolicy< ExecSpace , FunctorTagConstructNonScalar , size_t > Policy ;
 
-      (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_offset.extent() ) );
+      (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_offset.span() ) );
     }
 
   template< class ExecSpace >
@@ -2432,7 +2432,7 @@ public:
     {
       typedef Kokkos::RangePolicy< ExecSpace , FunctorTagDestructNonScalar , size_t > Policy ;
 
-      (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_offset.extent() ) );
+      (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_offset.span() ) );
     }
 };
 

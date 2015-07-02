@@ -437,18 +437,18 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_7() const { return m_map.stride_7(); }
 
   //----------------------------------------
-  // Range extent
+  // Range span
 
   typedef typename map_type::reference_type  reference_type ;
 
   enum { reference_type_is_lvalue_reference = std::is_lvalue_reference< reference_type >::value };
 
-  KOKKOS_INLINE_FUNCTION constexpr size_t extent() const { return m_map.extent(); }
-  KOKKOS_INLINE_FUNCTION constexpr bool   extent_is_contiguous() const { return m_map.extent_is_contiguous(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t span() const { return m_map.span(); }
+  KOKKOS_INLINE_FUNCTION constexpr bool   span_is_contiguous() const { return m_map.span_is_contiguous(); }
   KOKKOS_INLINE_FUNCTION constexpr typename traits::value_type * data() const { return m_map.data(); }
 
-  // Deprecated, use 'extent_is_contigous()' instead
-  KOKKOS_INLINE_FUNCTION constexpr bool   is_contiguous() const { return m_map.extent_is_contiguous(); }
+  // Deprecated, use 'span_is_contigous()' instead
+  KOKKOS_INLINE_FUNCTION constexpr bool   is_contiguous() const { return m_map.span_is_contiguous(); }
   // Deprecated, use 'data()' instead
   KOKKOS_INLINE_FUNCTION constexpr typename traits::value_type * ptr_on_device() const { return m_map.data(); }
 
@@ -869,9 +869,9 @@ public:
       const alloc_prop prop( arg_prop );
 
       // Query the mapping for byte-size of allocation.
-      const size_t alloc_size = map_type::memory_extent( prop.allow_padding
-                                                       , arg_N0 , arg_N1 , arg_N2 , arg_N3
-                                                       , arg_N4 , arg_N5 , arg_N6 , arg_N7 );
+      const size_t alloc_size = map_type::memory_span( prop.allow_padding
+                                                     , arg_N0 , arg_N1 , arg_N2 , arg_N3
+                                                     , arg_N4 , arg_N5 , arg_N6 , arg_N7 );
 
       // Allocate memory from the memory space.
       record_type * const record = record_type::allocate( prop.memory , prop.label , alloc_size );
@@ -916,7 +916,7 @@ public:
       const alloc_prop prop( arg_prop );
 
       // Query the mapping for byte-size of allocation.
-      const size_t alloc_size = map_type::memory_extent( prop.allow_padding , arg_layout );
+      const size_t alloc_size = map_type::memory_span( prop.allow_padding , arg_layout );
 
       // Allocate memory from the memory space.
       record_type * const record = record_type::allocate( prop.memory , prop.label , alloc_size );
@@ -938,20 +938,20 @@ public:
     }
 
   //----------------------------------------
-  // Memory extent required to wrap these dimensions.
-  static constexpr size_t memory_extent( const size_t arg_N0 = 0
-                                       , const size_t arg_N1 = 0
-                                       , const size_t arg_N2 = 0
-                                       , const size_t arg_N3 = 0
-                                       , const size_t arg_N4 = 0
-                                       , const size_t arg_N5 = 0
-                                       , const size_t arg_N6 = 0
-                                       , const size_t arg_N7 = 0
-                                       )
+  // Memory span required to wrap these dimensions.
+  static constexpr size_t memory_span( const size_t arg_N0 = 0
+                                     , const size_t arg_N1 = 0
+                                     , const size_t arg_N2 = 0
+                                     , const size_t arg_N3 = 0
+                                     , const size_t arg_N4 = 0
+                                     , const size_t arg_N5 = 0
+                                     , const size_t arg_N6 = 0
+                                     , const size_t arg_N7 = 0
+                                     )
     {
-      return map_type::memory_extent( std::integral_constant<bool,false>()
-                                    , arg_N0 , arg_N1 , arg_N2 , arg_N3
-                                    , arg_N4 , arg_N5 , arg_N6 , arg_N7 );
+      return map_type::memory_span( std::integral_constant<bool,false>()
+                                  , arg_N0 , arg_N1 , arg_N2 , arg_N3
+                                  , arg_N4 , arg_N5 , arg_N6 , arg_N7 );
     }
 
   explicit inline
@@ -992,9 +992,9 @@ public:
                      const size_t arg_N6 = 0 ,
                      const size_t arg_N7 = 0 )
   {
-    return map_type::memory_extent( std::integral_constant<bool,false>()
-                                  , arg_N0 , arg_N1 , arg_N2 , arg_N3
-                                  , arg_N4 , arg_N5 , arg_N6 , arg_N7 );
+    return map_type::memory_span( std::integral_constant<bool,false>()
+                                , arg_N0 , arg_N1 , arg_N2 , arg_N3
+                                , arg_N4 , arg_N5 , arg_N6 , arg_N7 );
   }
 
   explicit KOKKOS_INLINE_FUNCTION
@@ -1008,9 +1008,9 @@ public:
       , const size_t arg_N6 = 0
       , const size_t arg_N7 = 0 )
     : m_track() // No memory tracking
-    , m_map( arg_space.get_shmem( map_type::memory_extent( std::integral_constant<bool,false>()
-                                                         , arg_N0 , arg_N1 , arg_N2 , arg_N3
-                                                         , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) )
+    , m_map( arg_space.get_shmem( map_type::memory_span( std::integral_constant<bool,false>()
+                                                       , arg_N0 , arg_N1 , arg_N2 , arg_N3
+                                                       , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) )
            , std::integral_constant<bool,false>() 
            , arg_N0 , arg_N1 , arg_N2 , arg_N3
            , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
@@ -1473,7 +1473,7 @@ bool operator == ( const View<LT,L1,L2,L3> & lhs ,
                   typename rhs_traits::memory_space >::value &&
     lhs_traits::Rank == rhs_traits::Rank &&
     lhs.data()        == rhs.data() &&
-    lhs.extent()      == rhs.extent() &&
+    lhs.span()        == rhs.span() &&
     lhs.dimension_0() == rhs.dimension_0() &&
     lhs.dimension_1() == rhs.dimension_1() &&
     lhs.dimension_2() == rhs.dimension_2() &&
@@ -1704,15 +1704,15 @@ void deep_copy( const View<DT,D1,D2,D3> & dst ,
     // Concern: If overlapping views then a parallel copy will be erroneous.
     // ...
 
-    // If same type, equal layout, equal dimensions, equal extent, and contiguous memory then can byte-wise copy
+    // If same type, equal layout, equal dimensions, equal span, and contiguous memory then can byte-wise copy
 
     if ( std::is_same< typename ViewTraits<DT,D1,D2,D3>::value_type ,
                        typename ViewTraits<ST,S1,S2,S3>::non_const_value_type >::value &&
          std::is_same< typename ViewTraits<DT,D1,D2,D3>::array_layout ,
                        typename ViewTraits<ST,S1,S2,S3>::array_layout >::value &&
-         dst.extent_is_contiguous() &&
-         src.extent_is_contiguous() &&
-         dst.extent() == src.extent() &&
+         dst.span_is_contiguous() &&
+         src.span_is_contiguous() &&
+         dst.span() == src.span() &&
          dst.dimension_0() == src.dimension_0() &&
          dst.dimension_1() == src.dimension_1() &&
          dst.dimension_2() == src.dimension_2() &&
@@ -1722,7 +1722,7 @@ void deep_copy( const View<DT,D1,D2,D3> & dst ,
          dst.dimension_6() == src.dimension_6() &&
          dst.dimension_7() == src.dimension_7() ) {
 
-      const size_t nbytes = sizeof(typename dst_type::value_type) * dst.extent();
+      const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
 
       Kokkos::Impl::DeepCopy< dst_memory_space , src_memory_space >( dst.data() , src.data() , nbytes );
     }
@@ -1917,6 +1917,18 @@ namespace Impl {
 using Kokkos::Experimental::is_view ;
 
 class ViewDefault {};
+
+template< class SrcViewType
+        , class Arg0Type
+        , class Arg1Type
+        , class Arg2Type
+        , class Arg3Type
+        , class Arg4Type
+        , class Arg5Type
+        , class Arg6Type
+        , class Arg7Type
+        >
+struct ViewSubview /* { typedef ... type ; } */ ;
 
 }
 

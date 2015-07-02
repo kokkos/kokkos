@@ -429,7 +429,8 @@ public:
      t_host temp_view = create_mirror_view( d_view );
 
      /* Remap on Host */
-     Impl::ViewRemap< t_host , t_host >( temp_view , h_view );
+     Kokkos::deep_copy( temp_view , h_view );
+
      h_view = temp_view;
 
      /* Mark Host copy as modified */
@@ -443,7 +444,11 @@ public:
 
   //! The allocation size (same as Kokkos::View::capacity).
   size_t capacity() const {
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+    return d_view.span();
+#else
     return d_view.capacity();
+#endif
   }
 
   //! Get stride(s) for each dimension.

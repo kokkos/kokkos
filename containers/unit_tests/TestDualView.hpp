@@ -71,7 +71,8 @@ namespace Impl {
       if(m<3) m = 3;
       ViewType a("A",n,m);
 
-      Kokkos::Impl::ViewFill<typename ViewType::t_dev>(a.d_view,1);
+      Kokkos::deep_copy( a.d_view , 1 );
+
       a.template modify<typename ViewType::execution_space>();
       a.template sync<typename ViewType::host_mirror_space>();
 
@@ -82,7 +83,9 @@ namespace Impl {
       ViewType b = Kokkos::subview(a,std::pair<unsigned int, unsigned int>(6,9),std::pair<unsigned int, unsigned int>(0,1));
       a.template sync<typename ViewType::execution_space>();
       b.template modify<typename ViewType::execution_space>();
-      Kokkos::Impl::ViewFill<typename ViewType::t_dev>(b.d_view,2);
+
+      Kokkos::deep_copy( b.d_view , 2 );
+
       a.template sync<typename ViewType::host_mirror_space>();
       Scalar count = 0;
       for(unsigned int i = 0; i<a.d_view.dimension_0(); i++)
