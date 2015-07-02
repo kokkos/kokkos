@@ -445,7 +445,7 @@ public:
   //! The allocation size (same as Kokkos::View::capacity).
   size_t capacity() const {
 #if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
-    return d_view.extent();
+    return d_view.span();
 #else
     return d_view.capacity();
 #endif

@@ -193,12 +193,12 @@ void test_view_mapping()
     ASSERT_EQ( off3.stride_0() , 1 );
     ASSERT_EQ( off3.stride_1() , 2 );
     ASSERT_EQ( off3.stride_2() , 6 );
-    ASSERT_EQ( off3.extent() , 24 );
+    ASSERT_EQ( off3.span() , 24 );
 
     ASSERT_EQ( off3.stride_0() , stride3.stride_0() );
     ASSERT_EQ( off3.stride_1() , stride3.stride_1() );
     ASSERT_EQ( off3.stride_2() , stride3.stride_2() );
-    ASSERT_EQ( off3.extent() , stride3.extent() );
+    ASSERT_EQ( off3.span() , stride3.span() );
 
     int offset = 0 ;
 
@@ -242,8 +242,8 @@ void test_view_mapping()
       ASSERT_EQ( stride3(i,j,k) , dyn_off3(i,j,k) );
     }}}
 
-    ASSERT_EQ( dyn_off3.extent() , offset );
-    ASSERT_EQ( stride3.extent() , dyn_off3.extent() );
+    ASSERT_EQ( dyn_off3.span() , offset );
+    ASSERT_EQ( stride3.span() , dyn_off3.span() );
   }
 
   // Large dimension is likely padded
@@ -270,7 +270,7 @@ void test_view_mapping()
     ASSERT_EQ( stride3.m_dim.N2 , 4 );
     ASSERT_EQ( stride3.m_dim.N3 , 1 );
     ASSERT_EQ( stride3.size() , N0 * N1 * 4 );
-    ASSERT_EQ( stride3.extent() , dyn_off3.extent() );
+    ASSERT_EQ( stride3.span() , dyn_off3.span() );
 
     int offset = 0 ;
 
@@ -282,7 +282,7 @@ void test_view_mapping()
       offset = dyn_off3(i,j,k) + 1 ;
     }}}
 
-    ASSERT_LE( offset , dyn_off3.extent() );
+    ASSERT_LE( offset , dyn_off3.span() );
   }
 
   //----------------------------------------
@@ -306,7 +306,7 @@ void test_view_mapping()
     ASSERT_EQ( off3.stride_0() , stride3.stride_0() );
     ASSERT_EQ( off3.stride_1() , stride3.stride_1() );
     ASSERT_EQ( off3.stride_2() , stride3.stride_2() );
-    ASSERT_EQ( off3.extent() , stride3.extent() );
+    ASSERT_EQ( off3.span() , stride3.span() );
 
     int offset = 0 ;
 
@@ -317,7 +317,7 @@ void test_view_mapping()
       ASSERT_EQ( off3(i,j,k) , stride3(i,j,k) );
     }}}
 
-    ASSERT_EQ( off3.extent() , offset );
+    ASSERT_EQ( off3.span() , offset );
   }
 
   //----------------------------------------
@@ -342,7 +342,7 @@ void test_view_mapping()
     ASSERT_EQ( dyn_off3.stride_0() , stride3.stride_0() );
     ASSERT_EQ( dyn_off3.stride_1() , stride3.stride_1() );
     ASSERT_EQ( dyn_off3.stride_2() , stride3.stride_2() );
-    ASSERT_EQ( dyn_off3.extent() , stride3.extent() );
+    ASSERT_EQ( dyn_off3.span() , stride3.span() );
 
     int offset = 0 ;
 
@@ -353,7 +353,7 @@ void test_view_mapping()
       ASSERT_EQ( dyn_off3(i,j,k) , stride3(i,j,k) );
     }}}
 
-    ASSERT_EQ( dyn_off3.extent() , offset );
+    ASSERT_EQ( dyn_off3.span() , offset );
   }
 
   // Large dimension is likely padded
@@ -380,7 +380,7 @@ void test_view_mapping()
     ASSERT_EQ( dyn_off3.stride_0() , stride3.stride_0() );
     ASSERT_EQ( dyn_off3.stride_1() , stride3.stride_1() );
     ASSERT_EQ( dyn_off3.stride_2() , stride3.stride_2() );
-    ASSERT_EQ( dyn_off3.extent() , stride3.extent() );
+    ASSERT_EQ( dyn_off3.span() , stride3.span() );
 
     int offset = 0 ;
 
@@ -392,7 +392,7 @@ void test_view_mapping()
       offset = dyn_off3(i,j,k) + 1 ;
     }}}
 
-    ASSERT_LE( offset , dyn_off3.extent() );
+    ASSERT_LE( offset , dyn_off3.span() );
   }
 
   //----------------------------------------
@@ -419,7 +419,7 @@ void test_view_mapping()
     ASSERT_EQ( dyn_off3.stride_0() , stride3.stride_0() );
     ASSERT_EQ( dyn_off3.stride_1() , stride3.stride_1() );
     ASSERT_EQ( dyn_off3.stride_2() , stride3.stride_2() );
-    ASSERT_GE( dyn_off3.extent()   , stride3.extent() );
+    ASSERT_GE( dyn_off3.span()   , stride3.span() );
 
     for ( int k = 0 ; k < sub_N2 ; ++k ){
     for ( int j = 0 ; j < sub_N1 ; ++j ){
@@ -450,7 +450,7 @@ void test_view_mapping()
     ASSERT_EQ( dyn_off3.stride_0() , stride3.stride_0() );
     ASSERT_EQ( dyn_off3.stride_1() , stride3.stride_1() );
     ASSERT_EQ( dyn_off3.stride_2() , stride3.stride_2() );
-    ASSERT_GE( dyn_off3.extent()   , stride3.extent() );
+    ASSERT_GE( dyn_off3.span()   , stride3.span() );
 
     for ( int i = 0 ; i < sub_N0 ; ++i ){
     for ( int j = 0 ; j < sub_N1 ; ++j ){
@@ -516,8 +516,8 @@ void test_view_mapping()
     // Generate static_assert error:
     // T tmp( cr1 );
 
-    ASSERT_EQ( vr1.extent() , N );
-    ASSERT_EQ( cr1.extent() , N );
+    ASSERT_EQ( vr1.span() , N );
+    ASSERT_EQ( cr1.span() , N );
     ASSERT_EQ( vr1.data() , & data[0] );
     ASSERT_EQ( cr1.data() , & data[0] );
 
@@ -663,8 +663,8 @@ void test_view_mapping()
     ASSERT_EQ( offset.stride_1() , 1 );
     ASSERT_EQ( offset.stride_2() , 12 );
 
-    ASSERT_EQ( offset.extent() , 60 );
-    ASSERT_TRUE( offset.extent_is_contiguous() );
+    ASSERT_EQ( offset.span() , 60 );
+    ASSERT_TRUE( offset.span_is_contiguous() );
 
     Kokkos::Experimental::Impl::ViewMapping< traits_t , void >  v( (int*) 0 , std::false_type() , stride );
   }
@@ -853,7 +853,7 @@ struct TestViewMapOperator {
         offset = d ;
       }
 
-      if ( v.extent() <= size_t(offset) ) ++error_count ;
+      if ( v.span() <= size_t(offset) ) ++error_count ;
     }
 
   KOKKOS_INLINE_FUNCTION
@@ -883,7 +883,7 @@ struct TestViewMapOperator {
         offset = d ;
       }
 
-      if ( v.extent() <= size_t(offset) ) ++error_count ;
+      if ( v.span() <= size_t(offset) ) ++error_count ;
     }
 
   KOKKOS_INLINE_FUNCTION
@@ -927,7 +927,7 @@ struct TestViewMapOperator {
                  self.v.dimension_5()*
                  self.v.dimension_6()*
                  self.v.dimension_7()
-               , self.v.extent() );
+               , self.v.span() );
 
       long error_count ;
       Kokkos::RangePolicy< typename ViewType::execution_space > range(0,self.v.dimension_0());
