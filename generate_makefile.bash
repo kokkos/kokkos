@@ -148,6 +148,10 @@ mkdir containers/performance_tests
 mkdir algorithms
 mkdir algorithms/unit_tests
 mkdir algorithms/performance_tests
+mkdir example
+mkdir example/fixture
+mkdir example/feint
+mkdir example/fenl
 
 
 echo "Generating Makefile with options " ${KOKKOS_OPTIONS}
@@ -172,6 +176,12 @@ echo -e "\tcd containers/performance_tests; \\" >> Makefile
 echo -e "\tmake -j -f ${KOKKOS_PATH}/containers/performance_tests/Makefile ${KOKKOS_OPTIONS}" >> Makefile
 echo -e "\tcd algorithms/unit_tests; \\" >> Makefile
 echo -e "\tmake -j -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_OPTIONS}" >> Makefile
+echo -e "\tcd example/fixture; \\" >> Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_OPTIONS}" >> Makefile
+echo -e "\tcd example/feint; \\" >> Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_OPTIONS}" >> Makefile
+echo -e "\tcd example/fenl; \\" >> Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_OPTIONS}" >> Makefile
 echo "" >> Makefile
 echo "test: build-test" >> Makefile
 echo -e "\tcd core/unit_test; \\" >> Makefile
@@ -184,5 +194,11 @@ echo -e "\tcd containers/performance_tests; \\" >> Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/containers/performance_tests/Makefile ${KOKKOS_OPTIONS} test" >> Makefile
 echo -e "\tcd algorithms/unit_tests; \\" >> Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_OPTIONS} test" >> Makefile
+echo -e "\tcd example/fixture; \\" >> Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_OPTIONS} test" >> Makefile
+echo -e "\tcd example/feint; \\" >> Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_OPTIONS} test" >> Makefile
+echo -e "\tcd example/fenl; \\" >> Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_OPTIONS} test" >> Makefile
 
 
