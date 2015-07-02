@@ -52,10 +52,10 @@ namespace Kokkos {
        	return (NULL != initProfileLibrary);
     }
 
-    void beginParallelFor(const std::string& kernelPrefix, uint64_t* kernelID) {
+    void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID) {
         if(NULL != beginForCallee) {
             Kokkos::fence();
-            (*beginForCallee)(kernelPrefix.c_str(), kernelID);
+            (*beginForCallee)(kernelPrefix.c_str(), devID, kernelID);
         }
     };
 
@@ -66,10 +66,10 @@ namespace Kokkos {
         }
     };
 
-    void beginParallelScan(const std::string& kernelPrefix, uint64_t* kernelID) {
+    void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID) {
         if(NULL != beginScanCallee) {
             Kokkos::fence();
-            (*beginScanCallee)(kernelPrefix.c_str(), kernelID);
+            (*beginScanCallee)(kernelPrefix.c_str(), devID, kernelID);
         }
     };
 
@@ -80,10 +80,10 @@ namespace Kokkos {
         }
     };
     
-    void beginParallelReduce(const std::string& kernelPrefix, uint64_t* kernelID) {
+    void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID) {
         if(NULL != beginReduceCallee) {
             Kokkos::fence();
-            (*beginReduceCallee)(kernelPrefix.c_str(), kernelID);
+            (*beginReduceCallee)(kernelPrefix.c_str(), devID, kernelID);
         }
     };
     

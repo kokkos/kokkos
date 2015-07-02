@@ -67,7 +67,7 @@ namespace Kokkos {
 	const uint32_t,
 	KokkosPDeviceInfo*);
     typedef void (*finalizeFunction)();
-    typedef void (*beginFunction)(const char*, uint64_t*);
+    typedef void (*beginFunction)(const char*, const uint32_t, uint64_t*);
     typedef void (*endFunction)(uint64_t);
 
     static initFunction initProfileLibrary = NULL;
@@ -81,16 +81,16 @@ namespace Kokkos {
 
     bool profileLibraryLoaded();
 
-    void beginParallelFor(const std::string& kernelPrefix, uint64_t* kernelID);
+    void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID);
     void endParallelFor(const uint64_t kernelID);
-    void beginParallelScan(const std::string& kernelPrefix, uint64_t* kernelID);
+    void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID);
     void endParallelScan(const uint64_t kernelID);
-    void beginParallelReduce(const std::string& kernelPrefix, uint64_t* kernelID);
+    void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID);
     void endParallelReduce(const uint64_t kernelID);
 
     void initialize();
     void finalize();
-    
+
   }
 }
 
