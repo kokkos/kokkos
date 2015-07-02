@@ -39,60 +39,19 @@
  //
  // ************************************************************************
  //@HEADER
- */
+*/
 
-#ifndef KOKKOSP_INTERFACE_HPP
-#define KOKKOSP_INTERFACE_HPP
+#ifndef KOKKOSP_DEVICE_INFO_HPP
+#define KOKKOSP_DEVICE_INFO_HPP
 
-#include <cstddef>
-#include <Kokkos_Core_fwd.hpp>
-#include <Kokkos_Macros.hpp>
-#include <string>
-
-#ifdef KOKKOSP_ENABLE_PROFILING
-#include <KokkosP_DeviceInfo.hpp>
-#include <dlfcn.h>
-#include <iostream>
-#include <stdlib.h>
-#endif
-
-#define KOKKOSP_INTERFACE_VERSION 20150628
-
-#ifdef KOKKOSP_ENABLE_PROFILING
 namespace Kokkos {
-  namespace Experimental {
+namespace Experimental {
 
-    typedef void (*initFunction)(const int,
-	const uint64_t,
-	const uint32_t,
-	KokkosPDeviceInfo*);
-    typedef void (*finalizeFunction)();
-    typedef void (*beginFunction)(const char*, uint64_t*);
-    typedef void (*endFunction)(uint64_t);
+    struct KokkosPDeviceInfo {
+        uint32_t deviceID;
+    };
 
-    static initFunction initProfileLibrary = NULL;
-    static finalizeFunction finalizeProfileLibrary = NULL;
-    static beginFunction beginForCallee = NULL;
-    static beginFunction beginScanCallee = NULL;
-    static beginFunction beginReduceCallee = NULL;
-    static endFunction endForCallee = NULL;
-    static endFunction endScanCallee = NULL;
-    static endFunction endReduceCallee = NULL;
-
-    bool profileLibraryLoaded();
-
-    void beginParallelFor(const std::string& kernelPrefix, uint64_t* kernelID);
-    void endParallelFor(const uint64_t kernelID);
-    void beginParallelScan(const std::string& kernelPrefix, uint64_t* kernelID);
-    void endParallelScan(const uint64_t kernelID);
-    void beginParallelReduce(const std::string& kernelPrefix, uint64_t* kernelID);
-    void endParallelReduce(const uint64_t kernelID);
-
-    void initialize();
-    void finalize();
-    
-  }
+}
 }
 
-#endif
 #endif
