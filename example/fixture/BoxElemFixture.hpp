@@ -182,9 +182,9 @@ public:
   KOKKOS_INLINE_FUNCTION
   size_t node_global_index( size_t local ) const
     {
-      const size_t node_grid[SpaceDim] =
+      const size_t tmp_node_grid[SpaceDim] =
         { m_node_grid(local,0) , m_node_grid(local,1) , m_node_grid(local,2) };
-      return m_box_part.global_node_id( node_grid );
+      return m_box_part.global_node_id( tmp_node_grid );
     }
 
   KOKKOS_INLINE_FUNCTION
@@ -301,30 +301,30 @@ public:
       const size_t inode = i % ElemNode ;
 
       size_t elem_grid[SpaceDim] ;
-      size_t node_grid[SpaceDim] ;
+      size_t tmp_node_grid[SpaceDim] ;
 
       m_box_part.uses_elem_coord( ielem , elem_grid );
 
       enum { elem_node_scale = Order == BoxElemPart::ElemLinear ? 1 :
                                Order == BoxElemPart::ElemQuadratic ? 2 : 0 };
 
-      node_grid[0] = elem_node_scale * elem_grid[0] + m_elem_node_local[inode][0] ;
-      node_grid[1] = elem_node_scale * elem_grid[1] + m_elem_node_local[inode][1] ;
-      node_grid[2] = elem_node_scale * elem_grid[2] + m_elem_node_local[inode][2] ;
+      tmp_node_grid[0] = elem_node_scale * elem_grid[0] + m_elem_node_local[inode][0] ;
+      tmp_node_grid[1] = elem_node_scale * elem_grid[1] + m_elem_node_local[inode][1] ;
+      tmp_node_grid[2] = elem_node_scale * elem_grid[2] + m_elem_node_local[inode][2] ;
 
-      m_elem_node(ielem,inode) = m_box_part.local_node_id( node_grid );
+      m_elem_node(ielem,inode) = m_box_part.local_node_id( tmp_node_grid );
     }
 
     if ( i < m_node_grid.dimension_0() ) {
-      size_t node_grid[SpaceDim] ;
-      m_box_part.local_node_coord( i , node_grid );
-      m_node_grid(i,0) = node_grid[0] ;
-      m_node_grid(i,1) = node_grid[1] ;
-      m_node_grid(i,2) = node_grid[2] ;
+      size_t tmp_node_grid[SpaceDim] ;
+      m_box_part.local_node_coord( i , tmp_node_grid );
+      m_node_grid(i,0) = tmp_node_grid[0] ;
+      m_node_grid(i,1) = tmp_node_grid[1] ;
+      m_node_grid(i,2) = tmp_node_grid[2] ;
 
-      m_coord_map( node_grid[0] ,
-                   node_grid[1] ,
-                   node_grid[2] ,
+      m_coord_map( tmp_node_grid[0] ,
+                   tmp_node_grid[1] ,
+                   tmp_node_grid[2] ,
                    m_node_coord(i,0) ,
                    m_node_coord(i,1) ,
                    m_node_coord(i,2) );

@@ -154,14 +154,11 @@ template< class Device , Kokkos::Example::BoxElemPart::ElemOrder ElemOrder >
 void run( MPI_Comm comm , const int cmd[] )
 {
   int comm_rank = 0 ;
-  int comm_size = 1 ;
 
 #if defined( KOKKOS_HAVE_MPI )
   MPI_Comm_rank( comm , & comm_rank );
-  MPI_Comm_size( comm , & comm_size );
 #else
   comm = 0 ;
-  (void)comm_size;
 #endif
 
 
@@ -256,16 +253,14 @@ void run( MPI_Comm comm , const int cmd[] )
 int main( int argc , char ** argv )
 {
   int comm_rank = 0 ;
-  int comm_size = 1 ;
 
 #if defined( KOKKOS_HAVE_MPI )
   MPI_Init( & argc , & argv );
   MPI_Comm comm = MPI_COMM_WORLD ;
   MPI_Comm_rank( comm , & comm_rank );
-  MPI_Comm_size( comm , & comm_size );
 #else
   MPI_Comm comm = 0 ;
-  (void)comm_size;
+  (void) comm ; // suppress warning
 #endif
 
   int cmdline[ CMD_COUNT ] ;
