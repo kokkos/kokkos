@@ -1,10 +1,10 @@
 KOKKOS_PATH ?= ../..
 
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
-MAKEFILE_DIR := $(dir $(MAKEFILE_PATH))
+SRC_DIR := $(dir $(MAKEFILE_PATH))
 
-SRC = $(wildcard $(MAKEFILE_DIR)/*.cpp)
-OBJ = $(SRC:$(MAKEFILE_DIR)/%.cpp=%.o)
+SRC = $(wildcard $(SRC_DIR)/*.cpp)
+OBJ = $(SRC:$(SRC_DIR)/%.cpp=%.o)
 
 #SRC = $(wildcard *.cpp)
 #OBJ = $(SRC:%.cpp=%.o)
@@ -17,18 +17,18 @@ include $(KOKKOS_PATH)/Makefile.kokkos
 
 ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
 CXX = $(NVCC_WRAPPER)
-CXXFLAGS = -I$(MAKEFILE_DIR) -I$(CUDA_PATH) -O3
+CXXFLAGS = -I$(SRC_DIR) -I$(CUDA_PATH) -O3
 LINK = $(CXX)
 LINKFLAGS = -L$(CUDA_PATH)/lib64 -lcusparse
-EXE = $(addsuffix .cuda, $(shell basename $(MAKEFILE_DIR)))
+EXE = $(addsuffix .cuda, $(shell basename $(SRC_DIR)))
 #KOKKOS_DEVICES = "Cuda,OpenMP"
 #KOKKOS_ARCH = "SNB,Kepler35"
 else
 CXX = g++
-CXXFLAGS = -I$(MAKEFILE_DIR) -O3
+CXXFLAGS = -I$(SRC_DIR) -O3
 LINK = $(CXX)
 LINKFLAGS =  
-EXE = $(addsuffix .host, $(shell basename $(MAKEFILE_DIR)))
+EXE = $(addsuffix .host, $(shell basename $(SRC_DIR)))
 #KOKKOS_DEVICES = "OpenMP"
 #KOKKOS_ARCH = "SNB"
 endif
@@ -48,6 +48,6 @@ clean:
 
 # Compilation rules
 
-%.o:$(MAKEFILE_DIR)/%.cpp $(KOKKOS_CPP_DEPENDS)
+%.o:$(SRC_DIR)/%.cpp $(KOKKOS_CPP_DEPENDS)
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) $(EXTRA_INC) -c $<
 

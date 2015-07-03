@@ -48,7 +48,7 @@ build_all : $(TARGETS)
 test : build_all
 
 clean:
-	rm -f *.o $(EXE_EXAMPLE_FENL)
+	rm -f *.o $(EXE_EXAMPLE_FENL) KokkosCore_config.*
 
 # Compilation rules
 
