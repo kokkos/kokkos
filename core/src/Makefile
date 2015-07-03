@@ -64,6 +64,7 @@ build-makefile-kokkos:
 	echo "KOKKOS_CXX_STANDARD = $(KOKKOS_CXX_STANDARD)" >> Makefile.kokkos
 	echo "KOKKOS_CUDA_OPTIONS = $(KOKKOS_CUDA_OPTIONS)" >> Makefile.kokkos
 	echo "CXX ?= $(CXX)" >> Makefile.kokkos 
+	echo "NVCC_WRAPPER ?= $(PREFIX)/bin/nvcc_wrapper" >> Makefile.kokkos
 	echo "" >> Makefile.kokkos  
 	echo "#Source and Header files of Kokkos relative to KOKKOS_PATH" >> Makefile.kokkos
 	echo "KOKKOS_HEADERS = $(KOKKOS_HEADERS)" >> Makefile.kokkos
