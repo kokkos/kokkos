@@ -208,12 +208,5 @@ echo -e "\tcd example/feint; \\" >> Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_OPTIONS} test" >> Makefile
 echo -e "\tcd example/fenl; \\" >> Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_OPTIONS} test" >> Makefile
-# examples
-EXAMPLE_NAME=query_device
-echo "" >> Makefile
-echo "examples:" >> Makefile
-echo -e "\tmkdir -p example/${EXAMPLE_NAME}; \\" >> Makefile
-echo -e "\tcd example/${EXAMPLE_NAME}; \\" >> Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/${EXAMPLE_NAME}/Makefile ${KOKKOS_OPTIONS}" >> Makefile
 
 
