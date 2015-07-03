@@ -95,6 +95,7 @@ KOKKOS_INTERNAL_USE_ARCH_HSW := $(strip $(shell echo $(KOKKOS_ARCH) | grep HSW |
 KOKKOS_INTERNAL_USE_ARCH_KNL := $(strip $(shell echo $(KOKKOS_ARCH) | grep KNL | wc -l))
 
 #NVIDIA based
+NVCC_WRAPPER :=  $(KOKKOS_PATH)/config/nvcc_wrapper
 KOKKOS_INTERNAL_USE_ARCH_KEPLER30 := $(strip $(shell echo $(KOKKOS_ARCH) | grep Kepler30 | wc -l))
 KOKKOS_INTERNAL_USE_ARCH_KEPLER32 := $(strip $(shell echo $(KOKKOS_ARCH) | grep Kepler32 | wc -l))
 KOKKOS_INTERNAL_USE_ARCH_KEPLER35 := $(strip $(shell echo $(KOKKOS_ARCH) | grep Kepler35 | wc -l))

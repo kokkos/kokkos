@@ -9,9 +9,9 @@ default: messages build-lib
 include $(KOKKOS_PATH)/Makefile.kokkos
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
-	CXX = nvcc_wrapper
+	CXX = $(NVCC_WRAPPER)
 	CXXFLAGS ?= -O3
-	LINK = nvcc_wrapper
+	LINK = $(NVCC_WRAPPER)
 	LINKFLAGS ?= 
 else
 	CXX ?= g++
@@ -112,7 +112,7 @@ copy-openmp: mkdir
 	cp $(KOKKOS_HEADERS_OPENMP) $(PREFIX)/include/OpenMP
 
 install: mkdir $(CONDITIONAL_COPIES) build-lib 
-	cp $(KOKKOS_PATH)/config/nvcc_wrapper $(PREFIX)/bin
+	cp $(NVCC_WRAPPER) $(PREFIX)/bin
 	cp $(KOKKOS_HEADERS_INCLUDE) $(PREFIX)/include
 	cp $(KOKKOS_HEADERS_INCLUDE_IMPL) $(PREFIX)/include/impl
 	cp Makefile.kokkos $(PREFIX)

@@ -7,11 +7,15 @@ TEST_HEADERS = $(wildcard $(KOKKOS_PATH)/core/unit_test/*.hpp)
 
 default: build_all
 	echo "End Build"
+<<<<<<< HEAD
+=======
+
+>>>>>>> change nvcc_wrapper into  to use local file in config subdir
 
 include $(KOKKOS_PATH)/Makefile.kokkos
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
-	CXX = nvcc_wrapper
+	CXX = $(NVCC_WRAPPER)
 	CXXFLAGS ?= -O3
 	LINK = $(CXX)
 	LDFLAGS ?= -lpthread
