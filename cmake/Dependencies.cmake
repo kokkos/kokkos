@@ -2,7 +2,6 @@ SET(SUBPACKAGES_DIRS_CLASSIFICATIONS_OPTREQS
   #SubPackageName       Directory         Class    Req/Opt
   #
   # New Kokkos subpackages:
-  Profiler              profiler          EX       OPTIONAL
   Core                  core              PS       REQUIRED
   Containers            containers        PS       OPTIONAL
   Algorithms            algorithms        PS       OPTIONAL
