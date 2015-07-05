@@ -61,7 +61,7 @@
 #include <Kokkos_Vectorization.hpp>
 
 #ifdef KOKKOSP_ENABLE_PROFILING
-#include <KokkosP_Interface.hpp>
+#include <impl/Kokkos_Profiling_Interface.hpp>
 #include <typeinfo>
 #endif
 

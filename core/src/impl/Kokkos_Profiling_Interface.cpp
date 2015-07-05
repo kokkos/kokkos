@@ -41,7 +41,7 @@
  //@HEADER
  */
 
-#include <KokkosP_Interface.hpp>
+#include <impl/Kokkos_Profiling_Interface.hpp>
 
 #ifdef KOKKOSP_ENABLE_PROFILING
 #include <string.h>
