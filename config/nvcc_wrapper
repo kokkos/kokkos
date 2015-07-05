@@ -111,7 +111,7 @@ do
     xlinker_args="$xlinker_args -Xlinker ${1:4:${#1}}"
     ;;
   #Handle object files: -x cu applies to all input files, so give them to linker, except if only linking
-  *.a|*.so|*.o)
+  *.a|*.so|*.o|*.obj)
     object_files="$object_files $1"
     object_files_xlinker="$object_files_xlinker -Xlinker $1"
     ;;
