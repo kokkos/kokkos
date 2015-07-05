@@ -1111,25 +1111,11 @@ namespace Impl {
     end( count ),
     increment( blockDim.x )
     {}
-    
-    __device__ inline
-    ThreadVectorRangeBoundariesStruct (const CudaTeamMember& thread, const iType& begin_, const iType& end_):
-    start( begin_ + threadIdx.x ),
-    end( end_ ),
-    increment( blockDim.x )
-    {}
 #else
     KOKKOS_INLINE_FUNCTION
     ThreadVectorRangeBoundariesStruct (const CudaTeamMember& thread_, const iType& count):
       start( 0 ),
       end( count ),
-      increment( 1 )
-    {}
-
-    KOKKOS_INLINE_FUNCTION
-    ThreadVectorRangeBoundariesStruct (const CudaTeamMember& thread, const iType& begin_, const iType& end_):
-      start( begin_ ),
-      end( end_ ),
       increment( 1 )
     {}
 #endif
@@ -1157,14 +1143,6 @@ Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember >
   ThreadVectorRange(const Impl::CudaTeamMember& thread, const iType& count) {
   return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember >(thread,count);
 }
-
-template<typename iType>
-KOKKOS_INLINE_FUNCTION
-Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember >
-  ThreadVectorRange(const Impl::CudaTeamMember& thread, const iType& begin, const iType& end) {
-  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember >(thread,begin,end);
-}
-
 
 KOKKOS_INLINE_FUNCTION
 Impl::ThreadSingleStruct<Impl::CudaTeamMember> PerTeam(const Impl::CudaTeamMember& thread) {
