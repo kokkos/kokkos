@@ -201,8 +201,8 @@ BoxElemPart::BoxElemPart(
 
   local( m_global_rank , m_uses_elem_box , m_owns_node_box[0] , m_uses_node_box );
 
-  const size_t global_node_count = Kokkos::Example::box_count( m_global_node_box );
-  const size_t global_elem_count = Kokkos::Example::box_count( m_global_elem_box );
+  const size_t global_node_count_ = Kokkos::Example::box_count( m_global_node_box );
+  const size_t global_elem_count_ = Kokkos::Example::box_count( m_global_elem_box );
 
   //----------------------------------------
 
@@ -333,13 +333,13 @@ BoxElemPart::BoxElemPart(
     }
   }
 
-  if ( global_node_count != node_count ) {
-    std::cout << "Node count = " << global_node_count << " overlap error count = " << node_count << std::endl ;
+  if ( global_node_count_ != node_count ) {
+    std::cout << "Node count = " << global_node_count_ << " overlap error count = " << node_count << std::endl ;
     m_ok = false ;
   }
 
-  if ( DecomposeElem == decompose && global_elem_count != elem_count ) {
-    std::cout << "Elem count = " << global_elem_count << " overlap error count = " << elem_count << std::endl ;
+  if ( DecomposeElem == decompose && global_elem_count_ != elem_count ) {
+    std::cout << "Elem count = " << global_elem_count_ << " overlap error count = " << elem_count << std::endl ;
     m_ok = false ;
   }
 
