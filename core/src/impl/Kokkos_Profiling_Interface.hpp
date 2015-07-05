@@ -50,7 +50,7 @@
 #include <string>
 
 #ifdef KOKKOSP_ENABLE_PROFILING
-#include <Kokkos_Profiling_DeviceInfo.hpp>
+#include <impl/Kokkos_Profiling_DeviceInfo.hpp>
 #include <dlfcn.h>
 #include <iostream>
 #include <stdlib.h>
