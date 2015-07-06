@@ -2012,7 +2012,10 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-struct ALL_t {};
+struct ALL_t {
+  KOKKOS_INLINE_FUNCTION
+  constexpr const ALL_t & operator()() const { return *this ; }
+};
 
 template< class T >
 struct ViewOffsetRange {

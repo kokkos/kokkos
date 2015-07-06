@@ -44,6 +44,7 @@
 #ifndef KOKKOS_VIEW_HPP
 #define KOKKOS_VIEW_HPP
 
+#include <type_traits>
 #include <string>
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_HostSpace.hpp>
@@ -55,10 +56,13 @@
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_Shape.hpp>
 #include <impl/Kokkos_AnalyzeShape.hpp>
+#include <impl/Kokkos_Tags.hpp>
+
+// Must define before includng <impl/Kokkos_ViewOffset.hpp>
+namespace Kokkos { struct ALL ; }
+
 #include <impl/Kokkos_ViewOffset.hpp>
 #include <impl/Kokkos_ViewSupport.hpp>
-#include <impl/Kokkos_Tags.hpp>
-#include <type_traits>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -1693,9 +1697,6 @@ void realloc( View<T,L,D,M,S> & v ,
 
 namespace Kokkos {
 
-/** \brief  Tag denoting that a subview should capture all of a dimension */
-struct ALL { KOKKOS_INLINE_FUNCTION ALL(){} };
-
 template< class D , class A1 , class A2 , class A3 , class S ,
           class ArgType0 , class ArgType1 , class ArgType2 , class ArgType3 ,
           class ArgType4 , class ArgType5 , class ArgType6 , class ArgType7 >
@@ -1896,17 +1897,37 @@ subview( const View<D,A1,A2,A3,S> & src ,
 #include <impl/Kokkos_ViewDefault.hpp>
 #include <impl/Kokkos_Atomic_View.hpp>
 
+#include <impl/Kokkos_ViewOffset.hpp>
+#include <impl/Kokkos_ViewSupport.hpp>
+
+namespace Kokkos {
+/** \brief  Tag denoting that a subview should capture all of a dimension */
+struct ALL { KOKKOS_INLINE_FUNCTION ALL(){} };
+}
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#include <KokkosExp_View.hpp>
+
 #else
+
+// Must define before includng <impl/Kokkos_ViewOffset.hpp>
+namespace Kokkos {
+namespace Experimental {
+namespace Impl {
+struct ALL_t ;
+}
+}
+using ALL = Experimental::Impl::ALL_t ;
+}
 
 #include <impl/Kokkos_ViewOffset.hpp>
 #include <impl/Kokkos_ViewSupport.hpp>
 
-#endif /* #if defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
-
 #include <KokkosExp_View.hpp>
+
+#endif /* #if defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
