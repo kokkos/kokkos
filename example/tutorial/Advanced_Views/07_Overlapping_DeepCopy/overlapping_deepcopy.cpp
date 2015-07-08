@@ -122,7 +122,7 @@ int main(int argc, char * argv[]) {
   if(synch==1)
     Kokkos::deep_copy(Kokkos::OpenMP(),h_b,d_b);
   if(synch==2)
-    Kokkos::deep_copy(Kokkos::OpenMP(),h_b,d_b);
+    Kokkos::deep_copy(h_b,d_b);
 
 
   Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::OpenMP>(0,size),KOKKOS_LAMBDA (const int& i) {
