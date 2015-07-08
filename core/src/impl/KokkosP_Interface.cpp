@@ -98,6 +98,15 @@ namespace Kokkos {
         void* firstProfileLibrary;
 
         char* envProfileLibrary  = getenv("KOKKOS_PROFILE_LIBRARY");
+
+	// If the library is not set in the environment then exit early, no more
+	// processing to be done. Otherwise continue and attempt to resolve function
+	// call sites etc.
+	if(NULL == envProfileLibrary) {
+		// Exit, no library specified.
+		return ;
+	}
+
 	char* profileLibraryName = strtok(envProfileLibrary, ";");
 
         if( (NULL != profileLibraryName) && (strcmp(profileLibraryName, "") != 0) ) {
