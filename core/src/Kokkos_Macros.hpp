@@ -209,10 +209,16 @@
 
 #if ! defined( __clang__ ) && ! defined( KOKKOS_COMPILER_INTEL ) &&defined( __GNUC__ )
   #define KOKKOS_COMPILER_GNU __GNUC__*100+__GNUC_MINOR__*10+__GNUC_PATCHLEVEL__
+  #if ( 472 > KOKKOS_COMPILER_GNU )
+    #error "Compiling with GCC version earlier than 4.7.2 is not supported."
+  #endif
 #endif
 
 #if defined( __PGIC__ ) && ! defined( __GNUC__ )
   #define KOKKOS_COMPILER_PGI __PGIC__*100+__PGIC_MINOR__*10+__PGIC_PATCHLEVEL__
+  #if ( 1540 > KOKKOS_COMPILER_PGI )
+    #error "Compiling with PGI version earlier than 15.4 is not supported."
+  #endif
 #endif
 
 #endif /* #if ! defined( __CUDA_ARCH__ ) */
@@ -229,7 +235,14 @@
   #define KOKKOS_HAVE_PRAGMA_VECTOR 1
   #define KOKKOS_HAVE_PRAGMA_SIMD 1
 
-#if ( 1200 <= KOKKOS_COMPILER_INTEL ) && ! defined( KOKKOS_ENABLE_ASM ) && ! defined( _WIN32 )
+  #if ( 1400 > KOKKOS_COMPILER_INTEL )
+    #if ( 1300 > KOKKOS_COMPILER_INTEL )
+      #error "Compiling with Intel version earlier than 13.0 is not supported. Official minimal version is 14.0."
+    #else
+      #warning "Compiling with Intel version 13.x probably works but is not officially supported. Official minimal version is 14.0."
+    #endif
+  #endif
+  #if ( 1200 <= KOKKOS_COMPILER_INTEL ) && ! defined( KOKKOS_ENABLE_ASM ) && ! defined( _WIN32 )
     #define KOKKOS_ENABLE_ASM 1
   #endif
 
