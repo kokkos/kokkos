@@ -220,8 +220,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX2), 1)
-	KOKKOS_CXXFLAGS += -xcore-avx2
-	KOKKOS_LDFLAGS += -xcore-avx2
+	KOKKOS_CXXFLAGS += -march=core-avx2
+	KOKKOS_LDFLAGS += -march=core-avx2
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KNC), 1)
