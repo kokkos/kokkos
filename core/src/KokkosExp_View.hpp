@@ -1810,8 +1810,8 @@ inline
 typename Kokkos::Experimental::View<T,A1,A2,A3>::HostMirror
 create_mirror_view( const Kokkos::Experimental::View<T,A1,A2,A3> & src
                   , typename std::enable_if<(
-                      std::is_same< typename Kokkos::Experimental::ViewTraits<T,A1,A2,A3>::memory_space
-                                  , typename Kokkos::Experimental::ViewTraits<T,A1,A2,A3>::host_mirror_space
+                      std::is_same< typename Kokkos::Experimental::View<T,A1,A2,A3>::memory_space
+                                  , typename Kokkos::Experimental::View<T,A1,A2,A3>::HostMirror::memory_space
                                   >::value
                     )>::type * = 0 
                   )
@@ -1824,8 +1824,8 @@ inline
 typename Kokkos::Experimental::View<T,A1,A2,A3>::HostMirror
 create_mirror_view( const Kokkos::Experimental::View<T,A1,A2,A3> & src
                   , typename std::enable_if<(
-                      ! std::is_same< typename Kokkos::Experimental::ViewTraits<T,A1,A2,A3>::memory_space
-                                    , typename Kokkos::Experimental::ViewTraits<T,A1,A2,A3>::host_mirror_space
+                      ! std::is_same< typename Kokkos::Experimental::View<T,A1,A2,A3>::memory_space
+                                    , typename Kokkos::Experimental::View<T,A1,A2,A3>::HostMirror::memory_space
                                     >::value
                     )>::type * = 0 
                   )
