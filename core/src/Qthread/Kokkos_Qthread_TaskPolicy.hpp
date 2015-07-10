@@ -631,6 +631,8 @@ public:
     {}
 #endif
 
+  static member_type & member_single();
+
   friend void wait( TaskPolicy< Kokkos::Qthread > & );
 };
 
