@@ -367,20 +367,13 @@ public:
     if (dev) { // if Device is the same as DualView's device type
       if ((modified_host () > 0) && (modified_host () >= modified_device ())) {
         return true;
-      } else {
-        return false;
       }
     } else { // hopefully Device is the same as DualView's host type
       if ((modified_device () > 0) && (modified_device () >= modified_host ())) {
         return true;
-      } else {
-        return false;
       }
     }
-    if(Impl::is_same<typename t_host::memory_space,typename t_dev::memory_space>::value) {
-      t_dev::execution_space::fence();
-      t_host::execution_space::fence();
-    }
+    return false;
   }
   /// \brief Mark data as modified on the given device \c Device.
   ///
