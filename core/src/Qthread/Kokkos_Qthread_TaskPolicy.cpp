@@ -431,6 +431,13 @@ fflush(stdout);
 namespace Kokkos {
 namespace Experimental {
 
+TaskPolicy< Kokkos::Qthread >::member_type &
+TaskPolicy< Kokkos::Qthread >::member_single()
+{
+  static member_type s ;
+  return s ;
+}
+
 void wait( Kokkos::Experimental::TaskPolicy< Kokkos::Qthread > & policy )
 {
   volatile int * const active_task_count = & policy.m_active_count ;
