@@ -12,6 +12,7 @@ LINKFLAGS =
 EXE = $(SRC:.cpp=.cuda)
 KOKKOS_DEVICES = "Cuda,OpenMP"
 KOKKOS_ARCH = "SNB,Kepler35"
+KOKKOS_CUDA_OPTIONS = "enable_lambda"
 else
 CXX = g++
 CXXFLAGS = -O3

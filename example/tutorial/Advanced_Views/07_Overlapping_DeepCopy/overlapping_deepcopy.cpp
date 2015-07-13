@@ -125,7 +125,7 @@ int main(int argc, char * argv[]) {
     Kokkos::deep_copy(h_b,d_b);
 
 
-  Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::OpenMP>(0,size),KOKKOS_LAMBDA (const int& i) {
+  Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::OpenMP>(0,size),[=] (const int& i) {
     h_a(i) = 0.0;
   });
   Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::OpenMP>(0,size),ComputeAHost(h_a,h_b));
