@@ -126,6 +126,16 @@
 #error "Cuda device capability >= 3.0 is required"
 #endif
 
+#ifdef KOKKOS_CUDA_USE_LAMBDA
+#if ( CUDA_VERSION < 7000 )
+// CUDA supports C++11 lambdas generated in host code to be given
+// to the device starting with version 7.5. But the release candidate (7.5.6)
+// still identifies as 7.0
+#error "Cuda version 7.5 or greater required for host-to-device Lambda support"
+#endif
+#define KOKKOS_LAMBDA [=]__device__
+#define KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA 1
+#endif
 #endif /* #if defined( KOKKOS_HAVE_CUDA ) && defined( __CUDACC__ ) */
 
 /*--------------------------------------------------------------------------*/

@@ -62,7 +62,7 @@ do
     cpp_files="$cpp_files $1"
     ;;
   #Handle known nvcc args
-  -O*|-D*|-gencode*|-c|-I*|-L*|-l*|-g|--help|--version|--dryrun|--verbose|--keep-dir|-E|-M|-G|--relocatable-device-code*|-shared|-lineinfo)
+  -O*|-D*|-gencode*|-c|-I*|-L*|-l*|-g|--help|--version|--dryrun|--verbose|--keep-dir|-E|-M|-G|--relocatable-device-code*|-shared|-lineinfo|-expt-extended-lambda|--resource-usage)
     cuda_args="$cuda_args $1"
     ;;
   #Handle c++11 setting
