@@ -2435,6 +2435,7 @@ public:
       typedef Kokkos::RangePolicy< ExecSpace , FunctorTagConstructScalar , size_t > Policy ;
 
       (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_offset.span() ) );
+      ExecSpace::fence();
     }
 
   template< class ExecSpace >
@@ -2445,6 +2446,7 @@ public:
       typedef Kokkos::RangePolicy< ExecSpace , FunctorTagConstructNonScalar , size_t > Policy ;
 
       (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_offset.span() ) );
+      ExecSpace::fence();
     }
 
   template< class ExecSpace >
@@ -2460,6 +2462,7 @@ public:
       typedef Kokkos::RangePolicy< ExecSpace , FunctorTagDestructNonScalar , size_t > Policy ;
 
       (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_offset.span() ) );
+      ExecSpace::fence();
     }
 };
 
