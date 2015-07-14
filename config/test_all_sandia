@@ -228,7 +228,7 @@ single_build_and_test() {
     mkdir "${build}-$build_type"
     cd "${build}-$build_type"
 
-    run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$build --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" \"$extra_args\" 2>&1 | tee ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
+    run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$build --compiler=$(which $compiler_exe) --cxxflags=\"-DKOKKOS_USING_EXPERIMENTAL_VIEW $cxxflags\" \"$extra_args\" 2>&1 | tee ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
     run_cmd make build-test 2>&1 | tee ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
     run_cmd make test 2>&1 | tee ${desc}.test.log || { report_and_log_test_result 1 ${desc} test && return 0; }
     report_and_log_test_result 0 $desc

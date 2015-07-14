@@ -598,7 +598,9 @@ namespace Experimental {
 namespace Impl {
 
 template < class Dimension , class Layout , typename Enable = void >
-struct ViewOffset ;
+struct ViewOffset {
+  using is_mapping_plugin = std::false_type ;
+};
 
 //----------------------------------------------------------------------------
 // LayoutLeft AND ( 1 >= rank OR 0 == rank_dynamic ) : no padding / striding
@@ -609,6 +611,9 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
                                              0 == Dimension::rank_dynamic
                                            )>::type >
 {
+  using is_mapping_plugin = std::true_type ;
+  using is_regular        = std::true_type ;
+
   typedef size_t             size_type ;
   typedef Dimension          dimension_type ;
   typedef Kokkos::LayoutLeft array_layout ;
@@ -830,6 +835,9 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
                                              0 < Dimension::rank_dynamic
                                            )>::type >
 {
+  using is_mapping_plugin = std::true_type ;
+  using is_regular        = std::true_type ;
+
   typedef size_t             size_type ;
   typedef Dimension          dimension_type ;
   typedef Kokkos::LayoutLeft array_layout ;
@@ -1076,6 +1084,9 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
                                              0 == Dimension::rank_dynamic
                                            )>::type >
 {
+  using is_mapping_plugin = std::true_type ;
+  using is_regular        = std::true_type ;
+
   typedef size_t              size_type ;
   typedef Dimension           dimension_type ;
   typedef Kokkos::LayoutRight array_layout ;
@@ -1298,6 +1309,9 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
                                              0 < Dimension::rank_dynamic
                                            )>::type >
 {
+  using is_mapping_plugin = std::true_type ;
+  using is_regular        = std::true_type ;
+
   typedef size_t               size_type ;
   typedef Dimension            dimension_type ;
   typedef Kokkos::LayoutRight  array_layout ;
@@ -1694,6 +1708,9 @@ struct ViewOffset< Dimension , Kokkos::LayoutStride
 private:
   typedef ViewStride< Dimension::rank >  stride_type ;
 public:
+
+  using is_mapping_plugin = std::true_type ;
+  using is_regular        = std::true_type ;
 
   typedef size_t                size_type ;
   typedef Dimension             dimension_type ;
@@ -2180,11 +2197,9 @@ class ViewMapping< Traits , void ,
   typename std::enable_if<(
     std::is_same< typename Traits::specialize , void >::value
     &&
-    (
-      std::is_same< typename Traits::array_layout , Kokkos::LayoutLeft >::value ||
-      std::is_same< typename Traits::array_layout , Kokkos::LayoutRight >::value ||
-      std::is_same< typename Traits::array_layout , Kokkos::LayoutStride >::value
-    )
+    ViewOffset< typename Traits::dimension
+              , typename Traits::array_layout
+              , void >::is_mapping_plugin::value
   )>::type >
 {
 private:
@@ -2219,6 +2234,9 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_6() const { return m_offset.dimension_6(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_7() const { return m_offset.dimension_7(); }
 
+  // Is a regular layout with uniform striding for each index.
+  using is_regular = typename offset_type::is_regular ;
+
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_0() const { return m_offset.stride_0(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_1() const { return m_offset.stride_1(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_2() const { return m_offset.stride_2(); }
@@ -2227,12 +2245,6 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_5() const { return m_offset.stride_5(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_6() const { return m_offset.stride_6(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_7() const { return m_offset.stride_7(); }
-
-  /*
-  KOKKOS_INLINE_FUNCTION
-  Kokkos::Array<size_t,Rank> dimension() const
-    { return Kokkos::Experimental::Impl::dimension( m_offset.m_dim ); }
-  */
 
   //----------------------------------------
   // Range span
