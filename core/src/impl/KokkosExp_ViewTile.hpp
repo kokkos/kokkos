@@ -54,26 +54,26 @@ namespace Impl {
 // View mapping for rank two tiled array
 
 template< class L >
-struct is_layout_tile< L > : public std::false_type {};
+struct is_layout_tile : public std::false_type {};
 
 template< unsigned N0 , unsigned N1 >
-struct is_layout_tile< Kokkos::LayoutTileLeft<N0,N1,true> : public std::true_type {};
+struct is_layout_tile< Kokkos::LayoutTileLeft<N0,N1,true> > : public std::true_type {};
 
 template< class Dimension , class Layout >
-struct ViewOffset< Dimension , Layout
+struct ViewOffset< Dimension , Layout ,
   typename std::enable_if<(
     ( Dimension::rank == 2 )
     &&
-    is_layout_tile< typename Layout >::value
+    is_layout_tile< Layout >::value
   )>::type >
 {
 private:
 
-  enum { SHIFT_0 = Impl::power_of_two<Traits::array_layout::N0>::value };
-  enum { SHIFT_1 = Impl::power_of_two<Traits::array_layout::N1>::value };
+  enum { SHIFT_0 = Kokkos::Impl::power_of_two<Layout::N0>::value };
+  enum { SHIFT_1 = Kokkos::Impl::power_of_two<Layout::N1>::value };
   enum { SHIFT_T = SHIFT_0 + SHIFT_1 };
-  enum { MASK_0  = N0 - 1 };
-  enum { MASK_1  = N1 - 1 };
+  enum { MASK_0  = Layout::N0 - 1 };
+  enum { MASK_1  = Layout::N1 - 1 };
 
 public:
 
@@ -131,7 +131,7 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_type span() const
     {
       // ( TileDim0 * ( TileDim1 ) ) * TileSize
-      return ( m_tile_N0 * ( ( shape_type::N1 + MASK_1 ) >> SHIFT_1 ) ) << SHIFT_T ;
+      return ( m_tile_N0 * ( ( m_dim.N1 + MASK_1 ) >> SHIFT_1 ) ) << SHIFT_T ;
     }
 
   KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const
@@ -162,62 +162,11 @@ public:
   KOKKOS_INLINE_FUNCTION
   size_type tile_begin( I0 const & i_tile0 , I1 const & i_tile1 ) const
     {
-      return ( i_tile0 + tile_N0 * i_tile1 ) << ( SHIFT_0 + SHIFT_1 );
+      return ( i_tile0 + m_tile_N0 * i_tile1 ) << ( SHIFT_0 + SHIFT_1 );
     }
 };
 
-template<>
-struct ViewAssignment< ViewTile , void , void >
-{
-  // Some compilers have type-matching issues on the integer values when using:
-  //   template< class T , unsigned N0 , unsigned N1 , class A2 , class A3 >
-  template< class T , unsigned dN0 , unsigned dN1
-          , class A2 , class A3
-          , unsigned sN0 , unsigned sN1 >
-  KOKKOS_INLINE_FUNCTION
-  ViewAssignment( View< T[dN0][dN1], LayoutLeft, A2, A3, Impl::ViewDefault > & dst
-                , View< T** , LayoutTileLeft<sN0,sN1,true>, A2, A3, Impl::ViewDefault > const & src
-                , size_t const i_tile0
-                , typename Impl::enable_if< unsigned(dN0) == unsigned(sN0) &&
-                                            unsigned(dN1) == unsigned(sN1)
-                                          , size_t const
-                                          >::type i_tile1
-                )
-   {
-     // Destination is always contiguous but source may be non-contiguous
-     // so don't assign the whole view management object.
-     // Just query and appropriately set the reference-count state.
-
-     if ( ! src.m_management.is_managed() ) dst.m_management.set_unmanaged();
-
-     dst.m_ptr_on_device = src.m_ptr_on_device + src.m_offset_map.tile_begin(i_tile0,i_tile1);
-
-     dst.m_tracker = src.m_tracker;
-   }
-};
-
 } /* namespace Impl */
-} /* namespace Experimental */
-} /* namespace Kokkos */
-
-namespace Kokkos {
-namespace Experimental {
-
-template< class T , unsigned N0, unsigned N1, class A2, class A3 >
-KOKKOS_INLINE_FUNCTION
-View< T[N0][N1], LayoutLeft, A2, A3, Impl::ViewDefault >
-tile_subview( const View<T**,LayoutTileLeft<N0,N1,true>,A2,A3,Impl::ViewDefault> & src
-            , const size_t i_tile0
-            , const size_t i_tile1
-            )
-{
-  View< T[N0][N1], LayoutLeft, A2, A3, Impl::ViewDefault > dst ;
-
-  (void) Impl::ViewAssignment< Impl::ViewTile , void , void >( dst , src , i_tile0 , i_tile1 );
-
-  return dst ;
-}
-
 } /* namespace Experimental */
 } /* namespace Kokkos */
 

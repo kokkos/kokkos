@@ -44,6 +44,12 @@
 #ifndef KOKKOS_VIEWTILELEFT_HPP
 #define KOKKOS_VIEWTILELEFT_HPP
 
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
+#include <impl/KokkosExp_ViewTile.hpp>
+
+#else
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -190,6 +196,8 @@ tile_subview( const View<T**,LayoutTileLeft<N0,N1,true>,A2,A3,Impl::ViewDefault>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+#endif
 
 #endif /* #ifndef KOKKOS_VIEWTILELEFT_HPP */
 
