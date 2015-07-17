@@ -33,9 +33,7 @@ COMPILERS=("gcc/4.7.2 gcc/4.7.2/base,hwloc/1.10.0/host/gnu/4.7.2 $GCC_BUILD_LIST
 
 export OMP_NUM_THREADS=4
 
-export SEMS_MODULE_ROOT=/projects/modulefiles
-module use /home/projects/modulefiles
-module use /projects/modulefiles/rhel6-x86_64/sems/compiler
+source /projects/modulefiles/utils/sems-modules-rhel6-x86_64.sh
 
 SCRIPT_KOKKOS_ROOT=$( cd "$( dirname "$0" )" && cd .. && pwd )
 
