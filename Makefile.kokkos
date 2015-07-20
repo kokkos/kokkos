@@ -48,20 +48,29 @@ endif
 endif
 
 KOKKOS_INTERNAL_COMPILER_PGI := $(shell $(CXX) --version | grep PGI | wc -l)
+KOKKOS_INTERNAL_COMPILER_XL  := $(shell $(CXX) -qversion | grep XL | wc -l)
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
   KOKKOS_INTERNAL_OPENMP_FLAG := -mp 
 else
-  KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
+    KOKKOS_INTERNAL_OPENMP_FLAG := -qsmp=omp
+  else
+    KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
+  endif
 endif
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
   KOKKOS_INTERNAL_CXX11_FLAG := --c++11
 else
-  KOKKOS_INTERNAL_CXX11_FLAG := --std=c++11
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
+     KOKKOS_INTERNAL_CXX11_FLAG := -std=c++11
+  else
+    KOKKOS_INTERNAL_CXX11_FLAG := --std=c++11
+  endif
 endif
-# Check for other Execution Spaces
 
+# Check for other Execution Spaces
 KOKKOS_INTERNAL_USE_CUDA := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Cuda | wc -l))
 
 # Check for Kokkos Architecture settings
@@ -223,6 +232,11 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX), 1)
 	KOKKOS_CXXFLAGS += -mavx
 	KOKKOS_LDFLAGS += -mavx
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_POWER8), 1)
+	KOKKOS_CXXFLAGS += -mcpu=power8
+	KOKKOS_LDFLAGS  += -mcpu=power8
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX2), 1)

@@ -46,6 +46,7 @@ Secondary tested compilers are:
 
 Other compilers working:
   PGI 15.4
+  IBM XL 13.1.2
 
 Primary tested compiler are passing in release mode
 with warnings as errors. We are using the following set
