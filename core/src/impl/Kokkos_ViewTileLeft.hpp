@@ -44,9 +44,15 @@
 #ifndef KOKKOS_VIEWTILELEFT_HPP
 #define KOKKOS_VIEWTILELEFT_HPP
 
+#include <impl/KokkosExp_ViewTile.hpp>
+
 #if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
 
-#include <impl/KokkosExp_ViewTile.hpp>
+namespace Kokkos {
+
+using Kokkos::Experimental::tile_subview ;
+
+}
 
 #else
 

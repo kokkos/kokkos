@@ -2218,6 +2218,12 @@ private:
   handle_type  m_handle ;
   offset_type  m_offset ;
 
+  KOKKOS_INLINE_FUNCTION
+  ViewMapping( const handle_type & arg_handle , const offset_type & arg_offset )
+    : m_handle( arg_handle )
+    , m_offset( arg_offset )
+    {}
+
 public:
 
   //----------------------------------------

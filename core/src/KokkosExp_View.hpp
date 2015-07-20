@@ -1021,6 +1021,13 @@ public:
 
 private:
 
+  /**\brief Private method to support extensibility of subview construction */
+  KOKKOS_INLINE_FUNCTION
+  View( const track_type & arg_track , const map_type & arg_map )
+    : m_track( arg_track )
+    , m_map(   arg_map )
+    {}
+
   explicit KOKKOS_INLINE_FUNCTION
   View( const track_type & rhs )
     : m_track( rhs )
