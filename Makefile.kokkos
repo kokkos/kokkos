@@ -47,8 +47,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 0)
 endif
 endif
 
-KOKKOS_INTERNAL_COMPILER_PGI := $(shell $(CXX) --version | grep PGI | wc -l)
-KOKKOS_INTERNAL_COMPILER_XL  := $(shell $(CXX) -qversion | grep XL | wc -l)
+KOKKOS_INTERNAL_COMPILER_PGI  := $(shell $(CXX) --version | grep PGI  | wc -l)
+KOKKOS_INTERNAL_COMPILER_XL   := $(shell $(CXX) -qversion | grep XL   | wc -l)
+KOKKOS_INTERNAL_COMPILER_CRAY := $(shell $(CXX) --version | grep Cray | wc -l)
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
   KOKKOS_INTERNAL_OPENMP_FLAG := -mp 
@@ -56,7 +57,12 @@ else
   ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
     KOKKOS_INTERNAL_OPENMP_FLAG := -qsmp=omp
   else
-    KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+      # OpenMP is turned on by default in Cray compiler environment
+      KOKKOS_INTERNAL_OPENMP_FLAG :=
+    else
+      KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
+    endif
   endif
 endif
 
@@ -66,7 +72,11 @@ else
   ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
      KOKKOS_INTERNAL_CXX11_FLAG := -std=c++11
   else
-    KOKKOS_INTERNAL_CXX11_FLAG := --std=c++11
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+      KOKKOS_INTERNAL_CXX11_FLAG := -hstd=c++11
+    else
+      KOKKOS_INTERNAL_CXX11_FLAG := --std=c++11
+    endif
   endif
 endif
 
