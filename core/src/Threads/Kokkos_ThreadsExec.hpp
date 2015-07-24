@@ -99,6 +99,48 @@ private:
   int           m_pool_fan_size ;
   int volatile  m_pool_state ;  ///< State for global synchronizations
 
+#ifdef KOKKOS_HOST_TEAM_BARRIER_EXPERIMENTAL  
+public:
+  class CoreBarrier {
+  private:
+    volatile int64_t m_arrive;
+    volatile int64_t m_depart;
+    int64_t m_padding[KOKKOS_HOST_CACHELINE_SIZE/sizeof(int64_t)-2];
+
+  public:
+    CoreBarrier() 
+      : m_arrive(0),
+        m_depart(0) 
+    {}
+
+    KOKKOS_INLINE_FUNCTION
+    int set_arrive(const int team_rank) {
+      const int flip = !((char*)&m_arrive)[team_rank];
+      ((char*)&m_arrive)[team_rank] = flip;
+      return flip;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    int set_depart(const int team_rank) {
+      const int flip = !((char*)&m_depart)[team_rank];
+      ((char*)&m_depart)[team_rank] = flip;
+      return flip;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    volatile int64_t& arrive() { return m_arrive; }
+    
+    KOKKOS_INLINE_FUNCTION
+    volatile int64_t& depart() { return m_depart; }
+  };
+
+private:
+  class CoreBarrier m_core_barrier;
+
+public:
+  KOKKOS_INLINE_FUNCTION CoreBarrier* core_barrier() { return &m_core_barrier; }
+
+#endif
 
   static void global_lock();
   static void global_unlock();

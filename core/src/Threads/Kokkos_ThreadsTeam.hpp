@@ -45,7 +45,7 @@
 #define KOKKOS_THREADSTEAM_HPP
 
 #include <stdio.h>
-
+#include <limits.h>
 #include <utility>
 #include <impl/Kokkos_spinwait.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
@@ -93,6 +93,15 @@ public:
   // All other threads will return false during the fan-out.
   KOKKOS_INLINE_FUNCTION bool team_fan_in() const
     {
+#ifdef KOKKOS_HOST_TEAM_BARRIER_EXPERIMENTAL
+      if ( m_team_size != 1 ) {
+        ThreadsExec::CoreBarrier *core_barrier = m_team_base[0]->core_barrier();
+        const int flip = core_barrier->set_arrive( m_team_rank );
+        const int64_t mask = static_cast<int64_t>( flip ? KOKKOS_HOST_TEAM_BARRIER_MASK : 0)
+          >> CHAR_BIT * ( sizeof( int64_t ) - m_team_size );
+        Impl::spinwait<Impl::IsNotEqual>( core_barrier->arrive() , mask );
+      }
+#else
       int n , j ;
 
       // Wait for fan-in threads
@@ -105,16 +114,26 @@ public:
         m_exec->state() = ThreadsExec::Rendezvous ;
         Impl::spinwait( m_exec->state() , ThreadsExec::Rendezvous );
       }
-
+#endif
       return ! m_team_rank_rev ;
     }
 
   KOKKOS_INLINE_FUNCTION void team_fan_out() const
     {
+#ifdef KOKKOS_HOST_TEAM_BARRIER_EXPERIMENTAL
+      if ( m_team_size != 1 ) {
+        ThreadsExec::CoreBarrier *core_barrier = m_team_base[0]->core_barrier();
+        const int flip = core_barrier->set_depart( m_team_rank );
+        const int64_t mask = static_cast<int64_t>( flip ? KOKKOS_HOST_TEAM_BARRIER_MASK : 0)
+          >> CHAR_BIT * ( sizeof( int64_t ) - m_team_size );
+        Impl::spinwait<Impl::IsNotEqual>( core_barrier->depart() , mask );
+      }
+#else
       int n , j ;
       for ( n = 1 ; ( ! ( m_team_rank_rev & n ) ) && ( ( j = m_team_rank_rev + n ) < m_team_size ) ; n <<= 1 ) {
         m_team_base[j]->state() = ThreadsExec::Active ;
       }
+#endif
     }
 
 public:
