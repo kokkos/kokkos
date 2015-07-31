@@ -334,5 +334,6 @@ kokkos-clean:
 
 libkokkos.a: $(KOKKOS_OBJ_LINK) $(KOKKOS_SRC) $(KOKKOS_HEADERS)
 	ar cr libkokkos.a $(KOKKOS_OBJ_LINK)
+	ranlib libkokkos.a
 
 KOKKOS_LINK_DEPENDS=libkokkos.a
