@@ -49,6 +49,7 @@ endif
 
 KOKKOS_INTERNAL_COMPILER_PGI := $(shell $(CXX) --version | grep PGI | wc -l)
 KOKKOS_INTERNAL_COMPILER_XL  := $(shell $(CXX) -qversion | grep XL | wc -l)
+KOKKOS_INTERNAL_OS_CYGWIN    := $(shell uname | grep CYGWIN | wc -l)
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
   KOKKOS_INTERNAL_OPENMP_FLAG := -mp 
@@ -317,6 +318,13 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_OPENMP_FLAG)
 endif
 
+#With Cygwin functions such as fdopen and fileno are not defined 
+#when strict ansi is enabled. strict ansi gets enabled with --std=c++11
+#though. So we hard undefine it here. Not sure if that has any bad side effects
+#This is needed for gtest actually, not for Kokkos itself!
+ifeq ($(KOKKOS_INTERNAL_OS_CYGWIN), 1)
+  KOKKOS_CXXFLAGS += -U__STRICT_ANSI__
+endif
 
 # Setting up dependencies
 
