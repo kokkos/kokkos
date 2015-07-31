@@ -239,7 +239,7 @@ TEST_F( defaultdevicetype , malloc )
   Kokkos::kokkos_free(data);
 
   int* data2 = (int*) Kokkos::kokkos_malloc(0);
-  ASSERT_EQ(data2, NULL);
+  ASSERT_TRUE(data2==NULL);
   Kokkos::kokkos_free(data);
 }
 
