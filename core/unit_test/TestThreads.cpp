@@ -402,7 +402,7 @@ TEST_F( threads , reduction_deduction )
 {
   TestCXX11::test_reduction_deduction< Kokkos::Threads >();
 }
-
+#endif
 TEST_F( threads , team_vector )
 {
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Threads >(0) ) );
