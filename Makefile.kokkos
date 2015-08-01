@@ -40,6 +40,7 @@ KOKKOS_INTERNAL_CUDA_USE_LAMBDA := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) |
 KOKKOS_INTERNAL_USE_OPENMP := $(strip $(shell echo $(KOKKOS_DEVICES) | grep OpenMP | wc -l))
 KOKKOS_INTERNAL_USE_PTHREADS := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Pthread | wc -l))
 KOKKOS_INTERNAL_USE_SERIAL := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Serial | wc -l))
+KOKKOS_INTERNAL_USE_QTHREAD := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Qthread | wc -l))
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 0)
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 0)
@@ -49,6 +50,9 @@ endif
 
 KOKKOS_INTERNAL_COMPILER_PGI := $(shell $(CXX) --version | grep PGI | wc -l)
 KOKKOS_INTERNAL_COMPILER_XL  := $(shell $(CXX) -qversion | grep XL | wc -l)
+KOKKOS_INTERNAL_COMPILER_CRAY := $(shell $(CXX) --version | grep Cray | wc -l)
+
+KOKKOS_INTERNAL_OS_CYGWIN    := $(shell uname | grep CYGWIN | wc -l)
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
   KOKKOS_INTERNAL_OPENMP_FLAG := -mp 
@@ -56,7 +60,12 @@ else
   ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
     KOKKOS_INTERNAL_OPENMP_FLAG := -qsmp=omp
   else
-    KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+      # OpenMP is turned on by default in Cray compiler environment
+      KOKKOS_INTERNAL_OPENMP_FLAG :=
+    else
+      KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
+    endif
   endif
 endif
 
@@ -66,7 +75,11 @@ else
   ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
      KOKKOS_INTERNAL_CXX11_FLAG := -std=c++11
   else
-    KOKKOS_INTERNAL_CXX11_FLAG := --std=c++11
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+      KOKKOS_INTERNAL_CXX11_FLAG := -hstd=c++11
+    else
+      KOKKOS_INTERNAL_CXX11_FLAG := --std=c++11
+    endif
   endif
 endif
 
@@ -173,6 +186,12 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	tmp := $(shell echo "\#define KOKKOS_HAVE_CUDA 1" >> KokkosCore_config.tmp )
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_QTHREAD), 1)
+	KOKKOS_CPPFLAGS += -I$(QTHREAD_PATH)/include
+	KOKKOS_LDFLAGS += -L$(QTHREAD_PATH)/lib 
+	tmp := $(shell echo "\#define KOKKOS_HAVE_QTHREAD 1" >> KokkosCore_config.tmp )
 endif
 
 tmp := $(shell echo "/* General Settings */" >> KokkosCore_config.tmp)
@@ -306,6 +325,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 	KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Threads/*.hpp)
 endif
 
+ifeq ($(KOKKOS_INTERNAL_USE_QTHREAD), 1)
+	KOKKOS_LIBS += -lqthread
+	KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Qthread/*.cpp)
+	KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Qthread/*.hpp)
+endif
+
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/OpenMP/*.cpp)
 	KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/OpenMP/*.hpp)
@@ -317,6 +342,13 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_OPENMP_FLAG)
 endif
 
+#With Cygwin functions such as fdopen and fileno are not defined 
+#when strict ansi is enabled. strict ansi gets enabled with --std=c++11
+#though. So we hard undefine it here. Not sure if that has any bad side effects
+#This is needed for gtest actually, not for Kokkos itself!
+ifeq ($(KOKKOS_INTERNAL_OS_CYGWIN), 1)
+  KOKKOS_CXXFLAGS += -U__STRICT_ANSI__
+endif
 
 # Setting up dependencies
 
@@ -334,5 +366,6 @@ kokkos-clean:
 
 libkokkos.a: $(KOKKOS_OBJ_LINK) $(KOKKOS_SRC) $(KOKKOS_HEADERS)
 	ar cr libkokkos.a $(KOKKOS_OBJ_LINK)
+	ranlib libkokkos.a
 
 KOKKOS_LINK_DEPENDS=libkokkos.a

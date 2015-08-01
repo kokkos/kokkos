@@ -473,8 +473,6 @@ TEST_F( cuda , template_meta_functions )
 
 //----------------------------------------------------------------------------
 
-#ifdef KOKKOS_HAVE_CXX11
-
 namespace Test {
 
 TEST_F( cuda , reduction_deduction )
@@ -498,5 +496,4 @@ TEST_F( cuda , team_vector )
 }
 
 }
-#endif
 
