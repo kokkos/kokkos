@@ -402,7 +402,8 @@ TEST_F( threads , reduction_deduction )
 {
   TestCXX11::test_reduction_deduction< Kokkos::Threads >();
 }
-#endif
+#endif /* #if defined( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_THREADS ) */
+
 TEST_F( threads , team_vector )
 {
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Threads >(0) ) );

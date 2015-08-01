@@ -271,8 +271,7 @@ TEST_F( qthread , task_policy )
 
 TEST_F( qthread , task_team )
 {
-  std::cout << "qthread.task_team test disabled due to unresolved error causing the test to hang." << std::endl ;
-  // TestTaskPolicy::test_task_team< Kokkos::Qthread >(1000);
+  TestTaskPolicy::test_task_team< Kokkos::Qthread >(1000);
 }
 
 //----------------------------------------------------------------------------

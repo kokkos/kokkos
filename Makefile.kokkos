@@ -40,6 +40,7 @@ KOKKOS_INTERNAL_CUDA_USE_LAMBDA := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) |
 KOKKOS_INTERNAL_USE_OPENMP := $(strip $(shell echo $(KOKKOS_DEVICES) | grep OpenMP | wc -l))
 KOKKOS_INTERNAL_USE_PTHREADS := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Pthread | wc -l))
 KOKKOS_INTERNAL_USE_SERIAL := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Serial | wc -l))
+KOKKOS_INTERNAL_USE_QTHREAD := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Qthread | wc -l))
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 0)
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 0)
@@ -187,6 +188,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	tmp := $(shell echo "\#define KOKKOS_HAVE_CUDA 1" >> KokkosCore_config.tmp )
 endif
 
+ifeq ($(KOKKOS_INTERNAL_USE_QTHREAD), 1)
+	KOKKOS_CPPFLAGS += -I$(QTHREAD_PATH)/include
+	KOKKOS_LDFLAGS += -L$(QTHREAD_PATH)/lib 
+	tmp := $(shell echo "\#define KOKKOS_HAVE_QTHREAD 1" >> KokkosCore_config.tmp )
+endif
+
 tmp := $(shell echo "/* General Settings */" >> KokkosCore_config.tmp)
 ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX11), 1)
 	KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX11_FLAG)
@@ -316,6 +323,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 	KOKKOS_LIBS += -lpthread
 	KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Threads/*.cpp)
 	KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Threads/*.hpp)
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_QTHREAD), 1)
+	KOKKOS_LIBS += -lqthread
+	KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Qthread/*.cpp)
+	KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Qthread/*.hpp)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
