@@ -317,6 +317,7 @@ class View ;
 
 #include <impl/KokkosExp_ViewMapping.hpp>
 #include <impl/KokkosExp_ViewAllocProp.hpp>
+#include <impl/KokkosExp_ViewArray.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

@@ -498,6 +498,8 @@ void test_view_mapping()
     ASSERT_TRUE( ( std::is_same< typename a_const_int_r3::non_const_type , int**[4] >::value ));
     ASSERT_TRUE( ( std::is_same< typename a_const_int_r3::non_const_value_type , int >::value ));
     ASSERT_TRUE( ( std::is_same< typename a_const_int_r3::non_const_array_scalar_type , int**[4] >::value ));
+
+    // std::cout << "typeid(const int**[4]).name() = " << typeid(const int**[4]).name() << std::endl ;
   }
 
   //----------------------------------------

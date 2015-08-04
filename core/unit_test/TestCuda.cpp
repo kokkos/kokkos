@@ -49,12 +49,8 @@
 
 //----------------------------------------------------------------------------
 
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
-
 #include <impl/Kokkos_ViewTileLeft.hpp>
 #include <TestTile.hpp>
-
-#endif
 
 //----------------------------------------------------------------------------
 
@@ -412,8 +408,6 @@ TEST_F( cuda, atomic )
 
 //----------------------------------------------------------------------------
 
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
-
 TEST_F( cuda, tile_layout)
 {
   TestTile::test< Kokkos::Cuda , 1 , 1 >( 1 , 1 );
@@ -438,8 +432,6 @@ TEST_F( cuda, tile_layout)
   TestTile::test< Kokkos::Cuda , 8 , 8 >( 9 , 9 );
   TestTile::test< Kokkos::Cuda , 8 , 8 >( 9 , 11 );
 }
-
-#endif
 
 TEST_F( cuda , view_aggregate )
 {

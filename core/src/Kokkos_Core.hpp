@@ -66,6 +66,7 @@
 #endif
 
 #include <Kokkos_Pair.hpp>
+#include <Kokkos_Array.hpp>
 #include <Kokkos_View.hpp>
 #include <Kokkos_Vectorization.hpp>
 #include <Kokkos_Atomic.hpp>

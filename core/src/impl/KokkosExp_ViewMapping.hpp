@@ -80,6 +80,15 @@ template< long sN0 = -1
         >
 struct ViewDimension {
 
+  enum { arg_N0 = sN0 };
+  enum { arg_N1 = sN1 };
+  enum { arg_N2 = sN2 };
+  enum { arg_N3 = sN3 };
+  enum { arg_N4 = sN4 };
+  enum { arg_N5 = sN5 };
+  enum { arg_N6 = sN6 };
+  enum { arg_N7 = sN7 };
+
   enum { rank = ( sN0 < 0 ? 0 :
                 ( sN1 < 0 ? 1 :
                 ( sN2 < 0 ? 2 :
@@ -118,6 +127,15 @@ template< long sN1
         >
 struct ViewDimension< 0, sN1, sN2, sN3, sN4, sN5, sN6, sN7 > {
 
+  enum { arg_N0 = 0 };
+  enum { arg_N1 = sN1 };
+  enum { arg_N2 = sN2 };
+  enum { arg_N3 = sN3 };
+  enum { arg_N4 = sN4 };
+  enum { arg_N5 = sN5 };
+  enum { arg_N6 = sN6 };
+  enum { arg_N7 = sN7 };
+
   enum { rank = ( sN1 < 0 ? 1 :
                 ( sN2 < 0 ? 2 :
                 ( sN3 < 0 ? 3 :
@@ -155,6 +173,15 @@ template< long sN2
         >
 struct ViewDimension< 0, 0, sN2, sN3, sN4, sN5, sN6, sN7 > {
 
+  enum { arg_N0 = 0 };
+  enum { arg_N1 = 0 };
+  enum { arg_N2 = sN2 };
+  enum { arg_N3 = sN3 };
+  enum { arg_N4 = sN4 };
+  enum { arg_N5 = sN5 };
+  enum { arg_N6 = sN6 };
+  enum { arg_N7 = sN7 };
+
   enum { rank = ( sN2 < 0 ? 2 :
                 ( sN3 < 0 ? 3 :
                 ( sN4 < 0 ? 4 :
@@ -190,6 +217,15 @@ template< long sN3
         >
 struct ViewDimension< 0, 0, 0, sN3, sN4, sN5, sN6, sN7 > {
 
+  enum { arg_N0 = 0 };
+  enum { arg_N1 = 0 };
+  enum { arg_N2 = 0 };
+  enum { arg_N3 = sN3 };
+  enum { arg_N4 = sN4 };
+  enum { arg_N5 = sN5 };
+  enum { arg_N6 = sN6 };
+  enum { arg_N7 = sN7 };
+
   enum { rank = ( sN3 < 0 ? 3 :
                 ( sN4 < 0 ? 4 :
                 ( sN5 < 0 ? 5 :
@@ -223,6 +259,15 @@ template< long sN4
         >
 struct ViewDimension< 0, 0, 0, 0, sN4, sN5, sN6, sN7 > {
 
+  enum { arg_N0 = 0 };
+  enum { arg_N1 = 0 };
+  enum { arg_N2 = 0 };
+  enum { arg_N3 = 0 };
+  enum { arg_N4 = sN4 };
+  enum { arg_N5 = sN5 };
+  enum { arg_N6 = sN6 };
+  enum { arg_N7 = sN7 };
+
   enum { rank = ( sN4 < 0 ? 4 :
                 ( sN5 < 0 ? 5 :
                 ( sN6 < 0 ? 6 :
@@ -254,6 +299,15 @@ template< long sN5
         >
 struct ViewDimension< 0, 0, 0, 0, 0, sN5, sN6, sN7 > {
 
+  enum { arg_N0 = 0 };
+  enum { arg_N1 = 0 };
+  enum { arg_N2 = 0 };
+  enum { arg_N3 = 0 };
+  enum { arg_N4 = 0 };
+  enum { arg_N5 = sN5 };
+  enum { arg_N6 = sN6 };
+  enum { arg_N7 = sN7 };
+
   enum { rank = ( sN5 < 0 ? 5 :
                 ( sN6 < 0 ? 6 :
                 ( sN7 < 0 ? 7 : 8 ))) };
@@ -283,6 +337,15 @@ template< long sN6
         >
 struct ViewDimension< 0, 0, 0, 0, 0, 0, sN6, sN7 > {
 
+  enum { arg_N0 = 0 };
+  enum { arg_N1 = 0 };
+  enum { arg_N2 = 0 };
+  enum { arg_N3 = 0 };
+  enum { arg_N4 = 0 };
+  enum { arg_N5 = 0 };
+  enum { arg_N6 = sN6 };
+  enum { arg_N7 = sN7 };
+
   enum { rank = ( sN6 < 0 ? 6 :
                 ( sN7 < 0 ? 7 : 8 )) };
   enum { rank_dynamic = 6 };
@@ -309,6 +372,15 @@ struct ViewDimension< 0, 0, 0, 0, 0, 0, sN6, sN7 > {
 template< long sN7 >
 struct ViewDimension< 0, 0, 0, 0, 0, 0, 0, sN7 > {
 
+  enum { arg_N0 = 0 };
+  enum { arg_N1 = 0 };
+  enum { arg_N2 = 0 };
+  enum { arg_N3 = 0 };
+  enum { arg_N4 = 0 };
+  enum { arg_N5 = 0 };
+  enum { arg_N6 = 0 };
+  enum { arg_N7 = sN7 };
+
   enum { rank = ( sN7 < 0 ? 7 : 8 ) };
   enum { rank_dynamic = 7 };
 
@@ -333,6 +405,15 @@ struct ViewDimension< 0, 0, 0, 0, 0, 0, 0, sN7 > {
 
 template<>
 struct ViewDimension< 0, 0, 0, 0, 0, 0, 0, 0 > {
+
+  enum { arg_N0 = 0 };
+  enum { arg_N1 = 0 };
+  enum { arg_N2 = 0 };
+  enum { arg_N3 = 0 };
+  enum { arg_N4 = 0 };
+  enum { arg_N5 = 0 };
+  enum { arg_N6 = 0 };
+  enum { arg_N7 = 0 };
 
   enum { rank = 8 };
   enum { rank_dynamic = 8 };
@@ -490,6 +571,208 @@ namespace Impl {
  *  The embedded aggregate type must have an AnalyzeShape specialization
  *  to map it down to a shape and intrinsic scalar numerical type.
  */
+
+#if 0
+
+template< class T , class Dim > struct ViewDataType ;
+
+template< class T >
+struct ViewDataType< T , ViewDimension< long(-1) , long(-1) , long(-1) , long(-1) , long(-1) , long(-1) , long(-1) , long(-1) > > {
+  typedef T type ;
+};
+
+template< class T , long sN0 >
+struct ViewDataType< T , ViewDimension< sN0 , long(-1) , long(-1) , long(-1) , long(-1) , long(-1) , long(-1) , long(-1) > > {
+  typedef typename std::conditional< Dim::rank_dynamic == 0 , T[sN0] , T* >::type
+    type ;
+};
+
+template< class T , long sN0 , long sN1 >
+struct ViewDataType< T , ViewDimension< sN0 , sN1 , long(-1) , long(-1) , long(-1) , long(-1) , long(-1) , long(-1) > > {
+  typedef typename std::conditional< Dim::rank_dynamic == 0 , T[sN0][sN1] ,
+          typename std::conditional< Dim::rank_dynamic == 1 , T*[sN1] , T**
+          >::type >::type
+    type ;
+};
+
+template< class T , long sN0 , long sN1 , long sN2 >
+struct ViewDataType< T , ViewDimension< sN0 , sN1 , sN2 , long(-1) , long(-1) , long(-1) , long(-1) , long(-1) > > {
+  typedef typename std::conditional< Dim::rank_dynamic == 0 , T[sN0][sN1][sN2] ,
+          typename std::conditional< Dim::rank_dynamic == 1 , T*[sN1][sN2] ,
+          typename std::conditional< Dim::rank_dynamic == 2 , T**[sN2] , T***
+          >::type >::type >::type
+    type ;
+};
+
+template< class T , long sN0 , long sN1 , long sN2 , long sN3 >
+struct ViewDataType< T , ViewDimension< sN0 , sN1 , sN2 , sN3 , long(-1) , long(-1) , long(-1) , long(-1) > > {
+  typedef typename std::conditional< Dim::rank_dynamic == 0 , T[sN0][sN1][sN2][sN3] ,
+          typename std::conditional< Dim::rank_dynamic == 1 , T*[sN1][sN2][sN3] ,
+          typename std::conditional< Dim::rank_dynamic == 2 , T**[sN2][sN3] ,
+          typename std::conditional< Dim::rank_dynamic == 3 , T***[sN3] , T****
+          >::type >::type >::type >::type
+    type ;
+};
+
+template< class T
+        , long sN0 , long sN1 , long sN2 ,
+        , long sN3 , long sN4 >
+struct ViewDataType< T , ViewDimension< sN0 , sN1 , sN2 , sN3 , sN4 , long(-1) , long(-1) , long(-1) > > {
+  typedef typename std::conditional< Dim::rank_dynamic == 0 , T[sN0][sN1][sN2][sN3][sN4] ,
+          typename std::conditional< Dim::rank_dynamic == 1 , T*[sN1][sN2][sN3][sN4] ,
+          typename std::conditional< Dim::rank_dynamic == 2 , T**[sN2][sN3][sN4] ,
+          typename std::conditional< Dim::rank_dynamic == 3 , T***[sN3][sN4] ,
+          typename std::conditional< Dim::rank_dynamic == 4 , T****[sN4] , T*****
+          >::type >::type >::type >::type >::type
+    type ;
+};
+
+template< class T
+        , long sN0 , long sN1 , long sN2 ,
+        , long sN3 , long sN4 , long sN5 >
+struct ViewDataType< T , ViewDimension< sN0 , sN1 , sN2 , sN3 , sN4 , sN5 , long(-1) , long(-1) > > {
+  typedef typename std::conditional< Dim::rank_dynamic == 0 , T[sN0][sN1][sN2][sN3][sN4][sN5] ,
+          typename std::conditional< Dim::rank_dynamic == 1 , T*[sN1][sN2][sN3][sN4][sN5] ,
+          typename std::conditional< Dim::rank_dynamic == 2 , T**[sN2][sN3][sN4][sN5] ,
+          typename std::conditional< Dim::rank_dynamic == 3 , T***[sN3][sN4][sN5] ,
+          typename std::conditional< Dim::rank_dynamic == 4 , T****[sN4][sN5] ,
+          typename std::conditional< Dim::rank_dynamic == 5 , T*****[sN5] , T******
+          >::type >::type >::type >::type >::type >::type
+    type ;
+};
+
+template< class T
+        , long sN0 , long sN1 , long sN2 ,
+        , long sN3 , long sN4 , long sN5 ,
+        , long sN6 >
+struct ViewDataType< T , ViewDimension< sN0 , sN1 , sN2 , sN3 , sN4 , sN5 , sN6 , long(-1) > > {
+  typedef typename std::conditional< Dim::rank_dynamic == 0 , T[sN0][sN1][sN2][sN3][sN4][sN5][sN6] ,
+          typename std::conditional< Dim::rank_dynamic == 1 , T*[sN1][sN2][sN3][sN4][sN5][sN6] ,
+          typename std::conditional< Dim::rank_dynamic == 2 , T**[sN2][sN3][sN4][sN5][sN6] ,
+          typename std::conditional< Dim::rank_dynamic == 3 , T***[sN3][sN4][sN5][sN6] ,
+          typename std::conditional< Dim::rank_dynamic == 4 , T****[sN4][sN5][sN6] ,
+          typename std::conditional< Dim::rank_dynamic == 5 , T*****[sN5][sN6] ,
+          typename std::conditional< Dim::rank_dynamic == 6 , T******[sN6] , T*******
+          >::type >::type >::type >::type >::type >::type >::type
+    type ;
+};
+
+template< class T
+        , long sN0 , long sN1 , long sN2 ,
+        , long sN3 , long sN4 , long sN5 ,
+        , long sN6 , long sN7 >
+struct ViewDataType< T , ViewDimension< sN0 , sN1 , sN2 , sN3 , sN4 , sN5 , sN6 , sN7 > > {
+  typedef typename std::conditional< Dim::rank_dynamic == 0 , T[sN0][sN1][sN2][sN3][sN4][sN5][sN6][sN7] ,
+          typename std::conditional< Dim::rank_dynamic == 1 , T*[sN1][sN2][sN3][sN4][sN5][sN6][sN7] ,
+          typename std::conditional< Dim::rank_dynamic == 2 , T**[sN2][sN3][sN4][sN5][sN6][sN7] ,
+          typename std::conditional< Dim::rank_dynamic == 3 , T***[sN3][sN4][sN5][sN6][sN7] ,
+          typename std::conditional< Dim::rank_dynamic == 4 , T****[sN4][sN5][sN6][sN7] ,
+          typename std::conditional< Dim::rank_dynamic == 5 , T*****[sN5][sN6][sN7] ,
+          typename std::conditional< Dim::rank_dynamic == 6 , T******[sN6][sN7] ,
+          typename std::conditional< Dim::rank_dynamic == 7 , T*******[sN7] , T********
+          >::type >::type >::type >::type >::type >::type >::type >::type
+    type ;
+};
+
+
+
+template< class T >
+struct ViewArrayAnalysis
+{
+private:
+  // Analysis of : T * * *[#][#][#]
+
+  // std::rank and std::extent consider "T***" to be the type
+  enum { rank_bracket = std::rank< T >::value };
+
+  static_assert( rank_bracket <= 10 , "Maximum ten dimensional array" );
+
+  enum { extent_0 = std::extent< T , 0 >::value };
+  enum { extent_1 = std::extent< T , 1 >::value };
+  enum { extent_2 = std::extent< T , 2 >::value };
+  enum { extent_3 = std::extent< T , 3 >::value };
+  enum { extent_4 = std::extent< T , 4 >::value };
+  enum { extent_5 = std::extent< T , 5 >::value };
+  enum { extent_6 = std::extent< T , 6 >::value };
+  enum { extent_7 = std::extent< T , 7 >::value };
+  enum { extent_8 = std::extent< T , 8 >::value };
+  enum { extent_9 = std::extent< T , 9 >::value };
+
+  typedef typename std::remove_all_extents< T >::type  t_0 ;
+  typedef typename std::remove_pointer< t_0   >::type  t_1 ;
+  typedef typename std::remove_pointer< t_1   >::type  t_2 ;
+  typedef typename std::remove_pointer< t_2   >::type  t_3 ;
+  typedef typename std::remove_pointer< t_3   >::type  t_4 ;
+  typedef typename std::remove_pointer< t_4   >::type  t_5 ;
+  typedef typename std::remove_pointer< t_5   >::type  t_6 ;
+  typedef typename std::remove_pointer< t_6   >::type  t_7 ;
+  typedef typename std::remove_pointer< t_7   >::type  t_8 ;
+  typedef typename std::remove_pointer< t_8   >::type  t_9 ;
+  typedef typename std::remove_pointer< t_9   >::type  t_10 ;
+
+  enum { rank_pointer =
+    ( ! std::is_pointer< t_0 >::value ? 0 :
+    ( ! std::is_pointer< t_1 >::value ? 1 :
+    ( ! std::is_pointer< t_2 >::value ? 2 :
+    ( ! std::is_pointer< t_3 >::value ? 3 :
+    ( ! std::is_pointer< t_4 >::value ? 4 :
+    ( ! std::is_pointer< t_5 >::value ? 5 :
+    ( ! std::is_pointer< t_6 >::value ? 6 :
+    ( ! std::is_pointer< t_7 >::value ? 7 :
+    ( ! std::is_pointer< t_8 >::value ? 8 :
+    ( ! std::is_pointer< t_9 >::value ? 9 :
+    ( ! std::is_pointer< t_10 >::value ? 10 : 0x7fffffff };
+
+  enum { rank         = rank_bracket + rank_pointer };
+  enum { rank_dynamic = rank_pointer + ( rank_bracket && std::extent<T,0>::value == 0 ? 1 : 0 ) };
+
+  static_assert( rank <= 10 , "Maximum ten dimensional array" );
+
+public:
+
+  typedef ViewDimension< ( rank <= 0 ? long(-1) : ( rank_dynamic <= 0 ? extent_0 : 0 ) )
+                       , ( rank <= 1 ? long(-1) : ( rank_dynamic <= 1 ? extent_1 : 0 ) )
+                       , ( rank <= 2 ? long(-1) : ( rank_dynamic <= 2 ? extent_2 : 0 ) )
+                       , ( rank <= 3 ? long(-1) : ( rank_dynamic <= 3 ? extent_3 : 0 ) )
+                       , ( rank <= 4 ? long(-1) : ( rank_dynamic <= 4 ? extent_4 : 0 ) )
+                       , ( rank <= 5 ? long(-1) : ( rank_dynamic <= 5 ? extent_5 : 0 ) )
+                       , ( rank <= 6 ? long(-1) : ( rank_dynamic <= 6 ? extent_6 : 0 ) )
+                       , ( rank <= 7 ? long(-1) : ( rank_dynamic <= 7 ? extent_7 : 0 ) )
+                       , ( rank <= 8 ? long(-1) : ( rank_dynamic <= 8 ? extent_8 : 0 ) )
+                       , ( rank <= 9 ? long(-1) : ( rank_dynamic <= 9 ? extent_9 : 0 ) )
+                       > dimension ;
+
+  typedef t_10 value_type ;
+
+  static_assert( dimension::rank == rank );
+  static_assert( dimension::rank_dynamic == rank_dynamic );
+};
+
+template< class T , class ValueType = typename ViewArrayAnalysis<T>::value_type >
+{
+public:
+
+  typedef void specialize ; // No specialization
+
+  typedef typename ViewArrayAnalysis<T>::dimension  dimension ;
+
+  typedef  T          type ;
+  typedef  ValueType  value_type ;
+  typedef  T          array_scalar_type ;
+
+  typedef typename std::add_const< T >::type                  const_type ;
+  typedef typename std::add_const< value_type >::type         const_value_type ;
+  typedef typename std::add_const< array_scalar_type >::type  const_array_scalar_type ;
+
+  typedef typename std::remove_const< T >::type                  non_const_type ;
+  typedef typename std::remove_const< value_type >::type         non_const_value_type ;
+  typedef typename std::remove_const< array_scalar_type >::type  non_const_array_scalar_type ;
+
+
+};
+
+#endif
+
 template< class T >
 struct ViewDataAnalysis
 {
@@ -2153,6 +2436,8 @@ template< class Traits >
 struct ViewDataHandle< Traits ,
   typename std::enable_if<( std::is_same< typename Traits::non_const_value_type
                                         , typename Traits::value_type >::value
+                            &&
+                            std::is_same< typename Traits::specialize , void >::value
                             &&
                             Traits::memory_traits::Atomic
                           )>::type >
