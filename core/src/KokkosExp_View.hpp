@@ -59,8 +59,11 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template< class >         struct ViewArrayAnalysis ;
-template< class , class > struct ViewDataAnalysis ;
+template< class DataType >
+struct ViewArrayAnalysis ;
+
+template< class DataType , class ValueType , class ArrayLayout >
+struct ViewDataAnalysis ;
 
 template< class , class = void , typename Enable = void >
 class ViewMapping { enum { is_assignable = false }; };
@@ -175,7 +178,11 @@ private:
   typedef Kokkos::Experimental::Impl::ViewArrayAnalysis< DataType >  array_analysis ;
 
   // Analyze data type's properties with opportunity to specialize based upon the array value type
-  typedef Kokkos::Experimental::Impl::ViewDataAnalysis< DataType , typename array_analysis::non_const_value_type >  data_analysis ;
+  typedef Kokkos::Experimental::Impl::
+    ViewDataAnalysis< DataType
+                    , typename array_analysis::non_const_value_type
+                    , ArrayLayout
+                    >  data_analysis ;
 
 public:
 

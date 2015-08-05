@@ -666,12 +666,12 @@ public:
   static_assert( unsigned(dimension::rank_dynamic) == unsigned(rank_dynamic) , "" );
 };
 
-template< class T , class ValueType >
+template< class DataType , class ValueType , class ArrayLayout >
 struct ViewDataAnalysis
 {
 private:
 
-  typedef ViewArrayAnalysis< T > array_analysis ;
+  typedef ViewArrayAnalysis< DataType > array_analysis ;
 
   // ValueType is opportunity for partial specialization.
   // Must match array analysis when this default template is used.

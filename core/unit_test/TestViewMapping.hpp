@@ -521,8 +521,8 @@ void test_view_mapping()
   {
     using namespace Kokkos::Experimental::Impl ;
 
-    typedef ViewDataAnalysis< int[] , typename ViewArrayAnalysis<int[]>::non_const_value_type  >  a_int_r1 ;
-    typedef ViewDataAnalysis< const int[] , typename ViewArrayAnalysis<const int[]>::non_const_value_type >  a_const_int_r1 ;
+    typedef ViewDataAnalysis< int[] , typename ViewArrayAnalysis<int[]>::non_const_value_type , void >  a_int_r1 ;
+    typedef ViewDataAnalysis< const int[] , typename ViewArrayAnalysis<const int[]>::non_const_value_type , void >  a_const_int_r1 ;
 
     static_assert( std::is_same< typename a_const_int_r1::specialize , void >::value , "" );
     static_assert( std::is_same< typename a_const_int_r1::dimension , Kokkos::Experimental::Impl::ViewDimension<0> >::value , "" );
@@ -537,8 +537,8 @@ void test_view_mapping()
     static_assert( std::is_same< typename a_const_int_r1::non_const_type , int * >::value , "" );
     static_assert( std::is_same< typename a_const_int_r1::non_const_value_type , int >::value , "" );
 
-    typedef ViewDataAnalysis< int**[4] , typename ViewArrayAnalysis< int **[4] >::non_const_value_type >  a_int_r3 ;
-    typedef ViewDataAnalysis< const int**[4] , typename ViewArrayAnalysis< const int **[4] >::non_const_value_type >  a_const_int_r3 ;
+    typedef ViewDataAnalysis< int**[4] , typename ViewArrayAnalysis< int **[4] >::non_const_value_type , void >  a_int_r3 ;
+    typedef ViewDataAnalysis< const int**[4] , typename ViewArrayAnalysis< const int **[4] >::non_const_value_type , void >  a_const_int_r3 ;
 
     static_assert( std::is_same< typename a_const_int_r3::specialize , void >::value , "" );
     static_assert( std::is_same< typename a_const_int_r3::dimension , Kokkos::Experimental::Impl::ViewDimension<0,0,4> >::value , "" );

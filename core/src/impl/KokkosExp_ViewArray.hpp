@@ -50,15 +50,16 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template< class T , class V , long N , class P >
-struct ViewDataAnalysis< T , Kokkos::Array<V,N,P> >
+template< class DataType , class V , long N , class P , class ArrayLayout >
+struct ViewDataAnalysis< DataType , Kokkos::Array<V,N,P> , ArrayLayout >
 {
 private:
 
-  typedef ViewArrayAnalysis<T> array_analysis ;
+  typedef ViewArrayAnalysis<DataType> array_analysis ;
 
   static_assert( std::is_same<P,void>::value , "" );
   static_assert( std::is_same<typename array_analysis::non_const_value_type , Kokkos::Array<V,N,P> >::value , "" );
+  static_assert( std::is_scalar<V>::value , "View of Array type must be of a scalar type" );
 
 public:
 
@@ -327,70 +328,24 @@ public:
   //----------------------------------------
   // If the View is to construct or destroy the elements.
 
-  struct FunctorTagConstructScalar {};
-  struct FunctorTagConstructNonScalar {};
-  struct FunctorTagDestructNonScalar {};
-
   KOKKOS_FORCEINLINE_FUNCTION
-  void operator()( const FunctorTagConstructScalar & , const size_t i ) const
+  void operator()( const size_t i ) const
     {
       reference_type ref( m_handle + i * Array_S , Array_N , m_stride );
       for ( size_t j = 0 ; j < Array_N ; ++j ) ref[j] = 0 ;
     }
 
-  KOKKOS_FORCEINLINE_FUNCTION
-  void operator()( const FunctorTagConstructNonScalar & , const size_t i ) const
-    { 
-      typedef typename Traits::value_type::value_type  value_type ;
-      reference_type ref( m_handle + i * Array_S , Array_N , m_stride );
-      for ( size_t j = 0 ; j < Array_N ; ++j ) new( & ref[j] ) value_type();
-    }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  void operator()( const FunctorTagDestructNonScalar & , const size_t i ) const
-    { 
-      typedef typename Traits::value_type::value_type  value_type ;
-      reference_type ref( m_handle + i * Array_S , Array_N , m_stride );
-      for ( size_t j = 0 ; j < Array_N ; ++j ) ( & ref[j] )->~value_type();
-    }
-
   template< class ExecSpace >
-  typename std::enable_if< Kokkos::Impl::is_execution_space<ExecSpace>::value &&
-                           std::is_scalar< typename Traits::value_type::value_type >::value >::type
-  construct( const ExecSpace & space ) const
+  void construct( const ExecSpace & space ) const
     {
-      typedef Kokkos::RangePolicy< ExecSpace , FunctorTagConstructScalar , size_t > Policy ;
+      typedef Kokkos::RangePolicy< ExecSpace , size_t > Policy ;
 
       (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_stride ) );
       ExecSpace::fence();
     }
 
   template< class ExecSpace >
-  typename std::enable_if< Kokkos::Impl::is_execution_space<ExecSpace>::value &&
-                           ! std::is_scalar< typename Traits::value_type::value_type >::value >::type
-  construct( const ExecSpace & space ) const
-    {
-      typedef Kokkos::RangePolicy< ExecSpace , FunctorTagConstructNonScalar , size_t > Policy ;
-
-      (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_stride ) );
-      ExecSpace::fence();
-    }
-
-  template< class ExecSpace >
-  typename std::enable_if< Kokkos::Impl::is_execution_space<ExecSpace>::value &&
-                           std::is_scalar< typename Traits::value_type::value_type >::value >::type
-  destroy( const ExecSpace & ) const {}
-
-  template< class ExecSpace >
-  typename std::enable_if< Kokkos::Impl::is_execution_space<ExecSpace>::value &&
-                           ! std::is_scalar< typename Traits::value_type::value_type >::value >::type
-  destroy( const ExecSpace & space ) const
-    {
-      typedef Kokkos::RangePolicy< ExecSpace , FunctorTagDestructNonScalar , size_t > Policy ;
-
-      (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_stride ) );
-      ExecSpace::fence();
-    }
+  void destroy( const ExecSpace & ) const {}
 };
 
 //----------------------------------------------------------------------------
