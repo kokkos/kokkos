@@ -50,18 +50,27 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-#if 0
-
-template< class T , class V , size_t N , class P >
+template< class T , class V , long N , class P >
 struct ViewDataAnalysis< T , Kokkos::Array<V,N,P> >
 {
+private:
+
+  typedef ViewArrayAnalysis<T> array_analysis ;
+
   static_assert( std::is_same<P,void>::value , "" );
+  static_assert( std::is_same<typename array_analysis::non_const_value_type , Kokkos::Array<V,N,P> >::value , "" );
+
+public:
 
   typedef Kokkos::Array<>  specialize ;
 
-  typedef typename ViewArrayAnalysis<T>::dimension  dimension ;
+  typedef typename array_analysis::dimension  dimension ;
 
 private:
+
+  enum { is_const = std::is_same< typename array_analysis::value_type
+                                , typename array_analysis::const_value_type
+                                >::value };
 
   typedef ViewDimension< ( dimension::rank == 0 ? N : dimension::arg_N0 )
                        , ( dimension::rank == 1 ? N : dimension::arg_N1 )
@@ -71,47 +80,25 @@ private:
                        , ( dimension::rank == 5 ? N : dimension::arg_N5 )
                        , ( dimension::rank == 6 ? N : dimension::arg_N6 )
                        , ( dimension::rank == 7 ? N : dimension::arg_N7 )
-                       , ( dimension::rank == 8 ? N : dimension::arg_N8 )
                        > array_scalar_dimension ;
+
+  typedef typename std::conditional< is_const , const V , V >::type  scalar_type ;
+  typedef V       non_const_scalar_type ;
+  typedef const V const_scalar_type ;
 
 public:
 
-  typedef  T                                                         type ;
-  typedef  Kokkos::Array<V,N,P>                                      value_type ;
-  typedef typename ViewDataType< V , array_scalar_dimension >::type  array_scalar_type ;
+  typedef typename array_analysis::value_type            value_type ;
+  typedef typename array_analysis::const_value_type      const_value_type ;
+  typedef typename array_analysis::non_const_value_type  non_const_value_type ;
 
-  typedef typename std::add_const< T >::type                  const_type ;
-  typedef typename std::add_const< value_type >::type         const_value_type ;
-  typedef typename std::add_const< array_scalar_type >::type  const_array_scalar_type ;
+  typedef typename ViewDataType<           value_type , dimension >::type  type ;
+  typedef typename ViewDataType<     const_value_type , dimension >::type  const_type ;
+  typedef typename ViewDataType< non_const_value_type , dimension >::type  non_const_type ;
 
-  typedef typename std::remove_const< T >::type                  non_const_type ;
-  typedef typename std::remove_const< value_type >::type         non_const_value_type ;
-  typedef typename std::remove_const< array_scalar_type >::type  non_const_array_scalar_type ;
-};
-
-
-#endif
-
-template< class T , size_t N , class P >
-struct ViewDataAnalysis< Kokkos::Array<T,N,P> >
-{
-  static_assert( std::is_same<P,void>::value , "" );
-
-  typedef Kokkos::Array<>  specialize ;
-
-  typedef ViewDimension<>  dimension ;
-
-  typedef Kokkos::Array<T,N,void>  type ;
-  typedef Kokkos::Array<T,N,void>  value_type ;
-  typedef T                        array_scalar_type [ N ];
-
-  typedef const Kokkos::Array<T,N,void>     const_type ;
-  typedef const Kokkos::Array<T,N,void>     const_value_type ;
-  typedef typename std::add_const<T>::type  const_array_scalar_type [ N ];
-
-  typedef Kokkos::Array<T,N,void>              non_const_type ;
-  typedef Kokkos::Array<T,N,void>              non_const_value_type ;
-  typedef typename std::remove_const<T>::type  non_const_array_scalar_type [ N ];
+  typedef typename ViewDataType<           scalar_type , array_scalar_dimension >::type  array_scalar_type ;
+  typedef typename ViewDataType<     const_scalar_type , array_scalar_dimension >::type  const_array_scalar_type ;
+  typedef typename ViewDataType< non_const_scalar_type , array_scalar_dimension >::type  non_const_array_scalar_type ;
 };
 
 }}} // namespace Kokkos::Experimental::Impl
@@ -151,8 +138,8 @@ private:
 
   typedef typename Traits::value_type::value_type scalar_type ;
 
-  typedef Kokkos::Array< scalar_type , std::numeric_limits<size_t>::max() , Kokkos::Array<>::contiguous >  contiguous_reference ;
-  typedef Kokkos::Array< scalar_type , std::numeric_limits<size_t>::max() , Kokkos::Array<>::strided >     strided_reference ;
+  typedef Kokkos::Array< scalar_type , std::numeric_limits<long>::max() , Kokkos::Array<>::contiguous >  contiguous_reference ;
+  typedef Kokkos::Array< scalar_type , std::numeric_limits<long>::max() , Kokkos::Array<>::strided >     strided_reference ;
 
   enum { is_contiguous_reference =
     ( Traits::rank == 0 ) || ( std::is_same< typename Traits::array_layout , Kokkos::LayoutRight >::value ) };

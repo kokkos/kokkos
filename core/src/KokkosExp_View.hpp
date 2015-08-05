@@ -59,7 +59,8 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template< class > struct ViewDataAnalysis ;
+template< class >         struct ViewArrayAnalysis ;
+template< class , class > struct ViewDataAnalysis ;
 
 template< class , class = void , typename Enable = void >
 class ViewMapping { enum { is_assignable = false }; };
@@ -170,37 +171,41 @@ private:
     >::type >::type >::type
       MemoryTraits ;
 
-  typedef Kokkos::Experimental::Impl::ViewDataAnalysis< DataType >  analysis ;
+  // Analyze data type's array properties
+  typedef Kokkos::Experimental::Impl::ViewArrayAnalysis< DataType >  array_analysis ;
+
+  // Analyze data type's properties with opportunity to specialize based upon the array value type
+  typedef Kokkos::Experimental::Impl::ViewDataAnalysis< DataType , typename array_analysis::non_const_value_type >  data_analysis ;
 
 public:
 
   //------------------------------------
   // Data type traits:
 
-  typedef typename analysis::type            data_type ;
-  typedef typename analysis::const_type      const_data_type ;
-  typedef typename analysis::non_const_type  non_const_data_type ;
+  typedef typename data_analysis::type            data_type ;
+  typedef typename data_analysis::const_type      const_data_type ;
+  typedef typename data_analysis::non_const_type  non_const_data_type ;
 
   //------------------------------------
   // Compatible array of trivial type traits:
 
-  typedef typename analysis::array_scalar_type            array_scalar_type ;
-  typedef typename analysis::const_array_scalar_type      const_array_scalar_type ;
-  typedef typename analysis::non_const_array_scalar_type  non_const_array_scalar_type ;
+  typedef typename data_analysis::array_scalar_type            array_scalar_type ;
+  typedef typename data_analysis::const_array_scalar_type      const_array_scalar_type ;
+  typedef typename data_analysis::non_const_array_scalar_type  non_const_array_scalar_type ;
 
   //------------------------------------
   // Value type traits:
 
-  typedef typename analysis::value_type            value_type ;
-  typedef typename analysis::const_value_type      const_value_type ;
-  typedef typename analysis::non_const_value_type  non_const_value_type ;
+  typedef typename data_analysis::value_type            value_type ;
+  typedef typename data_analysis::const_value_type      const_value_type ;
+  typedef typename data_analysis::non_const_value_type  non_const_value_type ;
 
   //------------------------------------
   // Mapping traits:
 
-  typedef ArrayLayout                    array_layout ;
-  typedef typename analysis::dimension   dimension ;
-  typedef typename analysis::specialize  specialize /* mapping specialization tag */ ;
+  typedef ArrayLayout                         array_layout ;
+  typedef typename data_analysis::dimension   dimension ;
+  typedef typename data_analysis::specialize  specialize /* mapping specialization tag */ ;
 
   enum { rank         = dimension::rank };
   enum { rank_dynamic = dimension::rank_dynamic };

@@ -53,7 +53,7 @@ namespace Kokkos {
  *         Dropping the iterator interface.
  */
 template< class T     = void
-        , size_t N    = std::numeric_limits<size_t>::max()
+        , long  N     = std::numeric_limits<long>::max()
         , class Proxy = void
         >
 struct Array {
@@ -144,14 +144,14 @@ public:
 
 
 template<>
-struct Array<void,std::numeric_limits<size_t>::max(),void>
+struct Array<void,std::numeric_limits<long>::max(),void>
 {
   struct contiguous {};
   struct strided {};
 };
 
 template< class T >
-struct Array< T , std::numeric_limits<size_t>::max() , Array<>::contiguous >
+struct Array< T , std::numeric_limits<long>::max() , Array<>::contiguous >
 {
 private:
   T *    m_elem ;
@@ -216,7 +216,7 @@ public:
 };
 
 template< class T >
-struct Array< T , std::numeric_limits<size_t>::max() , Array<>::strided >
+struct Array< T , std::numeric_limits<long>::max() , Array<>::strided >
 {
 private:
   T *    m_elem ;
