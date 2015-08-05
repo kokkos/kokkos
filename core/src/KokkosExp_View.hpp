@@ -450,7 +450,7 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_7() const { return m_map.stride_7(); }
 
   //----------------------------------------
-  // Range span
+  // Range span is the span which contains all members.
 
   typedef typename map_type::reference_type  reference_type ;
 
@@ -464,6 +464,12 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr bool   is_contiguous() const { return m_map.span_is_contiguous(); }
   // Deprecated, use 'data()' instead
   KOKKOS_INLINE_FUNCTION constexpr typename traits::value_type * ptr_on_device() const { return m_map.data(); }
+
+  //----------------------------------------
+  // Allow specializations to query their specialized map
+
+  KOKKOS_INLINE_FUNCTION
+  const map_type & implementation_map() const { return m_map ; }
 
   //----------------------------------------
 
