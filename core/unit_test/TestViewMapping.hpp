@@ -521,7 +521,6 @@ void test_view_mapping()
   {
     using namespace Kokkos::Experimental::Impl ;
 
-    typedef ViewDataAnalysis< int[] , typename ViewArrayAnalysis<int[]>::non_const_value_type , void >  a_int_r1 ;
     typedef ViewDataAnalysis< const int[] , typename ViewArrayAnalysis<const int[]>::non_const_value_type , void >  a_const_int_r1 ;
 
     static_assert( std::is_same< typename a_const_int_r1::specialize , void >::value , "" );
@@ -537,7 +536,6 @@ void test_view_mapping()
     static_assert( std::is_same< typename a_const_int_r1::non_const_type , int * >::value , "" );
     static_assert( std::is_same< typename a_const_int_r1::non_const_value_type , int >::value , "" );
 
-    typedef ViewDataAnalysis< int**[4] , typename ViewArrayAnalysis< int **[4] >::non_const_value_type , void >  a_int_r3 ;
     typedef ViewDataAnalysis< const int**[4] , typename ViewArrayAnalysis< const int **[4] >::non_const_value_type , void >  a_const_int_r3 ;
 
     static_assert( std::is_same< typename a_const_int_r3::specialize , void >::value , "" );
@@ -551,6 +549,7 @@ void test_view_mapping()
     static_assert( std::is_same< typename a_const_int_r3::non_const_type , int**[4] >::value , "" );
     static_assert( std::is_same< typename a_const_int_r3::non_const_value_type , int >::value , "" );
     static_assert( std::is_same< typename a_const_int_r3::non_const_array_scalar_type , int**[4] >::value , "" );
+
 
     // std::cout << "typeid(const int**[4]).name() = " << typeid(const int**[4]).name() << std::endl ;
   }
