@@ -669,7 +669,11 @@ void test_view_mapping()
     }
   }
 
-  {
+  // Testing using space instance for allocation.
+  // The execution space of the memory space must be available for view data initialization
+
+  if ( std::is_same< ExecSpace , typename ExecSpace::memory_space::execution_space >::value ) {
+
     using namespace Kokkos::Experimental ;
 
     typedef typename ExecSpace::memory_space  memory_space ;
