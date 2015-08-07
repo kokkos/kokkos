@@ -887,6 +887,11 @@ public:
 
       const alloc_prop prop( arg_prop );
 
+      // If initializing view data then the execution space must be initialized.
+      if ( prop.initialize.value && ! prop.execution.is_initialized() ) {
+        Kokkos::Impl::throw_runtime_exception("Constructing View and initializing data with uninitialized execution space");
+      }
+
       // Query the mapping for byte-size of allocation.
       const size_t alloc_size = map_type::memory_span( prop.allow_padding
                                                      , arg_N0 , arg_N1 , arg_N2 , arg_N3
@@ -933,6 +938,11 @@ public:
       static_assert( traits::is_managed , "View allocation constructor requires managed memory" );
 
       const alloc_prop prop( arg_prop );
+
+      // If initializing view data then the execution space must be initialized.
+      if ( prop.initialize.value && ! prop.execution.is_initialized() ) {
+        Kokkos::Impl::throw_runtime_exception("Constructing View and initializing data with uninitialized execution space");
+      }
 
       // Query the mapping for byte-size of allocation.
       const size_t alloc_size = map_type::memory_span( prop.allow_padding , arg_layout );
