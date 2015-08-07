@@ -52,9 +52,9 @@ namespace Kokkos {
 /**\brief  Derived from the C++17 'std::array'.
  *         Dropping the iterator interface.
  */
-template< class T     = void
-        , long  N     = std::numeric_limits<long>::max()
-        , class Proxy = void
+template< class T      = void
+        , size_t N     = ~size_t(0)
+        , class Proxy  = void
         >
 struct Array {
 private:
@@ -95,8 +95,11 @@ public:
   Array() = default ;
   Array( const Array & ) = default ;
   Array & operator = ( const Array & ) = default ;
-  Array( Array && ) = default ;
-  Array & operator = ( Array && ) = default ;
+
+  // Some supported compilers are not sufficiently C++11 compliant
+  // for default move constructor and move assignment operator.
+  // Array( Array && ) = default ;
+  // Array & operator = ( Array && ) = default ;
 };
 
 
@@ -138,20 +141,23 @@ public:
   Array() = default ;
   Array( const Array & ) = default ;
   Array & operator = ( const Array & ) = default ;
-  Array( Array && ) = default ;
-  Array & operator = ( Array && ) = default ;
+
+  // Some supported compilers are not sufficiently C++11 compliant
+  // for default move constructor and move assignment operator.
+  // Array( Array && ) = default ;
+  // Array & operator = ( Array && ) = default ;
 };
 
 
 template<>
-struct Array<void,std::numeric_limits<long>::max(),void>
+struct Array<void,~size_t(0),void>
 {
   struct contiguous {};
   struct strided {};
 };
 
 template< class T >
-struct Array< T , std::numeric_limits<long>::max() , Array<>::contiguous >
+struct Array< T , ~size_t(0) , Array<>::contiguous >
 {
 private:
   T *    m_elem ;
@@ -191,8 +197,11 @@ public:
   ~Array() = default ;
   Array() = delete ;
   Array( const Array & rhs ) = delete ;
-  Array( Array && rhs ) = default ;
-  Array & operator = ( Array && rhs ) = delete ;
+
+  // Some supported compilers are not sufficiently C++11 compliant
+  // for default move constructor and move assignment operator.
+  // Array( Array && rhs ) = default ;
+  // Array & operator = ( Array && rhs ) = delete ;
 
   KOKKOS_INLINE_FUNCTION
   Array & operator = ( const Array & rhs )
@@ -216,7 +225,7 @@ public:
 };
 
 template< class T >
-struct Array< T , std::numeric_limits<long>::max() , Array<>::strided >
+struct Array< T , ~size_t(0) , Array<>::strided >
 {
 private:
   T *    m_elem ;
@@ -258,8 +267,11 @@ public:
   Array()  = delete ;
   Array( const Array & ) = delete ;
 
-  Array( Array && rhs ) = default ;
-  Array & operator = ( Array && rhs ) = delete ;
+
+  // Some supported compilers are not sufficiently C++11 compliant
+  // for default move constructor and move assignment operator.
+  // Array( Array && rhs ) = default ;
+  // Array & operator = ( Array && rhs ) = delete ;
 
   KOKKOS_INLINE_FUNCTION
   Array & operator = ( const Array & rhs )
