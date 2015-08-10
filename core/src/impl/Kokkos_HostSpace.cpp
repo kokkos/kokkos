@@ -73,8 +73,9 @@
 #endif
 
 // mmap flags for huge page tables
+// the Cuda driver does not interoperate with MAP_HUGETLB
 #if defined( KOKKOS_POSIX_MMAP_FLAGS )
-  #if defined( MAP_HUGETLB )
+  #if defined( MAP_HUGETLB ) && ! defined( KOKKOS_HAVE_CUDA )
     #define KOKKOS_POSIX_MMAP_FLAGS_HUGE (KOKKOS_POSIX_MMAP_FLAGS | MAP_HUGETLB )
   #else
     #define KOKKOS_POSIX_MMAP_FLAGS_HUGE KOKKOS_POSIX_MMAP_FLAGS
@@ -228,10 +229,10 @@ void * HostSpace::allocate( const size_t arg_alloc_size ) const
   static_assert( Kokkos::Impl::power_of_two< Kokkos::Impl::MEMORY_ALIGNMENT >::value
                , "Memory alignment must be power of two" );
 
-  constexpr size_t alignment = Kokkos::Impl::MEMORY_ALIGNMENT ;
-  constexpr size_t alignment_mask = alignment - 1 ;
+  constexpr uintptr_t alignment = Kokkos::Impl::MEMORY_ALIGNMENT ;
+  constexpr uintptr_t alignment_mask = alignment - 1 ;
 
-  void * ptr = NULL;
+  void * ptr = 0 ;
 
   if ( arg_alloc_size ) {
 
@@ -272,9 +273,9 @@ void * HostSpace::allocate( const size_t arg_alloc_size ) const
     else if ( m_alloc_mech == POSIX_MMAP ) {
       constexpr size_t use_huge_pages = (1u << 27);
       constexpr int    prot  = PROT_READ | PROT_WRITE ;
-      const     int    flags = arg_alloc_size < use_huge_pages
-                             ? KOKKOS_POSIX_MMAP_FLAGS
-                             : KOKKOS_POSIX_MMAP_FLAGS_HUGE ;
+      const int flags = arg_alloc_size < use_huge_pages
+                      ? KOKKOS_POSIX_MMAP_FLAGS
+                      : KOKKOS_POSIX_MMAP_FLAGS_HUGE ;
 
       // read write access to private memory
 
@@ -282,8 +283,8 @@ void * HostSpace::allocate( const size_t arg_alloc_size ) const
                 , arg_alloc_size /* size in bytes */
                 , prot           /* memory protection */
                 , flags          /* visibility of updates */
-                , -1 /* file descriptor */
-                ,  0 /* offset */
+                , -1             /* file descriptor */
+                ,  0             /* offset */
                 );
 
 /* Associated reallocation:
@@ -293,8 +294,24 @@ void * HostSpace::allocate( const size_t arg_alloc_size ) const
 #endif
   }
 
-  if ( reinterpret_cast<uintptr_t>(ptr) & alignment_mask ) {
-    Kokkos::Impl::throw_runtime_exception( "Kokkos::HostSpace aligned allocation failed" );
+  if ( ( ptr == 0 ) || ( reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0) )
+       || ( reinterpret_cast<uintptr_t>(ptr) & alignment_mask ) ) {
+    std::ostringstream msg ;
+    msg << "Kokkos::HostSpace::allocate[ " ;
+    switch( m_alloc_mech ) {
+    case STD_MALLOC: msg << "STD_MALLOC" ; break ;
+    case POSIX_MEMALIGN: msg << "POSIX_MEMALIGN" ; break ;
+    case POSIX_MMAP: msg << "POSIX_MMAP" ; break ;
+    case INTEL_MM_ALLOC: msg << "INTEL_MM_ALLOC" ; break ;
+    }
+    msg << " ]( " << arg_alloc_size << " ) FAILED" ;
+    if ( ptr == NULL ) { msg << " NULL" ; } 
+    else { msg << " NOT ALIGNED " << ptr ; }
+
+    std::cerr << msg.str() << std::endl ;
+    std::cerr.flush();
+
+    Kokkos::Impl::throw_runtime_exception( msg.str() );
   }
 
   return ptr;
