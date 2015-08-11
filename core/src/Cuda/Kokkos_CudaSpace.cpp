@@ -301,8 +301,18 @@ attach_texture_object( const unsigned sizeof_alias
                      , void *   const alloc_ptr
                      , size_t   const alloc_size )
 {
-  // Only valid for 300 <= __CUDA_ARCH__
-  // otherwise return zero.
+  enum { TEXTURE_BOUND_1D = 1u << 27 };
+
+  if ( ( alloc_ptr == 0 ) || ( sizeof_alias * TEXTURE_BOUND_1D <= alloc_size ) ) {
+    std::ostringstream msg ;
+    msg << "Kokkos::CudaSpace ERROR: Cannot attach texture object to"
+        << " alloc_ptr(" << alloc_ptr << ")"
+        << " alloc_size(" << alloc_size << ")"
+        << " max_size(" << ( sizeof_alias * TEXTURE_BOUND_1D ) << ")" ;
+    std::cerr << msg.str() << std::endl ;
+    std::cerr.flush();
+    Kokkos::Impl::throw_runtime_exception( msg.str() );
+  }
 
   ::cudaTextureObject_t tex_obj ;
 

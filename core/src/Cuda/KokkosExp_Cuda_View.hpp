@@ -130,7 +130,6 @@ struct CudaTextureFetch {
   CudaTextureFetch( const ValueType * const arg_ptr
                   , Kokkos::Experimental::Impl::SharedAllocationRecord< CudaMemorySpace , void > & record
                   )
-    // 'attach_texture_object' returns 0 when __CUDA_ARCH__ < 300
     : m_obj( record.template attach_texture_object< AliasType >() )
     , m_ptr( arg_ptr )
     , m_offset( record.attach_texture_object_offset( reinterpret_cast<const AliasType*>( arg_ptr ) ) )
