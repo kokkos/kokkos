@@ -23,10 +23,17 @@ default_arch="sm_35"
 #
 # The default C++ compiler.
 #
-default_compiler=${NVCC_WRAPPER_DEFAULT_COMPILER:-"g++"}
-#default_compiler="icpc"
-#default_compiler="/usr/local/gcc/4.8.3/bin/g++"
-#default_compiler="/usr/local/gcc/4.9.1/bin/g++"
+if [ "$SEMS_COMPILER_NAME" = "gcc" ]; then
+    default_compiler="g++"
+elif [ "$SEMS_COMPILER_NAME" = "intel" ]; then
+    default_compiler="icpc"
+elif [ "$SEMS_COMPILER_NAME" = "clang" ]; then
+    default_compiler="clang++"
+else
+    default_compiler=${NVCC_WRAPPER_DEFAULT_COMPILER:-"g++"}
+    #default_compiler="icpc"
+    #default_compiler="/usr/local/gcc/4.8.3/bin/g++"
+fi
 
 #
 # Internal variables
