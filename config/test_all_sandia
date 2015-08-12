@@ -18,23 +18,26 @@ CLANG_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limi
 INTEL_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limits,-Wuninitialized"
 CUDA_WARNING_FLAGS=""
 
+BASE_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>/base,hwloc/1.10.1/<COMPILER_NAME>/<COMPILER_VERSION>/base"
+CUDA_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>,nvcc_wrapper,gcc/4.7.2/base"
+
 # Format: (compiler module-list build-list exe-name warning-flag)
-COMPILERS=("gcc/4.7.2 gcc/4.7.2/base,hwloc/1.10.0/host/gnu/4.7.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-           "gcc/4.8.4 gcc/4.9.2/base,hwloc/1.10.0/host/gnu/4.9.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-           "gcc/4.9.2 gcc/4.9.2/base,hwloc/1.10.0/host/gnu/4.9.2 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-           "gcc/5.1.0 gcc/5.1.0/base,hwloc/1.10.0/host/gnu/5.1.0 $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-           "intel/14.0.4 intel/14.0.4/base,hwloc/1.10.0/host/gnu/4.7.2 $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-           "intel/15.0.2 intel/15.0.2/base,hwloc/1.10.0/host/gnu/4.7.2 $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-           "clang/3.5.2 clang/3.5.2/base $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-           "clang/3.6.1 clang/3.6.1/base $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-           "cuda/6.5.14 cuda/6.5.14,nvcc-wrapper/gnu,gcc/4.7.2/base $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
-           "cuda/7.0.28 cuda/7.0.18,nvcc-wrapper/gnu,gcc/4.7.2/base $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
+COMPILERS=("gcc/4.7.2 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "gcc/4.8.4 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "gcc/4.9.2 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "gcc/5.1.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "intel/14.0.4 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+           "intel/15.0.2 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+           "clang/3.5.2 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+           "clang/3.6.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+           "cuda/6.5.14 $CUDA_MODULE_LIST $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
+           "cuda/7.0.28 $CUDA_MODULE_LIST $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
            )
 
 export OMP_NUM_THREADS=4
 
-source /projects/modulefiles/utils/sems-modules-rhel6-x86_64.sh
-module use /home/projects/modulefiles
+source /projects/modulefiles/utils/sems-modules-init.sh
+source /projects/modulefiles/utils/kokkos-modules-init.sh
 
 SCRIPT_KOKKOS_ROOT=$( cd "$( dirname "$0" )" && cd .. && pwd )
 
@@ -144,15 +147,27 @@ done
 # Functions
 #
 
+# get_compiler_name <COMPILER>
+get_compiler_name() {
+    echo $1 | cut -d/ -f1
+}
+
+# get_compiler_version <COMPILER>
+get_compiler_version() {
+    echo $1 | cut -d/ -f2
+}
+
 # Do not call directly
 get_compiler_data() {
     compiler=$1
     item=$2
+    compiler_name=$(get_compiler_name $compiler)
+    compiler_vers=$(get_compiler_version $compiler)
 
     for compiler_data in "${COMPILERS[@]}" ; do
         arr=($compiler_data)
         if [ "$compiler" = "${arr[0]}" ]; then
-            echo "${arr[$item]}" | tr , ' '
+            echo "${arr[$item]}" | tr , ' ' | sed -e "s/<COMPILER_NAME>/$compiler_name/g" -e "s/<COMPILER_VERSION>/$compiler_vers/g"
             return 0
         fi
     done
@@ -211,7 +226,7 @@ single_build_and_test() {
     local compiler_exe=$(get_compiler_exe_name $compiler)
 
     if [[ "$build_type" = hwloc* ]]; then
-        local extra_args="--with-hwloc=$HWLOC_ROOT"
+        local extra_args=--with-hwloc=$(dirname $(dirname $(which hwloc-info)))
     fi
 
     if [[ "$build_type" = *debug* ]]; then
@@ -229,7 +244,7 @@ single_build_and_test() {
 
     # cxxflags="-DKOKKOS_USING_EXPERIMENTAL_VIEW $cxxflags"
 
-    run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$build --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" \"$extra_args\" 2>&1 | tee ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
+    run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$build --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" $extra_args 2>&1 | tee ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
     run_cmd make build-test 2>&1 | tee ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
     run_cmd make test 2>&1 | tee ${desc}.test.log || { report_and_log_test_result 1 ${desc} test && return 0; }
     report_and_log_test_result 0 $desc
