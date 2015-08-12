@@ -142,9 +142,9 @@ struct mcs_mutex {
 
         unique_lock(mcs_mutex & arg_m) : m(arg_m), next(nullptr), ready(false) {
 
-            unique_lock * const head = m.head.exchange(this,std::memory_order_acquire);
-            if(__builtin_expect(head != nullptr,0)) {
-                head->next.store(this,std::memory_order_seq_cst,Kokkos::Impl::notify_one);
+            unique_lock * const h = m.head.exchange(this,std::memory_order_acquire);
+            if(__builtin_expect(h != nullptr,0)) {
+                h->next.store(this,std::memory_order_seq_cst,Kokkos::Impl::notify_one);
                 while(!ready.load_when_not_equal(false,std::memory_order_acquire))
                     ;
             }
@@ -154,8 +154,8 @@ struct mcs_mutex {
 	    unique_lock& operator=(const unique_lock&) = delete;
 
         ~unique_lock() {
-            unique_lock * head = this;
-            if(__builtin_expect(!m.head.compare_exchange_strong(head,nullptr,std::memory_order_release, std::memory_order_relaxed),0)) {
+            unique_lock * h = this;
+            if(__builtin_expect(!m.head.compare_exchange_strong(h,nullptr,std::memory_order_release, std::memory_order_relaxed),0)) {
                 unique_lock * n = next.load(std::memory_order_relaxed);
                 while(!n)
                     n = next.load_when_not_equal(n,std::memory_order_relaxed);
