@@ -6,8 +6,6 @@
 
 set -o pipefail
 
-COMPILER_ROOT="/home/projects/x86-64"
-
 GCC_BUILD_LIST="OpenMP,Pthread,Serial,OpenMP_Serial,Pthread_Serial"
 INTEL_BUILD_LIST="OpenMP,Pthread,Serial,OpenMP_Serial,Pthread_Serial"
 CLANG_BUILD_LIST="Pthread,Serial,Pthread_Serial"
@@ -35,6 +33,9 @@ COMPILERS=("gcc/4.7.2 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
            )
 
 export OMP_NUM_THREADS=4
+
+declare -i NUM_RESULTS_TO_KEEP=7
+RESULT_ROOT_PREFIX=TestAll
 
 source /projects/modulefiles/utils/sems-modules-init.sh
 source /projects/modulefiles/utils/kokkos-modules-init.sh
@@ -159,13 +160,13 @@ get_compiler_version() {
 
 # Do not call directly
 get_compiler_data() {
-    compiler=$1
-    item=$2
-    compiler_name=$(get_compiler_name $compiler)
-    compiler_vers=$(get_compiler_version $compiler)
+    local compiler=$1
+    local item=$2
+    local compiler_name=$(get_compiler_name $compiler)
+    local compiler_vers=$(get_compiler_version $compiler)
 
     for compiler_data in "${COMPILERS[@]}" ; do
-        arr=($compiler_data)
+        local arr=($compiler_data)
         if [ "$compiler" = "${arr[0]}" ]; then
             echo "${arr[$item]}" | tr , ' ' | sed -e "s/<COMPILER_NAME>/$compiler_name/g" -e "s/<COMPILER_VERSION>/$compiler_vers/g"
             return 0
@@ -295,17 +296,27 @@ build_and_test_all() {
     return 0
 }
 
+get_test_root_dir() {
+    local -i num_existing_results=$(find . -maxdepth 1 -name "$RESULT_ROOT_PREFIX*" | wc -l)
+    local -i num_to_delete=${num_existing_results}-${NUM_RESULTS_TO_KEEP}
+
+    if [ $num_to_delete -gt 0 ]; then
+        /bin/rm -rf $(\ls -1t | tail -n $num_to_delete)
+    fi
+
+    echo $(pwd)/${RESULT_ROOT_PREFIX}_$(date +"%Y-%m-%d_%H.%M.%S")
+}
+
 #
 # Main
 #
 
-/bin/rm -rf TestAll
-mkdir TestAll
-cd TestAll
+ROOT_DIR=$(get_test_root_dir)
+mkdir -p $ROOT_DIR
+cd $ROOT_DIR
 
 TEST_RESULTS=""
 declare -i NUM_FAILED=0
-ROOT_DIR=$(pwd)
 for COMPILER in $COMPILERS_TO_TEST; do
     echo "Testing compiler $COMPILER"
     build_and_test_all $COMPILER
