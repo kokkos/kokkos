@@ -51,7 +51,7 @@ DEBUG=False
 ARGS=""
 CUSTOM_BUILD_LIST=""
 DRYRUN=False
-declare -i NUM_JOBS_TO_RUN_IN_PARALLEL=8
+declare -i NUM_JOBS_TO_RUN_IN_PARALLEL=3
 TEST_SCRIPT=False
 
 while [[ $# > 0 ]]
