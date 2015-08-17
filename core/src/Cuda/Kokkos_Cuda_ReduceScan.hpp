@@ -117,7 +117,7 @@ inline void cuda_inter_warp_reduction( ValueType& value,
 
 
   value = result[0];
-  for(int i = 1; (i*step<=max_active_thread) && i<STEP_WIDTH; i++)
+  for(int i = 1; (i*step<max_active_thread) && i<STEP_WIDTH; i++)
     join(value,result[i]);
 }
 
