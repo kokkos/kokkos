@@ -43,6 +43,7 @@ ccbin_set=0
 nvcc_error_code=0
 dry_run=0
 replace_pragma_ident=0
+temp_dir=${TMPDIR:-/tmp}
 
 #echo "Arguments: $# $@"
 
@@ -62,7 +63,7 @@ do
     cpp_files="$cpp_files $1"
     ;;
   #Handle known nvcc args
-  -O*|-D*|-gencode*|-c|-I*|-L*|-l*|-g|--help|--version|--dryrun|--verbose|--keep-dir|-E|-M|-G|--relocatable-device-code*|-shared|-lineinfo|-expt-extended-lambda|--resource-usage)
+  -O*|-D*|-gencode*|-c|-I*|-L*|-l*|-g|--help|--version|--dryrun|--verbose|--keep|--keep-dir*|-E|-M|-G|--relocatable-device-code*|-shared|-lineinfo|-expt-extended-lambda|--resource-usage)
     cuda_args="$cuda_args $1"
     ;;
   #Handle c++11 setting
@@ -155,8 +156,8 @@ if [ $replace_pragma_ident -eq 1 ]; then
     var=`grep pragma ${file} | grep ident | grep "#"`
     if [ "${#var}" -gt 0 ]
     then
-      sed 's/#[\ \t]*pragma[\ \t]*ident/#ident/g' $file > /tmp/nvcc_wrapper_tmp_$file
-      cpp_files2="$cpp_files2 /tmp/nvcc_wrapper_tmp_$file"
+      sed 's/#[\ \t]*pragma[\ \t]*ident/#ident/g' $file > $temp_dir/nvcc_wrapper_tmp_$file
+      cpp_files2="$cpp_files2 $temp_dir/nvcc_wrapper_tmp_$file"
     else
       cpp_files2="$cpp_files2 $file"
     fi
