@@ -407,7 +407,7 @@ mkdir -p $FAILED_DIR
 echo "Going to test compilers: " $COMPILERS_TO_TEST
 for COMPILER in $COMPILERS_TO_TEST; do
     echo "Testing compiler $COMPILER"
-    #build_and_test_all $COMPILER
+    build_and_test_all $COMPILER
 done
 
 wait_summarize_and_exit
