@@ -279,6 +279,11 @@ single_build_and_test() {
         local cxxflags="-O3 $compiler_warning_flags"
     fi
 
+    if [[ "$compiler" == cuda* ]]; then
+        cxxflags="--keep --keep-dir=$(pwd) $cxxflags"
+        export TMPDIR=$(pwd)
+    fi
+
     # cxxflags="-DKOKKOS_USING_EXPERIMENTAL_VIEW $cxxflags"
 
     echo "  Starting job $desc"
@@ -351,11 +356,12 @@ build_and_test_all() {
 }
 
 get_test_root_dir() {
-    local -i num_existing_results=$(find . -maxdepth 1 -name "$RESULT_ROOT_PREFIX*" | wc -l)
+    local existing_results=$(find . -maxdepth 1 -name "$RESULT_ROOT_PREFIX*" | sort)
+    local -i num_existing_results=$(echo $existing_results | tr ' ' '\n' | wc -l)
     local -i num_to_delete=${num_existing_results}-${NUM_RESULTS_TO_KEEP}
 
     if [ $num_to_delete -gt 0 ]; then
-        /bin/rm -rf $(\ls -1t | tail -n $num_to_delete)
+        /bin/rm -rf $(echo $existing_results | tr ' ' '\n' | head -n $num_to_delete)
     fi
 
     echo $(pwd)/${RESULT_ROOT_PREFIX}_$(date +"%Y-%m-%d_%H.%M.%S")
@@ -401,7 +407,7 @@ mkdir -p $FAILED_DIR
 echo "Going to test compilers: " $COMPILERS_TO_TEST
 for COMPILER in $COMPILERS_TO_TEST; do
     echo "Testing compiler $COMPILER"
-    build_and_test_all $COMPILER
+    #build_and_test_all $COMPILER
 done
 
 wait_summarize_and_exit
