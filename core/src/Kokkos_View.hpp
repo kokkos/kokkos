@@ -956,7 +956,7 @@ public:
   const View & operator = ( const typename if_scalar_operator::type & rhs ) const
     {
       KOKKOS_RESTRICT_EXECUTION_TO_DATA( typename traits::memory_space , ptr_on_device() );
-      *m_ptr_on_device = if_scalar_operator::select( rhs );
+      m_ptr_on_device[ 0 ] = if_scalar_operator::select( rhs );
       return *this ;
     }
 
@@ -964,21 +964,21 @@ public:
   operator typename if_scalar_operator::type & () const
     {
       KOKKOS_RESTRICT_EXECUTION_TO_DATA( typename traits::memory_space , ptr_on_device() );
-      return if_scalar_operator::select( *m_ptr_on_device );
+      return if_scalar_operator::select( m_ptr_on_device[ 0 ] );
     }
 
   KOKKOS_FORCEINLINE_FUNCTION
   typename if_scalar_operator::type & operator()() const
     {
       KOKKOS_RESTRICT_EXECUTION_TO_DATA( typename traits::memory_space , ptr_on_device() );
-      return if_scalar_operator::select( *m_ptr_on_device );
+      return if_scalar_operator::select( m_ptr_on_device[ 0 ] );
     }
 
   KOKKOS_FORCEINLINE_FUNCTION
   typename if_scalar_operator::type & operator*() const
     {
       KOKKOS_RESTRICT_EXECUTION_TO_DATA( typename traits::memory_space , ptr_on_device() );
-      return if_scalar_operator::select( *m_ptr_on_device );
+      return if_scalar_operator::select( m_ptr_on_device[ 0 ] );
     }
 
   //------------------------------------
