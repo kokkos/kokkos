@@ -952,6 +952,10 @@ public:
                       Impl::ViewError::scalar_operator_called_from_non_scalar_view >
     if_scalar_operator ;
 
+  typedef Impl::if_c< traits::rank == 0 ,
+                      reference_type ,
+                      Impl::ViewError::scalar_operator_called_from_non_scalar_view >
+    if_scalar_operator_return ;
   KOKKOS_INLINE_FUNCTION
   const View & operator = ( const typename if_scalar_operator::type & rhs ) const
     {
@@ -961,24 +965,24 @@ public:
     }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  operator typename if_scalar_operator::type & () const
+  operator typename if_scalar_operator_return::type () const
     {
       KOKKOS_RESTRICT_EXECUTION_TO_DATA( typename traits::memory_space , ptr_on_device() );
-      return if_scalar_operator::select( m_ptr_on_device[ 0 ] );
+      return if_scalar_operator_return::select( m_ptr_on_device[ 0 ] );
     }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  typename if_scalar_operator::type & operator()() const
+  typename if_scalar_operator_return::type operator()() const
     {
       KOKKOS_RESTRICT_EXECUTION_TO_DATA( typename traits::memory_space , ptr_on_device() );
-      return if_scalar_operator::select( m_ptr_on_device[ 0 ] );
+      return if_scalar_operator_return::select( m_ptr_on_device[ 0 ] );
     }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  typename if_scalar_operator::type & operator*() const
+  typename if_scalar_operator_return::type operator*() const
     {
       KOKKOS_RESTRICT_EXECUTION_TO_DATA( typename traits::memory_space , ptr_on_device() );
-      return if_scalar_operator::select( m_ptr_on_device[ 0 ] );
+      return if_scalar_operator_return::select( m_ptr_on_device[ 0 ] );
     }
 
   //------------------------------------
