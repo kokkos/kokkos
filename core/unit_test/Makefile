@@ -7,10 +7,6 @@ TEST_HEADERS = $(wildcard $(KOKKOS_PATH)/core/unit_test/*.hpp)
 
 default: build_all
 	echo "End Build"
-<<<<<<< HEAD
-=======
-
->>>>>>> change nvcc_wrapper into  to use local file in config subdir
 
 include $(KOKKOS_PATH)/Makefile.kokkos
 
