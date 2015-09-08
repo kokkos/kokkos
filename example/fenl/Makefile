@@ -3,7 +3,7 @@ KOKKOS_PATH ?= ../..
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 SRC_DIR := $(dir $(MAKEFILE_PATH))
 
-vpath %.cpp ${SRC_DIR}/../fixture ${SRC_DIR}/example/fenl
+vpath %.cpp ${SRC_DIR}/../fixture ${SRC_DIR}
 
 EXAMPLE_HEADERS = $(wildcard $(SRC_DIR)/../common/*.hpp ${SRC_DIR}/../fixture/*.hpp ${SRC_DIR}/*.hpp)
 
