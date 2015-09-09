@@ -176,7 +176,7 @@ void testmutex_outer(std::map<std::string,std::vector<double>>& results, std::st
 
     FOR_GAUNTLET(num_threads) {
 
-        Kokkos::Impl::portable_sleep(std::chrono::microseconds(2000000));
+        //Kokkos::Impl::portable_sleep(std::chrono::microseconds(2000000));
 
         int const num_iterations = (num_items_critical + num_items_noncritical != 0) ?
 #ifdef __SYNCHRONIC_JUST_YIELD
@@ -390,7 +390,7 @@ TEST( synchronic, main )
 #endif
     try {
 
-        std::pair<double,double> testpoints[] = { /*{1E-1, 10E-6}, {5E-1, 2E-6},  {1, 0},*/ {3E-1, 50E-9}, };
+      std::pair<double,double> testpoints[] = { {1, 0}, /*{1E-1, 10E-3}, {5E-1, 2E-6},  {3E-1, 50E-9},*/ };
         for(auto x : testpoints ) {
 
             std::map<std::string,std::vector<double>> results;
