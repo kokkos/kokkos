@@ -62,6 +62,7 @@ build-makefile-kokkos:
 	echo "KOKKOS_DEBUG = $(KOKKOS_DEBUG)" >> Makefile.kokkos
 	echo "KOKKOS_USE_TPLS = $(KOKKOS_USE_TPLS)" >> Makefile.kokkos
 	echo "KOKKOS_CXX_STANDARD = $(KOKKOS_CXX_STANDARD)" >> Makefile.kokkos
+	echo "KOKKOS_OPTIONS = $(KOKKOS_OPTIONS)" >> Makefile.kokkos
 	echo "KOKKOS_CUDA_OPTIONS = $(KOKKOS_CUDA_OPTIONS)" >> Makefile.kokkos
 	echo "CXX ?= $(CXX)" >> Makefile.kokkos 
 	echo "NVCC_WRAPPER ?= $(PREFIX)/bin/nvcc_wrapper" >> Makefile.kokkos
