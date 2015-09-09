@@ -11,8 +11,8 @@ KOKKOS_DEBUG ?= "no"
 KOKKOS_USE_TPLS ?= ""
 #Options: c++11
 KOKKOS_CXX_STANDARD ?= "c++11"
-#Options: kernel_times,aggregate_mpi
-KOKKOS_PROFILING ?= ""
+#Options: aggressive_vectorization
+KOKKOS_OPTIONS ?= ""
 
 #Default settings specific options
 #Options: force_uvm,use_ldg,rdc,enable_lambda
@@ -30,6 +30,7 @@ KOKKOS_INTERNAL_USE_HWLOC := $(strip $(shell echo $(KOKKOS_USE_TPLS) | grep "hwl
 KOKKOS_INTERNAL_USE_LIBRT := $(strip $(shell echo $(KOKKOS_USE_TPLS) | grep "librt" | wc -l))
 
 # Check for advanced settings
+KOKKOS_INTERNAL_OPT_RANGE_AGGRESSIVE_VECTORIZATION := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "aggressive_vectorization" | wc -l))
 KOKKOS_INTERNAL_CUDA_USE_LDG := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) | grep "use_ldg" | wc -l))
 KOKKOS_INTERNAL_CUDA_USE_UVM := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) | grep "force_uvm" | wc -l))
 KOKKOS_INTERNAL_CUDA_USE_RELOC := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) | grep "rdc" | wc -l))
@@ -225,6 +226,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_LIBRT), 1)
 	tmp := $(shell echo "\#define PREC_TIMER 1" >> KokkosCore_config.tmp )
   tmp := $(shell echo "\#define KOKKOSP_ENABLE_RTLIB 1" >> KokkosCore_config.tmp )
 	KOKKOS_LIBS += -lrt
+endif
+
+tmp := $(shell echo "/* Optimization Settings */" >> KokkosCore_config.tmp)
+
+ifeq ($(KOKKOS_INTERNAL_OPT_RANGE_AGGRESSIVE_VECTORIZATION), 1)
+  tmp := $(shell echo "\#define KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION 1" >> KokkosCore_config.tmp )
 endif
 
 tmp := $(shell echo "/* Cuda Settings */" >> KokkosCore_config.tmp)
