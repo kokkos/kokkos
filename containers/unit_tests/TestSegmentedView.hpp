@@ -49,6 +49,9 @@
 #include <cstdlib>
 #include <cstdio>
 #include <Kokkos_Core.hpp>
+
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
 #include <Kokkos_SegmentedView.hpp>
 #include <impl/Kokkos_Timer.hpp>
 
@@ -694,4 +697,12 @@ void test_segmented_view(unsigned int size)
 
 } // namespace Test
 
-#endif //KOKKOS_TEST_UNORDERED_MAP_HPP
+#else
+
+template <typename Scalar, class ExecutionSpace>
+void test_segmented_view(unsigned int ) {}
+
+#endif
+
+#endif /* #ifndef KOKKOS_TEST_SEGMENTEDVIEW_HPP */
+

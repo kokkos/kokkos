@@ -352,6 +352,29 @@ public:
       }
     }
   }
+
+  template<class Device>
+  bool need_sync()
+  {
+    const unsigned int dev =
+      Impl::if_c<
+        Impl::is_same<
+          typename t_dev::memory_space,
+          typename Device::memory_space>::value ,
+        unsigned int,
+        unsigned int>::select (1, 0);
+
+    if (dev) { // if Device is the same as DualView's device type
+      if ((modified_host () > 0) && (modified_host () >= modified_device ())) {
+        return true;
+      }
+    } else { // hopefully Device is the same as DualView's host type
+      if ((modified_device () > 0) && (modified_device () >= modified_host ())) {
+        return true;
+      }
+    }
+    return false;
+  }
   /// \brief Mark data as modified on the given device \c Device.
   ///
   /// If \c Device is the same as this DualView's device type, then
@@ -429,7 +452,8 @@ public:
      t_host temp_view = create_mirror_view( d_view );
 
      /* Remap on Host */
-     Impl::ViewRemap< t_host , t_host >( temp_view , h_view );
+     Kokkos::deep_copy( temp_view , h_view );
+
      h_view = temp_view;
 
      /* Mark Host copy as modified */
@@ -443,7 +467,11 @@ public:
 
   //! The allocation size (same as Kokkos::View::capacity).
   size_t capacity() const {
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+    return d_view.span();
+#else
     return d_view.capacity();
+#endif
   }
 
   //! Get stride(s) for each dimension.
@@ -826,6 +854,23 @@ deep_copy (DualView<DT,DL,DD,DM> dst, // trust me, this must not be a reference
     dst.template modify<typename DualView<DT,DL,DD,DM>::device_type> ();
   } else {
     deep_copy (dst.h_view, src.h_view);
+    dst.template modify<typename DualView<DT,DL,DD,DM>::host_mirror_space> ();
+  }
+}
+
+template< class ExecutionSpace ,
+          class DT , class DL , class DD , class DM ,
+          class ST , class SL , class SD , class SM >
+void
+deep_copy (const ExecutionSpace& exec ,
+           DualView<DT,DL,DD,DM> dst, // trust me, this must not be a reference
+           const DualView<ST,SL,SD,SM>& src )
+{
+  if (src.modified_device () >= src.modified_host ()) {
+    deep_copy (exec, dst.d_view, src.d_view);
+    dst.template modify<typename DualView<DT,DL,DD,DM>::device_type> ();
+  } else {
+    deep_copy (exec, dst.h_view, src.h_view);
     dst.template modify<typename DualView<DT,DL,DD,DM>::host_mirror_space> ();
   }
 }

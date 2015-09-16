@@ -12,7 +12,7 @@ case $key in
     ;;
     --prefix*)
     PREFIX="${key#*=}"
-    ;;    
+    ;;
     --with-cuda)
     KOKKOS_DEVICES="${KOKKOS_DEVICES},Cuda"
     CUDA_PATH_NVCC=`which nvcc`
@@ -23,13 +23,17 @@ case $key in
     CUDA_PATH="${key#*=}"
     ;;
     --with-openmp)
-    KOKKOS_DEVICES="${KOKKOS_DEVICES},OpenMP"    
+    KOKKOS_DEVICES="${KOKKOS_DEVICES},OpenMP"
     ;;
     --with-pthread)
-    KOKKOS_DEVICES="${KOKKOS_DEVICES},Pthread"    
+    KOKKOS_DEVICES="${KOKKOS_DEVICES},Pthread"
     ;;
     --with-serial)
-    KOKKOS_DEVICES="${KOKKOS_DEVICES},Serial"    
+    KOKKOS_DEVICES="${KOKKOS_DEVICES},Serial"
+    ;;
+    --with-qthread*)
+    KOKKOS_DEVICES="${KOKKOS_DEVICES},Qthread"
+    QTHREAD_PATH="${key#*=}"
     ;;
     --with-devices*)
     DEVICES="${key#*=}"
@@ -43,7 +47,7 @@ case $key in
     ;;
     --arch*)
     KOKKOS_ARCH="${key#*=}"
-    ;;    
+    ;;
     --cxxflags*)
     CXXFLAGS="${key#*=}"
     ;;
@@ -55,16 +59,20 @@ case $key in
     ;;
     --compiler*)
     COMPILER="${key#*=}"
-    ;; 
+    ;;
+    --with-options*)
+    KOKKOS_OPT="${key#*=}"
+    ;;
     --help)
     echo "Kokkos configure options:"
     echo "--kokkos-path=/Path/To/Kokkos: Path to the Kokkos root directory"
     echo ""
-    echo "--with-cuda[=/Path/To/Cuda]: enable Cuda and set path to Cuda Toolkit"
-    echo "--with-openmp:               enable OpenMP backend"
-    echo "--with-pthread:              enable Pthreads backend"
-    echo "--with-serial:               enable Serial backend"
-    echo "--with-devices:              explicitly add a set of backends"
+    echo "--with-cuda[=/Path/To/Cuda]:      enable Cuda and set path to Cuda Toolkit"
+    echo "--with-openmp:                    enable OpenMP backend"
+    echo "--with-pthread:                   enable Pthreads backend"
+    echo "--with-serial:                    enable Serial backend"
+    echo "--with-qthread=/Path/To/Qthread:  enable Qthread backend"
+    echo "--with-devices:                   explicitly add a set of backends"
     echo ""
     echo "--arch=[OPTIONS]:            set target architectures. Options are:"
     echo "                               SNB = Intel Sandy/Ivy Bridge CPUs"
@@ -84,15 +92,27 @@ case $key in
     echo "--ldflags=[FLAGS]            overwrite LDFLAGS for library build and test build"
     echo "                               This will still set certain required flags via"
     echo "                               KOKKOS_LDFLAGS (such as -fopenmp, -lpthread, etc.)"
-    echo "--with-gtest=/Path/To/Gtest: set path to gtest (used in unit and performance tests"  
-    echo "--with-hwloc=/Path/To/Hwloc: set path to hwloc"  
-    ;;      
+    echo "--with-gtest=/Path/To/Gtest: set path to gtest (used in unit and performance tests"
+    echo "--with-hwloc=/Path/To/Hwloc: set path to hwloc"
+    echo "--with-options=[OPTIONS]:    additional options to Kokkos:"
+    echo "                               aggressive_vectorization = add ivdep on loops"
+    exit 0
+    ;;
     *)
             # unknown option
     ;;
 esac
 shift
 done
+
+# If KOKKOS_PATH undefined, assume parent dir of this
+# script is the KOKKOS_PATH
+if [ -z "$KOKKOS_PATH" ]; then
+    KOKKOS_PATH=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+else
+    # Ensure KOKKOS_PATH is abs path
+    KOKKOS_PATH=$( cd $KOKKOS_PATH && pwd )
+fi
 
 KOKKOS_OPTIONS="KOKKOS_PATH=${KOKKOS_PATH}"
 
@@ -129,6 +149,12 @@ fi
 if [ ${#HWLOC_PATH} -gt 0 ]; then
 KOKKOS_OPTIONS="${KOKKOS_OPTIONS} HWLOC_PATH=${HWLOC_PATH} KOKKOS_USE_TPLS=hwloc"
 fi
+if [ ${#QTHREAD_PATH} -gt 0 ]; then
+KOKKOS_OPTIONS="${KOKKOS_OPTIONS} QTHREAD_PATH=${QTHREAD_PATH}"
+fi
+if [ ${#KOKKOS_OPT} -gt 0 ]; then
+KOKKOS_OPTIONS="${KOKKOS_OPTIONS} KOKKOS_OPTIONS=${KOKKOS_OPT}"
+fi
 mkdir core
 mkdir core/unit_test
 mkdir core/perf_test
@@ -138,8 +164,12 @@ mkdir containers/performance_tests
 mkdir algorithms
 mkdir algorithms/unit_tests
 mkdir algorithms/performance_tests
+mkdir example
+mkdir example/fixture
+mkdir example/feint
+mkdir example/fenl
 
- 
+
 echo "Generating Makefile with options " ${KOKKOS_OPTIONS}
 echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > Makefile
 echo "" >> Makefile
@@ -162,6 +192,12 @@ echo -e "\tcd containers/performance_tests; \\" >> Makefile
 echo -e "\tmake -j -f ${KOKKOS_PATH}/containers/performance_tests/Makefile ${KOKKOS_OPTIONS}" >> Makefile
 echo -e "\tcd algorithms/unit_tests; \\" >> Makefile
 echo -e "\tmake -j -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_OPTIONS}" >> Makefile
+echo -e "\tcd example/fixture; \\" >> Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_OPTIONS}" >> Makefile
+echo -e "\tcd example/feint; \\" >> Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_OPTIONS}" >> Makefile
+echo -e "\tcd example/fenl; \\" >> Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_OPTIONS}" >> Makefile
 echo "" >> Makefile
 echo "test: build-test" >> Makefile
 echo -e "\tcd core/unit_test; \\" >> Makefile
@@ -174,5 +210,11 @@ echo -e "\tcd containers/performance_tests; \\" >> Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/containers/performance_tests/Makefile ${KOKKOS_OPTIONS} test" >> Makefile
 echo -e "\tcd algorithms/unit_tests; \\" >> Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_OPTIONS} test" >> Makefile
+echo -e "\tcd example/fixture; \\" >> Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_OPTIONS} test" >> Makefile
+echo -e "\tcd example/feint; \\" >> Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_OPTIONS} test" >> Makefile
+echo -e "\tcd example/fenl; \\" >> Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_OPTIONS} test" >> Makefile
 
 

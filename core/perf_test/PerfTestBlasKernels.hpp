@@ -238,7 +238,7 @@ struct Scale
   KOKKOS_INLINE_FUNCTION
   void operator()( int i ) const
     {
-      Y[i] *= *alpha ;
+      Y[i] *= alpha() ;
     }
 };
 
@@ -300,7 +300,7 @@ struct AXPBY
   KOKKOS_INLINE_FUNCTION
   void operator()( int i ) const
     {
-      Y[i] = *alpha * X[i] + *beta * Y[i] ;
+      Y[i] = alpha() * X[i] + beta() * Y[i] ;
     }
 };
 

@@ -290,7 +290,7 @@ void assert_shape_bounds( const ShapeType & shape ,
   }
 }
 
-#if defined( KOKKOS_EXPRESSION_CHECK )
+#if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
 #define KOKKOS_ASSERT_SHAPE_BOUNDS_1( S , I0 ) assert_shape_bounds(S,1,I0);
 #define KOKKOS_ASSERT_SHAPE_BOUNDS_2( S , I0 , I1 ) assert_shape_bounds(S,2,I0,I1);
 #define KOKKOS_ASSERT_SHAPE_BOUNDS_3( S , I0 , I1 , I2 ) assert_shape_bounds(S,3,I0,I1,I2);

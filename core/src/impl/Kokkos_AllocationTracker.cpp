@@ -41,6 +41,10 @@
 //@HEADER
 */
 
+#include <Kokkos_Core_fwd.hpp>
+
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+
 #include <Kokkos_Atomic.hpp>
 
 #include <impl/Kokkos_Singleton.hpp>
@@ -57,6 +61,9 @@
 #include <cstring>
 #include <iostream>
 #include <iomanip>
+
+/* Enable clean up of memory leaks */
+#define CLEAN_UP_MEMORY_LEAKS 0
 
 namespace Kokkos { namespace Impl {
 
@@ -359,10 +366,16 @@ struct AllocationRecordPool
             alloc_rec->print( oss );
             string_vec.push_back( oss.str() );
 
+#if CLEAN_UP_MEMORY_LEAKS
+/* Cleaning up memory leaks prevents memory error detection tools
+ * from reporting the original source of allocation, which can
+ * impede debugging with such tools.
+ */
             try {
               destroy(alloc_rec);
             }
             catch(...) {}
+#endif
           }
         }
 
@@ -826,3 +839,6 @@ void * create_singleton(  size_t size
 }
 
 }} // namespace Kokkos::Impl
+
+#endif /* #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST ) */
+

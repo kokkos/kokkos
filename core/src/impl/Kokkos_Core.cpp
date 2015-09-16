@@ -139,6 +139,10 @@ void initialize_internal(const InitArguments& args)
     //std::cout << "Kokkos::initialize() fyi: Cuda enabled and initialized" << std::endl ;
   }
 #endif
+
+#ifdef KOKKOSP_ENABLE_PROFILING
+    Kokkos::Experimental::initialize();
+#endif
 }
 
 void finalize_internal( const bool all_spaces = false )
@@ -176,6 +180,10 @@ void finalize_internal( const bool all_spaces = false )
     if(Kokkos::Serial::is_initialized())
       Kokkos::Serial::finalize();
   }
+#endif
+
+#ifdef KOKKOSP_ENABLE_PROFILING
+    Kokkos::Experimental::finalize();
 #endif
 
 }

@@ -122,7 +122,7 @@ int main (int argc, char* argv[]) {
   //
   // You may notice that the printed numbers do not print out in
   // order.  Parallel for loops may execute in any order.
-  Kokkos::parallel_for (15, hello_world ());
+  Kokkos::parallel_for ("HelloWorld",15, hello_world ());
 
   // You must call finalize() after you are done using Kokkos.
   Kokkos::finalize ();

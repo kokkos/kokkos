@@ -447,8 +447,20 @@ struct min_max_functor {
 template<class ViewType>
 bool try_std_sort(ViewType view) {
   bool possible = true;
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
   size_t stride[8];
   view.stride(stride);
+#else
+  size_t stride[8] = { view.stride_0()
+                     , view.stride_1()
+                     , view.stride_2()
+                     , view.stride_3()
+                     , view.stride_4()
+                     , view.stride_5()
+                     , view.stride_6()
+                     , view.stride_7()
+                     };
+#endif
   possible  = possible && Impl::is_same<typename ViewType::memory_space, HostSpace>::value;
   possible  = possible && (ViewType::Rank == 1);
   possible  = possible && (stride[0] == 1);

@@ -222,7 +222,7 @@ struct CudaParallelLaunch< DriverType , true > {
       // Invoke the driver function on the device
       cuda_parallel_launch_constant_memory< DriverType ><<< grid , block , shmem , stream >>>();
 
-#if defined( KOKKOS_EXPRESSION_CHECK )
+#if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       Kokkos::Cuda::fence();
       CUDA_SAFE_CALL( cudaGetLastError() );
 #endif
@@ -246,9 +246,9 @@ struct CudaParallelLaunch< DriverType , false > {
         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
       }
       else if ( shmem ) {
-        cudaFuncSetCacheConfig( cuda_parallel_launch_constant_memory< DriverType > , cudaFuncCachePreferShared );
+        cudaFuncSetCacheConfig( cuda_parallel_launch_local_memory< DriverType > , cudaFuncCachePreferShared );
       } else {
-        cudaFuncSetCacheConfig( cuda_parallel_launch_constant_memory< DriverType > , cudaFuncCachePreferL1 );
+        cudaFuncSetCacheConfig( cuda_parallel_launch_local_memory< DriverType > , cudaFuncCachePreferL1 );
       }
 
       int* lock_array_ptr = lock_array_cuda_space_ptr();
@@ -256,7 +256,7 @@ struct CudaParallelLaunch< DriverType , false > {
 
       cuda_parallel_launch_local_memory< DriverType ><<< grid , block , shmem , stream >>>( driver );
 
-#if defined( KOKKOS_EXPRESSION_CHECK )
+#if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       Kokkos::Cuda::fence();
       CUDA_SAFE_CALL( cudaGetLastError() );
 #endif

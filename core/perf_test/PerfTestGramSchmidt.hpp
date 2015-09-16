@@ -71,8 +71,8 @@ struct InvNorm2 : public Kokkos::DotSingle< VectorView > {
   void final( value_type & result ) const
   {
     result = sqrt( result );
-    *Rjj = result ;
-    *inv = ( 0 < result ) ? 1.0 / result : 0 ;
+    Rjj() = result ;
+    inv() = ( 0 < result ) ? 1.0 / result : 0 ;
   }
 };
 
@@ -106,8 +106,8 @@ struct DotM : public Kokkos::Dot< VectorView > {
   KOKKOS_INLINE_FUNCTION
   void final( value_type & result ) const
   {
-     *Rjk  = result ;
-     *tmp  = - result ;
+     Rjk()  = result ;
+     tmp()  = - result ;
   }
 };
 
@@ -147,7 +147,6 @@ struct ModifiedGramSchmidt
   static double factorization( const multivector_type Q_ ,
                                const multivector_type R_ )
   {
-    const Kokkos::ALL ALL ;
     const size_type count  = Q_.dimension_1();
     value_view tmp("tmp");
     value_view one("one");
@@ -159,7 +158,7 @@ struct ModifiedGramSchmidt
     for ( size_type j = 0 ; j < count ; ++j ) {
       // Reduction   : tmp = dot( Q(:,j) , Q(:,j) );
       // PostProcess : tmp = sqrt( tmp ); R(j,j) = tmp ; tmp = 1 / tmp ;
-      const vector_type Qj  = Kokkos::subview( Q_ , ALL , j );
+      const vector_type Qj  = Kokkos::subview( Q_ , Kokkos::ALL() , j );
       const value_view  Rjj = Kokkos::subview( R_ , j , j );
 
       invnorm2( Qj , Rjj , tmp );
@@ -168,7 +167,7 @@ struct ModifiedGramSchmidt
       Kokkos::scale( tmp , Qj );
 
       for ( size_t k = j + 1 ; k < count ; ++k ) {
-        const vector_type Qk = Kokkos::subview( Q_ , ALL , k );
+        const vector_type Qk = Kokkos::subview( Q_ , Kokkos::ALL() , k );
         const value_view  Rjk = Kokkos::subview( R_ , j , k );
 
         // Reduction   : R(j,k) = dot( Q(:,j) , Q(:,k) );

@@ -3,11 +3,11 @@ SRC = $(wildcard *.cpp)
 
 default: build
 	echo "Start Build"
-	
-ifeq ($(CUDA), yes)
+
+ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
 CXX = nvcc_wrapper
 CXXFLAGS = -O3
-LINK = nvcc_wrapper
+LINK = ${CXX}
 LINKFLAGS = 
 EXE = $(SRC:.cpp=.cuda)
 KOKKOS_DEVICES = "Cuda,OpenMP"
@@ -15,7 +15,7 @@ KOKKOS_ARCH = "SNB,Kepler35"
 else
 CXX = g++
 CXXFLAGS = -O3
-LINK = g++
+LINK = ${CXX}
 LINKFLAGS =  
 EXE = $(SRC:.cpp=.host)
 KOKKOS_DEVICES = "OpenMP"
@@ -41,6 +41,3 @@ clean: kokkos-clean
 
 %.o:%.cpp $(KOKKOS_CPP_DEPENDS)
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) $(EXTRA_INC) -c $<
-
-
-

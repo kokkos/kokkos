@@ -76,23 +76,27 @@ private:
 
 
 public:
+#ifdef KOKKOS_CUDA_USE_UVM
+  KOKKOS_INLINE_FUNCTION Scalar& operator() (int i) const {return DV::h_view(i);};
+  KOKKOS_INLINE_FUNCTION Scalar& operator[] (int i) const {return DV::h_view(i);};
+#else
   inline Scalar& operator() (int i) const {return DV::h_view(i);};
   inline Scalar& operator[] (int i) const {return DV::h_view(i);};
-
+#endif
 
   /* Member functions which behave like std::vector functions */
 
   vector():DV() {
     _size = 0;
     _extra_storage = 1.1;
-    DV::modified_host = 1;
+    DV::modified_host() = 1;
   };
 
 
   vector(int n, Scalar val=Scalar()):DualView<Scalar*,LayoutLeft,Space>("Vector",size_t(n*(1.1))) {
     _size = n;
     _extra_storage = 1.1;
-    DV::modified_host = 1;
+    DV::modified_host() = 1;
 
     assign(n,val);
   }
@@ -118,16 +122,16 @@ public:
 
           /* Assign value either on host or on device */
 
-    if( DV::modified_host >= DV::modified_device ) {
+    if( DV::modified_host() >= DV::modified_device() ) {
       set_functor_host f(DV::h_view,val);
       parallel_for(n,f);
       DV::t_host::execution_space::fence();
-      DV::modified_host++;
+      DV::modified_host()++;
     } else {
       set_functor f(DV::d_view,val);
       parallel_for(n,f);
       DV::t_dev::execution_space::fence();
-      DV::modified_device++;
+      DV::modified_device()++;
     }
   }
 
@@ -136,7 +140,7 @@ public:
   }
 
   void push_back(Scalar val) {
-    DV::modified_host++;
+    DV::modified_host()++;
     if(_size == capacity()) {
       size_t new_size = _size*_extra_storage;
       if(new_size == _size) new_size++;
@@ -236,10 +240,10 @@ public:
   }
 
   void on_host() {
-    DV::modified_host = DV::modified_device + 1;
+    DV::modified_host() = DV::modified_device() + 1;
   }
   void on_device() {
-    DV::modified_device = DV::modified_host + 1;
+    DV::modified_device() = DV::modified_host() + 1;
   }
 
   void set_overallocation(float extra) {

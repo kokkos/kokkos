@@ -53,6 +53,9 @@
 #include <TestViewAPI.hpp>
 #include <TestViewSubview.hpp>
 
+#include <TestSharedAlloc.hpp>
+#include <TestViewMapping.hpp>
+
 #include <TestRange.hpp>
 #include <TestTeam.hpp>
 #include <TestReduce.hpp>
@@ -93,6 +96,17 @@ protected:
   }
 };
 
+
+TEST_F( openmp , impl_shared_alloc ) {
+  test_shared_alloc< Kokkos::HostSpace , Kokkos::OpenMP >();
+}
+
+TEST_F( openmp , impl_view_mapping ) {
+  test_view_mapping< Kokkos::OpenMP >();
+  test_view_mapping_subview< Kokkos::OpenMP >();
+  test_view_mapping_operator< Kokkos::OpenMP >();
+  TestViewMappingAtomic< Kokkos::OpenMP >::run();
+}
 
 TEST_F( openmp, view_impl) {
   test_view_impl< Kokkos::OpenMP >();
@@ -324,7 +338,7 @@ TEST_F( openmp , template_meta_functions )
 
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_HAVE_CXX11 ) && defined( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_OPENMP )
+#if defined( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_OPENMP )
 TEST_F( openmp , cxx11 )
 {
   if ( Kokkos::Impl::is_same< Kokkos::DefaultExecutionSpace , Kokkos::OpenMP >::value ) {
@@ -336,7 +350,6 @@ TEST_F( openmp , cxx11 )
 }
 #endif
 
-#if defined (KOKKOS_HAVE_CXX11)
 TEST_F( openmp , reduction_deduction )
 {
   TestCXX11::test_reduction_deduction< Kokkos::OpenMP >();
@@ -356,6 +369,5 @@ TEST_F( openmp , team_vector )
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::OpenMP >(9) ) );
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::OpenMP >(10) ) );
 }
-#endif
 } // namespace test
 

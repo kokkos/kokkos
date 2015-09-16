@@ -78,11 +78,18 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
   )
 
 TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_BOUNDS_CHECK
-  KOKKOS_EXPRESSION_CHECK
+  Kokkos_ENABLE_Debug_Bounds_Check
+  KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   "Enable bounds checking support in Kokkos."
   OFF
   )
+
+#TRIBITS_ADD_OPTION_AND_DEFINE(
+#  Kokkos_ENABLE_Profiling_Collect_Kernel_Data
+#  KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
+#  "Enable profiling support for kernel data collections in Kokkos."
+#  "${${PROJECT_NAME}_ENABLE_KokkosProfiler}"
+#  )
 
 # placeholder for future device...
 TRIBITS_ADD_OPTION_AND_DEFINE(
