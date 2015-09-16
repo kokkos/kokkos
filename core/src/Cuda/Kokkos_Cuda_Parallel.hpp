@@ -809,6 +809,12 @@ public:
     if(policy.team_size() < 32)
       Impl::throw_runtime_exception( "Kokkos::parallel_reduce with a TeamPolicy using a team_size smaller than 32 is not currently supported with CUDA.");
 
+    // Return Init value if the number of worksets is zero
+    if(policy.league_size() == 0) {
+      ValueInit::init( m_functor , result.ptr_on_device() );
+      return;
+    }
+
     // Functor's reduce memory, team scan memory, and team shared memory depend upon team size.
 
     const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size ;

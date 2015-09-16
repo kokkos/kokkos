@@ -465,7 +465,11 @@ public:
 
       const pointer_type ptr = pointer_type( OpenMPexec::pool_rev(0)->scratch_reduce() );
 
-      for ( int i = 1 ; i < OpenMPexec::pool_size() ; ++i ) {
+      size_t max_active_threads = OpenMPexec::pool_size();
+      if( max_active_threads > policy.league_size()*policy.team_size() )
+        max_active_threads = policy.league_size()*policy.team_size();
+
+      for ( int i = 1 ; i < max_active_threads ; ++i ) {
         Join::join( functor , ptr , OpenMPexec::pool_rev(i)->scratch_reduce() );
       }
 
@@ -501,7 +505,11 @@ public:
     {
       const pointer_type ptr = pointer_type( OpenMPexec::pool_rev(0)->scratch_reduce() );
 
-      for ( int i = 1 ; i < OpenMPexec::pool_size() ; ++i ) {
+      size_t max_active_threads = OpenMPexec::pool_size();
+      if( max_active_threads > policy.league_size()*policy.team_size() )
+        max_active_threads = policy.league_size()*policy.team_size();
+
+      for ( int i = 1 ; i < max_active_threads ; ++i ) {
         ValueJoin::join( functor , ptr , OpenMPexec::pool_rev(i)->scratch_reduce() );
       }
 
