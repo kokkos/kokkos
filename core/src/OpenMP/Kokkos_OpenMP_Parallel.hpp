@@ -465,7 +465,7 @@ public:
 
       const pointer_type ptr = pointer_type( OpenMPexec::pool_rev(0)->scratch_reduce() );
 
-      size_t max_active_threads = OpenMPexec::pool_size();
+      int max_active_threads = OpenMPexec::pool_size();
       if( max_active_threads > policy.league_size()*policy.team_size() )
         max_active_threads = policy.league_size()*policy.team_size();
 
@@ -505,7 +505,7 @@ public:
     {
       const pointer_type ptr = pointer_type( OpenMPexec::pool_rev(0)->scratch_reduce() );
 
-      size_t max_active_threads = OpenMPexec::pool_size();
+      int max_active_threads = OpenMPexec::pool_size();
       if( max_active_threads > policy.league_size()*policy.team_size() )
         max_active_threads = policy.league_size()*policy.team_size();
 
