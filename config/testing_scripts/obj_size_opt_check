@@ -177,8 +177,8 @@ def add_n_dupes(curr_lines, num_dupes):
     function_invocation = None
     function_lines = []
 
-    function_re = re.compile('^.* (\w+) *[(]')
-    function_inv_re = re.compile('^.*JGF_DUPE: +(.+)$')
+    function_re = re.compile(r'^.* (\w+) *[(]')
+    function_inv_re = re.compile(r'^.*JGF_DUPE: +(.+)$')
 
     # Get function lines
     record = False
@@ -260,7 +260,6 @@ def obj_size_opt_check(cppfile, buildcmd, execmd, start, end, repeat, csv=False)
         add_n_dupes(curr_lines, i)
 
         curr_fom = build_and_run(curr_lines, cppfile, buildcmd, execmd, repeat)
-        fom_change = (curr_fom - orig_fom) / orig_fom
 
         report(i, curr_lines, object_file, orig_fom, curr_fom, csv=csv)
 
