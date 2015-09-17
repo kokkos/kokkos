@@ -9,6 +9,10 @@ The CPP file being modified will need the following tags.
 // JGF_DUPLICATE_END - Put after end of function to duplcate
 // JGF_DUPE function_name(args); - Put anywhere where it's legal to
 put a function call but not in your timing section.
+
+The program will need to output the string:
+FOM: <number>
+This will represent the program's performance
 """
 
 import argparse, sys, os, doctest, subprocess, re, time
@@ -52,13 +56,16 @@ formatter_class=argparse.ArgumentDefaultsHelpFormatter
     parser.add_argument("-c", "--csv", action="store_true",
                         help="Print results as CSV")
 
+    parser.add_argument("-n", "--repeat", type=int, default=10,
+                        help="Number of times to repeat an individial execution. Best value will be taken.")
+
     args = parser.parse_args(args[1:])
 
     if (args.verbose):
         global VERBOSE
         VERBOSE = True
 
-    return args.cppfile, args.buildcmd, args.execmd, args.start, args.end, args.csv
+    return args.cppfile, args.buildcmd, args.execmd, args.start, args.end, args.repeat, args.csv
 
 ###############################################################################
 def verbose_print(msg, override=None):
@@ -117,22 +124,31 @@ def run_cmd(cmd, ok_to_fail=False, input_str=None, from_dir=None, verbose=None,
         return output
 
 ###############################################################################
-def build_and_run(source, cppfile, buildcmd, execmd):
+def build_and_run(source, cppfile, buildcmd, execmd, repeat):
 ###############################################################################
     open(cppfile, 'w').writelines(source)
 
     run_cmd(buildcmd)
 
-    wait_for_quiet_machine()
-    output = run_cmd(execmd)
+    best = None
+    for i in xrange(repeat):
+        wait_for_quiet_machine()
+        output = run_cmd(execmd)
 
-    fom_regex = re.compile(r'^FOM: ([0-9.]+)$')
-    for line in output.splitlines():
-        m = fom_regex.match(line)
-        if (m is not None):
-            return float(m.groups()[0])
+        current = None
+        fom_regex = re.compile(r'^FOM: ([0-9.]+)$')
+        for line in output.splitlines():
+            m = fom_regex.match(line)
+            if (m is not None):
+                current = float(m.groups()[0])
+                break
 
-    expect(False, "No lines in output matched FOM regex")
+        expect(current is not None, "No lines in output matched FOM regex")
+
+        if (best is None or best < current):
+            best = current
+
+    return best
 
 ###############################################################################
 def wait_for_quiet_machine():
@@ -227,7 +243,7 @@ def report(num_dupes, curr_lines, object_file, orig_fom, curr_fom, csv=False, is
         print "Change pct:", fom_change*100
 
 ###############################################################################
-def obj_size_opt_check(cppfile, buildcmd, execmd, start, end, csv=False):
+def obj_size_opt_check(cppfile, buildcmd, execmd, start, end, repeat, csv=False):
 ###############################################################################
     orig_source_lines = open(cppfile, 'r').readlines()
 
@@ -235,7 +251,7 @@ def obj_size_opt_check(cppfile, buildcmd, execmd, start, end, csv=False):
     object_file = "%s.o" % os.path.splitext(cppfile)[0]
     os.rename(cppfile, backup_file)
 
-    orig_fom = build_and_run(orig_source_lines, cppfile, buildcmd, execmd)
+    orig_fom = build_and_run(orig_source_lines, cppfile, buildcmd, execmd, repeat)
     report(0, orig_source_lines, object_file, orig_fom, orig_fom, csv=csv, is_first_report=True)
 
     i = start
@@ -243,7 +259,7 @@ def obj_size_opt_check(cppfile, buildcmd, execmd, start, end, csv=False):
         curr_lines = list(orig_source_lines)
         add_n_dupes(curr_lines, i)
 
-        curr_fom = build_and_run(curr_lines, cppfile, buildcmd, execmd)
+        curr_fom = build_and_run(curr_lines, cppfile, buildcmd, execmd, repeat)
         fom_change = (curr_fom - orig_fom) / orig_fom
 
         report(i, curr_lines, object_file, orig_fom, curr_fom, csv=csv)
@@ -260,9 +276,9 @@ def _main_func(description):
         test_results = doctest.testmod(verbose=True)
         sys.exit(1 if test_results.failed > 0 else 0)
 
-    cppfile, buildcmd, execmd, start, end, csv = parse_command_line(sys.argv, description)
+    cppfile, buildcmd, execmd, start, end, repeat, csv = parse_command_line(sys.argv, description)
 
-    obj_size_opt_check(cppfile, buildcmd, execmd, start, end, csv)
+    obj_size_opt_check(cppfile, buildcmd, execmd, start, end, repeat, csv)
 
 ###############################################################################
 if (__name__ == "__main__"):
