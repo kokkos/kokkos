@@ -186,7 +186,7 @@ struct unique_lock<Test::mcs_mutex> : Test::mcs_mutex::unique_lock {
 
 }
 
-#include <cmath>
+/* #include <cmath> */
 #include <stdlib.h>
 
 namespace Test {

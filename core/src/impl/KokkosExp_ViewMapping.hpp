@@ -2302,6 +2302,88 @@ template< class Traits
         , typename Enable = void >
 struct SubviewMapping ;
 
+//----------------------------------------------------------------------------
+
+template< class ValueType , class ExecSpace
+        , bool IsScalar = std::is_scalar< ValueType >::value >
+struct ViewValueFunctor ;
+
+/*
+ *  The construction, assignment to default, and destruction
+ *  are merged into a single functor.
+ *  Primarily to work around an unresolved CUDA back-end bug
+ *  that would lose the destruction cuda device function when
+ *  called from the shared memory tracking destruction.
+ *  Secondarily to have two fewer partial specializations.
+ */
+template< class ValueType , class ExecSpace >
+struct ViewValueFunctor< ValueType , ExecSpace , false >
+{
+  enum { CONSTRUCT = 0x01 , ASSIGN = 0x02 , DESTROY = 0x04 };
+
+  ValueType * const ptr ;
+  int         const mode ;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( size_t i ) const
+  {
+    if      ( mode == CONSTRUCT ) { new (ptr+i) ValueType(); }
+    else if ( mode == ASSIGN )    { ptr[i] = ValueType(); }
+    else if ( mode == DESTROY )   { (ptr+i)->~ValueType(); }
+  }
+
+  ViewValueFunctor( const ExecSpace & arg_space
+                  , ValueType * const arg_ptr
+                  , size_t      const arg_n
+                  , int         const arg_mode )
+   : ptr( arg_ptr )
+   , mode( arg_mode )
+   {
+     if ( ! arg_space.in_parallel() ) {
+       typedef Kokkos::RangePolicy< ExecSpace > PolicyType ;
+       (void) Kokkos::Impl::ParallelFor< ViewValueFunctor , PolicyType >
+         ( *this , PolicyType( 0 , arg_n ) );
+       arg_space.fence();
+     }
+     else {
+       for ( size_t i = 0 ; i < arg_n ; ++i ) operator()(i);
+     }
+   }
+};
+
+template< class ValueType , class ExecSpace >
+struct ViewValueFunctor< ValueType , ExecSpace , true >
+{
+  enum { CONSTRUCT = 0x01 , ASSIGN = 0x02 , DESTROY = 0x04 };
+
+  ValueType * const ptr ;
+  int         const mode ;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( size_t i ) const { ptr[i] = 0 ; }
+
+  ViewValueFunctor( const ExecSpace & arg_space
+                  , ValueType * const arg_ptr
+                  , size_t      const arg_n
+                  , int         const arg_mode )
+   : ptr( arg_ptr )
+   , mode( arg_mode )
+   {
+     if ( mode == CONSTRUCT || mode == ASSIGN ) {
+       if ( ! arg_space.in_parallel() ) {
+         typedef Kokkos::RangePolicy< ExecSpace > PolicyType ;
+         (void) Kokkos::Impl::ParallelFor< ViewValueFunctor , PolicyType >
+           ( *this , PolicyType( 0 , arg_n ) );
+         arg_space.fence();
+       }
+       else {
+         for ( size_t i = 0 ; i < arg_n ; ++i ) operator()(i);
+       }
+     }
+   }
+};
+
+//----------------------------------------------------------------------------
 /** \brief  View mapping for non-specialized data type and standard layout */
 template< class Traits >
 class ViewMapping< Traits , void ,
@@ -2522,64 +2604,22 @@ public:
   //----------------------------------------
   // If the View is to construct or destroy the elements.
 
-  struct FunctorTagConstructScalar {};
-  struct FunctorTagConstructNonScalar {};
-  struct FunctorTagDestructNonScalar {};
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  void operator()( const FunctorTagConstructScalar & , const size_t i ) const
-    { m_handle[i] = 0 ; }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  void operator()( const FunctorTagConstructNonScalar & , const size_t i ) const
-    { 
-      typedef typename Traits::value_type  value_type ;
-      new( & m_handle[i] ) value_type();
-    }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  void operator()( const FunctorTagDestructNonScalar & , const size_t i ) const
-    { 
-      typedef typename Traits::value_type  value_type ;
-      ( & (m_handle[i]) )->~value_type();
-    }
-
   template< class ExecSpace >
-  typename std::enable_if< Kokkos::Impl::is_execution_space<ExecSpace>::value &&
-                           std::is_scalar< typename Traits::value_type >::value >::type
-  construct( const ExecSpace & space ) const
+  void construct( const ExecSpace & space ) const
     {
-      typedef Kokkos::RangePolicy< ExecSpace , FunctorTagConstructScalar , size_t > Policy ;
+      typedef typename Traits::value_type value_type ;
+      typedef ViewValueFunctor< value_type , ExecSpace > FunctorType ;
 
-      (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_offset.span() ) );
-      ExecSpace::fence();
+      (void) FunctorType( space , (value_type *) m_handle , m_offset.span() , FunctorType::CONSTRUCT );
     }
 
   template< class ExecSpace >
-  typename std::enable_if< Kokkos::Impl::is_execution_space<ExecSpace>::value &&
-                           ! std::is_scalar< typename Traits::value_type >::value >::type
-  construct( const ExecSpace & space ) const
+  void destroy( const ExecSpace & space ) const
     {
-      typedef Kokkos::RangePolicy< ExecSpace , FunctorTagConstructNonScalar , size_t > Policy ;
+      typedef typename Traits::value_type value_type ;
+      typedef ViewValueFunctor< value_type , ExecSpace > FunctorType ;
 
-      (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_offset.span() ) );
-      ExecSpace::fence();
-    }
-
-  template< class ExecSpace >
-  typename std::enable_if< Kokkos::Impl::is_execution_space<ExecSpace>::value &&
-                           std::is_scalar< typename Traits::value_type >::value >::type
-  destroy( const ExecSpace & ) const {}
-
-  template< class ExecSpace >
-  typename std::enable_if< Kokkos::Impl::is_execution_space<ExecSpace>::value &&
-                           ! std::is_scalar< typename Traits::value_type >::value >::type
-  destroy( const ExecSpace & space ) const
-    {
-      typedef Kokkos::RangePolicy< ExecSpace , FunctorTagDestructNonScalar , size_t > Policy ;
-
-      (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_offset.span() ) );
-      ExecSpace::fence();
+      (void) FunctorType( space , (value_type *) m_handle , m_offset.span() , FunctorType::DESTROY );
     }
 };
 

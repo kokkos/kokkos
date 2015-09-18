@@ -148,6 +148,25 @@ public:
                                            , const bool detail );
 };
 
+namespace {
+
+/* Taking the address of this function so make sure it is unique */
+template < class MemorySpace , class DestroyFunctor >
+void deallocate( SharedAllocationRecord<void,void> * record_ptr )
+{
+  typedef SharedAllocationRecord< MemorySpace , void > base_type ;
+  typedef SharedAllocationRecord< MemorySpace , DestroyFunctor > this_type ;
+
+  this_type * const ptr = static_cast< this_type * >(
+                          static_cast< base_type * >( record_ptr ) );
+
+  ptr->m_destroy.destroy_shared_allocation();
+
+  delete ptr ;
+}
+
+}
+
 /*
  *  Memory space specialization of SharedAllocationRecord< Space , void > requires :
  *
@@ -158,25 +177,23 @@ public:
  *    Space m_space ;
  *  }
  */
-
 template< class MemorySpace , class DestroyFunctor >
 class SharedAllocationRecord : public SharedAllocationRecord< MemorySpace , void >
 {
 private:
-
-  static void deallocate( SharedAllocationRecord<void,void> * record_ptr )
-    { delete static_cast<SharedAllocationRecord<MemorySpace,DestroyFunctor>*>(record_ptr); }
 
   SharedAllocationRecord( const MemorySpace & arg_space
                         , const std::string & arg_label
                         , const size_t        arg_alloc
                         )
     /*  Allocate user memory as [ SharedAllocationHeader , user_memory ] */
-    : SharedAllocationRecord< MemorySpace , void >( arg_space , arg_label , arg_alloc , & deallocate )
+    : SharedAllocationRecord< MemorySpace , void >( arg_space , arg_label , arg_alloc , & Kokkos::Experimental::Impl::deallocate< MemorySpace , DestroyFunctor > )
     , m_destroy()
     {}
 
-  ~SharedAllocationRecord() { m_destroy.destroy_shared_allocation(); }
+  SharedAllocationRecord() = delete ;
+  SharedAllocationRecord( const SharedAllocationRecord & ) = delete ;
+  SharedAllocationRecord & operator = ( const SharedAllocationRecord & ) = delete ;
 
 public:
 

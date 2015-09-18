@@ -62,6 +62,7 @@
 
 #include <TestViewAPI.hpp>
 #include <TestViewSubview.hpp>
+#include <TestViewOfClass.hpp>
 
 #include <TestReduce.hpp>
 #include <TestScan.hpp>
@@ -155,6 +156,11 @@ TEST_F( cuda , impl_view_mapping )
   test_view_mapping_subview< Kokkos::Cuda >();
   test_view_mapping_operator< Kokkos::Cuda >();
   TestViewMappingAtomic< Kokkos::Cuda >::run();
+}
+
+TEST_F( cuda , view_of_class )
+{
+  TestViewMappingClassValue< Kokkos::Cuda >::run();
 }
 
 template< class MemSpace >
@@ -282,6 +288,12 @@ TEST_F( cuda, view_api )
   // y[0] = 10 ;
   // y(0) = 10 ;
 #endif
+}
+
+
+TEST_F( cuda , view_nested_view )
+{
+  ::Test::view_nested_view< Kokkos::Cuda >();
 }
 
 TEST_F( cuda, view_subview_auto_1d_left ) {
