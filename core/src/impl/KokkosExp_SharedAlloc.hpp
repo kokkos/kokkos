@@ -78,6 +78,8 @@ protected:
 
   typedef void (* function_type )( SharedAllocationRecord<void,void> * );
 
+  static int s_tracking_enabled ;
+
   SharedAllocationHeader * const m_alloc_ptr ;
   size_t                   const m_alloc_size ;
   function_type            const m_dealloc ;
@@ -99,6 +101,8 @@ protected:
                         );
 
 public:
+
+  static int tracking_enabled() { return s_tracking_enabled ; }
 
   ~SharedAllocationRecord() = default ;
 
@@ -226,8 +230,8 @@ private:
   };
 
   // The allocation record resides in Host memory space
-  Record * m_record ;
-  unsigned long m_record_bits;
+  Record      * m_record ;
+  unsigned long m_record_bits ;
 
   KOKKOS_INLINE_FUNCTION
   static Record * disable( Record * rec )
@@ -237,7 +241,10 @@ private:
   void increment() const
     {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-      if ( ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) Record::increment( m_record );
+      if ( Record::tracking_enabled() &&
+           ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) {
+        Record::increment( m_record );
+      }
 #endif
     }
 
@@ -245,7 +252,10 @@ private:
   void decrement() const
     {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-       if ( ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) Record::decrement( m_record );
+      if ( Record::tracking_enabled() &&
+           ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) {
+        Record::decrement( m_record );
+      }
 #endif
     }
 

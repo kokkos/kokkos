@@ -109,7 +109,6 @@ void view_nested_view()
 
   {
     Kokkos::View< NestedView<Space> * , Space > a("a_nested_view",2);
-    a = Kokkos::View< NestedView<Space> * , Space >();
 
     Kokkos::parallel_for( Kokkos::RangePolicy<Space>(0,2) , NestedViewFunctor<Space>( a , tracking ) );
     Kokkos::deep_copy( host_tracking , tracking );
@@ -122,7 +121,11 @@ void view_nested_view()
 
   }
   Kokkos::deep_copy( host_tracking , tracking );
-  // ASSERT_EQ( 0 , host_tracking(0) );
+
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+  ASSERT_EQ( 0 , host_tracking(0) );
+#endif
+
 }
 
 }
