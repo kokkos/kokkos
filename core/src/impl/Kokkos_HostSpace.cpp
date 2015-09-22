@@ -407,10 +407,10 @@ SharedAllocationRecord< Kokkos::HostSpace , void >::get_record( void * alloc_ptr
   typedef SharedAllocationHeader  Header ;
   typedef SharedAllocationRecord< Kokkos::HostSpace , void >  RecordHost ;
 
-  SharedAllocationHeader const * const head   = Header::get_header( alloc_ptr );
-  RecordHost                   * const record = static_cast< RecordHost * >( head->m_record );
+  SharedAllocationHeader const * const head   = alloc_ptr ? Header::get_header( alloc_ptr ) : (SharedAllocationHeader *)0 ;
+  RecordHost                   * const record = head ? static_cast< RecordHost * >( head->m_record ) : (RecordHost *) 0 ;
 
-  if ( record->m_alloc_ptr != head ) {
+  if ( ! alloc_ptr || record->m_alloc_ptr != head ) {
     Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void >::get_record ERROR" ) );
   }
 

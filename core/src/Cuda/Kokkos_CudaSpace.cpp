@@ -536,15 +536,17 @@ SharedAllocationRecord< Kokkos::CudaSpace , void >::get_record( void * alloc_ptr
 
 #if 0
   // Copy the header from the allocation
-  SharedAllocationHeader head ;
+  Header head ;
 
-  SharedAllocationHeader const * const head_cuda = Header::get_header( alloc_ptr );
+  Header const * const head_cuda = alloc_ptr ? Header::get_header( alloc_ptr ) : (Header*) 0 ;
 
-  Kokkos::Impl::DeepCopy<HostSpace,CudaSpace>::DeepCopy( & head , head_cuda , sizeof(SharedAllocationHeader) );
+  if ( alloc_ptr ) {
+    Kokkos::Impl::DeepCopy<HostSpace,CudaSpace>::DeepCopy( & head , head_cuda , sizeof(SharedAllocationHeader) );
+  }
 
-  RecordCuda * const record = static_cast< RecordCuda * >( head.m_record );
+  RecordCuda * const record = alloc_ptr ? static_cast< RecordCuda * >( head.m_record ) : (RecordCuda *) 0 ;
 
-  if ( record->m_alloc_ptr != head_cuda ) {
+  if ( ! alloc_ptr || record->m_alloc_ptr != head_cuda ) {
     Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void >::get_record ERROR" ) );
   }
 
@@ -570,9 +572,9 @@ SharedAllocationRecord< Kokkos::CudaUVMSpace , void >::get_record( void * alloc_
   using Header     = SharedAllocationHeader ;
   using RecordCuda = SharedAllocationRecord< Kokkos::CudaUVMSpace , void > ;
 
-  Header * const h = reinterpret_cast< Header * >( alloc_ptr ) - 1 ;
+  Header * const h = alloc_ptr ? reinterpret_cast< Header * >( alloc_ptr ) - 1 : (Header *) 0 ;
 
-  if ( h->m_record->m_alloc_ptr != h ) {
+  if ( ! alloc_ptr || h->m_record->m_alloc_ptr != h ) {
     Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaUVMSpace , void >::get_record ERROR" ) );
   }
 
@@ -585,9 +587,9 @@ SharedAllocationRecord< Kokkos::CudaHostPinnedSpace , void >::get_record( void *
   using Header     = SharedAllocationHeader ;
   using RecordCuda = SharedAllocationRecord< Kokkos::CudaHostPinnedSpace , void > ;
 
-  Header * const h = reinterpret_cast< Header * >( alloc_ptr ) - 1 ;
+  Header * const h = alloc_ptr ? reinterpret_cast< Header * >( alloc_ptr ) - 1 : (Header *) 0 ;
 
-  if ( h->m_record->m_alloc_ptr != h ) {
+  if ( ! alloc_ptr || h->m_record->m_alloc_ptr != h ) {
     Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaHostPinnedSpace , void >::get_record ERROR" ) );
   }
 

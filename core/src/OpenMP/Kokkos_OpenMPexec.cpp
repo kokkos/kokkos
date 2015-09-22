@@ -118,8 +118,12 @@ void OpenMPexec::clear_scratch()
   {
     const int rank_rev = m_map_rank[ omp_get_thread_num() ];
 #if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
-    Kokkos::kokkos_free< Kokkos::HostSpace >( m_pool[ rank_rev ] );
-    m_pool[ rank_rev ] = 0 ;
+    typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > Record ;
+    if ( m_pool[ rank_rev ] ) {
+      Record * const r = Record::get_record( m_pool[ rank_rev ] );
+      m_pool[ rank_rev ] = 0 ;
+      Record::decrement( r );
+    }
 #else
     m_pool.at(rank_rev).clear();
 #endif
@@ -162,9 +166,15 @@ void OpenMPexec::resize_scratch( size_t reduce_size , size_t thread_size )
 
 #if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
 
-      m_pool[ rank_rev ] = reinterpret_cast<OpenMPexec*>(
-        Kokkos::kokkos_malloc< Kokkos::HostSpace >( alloc_size , "openmp_scratch" )
-        );
+      typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > Record ;
+
+      Record * const r = Record::allocate( Kokkos::HostSpace()
+                                         , "openmp_scratch"
+                                         , alloc_size );
+
+      Record::increment( r );
+
+      m_pool[ rank_rev ] = reinterpret_cast<OpenMPexec*>( r->data() );
 
 #else
 

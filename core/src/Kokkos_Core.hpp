@@ -119,12 +119,11 @@ void * kokkos_malloc( const size_t arg_alloc_size
                     , const std::string & arg_label = std::string("kokkos_malloc") )
 {
   typedef typename Space::memory_space  MemorySpace ;
-  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< void , void >         RecordBase ;
-  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void >  RecordHost ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void >  RecordSpace ;
 
-  RecordHost * const r = RecordHost::allocate( MemorySpace() , "kokkos_malloc" , arg_alloc_size );
+  RecordSpace * const r = RecordSpace::allocate( MemorySpace() , arg_label , arg_alloc_size );
 
-  RecordBase::increment( r );
+  RecordSpace::increment( r );
 
   return r->data();
 }
@@ -134,12 +133,13 @@ inline
 void kokkos_free( void * arg_alloc )
 {
   typedef typename Space::memory_space  MemorySpace ;
-  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< void , void >         RecordBase ;
-  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void >  RecordHost ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void >  RecordSpace ;
 
-  RecordHost * const r = RecordHost::get_record( arg_alloc );
+  if ( arg_alloc ) {
+    RecordSpace * const r = RecordSpace::get_record( arg_alloc );
 
-  RecordBase::decrement( r );
+    RecordSpace::decrement( r );
+  }
 }
 
 template< class Space = typename Kokkos::DefaultExecutionSpace::memory_space >
@@ -147,17 +147,16 @@ inline
 void * kokkos_realloc( void * arg_alloc , const size_t arg_alloc_size )
 {
   typedef typename Space::memory_space  MemorySpace ;
-  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< void , void >         RecordBase ;
-  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void >  RecordHost ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< MemorySpace , void >  RecordSpace ;
 
-  RecordHost * const r_old = RecordHost::get_record( arg_alloc );
-  RecordHost * const r_new = RecordHost::allocate( MemorySpace() , r_old->get_label() , arg_alloc_size );
+  RecordSpace * const r_old = RecordSpace::get_record( arg_alloc );
+  RecordSpace * const r_new = RecordSpace::allocate( MemorySpace() , r_old->get_label() , arg_alloc_size );
 
   Kokkos::Impl::DeepCopy<MemorySpace,MemorySpace>( r_new->data() , r_old->data()
                                                  , std::min( r_old->size() , r_new->size() ) );
 
-  RecordBase::increment( r_new );
-  RecordBase::decrement( r_old );
+  RecordSpace::increment( r_new );
+  RecordSpace::decrement( r_old );
 
   return r_new->data();
 }
