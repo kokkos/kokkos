@@ -160,7 +160,7 @@ namespace Kokkos {
   }
 
   template< typename T >
-  T atomic_fetch_exchange(volatile T * const dest, const T val) {
+  T atomic_exchange(volatile T * const dest, const T val) {
     T oldval = *dest;
     T assume;
     do {
@@ -189,11 +189,6 @@ namespace Kokkos {
   template< typename T >
   void atomic_sub(volatile T * const dest, const T val) {
     atomic_fetch_sub(dest, val);
-  }
-
-  template< typename T >
-  void atomic_exchange(volatile T * const dest, const T val) {
-    atomic_fetch_exchange(dest, val);
   }
 
   template< typename T >
