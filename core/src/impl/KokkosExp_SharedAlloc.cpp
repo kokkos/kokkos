@@ -61,7 +61,7 @@ is_sane( SharedAllocationRecord< void , void > * arg_record )
     SharedAllocationRecord * root_next = 0 ;
 
     // Lock the list:
-    while ( ( root_next = Kokkos::atomic_exchange( & root->m_next , zero ) ) == 0 );
+    while ( ( root_next = Kokkos::atomic_exchange( & root->m_next , zero ) ) == zero );
 
     for ( SharedAllocationRecord * rec = root_next ; ok && rec != root ; rec = rec->m_next ) {
       const bool ok_non_null  = rec && rec->m_prev && ( rec == root || rec->m_next );
@@ -102,7 +102,7 @@ SharedAllocationRecord<void,void>::find( SharedAllocationRecord<void,void> * con
   SharedAllocationRecord * root_next = 0 ;
 
   // Lock the list:
-  while ( ( root_next = Kokkos::atomic_exchange( & arg_root->m_next , 0 ) ) == 0 );
+  while ( ( root_next = Kokkos::atomic_exchange( & arg_root->m_next , zero ) ) == zero );
 
   // Iterate searching for the record with this data pointer
 
@@ -148,7 +148,7 @@ SharedAllocationRecord( SharedAllocationRecord<void,void> * arg_root
   m_prev = m_root ;
 
   // Read root->m_next and lock by setting to zero
-  while ( ( m_next = Kokkos::atomic_exchange( & m_root->m_next , zero ) ) == 0 );
+  while ( ( m_next = Kokkos::atomic_exchange( & m_root->m_next , zero ) ) == zero );
 
   m_next->m_prev = this ;
 
@@ -187,7 +187,7 @@ decrement( SharedAllocationRecord< void , void > * arg_record )
     SharedAllocationRecord * root_next = 0 ;
 
     // Lock the list:
-    while ( ( root_next = Kokkos::atomic_exchange( & arg_record->m_root->m_next , 0 ) ) == 0 );
+    while ( ( root_next = Kokkos::atomic_exchange( & arg_record->m_root->m_next , zero ) ) == zero );
 
     arg_record->m_next->m_prev = arg_record->m_prev ;
 
