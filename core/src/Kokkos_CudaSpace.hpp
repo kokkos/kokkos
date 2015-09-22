@@ -109,12 +109,23 @@ public:
   CudaSpace & operator = ( const CudaSpace & rhs ) = default ;
   ~CudaSpace() = default ;
 
-  /**\brief  Allocate memory in the cuda space */
+  /**\brief  Allocate untracked memory in the cuda space */
   void * allocate( const size_t arg_alloc_size ) const ;
 
-  /**\brief  Deallocate memory in the cuda space */
+  /**\brief  Deallocate untracked memory in the cuda space */
   void deallocate( void * const arg_alloc_ptr
                  , const size_t arg_alloc_size ) const ;
+
+  /**\brief  Allocate tracked memory in the space */
+  void * allocate_tracked( const size_t arg_alloc_size
+                         , const std::string & arg_label = "no_label" ) const ;
+
+  /**\brief  Reallocate tracked memory in the space */
+  void * reallocate_tracked( void * const arg_alloc_ptr
+                           , const size_t arg_alloc_size ) const ;
+
+  /**\brief  Deallocate tracked memory in the space */
+  void deallocate_tracked( void * const arg_alloc_ptr ) const ;
 
   /*--------------------------------*/
   /** \brief  Error reporting for HostSpace attempt to access CudaSpace */
@@ -202,12 +213,23 @@ public:
   CudaUVMSpace & operator = ( const CudaUVMSpace & rhs ) = default ;
   ~CudaUVMSpace() = default ;
 
-  /**\brief  Allocate memory in the cuda space */
+  /**\brief  Allocate untracked memory in the cuda space */
   void * allocate( const size_t arg_alloc_size ) const ;
 
-  /**\brief  Deallocate memory in the cuda space */
+  /**\brief  Deallocate untracked memory in the cuda space */
   void deallocate( void * const arg_alloc_ptr
                  , const size_t arg_alloc_size ) const ;
+
+  /**\brief  Allocate tracked memory in the space */
+  void * allocate_tracked( const size_t arg_alloc_size
+                         , const std::string & arg_label = "no_label" ) const ;
+
+  /**\brief  Reallocate tracked memory in the space */
+  void * reallocate_tracked( void * const arg_alloc_ptr
+                           , const size_t arg_alloc_size ) const ;
+
+  /**\brief  Deallocate tracked memory in the space */
+  void deallocate_tracked( void * const arg_alloc_ptr ) const ;
 
   /*--------------------------------*/
 
@@ -259,12 +281,23 @@ public:
   CudaHostPinnedSpace & operator = ( const CudaHostPinnedSpace & rhs ) = default ;
   ~CudaHostPinnedSpace() = default ;
 
-  /**\brief  Allocate memory in the cuda space */
+  /**\brief  Allocate untracked memory in the space */
   void * allocate( const size_t arg_alloc_size ) const ;
 
-  /**\brief  Deallocate memory in the cuda space */
+  /**\brief  Deallocate untracked memory in the space */
   void deallocate( void * const arg_alloc_ptr
                  , const size_t arg_alloc_size ) const ;
+
+  /**\brief  Allocate tracked memory in the space */
+  void * allocate_tracked( const size_t arg_alloc_size
+                         , const std::string & arg_label = "no_label" ) const ;
+
+  /**\brief  Reallocate tracked memory in the space */
+  void * reallocate_tracked( void * const arg_alloc_ptr
+                           , const size_t arg_alloc_size ) const ;
+
+  /**\brief  Deallocate tracked memory in the space */
+  void deallocate_tracked( void * const arg_alloc_ptr ) const ;
 
   /*--------------------------------*/
 };

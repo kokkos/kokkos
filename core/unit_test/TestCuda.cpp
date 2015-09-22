@@ -134,7 +134,9 @@ TEST_F( cuda, uvm )
 
 #else
 
-    int * uvm_ptr = (int*) Kokkos::kokkos_malloc<Kokkos::CudaUVMSpace>(sizeof(int),"uvm_ptr");
+    Kokkos::CudaUVMSpace space ;
+
+    int * uvm_ptr = (int*) space.allocate_tracked(sizeof(int),"uvm_ptr");
 
 #endif
 
@@ -148,7 +150,7 @@ TEST_F( cuda, uvm )
 
 #if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
 
-    Kokkos::kokkos_free<Kokkos::CudaUVMSpace>(uvm_ptr);
+    space.deallocate_tracked(uvm_ptr);
 
 #endif
 

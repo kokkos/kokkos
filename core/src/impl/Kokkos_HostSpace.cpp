@@ -352,7 +352,54 @@ void HostSpace::deallocate( void * const arg_alloc_ptr , const size_t arg_alloc_
   }
 }
 
+//----------------------------------------------------------------------------
+
+void * HostSpace::allocate_tracked( const size_t arg_alloc_size
+                                  , const std::string & arg_alloc_label ) const
+{
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< HostSpace , void >  Record ;
+
+  if ( ! arg_alloc_size ) return (void *) 0 ;
+
+  Record * const r = Record::allocate( *this , arg_alloc_label , arg_alloc_size );
+
+  Record::increment( r );
+
+  return r->data();
+}
+
+void HostSpace::deallocate_tracked( void * const arg_alloc_ptr ) const
+{
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< HostSpace , void >  Record ;
+
+  if ( arg_alloc_ptr != 0 ) {
+    Record * const r = Record::get_record( arg_alloc_ptr );
+
+    Record::decrement( r );
+  }
+}
+
+void * HostSpace::reallocate_tracked( void * const arg_alloc_ptr
+                                    , const size_t arg_alloc_size ) const
+{
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< HostSpace , void >  Record ;
+
+  Record * const r_old = Record::get_record( arg_alloc_ptr );
+  Record * const r_new = Record::allocate( *this , r_old->get_label() , arg_alloc_size );
+
+  Kokkos::Impl::DeepCopy<HostSpace,HostSpace>( r_new->data() , r_old->data()
+                                             , std::min( r_old->size() , r_new->size() ) );
+
+  Record::increment( r_new );
+  Record::decrement( r_old );
+
+  return r_new->data();
+}
+
 } // namespace Kokkos
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
 namespace Kokkos {
 namespace Experimental {

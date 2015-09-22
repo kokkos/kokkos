@@ -289,6 +289,132 @@ void CudaHostPinnedSpace::deallocate( void * const arg_alloc_ptr , const size_t 
   } catch(...) {}
 }
 
+void * CudaSpace::allocate_tracked( const size_t arg_alloc_size
+                                  , const std::string & arg_alloc_label ) const
+{
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< CudaSpace , void >  Record ;
+
+  if ( ! arg_alloc_size ) return (void *) 0 ;
+
+  Record * const r = Record::allocate( *this , arg_alloc_label , arg_alloc_size );
+
+  Record::increment( r );
+
+  return r->data();
+}
+
+void * CudaUVMSpace::allocate_tracked( const size_t arg_alloc_size
+                                  , const std::string & arg_alloc_label ) const
+{
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< CudaUVMSpace , void >  Record ;
+
+  if ( ! arg_alloc_size ) return (void *) 0 ;
+
+  Record * const r = Record::allocate( *this , arg_alloc_label , arg_alloc_size );
+
+  Record::increment( r );
+
+  return r->data();
+}
+
+void * CudaHostPinnedSpace::allocate_tracked( const size_t arg_alloc_size
+                                  , const std::string & arg_alloc_label ) const
+{
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< CudaHostPinnedSpace , void >  Record ;
+
+  if ( ! arg_alloc_size ) return (void *) 0 ;
+
+  Record * const r = Record::allocate( *this , arg_alloc_label , arg_alloc_size );
+
+  Record::increment( r );
+
+  return r->data();
+}
+
+void CudaSpace::deallocate_tracked( void * const arg_alloc_ptr ) const
+{
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< CudaSpace , void >  Record ;
+
+  if ( arg_alloc_ptr != 0 ) {
+    Record * const r = Record::get_record( arg_alloc_ptr );
+
+    Record::decrement( r );
+  }
+}
+
+void CudaUVMSpace::deallocate_tracked( void * const arg_alloc_ptr ) const
+{
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< CudaUVMSpace , void >  Record ;
+
+  if ( arg_alloc_ptr != 0 ) {
+    Record * const r = Record::get_record( arg_alloc_ptr );
+
+    Record::decrement( r );
+  }
+}
+
+void CudaHostPinnedSpace::deallocate_tracked( void * const arg_alloc_ptr ) const
+{
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< CudaHostPinnedSpace , void >  Record ;
+
+  if ( arg_alloc_ptr != 0 ) {
+    Record * const r = Record::get_record( arg_alloc_ptr );
+
+    Record::decrement( r );
+  }
+}
+
+void * CudaSpace::reallocate_tracked( void * const arg_alloc_ptr
+                                    , const size_t arg_alloc_size ) const
+{
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< CudaSpace , void >  Record ;
+
+  Record * const r_old = Record::get_record( arg_alloc_ptr );
+  Record * const r_new = Record::allocate( *this , r_old->get_label() , arg_alloc_size );
+
+  Kokkos::Impl::DeepCopy<CudaSpace,CudaSpace>( r_new->data() , r_old->data()
+                                             , std::min( r_old->size() , r_new->size() ) );
+
+  Record::increment( r_new );
+  Record::decrement( r_old );
+
+  return r_new->data();
+}
+
+void * CudaUVMSpace::reallocate_tracked( void * const arg_alloc_ptr
+                                       , const size_t arg_alloc_size ) const
+{
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< CudaUVMSpace , void >  Record ;
+
+  Record * const r_old = Record::get_record( arg_alloc_ptr );
+  Record * const r_new = Record::allocate( *this , r_old->get_label() , arg_alloc_size );
+
+  Kokkos::Impl::DeepCopy<CudaUVMSpace,CudaUVMSpace>( r_new->data() , r_old->data()
+                                                   , std::min( r_old->size() , r_new->size() ) );
+
+  Record::increment( r_new );
+  Record::decrement( r_old );
+
+  return r_new->data();
+}
+
+void * CudaHostPinnedSpace::reallocate_tracked( void * const arg_alloc_ptr
+                                              , const size_t arg_alloc_size ) const
+{
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< CudaHostPinnedSpace , void >  Record ;
+
+  Record * const r_old = Record::get_record( arg_alloc_ptr );
+  Record * const r_new = Record::allocate( *this , r_old->get_label() , arg_alloc_size );
+
+  Kokkos::Impl::DeepCopy<CudaHostPinnedSpace,CudaHostPinnedSpace>( r_new->data() , r_old->data()
+                                                   , std::min( r_old->size() , r_new->size() ) );
+
+  Record::increment( r_new );
+  Record::decrement( r_old );
+
+  return r_new->data();
+}
+
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
