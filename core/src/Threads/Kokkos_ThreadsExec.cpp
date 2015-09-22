@@ -50,9 +50,7 @@
 #include <utility>
 #include <iostream>
 #include <sstream>
-#include <Kokkos_Threads.hpp>
-#include <Kokkos_hwloc.hpp>
-#include <Kokkos_Atomic.hpp>
+#include <Kokkos_Core.hpp>
 #include <impl/Kokkos_Error.hpp>
 
 
@@ -194,8 +192,19 @@ ThreadsExec::~ThreadsExec()
 {
   const unsigned entry = m_pool_size - ( m_pool_rank + 1 );
 
-  m_pool_base   = 0 ;
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
+  Kokkos::Experimental::kokkos_free< Kokkos::HostSpace >( m_scratch );
+
+  m_scratch = 0 ;
+
+#else
+
   m_scratch.clear();
+
+#endif
+
+  m_pool_base   = 0 ;
   m_scratch_reduce_end = 0 ;
   m_scratch_thread_end = 0 ;
   m_numa_rank      = 0 ;
@@ -405,17 +414,36 @@ void * ThreadsExec::root_reduce_scratch()
 
 void ThreadsExec::execute_resize_scratch( ThreadsExec & exec , const void * )
 {
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
+  Kokkos::Experimental::kokkos_free< Kokkos::HostSpace >( exec.m_scratch );
+
+#else
+
   exec.m_scratch.clear();
+
+#endif
 
   exec.m_scratch_reduce_end = s_threads_process.m_scratch_reduce_end ;
   exec.m_scratch_thread_end = s_threads_process.m_scratch_thread_end ;
 
   if ( s_threads_process.m_scratch_thread_end ) {
 
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
+    exec.m_scratch = Kokkos::Experimental::kokkos_malloc< Kokkos::HostSpace >( s_threads_process.m_scratch_thread_end , "thread_scratch" );
+
+    unsigned * ptr = reinterpret_cast<unsigned *>( exec.m_scratch );
+
+#else
+
     exec.m_scratch =
       HostSpace::allocate_and_track( "thread_scratch" , s_threads_process.m_scratch_thread_end );
 
     unsigned * ptr = reinterpret_cast<unsigned *>( exec.m_scratch.alloc_ptr() );
+
+#endif
+
     unsigned * const end = ptr + s_threads_process.m_scratch_thread_end / sizeof(unsigned);
 
     // touch on this thread
@@ -452,7 +480,11 @@ void * ThreadsExec::resize_scratch( size_t reduce_size , size_t thread_size )
     s_threads_process.m_scratch = s_threads_exec[0]->m_scratch ;
   }
 
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+  return s_threads_process.m_scratch ;
+#else
   return s_threads_process.m_scratch.alloc_ptr() ;
+#endif
 }
 
 //----------------------------------------------------------------------------

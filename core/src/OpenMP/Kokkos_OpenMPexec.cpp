@@ -84,7 +84,15 @@ int OpenMPexec::m_map_rank[ OpenMPexec::MAX_THREAD_COUNT ] = { 0 };
 
 int OpenMPexec::m_pool_topo[ 4 ] = { 0 };
 
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
 OpenMPexec::Pool OpenMPexec::m_pool;
+
+#else
+
+OpenMPexec * OpenMPexec::m_pool[ OpenMPexec::MAX_THREAD_COUNT ] = { 0 };
+
+#endif
 
 void OpenMPexec::verify_is_process( const char * const label )
 {
@@ -109,7 +117,12 @@ void OpenMPexec::clear_scratch()
 #pragma omp parallel
   {
     const int rank_rev = m_map_rank[ omp_get_thread_num() ];
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+    Kokkos::kokkos_free< Kokkos::HostSpace >( m_pool[ rank_rev ] );
+    m_pool[ rank_rev ] = 0 ;
+#else
     m_pool.at(rank_rev).clear();
+#endif
   }
 /* END #pragma omp parallel */
 }
@@ -147,7 +160,18 @@ void OpenMPexec::resize_scratch( size_t reduce_size , size_t thread_size )
       const int rank_rev = m_map_rank[ omp_get_thread_num() ];
       const int rank     = pool_size - ( rank_rev + 1 );
 
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
+      m_pool[ rank_rev ] = reinterpret_cast<OpenMPexec*>(
+        Kokkos::kokkos_malloc< Kokkos::HostSpace >( alloc_size , "openmp_scratch" )
+        );
+
+#else
+
       m_pool.at(rank_rev) = HostSpace::allocate_and_track( "openmp_scratch", alloc_size );
+
+#endif
+
       new ( m_pool[ rank_rev ] ) OpenMPexec( rank , ALLOC_EXEC , reduce_size , thread_size );
     }
 /* END #pragma omp parallel */

@@ -159,6 +159,8 @@ int HostSpace::in_parallel()
 
 /*--------------------------------------------------------------------------*/
 
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
 namespace Kokkos {
 
 Impl::AllocationTracker HostSpace::allocate_and_track( const std::string & label, const size_t size )
@@ -167,6 +169,8 @@ Impl::AllocationTracker HostSpace::allocate_and_track( const std::string & label
 }
 
 } // namespace Kokkos
+
+#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
 
 /*--------------------------------------------------------------------------*/
 

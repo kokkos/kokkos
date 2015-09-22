@@ -122,13 +122,21 @@ TEST_F( cuda , memory_space )
   TestMemorySpace< Kokkos::Cuda >();
 }
 
-TEST_F( cuda, spaces )
+TEST_F( cuda, uvm )
 {
   if ( Kokkos::CudaUVMSpace::available() ) {
+
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
 
     Kokkos::Impl::AllocationTracker tracker = Kokkos::CudaUVMSpace::allocate_and_track("uvm_ptr",sizeof(int));
 
     int * uvm_ptr = (int*) tracker.alloc_ptr();
+
+#else
+
+    int * uvm_ptr = (int*) Kokkos::kokkos_malloc<Kokkos::CudaUVMSpace>(sizeof(int),"uvm_ptr");
+
+#endif
 
     *uvm_ptr = 42 ;
 
@@ -137,6 +145,12 @@ TEST_F( cuda, spaces )
     Kokkos::Cuda::fence();
 
     EXPECT_EQ( *uvm_ptr, int(2*42) );
+
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
+    Kokkos::kokkos_free<Kokkos::CudaUVMSpace>(uvm_ptr);
+
+#endif
 
   }
 }

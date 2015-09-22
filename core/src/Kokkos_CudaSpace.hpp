@@ -75,6 +75,10 @@ public:
 
   typedef unsigned int          size_type ;
 
+  /*--------------------------------*/
+
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
   typedef Impl::CudaMallocAllocator allocator;
 
   /** \brief  Allocate a contiguous block of memory.
@@ -95,6 +99,8 @@ public:
                                     , ::cudaChannelFormatDesc const & desc
                                    );
 #endif
+
+#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
 
   /*--------------------------------*/
 
@@ -162,6 +168,10 @@ public:
   /** \brief  If UVM capability is available */
   static bool available();
 
+  /*--------------------------------*/
+
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
   typedef Impl::CudaUVMAllocator allocator;
 
   /** \brief  Allocate a contiguous block of memory.
@@ -182,6 +192,9 @@ public:
                                     , ::cudaChannelFormatDesc const & desc
                                    );
 #endif
+
+#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
+
   /*--------------------------------*/
 
   CudaUVMSpace();
@@ -223,6 +236,9 @@ public:
   typedef Kokkos::Device<execution_space,memory_space> device_type;
   typedef unsigned int                size_type ;
 
+  /*--------------------------------*/
+
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
 
   typedef Impl::CudaHostAllocator allocator ;
 
@@ -233,6 +249,8 @@ public:
    *  allocation gives it a reference count of one.
    */
   static Impl::AllocationTracker allocate_and_track( const std::string & label, const size_t size );
+
+#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
 
   /*--------------------------------*/
 

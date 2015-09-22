@@ -106,6 +106,8 @@ void DeepCopyAsyncCuda( void * dst , const void * src , size_t n) {
 
 namespace Kokkos {
 
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
 namespace {
 
 void texture_object_attach_impl(  Impl::AllocationTracker const & tracker
@@ -164,6 +166,8 @@ void CudaSpace::texture_object_attach(  Impl::AllocationTracker const & tracker
   texture_object_attach_impl( tracker, type_size, desc );
 }
 
+#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
+
 void CudaSpace::access_error()
 {
   const std::string msg("Kokkos::CudaSpace::access_error attempt to execute Cuda function from non-Cuda space" );
@@ -178,6 +182,8 @@ void CudaSpace::access_error( const void * const )
 
 /*--------------------------------------------------------------------------*/
 
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
 Impl::AllocationTracker CudaUVMSpace::allocate_and_track( const std::string & label, const size_t size )
 {
   return Impl::AllocationTracker( allocator(), size, label);
@@ -191,6 +197,8 @@ void CudaUVMSpace::texture_object_attach(  Impl::AllocationTracker const & track
   texture_object_attach_impl( tracker, type_size, desc );
 }
 
+#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
+
 bool CudaUVMSpace::available()
 {
 #if defined( CUDA_VERSION ) && ( 6000 <= CUDA_VERSION ) && !defined(__APPLE__)
@@ -203,10 +211,14 @@ bool CudaUVMSpace::available()
 
 /*--------------------------------------------------------------------------*/
 
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
 Impl::AllocationTracker CudaHostPinnedSpace::allocate_and_track( const std::string & label, const size_t size )
 {
   return Impl::AllocationTracker( allocator(), size, label);
 }
+
+#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
 
 } // namespace Kokkos
 
