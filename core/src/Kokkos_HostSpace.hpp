@@ -175,17 +175,6 @@ public:
   void deallocate( void * const arg_alloc_ptr 
                  , const size_t arg_alloc_size ) const ;
 
-  /**\brief  Allocate tracked memory in the space */
-  void * allocate_tracked( const size_t arg_alloc_size
-                         , const std::string & arg_label = "no_label" ) const ;
-
-  /**\brief  Reallocate tracked memory in the space */
-  void * reallocate_tracked( void * const arg_alloc_ptr
-                           , const size_t arg_alloc_size ) const ;
-
-  /**\brief  Deallocate tracked memory in the space */
-  void deallocate_tracked( void * const arg_alloc_ptr ) const ;
-
 private:
 
   AllocationMechanism  m_alloc_mech ;
@@ -253,6 +242,21 @@ public:
       return (SharedAllocationRecord *) 0 ;
 #endif
     }
+
+  /**\brief  Allocate tracked memory in the space */
+  static
+  void * allocate_tracked( const Kokkos::HostSpace & arg_space
+                         , const std::string & arg_label
+                         , const size_t arg_alloc_size );
+
+  /**\brief  Reallocate tracked memory in the space */
+  static
+  void * reallocate_tracked( void * const arg_alloc_ptr
+                           , const size_t arg_alloc_size );
+
+  /**\brief  Deallocate tracked memory in the space */
+  static
+  void deallocate_tracked( void * const arg_alloc_ptr );
 
 
   static SharedAllocationRecord * get_record( void * arg_alloc_ptr );

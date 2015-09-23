@@ -126,19 +126,7 @@ TEST_F( cuda, uvm )
 {
   if ( Kokkos::CudaUVMSpace::available() ) {
 
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
-
-    Kokkos::Impl::AllocationTracker tracker = Kokkos::CudaUVMSpace::allocate_and_track("uvm_ptr",sizeof(int));
-
-    int * uvm_ptr = (int*) tracker.alloc_ptr();
-
-#else
-
-    Kokkos::CudaUVMSpace space ;
-
-    int * uvm_ptr = (int*) space.allocate_tracked(sizeof(int),"uvm_ptr");
-
-#endif
+    int * uvm_ptr = (int*) Kokkos::kokkos_malloc< Kokkos::CudaUVMSpace >("uvm_ptr",sizeof(int));
 
     *uvm_ptr = 42 ;
 
@@ -148,12 +136,7 @@ TEST_F( cuda, uvm )
 
     EXPECT_EQ( *uvm_ptr, int(2*42) );
 
-#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
-
-    space.deallocate_tracked(uvm_ptr);
-
-#endif
-
+    Kokkos::kokkos_free< Kokkos::CudaUVMSpace >(uvm_ptr );
   }
 }
 

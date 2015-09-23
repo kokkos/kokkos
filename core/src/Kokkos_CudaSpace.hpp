@@ -116,17 +116,6 @@ public:
   void deallocate( void * const arg_alloc_ptr
                  , const size_t arg_alloc_size ) const ;
 
-  /**\brief  Allocate tracked memory in the space */
-  void * allocate_tracked( const size_t arg_alloc_size
-                         , const std::string & arg_label = "no_label" ) const ;
-
-  /**\brief  Reallocate tracked memory in the space */
-  void * reallocate_tracked( void * const arg_alloc_ptr
-                           , const size_t arg_alloc_size ) const ;
-
-  /**\brief  Deallocate tracked memory in the space */
-  void deallocate_tracked( void * const arg_alloc_ptr ) const ;
-
   /*--------------------------------*/
   /** \brief  Error reporting for HostSpace attempt to access CudaSpace */
   static void access_error();
@@ -220,17 +209,6 @@ public:
   void deallocate( void * const arg_alloc_ptr
                  , const size_t arg_alloc_size ) const ;
 
-  /**\brief  Allocate tracked memory in the space */
-  void * allocate_tracked( const size_t arg_alloc_size
-                         , const std::string & arg_label = "no_label" ) const ;
-
-  /**\brief  Reallocate tracked memory in the space */
-  void * reallocate_tracked( void * const arg_alloc_ptr
-                           , const size_t arg_alloc_size ) const ;
-
-  /**\brief  Deallocate tracked memory in the space */
-  void deallocate_tracked( void * const arg_alloc_ptr ) const ;
-
   /*--------------------------------*/
 
 private:
@@ -287,17 +265,6 @@ public:
   /**\brief  Deallocate untracked memory in the space */
   void deallocate( void * const arg_alloc_ptr
                  , const size_t arg_alloc_size ) const ;
-
-  /**\brief  Allocate tracked memory in the space */
-  void * allocate_tracked( const size_t arg_alloc_size
-                         , const std::string & arg_label = "no_label" ) const ;
-
-  /**\brief  Reallocate tracked memory in the space */
-  void * reallocate_tracked( void * const arg_alloc_ptr
-                           , const size_t arg_alloc_size ) const ;
-
-  /**\brief  Deallocate tracked memory in the space */
-  void deallocate_tracked( void * const arg_alloc_ptr ) const ;
 
   /*--------------------------------*/
 };
@@ -682,8 +649,24 @@ public:
 
   static SharedAllocationRecord * allocate( const Kokkos::CudaSpace &  arg_space
                                           , const std::string       &  arg_label
-                                          , const size_t               arg_alloc_size
-                                          );
+                                          , const size_t               arg_alloc_size );
+
+  /**\brief  Allocate tracked memory in the space */
+  static
+  void * allocate_tracked( const Kokkos::CudaSpace & arg_space
+                         , const std::string & arg_label
+                         , const size_t arg_alloc_size );
+
+  /**\brief  Reallocate tracked memory in the space */
+  static
+  void * reallocate_tracked( void * const arg_alloc_ptr
+                           , const size_t arg_alloc_size );
+
+  /**\brief  Deallocate tracked memory in the space */
+  static
+  void deallocate_tracked( void * const arg_alloc_ptr );
+
+  static SharedAllocationRecord * get_record( void * arg_alloc_ptr );
 
   template< typename AliasType >
   inline
@@ -710,8 +693,6 @@ public:
       // Texture object is attached to the entire allocation range
       return ptr - reinterpret_cast<AliasType*>( RecordBase::m_alloc_ptr );
     }
-
-  static SharedAllocationRecord * get_record( void * arg_alloc_ptr );
 
   static void print_records( std::ostream & , const Kokkos::CudaSpace & , bool detail = false );
 };
@@ -755,6 +736,24 @@ public:
                                           , const size_t                  arg_alloc_size
                                           );
 
+  /**\brief  Allocate tracked memory in the space */
+  static
+  void * allocate_tracked( const Kokkos::CudaUVMSpace & arg_space
+                         , const std::string & arg_label
+                         , const size_t arg_alloc_size );
+
+  /**\brief  Reallocate tracked memory in the space */
+  static
+  void * reallocate_tracked( void * const arg_alloc_ptr
+                           , const size_t arg_alloc_size );
+
+  /**\brief  Deallocate tracked memory in the space */
+  static
+  void deallocate_tracked( void * const arg_alloc_ptr );
+
+  static SharedAllocationRecord * get_record( void * arg_alloc_ptr );
+
+
   template< typename AliasType >
   inline
   ::cudaTextureObject_t attach_texture_object()
@@ -781,8 +780,6 @@ public:
       // Texture object is attached to the entire allocation range
       return ptr - reinterpret_cast<AliasType*>( RecordBase::m_alloc_ptr );
     }
-
-  static SharedAllocationRecord * get_record( void * arg_alloc_ptr );
 
   static void print_records( std::ostream & , const Kokkos::CudaUVMSpace & , bool detail = false );
 };
@@ -823,6 +820,21 @@ public:
                                           , const std::string          &  arg_label
                                           , const size_t                  arg_alloc_size
                                           );
+  /**\brief  Allocate tracked memory in the space */
+  static
+  void * allocate_tracked( const Kokkos::CudaHostPinnedSpace & arg_space
+                         , const std::string & arg_label
+                         , const size_t arg_alloc_size );
+
+  /**\brief  Reallocate tracked memory in the space */
+  static
+  void * reallocate_tracked( void * const arg_alloc_ptr
+                           , const size_t arg_alloc_size );
+
+  /**\brief  Deallocate tracked memory in the space */
+  static
+  void deallocate_tracked( void * const arg_alloc_ptr );
+
 
   static SharedAllocationRecord * get_record( void * arg_alloc_ptr );
 

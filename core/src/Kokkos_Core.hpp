@@ -113,28 +113,45 @@ void fence();
 namespace Kokkos {
 namespace Experimental {
 
+/* Allocate memory from a memory space.
+ * The allocation is tracked in Kokkos memory tracking system, so
+ * leaked memory can be identified.
+ */
+template< class Space = typename Kokkos::DefaultExecutionSpace::memory_space >
+inline
+void * kokkos_malloc( const std::string & arg_alloc_label
+                    , const size_t arg_alloc_size )
+{
+  typedef typename Space::memory_space MemorySpace ;
+  return Impl::SharedAllocationRecord< MemorySpace >::
+    allocate_tracked( MemorySpace() , arg_alloc_label , arg_alloc_size );
+}
+
 template< class Space = typename Kokkos::DefaultExecutionSpace::memory_space >
 inline
 void * kokkos_malloc( const size_t arg_alloc_size )
 {
-  typename Space::memory_space s ;
-  return s.allocate_tracked( arg_alloc_size );
+  typedef typename Space::memory_space MemorySpace ;
+  return Impl::SharedAllocationRecord< MemorySpace >::
+    allocate_tracked( MemorySpace() , "no-label" , arg_alloc_size );
 }
 
 template< class Space = typename Kokkos::DefaultExecutionSpace::memory_space >
 inline
 void kokkos_free( void * arg_alloc )
 {
-  typename Space::memory_space s ;
-  return s.deallocate_tracked( arg_alloc );
+  typedef typename Space::memory_space MemorySpace ;
+  return Impl::SharedAllocationRecord< MemorySpace >::
+    deallocate_tracked( arg_alloc );
 }
 
 template< class Space = typename Kokkos::DefaultExecutionSpace::memory_space >
 inline
 void * kokkos_realloc( void * arg_alloc , const size_t arg_alloc_size )
 {
-  typename Space::memory_space s ;
-  return s.reallocate_tracked( arg_alloc , arg_alloc_size );
+  typedef typename Space::memory_space MemorySpace ;
+  return Impl::SharedAllocationRecord< MemorySpace >::
+    reallocate_tracked( arg_alloc , arg_alloc_size );
 }
 
 } // namespace Experimental
