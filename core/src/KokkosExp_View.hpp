@@ -851,7 +851,6 @@ private:
     map_type  m_map ;
     ExecSpace m_space ;
 
-    KOKKOS_INLINE_FUNCTION
     void destroy_shared_allocation() { m_map.destroy( m_space ); }
   };
 
@@ -907,15 +906,17 @@ public:
                       , arg_N0 , arg_N1 , arg_N2 , arg_N3
                       , arg_N4 , arg_N5 , arg_N6 , arg_N7 );
 
-      // Copy the destroy functor into the allocation record before initiating tracking.
-      record->m_destroy.m_map   = m_map ;
-      record->m_destroy.m_space = prop.execution ;
-
+      // If constructing the plan for destructing as well
+      // Copy the destroy functor into the allocation record
+      // before initiating tracking.
       if ( prop.initialize.value ) {
         m_map.construct( prop.execution );
+
+        record->m_destroy.m_map   = m_map ;
+        record->m_destroy.m_space = prop.execution ;
       }
 
-      // Destroy functor assigned and initialization complete, start tracking
+      // Setup and initialization complete, start tracking
       m_track = track_type( record );
     }
 
@@ -955,14 +956,15 @@ public:
       m_map = map_type( record->data() , prop.allow_padding , arg_layout );
 
       // Copy the destroy functor into the allocation record before initiating tracking.
-      record->m_destroy.m_map   = m_map ;
-      record->m_destroy.m_space = prop.execution ;
 
       if ( prop.initialize.value ) {
         m_map.construct( prop.execution );
+
+        record->m_destroy.m_map   = m_map ;
+        record->m_destroy.m_space = prop.execution ;
       }
 
-      // Destroy functor assigned and initialization complete, start tracking
+      // Setup and initialization complete, start tracking
       m_track = track_type( record );
     }
 

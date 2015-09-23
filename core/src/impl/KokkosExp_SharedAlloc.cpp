@@ -47,6 +47,8 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+int SharedAllocationRecord< void , void >::s_tracking_enabled = 1 ;
+
 bool
 SharedAllocationRecord< void , void >::
 is_sane( SharedAllocationRecord< void , void > * arg_record )

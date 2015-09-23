@@ -78,6 +78,8 @@ protected:
 
   typedef void (* function_type )( SharedAllocationRecord<void,void> * );
 
+  static int s_tracking_enabled ;
+
   SharedAllocationHeader * const m_alloc_ptr ;
   size_t                   const m_alloc_size ;
   function_type            const m_dealloc ;
@@ -99,6 +101,8 @@ protected:
                         );
 
 public:
+
+  static int tracking_enabled() { return s_tracking_enabled ; }
 
   ~SharedAllocationRecord() = default ;
 
@@ -148,6 +152,25 @@ public:
                                            , const bool detail );
 };
 
+namespace {
+
+/* Taking the address of this function so make sure it is unique */
+template < class MemorySpace , class DestroyFunctor >
+void deallocate( SharedAllocationRecord<void,void> * record_ptr )
+{
+  typedef SharedAllocationRecord< MemorySpace , void > base_type ;
+  typedef SharedAllocationRecord< MemorySpace , DestroyFunctor > this_type ;
+
+  this_type * const ptr = static_cast< this_type * >(
+                          static_cast< base_type * >( record_ptr ) );
+
+  ptr->m_destroy.destroy_shared_allocation();
+
+  delete ptr ;
+}
+
+}
+
 /*
  *  Memory space specialization of SharedAllocationRecord< Space , void > requires :
  *
@@ -158,25 +181,23 @@ public:
  *    Space m_space ;
  *  }
  */
-
 template< class MemorySpace , class DestroyFunctor >
 class SharedAllocationRecord : public SharedAllocationRecord< MemorySpace , void >
 {
 private:
-
-  static void deallocate( SharedAllocationRecord<void,void> * record_ptr )
-    { delete static_cast<SharedAllocationRecord<MemorySpace,DestroyFunctor>*>(record_ptr); }
 
   SharedAllocationRecord( const MemorySpace & arg_space
                         , const std::string & arg_label
                         , const size_t        arg_alloc
                         )
     /*  Allocate user memory as [ SharedAllocationHeader , user_memory ] */
-    : SharedAllocationRecord< MemorySpace , void >( arg_space , arg_label , arg_alloc , & deallocate )
+    : SharedAllocationRecord< MemorySpace , void >( arg_space , arg_label , arg_alloc , & Kokkos::Experimental::Impl::deallocate< MemorySpace , DestroyFunctor > )
     , m_destroy()
     {}
 
-  ~SharedAllocationRecord() { m_destroy.destroy_shared_allocation(); }
+  SharedAllocationRecord() = delete ;
+  SharedAllocationRecord( const SharedAllocationRecord & ) = delete ;
+  SharedAllocationRecord & operator = ( const SharedAllocationRecord & ) = delete ;
 
 public:
 
@@ -209,8 +230,8 @@ private:
   };
 
   // The allocation record resides in Host memory space
-  Record * m_record ;
-  unsigned long m_record_bits;
+  Record      * m_record ;
+  unsigned long m_record_bits ;
 
   KOKKOS_INLINE_FUNCTION
   static Record * disable( Record * rec )
@@ -220,7 +241,10 @@ private:
   void increment() const
     {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-      if ( ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) Record::increment( m_record );
+      if ( Record::tracking_enabled() &&
+           ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) {
+        Record::increment( m_record );
+      }
 #endif
     }
 
@@ -228,7 +252,10 @@ private:
   void decrement() const
     {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-       if ( ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) Record::decrement( m_record );
+      if ( Record::tracking_enabled() &&
+           ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) {
+        Record::decrement( m_record );
+      }
 #endif
     }
 

@@ -61,6 +61,8 @@ public:
 
   enum { MAX_THREAD_COUNT = 4096 };
 
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
   struct Pool
   {
     Pool() : m_trackers() {}
@@ -78,11 +80,21 @@ public:
     }
   };
 
+
 private:
+
+  static Pool         m_pool; // Indexed by: m_pool_rank_rev
+
+#else
+
+private:
+
+  static OpenMPexec * m_pool[ MAX_THREAD_COUNT ]; // Indexed by: m_pool_rank_rev
+
+#endif
 
   static int          m_pool_topo[ 4 ];
   static int          m_map_rank[ MAX_THREAD_COUNT ];
-  static Pool         m_pool; // Indexed by: m_pool_rank_rev
 
   friend class Kokkos::OpenMP ;
 

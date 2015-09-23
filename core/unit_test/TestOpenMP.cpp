@@ -52,6 +52,7 @@
 
 #include <TestViewAPI.hpp>
 #include <TestViewSubview.hpp>
+#include <TestViewOfClass.hpp>
 
 #include <TestSharedAlloc.hpp>
 #include <TestViewMapping.hpp>
@@ -116,6 +117,10 @@ TEST_F( openmp, view_api) {
   TestViewAPI< double , Kokkos::OpenMP >();
 }
 
+TEST_F( openmp , view_nested_view )
+{
+  ::Test::view_nested_view< Kokkos::OpenMP >();
+}
 
 TEST_F( openmp, view_subview_auto_1d_left ) {
   TestViewSubview::test_auto_1d< Kokkos::LayoutLeft,Kokkos::OpenMP >();

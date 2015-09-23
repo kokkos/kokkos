@@ -159,6 +159,8 @@ int HostSpace::in_parallel()
 
 /*--------------------------------------------------------------------------*/
 
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
 namespace Kokkos {
 
 Impl::AllocationTracker HostSpace::allocate_and_track( const std::string & label, const size_t size )
@@ -167,6 +169,8 @@ Impl::AllocationTracker HostSpace::allocate_and_track( const std::string & label
 }
 
 } // namespace Kokkos
+
+#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
 
 /*--------------------------------------------------------------------------*/
 
@@ -350,6 +354,9 @@ void HostSpace::deallocate( void * const arg_alloc_ptr , const size_t arg_alloc_
 
 } // namespace Kokkos
 
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
@@ -397,16 +404,59 @@ SharedAllocationRecord( const Kokkos::HostSpace & arg_space
           );
 }
 
+//----------------------------------------------------------------------------
+
+void * SharedAllocationRecord< Kokkos::HostSpace , void >::
+allocate_tracked( const Kokkos::HostSpace & arg_space
+                , const std::string & arg_alloc_label 
+                , const size_t arg_alloc_size )
+{
+  if ( ! arg_alloc_size ) return (void *) 0 ;
+
+  SharedAllocationRecord * const r =
+    allocate( arg_space , arg_alloc_label , arg_alloc_size );
+
+  RecordBase::increment( r );
+
+  return r->data();
+}
+
+void SharedAllocationRecord< Kokkos::HostSpace , void >::
+deallocate_tracked( void * const arg_alloc_ptr )
+{
+  if ( arg_alloc_ptr != 0 ) {
+    SharedAllocationRecord * const r = get_record( arg_alloc_ptr );
+
+    RecordBase::decrement( r );
+  }
+}
+
+void * SharedAllocationRecord< Kokkos::HostSpace , void >::
+reallocate_tracked( void * const arg_alloc_ptr
+                  , const size_t arg_alloc_size )
+{
+  SharedAllocationRecord * const r_old = get_record( arg_alloc_ptr );
+  SharedAllocationRecord * const r_new = allocate( r_old->m_space , r_old->get_label() , arg_alloc_size );
+
+  Kokkos::Impl::DeepCopy<HostSpace,HostSpace>( r_new->data() , r_old->data()
+                                             , std::min( r_old->size() , r_new->size() ) );
+
+  RecordBase::increment( r_new );
+  RecordBase::decrement( r_old );
+
+  return r_new->data();
+}
+
 SharedAllocationRecord< Kokkos::HostSpace , void > *
 SharedAllocationRecord< Kokkos::HostSpace , void >::get_record( void * alloc_ptr )
 {
   typedef SharedAllocationHeader  Header ;
   typedef SharedAllocationRecord< Kokkos::HostSpace , void >  RecordHost ;
 
-  SharedAllocationHeader const * const head   = Header::get_header( alloc_ptr );
-  RecordHost                   * const record = static_cast< RecordHost * >( head->m_record );
+  SharedAllocationHeader const * const head   = alloc_ptr ? Header::get_header( alloc_ptr ) : (SharedAllocationHeader *)0 ;
+  RecordHost                   * const record = head ? static_cast< RecordHost * >( head->m_record ) : (RecordHost *) 0 ;
 
-  if ( record->m_alloc_ptr != head ) {
+  if ( ! alloc_ptr || record->m_alloc_ptr != head ) {
     Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void >::get_record ERROR" ) );
   }
 

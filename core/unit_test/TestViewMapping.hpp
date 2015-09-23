@@ -1073,6 +1073,51 @@ struct TestViewMappingAtomic {
     }
 };
 
+/*--------------------------------------------------------------------------*/
+
+template< class ExecSpace >
+struct TestViewMappingClassValue {
+
+  struct ValueType {
+    KOKKOS_INLINE_FUNCTION
+    ValueType()
+    {
+#if 0
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA )
+      printf("TestViewMappingClassValue construct on Cuda\n");
+#elif defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+      printf("TestViewMappingClassValue construct on Host\n");
+#else
+      printf("TestViewMappingClassValue construct unknown\n");
+#endif
+#endif
+    }
+    KOKKOS_INLINE_FUNCTION
+    ~ValueType()
+    {
+#if 0
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA )
+      printf("TestViewMappingClassValue destruct on Cuda\n");
+#elif defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+      printf("TestViewMappingClassValue destruct on Host\n");
+#else
+      printf("TestViewMappingClassValue destruct unknown\n");
+#endif
+#endif
+    }
+  };
+
+  static void run()
+  {
+    using namespace Kokkos::Experimental ;
+    ExecSpace::fence();
+    {
+      View< ValueType , ExecSpace > a("a");
+      ExecSpace::fence();
+    }
+    ExecSpace::fence();
+  }
+};
 
 } /* namespace Test */
 
