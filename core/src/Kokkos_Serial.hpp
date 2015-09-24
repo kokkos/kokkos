@@ -151,7 +151,11 @@ public:
   static void finalize() {}
 
   //! Print configuration information to the given output stream.
-  static void print_configuration( std::ostream & , const bool detail = false ) {}
+  static void print_configuration( std::ostream& /* out */ ) {}
+
+  /// \brief Print configuration information to the given output stream,
+  ///   with extra bool argument for whether to show details.
+  static void print_configuration (std::ostream& /* out */, const bool /* detail */ ) {}
 
   //--------------------------------------------------------------------------
 
