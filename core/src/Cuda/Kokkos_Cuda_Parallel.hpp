@@ -317,11 +317,9 @@ public:
     , m_vector_length( vector_length_request )
     {
       // Allow only power-of-two vector_length
-      const bool vector_is_power_of_two =
-        ( 0 < vector_length_request ) &&
-        ( 0 == ( vector_length_request & ( vector_length_request - 1 ) ) );
-      if(!vector_is_power_of_two)
+      if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
         Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
+      }
 
       // Make sure league size is permissable
       if(league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
@@ -343,11 +341,9 @@ public:
     , m_vector_length( vector_length_request )
     {
       // Allow only power-of-two vector_length
-      const bool vector_is_power_of_two =
-        ( 0 < vector_length_request ) &&
-        ( 0 == ( vector_length_request & ( vector_length_request - 1 ) ) );
-      if(!vector_is_power_of_two)
+      if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
         Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
+      }
 
       // Make sure league size is permissable
       if(league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
@@ -362,11 +358,9 @@ public:
     , m_vector_length ( vector_length_request )
     {
       // Allow only power-of-two vector_length
-      const bool vector_is_power_of_two =
-        ( 0 < vector_length_request ) &&
-        ( 0 == ( vector_length_request & ( vector_length_request - 1 ) ) );
-      if(!vector_is_power_of_two)
+      if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
         Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
+      }
 
       // Make sure league size is permissable
       if(league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
@@ -386,11 +380,9 @@ public:
     , m_vector_length ( vector_length_request )
     {
       // Allow only power-of-two vector_length
-      const bool vector_is_power_of_two =
-        ( 0 < vector_length_request ) &&
-        ( 0 == ( vector_length_request & ( vector_length_request - 1 ) ) );
-      if(!vector_is_power_of_two)
+      if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
         Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
+      }
 
       // Make sure league size is permissable
       if(league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
@@ -868,9 +860,9 @@ public:
     // Functor's reduce memory, team scan memory, and team shared memory depend upon team size.
 
     const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size ;
-    const int not_power_of_two = 0 != ( team_size & ( team_size - 1 ) );
 
-    if ( not_power_of_two ||  CudaTraits::SharedMemoryCapacity < shmem_size_total ) {
+    if ( ! Kokkos::Impl::is_integral_power_of_two( team_size ) ||
+         CudaTraits::SharedMemoryCapacity < shmem_size_total ) {
       Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > bad team size"));
     }
 

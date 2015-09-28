@@ -230,7 +230,7 @@ void * HostSpace::allocate( const size_t arg_alloc_size ) const
   static_assert( sizeof(void*) == sizeof(uintptr_t)
                , "Error sizeof(void*) != sizeof(uintptr_t)" );
 
-  static_assert( Kokkos::Impl::power_of_two< Kokkos::Impl::MEMORY_ALIGNMENT >::value
+  static_assert( Kokkos::Impl::is_integral_power_of_two( Kokkos::Impl::MEMORY_ALIGNMENT )
                , "Memory alignment must be power of two" );
 
   constexpr uintptr_t alignment = Kokkos::Impl::MEMORY_ALIGNMENT ;

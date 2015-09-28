@@ -69,8 +69,8 @@ struct ViewOffset< Dimension , Layout ,
 {
 public:
 
-  enum { SHIFT_0 = Kokkos::Impl::power_of_two<Layout::N0>::value };
-  enum { SHIFT_1 = Kokkos::Impl::power_of_two<Layout::N1>::value };
+  enum { SHIFT_0 = Kokkos::Impl::integral_power_of_two(Layout::N0) };
+  enum { SHIFT_1 = Kokkos::Impl::integral_power_of_two(Layout::N1) };
   enum { SHIFT_T = SHIFT_0 + SHIFT_1 };
   enum { MASK_0  = Layout::N0 - 1 };
   enum { MASK_1  = Layout::N1 - 1 };

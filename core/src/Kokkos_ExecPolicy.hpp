@@ -78,8 +78,9 @@ template< class Arg0 = void , class Arg1 = void , class Arg2 = void
         , class ExecSpace =
           // The first argument is the execution space,
           // otherwise use the default execution space.
-          typename Impl::if_c< Impl::is_execution_space< Arg0 >::value , Arg0
-                             , Kokkos::DefaultExecutionSpace >::type
+          typename std::conditional
+            < Impl::is_execution_space< Arg0 >::value , Arg0
+            , Kokkos::DefaultExecutionSpace >::type
         >
 class RangePolicy {
 private:
@@ -117,8 +118,8 @@ private:
     ) >::value };
 
   // The work argument tag is the first or second argument
-  typedef typename Impl::if_c< Arg0_WorkTag , Arg0 ,
-          typename Impl::if_c< Arg1_WorkTag , Arg1 , void
+  typedef typename std::conditional< Arg0_WorkTag , Arg0 ,
+          typename std::conditional< Arg1_WorkTag , Arg1 , void
           >::type >::type
     WorkTag ;
 
@@ -128,17 +129,18 @@ private:
                                        unsigned(DefaultIntValue) ))) };
 
   // Only accept the integral type if the blocking is a power of two
-  typedef typename Impl::enable_if< Impl::is_power_of_two< Granularity >::value ,
-            typename Impl::if_c< Arg0_IntType , Arg0 ,
-            typename Impl::if_c< Arg1_IntType , Arg1 ,
-            typename Impl::if_c< Arg2_IntType , Arg2 ,
-            typename Impl::if_c< Arg0_IntConst , typename Impl::is_integral_constant<Arg0>::integral_type ,
-            typename Impl::if_c< Arg1_IntConst , typename Impl::is_integral_constant<Arg1>::integral_type ,
-            typename Impl::if_c< Arg2_IntConst , typename Impl::is_integral_constant<Arg2>::integral_type ,
-                                                 DefaultIntType
-            >::type >::type >::type
-            >::type >::type >::type
-          >::type
+  static_assert( Impl::is_integral_power_of_two( Granularity )
+               , "RangePolicy blocking granularity must be power of two" );
+
+  typedef typename std::conditional< Arg0_IntType , Arg0 ,
+          typename std::conditional< Arg1_IntType , Arg1 ,
+          typename std::conditional< Arg2_IntType , Arg2 ,
+          typename std::conditional< Arg0_IntConst , typename Impl::is_integral_constant<Arg0>::integral_type ,
+          typename std::conditional< Arg1_IntConst , typename Impl::is_integral_constant<Arg1>::integral_type ,
+          typename std::conditional< Arg2_IntConst , typename Impl::is_integral_constant<Arg2>::integral_type ,
+                                                     DefaultIntType
+          >::type >::type >::type
+          >::type >::type >::type
     IntType ;
 
   enum { GranularityMask = IntType(Granularity) - 1 };
@@ -258,8 +260,9 @@ template< class Arg0 = void
         , class ExecSpace =
           // If the first argument is not an execution
           // then use the default execution space.
-          typename Impl::if_c< Impl::is_execution_space< Arg0 >::value , Arg0
-                             , Kokkos::DefaultExecutionSpace >::type
+          typename std::conditional
+            < Impl::is_execution_space< Arg0 >::value , Arg0
+            , Kokkos::DefaultExecutionSpace >::type
         >
 class TeamPolicy {
 private:
@@ -268,7 +271,7 @@ private:
   enum { Arg1_Void      = Impl::is_same< Arg1 , void >::value };
   enum { ArgOption_OK   = Impl::StaticAssert< ( Arg0_ExecSpace || Arg1_Void ) >::value };
 
-  typedef typename Impl::if_c< Arg0_ExecSpace , Arg1 , Arg0 >::type WorkTag ;
+  typedef typename std::conditional< Arg0_ExecSpace , Arg1 , Arg0 >::type WorkTag ;
 
 public:
 

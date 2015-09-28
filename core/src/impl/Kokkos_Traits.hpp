@@ -249,48 +249,49 @@ struct if_ : public if_c<Cond::value, TrueType, FalseType> {};
 template< typename T >
 struct is_integral : public integral_constant< bool ,
   (
-    Impl::is_same< T ,          char >::value ||
-    Impl::is_same< T , unsigned char >::value ||
-    Impl::is_same< T ,          short int >::value ||
-    Impl::is_same< T , unsigned short int >::value ||
-    Impl::is_same< T ,          int >::value ||
-    Impl::is_same< T , unsigned int >::value ||
-    Impl::is_same< T ,          long int >::value ||
-    Impl::is_same< T , unsigned long int >::value ||
-    Impl::is_same< T ,          long long int >::value ||
-    Impl::is_same< T , unsigned long long int >::value ||
+    std::is_same< T ,          char >::value ||
+    std::is_same< T , unsigned char >::value ||
+    std::is_same< T ,          short int >::value ||
+    std::is_same< T , unsigned short int >::value ||
+    std::is_same< T ,          int >::value ||
+    std::is_same< T , unsigned int >::value ||
+    std::is_same< T ,          long int >::value ||
+    std::is_same< T , unsigned long int >::value ||
+    std::is_same< T ,          long long int >::value ||
+    std::is_same< T , unsigned long long int >::value ||
 
-    Impl::is_same< T , int8_t   >::value ||
-    Impl::is_same< T , int16_t  >::value ||
-    Impl::is_same< T , int32_t  >::value ||
-    Impl::is_same< T , int64_t  >::value ||
-    Impl::is_same< T , uint8_t  >::value ||
-    Impl::is_same< T , uint16_t >::value ||
-    Impl::is_same< T , uint32_t >::value ||
-    Impl::is_same< T , uint64_t >::value 
+    std::is_same< T , int8_t   >::value ||
+    std::is_same< T , int16_t  >::value ||
+    std::is_same< T , int32_t  >::value ||
+    std::is_same< T , int64_t  >::value ||
+    std::is_same< T , uint8_t  >::value ||
+    std::is_same< T , uint16_t >::value ||
+    std::is_same< T , uint32_t >::value ||
+    std::is_same< T , uint64_t >::value 
   )>
 {};
 
 //----------------------------------------------------------------------------
 
-#if 0
+// These 'constexpr'functions can be used as
+// both regular functions and meta-function.
 
-// To replace the struct version since these 'constexpr'
-// functions can be used as both regular functions and meta-function.
-
+/**\brief  There exists integral 'k' such that N = 2^k */
 KOKKOS_INLINE_FUNCTION
-constexpr bool is_power_of_two( const size_t N )
+constexpr bool is_integral_power_of_two( const size_t N )
 { return ( 0 < N ) && ( 0 == ( N & ( N - 1 ) ) ); }
 
+/**\brief  Return integral 'k' such that N = 2^k, assuming valid.  */
 KOKKOS_INLINE_FUNCTION
-constexpr unsigned valid_power_of_two( const size_t N )
-{ return N == 1 ? 0 : 1 + valid_power_of_two( N >> 1 ); }
+constexpr unsigned integral_power_of_two_assume_valid( const size_t N )
+{ return N == 1 ? 0 : 1 + integral_power_of_two_assume_valid( N >> 1 ); }
 
+/**\brief  Return integral 'k' such that N = 2^k, if exists.
+ *         If does not exist return ~0u.
+ */
 KOKKOS_INLINE_FUNCTION
-constexpr unsigned power_of_two( const size_t N )
-{ return is_power_of_two(N) ? valid_power_of_two(N) : ~0u ; }
-
-#endif
+constexpr unsigned integral_power_of_two( const size_t N )
+{ return is_integral_power_of_two(N) ? integral_power_of_two_assume_valid(N) : ~0u ; }
 
 //----------------------------------------------------------------------------
 
