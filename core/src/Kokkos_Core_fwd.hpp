@@ -62,7 +62,7 @@ struct AUTO_t {
 
 namespace {
 /**\brief Token to indicate that a parameter's value is to be automatically selected */
-constexpr AUTO_t AUTO ;
+constexpr AUTO_t AUTO = Kokkos::AUTO_t();
 }
 }
 
