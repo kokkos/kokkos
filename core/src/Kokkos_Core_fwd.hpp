@@ -52,6 +52,22 @@
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+namespace Kokkos {
+
+struct AUTO_t {
+  KOKKOS_INLINE_FUNCTION
+  constexpr const AUTO_t & operator()() const { return *this ; }
+};
+
+namespace {
+/**\brief Token to indicate that a parameter's value is to be automatically selected */
+constexpr AUTO_t AUTO ;
+}
+}
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Forward declarations for class inter-relationships
 
 namespace Kokkos {
@@ -162,9 +178,15 @@ struct VerifyExecutionCanAccessMemorySpace< Space , Space >
   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< \
     Kokkos::Impl::ActiveExecutionMemorySpace , DATA_SPACE >::verify()
 
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
 namespace Kokkos {
   void fence();
 }
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
 #endif /* #ifndef KOKKOS_CORE_FWD_HPP */
 

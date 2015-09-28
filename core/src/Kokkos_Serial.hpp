@@ -151,7 +151,7 @@ public:
   static void finalize() {}
 
   //! Print configuration information to the given output stream.
-  static void print_configuration( std::ostream & , const bool detail = false ) {}
+  static void print_configuration( std::ostream & , const bool /* detail */ = false ) {}
 
   //--------------------------------------------------------------------------
 
@@ -328,13 +328,31 @@ public:
   inline int league_size() const { return m_league_size ; }
 
   /** \brief  Specify league size, request team size */
-  TeamPolicy( execution_space & , int league_size_request , int /* team_size_request */  , int vector_length_request = 1 )
+  TeamPolicy( execution_space &
+            , int league_size_request
+            , int /* team_size_request */
+            , int /* vector_length_request */ = 1 )
     : m_league_size( league_size_request )
-    { (void) vector_length_request; }
+    {}
 
-  TeamPolicy( int league_size_request , int /* team_size_request */ , int vector_length_request = 1 )
+  TeamPolicy( execution_space &
+            , int league_size_request
+            , const Kokkos::AUTO_t & /* team_size_request */
+            , int /* vector_length_request */ = 1 )
     : m_league_size( league_size_request )
-    { (void) vector_length_request; }
+    {}
+
+  TeamPolicy( int league_size_request
+            , int /* team_size_request */
+            , int /* vector_length_request */ = 1 )
+    : m_league_size( league_size_request )
+    {}
+
+  TeamPolicy( int league_size_request
+            , const Kokkos::AUTO_t & /* team_size_request */
+            , int /* vector_length_request */ = 1 )
+    : m_league_size( league_size_request )
+    {}
 
   typedef Impl::SerialTeamMember  member_type ;
 };

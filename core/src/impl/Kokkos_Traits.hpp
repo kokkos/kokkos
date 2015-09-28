@@ -273,6 +273,26 @@ struct is_integral : public integral_constant< bool ,
 
 //----------------------------------------------------------------------------
 
+#if 0
+
+// To replace the struct version since these 'constexpr'
+// functions can be used as both regular functions and meta-function.
+
+KOKKOS_INLINE_FUNCTION
+constexpr bool is_power_of_two( const size_t N )
+{ return ( 0 < N ) && ( 0 == ( N & ( N - 1 ) ) ); }
+
+KOKKOS_INLINE_FUNCTION
+constexpr unsigned valid_power_of_two( const size_t N )
+{ return N == 1 ? 0 : 1 + valid_power_of_two( N >> 1 ); }
+
+KOKKOS_INLINE_FUNCTION
+constexpr unsigned power_of_two( const size_t N )
+{ return is_power_of_two(N) ? valid_power_of_two(N) : ~0u ; }
+
+#endif
+
+//----------------------------------------------------------------------------
 
 template < size_t N >
 struct is_power_of_two

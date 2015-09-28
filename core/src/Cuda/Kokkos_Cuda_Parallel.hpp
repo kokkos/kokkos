@@ -308,17 +308,19 @@ public:
   inline int league_size() const { return m_league_size ; }
 
   /** \brief  Specify league size, request team size */
-  TeamPolicy( execution_space & , int league_size_ , int team_size_request , int vector_length_request = 1 )
+  TeamPolicy( execution_space &
+            , int league_size_
+            , int team_size_request
+            , int vector_length_request = 1 )
     : m_league_size( league_size_ )
     , m_team_size( team_size_request )
-    , m_vector_length ( vector_length_request )
+    , m_vector_length( vector_length_request )
     {
       // Allow only power-of-two vector_length
-      int check = 0;
-      for(int k = 1; k <= vector_length_max(); k*=2)
-        if(k == vector_length_request)
-          check = 1;
-      if(!check)
+      const bool vector_is_power_of_two =
+        ( 0 < vector_length_request ) &&
+        ( 0 == ( vector_length_request & ( vector_length_request - 1 ) ) );
+      if(!vector_is_power_of_two)
         Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
 
       // Make sure league size is permissable
@@ -329,20 +331,41 @@ public:
       if ( m_team_size * m_vector_length > 1024 ) {
         Impl::throw_runtime_exception(std::string("Kokkos::TeamPolicy< Cuda > the team size is too large. Team size x vector length must be smaller than 1024."));
       }
-
     }
 
-  TeamPolicy( int league_size_ , int team_size_request , int vector_length_request = 1 )
+  /** \brief  Specify league size, request team size */
+  TeamPolicy( execution_space &
+            , int league_size_
+            , const Kokkos::AUTO_t & /* team_size_request */
+            , int vector_length_request = 1 )
+    : m_league_size( league_size_ )
+    , m_team_size( -1 )
+    , m_vector_length( vector_length_request )
+    {
+      // Allow only power-of-two vector_length
+      const bool vector_is_power_of_two =
+        ( 0 < vector_length_request ) &&
+        ( 0 == ( vector_length_request & ( vector_length_request - 1 ) ) );
+      if(!vector_is_power_of_two)
+        Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
+
+      // Make sure league size is permissable
+      if(league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
+        Impl::throw_runtime_exception( "Requested too large league_size for TeamPolicy on Cuda execution space.");
+    }
+
+  TeamPolicy( int league_size_
+            , int team_size_request
+            , int vector_length_request = 1 )
     : m_league_size( league_size_ )
     , m_team_size( team_size_request )
     , m_vector_length ( vector_length_request )
     {
       // Allow only power-of-two vector_length
-      int check = 0;
-      for(int k = 1; k <= vector_length_max(); k*=2)
-        if(k == vector_length_request)
-          check = 1;
-      if(!check)
+      const bool vector_is_power_of_two =
+        ( 0 < vector_length_request ) &&
+        ( 0 == ( vector_length_request & ( vector_length_request - 1 ) ) );
+      if(!vector_is_power_of_two)
         Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
 
       // Make sure league size is permissable
@@ -353,7 +376,25 @@ public:
       if ( m_team_size * m_vector_length > 1024 ) {
         Impl::throw_runtime_exception(std::string("Kokkos::TeamPolicy< Cuda > the team size is too large. Team size x vector length must be smaller than 1024."));
       }
+    }
 
+  TeamPolicy( int league_size_
+            , const Kokkos::AUTO_t & /* team_size_request */
+            , int vector_length_request = 1 )
+    : m_league_size( league_size_ )
+    , m_team_size( -1 )
+    , m_vector_length ( vector_length_request )
+    {
+      // Allow only power-of-two vector_length
+      const bool vector_is_power_of_two =
+        ( 0 < vector_length_request ) &&
+        ( 0 == ( vector_length_request & ( vector_length_request - 1 ) ) );
+      if(!vector_is_power_of_two)
+        Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
+
+      // Make sure league size is permissable
+      if(league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
+        Impl::throw_runtime_exception( "Requested too large league_size for TeamPolicy on Cuda execution space.");
     }
 
   typedef Kokkos::Impl::CudaTeamMember member_type ;
@@ -503,8 +544,11 @@ public:
       Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelFor< Cuda > insufficient shared memory"));
     }
 
+    const int team_size = 0 <= policy.team_size() ? policy.team_size() :
+      Kokkos::Impl::cuda_get_opt_block_size< ParallelFor >( m_functor ) / policy.vector_length();
+
     const dim3 grid( int(policy.league_size()) , 1 , 1 );
-    const dim3 block( policy.vector_length() , policy.team_size() , 1 );
+    const dim3 block( policy.vector_length() , team_size , 1 );
 
     CudaParallelLaunch< ParallelFor >( *this, grid, block, shmem_size_total ); // copy to device and execute
   }
@@ -796,42 +840,48 @@ public:
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
-  , m_team_begin( cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,work_tag>( functor , policy.team_size() ) )
-  , m_shmem_begin( sizeof(double) * ( policy.team_size() + 2 ) )
-  , m_shmem_size( FunctorTeamShmemSize< FunctorType >::value( functor , policy.team_size() ) )
+  , m_team_begin( 0 )
+  , m_shmem_begin( 0 )
+  , m_shmem_size( 0 )
   , m_league_size( policy.league_size() )
   {
-
-    // The global parallel_reduce does not support vector_length other than 1 at the moment
-    if(policy.vector_length() > 1)
-      Impl::throw_runtime_exception( "Kokkos::parallel_reduce with a TeamPolicy using a vector length of greater than 1 is not currently supported for CUDA.");
-
-    if(policy.team_size() < 32)
-      Impl::throw_runtime_exception( "Kokkos::parallel_reduce with a TeamPolicy using a team_size smaller than 32 is not currently supported with CUDA.");
-
     // Return Init value if the number of worksets is zero
     if(policy.league_size() == 0) {
       ValueInit::init( m_functor , result.ptr_on_device() );
       return;
     }
 
+    const int team_size = 0 <= policy.team_size() ? policy.team_size() :
+      Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( m_functor ) / policy.vector_length();
+
+    m_team_begin = cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,work_tag>( functor , team_size );
+    m_shmem_begin = sizeof(double) * ( team_size + 2 );
+    m_shmem_size = FunctorTeamShmemSize< FunctorType >::value( functor , team_size );
+
+    // The global parallel_reduce does not support vector_length other than 1 at the moment
+    if(policy.vector_length() > 1)
+      Impl::throw_runtime_exception( "Kokkos::parallel_reduce with a TeamPolicy using a vector length of greater than 1 is not currently supported for CUDA.");
+
+    if( team_size < 32)
+      Impl::throw_runtime_exception( "Kokkos::parallel_reduce with a TeamPolicy using a team_size smaller than 32 is not currently supported with CUDA.");
+
     // Functor's reduce memory, team scan memory, and team shared memory depend upon team size.
 
     const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size ;
-    const int not_power_of_two = 0 != ( policy.team_size() & ( policy.team_size() - 1 ) );
+    const int not_power_of_two = 0 != ( team_size & ( team_size - 1 ) );
 
     if ( not_power_of_two ||  CudaTraits::SharedMemoryCapacity < shmem_size_total ) {
       Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > bad team size"));
     }
 
-    const int block_count = std::min( policy.league_size() , policy.team_size() );
+    const int block_count = std::min( policy.league_size() , team_size );
 
     m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( functor ) * block_count );
     m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
     m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( functor ) );
 
     const dim3 grid( block_count , 1 , 1 );
-    const dim3 block( 1 , policy.team_size() , 1 ); // REQUIRED DIMENSIONS ( 1 , N , 1 )
+    const dim3 block( 1 , team_size , 1 ); // REQUIRED DIMENSIONS ( 1 , N , 1 )
 
     CudaParallelLaunch< ParallelReduce >( *this, grid, block, shmem_size_total ); // copy to device and execute
 

@@ -525,11 +525,27 @@ public:
   inline int league_size() const { return m_league_size ; }
 
   /** \brief  Specify league size, request team size */
-  TeamPolicy( execution_space & , int league_size_request , int team_size_request , int vector_length_request = 1)
-    { init( league_size_request , team_size_request ); (void) vector_length_request; }
+  TeamPolicy( execution_space &
+            , int league_size_request
+            , int team_size_request
+            , int /* vector_length_request */ = 1 )
+    { init( league_size_request , team_size_request ); }
 
-  TeamPolicy( int league_size_request , int team_size_request , int vector_length_request = 1 )
-    { init( league_size_request , team_size_request ); (void) vector_length_request; }
+  TeamPolicy( execution_space &
+            , int league_size_request
+            , const Kokkos::AUTO_t & /* team_size_request */
+            , int /* vector_length_request */ = 1)
+    { init( league_size_request , execution_space::thread_pool_size(2) ); }
+
+  TeamPolicy( int league_size_request
+            , int team_size_request
+            , int /* vector_length_request */ = 1 )
+    { init( league_size_request , team_size_request ); }
+
+  TeamPolicy( int league_size_request
+            , const Kokkos::AUTO_t & /* team_size_request */
+            , int /* vector_length_request */ = 1 )
+    { init( league_size_request , execution_space::thread_pool_size(2) ); }
 
   inline int team_alloc() const { return m_team_alloc ; }
   inline int team_iter()  const { return m_team_iter ; }

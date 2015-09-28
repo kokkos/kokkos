@@ -302,8 +302,12 @@ public:
   /** \brief  Construct policy with the given instance of the execution space */
   TeamPolicy( const execution_space & , int league_size_request , int team_size_request );
 
+  TeamPolicy( const execution_space & , int league_size_request , const Kokkos::AUTO_t & );
+
   /** \brief  Construct policy with the default instance of the execution space */
   TeamPolicy( int league_size_request , int team_size_request );
+
+  TeamPolicy( int league_size_request , const Kokkos::AUTO_t & );
 
   /** \brief  The actual league size (number of teams) of the policy.
    *
