@@ -41,6 +41,9 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_SHARED_ALLOC_HPP_
+#define KOKKOS_SHARED_ALLOC_HPP_
+
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
@@ -316,4 +319,4 @@ public:
 } /* namespace Experimental */
 } /* namespace Kokkos */
 
-
+#endif
