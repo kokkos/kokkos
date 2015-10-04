@@ -220,7 +220,10 @@ void kokkos_free(const void* ptr) {
 
 
 template< class Arg = DefaultExecutionSpace>
-const void* kokkos_realloc(const void* old_ptr, size_t size) {
+void* kokkos_realloc(const void* old_ptr, size_t size) {
+  if(old_ptr == NULL)
+    return kokkos_malloc<Arg>(size);
+
   typedef typename Arg::memory_space MemorySpace;
   typedef typename MemorySpace::allocator allocator;
   Impl::AllocationTracker tracker = Impl::AllocationTracker::find<allocator>(old_ptr);
