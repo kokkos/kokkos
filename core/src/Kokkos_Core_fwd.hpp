@@ -74,6 +74,12 @@ namespace Kokkos {
 
 class HostSpace ; ///< Memory space for main process and CPU execution spaces
 
+#ifdef KOKKOS_HAVE_HBWSPACE
+namespace Experimental {
+class HBWSpace ; /// Memory space for hbw_malloc from memkind (e.g. for KNL processor)
+}
+#endif
+
 #if defined( KOKKOS_HAVE_SERIAL )
 class Serial ;    ///< Execution space main process on CPU
 #endif // defined( KOKKOS_HAVE_SERIAL )
