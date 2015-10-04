@@ -106,9 +106,9 @@ public:
 
   //! The type of a Kokkos::View on the device.
   typedef View< typename traits::data_type ,
-                typename traits::array_layout ,
-                typename traits::device_type ,
-                typename traits::memory_traits > t_dev ;
+                Arg1Type ,
+                Arg2Type ,
+                Arg3Type > t_dev ;
 
   /// \typedef t_host
   /// \brief The type of a Kokkos::View host mirror of \c t_dev.
@@ -117,9 +117,9 @@ public:
   //! The type of a const View on the device.
   //! The type of a Kokkos::View on the device.
   typedef View< typename traits::const_data_type ,
-                typename traits::array_layout ,
-                typename traits::device_type ,
-                typename traits::memory_traits > t_dev_const ;
+                Arg1Type ,
+                Arg2Type ,
+                Arg3Type > t_dev_const ;
 
   /// \typedef t_host_const
   /// \brief The type of a const View host mirror of \c t_dev_const.
