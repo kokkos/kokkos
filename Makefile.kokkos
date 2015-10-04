@@ -7,7 +7,7 @@ KOKKOS_DEVICES ?= "Pthreads"
 KOKKOS_ARCH ?= ""
 #Options: yes,no
 KOKKOS_DEBUG ?= "no"
-#Options: hwloc,librt
+#Options: hwloc,librt,experimental_memkind
 KOKKOS_USE_TPLS ?= ""
 #Options: c++11
 KOKKOS_CXX_STANDARD ?= "c++11"
@@ -28,6 +28,7 @@ KOKKOS_INTERNAL_ENABLE_CXX11 := $(strip $(shell echo $(KOKKOS_CXX_STANDARD) | gr
 # Check for external libraries
 KOKKOS_INTERNAL_USE_HWLOC := $(strip $(shell echo $(KOKKOS_USE_TPLS) | grep "hwloc" | wc -l))
 KOKKOS_INTERNAL_USE_LIBRT := $(strip $(shell echo $(KOKKOS_USE_TPLS) | grep "librt" | wc -l))
+KOKKOS_INTERNAL_USE_MEMKIND := $(strip $(shell echo $(KOKKOS_USE_TPLS) | grep "experimental_memkind" | wc -l))
 
 # Check for advanced settings
 KOKKOS_INTERNAL_OPT_RANGE_AGGRESSIVE_VECTORIZATION := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "aggressive_vectorization" | wc -l))
@@ -226,6 +227,13 @@ ifeq ($(KOKKOS_INTERNAL_USE_LIBRT), 1)
 	tmp := $(shell echo "\#define PREC_TIMER 1" >> KokkosCore_config.tmp )
   tmp := $(shell echo "\#define KOKKOSP_ENABLE_RTLIB 1" >> KokkosCore_config.tmp )
 	KOKKOS_LIBS += -lrt
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_MEMKIND), 1)
+  KOKKOS_CPPFLAGS += -I$(MEMKIND_PATH)/include
+  KOKKOS_LDFLAGS += -L$(MEMKIND_PATH)/lib 
+        KOKKOS_LIBS += -lmemkind
+  tmp := $(shell echo "\#define KOKKOS_HAVE_HBWSPACE 1" >> KokkosCore_config.tmp )
 endif
 
 tmp := $(shell echo "/* Optimization Settings */" >> KokkosCore_config.tmp)
