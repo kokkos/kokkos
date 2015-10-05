@@ -58,64 +58,73 @@ namespace Impl {
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+/* ParallelFor Kokkos::Threads with RangePolicy */
 
 template< class FunctorType , class Arg0 , class Arg1 , class Arg2 >
-class ParallelFor< FunctorType , Kokkos::RangePolicy< Arg0 , Arg1 , Arg2 , Kokkos::Threads > >
+class ParallelFor< FunctorType
+                 , Kokkos::RangePolicy< Arg0 , Arg1 , Arg2 , Kokkos::Threads >
+                 >
 {
 private:
 
   typedef Kokkos::RangePolicy< Arg0 , Arg1 , Arg2 , Kokkos::Threads > Policy ;
+  typedef typename Policy::work_tag    WorkTag ;
+  typedef typename Policy::WorkRange   WorkRange ;
+  typedef typename Policy::member_type Member ;
 
-  const FunctorType  m_func ;
+  const FunctorType  m_functor ;
   const Policy       m_policy ;
 
-  template< class PType >
-  KOKKOS_FORCEINLINE_FUNCTION static
-  void driver( typename Impl::enable_if<
-                 ( Impl::is_same< typename PType::work_tag , void >::value )
-                 , const FunctorType & >::type functor
-             , const PType & range )
+  template< class TagType >
+  inline
+  typename std::enable_if< std::is_same< TagType , void >::value >::type
+  exec_range( const Member & ibeg , const Member & iend ) const
     {
-      const typename PType::member_type e = range.end();
-      for ( typename PType::member_type i = range.begin() ; i < e ; ++i ) {
-        functor( i );
+      for ( Member i = ibeg ; i < iend ; ++i ) {
+        m_functor( i );
       }
     }
 
-  template< class PType >
-  KOKKOS_FORCEINLINE_FUNCTION static
-  void driver( typename Impl::enable_if<
-                 ( ! Impl::is_same< typename PType::work_tag , void >::value )
-                 , const FunctorType & >::type functor
-             , const PType & range )
+  template< class TagType >
+  inline
+  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
+  exec_range( const Member & ibeg , const Member & iend ) const
     {
-      const typename PType::member_type e = range.end();
-      for ( typename PType::member_type i = range.begin() ; i < e ; ++i ) {
-        functor( typename PType::work_tag() , i );
+      const TagType t ;
+      for ( Member i = ibeg ; i < iend ; ++i ) {
+        m_functor( t , i );
       }
     }
 
-  static void execute( ThreadsExec & exec , const void * arg )
+  static void exec( ThreadsExec & exec , const void * arg )
   {
     const ParallelFor & self = * ((const ParallelFor *) arg );
 
-    driver( self.m_func , typename Policy::WorkRange( self.m_policy , exec.pool_rank() , exec.pool_size() ) );
+    WorkRange range( self.m_policy , exec.pool_rank() , exec.pool_size() );
+
+    self.template exec_range< WorkTag >( range.begin() , range.end() );
 
     exec.fan_in();
   }
 
 public:
 
-  ParallelFor( const FunctorType & functor
-             , const Policy      & policy )
-    : m_func( functor )
-    , m_policy( policy )
+  inline
+  void execute() const
     {
-      ThreadsExec::start( & ParallelFor::execute , this );
-
+      ThreadsExec::start( & ParallelFor::exec , this );
       ThreadsExec::fence();
     }
+
+  ParallelFor( const FunctorType & functor
+             , const Policy      & policy )
+    : m_functor( functor )
+    , m_policy( policy )
+    { execute(); }
 };
+
+//----------------------------------------------------------------------------
+/* ParallelFor Kokkos::Threads with TeamPolicy */
 
 template< class FunctorType , class Arg0 , class Arg1 >
 class ParallelFor< FunctorType , Kokkos::TeamPolicy< Arg0 , Arg1 , Kokkos::Threads > >
