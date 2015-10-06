@@ -57,61 +57,75 @@ namespace Kokkos {
 namespace Impl {
 
 template< class FunctorType , class Arg0 , class Arg1 , class Arg2 >
-class ParallelFor< FunctorType , Kokkos::RangePolicy< Arg0 , Arg1 , Arg2 , Kokkos::OpenMP > >
+class ParallelFor< FunctorType
+                 , Kokkos::RangePolicy< Arg0 , Arg1 , Arg2 , Kokkos::OpenMP >
+                 >
 {
 private:
 
   typedef Kokkos::RangePolicy< Arg0 , Arg1 , Arg2 , Kokkos::OpenMP > Policy ;
+  typedef typename Policy::work_tag     WorkTag ;
+  typedef typename Policy::WorkRange    WorkRange ;
+  typedef typename Policy::member_type  Member ;
 
-  template< class PType >
-  KOKKOS_FORCEINLINE_FUNCTION static
-  void driver( typename Impl::enable_if< Impl::is_same< typename PType::work_tag , void >::value ,
-                 const FunctorType & >::type functor
-             , const PType & range )
+  const FunctorType m_functor ;
+  const Policy      m_policy ;
+
+  template< class TagType >
+  inline
+  typename std::enable_if< std::is_same< TagType , void >::value >::type
+  exec_range( const Member ibeg , const Member iend ) const
     {
-      const typename PType::member_type work_end = range.end();
       #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_HAVE_PRAGMA_IVDEP
       #pragma ivdep
       #endif
       #endif
-      for ( typename PType::member_type iwork = range.begin() ; iwork < work_end ; ++iwork ) {
-        functor( iwork );
+      for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
+        m_functor( iwork );
       }
     }
 
-  template< class PType >
-  KOKKOS_FORCEINLINE_FUNCTION static
-  void driver( typename Impl::enable_if< ! Impl::is_same< typename PType::work_tag , void >::value ,
-                 const FunctorType & >::type functor
-             , const PType & range )
+  template< class TagType >
+  inline
+  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
+  exec_range( const Member ibeg , const Member iend ) const
     {
-      const typename PType::member_type work_end = range.end();
+      const TagType t ;
       #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_HAVE_PRAGMA_IVDEP
       #pragma ivdep
       #endif
       #endif
-      for ( typename PType::member_type iwork = range.begin() ; iwork < work_end ; ++iwork ) {
-        functor( typename PType::work_tag() , iwork );
+      for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
+        m_functor( t , iwork );
       }
     }
 
 public:
 
   inline
-  ParallelFor( const FunctorType & functor
-             , const Policy      & policy )
+  void execute() const
+    {
+#pragma omp parallel
+      {
+        OpenMPexec & exec = * OpenMPexec::get_thread_omp();
+        const WorkRange range( m_policy, exec.pool_rank(), exec.pool_size() );
+        this-> template exec_range< WorkTag >( range.begin() , range.end() );
+      }
+/* END #pragma omp parallel */
+    }
+
+  inline
+  ParallelFor( const FunctorType & arg_functor
+             , const Policy      & arg_policy )
+    : m_functor( arg_functor )
+    , m_policy(  arg_policy )
     {
       OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
       OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
 
-#pragma omp parallel
-      {
-        OpenMPexec & exec = * OpenMPexec::get_thread_omp();
-        driver( functor , typename Policy::WorkRange( policy , exec.pool_rank() , exec.pool_size() ) );
-      }
-/* END #pragma omp parallel */
+      execute();
     }
 };
 
@@ -125,100 +139,119 @@ namespace Kokkos {
 namespace Impl {
 
 template< class FunctorType , class Arg0 , class Arg1 , class Arg2 >
-class ParallelReduce< FunctorType , Kokkos::RangePolicy< Arg0 , Arg1 , Arg2 , Kokkos::OpenMP > >
+class ParallelReduce< FunctorType
+                    , Kokkos::RangePolicy< Arg0 , Arg1 , Arg2 , Kokkos::OpenMP >
+                    >
 {
 private:
 
   typedef Kokkos::RangePolicy< Arg0 , Arg1 , Arg2 , Kokkos::OpenMP > Policy ;
-  typedef typename Policy::work_tag                                  WorkTag ;
-  typedef Kokkos::Impl::FunctorValueTraits< FunctorType , WorkTag >  ValueTraits ;
-  typedef Kokkos::Impl::FunctorValueInit<   FunctorType , WorkTag >  ValueInit ;
-  typedef Kokkos::Impl::FunctorValueJoin<   FunctorType , WorkTag >  ValueJoin ;
+
+  typedef typename Policy::work_tag     WorkTag ;
+  typedef typename Policy::WorkRange    WorkRange ;
+  typedef typename Policy::member_type  Member ;
+
+  typedef Kokkos::Impl::FunctorValueTraits< FunctorType, WorkTag > ValueTraits ;
+  typedef Kokkos::Impl::FunctorValueInit<   FunctorType, WorkTag > ValueInit ;
+  typedef Kokkos::Impl::FunctorValueJoin<   FunctorType, WorkTag > ValueJoin ;
 
   typedef typename ValueTraits::pointer_type    pointer_type ;
   typedef typename ValueTraits::reference_type  reference_type ;
 
-  template< class PType >
-  KOKKOS_FORCEINLINE_FUNCTION static
-  void driver( typename Impl::enable_if< Impl::is_same< typename PType::work_tag , void >::value ,
-                 const FunctorType & >::type functor
-             , reference_type update
-             , const PType & range )
+  const FunctorType   m_functor ;
+  const Policy        m_policy ;
+  const pointer_type  m_result_ptr ;
+
+  template< class TagType >
+  inline
+  typename std::enable_if< std::is_same< TagType , void >::value >::type
+  exec_range( const Member ibeg , const Member iend
+            , reference_type update ) const
     {
-      const typename PType::member_type work_end = range.end();
       #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_HAVE_PRAGMA_IVDEP
       #pragma ivdep
       #endif
       #endif
-      for ( typename PType::member_type iwork = range.begin() ; iwork < work_end ; ++iwork ) {
-        functor( iwork , update );
+      for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
+        m_functor( iwork , update );
       }
     }
 
-  template< class PType >
-  KOKKOS_FORCEINLINE_FUNCTION static
-  void driver( typename Impl::enable_if< ! Impl::is_same< typename PType::work_tag , void >::value ,
-                 const FunctorType & >::type functor
-             , reference_type update
-             , const PType & range )
+  template< class TagType >
+  inline
+  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
+  exec_range( const Member ibeg , const Member iend
+            , reference_type update ) const
     {
-      const typename PType::member_type work_end = range.end();
+      const TagType t ;
       #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_HAVE_PRAGMA_IVDEP
       #pragma ivdep
       #endif
       #endif
-      for ( typename PType::member_type iwork = range.begin() ; iwork < work_end ; ++iwork ) {
-        functor( typename PType::work_tag() , iwork , update );
+      for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
+        m_functor( t , iwork , update );
       }
     }
 
 public:
+
+  inline
+  void execute() const
+    {
+#pragma omp parallel
+      {
+        OpenMPexec & exec = * OpenMPexec::get_thread_omp();
+        const WorkRange range( m_policy, exec.pool_rank(), exec.pool_size() );
+        this-> template exec_range< WorkTag >( range.begin() , range.end() ,
+          ValueInit::init( m_functor , exec.scratch_reduce() ) );
+      }
+/* END #pragma omp parallel */
+
+      // Reduction:
+
+      const pointer_type ptr = pointer_type( OpenMPexec::pool_rev(0)->scratch_reduce() );
+
+      for ( int i = 1 ; i < OpenMPexec::pool_size() ; ++i ) {
+        ValueJoin::join( m_functor , ptr , OpenMPexec::pool_rev(i)->scratch_reduce() );
+      }
+
+      Kokkos::Impl::FunctorFinal<  FunctorType , WorkTag >::final( m_functor , ptr );
+
+      if ( m_result_ptr ) {
+        const int n = ValueTraits::value_count( m_functor );
+
+        for ( int j = 0 ; j < n ; ++j ) { m_result_ptr[j] = ptr[j] ; }
+      }
+    }
 
   //----------------------------------------
 
   template< class ViewType >
   inline
-  ParallelReduce( typename Impl::enable_if<
-                    ( Impl::is_view< ViewType >::value &&
-                      Impl::is_same< typename ViewType::memory_space , HostSpace >::value
-                    ), const FunctorType & >::type functor
-                , const Policy    & policy
-                , const ViewType  & result_view )
-  {
-    OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
-    OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_reduce");
-
-    OpenMPexec::resize_scratch( ValueTraits::value_size( functor ) , 0 );
-
-#pragma omp parallel
+  ParallelReduce( const FunctorType & arg_functor
+                , const Policy      & arg_policy
+                , const ViewType    & arg_result_view )
+    : m_functor( arg_functor )
+    , m_policy(  arg_policy )
+    , m_result_ptr(  arg_result_view.ptr_on_device() )
     {
-      OpenMPexec & exec = * OpenMPexec::get_thread_omp();
+      static_assert( Impl::is_view< ViewType >::value
+        , "Reduction result on Kokkos::OpenMP must be a Kokkos::View" );
 
-      driver( functor
-            , ValueInit::init( functor , exec.scratch_reduce() )
-            , typename Policy::WorkRange( policy , exec.pool_rank() , exec.pool_size() )
-            );
+      static_assert( std::is_same< typename ViewType::memory_space
+                                      , Kokkos::HostSpace >::value
+        , "Reduction result on Kokkos::OpenMP must be a Kokkos::View in HostSpace" );
+
+
+      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
+      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_reduce");
+
+      OpenMPexec::resize_scratch( ValueTraits::value_size( m_functor ) , 0 );
+
+      execute();
     }
-/* END #pragma omp parallel */
-
-    {
-      const pointer_type ptr = pointer_type( OpenMPexec::pool_rev(0)->scratch_reduce() );
-
-      for ( int i = 1 ; i < OpenMPexec::pool_size() ; ++i ) {
-        ValueJoin::join( functor , ptr , OpenMPexec::pool_rev(i)->scratch_reduce() );
-      }
-
-      Kokkos::Impl::FunctorFinal<  FunctorType , WorkTag >::final( functor , ptr );
-
-      if ( result_view.ptr_on_device() ) {
-        const int n = ValueTraits::value_count( functor );
-
-        for ( int j = 0 ; j < n ; ++j ) { result_view.ptr_on_device()[j] = ptr[j] ; }
-      }
-    }
-  }
 };
 
 } // namespace Impl
@@ -231,115 +264,126 @@ namespace Kokkos {
 namespace Impl {
 
 template< class FunctorType , class Arg0 , class Arg1 , class Arg2 >
-class ParallelScan< FunctorType , Kokkos::RangePolicy< Arg0 , Arg1 , Arg2 , Kokkos::OpenMP > >
+class ParallelScan< FunctorType
+                  , Kokkos::RangePolicy< Arg0 , Arg1 , Arg2 , Kokkos::OpenMP >
+                  >
 {
 private:
 
   typedef Kokkos::RangePolicy< Arg0 , Arg1 , Arg2 , Kokkos::OpenMP > Policy ;
-  typedef typename Policy::work_tag                                  WorkTag ;
-  typedef Kokkos::Impl::FunctorValueTraits< FunctorType , WorkTag >  ValueTraits ;
-  typedef Kokkos::Impl::FunctorValueInit<   FunctorType , WorkTag >  ValueInit ;
-  typedef Kokkos::Impl::FunctorValueJoin<   FunctorType , WorkTag >  ValueJoin ;
-  typedef Kokkos::Impl::FunctorValueOps<    FunctorType , WorkTag >  ValueOps ;
+
+  typedef typename Policy::work_tag     WorkTag ;
+  typedef typename Policy::WorkRange    WorkRange ;
+  typedef typename Policy::member_type  Member ;
+
+  typedef Kokkos::Impl::FunctorValueTraits< FunctorType, WorkTag > ValueTraits ;
+  typedef Kokkos::Impl::FunctorValueInit<   FunctorType, WorkTag > ValueInit ;
+  typedef Kokkos::Impl::FunctorValueJoin<   FunctorType, WorkTag > ValueJoin ;
+  typedef Kokkos::Impl::FunctorValueOps<    FunctorType, WorkTag > ValueOps ;
 
   typedef typename ValueTraits::pointer_type    pointer_type ;
   typedef typename ValueTraits::reference_type  reference_type ;
 
-  template< class PType >
-  KOKKOS_FORCEINLINE_FUNCTION static
-  void driver( typename Impl::enable_if< Impl::is_same< typename PType::work_tag , void >::value ,
-                 const FunctorType & >::type functor
-             , reference_type update
-             , const PType & range
-             , const bool    final )
+  const FunctorType   m_functor ;
+  const Policy        m_policy ;
+
+  template< class TagType >
+  inline
+  typename std::enable_if< std::is_same< TagType , void >::value >::type
+  exec_range( const Member ibeg , const Member iend
+            , reference_type update , const bool final ) const
     {
-      const typename PType::member_type work_end = range.end();
       #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_HAVE_PRAGMA_IVDEP
       #pragma ivdep
       #endif
       #endif
-      for ( typename PType::member_type iwork = range.begin() ; iwork < work_end ; ++iwork ) {
-        functor( iwork , update , final );
+      for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
+        m_functor( iwork , update , final );
       }
     }
 
-  template< class PType >
-  KOKKOS_FORCEINLINE_FUNCTION static
-  void driver( typename Impl::enable_if< ! Impl::is_same< typename PType::work_tag , void >::value ,
-                 const FunctorType & >::type functor
-             , reference_type update
-             , const PType & range
-             , const bool    final )
+  template< class TagType >
+  inline
+  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
+  exec_range( const Member ibeg , const Member iend
+            , reference_type update , const bool final ) const
     {
-      const typename PType::member_type work_end = range.end();
+      const TagType t ;
       #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_HAVE_PRAGMA_IVDEP
       #pragma ivdep
       #endif
       #endif
-      for ( typename PType::member_type iwork = range.begin() ; iwork < work_end ; ++iwork ) {
-        functor( typename PType::work_tag() , iwork , update , final );
+      for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
+        m_functor( t , iwork , update , final );
       }
     }
 
 public:
 
+  inline
+  void execute() const
+    {
+#pragma omp parallel
+      {
+        OpenMPexec & exec = * OpenMPexec::get_thread_omp();
+        const WorkRange range( m_policy, exec.pool_rank(), exec.pool_size() );
+        const pointer_type ptr =
+          pointer_type( exec.scratch_reduce() ) +
+          ValueTraits::value_count( m_functor );
+        this-> template exec_range< WorkTag >( range.begin() , range.end() ,
+          ValueInit::init( m_functor , ptr ) , false );
+      }
+/* END #pragma omp parallel */
+
+      {
+        const unsigned thread_count = OpenMPexec::pool_size();
+        const unsigned value_count  = ValueTraits::value_count( m_functor );
+
+        pointer_type ptr_prev = 0 ;
+
+        for ( unsigned rank_rev = thread_count ; rank_rev-- ; ) {
+
+          pointer_type ptr = pointer_type( OpenMPexec::pool_rev(rank_rev)->scratch_reduce() );
+
+          if ( ptr_prev ) {
+            for ( unsigned i = 0 ; i < value_count ; ++i ) { ptr[i] = ptr_prev[ i + value_count ] ; }
+            ValueJoin::join( m_functor , ptr + value_count , ptr );
+          }
+          else {
+            ValueInit::init( m_functor , ptr );
+          }
+
+          ptr_prev = ptr ;
+        }
+      }
+
+#pragma omp parallel
+      {
+        OpenMPexec & exec = * OpenMPexec::get_thread_omp();
+        const WorkRange range( m_policy, exec.pool_rank(), exec.pool_size() );
+        const pointer_type ptr = pointer_type( exec.scratch_reduce() );
+        this-> template exec_range< WorkTag >( range.begin() , range.end() ,
+          ValueOps::reference( ptr ), true );
+      }
+/* END #pragma omp parallel */
+    }
+
   //----------------------------------------
 
   inline
-  ParallelScan( const FunctorType & functor
-              , const Policy      & policy )
+  ParallelScan( const FunctorType & arg_functor
+              , const Policy      & arg_policy )
+    : m_functor( arg_functor )
+    , m_policy(  arg_policy )
   {
     OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_scan");
     OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_scan");
 
-    OpenMPexec::resize_scratch( 2 * ValueTraits::value_size( functor ) , 0 );
+    OpenMPexec::resize_scratch( 2 * ValueTraits::value_size( m_functor ) , 0 );
 
-#pragma omp parallel
-    {
-      OpenMPexec & exec = * OpenMPexec::get_thread_omp();
-
-      driver( functor
-            , ValueInit::init( functor , pointer_type( exec.scratch_reduce() ) + ValueTraits::value_count( functor ) )
-            , typename Policy::WorkRange( policy , exec.pool_rank() , exec.pool_size() )
-            , false );
-    }
-/* END #pragma omp parallel */
-
-    {
-      const unsigned thread_count = OpenMPexec::pool_size();
-      const unsigned value_count  = ValueTraits::value_count( functor );
-
-      pointer_type ptr_prev = 0 ;
-
-      for ( unsigned rank_rev = thread_count ; rank_rev-- ; ) {
-
-        pointer_type ptr = pointer_type( OpenMPexec::pool_rev(rank_rev)->scratch_reduce() );
-
-        if ( ptr_prev ) {
-          for ( unsigned i = 0 ; i < value_count ; ++i ) { ptr[i] = ptr_prev[ i + value_count ] ; }
-          ValueJoin::join( functor , ptr + value_count , ptr );
-        }
-        else {
-          ValueInit::init( functor , ptr );
-        }
-
-        ptr_prev = ptr ;
-      }
-    }
-
-#pragma omp parallel
-    {
-      OpenMPexec & exec = * OpenMPexec::get_thread_omp();
-
-      driver( functor
-            , ValueOps::reference( pointer_type( exec.scratch_reduce() ) )
-            , typename Policy::WorkRange( policy , exec.pool_rank() , exec.pool_size() )
-            , true );
-    }
-/* END #pragma omp parallel */
-
+    execute();
   }
 
   //----------------------------------------

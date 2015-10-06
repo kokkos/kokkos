@@ -78,8 +78,12 @@ private:
   template< class TagType >
   inline
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_range( const Member & ibeg , const Member & iend ) const
+  exec_range( const Member ibeg , const Member iend ) const
     {
+      #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
+          defined( KOKKOS_HAVE_PRAGMA_IVDEP )
+      #pragma ivdep
+      #endif
       for ( Member i = ibeg ; i < iend ; ++i ) {
         m_functor( i );
       }
@@ -88,9 +92,13 @@ private:
   template< class TagType >
   inline
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_range( const Member & ibeg , const Member & iend ) const
+  exec_range( const Member ibeg , const Member iend ) const
     {
       const TagType t ;
+      #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
+          defined( KOKKOS_HAVE_PRAGMA_IVDEP )
+      #pragma ivdep
+      #endif
       for ( Member i = ibeg ; i < iend ; ++i ) {
         m_functor( t , i );
       }
@@ -226,6 +234,10 @@ private:
   exec_range( const Member & ibeg , const Member & iend
             , reference_type update ) const
     {
+      #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
+          defined( KOKKOS_HAVE_PRAGMA_IVDEP )
+      #pragma ivdep
+      #endif
       for ( Member i = ibeg ; i < iend ; ++i ) {
         m_functor( i , update );
       }
@@ -238,6 +250,10 @@ private:
             , reference_type update ) const
     {
       const TagType t ;
+      #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
+          defined( KOKKOS_HAVE_PRAGMA_IVDEP )
+      #pragma ivdep
+      #endif
       for ( Member i = ibeg ; i < iend ; ++i ) {
         m_functor( t , i , update );
       }
@@ -412,6 +428,10 @@ private:
   exec_range( const Member & ibeg , const Member & iend
             , reference_type update , const bool final ) const
     {
+      #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
+          defined( KOKKOS_HAVE_PRAGMA_IVDEP )
+      #pragma ivdep
+      #endif
       for ( Member i = ibeg ; i < iend ; ++i ) {
         m_functor( i , update , final );
       }
@@ -424,6 +444,10 @@ private:
             , reference_type update , const bool final ) const
     {
       const TagType t ;
+      #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
+          defined( KOKKOS_HAVE_PRAGMA_IVDEP )
+      #pragma ivdep
+      #endif
       for ( Member i = ibeg ; i < iend ; ++i ) {
         m_functor( t , i , update , final );
       }
