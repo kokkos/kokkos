@@ -340,7 +340,8 @@ public:
     {
       typedef Kokkos::RangePolicy< ExecSpace , size_t > Policy ;
 
-      (void) Kokkos::Impl::ParallelFor< ViewMapping , Policy >( *this , Policy( 0 , m_stride ) );
+      const Kokkos::Impl::ParallelFor< ViewMapping , Policy > closure( *this , Policy( 0 , m_stride ) );
+      closure.execute();
       ExecSpace::fence();
     }
 

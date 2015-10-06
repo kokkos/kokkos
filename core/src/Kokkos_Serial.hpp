@@ -415,7 +415,7 @@ public:
              , const Policy      & arg_policy )
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
-    { execute(); }
+    {}
 };
 
 /*--------------------------------------------------------------------------*/
@@ -503,8 +503,6 @@ public:
       static_assert( std::is_same< typename ViewType::memory_space
                                       , Kokkos::HostSpace >::value
         , "Reduction result on Kokkos::Serial must be a Kokkos::View in HostSpace" );
-
-      execute();
     }
 };
 
@@ -570,7 +568,7 @@ public:
     , m_policy(  arg_policy )
     , m_result_ptr( (pointer_type)
         Kokkos::Serial::scratch_memory_resize( ValueTraits::value_size( arg_functor ) , 0 ) )
-    { execute(); }
+    {}
 };
 
 } // namespace Impl
@@ -631,8 +629,6 @@ public:
     , m_shared( FunctorTeamShmemSize< FunctorType >::value( arg_functor , 1 ) )
     {
       Kokkos::Serial::scratch_memory_resize( 0 , m_shared );
-
-      execute();
     }
 };
 
@@ -724,8 +720,6 @@ public:
       static_assert( std::is_same< typename ViewType::memory_space
                                       , Kokkos::HostSpace >::value
         , "Reduction result on Kokkos::Serial must be a Kokkos::View in HostSpace" );
-
-      execute();
     }
 
 };

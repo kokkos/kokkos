@@ -463,9 +463,7 @@ public:
                const Policy       & arg_policy )
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
-    {
-      execute();
-    }
+    { }
 };
 
 template< class FunctorType , class Arg0 , class Arg1 >
@@ -558,8 +556,6 @@ public:
       if ( CudaTraits::SharedMemoryCapacity < shmem_size_total ) {
         Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelFor< Cuda > insufficient shared memory"));
       }
-
-      execute();
     }
 };
 
@@ -753,8 +749,6 @@ public:
     m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( arg_functor ) * block_size /* block_size == max block_count */ );
     m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
     m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( arg_functor ) );
-
-    execute();
   }
 };
 
@@ -929,8 +923,6 @@ public:
     m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( m_functor ) * block_count );
     m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
     m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( m_functor ) );
-
-    execute();
   }
 };
 
@@ -1166,8 +1158,6 @@ public:
 
     m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( m_functor ) * grid_x );
     m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) * 1 );
-
-    execute();
   }
 };
 

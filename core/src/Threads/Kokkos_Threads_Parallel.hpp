@@ -128,7 +128,7 @@ public:
              , const Policy      & policy )
     : m_functor( functor )
     , m_policy( policy )
-    { execute(); }
+    {}
 };
 
 //----------------------------------------------------------------------------
@@ -196,8 +196,6 @@ public:
     , m_shared( FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
     {
       ThreadsExec::resize_scratch( 0 , Policy::member_type::team_reduce_size() + m_shared );
-
-      execute();
     }
 };
 
@@ -304,8 +302,6 @@ public:
         , "Kokkos::Threads reduce result must be a View in HostSpace" );
 
       ThreadsExec::resize_scratch( ValueTraits::value_size( m_functor ) , 0 );
-
-      execute();
     }
 };
 
@@ -393,8 +389,6 @@ public:
     , m_shared( FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
     {
       ThreadsExec::resize_scratch( ValueTraits::value_size( m_functor ) , Policy::member_type::team_reduce_size() + m_shared );
-
-      execute();
     }
 };
 
@@ -487,7 +481,6 @@ public:
     , m_policy( arg_policy )
     {
       ThreadsExec::resize_scratch( 2 * ValueTraits::value_size( m_functor ) , 0 );
-      execute();
     }
 };
 

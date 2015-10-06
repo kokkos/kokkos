@@ -124,8 +124,6 @@ public:
     {
       OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
       OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
-
-      execute();
     }
 };
 
@@ -249,8 +247,6 @@ public:
       OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_reduce");
 
       OpenMPexec::resize_scratch( ValueTraits::value_size( m_functor ) , 0 );
-
-      execute();
     }
 };
 
@@ -382,8 +378,6 @@ public:
     OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_scan");
 
     OpenMPexec::resize_scratch( 2 * ValueTraits::value_size( m_functor ) , 0 );
-
-    execute();
   }
 
   //----------------------------------------
@@ -460,8 +454,6 @@ public:
     const size_t team_reduce_size = Policy::member_type::team_reduce_size();
 
     OpenMPexec::resize_scratch( 0 , team_reduce_size + m_shmem_size );
-
-    execute();
   }
 };
 
@@ -560,8 +552,6 @@ public:
     const size_t team_reduce_size = Policy::member_type::team_reduce_size();
 
     OpenMPexec::resize_scratch( ValueTraits::value_size( m_functor ) , team_reduce_size + m_shmem_size );
-
-    execute();
   }
 };
 

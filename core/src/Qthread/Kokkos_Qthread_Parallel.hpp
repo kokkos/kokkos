@@ -122,9 +122,7 @@ public:
              )
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
-    {
-      execute();
-    }
+    { }
 };
 
 //----------------------------------------------------------------------------
@@ -212,7 +210,6 @@ public:
     , m_result_ptr( arg_result_view.ptr_on_device() )
     {
       QthreadExec::resize_worker_scratch( ValueTraits::value_size( m_functor ) , 0 );
-      execute();
     }
 };
 
@@ -278,8 +275,6 @@ public:
       QthreadExec::resize_worker_scratch
         ( /* reduction   memory */ 0
         , /* team shared memory */ FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) );
-
-      execute();
     }
 };
 
@@ -368,8 +363,6 @@ public:
       QthreadExec::resize_worker_scratch
         ( /* reduction   memory */ ValueTraits::value_size( functor )
         , /* team shared memory */ FunctorTeamShmemSize< FunctorType >::value( functor , policy.team_size() ) );
-
-      execute();
     }
 };
 
@@ -452,7 +445,6 @@ public:
     , m_policy( arg_policy )
     {
       QthreadExec::resize_worker_scratch( ValueTraits::value_size( m_functor ) , 0 );
-      execute();
     }
 };
 

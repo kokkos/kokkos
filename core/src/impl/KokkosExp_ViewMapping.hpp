@@ -2341,8 +2341,9 @@ struct ViewValueFunctor< ValueType , ExecSpace , false >
    {
      if ( ! arg_space.in_parallel() ) {
        typedef Kokkos::RangePolicy< ExecSpace > PolicyType ;
-       (void) Kokkos::Impl::ParallelFor< ViewValueFunctor , PolicyType >
-         ( *this , PolicyType( 0 , arg_n ) );
+       const Kokkos::Impl::ParallelFor< ViewValueFunctor , PolicyType >
+         closure( *this , PolicyType( 0 , arg_n ) );
+       closure.execute();
        arg_space.fence();
      }
      else {
@@ -2372,8 +2373,9 @@ struct ViewValueFunctor< ValueType , ExecSpace , true >
      if ( mode == CONSTRUCT || mode == ASSIGN ) {
        if ( ! arg_space.in_parallel() ) {
          typedef Kokkos::RangePolicy< ExecSpace > PolicyType ;
-         (void) Kokkos::Impl::ParallelFor< ViewValueFunctor , PolicyType >
-           ( *this , PolicyType( 0 , arg_n ) );
+         const Kokkos::Impl::ParallelFor< ViewValueFunctor , PolicyType >
+           closure( *this , PolicyType( 0 , arg_n ) );
+         closure.execute();
          arg_space.fence();
        }
        else {
