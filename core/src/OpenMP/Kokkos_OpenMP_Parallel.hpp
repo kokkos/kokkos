@@ -399,62 +399,85 @@ namespace Kokkos {
 namespace Impl {
 
 template< class FunctorType , class Arg0 , class Arg1 >
-class ParallelFor< FunctorType , Kokkos::TeamPolicy< Arg0 , Arg1 , Kokkos::OpenMP > >
+class ParallelFor< FunctorType
+                 , Kokkos::TeamPolicy< Arg0 , Arg1 , Kokkos::OpenMP >
+                 >
 {
 private:
 
   typedef Kokkos::TeamPolicy< Arg0 , Arg1 , Kokkos::OpenMP > Policy ;
+  typedef typename Policy::work_tag     WorkTag ;
+  typedef typename Policy::member_type  Member ;
+
+  const FunctorType  m_functor ;
+  const Policy       m_policy ;
+  const int          m_shmem_size ;
 
   template< class TagType >
-  KOKKOS_FORCEINLINE_FUNCTION static
-  void driver( typename Impl::enable_if< Impl::is_same< TagType , void >::value ,
-                 const FunctorType & >::type functor
-             , const typename Policy::member_type  & member )
-    { functor( member ); }
+  inline
+  typename std::enable_if< std::is_same< TagType , void >::value >::type
+  exec_team( Member member ) const
+    {
+      for ( ; member.valid() ; member.next() ) {
+        m_functor( member );
+      }
+    }
 
   template< class TagType >
-  KOKKOS_FORCEINLINE_FUNCTION static
-  void driver( typename Impl::enable_if< ! Impl::is_same< TagType , void >::value ,
-                 const FunctorType & >::type functor
-             , const typename Policy::member_type  & member )
-    { functor( TagType() , member ); }
+  inline
+  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
+  exec_team( Member member ) const
+    {
+      const TagType t ;
+      for ( ; member.valid() ; member.next() ) {
+        m_functor( t , member );
+      }
+    }
 
 public:
 
   inline
-  ParallelFor( const FunctorType & functor ,
-               const Policy      & policy )
+  void execute() const
+    {
+#pragma omp parallel
+      {
+        this-> template exec_team< WorkTag >( 
+          Member( * OpenMPexec::get_thread_omp() , m_policy , m_shmem_size ) );
+      }
+/* END #pragma omp parallel */
+    }
+
+  inline
+  ParallelFor( const FunctorType & arg_functor ,
+               const Policy      & arg_policy )
+    : m_functor( arg_functor )
+    , m_policy(  arg_policy )
+    , m_shmem_size( FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
   {
     OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
     OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
 
     const size_t team_reduce_size = Policy::member_type::team_reduce_size();
-    const size_t team_shmem_size  = FunctorTeamShmemSize< FunctorType >::value( functor , policy.team_size() );
 
-    OpenMPexec::resize_scratch( 0 , team_reduce_size + team_shmem_size );
+    OpenMPexec::resize_scratch( 0 , team_reduce_size + m_shmem_size );
 
-#pragma omp parallel
-    {
-      typename Policy::member_type member( * OpenMPexec::get_thread_omp() , policy , team_shmem_size );
-
-      for ( ; member.valid() ; member.next() ) {
-        ParallelFor::template driver< typename Policy::work_tag >( functor , member );
-      }
-    }
-/* END #pragma omp parallel */
+    execute();
   }
-
-  void wait() {}
 };
 
 
 template< class FunctorType , class Arg0 , class Arg1 >
-class ParallelReduce< FunctorType , Kokkos::TeamPolicy< Arg0 , Arg1 , Kokkos::OpenMP > >
+class ParallelReduce< FunctorType
+                    , Kokkos::TeamPolicy< Arg0 , Arg1 , Kokkos::OpenMP >
+                    >
 {
 private:
 
   typedef Kokkos::TeamPolicy< Arg0 , Arg1 , Kokkos::OpenMP >         Policy ;
-  typedef typename Policy::work_tag                                  WorkTag ;
+
+  typedef typename Policy::work_tag     WorkTag ;
+  typedef typename Policy::member_type  Member ;
+
   typedef Kokkos::Impl::FunctorValueTraits< FunctorType , WorkTag >  ValueTraits ;
   typedef Kokkos::Impl::FunctorValueInit<   FunctorType , WorkTag >  ValueInit ;
   typedef Kokkos::Impl::FunctorValueJoin<   FunctorType , WorkTag >  ValueJoin ;
@@ -462,110 +485,84 @@ private:
   typedef typename ValueTraits::pointer_type    pointer_type ;
   typedef typename ValueTraits::reference_type  reference_type ;
 
+  const FunctorType  m_functor ;
+  const Policy       m_policy ;
+  const pointer_type m_result_ptr ;
+  const int          m_shmem_size ;
 
-  template< class PType >
-  KOKKOS_FORCEINLINE_FUNCTION static
-  void driver( typename Impl::enable_if< Impl::is_same< typename PType::work_tag , void >::value ,
-                 const FunctorType & >::type functor
-             , const typename PType::member_type  & member
-             ,       reference_type update )
-    { functor( member , update ); }
+  template< class TagType >
+  typename std::enable_if< std::is_same< TagType , void >::value >::type
+  exec_team( Member member , reference_type update ) const
+    {
+      for ( ; member.valid() ; member.next() ) {
+        m_functor( member , update );
+      }
+    }
 
-  template< class PType >
-  KOKKOS_FORCEINLINE_FUNCTION static
-  void driver( typename Impl::enable_if< ! Impl::is_same< typename PType::work_tag , void >::value ,
-                 const FunctorType & >::type functor
-             , const typename PType::member_type  & member
-             ,       reference_type update )
-    { functor( typename PType::work_tag() , member , update ); }
+  template< class TagType >
+  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
+  exec_team( Member member , reference_type update ) const
+    {
+      const TagType t ;
+      for ( ; member.valid() ; member.next() ) {
+        m_functor( t , member , update );
+      }
+    }
 
 public:
 
   inline
-  ParallelReduce( const FunctorType  & functor ,
-                  const Policy       & policy )
-  {
-    OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
-
-    const size_t team_reduce_size = Policy::member_type::team_reduce_size();
-    const size_t team_shmem_size  = FunctorTeamShmemSize< FunctorType >::value( functor , policy.team_size() );
-
-    OpenMPexec::resize_scratch( ValueTraits::value_size( functor ) , team_reduce_size + team_shmem_size );
-
-#pragma omp parallel
+  void execute() const
     {
-      OpenMPexec & exec = * OpenMPexec::get_thread_omp();
+#pragma omp parallel
+      {
+        OpenMPexec & exec = * OpenMPexec::get_thread_omp();
 
-      reference_type update = ValueInit::init( functor , exec.scratch_reduce() );
-
-      for ( typename Policy::member_type member( exec , policy , team_shmem_size ); member.valid() ; member.next() ) {
-        ParallelReduce::template driver< Policy >( functor , member , update );
+        this-> template exec_team< WorkTag >(
+          Member( exec , m_policy , m_shmem_size ),
+          ValueInit::init( m_functor , exec.scratch_reduce() ) );
       }
-    }
 /* END #pragma omp parallel */
 
-    {
-      typedef Kokkos::Impl::FunctorValueJoin< FunctorType , WorkTag , reference_type >  Join ;
+      {
+        const pointer_type ptr = pointer_type( OpenMPexec::pool_rev(0)->scratch_reduce() );
 
-      const pointer_type ptr = pointer_type( OpenMPexec::pool_rev(0)->scratch_reduce() );
+        int max_active_threads = OpenMPexec::pool_size();
+        if( max_active_threads > m_policy.league_size()* m_policy.team_size() )
+          max_active_threads = m_policy.league_size()* m_policy.team_size();
 
-      int max_active_threads = OpenMPexec::pool_size();
-      if( max_active_threads > policy.league_size()*policy.team_size() )
-        max_active_threads = policy.league_size()*policy.team_size();
+        for ( int i = 1 ; i < max_active_threads ; ++i ) {
+          ValueJoin::join( m_functor , ptr , OpenMPexec::pool_rev(i)->scratch_reduce() );
+        }
 
-      for ( int i = 1 ; i < max_active_threads ; ++i ) {
-        Join::join( functor , ptr , OpenMPexec::pool_rev(i)->scratch_reduce() );
+        Kokkos::Impl::FunctorFinal< FunctorType , WorkTag >::final( m_functor , ptr );
+
+        if ( m_result_ptr ) {
+          const int n = ValueTraits::value_count( m_functor );
+
+          for ( int j = 0 ; j < n ; ++j ) { m_result_ptr[j] = ptr[j] ; }
+        }
       }
-
-      Kokkos::Impl::FunctorFinal< FunctorType , WorkTag >::final( functor , ptr );
     }
-  }
 
   template< class ViewType >
   inline
-  ParallelReduce( const FunctorType  & functor ,
-                  const Policy       & policy ,
-                  const ViewType     & result )
+  ParallelReduce( const FunctorType  & arg_functor ,
+                  const Policy       & arg_policy ,
+                  const ViewType     & arg_result )
+    : m_functor( arg_functor )
+    , m_policy(  arg_policy )
+    , m_result_ptr( arg_result.ptr_on_device() )
+    , m_shmem_size( FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
   {
     OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
 
     const size_t team_reduce_size = Policy::member_type::team_reduce_size();
-    const size_t team_shmem_size  = FunctorTeamShmemSize< FunctorType >::value( functor , policy.team_size() );
 
-    OpenMPexec::resize_scratch( ValueTraits::value_size( functor ) , team_reduce_size + team_shmem_size );
+    OpenMPexec::resize_scratch( ValueTraits::value_size( m_functor ) , team_reduce_size + m_shmem_size );
 
-#pragma omp parallel
-    {
-      OpenMPexec & exec = * OpenMPexec::get_thread_omp();
-
-      reference_type update = ValueInit::init( functor , exec.scratch_reduce() );
-
-      for ( typename Policy::member_type member( exec , policy , team_shmem_size ); member.valid() ; member.next() ) {
-        ParallelReduce::template driver< Policy >( functor , member , update );
-      }
-    }
-/* END #pragma omp parallel */
-
-    {
-      const pointer_type ptr = pointer_type( OpenMPexec::pool_rev(0)->scratch_reduce() );
-
-      int max_active_threads = OpenMPexec::pool_size();
-      if( max_active_threads > policy.league_size()*policy.team_size() )
-        max_active_threads = policy.league_size()*policy.team_size();
-
-      for ( int i = 1 ; i < max_active_threads ; ++i ) {
-        ValueJoin::join( functor , ptr , OpenMPexec::pool_rev(i)->scratch_reduce() );
-      }
-
-      Kokkos::Impl::FunctorFinal< FunctorType , WorkTag >::final( functor , ptr );
-
-      const int n = ValueTraits::value_count( functor );
-
-      for ( int j = 0 ; j < n ; ++j ) { result.ptr_on_device()[j] = ptr[j] ; }
-    }
+    execute();
   }
-
-  void wait() {}
 };
 
 } // namespace Impl
