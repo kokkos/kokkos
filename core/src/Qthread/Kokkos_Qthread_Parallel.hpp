@@ -189,6 +189,7 @@ public:
   inline
   void execute() const
     {
+      QthreadExec::resize_worker_scratch( ValueTraits::value_size( m_functor ) , 0 );
       Impl::QthreadExec::exec_all( Qthread::instance() , & ParallelReduce::execute , this );
 
       const pointer_type data = (pointer_type) QthreadExec::exec_all_reduce_result();
@@ -208,9 +209,7 @@ public:
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
     , m_result_ptr( arg_result_view.ptr_on_device() )
-    {
-      QthreadExec::resize_worker_scratch( ValueTraits::value_size( m_functor ) , 0 );
-    }
+    { }
 };
 
 //----------------------------------------------------------------------------
@@ -264,6 +263,9 @@ public:
   inline
   void execute() const
     {
+      QthreadExec::resize_worker_scratch
+        ( /* reduction   memory */ 0
+        , /* team shared memory */ FunctorTeamShmemSize< FunctorType >::value( m_functor , m_policy.team_size() ) );
       Impl::QthreadExec::exec_all( Qthread::instance() , & ParallelFor::exec , this );
     }
 
@@ -271,11 +273,7 @@ public:
                const Policy      & arg_policy )
     : m_functor( arg_functor )
     , m_policy( arg_policy )
-    {
-      QthreadExec::resize_worker_scratch
-        ( /* reduction   memory */ 0
-        , /* team shared memory */ FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) );
-    }
+    { }
 };
 
 //----------------------------------------------------------------------------
@@ -340,6 +338,10 @@ public:
   inline
   void execute() const
     {
+      QthreadExec::resize_worker_scratch
+        ( /* reduction   memory */ ValueTraits::value_size( m_functor )
+        , /* team shared memory */ FunctorTeamShmemSize< FunctorType >::value( m_functor , m_policy.team_size() ) );
+
       Impl::QthreadExec::exec_all( Qthread::instance() , & ParallelReduce::exec , this );
 
       const pointer_type data = (pointer_type) QthreadExec::exec_all_reduce_result();
@@ -359,11 +361,7 @@ public:
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
     , m_result_ptr( arg_result.ptr_on_device() )
-    {
-      QthreadExec::resize_worker_scratch
-        ( /* reduction   memory */ ValueTraits::value_size( functor )
-        , /* team shared memory */ FunctorTeamShmemSize< FunctorType >::value( functor , policy.team_size() ) );
-    }
+    { }
 };
 
 //----------------------------------------------------------------------------
@@ -435,6 +433,7 @@ public:
   inline
   void execute() const
     {
+      QthreadExec::resize_worker_scratch( ValueTraits::value_size( m_functor ) , 0 );
       Impl::QthreadExec::exec_all( Qthread::instance() , & ParallelScan::execute , this );
     }
 
@@ -444,7 +443,6 @@ public:
     : m_functor( arg_functor )
     , m_policy( arg_policy )
     {
-      QthreadExec::resize_worker_scratch( ValueTraits::value_size( m_functor ) , 0 );
     }
 };
 

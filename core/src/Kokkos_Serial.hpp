@@ -443,9 +443,9 @@ private:
   template< class TagType >
   inline
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec() const
+  exec( pointer_type ptr ) const
     {
-      reference_type update = ValueInit::init( m_functor , m_result_ptr );
+      reference_type update = ValueInit::init( m_functor , ptr );
 
       const typename Policy::member_type e = m_policy.end();
       for ( typename Policy::member_type i = m_policy.begin() ; i < e ; ++i ) {
@@ -453,16 +453,16 @@ private:
       }
 
       Kokkos::Impl::FunctorFinal< FunctorType , TagType >::
-        final( m_functor , m_result_ptr );
+        final( m_functor , ptr );
     }
 
   template< class TagType >
   inline
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec() const
+  exec( pointer_type ptr ) const
     {
       const TagType t ;
-      reference_type update = ValueInit::init( m_functor , m_result_ptr );
+      reference_type update = ValueInit::init( m_functor , ptr );
 
       const typename Policy::member_type e = m_policy.end();
       for ( typename Policy::member_type i = m_policy.begin() ; i < e ; ++i ) {
@@ -470,24 +470,19 @@ private:
       }
 
       Kokkos::Impl::FunctorFinal< FunctorType , TagType >::
-        final( m_functor , m_result_ptr );
-    }
-
-  inline static
-  pointer_type
-  result_ptr( const FunctorType & arg_functor
-            , const pointer_type  arg_ptr )
-    {
-      pointer_type ptr = (pointer_type) Kokkos::Serial::scratch_memory_resize
-           ( ValueTraits::value_size( arg_functor ) , 0 );
-      return arg_ptr ? arg_ptr : ptr ;
+        final( m_functor , ptr );
     }
 
 public:
 
   inline
   void execute() const
-    { this-> template exec< WorkTag >(); }
+    {
+      pointer_type ptr = (pointer_type) Kokkos::Serial::scratch_memory_resize
+           ( ValueTraits::value_size( m_functor ) , 0 );
+
+      this-> template exec< WorkTag >( m_result_ptr ? m_result_ptr : ptr );
+    }
 
   template< class ViewType >
   ParallelReduce( const FunctorType & arg_functor
@@ -495,7 +490,7 @@ public:
                 , const ViewType    & arg_result )
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
-    , m_result_ptr( result_ptr( m_functor , arg_result.ptr_on_device() ) )
+    , m_result_ptr( arg_result.ptr_on_device() )
     {
       static_assert( Impl::is_view< ViewType >::value
         , "Reduction result on Kokkos::Serial must be a Kokkos::View" );
@@ -525,14 +520,13 @@ private:
 
   const FunctorType   m_functor ;
   const Policy        m_policy ;
-  const pointer_type  m_result_ptr ;
 
   template< class TagType >
   inline
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec() const
+  exec( pointer_type ptr ) const
     {
-      reference_type update = ValueInit::init( m_functor , m_result_ptr );
+      reference_type update = ValueInit::init( m_functor , ptr );
 
       const typename Policy::member_type e = m_policy.end();
       for ( typename Policy::member_type i = m_policy.begin() ; i < e ; ++i ) {
@@ -543,10 +537,10 @@ private:
   template< class TagType >
   inline
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec() const
+  exec( pointer_type ptr ) const
     {
       const TagType t ;
-      reference_type update = ValueInit::init( m_functor , m_result_ptr );
+      reference_type update = ValueInit::init( m_functor , ptr );
 
       const typename Policy::member_type e = m_policy.end();
       for ( typename Policy::member_type i = m_policy.begin() ; i < e ; ++i ) {
@@ -558,7 +552,11 @@ public:
 
   inline
   void execute() const
-    { this-> template exec< WorkTag >(); }
+    {
+      pointer_type ptr = (pointer_type)
+        Kokkos::Serial::scratch_memory_resize( ValueTraits::value_size( m_functor ) , 0 );
+      this-> template exec< WorkTag >( ptr );
+    }
 
   inline
   ParallelScan( const FunctorType & arg_functor
@@ -566,8 +564,6 @@ public:
               )
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
-    , m_result_ptr( (pointer_type)
-        Kokkos::Serial::scratch_memory_resize( ValueTraits::value_size( arg_functor ) , 0 ) )
     {}
 };
 
@@ -620,16 +616,17 @@ public:
 
   inline
   void execute() const
-    { this-> template exec< typename Policy::work_tag >(); }
+    {
+      Kokkos::Serial::scratch_memory_resize( 0 , m_shared );
+      this-> template exec< typename Policy::work_tag >();
+    }
 
   ParallelFor( const FunctorType & arg_functor
              , const Policy      & arg_policy )
     : m_functor( arg_functor )
     , m_league(  arg_policy.league_size() )
     , m_shared( FunctorTeamShmemSize< FunctorType >::value( arg_functor , 1 ) )
-    {
-      Kokkos::Serial::scratch_memory_resize( 0 , m_shared );
-    }
+    { }
 };
 
 /*--------------------------------------------------------------------------*/
@@ -658,51 +655,45 @@ private:
   template< class TagType >
   inline
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec() const
+  exec( pointer_type ptr ) const
     {
-      reference_type update = ValueInit::init( m_functor , m_result_ptr );
+      reference_type update = ValueInit::init( m_functor , ptr );
 
       for ( int ileague = 0 ; ileague < m_league ; ++ileague ) {
         m_functor( Member(ileague,m_league,m_shared) , update );
       }
 
       Kokkos::Impl::FunctorFinal< FunctorType , TagType >::
-        final( m_functor , m_result_ptr );
+        final( m_functor , ptr );
     }
 
   template< class TagType >
   inline
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec() const
+  exec( pointer_type ptr ) const
     {
       const TagType t ;
 
-      reference_type update = ValueInit::init( m_functor , m_result_ptr );
+      reference_type update = ValueInit::init( m_functor , ptr );
 
       for ( int ileague = 0 ; ileague < m_league ; ++ileague ) {
         m_functor( t , Member(ileague,m_league,m_shared) , update );
       }
 
       Kokkos::Impl::FunctorFinal< FunctorType , TagType >::
-        final( m_functor , m_result_ptr );
-    }
-
-  inline static
-  pointer_type
-  result_ptr( const FunctorType & arg_functor
-            , const int         & arg_shared
-            , const pointer_type  arg_ptr )
-    {
-      pointer_type ptr = (pointer_type) Kokkos::Serial::scratch_memory_resize
-           ( ValueTraits::value_size( arg_functor ) , arg_shared );
-      return arg_ptr ? arg_ptr : ptr ;
+        final( m_functor , ptr );
     }
 
 public:
 
   inline
   void execute() const
-    { this-> template exec< WorkTag >(); }
+    {
+      pointer_type ptr = (pointer_type) Kokkos::Serial::scratch_memory_resize
+           ( ValueTraits::value_size( m_functor ) , m_shared );
+
+      this-> template exec< WorkTag >( m_result_ptr ? m_result_ptr : ptr );
+    }
 
   template< class ViewType >
   ParallelReduce( const FunctorType  & arg_functor
@@ -712,7 +703,7 @@ public:
     : m_functor( arg_functor )
     , m_league( arg_policy.league_size() )
     , m_shared( FunctorTeamShmemSize< FunctorType >::value( m_functor , 1 ) ) 
-    , m_result_ptr( result_ptr( m_functor , m_shared , arg_result.ptr_on_device() ) )
+    , m_result_ptr( arg_result.ptr_on_device() )
     {
       static_assert( Impl::is_view< ViewType >::value
         , "Reduction result on Kokkos::Serial must be a Kokkos::View" );

@@ -184,6 +184,8 @@ public:
   inline
   void execute() const
     {
+      ThreadsExec::resize_scratch( 0 , Policy::member_type::team_reduce_size() + m_shared );
+
       ThreadsExec::start( & ParallelFor::exec , this );
 
       ThreadsExec::fence();
@@ -194,9 +196,7 @@ public:
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
     , m_shared( FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
-    {
-      ThreadsExec::resize_scratch( 0 , Policy::member_type::team_reduce_size() + m_shared );
-    }
+    { }
 };
 
 //----------------------------------------------------------------------------
@@ -273,6 +273,8 @@ public:
   inline
   void execute() const
     {
+      ThreadsExec::resize_scratch( ValueTraits::value_size( m_functor ) , 0 );
+
       ThreadsExec::start( & ParallelReduce::exec , this );
 
       ThreadsExec::fence();
@@ -300,8 +302,6 @@ public:
 
       static_assert( std::is_same< typename HostViewType::memory_space , HostSpace >::value
         , "Kokkos::Threads reduce result must be a View in HostSpace" );
-
-      ThreadsExec::resize_scratch( ValueTraits::value_size( m_functor ) , 0 );
     }
 };
 
@@ -366,6 +366,8 @@ public:
   inline
   void execute() const
     {
+      ThreadsExec::resize_scratch( ValueTraits::value_size( m_functor ) , Policy::member_type::team_reduce_size() + m_shared );
+
       ThreadsExec::start( & ParallelReduce::exec , this );
 
       ThreadsExec::fence();
@@ -387,9 +389,7 @@ public:
     , m_policy( arg_policy )
     , m_result_ptr( arg_result.ptr_on_device() )
     , m_shared( FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
-    {
-      ThreadsExec::resize_scratch( ValueTraits::value_size( m_functor ) , Policy::member_type::team_reduce_size() + m_shared );
-    }
+    { }
 };
 
 //----------------------------------------------------------------------------
@@ -471,6 +471,7 @@ public:
   inline
   void execute() const
     {
+      ThreadsExec::resize_scratch( 2 * ValueTraits::value_size( m_functor ) , 0 );
       ThreadsExec::start( & ParallelScan::exec , this );
       ThreadsExec::fence();
     }
@@ -479,9 +480,7 @@ public:
               , const Policy      & arg_policy )
     : m_functor( arg_functor )
     , m_policy( arg_policy )
-    {
-      ThreadsExec::resize_scratch( 2 * ValueTraits::value_size( m_functor ) , 0 );
-    }
+    { }
 };
 
 } // namespace Impl

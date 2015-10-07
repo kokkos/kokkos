@@ -107,6 +107,8 @@ public:
   inline
   void execute() const
     {
+      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
+      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
 #pragma omp parallel
       {
         OpenMPexec & exec = * OpenMPexec::get_thread_omp();
@@ -121,10 +123,7 @@ public:
              , const Policy      & arg_policy )
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
-    {
-      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
-      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
-    }
+    {}
 };
 
 } // namespace Impl
@@ -198,6 +197,11 @@ public:
   inline
   void execute() const
     {
+      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
+      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_reduce");
+
+      OpenMPexec::resize_scratch( ValueTraits::value_size( m_functor ) , 0 );
+
 #pragma omp parallel
       {
         OpenMPexec & exec = * OpenMPexec::get_thread_omp();
@@ -241,12 +245,6 @@ public:
       static_assert( std::is_same< typename ViewType::memory_space
                                       , Kokkos::HostSpace >::value
         , "Reduction result on Kokkos::OpenMP must be a Kokkos::View in HostSpace" );
-
-
-      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
-      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_reduce");
-
-      OpenMPexec::resize_scratch( ValueTraits::value_size( m_functor ) , 0 );
     }
 };
 
@@ -321,6 +319,11 @@ public:
   inline
   void execute() const
     {
+      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_scan");
+      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_scan");
+
+      OpenMPexec::resize_scratch( 2 * ValueTraits::value_size( m_functor ) , 0 );
+
 #pragma omp parallel
       {
         OpenMPexec & exec = * OpenMPexec::get_thread_omp();
@@ -373,12 +376,7 @@ public:
               , const Policy      & arg_policy )
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
-  {
-    OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_scan");
-    OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_scan");
-
-    OpenMPexec::resize_scratch( 2 * ValueTraits::value_size( m_functor ) , 0 );
-  }
+  {}
 
   //----------------------------------------
 };
@@ -433,6 +431,13 @@ public:
   inline
   void execute() const
     {
+      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
+      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
+
+      const size_t team_reduce_size = Policy::member_type::team_reduce_size();
+
+      OpenMPexec::resize_scratch( 0 , team_reduce_size + m_shmem_size );
+
 #pragma omp parallel
       {
         this-> template exec_team< WorkTag >( 
@@ -447,14 +452,7 @@ public:
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
     , m_shmem_size( FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
-  {
-    OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
-    OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
-
-    const size_t team_reduce_size = Policy::member_type::team_reduce_size();
-
-    OpenMPexec::resize_scratch( 0 , team_reduce_size + m_shmem_size );
-  }
+    {}
 };
 
 
@@ -506,6 +504,12 @@ public:
   inline
   void execute() const
     {
+      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
+
+      const size_t team_reduce_size = Policy::member_type::team_reduce_size();
+
+      OpenMPexec::resize_scratch( ValueTraits::value_size( m_functor ) , team_reduce_size + m_shmem_size );
+
 #pragma omp parallel
       {
         OpenMPexec & exec = * OpenMPexec::get_thread_omp();
@@ -546,13 +550,7 @@ public:
     , m_policy(  arg_policy )
     , m_result_ptr( arg_result.ptr_on_device() )
     , m_shmem_size( FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
-  {
-    OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
-
-    const size_t team_reduce_size = Policy::member_type::team_reduce_size();
-
-    OpenMPexec::resize_scratch( ValueTraits::value_size( m_functor ) , team_reduce_size + m_shmem_size );
-  }
+    {}
 };
 
 } // namespace Impl

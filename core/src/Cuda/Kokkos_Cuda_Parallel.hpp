@@ -703,10 +703,16 @@ public:
     }
 
   inline
-  void execute() const
+  void execute()
     {
+      const int block_size = local_block_size( m_functor );
+
+      m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( arg_functor ) * block_size /* block_size == max block_count */ );
+      m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
+      m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( arg_functor ) );
+
       // REQUIRED ( 1 , N , 1 )
-      const dim3 block( 1 , local_block_size( m_functor ) , 1 );
+      const dim3 block( 1 , block_size , 1 );
       // Required grid.x <= block.y
       const dim3 grid( std::min( int(block.y) , int(m_policy.end() - m_policy.begin()) ) , 1 , 1 );
 
@@ -743,13 +749,7 @@ public:
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
-  {
-    const int block_size = local_block_size( arg_functor );
-
-    m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( arg_functor ) * block_size /* block_size == max block_count */ );
-    m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
-    m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( arg_functor ) );
-  }
+  { }
 };
 
 //----------------------------------------------------------------------------
@@ -852,8 +852,14 @@ public:
   }
 
   inline
-  void execute() const
+  void execute()
     {
+      const int block_count = std::min( m_league_size , m_team_size );
+
+      m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( m_functor ) * block_count );
+      m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
+      m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( m_functor ) );
+
       // REQUIRED DIMENSIONS ( 1 , N , 1 )
       const dim3 block( 1 , m_team_size , 1 );
       const dim3 grid( std::min( int(m_league_size) , int(m_team_size) ) , 1 , 1 );
@@ -917,12 +923,6 @@ public:
          CudaTraits::SharedMemoryCapacity < shmem_size_total ) {
       Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > bad team size"));
     }
-
-    const int block_count = std::min( m_league_size , m_team_size );
-
-    m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( m_functor ) * block_count );
-    m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
-    m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( m_functor ) );
   }
 };
 
@@ -1103,7 +1103,7 @@ public:
     }
 
   inline
-  void execute() const
+  void execute()
     {
       enum { GridMaxComputeCapability_2x = 0x0ffff };
 
@@ -1120,14 +1120,20 @@ public:
       // How much work per block:
       const int work_per_block = ( nwork + max_grid - 1 ) / max_grid ;
 
-      const dim3 grid( ( nwork + work_per_block - 1 ) / work_per_block , 1 , 1 );
+      // How many block are really needed for this much work:
+      const int grid_x = ( nwork + work_per_block - 1 ) / work_per_block ;
+
+      m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( m_functor ) * grid_x );
+      m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) * 1 );
+
+      const dim3 grid( grid_x , 1 , 1 );
       const dim3 block( 1 , block_size , 1 ); // REQUIRED DIMENSIONS ( 1 , N , 1 )
       const int shmem = ValueTraits::value_size( m_functor ) * ( block_size + 2 );
 
-      const_cast< size_type & >( m_final ) = false ;
+      m_final = false ;
       CudaParallelLaunch< ParallelScan >( *this, grid, block, shmem ); // copy to device and execute
 
-      const_cast< size_type & >( m_final ) = true ;
+      m_final = true ;
       CudaParallelLaunch< ParallelScan >( *this, grid, block, shmem ); // copy to device and execute
     }
 
@@ -1138,27 +1144,7 @@ public:
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_final( false )
-  {
-    enum { GridMaxComputeCapability_2x = 0x0ffff };
-
-    const int block_size = local_block_size( arg_functor );
-
-    const int grid_max = ( block_size * block_size ) < GridMaxComputeCapability_2x ?
-                         ( block_size * block_size ) : GridMaxComputeCapability_2x ;
-
-    // At most 'max_grid' blocks:
-    const int nwork    = arg_policy.end() - arg_policy.begin();
-    const int max_grid = std::min( int(grid_max) , int(( nwork + block_size - 1 ) / block_size ));
-
-    // How much work per block:
-    const int work_per_block = ( nwork + max_grid - 1 ) / max_grid ;
-
-    // How many block are really needed for this much work:
-    const int grid_x = ( nwork + work_per_block - 1 ) / work_per_block ;
-
-    m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( m_functor ) * grid_x );
-    m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) * 1 );
-  }
+  { }
 };
 
 } // namespace Impl
@@ -1646,8 +1632,10 @@ void parallel_reduce( const ExecPolicy  & policy
 	Kokkos::Experimental::beginParallelScan("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
      }
 #endif
-    
-  const Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , policy , result_view );
+
+  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , policy , result_view );
+  Kokkos::Impl::AllocationTracker::enable_tracking();
 
   closure.execute();
     
@@ -1698,7 +1686,9 @@ void parallel_reduce( const ExecPolicy  & policy
      }
 #endif
     
-  const Impl::ParallelReduce< FunctorType, ExecPolicy > closure( FunctorType(functor_in) , policy , result_view );
+  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Impl::ParallelReduce< FunctorType, ExecPolicy > closure( FunctorType(functor_in) , policy , result_view );
+  Kokkos::Impl::AllocationTracker::enable_tracking();
 
   closure.execute();
     
@@ -1747,7 +1737,9 @@ void parallel_reduce( const ExecPolicy  & policy
      }
 #endif
     
-  const Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , policy , result_view );
+  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , policy , result_view );
+  Kokkos::Impl::AllocationTracker::enable_tracking();
 
   closure.execute();
     
@@ -1789,7 +1781,9 @@ void parallel_reduce( const size_t        work_count
      }
 #endif
     
-  const Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , ExecPolicy(0,work_count) , result_view );
+  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , ExecPolicy(0,work_count) , result_view );
+  Kokkos::Impl::AllocationTracker::enable_tracking();
 
   closure.execute();
 
@@ -1849,7 +1843,9 @@ void parallel_reduce( const size_t        work_count
      }
 #endif
     
-  const Impl::ParallelReduce< FunctorType , ExecPolicy > closure( FunctorType(functor_in) , ExecPolicy(0,work_count) , result_view );
+  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Impl::ParallelReduce< FunctorType , ExecPolicy > closure( FunctorType(functor_in) , ExecPolicy(0,work_count) , result_view );
+  Kokkos::Impl::AllocationTracker::enable_tracking();
 
   closure.execute();
     
@@ -1906,7 +1902,9 @@ void parallel_reduce( const size_t        work_count
      }
 #endif
     
-  const Impl::ParallelReduce< FunctorType , ExecPolicy > closure( functor , ExecPolicy(0,work_count) , result_view );
+  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Impl::ParallelReduce< FunctorType , ExecPolicy > closure( functor , ExecPolicy(0,work_count) , result_view );
+  Kokkos::Impl::AllocationTracker::enable_tracking();
 
   closure.execute();
     
