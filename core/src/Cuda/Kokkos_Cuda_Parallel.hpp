@@ -1647,7 +1647,9 @@ void parallel_reduce( const ExecPolicy  & policy
      }
 #endif
     
-  (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( functor , policy , result_view );
+  const Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , policy , result_view );
+
+  closure.execute();
     
 #ifdef KOKKOSP_ENABLE_PROFILING
      if(Kokkos::Experimental::profileLibraryLoaded()) {
@@ -1696,7 +1698,9 @@ void parallel_reduce( const ExecPolicy  & policy
      }
 #endif
     
-  (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( FunctorType(functor_in) , policy , result_view );
+  const Impl::ParallelReduce< FunctorType, ExecPolicy > closure( FunctorType(functor_in) , policy , result_view );
+
+  closure.execute();
     
 #ifdef KOKKOSP_ENABLE_PROFILING
      if(Kokkos::Experimental::profileLibraryLoaded()) {
@@ -1743,7 +1747,9 @@ void parallel_reduce( const ExecPolicy  & policy
      }
 #endif
     
-  (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( functor , policy , result_view );
+  const Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , policy , result_view );
+
+  closure.execute();
     
 #ifdef KOKKOSP_ENABLE_PROFILING
      if(Kokkos::Experimental::profileLibraryLoaded()) {
@@ -1783,7 +1789,9 @@ void parallel_reduce( const size_t        work_count
      }
 #endif
     
-  (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( functor , ExecPolicy(0,work_count) , result_view );
+  const Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , ExecPolicy(0,work_count) , result_view );
+
+  closure.execute();
 
 #ifdef KOKKOSP_ENABLE_PROFILING
      if(Kokkos::Experimental::profileLibraryLoaded()) {
@@ -1841,7 +1849,9 @@ void parallel_reduce( const size_t        work_count
      }
 #endif
     
-  (void) Impl::ParallelReduce< FunctorType , ExecPolicy >( FunctorType(functor_in) , ExecPolicy(0,work_count) , result_view );
+  const Impl::ParallelReduce< FunctorType , ExecPolicy > closure( FunctorType(functor_in) , ExecPolicy(0,work_count) , result_view );
+
+  closure.execute();
     
 #ifdef KOKKOSP_ENABLE_PROFILING
      if(Kokkos::Experimental::profileLibraryLoaded()) {
@@ -1896,7 +1906,9 @@ void parallel_reduce( const size_t        work_count
      }
 #endif
     
-  (void) Impl::ParallelReduce< FunctorType , ExecPolicy >( functor , ExecPolicy(0,work_count) , result_view );
+  const Impl::ParallelReduce< FunctorType , ExecPolicy > closure( functor , ExecPolicy(0,work_count) , result_view );
+
+  closure.execute();
     
 #ifdef KOKKOSP_ENABLE_PROFILING
      if(Kokkos::Experimental::profileLibraryLoaded()) {
