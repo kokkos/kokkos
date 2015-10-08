@@ -104,7 +104,7 @@ private:
 
     const WorkRange range( self.m_policy, exec.worker_rank(), exec.worker_size() );
 
-    ParallelFor::template exec_range( self.m_functor , range.begin() , range.end() );
+    ParallelFor::template exec_range< WorkTag > ( self.m_functor , range.begin() , range.end() );
 
     // All threads wait for completion.
     exec.exec_all_barrier();
@@ -187,7 +187,7 @@ private:
       self.m_functor, range.begin(), range.end(),
       ValueInit::init( self.m_functor , exec.exec_all_reduce_value() ) );
 
-    exec.template exec_all_reduce<FunctorType, WorkTag >( self.m_func );
+    exec.template exec_all_reduce<FunctorType, WorkTag >( self.m_functor );
   }
 
 public:
@@ -196,7 +196,7 @@ public:
   void execute() const
     {
       QthreadExec::resize_worker_scratch( ValueTraits::value_size( m_functor ) , 0 );
-      Impl::QthreadExec::exec_all( Qthread::instance() , & ParallelReduce::execute , this );
+      Impl::QthreadExec::exec_all( Qthread::instance() , & ParallelReduce::exec , this );
 
       const pointer_type data = (pointer_type) QthreadExec::exec_all_reduce_result();
 
@@ -234,7 +234,7 @@ private:
 
   template< class TagType >
   inline static
-  typename std::enable_if< std::value_type< TagType , void >::value >::type
+  typename std::enable_if< std::is_same< TagType , void >::value >::type
   exec_team( const FunctorType & functor , Member member )
     {
       while ( member ) {
@@ -246,7 +246,7 @@ private:
 
   template< class TagType >
   inline static
-  typename std::enable_if< ! std::value_type< TagType , void >::value >::type
+  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   exec_team( const FunctorType & functor , Member member )
     {
       const TagType t{} ;
@@ -296,7 +296,6 @@ private:
 
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::member_type  Member ;
-  typedef typename Policy::WorkRange    WorkRange ;
 
   typedef Kokkos::Impl::FunctorValueTraits< FunctorType, WorkTag > ValueTraits ;
   typedef Kokkos::Impl::FunctorValueInit<   FunctorType, WorkTag > ValueInit ;
@@ -310,7 +309,7 @@ private:
 
   template< class TagType >
   inline static
-  typename std::enable_if< std::value_type< TagType , void >::value >::type
+  typename std::enable_if< std::is_same< TagType , void >::value >::type
   exec_team( const FunctorType & functor , Member member , reference_type update )
     {
       while ( member ) {
@@ -322,7 +321,7 @@ private:
 
   template< class TagType >
   inline static
-  typename std::enable_if< ! std::value_type< TagType , void >::value >::type
+  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   exec_team( const FunctorType & functor , Member member , reference_type update )
     {
       const TagType t{} ;
@@ -342,7 +341,7 @@ private:
       , Member( exec , self.m_policy )
       , ValueInit::init( self.m_functor , exec.exec_all_reduce_value() ) );
 
-    exec.template exec_all_reduce< FunctorType , WorkTag >( self.m_func );
+    exec.template exec_all_reduce< FunctorType , WorkTag >( self.m_functor );
   }
 
 public:
@@ -398,7 +397,7 @@ private:
   typedef typename ValueTraits::pointer_type    pointer_type ;
   typedef typename ValueTraits::reference_type  reference_type ;
 
-  const FunctorType  m_func ;
+  const FunctorType  m_functor ;
   const Policy       m_policy ;
 
   template< class TagType >
@@ -433,11 +432,11 @@ private:
     const WorkRange range( self.m_policy , exec.worker_rank() , exec.worker_size() );
 
     // Initialize thread-local value
-    reference_type update = ValueInit::init( self.m_func , exec.exec_all_reduce_value() );
+    reference_type update = ValueInit::init( self.m_functor , exec.exec_all_reduce_value() );
 
     ParallelScan::template exec_range< WorkTag >( self.m_functor, range.begin() , range.end() , update , false );
 
-    exec.template exec_all_scan< FunctorType , typename Policy::work_tag >( self.m_func );
+    exec.template exec_all_scan< FunctorType , typename Policy::work_tag >( self.m_functor );
 
     ParallelScan::template exec_range< WorkTag >( self.m_functor , range.begin() , range.end() , update , true );
 
@@ -450,7 +449,7 @@ public:
   void execute() const
     {
       QthreadExec::resize_worker_scratch( ValueTraits::value_size( m_functor ) , 0 );
-      Impl::QthreadExec::exec_all( Qthread::instance() , & ParallelScan::execute , this );
+      Impl::QthreadExec::exec_all( Qthread::instance() , & ParallelScan::exec , this );
     }
 
   ParallelScan( const FunctorType & arg_functor
