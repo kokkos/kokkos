@@ -76,23 +76,25 @@ private:
   const Policy       m_policy ;
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_range( const Member ibeg , const Member iend ) const
+  exec_range( const FunctorType & functor
+            , const Member ibeg , const Member iend )
     {
       #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
           defined( KOKKOS_HAVE_PRAGMA_IVDEP )
       #pragma ivdep
       #endif
       for ( Member i = ibeg ; i < iend ; ++i ) {
-        m_functor( i );
+        functor( i );
       }
     }
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_range( const Member ibeg , const Member iend ) const
+  exec_range( const FunctorType & functor
+            , const Member ibeg , const Member iend )
     {
       const TagType t{} ;
       #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
@@ -100,7 +102,7 @@ private:
       #pragma ivdep
       #endif
       for ( Member i = ibeg ; i < iend ; ++i ) {
-        m_functor( t , i );
+        functor( t , i );
       }
     }
 
@@ -110,7 +112,8 @@ private:
 
     WorkRange range( self.m_policy , exec.pool_rank() , exec.pool_size() );
 
-    self.template exec_range< WorkTag >( range.begin() , range.end() );
+    ParallelFor::template exec_range< WorkTag >
+      ( self.m_functor , range.begin() , range.end() );
 
     exec.fan_in();
   }
@@ -124,10 +127,10 @@ public:
       ThreadsExec::fence();
     }
 
-  ParallelFor( const FunctorType & functor
-             , const Policy      & policy )
-    : m_functor( functor )
-    , m_policy( policy )
+  ParallelFor( const FunctorType & arg_functor
+             , const Policy      & arg_policy )
+    : m_functor( arg_functor )
+    , m_policy( arg_policy )
     {}
 };
 
@@ -150,23 +153,23 @@ private:
   const int          m_shared ;
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_team( Member member ) const
+  exec_team( const FunctorType & functor , Member member )
     {
       for ( ; member.valid() ; member.next() ) {
-        m_functor( member );
+        functor( member );
       }
     }
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_team( Member member ) const
+  exec_team( const FunctorType & functor , Member member )
     {
       const TagType t{} ;
       for ( ; member.valid() ; member.next() ) {
-        m_functor( t , member );
+        functor( t , member );
       }
     }
 
@@ -174,7 +177,8 @@ private:
   {
     const ParallelFor & self = * ((const ParallelFor *) arg );
 
-    self.template exec_team< WorkTag >( Member( & exec , self.m_policy , self.m_shared ) );
+    ParallelFor::exec_team< WorkTag >
+      ( self.m_functor , Member( & exec , self.m_policy , self.m_shared ) );
 
     exec.fan_in();
   }
@@ -227,25 +231,27 @@ private:
   const pointer_type m_result_ptr ;
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_range( const Member & ibeg , const Member & iend
-            , reference_type update ) const
+  exec_range( const FunctorType & functor
+            , const Member & ibeg , const Member & iend
+            , reference_type update )
     {
       #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
           defined( KOKKOS_HAVE_PRAGMA_IVDEP )
       #pragma ivdep
       #endif
       for ( Member i = ibeg ; i < iend ; ++i ) {
-        m_functor( i , update );
+        functor( i , update );
       }
     }
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_range( const Member & ibeg , const Member & iend
-            , reference_type update ) const
+  exec_range( const FunctorType & functor
+            , const Member & ibeg , const Member & iend
+            , reference_type update )
     {
       const TagType t{} ;
       #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
@@ -253,7 +259,7 @@ private:
       #pragma ivdep
       #endif
       for ( Member i = ibeg ; i < iend ; ++i ) {
-        m_functor( t , i , update );
+        functor( t , i , update );
       }
     }
 
@@ -262,8 +268,9 @@ private:
     const ParallelReduce & self = * ((const ParallelReduce *) arg );
     const WorkRange range( self.m_policy, exec.pool_rank(), exec.pool_size() );
 
-    self.template exec_range< WorkTag >( range.begin() , range.end() 
-          , ValueInit::init( self.m_functor , exec.reduce_memory() ) );
+    ParallelReduce::template exec_range< WorkTag >
+      ( self.m_functor , range.begin() , range.end() 
+      , ValueInit::init( self.m_functor , exec.reduce_memory() ) );
 
     exec.template fan_in_reduce< FunctorType , WorkTag >( self.m_functor );
   }
@@ -330,23 +337,23 @@ private:
   const int          m_shared ;
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_team( Member member , reference_type update ) const
+  exec_team( const FunctorType & functor , Member member , reference_type update )
     {
       for ( ; member.valid() ; member.next() ) {
-        m_functor( member , update );
+        functor( member , update );
       }
     }
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_team( Member member , reference_type update ) const
+  exec_team( const FunctorType & functor , Member member , reference_type update )
     {
       const TagType t{} ;
       for ( ; member.valid() ; member.next() ) {
-        m_functor( t , member , update );
+        functor( t , member , update );
       }
     }
 
@@ -354,8 +361,8 @@ private:
   {
     const ParallelReduce & self = * ((const ParallelReduce *) arg );
 
-    self.template exec_team< WorkTag >
-      ( Member( & exec , self.m_policy , self.m_shared )
+    ParallelReduce::template exec_team< WorkTag >
+      ( self.m_functor , Member( & exec , self.m_policy , self.m_shared )
       , ValueInit::init( self.m_functor , exec.reduce_memory() ) );
 
     exec.template fan_in_reduce< FunctorType , WorkTag >( self.m_functor );
@@ -417,25 +424,27 @@ private:
   const Policy       m_policy ;
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_range( const Member & ibeg , const Member & iend
-            , reference_type update , const bool final ) const
+  exec_range( const FunctorType & functor
+            , const Member & ibeg , const Member & iend
+            , reference_type update , const bool final )
     {
       #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
           defined( KOKKOS_HAVE_PRAGMA_IVDEP )
       #pragma ivdep
       #endif
       for ( Member i = ibeg ; i < iend ; ++i ) {
-        m_functor( i , update , final );
+        functor( i , update , final );
       }
     }
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_range( const Member & ibeg , const Member & iend
-            , reference_type update , const bool final ) const
+  exec_range( const FunctorType & functor
+            , const Member & ibeg , const Member & iend
+            , reference_type update , const bool final )
     {
       const TagType t{} ;
       #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
@@ -443,7 +452,7 @@ private:
       #pragma ivdep
       #endif
       for ( Member i = ibeg ; i < iend ; ++i ) {
-        m_functor( t , i , update , final );
+        functor( t , i , update , final );
       }
     }
 
@@ -456,12 +465,14 @@ private:
     reference_type update =
       ValueInit::init( self.m_functor , exec.reduce_memory() );
 
-    self.template exec_range< WorkTag >( range.begin(), range.end(), update, false );
+    ParallelScan::template exec_range< WorkTag >
+      ( self.m_functor , range.begin(), range.end(), update, false );
 
     //  exec.template scan_large<FunctorType,WorkTag>( self.m_functor );
     exec.template scan_small<FunctorType,WorkTag>( self.m_functor );
 
-    self.template exec_range< WorkTag >( range.begin(), range.end(), update, true );
+    ParallelScan::template exec_range< WorkTag >
+      ( self.m_functor , range.begin(), range.end(), update, true );
 
     exec.fan_in();
   }

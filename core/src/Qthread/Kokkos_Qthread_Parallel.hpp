@@ -77,21 +77,23 @@ private:
   const Policy       m_policy ;
 
   template< class TagType >
+  inline static
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_range( const Member ibeg , const Member iend ) const
+  exec_range( const FunctorType & functor , const Member ibeg , const Member iend )
     {
       for ( Member i = ibeg ; i < iend ; ++i ) {
-        m_functor( i );
+        functor( i );
       }
     }
 
   template< class TagType >
+  inline static
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_range( const Member ibeg , const Member iend ) const
+  exec_range( const FunctorType & functor , const Member ibeg , const Member iend )
     {
       const TagType t{} ;
       for ( Member i = ibeg ; i < iend ; ++i ) {
-        m_functor( t , i );
+        functor( t , i );
       }
     }
 
@@ -102,7 +104,7 @@ private:
 
     const WorkRange range( self.m_policy, exec.worker_rank(), exec.worker_size() );
 
-    self.template exec_range( range.begin() , range.end() );
+    ParallelFor::template exec_range( self.m_functor , range.begin() , range.end() );
 
     // All threads wait for completion.
     exec.exec_all_barrier();
@@ -151,23 +153,27 @@ private:
   const pointer_type m_result_ptr ;
 
   template< class TagType >
+  inline static
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_range( const Member ibeg , const Member iend
-            , reference_type update ) const
+  exec_range( const FunctorType & functor
+            , const Member ibeg , const Member iend
+            , reference_type update )
     {
       for ( Member i = ibeg ; i < iend ; ++i ) {
-        m_functor( i , update );
+        functor( i , update );
       }
     }
 
   template< class TagType >
+  inline static
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_range( const Member ibeg , const Member iend
-            , reference_type update ) const
+  exec_range( const FunctorType & functor
+            , const Member ibeg , const Member iend
+            , reference_type update )
     {
       const TagType t{} ;
       for ( Member i = ibeg ; i < iend ; ++i ) {
-        m_functor( t , i , update );
+        functor( t , i , update );
       }
     }
 
@@ -177,8 +183,8 @@ private:
 
     const WorkRange range( self.m_policy, exec.worker_rank(), exec.worker_size() );
 
-    self.template exec_range< WorkTag >(
-      range.begin(), range.end(),
+    ParallelReduce::template exec_range< WorkTag >(
+      self.m_functor, range.begin(), range.end(),
       ValueInit::init( self.m_functor , exec.exec_all_reduce_value() ) );
 
     exec.template exec_all_reduce<FunctorType, WorkTag >( self.m_func );
@@ -227,23 +233,25 @@ private:
   const Policy       m_policy ;
 
   template< class TagType >
+  inline static
   typename std::enable_if< std::value_type< TagType , void >::value >::type
-  exec_team( Member member ) const
+  exec_team( const FunctorType & functor , Member member )
     {
       while ( member ) {
-        m_functor( member );
+        functor( member );
         member.team_barrier();
         member.next_team();
       }
     }
 
   template< class TagType >
+  inline static
   typename std::enable_if< ! std::value_type< TagType , void >::value >::type
-  exec_team( Member member ) const
+  exec_team( const FunctorType & functor , Member member )
     {
       const TagType t{} ;
       while ( member ) {
-        m_functor( t , member );
+        functor( t , member );
         member.team_barrier();
         member.next_team();
       }
@@ -253,7 +261,8 @@ private:
   {
     const ParallelFor & self = * ((const ParallelFor *) arg );
 
-    self.template exec_team< WorkTag >( Member( exec , self.m_policy ) );
+    ParallelFor::template exec_team< WorkTag >
+      ( self.m_functor , Member( exec , self.m_policy ) );
 
     exec.exec_all_barrier();
   }
@@ -300,23 +309,25 @@ private:
   const pointer_type m_result_ptr ;
 
   template< class TagType >
+  inline static
   typename std::enable_if< std::value_type< TagType , void >::value >::type
-  exec_team( Member member , reference_type update ) const
+  exec_team( const FunctorType & functor , Member member , reference_type update )
     {
       while ( member ) {
-        m_functor( member , update );
+        functor( member , update );
         member.team_barrier();
         member.next_team();
       }
     }
 
   template< class TagType >
+  inline static
   typename std::enable_if< ! std::value_type< TagType , void >::value >::type
-  exec_team( Member member , reference_type update ) const
+  exec_team( const FunctorType & functor , Member member , reference_type update )
     {
       const TagType t{} ;
       while ( member ) {
-        m_functor( t , member , update );
+        functor( t , member , update );
         member.team_barrier();
         member.next_team();
       }
@@ -326,9 +337,10 @@ private:
   {
     const ParallelReduce & self = * ((const ParallelReduce *) arg );
 
-    self.template exec_team< WorkTag >(
-      Member( exec , self.m_policy ) ,
-      ValueInit::init( self.m_functor , exec.exec_all_reduce_value() ) );
+    ParallelReduce::template exec_team< WorkTag >
+      ( self.m_functor
+      , Member( exec , self.m_policy )
+      , ValueInit::init( self.m_functor , exec.exec_all_reduce_value() ) );
 
     exec.template exec_all_reduce< FunctorType , WorkTag >( self.m_func );
   }
@@ -390,23 +402,27 @@ private:
   const Policy       m_policy ;
 
   template< class TagType >
+  inline static
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_range( const Member ibeg , const Member iend
-            , reference_type update , const bool final ) const
+  exec_range( const FunctorType & functor
+            , const Member ibeg , const Member iend
+            , reference_type update , const bool final )
     {
       for ( Member i = ibeg ; i < iend ; ++i ) {
-        m_functor( i , update , final );
+        functor( i , update , final );
       }
     }
 
   template< class TagType >
+  inline static
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_range( const Member ibeg , const Member iend
-            , reference_type update , const bool final ) const
+  exec_range( const FunctorType & functor
+            , const Member ibeg , const Member iend
+            , reference_type update , const bool final )
     {
       const TagType t{} ;
       for ( Member i = ibeg ; i < iend ; ++i ) {
-        m_functor( t , i , update , final );
+        functor( t , i , update , final );
       }
     }
 
@@ -419,11 +435,11 @@ private:
     // Initialize thread-local value
     reference_type update = ValueInit::init( self.m_func , exec.exec_all_reduce_value() );
 
-    self.template exec_range< WorkTag >( range.begin() , range.end() , update , false );
+    ParallelScan::template exec_range< WorkTag >( self.m_functor, range.begin() , range.end() , update , false );
 
     exec.template exec_all_scan< FunctorType , typename Policy::work_tag >( self.m_func );
 
-    self.template exec_range< WorkTag >( range.begin() , range.end() , update , true );
+    ParallelScan::template exec_range< WorkTag >( self.m_functor , range.begin() , range.end() , update , true );
 
     exec.exec_all_barrier();
   }
