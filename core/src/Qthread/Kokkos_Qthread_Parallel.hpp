@@ -89,7 +89,7 @@ private:
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   exec_range( const Member ibeg , const Member iend ) const
     {
-      const TagType t ;
+      const TagType t{} ;
       for ( Member i = ibeg ; i < iend ; ++i ) {
         m_functor( t , i );
       }
@@ -165,7 +165,7 @@ private:
   exec_range( const Member ibeg , const Member iend
             , reference_type update ) const
     {
-      const TagType t ;
+      const TagType t{} ;
       for ( Member i = ibeg ; i < iend ; ++i ) {
         m_functor( t , i , update );
       }
@@ -241,7 +241,7 @@ private:
   typename std::enable_if< ! std::value_type< TagType , void >::value >::type
   exec_team( Member member ) const
     {
-      const TagType t ;
+      const TagType t{} ;
       while ( member ) {
         m_functor( t , member );
         member.team_barrier();
@@ -314,7 +314,7 @@ private:
   typename std::enable_if< ! std::value_type< TagType , void >::value >::type
   exec_team( Member member , reference_type update ) const
     {
-      const TagType t ;
+      const TagType t{} ;
       while ( member ) {
         m_functor( t , member , update );
         member.team_barrier();
@@ -404,7 +404,7 @@ private:
   exec_range( const Member ibeg , const Member iend
             , reference_type update , const bool final ) const
     {
-      const TagType t ;
+      const TagType t{} ;
       for ( Member i = ibeg ; i < iend ; ++i ) {
         m_functor( t , i , update , final );
       }

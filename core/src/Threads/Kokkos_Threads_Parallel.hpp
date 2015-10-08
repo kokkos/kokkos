@@ -94,7 +94,7 @@ private:
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   exec_range( const Member ibeg , const Member iend ) const
     {
-      const TagType t ;
+      const TagType t{} ;
       #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
           defined( KOKKOS_HAVE_PRAGMA_IVDEP )
       #pragma ivdep
@@ -164,7 +164,7 @@ private:
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   exec_team( Member member ) const
     {
-      const TagType t ;
+      const TagType t{} ;
       for ( ; member.valid() ; member.next() ) {
         m_functor( t , member );
       }
@@ -247,7 +247,7 @@ private:
   exec_range( const Member & ibeg , const Member & iend
             , reference_type update ) const
     {
-      const TagType t ;
+      const TagType t{} ;
       #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
           defined( KOKKOS_HAVE_PRAGMA_IVDEP )
       #pragma ivdep
@@ -344,7 +344,7 @@ private:
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   exec_team( Member member , reference_type update ) const
     {
-      const TagType t ;
+      const TagType t{} ;
       for ( ; member.valid() ; member.next() ) {
         m_functor( t , member , update );
       }
@@ -437,7 +437,7 @@ private:
   exec_range( const Member & ibeg , const Member & iend
             , reference_type update , const bool final ) const
     {
-      const TagType t ;
+      const TagType t{} ;
       #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
           defined( KOKKOS_HAVE_PRAGMA_IVDEP )
       #pragma ivdep

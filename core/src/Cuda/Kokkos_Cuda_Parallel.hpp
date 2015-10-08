@@ -707,9 +707,9 @@ public:
     {
       const int block_size = local_block_size( m_functor );
 
-      m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( arg_functor ) * block_size /* block_size == max block_count */ );
+      m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( m_functor ) * block_size /* block_size == max block_count */ );
       m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
-      m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( arg_functor ) );
+      m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( m_functor ) );
 
       // REQUIRED ( 1 , N , 1 )
       const dim3 block( 1 , block_size , 1 );

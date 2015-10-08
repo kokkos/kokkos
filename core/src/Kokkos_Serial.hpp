@@ -397,7 +397,7 @@ private:
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   exec() const
     {
-      const TagType t ;
+      const TagType t{} ;
       const typename Policy::member_type e = m_policy.end();
       for ( typename Policy::member_type i = m_policy.begin() ; i < e ; ++i ) {
         m_functor( t , i );
@@ -461,7 +461,7 @@ private:
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   exec( pointer_type ptr ) const
     {
-      const TagType t ;
+      const TagType t{} ;
       reference_type update = ValueInit::init( m_functor , ptr );
 
       const typename Policy::member_type e = m_policy.end();
@@ -539,7 +539,7 @@ private:
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   exec( pointer_type ptr ) const
     {
-      const TagType t ;
+      const TagType t{} ;
       reference_type update = ValueInit::init( m_functor , ptr );
 
       const typename Policy::member_type e = m_policy.end();
@@ -606,7 +606,7 @@ private:
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   exec() const
     {
-      const TagType t ;
+      const TagType t{} ;
       for ( int ileague = 0 ; ileague < m_league ; ++ileague ) {
         m_functor( t , Member(ileague,m_league,m_shared) );
       }
@@ -672,7 +672,7 @@ private:
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   exec( pointer_type ptr ) const
     {
-      const TagType t ;
+      const TagType t{} ;
 
       reference_type update = ValueInit::init( m_functor , ptr );
 

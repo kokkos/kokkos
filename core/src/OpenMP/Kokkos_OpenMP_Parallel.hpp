@@ -72,9 +72,10 @@ private:
   const Policy      m_policy ;
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_range( const Member ibeg , const Member iend ) const
+  exec_range( const FunctorType & functor
+            , const Member ibeg , const Member iend )
     {
       #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_HAVE_PRAGMA_IVDEP
@@ -82,23 +83,24 @@ private:
       #endif
       #endif
       for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
-        m_functor( iwork );
+        functor( iwork );
       }
     }
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_range( const Member ibeg , const Member iend ) const
+  exec_range( const FunctorType & functor
+            , const Member ibeg , const Member iend )
     {
-      const TagType t ;
+      const TagType t{} ;
       #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_HAVE_PRAGMA_IVDEP
       #pragma ivdep
       #endif
       #endif
       for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
-        m_functor( t , iwork );
+        functor( t , iwork );
       }
     }
 
@@ -109,11 +111,14 @@ public:
     {
       OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
       OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
+
 #pragma omp parallel
       {
         OpenMPexec & exec = * OpenMPexec::get_thread_omp();
+
         const WorkRange range( m_policy, exec.pool_rank(), exec.pool_size() );
-        this-> template exec_range< WorkTag >( range.begin() , range.end() );
+
+        ParallelFor::template exec_range< WorkTag >( m_functor , range.begin() , range.end() );
       }
 /* END #pragma omp parallel */
     }
@@ -160,10 +165,11 @@ private:
   const pointer_type  m_result_ptr ;
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_range( const Member ibeg , const Member iend
-            , reference_type update ) const
+  exec_range( const FunctorType & functor
+            , const Member ibeg , const Member iend
+            , reference_type update )
     {
       #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_HAVE_PRAGMA_IVDEP
@@ -171,24 +177,25 @@ private:
       #endif
       #endif
       for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
-        m_functor( iwork , update );
+        functor( iwork , update );
       }
     }
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_range( const Member ibeg , const Member iend
-            , reference_type update ) const
+  exec_range( const FunctorType & functor
+            , const Member ibeg , const Member iend
+            , reference_type update )
     {
-      const TagType t ;
+      const TagType t{} ;
       #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_HAVE_PRAGMA_IVDEP
       #pragma ivdep
       #endif
       #endif
       for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
-        m_functor( t , iwork , update );
+        functor( t , iwork , update );
       }
     }
 
@@ -206,8 +213,9 @@ public:
       {
         OpenMPexec & exec = * OpenMPexec::get_thread_omp();
         const WorkRange range( m_policy, exec.pool_rank(), exec.pool_size() );
-        this-> template exec_range< WorkTag >( range.begin() , range.end() ,
-          ValueInit::init( m_functor , exec.scratch_reduce() ) );
+        ParallelReduce::template exec_range< WorkTag >
+          ( m_functor , range.begin() , range.end()
+          , ValueInit::init( m_functor , exec.scratch_reduce() ) );
       }
 /* END #pragma omp parallel */
 
@@ -282,10 +290,11 @@ private:
   const Policy        m_policy ;
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_range( const Member ibeg , const Member iend
-            , reference_type update , const bool final ) const
+  exec_range( const FunctorType & functor
+            , const Member ibeg , const Member iend
+            , reference_type update , const bool final )
     {
       #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_HAVE_PRAGMA_IVDEP
@@ -293,24 +302,25 @@ private:
       #endif
       #endif
       for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
-        m_functor( iwork , update , final );
+        functor( iwork , update , final );
       }
     }
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_range( const Member ibeg , const Member iend
-            , reference_type update , const bool final ) const
+  exec_range( const FunctorType & functor
+            , const Member ibeg , const Member iend
+            , reference_type update , const bool final )
     {
-      const TagType t ;
+      const TagType t{} ;
       #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_HAVE_PRAGMA_IVDEP
       #pragma ivdep
       #endif
       #endif
       for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
-        m_functor( t , iwork , update , final );
+        functor( t , iwork , update , final );
       }
     }
 
@@ -331,8 +341,9 @@ public:
         const pointer_type ptr =
           pointer_type( exec.scratch_reduce() ) +
           ValueTraits::value_count( m_functor );
-        this-> template exec_range< WorkTag >( range.begin() , range.end() ,
-          ValueInit::init( m_functor , ptr ) , false );
+        ParallelScan::template exec_range< WorkTag >
+          ( m_functor , range.begin() , range.end()
+          , ValueInit::init( m_functor , ptr ) , false );
       }
 /* END #pragma omp parallel */
 
@@ -363,8 +374,9 @@ public:
         OpenMPexec & exec = * OpenMPexec::get_thread_omp();
         const WorkRange range( m_policy, exec.pool_rank(), exec.pool_size() );
         const pointer_type ptr = pointer_type( exec.scratch_reduce() );
-        this-> template exec_range< WorkTag >( range.begin() , range.end() ,
-          ValueOps::reference( ptr ), true );
+        ParallelScan::template exec_range< WorkTag >
+          ( m_functor , range.begin() , range.end()
+          , ValueOps::reference( ptr ) , true );
       }
 /* END #pragma omp parallel */
     }
@@ -406,23 +418,23 @@ private:
   const int          m_shmem_size ;
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_team( Member member ) const
+  exec_team( const FunctorType & functor , Member member )
     {
       for ( ; member.valid() ; member.next() ) {
-        m_functor( member );
+        functor( member );
       }
     }
 
   template< class TagType >
-  inline
+  inline static
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_team( Member member ) const
+  exec_team( const FunctorType & functor , Member member )
     {
-      const TagType t ;
+      const TagType t{} ;
       for ( ; member.valid() ; member.next() ) {
-        m_functor( t , member );
+        functor( t , member );
       }
     }
 
@@ -440,8 +452,9 @@ public:
 
 #pragma omp parallel
       {
-        this-> template exec_team< WorkTag >( 
-          Member( * OpenMPexec::get_thread_omp() , m_policy , m_shmem_size ) );
+        ParallelFor::template exec_team< WorkTag >
+          ( m_functor
+          , Member( * OpenMPexec::get_thread_omp(), m_policy, m_shmem_size) );
       }
 /* END #pragma omp parallel */
     }
@@ -481,21 +494,23 @@ private:
   const int          m_shmem_size ;
 
   template< class TagType >
+  inline static
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_team( Member member , reference_type update ) const
+  exec_team( const FunctorType & functor , Member member , reference_type update )
     {
       for ( ; member.valid() ; member.next() ) {
-        m_functor( member , update );
+        functor( member , update );
       }
     }
 
   template< class TagType >
+  inline static
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_team( Member member , reference_type update ) const
+  exec_team( const FunctorType & functor , Member member , reference_type update )
     {
-      const TagType t ;
+      const TagType t{} ;
       for ( ; member.valid() ; member.next() ) {
-        m_functor( t , member , update );
+        functor( t , member , update );
       }
     }
 
@@ -514,9 +529,10 @@ public:
       {
         OpenMPexec & exec = * OpenMPexec::get_thread_omp();
 
-        this-> template exec_team< WorkTag >(
-          Member( exec , m_policy , m_shmem_size ),
-          ValueInit::init( m_functor , exec.scratch_reduce() ) );
+        ParallelReduce::template exec_team< WorkTag >
+          ( m_functor
+          , Member( exec , m_policy , m_shmem_size )
+          , ValueInit::init( m_functor , exec.scratch_reduce() ) );
       }
 /* END #pragma omp parallel */
 
