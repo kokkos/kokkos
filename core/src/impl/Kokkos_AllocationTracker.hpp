@@ -351,7 +351,6 @@ public:
 //-----------------------------------------------------------------------------
 
 // forward declaration for friend classes
-struct CopyWithoutTracking;
 struct MallocHelper;
 
 /// class AllocationTracker
@@ -544,6 +543,10 @@ public:
   /// NOT thread-safe
   void reallocate( size_t size ) const;
 
+  static void disable_tracking();
+  static void enable_tracking();
+  static bool tracking_enabled();
+
 private:
 
   static AllocationTracker find( void const * ptr, AllocatorBase const * arg_allocator );
@@ -556,29 +559,9 @@ private:
   void increment_ref_count() const;
   void decrement_ref_count() const;
 
-  static void disable_tracking();
-  static void enable_tracking();
-  static bool tracking_enabled();
-
-  friend struct Impl::CopyWithoutTracking;
   friend struct Impl::MallocHelper;
 
   uintptr_t m_alloc_rec;
-};
-
-
-
-/// Make a copy of the functor with reference counting disabled
-struct CopyWithoutTracking
-{
-  template <typename Functor>
-  static Functor apply( const Functor & f )
-  {
-    AllocationTracker::disable_tracking();
-    Functor func(f);
-    AllocationTracker::enable_tracking();
-    return func;
-  }
 };
 
 }} // namespace Kokkos::Impl

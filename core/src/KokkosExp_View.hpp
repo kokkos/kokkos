@@ -1577,7 +1577,9 @@ struct ViewFill {
       typedef typename OutputView::execution_space  execution_space ;
       typedef Kokkos::RangePolicy< execution_space > Policy ;
 
-      (void) Kokkos::Impl::ParallelFor< ViewFill , Policy >( *this , Policy( 0 , output.dimension_0() ) );
+      const Kokkos::Impl::ParallelFor< ViewFill , Policy > closure( *this , Policy( 0 , output.dimension_0() ) );
+
+      closure.execute();
 
       execution_space::fence();
     }
@@ -1619,7 +1621,8 @@ struct ViewRemap {
     {
       typedef typename OutputView::execution_space execution_space ;
       typedef Kokkos::RangePolicy< execution_space > Policy ;
-      (void) Kokkos::Impl::ParallelFor< ViewRemap , Policy >( *this , Policy( 0 , n0 ) );
+      const Kokkos::Impl::ParallelFor< ViewRemap , Policy > closure( *this , Policy( 0 , n0 ) );
+      closure.execute();
     }
 
   KOKKOS_INLINE_FUNCTION
