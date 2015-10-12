@@ -1986,6 +1986,7 @@ using ViewTraits = Kokkos::Experimental::ViewTraits<D,A1,A2,A3> ;
 template< class D , class A1 = void , class A2 = void , class A3 = void , class S = void >
 using View = Kokkos::Experimental::View<D,A1,A2,A3> ;
 
+using Kokkos::Experimental::ALL ;
 using Kokkos::Experimental::deep_copy ;
 using Kokkos::Experimental::create_mirror ;
 using Kokkos::Experimental::create_mirror_view ;

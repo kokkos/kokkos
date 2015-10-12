@@ -47,10 +47,11 @@
 #include <type_traits>
 #include <string>
 #include <Kokkos_Core_fwd.hpp>
-#include <Kokkos_HostSpace.hpp>
-#include <Kokkos_MemoryTraits.hpp>
 
 #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
+#include <Kokkos_HostSpace.hpp>
+#include <Kokkos_MemoryTraits.hpp>
 
 #include <impl/Kokkos_StaticAssert.hpp>
 #include <impl/Kokkos_Traits.hpp>
@@ -2096,22 +2097,7 @@ struct ALL { KOKKOS_INLINE_FUNCTION ALL(){} };
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#else /* #if defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
-
-// Must define before includng <impl/Kokkos_ViewOffset.hpp>
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
-struct ALL_t ;
-}
-}
-using ALL = Experimental::Impl::ALL_t ;
-}
-
-#include <impl/Kokkos_ViewOffset.hpp>
-/* #include <impl/Kokkos_ViewSupport.hpp> */
-
-#endif /* #if defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
+#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
 
 #include <KokkosExp_View.hpp>
 

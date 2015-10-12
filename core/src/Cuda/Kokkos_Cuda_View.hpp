@@ -53,6 +53,7 @@
 
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_CudaSpace.hpp>
+#include <impl/Kokkos_Shape.hpp>
 #include <Kokkos_View.hpp>
 
 #include <Cuda/Kokkos_Cuda_BasicAllocators.hpp>
