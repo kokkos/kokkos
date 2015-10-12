@@ -73,6 +73,8 @@ typedef const void * cuda_texture_object_type ;
 #endif
 
 
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
 struct TextureAttribute : public AllocatorAttributeBase
 {
   cuda_texture_object_type m_tex_obj ;
@@ -85,6 +87,7 @@ struct TextureAttribute : public AllocatorAttributeBase
   ~TextureAttribute();
 };
 
+#endif
 
 /// class CudaUnmanagedAllocator
 /// does nothing when deallocate(ptr,size) is called

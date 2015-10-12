@@ -1538,6 +1538,37 @@ bool operator != ( const View<LT,L1,L2,L3> & lhs ,
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+namespace Impl {
+
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
+inline
+void shared_allocation_tracking_claim_and_disable()
+{ Kokkos::Experimental::Impl::SharedAllocationRecord<void,void>::tracking_claim_and_disable(); }
+
+inline
+void shared_allocation_tracking_release_and_enable()
+{ Kokkos::Experimental::Impl::SharedAllocationRecord<void,void>::tracking_release_and_enable(); }
+
+#else
+
+inline
+void shared_allocation_tracking_claim_and_disable()
+{ Kokkos::Impl::AllocationTracker::disable_tracking(); }
+
+inline
+void shared_allocation_tracking_release_and_enable()
+{ Kokkos::Impl::AllocationTracker::enable_tracking(); }
+
+#endif
+
+} /* namespace Impl */
+} /* namespace Kokkos */
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 

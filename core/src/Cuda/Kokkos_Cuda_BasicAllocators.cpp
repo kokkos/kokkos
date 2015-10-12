@@ -56,6 +56,9 @@ namespace Kokkos { namespace Impl {
 
 
 /*--------------------------------------------------------------------------*/
+
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
 TextureAttribute::TextureAttribute(  void * const alloc_ptr
                                    , size_t alloc_size
                                    , cudaChannelFormatDesc const & desc
@@ -87,6 +90,8 @@ TextureAttribute::~TextureAttribute()
     cudaDestroyTextureObject( m_tex_obj );
   }
 }
+
+#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
 
 /*--------------------------------------------------------------------------*/
 

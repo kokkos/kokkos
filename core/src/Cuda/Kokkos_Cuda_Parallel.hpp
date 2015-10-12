@@ -1633,9 +1633,9 @@ void parallel_reduce( const ExecPolicy  & policy
      }
 #endif
 
-  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
   Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , policy , result_view );
-  Kokkos::Impl::AllocationTracker::enable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
 
   closure.execute();
     
@@ -1686,9 +1686,9 @@ void parallel_reduce( const ExecPolicy  & policy
      }
 #endif
     
-  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
   Impl::ParallelReduce< FunctorType, ExecPolicy > closure( FunctorType(functor_in) , policy , result_view );
-  Kokkos::Impl::AllocationTracker::enable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
 
   closure.execute();
     
@@ -1737,9 +1737,9 @@ void parallel_reduce( const ExecPolicy  & policy
      }
 #endif
     
-  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
   Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , policy , result_view );
-  Kokkos::Impl::AllocationTracker::enable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
 
   closure.execute();
     
@@ -1781,9 +1781,9 @@ void parallel_reduce( const size_t        work_count
      }
 #endif
     
-  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
   Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , ExecPolicy(0,work_count) , result_view );
-  Kokkos::Impl::AllocationTracker::enable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
 
   closure.execute();
 
@@ -1843,9 +1843,9 @@ void parallel_reduce( const size_t        work_count
      }
 #endif
     
-  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
   Impl::ParallelReduce< FunctorType , ExecPolicy > closure( FunctorType(functor_in) , ExecPolicy(0,work_count) , result_view );
-  Kokkos::Impl::AllocationTracker::enable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
 
   closure.execute();
     
@@ -1902,9 +1902,9 @@ void parallel_reduce( const size_t        work_count
      }
 #endif
     
-  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
   Impl::ParallelReduce< FunctorType , ExecPolicy > closure( functor , ExecPolicy(0,work_count) , result_view );
-  Kokkos::Impl::AllocationTracker::enable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
 
   closure.execute();
     
