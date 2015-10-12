@@ -51,6 +51,7 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_MemoryTraits.hpp>
+#include <Kokkos_ExecPolicy.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

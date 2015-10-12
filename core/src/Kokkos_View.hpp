@@ -2096,9 +2096,7 @@ struct ALL { KOKKOS_INLINE_FUNCTION ALL(){} };
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#include <KokkosExp_View.hpp>
-
-#else
+#else /* #if defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
 
 // Must define before includng <impl/Kokkos_ViewOffset.hpp>
 namespace Kokkos {
@@ -2111,11 +2109,11 @@ using ALL = Experimental::Impl::ALL_t ;
 }
 
 #include <impl/Kokkos_ViewOffset.hpp>
-#include <impl/Kokkos_ViewSupport.hpp>
-
-#include <KokkosExp_View.hpp>
+/* #include <impl/Kokkos_ViewSupport.hpp> */
 
 #endif /* #if defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
+
+#include <KokkosExp_View.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

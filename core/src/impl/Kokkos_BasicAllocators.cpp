@@ -43,6 +43,8 @@
 
 #include <Kokkos_HostSpace.hpp>
 
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
 #include <impl/Kokkos_BasicAllocators.hpp>
 #include <impl/Kokkos_Error.hpp>
 
@@ -279,3 +281,6 @@ void * PageAlignedAllocator::reallocate(void * old_ptr, size_t old_size, size_t 
 }
 
 }} // namespace Kokkos::Impl
+
+#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
+
