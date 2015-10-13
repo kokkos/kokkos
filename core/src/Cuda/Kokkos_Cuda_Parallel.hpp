@@ -714,7 +714,7 @@ public:
       // REQUIRED ( 1 , N , 1 )
       const dim3 block( 1 , block_size , 1 );
       // Required grid.x <= block.y
-      const dim3 grid( std::min( int(block.y) , int( ( nwork + block.y - 1 ) / block.y ) , 1 , 1 );
+      const dim3 grid( std::min( int(block.y) , int( ( nwork + block.y - 1 ) / block.y ) ) , 1 , 1 );
 
 #ifdef KOKKOS_EXPERIMENTAL_CUDA_SHFL_REDUCTION
     const int shmem = 0;
