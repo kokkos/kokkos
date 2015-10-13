@@ -1392,16 +1392,25 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
   template< class DimRHS >
   KOKKOS_INLINE_FUNCTION
   constexpr ViewOffset( const ViewOffset< DimRHS , Kokkos::LayoutRight , void > & rhs
-                      , const size_t n0
-                      , const size_t
-                      , const size_t
-                      , const size_t
-                      , const size_t
-                      , const size_t
-                      , const size_t
-                      , const size_t
+                      , const size_t aN0
+                      , const size_t aN1
+                      , const size_t aN2
+                      , const size_t aN3
+                      , const size_t aN4
+                      , const size_t aN5
+                      , const size_t aN6
+                      , const size_t aN7
                       )
-    : m_dim( n0, 0, 0, 0, 0, 0, 0, 0 )
+    : m_dim( // N0 == Right-most dimension
+             ( 1 == DimRHS::rank ? aN0 :
+             ( 2 == DimRHS::rank ? aN1 :
+             ( 3 == DimRHS::rank ? aN2 :
+             ( 4 == DimRHS::rank ? aN3 :
+             ( 5 == DimRHS::rank ? aN4 :
+             ( 6 == DimRHS::rank ? aN5 :
+             ( 7 == DimRHS::rank ? aN6 :
+             ( 8 == DimRHS::rank ? aN7 : 0 ))))))))
+           , 0, 0, 0, 0, 0, 0, 0 )
     {
       static_assert( ( 0 == dimension_type::rank ) ||
                      ( 1 == dimension_type::rank && 1 == dimension_type::rank_dynamic && 1 <= DimRHS::rank )
@@ -2849,21 +2858,6 @@ class Error_view_scalar_reference_to_non_scalar_view ;
 } /* namespace Impl */
 } /* namespace Experimental */
 } /* namespace Kokkos */
-
-#if defined( KOKKOS_EXPRESSION_CHECK )
-
-#define KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( SPACE , MAP , RANK , I0 , I1 , I2 , I3 , I4 , I5 , I6 , I7 ) \
-  Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< \
-    Kokkos::Impl::ActiveExecutionMemorySpace , SPACE >::verify( MAP.data() ); \
-  /* array bounds checking */
-
-#else
-
-#define KOKKOS_ASSERT_VIEW_MAPPING_ACCESS( SPACE , MAP , RANK , I0 , I1 , I2 , I3 , I4 , I5 , I6 , I7 ) \
-  Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< \
-    Kokkos::Impl::ActiveExecutionMemorySpace , SPACE >::verify( MAP.data() )
-
-#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
