@@ -49,6 +49,25 @@ namespace Impl {
 
 int SharedAllocationRecord< void , void >::s_tracking_enabled = 1 ;
 
+void SharedAllocationRecord< void , void >::tracking_claim_and_disable()
+{
+  // A host thread claim and disable tracking flag
+
+  while ( ! Kokkos::atomic_compare_exchange_strong( & s_tracking_enabled, 1, 0 ) );
+}
+
+void SharedAllocationRecord< void , void >::tracking_release_and_enable()
+{
+  // The host thread that claimed and disabled the tracking flag
+  // now release and enable tracking.
+
+  if ( ! Kokkos::atomic_compare_exchange_strong( & s_tracking_enabled, 0, 1 ) ){
+    Kokkos::Impl::throw_runtime_exception("Kokkos::Experimental::Impl::SharedAllocationRecord<>::tracking_release_and_enable FAILED, this host process thread did not hold the lock" );
+  }
+}
+
+//----------------------------------------------------------------------------
+
 bool
 SharedAllocationRecord< void , void >::
 is_sane( SharedAllocationRecord< void , void > * arg_record )

@@ -107,6 +107,16 @@ public:
 
   static int tracking_enabled() { return s_tracking_enabled ; }
 
+  /**\brief A host process thread claims and disables the 
+   *        shared allocation tracking flag.
+   */
+  static void tracking_claim_and_disable();
+
+  /**\brief A host process thread releases and enables the 
+   *        shared allocation tracking flag.
+   */
+  static void tracking_release_and_enable();
+
   ~SharedAllocationRecord() = default ;
 
   constexpr SharedAllocationRecord()
@@ -243,7 +253,7 @@ private:
 #define KOKKOS_SHARED_ALLOCATION_TRACKER_ASSIGN( R )	\
   Record::tracking_enabled() ? R :	\
   reinterpret_cast<Record*>(	\
-  reinterpret_cast<unsigned long>( R ) & DO_NOT_DEREF_FLAG )
+  reinterpret_cast<unsigned long>( R ) | DO_NOT_DEREF_FLAG )
 
 #define KOKKOS_SHARED_ALLOCATION_TRACKER_INCREMENT	\
   if ( ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) Record::increment( m_record )

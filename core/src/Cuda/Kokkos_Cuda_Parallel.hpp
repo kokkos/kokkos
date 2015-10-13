@@ -451,10 +451,9 @@ public:
   inline
   void execute() const
     {
+      const int nwork = m_policy.end() - m_policy.begin();
       const dim3 block(  1 , CudaTraits::WarpSize * cuda_internal_maximum_warp_count(), 1);
-      const dim3 grid( std::min( ( int( m_policy.end() - m_policy.begin() ) + block.y - 1 ) / block.y
-                               , cuda_internal_maximum_grid_count() )
-                     , 1 , 1);
+      const dim3 grid( std::min( ( nwork + block.y - 1 ) / block.y , cuda_internal_maximum_grid_count() ) , 1 , 1);
 
       CudaParallelLaunch< ParallelFor >( *this , grid , block , 0 );
     }
@@ -711,10 +710,11 @@ public:
       m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
       m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( m_functor ) );
 
+      const int nwork = m_policy.end() - m_policy.begin();
       // REQUIRED ( 1 , N , 1 )
       const dim3 block( 1 , block_size , 1 );
       // Required grid.x <= block.y
-      const dim3 grid( std::min( int(block.y) , int(m_policy.end() - m_policy.begin()) ) , 1 , 1 );
+      const dim3 grid( std::min( int(block.y) , int( ( nwork + block.y - 1 ) / block.y ) ) , 1 , 1 );
 
 #ifdef KOKKOS_EXPERIMENTAL_CUDA_SHFL_REDUCTION
     const int shmem = 0;
@@ -1633,9 +1633,9 @@ void parallel_reduce( const ExecPolicy  & policy
      }
 #endif
 
-  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
   Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , policy , result_view );
-  Kokkos::Impl::AllocationTracker::enable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
 
   closure.execute();
     
@@ -1686,9 +1686,9 @@ void parallel_reduce( const ExecPolicy  & policy
      }
 #endif
     
-  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
   Impl::ParallelReduce< FunctorType, ExecPolicy > closure( FunctorType(functor_in) , policy , result_view );
-  Kokkos::Impl::AllocationTracker::enable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
 
   closure.execute();
     
@@ -1737,9 +1737,9 @@ void parallel_reduce( const ExecPolicy  & policy
      }
 #endif
     
-  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
   Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , policy , result_view );
-  Kokkos::Impl::AllocationTracker::enable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
 
   closure.execute();
     
@@ -1781,9 +1781,9 @@ void parallel_reduce( const size_t        work_count
      }
 #endif
     
-  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
   Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , ExecPolicy(0,work_count) , result_view );
-  Kokkos::Impl::AllocationTracker::enable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
 
   closure.execute();
 
@@ -1843,9 +1843,9 @@ void parallel_reduce( const size_t        work_count
      }
 #endif
     
-  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
   Impl::ParallelReduce< FunctorType , ExecPolicy > closure( FunctorType(functor_in) , ExecPolicy(0,work_count) , result_view );
-  Kokkos::Impl::AllocationTracker::enable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
 
   closure.execute();
     
@@ -1902,9 +1902,9 @@ void parallel_reduce( const size_t        work_count
      }
 #endif
     
-  Kokkos::Impl::AllocationTracker::disable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
   Impl::ParallelReduce< FunctorType , ExecPolicy > closure( functor , ExecPolicy(0,work_count) , result_view );
-  Kokkos::Impl::AllocationTracker::enable_tracking();
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
 
   closure.execute();
     
