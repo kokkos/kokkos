@@ -451,10 +451,9 @@ public:
   inline
   void execute() const
     {
+      const int nwork = m_policy.end() - m_policy.begin();
       const dim3 block(  1 , CudaTraits::WarpSize * cuda_internal_maximum_warp_count(), 1);
-      const dim3 grid( std::min( ( int( m_policy.end() - m_policy.begin() ) + block.y - 1 ) / block.y
-                               , cuda_internal_maximum_grid_count() )
-                     , 1 , 1);
+      const dim3 grid( std::min( ( nwork + block.y - 1 ) / block.y , cuda_internal_maximum_grid_count() ) , 1 , 1);
 
       CudaParallelLaunch< ParallelFor >( *this , grid , block , 0 );
     }
@@ -711,10 +710,11 @@ public:
       m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
       m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( m_functor ) );
 
+      const int nwork = m_policy.end() - m_policy.begin();
       // REQUIRED ( 1 , N , 1 )
       const dim3 block( 1 , block_size , 1 );
       // Required grid.x <= block.y
-      const dim3 grid( std::min( int(block.y) , int(m_policy.end() - m_policy.begin()) ) , 1 , 1 );
+      const dim3 grid( std::min( int(block.y) , int( ( nwork + block.y - 1 ) / block.y ) , 1 , 1 );
 
 #ifdef KOKKOS_EXPERIMENTAL_CUDA_SHFL_REDUCTION
     const int shmem = 0;
