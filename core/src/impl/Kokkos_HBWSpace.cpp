@@ -53,6 +53,7 @@
 #include <iostream>
 #include <sstream>
 #include <cstring>
+#include <algorithm>
 
 #include <Kokkos_HBWSpace.hpp>
 #include <impl/Kokkos_BasicAllocators.hpp>

@@ -44,6 +44,7 @@
 #ifndef KOKKOS_VIEWSUPPORT_HPP
 #define KOKKOS_VIEWSUPPORT_HPP
 
+#include <algorithm>
 #include <Kokkos_ExecPolicy.hpp>
 #include <impl/Kokkos_Shape.hpp>
 

@@ -45,6 +45,7 @@
 #define KOKKOS_EXPERIMENTAL_VIEW_HPP
 
 #include <string>
+#include <algorithm>
 #include <type_traits>
 #include <initializer_list>
 
