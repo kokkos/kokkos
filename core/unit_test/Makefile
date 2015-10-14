@@ -1,6 +1,7 @@
 KOKKOS_PATH = ../..
 
-GTEST_PATH = ../../TPL/gtest
+GTEST_PATH     = ../../TPL/gtest
+GTEST_ALL_PATH = $(GTEST_PATH)/gtest/gtest-all.cc
 
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test
 TEST_HEADERS = $(wildcard $(KOKKOS_PATH)/core/unit_test/*.hpp)
@@ -149,6 +150,6 @@ clean: kokkos-clean
 %.o:%.cpp $(KOKKOS_CPP_DEPENDS) $(TEST_HEADERS)
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) $(EXTRA_INC) -c $<
 
-gtest-all.o:$(GTEST_PATH)/gtest/gtest-all.cc
-	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) $(EXTRA_INC) -c $(GTEST_PATH)/gtest/gtest-all.cc
+gtest-all.o: $(GTEST_ALL_PATH)
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) $(EXTRA_INC) -c $(GTEST_ALL_PATH)
 
