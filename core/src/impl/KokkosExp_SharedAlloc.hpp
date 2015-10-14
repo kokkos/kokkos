@@ -238,11 +238,11 @@ private:
 
   typedef SharedAllocationRecord<void,void>  Record ;
 
-  enum : unsigned long { DO_NOT_DEREF_FLAG = 0x01ul };
+  enum : uintptr_t { DO_NOT_DEREF_FLAG = 0x01ul };
 
   // The allocation record resides in Host memory space
   Record      * m_record ;
-  unsigned long m_record_bits ;
+  uintptr_t m_record_bits ;
 
   // Use macros instead of inline functions to reduce
   // pressure on compiler optimization by reducing
@@ -253,7 +253,7 @@ private:
 #define KOKKOS_SHARED_ALLOCATION_TRACKER_ASSIGN( R )	\
   Record::tracking_enabled() ? R :	\
   reinterpret_cast<Record*>(	\
-  reinterpret_cast<unsigned long>( R ) | DO_NOT_DEREF_FLAG )
+  reinterpret_cast<uintptr_t>( R ) | DO_NOT_DEREF_FLAG )
 
 #define KOKKOS_SHARED_ALLOCATION_TRACKER_INCREMENT	\
   if ( ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) Record::increment( m_record )

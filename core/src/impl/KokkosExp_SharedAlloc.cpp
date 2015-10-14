@@ -94,14 +94,18 @@ is_sane( SharedAllocationRecord< void , void > * arg_record )
       ok = ok_root && ok_prev_next && ok_next_prev && ok_count ;
 
 if ( ! ok ) {
-  fprintf(stderr,"Kokkos::Experimental::Impl::SharedAllocationRecord failed is_sane: rec(0x%.12lx){ m_count(%d) m_root(0x%.12lx) m_next(0x%.12lx) m_prev(0x%.12lx) m_next->m_prev(0x%.12lx) m_prev->m_next(0x%.12lx) }\n"
-        , reinterpret_cast< unsigned long >( rec )
+  //Formatting dependent on sizeof(uintptr_t) 
+  fprintf(stderr
+        , ( (sizeof(uintptr_t) == sizeof(unsigned long))
+            ? ("Kokkos::Experimental::Impl::SharedAllocationRecord failed is_sane: rec(0x%.12lx){ m_count(%d) m_root(0x%.12lx) m_next(0x%.12lx) m_prev(0x%.12lx) m_next->m_prev(0x%.12lx) m_prev->m_next(0x%.12lx) }\n")
+            : ("Kokkos::Experimental::Impl::SharedAllocationRecord failed is_sane: rec(0x%.12llx){ m_count(%d) m_root(0x%.12llx) m_next(0x%.12llx) m_prev(0x%.12llx) m_next->m_prev(0x%.12llx) m_prev->m_next(0x%.12llx) }\n") )
+        , reinterpret_cast< uintptr_t >( rec )
         , rec->m_count
-        , reinterpret_cast< unsigned long >( rec->m_root )
-        , reinterpret_cast< unsigned long >( rec->m_next )
-        , reinterpret_cast< unsigned long >( rec->m_prev )
-        , reinterpret_cast< unsigned long >( rec->m_next->m_prev )
-        , reinterpret_cast< unsigned long >( rec->m_prev != rec->m_root ? rec->m_prev->m_next : root_next )
+        , reinterpret_cast< uintptr_t >( rec->m_root )
+        , reinterpret_cast< uintptr_t >( rec->m_next )
+        , reinterpret_cast< uintptr_t >( rec->m_prev )
+        , reinterpret_cast< uintptr_t >( rec->m_next->m_prev )
+        , reinterpret_cast< uintptr_t >( rec->m_prev != rec->m_root ? rec->m_prev->m_next : root_next )
         );
 }
 
@@ -253,16 +257,19 @@ print_host_accessible_records( std::ostream & s
 
   if ( detail ) {
     do {
-
-      snprintf( buffer , 256 , "%s addr( 0x%.12lx ) list( 0x%.12lx 0x%.12lx ) extent[ 0x%.12lx + %.8ld ] count(%d) dealloc(0x%.12lx) %s\n"
+      //Formatting dependent on sizeof(uintptr_t) 
+      snprintf( buffer , 256
+              , ( (sizeof(uintptr_t) == sizeof(unsigned long))
+                  ? ("%s addr( 0x%.12lx ) list( 0x%.12lx 0x%.12lx ) extent[ 0x%.12lx + %.8ld ] count(%d) dealloc(0x%.12lx) %s\n")
+                  : ("%s addr( 0x%.12llx ) list( 0x%.12llx 0x%.12llx ) extent[ 0x%.12llx + %.8ld ] count(%d) dealloc(0x%.12llx) %s\n") )
               , space_name
-              , reinterpret_cast<unsigned long>( r )
-              , reinterpret_cast<unsigned long>( r->m_prev )
-              , reinterpret_cast<unsigned long>( r->m_next )
-              , reinterpret_cast<unsigned long>( r->m_alloc_ptr )
+              , reinterpret_cast<uintptr_t>( r )
+              , reinterpret_cast<uintptr_t>( r->m_prev )
+              , reinterpret_cast<uintptr_t>( r->m_next )
+              , reinterpret_cast<uintptr_t>( r->m_alloc_ptr )
               , r->m_alloc_size
               , r->m_count
-              , reinterpret_cast<unsigned long>( r->m_dealloc )
+              , reinterpret_cast<uintptr_t>( r->m_dealloc )
               , r->m_alloc_ptr->m_label
               );
       std::cout << buffer ;
@@ -272,10 +279,13 @@ print_host_accessible_records( std::ostream & s
   else {
     do {
       if ( r->m_alloc_ptr ) {
-
-        snprintf( buffer , 256 , "%s [ 0x%.12lx + %ld ] %s\n"
+      //Formatting dependent on sizeof(uintptr_t) 
+        snprintf( buffer , 256
+                , ( (sizeof(uintptr_t) == sizeof(unsigned long))
+                    ? ("%s [ 0x%.12lx + %ld ] %s\n")
+                    : ("%s [ 0x%.12llx + %ld ] %s\n") )
                 , space_name
-                , reinterpret_cast< unsigned long >( r->data() )
+                , reinterpret_cast< uintptr_t >( r->data() )
                 , r->size()
                 , r->m_alloc_ptr->m_label
                 );
