@@ -45,6 +45,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <algorithm>
 #include <Kokkos_Macros.hpp>
 
 /* only compile this file if CUDA is enabled for Kokkos */

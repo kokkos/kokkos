@@ -45,6 +45,7 @@
 #define KOKKOS_CUDA_PARALLEL_HPP
 
 #include <iostream>
+#include <algorithm>
 #include <stdio.h>
 
 #include <Kokkos_Macros.hpp>

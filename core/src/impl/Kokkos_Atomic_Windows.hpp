@@ -45,6 +45,7 @@
 #ifdef _WIN32
 
 #define NOMINMAX
+#include <winsock2.h>
 #include <Windows.h>
 
 namespace Kokkos {
@@ -103,7 +104,8 @@ namespace Kokkos {
       KOKKOS_INLINE_FUNCTION U() {};
     } tmp, newval;
     newval.t = val;
-    tmp.i = _InterlockedCompareExchange128((LONGLONG*)dest, newval.i.upper, newval.i.lower, *((LONGLONG*)&compare));
+    _InterlockedCompareExchange128((LONGLONG*)dest, newval.i.upper, newval.i.lower, ((LONGLONG*)&compare));
+    tmp.t = dest;
     return tmp.t;
   }
 
