@@ -744,14 +744,18 @@ print_records( std::ostream & s , const Kokkos::CudaSpace & space , bool detail 
         head.m_label[0] = 0 ;
       }
 
-      snprintf( buffer , 256 , "Cuda addr( 0x%.12lx ) list( 0x%.12lx 0x%.12lx ) extent[ 0x%.12lx + %.8ld ] count(%d) dealloc(0x%.12lx) %s\n"
-              , reinterpret_cast<unsigned long>( r )
-              , reinterpret_cast<unsigned long>( r->m_prev )
-              , reinterpret_cast<unsigned long>( r->m_next )
-              , reinterpret_cast<unsigned long>( r->m_alloc_ptr )
+      //Formatting dependent on sizeof(uintptr_t)
+      snprintf( buffer , 256 
+              , ( (sizeof(uintptr_t) == sizeof(unsigned long)) 
+                  ? ("Cuda addr( 0x%.12lx ) list( 0x%.12lx 0x%.12lx ) extent[ 0x%.12lx + %.8ld ] count(%d) dealloc(0x%.12lx) %s\n")
+                  : ("Cuda addr( 0x%.12llx ) list( 0x%.12llx 0x%.12llx ) extent[ 0x%.12llx + %.8ld ] count(%d) dealloc(0x%.12llx) %s\n") )
+              , reinterpret_cast<uintptr_t>( r )
+              , reinterpret_cast<uintptr_t>( r->m_prev )
+              , reinterpret_cast<uintptr_t>( r->m_next )
+              , reinterpret_cast<uintptr_t>( r->m_alloc_ptr )
               , r->m_alloc_size
               , r->m_count
-              , reinterpret_cast<unsigned long>( r->m_dealloc )
+              , reinterpret_cast<uintptr_t>( r->m_dealloc )
               , head.m_label
               );
       std::cout << buffer ;
@@ -764,8 +768,12 @@ print_records( std::ostream & s , const Kokkos::CudaSpace & space , bool detail 
 
         Kokkos::Impl::DeepCopy<HostSpace,CudaSpace>::DeepCopy( & head , r->m_alloc_ptr , sizeof(SharedAllocationHeader) );
 
-        snprintf( buffer , 256 , "Cuda [ 0x%.12lx + %ld ] %s\n"
-                , reinterpret_cast< unsigned long >( r->data() )
+        //Formatting dependent on sizeof(uintptr_t)
+        snprintf( buffer , 256 
+                , ( (sizeof(uintptr_t) == sizeof(unsigned long)) 
+                  ? ("Cuda [ 0x%.12lx + %ld ] %s\n")
+                  : ("Cuda [ 0x%.12llx + %ld ] %s\n") )
+                , reinterpret_cast< uintptr_t >( r->data() )
                 , r->size()
                 , head.m_label
                 );
