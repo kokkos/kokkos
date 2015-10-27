@@ -50,8 +50,11 @@
 #include <stdint.h>    // uintptr_t
 #include <cstdlib>     // for malloc, realloc, and free
 #include <cstring>     // for memcpy
+
+#if defined(KOKKOS_POSIX_MEMALIGN_AVAILABLE)
 #include <sys/mman.h>  // for mmap, munmap, MAP_ANON, etc
 #include <unistd.h>    // for sysconf, _SC_PAGE_SIZE, _SC_PHYS_PAGES
+#endif
 
 #include <sstream>
 #include <iostream>
