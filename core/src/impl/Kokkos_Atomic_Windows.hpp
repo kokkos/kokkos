@@ -62,7 +62,6 @@ namespace Kokkos {
     };
   }
 
-#ifdef KOKKOS_HAVE_CXX11
   template < typename T >
   KOKKOS_INLINE_FUNCTION
     T atomic_compare_exchange(volatile T * const dest, const T & compare,
@@ -107,6 +106,13 @@ namespace Kokkos {
     _InterlockedCompareExchange128((LONGLONG*)dest, newval.i.upper, newval.i.lower, ((LONGLONG*)&compare));
     tmp.t = dest;
     return tmp.t;
+  }
+
+  template < typename T >
+  KOKKOS_INLINE_FUNCTION
+    T atomic_compare_exchange_strong(volatile T * const dest, const T & compare, const T & val)
+  {
+    return atomic_compare_exchange(dest,compare,val);
   }
 
   template< typename T >
@@ -221,7 +227,6 @@ namespace Kokkos {
   }
 
 }
-#endif
 #endif
 #endif
 
