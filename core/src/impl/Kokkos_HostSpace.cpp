@@ -56,10 +56,7 @@
 
 /*--------------------------------------------------------------------------*/
 
-#if ( defined( _POSIX_C_SOURCE ) && _POSIX_C_SOURCE >= 200112L ) || \
-    ( defined( _XOPEN_SOURCE )   && _XOPEN_SOURCE   >= 600 )
-
-#define KOKKOS_POSIX_MEMALIGN_AVAILABLE
+#if defined(KOKKOS_POSIX_MEMALIGN_AVAILABLE)
 
 #include <unistd.h>
 #include <sys/mman.h>
