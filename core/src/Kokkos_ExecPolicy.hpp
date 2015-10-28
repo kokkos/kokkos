@@ -189,8 +189,8 @@ public:
    *  Typically used to partition a range over a group of threads.
    */
   struct WorkRange {
-    typedef RangePolicy::work_tag     work_tag ;
-    typedef RangePolicy::member_type  member_type ;
+    typedef typename RangePolicy::work_tag     work_tag ;
+    typedef typename RangePolicy::member_type  member_type ;
 
     KOKKOS_INLINE_FUNCTION member_type begin() const { return m_begin ; }
     KOKKOS_INLINE_FUNCTION member_type end()   const { return m_end ; }
