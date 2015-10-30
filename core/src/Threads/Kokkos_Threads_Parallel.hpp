@@ -45,6 +45,7 @@
 #define KOKKOS_THREADS_PARALLEL_HPP
 
 #include <vector>
+#include <iostream> 
 
 #include <Kokkos_Parallel.hpp>
 
@@ -190,6 +191,7 @@ public:
     {
       ThreadsExec::resize_scratch( 0 , Policy::member_type::team_reduce_size() + m_shared );
 
+      std::cout << " TeamSharedMemory: " << m_shared << std::endl;
       ThreadsExec::start( & ParallelFor::exec , this );
 
       ThreadsExec::fence();
@@ -199,7 +201,7 @@ public:
              , const Policy      & arg_policy )
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
-    , m_shared( FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
+    , m_shared( arg_policy.scratch_size() + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
     { }
 };
 
@@ -395,7 +397,7 @@ public:
     : m_functor( arg_functor )
     , m_policy( arg_policy )
     , m_result_ptr( arg_result.ptr_on_device() )
-    , m_shared( FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
+    , m_shared( arg_policy.scratch_size() + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
     { }
 };
 

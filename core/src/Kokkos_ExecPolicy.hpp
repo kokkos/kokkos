@@ -235,6 +235,38 @@ public:
 
 namespace Kokkos {
 
+namespace Experimental {
+
+/** \brief Scratch memory request accepting per team and per thread value
+ *
+ * An instance of this class can be given as the last argument to a 
+ * TeamPolicy constructor. It sets the amount of user requested shared
+ * memory for the team.
+ */
+
+template< class MemorySpace >
+class TeamScratchRequest {
+  size_t m_per_team;
+  size_t m_per_thread;
+  
+public:
+  TeamScratchRequest(size_t per_team_, size_t per_thread_ = 0):
+   m_per_team(per_team_), m_per_thread(per_thread_) {
+  } 
+
+  size_t per_team() const {
+    return m_per_team;
+  }
+  size_t per_thread() const {
+    return m_per_thread;
+  }
+  size_t total(const size_t team_size) const {
+    return m_per_team + m_per_thread * team_size;
+  }
+}; 
+
+}
+
 /** \brief  Execution policy for parallel work over a league of teams of threads.
  *
  *  The work functor is called for each thread of each team such that
@@ -303,14 +335,20 @@ public:
   static int team_size_recommended( const FunctorType & , const int&);
   //----------------------------------------
   /** \brief  Construct policy with the given instance of the execution space */
-  TeamPolicy( const execution_space & , int league_size_request , int team_size_request );
+  TeamPolicy( const execution_space & , int league_size_request , int team_size_request , int vector_length_request = 1 );
 
-  TeamPolicy( const execution_space & , int league_size_request , const Kokkos::AUTO_t & );
+  TeamPolicy( const execution_space & , int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 );
 
   /** \brief  Construct policy with the default instance of the execution space */
-  TeamPolicy( int league_size_request , int team_size_request );
+  TeamPolicy( int league_size_request , int team_size_request , int vector_length_request = 1 );
 
-  TeamPolicy( int league_size_request , const Kokkos::AUTO_t & );
+  TeamPolicy( int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 );
+
+  template<class MemorySpace>
+  TeamPolicy( int league_size_request , int team_size_request , const Experimental::TeamScratchRequest<MemorySpace>& team_scratch_memory_request );
+
+  template<class MemorySpace>
+  TeamPolicy( int league_size_request , const Kokkos::AUTO_t & , const Experimental::TeamScratchRequest<MemorySpace>& team_scratch_memory_request );
 
   /** \brief  The actual league size (number of teams) of the policy.
    *
