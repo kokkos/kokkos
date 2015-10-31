@@ -372,6 +372,13 @@ TEST_F( cuda, shared_team )
   TestSharedTeam< Kokkos::Cuda >();
 }
 
+#if defined (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA)
+TEST_F( cuda, lambda_shared_team )
+{
+  TestLambdaSharedTeam< Kokkos::Cuda >();
+}
+#endif
+
 TEST_F( cuda, reduce_dynamic )
 {
   TestReduceDynamic< long ,   Kokkos::Cuda >( 10000000 );

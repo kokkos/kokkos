@@ -489,6 +489,7 @@ public:
     : m_league_size(0)
     , m_team_size(0)
     , m_team_alloc(0)
+    , m_scratch_size ( 0 )
     { init(league_size_request,team_size_request); (void) vector_length_request; }
 
   /** \brief  Specify league size, request team size */
@@ -499,6 +500,7 @@ public:
     : m_league_size(0)
     , m_team_size(0)
     , m_team_alloc(0)
+    , m_scratch_size ( 0 )
     { init(league_size_request,execution_space::thread_pool_size(2)); }
 
   TeamPolicy( int league_size_request
@@ -507,6 +509,7 @@ public:
     : m_league_size(0)
     , m_team_size(0)
     , m_team_alloc(0)
+    , m_scratch_size ( 0 )
     { init(league_size_request,team_size_request); }
 
   TeamPolicy( int league_size_request
@@ -515,7 +518,19 @@ public:
     : m_league_size(0)
     , m_team_size(0)
     , m_team_alloc(0)
+    , m_scratch_size ( 0 )
     { init(league_size_request,execution_space::thread_pool_size(2)); }
+
+  template<class MemorySpace>
+  TeamPolicy( int league_size_request
+            , int team_size_request
+            , const Experimental::TeamScratchRequest<MemorySpace> & scratch_request )
+    : m_league_size(0)
+    , m_team_size(0)
+    , m_team_alloc(0)
+    , m_scratch_size(scratch_request.total(team_size_request))
+    { init(league_size_request,team_size_request); }
+
 
   template<class MemorySpace>
   TeamPolicy( int league_size_request

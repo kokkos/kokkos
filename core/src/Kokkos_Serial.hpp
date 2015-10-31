@@ -295,6 +295,7 @@ class TeamPolicy< Arg0 , Arg1 , Kokkos::Serial >
 private:
 
   const int m_league_size ;
+  const int m_scratch_size ;
 
 public:
 
@@ -326,6 +327,7 @@ public:
 
   inline int team_size() const { return 1 ; }
   inline int league_size() const { return m_league_size ; }
+  inline size_t scratch_size() const { return m_scratch_size ; }
 
   /** \brief  Specify league size, request team size */
   TeamPolicy( execution_space &
@@ -333,6 +335,7 @@ public:
             , int /* team_size_request */
             , int /* vector_length_request */ = 1 )
     : m_league_size( league_size_request )
+    , m_scratch_size ( 0 )
     {}
 
   TeamPolicy( execution_space &
@@ -340,18 +343,38 @@ public:
             , const Kokkos::AUTO_t & /* team_size_request */
             , int /* vector_length_request */ = 1 )
     : m_league_size( league_size_request )
+    , m_scratch_size ( 0 )
     {}
 
   TeamPolicy( int league_size_request
             , int /* team_size_request */
             , int /* vector_length_request */ = 1 )
     : m_league_size( league_size_request )
+    , m_scratch_size ( 0 )
     {}
 
   TeamPolicy( int league_size_request
             , const Kokkos::AUTO_t & /* team_size_request */
             , int /* vector_length_request */ = 1 )
     : m_league_size( league_size_request )
+    , m_scratch_size ( 0 )
+    {}
+
+  template<class MemorySpace>
+  TeamPolicy( int league_size_request
+            , int /* team_size_request */
+            , const Experimental::TeamScratchRequest<MemorySpace> & scratch_request )
+    : m_league_size(league_size_request)
+    , m_scratch_size(scratch_request.total(1))
+    {}
+
+
+  template<class MemorySpace>
+  TeamPolicy( int league_size_request
+            , const Kokkos::AUTO_t & /* team_size_request */
+            , const Experimental::TeamScratchRequest<MemorySpace> & scratch_request )
+    : m_league_size(league_size_request)
+    , m_scratch_size(scratch_request.total(1))
     {}
 
   typedef Impl::SerialTeamMember  member_type ;
@@ -625,7 +648,7 @@ public:
              , const Policy      & arg_policy )
     : m_functor( arg_functor )
     , m_league(  arg_policy.league_size() )
-    , m_shared( FunctorTeamShmemSize< FunctorType >::value( arg_functor , 1 ) )
+    , m_shared( arg_policy.scratch_size() + FunctorTeamShmemSize< FunctorType >::value( arg_functor , 1 ) )
     { }
 };
 
@@ -702,7 +725,7 @@ public:
                 )
     : m_functor( arg_functor )
     , m_league( arg_policy.league_size() )
-    , m_shared( FunctorTeamShmemSize< FunctorType >::value( m_functor , 1 ) ) 
+    , m_shared( arg_policy.scratch_size() + FunctorTeamShmemSize< FunctorType >::value( m_functor , 1 ) )
     , m_result_ptr( arg_result.ptr_on_device() )
     {
       static_assert( Impl::is_view< ViewType >::value

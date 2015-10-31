@@ -213,6 +213,11 @@ TEST_F( openmp, team_shared_request) {
   TestSharedTeam< Kokkos::OpenMP >();
 }
 
+#if defined (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA)
+TEST_F( openmp, team_lambda_shared_request) {
+  TestLambdaSharedTeam< Kokkos::OpenMP >();
+}
+#endif
 
 TEST_F( openmp , atomics )
 {

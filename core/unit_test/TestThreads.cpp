@@ -254,6 +254,12 @@ TEST_F( threads, team_shared_request) {
   TestSharedTeam< Kokkos::Threads >();
 }
 
+#if defined (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA)
+TEST_F( threads, team_lambda_shared_request) {
+  TestLambdaSharedTeam< Kokkos::Threads >();
+}
+#endif
+
 TEST_F( threads , view_remap )
 {
   enum { N0 = 3 , N1 = 2 , N2 = 8 , N3 = 9 };

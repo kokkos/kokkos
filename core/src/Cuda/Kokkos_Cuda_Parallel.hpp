@@ -253,6 +253,7 @@ private:
   const int m_league_size ;
   const int m_team_size ;
   const int m_vector_length ;
+  const size_t m_scratch_size ;
 
 public:
 
@@ -307,6 +308,7 @@ public:
   inline int vector_length()   const { return m_vector_length ; }
   inline int team_size()   const { return m_team_size ; }
   inline int league_size() const { return m_league_size ; }
+  inline size_t scratch_size() const { return m_scratch_size ; }
 
   /** \brief  Specify league size, request team size */
   TeamPolicy( execution_space &
@@ -316,6 +318,7 @@ public:
     : m_league_size( league_size_ )
     , m_team_size( team_size_request )
     , m_vector_length( vector_length_request )
+    , m_scratch_size ( 0 )
     {
       // Allow only power-of-two vector_length
       if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
@@ -340,6 +343,7 @@ public:
     : m_league_size( league_size_ )
     , m_team_size( -1 )
     , m_vector_length( vector_length_request )
+    , m_scratch_size ( 0 )
     {
       // Allow only power-of-two vector_length
       if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
@@ -357,6 +361,7 @@ public:
     : m_league_size( league_size_ )
     , m_team_size( team_size_request )
     , m_vector_length ( vector_length_request )
+    , m_scratch_size ( 0 )
     {
       // Allow only power-of-two vector_length
       if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
@@ -379,9 +384,53 @@ public:
     : m_league_size( league_size_ )
     , m_team_size( -1 )
     , m_vector_length ( vector_length_request )
+    , m_scratch_size ( 0 )
     {
       // Allow only power-of-two vector_length
       if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
+        Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
+      }
+
+      // Make sure league size is permissable
+      if(league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
+        Impl::throw_runtime_exception( "Requested too large league_size for TeamPolicy on Cuda execution space.");
+    }
+
+  template<class MemorySpace>
+  TeamPolicy( int league_size_
+            , int team_size_request
+            , const Experimental::TeamScratchRequest<MemorySpace> & scratch_request )
+    : m_league_size( league_size_ )
+    , m_team_size( team_size_request )
+    , m_vector_length( 1 )
+    , m_scratch_size(scratch_request.total(team_size_request))
+    {
+      // Allow only power-of-two vector_length
+      if ( ! Kokkos::Impl::is_integral_power_of_two( m_vector_length ) ) {
+        Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
+      }
+
+      // Make sure league size is permissable
+      if(league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
+        Impl::throw_runtime_exception( "Requested too large league_size for TeamPolicy on Cuda execution space.");
+
+      // Make sure total block size is permissable
+      if ( m_team_size * m_vector_length > 1024 ) {
+        Impl::throw_runtime_exception(std::string("Kokkos::TeamPolicy< Cuda > the team size is too large. Team size x vector length must be smaller than 1024."));
+      }
+    }
+
+  template<class MemorySpace>
+  TeamPolicy( int league_size_
+            , const Kokkos::AUTO_t & /* team_size_request */
+            , const Experimental::TeamScratchRequest<MemorySpace> & scratch_request )
+    : m_league_size( league_size_ )
+    , m_team_size( 256 )
+    , m_vector_length ( 1 )
+    , m_scratch_size(scratch_request.total(2356))
+    {
+      // Allow only power-of-two vector_length
+      if ( ! Kokkos::Impl::is_integral_power_of_two( m_vector_length ) ) {
         Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
       }
 
@@ -547,7 +596,7 @@ public:
         Kokkos::Impl::cuda_get_opt_block_size< ParallelFor >( arg_functor ) / arg_policy.vector_length() )
     , m_vector_size( arg_policy.vector_length() )
     , m_shmem_begin( sizeof(double) * ( m_team_size + 2 ) )
-    , m_shmem_size( FunctorTeamShmemSize< FunctorType >::value( m_functor , m_team_size ) )
+    , m_shmem_size( arg_policy.scratch_size() + FunctorTeamShmemSize< FunctorType >::value( m_functor , m_team_size ) )
     {
       // Functor's reduce memory, team scan memory, and team shared memory depend upon team size.
 
@@ -907,7 +956,7 @@ public:
 
     m_team_begin = cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( arg_functor , m_team_size );
     m_shmem_begin = sizeof(double) * ( m_team_size + 2 );
-    m_shmem_size = FunctorTeamShmemSize< FunctorType >::value( arg_functor , m_team_size );
+    m_shmem_size = arg_policy.scratch_size() + FunctorTeamShmemSize< FunctorType >::value( arg_functor , m_team_size );
 
     // The global parallel_reduce does not support vector_length other than 1 at the moment
     if( arg_policy.vector_length() > 1)
