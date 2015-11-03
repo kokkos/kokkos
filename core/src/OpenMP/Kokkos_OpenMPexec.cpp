@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -282,7 +282,9 @@ void OpenMP::initialize( unsigned thread_count ,
         // Reverse the rank for threads so that the scan operation reduces to the highest rank thread.
 
         const unsigned omp_rank    = omp_get_thread_num();
-        const unsigned thread_r    = Impl::s_using_hwloc ? Kokkos::hwloc::bind_this_thread( thread_count , threads_coord ) : omp_rank ;
+        const unsigned thread_r    = Impl::s_using_hwloc && Kokkos::hwloc::can_bind_threads()
+                                   ? Kokkos::hwloc::bind_this_thread( thread_count , threads_coord )
+                                   : omp_rank ;
 
         Impl::OpenMPexec::m_map_rank[ omp_rank ] = thread_r ;
       }
@@ -327,7 +329,7 @@ void OpenMP::finalize()
 
   omp_set_num_threads(1);
 
-  if ( Impl::s_using_hwloc ) {
+  if ( Impl::s_using_hwloc && Kokkos::hwloc::can_bind_threads() ) {
     hwloc::unbind_this_thread();
   }
 }
