@@ -697,6 +697,7 @@ namespace Kokkos {
 namespace hwloc {
 
 bool available() { return false ; }
+bool can_bind_threads() { return false ; }
 
 unsigned get_available_numa_count() { return 1 ; }
 unsigned get_available_cores_per_numa() { return 1 ; }
