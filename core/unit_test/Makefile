@@ -1,6 +1,19 @@
 KOKKOS_PATH = ../..
 
-GTEST_PATH = ../../TPL/gtest
+# Google Test Import for Trilinos
+GTEST_PATH     = ../../TPL/gtest
+GTEST_ALL_PATH = $(GTEST_PATH)/gtest/gtest-all.cc
+GTEST_INC      = -I$(GTEST_PATH)
+
+# Use Kokkos Internal Copy of Google Test
+#GTEST_PATH      = ../../tpls/gtest
+#GTEST_ALL_PATH  = $(GTEST_PATH)/gtest/gtest-all.cc
+#GTEST_INC       = -I$(GTEST_PATH)
+
+# Google Test Import for GoogleTest Github Code Checkout Locally
+#GTEST_PATH      = $(HOME)/git/googletest/googletest
+#GTEST_INC       = -I$(GTEST_PATH)/include -I$(GTEST_PATH)
+#GTEST_ALL_PATH  = $(GTEST_PATH)/src/gtest-all.cc
 
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test
 TEST_HEADERS = $(wildcard $(KOKKOS_PATH)/core/unit_test/*.hpp)
@@ -22,7 +35,7 @@ else
 	LDFLAGS ?= -lpthread
 endif
 
-KOKKOS_CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/core/unit_test
+KOKKOS_CXXFLAGS += $(GTEST_INC) -I${KOKKOS_PATH}/core/unit_test
 
 TEST_TARGETS =
 TARGETS =
@@ -149,6 +162,5 @@ clean: kokkos-clean
 %.o:%.cpp $(KOKKOS_CPP_DEPENDS) $(TEST_HEADERS)
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) $(EXTRA_INC) -c $<
 
-gtest-all.o:$(GTEST_PATH)/gtest/gtest-all.cc
-	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) $(EXTRA_INC) -c $(GTEST_PATH)/gtest/gtest-all.cc
-
+gtest-all.o: $(GTEST_ALL_PATH)
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) $(EXTRA_INC) -c $(GTEST_ALL_PATH)
