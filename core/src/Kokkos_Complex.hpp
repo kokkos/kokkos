@@ -375,6 +375,17 @@ operator * (const std::complex<RealType>& x, const complex<RealType>& y) {
                             x.real () * y.imag () + x.imag () * y.real ());
 }
 
+/// \brief Binary * operator for RealType times complex.
+///
+/// This function exists because the compiler doesn't know that
+/// RealType and complex<RealType> commute with respect to operator*.
+template<class RealType>
+KOKKOS_INLINE_FUNCTION
+complex<RealType>
+operator * (const RealType& x, const complex<RealType>& y) {
+  return complex<RealType> (x * y.real (), x * y.imag ());
+}
+
 
 //! Imaginary part of a complex number.
 template<class RealType>
