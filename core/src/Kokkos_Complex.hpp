@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -357,6 +357,24 @@ operator * (const complex<RealType>& x, const complex<RealType>& y) {
   return complex<RealType> (x.real () * y.real () - x.imag () * y.imag (),
                             x.real () * y.imag () + x.imag () * y.real ());
 }
+
+/// \brief Binary * operator for std::complex and complex.
+///
+/// This function exists because GCC 4.7.2 (and perhaps other
+/// compilers) are not able to deduce that they can multiply
+/// std::complex by Kokkos::complex, by first converting std::complex
+/// to Kokkos::complex.
+///
+/// This function cannot be called in a CUDA device function, because
+/// std::complex's methods and nonmember functions are not marked as
+/// CUDA device functions.
+template<class RealType>
+complex<RealType>
+operator * (const std::complex<RealType>& x, const complex<RealType>& y) {
+  return complex<RealType> (x.real () * y.real () - x.imag () * y.imag (),
+                            x.real () * y.imag () + x.imag () * y.real ());
+}
+
 
 //! Imaginary part of a complex number.
 template<class RealType>
