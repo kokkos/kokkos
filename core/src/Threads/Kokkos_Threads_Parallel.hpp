@@ -191,7 +191,6 @@ public:
     {
       ThreadsExec::resize_scratch( 0 , Policy::member_type::team_reduce_size() + m_shared );
 
-      std::cout << " TeamSharedMemory: " << m_shared << std::endl;
       ThreadsExec::start( & ParallelFor::exec , this );
 
       ThreadsExec::fence();
