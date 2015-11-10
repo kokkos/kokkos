@@ -593,7 +593,7 @@ public:
     : m_functor( arg_functor )
     , m_league_size( arg_policy.league_size() )
     , m_team_size( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
-        Kokkos::Impl::cuda_get_opt_block_size< ParallelFor >( arg_functor ) / arg_policy.vector_length() )
+        Kokkos::Impl::cuda_get_opt_block_size< ParallelFor >( arg_functor , arg_policy.scratch_size() ) / arg_policy.vector_length() )
     , m_vector_size( arg_policy.vector_length() )
     , m_shmem_begin( sizeof(double) * ( m_team_size + 2 ) )
     , m_shmem_size( arg_policy.scratch_size() + FunctorTeamShmemSize< FunctorType >::value( m_functor , m_team_size ) )
@@ -946,7 +946,7 @@ public:
   , m_shmem_size( 0 )
   , m_league_size( arg_policy.league_size() )
   , m_team_size( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
-      Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( arg_functor ) / arg_policy.vector_length() )
+      Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( arg_functor , arg_policy.scratch_size() ) / arg_policy.vector_length() )
   {
     // Return Init value if the number of worksets is zero
     if( arg_policy.league_size() == 0) {
