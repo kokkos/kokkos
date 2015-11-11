@@ -336,7 +336,7 @@ private:
           , const Kokkos::Experimental::Impl::ALL_t 
           , Args ... args )
     {
-      m_begin[  domain_rank ]  = 0 ;
+      m_begin[  domain_rank ] = 0 ;
       m_length[ range_rank  ] = dim.extent( domain_rank );
       m_index[  range_rank  ] = domain_rank ;
 
@@ -357,7 +357,7 @@ private:
 
       if ( b + dim.extent( domain_rank ) < e ) return false ;
 
-      m_begin[  domain_rank ]  = b ;
+      m_begin[  domain_rank ] = b ;
       m_length[ range_rank  ] = e < b ? 0 : e - b ;
       m_index[  range_rank  ] = domain_rank ;
 
@@ -378,7 +378,7 @@ private:
 
       if ( b + dim.extent(domain_rank) < e ) return false ;
 
-      m_begin[  domain_rank ]  = b ;
+      m_begin[  domain_rank ] = b ;
       m_length[ range_rank  ] = e < b ? 0 : e - b ;
       m_index[  range_rank  ] = domain_rank ;
 
@@ -399,7 +399,7 @@ private:
 
       if ( val.size() != 2 || b + dim.extent(domain_rank) < e ) return false ;
 
-      m_begin[  domain_rank ]  = b ;
+      m_begin[  domain_rank ] = b ;
       m_length[ range_rank  ] = e < b ? 0 : e - b ;
       m_index[  range_rank  ] = domain_rank ;
 
@@ -427,22 +427,30 @@ public:
         unsigned( is_integral_extent<6,Args...>() ) +
         unsigned( is_integral_extent<7,Args...>() ) , "" );
 
+      // Required to suppress '-Werror=maybe-uninitialized'
+      m_begin[0]  = 0 ;
+      m_length[0] = 0 ;
+      m_index[0]  = 0 ;
+
       if ( ! set( 0 , 0 , dim , args... ) ) {
         Kokkos::abort("Kokkos::Experimental::subview bounds error");
       }
     }
 
+  template < typename iType >
   KOKKOS_INLINE_FUNCTION
-  constexpr size_t domain_offset( int i ) const
-    { return i < DomainRank ? m_begin[i] : 0 ; }
+  constexpr size_t domain_offset( const iType i ) const
+    { return unsigned(i) < DomainRank ? m_begin[i] : 0 ; }
 
+  template < typename iType >
   KOKKOS_INLINE_FUNCTION
-  constexpr size_t range_extent( int i ) const
-    { return i < RangeRank ? m_length[i] : 0 ; }
+  constexpr size_t range_extent( const iType i ) const
+    { return unsigned(i) < RangeRank ? m_length[i] : 0 ; }
 
+  template < typename iType >
   KOKKOS_INLINE_FUNCTION
-  constexpr unsigned range_index( int i ) const
-    { return i < RangeRank ? m_index[i] : ~0u ; }
+  constexpr unsigned range_index( const iType i ) const
+    { return unsigned(i) < RangeRank ? m_index[i] : ~0u ; }
 };
 
 }}} // namespace Kokkos::Experimental::Impl
@@ -503,8 +511,8 @@ private:
   typedef ViewArrayAnalysis< T > nested ;
 public:
   typedef typename nested::value_type            value_type ;
-  typedef typename nested::const_value_type      const_value_type ;;
-  typedef typename nested::non_const_value_type  non_const_value_type ;;
+  typedef typename nested::const_value_type      const_value_type ;
+  typedef typename nested::non_const_value_type  non_const_value_type ;
 
   typedef typename nested::static_dimension::template prepend<N>::type
     static_dimension ;
@@ -524,8 +532,8 @@ private:
   typedef typename nested::dimension nested_dimension ;
 public:
   typedef typename nested::value_type            value_type ;
-  typedef typename nested::const_value_type      const_value_type ;;
-  typedef typename nested::non_const_value_type  non_const_value_type ;;
+  typedef typename nested::const_value_type      const_value_type ;
+  typedef typename nested::non_const_value_type  non_const_value_type ;
 
   typedef typename nested::dynamic_dimension::template prepend<0>::type
     dynamic_dimension ;
@@ -544,8 +552,8 @@ private:
   typedef ViewArrayAnalysis< T > nested ;
 public:
   typedef typename nested::value_type            value_type ;
-  typedef typename nested::const_value_type      const_value_type ;;
-  typedef typename nested::non_const_value_type  non_const_value_type ;;
+  typedef typename nested::const_value_type      const_value_type ;
+  typedef typename nested::non_const_value_type  non_const_value_type ;
 
   typedef typename nested::dynamic_dimension::template prepend<0>::type
     dynamic_dimension ;

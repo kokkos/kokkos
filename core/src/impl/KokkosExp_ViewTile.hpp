@@ -206,11 +206,12 @@ tile_subview( const Kokkos::Experimental::View<T**,Kokkos::LayoutTileLeft<N0,N1,
             , const size_t i_tile1
             )
 {
-  typedef Kokkos::LayoutTileLeft<N0,N1,true>             SrcLayout ;
-  typedef Kokkos::Experimental::View<T**,SrcLayout,P...> SrcType ;
-  typedef Kokkos::Experimental::View< T[N0][N1] , LayoutLeft , P... > DstType ;
+  // Force the specialized ViewMapping for extracting a tile
+  // by using the first subview argument as the layout.
+  typedef Kokkos::LayoutTileLeft<N0,N1,true> SrcLayout ;
 
-  return DstType( src , SrcLayout() , i_tile0 , i_tile1 );
+  return Kokkos::Experimental::View< T[N0][N1] , LayoutLeft , P... >
+    ( src , SrcLayout() , i_tile0 , i_tile1 );
 }
 
 } /* namespace Experimental */
