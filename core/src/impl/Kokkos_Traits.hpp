@@ -51,6 +51,21 @@
 namespace Kokkos {
 namespace Impl {
 
+//----------------------------------------------------------------------------
+// Help with C++11 variadic argument packs
+
+template< unsigned I , class ... Args >
+struct variadic_type { typedef void type ; };
+
+template< class T , class ... Args >
+struct variadic_type< 0 , T , Args ... >
+  { typedef T type ; };
+
+template< unsigned I , class T , class ... Args >
+struct variadic_type< I , T , Args ... >
+  { typedef typename variadic_type< I - 1 , Args ... >::type type ; };
+
+//----------------------------------------------------------------------------
 /* C++11 conformal compile-time type traits utilities.
  * Prefer to use C++11 when portably available.
  */

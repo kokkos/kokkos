@@ -67,10 +67,13 @@ struct DeepCopy ;
 template< class DataType >
 struct ViewArrayAnalysis ;
 
-template< class DataType , class ValueType , class ArrayLayout >
+template< class DataType , class ArrayLayout 
+        , typename ValueType =
+          typename ViewArrayAnalysis< DataType >::non_const_value_type
+        >
 struct ViewDataAnalysis ;
 
-template< class , class = void , typename Enable = void >
+template< class , class ... >
 class ViewMapping { enum { is_assignable = false }; };
 
 template< class MemorySpace >
@@ -105,102 +108,125 @@ namespace Experimental {
  * This is an implementation detail of View.  It is only of interest
  * to developers implementing a new specialization of View.
  *
- * Template argument permutations:
- *   - View< DataType , void         , void         , void >
- *   - View< DataType , Space        , void         , void >
- *   - View< DataType , Space        , MemoryTraits , void >
- *   - View< DataType , Space        , void         , MemoryTraits >
- *   - View< DataType , ArrayLayout  , void         , void >
- *   - View< DataType , ArrayLayout  , Space        , void >
- *   - View< DataType , ArrayLayout  , MemoryTraits , void   >
- *   - View< DataType , ArrayLayout  , Space        , MemoryTraits >
- *   - View< DataType , MemoryTraits , void         , void  >
+ * Template argument options:
+ *   - View< DataType >
+ *   - View< DataType , Space >
+ *   - View< DataType , Space , MemoryTraits >
+ *   - View< DataType , ArrayLayout >
+ *   - View< DataType , ArrayLayout , Space >
+ *   - View< DataType , ArrayLayout , MemoryTraits >
+ *   - View< DataType , ArrayLayout , Space , MemoryTraits >
+ *   - View< DataType , MemoryTraits >
  */
 
-template< class DataType ,
-          class Arg1 = void ,
-          class Arg2 = void ,
-          class Arg3 = void >
-class ViewTraits {
+template< class DataType , class ... Properties >
+struct ViewTraits ;
+
+template<>
+struct ViewTraits< void >
+{
+  typedef void  execution_space ;
+  typedef void  memory_space ;
+  typedef void  array_layout ;
+  typedef void  memory_traits ;
+};
+
+template< class ... Prop >
+struct ViewTraits< void , void , Prop ... >
+{
+  // Ignore an extraneous 'void'
+  typedef typename ViewTraits<void,Prop...>::execution_space  execution_space ;
+  typedef typename ViewTraits<void,Prop...>::memory_space     memory_space ;
+  typedef typename ViewTraits<void,Prop...>::array_layout     array_layout ;
+  typedef typename ViewTraits<void,Prop...>::memory_traits    memory_traits ;
+};
+
+template< class ArrayLayout , class ... Prop >
+struct ViewTraits< typename std::enable_if< Kokkos::Impl::is_array_layout<ArrayLayout>::value >::type , ArrayLayout , Prop ... >
+{
+  // Specify layout, keep subsequent space and memory traits arguments
+
+  typedef typename ViewTraits<void,Prop...>::execution_space  execution_space ;
+  typedef typename ViewTraits<void,Prop...>::memory_space     memory_space ;
+  typedef          ArrayLayout                                array_layout ;
+  typedef typename ViewTraits<void,Prop...>::memory_traits    memory_traits ;
+};
+
+template< class Space , class ... Prop >
+struct ViewTraits< typename std::enable_if< Kokkos::Impl::is_space<Space>::value >::type , Space , Prop ... >
+{
+  // Specify Space, memory traits should be the only subsequent argument
+
+  static_assert( std::is_same< typename ViewTraits<void,Prop...>::execution_space , void >::value ||
+                 std::is_same< typename ViewTraits<void,Prop...>::memory_space    , void >::value ||
+                 std::is_same< typename ViewTraits<void,Prop...>::array_layout    , void >::value
+               , "Only one View Execution or Memory Space template argument" );
+
+  typedef typename Space::execution_space                   execution_space ;
+  typedef typename Space::memory_space                      memory_space ;
+  typedef typename execution_space::array_layout            array_layout ;
+  typedef typename ViewTraits<void,Prop...>::memory_traits  memory_traits ;
+};
+
+template< class MemoryTraits , class ... Prop >
+struct ViewTraits< typename std::enable_if< Kokkos::Impl::is_memory_traits<MemoryTraits>::value >::type , MemoryTraits , Prop ... >
+{
+  // Specify memory trait, should not be any subsequent arguments
+
+  static_assert( std::is_same< typename ViewTraits<void,Prop...>::execution_space , void >::value ||
+                 std::is_same< typename ViewTraits<void,Prop...>::memory_space    , void >::value ||
+                 std::is_same< typename ViewTraits<void,Prop...>::array_layout    , void >::value ||
+                 std::is_same< typename ViewTraits<void,Prop...>::memory_traits   , void >::value
+               , "MemoryTrait is the final optional template argument for a View" );
+
+  typedef void          execution_space ;
+  typedef void          memory_space ;
+  typedef void          array_layout ;
+  typedef MemoryTraits  memory_traits ;
+};
+
+
+template< class DataType , class ... Properties >
+struct ViewTraits {
 private:
 
-  // Layout, Space, and MemoryTraits are optional
-  // but need to appear in that order. That means Layout
-  // can only be Arg1, Space can be Arg1 or Arg2, and
-  // MemoryTraits can be Arg1, Arg2 or Arg3
+  // Unpack the properties arguments
+  typedef ViewTraits< void , Properties ... >  prop ;
 
-  enum { Arg1IsLayout = Kokkos::Impl::is_array_layout<Arg1>::value };
+  typedef typename
+    std::conditional< ! std::is_same< typename prop::execution_space , void >::value
+                    , typename prop::execution_space
+                    , Kokkos::DefaultExecutionSpace
+                    >::type
+      ExecutionSpace ;
 
-  enum { Arg1IsSpace = Kokkos::Impl::is_space<Arg1>::value };
-  enum { Arg2IsSpace = Kokkos::Impl::is_space<Arg2>::value };
-
-  enum { Arg1IsMemoryTraits = Kokkos::Impl::is_memory_traits<Arg1>::value };
-  enum { Arg2IsMemoryTraits = Kokkos::Impl::is_memory_traits<Arg2>::value };
-  enum { Arg3IsMemoryTraits = Kokkos::Impl::is_memory_traits<Arg3>::value };
-
-  enum { Arg1IsVoid = std::is_same< Arg1 , void >::value };
-  enum { Arg2IsVoid = std::is_same< Arg2 , void >::value };
-  enum { Arg3IsVoid = std::is_same< Arg3 , void >::value };
-
-  static_assert( 1 == Arg1IsLayout + Arg1IsSpace + Arg1IsMemoryTraits + Arg1IsVoid
-               , "Template argument #1 must be layout, space, traits, or void" );
-
-  // If Arg1 is Layout       then Arg2 is Space, MemoryTraits, or void
-  // If Arg1 is Space        then Arg2 is MemoryTraits or void
-  // If Arg1 is MemoryTraits then Arg2 is void
-  // If Arg1 is Void         then Arg2 is void
-
-  static_assert( ( Arg1IsLayout       && ( 1 == Arg2IsSpace + Arg2IsMemoryTraits + Arg2IsVoid ) ) ||
-                 ( Arg1IsSpace        && ( 0 == Arg2IsSpace ) && ( 1 == Arg2IsMemoryTraits + Arg2IsVoid ) ) ||
-                 ( Arg1IsMemoryTraits && Arg2IsVoid ) ||
-                 ( Arg1IsVoid         && Arg2IsVoid )
-               , "Template argument #2 must be space, traits, or void" );
-
-  // Arg3 is MemoryTraits or void and at most one argument is MemoryTraits
-  static_assert( ( 1 == Arg3IsMemoryTraits + Arg3IsVoid ) &&
-                 ( Arg1IsMemoryTraits + Arg2IsMemoryTraits + Arg3IsMemoryTraits <= 1 )
-               , "Template argument #3 must be traits or void" );
-
-  typedef
-    typename std::conditional< Arg1IsSpace , Arg1 ,
-    typename std::conditional< Arg2IsSpace , Arg2 , Kokkos::DefaultExecutionSpace
-    >::type >::type::execution_space
-     ExecutionSpace ;
-
-  typedef 
-    typename std::conditional< Arg1IsSpace , Arg1 ,
-    typename std::conditional< Arg2IsSpace , Arg2 , Kokkos::DefaultExecutionSpace
-    >::type >::type::memory_space 
+  typedef typename
+    std::conditional< ! std::is_same< typename prop::memory_space , void >::value
+                    , typename prop::memory_space
+                    , typename ExecutionSpace::memory_space
+                    >::type
       MemorySpace ;
 
-  typedef
-    typename Kokkos::Impl::is_space<
-    typename std::conditional< Arg1IsSpace , Arg1 ,
-    typename std::conditional< Arg2IsSpace , Arg2 , Kokkos::DefaultExecutionSpace
-    >::type >::type >::host_mirror_space
-      HostMirrorSpace ;
-
-  typedef
-    typename std::conditional< Arg1IsLayout , Arg1 , typename ExecutionSpace::array_layout >::type
+  typedef typename
+    std::conditional< ! std::is_same< typename prop::array_layout , void >::value
+                    , typename prop::array_layout
+                    , typename ExecutionSpace::array_layout
+                    >::type
       ArrayLayout ;
 
-  // Arg1, Arg2, or Arg3 may be memory traits
-  typedef
-    typename std::conditional< Arg1IsMemoryTraits , Arg1 ,
-    typename std::conditional< Arg2IsMemoryTraits , Arg2 ,
-    typename std::conditional< Arg3IsMemoryTraits , Arg3 , MemoryManaged
-    >::type >::type >::type
+  typedef typename Kokkos::Impl::is_space< ExecutionSpace >::host_mirror_space
+      HostMirrorSpace ;
+
+  typedef typename
+    std::conditional< ! std::is_same< typename prop::memory_traits , void >::value
+                    , typename prop::memory_traits
+                    , typename Kokkos::MemoryManaged
+                    >::type
       MemoryTraits ;
 
-  // Analyze data type's array properties
-  typedef Kokkos::Experimental::Impl::ViewArrayAnalysis< DataType >  array_analysis ;
-
-  // Analyze data type's properties with opportunity to specialize based upon the array value type
-  typedef Kokkos::Experimental::Impl::
-    ViewDataAnalysis< DataType
-                    , typename array_analysis::non_const_value_type
-                    , ArrayLayout
-                    >  data_analysis ;
+  // Analyze data type's properties,
+  // May be specialized based upon the layout and value type
+  typedef Kokkos::Experimental::Impl::ViewDataAnalysis< DataType , ArrayLayout > data_analysis ;
 
 public:
 
@@ -238,17 +264,17 @@ public:
   //------------------------------------
   // Execution space, memory space, memory access traits, and host mirror space.
 
-  typedef ExecutionSpace                      execution_space ;
-  typedef MemorySpace                         memory_space ;
-  typedef Device<ExecutionSpace,MemorySpace>  device_type ;
-  typedef MemoryTraits                        memory_traits ;
-  typedef HostMirrorSpace                     host_mirror_space ;
+  typedef ExecutionSpace                              execution_space ;
+  typedef MemorySpace                                 memory_space ;
+  typedef Kokkos::Device<ExecutionSpace,MemorySpace>  device_type ;
+  typedef MemoryTraits                                memory_traits ;
+  typedef HostMirrorSpace                             host_mirror_space ;
 
-  typedef typename memory_space::size_type  size_type ;
+  typedef typename MemorySpace::size_type  size_type ;
 
-  enum { is_hostspace      = std::is_same< memory_space , HostSpace >::value };
-  enum { is_managed        = memory_traits::Unmanaged    == 0 };
-  enum { is_random_access  = memory_traits::RandomAccess == 1 };
+  enum { is_hostspace      = std::is_same< MemorySpace , HostSpace >::value };
+  enum { is_managed        = MemoryTraits::Unmanaged    == 0 };
+  enum { is_random_access  = MemoryTraits::RandomAccess == 1 };
 
   //------------------------------------
 };
@@ -272,11 +298,13 @@ public:
  * they may occur.
  *
  * Valid ways in which template arguments may be specified:
- *   - View< DataType , Space >
- *   - View< DataType , Space  ,         MemoryTraits >
- *   - View< DataType , Space  , void  , MemoryTraits >
+ *   - View< DataType >
+ *   - View< DataType , Layout >
  *   - View< DataType , Layout , Space >
  *   - View< DataType , Layout , Space , MemoryTraits >
+ *   - View< DataType , Space >
+ *   - View< DataType , Space , MemoryTraits >
+ *   - View< DataType , MemoryTraits >
  *
  * \tparam DataType (required) This indicates both the type of each
  *   entry of the array, and the combination of compile-time and
@@ -333,10 +361,7 @@ public:
  * }
  * \endcode
  */
-template< class DataType
-        , class Arg1 = void /* ArrayLayout, SpaceType, or MemoryTraits */
-        , class Arg2 = void /* SpaceType or MemoryTraits */
-        , class Arg3 = void /* MemoryTraits */ >
+template< class DataType , class ... Properties >
 class View ;
 
 } /* namespace Experimental */
@@ -394,21 +419,16 @@ view_alloc( Args ... args )
 namespace Kokkos {
 namespace Experimental {
 
-/**\brief  Each R? template argument designates whether the subview argument is a range */
-template< class V
-        , bool R0 = false , bool R1 = false , bool R2 = false , bool R3 = false
-        , bool R4 = false , bool R5 = false , bool R6 = false , bool R7 = false >
-using Subview = typename Kokkos::Experimental::Impl::SubviewType< V, R0 , R1 , R2 , R3 , R4 , R5 , R6 , R7 >::type ;
-
-template< class DataType , class Arg1 , class Arg2 , class Arg3 >
-class View : public ViewTraits< DataType , Arg1 , Arg2 , Arg3 > {
+template< class DataType , class ... Properties >
+class View : public ViewTraits< DataType , Properties ... > {
 private:
 
-  template< class , class , class , class > friend class View ;
+  template< class , class ... > friend class View ;
+  template< class , class ... > friend class Impl::ViewMapping ;
 
-  typedef ViewTraits< DataType , Arg1 , Arg2 , Arg3 >          traits ;
-  typedef Kokkos::Experimental::Impl::ViewMapping< traits >    map_type ;
-  typedef Kokkos::Experimental::Impl::SharedAllocationTracker  track_type ;
+  typedef ViewTraits< DataType , Properties ... >                  traits ;
+  typedef Kokkos::Experimental::Impl::ViewMapping< traits , void > map_type ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationTracker      track_type ;
 
   track_type  m_track ;
   map_type    m_map ;
@@ -432,16 +452,15 @@ public:
 
   /** \brief  Compatible view of non-const data type */
   typedef View< typename traits::non_const_data_type ,
-                    typename traits::array_layout ,
-                    typename traits::device_type ,
-                    typename traits::memory_traits > 
+                typename traits::array_layout ,
+                typename traits::device_type ,
+                typename traits::memory_traits > 
     non_const_type ;
 
   /** \brief  Compatible HostMirror view */
   typedef View< typename traits::non_const_data_type ,
                 typename traits::array_layout ,
-                typename traits::host_mirror_space ,
-                void >
+                typename traits::host_mirror_space >
     HostMirror ;
 
   //----------------------------------------
@@ -894,6 +913,7 @@ public:
 #undef KOKKOS_VIEW_OPERATOR_VERIFY
 
   //----------------------------------------
+  // Standard destructor, constructors, and assignment operators
 
   KOKKOS_INLINE_FUNCTION
   ~View() {}
@@ -914,54 +934,83 @@ public:
   View & operator = ( View && rhs ) { m_track = rhs.m_track ; m_map = rhs.m_map ; return *this ; }
 
   //----------------------------------------
+  // Compatible view constructors:
 
-  template< class RT , class R1 , class R2 , class R3 >
+  template< class RT , class ... RP >
   KOKKOS_INLINE_FUNCTION
-  View( const View<RT,R1,R2,R3> & rhs )
+  View( const View<RT,RP...> & rhs )
     : m_track( rhs.m_track )
     , m_map()
     {
-      typedef typename View<RT,R1,R2,R3>::traits  SrcTraits ;
-      typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits >  Mapping ;
+      typedef typename View<RT,RP...>::traits  SrcTraits ;
+      typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
       static_assert( Mapping::is_assignable , "Incompatible View copy construction" );
       Mapping::assign( m_map , rhs.m_map , rhs.m_track );
     }
 
-  template< class RT , class R1 , class R2 , class R3 >
+  template< class RT , class ... RP >
   KOKKOS_INLINE_FUNCTION
-  View( View<RT,R1,R2,R3> && rhs )
+  View( View<RT,RP...> && rhs )
     : m_track( rhs.m_track )
     , m_map()
     {
-      typedef typename View<RT,R1,R2,R3>::traits  SrcTraits ;
-      typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits >  Mapping ;
+      typedef typename View<RT,RP...>::traits  SrcTraits ;
+      typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
       static_assert( Mapping::is_assignable , "Incompatible View move construction" );
       Mapping::assign( m_map , rhs.m_map , rhs.m_track );
     }
 
-  template< class RT , class R1 , class R2 , class R3 >
+  //----------------------------------------
+  // Compatible subview constructor
+
+  template< class RT , class ... RP , class Arg0 , class ... Args >
   KOKKOS_INLINE_FUNCTION
-  View & operator = ( const View<RT,R1,R2,R3> & rhs )
+  View( const View< RT , RP... > & src_view
+      , const Arg0 & arg0 , Args ... args )
+    : m_track( src_view.m_track )
+    , m_map()
     {
-      typedef typename View<RT,R1,R2,R3>::traits  SrcTraits ;
-      typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits >  Mapping ;
+      typedef View< RT , RP... > SrcType ;
+
+      typedef Kokkos::Experimental::Impl::ViewMapping
+        < void /* deduce destination view type from source view traits */
+        , typename SrcType::traits
+        , Arg0 , Args... > Mapping ;
+
+      static_assert( std::is_same< View , typename Mapping::type >::value
+                   , "Subview construction requires compatible view and subview arguments" );
+
+      Mapping::assign( m_map, src_view.m_map, arg0 , args... );
+    }
+
+  //----------------------------------------
+  // Compatible view assignment:
+
+  template< class RT , class ... RP >
+  KOKKOS_INLINE_FUNCTION
+  View & operator = ( const View<RT,RP...> & rhs )
+    {
+      typedef typename View<RT,RP...>::traits  SrcTraits ;
+      typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
       static_assert( Mapping::is_assignable , "Incompatible View copy assignment" );
       Mapping::assign( m_map , rhs.m_map , rhs.m_track );
       m_track.operator=( rhs.m_track );
       return *this ;
     }
 
-  template< class RT , class R1 , class R2 , class R3 >
+  template< class RT , class ... RP >
   KOKKOS_INLINE_FUNCTION
-  View & operator = ( View<RT,R1,R2,R3> && rhs )
+  View & operator = ( View<RT,RP...> && rhs )
     {
-      typedef typename View<RT,R1,R2,R3>::traits  SrcTraits ;
-      typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits >  Mapping ;
+      typedef typename View<RT,RP...>::traits  SrcTraits ;
+      typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
       static_assert( Mapping::is_assignable , "Incompatible View move assignment" );
       Mapping::assign( m_map , rhs.m_map , rhs.m_track );
       m_track.operator=( rhs.m_track );
       return *this ;
     }
+
+public:
 
   //----------------------------------------
   // Allocation according to allocation properties
@@ -1169,441 +1218,38 @@ public:
            , arg_N0 , arg_N1 , arg_N2 , arg_N3
            , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
     {}
-
-  //----------------------------------------
-  // Subviews
-
-private:
-
-  /**\brief Private method to support extensibility of subview construction */
-  KOKKOS_INLINE_FUNCTION
-  View( const track_type & arg_track , const map_type & arg_map )
-    : m_track( arg_track )
-    , m_map(   arg_map )
-    {}
-
-  explicit KOKKOS_INLINE_FUNCTION
-  View( const track_type & rhs )
-    : m_track( rhs )
-    , m_map()
-    {}
-
-public:
-
-  template< class D , class A1 , class A2 , class A3
-          , class T0 , class T1 , class T2 , class T3
-          , class T4 , class T5 , class T6 , class T7 >
-  friend
-  KOKKOS_INLINE_FUNCTION
-  Kokkos::Experimental::Subview< View< D , A1 , A2 , A3 >
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T3>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T4>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T5>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T6>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T7>::is_range
-    >
-  subview( const View< D , A1 , A2 , A3 > & src
-         , T0 const & arg0 , T1 const & arg1 , T2 const & arg2 , T3 const & arg3
-         , T4 const & arg4 , T5 const & arg5 , T6 const & arg6 , T7 const & arg7
-         );
-  
-  template< class D , class A1 , class A2 , class A3
-          , class T0 , class T1 , class T2 , class T3
-          , class T4 , class T5 , class T6 >
-  friend
-  KOKKOS_INLINE_FUNCTION
-  Kokkos::Experimental::Subview< View< D , A1 , A2 , A3 >
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T3>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T4>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T5>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T6>::is_range
-    >
-  subview( const View< D , A1 , A2 , A3 > & src
-         , T0 const & arg0 , T1 const & arg1 , T2 const & arg2 , T3 const & arg3
-         , T4 const & arg4 , T5 const & arg5 , T6 const & arg6
-         );
-
-  template< class D , class A1 , class A2 , class A3
-          , class T0 , class T1 , class T2 , class T3
-          , class T4 , class T5 >
-  friend
-  KOKKOS_INLINE_FUNCTION
-  Kokkos::Experimental::Subview< View< D , A1 , A2 , A3 >
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T3>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T4>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T5>::is_range
-    >
-  subview( const View< D , A1 , A2 , A3 > & src
-         , T0 const & arg0 , T1 const & arg1 , T2 const & arg2 , T3 const & arg3
-         , T4 const & arg4 , T5 const & arg5
-         );
-  
-  template< class D , class A1 , class A2 , class A3
-          , class T0 , class T1 , class T2 , class T3
-          , class T4 >
-  friend
-  KOKKOS_INLINE_FUNCTION
-  Kokkos::Experimental::Subview< View< D , A1 , A2 , A3 >
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T3>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T4>::is_range
-    >
-  subview( const View< D , A1 , A2 , A3 > & src
-         , T0 const & arg0 , T1 const & arg1 , T2 const & arg2 , T3 const & arg3
-         , T4 const & arg4
-         );
-  
-  template< class D , class A1 , class A2 , class A3
-          , class T0 , class T1 , class T2 , class T3 >
-  friend
-  KOKKOS_INLINE_FUNCTION
-  Kokkos::Experimental::Subview< View< D , A1 , A2 , A3 >
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T3>::is_range
-    >
-  subview( const View< D , A1 , A2 , A3 > & src
-         , T0 const & arg0 , T1 const & arg1 , T2 const & arg2 , T3 const & arg3
-         );
-  
-  template< class D , class A1 , class A2 , class A3
-          , class T0 , class T1 , class T2 >
-  friend
-  KOKKOS_INLINE_FUNCTION
-  Kokkos::Experimental::Subview< View< D , A1 , A2 , A3 >
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-    >
-  subview( const View< D , A1 , A2 , A3 > & src
-         , T0 const & arg0 , T1 const & arg1 , T2 const & arg2
-         );
-
-  template< class D , class A1 , class A2 , class A3
-          , class T0 , class T1 >
-  friend
-  KOKKOS_INLINE_FUNCTION
-  Kokkos::Experimental::Subview< View< D , A1 , A2 , A3 >
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-    >
-  subview( const View< D , A1 , A2 , A3 > & src
-         , T0 const & arg0 , T1 const & arg1
-         );
-  
-  template< class D, class A1, class A2, class A3, class T0 >
-  friend
-  KOKKOS_INLINE_FUNCTION
-  Kokkos::Experimental::Subview< View< D, A1, A2, A3 >
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-    >
-  subview( const View< D, A1, A2, A3 > & src , T0 const & arg0 );
-
 };
 
 template< class > struct is_view : public std::false_type {};
 
-template< class D, class A1, class A2, class A3 >
-struct is_view< View<D,A1,A2,A3> > : public std::true_type {};
+template< class D, class ... P >
+struct is_view< View<D,P...> > : public std::true_type {};
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-template< class D, class A1, class A2, class A3
-        , class T0 , class T1 , class T2 , class T3
-        , class T4 , class T5 , class T6 , class T7 >
+template< class V , class ... Args >
+using Subview =
+  typename Kokkos::Experimental::Impl::ViewMapping
+    < void /* deduce subview type from source view traits */
+    , V
+    , Args ...
+    >::type ;
+
+template< class D, class ... P , class ... Args >
 KOKKOS_INLINE_FUNCTION
-Kokkos::Experimental::Subview< View< D, A1, A2, A3 >
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T3>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T4>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T5>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T6>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T7>::is_range
-  >
-subview( const View< D, A1, A2, A3 > & src
-       , T0 const & arg0 , T1 const & arg1 , T2 const & arg2 , T3 const & arg3
-       , T4 const & arg4 , T5 const & arg5 , T6 const & arg6 , T7 const & arg7
-       )
+typename Kokkos::Experimental::Impl::ViewMapping
+  < void /* deduce subview type from source view traits */
+  , ViewTraits< D , P... >
+  , Args ...
+  >::type
+subview( const View< D, P... > & src , Args ... args )
 {
-  typedef View< D, A1, A2, A3 >  SrcView ;
-
-  typedef Kokkos::Experimental::Impl::SubviewMapping
-    < typename SrcView::traits
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T3>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T4>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T5>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T6>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T7>::is_range
-    > Mapping ;
-
-  typedef typename Mapping::type  DstView ;
-
-  static_assert( SrcView::Rank == 8 , "Subview of rank 8 View requires 8 arguments" );
-
-  DstView dst( src.m_track );
-
-  Mapping::assign( dst.m_map, src.m_map, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7 );
-
-  return dst ;
-}
-
-template< class D, class A1, class A2, class A3
-        , class T0 , class T1 , class T2 , class T3
-        , class T4 , class T5 , class T6 >
-KOKKOS_INLINE_FUNCTION
-Kokkos::Experimental::Subview< View< D, A1, A2, A3 >
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T3>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T4>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T5>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T6>::is_range
-  >
-subview( const View< D, A1, A2, A3 > & src
-       , T0 const & arg0 , T1 const & arg1 , T2 const & arg2 , T3 const & arg3
-       , T4 const & arg4 , T5 const & arg5 , T6 const & arg6
-       )
-{
-  typedef View< D, A1, A2, A3 >  SrcView ;
-
-  typedef Kokkos::Experimental::Impl::SubviewMapping
-    < typename SrcView::traits
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T3>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T4>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T5>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T6>::is_range
-    >  Mapping ;
-
-  typedef typename Mapping::type  DstView ;
-
-  static_assert( SrcView::Rank == 7 , "Subview of rank 7 View requires 7 arguments" );
-
-  DstView dst( src.m_track );
-
-  Mapping::assign( dst.m_map, src.m_map, arg0, arg1, arg2, arg3, arg4, arg5, arg6, 0 );
-
-  return dst ;
-}
-
-template< class D, class A1, class A2, class A3
-        , class T0 , class T1 , class T2 , class T3
-        , class T4 , class T5 >
-KOKKOS_INLINE_FUNCTION
-Kokkos::Experimental::Subview< View< D, A1, A2, A3 >
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T3>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T4>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T5>::is_range
-  >
-subview( const View< D, A1, A2, A3 > & src
-       , T0 const & arg0 , T1 const & arg1 , T2 const & arg2 , T3 const & arg3
-       , T4 const & arg4 , T5 const & arg5
-       )
-{
-  typedef View< D, A1, A2, A3 >  SrcView ;
-
-  typedef Kokkos::Experimental::Impl::SubviewMapping
-    < typename SrcView::traits
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T3>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T4>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T5>::is_range
-    >  Mapping ;
-
-  typedef typename Mapping::type  DstView ;
-
-  static_assert( SrcView::Rank == 6 , "Subview of rank 6 View requires 6 arguments" );
-
-  DstView dst( src.m_track );
-
-  Mapping::assign( dst.m_map, src.m_map, arg0, arg1, arg2, arg3, arg4, arg5, 0, 0 );
-
-  return dst ;
-}
-
-template< class D, class A1, class A2, class A3
-        , class T0 , class T1 , class T2 , class T3
-        , class T4 >
-KOKKOS_INLINE_FUNCTION
-Kokkos::Experimental::Subview< View< D, A1, A2, A3 >
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T3>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T4>::is_range
-  >
-subview( const View< D, A1, A2, A3 > & src
-       , T0 const & arg0 , T1 const & arg1 , T2 const & arg2 , T3 const & arg3
-       , T4 const & arg4
-       )
-{
-  typedef View< D, A1, A2, A3 >  SrcView ;
-
-  typedef Kokkos::Experimental::Impl::SubviewMapping
-    < typename SrcView::traits
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T3>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T4>::is_range
-    >  Mapping ;
-
-  typedef typename Mapping::type  DstView ;
-
-  static_assert( SrcView::Rank == 5 , "Subview of rank 5 View requires 5 arguments" );
-
-  DstView dst( src.m_track );
-
-  Mapping::assign( dst.m_map, src.m_map, arg0, arg1, arg2, arg3, arg4, 0, 0, 0 );
-
-  return dst ;
-}
-
-template< class D, class A1, class A2, class A3
-        , class T0 , class T1 , class T2 , class T3 >
-KOKKOS_INLINE_FUNCTION
-Kokkos::Experimental::Subview< View< D, A1, A2, A3 >
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T3>::is_range
-  >
-subview( const View< D, A1, A2, A3 > & src
-       , T0 const & arg0 , T1 const & arg1 , T2 const & arg2 , T3 const & arg3
-       )
-{
-  typedef View< D, A1, A2, A3 >  SrcView ;
-
-  typedef Kokkos::Experimental::Impl::SubviewMapping
-    < typename SrcView::traits
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T3>::is_range
-    >  Mapping ;
-
-  typedef typename Mapping::type  DstView ;
-
-  static_assert( SrcView::Rank == 4 , "Subview of rank 4 View requires 4 arguments" );
-
-  DstView dst( src.m_track );
-
-  Mapping::assign( dst.m_map, src.m_map, arg0, arg1, arg2, arg3, 0, 0, 0, 0 );
-
-  return dst ;
-}
-
-template< class D, class A1, class A2, class A3
-        , class T0 , class T1 , class T2 >
-KOKKOS_INLINE_FUNCTION
-Kokkos::Experimental::Subview< View< D, A1, A2, A3 >
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-  >
-subview( const View< D, A1, A2, A3 > & src
-       , T0 const & arg0 , T1 const & arg1 , T2 const & arg2
-       )
-{
-  typedef View< D, A1, A2, A3 >  SrcView ;
-
-  typedef Kokkos::Experimental::Impl::SubviewMapping
-    < typename SrcView::traits
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T2>::is_range
-    >  Mapping ;
-
-  typedef typename Mapping::type  DstView ;
-
-  static_assert( SrcView::Rank == 3 , "Subview of rank 3 View requires 3 arguments" );
-
-  DstView dst( src.m_track );
-
-  Mapping::assign( dst.m_map, src.m_map, arg0, arg1, arg2, 0, 0, 0, 0, 0 );
-
-  return dst ;
-}
-
-template< class D, class A1, class A2, class A3
-        , class T0 , class T1 >
-KOKKOS_INLINE_FUNCTION
-Kokkos::Experimental::Subview< View< D, A1, A2, A3 >
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-  >
-subview( const View< D, A1, A2, A3 > & src
-       , T0 const & arg0 , T1 const & arg1
-       )
-{
-  typedef View< D, A1, A2, A3 >  SrcView ;
-
-  typedef Kokkos::Experimental::Impl::SubviewMapping
-    < typename SrcView::traits
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T1>::is_range
-    >  Mapping ;
-
-  typedef typename Mapping::type  DstView ;
-
-  static_assert( SrcView::Rank == 2 , "Subview of rank 2 View requires 2 arguments" );
-
-  DstView dst( src.m_track );
-
-  Mapping::assign( dst.m_map, src.m_map, arg0, arg1, 0, 0, 0, 0, 0, 0 );
-
-  return dst ;
-}
-
-template< class D, class A1, class A2, class A3, class T0 >
-KOKKOS_INLINE_FUNCTION
-Kokkos::Experimental::Subview< View< D, A1, A2, A3 >
-  , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-  >
-subview( const View< D, A1, A2, A3 > & src , T0 const & arg0 )
-{
-  typedef View< D, A1, A2, A3 >  SrcView ;
-
-  typedef Kokkos::Experimental::Impl::SubviewMapping
-    < typename SrcView::traits
-    , Kokkos::Experimental::Impl::ViewOffsetRange<T0>::is_range
-    >  Mapping ;
-
-  typedef typename Mapping::type  DstView ;
-
-  static_assert( SrcView::Rank == 1 , "Subview of rank 1 View requires 1 arguments" );
-
-  DstView dst( src.m_track );
-
-  Mapping::assign( dst.m_map , src.m_map , arg0, 0, 0, 0, 0, 0, 0, 0 );
-
-  return dst ;
+  return typename
+    Kokkos::Experimental::Impl::ViewMapping
+      < void /* deduce subview type from source view traits */
+      , ViewTraits< D , P ... >
+      , Args ... >::type( src , args ... ); 
 }
 
 } /* namespace Experimental */
@@ -1615,15 +1261,14 @@ subview( const View< D, A1, A2, A3 > & src , T0 const & arg0 )
 namespace Kokkos {
 namespace Experimental {
 
-template< class LT , class L1 , class L2 , class L3
-        , class RT , class R1 , class R2 , class R3 >
+template< class LT , class ... LP , class RT , class ... RP >
 KOKKOS_INLINE_FUNCTION
-bool operator == ( const View<LT,L1,L2,L3> & lhs ,
-                   const View<RT,R1,R2,R3> & rhs )
+bool operator == ( const View<LT,LP...> & lhs ,
+                   const View<RT,RP...> & rhs )
 {
   // Same data, layout, dimensions
-  typedef ViewTraits<LT,L1,L2,L3>  lhs_traits ;
-  typedef ViewTraits<RT,R1,R2,R3>  rhs_traits ;
+  typedef ViewTraits<LT,LP...>  lhs_traits ;
+  typedef ViewTraits<RT,RP...>  rhs_traits ;
 
   return
     std::is_same< typename lhs_traits::const_value_type ,
@@ -1645,11 +1290,10 @@ bool operator == ( const View<LT,L1,L2,L3> & lhs ,
     lhs.dimension_7() == rhs.dimension_7();
 }
 
-template< class LT , class L1 , class L2 , class L3
-        , class RT , class R1 , class R2 , class R3 >
+template< class LT , class ... LP , class RT , class ... RP >
 KOKKOS_INLINE_FUNCTION
-bool operator != ( const View<LT,L1,L2,L3> & lhs ,
-                   const View<RT,R1,R2,R3> & rhs )
+bool operator != ( const View<LT,LP...> & lhs ,
+                   const View<RT,RP...> & rhs )
 {
   return ! ( operator==(lhs,rhs) );
 }
@@ -1805,49 +1449,49 @@ namespace Kokkos {
 namespace Experimental {
 
 /** \brief  Deep copy a value from Host memory into a view.  */
-template< class DT , class D1 , class D2 , class D3 >
+template< class DT , class ... DP >
 inline
-void deep_copy( const View<DT,D1,D2,D3> & dst
-              , typename ViewTraits<DT,D1,D2,D3>::const_value_type & value )
+void deep_copy( const View<DT,DP...> & dst
+              , typename ViewTraits<DT,DP...>::const_value_type & value )
 {
-  static_assert( std::is_same< typename ViewTraits<DT,D1,D2,D3>::non_const_value_type ,
-                               typename ViewTraits<DT,D1,D2,D3>::value_type >::value
-               , "ERROR: Incompatible deep_copy( View , value )" );
+  static_assert(
+    std::is_same< typename ViewTraits<DT,DP...>::non_const_value_type ,
+                  typename ViewTraits<DT,DP...>::value_type >::value
+    , "ERROR: Incompatible deep_copy( View , value )" );
 
-  Kokkos::Experimental::Impl::ViewFill< View<DT,D1,D2,D3> >( dst , value );
+  Kokkos::Experimental::Impl::ViewFill< View<DT,DP...> >( dst , value );
 }
 
 /** \brief  Deep copy into a value in Host memory from a view.  */
-template< class ST , class S1 , class S2 , class S3 >
+template< class ST , class ... SP >
 inline
-void deep_copy( ST & dst , const View<ST,S1,S2,S3> & src )
+void deep_copy( ST & dst , const View<ST,SP...> & src )
 {
-  static_assert( ViewTraits<ST,S1,S2,S3>::rank == 0 
+  static_assert( ViewTraits<ST,SP...>::rank == 0 
                , "ERROR: Non-rank-zero view in deep_copy( value , View )" );
 
-  typedef ViewTraits<ST,S1,S2,S3>            src_traits ;
+  typedef ViewTraits<ST,SP...>               src_traits ;
   typedef typename src_traits::memory_space  src_memory_space ;
   Kokkos::Impl::DeepCopy< HostSpace , src_memory_space >( & dst , src.data() , sizeof(ST) );
 }
 
 //----------------------------------------------------------------------------
 /** \brief  A deep copy between views of compatible type, and rank zero.  */
-template< class DT , class D1 , class D2 , class D3
-        , class ST , class S1 , class S2 , class S3 >
+template< class DT , class ... DP , class ST , class ... SP >
 inline
-void deep_copy( const View<DT,D1,D2,D3> & dst ,
-                const View<ST,S1,S2,S3> & src ,
+void deep_copy( const View<DT,DP...> & dst ,
+                const View<ST,SP...> & src ,
                 typename std::enable_if<(
                   // Rank zero:
-                  ( unsigned(ViewTraits<DT,D1,D2,D3>::rank) == unsigned(0) ) &&
-                  ( unsigned(ViewTraits<ST,S1,S2,S3>::rank) == unsigned(0) ) &&
+                  ( unsigned(ViewTraits<DT,DP...>::rank) == unsigned(0) ) &&
+                  ( unsigned(ViewTraits<ST,SP...>::rank) == unsigned(0) ) &&
                   // Same type and destination is not constant:
-                  std::is_same< typename ViewTraits<DT,D1,D2,D3>::value_type ,
-                                typename ViewTraits<ST,S1,S2,S3>::non_const_value_type >::value
+                  std::is_same< typename ViewTraits<DT,DP...>::value_type ,
+                                typename ViewTraits<ST,SP...>::non_const_value_type >::value
                 )>::type * = 0 )
 {
-  typedef View<DT,D1,D2,D3>  dst_type ;
-  typedef View<ST,S1,S2,S3>  src_type ;
+  typedef View<DT,DP...>  dst_type ;
+  typedef View<ST,SP...>  src_type ;
 
   typedef typename dst_type::value_type    value_type ;
   typedef typename dst_type::memory_space  dst_memory_space ;
@@ -1862,30 +1506,29 @@ void deep_copy( const View<DT,D1,D2,D3> & dst ,
 /** \brief  A deep copy between views of the default specialization, compatible type,
  *          same non-zero rank, same contiguous layout.
  */
-template< class DT , class D1 , class D2 , class D3 ,
-          class ST , class S1 , class S2 , class S3 >
+template< class DT , class ... DP , class ST , class ... SP >
 inline
-void deep_copy( const View<DT,D1,D2,D3> & dst ,
-                const View<ST,S1,S2,S3> & src ,
+void deep_copy( const View<DT,DP...> & dst ,
+                const View<ST,SP...> & src ,
                 typename std::enable_if<(
                   // destination is non-const.
-                  std::is_same< typename ViewTraits<DT,D1,D2,D3>::value_type ,
-                                typename ViewTraits<DT,D1,D2,D3>::non_const_value_type >::value
+                  std::is_same< typename ViewTraits<DT,DP...>::value_type ,
+                                typename ViewTraits<DT,DP...>::non_const_value_type >::value
                   &&
                   // Same non-zero rank:
-                  ( unsigned(ViewTraits<DT,D1,D2,D3>::rank) != 0 )
+                  ( unsigned(ViewTraits<DT,DP...>::rank) != 0 )
                   &&
-                  ( unsigned(ViewTraits<DT,D1,D2,D3>::rank) ==
-                    unsigned(ViewTraits<ST,S1,S2,S3>::rank) )
+                  ( unsigned(ViewTraits<DT,DP...>::rank) ==
+                    unsigned(ViewTraits<ST,SP...>::rank) )
                   &&
                   // Not specialized, default ViewMapping
-                  std::is_same< typename ViewTraits<DT,D1,D2,D3>::specialize , void >::value
+                  std::is_same< typename ViewTraits<DT,DP...>::specialize , void >::value
                   &&
-                  std::is_same< typename ViewTraits<ST,S1,S2,S3>::specialize , void >::value
+                  std::is_same< typename ViewTraits<ST,SP...>::specialize , void >::value
                 )>::type * = 0 )
 {
-  typedef View<DT,D1,D2,D3>  dst_type ;
-  typedef View<ST,S1,S2,S3>  src_type ;
+  typedef View<DT,DP...>  dst_type ;
+  typedef View<ST,SP...>  src_type ;
 
   typedef typename dst_type::execution_space  dst_execution_space ;
   typedef typename dst_type::memory_space     dst_memory_space ;
@@ -1901,10 +1544,10 @@ void deep_copy( const View<DT,D1,D2,D3> & dst ,
 
     // If same type, equal layout, equal dimensions, equal span, and contiguous memory then can byte-wise copy
 
-    if ( std::is_same< typename ViewTraits<DT,D1,D2,D3>::value_type ,
-                       typename ViewTraits<ST,S1,S2,S3>::non_const_value_type >::value &&
-         std::is_same< typename ViewTraits<DT,D1,D2,D3>::array_layout ,
-                       typename ViewTraits<ST,S1,S2,S3>::array_layout >::value &&
+    if ( std::is_same< typename ViewTraits<DT,DP...>::value_type ,
+                       typename ViewTraits<ST,SP...>::non_const_value_type >::value &&
+         std::is_same< typename ViewTraits<DT,DP...>::array_layout ,
+                       typename ViewTraits<ST,SP...>::array_layout >::value &&
          dst.span_is_contiguous() &&
          src.span_is_contiguous() &&
          dst.span() == src.span() &&
@@ -1940,17 +1583,17 @@ void deep_copy( const View<DT,D1,D2,D3> & dst ,
 namespace Kokkos {
 namespace Experimental {
 
-template< class T , class A1, class A2, class A3 >
+template< class T , class ... P >
 inline
-typename Kokkos::Experimental::View<T,A1,A2,A3>::HostMirror
-create_mirror( const Kokkos::Experimental::View<T,A1,A2,A3> & src
+typename Kokkos::Experimental::View<T,P...>::HostMirror
+create_mirror( const Kokkos::Experimental::View<T,P...> & src
              , typename std::enable_if<
-                 ! std::is_same< typename Kokkos::Experimental::ViewTraits<T,A1,A2,A3>::array_layout
+                 ! std::is_same< typename Kokkos::Experimental::ViewTraits<T,P...>::array_layout
                                , Kokkos::LayoutStride >::value
                >::type * = 0
              )
 {
-  typedef View<T,A1,A2,A3>               src_type ;
+  typedef View<T,P...>                   src_type ;
   typedef typename src_type::HostMirror  dst_type ;
 
   return dst_type( std::string( src.label() ).append("_mirror")
@@ -1964,17 +1607,17 @@ create_mirror( const Kokkos::Experimental::View<T,A1,A2,A3> & src
                  , src.dimension_7() );
 }
 
-template< class T , class A1, class A2, class A3 >
+template< class T , class ... P >
 inline
-typename Kokkos::Experimental::View<T,A1,A2,A3>::HostMirror
-create_mirror( const Kokkos::Experimental::View<T,A1,A2,A3> & src
+typename Kokkos::Experimental::View<T,P...>::HostMirror
+create_mirror( const Kokkos::Experimental::View<T,P...> & src
              , typename std::enable_if<
-                 std::is_same< typename Kokkos::Experimental::ViewTraits<T,A1,A2,A3>::array_layout
+                 std::is_same< typename Kokkos::Experimental::ViewTraits<T,P...>::array_layout
                              , Kokkos::LayoutStride >::value
                >::type * = 0
              )
 {
-  typedef View<T,A1,A2,A3>               src_type ;
+  typedef View<T,P...>                   src_type ;
   typedef typename src_type::HostMirror  dst_type ;
 
   Kokkos::LayoutStride layout ;
@@ -2000,17 +1643,17 @@ create_mirror( const Kokkos::Experimental::View<T,A1,A2,A3> & src
   return dst_type( std::string( src.label() ).append("_mirror") , layout );
 }
 
-template< class T , class A1 , class A2 , class A3 >
+template< class T , class ... P >
 inline
-typename Kokkos::Experimental::View<T,A1,A2,A3>::HostMirror
-create_mirror_view( const Kokkos::Experimental::View<T,A1,A2,A3> & src
+typename Kokkos::Experimental::View<T,P...>::HostMirror
+create_mirror_view( const Kokkos::Experimental::View<T,P...> & src
                   , typename std::enable_if<(
-                      std::is_same< typename Kokkos::Experimental::View<T,A1,A2,A3>::memory_space
-                                  , typename Kokkos::Experimental::View<T,A1,A2,A3>::HostMirror::memory_space
+                      std::is_same< typename Kokkos::Experimental::View<T,P...>::memory_space
+                                  , typename Kokkos::Experimental::View<T,P...>::HostMirror::memory_space
                                   >::value
                       &&
-                      std::is_same< typename Kokkos::Experimental::View<T,A1,A2,A3>::data_type
-                                  , typename Kokkos::Experimental::View<T,A1,A2,A3>::HostMirror::data_type
+                      std::is_same< typename Kokkos::Experimental::View<T,P...>::data_type
+                                  , typename Kokkos::Experimental::View<T,P...>::HostMirror::data_type
                                   >::value
                     )>::type * = 0 
                   )
@@ -2018,17 +1661,17 @@ create_mirror_view( const Kokkos::Experimental::View<T,A1,A2,A3> & src
   return src ;
 }
 
-template< class T , class A1 , class A2 , class A3 >
+template< class T , class ... P >
 inline
-typename Kokkos::Experimental::View<T,A1,A2,A3>::HostMirror
-create_mirror_view( const Kokkos::Experimental::View<T,A1,A2,A3> & src
+typename Kokkos::Experimental::View<T,P...>::HostMirror
+create_mirror_view( const Kokkos::Experimental::View<T,P...> & src
                   , typename std::enable_if< ! (
-                      std::is_same< typename Kokkos::Experimental::View<T,A1,A2,A3>::memory_space
-                                  , typename Kokkos::Experimental::View<T,A1,A2,A3>::HostMirror::memory_space
+                      std::is_same< typename Kokkos::Experimental::View<T,P...>::memory_space
+                                  , typename Kokkos::Experimental::View<T,P...>::HostMirror::memory_space
                                   >::value
                       &&
-                      std::is_same< typename Kokkos::Experimental::View<T,A1,A2,A3>::data_type
-                                  , typename Kokkos::Experimental::View<T,A1,A2,A3>::HostMirror::data_type
+                      std::is_same< typename Kokkos::Experimental::View<T,P...>::data_type
+                                  , typename Kokkos::Experimental::View<T,P...>::HostMirror::data_type
                                   >::value
                     )>::type * = 0 
                   )
@@ -2046,9 +1689,9 @@ namespace Kokkos {
 namespace Experimental {
 
 /** \brief  Resize a view with copying old data to new data at the corresponding indices. */
-template< class T , class A1 , class A2 , class A3 >
+template< class T , class ... P >
 inline
-void resize( Kokkos::Experimental::View<T,A1,A2,A3> & v ,
+void resize( Kokkos::Experimental::View<T,P...> & v ,
              const size_t n0 = 0 ,
              const size_t n1 = 0 ,
              const size_t n2 = 0 ,
@@ -2058,9 +1701,9 @@ void resize( Kokkos::Experimental::View<T,A1,A2,A3> & v ,
              const size_t n6 = 0 ,
              const size_t n7 = 0 )
 {
-  typedef Kokkos::Experimental::View<T,A1,A2,A3>  view_type ;
+  typedef Kokkos::Experimental::View<T,P...>  view_type ;
 
-  static_assert( Kokkos::Experimental::ViewTraits<T,A1,A2,A3>::is_managed , "Can only resize managed views" );
+  static_assert( Kokkos::Experimental::ViewTraits<T,P...>::is_managed , "Can only resize managed views" );
 
   view_type v_resized( v.label(), n0, n1, n2, n3, n4, n5, n6, n7 );
 
@@ -2070,9 +1713,9 @@ void resize( Kokkos::Experimental::View<T,A1,A2,A3> & v ,
 }
 
 /** \brief  Resize a view with copying old data to new data at the corresponding indices. */
-template< class T , class A1 , class A2 , class A3 >
+template< class T , class ... P >
 inline
-void realloc( Kokkos::Experimental::View<T,A1,A2,A3> & v ,
+void realloc( Kokkos::Experimental::View<T,P...> & v ,
               const size_t n0 = 0 ,
               const size_t n1 = 0 ,
               const size_t n2 = 0 ,
@@ -2082,9 +1725,9 @@ void realloc( Kokkos::Experimental::View<T,A1,A2,A3> & v ,
               const size_t n6 = 0 ,
               const size_t n7 = 0 )
 {
-  typedef Kokkos::Experimental::View<T,A1,A2,A3>  view_type ;
+  typedef Kokkos::Experimental::View<T,P...>  view_type ;
 
-  static_assert( Kokkos::Experimental::ViewTraits<T,A1,A2,A3>::is_managed , "Can only realloc managed views" );
+  static_assert( Kokkos::Experimental::ViewTraits<T,P...>::is_managed , "Can only realloc managed views" );
 
   const std::string label = v.label();
 
@@ -2102,11 +1745,11 @@ void realloc( Kokkos::Experimental::View<T,A1,A2,A3> & v ,
 
 namespace Kokkos {
 
-template< class D , class A1 = void , class A2 = void , class A3 = void >
-using ViewTraits = Kokkos::Experimental::ViewTraits<D,A1,A2,A3> ;
+template< class D , class ... P >
+using ViewTraits = Kokkos::Experimental::ViewTraits<D,P...> ;
 
-template< class D , class A1 = void , class A2 = void , class A3 = void , class S = void >
-using View = Kokkos::Experimental::View<D,A1,A2,A3> ;
+template< class D , class ... P >
+using View = Kokkos::Experimental::View<D,P...> ;
 
 using Kokkos::Experimental::ALL ;
 using Kokkos::Experimental::deep_copy ;

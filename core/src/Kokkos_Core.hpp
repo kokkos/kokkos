@@ -49,20 +49,20 @@
 
 #include <Kokkos_Core_fwd.hpp>
 
-#if defined( KOKKOS_HAVE_CUDA )
-#include <Kokkos_Cuda.hpp>
+#if defined( KOKKOS_HAVE_SERIAL )
+#include <Kokkos_Serial.hpp>
 #endif
 
 #if defined( KOKKOS_HAVE_OPENMP )
 #include <Kokkos_OpenMP.hpp>
 #endif
 
-#if defined( KOKKOS_HAVE_SERIAL )
-#include <Kokkos_Serial.hpp>
-#endif
-
 #if defined( KOKKOS_HAVE_PTHREAD )
 #include <Kokkos_Threads.hpp>
+#endif
+
+#if defined( KOKKOS_HAVE_CUDA )
+#include <Kokkos_Cuda.hpp>
 #endif
 
 #include <Kokkos_Pair.hpp>

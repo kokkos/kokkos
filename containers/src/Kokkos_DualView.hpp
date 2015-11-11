@@ -237,7 +237,30 @@ public:
     modified_device (View<unsigned int,LayoutLeft,typename t_host::execution_space> ("DualView::modified_device")),
     modified_host (View<unsigned int,LayoutLeft,typename t_host::execution_space> ("DualView::modified_host"))
   {
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
     Impl::assert_shapes_are_equal (d_view.shape (), h_view.shape ());
+#else
+    if ( d_view.rank          != h_view.rank ||
+         d_view.dimension_0() != h_view.dimension_0() ||
+         d_view.dimension_1() != h_view.dimension_1() ||
+         d_view.dimension_2() != h_view.dimension_2() ||
+         d_view.dimension_3() != h_view.dimension_3() ||
+         d_view.dimension_4() != h_view.dimension_4() ||
+         d_view.dimension_5() != h_view.dimension_5() ||
+         d_view.dimension_6() != h_view.dimension_6() ||
+         d_view.dimension_7() != h_view.dimension_7() ||
+         d_view.stride_0()    != h_view.stride_0() ||
+         d_view.stride_1()    != h_view.stride_1() ||
+         d_view.stride_2()    != h_view.stride_2() ||
+         d_view.stride_3()    != h_view.stride_3() ||
+         d_view.stride_4()    != h_view.stride_4() ||
+         d_view.stride_5()    != h_view.stride_5() ||
+         d_view.stride_6()    != h_view.stride_6() ||
+         d_view.stride_7()    != h_view.stride_7() ||
+         d_view.span()        != h_view.span() ) {
+      Kokkos::Impl::throw_runtime_exception("DualView constructed with incompatible views");
+    }
+#endif
   }
 
   //@}
@@ -501,6 +524,9 @@ public:
 };
 
 } // namespace Kokkos
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 //
 // Partial specializations of Kokkos::subview() for DualView objects.
 //
@@ -838,6 +864,13 @@ subview( const DualView<D,A1,A2,A3> & src ,
   sub_view.modified_host = src.modified_host;
   return sub_view;
 }
+
+} // namespace Kokkos
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
 
 //
 // Partial specialization of Kokkos::deep_copy() for DualView objects.
