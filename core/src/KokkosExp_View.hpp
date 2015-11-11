@@ -420,6 +420,14 @@ namespace Kokkos {
 namespace Experimental {
 
 template< class DataType , class ... Properties >
+class View ;
+
+template< class > struct is_view : public std::false_type {};
+
+template< class D, class ... P >
+struct is_view< View<D,P...> > : public std::true_type {};
+
+template< class DataType , class ... Properties >
 class View : public ViewTraits< DataType , Properties ... > {
 private:
 
@@ -1031,10 +1039,12 @@ public:
   inline
   const std::string label() const { return m_track.template get_label< typename traits::memory_space >(); }
 
+  // Disambiguate from subview constructor.
   template< class Prop >
   explicit inline
   View( const Prop & arg_prop
-      , const size_t arg_N0 = 0
+      , typename std::enable_if< ! is_view<Prop>::value ,
+        const size_t >::type arg_N0 = 0
       , const size_t arg_N1 = 0
       , const size_t arg_N2 = 0
       , const size_t arg_N3 = 0
@@ -1219,11 +1229,6 @@ public:
            , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
     {}
 };
-
-template< class > struct is_view : public std::false_type {};
-
-template< class D, class ... P >
-struct is_view< View<D,P...> > : public std::true_type {};
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
