@@ -496,6 +496,14 @@ void test_view_mapping()
 
   //----------------------------------------
   // view data analysis
+  {
+    using namespace Kokkos::Experimental::Impl ;
+    static_assert( rank_dynamic<>::value == 0 , "" );
+    static_assert( rank_dynamic<1>::value == 0 , "" );
+    static_assert( rank_dynamic<0>::value == 1 , "" );
+    static_assert( rank_dynamic<0,1>::value == 1 , "" );
+    static_assert( rank_dynamic<0,0,1>::value == 2 , "" );
+  }
 
   {
     using namespace Kokkos::Experimental::Impl ;

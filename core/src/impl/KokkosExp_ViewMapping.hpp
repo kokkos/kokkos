@@ -50,7 +50,6 @@
 #include <Kokkos_Pair.hpp>
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_Error.hpp>
-#include <Cuda/Kokkos_Cuda_abort.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_Atomic_View.hpp>
 
@@ -73,44 +72,46 @@ namespace Impl {
 
 template< unsigned I , size_t ... Args >
 struct variadic_size_t
-  { enum : size_t { value = ~size_t(0) }; };
+  { enum { value = ~size_t(0) }; };
 
 template< size_t Val , size_t ... Args >
 struct variadic_size_t< 0 , Val , Args ... >
-  { enum : size_t { value = Val }; };
+  { enum { value = Val }; };
 
 template< unsigned I , size_t Val , size_t ... Args >
 struct variadic_size_t< I , Val , Args ... >
-  { enum : size_t { value = variadic_size_t< I - 1 , Args ... >::value }; };
+  { enum { value = variadic_size_t< I - 1 , Args ... >::value }; };
 
 template< size_t ... Args >
-struct rank_dynamic { enum : unsigned { value = 0 }; };
+struct rank_dynamic ;
+
+template<>
+struct rank_dynamic<> { enum { value = 0 }; };
 
 template< size_t Val , size_t ... Args >
 struct rank_dynamic< Val , Args... >
 {
-  enum : unsigned { value = ( Val == 0 ? 1 : 0 )
-                          + rank_dynamic< Args... >::value };
+  enum { value = ( Val == 0 ? 1 : 0 ) + rank_dynamic< Args... >::value };
 };
 
 #define KOKKOS_IMPL_VIEW_DIMENSION( R ) \
   template< size_t V , unsigned > struct ViewDimension ## R \
     { \
-      enum : size_t { ArgN ## R = ( V != ~size_t(0) ? V : 1 ) }; \
-      enum : size_t { N ## R = ( V != ~size_t(0) ? V : 1 ) }; \
-      explicit ViewDimension ## R ( size_t ) {} \
+      enum { ArgN ## R = ( V != ~size_t(0) ? V : 1 ) }; \
+      enum { N ## R = ( V != ~size_t(0) ? V : 1 ) }; \
+      KOKKOS_INLINE_FUNCTION explicit ViewDimension ## R ( size_t ) {} \
       ViewDimension ## R () = default ; \
       ViewDimension ## R ( const ViewDimension ## R  & ) = default ; \
       ViewDimension ## R & operator = ( const ViewDimension ## R  & ) = default ; \
     }; \
   template< unsigned RD > struct ViewDimension ## R < 0 , RD > \
     { \
-      enum : size_t { ArgN ## R = 0 }; \
+      enum { ArgN ## R = 0 }; \
       typename std::conditional<( RD < 3 ), size_t , unsigned >::type N ## R ; \
       ViewDimension ## R () = default ; \
       ViewDimension ## R ( const ViewDimension ## R  & ) = default ; \
       ViewDimension ## R & operator = ( const ViewDimension ## R  & ) = default ; \
-      explicit ViewDimension ## R ( size_t V ) : N ## R ( V ) {} \
+      KOKKOS_INLINE_FUNCTION explicit ViewDimension ## R ( size_t V ) : N ## R ( V ) {} \
     };
 
 KOKKOS_IMPL_VIEW_DIMENSION( 0 )
@@ -264,20 +265,20 @@ struct ALL_t {
 
 template< class T >
 struct is_integral_extent_type
-{ enum { value = std::is_same<T,Kokkos::Experimental::Impl::ALL_t>::value }; };
+{ enum { value = std::is_same<T,Kokkos::Experimental::Impl::ALL_t>::value ? 1 : 0 }; };
 
 template< class iType >
 struct is_integral_extent_type< std::pair<iType,iType> >
-{ enum { value = std::is_integral<iType>::value }; };
+{ enum { value = std::is_integral<iType>::value ? 1 : 0 }; };
 
 template< class iType >
 struct is_integral_extent_type< Kokkos::pair<iType,iType> >
-{ enum { value = std::is_integral<iType>::value }; };
+{ enum { value = std::is_integral<iType>::value ? 1 : 0 }; };
 
 // Assuming '2 == initializer_list<iType>::size()'
 template< class iType >
 struct is_integral_extent_type< std::initializer_list<iType> >
-{ enum { value = std::is_integral<iType>::value }; };
+{ enum { value = std::is_integral<iType>::value ? 1 : 0 }; };
 
 template < unsigned I , class ... Args >
 struct is_integral_extent
@@ -2402,22 +2403,23 @@ private:
 
   static_assert( SrcTraits::rank == sizeof...(Args) , "" );
 
-  enum : bool
-    { R0 = is_integral_extent<0,Args...>::value
-    , R1 = is_integral_extent<1,Args...>::value
-    , R2 = is_integral_extent<2,Args...>::value
-    , R3 = is_integral_extent<3,Args...>::value
-    , R4 = is_integral_extent<4,Args...>::value
-    , R5 = is_integral_extent<5,Args...>::value
-    , R6 = is_integral_extent<6,Args...>::value
-    , R7 = is_integral_extent<7,Args...>::value
+  enum
+    { RZ = false
+    , R0 = bool(is_integral_extent<0,Args...>::value)
+    , R1 = bool(is_integral_extent<1,Args...>::value)
+    , R2 = bool(is_integral_extent<2,Args...>::value)
+    , R3 = bool(is_integral_extent<3,Args...>::value)
+    , R4 = bool(is_integral_extent<4,Args...>::value)
+    , R5 = bool(is_integral_extent<5,Args...>::value)
+    , R6 = bool(is_integral_extent<6,Args...>::value)
+    , R7 = bool(is_integral_extent<7,Args...>::value)
     };
 
   enum { rank = unsigned(R0) + unsigned(R1) + unsigned(R2) + unsigned(R3)
               + unsigned(R4) + unsigned(R5) + unsigned(R6) + unsigned(R7) };
 
   // Whether right-most rank is a range.
-  enum { R0_rev = ( 0 == SrcTraits::rank ? false : (
+  enum { R0_rev = ( 0 == SrcTraits::rank ? RZ : (
                     1 == SrcTraits::rank ? R0 : (
                     2 == SrcTraits::rank ? R1 : (
                     3 == SrcTraits::rank ? R2 : (
