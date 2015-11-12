@@ -36,6 +36,13 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
   )
 
 TRIBITS_ADD_OPTION_AND_DEFINE(
+  Kokkos_ENABLE_Cuda_LAMBDA
+  KOKKOS_CUDA_USE_LAMBDA
+  "Enable CUDA lambda support in Kokkos."
+  OFF
+  )
+
+TRIBITS_ADD_OPTION_AND_DEFINE(
   Kokkos_ENABLE_Pthread
   KOKKOS_HAVE_PTHREAD
   "Enable Pthread support in Kokkos."
