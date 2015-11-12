@@ -50,6 +50,7 @@
 #include <Kokkos_Pair.hpp>
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <Cuda/Kokkos_Cuda_abort.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_Atomic_View.hpp>
 
