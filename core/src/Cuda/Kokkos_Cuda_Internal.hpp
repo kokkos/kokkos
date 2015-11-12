@@ -43,7 +43,7 @@
 
 #ifndef KOKKOS_CUDA_INTERNAL_HPP
 #define KOKKOS_CUDA_INTERNAL_HPP
-
+#include<iostream>
 #include <Kokkos_Macros.hpp>
 
 /* only compile this file if CUDA is enabled for Kokkos */
@@ -53,15 +53,19 @@
 
 namespace Kokkos { namespace Impl {
 
+template<class DriverType, bool Large>
+struct CudaGetMaxBlockSize;
 
 template<class DriverType, bool Large = (CudaTraits::ConstantMemoryUseThreshold < sizeof(DriverType))>
 int cuda_get_max_block_size(const typename DriverType::functor_type & f, const size_t shmem_extra) {
-#if ( CUDA_VERSION < 6050 )
-  return 256;
-#else
+  return CudaGetMaxBlockSize<DriverType,Large>::get_block_size(f,shmem_extra);
+}
 
-  int numBlocks;
-  if(Large) {
+
+template<class DriverType>
+struct CudaGetMaxBlockSize<DriverType,true> {
+  static int get_block_size(const typename DriverType::functor_type & f, const size_t shmem_extra) {
+    int numBlocks;
     int blockSize=32;
     int sharedmem = shmem_extra + FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize );
     cudaOccupancyMaxActiveBlocksPerMultiprocessor(
@@ -82,7 +86,14 @@ int cuda_get_max_block_size(const typename DriverType::functor_type & f, const s
     }
     if(numBlocks>0) return blockSize;
     else return blockSize/2;
-  } else {
+  }
+};
+
+template<class DriverType>
+struct CudaGetMaxBlockSize<DriverType,false> {
+  static int get_block_size(const typename DriverType::functor_type & f, const size_t shmem_extra) {
+    int numBlocks;
+
     int blockSize=32;
     int sharedmem = shmem_extra + FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize );
     cudaOccupancyMaxActiveBlocksPerMultiprocessor(
@@ -104,22 +115,27 @@ int cuda_get_max_block_size(const typename DriverType::functor_type & f, const s
     if(numBlocks>0) return blockSize;
     else return blockSize/2;
   }
-#endif
-}
+};
+
+
+
+template<class DriverType, bool Large>
+struct CudaGetOptBlockSize;
 
 template<class DriverType, bool Large = (CudaTraits::ConstantMemoryUseThreshold < sizeof(DriverType))>
 int cuda_get_opt_block_size(const typename DriverType::functor_type & f, const size_t shmem_extra) {
-#if ( CUDA_VERSION < 6050 )
-  return 256;
-#else
+  return CudaGetOptBlockSize<DriverType,Large>::get_block_size(f,shmem_extra);
+}
 
-  int blockSize=16;
-  int numBlocks;
-  int sharedmem;
-  int maxOccupancy=0;
-  int bestBlockSize=0;
+template<class DriverType>
+struct CudaGetOptBlockSize<DriverType,true> {
+  static int get_block_size(const typename DriverType::functor_type & f, const size_t shmem_extra) {
+    int blockSize=16;
+    int numBlocks;
+    int sharedmem;
+    int maxOccupancy=0;
+    int bestBlockSize=0;
 
-  if(Large) {
     while(blockSize<1024) {
       blockSize*=2;
 
@@ -131,11 +147,23 @@ int cuda_get_opt_block_size(const typename DriverType::functor_type & f, const s
               blockSize,
               sharedmem);
       if(maxOccupancy < numBlocks*blockSize) {
-        maxOccupancy = numBlocks*blockSize;
-        bestBlockSize = blockSize;
+         maxOccupancy = numBlocks*blockSize;
+         bestBlockSize = blockSize;
       }
     }
-  } else {
+    return bestBlockSize;
+  }
+};
+
+template<class DriverType>
+struct CudaGetOptBlockSize<DriverType,false> {
+  static int get_block_size(const typename DriverType::functor_type & f, const size_t shmem_extra) {
+    int blockSize=16;
+    int numBlocks;
+    int sharedmem;
+    int maxOccupancy=0;
+    int bestBlockSize=0;
+
     while(blockSize<1024) {
       blockSize*=2;
       sharedmem = shmem_extra + FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize );
@@ -151,10 +179,9 @@ int cuda_get_opt_block_size(const typename DriverType::functor_type & f, const s
         bestBlockSize = blockSize;
       }
     }
+    return bestBlockSize;
   }
-  return bestBlockSize;
-#endif
-}
+};
 
 }} // namespace Kokkos::Impl
 
