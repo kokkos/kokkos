@@ -605,6 +605,12 @@ public:
       if ( CudaTraits::SharedMemoryCapacity < shmem_size_total ) {
         Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelFor< Cuda > insufficient shared memory"));
       }
+
+      if ( m_team_size >
+           Kokkos::Impl::cuda_get_max_block_size< ParallelFor >
+                 ( arg_functor , arg_policy.scratch_size() ) / arg_policy.vector_length()) {
+        Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelFor< Cuda > requested too large team size."));
+      }
     }
 };
 
@@ -973,6 +979,13 @@ public:
          CudaTraits::SharedMemoryCapacity < shmem_size_total ) {
       Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > bad team size"));
     }
+
+    if ( m_team_size >
+         Kokkos::Impl::cuda_get_max_block_size< ParallelReduce >
+               ( arg_functor , arg_policy.scratch_size() ) / arg_policy.vector_length()) {
+      Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too large team size."));
+    }
+
   }
 };
 
@@ -1025,14 +1038,14 @@ private:
   template< class TagType >
   __device__ inline
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_range( const Member & i , reference_type update , const bool final_result ) const
-    { m_functor( i , update , final_result ); }
+  exec_range( const Member & i , reference_type update , const bool final ) const
+    { m_functor( i , update , final ); }
 
   template< class TagType >
   __device__ inline
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_range( const Member & i , reference_type update , const bool final_result ) const
-    { m_functor( TagType() , i , update , final_result ); }
+  exec_range( const Member & i , reference_type update , const bool final ) const
+    { m_functor( TagType() , i , update , final ); }
 
   //----------------------------------------
 
