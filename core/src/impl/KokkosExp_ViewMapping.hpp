@@ -49,6 +49,7 @@
 
 #include <Kokkos_Pair.hpp>
 #include <Kokkos_Layout.hpp>
+#include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_Atomic_View.hpp>
 
@@ -278,7 +279,7 @@ struct is_integral_extent_type< std::initializer_list<iType> >
 { enum { value = std::is_integral<iType>::value }; };
 
 template < unsigned I , class ... Args >
-constexpr bool is_integral_extent()
+struct is_integral_extent
 {
   // variadic_type is void when sizeof...(Args) <= I
   typedef typename std::remove_cv<
@@ -292,8 +293,7 @@ constexpr bool is_integral_extent()
                  std::is_integral<type>::value ||
                  std::is_same<type,void>::value 
                , "subview argument must be either integral or integral extent" );
-  return value ;
-}
+};
 
 template< unsigned DomainRank , unsigned RangeRank >
 struct SubviewExtents {
@@ -418,14 +418,14 @@ public:
       // Verifies that all arguments, up to 8, are integral types,
       // integral extents, or don't exist.
       static_assert( RangeRank ==
-        unsigned( is_integral_extent<0,Args...>() ) +
-        unsigned( is_integral_extent<1,Args...>() ) +
-        unsigned( is_integral_extent<2,Args...>() ) +
-        unsigned( is_integral_extent<3,Args...>() ) +
-        unsigned( is_integral_extent<4,Args...>() ) +
-        unsigned( is_integral_extent<5,Args...>() ) +
-        unsigned( is_integral_extent<6,Args...>() ) +
-        unsigned( is_integral_extent<7,Args...>() ) , "" );
+        unsigned( is_integral_extent<0,Args...>::value ) +
+        unsigned( is_integral_extent<1,Args...>::value ) +
+        unsigned( is_integral_extent<2,Args...>::value ) +
+        unsigned( is_integral_extent<3,Args...>::value ) +
+        unsigned( is_integral_extent<4,Args...>::value ) +
+        unsigned( is_integral_extent<5,Args...>::value ) +
+        unsigned( is_integral_extent<6,Args...>::value ) +
+        unsigned( is_integral_extent<7,Args...>::value ) , "" );
 
       // Required to suppress '-Werror=maybe-uninitialized'
       m_begin[0]  = 0 ;
@@ -2402,14 +2402,14 @@ private:
   static_assert( SrcTraits::rank == sizeof...(Args) , "" );
 
   enum : bool
-    { R0 = is_integral_extent<0,Args...>()
-    , R1 = is_integral_extent<1,Args...>()
-    , R2 = is_integral_extent<2,Args...>()
-    , R3 = is_integral_extent<3,Args...>()
-    , R4 = is_integral_extent<4,Args...>()
-    , R5 = is_integral_extent<5,Args...>()
-    , R6 = is_integral_extent<6,Args...>()
-    , R7 = is_integral_extent<7,Args...>()
+    { R0 = is_integral_extent<0,Args...>::value
+    , R1 = is_integral_extent<1,Args...>::value
+    , R2 = is_integral_extent<2,Args...>::value
+    , R3 = is_integral_extent<3,Args...>::value
+    , R4 = is_integral_extent<4,Args...>::value
+    , R5 = is_integral_extent<5,Args...>::value
+    , R6 = is_integral_extent<6,Args...>::value
+    , R7 = is_integral_extent<7,Args...>::value
     };
 
   enum { rank = unsigned(R0) + unsigned(R1) + unsigned(R2) + unsigned(R3)

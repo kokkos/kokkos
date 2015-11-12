@@ -114,9 +114,8 @@ class ViewMapping< Traits , void ,
 {
 private:
 
-  template< class , class , typename > friend class ViewMapping ;
-  template< class , bool , bool , bool , bool , bool , bool , bool , bool , class > friend struct SubviewMapping ;
-  template< class , class , class , class > friend class Kokkos::Experimental::View ;
+  template< class , class ... > friend class ViewMapping ;
+  template< class , class ... > friend class Kokkos::Experimental::View ;
 
   typedef ViewOffset< typename Traits::dimension
                     , typename Traits::array_layout
@@ -495,14 +494,14 @@ private:
   static_assert( SrcTraits::rank == sizeof...(Args) , "" );
 
   enum : bool
-    { R0 = is_integral_extent<0,Args...>()
-    , R1 = is_integral_extent<1,Args...>()
-    , R2 = is_integral_extent<2,Args...>()
-    , R3 = is_integral_extent<3,Args...>()
-    , R4 = is_integral_extent<4,Args...>()
-    , R5 = is_integral_extent<5,Args...>()
-    , R6 = is_integral_extent<6,Args...>()
-    , R7 = is_integral_extent<7,Args...>()
+    { R0 = is_integral_extent<0,Args...>::value
+    , R1 = is_integral_extent<1,Args...>::value
+    , R2 = is_integral_extent<2,Args...>::value
+    , R3 = is_integral_extent<3,Args...>::value
+    , R4 = is_integral_extent<4,Args...>::value
+    , R5 = is_integral_extent<5,Args...>::value
+    , R6 = is_integral_extent<6,Args...>::value
+    , R7 = is_integral_extent<7,Args...>::value
     };
 
   enum { rank = unsigned(R0) + unsigned(R1) + unsigned(R2) + unsigned(R3)
