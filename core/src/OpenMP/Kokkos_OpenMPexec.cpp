@@ -178,7 +178,10 @@ void OpenMPexec::resize_scratch( size_t reduce_size , size_t thread_size )
 
 #else
 
-      m_pool.at(rank_rev) = HostSpace::allocate_and_track( "openmp_scratch", alloc_size );
+      #pragma omp critical
+      {
+        m_pool.at(rank_rev) = HostSpace::allocate_and_track( "openmp_scratch", alloc_size );
+      }
 
 #endif
 
