@@ -301,9 +301,11 @@ template< unsigned DomainRank , unsigned RangeRank >
 struct SubviewExtents {
 private:
 
+  enum { InternalRangeRank = RangeRank ? RangeRank : 1u };
+
   size_t   m_begin[  DomainRank ];
-  size_t   m_length[ RangeRank ? RangeRank : 1 ];
-  unsigned m_index[  RangeRank ? RangeRank : 1 ];
+  size_t   m_length[ InternalRangeRank ];
+  unsigned m_index[  InternalRangeRank ];
 
   template< size_t ... DimArgs >
   KOKKOS_INLINE_FUNCTION
@@ -429,10 +431,14 @@ public:
         unsigned( is_integral_extent<6,Args...>::value ) +
         unsigned( is_integral_extent<7,Args...>::value ) , "" );
 
-      // Required to suppress '-Werror=maybe-uninitialized'
-      m_begin[0]  = 0 ;
-      m_length[0] = 0 ;
-      m_index[0]  = 0 ;
+      // Required to suppress "is always false" warning in
+      // 'range_extent' and 'range_index' when RangeRank == 0,
+      // which leads to using InternalRangeRank in these functions
+      // which leads to requiring initialization.
+      // Also required to suppress '-Werror=maybe-uninitialized'.
+      for ( unsigned i = 0 ; i < DomainRank ; ++i ) m_begin[i] = 0 ;
+      for ( unsigned i = 0 ; i < InternalRangeRank ; ++i ) m_length[i] = 0 ;
+      for ( unsigned i = 0 ; i < InternalRangeRank ; ++i ) m_index[i] = ~0u ;
 
       if ( ! set( 0 , 0 , dim , args... ) ) {
         Kokkos::abort("Kokkos::Experimental::subview bounds error");
@@ -447,12 +453,12 @@ public:
   template < typename iType >
   KOKKOS_INLINE_FUNCTION
   constexpr size_t range_extent( const iType i ) const
-    { return unsigned(i) < RangeRank ? m_length[i] : 0 ; }
+    { return unsigned(i) < InternalRangeRank ? m_length[i] : 0 ; }
 
   template < typename iType >
   KOKKOS_INLINE_FUNCTION
   constexpr unsigned range_index( const iType i ) const
-    { return unsigned(i) < RangeRank ? m_index[i] : ~0u ; }
+    { return unsigned(i) < InternalRangeRank ? m_index[i] : ~0u ; }
 };
 
 }}} // namespace Kokkos::Experimental::Impl
