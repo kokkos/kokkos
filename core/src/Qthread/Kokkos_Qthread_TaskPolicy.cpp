@@ -425,8 +425,7 @@ fflush(stdout);
       , NULL
       , m_dep_size , qprecon /* dependences */
       , spawn_shepherd
-      // , unsigned( QTHREAD_SPAWN_SIMPLE | QTHREAD_SPAWN_LOCAL_PRIORITY )
-      , unsigned( QTHREAD_SPAWN_LOCAL_PRIORITY )
+      , unsigned( QTHREAD_SPAWN_SIMPLE | QTHREAD_SPAWN_LOCAL_PRIORITY )
       , num_worker_per_shepherd - 1
       );
   }
