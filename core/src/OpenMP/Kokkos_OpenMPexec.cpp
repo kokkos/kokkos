@@ -110,6 +110,13 @@ void OpenMPexec::verify_initialized( const char * const label )
     msg.append( " ERROR: not initialized" );
     Kokkos::Impl::throw_runtime_exception( msg );
   }
+
+  if ( omp_get_max_threads() != Kokkos::OpenMP::thread_pool_size(0) ) {
+    std::string msg( label );
+    msg.append( " ERROR: Initialized but threads modified inappropriately" );
+    Kokkos::Impl::throw_runtime_exception( msg );
+  }
+
 }
 
 void OpenMPexec::clear_scratch()
