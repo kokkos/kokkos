@@ -132,7 +132,7 @@ do
   -x)
     if [[ $2 != "cu" ]]; then
       if [ $first_xcompiler_arg -eq 1 ]; then
-        xcompiler_args="-x,$1"
+        xcompiler_args="-x,$2"
         first_xcompiler_arg=0
       else
         xcompiler_args="$xcompiler_args,-x,$2"
