@@ -500,6 +500,15 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_6() const { return m_map.dimension_6(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_7() const { return m_map.dimension_7(); }
 
+  KOKKOS_INLINE_FUNCTION constexpr size_t size() const { return m_map.dimension_0() *
+                                                                m_map.dimension_1() *
+                                                                m_map.dimension_2() *
+                                                                m_map.dimension_3() *
+                                                                m_map.dimension_4() *
+                                                                m_map.dimension_5() *
+                                                                m_map.dimension_6() *
+                                                                m_map.dimension_7(); }
+
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_0() const { return m_map.stride_0(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_1() const { return m_map.stride_1(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_2() const { return m_map.stride_2(); }
@@ -517,6 +526,7 @@ public:
   enum { reference_type_is_lvalue_reference = std::is_lvalue_reference< reference_type >::value };
 
   KOKKOS_INLINE_FUNCTION constexpr size_t span() const { return m_map.span(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t capacity() const { return m_map.span(); }
   KOKKOS_INLINE_FUNCTION constexpr bool   span_is_contiguous() const { return m_map.span_is_contiguous(); }
   KOKKOS_INLINE_FUNCTION constexpr typename traits::value_type * data() const { return m_map.data(); }
 
