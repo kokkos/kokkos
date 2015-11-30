@@ -2286,6 +2286,26 @@ public:
 
   template< bool AllowPadding >
   KOKKOS_INLINE_FUNCTION
+  ViewMapping( typename Traits::value_type * ptr
+             , const std::integral_constant<bool,AllowPadding> &
+             , const size_t N0 , const size_t N1 , const size_t N2 , const size_t N3
+             , const size_t N4 , const size_t N5 , const size_t N6 , const size_t N7 )
+    : m_handle( ptr )
+    , m_offset( std::integral_constant< unsigned , AllowPadding ? sizeof(typename Traits::value_type) : 0 >()
+              , N0, N1, N2, N3, N4, N5, N6, N7 )
+    {}
+
+  template< bool AllowPadding >
+  KOKKOS_INLINE_FUNCTION
+  ViewMapping( typename Traits::value_type * ptr
+             , const std::integral_constant<bool,AllowPadding> &
+             , const typename Traits::array_layout & layout )
+    : m_handle( ptr )
+    , m_offset( layout )
+    {}
+
+  template< bool AllowPadding >
+  KOKKOS_INLINE_FUNCTION
   ViewMapping( void * ptr
              , const std::integral_constant<bool,AllowPadding> &
              , const size_t N0 , const size_t N1 , const size_t N2 , const size_t N3
