@@ -1773,6 +1773,7 @@ using Kokkos::Experimental::create_mirror_view ;
 using Kokkos::Experimental::subview ;
 using Kokkos::Experimental::resize ;
 using Kokkos::Experimental::realloc ;
+using Kokkos::Experimental::is_view ;
 
 namespace Impl {
 

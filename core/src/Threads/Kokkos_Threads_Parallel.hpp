@@ -305,7 +305,7 @@ public:
     , m_policy( arg_policy )
     , m_result_ptr( arg_result_view.ptr_on_device() )
     {
-      static_assert( Impl::is_view< HostViewType >::value
+      static_assert( Kokkos::is_view< HostViewType >::value
         , "Kokkos::Threads reduce result must be a View" );
 
       static_assert( std::is_same< typename HostViewType::memory_space , HostSpace >::value
