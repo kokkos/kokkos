@@ -518,6 +518,9 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_6() const { return m_map.stride_6(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_7() const { return m_map.stride_7(); }
 
+  template< typename iType >
+  KOKKOS_INLINE_FUNCTION constexpr void stride( iType * const s ) const { m_map.stride(s); }
+
   //----------------------------------------
   // Range span is the span which contains all members.
 
@@ -526,6 +529,7 @@ public:
   enum { reference_type_is_lvalue_reference = std::is_lvalue_reference< reference_type >::value };
 
   KOKKOS_INLINE_FUNCTION constexpr size_t span() const { return m_map.span(); }
+  // Deprecated, use 'span()' instead
   KOKKOS_INLINE_FUNCTION constexpr size_t capacity() const { return m_map.span(); }
   KOKKOS_INLINE_FUNCTION constexpr bool   span_is_contiguous() const { return m_map.span_is_contiguous(); }
   KOKKOS_INLINE_FUNCTION constexpr typename traits::value_type * data() const { return m_map.data(); }

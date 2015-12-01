@@ -2274,6 +2274,9 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_6() const { return m_offset.stride_6(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_7() const { return m_offset.stride_7(); }
 
+  template< typename iType >
+  KOKKOS_INLINE_FUNCTION constexpr void stride( iType * const s ) const { m_offset.stride(s); }
+
   //----------------------------------------
   // Range span
 
