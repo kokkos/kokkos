@@ -163,8 +163,13 @@ do
     host_linker_args="$host_linker_args ${1:4:${#1}}"
     ;;
   #Handle object files: -x cu applies to all input files, so give them to linker, except if only linking
-  *.a|*.so|*.o|*.obj|*.so.*|*.dylib)
+  *.a|*.so|*.o|*.obj)
     object_files="$object_files $1"
+    object_files_xlinker="$object_files_xlinker -Xlinker $1"
+    ;;
+  #Handle object files which always need to use "-Xlinker": -x cu applies to all input files, so give them to linker, except if only linking
+  *.so.*|*.dylib)
+    object_files="$object_files -Xlinker $1"
     object_files_xlinker="$object_files_xlinker -Xlinker $1"
     ;;
   #All other args are sent to the host compiler
