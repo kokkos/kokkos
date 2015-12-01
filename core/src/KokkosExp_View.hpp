@@ -519,7 +519,7 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_7() const { return m_map.stride_7(); }
 
   template< typename iType >
-  KOKKOS_INLINE_FUNCTION constexpr void stride( iType * const s ) const { m_map.stride(s); }
+  KOKKOS_INLINE_FUNCTION void stride( iType * const s ) const { m_map.stride(s); }
 
   //----------------------------------------
   // Range span is the span which contains all members.
