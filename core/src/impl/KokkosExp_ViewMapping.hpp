@@ -2290,15 +2290,14 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const { return m_offset.span_is_contiguous(); }
 
   typedef typename ViewDataHandle< Traits >::return_type  reference_type ;
+  typedef typename Traits::value_type *                   pointer_type ;
 
   /** \brief  If data references are lvalue_reference than can query pointer to memory */
-  KOKKOS_INLINE_FUNCTION constexpr typename Traits::value_type * data() const
+  KOKKOS_INLINE_FUNCTION constexpr pointer_type data() const
     {
-      typedef typename Traits::value_type * ptr_type ;
-
       return std::is_lvalue_reference< reference_type >::value
-             ? (ptr_type) m_handle
-             : (ptr_type) 0 ;
+             ? (pointer_type) m_handle
+             : (pointer_type) 0 ;
     }
 
   //----------------------------------------
@@ -2418,7 +2417,7 @@ public:
 
   template< bool AllowPadding >
   KOKKOS_INLINE_FUNCTION
-  ViewMapping( typename Traits::value_type * ptr
+  ViewMapping( pointer_type ptr
              , const std::integral_constant<bool,AllowPadding> &
              , const size_t N0 , const size_t N1 , const size_t N2 , const size_t N3
              , const size_t N4 , const size_t N5 , const size_t N6 , const size_t N7 )
@@ -2429,30 +2428,10 @@ public:
 
   template< bool AllowPadding >
   KOKKOS_INLINE_FUNCTION
-  ViewMapping( typename Traits::value_type * ptr
+  ViewMapping( pointer_type ptr
              , const std::integral_constant<bool,AllowPadding> &
              , const typename Traits::array_layout & layout )
     : m_handle( ptr )
-    , m_offset( layout )
-    {}
-
-  template< bool AllowPadding >
-  KOKKOS_INLINE_FUNCTION
-  ViewMapping( void * ptr
-             , const std::integral_constant<bool,AllowPadding> &
-             , const size_t N0 , const size_t N1 , const size_t N2 , const size_t N3
-             , const size_t N4 , const size_t N5 , const size_t N6 , const size_t N7 )
-    : m_handle( reinterpret_cast< handle_type >( ptr ) )
-    , m_offset( std::integral_constant< unsigned , AllowPadding ? sizeof(typename Traits::value_type) : 0 >()
-              , N0, N1, N2, N3, N4, N5, N6, N7 )
-    {}
-
-  template< bool AllowPadding >
-  KOKKOS_INLINE_FUNCTION
-  ViewMapping( void * ptr
-             , const std::integral_constant<bool,AllowPadding> &
-             , const typename Traits::array_layout & layout )
-    : m_handle( reinterpret_cast< handle_type >( ptr ) )
     , m_offset( layout )
     {}
 

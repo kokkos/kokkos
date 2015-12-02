@@ -50,7 +50,7 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template< class DataType , class ArrayLayout , class V , long N , class P >
+template< class DataType , class ArrayLayout , class V , size_t N , class P >
 struct ViewDataAnalysis< DataType , ArrayLayout , Kokkos::Array<V,N,P> >
 {
 private:
@@ -105,12 +105,13 @@ namespace Impl {
 
 /** \brief  View mapping for non-specialized data type and standard layout */
 template< class Traits >
-class ViewMapping< Traits , void ,
-  typename std::enable_if<( std::is_same< typename Traits::specialize , Kokkos::Array<> >::value &&
-                            ( std::is_same< typename Traits::array_layout , Kokkos::LayoutLeft >::value ||
-                              std::is_same< typename Traits::array_layout , Kokkos::LayoutRight >::value ||
-                              std::is_same< typename Traits::array_layout , Kokkos::LayoutStride >::value )
-                          )>::type >
+class ViewMapping< Traits ,
+  typename std::enable_if<(
+    std::is_same< typename Traits::specialize , Kokkos::Array<> >::value &&
+    ( std::is_same< typename Traits::array_layout , Kokkos::LayoutLeft >::value ||
+      std::is_same< typename Traits::array_layout , Kokkos::LayoutRight >::value ||
+      std::is_same< typename Traits::array_layout , Kokkos::LayoutStride >::value )
+  )>::type >
 {
 private:
 
@@ -178,16 +179,20 @@ public:
   // Range span
 
   /** \brief  Span of the mapped range */
-  KOKKOS_INLINE_FUNCTION constexpr size_t span() const { return m_offset.span(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t span() const
+    { return m_offset.span() * Array_N ; }
 
   /** \brief  Is the mapped range span contiguous */
-  KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const { return m_offset.span_is_contiguous(); }
+  KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const
+    { return m_offset.span_is_contiguous(); }
 
   typedef typename std::conditional< is_contiguous_reference , contiguous_reference , strided_reference >::type  reference_type ;
 
+  typedef handle_type pointer_type ;
+
   /** \brief  If data references are lvalue_reference than can query pointer to memory */
-  KOKKOS_INLINE_FUNCTION constexpr typename Traits::value_type * data() const
-    { return (typename Traits::value_type *) 0 ; }
+  KOKKOS_INLINE_FUNCTION constexpr pointer_type data() const
+    { return m_handle ; }
 
   //----------------------------------------
   // The View class performs all rank and bounds checking before
@@ -250,14 +255,14 @@ public:
 private:
 
   enum { MemorySpanMask = 8 - 1 /* Force alignment on 8 byte boundary */ };
-  enum { MemorySpanSize = sizeof(typename Traits::value_type) };
+  enum { MemorySpanSize = sizeof(scalar_type) };
 
 public:
 
   /** \brief  Span, in bytes, of the referenced memory */
   KOKKOS_INLINE_FUNCTION constexpr size_t memory_span() const
     {
-      return ( m_stride * sizeof(typename Traits::value_type) + MemorySpanMask ) & ~size_t(MemorySpanMask);
+      return ( m_offset.span() * Array_N * MemorySpanSize + MemorySpanMask ) & ~size_t(MemorySpanMask);
     }
 
   /** \brief  Span, in bytes, of the required memory */
@@ -268,7 +273,7 @@ public:
                                       , const size_t N4 , const size_t N5 , const size_t N6 , const size_t N7 )
     {
       typedef std::integral_constant< unsigned , AllowPadding ? MemorySpanSize : 0 >  padding ;
-      return ( offset_type( padding(), N0, N1, N2, N3, N4, N5, N6, N7 ).span() * MemorySpanSize + MemorySpanMask ) & ~size_t(MemorySpanMask);
+      return ( offset_type( padding(), N0, N1, N2, N3, N4, N5, N6, N7 ).span() * Array_N * MemorySpanSize + MemorySpanMask ) & ~size_t(MemorySpanMask);
     }
 
   /** \brief  Span, in bytes, of the required memory */
@@ -277,7 +282,7 @@ public:
   static constexpr size_t memory_span( const std::integral_constant<bool,AllowPadding> &
                                        , const typename Traits::array_layout & layout )
     {
-      return ( offset_type( layout ).span() * MemorySpanSize + MemorySpanMask ) & ~size_t(MemorySpanMask);
+      return ( offset_type( layout ).span() * Array_N * MemorySpanSize + MemorySpanMask ) & ~size_t(MemorySpanMask);
     }
 
   //----------------------------------------
@@ -296,11 +301,11 @@ public:
 
   template< bool AllowPadding >
   KOKKOS_INLINE_FUNCTION
-  ViewMapping( void * ptr
+  ViewMapping( pointer_type ptr
              , const std::integral_constant<bool,AllowPadding> &
              , const size_t N0 , const size_t N1 , const size_t N2 , const size_t N3
              , const size_t N4 , const size_t N5 , const size_t N6 , const size_t N7 )
-    : m_handle( reinterpret_cast< handle_type >( ptr ) )
+    : m_handle( ptr )
     , m_offset( std::integral_constant< unsigned , AllowPadding ? sizeof(typename Traits::value_type) : 0 >()
               , N0, N1, N2, N3, N4, N5, N6, N7 )
     , m_stride( m_offset.span() )
@@ -308,10 +313,10 @@ public:
 
   template< bool AllowPadding >
   KOKKOS_INLINE_FUNCTION
-  ViewMapping( void * ptr
+  ViewMapping( pointer_type ptr
              , const std::integral_constant<bool,AllowPadding> &
              , const typename Traits::array_layout & layout )
-    : m_handle( reinterpret_cast< handle_type >( ptr ) )
+    : m_handle( ptr )
     , m_offset( layout )
     , m_stride( m_offset.span() )
     {}
@@ -371,8 +376,8 @@ public:
   enum { is_assignable = true };
 
   typedef Kokkos::Experimental::Impl::SharedAllocationTracker  TrackType ;
-  typedef ViewMapping< DstTraits , void , void >  DstType ;
-  typedef ViewMapping< SrcTraits , void , void >  SrcType ;
+  typedef ViewMapping< DstTraits , void >  DstType ;
+  typedef ViewMapping< SrcTraits , void >  SrcType ;
 
   KOKKOS_INLINE_FUNCTION
   static void assign( DstType & dst , const SrcType & src , const TrackType & src_track )
@@ -430,8 +435,8 @@ public:
                          std::is_same< typename DstTraits::array_layout , typename SrcTraits::array_layout >::value };
 
   typedef Kokkos::Experimental::Impl::SharedAllocationTracker  TrackType ;
-  typedef ViewMapping< DstTraits , void , void >  DstType ;
-  typedef ViewMapping< SrcTraits , void , void >  SrcType ;
+  typedef ViewMapping< DstTraits , void >  DstType ;
+  typedef ViewMapping< SrcTraits , void >  SrcType ;
 
   KOKKOS_INLINE_FUNCTION
   static void assign( DstType & dst , const SrcType & src , const TrackType & src_track )
@@ -444,6 +449,7 @@ public:
       // Arguments beyond the destination rank are ignored.
       if ( src.span_is_contiguous() ) { // not padded
         dst.m_offset = dst_offset_type( std::integral_constant<unsigned,0>()
+                                      , ( 0 < SrcType::Rank ? src.dimension_0() : SrcTraits::value_type::size() )
                                       , ( 1 < SrcType::Rank ? src.dimension_1() : SrcTraits::value_type::size() )
                                       , ( 2 < SrcType::Rank ? src.dimension_2() : SrcTraits::value_type::size() )
                                       , ( 3 < SrcType::Rank ? src.dimension_3() : SrcTraits::value_type::size() )
