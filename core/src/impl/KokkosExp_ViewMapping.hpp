@@ -215,6 +215,9 @@ struct ViewDimension
 
   template< size_t N >
   struct prepend { typedef ViewDimension< N , Vals... > type ; };
+
+  template< size_t N >
+  struct append { typedef ViewDimension< Vals... , N > type ; };
 };
 
 template< class A , class B >
