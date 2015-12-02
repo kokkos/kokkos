@@ -1681,7 +1681,7 @@ void parallel_reduce( const ExecPolicy  & policy
                     , const ViewType    & result_view
                     , const std::string& str = "" 
                     , typename Impl::enable_if<
-                      ( Impl::is_view<ViewType>::value && ! Impl::is_integral< ExecPolicy >::value &&
+                      ( Kokkos::is_view<ViewType>::value && ! Impl::is_integral< ExecPolicy >::value &&
                         Impl::is_same<typename ExecPolicy::execution_space,Kokkos::Cuda>::value
                       )>::type * = 0 )
 {
@@ -1717,7 +1717,7 @@ void parallel_reduce( const ExecPolicy  & policy
                     , ResultType& result_ref
                     , const std::string& str = "" 
                     , typename Impl::enable_if<
-                      ( ! Impl::is_view<ResultType>::value &&
+                      ( ! Kokkos::is_view<ResultType>::value &&
                         ! Impl::IsNonTrivialReduceFunctor<FunctorTypeIn>::value &&
                         ! Impl::is_integral< ExecPolicy >::value  &&
                           Impl::is_same<typename ExecPolicy::execution_space,Kokkos::Cuda>::value )>::type * = 0 )
@@ -1820,7 +1820,7 @@ void parallel_reduce( const size_t        work_count
                     , const FunctorTypeIn & functor_in
                     , const ViewType    & result_view
                     , const std::string& str = "" 
-                    , typename Impl::enable_if<( Impl::is_view<ViewType>::value &&
+                    , typename Impl::enable_if<( Kokkos::is_view<ViewType>::value &&
                                                  Impl::is_same<
                           typename Impl::FunctorPolicyExecutionSpace< FunctorTypeIn , void >::execution_space,
                           Kokkos::Cuda>::value
@@ -1865,7 +1865,7 @@ void parallel_reduce( const size_t        work_count
                     , const FunctorTypeIn & functor_in
                     , ResultType& result
                     , const std::string& str = "" 
-                    , typename Impl::enable_if< ! Impl::is_view<ResultType>::value &&
+                    , typename Impl::enable_if< ! Kokkos::is_view<ResultType>::value &&
                                                 ! Impl::IsNonTrivialReduceFunctor<FunctorTypeIn>::value &&
                                                 Impl::is_same<
                              typename Impl::FunctorPolicyExecutionSpace< FunctorTypeIn , void >::execution_space,

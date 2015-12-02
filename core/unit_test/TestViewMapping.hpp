@@ -602,8 +602,9 @@ void test_view_mapping()
 
     int data[N] ;
 
-    T vr1(data,N);
-    C cr1(vr1);
+    T vr1(data,N); // view of non-const
+    C cr1(vr1);    // view of const from view of non-const
+    C cr2( (const int *) data , N );
 
     // Generate static_assert error:
     // T tmp( cr1 );

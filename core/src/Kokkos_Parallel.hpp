@@ -410,7 +410,7 @@ void parallel_reduce( const ExecPolicy  & policy
                     , const ViewType    & result_view
                     , const std::string& str = ""
                     , typename Impl::enable_if<
-                      ( Impl::is_view<ViewType>::value && ! Impl::is_integral< ExecPolicy >::value
+                      ( Kokkos::is_view<ViewType>::value && ! Impl::is_integral< ExecPolicy >::value
 #ifdef KOKKOS_HAVE_CUDA
                         && ! Impl::is_same<typename ExecPolicy::execution_space,Kokkos::Cuda>::value
 #endif
@@ -506,7 +506,7 @@ void parallel_reduce( const size_t        work_count
                     , const FunctorType & functor
                     , const ViewType    & result_view
                     , const std::string& str = ""
-                    , typename Impl::enable_if<( Impl::is_view<ViewType>::value
+                    , typename Impl::enable_if<( Kokkos::is_view<ViewType>::value
 #ifdef KOKKOS_HAVE_CUDA
                         && ! Impl::is_same<
                           typename Impl::FunctorPolicyExecutionSpace< FunctorType , void >::execution_space,

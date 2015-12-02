@@ -500,6 +500,15 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_6() const { return m_map.dimension_6(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_7() const { return m_map.dimension_7(); }
 
+  KOKKOS_INLINE_FUNCTION constexpr size_t size() const { return m_map.dimension_0() *
+                                                                m_map.dimension_1() *
+                                                                m_map.dimension_2() *
+                                                                m_map.dimension_3() *
+                                                                m_map.dimension_4() *
+                                                                m_map.dimension_5() *
+                                                                m_map.dimension_6() *
+                                                                m_map.dimension_7(); }
+
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_0() const { return m_map.stride_0(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_1() const { return m_map.stride_1(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_2() const { return m_map.stride_2(); }
@@ -509,6 +518,9 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_6() const { return m_map.stride_6(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_7() const { return m_map.stride_7(); }
 
+  template< typename iType >
+  KOKKOS_INLINE_FUNCTION void stride( iType * const s ) const { m_map.stride(s); }
+
   //----------------------------------------
   // Range span is the span which contains all members.
 
@@ -517,6 +529,8 @@ public:
   enum { reference_type_is_lvalue_reference = std::is_lvalue_reference< reference_type >::value };
 
   KOKKOS_INLINE_FUNCTION constexpr size_t span() const { return m_map.span(); }
+  // Deprecated, use 'span()' instead
+  KOKKOS_INLINE_FUNCTION constexpr size_t capacity() const { return m_map.span(); }
   KOKKOS_INLINE_FUNCTION constexpr bool   span_is_contiguous() const { return m_map.span_is_contiguous(); }
   KOKKOS_INLINE_FUNCTION constexpr typename traits::value_type * data() const { return m_map.data(); }
 
@@ -1282,7 +1296,7 @@ bool operator == ( const View<LT,LP...> & lhs ,
                   typename rhs_traits::array_layout >::value &&
     std::is_same< typename lhs_traits::memory_space ,
                   typename rhs_traits::memory_space >::value &&
-    lhs_traits::Rank == rhs_traits::Rank &&
+    lhs_traits::rank == rhs_traits::rank &&
     lhs.data()        == rhs.data() &&
     lhs.span()        == rhs.span() &&
     lhs.dimension_0() == rhs.dimension_0() &&
@@ -1763,6 +1777,7 @@ using Kokkos::Experimental::create_mirror_view ;
 using Kokkos::Experimental::subview ;
 using Kokkos::Experimental::resize ;
 using Kokkos::Experimental::realloc ;
+using Kokkos::Experimental::is_view ;
 
 namespace Impl {
 

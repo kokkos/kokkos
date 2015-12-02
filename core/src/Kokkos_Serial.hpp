@@ -515,7 +515,7 @@ public:
     , m_policy(  arg_policy )
     , m_result_ptr( arg_result.ptr_on_device() )
     {
-      static_assert( Impl::is_view< ViewType >::value
+      static_assert( Kokkos::is_view< ViewType >::value
         , "Reduction result on Kokkos::Serial must be a Kokkos::View" );
 
       static_assert( std::is_same< typename ViewType::memory_space
@@ -728,7 +728,7 @@ public:
     , m_shared( arg_policy.scratch_size() + FunctorTeamShmemSize< FunctorType >::value( m_functor , 1 ) )
     , m_result_ptr( arg_result.ptr_on_device() )
     {
-      static_assert( Impl::is_view< ViewType >::value
+      static_assert( Kokkos::is_view< ViewType >::value
         , "Reduction result on Kokkos::Serial must be a Kokkos::View" );
 
       static_assert( std::is_same< typename ViewType::memory_space

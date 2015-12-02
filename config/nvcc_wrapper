@@ -99,7 +99,6 @@ do
     ;;
   #Handle shared args (valid for both nvcc and the host compiler)
   -O*|-D*|-c|-I*|-L*|-l*|-g|--help|--version|-E|-M|-shared)
-    echo $1
     shared_args="$shared_args $1"
     ;;
   #Handle shared args that have an argument
@@ -132,7 +131,12 @@ do
   #strip of "-x cu" because we add that
   -x)
     if [[ $2 != "cu" ]]; then
-      xcompiler_args="$xcompiler_args,-x,$2"
+      if [ $first_xcompiler_arg -eq 1 ]; then
+        xcompiler_args="-x,$2"
+        first_xcompiler_arg=0
+      else
+        xcompiler_args="$xcompiler_args,-x,$2"
+      fi
     fi
     shift
     ;;
@@ -159,8 +163,13 @@ do
     host_linker_args="$host_linker_args ${1:4:${#1}}"
     ;;
   #Handle object files: -x cu applies to all input files, so give them to linker, except if only linking
-  *.a|*.so|*.o|*.obj|*.so.*|*.dylib)
+  *.a|*.so|*.o|*.obj)
     object_files="$object_files $1"
+    object_files_xlinker="$object_files_xlinker -Xlinker $1"
+    ;;
+  #Handle object files which always need to use "-Xlinker": -x cu applies to all input files, so give them to linker, except if only linking
+  *.so.*|*.dylib)
+    object_files="$object_files -Xlinker $1"
     object_files_xlinker="$object_files_xlinker -Xlinker $1"
     ;;
   #All other args are sent to the host compiler
@@ -188,7 +197,10 @@ if [ $arch_set -ne 1 ]; then
 fi
 
 #Compose compilation command
-nvcc_command="nvcc $cuda_args $shared_args $xlinker_args -Xcompiler $xcompiler_args"
+nvcc_command="nvcc $cuda_args $shared_args $xlinker_args"
+if [ $first_xcompiler_arg -eq 0 ]; then
+  nvcc_command="$nvcc_command -Xcompiler $xcompiler_args"
+fi
 
 #Compose host only command
 host_command="$host_compiler $shared_args $xcompiler_args $host_linker_args"
@@ -208,7 +220,7 @@ if [ $replace_pragma_ident -eq 1 ]; then
     fi
   done
   cpp_files=$cpp_files2
-  echo $cpp_files
+  #echo $cpp_files
 fi
 
 if [ "$cpp_files" ]; then

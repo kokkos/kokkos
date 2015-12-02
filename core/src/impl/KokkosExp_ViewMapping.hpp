@@ -324,11 +324,10 @@ private:
     {
       const size_t v = static_cast<size_t>(val);
 
-      if ( dim.extent( domain_rank ) <= v ) return false ;
-
       m_begin[ domain_rank ] = v ;
 
-      return set( domain_rank + 1 , range_rank , dim , args... );
+      return set( domain_rank + 1 , range_rank , dim , args... )
+             && ( v < dim.extent( domain_rank ) );
     }
 
   // std::pair range
@@ -359,13 +358,13 @@ private:
       const size_t b = static_cast<size_t>( val.first );
       const size_t e = static_cast<size_t>( val.second );
 
-      if ( b + dim.extent( domain_rank ) < e ) return false ;
-
       m_begin[  domain_rank ] = b ;
-      m_length[ range_rank  ] = e < b ? 0 : e - b ;
+      m_length[ range_rank  ] = e - b ;
       m_index[  range_rank  ] = domain_rank ;
 
-      return set( domain_rank + 1 , range_rank + 1 , dim , args... );
+      return set( domain_rank + 1 , range_rank + 1 , dim , args... )
+             && ( e <= b + dim.extent( domain_rank ) );
+
     }
 
   // Kokkos::pair range
@@ -380,13 +379,12 @@ private:
       const size_t b = static_cast<size_t>( val.first );
       const size_t e = static_cast<size_t>( val.second );
 
-      if ( b + dim.extent(domain_rank) < e ) return false ;
-
       m_begin[  domain_rank ] = b ;
-      m_length[ range_rank  ] = e < b ? 0 : e - b ;
+      m_length[ range_rank  ] = e - b ;
       m_index[  range_rank  ] = domain_rank ;
 
-      return set( domain_rank + 1 , range_rank + 1 , dim , args... );
+      return set( domain_rank + 1 , range_rank + 1 , dim , args... )
+             && ( e <= b + dim.extent( domain_rank ) );
     }
 
   // { begin , end } range
@@ -401,13 +399,131 @@ private:
       const size_t b = static_cast<size_t>( val.begin()[0] );
       const size_t e = static_cast<size_t>( val.begin()[1] );
 
-      if ( val.size() != 2 || b + dim.extent(domain_rank) < e ) return false ;
-
       m_begin[  domain_rank ] = b ;
-      m_length[ range_rank  ] = e < b ? 0 : e - b ;
+      m_length[ range_rank  ] = e - b ;
       m_index[  range_rank  ] = domain_rank ;
 
-      return set( domain_rank + 1 , range_rank + 1 , dim , args... );
+      return set( domain_rank + 1 , range_rank + 1 , dim , args... )
+             && ( val.size() == 2 )
+             && ( e <= b + dim.extent( domain_rank ) );
+    }
+
+  //------------------------------
+
+  template< size_t ... DimArgs >
+  void error( char *
+            , int
+            , unsigned
+            , unsigned
+            , const ViewDimension< DimArgs ... > & ) const
+    {}
+
+  template< class T , size_t ... DimArgs , class ... Args >
+  void error( char * buf , int buf_len
+            , unsigned domain_rank
+            , unsigned range_rank
+            , const ViewDimension< DimArgs ... > & dim
+            , const T & val
+            , Args ... args ) const
+    {
+      const int n = std::min( buf_len ,
+        snprintf( buf , buf_len
+                , " %lu < %lu %c"
+                , static_cast<unsigned long>(val)
+                , static_cast<unsigned long>( dim.extent( domain_rank ) )
+                , int( sizeof...(Args) ? ',' : ')' ) ) );
+
+      error( buf+n, buf_len-n, domain_rank + 1 , range_rank , dim , args... );
+    }
+
+  // std::pair range
+  template< size_t ... DimArgs , class ... Args >
+  void error( char * buf , int buf_len
+            , unsigned domain_rank
+            , unsigned range_rank
+            , const ViewDimension< DimArgs ... > & dim
+            , const Kokkos::Experimental::Impl::ALL_t 
+            , Args ... args ) const
+    {
+      const int n = std::min( buf_len ,
+        snprintf( buf , buf_len
+                , " Kokkos::ALL %c" 
+                , int( sizeof...(Args) ? ',' : ')' ) ) );
+
+      error( buf+n , buf_len-n , domain_rank + 1 , range_rank + 1 , dim , args... );
+    }
+
+  // std::pair range
+  template< class T , size_t ... DimArgs , class ... Args >
+  void error( char * buf , int buf_len
+            , unsigned domain_rank
+            , unsigned range_rank
+            , const ViewDimension< DimArgs ... > & dim
+            , const std::pair<T,T> & val
+            , Args ... args ) const
+    {
+      // d <= e - b
+      const int n = std::min( buf_len ,
+        snprintf( buf , buf_len
+                , " %lu <= %lu - %lu %c"
+                , static_cast<unsigned long>( dim.extent( domain_rank ) )
+                , static_cast<unsigned long>( val.second )
+                , static_cast<unsigned long>( val.begin )
+                , int( sizeof...(Args) ? ',' : ')' ) ) );
+
+      error( buf+n , buf_len-n , domain_rank + 1 , range_rank + 1 , dim , args... );
+    }
+
+  // Kokkos::pair range
+  template< class T , size_t ... DimArgs , class ... Args >
+  void error( char * buf , int buf_len
+            , unsigned domain_rank
+            , unsigned range_rank
+            , const ViewDimension< DimArgs ... > & dim
+            , const Kokkos::pair<T,T> & val
+            , Args ... args ) const
+    {
+      // d <= e - b
+      const int n = std::min( buf_len ,
+        snprintf( buf , buf_len
+                , " %lu <= %lu - %lu %c"
+                , static_cast<unsigned long>( dim.extent( domain_rank ) )
+                , static_cast<unsigned long>( val.second )
+                , static_cast<unsigned long>( val.begin )
+                , int( sizeof...(Args) ? ',' : ')' ) ) );
+
+      error( buf+n , buf_len-n , domain_rank + 1 , range_rank + 1 , dim , args... );
+    }
+
+  // { begin , end } range
+  template< class T , size_t ... DimArgs , class ... Args >
+  void error( char * buf , int buf_len
+            , unsigned domain_rank
+            , unsigned range_rank
+            , const ViewDimension< DimArgs ... > & dim
+            , const std::initializer_list< T > & val
+            , Args ... args ) const
+    {
+      // d <= e - b
+      int n = 0 ;
+      if ( val.size() == 2 ) {
+        n = std::min( buf_len ,
+          snprintf( buf , buf_len
+                  , " %lu <= %lu - %lu %c"
+                  , static_cast<unsigned long>( dim.extent( domain_rank ) )
+                  , static_cast<unsigned long>( val.begin()[0] )
+                  , static_cast<unsigned long>( val.begin()[1] )
+                  , int( sizeof...(Args) ? ',' : ')' ) ) );
+      }
+      else {
+        n = std::min( buf_len ,
+          snprintf( buf , buf_len
+                  , " { ... }.size() == %u %c"
+                  , unsigned(val.size())
+                  , int( sizeof...(Args) ? ',' : ')' ) ) );
+      }
+
+      error( buf+n , buf_len-n , domain_rank + 1 , range_rank + 1 , dim , args... );
     }
 
 public:
@@ -441,7 +557,17 @@ public:
       for ( unsigned i = 0 ; i < InternalRangeRank ; ++i ) m_index[i] = ~0u ;
 
       if ( ! set( 0 , 0 , dim , args... ) ) {
-        Kokkos::abort("Kokkos::Experimental::subview bounds error");
+#if defined( KOKKOS_ACTIVE_EXECUTION_SPACE_HOST )
+        enum { LEN = 1024 };
+        char buffer[ LEN ];
+
+        const int n = snprintf(buffer,LEN,"Kokkos::subview bounds error (");
+        error( buffer+n , LEN-n , 0 , 0 , dim , args... );
+
+        Kokkos::Impl::throw_runtime_exception(std::string(buffer));
+#else
+        Kokkos::abort("Kokkos::subview bounds error");
+#endif
       }
     }
 
@@ -2148,6 +2274,9 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_6() const { return m_offset.stride_6(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_7() const { return m_offset.stride_7(); }
 
+  template< typename iType >
+  KOKKOS_INLINE_FUNCTION void stride( iType * const s ) const { m_offset.stride(s); }
+
   //----------------------------------------
   // Range span
 
@@ -2283,6 +2412,26 @@ public:
     : m_handle( rhs.m_handle ), m_offset( rhs.m_offset ) {}
   KOKKOS_INLINE_FUNCTION ViewMapping & operator = ( ViewMapping && rhs )
     { m_handle = rhs.m_handle ; m_offset = rhs.m_offset ; return *this ; }
+
+  template< bool AllowPadding >
+  KOKKOS_INLINE_FUNCTION
+  ViewMapping( typename Traits::value_type * ptr
+             , const std::integral_constant<bool,AllowPadding> &
+             , const size_t N0 , const size_t N1 , const size_t N2 , const size_t N3
+             , const size_t N4 , const size_t N5 , const size_t N6 , const size_t N7 )
+    : m_handle( ptr )
+    , m_offset( std::integral_constant< unsigned , AllowPadding ? sizeof(typename Traits::value_type) : 0 >()
+              , N0, N1, N2, N3, N4, N5, N6, N7 )
+    {}
+
+  template< bool AllowPadding >
+  KOKKOS_INLINE_FUNCTION
+  ViewMapping( typename Traits::value_type * ptr
+             , const std::integral_constant<bool,AllowPadding> &
+             , const typename Traits::array_layout & layout )
+    : m_handle( ptr )
+    , m_offset( layout )
+    {}
 
   template< bool AllowPadding >
   KOKKOS_INLINE_FUNCTION

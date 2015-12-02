@@ -247,7 +247,7 @@ public:
     , m_policy(  arg_policy )
     , m_result_ptr(  arg_result_view.ptr_on_device() )
     {
-      static_assert( Impl::is_view< ViewType >::value
+      static_assert( Kokkos::is_view< ViewType >::value
         , "Reduction result on Kokkos::OpenMP must be a Kokkos::View" );
 
       static_assert( std::is_same< typename ViewType::memory_space

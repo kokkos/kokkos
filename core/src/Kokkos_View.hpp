@@ -445,14 +445,14 @@ template< class DataType ,
             typename ViewTraits<DataType,Arg1Type,Arg2Type,Arg3Type>::specialize >
 class View ;
 
-namespace Impl {
-
 template< class C >
-struct is_view : public bool_< false > {};
+struct is_view : public Impl::bool_< false > {};
 
 template< class D , class A1 , class A2 , class A3 , class S >
-struct is_view< View< D , A1 , A2 , A3 , S > > : public bool_< true > {};
+struct is_view< View< D , A1 , A2 , A3 , S > > : public Impl::bool_< true > {};
 
+namespace Impl {
+using Kokkos::is_view ;
 }
 
 //----------------------------------------------------------------------------

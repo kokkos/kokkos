@@ -17,20 +17,7 @@ INTEL_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limi
 CUDA_WARNING_FLAGS=""
 
 BASE_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>/base,hwloc/1.10.1/<COMPILER_NAME>/<COMPILER_VERSION>/base"
-CUDA_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>,nvcc_wrapper,gcc/4.7.2/base"
-
-# Format: (compiler module-list build-list exe-name warning-flag)
-COMPILERS=("gcc/4.7.2 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-           "gcc/4.8.4 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-           "gcc/4.9.2 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-           "gcc/5.1.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-           "intel/14.0.4 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-           "intel/15.0.2 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-           "clang/3.5.2 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-           "clang/3.6.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-           "cuda/6.5.14 $CUDA_MODULE_LIST $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
-           "cuda/7.0.28 $CUDA_MODULE_LIST $CUDA_BUILD_LIST nvcc_wrapper $CUDA_WARNING_FLAGS"
-           )
+CUDA_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>,gcc/4.7.2/base"
 
 export OMP_NUM_THREADS=4
 
@@ -51,6 +38,7 @@ DEBUG=False
 ARGS=""
 CUSTOM_BUILD_LIST=""
 DRYRUN=False
+BUILD_ONLY=False
 declare -i NUM_JOBS_TO_RUN_IN_PARALLEL=3
 TEST_SCRIPT=False
 
@@ -66,6 +54,9 @@ CUSTOM_BUILD_LIST="${key#*=}"
 ;;
 --debug*)
 DEBUG=True
+;;
+--build-only*)
+BUILD_ONLY=True
 ;;
 --test-script*)
 TEST_SCRIPT=True
@@ -84,6 +75,7 @@ echo "--debug: Run tests in debug. Defaults to False"
 echo "--test-script: Test this script, not Kokkos"
 echo "--num=N: Number of jobs to run in parallel "
 echo "--dry-run: Just print what would be executed"
+echo "--build-only: Just do builds, don't run anything"
 echo "--build-list=BUILD,BUILD,BUILD..."
 echo "    Provide a comma-separated list of builds instead of running all builds"
 echo "    Valid items:"
@@ -91,6 +83,18 @@ echo "      OpenMP, Pthread, Serial, OpenMP_Serial, Pthread_Serial"
 echo "      Cuda_OpenMP, Cuda_Pthread, Cuda_Serial"
 echo ""
 echo "ARGS: list of expressions matching compilers to test"
+echo "  supported compilers"
+echo "    gcc/4.7.2"
+echo "    gcc/4.8.4"
+echo "    gcc/4.9.2"
+echo "    gcc/5.1.0"
+echo "    intel/14.0.4"
+echo "    intel/15.0.2"
+echo "    clang/3.5.2"
+echo "    clang/3.6.1"
+echo "    cuda/6.5.14"
+echo "    cuda/7.0.28"
+echo "    cuda/7.5.18"
 echo ""
 echo "Examples:"
 echo "  Run all tests"
@@ -141,6 +145,20 @@ fi
 if [ -z "$ARGS" ]; then
     ARGS='?'
 fi
+
+# Format: (compiler module-list build-list exe-name warning-flag)
+COMPILERS=("gcc/4.7.2 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "gcc/4.8.4 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "gcc/4.9.2 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "gcc/5.1.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+           "intel/14.0.4 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+           "intel/15.0.2 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+           "clang/3.5.2 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+           "clang/3.6.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+           "cuda/6.5.14 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
+           "cuda/7.0.28 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
+           "cuda/7.5.18 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
+           )
 
 # Process args to figure out which compilers to test
 COMPILERS_TO_TEST=""
@@ -297,7 +315,9 @@ single_build_and_test() {
     else
         run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$build --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" $extra_args >& ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
         run_cmd make build-test >& ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
-        run_cmd make test >& ${desc}.test.log || { report_and_log_test_result 1 ${desc} test && return 0; }
+        if [[ "$BUILD_ONLY" == False ]]; then
+            run_cmd make test >& ${desc}.test.log || { report_and_log_test_result 1 ${desc} test && return 0; }
+        fi
     fi
 
     report_and_log_test_result 0 $desc
@@ -322,8 +342,12 @@ run_in_background() {
     local compiler=$1
 
     local -i num_jobs=$NUM_JOBS_TO_RUN_IN_PARALLEL
-    if [[ "$compiler" == cuda* ]]; then
-        num_jobs=1
+    if [[ "$BUILD_ONLY" == True ]]; then
+        num_jobs=8
+    else
+        if [[ "$compiler" == cuda* ]]; then
+            num_jobs=1
+        fi
     fi
     wait_for_jobs $num_jobs
 
