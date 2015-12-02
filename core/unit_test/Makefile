@@ -1,6 +1,6 @@
 KOKKOS_PATH = ../..
 
-GTEST_PATH = ../../TPL/gtest
+GTEST_PATH = ../../tpls/gtest
 
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test
 TEST_HEADERS = $(wildcard $(KOKKOS_PATH)/core/unit_test/*.hpp)
