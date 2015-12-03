@@ -957,12 +957,13 @@ public:
   View & operator = ( View && rhs ) { m_track = rhs.m_track ; m_map = rhs.m_map ; return *this ; }
 
   //----------------------------------------
-  // Compatible view constructors:
+  // Compatible view copy constructor and assignment
+  // may assign unmanaged from managed.
 
   template< class RT , class ... RP >
   KOKKOS_INLINE_FUNCTION
   View( const View<RT,RP...> & rhs )
-    : m_track( rhs.m_track )
+    : m_track( rhs.m_track , traits::is_managed )
     , m_map()
     {
       typedef typename View<RT,RP...>::traits  SrcTraits ;
@@ -973,24 +974,25 @@ public:
 
   template< class RT , class ... RP >
   KOKKOS_INLINE_FUNCTION
-  View( View<RT,RP...> && rhs )
-    : m_track( rhs.m_track )
-    , m_map()
+  View & operator = ( const View<RT,RP...> & rhs )
     {
       typedef typename View<RT,RP...>::traits  SrcTraits ;
       typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
-      static_assert( Mapping::is_assignable , "Incompatible View move construction" );
+      static_assert( Mapping::is_assignable , "Incompatible View copy assignment" );
       Mapping::assign( m_map , rhs.m_map , rhs.m_track );
+      m_track.assign( rhs.m_track , traits::is_managed );
+      return *this ;
     }
 
   //----------------------------------------
   // Compatible subview constructor
+  // may assign unmanaged from managed.
 
   template< class RT , class ... RP , class Arg0 , class ... Args >
   KOKKOS_INLINE_FUNCTION
   View( const View< RT , RP... > & src_view
       , const Arg0 & arg0 , Args ... args )
-    : m_track( src_view.m_track )
+    : m_track( src_view.m_track , traits::is_managed )
     , m_map()
     {
       typedef View< RT , RP... > SrcType ;
@@ -1007,35 +1009,6 @@ public:
     }
 
   //----------------------------------------
-  // Compatible view assignment:
-
-  template< class RT , class ... RP >
-  KOKKOS_INLINE_FUNCTION
-  View & operator = ( const View<RT,RP...> & rhs )
-    {
-      typedef typename View<RT,RP...>::traits  SrcTraits ;
-      typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
-      static_assert( Mapping::is_assignable , "Incompatible View copy assignment" );
-      Mapping::assign( m_map , rhs.m_map , rhs.m_track );
-      m_track.operator=( rhs.m_track );
-      return *this ;
-    }
-
-  template< class RT , class ... RP >
-  KOKKOS_INLINE_FUNCTION
-  View & operator = ( View<RT,RP...> && rhs )
-    {
-      typedef typename View<RT,RP...>::traits  SrcTraits ;
-      typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
-      static_assert( Mapping::is_assignable , "Incompatible View move assignment" );
-      Mapping::assign( m_map , rhs.m_map , rhs.m_track );
-      m_track.operator=( rhs.m_track );
-      return *this ;
-    }
-
-public:
-
-  //----------------------------------------
   // Allocation according to allocation properties
 
 private:
@@ -1050,6 +1023,9 @@ private:
   };
 
 public:
+
+  KOKKOS_INLINE_FUNCTION
+  int use_count() const { return m_track.use_count(); }
 
   inline
   const std::string label() const { return m_track.template get_label< typename traits::memory_space >(); }
@@ -1114,7 +1090,7 @@ public:
       }
 
       // Setup and initialization complete, start tracking
-      m_track = track_type( record );
+      m_track.assign_allocated_record_to_unitialized( record );
     }
 
   template< class Prop >
@@ -1162,7 +1138,7 @@ public:
       }
 
       // Setup and initialization complete, start tracking
-      m_track = track_type( record );
+      m_track.assign_allocated_record_to_unitialized( record );
     }
 
   //----------------------------------------

@@ -800,6 +800,57 @@ void test_view_mapping()
     ASSERT_EQ( d.dimension_0() , 5 );
     ASSERT_EQ( d.dimension_1() , 6 );
   }
+
+  {
+    typedef Kokkos::Experimental::View<int*,ExecSpace> V ;
+    typedef Kokkos::Experimental::View<int*,ExecSpace,Kokkos::MemoryUnmanaged> U ;
+
+
+    V a("a",10);
+
+    ASSERT_EQ( a.use_count() , 1 );
+
+    V b = a ;
+
+    ASSERT_EQ( a.use_count() , 2 );
+    ASSERT_EQ( b.use_count() , 2 );
+
+    {
+      U c = b ; // 'c' is compile-time unmanaged
+
+      ASSERT_EQ( a.use_count() , 2 );
+      ASSERT_EQ( b.use_count() , 2 );
+      ASSERT_EQ( c.use_count() , 2 );
+
+      V d = c ; // 'd' is run-time unmanaged
+
+      ASSERT_EQ( a.use_count() , 2 );
+      ASSERT_EQ( b.use_count() , 2 );
+      ASSERT_EQ( c.use_count() , 2 );
+      ASSERT_EQ( d.use_count() , 2 );
+    }
+
+    ASSERT_EQ( a.use_count() , 2 );
+    ASSERT_EQ( b.use_count() , 2 );
+
+    b = V();
+
+    ASSERT_EQ( a.use_count() , 1 );
+    ASSERT_EQ( b.use_count() , 0 );
+
+    Kokkos::parallel_for(
+      Kokkos::RangePolicy< Kokkos::DefaultHostExecutionSpace >(0,10) ,
+      [=]( int i ){
+        // 'a' is captured by copy and the capture mechanism
+        // converts 'a' to an unmanaged copy.
+        // When the parallel dispatch accepts a move for the lambda
+        // this count should become 1
+        ASSERT_EQ( a.use_count() , 2 );
+        V x = a ;
+        ASSERT_EQ( a.use_count() , 2 );
+        ASSERT_EQ( x.use_count() , 2 );
+      });
+  }
 }
 
 template< class ExecSpace >
