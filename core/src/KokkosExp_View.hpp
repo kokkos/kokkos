@@ -1090,7 +1090,7 @@ public:
       }
 
       // Setup and initialization complete, start tracking
-      m_track.assign_allocated_record_to_unitialized( record );
+      m_track.assign_allocated_record_to_uninitialized( record );
     }
 
   template< class Prop >
@@ -1138,7 +1138,7 @@ public:
       }
 
       // Setup and initialization complete, start tracking
-      m_track.assign_allocated_record_to_unitialized( record );
+      m_track.assign_allocated_record_to_uninitialized( record );
     }
 
   //----------------------------------------

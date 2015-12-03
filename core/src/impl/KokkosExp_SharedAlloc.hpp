@@ -273,7 +273,7 @@ public:
 
   /** \brief  Assign a specialized record */
   inline
-  void assign_allocated_record_to_unitialized( Record * arg_record )
+  void assign_allocated_record_to_uninitialized( Record * arg_record )
     { Record::increment( m_record = arg_record ); }
 
   template< class MemorySpace >

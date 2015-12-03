@@ -172,7 +172,7 @@ void test_shared_alloc()
       // Start tracking, increments the use count from 0 to 1
       Tracker track ;
 
-      track.assign_allocated_record_to_unitialized( rec );
+      track.assign_allocated_record_to_uninitialized( rec );
 
       ASSERT_EQ( rec->use_count() , 1 );
       ASSERT_EQ( track.use_count() , 1 );
@@ -182,7 +182,7 @@ void test_shared_alloc()
         ASSERT_EQ( rec->use_count() , 1 );
         {
           Tracker local_tracker ;
-          local_tracker.assign_allocated_record_to_unitialized( rec );
+          local_tracker.assign_allocated_record_to_uninitialized( rec );
           ASSERT_EQ( rec->use_count() , 2 );
           ASSERT_EQ( local_tracker.use_count() , 2 );
         }
@@ -192,7 +192,7 @@ void test_shared_alloc()
 
       Kokkos::parallel_for( range , [=]( size_t i ){
         Tracker local_tracker ;
-        local_tracker.assign_allocated_record_to_unitialized( rec );
+        local_tracker.assign_allocated_record_to_uninitialized( rec );
         ASSERT_GT( rec->use_count() , 1 );
       });
 
