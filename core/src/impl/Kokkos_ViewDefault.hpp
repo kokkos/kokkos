@@ -84,7 +84,8 @@ struct ViewAssignment< ViewDefault , ViewDefault , void >
 
     dst.m_ptr_on_device = ViewDataManagement< ViewTraits<DT,DL,DD,DM> >::create_handle( src.m_ptr_on_device, src.m_tracker );
 
-    dst.m_tracker = src.m_tracker ;
+    if( dst.is_managed )
+      dst.m_tracker = src.m_tracker ;
 
   }
 
@@ -125,7 +126,8 @@ struct ViewAssignment< ViewDefault , ViewDefault , void >
 
     dst.m_ptr_on_device = ViewDataManagement< ViewTraits<DT,DL,DD,DM> >::create_handle( src.m_ptr_on_device, src.m_tracker );
 
-    dst.m_tracker = src.m_tracker ;
+    if( dst.is_managed )
+      dst.m_tracker = src.m_tracker ;
 
   }
 
