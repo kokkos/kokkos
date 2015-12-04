@@ -240,16 +240,17 @@ struct ViewDimensionAssignable< ViewDimension< DstArgs ... >
   typedef ViewDimension< DstArgs... > dst ;
   typedef ViewDimension< SrcArgs... > src ;
 
-  enum { value = dst::rank == src::rank &&
-                 dst::rank_dynamic >= src::rank_dynamic &&
-                 ( 0 < dst::rank_dynamic || dst::ArgN0 == src::ArgN0 ) &&
-                 ( 1 < dst::rank_dynamic || dst::ArgN1 == src::ArgN1 ) &&
-                 ( 2 < dst::rank_dynamic || dst::ArgN2 == src::ArgN2 ) &&
-                 ( 3 < dst::rank_dynamic || dst::ArgN3 == src::ArgN3 ) &&
-                 ( 4 < dst::rank_dynamic || dst::ArgN4 == src::ArgN4 ) &&
-                 ( 5 < dst::rank_dynamic || dst::ArgN5 == src::ArgN5 ) &&
-                 ( 6 < dst::rank_dynamic || dst::ArgN6 == src::ArgN6 ) &&
-                 ( 7 < dst::rank_dynamic || dst::ArgN7 == src::ArgN7 ) };
+  enum { value =
+    dst::rank == src::rank &&
+    dst::rank_dynamic >= src::rank_dynamic &&
+    ( 0 < dst::rank_dynamic || size_t(dst::ArgN0) == size_t(src::ArgN0) ) &&
+    ( 1 < dst::rank_dynamic || size_t(dst::ArgN1) == size_t(src::ArgN1) ) &&
+    ( 2 < dst::rank_dynamic || size_t(dst::ArgN2) == size_t(src::ArgN2) ) &&
+    ( 3 < dst::rank_dynamic || size_t(dst::ArgN3) == size_t(src::ArgN3) ) &&
+    ( 4 < dst::rank_dynamic || size_t(dst::ArgN4) == size_t(src::ArgN4) ) &&
+    ( 5 < dst::rank_dynamic || size_t(dst::ArgN5) == size_t(src::ArgN5) ) &&
+    ( 6 < dst::rank_dynamic || size_t(dst::ArgN6) == size_t(src::ArgN6) ) &&
+    ( 7 < dst::rank_dynamic || size_t(dst::ArgN7) == size_t(src::ArgN7) ) };
 };
 
 }}} // namespace Kokkos::Experimental::Impl
