@@ -801,6 +801,8 @@ void test_view_mapping()
     ASSERT_EQ( d.dimension_1() , 6 );
   }
 
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+  /* Only works when experimental view is activated */
   {
     typedef Kokkos::Experimental::View<int*,ExecSpace> V ;
     typedef Kokkos::Experimental::View<int*,ExecSpace,Kokkos::MemoryUnmanaged> U ;
@@ -851,6 +853,7 @@ void test_view_mapping()
         ASSERT_EQ( x.use_count() , 2 );
       });
   }
+#endif /* #if defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
 }
 
 template< class ExecSpace >
