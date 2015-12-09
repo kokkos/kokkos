@@ -86,7 +86,10 @@ struct ViewAssignment< ViewDefault , ViewDefault , void >
 
     if( dst.is_managed )
       dst.m_tracker = src.m_tracker ;
-
+    else {
+      dst.m_tracker = AllocationTracker();
+      dst.m_management.set_unmanaged();
+    }
   }
 
 
@@ -128,7 +131,10 @@ struct ViewAssignment< ViewDefault , ViewDefault , void >
 
     if( dst.is_managed )
       dst.m_tracker = src.m_tracker ;
-
+    else {
+      dst.m_tracker = AllocationTracker();
+      dst.m_management.set_unmanaged();
+    }
   }
 
   //------------------------------------
