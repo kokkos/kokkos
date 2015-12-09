@@ -74,7 +74,7 @@ template< class DataType , class ArrayLayout
 struct ViewDataAnalysis ;
 
 template< class , class ... >
-class ViewMapping { enum { is_assignable = false }; };
+class ViewMapping { public: enum { is_assignable = false }; };
 
 template< class MemorySpace >
 struct ViewOperatorBoundsErrorAbort ;
@@ -1002,7 +1002,9 @@ public:
         , typename SrcType::traits
         , Arg0 , Args... > Mapping ;
 
-      static_assert( std::is_same< View , typename Mapping::type >::value
+      typedef typename Mapping::type DstType ;
+
+      static_assert( Kokkos::Experimental::Impl::ViewMapping< View , DstType , void >::is_assignable
         , "Subview construction requires compatible view and subview arguments" );
 
       Mapping::assign( m_map, src_view.m_map, arg0 , args... );

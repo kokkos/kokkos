@@ -2503,9 +2503,33 @@ class ViewMapping< DstTraits , SrcTraits ,
     )
   )>::type >
 {
+private:
+
+  enum { is_assignable_value_type =
+    std::is_same< typename DstTraits::value_type
+                , typename SrcTraits::value_type >::value ||
+    std::is_same< typename DstTraits::value_type
+                , typename SrcTraits::const_value_type >::value };
+
+  enum { is_assignable_dimension =
+    ViewDimensionAssignable< typename DstTraits::dimension
+                           , typename SrcTraits::dimension >::value };
+
+  enum { is_assignable_layout =
+    std::is_same< typename DstTraits::array_layout
+                , typename SrcTraits::array_layout >::value ||
+    std::is_same< typename DstTraits::array_layout
+                , Kokkos::LayoutStride >::value ||
+    ( DstTraits::dimension::rank == 0 ) ||
+    ( DstTraits::dimension::rank == 1 &&
+      DstTraits::dimension::rank_dynamic == 1 )
+    };
+
 public:
 
-  enum { is_assignable = true };
+  enum { is_assignable = is_assignable_value_type &&
+                         is_assignable_dimension &&
+                         is_assignable_layout };
 
   typedef Kokkos::Experimental::Impl::SharedAllocationTracker  TrackType ;
   typedef ViewMapping< DstTraits , void >  DstType ;
@@ -2514,17 +2538,13 @@ public:
   KOKKOS_INLINE_FUNCTION
   static void assign( DstType & dst , const SrcType & src , const TrackType & src_track )
     {
-      static_assert( std::is_same< typename DstTraits::value_type , typename SrcTraits::value_type >::value ||
-                     std::is_same< typename DstTraits::value_type , typename SrcTraits::const_value_type >::value
+      static_assert( is_assignable_value_type
                    , "View assignment must have same value type or const = non-const" );
 
-      static_assert( ViewDimensionAssignable< typename DstTraits::dimension , typename SrcTraits::dimension >::value
+      static_assert( is_assignable_dimension
                    , "View assignment must have compatible dimensions" );
 
-      static_assert( std::is_same< typename DstTraits::array_layout , typename SrcTraits::array_layout >::value ||
-                     std::is_same< typename DstTraits::array_layout , Kokkos::LayoutStride >::value ||
-                     ( DstTraits::dimension::rank == 0 ) ||
-                     ( DstTraits::dimension::rank == 1 && DstTraits::dimension::rank_dynamic == 1 )
+      static_assert( is_assignable_layout
                    , "View assignment must have compatible layout or have rank <= 1" );
 
       typedef typename DstType::offset_type  dst_offset_type ;
@@ -2629,12 +2649,19 @@ public:
     , typename SrcTraits::device_type
     , typename SrcTraits::memory_traits > type ;
 
+  // The presumed type is 'ViewMapping< traits_type , void >'
+  // However, a compatible ViewMapping is acceptable
+  template< class DstTraits >
   KOKKOS_INLINE_FUNCTION
-  static void assign( ViewMapping< traits_type , void > & dst
+  static void assign( ViewMapping< DstTraits , void > & dst
                     , ViewMapping< SrcTraits , void > const & src
                     , Args ... args )
     {
-      typedef ViewMapping< traits_type , void >  DstType ;
+      static_assert(
+        ViewMapping< DstTraits , traits_type , void >::is_assignable ,
+        "Subview destination type must be compatible with subview derived type" );
+
+      typedef ViewMapping< DstTraits , void >  DstType ;
 
       typedef typename DstType::offset_type  dst_offset_type ;
       typedef typename DstType::handle_type  dst_handle_type ;
