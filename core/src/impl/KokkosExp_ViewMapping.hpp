@@ -2649,8 +2649,26 @@ public:
     , typename SrcTraits::device_type
     , typename SrcTraits::memory_traits > type ;
 
+  template< class MemoryTraits >
+  struct apply {
+
+    static_assert( Kokkos::Impl::is_memory_traits< MemoryTraits >::value , "" );
+
+    typedef Kokkos::Experimental::ViewTraits
+      < data_type 
+      , array_layout
+      , typename SrcTraits::device_type
+      , MemoryTraits > traits_type ;
+
+    typedef Kokkos::Experimental::View
+      < data_type 
+      , array_layout
+      , typename SrcTraits::device_type
+      , MemoryTraits > type ;
+  };
+
   // The presumed type is 'ViewMapping< traits_type , void >'
-  // However, a compatible ViewMapping is acceptable
+  // However, a compatible ViewMapping is acceptable.
   template< class DstTraits >
   KOKKOS_INLINE_FUNCTION
   static void assign( ViewMapping< DstTraits , void > & dst

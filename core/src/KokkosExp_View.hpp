@@ -1246,7 +1246,7 @@ typename Kokkos::Experimental::Impl::ViewMapping
 subview( const View< D, P... > & src , Args ... args )
 {
   static_assert( View< D , P... >::Rank == sizeof...(Args) , 
-    "subview requires one argument per source View rank" );
+    "subview requires one argument for each source View rank" );
 
   return typename
     Kokkos::Experimental::Impl::ViewMapping
@@ -1254,6 +1254,29 @@ subview( const View< D, P... > & src , Args ... args )
       , ViewTraits< D , P ... >
       , Args ... >::type( src , args ... ); 
 }
+
+template< class MemoryTraits , class D, class ... P , class ... Args >
+KOKKOS_INLINE_FUNCTION
+typename Kokkos::Experimental::Impl::ViewMapping
+  < void /* deduce subview type from source view traits */
+  , ViewTraits< D , P... >
+  , Args ...
+  >::template apply< MemoryTraits >::type
+subview( const View< D, P... > & src , Args ... args )
+{
+  static_assert( View< D , P... >::Rank == sizeof...(Args) , 
+    "subview requires one argument for each source View rank" );
+
+  return typename
+    Kokkos::Experimental::Impl::ViewMapping
+      < void /* deduce subview type from source view traits */
+      , ViewTraits< D , P ... >
+      , Args ... >
+      ::template apply< MemoryTraits >
+      ::type( src , args ... ); 
+}
+
+
 
 } /* namespace Experimental */
 } /* namespace Kokkos */

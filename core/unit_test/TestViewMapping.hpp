@@ -934,8 +934,11 @@ struct TestViewMappingSubview {
   KOKKOS_INLINE_FUNCTION
   void operator()( const int , long & error_count ) const
     {
+      auto Ad = Kokkos::Experimental::subview< Kokkos::MemoryUnmanaged >( Aa , Kokkos::pair<int,int>(1,AN-1) );
+
       for ( int i = 1 ; i < AN-1 ; ++i ) if( & Aa[i] != & Ab[i-1] ) ++error_count ;
       for ( int i = 1 ; i < AN-1 ; ++i ) if( & Aa[i] != & Ac[i-1] ) ++error_count ;
+      for ( int i = 1 ; i < AN-1 ; ++i ) if( & Aa[i] != & Ad[i-1] ) ++error_count ;
 
       for ( int i2 = 1 ; i2 < BN2-1 ; ++i2 ) {
       for ( int i1 = 1 ; i1 < BN1-1 ; ++i1 ) {
