@@ -305,6 +305,7 @@ template< unsigned DomainRank , unsigned RangeRank >
 struct SubviewExtents {
 private:
 
+  // Cannot declare zero-length arrays
   enum { InternalRangeRank = RangeRank ? RangeRank : 1u };
 
   size_t   m_begin[  DomainRank ];
@@ -312,14 +313,14 @@ private:
   unsigned m_index[  InternalRangeRank ];
 
   template< size_t ... DimArgs >
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FORCEINLINE_FUNCTION
   bool set( unsigned domain_rank
           , unsigned range_rank
           , const ViewDimension< DimArgs ... > & dim )
     { return true ; }
 
   template< class T , size_t ... DimArgs , class ... Args >
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FORCEINLINE_FUNCTION
   bool set( unsigned domain_rank
           , unsigned range_rank
           , const ViewDimension< DimArgs ... > & dim
@@ -331,12 +332,15 @@ private:
       m_begin[ domain_rank ] = v ;
 
       return set( domain_rank + 1 , range_rank , dim , args... )
-             && ( v < dim.extent( domain_rank ) );
+#if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
+             && ( v < dim.extent( domain_rank ) )
+#endif
+      ;
     }
 
   // std::pair range
   template< size_t ... DimArgs , class ... Args >
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FORCEINLINE_FUNCTION
   bool set( unsigned domain_rank
           , unsigned range_rank
           , const ViewDimension< DimArgs ... > & dim
@@ -352,7 +356,7 @@ private:
 
   // std::pair range
   template< class T , size_t ... DimArgs , class ... Args >
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FORCEINLINE_FUNCTION
   bool set( unsigned domain_rank
           , unsigned range_rank
           , const ViewDimension< DimArgs ... > & dim
@@ -367,13 +371,15 @@ private:
       m_index[  range_rank  ] = domain_rank ;
 
       return set( domain_rank + 1 , range_rank + 1 , dim , args... )
-             && ( e <= b + dim.extent( domain_rank ) );
-
+#if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
+             && ( e <= b + dim.extent( domain_rank ) )
+#endif
+      ;
     }
 
   // Kokkos::pair range
   template< class T , size_t ... DimArgs , class ... Args >
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FORCEINLINE_FUNCTION
   bool set( unsigned domain_rank
           , unsigned range_rank
           , const ViewDimension< DimArgs ... > & dim
@@ -388,12 +394,15 @@ private:
       m_index[  range_rank  ] = domain_rank ;
 
       return set( domain_rank + 1 , range_rank + 1 , dim , args... )
-             && ( e <= b + dim.extent( domain_rank ) );
+#if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
+             && ( e <= b + dim.extent( domain_rank ) )
+#endif
+      ;
     }
 
   // { begin , end } range
   template< class T , size_t ... DimArgs , class ... Args >
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FORCEINLINE_FUNCTION
   bool set( unsigned domain_rank
           , unsigned range_rank
           , const ViewDimension< DimArgs ... > & dim
@@ -408,11 +417,16 @@ private:
       m_index[  range_rank  ] = domain_rank ;
 
       return set( domain_rank + 1 , range_rank + 1 , dim , args... )
+#if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
              && ( val.size() == 2 )
-             && ( e <= b + dim.extent( domain_rank ) );
+             && ( e <= b + dim.extent( domain_rank ) )
+#endif
+      ;
     }
 
   //------------------------------
+
+#if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
 
   template< size_t ... DimArgs >
   void error( char *
@@ -530,6 +544,30 @@ private:
       error( buf+n , buf_len-n , domain_rank + 1 , range_rank + 1 , dim , args... );
     }
 
+  template< size_t ... DimArgs , class ... Args >
+  void error( const ViewDimension< DimArgs ... > & dim , Args ... args ) const
+    {
+#if defined( KOKKOS_ACTIVE_EXECUTION_SPACE_HOST )
+      enum { LEN = 1024 };
+      char buffer[ LEN ];
+
+      const int n = snprintf(buffer,LEN,"Kokkos::subview bounds error (");
+      error( buffer+n , LEN-n , 0 , 0 , dim , args... );
+
+      Kokkos::Impl::throw_runtime_exception(std::string(buffer));
+#else
+      Kokkos::abort("Kokkos::subview bounds error");
+#endif
+    }
+
+#else
+
+  template< size_t ... DimArgs , class ... Args >
+  KOKKOS_FORCEINLINE_FUNCTION
+  void error( const ViewDimension< DimArgs ... > & , Args ... ) const {}
+
+#endif
+
 public:
 
   template< size_t ... DimArgs , class ... Args >
@@ -551,42 +589,23 @@ public:
         unsigned( is_integral_extent<6,Args...>::value ) +
         unsigned( is_integral_extent<7,Args...>::value ) , "" );
 
-      // Required to suppress "is always false" warning in
-      // 'range_extent' and 'range_index' when RangeRank == 0,
-      // which leads to using InternalRangeRank in these functions
-      // which leads to requiring initialization.
-      // Also required to suppress '-Werror=maybe-uninitialized'.
-      for ( unsigned i = 0 ; i < DomainRank ; ++i ) m_begin[i] = 0 ;
-      for ( unsigned i = 0 ; i < InternalRangeRank ; ++i ) m_length[i] = 0 ;
-      for ( unsigned i = 0 ; i < InternalRangeRank ; ++i ) m_index[i] = ~0u ;
+      if ( RangeRank == 0 ) { m_length[0] = 0 ; m_index[0] = ~0u ; }
 
-      if ( ! set( 0 , 0 , dim , args... ) ) {
-#if defined( KOKKOS_ACTIVE_EXECUTION_SPACE_HOST )
-        enum { LEN = 1024 };
-        char buffer[ LEN ];
-
-        const int n = snprintf(buffer,LEN,"Kokkos::subview bounds error (");
-        error( buffer+n , LEN-n , 0 , 0 , dim , args... );
-
-        Kokkos::Impl::throw_runtime_exception(std::string(buffer));
-#else
-        Kokkos::abort("Kokkos::subview bounds error");
-#endif
-      }
+      if ( ! set( 0 , 0 , dim , args... ) ) error( dim , args... );
     }
 
   template < typename iType >
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FORCEINLINE_FUNCTION
   constexpr size_t domain_offset( const iType i ) const
     { return unsigned(i) < DomainRank ? m_begin[i] : 0 ; }
 
   template < typename iType >
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FORCEINLINE_FUNCTION
   constexpr size_t range_extent( const iType i ) const
     { return unsigned(i) < InternalRangeRank ? m_length[i] : 0 ; }
 
   template < typename iType >
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FORCEINLINE_FUNCTION
   constexpr unsigned range_index( const iType i ) const
     { return unsigned(i) < InternalRangeRank ? m_index[i] : ~0u ; }
 };
@@ -2539,7 +2558,8 @@ struct ViewMapping
 {
 private:
 
-  static_assert( SrcTraits::rank == sizeof...(Args) , "" );
+  static_assert( SrcTraits::rank == sizeof...(Args) ,
+    "Subview mapping requires one argument for each dimension of source View" );
 
   enum
     { RZ = false
