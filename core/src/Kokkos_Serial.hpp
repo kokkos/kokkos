@@ -405,7 +405,6 @@ private:
   const Policy      m_policy ;
 
   template< class TagType >
-  KOKKOS_INLINE_FUNCTION
   typename std::enable_if< std::is_same< TagType , void >::value >::type
   exec() const
     {
@@ -416,7 +415,6 @@ private:
     }
 
   template< class TagType >
-  KOKKOS_INLINE_FUNCTION
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   exec() const
     {

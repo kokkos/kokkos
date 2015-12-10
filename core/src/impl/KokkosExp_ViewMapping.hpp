@@ -545,6 +545,7 @@ private:
     }
 
   template< size_t ... DimArgs , class ... Args >
+  KOKKOS_FORCEINLINE_FUNCTION
   void error( const ViewDimension< DimArgs ... > & dim , Args ... args ) const
     {
 #if defined( KOKKOS_ACTIVE_EXECUTION_SPACE_HOST )
@@ -2276,6 +2277,10 @@ public:
 
   enum { Rank = Traits::dimension::rank };
 
+  template< typename iType >
+  KOKKOS_INLINE_FUNCTION constexpr size_t extent( const iType & r ) const
+    { return m_offset.m_dim.extent(r); }
+
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_0() const { return m_offset.dimension_0(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_1() const { return m_offset.dimension_1(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_2() const { return m_offset.dimension_2(); }
@@ -2709,6 +2714,66 @@ public:
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
+
+template< unsigned , class MapType >
+KOKKOS_INLINE_FUNCTION
+bool view_verify_operator_bounds( const MapType & )
+{ return true ; }
+
+template< unsigned R , class MapType , class iType , class ... Args >
+KOKKOS_INLINE_FUNCTION
+bool view_verify_operator_bounds
+  ( const MapType & map
+  , const iType   & i
+  , Args ... args
+  )
+{
+  return ( size_t(i) < map.extent(R) )
+         && view_verify_operator_bounds<R+1>( map , args ... );
+}
+
+template< unsigned , class MapType >
+inline
+void view_error_operator_bounds( char * , int , const MapType & )
+{}
+
+template< unsigned R , class MapType , class iType , class ... Args >
+inline
+void view_error_operator_bounds
+  ( char * buf
+  , int len
+  , const MapType & map
+  , const iType   & i
+  , Args ... args
+  )
+{
+  const int n =
+    snprintf(buf,len," %ld < %ld %c"
+            , static_cast<unsigned long>(i)
+            , static_cast<unsigned long>( map.extent(R) )
+            , ( sizeof...(Args) ? ',' : ')' )
+            );
+  view_error_operator_bounds<R+1>(buf+n,len-n,map,args...);
+}
+
+template< class MapType , class ... Args >
+KOKKOS_INLINE_FUNCTION
+void view_verify_operator_bounds
+  ( const MapType & map , Args ... args )
+{
+  if ( ! view_verify_operator_bounds<0>( map , args ... ) ) {
+#if defined( KOKKOS_ACTIVE_EXECUTION_SPACE_HOST )
+    enum { LEN = 1024 };
+    char buffer[ LEN ];
+    int n = snprintf(buf,LEN,"View bounds error(" );
+    view_error_operator_bounds<0>( buffer + n , LEN - n , map , args ... );
+    Kokkos::Impl::throw_runtime_exception(std::string(buffer));
+#else
+    Kokkos::abort("View bounds error");
+#endif
+  }
+}
+
 
 class Error_view_scalar_reference_to_non_scalar_view ;
 

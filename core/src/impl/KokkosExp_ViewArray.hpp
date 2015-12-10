@@ -154,6 +154,10 @@ public:
 
   enum { Rank = Traits::dimension::rank };
 
+  template< typename iType >
+  KOKKOS_INLINE_FUNCTION constexpr size_t extent( const iType & r ) const
+    { return m_offset.m_dim.extent(r); }
+
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_0() const { return m_offset.dimension_0(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_1() const { return m_offset.dimension_1(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_2() const { return m_offset.dimension_2(); }

@@ -65,6 +65,17 @@ template< unsigned I , class T , class ... Args >
 struct variadic_type< I , T , Args ... >
   { typedef typename variadic_type< I - 1 , Args ... >::type type ; };
 
+template< class ... Args >
+struct are_integral ;
+
+template<>
+struct are_integral<> { enum { value = true }; };
+
+template< typename T , class ... Args >
+struct are_integral<T,Args...> {
+  enum { value = std::is_integral<T>::value && are_integral<Args...>::value };
+};
+
 //----------------------------------------------------------------------------
 /* C++11 conformal compile-time type traits utilities.
  * Prefer to use C++11 when portably available.
