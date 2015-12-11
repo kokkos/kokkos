@@ -163,7 +163,7 @@ KOKKOS_CXXFLAGS =
 # GCC warnings:
 #KOKKOS_CXXFLAGS = -Wall -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized -Wignored-qualifiers -Wempty-body -Wclobbered
 
-KOKKOS_LIBS = -lkokkos 
+KOKKOS_LIBS = -lkokkos -ldl
 KOKKOS_LDFLAGS = -L$(shell pwd)
 KOKKOS_SRC = 
 KOKKOS_HEADERS =
