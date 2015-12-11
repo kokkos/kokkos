@@ -66,6 +66,7 @@ case $key in
     --help)
     echo "Kokkos configure options:"
     echo "--kokkos-path=/Path/To/Kokkos: Path to the Kokkos root directory"
+    echo "--prefix=/Install/Path:        Path to where the Kokkos library should be installed"
     echo ""
     echo "--with-cuda[=/Path/To/Cuda]:      enable Cuda and set path to Cuda Toolkit"
     echo "--with-openmp:                    enable OpenMP backend"
