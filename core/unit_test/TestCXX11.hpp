@@ -120,7 +120,7 @@ double AddTestLambda() {
   Kokkos::deep_copy(a,h_a);
 
   if(PWRTest==false) {
-    Kokkos::parallel_for(100,[=](const int& i)  {
+    Kokkos::parallel_for(100,KOKKOS_LAMBDA(const int& i)  {
       b(i,0) = a(i,1) + a(i,2);
       b(i,1) = a(i,0) - a(i,3);
       b(i,2) = a(i,4) + a(i,0);
@@ -129,7 +129,7 @@ double AddTestLambda() {
     });
   } else {
     typedef typename policy_type::member_type team_member ;
-    Kokkos::parallel_for(policy_type(25,4),[=](const team_member & dev)  {
+    Kokkos::parallel_for(policy_type(25,4),KOKKOS_LAMBDA(const team_member & dev)  {
       int i = dev.league_rank()*dev.team_size() + dev.team_rank();
       b(i,0) = a(i,1) + a(i,2);
       b(i,1) = a(i,0) - a(i,3);
@@ -236,7 +236,7 @@ double ReduceTestLambda() {
   double result = 0.0;
 
   if(PWRTest==false) {
-    Kokkos::parallel_reduce(100,[=](const int& i, double& sum)  {
+    Kokkos::parallel_reduce(100,KOKKOS_LAMBDA(const int& i, double& sum)  {
       sum += a(i,1) + a(i,2);
       sum += a(i,0) - a(i,3);
       sum += a(i,4) + a(i,0);
@@ -245,7 +245,7 @@ double ReduceTestLambda() {
     }, unmanaged_result( & result ) );
   } else {
     typedef typename policy_type::member_type team_member ;
-    Kokkos::parallel_reduce(policy_type(25,4),[=](const team_member & dev, double& sum)  {
+    Kokkos::parallel_reduce(policy_type(25,4),KOKKOS_LAMBDA(const team_member & dev, double& sum)  {
       int i = dev.league_rank()*dev.team_size() + dev.team_rank();
       sum += a(i,1) + a(i,2);
       sum += a(i,0) - a(i,3);

@@ -69,6 +69,12 @@
 #include <TestAggregateReduction.hpp>
 #include <TestCompilerMacros.hpp>
 #include <TestTaskPolicy.hpp>
+
+#ifdef KOKKOS_LAMBDA
+#undef KOKKOS_LAMBDA
+#endif
+#define KOKKOS_LAMBDA [=]
+
 #include <TestCXX11.hpp>
 #include <TestCXX11Deduction.hpp>
 #include <TestTeamVector.hpp>
