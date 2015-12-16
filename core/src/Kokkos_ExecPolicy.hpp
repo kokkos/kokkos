@@ -53,6 +53,158 @@
 
 namespace Kokkos {
 
+//Schedules for Execution Policies
+struct Static {
+  typedef Static schedule_type;
+};
+
+struct Dynamic {
+  typedef Dynamic schedule_type;
+};
+
+template<class ScheduleType>
+struct Schedule {
+  typedef ScheduleType schedule_type;
+};
+
+template<class Arg>
+struct is_schedule_type {
+  enum { value = 0};
+};
+
+template<class ScheduleType>
+struct is_schedule_type<Schedule<ScheduleType> > {
+  enum {value = 1 };
+};
+
+//Specify ChunkSize for Iterations
+template<int Chunk>
+struct ChunkSize {
+  enum {chunk_size = Chunk};
+};
+
+template<class Arg>
+struct is_chunk_size {
+  enum { value = 0 };
+};
+
+template<int Chunk>
+struct is_chunk_size<ChunkSize<Chunk> > {
+  enum { value = 1 };
+};
+
+//Specif Iteration Index Type
+template<typename iType>
+struct IterationType {
+  typedef iType iteration_type;
+};
+
+template<class Arg>
+struct is_iteration_type {
+  enum { value = 0 };
+};
+
+template<typename iType>
+struct is_iteration_type<IterationType<iType> > {
+  enum { value = 1 };
+};
+
+namespace Impl {
+//Policy Traits
+template<class ... Properties>
+struct PolicyTraits;
+
+template<>
+struct PolicyTraits<void> {
+  typedef void execution_space;
+  typedef void schedule_type;
+  typedef void iteration_type;
+  typedef void tag_type;
+  enum { chunk_size = 0 };
+};
+
+
+//Strip off ExecutionSpace
+template<class ExecutionSpace, class ... Props>
+struct PolicyTraits<typename std::enable_if<is_execution_space<ExecutionSpace>::value >::type,ExecutionSpace,Props ...> {
+  static_assert( std::is_same<typename PolicyTraits<void, Props ...>::execution_space, void>::value,
+                 "ExecutionPolicy: Only one execution space template argument may be used.");
+  typedef ExecutionSpace execution_space;
+  typedef typename PolicyTraits<void, Props ...>::schedule_type schedule_type;
+  typedef typename PolicyTraits<void, Props ...>::iteration_type iteration_type;
+  typedef typename PolicyTraits<void, Props ...>::tag_type tag_type;
+  enum { chunk_size = PolicyTraits<void, Props ...>::chunk_size };
+};
+
+//Strip off ScheduleType
+template<class ScheduleType, class ... Props>
+struct PolicyTraits<typename std::enable_if<is_schedule_type<ScheduleType>::value >::type,ScheduleType,Props ...> {
+  static_assert( std::is_same<typename PolicyTraits<void, Props ...>::schedule_type, void>::value,
+                 "ExecutionPolicy: Only one Schedule<..> template argument may be used.");
+  typedef typename PolicyTraits<void, Props ...>::execution_space execution_space;
+  typedef ScheduleType schedule_type;
+  typedef typename PolicyTraits<void, Props ...>::iteration_type iteration_type;
+  typedef typename PolicyTraits<void, Props ...>::tag_type tag_type;
+  enum { chunk_size = PolicyTraits<void, Props ...>::chunk_size };
+};
+
+//Strip off IterationType
+template<typename iType, class ... Props>
+struct PolicyTraits<void, IterationType<iType>,Props ...> {
+  static_assert( std::is_same<typename PolicyTraits<void, Props ...>::iteration_type, void>::value,
+                 "ExecutionPolicy: Only one IterationType<..> template argument may be used.");
+  typedef typename PolicyTraits<void, Props ...>::execution_space execution_space;
+  typedef typename PolicyTraits<void, Props ...>::schedule_type schedule_type;
+  typedef iType iteration_type;
+  typedef typename PolicyTraits<void, Props ...>::tag_type tag_type;
+  enum { chunk_size = PolicyTraits<void, Props ...>::chunk_size };
+};
+
+//Strip off TagType
+template<class TagType, class ... Props>
+struct PolicyTraits<typename std::enable_if<!is_schedule_type<TagType>::value &&
+                                            !is_execution_space<TagType>::value &&
+                                            !is_iteration_type<TagType>::value &&
+                                            !is_chunk_size<TagType>::value>::type,
+                    TagType,Props ...> {
+  static_assert( std::is_same<typename PolicyTraits<void, Props ...>::tag_type, void>::value,
+                 "ExecutionPolicy: Only one tag type template argument may be used.");
+
+  typedef typename PolicyTraits<void, Props ...>::execution_space execution_space;
+  typedef typename PolicyTraits<void, Props ...>::schedule_type schedule_type;
+  typedef typename PolicyTraits<void, Props ...>::iteration_type iteration_type;
+  typedef TagType tag_type;
+  enum { chunk_size = PolicyTraits<void, Props ...>::chunk_size };
+};
+
+//Strip off ChunkSize
+template<int Chunk, class ... Props>
+struct PolicyTraits<void, ChunkSize<Chunk>,Props ...> {
+  static_assert( PolicyTraits<void, Props ...>::chunk_size == 0,
+                 "ExecutionPolicy: Only one ChunkSize<..> template argument may be used.");
+
+  typedef typename PolicyTraits<void, Props ...>::execution_space execution_space;
+  typedef typename PolicyTraits<void, Props ...>::schedule_type schedule_type;
+  typedef typename PolicyTraits<void, Props ...>::iteration_type iteration_type;
+  typedef typename PolicyTraits<void, Props ...>::tag_type tag_type;
+  enum { chunk_size = Chunk };
+};
+
+
+template<class ... Props>
+struct PolicyTraits {
+  typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::execution_space>::value, 
+    Kokkos::DefaultExecutionSpace, typename PolicyTraits<void,Props ...>::execution_space>::type execution_space;
+  typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::schedule_type>::value, 
+    Kokkos::Schedule<Static>, typename PolicyTraits<void,Props ...>::schedule_type>::type schedule_type;
+  typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::iteration_type>::value, 
+    typename execution_space::size_type, typename PolicyTraits<void,Props ...>::iteration_type>::type iteration_type;
+  typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::tag_type>::value, 
+    void, typename PolicyTraits<void,Props ...>::tag_type>::type work_tag;
+  enum { chunk_size = PolicyTraits<void, Props ...>::chunk_size };
+};
+
+}
 /** \brief  Execution policy for work over a range of an integral type.
  *
  * Valid template argument options:
@@ -74,90 +226,31 @@ namespace Kokkos {
  *
  *  Blocking is the granularity of partitioning the range among threads.
  */
-template< class Arg0 = void , class Arg1 = void , class Arg2 = void 
-        , class ExecSpace =
-          // The first argument is the execution space,
-          // otherwise use the default execution space.
-          typename std::conditional
-            < Impl::is_execution_space< Arg0 >::value , Arg0
-            , Kokkos::DefaultExecutionSpace >::type
-        >
-class RangePolicy {
+template<class ... Properties>
+class RangePolicy: public Impl::PolicyTraits<Properties ... > {
 private:
 
+  typedef Impl::PolicyTraits<Properties ... > traits;
+
   // Default integral type and blocking factor:
-  typedef int DefaultIntType ;
-  enum { DefaultIntValue = 8 };
-
-  enum { Arg0_Void = Impl::is_same< Arg0 , void >::value };
-  enum { Arg1_Void = Impl::is_same< Arg1 , void >::value };
-  enum { Arg2_Void = Impl::is_same< Arg2 , void >::value };
-
-  enum { Arg0_ExecSpace = Impl::is_execution_space< Arg0 >::value };
-
-  enum { Arg0_IntConst = Impl::is_integral_constant< Arg0 >::value };
-  enum { Arg1_IntConst = Impl::is_integral_constant< Arg1 >::value };
-  enum { Arg2_IntConst = Impl::is_integral_constant< Arg2 >::value };
-
-  enum { Arg0_IntType = Impl::is_integral< Arg0 >::value };
-  enum { Arg1_IntType = Impl::is_integral< Arg1 >::value };
-  enum { Arg2_IntType = Impl::is_integral< Arg2 >::value };
-
-  enum { Arg0_WorkTag = ! Arg0_ExecSpace && ! Arg0_IntConst && ! Arg0_IntType && ! Arg0_Void };
-  enum { Arg1_WorkTag =   Arg0_ExecSpace && ! Arg1_IntConst && ! Arg1_IntType && ! Arg1_Void };
-
-  enum { ArgOption_OK = Impl::StaticAssert< (
-    ( Arg0_ExecSpace && Arg1_WorkTag && ( Arg2_IntConst || Arg2_IntType ) ) ||
-    ( Arg0_ExecSpace && Arg1_WorkTag && Arg2_Void ) ||
-    ( Arg0_ExecSpace && ( Arg1_IntConst || Arg1_IntType ) && Arg2_Void ) ||
-    ( Arg0_ExecSpace && Arg1_Void && Arg2_Void ) ||
-    ( Arg0_WorkTag && ( Arg1_IntConst || Arg1_IntType ) && Arg2_Void ) ||
-    ( Arg0_WorkTag && Arg1_Void && Arg2_Void ) ||
-    ( ( Arg0_IntConst || Arg0_IntType ) && Arg1_Void && Arg2_Void ) ||
-    ( Arg0_Void && Arg1_Void && Arg2_Void )
-    ) >::value };
-
-  // The work argument tag is the first or second argument
-  typedef typename std::conditional< Arg0_WorkTag , Arg0 ,
-          typename std::conditional< Arg1_WorkTag , Arg1 , void
-          >::type >::type
-    WorkTag ;
-
-  enum { Granularity = Arg0_IntConst ? unsigned(Impl::is_integral_constant<Arg0>::integral_value) : (
-                       Arg1_IntConst ? unsigned(Impl::is_integral_constant<Arg1>::integral_value) : (
-                       Arg2_IntConst ? unsigned(Impl::is_integral_constant<Arg2>::integral_value) : (
-                                       unsigned(DefaultIntValue) ))) };
+  enum { Granularity = traits::chunk_size>0?traits::chunk_size:8 };
 
   // Only accept the integral type if the blocking is a power of two
   static_assert( Impl::is_integral_power_of_two( Granularity )
                , "RangePolicy blocking granularity must be power of two" );
 
-  typedef typename std::conditional< Arg0_IntType , Arg0 ,
-          typename std::conditional< Arg1_IntType , Arg1 ,
-          typename std::conditional< Arg2_IntType , Arg2 ,
-          typename std::conditional< Arg0_IntConst , typename Impl::is_integral_constant<Arg0>::integral_type ,
-          typename std::conditional< Arg1_IntConst , typename Impl::is_integral_constant<Arg1>::integral_type ,
-          typename std::conditional< Arg2_IntConst , typename Impl::is_integral_constant<Arg2>::integral_type ,
-                                                     DefaultIntType
-          >::type >::type >::type
-          >::type >::type >::type
-    IntType ;
+  enum { GranularityMask = typename traits::iteration_type(Granularity) - 1 };
 
-  enum { GranularityMask = IntType(Granularity) - 1 };
-
-  ExecSpace m_space ;
-  IntType   m_begin ;
-  IntType   m_end ;
+  typename traits::execution_space m_space ;
+  typename traits::iteration_type  m_begin ;
+  typename traits::iteration_type  m_end ;
 
 public:
 
   //! Tag this class as an execution policy
-  typedef ExecSpace    execution_space ;
-  typedef RangePolicy  execution_policy ;
-  typedef WorkTag      work_tag ;
-  typedef IntType      member_type ;
+  typedef typename traits::iteration_type member_type ;
 
-  KOKKOS_INLINE_FUNCTION const execution_space & space() const { return m_space ; }
+  KOKKOS_INLINE_FUNCTION const typename traits::execution_space & space() const { return m_space ; }
   KOKKOS_INLINE_FUNCTION member_type begin() const { return m_begin ; }
   KOKKOS_INLINE_FUNCTION member_type end()   const { return m_end ; }
 
@@ -175,7 +268,7 @@ public:
 
   /** \brief  Total range */
   inline
-  RangePolicy( const execution_space & work_space
+  RangePolicy( const typename traits::execution_space & work_space
              , const member_type work_begin
              , const member_type work_end
              )
