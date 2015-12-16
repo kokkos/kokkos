@@ -160,12 +160,26 @@ struct PolicyTraits<void, IterationType<iType>,Props ...> {
   enum { chunk_size = PolicyTraits<void, Props ...>::chunk_size };
 };
 
+//Strip off raw IterationType
+template<typename iType, class ... Props>
+struct PolicyTraits<typename std::enable_if<std::is_integral<iType>::value>::type, iType,Props ...> {
+  static_assert( std::is_same<typename PolicyTraits<void, Props ...>::iteration_type, void>::value,
+                 "ExecutionPolicy: Only one IterationType<..> template argument may be used.");
+  typedef typename PolicyTraits<void, Props ...>::execution_space execution_space;
+  typedef typename PolicyTraits<void, Props ...>::schedule_type schedule_type;
+  typedef iType iteration_type;
+  typedef typename PolicyTraits<void, Props ...>::tag_type tag_type;
+  enum { chunk_size = PolicyTraits<void, Props ...>::chunk_size };
+};
+
 //Strip off TagType
 template<class TagType, class ... Props>
 struct PolicyTraits<typename std::enable_if<!is_schedule_type<TagType>::value &&
                                             !is_execution_space<TagType>::value &&
                                             !is_iteration_type<TagType>::value &&
-                                            !is_chunk_size<TagType>::value>::type,
+                                            !is_chunk_size<TagType>::value &&
+                                            !std::is_integral<TagType>::value 
+                                           >::type,
                     TagType,Props ...> {
   static_assert( std::is_same<typename PolicyTraits<void, Props ...>::tag_type, void>::value,
                  "ExecutionPolicy: Only one tag type template argument may be used.");
