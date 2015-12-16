@@ -61,14 +61,15 @@ namespace Impl {
 //----------------------------------------------------------------------------
 /* ParallelFor Kokkos::Threads with RangePolicy */
 
-template< class FunctorType , class Arg0 , class Arg1 , class Arg2 >
+template< class FunctorType , class ... Traits >
 class ParallelFor< FunctorType
-                 , Kokkos::RangePolicy< Arg0 , Arg1 , Arg2 , Kokkos::Threads >
+                 , Kokkos::RangePolicy< Traits ... >
+                 , Kokkos::Threads
                  >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Arg0 , Arg1 , Arg2 , Kokkos::Threads > Policy ;
+  typedef Kokkos::RangePolicy< Traits ... > Policy ;
   typedef typename Policy::work_tag    WorkTag ;
   typedef typename Policy::WorkRange   WorkRange ;
   typedef typename Policy::member_type Member ;
@@ -208,14 +209,15 @@ public:
 //----------------------------------------------------------------------------
 /* ParallelReduce with Kokkos::Threads and RangePolicy */
 
-template< class FunctorType , class Arg0 , class Arg1 , class Arg2 >
+template< class FunctorType , class ... Traits >
 class ParallelReduce< FunctorType
-                    , Kokkos::RangePolicy< Arg0, Arg1, Arg2, Kokkos::Threads >
+                    , Kokkos::RangePolicy< Traits ... >
+                    , Kokkos::Threads
                     >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Arg0 , Arg1, Arg2, Kokkos::Threads > Policy ;
+  typedef Kokkos::RangePolicy< Traits ... > Policy ;
 
   typedef typename Policy::work_tag    WorkTag ;
   typedef typename Policy::WorkRange   WorkRange ;
@@ -404,14 +406,15 @@ public:
 //----------------------------------------------------------------------------
 /* ParallelScan with Kokkos::Threads and RangePolicy */
 
-template< class FunctorType , class Arg0 , class Arg1 , class Arg2 >
+template< class FunctorType , class ... Traits >
 class ParallelScan< FunctorType
-                  , Kokkos::RangePolicy< Arg0, Arg1, Arg2, Kokkos::Threads >
+                  , Kokkos::RangePolicy< Traits ... >
+                  , Kokkos::Threads
                   >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Arg0, Arg1, Arg2, Kokkos::Threads > Policy ;
+  typedef Kokkos::RangePolicy< Traits ... > Policy ;
   typedef typename Policy::WorkRange                               WorkRange ;
   typedef typename Policy::work_tag                                WorkTag ;
   typedef typename Policy::member_type                             Member ;
