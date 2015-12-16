@@ -82,8 +82,8 @@ namespace Impl {
  */
 template< class Functor
         , class Policy
-        , class EnableFunctor = void
-        , class EnablePolicy  = void
+        , class EnableFunctor
+        , class EnablePolicy
         >
 struct FunctorPolicyExecutionSpace {
   typedef Kokkos::DefaultExecutionSpace execution_space ;
@@ -138,30 +138,6 @@ struct FunctorPolicyExecutionSpace
 {
   typedef typename Functor::execution_space execution_space ;
 };
-
-//----------------------------------------------------------------------------
-/// \class ParallelFor
-/// \brief Implementation of the ParallelFor operator that has a
-///   partial specialization for the device.
-///
-/// This is an implementation detail of parallel_for.  Users should
-/// skip this and go directly to the nonmember function parallel_for.
-template< class FunctorType , class ExecPolicy > class ParallelFor ;
-
-/// \class ParallelReduce
-/// \brief Implementation detail of parallel_reduce.
-///
-/// This is an implementation detail of parallel_reduce.  Users should
-/// skip this and go directly to the nonmember function parallel_reduce.
-template< class FunctorType , class ExecPolicy > class ParallelReduce ;
-
-/// \class ParallelScan
-/// \brief Implementation detail of parallel_scan.
-///
-/// This is an implementation detail of parallel_scan.  Users should
-/// skip this and go directly to the documentation of the nonmember
-/// template function Kokkos::parallel_scan.
-template< class FunctorType , class ExecPolicy > class ParallelScan ;
 
 } // namespace Impl
 } // namespace Kokkos

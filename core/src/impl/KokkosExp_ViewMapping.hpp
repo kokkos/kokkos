@@ -47,22 +47,13 @@
 #include <type_traits>
 #include <initializer_list>
 
+#include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Pair.hpp>
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/KokkosExp_ViewAlloc.hpp>
 #include <impl/Kokkos_Atomic_View.hpp>
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Impl {
-
-template< class FunctorType , class ExecPolicy > class ParallelFor ;
-
-}} /* namespace Kokkos::Impl */
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
