@@ -138,7 +138,7 @@ struct PolicyTraits<typename std::enable_if<is_execution_space<ExecutionSpace>::
 
 //Strip off ScheduleType
 template<class ScheduleType, class ... Props>
-struct PolicyTraits<typename std::enable_if<is_schedule_type<ScheduleType>::value >::type,ScheduleType,Props ...> {
+struct PolicyTraits<typename std::enable_if<is_schedule_type<Schedule<ScheduleType> >::value >::type,Schedule<ScheduleType>,Props ...> {
   static_assert( std::is_same<typename PolicyTraits<void, Props ...>::schedule_type, void>::value,
                  "ExecutionPolicy: Only one Schedule<..> template argument may be used.");
   typedef typename PolicyTraits<void, Props ...>::execution_space execution_space;
@@ -210,7 +210,7 @@ struct PolicyTraits {
   typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::execution_space>::value, 
     Kokkos::DefaultExecutionSpace, typename PolicyTraits<void,Props ...>::execution_space>::type execution_space;
   typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::schedule_type>::value, 
-    Kokkos::Schedule<Static>, typename PolicyTraits<void,Props ...>::schedule_type>::type schedule_type;
+    Kokkos::Static, typename PolicyTraits<void,Props ...>::schedule_type>::type schedule_type;
   typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::iteration_type>::value, 
     typename execution_space::size_type, typename PolicyTraits<void,Props ...>::iteration_type>::type iteration_type;
   typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::tag_type>::value, 

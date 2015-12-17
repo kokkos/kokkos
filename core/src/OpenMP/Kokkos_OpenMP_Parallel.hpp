@@ -107,8 +107,14 @@ private:
 
 public:
 
+  inline void execute() const {
+    this->template execute_schedule<typename Policy::schedule_type>();
+  }
+
+  template<class Schedule>
   inline
-  void execute() const
+  typename std::enable_if< std::is_same<Schedule,Kokkos::Static>::value >::type
+    execute_schedule() const
     {
       OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
       OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
@@ -120,6 +126,29 @@ public:
         const WorkRange range( m_policy, exec.pool_rank(), exec.pool_size() );
 
         ParallelFor::template exec_range< WorkTag >( m_functor , range.begin() , range.end() );
+      }
+/* END #pragma omp parallel */
+    }
+
+  template<class Schedule>
+  inline
+  typename std::enable_if< std::is_same<Schedule,Kokkos::Dynamic>::value >::type
+    execute_schedule() const
+    {
+      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
+      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
+      
+      typename Policy::iteration_type count = m_policy.begin();
+      const typename Policy::iteration_type end_all = m_policy.end();
+#pragma omp parallel shared(count)
+      {
+        OpenMPexec & exec = * OpenMPexec::get_thread_omp();
+        typename Policy::iteration_type begin = Kokkos::atomic_fetch_add(&count, Policy::chunk_size);
+        while( begin < end_all ) {
+          const typename Policy::iteration_type end = begin+Policy::chunk_size < end_all ? begin+Policy::chunk_size : end_all;
+          ParallelFor::template exec_range< WorkTag >( m_functor , begin, end );
+          begin = Kokkos::atomic_fetch_add(&count, Policy::chunk_size);
+        }
       }
 /* END #pragma omp parallel */
     }
