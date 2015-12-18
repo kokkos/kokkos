@@ -49,7 +49,7 @@
 #include <impl/Kokkos_AllocationTracker.hpp>
 
 #include <Kokkos_Atomic.hpp>
-
+#include <iostream>
 namespace Kokkos {
 namespace Impl {
 
@@ -81,7 +81,7 @@ public:
   };
 
 
-private:
+public:
 
   static Pool         m_pool; // Indexed by: m_pool_rank_rev
 
@@ -168,6 +168,99 @@ public:
 
   inline static
   OpenMPexec * get_thread_omp() { return m_pool[ m_map_rank[ omp_get_thread_num() ] ]; }
+
+  int dummy;
+  // Members for dynamic scheduling
+  Kokkos::pair<long,long> work_range;
+
+  inline void set_work_range(const long& begin, const long& end) {
+    work_range.first = begin;
+    work_range.second = end;
+  }
+
+  inline long get_work_index_begin () {
+    Kokkos::pair<long,long> work_range_new = work_range;
+    Kokkos::pair<long,long> work_range_old = work_range_new;
+    if(work_range_old.first>=work_range_old.second)
+      return -1;
+
+    work_range_new.first+=1;
+
+    bool success = false;
+    while(!success) {
+      work_range_new = Kokkos::atomic_compare_exchange(&work_range,work_range_old,work_range_new);
+      success = ( (work_range_new == work_range_old) || 
+                  (work_range_new.first>=work_range_new.second));
+      work_range_old = work_range_new;
+      work_range_new.first+=1;
+    }
+    if(work_range_old.first<work_range_old.second)
+      return work_range_old.first;
+    else
+      return -1;
+  }
+
+  int current_steal_target;
+  bool stealing;
+  inline void reset_steal_target() {
+    current_steal_target = (m_pool_rank+1)%m_pool_topo[0];
+    stealing = false;
+  }
+
+  inline int get_steal_target() {
+    while(( m_pool[current_steal_target]->work_range.second <=
+            m_pool[current_steal_target]->work_range.first  ) &&
+          (current_steal_target!=m_pool_rank) ) {
+      current_steal_target = (current_steal_target+1)%m_pool_topo[0];
+    }
+    if(current_steal_target == m_pool_rank)
+      return -1;
+    else
+      return current_steal_target;
+  }
+
+  inline long get_work_index_end () {
+    Kokkos::pair<long,long> work_range_new = work_range;
+    Kokkos::pair<long,long> work_range_old = work_range_new;
+    if(work_range_old.first>=work_range_old.second)
+      return -1;
+    work_range_new.second-=1;
+    bool success = false;
+    while(!success) {
+      work_range_new = Kokkos::atomic_compare_exchange(&work_range,work_range_old,work_range_new);
+      success = ( (work_range_new == work_range_old) ||
+                  (work_range_new.first>=work_range_new.second) );
+      work_range_old = work_range_new;
+      work_range_new.second-=1;
+    }
+    if(work_range_old.first<work_range_old.second)
+      return work_range_old.second-1;
+    else
+      return -1;
+  }
+
+  inline long steal_work_index () {
+    long index = -1;
+    int steal_target = get_steal_target();
+    while ( (steal_target != -1) && (index == -1)) {
+      index = m_pool[steal_target]->get_work_index_end();
+      if(index == -1)
+        steal_target = get_steal_target();
+    }
+    return index;
+  }
+  
+  inline long get_work_index () {
+    long work_index = -1;
+    if(!stealing) work_index = get_work_index_begin();
+    if( work_index == -1) {
+      memory_fence();
+      stealing = true;
+      work_index = steal_work_index();
+    }
+    return work_index;
+  }
+
 };
 
 } // namespace Impl
