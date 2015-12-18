@@ -240,8 +240,14 @@ private:
 
 public:
 
+  inline void execute() const {
+    this->template execute_schedule<typename Policy::schedule_type>();
+  }
+
+  template<class Schedule>
   inline
-  void execute() const
+  typename std::enable_if< std::is_same<Schedule,Kokkos::Static>::value >::type
+    execute_schedule() const
     {
       OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
       OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_reduce");
@@ -255,6 +261,56 @@ public:
         ParallelReduce::template exec_range< WorkTag >
           ( m_functor , range.begin() , range.end()
           , ValueInit::init( m_functor , exec.scratch_reduce() ) );
+      }
+/* END #pragma omp parallel */
+
+      // Reduction:
+
+      const pointer_type ptr = pointer_type( OpenMPexec::pool_rev(0)->scratch_reduce() );
+
+      for ( int i = 1 ; i < OpenMPexec::pool_size() ; ++i ) {
+        ValueJoin::join( m_functor , ptr , OpenMPexec::pool_rev(i)->scratch_reduce() );
+      }
+
+      Kokkos::Impl::FunctorFinal<  FunctorType , WorkTag >::final( m_functor , ptr );
+
+      if ( m_result_ptr ) {
+        const int n = ValueTraits::value_count( m_functor );
+
+        for ( int j = 0 ; j < n ; ++j ) { m_result_ptr[j] = ptr[j] ; }
+      }
+    }
+
+  template<class Schedule>
+  inline
+  typename std::enable_if< std::is_same<Schedule,Kokkos::Dynamic>::value >::type
+    execute_schedule() const
+    {
+      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
+      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_reduce");
+
+      OpenMPexec::resize_scratch( ValueTraits::value_size( m_functor ) , 0 );
+
+#pragma omp parallel
+      {
+        OpenMPexec & exec = * OpenMPexec::get_thread_omp();
+        const WorkRange range( m_policy, exec.pool_rank(), exec.pool_size() );
+
+        exec.set_work_range(range.begin(),range.end(),m_policy.chunk_size);
+        exec.reset_steal_target();
+        #pragma omp barrier
+
+        long work_index = exec.get_work_index();
+
+        reference_type update = ValueInit::init( m_functor , exec.scratch_reduce() );
+        while(work_index != -1) {
+          const Member begin = static_cast<Member>(work_index) * m_policy.chunk_size;
+          const Member end = begin + m_policy.chunk_size < m_policy.end()?begin+m_policy.chunk_size:m_policy.end();
+          ParallelReduce::template exec_range< WorkTag >
+            ( m_functor , begin,end
+            , update );
+          work_index = exec.get_work_index();
+        }
       }
 /* END #pragma omp parallel */
 
