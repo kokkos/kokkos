@@ -66,6 +66,30 @@ void memory_fence()
 #endif
 }
 
+KOKKOS_FORCEINLINE_FUNCTION
+void store_fence()
+{
+#if defined( KOKKOS_USE_ASM ) && defined( KOKKOS_INTERNAL_USE_ISA_X86_64 )
+  asm volatile (
+	"sfence" ::: "memory"
+  	);
+#else
+  memory_fence();
+#endif
+}
+
+KOKKOS_FORCEINLINE_FUNCTION
+void load_fence()
+{
+#if defined( KOKKOS_USE_ASM ) && defined( KOKKOS_INTERNAL_USE_ISA_X86_64 )
+  asm volatile (
+	"lfence" ::: "memory"
+  	);
+#else
+  memory_fence();
+#endif
+}
+
 } // namespace kokkos
 
 #endif
