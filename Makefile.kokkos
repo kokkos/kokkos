@@ -142,6 +142,11 @@ KOKKOS_INTERNAL_USE_ARCH_AVX       := $(strip $(shell echo $(KOKKOS_INTERNAL_USE
 KOKKOS_INTERNAL_USE_ARCH_AVX2      := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_HSW) | bc ))
 KOKKOS_INTERNAL_USE_ARCH_AVX512MIC := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_KNL) | bc ))
 
+# Decide what ISA level we are able to support
+KOKKOS_INTERNAL_USE_ISA_X86_64     := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_SNB)+$(KOKKOS_INTERNAL_USE_ARCH_HSW)+$(KOKKOS_INTERNAL_USE_ARCH_KNL) | bc ))
+KOKKOS_INTERNAL_USE_ISA_KNC        := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_KNC) | bc ))
+KOKKOS_INTERNAL_USE_ISA_POWERPCLE  := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_POWER8) | bc ))
+
 #Incompatible flags?
 KOKKOS_INTERNAL_USE_ARCH_MULTIHOST := $(strip $(shell echo "$(KOKKOS_INTERNAL_USE_ARCH_AVX)+$(KOKKOS_INTERNAL_USE_ARCH_AVX2)+$(KOKKOS_INTERNAL_USE_ARCH_KNC)+$(KOKKOS_INTERNAL_USE_ARCH_IBM)+$(KOKKOS_INTERNAL_USE_ARCH_AMDAVX)+$(KOKKOS_INTERNAL_USE_ARCH_ARMV80)>1" | bc ))
 KOKKOS_INTERNAL_USE_ARCH_MULTIGPU := $(strip $(shell echo "$(KOKKOS_INTERNAL_USE_ARCH_NVIDIA)>1" | bc))
@@ -156,6 +161,7 @@ endif
 #Generating the list of Flags
 
 KOKKOS_CPPFLAGS = -I./ -I$(KOKKOS_PATH)/core/src -I$(KOKKOS_PATH)/containers/src -I$(KOKKOS_PATH)/algorithms/src
+
 # No warnings:
 KOKKOS_CXXFLAGS =
 # INTEL and CLANG warnings:
@@ -191,6 +197,18 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	tmp := $(shell echo "\#define KOKKOS_HAVE_CUDA 1" >> KokkosCore_config.tmp )
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_ISA_X86_64), 1)
+  	tmp := $(shell echo "\#define KOKKOS_ISA_X86_64" >> KokkosCore_config.tmp )
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_ISA_KNC), 1)
+  	tmp := $(shell echo "\#define KOKKOS_ISA_KNC" >> KokkosCore_config.tmp )
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_ISA_POWERPCLE), 1)
+  	tmp := $(shell echo "\#define KOKKOS_ISA_POWERPCLE" >> KokkosCore_config.tmp )
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_QTHREAD), 1)
