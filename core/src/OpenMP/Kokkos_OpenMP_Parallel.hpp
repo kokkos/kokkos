@@ -138,53 +138,27 @@ public:
       OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
       OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
 
-#if 1     
 #pragma omp parallel
       {
         OpenMPexec & exec = * OpenMPexec::get_thread_omp();
 
         const WorkRange range( m_policy, exec.pool_rank(), exec.pool_size() );
-        const Member begin_all = 0;
-        const Member end_all = (m_policy.end()+Policy::chunk_size-1)/Policy::chunk_size;
-        const Member sub_chunk = (end_all+exec.pool_size()-1)/exec.pool_size();
-        const Member my_begin = begin_all  + sub_chunk*exec.pool_rank();
-        const Member my_end = my_begin+sub_chunk;
-        /*for(int i=0;i<exec.pool_size();i++) {
-          if(i==exec.pool_rank())
-            std::cout << "MyRange: "<< exec.pool_rank() << " " << my_begin << " " << my_end << std::endl;
-          #pragma omp barrier
-        }*/
-        exec.set_work_range(my_begin,my_end);
+
+        exec.set_work_range(range.begin(),range.end(),m_policy.chunk_size);
         exec.reset_steal_target();
         #pragma omp barrier
         
         long work_index = exec.get_work_index();
 
         while(work_index != -1) {
-          const Member begin = static_cast<Member>(work_index) * Policy::chunk_size;
-          const Member end = begin + Policy::chunk_size < m_policy.end()?begin+Policy::chunk_size:m_policy.end();
+          const Member begin = static_cast<Member>(work_index) * m_policy.chunk_size;
+          const Member end = begin + m_policy.chunk_size < m_policy.end()?begin+m_policy.chunk_size:m_policy.end();
           ParallelFor::template exec_range< WorkTag >( m_functor , begin, end );
           work_index = exec.get_work_index();
         }
 
       }
 /* END #pragma omp parallel */
-#else
-
-      Member count = m_policy.begin();
-      const Member end_all = m_policy.end();
-      #pragma omp parallel shared(count)
-      {
-        OpenMPexec & exec = * OpenMPexec::get_thread_omp();
-
-        Member begin = Kokkos::atomic_fetch_add(&count, Policy::chunk_size);
-        while( begin < end_all ) {
-          const Member end = begin+Policy::chunk_size < end_all ? begin+Policy::chunk_size : end_all;
-          ParallelFor::template exec_range< WorkTag >( m_functor , begin, end );
-          begin = Kokkos::atomic_fetch_add(&count, Policy::chunk_size);
-        }
-      }
-#endif
     }
 
   inline

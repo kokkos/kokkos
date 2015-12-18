@@ -169,15 +169,21 @@ public:
   inline static
   OpenMPexec * get_thread_omp() { return m_pool[ m_map_rank[ omp_get_thread_num() ] ]; }
 
-  int dummy;
   // Members for dynamic scheduling
+  // Which thread am I stealing from currently
+  int current_steal_target;
+  // This thread's owned work_range
   Kokkos::pair<long,long> work_range;
+  // Is this thread stealing (i.e. its owned work_range is exhausted
+  bool stealing;
 
-  inline void set_work_range(const long& begin, const long& end) {
-    work_range.first = begin;
-    work_range.second = end;
+  // Initialize the work range for this thread
+  inline void set_work_range(const long& begin, const long& end, const long& chunk_size) {
+    work_range.first = begin/chunk_size;
+    work_range.second = (end+chunk_size-1)/chunk_size;
   }
 
+  // Claim and index from this thread's range from the beginning
   inline long get_work_index_begin () {
     Kokkos::pair<long,long> work_range_new = work_range;
     Kokkos::pair<long,long> work_range_old = work_range_new;
@@ -200,25 +206,7 @@ public:
       return -1;
   }
 
-  int current_steal_target;
-  bool stealing;
-  inline void reset_steal_target() {
-    current_steal_target = (m_pool_rank+1)%m_pool_topo[0];
-    stealing = false;
-  }
-
-  inline int get_steal_target() {
-    while(( m_pool[current_steal_target]->work_range.second <=
-            m_pool[current_steal_target]->work_range.first  ) &&
-          (current_steal_target!=m_pool_rank) ) {
-      current_steal_target = (current_steal_target+1)%m_pool_topo[0];
-    }
-    if(current_steal_target == m_pool_rank)
-      return -1;
-    else
-      return current_steal_target;
-  }
-
+  // Claim and index from this thread's range from the end
   inline long get_work_index_end () {
     Kokkos::pair<long,long> work_range_new = work_range;
     Kokkos::pair<long,long> work_range_old = work_range_new;
@@ -239,6 +227,29 @@ public:
       return -1;
   }
 
+  // Reset the steal target
+  inline void reset_steal_target() {
+    current_steal_target = (m_pool_rank+1)%m_pool_topo[0];
+    stealing = false;
+  }
+
+  // Get a steal target; start with my-rank + 1 and go round robin, until arriving at this threads rank
+  // Returns -1 fi no active steal target available
+  inline int get_steal_target() {
+    while(( m_pool[current_steal_target]->work_range.second <=
+            m_pool[current_steal_target]->work_range.first  ) &&
+          (current_steal_target!=m_pool_rank) ) {
+      current_steal_target = (current_steal_target+1)%m_pool_topo[0];
+    }
+    if(current_steal_target == m_pool_rank)
+      return -1;
+    else
+      return current_steal_target;
+  }
+
+  // Claim (steal) a work index from another thread
+  // First try to find another thread with non-exhausted work_range
+  // Then steal from it
   inline long steal_work_index () {
     long index = -1;
     int steal_target = get_steal_target();
@@ -250,6 +261,7 @@ public:
     return index;
   }
   
+  // Get a work index. Claim from owned range until its exhausted, then steal from other thread
   inline long get_work_index () {
     long work_index = -1;
     if(!stealing) work_index = get_work_index_begin();
