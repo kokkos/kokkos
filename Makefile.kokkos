@@ -200,15 +200,15 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ISA_X86_64), 1)
-  	tmp := $(shell echo "\#define KOKKOS_ISA_X86_64" >> KokkosCore_config.tmp )
+  	tmp := $(shell echo "\#define KOKKOS_USE_ISA_X86_64" >> KokkosCore_config.tmp )
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ISA_KNC), 1)
-  	tmp := $(shell echo "\#define KOKKOS_ISA_KNC" >> KokkosCore_config.tmp )
+  	tmp := $(shell echo "\#define KOKKOS_USE_ISA_KNC" >> KokkosCore_config.tmp )
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ISA_POWERPCLE), 1)
-  	tmp := $(shell echo "\#define KOKKOS_ISA_POWERPCLE" >> KokkosCore_config.tmp )
+  	tmp := $(shell echo "\#define KOKKOS_USE_ISA_POWERPCLE" >> KokkosCore_config.tmp )
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_QTHREAD), 1)
