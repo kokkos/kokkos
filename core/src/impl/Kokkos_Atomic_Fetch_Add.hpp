@@ -233,7 +233,7 @@ T atomic_fetch_add( volatile T * const dest ,
   return oldval.t ;
 }
 
-#ifdef KOKKOS_ENABLE_ASM
+#if defined( KOKKOS_ENABLE_ASM ) && defined ( KOKKOS_USE_ISA_X86_64 )
 template < typename T >
 KOKKOS_INLINE_FUNCTION
 T atomic_fetch_add( volatile T * const dest ,
@@ -267,7 +267,7 @@ T atomic_fetch_add( volatile T * const dest ,
     typename ::Kokkos::Impl::enable_if<
                   ( sizeof(T) != 4 )
                && ( sizeof(T) != 8 )
-              #if defined(KOKKOS_ENABLE_ASM)
+              #if defined(KOKKOS_ENABLE_ASM) && defined ( KOKKOS_USE_ISA_X86_64 )
                && ( sizeof(T) != 16 )
               #endif
                  , const T >::type& val )

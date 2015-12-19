@@ -86,9 +86,9 @@ namespace Impl {
   __attribute__ (( __aligned__( 16 ) ));
 
 
+  #if defined( KOKKOS_ENABLE_ASM ) && defined ( KOKKOS_USE_ISA_X86_64 )
   inline cas128_t cas128( volatile cas128_t * ptr, cas128_t cmp,  cas128_t swap )
   {
-    #if defined( KOKKOS_ENABLE_ASM ) && defined ( KOKKOS_USE_ISA_X86_64 )
       bool swapped = false;
       __asm__ __volatile__
       (
@@ -103,16 +103,8 @@ namespace Impl {
        , "q" ( swapped )
      );
       return cmp;
-    #else
-      cas128_t tmp(ptr);
-      if(tmp !=  cmp) {
-        return tmp;
-      } else {
-        *ptr = swap;
-        return swap;
-      }
-    #endif
   }
+  #endif
 
 }
 }
