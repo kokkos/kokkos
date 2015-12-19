@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,85 +36,82 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
-#if defined( KOKKOS_ATOMIC_HPP ) && ! defined( KOKKOS_ATOMIC_ASSEMBLY_HPP )
-#define KOKKOS_ATOMIC_ASSEMBLY_HPP
+
+#if defined( KOKKOS_ATOMIC_HPP) && ! defined( KOKKOS_ATOMIC_INCREMENT )
+#define KOKKOS_ATOMIC_INCREMENT
+
 namespace Kokkos {
 
-namespace Impl {
-  struct cas128_t
-  {
-    uint64_t lower;
-    uint64_t upper;
-
-    KOKKOS_INLINE_FUNCTION
-    cas128_t () {
-      lower = 0;
-      upper = 0;
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    cas128_t (const cas128_t& a) {
-      lower = a.lower;
-      upper = a.upper;
-    }
-    KOKKOS_INLINE_FUNCTION
-    cas128_t (volatile cas128_t* a) {
-      lower = a->lower;
-      upper = a->upper;
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    bool operator != (const cas128_t& a) const {
-      return (lower != a.lower) || upper!=a.upper;
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    void operator = (const cas128_t& a) {
-      lower = a.lower;
-      upper = a.upper;
-    }
-    KOKKOS_INLINE_FUNCTION
-    void operator = (const cas128_t& a) volatile {
-      lower = a.lower;
-      upper = a.upper;
-    }
-  }
-  __attribute__ (( __aligned__( 16 ) ));
-
-
-  inline cas128_t cas128( volatile cas128_t * ptr, cas128_t cmp,  cas128_t swap )
-  {
-    #if defined( KOKKOS_ENABLE_ASM ) && defined ( KOKKOS_USE_ISA_X86_64 )
-      bool swapped = false;
-      __asm__ __volatile__
-      (
-       "lock cmpxchg16b %1\n\t"
-       "setz %0"
-       : "=q" ( swapped )
-       , "+m" ( *ptr )
-       , "+d" ( cmp.upper )
-       , "+a" ( cmp.lower )
-       : "c" ( swap.upper )
-       , "b" ( swap.lower )
-       , "q" ( swapped )
-     );
-      return cmp;
-    #else
-      cas128_t tmp(ptr);
-      if(tmp !=  cmp) {
-        return tmp;
-      } else {
-        *ptr = swap;
-        return swap;
-      }
-    #endif
-  }
-
-}
+// Atomic increment
+template<>
+KOKKOS_INLINE_FUNCTION
+void atomic_increment<char>(volatile char* a) {
+#if defined( KOKKOS_ENABLE_ASM ) && defined( KOKKOS_USE_ISA_X86_64 ) && ! defined(_WIN32) && ! defined(__CUDA_ARCH__)
+  __asm__ __volatile__(
+      "lock incb %0"
+      : /* no output registers */
+      : "m" (a[0])
+      : "memory"
+    );
+#else
+  Kokkos::atomic_fetch_add(a,1);
+#endif
 }
 
+template<>
+KOKKOS_INLINE_FUNCTION
+void atomic_increment<short>(volatile short* a) {
+#if defined( KOKKOS_ENABLE_ASM ) && defined( KOKKOS_USE_ISA_X86_64 ) && ! defined(_WIN32) && ! defined(__CUDA_ARCH__)
+  __asm__ __volatile__(
+      "lock incw %0"
+      : /* no output registers */
+      : "m" (a[0])
+      : "memory"
+    );
+#else
+  Kokkos::atomic_fetch_add(a,1);
+#endif
+}
+
+template<>
+KOKKOS_INLINE_FUNCTION
+void atomic_increment<int>(volatile int* a) {
+#if defined( KOKKOS_ENABLE_ASM ) && defined( KOKKOS_USE_ISA_X86_64 ) && ! defined(_WIN32) && ! defined(__CUDA_ARCH__)
+  __asm__ __volatile__(
+      "lock incl %0"
+      : /* no output registers */
+      : "m" (a[0])
+      : "memory"
+    );
+#else
+  Kokkos::atomic_fetch_add(a,1);
+#endif
+}
+
+template<>
+KOKKOS_INLINE_FUNCTION
+void atomic_increment<long long int>(volatile long long int* a) {
+#if defined( KOKKOS_ENABLE_ASM ) && defined( KOKKOS_USE_ISA_X86_64 ) && ! defined(_WIN32) && ! defined(__CUDA_ARCH__)
+  __asm__ __volatile__(
+      "lock incq %0"
+      : /* no output registers */
+      : "m" (a[0])
+      : "memory"
+    );
+#else
+  Kokkos::atomic_fetch_add(a,1);
+#endif
+}
+
+template<typename T>
+KOKKOS_INLINE_FUNCTION
+void atomic_increment(volatile T* a) {
+  Kokkos::atomic_fetch_add(a,1);
+}
+
+} // End of namespace Kokkos
 #endif

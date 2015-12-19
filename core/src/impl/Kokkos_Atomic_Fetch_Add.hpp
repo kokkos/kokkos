@@ -308,19 +308,6 @@ void atomic_add(volatile T * const dest, const T src) {
   atomic_fetch_add(dest,src);
 }
 
-// Atomic increment
-template<typename T>
-KOKKOS_INLINE_FUNCTION
-void atomic_increment(volatile T* a) {
-  Kokkos::atomic_fetch_add(a,1);
-}
-
-template<typename T>
-KOKKOS_INLINE_FUNCTION
-void atomic_decrement(volatile T* a) {
-  Kokkos::atomic_fetch_add(a,-1);
-}
-
 }
 #endif
 
