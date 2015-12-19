@@ -66,10 +66,15 @@ void memory_fence()
 #endif
 }
 
+//////////////////////////////////////////////////////
+// store_fence()
+//
+// If possible use a store fence on the architecture, if not run a full memory fence
+
 KOKKOS_FORCEINLINE_FUNCTION
 void store_fence()
 {
-#if defined( KOKKOS_ENABLE_ASM ) && defined( KOKKOS_INTERNAL_USE_ISA_X86_64 )
+#if defined( KOKKOS_ENABLE_ASM ) && defined( KOKKOS_USE_ISA_X86_64 )
   asm volatile (
 	"sfence" ::: "memory"
   	);
@@ -78,10 +83,15 @@ void store_fence()
 #endif
 }
 
+//////////////////////////////////////////////////////
+// load_fence()
+//
+// If possible use a load fence on the architecture, if not run a full memory fence
+
 KOKKOS_FORCEINLINE_FUNCTION
 void load_fence()
 {
-#if defined( KOKKOS_ENABLE_ASM ) && defined( KOKKOS_INTERNAL_USE_ISA_X86_64 )
+#if defined( KOKKOS_ENABLE_ASM ) && defined( KOKKOS_USE_ISA_X86_64 )
   asm volatile (
 	"lfence" ::: "memory"
   	);
