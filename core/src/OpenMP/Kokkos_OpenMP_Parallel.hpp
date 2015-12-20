@@ -296,7 +296,7 @@ public:
         OpenMPexec & exec = * OpenMPexec::get_thread_omp();
         const WorkRange range( m_policy, exec.pool_rank(), exec.pool_size() );
 
-        exec.set_work_range(range.begin(),range.end(),m_policy.chunk_size);
+        exec.set_work_range(range.begin(),range.end(),m_policy.chunk_size());
         exec.reset_steal_target();
         #pragma omp barrier
 
@@ -304,8 +304,8 @@ public:
 
         reference_type update = ValueInit::init( m_functor , exec.scratch_reduce() );
         while(work_index != -1) {
-          const Member begin = static_cast<Member>(work_index) * m_policy.chunk_size;
-          const Member end = begin + m_policy.chunk_size < m_policy.end()?begin+m_policy.chunk_size:m_policy.end();
+          const Member begin = static_cast<Member>(work_index) * m_policy.chunk_size();
+          const Member end = begin + m_policy.chunk_size() < m_policy.end()?begin+m_policy.chunk_size():m_policy.end();
           ParallelReduce::template exec_range< WorkTag >
             ( m_functor , begin,end
             , update );
@@ -336,10 +336,10 @@ public:
   template< class ViewType >
   inline
   ParallelReduce( const FunctorType & arg_functor
-                , const Policy      & arg_policy
+                , Policy       arg_policy
                 , const ViewType    & arg_result_view )
     : m_functor( arg_functor )
-    , m_policy(  arg_policy )
+    , m_policy(  arg_policy.set_chunk_size(OpenMPexec::pool_size()) )
     , m_result_ptr(  arg_result_view.ptr_on_device() )
     {
       static_assert( Kokkos::is_view< ViewType >::value
