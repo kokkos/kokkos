@@ -144,15 +144,15 @@ public:
 
         const WorkRange range( m_policy, exec.pool_rank(), exec.pool_size() );
 
-        exec.set_work_range(range.begin(),range.end(),m_policy.chunk_size);
+        exec.set_work_range(range.begin(),range.end(),m_policy.chunk_size());
         exec.reset_steal_target();
         #pragma omp barrier
         
         long work_index = exec.get_work_index();
 
         while(work_index != -1) {
-          const Member begin = static_cast<Member>(work_index) * m_policy.chunk_size;
-          const Member end = begin + m_policy.chunk_size < m_policy.end()?begin+m_policy.chunk_size:m_policy.end();
+          const Member begin = static_cast<Member>(work_index) * m_policy.chunk_size();
+          const Member end = begin + m_policy.chunk_size() < m_policy.end()?begin+m_policy.chunk_size():m_policy.end();
           ParallelFor::template exec_range< WorkTag >( m_functor , begin, end );
           work_index = exec.get_work_index();
         }
@@ -163,9 +163,9 @@ public:
 
   inline
   ParallelFor( const FunctorType & arg_functor
-             , const Policy      & arg_policy )
+             , Policy arg_policy )
     : m_functor( arg_functor )
-    , m_policy(  arg_policy )
+    , m_policy(  arg_policy.set_chunk_size(OpenMPexec::pool_size()) )
     {}
 };
 

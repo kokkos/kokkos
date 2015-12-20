@@ -77,22 +77,6 @@ struct is_schedule_type<Schedule<ScheduleType> > {
   enum {value = 1 };
 };
 
-//Specify ChunkSize for Iterations
-template<int Chunk>
-struct ChunkSize {
-  enum {chunk_size = Chunk};
-};
-
-template<class Arg>
-struct is_chunk_size {
-  enum { value = 0 };
-};
-
-template<int Chunk>
-struct is_chunk_size<ChunkSize<Chunk> > {
-  enum { value = 1 };
-};
-
 //Specif Iteration Index Type
 template<typename iType>
 struct IterationType {
@@ -120,7 +104,6 @@ struct PolicyTraits<void> {
   typedef void schedule_type;
   typedef void iteration_type;
   typedef void tag_type;
-  enum { chunk_size = 0 };
 };
 
 
@@ -133,7 +116,6 @@ struct PolicyTraits<typename std::enable_if<is_execution_space<ExecutionSpace>::
   typedef typename PolicyTraits<void, Props ...>::schedule_type schedule_type;
   typedef typename PolicyTraits<void, Props ...>::iteration_type iteration_type;
   typedef typename PolicyTraits<void, Props ...>::tag_type tag_type;
-  enum { chunk_size = PolicyTraits<void, Props ...>::chunk_size };
 };
 
 //Strip off ScheduleType
@@ -145,7 +127,6 @@ struct PolicyTraits<typename std::enable_if<is_schedule_type<Schedule<ScheduleTy
   typedef ScheduleType schedule_type;
   typedef typename PolicyTraits<void, Props ...>::iteration_type iteration_type;
   typedef typename PolicyTraits<void, Props ...>::tag_type tag_type;
-  enum { chunk_size = PolicyTraits<void, Props ...>::chunk_size };
 };
 
 //Strip off IterationType
@@ -157,7 +138,6 @@ struct PolicyTraits<void, IterationType<iType>,Props ...> {
   typedef typename PolicyTraits<void, Props ...>::schedule_type schedule_type;
   typedef iType iteration_type;
   typedef typename PolicyTraits<void, Props ...>::tag_type tag_type;
-  enum { chunk_size = PolicyTraits<void, Props ...>::chunk_size };
 };
 
 //Strip off raw IterationType
@@ -169,7 +149,6 @@ struct PolicyTraits<typename std::enable_if<std::is_integral<iType>::value>::typ
   typedef typename PolicyTraits<void, Props ...>::schedule_type schedule_type;
   typedef iType iteration_type;
   typedef typename PolicyTraits<void, Props ...>::tag_type tag_type;
-  enum { chunk_size = PolicyTraits<void, Props ...>::chunk_size };
 };
 
 //Strip off TagType
@@ -177,7 +156,6 @@ template<class TagType, class ... Props>
 struct PolicyTraits<typename std::enable_if<!is_schedule_type<TagType>::value &&
                                             !is_execution_space<TagType>::value &&
                                             !is_iteration_type<TagType>::value &&
-                                            !is_chunk_size<TagType>::value &&
                                             !std::is_integral<TagType>::value 
                                            >::type,
                     TagType,Props ...> {
@@ -188,20 +166,6 @@ struct PolicyTraits<typename std::enable_if<!is_schedule_type<TagType>::value &&
   typedef typename PolicyTraits<void, Props ...>::schedule_type schedule_type;
   typedef typename PolicyTraits<void, Props ...>::iteration_type iteration_type;
   typedef TagType tag_type;
-  enum { chunk_size = PolicyTraits<void, Props ...>::chunk_size };
-};
-
-//Strip off ChunkSize
-template<int Chunk, class ... Props>
-struct PolicyTraits<void, ChunkSize<Chunk>,Props ...> {
-  static_assert( PolicyTraits<void, Props ...>::chunk_size == 0,
-                 "ExecutionPolicy: Only one ChunkSize<..> template argument may be used.");
-
-  typedef typename PolicyTraits<void, Props ...>::execution_space execution_space;
-  typedef typename PolicyTraits<void, Props ...>::schedule_type schedule_type;
-  typedef typename PolicyTraits<void, Props ...>::iteration_type iteration_type;
-  typedef typename PolicyTraits<void, Props ...>::tag_type tag_type;
-  enum { chunk_size = Chunk };
 };
 
 
@@ -215,10 +179,15 @@ struct PolicyTraits {
     typename execution_space::size_type, typename PolicyTraits<void,Props ...>::iteration_type>::type iteration_type;
   typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::tag_type>::value, 
     void, typename PolicyTraits<void,Props ...>::tag_type>::type work_tag;
-  enum { chunk_size = PolicyTraits<void, Props ...>::chunk_size };
 };
 
 }
+
+struct ChunkSize {
+  long chunk_size;
+  ChunkSize(const long& value):chunk_size(value) {}
+  ChunkSize(const Kokkos::AUTO_t&):chunk_size(-1) {}
+};
 /** \brief  Execution policy for work over a range of an integral type.
  *
  * Valid template argument options:
@@ -247,7 +216,7 @@ private:
   typedef Impl::PolicyTraits<Properties ... > traits;
 
   // Default integral type and blocking factor:
-  enum { Granularity = traits::chunk_size>0?traits::chunk_size:8 };
+  enum { Granularity = 8 };
 
   // Only accept the integral type if the blocking is a power of two
   static_assert( Impl::is_integral_power_of_two( Granularity )
@@ -258,7 +227,8 @@ private:
   typename traits::execution_space m_space ;
   typename traits::iteration_type  m_begin ;
   typename traits::iteration_type  m_end ;
-
+  typename traits::iteration_type  m_granularity ;
+  typename traits::iteration_type  m_granularity_mask ;
 public:
 
   //! Tag this class as an execution policy
@@ -278,6 +248,8 @@ public:
     : m_space()
     , m_begin( work_begin < work_end ? work_begin : 0 )
     , m_end(   work_begin < work_end ? work_end : 0 )
+    , m_granularity(Granularity)
+    , m_granularity_mask(m_granularity-1)
     {}
 
   /** \brief  Total range */
@@ -289,7 +261,61 @@ public:
     : m_space( work_space )
     , m_begin( work_begin < work_end ? work_begin : 0 )
     , m_end(   work_begin < work_end ? work_end : 0 )
+    , m_granularity(Granularity)
+    , m_granularity_mask(m_granularity-1)
     {}
+
+  /** \brief  Total range */
+  inline
+  RangePolicy( const member_type work_begin
+             , const member_type work_end
+             , const ChunkSize chunk
+             )
+    : m_space()
+    , m_begin( work_begin < work_end ? work_begin : 0 )
+    , m_end(   work_begin < work_end ? work_end : 0 )
+    {
+      m_granularity = chunk.chunk_size;      
+      m_granularity_mask = m_granularity - 1;
+    }
+
+  /** \brief  Total range */
+  inline
+  RangePolicy( const typename traits::execution_space & work_space
+             , const member_type work_begin
+             , const member_type work_end
+             , const ChunkSize chunk
+             )
+    : m_space( work_space )
+    , m_begin( work_begin < work_end ? work_begin : 0 )
+    , m_end(   work_begin < work_end ? work_end : 0 )
+    {
+      m_granularity = chunk.chunk_size;      
+      m_granularity_mask = m_granularity - 1;
+    }
+
+  public:
+
+     inline member_type chunk_size() const {
+       return m_granularity;
+     }
+
+     inline RangePolicy set_chunk_size(int concurrency) {
+       if(m_granularity > 0)
+         return *this;
+
+       member_type new_chunk_size = 1;
+       while(new_chunk_size*100*concurrency < m_end-m_begin)
+         new_chunk_size *= 2;
+       if(new_chunk_size < 128) {
+         new_chunk_size = 1;
+         while( (new_chunk_size*40*concurrency < m_end-m_begin ) && (new_chunk_size<128) )
+           new_chunk_size*=2;
+       }
+       m_granularity = new_chunk_size;
+       m_granularity_mask = m_granularity - 1;
+       return *this;
+     }
 
   /** \brief  Subrange for a partition's rank and size.
    *
@@ -318,7 +344,7 @@ public:
           // Split evenly among partitions, then round up to the granularity.
           const member_type work_part =
             ( ( ( ( range.end() - range.begin() ) + ( part_size - 1 ) ) / part_size )
-              + GranularityMask ) & ~member_type(GranularityMask);
+              + range.m_granularity_mask ) & ~member_type(range.m_granularity_mask);
 
           m_begin = range.begin() + work_part * part_rank ;
           m_end   = m_begin       + work_part ;
@@ -332,6 +358,7 @@ public:
      member_type m_end ;
      WorkRange();
      WorkRange & operator = ( const WorkRange & );
+   
   };
 };
 
