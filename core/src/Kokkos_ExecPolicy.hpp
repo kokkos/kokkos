@@ -186,7 +186,7 @@ struct PolicyTraits {
 struct ChunkSize {
   long chunk_size;
   ChunkSize(const long& value):chunk_size(value) {}
-  ChunkSize(const Kokkos::AUTO_t&):chunk_size(-1) {}
+  ChunkSize(const Kokkos::AUTO_t&):chunk_size(0) {}
 };
 /** \brief  Execution policy for work over a range of an integral type.
  *
