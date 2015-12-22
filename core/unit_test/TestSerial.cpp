@@ -40,8 +40,13 @@
 // ************************************************************************
 //@HEADER
 */
-
 #include <gtest/gtest.h>
+
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_LAMBDA
+#undef KOKKOS_LAMBDA
+#endif
+#define KOKKOS_LAMBDA [=]
 
 #include <Kokkos_Core.hpp>
 
@@ -70,10 +75,6 @@
 #include <TestCompilerMacros.hpp>
 #include <TestTaskPolicy.hpp>
 
-#ifdef KOKKOS_LAMBDA
-#undef KOKKOS_LAMBDA
-#endif
-#define KOKKOS_LAMBDA [=]
 
 #include <TestCXX11.hpp>
 #include <TestCXX11Deduction.hpp>
@@ -215,9 +216,9 @@ TEST_F( serial , team_shared_request) {
   TestSharedTeam< Kokkos::Serial >();
 }
 
-#if defined(KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA) && !defined(KOKKOS_HAVE_CUDA)
+#if defined(KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA) 
 TEST_F( serial , team_lambda_shared_request) {
-  TestLambdaSharedTeam< Kokkos::Serial >();
+  TestLambdaSharedTeam< Kokkos::HostSpace, Kokkos::Serial >();
 }
 #endif
 

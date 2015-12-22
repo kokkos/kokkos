@@ -235,7 +235,7 @@ struct Norm2 {
   inline
   void init( double & val ) const { val = 0 ; }
 
-  inline
+  KOKKOS_INLINE_FUNCTION
   void operator()( int i , double & val ) const { val += m_x[i] * m_x[i] ; }
 
   void apply( double & dst ) const { dst = std::sqrt( dst ); }

@@ -95,7 +95,8 @@ void test_shared_alloc()
   
   //----------------------------------------
   {
-    Kokkos::parallel_for( range , KOKKOS_LAMBDA( size_t i ){
+  // Since always executed on host space, leave [=]
+    Kokkos::parallel_for( range , [=]( size_t i ){
       char name[64] ;
       sprintf(name,"test_%.2d",int(i));
 
@@ -114,7 +115,7 @@ void test_shared_alloc()
     RecordBase::is_sane( r[0] );
     // RecordMemS::print_records( std::cout , s , true );
 
-    Kokkos::parallel_for( range , KOKKOS_LAMBDA( size_t i ){
+    Kokkos::parallel_for( range , [=]( size_t i ){
       while ( 0 != ( r[i] = static_cast< RecordMemS *>( RecordBase::decrement( r[i] ) ) ) ) {
         if ( r[i]->use_count() == 1 ) RecordBase::is_sane( r[i] );
       }
@@ -125,7 +126,7 @@ void test_shared_alloc()
     int destroy_count = 0 ;
     SharedAllocDestroy counter( & destroy_count );
 
-    Kokkos::parallel_for( range , KOKKOS_LAMBDA( size_t i ){
+    Kokkos::parallel_for( range , [=]( size_t i ){
       char name[64] ;
       sprintf(name,"test_%.2d",int(i));
 
@@ -146,7 +147,7 @@ void test_shared_alloc()
 
     RecordBase::is_sane( r[0] );
 
-    Kokkos::parallel_for( range , KOKKOS_LAMBDA( size_t i ){
+    Kokkos::parallel_for( range , [=]( size_t i ){
       while ( 0 != ( r[i] = static_cast< RecordMemS *>( RecordBase::decrement( r[i] ) ) ) ) {
         if ( r[i]->use_count() == 1 ) RecordBase::is_sane( r[i] );
       }
@@ -190,7 +191,7 @@ void test_shared_alloc()
         ASSERT_EQ( track.use_count() , 1 );
       }
 
-      Kokkos::parallel_for( range , KOKKOS_LAMBDA( size_t i ){
+      Kokkos::parallel_for( range , [=]( size_t i ){
         Tracker local_tracker ;
         local_tracker.assign_allocated_record_to_uninitialized( rec );
         ASSERT_GT( rec->use_count() , 1 );
