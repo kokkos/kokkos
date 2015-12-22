@@ -43,6 +43,12 @@
 
 #include <gtest/gtest.h>
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_LAMBDA
+#undef KOKKOS_LAMBDA
+#endif
+#define KOKKOS_LAMBDA [=]
+
 #include <Kokkos_Core.hpp>
 
 //----------------------------------------------------------------------------
@@ -64,11 +70,14 @@
 #include <TestAggregate.hpp>
 #include <TestAggregateReduction.hpp>
 #include <TestCompilerMacros.hpp>
+
+
 #include <TestCXX11.hpp>
 #include <TestCXX11Deduction.hpp>
 #include <TestTeamVector.hpp>
 #include <TestMemorySpaceTracking.hpp>
 #include <TestTemplateMetaFunctions.hpp>
+
 
 namespace Test {
 
@@ -213,9 +222,9 @@ TEST_F( openmp, team_shared_request) {
   TestSharedTeam< Kokkos::OpenMP >();
 }
 
-#if defined(KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA) && !defined(KOKKOS_HAVE_CUDA)
+#if defined(KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA) 
 TEST_F( openmp, team_lambda_shared_request) {
-  TestLambdaSharedTeam< Kokkos::OpenMP >();
+  TestLambdaSharedTeam< Kokkos::HostSpace, Kokkos::OpenMP >();
 }
 #endif
 

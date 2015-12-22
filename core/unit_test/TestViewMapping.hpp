@@ -842,7 +842,7 @@ void test_view_mapping()
 
     Kokkos::parallel_for(
       Kokkos::RangePolicy< Kokkos::DefaultHostExecutionSpace >(0,10) ,
-      [=]( int i ){
+      KOKKOS_LAMBDA( int i ){
         // 'a' is captured by copy and the capture mechanism
         // converts 'a' to an unmanaged copy.
         // When the parallel dispatch accepts a move for the lambda

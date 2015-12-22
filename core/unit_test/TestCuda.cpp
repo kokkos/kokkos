@@ -372,12 +372,16 @@ TEST_F( cuda, shared_team )
   TestSharedTeam< Kokkos::Cuda >();
 }
 
+
 #if defined (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA)
 TEST_F( cuda, lambda_shared_team )
 {
-  TestLambdaSharedTeam< Kokkos::Cuda >();
+  TestLambdaSharedTeam< Kokkos::CudaSpace, Kokkos::Cuda >();
+  TestLambdaSharedTeam< Kokkos::CudaUVMSpace, Kokkos::Cuda >();
+  TestLambdaSharedTeam< Kokkos::CudaHostPinnedSpace, Kokkos::Cuda >();
 }
 #endif
+
 
 TEST_F( cuda, reduce_dynamic )
 {
@@ -504,6 +508,4 @@ TEST_F( cuda , team_vector )
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Cuda >(9) ) );
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Cuda >(10) ) );
 }
-
 }
-

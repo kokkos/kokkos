@@ -46,6 +46,10 @@
 #include <Kokkos_Macros.hpp>
 
 #if defined( KOKKOS_HAVE_PTHREAD )
+#ifdef KOKKOS_LAMBDA
+#undef KOKKOS_LAMBDA
+#endif
+#define KOKKOS_LAMBDA [=]
 
 #include <Kokkos_Core.hpp>
 
@@ -70,6 +74,8 @@
 #include <TestAggregate.hpp>
 #include <TestAggregateReduction.hpp>
 #include <TestCompilerMacros.hpp>
+
+
 #include <TestCXX11.hpp>
 #include <TestCXX11Deduction.hpp>
 #include <TestTeamVector.hpp>
@@ -264,9 +270,9 @@ TEST_F( threads, team_shared_request) {
   TestSharedTeam< Kokkos::Threads >();
 }
 
-#if defined(KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA) && !defined(KOKKOS_HAVE_CUDA)
+#if defined(KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA) 
 TEST_F( threads, team_lambda_shared_request) {
-  TestLambdaSharedTeam< Kokkos::Threads >();
+  TestLambdaSharedTeam< Kokkos::HostSpace, Kokkos::Threads >();
 }
 #endif
 
@@ -454,5 +460,4 @@ TEST_F( threads , task_team )
 }
 
 } // namespace Test
-
 #endif /* #if defined( KOKKOS_HAVE_PTHREAD ) */

@@ -394,7 +394,7 @@ struct SharedTeamFunctor {
 
   // Tell how much shared memory will be required by this functor:
   inline
-  unsigned team_shmem_size( int /* team_size */ ) const
+  unsigned team_shmem_size( int team_size ) const
   {
     return shared_int_array_type::shmem_size( SHARED_COUNT ) +
            shared_int_array_type::shmem_size( SHARED_COUNT );
@@ -460,10 +460,12 @@ struct TestSharedTeam {
     ASSERT_EQ( error_count , 0 );
   }
 };
+}
+
+namespace Test {
 
 #if defined (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA)
-
-template< class ExecSpace >
+template< class MemorySpace, class ExecSpace >
 struct TestLambdaSharedTeam {
 
   TestLambdaSharedTeam()
@@ -472,7 +474,9 @@ struct TestLambdaSharedTeam {
   void run()
   {
     typedef Test::SharedTeamFunctor<ExecSpace> Functor ;
-    typedef Kokkos::View< typename Functor::value_type , Kokkos::HostSpace , Kokkos::MemoryUnmanaged >  result_type ;
+    //typedef Kokkos::View< typename Functor::value_type , Kokkos::HostSpace , Kokkos::MemoryUnmanaged >  result_type ;
+    typedef Kokkos::View< typename Functor::value_type , MemorySpace, Kokkos::MemoryUnmanaged >  result_type ;
+
     typedef typename ExecSpace::scratch_memory_space shmem_space ;
 
     // tbd: MemoryUnmanaged should be the default for shared memory space
@@ -524,8 +528,7 @@ struct TestLambdaSharedTeam {
     ASSERT_EQ( error_count , 0 );
   }
 };
-
 #endif
-}
 
+}
 /*--------------------------------------------------------------------------*/
