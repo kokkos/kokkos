@@ -155,18 +155,6 @@ void Task::throw_error_verify_type()
   Kokkos::Impl::throw_runtime_exception("TaskMember< Threads >::verify_type ERROR");
 }
 
-void Task::deallocate( void * ptr )
-{
-  free( ptr );
-}
-
-void * Task::allocate( const unsigned n )
-{
-  void * const ptr = malloc(n);
-
-  return ptr ;
-}
-
 Task::~TaskMember()
 {
 }

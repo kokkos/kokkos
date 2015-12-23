@@ -48,6 +48,7 @@
 #define KOKKOS_TASKPOLICY_HPP
 
 #include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_MemoryPool.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_StaticAssert.hpp>

@@ -60,12 +60,15 @@ struct FibChild {
   typedef long value_type ;
 
   Kokkos::Experimental::TaskPolicy<ExecSpace> policy ;
+  Kokkos::Experimental::Future<long,ExecSpace> fib_1 ;
+  Kokkos::Experimental::Future<long,ExecSpace> fib_2 ;
   const value_type n ;
   int has_nested ;
 
   FibChild( const Kokkos::Experimental::TaskPolicy<ExecSpace> & arg_policy
           , const value_type arg_n )
     : policy(arg_policy,2) /* default dependence capacity = 2 */
+    , fib_1() , fib_2()
     , n( arg_n ), has_nested(0) {}
 
   inline
@@ -82,20 +85,19 @@ struct FibChild {
           // Spawn new children and respawn myself to sum their results:
           has_nested = 2 ;
 
+          fib_1 = Kokkos::Experimental::spawn( policy , FibChild(policy,n-1) );
+          fib_2 = Kokkos::Experimental::spawn( policy , FibChild(policy,n-2) );
+
           Kokkos::Experimental::respawn
             ( policy
             , this
-            , Kokkos::Experimental::spawn( policy , FibChild(policy,n-1) )
-            , Kokkos::Experimental::spawn( policy , FibChild(policy,n-2) )
+            , fib_1
+            , fib_2
             );
-
         }
         else if ( has_nested == 2 ) {
 
           has_nested = -1 ;
-
-          const Kokkos::Experimental::Future<long,ExecSpace> fib_1 = policy.get_dependence(this,0);
-          const Kokkos::Experimental::Future<long,ExecSpace> fib_2 = policy.get_dependence(this,1);
 
           result = fib_1.get() + fib_2.get();
         }
@@ -113,6 +115,8 @@ struct FibChild2 {
   typedef long value_type ;
 
   Kokkos::Experimental::TaskPolicy<ExecSpace> policy ;
+  Kokkos::Experimental::Future<long,ExecSpace> fib_a ;
+  Kokkos::Experimental::Future<long,ExecSpace> fib_b ;
   const value_type n ;
   int has_nested ;
 
@@ -137,8 +141,10 @@ struct FibChild2 {
           has_nested = 2 ;
           // Kokkos::respawn implements the following steps:
           policy.clear_dependence( this );
-          policy.add_dependence( this , Kokkos::Experimental::spawn( policy , FibChild2(policy,n-1) ) );
-          policy.add_dependence( this , Kokkos::Experimental::spawn( policy , FibChild2(policy,n-2) ) );
+          fib_a = Kokkos::Experimental::spawn( policy , FibChild2(policy,n-1) );
+          fib_b = Kokkos::Experimental::spawn( policy , FibChild2(policy,n-2) );
+          policy.add_dependence( this , fib_a );
+          policy.add_dependence( this , fib_b );
           policy.respawn( this );
         }
         else {
@@ -150,15 +156,14 @@ struct FibChild2 {
           has_nested = 4 ;
           // Kokkos::Experimental::respawn implements the following steps:
           policy.clear_dependence( this );
-          policy.add_dependence( this , Kokkos::Experimental::spawn( policy , FibChild2(policy,n-3) ) );
-          policy.add_dependence( this , Kokkos::Experimental::spawn( policy , FibChild2(policy,n-4) ) );
+          fib_a = Kokkos::Experimental::spawn( policy , FibChild2(policy,n-3) );
+          fib_b = Kokkos::Experimental::spawn( policy , FibChild2(policy,n-4) );
+          policy.add_dependence( this , fib_a );
+          policy.add_dependence( this , fib_b );
           policy.respawn( this );
         }
      }
      else if ( 2 == has_nested || 4 == has_nested ) {
-        const Kokkos::Experimental::Future<long,ExecSpace> fib_a = policy.get_dependence(this,0);
-        const Kokkos::Experimental::Future<long,ExecSpace> fib_b = policy.get_dependence(this,1);
-
         result = ( has_nested == 2 ) ? fib_a.get() + fib_b.get()
                                      : 3 * fib_a.get() + 2 * fib_b.get() ;
 
