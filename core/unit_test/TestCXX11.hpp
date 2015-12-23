@@ -62,12 +62,15 @@ struct FunctorAddTest{
   typedef typename Kokkos::TeamPolicy< execution_space >::member_type  team_member ;
   KOKKOS_INLINE_FUNCTION
   void operator() (const team_member & dev) const {
-    int i = dev.league_rank()*dev.team_size() + dev.team_rank();
-    b_(i,0) = a_(i,1) + a_(i,2);
-    b_(i,1) = a_(i,0) - a_(i,3);
-    b_(i,2) = a_(i,4) + a_(i,0);
-    b_(i,3) = a_(i,2) - a_(i,1);
-    b_(i,4) = a_(i,3) + a_(i,4);
+    const int begin = dev.league_rank() * 4 ;
+    const int end   = begin + 4 ;
+    for ( int i = begin + dev.team_rank() ; i < end ; i += dev.team_size() ) {
+      b_(i,0) = a_(i,1) + a_(i,2);
+      b_(i,1) = a_(i,0) - a_(i,3);
+      b_(i,2) = a_(i,4) + a_(i,0);
+      b_(i,3) = a_(i,2) - a_(i,1);
+      b_(i,4) = a_(i,3) + a_(i,4);
+    }
   }
 };
 
@@ -107,8 +110,6 @@ double AddTestFunctor() {
 template<class DeviceType, bool PWRTest>
 double AddTestLambda() {
 
-  typedef Kokkos::TeamPolicy<DeviceType> policy_type ;
-
   Kokkos::View<double**,DeviceType> a("A",100,5);
   Kokkos::View<double**,DeviceType> b("B",100,5);
   typename Kokkos::View<double**,DeviceType>::HostMirror h_a = Kokkos::create_mirror_view(a);
@@ -129,14 +130,21 @@ double AddTestLambda() {
       b(i,4) = a(i,3) + a(i,4);
     });
   } else {
+    typedef Kokkos::TeamPolicy<DeviceType> policy_type ;
     typedef typename policy_type::member_type team_member ;
-    Kokkos::parallel_for(policy_type(25,4),KOKKOS_LAMBDA(const team_member & dev)  {
-      int i = dev.league_rank()*dev.team_size() + dev.team_rank();
-      b(i,0) = a(i,1) + a(i,2);
-      b(i,1) = a(i,0) - a(i,3);
-      b(i,2) = a(i,4) + a(i,0);
-      b(i,3) = a(i,2) - a(i,1);
-      b(i,4) = a(i,3) + a(i,4);
+
+    policy_type policy(25,Kokkos::AUTO);
+
+    Kokkos::parallel_for(policy,KOKKOS_LAMBDA(const team_member & dev)  {
+      const int begin = dev.league_rank() * 4 ;
+      const int end   = begin + 4 ;
+      for ( int i = begin + dev.team_rank() ; i < end ; i += dev.team_size() ) {
+        b(i,0) = a(i,1) + a(i,2);
+        b(i,1) = a(i,0) - a(i,3);
+        b(i,2) = a(i,4) + a(i,0);
+        b(i,3) = a(i,2) - a(i,1);
+        b(i,4) = a(i,3) + a(i,4);
+      }
     });
   }
   Kokkos::deep_copy(h_b,b);
@@ -179,12 +187,15 @@ struct FunctorReduceTest{
 
   KOKKOS_INLINE_FUNCTION
   void operator() (const team_member & dev, value_type& sum) const {
-    int i = dev.league_rank()*dev.team_size() + dev.team_rank();
-    sum += a_(i,1) + a_(i,2);
-    sum += a_(i,0) - a_(i,3);
-    sum += a_(i,4) + a_(i,0);
-    sum += a_(i,2) - a_(i,1);
-    sum += a_(i,3) + a_(i,4);
+    const int begin = dev.league_rank() * 4 ;
+    const int end   = begin + 4 ;
+    for ( int i = begin + dev.team_rank() ; i < end ; i += dev.team_size() ) {
+      sum += a_(i,1) + a_(i,2);
+      sum += a_(i,0) - a_(i,3);
+      sum += a_(i,4) + a_(i,0);
+      sum += a_(i,2) - a_(i,1);
+      sum += a_(i,3) + a_(i,4);
+    }
   }
   KOKKOS_INLINE_FUNCTION
   void init(value_type& update) const {update = 0.0;}
@@ -247,12 +258,15 @@ double ReduceTestLambda() {
   } else {
     typedef typename policy_type::member_type team_member ;
     Kokkos::parallel_reduce(policy_type(25,Kokkos::AUTO),KOKKOS_LAMBDA(const team_member & dev, double& sum)  {
-      int i = dev.league_rank()*dev.team_size() + dev.team_rank();
-      sum += a(i,1) + a(i,2);
-      sum += a(i,0) - a(i,3);
-      sum += a(i,4) + a(i,0);
-      sum += a(i,2) - a(i,1);
-      sum += a(i,3) + a(i,4);
+      const int begin = dev.league_rank() * 4 ;
+      const int end   = begin + 4 ;
+      for ( int i = begin + dev.team_rank() ; i < end ; i += dev.team_size() ) {
+        sum += a(i,1) + a(i,2);
+        sum += a(i,0) - a(i,3);
+        sum += a(i,4) + a(i,0);
+        sum += a(i,2) - a(i,1);
+        sum += a(i,3) + a(i,4);
+      }
     }, unmanaged_result( & result ) );
   }
 
