@@ -750,7 +750,7 @@ void test_view_mapping()
     stride.stride[1] = 1 ;
     stride.stride[2] = 12 ;
 
-    const offset_t offset( stride );
+    const offset_t offset( std::integral_constant<unsigned,0>() , stride );
 
     ASSERT_EQ( offset.dimension_0() , 3 );
     ASSERT_EQ( offset.dimension_1() , 4 );
@@ -763,7 +763,7 @@ void test_view_mapping()
     ASSERT_EQ( offset.span() , 60 );
     ASSERT_TRUE( offset.span_is_contiguous() );
 
-    Kokkos::Experimental::Impl::ViewMapping< traits_t , void >  v( (int*) 0 , std::false_type() , stride );
+    Kokkos::Experimental::Impl::ViewMapping< traits_t , void >  v( (int*) 0 , stride );
   }
 
   {
