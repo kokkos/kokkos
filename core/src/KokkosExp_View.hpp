@@ -1246,7 +1246,7 @@ public:
                                   , arg_N4 , arg_N5 , arg_N6 , arg_N7 );
     }
 
-  explicit inline
+  explicit KOKKOS_INLINE_FUNCTION
   View( pointer_type arg_ptr
       , const size_t arg_N0 = 0
       , const size_t arg_N1 = 0
@@ -1263,7 +1263,7 @@ public:
            , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
     {}
 
-  explicit inline
+  explicit KOKKOS_INLINE_FUNCTION
   View( pointer_type arg_ptr
       , typename traits::array_layout & arg_layout
       )
