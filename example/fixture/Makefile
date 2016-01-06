@@ -10,7 +10,7 @@ default: build_all
 include $(KOKKOS_PATH)/Makefile.kokkos
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
-	CXX = nvcc_wrapper
+	CXX = $(NVCC_WRAPPER)
 	CXXFLAGS ?= -O3
 	LINK = $(CXX)
 	LDFLAGS ?= -lpthread

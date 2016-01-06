@@ -15,7 +15,7 @@ include $(KOKKOS_PATH)/Makefile.kokkos
 # KOKKOS_INTERNAL_USE_CUDA is not exported to installed Makefile.kokkos
 # use KOKKOS_DEVICE here
 ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
-	CXX = nvcc_wrapper
+	CXX = $(NVCC_WRAPPER)
 	CXXFLAGS ?= -O3
 	LINK = $(CXX)
 	LDFLAGS ?= -lpthread
