@@ -269,26 +269,6 @@ public:
       return ( m_offset.span() * Array_N * MemorySpanSize + MemorySpanMask ) & ~size_t(MemorySpanMask);
     }
 
-  /** \brief  Span, in bytes, of the required memory */
-  template< bool AllowPadding >
-  KOKKOS_INLINE_FUNCTION
-  static constexpr size_t memory_span( const std::integral_constant<bool,AllowPadding> &
-                                     , const size_t N0 , const size_t N1 , const size_t N2 , const size_t N3
-                                      , const size_t N4 , const size_t N5 , const size_t N6 , const size_t N7 )
-    {
-      typedef std::integral_constant< unsigned , AllowPadding ? MemorySpanSize : 0 >  padding ;
-      return ( offset_type( padding(), N0, N1, N2, N3, N4, N5, N6, N7 ).span() * Array_N * MemorySpanSize + MemorySpanMask ) & ~size_t(MemorySpanMask);
-    }
-
-  /** \brief  Span, in bytes, of the required memory */
-  template< bool AllowPadding >
-  KOKKOS_INLINE_FUNCTION
-  static constexpr size_t memory_span( const std::integral_constant<bool,AllowPadding> &
-                                       , const typename Traits::array_layout & layout )
-    {
-      return ( offset_type( layout ).span() * Array_N * MemorySpanSize + MemorySpanMask ) & ~size_t(MemorySpanMask);
-    }
-
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION ~ViewMapping() {}
@@ -303,27 +283,58 @@ public:
   KOKKOS_INLINE_FUNCTION ViewMapping & operator = ( ViewMapping && rhs )
     { m_handle = rhs.m_handle ; m_offset = rhs.m_offset ; m_stride = rhs.m_stride ; return *this ; }
 
-  template< bool AllowPadding >
+  //----------------------------------------
+
+  template< class ... Args >
   KOKKOS_INLINE_FUNCTION
-  ViewMapping( pointer_type ptr
-             , const std::integral_constant<bool,AllowPadding> &
-             , const size_t N0 , const size_t N1 , const size_t N2 , const size_t N3
-             , const size_t N4 , const size_t N5 , const size_t N6 , const size_t N7 )
+  ViewMapping( pointer_type ptr , Args ... args )
     : m_handle( ptr )
-    , m_offset( std::integral_constant< unsigned , AllowPadding ? sizeof(typename Traits::value_type) : 0 >()
-              , N0, N1, N2, N3, N4, N5, N6, N7 )
+    , m_offset( std::integral_constant< unsigned , 0 >() , args... )
     , m_stride( m_offset.span() )
     {}
 
-  template< bool AllowPadding >
-  KOKKOS_INLINE_FUNCTION
-  ViewMapping( pointer_type ptr
-             , const std::integral_constant<bool,AllowPadding> &
-             , const typename Traits::array_layout & layout )
-    : m_handle( ptr )
-    , m_offset( layout )
-    , m_stride( m_offset.span() )
-    {}
+  //----------------------------------------
+
+  template< class ... P , class ... Args >
+  SharedAllocationRecord<> *
+  allocate_shared( const ViewAllocProp< P... > & prop , Args ... args )
+  {
+    typedef ViewAllocProp< P... > alloc_prop ;
+
+    typedef typename alloc_prop::execution_space  execution_space ;
+    typedef typename Traits::memory_space         memory_space ;
+    typedef ViewValueFunctor< execution_space , scalar_type > functor_type ;
+    typedef SharedAllocationRecord< memory_space , functor_type > record_type ;
+
+    // Query the mapping for byte-size of allocation.
+    typedef std::integral_constant< unsigned , alloc_prop::allow_padding >  padding ;
+
+    m_offset = offset_type( padding(), args... );
+
+    const size_t alloc_size =
+      ( m_offset.span() * Array_N * MemorySpanSize + MemorySpanMask ) & ~size_t(MemorySpanMask);
+
+    // Allocate memory from the memory space and create tracking record.
+    record_type * const record =
+      record_type::allocate( prop.template value<memory_space>()
+                           , prop.template value<std::string>()
+                           , alloc_size );
+
+    m_handle =
+      handle_type( reinterpret_cast< pointer_type >( record->data() ) );
+
+    if ( prop.initialize ) {
+      // The functor constructs and destroys
+      record->m_destroy = functor_type( prop.template value<execution_space>()
+                                      , (pointer_type) m_handle
+                                      , m_offset.span() * Array_N
+                                      );
+
+      record->m_destroy.construct_shared_allocation();
+    }
+
+    return record ;
+  }
 
   //----------------------------------------
   // If the View is to construct or destroy the elements.
