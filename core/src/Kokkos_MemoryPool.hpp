@@ -44,11 +44,18 @@
 #ifndef KOKKOS_MEMORYPOOL_HPP
 #define KOKKOS_MEMORYPOOL_HPP
 
+#include <iostream>
+
+// TODO: This should probably not be included here, but it's the only way I
+//       could get this to compile.  Ask Carter about this.
+#include <Kokkos_Core.hpp>
+
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_Timer.hpp>
 
 //#include <impl/Kokkos_HostSpace.hpp>
 
@@ -67,10 +74,15 @@ namespace Experimental {
 template < class MemorySpace >
 class MemoryPool {
 public:
+  /// \brief Structure used to create a linked list from the memory chunk.
+  ///
+  /// The allocated memory is cast to this type internally to create the lists.
+  struct Link {
+    Link * next;
+  };
 
   //! Tag this class as a kokkos memory space
-  typedef MemoryPool                       memory_space ;
-  typedef typename MemorySpace::size_type  size_type ;
+  typedef MemoryPool                                         memory_space;
 
   /// \typedef execution_space
   /// \brief Default execution space for this memory space.
@@ -78,48 +90,101 @@ public:
   /// Every memory space has a default execution space.  This is
   /// useful for things like initializing a View (which happens in
   /// parallel using the View's default execution space).
-  typedef typename MemorySpace::execution_space execution_space ;
+  typedef typename MemorySpace::execution_space execution_space;
 
   //! This memory space preferred device_type
   typedef typename MemorySpace::device_type device_type;
 
+  typedef typename MemorySpace::size_type                    size_type;
+  typedef Impl::SharedAllocationRecord< MemorySpace, void >  SharedRecord;
+  typedef Impl::SharedAllocationTracker                      Tracker;
+  typedef Kokkos::View< Link, execution_space >              LinkView;
+
   //------------------------------------
 
-  MemoryPool() = default ;
-  MemoryPool( MemoryPool && rhs ) = default ;
-  MemoryPool( const MemoryPool & rhs ) = default ;
-  MemoryPool & operator = ( MemoryPool && ) = default ;
-  MemoryPool & operator = ( const MemoryPool & ) = default ;
-  ~MemoryPool() = default ;
+//  MemoryPool() : m_freelist( "freelist") {}
+  MemoryPool() = default;
+  MemoryPool( MemoryPool && rhs ) = default;
+  MemoryPool( const MemoryPool & rhs ) = default;
+  MemoryPool & operator = ( MemoryPool && ) = default;
+  MemoryPool & operator = ( const MemoryPool & ) = default;
+  ~MemoryPool() = default;
 
   /**\brief  Default memory space instance */
-  MemoryPool( const MemorySpace & space /* From where to allocate the pool */
-            , size_type chunk_size /* Hand out memory in chunks of this size */
-            , size_type total_size /* Total size of the pool */
+  MemoryPool( const MemorySpace & memspace, /* From where to allocate the pool */
+              size_type chunk_size, /* Hand out memory in chunks of this size */
+              size_type total_size /* Total size of the pool */
             )
-    : m_memory_space( space )
-    , m_chunk_mask( 0 )
-    {
-      size_type i = 1 ;
-      while ( total_size < i ) i <<= 1 ;
-      m_chunk_mask = i - 1 ;
+    : m_freelist( "freelist" )
+  {
+    // TODO: Ask Carter about how to better handle this.
+    if ( chunk_size < 8 ) {
+      std::cerr << "Chunk size must be at least 8 bytes.  Setting to be "
+                << "8 bytes." << std::endl;
+      chunk_size = 8;
     }
 
-  /**\brief  Claim chunks of untracked memory from the pool. */
+    // Force total_size to be a multiple of chunk_size.
+    total_size = ( ( total_size + chunk_size - 1 ) / chunk_size ) * chunk_size;
+
+    size_type num_chunks = total_size / chunk_size;
+
+    SharedRecord * rec = SharedRecord::allocate( memspace, "mempool", total_size );
+    m_pool_tracker.assign_allocated_record_to_uninitialized( rec );
+
+    Link alink;
+    alink.next = static_cast< Link * >( rec->data() );
+    deep_copy(m_freelist, alink);
+
+    char * head = static_cast< char * >( rec->data() );
+
+    // TODO: The next two loops need to be done in parallel so they access the
+    //       correct memory space.
+
+    // Initialize all next pointers to 0.  This is a bit overkill since we only
+    // need to set the next pointer of the last chunk to 0, but two simple loops
+    // should be faster than one loop with an if statement.
+    for ( size_type i = 0; i < num_chunks; ++i )
+    {
+      Link * lp = reinterpret_cast< Link * >( head + i * chunk_size );
+      lp->next = 0;
+    }
+
+    // Initialize the next pointers to point to the next chunk for all but the
+    // last chunk.
+    for ( size_type i = 1; i < num_chunks; ++i )
+    {
+      Link * lp = reinterpret_cast< Link * >( head + ( i - 1 ) * chunk_size );
+      lp->next = reinterpret_cast< Link * >( head + i * chunk_size );
+    }
+
+//    printf(" Pool size: %llu\n", rec->size());
+  }
+
+  ///\brief  Claim chunks of untracked memory from the pool.
+  /// Can only be called from device.
+  KOKKOS_INLINE_FUNCTION
   void * allocate( const size_t alloc_size ) const
-    {
-      // Improper implementation
-      return m_memory_space.allocate( ( alloc_size + m_chunk_mask ) & ~m_chunk_mask );
-    }
+  {
+    void * p = static_cast< void * >((*m_freelist).next);
+    (*m_freelist).next = (*m_freelist).next->next;
+    return p;
+  }
 
-  /**\brief  Release claimed memory back into the pool */
-  void deallocate( void * const alloc_ptr ,
+  ///\brief  Release claimed memory back into the pool
+  /// Can only be called from device.
+  KOKKOS_INLINE_FUNCTION
+  void deallocate( void * const alloc_ptr,
                    const size_t alloc_size ) const
-    { m_memory_space.deallocate( alloc_ptr , alloc_size ); }
+  {
+    Link* lp = static_cast< Link * >(alloc_ptr);
+    lp->next = (*m_freelist).next;
+    (*m_freelist).next = lp;
+  }
 
 private:
-  MemorySpace  m_memory_space ;
-  size_type    m_chunk_mask ;
+  Tracker      m_pool_tracker;
+  LinkView     m_freelist;
 };
 
 } // namespace Experimental
