@@ -58,7 +58,11 @@ struct ViewAllocateWithoutInitializing {
   const std::string label ;
 
   ViewAllocateWithoutInitializing() : label() {}
+
+  explicit
   ViewAllocateWithoutInitializing( const std::string & arg_label ) : label( arg_label ) {}
+
+  explicit
   ViewAllocateWithoutInitializing( const char * const  arg_label ) : label( arg_label ) {}
 };
 
@@ -86,12 +90,6 @@ struct is_view_label : public std::false_type {};
 template<>
 struct is_view_label< std::string > : public std::true_type {};
 
-template<>
-struct is_view_label< char * > : public std::true_type {};
-
-template<>
-struct is_view_label< const char * > : public std::true_type {};
-
 template< unsigned N >
 struct is_view_label< char[N] > : public std::true_type {};
 
@@ -100,65 +98,14 @@ struct is_view_label< const char[N] > : public std::true_type {};
 
 //----------------------------------------------------------------------------
 
-
-template< typename T , typename ... Args >
-struct variadic_has_type ;
-
-template< typename T >
-struct variadic_has_type<T> { enum { value = false }; };
-
-template< typename T , typename S , typename ... Args >
-struct variadic_has_type<T,S,Args...>
-{
-private:
-  enum { self_value = std::is_same<T,S>::value };
-  enum { next_value = variadic_has_type<T,Args...>::value };
-
-  static_assert( ! ( self_value && next_value )
-               , "Variadic pack cannot have duplicated type" );
-
-public:
-
-  enum { value = self_value || next_value };
-};
-
-template< template<typename> class Condition , typename ... Args >
-struct variadic_has_condition ;
-
-template< template<typename> class Condition >
-struct variadic_has_condition< Condition >
-{
-  enum { value = false };
-  typedef void type ;
-};
-
-template< template<typename> class Condition , typename S , typename ... Args >
-struct variadic_has_condition< Condition , S , Args... >
-{
-private:
-
-  enum { self_value = Condition<S>::value };
-
-  typedef variadic_has_condition< Condition , Args... > next ;
-
-  static_assert( ! ( self_value && next::value )
-               , "Variadic pack cannot have duplicated condition" );
-public:
-
-  enum { value = self_value || next::value };
-
-  typedef typename
-    std::conditional< self_value , S , typename next::type >::type
-      type ;
-};
-
-//----------------------------------------------------------------------------
-
 template< typename ... P >
 struct ViewAllocProp ;
 
-template<>
-struct ViewAllocProp< void , void >
+/*  std::integral_constant<unsigned,I> are dummy arguments
+ *  that avoid duplicate base class errors
+ */
+template< unsigned I >
+struct ViewAllocProp< void , std::integral_constant<unsigned,I> >
 {
   ViewAllocProp() = default ;
   ViewAllocProp( const ViewAllocProp & ) = default ;
@@ -168,6 +115,7 @@ struct ViewAllocProp< void , void >
   ViewAllocProp( const P & ) {}
 };
 
+/* Property flags have constexpr value */
 template< typename P >
 struct ViewAllocProp
   < typename std::enable_if<
@@ -188,6 +136,7 @@ struct ViewAllocProp
   static constexpr type value = type();
 };
 
+/* Map input label type to std::string */
 template< typename Label >
 struct ViewAllocProp
   < typename std::enable_if< is_view_label< Label >::value >::type
@@ -232,80 +181,37 @@ struct ViewAllocProp : public ViewAllocProp< void , P > ...
 {
 private:
 
-  template< typename T >
-  struct is_mem_space : public Kokkos::Impl::is_memory_space<T> {};
+  typedef Kokkos::Impl::has_condition< void , Kokkos::Impl::is_memory_space , P ... >
+    var_memory_space ;
 
-  template< typename T >
-  struct is_exe_space : public Kokkos::Impl::is_execution_space<T> {};
-
-  template< typename T >
-  struct is_label : public Impl::is_view_label<T> {};
-
-  typedef variadic_has_condition< is_mem_space , P ... > var_memory_space ;
-  typedef variadic_has_condition< is_exe_space , P ... > var_execution_space ;
-  typedef variadic_has_condition< is_label     , P ... > var_label ;
+  typedef Kokkos::Impl::has_condition< void , Kokkos::Impl::is_execution_space , P ... >
+    var_execution_space ;
 
 public:
 
-  enum { has_label           = var_label::value };
+  /* Flags for the common properties */
   enum { has_memory_space    = var_memory_space::value };
   enum { has_execution_space = var_execution_space::value };
-  enum { allow_padding       = variadic_has_type< AllowPadding_t , P... >::value };
-  enum { initialize          = ! variadic_has_type< WithoutInitializing_t , P ... >::value };
+  enum { has_label           = Kokkos::Impl::has_type< std::string , P... >::value };
+  enum { allow_padding       = Kokkos::Impl::has_type< AllowPadding_t , P... >::value };
+  enum { initialize          = ! Kokkos::Impl::has_type< WithoutInitializing_t , P ... >::value };
 
   typedef typename var_memory_space::type     memory_space ;
   typedef typename var_execution_space::type  execution_space ;
 
+  /*  Copy from a matching argument list.
+   *  Requires  std::is_same< P , ViewAllocProp< void , Args >::value ...
+   */
   template< typename ... Args >
-  ViewAllocProp( Args ... args )
+  ViewAllocProp( Args const & ... args )
     : ViewAllocProp< void , P >( args ) ...
     {}
 
+  /* Copy from a matching property subset */
   template< typename ... Args >
   ViewAllocProp( ViewAllocProp< Args ... > const & arg )
-    : ViewAllocProp< void , P >( arg.template value<P>() ) ...
+    : ViewAllocProp< void , Args >( ((ViewAllocProp<void,Args> const &) arg ) ) ...
     {}
-
-  template< typename T >
-  static constexpr bool has_value()
-    {
-      return ! std::is_same<T,void>::value &&
-             variadic_has_type<T,P...>::value ;
-    }
-
-  template< typename T >
-  int value( typename std::enable_if<
-               std::is_same<T,void>::value
-           >::type * = 0 ) const
-    { return 0 ; }
-  
-  template< typename T >
-  const T & value( typename std::enable_if<
-                     std::is_same<T,std::string>::value && has_label
-                   >::type * = 0 ) const
-    { return ViewAllocProp< void , typename var_label::type >::value ; }
-  
-  template< typename T >
-  T value( typename std::enable_if<
-                     std::is_same<T,std::string>::value && ! has_label
-                   >::type * = 0 ) const
-    { return T(); }
-
-  template< typename T >
-  const T & value( typename std::enable_if<
-                     ! std::is_same<T,void>::value &&
-                     ! std::is_same<T,std::string>::value &&
-                     variadic_has_type<T,P...>::value
-                   >::type * = 0 ) const
-    { return ViewAllocProp<void,T>::value ; }
-
-  template< typename T >
-  T value( typename std::enable_if<
-             ! std::is_same<T,void>::value &&
-             ! std::is_same<T,std::string>::value &&
-             ! variadic_has_type<T,P...>::value
-           >::type * = 0 ) const
-    { return T(); }
 };
 
 } /* namespace Impl */

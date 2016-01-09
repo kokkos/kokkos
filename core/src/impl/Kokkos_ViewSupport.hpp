@@ -395,8 +395,8 @@ struct ViewAllocateWithoutInitializing {
   const std::string label ;
 
   ViewAllocateWithoutInitializing() : label() {}
-  ViewAllocateWithoutInitializing( const std::string & arg_label ) : label( arg_label ) {}
-  ViewAllocateWithoutInitializing( const char * const  arg_label ) : label( arg_label ) {}
+  explicit ViewAllocateWithoutInitializing( const std::string & arg_label ) : label( arg_label ) {}
+  explicit ViewAllocateWithoutInitializing( const char * const  arg_label ) : label( arg_label ) {}
 };
 
 struct ViewAllocate {

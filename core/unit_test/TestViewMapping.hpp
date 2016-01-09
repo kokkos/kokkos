@@ -204,7 +204,8 @@ void test_view_mapping()
   {
     typedef Kokkos::Experimental::Impl::ViewOffset< dim_s0_s0_s4 , Kokkos::LayoutLeft > left_s0_s0_s4 ;
 
-    left_s0_s0_s4 dyn_off3( std::integral_constant<unsigned,sizeof(int)>(), 2, 3, 0, 0, 0, 0, 0, 0 );
+    left_s0_s0_s4 dyn_off3( std::integral_constant<unsigned,sizeof(int)>()
+                          , Kokkos::LayoutLeft( 2, 3, 0, 0, 0, 0, 0, 0 ) );
 
     stride_s0_s0_s0  stride3( dyn_off3 );
 
@@ -242,7 +243,8 @@ void test_view_mapping()
 
     typedef Kokkos::Experimental::Impl::ViewOffset< dim_s0_s0_s4 , Kokkos::LayoutLeft > left_s0_s0_s4 ;
 
-    left_s0_s0_s4 dyn_off3( std::integral_constant<unsigned,sizeof(int)>(), N0, N1, 0, 0, 0, 0, 0, 0 );
+    left_s0_s0_s4 dyn_off3( std::integral_constant<unsigned,sizeof(int)>()
+                          , Kokkos::LayoutLeft( N0, N1, 0, 0, 0, 0, 0, 0 ) );
 
     stride_s0_s0_s0  stride3( dyn_off3 );
 
@@ -314,7 +316,8 @@ void test_view_mapping()
   {
     typedef Kokkos::Experimental::Impl::ViewOffset< dim_s0_s0_s4 , Kokkos::LayoutRight > right_s0_s0_s4 ;
 
-    right_s0_s0_s4 dyn_off3( std::integral_constant<unsigned,sizeof(int)>(), 2, 3, 0, 0, 0, 0, 0, 0 );
+    right_s0_s0_s4 dyn_off3( std::integral_constant<unsigned,sizeof(int)>()
+                           , Kokkos::LayoutRight( 2, 3, 0, 0, 0, 0, 0, 0 ) );
 
     stride_s0_s0_s0  stride3( dyn_off3 );
 
@@ -352,7 +355,8 @@ void test_view_mapping()
 
     typedef Kokkos::Experimental::Impl::ViewOffset< dim_s0_s0_s4 , Kokkos::LayoutRight > right_s0_s0_s4 ;
 
-    right_s0_s0_s4 dyn_off3( std::integral_constant<unsigned,sizeof(int)>(), N0, N1, 0, 0, 0, 0, 0, 0 );
+    right_s0_s0_s4 dyn_off3( std::integral_constant<unsigned,sizeof(int)>()
+                           , Kokkos::LayoutRight( N0, N1, 0, 0, 0, 0, 0, 0 ) );
 
     stride_s0_s0_s0  stride3( dyn_off3 );
 
@@ -428,7 +432,8 @@ void test_view_mapping()
 
     typedef Kokkos::Experimental::Impl::ViewOffset< dim_s0_s0_s4 , Kokkos::LayoutLeft > left_s0_s0_s4 ;
 
-    left_s0_s0_s4 dyn_off3( std::integral_constant<unsigned,sizeof(int)>(), N0, N1, 0, 0, 0, 0, 0, 0 );
+    left_s0_s0_s4 dyn_off3( std::integral_constant<unsigned,sizeof(int)>()
+                          , Kokkos::LayoutLeft( N0, N1, 0, 0, 0, 0, 0, 0 ) );
 
     Kokkos::Experimental::Impl::SubviewExtents< 3 , 3 >
       sub( dyn_off3.m_dim
@@ -466,7 +471,8 @@ void test_view_mapping()
 
     typedef Kokkos::Experimental::Impl::ViewOffset< dim_s0_s0_s4 , Kokkos::LayoutRight > right_s0_s0_s4 ;
 
-    right_s0_s0_s4 dyn_off3( std::integral_constant<unsigned,sizeof(int)>(), N0, N1, 0, 0, 0, 0, 0, 0 );
+    right_s0_s0_s4 dyn_off3( std::integral_constant<unsigned,sizeof(int)>()
+                           , Kokkos::LayoutRight( N0, N1, 0, 0, 0, 0, 0, 0 ) );
 
     Kokkos::Experimental::Impl::SubviewExtents< 3 , 3 >
       sub( dyn_off3.m_dim

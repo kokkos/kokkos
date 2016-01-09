@@ -403,18 +403,12 @@ constexpr Kokkos::Experimental::Impl::AllowPadding_t
  */
 template< class ... Args >
 inline
-Impl::ViewAllocProp<
-  typename Impl::ViewAllocProp< void ,
-  typename std::remove_const<
-  typename std::remove_reference< Args >::type >::type >::type ... >
-view_alloc( Args ... args )
+Impl::ViewAllocProp< typename Impl::ViewAllocProp< void , Args >::type ... >
+view_alloc( Args const & ... args )
 {
   return
-    Kokkos::Experimental::Impl::ViewAllocProp<
-      typename Impl::ViewAllocProp< void ,
-      typename std::remove_const<
-      typename std::remove_reference< Args >::type >::type >::type ...
-    >( args... );
+    Impl::ViewAllocProp< typename Impl::ViewAllocProp< void , Args >::type ... >
+      ( args... );
 }
 
 } /* namespace Experimental */
@@ -1115,34 +1109,38 @@ public:
     { return m_track.template get_label< typename traits::memory_space >(); }
 
   //----------------------------------------
-  // Allocation according to allocation properties and dimensions
+  // Allocation according to allocation properties and array layout
 
   template< class ... P >
   explicit inline
   View( const Impl::ViewAllocProp< P ... > & arg_prop
-      , const size_t arg_N0 = 0
-      , const size_t arg_N1 = 0
-      , const size_t arg_N2 = 0
-      , const size_t arg_N3 = 0
-      , const size_t arg_N4 = 0
-      , const size_t arg_N5 = 0
-      , const size_t arg_N6 = 0
-      , const size_t arg_N7 = 0
+      , const typename traits::array_layout & arg_layout
       )
     : m_track()
     , m_map()
     {
-      // Append label and spaces if not input
+      // Append layout and spaces if not input
       typedef Impl::ViewAllocProp< P ... > alloc_prop_input ;
 
+      // use 'std::integral_constant<unsigned,I>' for non-types
+      // to avoid duplicate class error.
       typedef Impl::ViewAllocProp
         < P ...
         , typename std::conditional
-            < alloc_prop_input::has_memory_space , void
-            , typename traits::device_type::memory_space >::type
+            < alloc_prop_input::has_label
+            , std::integral_constant<unsigned,0>
+            , typename std::string
+            >::type
         , typename std::conditional
-            < alloc_prop_input::has_execution_space , void
-            , typename traits::device_type::execution_space >::type
+            < alloc_prop_input::has_memory_space
+            , std::integral_constant<unsigned,1>
+            , typename traits::device_type::memory_space
+            >::type
+        , typename std::conditional
+            < alloc_prop_input::has_execution_space
+            , std::integral_constant<unsigned,2>
+            , typename traits::device_type::execution_space
+            >::type
         > alloc_prop ;
 
       static_assert( traits::is_managed
@@ -1155,16 +1153,46 @@ public:
         Kokkos::Impl::throw_runtime_exception("Constructing View and initializing data with uninitialized execution space");
       }
 
+      // Copy the input allocation properties with possibly defaulted properties
+      alloc_prop prop( arg_prop );
+
       Kokkos::Experimental::Impl::SharedAllocationRecord<> *
-        record = m_map.allocate_shared
-          ( alloc_prop( arg_prop )
-          , arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7 );
+        record = m_map.allocate_shared( prop , arg_layout );
 
       // Setup and initialization complete, start tracking
       m_track.assign_allocated_record_to_uninitialized( record );
     }
 
-  // Disambiguate label constructor from subview constructor.
+  // Simple dimension-only layout
+  template< class ... P >
+  explicit inline
+  View( const Impl::ViewAllocProp< P ... > & arg_prop
+      , const size_t arg_N0 = 0
+      , const size_t arg_N1 = 0
+      , const size_t arg_N2 = 0
+      , const size_t arg_N3 = 0
+      , const size_t arg_N4 = 0
+      , const size_t arg_N5 = 0
+      , const size_t arg_N6 = 0
+      , const size_t arg_N7 = 0
+      )
+    : View( arg_prop
+          , typename traits::array_layout
+              ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+              , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+          )
+    {}
+
+  // Label and layout
+  template< typename Label >
+  explicit inline
+  View( const Label & arg_label
+      , const typename traits::array_layout & arg_layout
+      )
+    : View( Impl::ViewAllocProp< std::string >( arg_label ) , arg_layout )
+    {}
+
+  // Label and layout, must disambiguate from subview constructor.
   template< typename Label >
   explicit inline
   View( const Label & arg_label
@@ -1178,41 +1206,23 @@ public:
       , const size_t arg_N6 = 0
       , const size_t arg_N7 = 0
       )
-    : m_track()
-    , m_map()
-    {
-      // Append default memory and execution spaces
-      typedef Impl::ViewAllocProp
-        < std::string
-        , typename traits::device_type::memory_space
-        , typename traits::device_type::execution_space
-        > alloc_prop ;
-
-      static_assert( traits::is_managed
-                   , "View allocation constructor requires managed memory" );
-
-      if ( alloc_prop::initialize &&
-           ! alloc_prop::execution_space::is_initialized() ) {
-        // If initializing view data then
-        // the execution space must be initialized.
-        Kokkos::Impl::throw_runtime_exception("Constructing View and initializing data with uninitialized execution space");
-      }
-
-      const alloc_prop prop( arg_label
-                           , typename traits::device_type::memory_space()
-                           , typename traits::device_type::execution_space()
-                           );
-
-      Kokkos::Experimental::Impl::SharedAllocationRecord<> *
-        record = m_map.allocate_shared
-          ( prop
-          , arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7 );
-
-      // Setup and initialization complete, start tracking
-      m_track.assign_allocated_record_to_uninitialized( record );
-    }
+    : View( Impl::ViewAllocProp< std::string >( arg_label )
+          , typename traits::array_layout
+              ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+              , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+          )
+    {}
 
   // For backward compatibility
+  explicit inline
+  View( const ViewAllocateWithoutInitializing & arg_prop
+      , const typename traits::array_layout & arg_layout
+      )
+    : View( Impl::ViewAllocProp< std::string , Kokkos::Experimental::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::Experimental::WithoutInitializing )
+          , arg_layout
+          )
+    {}
+
   explicit inline
   View( const ViewAllocateWithoutInitializing & arg_prop
       , const size_t arg_N0 = 0
@@ -1224,157 +1234,12 @@ public:
       , const size_t arg_N6 = 0
       , const size_t arg_N7 = 0
       )
-    : m_track()
-    , m_map()
-    {
-      typedef Impl::ViewAllocProp
-        < std::string
-        , typename traits::device_type::memory_space
-        , typename traits::device_type::execution_space
-        , Kokkos::Experimental::Impl::WithoutInitializing_t
-        > alloc_prop ;
-
-      static_assert( traits::is_managed , "View allocation constructor requires managed memory" );
-
-      if ( alloc_prop::initialize &&
-           ! alloc_prop::execution_space::is_initialized() ) {
-        // If initializing view data then
-        // the execution space must be initialized.
-        Kokkos::Impl::throw_runtime_exception("Constructing View and initializing data with uninitialized execution space");
-      }
-
-      const alloc_prop
-        prop( arg_prop.label
-            , typename traits::device_type::memory_space()
-            , typename traits::device_type::execution_space()
-            , Kokkos::Experimental::WithoutInitializing );
-
-      Kokkos::Experimental::Impl::SharedAllocationRecord<> *
-        record = m_map.allocate_shared
-          ( prop
-          , arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7 );
-
-      // Setup and initialization complete, start tracking
-      m_track.assign_allocated_record_to_uninitialized( record );
-    }
-
-  //----------------------------------------
-  // Allocation according to allocation properties and layout
-
-  template< class ... P >
-  explicit inline
-  View( const Impl::ViewAllocProp< P ... > & arg_prop
-      , const typename traits::array_layout & arg_layout
-      )
-    : m_track()
-    , m_map()
-    {
-      // Append spaces if unspecified
-      typedef Impl::ViewAllocProp< P ... > alloc_prop_input ;
-
-      typedef Impl::ViewAllocProp
-        < P ...
-        , typename std::conditional
-            < alloc_prop_input::has_memory_space , void
-            , typename traits::device_type::memory_space >::type
-        , typename std::conditional
-            < alloc_prop_input::has_execution_space , void
-            , typename traits::device_type::execution_space >::type
-        > alloc_prop ;
-
-      static_assert( traits::is_managed
-                   , "View allocation constructor requires managed memory" );
-
-      if ( alloc_prop::initialize &&
-           ! alloc_prop::execution_space::is_initialized() ) {
-        // If initializing view data then
-        // the execution space must be initialized.
-        Kokkos::Impl::throw_runtime_exception("Constructing View and initializing data with uninitialized execution space");
-      }
-
-      Kokkos::Experimental::Impl::SharedAllocationRecord<> *
-        record = m_map.allocate_shared
-          ( alloc_prop( arg_prop ) , arg_layout );
-
-      // Setup and initialization complete, start tracking
-      m_track.assign_allocated_record_to_uninitialized( record );
-    }
-
-  // Disambiguate label constructor from subview constructor.
-  template< typename Label >
-  explicit inline
-  View( const Label & arg_label
-      , typename std::enable_if< Kokkos::Experimental::Impl::is_view_label<Label>::value ,
-          const typename traits::array_layout >::type & arg_layout
-      )
-    : m_track()
-    , m_map()
-    {
-      // Append default memory and execution spaces
-      typedef Impl::ViewAllocProp
-        < std::string
-        , typename traits::device_type::memory_space
-        , typename traits::device_type::execution_space
-        > alloc_prop ;
-
-      static_assert( traits::is_managed
-                   , "View allocation constructor requires managed memory" );
-
-      if ( alloc_prop::initialize &&
-           ! alloc_prop::execution_space::is_initialized() ) {
-        // If initializing view data then
-        // the execution space must be initialized.
-        Kokkos::Impl::throw_runtime_exception("Constructing View and initializing data with uninitialized execution space");
-      }
-
-      const alloc_prop prop( arg_label
-                           , typename traits::device_type::memory_space()
-                           , typename traits::device_type::execution_space()
-                           );
-
-      Kokkos::Experimental::Impl::SharedAllocationRecord<> *
-        record = m_map.allocate_shared( prop , arg_layout );
-
-      // Setup and initialization complete, start tracking
-      m_track.assign_allocated_record_to_uninitialized( record );
-    }
-
-  // For backward compatibility
-  explicit inline
-  View( const ViewAllocateWithoutInitializing & arg_prop
-      , const typename traits::array_layout & arg_layout
-      )
-    : m_track()
-    , m_map()
-    {
-      typedef Impl::ViewAllocProp
-        < std::string
-        , typename traits::device_type::memory_space
-        , typename traits::device_type::execution_space
-        , Kokkos::Experimental::Impl::WithoutInitializing_t
-        > alloc_prop ;
-
-      static_assert( traits::is_managed , "View allocation constructor requires managed memory" );
-
-      if ( alloc_prop::initialize &&
-           ! alloc_prop::execution_space::is_initialized() ) {
-        // If initializing view data then
-        // the execution space must be initialized.
-        Kokkos::Impl::throw_runtime_exception("Constructing View and initializing data with uninitialized execution space");
-      }
-
-      const alloc_prop
-        prop( arg_prop.label
-            , typename traits::device_type::memory_space()
-            , typename traits::device_type::execution_space()
-            , Kokkos::Experimental::WithoutInitializing );
-
-      Kokkos::Experimental::Impl::SharedAllocationRecord<> *
-        record = m_map.allocate_shared( prop , arg_layout );
-
-      // Setup and initialization complete, start tracking
-      m_track.assign_allocated_record_to_uninitialized( record );
-    }
+    : View( Impl::ViewAllocProp< std::string , Kokkos::Experimental::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::Experimental::WithoutInitializing )
+          , typename traits::array_layout
+              ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+              , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+          )
+    {}
 
   //----------------------------------------
   // Memory span required to wrap these dimensions.
@@ -1388,8 +1253,10 @@ public:
                                      , const size_t arg_N7 = 0
                                      )
     {
-      return map_type::memory_span( arg_N0 , arg_N1 , arg_N2 , arg_N3
-                                  , arg_N4 , arg_N5 , arg_N6 , arg_N7 );
+      return map_type::memory_span(
+        typename traits::array_layout
+          ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+          , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) );
     }
 
   explicit KOKKOS_INLINE_FUNCTION
@@ -1405,8 +1272,10 @@ public:
       )
     : m_track() // No memory tracking
     , m_map( arg_ptr
-           , arg_N0 , arg_N1 , arg_N2 , arg_N3
-           , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+           , typename traits::array_layout
+              ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+              , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+           )
     {}
 
   explicit KOKKOS_INLINE_FUNCTION
@@ -1447,10 +1316,14 @@ public:
     : m_track() // No memory tracking
     , m_map( reinterpret_cast<pointer_type>(
        arg_space.get_shmem(
-         map_type::memory_span( arg_N0 , arg_N1 , arg_N2 , arg_N3
-                              , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) ) )
-         , arg_N0 , arg_N1 , arg_N2 , arg_N3
-         , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+         map_type::memory_span(
+           typename traits::array_layout
+            ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+            , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) ) ) )
+         , typename traits::array_layout
+            ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+            , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+       )
     {}
 };
 
