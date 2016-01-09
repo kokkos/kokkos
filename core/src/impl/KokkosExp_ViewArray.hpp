@@ -295,9 +295,11 @@ public:
 
   //----------------------------------------
 
-  template< class ... P , class ... Args >
+  template< class ... P >
   SharedAllocationRecord<> *
-  allocate_shared( const ViewAllocProp< P... > & prop , Args ... args )
+  allocate_shared( ViewAllocProp< P... > const & prop
+                 , typename Traits::array_layout const & layout
+                 )
   {
     typedef ViewAllocProp< P... > alloc_prop ;
 
@@ -307,57 +309,37 @@ public:
     typedef SharedAllocationRecord< memory_space , functor_type > record_type ;
 
     // Query the mapping for byte-size of allocation.
-    typedef std::integral_constant< unsigned , alloc_prop::allow_padding >  padding ;
+    typedef std::integral_constant< unsigned ,
+      alloc_prop::allow_padding ? sizeof(scalar_type) : 0 > padding ;
 
-    m_offset = offset_type( padding(), args... );
+    m_offset = offset_type( padding(), layout );
 
     const size_t alloc_size =
       ( m_offset.span() * Array_N * MemorySpanSize + MemorySpanMask ) & ~size_t(MemorySpanMask);
 
     // Allocate memory from the memory space and create tracking record.
     record_type * const record =
-      record_type::allocate( prop.template value<memory_space>()
-                           , prop.template value<std::string>()
+      record_type::allocate( ((ViewAllocProp<void,memory_space> const &) prop ).value
+                           , ((ViewAllocProp<void,std::string>  const &) prop ).value
                            , alloc_size );
 
-    m_handle =
-      handle_type( reinterpret_cast< pointer_type >( record->data() ) );
+    if ( alloc_size ) {
+      m_handle =
+        handle_type( reinterpret_cast< pointer_type >( record->data() ) );
 
-    if ( prop.initialize ) {
-      // The functor constructs and destroys
-      record->m_destroy = functor_type( prop.template value<execution_space>()
-                                      , (pointer_type) m_handle
-                                      , m_offset.span() * Array_N
-                                      );
+      if ( alloc_prop::initialize ) {
+        // The functor constructs and destroys
+        record->m_destroy = functor_type( ((ViewAllocProp<void,execution_space> const & )prop).value
+                                        , (pointer_type) m_handle
+                                        , m_offset.span() * Array_N
+                                        );
 
-      record->m_destroy.construct_shared_allocation();
+        record->m_destroy.construct_shared_allocation();
+      }
     }
 
     return record ;
   }
-
-  //----------------------------------------
-  // If the View is to construct or destroy the elements.
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  void operator()( const size_t i ) const
-    {
-      reference_type ref( m_handle + i * Array_S , Array_N , m_stride );
-      for ( size_t j = 0 ; j < Array_N ; ++j ) ref[j] = 0 ;
-    }
-
-  template< class ExecSpace >
-  void construct( const ExecSpace & space ) const
-    {
-      typedef Kokkos::RangePolicy< ExecSpace , size_t > Policy ;
-
-      const Kokkos::Impl::ParallelFor< ViewMapping , Policy > closure( *this , Policy( 0 , m_stride ) );
-      closure.execute();
-      ExecSpace::fence();
-    }
-
-  template< class ExecSpace >
-  void destroy( const ExecSpace & ) const {}
 };
 
 //----------------------------------------------------------------------------
@@ -463,30 +445,32 @@ public:
       // Array dimension becomes the last dimension.
       // Arguments beyond the destination rank are ignored.
       if ( src.span_is_contiguous() ) { // not padded
-        dst.m_offset = dst_offset_type( std::integral_constant<unsigned,0>()
-                                      , ( 0 < SrcType::Rank ? src.dimension_0() : SrcTraits::value_type::size() )
-                                      , ( 1 < SrcType::Rank ? src.dimension_1() : SrcTraits::value_type::size() )
-                                      , ( 2 < SrcType::Rank ? src.dimension_2() : SrcTraits::value_type::size() )
-                                      , ( 3 < SrcType::Rank ? src.dimension_3() : SrcTraits::value_type::size() )
-                                      , ( 4 < SrcType::Rank ? src.dimension_4() : SrcTraits::value_type::size() )
-                                      , ( 5 < SrcType::Rank ? src.dimension_5() : SrcTraits::value_type::size() )
-                                      , ( 6 < SrcType::Rank ? src.dimension_6() : SrcTraits::value_type::size() )
-                                      , ( 7 < SrcType::Rank ? src.dimension_7() : SrcTraits::value_type::size() )
-                                      );
+        dst.m_offset = dst_offset_type( std::integral_constant<unsigned,0>() ,
+          typename DstTraits::array_layout
+            ( ( 0 < SrcType::Rank ? src.dimension_0() : SrcTraits::value_type::size() )
+            , ( 1 < SrcType::Rank ? src.dimension_1() : SrcTraits::value_type::size() )
+            , ( 2 < SrcType::Rank ? src.dimension_2() : SrcTraits::value_type::size() )
+            , ( 3 < SrcType::Rank ? src.dimension_3() : SrcTraits::value_type::size() )
+            , ( 4 < SrcType::Rank ? src.dimension_4() : SrcTraits::value_type::size() )
+            , ( 5 < SrcType::Rank ? src.dimension_5() : SrcTraits::value_type::size() )
+            , ( 6 < SrcType::Rank ? src.dimension_6() : SrcTraits::value_type::size() )
+            , ( 7 < SrcType::Rank ? src.dimension_7() : SrcTraits::value_type::size() )
+            ) );
       }
       else { // is padded
         typedef std::integral_constant<unsigned,sizeof(typename SrcTraits::value_type::value_type)> padded ;
 
-        dst.m_offset = dst_offset_type( padded()
-                                      , ( 0 < SrcType::Rank ? src.dimension_0() : SrcTraits::value_type::size() )
-                                      , ( 1 < SrcType::Rank ? src.dimension_1() : SrcTraits::value_type::size() )
-                                      , ( 2 < SrcType::Rank ? src.dimension_2() : SrcTraits::value_type::size() )
-                                      , ( 3 < SrcType::Rank ? src.dimension_3() : SrcTraits::value_type::size() )
-                                      , ( 4 < SrcType::Rank ? src.dimension_4() : SrcTraits::value_type::size() )
-                                      , ( 5 < SrcType::Rank ? src.dimension_5() : SrcTraits::value_type::size() )
-                                      , ( 6 < SrcType::Rank ? src.dimension_6() : SrcTraits::value_type::size() )
-                                      , ( 7 < SrcType::Rank ? src.dimension_7() : SrcTraits::value_type::size() )
-                                      );
+        dst.m_offset = dst_offset_type( padded() ,
+          typename DstTraits::array_layout
+            ( ( 0 < SrcType::Rank ? src.dimension_0() : SrcTraits::value_type::size() )
+            , ( 1 < SrcType::Rank ? src.dimension_1() : SrcTraits::value_type::size() )
+            , ( 2 < SrcType::Rank ? src.dimension_2() : SrcTraits::value_type::size() )
+            , ( 3 < SrcType::Rank ? src.dimension_3() : SrcTraits::value_type::size() )
+            , ( 4 < SrcType::Rank ? src.dimension_4() : SrcTraits::value_type::size() )
+            , ( 5 < SrcType::Rank ? src.dimension_5() : SrcTraits::value_type::size() )
+            , ( 6 < SrcType::Rank ? src.dimension_6() : SrcTraits::value_type::size() )
+            , ( 7 < SrcType::Rank ? src.dimension_7() : SrcTraits::value_type::size() )
+            ) );
       }
 
       dst.m_handle = src.m_handle ;

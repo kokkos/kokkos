@@ -207,10 +207,10 @@ struct LayoutTileLeft {
 
   KOKKOS_INLINE_FUNCTION
   constexpr
-  LayoutTileLeft( size_t N0 = 0 , size_t N1 = 0 , size_t N2 = 0 , size_t N3 = 0
-                , size_t N4 = 0 , size_t N5 = 0 , size_t N6 = 0 , size_t N7 = 0
+  LayoutTileLeft( size_t argN0 = 0 , size_t argN1 = 0 , size_t argN2 = 0 , size_t argN3 = 0
+                , size_t argN4 = 0 , size_t argN5 = 0 , size_t argN6 = 0 , size_t argN7 = 0
                 )
-    : dimension { N0 , N1 , N2 , N3 , N4 , N5 , N6 , N7 } {}
+    : dimension { argN0 , argN1 , argN2 , argN3 , argN4 , argN5 , argN6 , argN7 } {}
 };
 
 } // namespace Kokkos

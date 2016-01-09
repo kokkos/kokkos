@@ -147,11 +147,10 @@ public:
 
   template< unsigned TrivialScalarSize >
   KOKKOS_INLINE_FUNCTION
-  constexpr ViewOffset( std::integral_constant<unsigned,TrivialScalarSize> const &
-                      , size_t aN0   , size_t aN1
-                      , unsigned , unsigned , unsigned , unsigned , unsigned , unsigned )
-    : m_dim( aN0, aN1, 0, 0, 0, 0, 0, 0 )
-    , m_tile_N0( ( aN0 + MASK_0 ) >> SHIFT_0 /* number of tiles in first dimension */ )
+  constexpr ViewOffset( std::integral_constant<unsigned,TrivialScalarSize> const & ,
+                        array_layout const layout )
+    : m_dim( layout.dimension[0], layout.dimension[1], 0, 0, 0, 0, 0, 0 )
+    , m_tile_N0( ( layout.dimension[0] + MASK_0 ) >> SHIFT_0 /* number of tiles in first dimension */ )
     {}
 };
 

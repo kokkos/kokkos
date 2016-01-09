@@ -1299,8 +1299,10 @@ public:
                      const size_t arg_N6 = 0 ,
                      const size_t arg_N7 = 0 )
   {
-    return map_type::memory_span( arg_N0 , arg_N1 , arg_N2 , arg_N3
-                                , arg_N4 , arg_N5 , arg_N6 , arg_N7 );
+    return map_type::memory_span(
+           typename traits::array_layout
+            ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+            , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) );
   }
 
   explicit KOKKOS_INLINE_FUNCTION
