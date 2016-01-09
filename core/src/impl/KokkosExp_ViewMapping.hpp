@@ -751,9 +751,9 @@ public:
   typedef typename ViewDataType< non_const_value_type , dimension >::type  non_const_type ;
 
   // Generate "flattened" multidimensional array specification type.
-  typedef type            array_scalar_type ;
-  typedef const_type      const_array_scalar_type ;
-  typedef non_const_type  non_const_array_scalar_type ;
+  typedef type            scalar_array_type ;
+  typedef const_type      const_scalar_array_type ;
+  typedef non_const_type  non_const_scalar_array_type ;
 };
 
 }}} // namespace Kokkos::Experimental::Impl

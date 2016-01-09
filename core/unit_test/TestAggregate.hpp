@@ -728,7 +728,7 @@ void TestViewAggregate()
 
 
   typedef Kokkos::ViewTraits< value_type ** , DeviceType > a32_traits ;
-  typedef Kokkos::ViewTraits< typename a32_traits::array_scalar_type , DeviceType > flat_traits ;
+  typedef Kokkos::ViewTraits< typename a32_traits::scalar_array_type , DeviceType > flat_traits ;
 
   static_assert( std::is_same< typename a32_traits::specialize , Kokkos::Array<> >::value , "" );
   static_assert( std::is_same< typename a32_traits::value_type , value_type >::value , "" );

@@ -571,10 +571,10 @@ void test_view_mapping()
     static_assert( std::is_same< typename a_const_int_r1::type , const int * >::value , "" );
     static_assert( std::is_same< typename a_const_int_r1::value_type , const int >::value , "" );
 
-    static_assert( std::is_same< typename a_const_int_r1::array_scalar_type , const int * >::value , "" );
+    static_assert( std::is_same< typename a_const_int_r1::scalar_array_type , const int * >::value , "" );
     static_assert( std::is_same< typename a_const_int_r1::const_type , const int * >::value , "" );
     static_assert( std::is_same< typename a_const_int_r1::const_value_type , const int >::value , "" );
-    static_assert( std::is_same< typename a_const_int_r1::const_array_scalar_type , const int * >::value , "" );
+    static_assert( std::is_same< typename a_const_int_r1::const_scalar_array_type , const int * >::value , "" );
     static_assert( std::is_same< typename a_const_int_r1::non_const_type , int * >::value , "" );
     static_assert( std::is_same< typename a_const_int_r1::non_const_value_type , int >::value , "" );
 
@@ -586,13 +586,13 @@ void test_view_mapping()
 
     static_assert( std::is_same< typename a_const_int_r3::type , const int**[4] >::value , "" );
     static_assert( std::is_same< typename a_const_int_r3::value_type , const int >::value , "" );
-    static_assert( std::is_same< typename a_const_int_r3::array_scalar_type , const int**[4] >::value , "" );
+    static_assert( std::is_same< typename a_const_int_r3::scalar_array_type , const int**[4] >::value , "" );
     static_assert( std::is_same< typename a_const_int_r3::const_type , const int**[4] >::value , "" );
     static_assert( std::is_same< typename a_const_int_r3::const_value_type , const int >::value , "" );
-    static_assert( std::is_same< typename a_const_int_r3::const_array_scalar_type , const int**[4] >::value , "" );
+    static_assert( std::is_same< typename a_const_int_r3::const_scalar_array_type , const int**[4] >::value , "" );
     static_assert( std::is_same< typename a_const_int_r3::non_const_type , int**[4] >::value , "" );
     static_assert( std::is_same< typename a_const_int_r3::non_const_value_type , int >::value , "" );
-    static_assert( std::is_same< typename a_const_int_r3::non_const_array_scalar_type , int**[4] >::value , "" );
+    static_assert( std::is_same< typename a_const_int_r3::non_const_scalar_array_type , int**[4] >::value , "" );
 
 
     // std::cout << "typeid(const int**[4]).name() = " << typeid(const int**[4]).name() << std::endl ;
@@ -624,9 +624,9 @@ void test_view_mapping()
     ASSERT_TRUE( ( std::is_same< typename T::const_data_type     , const int* >::value ) );
     ASSERT_TRUE( ( std::is_same< typename T::non_const_data_type , int* >::value ) );
 
-    ASSERT_TRUE( ( std::is_same< typename T::array_scalar_type           , int* >::value ) );
-    ASSERT_TRUE( ( std::is_same< typename T::const_array_scalar_type     , const int* >::value ) );
-    ASSERT_TRUE( ( std::is_same< typename T::non_const_array_scalar_type , int* >::value ) );
+    ASSERT_TRUE( ( std::is_same< typename T::scalar_array_type           , int* >::value ) );
+    ASSERT_TRUE( ( std::is_same< typename T::const_scalar_array_type     , const int* >::value ) );
+    ASSERT_TRUE( ( std::is_same< typename T::non_const_scalar_array_type , int* >::value ) );
 
     ASSERT_TRUE( ( std::is_same< typename T::value_type           , int >::value ) );
     ASSERT_TRUE( ( std::is_same< typename T::const_value_type     , const int >::value ) );
@@ -641,9 +641,9 @@ void test_view_mapping()
     ASSERT_TRUE( ( std::is_same< typename C::const_data_type     , const int* >::value ) );
     ASSERT_TRUE( ( std::is_same< typename C::non_const_data_type , int* >::value ) );
 
-    ASSERT_TRUE( ( std::is_same< typename C::array_scalar_type           , const int* >::value ) );
-    ASSERT_TRUE( ( std::is_same< typename C::const_array_scalar_type     , const int* >::value ) );
-    ASSERT_TRUE( ( std::is_same< typename C::non_const_array_scalar_type , int* >::value ) );
+    ASSERT_TRUE( ( std::is_same< typename C::scalar_array_type           , const int* >::value ) );
+    ASSERT_TRUE( ( std::is_same< typename C::const_scalar_array_type     , const int* >::value ) );
+    ASSERT_TRUE( ( std::is_same< typename C::non_const_scalar_array_type , int* >::value ) );
 
     ASSERT_TRUE( ( std::is_same< typename C::value_type           , const int >::value ) );
     ASSERT_TRUE( ( std::is_same< typename C::const_value_type     , const int >::value ) );
@@ -684,9 +684,9 @@ void test_view_mapping()
     ASSERT_TRUE( ( std::is_same< typename T::const_data_type     , const int* >::value ) );
     ASSERT_TRUE( ( std::is_same< typename T::non_const_data_type , int* >::value ) );
 
-    ASSERT_TRUE( ( std::is_same< typename T::array_scalar_type           , int* >::value ) );
-    ASSERT_TRUE( ( std::is_same< typename T::const_array_scalar_type     , const int* >::value ) );
-    ASSERT_TRUE( ( std::is_same< typename T::non_const_array_scalar_type , int* >::value ) );
+    ASSERT_TRUE( ( std::is_same< typename T::scalar_array_type           , int* >::value ) );
+    ASSERT_TRUE( ( std::is_same< typename T::const_scalar_array_type     , const int* >::value ) );
+    ASSERT_TRUE( ( std::is_same< typename T::non_const_scalar_array_type , int* >::value ) );
 
     ASSERT_TRUE( ( std::is_same< typename T::value_type           , int >::value ) );
     ASSERT_TRUE( ( std::is_same< typename T::const_value_type     , const int >::value ) );

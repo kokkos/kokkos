@@ -89,9 +89,9 @@ public:
   typedef typename ViewDataType<     const_value_type , dimension >::type  const_type ;
   typedef typename ViewDataType< non_const_value_type , dimension >::type  non_const_type ;
 
-  typedef typename ViewDataType<           scalar_type , array_scalar_dimension >::type  array_scalar_type ;
-  typedef typename ViewDataType<     const_scalar_type , array_scalar_dimension >::type  const_array_scalar_type ;
-  typedef typename ViewDataType< non_const_scalar_type , array_scalar_dimension >::type  non_const_array_scalar_type ;
+  typedef typename ViewDataType<           scalar_type , array_scalar_dimension >::type  scalar_array_type ;
+  typedef typename ViewDataType<     const_scalar_type , array_scalar_dimension >::type  const_scalar_array_type ;
+  typedef typename ViewDataType< non_const_scalar_type , array_scalar_dimension >::type  non_const_scalar_array_type ;
 };
 
 }}} // namespace Kokkos::Experimental::Impl
@@ -428,7 +428,7 @@ public:
 
   // Can only convert to View::array_type
 
-  enum { is_assignable = std::is_same< typename DstTraits::data_type ,    typename SrcTraits::array_scalar_type >::value &&
+  enum { is_assignable = std::is_same< typename DstTraits::data_type ,    typename SrcTraits::scalar_array_type >::value &&
                          std::is_same< typename DstTraits::array_layout , typename SrcTraits::array_layout >::value };
 
   typedef Kokkos::Experimental::Impl::SharedAllocationTracker  TrackType ;

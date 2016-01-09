@@ -240,9 +240,9 @@ public:
   //------------------------------------
   // Compatible array of trivial type traits:
 
-  typedef typename data_analysis::array_scalar_type            array_scalar_type ;
-  typedef typename data_analysis::const_array_scalar_type      const_array_scalar_type ;
-  typedef typename data_analysis::non_const_array_scalar_type  non_const_array_scalar_type ;
+  typedef typename data_analysis::scalar_array_type            scalar_array_type ;
+  typedef typename data_analysis::const_scalar_array_type      const_scalar_array_type ;
+  typedef typename data_analysis::non_const_scalar_array_type  non_const_scalar_array_type ;
 
   //------------------------------------
   // Value type traits:
@@ -446,7 +446,7 @@ public:
 
   //----------------------------------------
   /** \brief  Compatible view of array of scalar types */
-  typedef View< typename traits::array_scalar_type ,
+  typedef View< typename traits::scalar_array_type ,
                 typename traits::array_layout ,
                 typename traits::device_type ,
                 typename traits::memory_traits > 
@@ -482,6 +482,12 @@ public:
   typename std::enable_if< std::is_integral<iType>::value , size_t >::type
   extent( const iType & r ) const
     { return m_map.extent(r); }
+
+  template< typename iType >
+  KOKKOS_INLINE_FUNCTION constexpr
+  typename std::enable_if< std::is_integral<iType>::value , int >::type
+  extent_int( const iType & r ) const
+    { return static_cast<int>(m_map.extent(r)); }
 
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_0() const { return m_map.dimension_0(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_1() const { return m_map.dimension_1(); }
