@@ -25,8 +25,8 @@ KOKKOS_CXXFLAGS +=	\
 	-I${KOKKOS_PATH}/example/common	\
 	-I${KOKKOS_PATH}/example/fixture
 
-OBJ_EXAMPLE_FIXTURE = Main.o TestFixture.o BoxElemPart.o
 EXE_EXAMPLE_FIXTURE = KokkosExample_Fixture
+OBJ_EXAMPLE_FIXTURE = Main.o TestFixture.o BoxElemPart.o
 
 TARGETS = $(EXE_EXAMPLE_FIXTURE)
 
@@ -35,15 +35,14 @@ TARGETS = $(EXE_EXAMPLE_FIXTURE)
 $(EXE_EXAMPLE_FIXTURE) : $(OBJ_EXAMPLE_FIXTURE) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_EXAMPLE_FIXTURE) $(KOKKOS_LIBS) $(LIB) -o $(EXE_EXAMPLE_FIXTURE)
 
-
 build_all : $(TARGETS)
-
 
 test : build_all
 
+clean: kokkos-clean
+	rm -f *.o $(TARGETS)
 
 # Compilation rules
 
 %.o:%.cpp $(KOKKOS_CPP_DEPENDS) $(EXAMPLE_HEADERS)
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) $(EXTRA_INC) -c $<
-
