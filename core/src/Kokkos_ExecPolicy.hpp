@@ -48,7 +48,7 @@
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_StaticAssert.hpp>
 #include <impl/Kokkos_Tags.hpp>
-
+#include <iostream>
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
@@ -220,15 +220,6 @@ private:
 
   typedef Impl::PolicyTraits<Properties ... > traits;
 
-  // Default integral type and blocking factor:
-  enum { Granularity = 8 };
-
-  // Only accept the integral type if the blocking is a power of two
-  static_assert( Impl::is_integral_power_of_two( Granularity )
-               , "RangePolicy blocking granularity must be power of two" );
-
-  enum { GranularityMask = typename traits::index_type(Granularity) - 1 };
-
   typename traits::execution_space m_space ;
   typename traits::index_type  m_begin ;
   typename traits::index_type  m_end ;
@@ -253,8 +244,8 @@ public:
     : m_space()
     , m_begin( work_begin < work_end ? work_begin : 0 )
     , m_end(   work_begin < work_end ? work_end : 0 )
-    , m_granularity(Granularity)
-    , m_granularity_mask(m_granularity-1)
+    , m_granularity(0)
+    , m_granularity_mask(0)
     {}
 
   /** \brief  Total range */
@@ -266,52 +257,35 @@ public:
     : m_space( work_space )
     , m_begin( work_begin < work_end ? work_begin : 0 )
     , m_end(   work_begin < work_end ? work_end : 0 )
-    , m_granularity(Granularity)
-    , m_granularity_mask(m_granularity-1)
+    , m_granularity(0)
+    , m_granularity_mask(0)
     {}
-
-  /** \brief  Total range */
-  inline
-  RangePolicy( const member_type work_begin
-             , const member_type work_end
-             , const ChunkSize chunk
-             )
-    : m_space()
-    , m_begin( work_begin < work_end ? work_begin : 0 )
-    , m_end(   work_begin < work_end ? work_end : 0 )
-    {
-      m_granularity = chunk.chunk_size;
-
-      m_granularity_mask = m_granularity - 1;
-    }
-
-  /** \brief  Total range */
-  inline
-  RangePolicy( const typename traits::execution_space & work_space
-             , const member_type work_begin
-             , const member_type work_end
-             , const ChunkSize chunk
-             )
-    : m_space( work_space )
-    , m_begin( work_begin < work_end ? work_begin : 0 )
-    , m_end(   work_begin < work_end ? work_end : 0 )
-    {
-      m_granularity = chunk.chunk_size;      
-      m_granularity_mask = m_granularity - 1;
-    }
 
   public:
 
+     /** \brief return chunk_size */
      inline member_type chunk_size() const {
        return m_granularity;
      }
 
-     inline RangePolicy set_chunk_size(int concurrency) {
+     /** \brief set chunk_size to a discrete value*/
+     inline RangePolicy set_chunk_size(int chunk_size) const {
+       RangePolicy p = *this;
+       p.m_granularity = chunk_size;
+       p.m_granularity_mask = p.m_granularity - 1;
+       return p;
+     }
+
+     /** \brief finalize chunk_size if it was set to AUTO*/
+     inline RangePolicy internal_finalize_chunk_size(int concurrency) const {
+
        if(m_granularity > 0) {
          if(!Impl::is_integral_power_of_two( m_granularity ))
            Kokkos::abort("RangePolicy blocking granularity must be power of two" );
          return *this;
        }
+
+       RangePolicy p = *this;
 
        member_type new_chunk_size = 1;
        while(new_chunk_size*100*concurrency < m_end-m_begin)
@@ -321,9 +295,9 @@ public:
          while( (new_chunk_size*40*concurrency < m_end-m_begin ) && (new_chunk_size<128) )
            new_chunk_size*=2;
        }
-       m_granularity = new_chunk_size;
-       m_granularity_mask = m_granularity - 1;
-       return *this;
+       p.m_granularity = new_chunk_size;
+       p.m_granularity_mask = p.m_granularity - 1;
+       return p;
      }
 
   /** \brief  Subrange for a partition's rank and size.
@@ -474,7 +448,9 @@ public:
 
   inline typename traits::index_type chunk_size() const ;
 
-  inline TeamPolicyInternal set_chunk_size(int concurrency) ;
+  inline TeamPolicyInternal set_chunk_size(int chunk_size) const ;
+
+  inline TeamPolicyInternal internal_finalize_chunk_size(int concurrency) const ;
 
   /** \brief  Parallel execution of a functor calls the functor once with
    *          each member of the execution policy.

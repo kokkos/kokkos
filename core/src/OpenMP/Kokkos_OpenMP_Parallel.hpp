@@ -165,7 +165,7 @@ public:
   ParallelFor( const FunctorType & arg_functor
              , Policy arg_policy )
     : m_functor( arg_functor )
-    , m_policy(  arg_policy.set_chunk_size(OpenMPexec::pool_size()) )
+    , m_policy(  arg_policy.internal_finalize_chunk_size(OpenMPexec::pool_size()) )
     {}
 };
 
@@ -339,7 +339,7 @@ public:
                 , Policy       arg_policy
                 , const ViewType    & arg_result_view )
     : m_functor( arg_functor )
-    , m_policy(  arg_policy.set_chunk_size(OpenMPexec::pool_size()) )
+    , m_policy(  arg_policy.internal_finalize_chunk_size(OpenMPexec::pool_size()) )
     , m_result_ptr(  arg_result_view.ptr_on_device() )
     {
       static_assert( Kokkos::is_view< ViewType >::value
@@ -483,7 +483,7 @@ public:
   ParallelScan( const FunctorType & arg_functor
               , const Policy      & arg_policy )
     : m_functor( arg_functor )
-    , m_policy(  arg_policy )
+    , m_policy(  arg_policy.internal_finalize_chunk_size(OpenMPexec::pool_size()) )
   {}
 
   //----------------------------------------
@@ -581,7 +581,7 @@ public:
   ParallelFor( const FunctorType & arg_functor ,
                const Policy      & arg_policy )
     : m_functor( arg_functor )
-    , m_policy(  arg_policy )
+    , m_policy(  arg_policy.internal_finalize_chunk_size() )
     , m_shmem_size( arg_policy.scratch_size() + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
     {}
 };
@@ -682,7 +682,7 @@ public:
                   const Policy       & arg_policy ,
                   const ViewType     & arg_result )
     : m_functor( arg_functor )
-    , m_policy(  arg_policy )
+    , m_policy(  arg_policy.internal_finalize_chunk_size() )
     , m_result_ptr( arg_result.ptr_on_device() )
     , m_shmem_size( arg_policy.scratch_size() + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
     {}

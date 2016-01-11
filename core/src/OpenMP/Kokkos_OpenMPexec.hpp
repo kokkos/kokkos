@@ -277,20 +277,6 @@ public:
       return current_steal_target;
   }
 
-  // Claim (steal) a work index from another thread
-  // First try to find another thread with non-exhausted work_range
-  // Then steal from it
-  /*inline long steal_work_index () {
-    long index = -1;
-    int steal_target = get_steal_target();
-    while ( (steal_target != -1) && (index == -1)) {
-      index = m_pool[steal_target]->get_work_index_end();
-      if(index == -1)
-        steal_target = get_steal_target();
-    }
-    return index;
-  }*/
-
   inline long steal_work_index (int team_size = 0) {
     long index = -1;
     int steal_target = team_size>0?get_steal_target(team_size):get_steal_target();
@@ -301,20 +287,6 @@ public:
     }
     return index;
   }
-
-  // Get a work index. Claim from owned range until its exhausted, then steal from other thread
-  /*inline long get_work_index () {
-    long work_index = -1;
-    if(!stealing) work_index = get_work_index_begin();
-    if( work_index == -1) {
-      memory_fence();
-      stealing = true;
-      work_index = steal_work_index();
-    }
-    team_work_index = work_index;
-    memory_fence();
-    return work_index;
-  }*/
 
   // Get a work index. Claim from owned range until its exhausted, then steal from other thread
   inline long get_work_index (int team_size = 0) {
@@ -765,7 +737,7 @@ public:
             , int team_size_request
             , int /* vector_length_request */ = 1 )
             : m_scratch_size ( 0 )
-            , m_chunk_size(2)
+            , m_chunk_size(0)
     { init( league_size_request , team_size_request ); }
 
   TeamPolicyInternal( typename traits::execution_space &
@@ -773,21 +745,21 @@ public:
             , const Kokkos::AUTO_t & /* team_size_request */
             , int /* vector_length_request */ = 1)
             : m_scratch_size ( 0 )
-            , m_chunk_size(2)
+            , m_chunk_size(0)
     { init( league_size_request , traits::execution_space::thread_pool_size(2) ); }
 
   TeamPolicyInternal( int league_size_request
             , int team_size_request
             , int /* vector_length_request */ = 1 )
             : m_scratch_size ( 0 )
-            , m_chunk_size(2)
+            , m_chunk_size(0)
     { init( league_size_request , team_size_request ); }
 
   TeamPolicyInternal( int league_size_request
             , const Kokkos::AUTO_t & /* team_size_request */
             , int /* vector_length_request */ = 1 )
             : m_scratch_size ( 0 )
-            , m_chunk_size(2)
+            , m_chunk_size(0)
     { init( league_size_request , traits::execution_space::thread_pool_size(2) ); }
 
   template<class MemorySpace>
@@ -795,7 +767,7 @@ public:
             , int team_size_request
             , const Experimental::TeamScratchRequest<MemorySpace> & scratch_request )
             : m_scratch_size(scratch_request.total(team_size_request))
-            , m_chunk_size(2)
+            , m_chunk_size(0)
     { init(league_size_request,team_size_request); }
 
 
@@ -804,13 +776,46 @@ public:
             , const Kokkos::AUTO_t & /* team_size_request */
             , const Experimental::TeamScratchRequest<MemorySpace> & scratch_request )
             : m_scratch_size(scratch_request.total(traits::execution_space::thread_pool_size(2)))
-            , m_chunk_size(2)
+            , m_chunk_size(0)
     { init(league_size_request,traits::execution_space::thread_pool_size(2)); }
 
   inline int team_alloc() const { return m_team_alloc ; }
   inline int team_iter()  const { return m_team_iter ; }
 
   inline int chunk_size() const { return m_chunk_size ; }
+
+  /** \brief set chunk_size to a discrete value*/
+  inline TeamPolicyInternal set_chunk_size(typename traits::index_type chunk_size) const {
+    TeamPolicyInternal p = *this;
+    p.m_chunk_size = chunk_size;
+    return p;
+  }
+
+  /** \brief finalize chunk_size if it was set to AUTO*/
+  inline TeamPolicyInternal internal_finalize_chunk_size() const {
+
+    typename traits::index_type concurrency = traits::execution_space::thread_pool_size(0)/m_team_alloc;
+
+    if(m_chunk_size > 0) {
+      if(!Impl::is_integral_power_of_two( m_chunk_size ))
+        Kokkos::abort("TeamPolicy blocking granularity must be power of two" );
+      return *this;
+    }
+
+    TeamPolicyInternal p = *this;
+
+    typename traits::index_type new_chunk_size = 1;
+    while(new_chunk_size*100*concurrency < m_league_size)
+      new_chunk_size *= 2;
+    if(new_chunk_size < 128) {
+      new_chunk_size = 1;
+      while( (new_chunk_size*40*concurrency < m_league_size ) && (new_chunk_size<128) )
+        new_chunk_size*=2;
+    }
+    p.m_chunk_size = new_chunk_size;
+    return p;
+  }
+
   typedef Impl::OpenMPexecTeamMember member_type ;
 };
 } // namespace Impl
