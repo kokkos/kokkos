@@ -67,6 +67,20 @@ struct Schedule {
   typedef ScheduleType schedule_type;
 };
 
+//Specif Iteration Index Type
+template<typename iType>
+struct IndexType {
+  typedef iType index_type;
+};
+
+struct ChunkSize {
+  long chunk_size;
+  ChunkSize(const long& value):chunk_size(value) {}
+  ChunkSize(const Kokkos::AUTO_t&):chunk_size(0) {}
+};
+
+namespace Impl {
+
 template<class Arg>
 struct is_schedule_type {
   enum { value = 0};
@@ -75,12 +89,6 @@ struct is_schedule_type {
 template<class ScheduleType>
 struct is_schedule_type<Schedule<ScheduleType> > {
   enum {value = 1 };
-};
-
-//Specif Iteration Index Type
-template<typename iType>
-struct IndexType {
-  typedef iType index_type;
 };
 
 template<class Arg>
@@ -93,7 +101,6 @@ struct is_index_type<IndexType<iType> > {
   enum { value = 1 };
 };
 
-namespace Impl {
 //Policy Traits
 template<class ... Properties>
 struct PolicyTraits;
@@ -183,11 +190,9 @@ struct PolicyTraits {
 
 }
 
-struct ChunkSize {
-  long chunk_size;
-  ChunkSize(const long& value):chunk_size(value) {}
-  ChunkSize(const Kokkos::AUTO_t&):chunk_size(0) {}
-};
+}
+
+namespace Kokkos {
 /** \brief  Execution policy for work over a range of an integral type.
  *
  * Valid template argument options:
@@ -303,7 +308,7 @@ public:
 
      inline RangePolicy set_chunk_size(int concurrency) {
        if(m_granularity > 0) {
-         if(!Impl::is_integral_power_of_two( chunk_size ))
+         if(!Impl::is_integral_power_of_two( m_granularity ))
            Kokkos::abort("RangePolicy blocking granularity must be power of two" );
          return *this;
        }
@@ -405,50 +410,15 @@ public:
 
 }
 
-/** \brief  Execution policy for parallel work over a league of teams of threads.
- *
- *  The work functor is called for each thread of each team such that
- *  the team's member threads are guaranteed to be concurrent.
- *
- *  The team's threads have access to team shared scratch memory and
- *  team collective operations.
- *
- *  If the WorkTag is non-void then the first calling argument of the
- *  work functor's parentheses operator is 'const WorkTag &'.
- *  This allows a functor to have multiple work member functions.
- *
- *  template argument option with specified execution space:
- *    < ExecSpace , WorkTag >
- *    < ExecSpace , void >
- *
- *  template argument option with default execution space:
- *    < WorkTag , void >
- *    < void , void >
- */
-template< class Arg0 = void
-        , class Arg1 = void
-        , class ExecSpace =
-          // If the first argument is not an execution
-          // then use the default execution space.
-          typename std::conditional
-            < Impl::is_execution_space< Arg0 >::value , Arg0
-            , Kokkos::DefaultExecutionSpace >::type
-        >
-class TeamPolicy {
+namespace Impl {
+
+
+template< class ExecSpace, class ... Properties>
+class TeamPolicyInternal: public Impl::PolicyTraits<Properties ... > {
 private:
-
-  enum { Arg0_ExecSpace = Impl::is_execution_space< Arg0 >::value };
-  enum { Arg1_Void      = Impl::is_same< Arg1 , void >::value };
-  enum { ArgOption_OK   = Impl::StaticAssert< ( Arg0_ExecSpace || Arg1_Void ) >::value };
-
-  typedef typename std::conditional< Arg0_ExecSpace , Arg1 , Arg0 >::type WorkTag ;
+  typedef Impl::PolicyTraits<Properties ... > traits;
 
 public:
-
-  //! Tag this class as an execution policy
-  typedef TeamPolicy  execution_policy ;
-  typedef ExecSpace   execution_space ;
-  typedef WorkTag     work_tag ;
 
   //----------------------------------------
   /** \brief  Query maximum team size for a given functor.
@@ -473,20 +443,20 @@ public:
   static int team_size_recommended( const FunctorType & , const int&);
   //----------------------------------------
   /** \brief  Construct policy with the given instance of the execution space */
-  TeamPolicy( const execution_space & , int league_size_request , int team_size_request , int vector_length_request = 1 );
+  TeamPolicyInternal( const typename traits::execution_space & , int league_size_request , int team_size_request , int vector_length_request = 1 );
 
-  TeamPolicy( const execution_space & , int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 );
+  TeamPolicyInternal( const typename traits::execution_space & , int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 );
 
   /** \brief  Construct policy with the default instance of the execution space */
-  TeamPolicy( int league_size_request , int team_size_request , int vector_length_request = 1 );
+  TeamPolicyInternal( int league_size_request , int team_size_request , int vector_length_request = 1 );
 
-  TeamPolicy( int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 );
-
-  template<class MemorySpace>
-  TeamPolicy( int league_size_request , int team_size_request , const Experimental::TeamScratchRequest<MemorySpace>& team_scratch_memory_request );
+  TeamPolicyInternal( int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 );
 
   template<class MemorySpace>
-  TeamPolicy( int league_size_request , const Kokkos::AUTO_t & , const Experimental::TeamScratchRequest<MemorySpace>& team_scratch_memory_request );
+  TeamPolicyInternal( int league_size_request , int team_size_request , const Experimental::TeamScratchRequest<MemorySpace>& team_scratch_memory_request );
+
+  template<class MemorySpace>
+  TeamPolicyInternal( int league_size_request , const Kokkos::AUTO_t & , const Experimental::TeamScratchRequest<MemorySpace>& team_scratch_memory_request );
 
   /** \brief  The actual league size (number of teams) of the policy.
    *
@@ -502,6 +472,10 @@ public:
    */
   KOKKOS_INLINE_FUNCTION int team_size() const ;
 
+  inline typename traits::index_type chunk_size() const ;
+
+  inline TeamPolicyInternal set_chunk_size(int concurrency) ;
+
   /** \brief  Parallel execution of a functor calls the functor once with
    *          each member of the execution policy.
    */
@@ -509,7 +483,7 @@ public:
 
     /** \brief  Handle to the currently executing team shared scratch memory */
     KOKKOS_INLINE_FUNCTION
-    typename execution_space::scratch_memory_space team_shmem() const ;
+    typename traits::execution_space::scratch_memory_space team_shmem() const ;
 
     /** \brief  Rank of this team within the league of teams */
     KOKKOS_INLINE_FUNCTION int league_rank() const ;
@@ -552,6 +526,63 @@ public:
     template< typename Type >
     KOKKOS_INLINE_FUNCTION Type team_scan( const Type & value , Type * const global_accum ) const ;
   };
+};
+}
+
+/** \brief  Execution policy for parallel work over a league of teams of threads.
+ *
+ *  The work functor is called for each thread of each team such that
+ *  the team's member threads are guaranteed to be concurrent.
+ *
+ *  The team's threads have access to team shared scratch memory and
+ *  team collective operations.
+ *
+ *  If the WorkTag is non-void then the first calling argument of the
+ *  work functor's parentheses operator is 'const WorkTag &'.
+ *  This allows a functor to have multiple work member functions.
+ *
+ *  Order of template arguments does not matter, since the implementation
+ *  uses variadic templates. Each and any of the template arguments can
+ *  be omitted.
+ *
+ *  Possible Template arguments and there default values:
+ *    ExecutionSpace (DefaultExecutionSpace): where to execute code. Must be enabled.
+ *    WorkTag (none): Tag which is used as the first argument for the functor operator.
+ *    Schedule<Type> (Schedule<Static>): Scheduling Policy (Dynamic, or Static).
+ *    IndexType<Type> (IndexType<ExecutionSpace::size_type>: Integer Index type used to iterate over the Index space.
+ */
+template< class ... Properties>
+class TeamPolicy: public
+  Impl::TeamPolicyInternal<
+     typename Impl::PolicyTraits<Properties ... >::execution_space,
+     Properties ...> {
+  typedef Impl::TeamPolicyInternal<
+       typename Impl::PolicyTraits<Properties ... >::execution_space,
+       Properties ...> internal_policy;
+  typedef Impl::PolicyTraits<Properties ... > traits;
+
+public:
+  /** \brief  Construct policy with the given instance of the execution space */
+  TeamPolicy( const typename traits::execution_space & , int league_size_request , int team_size_request , int vector_length_request = 1 )
+    : internal_policy(typename traits::execution_space(),league_size_request,team_size_request, vector_length_request) {}
+
+  TeamPolicy( const typename traits::execution_space & , int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 )
+    : internal_policy(typename traits::execution_space(),league_size_request,Kokkos::AUTO(), vector_length_request) {}
+
+  /** \brief  Construct policy with the default instance of the execution space */
+  TeamPolicy( int league_size_request , int team_size_request , int vector_length_request = 1 )
+    : internal_policy(league_size_request,team_size_request, vector_length_request) {}
+
+  TeamPolicy( int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 )
+    : internal_policy(league_size_request,Kokkos::AUTO(), vector_length_request) {}
+
+  template<class MemorySpace>
+  TeamPolicy( int league_size_request , int team_size_request , const Experimental::TeamScratchRequest<MemorySpace>& team_scratch_memory_request )
+    : internal_policy(league_size_request,team_size_request, team_scratch_memory_request) {}
+
+  template<class MemorySpace>
+  TeamPolicy( int league_size_request , const Kokkos::AUTO_t & , const Experimental::TeamScratchRequest<MemorySpace>& team_scratch_memory_request )
+    : internal_policy(league_size_request,Kokkos::AUTO(), team_scratch_memory_request) {}
 };
 
 } // namespace Kokkos

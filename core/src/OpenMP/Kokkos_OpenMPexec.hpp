@@ -50,6 +50,8 @@
 
 #include <Kokkos_Atomic.hpp>
 #include <iostream>
+#include <sstream>
+#include <fstream>
 namespace Kokkos {
 namespace Impl {
 
@@ -174,6 +176,9 @@ public:
   int current_steal_target;
   // This thread's owned work_range
   Kokkos::pair<long,long> work_range;
+  // Team Offset if one thread determines work_range for others
+  long team_work_index;
+
   // Is this thread stealing (i.e. its owned work_range is exhausted
   bool stealing;
 
@@ -233,6 +238,14 @@ public:
     stealing = false;
   }
 
+  // Reset the steal target
+  inline void reset_steal_target(int team_size) {
+    current_steal_target = (m_pool_rank_rev+team_size);
+    if(current_steal_target>=m_pool_topo[0])
+      current_steal_target = 0;//m_pool_topo[0]-1;
+    stealing = false;
+  }
+
   // Get a steal target; start with my-rank + 1 and go round robin, until arriving at this threads rank
   // Returns -1 fi no active steal target available
   inline int get_steal_target() {
@@ -247,10 +260,27 @@ public:
       return current_steal_target;
   }
 
+  inline int get_steal_target(int team_size) {
+
+    while(( m_pool[current_steal_target]->work_range.second <=
+            m_pool[current_steal_target]->work_range.first  ) &&
+          (current_steal_target!=m_pool_rank_rev) ) {
+      if(current_steal_target + team_size < m_pool_topo[0])
+        current_steal_target = (current_steal_target+team_size);
+      else
+        current_steal_target = 0;
+    }
+
+    if(current_steal_target == m_pool_rank_rev)
+      return -1;
+    else
+      return current_steal_target;
+  }
+
   // Claim (steal) a work index from another thread
   // First try to find another thread with non-exhausted work_range
   // Then steal from it
-  inline long steal_work_index () {
+  /*inline long steal_work_index () {
     long index = -1;
     int steal_target = get_steal_target();
     while ( (steal_target != -1) && (index == -1)) {
@@ -259,10 +289,21 @@ public:
         steal_target = get_steal_target();
     }
     return index;
+  }*/
+
+  inline long steal_work_index (int team_size = 0) {
+    long index = -1;
+    int steal_target = team_size>0?get_steal_target(team_size):get_steal_target();
+    while ( (steal_target != -1) && (index == -1)) {
+      index = m_pool[steal_target]->get_work_index_end();
+      if(index == -1)
+        steal_target = team_size>0?get_steal_target(team_size):get_steal_target();
+    }
+    return index;
   }
-  
+
   // Get a work index. Claim from owned range until its exhausted, then steal from other thread
-  inline long get_work_index () {
+  /*inline long get_work_index () {
     long work_index = -1;
     if(!stealing) work_index = get_work_index_begin();
     if( work_index == -1) {
@@ -270,6 +311,22 @@ public:
       stealing = true;
       work_index = steal_work_index();
     }
+    team_work_index = work_index;
+    memory_fence();
+    return work_index;
+  }*/
+
+  // Get a work index. Claim from owned range until its exhausted, then steal from other thread
+  inline long get_work_index (int team_size = 0) {
+    long work_index = -1;
+    if(!stealing) work_index = get_work_index_begin();
+    if( work_index == -1) {
+      memory_fence();
+      stealing = true;
+      work_index = steal_work_index(team_size);
+    }
+    team_work_index = work_index;
+    memory_fence();
     return work_index;
   }
 
@@ -285,7 +342,7 @@ namespace Kokkos {
 namespace Impl {
 
 class OpenMPexecTeamMember {
-private:
+public:
 
   enum { TEAM_REDUCE_SIZE = 512 };
 
@@ -306,12 +363,19 @@ private:
   int                   m_league_end ;
   int                   m_league_size ;
 
+  int                   m_chunk_size;
+  int                   m_league_chunk_end;
+  Impl::OpenMPexec    & m_team_lead_exec ;
+  int                   m_invalid_thread;
+  int                   m_team_alloc;
+
   // Fan-in team threads, root of the fan-in which does not block returns true
   inline
   bool team_fan_in() const
     {
       memory_fence();
       for ( int n = 1 , j ; ( ( j = m_team_rank_rev + n ) < m_team_size ) && ! ( m_team_rank_rev & n ) ; n <<= 1 ) {
+
         m_exec.pool_rev( m_team_base_rev + j )->state_wait( Active );
       }
 
@@ -350,7 +414,7 @@ public:
     {}
 #else
     {
-      if ( 1 < m_team_size ) {
+      if ( 1 < m_team_size && !m_invalid_thread) {
         team_fan_in();
         team_fan_out();
       }
@@ -516,10 +580,10 @@ private:
 
 public:
 
-  template< class Arg0 , class Arg1 >
+  template< class ... Properties >
   inline
   OpenMPexecTeamMember( Impl::OpenMPexec & exec
-                      , const TeamPolicy< Arg0 , Arg1 , Kokkos::OpenMP > & team
+                      , const TeamPolicyInternal< OpenMP, Properties ...> & team
                       , const int shmem_size
                       )
     : m_exec( exec )
@@ -532,26 +596,54 @@ public:
     , m_league_rank(0)
     , m_league_end(0)
     , m_league_size( team.league_size() )
+    , m_chunk_size( team.chunk_size() )
+    , m_league_chunk_end(0)
+    , m_team_lead_exec( *exec.pool_rev( team.team_alloc() * (m_exec.pool_rank_rev()/team.team_alloc()) ))
+    , m_team_alloc( team.team_alloc())
     {
       const int pool_rank_rev        = m_exec.pool_rank_rev();
       const int pool_team_rank_rev   = pool_rank_rev % team.team_alloc();
       const int pool_league_rank_rev = pool_rank_rev / team.team_alloc();
-      const int league_iter_end      = team.league_size() - pool_league_rank_rev * team.team_iter();
+      const int pool_num_teams       = OpenMP::thread_pool_size(0)/team.team_alloc();
+      const int chunk_size           = team.chunk_size()>0?team.chunk_size():team.team_iter();
+      const int chunks_per_team      = ( team.league_size() + chunk_size*pool_num_teams-1 ) / (chunk_size*pool_num_teams);
+            int league_iter_end      = team.league_size() - pool_league_rank_rev * chunks_per_team * chunk_size;
+            int league_iter_begin    = league_iter_end - chunks_per_team * chunk_size;
+      if (league_iter_begin < 0)     league_iter_begin = 0;
+      if (league_iter_end>team.league_size()) league_iter_end = team.league_size();
 
+      if ((team.team_alloc()>m_team_size)?
+          (pool_team_rank_rev >= m_team_size):
+          (m_exec.pool_size() - pool_num_teams*m_team_size > m_exec.pool_rank())
+         )
+        m_invalid_thread = 1;
+      else
+        m_invalid_thread = 0;
+
+      m_team_rank_rev  = pool_team_rank_rev ;
       if ( pool_team_rank_rev < m_team_size && 0 < league_iter_end ) {
         m_team_base_rev  = team.team_alloc() * pool_league_rank_rev ;
         m_team_rank_rev  = pool_team_rank_rev ;
         m_team_rank      = m_team_size - ( m_team_rank_rev + 1 );
         m_league_end     = league_iter_end ;
-        m_league_rank    = league_iter_end > team.team_iter() ? league_iter_end - team.team_iter() : 0 ;
+        m_league_rank    = league_iter_begin ;
         new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_shmem );
       }
+
+      if ( (m_team_rank_rev == 0) && (m_invalid_thread == 0) ) {
+        m_exec.set_work_range(m_league_rank,m_league_end,m_chunk_size);
+        m_exec.reset_steal_target(m_team_size);
+      }
+
+#pragma omp barrier
     }
 
-  bool valid() const
-    { return m_league_rank < m_league_end ; }
+  bool valid_static() const
+    {
+      return m_league_rank < m_league_end ;
+    }
 
-  void next()
+  void next_static()
     {
       if ( ++m_league_rank < m_league_end ) {
         team_barrier();
@@ -559,44 +651,71 @@ public:
       }
     }
 
+  bool valid_dynamic() {
+    if(m_invalid_thread)
+      return false;
+    if ((m_league_rank < m_league_chunk_end) && (m_league_rank < m_league_size)) {
+      return true;
+    }
+
+    if (  m_team_rank_rev == 0 ) {
+      m_team_lead_exec.get_work_index(m_team_alloc);
+    }
+    team_barrier();
+
+    long work_index = m_team_lead_exec.team_work_index;
+
+    m_league_rank = work_index * m_chunk_size;
+    m_league_chunk_end = (work_index +1 ) * m_chunk_size;
+
+    if(m_league_chunk_end > m_league_size) m_league_chunk_end = m_league_size;
+
+    if(m_league_rank>=0)
+      return true;
+    return false;
+  }
+
+  void next_dynamic() {
+    if(m_invalid_thread)
+      return;
+
+    team_barrier();
+    if ( ++m_league_rank < m_league_chunk_end ) {
+      new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_shmem );
+    }
+  }
+
   static inline int team_reduce_size() { return TEAM_REDUCE_SIZE ; }
 };
 
 
 
-} // namespace Impl
-
-template< class Arg0 , class Arg1 >
-class TeamPolicy< Arg0 , Arg1 , Kokkos::OpenMP >
+template< class ... Properties >
+class TeamPolicyInternal< Kokkos::OpenMP, Properties ... >: public PolicyTraits<Properties ...>
 {
 public:
 
   //! Tag this class as a kokkos execution policy
-  typedef TeamPolicy      execution_policy ;
+  typedef TeamPolicyInternal      execution_policy ;
 
-  //! Execution space of this execution policy.
-  typedef Kokkos::OpenMP  execution_space ;
-
-  typedef typename
-    Impl::if_c< ! Impl::is_same< Kokkos::OpenMP , Arg0 >::value , Arg0 , Arg1 >::type
-      work_tag ;
+  typedef PolicyTraits<Properties ... > traits;
 
   //----------------------------------------
 
   template< class FunctorType >
   inline static
   int team_size_max( const FunctorType & )
-    { return execution_space::thread_pool_size(1); }
+    { return traits::execution_space::thread_pool_size(1); }
 
   template< class FunctorType >
   inline static
   int team_size_recommended( const FunctorType & )
-    { return execution_space::thread_pool_size(2); }
+    { return traits::execution_space::thread_pool_size(2); }
 
   template< class FunctorType >
   inline static
   int team_size_recommended( const FunctorType &, const int& )
-    { return execution_space::thread_pool_size(2); }
+    { return traits::execution_space::thread_pool_size(2); }
 
   //----------------------------------------
 
@@ -609,12 +728,14 @@ private:
 
   size_t m_scratch_size;
 
+  int m_chunk_size;
+
   inline void init( const int league_size_request
                   , const int team_size_request )
     {
-      const int pool_size  = execution_space::thread_pool_size(0);
-      const int team_max   = execution_space::thread_pool_size(1);
-      const int team_grain = execution_space::thread_pool_size(2);
+      const int pool_size  = traits::execution_space::thread_pool_size(0);
+      const int team_max   = traits::execution_space::thread_pool_size(1);
+      const int team_grain = traits::execution_space::thread_pool_size(2);
 
       m_league_size = league_size_request ;
 
@@ -639,52 +760,61 @@ public:
   inline size_t scratch_size() const { return m_scratch_size ; }
 
   /** \brief  Specify league size, request team size */
-  TeamPolicy( execution_space &
+  TeamPolicyInternal( typename traits::execution_space &
             , int league_size_request
             , int team_size_request
             , int /* vector_length_request */ = 1 )
             : m_scratch_size ( 0 )
+            , m_chunk_size(2)
     { init( league_size_request , team_size_request ); }
 
-  TeamPolicy( execution_space &
+  TeamPolicyInternal( typename traits::execution_space &
             , int league_size_request
             , const Kokkos::AUTO_t & /* team_size_request */
             , int /* vector_length_request */ = 1)
             : m_scratch_size ( 0 )
-    { init( league_size_request , execution_space::thread_pool_size(2) ); }
+            , m_chunk_size(2)
+    { init( league_size_request , traits::execution_space::thread_pool_size(2) ); }
 
-  TeamPolicy( int league_size_request
+  TeamPolicyInternal( int league_size_request
             , int team_size_request
             , int /* vector_length_request */ = 1 )
             : m_scratch_size ( 0 )
+            , m_chunk_size(2)
     { init( league_size_request , team_size_request ); }
 
-  TeamPolicy( int league_size_request
+  TeamPolicyInternal( int league_size_request
             , const Kokkos::AUTO_t & /* team_size_request */
             , int /* vector_length_request */ = 1 )
             : m_scratch_size ( 0 )
-    { init( league_size_request , execution_space::thread_pool_size(2) ); }
+            , m_chunk_size(2)
+    { init( league_size_request , traits::execution_space::thread_pool_size(2) ); }
 
   template<class MemorySpace>
-  TeamPolicy( int league_size_request
+  TeamPolicyInternal( int league_size_request
             , int team_size_request
             , const Experimental::TeamScratchRequest<MemorySpace> & scratch_request )
             : m_scratch_size(scratch_request.total(team_size_request))
+            , m_chunk_size(2)
     { init(league_size_request,team_size_request); }
 
 
   template<class MemorySpace>
-  TeamPolicy( int league_size_request
+  TeamPolicyInternal( int league_size_request
             , const Kokkos::AUTO_t & /* team_size_request */
             , const Experimental::TeamScratchRequest<MemorySpace> & scratch_request )
-            : m_scratch_size(scratch_request.total(execution_space::thread_pool_size(2)))
-    { init(league_size_request,execution_space::thread_pool_size(2)); }
+            : m_scratch_size(scratch_request.total(traits::execution_space::thread_pool_size(2)))
+            , m_chunk_size(2)
+    { init(league_size_request,traits::execution_space::thread_pool_size(2)); }
 
   inline int team_alloc() const { return m_team_alloc ; }
   inline int team_iter()  const { return m_team_iter ; }
 
+  inline int chunk_size() const { return m_chunk_size ; }
   typedef Impl::OpenMPexecTeamMember member_type ;
 };
+} // namespace Impl
+
 
 } // namespace Kokkos
 
