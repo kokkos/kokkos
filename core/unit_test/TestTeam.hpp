@@ -53,17 +53,17 @@
 namespace Test {
 namespace {
 
-template< class ExecSpace >
+template< class ExecSpace, class ScheduleType >
 struct TestTeamPolicy {
 
-  typedef typename Kokkos::TeamPolicy< ExecSpace >::member_type team_member ;
+  typedef typename Kokkos::TeamPolicy< ScheduleType,  ExecSpace >::member_type team_member ;
   typedef Kokkos::View<int**,ExecSpace> view_type ;
 
   view_type m_flags ;
 
   TestTeamPolicy( const size_t league_size )
     : m_flags( Kokkos::ViewAllocateWithoutInitializing("flags")
-             , Kokkos::TeamPolicy< ExecSpace >::team_size_max( *this )
+             , Kokkos::TeamPolicy< ScheduleType,  ExecSpace >::team_size_max( *this )
              , league_size )
     {}
 
@@ -93,10 +93,10 @@ struct TestTeamPolicy {
     {
       TestTeamPolicy functor( league_size );
 
-      const int team_size = Kokkos::TeamPolicy< ExecSpace >::team_size_max( functor );
+      const int team_size = Kokkos::TeamPolicy< ScheduleType,  ExecSpace >::team_size_max( functor );
 
-      Kokkos::parallel_for( Kokkos::TeamPolicy< ExecSpace >( league_size , team_size ) , functor );
-      Kokkos::parallel_for( Kokkos::TeamPolicy< ExecSpace , VerifyInitTag >( league_size , team_size ) , functor );
+      Kokkos::parallel_for( Kokkos::TeamPolicy< ScheduleType,  ExecSpace >( league_size , team_size ) , functor );
+      Kokkos::parallel_for( Kokkos::TeamPolicy< ScheduleType,  ExecSpace , VerifyInitTag >( league_size , team_size ) , functor );
     }
 
   struct ReduceTag {};
@@ -119,15 +119,15 @@ struct TestTeamPolicy {
     {
       TestTeamPolicy functor( league_size );
 
-      const int team_size = Kokkos::TeamPolicy< ExecSpace >::team_size_max( functor );
+      const int team_size = Kokkos::TeamPolicy< ScheduleType,  ExecSpace >::team_size_max( functor );
       const long N = team_size * league_size ;
 
       long total = 0 ;
 
-      Kokkos::parallel_reduce( Kokkos::TeamPolicy< ExecSpace >( league_size , team_size ) , functor , total );
+      Kokkos::parallel_reduce( Kokkos::TeamPolicy< ScheduleType,  ExecSpace >( league_size , team_size ) , functor , total );
       ASSERT_EQ( size_t((N-1)*(N))/2 , size_t(total) );
 
-      Kokkos::parallel_reduce( Kokkos::TeamPolicy< ExecSpace , ReduceTag >( league_size , team_size ) , functor , total );
+      Kokkos::parallel_reduce( Kokkos::TeamPolicy< ScheduleType,  ExecSpace , ReduceTag >( league_size , team_size ) , functor , total );
       ASSERT_EQ( (size_t(N)*size_t(N+1))/2 , size_t(total) );
     }
 };
@@ -139,12 +139,12 @@ struct TestTeamPolicy {
 
 namespace Test {
 
-template< typename ScalarType , class DeviceType >
+template< typename ScalarType , class DeviceType, class ScheduleType >
 class ReduceTeamFunctor
 {
 public:
   typedef DeviceType execution_space ;
-  typedef Kokkos::TeamPolicy< execution_space >  policy_type ;
+  typedef Kokkos::TeamPolicy< ScheduleType,  execution_space >  policy_type ;
   typedef typename execution_space::size_type        size_type ;
 
   struct value_type {
@@ -197,12 +197,12 @@ public:
 
 namespace {
 
-template< typename ScalarType , class DeviceType >
+template< typename ScalarType , class DeviceType, class ScheduleType >
 class TestReduceTeam
 {
 public:
   typedef DeviceType    execution_space ;
-  typedef Kokkos::TeamPolicy< execution_space >  policy_type ;
+  typedef Kokkos::TeamPolicy< ScheduleType,  execution_space >  policy_type ;
   typedef typename execution_space::size_type    size_type ;
 
   //------------------------------------
@@ -214,7 +214,7 @@ public:
 
   void run_test( const size_type & nwork )
   {
-    typedef Test::ReduceTeamFunctor< ScalarType , execution_space > functor_type ;
+    typedef Test::ReduceTeamFunctor< ScalarType , execution_space , ScheduleType> functor_type ;
     typedef typename functor_type::value_type value_type ;
     typedef Kokkos::View< value_type, Kokkos::HostSpace, Kokkos::MemoryUnmanaged > result_type ;
 
@@ -254,12 +254,12 @@ public:
 
 namespace Test {
 
-template< class DeviceType >
+template< class DeviceType, class ScheduleType >
 class ScanTeamFunctor
 {
 public:
   typedef DeviceType  execution_space ;
-  typedef Kokkos::TeamPolicy< execution_space >  policy_type ;
+  typedef Kokkos::TeamPolicy< ScheduleType,  execution_space >  policy_type ;
 
   typedef long int    value_type ;
   Kokkos::View< value_type , execution_space > accum ;
@@ -326,15 +326,15 @@ public:
   }
 };
 
-template< class DeviceType >
+template< class DeviceType, class ScheduleType >
 class TestScanTeam
 {
 public:
   typedef DeviceType  execution_space ;
   typedef long int    value_type ;
 
-  typedef Kokkos::TeamPolicy< execution_space > policy_type ;
-  typedef Test::ScanTeamFunctor<DeviceType> functor_type ;
+  typedef Kokkos::TeamPolicy< ScheduleType,  execution_space > policy_type ;
+  typedef Test::ScanTeamFunctor<DeviceType, ScheduleType> functor_type ;
 
   //------------------------------------
 
@@ -378,12 +378,12 @@ public:
 
 namespace Test {
 
-template< class ExecSpace >
+template< class ExecSpace, class ScheduleType >
 struct SharedTeamFunctor {
 
   typedef ExecSpace  execution_space ;
   typedef int        value_type ;
-  typedef Kokkos::TeamPolicy< execution_space >  policy_type ;
+  typedef Kokkos::TeamPolicy< ScheduleType,  execution_space >  policy_type ;
 
   enum { SHARED_COUNT = 1000 };
 
@@ -438,7 +438,7 @@ struct SharedTeamFunctor {
 
 namespace {
 
-template< class ExecSpace >
+template< class ExecSpace, class ScheduleType >
 struct TestSharedTeam {
 
   TestSharedTeam()
@@ -446,12 +446,12 @@ struct TestSharedTeam {
 
   void run()
   {
-    typedef Test::SharedTeamFunctor<ExecSpace> Functor ;
+    typedef Test::SharedTeamFunctor<ExecSpace, ScheduleType> Functor ;
     typedef Kokkos::View< typename Functor::value_type , Kokkos::HostSpace , Kokkos::MemoryUnmanaged >  result_type ;
 
-    const size_t team_size = Kokkos::TeamPolicy< ExecSpace >::team_size_max( Functor() );
+    const size_t team_size = Kokkos::TeamPolicy< ScheduleType,  ExecSpace >::team_size_max( Functor() );
 
-    Kokkos::TeamPolicy< ExecSpace > team_exec( 8192 / team_size , team_size );
+    Kokkos::TeamPolicy< ScheduleType,  ExecSpace > team_exec( 8192 / team_size , team_size );
 
     typename Functor::value_type error_count = 0 ;
 
@@ -465,7 +465,7 @@ struct TestSharedTeam {
 namespace Test {
 
 #if defined (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA)
-template< class MemorySpace, class ExecSpace >
+template< class MemorySpace, class ExecSpace, class ScheduleType >
 struct TestLambdaSharedTeam {
 
   TestLambdaSharedTeam()
@@ -473,7 +473,7 @@ struct TestLambdaSharedTeam {
 
   void run()
   {
-    typedef Test::SharedTeamFunctor<ExecSpace> Functor ;
+    typedef Test::SharedTeamFunctor<ExecSpace, ScheduleType> Functor ;
     //typedef Kokkos::View< typename Functor::value_type , Kokkos::HostSpace , Kokkos::MemoryUnmanaged >  result_type ;
     typedef Kokkos::View< typename Functor::value_type , MemorySpace, Kokkos::MemoryUnmanaged >  result_type ;
 
@@ -488,13 +488,13 @@ struct TestLambdaSharedTeam {
     if(std::is_same<ExecSpace,Kokkos::Cuda>::value)
       team_size = 128;
 #endif
-    Kokkos::TeamPolicy< ExecSpace > team_exec( 8192 / team_size , team_size ,
+    Kokkos::TeamPolicy< ScheduleType,  ExecSpace > team_exec( 8192 / team_size , team_size ,
         Kokkos::Experimental::TeamScratchRequest<shmem_space>(SHARED_COUNT*2*sizeof(int)));
 
     typename Functor::value_type error_count = 0 ;
 
     Kokkos::parallel_reduce( team_exec , KOKKOS_LAMBDA
-        ( const typename Kokkos::TeamPolicy< ExecSpace >::member_type & ind , int & update ) {
+        ( const typename Kokkos::TeamPolicy< ScheduleType,  ExecSpace >::member_type & ind , int & update ) {
 
       const shared_int_array_type shared_A( ind.team_shmem() , SHARED_COUNT );
       const shared_int_array_type shared_B( ind.team_shmem() , SHARED_COUNT );
