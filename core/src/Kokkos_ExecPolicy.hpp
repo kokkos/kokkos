@@ -559,6 +559,14 @@ public:
   template<class MemorySpace>
   TeamPolicy( int league_size_request , const Kokkos::AUTO_t & , const Experimental::TeamScratchRequest<MemorySpace>& team_scratch_memory_request )
     : internal_policy(league_size_request,Kokkos::AUTO(), team_scratch_memory_request) {}
+
+private:
+  TeamPolicy(const internal_policy& p):internal_policy(p) {}
+public:
+  inline TeamPolicy set_chunk_size(int chunk) const {
+    return TeamPolicy(internal_policy::set_chunk_size(chunk));
+  };
+
 };
 
 } // namespace Kokkos

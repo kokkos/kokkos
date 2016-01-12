@@ -184,8 +184,8 @@ public:
 
   // Initialize the work range for this thread
   inline void set_work_range(const long& begin, const long& end, const long& chunk_size) {
-    work_range.first = begin/chunk_size;
-    work_range.second = (end+chunk_size-1)/chunk_size;
+    work_range.first = (begin+chunk_size-1)/chunk_size;
+    work_range.second = end>0?(end+chunk_size-1)/chunk_size:work_range.first;
   }
 
   // Claim and index from this thread's range from the beginning
@@ -292,6 +292,7 @@ public:
   inline long get_work_index (int team_size = 0) {
     long work_index = -1;
     if(!stealing) work_index = get_work_index_begin();
+
     if( work_index == -1) {
       memory_fence();
       stealing = true;
@@ -593,7 +594,7 @@ public:
         m_invalid_thread = 0;
 
       m_team_rank_rev  = pool_team_rank_rev ;
-      if ( pool_team_rank_rev < m_team_size && 0 < league_iter_end ) {
+      if ( pool_team_rank_rev < m_team_size && !m_invalid_thread ) {
         m_team_base_rev  = team.team_alloc() * pool_league_rank_rev ;
         m_team_rank_rev  = pool_team_rank_rev ;
         m_team_rank      = m_team_size - ( m_team_rank_rev + 1 );
