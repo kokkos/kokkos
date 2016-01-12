@@ -78,6 +78,8 @@
 #include <TestMemorySpaceTracking.hpp>
 #include <TestTemplateMetaFunctions.hpp>
 
+#include <TestPolicyConstruction.hpp>
+
 
 namespace Test {
 
@@ -109,6 +111,10 @@ protected:
 
 TEST_F( openmp , impl_shared_alloc ) {
   test_shared_alloc< Kokkos::HostSpace , Kokkos::OpenMP >();
+}
+
+TEST_F( openmp, policy_construction) {
+  TestRangePolicy< Kokkos::OpenMP >();
 }
 
 TEST_F( openmp , impl_view_mapping ) {

@@ -619,7 +619,7 @@ private:
   typename std::enable_if< std::is_same< TagType , void >::value >::type
   exec_team( const FunctorType & functor , Member member , reference_type update )
     {
-      for ( ; member.valid() ; member.next() ) {
+      for ( ; member.valid_static() ; member.next_static() ) {
         functor( member , update );
       }
     }
@@ -630,7 +630,7 @@ private:
   exec_team( const FunctorType & functor , Member member , reference_type update )
     {
       const TagType t{} ;
-      for ( ; member.valid() ; member.next() ) {
+      for ( ; member.valid_static() ; member.next_static() ) {
         functor( t , member , update );
       }
     }
@@ -684,7 +684,7 @@ public:
                   const Policy       & arg_policy ,
                   const ViewType     & arg_result )
     : m_functor( arg_functor )
-    , m_policy(  arg_policy.internal_finalize_chunk_size() )
+    , m_policy(  arg_policy )
     , m_result_ptr( arg_result.ptr_on_device() )
     , m_shmem_size( arg_policy.scratch_size() + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
     {}
