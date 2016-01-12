@@ -70,6 +70,7 @@
 #include <TestAggregate.hpp>
 #include <TestAggregateReduction.hpp>
 #include <TestCompilerMacros.hpp>
+#include <TestMemoryPool.hpp>
 
 
 #include <TestCXX11.hpp>
@@ -369,6 +370,12 @@ TEST_F( openmp , compiler_macros )
 TEST_F( openmp , memory_space )
 {
   TestMemorySpace< Kokkos::OpenMP >();
+}
+
+TEST_F( openmp , memory_pool )
+{
+  bool val = TestMemoryPool::test_mempool< Kokkos::OpenMP >( 8, 80000000 );
+  ASSERT_TRUE( val );
 }
 
 //----------------------------------------------------------------------------
