@@ -73,12 +73,6 @@ struct IndexType {
   typedef iType index_type;
 };
 
-struct ChunkSize {
-  long chunk_size;
-  ChunkSize(const long& value):chunk_size(value) {}
-  ChunkSize(const Kokkos::AUTO_t&):chunk_size(0) {}
-};
-
 namespace Impl {
 
 template<class Arg>
@@ -99,6 +93,13 @@ struct is_index_type {
 template<typename iType>
 struct is_index_type<IndexType<iType> > {
   enum { value = 1 };
+};
+
+template<typename Arg>
+struct is_tag_type {
+  enum { value = !(is_execution_space<Arg>::value ||
+                   is_schedule_type<Arg>::value ||
+                   is_index_type<Arg>::value)};
 };
 
 //Policy Traits
@@ -178,14 +179,19 @@ struct PolicyTraits<typename std::enable_if<!is_schedule_type<TagType>::value &&
 
 template<class ... Props>
 struct PolicyTraits {
-  typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::execution_space>::value, 
+  typedef typename has_condition<Kokkos::DefaultExecutionSpace,is_execution_space,Props ...>::type execution_space;
+  typedef typename has_condition<Kokkos::Schedule<Kokkos::Static>,is_schedule_type,Props ...>::type::schedule_type schedule_type;
+  typedef typename has_condition<Kokkos::IndexType<typename execution_space::size_type>,is_index_type,Props ...>::type::index_type index_type;
+  typedef typename has_condition<void,is_tag_type,Props ...>::type work_tag;
+
+  /*typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::execution_space>::value,
     Kokkos::DefaultExecutionSpace, typename PolicyTraits<void,Props ...>::execution_space>::type execution_space;
-  typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::schedule_type>::value, 
+  typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::schedule_type>::value,
     Kokkos::Static, typename PolicyTraits<void,Props ...>::schedule_type>::type schedule_type;
-  typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::index_type>::value,
+  /*typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::index_type>::value,
     typename execution_space::size_type, typename PolicyTraits<void,Props ...>::index_type>::type index_type;
   typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::tag_type>::value, 
-    void, typename PolicyTraits<void,Props ...>::tag_type>::type work_tag;
+    void, typename PolicyTraits<void,Props ...>::tag_type>::type work_tag;*/
 };
 
 }
