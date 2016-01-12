@@ -55,22 +55,27 @@ namespace Kokkos {
 
 //Schedules for Execution Policies
 struct Static {
-  typedef Static schedule_type;
 };
 
 struct Dynamic {
-  typedef Dynamic schedule_type;
 };
 
+//Schedule Wrapper Type
 template<class ScheduleType>
 struct Schedule {
-  typedef ScheduleType schedule_type;
+  static_assert(std::is_same<ScheduleType,Static>::value ||
+                std::is_same<ScheduleType,Dynamic>::value,
+                "Kokkos: Invalid Schedule<> type.");
+  typedef Schedule<ScheduleType> schedule_type;
+  typedef ScheduleType type;
 };
 
 //Specif Iteration Index Type
 template<typename iType>
 struct IndexType {
-  typedef iType index_type;
+  static_assert(std::is_integral<iType>::value,"Kokkos: Invalid IndexType<>.");
+  typedef IndexType<iType> index_type;
+  typedef iType type;
 };
 
 namespace Impl {
@@ -179,19 +184,21 @@ struct PolicyTraits<typename std::enable_if<!is_schedule_type<TagType>::value &&
 
 template<class ... Props>
 struct PolicyTraits {
-  typedef typename has_condition<Kokkos::DefaultExecutionSpace,is_execution_space,Props ...>::type execution_space;
-  typedef typename has_condition<Kokkos::Schedule<Kokkos::Static>,is_schedule_type,Props ...>::type::schedule_type schedule_type;
-  typedef typename has_condition<Kokkos::IndexType<typename execution_space::size_type>,is_index_type,Props ...>::type::index_type index_type;
-  typedef typename has_condition<void,is_tag_type,Props ...>::type work_tag;
-
-  /*typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::execution_space>::value,
+#ifdef KOKKOS_DIRECT_VARIADIC_EXPANSION
+  typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::execution_space>::value,
     Kokkos::DefaultExecutionSpace, typename PolicyTraits<void,Props ...>::execution_space>::type execution_space;
   typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::schedule_type>::value,
     Kokkos::Static, typename PolicyTraits<void,Props ...>::schedule_type>::type schedule_type;
-  /*typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::index_type>::value,
+  typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::index_type>::value,
     typename execution_space::size_type, typename PolicyTraits<void,Props ...>::index_type>::type index_type;
   typedef typename std::conditional<std::is_same<void, typename PolicyTraits<void, Props ...>::tag_type>::value, 
-    void, typename PolicyTraits<void,Props ...>::tag_type>::type work_tag;*/
+    void, typename PolicyTraits<void,Props ...>::tag_type>::type work_tag;
+#else
+  typedef typename has_condition<Kokkos::DefaultExecutionSpace,is_execution_space,Props ...>::type execution_space;
+  typedef typename has_condition<Kokkos::Schedule<Kokkos::Static>,is_schedule_type,Props ...>::type schedule_type;
+  typedef typename has_condition<Kokkos::IndexType<typename execution_space::size_type>,is_index_type,Props ...>::type::type index_type;
+  typedef typename has_condition<void,is_tag_type,Props ...>::type work_tag;
+#endif
 };
 
 }
@@ -240,6 +247,9 @@ public:
   KOKKOS_INLINE_FUNCTION member_type begin() const { return m_begin ; }
   KOKKOS_INLINE_FUNCTION member_type end()   const { return m_end ; }
 
+  RangePolicy(const RangePolicy&) = default;
+  RangePolicy(RangePolicy&&) = default;
+
   inline RangePolicy() : m_space(), m_begin(0), m_end(0) {}
 
   /** \brief  Total range */
@@ -252,7 +262,9 @@ public:
     , m_end(   work_begin < work_end ? work_end : 0 )
     , m_granularity(0)
     , m_granularity_mask(0)
-    {}
+    {
+      set_auto_chunk_size();
+    }
 
   /** \brief  Total range */
   inline
@@ -265,7 +277,9 @@ public:
     , m_end(   work_begin < work_end ? work_end : 0 )
     , m_granularity(0)
     , m_granularity_mask(0)
-    {}
+    {
+      set_auto_chunk_size();
+    }
 
   public:
 
@@ -282,16 +296,16 @@ public:
        return p;
      }
 
+  private:
      /** \brief finalize chunk_size if it was set to AUTO*/
-     inline RangePolicy internal_finalize_chunk_size(int concurrency) const {
+     inline void set_auto_chunk_size() {
 
+       typename traits::index_type concurrency = traits::execution_space::concurrency();
        if(m_granularity > 0) {
          if(!Impl::is_integral_power_of_two( m_granularity ))
            Kokkos::abort("RangePolicy blocking granularity must be power of two" );
-         return *this;
        }
 
-       RangePolicy p = *this;
 
        member_type new_chunk_size = 1;
        while(new_chunk_size*100*concurrency < m_end-m_begin)
@@ -301,11 +315,11 @@ public:
          while( (new_chunk_size*40*concurrency < m_end-m_begin ) && (new_chunk_size<128) )
            new_chunk_size*=2;
        }
-       p.m_granularity = new_chunk_size;
-       p.m_granularity_mask = p.m_granularity - 1;
-       return p;
+       m_granularity = new_chunk_size;
+       m_granularity_mask = m_granularity - 1;
      }
 
+  public:
   /** \brief  Subrange for a partition's rank and size.
    *
    *  Typically used to partition a range over a group of threads.
@@ -455,8 +469,6 @@ public:
   inline typename traits::index_type chunk_size() const ;
 
   inline TeamPolicyInternal set_chunk_size(int chunk_size) const ;
-
-  inline TeamPolicyInternal internal_finalize_chunk_size(int concurrency) const ;
 
   /** \brief  Parallel execution of a functor calls the functor once with
    *          each member of the execution policy.

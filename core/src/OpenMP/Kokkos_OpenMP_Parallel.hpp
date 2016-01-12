@@ -108,7 +108,7 @@ private:
 public:
 
   inline void execute() const {
-    this->template execute_schedule<typename Policy::schedule_type>();
+    this->template execute_schedule<typename Policy::schedule_type::type>();
   }
 
   template<class Schedule>
@@ -165,7 +165,7 @@ public:
   ParallelFor( const FunctorType & arg_functor
              , Policy arg_policy )
     : m_functor( arg_functor )
-    , m_policy(  arg_policy.internal_finalize_chunk_size(OpenMPexec::pool_size()) )
+    , m_policy(  arg_policy )
     {}
 };
 
@@ -241,7 +241,7 @@ private:
 public:
 
   inline void execute() const {
-    this->template execute_schedule<typename Policy::schedule_type>();
+    this->template execute_schedule<typename Policy::schedule_type::type>();
   }
 
   template<class Schedule>
@@ -339,7 +339,7 @@ public:
                 , Policy       arg_policy
                 , const ViewType    & arg_result_view )
     : m_functor( arg_functor )
-    , m_policy(  arg_policy.internal_finalize_chunk_size(OpenMPexec::pool_size()) )
+    , m_policy(  arg_policy )
     , m_result_ptr(  arg_result_view.ptr_on_device() )
     {
       static_assert( Kokkos::is_view< ViewType >::value
@@ -483,7 +483,7 @@ public:
   ParallelScan( const FunctorType & arg_functor
               , const Policy      & arg_policy )
     : m_functor( arg_functor )
-    , m_policy(  arg_policy.internal_finalize_chunk_size(OpenMPexec::pool_size()) )
+    , m_policy(  arg_policy )
   {}
 
   //----------------------------------------
@@ -540,6 +540,7 @@ private:
   typename std::enable_if< std::is_same< TagType , void >::value && std::is_same<Schedule,Kokkos::Dynamic>::value>::type
   exec_team( const FunctorType & functor , Member member )
     {
+      #pragma omp barrier
       for ( ; member.valid_dynamic() ; member.next_dynamic() ) {
         functor( member );
       }
@@ -550,6 +551,7 @@ private:
   typename std::enable_if< (! std::is_same< TagType , void >::value) && std::is_same<Schedule,Kokkos::Dynamic>::value >::type
   exec_team( const FunctorType & functor , Member member )
     {
+      #pragma omp barrier
       const TagType t{} ;
       for ( ; member.valid_dynamic() ; member.next_dynamic() ) {
         functor( t , member );
@@ -570,7 +572,7 @@ public:
 
 #pragma omp parallel
       {
-        ParallelFor::template exec_team< WorkTag, typename Policy::schedule_type>
+        ParallelFor::template exec_team< WorkTag, typename Policy::schedule_type::type>
           ( m_functor
           , Member( * OpenMPexec::get_thread_omp(), m_policy, m_shmem_size) );
       }
@@ -581,7 +583,7 @@ public:
   ParallelFor( const FunctorType & arg_functor ,
                const Policy      & arg_policy )
     : m_functor( arg_functor )
-    , m_policy(  arg_policy.internal_finalize_chunk_size() )
+    , m_policy(  arg_policy )
     , m_shmem_size( arg_policy.scratch_size() + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
     {}
 };

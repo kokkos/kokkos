@@ -413,6 +413,10 @@ void OpenMP::print_configuration( std::ostream & s , const bool detail )
   }
 }
 
+int OpenMP::concurrency() {
+  return thread_pool_size(0);
+}
+
 } // namespace Kokkos
 
 #endif //KOKKOS_HAVE_OPENMP
