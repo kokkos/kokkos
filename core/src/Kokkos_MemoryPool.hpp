@@ -57,12 +57,17 @@
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Timer.hpp>
 
-//#include <impl/Kokkos_HostSpace.hpp>
+//#define MEMPOOL_SERIAL
 
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
 namespace Experimental {
+
+// Global variable for this file only.
+namespace {
+  const void* list_lock = reinterpret_cast<void*>( ~((unsigned long) 0) );
+} // namespace
 
 /// \class MemoryPool
 /// \brief Memory management for pool of same-sized chunks of memory.
@@ -73,14 +78,15 @@ namespace Experimental {
 /// associated with.
 template < class MemorySpace >
 class MemoryPool {
-public:
+private:
   /// \brief Structure used to create a linked list from the memory chunk.
   ///
   /// The allocated memory is cast to this type internally to create the lists.
   struct Link {
-    Link * next;
+    Link * m_next;
   };
 
+public:
   //! Tag this class as a kokkos memory space
   typedef MemoryPool                                         memory_space;
 
@@ -92,7 +98,7 @@ public:
   /// parallel using the View's default execution space).
   typedef typename MemorySpace::execution_space execution_space;
 
-  //! This memory space preferred device_type
+  //! The memory space's preferred device_type.
   typedef typename MemorySpace::device_type device_type;
 
   typedef typename MemorySpace::size_type                    size_type;
@@ -102,7 +108,6 @@ public:
 
   //------------------------------------
 
-//  MemoryPool() : m_freelist( "freelist") {}
   MemoryPool() = default;
   MemoryPool( MemoryPool && rhs ) = default;
   MemoryPool( const MemoryPool & rhs ) = default;
@@ -110,17 +115,18 @@ public:
   MemoryPool & operator = ( const MemoryPool & ) = default;
   ~MemoryPool() = default;
 
-  /**\brief  Default memory space instance */
-  MemoryPool( const MemorySpace & memspace, /* From where to allocate the pool */
-              size_type chunk_size, /* Hand out memory in chunks of this size */
-              size_type total_size /* Total size of the pool */
+  /**\brief  Default memory space instance. */
+  MemoryPool( const MemorySpace & memspace, /* From where to allocate the pool. */
+              size_type chunk_size, /* Hand out memory in chunks of this size. */
+              size_type total_size /* Total size of the pool. */
             )
     : m_freelist( "freelist" )
   {
     // TODO: Ask Carter about how to better handle this.
     if ( chunk_size < 8 ) {
-      std::cerr << "Chunk size must be at least 8 bytes.  Setting to be "
-                << "8 bytes." << std::endl;
+      fprintf( stderr, "Chunk size must be at least 8 bytes.  Setting to be 8 bytes.\n" );
+      fflush( stderr );
+
       chunk_size = 8;
     }
 
@@ -133,30 +139,25 @@ public:
     m_pool_tracker.assign_allocated_record_to_uninitialized( rec );
 
     Link alink;
-    alink.next = static_cast< Link * >( rec->data() );
+    alink.m_next = static_cast< Link * >( rec->data() );
     deep_copy(m_freelist, alink);
 
     char * head = static_cast< char * >( rec->data() );
 
-    // TODO: The next two loops need to be done in parallel so they access the
-    //       correct memory space.
-
-    // Initialize all next pointers to 0.  This is a bit overkill since we only
-    // need to set the next pointer of the last chunk to 0, but two simple loops
+    // Initialize all next pointers to 0.  This is a bit overkill since only the
+    // next pointer of the last chunk needs to be set to 0, but two simple loops
     // should be faster than one loop with an if statement.
-    for ( size_type i = 0; i < num_chunks; ++i )
-    {
+    parallel_for(num_chunks, KOKKOS_LAMBDA (size_type i) {
       Link * lp = reinterpret_cast< Link * >( head + i * chunk_size );
-      lp->next = 0;
-    }
+      lp->m_next = 0;
+    });
 
     // Initialize the next pointers to point to the next chunk for all but the
     // last chunk.
-    for ( size_type i = 1; i < num_chunks; ++i )
-    {
-      Link * lp = reinterpret_cast< Link * >( head + ( i - 1 ) * chunk_size );
-      lp->next = reinterpret_cast< Link * >( head + i * chunk_size );
-    }
+    parallel_for(num_chunks - 1, KOKKOS_LAMBDA (size_type i) {
+      Link * lp = reinterpret_cast< Link * >( head + i * chunk_size );
+      lp->m_next = reinterpret_cast< Link * >( head + ( i + 1 ) * chunk_size );
+    });
 
 //    printf(" Pool size: %llu\n", rec->size());
   }
@@ -166,9 +167,63 @@ public:
   KOKKOS_INLINE_FUNCTION
   void * allocate( const size_t alloc_size ) const
   {
-    void * p = static_cast< void * >((*m_freelist).next);
-    (*m_freelist).next = (*m_freelist).next->next;
+#ifdef MEMPOOL_SERIAL
+    void * p = static_cast< void * >( (*m_freelist).m_next );
+    (*m_freelist).m_next = (*m_freelist).m_next->m_next;
     return p;
+#else
+    Link * volatile * freelist = &((*m_freelist).m_next);
+    void * p = 0;
+
+//  TODO: Should I throw an error when the pool is out of memory?  For now, I
+//        will just return 0.
+
+    bool removed = false;
+
+    while ( ! removed ) {
+      Link * const old_head = *freelist;
+
+      if ( old_head == 0 ) {
+        // The freelist is empty.  Just return 0.
+        removed = true;
+      }
+      else if ( old_head != list_lock ) {
+        // In the initial look at the head, the freelist wasn't empty or
+        // locked. Attempt to lock the head of list.  If the list was changed
+        // (including being locked) between the initial look and now, head will
+        // be different than old_head.  This means the removal can't proceed
+        // and has to be tried again.
+        Link * const head = atomic_compare_exchange( freelist, old_head, (Link *) list_lock );
+
+        if ( head == old_head ) {
+          // The lock succeeded.  Get a local copy of the second entry in
+          // the list.
+          Link * const head_next = *((Link * volatile *) &(old_head->m_next) );
+
+          // Replace the lock with the next entry on the list.
+          Link * const l = atomic_compare_exchange( freelist, (Link *) list_lock, head_next );
+
+          if ( l != list_lock ) {
+            // We shouldn't get here.  This is a test that we might want to
+            // comment out for performance reasons when we are sure it works.
+            fprintf( stderr, "Memory_Pool::allocate( 0x%lx ) UNLOCK ERROR\n",
+                     (unsigned long) freelist );
+            fflush(stderr);
+          }
+
+          *((Link * volatile *) &(old_head->m_next) ) = 0 ;
+          p = old_head;
+          removed = true;
+        }
+      }
+      else {
+        // The freelist was locked.  For now, the thread will just do the next
+        // loop iteration.  If this is a performance issue, it can be revisited.
+      }
+    }
+
+    return p;
+#endif
   }
 
   ///\brief  Release claimed memory back into the pool
@@ -177,9 +232,40 @@ public:
   void deallocate( void * const alloc_ptr,
                    const size_t alloc_size ) const
   {
-    Link* lp = static_cast< Link * >(alloc_ptr);
-    lp->next = (*m_freelist).next;
-    (*m_freelist).next = lp;
+#ifdef MEMPOOL_SERIAL
+    Link * lp = static_cast< Link * >( alloc_ptr );
+    lp->m_next = (*m_freelist).m_next;
+    (*m_freelist).m_next = lp;
+#else
+    Link * lp = static_cast< Link * >( alloc_ptr );
+    Link * volatile * freelist = &((*m_freelist).m_next);
+
+    bool inserted = false;
+
+    while ( ! inserted ) {
+      Link * const old_head = *freelist;
+
+      if ( old_head != list_lock ) {
+        // In the initial look at the head, the freelist wasn't locked.
+
+        // Proactively assign lp->m_next assuming a successful insertion into
+        // the list.
+        *((Link * volatile *) &(lp->m_next)) = old_head;
+
+        memory_fence();
+
+        // Attempt to insert at head of list.  If the list was changed
+        // (including being locked) between the initial look and now, head will
+        // be different than old_head.  This means the insert can't proceed and
+        // has to be tried again.
+        Link * const head = atomic_compare_exchange( freelist, old_head, lp );
+
+        if ( head == old_head ) {
+          inserted = true;
+        }
+      }
+    }
+#endif
   }
 
 private:

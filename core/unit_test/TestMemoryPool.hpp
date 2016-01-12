@@ -263,6 +263,49 @@ bool test_mempool( size_t chunk_size, size_t total_size )
   print_results( "deallocate chunks: ", elapsed_time );
   timer.reset();
 
+  {
+    allocate_memory< pointer_view, pool_memory_space >
+      am( pointers, num_chunks, chunk_size, m_space );
+  }
+
+  ExecSpace::fence();
+  elapsed_time = timer.seconds();
+  print_results( "allocate chunks: ", elapsed_time );
+  timer.reset();
+
+  {
+    fill_memory< pointer_view > fm( pointers, num_chunks );
+  }
+
+  ExecSpace::fence();
+  elapsed_time = timer.seconds();
+  print_results( "fill chunks: ", elapsed_time );
+  timer.reset();
+
+  {
+    sum_memory< pointer_view > sm( pointers, num_chunks, result );
+  }
+
+  ExecSpace::fence();
+  elapsed_time = timer.seconds();
+  print_results( "sum chunks: ", 10, elapsed_time, result );
+
+  if ( result != ( num_chunks * ( num_chunks - 1 ) ) / 2 ) {
+    std::cerr << "Invalid sum value in memory." << std::endl;
+    return_val = false;
+  }
+
+  timer.reset();
+
+  {
+    deallocate_memory< pointer_view, pool_memory_space >
+      dm( pointers, num_chunks, chunk_size, m_space );
+  }
+
+  ExecSpace::fence();
+  elapsed_time = timer.seconds();
+  print_results( "deallocate chunks: ", elapsed_time );
+
   return return_val;
 }
 
