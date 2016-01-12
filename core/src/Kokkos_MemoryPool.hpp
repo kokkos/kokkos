@@ -130,6 +130,8 @@ public:
       chunk_size = 8;
     }
 
+    m_chunk_size = chunk_size;
+
     // Force total_size to be a multiple of chunk_size.
     total_size = ( ( total_size + chunk_size - 1 ) / chunk_size ) * chunk_size;
 
@@ -158,8 +160,6 @@ public:
       Link * lp = reinterpret_cast< Link * >( head + i * chunk_size );
       lp->m_next = reinterpret_cast< Link * >( head + ( i + 1 ) * chunk_size );
     });
-
-//    printf(" Pool size: %llu\n", rec->size());
   }
 
   ///\brief  Claim chunks of untracked memory from the pool.
@@ -167,6 +167,13 @@ public:
   KOKKOS_INLINE_FUNCTION
   void * allocate( const size_t alloc_size ) const
   {
+    if ( alloc_size > m_chunk_size ) {
+      // This is just here for now for debugging as we only support allocating
+      // m_chunk_size or smaller.
+      fprintf( stderr, "MemoryPool::allocate() ALLOC_SIZE(%d) > CHUNK_SIZE(%d)\n",
+               alloc_size, m_chunk_size );
+      fflush(stderr);
+    }
 #ifdef MEMPOOL_SERIAL
     void * p = static_cast< void * >( (*m_freelist).m_next );
     (*m_freelist).m_next = (*m_freelist).m_next->m_next;
@@ -174,9 +181,6 @@ public:
 #else
     Link * volatile * freelist = &((*m_freelist).m_next);
     void * p = 0;
-
-//  TODO: Should I throw an error when the pool is out of memory?  For now, I
-//        will just return 0.
 
     bool removed = false;
 
@@ -186,6 +190,12 @@ public:
       if ( old_head == 0 ) {
         // The freelist is empty.  Just return 0.
         removed = true;
+
+        //  TODO: Should I throw an error when the pool is out of memory?  For
+        //        now, I will just print an error and return 0.
+        fprintf( stderr, "MemoryPool::allocate() OUT_OF_MEMORY\n",
+                 (unsigned long) freelist );
+        fflush(stderr);
       }
       else if ( old_head != list_lock ) {
         // In the initial look at the head, the freelist wasn't empty or
@@ -206,7 +216,7 @@ public:
           if ( l != list_lock ) {
             // We shouldn't get here.  This is a test that we might want to
             // comment out for performance reasons when we are sure it works.
-            fprintf( stderr, "Memory_Pool::allocate( 0x%lx ) UNLOCK ERROR\n",
+            fprintf( stderr, "MemoryPool::allocate() UNLOCK_ERROR(0x%lx)\n",
                      (unsigned long) freelist );
             fflush(stderr);
           }
@@ -269,11 +279,16 @@ public:
   }
 
 private:
-  Tracker      m_pool_tracker;
-  LinkView     m_freelist;
+  Tracker    m_pool_tracker;
+  LinkView   m_freelist;
+  size_type  m_chunk_size;
 };
 
 } // namespace Experimental
 } // namespace Kokkos
+
+#ifdef MEMPOOL_SERIAL
+#undef MEMPOOL_SERIAL
+#endif
 
 #endif /* #define KOKKOS_MEMORYPOOL_HPP */

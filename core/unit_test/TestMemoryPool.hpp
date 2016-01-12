@@ -51,6 +51,8 @@
 
 #include <impl/Kokkos_Timer.hpp>
 
+//#define TESTMEMORYPOOL_PRINT
+
 namespace TestMemoryPool {
 
 struct pointer_obj {
@@ -205,19 +207,22 @@ bool test_mempool( size_t chunk_size, size_t total_size )
   double elapsed_time = 0;
   bool return_val = true;
 
+#ifdef TESTMEMORYPOOL_PRINT
   std::cout << std::setw( SHIFTW ) << "chunk_size: " << std::setw( 10 )
             << chunk_size << std::endl
             << std::setw( SHIFTW ) << "total_size: " << std::setw( 10 )
             << total_size << std::endl
             << std::setw( SHIFTW ) << "num_chunks: " << std::setw( 10 )
             << num_chunks << std::endl;
+#endif
 
   pointer_view pointers( "pointers", num_chunks );
 
-  memory_space mspace;
-  pool_memory_space m_space( mspace, chunk_size, total_size );
+  pool_memory_space m_space( memory_space(), chunk_size, total_size );
 
+#ifdef TESTMEMORYPOOL_PRINT
   Kokkos::Impl::Timer timer;
+#endif
 
   {
     allocate_memory< pointer_view, pool_memory_space >
@@ -225,33 +230,44 @@ bool test_mempool( size_t chunk_size, size_t total_size )
   }
 
   ExecSpace::fence();
+
+#ifdef TESTMEMORYPOOL_PRINT
   elapsed_time = timer.seconds();
   print_results( "allocate chunks: ", elapsed_time );
   timer.reset();
+#endif
 
   {
     fill_memory< pointer_view > fm( pointers, num_chunks );
   }
 
   ExecSpace::fence();
+
+#ifdef TESTMEMORYPOOL_PRINT
   elapsed_time = timer.seconds();
   print_results( "fill chunks: ", elapsed_time );
   timer.reset();
+#endif
 
   {
     sum_memory< pointer_view > sm( pointers, num_chunks, result );
   }
 
   ExecSpace::fence();
+
+#ifdef TESTMEMORYPOOL_PRINT
   elapsed_time = timer.seconds();
   print_results( "sum chunks: ", 10, elapsed_time, result );
+#endif
 
   if ( result != ( num_chunks * ( num_chunks - 1 ) ) / 2 ) {
     std::cerr << "Invalid sum value in memory." << std::endl;
     return_val = false;
   }
 
+#ifdef TESTMEMORYPOOL_PRINT
   timer.reset();
+#endif
 
   {
     deallocate_memory< pointer_view, pool_memory_space >
@@ -259,9 +275,12 @@ bool test_mempool( size_t chunk_size, size_t total_size )
   }
 
   ExecSpace::fence();
+
+#ifdef TESTMEMORYPOOL_PRINT
   elapsed_time = timer.seconds();
   print_results( "deallocate chunks: ", elapsed_time );
   timer.reset();
+#endif
 
   {
     allocate_memory< pointer_view, pool_memory_space >
@@ -269,33 +288,44 @@ bool test_mempool( size_t chunk_size, size_t total_size )
   }
 
   ExecSpace::fence();
+
+#ifdef TESTMEMORYPOOL_PRINT
   elapsed_time = timer.seconds();
   print_results( "allocate chunks: ", elapsed_time );
   timer.reset();
+#endif
 
   {
     fill_memory< pointer_view > fm( pointers, num_chunks );
   }
 
   ExecSpace::fence();
+
+#ifdef TESTMEMORYPOOL_PRINT
   elapsed_time = timer.seconds();
   print_results( "fill chunks: ", elapsed_time );
   timer.reset();
+#endif
 
   {
     sum_memory< pointer_view > sm( pointers, num_chunks, result );
   }
 
   ExecSpace::fence();
+
+#ifdef TESTMEMORYPOOL_PRINT
   elapsed_time = timer.seconds();
   print_results( "sum chunks: ", 10, elapsed_time, result );
+#endif
 
   if ( result != ( num_chunks * ( num_chunks - 1 ) ) / 2 ) {
     std::cerr << "Invalid sum value in memory." << std::endl;
     return_val = false;
   }
 
+#ifdef TESTMEMORYPOOL_PRINT
   timer.reset();
+#endif
 
   {
     deallocate_memory< pointer_view, pool_memory_space >
@@ -303,12 +333,19 @@ bool test_mempool( size_t chunk_size, size_t total_size )
   }
 
   ExecSpace::fence();
+
+#ifdef TESTMEMORYPOOL_PRINT
   elapsed_time = timer.seconds();
   print_results( "deallocate chunks: ", elapsed_time );
+#endif
 
   return return_val;
 }
 
 }
+
+#ifdef TESTMEMORYPOOL_PRINT
+#undef TESTMEMORYPOOL_PRINT
+#endif
 
 #endif

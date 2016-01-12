@@ -77,7 +77,8 @@ TaskPolicy< Kokkos::Threads >::TaskPolicy
   ( const unsigned arg_default_dependence_capacity
   , const unsigned arg_team_size
   )
-  : m_default_dependence_capacity( arg_default_dependence_capacity )
+  : m_space( Kokkos::Threads::memory_space(), 256, 1000000 * 256 )
+  , m_default_dependence_capacity( arg_default_dependence_capacity )
   , m_team_size( arg_team_size )
 {
   const int threads_total    = Threads::thread_pool_size(0);
