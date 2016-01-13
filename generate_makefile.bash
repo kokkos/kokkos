@@ -302,4 +302,4 @@ echo -e "\tmake -C example/fixture clean" >> Makefile
 echo -e "\tmake -C example/feint clean" >> Makefile
 echo -e "\tmake -C example/fenl clean" >> Makefile
 echo -e "\tcd core; \\" >> Makefile
-echo -e "\tmake -f /Users/gemacke/kokkos/dev_kokkos/core/src/Makefile KOKKOS_PATH=/Users/gemacke/kokkos/dev_kokkos PREFIX=/Users/gemacke/kokkos/install/dev_kokkos KOKKOS_DEVICES=,OpenMP,Pthread,Serial GTEST_PATH=/Users/gemacke/kokkos/dev_kokkos/tpls/gtest HWLOC_PATH=/opt/local KOKKOS_USE_TPLS=hwloc clean" >> Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_OPTIONS} clean" >> Makefile

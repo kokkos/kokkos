@@ -58,6 +58,7 @@
 #include <impl/Kokkos_Timer.hpp>
 
 //#define MEMPOOL_SERIAL
+//#define MEMPOOL_PRINTERR
 
 //----------------------------------------------------------------------------
 
@@ -65,9 +66,57 @@ namespace Kokkos {
 namespace Experimental {
 
 // Global variable for this file only.
-namespace {
-  const void* list_lock = reinterpret_cast<void*>( ~((unsigned long) 0) );
-} // namespace
+#define MEMPOOL_LIST_LOCK (Link*)0xFFFFFFFFFFFFFFFF
+
+namespace Impl {
+
+template < typename ExecutionSpace, typename Link >
+struct initialize_mempool {
+  typedef ExecutionSpace  execution_space;
+  typedef typename execution_space::size_type    size_type;
+
+  size_type m_chunk_size;
+  char * m_head;
+
+  initialize_mempool( size_type num_chunks, size_type cs, char * h )
+    : m_chunk_size( cs ), m_head( h )
+  {
+    // Initialize the view with the out degree of each vertex.
+    Kokkos::parallel_for( num_chunks, *this );
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( size_type i ) const
+  {
+    Link * lp = reinterpret_cast< Link * >( m_head + i * m_chunk_size );
+    lp->m_next = 0;
+  }
+};
+
+template < typename ExecutionSpace, typename Link >
+struct initialize_mempool2 {
+  typedef ExecutionSpace  execution_space;
+  typedef typename execution_space::size_type    size_type;
+
+  size_type m_chunk_size;
+  char * m_head;
+
+  initialize_mempool2( size_type num_chunks, size_type cs, char * h )
+    : m_chunk_size( cs ), m_head( h )
+  {
+    // Initialize the view with the out degree of each vertex.
+    Kokkos::parallel_for( num_chunks, *this );
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( size_type i ) const
+  {
+    Link * lp = reinterpret_cast< Link * >( m_head + i * m_chunk_size );
+    lp->m_next = reinterpret_cast< Link * >( m_head + ( i + 1 ) * m_chunk_size );
+  }
+};
+
+} // namespace Impl
 
 /// \class MemoryPool
 /// \brief Memory management for pool of same-sized chunks of memory.
@@ -124,8 +173,10 @@ public:
   {
     // TODO: Ask Carter about how to better handle this.
     if ( chunk_size < 8 ) {
+#ifdef MEMPOOL_PRINTERR
       fprintf( stderr, "Chunk size must be at least 8 bytes.  Setting to be 8 bytes.\n" );
       fflush( stderr );
+#endif
 
       chunk_size = 8;
     }
@@ -144,22 +195,20 @@ public:
     alink.m_next = static_cast< Link * >( rec->data() );
     deep_copy(m_freelist, alink);
 
-    char * head = static_cast< char * >( rec->data() );
-
     // Initialize all next pointers to 0.  This is a bit overkill since only the
     // next pointer of the last chunk needs to be set to 0, but two simple loops
     // should be faster than one loop with an if statement.
-    parallel_for(num_chunks, KOKKOS_LAMBDA (size_type i) {
-      Link * lp = reinterpret_cast< Link * >( head + i * chunk_size );
-      lp->m_next = 0;
-    });
+    {
+      Impl::initialize_mempool< execution_space, Link >
+        im( num_chunks, m_chunk_size, static_cast< char * >( rec->data() ) );
+    }
 
     // Initialize the next pointers to point to the next chunk for all but the
     // last chunk.
-    parallel_for(num_chunks - 1, KOKKOS_LAMBDA (size_type i) {
-      Link * lp = reinterpret_cast< Link * >( head + i * chunk_size );
-      lp->m_next = reinterpret_cast< Link * >( head + ( i + 1 ) * chunk_size );
-    });
+    {
+      Impl::initialize_mempool2< execution_space, Link >
+        im( num_chunks - 1, m_chunk_size, static_cast< char * >( rec->data() ) );
+    }
   }
 
   ///\brief  Claim chunks of untracked memory from the pool.
@@ -167,13 +216,16 @@ public:
   KOKKOS_INLINE_FUNCTION
   void * allocate( const size_t alloc_size ) const
   {
+#ifdef MEMPOOL_PRINTERR
     if ( alloc_size > m_chunk_size ) {
       // This is just here for now for debugging as we only support allocating
       // m_chunk_size or smaller.
-      fprintf( stderr, "MemoryPool::allocate() ALLOC_SIZE(%d) > CHUNK_SIZE(%d)\n",
+      fprintf( stderr, "MemoryPool::allocate() ALLOC_SIZE(%ld) > CHUNK_SIZE(%ld)\n",
                alloc_size, m_chunk_size );
       fflush(stderr);
     }
+#endif
+
 #ifdef MEMPOOL_SERIAL
     void * p = static_cast< void * >( (*m_freelist).m_next );
     (*m_freelist).m_next = (*m_freelist).m_next->m_next;
@@ -191,19 +243,20 @@ public:
         // The freelist is empty.  Just return 0.
         removed = true;
 
+#ifdef MEMPOOL_PRINTERR
         //  TODO: Should I throw an error when the pool is out of memory?  For
         //        now, I will just print an error and return 0.
-        fprintf( stderr, "MemoryPool::allocate() OUT_OF_MEMORY\n",
-                 (unsigned long) freelist );
+        fprintf( stderr, "MemoryPool::allocate() OUT_OF_MEMORY\n" );
         fflush(stderr);
+#endif
       }
-      else if ( old_head != list_lock ) {
+      else if ( old_head != MEMPOOL_LIST_LOCK ) {
         // In the initial look at the head, the freelist wasn't empty or
         // locked. Attempt to lock the head of list.  If the list was changed
         // (including being locked) between the initial look and now, head will
         // be different than old_head.  This means the removal can't proceed
         // and has to be tried again.
-        Link * const head = atomic_compare_exchange( freelist, old_head, (Link *) list_lock );
+        Link * const head = atomic_compare_exchange( freelist, old_head, MEMPOOL_LIST_LOCK );
 
         if ( head == old_head ) {
           // The lock succeeded.  Get a local copy of the second entry in
@@ -211,15 +264,17 @@ public:
           Link * const head_next = *((Link * volatile *) &(old_head->m_next) );
 
           // Replace the lock with the next entry on the list.
-          Link * const l = atomic_compare_exchange( freelist, (Link *) list_lock, head_next );
+          Link * const l = atomic_compare_exchange( freelist, MEMPOOL_LIST_LOCK, head_next );
 
-          if ( l != list_lock ) {
+#ifdef MEMPOOL_PRINTERR
+          if ( l != MEMPOOL_LIST_LOCK ) {
             // We shouldn't get here.  This is a test that we might want to
             // comment out for performance reasons when we are sure it works.
             fprintf( stderr, "MemoryPool::allocate() UNLOCK_ERROR(0x%lx)\n",
                      (unsigned long) freelist );
             fflush(stderr);
           }
+#endif
 
           *((Link * volatile *) &(old_head->m_next) ) = 0 ;
           p = old_head;
@@ -255,7 +310,7 @@ public:
     while ( ! inserted ) {
       Link * const old_head = *freelist;
 
-      if ( old_head != list_lock ) {
+      if ( old_head != MEMPOOL_LIST_LOCK ) {
         // In the initial look at the head, the freelist wasn't locked.
 
         // Proactively assign lp->m_next assuming a successful insertion into
@@ -289,6 +344,10 @@ private:
 
 #ifdef MEMPOOL_SERIAL
 #undef MEMPOOL_SERIAL
+#endif
+
+#ifdef MEMPOOL_LIST_LOCK
+#undef MEMPOOL_LIST_LOCK
 #endif
 
 #endif /* #define KOKKOS_MEMORYPOOL_HPP */

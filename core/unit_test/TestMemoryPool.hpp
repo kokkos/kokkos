@@ -134,9 +134,9 @@ struct sum_memory {
   { dst += src; }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()( size_type i, value_type & result ) const
+  void operator()( size_type i, value_type & r ) const
   {
-    result += *m_pointers[i].ptr;
+    r += *m_pointers[i].ptr;
   }
 };
 
@@ -204,7 +204,6 @@ bool test_mempool( size_t chunk_size, size_t total_size )
 
   uint64_t result;
   size_t num_chunks = total_size / chunk_size;
-  double elapsed_time = 0;
   bool return_val = true;
 
 #ifdef TESTMEMORYPOOL_PRINT
@@ -221,6 +220,7 @@ bool test_mempool( size_t chunk_size, size_t total_size )
   pool_memory_space m_space( memory_space(), chunk_size, total_size );
 
 #ifdef TESTMEMORYPOOL_PRINT
+  double elapsed_time = 0;
   Kokkos::Impl::Timer timer;
 #endif
 
