@@ -110,12 +110,46 @@ private:
 
   static void exec( ThreadsExec & exec , const void * arg )
   {
+    exec_schedule<typename Policy::schedule_type::type>(exec,arg);
+  }
+
+  template<class Schedule>
+  static
+  typename std::enable_if< std::is_same<Schedule,Kokkos::Static>::value >::type
+  exec_schedule( ThreadsExec & exec , const void * arg )
+  {
     const ParallelFor & self = * ((const ParallelFor *) arg );
 
     WorkRange range( self.m_policy , exec.pool_rank() , exec.pool_size() );
 
     ParallelFor::template exec_range< WorkTag >
       ( self.m_functor , range.begin() , range.end() );
+
+    exec.fan_in();
+  }
+
+  template<class Schedule>
+  static
+  typename std::enable_if< std::is_same<Schedule,Kokkos::Dynamic>::value >::type
+  exec_schedule( ThreadsExec & exec , const void * arg )
+  {
+    const ParallelFor & self = * ((const ParallelFor *) arg );
+
+    WorkRange range( self.m_policy , exec.pool_rank() , exec.pool_size() );
+
+    exec.set_work_range(range.begin(),range.end(),self.m_policy.chunk_size());
+    exec.reset_steal_target();
+    int m = exec.all_reduce(1);
+
+    Member work_index = exec.get_work_index();
+
+    while(work_index != -1) {
+      const Member begin = static_cast<Member>(work_index) * self.m_policy.chunk_size();
+      const Member end = begin + self.m_policy.chunk_size() < self.m_policy.end()?begin+self.m_policy.chunk_size():self.m_policy.end();
+      ParallelFor::template exec_range< WorkTag >
+        ( self.m_functor , begin , end );
+      work_index = exec.get_work_index();
+    }
 
     exec.fan_in();
   }
@@ -139,14 +173,15 @@ public:
 //----------------------------------------------------------------------------
 /* ParallelFor Kokkos::Threads with TeamPolicy */
 
-template< class FunctorType , class Arg0 , class Arg1 >
+template< class FunctorType , class ... Properties >
 class ParallelFor< FunctorType
-                 , Kokkos::TeamPolicy< Arg0 , Arg1 , Kokkos::Threads >
+                 , Kokkos::TeamPolicy< Properties ... >
+                 , Kokkos::Threads
                  >
 {
 private:
 
-  typedef TeamPolicy< Arg0 , Arg1 , Kokkos::Threads >  Policy ;
+  typedef Kokkos::Impl::TeamPolicyInternal< Kokkos::Threads, Properties ... >  Policy ;
   typedef typename Policy::work_tag                    WorkTag ;
   typedef typename Policy::member_type                 Member ;
 
@@ -154,23 +189,49 @@ private:
   const Policy       m_policy ;
   const int          m_shared ;
 
-  template< class TagType >
+  template< class TagType , class Schedule>
   inline static
-  typename std::enable_if< std::is_same< TagType , void >::value >::type
+  typename std::enable_if< std::is_same< TagType , void >::value
+  && std::is_same<Schedule,Kokkos::Static>::value >::type
   exec_team( const FunctorType & functor , Member member )
     {
-      for ( ; member.valid() ; member.next() ) {
+      for ( ; member.valid_static() ; member.next_static() ) {
         functor( member );
       }
     }
 
-  template< class TagType >
+  template< class TagType , class Schedule>
   inline static
-  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
+  typename std::enable_if< ! std::is_same< TagType , void >::value
+  && std::is_same<Schedule,Kokkos::Static>::value >::type
   exec_team( const FunctorType & functor , Member member )
     {
       const TagType t{} ;
-      for ( ; member.valid() ; member.next() ) {
+      for ( ; member.valid_static() ; member.next_static() ) {
+        functor( t , member );
+      }
+    }
+
+  template< class TagType , class Schedule>
+  inline static
+  typename std::enable_if< std::is_same< TagType , void >::value
+  && std::is_same<Schedule,Kokkos::Dynamic>::value >::type
+  exec_team( const FunctorType & functor , Member member )
+    {
+
+      for ( ; member.valid_dynamic() ; member.next_dynamic() ) {
+        functor( member );
+      }
+    }
+
+  template< class TagType , class Schedule>
+  inline static
+  typename std::enable_if< ! std::is_same< TagType , void >::value
+                          && std::is_same<Schedule,Kokkos::Dynamic>::value >::type
+  exec_team( const FunctorType & functor , Member member )
+    {
+      const TagType t{} ;
+      for ( ; member.valid_dynamic() ; member.next_dynamic() ) {
         functor( t , member );
       }
     }
@@ -179,9 +240,10 @@ private:
   {
     const ParallelFor & self = * ((const ParallelFor *) arg );
 
-    ParallelFor::exec_team< WorkTag >
+    ParallelFor::exec_team< WorkTag , typename Policy::schedule_type::type >
       ( self.m_functor , Member( & exec , self.m_policy , self.m_shared ) );
 
+    int m = exec.all_reduce(1);
     exec.fan_in();
   }
 
@@ -266,7 +328,15 @@ private:
       }
     }
 
-  static void exec( ThreadsExec & exec , const void * arg )
+  static void
+  exec( ThreadsExec & exec , const void * arg ) {
+    exec_schedule<typename Policy::schedule_type::type>(exec, arg);
+  }
+
+  template<class Schedule>
+  static
+  typename std::enable_if< std::is_same<Schedule,Kokkos::Static>::value >::type
+  exec_schedule( ThreadsExec & exec , const void * arg )
   {
     const ParallelReduce & self = * ((const ParallelReduce *) arg );
     const WorkRange range( self.m_policy, exec.pool_rank(), exec.pool_size() );
@@ -274,6 +344,32 @@ private:
     ParallelReduce::template exec_range< WorkTag >
       ( self.m_functor , range.begin() , range.end() 
       , ValueInit::init( self.m_functor , exec.reduce_memory() ) );
+
+    exec.template fan_in_reduce< FunctorType , WorkTag >( self.m_functor );
+  }
+
+  template<class Schedule>
+  static
+  typename std::enable_if< std::is_same<Schedule,Kokkos::Dynamic>::value >::type
+    exec_schedule( ThreadsExec & exec , const void * arg )
+  {
+    const ParallelReduce & self = * ((const ParallelReduce *) arg );
+    const WorkRange range( self.m_policy, exec.pool_rank(), exec.pool_size() );
+
+    exec.set_work_range(range.begin(),range.end(),self.m_policy.chunk_size());
+    exec.reset_steal_target();
+    int m = exec.all_reduce(1);
+
+    Member work_index = exec.get_work_index();
+    reference_type update = ValueInit::init( self.m_functor , exec.reduce_memory() );
+    while(work_index != -1) {
+      const Member begin = static_cast<Member>(work_index) * self.m_policy.chunk_size();
+      const Member end = begin + self.m_policy.chunk_size() < self.m_policy.end()?begin+self.m_policy.chunk_size():self.m_policy.end();
+      ParallelReduce::template exec_range< WorkTag >
+        ( self.m_functor , begin , end
+        , update );
+      work_index = exec.get_work_index();
+    }
 
     exec.template fan_in_reduce< FunctorType , WorkTag >( self.m_functor );
   }
@@ -318,14 +414,15 @@ public:
 //----------------------------------------------------------------------------
 /* ParallelReduce with Kokkos::Threads and TeamPolicy */
 
-template< class FunctorType , class Arg0 , class Arg1 >
+template< class FunctorType , class ... Properties >
 class ParallelReduce< FunctorType
-                    , Kokkos::TeamPolicy< Arg0 , Arg1 , Kokkos::Threads >
+                    , Kokkos::TeamPolicy< Properties ... >
+                    , Kokkos::Threads
                     >
 {
 private:
 
-  typedef TeamPolicy< Arg0 , Arg1 , Kokkos::Threads >              Policy ;
+  typedef Kokkos::Impl::TeamPolicyInternal< Kokkos::Threads, Properties ... >              Policy ;
   typedef typename Policy::work_tag                                WorkTag ;
   typedef typename Policy::member_type                             Member ;
   typedef Kokkos::Impl::FunctorValueTraits< FunctorType, WorkTag > ValueTraits ;
@@ -344,7 +441,7 @@ private:
   typename std::enable_if< std::is_same< TagType , void >::value >::type
   exec_team( const FunctorType & functor , Member member , reference_type update )
     {
-      for ( ; member.valid() ; member.next() ) {
+      for ( ; member.valid_static() ; member.next_static() ) {
         functor( member , update );
       }
     }
@@ -355,7 +452,7 @@ private:
   exec_team( const FunctorType & functor , Member member , reference_type update )
     {
       const TagType t{} ;
-      for ( ; member.valid() ; member.next() ) {
+      for ( ; member.valid_static() ; member.next_static() ) {
         functor( t , member , update );
       }
     }

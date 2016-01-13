@@ -169,6 +169,7 @@ ThreadsExec::ThreadsExec()
       m_numa_core_rank  = coord.second ;
       m_pool_base       = s_threads_exec ;
       m_pool_rank       = s_thread_pool_size[0] - ( entry + 1 );
+      m_pool_rank_rev   = s_thread_pool_size[0] - ( pool_rank() + 1 );
       m_pool_size       = s_thread_pool_size[0] ;
       m_pool_fan_size   = fan_size( m_pool_rank , m_pool_size );
       m_pool_state      = ThreadsExec::Active ;
@@ -817,6 +818,10 @@ void ThreadsExec::finalize()
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+
+int Threads::concurrency() {
+  return thread_pool_size(0);
+}
 
 Threads & Threads::instance(int)
 {

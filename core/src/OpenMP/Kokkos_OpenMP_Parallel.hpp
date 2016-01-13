@@ -148,7 +148,7 @@ public:
         exec.reset_steal_target();
         #pragma omp barrier
         
-        long work_index = exec.get_work_index();
+        Member work_index = exec.get_work_index();
 
         while(work_index != -1) {
           const Member begin = static_cast<Member>(work_index) * m_policy.chunk_size();
@@ -300,7 +300,7 @@ public:
         exec.reset_steal_target();
         #pragma omp barrier
 
-        long work_index = exec.get_work_index();
+        Member work_index = exec.get_work_index();
 
         reference_type update = ValueInit::init( m_functor , exec.scratch_reduce() );
         while(work_index != -1) {

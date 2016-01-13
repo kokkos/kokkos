@@ -99,10 +99,22 @@ private:
   int           m_numa_rank ;
   int           m_numa_core_rank ;
   int           m_pool_rank ;
+  int           m_pool_rank_rev ;
   int           m_pool_size ;
   int           m_pool_fan_size ;
   int volatile  m_pool_state ;  ///< State for global synchronizations
 
+  // Members for dynamic scheduling
+  // Which thread am I stealing from currently
+  int m_current_steal_target;
+  // This thread's owned work_range
+  Kokkos::pair<long,long> m_work_range KOKKOS_ALIGN_16;
+  // Team Offset if one thread determines work_range for others
+public:
+  long m_team_work_index;
+private:
+  // Is this thread stealing (i.e. its owned work_range is exhausted
+  bool m_stealing;
 
   static void global_lock();
   static void global_unlock();
@@ -426,6 +438,130 @@ public:
   static void fence();
   static bool sleep();
   static bool wake();
+
+  /* Dynamic Scheduling related functionality */
+  // Initialize the work range for this thread
+  inline void set_work_range(const long& begin, const long& end, const long& chunk_size) {
+    m_work_range.first = (begin+chunk_size-1)/chunk_size;
+    m_work_range.second = end>0?(end+chunk_size-1)/chunk_size:m_work_range.first;
+  }
+
+  // Claim and index from this thread's range from the beginning
+  inline long get_work_index_begin () {
+    Kokkos::pair<long,long> work_range_new = m_work_range;
+    Kokkos::pair<long,long> work_range_old = work_range_new;
+    if(work_range_old.first>=work_range_old.second)
+      return -1;
+
+    work_range_new.first+=1;
+
+    bool success = false;
+    while(!success) {
+      work_range_new = Kokkos::atomic_compare_exchange(&m_work_range,work_range_old,work_range_new);
+      success = ( (work_range_new == work_range_old) ||
+                  (work_range_new.first>=work_range_new.second));
+      work_range_old = work_range_new;
+      work_range_new.first+=1;
+    }
+    if(work_range_old.first<work_range_old.second)
+      return work_range_old.first;
+    else
+      return -1;
+  }
+
+  // Claim and index from this thread's range from the end
+  inline long get_work_index_end () {
+    Kokkos::pair<long,long> work_range_new = m_work_range;
+    Kokkos::pair<long,long> work_range_old = work_range_new;
+    if(work_range_old.first>=work_range_old.second)
+      return -1;
+    work_range_new.second-=1;
+    bool success = false;
+    while(!success) {
+      work_range_new = Kokkos::atomic_compare_exchange(&m_work_range,work_range_old,work_range_new);
+      success = ( (work_range_new == work_range_old) ||
+                  (work_range_new.first>=work_range_new.second) );
+      work_range_old = work_range_new;
+      work_range_new.second-=1;
+    }
+    if(work_range_old.first<work_range_old.second)
+      return work_range_old.second-1;
+    else
+      return -1;
+  }
+
+  // Reset the steal target
+  inline void reset_steal_target() {
+    m_current_steal_target = (m_pool_rank+1)%pool_size();
+    m_stealing = false;
+  }
+
+  // Reset the steal target
+  inline void reset_steal_target(int team_size) {
+    m_current_steal_target = (m_pool_rank_rev+team_size);
+    if(m_current_steal_target>=pool_size())
+      m_current_steal_target = 0;//pool_size()-1;
+    m_stealing = false;
+  }
+
+  // Get a steal target; start with my-rank + 1 and go round robin, until arriving at this threads rank
+  // Returns -1 fi no active steal target available
+  inline int get_steal_target() {
+    while(( m_pool_base[m_current_steal_target]->m_work_range.second <=
+            m_pool_base[m_current_steal_target]->m_work_range.first  ) &&
+          (m_current_steal_target!=m_pool_rank) ) {
+      m_current_steal_target = (m_current_steal_target+1)%pool_size();
+    }
+    if(m_current_steal_target == m_pool_rank)
+      return -1;
+    else
+      return m_current_steal_target;
+  }
+
+  inline int get_steal_target(int team_size) {
+
+    while(( m_pool_base[m_current_steal_target]->m_work_range.second <=
+            m_pool_base[m_current_steal_target]->m_work_range.first  ) &&
+          (m_current_steal_target!=m_pool_rank_rev) ) {
+      if(m_current_steal_target + team_size < pool_size())
+        m_current_steal_target = (m_current_steal_target+team_size);
+      else
+        m_current_steal_target = 0;
+    }
+
+    if(m_current_steal_target == m_pool_rank_rev)
+      return -1;
+    else
+      return m_current_steal_target;
+  }
+
+  inline long steal_work_index (int team_size = 0) {
+    long index = -1;
+    int steal_target = team_size>0?get_steal_target(team_size):get_steal_target();
+    while ( (steal_target != -1) && (index == -1)) {
+      index = m_pool_base[steal_target]->get_work_index_end();
+      if(index == -1)
+        steal_target = team_size>0?get_steal_target(team_size):get_steal_target();
+    }
+    return index;
+  }
+
+  // Get a work index. Claim from owned range until its exhausted, then steal from other thread
+  inline long get_work_index (int team_size = 0) {
+    long work_index = -1;
+    if(!m_stealing) work_index = get_work_index_begin();
+
+    if( work_index == -1) {
+      memory_fence();
+      m_stealing = true;
+      work_index = steal_work_index(team_size);
+    }
+
+    m_team_work_index = work_index;
+    memory_fence();
+    return work_index;
+  }
+
 };
 
 } /* namespace Impl */

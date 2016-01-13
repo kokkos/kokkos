@@ -112,7 +112,7 @@ private:
   // Which thread am I stealing from currently
   int m_current_steal_target;
   // This thread's owned work_range
-  Kokkos::pair<long,long> m_work_range;
+  Kokkos::pair<long,long> m_work_range KOKKOS_ALIGN_16;
   // Team Offset if one thread determines work_range for others
   long m_team_work_index;
 
@@ -182,7 +182,7 @@ public:
   inline static
   OpenMPexec * get_thread_omp() { return m_pool[ m_map_rank[ omp_get_thread_num() ] ]; }
 
-
+  /* Dynamic Scheduling related functionality */
   // Initialize the work range for this thread
   inline void set_work_range(const long& begin, const long& end, const long& chunk_size) {
     m_work_range.first = (begin+chunk_size-1)/chunk_size;
