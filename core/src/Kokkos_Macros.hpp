@@ -374,6 +374,12 @@
 #endif
 
 //----------------------------------------------------------------------------
+/** Define Macro for alignment: */
+#if ! defined(KOKKOS_ALIGN_16)
+#define KOKKOS_ALIGN_16 __attribute__((aligned(16)))
+#endif
+
+//----------------------------------------------------------------------------
 /** Determine the default execution space for parallel dispatch.
  *  There is zero or one default execution space specified.
  */
