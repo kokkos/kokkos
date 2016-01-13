@@ -104,7 +104,8 @@ template<typename Arg>
 struct is_tag_type {
   enum { value = !(is_execution_space<Arg>::value ||
                    is_schedule_type<Arg>::value ||
-                   is_index_type<Arg>::value)};
+                   is_index_type<Arg>::value ||
+                   std::is_integral<Arg>::value)};
 };
 
 //Policy Traits
@@ -196,8 +197,9 @@ struct PolicyTraits {
 #else
   typedef typename has_condition<Kokkos::DefaultExecutionSpace,is_execution_space,Props ...>::type execution_space;
   typedef typename has_condition<Kokkos::Schedule<Kokkos::Static>,is_schedule_type,Props ...>::type schedule_type;
-  typedef typename has_condition<Kokkos::IndexType<typename execution_space::size_type>,is_index_type,Props ...>::type::type index_type;
   typedef typename has_condition<void,is_tag_type,Props ...>::type work_tag;
+  typedef typename has_condition<typename execution_space::size_type, std::is_integral, Props ... >::type default_index_type;
+  typedef typename has_condition<Kokkos::IndexType<default_index_type>,is_index_type,Props ...>::type::type index_type;
 #endif
 };
 

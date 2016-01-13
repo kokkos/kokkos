@@ -180,7 +180,7 @@ struct TestRange {
       });
 
       int error = 0;
-      Kokkos::parallel_reduce(N, KOKKOS_LAMBDA(const typename policy_t::member_type& i, int& lsum) {
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0,N), KOKKOS_LAMBDA(const typename policy_t::member_type& i, int& lsum) {
         lsum += ( a(i)!= (i<N/2?1:10000) );
       },error);
       ASSERT_EQ(error,0);
@@ -213,7 +213,7 @@ struct TestRange {
       ASSERT_EQ(sum,N);
 
       int error = 0;
-      Kokkos::parallel_reduce(N, KOKKOS_LAMBDA(const typename policy_t::member_type& i, int& lsum) {
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0,N), KOKKOS_LAMBDA(const typename policy_t::member_type& i, int& lsum) {
         lsum += ( a(i)!= (i<N/2?1:10000) );
       },error);
       ASSERT_EQ(error,0);

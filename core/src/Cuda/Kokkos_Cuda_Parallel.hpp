@@ -243,9 +243,17 @@ public:
 
 } // namespace Impl
 
-template< class Arg0 , class Arg1 >
-class TeamPolicy< Arg0 , Arg1 , Kokkos::Cuda >
+namespace Impl {
+template< class ... Properties >
+class TeamPolicyInternal< Kokkos::Cuda , Properties ... >: public PolicyTraits<Properties ... >
 {
+public:
+
+  //! Tag this class as a kokkos execution policy
+  typedef TeamPolicyInternal      execution_policy ;
+
+  typedef PolicyTraits<Properties ... > traits;
+
 private:
 
   enum { MAX_WARP = 8 };
@@ -257,15 +265,8 @@ private:
 
 public:
 
-  //! Tag this class as a kokkos execution policy
-  typedef TeamPolicy     execution_policy ;
-
   //! Execution space of this execution policy
   typedef Kokkos::Cuda  execution_space ;
-
-  typedef typename
-    Impl::if_c< ! Impl::is_same< Kokkos::Cuda , Arg0 >::value , Arg0 , Arg1 >::type
-      work_tag ;
 
   //----------------------------------------
 
@@ -277,7 +278,7 @@ public:
 
       for ( ; n ; n >>= 1 ) {
         const int shmem_size =
-          /* for global reduce */ Impl::cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,work_tag>( functor , n )
+          /* for global reduce */ Impl::cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,typename traits::work_tag>( functor , n )
           /* for team   reduce */ + ( n + 2 ) * sizeof(double)
           /* for team   shared */ + Impl::FunctorTeamShmemSize< FunctorType >::value( functor , n );
 
@@ -311,7 +312,7 @@ public:
   inline size_t scratch_size() const { return m_scratch_size ; }
 
   /** \brief  Specify league size, request team size */
-  TeamPolicy( execution_space &
+  TeamPolicyInternal( execution_space &
             , int league_size_
             , int team_size_request
             , int vector_length_request = 1 )
@@ -336,7 +337,7 @@ public:
     }
 
   /** \brief  Specify league size, request team size */
-  TeamPolicy( execution_space &
+  TeamPolicyInternal( execution_space &
             , int league_size_
             , const Kokkos::AUTO_t & /* team_size_request */
             , int vector_length_request = 1 )
@@ -355,7 +356,7 @@ public:
         Impl::throw_runtime_exception( "Requested too large league_size for TeamPolicy on Cuda execution space.");
     }
 
-  TeamPolicy( int league_size_
+  TeamPolicyInternal( int league_size_
             , int team_size_request
             , int vector_length_request = 1 )
     : m_league_size( league_size_ )
@@ -378,7 +379,7 @@ public:
       }
     }
 
-  TeamPolicy( int league_size_
+  TeamPolicyInternal( int league_size_
             , const Kokkos::AUTO_t & /* team_size_request */
             , int vector_length_request = 1 )
     : m_league_size( league_size_ )
@@ -397,7 +398,7 @@ public:
     }
 
   template<class MemorySpace>
-  TeamPolicy( int league_size_
+  TeamPolicyInternal( int league_size_
             , int team_size_request
             , const Experimental::TeamScratchRequest<MemorySpace> & scratch_request )
     : m_league_size( league_size_ )
@@ -421,7 +422,7 @@ public:
     }
 
   template<class MemorySpace>
-  TeamPolicy( int league_size_
+  TeamPolicyInternal( int league_size_
             , const Kokkos::AUTO_t & /* team_size_request */
             , const Experimental::TeamScratchRequest<MemorySpace> & scratch_request )
     : m_league_size( league_size_ )
@@ -441,7 +442,7 @@ public:
 
   typedef Kokkos::Impl::CudaTeamMember member_type ;
 };
-
+} // namspace Impl
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
@@ -516,14 +517,15 @@ public:
     { }
 };
 
-template< class FunctorType , class Arg0 , class Arg1 >
+template< class FunctorType , class ... Properties >
 class ParallelFor< FunctorType
-                 , Kokkos::TeamPolicy< Arg0 , Arg1 , Kokkos::Cuda >
+                 , Kokkos::TeamPolicy< Properties ... >
+                 , Kokkos::Cuda
                  >
 {
 private:
 
-  typedef Kokkos::TeamPolicy< Arg0 , Arg1 , Kokkos::Cuda >   Policy ;
+  typedef TeamPolicyInternal< Kokkos::Cuda , Properties ... >   Policy ;
   typedef typename Policy::member_type  Member ;
   typedef typename Policy::work_tag     WorkTag ;
 
@@ -812,14 +814,15 @@ public:
 
 //----------------------------------------------------------------------------
 
-template< class FunctorType , class Arg0 , class Arg1 >
+template< class FunctorType , class ... Properties >
 class ParallelReduce< FunctorType
-                    , Kokkos::TeamPolicy< Arg0 , Arg1 , Kokkos::Cuda >
+                    , Kokkos::TeamPolicy< Properties ... >
+                    , Kokkos::Cuda
                     >
 {
 private:
 
-  typedef Kokkos::TeamPolicy<Arg0,Arg1,Kokkos::Cuda>  Policy ;
+  typedef TeamPolicyInternal< Kokkos::Cuda, Properties ... >  Policy ;
   typedef typename Policy::member_type  Member ;
   typedef typename Policy::work_tag     WorkTag ;
 

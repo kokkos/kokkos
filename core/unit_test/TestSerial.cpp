@@ -82,6 +82,8 @@
 #include <TestMemorySpaceTracking.hpp>
 #include <TestTemplateMetaFunctions.hpp>
 
+#include <TestPolicyConstruction.hpp>
+
 namespace Test {
 
 class serial : public ::testing::Test {
@@ -98,6 +100,11 @@ protected:
 
 TEST_F( serial , impl_shared_alloc ) {
   test_shared_alloc< Kokkos::HostSpace , Kokkos::Serial >();
+}
+
+TEST_F( serial, policy_construction) {
+  TestRangePolicyConstruction< Kokkos::Serial >();
+  TestTeamPolicyConstruction< Kokkos::Serial >();
 }
 
 TEST_F( serial , impl_view_mapping ) {
@@ -166,15 +173,21 @@ TEST_F( serial, view_subview_right_3 ) {
 
 TEST_F( serial , range_tag )
 {
-  TestRange< Kokkos::Serial >::test_for(1000);
-  TestRange< Kokkos::Serial >::test_reduce(1000);
-  TestRange< Kokkos::Serial >::test_scan(1000);
+  TestRange< Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >::test_for(1000);
+  TestRange< Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >::test_reduce(1000);
+  TestRange< Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >::test_scan(1000);
+  TestRange< Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(1001);
+  TestRange< Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(1001);
+  TestRange< Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >::test_scan(1001);
+  TestRange< Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >::test_dynamic_policy(1000);
 }
 
 TEST_F( serial , team_tag )
 {
-  TestTeamPolicy< Kokkos::Serial >::test_for( 1000 );
-  TestTeamPolicy< Kokkos::Serial >::test_reduce( 1000 );
+  TestTeamPolicy< Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >::test_for(1000);
+  TestTeamPolicy< Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >::test_reduce(1000);
+  TestTeamPolicy< Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(1000);
+  TestTeamPolicy< Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(1000);
 }
 
 TEST_F( serial, long_reduce) {
@@ -205,27 +218,37 @@ TEST_F( serial , scan )
 }
 
 TEST_F( serial , team_long_reduce) {
-  TestReduceTeam< long ,   Kokkos::Serial >( 100000 );
+  TestReduceTeam< long ,   Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >( 3 );
+  TestReduceTeam< long ,   Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >( 3 );
+  TestReduceTeam< long ,   Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >( 100000 );
+  TestReduceTeam< long ,   Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >( 100000 );
 }
 
 TEST_F( serial , team_double_reduce) {
-  TestReduceTeam< double ,   Kokkos::Serial >( 100000 );
+  TestReduceTeam< double ,   Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >( 3 );
+  TestReduceTeam< double ,   Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >( 3 );
+  TestReduceTeam< double ,   Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >( 100000 );
+  TestReduceTeam< double ,   Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >( 100000 );
 }
 
 TEST_F( serial , team_shared_request) {
-  TestSharedTeam< Kokkos::Serial >();
+  TestSharedTeam< Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >();
+  TestSharedTeam< Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >();
 }
 
 #if defined(KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA) 
 TEST_F( serial , team_lambda_shared_request) {
-  TestLambdaSharedTeam< Kokkos::HostSpace, Kokkos::Serial >();
+  TestLambdaSharedTeam< Kokkos::HostSpace, Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >();
+  TestLambdaSharedTeam< Kokkos::HostSpace, Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >();
 }
 #endif
 
 TEST_F( serial  , team_scan )
 {
-  TestScanTeam< Kokkos::Serial >( 10 );
-  TestScanTeam< Kokkos::Serial >( 10000 );
+  TestScanTeam< Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >( 10 );
+  TestScanTeam< Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >( 10 );
+  TestScanTeam< Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >( 10000 );
+  TestScanTeam< Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >( 10000 );
 }
 
 

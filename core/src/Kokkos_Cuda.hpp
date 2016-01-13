@@ -160,6 +160,9 @@ public:
   //! Has been initialized
   static int is_initialized();
 
+  /** \brief  Return the maximum amount of concurrency.  */
+  static int concurrency();
+
   //! Print configuration information to the given output stream.
   static void print_configuration( std::ostream & , const bool detail = false );
 

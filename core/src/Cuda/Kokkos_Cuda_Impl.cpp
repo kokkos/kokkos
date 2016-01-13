@@ -701,6 +701,10 @@ namespace Kokkos {
 Cuda::size_type Cuda::detect_device_count()
 { return Impl::CudaInternalDevices::singleton().m_cudaDevCount ; }
 
+int Cuda::concurrency() {
+  return 131072;
+}
+
 int Cuda::is_initialized()
 { return Impl::CudaInternal::singleton().is_initialized(); }
 
