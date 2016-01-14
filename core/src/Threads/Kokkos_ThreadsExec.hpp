@@ -232,6 +232,36 @@ public:
       return *((volatile int*) reduce_memory());
     }
 
+  inline
+  void barrier( )
+    {
+      // Make sure there is enough scratch space:
+      const int rev_rank = m_pool_size - ( m_pool_rank + 1 );
+
+      memory_fence();
+
+      // Fan-in reduction with highest ranking thread as the root
+      for ( int i = 0 ; i < m_pool_fan_size ; ++i ) {
+        // Wait: Active -> Rendezvous
+        Impl::spinwait( m_pool_base[ rev_rank + (1<<i) ]->m_pool_state , ThreadsExec::Active );
+      }
+
+      if ( rev_rank ) {
+        m_pool_state = ThreadsExec::Rendezvous ;
+        // Wait: Rendezvous -> Active
+        Impl::spinwait( m_pool_state , ThreadsExec::Rendezvous );
+      }
+      else {
+        // Root thread does the reduction and broadcast
+
+        memory_fence();
+
+        for ( int rank = 0 ; rank < m_pool_size ; ++rank ) {
+          get_thread( rank )->m_pool_state = ThreadsExec::Active ;
+        }
+      }
+    }
+
   //------------------------------------
   // All-thread functions:
 
