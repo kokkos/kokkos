@@ -74,6 +74,7 @@
 #include <TestAggregateReduction.hpp>
 #include <TestCompilerMacros.hpp>
 #include <TestTaskPolicy.hpp>
+#include <TestMemoryPool.hpp>
 
 
 #include <TestCXX11.hpp>
@@ -379,6 +380,12 @@ TEST_F( serial , compiler_macros )
 TEST_F( serial , memory_space )
 {
   TestMemorySpace< Kokkos::Serial >();
+}
+
+TEST_F( serial , memory_pool )
+{
+  bool val = TestMemoryPool::test_mempool< Kokkos::Serial >( 8, 80000000 );
+  ASSERT_TRUE( val );
 }
 
 //----------------------------------------------------------------------------

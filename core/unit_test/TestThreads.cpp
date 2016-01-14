@@ -74,6 +74,8 @@
 #include <TestAggregate.hpp>
 #include <TestAggregateReduction.hpp>
 #include <TestCompilerMacros.hpp>
+#include <TestTaskPolicy.hpp>
+#include <TestMemoryPool.hpp>
 
 
 #include <TestCXX11.hpp>
@@ -82,7 +84,6 @@
 #include <TestMemorySpaceTracking.hpp>
 #include <TestTemplateMetaFunctions.hpp>
 
-#include <TestTaskPolicy.hpp>
 
 #include <TestPolicyConstruction.hpp>
 
@@ -427,6 +428,12 @@ TEST_F( threads , compiler_macros )
 TEST_F( threads , memory_space )
 {
   TestMemorySpace< Kokkos::Threads >();
+}
+
+TEST_F( threads , memory_pool )
+{
+  bool val = TestMemoryPool::test_mempool< Kokkos::Threads >( 8, 80000000 );
+  ASSERT_TRUE( val );
 }
 
 //----------------------------------------------------------------------------
