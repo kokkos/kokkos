@@ -110,7 +110,7 @@ private:
   // Argument #2, if not void, must be the space.
   enum { Arg1_is_space  = Kokkos::Impl::is_execution_space< Arg1 >::value };
   enum { Arg2_is_space  = Kokkos::Impl::is_execution_space< Arg2 >::value };
-  enum { Arg2_is_void   = Kokkos::Impl::is_same< Arg2 , void >::value };
+  enum { Arg2_is_void   = std::is_same< Arg2 , void >::value };
 
   struct ErrorNoExecutionSpace {};
 

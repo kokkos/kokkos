@@ -237,6 +237,7 @@ public:
 
   int         m_cudaDev ;
   int         m_cudaArch ;
+  unsigned    m_multiProcCount ;
   unsigned    m_maxWarpCount ;
   unsigned    m_maxBlock ;
   unsigned    m_maxSharedWords ;
@@ -268,6 +269,7 @@ public:
   CudaInternal()
     : m_cudaDev( -1 )
     , m_cudaArch( -1 )
+    , m_multiProcCount( 0 )
     , m_maxWarpCount( 0 )
     , m_maxBlock( 0 )
     , m_maxSharedWords( 0 )
@@ -330,6 +332,7 @@ CudaInternal::~CudaInternal()
 
   m_cudaDev                 = -1 ;
   m_cudaArch                = -1 ;
+  m_multiProcCount          = 0 ;
   m_maxWarpCount            = 0 ;
   m_maxBlock                = 0 ;
   m_maxSharedWords          = 0 ;
@@ -402,6 +405,10 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
                 << " , this will likely reduce potential performance."
                 << std::endl ;
     }
+
+    // number of multiprocessors
+
+    m_multiProcCount = cudaProp.multiProcessorCount ;
 
     //----------------------------------
     // Maximum number of warps,
@@ -656,6 +663,7 @@ void CudaInternal::finalize()
 #endif
 
     m_cudaDev             = -1 ;
+    m_multiProcCount      = 0 ;
     m_maxWarpCount        = 0 ;
     m_maxBlock            = 0 ;
     m_maxSharedWords      = 0 ;
@@ -671,6 +679,9 @@ void CudaInternal::finalize()
 }
 
 //----------------------------------------------------------------------------
+
+Cuda::size_type cuda_internal_multiprocessor_count()
+{ return CudaInternal::singleton().m_multiProcCount ; }
 
 Cuda::size_type cuda_internal_maximum_warp_count()
 { return CudaInternal::singleton().m_maxWarpCount ; }

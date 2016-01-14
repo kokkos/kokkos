@@ -43,14 +43,15 @@
 
 // Experimental unified task-data parallel manycore LDRD
 
-#ifndef KOKKOS_THREADS_TASKPOLICY_HPP
-#define KOKKOS_THREADS_TASKPOLICY_HPP
+#ifndef KOKKOS_CUDA_TASKPOLICY_HPP
+#define KOKKOS_CUDA_TASKPOLICY_HPP
 
+#include <Kokkos_Core_fwd.hpp>
 
-#include <Kokkos_Threads.hpp>
+#if defined( KOKKOS_HAVE_CUDA )
+
+#include <Kokkos_Cuda.hpp>
 #include <Kokkos_TaskPolicy.hpp>
-
-#if defined( KOKKOS_HAVE_PTHREAD )
 
 //----------------------------------------------------------------------------
 
@@ -58,184 +59,240 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-/** \brief  Base class for all Kokkos::Threads tasks */
+struct CudaTaskPolicyQueue {
+
+  typedef Kokkos::Experimental::MemoryPool< Kokkos::CudaUVMSpace >
+    memory_space ;
+
+  typedef Kokkos::Experimental::Impl::TaskMember< Kokkos::Cuda , void , void >
+    task_root_type ;
+
+  memory_space     m_space ;
+  task_root_type * m_ready_team ;
+  task_root_type * m_ready_serial ;
+  task_root_type * m_garbage ;
+  int              m_team_size ;
+  int              m_default_dependence_capacity ;
+  int              m_task_count ;
+
+  __device__
+  void driver();
+
+  __device__
+  void complete_executed_task( task_root_type * );
+
+  __device__ static
+  task_root_type * pop_ready_task( task_root_type * volatile * const queue );
+
+  CudaTaskPolicyQueue( const unsigned arg_memory_pool_chunk
+                     , const unsigned arg_memory_pool_size
+                     , const unsigned arg_default_dependence_capacity
+                     );
+
+  struct Destroy {
+    CudaTaskPolicyQueue * m_queue ;
+    void destroy_shared_allocation();
+  };
+};
+
+} /* namespace Impl */
+} /* namespace Experimental */
+} /* namespace Kokkos */
+
+
+namespace Kokkos {
+namespace Experimental {
+namespace Impl {
+
+/** \brief  Base class for all Kokkos::Cuda tasks */
 template<>
-class TaskMember< Kokkos::Threads , void , void > {
+class TaskMember< Kokkos::Cuda , void , void > {
 public:
 
-  typedef void         (* function_dealloc_type)( TaskMember * );
-  typedef TaskMember * (* function_verify_type) ( TaskMember * );
   typedef void         (* function_single_type) ( TaskMember * );
-  typedef void         (* function_team_type)   ( TaskMember * , Kokkos::Impl::ThreadsExecTeamMember & );
+  typedef void         (* function_team_type)   ( TaskMember * , Kokkos::Impl::CudaTeamMember & );
 
 private:
 
-  template < class > friend class Kokkos::Experimental::TaskPolicy ;
+  friend struct CudaTaskPolicyQueue ;
 
   // Needed to disambiguate references to base class variables
   // without triggering a false-positive on Intel compiler warning #955.
-  typedef TaskMember< Kokkos::Threads , void , void > SelfType ;
-  
-  TaskPolicy< Kokkos::Threads > * m_policy ;
-  function_dealloc_type  m_dealloc ;      ///< Deallocation
-  function_verify_type   m_verify ;       ///< Result type verification
-  function_team_type     m_team ;         ///< Apply function
-  function_single_type   m_serial ;       ///< Apply function
+  typedef TaskMember< Kokkos::Cuda , void , void > SelfType ;
+
+  CudaTaskPolicyQueue  * m_policy_queue ;
+  function_team_type     m_cuda_team ;    ///< Apply function
+  function_single_type   m_cuda_serial ;  ///< Apply function
   TaskMember **          m_dep ;          ///< Dependences
   TaskMember *           m_wait ;         ///< Linked list of tasks waiting on this task
   TaskMember *           m_next ;         ///< Linked list of tasks waiting on a different task
+  int                    m_size_alloc ;
   int                    m_dep_capacity ; ///< Capacity of dependences
   int                    m_dep_size ;     ///< Actual count of dependences
-  int                    m_size_alloc ;
   int                    m_shmem_size ;
   int                    m_ref_count ;    ///< Reference count
   int                    m_state ;        ///< State of the task
 
+  // 6 pointers + 6 integers = 9 words = 72 bytes
 
   TaskMember( TaskMember && ) = delete ;
   TaskMember( const TaskMember & ) = delete ;
   TaskMember & operator = ( TaskMember && ) = delete ;
   TaskMember & operator = ( const TaskMember & ) = delete ;
 
-  static TaskMember * pop_ready_task( TaskMember * volatile * const queue );
-  static void complete_executed_task( TaskMember * , volatile int * const );
-
-  static void throw_error_verify_type();
-
 protected:
 
   TaskMember()
-    : m_policy(0)
-    , m_dealloc(0)
-    , m_verify(0)
-    , m_team(0)
-    , m_serial(0)
+    : m_policy_queue(0)
+    , m_cuda_team(0)
+    , m_cuda_serial(0)
     , m_dep(0)
     , m_wait(0)
     , m_next(0)
+    , m_size_alloc(0)
     , m_dep_capacity(0)
     , m_dep_size(0)
-    , m_size_alloc(0)
     , m_shmem_size(0)
     , m_ref_count(0)
-    , m_state(0)
+    , m_state( TASK_STATE_CONSTRUCTING )
     {}
 
 public:
 
-  static void execute_ready_tasks_driver( Kokkos::Impl::ThreadsExec & , const void * );
-
   ~TaskMember();
-
-  template< typename ResultType >
-  KOKKOS_FUNCTION static
-  TaskMember * verify_type( TaskMember * t )
-    {
-      enum { check_type = ! std::is_same< ResultType , void >::value };
-
-      if ( check_type && t != 0 ) {
-
-        // Verify that t->m_verify is this function
-        const function_verify_type self = & TaskMember::template verify_type< ResultType > ;
-
-        if ( t->m_verify != self ) {
-          t = 0 ;
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-          throw_error_verify_type();
-#endif
-        }
-      }
-      return t ;
-    }
 
   //----------------------------------------
   /*  Inheritence Requirements on task types:
    *
-   *    class TaskMember< Threads , DerivedType::value_type , FunctorType >
-   *      : public TaskMember< Threads , DerivedType::value_type , void >
+   *    class DerivedTaskType
+   *      : public TaskMember< Cuda , DerivedType::value_type , FunctorType >
+   *      { ... };
+   *
+   *    class TaskMember< Cuda , DerivedType::value_type , FunctorType >
+   *      : public TaskMember< Cuda , DerivedType::value_type , void >
    *      , public Functor
    *      { ... };
    *
    *  If value_type != void
-   *    class TaskMember< Threads , value_type , void >
-   *      : public TaskMember< Threads , void , void >
+   *    class TaskMember< Cuda , value_type , void >
+   *      : public TaskMember< Cuda , void , void >
+   *
+   *  Allocate space for DerivedTaskType followed by TaskMember*[ dependence_capacity ]
    *
    */
   //----------------------------------------
+  // If after the 'apply' the task's state is waiting 
+  // then it will be rescheduled and called again.
+  // Otherwise the functor must be destroyed.
 
   template< class DerivedTaskType , class Tag >
-  KOKKOS_FUNCTION static
-  void apply_single( typename std::enable_if< ! std::is_same< typename DerivedTaskType::result_type , void >::value
-                                                , TaskMember * >::type t )
+  __device__ static
+  void apply_single(
+    typename std::enable_if
+      <( std::is_same< Tag , void >::value &&
+        std::is_same< typename DerivedTaskType::result_type , void >::value
+       ), TaskMember * >::type t )
+    {
+      typedef typename DerivedTaskType::functor_type  functor_type ;
+
+      DerivedTaskType * const self = static_cast< DerivedTaskType * >(t);
+
+      static_cast<functor_type*>(self)->apply();
+
+      if ( self->m_state == int(Kokkos::Experimental::TASK_STATE_EXECUTING) ) {
+        static_cast<functor_type*>(self)->~functor_type();
+      }
+
+      t->m_policy_queue->complete_executed_task( t );
+    }
+
+  template< class DerivedTaskType , class Tag >
+  __device__ static
+  void apply_single(
+    typename std::enable_if
+      <( std::is_same< Tag , void >::value &&
+        ! std::is_same< typename DerivedTaskType::result_type , void >::value
+       ), TaskMember * >::type t )
     {
       typedef typename DerivedTaskType::functor_type  functor_type ;
       typedef typename DerivedTaskType::result_type   result_type ;
 
-      DerivedTaskType & self = * static_cast< DerivedTaskType * >(t);
+      DerivedTaskType * const self = static_cast< DerivedTaskType * >(t);
 
-      Kokkos::Impl::FunctorApply< functor_type , Tag , result_type & >
-        ::apply( (functor_type &) self , & self.m_result );
-    }
+      static_cast<functor_type*>(self)->apply( self->m_result );
 
-  template< class DerivedTaskType , class Tag >
-  KOKKOS_FUNCTION static
-  void apply_single( typename std::enable_if< std::is_same< typename DerivedTaskType::result_type , void >::value
-                                                , TaskMember * >::type t )
-    {
-      typedef typename DerivedTaskType::functor_type  functor_type ;
+      if ( self->m_state == int(Kokkos::Experimental::TASK_STATE_EXECUTING) ) {
+        static_cast<functor_type*>(self)->~functor_type();
+      }
 
-      DerivedTaskType & self = * static_cast< DerivedTaskType * >(t);
-
-      Kokkos::Impl::FunctorApply< functor_type , Tag , void >::apply( (functor_type &) self );
+      t->m_policy_queue->complete_executed_task( t );
     }
 
   //----------------------------------------
 
   template< class DerivedTaskType , class Tag >
-  KOKKOS_FUNCTION static
-  void apply_team( typename std::enable_if<(
-                     std::is_same<Tag,void>::value
-                     &&
-                     std::is_same<typename DerivedTaskType::result_type,void>::value
-                   ), TaskMember * >::type t
-                 , Kokkos::Impl::ThreadsExecTeamMember & member
-                 )
+  __device__ static
+  void apply_team(
+    typename std::enable_if
+      <( std::is_same<Tag,void>::value &&
+         std::is_same<typename DerivedTaskType::result_type,void>::value
+       ), TaskMember * >::type t
+    , Kokkos::Impl::CudaTeamMember & member
+    )
     {
-      DerivedTaskType & self = * static_cast< DerivedTaskType * >(t);
+      typedef typename DerivedTaskType::functor_type functor_type ;
 
-      self.DerivedTaskType::functor_type::apply( member );
+      DerivedTaskType * const self = static_cast< DerivedTaskType * >(t);
+
+      static_cast<functor_type*>(self)->apply( member );
+
+      member.team_barrier();
+
+      if ( member.team_rank() == 0 &&
+           self->m_state == int(Kokkos::Experimental::TASK_STATE_EXECUTING) ) {
+
+        static_cast<functor_type*>(self)->~functor_type();
+
+        t->m_policy_queue->complete_executed_task( t );
+      }
     }
 
-  /** \brief  Allocate and construct a task */
   template< class DerivedTaskType , class Tag >
-  KOKKOS_FUNCTION static
-  void apply_team( typename std::enable_if<(
-                     std::is_same<Tag,void>::value
-                     &&
-                     ! std::is_same<typename DerivedTaskType::result_type,void>::value
-                   ), TaskMember * >::type t
-                 , Kokkos::Impl::ThreadsExecTeamMember & member
-                 )
+  __device__ static
+  void apply_team(
+    typename std::enable_if
+      <( std::is_same<Tag,void>::value &&
+         ! std::is_same<typename DerivedTaskType::result_type,void>::value
+       ), TaskMember * >::type t
+    , Kokkos::Impl::CudaTeamMember & member
+    )
     {
-      DerivedTaskType & self = * static_cast< DerivedTaskType * >(t);
+      typedef typename DerivedTaskType::functor_type functor_type ;
 
-      self.DerivedTaskType::functor_type::apply( member , self.m_result );
+      DerivedTaskType * const self = static_cast< DerivedTaskType * >(t);
+
+      static_cast<functor_type*>(self)->apply( member , self->m_result );
+
+      member.team_barrier();
+
+      if ( member.team_rank() == 0 &&
+           self->m_state == int(Kokkos::Experimental::TASK_STATE_EXECUTING) ) {
+
+        static_cast<functor_type*>(self)->~functor_type();
+
+        t->m_policy_queue->complete_executed_task( t );
+      }
     }
 
   //----------------------------------------
 
-  void reschedule();
-  void schedule();
+  __device__ void reschedule();
+  __device__ void schedule();
 
   //----------------------------------------
 
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-  static
+  KOKKOS_FUNCTION static
   void assign( TaskMember ** const lhs , TaskMember * const rhs );
-#else
-  KOKKOS_INLINE_FUNCTION static
-  void assign( TaskMember ** const lhs , TaskMember * const rhs ) {}
-#endif
 
   TaskMember * get_dependence( int i ) const ;
 
@@ -243,8 +300,8 @@ public:
   int get_dependence() const
     { return m_dep_size ; }
 
-  void clear_dependence();
-  void add_dependence( TaskMember * before );
+  KOKKOS_FUNCTION void clear_dependence();
+  KOKKOS_FUNCTION void add_dependence( TaskMember * before );
 
   //----------------------------------------
 
@@ -258,14 +315,14 @@ public:
 
 };
 
-/** \brief  A Future< Kokkos::Threads , ResultType > will cast
- *          from  TaskMember< Kokkos::Threads , void , void >
- *          to    TaskMember< Kokkos::Threads , ResultType , void >
+/** \brief  A Future< Kokkos::Cuda , ResultType > will cast
+ *          from  TaskMember< Kokkos::Cuda , void , void >
+ *          to    TaskMember< Kokkos::Cuda , ResultType , void >
  *          to query the result.
  */
 template< class ResultType >
-class TaskMember< Kokkos::Threads , ResultType , void >
-  : public TaskMember< Kokkos::Threads , void , void >
+class TaskMember< Kokkos::Cuda , ResultType , void >
+  : public TaskMember< Kokkos::Cuda , void , void >
 {
 public:
 
@@ -279,20 +336,26 @@ public:
   get_result_type get() const { return m_result ; }
 
   inline
-  TaskMember() : TaskMember< Kokkos::Threads , void , void >(), m_result() {}
+  TaskMember() : TaskMember< Kokkos::Cuda , void , void >(), m_result() {}
 
+#if defined( KOKKOS_HAVE_CXX11 )
   TaskMember( const TaskMember & ) = delete ;
   TaskMember & operator = ( const TaskMember & ) = delete ;
+#else
+private:
+  TaskMember( const TaskMember & );
+  TaskMember & operator = ( const TaskMember & );
+#endif
 };
 
 /** \brief  Callback functions will cast
- *          from  TaskMember< Kokkos::Threads , void , void >
- *          to    TaskMember< Kokkos::Threads , ResultType , FunctorType >
+ *          from  TaskMember< Kokkos::Cuda , void , void >
+ *          to    TaskMember< Kokkos::Cuda , ResultType , FunctorType >
  *          to execute work functions.
  */
 template< class ResultType , class FunctorType >
-class TaskMember< Kokkos::Threads , ResultType , FunctorType >
-  : public TaskMember< Kokkos::Threads , ResultType , void >
+class TaskMember< Kokkos::Cuda , ResultType , FunctorType >
+  : public TaskMember< Kokkos::Cuda , ResultType , void >
   , public FunctorType
 {
 public:
@@ -301,7 +364,7 @@ public:
 
   inline
   TaskMember( const functor_type & arg_functor )
-    : TaskMember< Kokkos::Threads , ResultType , void >()
+    : TaskMember< Kokkos::Cuda , ResultType , void >()
     , functor_type( arg_functor )
     {}
 };
@@ -310,31 +373,49 @@ public:
 } /* namespace Experimental */
 } /* namespace Kokkos */
 
+template< class DerivedTaskType , class Tag >
+__global__
+void kokkos_cuda_task_policy_set_apply
+  ( Kokkos::Experimental::Impl::TaskMember< Kokkos::Cuda , void , void > * self
+  , int set_team )
+{
+  typedef Kokkos::Experimental::Impl::TaskMember< Kokkos::Cuda , void , void > Task ;
+
+  if ( set_team ) {
+    self->m_cuda_team =
+      Task::template apply_team< DerivedTaskType , Tag > ;
+  }
+  else {
+    self->m_cuda_serial =
+      Task::template apply_single< DerivedTaskType , Tag > ;
+  }
+}
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
 namespace Experimental {
 
-void wait( TaskPolicy< Kokkos::Threads > & );
+void wait( TaskPolicy< Kokkos::Cuda > & );
 
 template<>
-class TaskPolicy< Kokkos::Threads >
+class TaskPolicy< Kokkos::Cuda >
 {
 public:
 
-  typedef Kokkos::Threads                      execution_space ;
-  typedef TaskPolicy                           execution_policy ;
-  typedef Kokkos::Impl::ThreadsExecTeamMember  member_type ;
+  typedef Kokkos::Cuda                  execution_space ;
+  typedef TaskPolicy                    execution_policy ;
+  typedef Kokkos::Impl::CudaTeamMember  member_type ;
 
 private:
 
-  typedef Impl::TaskMember< Kokkos::Threads , void , void >  task_root_type ;
-  typedef Kokkos::Experimental::MemoryPool< Kokkos::Threads::memory_space > memory_space ;
+  typedef Impl::TaskMember< Kokkos::Cuda , void , void >  task_root_type ;
+  typedef Kokkos::Experimental::MemoryPool< Kokkos::CudaUVMSpace > memory_space ;
+  typedef Kokkos::Experimental::Impl::SharedAllocationTracker track_type ;
 
-  memory_space m_space ;        ///< Memory pool for allocation & deallocation
-  int m_default_dependence_capacity ;
-  int m_team_size ;    ///< Fixed size of a task-team
+  track_type                   m_track ;
+  Impl::CudaTaskPolicyQueue  * m_cuda_uvm_queue ;
 
   template< class FunctorType >
   static inline
@@ -352,132 +433,138 @@ private:
       return static_cast< task_root_type * >( static_cast< task_type * >(f) );
     }
 
-  template< class DerivedTaskType >
-  static
-  void deallocate( task_root_type * t )
-    {
-      DerivedTaskType * ptr = static_cast< DerivedTaskType * >(t);
-      TaskPolicy * const policy = ptr->m_policy ;
-      const unsigned size_alloc = ptr->m_size_alloc ;
-      ptr->~DerivedTaskType();
-      policy->m_space.deallocate( ptr , size_alloc );
-    }
 
   /** \brief  Allocate and construct a task.
    *
-   *  Allocate space for DerivedTaskType followed by TaskMember*[ dependence_capacity ]
+   *  Allocate space for DerivedTaskType followed
+   *  by TaskMember*[ dependence_capacity ]
    */
   template< class DerivedTaskType , class Tag >
+  KOKKOS_INLINE_FUNCTION
   task_root_type *
   create( const typename DerivedTaskType::functor_type &  arg_functor
-        , const task_root_type::function_team_type        arg_apply_team
-        , const task_root_type::function_single_type      arg_apply_single
+        , const int                                       arg_is_team
         , const unsigned                                  arg_team_shmem
         , const unsigned                                  arg_dependence_capacity
         )
     {
+      typedef typename DerivedTaskType::functor_type functor_type ;
+
       enum { padding_size = sizeof(DerivedTaskType) % sizeof(task_root_type*)
                           ? sizeof(task_root_type*) - sizeof(DerivedTaskType) % sizeof(task_root_type*) : 0 };
       enum { derived_size = sizeof(DerivedTaskType) + padding_size };
 
+      const unsigned dep_capacity
+        = ~0u == arg_dependence_capacity
+        ? m_cuda_uvm_queue->m_default_dependence_capacity
+        : arg_dependence_capacity ;
+
       const unsigned size_alloc =
-         derived_size + sizeof(task_root_type*) * arg_dependence_capacity ;
+         derived_size + sizeof(task_root_type*) * dep_capacity ;
 
       DerivedTaskType * const task =
-        new( m_space.allocate( size_alloc ) )
-          DerivedTaskType( arg_functor );
+        reinterpret_cast<DerivedTaskType*>(
+          m_cuda_uvm_queue->m_space.allocate( size_alloc ) );
 
-      task->task_root_type::m_policy       = this ;
-      task->task_root_type::m_dealloc      = & TaskPolicy::template deallocate< DerivedTaskType > ;
-      task->task_root_type::m_verify       = & task_root_type::template verify_type< typename DerivedTaskType::value_type > ;
-      task->task_root_type::m_team         = arg_apply_team ;
-      task->task_root_type::m_serial       = arg_apply_single ;
+      // Copy construct the functor into the task's UVM memory.
+      // Destructor will called on the device when the task is complete.
+      new( task ) DerivedTaskType( arg_functor );
+
+      // Set values
+
+      task->task_root_type::m_policy_queue = m_cuda_uvm_queue ;
       task->task_root_type::m_dep          = (task_root_type**)( ((unsigned char *)task) + derived_size );
-      task->task_root_type::m_dep_capacity = arg_dependence_capacity ;
+      task->task_root_type::m_dep_capacity = dep_capacity ;
       task->task_root_type::m_size_alloc   = size_alloc ;
       task->task_root_type::m_shmem_size   = arg_team_shmem ;
-      task->task_root_type::m_state        = TASK_STATE_CONSTRUCTING ;
 
       for ( unsigned i = 0 ; i < arg_dependence_capacity ; ++i ) task->task_root_type::m_dep[i] = 0 ;
+
+      // Set the apply pointer on the device via kernel launch.
+      // This will cause the allocated UVM memory to be copied to the device.
+
+      ::kokkos_cuda_task_policy_set_apply<DerivedTaskType,Tag><<<1,1>>>( task , arg_is_team );
+
+      // Synchronize to guarantee non-concurrent access
+      // between host and device.
+
+      cudaDeviceSynchronize();
 
       return static_cast< task_root_type * >( task );
     }
 
 public:
 
-  // Valid team sizes are 1,
-  // Threads::pool_size(1) == threads per numa, or
-  // Threads::pool_size(2) == threads per core
-
-  TaskPolicy( const unsigned arg_default_dependence_capacity = 4
-            , const unsigned arg_team_size = 0 /* default from thread pool topology */
+  TaskPolicy( const unsigned  arg_memory_pool_chunk
+            , const unsigned  arg_memory_pool_size
+            , const unsigned  arg_default_dependence_capacity = 4
             );
 
-  TaskPolicy( const TaskPolicy & rhs ) = default ;
-  
   KOKKOS_INLINE_FUNCTION
-  TaskPolicy( const TaskPolicy & rhs
-            , const unsigned arg_default_dependence_capacity )
-    : m_space( rhs.m_space )
-    , m_default_dependence_capacity( arg_default_dependence_capacity )
-    , m_team_size( rhs.m_team_size )
-    {}
+  TaskPolicy() : m_track(), m_cuda_uvm_queue(0) {}
 
-  TaskPolicy & operator = ( const TaskPolicy &rhs )
-    {
-      m_space = rhs.m_space ;
-      m_default_dependence_capacity = rhs.m_default_dependence_capacity;
-      m_team_size = rhs.m_team_size;
-      return *this;
-    }
+  KOKKOS_INLINE_FUNCTION
+  TaskPolicy( TaskPolicy && ) = default ;
 
+  KOKKOS_INLINE_FUNCTION
+  TaskPolicy( const TaskPolicy & ) = default ;
+
+  KOKKOS_INLINE_FUNCTION
+  TaskPolicy & operator = ( TaskPolicy && ) = default ;
+
+  KOKKOS_INLINE_FUNCTION
+  TaskPolicy & operator = ( const TaskPolicy & ) = default ;
+
+  //----------------------------------------
   // Create serial-thread task
 
   template< class FunctorType >
   KOKKOS_INLINE_FUNCTION
   Future< typename FunctorType::value_type , execution_space >
   create( const FunctorType & functor
-        , const unsigned dependence_capacity = ~0u )
+        , const unsigned dependence_capacity = ~0u ) const
     {
       typedef typename FunctorType::value_type  value_type ;
-      typedef Impl::TaskMember< execution_space , value_type , FunctorType >  task_type ;
+
+      typedef Impl::TaskMember< execution_space , value_type , FunctorType >
+        task_type ;
 
       return Future< value_type , execution_space >(
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
         TaskPolicy::create< task_type , void >
           ( functor
-          , task_root_type::function_team_type(0)
-          , & task_root_type::template apply_single< task_type , void >
-          , 0
-          , ( ~0u == dependence_capacity ? m_default_dependence_capacity : dependence_capacity )
+          , 0 /* arg_is_team */
+          , 0 /* team shmem */
+          , dependence_capacity
           )
-#endif
         );
     }
 
+  //----------------------------------------
   // Create thread-team task
 
   template< class FunctorType >
   KOKKOS_INLINE_FUNCTION
   Future< typename FunctorType::value_type , execution_space >
   create_team( const FunctorType & functor
-             , const unsigned dependence_capacity = ~0u )
+             , const unsigned dependence_capacity = ~0u ) const
     {
       typedef typename FunctorType::value_type  value_type ;
-      typedef Impl::TaskMember< execution_space , value_type , FunctorType >  task_type ;
+
+      typedef Impl::TaskMember< execution_space , value_type , FunctorType >
+        task_type ;
 
       return Future< value_type , execution_space >(
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
         TaskPolicy::create< task_type , void >
           ( functor
-          , & task_root_type::template apply_team< task_type , void >
-          , task_root_type::function_single_type(0)
-          , Kokkos::Impl::FunctorTeamShmemSize< FunctorType >::value( functor , m_team_size )
-          , ( ~0u == dependence_capacity ? m_default_dependence_capacity : dependence_capacity )
+          , 1 /* arg_set_team */
+          , Kokkos::Impl::FunctorTeamShmemSize< FunctorType >::value
+              ( functor , m_cuda_uvm_queue->m_team_size )
+          , dependence_capacity
           )
-#endif
         );
     }
+
+  //----------------------------------------
 
   template< class A1 , class A2 , class A3 , class A4 >
   KOKKOS_INLINE_FUNCTION
@@ -489,11 +576,7 @@ public:
                           std::is_same< typename Future<A3,A4>::execution_space , execution_space >::value
                         >::type * = 0
                       ) const
-    {
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-      after.m_task->add_dependence( before.m_task );
-#endif
-    }
+    { after.m_task->add_dependence( before.m_task ); }
 
   template< class FunctorType , class A3 , class A4 >
   KOKKOS_INLINE_FUNCTION
@@ -503,31 +586,21 @@ public:
                         < std::is_same< typename Future<A3,A4>::execution_space , execution_space >::value
                         >::type * = 0
                       ) const
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     { get_task_root(task_functor)->add_dependence( before.m_task ); }
-#else
-    {}
-#endif
 
 
   template< class ValueType >
   const Future< ValueType , execution_space > &
     spawn( const Future< ValueType , execution_space > & f ) const
       {
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
         f.m_task->schedule();
-#endif
         return f ;
       }
 
   template< class FunctorType >
   KOKKOS_INLINE_FUNCTION
   void respawn( FunctorType * task_functor ) const
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     { get_task_root(task_functor)->reschedule(); }
-#else
-    {}
-#endif
 
   //----------------------------------------
   // Functions for an executing task functor to query dependences,
@@ -539,44 +612,34 @@ public:
   get_dependence( const FunctorType * task_functor , int i ) const
     {
       return Future<void,execution_space>(
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
         get_task_root(task_functor)->get_dependence(i)
-#endif
         );
     }
 
   template< class FunctorType >
   KOKKOS_INLINE_FUNCTION
   int get_dependence( const FunctorType * task_functor ) const
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     { return get_task_root(task_functor)->get_dependence(); }
-#else
-    { return 0 ; }
-#endif
 
   template< class FunctorType >
   KOKKOS_INLINE_FUNCTION
   void clear_dependence( FunctorType * task_functor ) const
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     { get_task_root(task_functor)->clear_dependence(); }
-#else
-    {}
-#endif
 
   //----------------------------------------
 
   static member_type & member_single();
 
-  friend void wait( TaskPolicy< Kokkos::Threads > & );
+  friend void wait( TaskPolicy< Kokkos::Cuda > & );
 };
 
 } /* namespace Experimental */
 } /* namespace Kokkos */
 
-#endif /* #if defined( KOKKOS_HAVE_PTHREAD ) */
+#endif /* #if defined( KOKKOS_HAVE_CUDA ) */
 
 //----------------------------------------------------------------------------
 
-#endif /* #ifndef KOKKOS_THREADS_TASKPOLICY_HPP */
+#endif /* #ifndef KOKKOS_CUDA_TASKPOLICY_HPP */
 
 
