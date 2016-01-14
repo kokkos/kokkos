@@ -112,10 +112,10 @@ public:
   __device__ inline void team_broadcast(ValueType& value, const int& thread_id) const {
     __shared__ ValueType sh_val;
     if(threadIdx.x == 0 && threadIdx.y == thread_id) {
-      sh_val = val;
+      sh_val = value;
     }
     team_barrier();
-    val = sh_val;
+    value = sh_val;
   }
 
 #ifdef KOKKOS_HAVE_CXX11
