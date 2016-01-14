@@ -266,15 +266,14 @@ public:
           // Replace the lock with the next entry on the list.
           Link * const l = atomic_compare_exchange( freelist, MEMPOOL_LIST_LOCK, head_next );
 
-#ifdef MEMPOOL_PRINTERR
           if ( l != MEMPOOL_LIST_LOCK ) {
-            // We shouldn't get here.  This is a test that we might want to
-            // comment out for performance reasons when we are sure it works.
+#ifdef MEMPOOL_PRINTERR
+            // We shouldn't get here, but this check is here for sanity.  
             fprintf( stderr, "MemoryPool::allocate() UNLOCK_ERROR(0x%lx)\n",
                      (unsigned long) freelist );
             fflush(stderr);
-          }
 #endif
+          }
 
           *((Link * volatile *) &(old_head->m_next) ) = 0 ;
           p = old_head;
