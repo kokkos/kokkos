@@ -110,9 +110,8 @@ private:
   // This thread's owned work_range
   Kokkos::pair<long,long> m_work_range KOKKOS_ALIGN_16;
   // Team Offset if one thread determines work_range for others
-public:
   long m_team_work_index;
-private:
+
   // Is this thread stealing (i.e. its owned work_range is exhausted
   bool m_stealing;
 
@@ -134,6 +133,7 @@ public:
   KOKKOS_INLINE_FUNCTION int pool_rank() const { return m_pool_rank ; }
   KOKKOS_INLINE_FUNCTION int numa_rank() const { return m_numa_rank ; }
   KOKKOS_INLINE_FUNCTION int numa_core_rank() const { return m_numa_core_rank ; }
+  inline long team_work_index() const { return m_team_work_index ; }
 
   static int get_thread_count();
   static ThreadsExec * get_thread( const int init_thread_rank );

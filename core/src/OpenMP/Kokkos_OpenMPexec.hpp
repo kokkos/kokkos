@@ -83,7 +83,7 @@ public:
   };
 
 
-public:
+private:
 
   static Pool         m_pool; // Indexed by: m_pool_rank_rev
 
@@ -142,6 +142,8 @@ public:
 
   inline int pool_rank() const { return m_pool_rank ; }
   inline int pool_rank_rev() const { return m_pool_rank_rev ; }
+
+  inline long team_work_index() const { return m_team_work_index ; }
 
   inline void * scratch_reduce() const { return ((char *) this) + m_scratch_exec_end ; }
   inline void * scratch_thread() const { return ((char *) this) + m_scratch_reduce_end ; }
@@ -635,7 +637,7 @@ public:
     }
     team_barrier();
 
-    long work_index = m_team_lead_exec.m_team_work_index;
+    long work_index = m_team_lead_exec.team_work_index();
 
     m_league_rank = work_index * m_chunk_size;
     m_league_chunk_end = (work_index +1 ) * m_chunk_size;

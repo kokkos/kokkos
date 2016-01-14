@@ -411,6 +411,10 @@ public:
     , m_league_size(1)
     , m_league_end(0)
     , m_league_rank(0)
+    , m_chunk_size(0)
+    , m_league_chunk_end(0)
+    , m_invalid_thread(0)
+    , m_team_alloc(0)
     {}
 
   inline
@@ -440,7 +444,7 @@ public:
     }
     team_barrier();
 
-    long work_index = m_team_base[0]->m_team_work_index;
+    long work_index = m_team_base[0]->team_work_index();
 
     m_league_rank = work_index * m_chunk_size;
     m_league_chunk_end = (work_index +1 ) * m_chunk_size;
