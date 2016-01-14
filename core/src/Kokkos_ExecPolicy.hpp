@@ -249,6 +249,12 @@ public:
   KOKKOS_INLINE_FUNCTION member_type begin() const { return m_begin ; }
   KOKKOS_INLINE_FUNCTION member_type end()   const { return m_end ; }
 
+
+  //TODO: find a better workaround for Clangs weird instantiation order
+  // This thing is here because of an instantiation error, where the RangePolicy is inserted into FunctorValue Traits, which
+  // tries decltype on the operator. It tries to do this even though the first argument of parallel for clearly doesn't match.
+  void operator()(const int&) const {}
+
   RangePolicy(const RangePolicy&) = default;
   RangePolicy(RangePolicy&&) = default;
 
