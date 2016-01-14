@@ -47,6 +47,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <Kokkos_Macros.hpp>
+#include <type_traits>
 
 namespace Kokkos {
 namespace Impl {

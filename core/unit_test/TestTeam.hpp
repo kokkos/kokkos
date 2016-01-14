@@ -488,8 +488,8 @@ struct TestLambdaSharedTeam {
     if(std::is_same<ExecSpace,Kokkos::Cuda>::value)
       team_size = 128;
 #endif
-    Kokkos::TeamPolicy< ScheduleType,  ExecSpace > team_exec( 8192 / team_size , team_size ,
-        Kokkos::Experimental::TeamScratchRequest<shmem_space>(SHARED_COUNT*2*sizeof(int)));
+    Kokkos::TeamPolicy< ScheduleType,  ExecSpace > team_exec( 8192 / team_size , team_size);
+    team_exec = team_exec.set_scratch_size(0,Kokkos::PerTeam(SHARED_COUNT*2*sizeof(int)));
 
     typename Functor::value_type error_count = 0 ;
 
