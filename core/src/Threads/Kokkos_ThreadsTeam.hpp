@@ -395,7 +395,7 @@ public:
           m_exec->reset_steal_target(m_team_size);
         }
         if(std::is_same<typename TeamPolicyInternal<Kokkos::Threads, Properties ...>::schedule_type::type,Kokkos::Dynamic>::value) {
-          int m = m_exec->all_reduce(1);
+          m_exec->barrier();
         }
       }
     }
@@ -626,9 +626,9 @@ public:
   inline int chunk_size() const { return m_chunk_size ; }
 
   /** \brief set chunk_size to a discrete value*/
-  inline TeamPolicyInternal set_chunk_size(typename traits::index_type chunk_size) const {
+  inline TeamPolicyInternal set_chunk_size(typename traits::index_type chunk_size_) const {
     TeamPolicyInternal p = *this;
-    p.m_chunk_size = chunk_size;
+    p.m_chunk_size = chunk_size_;
     return p;
   }
 
@@ -636,14 +636,14 @@ private:
   /** \brief finalize chunk_size if it was set to AUTO*/
   inline void set_auto_chunk_size() {
 
-    typename traits::index_type concurrency = traits::execution_space::thread_pool_size(0)/m_team_alloc;
+    int concurrency = traits::execution_space::thread_pool_size(0)/m_team_alloc;
 
     if(m_chunk_size > 0) {
       if(!Impl::is_integral_power_of_two( m_chunk_size ))
         Kokkos::abort("TeamPolicy blocking granularity must be power of two" );
     }
 
-    typename traits::index_type new_chunk_size = 1;
+    int new_chunk_size = 1;
     while(new_chunk_size*100*concurrency < m_league_size)
       new_chunk_size *= 2;
     if(new_chunk_size < 128) {

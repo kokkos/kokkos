@@ -300,6 +300,7 @@ private:
 
   const int m_league_size ;
   const int m_scratch_size ;
+  int m_chunk_size;
 
 public:
 
@@ -378,6 +379,15 @@ public:
     : m_league_size(league_size_request)
     , m_scratch_size(scratch_request.total(1))
     {}
+
+  inline int chunk_size() const { return m_chunk_size ; }
+
+  /** \brief set chunk_size to a discrete value*/
+  inline TeamPolicyInternal set_chunk_size(typename traits::index_type chunk_size_) const {
+    TeamPolicyInternal p = *this;
+    p.m_chunk_size = chunk_size_;
+    return p;
+  }
 
   typedef Impl::SerialTeamMember  member_type ;
 };

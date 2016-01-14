@@ -139,13 +139,14 @@ private:
 
     exec.set_work_range(range.begin(),range.end(),self.m_policy.chunk_size());
     exec.reset_steal_target();
-    int m = exec.all_reduce(1);
+    exec.barrier();
 
-    Member work_index = exec.get_work_index();
+    long work_index = exec.get_work_index();
 
     while(work_index != -1) {
       const Member begin = static_cast<Member>(work_index) * self.m_policy.chunk_size();
       const Member end = begin + self.m_policy.chunk_size() < self.m_policy.end()?begin+self.m_policy.chunk_size():self.m_policy.end();
+
       ParallelFor::template exec_range< WorkTag >
         ( self.m_functor , begin , end );
       work_index = exec.get_work_index();
@@ -243,7 +244,7 @@ private:
     ParallelFor::exec_team< WorkTag , typename Policy::schedule_type::type >
       ( self.m_functor , Member( & exec , self.m_policy , self.m_shared ) );
 
-    int m = exec.all_reduce(1);
+    exec.barrier();
     exec.fan_in();
   }
 
@@ -358,9 +359,9 @@ private:
 
     exec.set_work_range(range.begin(),range.end(),self.m_policy.chunk_size());
     exec.reset_steal_target();
-    int m = exec.all_reduce(1);
+    exec.barrier();
 
-    Member work_index = exec.get_work_index();
+    long work_index = exec.get_work_index();
     reference_type update = ValueInit::init( self.m_functor , exec.reduce_memory() );
     while(work_index != -1) {
       const Member begin = static_cast<Member>(work_index) * self.m_policy.chunk_size();

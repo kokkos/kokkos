@@ -291,9 +291,9 @@ public:
      }
 
      /** \brief set chunk_size to a discrete value*/
-     inline RangePolicy set_chunk_size(int chunk_size) const {
+     inline RangePolicy set_chunk_size(int chunk_size_) const {
        RangePolicy p = *this;
-       p.m_granularity = chunk_size;
+       p.m_granularity = chunk_size_;
        p.m_granularity_mask = p.m_granularity - 1;
        return p;
      }
