@@ -536,6 +536,8 @@ public:
 
   typedef PolicyTraits<Properties ... > traits;
 
+  TeamPolicyInternal& operator = (const TeamPolicyInternal&) = default;
+
   //----------------------------------------
 
   template< class FunctorType >

@@ -314,6 +314,8 @@ public:
   //! Execution space of this execution policy:
   typedef Kokkos::Serial  execution_space ;
 
+  TeamPolicyInternal& operator = (const TeamPolicyInternal&) = default;
+
   //----------------------------------------
 
   template< class FunctorType >

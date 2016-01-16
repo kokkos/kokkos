@@ -580,6 +580,9 @@ class TeamPolicy: public
   typedef Impl::PolicyTraits<Properties ... > traits;
 
 public:
+
+  TeamPolicy& operator = (const TeamPolicy&) = default;
+ 
   /** \brief  Construct policy with the given instance of the execution space */
   TeamPolicy( const typename traits::execution_space & , int league_size_request , int team_size_request , int vector_length_request = 1 )
     : internal_policy(typename traits::execution_space(),league_size_request,team_size_request, vector_length_request) {}

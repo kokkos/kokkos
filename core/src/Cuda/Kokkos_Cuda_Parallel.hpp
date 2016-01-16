@@ -269,6 +269,8 @@ public:
   //! Execution space of this execution policy
   typedef Kokkos::Cuda  execution_space ;
 
+  TeamPolicyInternal& operator = (const TeamPolicyInternal&) = default;
+
   //----------------------------------------
 
   template< class FunctorType >
