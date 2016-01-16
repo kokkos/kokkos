@@ -298,7 +298,7 @@ class TeamPolicyInternal< Kokkos::Serial , Properties ... >:public PolicyTraits<
 {
 private:
 
-  const int m_league_size ;
+  int m_league_size ;
   size_t m_team_scratch_size ;
   size_t m_thread_scratch_size ;
 
@@ -314,7 +314,13 @@ public:
   //! Execution space of this execution policy:
   typedef Kokkos::Serial  execution_space ;
 
-  TeamPolicyInternal& operator = (const TeamPolicyInternal&) = default;
+  TeamPolicyInternal& operator = (const TeamPolicyInternal& p) {
+    m_league_size = p.m_league_size;
+    m_team_scratch_size = p.m_team_scratch_size;
+    m_thread_scratch_size = p.m_thread_scratch_size;
+    m_chunk_size = p.m_chunk_size;
+    return *this;
+  }
 
   //----------------------------------------
 
@@ -344,6 +350,7 @@ public:
     : m_league_size( league_size_request )
     , m_team_scratch_size ( 0 )
     , m_thread_scratch_size ( 0 )
+    , m_chunk_size ( 32 )
     {}
 
   TeamPolicyInternal( execution_space &
@@ -353,6 +360,7 @@ public:
     : m_league_size( league_size_request )
     , m_team_scratch_size ( 0 )
     , m_thread_scratch_size ( 0 )
+    , m_chunk_size ( 32 )
     {}
 
   TeamPolicyInternal( int league_size_request
@@ -361,6 +369,7 @@ public:
     : m_league_size( league_size_request )
     , m_team_scratch_size ( 0 )
     , m_thread_scratch_size ( 0 )
+    , m_chunk_size ( 32 )
     {}
 
   TeamPolicyInternal( int league_size_request
@@ -369,6 +378,7 @@ public:
     : m_league_size( league_size_request )
     , m_team_scratch_size ( 0 )
     , m_thread_scratch_size ( 0 )
+    , m_chunk_size ( 32 )
     {}
 
 

@@ -258,9 +258,9 @@ private:
 
   enum { MAX_WARP = 8 };
 
-  const int m_league_size ;
-  const int m_team_size ;
-  const int m_vector_length ;
+  int m_league_size ;
+  int m_team_size ;
+  int m_vector_length ;
   size_t m_team_scratch_size ;
   size_t m_thread_scratch_size ;
 
@@ -269,7 +269,14 @@ public:
   //! Execution space of this execution policy
   typedef Kokkos::Cuda  execution_space ;
 
-  TeamPolicyInternal& operator = (const TeamPolicyInternal&) = default;
+  TeamPolicyInternal& operator = (const TeamPolicyInternal& p) {
+    m_league_size = p.m_league_size;
+    m_team_size = p.m_team_size;
+    m_vector_length = p.m_vector_length;
+    m_team_scratch_size = p.m_team_scratch_size;
+    m_thread_scratch_size = p.m_thread_scratch_size;
+    return *this;
+  }
 
   //----------------------------------------
 

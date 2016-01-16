@@ -674,7 +674,16 @@ public:
 
   typedef PolicyTraits<Properties ... > traits;
 
-  TeamPolicyInternal& operator = (const TeamPolicyInternal&) = default;
+  TeamPolicyInternal& operator = (const TeamPolicyInternal& p) {
+    m_league_size = p.m_league_size;
+    m_team_size = p.m_team_size;
+    m_team_alloc = p.m_team_alloc;
+    m_team_iter = p.m_team_iter;
+    m_team_scratch_size = p.m_team_scratch_size;
+    m_thread_scratch_size = p.m_thread_scratch_size;
+    m_chunk_size = p.m_chunk_size;
+    return *this;
+  }
 
   //----------------------------------------
 
