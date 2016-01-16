@@ -227,11 +227,11 @@ public:
 #endif
 
 #ifdef MEMPOOL_SERIAL
-    void * p = static_cast< void * >( (*m_freelist).m_next );
-    (*m_freelist).m_next = (*m_freelist).m_next->m_next;
+    void * p = static_cast< void * >( m_freelist().m_next );
+    m_freelist().m_next = m_freelist().m_next->m_next;
     return p;
 #else
-    Link * volatile * freelist = &((*m_freelist).m_next);
+    Link * volatile * freelist = &(m_freelist().m_next);
     void * p = 0;
 
     bool removed = false;
@@ -298,11 +298,11 @@ public:
   {
 #ifdef MEMPOOL_SERIAL
     Link * lp = static_cast< Link * >( alloc_ptr );
-    lp->m_next = (*m_freelist).m_next;
-    (*m_freelist).m_next = lp;
+    lp->m_next = m_freelist().m_next;
+    m_freelist().m_next = lp;
 #else
     Link * lp = static_cast< Link * >( alloc_ptr );
-    Link * volatile * freelist = &((*m_freelist).m_next);
+    Link * volatile * freelist = &(m_freelist().m_next);
 
     bool inserted = false;
 

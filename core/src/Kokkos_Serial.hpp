@@ -298,11 +298,10 @@ class TeamPolicyInternal< Kokkos::Serial , Properties ... >:public PolicyTraits<
 {
 private:
 
-  int m_league_size ;
   size_t m_team_scratch_size ;
   size_t m_thread_scratch_size ;
-
-  int m_chunk_size;
+  int    m_league_size ;
+  int    m_chunk_size;
 
 public:
 
@@ -347,9 +346,9 @@ public:
             , int league_size_request
             , int /* team_size_request */
             , int /* vector_length_request */ = 1 )
-    : m_league_size( league_size_request )
-    , m_team_scratch_size ( 0 )
+    : m_team_scratch_size ( 0 )
     , m_thread_scratch_size ( 0 )
+    , m_league_size( league_size_request )
     , m_chunk_size ( 32 )
     {}
 
@@ -357,27 +356,27 @@ public:
             , int league_size_request
             , const Kokkos::AUTO_t & /* team_size_request */
             , int /* vector_length_request */ = 1 )
-    : m_league_size( league_size_request )
-    , m_team_scratch_size ( 0 )
+    : m_team_scratch_size ( 0 )
     , m_thread_scratch_size ( 0 )
+    , m_league_size( league_size_request )
     , m_chunk_size ( 32 )
     {}
 
   TeamPolicyInternal( int league_size_request
             , int /* team_size_request */
             , int /* vector_length_request */ = 1 )
-    : m_league_size( league_size_request )
-    , m_team_scratch_size ( 0 )
+    : m_team_scratch_size ( 0 )
     , m_thread_scratch_size ( 0 )
+    , m_league_size( league_size_request )
     , m_chunk_size ( 32 )
     {}
 
   TeamPolicyInternal( int league_size_request
             , const Kokkos::AUTO_t & /* team_size_request */
             , int /* vector_length_request */ = 1 )
-    : m_league_size( league_size_request )
-    , m_team_scratch_size ( 0 )
+    : m_team_scratch_size ( 0 )
     , m_thread_scratch_size ( 0 )
+    , m_league_size( league_size_request )
     , m_chunk_size ( 32 )
     {}
 
