@@ -430,7 +430,9 @@ public:
 
   /** \brief set chunk_size to a discrete value*/
   inline TeamPolicyInternal set_chunk_size(typename traits::index_type chunk_size_) const {
-    return TeamPolicyInternal( *this );
+    TeamPolicyInternal p = *this;
+    p.m_chunk_size = chunk_size_;
+    return p;
   }
 
   /** \brief set per team scratch size for a specific level of the scratch hierarchy */
