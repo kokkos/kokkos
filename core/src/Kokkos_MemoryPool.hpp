@@ -127,7 +127,7 @@ struct initialize_mempool2 {
 /// associated with.
 template < class MemorySpace >
 class MemoryPool {
-private:
+public:
   /// \brief Structure used to create a linked list from the memory chunk.
   ///
   /// The allocated memory is cast to this type internally to create the lists.
@@ -135,7 +135,6 @@ private:
     Link * m_next;
   };
 
-public:
   //! Tag this class as a kokkos memory space
   typedef MemoryPool                                         memory_space;
 

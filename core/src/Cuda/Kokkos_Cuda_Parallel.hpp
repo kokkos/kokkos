@@ -261,22 +261,15 @@ private:
   int m_league_size ;
   int m_team_size ;
   int m_vector_length ;
-  size_t m_team_scratch_size ;
-  size_t m_thread_scratch_size ;
+  int m_team_scratch_size ;
+  int m_thread_scratch_size ;
 
 public:
 
   //! Execution space of this execution policy
   typedef Kokkos::Cuda  execution_space ;
 
-  TeamPolicyInternal& operator = (const TeamPolicyInternal& p) {
-    m_league_size = p.m_league_size;
-    m_team_size = p.m_team_size;
-    m_vector_length = p.m_vector_length;
-    m_team_scratch_size = p.m_team_scratch_size;
-    m_thread_scratch_size = p.m_thread_scratch_size;
-    return *this;
-  }
+  TeamPolicyInternal& operator = (const TeamPolicyInternal& p) = default ;
 
   //----------------------------------------
 
@@ -415,9 +408,7 @@ public:
 
   /** \brief set chunk_size to a discrete value*/
   inline TeamPolicyInternal set_chunk_size(typename traits::index_type chunk_size_) const {
-    TeamPolicyInternal p = *this;
-    p.m_chunk_size = chunk_size_;
-    return p;
+    return TeamPolicyInternal( *this );
   }
 
   /** \brief set per team scratch size for a specific level of the scratch hierarchy */
