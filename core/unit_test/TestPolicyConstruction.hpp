@@ -487,7 +487,7 @@ private:
   void test_run_time_parameters() {
     test_run_time_parameters_type<Kokkos::TeamPolicy<ExecutionSpace> >();
     test_run_time_parameters_type<Kokkos::TeamPolicy<ExecutionSpace,Kokkos::Schedule<Kokkos::Dynamic>,Kokkos::IndexType<long> > >();
-    test_run_time_parameters_type<Kokkos::TeamPolicy<Kokkos::IndexType<long>, Kokkos::Schedule<Kokkos::Dynamic> > >();
+    test_run_time_parameters_type<Kokkos::TeamPolicy<Kokkos::IndexType<long>, ExecutionSpace, Kokkos::Schedule<Kokkos::Dynamic> > >();
     test_run_time_parameters_type<Kokkos::TeamPolicy<Kokkos::Schedule<Kokkos::Dynamic>,Kokkos::IndexType<long>,ExecutionSpace,SomeTag > >();
   }
 };

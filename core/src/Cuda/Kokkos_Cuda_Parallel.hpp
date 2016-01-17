@@ -263,13 +263,22 @@ private:
   int m_vector_length ;
   int m_team_scratch_size ;
   int m_thread_scratch_size ;
+  int m_chunk_size;
 
 public:
 
   //! Execution space of this execution policy
   typedef Kokkos::Cuda  execution_space ;
 
-  TeamPolicyInternal& operator = (const TeamPolicyInternal& p) = default ;
+  TeamPolicyInternal& operator = (const TeamPolicyInternal& p) {
+    m_league_size = p.m_league_size;
+    m_team_size = p.m_team_size;
+    m_vector_length = p.m_vector_length;
+    m_team_scratch_size = p.m_team_scratch_size;
+    m_thread_scratch_size = p.m_thread_scratch_size;
+    m_chunk_size = p.m_chunk_size;
+    return *this;
+  }
 
   //----------------------------------------
 
@@ -314,6 +323,15 @@ public:
   inline int league_size() const { return m_league_size ; }
   inline size_t scratch_size() const { return m_team_scratch_size + m_team_size*m_thread_scratch_size; }
 
+  TeamPolicyInternal()
+    : m_league_size( 0 )
+    , m_team_size( 0 )
+    , m_vector_length( 0 )
+    , m_team_scratch_size ( 0 )
+    , m_thread_scratch_size ( 0 )
+    , m_chunk_size ( 32 ) 
+   {}
+
   /** \brief  Specify league size, request team size */
   TeamPolicyInternal( execution_space &
             , int league_size_
@@ -324,6 +342,7 @@ public:
     , m_vector_length( vector_length_request )
     , m_team_scratch_size ( 0 )
     , m_thread_scratch_size ( 0 )
+    , m_chunk_size ( 32 )
     {
       // Allow only power-of-two vector_length
       if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
@@ -350,6 +369,7 @@ public:
     , m_vector_length( vector_length_request )
     , m_team_scratch_size ( 0 )
     , m_thread_scratch_size ( 0 )
+    , m_chunk_size ( 32 )
     {
       // Allow only power-of-two vector_length
       if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
@@ -369,6 +389,7 @@ public:
     , m_vector_length ( vector_length_request )
     , m_team_scratch_size ( 0 )
     , m_thread_scratch_size ( 0 )
+    , m_chunk_size ( 32 )
     {
       // Allow only power-of-two vector_length
       if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
@@ -393,6 +414,7 @@ public:
     , m_vector_length ( vector_length_request )
     , m_team_scratch_size ( 0 )
     , m_thread_scratch_size ( 0 )
+    , m_chunk_size ( 32 )
     {
       // Allow only power-of-two vector_length
       if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
@@ -404,7 +426,7 @@ public:
         Impl::throw_runtime_exception( "Requested too large league_size for TeamPolicy on Cuda execution space.");
     }
 
-  inline int chunk_size() const { return 1 ; }
+  inline int chunk_size() const { return m_chunk_size ; }
 
   /** \brief set chunk_size to a discrete value*/
   inline TeamPolicyInternal set_chunk_size(typename traits::index_type chunk_size_) const {
