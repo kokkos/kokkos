@@ -415,7 +415,6 @@ public:
 
   TaskPolicy( const TaskPolicy & rhs ) = default ;
   
-  KOKKOS_INLINE_FUNCTION
   TaskPolicy( const TaskPolicy & rhs
             , const unsigned arg_default_dependence_capacity )
     : m_space( rhs.m_space )

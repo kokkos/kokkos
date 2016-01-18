@@ -44,6 +44,9 @@
 #ifndef KOKKOS_SHARED_ALLOC_HPP_
 #define KOKKOS_SHARED_ALLOC_HPP_
 
+#include <stdint.h>
+#include <string>
+
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
