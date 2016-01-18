@@ -113,14 +113,23 @@ CudaSpace::size_type * cuda_internal_scratch_unified( const CudaSpace::size_type
 
 /** \brief  Access to constant memory on the device */
 #ifdef KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE
-extern
-#endif
-__device__ __constant__
-Kokkos::Impl::CudaTraits::ConstantGlobalBufferType
-kokkos_impl_cuda_constant_memory_buffer ;
 
 __device__ __constant__
+extern unsigned long kokkos_impl_cuda_constant_memory_buffer[] ;
+
+#else
+
+__device__ __constant__
+unsigned long kokkos_impl_cuda_constant_memory_buffer[ Kokkos::Impl::CudaTraits::ConstantMemoryUsage / sizeof(unsigned long) ] ;
+
+#endif
+
+__device__ __constant__
+#ifdef KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE
+extern
+#endif
 int* kokkos_impl_cuda_atomic_lock_array ;
+
 #define CUDA_SPACE_ATOMIC_MASK 0x1FFFF
 #define CUDA_SPACE_ATOMIC_XOR_MASK 0x15A39
 

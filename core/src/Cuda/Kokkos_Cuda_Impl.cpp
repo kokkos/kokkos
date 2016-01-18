@@ -65,9 +65,13 @@
 #include <string>
 
 #ifdef KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE
+
 __device__ __constant__
-Kokkos::Impl::CudaTraits::ConstantGlobalBufferType
-kokkos_impl_cuda_constant_memory_buffer ;
+unsigned long kokkos_impl_cuda_constant_memory_buffer[ Kokkos::Impl::CudaTraits::ConstantMemoryUsage / sizeof(unsigned long) ] ;
+
+__device__ __constant__
+int* kokkos_impl_cuda_atomic_lock_array ;
+
 #endif
 
 /*--------------------------------------------------------------------------*/
