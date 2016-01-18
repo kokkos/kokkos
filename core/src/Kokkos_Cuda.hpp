@@ -174,10 +174,10 @@ public:
   Cuda();
   explicit Cuda( const int instance_id );
 
-  Cuda( const Cuda & ) = default ;
   Cuda( Cuda && ) = default ;
-  Cuda & operator = ( const Cuda & ) = default ;
+  Cuda( const Cuda & ) = default ;
   Cuda & operator = ( Cuda && ) = default ;
+  Cuda & operator = ( const Cuda & ) = default ;
 
   //--------------------------------------------------------------------------
   //! \name Device-specific functions

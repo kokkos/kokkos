@@ -157,7 +157,9 @@ public:
 
   /**\brief  Default memory space instance */
   HostSpace();
+  HostSpace( HostSpace && rhs ) = default ;
   HostSpace( const HostSpace & rhs ) = default ;
+  HostSpace & operator = ( HostSpace && ) = default ;
   HostSpace & operator = ( const HostSpace & ) = default ;
   ~HostSpace() = default ;
 
