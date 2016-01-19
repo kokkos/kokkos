@@ -41,18 +41,46 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_MEMORYPOOL_CPP
+#define KOKKOS_MEMORYPOOL_CPP
+
+//----------------------------------------------------------------------------
+
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA )
+
+/* This '.cpp' is being included by the header file
+ * to inline these functions for Cuda.
+ *
+ *  Prefer to implement these functions in a separate
+ *  compilation unit.  However, the 'nvcc' linker
+ *  has an internal error when attempting separate compilation
+ *  (--relocatable-device-code=true)
+ *  of Kokkos unit tests.
+ */
+
+#define KOKKOS_MEMPOOLLIST_INLINE inline
+
+#else
+
+/*  This '.cpp' file is being separately compiled for the Host */
+
 #include <Kokkos_MemoryPool.hpp>
 #include <Kokkos_Atomic.hpp>
 
-#if ! defined( KOKKOS_MEMPOOLLIST_INLINE )
+#define KOKKOS_MEMPOOLLIST_INLINE /* */
+
+#endif
+
+//----------------------------------------------------------------------------
+
+#define KOKKOS_MEMPOOLLIST_LOCK  reinterpret_cast<void*>( ~uintptr_t(0) )
 
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-#define MEMPOOL_LIST_LOCK  reinterpret_cast<void*>( ~uintptr_t(0) )
-
 KOKKOS_FUNCTION
+KOKKOS_MEMPOOLLIST_INLINE
 void * MemPoolList::allocate( size_t arg_size ) const
 {
   // Requires requested size less than or equal chunk size
@@ -69,14 +97,14 @@ void * MemPoolList::allocate( size_t arg_size ) const
     // If head is null then nothing left to allocate.
     pending = 0 != ( p = *m_head_list );
 
-    if ( pending && ( p != MEMPOOL_LIST_LOCK ) ) {
+    if ( pending && ( p != KOKKOS_MEMPOOLLIST_LOCK ) ) {
       // In the initial look at the head, the freelist wasn't empty or
       // locked. Attempt to lock the head of list.  If the list was changed
       // (including being locked) between the initial look and now, head will
       // be different.  This means the removal can't proceed
       // and has to be tried again.
 
-      pending = p != atomic_compare_exchange( m_head_list, p, MEMPOOL_LIST_LOCK );
+      pending = p != atomic_compare_exchange( m_head_list, p, KOKKOS_MEMPOOLLIST_LOCK );
     }
   }
 
@@ -85,7 +113,7 @@ void * MemPoolList::allocate( size_t arg_size ) const
     void * const head_next = *reinterpret_cast<void * volatile *>( p );
 
     // Replace the lock with the next entry on the list.
-    if ( MEMPOOL_LIST_LOCK != atomic_compare_exchange( m_head_list, MEMPOOL_LIST_LOCK, head_next ) ) {
+    if ( KOKKOS_MEMPOOLLIST_LOCK != atomic_compare_exchange( m_head_list, KOKKOS_MEMPOOLLIST_LOCK, head_next ) ) {
       Kokkos::abort("MemoryPool::allocate UNLOCK ERROR");
     }
   }
@@ -93,7 +121,9 @@ void * MemPoolList::allocate( size_t arg_size ) const
   return p ;
 }
 
+
 KOKKOS_FUNCTION
+KOKKOS_MEMPOOLLIST_INLINE
 void MemPoolList::deallocate( void * arg_alloc , size_t arg_size ) const
 {
   {
@@ -114,7 +144,7 @@ void MemPoolList::deallocate( void * arg_alloc , size_t arg_size ) const
 
     void * const head = *m_head_list ;
 
-    if ( head != MEMPOOL_LIST_LOCK ) {
+    if ( head != KOKKOS_MEMPOOLLIST_LOCK ) {
       // In the initial look at the head, the freelist wasn't locked.
 
       // Proactively assign next pointer assuming a successful insertion into
@@ -133,10 +163,13 @@ void MemPoolList::deallocate( void * arg_alloc , size_t arg_size ) const
   }
 }
 
+
 } // namespace Impl
 } // namespace Experimental
 } // namespace Kokkos
 
-#endif
+#undef KOKKOS_MEMPOOLLIST_LOCK
+#undef KOKKOS_MEMPOOLLIST_INLINE
 
+#endif /* #ifndef KOKKOS_MEMORYPOOL_CPP */
 

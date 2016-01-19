@@ -69,18 +69,19 @@ namespace Impl {
 
 CudaTaskPolicyQueue::
 CudaTaskPolicyQueue
-  ( const unsigned arg_memory_pool_chunk
-  , const unsigned arg_memory_pool_size
-  , const unsigned arg_default_dependence_capacity
+  ( const unsigned arg_task_max_count
+  , const unsigned arg_task_max_size
+  , const unsigned arg_task_default_dependence_capacity 
+  , const unsigned
   )
   : m_space( Kokkos::CudaUVMSpace()
-           , arg_memory_pool_chunk
-           , arg_memory_pool_size )
+           , arg_task_max_size
+           , arg_task_max_size * arg_task_max_count )
   , m_ready_team(0)
   , m_ready_serial(0)
   , m_garbage(0)
   , m_team_size( 32 * 4 /* 4 warps */ )
-  , m_default_dependence_capacity( arg_default_dependence_capacity )
+  , m_default_dependence_capacity( arg_task_default_dependence_capacity )
   , m_task_count(0)
 {
 }
@@ -106,9 +107,10 @@ namespace Kokkos {
 namespace Experimental {
 
 TaskPolicy< Kokkos::Cuda >::TaskPolicy
-  ( const unsigned arg_memory_pool_chunk
-  , const unsigned arg_memory_pool_size
-  , const unsigned arg_default_dependence_capacity
+  ( const unsigned arg_task_max_count
+  , const unsigned arg_task_max_size
+  , const unsigned arg_task_default_dependence_capacity
+  , const unsigned arg_task_team_size
   )
   : m_track()
   , m_cuda_uvm_queue(0)
@@ -127,9 +129,10 @@ TaskPolicy< Kokkos::Cuda >::TaskPolicy
   m_cuda_uvm_queue = reinterpret_cast< Impl::CudaTaskPolicyQueue * >( record->data() );
 
   new( m_cuda_uvm_queue )
-    Impl::CudaTaskPolicyQueue( arg_memory_pool_chunk
-                             , arg_memory_pool_size
-                             , arg_default_dependence_capacity );
+    Impl::CudaTaskPolicyQueue( arg_task_max_count
+                             , arg_task_max_size
+                             , arg_task_default_dependence_capacity
+                             , arg_task_team_size );
 
   record->m_destroy.m_queue = m_cuda_uvm_queue ;
   

@@ -65,15 +65,6 @@ struct FutureValueTypeIsVoidError {};
 template < class ExecSpace , class ResultType , class FunctorType >
 class TaskMember ;
 
-template< class ExecPolicy , class ResultType , class FunctorType >
-class TaskForEach ;
-
-template< class ExecPolicy , class ResultType , class FunctorType >
-class TaskReduce ;
-
-template< class ExecPolicy , class ResultType , class FunctorType >
-struct TaskScan ;
-
 } /* namespace Impl */
 } /* namespace Experimental */
 } /* namespace Kokkos */
@@ -221,6 +212,21 @@ public:
   typedef typename Arg0::execution_space  execution_space ;
 
   //----------------------------------------
+
+  TaskPolicy
+    ( const unsigned arg_task_max_count
+    , const unsigned arg_task_max_size
+    , const unsigned arg_task_default_dependence_capacity = 4
+    , const unsigned arg_task_team_size = 0 /* choose default */
+    );
+
+  TaskPolicy() = default ;
+  TaskPolicy( TaskPolicy && rhs ) = default ;
+  TaskPolicy( const TaskPolicy & rhs ) = default ;
+  TaskPolicy & operator = ( TaskPolicy && rhs ) = default ;
+  TaskPolicy & operator = ( const TaskPolicy & rhs ) = default ;
+
+  //----------------------------------------
   /** \brief  Create a serial task with storage for dependences.
    *
    *  Postcondition: Task is in the 'constructing' state.
@@ -228,28 +234,13 @@ public:
   template< class FunctorType >
   Future< typename FunctorType::value_type , execution_space >
   create( const FunctorType & functor
-        , const unsigned      dependence_capacity /* = default */ ) const ;
+        , const unsigned      dependence_capacity /* = default */ );
 
-  /** \brief  Create a foreach task with storage for dependences. */
-  template< class ExecPolicy , class FunctorType >
+  template< class FunctorType >
+  KOKKOS_INLINE_FUNCTION
   Future< typename FunctorType::value_type , execution_space >
-  create_foreach( const ExecPolicy  & policy
-                , const FunctorType & functor
-                , const unsigned      dependence_capacity /* = default */ ) const ;
-
-  /** \brief  Create a reduce task with storage for dependences. */
-  template< class ExecPolicy , class FunctorType >
-  Future< typename FunctorType::value_type , execution_space >
-  create_reduce( const ExecPolicy  & policy
-               , const FunctorType & functor
-               , const unsigned      dependence_capacity /* = default */ ) const ;
-
-  /** \brief  Create a scan task with storage for dependences. */
-  template< class ExecPolicy , class FunctorType >
-  Future< typename FunctorType::value_type , execution_space >
-  create_scan( const ExecPolicy  & policy
-             , const FunctorType & functor
-             , const unsigned      dependence_capacity /* = default */ ) const ;
+  create_team( const FunctorType & functor
+             , const unsigned dependence_capacity /* = default */ );
 
   /** \brief  Set dependence that 'after' cannot start execution
    *          until 'before' has completed.
@@ -257,7 +248,7 @@ public:
    *  Precondition: The 'after' task must be in then 'Constructing' state.
    */
   template< class TA , class TB >
-  void set_dependence( const Future<TA,execution_space> & after
+  void add_dependence( const Future<TA,execution_space> & after
                      , const Future<TB,execution_space> & before ) const ;
 
   /** \brief  Spawn a task in the 'Constructing' state
@@ -286,13 +277,13 @@ public:
   template< class FunctorType >
   void clear_dependence( FunctorType * ) const ;
 
-  /** \brief  Set dependence that 'after' cannot start execution
+  /** \brief  Set dependence that 'after' cannot resume execution
    *          until 'before' has completed.
    *
    *  The 'after' functor must be in the executing state
    */
   template< class FunctorType , class TB >
-  void set_dependence( FunctorType * after
+  void add_dependence( FunctorType * after
                      , const Future<TB,execution_space> & before ) const ;
 
   /** \brief  Respawn (reschedule) an executing task to be called again

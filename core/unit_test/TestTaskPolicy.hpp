@@ -67,7 +67,7 @@ struct FibChild {
 
   FibChild( const Kokkos::Experimental::TaskPolicy<ExecSpace> & arg_policy
           , const value_type arg_n )
-    : policy(arg_policy,2) /* default dependence capacity = 2 */
+    : policy(arg_policy)
     , fib_1() , fib_2()
     , n( arg_n ), has_nested(0) {}
 
@@ -122,7 +122,7 @@ struct FibChild2 {
 
   FibChild2( const Kokkos::Experimental::TaskPolicy<ExecSpace> & arg_policy
            , const value_type arg_n )
-    : policy(arg_policy,2) /* default dependence capacity = 2 */
+    : policy(arg_policy)
     , n( arg_n ), has_nested(0) {}
 
   inline
@@ -197,7 +197,14 @@ long eval_fib( long n )
 template< class ExecSpace >
 void test_fib( long n )
 {
-  Kokkos::Experimental::TaskPolicy<ExecSpace> policy(2);
+  const unsigned task_max_count  = 1024 ;
+  const unsigned task_max_size   = 256 ;
+  const unsigned task_dependence = 4 ;
+
+  Kokkos::Experimental::TaskPolicy<ExecSpace>
+    policy( task_max_count
+          , task_max_size
+          , task_dependence );
 
   Kokkos::Experimental::Future<long,ExecSpace> f = Kokkos::Experimental::spawn( policy , FibChild<ExecSpace>(policy,n) );
 
@@ -213,7 +220,14 @@ void test_fib( long n )
 template< class ExecSpace >
 void test_fib2( long n )
 {
-  Kokkos::Experimental::TaskPolicy<ExecSpace> policy(2); // default dependence capacity
+  const unsigned task_max_count  = 1024 ;
+  const unsigned task_max_size   = 256 ;
+  const unsigned task_dependence = 4 ;
+
+  Kokkos::Experimental::TaskPolicy<ExecSpace>
+    policy( task_max_count
+          , task_max_size
+          , task_dependence );
 
   Kokkos::Experimental::Future<long,ExecSpace> f = Kokkos::Experimental::spawn( policy , FibChild2<ExecSpace>(policy,n) );
 
@@ -249,7 +263,14 @@ struct Norm2 {
 template< class ExecSpace >
 void test_norm2( const int n )
 {
-  Kokkos::Experimental::TaskPolicy< ExecSpace > policy ;
+  const unsigned task_max_count  = 1024 ;
+  const unsigned task_max_size   = 256 ;
+  const unsigned task_dependence = 4 ;
+
+  Kokkos::Experimental::TaskPolicy<ExecSpace>
+    policy( task_max_count
+          , task_max_size
+          , task_dependence );
 
   double * const x = new double[n];
 
@@ -300,7 +321,14 @@ void test_task_dep( const int n )
 {
   enum { NTEST = 64 };
 
-  Kokkos::Experimental::TaskPolicy< Space > policy ;
+  const unsigned task_max_count  = 1024 ;
+  const unsigned task_max_size   = 256 ;
+  const unsigned task_dependence = 4 ;
+
+  Kokkos::Experimental::TaskPolicy<Space>
+    policy( task_max_count
+          , task_max_size
+          , task_dependence );
 
   Kokkos::Experimental::Future<int,Space> f[ NTEST ];
 
@@ -457,7 +485,15 @@ void test_task_team( long n )
   typedef typename task_type::future_type        future_type ;
   typedef typename task_value_type::future_type  future_value_type ;
 
-  policy_type  policy ;
+  const unsigned task_max_count  = 1024 ;
+  const unsigned task_max_size   = 256 ;
+  const unsigned task_dependence = 4 ;
+
+  Kokkos::Experimental::TaskPolicy<ExecSpace>
+    policy( task_max_count
+          , task_max_size
+          , task_dependence );
+
   view_type    result("result",n+1);
 
   future_type f = policy.spawn( policy.create_team( task_type( policy , result , n ) ) );

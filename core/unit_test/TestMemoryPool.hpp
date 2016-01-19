@@ -64,6 +64,8 @@ struct allocate_memory {
   typedef typename PointerView::execution_space  execution_space;
   typedef typename execution_space::size_type    size_type;
 
+  enum { STRIDE = 32 };
+
   PointerView m_pointers;
   size_t m_num_ptrs;
   size_t m_chunk_size;
@@ -75,14 +77,16 @@ struct allocate_memory {
       m_chunk_size( cs ), m_space( sp )
   {
     // Initialize the view with the out degree of each vertex.
-    Kokkos::parallel_for( m_num_ptrs, *this );
+    Kokkos::parallel_for( m_num_ptrs * STRIDE , *this );
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator()( size_type i ) const
   {
-    m_pointers[i].ptr =
-      static_cast< uint64_t * >( m_space.allocate( m_chunk_size ) );
+    if ( 0 == ( i % STRIDE ) ) {
+      m_pointers[i/STRIDE].ptr =
+        static_cast< uint64_t * >( m_space.allocate( m_chunk_size ) );
+    }
   }
 };
 
@@ -91,6 +95,8 @@ struct fill_memory {
   typedef typename PointerView::execution_space  execution_space;
   typedef typename execution_space::size_type    size_type;
 
+  enum { STRIDE = 32 };
+
   PointerView m_pointers;
   size_t m_num_ptrs;
 
@@ -98,13 +104,15 @@ struct fill_memory {
     : m_pointers( ptrs ), m_num_ptrs( nptrs )
   {
     // Initialize the view with the out degree of each vertex.
-    Kokkos::parallel_for( m_num_ptrs, *this );
+    Kokkos::parallel_for( m_num_ptrs * STRIDE , *this );
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator()( size_type i ) const
   {
-    *m_pointers[i].ptr = i;
+    if ( 0 == ( i % STRIDE ) ) {
+      *m_pointers[i/STRIDE].ptr = i / STRIDE ;
+    }
   }
 };
 
@@ -114,6 +122,8 @@ struct sum_memory {
   typedef typename execution_space::size_type    size_type;
   typedef uint64_t                               value_type;
 
+  enum { STRIDE = 32 };
+
   PointerView m_pointers;
   size_t m_num_ptrs;
   uint64_t & result;
@@ -122,7 +132,7 @@ struct sum_memory {
     : m_pointers( ptrs ), m_num_ptrs( nptrs ), result( res )
   {
     // Initialize the view with the out degree of each vertex.
-    Kokkos::parallel_reduce( m_num_ptrs, *this, result );
+    Kokkos::parallel_reduce( m_num_ptrs * STRIDE , *this, result );
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -136,7 +146,9 @@ struct sum_memory {
   KOKKOS_INLINE_FUNCTION
   void operator()( size_type i, value_type & r ) const
   {
-    r += *m_pointers[i].ptr;
+    if ( 0 == ( i % STRIDE ) ) {
+      r += *m_pointers[i/STRIDE].ptr;
+    }
   }
 };
 
@@ -144,6 +156,8 @@ template < typename PointerView, typename MemorySpace >
 struct deallocate_memory {
   typedef typename PointerView::execution_space  execution_space;
   typedef typename execution_space::size_type    size_type;
+
+  enum { STRIDE = 32 };
 
   PointerView m_pointers;
   size_t m_num_ptrs;
@@ -155,13 +169,15 @@ struct deallocate_memory {
     : m_pointers( ptrs ), m_num_ptrs( nptrs ), m_chunk_size( cs ), m_space( sp )
   {
     // Initialize the view with the out degree of each vertex.
-    Kokkos::parallel_for( m_num_ptrs, *this );
+    Kokkos::parallel_for( m_num_ptrs * STRIDE , *this );
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator()( size_type i ) const
   {
-    m_space.deallocate( m_pointers[i].ptr, m_chunk_size );
+    if ( 0 == ( i % STRIDE ) ) {
+      m_space.deallocate( m_pointers[i/STRIDE].ptr, m_chunk_size );
+    }
   }
 };
 

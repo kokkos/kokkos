@@ -127,7 +127,7 @@ TEST_F( cuda , memory_space )
 
 TEST_F( cuda , memory_pool )
 {
-  bool val = TestMemoryPool::test_mempool< Kokkos::Cuda >( 8, 80000000 );
+  bool val = TestMemoryPool::test_mempool< Kokkos::Cuda >( 32, 8000000 );
   ASSERT_TRUE( val );
 }
 

@@ -332,9 +332,9 @@ private:
   typedef Impl::TaskMember< Kokkos::Threads , void , void >  task_root_type ;
   typedef Kokkos::Experimental::MemoryPool< Kokkos::Threads::memory_space > memory_space ;
 
-  memory_space m_space ;        ///< Memory pool for allocation & deallocation
-  int m_default_dependence_capacity ;
-  int m_team_size ;    ///< Fixed size of a task-team
+  memory_space  m_space ;        ///< Memory pool for allocation & deallocation
+  int           m_default_dependence_capacity ;
+  int           m_team_size ;    ///< Fixed size of a task-team
 
   template< class FunctorType >
   static inline
@@ -383,9 +383,11 @@ private:
       const unsigned size_alloc =
          derived_size + sizeof(task_root_type*) * arg_dependence_capacity ;
 
-      DerivedTaskType * const task =
-        new( m_space.allocate( size_alloc ) )
-          DerivedTaskType( arg_functor );
+      void * const ptr = m_space.allocate( size_alloc );
+
+      if ( ptr == 0 ) { Kokkos::abort("Threads TaskPolicy out of memory"); }
+
+      DerivedTaskType * const task = new( ptr ) DerivedTaskType( arg_functor );
 
       task->task_root_type::m_policy       = this ;
       task->task_root_type::m_dealloc      = & TaskPolicy::template deallocate< DerivedTaskType > ;
@@ -409,27 +411,19 @@ public:
   // Threads::pool_size(1) == threads per numa, or
   // Threads::pool_size(2) == threads per core
 
-  TaskPolicy( const unsigned arg_default_dependence_capacity = 4
-            , const unsigned arg_team_size = 0 /* default from thread pool topology */
-            );
+  TaskPolicy
+    ( const unsigned arg_task_max_count
+    , const unsigned arg_task_max_size
+    , const unsigned arg_task_default_dependence_capacity = 4
+    , const unsigned arg_task_team_size = 0 /* choose default */
+    );
 
+  TaskPolicy() = default ;
+  TaskPolicy( TaskPolicy && rhs ) = default ;
   TaskPolicy( const TaskPolicy & rhs ) = default ;
+  TaskPolicy & operator = ( TaskPolicy && rhs ) = default ;
+  TaskPolicy & operator = ( const TaskPolicy & rhs ) = default ;
   
-  TaskPolicy( const TaskPolicy & rhs
-            , const unsigned arg_default_dependence_capacity )
-    : m_space( rhs.m_space )
-    , m_default_dependence_capacity( arg_default_dependence_capacity )
-    , m_team_size( rhs.m_team_size )
-    {}
-
-  TaskPolicy & operator = ( const TaskPolicy &rhs )
-    {
-      m_space = rhs.m_space ;
-      m_default_dependence_capacity = rhs.m_default_dependence_capacity;
-      m_team_size = rhs.m_team_size;
-      return *this;
-    }
-
   // Create serial-thread task
 
   template< class FunctorType >

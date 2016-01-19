@@ -432,7 +432,7 @@ TEST_F( threads , memory_space )
 
 TEST_F( threads , memory_pool )
 {
-  bool val = TestMemoryPool::test_mempool< Kokkos::Threads >( 8, 80000000 );
+  bool val = TestMemoryPool::test_mempool< Kokkos::Threads >( 32, 8000000 );
   ASSERT_TRUE( val );
 }
 

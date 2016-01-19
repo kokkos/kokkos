@@ -84,10 +84,12 @@ struct CudaTaskPolicyQueue {
   __device__ static
   task_root_type * pop_ready_task( task_root_type * volatile * const queue );
 
-  CudaTaskPolicyQueue( const unsigned arg_memory_pool_chunk
-                     , const unsigned arg_memory_pool_size
-                     , const unsigned arg_default_dependence_capacity
-                     );
+  CudaTaskPolicyQueue
+    ( const unsigned arg_task_max_count
+    , const unsigned arg_task_max_size
+    , const unsigned arg_task_default_dependence_capacity
+    , const unsigned arg_task_team_size
+    );
 
   struct Destroy {
     CudaTaskPolicyQueue * m_queue ;
@@ -495,25 +497,18 @@ private:
 
 public:
 
-  TaskPolicy( const unsigned  arg_memory_pool_chunk
-            , const unsigned  arg_memory_pool_size
-            , const unsigned  arg_default_dependence_capacity = 4
-            );
+  TaskPolicy
+    ( const unsigned arg_task_max_count
+    , const unsigned arg_task_max_size
+    , const unsigned arg_task_default_dependence_capacity = 4
+    , const unsigned arg_task_team_size = 0 /* choose default */
+    );
 
-  KOKKOS_INLINE_FUNCTION
-  TaskPolicy() : m_track(), m_cuda_uvm_queue(0) {}
-
-  KOKKOS_INLINE_FUNCTION
-  TaskPolicy( TaskPolicy && ) = default ;
-
-  KOKKOS_INLINE_FUNCTION
-  TaskPolicy( const TaskPolicy & ) = default ;
-
-  KOKKOS_INLINE_FUNCTION
-  TaskPolicy & operator = ( TaskPolicy && ) = default ;
-
-  KOKKOS_INLINE_FUNCTION
-  TaskPolicy & operator = ( const TaskPolicy & ) = default ;
+  TaskPolicy() = default ;
+  TaskPolicy( TaskPolicy && rhs ) = default ;
+  TaskPolicy( const TaskPolicy & rhs ) = default ;
+  TaskPolicy & operator = ( TaskPolicy && rhs ) = default ;
+  TaskPolicy & operator = ( const TaskPolicy & rhs ) = default ;
 
   //----------------------------------------
   // Create serial-thread task
