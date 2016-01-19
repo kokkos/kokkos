@@ -489,7 +489,7 @@ void test_task_team( long n )
   const unsigned task_max_size   = 256 ;
   const unsigned task_dependence = 4 ;
 
-  Kokkos::Experimental::TaskPolicy<ExecSpace>
+  policy_type
     policy( task_max_count
           , task_max_size
           , task_dependence );
