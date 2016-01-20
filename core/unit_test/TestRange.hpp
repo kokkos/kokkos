@@ -193,8 +193,8 @@ struct TestRange {
           if(count(t)>max) max = count(t);
         }
         ASSERT_TRUE(min<max);
-        if(ExecSpace::concurrency()>2)
-          ASSERT_TRUE(2*min<max);
+        //if(ExecSpace::concurrency()>2)
+        //  ASSERT_TRUE(2*min<max);
       }
     }
 
