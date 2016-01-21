@@ -108,7 +108,7 @@ namespace Kokkos {
         initProfileLibrary = NULL;
         finalizeProfileLibrary = NULL;
       }
-    };
+    }
 
 
   }
