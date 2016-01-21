@@ -372,6 +372,7 @@ TEST_F( cuda, reduce )
 {
   TestReduce< long ,   Kokkos::Cuda >( 10000000 );
   TestReduce< double , Kokkos::Cuda >( 1000000 );
+  TestReduce< int , Kokkos::Cuda >( 0 );
 }
 
 TEST_F( cuda, reduce_team )
@@ -490,6 +491,10 @@ TEST_F( cuda , scan )
   TestScan< Kokkos::Cuda >::test_range( 1 , 1000 );
   TestScan< Kokkos::Cuda >( 1000000 );
   TestScan< Kokkos::Cuda >( 10000000 );
+
+  TestScan< Kokkos::Cuda >( 0 );
+  TestScan< Kokkos::Cuda >( 0 , 0 );
+
   Kokkos::Cuda::fence();
 }
 

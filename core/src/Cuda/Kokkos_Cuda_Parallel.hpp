@@ -784,36 +784,43 @@ public:
   inline
   void execute()
     {
-      const int block_size = local_block_size( m_functor );
-
-      m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( m_functor ) * block_size /* block_size == max block_count */ );
-      m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
-      m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( m_functor ) );
-
       const int nwork = m_policy.end() - m_policy.begin();
-      // REQUIRED ( 1 , N , 1 )
-      const dim3 block( 1 , block_size , 1 );
-      // Required grid.x <= block.y
-      const dim3 grid( std::min( int(block.y) , int( ( nwork + block.y - 1 ) / block.y ) ) , 1 , 1 );
-
+      if ( nwork ) {
+        const int block_size = local_block_size( m_functor );
+  
+        m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( m_functor ) * block_size /* block_size == max block_count */ );
+        m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
+        m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( m_functor ) );
+  
+        // REQUIRED ( 1 , N , 1 )
+        const dim3 block( 1 , block_size , 1 );
+        // Required grid.x <= block.y
+        const dim3 grid( std::min( int(block.y) , int( ( nwork + block.y - 1 ) / block.y ) ) , 1 , 1 );
+  
 #ifdef KOKKOS_EXPERIMENTAL_CUDA_SHFL_REDUCTION
-    const int shmem = 0;
+      const int shmem = 0;
 #else
-    const int shmem = cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( m_functor , block.y );
+      const int shmem = cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( m_functor , block.y );
 #endif
-
-    CudaParallelLaunch< ParallelReduce >( *this, grid, block, shmem ); // copy to device and execute
-
-    Cuda::fence();
-
-    if ( m_result_ptr ) {
-      if ( m_unified_space ) {
-        const int count = ValueTraits::value_count( m_functor );
-        for ( int i = 0 ; i < count ; ++i ) { m_result_ptr[i] = pointer_type(m_unified_space)[i] ; }
+  
+      CudaParallelLaunch< ParallelReduce >( *this, grid, block, shmem ); // copy to device and execute
+  
+      Cuda::fence();
+  
+      if ( m_result_ptr ) {
+        if ( m_unified_space ) {
+          const int count = ValueTraits::value_count( m_functor );
+          for ( int i = 0 ; i < count ; ++i ) { m_result_ptr[i] = pointer_type(m_unified_space)[i] ; }
+        }
+        else {
+          const int size = ValueTraits::value_size( m_functor );
+          DeepCopy<HostSpace,CudaSpace>( m_result_ptr , m_scratch_space , size );
+        }
       }
-      else {
-        const int size = ValueTraits::value_size( m_functor );
-        DeepCopy<HostSpace,CudaSpace>( m_result_ptr , m_scratch_space , size );
+    }
+    else {
+      if (m_result_ptr) {
+        ValueInit::init( m_functor , m_result_ptr ); 
       }
     }
   }
@@ -1194,36 +1201,38 @@ public:
   inline
   void execute()
     {
-      enum { GridMaxComputeCapability_2x = 0x0ffff };
-
-      const int block_size = local_block_size( m_functor );
-
-      const int grid_max =
-        ( block_size * block_size ) < GridMaxComputeCapability_2x ?
-        ( block_size * block_size ) : GridMaxComputeCapability_2x ;
-
-      // At most 'max_grid' blocks:
       const int nwork    = m_policy.end() - m_policy.begin();
-      const int max_grid = std::min( int(grid_max) , int(( nwork + block_size - 1 ) / block_size ));
-
-      // How much work per block:
-      const int work_per_block = ( nwork + max_grid - 1 ) / max_grid ;
-
-      // How many block are really needed for this much work:
-      const int grid_x = ( nwork + work_per_block - 1 ) / work_per_block ;
-
-      m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( m_functor ) * grid_x );
-      m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) * 1 );
-
-      const dim3 grid( grid_x , 1 , 1 );
-      const dim3 block( 1 , block_size , 1 ); // REQUIRED DIMENSIONS ( 1 , N , 1 )
-      const int shmem = ValueTraits::value_size( m_functor ) * ( block_size + 2 );
-
-      m_final = false ;
-      CudaParallelLaunch< ParallelScan >( *this, grid, block, shmem ); // copy to device and execute
-
-      m_final = true ;
-      CudaParallelLaunch< ParallelScan >( *this, grid, block, shmem ); // copy to device and execute
+      if ( nwork ) {
+        enum { GridMaxComputeCapability_2x = 0x0ffff };
+  
+        const int block_size = local_block_size( m_functor );
+  
+        const int grid_max =
+          ( block_size * block_size ) < GridMaxComputeCapability_2x ?
+          ( block_size * block_size ) : GridMaxComputeCapability_2x ;
+  
+        // At most 'max_grid' blocks:
+        const int max_grid = std::min( int(grid_max) , int(( nwork + block_size - 1 ) / block_size ));
+  
+        // How much work per block:
+        const int work_per_block = ( nwork + max_grid - 1 ) / max_grid ;
+  
+        // How many block are really needed for this much work:
+        const int grid_x = ( nwork + work_per_block - 1 ) / work_per_block ;
+  
+        m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( m_functor ) * grid_x );
+        m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) * 1 );
+  
+        const dim3 grid( grid_x , 1 , 1 );
+        const dim3 block( 1 , block_size , 1 ); // REQUIRED DIMENSIONS ( 1 , N , 1 )
+        const int shmem = ValueTraits::value_size( m_functor ) * ( block_size + 2 );
+  
+        m_final = false ;
+        CudaParallelLaunch< ParallelScan >( *this, grid, block, shmem ); // copy to device and execute
+  
+        m_final = true ;
+        CudaParallelLaunch< ParallelScan >( *this, grid, block, shmem ); // copy to device and execute
+      }
     }
 
   ParallelScan( const FunctorType  & arg_functor ,
