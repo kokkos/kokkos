@@ -330,7 +330,7 @@ public:
 private:
 
   typedef Impl::TaskMember< Kokkos::Threads , void , void >  task_root_type ;
-  typedef Kokkos::Experimental::MemoryPool< Kokkos::Threads::memory_space > memory_space ;
+  typedef Kokkos::Experimental::MemoryPool< Kokkos::Device<Kokkos::Threads,Kokkos::Threads::memory_space> > memory_space ;
 
   memory_space  m_space ;        ///< Memory pool for allocation & deallocation
   int           m_default_dependence_capacity ;

@@ -55,7 +55,7 @@
 namespace Kokkos {
 namespace Experimental {
 
-template < class MemorySpace >
+template < class Device >
 class MemoryPool ;
 
 namespace Impl {
@@ -96,9 +96,10 @@ public:
 
 private:
 
-  template< class MemorySpace >
+  template< class MemorySpace , class ExecutionSpace>
   inline
   MemPoolList( const MemorySpace & arg_space 
+             , const ExecutionSpace & 
              , size_t        arg_chunk
              , size_t        arg_total
              )
@@ -108,7 +109,7 @@ private:
     , m_chunk_count( arg_chunk * ( ( arg_total + arg_chunk - 1 ) / arg_chunk ) )
   {
     typedef Impl::SharedAllocationRecord< MemorySpace, void >  SharedRecord ;
-    typedef Kokkos::RangePolicy< typename MemorySpace::execution_space > Range ;
+    typedef Kokkos::RangePolicy< ExecutionSpace > Range ;
 
     // Force chunk size to be power of two,
     // mininum of 32 (mininum of 4 x 8byte pointers),
@@ -134,7 +135,7 @@ private:
 
     closure.execute();
 
-    MemorySpace::execution_space::fence();
+    ExecutionSpace::fence();
   }
 
   KOKKOS_FUNCTION
@@ -173,12 +174,14 @@ namespace Experimental {
 /// pool memory allocator for fast allocation of same-sized chunks of memory.
 /// The memory is only accessible on the host / device this allocator is
 /// associated with.
-template < class MemorySpace >
+template < class Device >
 class MemoryPool {
 private:
 
   Impl::MemPoolList  m_freelist ;
 
+  typedef typename Device::memory_space backend_memory_space;
+  typedef typename Device::execution_space execution_space;
 public:
 
   //! Tag this class as a kokkos memory space
@@ -195,11 +198,11 @@ public:
 
   /**\brief  Allocate memory pool */
   MemoryPool
-    ( const MemorySpace & arg_space /* From where to allocate the pool. */
+    ( const backend_memory_space & arg_space /* From where to allocate the pool. */
     , size_t arg_chunk_size   /* Hand out memory in chunks of this size. */
     , size_t arg_total_size   /* Total size of the pool. */
     )
-    : m_freelist( arg_space , arg_chunk_size , arg_total_size )
+    : m_freelist( arg_space , execution_space(), arg_chunk_size , arg_total_size )
   {}
 
   ///\brief  Claim chunks of untracked memory from the pool.
