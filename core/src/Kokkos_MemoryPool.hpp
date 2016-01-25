@@ -158,7 +158,7 @@ private:
  */
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA )
 
-#include <impl/Kokkos_MemoryPool.cpp>
+#include <impl/Kokkos_MemoryPool_Inline.hpp>
 
 #endif
 
