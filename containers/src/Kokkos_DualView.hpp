@@ -264,7 +264,7 @@ public:
 #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
     Impl::assert_shapes_are_equal (d_view.shape (), h_view.shape ());
 #else
-    if ( d_view.rank          != h_view.rank ||
+    if ( int(d_view.rank)     != int(h_view.rank) ||
          d_view.dimension_0() != h_view.dimension_0() ||
          d_view.dimension_1() != h_view.dimension_1() ||
          d_view.dimension_2() != h_view.dimension_2() ||
