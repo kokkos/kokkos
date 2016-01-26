@@ -575,7 +575,7 @@ struct ScratchTeamFunctor {
       ind.team_barrier();
 
       for( int i = 0; i<SHARED_TEAM_COUNT; i++) {
-        if(scratch_A[i] != i + ind.league_rank())
+        if(scratch_A[i] != size_t(i + ind.league_rank()))
           ++update;
       }
       for( int i = 0; i < ind.team_size(); i++) {
