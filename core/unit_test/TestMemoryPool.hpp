@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -51,7 +51,8 @@
 
 #include <impl/Kokkos_Timer.hpp>
 
-//#define TESTMEMORYPOOL_PRINT
+#define TESTMEMORYPOOL_PRINT
+//#define TESTMEMORYPOOL_PRINT_STATUS
 
 namespace TestMemoryPool {
 
@@ -181,8 +182,38 @@ struct deallocate_memory {
   }
 };
 
+template < typename ExecutionSpace, typename MemorySpace >
+struct allocate_deallocate_memory {
+  typedef ExecutionSpace                       execution_space;
+  typedef typename execution_space::size_type  size_type;
+
+  size_t m_max_chunk_size;
+  size_t m_min_chunk_size;
+  size_t m_chunk_spacing;
+  MemorySpace m_space;
+
+  allocate_deallocate_memory( size_t num_max_chunks, size_t max_cs,
+                              size_t min_cs, size_t cs, MemorySpace & sp )
+    : m_max_chunk_size( max_cs ), m_min_chunk_size( min_cs ),
+      m_chunk_spacing( cs ), m_space( sp )
+  {
+    Kokkos::parallel_for( num_max_chunks, *this );
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( size_type i ) const
+  {
+    for ( size_t i = m_max_chunk_size; i >= m_min_chunk_size; i /= m_chunk_spacing ) {
+      for ( size_t j = 0; j < 10; ++j ) {
+        void * mem = m_space.allocate( i );
+        m_space.deallocate( mem, i );
+      }
+    }
+  }
+};
+
 #define PRECISION 6
-#define SHIFTW 21
+#define SHIFTW 24
 #define SHIFTW2 12
 
 template < typename F >
@@ -211,157 +242,243 @@ void print_results( const std::string & text, unsigned long long width,
             << "     " << std::setw( width ) << result << std::endl;
 }
 
-template < class ExecSpace >
+// This test slams allocation and deallocation in a worse than real-world usage
+// scenario to see how bad the thread-safety really is by having a loop where
+// all threads allocate and a subsequent loop where all threads deallocate.
+// All of the allocation requests are for equal-sized chunks that are the base
+// chunk size of the memory pool.  It also tests initialization of the memory
+// pool and breaking large chunks into smaller chunks to fulfill allocation
+// requests.  It verifies that MemoryPool(), allocate(), and deallocate() work
+// correctly.
+template < class ExecSpace, class MemorySpace = typename ExecSpace::memory_space >
 bool test_mempool( size_t chunk_size, size_t total_size )
 {
-  typedef Kokkos::View<pointer_obj*, ExecSpace>             pointer_view;
-  typedef typename pointer_view::memory_space               memory_space;
-  typedef Kokkos::Experimental::MemoryPool< memory_space >  pool_memory_space;
+  typedef Kokkos::View< pointer_obj *, ExecSpace >         pointer_view;
+  typedef Kokkos::Experimental::MemoryPool< MemorySpace >  pool_memory_space;
 
   uint64_t result;
   size_t num_chunks = total_size / chunk_size;
   bool return_val = true;
 
-#ifdef TESTMEMORYPOOL_PRINT
-  std::cout << std::setw( SHIFTW ) << "chunk_size: " << std::setw( 10 )
-            << chunk_size << std::endl
-            << std::setw( SHIFTW ) << "total_size: " << std::setw( 10 )
-            << total_size << std::endl
-            << std::setw( SHIFTW ) << "num_chunks: " << std::setw( 10 )
-            << num_chunks << std::endl;
-#endif
-
   pointer_view pointers( "pointers", num_chunks );
 
-  pool_memory_space m_space( memory_space(), chunk_size, total_size );
+#ifdef TESTMEMORYPOOL_PRINT
+  std::cout << std::setw( SHIFTW ) << "chunk_size: " << std::setw( 12 )
+            << chunk_size << std::endl
+            << std::setw( SHIFTW ) << "total_size: " << std::setw( 12 )
+            << total_size << std::endl
+            << std::setw( SHIFTW ) << "num_chunks: " << std::setw( 12 )
+            << num_chunks << std::endl;
+
+  double elapsed_time = 0;
+  Kokkos::Impl::Timer timer;
+#endif
+
+  pool_memory_space m_space( MemorySpace(), chunk_size, total_size );
+
+#ifdef TESTMEMORYPOOL_PRINT
+  ExecSpace::fence();
+  elapsed_time = timer.seconds();
+  print_results( "initialize mempool: ", elapsed_time );
+#ifdef TESTMEMORYPOOL_PRINT_STATUS
+  m_space.print_status();
+#endif
+  timer.reset();
+#endif
+
+  // Tests:
+  //   test for correct behvior when out of memory
+  //   test for correct behvior when interleaving allocate() and deallocate()
+
+  {
+    allocate_memory< pointer_view, pool_memory_space >
+      am( pointers, num_chunks, chunk_size, m_space );
+  }
+
+#ifdef TESTMEMORYPOOL_PRINT
+  ExecSpace::fence();
+  elapsed_time = timer.seconds();
+  print_results( "allocate chunks: ", elapsed_time );
+#ifdef TESTMEMORYPOOL_PRINT_STATUS
+  m_space.print_status();
+#endif
+  timer.reset();
+#endif
+
+  {
+    fill_memory< pointer_view > fm( pointers, num_chunks );
+  }
+
+#ifdef TESTMEMORYPOOL_PRINT
+  ExecSpace::fence();
+  elapsed_time = timer.seconds();
+  print_results( "fill chunks: ", elapsed_time );
+  timer.reset();
+#endif
+
+  {
+    sum_memory< pointer_view > sm( pointers, num_chunks, result );
+  }
+
+#ifdef TESTMEMORYPOOL_PRINT
+  ExecSpace::fence();
+  elapsed_time = timer.seconds();
+  print_results( "sum chunks: ", 10, elapsed_time, result );
+#endif
+
+  if ( result != ( num_chunks * ( num_chunks - 1 ) ) / 2 ) {
+    std::cerr << "Invalid sum value in memory." << std::endl;
+    return_val = false;
+  }
+
+#ifdef TESTMEMORYPOOL_PRINT
+  timer.reset();
+#endif
+
+  {
+    deallocate_memory< pointer_view, pool_memory_space >
+      dm( pointers, num_chunks, chunk_size, m_space );
+  }
+
+#ifdef TESTMEMORYPOOL_PRINT
+  ExecSpace::fence();
+  elapsed_time = timer.seconds();
+  print_results( "deallocate chunks: ", elapsed_time );
+#ifdef TESTMEMORYPOOL_PRINT_STATUS
+  m_space.print_status();
+#endif
+  timer.reset();
+#endif
+
+  {
+    allocate_memory< pointer_view, pool_memory_space >
+      am( pointers, num_chunks, chunk_size, m_space );
+  }
+
+#ifdef TESTMEMORYPOOL_PRINT
+  ExecSpace::fence();
+  elapsed_time = timer.seconds();
+  print_results( "allocate chunks: ", elapsed_time );
+#ifdef TESTMEMORYPOOL_PRINT_STATUS
+  m_space.print_status();
+#endif
+  timer.reset();
+#endif
+
+  {
+    fill_memory< pointer_view > fm( pointers, num_chunks );
+  }
+
+#ifdef TESTMEMORYPOOL_PRINT
+  ExecSpace::fence();
+  elapsed_time = timer.seconds();
+  print_results( "fill chunks: ", elapsed_time );
+  timer.reset();
+#endif
+
+  {
+    sum_memory< pointer_view > sm( pointers, num_chunks, result );
+  }
+
+#ifdef TESTMEMORYPOOL_PRINT
+  ExecSpace::fence();
+  elapsed_time = timer.seconds();
+  print_results( "sum chunks: ", 10, elapsed_time, result );
+#endif
+
+  if ( result != ( num_chunks * ( num_chunks - 1 ) ) / 2 ) {
+    std::cerr << "Invalid sum value in memory." << std::endl;
+    return_val = false;
+  }
+
+#ifdef TESTMEMORYPOOL_PRINT
+  timer.reset();
+#endif
+
+  {
+    deallocate_memory< pointer_view, pool_memory_space >
+      dm( pointers, num_chunks, chunk_size, m_space );
+  }
+
+#ifdef TESTMEMORYPOOL_PRINT
+  ExecSpace::fence();
+  elapsed_time = timer.seconds();
+  print_results( "deallocate chunks: ", elapsed_time );
+#ifdef TESTMEMORYPOOL_PRINT_STATUS
+  m_space.print_status();
+#endif
+#endif
+
+  return return_val;
+}
+
+// This test makes allocation requests for multiple sizes and interleaves
+// allocation and deallocation.
+template < class ExecSpace, class MemorySpace = typename ExecSpace::memory_space >
+void test_mempool2( size_t chunk_size, size_t total_size )
+{
+  typedef Kokkos::View<pointer_obj*, ExecSpace >           pointer_view;
+  typedef Kokkos::Experimental::MemoryPool< MemorySpace >  pool_memory_space;
+
+  size_t num_chunk_sizes = 4;
+  size_t chunk_spacing = 4;
 
 #ifdef TESTMEMORYPOOL_PRINT
   double elapsed_time = 0;
   Kokkos::Impl::Timer timer;
 #endif
 
-  {
-    allocate_memory< pointer_view, pool_memory_space >
-      am( pointers, num_chunks, chunk_size, m_space );
-  }
-
-  ExecSpace::fence();
+  pool_memory_space m_space( MemorySpace(), chunk_size, total_size,
+                             num_chunk_sizes, chunk_spacing );
 
 #ifdef TESTMEMORYPOOL_PRINT
-  elapsed_time = timer.seconds();
-  print_results( "allocate chunks: ", elapsed_time );
-  timer.reset();
-#endif
-
-  {
-    fill_memory< pointer_view > fm( pointers, num_chunks );
-  }
-
   ExecSpace::fence();
-
-#ifdef TESTMEMORYPOOL_PRINT
   elapsed_time = timer.seconds();
-  print_results( "fill chunks: ", elapsed_time );
-  timer.reset();
+  print_results( "initialize mempool: ", elapsed_time );
 #endif
 
-  {
-    sum_memory< pointer_view > sm( pointers, num_chunks, result );
+  uint64_t result;
+
+  chunk_size = m_space.get_min_chunk_size();
+  total_size = m_space.get_mem_size();
+
+  // Get the chunk size for the largest possible chunk.
+  //   max_chunk_size =
+  //     chunk_size * (MEMPOOL_CHUNK_SPACING ^ (MEMPOOL_NUM_CHUNK_SIZES - 1))
+  size_t max_chunk_size = chunk_size;
+  for (size_t i = 1; i < num_chunk_sizes; ++i) {
+    max_chunk_size *= chunk_spacing;
   }
 
-  ExecSpace::fence();
-
-#ifdef TESTMEMORYPOOL_PRINT
-  elapsed_time = timer.seconds();
-  print_results( "sum chunks: ", 10, elapsed_time, result );
-#endif
-
-  if ( result != ( num_chunks * ( num_chunks - 1 ) ) / 2 ) {
-    std::cerr << "Invalid sum value in memory." << std::endl;
-    return_val = false;
-  }
+  size_t num_max_chunks = total_size / ( max_chunk_size * num_chunk_sizes );
 
 #ifdef TESTMEMORYPOOL_PRINT
   timer.reset();
 #endif
 
   {
-    deallocate_memory< pointer_view, pool_memory_space >
-      dm( pointers, num_chunks, chunk_size, m_space );
+    allocate_deallocate_memory< ExecSpace, pool_memory_space >
+      am( num_max_chunks, max_chunk_size, chunk_size, chunk_spacing, m_space );
   }
 
+#ifdef TESTMEMORYPOOL_PRINT
   ExecSpace::fence();
-
-#ifdef TESTMEMORYPOOL_PRINT
   elapsed_time = timer.seconds();
-  print_results( "deallocate chunks: ", elapsed_time );
-  timer.reset();
+  print_results( "allocate / deallocate: ", elapsed_time );
+#ifdef TESTMEMORYPOOL_PRINT_STATUS
+  m_space.print_status();
 #endif
-
-  {
-    allocate_memory< pointer_view, pool_memory_space >
-      am( pointers, num_chunks, chunk_size, m_space );
-  }
-
-  ExecSpace::fence();
-
-#ifdef TESTMEMORYPOOL_PRINT
-  elapsed_time = timer.seconds();
-  print_results( "allocate chunks: ", elapsed_time );
-  timer.reset();
 #endif
-
-  {
-    fill_memory< pointer_view > fm( pointers, num_chunks );
-  }
-
-  ExecSpace::fence();
-
-#ifdef TESTMEMORYPOOL_PRINT
-  elapsed_time = timer.seconds();
-  print_results( "fill chunks: ", elapsed_time );
-  timer.reset();
-#endif
-
-  {
-    sum_memory< pointer_view > sm( pointers, num_chunks, result );
-  }
-
-  ExecSpace::fence();
-
-#ifdef TESTMEMORYPOOL_PRINT
-  elapsed_time = timer.seconds();
-  print_results( "sum chunks: ", 10, elapsed_time, result );
-#endif
-
-  if ( result != ( num_chunks * ( num_chunks - 1 ) ) / 2 ) {
-    std::cerr << "Invalid sum value in memory." << std::endl;
-    return_val = false;
-  }
-
-#ifdef TESTMEMORYPOOL_PRINT
-  timer.reset();
-#endif
-
-  {
-    deallocate_memory< pointer_view, pool_memory_space >
-      dm( pointers, num_chunks, chunk_size, m_space );
-  }
-
-  ExecSpace::fence();
-
-#ifdef TESTMEMORYPOOL_PRINT
-  elapsed_time = timer.seconds();
-  print_results( "deallocate chunks: ", elapsed_time );
-#endif
-
-  return return_val;
 }
 
 }
 
 #ifdef TESTMEMORYPOOL_PRINT
 #undef TESTMEMORYPOOL_PRINT
+#endif
+
+#ifdef TESTMEMORYPOOL_PRINT_STATUS
+#undef TESTMEMORYPOOL_PRINT_STATUS
 #endif
 
 #endif
