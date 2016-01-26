@@ -231,6 +231,15 @@ public:
   KOKKOS_INLINE_FUNCTION
   const scratch_memory_space & team_shmem() const { return m_space ; }
 
+  KOKKOS_INLINE_FUNCTION
+  const scratch_memory_space & team_scratch(int) const
+    { return m_space ; }
+
+  KOKKOS_INLINE_FUNCTION
+  const scratch_memory_space & thread_scratch(int) const
+    { return m_space ; }
+
+
   KOKKOS_INLINE_FUNCTION int league_rank() const { return m_league_rank ; }
   KOKKOS_INLINE_FUNCTION int league_size() const { return m_league_size ; }
   KOKKOS_INLINE_FUNCTION int team_rank() const { return 0 ; }

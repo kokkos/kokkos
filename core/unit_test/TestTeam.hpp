@@ -529,6 +529,101 @@ struct TestLambdaSharedTeam {
   }
 };
 #endif
+}
+
+namespace Test {
+
+template< class ExecSpace, class ScheduleType >
+struct ScratchTeamFunctor {
+
+  typedef ExecSpace  execution_space ;
+  typedef int        value_type ;
+  typedef Kokkos::TeamPolicy< ScheduleType,  execution_space >  policy_type ;
+
+  enum { SHARED_TEAM_COUNT = 100 };
+  enum { SHARED_THREAD_COUNT = 10 };
+
+  typedef typename ExecSpace::scratch_memory_space shmem_space ;
+
+  // tbd: MemoryUnmanaged should be the default for shared memory space
+  typedef Kokkos::View<size_t*,shmem_space,Kokkos::MemoryUnmanaged> shared_int_array_type ;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const typename policy_type::member_type & ind , value_type & update ) const
+  {
+    const shared_int_array_type scratch_ptr( ind.team_scratch(1) , 2*ind.team_size() );
+    const shared_int_array_type scratch_A( ind.team_scratch(1) , SHARED_TEAM_COUNT );
+    const shared_int_array_type scratch_B( ind.thread_scratch(1) , SHARED_THREAD_COUNT );
+
+    if ((scratch_ptr.ptr_on_device () == NULL ) ||
+        (scratch_A.  ptr_on_device () == NULL && SHARED_TEAM_COUNT > 0) ||
+        (scratch_B.  ptr_on_device () == NULL && SHARED_THREAD_COUNT > 0)) {
+      printf ("Failed to allocate shared memory of size %lu\n",
+              static_cast<unsigned long> (SHARED_TEAM_COUNT));
+      ++update; // failure to allocate is an error
+    }
+    else {
+      Kokkos::parallel_for(Kokkos::TeamThreadRange(ind,0,(int)SHARED_TEAM_COUNT),[&] (const int &i) {
+        scratch_A[i] = i + ind.league_rank();
+      });
+      for(int i=0; i<SHARED_THREAD_COUNT; i++)
+        scratch_B[i] = 10000*ind.league_rank() + 100*ind.team_rank() + i;
+
+      scratch_ptr[ind.team_rank()] = (size_t) scratch_A.ptr_on_device();
+      scratch_ptr[ind.team_rank() + ind.team_size()] = (size_t) scratch_B.ptr_on_device();
+
+      ind.team_barrier();
+
+      for( int i = 0; i<SHARED_TEAM_COUNT; i++) {
+        if(scratch_A[i] != i + ind.league_rank())
+          ++update;
+      }
+      for( int i = 0; i < ind.team_size(); i++) {
+        if(scratch_ptr[0]!=scratch_ptr[i]) ++update;
+      }
+      if(scratch_ptr[1+ind.team_size()] - scratch_ptr[0 + ind.team_size()] <
+         SHARED_THREAD_COUNT*sizeof(size_t))
+        ++update;
+      for( int i = 1; i < ind.team_size(); i++) {
+        if((scratch_ptr[i+ind.team_size()] - scratch_ptr[i-1+ind.team_size()]) !=
+           (scratch_ptr[1+ind.team_size()] - scratch_ptr[0 + ind.team_size()])) ++update;
+
+      }
+    }
+  }
+};
 
 }
+
+namespace {
+
+template< class ExecSpace, class ScheduleType >
+struct TestScratchTeam {
+
+  TestScratchTeam()
+  { run(); }
+
+  void run()
+  {
+    typedef Test::ScratchTeamFunctor<ExecSpace, ScheduleType> Functor ;
+    typedef Kokkos::View< typename Functor::value_type , Kokkos::HostSpace , Kokkos::MemoryUnmanaged >  result_type ;
+
+    const size_t team_size = Kokkos::TeamPolicy< ScheduleType,  ExecSpace >::team_size_max( Functor() );
+
+    Kokkos::TeamPolicy< ScheduleType,  ExecSpace > team_exec( 8192 / team_size , team_size );
+
+    typename Functor::value_type error_count = 0 ;
+
+    int team_scratch_size   = Functor::shared_int_array_type::shmem_size(Functor::SHARED_TEAM_COUNT) +
+                              Functor::shared_int_array_type::shmem_size(2*team_size);
+    int thread_scratch_size = Functor::shared_int_array_type::shmem_size(Functor::SHARED_THREAD_COUNT);
+    Kokkos::parallel_reduce( team_exec.set_scratch_size(1,Kokkos::PerTeam(team_scratch_size),
+                                                          Kokkos::PerThread(thread_scratch_size)) ,
+                             Functor() , result_type( & error_count ) );
+
+    ASSERT_EQ( error_count , 0 );
+  }
+};
+}
+
 /*--------------------------------------------------------------------------*/

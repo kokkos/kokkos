@@ -99,7 +99,13 @@ public:
 
   __device__ inline
   const execution_space::scratch_memory_space & team_shmem() const
-    { return m_team_shared ; }
+    { return m_team_shared.set_team_thread_mode(1,0) ; }
+  __device__ inline
+  const execution_space::scratch_memory_space & team_scratch(int) const
+    { return m_team_shared.set_team_thread_mode(1,0) ; }
+  __device__ inline
+  const execution_space::scratch_memory_space & thread_scratch(int) const
+    { return m_team_shared.set_team_thread_mode(team_size(),team_rank()) ; }
 
   __device__ inline int league_rank() const { return m_league_rank ; }
   __device__ inline int league_size() const { return m_league_size ; }
@@ -207,7 +213,12 @@ public:
 
 #else
 
-  const execution_space::scratch_memory_space & team_shmem() const {return m_team_shared;}
+  const execution_space::scratch_memory_space & team_shmem() const
+    { return m_team_shared.set_team_thread_mode(1,0) ; }
+  const execution_space::scratch_memory_space & team_scratch(int) const
+    { return m_team_shared.set_team_thread_mode(1,0) ; }
+  const execution_space::scratch_memory_space & thread_scratch(int) const
+    { return m_team_shared.set_team_thread_mode(team_size(),team_rank()) ; }
 
   int league_rank() const {return 0;}
   int league_size() const {return 1;}
