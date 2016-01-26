@@ -473,7 +473,7 @@ public:
     HostMirror ;
 
   //----------------------------------------
-  // Domain dimensions
+  // Domain rank and extents
 
   enum { Rank = map_type::Rank };
 
@@ -489,6 +489,16 @@ public:
   extent_int( const iType & r ) const
     { return static_cast<int>(m_map.extent(r)); }
 
+  //----------------------------------------
+  /*  Deprecate all 'dimension' functions in favor of
+   *  ISO/C++ vocabulary 'extent'.
+   */
+
+  template< typename iType >
+  KOKKOS_INLINE_FUNCTION constexpr
+  typename std::enable_if< std::is_integral<iType>::value , size_t >::type
+  dimension( const iType & r ) const { return extent( r ); }
+
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_0() const { return m_map.dimension_0(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_1() const { return m_map.dimension_1(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_2() const { return m_map.dimension_2(); }
@@ -497,6 +507,8 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_5() const { return m_map.dimension_5(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_6() const { return m_map.dimension_6(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_7() const { return m_map.dimension_7(); }
+
+  //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION constexpr size_t size() const { return m_map.dimension_0() *
                                                                 m_map.dimension_1() *
@@ -1097,7 +1109,7 @@ public:
 
       typedef typename Mapping::type DstType ;
 
-      static_assert( Kokkos::Experimental::Impl::ViewMapping< View , DstType , void >::is_assignable
+      static_assert( Kokkos::Experimental::Impl::ViewMapping< traits , typename DstType::traits , void >::is_assignable
         , "Subview construction requires compatible view and subview arguments" );
 
       Mapping::assign( m_map, src_view.m_map, arg0 , args... );

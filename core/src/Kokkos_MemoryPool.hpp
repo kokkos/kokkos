@@ -205,6 +205,8 @@ public:
     : m_freelist( arg_space , execution_space(), arg_chunk_size , arg_total_size )
   {}
 
+  unsigned chunk_size() const { return m_freelist.m_chunk_size ; }
+
   ///\brief  Claim chunks of untracked memory from the pool.
   /// Can only be called from device.
   KOKKOS_INLINE_FUNCTION
