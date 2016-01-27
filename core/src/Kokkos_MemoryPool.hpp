@@ -99,12 +99,16 @@ private:
 
   template< class > friend class Kokkos::Experimental::MemoryPool;
 
+public:
+
   /// \brief Structure used to create a linked list from the memory chunks.
   ///
   /// The chunks are cast to this type internally to create the lists.
   struct Link {
     Link * m_next;
   };
+
+private:
 
   Tracker   m_track;
 

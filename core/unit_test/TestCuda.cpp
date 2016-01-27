@@ -127,10 +127,10 @@ TEST_F( cuda , memory_space )
 
 TEST_F( cuda , memory_pool )
 {
-  bool val = TestMemoryPool::test_mempool< Kokkos::Cuda >( 128, 1280000000 );
+  bool val = TestMemoryPool::test_mempool< Kokkos::Cuda, Kokkos::CudaUVMSpace >( 128, 12800000 );
   ASSERT_TRUE( val );
 
-  TestMemoryPool::test_mempool2< Kokkos::Cuda >( 128, 1280000000 );
+  TestMemoryPool::test_mempool2< Kokkos::Cuda, Kokkos::CudaUVMSpace >( 128, 12800000 );
 }
 
 TEST_F( cuda, uvm )

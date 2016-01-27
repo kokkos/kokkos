@@ -437,8 +437,6 @@ void test_mempool2( size_t chunk_size, size_t total_size )
   print_results( "initialize mempool: ", elapsed_time );
 #endif
 
-  uint64_t result;
-
   chunk_size = m_space.get_min_chunk_size();
   total_size = m_space.get_mem_size();
 
