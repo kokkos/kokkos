@@ -435,7 +435,12 @@ private:
   template< class , class ... > friend class View ;
   template< class , class ... > friend class Impl::ViewMapping ;
 
-  typedef ViewTraits< DataType , Properties ... >                  traits ;
+public:
+
+  typedef ViewTraits< DataType , Properties ... > traits ;
+
+private:
+
   typedef Kokkos::Experimental::Impl::ViewMapping< traits , void > map_type ;
   typedef Kokkos::Experimental::Impl::SharedAllocationTracker      track_type ;
 
@@ -554,7 +559,8 @@ public:
   // Allow specializations to query their specialized map
 
   KOKKOS_INLINE_FUNCTION
-  const map_type & implementation_map() const { return m_map ; }
+  const Kokkos::Experimental::Impl::ViewMapping< traits , void > &
+  implementation_map() const { return m_map ; }
 
   //----------------------------------------
 
