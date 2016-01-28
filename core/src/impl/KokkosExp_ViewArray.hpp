@@ -158,6 +158,11 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t extent( const iType & r ) const
     { return m_offset.m_dim.extent(r); }
 
+  KOKKOS_INLINE_FUNCTION constexpr
+  typename Traits::array_layout layout() const
+    { return m_offset.layout(); }
+
+
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_0() const { return m_offset.dimension_0(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_1() const { return m_offset.dimension_1(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_2() const { return m_offset.dimension_2(); }
@@ -297,8 +302,8 @@ public:
 
   template< class ... P >
   SharedAllocationRecord<> *
-  allocate_shared( ViewAllocProp< P... > const & prop
-                 , typename Traits::array_layout const & layout
+  allocate_shared( ViewAllocProp< P... > const & arg_prop
+                 , typename Traits::array_layout const & arg_layout
                  )
   {
     typedef ViewAllocProp< P... > alloc_prop ;
@@ -312,15 +317,15 @@ public:
     typedef std::integral_constant< unsigned ,
       alloc_prop::allow_padding ? sizeof(scalar_type) : 0 > padding ;
 
-    m_offset = offset_type( padding(), layout );
+    m_offset = offset_type( padding(), arg_layout );
 
     const size_t alloc_size =
       ( m_offset.span() * Array_N * MemorySpanSize + MemorySpanMask ) & ~size_t(MemorySpanMask);
 
     // Allocate memory from the memory space and create tracking record.
     record_type * const record =
-      record_type::allocate( ((ViewAllocProp<void,memory_space> const &) prop ).value
-                           , ((ViewAllocProp<void,std::string>  const &) prop ).value
+      record_type::allocate( ((ViewAllocProp<void,memory_space> const &) arg_prop ).value
+                           , ((ViewAllocProp<void,std::string>  const &) arg_prop ).value
                            , alloc_size );
 
     if ( alloc_size ) {
@@ -329,7 +334,7 @@ public:
 
       if ( alloc_prop::initialize ) {
         // The functor constructs and destroys
-        record->m_destroy = functor_type( ((ViewAllocProp<void,execution_space> const & )prop).value
+        record->m_destroy = functor_type( ((ViewAllocProp<void,execution_space> const & )arg_prop).value
                                         , (pointer_type) m_handle
                                         , m_offset.span() * Array_N
                                         );

@@ -494,6 +494,10 @@ public:
   extent_int( const iType & r ) const
     { return static_cast<int>(m_map.extent(r)); }
 
+  KOKKOS_INLINE_FUNCTION constexpr
+  typename traits::array_layout layout() const
+    { return m_map.layout(); }
+
   //----------------------------------------
   /*  Deprecate all 'dimension' functions in favor of
    *  ISO/C++ vocabulary 'extent'.

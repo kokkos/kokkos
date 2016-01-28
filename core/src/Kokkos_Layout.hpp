@@ -163,6 +163,20 @@ struct LayoutStride {
       }
       return tmp ;
     }
+
+  KOKKOS_INLINE_FUNCTION constexpr
+  LayoutStride( size_t N0 = 0 , size_t S0 = 0
+              , size_t N1 = 0 , size_t S1 = 0
+              , size_t N2 = 0 , size_t S2 = 0
+              , size_t N3 = 0 , size_t S3 = 0
+              , size_t N4 = 0 , size_t S4 = 0
+              , size_t N5 = 0 , size_t S5 = 0
+              , size_t N6 = 0 , size_t S6 = 0
+              , size_t N7 = 0 , size_t S7 = 0
+              )
+    : dimension { N0 , N1 , N2 , N3 , N4 , N5 , N6 , N7 }
+    , stride    { S0 , S1 , S2 , S3 , S4 , S5 , S6 , S7 }
+    {}
 };
 
 //----------------------------------------------------------------------------

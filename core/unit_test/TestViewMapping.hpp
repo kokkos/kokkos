@@ -216,6 +216,17 @@ void test_view_mapping()
     ASSERT_EQ( dyn_off3.m_dim.N3 , 1 );
     ASSERT_EQ( dyn_off3.size() , 2 * 3 * 4 );
 
+    const Kokkos::LayoutLeft layout = dyn_off3.layout();
+
+    ASSERT_EQ( layout.dimension[0] , 2 );
+    ASSERT_EQ( layout.dimension[1] , 3 );
+    ASSERT_EQ( layout.dimension[2] , 4 );
+    ASSERT_EQ( layout.dimension[3] , 0 );
+    ASSERT_EQ( layout.dimension[4] , 0 );
+    ASSERT_EQ( layout.dimension[5] , 0 );
+    ASSERT_EQ( layout.dimension[6] , 0 );
+    ASSERT_EQ( layout.dimension[7] , 0 );
+
     ASSERT_EQ( stride3.m_dim.rank , 3 );
     ASSERT_EQ( stride3.m_dim.N0 , 2 );
     ASSERT_EQ( stride3.m_dim.N1 , 3 );
