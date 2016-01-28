@@ -298,7 +298,12 @@ void atomic_assign( volatile T * const dest ,
                  , const T >::type& val )
 {
   while( !Impl::lock_address_host_space( (void*) dest ) );
-  *dest = val;
+  // This is likely an aggregate type with a defined
+  // 'volatile T & operator = ( const T & ) volatile'
+  // member.  The volatile return value implicitly defines a
+  // dereference that some compilers (gcc 4.7.2) warn is being ignored.
+  // Suppress warning by casting return to void.
+  (void)( *dest = val );
   Impl::unlock_address_host_space( (void*) dest );
 }
 //----------------------------------------------------------------------------
