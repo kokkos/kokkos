@@ -403,12 +403,35 @@ constexpr Kokkos::Experimental::Impl::AllowPadding_t
  */
 template< class ... Args >
 inline
-Impl::ViewAllocProp< typename Impl::ViewAllocProp< void , Args >::type ... >
+Impl::ViewCtorProp< typename Impl::ViewCtorProp< void , Args >::type ... >
 view_alloc( Args const & ... args )
 {
-  return
-    Impl::ViewAllocProp< typename Impl::ViewAllocProp< void , Args >::type ... >
-      ( args... );
+  typedef 
+    Impl::ViewCtorProp< typename Impl::ViewCtorProp< void , Args >::type ... >
+      return_type ;
+
+  static_assert( ! return_type::has_pointer
+               , "Cannot give pointer-to-memory for view allocation" );
+
+  return return_type( args... );
+}
+
+template< class ... Args >
+inline
+Impl::ViewCtorProp< typename Impl::ViewCtorProp< void , Args >::type ... >
+view_wrap( Args const & ... args )
+{
+  typedef 
+    Impl::ViewCtorProp< typename Impl::ViewCtorProp< void , Args >::type ... >
+      return_type ;
+
+  static_assert( ! return_type::has_memory_space &&
+                 ! return_type::has_execution_space &&
+                 ! return_type::has_label &&
+                 return_type::has_pointer
+               , "Must only give pointer-to-memory for view wrapping" );
+
+  return return_type( args... );
 }
 
 } /* namespace Experimental */
@@ -1141,18 +1164,20 @@ public:
 
   template< class ... P >
   explicit inline
-  View( const Impl::ViewAllocProp< P ... > & arg_prop
-      , const typename traits::array_layout & arg_layout
+  View( const Impl::ViewCtorProp< P ... > & arg_prop
+      , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer
+                               , typename traits::array_layout
+                               >::type const & arg_layout
       )
     : m_track()
     , m_map()
     {
       // Append layout and spaces if not input
-      typedef Impl::ViewAllocProp< P ... > alloc_prop_input ;
+      typedef Impl::ViewCtorProp< P ... > alloc_prop_input ;
 
       // use 'std::integral_constant<unsigned,I>' for non-types
       // to avoid duplicate class error.
-      typedef Impl::ViewAllocProp
+      typedef Impl::ViewCtorProp
         < P ...
         , typename std::conditional
             < alloc_prop_input::has_label
@@ -1191,10 +1216,28 @@ public:
       m_track.assign_allocated_record_to_uninitialized( record );
     }
 
+  // Wrap memory according to properties and array layout
+  template< class ... P >
+  explicit inline
+  View( const Impl::ViewCtorProp< P ... > & arg_prop
+      , typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer
+                               , typename traits::array_layout
+                               >::type const & arg_layout
+      )
+    : m_track() // No memory tracking
+    , m_map( arg_prop , arg_layout )
+    {
+      static_assert(
+        std::is_same< pointer_type
+                    , typename Impl::ViewCtorProp< P... >::pointer_type
+                    >::value ,
+        "Constructing View to wrap user memory must supply matching pointer type" );
+    }
+
   // Simple dimension-only layout
   template< class ... P >
   explicit inline
-  View( const Impl::ViewAllocProp< P ... > & arg_prop
+  View( const Impl::ViewCtorProp< P ... > & arg_prop
       , const size_t arg_N0 = 0
       , const size_t arg_N1 = 0
       , const size_t arg_N2 = 0
@@ -1215,16 +1258,19 @@ public:
   template< typename Label >
   explicit inline
   View( const Label & arg_label
-      , const typename traits::array_layout & arg_layout
+      , typename std::enable_if<
+          Kokkos::Experimental::Impl::is_view_label<Label>::value ,
+          typename traits::array_layout >::type const & arg_layout
       )
-    : View( Impl::ViewAllocProp< std::string >( arg_label ) , arg_layout )
+    : View( Impl::ViewCtorProp< std::string >( arg_label ) , arg_layout )
     {}
 
   // Label and layout, must disambiguate from subview constructor.
   template< typename Label >
   explicit inline
   View( const Label & arg_label
-      , typename std::enable_if< Kokkos::Experimental::Impl::is_view_label<Label>::value ,
+      , typename std::enable_if<
+          Kokkos::Experimental::Impl::is_view_label<Label>::value ,
         const size_t >::type arg_N0 = 0
       , const size_t arg_N1 = 0
       , const size_t arg_N2 = 0
@@ -1234,7 +1280,7 @@ public:
       , const size_t arg_N6 = 0
       , const size_t arg_N7 = 0
       )
-    : View( Impl::ViewAllocProp< std::string >( arg_label )
+    : View( Impl::ViewCtorProp< std::string >( arg_label )
           , typename traits::array_layout
               ( arg_N0 , arg_N1 , arg_N2 , arg_N3
               , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
@@ -1246,7 +1292,7 @@ public:
   View( const ViewAllocateWithoutInitializing & arg_prop
       , const typename traits::array_layout & arg_layout
       )
-    : View( Impl::ViewAllocProp< std::string , Kokkos::Experimental::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::Experimental::WithoutInitializing )
+    : View( Impl::ViewCtorProp< std::string , Kokkos::Experimental::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::Experimental::WithoutInitializing )
           , arg_layout
           )
     {}
@@ -1262,7 +1308,7 @@ public:
       , const size_t arg_N6 = 0
       , const size_t arg_N7 = 0
       )
-    : View( Impl::ViewAllocProp< std::string , Kokkos::Experimental::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::Experimental::WithoutInitializing )
+    : View( Impl::ViewCtorProp< std::string , Kokkos::Experimental::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::Experimental::WithoutInitializing )
           , typename traits::array_layout
               ( arg_N0 , arg_N1 , arg_N2 , arg_N3
               , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
@@ -1298,20 +1344,18 @@ public:
       , const size_t arg_N6 = 0
       , const size_t arg_N7 = 0
       )
-    : m_track() // No memory tracking
-    , m_map( arg_ptr
-           , typename traits::array_layout
-              ( arg_N0 , arg_N1 , arg_N2 , arg_N3
-              , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
-           )
+    : View( Impl::ViewCtorProp<pointer_type>(arg_ptr)
+          , typename traits::array_layout
+             ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+             , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+          )
     {}
 
   explicit KOKKOS_INLINE_FUNCTION
   View( pointer_type arg_ptr
       , typename traits::array_layout & arg_layout
       )
-    : m_track() // No memory tracking
-    , m_map( arg_ptr , arg_layout )
+    : View( Impl::ViewCtorProp<pointer_type>(arg_ptr) , arg_layout )
     {}
 
   //----------------------------------------
@@ -1344,12 +1388,12 @@ public:
       , const size_t arg_N6 = 0
       , const size_t arg_N7 = 0 )
     : m_track() // No memory tracking
-    , m_map( reinterpret_cast<pointer_type>(
+    , m_map( Impl::ViewCtorProp<pointer_type>( reinterpret_cast<pointer_type>(
        arg_space.get_shmem(
          map_type::memory_span(
            typename traits::array_layout
             ( arg_N0 , arg_N1 , arg_N2 , arg_N3
-            , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) ) ) )
+            , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) ) ) ) )
          , typename traits::array_layout
             ( arg_N0 , arg_N1 , arg_N2 , arg_N3
             , arg_N4 , arg_N5 , arg_N6 , arg_N7 )

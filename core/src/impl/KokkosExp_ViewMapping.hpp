@@ -52,7 +52,7 @@
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Traits.hpp>
-#include <impl/KokkosExp_ViewAlloc.hpp>
+#include <impl/KokkosExp_ViewCtor.hpp>
 #include <impl/Kokkos_Atomic_View.hpp>
 
 //----------------------------------------------------------------------------
@@ -2508,11 +2508,12 @@ public:
     }
 
   /**\brief  Wrap a span of memory */
+  template< class ... P >
   KOKKOS_INLINE_FUNCTION
-  ViewMapping( pointer_type ptr
+  ViewMapping( ViewCtorProp< P ... > const & arg_prop
              , typename Traits::array_layout const & arg_layout
              )
-    : m_handle( ptr )
+    : m_handle( ( (ViewCtorProp<void,pointer_type> const &) arg_prop ).value )
     , m_offset( std::integral_constant< unsigned , 0 >() , arg_layout )
     {}
 
@@ -2523,10 +2524,10 @@ public:
    */
   template< class ... P >
   SharedAllocationRecord<> *
-  allocate_shared( ViewAllocProp< P... > const & arg_prop
+  allocate_shared( ViewCtorProp< P... > const & arg_prop
                  , typename Traits::array_layout const & arg_layout )
   {
-    typedef ViewAllocProp< P... > alloc_prop ;
+    typedef ViewCtorProp< P... > alloc_prop ;
 
     typedef typename alloc_prop::execution_space  execution_space ;
     typedef typename Traits::memory_space         memory_space ;
@@ -2549,8 +2550,8 @@ public:
 
     // Create shared memory tracking record with allocate memory from the memory space
     record_type * const record =
-      record_type::allocate( ( (ViewAllocProp<void,memory_space> const &) arg_prop ).value
-                           , ( (ViewAllocProp<void,std::string>  const &) arg_prop ).value
+      record_type::allocate( ( (ViewCtorProp<void,memory_space> const &) arg_prop ).value
+                           , ( (ViewCtorProp<void,std::string>  const &) arg_prop ).value
                            , alloc_size );
 
     //  Only set the the pointer and initialize if the allocation is non-zero.
@@ -2562,7 +2563,7 @@ public:
       if ( alloc_prop::initialize ) {
         // Assume destruction is only required when construction is requested.
         // The ViewValueFunctor has both value construction and destruction operators.
-        record->m_destroy = functor_type( ( (ViewAllocProp<void,execution_space> const &) arg_prop).value
+        record->m_destroy = functor_type( ( (ViewCtorProp<void,execution_space> const &) arg_prop).value
                                         , (value_type *) m_handle
                                         , m_offset.span()
                                         );

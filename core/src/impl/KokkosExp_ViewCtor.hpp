@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_EXPERIMENTAL_IMPL_VIEW_ALLOC_PROP_HPP
-#define KOKKOS_EXPERIMENTAL_IMPL_VIEW_ALLOC_PROP_HPP
+#ifndef KOKKOS_EXPERIMENTAL_IMPL_VIEW_CTOR_PROP_HPP
+#define KOKKOS_EXPERIMENTAL_IMPL_VIEW_CTOR_PROP_HPP
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -99,25 +99,25 @@ struct is_view_label< const char[N] > : public std::true_type {};
 //----------------------------------------------------------------------------
 
 template< typename ... P >
-struct ViewAllocProp ;
+struct ViewCtorProp ;
 
 /*  std::integral_constant<unsigned,I> are dummy arguments
  *  that avoid duplicate base class errors
  */
 template< unsigned I >
-struct ViewAllocProp< void , std::integral_constant<unsigned,I> >
+struct ViewCtorProp< void , std::integral_constant<unsigned,I> >
 {
-  ViewAllocProp() = default ;
-  ViewAllocProp( const ViewAllocProp & ) = default ;
-  ViewAllocProp & operator = ( const ViewAllocProp & ) = default ;
+  ViewCtorProp() = default ;
+  ViewCtorProp( const ViewCtorProp & ) = default ;
+  ViewCtorProp & operator = ( const ViewCtorProp & ) = default ;
 
   template< typename P >
-  ViewAllocProp( const P & ) {}
+  ViewCtorProp( const P & ) {}
 };
 
 /* Property flags have constexpr value */
 template< typename P >
-struct ViewAllocProp
+struct ViewCtorProp
   < typename std::enable_if<
       std::is_same< P , AllowPadding_t >::value ||
       std::is_same< P , WithoutInitializing_t >::value
@@ -125,38 +125,38 @@ struct ViewAllocProp
   , P
   >
 {
-  ViewAllocProp() = default ;
-  ViewAllocProp( const ViewAllocProp & ) = default ;
-  ViewAllocProp & operator = ( const ViewAllocProp & ) = default ;
+  ViewCtorProp() = default ;
+  ViewCtorProp( const ViewCtorProp & ) = default ;
+  ViewCtorProp & operator = ( const ViewCtorProp & ) = default ;
 
   typedef P type ;
 
-  ViewAllocProp( const type & ) {}
+  ViewCtorProp( const type & ) {}
 
   static constexpr type value = type();
 };
 
 /* Map input label type to std::string */
 template< typename Label >
-struct ViewAllocProp
+struct ViewCtorProp
   < typename std::enable_if< is_view_label< Label >::value >::type
   , Label
   >
 {
-  ViewAllocProp() = default ;
-  ViewAllocProp( const ViewAllocProp & ) = default ;
-  ViewAllocProp & operator = ( const ViewAllocProp & ) = default ;
+  ViewCtorProp() = default ;
+  ViewCtorProp( const ViewCtorProp & ) = default ;
+  ViewCtorProp & operator = ( const ViewCtorProp & ) = default ;
 
   typedef std::string type ;
 
-  ViewAllocProp( const type & arg ) : value( arg ) {}
-  ViewAllocProp( type && arg ) : value( arg ) {}
+  ViewCtorProp( const type & arg ) : value( arg ) {}
+  ViewCtorProp( type && arg ) : value( arg ) {}
 
   type value ;
 };
 
 template< typename Space >
-struct ViewAllocProp
+struct ViewCtorProp
   < typename std::enable_if<
       Kokkos::Impl::is_memory_space<Space>::value ||
       Kokkos::Impl::is_execution_space<Space>::value
@@ -164,20 +164,35 @@ struct ViewAllocProp
   , Space
   >
 {
-  ViewAllocProp() = default ;
-  ViewAllocProp( const ViewAllocProp & ) = default ;
-  ViewAllocProp & operator = ( const ViewAllocProp & ) = default ;
+  ViewCtorProp() = default ;
+  ViewCtorProp( const ViewCtorProp & ) = default ;
+  ViewCtorProp & operator = ( const ViewCtorProp & ) = default ;
 
   typedef Space type ;
 
-  ViewAllocProp( const type & arg ) : value( arg ) {}
+  ViewCtorProp( const type & arg ) : value( arg ) {}
+
+  type value ;
+};
+
+
+template< typename T >
+struct ViewCtorProp < void , T * >
+{
+  ViewCtorProp() = default ;
+  ViewCtorProp( const ViewCtorProp & ) = default ;
+  ViewCtorProp & operator = ( const ViewCtorProp & ) = default ;
+
+  typedef T * type ;
+
+  ViewCtorProp( const type arg ) : value( arg ) {}
 
   type value ;
 };
 
 
 template< typename ... P >
-struct ViewAllocProp : public ViewAllocProp< void , P > ...
+struct ViewCtorProp : public ViewCtorProp< void , P > ...
 {
 private:
 
@@ -187,30 +202,35 @@ private:
   typedef Kokkos::Impl::has_condition< void , Kokkos::Impl::is_execution_space , P ... >
     var_execution_space ;
 
+  typedef Kokkos::Impl::has_condition< void , std::is_pointer , P ... >
+    var_pointer ;
+
 public:
 
   /* Flags for the common properties */
   enum { has_memory_space    = var_memory_space::value };
   enum { has_execution_space = var_execution_space::value };
+  enum { has_pointer         = var_pointer::value };
   enum { has_label           = Kokkos::Impl::has_type< std::string , P... >::value };
   enum { allow_padding       = Kokkos::Impl::has_type< AllowPadding_t , P... >::value };
   enum { initialize          = ! Kokkos::Impl::has_type< WithoutInitializing_t , P ... >::value };
 
   typedef typename var_memory_space::type     memory_space ;
   typedef typename var_execution_space::type  execution_space ;
+  typedef typename var_pointer::type          pointer_type ;
 
   /*  Copy from a matching argument list.
-   *  Requires  std::is_same< P , ViewAllocProp< void , Args >::value ...
+   *  Requires  std::is_same< P , ViewCtorProp< void , Args >::value ...
    */
   template< typename ... Args >
-  ViewAllocProp( Args const & ... args )
-    : ViewAllocProp< void , P >( args ) ...
+  ViewCtorProp( Args const & ... args )
+    : ViewCtorProp< void , P >( args ) ...
     {}
 
   /* Copy from a matching property subset */
   template< typename ... Args >
-  ViewAllocProp( ViewAllocProp< Args ... > const & arg )
-    : ViewAllocProp< void , Args >( ((ViewAllocProp<void,Args> const &) arg ) ) ...
+  ViewCtorProp( ViewCtorProp< Args ... > const & arg )
+    : ViewCtorProp< void , Args >( ((ViewCtorProp<void,Args> const &) arg ) ) ...
     {}
 };
 

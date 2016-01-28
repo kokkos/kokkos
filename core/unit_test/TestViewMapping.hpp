@@ -221,11 +221,11 @@ void test_view_mapping()
     ASSERT_EQ( layout.dimension[0] , 2 );
     ASSERT_EQ( layout.dimension[1] , 3 );
     ASSERT_EQ( layout.dimension[2] , 4 );
-    ASSERT_EQ( layout.dimension[3] , 0 );
-    ASSERT_EQ( layout.dimension[4] , 0 );
-    ASSERT_EQ( layout.dimension[5] , 0 );
-    ASSERT_EQ( layout.dimension[6] , 0 );
-    ASSERT_EQ( layout.dimension[7] , 0 );
+    ASSERT_EQ( layout.dimension[3] , 1 );
+    ASSERT_EQ( layout.dimension[4] , 1 );
+    ASSERT_EQ( layout.dimension[5] , 1 );
+    ASSERT_EQ( layout.dimension[6] , 1 );
+    ASSERT_EQ( layout.dimension[7] , 1 );
 
     ASSERT_EQ( stride3.m_dim.rank , 3 );
     ASSERT_EQ( stride3.m_dim.N0 , 2 );
@@ -780,7 +780,8 @@ void test_view_mapping()
     ASSERT_EQ( offset.span() , 60 );
     ASSERT_TRUE( offset.span_is_contiguous() );
 
-    Kokkos::Experimental::Impl::ViewMapping< traits_t , void >  v( (int*) 0 , stride );
+    Kokkos::Experimental::Impl::ViewMapping< traits_t , void >
+      v( Kokkos::Experimental::Impl::ViewCtorProp<int*>((int*)0), stride );
   }
 
   {

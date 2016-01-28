@@ -302,11 +302,11 @@ public:
 
   template< class ... P >
   SharedAllocationRecord<> *
-  allocate_shared( ViewAllocProp< P... > const & arg_prop
+  allocate_shared( ViewCtorProp< P... > const & arg_prop
                  , typename Traits::array_layout const & arg_layout
                  )
   {
-    typedef ViewAllocProp< P... > alloc_prop ;
+    typedef ViewCtorProp< P... > alloc_prop ;
 
     typedef typename alloc_prop::execution_space  execution_space ;
     typedef typename Traits::memory_space         memory_space ;
@@ -324,8 +324,8 @@ public:
 
     // Allocate memory from the memory space and create tracking record.
     record_type * const record =
-      record_type::allocate( ((ViewAllocProp<void,memory_space> const &) arg_prop ).value
-                           , ((ViewAllocProp<void,std::string>  const &) arg_prop ).value
+      record_type::allocate( ((ViewCtorProp<void,memory_space> const &) arg_prop ).value
+                           , ((ViewCtorProp<void,std::string>  const &) arg_prop ).value
                            , alloc_size );
 
     if ( alloc_size ) {
@@ -334,7 +334,7 @@ public:
 
       if ( alloc_prop::initialize ) {
         // The functor constructs and destroys
-        record->m_destroy = functor_type( ((ViewAllocProp<void,execution_space> const & )arg_prop).value
+        record->m_destroy = functor_type( ((ViewCtorProp<void,execution_space> const & )arg_prop).value
                                         , (pointer_type) m_handle
                                         , m_offset.span() * Array_N
                                         );
