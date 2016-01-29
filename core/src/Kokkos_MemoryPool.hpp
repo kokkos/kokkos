@@ -69,6 +69,37 @@ class MemoryPool ;
 
 namespace Impl {
 
+#ifdef KOKKOS_MEMPOOL_PRINT_INFO
+template < typename Link >
+struct print_mempool {
+  size_t    m_num_chunk_sizes;
+  size_t *  m_chunk_size;
+  Link **   m_freelist;
+  char *    m_data;
+
+  print_mempool( size_t ncs, size_t * cs, Link ** f, char * d )
+    : m_num_chunk_sizes(ncs), m_chunk_size(cs), m_freelist(f), m_data(d)
+  {}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( size_t i ) const
+  {
+    if ( i == 0 ) {
+      printf( "*** ON DEVICE ***\n");
+      printf( "m_chunk_size: 0x%lx\n", m_chunk_size );
+      printf( "  m_freelist: 0x%lx\n", m_freelist );
+      printf( "      m_data: 0x%lx\n", m_data );
+      for ( size_t l = 0; l < m_num_chunk_sizes; ++l ) {
+        printf( "%2ld    freelist: 0x%lx    chunk_size: %6ld\n",
+                l, m_freelist[l], m_chunk_size[l] );
+      }
+      printf( "                               chunk_size: %6ld\n\n",
+              m_chunk_size[m_num_chunk_sizes] );
+    }
+  }
+};
+#endif
+
 template < typename Link >
 struct initialize_mempool {
   char *  m_data;
@@ -120,7 +151,7 @@ private:
   size_t    m_data_size;
   size_t    m_chunk_spacing;
 
-#ifdef KOKKOS_MEMPOOL_PRINT_INFO
+#if defined(KOKKOS_MEMPOOL_PRINT_INFO) && defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
   mutable size_t m_count;
 #endif
 
@@ -138,7 +169,7 @@ private:
                size_t num_chunk_sizes, size_t chunk_spacing )
     : m_track(), m_chunk_size(0), m_freelist(0), m_data(0), m_data_size(0),
       m_chunk_spacing(chunk_spacing)
-#ifdef KOKKOS_MEMPOOL_PRINT_INFO
+#if defined(KOKKOS_MEMPOOL_PRINT_INFO) && defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
     , m_count(0)
 #endif
   {
@@ -194,9 +225,9 @@ private:
     //   Link *  freelist[num_chunk_sizes]
 
     // Calculate the size of the header where the size is rounded up to the
-    // smallest multiple of base_chunk_size >= the needed size.
-    const size_t header_bytes = ( num_chunk_sizes + 1 ) * sizeof(size_t) +
-                                num_chunk_sizes * sizeof(void*);
+    // smallest multiple of base_chunk_size >= the needed size.  Assume all
+    // types are 8 bytes to give ample space.
+    const size_t header_bytes = ( 2 * num_chunk_sizes + 1 ) * 8;
     const size_t header_size =
       (header_bytes + base_chunk_size - 1 ) / base_chunk_size * base_chunk_size;
 
@@ -214,9 +245,10 @@ private:
     //       that?
 
     // Get the pointers into the allocated memory.
-    m_chunk_size = reinterpret_cast< size_t * >( rec->data() );
-    m_freelist = reinterpret_cast< Link ** >( m_chunk_size + num_chunk_sizes + 1 );
-    m_data = reinterpret_cast< char * >( m_freelist + num_chunk_sizes );
+    char * mem = reinterpret_cast< char * >( rec->data() );
+    m_chunk_size = reinterpret_cast< size_t * >( mem );
+    m_freelist = reinterpret_cast< Link ** >( mem + ( num_chunk_sizes + 1 ) * 8 );
+    m_data = mem + header_size;
 
     // Initialize the chunk sizes array.  Create num_chunk_sizes different
     // chunk sizes where each successive chunk size is
@@ -250,10 +282,18 @@ private:
     }
 
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
+    printf( "\n" );
+    printf( "*** ON HOST ***\n");
+    printf( "m_chunk_size: 0x%lx\n", m_chunk_size );
+    printf( "  m_freelist: 0x%lx\n", m_freelist );
+    printf( "      m_data: 0x%lx\n", m_data );
     for ( size_t i = 0; i < num_chunk_sizes; ++i ) {
       printf( "%2ld    freelist: 0x%lx    chunk_size: %6ld    num_chunks: %8ld\n",
               i, (unsigned long) m_freelist[i], m_chunk_size[i], num_chunks[i] );
     }
+    printf( "                               chunk_size: %6ld\n\n",
+            m_chunk_size[num_chunk_sizes] );
+    fflush( stdout );
 #endif
 
 #ifdef KOKKOS_MEMPOOL_PRINTERR
@@ -277,8 +317,25 @@ private:
         closure( im, Range( 0, num_chunks[i] ) );
 
       closure.execute();
+
+      ExecutionSpace::fence();
     }
+
+#ifdef KOKKOS_MEMPOOL_PRINT_INFO
+    print_mempool < Link > pm( num_chunk_sizes, m_chunk_size, m_freelist, m_data );
+
+    Kokkos::Impl::ParallelFor< print_mempool< Link >, Range >
+      closure( pm, Range( 0, 10 ) );
+
+    closure.execute();
+
+    ExecutionSpace::fence();
+#endif
   }
+
+  ///\brief  Inserts an already linked list of chunks into the pool.
+  KOKKOS_FUNCTION
+  void insert_list( Link * lp_head, Link * lp_tail, size_t list ) const;
 
   ///\brief  Claim chunks of untracked memory from the pool.
   KOKKOS_FUNCTION

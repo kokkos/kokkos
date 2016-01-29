@@ -51,7 +51,7 @@
 
 #include <impl/Kokkos_Timer.hpp>
 
-#define TESTMEMORYPOOL_PRINT
+//#define TESTMEMORYPOOL_PRINT
 //#define TESTMEMORYPOOL_PRINT_STATUS
 
 namespace TestMemoryPool {
@@ -84,7 +84,8 @@ struct allocate_memory {
   KOKKOS_INLINE_FUNCTION
   void operator()( size_type i ) const
   {
-    if ( 0 == ( i % STRIDE ) ) {
+    // Why do I need the first check?
+    if ( i / STRIDE < m_num_ptrs && i % STRIDE == 0 ) {
       m_pointers[i/STRIDE].ptr =
         static_cast< uint64_t * >( m_space.allocate( m_chunk_size ) );
     }
@@ -111,7 +112,7 @@ struct fill_memory {
   KOKKOS_INLINE_FUNCTION
   void operator()( size_type i ) const
   {
-    if ( 0 == ( i % STRIDE ) ) {
+    if ( i / STRIDE < m_num_ptrs && i % STRIDE == 0 ) {
       *m_pointers[i/STRIDE].ptr = i / STRIDE ;
     }
   }
@@ -147,7 +148,7 @@ struct sum_memory {
   KOKKOS_INLINE_FUNCTION
   void operator()( size_type i, value_type & r ) const
   {
-    if ( 0 == ( i % STRIDE ) ) {
+    if ( i / STRIDE < m_num_ptrs && i % STRIDE == 0 ) {
       r += *m_pointers[i/STRIDE].ptr;
     }
   }
@@ -176,7 +177,7 @@ struct deallocate_memory {
   KOKKOS_INLINE_FUNCTION
   void operator()( size_type i ) const
   {
-    if ( 0 == ( i % STRIDE ) ) {
+    if ( i / STRIDE < m_num_ptrs && i % STRIDE == 0 ) {
       m_space.deallocate( m_pointers[i/STRIDE].ptr, m_chunk_size );
     }
   }
@@ -203,10 +204,10 @@ struct allocate_deallocate_memory {
   KOKKOS_INLINE_FUNCTION
   void operator()( size_type i ) const
   {
-    for ( size_t i = m_max_chunk_size; i >= m_min_chunk_size; i /= m_chunk_spacing ) {
-      for ( size_t j = 0; j < 10; ++j ) {
-        void * mem = m_space.allocate( i );
-        m_space.deallocate( mem, i );
+    for ( size_t j = m_max_chunk_size; j >= m_min_chunk_size; j /= m_chunk_spacing ) {
+      for ( size_t k = 0; k < 10; ++k ) {
+        void * mem = m_space.allocate( j );
+        m_space.deallocate( mem, j );
       }
     }
   }
