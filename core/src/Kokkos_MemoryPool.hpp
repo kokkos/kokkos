@@ -55,7 +55,7 @@
 namespace Kokkos {
 namespace Experimental {
 
-template < class Device >
+template < class Space >
 class MemoryPool ;
 
 namespace Impl {
@@ -174,14 +174,15 @@ namespace Experimental {
 /// pool memory allocator for fast allocation of same-sized chunks of memory.
 /// The memory is only accessible on the host / device this allocator is
 /// associated with.
-template < class Device >
+template < class Space >
 class MemoryPool {
 private:
 
   Impl::MemPoolList  m_freelist ;
 
-  typedef typename Device::memory_space backend_memory_space;
-  typedef typename Device::execution_space execution_space;
+  typedef typename Space::memory_space     backend_memory_space;
+  typedef typename Space::execution_space  execution_space;
+
 public:
 
   //! Tag this class as a kokkos memory space

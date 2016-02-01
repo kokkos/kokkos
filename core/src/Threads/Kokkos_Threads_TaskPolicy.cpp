@@ -58,12 +58,8 @@ typedef TaskMember< Kokkos::Threads , void , void > Task ;
 
 namespace {
 
-int    volatile s_count_serial = 0 ;
-int    volatile s_count_team   = 0 ;
-Task * volatile s_ready_team   = 0 ;
-Task * volatile s_ready_serial = 0 ;
-Task * const    s_lock   = reinterpret_cast<Task*>( ~((unsigned long)0) );
-Task * const    s_denied = reinterpret_cast<Task*>( ~((unsigned long)0) - 1 );
+constexpr Task * const s_lock   = reinterpret_cast<Task*>( ~((unsigned long)0) );
+constexpr Task * const s_denied = reinterpret_cast<Task*>( ~((unsigned long)0) - 1 );
 
 } /* namespace */
 } /* namespace Impl */
@@ -72,8 +68,23 @@ Task * const    s_denied = reinterpret_cast<Task*>( ~((unsigned long)0) - 1 );
 
 namespace Kokkos {
 namespace Experimental {
+namespace Impl {
 
-TaskPolicy< Kokkos::Threads >::TaskPolicy
+void ThreadsTaskPolicyQueue::Destroy::destroy_shared_allocation()
+{
+  // Verify the queue is empty
+
+  if ( m_queue->m_count_ready ||
+       m_queue->m_ready_team ||
+       m_queue->m_ready_serial ) {
+    Kokkos::abort("ThreadsTaskPolicyQueue ERROR : Attempt to destroy non-empty queue" );
+  }
+
+  m_queue->~ThreadsTaskPolicyQueue();
+}
+
+
+ThreadsTaskPolicyQueue::ThreadsTaskPolicyQueue
   ( const unsigned arg_task_max_count
   , const unsigned arg_task_max_size
   , const unsigned arg_task_default_dependence_capacity
@@ -83,8 +94,11 @@ TaskPolicy< Kokkos::Threads >::TaskPolicy
            , arg_task_max_size
            , arg_task_max_size * arg_task_max_count
            )
-  , m_default_dependence_capacity( arg_task_default_dependence_capacity )
+  , m_ready_team(0)
+  , m_ready_serial(0)
+  , m_count_ready(0)
   , m_team_size( arg_task_team_size )
+  , m_default_dependence_capacity( arg_task_default_dependence_capacity )
 {
   const int threads_total    = Threads::thread_pool_size(0);
   const int threads_per_numa = Threads::thread_pool_size(1);
@@ -123,9 +137,389 @@ TaskPolicy< Kokkos::Threads >::TaskPolicy
         ;
 
     Kokkos::Impl::throw_runtime_exception( msg.str() );
-
   }
 }
+
+void ThreadsTaskPolicyQueue::driver( Kokkos::Impl::ThreadsExec & exec
+                                   , const void * arg )
+{
+  // Whole thread pool is calling this function
+
+  typedef Kokkos::Impl::ThreadsExecTeamMember member_type ;
+
+  ThreadsTaskPolicyQueue & self =
+    * reinterpret_cast< ThreadsTaskPolicyQueue * >( const_cast<void*>(arg) );
+
+  // Create the thread team member with shared memory for the given task.
+
+  const TeamPolicy< Kokkos::Threads > team_policy( 1 , self.m_team_size );
+
+  member_type team_member( & exec , team_policy , 0 );
+
+  Kokkos::Impl::ThreadsExec & exec_team_base =
+    team_member.threads_exec_team_base();
+
+  task_root_type * volatile * const task_team_ptr =
+    reinterpret_cast<Task**>( exec_team_base.reduce_memory() );
+
+  // Each team must iterate this loop synchronously
+  // to insure team-execution of team-task.
+
+  const bool team_lead = team_member.team_fan_in();
+
+  while ( 0 < self.m_count_ready ) {
+
+    // Start here with members in a fan_in state
+
+    if ( team_lead ) {
+      // Only one team member attempts to pop a team task
+      *task_team_ptr = pop_ready_task( & self.m_ready_team );
+      Kokkos::memory_fence();
+    }
+    team_member.team_fan_out();
+
+    // Query if team acquired a team task
+    task_root_type * const task_team = *task_team_ptr ;
+
+    if ( task_team ) {
+      // Set shared memory
+      team_member.set_league_shmem( 0 , 1 , task_team->m_shmem_size );
+
+      (*task_team->m_team)( task_team , team_member );
+
+      // The team task called the functor, invoked a fan_in,
+      // and if completed destroyed the functor.
+
+      if ( team_lead ) {
+        self.complete_executed_task( task_team );
+      }
+    }
+    else {
+      // No team task acquired, each thread try a serial task
+      task_root_type * const task_serial =
+        pop_ready_task( & self.m_ready_serial );
+
+      if ( task_serial ) {
+
+        (*task_serial->m_serial)( task_serial );
+
+        self.complete_executed_task( task_serial );
+      }
+
+      team_member.team_fan_in();
+    }
+  }
+
+  team_member.team_fan_out();
+
+  exec.fan_in();
+}
+
+//----------------------------------------------------------------------------
+
+ThreadsTaskPolicyQueue::task_root_type *
+ThreadsTaskPolicyQueue::pop_ready_task(
+  ThreadsTaskPolicyQueue::task_root_type * volatile * const queue )
+{
+  task_root_type * task = 0 ;
+  task_root_type * const task_claim = *queue ;
+
+  if ( ( s_lock != task_claim ) && ( 0 != task_claim ) ) {
+
+    // Queue is not locked and not null, try to claim head of queue.
+    // Is a race among threads to claim the queue.
+
+    if ( task_claim == atomic_compare_exchange(queue,task_claim,s_lock) ) {
+
+      // Aquired the task which must be in the waiting state.
+
+      const int claim_state =
+        atomic_compare_exchange( & task_claim->m_state
+                               , int(TASK_STATE_WAITING)
+                               , int(TASK_STATE_EXECUTING) );
+
+      task_root_type * lock_verify = 0 ;
+
+      if ( claim_state == int(TASK_STATE_WAITING) ) {
+
+        // Transitioned this task from waiting to executing
+        // Update the queue to the next entry and release the lock
+
+        task_root_type * const next =
+          *((task_root_type * volatile *) & task_claim->m_next );
+
+        *((task_root_type * volatile *) & task_claim->m_next ) = 0 ;
+
+        lock_verify = atomic_compare_exchange( queue , s_lock , next );
+      }
+
+      if ( ( claim_state != int(TASK_STATE_WAITING) ) |
+           ( s_lock != lock_verify ) ) {
+
+        fprintf(stderr,"ThreadsTaskPolicyQueue::pop_ready_task(0x%lx) task(0x%lx) state(%d) ERROR %s\n"
+                      , (unsigned long) queue
+                      , (unsigned long) task
+                      , claim_state
+                      , ( claim_state != int(TASK_STATE_WAITING)
+                        ? "NOT WAITING"
+                        : "UNLOCK" ) );
+        fflush(stderr);
+        Kokkos::abort("ThreadsTaskPolicyQueue::pop_ready_task");
+      }
+
+      task = task_claim ;
+    }
+  }
+
+  return task ;
+}
+
+//----------------------------------------------------------------------------
+
+void ThreadsTaskPolicyQueue::complete_executed_task(
+  ThreadsTaskPolicyQueue::task_root_type * const task )
+{
+  // State is either executing or if respawned then waiting,
+  // try to transition from executing to complete.
+  // Reads the current value.
+
+  const int state_old =
+    atomic_compare_exchange( & task->m_state
+                           , int(Kokkos::Experimental::TASK_STATE_EXECUTING)
+                           , int(Kokkos::Experimental::TASK_STATE_COMPLETE) );
+
+  if ( int(Kokkos::Experimental::TASK_STATE_WAITING) == state_old ) {
+    /* Task requested a respawn so reschedule it */
+    schedule_task( task );
+  }
+  else if ( int(Kokkos::Experimental::TASK_STATE_EXECUTING) == state_old ) {
+    /* Task is complete */
+
+    // Clear dependences of this task before locking wait queue
+
+    task->clear_dependence();
+
+    // Stop other tasks from adding themselves to this task's wait queue.
+    // The wait queue is updated concurrently so guard with an atomic.
+    // Setting the wait queue to denied denotes delete-ability of the task by any thread.
+    // Therefore, once 'denied' the task pointer must be treated as invalid.
+
+    Task * wait_queue     = *((Task * volatile *) & task->m_wait );
+    Task * wait_queue_old = 0 ;
+
+    do {
+      wait_queue_old = wait_queue ;
+      wait_queue     = atomic_compare_exchange( & task->m_wait , wait_queue_old , s_denied );
+    } while ( wait_queue_old != wait_queue );
+
+    // 'task' pointer is now invalid
+
+    // Pop waiting tasks and schedule them
+    while ( wait_queue ) {
+      Task * const x = wait_queue ; wait_queue = x->m_next ; x->m_next = 0 ;
+      schedule_task( x );
+    }
+  }
+  else {
+    fprintf( stderr
+           , "ThreadsTaskPolicyQueue::complete_executed_task(0x%lx) ERROR state_old(%d) dep_size(%d)\n"
+           , (unsigned long)( task )
+           , int(state_old)
+           , task->m_dep_size
+           );
+    fflush( stderr );
+    Kokkos::abort("ThreadsTaskPolicyQueue::complete_executed_task" );
+  }
+
+  // If the task was respawned it may have already been
+  // put in a ready queue and the count incremented.
+  // By decrementing the count last it will never go to zero
+  // with a ready or executing task.
+
+  atomic_decrement( & m_count_ready );
+}
+
+//----------------------------------------------------------------------------
+
+void ThreadsTaskPolicyQueue::reschedule_task(
+  ThreadsTaskPolicyQueue::task_root_type * const task )
+{
+  // Reschedule transitions from executing back to waiting.
+  const int old_state =
+    atomic_compare_exchange( & task->m_state
+                           , int(TASK_STATE_EXECUTING)
+                           , int(TASK_STATE_WAITING) );
+
+  if ( old_state != int(TASK_STATE_EXECUTING) ) {
+
+    fprintf( stderr
+           , "ThreadsTaskPolicyQueue::reschedule(0x%lx) ERROR state(%d)\n"
+           , (unsigned long) task
+           , old_state
+           );
+    fflush(stderr);
+    Kokkos::abort("ThreadsTaskPolicyQueue::reschedule" );
+  }
+}
+
+void ThreadsTaskPolicyQueue::schedule_task(
+  ThreadsTaskPolicyQueue::task_root_type * const task )
+{
+  //----------------------------------------
+  // State is either constructing or already waiting.
+  // If constructing then transition to waiting.
+
+  {
+    const int old_state = atomic_compare_exchange( & task->m_state
+                                                 , int(TASK_STATE_CONSTRUCTING)
+                                                 , int(TASK_STATE_WAITING) );
+
+    // Head of linked list of tasks waiting on this task
+    task_root_type * const waitTask =
+      *((task_root_type * volatile const *) & task->m_wait );
+
+    // Member of linked list of tasks waiting on some other task
+    task_root_type * const next =
+      *((task_root_type * volatile const *) & task->m_next );
+
+    // An incomplete and non-executing task has:
+    //   task->m_state == TASK_STATE_CONSTRUCTING or TASK_STATE_WAITING
+    //   task->m_wait  != s_denied
+    //   task->m_next  == 0
+    //
+    if ( ( s_denied == waitTask ) ||
+         ( 0 != next ) ||
+         ( old_state != int(TASK_STATE_CONSTRUCTING) &&
+           old_state != int(TASK_STATE_WAITING) ) ) {
+      fprintf(stderr,"ThreadsTaskPolicyQueue::schedule(0x%lx) STATE ERROR: state(%d) wait(0x%lx) next(0x%lx)\n"
+                    , (unsigned long) task
+                    , old_state
+                    , (unsigned long) waitTask
+                    , (unsigned long) next );
+      fflush(stderr);
+      Kokkos::abort("ThreadsTaskPolicyQueue::schedule" );
+    }
+  }
+
+  //----------------------------------------
+  // Insert this task into another dependence that is not complete
+  // Push on to the wait queue, fails if ( s_denied == m_dep[i]->m_wait )
+
+  bool attempt_insert_in_queue = true ;
+
+  task_root_type * volatile * queue =
+    task->m_dep_size ? & task->m_dep[0]->m_wait : (task_root_type **) 0 ;
+
+  for ( int i = 0 ; attempt_insert_in_queue && ( 0 != queue ) ; ) {
+
+    task_root_type * const head_value_old = *queue ;
+
+    if ( s_denied == head_value_old ) {
+      // Wait queue is closed because task is complete,
+      // try again with the next dependence wait queue.
+      ++i ;
+      queue = i < task->m_dep_size ? & task->m_dep[i]->m_wait
+                                   : (task_root_type **) 0 ;
+    }
+    else {
+
+      // Wait queue is open and not locked.
+      // If CAS succeeds then have acquired the lock.
+
+      // Have exclusive access to this task.
+      // Assign m_next assuming a successfull insertion into the queue.
+      // Fence the memory assignment before attempting the CAS.
+
+      *((task_root_type * volatile *) & task->m_next ) = head_value_old ;
+
+      memory_fence();
+
+      // Attempt to insert this task into the queue.
+      // If fails then continue the attempt.
+
+      attempt_insert_in_queue =
+        head_value_old != atomic_compare_exchange(queue,head_value_old,task);
+    }
+  }
+
+  //----------------------------------------
+  // All dependences are complete, insert into the ready list
+
+  if ( attempt_insert_in_queue ) {
+
+    // Increment the count of ready tasks.
+    // Count will be decremented when task is complete.
+
+    atomic_increment( & m_count_ready );
+
+    queue = 0 != task->m_serial ? & m_ready_serial : & m_ready_team ;
+
+    while ( attempt_insert_in_queue ) {
+
+      // A locked queue is being popped.
+
+      task_root_type * const head_value_old = *queue ;
+
+      if ( s_lock != head_value_old ) {
+        // Read the head of ready queue,
+        // if same as previous value then CAS locks the ready queue
+
+        // Have exclusive access to this task,
+        // assign to head of queue, assuming successful insert
+        // Fence assignment before attempting insert.
+        *((task_root_type * volatile *) & task->m_next ) = head_value_old ;
+
+        memory_fence();
+
+        attempt_insert_in_queue =
+          head_value_old != atomic_compare_exchange(queue,head_value_old,task);
+      }
+    }
+  }
+}
+
+} /* namespace Impl */
+} /* namespace Experimental */
+} /* namespace Kokkos */
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+namespace Experimental {
+
+TaskPolicy< Kokkos::Threads >::TaskPolicy
+  ( const unsigned arg_task_max_count
+  , const unsigned arg_task_max_size
+  , const unsigned arg_task_default_dependence_capacity
+  , const unsigned arg_task_team_size
+  )
+  : m_track()
+  , m_threads_queue(0)
+{
+  typedef Kokkos::Experimental::Impl::SharedAllocationRecord
+    < Kokkos::HostSpace , Impl::ThreadsTaskPolicyQueue::Destroy > record_type ;
+
+  record_type * record =
+    record_type::allocate( Kokkos::HostSpace()
+                         , "Threads task queue"
+                         , sizeof(Impl::ThreadsTaskPolicyQueue)
+                         );
+
+  m_threads_queue =
+    reinterpret_cast< Impl::ThreadsTaskPolicyQueue * >( record->data() );
+
+  new( m_threads_queue )
+    Impl::ThreadsTaskPolicyQueue( arg_task_max_count
+                                , arg_task_max_size
+                                , arg_task_default_dependence_capacity
+                                , arg_task_team_size );
+
+  record->m_destroy.m_queue = m_threads_queue ;
+
+  m_track.assign_allocated_record_to_uninitialized( record );
+}
+
 
 TaskPolicy< Kokkos::Threads >::member_type &
 TaskPolicy< Kokkos::Threads >::member_single()
@@ -140,10 +534,11 @@ void wait( Kokkos::Experimental::TaskPolicy< Kokkos::Threads > & policy )
 
   enum { BASE_SHMEM = 1024 };
 
-  void * const arg = reinterpret_cast<void*>( long( policy.m_team_size ) );
-
   Kokkos::Impl::ThreadsExec::resize_scratch( 0 , member_type::team_reduce_size() + BASE_SHMEM );
-  Kokkos::Impl::ThreadsExec::start( & Impl::Task::execute_ready_tasks_driver , arg );
+
+  Kokkos::Impl::ThreadsExec::start( & Impl::ThreadsTaskPolicyQueue::driver
+                                  , policy.m_threads_queue );
+
   Kokkos::Impl::ThreadsExec::fence();
 }
 
@@ -156,138 +551,8 @@ namespace Impl {
 
 //----------------------------------------------------------------------------
 
-void Task::throw_error_verify_type()
-{
-  Kokkos::Impl::throw_runtime_exception("TaskMember< Threads >::verify_type ERROR");
-}
-
 Task::~TaskMember()
 {
-}
-
-//----------------------------------------------------------------------------
-
-void Task::reschedule()
-{
-  // Reschedule transitions from executing back to waiting.
-  const int old_state = atomic_compare_exchange( & m_state , int(TASK_STATE_EXECUTING) , int(TASK_STATE_WAITING) );
-
-  if ( old_state != int(TASK_STATE_EXECUTING) ) {
-
-fprintf( stderr
-       , "reschedule ERROR task[%lx] state(%d)\n"
-       , (unsigned long) this
-       , old_state
-       );
-fflush(stderr);
-
-  }
-}
-
-void Task::schedule()
-{
-  //----------------------------------------
-  // State is either constructing or already waiting.
-  // If constructing then transition to waiting.
-
-  {
-    const int old_state = atomic_compare_exchange( & m_state , int(TASK_STATE_CONSTRUCTING) , int(TASK_STATE_WAITING) );
-    Task * const waitTask = *((Task * volatile const *) & m_wait );
-    Task * const next = *((Task * volatile const *) & m_next );
-
-    if ( s_denied == waitTask || 0 != next ||
-         ( old_state != int(TASK_STATE_CONSTRUCTING) &&
-           old_state != int(TASK_STATE_WAITING) ) ) {
-      fprintf(stderr,"Task::schedule task(0x%lx) STATE ERROR: state(%d) wait(0x%lx) next(0x%lx)\n"
-                    , (unsigned long) this
-                    , old_state
-                    , (unsigned long) waitTask
-                    , (unsigned long) next );
-      fflush(stderr);
-      Kokkos::Impl::throw_runtime_exception("Kokkos::Impl::Task spawn or respawn state error");
-    }
-  }
-
-  //----------------------------------------
-  // Insert this task into another dependence that is not complete
-  // Push on to the wait queue, fails if ( s_denied == m_dep[i]->m_wait )
-
-  bool insert_in_ready_queue = true ;
-
-  for ( int i = 0 ; i < m_dep_size && insert_in_ready_queue ; ) {
-
-    Task * const task_dep = m_dep[i] ;
-    Task * const head_value_old = *((Task * volatile *) & task_dep->m_wait );
-
-    if ( s_denied == head_value_old ) {
-      // Wait queue is closed, try again with the next queue
-      ++i ;
-    }
-    else {
-
-      // Wait queue is open and not locked.
-      // If CAS succeeds then have acquired the lock.
-
-      // Have exclusive access to this task.
-      // Assign m_next assuming a successfull insertion into the queue.
-      // Fence the memory assignment before attempting the CAS.
-
-      *((Task * volatile *) & m_next ) = head_value_old ;
-
-      memory_fence();
-
-      // Attempt to insert this task into the queue
-
-      Task * const wait_queue_head = atomic_compare_exchange( & task_dep->m_wait , head_value_old , this );
-
-      if ( head_value_old == wait_queue_head ) {
-        insert_in_ready_queue = false ;
-      }
-    }
-  }
-
-  //----------------------------------------
-  // All dependences are complete, insert into the ready list
-
-  if ( insert_in_ready_queue ) {
-
-    // Increment the count of ready tasks.
-    // Count is decremented when task is complete.
-
-    Task * volatile * queue = 0 ;
-
-    if ( m_serial ) {
-      atomic_increment( & s_count_serial );
-      queue = & s_ready_serial ;
-    }
-    else {
-      atomic_increment( & s_count_team );
-      queue = & s_ready_team ;
-    }
-
-    while ( insert_in_ready_queue ) {
-
-      Task * const head_value_old = *queue ;
-
-      if ( s_lock != head_value_old ) {
-        // Read the head of ready queue, if same as previous value then CAS locks the ready queue
-        // Only access via CAS
-
-        // Have exclusive access to this task, assign to head of queue, assuming successful insert
-        // Fence assignment before attempting insert.
-        *((Task * volatile *) & m_next ) = head_value_old ;
-
-        memory_fence();
-
-        Task * const ready_queue_head = atomic_compare_exchange( queue , head_value_old , this );
-
-        if ( head_value_old == ready_queue_head ) {
-          // Successful insert
-          insert_in_ready_queue = false ; // done
-        }
-      }
-    }
-  }
 }
 
 //----------------------------------------------------------------------------
@@ -330,8 +595,11 @@ void Task::assign( Task ** const lhs_ptr , Task * rhs )
 
     if ( count == 0 ) {
       // When 'count == 0' this thread has exclusive access to 'old_lhs'
-      const Task::function_dealloc_type d = old_lhs->m_dealloc ;
-      (*d)( old_lhs );
+
+      ThreadsTaskPolicyQueue::memory_space & space = 
+        old_lhs->m_policy_queue->m_space ;
+
+      space.deallocate( old_lhs , old_lhs->m_size_alloc );
     }
   }
 }
@@ -412,178 +680,6 @@ void Task::clear_dependence()
 }
 
 //----------------------------------------------------------------------------
-
-Task * Task::pop_ready_task( Task * volatile * const queue )
-{
-  Task * const task_old = *queue ;
-
-  if ( s_lock != task_old && 0 != task_old ) {
-
-    Task * const task = atomic_compare_exchange( queue , task_old , s_lock );
-
-    if ( task_old == task ) {
-
-      // May have acquired the lock and task.
-      // One or more other threads may have acquired this same task and lock
-      // due to respawning ABA race condition.
-      // Can only be sure of acquire with a successful state transition from waiting to executing
-
-      const int old_state = atomic_compare_exchange( & task->m_state, int(TASK_STATE_WAITING), int(TASK_STATE_EXECUTING) );
-
-      if ( old_state == int(TASK_STATE_WAITING) ) {
-
-        // Transitioned this task from waiting to executing
-        // Update the queue to the next entry and release the lock
-
-        Task * const next_old = *((Task * volatile *) & task->m_next );
-
-        Task * const s = atomic_compare_exchange( queue , s_lock , next_old );
-
-        if ( s != s_lock ) {
-          fprintf(stderr,"Task::pop_ready_task( 0x%lx ) UNLOCK ERROR\n", (unsigned long) queue );
-          fflush(stderr);
-        }
-
-        *((Task * volatile *) & task->m_next ) = 0 ;
-
-        return task ;
-      }
-      else {
-        fprintf(stderr,"Task::pop_ready_task( 0x%lx ) task(0x%lx) state(%d) ERROR\n"
-                      , (unsigned long) queue
-                      , (unsigned long) task
-                      , old_state );
-        fflush(stderr);
-      }
-    }
-  }
-
-  return (Task *) 0 ;
-}
-
-
-void Task::complete_executed_task( Task * task , volatile int * const queue_count )
-{
-  // State is either executing or if respawned then waiting,
-  // try to transition from executing to complete.
-  // Reads the current value.
-
-  const int state_old =
-    atomic_compare_exchange( & task->m_state
-                           , int(Kokkos::Experimental::TASK_STATE_EXECUTING)
-                           , int(Kokkos::Experimental::TASK_STATE_COMPLETE) );
-
-  if ( Kokkos::Experimental::TASK_STATE_WAITING == state_old ) {
-    task->schedule(); /* Task requested a respawn so reschedule it */
-  }
-  else if ( Kokkos::Experimental::TASK_STATE_EXECUTING != state_old ) {
-    fprintf( stderr
-           , "TaskMember< Threads >::execute_serial completion ERROR : task[%lx]{ state_old(%d) dep_size(%d) }\n"
-           , (unsigned long) & task
-           , state_old
-           , task->m_dep_size
-           );
-    fflush( stderr );
-  }
-  else {
-
-    // Clear dependences of this task before locking wait queue
-
-    task->clear_dependence();
-
-    // Stop other tasks from adding themselves to this task's wait queue.
-    // The wait queue is updated concurrently so guard with an atomic.
-    // Setting the wait queue to denied denotes delete-ability of the task by any thread.
-    // Therefore, once 'denied' the task pointer must be treated as invalid.
-
-    Task * wait_queue     = *((Task * volatile *) & task->m_wait );
-    Task * wait_queue_old = 0 ;
-
-    do {
-      wait_queue_old = wait_queue ;
-      wait_queue     = atomic_compare_exchange( & task->m_wait , wait_queue_old , s_denied );
-    } while ( wait_queue_old != wait_queue );
-
-    task = 0 ;
-
-    // Pop waiting tasks and schedule them
-    while ( wait_queue ) {
-      Task * const x = wait_queue ; wait_queue = x->m_next ; x->m_next = 0 ;
-      x->schedule();
-    }
-  }
-
-  atomic_decrement( queue_count );
-}
-
-//----------------------------------------------------------------------------
-
-void Task::execute_ready_tasks_driver( Kokkos::Impl::ThreadsExec & exec , const void * arg )
-{
-  typedef Kokkos::Impl::ThreadsExecTeamMember member_type ;
-
-  // Whole pool is calling this function
-
-  // Create the thread team member with shared memory for the given task.
-  const int team_size = reinterpret_cast<long>( arg );
-
-  member_type member( & exec , TeamPolicy< Kokkos::Threads >( 1 , team_size ) , 0 );
-
-  Kokkos::Impl::ThreadsExec & exec_team_base = member.threads_exec_team_base();
-
-  Task * volatile * const task_team_ptr = reinterpret_cast<Task**>( exec_team_base.reduce_memory() );
-
-  if ( member.team_fan_in() ) {
-    *task_team_ptr = 0 ;
-    Kokkos::memory_fence();
-  }
-  member.team_fan_out();
-
-  long int iteration_count = 0 ;
-
-  // Each team must iterate this loop synchronously to insure team-execution of team-task
-
-  while ( 0 < s_count_serial || 0 < s_count_team ) {
-
-    if ( member.team_rank() == 0 ) {
-      // Only one team member attempts to pop a team task
-      *task_team_ptr = pop_ready_task( & s_ready_team );
-    }
-
-    // Query if team acquired a team task
-    Task * const task_team = *task_team_ptr ;
-
-    if ( task_team ) {
-      // Set shared memory
-      member.set_league_shmem( 0 , 1 , task_team->m_shmem_size );
-
-      (*task_team->m_team)( task_team , member );
-
-      // Do not proceed until all members have completed the task,
-      // the task has been completed or rescheduled, and
-      // the team task pointer has been cleared.
-      if ( member.team_fan_in() ) {
-        complete_executed_task( task_team , & s_count_team );
-        *task_team_ptr = 0 ;
-        Kokkos::memory_fence();
-      }
-      member.team_fan_out();
-    }
-    else {
-      Task * const task_serial = pop_ready_task( & s_ready_serial );
-
-      if ( task_serial ) {
-        if ( task_serial->m_serial ) (*task_serial->m_serial)( task_serial );
-
-        complete_executed_task( task_serial , & s_count_serial );
-      }
-    }
-
-    ++iteration_count ;
-  }
-
-  exec.fan_in();
-}
 
 } /* namespace Impl */
 } /* namespace Experimental */
