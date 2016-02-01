@@ -1082,14 +1082,14 @@ private:
   template< class TagType >
   __device__ inline
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_range( const Member & i , reference_type update , const bool final ) const
-    { m_functor( i , update , final ); }
+  exec_range( const Member & i , reference_type update , const bool final_result ) const
+    { m_functor( i , update , final_result ); }
 
   template< class TagType >
   __device__ inline
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_range( const Member & i , reference_type update , const bool final ) const
-    { m_functor( TagType() , i , update , final ); }
+  exec_range( const Member & i , reference_type update , const bool final_result ) const
+    { m_functor( TagType() , i , update , final_result ); }
 
   //----------------------------------------
 
