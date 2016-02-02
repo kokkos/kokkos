@@ -206,7 +206,8 @@ void test_fib( long n )
           , task_max_size
           , task_dependence );
 
-  Kokkos::Experimental::Future<long,ExecSpace> f = Kokkos::Experimental::spawn( policy , FibChild<ExecSpace>(policy,n) );
+  Kokkos::Experimental::Future<long,ExecSpace> f =
+    Kokkos::Experimental::spawn( policy , FibChild<ExecSpace>(policy,n) );
 
   Kokkos::Experimental::wait( policy );
 

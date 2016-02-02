@@ -67,6 +67,8 @@ struct ThreadsTaskPolicyQueue {
     task_root_type ;
 
   memory_space              m_space ;
+  task_root_type * volatile m_priority_team ;
+  task_root_type * volatile m_priority_serial ;
   task_root_type * volatile m_ready_team ;
   task_root_type * volatile m_ready_serial ;
   int              volatile m_count_ready ;  ///< Ready plus executing tasks
@@ -77,6 +79,8 @@ struct ThreadsTaskPolicyQueue {
   static void driver( Kokkos::Impl::ThreadsExec & exec
                     , const void * arg );
 
+  void * allocate_task( unsigned );
+  void deallocate_task( void * , unsigned );
   void schedule_task( task_root_type * const );
   void reschedule_task( task_root_type * const );
 
@@ -136,8 +140,8 @@ private:
   function_team_type     m_team ;         ///< Apply function
   function_single_type   m_serial ;       ///< Apply function
   TaskMember **          m_dep ;          ///< Dependences
-  TaskMember *           m_wait ;         ///< Linked list of tasks waiting on this task
-  TaskMember *           m_next ;         ///< Linked list of tasks waiting on a different task
+  TaskMember *           m_wait ;         ///< Head of linked list of tasks waiting on this task
+  TaskMember *           m_next ;         ///< Member of linked list of tasks
   int                    m_dep_capacity ; ///< Capacity of dependences
   int                    m_dep_size ;     ///< Actual count of dependences
   int                    m_size_alloc ;
@@ -457,7 +461,7 @@ private:
       const unsigned size_alloc =
         derived_size + sizeof(task_root_type*) * dep_capacity ;
 
-      void * const ptr = m_threads_queue->m_space.allocate( size_alloc );
+      void * const ptr = m_threads_queue->allocate_task( size_alloc );
 
       if ( ptr == 0 ) { Kokkos::abort("Threads TaskPolicy out of memory"); }
 

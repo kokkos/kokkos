@@ -83,6 +83,7 @@ void ThreadsTaskPolicyQueue::Destroy::destroy_shared_allocation()
   m_queue->~ThreadsTaskPolicyQueue();
 }
 
+//----------------------------------------------------------------------------
 
 ThreadsTaskPolicyQueue::ThreadsTaskPolicyQueue
   ( const unsigned arg_task_max_count
@@ -94,6 +95,8 @@ ThreadsTaskPolicyQueue::ThreadsTaskPolicyQueue
            , arg_task_max_size
            , arg_task_max_size * arg_task_max_count
            )
+  , m_priority_team(0)
+  , m_priority_serial(0)
   , m_ready_team(0)
   , m_ready_serial(0)
   , m_count_ready(0)
@@ -140,6 +143,8 @@ ThreadsTaskPolicyQueue::ThreadsTaskPolicyQueue
   }
 }
 
+//----------------------------------------------------------------------------
+
 void ThreadsTaskPolicyQueue::driver( Kokkos::Impl::ThreadsExec & exec
                                    , const void * arg )
 {
@@ -162,6 +167,8 @@ void ThreadsTaskPolicyQueue::driver( Kokkos::Impl::ThreadsExec & exec
   task_root_type * volatile * const task_team_ptr =
     reinterpret_cast<Task**>( exec_team_base.reduce_memory() );
 
+  task_root_type * task = 0 ;
+
   // Each team must iterate this loop synchronously
   // to insure team-execution of team-task.
 
@@ -173,37 +180,41 @@ void ThreadsTaskPolicyQueue::driver( Kokkos::Impl::ThreadsExec & exec
 
     if ( team_lead ) {
       // Only one team member attempts to pop a team task
-      *task_team_ptr = pop_ready_task( & self.m_ready_team );
+      // Try the priority queue, then the regular queue.
+      if ( 0 == ( *task_team_ptr = pop_ready_task( & self.m_priority_team ) ) ) {
+        *task_team_ptr = pop_ready_task( & self.m_ready_team );
+      }
       Kokkos::memory_fence();
     }
     team_member.team_fan_out();
 
     // Query if team acquired a team task
-    task_root_type * const task_team = *task_team_ptr ;
 
-    if ( task_team ) {
+    if ( 0 != ( task = *task_team_ptr ) ) {
       // Set shared memory
-      team_member.set_league_shmem( 0 , 1 , task_team->m_shmem_size );
+      team_member.set_league_shmem( 0 , 1 , task->m_shmem_size );
 
-      (*task_team->m_team)( task_team , team_member );
+      (*task->m_team)( task , team_member );
 
       // The team task called the functor, invoked a fan_in,
       // and if completed destroyed the functor.
 
       if ( team_lead ) {
-        self.complete_executed_task( task_team );
+        self.complete_executed_task( task );
       }
     }
     else {
       // No team task acquired, each thread try a serial task
-      task_root_type * const task_serial =
-        pop_ready_task( & self.m_ready_serial );
+      // Try the priority queue, then the regular queue.
+      if ( 0 == ( task = pop_ready_task( & self.m_priority_serial ) ) ) {
+        task = pop_ready_task( & self.m_ready_serial );
+      }
 
-      if ( task_serial ) {
+      if ( 0 != task ) {
 
-        (*task_serial->m_serial)( task_serial );
+        (*task->m_serial)( task );
 
-        self.complete_executed_task( task_serial );
+        self.complete_executed_task( task );
       }
 
       team_member.team_fan_in();
@@ -442,6 +453,11 @@ void ThreadsTaskPolicyQueue::schedule_task(
     }
   }
 
+  // If the task is waiting on memory and
+  // the memory pool is full then put into the memory pool wait list.o
+
+
+
   //----------------------------------------
   // All dependences are complete, insert into the ready list
 
@@ -476,6 +492,53 @@ void ThreadsTaskPolicyQueue::schedule_task(
       }
     }
   }
+}
+
+namespace {
+
+int alloc_count = 0 ;
+
+}
+
+void * ThreadsTaskPolicyQueue::allocate_task( unsigned size_alloc )
+{
+  void * const ptr = m_space.allocate( size_alloc );
+
+/*
+  const int n = atomic_fetch_add( & alloc_count , 1 ) + 1 ;
+
+  fprintf( stderr
+         , "ThreadsTaskPolicyQueue::allocate_task(%d) ptr(0x%lx) count(%d)\n"
+         , size_alloc
+         , (unsigned long) ptr
+         , n
+         );
+  fflush( stderr );
+*/
+
+  return ptr ;
+}
+
+void ThreadsTaskPolicyQueue::deallocate_task( void * ptr , unsigned size_alloc )
+{
+/*
+  const int n = atomic_fetch_add( & alloc_count , -1 ) - 1 ;
+
+  fprintf( stderr
+         , "ThreadsTaskPolicyQueue::deallocate_task(0x%lx,%d) count(%d)\n"
+         , (unsigned long) ptr
+         , size_alloc
+         , n
+         );
+  fflush( stderr );
+*/
+
+  m_space.deallocate( ptr , size_alloc );
+
+  // If a task is in the waiting for memory pool queue
+  // then move it to the ready queue
+
+
 }
 
 } /* namespace Impl */
@@ -568,6 +631,10 @@ void Task::assign( Task ** const lhs_ptr , Task * rhs )
 
   Task * const old_lhs = atomic_exchange( lhs_ptr , rhs );
 
+  if ( old_lhs && rhs && old_lhs->m_policy_queue != rhs->m_policy_queue ) {
+    Kokkos::abort( "Kokkos::Impl::TaskMember<Kokkos::Threads>::assign ERROR different queues");
+  }
+
   if ( old_lhs ) {
 
     // Decrement former lhs reference count.
@@ -581,25 +648,20 @@ void Task::assign( Task ** const lhs_ptr , Task * rhs )
 
     if ( count < 0 || ( count == 0 && wait != s_denied ) ) {
 
-      static const char msg_error_header[]  = "Kokkos::Impl::TaskManager<Kokkos::Threads>::assign ERROR deleting" ;
-
-      fprintf( stderr , "%s task(0x%lx) m_ref_count(%d) , m_wait(0x%ld)\n"
-                      , msg_error_header
+      fprintf( stderr , "Kokkos::Impl::TaskManager<Kokkos::Threads>::assign ERROR deleting task(0x%lx) m_ref_count(%d) , m_wait(0x%ld)\n"
                       , (unsigned long) old_lhs
                       , count
                       , (unsigned long) wait );
       fflush(stderr);
-
-      Kokkos::Impl::throw_runtime_exception( msg_error_header );
+      Kokkos::abort( "Kokkos::Impl::TaskMember<Kokkos::Threads>::assign ERROR deleting");
     }
 
     if ( count == 0 ) {
       // When 'count == 0' this thread has exclusive access to 'old_lhs'
 
-      ThreadsTaskPolicyQueue::memory_space & space = 
-        old_lhs->m_policy_queue->m_space ;
+      ThreadsTaskPolicyQueue & queue = *( old_lhs->m_policy_queue );
 
-      space.deallocate( old_lhs , old_lhs->m_size_alloc );
+      queue.deallocate_task( old_lhs , old_lhs->m_size_alloc );
     }
   }
 }

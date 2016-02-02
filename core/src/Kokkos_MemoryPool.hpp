@@ -83,15 +83,16 @@ public:
   MemPoolList & operator = ( MemPoolList && ) = default ;
   MemPoolList & operator = ( const MemPoolList & ) = default ;
 
- KOKKOS_INLINE_FUNCTION
  void operator()( size_t i ) const
    {
-     const size_t n = m_chunk_size / sizeof(void*) ;
-     void * volatile * const lp = m_head_list + i * n ;
+     enum { S = Kokkos::Impl::power_of_two< sizeof(void*) >::value };
+     const size_t n = m_chunk_size >> S ;
+     const size_t j = i * n ;
      // The last entry is null
-     *lp = i <= m_chunk_count
-         ? (void*) ( lp + n )
-         : (void*) 0 ; 
+     m_head_list[j] =  i < m_chunk_count
+                    ? (void*) ( m_head_list + j + n )
+                    : (void*) 0 ; 
+     Kokkos::memory_fence();
    }
 
 private:
@@ -110,6 +111,11 @@ private:
   {
     typedef Impl::SharedAllocationRecord< MemorySpace, void >  SharedRecord ;
     typedef Kokkos::RangePolicy< ExecutionSpace > Range ;
+
+    enum { host_can_access_memory =
+      Kokkos::Impl::VerifyExecutionCanAccessMemorySpace
+        < Kokkos::Impl::ActiveExecutionMemorySpace
+        , MemorySpace >::value };
 
     // Force chunk size to be power of two,
     // mininum of 32 (mininum of 4 x 8byte pointers),
@@ -130,12 +136,25 @@ private:
 
     // Initialize link list of free chunks
 
-    Kokkos::Impl::ParallelFor< MemPoolList , Range >
-      closure( *this , Range( 0 , m_chunk_count + 1 ) );
+    if ( host_can_access_memory ) {
 
-    closure.execute();
+      const size_t n = m_chunk_size / sizeof(void*);
 
-    ExecutionSpace::fence();
+      for ( size_t i = 0 ; i <= m_chunk_count ; ++i ) {
+        m_head_list[i*n] = i < m_chunk_count 
+                         ? (void*)( m_head_list + n * ( i + 1 ) )
+                         : (void*) 0 ;
+      }
+    }
+    else {
+
+      Kokkos::Impl::ParallelFor< MemPoolList , Range >
+        closure( *this , Range( 0 , m_chunk_count + 1 ) );
+
+      closure.execute();
+
+      ExecutionSpace::fence();
+    }
   }
 
   KOKKOS_FUNCTION
