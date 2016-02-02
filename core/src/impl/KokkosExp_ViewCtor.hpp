@@ -185,6 +185,7 @@ struct ViewCtorProp < void , T * >
 
   typedef T * type ;
 
+  KOKKOS_INLINE_FUNCTION
   ViewCtorProp( const type arg ) : value( arg ) {}
 
   type value ;
@@ -202,7 +203,9 @@ private:
   typedef Kokkos::Impl::has_condition< void , Kokkos::Impl::is_execution_space , P ... >
     var_execution_space ;
 
-  typedef Kokkos::Impl::has_condition< void , std::is_pointer , P ... >
+  struct VOIDDUMMY{};
+
+  typedef Kokkos::Impl::has_condition< VOIDDUMMY , std::is_pointer , P ... >
     var_pointer ;
 
 public:
@@ -223,8 +226,16 @@ public:
    *  Requires  std::is_same< P , ViewCtorProp< void , Args >::value ...
    */
   template< typename ... Args >
+  inline
   ViewCtorProp( Args const & ... args )
     : ViewCtorProp< void , P >( args ) ...
+    {}
+
+  template< typename ... Args >
+  KOKKOS_INLINE_FUNCTION
+  ViewCtorProp( pointer_type arg0 , Args const & ... args )
+    : ViewCtorProp< void , pointer_type >( arg0 )
+    , ViewCtorProp< void , typename ViewCtorProp< void , Args >::type >( args ) ...
     {}
 
   /* Copy from a matching property subset */
