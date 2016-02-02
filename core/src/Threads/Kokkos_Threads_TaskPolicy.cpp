@@ -74,13 +74,13 @@ void ThreadsTaskPolicyQueue::Destroy::destroy_shared_allocation()
 {
   // Verify the queue is empty
 
-  if ( m_queue->m_count_ready ||
-       m_queue->m_ready_team ||
-       m_queue->m_ready_serial ) {
+  if ( m_policy->m_count_ready ||
+       m_policy->m_ready_team ||
+       m_policy->m_ready_serial ) {
     Kokkos::abort("ThreadsTaskPolicyQueue ERROR : Attempt to destroy non-empty queue" );
   }
 
-  m_queue->~ThreadsTaskPolicyQueue();
+  m_policy->~ThreadsTaskPolicyQueue();
 }
 
 //----------------------------------------------------------------------------
@@ -364,7 +364,7 @@ void ThreadsTaskPolicyQueue::reschedule_task(
   if ( old_state != int(TASK_STATE_EXECUTING) ) {
 
     fprintf( stderr
-           , "ThreadsTaskPolicyQueue::reschedule(0x%lx) ERROR state(%d)\n"
+           , "ThreadsTaskPolicyQueue::reschedule_task(0x%lx) ERROR state(%d)\n"
            , (unsigned long) task
            , old_state
            );
@@ -402,7 +402,7 @@ void ThreadsTaskPolicyQueue::schedule_task(
          ( 0 != next ) ||
          ( old_state != int(TASK_STATE_CONSTRUCTING) &&
            old_state != int(TASK_STATE_WAITING) ) ) {
-      fprintf(stderr,"ThreadsTaskPolicyQueue::schedule(0x%lx) STATE ERROR: state(%d) wait(0x%lx) next(0x%lx)\n"
+      fprintf(stderr,"ThreadsTaskPolicyQueue::schedule_task(0x%lx) STATE ERROR: state(%d) wait(0x%lx) next(0x%lx)\n"
                     , (unsigned long) task
                     , old_state
                     , (unsigned long) waitTask
@@ -413,8 +413,8 @@ void ThreadsTaskPolicyQueue::schedule_task(
   }
 
   //----------------------------------------
-  // Insert this task into another dependence that is not complete
-  // Push on to the wait queue, fails if ( s_denied == m_dep[i]->m_wait )
+  // Insert this task into a dependence task that is not complete.
+  // Push on to that task's wait queue.
 
   bool attempt_insert_in_queue = true ;
 
@@ -434,9 +434,7 @@ void ThreadsTaskPolicyQueue::schedule_task(
     }
     else {
 
-      // Wait queue is open and not locked.
-      // If CAS succeeds then have acquired the lock.
-
+      // Wait queue is open and not denied.
       // Have exclusive access to this task.
       // Assign m_next assuming a successfull insertion into the queue.
       // Fence the memory assignment before attempting the CAS.
@@ -453,11 +451,6 @@ void ThreadsTaskPolicyQueue::schedule_task(
     }
   }
 
-  // If the task is waiting on memory and
-  // the memory pool is full then put into the memory pool wait list.o
-
-
-
   //----------------------------------------
   // All dependences are complete, insert into the ready list
 
@@ -468,7 +461,7 @@ void ThreadsTaskPolicyQueue::schedule_task(
 
     atomic_increment( & m_count_ready );
 
-    queue = 0 != task->m_serial ? & m_ready_serial : & m_ready_team ;
+    queue = task->m_queue ;
 
     while ( attempt_insert_in_queue ) {
 
@@ -494,11 +487,13 @@ void ThreadsTaskPolicyQueue::schedule_task(
   }
 }
 
+/*
 namespace {
 
 int alloc_count = 0 ;
 
 }
+*/
 
 void * ThreadsTaskPolicyQueue::allocate_task( unsigned size_alloc )
 {
@@ -558,7 +553,7 @@ TaskPolicy< Kokkos::Threads >::TaskPolicy
   , const unsigned arg_task_team_size
   )
   : m_track()
-  , m_threads_queue(0)
+  , m_policy(0)
 {
   typedef Kokkos::Experimental::Impl::SharedAllocationRecord
     < Kokkos::HostSpace , Impl::ThreadsTaskPolicyQueue::Destroy > record_type ;
@@ -569,16 +564,16 @@ TaskPolicy< Kokkos::Threads >::TaskPolicy
                          , sizeof(Impl::ThreadsTaskPolicyQueue)
                          );
 
-  m_threads_queue =
+  m_policy =
     reinterpret_cast< Impl::ThreadsTaskPolicyQueue * >( record->data() );
 
-  new( m_threads_queue )
+  new( m_policy )
     Impl::ThreadsTaskPolicyQueue( arg_task_max_count
                                 , arg_task_max_size
                                 , arg_task_default_dependence_capacity
                                 , arg_task_team_size );
 
-  record->m_destroy.m_queue = m_threads_queue ;
+  record->m_destroy.m_policy = m_policy ;
 
   m_track.assign_allocated_record_to_uninitialized( record );
 }
@@ -600,7 +595,7 @@ void wait( Kokkos::Experimental::TaskPolicy< Kokkos::Threads > & policy )
   Kokkos::Impl::ThreadsExec::resize_scratch( 0 , member_type::team_reduce_size() + BASE_SHMEM );
 
   Kokkos::Impl::ThreadsExec::start( & Impl::ThreadsTaskPolicyQueue::driver
-                                  , policy.m_threads_queue );
+                                  , policy.m_policy );
 
   Kokkos::Impl::ThreadsExec::fence();
 }
@@ -631,7 +626,7 @@ void Task::assign( Task ** const lhs_ptr , Task * rhs )
 
   Task * const old_lhs = atomic_exchange( lhs_ptr , rhs );
 
-  if ( old_lhs && rhs && old_lhs->m_policy_queue != rhs->m_policy_queue ) {
+  if ( old_lhs && rhs && old_lhs->m_policy != rhs->m_policy ) {
     Kokkos::abort( "Kokkos::Impl::TaskMember<Kokkos::Threads>::assign ERROR different queues");
   }
 
@@ -659,7 +654,7 @@ void Task::assign( Task ** const lhs_ptr , Task * rhs )
     if ( count == 0 ) {
       // When 'count == 0' this thread has exclusive access to 'old_lhs'
 
-      ThreadsTaskPolicyQueue & queue = *( old_lhs->m_policy_queue );
+      ThreadsTaskPolicyQueue & queue = *( old_lhs->m_policy );
 
       queue.deallocate_task( old_lhs , old_lhs->m_size_alloc );
     }

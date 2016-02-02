@@ -103,7 +103,7 @@ struct ThreadsTaskPolicyQueue {
 
   // Callback to destroy the shared memory tracked queue.
   struct Destroy {
-    ThreadsTaskPolicyQueue * m_queue ;
+    ThreadsTaskPolicyQueue * m_policy ;
     void destroy_shared_allocation();
   };
 };
@@ -135,19 +135,20 @@ private:
   // without triggering a false-positive on Intel compiler warning #955.
   typedef TaskMember< Kokkos::Threads , void , void > SelfType ;
   
-  ThreadsTaskPolicyQueue * m_policy_queue ;
-  function_verify_type   m_verify ;
-  function_team_type     m_team ;         ///< Apply function
-  function_single_type   m_serial ;       ///< Apply function
-  TaskMember **          m_dep ;          ///< Dependences
-  TaskMember *           m_wait ;         ///< Head of linked list of tasks waiting on this task
-  TaskMember *           m_next ;         ///< Member of linked list of tasks
-  int                    m_dep_capacity ; ///< Capacity of dependences
-  int                    m_dep_size ;     ///< Actual count of dependences
-  int                    m_size_alloc ;
-  int                    m_shmem_size ;
-  int                    m_ref_count ;    ///< Reference count
-  int                    m_state ;        ///< State of the task
+  ThreadsTaskPolicyQueue * m_policy ;
+  TaskMember * volatile  * m_queue ;
+  function_verify_type     m_verify ;
+  function_team_type       m_team ;         ///< Apply function
+  function_single_type     m_serial ;       ///< Apply function
+  TaskMember **            m_dep ;          ///< Dependences
+  TaskMember *             m_wait ;         ///< Head of linked list of tasks waiting on this task
+  TaskMember *             m_next ;         ///< Member of linked list of tasks
+  int                      m_dep_capacity ; ///< Capacity of dependences
+  int                      m_dep_size ;     ///< Actual count of dependences
+  int                      m_size_alloc ;
+  int                      m_shmem_size ;
+  int                      m_ref_count ;    ///< Reference count
+  int                      m_state ;        ///< State of the task
 
 
   TaskMember( TaskMember && ) = delete ;
@@ -158,7 +159,7 @@ private:
 protected:
 
   TaskMember()
-    : m_policy_queue(0)
+    : m_policy(0)
     , m_verify(0)
     , m_team(0)
     , m_serial(0)
@@ -243,7 +244,6 @@ public:
     {
       {
         typedef typename DerivedTaskType::functor_type  functor_type ;
-        typedef typename DerivedTaskType::result_type   result_type ;
 
         DerivedTaskType * const self = static_cast< DerivedTaskType * >(t);
         functor_type    * const f    = static_cast< functor_type * >( self );
@@ -418,7 +418,7 @@ private:
   typedef Kokkos::Experimental::Impl::SharedAllocationTracker track_type ;
 
   track_type                      m_track ;
-  Impl::ThreadsTaskPolicyQueue  * m_threads_queue ;
+  Impl::ThreadsTaskPolicyQueue  * m_policy ;
 
   template< class FunctorType >
   static inline
@@ -455,19 +455,19 @@ private:
 
       const unsigned dep_capacity
         = ~0u == arg_dependence_capacity
-        ? m_threads_queue->m_default_dependence_capacity
+        ? m_policy->m_default_dependence_capacity
         : arg_dependence_capacity ;
 
       const unsigned size_alloc =
         derived_size + sizeof(task_root_type*) * dep_capacity ;
 
-      void * const ptr = m_threads_queue->allocate_task( size_alloc );
+      void * const ptr = m_policy->allocate_task( size_alloc );
 
       if ( ptr == 0 ) { Kokkos::abort("Threads TaskPolicy out of memory"); }
 
       DerivedTaskType * const task = new( ptr ) DerivedTaskType( arg_functor );
 
-      task->task_root_type::m_policy_queue = m_threads_queue ;
+      task->task_root_type::m_policy       = m_policy ;
       task->task_root_type::m_verify       = & task_root_type::template verify_type< typename DerivedTaskType::value_type > ;
       task->task_root_type::m_team         = arg_apply_team ;
       task->task_root_type::m_serial       = arg_apply_single ;
@@ -543,7 +543,7 @@ public:
           , task_root_type::function_single_type(0)
           , & task_root_type::template apply_team< task_type , void >
           , Kokkos::Impl::FunctorTeamShmemSize< FunctorType >::
-              value( functor , m_threads_queue->m_team_size )
+              value( functor , m_policy->m_team_size )
           , dependence_capacity
           )
 #endif
@@ -583,22 +583,35 @@ public:
 
   template< class ValueType >
   const Future< ValueType , execution_space > &
-    spawn( const Future< ValueType , execution_space > & f ) const
+    spawn( const Future< ValueType , execution_space > & f
+         , const bool priority = false ) const
       {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-        m_threads_queue->schedule_task( f.m_task );
+        f.m_task->m_queue =
+          ( f.m_task->m_team != 0 ? ( priority ? & m_policy->m_priority_team
+                                               : & m_policy->m_ready_team )
+                                  : ( priority ? & m_policy->m_priority_serial
+                                               : & m_policy->m_ready_serial ) );
+        m_policy->schedule_task( f.m_task );
 #endif
         return f ;
       }
 
   template< class FunctorType >
   KOKKOS_INLINE_FUNCTION
-  void respawn( FunctorType * task_functor ) const
+  void respawn( FunctorType * task_functor 
+              , const bool priority = false ) const
+    {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-    { m_threads_queue->reschedule_task( get_task_root(task_functor) ); }
-#else
-    {}
+      task_root_type * const t = get_task_root(task_functor);
+      t->m_queue =
+        ( t->m_team != 0 ? ( priority ? & m_policy->m_priority_team
+                                      : & m_policy->m_ready_team )
+                         : ( priority ? & m_policy->m_priority_serial
+                                      : & m_policy->m_ready_serial ) );
+      m_policy->reschedule_task( t );
 #endif
+    }
 
   //----------------------------------------
   // Functions for an executing task functor to query dependences,

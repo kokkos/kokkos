@@ -83,17 +83,16 @@ struct FibChild {
       else {
         if ( has_nested == 0 ) {
           // Spawn new children and respawn myself to sum their results:
+          // Spawn lower value at higher priority as it has a shorter
+          // path to completion.
           has_nested = 2 ;
 
-          fib_1 = Kokkos::Experimental::spawn( policy , FibChild(policy,n-1) );
-          fib_2 = Kokkos::Experimental::spawn( policy , FibChild(policy,n-2) );
+          fib_1 = policy.spawn( policy.create( FibChild(policy,n-1) ) );
+          fib_2 = policy.spawn( policy.create( FibChild(policy,n-2) ) , true );
 
-          Kokkos::Experimental::respawn
-            ( policy
-            , this
-            , fib_1
-            , fib_2
-            );
+          policy.add_dependence( this , fib_1 );
+          policy.add_dependence( this , fib_2 );
+          policy.respawn( this );
         }
         else if ( has_nested == 2 ) {
 
@@ -139,10 +138,13 @@ struct FibChild2 {
           // Spawn new children and respawn myself to sum their results:
           // result = Fib(n-1) + Fib(n-2)
           has_nested = 2 ;
-          // Kokkos::respawn implements the following steps:
+
+          // Spawn lower value at higher priority as it has a shorter
+          // path to completion.
+
           policy.clear_dependence( this );
-          fib_a = Kokkos::Experimental::spawn( policy , FibChild2(policy,n-1) );
-          fib_b = Kokkos::Experimental::spawn( policy , FibChild2(policy,n-2) );
+          fib_a = policy.spawn( policy.create( FibChild2(policy,n-1) ) );
+          fib_b = policy.spawn( policy.create( FibChild2(policy,n-2) ) , true );
           policy.add_dependence( this , fib_a );
           policy.add_dependence( this , fib_b );
           policy.respawn( this );
@@ -154,10 +156,13 @@ struct FibChild2 {
           // result = ( ( Fib(n-3) + Fib(n-4) ) + Fib(n-3) ) + ( Fib(n-3) + Fib(n-4) )
           // result = 3 * Fib(n-3) + 2 * Fib(n-4)
           has_nested = 4 ;
-          // Kokkos::Experimental::respawn implements the following steps:
+
+          // Spawn lower value at higher priority as it has a shorter
+          // path to completion.
+
           policy.clear_dependence( this );
-          fib_a = Kokkos::Experimental::spawn( policy , FibChild2(policy,n-3) );
-          fib_b = Kokkos::Experimental::spawn( policy , FibChild2(policy,n-4) );
+          fib_a = policy.spawn( policy.create( FibChild2(policy,n-3) ) );
+          fib_b = policy.spawn( policy.create( FibChild2(policy,n-4) ) , true );
           policy.add_dependence( this , fib_a );
           policy.add_dependence( this , fib_b );
           policy.respawn( this );
@@ -207,7 +212,7 @@ void test_fib( long n )
           , task_dependence );
 
   Kokkos::Experimental::Future<long,ExecSpace> f =
-    Kokkos::Experimental::spawn( policy , FibChild<ExecSpace>(policy,n) );
+    policy.spawn( policy.create( FibChild<ExecSpace>(policy,n) ) );
 
   Kokkos::Experimental::wait( policy );
 
@@ -230,7 +235,8 @@ void test_fib2( long n )
           , task_max_size
           , task_dependence );
 
-  Kokkos::Experimental::Future<long,ExecSpace> f = Kokkos::Experimental::spawn( policy , FibChild2<ExecSpace>(policy,n) );
+  Kokkos::Experimental::Future<long,ExecSpace> f =
+    policy.spawn( policy.create( FibChild2<ExecSpace>(policy,n) ) );
 
   Kokkos::Experimental::wait( policy );
 
@@ -279,7 +285,8 @@ void test_norm2( const int n )
 
   Kokkos::RangePolicy<ExecSpace> r(0,n);
 
-  Kokkos::Experimental::Future<double,ExecSpace> f = Kokkos::Experimental::spawn_reduce( policy , r , Norm2<ExecSpace>(x) );
+  Kokkos::Experimental::Future<double,ExecSpace> f =
+    Kokkos::Experimental::spawn_reduce( policy , r , Norm2<ExecSpace>(x) );
 
   Kokkos::Experimental::wait( policy );
 
@@ -345,7 +352,8 @@ void test_task_dep( const int n )
 
     for ( int j = 0 ; j < n ; ++j ) {
 
-      Kokkos::Experimental::Future<int,Space> nested = policy.create( TaskDep<Space>(policy,j+1) );
+      Kokkos::Experimental::Future<int,Space> nested =
+        policy.create( TaskDep<Space>(policy,j+1) );
 
       policy.spawn( nested );
 

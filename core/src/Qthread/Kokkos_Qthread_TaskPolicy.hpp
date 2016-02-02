@@ -499,7 +499,8 @@ public:
 
   template< class ValueType >
   const Future< ValueType , execution_space > &
-    spawn( const Future< ValueType , execution_space > & f ) const
+    spawn( const Future< ValueType , execution_space > & f 
+         , const bool priority = false ) const
       {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
         f.m_task->spawn();
@@ -611,7 +612,8 @@ public:
     }
 
   template< class FunctorType >
-  void respawn( FunctorType * task_functor ) const
+  void respawn( FunctorType * task_functor 
+              , const bool priority = false ) const
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     { get_task_root(task_functor)->respawn(); }
 #else

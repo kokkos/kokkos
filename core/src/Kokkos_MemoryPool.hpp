@@ -92,7 +92,6 @@ public:
      m_head_list[j] =  i < m_chunk_count
                     ? (void*) ( m_head_list + j + n )
                     : (void*) 0 ; 
-     Kokkos::memory_fence();
    }
 
 private:
@@ -154,6 +153,7 @@ private:
       closure.execute();
 
       ExecutionSpace::fence();
+      Kokkos::memory_fence();
     }
   }
 
