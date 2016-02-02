@@ -164,8 +164,44 @@ void * MemPoolList::allocate( size_t alloc_size ) const
           atomic_compare_exchange( freelist, old_head, KOKKOS_MEMPOOLLIST_LOCK );
 
         if ( head == old_head ) {
-          // The lock succeeded.  Get a local copy of the second entry in
-          // the list.
+          // The lock succeeded.
+
+          // Check if too large a chunk was used because a smaller one wasn't
+          // available.  If so, divide up the chunk to the next smallest chunk
+          // size.  We could be more aggressive about dividing up chunks and
+          // save some memory.  However, there is currently no way to combine
+          // multiple free chunks into a larger single chunk which means memory
+          // fragmentation could be a problem.  Being aggressive about dividing
+          // up chunks would further exacerbate the fragmentation issue.
+          // The way we could be more aggressive is that some chunks that need
+          // the current size don't use much of it and the leftover could be
+          // parceled off as a smaller chunk.  For example, let us have two
+          // chunk sizes of 128 and 512 bytes.  If a request for 256 bytes
+          // comes in, it requires a 512 chunk to fulfill, but the remaining
+          // 256 bytes could be broken up into 2 128 byte chunks instead of
+          // wasting it as part of the chunk given to fulfill the 256 byte
+          // request.
+          if ( l > l_exp ) {
+            // Subdivide the chunk into smaller chunks.  The first chunk will
+            // be returned to satisfy the allocaiton request.  The remainder
+            // of the chunks will be inserted onto the appropriate freelist.
+            size_t num_chunks = m_chunk_size[l] / m_chunk_size[l_exp];
+            char * pchar = (char *) old_head;
+
+            // Link the chunks following the first chunk to form a list.
+            for (size_t i = 2; i < num_chunks; ++i) {
+              Link * chunk = (Link *) (pchar + (i - 1) * m_chunk_size[l_exp]);
+              chunk->m_next = (Link *) (pchar + i * m_chunk_size[l_exp]);
+            }
+
+            Link * lp_head = (Link *) (pchar + m_chunk_size[l_exp]);
+            Link * lp_tail = (Link *) (pchar + (num_chunks - 1) * m_chunk_size[l_exp]);
+
+            // Insert the list of chunks at the head of the freelist.
+            insert_list( lp_head, lp_tail, l_exp );
+          }
+
+          // Get a local copy of the second entry in the list.
           Link * const head_next =
             *reinterpret_cast< Link * volatile * >(&(old_head->m_next));
 
@@ -209,42 +245,6 @@ void * MemPoolList::allocate( size_t alloc_size ) const
       }
       else {
         ++num_tries;
-      }
-    }
-
-    if ( removed && p != 0 ) {
-      // Check if too large a chunk was used because a smaller one wasn't
-      // available.  If so, divide up the chunk to the next smallest chunk
-      // size.  We could be more aggressive about dividing up chunks and save
-      // some memory.  However, there is currently no way to combine multiple
-      // free chunks into a larger single chunk which means memory
-      // fragmentation could be a problem.  Being aggressive about dividing
-      // up chunks would further exacerbate the fragmentation issue.
-      // The way we could be more aggressive is that some chunks that need
-      // the current size don't use much of it and the leftover could be
-      // parceled off as a smaller chunk.  For example, let us have two chunk
-      // sizes of 128 and 512 bytes.  If a request for 256 bytes comes in, it
-      // requires a 512 chunk to fulfill, but the remaining 256 bytes could
-      // be broken up into 2 128 byte chunks instead of wasting it as part of
-      // the chunk given to fulfill the 256 byte request.
-      if ( l > l_exp ) {
-        // Subdivide the chunk into smaller chunks.  The first chunk will be
-        // returned to satisfy the allocaiton request.  The remainder of the
-        // chunks will be inserted onto the appropriate freelist.
-        size_t num_chunks = m_chunk_size[l] / m_chunk_size[l_exp];
-        char * pchar = (char *) p;
-
-        // Link the chunks following the first chunk to form a list.
-        for (size_t i = 2; i < num_chunks; ++i) {
-          Link * chunk = (Link *) (pchar + (i - 1) * m_chunk_size[l_exp]);
-          chunk->m_next = (Link *) (pchar + i * m_chunk_size[l_exp]);
-        }
-
-        Link * lp_head = (Link *) (pchar + m_chunk_size[l_exp]);
-        Link * lp_tail = (Link *) (pchar + (num_chunks - 1) * m_chunk_size[l_exp]);
-
-        // Insert the list of chunks at the head of the freelist.
-        insert_list( lp_head, lp_tail, l_exp );
       }
     }
   }
