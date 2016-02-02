@@ -1218,7 +1218,7 @@ public:
 
   // Wrap memory according to properties and array layout
   template< class ... P >
-  explicit inline
+  explicit KOKKOS_INLINE_FUNCTION
   View( const Impl::ViewCtorProp< P ... > & arg_prop
       , typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer
                                , typename traits::array_layout
@@ -1238,7 +1238,9 @@ public:
   template< class ... P >
   explicit inline
   View( const Impl::ViewCtorProp< P ... > & arg_prop
-      , const size_t arg_N0 = 0
+      , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer
+                               , size_t 
+                               >::type const arg_N0 = 0 
       , const size_t arg_N1 = 0
       , const size_t arg_N2 = 0
       , const size_t arg_N3 = 0
@@ -1254,7 +1256,28 @@ public:
           )
     {}
 
-  // Label and layout
+  template< class ... P >
+  explicit KOKKOS_INLINE_FUNCTION
+  View( const Impl::ViewCtorProp< P ... > & arg_prop
+      , typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer
+                               , size_t 
+                               >::type const arg_N0 = 0 
+      , const size_t arg_N1 = 0
+      , const size_t arg_N2 = 0
+      , const size_t arg_N3 = 0
+      , const size_t arg_N4 = 0
+      , const size_t arg_N5 = 0
+      , const size_t arg_N6 = 0
+      , const size_t arg_N7 = 0
+      )
+    : View( arg_prop
+          , typename traits::array_layout
+              ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+              , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+          )
+    {}
+
+  // Allocate with label and layout
   template< typename Label >
   explicit inline
   View( const Label & arg_label
@@ -1265,7 +1288,7 @@ public:
     : View( Impl::ViewCtorProp< std::string >( arg_label ) , arg_layout )
     {}
 
-  // Label and layout, must disambiguate from subview constructor.
+  // Allocate label and layout, must disambiguate from subview constructor.
   template< typename Label >
   explicit inline
   View( const Label & arg_label
