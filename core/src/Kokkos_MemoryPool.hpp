@@ -83,6 +83,7 @@ public:
   MemPoolList & operator = ( MemPoolList && ) = default ;
   MemPoolList & operator = ( const MemPoolList & ) = default ;
 
+ KOKKOS_INLINE_FUNCTION
  void operator()( size_t i ) const
    {
      enum { S = Kokkos::Impl::power_of_two< sizeof(void*) >::value };

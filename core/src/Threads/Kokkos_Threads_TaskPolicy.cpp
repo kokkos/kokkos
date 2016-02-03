@@ -56,12 +56,9 @@ namespace Impl {
 
 typedef TaskMember< Kokkos::Threads , void , void > Task ;
 
-namespace {
+#define s_lock   = (reinterpret_cast<Task*>( ~((uintptr_t)0) ))
+#define s_denied = (reinterpret_cast<Task*>( ~((uintptr_t)0) - 1 ))
 
-constexpr Task * const s_lock   = reinterpret_cast<Task*>( ~((unsigned long)0) );
-constexpr Task * const s_denied = reinterpret_cast<Task*>( ~((unsigned long)0) - 1 );
-
-} /* namespace */
 } /* namespace Impl */
 } /* namespace Experimental */
 } /* namespace Kokkos */
