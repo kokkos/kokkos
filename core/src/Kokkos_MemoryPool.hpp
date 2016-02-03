@@ -335,17 +335,29 @@ private:
 #endif
   }
 
-  ///\brief  Inserts an already linked list of chunks into the pool.
+  /// \brief Inserts an already linked list of chunks into the pool.
   KOKKOS_FUNCTION
   void insert_list( Link * lp_head, Link * lp_tail, size_t list ) const;
 
-  ///\brief  Claim chunks of untracked memory from the pool.
+  /// \brief Claim chunks of untracked memory from the pool.
   KOKKOS_FUNCTION
   void * allocate( size_t alloc_size ) const;
 
-  ///\brief  Release claimed memory back into the pool.
+  /// \brief Release claimed memory back into the pool.
   KOKKOS_FUNCTION
   void deallocate( void * alloc_ptr, size_t alloc_size ) const;
+
+  /// \brief Tests if the memory pool is empty.
+  KOKKOS_INLINE_FUNCTION
+  bool is_empty() const
+  {
+    size_t l = 0;
+    while ( m_chunk_size[l] > 0 && m_freelist[l] == 0 ) {
+      ++l;
+    }
+
+    return m_chunk_size[l] == 0;
+  }
 
   // The following three functions are used for debugging.
   void print_status() const
@@ -419,7 +431,7 @@ public:
   MemoryPool & operator = ( const MemoryPool & ) = default;
   ~MemoryPool() = default;
 
-  /// \brief  Allocate memory pool
+  /// \brief Allocate memory pool
   /// \param memspace         From where to allocate the pool.
   /// \param base_chunk_size  Hand out memory in chunks of this size.
   /// \param total_size       Total size of the pool.
@@ -430,23 +442,20 @@ public:
                 num_chunk_sizes, chunk_spacing )
   {}
 
-  KOKKOS_INLINE_FUNCTION
-  bool is_empty() const { return 0 == *m_freelist.m_head_list ; }
-
-  KOKKOS_INLINE_FUNCTION
-  unsigned chunk_size() const { return m_freelist.m_chunk_size ; }
-
-  ///\brief  Claim chunks of untracked memory from the pool.
+  /// \brief Claim chunks of untracked memory from the pool.
   /// Can only be called from device.
   KOKKOS_INLINE_FUNCTION
   void * allocate( const size_t alloc_size ) const
   { return m_memory.allocate( alloc_size ); }
 
-  ///\brief  Release claimed memory back into the pool
+  /// \brief Release claimed memory back into the pool
   /// Can only be called from device.
   KOKKOS_INLINE_FUNCTION
   void deallocate( void * const alloc_ptr, const size_t alloc_size ) const
   { m_memory.deallocate( alloc_ptr, alloc_size ); }
+
+  KOKKOS_INLINE_FUNCTION
+  bool is_empty() const { return m_memory.is_empty(); }
 
   // The following three functions are used for debugging.
   void print_status() const { m_memory.print_status(); }
