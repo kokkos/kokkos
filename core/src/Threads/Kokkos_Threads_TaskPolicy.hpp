@@ -467,23 +467,27 @@ private:
 
       void * const ptr = m_policy->allocate_task( size_alloc );
 
-      if ( ptr == 0 ) { Kokkos::abort("Threads TaskPolicy out of memory"); }
+      task_root_type * t = 0 ;
 
-      DerivedTaskType * const task = new( ptr ) DerivedTaskType( arg_functor );
+      if ( ptr != 0 ) {
 
-      task->task_root_type::m_policy       = m_policy ;
-      task->task_root_type::m_verify       = & task_root_type::template verify_type< typename DerivedTaskType::value_type > ;
-      task->task_root_type::m_team         = arg_apply_team ;
-      task->task_root_type::m_serial       = arg_apply_single ;
-      task->task_root_type::m_dep          = (task_root_type**)( ((unsigned char *)task) + derived_size );
-      task->task_root_type::m_dep_capacity = dep_capacity ;
-      task->task_root_type::m_size_alloc   = size_alloc ;
-      task->task_root_type::m_shmem_size   = arg_team_shmem ;
+        DerivedTaskType * const task = new( ptr ) DerivedTaskType( arg_functor );
 
-      for ( unsigned i = 0 ; i < dep_capacity ; ++i )
-        task->task_root_type::m_dep[i] = 0 ;
+        task->task_root_type::m_policy       = m_policy ;
+        task->task_root_type::m_verify       = & task_root_type::template verify_type< typename DerivedTaskType::value_type > ;
+        task->task_root_type::m_team         = arg_apply_team ;
+        task->task_root_type::m_serial       = arg_apply_single ;
+        task->task_root_type::m_dep          = (task_root_type**)( ((unsigned char *)task) + derived_size );
+        task->task_root_type::m_dep_capacity = dep_capacity ;
+        task->task_root_type::m_size_alloc   = size_alloc ;
+        task->task_root_type::m_shmem_size   = arg_team_shmem ;
 
-      return static_cast< task_root_type * >( task );
+        for ( unsigned i = 0 ; i < dep_capacity ; ++i )
+          task->task_root_type::m_dep[i] = 0 ;
+
+        t = static_cast< task_root_type * >( task );
+      }
+      return t ;
     }
 
 public:
@@ -589,12 +593,15 @@ public:
     spawn( const Future< ValueType , execution_space > & f
          , const bool priority = false ) const
       {
+        if ( f.m_task ) {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-        f.m_task->m_queue =
-          ( f.m_task->m_team != 0 ? & ( m_policy->m_team[   priority ? 0 : 1 ] )
-                                  : & ( m_policy->m_serial[ priority ? 0 : 1 ] ) );
-        m_policy->schedule_task( f.m_task );
+          f.m_task->m_queue =
+            ( f.m_task->m_team != 0
+            ? & ( m_policy->m_team[   priority ? 0 : 1 ] )
+            : & ( m_policy->m_serial[ priority ? 0 : 1 ] ) );
+          m_policy->schedule_task( f.m_task );
 #endif
+        }
         return f ;
       }
 
@@ -620,7 +627,7 @@ public:
 
   template< class FunctorType >
   KOKKOS_INLINE_FUNCTION
-  void respawn_available_memory( FunctorType * task_functor ) const
+  void respawn_needing_memory( FunctorType * task_functor ) const
     {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
       task_root_type * const t = get_task_root(task_functor);

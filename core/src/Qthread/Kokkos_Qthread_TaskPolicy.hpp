@@ -614,11 +614,19 @@ public:
   template< class FunctorType >
   void respawn( FunctorType * task_functor 
               , const bool priority = false ) const
+    {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-    { get_task_root(task_functor)->respawn(); }
-#else
-    {}
+      get_task_root(task_functor)->respawn();
 #endif
+    }
+
+  template< class FunctorType >
+  void respawn_needing_memory( FunctorType * task_functor ) const
+    {
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+      get_task_root(task_functor)->respawn();
+#endif
+    }
 
   static member_type & member_single();
 

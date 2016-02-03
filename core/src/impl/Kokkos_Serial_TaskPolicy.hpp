@@ -619,11 +619,20 @@ public:
   KOKKOS_INLINE_FUNCTION
   void respawn( FunctorType * task_functor 
               , const bool priority = false ) const
+    {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-    { get_task_root(task_functor)->schedule(); }
-#else
-    {}
+      get_task_root(task_functor)->schedule();
 #endif
+    }
+
+  template< class FunctorType >
+  KOKKOS_INLINE_FUNCTION
+  void respawn_needing_memory( FunctorType * task_functor ) const
+    {
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+      get_task_root(task_functor)->schedule();
+#endif
+    }
 
   //----------------------------------------
 

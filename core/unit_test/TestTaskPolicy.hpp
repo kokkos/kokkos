@@ -74,6 +74,8 @@ struct FibChild {
   inline
   void apply( value_type & result )
     {
+      typedef Kokkos::Experimental::Future<long,ExecSpace> future_type ;
+
       if ( n < 2 ) {
 
         has_nested = -1 ;
@@ -85,14 +87,30 @@ struct FibChild {
           // Spawn new children and respawn myself to sum their results:
           // Spawn lower value at higher priority as it has a shorter
           // path to completion.
-          has_nested = 2 ;
+          if ( fib_2.is_null() ) {
+            fib_2 = policy.create( FibChild(policy,n-2) );
+          }
 
-          fib_1 = policy.spawn( policy.create( FibChild(policy,n-1) ) );
-          fib_2 = policy.spawn( policy.create( FibChild(policy,n-2) ) , true );
+          if ( ! fib_2.is_null() && fib_1.is_null() ) {
+            fib_1 = policy.create( FibChild(policy,n-1) );
+          }
 
-          policy.add_dependence( this , fib_1 );
-          policy.add_dependence( this , fib_2 );
-          policy.respawn( this );
+          if ( ! fib_1.is_null() ) {
+            has_nested = 2 ;
+
+            policy.spawn( fib_2 , true /* high priority */ );
+            policy.spawn( fib_1 );
+            policy.add_dependence( this , fib_1 );
+            policy.add_dependence( this , fib_2 );
+            policy.respawn( this );
+          }
+          else {
+            // Release task memory before spawning the task,
+            // after spawning memory cannot be released.
+            fib_2 = future_type();
+            // Respawn when more memory is available
+            policy.respawn_needing_memory( this );
+          }
         }
         else if ( has_nested == 2 ) {
 
@@ -185,16 +203,18 @@ namespace {
 
 long eval_fib( long n )
 {
-  if ( n < 2 ) return n ;
+  if ( 2 <= n ) {
+    std::vector<long> fib(n+1);
 
-  std::vector<long> fib(n+1);
+    fib[0] = 0 ;
+    fib[1] = 1 ;
 
-  fib[0] = 0 ;
-  fib[1] = 1 ;
+    for ( long i = 2 ; i <= n ; ++i ) { fib[i] = fib[i-2] + fib[i-1]; }
 
-  for ( long i = 2 ; i <= n ; ++i ) { fib[i] = fib[i-2] + fib[i-1]; }
+    n = fib[n] ;
+  }
 
-  return fib[n];
+  return n ;
 }
 
 }
@@ -202,7 +222,7 @@ long eval_fib( long n )
 template< class ExecSpace >
 void test_fib( long n )
 {
-  const unsigned task_max_count  = 1024 ;
+  const unsigned task_max_count  = 16 ; // 1024 ;
   const unsigned task_max_size   = 256 ;
   const unsigned task_dependence = 4 ;
 

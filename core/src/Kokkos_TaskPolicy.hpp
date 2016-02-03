@@ -138,6 +138,9 @@ public:
   TaskState get_task_state() const
     { return 0 != m_task ? m_task->get_state() : TASK_STATE_NULL ; }
 
+  KOKKOS_INLINE_FUNCTION
+  bool is_null() const { return 0 == m_task ; }
+
   //----------------------------------------
 
   explicit

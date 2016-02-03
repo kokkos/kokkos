@@ -226,6 +226,10 @@ public:
     : m_freelist( arg_space , execution_space(), arg_chunk_size , arg_total_size )
   {}
 
+  KOKKOS_INLINE_FUNCTION
+  bool is_empty() const { return 0 == *m_freelist.m_head_list ; }
+
+  KOKKOS_INLINE_FUNCTION
   unsigned chunk_size() const { return m_freelist.m_chunk_size ; }
 
   ///\brief  Claim chunks of untracked memory from the pool.

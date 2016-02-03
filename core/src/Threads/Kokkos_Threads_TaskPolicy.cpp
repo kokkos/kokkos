@@ -194,7 +194,10 @@ void ThreadsTaskPolicyQueue::driver( Kokkos::Impl::ThreadsExec & exec
 
       // Only the team lead attempts to pop a team task from the queues
       for ( int i = 0 ; i < int(NPRIORITY) && 0 == task ; ++i ) {
-        task = pop_ready_task( & self.m_team[i] );
+        if ( ( i < 2 /* regular queue */ )
+             || ( ! self.m_space.is_empty() /* waiting for memory queue */ ) ) {
+          task = pop_ready_task( & self.m_team[i] );
+        }
       }
 
       *task_team_ptr = task ;
@@ -226,7 +229,10 @@ void ThreadsTaskPolicyQueue::driver( Kokkos::Impl::ThreadsExec & exec
       // No team task acquired, each thread try a serial task
       // Try the priority queue, then the regular queue.
       for ( int i = 0 ; i < int(NPRIORITY) && 0 == task ; ++i ) {
-        task = pop_ready_task( & self.m_serial[i] );
+        if ( ( i < 2 /* regular queue */ )
+             || ( ! self.m_space.is_empty() /* waiting for memory queue */ ) ) {
+          task = pop_ready_task( & self.m_serial[i] );
+        }
       }
 
       if ( 0 != task ) {
@@ -707,11 +713,21 @@ void Task::assign( Task ** const lhs_ptr , Task * rhs )
     // Task is ready for deletion when  wait == q_denied
 
     int const count = atomic_fetch_add( & (old_lhs->m_ref_count) , -1 ) - 1 ;
+    int const state = old_lhs->m_state ;
+    Task * const wait = *((Task * const volatile *) & old_lhs->m_wait );
 
-    // if 'count != 0' then 'old_lhs' may be deallocated before dereferencing
-    Task * const wait = count == 0 ? *((Task * const volatile *) & old_lhs->m_wait ) : (Task*) 0 ;
+    const bool ok_count = 0 <= count ;
 
-    if ( count < 0 || ( count == 0 && wait != q_denied ) ) {
+    // If count == 0 then will be deleting
+    // and must either be constructing or complete.
+    const bool ok_state = 0 < count ? true :
+      ( ( state == int(TASK_STATE_CONSTRUCTING) && wait == 0 ) ||
+        ( state == int(TASK_STATE_COMPLETE)     && wait == q_denied ) )
+      &&
+     old_lhs->m_next == 0 &&
+     old_lhs->m_dep_size == 0 ;
+
+    if ( ! ok_count || ! ok_state ) {
 
       fprintf( stderr , "Kokkos::Impl::TaskManager<Kokkos::Threads>::assign ERROR deleting task(0x%lx) m_ref_count(%d) , m_wait(0x%ld)\n"
                       , (unsigned long) old_lhs
