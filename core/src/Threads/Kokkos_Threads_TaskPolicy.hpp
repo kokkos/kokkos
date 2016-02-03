@@ -58,63 +58,7 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-struct ThreadsTaskPolicyQueue {
-
-  typedef Kokkos::Experimental::MemoryPool< Kokkos::Threads >
-    memory_space ;
-
-  typedef Kokkos::Experimental::Impl::TaskMember< Kokkos::Threads, void, void >
-    task_root_type ;
-
-  memory_space              m_space ;
-  task_root_type * volatile m_priority_team ;
-  task_root_type * volatile m_priority_serial ;
-  task_root_type * volatile m_ready_team ;
-  task_root_type * volatile m_ready_serial ;
-  int              volatile m_count_ready ;  ///< Ready plus executing tasks
-  int                       m_team_size ;    ///< Fixed size of a task-team
-  int                       m_default_dependence_capacity ;
-
-  // Execute tasks until all non-waiting tasks are complete.
-  static void driver( Kokkos::Impl::ThreadsExec & exec
-                    , const void * arg );
-
-  void * allocate_task( unsigned );
-  void deallocate_task( void * , unsigned );
-  void schedule_task( task_root_type * const );
-  void reschedule_task( task_root_type * const );
-
-  // When a task finishes executing update its dependences
-  // and either deallocate the task if complete
-  // or reschedule the task if respawned.
-  void complete_executed_task( task_root_type * );
-
-  // Pop a task from the queue;
-  // which is either m_ready_team or m_ready_serial
-  static task_root_type *
-    pop_ready_task( task_root_type * volatile * const queue );
-
-  ThreadsTaskPolicyQueue
-    ( const unsigned arg_task_max_count
-    , const unsigned arg_task_max_size
-    , const unsigned arg_task_default_dependence_capacity
-    , const unsigned arg_task_team_size
-    );
-
-  // Callback to destroy the shared memory tracked queue.
-  struct Destroy {
-    ThreadsTaskPolicyQueue * m_policy ;
-    void destroy_shared_allocation();
-  };
-};
-
-} /* namespace Impl */
-} /* namespace Experimental */
-} /* namespace Kokkos */
-
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+struct ThreadsTaskPolicyQueue ;
 
 /** \brief  Base class for all Kokkos::Threads tasks */
 template<>
@@ -327,7 +271,6 @@ public:
     { return m_dep_size ; }
 
   void clear_dependence();
-  void add_dependence( TaskMember * before );
 
   //----------------------------------------
 
@@ -387,6 +330,67 @@ public:
     : TaskMember< Kokkos::Threads , ResultType , void >()
     , functor_type( arg_functor )
     {}
+};
+
+//----------------------------------------------------------------------------
+
+struct ThreadsTaskPolicyQueue {
+
+  enum { NPRIORITY = 3 };
+
+  typedef Kokkos::Experimental::MemoryPool< Kokkos::Threads >
+    memory_space ;
+
+  typedef Kokkos::Experimental::Impl::TaskMember< Kokkos::Threads, void, void >
+    task_root_type ;
+
+  memory_space     m_space ;
+  task_root_type * m_team[ NPRIORITY ];
+  task_root_type * m_serial[ NPRIORITY ];
+  int     volatile m_count_ready ;  ///< Ready plus executing tasks
+  int              m_team_size ;    ///< Fixed size of a task-team
+  int              m_default_dependence_capacity ;
+
+  // Execute tasks until all non-waiting tasks are complete.
+  static void driver( Kokkos::Impl::ThreadsExec & exec
+                    , const void * arg );
+
+  void * allocate_task( unsigned );
+  void deallocate_task( void * , unsigned );
+  void schedule_task( task_root_type * const );
+  void reschedule_task( task_root_type * const );
+  void add_dependence( task_root_type * const after
+                     , task_root_type * const before );
+
+  // When a task finishes executing update its dependences
+  // and either deallocate the task if complete
+  // or reschedule the task if respawned.
+  void complete_executed_task( task_root_type * );
+
+  // Pop a task from a ready queue
+  static task_root_type *
+    pop_ready_task( task_root_type * volatile * const queue );
+
+  ThreadsTaskPolicyQueue() = delete ;
+  ThreadsTaskPolicyQueue( ThreadsTaskPolicyQueue && ) = delete ;
+  ThreadsTaskPolicyQueue( const ThreadsTaskPolicyQueue & ) = delete ;
+  ThreadsTaskPolicyQueue & operator = ( ThreadsTaskPolicyQueue && ) = delete ;
+  ThreadsTaskPolicyQueue & operator = ( const ThreadsTaskPolicyQueue & ) = delete ;
+
+  ~ThreadsTaskPolicyQueue();
+
+  ThreadsTaskPolicyQueue
+    ( const unsigned arg_task_max_count
+    , const unsigned arg_task_max_size
+    , const unsigned arg_task_default_dependence_capacity
+    , const unsigned arg_task_team_size
+    );
+
+  // Callback to destroy the shared memory tracked queue.
+  struct Destroy {
+    ThreadsTaskPolicyQueue * m_policy ;
+    void destroy_shared_allocation();
+  };
 };
 
 } /* namespace Impl */
@@ -500,7 +504,7 @@ public:
   TaskPolicy( const TaskPolicy & rhs ) = default ;
   TaskPolicy & operator = ( TaskPolicy && rhs ) = default ;
   TaskPolicy & operator = ( const TaskPolicy & rhs ) = default ;
-  
+
   // Create serial-thread task
 
   template< class FunctorType >
@@ -562,7 +566,7 @@ public:
                       ) const
     {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-      after.m_task->add_dependence( before.m_task );
+      m_policy->add_dependence( after.m_task , before.m_task );
 #endif
     }
 
@@ -574,12 +578,11 @@ public:
                         < std::is_same< typename Future<A3,A4>::execution_space , execution_space >::value
                         >::type * = 0
                       ) const
+    {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-    { get_task_root(task_functor)->add_dependence( before.m_task ); }
-#else
-    {}
+      m_policy->add_dependence( get_task_root(task_functor) , before.m_task );
 #endif
-
+    }
 
   template< class ValueType >
   const Future< ValueType , execution_space > &
@@ -588,10 +591,8 @@ public:
       {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
         f.m_task->m_queue =
-          ( f.m_task->m_team != 0 ? ( priority ? & m_policy->m_priority_team
-                                               : & m_policy->m_ready_team )
-                                  : ( priority ? & m_policy->m_priority_serial
-                                               : & m_policy->m_ready_serial ) );
+          ( f.m_task->m_team != 0 ? & ( m_policy->m_team[   priority ? 0 : 1 ] )
+                                  : & ( m_policy->m_serial[ priority ? 0 : 1 ] ) );
         m_policy->schedule_task( f.m_task );
 #endif
         return f ;
@@ -605,10 +606,27 @@ public:
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
       task_root_type * const t = get_task_root(task_functor);
       t->m_queue =
-        ( t->m_team != 0 ? ( priority ? & m_policy->m_priority_team
-                                      : & m_policy->m_ready_team )
-                         : ( priority ? & m_policy->m_priority_serial
-                                      : & m_policy->m_ready_serial ) );
+        ( t->m_team != 0 ? & ( m_policy->m_team[   priority ? 0 : 1 ] )
+                         : & ( m_policy->m_serial[ priority ? 0 : 1 ] ) );
+      m_policy->reschedule_task( t );
+#endif
+    }
+
+  // When a create method fails by returning a null Future
+  // the task that called the create method may respawn
+  // with a dependence on memory becoming available.
+  // This is a race as more than one task may be respawned
+  // with this dependence.
+
+  template< class FunctorType >
+  KOKKOS_INLINE_FUNCTION
+  void respawn_available_memory( FunctorType * task_functor ) const
+    {
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+      task_root_type * const t = get_task_root(task_functor);
+      t->m_queue =
+        ( t->m_team != 0 ? & ( m_policy->m_team[   2 ] )
+                         : & ( m_policy->m_serial[ 2 ] ) );
       m_policy->reschedule_task( t );
 #endif
     }
