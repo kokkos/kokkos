@@ -418,7 +418,6 @@ bool test_mempool( size_t chunk_size, size_t total_size )
 template < class ExecSpace, class MemorySpace = typename ExecSpace::memory_space >
 void test_mempool2( size_t chunk_size, size_t total_size )
 {
-  typedef Kokkos::View<pointer_obj*, ExecSpace >           pointer_view;
   typedef Kokkos::Experimental::MemoryPool< MemorySpace >  pool_memory_space;
 
   size_t num_chunk_sizes = 4;

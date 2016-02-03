@@ -260,7 +260,7 @@ private:
     }
     m_chunk_size[num_chunk_sizes] = 0;
 
-    size_t num_chunks[num_chunk_sizes];
+    size_t * num_chunks = new size_t[num_chunk_sizes];
 
     // Set the starting point in memory and get the number of chunks for each
     // freelist.  Start with the largest chunk size to ensure usage of all the
@@ -320,6 +320,8 @@ private:
 
       ExecutionSpace::fence();
     }
+
+    delete [] num_chunks;
 
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
     print_mempool < Link > pm( num_chunk_sizes, m_chunk_size, m_freelist, m_data );

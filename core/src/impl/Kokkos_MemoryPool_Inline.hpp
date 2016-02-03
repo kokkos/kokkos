@@ -132,7 +132,9 @@ void * MemPoolList::allocate( size_t alloc_size ) const
 
   // Find the first freelist whose chunk size is big enough for allocation.
   size_t l_exp = 0;
-  for ( ; m_chunk_size[l_exp] > 0 && alloc_size > m_chunk_size[l_exp]; ++l_exp );
+  while ( m_chunk_size[l_exp] > 0 && alloc_size > m_chunk_size[l_exp] ) {
+    ++l_exp;
+  }
 
 #ifdef KOKKOS_MEMPOOLLIST_PRINTERR
   if ( m_chunk_size[l_exp] == 0 ) {
@@ -147,7 +149,9 @@ void * MemPoolList::allocate( size_t alloc_size ) const
   while ( !removed ) {
     // Keep searching for a freelist until we find one with chunks available.
     l = l_exp;
-    for ( ; m_chunk_size[l] > 0 && m_freelist[l] == 0; ++l );
+    while ( m_chunk_size[l] > 0 && m_freelist[l] == 0 ) {
+      ++l;
+    }
 
     if ( m_chunk_size[l] > 0 )
     {
@@ -284,7 +288,9 @@ void MemPoolList::deallocate( void * alloc_ptr, size_t alloc_size ) const
 
   // Determine which freelist to place deallocated memory on.
   size_t l = 0;
-  for ( ; m_chunk_size[l] > 0 && alloc_size > m_chunk_size[l]; ++l );
+  while ( m_chunk_size[l] > 0 && alloc_size > m_chunk_size[l] ) {
+    ++l;
+  }
 
 #ifdef KOKKOS_MEMPOOLLIST_PRINTERR
     if ( m_chunk_size[l] == 0 ) {
