@@ -152,7 +152,7 @@ private:
   size_t    m_chunk_spacing;
 
 #if defined(KOKKOS_MEMPOOL_PRINT_INFO) && defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-  mutable size_t m_count;
+  static long m_count;
 #endif
 
   ~MemPoolList() = default;
@@ -169,9 +169,6 @@ private:
                size_t num_chunk_sizes, size_t chunk_spacing )
     : m_track(), m_chunk_size(0), m_freelist(0), m_data(0), m_data_size(0),
       m_chunk_spacing(chunk_spacing)
-#if defined(KOKKOS_MEMPOOL_PRINT_INFO) && defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    , m_count(0)
-#endif
   {
     typedef Impl::SharedAllocationRecord< MemorySpace, void >  SharedRecord;
     typedef Kokkos::RangePolicy< ExecutionSpace >              Range;

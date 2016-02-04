@@ -89,6 +89,10 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+#if defined(KOKKOS_MEMPOOLLIST_PRINT_INFO) && defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
+long MemPoolList::m_count = 0;
+#endif
+
 KOKKOS_FUNCTION
 KOKKOS_MEMPOOLLIST_INLINE
 void MemPoolList::insert_list( Link * lp_head, Link * lp_tail, size_t list ) const
@@ -243,6 +247,18 @@ void * MemPoolList::allocate( size_t alloc_size ) const
         // pool.  Quit and return 0.
         removed = true;
 
+#ifdef KOKKOS_MEMPOOLLIST_PRINT_INFO
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+        long val = Kokkos::atomic_fetch_add( &m_count, 1 );
+        printf( "  allocate(): %6ld   size: %6lu    l: %2ld  %2ld   0x%lx\n",
+                val, alloc_size, l_exp, l, (unsigned long) p );
+        fflush(stdout);
+#else
+        printf( "  allocate()   size: %6lu    l: %2ld  %2ld   0x%lx\n",
+                alloc_size, l_exp, l, (unsigned long) p );
+#endif
+#endif
+
 #ifdef KOKKOS_MEMPOOLLIST_PRINTERR
         Kokkos::abort("\n** MemoryPool::allocate() NO_CHUNKS_BIG_ENOUGH **\n" );
 #endif
@@ -255,11 +271,13 @@ void * MemPoolList::allocate( size_t alloc_size ) const
 
 #ifdef KOKKOS_MEMPOOLLIST_PRINT_INFO
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-  size_t val = Kokkos::atomic_fetch_add( &m_count, 1 );
-  printf( "allocate(): %4ld   l: %ld  %ld   0x%lx\n", val, l_exp, l,
-          (unsigned long) p );
+  long val = Kokkos::atomic_fetch_add( &m_count, 1 );
+  printf( "  allocate(): %6ld   size: %6lu    l: %2ld  %2ld   0x%lx\n", val,
+          alloc_size, l_exp, l, (unsigned long) p );
+  fflush(stdout);
 #else
-  printf( "allocate()   l: %ld  %ld   0x%lx\n", l_exp, l, (unsigned long) p );
+  printf( "  allocate()   size: %6lu    l: %2ld  %2ld   0x%lx\n", alloc_size,
+          l_exp, l, (unsigned long) p );
 #endif
 #endif
 
@@ -293,19 +311,31 @@ void MemPoolList::deallocate( void * alloc_ptr, size_t alloc_size ) const
   }
 
 #ifdef KOKKOS_MEMPOOLLIST_PRINTERR
-    if ( m_chunk_size[l] == 0 ) {
-      printf( "\n** MemoryPool::deallocate() CHUNK_TOO_LARGE(%ld) **\n", alloc_size );
+  if ( m_chunk_size[l] == 0 ) {
+    printf( "\n** MemoryPool::deallocate() CHUNK_TOO_LARGE(%ld) **\n", alloc_size );
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-      fflush( stdout );
+    fflush( stdout );
 #endif
-      Kokkos::abort( "" );
-    }
+    Kokkos::abort( "" );
+  }
 #endif
 
   Link * lp = static_cast< Link * >( alloc_ptr );
 
   // Insert a single chunk at the head of the freelist.
   insert_list( lp, lp, l );
+
+#ifdef KOKKOS_MEMPOOLLIST_PRINT_INFO
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+  long val = Kokkos::atomic_fetch_add( &m_count, -1 ) - 1;
+  printf( "deallocate(): %6ld   size: %6lu    l: %2ld       0x%lx\n", val,
+          alloc_size, l, (unsigned long) alloc_ptr );
+  fflush(stdout);
+#else
+  printf( "deallocate()   size: %6lu    l: %2ld       0x%lx\n", alloc_size, l,
+          (unsigned long) alloc_ptr );
+#endif
+#endif
 }
 
 
