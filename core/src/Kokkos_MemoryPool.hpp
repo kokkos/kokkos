@@ -263,17 +263,42 @@ private:
     // Allocate the memory including the header.
     const size_t alloc_size = total_size + header_size;
 
+#ifdef KOKKOS_MEMPOOL_PRINT_INFO
+      printf( "** Allocating total %ld bytes\n", long(alloc_size));
+      fflush( stdout );
+#endif
+
     SharedRecord * rec =
       SharedRecord::allocate( memspace, "mempool", alloc_size );
 
+#ifdef KOKKOS_MEMPOOL_PRINT_INFO
+      printf( "** Allocated total %ld bytes at 0x%lx\n"
+            , long(alloc_size)
+            , long(rec->data())
+            );
+      fflush( stdout );
+#endif
+
     m_track.assign_allocated_record_to_uninitialized( rec );
 
-    // Get the pointers into the allocated memory.
-    char * mem = reinterpret_cast<char *>( rec->data() );
-    m_chunk_size = reinterpret_cast<size_t *>( mem );
-    m_freelist = reinterpret_cast<Link **>(
+    {
+      // Get the pointers into the allocated memory.
+      char * mem = reinterpret_cast<char *>( rec->data() );
+      m_chunk_size = reinterpret_cast<size_t *>( mem );
+      m_freelist = reinterpret_cast<Link **>(
                    mem + ( num_chunk_sizes + 1 ) * sizeof(void*) );
-    m_data = mem + header_size;
+      m_data = mem + header_size;
+
+#ifdef KOKKOS_MEMPOOL_PRINT_INFO
+      printf( "** Partitioning allocation 0x%lx : m_chunk_size[0x%lx] m_freelist[0x%lx] m_data[0x%lx]\n"
+            , (unsigned long) mem
+            , (unsigned long) m_chunk_size
+            , (unsigned long) m_freelist
+            , (unsigned long) m_data
+            );
+      fflush( stdout );
+#endif
+    }
 
     // Initialize the chunk sizes array.  Create num_chunk_sizes different
     // chunk sizes where each successive chunk size is
@@ -413,7 +438,9 @@ private:
     }
   }
 
+  KOKKOS_INLINE_FUNCTION
   size_t get_min_chunk_size() const { return m_chunk_size[0]; }
+
   size_t get_mem_size() const { return m_data_size; }
 };
 
@@ -454,8 +481,19 @@ private:
 
   Impl::MemPoolList  m_memory;
 
-  typedef typename Space::memory_space  backend_memory_space ;
   typedef ExecSpace                     execution_space ;
+  typedef typename Space::memory_space  backend_memory_space ;
+
+#if defined( KOKKOS_HAVE_CUDA )
+
+  // Current implementation requires CudaUVM memory space
+  // for Cuda memory pool.
+
+  static_assert(
+    ! std::is_same< typename Space::memory_space , Kokkos::CudaSpace >::value ,
+    "Kokkos::MemoryPool currently cannot use Kokkos::CudaSpace, you must use Kokkos::CudaUVMSpace" );
+
+#endif
 
 public:
 
@@ -476,8 +514,10 @@ public:
   /// \param base_chunk_size  Hand out memory in chunks of this size.
   /// \param total_size       Total size of the pool.
   MemoryPool( const backend_memory_space & memspace,
-              size_t base_chunk_size, size_t total_size,
-              size_t num_chunk_sizes = 4, size_t chunk_spacing = 4 )
+              size_t base_chunk_size,
+              size_t total_size,
+              size_t num_chunk_sizes = 4,
+              size_t chunk_spacing = 4 )
     : m_memory( memspace, execution_space(), base_chunk_size, total_size,
                 num_chunk_sizes, chunk_spacing )
   {}
@@ -494,12 +534,16 @@ public:
   void deallocate( void * const alloc_ptr, const size_t alloc_size ) const
   { m_memory.deallocate( alloc_ptr, alloc_size ); }
 
+  /// \brief  Is out of memory at this instant
   KOKKOS_INLINE_FUNCTION
   bool is_empty() const { return m_memory.is_empty(); }
 
-  // The following three functions are used for debugging.
-  void print_status() const { m_memory.print_status(); }
+  /// \brief  Minimum chunk size allocatable.
+  KOKKOS_INLINE_FUNCTION
   size_t get_min_chunk_size() const { return m_memory.get_min_chunk_size(); }
+
+  // The following unctions are used for debugging.
+  void print_status() const { m_memory.print_status(); }
   size_t get_mem_size() const { return m_memory.get_mem_size(); }
 };
 
