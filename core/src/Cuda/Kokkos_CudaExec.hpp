@@ -214,6 +214,9 @@ struct CudaParallelLaunch< DriverType , true > {
         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: Functor is too large") );
       }
 
+      // Fence before changing settings and copying closure
+      Kokkos::Cuda::fence();
+
       if ( CudaTraits::SharedMemoryCapacity < shmem ) {
         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
       }

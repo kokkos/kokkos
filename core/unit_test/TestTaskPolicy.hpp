@@ -74,6 +74,8 @@ struct FibChild {
   inline
   void apply( value_type & result )
     {
+      typedef Kokkos::Experimental::Future<long,ExecSpace> future_type ;
+
       if ( n < 2 ) {
 
         has_nested = -1 ;
@@ -83,17 +85,32 @@ struct FibChild {
       else {
         if ( has_nested == 0 ) {
           // Spawn new children and respawn myself to sum their results:
-          has_nested = 2 ;
+          // Spawn lower value at higher priority as it has a shorter
+          // path to completion.
+          if ( fib_2.is_null() ) {
+            fib_2 = policy.create( FibChild(policy,n-2) );
+          }
 
-          fib_1 = Kokkos::Experimental::spawn( policy , FibChild(policy,n-1) );
-          fib_2 = Kokkos::Experimental::spawn( policy , FibChild(policy,n-2) );
+          if ( ! fib_2.is_null() && fib_1.is_null() ) {
+            fib_1 = policy.create( FibChild(policy,n-1) );
+          }
 
-          Kokkos::Experimental::respawn
-            ( policy
-            , this
-            , fib_1
-            , fib_2
-            );
+          if ( ! fib_1.is_null() ) {
+            has_nested = 2 ;
+
+            policy.spawn( fib_2 , true /* high priority */ );
+            policy.spawn( fib_1 );
+            policy.add_dependence( this , fib_1 );
+            policy.add_dependence( this , fib_2 );
+            policy.respawn( this );
+          }
+          else {
+            // Release task memory before spawning the task,
+            // after spawning memory cannot be released.
+            fib_2 = future_type();
+            // Respawn when more memory is available
+            policy.respawn_needing_memory( this );
+          }
         }
         else if ( has_nested == 2 ) {
 
@@ -139,10 +156,13 @@ struct FibChild2 {
           // Spawn new children and respawn myself to sum their results:
           // result = Fib(n-1) + Fib(n-2)
           has_nested = 2 ;
-          // Kokkos::respawn implements the following steps:
+
+          // Spawn lower value at higher priority as it has a shorter
+          // path to completion.
+
           policy.clear_dependence( this );
-          fib_a = Kokkos::Experimental::spawn( policy , FibChild2(policy,n-1) );
-          fib_b = Kokkos::Experimental::spawn( policy , FibChild2(policy,n-2) );
+          fib_a = policy.spawn( policy.create( FibChild2(policy,n-1) ) );
+          fib_b = policy.spawn( policy.create( FibChild2(policy,n-2) ) , true );
           policy.add_dependence( this , fib_a );
           policy.add_dependence( this , fib_b );
           policy.respawn( this );
@@ -154,10 +174,13 @@ struct FibChild2 {
           // result = ( ( Fib(n-3) + Fib(n-4) ) + Fib(n-3) ) + ( Fib(n-3) + Fib(n-4) )
           // result = 3 * Fib(n-3) + 2 * Fib(n-4)
           has_nested = 4 ;
-          // Kokkos::Experimental::respawn implements the following steps:
+
+          // Spawn lower value at higher priority as it has a shorter
+          // path to completion.
+
           policy.clear_dependence( this );
-          fib_a = Kokkos::Experimental::spawn( policy , FibChild2(policy,n-3) );
-          fib_b = Kokkos::Experimental::spawn( policy , FibChild2(policy,n-4) );
+          fib_a = policy.spawn( policy.create( FibChild2(policy,n-3) ) );
+          fib_b = policy.spawn( policy.create( FibChild2(policy,n-4) ) , true );
           policy.add_dependence( this , fib_a );
           policy.add_dependence( this , fib_b );
           policy.respawn( this );
@@ -180,16 +203,18 @@ namespace {
 
 long eval_fib( long n )
 {
-  if ( n < 2 ) return n ;
+  if ( 2 <= n ) {
+    std::vector<long> fib(n+1);
 
-  std::vector<long> fib(n+1);
+    fib[0] = 0 ;
+    fib[1] = 1 ;
 
-  fib[0] = 0 ;
-  fib[1] = 1 ;
+    for ( long i = 2 ; i <= n ; ++i ) { fib[i] = fib[i-2] + fib[i-1]; }
 
-  for ( long i = 2 ; i <= n ; ++i ) { fib[i] = fib[i-2] + fib[i-1]; }
+    n = fib[n] ;
+  }
 
-  return fib[n];
+  return n ;
 }
 
 }
@@ -197,7 +222,7 @@ long eval_fib( long n )
 template< class ExecSpace >
 void test_fib( long n )
 {
-  const unsigned task_max_count  = 1024 ;
+  const unsigned task_max_count  = 16 ; // 1024 ;
   const unsigned task_max_size   = 256 ;
   const unsigned task_dependence = 4 ;
 
@@ -206,7 +231,8 @@ void test_fib( long n )
           , task_max_size
           , task_dependence );
 
-  Kokkos::Experimental::Future<long,ExecSpace> f = Kokkos::Experimental::spawn( policy , FibChild<ExecSpace>(policy,n) );
+  Kokkos::Experimental::Future<long,ExecSpace> f =
+    policy.spawn( policy.create( FibChild<ExecSpace>(policy,n) ) );
 
   Kokkos::Experimental::wait( policy );
 
@@ -229,7 +255,8 @@ void test_fib2( long n )
           , task_max_size
           , task_dependence );
 
-  Kokkos::Experimental::Future<long,ExecSpace> f = Kokkos::Experimental::spawn( policy , FibChild2<ExecSpace>(policy,n) );
+  Kokkos::Experimental::Future<long,ExecSpace> f =
+    policy.spawn( policy.create( FibChild2<ExecSpace>(policy,n) ) );
 
   Kokkos::Experimental::wait( policy );
 
@@ -278,7 +305,8 @@ void test_norm2( const int n )
 
   Kokkos::RangePolicy<ExecSpace> r(0,n);
 
-  Kokkos::Experimental::Future<double,ExecSpace> f = Kokkos::Experimental::spawn_reduce( policy , r , Norm2<ExecSpace>(x) );
+  Kokkos::Experimental::Future<double,ExecSpace> f =
+    Kokkos::Experimental::spawn_reduce( policy , r , Norm2<ExecSpace>(x) );
 
   Kokkos::Experimental::wait( policy );
 
@@ -344,7 +372,8 @@ void test_task_dep( const int n )
 
     for ( int j = 0 ; j < n ; ++j ) {
 
-      Kokkos::Experimental::Future<int,Space> nested = policy.create( TaskDep<Space>(policy,j+1) );
+      Kokkos::Experimental::Future<int,Space> nested =
+        policy.create( TaskDep<Space>(policy,j+1) );
 
       policy.spawn( nested );
 

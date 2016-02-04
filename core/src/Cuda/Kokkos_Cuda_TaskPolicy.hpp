@@ -586,7 +586,8 @@ public:
 
   template< class ValueType >
   const Future< ValueType , execution_space > &
-    spawn( const Future< ValueType , execution_space > & f ) const
+    spawn( const Future< ValueType , execution_space > & f 
+         , const bool priority = false ) const
       {
         f.m_task->schedule();
         return f ;
@@ -594,7 +595,8 @@ public:
 
   template< class FunctorType >
   KOKKOS_INLINE_FUNCTION
-  void respawn( FunctorType * task_functor ) const
+  void respawn( FunctorType * task_functor 
+              , const bool priority = false ) const
     { get_task_root(task_functor)->reschedule(); }
 
   //----------------------------------------
