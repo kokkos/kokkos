@@ -44,7 +44,7 @@
 #ifndef KOKKOS_MEMORYPOOL_CPP
 #define KOKKOS_MEMORYPOOL_CPP
 
-#define KOKKOS_MEMPOOLLIST_LOCK reinterpret_cast<Link*>( ~uintptr_t(0) )
+#define KOKKOS_MEMPOOLLIST_LOCK reinterpret_cast<Link *>( ~uintptr_t(0) )
 
 // How should errors be handled?  In general, production code should return a
 // value indicating failure so the user can decide how the error is handled.
@@ -109,7 +109,7 @@ void MemPoolList::insert_list( Link * lp_head, Link * lp_tail, size_t list ) con
 
       // Proactively assign lp->m_next assuming a successful insertion into
       // the list.
-      *reinterpret_cast< Link * volatile * >(&(lp_tail->m_next)) = old_head;
+      *reinterpret_cast<Link * volatile *>( &(lp_tail->m_next) ) = old_head;
 
       memory_fence();
 
@@ -142,7 +142,7 @@ void * MemPoolList::allocate( size_t alloc_size ) const
 
 #ifdef KOKKOS_MEMPOOLLIST_PRINTERR
   if ( m_chunk_size[l_exp] == 0 ) {
-    Kokkos::abort("\n** MemoryPool::allocate() REQUESTED_SIZE_TOO_LARGE **\n" );
+    Kokkos::abort( "\n** MemoryPool::allocate() REQUESTED_SIZE_TOO_LARGE **\n" );
   }
 #endif
 
@@ -194,16 +194,20 @@ void * MemPoolList::allocate( size_t alloc_size ) const
             // be returned to satisfy the allocaiton request.  The remainder
             // of the chunks will be inserted onto the appropriate freelist.
             size_t num_chunks = m_chunk_size[l] / m_chunk_size[l_exp];
-            char * pchar = (char *) old_head;
+            char * pchar = reinterpret_cast<char *>( old_head );
 
             // Link the chunks following the first chunk to form a list.
-            for (size_t i = 2; i < num_chunks; ++i) {
-              Link * chunk = (Link *) (pchar + (i - 1) * m_chunk_size[l_exp]);
-              chunk->m_next = (Link *) (pchar + i * m_chunk_size[l_exp]);
+            for ( size_t i = 2; i < num_chunks; ++i ) {
+              Link * chunk =
+                reinterpret_cast<Link *>( pchar + (i - 1) * m_chunk_size[l_exp] );
+
+              chunk->m_next =
+                reinterpret_cast<Link *>( pchar + i * m_chunk_size[l_exp] );
             }
 
-            Link * lp_head = (Link *) (pchar + m_chunk_size[l_exp]);
-            Link * lp_tail = (Link *) (pchar + (num_chunks - 1) * m_chunk_size[l_exp]);
+            Link * lp_head = reinterpret_cast<Link *>( pchar + m_chunk_size[l_exp] );
+            Link * lp_tail =
+              reinterpret_cast<Link *>( pchar + (num_chunks - 1) * m_chunk_size[l_exp] );
 
             // Insert the list of chunks at the head of the freelist.
             insert_list( lp_head, lp_tail, l_exp );
@@ -211,7 +215,7 @@ void * MemPoolList::allocate( size_t alloc_size ) const
 
           // Get a local copy of the second entry in the list.
           Link * const head_next =
-            *reinterpret_cast< Link * volatile * >(&(old_head->m_next));
+            *reinterpret_cast<Link * volatile *>( &(old_head->m_next) );
 
           // Replace the lock with the next entry on the list.
           Link * const lock_head =
@@ -221,7 +225,7 @@ void * MemPoolList::allocate( size_t alloc_size ) const
 #ifdef KOKKOS_MEMPOOLLIST_PRINTERR
             // We shouldn't get here, but this check is here for sanity.
             printf( "\n** MemoryPool::allocate() UNLOCK_ERROR(0x%lx) **\n",
-                    (unsigned long) freelist );
+                    reinterpret_cast<unsigned long>( freelist ) );
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
             fflush( stdout );
 #endif
@@ -229,7 +233,7 @@ void * MemPoolList::allocate( size_t alloc_size ) const
 #endif
           }
 
-          *reinterpret_cast< Link * volatile * >(&(old_head->m_next)) = 0;
+          *reinterpret_cast<Link * volatile *>( &(old_head->m_next) ) = 0;
           p = old_head;
           removed = true;
         }
@@ -250,17 +254,17 @@ void * MemPoolList::allocate( size_t alloc_size ) const
 #ifdef KOKKOS_MEMPOOLLIST_PRINT_INFO
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
         long val = Kokkos::atomic_fetch_add( &m_count, 1 );
-        printf( "  allocate(): %6ld   size: %6lu    l: %2ld  %2ld   0x%lx\n",
-                val, alloc_size, l_exp, l, (unsigned long) p );
-        fflush(stdout);
+        printf( "  allocate(): %6ld   size: %6lu    l: %2lu  %2lu   0x%lx\n",
+                val, alloc_size, l_exp, l, reinterpret_cast<unsigned long>( p ) );
+        fflush( stdout );
 #else
-        printf( "  allocate()   size: %6lu    l: %2ld  %2ld   0x%lx\n",
-                alloc_size, l_exp, l, (unsigned long) p );
+        printf( "  allocate()   size: %6lu    l: %2lu  %2lu   0x%lx\n",
+                alloc_size, l_exp, l, reinterpret_cast<unsigned long>( p ) );
 #endif
 #endif
 
 #ifdef KOKKOS_MEMPOOLLIST_PRINTERR
-        Kokkos::abort("\n** MemoryPool::allocate() NO_CHUNKS_BIG_ENOUGH **\n" );
+        Kokkos::abort( "\n** MemoryPool::allocate() NO_CHUNKS_BIG_ENOUGH **\n" );
 #endif
       }
       else {
@@ -272,12 +276,12 @@ void * MemPoolList::allocate( size_t alloc_size ) const
 #ifdef KOKKOS_MEMPOOLLIST_PRINT_INFO
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
   long val = Kokkos::atomic_fetch_add( &m_count, 1 );
-  printf( "  allocate(): %6ld   size: %6lu    l: %2ld  %2ld   0x%lx\n", val,
-          alloc_size, l_exp, l, (unsigned long) p );
-  fflush(stdout);
+  printf( "  allocate(): %6ld   size: %6lu    l: %2lu  %2lu   0x%lx\n", val,
+          alloc_size, l_exp, l, reinterpret_cast<unsigned long>( p ) );
+  fflush( stdout );
 #else
-  printf( "  allocate()   size: %6lu    l: %2ld  %2ld   0x%lx\n", alloc_size,
-          l_exp, l, (unsigned long) p );
+  printf( "  allocate()   size: %6lu    l: %2lu  %2lu   0x%lx\n", alloc_size,
+          l_exp, l, reinterpret_cast<unsigned long>( p ) );
 #endif
 #endif
 
@@ -291,11 +295,11 @@ void MemPoolList::deallocate( void * alloc_ptr, size_t alloc_size ) const
 #ifdef KOKKOS_MEMPOOLLIST_PRINTERR
   // Verify that the pointer is controlled by this pool.
   {
-    char * ap = (char *) alloc_ptr;
+    char * ap = static_cast<char *>( alloc_ptr );
 
     if ( ap < m_data || ap + alloc_size > m_data + m_data_size ) {
       printf( "\n** MemoryPool::deallocate() ADDRESS_OUT_OF_RANGE(0x%lx) **\n",
-              (unsigned long) alloc_ptr );
+              reinterpret_cast<unsigned long>( alloc_ptr ) );
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
       fflush( stdout );
 #endif
@@ -312,7 +316,7 @@ void MemPoolList::deallocate( void * alloc_ptr, size_t alloc_size ) const
 
 #ifdef KOKKOS_MEMPOOLLIST_PRINTERR
   if ( m_chunk_size[l] == 0 ) {
-    printf( "\n** MemoryPool::deallocate() CHUNK_TOO_LARGE(%ld) **\n", alloc_size );
+    printf( "\n** MemoryPool::deallocate() CHUNK_TOO_LARGE(%lu) **\n", alloc_size );
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     fflush( stdout );
 #endif
@@ -320,7 +324,7 @@ void MemPoolList::deallocate( void * alloc_ptr, size_t alloc_size ) const
   }
 #endif
 
-  Link * lp = static_cast< Link * >( alloc_ptr );
+  Link * lp = static_cast<Link *>( alloc_ptr );
 
   // Insert a single chunk at the head of the freelist.
   insert_list( lp, lp, l );
@@ -328,12 +332,12 @@ void MemPoolList::deallocate( void * alloc_ptr, size_t alloc_size ) const
 #ifdef KOKKOS_MEMPOOLLIST_PRINT_INFO
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
   long val = Kokkos::atomic_fetch_add( &m_count, -1 ) - 1;
-  printf( "deallocate(): %6ld   size: %6lu    l: %2ld       0x%lx\n", val,
-          alloc_size, l, (unsigned long) alloc_ptr );
-  fflush(stdout);
+  printf( "deallocate(): %6ld   size: %6lu    l: %2lu       0x%lx\n", val,
+          alloc_size, l, reinterpret_cast<unsigned long>( alloc_ptr ) );
+  fflush( stdout );
 #else
-  printf( "deallocate()   size: %6lu    l: %2ld       0x%lx\n", alloc_size, l,
-          (unsigned long) alloc_ptr );
+  printf( "deallocate()   size: %6lu    l: %2lu       0x%lx\n", alloc_size, l,
+          reinterpret_cast<unsigned long>( alloc_ptr ) );
 #endif
 #endif
 }

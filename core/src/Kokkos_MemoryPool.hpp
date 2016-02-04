@@ -44,6 +44,8 @@
 #ifndef KOKKOS_MEMORYPOOL_HPP
 #define KOKKOS_MEMORYPOOL_HPP
 
+#include <vector>
+
 #include <Kokkos_Core_fwd.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/KokkosExp_SharedAlloc.hpp>
@@ -58,6 +60,10 @@
 #define KOKKOS_MEMPOOL_PRINTERR
 
 //#define KOKKOS_MEMPOOL_PRINT_INFO
+
+#ifdef KOKKOS_MEMPOOL_PRINT_INFO
+#include <cmath>
+#endif
 
 //----------------------------------------------------------------------------
 
@@ -85,15 +91,24 @@ struct print_mempool {
   void operator()( size_t i ) const
   {
     if ( i == 0 ) {
-      printf( "*** ON DEVICE ***\n");
-      printf( "m_chunk_size: 0x%lx\n", m_chunk_size );
-      printf( "  m_freelist: 0x%lx\n", m_freelist );
-      printf( "      m_data: 0x%lx\n", m_data );
-      for ( size_t l = 0; l < m_num_chunk_sizes; ++l ) {
-        printf( "%2ld    freelist: 0x%lx    chunk_size: %6ld\n",
-                l, m_freelist[l], m_chunk_size[l] );
+      // Get the padding size for printing an address.
+      char padding[32];
+      double ds = static_cast<double>( reinterpret_cast<unsigned long>( m_data ) );
+      size_t padding_size = static_cast<size_t>( ceil( ceil( log2( ds ) ) / 4 ) + 2 );
+      for ( size_t j = 0; j < padding_size; ++j ) {
+        padding[j] = ' ';
       }
-      printf( "                               chunk_size: %6ld\n\n",
+      padding[padding_size] = '\0';
+
+      printf( "*** ON DEVICE ***\n");
+      printf( "m_chunk_size: 0x%lx\n", reinterpret_cast<unsigned long>( m_chunk_size ) );
+      printf( "  m_freelist: 0x%lx\n", reinterpret_cast<unsigned long>( m_freelist ) );
+      printf( "      m_data: 0x%lx\n", reinterpret_cast<unsigned long>( m_data ) );
+      for ( size_t l = 0; l < m_num_chunk_sizes; ++l ) {
+        printf( "%2lu    freelist: 0x%lx    chunk_size: %6lu\n",
+                l, reinterpret_cast<unsigned long>( m_freelist[l] ), m_chunk_size[l] );
+      }
+      printf( "%s                    chunk_size: %6lu\n\n", padding,
               m_chunk_size[m_num_chunk_sizes] );
     }
   }
@@ -113,13 +128,12 @@ struct initialize_mempool {
   KOKKOS_INLINE_FUNCTION
   void operator()( size_t i ) const
   {
-    Link * lp = reinterpret_cast< Link * >(m_data + i * m_chunk_size);
+    Link * lp = reinterpret_cast<Link *>( m_data + i * m_chunk_size );
 
     // All entries in the list point to the next entry except the last which
     // is null.
     lp->m_next = i < m_last_chunk ?
-                 reinterpret_cast< Link * >( m_data + (i + 1) * m_chunk_size ) :
-                 reinterpret_cast< Link * >(0);
+                 reinterpret_cast<Link *>( m_data + (i + 1) * m_chunk_size ) : 0;
   }
 };
 
@@ -170,27 +184,34 @@ private:
     : m_track(), m_chunk_size(0), m_freelist(0), m_data(0), m_data_size(0),
       m_chunk_spacing(chunk_spacing)
   {
+    enum { MIN_CHUNK_SIZE = 128 };
+
+    static_assert( sizeof(size_t) <= sizeof(void*), "" );
+
     typedef Impl::SharedAllocationRecord< MemorySpace, void >  SharedRecord;
     typedef Kokkos::RangePolicy< ExecutionSpace >              Range;
 
-    // The base chunk size must be at least 128 bytes as this is the cache-line
-    // size for NVIDA GPUs.
-    if ( base_chunk_size < 128 ) {
-      printf( "** Chunk size must be at least 128 bytes.  Setting to 128. **\n" );
+    // The base chunk size must be at least MIN_CHUNK_SIZE bytes as this is the
+    // cache-line size for NVIDA GPUs.
+    if ( base_chunk_size < MIN_CHUNK_SIZE ) {
+      printf( "** Chunk size must be at least %u bytes.  Setting to %u. **\n",
+              MIN_CHUNK_SIZE, MIN_CHUNK_SIZE);
       fflush( stdout );
 
-      base_chunk_size = 128;
+      base_chunk_size = MIN_CHUNK_SIZE;
     }
 
-    // The base chunk size must also be a multiple of 128 bytes for correct
-    // memory alignment of the chunks.  If it isn't a multiple of 128, set it
-    // to the smallest multiple of 128 greater than the given chunk size.
-    if ( base_chunk_size % 128 != 0 ) {
+    // The base chunk size must also be a multiple of MIN_CHUNK_SIZE bytes for
+    // correct memory alignment of the chunks.  If it isn't a multiple of
+    // MIN_CHUNK_SIZE, set it to the smallest multiple of MIN_CHUNK_SIZE
+    // greater than the given chunk size.
+    if ( base_chunk_size % MIN_CHUNK_SIZE != 0 ) {
       size_t old_chunk_size = base_chunk_size;
-      base_chunk_size = ( ( old_chunk_size + 127 ) / 128 ) * 128;
+      base_chunk_size = ( ( old_chunk_size + MIN_CHUNK_SIZE - 1 ) / MIN_CHUNK_SIZE ) *
+                        MIN_CHUNK_SIZE;
 
-      printf( "** Chunk size must be a multiple of 128 bytes.  Given: %ld  Using: %ld. **\n",
-              old_chunk_size, base_chunk_size);
+      printf( "** Chunk size must be a multiple of %u bytes.  Given: %lu  Using: %lu. **\n",
+              MIN_CHUNK_SIZE, old_chunk_size, base_chunk_size);
       fflush( stdout );
     }
 
@@ -222,11 +243,12 @@ private:
     //   Link *  freelist[num_chunk_sizes]
 
     // Calculate the size of the header where the size is rounded up to the
-    // smallest multiple of base_chunk_size >= the needed size.  Assume all
-    // types are 8 bytes to give ample space.
-    const size_t header_bytes = ( 2 * num_chunk_sizes + 1 ) * 8;
+    // smallest multiple of base_chunk_size >= the needed size.  The size of the
+    // chunk size array is calculated using sizeof(void*) to guarantee alignment
+    // for the freelist array.  This assumes sizeof(size_t) <= sizeof(void*).
+    const size_t header_bytes = ( 2 * num_chunk_sizes + 1 ) * sizeof(void*);
     const size_t header_size =
-      (header_bytes + base_chunk_size - 1 ) / base_chunk_size * base_chunk_size;
+      ( header_bytes + base_chunk_size - 1 ) / base_chunk_size * base_chunk_size;
 
     // Allocate the memory including the header.
     const size_t alloc_size = total_size + header_size;
@@ -236,15 +258,11 @@ private:
 
     m_track.assign_allocated_record_to_uninitialized( rec );
 
-    // TODO: I'm not sure that sizes of types are the same on host and device.
-    //       Will the pointer arithmetic hold on both host and device?  If
-    //       size_t is a different size on host and device, how do I handle
-    //       that?
-
     // Get the pointers into the allocated memory.
-    char * mem = reinterpret_cast< char * >( rec->data() );
-    m_chunk_size = reinterpret_cast< size_t * >( mem );
-    m_freelist = reinterpret_cast< Link ** >( mem + ( num_chunk_sizes + 1 ) * 8 );
+    char * mem = reinterpret_cast<char *>( rec->data() );
+    m_chunk_size = reinterpret_cast<size_t *>( mem );
+    m_freelist = reinterpret_cast<Link **>(
+                   mem + ( num_chunk_sizes + 1 ) * sizeof(void*) );
     m_data = mem + header_size;
 
     // Initialize the chunk sizes array.  Create num_chunk_sizes different
@@ -257,7 +275,7 @@ private:
     }
     m_chunk_size[num_chunk_sizes] = 0;
 
-    size_t * num_chunks = new size_t[num_chunk_sizes];
+    std::vector<size_t> num_chunks(num_chunk_sizes);
 
     // Set the starting point in memory and get the number of chunks for each
     // freelist.  Start with the largest chunk size to ensure usage of all the
@@ -267,7 +285,7 @@ private:
     for ( size_t i = num_chunk_sizes; i > 0; --i ) {
       // Set the starting point in the memory for the current chunk sizes's
       // freelist.
-      m_freelist[i - 1] = reinterpret_cast< Link * >( m_data + used_memory );
+      m_freelist[i - 1] = reinterpret_cast<Link *>( m_data + used_memory );
 
       size_t mem_avail =
         total_size - (i - 1) * ( total_size / num_chunk_sizes ) - used_memory;
@@ -279,23 +297,33 @@ private:
     }
 
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
+    // Get the padding size for printing an address.
+    char padding[32];
+    double ds = static_cast<double>( reinterpret_cast<unsigned long>( m_data ) );
+    size_t padding_size = static_cast<size_t>( ceil( ceil( log2( ds ) ) / 4 ) + 2 );
+    for ( size_t j = 0; j < padding_size; ++j ) {
+      padding[j] = ' ';
+    }
+    padding[padding_size] = '\0';
+
     printf( "\n" );
     printf( "*** ON HOST ***\n");
-    printf( "m_chunk_size: 0x%lx\n", m_chunk_size );
-    printf( "  m_freelist: 0x%lx\n", m_freelist );
-    printf( "      m_data: 0x%lx\n", m_data );
+    printf( "m_chunk_size: 0x%lx\n", reinterpret_cast<unsigned long>( m_chunk_size ) );
+    printf( "  m_freelist: 0x%lx\n", reinterpret_cast<unsigned long>( m_freelist ) );
+    printf( "      m_data: 0x%lx\n", reinterpret_cast<unsigned long>( m_data ) );
     for ( size_t i = 0; i < num_chunk_sizes; ++i ) {
-      printf( "%2ld    freelist: 0x%lx    chunk_size: %6ld    num_chunks: %8ld\n",
-              i, (unsigned long) m_freelist[i], m_chunk_size[i], num_chunks[i] );
+      printf( "%2lu    freelist: 0x%lx    chunk_size: %6lu    num_chunks: %8lu\n",
+              i, reinterpret_cast<unsigned long>( m_freelist[i] ), m_chunk_size[i],
+              num_chunks[i] );
     }
-    printf( "                               chunk_size: %6ld\n\n",
+    printf( "%s                    chunk_size: %6lu\n\n", padding,
             m_chunk_size[num_chunk_sizes] );
     fflush( stdout );
 #endif
 
 #ifdef KOKKOS_MEMPOOL_PRINTERR
     if ( used_memory != total_size ) {
-      printf( "\n** MemoryPool::MemoryPool() USED_MEMORY(%ld) != TOTAL_SIZE(%ld) **\n",
+      printf( "\n** MemoryPool::MemoryPool() USED_MEMORY(%lu) != TOTAL_SIZE(%lu) **\n",
               used_memory, total_size );
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
       fflush( stdout );
@@ -309,7 +337,9 @@ private:
       // Initialize the next pointers to point to the next chunk for all but the
       // last chunk which has points to NULL.
       initialize_mempool< Link >
-        im( (char *) m_freelist[i], m_chunk_size[i], num_chunks[i] - 1 );
+        im( reinterpret_cast<char *>( m_freelist[i] ),
+            m_chunk_size[i], num_chunks[i] - 1 );
+
       Kokkos::Impl::ParallelFor< initialize_mempool< Link >, Range >
         closure( im, Range( 0, num_chunks[i] ) );
 
@@ -317,8 +347,6 @@ private:
 
       ExecutionSpace::fence();
     }
-
-    delete [] num_chunks;
 
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
     print_mempool < Link > pm( num_chunk_sizes, m_chunk_size, m_freelist, m_data );
@@ -368,7 +396,7 @@ private:
         chunk = chunk->m_next;
       }
 
-      printf( "chunk_size: %6ld    num_chunks: %8ld\n", m_chunk_size[l], count );
+      printf( "chunk_size: %6lu    num_chunks: %8lu\n", m_chunk_size[l], count );
     }
   }
 
