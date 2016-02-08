@@ -65,6 +65,7 @@ template<>
 class TaskMember< Kokkos::Threads , void , void > {
 public:
 
+  template < class > friend class Kokkos::Experimental::TaskPolicy ;
   friend struct ThreadsTaskPolicyQueue ;
 
   typedef TaskMember * (* function_verify_type) ( TaskMember * );
@@ -73,12 +74,7 @@ public:
 
 private:
 
-  template < class > friend class Kokkos::Experimental::TaskPolicy ;
 
-  // Needed to disambiguate references to base class variables
-  // without triggering a false-positive on Intel compiler warning #955.
-  typedef TaskMember< Kokkos::Threads , void , void > SelfType ;
-  
   ThreadsTaskPolicyQueue * m_policy ;
   TaskMember * volatile  * m_queue ;
   function_verify_type     m_verify ;
@@ -120,6 +116,8 @@ protected:
 
 public:
 
+  ~TaskMember();
+
   template< typename ResultType >
   KOKKOS_FUNCTION static
   TaskMember * verify_type( TaskMember * t )
@@ -138,8 +136,6 @@ public:
       }
       return t ;
     }
-
-  ~TaskMember();
 
   //----------------------------------------
   /*  Inheritence Requirements on task types:
@@ -267,10 +263,11 @@ public:
   TaskMember * get_dependence( int i ) const ;
 
   KOKKOS_INLINE_FUNCTION
-  int get_dependence() const
-    { return m_dep_size ; }
+  int get_dependence() const { return m_dep_size ; }
 
   void clear_dependence();
+
+  void latch_add( const int k );
 
   //----------------------------------------
 
@@ -278,6 +275,9 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   get_result_type get() const { return get_result_type() ; }
+
+  inline static
+  void construct_result( TaskMember * const ) {}
 
   KOKKOS_INLINE_FUNCTION
   Kokkos::Experimental::TaskState get_state() const { return Kokkos::Experimental::TaskState( m_state ); }
@@ -304,10 +304,18 @@ public:
   KOKKOS_INLINE_FUNCTION
   get_result_type get() const { return m_result ; }
 
+  inline static
+  void construct_result( TaskMember * const ptr )
+    { 
+      new((void*)(& ptr->m_result)) result_type();
+    }
+
   inline
   TaskMember() : TaskMember< Kokkos::Threads , void , void >(), m_result() {}
 
+  TaskMember( TaskMember && ) = delete ;
   TaskMember( const TaskMember & ) = delete ;
+  TaskMember & operator = ( TaskMember && ) = delete ;
   TaskMember & operator = ( const TaskMember & ) = delete ;
 };
 
@@ -330,6 +338,23 @@ public:
     : TaskMember< Kokkos::Threads , ResultType , void >()
     , functor_type( arg_functor )
     {}
+
+  inline static
+  void copy_construct( TaskMember * const ptr
+                     , const functor_type & arg_functor )
+    {
+      typedef TaskMember< Kokkos::Threads , ResultType , void > base_type ;
+
+      new((void*)static_cast<FunctorType*>(ptr)) functor_type( arg_functor );
+
+      base_type::construct_result( static_cast<base_type*>( ptr ) );
+    }
+
+  TaskMember() = delete ;
+  TaskMember( TaskMember && ) = delete ;
+  TaskMember( const TaskMember & ) = delete ;
+  TaskMember & operator = ( TaskMember && ) = delete ;
+  TaskMember & operator = ( const TaskMember & ) = delete ;
 };
 
 //----------------------------------------------------------------------------
@@ -347,17 +372,23 @@ struct ThreadsTaskPolicyQueue {
   memory_space     m_space ;
   task_root_type * m_team[ NPRIORITY ];
   task_root_type * m_serial[ NPRIORITY ];
-  int     volatile m_count_ready ;  ///< Ready plus executing tasks
   int              m_team_size ;    ///< Fixed size of a task-team
   int              m_default_dependence_capacity ;
+  int     volatile m_count_ready ;  ///< Ready plus executing tasks
 
   // Execute tasks until all non-waiting tasks are complete.
   static void driver( Kokkos::Impl::ThreadsExec & exec
                     , const void * arg );
 
-  void * allocate_task( unsigned );
+  task_root_type * allocate_task
+   ( const unsigned arg_sizeof_task
+   , const unsigned arg_dep_capacity
+   , const unsigned arg_team_shmem
+   );
+
   void deallocate_task( void * , unsigned );
-  void schedule_task( task_root_type * const );
+  void schedule_task( task_root_type * const
+                    , const bool initial_spawn = true );
   void reschedule_task( task_root_type * const );
   void add_dependence( task_root_type * const after
                      , task_root_type * const before );
@@ -453,39 +484,23 @@ private:
         , const unsigned                                  arg_dependence_capacity
         )
     {
-      enum { padding_size = sizeof(DerivedTaskType) % sizeof(task_root_type*)
-                          ? sizeof(task_root_type*) - sizeof(DerivedTaskType) % sizeof(task_root_type*) : 0 };
-      enum { derived_size = sizeof(DerivedTaskType) + padding_size };
+      task_root_type * const t =
+        m_policy->allocate_task( sizeof(DerivedTaskType)
+                               , arg_dependence_capacity
+                               , arg_team_shmem
+                               );
+      if ( t != 0 ) {
 
-      const unsigned dep_capacity
-        = ~0u == arg_dependence_capacity
-        ? m_policy->m_default_dependence_capacity
-        : arg_dependence_capacity ;
+        DerivedTaskType * const task = static_cast<DerivedTaskType*>(t);
 
-      const unsigned size_alloc =
-        derived_size + sizeof(task_root_type*) * dep_capacity ;
+        DerivedTaskType::copy_construct( task , arg_functor );
 
-      void * const ptr = m_policy->allocate_task( size_alloc );
+        task->task_root_type::m_verify  = & task_root_type::template verify_type< typename DerivedTaskType::value_type > ;
+        task->task_root_type::m_team    = arg_apply_team ;
+        task->task_root_type::m_serial  = arg_apply_single ;
 
-      task_root_type * t = 0 ;
-
-      if ( ptr != 0 ) {
-
-        DerivedTaskType * const task = new( ptr ) DerivedTaskType( arg_functor );
-
-        task->task_root_type::m_policy       = m_policy ;
-        task->task_root_type::m_verify       = & task_root_type::template verify_type< typename DerivedTaskType::value_type > ;
-        task->task_root_type::m_team         = arg_apply_team ;
-        task->task_root_type::m_serial       = arg_apply_single ;
-        task->task_root_type::m_dep          = (task_root_type**)( ((unsigned char *)task) + derived_size );
-        task->task_root_type::m_dep_capacity = dep_capacity ;
-        task->task_root_type::m_size_alloc   = size_alloc ;
-        task->task_root_type::m_shmem_size   = arg_team_shmem ;
-
-        for ( unsigned i = 0 ; i < dep_capacity ; ++i )
-          task->task_root_type::m_dep[i] = 0 ;
-
-        t = static_cast< task_root_type * >( task );
+        // Do not proceed until initialization is written to memory
+        Kokkos::memory_fence();
       }
       return t ;
     }
@@ -503,19 +518,20 @@ public:
     , const unsigned arg_task_team_size = 0 /* choose default */
     );
 
-  TaskPolicy() = default ;
-  TaskPolicy( TaskPolicy && rhs ) = default ;
-  TaskPolicy( const TaskPolicy & rhs ) = default ;
-  TaskPolicy & operator = ( TaskPolicy && rhs ) = default ;
-  TaskPolicy & operator = ( const TaskPolicy & rhs ) = default ;
+  KOKKOS_FUNCTION TaskPolicy() = default ;
+  KOKKOS_FUNCTION TaskPolicy( TaskPolicy && rhs ) = default ;
+  KOKKOS_FUNCTION TaskPolicy( const TaskPolicy & rhs ) = default ;
+  KOKKOS_FUNCTION TaskPolicy & operator = ( TaskPolicy && rhs ) = default ;
+  KOKKOS_FUNCTION TaskPolicy & operator = ( const TaskPolicy & rhs ) = default ;
 
+  //----------------------------------------
   // Create serial-thread task
 
   template< class FunctorType >
   KOKKOS_INLINE_FUNCTION
   Future< typename FunctorType::value_type , execution_space >
-  create( const FunctorType & functor
-        , const unsigned dependence_capacity = ~0u )
+  task_create( const FunctorType & functor
+             , const unsigned dependence_capacity = ~0u )
     {
       typedef typename FunctorType::value_type  value_type ;
       typedef Impl::TaskMember< execution_space , value_type , FunctorType >  task_type ;
@@ -533,13 +549,20 @@ public:
         );
     }
 
+  template< class FunctorType >
+  KOKKOS_INLINE_FUNCTION
+  Future< typename FunctorType::value_type , execution_space >
+  proc_create( const FunctorType & functor
+             , const unsigned dependence_capacity = ~0u )
+    { return task_create( functor , dependence_capacity ); }
+
   // Create thread-team task
 
   template< class FunctorType >
   KOKKOS_INLINE_FUNCTION
   Future< typename FunctorType::value_type , execution_space >
-  create_team( const FunctorType & functor
-             , const unsigned dependence_capacity = ~0u )
+  task_create_team( const FunctorType & functor
+                  , const unsigned dependence_capacity = ~0u )
     {
       typedef typename FunctorType::value_type  value_type ;
       typedef Impl::TaskMember< execution_space , value_type , FunctorType >  task_type ;
@@ -558,6 +581,13 @@ public:
         );
     }
 
+  template< class FunctorType >
+  KOKKOS_INLINE_FUNCTION
+  Future< typename FunctorType::value_type , execution_space >
+  proc_create_team( const FunctorType & functor
+                  , const unsigned dependence_capacity = ~0u )
+    { return task_create_team( functor , dependence_capacity ); }
+
   template< class A1 , class A2 , class A3 , class A4 >
   KOKKOS_INLINE_FUNCTION
   void add_dependence( const Future<A1,A2> & after
@@ -573,6 +603,21 @@ public:
       m_policy->add_dependence( after.m_task , before.m_task );
 #endif
     }
+
+  //----------------------------------------
+
+  Future< Latch , execution_space >
+  KOKKOS_INLINE_FUNCTION
+  create_latch( const int N ) const
+    {
+      task_root_type * const task =
+        m_policy->allocate_task( sizeof(task_root_type) , 0 , 0 );
+      task->m_dep_size = N ; // Using m_dep_size for latch counter
+      task->m_state = TASK_STATE_WAITING ;
+      return Future< Latch , execution_space >( task );
+    }
+
+  //----------------------------------------
 
   template< class FunctorType , class A3 , class A4 >
   KOKKOS_INLINE_FUNCTION
@@ -623,7 +668,7 @@ public:
   // the task that called the create method may respawn
   // with a dependence on memory becoming available.
   // This is a race as more than one task may be respawned
-  // with this dependence.
+  // with this need.
 
   template< class FunctorType >
   KOKKOS_INLINE_FUNCTION

@@ -899,7 +899,7 @@ namespace Impl {
 template< class FunctorType , class Enable = void >
 struct FunctorTeamShmemSize
 {
-  static inline size_t value( const FunctorType & , int ) { return 0 ; }
+  KOKKOS_INLINE_FUNCTION static size_t value( const FunctorType & , int ) { return 0 ; }
 };
 
 template< class FunctorType >

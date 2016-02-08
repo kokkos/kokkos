@@ -511,9 +511,10 @@ public:
   // Create single-thread task
 
   template< class FunctorType >
+  KOKKOS_INLINE_FUNCTION
   Future< typename FunctorType::value_type , execution_space >
-  create( const FunctorType & functor
-        , const unsigned dependence_capacity = ~0u ) const
+  task_create( const FunctorType & functor
+             , const unsigned dependence_capacity = ~0u ) const
     {
       typedef typename FunctorType::value_type value_type ;
       typedef Impl::TaskMember< execution_space , value_type , FunctorType >  task_type ;
@@ -528,13 +529,19 @@ public:
         );
     }
 
+  template< class FunctorType >
+  Future< typename FunctorType::value_type , execution_space >
+  proc_create( const FunctorType & functor
+             , const unsigned dependence_capacity = ~0u ) const
+    { return task_create( functor , dependence_capacity ); }
+
   // Create thread-team task
 
   template< class FunctorType >
   KOKKOS_INLINE_FUNCTION
   Future< typename FunctorType::value_type , execution_space >
-  create_team( const FunctorType & functor
-             , const unsigned dependence_capacity = ~0u ) const
+  task_create_team( const FunctorType & functor
+                  , const unsigned dependence_capacity = ~0u ) const
     {
       typedef typename FunctorType::value_type  value_type ;
       typedef Impl::TaskMember< execution_space , value_type , FunctorType >  task_type ;
@@ -550,6 +557,13 @@ public:
 #endif
         );
     }
+
+  template< class FunctorType >
+  KOKKOS_INLINE_FUNCTION
+  Future< typename FunctorType::value_type , execution_space >
+  proc_create_team( const FunctorType & functor
+                  , const unsigned dependence_capacity = ~0u ) const
+    { return task_create_team( functor , dependence_capacity ); }
 
   // Add dependence
   template< class A1 , class A2 , class A3 , class A4 >

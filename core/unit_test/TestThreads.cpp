@@ -496,5 +496,12 @@ TEST_F( threads , task_team )
   TestTaskPolicy::test_task_team< Kokkos::Threads >(1000);
 }
 
+TEST_F( threads , task_latch )
+{
+  TestTaskPolicy::test_latch< Kokkos::Threads >(10);
+  TestTaskPolicy::test_latch< Kokkos::Threads >(1000);
+}
+
 } // namespace Test
+
 #endif /* #if defined( KOKKOS_HAVE_PTHREAD ) */

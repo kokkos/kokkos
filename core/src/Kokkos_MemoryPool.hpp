@@ -107,7 +107,7 @@ private:
     : m_track()
     , m_head_list(0)
     , m_chunk_size(0)
-    , m_chunk_count( arg_chunk * ( ( arg_total + arg_chunk - 1 ) / arg_chunk ) )
+    , m_chunk_count( ( ( arg_total + arg_chunk - 1 ) / arg_chunk ) )
   {
     typedef Impl::SharedAllocationRecord< MemorySpace, void >  SharedRecord ;
     typedef Kokkos::RangePolicy< ExecutionSpace > Range ;
@@ -171,12 +171,14 @@ private:
 
 //----------------------------------------------------------------------------
 /*  Prefer to implement these functions in a separate
- *  compilation unit.  However, the 'nvcc' linker
- *  has an internal error when attempting separate compilation
- *  (--relocatable-device-code=true)
- *  of Kokkos unit tests.
+ *  compilation unit.  For CUDA this requires nvcc command
+ *  --relocatable-device-code=true
+ *  When this command is set then the macro
+ *  KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE 
+ *  is also set.
  */
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA )
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA ) && \
+    ! defined( KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE )
 
 #include <impl/Kokkos_MemoryPool_Inline.hpp>
 
