@@ -105,7 +105,10 @@ namespace Kokkos {
 		return ;
 	}
 
-	char* profileLibraryName = strtok(envProfileLibrary, ";");
+		char* envProfileCopy = (char*) malloc(sizeof(char) * (strlen(envProfileLibrary) + 1));
+		sprintf(envProfileCopy, "%s", envProfileLibrary);
+
+		char* profileLibraryName = strtok(envProfileCopy, ";");
 
         if( (NULL != profileLibraryName) && (strcmp(profileLibraryName, "") != 0) ) {
             firstProfileLibrary = dlopen(profileLibraryName, RTLD_NOW | RTLD_GLOBAL);
@@ -131,10 +134,12 @@ namespace Kokkos {
 
         if(NULL != initProfileLibrary) {
             (*initProfileLibrary)(0,
-		(uint64_t) KOKKOSP_INTERFACE_VERSION,
-		(uint32_t) 0,
-		NULL);
+			(uint64_t) KOKKOSP_INTERFACE_VERSION,
+			(uint32_t) 0,
+			NULL);
         }
+
+		free(envProfileCopy);
     };
 
     void finalize() {
