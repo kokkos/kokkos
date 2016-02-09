@@ -134,10 +134,12 @@ namespace Kokkos {
 
         if(NULL != initProfileLibrary) {
             (*initProfileLibrary)(0,
-		(uint64_t) KOKKOSP_INTERFACE_VERSION,
-		(uint32_t) 0,
-		NULL);
+			(uint64_t) KOKKOSP_INTERFACE_VERSION,
+			(uint32_t) 0,
+			NULL);
         }
+
+		free(envProfileCopy);
     };
 
     void finalize() {
