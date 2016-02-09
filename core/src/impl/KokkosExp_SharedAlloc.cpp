@@ -111,7 +111,7 @@ if ( ! ok ) {
         , reinterpret_cast< uintptr_t >( rec->m_root )
         , reinterpret_cast< uintptr_t >( rec->m_next )
         , reinterpret_cast< uintptr_t >( rec->m_prev )
-        , reinterpret_cast< uintptr_t >( rec->m_next->m_prev )
+        , reinterpret_cast< uintptr_t >( rec->m_next != NULL ? rec->m_next->m_prev : NULL )
         , reinterpret_cast< uintptr_t >( rec->m_prev != rec->m_root ? rec->m_prev->m_next : root_next )
         );
 }
