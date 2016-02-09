@@ -105,7 +105,10 @@ namespace Kokkos {
 		return ;
 	}
 
-	char* profileLibraryName = strtok(envProfileLibrary, ";");
+		char* envProfileCopy = (char*) malloc(sizeof(char) * (strlen(envProfileLibrary) + 1));
+		sprintf(envProfileCopy, "%s", envProfileLibrary);
+
+		char* profileLibraryName = strtok(envProfileCopy, ";");
 
         if( (NULL != profileLibraryName) && (strcmp(profileLibraryName, "") != 0) ) {
             firstProfileLibrary = dlopen(profileLibraryName, RTLD_NOW | RTLD_GLOBAL);
