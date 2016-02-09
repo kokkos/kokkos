@@ -188,26 +188,31 @@ struct allocate_deallocate_memory {
   typedef ExecutionSpace                       execution_space;
   typedef typename execution_space::size_type  size_type;
 
+  enum { STRIDE = 32 };
+
+  size_t m_num_max_chunks;
   size_t m_max_chunk_size;
   size_t m_min_chunk_size;
   size_t m_chunk_spacing;
   MemorySpace m_space;
 
-  allocate_deallocate_memory( size_t num_max_chunks, size_t max_cs,
+  allocate_deallocate_memory( size_t nmc, size_t max_cs,
                               size_t min_cs, size_t cs, MemorySpace & sp )
-    : m_max_chunk_size( max_cs ), m_min_chunk_size( min_cs ),
-      m_chunk_spacing( cs ), m_space( sp )
+    : m_num_max_chunks( nmc ), m_max_chunk_size( max_cs ),
+      m_min_chunk_size( min_cs ), m_chunk_spacing( cs ), m_space( sp )
   {
-    Kokkos::parallel_for( num_max_chunks, *this );
+    Kokkos::parallel_for( m_num_max_chunks * STRIDE, *this );
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator()( size_type i ) const
   {
-    for ( size_t j = m_max_chunk_size; j >= m_min_chunk_size; j /= m_chunk_spacing ) {
-      for ( size_t k = 0; k < 10; ++k ) {
-        void * mem = m_space.allocate( j );
-        m_space.deallocate( mem, j );
+    if ( i / STRIDE < m_num_max_chunks && i % STRIDE == 0 ) {
+      for ( size_t j = m_max_chunk_size; j >= m_min_chunk_size; j /= m_chunk_spacing ) {
+        for ( size_t k = 0; k < 10; ++k ) {
+          void * mem = m_space.allocate( j );
+          m_space.deallocate( mem, j );
+        }
       }
     }
   }
@@ -449,6 +454,10 @@ void test_mempool2( size_t chunk_size, size_t total_size )
   }
 
   size_t num_max_chunks = total_size / ( max_chunk_size * num_chunk_sizes );
+
+#ifdef TESTMEMORYPOOL_PRINT_STATUS
+  m_space.print_status();
+#endif
 
 #ifdef TESTMEMORYPOOL_PRINT
   timer.reset();

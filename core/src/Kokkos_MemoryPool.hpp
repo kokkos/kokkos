@@ -95,9 +95,9 @@ struct print_mempool {
       char padding[32];
       double ds = static_cast<double>( reinterpret_cast<unsigned long>( m_data ) );
       size_t padding_size = static_cast<size_t>( ceil( ceil( log2( ds ) ) / 4 ) + 2 );
-      for ( size_t j = 0; j < padding_size; ++j ) {
-        padding[j] = ' ';
-      }
+
+      // Create the padding string.
+      for ( size_t j = 0; j < padding_size; ++j ) padding[j] = ' ';
       padding[padding_size] = '\0';
 
       printf( "*** ON DEVICE ***\n");
@@ -176,7 +176,7 @@ private:
   MemPoolList & operator = ( MemPoolList && ) = default;
   MemPoolList & operator = ( const MemPoolList & ) = default;
 
-  template< class MemorySpace, class ExecutionSpace>
+  template< class MemorySpace, class ExecutionSpace >
   inline
   MemPoolList( const MemorySpace & memspace, const ExecutionSpace &,
                size_t base_chunk_size, size_t total_size,
@@ -301,9 +301,9 @@ private:
     char padding[32];
     double ds = static_cast<double>( reinterpret_cast<unsigned long>( m_data ) );
     size_t padding_size = static_cast<size_t>( ceil( ceil( log2( ds ) ) / 4 ) + 2 );
-    for ( size_t j = 0; j < padding_size; ++j ) {
-      padding[j] = ' ';
-    }
+
+    // Create the padding string.
+    for ( size_t j = 0; j < padding_size; ++j ) padding[j] = ' ';
     padding[padding_size] = '\0';
 
     printf( "\n" );
@@ -360,9 +360,14 @@ private:
 #endif
   }
 
-  /// \brief Inserts an already linked list of chunks into the pool.
+  /// \brief Releases a lock on a freelist.
   KOKKOS_FUNCTION
-  void insert_list( Link * lp_head, Link * lp_tail, size_t list ) const;
+  void acquire_lock( size_t pos, Link * volatile * & freelist,
+                     Link * & old_head ) const;
+
+  /// \brief Releases a lock on a freelist.
+  KOKKOS_FUNCTION
+  void release_lock( Link * volatile * freelist, Link * const new_head ) const;
 
   /// \brief Claim chunks of untracked memory from the pool.
   KOKKOS_FUNCTION
@@ -377,9 +382,7 @@ private:
   bool is_empty() const
   {
     size_t l = 0;
-    while ( m_chunk_size[l] > 0 && m_freelist[l] == 0 ) {
-      ++l;
-    }
+    while ( m_chunk_size[l] > 0 && m_freelist[l] == 0 ) ++l;
 
     return m_chunk_size[l] == 0;
   }
