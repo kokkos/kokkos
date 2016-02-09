@@ -667,6 +667,7 @@ private:
   inline void set_auto_chunk_size() {
 
     int concurrency = traits::execution_space::thread_pool_size(0)/m_team_alloc;
+    if( concurrency==0 ) concurrency=1;
 
     if(m_chunk_size > 0) {
       if(!Impl::is_integral_power_of_two( m_chunk_size ))

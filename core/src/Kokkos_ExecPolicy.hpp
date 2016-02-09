@@ -304,6 +304,8 @@ public:
      inline void set_auto_chunk_size() {
 
        typename traits::index_type concurrency = traits::execution_space::concurrency();
+       if( concurrency==0 ) concurrency=1;
+
        if(m_granularity > 0) {
          if(!Impl::is_integral_power_of_two( m_granularity ))
            Kokkos::abort("RangePolicy blocking granularity must be power of two" );
