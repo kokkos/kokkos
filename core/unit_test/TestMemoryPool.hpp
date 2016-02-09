@@ -84,9 +84,8 @@ struct allocate_memory {
   KOKKOS_INLINE_FUNCTION
   void operator()( size_type i ) const
   {
-    // Why do I need the first check?
-    if ( i / STRIDE < m_num_ptrs && i % STRIDE == 0 ) {
-      m_pointers[i/STRIDE].ptr =
+    if ( i % STRIDE == 0 ) {
+      m_pointers[i / STRIDE].ptr =
         static_cast< uint64_t * >( m_space.allocate( m_chunk_size ) );
     }
   }
@@ -112,8 +111,8 @@ struct fill_memory {
   KOKKOS_INLINE_FUNCTION
   void operator()( size_type i ) const
   {
-    if ( i / STRIDE < m_num_ptrs && i % STRIDE == 0 ) {
-      *m_pointers[i/STRIDE].ptr = i / STRIDE ;
+    if ( i % STRIDE == 0 ) {
+      *m_pointers[i / STRIDE].ptr = i / STRIDE ;
     }
   }
 };
@@ -148,8 +147,8 @@ struct sum_memory {
   KOKKOS_INLINE_FUNCTION
   void operator()( size_type i, value_type & r ) const
   {
-    if ( i / STRIDE < m_num_ptrs && i % STRIDE == 0 ) {
-      r += *m_pointers[i/STRIDE].ptr;
+    if ( i % STRIDE == 0 ) {
+      r += *m_pointers[i / STRIDE].ptr;
     }
   }
 };
@@ -177,8 +176,8 @@ struct deallocate_memory {
   KOKKOS_INLINE_FUNCTION
   void operator()( size_type i ) const
   {
-    if ( i / STRIDE < m_num_ptrs && i % STRIDE == 0 ) {
-      m_space.deallocate( m_pointers[i/STRIDE].ptr, m_chunk_size );
+    if ( i % STRIDE == 0 ) {
+      m_space.deallocate( m_pointers[i / STRIDE].ptr, m_chunk_size );
     }
   }
 };
@@ -207,7 +206,7 @@ struct allocate_deallocate_memory {
   KOKKOS_INLINE_FUNCTION
   void operator()( size_type i ) const
   {
-    if ( i / STRIDE < m_num_max_chunks && i % STRIDE == 0 ) {
+    if ( i % STRIDE == 0 ) {
       for ( size_t j = m_max_chunk_size; j >= m_min_chunk_size; j /= m_chunk_spacing ) {
         for ( size_t k = 0; k < 10; ++k ) {
           void * mem = m_space.allocate( j );

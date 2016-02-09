@@ -132,7 +132,9 @@ TEST_F( cuda , memory_pool )
 
   Kokkos::Cuda::fence();
 
-  TestMemoryPool::test_mempool2< Kokkos::Cuda, Kokkos::CudaUVMSpace >( 128, 1280000 );
+  TestMemoryPool::test_mempool2< Kokkos::Cuda, Kokkos::CudaUVMSpace >( 128, 2560000 );
+
+  Kokkos::Cuda::fence();
 }
 
 TEST_F( cuda, uvm )
