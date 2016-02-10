@@ -57,42 +57,42 @@ namespace Kokkos {
             Kokkos::fence();
             (*beginForCallee)(kernelPrefix.c_str(), devID, kernelID);
         }
-    };
+    }
 
     void endParallelFor(const uint64_t kernelID) {
         if(NULL != endForCallee) {
             Kokkos::fence();
             (*endForCallee)(kernelID);
         }
-    };
+    }
 
     void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID) {
         if(NULL != beginScanCallee) {
             Kokkos::fence();
             (*beginScanCallee)(kernelPrefix.c_str(), devID, kernelID);
         }
-    };
+    }
 
     void endParallelScan(const uint64_t kernelID) {
         if(NULL != endScanCallee) {
             Kokkos::fence();
             (*endScanCallee)(kernelID);
         }
-    };
+    }
     
     void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID) {
         if(NULL != beginReduceCallee) {
             Kokkos::fence();
             (*beginReduceCallee)(kernelPrefix.c_str(), devID, kernelID);
         }
-    };
+    }
     
     void endParallelReduce(const uint64_t kernelID) {
         if(NULL != endReduceCallee) {
             Kokkos::fence();
             (*endReduceCallee)(kernelID);
         }
-    };
+    }
     
     void initialize() {
         void* firstProfileLibrary;
@@ -119,16 +119,26 @@ namespace Kokkos {
             } else {
                 std::cout << "KokkosP: Library Loaded: " << profileLibraryName << std::endl;
 
-                beginForCallee = (beginFunction) dlsym(firstProfileLibrary, "kokkosp_begin_parallel_for");
-                beginScanCallee = (beginFunction) dlsym(firstProfileLibrary, "kokkosp_begin_parallel_scan");
-                beginReduceCallee = (beginFunction) dlsym(firstProfileLibrary, "kokkosp_begin_parallel_reduce");
+                // dlsym returns a pointer to an object, while we want to assign to pointer to function
+                // A direct cast will give warnings hence, we have to workaround the issue by casting pointer to pointers.
+                auto p1 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_for");
+                beginForCallee = *((beginFunction*) &p1);
+                auto p2 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_scan");
+                beginScanCallee = *((beginFunction*) &p2);
+                auto p3 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_reduce");
+                beginReduceCallee = *((beginFunction*) &p3);
 
-                endScanCallee = (endFunction) dlsym(firstProfileLibrary, "kokkosp_end_parallel_scan");
-                endForCallee = (endFunction) dlsym(firstProfileLibrary, "kokkosp_end_parallel_for");
-                endReduceCallee = (endFunction) dlsym(firstProfileLibrary, "kokkosp_end_parallel_reduce");
+                auto p4 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_scan");
+                endScanCallee = *((endFunction*) &p4);
+                auto p5 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_for");
+                endForCallee = *((endFunction*) &p5);
+                auto p6 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_reduce");
+                endReduceCallee = *((endFunction*) &p6);
 
-                initProfileLibrary = (initFunction) dlsym(firstProfileLibrary, "kokkosp_init_library");
-                finalizeProfileLibrary = (finalizeFunction) dlsym(firstProfileLibrary, "kokkosp_finalize_library");
+                auto p7 = dlsym(firstProfileLibrary, "kokkosp_init_library");
+                initProfileLibrary = *((initFunction*) &p7);
+                auto p8 = dlsym(firstProfileLibrary, "kokkosp_finalize_library");
+                finalizeProfileLibrary = *((finalizeFunction*) &p8);
             }
         }
 
@@ -140,7 +150,7 @@ namespace Kokkos {
         }
 
 		free(envProfileCopy);
-    };
+    }
 
     void finalize() {
       if(NULL != finalizeProfileLibrary) {
@@ -158,7 +168,7 @@ namespace Kokkos {
         initProfileLibrary = NULL;
         finalizeProfileLibrary = NULL;
       }
-    };
+    }
   }
 }
 
