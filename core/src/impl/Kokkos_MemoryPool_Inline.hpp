@@ -52,7 +52,7 @@
 // is defined, the code will abort with an error message.  Otherwise, the code
 // will return with a value indicating failure when possible, or do nothing
 // instead.
-#define KOKKOS_MEMPOOLLIST_PRINTERR
+//#define KOKKOS_MEMPOOLLIST_PRINTERR
 
 //#define KOKKOS_MEMPOOLLIST_PRINT_INFO
 
@@ -156,125 +156,112 @@ void * MemPoolList::allocate( size_t alloc_size ) const
   }
 #endif
 
-  // Do a fast fail for an empty list.  This checks for l_exp and all higher
-  // freelist pointers being 0.
+  // Do a fast fail test for an empty list.  This checks for l_exp and all
+  // higher freelist pointers being 0.
   size_t l = l_exp;
   while ( m_chunk_size[l] > 0 && m_freelist[l] == 0 ) ++l;
 
-  if ( m_chunk_size[l] == 0 ) {
-#ifdef KOKKOS_MEMPOOLLIST_PRINT_INFO
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    long val = Kokkos::atomic_fetch_add( &m_count, 1 );
-    printf( "  allocate(): %6ld   size: %6lu    l: %2lu   E   0x0\n",
-            val, alloc_size, l_exp );
-    fflush( stdout );
-#else
-    printf( "  allocate()   size: %6lu    l: %2lu   E   0x0\n",
-            alloc_size, l_exp );
-#endif
-#endif
+  if ( m_chunk_size[l] != 0 ) {
+    Link * volatile * l_exp_freelist = 0;
+    Link * l_exp_old_head = 0;
 
-#ifdef KOKKOS_MEMPOOLLIST_PRINTERR
-    Kokkos::abort( "\n** MemoryPool::allocate() NO_CHUNKS_BIG_ENOUGH **\n" );
-#endif
+    // Grab a lock on the l_exp freelist.
+    acquire_lock( l_exp, l_exp_freelist, l_exp_old_head );
 
-    // The list is empty.  Exit returning a null pointer.
-    return 0;
-  }
+    if ( l_exp_old_head != 0 ) {
+      // The l_exp freelist isn't empty.
 
-  Link * volatile * l_exp_freelist = 0;
-  Link * l_exp_old_head = 0;
+      // Get a local copy of the second entry in the list.
+      Link * const head_next =
+        *reinterpret_cast<Link * volatile *>( &(l_exp_old_head->m_next) );
 
-  // Grab a lock on the l_exp freelist.
-  acquire_lock( l_exp, l_exp_freelist, l_exp_old_head );
+      // Release the lock, replacing the head with the next entry on the list.
+      release_lock( l_exp_freelist, head_next );
 
-  if ( l_exp_old_head != 0 ) {
-    // The l_exp freelist isn't empty.
+      // Set the chunk to return.
+      *reinterpret_cast<Link * volatile *>( &(l_exp_old_head->m_next) ) = 0;
+      p = l_exp_old_head;
+    }
+    else {
+      // The l_exp freelist is empty.
 
-    // Get a local copy of the second entry in the list.
-    Link * const head_next =
-      *reinterpret_cast<Link * volatile *>( &(l_exp_old_head->m_next) );
+      l = l_exp + 1;
+      bool done = false;
 
-    // Release the lock, replacing the head with the next entry on the list.
-    release_lock( l_exp_freelist, head_next );
+      while ( !done ) {
+        // Find the next freelist that is either locked or not empty.  A locked
+        // freelist will probably have memory available when the lock is
+        // released.
+        while ( m_chunk_size[l] > 0 && m_freelist[l] == 0 ) ++l;
 
-    // Set the chunk to return.
-    *reinterpret_cast<Link * volatile *>( &(l_exp_old_head->m_next) ) = 0;
-    p = l_exp_old_head;
-  }
-  else {
-    // The l_exp freelist is empty.
+        if ( m_chunk_size[l] == 0 ) {
+          // We got to the end of the list of freelists without finding any
+          // available memory which means the pool is empty.  Release the lock
+          // on the l_exp freelist.  Put NULL as the head since the freelist
+          // was empty.
+          release_lock( l_exp_freelist, 0 );
 
-    size_t l = l_exp + 1;
-    bool done = false;
-
-    while ( !done ) {
-      // Find the next freelist that is either locked or not empty.  A locked
-      // freelist will probably have memory available when the lock is released.
-      while ( m_chunk_size[l] > 0 && m_freelist[l] == 0 ) ++l;
-
-      if ( m_chunk_size[l] == 0 ) {
-        // We got to the end of the list of freelists without finding any
-        // available memory which means the pool is empty.  Release the lock
-        // on the l_exp freelist.  Put NULL as the head since the freelist
-        // was empty.
-        release_lock( l_exp_freelist, 0 );
-
-        done = true;
-      }
-      else {
-        Link * volatile * l_freelist = 0;
-        Link * l_old_head = 0;
-
-        // Grab a lock on the l freelist.
-        acquire_lock( l, l_freelist, l_old_head );
-
-        if ( l_old_head != 0 ) {
-          // The l freelist has chunks.  Grab one to divide.
-
-          // Subdivide the chunk into smaller chunks.  The first chunk will
-          // be returned to satisfy the allocaiton request.  The remainder
-          // of the chunks will be inserted onto the appropriate freelist.
-          size_t num_chunks = m_chunk_size[l] / m_chunk_size[l_exp];
-          char * pchar = reinterpret_cast<char *>( l_old_head );
-
-          // Link the chunks following the first chunk to form a list.
-          for ( size_t i = 2; i < num_chunks; ++i ) {
-            Link * chunk =
-              reinterpret_cast<Link *>( pchar + (i - 1) * m_chunk_size[l_exp] );
-
-            chunk->m_next =
-              reinterpret_cast<Link *>( pchar + i * m_chunk_size[l_exp] );
-          }
-
-          Link * lp_head = reinterpret_cast<Link *>( pchar + m_chunk_size[l_exp] );
-          Link * lp_tail =
-            reinterpret_cast<Link *>( pchar + (num_chunks - 1) * m_chunk_size[l_exp] );
-
-          // Assign lp_tail->m_next to be NULL since the l_exp freelist was empty.
-          *reinterpret_cast<Link * volatile *>( &(lp_tail->m_next) ) = 0;
-
-          memory_fence();
-
-          // Get a local copy of the second entry in the list.
-          Link * const head_next =
-            *reinterpret_cast<Link * volatile *>( &(l_old_head->m_next) );
-
-          // Release the lock on the l freelist.
-          release_lock( l_freelist, head_next );
-
-          // This thread already has the lock on the l_exp freelist, so just
-          // release the lock placing the divided memory on the list.
-          release_lock( l_exp_freelist, lp_head );
-
-          *reinterpret_cast<Link * volatile *>( &(l_old_head->m_next) ) = 0;
-          p = l_old_head;
+          // Exit out of the loop.
           done = true;
         }
         else {
-          // Release the lock on the l freelist.  Put NULL as the head since
-          // the freelist was empty.
-          release_lock( l_freelist, 0 );
+          Link * volatile * l_freelist = 0;
+          Link * l_old_head = 0;
+
+          // Grab a lock on the l freelist.
+          acquire_lock( l, l_freelist, l_old_head );
+
+          if ( l_old_head != 0 ) {
+            // The l freelist has chunks.  Grab one to divide.
+
+            // Subdivide the chunk into smaller chunks.  The first chunk will
+            // be returned to satisfy the allocaiton request.  The remainder
+            // of the chunks will be inserted onto the appropriate freelist.
+            size_t num_chunks = m_chunk_size[l] / m_chunk_size[l_exp];
+            char * pchar = reinterpret_cast<char *>( l_old_head );
+
+            // Link the chunks following the first chunk to form a list.
+            for ( size_t i = 2; i < num_chunks; ++i ) {
+              Link * chunk =
+                reinterpret_cast<Link *>( pchar + (i - 1) * m_chunk_size[l_exp] );
+
+              chunk->m_next =
+                reinterpret_cast<Link *>( pchar + i * m_chunk_size[l_exp] );
+            }
+
+            Link * lp_head =
+              reinterpret_cast<Link *>( pchar + m_chunk_size[l_exp] );
+
+            Link * lp_tail =
+              reinterpret_cast<Link *>( pchar + (num_chunks - 1) * m_chunk_size[l_exp] );
+
+            // Assign lp_tail->m_next to be NULL since the l_exp freelist was
+            // empty.
+            *reinterpret_cast<Link * volatile *>( &(lp_tail->m_next) ) = 0;
+
+            memory_fence();
+
+            // Get a local copy of the second entry in the list.
+            Link * const head_next =
+              *reinterpret_cast<Link * volatile *>( &(l_old_head->m_next) );
+
+            // Release the lock on the l freelist.
+            release_lock( l_freelist, head_next );
+
+            // This thread already has the lock on the l_exp freelist, so just
+            // release the lock placing the divided memory on the list.
+            release_lock( l_exp_freelist, lp_head );
+
+            // Set the chunk to return.
+            *reinterpret_cast<Link * volatile *>( &(l_old_head->m_next) ) = 0;
+            p = l_old_head;
+            done = true;
+          }
+          else {
+            // Release the lock on the l freelist.  Put NULL as the head since
+            // the freelist was empty.
+            release_lock( l_freelist, 0 );
+          }
         }
       }
     }
@@ -282,7 +269,10 @@ void * MemPoolList::allocate( size_t alloc_size ) const
 
 #ifdef KOKKOS_MEMPOOLLIST_PRINT_INFO
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-  long val = Kokkos::atomic_fetch_add( &m_count, 1 );
+  long val = p == 0 ?
+             *reinterpret_cast<volatile long *>( &m_count ) :
+             Kokkos::atomic_fetch_add( &m_count, 1 );
+
   printf( "  allocate(): %6ld   size: %6lu    l: %2lu  %2lu   0x%lx\n", val,
           alloc_size, l_exp, l, reinterpret_cast<unsigned long>( p ) );
   fflush( stdout );
@@ -290,6 +280,15 @@ void * MemPoolList::allocate( size_t alloc_size ) const
   printf( "  allocate()   size: %6lu    l: %2lu  %2lu   0x%lx\n", alloc_size,
           l_exp, l, reinterpret_cast<unsigned long>( p ) );
 #endif
+#endif
+
+#ifdef KOKKOS_MEMPOOLLIST_PRINTERR
+  if ( p == 0 ) {
+    printf( "** MemoryPool::allocate() NO_CHUNKS_BIG_ENOUGH **\n" );
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+    fflush( stdout );
+#endif
+  }
 #endif
 
   return p;

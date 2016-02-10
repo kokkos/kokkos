@@ -57,7 +57,7 @@
 // While experimental, code can abort instead.  If KOKKOS_MEMPOOL_PRINTERR is
 // defined, the code will abort with an error message.  Otherwise, the code will
 // return with a value indicating failure when possible, or do nothing instead.
-#define KOKKOS_MEMPOOL_PRINTERR
+//#define KOKKOS_MEMPOOL_PRINTERR
 
 //#define KOKKOS_MEMPOOL_PRINT_INFO
 
