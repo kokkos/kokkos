@@ -43,7 +43,7 @@
 
 #include <impl/Kokkos_Profiling_Interface.hpp>
 
-#ifdef KOKKOSP_ENABLE_PROFILING
+#if (KOKKOS_ENABLE_PROFILING)
 #include <string.h>
 
 namespace Kokkos {

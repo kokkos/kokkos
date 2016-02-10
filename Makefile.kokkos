@@ -11,7 +11,7 @@ KOKKOS_DEBUG ?= "no"
 KOKKOS_USE_TPLS ?= ""
 #Options: c++11
 KOKKOS_CXX_STANDARD ?= "c++11"
-#Options: aggressive_vectorization
+#Options: aggressive_vectorization,disable_profiling
 KOKKOS_OPTIONS ?= ""
 
 #Default settings specific options
@@ -21,8 +21,6 @@ KOKKOS_CUDA_OPTIONS ?= ""
 # Check for general settings
 
 KOKKOS_INTERNAL_ENABLE_DEBUG := $(strip $(shell echo $(KOKKOS_DEBUG) | grep "yes" | wc -l))
-KOKKOS_INTERNAL_ENABLE_PROFILING_COLLECT_KERNEL_DATA := $(strip $(shell echo $(KOKKOS_PROFILING) | grep "kernel_times" | wc -l))
-KOKKOS_INTERNAL_ENABLE_PROFILING_AGGREGATE_MPI := $(strip $(shell echo $(KOKKOS_PROFILING) | grep "aggregate_mpi" | wc -l))
 KOKKOS_INTERNAL_ENABLE_CXX11 := $(strip $(shell echo $(KOKKOS_CXX_STANDARD) | grep "c++11" | wc -l))
 
 # Check for external libraries
@@ -32,6 +30,7 @@ KOKKOS_INTERNAL_USE_MEMKIND := $(strip $(shell echo $(KOKKOS_USE_TPLS) | grep "e
 
 # Check for advanced settings
 KOKKOS_INTERNAL_OPT_RANGE_AGGRESSIVE_VECTORIZATION := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "aggressive_vectorization" | wc -l))
+KOKKOS_INTERNAL_DISABLE_PROFILING := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "disable_profiling" | wc -l))
 KOKKOS_INTERNAL_CUDA_USE_LDG := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) | grep "use_ldg" | wc -l))
 KOKKOS_INTERNAL_CUDA_USE_UVM := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) | grep "force_uvm" | wc -l))
 KOKKOS_INTERNAL_CUDA_USE_RELOC := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) | grep "rdc" | wc -l))
@@ -252,6 +251,10 @@ ifeq ($(KOKKOS_INTERNAL_USE_MEMKIND), 1)
   KOKKOS_LDFLAGS += -L$(MEMKIND_PATH)/lib 
         KOKKOS_LIBS += -lmemkind
   tmp := $(shell echo "\#define KOKKOS_HAVE_HBWSPACE 1" >> KokkosCore_config.tmp )
+endif
+
+ifeq ($(KOKKOS_INTERNAL_DISABLE_PROFILING), 1)
+  tmp := $(shell echo "\#define KOKKOS_ENABLE_PROFILING 0" >> KokkosCore_config.tmp )
 endif
 
 tmp := $(shell echo "/* Optimization Settings */" >> KokkosCore_config.tmp)

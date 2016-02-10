@@ -430,3 +430,11 @@
 #endif
 #endif /* #ifndef KOKKOS_MACROS_HPP */
 
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+/**Enable Profiling by default**/
+
+#ifndef KOKKOS_ENABLE_PROFILING
+#define KOKKOS_ENABLE_PROFILING 1
+#endif

@@ -49,7 +49,7 @@
 #include <Kokkos_Macros.hpp>
 #include <string>
 
-#ifdef KOKKOSP_ENABLE_PROFILING
+#if (KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Profiling_DeviceInfo.hpp>
 #include <dlfcn.h>
 #include <iostream>
@@ -58,7 +58,7 @@
 
 #define KOKKOSP_INTERFACE_VERSION 20150628
 
-#ifdef KOKKOSP_ENABLE_PROFILING
+#if (KOKKOS_ENABLE_PROFILING)
 namespace Kokkos {
   namespace Experimental {
 
