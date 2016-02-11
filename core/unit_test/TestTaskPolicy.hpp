@@ -222,7 +222,7 @@ long eval_fib( long n )
 template< class ExecSpace >
 void test_fib( long n )
 {
-  const unsigned task_max_count  = 1024 ;
+  const unsigned task_max_count  = 2048 ;
   const unsigned task_max_size   = 256 ;
   const unsigned task_dependence = 4 ;
 
@@ -246,7 +246,7 @@ void test_fib( long n )
 template< class ExecSpace >
 void test_fib2( long n )
 {
-  const unsigned task_max_count  = 1024 ;
+  const unsigned task_max_count  = 2048 ;
   const unsigned task_max_size   = 256 ;
   const unsigned task_dependence = 4 ;
 
