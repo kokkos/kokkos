@@ -384,8 +384,10 @@ TEST_F( serial , memory_space )
 
 TEST_F( serial , memory_pool )
 {
-  bool val = TestMemoryPool::test_mempool< Kokkos::Serial >( 32, 8000000 );
+  bool val = TestMemoryPool::test_mempool< Kokkos::Serial >( 128, 128000000 );
   ASSERT_TRUE( val );
+
+  TestMemoryPool::test_mempool2< Kokkos::Serial >( 128, 128000000 );
 }
 
 //----------------------------------------------------------------------------
