@@ -65,13 +65,14 @@ struct FibChild {
   const value_type n ;
   int has_nested ;
 
+  KOKKOS_INLINE_FUNCTION
   FibChild( const Kokkos::Experimental::TaskPolicy<ExecSpace> & arg_policy
           , const value_type arg_n )
     : policy(arg_policy)
     , fib_1() , fib_2()
     , n( arg_n ), has_nested(0) {}
 
-  inline
+  KOKKOS_INLINE_FUNCTION
   void apply( value_type & result )
     {
       typedef Kokkos::Experimental::Future<long,ExecSpace> future_type ;
@@ -88,11 +89,11 @@ struct FibChild {
           // Spawn lower value at higher priority as it has a shorter
           // path to completion.
           if ( fib_2.is_null() ) {
-            fib_2 = policy.create( FibChild(policy,n-2) );
+            fib_2 = policy.task_create( FibChild(policy,n-2) );
           }
 
           if ( ! fib_2.is_null() && fib_1.is_null() ) {
-            fib_1 = policy.create( FibChild(policy,n-1) );
+            fib_1 = policy.task_create( FibChild(policy,n-1) );
           }
 
           if ( ! fib_1.is_null() ) {
@@ -119,8 +120,8 @@ struct FibChild {
           result = fib_1.get() + fib_2.get();
         }
         else {
-          fprintf(stderr,"FibChild(%ld) execution error\n",(long)n);
-          fflush(stderr);
+          printf("FibChild(%ld) execution error\n",(long)n);
+          Kokkos::abort("FibChild execution error");
         }
       }
     }
@@ -137,12 +138,13 @@ struct FibChild2 {
   const value_type n ;
   int has_nested ;
 
+  KOKKOS_INLINE_FUNCTION
   FibChild2( const Kokkos::Experimental::TaskPolicy<ExecSpace> & arg_policy
            , const value_type arg_n )
     : policy(arg_policy)
     , n( arg_n ), has_nested(0) {}
 
-  inline
+  KOKKOS_INLINE_FUNCTION
   void apply( value_type & result )
     {
       if ( 0 == has_nested ) {
@@ -161,8 +163,8 @@ struct FibChild2 {
           // path to completion.
 
           policy.clear_dependence( this );
-          fib_a = policy.spawn( policy.create( FibChild2(policy,n-1) ) );
-          fib_b = policy.spawn( policy.create( FibChild2(policy,n-2) ) , true );
+          fib_a = policy.spawn( policy.task_create( FibChild2(policy,n-1) ) );
+          fib_b = policy.spawn( policy.task_create( FibChild2(policy,n-2) ) , true );
           policy.add_dependence( this , fib_a );
           policy.add_dependence( this , fib_b );
           policy.respawn( this );
@@ -179,8 +181,8 @@ struct FibChild2 {
           // path to completion.
 
           policy.clear_dependence( this );
-          fib_a = policy.spawn( policy.create( FibChild2(policy,n-3) ) );
-          fib_b = policy.spawn( policy.create( FibChild2(policy,n-4) ) , true );
+          fib_a = policy.spawn( policy.task_create( FibChild2(policy,n-3) ) );
+          fib_b = policy.spawn( policy.task_create( FibChild2(policy,n-4) ) , true );
           policy.add_dependence( this , fib_a );
           policy.add_dependence( this , fib_b );
           policy.respawn( this );
@@ -193,8 +195,8 @@ struct FibChild2 {
         has_nested = -1 ;
       }
       else {
-        fprintf(stderr,"FibChild2(%ld) execution error\n",(long)n);
-        fflush(stderr);
+        printf("FibChild2(%ld) execution error\n",(long)n);
+        Kokkos::abort("FibChild2 execution error");
       }
     }
 };
@@ -220,9 +222,8 @@ long eval_fib( long n )
 }
 
 template< class ExecSpace >
-void test_fib( long n )
+void test_fib( long n , const unsigned task_max_count = 1024 )
 {
-  const unsigned task_max_count  = 16 ; // 1024 ;
   const unsigned task_max_size   = 256 ;
   const unsigned task_dependence = 4 ;
 
@@ -232,7 +233,7 @@ void test_fib( long n )
           , task_dependence );
 
   Kokkos::Experimental::Future<long,ExecSpace> f =
-    policy.spawn( policy.create( FibChild<ExecSpace>(policy,n) ) );
+    policy.spawn( policy.proc_create( FibChild<ExecSpace>(policy,n) ) );
 
   Kokkos::Experimental::wait( policy );
 
@@ -244,9 +245,8 @@ void test_fib( long n )
 }
 
 template< class ExecSpace >
-void test_fib2( long n )
+void test_fib2( long n , const unsigned task_max_count = 1024 )
 {
-  const unsigned task_max_count  = 1024 ;
   const unsigned task_max_size   = 256 ;
   const unsigned task_dependence = 4 ;
 
@@ -256,7 +256,7 @@ void test_fib2( long n )
           , task_dependence );
 
   Kokkos::Experimental::Future<long,ExecSpace> f =
-    policy.spawn( policy.create( FibChild2<ExecSpace>(policy,n) ) );
+    policy.spawn( policy.proc_create( FibChild2<ExecSpace>(policy,n) ) );
 
   Kokkos::Experimental::wait( policy );
 
@@ -331,6 +331,7 @@ struct TaskDep {
   TaskDep( const policy_type & arg_p , const int arg_i )
     : policy( arg_p ), input( arg_i ) {}
 
+  KOKKOS_INLINE_FUNCTION
   void apply( int & val )
   {
     val = input ;
@@ -362,7 +363,7 @@ void test_task_dep( const int n )
 
   for ( int i = 0 ; i < NTEST ; ++i ) {
     // Create task in the "constructing" state with capacity for 'n+1' dependences
-    f[i] = policy.create( TaskDep<Space>(policy,0) , n + 1 );
+    f[i] = policy.proc_create( TaskDep<Space>(policy,0) , n + 1 );
 
     if ( f[i].get_task_state() != Kokkos::Experimental::TASK_STATE_CONSTRUCTING ) {
       Kokkos::Impl::throw_runtime_exception("get_task_state() != Kokkos::Experimental::TASK_STATE_CONSTRUCTING");
@@ -373,7 +374,7 @@ void test_task_dep( const int n )
     for ( int j = 0 ; j < n ; ++j ) {
 
       Kokkos::Experimental::Future<int,Space> nested =
-        policy.create( TaskDep<Space>(policy,j+1) );
+        policy.proc_create( TaskDep<Space>(policy,j+1) );
 
       policy.spawn( nested );
 
@@ -410,7 +411,7 @@ struct TaskTeam {
 
   typedef void value_type ;
   typedef Kokkos::Experimental::TaskPolicy<ExecSpace>  policy_type ;
-  typedef Kokkos::Experimental::Future<ExecSpace>      future_type ;
+  typedef Kokkos::Experimental::Future<void,ExecSpace> future_type ;
   typedef Kokkos::View<long*,ExecSpace>                view_type ;
 
   policy_type  policy ;
@@ -419,6 +420,7 @@ struct TaskTeam {
   view_type  result ;
   const long nvalue ;
 
+  KOKKOS_INLINE_FUNCTION
   TaskTeam( const policy_type & arg_policy
           , const view_type   & arg_result
           , const long          arg_nvalue )
@@ -428,7 +430,7 @@ struct TaskTeam {
     , nvalue( arg_nvalue )
     {}
 
-  inline
+  KOKKOS_INLINE_FUNCTION
   void apply( const typename policy_type::member_type & member )
     {
       const long end   = nvalue + 1 ;
@@ -436,7 +438,7 @@ struct TaskTeam {
 
       if ( 0 < begin && future.get_task_state() == Kokkos::Experimental::TASK_STATE_NULL ) {
         if ( member.team_rank() == 0 ) {
-          future = policy.spawn( policy.create_team( TaskTeam( policy , result , begin - 1 ) ) );
+          future = policy.spawn( policy.task_create_team( TaskTeam( policy , result , begin - 1 ) ) );
           policy.clear_dependence( this );
           policy.add_dependence( this , future );
           policy.respawn( this );
@@ -466,6 +468,7 @@ struct TaskTeamValue {
   view_type  result ;
   const long nvalue ;
 
+  KOKKOS_INLINE_FUNCTION
   TaskTeamValue( const policy_type & arg_policy
                , const view_type   & arg_result
                , const long          arg_nvalue )
@@ -475,16 +478,18 @@ struct TaskTeamValue {
     , nvalue( arg_nvalue )
     {}
 
-  inline
+  KOKKOS_INLINE_FUNCTION
   void apply( const typename policy_type::member_type & member , value_type & final )
     {
       const long end   = nvalue + 1 ;
       const long begin = 0 < end - SPAN ? end - SPAN : 0 ;
 
-      if ( 0 < begin && future.get_task_state() == Kokkos::Experimental::TASK_STATE_NULL ) {
+      if ( 0 < begin && future.is_null() ) {
         if ( member.team_rank() == 0 ) {
-          future = policy.spawn( policy.create_team( TaskTeamValue( policy , result , begin - 1 ) ) );
-          policy.clear_dependence( this );
+
+          future = policy.task_create_team( TaskTeamValue( policy , result , begin - 1 ) );
+
+          policy.spawn( future );
           policy.add_dependence( this , future );
           policy.respawn( this );
         }
@@ -525,30 +530,133 @@ void test_task_team( long n )
 
   view_type    result("result",n+1);
 
-  future_type f = policy.spawn( policy.create_team( task_type( policy , result , n ) ) );
+  typename view_type::HostMirror
+    host_result = Kokkos::create_mirror_view( result );
+
+  future_type f = policy.proc_create_team( task_type( policy , result , n ) );
+
+  ASSERT_FALSE( f.is_null() );
+
+  policy.spawn( f );
 
   Kokkos::Experimental::wait( policy );
+
+  Kokkos::deep_copy( host_result , result );
 
   for ( long i = 0 ; i <= n ; ++i ) {
     const long answer = i + 1 ;
-    if ( result(i) != answer ) {
-      std::cerr << "test_task_team void ERROR result(" << i << ") = " << result(i) << " != " << answer << std::endl ;
+    if ( host_result(i) != answer ) {
+      std::cerr << "test_task_team void ERROR result(" << i << ") = "
+                << host_result(i) << " != " << answer << std::endl ;
     }
   }
 
-  future_value_type fv = policy.spawn( policy.create_team( task_value_type( policy , result , n ) ) );
+  future_value_type fv = policy.proc_create_team( task_value_type( policy , result , n ) );
+
+  ASSERT_FALSE( fv.is_null() );
+
+  policy.spawn( fv );
 
   Kokkos::Experimental::wait( policy );
+
+  Kokkos::deep_copy( host_result , result );
 
   if ( fv.get() != n + 1 ) {
-    std::cerr << "test_task_team value ERROR future = " << fv.get() << " != " << n + 1 << std::endl ;
+    std::cerr << "test_task_team value ERROR future = "
+              << fv.get() << " != " << n + 1 << std::endl ;
   }
   for ( long i = 0 ; i <= n ; ++i ) {
     const long answer = i + 1 ;
-    if ( result(i) != answer ) {
-      std::cerr << "test_task_team value ERROR result(" << i << ") = " << result(i) << " != " << answer << std::endl ;
+    if ( host_result(i) != answer ) {
+      std::cerr << "test_task_team value ERROR result(" << i << ") = "
+                << host_result(i) << " != " << answer << std::endl ;
     }
   }
+}
+
+//----------------------------------------------------------------------------
+
+template< class ExecSpace >
+struct TaskLatchAdd {
+
+  typedef void value_type ;
+  typedef Kokkos::Experimental::Future< Kokkos::Experimental::Latch , ExecSpace >  future_type ;
+
+  future_type     latch ;
+  volatile int *  count ;
+
+  KOKKOS_INLINE_FUNCTION
+  TaskLatchAdd( const future_type & arg_latch 
+              , volatile int * const arg_count )
+    : latch( arg_latch )
+    , count( arg_count )
+    {}
+
+  KOKKOS_INLINE_FUNCTION
+  void apply()
+    {
+      Kokkos::atomic_fetch_add( count , 1 );
+      latch.add(1);
+    }
+};
+
+template< class ExecSpace >
+struct TaskLatchRun {
+
+  typedef void value_type ;
+  typedef Kokkos::Experimental::TaskPolicy< ExecSpace >      policy_type ;
+  typedef Kokkos::Experimental::Future< Kokkos::Experimental::Latch , ExecSpace >  future_type ;
+
+  policy_type policy ;
+  int total ;
+  volatile int count ;
+
+  KOKKOS_INLINE_FUNCTION
+  TaskLatchRun( const policy_type & arg_policy , const int arg_total )
+    : policy(arg_policy), total(arg_total), count(0) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void apply()
+    {
+      if ( 0 == count && 0 < total ) {
+        future_type latch = policy.create_latch( total );
+
+        for ( int i = 0 ; i < total ; ++i ) {
+          if ( policy.spawn( policy.task_create( TaskLatchAdd<ExecSpace>(latch,&count) , 0 ) ).is_null() ) {
+            Kokkos::abort("TaskLatchRun spawning FAILED" );
+          }
+        }
+
+        policy.add_dependence( this , latch );
+        policy.respawn( this );
+      }
+      else if ( count != total ) {
+        printf("TaskLatchRun FAILED %d != %d\n",count,total);
+      }
+    }
+};
+
+
+template< class ExecSpace >
+void test_latch( int n )
+{
+  typedef TaskLatchRun< ExecSpace >        task_type ;
+  typedef typename task_type::policy_type  policy_type ;
+
+  // Primary + latch + n LatchAdd
+  const unsigned task_max_count  = n + 2 ;
+  const unsigned task_max_size   = 256 ;
+  const unsigned task_dependence = 4 ;
+
+  policy_type
+    policy( task_max_count
+          , task_max_size
+          , task_dependence );
+
+
+  policy.spawn( policy.proc_create( TaskLatchRun<ExecSpace>(policy,n) ) );
+
+  wait( policy );
 }
 
 //----------------------------------------------------------------------------

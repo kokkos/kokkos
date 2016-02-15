@@ -18,6 +18,10 @@ case $key in
     CUDA_PATH_NVCC=`which nvcc`
     CUDA_PATH=${CUDA_PATH_NVCC%/bin/nvcc}
     ;;
+    # Catch this before '--with-cuda*'
+    --with-cuda-options*)
+    KOKKOS_CUDA_OPT="${key#*=}"
+    ;;
     --with-cuda*)
     KOKKOS_DEVICES="${KOKKOS_DEVICES},Cuda"
     CUDA_PATH="${key#*=}"
@@ -98,6 +102,8 @@ case $key in
     echo "--with-hwloc=/Path/To/Hwloc: set path to hwloc"
     echo "--with-options=[OPTIONS]:    additional options to Kokkos:"
     echo "                               aggressive_vectorization = add ivdep on loops"
+    echo "--with-cuda-options=[OPTIONS]: additional options to CUDA:"
+    echo "                               force_uvm, use_ldg, enable_lambda, rdc"
     exit 0
     ;;
     *)
@@ -156,6 +162,9 @@ KOKKOS_OPTIONS="${KOKKOS_OPTIONS} QTHREAD_PATH=${QTHREAD_PATH}"
 fi
 if [ ${#KOKKOS_OPT} -gt 0 ]; then
 KOKKOS_OPTIONS="${KOKKOS_OPTIONS} KOKKOS_OPTIONS=${KOKKOS_OPT}"
+fi
+if [ ${#KOKKOS_CUDA_OPT} -gt 0 ]; then
+KOKKOS_OPTIONS="${KOKKOS_OPTIONS} KOKKOS_CUDA_OPTIONS=${KOKKOS_CUDA_OPT}"
 fi
 mkdir core
 mkdir core/unit_test

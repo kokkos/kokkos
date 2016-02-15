@@ -83,6 +83,10 @@ enum TaskState
   , TASK_STATE_COMPLETE     = 8  ///<  Execution is complete
   };
 
+/**\brief  Tag for Future<Latch,Space>
+ */
+struct Latch {};
+
 /**
  *
  *  Future< space >  // value_type == void
@@ -127,6 +131,13 @@ private:
 
   TaskRoot * m_task ;
 
+  KOKKOS_INLINE_FUNCTION explicit
+  Future( TaskRoot * task )
+    : m_task(0)
+    { TaskRoot::assign( & m_task , TaskRoot::template verify_type< ValueType >( task ) ); }
+
+  //----------------------------------------
+
 public:
 
   typedef ValueType       value_type;
@@ -140,13 +151,6 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   bool is_null() const { return 0 == m_task ; }
-
-  //----------------------------------------
-
-  explicit
-  Future( TaskRoot * task )
-    : m_task(0)
-    { TaskRoot::assign( & m_task , TaskRoot::template verify_type< value_type >( task ) ); }
 
   //----------------------------------------
 
@@ -187,15 +191,97 @@ public:
   KOKKOS_INLINE_FUNCTION
   get_result_type get() const
     { return static_cast<TaskValue*>( m_task )->get(); }
+
+  //----------------------------------------
+};
+
+template< class Arg2 >
+class Future< Latch , Arg2 > {
+private:
+
+  template< class , class , class > friend class Impl::TaskMember ;
+  template< class > friend class TaskPolicy ;
+  template< class , class > friend class Future ;
+
+  // Argument #2, if not void, must be the space.
+  enum { Arg2_is_space  = Kokkos::Impl::is_execution_space< Arg2 >::value };
+  enum { Arg2_is_void   = std::is_same< Arg2 , void >::value };
+
+  static_assert( Arg2_is_space || Arg2_is_void 
+               , "Future template argument #2 must be a space" );
+
+  typedef typename
+    std::conditional< Arg2_is_space , Arg2 , Kokkos::DefaultExecutionSpace >
+     ::type ExecutionSpace ;
+
+  typedef Impl::TaskMember< ExecutionSpace , void , void >  TaskRoot ;
+
+  TaskRoot * m_task ;
+
+  KOKKOS_INLINE_FUNCTION explicit
+  Future( TaskRoot * task )
+    : m_task(0)
+    { TaskRoot::assign( & m_task , task ); }
+
+  //----------------------------------------
+
+public:
+
+  typedef void            value_type;
+  typedef ExecutionSpace  execution_space ;
+
+  //----------------------------------------
+
+  KOKKOS_INLINE_FUNCTION
+  void add( const int k ) const
+    { if ( 0 != m_task ) m_task->latch_add(k); }
+
+  //----------------------------------------
+
+  KOKKOS_INLINE_FUNCTION
+  TaskState get_task_state() const
+    { return 0 != m_task ? m_task->get_state() : TASK_STATE_NULL ; }
+
+  KOKKOS_INLINE_FUNCTION
+  bool is_null() const { return 0 == m_task ; }
+
+  //----------------------------------------
+
+  KOKKOS_INLINE_FUNCTION
+  ~Future() { TaskRoot::assign( & m_task , 0 ); }
+
+  //----------------------------------------
+
+  KOKKOS_INLINE_FUNCTION
+  Future() : m_task(0) {}
+
+  KOKKOS_INLINE_FUNCTION
+  Future( const Future & rhs )
+    : m_task(0)
+    { TaskRoot::assign( & m_task , rhs.m_task ); }
+
+  KOKKOS_INLINE_FUNCTION
+  Future & operator = ( const Future & rhs )
+    { TaskRoot::assign( & m_task , rhs.m_task ); return *this ; }
+
+  //----------------------------------------
+
+  typedef void get_result_type ;
+
+  KOKKOS_INLINE_FUNCTION
+  void get() const {}
+
+  //----------------------------------------
 };
 
 namespace Impl {
 
 template< class T >
-struct is_future : public Kokkos::Impl::bool_< false > {};
+struct is_future : public std::false_type {};
 
 template< class Arg0 , class Arg1 >
-struct is_future< Kokkos::Experimental::Future<Arg0,Arg1> > : public Kokkos::Impl::bool_< true > {};
+struct is_future< Kokkos::Experimental::Future<Arg0,Arg1> >
+  : public std::true_type {};
 
 } /* namespace Impl */
 } /* namespace Experimental */

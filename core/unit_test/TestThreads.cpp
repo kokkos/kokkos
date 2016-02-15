@@ -432,8 +432,10 @@ TEST_F( threads , memory_space )
 
 TEST_F( threads , memory_pool )
 {
-  bool val = TestMemoryPool::test_mempool< Kokkos::Threads >( 32, 8000000 );
+  bool val = TestMemoryPool::test_mempool< Kokkos::Threads >( 128, 128000000 );
   ASSERT_TRUE( val );
+
+  TestMemoryPool::test_mempool2< Kokkos::Threads >( 128, 128000000 );
 }
 
 //----------------------------------------------------------------------------
@@ -482,11 +484,11 @@ TEST_F( threads , task_policy )
   TestTaskPolicy::test_task_dep< Kokkos::Threads >( 10 );
 
   for ( long i = 0 ; i < 25 ; ++i ) {
-    // printf("TestTaskPolicy::test_fib< Kokkos::Threads >(%d);\n",i);
+//    printf( "test_fib():  %2ld\n", i );
     TestTaskPolicy::test_fib< Kokkos::Threads >(i);
   }
   for ( long i = 0 ; i < 35 ; ++i ) {
-    // printf("TestTaskPolicy::test_fib2< Kokkos::Threads >(%d);\n",i);
+//    printf( "test_fib2(): %2ld\n", i );
     TestTaskPolicy::test_fib2< Kokkos::Threads >(i);
   }
 }
@@ -496,5 +498,12 @@ TEST_F( threads , task_team )
   TestTaskPolicy::test_task_team< Kokkos::Threads >(1000);
 }
 
+TEST_F( threads , task_latch )
+{
+  TestTaskPolicy::test_latch< Kokkos::Threads >(10);
+  TestTaskPolicy::test_latch< Kokkos::Threads >(1000);
+}
+
 } // namespace Test
+
 #endif /* #if defined( KOKKOS_HAVE_PTHREAD ) */

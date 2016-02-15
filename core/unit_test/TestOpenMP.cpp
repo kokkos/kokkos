@@ -379,8 +379,10 @@ TEST_F( openmp , memory_space )
 
 TEST_F( openmp , memory_pool )
 {
-  bool val = TestMemoryPool::test_mempool< Kokkos::OpenMP >( 32, 8000000 );
+  bool val = TestMemoryPool::test_mempool< Kokkos::OpenMP >( 128, 128000000 );
   ASSERT_TRUE( val );
+
+  TestMemoryPool::test_mempool2< Kokkos::OpenMP >( 128, 128000000 );
 }
 
 //----------------------------------------------------------------------------
