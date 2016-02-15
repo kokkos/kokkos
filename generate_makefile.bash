@@ -18,7 +18,7 @@ case $key in
     CUDA_PATH_NVCC=`which nvcc`
     CUDA_PATH=${CUDA_PATH_NVCC%/bin/nvcc}
     ;;
-    // Catch this before '--with-cuda*'
+    # Catch this before '--with-cuda*'
     --with-cuda-options*)
     KOKKOS_CUDA_OPT="${key#*=}"
     ;;

@@ -783,7 +783,7 @@ void Task::assign( Task ** const lhs_ptr , Task * rhs )
   Task * const q_denied = reinterpret_cast<Task*>(QDENIED);
 
   // Increment rhs reference count.
-  if ( rhs ) { atomic_fetch_add( & rhs->m_ref_count , 1 ) + 1 ; }
+  if ( rhs ) { atomic_fetch_add( & rhs->m_ref_count , 1 ); }
 
   if ( 0 == lhs_ptr ) return ;
 

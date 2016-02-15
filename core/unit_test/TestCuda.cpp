@@ -557,6 +557,8 @@ TEST_F( cuda , team_vector )
 
 //----------------------------------------------------------------------------
 
+#if defined( KOKKOS_ENABLE_CUDA_TASK_POLICY )
+
 TEST_F( cuda , task_policy )
 {
   TestTaskPolicy::test_task_dep< Kokkos::Cuda >( 10 );
@@ -581,4 +583,6 @@ TEST_F( cuda , task_latch )
   TestTaskPolicy::test_latch< Kokkos::Cuda >(10);
   TestTaskPolicy::test_latch< Kokkos::Cuda >(1000);
 }
+
+#endif /* #if defined( KOKKOS_ENABLE_CUDA_TASK_POLICY ) */
 

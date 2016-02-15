@@ -641,7 +641,6 @@ template< class ExecSpace >
 void test_latch( int n )
 {
   typedef TaskLatchRun< ExecSpace >        task_type ;
-  typedef typename task_type::future_type  future_type ;
   typedef typename task_type::policy_type  policy_type ;
 
   // Primary + latch + n LatchAdd

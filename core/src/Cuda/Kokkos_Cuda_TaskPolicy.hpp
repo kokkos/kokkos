@@ -48,9 +48,14 @@
 
 #include <Kokkos_Core_fwd.hpp>
 
-#if defined( KOKKOS_HAVE_CUDA )
+#if defined( KOKKOS_HAVE_CUDA ) && \
+    defined( KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE )
 
-#include <nvfunctional>
+#define KOKKOS_ENABLE_CUDA_TASK_POLICY
+
+/* The TaskPolicy< Cuda > capability requires nvcc using the option:
+ *    --relocatable-device-code=true
+ */
 
 #include <Kokkos_Cuda.hpp>
 #include <Kokkos_TaskPolicy.hpp>
@@ -73,9 +78,6 @@ public:
 
   typedef void (* function_single_type) ( TaskMember * );
   typedef void (* function_team_type)   ( TaskMember * , Kokkos::Impl::CudaTeamMember & );
-
-  // typedef nvstd::function<void(TaskMember*)> function_single_type ;
-  // typedef nvstd::function<void(TaskMember*,Kokkos::Impl::CudaTeamMember&)> function_team_type ;
 
 private:
 
@@ -823,7 +825,7 @@ public:
 } /* namespace Experimental */
 } /* namespace Kokkos */
 
-#endif /* #if defined( KOKKOS_HAVE_CUDA ) */
+#endif /* #if defined( KOKKOS_HAVE_CUDA ) && defined( KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE ) */
 
 //----------------------------------------------------------------------------
 
