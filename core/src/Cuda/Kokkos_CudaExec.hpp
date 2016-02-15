@@ -236,8 +236,8 @@ struct CudaParallelLaunch< DriverType , true > {
       cuda_parallel_launch_constant_memory< DriverType ><<< grid , block , shmem , stream >>>();
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
-      Kokkos::Cuda::fence();
       CUDA_SAFE_CALL( cudaGetLastError() );
+      Kokkos::Cuda::fence();
 #endif
     }
   }
@@ -270,8 +270,8 @@ struct CudaParallelLaunch< DriverType , false > {
       cuda_parallel_launch_local_memory< DriverType ><<< grid , block , shmem , stream >>>( driver );
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
-      Kokkos::Cuda::fence();
       CUDA_SAFE_CALL( cudaGetLastError() );
+      Kokkos::Cuda::fence();
 #endif
     }
   }

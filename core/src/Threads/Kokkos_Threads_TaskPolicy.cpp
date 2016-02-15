@@ -50,18 +50,8 @@
 
 #if defined( KOKKOS_HAVE_PTHREAD )
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
-
-typedef TaskMember< Kokkos::Threads , void , void > Task ;
-
-#define QLOCK   (reinterpret_cast<Task*>( ~((uintptr_t)0) ))
-#define QDENIED (reinterpret_cast<Task*>( ~((uintptr_t)0) - 1 ))
-
-} /* namespace Impl */
-} /* namespace Experimental */
-} /* namespace Kokkos */
+#define QLOCK   (reinterpret_cast<void*>( ~((uintptr_t)0) ))
+#define QDENIED (reinterpret_cast<void*>( ~((uintptr_t)0) - 1 ))
 
 namespace Kokkos {
 namespace Experimental {
@@ -102,9 +92,9 @@ ThreadsTaskPolicyQueue::ThreadsTaskPolicyQueue
            )
   , m_team { 0 , 0 , 0 }
   , m_serial { 0 , 0 , 0 }
-  , m_count_ready(0)
   , m_team_size( arg_task_team_size )
   , m_default_dependence_capacity( arg_task_default_dependence_capacity )
+  , m_count_ready(0)
 {
   const int threads_total    = Threads::thread_pool_size(0);
   const int threads_per_numa = Threads::thread_pool_size(1);
@@ -170,7 +160,7 @@ void ThreadsTaskPolicyQueue::driver( Kokkos::Impl::ThreadsExec & exec
     team_member.threads_exec_team_base();
 
   task_root_type * volatile * const task_team_ptr =
-    reinterpret_cast<Task**>( exec_team_base.reduce_memory() );
+    reinterpret_cast<task_root_type**>( exec_team_base.reduce_memory() );
 
   volatile int * const work_team_ptr =
     reinterpret_cast<volatile int*>( task_team_ptr + 1 );
@@ -257,7 +247,7 @@ ThreadsTaskPolicyQueue::task_root_type *
 ThreadsTaskPolicyQueue::pop_ready_task(
   ThreadsTaskPolicyQueue::task_root_type * volatile * const queue )
 {
-  task_root_type * const q_lock = QLOCK ;
+  task_root_type * const q_lock = reinterpret_cast<task_root_type*>(QLOCK);
   task_root_type * task = 0 ;
   task_root_type * const task_claim = *queue ;
 
@@ -314,9 +304,9 @@ ThreadsTaskPolicyQueue::pop_ready_task(
 //----------------------------------------------------------------------------
 
 void ThreadsTaskPolicyQueue::complete_executed_task(
-  ThreadsTaskPolicyQueue::task_root_type * const task )
+  ThreadsTaskPolicyQueue::task_root_type * task )
 {
-  task_root_type * const q_denied = QDENIED ;
+  task_root_type * const q_denied = reinterpret_cast<task_root_type*>(QDENIED);
 
   // State is either executing or if respawned then waiting,
   // try to transition from executing to complete.
@@ -328,8 +318,9 @@ void ThreadsTaskPolicyQueue::complete_executed_task(
                            , int(Kokkos::Experimental::TASK_STATE_COMPLETE) );
 
   if ( int(Kokkos::Experimental::TASK_STATE_WAITING) == state_old ) {
-    /* Task requested a respawn so reschedule it */
-    schedule_task( task );
+    // Task requested a respawn so reschedule it.
+    // The reference count will be incremented if placed in a queue.
+    schedule_task( task , false /* not the initial spawn */ );
   }
   else if ( int(Kokkos::Experimental::TASK_STATE_EXECUTING) == state_old ) {
     /* Task is complete */
@@ -340,23 +331,25 @@ void ThreadsTaskPolicyQueue::complete_executed_task(
 
     // Stop other tasks from adding themselves to this task's wait queue.
     // The wait queue is updated concurrently so guard with an atomic.
-    // Setting the wait queue to denied denotes delete-ability of the task by any thread.
-    // Therefore, once 'denied' the task pointer must be treated as invalid.
 
-    Task * wait_queue     = *((Task * volatile *) & task->m_wait );
-    Task * wait_queue_old = 0 ;
+    task_root_type * wait_queue     = *((task_root_type * volatile *) & task->m_wait );
+    task_root_type * wait_queue_old = 0 ;
 
     do {
       wait_queue_old = wait_queue ;
       wait_queue     = atomic_compare_exchange( & task->m_wait , wait_queue_old , q_denied );
     } while ( wait_queue_old != wait_queue );
 
-    // 'task' pointer is now invalid
+    // The task has been removed from ready queue and
+    // execution is complete so decrement the reference count.
+    // The reference count was incremented by the initial spawning.
+    // The task may be deleted if this was the last reference.
+    task_root_type::assign( & task , 0 );
 
     // Pop waiting tasks and schedule them
     while ( wait_queue ) {
-      Task * const x = wait_queue ; wait_queue = x->m_next ; x->m_next = 0 ;
-      schedule_task( x );
+      task_root_type * const x = wait_queue ; wait_queue = x->m_next ; x->m_next = 0 ;
+      schedule_task( x , false /* not the initial spawn */ );
     }
   }
   else {
@@ -401,11 +394,12 @@ void ThreadsTaskPolicyQueue::reschedule_task(
   }
 }
 
-void ThreadsTaskPolicyQueue::schedule_task(
-  ThreadsTaskPolicyQueue::task_root_type * const task )
+void ThreadsTaskPolicyQueue::schedule_task
+  ( ThreadsTaskPolicyQueue::task_root_type * const task 
+  , const bool initial_spawn )
 {
-  task_root_type * const q_lock = QLOCK ;
-  task_root_type * const q_denied = QDENIED ;
+  task_root_type * const q_lock = reinterpret_cast<task_root_type*>(QLOCK);
+  task_root_type * const q_denied = reinterpret_cast<task_root_type*>(QDENIED);
 
   //----------------------------------------
   // State is either constructing or already waiting.
@@ -441,6 +435,18 @@ void ThreadsTaskPolicyQueue::schedule_task(
       fflush(stderr);
       Kokkos::abort("ThreadsTaskPolicyQueue::schedule" );
     }
+  }
+
+  //----------------------------------------
+
+  if ( initial_spawn ) {
+    // The initial spawn of a task increments the reference count
+    // for the task's existence in either a waiting or ready queue
+    // until the task has completed.
+    // Completing the task's execution is the matching
+    // decrement of the reference count.
+
+    task_root_type::assign( 0 , task );
   }
 
   //----------------------------------------
@@ -518,32 +524,60 @@ void ThreadsTaskPolicyQueue::schedule_task(
   }
 }
 
-/*
-namespace {
 
-int alloc_count = 0 ;
-
-}
-*/
-
-void * ThreadsTaskPolicyQueue::allocate_task( unsigned size_alloc )
+void TaskMember< Kokkos::Threads , void , void >::latch_add( const int k )
 {
-  void * const ptr = m_space.allocate( size_alloc );
+  typedef TaskMember< Kokkos::Threads , void , void > task_root_type ;
 
-/*
-  const int n = atomic_fetch_add( & alloc_count , 1 ) + 1 ;
+  task_root_type * const q_denied = reinterpret_cast<task_root_type*>(QDENIED);
+  
+  const bool ok_input = 0 < k ;
+  
+  const int count = ok_input ? atomic_fetch_add( & m_dep_size , -k ) - k
+                             : k ;
+                           
+  const bool ok_count = 0 <= count ;
+  
+  const int state = 0 != count ? TASK_STATE_WAITING :
+    atomic_compare_exchange( & m_state
+                           , TASK_STATE_WAITING
+                           , TASK_STATE_COMPLETE );
+          
+  const bool ok_state = state == TASK_STATE_WAITING ;
+            
+  if ( ! ok_count || ! ok_state ) {
+    printf( "ThreadsTaskPolicyQueue::latch_add[0x%lx](%d) ERROR %s %d\n"
+          , (unsigned long) this
+          , k
+          , ( ! ok_input ? "Non-positive input" :
+            ( ! ok_count ? "Negative count" : "Bad State" ) )
+          , ( ! ok_input ? k :
+            ( ! ok_count ? count : state ) )
+          );
+    Kokkos::abort( "ThreadsTaskPolicyQueue::latch_add ERROR" );
+  } 
+  else if ( 0 == count ) {
+    // Stop other tasks from adding themselves to this latch's wait queue.
+    // The wait queue is updated concurrently so guard with an atomic.
+      
+    ThreadsTaskPolicyQueue & policy = *m_policy ; 
+    task_root_type * wait_queue     = *((task_root_type * volatile *) &m_wait);
+    task_root_type * wait_queue_old = 0 ;
 
-  fprintf( stderr
-         , "ThreadsTaskPolicyQueue::allocate_task(%d) ptr(0x%lx) count(%d)\n"
-         , size_alloc
-         , (unsigned long) ptr
-         , n
-         );
-  fflush( stderr );
-*/
-
-  return ptr ;
+    do {
+      wait_queue_old = wait_queue ;
+      wait_queue     = atomic_compare_exchange( & m_wait , wait_queue_old , q_denied );
+    } while ( wait_queue_old != wait_queue );
+    
+    // Pop waiting tasks and schedule them
+    while ( wait_queue ) {
+      task_root_type * const x = wait_queue ; wait_queue = x->m_next ; x->m_next = 0 ;
+      policy.schedule_task( x , false /* not initial spawn */ );
+    }
+  }
 }
+
+//----------------------------------------------------------------------------
 
 void ThreadsTaskPolicyQueue::deallocate_task( void * ptr , unsigned size_alloc )
 {
@@ -562,10 +596,60 @@ void ThreadsTaskPolicyQueue::deallocate_task( void * ptr , unsigned size_alloc )
   m_space.deallocate( ptr , size_alloc );
 }
 
+ThreadsTaskPolicyQueue::task_root_type *
+ThreadsTaskPolicyQueue::allocate_task
+  ( const unsigned arg_sizeof_task
+  , const unsigned arg_dep_capacity
+  , const unsigned arg_team_shmem
+  )
+{ 
+  const unsigned base_size = arg_sizeof_task +
+    ( arg_sizeof_task % sizeof(task_root_type*)
+    ? sizeof(task_root_type*) - arg_sizeof_task % sizeof(task_root_type*)
+    : 0 );
+    
+  const unsigned dep_capacity
+    = ~0u == arg_dep_capacity
+    ? m_default_dependence_capacity
+    : arg_dep_capacity ;
+    
+  const unsigned size_alloc =
+     base_size + sizeof(task_root_type*) * dep_capacity ;
+    
+  task_root_type * const task =
+    reinterpret_cast<task_root_type*>( m_space.allocate( size_alloc ) );
+      
+  if ( task != 0 ) {
+        
+    // Initialize task's root and value data structure
+    // Calling function must copy construct the functor.
+        
+    new( (void*) task ) task_root_type();
+  
+    task->m_policy       = this ;
+    task->m_size_alloc   = size_alloc ;
+    task->m_dep_capacity = dep_capacity ;
+    task->m_shmem_size   = arg_team_shmem ;
+
+    if ( dep_capacity ) {
+      task->m_dep =
+        reinterpret_cast<task_root_type**>(
+        reinterpret_cast<unsigned char*>(task) + base_size );
+
+      for ( unsigned i = 0 ; i < dep_capacity ; ++i )
+        task->task_root_type::m_dep[i] = 0 ;
+    }
+  }
+  return  task ;
+}
+
+
 //----------------------------------------------------------------------------
 
-void ThreadsTaskPolicyQueue::
-  add_dependence( Task * const after ,  Task * const before )
+void ThreadsTaskPolicyQueue::add_dependence
+  ( ThreadsTaskPolicyQueue::task_root_type * const after
+  , ThreadsTaskPolicyQueue::task_root_type * const before
+  )
 {
   if ( ( after != 0 ) && ( before != 0 ) ) {
 
@@ -610,6 +694,7 @@ fflush( stderr );
     }
   }
 }
+
 } /* namespace Impl */
 } /* namespace Experimental */
 } /* namespace Kokkos */
@@ -681,6 +766,8 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+typedef TaskMember< Kokkos::Threads , void , void > Task ;
+
 //----------------------------------------------------------------------------
 
 Task::~TaskMember()
@@ -693,14 +780,35 @@ Task::~TaskMember()
 
 void Task::assign( Task ** const lhs_ptr , Task * rhs )
 {
-  Task * const q_denied = QDENIED ;
+  Task * const q_denied = reinterpret_cast<Task*>(QDENIED);
 
   // Increment rhs reference count.
-  if ( rhs ) { atomic_increment( & rhs->m_ref_count ); }
+  if ( rhs ) { atomic_fetch_add( & rhs->m_ref_count , 1 ) + 1 ; }
 
+  if ( 0 == lhs_ptr ) return ;
+
+  // Must have exclusive access to *lhs_ptr.
   // Assign the pointer and retrieve the previous value.
 
+#if 1
+
+  Task * const old_lhs = *lhs_ptr ;
+
+  *lhs_ptr = rhs ;
+
+#elif 0
+
+  Task * const old_lhs = *((Task*volatile*)lhs_ptr);
+
+  *((Task*volatile*)lhs_ptr) = rhs ;
+
+  Kokkos::memory_fence();
+
+#else
+
   Task * const old_lhs = atomic_exchange( lhs_ptr , rhs );
+
+#endif
 
   if ( old_lhs && rhs && old_lhs->m_policy != rhs->m_policy ) {
     Kokkos::abort( "Kokkos::Impl::TaskMember<Kokkos::Threads>::assign ERROR different queues");
@@ -711,7 +819,6 @@ void Task::assign( Task ** const lhs_ptr , Task * rhs )
     // Decrement former lhs reference count.
     // If reference count is zero task must be complete, then delete task.
     // Task is ready for deletion when  wait == q_denied
-
     int const count = atomic_fetch_add( & (old_lhs->m_ref_count) , -1 ) - 1 ;
     int const state = old_lhs->m_state ;
     Task * const wait = *((Task * const volatile *) & old_lhs->m_wait );
