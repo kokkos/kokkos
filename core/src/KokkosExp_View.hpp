@@ -1695,7 +1695,7 @@ void deep_copy
 template< class ST , class ... SP >
 inline
 void deep_copy
-  ( ST & dst
+  ( typename ViewTraits<ST,SP...>::non_const_value_type & dst
   , const View<ST,SP...> & src
   , typename std::enable_if<
     std::is_same< typename ViewTraits<ST,SP...>::specialize , void >::value
