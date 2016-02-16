@@ -179,6 +179,7 @@ mkdir example
 mkdir example/fixture
 mkdir example/feint
 mkdir example/fenl
+mkdir example/ichol
 
 # Generate subdirectory makefiles.
 echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > core/unit_test/Makefile
@@ -235,6 +236,17 @@ echo -e "\tmake -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_OPTION
 echo "" >> algorithms/unit_tests/Makefile
 echo "clean:" >> algorithms/unit_tests/Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_OPTIONS} clean" >> algorithms/unit_tests/Makefile
+
+echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > example/ichol/Makefile
+echo "" >> example/ichol/Makefile
+echo "all:" >> example/ichol/Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_OPTIONS}" >> example/ichol/Makefile
+echo "" >> example/ichol/Makefile
+echo "test: all" >> example/ichol/Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_OPTIONS} test" >> example/ichol/Makefile
+echo "" >> example/ichol/Makefile
+echo "clean:" >> example/ichol/Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_OPTIONS} clean" >> example/ichol/Makefile
 
 echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > example/fixture/Makefile
 echo "" >> example/fixture/Makefile
