@@ -261,6 +261,7 @@ setup_env() {
 
     local mod
     for mod in $compiler_modules; do
+        echo "Loading module $mod"
 	module load $mod 2>&1
         # It is ridiculously hard to check for the success of a loaded
         # module. Module does not return error codes and piping to grep
@@ -313,7 +314,7 @@ single_build_and_test() {
             run_cmd ls fake_problem >& ${desc}.configure.log || { report_and_log_test_result 1 $desc configure && return 0; }
         fi
     else
-        run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$build --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" $extra_args >& ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
+        run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$build --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" $extra_args &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
         run_cmd make build-test >& ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
         if [[ "$BUILD_ONLY" == False ]]; then
             run_cmd make test >& ${desc}.test.log || { report_and_log_test_result 1 ${desc} test && return 0; }
