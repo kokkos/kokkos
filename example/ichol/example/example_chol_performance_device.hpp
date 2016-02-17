@@ -29,7 +29,6 @@ namespace Tacho {
            typename OrdinalType,
            typename SizeType = OrdinalType,
            typename SpaceType = void>
-  KOKKOS_INLINE_FUNCTION
   int exampleCholPerformanceDevice(const string file_input,
                                    const int treecut,
                                    const int prunecut,
@@ -95,8 +94,10 @@ namespace Tacho {
 
       t_import = timer.seconds();
 
-      if (verbose)
-        cout << AA << endl;
+      if (verbose) {
+        AA.showMe( std::cout );
+        std::cout << endl;
+      }
     }
     cout << "CholPerformanceDevice:: import input file::time = " << t_import << endl;
 
@@ -107,11 +108,11 @@ namespace Tacho {
     CrsHierMatrixBaseType HU("HU");;
 
     {
-      typename GraphHelperType::size_type_array rptr(AA.Label()+"Graph::RowPtrArray", AA.NumRows() + 1);
-      typename GraphHelperType::ordinal_type_array cidx(AA.Label()+"Graph::ColIndexArray", AA.NumNonZeros());
+      typename GraphHelperType::size_type_array rptr("Graph::RowPtrArray", AA.NumRows() + 1);
+      typename GraphHelperType::ordinal_type_array cidx("Graph::ColIndexArray", AA.NumNonZeros());
 
       AA.convertGraph(rptr, cidx);
-      GraphHelperType S(AA.Label()+"ScotchHelper",
+      GraphHelperType S("ScotchHelper",
                         AA.NumRows(),
                         rptr,
                         cidx,
@@ -126,9 +127,12 @@ namespace Tacho {
 
         t_reorder = timer.seconds();
 
-        if (verbose)
-          cout << S << endl
-               << PA << endl;
+        if (verbose) {
+          S.showMe( std::cout );
+          std::cout << std::endl ;
+          PA.showMe( std::cout );
+          std::cout << std::endl ;
+        }
       }
 
       // Symbolic factorization adds non-zero entries
@@ -143,9 +147,12 @@ namespace Tacho {
         t_symbolic = timer.seconds();
         cout << "CholPerformanceDevice:: AA (nnz) = " << AA.NumNonZeros() << ", UU (nnz) = " << UU.NumNonZeros() << endl;
 
-        if (verbose)
-          cout << F << endl
-               << UU << endl;
+        if (verbose) {
+          F.showMe( std::cout );
+          std::cout << std::endl ;
+          UU.showMe( std::cout );
+          std::cout << std::endl ;
+        }
       }
       cout << "CholPerformanceDevice:: symbolic factorization::time = " << t_symbolic << endl;
 
@@ -205,7 +212,8 @@ namespace Tacho {
         t_factor_task += timer.seconds();
 
         if (verbose) {
-          cout << UU << endl;
+          UU.showMe( std::cout );
+          std::cout << endl;
         }
       }
       cout << "CholPerformanceDevice:: ByBlocks factorize the matrix::time = " << t_factor_task << endl;

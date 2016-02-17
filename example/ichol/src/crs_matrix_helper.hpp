@@ -16,14 +16,12 @@ namespace Tacho {
   public:
 
     template<typename CrsFlatBase>
-    KOKKOS_INLINE_FUNCTION    
     static int
     filterZeros(CrsFlatBase &flat);
     
     /// \brief Transform a scalar flat matrix to hierarchical matrix of matrices 1x1; testing only.
     template<typename CrsFlatBase,
              typename CrsHierBase>
-    KOKKOS_INLINE_FUNCTION
     static int
     flat2hier(CrsFlatBase &flat, 
               CrsHierBase &hier);
@@ -31,7 +29,6 @@ namespace Tacho {
     /// \brief Transform a scalar flat matrix to upper hierarchical matrix given scotch info. 
     template<typename CrsFlatBase,
              typename CrsHierBase>
-    KOKKOS_INLINE_FUNCTION
     static int
     flat2hier(int uplo, 
               CrsFlatBase &flat, 
@@ -43,7 +40,6 @@ namespace Tacho {
     /// \brief Transform a scalar flat matrix to upper hierarchical matrix given scotch info. 
     template<typename CrsFlatBase,
              typename CrsHierBase>
-    KOKKOS_INLINE_FUNCTION
     static int
     flat2hier_upper(CrsFlatBase &flat, 
                     CrsHierBase &hier,
@@ -54,7 +50,6 @@ namespace Tacho {
     /// \brief Transform a scalar flat matrix to lower hierarchical matrix given scotch info. 
     template<typename CrsFlatBase,
              typename CrsHierBase>
-    KOKKOS_INLINE_FUNCTION
     static int
     flat2hier_lower(CrsFlatBase &flat, 
                     CrsHierBase &hier,

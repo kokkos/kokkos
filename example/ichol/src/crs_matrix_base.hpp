@@ -20,7 +20,7 @@ namespace Tacho {
            typename SizeType = OrdinalType,
            typename SpaceType = void,
            typename MemoryTraits = void>
-  class CrsMatrixBase : public Disp {
+  class CrsMatrixBase {
   public:
     typedef ValueType    value_type;
     typedef OrdinalType  ordinal_type;
@@ -46,8 +46,6 @@ namespace Tacho {
     friend class CrsMatrixHelper;
 
   private:
-    string             _label;   //!< object label
-
     ordinal_type       _m;       //!< # of rows
     ordinal_type       _n;       //!< # of cols
     size_type          _nnz;     //!< # of nonzeros
@@ -64,14 +62,13 @@ namespace Tacho {
       _nnz = nnz;
 
       if (static_cast<ordinal_type>(_ap.dimension_0()) < m+1)
-        _ap = size_type_array(_label+"::RowPtrArray", m+1);
+        _ap = size_type_array("CrsMatrixBase::RowPtrArray", m+1);
       
       if (static_cast<size_type>(_aj.dimension_0()) < nnz)
-        _aj = ordinal_type_array(_label+"::ColsArray", nnz);
+        _aj = ordinal_type_array("CrsMatrixBase::ColsArray", nnz);
 
       if (static_cast<size_type>(_ax.dimension_0()) < nnz)
-        _ax = value_type_array(_label+"::ValuesArray", nnz);
-      //_ax = value_type_array(Kokkos::ViewAllocateWithoutInitializing(_label+"::ValuesArray"), nnz);
+        _ax = value_type_array("CrsMatrixBase::ValuesArray", nnz);
     }
 
     // Copy sparse matrix structure from coordinate format in 'mm'
@@ -114,17 +111,12 @@ namespace Tacho {
     }
     
   public:
-    KOKKOS_INLINE_FUNCTION
-    void setLabel(const string label) { _label = label; }
 
     KOKKOS_INLINE_FUNCTION
     void setNumNonZeros() { 
       if (_m) 
         _nnz = _ap[_m];
     }
-
-    KOKKOS_INLINE_FUNCTION
-    string Label() const { return _label; }
 
     KOKKOS_INLINE_FUNCTION
     ordinal_type NumRows() const { return _m; }
@@ -163,9 +155,9 @@ namespace Tacho {
     value_type Value(const ordinal_type k) const { return _ax[k]; }
 
     /// \brief Default constructor.
+    KOKKOS_INLINE_FUNCTION
     CrsMatrixBase() 
-      : _label("CrsMatrixBase"),
-        _m(0),
+      : _m(0),
         _n(0),
         _nnz(0),
         _ap(),
@@ -174,9 +166,8 @@ namespace Tacho {
     { }
 
     /// \brief Constructor with label
-    CrsMatrixBase(const string label) 
-      : _label(label),
-        _m(0),
+    CrsMatrixBase(const string & ) 
+      : _m(0),
         _n(0),
         _nnz(0),
         _ap(),
@@ -191,8 +182,7 @@ namespace Tacho {
              typename SpT,
              typename MT>
     CrsMatrixBase(const CrsMatrixBase<VT,OT,ST,SpT,MT> &b) 
-      : _label(b._label),
-        _m(b._m),
+      : _m(b._m),
         _n(b._n),
         _nnz(b._nnz),
         _ap(b._ap), 
@@ -201,29 +191,27 @@ namespace Tacho {
     { }
 
     /// \brief Constructor to allocate internal data structures.
-    CrsMatrixBase(const string label,
+    CrsMatrixBase(const string & ,
                   const ordinal_type m, 
                   const ordinal_type n, 
                   const ordinal_type nnz) 
-      : _label(label), 
-        _m(m),
+      : _m(m),
         _n(n),
         _nnz(nnz),
-        _ap(_label+"::RowPtrArray", m+1),
-        _aj(_label+"::ColsArray", nnz),
-        _ax(_label+"::ValuesArray", nnz)
+        _ap("CrsMatrixBase::RowPtrArray", m+1),
+        _aj("CrsMatrixBase::ColsArray", nnz),
+        _ax("CrsMatrixBase::ValuesArray", nnz)
     { }
 
     /// \brief Constructor to attach external arrays to the matrix.
-    CrsMatrixBase(const string label,
+    CrsMatrixBase(const string &,
                   const ordinal_type m, 
                   const ordinal_type n, 
                   const ordinal_type nnz,
                   const size_type_array &ap,
                   const ordinal_type_array &aj,
                   const value_type_array &ax) 
-      : _label(label), 
-        _m(m),
+      : _m(m),
         _n(n),
         _nnz(nnz),
         _ap(ap), 
@@ -415,7 +403,7 @@ namespace Tacho {
       os.precision(8);
       os << scientific;
 
-      os << " -- " << _label << " -- " << endl
+      os << " -- CrsMatrixBase -- " << endl
          << "    # of Rows          = " << _m << endl
          << "    # of Cols          = " << _n << endl
          << "    # of NonZeros      = " << _nnz << endl

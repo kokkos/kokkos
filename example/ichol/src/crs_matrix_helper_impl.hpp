@@ -1,4 +1,4 @@
-#pragma once
+
 #ifndef __CRS_MATRIX_HELPER_IMPL_HPP__
 #define __CRS_MATRIX_HELPER_IMPL_HPP__
 
@@ -13,7 +13,6 @@ namespace Tacho {
   using namespace std;
   
   template<typename CrsFlatBase>
-  KOKKOS_INLINE_FUNCTION
   int
   CrsMatrixHelper::filterZeros(CrsFlatBase &flat) {
     typedef typename CrsFlatBase::ordinal_type           ordinal_type;
@@ -64,7 +63,6 @@ namespace Tacho {
 
   template<typename CrsFlatBase,
            typename CrsHierBase>
-  KOKKOS_INLINE_FUNCTION
   int
   CrsMatrixHelper::flat2hier(CrsFlatBase &flat,
                              CrsHierBase &hier) {
@@ -96,7 +94,6 @@ namespace Tacho {
 
   template<typename CrsFlatBase,
            typename CrsHierBase>
-  KOKKOS_INLINE_FUNCTION
   int
   CrsMatrixHelper::flat2hier(int uplo,
                              CrsFlatBase &flat,
@@ -113,7 +110,6 @@ namespace Tacho {
 
   template<typename CrsFlatBase,
            typename CrsHierBase>
-  KOKKOS_INLINE_FUNCTION
   int
   CrsMatrixHelper::flat2hier_upper(CrsFlatBase &flat, 
                                    CrsHierBase &hier,
@@ -157,7 +153,6 @@ namespace Tacho {
 
   // template<typename CrsFlatBase,
   //          typename CrsHierBase>
-  // KOKKOS_INLINE_FUNCTION
   // int
   // CrsMatrixHelper::flat2hier_upper(CrsFlatBase &flat,
   //                                  CrsHierBase &hier,
@@ -223,7 +218,6 @@ namespace Tacho {
 
   template<typename CrsFlatBase,
            typename CrsHierBase>
-  KOKKOS_INLINE_FUNCTION
   int
   CrsMatrixHelper::flat2hier_lower(CrsFlatBase &flat,
                                    CrsHierBase &hier,

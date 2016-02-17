@@ -65,7 +65,7 @@ namespace Tacho {
                          const int lsize = (space_type::thread_pool_size(0)/
                                             space_type::thread_pool_size(2)))  {
 
-      _label = "SymbolicFactorHelper::" + A.Label();
+      _label = "SymbolicFactorHelper::" ;
 
       // matrix index base and the number of rows
       _A = A;
@@ -144,7 +144,7 @@ namespace Tacho {
       void setPhaseCountNumNonZeros() { _phase = 0; }
       void setPhaseComputeColIndex()  { _phase = 1; }
 
-      KOKKOS_INLINE_FUNCTION
+      inline
       void operator()(const typename policy_type::member_type &member) const {
         const int lrank = member.league_rank();
         const int lsize = member.league_size();
@@ -306,7 +306,7 @@ namespace Tacho {
       }
 
       {
-        F = CrsMatrixType(F.Label(), _m, _n, nnz, ap, aj, ax);
+        F = CrsMatrixType("dummy", _m, _n, nnz, ap, aj, ax);
         F.add(_A);
       }
 

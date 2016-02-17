@@ -16,7 +16,7 @@ namespace Tacho {
   class CrsRowView;
 
   template<typename CrsMatBaseType>
-  class CrsMatrixView : public Disp {
+  class CrsMatrixView {
   public:
     typedef typename CrsMatBaseType::space_type    space_type;
     
@@ -42,12 +42,12 @@ namespace Tacho {
     row_view_type_array _rows;
     
   public:
-    KOKKOS_INLINE_FUNCTION
+
     void fillRowViewArray(const bool flag = true) {
       if (flag) {
         if (static_cast<ordinal_type>(_rows.dimension_0()) < _m)
           // When the value type is a submatrix View must initialize properly
-          _rows = row_view_type_array((_base.Label() + "::View::RowViewArray"), _m);
+          _rows = row_view_type_array("CrsMatrixView::RowViewArray", _m);
         
         for (ordinal_type i=0;i<_m;++i)
           _rows[i].setView(*this, i);
@@ -95,7 +95,7 @@ namespace Tacho {
       return false;
     }
 
-    KOKKOS_INLINE_FUNCTION
+    inline
     size_type countNumNonZeros() const { 
       size_type nnz = 0;
       const ordinal_type m = NumRows();
@@ -107,10 +107,7 @@ namespace Tacho {
       return nnz; 
     }
 
-    virtual bool hasDenseFlatBase() const { return false; }
-    virtual bool hasDenseHierBase() const { return false; }
-    virtual bool isDenseFlatBaseValid() const { return false; }
-
+    KOKKOS_INLINE_FUNCTION
     CrsMatrixView()
       : _base(),
         _offm(0),
@@ -120,6 +117,7 @@ namespace Tacho {
         _rows()
     { } 
 
+    KOKKOS_INLINE_FUNCTION
     CrsMatrixView(const CrsMatrixView &b)
       : _base(b._base),
         _offm(b._offm),
@@ -129,6 +127,7 @@ namespace Tacho {
         _rows(b._rows)
     { } 
 
+    KOKKOS_INLINE_FUNCTION
     CrsMatrixView(const CrsMatBaseType & b)
       : _base(b),
         _offm(0),
@@ -151,16 +150,10 @@ namespace Tacho {
 
     ostream& showMe(ostream &os) const {
       const int w = 4;
-      os << _base.Label() << "::View, "
+      os << "CrsMatrixView, "
          << " Offs ( " << setw(w) << _offm << ", " << setw(w) << _offn << " ); "
          << " Dims ( " << setw(w) << _m    << ", " << setw(w) << _n    << " ); "
          << " NumNonZeros = " << countNumNonZeros() << ";";
-
-      if (hasDenseFlatBase()) 
-        os << " DenseFlatBase::" << (isDenseFlatBaseValid() ? "Valid  " : "Invalid");
-
-      if (hasDenseHierBase()) 
-        os << " DenseHierBase::created";
 
       return os;
     }

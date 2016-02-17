@@ -12,7 +12,7 @@ namespace Tacho {
 
   /// \class CrsRowView
   template<typename CrsMatBaseType>
-  class CrsRowView : public Disp {
+  class CrsRowView {
   public:
     typedef typename CrsMatBaseType::ordinal_type           ordinal_type;
     typedef typename CrsMatBaseType::value_type             value_type;
@@ -69,6 +69,7 @@ namespace Tacho {
       return (j < 0 ? value_type(0) : _ax[j]);
     }
 
+    KOKKOS_INLINE_FUNCTION
     CrsRowView()
       : _offn(0),
         _n(0),
@@ -110,8 +111,8 @@ namespace Tacho {
       const typename CrsMatBaseType::ordinal_type_array_ptr next = A.BaseObject().ColsInRow(ii+1);
       const typename CrsMatBaseType::value_type_array_ptr   vals = A.BaseObject().ValuesInRow(ii);
 
-      _aj  = lower_bound(cols, next, _offn);
-      _ajn = lower_bound(_aj,  next, _offn+_n);
+      _aj  = std::lower_bound(cols, next, _offn);
+      _ajn = std::lower_bound(_aj,  next, _offn+_n);
       _ax  = &vals[_aj - cols];
     }
 

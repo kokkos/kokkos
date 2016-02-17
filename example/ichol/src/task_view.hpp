@@ -28,18 +28,22 @@ namespace Tacho {
     void setFuture(const future_type &f) { _f = f; }
     future_type Future() const { return _f; }
 
+    KOKKOS_INLINE_FUNCTION
     TaskView() 
       : MatrixViewType(), _f()
     { } 
 
+    KOKKOS_INLINE_FUNCTION
     TaskView(const TaskView &b) 
       : MatrixViewType(b), _f(b._f)
     { } 
 
+    KOKKOS_INLINE_FUNCTION
     TaskView(typename MatrixViewType::mat_base_type const & b) 
       : MatrixViewType(b), _f() 
     { }
 
+    KOKKOS_INLINE_FUNCTION
     TaskView(typename MatrixViewType::mat_base_type const & b,
              const ordinal_type offm, const ordinal_type m,
              const ordinal_type offn, const ordinal_type n) 
