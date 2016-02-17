@@ -36,11 +36,11 @@ namespace Tacho {
       : MatrixViewType(b), _f(b._f)
     { } 
 
-    TaskView(typename MatrixViewType::mat_base_type *b) 
+    TaskView(typename MatrixViewType::mat_base_type const & b) 
       : MatrixViewType(b), _f() 
     { }
 
-    TaskView(typename MatrixViewType::mat_base_type *b,
+    TaskView(typename MatrixViewType::mat_base_type const & b,
              const ordinal_type offm, const ordinal_type m,
              const ordinal_type offn, const ordinal_type n) 
       : MatrixViewType(b, offm, m, offn, n), _f() 

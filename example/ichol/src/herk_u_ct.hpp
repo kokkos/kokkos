@@ -8,6 +8,4 @@
 
 #include "herk_u_ct_for_factor_blocked.hpp"
 
-#include "herk_u_ct_external_blas.hpp"
-
 #endif

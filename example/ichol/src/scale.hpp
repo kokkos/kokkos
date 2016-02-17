@@ -62,7 +62,7 @@ namespace Tacho {
     if (alpha == ScaleTraits<value_type>::one) {
       // do nothing
     } else {
-      if (A.BaseObject()->ColStride() > A.BaseObject()->RowStride()) {
+      if (A.BaseObject().ColStride() > A.BaseObject().RowStride()) {
         const ordinal_type nA = A.NumCols();
         if (nA > 0) {
           Kokkos::parallel_for(Kokkos::TeamThreadRange(member, 0, nA),

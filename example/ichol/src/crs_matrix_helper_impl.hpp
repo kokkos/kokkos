@@ -83,7 +83,7 @@ namespace Tacho {
       ordinal_type_array_ptr ci = flat.ColsInRow(i);
       for (ordinal_type j=0;j<jsize;++j,++nnz) {
         hier._aj[nnz] = ci[j];
-        hier._ax[nnz].setView(&flat,     i, 1,
+        hier._ax[nnz].setView( flat,     i, 1,
                               /**/   ci[j], 1);
       }
     }
@@ -141,7 +141,7 @@ namespace Tacho {
       hier._ap[i] = nnz;
       for (ordinal_type j=i;j != -1;++nnz,j=tree[j]) {
         hier._aj[nnz] = j;
-        hier._ax[nnz].setView(&flat, range[i], (range[i+1] - range[i]),
+        hier._ax[nnz].setView( flat, range[i], (range[i+1] - range[i]),
                               /**/   range[j], (range[j+1] - range[j]));
         // this checking might more expensive 
         if (!hier._ax[nnz].countNumNonZeros())
@@ -206,7 +206,7 @@ namespace Tacho {
   //       ordinal_type k=j;
   //       do {
   //         hier._aj[nnz] = k;
-  //         hier._ax[nnz].setView(&flat, range[i], (range[i+1] - range[i]),
+  //         hier._ax[nnz].setView( flat, range[i], (range[i+1] - range[i]),
   //                               /**/   range[k], (range[k+1] - range[k]));
 
   //         // this checking might more expensive
@@ -260,7 +260,7 @@ namespace Tacho {
     // for (ordinal_type i=0;i<nblks;++i)
     //   for (ordinal_type j=i;j != -1;j=tree[j]) {
     //     hier._aj[tmp[j]] = i;
-    //     hier._ax[tmp[j]].setView(&flat, range[j], (range[j+1] - range[j]),
+    //     hier._ax[tmp[j]].setView( flat, range[j], (range[j+1] - range[j]),
     //                              /**/   range[i], (range[i+1] - range[i]));
     //     ++tmp[j];
     //   }

@@ -106,9 +106,9 @@ namespace Tacho {
 
       const ordinal_type ii = A.OffsetRows() + i;
 
-      const typename CrsMatBaseType::ordinal_type_array_ptr cols = A.BaseObject()->ColsInRow(ii);
-      const typename CrsMatBaseType::ordinal_type_array_ptr next = A.BaseObject()->ColsInRow(ii+1);
-      const typename CrsMatBaseType::value_type_array_ptr   vals = A.BaseObject()->ValuesInRow(ii);
+      const typename CrsMatBaseType::ordinal_type_array_ptr cols = A.BaseObject().ColsInRow(ii);
+      const typename CrsMatBaseType::ordinal_type_array_ptr next = A.BaseObject().ColsInRow(ii+1);
+      const typename CrsMatBaseType::value_type_array_ptr   vals = A.BaseObject().ValuesInRow(ii);
 
       _aj  = lower_bound(cols, next, _offn);
       _ajn = lower_bound(_aj,  next, _offn+_n);

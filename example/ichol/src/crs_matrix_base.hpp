@@ -74,8 +74,10 @@ namespace Tacho {
       //_ax = value_type_array(Kokkos::ViewAllocateWithoutInitializing(_label+"::ValuesArray"), nnz);
     }
 
-
+    // Copy sparse matrix structure from coordinate format in 'mm'
+    // to CRS format in Views _ap, _aj, a_x.
     void ijv2crs(const vector<ijv_type> &mm) {
+
       ordinal_type ii = 0;
       size_type jj = 0;
       
@@ -229,14 +231,16 @@ namespace Tacho {
         _ax(ax) 
     { }
     
-    /// \brief deep copy of matrix b
-    template<typename VT,
-             typename OT,
-             typename ST,
-             typename SpT,
-             typename MT>
+  // Allow the copy function access to the input CrsMatrixBase
+  // private data.
+  template<typename, typename, typename, typename, typename>
+  friend class CrsMatrixBase ;
+
+  public:
+    /// \brief deep copy of matrix b, potentially different spaces
+    template< typename SpT >
     int 
-    copy(const CrsMatrixBase<VT,OT,ST,SpT,MT> &b) {
+    copy(const CrsMatrixBase<ValueType,OrdinalType,SizeType,SpT,MemoryTraits> &b) {
       createInternalArrays(b._m, b._n, b._nnz);
 
       const auto ap_range = range_type<ordinal_type>(0, min(_ap.dimension_0(), b._ap.dimension_0()));
@@ -247,6 +251,7 @@ namespace Tacho {
                         Kokkos::subview(b._ap, ap_range));
       Kokkos::deep_copy(Kokkos::subview(  _aj, aj_range),
                         Kokkos::subview(b._aj, aj_range));
+
       Kokkos::deep_copy(Kokkos::subview(  _ax, ax_range),
                         Kokkos::subview(b._ax, ax_range));
 
@@ -254,14 +259,9 @@ namespace Tacho {
     }
 
     /// \brief deep copy of lower/upper triangular of matrix b
-    template<typename VT,
-             typename OT,
-             typename ST,
-             typename SpT,
-             typename MT>
     int 
     copy(const int uplo, 
-         const CrsMatrixBase<VT,OT,ST,SpT,MT> &b) { 
+         const CrsMatrixBase &b) { 
 
       createInternalArrays(b._m, b._n, b._nnz);
 
@@ -551,11 +551,13 @@ namespace Tacho {
       return 0;
     }
 
+    //----------------------------------------------------------------------
+
     int convertGraph(size_type_array rptr,
                      ordinal_type_array cidx) const {
       ordinal_type ii = 0;
       size_type jj = 0;
-      
+
       for (ordinal_type i=0;i<_m;++i) {
         size_type jbegin = _ap[i], jend = _ap[i+1];
         rptr[ii++] = jj;
@@ -567,6 +569,8 @@ namespace Tacho {
 
       return 0;
     }
+
+    //----------------------------------------------------------------------
 
   };
 

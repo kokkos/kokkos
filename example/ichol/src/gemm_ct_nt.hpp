@@ -9,7 +9,4 @@
 #include "gemm_ct_nt_for_factor_blocked.hpp"
 #include "gemm_ct_nt_for_tri_solve_blocked.hpp"
 
-#include "gemm_ct_nt_dense_by_blocks.hpp"
-#include "gemm_ct_nt_external_blas.hpp"
-
 #endif

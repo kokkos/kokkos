@@ -49,7 +49,7 @@ int main (int argc, char *argv[]) {
     exec_space::print_configuration(cout, true);
 
     r_val = exampleCholPerformanceDevice
-      <value_type,ordinal_type,size_type,exec_space,void>
+      <value_type,ordinal_type,size_type,exec_space>
       (file_input,
        treecut,
        prunecut,

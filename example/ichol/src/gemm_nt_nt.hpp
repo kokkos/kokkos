@@ -8,7 +8,4 @@
 
 #include "gemm_nt_nt_for_tri_solve_blocked.hpp"
 
-#include "gemm_nt_nt_dense_by_blocks.hpp"
-#include "gemm_nt_nt_external_blas.hpp"
-
 #endif

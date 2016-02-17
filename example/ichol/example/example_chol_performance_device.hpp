@@ -28,8 +28,7 @@ namespace Tacho {
   template<typename ValueType,
            typename OrdinalType,
            typename SizeType = OrdinalType,
-           typename SpaceType = void,
-           typename MemoryTraits = void>
+           typename SpaceType = void>
   KOKKOS_INLINE_FUNCTION
   int exampleCholPerformanceDevice(const string file_input,
                                    const int treecut,
@@ -50,14 +49,22 @@ namespace Tacho {
     typedef TaskFactory<Kokkos::Experimental::TaskPolicy<SpaceType>,
       Kokkos::Experimental::Future<int,SpaceType> > TaskFactoryType;
 
-    typedef CrsMatrixBase<value_type,ordinal_type,size_type,SpaceType,MemoryTraits> CrsMatrixBaseType;
+    typedef CrsMatrixBase<value_type,ordinal_type,size_type,SpaceType>
+      CrsMatrixBaseType;
+
+    typedef Kokkos::MemoryUnmanaged MemoryUnmanaged ;
+
+    typedef CrsMatrixBase<value_type,ordinal_type,size_type,SpaceType,MemoryUnmanaged >
+      CrsMatrixNestedType;
+
+
     typedef GraphHelper_Scotch<CrsMatrixBaseType> GraphHelperType;
     typedef SymbolicFactorHelper<CrsMatrixBaseType> SymbolicFactorHelperType;
 
-    typedef CrsMatrixView<CrsMatrixBaseType> CrsMatrixViewType;
+    typedef CrsMatrixView<CrsMatrixNestedType> CrsMatrixViewType;
     typedef TaskView<CrsMatrixViewType,TaskFactoryType> CrsTaskViewType;
 
-    typedef CrsMatrixBase<CrsTaskViewType,ordinal_type,size_type,SpaceType,MemoryTraits> CrsHierMatrixBaseType;
+    typedef CrsMatrixBase<CrsTaskViewType,ordinal_type,size_type,SpaceType> CrsHierMatrixBaseType;
 
     typedef CrsMatrixView<CrsHierMatrixBaseType> CrsHierMatrixViewType;
     typedef TaskView<CrsHierMatrixViewType,TaskFactoryType> CrsHierTaskViewType;
@@ -96,7 +103,8 @@ namespace Tacho {
     cout << "CholPerformanceDevice:: reorder the matrix" << endl;
     CrsMatrixBaseType PA("Permuted AA");
     CrsMatrixBaseType UU("UU");     // permuted base upper triangular matrix
-    CrsHierMatrixBaseType HU("HU"); // hierarchical matrix of views
+
+    CrsHierMatrixBaseType HU("HU");;
 
     {
       typename GraphHelperType::size_type_array rptr(AA.Label()+"Graph::RowPtrArray", AA.NumRows() + 1);
@@ -123,6 +131,10 @@ namespace Tacho {
                << PA << endl;
       }
 
+      // Symbolic factorization adds non-zero entries
+      // for factorization levels.
+      // Runs on the host process and currently requires std::sort.
+
       cout << "CholPerformanceDevice:: reorder the matrix::time = " << t_reorder << endl;
       {
         SymbolicFactorHelperType F(PA, league_size);
@@ -136,6 +148,14 @@ namespace Tacho {
                << UU << endl;
       }
       cout << "CholPerformanceDevice:: symbolic factorization::time = " << t_symbolic << endl;
+
+    //----------------------------------------------------------------------
+    // Set up the hierarchical sparse matrix of views (HU)
+    // into the flat sparse matrix (UU).
+    // Assign entries of HU into UU,
+    // then deep copy HU to HU.
+    //----------------------------------------------------------------------
+
       {
         timer.reset();
         CrsMatrixHelper::flat2hier(Uplo::Upper, UU, HU,
@@ -153,43 +173,16 @@ namespace Tacho {
       cout << "CholPerformanceDevice:: construct hierarchical matrix::time = " << t_flat2hier << endl;
     }
 
-    // copy of UU
-    CrsMatrixBaseType RR("RR");
-    RR.copy(UU);
-
     cout << "CholPerformanceDevice:: max concurrency = " << max_concurrency << endl;
 
     const size_t max_task_size = 3*sizeof(CrsTaskViewType)+128;
     cout << "CholPerformanceDevice:: max task size   = " << max_task_size << endl;
 
-    if (!skip_serial) {
-      typename TaskFactoryType::policy_type policy(max_concurrency,
-                                                   max_task_size,
-                                                   max_task_dependence,
-                                                   1);
+    //----------------------------------------------------------------------
+    // From here onward all work is on the device.
+    //----------------------------------------------------------------------
 
-      TaskFactoryType::setMaxTaskDependence(max_task_dependence);
-      TaskFactoryType::setPolicy(&policy);
-
-      CrsTaskViewType U(&UU);
-      U.fillRowViewArray();
-
-      cout << "CholPerformanceDevice:: Serial factorize the matrix" << endl;
-      {
-        UU.copy(RR);
-        timer.reset();
-        {
-          Chol<Uplo::Upper,AlgoChol::UnblockedOpt,Variant::One>
-            ::invoke(TaskFactoryType::Policy(),
-                              TaskFactoryType::Policy().member_single(),
-                              U);
-        }
-        t_factor_seq = timer.seconds();
-        if (verbose)
-          cout << UU << endl;
-      }
-      cout << "CholPerformanceDevice:: Serial factorize the matrix::time = " << t_factor_seq << endl;
-    }
+    
 
     {
       typename TaskFactoryType::policy_type policy(max_concurrency,
@@ -200,9 +193,8 @@ namespace Tacho {
       TaskFactoryType::setPolicy(&policy);
 
       cout << "CholPerformanceDevice:: ByBlocks factorize the matrix:: team_size = " << team_size << endl;
-      CrsHierTaskViewType H(&HU);
+      CrsHierTaskViewType H( HU );
       {
-        UU.copy(RR);
         timer.reset();
         {
           auto future = TaskFactoryType::Policy().task_create_team(Chol<Uplo::Upper,AlgoChol::ByBlocks>::
@@ -212,14 +204,11 @@ namespace Tacho {
         }
         t_factor_task += timer.seconds();
 
-        if (verbose)
+        if (verbose) {
           cout << UU << endl;
+        }
       }
       cout << "CholPerformanceDevice:: ByBlocks factorize the matrix::time = " << t_factor_task << endl;
-    }
-
-    if (!skip_serial) {
-      cout << "CholPerformanceDevice:: task scale [seq/task] = " << t_factor_seq/t_factor_task << endl;
     }
 
     return r_val;

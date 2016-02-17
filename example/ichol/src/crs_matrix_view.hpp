@@ -19,7 +19,6 @@ namespace Tacho {
   class CrsMatrixView : public Disp {
   public:
     typedef typename CrsMatBaseType::space_type    space_type;
-    typedef typename CrsMatBaseType::memory_traits memory_traits;
     
     typedef typename CrsMatBaseType::value_type    value_type;
     typedef typename CrsMatBaseType::ordinal_type  ordinal_type;
@@ -31,11 +30,10 @@ namespace Tacho {
     // be careful this use rcp and atomic operation
     // - use setView to create a view if _rows is not necessary
     // - copy constructor and assignment operator will do soft copy of the object
-    typedef Kokkos::View<row_view_type*,space_type,memory_traits> row_view_type_array;
+    typedef Kokkos::View<row_view_type*,space_type> row_view_type_array;
     
   private:
-    CrsMatBaseType *_base;   // pointer to the base object
-
+    CrsMatBaseType _base;    // shallow copy of the base object
     ordinal_type  _offm;     // offset in rows
     ordinal_type  _offn;     // offset in cols
     ordinal_type  _m;        // # of rows
@@ -48,7 +46,8 @@ namespace Tacho {
     void fillRowViewArray(const bool flag = true) {
       if (flag) {
         if (static_cast<ordinal_type>(_rows.dimension_0()) < _m)
-          _rows = row_view_type_array(Kokkos::ViewAllocateWithoutInitializing(_base->Label() + "::View::RowViewArray"), _m);
+          // When the value type is a submatrix View must initialize properly
+          _rows = row_view_type_array((_base.Label() + "::View::RowViewArray"), _m);
         
         for (ordinal_type i=0;i<_m;++i)
           _rows[i].setView(*this, i);
@@ -61,7 +60,7 @@ namespace Tacho {
     row_view_type& RowView(const ordinal_type i) const { return _rows[i]; }
 
     KOKKOS_INLINE_FUNCTION
-    void setView(CrsMatBaseType *base,
+    void setView(const CrsMatBaseType &base,
                  const ordinal_type offm, const ordinal_type m,
                  const ordinal_type offn, const ordinal_type n) {
       _base = base;
@@ -71,7 +70,7 @@ namespace Tacho {
     }
 
     KOKKOS_INLINE_FUNCTION
-    CrsMatBaseType* BaseObject() const { return _base; }
+    const CrsMatBaseType & BaseObject() const { return _base; }
 
     KOKKOS_INLINE_FUNCTION
     ordinal_type  OffsetRows() const { return _offm; }
@@ -113,7 +112,7 @@ namespace Tacho {
     virtual bool isDenseFlatBaseValid() const { return false; }
 
     CrsMatrixView()
-      : _base(NULL),
+      : _base(),
         _offm(0),
         _offn(0),
         _m(0),
@@ -130,16 +129,16 @@ namespace Tacho {
         _rows(b._rows)
     { } 
 
-    CrsMatrixView(CrsMatBaseType *b)
+    CrsMatrixView(const CrsMatBaseType & b)
       : _base(b),
         _offm(0),
         _offn(0),
-        _m(b->NumRows()),
-        _n(b->NumCols()),
+        _m(b.NumRows()),
+        _n(b.NumCols()),
         _rows()
     { } 
 
-    CrsMatrixView(CrsMatBaseType *b,
+    CrsMatrixView(const CrsMatBaseType & b,
                   const ordinal_type offm, const ordinal_type m,
                   const ordinal_type offn, const ordinal_type n) 
       : _base(b),
@@ -152,13 +151,10 @@ namespace Tacho {
 
     ostream& showMe(ostream &os) const {
       const int w = 4;
-      if (_base != NULL) 
-        os << _base->Label() << "::View, "
-           << " Offs ( " << setw(w) << _offm << ", " << setw(w) << _offn << " ); "
-           << " Dims ( " << setw(w) << _m    << ", " << setw(w) << _n    << " ); "
-           << " NumNonZeros = " << countNumNonZeros() << ";";
-      else 
-        os << "-- Base object is null --;";
+      os << _base.Label() << "::View, "
+         << " Offs ( " << setw(w) << _offm << ", " << setw(w) << _offn << " ); "
+         << " Dims ( " << setw(w) << _m    << ", " << setw(w) << _n    << " ); "
+         << " NumNonZeros = " << countNumNonZeros() << ";";
 
       if (hasDenseFlatBase()) 
         os << " DenseFlatBase::" << (isDenseFlatBaseValid() ? "Valid  " : "Invalid");
