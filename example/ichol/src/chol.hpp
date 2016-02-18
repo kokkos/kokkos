@@ -48,22 +48,25 @@ namespace Tacho {
     private:
       ExecViewType _A;
       
-      policy_type &_policy;
+      policy_type _policy;
       
     public:
-      TaskFunctor(const ExecViewType A)
+      KOKKOS_INLINE_FUNCTION
+      TaskFunctor(const policy_type & P , const ExecViewType A)
         : _A(A),
-          _policy(ExecViewType::task_factory_type::Policy())
+          _policy(P)
       { } 
       
       string Label() const { return "Chol"; }
       
       // task execution
+      KOKKOS_INLINE_FUNCTION
       void apply(value_type &r_val) {
         r_val = Chol::invoke(_policy, _policy.member_single(), _A);
       }
 
       // task-data execution
+      KOKKOS_INLINE_FUNCTION
       void apply(const member_type &member, value_type &r_val) {
         r_val = Chol::invoke(_policy, member, _A);
       }

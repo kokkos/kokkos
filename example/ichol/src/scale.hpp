@@ -12,13 +12,11 @@ namespace Tacho {
 
   template<typename T> struct ScaleTraits {
     typedef T scale_type;
-    static T one;
-    static T zero;
+    // assume built-in types have appropriate type conversion
+    static constexpr T one = 1 ;
+    static constexpr T zero = 0 ;
   };
 
-  // assume built-in types have appropriate type conversion
-  template<typename T> T ScaleTraits<T>::one  = 1;
-  template<typename T> T ScaleTraits<T>::zero = 0;
 
   template<typename ScalarType,
            typename CrsExecViewType>

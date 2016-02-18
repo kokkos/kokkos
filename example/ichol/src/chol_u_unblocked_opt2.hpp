@@ -26,6 +26,15 @@ namespace Tacho {
     typedef typename CrsExecViewType::ordinal_type      ordinal_type;
     typedef typename CrsExecViewType::row_view_type     row_view_type;
 
+if ( member.team_rank() == 0 ) {
+ printf("Chol [%d +%d)x[%d +%d)\n"
+       , A.OffsetRows()
+       , A.NumRows()
+       , A.OffsetCols()
+       , A.NumCols()
+       );
+}
+
     // row_view_type r1t, r2t;
 
     for (ordinal_type k=0;k<A.NumRows();++k) {
@@ -43,7 +52,8 @@ namespace Tacho {
         // error handling should be more carefully designed
 
         // sqrt on diag
-        alpha = sqrt(real(alpha));
+        // alpha = sqrt(real(alpha));
+        alpha = sqrt(alpha);
       }
       member.team_barrier();
 
@@ -61,7 +71,8 @@ namespace Tacho {
         // hermitian rank update
         for (ordinal_type i=1;i<nnz_r1t;++i) {
           const ordinal_type row_at_i = r1t.Col(i);
-          const value_type   val_at_i = conj(r1t.Value(i));
+          // const value_type   val_at_i = conj(r1t.Value(i));
+          const value_type   val_at_i = r1t.Value(i);
 
           //r2t.setView(A, row_at_i);
           row_view_type &r2t = A.RowView(row_at_i);

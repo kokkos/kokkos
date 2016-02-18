@@ -52,10 +52,12 @@ namespace Tacho {
       ExecViewTypeB _B;
       ExecViewTypeC _C;
 
-      policy_type &_policy;
+      policy_type _policy;
 
     public:
-      TaskFunctor(const ScalarType alpha,
+      KOKKOS_INLINE_FUNCTION
+      TaskFunctor(const policy_type & P,
+                  const ScalarType alpha,
                   const ExecViewTypeA A,
                   const ExecViewTypeB B,
                   const ScalarType beta,
@@ -65,18 +67,20 @@ namespace Tacho {
           _A(A),
           _B(B),
           _C(C),
-          _policy(ExecViewTypeA::task_factory_type::Policy())
+          _policy(P)
       { }
 
       string Label() const { return "Gemm"; }
 
       // task execution
+      KOKKOS_INLINE_FUNCTION
       void apply(value_type &r_val) {
         r_val = Gemm::invoke(_policy, _policy.member_single(),
                              _alpha, _A, _B, _beta, _C);
       }
 
       // task-data execution
+      KOKKOS_INLINE_FUNCTION
       void apply(const member_type &member, value_type &r_val) {
         r_val = Gemm::invoke(_policy, member,
                              _alpha, _A, _B, _beta, _C);

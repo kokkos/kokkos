@@ -70,7 +70,8 @@ namespace Tacho {
     for (ordinal_type i=0;i<mA;++i) 
       for (ordinal_type j=0;j<nA;++j) {
         value_type val = A.Value(i,j);
-        r_val += conj(val)*val;
+        // r_val += conj(val)*val;
+        r_val += val*val;
       }
     return sqrt(r_val);
   }

@@ -43,7 +43,8 @@ namespace Tacho {
         // error handling should be more carefully designed
 
         // sqrt on diag
-        alpha = sqrt(real(alpha));
+        // alpha = sqrt(real(alpha));
+        alpha = sqrt(alpha);
       }
       member.team_barrier();
 
@@ -62,7 +63,8 @@ namespace Tacho {
         Kokkos::parallel_for(Kokkos::TeamThreadRange(member, 1, nnz_r1t),
                              [&](const ordinal_type i) {
                                const ordinal_type row_at_i = r1t.Col(i);
-                               const value_type   val_at_i = conj(r1t.Value(i));
+                               // const value_type   val_at_i = conj(r1t.Value(i));
+                               const value_type   val_at_i = r1t.Value(i);
                                
                                //r2t.setView(A, row_at_i);
                                row_view_type &r2t = A.RowView(row_at_i);

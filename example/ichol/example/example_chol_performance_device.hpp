@@ -196,18 +196,16 @@ namespace Tacho {
                                                    max_task_size,
                                                    max_task_dependence,
                                                    team_size);
-      TaskFactoryType::setMaxTaskDependence(max_task_dependence);
-      TaskFactoryType::setPolicy(&policy);
 
       cout << "CholPerformanceDevice:: ByBlocks factorize the matrix:: team_size = " << team_size << endl;
       CrsHierTaskViewType H( HU );
       {
         timer.reset();
         {
-          auto future = TaskFactoryType::Policy().task_create_team(Chol<Uplo::Upper,AlgoChol::ByBlocks>::
-                                                              TaskFunctor<CrsHierTaskViewType>(H), 0);
-          TaskFactoryType::Policy().spawn(future);
-          Kokkos::Experimental::wait(TaskFactoryType::Policy());
+          auto future = policy.proc_create_team(Chol<Uplo::Upper,AlgoChol::ByBlocks>::
+                                                TaskFunctor<CrsHierTaskViewType>(policy,H), 0);
+          policy.spawn(future);
+          Kokkos::Experimental::wait(policy);
         }
         t_factor_task += timer.seconds();
 

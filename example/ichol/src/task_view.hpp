@@ -25,7 +25,10 @@ namespace Tacho {
     future_type _f;
 
   public:
+    KOKKOS_INLINE_FUNCTION
     void setFuture(const future_type &f) { _f = f; }
+
+    KOKKOS_INLINE_FUNCTION
     future_type Future() const { return _f; }
 
     KOKKOS_INLINE_FUNCTION

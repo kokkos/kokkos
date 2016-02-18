@@ -31,6 +31,16 @@ namespace Tacho {
     typedef typename CrsExecViewTypeA::value_type        value_type;
     typedef typename CrsExecViewTypeA::row_view_type     row_view_type;
 
+
+if ( member.team_rank() == 0 ) {
+ printf("Trsm [%d +%d)x[%d +%d)\n"
+       , B.OffsetRows()
+       , B.NumRows()
+       , B.OffsetCols()
+       , B.NumCols()
+       );
+}
+
     // scale the matrix B with alpha
     scaleCrsMatrix(member, alpha, B);
 
@@ -41,7 +51,8 @@ namespace Tacho {
     if (nB > 0) {
       for (ordinal_type k=0;k<mA;++k) {
         row_view_type &a = A.RowView(k);
-        const value_type cdiag = conj(a.Value(0));
+        // const value_type cdiag = std::conj(a.Value(0)); // for complex<T>
+        const value_type cdiag = a.Value(0);
 
         // invert
         row_view_type &b1 = B.RowView(k);
@@ -68,7 +79,8 @@ namespace Tacho {
                                  for (ordinal_type i=1;i<nnz_a;++i) {
                                    // grab a12t
                                    const ordinal_type row_at_i = a.Col(i);
-                                   const value_type   val_at_i = conj(a.Value(i));
+                                   // const value_type   val_at_i = conj(a.Value(i));
+                                   const value_type   val_at_i = a.Value(i);
 
                                    // grab b2
                                    row_view_type &b2 = B.RowView(row_at_i);
@@ -118,7 +130,8 @@ namespace Tacho {
     if (nB > 0) {
       for (ordinal_type k=0;k<mA;++k) {
         row_view_type &a = A.RowView(k);
-        const value_type cdiag = conj(a.Value(0));
+        // const value_type cdiag = conj(a.Value(0));
+        const value_type cdiag = a.Value(0);
 
         // invert
         row_view_type &b1 = B.RowView(k);
@@ -141,7 +154,8 @@ namespace Tacho {
                                [&](const ordinal_type i) {
                                  // grab a12t
                                  const ordinal_type row_at_i = a.Col(i);
-                                 const value_type   val_at_i = conj(a.Value(i));
+                                 // const value_type   val_at_i = conj(a.Value(i));
+                                 const value_type   val_at_i = a.Value(i);
 
                                  // grab b2
                                  row_view_type &b2 = B.RowView(row_at_i);

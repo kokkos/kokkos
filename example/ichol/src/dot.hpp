@@ -17,7 +17,8 @@ namespace Tacho {
 
     static KOKKOS_FORCEINLINE_FUNCTION 
     dot_type 
-    dot(const T &x, const T &y) { return conj<T>(x)*y; }
+    // dot(const T &x, const T &y) { return conj<T>(x)*y; }
+    dot(const T &x, const T &y) { return x*y; }
   }; 
 
   template<typename CrsRowViewType>

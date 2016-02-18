@@ -31,6 +31,16 @@ namespace Tacho {
     typedef typename CrsExecViewTypeA::value_type        value_type;
     typedef typename CrsExecViewTypeA::row_view_type     row_view_type;
 
+
+if ( member.team_rank() == 0 ) {
+ printf("Herk [%d +%d)x[%d +%d)\n"
+       , C.OffsetRows()
+       , C.NumRows()
+       , C.OffsetCols()
+       , C.NumCols()
+       );
+}
+
     // scale the matrix C with beta
     scaleCrsMatrix(member, beta, C);
 
@@ -43,7 +53,8 @@ namespace Tacho {
         Kokkos::parallel_for(Kokkos::TeamThreadRange(member, 0, nnz),
                              [&](const ordinal_type i) {
                                const ordinal_type row_at_i  = a.Col(i);
-                               const value_type   val_at_ik = conj(a.Value(i));
+                               // const value_type   val_at_ik = conj(a.Value(i));
+                               const value_type   val_at_ik = a.Value(i);
 
                                row_view_type &c = C.RowView(row_at_i);
 

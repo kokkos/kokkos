@@ -78,6 +78,28 @@ namespace Tacho {
         _ax() 
     { }
 
+    static KOKKOS_INLINE_FUNCTION
+    typename CrsMatBaseType::ordinal_type_array_ptr
+    lower_bound( typename CrsMatBaseType::ordinal_type_array_ptr begin ,
+                 typename CrsMatBaseType::ordinal_type_array_ptr const end ,
+                 typename CrsMatBaseType::ordinal_type           const val )
+      {
+         typename CrsMatBaseType::ordinal_type_array_ptr it = begin ;
+         int count = end - begin ;
+         int step = 0 ;
+         while (count>0) {
+           it = begin ;
+           it += ( step = (count >> 1) );
+           if (*it<val) {
+             begin=++it;
+             count-=step+1;
+           }
+           else { count=step; }
+         }
+         return begin;
+      }
+
+    KOKKOS_INLINE_FUNCTION
     CrsRowView(const ordinal_type           offn,
                const ordinal_type           n,
                const ordinal_type_array_ptr aj,
@@ -90,16 +112,19 @@ namespace Tacho {
         _ax(ax) 
     { }
 
+    KOKKOS_INLINE_FUNCTION
     CrsRowView(const CrsMatrixView<CrsMatBaseType> &A, 
                const ordinal_type i) {
       this->setView(A, i);
     }
 
+    KOKKOS_INLINE_FUNCTION
     CrsRowView(const CrsMatBaseType &A, 
                const ordinal_type i) {
       this->setView(A, i);
     }
 
+    KOKKOS_INLINE_FUNCTION
     void setView(const CrsMatrixView<CrsMatBaseType> &A, 
                  const ordinal_type i) {
       _offn = A.OffsetCols();
@@ -111,11 +136,14 @@ namespace Tacho {
       const typename CrsMatBaseType::ordinal_type_array_ptr next = A.BaseObject().ColsInRow(ii+1);
       const typename CrsMatBaseType::value_type_array_ptr   vals = A.BaseObject().ValuesInRow(ii);
 
-      _aj  = std::lower_bound(cols, next, _offn);
-      _ajn = std::lower_bound(_aj,  next, _offn+_n);
+      // [cols..next) is sorted so a log(N) search could performed
+      _aj  = CrsRowView::lower_bound(cols, next, _offn);
+      _ajn = CrsRowView::lower_bound(_aj,  next, _offn+_n);
+
       _ax  = &vals[_aj - cols];
     }
 
+    KOKKOS_INLINE_FUNCTION
     void setView(const CrsMatBaseType &A, 
                  const ordinal_type i) {
       _offn = 0;

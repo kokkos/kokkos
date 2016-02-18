@@ -1,15 +1,12 @@
 #include <Kokkos_Core.hpp>
 
-#include <Kokkos_Threads.hpp>
-#include <Threads/Kokkos_Threads_TaskPolicy.hpp>
+#include <Cuda/Kokkos_Cuda_TaskPolicy.hpp>
 
 using namespace std;
 
 typedef double value_type;
 typedef int    ordinal_type;
 typedef int    size_type;
-
-typedef Kokkos::Threads exec_space;
 
 #include "example_chol_performance_device.hpp"
 
@@ -45,11 +42,15 @@ int main (int argc, char *argv[]) {
 
   int r_val = 0;
   {
-    exec_space::initialize(nthreads);
+    typedef Kokkos::Cuda exec_space;
+
+    Kokkos::DefaultHostExecutionSpace::initialize();
+
+    exec_space::initialize();
     exec_space::print_configuration(cout, true);
 
     r_val = exampleCholPerformanceDevice
-      <value_type,ordinal_type,size_type,exec_space,void>
+      <value_type,ordinal_type,size_type,exec_space>
       (file_input,
        treecut,
        prunecut,

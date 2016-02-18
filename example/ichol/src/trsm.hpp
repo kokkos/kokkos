@@ -49,10 +49,12 @@ namespace Tacho {
       ExecViewTypeA _A;
       ExecViewTypeB _B;
 
-      policy_type &_policy;
+      policy_type _policy;
 
     public:
-      TaskFunctor(const int diagA,
+      KOKKOS_INLINE_FUNCTION
+      TaskFunctor(const policy_type & P,
+                  const int diagA,
                   const ScalarType alpha,
                   const ExecViewTypeA A,
                   const ExecViewTypeB B)
@@ -60,18 +62,20 @@ namespace Tacho {
           _alpha(alpha),
           _A(A),
           _B(B),
-          _policy(ExecViewTypeA::task_factory_type::Policy())
+          _policy(P)
       { }
 
       string Label() const { return "Trsm"; }
 
       // task execution
+      KOKKOS_INLINE_FUNCTION
       void apply(value_type &r_val) {
         r_val = Trsm::invoke(_policy, _policy.member_single(),
                              _diagA, _alpha, _A, _B);
       }
 
       // task-data execution
+      KOKKOS_INLINE_FUNCTION
       void apply(const member_type &member, value_type &r_val) {
         r_val = Trsm::invoke(_policy, member, 
                              _diagA, _alpha, _A, _B);

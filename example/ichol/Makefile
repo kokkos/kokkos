@@ -27,18 +27,27 @@ KOKKOS_CXXFLAGS +=	\
 	-I${KOKKOS_PATH}/example/ichol/example	\
 	-I${SCOTCH_PATH}/include
 
-EXE_EXAMPLE_ICHOL = KokkosExample_ichol
-OBJ_EXAMPLE_ICHOL = example_chol_performance_device_pthread.o
+EXE_EXAMPLE_ICHOL_THREADS = KokkosExample_ichol_threads
+OBJ_EXAMPLE_ICHOL_THREADS = example_chol_performance_device_pthread.o
 
-TARGETS = $(EXE_EXAMPLE_ICHOL)
+EXE_EXAMPLE_ICHOL_CUDA = KokkosExample_ichol_cuda
+OBJ_EXAMPLE_ICHOL_CUDA = example_chol_performance_device_cuda.o
+
+TARGETS = $(EXE_EXAMPLE_ICHOL_THREADS) $(EXE_EXAMPLE_ICHOL_CUDA)
 
 #TEST_TARGETS =
 
-$(EXE_EXAMPLE_ICHOL) : $(OBJ_EXAMPLE_ICHOL) $(KOKKOS_LINK_DEPENDS)
+$(EXE_EXAMPLE_ICHOL_THREADS) : $(OBJ_EXAMPLE_ICHOL_THREADS) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) \
-	$(OBJ_EXAMPLE_ICHOL) $(KOKKOS_LIBS) $(LIB) \
+	$(OBJ_EXAMPLE_ICHOL_THREADS) $(KOKKOS_LIBS) $(LIB) \
 	-L${SCOTCH_PATH}/lib -lscotch  -lscotcherr  -lscotcherrexit \
-	-o $(EXE_EXAMPLE_ICHOL)
+	-o $(EXE_EXAMPLE_ICHOL_THREADS)
+
+$(EXE_EXAMPLE_ICHOL_CUDA) : $(OBJ_EXAMPLE_ICHOL_CUDA) $(KOKKOS_LINK_DEPENDS)
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) \
+	$(OBJ_EXAMPLE_ICHOL_CUDA) $(KOKKOS_LIBS) $(LIB) \
+	-L${SCOTCH_PATH}/lib -lscotch  -lscotcherr  -lscotcherrexit \
+	-o $(EXE_EXAMPLE_ICHOL_CUDA)
 
 build_all : $(TARGETS)
 

@@ -41,7 +41,7 @@ namespace Tacho {
       future_type f = task_factory_type::create(policy,
                                                 typename Chol<Uplo::Upper,
                                                 CtrlDetail(ControlType,AlgoChol::ByBlocks,ArgVariant,Chol)>
-                                                ::template TaskFunctor<value_type>(aa));
+                                                ::template TaskFunctor<value_type>(policy,aa));
       
       // manage dependence
       task_factory_type::addDependence(policy, f, aa.Future());
@@ -75,7 +75,7 @@ namespace Tacho {
           ::create(policy, 
                    typename Trsm<Side::Left,Uplo::Upper,Trans::ConjTranspose,
                    CtrlDetail(ControlType,AlgoChol::ByBlocks,ArgVariant,Trsm)>
-                   ::template TaskFunctor<double,value_type,value_type>(Diag::NonUnit, 1.0, aa, bb));
+                   ::template TaskFunctor<double,value_type,value_type>(policy,Diag::NonUnit, 1.0, aa, bb));
         
         // trsm dependence
         task_factory_type::addDependence(policy, f, aa.Future());
@@ -130,7 +130,7 @@ namespace Tacho {
                 ::create(policy, 
                          typename Herk<Uplo::Upper,Trans::ConjTranspose,
                          CtrlDetail(ControlType,AlgoChol::ByBlocks,ArgVariant,Herk)>
-                         ::template TaskFunctor<double,value_type,value_type>(-1.0, aa, 1.0, cc));
+                         ::template TaskFunctor<double,value_type,value_type>(policy,-1.0, aa, 1.0, cc));
             
               // dependence
               task_factory_type::addDependence(policy, f, aa.Future());              
@@ -152,7 +152,7 @@ namespace Tacho {
                 ::create(policy, 
                          typename Gemm<Trans::ConjTranspose,Trans::NoTranspose,
                          CtrlDetail(ControlType,AlgoChol::ByBlocks,ArgVariant,Gemm)>
-                         ::template TaskFunctor<double,value_type,value_type,value_type>(-1.0, aa, bb, 1.0, cc));
+                         ::template TaskFunctor<double,value_type,value_type,value_type>(policy,-1.0, aa, bb, 1.0, cc));
             
               // dependence
               task_factory_type::addDependence(policy, f, aa.Future());
@@ -240,22 +240,25 @@ namespace Tacho {
     private:
       ExecViewType _A;
       
-      policy_type &_policy;
+      policy_type _policy;
       
     public:
-      TaskFunctor(const ExecViewType A)
+      KOKKOS_INLINE_FUNCTION
+      TaskFunctor(const policy_type & P , const ExecViewType & A)
         : _A(A),
-          _policy(ExecViewType::task_factory_type::Policy())
+          _policy(P)
       { } 
       
       string Label() const { return "Chol"; }
       
       // task execution
+      KOKKOS_INLINE_FUNCTION
       void apply(value_type &r_val) {
         r_val = Chol::invoke(_policy, _policy.member_single(), _A);
       }
       
       // task-data execution
+      KOKKOS_INLINE_FUNCTION
       void apply(const member_type &member, value_type &r_val) {
         r_val = Chol::invoke(_policy, member, _A);
       }

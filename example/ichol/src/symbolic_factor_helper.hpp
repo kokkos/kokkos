@@ -17,7 +17,8 @@ namespace Tacho {
   public:
     typedef typename CrsMatrixType::ordinal_type ordinal_type;
     typedef typename CrsMatrixType::size_type    size_type;
-    typedef typename CrsMatrixType::space_type   space_type;
+
+    typedef typename Kokkos::HostSpace::execution_space  host_exec_space ;
 
     typedef typename CrsMatrixType::ordinal_type_array ordinal_type_array;
     typedef typename CrsMatrixType::size_type_array    size_type_array;
@@ -38,7 +39,7 @@ namespace Tacho {
     typedef struct crs_graph crs_graph_type;
     crs_graph_type _in, _out;
 
-    typedef Kokkos::View<ordinal_type**, Kokkos::LayoutLeft, space_type> league_specific_ordinal_type_array;
+    typedef Kokkos::View<ordinal_type**, Kokkos::LayoutLeft, host_exec_space> league_specific_ordinal_type_array;
     typedef typename league_specific_ordinal_type_array::value_type* league_specific_ordinal_type_array_ptr;
 
     int _lsize;
@@ -62,8 +63,8 @@ namespace Tacho {
     string Label() const { return _label; }
 
     SymbolicFactorHelper(const CrsMatrixType &A,
-                         const int lsize = (space_type::thread_pool_size(0)/
-                                            space_type::thread_pool_size(2)))  {
+                         const int lsize = (host_exec_space::thread_pool_size(0)/
+                                            host_exec_space::thread_pool_size(2)))  {
 
       _label = "SymbolicFactorHelper::" ;
 
@@ -112,7 +113,7 @@ namespace Tacho {
 
     class FunctorComputeNonZeroPatternInRow {
     public:
-      typedef Kokkos::TeamPolicy<space_type> policy_type;
+      typedef Kokkos::TeamPolicy<host_exec_space> policy_type;
 
     private:
       ordinal_type _level, _m;
@@ -232,7 +233,7 @@ namespace Tacho {
 
     class FunctorCountOffsetsInRow {
     public:
-      typedef Kokkos::RangePolicy<space_type> policy_type;
+      typedef Kokkos::RangePolicy<host_exec_space> policy_type;
       typedef size_type value_type;
 
     private:

@@ -1,4 +1,4 @@
-#pragma once
+
 #ifndef __PARTITION_HPP__
 #define __PARTITION_HPP__
 
@@ -31,7 +31,7 @@ namespace Tacho {
       break;
     case Partition::TopRight:
     case Partition::BottomLeft:
-      ERROR(MSG_NOT_YET_IMPLEMENTED);
+      Kokkos::abort("Tacho::Part_2x2 Not yet implemented");
       break;
     case Partition::BottomRight:
       bmm = A.NumRows() - min(bm, A.NumRows());
@@ -42,7 +42,7 @@ namespace Tacho {
                   A.OffsetCols(), bnn);
       break;
     default:
-      ERROR(MSG_INVALID_INPUT(quadrant));
+      Kokkos::abort("Tacho::Part_2x2 Invalid Input");
       break;
     }
     
@@ -85,7 +85,7 @@ namespace Tacho {
                  A.OffsetCols(), bnn);
       break;
     default:
-      ERROR(MSG_INVALID_INPUT(side));
+      Kokkos::abort("Tacho::Part_1x2 Invalid Input");
       break;
     }
 
@@ -121,7 +121,7 @@ namespace Tacho {
                  A.OffsetCols(), bnn);
       break;
     default:
-      ERROR(MSG_INVALID_INPUT(side));
+      Kokkos::abort("Tacho::Part_2x1 Invalid Input");
       break;
     }
     
@@ -158,7 +158,7 @@ namespace Tacho {
       break;
     case Partition::TopRight:
     case Partition::BottomLeft:
-      ERROR(MSG_NOT_YET_IMPLEMENTED);
+      Kokkos::abort("Tacho::Part_???");
       break;
     case Partition::BottomRight:
       A00.setView(ATL.BaseObject(),
@@ -177,7 +177,7 @@ namespace Tacho {
                bm, bn, Partition::TopLeft);
       break;
     default:
-      ERROR(MSG_INVALID_INPUT(side));
+      Kokkos::abort("Tacho::Part_???");
       break;
     }
   }
@@ -210,7 +210,7 @@ namespace Tacho {
                bm, Partition::Top);
       break;
     default:
-      ERROR(MSG_INVALID_INPUT(side));
+      Kokkos::abort("Tacho::Part_???");
       break;
     }
   }
@@ -240,7 +240,7 @@ namespace Tacho {
                bn, Partition::Left);
       break;
     default:
-      ERROR(MSG_INVALID_INPUT(side));
+      Kokkos::abort("Tacho::Part_???");
       break;
     }
   }
@@ -297,7 +297,7 @@ namespace Tacho {
       break;
     case Partition::TopRight:
     case Partition::BottomLeft:
-      ERROR(MSG_NOT_YET_IMPLEMENTED);
+      Kokkos::abort("Tacho::Part_???");
       break;
     case Partition::BottomRight:
       ATL.setView(A00.BaseObject(),
@@ -313,7 +313,7 @@ namespace Tacho {
                 A21, A22, ABR);
       break;
     default:
-      ERROR(MSG_INVALID_INPUT(side));
+      Kokkos::abort("Tacho::Part_???");
       break;
     }
   }
@@ -343,7 +343,7 @@ namespace Tacho {
                 A2, AB);
       break;
     default:
-      ERROR(MSG_INVALID_INPUT(side));
+      Kokkos::abort("Tacho::Part_???");
       break;
     }
   }
@@ -370,7 +370,7 @@ namespace Tacho {
       Merge_1x2(A1, A2, AR);
       break;
     default:
-      ERROR(MSG_INVALID_INPUT(side));
+      Kokkos::abort("Tacho::Part_???");
       break;
     }
   }
