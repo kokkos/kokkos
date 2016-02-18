@@ -43,10 +43,21 @@ namespace Tacho {
                                                 CtrlDetail(ControlType,AlgoChol::ByBlocks,ArgVariant,Chol)>
                                                 ::template TaskFunctor<value_type>(policy,aa));
       
+
+if ( false ) {
+ printf("Chol [%d +%d)x[%d +%d) spawn depend %d\n"
+       , aa.OffsetRows()
+       , aa.NumRows()
+       , aa.OffsetCols()
+       , aa.NumCols()
+       , int( ! aa.Future().is_null() )
+       );
+}
+
       // manage dependence
       task_factory_type::addDependence(policy, f, aa.Future());
       aa.setFuture(f);
-      
+
       // spawn a task
       task_factory_type::spawn(policy, f);
       
@@ -77,6 +88,17 @@ namespace Tacho {
                    CtrlDetail(ControlType,AlgoChol::ByBlocks,ArgVariant,Trsm)>
                    ::template TaskFunctor<double,value_type,value_type>(policy,Diag::NonUnit, 1.0, aa, bb));
         
+if ( false ) {
+ printf("Trsm [%d +%d)x[%d +%d) spawn depend %d %d\n"
+       , bb.OffsetRows()
+       , bb.NumRows()
+       , bb.OffsetCols()
+       , bb.NumCols()
+       , int( ! aa.Future().is_null() )
+       , int( ! bb.Future().is_null() )
+       );
+}
+
         // trsm dependence
         task_factory_type::addDependence(policy, f, aa.Future());
         
@@ -132,6 +154,18 @@ namespace Tacho {
                          CtrlDetail(ControlType,AlgoChol::ByBlocks,ArgVariant,Herk)>
                          ::template TaskFunctor<double,value_type,value_type>(policy,-1.0, aa, 1.0, cc));
             
+
+if ( false ) {
+ printf("Herk [%d +%d)x[%d +%d) spawn %d %d\n"
+       , cc.OffsetRows()
+       , cc.NumRows()
+       , cc.OffsetCols()
+       , cc.NumCols()
+       , int( ! aa.Future().is_null() )
+       , int( ! cc.Future().is_null() )
+       );
+}
+
               // dependence
               task_factory_type::addDependence(policy, f, aa.Future());              
             
@@ -140,7 +174,7 @@ namespace Tacho {
             
               // place task signature on y
               cc.setFuture(f);
-            
+
               // spawn a task
               task_factory_type::spawn(policy, f);
             }
@@ -154,6 +188,19 @@ namespace Tacho {
                          CtrlDetail(ControlType,AlgoChol::ByBlocks,ArgVariant,Gemm)>
                          ::template TaskFunctor<double,value_type,value_type,value_type>(policy,-1.0, aa, bb, 1.0, cc));
             
+
+if ( false ) {
+ printf("Gemm [%d +%d)x[%d +%d) spawn %d %d %d\n"
+       , cc.OffsetRows()
+       , cc.NumRows()
+       , cc.OffsetCols()
+       , cc.NumCols()
+       , int( ! aa.Future().is_null() )
+       , int( ! bb.Future().is_null() )
+       , int( ! cc.Future().is_null() )
+       );
+}
+ 
               // dependence
               task_factory_type::addDependence(policy, f, aa.Future());
               task_factory_type::addDependence(policy, f, bb.Future());

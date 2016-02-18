@@ -30,12 +30,8 @@ namespace Tacho {
     KOKKOS_INLINE_FUNCTION
     static int invoke(typename ExecViewType::policy_type &policy, 
                       const typename ExecViewType::policy_type::member_type &member, 
-                      ExecViewType &A) {
-      // each algorithm and its variants should be specialized
-      ERROR(MSG_INVALID_TEMPLATE_ARGS);
-      return -1;
-    } 
-    
+                      ExecViewType &A);
+
     // task-data parallel interface
     // ============================
     template<typename ExecViewType>
@@ -68,7 +64,11 @@ namespace Tacho {
       // task-data execution
       KOKKOS_INLINE_FUNCTION
       void apply(const member_type &member, value_type &r_val) {
-        r_val = Chol::invoke(_policy, member, _A);
+
+        const int result = Chol::invoke(_policy, member, _A);
+
+        if ( 0 == member.team_rank() ) { r_val = result ; }
+
       }
 
     };

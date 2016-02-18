@@ -179,7 +179,10 @@ mkdir example
 mkdir example/fixture
 mkdir example/feint
 mkdir example/fenl
+
+if [ ${KOKKOS_ENABLE_EXAMPLE_ICHOL} -gt 0 ]; then
 mkdir example/ichol
+fi
 
 # Generate subdirectory makefiles.
 echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > core/unit_test/Makefile
@@ -237,17 +240,6 @@ echo "" >> algorithms/unit_tests/Makefile
 echo "clean:" >> algorithms/unit_tests/Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_OPTIONS} clean" >> algorithms/unit_tests/Makefile
 
-echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > example/ichol/Makefile
-echo "" >> example/ichol/Makefile
-echo "all:" >> example/ichol/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_OPTIONS}" >> example/ichol/Makefile
-echo "" >> example/ichol/Makefile
-echo "test: all" >> example/ichol/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_OPTIONS} test" >> example/ichol/Makefile
-echo "" >> example/ichol/Makefile
-echo "clean:" >> example/ichol/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_OPTIONS} clean" >> example/ichol/Makefile
-
 echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > example/fixture/Makefile
 echo "" >> example/fixture/Makefile
 echo "all:" >> example/fixture/Makefile
@@ -280,6 +272,19 @@ echo -e "\tmake -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_OPTIONS} test" 
 echo "" >> example/fenl/Makefile
 echo "clean:" >> example/fenl/Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_OPTIONS} clean" >> example/fenl/Makefile
+
+if [ ${KOKKOS_ENABLE_EXAMPLE_ICHOL} -gt 0 ]; then
+echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > example/ichol/Makefile
+echo "" >> example/ichol/Makefile
+echo "all:" >> example/ichol/Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_OPTIONS}" >> example/ichol/Makefile
+echo "" >> example/ichol/Makefile
+echo "test: all" >> example/ichol/Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_OPTIONS} test" >> example/ichol/Makefile
+echo "" >> example/ichol/Makefile
+echo "clean:" >> example/ichol/Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_OPTIONS} clean" >> example/ichol/Makefile
+fi
 
 # Generate top level directory makefile.
 echo "Generating Makefiles with options " ${KOKKOS_OPTIONS}

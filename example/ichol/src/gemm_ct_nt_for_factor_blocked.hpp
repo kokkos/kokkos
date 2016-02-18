@@ -32,7 +32,8 @@ namespace Tacho {
     typedef typename CrsExecViewTypeA::value_type        value_type;
     typedef typename CrsExecViewTypeA::row_view_type     row_view_type;
 
-if ( member.team_rank() == 0 ) {
+
+if ( false && member.team_rank() == 0 ) {
  printf("Gemm [%d +%d)x[%d +%d)\n"
        , C.OffsetRows()
        , C.NumRows()

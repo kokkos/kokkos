@@ -26,8 +26,8 @@ namespace Tacho {
     typedef typename CrsExecViewType::ordinal_type      ordinal_type;
     typedef typename CrsExecViewType::row_view_type     row_view_type;
 
-if ( member.team_rank() == 0 ) {
- printf("Chol [%d +%d)x[%d +%d)\n"
+if ( false && member.team_rank() == 0 ) {
+ printf("Chol [%d +%d)x[%d +%d) begin\n"
        , A.OffsetRows()
        , A.NumRows()
        , A.OffsetCols()
@@ -57,6 +57,18 @@ if ( member.team_rank() == 0 ) {
       }
       member.team_barrier();
 
+
+if ( false && member.team_rank() == 0 ) {
+ printf("Chol [%d +%d)x[%d +%d) local row %d\n"
+       , A.OffsetRows()
+       , A.NumRows()
+       , A.OffsetCols()
+       , A.NumCols()
+       , int(k)
+       );
+}
+
+
       const ordinal_type nnz_r1t = r1t.NumNonZeros();
 
       if (nnz_r1t) {
@@ -68,6 +80,17 @@ if ( member.team_rank() == 0 ) {
 
         member.team_barrier();
 
+
+if ( false && member.team_rank() == 0 ) {
+ printf("Chol [%d +%d)x[%d +%d) local row %d nnz_r1t\n"
+       , A.OffsetRows()
+       , A.NumRows()
+       , A.OffsetCols()
+       , A.NumCols()
+       , int(k)
+       );
+}
+
         // hermitian rank update
         for (ordinal_type i=1;i<nnz_r1t;++i) {
           const ordinal_type row_at_i = r1t.Col(i);
@@ -77,22 +100,52 @@ if ( member.team_rank() == 0 ) {
           //r2t.setView(A, row_at_i);
           row_view_type &r2t = A.RowView(row_at_i);
 
-          ordinal_type idx_team[MAX_TEAM_SIZE] = {};
+          ordinal_type member_idx = 0 ;
+
           Kokkos::parallel_for(Kokkos::TeamThreadRange(member, i, nnz_r1t),
                                [&](const ordinal_type j) {
-                                 ordinal_type &idx = idx_team[member.team_rank()];
-                                 if (idx > -2) {
+                                 if (member_idx > -2) {
                                    const ordinal_type col_at_j = r1t.Col(j);
-                                   idx = r2t.Index(col_at_j, idx);
-                                   if (idx >= 0) {
+                                   member_idx = r2t.Index(col_at_j, member_idx);
+                                   if (member_idx >= 0) {
                                      const value_type   val_at_j = r1t.Value(j);
-                                     r2t.Value(idx) -= val_at_i*val_at_j;
+                                     r2t.Value(member_idx) -= val_at_i*val_at_j;
                                    }
                                  }
                                });
         }
       }
+
+
+if ( false ) {
+member.team_barrier();
+if ( member.team_rank() == 0 ) {
+ printf("Chol [%d +%d)x[%d +%d) local row %d end\n"
+       , A.OffsetRows()
+       , A.NumRows()
+       , A.OffsetCols()
+       , A.NumCols()
+       , int(k)
+       );
+}
+}
+
     }
+
+
+if ( false ) {
+member.team_barrier();
+if ( member.team_rank() == 0 ) {
+ printf("Chol [%d +%d)x[%d +%d) end\n"
+       , A.OffsetRows()
+       , A.NumRows()
+       , A.OffsetCols()
+       , A.NumCols()
+       );
+}
+}
+
+
     return 0;
   }
 

@@ -90,17 +90,23 @@ CudaTaskPolicyQueue
   ( const unsigned arg_task_max_count
   , const unsigned arg_task_max_size
   , const unsigned arg_task_default_dependence_capacity 
-  , const unsigned
+  , const unsigned arg_team_size
   )
   : m_space( Kokkos::CudaUVMSpace()
            , arg_task_max_size
            , arg_task_max_size * arg_task_max_count )
   , m_team { 0 , 0 , 0 }
   , m_serial { 0 , 0 , 0 }
-  , m_team_size( 32 * 4 /* 4 warps */ )
+  , m_team_size( 32 /* 1 warps */ )
   , m_default_dependence_capacity( arg_task_default_dependence_capacity )
   , m_count_ready(0)
 {
+  constexpr int max_team_size = 32 * 16 /* 16 warps */ ;
+
+  const int target_team_size =
+    std::min( int(arg_team_size) , max_team_size );
+
+  while ( m_team_size < target_team_size ) { m_team_size *= 2 ; }
 }
 
 //-----------------------------------------------------------------------
@@ -111,10 +117,10 @@ void Kokkos::Experimental::Impl::CudaTaskPolicyQueue::driver()
 {
   task_root_type * const q_denied = reinterpret_cast<task_root_type*>(QDENIED);
 
-  const bool is_team_lead = threadIdx.x == 0 && threadIdx.y == 0 ;
+#define IS_TEAM_LEAD ( threadIdx.x == 0 && threadIdx.y == 0 )
 
 #ifdef DETAILED_PRINT
-if ( is_team_lead ) {
+if ( IS_TEAM_LEAD ) {
   printf( "CudaTaskPolicyQueue::driver() begin on %d with count %d\n"
         , blockIdx.x , m_count_ready );
 }
@@ -129,7 +135,7 @@ if ( is_team_lead ) {
 
   do {
 
-    if ( is_team_lead ) {
+    if ( IS_TEAM_LEAD ) {
       if ( 0 == m_count_ready ) {
         team_task = q_denied ; // All queues are empty and no running tasks
       }
@@ -147,7 +153,7 @@ if ( is_team_lead ) {
     __syncthreads();
 
 #ifdef DETAILED_PRINT
-if ( is_team_lead && 0 != team_task ) {
+if ( IS_TEAM_LEAD && 0 != team_task ) {
   printf( "CudaTaskPolicyQueue::driver() (%d) team_task(0x%lx)\n"
         , blockIdx.x
         , (unsigned long) team_task );
@@ -173,7 +179,7 @@ if ( is_team_lead && 0 != team_task ) {
         // A __synthreads was called and if completed the
         // functor was destroyed.
 
-        if ( is_team_lead ) {
+        if ( IS_TEAM_LEAD ) {
           complete_executed_task( team_task );
         }
       }
@@ -210,12 +216,13 @@ if ( 0 != task ) {
   } while ( q_denied != team_task );
 
 #ifdef DETAILED_PRINT
-if ( is_team_lead ) {
+if ( IS_TEAM_LEAD ) {
   printf( "CudaTaskPolicyQueue::driver() end on %d with count %d\n"
         , blockIdx.x , m_count_ready );
 }
 #endif
 
+#undef IS_TEAM_LEAD
 }
 
 //-----------------------------------------------------------------------
@@ -285,6 +292,17 @@ void CudaTaskPolicyQueue::complete_executed_task(
 {
   task_root_type * const q_denied = reinterpret_cast<task_root_type*>(QDENIED);
   
+
+#ifdef DETAILED_PRINT
+printf( "CudaTaskPolicyQueue::complete_executed_task(0x%lx) state(%d) (%d)(%d,%d)\n"
+      , (unsigned long) task
+      , task->m_state
+      , blockIdx.x
+      , threadIdx.x
+      , threadIdx.y
+      );
+#endif
+
   // State is either executing or if respawned then waiting,
   // try to transition from executing to complete.
   // Reads the current value.
@@ -300,11 +318,6 @@ void CudaTaskPolicyQueue::complete_executed_task(
   }
   else if ( int(Kokkos::Experimental::TASK_STATE_EXECUTING) == state_old ) {
     /* Task is complete */
-    
-#ifdef DETAILED_PRINT
-printf( "CudaTaskPolicyQueue::complete_executed_task(0x%lx)\n"
-      , (unsigned long) task );
-#endif
 
     // Clear dependences of this task before locking wait queue
     
@@ -709,6 +722,7 @@ void wait( Kokkos::Experimental::TaskPolicy< Kokkos::Cuda > & policy )
 {
   const dim3 grid( Kokkos::Impl::cuda_internal_multiprocessor_count() , 1 , 1 );
   const dim3 block( 1 , policy.m_policy->m_team_size , 1 );
+
   const int shared = 0 ; // Kokkos::Impl::CudaTraits::SharedMemoryUsage / 2 ;
   const cudaStream_t stream = 0 ;
 

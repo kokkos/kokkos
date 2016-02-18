@@ -341,10 +341,13 @@ namespace Tacho {
          << "    # of NonZeros  = " << _in._nnz << endl ;
 
       os << " -- Input Graph :: RowPtr -- " << endl;
-      for (ordinal_type i=0;i<_in._ap.dimension_0();++i)
-        os << setw(w) << i
-           << setw(w) << _in._ap[i]
-           << endl;
+      {
+        const ordinal_type n0 = _in._ap.dimension_0();
+        for (ordinal_type i=0;i<n0;++i)
+          os << setw(w) << i
+             << setw(w) << _in._ap[i]
+             << endl;
+      }
 
       os << endl;
 
@@ -352,10 +355,13 @@ namespace Tacho {
          << "    # of NonZeros  = " << _out._nnz << endl ;
 
       os << " -- Output Graph :: RowPtr -- " << endl;
-      for (ordinal_type i=0;i<_out._ap.dimension_0();++i)
-        os << setw(w) << i
-           << setw(w) << _out._ap[i]
-           << endl;
+      {
+        const ordinal_type n0 = _out._ap.dimension_0();
+        for (ordinal_type i=0;i<n0;++i)
+          os << setw(w) << i
+             << setw(w) << _out._ap[i]
+             << endl;
+      }
 
       os.unsetf(ios::scientific);
       os.precision(prec);

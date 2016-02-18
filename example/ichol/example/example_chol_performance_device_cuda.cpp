@@ -44,7 +44,7 @@ int main (int argc, char *argv[]) {
   {
     typedef Kokkos::Cuda exec_space;
 
-    Kokkos::DefaultHostExecutionSpace::initialize();
+    Kokkos::DefaultHostExecutionSpace::initialize(nthreads);
 
     exec_space::initialize();
     exec_space::print_configuration(cout, true);
@@ -62,6 +62,8 @@ int main (int argc, char *argv[]) {
        verbose);
 
     exec_space::finalize();
+
+    Kokkos::DefaultHostExecutionSpace::finalize();
   }
 
   return r_val;

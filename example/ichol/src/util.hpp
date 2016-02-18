@@ -36,10 +36,6 @@ using namespace std;
 
 namespace Tacho {
 
-#ifndef MAX_TEAM_SIZE
-#define MAX_TEAM_SIZE 8
-#endif
-
 #undef CHKERR
 #define CHKERR(ierr)                                                    \
   if (ierr != 0) { cout << endl << ">> Error in " << __FILE__ << ", " << __LINE__ << " : " << ierr << endl; }
