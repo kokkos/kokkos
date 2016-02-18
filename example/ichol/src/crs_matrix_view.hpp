@@ -30,7 +30,7 @@ namespace Tacho {
     // be careful this use rcp and atomic operation
     // - use setView to create a view if _rows is not necessary
     // - copy constructor and assignment operator will do soft copy of the object
-    typedef Kokkos::View<row_view_type*,space_type> row_view_type_array;
+    typedef Kokkos::View<row_view_type*,space_type,Kokkos::MemoryUnmanaged> row_view_type_array;
     
   private:
     CrsMatBaseType _base;    // shallow copy of the base object
@@ -43,18 +43,13 @@ namespace Tacho {
     
   public:
 
-    void fillRowViewArray(const bool flag = true) {
-      if (flag) {
-        if (static_cast<ordinal_type>(_rows.dimension_0()) < _m)
-          // When the value type is a submatrix View must initialize properly
-          _rows = row_view_type_array("CrsMatrixView::RowViewArray", _m);
-        
+    void setRowViewArray( const row_view_type_array & arg_rows )
+      {
+        _rows = arg_rows ;
+
         for (ordinal_type i=0;i<_m;++i)
           _rows[i].setView(*this, i);
-      } else {
-        _rows = row_view_type_array();
       }
-    }
 
     KOKKOS_INLINE_FUNCTION
     row_view_type& RowView(const ordinal_type i) const { return _rows[i]; }

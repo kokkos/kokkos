@@ -11,6 +11,33 @@
 namespace Tacho {
 
   using namespace std;
+
+  template< typename CrsHierBase >
+  int CrsMatrixHelper::fillRowViewArray( CrsHierBase & HU )
+  {
+    typedef typename CrsHierBase::row_view_type_array row_view_type_array ;
+
+    int total_row_view_count = 0 ;
+    for (ordinal_type k=0;k<HU.NumNonZeros();++k) {
+      total_row_view_count += HU.Value(k).NumRows();
+    }
+
+    HU._all_row_views = row_view_type_array("RowViews",total_row_view_count);
+
+    total_row_view_count = 0 ;
+    for (ordinal_type k=0;k<HU.NumNonZeros();++k) {
+       const int begin = total_row_view_count ;
+       const int end   = begin + HU.Value(k).NumRows();
+
+       row_view_type_array sub =
+         Kokkos::subview( HU._all_row_views, Kokkos::pair<int,int>(begin,end) );
+
+       HU.Value(k).setRowViewArray( sub );
+
+       total_row_view_count = end ;
+    }
+    return 0 ;
+  }
   
   template<typename CrsFlatBase>
   int

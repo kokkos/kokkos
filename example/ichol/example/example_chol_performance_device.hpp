@@ -170,8 +170,7 @@ namespace Tacho {
                                    S.RangeVector(),
                                    S.TreeVector());
 
-        for (ordinal_type k=0;k<HU.NumNonZeros();++k)
-          HU.Value(k).fillRowViewArray();
+        CrsMatrixHelper::fillRowViewArray( HU );
 
         t_flat2hier = timer.seconds();
 

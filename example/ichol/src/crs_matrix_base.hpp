@@ -12,7 +12,22 @@
 namespace Tacho { 
 
   using namespace std;
-  
+
+  template< typename , typename > class TaskView ;
+
+  template < typename CrsMatrixType >
+  struct GetCrsMatrixRowViewType {
+    typedef int type ;
+  };
+
+
+  template < typename CrsMatrixViewType , typename TaskFactoryType >
+  struct GetCrsMatrixRowViewType
+    < TaskView<CrsMatrixViewType,TaskFactoryType> >
+  {
+    typedef typename CrsMatrixViewType::row_view_type type ;
+  };
+
   /// \class CrsMatrixBase
   /// \breif CRS matrix base object using Kokkos view and subview
   template<typename ValueType,
@@ -46,6 +61,7 @@ namespace Tacho {
     friend class CrsMatrixHelper;
 
   private:
+
     ordinal_type       _m;       //!< # of rows
     ordinal_type       _n;       //!< # of cols
     size_type          _nnz;     //!< # of nonzeros
@@ -53,7 +69,15 @@ namespace Tacho {
     ordinal_type_array _aj;      //!< column index compressed format
     value_type_array   _ax;      //!< values
 
+  public:
+
+    typedef typename GetCrsMatrixRowViewType< ValueType >::type row_view_type ;
+    typedef Kokkos::View<row_view_type*,space_type> row_view_type_array;
+
+    row_view_type_array _all_row_views ;
+
   protected:
+
     void createInternalArrays(const ordinal_type m, 
                               const ordinal_type n,
                               const size_type nnz) {

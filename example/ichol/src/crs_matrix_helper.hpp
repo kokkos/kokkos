@@ -15,6 +15,9 @@ namespace Tacho {
   class CrsMatrixHelper {
   public:
 
+    template< typename CrsHierBase >
+    static int fillRowViewArray( CrsHierBase & HU );
+
     template<typename CrsFlatBase>
     static int
     filterZeros(CrsFlatBase &flat);
