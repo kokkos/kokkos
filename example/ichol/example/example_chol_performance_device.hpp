@@ -105,7 +105,9 @@ namespace Tacho {
     CrsMatrixBaseType PA("Permuted AA");
     CrsMatrixBaseType UU("UU");     // permuted base upper triangular matrix
 
-    CrsHierMatrixBaseType HU("HU");;
+    CrsHierMatrixBaseType device_HU("HU");;
+
+    // typename CrsMatrixBaseHostType host_UU("host_UU");
 
     {
       typename GraphHelperType::size_type_array rptr("Graph::RowPtrArray", AA.NumRows() + 1);
@@ -162,19 +164,21 @@ namespace Tacho {
     // Assign entries of HU into UU,
     // then deep copy HU to HU.
     //----------------------------------------------------------------------
+    // deep_copy host_UU to device_UU
+    // set up device_HU referencing blocks of device_UU
 
       {
         timer.reset();
-        CrsMatrixHelper::flat2hier(Uplo::Upper, UU, HU,
+        CrsMatrixHelper::flat2hier(Uplo::Upper, UU, device_HU,
                                    S.NumBlocks(),
                                    S.RangeVector(),
                                    S.TreeVector());
 
-        CrsMatrixHelper::fillRowViewArray( HU );
+        CrsMatrixHelper::fillRowViewArray( device_HU );
 
         t_flat2hier = timer.seconds();
 
-        cout << "CholPerformanceDevice:: Hier (dof, nnz) = " << HU.NumRows() << ", " << HU.NumNonZeros() << endl;
+        cout << "CholPerformanceDevice:: Hier (dof, nnz) = " << device_HU.NumRows() << ", " << device_HU.NumNonZeros() << endl;
       }
       cout << "CholPerformanceDevice:: construct hierarchical matrix::time = " << t_flat2hier << endl;
     }
@@ -188,8 +192,6 @@ namespace Tacho {
     // From here onward all work is on the device.
     //----------------------------------------------------------------------
 
-    
-
     {
       typename TaskFactoryType::policy_type policy(max_concurrency,
                                                    max_task_size,
@@ -197,7 +199,7 @@ namespace Tacho {
                                                    team_size);
 
       cout << "CholPerformanceDevice:: ByBlocks factorize the matrix:: team_size = " << team_size << endl;
-      CrsHierTaskViewType H( HU );
+      CrsHierTaskViewType H( device_HU );
       {
         timer.reset();
         {

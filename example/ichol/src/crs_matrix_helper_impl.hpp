@@ -138,8 +138,8 @@ namespace Tacho {
   template<typename CrsFlatBase,
            typename CrsHierBase>
   int
-  CrsMatrixHelper::flat2hier_upper(CrsFlatBase &flat, 
-                                   CrsHierBase &hier,
+  CrsMatrixHelper::flat2hier_upper(CrsFlatBase & device_flat, 
+                                   CrsHierBase & device_hier,
                                    const typename CrsHierBase::ordinal_type       nblks,
                                    const typename CrsHierBase::ordinal_type_array range,
                                    const typename CrsHierBase::ordinal_type_array tree) {
@@ -157,23 +157,37 @@ namespace Tacho {
       for (ordinal_type j=i;j != -1;++nnz,j=tree[j]) ;
     
     // create upper triangular block matrix
-    hier.createInternalArrays(nblks, nblks, nnz);    
+    device_hier.createInternalArrays(nblks, nblks, nnz);    
+
+    typename CrsHierBase::size_type_array::HostMirror
+      host_ap = Kokkos::create_mirror_view( device_hier._ap );
+
+    typename CrsHierBase::ordinal_type_array::HostMirror
+      host_aj = Kokkos::create_mirror_view( device_hier._aj );
+
+    typename CrsHierBase::value_type_array::HostMirror
+      host_ax = Kokkos::create_mirror_view( device_hier._ax );
 
     nnz = 0;
     for (ordinal_type i=0;i<nblks;++i) {
-      hier._ap[i] = nnz;
+      host_ap[i] = nnz;
       for (ordinal_type j=i;j != -1;++nnz,j=tree[j]) {
-        hier._aj[nnz] = j;
-        hier._ax[nnz].setView( flat, range[i], (range[i+1] - range[i]),
-                              /**/   range[j], (range[j+1] - range[j]));
+        host_aj[nnz] = j;
+        host_ax[nnz].setView( device_flat, range[i], (range[i+1] - range[i]),
+                             /**/          range[j], (range[j+1] - range[j]));
         // this checking might more expensive 
-        if (!hier._ax[nnz].countNumNonZeros())
+        if (!host_ax[nnz].countNumNonZeros())
           --nnz;
       }
     }
     
-    hier._ap[nblks] = nnz;
-    hier._nnz = nnz;
+    host_ap[nblks] = nnz;
+
+    Kokkos::deep_copy( device_hier._ap , host_ap );
+    Kokkos::deep_copy( device_hier._aj , host_aj );
+    Kokkos::deep_copy( device_hier._ax , host_ax );
+
+    device_hier._nnz = nnz;
 
     return 0;
   }
