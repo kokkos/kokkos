@@ -76,7 +76,6 @@ namespace Tacho {
       t_reorder = 0.0,
       t_symbolic = 0.0,
       t_flat2hier = 0.0,
-      t_factor_seq = 0.0,
       t_factor_task = 0.0;
 
     cout << "CholPerformanceDevice:: import input file = " << file_input << endl;
@@ -173,6 +172,9 @@ namespace Tacho {
                                    S.NumBlocks(),
                                    S.RangeVector(),
                                    S.TreeVector());
+
+        // Filling non-zero block matrixes' row ranges within block view.
+        // This is performed entirely in the 'device_HU' space.
 
         CrsMatrixHelper::fillRowViewArray( device_HU );
 

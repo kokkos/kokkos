@@ -13,29 +13,78 @@ namespace Tacho {
   using namespace std;
 
   template< typename CrsHierBase >
-  int CrsMatrixHelper::fillRowViewArray( CrsHierBase & HU )
+  struct FunctorFillRowViewArray {
+
+    typedef typename CrsHierBase::ordinal_type         ordinal_type ;
+    typedef typename CrsHierBase::row_view_type_array  row_view_type_array ;
+    typedef typename CrsHierBase::value_type_array     ax_type ;
+
+    typedef ordinal_type value_type ;
+
+    row_view_type_array _all_row_views ;
+    ax_type             _ax ;
+
+    FunctorFillRowViewArray( const row_view_type_array & arg_all_row_views
+                           , const ax_type             & arg_ax )
+      : _all_row_views( arg_all_row_views )
+      , _ax( arg_ax )
+      {}
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()( ordinal_type k , ordinal_type & value ) const
+      { value += _ax(k).NumRows(); }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()( ordinal_type k , ordinal_type & value , bool final ) const
+      {
+        if ( final ) {
+          const int begin = value ;
+          const int end   = begin + _ax(k).NumRows();
+
+          auto sub = Kokkos::subview( _all_row_views, Kokkos::pair<int,int>(begin,end) );
+
+          _ax(k).setRowViewArray( sub );
+        }
+
+        value += _ax(k).NumRows();
+      }
+  };
+
+  template< typename CrsHierBase >
+  int CrsMatrixHelper::fillRowViewArray( CrsHierBase & device_HU )
   {
     typedef typename CrsHierBase::row_view_type_array row_view_type_array ;
+    typedef typename CrsHierBase::space_type          space_type ;
 
-    int total_row_view_count = 0 ;
-    for (ordinal_type k=0;k<HU.NumNonZeros();++k) {
-      total_row_view_count += HU.Value(k).NumRows();
+    ordinal_type total_row_view_count = 0 ;
+
+    Kokkos::RangePolicy< space_type >
+      range_policy( 0 , device_HU.NumNonZeros() );
+
+    space_type::fence();
+
+    {
+      FunctorFillRowViewArray< CrsHierBase >
+         functor( row_view_type_array() , device_HU._ax );
+
+
+      Kokkos::parallel_reduce( range_policy , functor , total_row_view_count );
     }
 
-    HU._all_row_views = row_view_type_array("RowViews",total_row_view_count);
+    device_HU._all_row_views =
+      row_view_type_array("RowViews",total_row_view_count);
 
-    total_row_view_count = 0 ;
-    for (ordinal_type k=0;k<HU.NumNonZeros();++k) {
-       const int begin = total_row_view_count ;
-       const int end   = begin + HU.Value(k).NumRows();
+    space_type::fence();
 
-       row_view_type_array sub =
-         Kokkos::subview( HU._all_row_views, Kokkos::pair<int,int>(begin,end) );
+    {
+      FunctorFillRowViewArray< CrsHierBase >
+         functor( device_HU._all_row_views , device_HU._ax );
 
-       HU.Value(k).setRowViewArray( sub );
-
-       total_row_view_count = end ;
+      Kokkos::parallel_scan( range_policy , functor );
     }
+
+    space_type::fence();
+
     return 0 ;
   }
   

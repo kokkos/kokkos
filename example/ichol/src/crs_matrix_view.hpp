@@ -43,12 +43,14 @@ namespace Tacho {
     
   public:
 
+    KOKKOS_INLINE_FUNCTION
     void setRowViewArray( const row_view_type_array & arg_rows )
       {
         _rows = arg_rows ;
 
-        for (ordinal_type i=0;i<_m;++i)
+        for (ordinal_type i=0;i<_m;++i) {
           _rows[i].setView(*this, i);
+        }
       }
 
     KOKKOS_INLINE_FUNCTION
