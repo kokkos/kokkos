@@ -168,15 +168,16 @@ namespace Tacho {
     return 0;
   }
 
-  template<typename CrsFlatBase,
-           typename CrsHierBase>
+  template< typename CrsFlatBase ,
+            typename CrsHierBase ,
+            typename HostOrdinalTypeArray >
   int
   CrsMatrixHelper::flat2hier(int uplo,
                              CrsFlatBase &flat,
                              CrsHierBase &hier,
                              const typename CrsHierBase::ordinal_type       nblks,
-                             const typename CrsHierBase::ordinal_type_array range,
-                             const typename CrsHierBase::ordinal_type_array tree) {
+                             const HostOrdinalTypeArray range ,
+                             const HostOrdinalTypeArray tree) {
     switch(uplo) {
     case Uplo::Upper: return flat2hier_upper(flat, hier, nblks, range, tree);
     case Uplo::Lower: return flat2hier_lower(flat, hier, nblks, range, tree);
@@ -185,13 +186,14 @@ namespace Tacho {
   }
 
   template<typename CrsFlatBase,
-           typename CrsHierBase>
+           typename CrsHierBase,
+           typename HostOrdinalTypeArray >
   int
   CrsMatrixHelper::flat2hier_upper(CrsFlatBase & device_flat, 
                                    CrsHierBase & device_hier,
                                    const typename CrsHierBase::ordinal_type       nblks,
-                                   const typename CrsHierBase::ordinal_type_array range,
-                                   const typename CrsHierBase::ordinal_type_array tree) {
+                                   const HostOrdinalTypeArray range,
+                                   const HostOrdinalTypeArray tree) {
     typedef typename CrsHierBase::ordinal_type            ordinal_type;
     typedef typename CrsHierBase::size_type               size_type;
     
@@ -224,9 +226,11 @@ namespace Tacho {
         host_aj[nnz] = j;
         host_ax[nnz].setView( device_flat, range[i], (range[i+1] - range[i]),
                              /**/          range[j], (range[j+1] - range[j]));
+
         // this checking might more expensive 
-        if (!host_ax[nnz].countNumNonZeros())
-          --nnz;
+        // and attempts to access device memory from the host
+        // if (!host_ax[nnz].countNumNonZeros())
+        //  --nnz;
       }
     }
     
@@ -307,13 +311,14 @@ namespace Tacho {
   // }
 
   template<typename CrsFlatBase,
-           typename CrsHierBase>
+           typename CrsHierBase,
+           typename HostOrdinalTypeArray >
   int
   CrsMatrixHelper::flat2hier_lower(CrsFlatBase &flat,
                                    CrsHierBase &hier,
                                    const typename CrsHierBase::ordinal_type       nblks,
-                                   const typename CrsHierBase::ordinal_type_array range,
-                                   const typename CrsHierBase::ordinal_type_array tree) {
+                                   const HostOrdinalTypeArray range,
+                                   const HostOrdinalTypeArray tree) {
     ERROR(MSG_NOT_YET_IMPLEMENTED);
 
     // typedef typename CrsHierBase::ordinal_type           ordinal_type;

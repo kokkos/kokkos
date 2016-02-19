@@ -44,6 +44,9 @@ namespace Tacho {
     typedef ValueType   value_type;
     typedef OrdinalType ordinal_type;
     typedef SizeType    size_type;
+    typedef typename
+       Kokkos::Impl::is_space< SpaceType >::host_mirror_space::execution_space
+         HostSpaceType ;
 
     typedef TaskFactory<Kokkos::Experimental::TaskPolicy<SpaceType>,
       Kokkos::Experimental::Future<int,SpaceType> > TaskFactoryType;
@@ -51,14 +54,17 @@ namespace Tacho {
     typedef CrsMatrixBase<value_type,ordinal_type,size_type,SpaceType>
       CrsMatrixBaseType;
 
+    typedef CrsMatrixBase<value_type,ordinal_type,size_type,HostSpaceType>
+      CrsMatrixBaseHostType;
+
     typedef Kokkos::MemoryUnmanaged MemoryUnmanaged ;
 
     typedef CrsMatrixBase<value_type,ordinal_type,size_type,SpaceType,MemoryUnmanaged >
       CrsMatrixNestedType;
 
 
-    typedef GraphHelper_Scotch<CrsMatrixBaseType> GraphHelperType;
-    typedef SymbolicFactorHelper<CrsMatrixBaseType> SymbolicFactorHelperType;
+    typedef GraphHelper_Scotch<CrsMatrixBaseHostType> GraphHelperType;
+    typedef SymbolicFactorHelper<CrsMatrixBaseHostType> SymbolicFactorHelperType;
 
     typedef CrsMatrixView<CrsMatrixNestedType> CrsMatrixViewType;
     typedef TaskView<CrsMatrixViewType,TaskFactoryType> CrsTaskViewType;
@@ -79,7 +85,7 @@ namespace Tacho {
       t_factor_task = 0.0;
 
     cout << "CholPerformanceDevice:: import input file = " << file_input << endl;
-    CrsMatrixBaseType AA("AA");
+    CrsMatrixBaseHostType AA("AA");
     {
       timer.reset();
 
@@ -101,9 +107,11 @@ namespace Tacho {
     cout << "CholPerformanceDevice:: import input file::time = " << t_import << endl;
 
     cout << "CholPerformanceDevice:: reorder the matrix" << endl;
-    CrsMatrixBaseType PA("Permuted AA");
-    CrsMatrixBaseType UU("UU");     // permuted base upper triangular matrix
+    CrsMatrixBaseHostType PA("Permuted AA");
 
+    // '*_UU' is the permuted base upper triangular matrix
+    CrsMatrixBaseHostType host_UU("host_UU");
+    CrsMatrixBaseType     device_UU("UU");
     CrsHierMatrixBaseType device_HU("HU");;
 
     // typename CrsMatrixBaseHostType host_UU("host_UU");
@@ -144,31 +152,30 @@ namespace Tacho {
       {
         SymbolicFactorHelperType F(PA, league_size);
         timer.reset();
-        F.createNonZeroPattern(fill_level, Uplo::Upper, UU);
+        F.createNonZeroPattern(fill_level, Uplo::Upper, host_UU);
         t_symbolic = timer.seconds();
-        cout << "CholPerformanceDevice:: AA (nnz) = " << AA.NumNonZeros() << ", UU (nnz) = " << UU.NumNonZeros() << endl;
+        cout << "CholPerformanceDevice:: AA (nnz) = " << AA.NumNonZeros() << ", host_UU (nnz) = " << host_UU.NumNonZeros() << endl;
 
         if (verbose) {
           F.showMe( std::cout );
           std::cout << std::endl ;
-          UU.showMe( std::cout );
+          host_UU.showMe( std::cout );
           std::cout << std::endl ;
         }
       }
       cout << "CholPerformanceDevice:: symbolic factorization::time = " << t_symbolic << endl;
 
     //----------------------------------------------------------------------
-    // Set up the hierarchical sparse matrix of views (HU)
-    // into the flat sparse matrix (UU).
-    // Assign entries of HU into UU,
-    // then deep copy HU to HU.
-    //----------------------------------------------------------------------
-    // deep_copy host_UU to device_UU
-    // set up device_HU referencing blocks of device_UU
+    // Allocate device_UU conformal to host_UU 
+    // and deep_copy host_UU arrays to device_UU arrays.
+    // Set up device_HU referencing blocks of device_UU
 
       {
         timer.reset();
-        CrsMatrixHelper::flat2hier(Uplo::Upper, UU, device_HU,
+
+        device_UU.copy( host_UU );
+
+        CrsMatrixHelper::flat2hier(Uplo::Upper, device_UU, device_HU,
                                    S.NumBlocks(),
                                    S.RangeVector(),
                                    S.TreeVector());
@@ -182,7 +189,7 @@ namespace Tacho {
 
         cout << "CholPerformanceDevice:: Hier (dof, nnz) = " << device_HU.NumRows() << ", " << device_HU.NumNonZeros() << endl;
       }
-      cout << "CholPerformanceDevice:: construct hierarchical matrix::time = " << t_flat2hier << endl;
+      cout << "CholPerformanceDevice:: copy base matrix and construct hierarchical matrix::time = " << t_flat2hier << endl;
     }
 
     cout << "CholPerformanceDevice:: max concurrency = " << max_concurrency << endl;
@@ -213,7 +220,8 @@ namespace Tacho {
         t_factor_task += timer.seconds();
 
         if (verbose) {
-          UU.showMe( std::cout );
+          host_UU.copy( device_UU );
+          host_UU.showMe( std::cout );
           std::cout << endl;
         }
       }

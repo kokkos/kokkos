@@ -31,34 +31,37 @@ namespace Tacho {
 
     /// \brief Transform a scalar flat matrix to upper hierarchical matrix given scotch info. 
     template<typename CrsFlatBase,
-             typename CrsHierBase>
+             typename CrsHierBase,
+             typename HostOrdinalTypeArray >
     static int
     flat2hier(int uplo, 
               CrsFlatBase &flat, 
               CrsHierBase &hier,
               const typename CrsHierBase::ordinal_type       nblks,
-              const typename CrsHierBase::ordinal_type_array range,
-              const typename CrsHierBase::ordinal_type_array tree);
+              const HostOrdinalTypeArray range,
+              const HostOrdinalTypeArray tree);
 
     /// \brief Transform a scalar flat matrix to upper hierarchical matrix given scotch info. 
     template<typename CrsFlatBase,
-             typename CrsHierBase>
+             typename CrsHierBase,
+             typename HostOrdinalTypeArray >
     static int
     flat2hier_upper(CrsFlatBase &flat, 
                     CrsHierBase &hier,
                     const typename CrsHierBase::ordinal_type       nblks,
-                    const typename CrsHierBase::ordinal_type_array range,
-                    const typename CrsHierBase::ordinal_type_array tree);
+                    const HostOrdinalTypeArray range,
+                    const HostOrdinalTypeArray tree);
 
     /// \brief Transform a scalar flat matrix to lower hierarchical matrix given scotch info. 
     template<typename CrsFlatBase,
-             typename CrsHierBase>
+             typename CrsHierBase,
+             typename HostOrdinalTypeArray >
     static int
     flat2hier_lower(CrsFlatBase &flat, 
                     CrsHierBase &hier,
                     const typename CrsHierBase::ordinal_type       nblks,
-                    const typename CrsHierBase::ordinal_type_array range,
-                    const typename CrsHierBase::ordinal_type_array tree);
+                    const HostOrdinalTypeArray range,
+                    const HostOrdinalTypeArray tree);
   };
 
 }

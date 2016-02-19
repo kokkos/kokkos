@@ -1785,8 +1785,13 @@ void deep_copy
 
     if ( std::is_same< typename ViewTraits<DT,DP...>::value_type ,
                        typename ViewTraits<ST,SP...>::non_const_value_type >::value &&
-         std::is_same< typename ViewTraits<DT,DP...>::array_layout ,
-                       typename ViewTraits<ST,SP...>::array_layout >::value &&
+         (
+           std::is_same< typename ViewTraits<DT,DP...>::array_layout ,
+                         typename ViewTraits<ST,SP...>::array_layout >::value
+           ||
+           ( ViewTraits<DT,DP...>::rank == 1 &&
+             ViewTraits<ST,SP...>::rank == 1 )
+         ) &&
          dst.span_is_contiguous() &&
          src.span_is_contiguous() &&
          dst.span() == src.span() &&

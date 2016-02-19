@@ -253,7 +253,12 @@ namespace Tacho {
     template< typename SpT >
     int 
     copy(const CrsMatrixBase<ValueType,OrdinalType,SizeType,SpT,MemoryTraits> &b) {
+
+      space_type::execution_space::fence();
+
       createInternalArrays(b._m, b._n, b._nnz);
+
+      space_type::execution_space::fence();
 
       const auto ap_range = range_type<ordinal_type>(0, min(_ap.dimension_0(), b._ap.dimension_0()));
       const auto aj_range = range_type<size_type>   (0, min(_aj.dimension_0(), b._aj.dimension_0()));
@@ -266,6 +271,8 @@ namespace Tacho {
 
       Kokkos::deep_copy(Kokkos::subview(  _ax, ax_range),
                         Kokkos::subview(b._ax, ax_range));
+
+      space_type::execution_space::fence();
 
       return 0;
     }
