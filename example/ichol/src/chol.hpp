@@ -30,7 +30,7 @@ namespace Tacho {
     KOKKOS_INLINE_FUNCTION
     static int invoke(typename ExecViewType::policy_type &policy, 
                       const typename ExecViewType::policy_type::member_type &member, 
-                      ExecViewType &A);
+                      typename ExecViewType::matrix_type &A);
 
     // task-data parallel interface
     // ============================
@@ -42,13 +42,14 @@ namespace Tacho {
       typedef int value_type;
       
     private:
-      ExecViewType _A;
+      typename ExecViewType::matrix_type _A;
       
       policy_type _policy;
       
     public:
       KOKKOS_INLINE_FUNCTION
-      TaskFunctor(const policy_type & P , const ExecViewType A)
+      TaskFunctor(const policy_type & P ,
+                  const typename ExecViewType::matrix_type & A)
         : _A(A),
           _policy(P)
       { } 
@@ -58,14 +59,14 @@ namespace Tacho {
       // task execution
       KOKKOS_INLINE_FUNCTION
       void apply(value_type &r_val) {
-        r_val = Chol::invoke(_policy, _policy.member_single(), _A);
+        r_val = Chol::invoke<ExecViewType>(_policy, _policy.member_single(), _A);
       }
 
       // task-data execution
       KOKKOS_INLINE_FUNCTION
       void apply(const member_type &member, value_type &r_val) {
 
-        const int result = Chol::invoke(_policy, member, _A);
+        const int result = Chol::invoke<ExecViewType>(_policy, member, _A);
 
         if ( 0 == member.team_rank() ) { r_val = result ; }
 

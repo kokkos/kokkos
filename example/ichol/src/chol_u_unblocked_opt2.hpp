@@ -20,7 +20,7 @@ namespace Tacho {
   Chol<Uplo::Upper,AlgoChol::UnblockedOpt,Variant::Two>
   ::invoke(typename CrsExecViewType::policy_type &policy,
            const typename CrsExecViewType::policy_type::member_type &member,
-           CrsExecViewType &A) {
+           typename CrsExecViewType::matrix_type &A) {
 
     typedef typename CrsExecViewType::value_type        value_type;
     typedef typename CrsExecViewType::ordinal_type      ordinal_type;

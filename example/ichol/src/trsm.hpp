@@ -29,8 +29,8 @@ namespace Tacho {
                       const typename ExecViewTypeA::policy_type::member_type &member,
                       const int diagA,
                       const ScalarType alpha,
-                      ExecViewTypeA &A,
-                      ExecViewTypeB &B);
+                      typename ExecViewTypeA::matrix_type &A,
+                      typename ExecViewTypeB::matrix_type &B);
 
     // task-data parallel interface
     // ============================
@@ -46,8 +46,8 @@ namespace Tacho {
     private:
       int _diagA;
       ScalarType _alpha;
-      ExecViewTypeA _A;
-      ExecViewTypeB _B;
+      typename ExecViewTypeA::matrix_type _A;
+      typename ExecViewTypeB::matrix_type _B;
 
       policy_type _policy;
 
@@ -56,8 +56,8 @@ namespace Tacho {
       TaskFunctor(const policy_type & P,
                   const int diagA,
                   const ScalarType alpha,
-                  const ExecViewTypeA A,
-                  const ExecViewTypeB B)
+                  const ExecViewTypeA & A,
+                  const ExecViewTypeB & B)
         : _diagA(diagA),
           _alpha(alpha),
           _A(A),
@@ -70,14 +70,14 @@ namespace Tacho {
       // task execution
       KOKKOS_INLINE_FUNCTION
       void apply(value_type &r_val) {
-        r_val = Trsm::invoke(_policy, _policy.member_single(),
+        r_val = Trsm::invoke<ScalarType,ExecViewTypeA,ExecViewTypeB>(_policy, _policy.member_single(),
                              _diagA, _alpha, _A, _B);
       }
 
       // task-data execution
       KOKKOS_INLINE_FUNCTION
       void apply(const member_type &member, value_type &r_val) {
-        r_val = Trsm::invoke(_policy, member, 
+        r_val = Trsm::invoke<ScalarType,ExecViewTypeA,ExecViewTypeB>(_policy, member, 
                              _diagA, _alpha, _A, _B);
       }
 
@@ -86,7 +86,7 @@ namespace Tacho {
 
 }
 
-#include "trsm_l_u_nt.hpp"
+// #include "trsm_l_u_nt.hpp"
 #include "trsm_l_u_ct.hpp"
 
 #endif

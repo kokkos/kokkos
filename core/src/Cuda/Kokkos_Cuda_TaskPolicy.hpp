@@ -127,6 +127,10 @@ public:
   KOKKOS_FUNCTION
   ~TaskMember();
 
+  KOKKOS_INLINE_FUNCTION
+  int reference_count() const
+    { return *((volatile int *) & m_ref_count ); }
+
   // Cannot use the function pointer to verify the type
   // since the function pointer is not unique between
   // Host and Cuda. Don't run verificaton for Cuda. 
@@ -536,6 +540,9 @@ public:
   KOKKOS_FUNCTION TaskPolicy( const TaskPolicy & rhs ) = default ;
   KOKKOS_FUNCTION TaskPolicy & operator = ( TaskPolicy && rhs ) = default ;
   KOKKOS_FUNCTION TaskPolicy & operator = ( const TaskPolicy & rhs ) = default ;
+
+  KOKKOS_FUNCTION
+  int allocated_task_count() const { return 0 ; }
 
   //----------------------------------------
   // Create serial-thread task

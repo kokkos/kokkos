@@ -7,7 +7,7 @@
 /// \author Kyungjoo Kim (kyukim@sandia.gov)
 
 // testing task-data parallelism
-#include "chol_u_unblocked_dummy.hpp"
+// #include "chol_u_unblocked_dummy.hpp"
 
 // flame style implementation
 //#include "chol_unblocked.hpp"  

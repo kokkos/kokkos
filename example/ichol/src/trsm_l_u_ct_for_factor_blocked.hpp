@@ -25,8 +25,8 @@ namespace Tacho {
            const typename CrsExecViewTypeA::policy_type::member_type &member,
            const int diagA,
            const ScalarType alpha,
-           CrsExecViewTypeA &A,
-           CrsExecViewTypeB &B) {
+           typename CrsExecViewTypeA::matrix_type &A,
+           typename CrsExecViewTypeB::matrix_type &B) {
     typedef typename CrsExecViewTypeA::ordinal_type      ordinal_type;
     typedef typename CrsExecViewTypeA::value_type        value_type;
     typedef typename CrsExecViewTypeA::row_view_type     row_view_type;
@@ -42,7 +42,7 @@ if ( false && member.team_rank() == 0 ) {
 }
 
     // scale the matrix B with alpha
-    scaleCrsMatrix(member, alpha, B);
+    scaleCrsMatrix<ScalarType,CrsExecViewTypeB>(member, alpha, B);
 
     // Solve a system: AX = B -> B := inv(A) B
     const ordinal_type mA = A.NumRows();
@@ -114,14 +114,14 @@ if ( false && member.team_rank() == 0 ) {
            const typename CrsExecViewTypeA::policy_type::member_type &member,
            const int diagA,
            const ScalarType alpha,
-           CrsExecViewTypeA &A,
-           CrsExecViewTypeB &B) {
+           typename CrsExecViewTypeA::matrix_type &A,
+           typename CrsExecViewTypeB::matrix_type &B) {
     typedef typename CrsExecViewTypeA::ordinal_type      ordinal_type;
     typedef typename CrsExecViewTypeA::value_type        value_type;
     typedef typename CrsExecViewTypeA::row_view_type     row_view_type;
 
     // scale the matrix B with alpha
-    scaleCrsMatrix(member, alpha, B);
+    scaleCrsMatrix<ScalarType,CrsExecViewTypeB>(member, alpha, B);
 
     // Solve a system: AX = B -> B := inv(A) B
     const ordinal_type mA = A.NumRows();

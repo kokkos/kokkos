@@ -14,8 +14,9 @@ namespace Tacho {
            typename TaskFactoryType>
   class TaskView : public MatrixViewType {
   public:
-    typedef typename MatrixViewType::value_type   value_type;
-    typedef typename MatrixViewType::ordinal_type ordinal_type;
+    typedef          MatrixViewType                matrix_type ;
+    typedef typename MatrixViewType::value_type    value_type;
+    typedef typename MatrixViewType::ordinal_type  ordinal_type;
 
     typedef TaskFactoryType task_factory_type;
     typedef typename task_factory_type::policy_type policy_type;
@@ -26,20 +27,36 @@ namespace Tacho {
 
   public:
     KOKKOS_INLINE_FUNCTION
-    void setFuture(const future_type &f) { _f = f; }
+    void setFuture(const future_type &f)
+      {
+        if ( ! _f.is_null() ) {
+          printf( "TaskView::setFuture releasing future reference_count(%d)\n"
+                , _f.reference_count() );
+        }
+        _f = f;
+      }
 
     KOKKOS_INLINE_FUNCTION
     future_type Future() const { return _f; }
+
+    KOKKOS_INLINE_FUNCTION
+    ~TaskView() = default ;
 
     KOKKOS_INLINE_FUNCTION
     TaskView() 
       : MatrixViewType(), _f()
     { } 
 
+#if 0
     KOKKOS_INLINE_FUNCTION
     TaskView(const TaskView &b) 
       : MatrixViewType(b), _f(b._f)
-    { } 
+    {
+      if ( ! _f.is_null() ) { printf("TaskView copying non-null future\n");
+    } 
+#else
+    TaskView(const TaskView &b) = delete ;
+#endif
 
     KOKKOS_INLINE_FUNCTION
     TaskView(typename MatrixViewType::mat_base_type const & b) 

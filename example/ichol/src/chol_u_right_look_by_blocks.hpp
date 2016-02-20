@@ -17,7 +17,27 @@
 namespace Tacho { 
   
   using namespace std;
+
+  template< typename CrsTaskViewType >
+  KOKKOS_INLINE_FUNCTION
+  int releaseFutures( typename CrsTaskViewType::matrix_type & A )
+    {
+      typedef typename CrsTaskViewType::ordinal_type      ordinal_type;
+      typedef typename CrsTaskViewType::row_view_type     row_view_type;
+      typedef typename CrsTaskViewType::future_type       future_type;
+      
+      row_view_type a(A,0);
+      
+      const ordinal_type nnz = a.NumNonZeros();
+
+      for (ordinal_type j=0;j<nnz;++j) {
+        a.Value(j).setFuture( future_type() );
+      }
+
+      return nnz ;
+    }
   
+  // ========================================
   // detailed workflow of by-blocks algorithm
   // ========================================
   template<int ArgVariant, 
@@ -27,7 +47,7 @@ namespace Tacho {
   public:
     KOKKOS_INLINE_FUNCTION
     static int genScalarTask(typename CrsTaskViewType::policy_type &policy,
-                             CrsTaskViewType &A) {
+                             typename CrsTaskViewType::matrix_type &A) {
       typedef typename CrsTaskViewType::value_type        value_type;
       typedef typename CrsTaskViewType::row_view_type     row_view_type;
       
@@ -59,34 +79,41 @@ if ( false ) {
       aa.setFuture(f);
 
       // spawn a task
-      task_factory_type::spawn(policy, f);
+      task_factory_type::spawn(policy, f, true /* high priority */ );
       
-      return 0;
+      return 1;
     }
     
     KOKKOS_INLINE_FUNCTION
     static int genTrsmTasks(typename CrsTaskViewType::policy_type &policy,
-                            CrsTaskViewType &A,
-                            CrsTaskViewType &B) {
+                            typename CrsTaskViewType::matrix_type &A,
+                            typename CrsTaskViewType::matrix_type &B) {
       typedef typename CrsTaskViewType::ordinal_type      ordinal_type;
-      typedef typename CrsTaskViewType::value_type        value_type;
       typedef typename CrsTaskViewType::row_view_type     row_view_type;
-      
+      typedef typename CrsTaskViewType::value_type        value_type;
+
       typedef typename CrsTaskViewType::future_type       future_type;
       typedef typename CrsTaskViewType::task_factory_type task_factory_type;
       
       row_view_type a(A,0), b(B,0); 
       value_type &aa = a.Value(0);
-      
+
+if ( true ) {
+  printf("genTrsmTasks after aa.Future().reference_count = %d\n"
+        , aa.Future().reference_count());
+}
       const ordinal_type nnz = b.NumNonZeros();
       for (ordinal_type j=0;j<nnz;++j) {
+        typedef typename
+           Trsm< Side::Left,Uplo::Upper,Trans::ConjTranspose,
+                 CtrlDetail(ControlType,AlgoChol::ByBlocks,ArgVariant,Trsm)>
+           ::template TaskFunctor<double,value_type,value_type>
+             FunctorType ;
+
         value_type &bb = b.Value(j);
         
         future_type f = task_factory_type
-          ::create(policy, 
-                   typename Trsm<Side::Left,Uplo::Upper,Trans::ConjTranspose,
-                   CtrlDetail(ControlType,AlgoChol::ByBlocks,ArgVariant,Trsm)>
-                   ::template TaskFunctor<double,value_type,value_type>(policy,Diag::NonUnit, 1.0, aa, bb));
+          ::create(policy, FunctorType(policy,Diag::NonUnit, 1.0, aa, bb));
         
 if ( false ) {
  printf("Trsm [%d +%d)x[%d +%d) spawn depend %d %d\n"
@@ -109,16 +136,21 @@ if ( false ) {
         bb.setFuture(f);
         
         // spawn a task
-        task_factory_type::spawn(policy, f);              
+        task_factory_type::spawn(policy, f, true /* high priority */);              
       }
+
+if ( true ) {
+  printf("genTrsmTasks after aa.Future().reference_count = %d\n"
+        , aa.Future().reference_count());
+}
       
-      return 0;
+      return nnz ;
     }
     
     KOKKOS_INLINE_FUNCTION
     static int genHerkTasks(typename CrsTaskViewType::policy_type &policy,
-                            CrsTaskViewType &A,
-                            CrsTaskViewType &C) {
+                            typename CrsTaskViewType::matrix_type &A,
+                            typename CrsTaskViewType::matrix_type &C) {
       typedef typename CrsTaskViewType::ordinal_type      ordinal_type;
       typedef typename CrsTaskViewType::value_type        value_type;
       typedef typename CrsTaskViewType::row_view_type     row_view_type;
@@ -131,7 +163,9 @@ if ( false ) {
       row_view_type a(A,0), c; 
       
       const ordinal_type nnz = a.NumNonZeros();
-      
+      ordinal_type herk_count = 0 ; 
+      ordinal_type gemm_count = 0 ; 
+
       // update herk
       for (ordinal_type i=0;i<nnz;++i) {
         const ordinal_type row_at_i = a.Col(i);
@@ -147,6 +181,7 @@ if ( false ) {
           if (row_at_i == col_at_j) {
             idx = c.Index(row_at_i, idx);
             if (idx >= 0) {
+              ++herk_count ;
               value_type &cc = c.Value(idx);
               future_type f = task_factory_type
                 ::create(policy, 
@@ -181,6 +216,7 @@ if ( false ) {
           } else {
             idx = c.Index(col_at_j, idx);
             if (idx >= 0) {
+              ++gemm_count ;
               value_type &cc = c.Value(idx);
               future_type f = task_factory_type
                 ::create(policy, 
@@ -217,8 +253,12 @@ if ( false ) {
           }
         }
       }
+
+if ( false ) {
+printf("genHerkTask Herk(%ld) Gemm(%ld)\n",(long)herk_count,(long)gemm_count);
+}
     
-      return 0;
+      return herk_count + gemm_count ;
     }
     
   };
@@ -235,44 +275,66 @@ if ( false ) {
     KOKKOS_INLINE_FUNCTION
     static int invoke(typename ExecViewType::policy_type &policy, 
                       const typename ExecViewType::policy_type::member_type &member, 
-                      ExecViewType &A) {
-      if (member.team_rank() == 0) {
-        ExecViewType ATL, ATR,      A00, A01, A02,
-          /**/       ABL, ABR,      A10, A11, A12,
-          /**/                      A20, A21, A22;
+                      typename ExecViewType::matrix_type &A,
+                      int checkpoint ) {
+        typename ExecViewType::matrix_type
+          ATL, ATR,      A00, A01, A02,
+          ABL, ABR,      A10, A11, A12,
+                         A20, A21, A22;
 
         Part_2x2(A,  ATL, ATR,
                  /**/ABL, ABR,
-                 0, 0, Partition::TopLeft);
+                 checkpoint, checkpoint, Partition::TopLeft);
 
-        while (ATL.NumRows() < A.NumRows()) {
+        int tasks_spawned = 0 ;
+        int futures_released = 0 ;
+
+        for ( int i = 0 ; i < 5 && ATL.NumRows() < A.NumRows() ; ++i ) {
           Part_2x2_to_3x3(ATL, ATR, /**/  A00, A01, A02,
                           /*******/ /**/  A10, A11, A12,
                           ABL, ABR, /**/  A20, A21, A22,
                           1, 1, Partition::BottomRight);
           // -----------------------------------------------------
+          // Spawning tasks:
 
-          // A11 = chol(A11)
+          // A11 = chol(A11) : #task = 1
+          tasks_spawned +=
           CholUpperRightLookByBlocks<ArgVariant,ControlType,ExecViewType>
             ::genScalarTask(policy, A11);
           
-          // A12 = inv(triu(A11)') * A12
+          // A12 = inv(triu(A11)') * A12 : #tasks = non-zero row blocks
+          tasks_spawned +=
           CholUpperRightLookByBlocks<ArgVariant,ControlType,ExecViewType>
             ::genTrsmTasks(policy, A11, A12);
 
-          // A22 = A22 - A12' * A12
+          // A22 = A22 - A12' * A12 : #tasks = highly variable
+          tasks_spawned +=
           CholUpperRightLookByBlocks<ArgVariant,ControlType,ExecViewType>
             ::genHerkTasks(policy, A12, A22);
-          
+
+          // -----------------------------------------------------
+          // Can release futures of A11 and A12 
+
+          futures_released += releaseFutures<ExecViewType>( A11 );
+          futures_released += releaseFutures<ExecViewType>( A12 );
+
+if ( true ) {
+  printf("Chol iteration(%d) task_count(%d) cumulative: spawn(%d) release(%d)\n"
+        , int(ATL.NumRows())
+        , policy.allocated_task_count()
+        , tasks_spawned , futures_released
+        );
+}
+
           // -----------------------------------------------------
           Merge_3x3_to_2x2(A00, A01, A02, /**/ ATL, ATR,
                            A10, A11, A12, /**/ /******/
                            A20, A21, A22, /**/ ABL, ABR,
                            Partition::TopLeft);
+
         }
-      }
       
-      return 0;
+      return ATL.NumRows();
     }
     
     // task-data parallel interface
@@ -285,29 +347,34 @@ if ( false ) {
       typedef int value_type;
       
     private:
-      ExecViewType _A;
+      typename ExecViewType::matrix_type _A;
       
       policy_type _policy;
+      int         _checkpoint ;
       
     public:
       KOKKOS_INLINE_FUNCTION
-      TaskFunctor(const policy_type & P , const ExecViewType & A)
+      TaskFunctor(const policy_type & P ,
+                  const typename ExecViewType::matrix_type & A)
         : _A(A),
-          _policy(P)
+          _policy(P),
+          _checkpoint(0)
       { } 
       
       string Label() const { return "Chol"; }
       
-      // task execution
-      KOKKOS_INLINE_FUNCTION
-      void apply(value_type &r_val) {
-        r_val = Chol::invoke(_policy, _policy.member_single(), _A);
-      }
-      
       // task-data execution
       KOKKOS_INLINE_FUNCTION
-      void apply(const member_type &member, value_type &r_val) {
-        r_val = Chol::invoke(_policy, member, _A);
+      void apply(const member_type &member, value_type &r_val)
+      {
+        if (member.team_rank() == 0) {
+          _checkpoint = Chol::invoke<ExecViewType>(_policy, member, _A,_checkpoint);
+
+          if ( _checkpoint < _A.NumRows() ) _policy.respawn_needing_memory(this);
+
+          r_val = 0 ;
+        }
+        return ;
       }
 
     };

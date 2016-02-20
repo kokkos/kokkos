@@ -194,7 +194,7 @@ namespace Tacho {
 
     cout << "CholPerformanceDevice:: max concurrency = " << max_concurrency << endl;
 
-    const size_t max_task_size = 3*sizeof(CrsTaskViewType)+128;
+    const size_t max_task_size = 4*sizeof(CrsTaskViewType)+128;
     cout << "CholPerformanceDevice:: max task size   = " << max_task_size << endl;
 
     //----------------------------------------------------------------------
@@ -218,6 +218,10 @@ namespace Tacho {
           Kokkos::Experimental::wait(policy);
         }
         t_factor_task += timer.seconds();
+
+        cout << "CholPerformanceDevice:: policy.allocated_task_count = "
+             << policy.allocated_task_count()
+             << endl ;
 
         if (verbose) {
           host_UU.copy( device_UU );

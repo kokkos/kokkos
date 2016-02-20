@@ -28,9 +28,9 @@ namespace Tacho {
     static int invoke(typename ExecViewTypeA::policy_type &policy,
                       const typename ExecViewTypeA::policy_type::member_type &member,
                       const ScalarType alpha,
-                      ExecViewTypeA &A,
+                      typename ExecViewTypeA::matrix_type &A,
                       const ScalarType beta,
-                      ExecViewTypeC &C);
+                      typename ExecViewTypeC::matrix_type &C);
 
     // task-data parallel interface
     // ============================
@@ -45,8 +45,8 @@ namespace Tacho {
 
     private:
       ScalarType _alpha, _beta;
-      ExecViewTypeA _A;
-      ExecViewTypeC _C;
+      typename ExecViewTypeA::matrix_type _A;
+      typename ExecViewTypeC::matrix_type _C;
 
       policy_type _policy;
 
@@ -54,9 +54,9 @@ namespace Tacho {
       KOKKOS_INLINE_FUNCTION
       TaskFunctor(const policy_type & P,
                   const ScalarType alpha,
-                  const ExecViewTypeA A,
+                  const typename ExecViewTypeA::matrix_type & A,
                   const ScalarType beta,
-                  const ExecViewTypeC C)
+                  const typename ExecViewTypeC::matrix_type & C)
         : _alpha(alpha),
           _beta(beta),
           _A(A),
@@ -69,14 +69,14 @@ namespace Tacho {
       // task execution
       KOKKOS_INLINE_FUNCTION
       void apply(value_type &r_val) {
-        r_val = Herk::invoke(_policy, _policy.member_single(), 
+        r_val = Herk::invoke<ScalarType,ExecViewTypeA,ExecViewTypeC>(_policy, _policy.member_single(), 
                              _alpha, _A, _beta, _C);
       }
 
       // task-data execution
       KOKKOS_INLINE_FUNCTION
       void apply(const member_type &member, value_type &r_val) {
-        r_val = Herk::invoke(_policy, member, 
+        r_val = Herk::invoke<ScalarType,ExecViewTypeA,ExecViewTypeC>(_policy, member, 
                              _alpha, _A, _beta, _C);
       }
 

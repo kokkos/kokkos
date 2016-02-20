@@ -118,6 +118,10 @@ public:
 
   ~TaskMember();
 
+  KOKKOS_INLINE_FUNCTION
+  int reference_count() const
+    { return *((volatile int *) & m_ref_count ); }
+
   template< typename ResultType >
   KOKKOS_FUNCTION static
   TaskMember * verify_type( TaskMember * t )
@@ -375,6 +379,7 @@ struct ThreadsTaskPolicyQueue {
   int              m_team_size ;    ///< Fixed size of a task-team
   int              m_default_dependence_capacity ;
   int     volatile m_count_ready ;  ///< Ready plus executing tasks
+  int     volatile m_count_alloc ;  ///< Total allocated tasks
 
   // Execute tasks until all non-waiting tasks are complete.
   static void driver( Kokkos::Impl::ThreadsExec & exec
@@ -523,6 +528,11 @@ public:
   KOKKOS_FUNCTION TaskPolicy( const TaskPolicy & rhs ) = default ;
   KOKKOS_FUNCTION TaskPolicy & operator = ( TaskPolicy && rhs ) = default ;
   KOKKOS_FUNCTION TaskPolicy & operator = ( const TaskPolicy & rhs ) = default ;
+
+  //----------------------------------------
+
+  KOKKOS_INLINE_FUNCTION
+  int allocated_task_count() const { return m_policy->m_count_alloc ; }
 
   //----------------------------------------
   // Create serial-thread task

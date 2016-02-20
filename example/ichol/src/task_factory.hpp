@@ -33,14 +33,18 @@ namespace Tacho {
     template<typename TaskFunctorType>
     static KOKKOS_INLINE_FUNCTION
     future_type create(policy_type &policy, const TaskFunctorType &func) {
-      future_type f = policy.task_create_team(func, _max_task_dependence);
+
+      future_type f ;
+      // while ( f.is_null() ) {
+        f = policy.task_create_team(func, _max_task_dependence);
+      // }
       if ( f.is_null() ) Kokkos::abort("task_create_team FAILED, out of memory");
       return f ;
     }
     
     static KOKKOS_INLINE_FUNCTION
-    void spawn(policy_type &policy, const future_type &obj) {
-      policy.spawn(obj);
+    void spawn(policy_type &policy, const future_type &obj, bool priority = false ) {
+      policy.spawn(obj,priority);
     }
     
     static KOKKOS_INLINE_FUNCTION

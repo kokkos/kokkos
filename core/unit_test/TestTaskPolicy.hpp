@@ -118,6 +118,12 @@ struct FibChild {
           has_nested = -1 ;
 
           result = fib_1.get() + fib_2.get();
+
+if ( true ) {
+  printf("FibChild %ld = fib(%d), task_count(%d)\n"
+        , long(n), long(result), policy.allocated_task_count());
+}
+
         }
         else {
           printf("FibChild(%ld) execution error\n",(long)n);

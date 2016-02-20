@@ -29,10 +29,10 @@ namespace Tacho {
     static int invoke(typename ExecViewTypeA::policy_type &policy,
                       const typename ExecViewTypeA::policy_type::member_type &member,
                       const ScalarType alpha,
-                      ExecViewTypeA &A,
-                      ExecViewTypeB &B,
+                      typename ExecViewTypeA::matrix_type &A,
+                      typename ExecViewTypeB::matrix_type &B,
                       const ScalarType beta,
-                      ExecViewTypeC &C);
+                      typename ExecViewTypeC::matrix_type &C);
 
     // task-data parallel interface
     // ============================
@@ -48,9 +48,9 @@ namespace Tacho {
 
     private:
       ScalarType _alpha, _beta;
-      ExecViewTypeA _A;
-      ExecViewTypeB _B;
-      ExecViewTypeC _C;
+      typename ExecViewTypeA::matrix_type _A;
+      typename ExecViewTypeB::matrix_type _B;
+      typename ExecViewTypeC::matrix_type _C;
 
       policy_type _policy;
 
@@ -58,10 +58,10 @@ namespace Tacho {
       KOKKOS_INLINE_FUNCTION
       TaskFunctor(const policy_type & P,
                   const ScalarType alpha,
-                  const ExecViewTypeA A,
-                  const ExecViewTypeB B,
+                  const typename ExecViewTypeA::matrix_type & A,
+                  const typename ExecViewTypeB::matrix_type & B,
                   const ScalarType beta,
-                  const ExecViewTypeC C)
+                  const typename ExecViewTypeC::matrix_type & C)
         : _alpha(alpha),
           _beta(beta),
           _A(A),
@@ -75,14 +75,14 @@ namespace Tacho {
       // task execution
       KOKKOS_INLINE_FUNCTION
       void apply(value_type &r_val) {
-        r_val = Gemm::invoke(_policy, _policy.member_single(),
+        r_val = Gemm::invoke<ScalarType,ExecViewTypeA,ExecViewTypeB,ExecViewTypeC>(_policy, _policy.member_single(),
                              _alpha, _A, _B, _beta, _C);
       }
 
       // task-data execution
       KOKKOS_INLINE_FUNCTION
       void apply(const member_type &member, value_type &r_val) {
-        r_val = Gemm::invoke(_policy, member,
+        r_val = Gemm::invoke<ScalarType,ExecViewTypeA,ExecViewTypeB,ExecViewTypeC>(_policy, member,
                              _alpha, _A, _B, _beta, _C);
       }
 
@@ -93,7 +93,7 @@ namespace Tacho {
 }
 
 
-#include "gemm_nt_nt.hpp"
+// #include "gemm_nt_nt.hpp"
 #include "gemm_ct_nt.hpp"
 
 #endif

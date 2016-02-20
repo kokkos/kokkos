@@ -340,6 +340,14 @@ void ThreadsTaskPolicyQueue::complete_executed_task(
       wait_queue     = atomic_compare_exchange( & task->m_wait , wait_queue_old , q_denied );
     } while ( wait_queue_old != wait_queue );
 
+if ( true ) {
+fprintf(stderr,"Completed task(0x%lx) ref_count(%d)\n"
+       , (unsigned long) task
+       , task->m_ref_count
+       );
+fflush(stderr);
+}
+
     // The task has been removed from ready queue and
     // execution is complete so decrement the reference count.
     // The reference count was incremented by the initial spawning.
@@ -594,6 +602,8 @@ void ThreadsTaskPolicyQueue::deallocate_task( void * ptr , unsigned size_alloc )
 */
 
   m_space.deallocate( ptr , size_alloc );
+
+  Kokkos::atomic_decrement( & m_count_alloc );
 }
 
 ThreadsTaskPolicyQueue::task_root_type *
@@ -612,10 +622,24 @@ ThreadsTaskPolicyQueue::allocate_task
     = ~0u == arg_dep_capacity
     ? m_default_dependence_capacity
     : arg_dep_capacity ;
-    
+
   const unsigned size_alloc =
      base_size + sizeof(task_root_type*) * dep_capacity ;
-    
+
+#if 0
+  // User created task memory pool with an estimate,
+  // if estimate is to low then report and throw exception.
+
+  if ( m_space.get_min_chunk_size() < size_alloc ) {
+    fprintf(stderr,"TaskPolicy<Threads> task allocation requires %d bytes on memory pool with %d byte chunk size\n"
+           , int(size_alloc)
+           , int(m_space.get_min_chunk_size())
+           );
+    fflush(stderr);
+    Kokkos::Impl::throw_runtime_exception("TaskMember< Threads >::task_allocate");
+  }
+#endif
+
   task_root_type * const task =
     reinterpret_cast<task_root_type*>( m_space.allocate( size_alloc ) );
       
@@ -639,6 +663,8 @@ ThreadsTaskPolicyQueue::allocate_task
       for ( unsigned i = 0 ; i < dep_capacity ; ++i )
         task->task_root_type::m_dep[i] = 0 ;
     }
+
+    Kokkos::atomic_increment( & m_count_alloc );
   }
   return  task ;
 }

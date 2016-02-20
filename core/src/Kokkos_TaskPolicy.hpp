@@ -152,6 +152,10 @@ public:
   KOKKOS_INLINE_FUNCTION
   bool is_null() const { return 0 == m_task ; }
 
+  KOKKOS_INLINE_FUNCTION
+  int reference_count() const
+    { return 0 != m_task ? m_task->reference_count() : 0 ; }
+
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
@@ -272,6 +276,7 @@ public:
   void get() const {}
 
   //----------------------------------------
+
 };
 
 namespace Impl {

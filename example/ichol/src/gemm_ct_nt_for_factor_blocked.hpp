@@ -24,10 +24,10 @@ namespace Tacho {
   ::invoke(typename CrsExecViewTypeA::policy_type &policy,
            const typename CrsExecViewTypeA::policy_type::member_type &member,
            const ScalarType alpha,
-           CrsExecViewTypeA &A,
-           CrsExecViewTypeB &B,
+           typename CrsExecViewTypeA::matrix_type &A,
+           typename CrsExecViewTypeB::matrix_type &B,
            const ScalarType beta,
-           CrsExecViewTypeC &C) {
+           typename CrsExecViewTypeC::matrix_type &C) {
     typedef typename CrsExecViewTypeA::ordinal_type      ordinal_type;
     typedef typename CrsExecViewTypeA::value_type        value_type;
     typedef typename CrsExecViewTypeA::row_view_type     row_view_type;
@@ -43,7 +43,7 @@ if ( false && member.team_rank() == 0 ) {
 }
 
     // scale the matrix C with beta
-    scaleCrsMatrix(member, beta, C);
+    scaleCrsMatrix<ScalarType,CrsExecViewTypeC>(member, beta, C);
 
     // C(i,j) += alpha*A'(i,k)*B(k,j)
     const ordinal_type mA = A.NumRows();
