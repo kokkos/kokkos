@@ -98,7 +98,7 @@ if ( false ) {
       row_view_type a(A,0), b(B,0); 
       value_type &aa = a.Value(0);
 
-if ( true ) {
+if ( false ) {
   printf("genTrsmTasks after aa.Future().reference_count = %d\n"
         , aa.Future().reference_count());
 }
@@ -139,7 +139,7 @@ if ( false ) {
         task_factory_type::spawn(policy, f, true /* high priority */);              
       }
 
-if ( true ) {
+if ( false ) {
   printf("genTrsmTasks after aa.Future().reference_count = %d\n"
         , aa.Future().reference_count());
 }
@@ -318,7 +318,7 @@ printf("genHerkTask Herk(%ld) Gemm(%ld)\n",(long)herk_count,(long)gemm_count);
           futures_released += releaseFutures<ExecViewType>( A11 );
           futures_released += releaseFutures<ExecViewType>( A12 );
 
-if ( true ) {
+if ( false ) {
   printf("Chol iteration(%d) task_count(%d) cumulative: spawn(%d) release(%d)\n"
         , int(ATL.NumRows())
         , policy.allocated_task_count()

@@ -28,13 +28,7 @@ namespace Tacho {
   public:
     KOKKOS_INLINE_FUNCTION
     void setFuture(const future_type &f)
-      {
-        if ( ! _f.is_null() ) {
-          printf( "TaskView::setFuture releasing future reference_count(%d)\n"
-                , _f.reference_count() );
-        }
-        _f = f;
-      }
+      { _f = f; }
 
     KOKKOS_INLINE_FUNCTION
     future_type Future() const { return _f; }
@@ -47,16 +41,7 @@ namespace Tacho {
       : MatrixViewType(), _f()
     { } 
 
-#if 0
-    KOKKOS_INLINE_FUNCTION
-    TaskView(const TaskView &b) 
-      : MatrixViewType(b), _f(b._f)
-    {
-      if ( ! _f.is_null() ) { printf("TaskView copying non-null future\n");
-    } 
-#else
     TaskView(const TaskView &b) = delete ;
-#endif
 
     KOKKOS_INLINE_FUNCTION
     TaskView(typename MatrixViewType::mat_base_type const & b) 

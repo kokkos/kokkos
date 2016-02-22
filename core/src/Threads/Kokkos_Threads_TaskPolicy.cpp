@@ -340,14 +340,6 @@ void ThreadsTaskPolicyQueue::complete_executed_task(
       wait_queue     = atomic_compare_exchange( & task->m_wait , wait_queue_old , q_denied );
     } while ( wait_queue_old != wait_queue );
 
-if ( true ) {
-fprintf(stderr,"Completed task(0x%lx) ref_count(%d)\n"
-       , (unsigned long) task
-       , task->m_ref_count
-       );
-fflush(stderr);
-}
-
     // The task has been removed from ready queue and
     // execution is complete so decrement the reference count.
     // The reference count was incremented by the initial spawning.
