@@ -819,7 +819,7 @@ void test_view_mapping()
     ASSERT_EQ( d.dimension_1() , 6 );
   }
 
-#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) && ! defined ( KOKKOS_CUDA_USE_LAMBDA )
   /* Only works when experimental view is activated */
   {
     typedef Kokkos::Experimental::View<int*,ExecSpace> V ;
