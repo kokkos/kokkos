@@ -45,7 +45,9 @@ if ( false && member.team_rank() == 0 ) {
     // scale the matrix C with beta
     scaleCrsMatrix<ScalarType,CrsExecViewTypeC>(member, beta, C);
 
+    // Sparse matrix-matrix multiply:
     // C(i,j) += alpha*A'(i,k)*B(k,j)
+
     const ordinal_type mA = A.NumRows();
     for (ordinal_type k=0;k<mA;++k) {
       row_view_type &a = A.RowView(k);
@@ -54,25 +56,46 @@ if ( false && member.team_rank() == 0 ) {
       row_view_type &b = B.RowView(k);
       const ordinal_type nnz_b = b.NumNonZeros();
 
-      if (nnz_a > 0 && nnz_b) {
-        Kokkos::parallel_for(Kokkos::TeamThreadRange(member, 0, nnz_a),
-                             [&](const ordinal_type i) {
-                               const ordinal_type row_at_i  = a.Col(i);
-                               // const value_type   val_at_ik = conj(a.Value(i));
-                               const value_type   val_at_ik = a.Value(i);
+      if (nnz_a > 0 && nnz_b > 0 ) {
+#if 0
+        Kokkos::parallel_for(
+          Kokkos::TeamThreadRange(member, 0, nnz_a),
+          [&](const ordinal_type i) {
+             const ordinal_type row_at_i  = a.Col(i);
+             const value_type   val_at_ik = a.Value(i);
+             // const value_type   val_at_ik = conj(a.Value(i));
 
-                               row_view_type &c = C.RowView(row_at_i);
+             row_view_type &c = C.RowView(row_at_i);
 
-                               ordinal_type idx = 0;
-                               for (ordinal_type j=0;j<nnz_b && (idx > -2);++j) {
-                                 const ordinal_type col_at_j  = b.Col(j);
-                                 const value_type   val_at_kj = b.Value(j);
+             ordinal_type idx = 0;
+             for (ordinal_type j=0;j<nnz_b && (idx > -2);++j) {
+                const ordinal_type col_at_j  = b.Col(j);
+                const value_type   val_at_kj = b.Value(j);
 
-                                 idx = c.Index(col_at_j, idx);
-                                 if (idx >= 0)
-                                   c.Value(idx) += alpha*val_at_ik*val_at_kj;
-                               }
-                             });
+                idx = c.Index(col_at_j, idx);
+                if (idx >= 0)
+                  c.Value(idx) += alpha*val_at_ik*val_at_kj;
+                }
+          });
+#else
+        Kokkos::parallel_for(
+          Kokkos::TeamThreadRange(member, 0, nnz_a * nnz_b ),
+          [&](const ordinal_type ii) {
+             const ordinal_type i = ii / nnz_a ;
+             const ordinal_type j = ii % nnz_a ;
+
+             row_view_type &c = C.RowView( a.Col(i) );
+
+             // Binary search for c's index of b.Col(j)
+             const ordinal_type idx = c.Index( b.Col(j) );
+
+             if (idx >= 0) {
+               // const value_type   val_at_ik = conj(a.Value(i));
+               c.Value(idx) += alpha * a.Value(i) * b.Value(j);
+             }
+          });
+#endif
+
         member.team_barrier();
       }
     }

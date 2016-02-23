@@ -275,8 +275,13 @@ printf("genHerkTask Herk(%ld) Gemm(%ld)\n",(long)herk_count,(long)gemm_count);
     KOKKOS_INLINE_FUNCTION
     static int invoke(typename ExecViewType::policy_type &policy, 
                       const typename ExecViewType::policy_type::member_type &member, 
-                      typename ExecViewType::matrix_type &A,
-                      int checkpoint ) {
+                      typename ExecViewType::matrix_type & A,
+                      int checkpoint )
+      {
+        typedef typename ExecViewType::row_view_type  row_view_type ;
+
+        enum { CYCLE = 2 };
+
         typename ExecViewType::matrix_type
           ATL, ATR,      A00, A01, A02,
           ABL, ABR,      A10, A11, A12,
@@ -289,7 +294,7 @@ printf("genHerkTask Herk(%ld) Gemm(%ld)\n",(long)herk_count,(long)gemm_count);
         int tasks_spawned = 0 ;
         int futures_released = 0 ;
 
-        for ( int i = 0 ; i < 5 && ATL.NumRows() < A.NumRows() ; ++i ) {
+        for ( int i = 0 ; i < CYCLE && ATL.NumRows() < A.NumRows() ; ++i ) {
           Part_2x2_to_3x3(ATL, ATR, /**/  A00, A01, A02,
                           /*******/ /**/  A10, A11, A12,
                           ABL, ABR, /**/  A20, A21, A22,
@@ -342,8 +347,9 @@ if ( false ) {
     template<typename ExecViewType>
     class TaskFunctor {
     public:
-      typedef typename ExecViewType::policy_type policy_type;
-      typedef typename policy_type::member_type member_type;
+      typedef typename ExecViewType::policy_type  policy_type;
+      typedef typename ExecViewType::future_type  future_type;
+      typedef typename policy_type::member_type   member_type;
       typedef int value_type;
       
     private:
@@ -368,7 +374,10 @@ if ( false ) {
       void apply(const member_type &member, value_type &r_val)
       {
         if (member.team_rank() == 0) {
-          _checkpoint = Chol::invoke<ExecViewType>(_policy, member, _A,_checkpoint);
+          // Clear out previous dependence
+          _policy.clear_dependence( this );
+
+          _checkpoint = Chol::invoke<ExecViewType>(_policy, member, _A, _checkpoint);
 
           if ( _checkpoint < _A.NumRows() ) _policy.respawn_needing_memory(this);
 

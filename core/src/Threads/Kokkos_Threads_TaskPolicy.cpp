@@ -95,6 +95,7 @@ ThreadsTaskPolicyQueue::ThreadsTaskPolicyQueue
   , m_team_size( arg_task_team_size )
   , m_default_dependence_capacity( arg_task_default_dependence_capacity )
   , m_count_ready(0)
+  , m_count_alloc(0)
 {
   const int threads_total    = Threads::thread_pool_size(0);
   const int threads_per_numa = Threads::thread_pool_size(1);

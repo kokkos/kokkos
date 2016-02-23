@@ -212,7 +212,8 @@ namespace Tacho {
       {
         timer.reset();
         {
-          auto future = policy.proc_create_team(Chol<Uplo::Upper,AlgoChol::ByBlocks>::
+          // auto future = policy.proc_create_team(Chol<Uplo::Upper,AlgoChol::ByBlocks>::
+          auto future = policy.proc_create_team(Chol<Uplo::Upper,AlgoChol::ByBlocks,Variant::Two>::
                                                 TaskFunctor<CrsHierTaskViewType>(policy,H), 0);
           policy.spawn(future);
           Kokkos::Experimental::wait(policy);

@@ -27,6 +27,27 @@ namespace Tacho {
     ordinal_type_array_ptr _aj, _ajn; // column index compressed format in row
     value_type_array_ptr   _ax;                // values 
 
+    static KOKKOS_INLINE_FUNCTION
+    typename CrsMatBaseType::ordinal_type_array_ptr
+    lower_bound( typename CrsMatBaseType::ordinal_type_array_ptr begin ,
+                 typename CrsMatBaseType::ordinal_type_array_ptr const end ,
+                 typename CrsMatBaseType::ordinal_type           const val )
+      {
+         typename CrsMatBaseType::ordinal_type_array_ptr it = begin ;
+         int count = end - begin ;
+         int step = 0 ;
+         while (count>0) {
+           it = begin ;
+           it += ( step = (count >> 1) );
+           if (*it<val) {
+             begin=++it;
+             count-=step+1;
+           }
+           else { count=step; }
+         }
+         return begin;
+      }
+
   public:
     KOKKOS_INLINE_FUNCTION
     ordinal_type OffsetCols() const { return _offn; }
@@ -47,8 +68,19 @@ namespace Tacho {
     value_type Value(const ordinal_type j) const { return _ax[j]; }
     
     KOKKOS_INLINE_FUNCTION
+    ordinal_type Index(const ordinal_type col ) const {
+      const ordinal_type loc = _offn + col ;
+      // binary search
+      ordinal_type_array_ptr aj = CrsRowView::lower_bound(_aj, _ajn, loc);
+
+      // if found, return index for the location, 
+      // otherwise return -1 (not found), -2 (end of array)
+      return (aj < _ajn ? (*aj == loc ? aj - _aj : -1) : -2);
+    }
+
+    KOKKOS_INLINE_FUNCTION
     ordinal_type Index(const ordinal_type col,
-                       const ordinal_type prev = 0) const {
+                       const ordinal_type prev ) const {
       const ordinal_type loc = _offn + col;
       ordinal_type_array_ptr aj = _aj + prev;
 
@@ -78,26 +110,6 @@ namespace Tacho {
         _ax() 
     { }
 
-    static KOKKOS_INLINE_FUNCTION
-    typename CrsMatBaseType::ordinal_type_array_ptr
-    lower_bound( typename CrsMatBaseType::ordinal_type_array_ptr begin ,
-                 typename CrsMatBaseType::ordinal_type_array_ptr const end ,
-                 typename CrsMatBaseType::ordinal_type           const val )
-      {
-         typename CrsMatBaseType::ordinal_type_array_ptr it = begin ;
-         int count = end - begin ;
-         int step = 0 ;
-         while (count>0) {
-           it = begin ;
-           it += ( step = (count >> 1) );
-           if (*it<val) {
-             begin=++it;
-             count-=step+1;
-           }
-           else { count=step; }
-         }
-         return begin;
-      }
 
     KOKKOS_INLINE_FUNCTION
     CrsRowView(const ordinal_type           offn,

@@ -36,7 +36,7 @@ namespace Tacho {
   // - CholByBlocks Variant 2
   // * diagonal blocks have nested dense blocks
   template<> struct Control<AlgoChol::ByBlocks,Variant::Two> {
-    static constexpr int Chol[2] = { AlgoChol::NestedDenseBlock, Variant::One }; 
+    static constexpr int Chol[2] = { AlgoChol::UnblockedOpt, Variant::One }; 
     static constexpr int Trsm[2] = { AlgoTrsm::ForFactorBlocked, Variant::One };
     static constexpr int Herk[2] = { AlgoHerk::ForFactorBlocked, Variant::One };
     static constexpr int Gemm[2] = { AlgoGemm::ForFactorBlocked, Variant::One };
@@ -53,12 +53,12 @@ namespace Tacho {
 
   // - CholByBlocks Variant 4
   // * diagonal blocks have nested hier dense blocks (hierarchical task scheduling)
-  template<> struct Control<AlgoChol::ByBlocks,Variant::Four> {
-    static constexpr int Chol[2] = { AlgoChol::NestedDenseByBlocks, Variant::One }; 
-    static constexpr int Trsm[2] = { AlgoTrsm::ForFactorBlocked,    Variant::One };
-    static constexpr int Herk[2] = { AlgoHerk::ForFactorBlocked,    Variant::One };
-    static constexpr int Gemm[2] = { AlgoGemm::ForFactorBlocked,    Variant::One };
-  };
+  // template<> struct Control<AlgoChol::ByBlocks,Variant::Four> {
+  //  static constexpr int Chol[2] = { AlgoChol::NestedDenseByBlocks, Variant::One }; 
+  //  static constexpr int Trsm[2] = { AlgoTrsm::ForFactorBlocked,    Variant::One };
+  //  static constexpr int Herk[2] = { AlgoHerk::ForFactorBlocked,    Variant::One };
+  //  static constexpr int Gemm[2] = { AlgoGemm::ForFactorBlocked,    Variant::One };
+  //};
 
   // - CholByBlocks Variant 5
   // * diagonal blocks have nested hier dense blocks (hierarchical task scheduling)

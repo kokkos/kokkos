@@ -50,24 +50,47 @@ if ( false && member.team_rank() == 0 ) {
       const ordinal_type nnz = a.NumNonZeros();
 
       if (nnz > 0) {
-        Kokkos::parallel_for(Kokkos::TeamThreadRange(member, 0, nnz),
-                             [&](const ordinal_type i) {
-                               const ordinal_type row_at_i  = a.Col(i);
-                               // const value_type   val_at_ik = conj(a.Value(i));
-                               const value_type   val_at_ik = a.Value(i);
 
-                               row_view_type &c = C.RowView(row_at_i);
+#if 0
 
-                               ordinal_type idx = 0;
-                               for (ordinal_type j=i;j<nnz && (idx > -2);++j) {
-                                 const ordinal_type col_at_j  = a.Col(j);
-                                 const value_type   val_at_kj = a.Value(j);
+        Kokkos::parallel_for(
+          Kokkos::TeamThreadRange(member, 0, nnz),
+            [&](const ordinal_type i) {
+              const ordinal_type row_at_i  = a.Col(i);
+               // const value_type   val_at_ik = conj(a.Value(i));
+               const value_type   val_at_ik = a.Value(i);
 
-                                 idx = c.Index(col_at_j, idx);
-                                 if (idx >= 0)
-                                   c.Value(idx) += alpha*val_at_ik*val_at_kj;
-                               }
-                             });
+               row_view_type &c = C.RowView(row_at_i);
+
+               ordinal_type idx = 0;
+               for (ordinal_type j=i;j<nnz && (idx > -2);++j) {
+                 const ordinal_type col_at_j  = a.Col(j);
+                 const value_type   val_at_kj = a.Value(j);
+
+                 idx = c.Index(col_at_j, idx);
+                 if (idx >= 0)
+                   c.Value(idx) += alpha*val_at_ik*val_at_kj;
+               }
+             });
+#else
+
+        Kokkos::parallel_for(
+          Kokkos::TeamThreadRange(member, 0, nnz*nnz),
+            [&](const ordinal_type ii) {
+               const ordinal_type i = ii / nnz ;
+               const ordinal_type j = ii % nnz ;
+
+               row_view_type &c = C.RowView( a.Col(i) );
+
+               const ordinal_type idx = c.Index( a.Col(j) );
+
+               if (idx >= 0) {
+                 c.Value(idx) += alpha* a.Value(i) * a.Value(j);
+               }
+             });
+
+#endif
+
         member.team_barrier();
       }
     }
