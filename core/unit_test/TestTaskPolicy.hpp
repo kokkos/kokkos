@@ -119,8 +119,8 @@ struct FibChild {
 
           result = fib_1.get() + fib_2.get();
 
-if ( true ) {
-  printf("FibChild %ld = fib(%d), task_count(%d)\n"
+if ( false ) {
+  printf("FibChild %ld = fib(%ld), task_count(%d)\n"
         , long(n), long(result), policy.allocated_task_count());
 }
 

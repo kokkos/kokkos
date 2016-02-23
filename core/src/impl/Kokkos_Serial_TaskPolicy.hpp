@@ -487,6 +487,10 @@ private:
 
 public:
 
+  // Stubbed out for now.
+  KOKKOS_INLINE_FUNCTION
+  int allocated_task_count() const { return 0 ; }
+
   TaskPolicy
     ( const unsigned /* arg_task_max_count */
     , const unsigned /* arg_task_max_size */
