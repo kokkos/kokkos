@@ -83,23 +83,54 @@ class DynRankView : private View< DataType********, P... >
 
 public: 
   using view_type = View< DataType******** , P...>;
-  typedef typename view_type::reference_type return_type;
+//  typedef typename view_type::reference_type return_type;
+//  typedef typename view_type::reference_type reference_type;
+  //using reference_type = typename view_type::reference_type; 
+  using typename view_type::reference_type; 
 private: 
-//  view_type m_view;
 
 public:
   //Constructor(s)
-//  DynRankView(unsigned dim0 = 0, unsigned dim1 = 0, unsigned dim2 = 0, unsigned dim3 = 0, unsigned dim4 = 0, unsigned dim5 = 0, unsigned dim6 = 0, unsigned dim7 = 0) : m_view("",dim0,dim1,dim2,dim3,dim4,dim5,dim6,dim7) {}
-  DynRankView(unsigned dim0 = 0, unsigned dim1 = 0, unsigned dim2 = 0, unsigned dim3 = 0, unsigned dim4 = 0, unsigned dim5 = 0, unsigned dim6 = 0, unsigned dim7 = 0) : view_type("",dim0,dim1,dim2,dim3,dim4,dim5,dim6,dim7) {}
+  template< typename iType >
+  DynRankView(iType dim0 = 0, iType dim1 = 0, iType dim2 = 0, iType dim3 = 0, iType dim4 = 0, iType dim5 = 0, iType dim6 = 0, iType dim7 = 0) : view_type("",dim0,dim1,dim2,dim3,dim4,dim5,dim6,dim7) {}
 
   //operator ()
-  return_type operator()(const unsigned i0 = 0, const unsigned i1 = 0, const unsigned i2 = 0, const unsigned i3 = 0, const unsigned i4 = 0, const unsigned i5 = 0, const unsigned i6 = 0, const unsigned i7 = 0) const 
-    //{ return m_view(i0,i1,i2,i3,i4,i5,i6,i7); }
+  template< typename iType >
+  reference_type operator()(const iType i0 ) const 
+    { return view_type::operator()(i0,0,0,0,0,0,0,0); }
+
+  template< typename iType >
+  reference_type operator()(const iType i0 , const iType i1 ) const 
+    { return view_type::operator()(i0,i1,0,0,0,0,0,0); }
+
+  template< typename iType >
+  reference_type operator()(const iType i0 , const iType i1 , const iType i2 ) const 
+    { return view_type::operator()(i0,i1,i2,0,0,0,0,0); }
+
+  template< typename iType >
+  reference_type operator()(const iType i0 , const iType i1 , const iType i2 , const iType i3 ) const 
+    { return view_type::operator()(i0,i1,i2,i3,0,0,0,0); }
+
+  template< typename iType >
+  reference_type operator()(const iType i0 , const iType i1 , const iType i2 , const iType i3 , const iType i4 ) const 
+    { return view_type::operator()(i0,i1,i2,i3,i4,0,0,0); }
+
+  template< typename iType >
+  reference_type operator()(const iType i0 , const iType i1 , const iType i2 , const iType i3 , const iType i4 , const iType i5 ) const 
+    { return view_type::operator()(i0,i1,i2,i3,i4,i5,0,0); }
+
+  template< typename iType >
+  reference_type operator()(const iType i0 , const iType i1 , const iType i2 , const iType i3 , const iType i4 , const iType i5 , const iType i6 ) const 
+    { return view_type::operator()(i0,i1,i2,i3,i4,i5,i6,0); }
+
+  template< typename iType >
+  reference_type operator()(const iType i0 = 0, const iType i1 = 0, const iType i2 = 0, const iType i3 = 0, const iType i4 = 0, const iType i5 = 0, const iType i6 = 0, const iType i7 = 0) const 
     { return view_type::operator()(i0,i1,i2,i3,i4,i5,i6,i7); }
 
 
   //rank
-  enum { Rank = view_type::Rank };
+//  enum { Rank = view_type::Rank };
+  using view_type::Rank ;
 
   template< typename iType >
   KOKKOS_INLINE_FUNCTION constexpr
@@ -112,6 +143,8 @@ public:
   typename std::enable_if< std::is_integral<iType>::value, int >::type
   extent_int( const iType &r ) const
     { return view_type::extent_int( r ); }
+
+//  using view_type::extent_int( r ) ; 
 
   KOKKOS_INLINE_FUNCTION constexpr
   typename view_type::traits::array_layout layout() const
@@ -129,7 +162,7 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr void stride( iType * const s ) const { view_type::stride( s ); }
 
   //Range span ...
-  typedef typename view_type::reference_type reference_type;
+//  typedef typename view_type::reference_type reference_type;
   typedef typename view_type::pointer_type   pointer_type;
 
   enum { reference_type_is_lvalue_reference = std::is_lvalue_reference< reference_type >::value };
