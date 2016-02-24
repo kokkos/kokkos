@@ -819,8 +819,6 @@ void test_view_mapping()
     ASSERT_EQ( d.dimension_1() , 6 );
   }
 
-#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) && ! defined ( KOKKOS_CUDA_USE_LAMBDA )
-  /* Only works when experimental view is activated */
   {
     typedef Kokkos::Experimental::View<int*,ExecSpace> V ;
     typedef Kokkos::Experimental::View<int*,ExecSpace,Kokkos::MemoryUnmanaged> U ;
@@ -858,8 +856,14 @@ void test_view_mapping()
     ASSERT_EQ( a.use_count() , 1 );
     ASSERT_EQ( b.use_count() , 0 );
 
+#if ! defined ( KOKKOS_CUDA_USE_LAMBDA )
+    /* Cannot launch host lambda when CUDA lambda is enabled */
+
+    typedef typename Kokkos::Impl::is_space< ExecSpace >::host_execution_space
+      host_exec_space ;
+
     Kokkos::parallel_for(
-      Kokkos::RangePolicy< Kokkos::DefaultHostExecutionSpace >(0,10) ,
+      Kokkos::RangePolicy< host_exec_space >(0,10) ,
       KOKKOS_LAMBDA( int i ){
         // 'a' is captured by copy and the capture mechanism
         // converts 'a' to an unmanaged copy.
@@ -870,8 +874,8 @@ void test_view_mapping()
         ASSERT_EQ( a.use_count() , 2 );
         ASSERT_EQ( x.use_count() , 2 );
       });
+#endif /* #if ! defined ( KOKKOS_CUDA_USE_LAMBDA ) */
   }
-#endif /* #if defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
 }
 
 template< class ExecSpace >
