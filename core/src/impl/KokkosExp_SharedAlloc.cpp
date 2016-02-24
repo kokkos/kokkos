@@ -76,7 +76,7 @@ is_sane( SharedAllocationRecord< void , void > * arg_record )
 
   SharedAllocationRecord * const root = arg_record ? arg_record->m_root : 0 ;
 
-  bool ok = root != 0 && root->m_count == 0 ;
+  bool ok = root != 0 && root->use_count() == 0 ;
 
   if ( ok ) {
     SharedAllocationRecord * root_next = 0 ;
@@ -89,7 +89,7 @@ is_sane( SharedAllocationRecord< void , void > * arg_record )
       const bool ok_root      = ok_non_null && rec->m_root == root ;
       const bool ok_prev_next = ok_non_null && ( rec->m_prev != root ? rec->m_prev->m_next == rec : root_next == rec );
       const bool ok_next_prev = ok_non_null && rec->m_next->m_prev == rec ;
-      const bool ok_count     = ok_non_null && 0 <= rec->m_count ;
+      const bool ok_count     = ok_non_null && 0 <= rec->use_count() ;
 
       ok = ok_root && ok_prev_next && ok_next_prev && ok_count ;
 
@@ -107,7 +107,7 @@ if ( ! ok ) {
   fprintf(stderr
         , format_string 
         , reinterpret_cast< uintptr_t >( rec )
-        , rec->m_count
+        , rec->use_count()
         , reinterpret_cast< uintptr_t >( rec->m_root )
         , reinterpret_cast< uintptr_t >( rec->m_next )
         , reinterpret_cast< uintptr_t >( rec->m_prev )
@@ -183,6 +183,9 @@ SharedAllocationRecord( SharedAllocationRecord<void,void> * arg_root
   while ( ( m_next = Kokkos::atomic_exchange( & m_root->m_next , zero ) ) == zero );
 
   m_next->m_prev = this ;
+
+  // memory fence before completing insertion into linked list
+  Kokkos::memory_fence();
 
   if ( zero != Kokkos::atomic_exchange( & m_root->m_next , this ) ) {
     Kokkos::Impl::throw_runtime_exception("Kokkos::Experimental::Impl::SharedAllocationRecord failed locking/unlocking");
@@ -292,7 +295,7 @@ print_host_accessible_records( std::ostream & s
               , reinterpret_cast<uintptr_t>( r->m_next )
               , reinterpret_cast<uintptr_t>( r->m_alloc_ptr )
               , r->m_alloc_size
-              , r->m_count
+              , r->use_count()
               , reinterpret_cast<uintptr_t>( r->m_dealloc )
               , r->m_alloc_ptr->m_label
               );

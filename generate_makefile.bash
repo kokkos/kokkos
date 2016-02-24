@@ -180,7 +180,7 @@ mkdir example/fixture
 mkdir example/feint
 mkdir example/fenl
 
-if [ ${KOKKOS_ENABLE_EXAMPLE_ICHOL} -gt 0 ]; then
+if [ ${#KOKKOS_ENABLE_EXAMPLE_ICHOL} -gt 0 ]; then
 mkdir example/ichol
 fi
 
@@ -273,7 +273,7 @@ echo "" >> example/fenl/Makefile
 echo "clean:" >> example/fenl/Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_OPTIONS} clean" >> example/fenl/Makefile
 
-if [ ${KOKKOS_ENABLE_EXAMPLE_ICHOL} -gt 0 ]; then
+if [ ${#KOKKOS_ENABLE_EXAMPLE_ICHOL} -gt 0 ]; then
 echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > example/ichol/Makefile
 echo "" >> example/ichol/Makefile
 echo "all:" >> example/ichol/Makefile
