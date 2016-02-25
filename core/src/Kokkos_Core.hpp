@@ -158,7 +158,8 @@ void * kokkos_realloc( void * arg_alloc , const size_t arg_alloc_size )
 } // namespace Experimental
 } // namespace Kokkos
 
-#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+
+#if KOKKOS_USING_EXP_VIEW
 
 namespace Kokkos {
 

@@ -162,7 +162,7 @@ namespace Tacho {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if ! KOKKOS_USING_EXP_VIEW
 
 namespace Kokkos {
   namespace Impl {
@@ -217,7 +217,7 @@ namespace Kokkos {
   } // namespace Impl
 } // namespace Kokkos
 
-#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
+#endif /* #if ! KOKKOS_USING_EXP_VIEW */
 
 
 //----------------------------------------------------------------------------

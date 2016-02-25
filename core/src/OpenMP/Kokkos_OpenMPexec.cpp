@@ -85,7 +85,7 @@ int OpenMPexec::m_map_rank[ OpenMPexec::MAX_THREAD_COUNT ] = { 0 };
 
 int OpenMPexec::m_pool_topo[ 4 ] = { 0 };
 
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if ! KOKKOS_USING_EXP_VIEW
 
 OpenMPexec::Pool OpenMPexec::m_pool;
 
@@ -125,7 +125,7 @@ void OpenMPexec::clear_scratch()
 #pragma omp parallel
   {
     const int rank_rev = m_map_rank[ omp_get_thread_num() ];
-#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if KOKKOS_USING_EXP_VIEW
     typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > Record ;
     if ( m_pool[ rank_rev ] ) {
       Record * const r = Record::get_record( m_pool[ rank_rev ] );
@@ -172,7 +172,7 @@ void OpenMPexec::resize_scratch( size_t reduce_size , size_t thread_size )
       const int rank_rev = m_map_rank[ omp_get_thread_num() ];
       const int rank     = pool_size - ( rank_rev + 1 );
 
-#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if KOKKOS_USING_EXP_VIEW
 
       typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > Record ;
 

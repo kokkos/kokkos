@@ -226,7 +226,7 @@ private:
   CudaInternal( const CudaInternal & );
   CudaInternal & operator = ( const CudaInternal & );
 
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if ! KOKKOS_USING_EXP_VIEW
 
   AllocationTracker m_scratchFlagsTracker;
   AllocationTracker m_scratchSpaceTracker;
@@ -542,7 +542,7 @@ CudaInternal::scratch_flags( const Cuda::size_type size )
 
     m_scratchFlagsCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
 
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if ! KOKKOS_USING_EXP_VIEW
 
     m_scratchFlagsTracker = CudaSpace::allocate_and_track( std::string("InternalScratchFlags") , sizeof( ScratchGrain ) * m_scratchFlagsCount );
 
@@ -576,7 +576,7 @@ CudaInternal::scratch_space( const Cuda::size_type size )
 
     m_scratchSpaceCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
 
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if ! KOKKOS_USING_EXP_VIEW
 
     m_scratchSpaceTracker = CudaSpace::allocate_and_track( std::string("InternalScratchSpace") , sizeof( ScratchGrain ) * m_scratchSpaceCount );
 
@@ -609,7 +609,7 @@ CudaInternal::scratch_unified( const Cuda::size_type size )
 
     m_scratchUnifiedCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
 
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if ! KOKKOS_USING_EXP_VIEW
 
     m_scratchUnifiedTracker = CudaHostPinnedSpace::allocate_and_track( std::string("InternalScratchUnified") , sizeof( ScratchGrain ) * m_scratchUnifiedCount );
 
@@ -649,7 +649,7 @@ void CudaInternal::finalize()
       ::free( m_stream );
     }
 
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if ! KOKKOS_USING_EXP_VIEW
 
     m_scratchSpaceTracker.clear();
     m_scratchFlagsTracker.clear();

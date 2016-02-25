@@ -77,7 +77,7 @@ public:
 
   /*--------------------------------*/
 
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if ! KOKKOS_USING_EXP_VIEW
 
   typedef Impl::CudaMallocAllocator allocator;
 
@@ -100,7 +100,7 @@ public:
                                    );
 #endif
 
-#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
+#endif /* #if ! KOKKOS_USING_EXP_VIEW */
 
   /*--------------------------------*/
 
@@ -172,7 +172,7 @@ public:
 
   /*--------------------------------*/
 
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if ! KOKKOS_USING_EXP_VIEW
 
   typedef Impl::CudaUVMAllocator allocator;
 
@@ -195,7 +195,7 @@ public:
                                    );
 #endif
 
-#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
+#endif /* #if ! KOKKOS_USING_EXP_VIEW */
 
   /*--------------------------------*/
 
@@ -242,7 +242,7 @@ public:
 
   /*--------------------------------*/
 
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if ! KOKKOS_USING_EXP_VIEW
 
   typedef Impl::CudaHostAllocator allocator ;
 
@@ -254,7 +254,7 @@ public:
    */
   static Impl::AllocationTracker allocate_and_track( const std::string & label, const size_t size );
 
-#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
+#endif /* #if ! KOKKOS_USING_EXP_VIEW */
 
   /*--------------------------------*/
 

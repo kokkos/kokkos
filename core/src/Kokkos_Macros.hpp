@@ -428,7 +428,6 @@
 #define KOKKOS_POSIX_MEMALIGN_AVAILABLE 1
 #endif
 #endif
-#endif /* #ifndef KOKKOS_MACROS_HPP */
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -438,3 +437,21 @@
 #ifndef KOKKOS_ENABLE_PROFILING
 #define KOKKOS_ENABLE_PROFILING 1
 #endif
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+/* Transitional macro to change between old and new View */
+
+#if ! defined( KOKKOS_USING_EXP_VIEW )
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#define KOKKOS_USING_EXP_VIEW 1
+#else
+#define KOKKOS_USING_EXP_VIEW 0
+#endif
+#endif
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+#endif /* #ifndef KOKKOS_MACROS_HPP */
+

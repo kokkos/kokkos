@@ -89,7 +89,7 @@ private:
 
   ThreadsExec * const * m_pool_base ; ///< Base for pool fan-in
 
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if ! KOKKOS_USING_EXP_VIEW
   Impl::AllocationTracker m_scratch ;
 #else
   void *        m_scratch ;
@@ -138,7 +138,7 @@ public:
   static int get_thread_count();
   static ThreadsExec * get_thread( const int init_thread_rank );
 
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if ! KOKKOS_USING_EXP_VIEW
 
   inline void * reduce_memory() const { return reinterpret_cast<unsigned char *>(m_scratch.alloc_ptr()); }
   KOKKOS_INLINE_FUNCTION  void * scratch_memory() const { return reinterpret_cast<unsigned char *>(m_scratch.alloc_ptr()) + m_scratch_reduce_end ; }

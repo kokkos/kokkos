@@ -63,7 +63,7 @@ public:
 
   enum { MAX_THREAD_COUNT = 4096 };
 
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if ! KOKKOS_USING_EXP_VIEW
 
   struct Pool
   {

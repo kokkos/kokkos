@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_EXPERIMENTAL_VIEW_HPP
-#define KOKKOS_EXPERIMENTAL_VIEW_HPP
+#ifndef KOKKOS_EXP_VIEW_HPP
+#define KOKKOS_EXP_VIEW_HPP
 
 #include <string>
 #include <algorithm>
@@ -1532,7 +1532,7 @@ bool operator != ( const View<LT,LP...> & lhs ,
 namespace Kokkos {
 namespace Impl {
 
-#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if KOKKOS_USING_EXP_VIEW
 
 inline
 void shared_allocation_tracking_claim_and_disable()
@@ -1985,7 +1985,7 @@ void realloc( Kokkos::Experimental::View<T,P...> & v ,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if KOKKOS_USING_EXP_VIEW
 
 namespace Kokkos {
 
@@ -2028,7 +2028,7 @@ struct ViewSubview /* { typedef ... type ; } */ ;
 
 #include <impl/Kokkos_Atomic_View.hpp>
 
-#endif /* #if defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
+#endif /* #if KOKKOS_USING_EXP_VIEW */
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

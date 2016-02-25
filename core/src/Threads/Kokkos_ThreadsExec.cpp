@@ -134,7 +134,7 @@ void ThreadsExec::driver(void)
 
 ThreadsExec::ThreadsExec()
   : m_pool_base(0)
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if ! KOKKOS_USING_EXP_VIEW
   , m_scratch()
 #else
   , m_scratch(0)
@@ -198,7 +198,7 @@ ThreadsExec::~ThreadsExec()
 {
   const unsigned entry = m_pool_size - ( m_pool_rank + 1 );
 
-#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if KOKKOS_USING_EXP_VIEW
 
   typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > Record ;
 
@@ -439,7 +439,7 @@ void * ThreadsExec::root_reduce_scratch()
 
 void ThreadsExec::execute_resize_scratch( ThreadsExec & exec , const void * )
 {
-#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if KOKKOS_USING_EXP_VIEW
 
   typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > Record ;
 
@@ -462,7 +462,7 @@ void ThreadsExec::execute_resize_scratch( ThreadsExec & exec , const void * )
 
   if ( s_threads_process.m_scratch_thread_end ) {
 
-#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if KOKKOS_USING_EXP_VIEW
 
     // Allocate tracked memory:
     {
@@ -520,7 +520,7 @@ void * ThreadsExec::resize_scratch( size_t reduce_size , size_t thread_size )
     s_threads_process.m_scratch = s_threads_exec[0]->m_scratch ;
   }
 
-#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if KOKKOS_USING_EXP_VIEW
   return s_threads_process.m_scratch ;
 #else
   return s_threads_process.m_scratch.alloc_ptr() ;

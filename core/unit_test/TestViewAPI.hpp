@@ -50,7 +50,7 @@
 
 /*--------------------------------------------------------------------------*/
 
-#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if KOKKOS_USING_EXP_VIEW
 
 namespace Test {
 
@@ -1038,12 +1038,12 @@ public:
     dx = dView4( "dx" , N0 );
     dy = dView4( "dy" , N0 );
 
-    #ifndef KOKKOS_USING_EXPERIMENTAL_VIEW
+    #if KOKKOS_USING_EXP_VIEW
     ASSERT_EQ( dx.tracker().ref_count() , size_t(1) );
     #endif
 
     dView4_unmanaged unmanaged_dx = dx;
-    #ifndef KOKKOS_USING_EXPERIMENTAL_VIEW
+    #if KOKKOS_USING_EXP_VIEW
     ASSERT_EQ( dx.tracker().ref_count() , size_t(1) );
     #endif
 
@@ -1063,34 +1063,34 @@ public:
     }
 
     const_dView4 const_dx = dx ;
-    #ifndef KOKKOS_USING_EXPERIMENTAL_VIEW
+    #if KOKKOS_USING_EXP_VIEW
     ASSERT_EQ( dx.tracker().ref_count() , size_t(2) );
     #endif
 
     {
       const_dView4 const_dx2;
       const_dx2 = const_dx;
-      #ifndef KOKKOS_USING_EXPERIMENTAL_VIEW
+      #if KOKKOS_USING_EXP_VIEW
       ASSERT_EQ( dx.tracker().ref_count() , size_t(3) );
       #endif
 
       const_dx2 = dy;
-      #ifndef KOKKOS_USING_EXPERIMENTAL_VIEW
+      #if KOKKOS_USING_EXP_VIEW
       ASSERT_EQ( dx.tracker().ref_count() , size_t(2) );
       #endif
 
       const_dView4 const_dx3(dx);
-      #ifndef KOKKOS_USING_EXPERIMENTAL_VIEW
+      #if KOKKOS_USING_EXP_VIEW
       ASSERT_EQ( dx.tracker().ref_count() , size_t(3) );
       #endif
       
       dView4_unmanaged dx4_unmanaged(dx);
-      #ifndef KOKKOS_USING_EXPERIMENTAL_VIEW
+      #if KOKKOS_USING_EXP_VIEW
       ASSERT_EQ( dx.tracker().ref_count() , size_t(3) );
       #endif
     }
 
-    #ifndef KOKKOS_USING_EXPERIMENTAL_VIEW
+    #if KOKKOS_USING_EXP_VIEW
     ASSERT_EQ( dx.tracker().ref_count() , size_t(2) );
     #endif
 

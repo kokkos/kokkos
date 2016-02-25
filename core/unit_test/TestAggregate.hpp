@@ -52,7 +52,7 @@
 
 /*--------------------------------------------------------------------------*/
 
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#if ! KOKKOS_USING_EXP_VIEW
 
 namespace Test {
 
@@ -709,7 +709,7 @@ int TestViewAggregate()
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#else /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
+#else /* #if ! KOKKOS_USING_EXP_VIEW */
 
 #include <impl/KokkosExp_ViewArray.hpp>
 
@@ -762,7 +762,7 @@ void TestViewAggregate()
 
 }
 
-#endif /* #if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW ) */
+#endif /* #if ! KOKKOS_USING_EXP_VIEW */
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
