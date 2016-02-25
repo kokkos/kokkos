@@ -48,10 +48,49 @@
 
 namespace Test {
 
+
+template< typename DataType , class Device >
+struct test_dynamic_rank_view_2D {
+
+  //typedef typename Kokkos::DynRankView< DataType, Device > dynview;
+  typedef typename Kokkos::Experimental::DynRankView< DataType, Device > dynview;
+  dynview m_testview;
+
+  void set_values( size_t s0 , size_t s1 ) {
+    for ( size_t i0 = 0; i0 < s0; ++i0 ) {
+    for ( size_t i1 = 0; i1 < s1; ++i1 ) {
+      m_testview(i0 , i1) = i1*s0 + i0;
+    }}
+  }
+
+  void check_values( size_t s0 , size_t s1 ) {
+    size_t error_count = 0;
+    for ( size_t i0 = 0; i0 < s0; ++i0 ) {
+    for ( size_t i1 = 0; i1 < s1; ++i1 ) {
+      if ( m_testview(i0 , i1 ) != i1*s0 + i0 )
+        { ++error_count; }
+    }}
+
+    ASSERT_EQ( error_count , size_t(0) ); //should be 0, intentionally wrong to make sure test is running
+  }
+
+
+  test_dynamic_rank_view_2D(size_t s0 = 1, size_t s1 = 1) : m_testview( s0 , s1 )
+  {
+    std::cout << "In 2d dyn rank constructor" << std::endl;
+    set_values(s0 , s1);
+      std::cout << " set 2d values ..." << std::endl;
+    check_values(s0 , s1);
+      std::cout << " checked 2d values ..." << std::endl;
+//    std::cout << "Rank of this view is " <<  m_testview.Rank << std::endl;
+  }
+};
+
 template< typename DataType , class Device >
 struct test_dynamic_rank_view {
 
-  typedef typename Kokkos::DynRankView< DataType, Device > dynview;
+  //typedef typename Kokkos::DynRankView< DataType, Device > dynview;
+  typedef typename Kokkos::Experimental::DynRankView< DataType, Device > dynview;
   dynview m_testview;
 
   //set and check values:
@@ -66,7 +105,6 @@ struct test_dynamic_rank_view {
     for ( size_t i7 = 0; i7 < s7; ++i7 ) {
       m_testview(i0 , i1 , i2 , i3 , i4 , i5 , i6 , i7) = i7*s0*s1*s2*s3*s4*s5*s6 + i6*s0*s1*s2*s3*s4*s5 + i5*s0*s1*s2*s3*s4 + i4*s0*s1*s2*s3 + i3*s0*s1*s2 + i2*s0*s1 + i1*s0 + i0;
     }}}}}}}}
-
   }
 
   void check_values( size_t s0 , size_t s1 , size_t s2 , size_t s3 , size_t s4 , size_t s5 , size_t s6 , size_t s7 ) {
