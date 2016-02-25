@@ -70,7 +70,7 @@
 namespace Kokkos {
 namespace Experimental {
 
-template < class Space >
+template < class Space , class ExecSpace = typename Space::execution_space >
 class MemoryPool ;
 
 namespace Impl {
@@ -142,7 +142,7 @@ private:
 
   typedef Impl::SharedAllocationTracker  Tracker;
 
-  template< class > friend class Kokkos::Experimental::MemoryPool;
+  template< class , class > friend class Kokkos::Experimental::MemoryPool;
 
 public:
 
@@ -438,14 +438,14 @@ namespace Experimental {
 /// pool memory allocator for fast allocation of same-sized chunks of memory.
 /// The memory is only accessible on the host / device this allocator is
 /// associated with.
-template < class Space >
+template < class Space , class ExecSpace >
 class MemoryPool {
 private:
 
   Impl::MemPoolList  m_memory;
 
-  typedef typename Space::memory_space     backend_memory_space;
-  typedef typename Space::execution_space  execution_space;
+  typedef typename Space::memory_space  backend_memory_space ;
+  typedef ExecSpace                     execution_space ;
 
 public:
 
