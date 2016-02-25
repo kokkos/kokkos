@@ -50,26 +50,23 @@
 
 /*--------------------------------------------------------------------------*/
 
-#if KOKKOS_USING_EXP_VIEW
-
-namespace Test {
-
-template< typename T, class DeviceType >
-class TestViewAPI {
-public:
-  TestViewAPI() {}
-};
-
-}
-
-#else
 
 /*--------------------------------------------------------------------------*/
 
 namespace Test {
 
+#if KOKKOS_USING_EXP_VIEW
+
+template< class T , class ... P >
+size_t allocation_count( const Kokkos::View<T,P...> & view )
+
+#else
+
 template< class T , class L , class D , class M , class S >
 size_t allocation_count( const Kokkos::View<T,L,D,M,S> & view )
+
+#endif
+
 {
   const size_t card  = Kokkos::Impl::cardinality_count( view.shape() );
   const size_t alloc = view.capacity();
@@ -1039,11 +1036,15 @@ public:
     dy = dView4( "dy" , N0 );
 
     #if KOKKOS_USING_EXP_VIEW
+    ASSERT_EQ( dx.use_count() , size_t(1) );
+    #else
     ASSERT_EQ( dx.tracker().ref_count() , size_t(1) );
     #endif
 
     dView4_unmanaged unmanaged_dx = dx;
     #if KOKKOS_USING_EXP_VIEW
+    ASSERT_EQ( dx.use_count() , size_t(1) );
+    #else
     ASSERT_EQ( dx.tracker().ref_count() , size_t(1) );
     #endif
 
@@ -1064,6 +1065,8 @@ public:
 
     const_dView4 const_dx = dx ;
     #if KOKKOS_USING_EXP_VIEW
+    ASSERT_EQ( dx.use_count() , size_t(2) );
+    #else
     ASSERT_EQ( dx.tracker().ref_count() , size_t(2) );
     #endif
 
@@ -1071,26 +1074,36 @@ public:
       const_dView4 const_dx2;
       const_dx2 = const_dx;
       #if KOKKOS_USING_EXP_VIEW
+      ASSERT_EQ( dx.use_count() , size_t(3) );
+      #else
       ASSERT_EQ( dx.tracker().ref_count() , size_t(3) );
       #endif
 
       const_dx2 = dy;
       #if KOKKOS_USING_EXP_VIEW
+      ASSERT_EQ( dx.use_count() , size_t(2) );
+      #else
       ASSERT_EQ( dx.tracker().ref_count() , size_t(2) );
       #endif
 
       const_dView4 const_dx3(dx);
       #if KOKKOS_USING_EXP_VIEW
+      ASSERT_EQ( dx.use_count() , size_t(3) );
+      #else
       ASSERT_EQ( dx.tracker().ref_count() , size_t(3) );
       #endif
       
       dView4_unmanaged dx4_unmanaged(dx);
       #if KOKKOS_USING_EXP_VIEW
+      ASSERT_EQ( dx.use_count() , size_t(3) );
+      #else
       ASSERT_EQ( dx.tracker().ref_count() , size_t(3) );
       #endif
     }
 
     #if KOKKOS_USING_EXP_VIEW
+    ASSERT_EQ( dx.use_count() , size_t(2) );
+    #else
     ASSERT_EQ( dx.tracker().ref_count() , size_t(2) );
     #endif
 
@@ -1399,8 +1412,6 @@ public:
 };
 
 } // namespace Test
-
-#endif
 
 /*--------------------------------------------------------------------------*/
 
