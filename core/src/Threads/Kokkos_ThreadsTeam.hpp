@@ -93,7 +93,7 @@ public:
   // All other threads will return false during the fan-out.
   KOKKOS_INLINE_FUNCTION bool team_fan_in() const
     {
-#ifdef KOKKOS_HOST_TEAM_BARRIER_EXPERIMENTAL
+#if defined( KOKKOS_USING_EXPERIMENTAL_HOST_TEAM_BARRIER )
       if ( m_team_size != 1 ) {
         ThreadsExec::CoreBarrier *core_barrier = m_team_base[0]->core_barrier();
         const int flip = core_barrier->set_arrive( m_team_rank );
@@ -120,7 +120,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION void team_fan_out() const
     {
-#ifdef KOKKOS_HOST_TEAM_BARRIER_EXPERIMENTAL
+#if defined( KOKKOS_USING_EXPERIMENTAL_HOST_TEAM_BARRIER )
       if ( m_team_size != 1 ) {
         ThreadsExec::CoreBarrier *core_barrier = m_team_base[0]->core_barrier();
         const int flip = core_barrier->set_depart( m_team_rank );
@@ -438,6 +438,10 @@ class TeamPolicy< Arg0 , Arg1 , Kokkos::Threads >
 {
 private:
 
+#if defined( KOKKOS_USING_EXPERIMENTAL_HOST_TEAM_BARRIER )
+  enum { TEAM_BARRIER_SIZE = 8 };
+#endif
+
   int m_league_size ;
   int m_team_size ;
   int m_team_alloc ;
@@ -447,7 +451,12 @@ private:
            , const int team_size_request )
    {
       const int pool_size  = execution_space::thread_pool_size(0);
+#if defined( KOKKOS_USING_EXPERIMENTAL_HOST_TEAM_BARRIER )
+      const int team_max   = ( execution_space::thread_pool_size(1) < TEAM_BARRIER_SIZE ?
+                               execution_space::thread_pool_size(1) : TEAM_BARRIER_SIZE );
+#else
       const int team_max   = execution_space::thread_pool_size(1);
+#endif
       const int team_grain = execution_space::thread_pool_size(2);
 
       m_league_size = league_size_request ;

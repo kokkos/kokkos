@@ -99,7 +99,7 @@ private:
   int           m_pool_fan_size ;
   int volatile  m_pool_state ;  ///< State for global synchronizations
 
-#ifdef KOKKOS_HOST_TEAM_BARRIER_EXPERIMENTAL  
+#if defined( KOKKOS_USING_EXPERIMENTAL_HOST_TEAM_BARRIER )
 public:
   class CoreBarrier {
   private:

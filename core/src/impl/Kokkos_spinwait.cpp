@@ -77,7 +77,7 @@ void spinwait( volatile int & flag , const int value )
   }
 }
 
-#ifdef KOKKOS_HOST_TEAM_BARRIER_EXPERIMENTAL
+#if defined( KOKKOS_USING_EXPERIMENTAL_HOST_TEAM_BARRIER )
   template<>
   void spinwait<IsNotEqual,int64_t>( volatile int64_t & flag , const int64_t value )
   {

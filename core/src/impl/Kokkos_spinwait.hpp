@@ -53,14 +53,14 @@ namespace Impl {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
 void spinwait( volatile int & flag , const int value );
 
-#ifdef KOKKOS_HOST_TEAM_BARRIER_EXPERIMENTAL
+#if defined( KOKKOS_USING_EXPERIMENTAL_HOST_TEAM_BARRIER )
   enum { IsEqual = 1,
          IsNotEqual };
-
+  
   template<int CompareType, typename IType>
   void spinwait( volatile IType & flag , const IType value );
 #endif
-
+  
 #else
 KOKKOS_INLINE_FUNCTION
 void spinwait( volatile int & , const int ) {}
