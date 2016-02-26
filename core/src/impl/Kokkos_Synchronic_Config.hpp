@@ -60,7 +60,8 @@ namespace Impl {
 //certain platforms have efficient support for spin-waiting built into the operating system
 #if defined(__linux__) || (defined(_WIN32_WINNT) && _WIN32_WINNT >= 0x0602)
 #if defined(_WIN32_WINNT)
-    #include <Windows.h>
+#include <winsock2.h>
+#include <Windows.h>
     //the combination of WaitOnAddress and WakeByAddressAll is supported on Windows 8.1+
     #define __synchronic_wait(x,v) WaitOnAddress((PVOID)x,(PVOID)&v,sizeof(v),-1)
     #define __synchronic_wait_timed(x,v,t) WaitOnAddress((PVOID)x,(PVOID)&v,sizeof(v),std::chrono::duration_cast<std::chrono::milliseconds>(t).count())

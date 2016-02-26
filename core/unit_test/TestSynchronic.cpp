@@ -29,6 +29,12 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 //#undef _WIN32_WINNT
 //#define _WIN32_WINNT 0x0602
 
+#if defined(__powerpc__) || defined(__ppc__) || defined(__PPC__) || defined(__APPLE__)
+
+// Skip for now
+
+#else
+
 #include <gtest/gtest.h>
 
 #ifdef USEOMP
@@ -438,3 +444,5 @@ TEST( synchronic, main )
 }
 
 } // namespace Test
+
+#endif

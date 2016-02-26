@@ -186,7 +186,7 @@ T atomic_exchange( volatile T * const dest ,
   return old.val_T ;
 }
 
-#if defined(KOKKOS_ENABLE_ASM)
+#if defined(KOKKOS_ENABLE_ASM) && defined ( KOKKOS_USE_ISA_X86_64 )
 template< typename T >
 KOKKOS_INLINE_FUNCTION
 T atomic_exchange( volatile T * const dest ,
@@ -219,7 +219,7 @@ T atomic_exchange( volatile T * const dest ,
     typename ::Kokkos::Impl::enable_if<
                   ( sizeof(T) != 4 )
                && ( sizeof(T) != 8 )
-              #if defined(KOKKOS_ENABLE_ASM)
+              #if defined(KOKKOS_ENABLE_ASM) && defined ( KOKKOS_USE_ISA_X86_64 )
                && ( sizeof(T) != 16 )
               #endif
                  , const T >::type& val )
@@ -264,7 +264,7 @@ void atomic_assign( volatile T * const dest ,
   } while ( assumed != old.val_type );
 }
 
-#ifdef KOKKOS_ENABLE_ASM
+#if defined( KOKKOS_ENABLE_ASM ) && defined ( KOKKOS_USE_ISA_X86_64 )
 template< typename T >
 KOKKOS_INLINE_FUNCTION
 void atomic_assign( volatile T * const dest ,
@@ -292,13 +292,18 @@ void atomic_assign( volatile T * const dest ,
     typename ::Kokkos::Impl::enable_if<
                   ( sizeof(T) != 4 )
                && ( sizeof(T) != 8 )
-              #if defined(KOKKOS_ENABLE_ASM)
+              #if defined(KOKKOS_ENABLE_ASM) && defined ( KOKKOS_USE_ISA_X86_64 )
                && ( sizeof(T) != 16 )
               #endif
                  , const T >::type& val )
 {
   while( !Impl::lock_address_host_space( (void*) dest ) );
-  *dest = val;
+  // This is likely an aggregate type with a defined
+  // 'volatile T & operator = ( const T & ) volatile'
+  // member.  The volatile return value implicitly defines a
+  // dereference that some compilers (gcc 4.7.2) warn is being ignored.
+  // Suppress warning by casting return to void.
+  (void)( *dest = val );
   Impl::unlock_address_host_space( (void*) dest );
 }
 //----------------------------------------------------------------------------

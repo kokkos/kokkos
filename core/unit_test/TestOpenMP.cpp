@@ -43,6 +43,12 @@
 
 #include <gtest/gtest.h>
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_LAMBDA
+#undef KOKKOS_LAMBDA
+#endif
+#define KOKKOS_LAMBDA [=]
+
 #include <Kokkos_Core.hpp>
 
 //----------------------------------------------------------------------------
@@ -52,6 +58,7 @@
 
 #include <TestViewAPI.hpp>
 #include <TestViewSubview.hpp>
+#include <TestViewOfClass.hpp>
 
 #include <TestSharedAlloc.hpp>
 #include <TestViewMapping.hpp>
@@ -63,11 +70,17 @@
 #include <TestAggregate.hpp>
 #include <TestAggregateReduction.hpp>
 #include <TestCompilerMacros.hpp>
+#include <TestMemoryPool.hpp>
+
+
 #include <TestCXX11.hpp>
 #include <TestCXX11Deduction.hpp>
 #include <TestTeamVector.hpp>
 #include <TestMemorySpaceTracking.hpp>
 #include <TestTemplateMetaFunctions.hpp>
+
+#include <TestPolicyConstruction.hpp>
+
 
 namespace Test {
 
@@ -101,6 +114,11 @@ TEST_F( openmp , impl_shared_alloc ) {
   test_shared_alloc< Kokkos::HostSpace , Kokkos::OpenMP >();
 }
 
+TEST_F( openmp, policy_construction) {
+  TestRangePolicyConstruction< Kokkos::OpenMP >();
+  TestTeamPolicyConstruction< Kokkos::OpenMP >();
+}
+
 TEST_F( openmp , impl_view_mapping ) {
   test_view_mapping< Kokkos::OpenMP >();
   test_view_mapping_subview< Kokkos::OpenMP >();
@@ -116,6 +134,10 @@ TEST_F( openmp, view_api) {
   TestViewAPI< double , Kokkos::OpenMP >();
 }
 
+TEST_F( openmp , view_nested_view )
+{
+  ::Test::view_nested_view< Kokkos::OpenMP >();
+}
 
 TEST_F( openmp, view_subview_auto_1d_left ) {
   TestViewSubview::test_auto_1d< Kokkos::LayoutLeft,Kokkos::OpenMP >();
@@ -165,15 +187,21 @@ TEST_F( openmp, view_subview_right_3 ) {
 
 TEST_F( openmp , range_tag )
 {
-  TestRange< Kokkos::OpenMP >::test_for(1000);
-  TestRange< Kokkos::OpenMP >::test_reduce(1000);
-  TestRange< Kokkos::OpenMP >::test_scan(1000);
+  TestRange< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >::test_for(1000);
+  TestRange< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >::test_reduce(1000);
+  TestRange< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >::test_scan(1000);
+  TestRange< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(1001);
+  TestRange< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(1001);
+  TestRange< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >::test_scan(1001);
+  TestRange< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >::test_dynamic_policy(1000);
 }
 
 TEST_F( openmp , team_tag )
 {
-  TestTeamPolicy< Kokkos::OpenMP >::test_for(1000);
-  TestTeamPolicy< Kokkos::OpenMP >::test_reduce(1000);
+  TestTeamPolicy< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >::test_for(1000);
+  TestTeamPolicy< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >::test_reduce(1000);
+  TestTeamPolicy< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(1000);
+  TestTeamPolicy< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(1000);
 }
 
 TEST_F( openmp, long_reduce) {
@@ -197,17 +225,35 @@ TEST_F( openmp, long_reduce_dynamic_view ) {
 }
 
 TEST_F( openmp, team_long_reduce) {
-  TestReduceTeam< long ,   Kokkos::OpenMP >( 100000 );
+  TestReduceTeam< long ,   Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >( 3 );
+  TestReduceTeam< long ,   Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >( 3 );
+  TestReduceTeam< long ,   Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >( 100000 );
+  TestReduceTeam< long ,   Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >( 100000 );
 }
 
 TEST_F( openmp, team_double_reduce) {
-  TestReduceTeam< double ,   Kokkos::OpenMP >( 100000 );
+  TestReduceTeam< double ,   Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >( 3 );
+  TestReduceTeam< double ,   Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >( 3 );
+  TestReduceTeam< double ,   Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >( 100000 );
+  TestReduceTeam< double ,   Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >( 100000 );
 }
 
 TEST_F( openmp, team_shared_request) {
-  TestSharedTeam< Kokkos::OpenMP >();
+  TestSharedTeam< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >();
+  TestSharedTeam< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >();
 }
 
+TEST_F( openmp, team_scratch_request) {
+  TestScratchTeam< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >();
+  TestScratchTeam< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >();
+}
+
+#if defined(KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA) 
+TEST_F( openmp, team_lambda_shared_request) {
+  TestLambdaSharedTeam< Kokkos::HostSpace, Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >();
+  TestLambdaSharedTeam< Kokkos::HostSpace, Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >();
+}
+#endif
 
 TEST_F( openmp , atomics )
 {
@@ -311,8 +357,10 @@ TEST_F( openmp , scan )
 
 TEST_F( openmp , team_scan )
 {
-  TestScanTeam< Kokkos::OpenMP >( 10000 );
-  TestScanTeam< Kokkos::OpenMP >( 10000 );
+  TestScanTeam< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >( 10 );
+  TestScanTeam< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >( 10 );
+  TestScanTeam< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >( 10000 );
+  TestScanTeam< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >( 10000 );
 }
 
 //----------------------------------------------------------------------------
@@ -327,6 +375,12 @@ TEST_F( openmp , compiler_macros )
 TEST_F( openmp , memory_space )
 {
   TestMemorySpace< Kokkos::OpenMP >();
+}
+
+TEST_F( openmp , memory_pool )
+{
+  bool val = TestMemoryPool::test_mempool< Kokkos::OpenMP >( 32, 8000000 );
+  ASSERT_TRUE( val );
 }
 
 //----------------------------------------------------------------------------

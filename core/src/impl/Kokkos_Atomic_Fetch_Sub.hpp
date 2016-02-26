@@ -227,7 +227,7 @@ void atomic_sub(volatile T * const dest, const T src) {
 
 }
 
-#include<impl/Kokkos_Atomic_Assembly_X86.hpp>
+#include<impl/Kokkos_Atomic_Assembly.hpp>
 #endif
 
 

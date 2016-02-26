@@ -82,8 +82,8 @@ namespace Impl {
  */
 template< class Functor
         , class Policy
-        , class EnableFunctor = void
-        , class EnablePolicy  = void
+        , class EnableFunctor
+        , class EnablePolicy
         >
 struct FunctorPolicyExecutionSpace {
   typedef Kokkos::DefaultExecutionSpace execution_space ;
@@ -139,30 +139,6 @@ struct FunctorPolicyExecutionSpace
   typedef typename Functor::execution_space execution_space ;
 };
 
-//----------------------------------------------------------------------------
-/// \class ParallelFor
-/// \brief Implementation of the ParallelFor operator that has a
-///   partial specialization for the device.
-///
-/// This is an implementation detail of parallel_for.  Users should
-/// skip this and go directly to the nonmember function parallel_for.
-template< class FunctorType , class ExecPolicy > class ParallelFor ;
-
-/// \class ParallelReduce
-/// \brief Implementation detail of parallel_reduce.
-///
-/// This is an implementation detail of parallel_reduce.  Users should
-/// skip this and go directly to the nonmember function parallel_reduce.
-template< class FunctorType , class ExecPolicy > class ParallelReduce ;
-
-/// \class ParallelScan
-/// \brief Implementation detail of parallel_scan.
-///
-/// This is an implementation detail of parallel_scan.  Users should
-/// skip this and go directly to the documentation of the nonmember
-/// template function Kokkos::parallel_scan.
-template< class FunctorType , class ExecPolicy > class ParallelScan ;
-
 } // namespace Impl
 } // namespace Kokkos
 
@@ -207,8 +183,12 @@ void parallel_for( const ExecPolicy  & policy
      }
 #endif
 
-    (void) Impl::ParallelFor< FunctorType , ExecPolicy >( Impl::CopyWithoutTracking::apply(functor) , policy );
+    Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+    Impl::ParallelFor< FunctorType , ExecPolicy > closure( functor , policy );
+    Kokkos::Impl::shared_allocation_tracking_release_and_enable();
    
+   closure.execute();
+
 #ifdef KOKKOSP_ENABLE_PROFILING
      if(Kokkos::Experimental::profileLibraryLoaded()) {
         Kokkos::Experimental::endParallelFor(kpID);
@@ -235,7 +215,11 @@ void parallel_for( const size_t        work_count
      }
 #endif
     
-  (void) Impl::ParallelFor< FunctorType , policy >( Impl::CopyWithoutTracking::apply(functor) , policy(0,work_count) );
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+  Impl::ParallelFor< FunctorType , policy > closure( functor , policy(0,work_count) );
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
+
+  closure.execute();
 
 #ifdef KOKKOSP_ENABLE_PROFILING
      if(Kokkos::Experimental::profileLibraryLoaded()) {
@@ -333,7 +317,11 @@ void parallel_reduce( const ExecPolicy  & policy
      }
 #endif
 
-     (void) Impl::ParallelReduce< FunctorType , ExecPolicy >( Impl::CopyWithoutTracking::apply(functor) , policy , result_view );
+    Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+    Impl::ParallelReduce< FunctorType , ExecPolicy > closure( functor , policy , result_view );
+    Kokkos::Impl::shared_allocation_tracking_release_and_enable();
+
+    closure.execute();
 
 #ifdef KOKKOSP_ENABLE_PROFILING
      if(Kokkos::Experimental::profileLibraryLoaded()) {
@@ -376,7 +364,11 @@ void parallel_reduce( const size_t        work_count
      }
 #endif
     
-  (void) Impl::ParallelReduce< FunctorType , policy >( Impl::CopyWithoutTracking::apply(functor) , policy(0,work_count) , result_view );
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+  Impl::ParallelReduce< FunctorType , policy > closure( functor , policy(0,work_count) , result_view );
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
+
+  closure.execute();
 
 #ifdef KOKKOSP_ENABLE_PROFILING
      if(Kokkos::Experimental::profileLibraryLoaded()) {
@@ -394,7 +386,7 @@ void parallel_reduce( const ExecPolicy  & policy
                     , const ViewType    & result_view
                     , const std::string& str = ""
                     , typename Impl::enable_if<
-                      ( Impl::is_view<ViewType>::value && ! Impl::is_integral< ExecPolicy >::value
+                      ( Kokkos::is_view<ViewType>::value && ! Impl::is_integral< ExecPolicy >::value
 #ifdef KOKKOS_HAVE_CUDA
                         && ! Impl::is_same<typename ExecPolicy::execution_space,Kokkos::Cuda>::value
 #endif
@@ -408,7 +400,11 @@ void parallel_reduce( const ExecPolicy  & policy
      }
 #endif
     
-  (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( Impl::CopyWithoutTracking::apply(functor) , policy , Impl::CopyWithoutTracking::apply(result_view) );
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+  Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , policy , result_view );
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
+
+  closure.execute();
 
 #ifdef KOKKOSP_ENABLE_PROFILING
      if(Kokkos::Experimental::profileLibraryLoaded()) {
@@ -465,7 +461,11 @@ void parallel_reduce( const ExecPolicy  & policy
      }
 #endif
     
-  (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( Impl::CopyWithoutTracking::apply(functor) , policy , Impl::CopyWithoutTracking::apply(result_view) );
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+  Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , policy , result_view );
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
+
+  closure.execute();
 
 #ifdef KOKKOSP_ENABLE_PROFILING
      if(Kokkos::Experimental::profileLibraryLoaded()) {
@@ -482,7 +482,7 @@ void parallel_reduce( const size_t        work_count
                     , const FunctorType & functor
                     , const ViewType    & result_view
                     , const std::string& str = ""
-                    , typename Impl::enable_if<( Impl::is_view<ViewType>::value
+                    , typename Impl::enable_if<( Kokkos::is_view<ViewType>::value
 #ifdef KOKKOS_HAVE_CUDA
                         && ! Impl::is_same<
                           typename Impl::FunctorPolicyExecutionSpace< FunctorType , void >::execution_space,
@@ -503,7 +503,11 @@ void parallel_reduce( const size_t        work_count
      }
 #endif
 
-  (void) Impl::ParallelReduce< FunctorType, ExecPolicy >( Impl::CopyWithoutTracking::apply(functor) , ExecPolicy(0,work_count) , Impl::CopyWithoutTracking::apply(result_view) );
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+  Impl::ParallelReduce< FunctorType, ExecPolicy > closure( functor , ExecPolicy(0,work_count) , result_view );
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
+
+  closure.execute();
     
 #ifdef KOKKOSP_ENABLE_PROFILING
      if(Kokkos::Experimental::profileLibraryLoaded()) {
@@ -564,7 +568,11 @@ void parallel_reduce( const size_t        work_count
      }
 #endif
 
-  (void) Impl::ParallelReduce< FunctorType , policy >( Impl::CopyWithoutTracking::apply(functor) , policy(0,work_count) , Impl::CopyWithoutTracking::apply(result_view) );
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+  Impl::ParallelReduce< FunctorType , policy > closure( functor , policy(0,work_count) , result_view );
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
+
+  closure.execute();
 
 #ifdef KOKKOSP_ENABLE_PROFILING
      if(Kokkos::Experimental::profileLibraryLoaded()) {
@@ -813,7 +821,11 @@ void parallel_scan( const ExecutionPolicy & policy
      }
 #endif
 
-  Impl::ParallelScan< FunctorType , ExecutionPolicy > scan( Impl::CopyWithoutTracking::apply(functor) , policy );
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+  Impl::ParallelScan< FunctorType , ExecutionPolicy > closure( functor , policy );
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
+
+  closure.execute();
 
 #ifdef KOKKOSP_ENABLE_PROFILING
      if(Kokkos::Experimental::profileLibraryLoaded()) {
@@ -842,7 +854,11 @@ void parallel_scan( const size_t        work_count
      }
 #endif
     
-  (void) Impl::ParallelScan< FunctorType , policy >( Impl::CopyWithoutTracking::apply(functor) , policy(0,work_count) );
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+  Impl::ParallelScan< FunctorType , policy > closure( functor , policy(0,work_count) );
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
+
+  closure.execute();
 
 #ifdef KOKKOSP_ENABLE_PROFILING
      if(Kokkos::Experimental::profileLibraryLoaded()) {

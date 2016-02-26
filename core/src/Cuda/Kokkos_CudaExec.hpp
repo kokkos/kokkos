@@ -94,6 +94,7 @@ struct CudaTraits {
 
 //----------------------------------------------------------------------------
 
+CudaSpace::size_type cuda_internal_multiprocessor_count();
 CudaSpace::size_type cuda_internal_maximum_warp_count();
 CudaSpace::size_type cuda_internal_maximum_grid_count();
 CudaSpace::size_type cuda_internal_maximum_shared_words();
@@ -112,14 +113,23 @@ CudaSpace::size_type * cuda_internal_scratch_unified( const CudaSpace::size_type
 
 /** \brief  Access to constant memory on the device */
 #ifdef KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE
-extern
-#endif
-__device__ __constant__
-Kokkos::Impl::CudaTraits::ConstantGlobalBufferType
-kokkos_impl_cuda_constant_memory_buffer ;
 
 __device__ __constant__
+extern unsigned long kokkos_impl_cuda_constant_memory_buffer[] ;
+
+#else
+
+__device__ __constant__
+unsigned long kokkos_impl_cuda_constant_memory_buffer[ Kokkos::Impl::CudaTraits::ConstantMemoryUsage / sizeof(unsigned long) ] ;
+
+#endif
+
+__device__ __constant__
+#ifdef KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE
+extern
+#endif
 int* kokkos_impl_cuda_atomic_lock_array ;
+
 #define CUDA_SPACE_ATOMIC_MASK 0x1FFFF
 #define CUDA_SPACE_ATOMIC_XOR_MASK 0x15A39
 
@@ -204,13 +214,16 @@ struct CudaParallelLaunch< DriverType , true > {
         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: Functor is too large") );
       }
 
+      // Fence before changing settings and copying closure
+      Kokkos::Cuda::fence();
+
       if ( CudaTraits::SharedMemoryCapacity < shmem ) {
         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
       }
       else if ( shmem ) {
-        cudaFuncSetCacheConfig( cuda_parallel_launch_constant_memory< DriverType > , cudaFuncCachePreferShared );
+        CUDA_SAFE_CALL( cudaFuncSetCacheConfig( cuda_parallel_launch_constant_memory< DriverType > , cudaFuncCachePreferShared ) );
       } else {
-        cudaFuncSetCacheConfig( cuda_parallel_launch_constant_memory< DriverType > , cudaFuncCachePreferL1 );
+        CUDA_SAFE_CALL( cudaFuncSetCacheConfig( cuda_parallel_launch_constant_memory< DriverType > , cudaFuncCachePreferL1 ) );
       }
 
       // Copy functor to constant memory on the device
@@ -246,9 +259,9 @@ struct CudaParallelLaunch< DriverType , false > {
         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
       }
       else if ( shmem ) {
-        cudaFuncSetCacheConfig( cuda_parallel_launch_local_memory< DriverType > , cudaFuncCachePreferShared );
+        CUDA_SAFE_CALL( cudaFuncSetCacheConfig( cuda_parallel_launch_local_memory< DriverType > , cudaFuncCachePreferShared ) );
       } else {
-        cudaFuncSetCacheConfig( cuda_parallel_launch_local_memory< DriverType > , cudaFuncCachePreferL1 );
+        CUDA_SAFE_CALL( cudaFuncSetCacheConfig( cuda_parallel_launch_local_memory< DriverType > , cudaFuncCachePreferL1 ) );
       }
 
       int* lock_array_ptr = lock_array_cuda_space_ptr();

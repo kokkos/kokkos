@@ -63,6 +63,7 @@ private :
 };
 
 #ifdef WIN32
+#include <winsock2.h>
 #include <windows.h>
 #include <synchapi.h>
 struct srw_mutex {
@@ -186,7 +187,7 @@ struct unique_lock<Test::mcs_mutex> : Test::mcs_mutex::unique_lock {
 
 }
 
-#include <cmath>
+/* #include <cmath> */
 #include <stdlib.h>
 
 namespace Test {

@@ -47,10 +47,91 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <Kokkos_Macros.hpp>
+#include <type_traits>
 
 namespace Kokkos {
 namespace Impl {
 
+//----------------------------------------------------------------------------
+// Help with C++11 variadic argument packs
+
+template< unsigned I , typename ... Pack >
+struct get_type { typedef void type ; };
+
+template< typename T , typename ... Pack >
+struct get_type< 0 , T , Pack ... >
+{ typedef T type ; };
+
+template< unsigned I , typename T , typename ... Pack >
+struct get_type< I , T , Pack ... >
+{ typedef typename get_type< I - 1 , Pack ... >::type type ; };
+
+
+template< typename T , typename ... Pack >
+struct has_type { enum { value = false }; };
+
+template< typename T , typename S , typename ... Pack >
+struct has_type<T,S,Pack...>
+{
+private:
+
+  enum { self_value = std::is_same<T,S>::value };
+
+  typedef has_type<T,Pack...> next ;
+
+  static_assert( ! ( self_value && next::value )
+               , "Error: more than one member of the argument pack matches the type" );
+
+public:
+
+  enum { value = self_value || next::value };
+
+};
+
+
+template< typename DefaultType
+        , template< typename > class Condition
+        , typename ... Pack >
+struct has_condition 
+{
+  enum { value = false };
+  typedef DefaultType type ;
+};
+
+template< typename DefaultType
+        , template< typename > class Condition
+        , typename S
+        , typename ... Pack >
+struct has_condition< DefaultType , Condition , S , Pack... >
+{
+private:
+
+  enum { self_value = Condition<S>::value };
+
+  typedef has_condition< DefaultType , Condition , Pack... > next ;
+
+  static_assert( ! ( self_value && next::value )
+               , "Error: more than one member of the argument pack satisfies condition" );
+
+public:
+
+  enum { value = self_value || next::value };
+
+  typedef typename
+    std::conditional< self_value , S , typename next::type >::type
+      type ;
+};
+
+
+template< class ... Args >
+struct are_integral { enum { value = true }; };
+
+template< typename T , class ... Args >
+struct are_integral<T,Args...> {
+  enum { value = std::is_integral<T>::value && are_integral<Args...>::value };
+};
+
+//----------------------------------------------------------------------------
 /* C++11 conformal compile-time type traits utilities.
  * Prefer to use C++11 when portably available.
  */
@@ -249,30 +330,51 @@ struct if_ : public if_c<Cond::value, TrueType, FalseType> {};
 template< typename T >
 struct is_integral : public integral_constant< bool ,
   (
-    Impl::is_same< T ,          char >::value ||
-    Impl::is_same< T , unsigned char >::value ||
-    Impl::is_same< T ,          short int >::value ||
-    Impl::is_same< T , unsigned short int >::value ||
-    Impl::is_same< T ,          int >::value ||
-    Impl::is_same< T , unsigned int >::value ||
-    Impl::is_same< T ,          long int >::value ||
-    Impl::is_same< T , unsigned long int >::value ||
-    Impl::is_same< T ,          long long int >::value ||
-    Impl::is_same< T , unsigned long long int >::value ||
+    std::is_same< T ,          char >::value ||
+    std::is_same< T , unsigned char >::value ||
+    std::is_same< T ,          short int >::value ||
+    std::is_same< T , unsigned short int >::value ||
+    std::is_same< T ,          int >::value ||
+    std::is_same< T , unsigned int >::value ||
+    std::is_same< T ,          long int >::value ||
+    std::is_same< T , unsigned long int >::value ||
+    std::is_same< T ,          long long int >::value ||
+    std::is_same< T , unsigned long long int >::value ||
 
-    Impl::is_same< T , int8_t   >::value ||
-    Impl::is_same< T , int16_t  >::value ||
-    Impl::is_same< T , int32_t  >::value ||
-    Impl::is_same< T , int64_t  >::value ||
-    Impl::is_same< T , uint8_t  >::value ||
-    Impl::is_same< T , uint16_t >::value ||
-    Impl::is_same< T , uint32_t >::value ||
-    Impl::is_same< T , uint64_t >::value 
+    std::is_same< T , int8_t   >::value ||
+    std::is_same< T , int16_t  >::value ||
+    std::is_same< T , int32_t  >::value ||
+    std::is_same< T , int64_t  >::value ||
+    std::is_same< T , uint8_t  >::value ||
+    std::is_same< T , uint16_t >::value ||
+    std::is_same< T , uint32_t >::value ||
+    std::is_same< T , uint64_t >::value 
   )>
 {};
 
 //----------------------------------------------------------------------------
 
+// These 'constexpr'functions can be used as
+// both regular functions and meta-function.
+
+/**\brief  There exists integral 'k' such that N = 2^k */
+KOKKOS_INLINE_FUNCTION
+constexpr bool is_integral_power_of_two( const size_t N )
+{ return ( 0 < N ) && ( 0 == ( N & ( N - 1 ) ) ); }
+
+/**\brief  Return integral 'k' such that N = 2^k, assuming valid.  */
+KOKKOS_INLINE_FUNCTION
+constexpr unsigned integral_power_of_two_assume_valid( const size_t N )
+{ return N == 1 ? 0 : 1 + integral_power_of_two_assume_valid( N >> 1 ); }
+
+/**\brief  Return integral 'k' such that N = 2^k, if exists.
+ *         If does not exist return ~0u.
+ */
+KOKKOS_INLINE_FUNCTION
+constexpr unsigned integral_power_of_two( const size_t N )
+{ return is_integral_power_of_two(N) ? integral_power_of_two_assume_valid(N) : ~0u ; }
+
+//----------------------------------------------------------------------------
 
 template < size_t N >
 struct is_power_of_two

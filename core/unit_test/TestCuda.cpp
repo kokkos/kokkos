@@ -62,6 +62,7 @@
 
 #include <TestViewAPI.hpp>
 #include <TestViewSubview.hpp>
+#include <TestViewOfClass.hpp>
 
 #include <TestReduce.hpp>
 #include <TestScan.hpp>
@@ -71,9 +72,12 @@
 #include <TestAggregateReduction.hpp>
 #include <TestCompilerMacros.hpp>
 #include <TestMemorySpaceTracking.hpp>
+#include <TestMemoryPool.hpp>
 #include <TestTeamVector.hpp>
 #include <TestTemplateMetaFunctions.hpp>
 #include <TestCXX11Deduction.hpp>
+
+#include <TestPolicyConstruction.hpp>
 
 //----------------------------------------------------------------------------
 
@@ -121,13 +125,17 @@ TEST_F( cuda , memory_space )
   TestMemorySpace< Kokkos::Cuda >();
 }
 
-TEST_F( cuda, spaces )
+TEST_F( cuda , memory_pool )
+{
+  bool val = TestMemoryPool::test_mempool< Kokkos::Cuda >( 32, 8000000 );
+  ASSERT_TRUE( val );
+}
+
+TEST_F( cuda, uvm )
 {
   if ( Kokkos::CudaUVMSpace::available() ) {
 
-    Kokkos::Impl::AllocationTracker tracker = Kokkos::CudaUVMSpace::allocate_and_track("uvm_ptr",sizeof(int));
-
-    int * uvm_ptr = (int*) tracker.alloc_ptr();
+    int * uvm_ptr = (int*) Kokkos::kokkos_malloc< Kokkos::CudaUVMSpace >("uvm_ptr",sizeof(int));
 
     *uvm_ptr = 42 ;
 
@@ -137,6 +145,7 @@ TEST_F( cuda, spaces )
 
     EXPECT_EQ( *uvm_ptr, int(2*42) );
 
+    Kokkos::kokkos_free< Kokkos::CudaUVMSpace >(uvm_ptr );
   }
 }
 
@@ -149,12 +158,22 @@ TEST_F( cuda , impl_shared_alloc )
   test_shared_alloc< Kokkos::CudaHostPinnedSpace , Kokkos::HostSpace::execution_space >();
 }
 
+TEST_F( cuda, policy_construction) {
+  TestRangePolicyConstruction< Kokkos::Cuda >();
+  TestTeamPolicyConstruction< Kokkos::Cuda >();
+}
+
 TEST_F( cuda , impl_view_mapping )
 {
   test_view_mapping< Kokkos::Cuda >();
   test_view_mapping_subview< Kokkos::Cuda >();
   test_view_mapping_operator< Kokkos::Cuda >();
   TestViewMappingAtomic< Kokkos::Cuda >::run();
+}
+
+TEST_F( cuda , view_of_class )
+{
+  TestViewMappingClassValue< Kokkos::Cuda >::run();
 }
 
 template< class MemSpace >
@@ -284,6 +303,12 @@ TEST_F( cuda, view_api )
 #endif
 }
 
+
+TEST_F( cuda , view_nested_view )
+{
+  ::Test::view_nested_view< Kokkos::Cuda >();
+}
+
 TEST_F( cuda, view_subview_auto_1d_left ) {
   TestViewSubview::test_auto_1d< Kokkos::LayoutLeft,Kokkos::Cuda >();
 }
@@ -333,33 +358,61 @@ TEST_F( cuda, view_subview_right_3 ) {
 
 TEST_F( cuda, range_tag )
 {
-  TestRange< Kokkos::Cuda >::test_for(1000);
-  TestRange< Kokkos::Cuda >::test_reduce(1000);
-  TestRange< Kokkos::Cuda >::test_scan(1000);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_for(1000);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_reduce(1000);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_scan(1000);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(1001);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(1001);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_scan(1001);
+  //TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_dynamic_policy(1000);
 }
 
 TEST_F( cuda, team_tag )
 {
-  TestTeamPolicy< Kokkos::Cuda >::test_for(1000);
-  TestTeamPolicy< Kokkos::Cuda >::test_reduce(1000);
+  TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_for(1000);
+  TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_reduce(1000);
+  TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(1000);
+  TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(1000);
 }
 
 TEST_F( cuda, reduce )
 {
   TestReduce< long ,   Kokkos::Cuda >( 10000000 );
   TestReduce< double , Kokkos::Cuda >( 1000000 );
+  TestReduce< int , Kokkos::Cuda >( 0 );
 }
 
 TEST_F( cuda, reduce_team )
 {
-  TestReduceTeam< long ,   Kokkos::Cuda >( 10000000 );
-  TestReduceTeam< double , Kokkos::Cuda >( 1000000 );
+  TestReduceTeam< long ,   Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >( 3 );
+  TestReduceTeam< long ,   Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >( 3 );
+  TestReduceTeam< long ,   Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >( 100000 );
+  TestReduceTeam< long ,   Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >( 100000 );
+  TestReduceTeam< double ,   Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >( 3 );
+  TestReduceTeam< double ,   Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >( 3 );
+  TestReduceTeam< double ,   Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >( 100000 );
+  TestReduceTeam< double ,   Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >( 100000 );
 }
 
 TEST_F( cuda, shared_team )
 {
-  TestSharedTeam< Kokkos::Cuda >();
+  TestSharedTeam< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >();
+  TestSharedTeam< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >();
 }
+
+
+#if defined (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA)
+TEST_F( cuda, lambda_shared_team )
+{
+  TestLambdaSharedTeam< Kokkos::CudaSpace, Kokkos::Cuda, Kokkos::Schedule<Kokkos::Static> >();
+  TestLambdaSharedTeam< Kokkos::CudaUVMSpace, Kokkos::Cuda, Kokkos::Schedule<Kokkos::Static> >();
+  TestLambdaSharedTeam< Kokkos::CudaHostPinnedSpace, Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static>  >();
+  TestLambdaSharedTeam< Kokkos::CudaSpace, Kokkos::Cuda, Kokkos::Schedule<Kokkos::Dynamic> >();
+  TestLambdaSharedTeam< Kokkos::CudaUVMSpace, Kokkos::Cuda, Kokkos::Schedule<Kokkos::Dynamic> >();
+  TestLambdaSharedTeam< Kokkos::CudaHostPinnedSpace, Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic>  >();
+}
+#endif
+
 
 TEST_F( cuda, reduce_dynamic )
 {
@@ -445,13 +498,19 @@ TEST_F( cuda , scan )
   TestScan< Kokkos::Cuda >::test_range( 1 , 1000 );
   TestScan< Kokkos::Cuda >( 1000000 );
   TestScan< Kokkos::Cuda >( 10000000 );
+
+  TestScan< Kokkos::Cuda >( 0 );
+  TestScan< Kokkos::Cuda >( 0 , 0 );
+
   Kokkos::Cuda::fence();
 }
 
 TEST_F( cuda , team_scan )
 {
-  TestScanTeam< Kokkos::Cuda >( 10 );
-  TestScanTeam< Kokkos::Cuda >( 10000 );
+  TestScanTeam< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >( 10 );
+  TestScanTeam< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >( 10 );
+  TestScanTeam< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >( 10000 );
+  TestScanTeam< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >( 10000 );
 }
 
 }
@@ -486,6 +545,4 @@ TEST_F( cuda , team_vector )
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Cuda >(9) ) );
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Cuda >(10) ) );
 }
-
 }
-

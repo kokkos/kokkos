@@ -91,6 +91,26 @@ namespace Kokkos {
     void initialize();
     void finalize();
 
+    //Define finalize_fake inline to get rid of warnings for unused static variables
+    inline void finalize_fake() {
+      if(NULL != finalizeProfileLibrary) {
+        (*finalizeProfileLibrary)();
+
+        // Set all profile hooks to NULL to prevent
+        // any additional calls. Once we are told to
+        // finalize, we mean it
+        beginForCallee = NULL;
+        beginScanCallee = NULL;
+        beginReduceCallee = NULL;
+        endScanCallee = NULL;
+        endForCallee = NULL;
+        endReduceCallee = NULL;
+        initProfileLibrary = NULL;
+        finalizeProfileLibrary = NULL;
+      }
+    }
+
+
   }
 }
 

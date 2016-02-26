@@ -52,11 +52,33 @@
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+namespace Kokkos {
+
+struct AUTO_t {
+  KOKKOS_INLINE_FUNCTION
+  constexpr const AUTO_t & operator()() const { return *this ; }
+};
+
+namespace {
+/**\brief Token to indicate that a parameter's value is to be automatically selected */
+constexpr AUTO_t AUTO = Kokkos::AUTO_t();
+}
+}
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Forward declarations for class inter-relationships
 
 namespace Kokkos {
 
 class HostSpace ; ///< Memory space for main process and CPU execution spaces
+
+#ifdef KOKKOS_HAVE_HBWSPACE
+namespace Experimental {
+class HBWSpace ; /// Memory space for hbw_malloc from memkind (e.g. for KNL processor)
+}
+#endif
 
 #if defined( KOKKOS_HAVE_SERIAL )
 class Serial ;    ///< Execution space main process on CPU
@@ -162,9 +184,56 @@ struct VerifyExecutionCanAccessMemorySpace< Space , Space >
   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< \
     Kokkos::Impl::ActiveExecutionMemorySpace , DATA_SPACE >::verify()
 
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
 namespace Kokkos {
   void fence();
 }
 
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+namespace Impl {
+
+template< class Functor
+        , class Policy
+        , class EnableFunctor = void 
+	, class EnablePolicy = void
+        >
+struct FunctorPolicyExecutionSpace;
+
+//----------------------------------------------------------------------------
+/// \class ParallelFor
+/// \brief Implementation of the ParallelFor operator that has a
+///   partial specialization for the device.
+///
+/// This is an implementation detail of parallel_for.  Users should
+/// skip this and go directly to the nonmember function parallel_for.
+template< class FunctorType , class ExecPolicy , class ExecutionSpace =
+          typename Impl::FunctorPolicyExecutionSpace< FunctorType , ExecPolicy >::execution_space 
+        > class ParallelFor ;
+
+/// \class ParallelReduce
+/// \brief Implementation detail of parallel_reduce.
+///
+/// This is an implementation detail of parallel_reduce.  Users should
+/// skip this and go directly to the nonmember function parallel_reduce.
+template< class FunctorType , class ExecPolicy , class ExecutionSpace = 
+          typename Impl::FunctorPolicyExecutionSpace< FunctorType , ExecPolicy >::execution_space 
+        > class ParallelReduce ;
+
+/// \class ParallelScan
+/// \brief Implementation detail of parallel_scan.
+///
+/// This is an implementation detail of parallel_scan.  Users should
+/// skip this and go directly to the documentation of the nonmember
+/// template function Kokkos::parallel_scan.
+template< class FunctorType , class ExecPolicy , class ExecutionSapce = 
+          typename Impl::FunctorPolicyExecutionSpace< FunctorType , ExecPolicy >::execution_space 
+        > class ParallelScan ;
+
+}}
 #endif /* #ifndef KOKKOS_CORE_FWD_HPP */
 

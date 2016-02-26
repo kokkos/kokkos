@@ -199,12 +199,6 @@ TEST_F( defaultdevicetype , scan )
 }
 
 
-TEST_F( defaultdevicetype , team_scan )
-{
-  TestScanTeam< Kokkos::DefaultExecutionSpace >( 10 );
-  TestScanTeam< Kokkos::DefaultExecutionSpace >( 10000 );
-}
-
 //----------------------------------------------------------------------------
 
 TEST_F( defaultdevicetype , compiler_macros )
@@ -240,7 +234,7 @@ TEST_F( defaultdevicetype , malloc )
 
   int* data2 = (int*) Kokkos::kokkos_malloc(0);
   ASSERT_TRUE(data2==NULL);
-  Kokkos::kokkos_free(data);
+  Kokkos::kokkos_free(data2);
 }
 
 } // namespace test

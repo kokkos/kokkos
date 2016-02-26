@@ -374,6 +374,12 @@
 #endif
 
 //----------------------------------------------------------------------------
+/** Define Macro for alignment: */
+#if ! defined(KOKKOS_ALIGN_16)
+#define KOKKOS_ALIGN_16 __attribute__((aligned(16)))
+#endif
+
+//----------------------------------------------------------------------------
 /** Determine the default execution space for parallel dispatch.
  *  There is zero or one default execution space specified.
  */
@@ -424,5 +430,11 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#if ( defined( _POSIX_C_SOURCE ) && _POSIX_C_SOURCE >= 200112L ) || \
+    ( defined( _XOPEN_SOURCE )   && _XOPEN_SOURCE   >= 600 )
+#if defined(KOKKOS_ENABLE_PERFORMANCE_POSIX_MEMALIGN)
+#define KOKKOS_POSIX_MEMALIGN_AVAILABLE 1
+#endif
+#endif
 #endif /* #ifndef KOKKOS_MACROS_HPP */
 

@@ -7,7 +7,7 @@ KOKKOS_DEVICES ?= "Pthreads"
 KOKKOS_ARCH ?= ""
 #Options: yes,no
 KOKKOS_DEBUG ?= "no"
-#Options: hwloc,librt
+#Options: hwloc,librt,experimental_memkind
 KOKKOS_USE_TPLS ?= ""
 #Options: c++11
 KOKKOS_CXX_STANDARD ?= "c++11"
@@ -28,6 +28,7 @@ KOKKOS_INTERNAL_ENABLE_CXX11 := $(strip $(shell echo $(KOKKOS_CXX_STANDARD) | gr
 # Check for external libraries
 KOKKOS_INTERNAL_USE_HWLOC := $(strip $(shell echo $(KOKKOS_USE_TPLS) | grep "hwloc" | wc -l))
 KOKKOS_INTERNAL_USE_LIBRT := $(strip $(shell echo $(KOKKOS_USE_TPLS) | grep "librt" | wc -l))
+KOKKOS_INTERNAL_USE_MEMKIND := $(strip $(shell echo $(KOKKOS_USE_TPLS) | grep "experimental_memkind" | wc -l))
 
 # Check for advanced settings
 KOKKOS_INTERNAL_OPT_RANGE_AGGRESSIVE_VECTORIZATION := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "aggressive_vectorization" | wc -l))
@@ -141,6 +142,11 @@ KOKKOS_INTERNAL_USE_ARCH_AVX       := $(strip $(shell echo $(KOKKOS_INTERNAL_USE
 KOKKOS_INTERNAL_USE_ARCH_AVX2      := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_HSW) | bc ))
 KOKKOS_INTERNAL_USE_ARCH_AVX512MIC := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_KNL) | bc ))
 
+# Decide what ISA level we are able to support
+KOKKOS_INTERNAL_USE_ISA_X86_64     := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_SNB)+$(KOKKOS_INTERNAL_USE_ARCH_HSW)+$(KOKKOS_INTERNAL_USE_ARCH_KNL) | bc ))
+KOKKOS_INTERNAL_USE_ISA_KNC        := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_KNC) | bc ))
+KOKKOS_INTERNAL_USE_ISA_POWERPCLE  := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_POWER8) | bc ))
+
 #Incompatible flags?
 KOKKOS_INTERNAL_USE_ARCH_MULTIHOST := $(strip $(shell echo "$(KOKKOS_INTERNAL_USE_ARCH_AVX)+$(KOKKOS_INTERNAL_USE_ARCH_AVX2)+$(KOKKOS_INTERNAL_USE_ARCH_KNC)+$(KOKKOS_INTERNAL_USE_ARCH_IBM)+$(KOKKOS_INTERNAL_USE_ARCH_AMDAVX)+$(KOKKOS_INTERNAL_USE_ARCH_ARMV80)>1" | bc ))
 KOKKOS_INTERNAL_USE_ARCH_MULTIGPU := $(strip $(shell echo "$(KOKKOS_INTERNAL_USE_ARCH_NVIDIA)>1" | bc))
@@ -155,6 +161,7 @@ endif
 #Generating the list of Flags
 
 KOKKOS_CPPFLAGS = -I./ -I$(KOKKOS_PATH)/core/src -I$(KOKKOS_PATH)/containers/src -I$(KOKKOS_PATH)/algorithms/src
+
 # No warnings:
 KOKKOS_CXXFLAGS =
 # INTEL and CLANG warnings:
@@ -162,7 +169,7 @@ KOKKOS_CXXFLAGS =
 # GCC warnings:
 #KOKKOS_CXXFLAGS = -Wall -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized -Wignored-qualifiers -Wempty-body -Wclobbered
 
-KOKKOS_LIBS = -lkokkos 
+KOKKOS_LIBS = -lkokkos -ldl
 KOKKOS_LDFLAGS = -L$(shell pwd)
 KOKKOS_SRC = 
 KOKKOS_HEADERS =
@@ -190,6 +197,18 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	tmp := $(shell echo "\#define KOKKOS_HAVE_CUDA 1" >> KokkosCore_config.tmp )
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_ISA_X86_64), 1)
+  	tmp := $(shell echo "\#define KOKKOS_USE_ISA_X86_64" >> KokkosCore_config.tmp )
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_ISA_KNC), 1)
+  	tmp := $(shell echo "\#define KOKKOS_USE_ISA_KNC" >> KokkosCore_config.tmp )
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_ISA_POWERPCLE), 1)
+  	tmp := $(shell echo "\#define KOKKOS_USE_ISA_POWERPCLE" >> KokkosCore_config.tmp )
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_QTHREAD), 1)
@@ -226,6 +245,13 @@ ifeq ($(KOKKOS_INTERNAL_USE_LIBRT), 1)
 	tmp := $(shell echo "\#define PREC_TIMER 1" >> KokkosCore_config.tmp )
   tmp := $(shell echo "\#define KOKKOSP_ENABLE_RTLIB 1" >> KokkosCore_config.tmp )
 	KOKKOS_LIBS += -lrt
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_MEMKIND), 1)
+  KOKKOS_CPPFLAGS += -I$(MEMKIND_PATH)/include
+  KOKKOS_LDFLAGS += -L$(MEMKIND_PATH)/lib 
+        KOKKOS_LIBS += -lmemkind
+  tmp := $(shell echo "\#define KOKKOS_HAVE_HBWSPACE 1" >> KokkosCore_config.tmp )
 endif
 
 tmp := $(shell echo "/* Optimization Settings */" >> KokkosCore_config.tmp)
