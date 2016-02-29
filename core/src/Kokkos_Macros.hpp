@@ -450,6 +450,16 @@
 #endif
 #endif
 
+#if KOKKOS_USING_EXP_VIEW
+#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#define KOKKOS_USING_EXPERIMENTAL_VIEW
+#endif
+#else /* ! KOKKOS_USING_EXP_VIEW */
+#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#error "KOKKOS_USING_EXP_VIEW and KOKKOS_USING_EXPERIMENAL_VIEW are both defined and are incompatible"
+#endif
+#endif
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
