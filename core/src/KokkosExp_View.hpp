@@ -1502,7 +1502,7 @@ bool operator == ( const View<LT,LP...> & lhs ,
                   typename rhs_traits::array_layout >::value &&
     std::is_same< typename lhs_traits::memory_space ,
                   typename rhs_traits::memory_space >::value &&
-    lhs_traits::rank == rhs_traits::rank &&
+    unsigned(lhs_traits::rank) == unsigned(rhs_traits::rank) &&
     lhs.data()        == rhs.data() &&
     lhs.span()        == rhs.span() &&
     lhs.dimension_0() == rhs.dimension_0() &&

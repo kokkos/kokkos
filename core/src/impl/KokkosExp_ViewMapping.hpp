@@ -233,8 +233,8 @@ struct ViewDimensionAssignable< ViewDimension< DstArgs ... >
   typedef ViewDimension< SrcArgs... > src ;
 
   enum { value =
-    dst::rank == src::rank &&
-    dst::rank_dynamic >= src::rank_dynamic &&
+    unsigned(dst::rank) == unsigned(src::rank) &&
+    unsigned(dst::rank_dynamic) >= unsigned(src::rank_dynamic) &&
     ( 0 < dst::rank_dynamic || size_t(dst::ArgN0) == size_t(src::ArgN0) ) &&
     ( 1 < dst::rank_dynamic || size_t(dst::ArgN1) == size_t(src::ArgN1) ) &&
     ( 2 < dst::rank_dynamic || size_t(dst::ArgN2) == size_t(src::ArgN2) ) &&
