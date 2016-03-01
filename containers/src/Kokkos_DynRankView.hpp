@@ -87,16 +87,37 @@ public:
   using reference_type = typename view_type::reference_type; 
 
 private: 
+  template < class , class ... > friend class DynRankView ;
   unsigned m_rank;
 
 public:
+  view_type & DownCast() const { return static_cast< view_type & > (*this); }
+  const view_type & ConstDownCast() const { return static_cast< const view_type & > (*this); }
   typedef ViewTraits< DataType , Properties ... > traits ;
+
   // Below are members of traits, but accessible by View via inheritance of Traits; 
-  using execution_space = typename view_type::execution_space;
-  using memory_space = typename view_type::memory_space;
-  using array_layout = typename view_type::array_layout;
-  using memory_traits = typename view_type::memory_traits;
-  using device_type = typename view_type::device_type;
+//  using execution_space = typename view_type::execution_space;
+//  using memory_space = typename view_type::memory_space;
+//  using array_layout = typename view_type::array_layout;
+//  using memory_traits = typename view_type::memory_traits;
+//  using device_type = typename view_type::device_type;
+
+  typedef typename traits::execution_space execution_space;
+  typedef typename traits::memory_space memory_space;
+
+  typedef typename traits::data_type data_type;
+  typedef typename traits::const_data_type const_data_type;
+  typedef typename traits::non_const_data_type non_const_data_type;
+
+  typedef typename traits::host_mirror_space host_mirror_space;
+//  using host_mirror_space = typename view_type::host_mirror_space;
+/*
+  typedef typename traits::scalar_array_type scalar_array_type;
+  typedef typename traits::const_scalar_array_type const_scalar_array_type;
+  typedef typename traits::non_const_scalar_array_type non_const_scalar_array_type;
+  typedef typename traits::value_type value_type;
+  typedef typename traits::const_value_type const_value_type;
+  typedef typename traits::non_const_value_type non_const_value_type;
 
   using data_type = typename view_type::data_type;
   using const_data_type = typename view_type::const_data_type;
@@ -108,7 +129,7 @@ public:
   using const_value_type = typename view_type::const_value_type;
   using non_const_value_type = typename view_type::non_const_value_type;
 
-  using host_mirror_space = typename view_type::host_mirror_space;
+*/
 
   /** \brief  Compatible view of array of scalar types */
   typedef DynRankView< typename traits::scalar_array_type ,
@@ -159,10 +180,30 @@ public:
   using view_type::data;
   using view_type::implementation_map;
 
+  using view_type::is_contiguous;
+  using view_type::ptr_on_device;
 
-  //operator ()
+  //Deprecated, remove soon (add for test)
+  using view_type::dimension_0;
+  using view_type::dimension_1;
+  using view_type::dimension_2;
+  using view_type::dimension_3;
+  using view_type::dimension_4;
+  using view_type::dimension_5;
+  using view_type::dimension_6;
+  using view_type::dimension_7;
+  using view_type::stride_0;
+  using view_type::stride_1;
+  using view_type::stride_2;
+  using view_type::stride_3;
+  using view_type::stride_4;
+  using view_type::stride_5;
+  using view_type::stride_6;
+  using view_type::stride_7;
+
+
+  //operators ()
   // Rank 0
-  template< typename iType >
   reference_type operator()() const
     { return view_type::operator()(0,0,0,0,0,0,0,0); }
   
@@ -176,38 +217,38 @@ public:
     { return view_type::operator()(i0,0,0,0,0,0,0,0); }
 
   // Rank 2
-  template< typename iType >
-  reference_type operator()(const iType i0 , const iType i1 ) const 
+  template< typename iType0 , typename iType1 >
+  reference_type operator()(const iType0 i0 , const iType1 i1 ) const 
     { return view_type::operator()(i0,i1,0,0,0,0,0,0); }
 
   // Rank 3
-  template< typename iType >
-  reference_type operator()(const iType i0 , const iType i1 , const iType i2 ) const 
+  template< typename iType0 , typename iType1 , typename iType2 >
+  reference_type operator()(const iType0 i0 , const iType1 i1 , const iType2 i2 ) const 
     { return view_type::operator()(i0,i1,i2,0,0,0,0,0); }
 
   // Rank 4
-  template< typename iType >
-  reference_type operator()(const iType i0 , const iType i1 , const iType i2 , const iType i3 ) const 
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3 >
+  reference_type operator()(const iType0 i0 , const iType1 i1 , const iType2 i2 , const iType3 i3 ) const 
     { return view_type::operator()(i0,i1,i2,i3,0,0,0,0); }
 
   // Rank 5
-  template< typename iType >
-  reference_type operator()(const iType i0 , const iType i1 , const iType i2 , const iType i3 , const iType i4 ) const 
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 >
+  reference_type operator()(const iType0 i0 , const iType1 i1 , const iType2 i2 , const iType3 i3 , const iType4 i4 ) const 
     { return view_type::operator()(i0,i1,i2,i3,i4,0,0,0); }
 
   // Rank 6
-  template< typename iType >
-  reference_type operator()(const iType i0 , const iType i1 , const iType i2 , const iType i3 , const iType i4 , const iType i5 ) const 
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 , typename iType5 >
+  reference_type operator()(const iType0 i0 , const iType1 i1 , const iType2 i2 , const iType3 i3 , const iType4 i4 , const iType5 i5 ) const 
     { return view_type::operator()(i0,i1,i2,i3,i4,i5,0,0); }
 
   // Rank 7
-  template< typename iType >
-  reference_type operator()(const iType i0 , const iType i1 , const iType i2 , const iType i3 , const iType i4 , const iType i5 , const iType i6 ) const 
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 , typename iType5 , typename iType6 >
+  reference_type operator()(const iType0 i0 , const iType1 i1 , const iType2 i2 , const iType3 i3 , const iType4 i4 , const iType5 i5 , const iType6 i6 ) const 
     { return view_type::operator()(i0,i1,i2,i3,i4,i5,i6,0); }
 
   // Rank 8
-  template< typename iType >
-  reference_type operator()(const iType i0 , const iType i1 , const iType i2 , const iType i3 , const iType i4 , const iType i5 , const iType i6 , const iType i7 ) const 
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 , typename iType5 , typename iType6 , typename iType7 >
+  reference_type operator()(const iType0 i0 , const iType1 i1 , const iType2 i2 , const iType3 i3 , const iType4 i4 , const iType5 i5 , const iType6 i6 , const iType7 i7 ) const 
     { return view_type::operator()(i0,i1,i2,i3,i4,i5,i6,i7); }
 
 
@@ -236,16 +277,17 @@ public:
   template< class RT , class ... RP >
   KOKKOS_INLINE_FUNCTION
   DynRankView( const DynRankView<RT,RP...> & rhs )
-    : view_type( static_cast< const typename DynRankView<RT,RP...>::view_type & >( rhs ) )
-    , m_rank(rhs.m_rank)
-  {}
+    : view_type( rhs.ConstDownCast() )  
+//    : view_type( static_cast< const typename DynRankView<RT,RP...>::view_type & >( rhs ) )
+  { m_rank=rhs.rank(); }
 
   template< class RT , class ... RP >
   KOKKOS_INLINE_FUNCTION
   DynRankView & operator = (const DynRankView<RT,RP...> & rhs )
   {
-    view_type::operator = ( static_cast< const typename DynRankView<RT,RP...>::view_type & >( rhs ) );
-    m_rank = rhs.m_rank;
+    view_type::operator = ( rhs.ConstDownCast() );
+//    view_type::operator = ( static_cast< const typename DynRankView<RT,RP...>::view_type & >( rhs ) );
+    m_rank = rhs.rank();
     return *this;
   }
 
@@ -283,8 +325,21 @@ public:
   DynRankView( const Impl::ViewCtorProp< P ... > & arg_prop
       , typename traits::array_layout const & arg_layout
       )
-    : view_type( arg_prop , arg_layout ) 
-    , m_rank(arg_layout.dimension[0] == 0 ? 0 : ( arg_layout.dimension[1] == 0 ? 1 : ( arg_layout.dimension[2] == 0 ? 2 : ( arg_layout.dimension[3] == 0 ? 3 : ( arg_layout.dimension[4] == 0 ? 4 : ( arg_layout.dimension[5] == 0 ? 5 : ( arg_layout.dimension[6] == 0 ? 6 : ( arg_layout.dimension[7] == 0 ? 7 : 8 ) ) ) ) ) ) ) ) 
+//    : view_type( arg_prop , arg_layout ) 
+
+//    , m_rank(arg_layout.dimension[0] == 0 ? 0 : ( arg_layout.dimension[1] == 0 ? 1 : ( arg_layout.dimension[2] == 0 ? 2 : ( arg_layout.dimension[3] == 0 ? 3 : ( arg_layout.dimension[4] == 0 ? 4 : ( arg_layout.dimension[5] == 0 ? 5 : ( arg_layout.dimension[6] == 0 ? 6 : ( arg_layout.dimension[7] == 0 ? 7 : 8 ) ) ) ) ) ) ) ) 
+
+    : view_type( arg_prop , typename traits::array_layout( arg_layout.dimension[0] != 0 ? arg_layout.dimension[0] : 1 , arg_layout.dimension[1] != 0 ? arg_layout.dimension[1] : 1 , arg_layout.dimension[2] != 0 ? arg_layout.dimension[2] : 1 , arg_layout.dimension[3] != 0 ? arg_layout.dimension[3] : 1 , arg_layout.dimension[4] != 0 ? arg_layout.dimension[4] : 1 , arg_layout.dimension[5] != 0 ? arg_layout.dimension[5] : 1 , arg_layout.dimension[6] != 0 ? arg_layout.dimension[6] : 1 , arg_layout.dimension[7] != 0 ? arg_layout.dimension[7] : 1 ) )
+
+    , m_rank( ( arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0 && arg_layout.dimension[3] == 0 && arg_layout.dimension[2] == 0 && arg_layout.dimension[1] == 0 && arg_layout.dimension[0] == 0) ? 0 
+            : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0 && arg_layout.dimension[3] == 0 && arg_layout.dimension[2] == 0 && arg_layout.dimension[1] == 0) ? 1 
+            : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0 && arg_layout.dimension[3] == 0 && arg_layout.dimension[2] == 0) ? 2 
+            : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0 && arg_layout.dimension[3] == 0) ? 3 
+            : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0) ? 4 
+            : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0) ? 5 
+            : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0) ? 6 
+            : ( arg_layout.dimension[7] == 0 ? 7 
+            : 8 ) ) ) ) ) ) ) )  //shouldn't this return 8 always?
     {}
 
 /* //unnecessary since view will determine if ptr passed by interrogating arg_prop
@@ -326,11 +381,27 @@ public:
       , const size_t arg_N6 = 0
       , const size_t arg_N7 = 0
       )
+    : DynRankView( arg_prop 
+    , typename traits::array_layout
+          ( arg_N0 , arg_N1 , arg_N2 , arg_N3 , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+      )
+/*
     : view_type( arg_prop
           , typename traits::array_layout
+//              ( arg_N0 , arg_N1 , arg_N2 , arg_N3 , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
               ( arg_N0 != 0 ? arg_N0 : 1 , arg_N1 != 0 ? arg_N1 : 1 , arg_N2 != 0 ? arg_N2 : 1 , arg_N3 != 0 ? arg_N3 : 1 , arg_N4 != 0 ? arg_N4 : 1 , arg_N5 != 0 ? arg_N5 : 1 , arg_N6 != 0 ? arg_N6 : 1 , arg_N7 != 0 ? arg_N7 : 1 )
           ) 
-    , m_rank(arg_N0 == 0 ? 0 : ( arg_N1 == 0 ? 1 : ( arg_N2 == 0 ? 2 : ( arg_N3 == 0 ? 3 : ( arg_N4 == 0 ? 4 : ( arg_N5 == 0 ? 5 : ( arg_N6 == 0 ? 6 : ( arg_N7 == 0 ? 7 : 8 ) ) ) ) ) ) ) ) 
+//    , m_rank(arg_N0 == 0 ? 0 : ( arg_N1 == 0 ? 1 : ( arg_N2 == 0 ? 2 : ( arg_N3 == 0 ? 3 : ( arg_N4 == 0 ? 4 : ( arg_N5 == 0 ? 5 : ( arg_N6 == 0 ? 6 : ( arg_N7 == 0 ? 7 : 8 ) ) ) ) ) ) ) ) 
+    , m_rank( ( arg_N7 == 0 && arg_N6 == 0 && arg_N5 == 0 && arg_N4 == 0 && arg_N3 == 0 && arg_N2 == 0 && arg_N1 == 0 && arg_N0 == 0) ? 0 
+            : ( (arg_N7 == 0 && arg_N6 == 0 && arg_N5 == 0 && arg_N4 == 0 && arg_N3 == 0 && arg_N2 == 0 && arg_N1 == 0) ? 1 
+            : ( (arg_N7 == 0 && arg_N6 == 0 && arg_N5 == 0 && arg_N4 == 0 && arg_N3 == 0 && arg_N2 == 0) ? 2 
+            : ( (arg_N7 == 0 && arg_N6 == 0 && arg_N5 == 0 && arg_N4 == 0 && arg_N3 == 0) ? 3 
+            : ( (arg_N7 == 0 && arg_N6 == 0 && arg_N5 == 0 && arg_N4 == 0) ? 4 
+            : ( (arg_N7 == 0 && arg_N6 == 0 && arg_N5 == 0) ? 5 
+            : ( (arg_N7 == 0 && arg_N6 == 0) ? 6 
+            : ( arg_N7 == 0 ? 7 
+            : 8 ) ) ) ) ) ) ) ) 
+*/
     {}
 
 /* //Unneeded
@@ -386,9 +457,9 @@ public:
       , const size_t arg_N7 = 0
       )
     : DynRankView( Impl::ViewCtorProp< std::string >( arg_label )
-//    : view_type( Impl::ViewCtorProp< std::string >( arg_label )
-          , typename traits::array_layout
-              ( arg_N0 != 0 ? arg_N0 : 1 , arg_N1 != 0 ? arg_N1 : 1 , arg_N2 != 0 ? arg_N2 : 1 , arg_N3 != 0 ? arg_N3 : 1 , arg_N4 != 0 ? arg_N4 : 1 , arg_N5 != 0 ? arg_N5 : 1 , arg_N6 != 0 ? arg_N6 : 1 , arg_N7 != 0 ? arg_N7 : 1 )
+    , typename traits::array_layout
+          ( arg_N0 , arg_N1 , arg_N2 , arg_N3 , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+//          ( arg_N0 != 0 ? arg_N0 : 1 , arg_N1 != 0 ? arg_N1 : 1 , arg_N2 != 0 ? arg_N2 : 1 , arg_N3 != 0 ? arg_N3 : 1 , arg_N4 != 0 ? arg_N4 : 1 , arg_N5 != 0 ? arg_N5 : 1 , arg_N6 != 0 ? arg_N6 : 1 , arg_N7 != 0 ? arg_N7 : 1 )
           )
 //    , m_rank(arg_N0 == 0 ? 0 : ( arg_N1 == 0 ? 1 : ( arg_N2 == 0 ? 2 : ( arg_N3 == 0 ? 3 : ( arg_N4 == 0 ? 4 : ( arg_N5 == 0 ? 5 : ( arg_N6 == 0 ? 6 : ( arg_N7 == 0 ? 7 : 8 ) ) ) ) ) ) ) ) //initialized by forwarded DynRankView
     {}
@@ -425,7 +496,8 @@ public:
 //    , m_rank(arg_N0 == 0 ? 0 : ( arg_N1 == 0 ? 1 : ( arg_N2 == 0 ? 2 : ( arg_N3 == 0 ? 3 : ( arg_N4 == 0 ? 4 : ( arg_N5 == 0 ? 5 : ( arg_N6 == 0 ? 6 : ( arg_N7 == 0 ? 7 : 8 ) ) ) ) ) ) ) ) 
     {}
 
-  using memory_span = typename view_type::memory_span;
+  //using memory_span = typename view_type::memory_span;
+  using view_type::memory_span;
 
   explicit KOKKOS_INLINE_FUNCTION
   DynRankView( pointer_type arg_ptr
@@ -439,10 +511,9 @@ public:
       , const size_t arg_N7 = 0
       )
 //    : view_type( Impl::ViewCtorProp<pointer_type>(arg_ptr)
-    : DynRankView( Impl::ViewCtorProp<pointer_type>(arg_ptr) , arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7 
-  //        , typename traits::array_layout
+    : DynRankView( Impl::ViewCtorProp<pointer_type>(arg_ptr) , arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7 )
+  //   , typename traits::array_layout
  //             ( arg_N0 != 0 ? arg_N0 : 1 , arg_N1 != 0 ? arg_N1 : 1 , arg_N2 != 0 ? arg_N2 : 1 , arg_N3 != 0 ? arg_N3 : 1 , arg_N4 != 0 ? arg_N4 : 1 , arg_N5 != 0 ? arg_N5 : 1 , arg_N6 != 0 ? arg_N6 : 1 , arg_N7 != 0 ? arg_N7 : 1 )
-          )
 //    , m_rank(arg_N0 == 0 ? 0 : ( arg_N1 == 0 ? 1 : ( arg_N2 == 0 ? 2 : ( arg_N3 == 0 ? 3 : ( arg_N4 == 0 ? 4 : ( arg_N5 == 0 ? 5 : ( arg_N6 == 0 ? 6 : ( arg_N7 == 0 ? 7 : 8 ) ) ) ) ) ) ) ) 
     {}
 
@@ -492,8 +563,17 @@ public:
       , const size_t arg_N6 = 0
       , const size_t arg_N7 = 0 )
     : view_type( arg_space
-              , arg_N0 != 0 ? arg_N0 : 1 , arg_N1 != 0 ? arg_N1 : 1 , arg_N2 != 0 ? arg_N2 : 1 , arg_N3 != 0 ? arg_N3 : 1 , arg_N4 != 0 ? arg_N4 : 1 , arg_N5 != 0 ? arg_N5 : 1 , arg_N6 != 0 ? arg_N6 : 1 , arg_N7 != 0 ? arg_N7 : 1 )
-    , m_rank(arg_N0 == 0 ? 0 : ( arg_N1 == 0 ? 1 : ( arg_N2 == 0 ? 2 : ( arg_N3 == 0 ? 3 : ( arg_N4 == 0 ? 4 : ( arg_N5 == 0 ? 5 : ( arg_N6 == 0 ? 6 : ( arg_N7 == 0 ? 7 : 8 ) ) ) ) ) ) ) ) 
+           , arg_N0 != 0 ? arg_N0 : 1 , arg_N1 != 0 ? arg_N1 : 1 , arg_N2 != 0 ? arg_N2 : 1 , arg_N3 != 0 ? arg_N3 : 1 , arg_N4 != 0 ? arg_N4 : 1 , arg_N5 != 0 ? arg_N5 : 1 , arg_N6 != 0 ? arg_N6 : 1 , arg_N7 != 0 ? arg_N7 : 1 )
+//    , m_rank(arg_N0 == 0 ? 0 : ( arg_N1 == 0 ? 1 : ( arg_N2 == 0 ? 2 : ( arg_N3 == 0 ? 3 : ( arg_N4 == 0 ? 4 : ( arg_N5 == 0 ? 5 : ( arg_N6 == 0 ? 6 : ( arg_N7 == 0 ? 7 : 8 ) ) ) ) ) ) ) ) 
+    , m_rank( ( arg_N7 == 0 && arg_N6 == 0 && arg_N5 == 0 && arg_N4 == 0 && arg_N3 == 0 && arg_N2 == 0 && arg_N1 == 0 && arg_N0 == 0) ? 0 
+            : ( (arg_N7 == 0 && arg_N6 == 0 && arg_N5 == 0 && arg_N4 == 0 && arg_N3 == 0 && arg_N2 == 0 && arg_N1 == 0) ? 1 
+            : ( (arg_N7 == 0 && arg_N6 == 0 && arg_N5 == 0 && arg_N4 == 0 && arg_N3 == 0 && arg_N2 == 0) ? 2 
+            : ( (arg_N7 == 0 && arg_N6 == 0 && arg_N5 == 0 && arg_N4 == 0 && arg_N3 == 0) ? 3 
+            : ( (arg_N7 == 0 && arg_N6 == 0 && arg_N5 == 0 && arg_N4 == 0) ? 4 
+            : ( (arg_N7 == 0 && arg_N6 == 0 && arg_N5 == 0) ? 5 
+            : ( (arg_N7 == 0 && arg_N6 == 0) ? 6 
+            : ( arg_N7 == 0 ? 7 
+            : 8 ) ) ) ) ) ) ) ) 
     {}
 
 
@@ -535,9 +615,10 @@ bool operator == ( const DynRankView<LT,LP...> & lhs ,
                   typename rhs_traits::array_layout >::value &&
     std::is_same< typename lhs_traits::memory_space ,
                   typename rhs_traits::memory_space >::value &&
-    lhs_traits::rank == rhs_traits::rank &&
-    lhs.data()        == rhs.data() &&
-    lhs.span()        == rhs.span() &&
+//    lhs_traits::rank == rhs_traits::rank &&
+    lhs.rank()       ==  rhs.rank() &&
+    lhs.data()       == rhs.data() &&
+    lhs.span()       == rhs.span() &&
     lhs.dimension(0) == rhs.dimension(0) &&
     lhs.dimension(1) == rhs.dimension(1) &&
     lhs.dimension(2) == rhs.dimension(2) &&
@@ -693,7 +774,8 @@ void deep_copy
     std::is_same< typename ViewTraits<DT,DP...>::specialize , void >::value
     >::type * = 0 )
 {
-  deep_copy( static_cast< const typename DynRankView<DT,DP...>::view_type &>(dst) , value );
+//  deep_copy( static_cast< const typename DynRankView<DT,DP...>::view_type &>(dst) , value );
+  deep_copy( dst.ConstDownCast() , value );
 }
 
 /** \brief  Deep copy into a value in Host memory from a view.  */
@@ -706,7 +788,8 @@ void deep_copy
     std::is_same< typename ViewTraits<ST,SP...>::specialize , void >::value
     >::type * = 0 )
 {
-  deep_copy( dst , static_cast< const typename DynRankView<ST,SP...>::view_type & >(src) );
+//  deep_copy( dst , static_cast< const typename DynRankView<ST,SP...>::view_type & >(src) );
+  deep_copy( dst , src.ConstDownCast() );
 }
 
 
@@ -724,10 +807,12 @@ void deep_copy
 //      unsigned(DynRankView<ST,SP...>().rank() ) == unsigned(0) ) //will turn into runtime check, not constexpr
   )>::type * = 0 )
 {
-  if ( dst.rank() != 0 && src.rank() != 0 )
-    { Kokkos::Impl::throw_runtime_exception("Runtime rank must be 0 for dst and src DynRankView"); }
+// Error here, but how to overload the function based on rank? Or, unnecessary since view is always rank8, thus it should always call the non-rank 0 deep_copy...
+//  if ( dst.rank() != 0 && src.rank() != 0 )
+//    { Kokkos::Impl::throw_runtime_exception("Runtime rank must be 0 for dst and src DynRankView"); }
 
-  deep_copy( static_cast< const typename DynRankView<DT,DP...>::view_type & >(dst) , static_cast< const typename DynRankView<ST,SP...>::view_type & >(src) );
+  //deep_copy( static_cast< const typename DynRankView<DT,DP...>::view_type & >(dst) , static_cast< const typename DynRankView<ST,SP...>::view_type & >(src) );
+  deep_copy( dst.ConstDownCast() , src.ConstDownCast() );
 
 }
 

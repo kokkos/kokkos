@@ -65,6 +65,7 @@
 
 #include <Kokkos_DynRankView.hpp>
 #include <TestDynRankView.hpp>
+#include <TestDynViewAPI.hpp>
 
 namespace Test {
 
@@ -95,6 +96,12 @@ TEST_F( serial , dynrankview )
   printf(" Begin 2d dyn rank test\n");
   test_dynamic_rank_view_2D< int, Kokkos::Serial >(50 , 50);
   printf(" End 2d dyn rank test\n");
+}
+#endif
+
+#if 1
+TEST_F( serial, dyn_view_api) {
+  TestDynViewAPI< double , Kokkos::Serial >();
 }
 #endif
 
