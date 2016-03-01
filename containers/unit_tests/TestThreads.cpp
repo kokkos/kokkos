@@ -63,6 +63,9 @@
 #include <TestDualView.hpp>
 #include <TestSegmentedView.hpp>
 
+#include <Kokkos_DynRankView.hpp>
+#include <TestDynViewAPI.hpp>
+
 namespace Test {
 
 class threads : public ::testing::Test {
@@ -91,6 +94,10 @@ protected:
     Kokkos::Threads::finalize();
   }
 };
+
+TEST_F( threads , dyn_view_api) {
+  TestDynViewAPI< double , Kokkos::Threads >();
+}
 
 TEST_F( threads , staticcrsgraph )
 {

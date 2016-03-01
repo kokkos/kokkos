@@ -64,7 +64,6 @@
 #include <iomanip>
 
 #include <Kokkos_DynRankView.hpp>
-#include <TestDynRankView.hpp>
 #include <TestDynViewAPI.hpp>
 
 namespace Test {
@@ -81,29 +80,9 @@ protected:
   }
 };
 
-#if 0
-TEST_F( serial , dynrankview )
-{
-  test_dynamic_rank_view< int , Kokkos::Serial >(10);
-  test_dynamic_rank_view< int , Kokkos::Serial >(10 , 10);
-  test_dynamic_rank_view< int , Kokkos::Serial >(10 , 10 , 10);
-  test_dynamic_rank_view< int , Kokkos::Serial >(10 , 10 , 10 , 10);
-  test_dynamic_rank_view< int , Kokkos::Serial >(10 , 10 , 10 , 10 , 10);
-  test_dynamic_rank_view< int , Kokkos::Serial >(10 , 10 , 10 , 10 , 10 , 5);
-  test_dynamic_rank_view< int , Kokkos::Serial >(10 , 10 , 10 , 10 , 10 , 5 , 3);
-  test_dynamic_rank_view< int , Kokkos::Serial >(10 , 10 , 10 , 10 , 10 , 5 , 3 , 3);
-
-  printf(" Begin 2d dyn rank test\n");
-  test_dynamic_rank_view_2D< int, Kokkos::Serial >(50 , 50);
-  printf(" End 2d dyn rank test\n");
-}
-#endif
-
-#if 1
 TEST_F( serial, dyn_view_api) {
   TestDynViewAPI< double , Kokkos::Serial >();
 }
-#endif
 
 TEST_F( serial , staticcrsgraph )
 {

@@ -91,7 +91,6 @@ struct TestViewOperator
   static const unsigned D = 3 ;
 
   //typedef Kokkos::View< T*[D] , execution_space > view_type ;
-  //typedef Kokkos::Experimental::DynRankView< T*[D] , execution_space > view_type ;
   typedef Kokkos::Experimental::DynRankView< T , execution_space > view_type ;
 
   const view_type v1 ;
@@ -1010,54 +1009,65 @@ public:
       (void) thing;
     }
 
-    //dView4 dx , dy , dz ;
-    dView4 dx("dx" ,  0u , N1 , N2 , N3 ) , dy( "dy" , 0u , N1 , N2 , N3 ) , dz( "dz" , 0u , N1 , N2 , N3 ) ;
-    //dView4 dx( N0 , N1 , N2 , N3 ) , dy( N0 , N1 , N2 , N3 ) , dz( N0 , N1 , N2 , N3 ) ;
-//    hView4 hx , hy , hz ;
-    hView4 hx( "hx" , 0u , N1 , N2 , N3 ) , hy( "hy" , 0u , N1 , N2 , N3 ) , hz( "hz" , 0u , N1 , N2 , N3 ) ;
+    dView4 dx , dy , dz ;
+    hView4 hx , hy , hz ;
 
-/*
     ASSERT_TRUE( dx.ptr_on_device() == 0 );
     ASSERT_TRUE( dy.ptr_on_device() == 0 );
     ASSERT_TRUE( dz.ptr_on_device() == 0 );
     ASSERT_TRUE( hx.ptr_on_device() == 0 );
     ASSERT_TRUE( hy.ptr_on_device() == 0 );
     ASSERT_TRUE( hz.ptr_on_device() == 0 );
-*/
-    std::cout << " dx.dim0 is " << dx.dimension_0() <<std::endl;
-    std::cout << " dx.dim1 is " << dx.dimension_1() <<std::endl;
-    std::cout << " dx.rank() is " << dx.rank() <<std::endl;
-    std::cout << " hx.rank() is " << hx.rank() <<std::endl;
- 
-/*
     ASSERT_EQ( dx.dimension_0() , 0u );
     ASSERT_EQ( dy.dimension_0() , 0u );
     ASSERT_EQ( dz.dimension_0() , 0u );
     ASSERT_EQ( hx.dimension_0() , 0u );
     ASSERT_EQ( hy.dimension_0() , 0u );
     ASSERT_EQ( hz.dimension_0() , 0u );
-*/
-    ASSERT_EQ( dx.dimension_0() , 1 );
-    ASSERT_EQ( dy.dimension_0() , 1 );
-    ASSERT_EQ( dz.dimension_0() , 1 );
-    ASSERT_EQ( hx.dimension_0() , 1 );
-    ASSERT_EQ( hy.dimension_0() , 1 );
-    ASSERT_EQ( hz.dimension_0() , 1 );
-    ASSERT_EQ( dx.dimension_1() , unsigned(N1) );
-    ASSERT_EQ( dy.dimension_1() , unsigned(N1) );
-    ASSERT_EQ( dz.dimension_1() , unsigned(N1) );
-    ASSERT_EQ( hx.dimension_1() , unsigned(N1) );
-    ASSERT_EQ( hy.dimension_1() , unsigned(N1) );
-    ASSERT_EQ( hz.dimension_1() , unsigned(N1) );
+    ASSERT_EQ( dx.rank() , 0u );
+    ASSERT_EQ( hx.rank() , 0u );
 
-//    dx = dView4( "dx" , N0 );
-//    dy = dView4( "dy" , N0 );
-//
-    dx = dView4( "dx" , N0 , N1 , N2 , N3 );
+  //Change to assignment
+//    dView4 dx("dx" ,  0u , N1 , N2 , N3 ) , dy( "dy" , 0u , N1 , N2 , N3 ) , dz( "dz" , 0u , N1 , N2 , N3 ) ;
+//    dx = dView4( "dx" , 0u , N1 , N2 , N3 );
+//    dy = dView4( "dy" , 0u , N1 , N2 , N3 );
+//    dz = dView4( "dz" , 0u , N1 , N2 , N3 ) ;
+    dx = dView4( "dx" , N1 , N2 , N3 );
+    dy = dView4( "dy" , N1 , N2 , N3 );
+
+//    hView4 hx( "hx" , 0u , N1 , N2 , N3 ) , hy( "hy" , 0u , N1 , N2 , N3 ) , hz( "hz" , 0u , N1 , N2 , N3 ) ;
+//    hx = hView4( "hx" , 0u , N1 , N2 , N3 );
+//    hy = hView4( "hy" , 0u , N1 , N2 , N3 );
+//    hz = hView4( "hz" , 0u , N1 , N2 , N3 ) ;
+    hx = hView4( "hx" , N1 , N2 , N3 );
+    hy = hView4( "hy" , N1 , N2 , N3 );
+
     std::cout << " dx.dim0 is " << dx.dimension_0() <<std::endl;
     std::cout << " dx.dim1 is " << dx.dimension_1() <<std::endl;
     std::cout << " dx.rank() is " << dx.rank() <<std::endl;
+    std::cout << " hx.rank() is " << hx.rank() <<std::endl;
+ 
+    ASSERT_EQ( dx.dimension_0() , unsigned(N1) );
+    ASSERT_EQ( dy.dimension_0() , unsigned(N1) );
+    ASSERT_EQ( hx.dimension_0() , unsigned(N1) );
+    ASSERT_EQ( hy.dimension_0() , unsigned(N1) );
+    ASSERT_EQ( dx.rank() , 3 );
+    ASSERT_EQ( hx.rank() , 3 );
+
+    dx = dView4( "dx" , N0 , N1 , N2 , N3 );
     dy = dView4( "dy" , N0 , N1 , N2 , N3 );
+    hx = hView4( "hx" , N0 , N1 , N2 , N3 );
+    hy = hView4( "hy" , N0 , N1 , N2 , N3 );
+
+    std::cout << " dx.dim0 is " << dx.dimension_0() <<std::endl;
+    std::cout << " dx.dim1 is " << dx.dimension_1() <<std::endl;
+    std::cout << " dx.rank() is " << dx.rank() <<std::endl;
+    ASSERT_EQ( dx.dimension_0() , unsigned(N0) );
+    ASSERT_EQ( dy.dimension_0() , unsigned(N0) );
+    ASSERT_EQ( hx.dimension_0() , unsigned(N0) );
+    ASSERT_EQ( hy.dimension_0() , unsigned(N0) );
+    ASSERT_EQ( dx.rank() , 4 );
+    ASSERT_EQ( hx.rank() , 4 );
 
     #if KOKKOS_USING_EXP_VIEW
     ASSERT_EQ( dx.use_count() , size_t(1) );
