@@ -84,12 +84,12 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
   OFF
   )
 
-#TRIBITS_ADD_OPTION_AND_DEFINE(
-#  Kokkos_ENABLE_Profiling
-#  KOKKOS_ENABLE_PROFILING
-#  "Enable KokkosP profiling support for kernel data collections."
-#  ON
-#  )
+TRIBITS_ADD_OPTION_AND_DEFINE(
+  Kokkos_ENABLE_Profiling
+  KOKKOS_ENABLE_PROFILING_INTERNAL
+  "Enable KokkosP profiling support for kernel data collections."
+  "${TPL_ENABLE_DLlib}"
+  )
 
 # placeholder for future device...
 TRIBITS_ADD_OPTION_AND_DEFINE(
