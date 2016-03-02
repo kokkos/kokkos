@@ -58,7 +58,6 @@ namespace Test {
 #if KOKKOS_USING_EXP_VIEW
 
 template< class T , class ... P >
-//size_t allocation_count( const Kokkos::View<T,P...> & view )
 size_t allocation_count( const Kokkos::Experimental::DynRankView<T,P...> & view )
 {
   const size_t card  = view.size();
@@ -90,7 +89,6 @@ struct TestViewOperator
   static const unsigned N = 100 ;
   static const unsigned D = 3 ;
 
-  //typedef Kokkos::View< T*[D] , execution_space > view_type ;
   typedef Kokkos::Experimental::DynRankView< T , execution_space > view_type ;
 
   const view_type v1 ;
@@ -99,8 +97,6 @@ struct TestViewOperator
   TestViewOperator()
     : v1( "v1" , N , D )
     , v2( "v2" , N , D )
-//    : v1( "v1" , N )
-//    , v2( "v2" , N )
     {}
 
   static void testit()
@@ -126,7 +122,6 @@ struct TestViewOperator
 template< class DataType ,
           class DeviceType ,
           unsigned Rank >
-          //unsigned Rank = Kokkos::ViewTraits< DataType >::rank >
 struct TestViewOperator_LeftAndRight ;
 
 template< class DataType , class DeviceType >
@@ -150,15 +145,12 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 8 >
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutLeft, execution_space > left_view ;
-//    View< DataType, Kokkos::LayoutLeft, execution_space > left_view ;
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutRight, execution_space > right_view ;
-//    View< DataType, Kokkos::LayoutRight, execution_space > right_view ;
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutStride, execution_space > stride_view ;
-//    View< DataType, Kokkos::LayoutStride, execution_space > stride_view ;
 
   left_view    left ;
   right_view   right ;
@@ -167,7 +159,6 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 8 >
   long         left_alloc ;
   long         right_alloc ;
 
-  //TestViewOperator_LeftAndRight()
   TestViewOperator_LeftAndRight(unsigned N0, unsigned N1, unsigned N2, unsigned N3, unsigned N4, unsigned N5, unsigned N6, unsigned N7)
     : left(  "left", N0, N1, N2, N3, N4, N5, N6, N7 )
     , right( "right" , N0, N1, N2, N3, N4, N5, N6, N7 )
@@ -258,18 +249,15 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 7 >
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutLeft, execution_space > left_view ;
-//    View< DataType, Kokkos::LayoutLeft, execution_space > left_view ;
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutRight, execution_space > right_view ;
-//    View< DataType, Kokkos::LayoutRight, execution_space > right_view ;
 
   left_view    left ;
   right_view   right ;
   long         left_alloc ;
   long         right_alloc ;
 
-//  TestViewOperator_LeftAndRight()
   TestViewOperator_LeftAndRight(unsigned N0, unsigned N1, unsigned N2, unsigned N3, unsigned N4, unsigned N5, unsigned N6 )
     : left(  "left" , N0, N1, N2, N3, N4, N5, N6 )
     , right( "right" , N0, N1, N2, N3, N4, N5, N6 )
@@ -346,18 +334,15 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 6 >
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutLeft, execution_space > left_view ;
-//    View< DataType, Kokkos::LayoutLeft, execution_space > left_view ;
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutRight, execution_space > right_view ;
-//    View< DataType, Kokkos::LayoutRight, execution_space > right_view ;
 
   left_view    left ;
   right_view   right ;
   long         left_alloc ;
   long         right_alloc ;
 
-  //TestViewOperator_LeftAndRight()
   TestViewOperator_LeftAndRight(unsigned N0, unsigned N1, unsigned N2, unsigned N3, unsigned N4, unsigned N5 )
     : left(  "left" , N0, N1, N2, N3, N4, N5 )
     , right( "right" , N0, N1, N2, N3, N4, N5 )
@@ -432,15 +417,12 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 5 >
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutLeft, execution_space > left_view ;
-    //View< DataType, Kokkos::LayoutLeft, execution_space > left_view ;
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutRight, execution_space > right_view ;
-//    View< DataType, Kokkos::LayoutRight, execution_space > right_view ;
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutStride, execution_space > stride_view ;
-//    View< DataType, Kokkos::LayoutStride, execution_space > stride_view ;
 
   left_view    left ;
   right_view   right ;
@@ -449,7 +431,6 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 5 >
   long         left_alloc ;
   long         right_alloc ;
 
-  //TestViewOperator_LeftAndRight()
   TestViewOperator_LeftAndRight(unsigned N0, unsigned N1, unsigned N2, unsigned N3, unsigned N4 )
     : left(  "left" , N0, N1, N2, N3, N4 )
     , right( "right" , N0, N1, N2, N3, N4 )
@@ -530,18 +511,15 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 4 >
 
   typedef Kokkos::
    Experimental::DynRankView< DataType, Kokkos::LayoutLeft, execution_space > left_view ;
-//    View< DataType, Kokkos::LayoutLeft, execution_space > left_view ;
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutRight, execution_space > right_view ;
-//    View< DataType, Kokkos::LayoutRight, execution_space > right_view ;
 
   left_view    left ;
   right_view   right ;
   long         left_alloc ;
   long         right_alloc ;
 
-  //TestViewOperator_LeftAndRight()
   TestViewOperator_LeftAndRight(unsigned N0, unsigned N1, unsigned N2, unsigned N3)
     : left(  "left" , N0, N1, N2, N3 )
     , right( "right" , N0, N1, N2, N3 )
@@ -612,15 +590,12 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 3 >
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutLeft, execution_space > left_view ;
-//    View< DataType, Kokkos::LayoutLeft, execution_space > left_view ;
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutRight, execution_space > right_view ;
-//    View< DataType, Kokkos::LayoutRight, execution_space > right_view ;
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutStride, execution_space > stride_view ;
-//    View< DataType, Kokkos::LayoutStride, execution_space > stride_view ;
 
   left_view    left ;
   right_view   right ;
@@ -629,7 +604,6 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 3 >
   long         left_alloc ;
   long         right_alloc ;
 
-  //TestViewOperator_LeftAndRight()
   TestViewOperator_LeftAndRight(unsigned N0, unsigned N1, unsigned N2)
     : left(  std::string("left") , N0, N1, N2 )
     , right( std::string("right") , N0, N1, N2 )
@@ -714,18 +688,15 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 2 >
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutLeft, execution_space > left_view ;
-//    View< DataType, Kokkos::LayoutLeft, execution_space > left_view ;
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutRight, execution_space > right_view ;
-//    View< DataType, Kokkos::LayoutRight, execution_space > right_view ;
 
   left_view    left ;
   right_view   right ;
   long         left_alloc ;
   long         right_alloc ;
 
-  //TestViewOperator_LeftAndRight()
   TestViewOperator_LeftAndRight(unsigned N0, unsigned N1)
     : left(  "left" , N0, N1 )
     , right( "right" , N0, N1 )
@@ -801,15 +772,12 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 1 >
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutLeft, execution_space > left_view ;
-//    View< DataType, Kokkos::LayoutLeft, execution_space > left_view ;
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutRight, execution_space > right_view ;
-//    View< DataType, Kokkos::LayoutRight, execution_space > right_view ;
 
   typedef Kokkos::
     Experimental::DynRankView< DataType, Kokkos::LayoutStride, execution_space > stride_view ;
-//    View< DataType, Kokkos::LayoutStride, execution_space > stride_view ;
 
   left_view    left ;
   right_view   right ;
@@ -818,7 +786,6 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 1 >
   long         left_alloc ;
   long         right_alloc ;
 
-  //TestViewOperator_LeftAndRight()
   TestViewOperator_LeftAndRight(unsigned N0)
     : left(  "left" , N0 )
     , right( "right" , N0 )
@@ -857,7 +824,6 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 1 >
 /*--------------------------------------------------------------------------*/
 
 template< typename T, class DeviceType >
-//class TestViewAPI
 class TestDynViewAPI
 {
 public:
@@ -868,25 +834,6 @@ public:
          N2 = 5 ,
          N3 = 7 };
 
-/*
-  typedef Kokkos::View< T , device > dView0 ;
-  typedef Kokkos::View< T* , device > dView1 ;
-  typedef Kokkos::View< T*[N1] , device > dView2 ;
-  typedef Kokkos::View< T*[N1][N2] , device > dView3 ;
-  typedef Kokkos::View< T*[N1][N2][N3] , device > dView4 ;
-  typedef Kokkos::View< const T*[N1][N2][N3] , device > const_dView4 ;
-
-  typedef Kokkos::View< T****, device, Kokkos::MemoryUnmanaged > dView4_unmanaged ;
-
-  typedef Kokkos::Experimental::DynRankView< T , device > dView0 ;
-  typedef Kokkos::Experimental::DynRankView< T* , device > dView1 ;
-  typedef Kokkos::Experimental::DynRankView< T*[N1] , device > dView2 ;
-  typedef Kokkos::Experimental::DynRankView< T*[N1][N2] , device > dView3 ;
-  typedef Kokkos::Experimental::DynRankView< T*[N1][N2][N3] , device > dView4 ;
-  typedef Kokkos::Experimental::DynRankView< const T*[N1][N2][N3] , device > const_dView4 ;
-
-  typedef Kokkos::Experimental::DynRankView< T****, device, Kokkos::MemoryUnmanaged > dView4_unmanaged ;
-*/
   typedef Kokkos::Experimental::DynRankView< T , device > dView0 ;
   typedef Kokkos::Experimental::DynRankView< T , device > dView1 ;
   typedef Kokkos::Experimental::DynRankView< T , device > dView2 ;
@@ -897,7 +844,6 @@ public:
   typedef Kokkos::Experimental::DynRankView< T, device, Kokkos::MemoryUnmanaged > dView4_unmanaged ;
   typedef typename dView0::host_mirror_space host ;
 
-  //TestViewAPI()
   TestDynViewAPI()
   {
     run_test_mirror();
@@ -909,28 +855,6 @@ public:
 //    run_test_vector();
 
     TestViewOperator< T , device >::testit();
-/*
-    TestViewOperator_LeftAndRight< int[2][3][4][2][3][4][2][3] , device >::testit();
-    TestViewOperator_LeftAndRight< int[2][3][4][2][3][4][2] , device >::testit();
-    TestViewOperator_LeftAndRight< int[2][3][4][2][3][4] , device >::testit();
-    TestViewOperator_LeftAndRight< int[2][3][4][2][3] , device >::testit();
-    TestViewOperator_LeftAndRight< int[2][3][4][2] , device >::testit();
-    TestViewOperator_LeftAndRight< int[2][3][4] , device >::testit();
-    TestViewOperator_LeftAndRight< int[2][3] , device >::testit();
-    TestViewOperator_LeftAndRight< int[2] , device >::testit();
-
-    TestViewOperator_LeftAndRight< int , device >(2,3,4,2,3,4,2,3)::testit();
-//    TestViewOperator_LeftAndRight template < int , device >TestViewOperator_LeftAndRight(2,3,4,2,3,4,2,3)::testit();
-    TestViewOperator_LeftAndRight< int , device >(2,3,4,2,3,4,2)::testit();
-    TestViewOperator_LeftAndRight< int , device >(2,3,4,2,3,4)::testit();
-    TestViewOperator_LeftAndRight< int , device >(2,3,4,2,3)::testit();
-    TestViewOperator_LeftAndRight< int , device >(2,3,4,2)::testit();
-    TestViewOperator_LeftAndRight< int , device >(2,3,4)::testit();
-    TestViewOperator_LeftAndRight< int , device >(2,3)::testit();
-    TestViewOperator_LeftAndRight< int , device >(2)::testit();
-*/
-
-
     TestViewOperator_LeftAndRight< int , device , 8 >::testit(2,3,4,2,3,4,2,3); 
     TestViewOperator_LeftAndRight< int , device , 7 >::testit(2,3,4,2,3,4,2); 
     TestViewOperator_LeftAndRight< int , device , 6 >::testit(2,3,4,2,3,4); 
@@ -943,7 +867,6 @@ public:
 
   static void run_test_mirror()
   {
-    //typedef Kokkos::View< int , host > view_type ;
     typedef Kokkos::Experimental::DynRankView< int , host > view_type ;
     typedef typename view_type::HostMirror mirror_type ;
     view_type a("a");
@@ -1027,26 +950,12 @@ public:
     ASSERT_EQ( dx.rank() , 0u );
     ASSERT_EQ( hx.rank() , 0u );
 
-  //Change to assignment
-//    dView4 dx("dx" ,  0u , N1 , N2 , N3 ) , dy( "dy" , 0u , N1 , N2 , N3 ) , dz( "dz" , 0u , N1 , N2 , N3 ) ;
-//    dx = dView4( "dx" , 0u , N1 , N2 , N3 );
-//    dy = dView4( "dy" , 0u , N1 , N2 , N3 );
-//    dz = dView4( "dz" , 0u , N1 , N2 , N3 ) ;
     dx = dView4( "dx" , N1 , N2 , N3 );
     dy = dView4( "dy" , N1 , N2 , N3 );
 
-//    hView4 hx( "hx" , 0u , N1 , N2 , N3 ) , hy( "hy" , 0u , N1 , N2 , N3 ) , hz( "hz" , 0u , N1 , N2 , N3 ) ;
-//    hx = hView4( "hx" , 0u , N1 , N2 , N3 );
-//    hy = hView4( "hy" , 0u , N1 , N2 , N3 );
-//    hz = hView4( "hz" , 0u , N1 , N2 , N3 ) ;
     hx = hView4( "hx" , N1 , N2 , N3 );
     hy = hView4( "hy" , N1 , N2 , N3 );
 
-    std::cout << " dx.dim0 is " << dx.dimension_0() <<std::endl;
-    std::cout << " dx.dim1 is " << dx.dimension_1() <<std::endl;
-    std::cout << " dx.rank() is " << dx.rank() <<std::endl;
-    std::cout << " hx.rank() is " << hx.rank() <<std::endl;
- 
     ASSERT_EQ( dx.dimension_0() , unsigned(N1) );
     ASSERT_EQ( dy.dimension_0() , unsigned(N1) );
     ASSERT_EQ( hx.dimension_0() , unsigned(N1) );
@@ -1059,9 +968,6 @@ public:
     hx = hView4( "hx" , N0 , N1 , N2 , N3 );
     hy = hView4( "hy" , N0 , N1 , N2 , N3 );
 
-    std::cout << " dx.dim0 is " << dx.dimension_0() <<std::endl;
-    std::cout << " dx.dim1 is " << dx.dimension_1() <<std::endl;
-    std::cout << " dx.rank() is " << dx.rank() <<std::endl;
     ASSERT_EQ( dx.dimension_0() , unsigned(N0) );
     ASSERT_EQ( dy.dimension_0() , unsigned(N0) );
     ASSERT_EQ( hx.dimension_0() , unsigned(N0) );
@@ -1283,7 +1189,6 @@ public:
     ASSERT_TRUE( dz.ptr_on_device() == 0 );
   }
 
-  //typedef T DataType[2] ;
   typedef T DataType ;
 
   static void
@@ -1298,9 +1203,6 @@ public:
 
   static void run_test_const()
   {
-//    typedef Kokkos::View< DataType , device > typeX ;
-//    typedef Kokkos::View< const DataType , device > const_typeX ;
-//    typedef Kokkos::View< const DataType , device , Kokkos::MemoryRandomAccess > const_typeR ;
     typedef Kokkos::Experimental::DynRankView< DataType , device > typeX ;
     typedef Kokkos::Experimental::DynRankView< const DataType , device > const_typeX ;
     typedef Kokkos::Experimental::DynRankView< const DataType , device , Kokkos::MemoryRandomAccess > const_typeR ;

@@ -84,13 +84,6 @@ public:
 
   typedef ViewTraits< DataType , Properties ... > traits ;
 
-  // Below are members of traits, but accessible by View via inheritance of Traits; 
-//  using execution_space = typename view_type::execution_space;
-//  using memory_space = typename view_type::memory_space;
-//  using array_layout = typename view_type::array_layout;
-//  using memory_traits = typename view_type::memory_traits;
-//  using device_type = typename view_type::device_type;
-
   typedef typename traits::execution_space execution_space;
   typedef typename traits::memory_space memory_space;
 
@@ -99,26 +92,6 @@ public:
   typedef typename traits::non_const_data_type non_const_data_type;
 
   typedef typename traits::host_mirror_space host_mirror_space;
-//  using host_mirror_space = typename view_type::host_mirror_space;
-/*
-  typedef typename traits::scalar_array_type scalar_array_type;
-  typedef typename traits::const_scalar_array_type const_scalar_array_type;
-  typedef typename traits::non_const_scalar_array_type non_const_scalar_array_type;
-  typedef typename traits::value_type value_type;
-  typedef typename traits::const_value_type const_value_type;
-  typedef typename traits::non_const_value_type non_const_value_type;
-
-  using data_type = typename view_type::data_type;
-  using const_data_type = typename view_type::const_data_type;
-  using non_const_data_type = typename view_type::non_const_data_type;
-  using scalar_array_type = typename view_type::scalar_array_type;
-  using const_scalar_array_type = typename view_type::const_scalar_array_type;
-  using non_const_scalar_array_type = typename view_type::non_const_scalar_array_type;
-  using value_type = typename view_type::value_type;
-  using const_value_type = typename view_type::const_value_type;
-  using non_const_value_type = typename view_type::non_const_value_type;
-
-*/
 
   /** \brief  Compatible view of array of scalar types */
   typedef DynRankView< typename traits::scalar_array_type ,
@@ -175,7 +148,6 @@ public:
   using view_type::ptr_on_device;
 
   //Deprecated, remove soon (add for test)
-  // What should be called for the dyn rank view vs rank 8 inherited view?
   using view_type::dimension_0;
   using view_type::dimension_1;
   using view_type::dimension_2;
@@ -192,7 +164,6 @@ public:
   using view_type::stride_5;
   using view_type::stride_6;
   using view_type::stride_7;
-
 
   //operators ()
   // Rank 0
@@ -280,9 +251,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   DynRankView( const DynRankView<RT,RP...> & rhs )
     : view_type( rhs.ConstDownCast() )  
-//    : view_type( static_cast< const typename DynRankView<RT,RP...>::view_type & >( rhs ) )
     , m_rank(rhs.m_rank)
-//  { m_rank=rhs.rank(); }
     {}
 
   template< class RT , class ... RP >
@@ -290,7 +259,6 @@ public:
   DynRankView & operator = (const DynRankView<RT,RP...> & rhs )
   {
     view_type::operator = ( rhs.ConstDownCast() );
-//    view_type::operator = ( static_cast< const typename DynRankView<RT,RP...>::view_type & >( rhs ) );
     m_rank = rhs.rank();
     return *this;
   }
@@ -307,22 +275,17 @@ public:
   using view_type::label;
 
   //----------------------------------------
-
-  //----------------------------------------
   // Allocation according to allocation properties and array layout
+
   template< class ... P >
   explicit inline
   DynRankView( const Impl::ViewCtorProp< P ... > & arg_prop
       , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer
                                , typename traits::array_layout
                                >::type const & arg_layout
-//      , typename traits::array_layout const & arg_layout
       )
-//    : view_type( arg_prop , arg_layout ) 
-//    , m_rank(arg_layout.dimension[0] == 0 ? 0 : ( arg_layout.dimension[1] == 0 ? 1 : ( arg_layout.dimension[2] == 0 ? 2 : ( arg_layout.dimension[3] == 0 ? 3 : ( arg_layout.dimension[4] == 0 ? 4 : ( arg_layout.dimension[5] == 0 ? 5 : ( arg_layout.dimension[6] == 0 ? 6 : ( arg_layout.dimension[7] == 0 ? 7 : 8 ) ) ) ) ) ) ) ) 
-
-    : view_type( arg_prop 
-                , typename traits::array_layout
+      : view_type( arg_prop 
+                 , typename traits::array_layout
                    ( arg_layout.dimension[0] != 0 ? arg_layout.dimension[0] : 1 
                    , arg_layout.dimension[1] != 0 ? arg_layout.dimension[1] : 1 
                    , arg_layout.dimension[2] != 0 ? arg_layout.dimension[2] : 1 
@@ -332,8 +295,8 @@ public:
                    , arg_layout.dimension[6] != 0 ? arg_layout.dimension[6] : 1 
                    , arg_layout.dimension[7] != 0 ? arg_layout.dimension[7] : 1 
                    ) 
-               )
-    , m_rank( ( arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0 && arg_layout.dimension[3] == 0 && arg_layout.dimension[2] == 0 && arg_layout.dimension[1] == 0 && arg_layout.dimension[0] == 0) ? 0 
+                 )
+      , m_rank( ( arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0 && arg_layout.dimension[3] == 0 && arg_layout.dimension[2] == 0 && arg_layout.dimension[1] == 0 && arg_layout.dimension[0] == 0) ? 0 
             : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0 && arg_layout.dimension[3] == 0 && arg_layout.dimension[2] == 0 && arg_layout.dimension[1] == 0) ? 1 
             : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0 && arg_layout.dimension[3] == 0 && arg_layout.dimension[2] == 0) ? 2 
             : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0 && arg_layout.dimension[3] == 0) ? 3 
@@ -346,7 +309,6 @@ public:
     {}
 
 //Wrappers
- //test this
   template< class ... P >
   explicit KOKKOS_INLINE_FUNCTION
   DynRankView( const Impl::ViewCtorProp< P ... > & arg_prop
@@ -354,7 +316,7 @@ public:
                                , typename traits::array_layout
                                >::type const & arg_layout
       )
-    : view_type( arg_prop 
+      : view_type( arg_prop 
                 , typename traits::array_layout
                    ( arg_layout.dimension[0] != 0 ? arg_layout.dimension[0] : 1 
                    , arg_layout.dimension[1] != 0 ? arg_layout.dimension[1] : 1 
@@ -366,31 +328,29 @@ public:
                    , arg_layout.dimension[7] != 0 ? arg_layout.dimension[7] : 1 
                    ) 
                )
-    , m_rank( ( arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0 && arg_layout.dimension[3] == 0 && arg_layout.dimension[2] == 0 && arg_layout.dimension[1] == 0 && arg_layout.dimension[0] == 0) ? 0 
-            : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0 && arg_layout.dimension[3] == 0 && arg_layout.dimension[2] == 0 && arg_layout.dimension[1] == 0) ? 1 
-            : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0 && arg_layout.dimension[3] == 0 && arg_layout.dimension[2] == 0) ? 2 
-            : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0 && arg_layout.dimension[3] == 0) ? 3 
-            : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0) ? 4 
-            : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0) ? 5 
-            : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0) ? 6 
-            : ( arg_layout.dimension[7] == 0 ? 7 
-            : 8 ) ) ) ) ) ) )
+      , m_rank( 
+               ( arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0 && arg_layout.dimension[3] == 0 && arg_layout.dimension[2] == 0 && arg_layout.dimension[1] == 0 && arg_layout.dimension[0] == 0) ? 0 
+              : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0 && arg_layout.dimension[3] == 0 && arg_layout.dimension[2] == 0 && arg_layout.dimension[1] == 0) ? 1 
+              : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0 && arg_layout.dimension[3] == 0 && arg_layout.dimension[2] == 0) ? 2 
+              : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0 && arg_layout.dimension[3] == 0) ? 3 
+              : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0 && arg_layout.dimension[4] == 0) ? 4 
+              : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0 && arg_layout.dimension[5] == 0) ? 5 
+              : ( (arg_layout.dimension[7] == 0 && arg_layout.dimension[6] == 0) ? 6 
+              : ( arg_layout.dimension[7] == 0 ? 7 
+              : 8 ) ) ) ) ) ) )
             )  
     {}
- //end test this
 
   //----------------------------------------
   //Constructor(s)
 
   // Simple dimension-only layout
-  // Need has_pointer vs !has_pointer??
   template< class ... P >
   explicit inline
   DynRankView( const Impl::ViewCtorProp< P ... > & arg_prop
       , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer
                                , size_t
                                >::type const arg_N0 = 0
-//      , const size_t arg_N0 = 0 
       , const size_t arg_N1 = 0
       , const size_t arg_N2 = 0
       , const size_t arg_N3 = 0
@@ -404,7 +364,7 @@ public:
           ( arg_N0 , arg_N1 , arg_N2 , arg_N3 , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
       )
     {}
- //test this
+
   template< class ... P >
   explicit KOKKOS_INLINE_FUNCTION
   DynRankView( const Impl::ViewCtorProp< P ... > & arg_prop
@@ -424,7 +384,6 @@ public:
           ( arg_N0 , arg_N1 , arg_N2 , arg_N3 , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
       )
     {}
- //end test this pointer
 
   // Allocate with label and layout
   template< typename Label >
@@ -436,7 +395,6 @@ public:
       )
     : DynRankView( Impl::ViewCtorProp< std::string >( arg_label ) , arg_layout )
     {}
-
 
   // Allocate label and layout, must disambiguate from subview constructor.
   template< typename Label >
@@ -502,7 +460,6 @@ public:
     : DynRankView( Impl::ViewCtorProp<pointer_type>(arg_ptr) , arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7 )
     {}
 
-
   explicit KOKKOS_INLINE_FUNCTION
   DynRankView( pointer_type arg_ptr
       , typename traits::array_layout & arg_layout
@@ -513,24 +470,6 @@ public:
 
   //----------------------------------------
   // Shared scratch memory constructor
-
-/*
-  static inline
-  size_t shmem_size( const size_t arg_N0 = 0 ,
-                     const size_t arg_N1 = 0 ,
-                     const size_t arg_N2 = 0 ,
-                     const size_t arg_N3 = 0 ,
-                     const size_t arg_N4 = 0 ,
-                     const size_t arg_N5 = 0 ,
-                     const size_t arg_N6 = 0 ,
-                     const size_t arg_N7 = 0 )
-  {
-    return map_type::memory_span(
-           typename traits::array_layout
-            ( arg_N0 , arg_N1 , arg_N2 , arg_N3
-            , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) );
-  }
-*/
 
   using view_type::shmem_size; 
 
@@ -545,7 +484,15 @@ public:
       , const size_t arg_N6 = 0
       , const size_t arg_N7 = 0 )
     : view_type( arg_space
-           , arg_N0 != 0 ? arg_N0 : 1 , arg_N1 != 0 ? arg_N1 : 1 , arg_N2 != 0 ? arg_N2 : 1 , arg_N3 != 0 ? arg_N3 : 1 , arg_N4 != 0 ? arg_N4 : 1 , arg_N5 != 0 ? arg_N5 : 1 , arg_N6 != 0 ? arg_N6 : 1 , arg_N7 != 0 ? arg_N7 : 1 )
+                 , arg_N0 != 0 ? arg_N0 : 1 
+                 , arg_N1 != 0 ? arg_N1 : 1 
+                 , arg_N2 != 0 ? arg_N2 : 1 
+                 , arg_N3 != 0 ? arg_N3 : 1 
+                 , arg_N4 != 0 ? arg_N4 : 1 
+                 , arg_N5 != 0 ? arg_N5 : 1 
+                 , arg_N6 != 0 ? arg_N6 : 1 
+                 , arg_N7 != 0 ? arg_N7 : 1 
+               )
     , m_rank( 
              ( arg_N7 == 0 && arg_N6 == 0 && arg_N5 == 0 && arg_N4 == 0 && arg_N3 == 0 && arg_N2 == 0 && arg_N1 == 0 && arg_N0 == 0) ? 0 
              : ( (arg_N7 == 0 && arg_N6 == 0 && arg_N5 == 0 && arg_N4 == 0 && arg_N3 == 0 && arg_N2 == 0 && arg_N1 == 0) ? 1 
@@ -614,124 +561,6 @@ bool operator != ( const DynRankView<LT,LP...> & lhs ,
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-//  Original Exp_View
-
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
-
-/*
-template< class OutputView , typename Enable = void >
-struct ViewFill {
-
-  typedef typename OutputView::const_value_type  const_value_type ;
-
-  const OutputView output ;
-  const_value_type input ;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()( const size_t i0 ) const
-  {
-    const size_t n1 = output.dimension_1();
-    const size_t n2 = output.dimension_2();
-    const size_t n3 = output.dimension_3();
-    const size_t n4 = output.dimension_4();
-    const size_t n5 = output.dimension_5();
-    const size_t n6 = output.dimension_6();
-    const size_t n7 = output.dimension_7();
-
-    for ( size_t i1 = 0 ; i1 < n1 ; ++i1 ) {
-    for ( size_t i2 = 0 ; i2 < n2 ; ++i2 ) {
-    for ( size_t i3 = 0 ; i3 < n3 ; ++i3 ) {
-    for ( size_t i4 = 0 ; i4 < n4 ; ++i4 ) {
-    for ( size_t i5 = 0 ; i5 < n5 ; ++i5 ) {
-    for ( size_t i6 = 0 ; i6 < n6 ; ++i6 ) {
-    for ( size_t i7 = 0 ; i7 < n7 ; ++i7 ) {
-      output(i0,i1,i2,i3,i4,i5,i6,i7) = input ;
-    }}}}}}}
-  }
-
-  ViewFill( const OutputView & arg_out , const_value_type & arg_in )
-    : output( arg_out ), input( arg_in )
-    {
-      typedef typename OutputView::execution_space  execution_space ;
-      typedef Kokkos::RangePolicy< execution_space > Policy ;
-
-      const Kokkos::Impl::ParallelFor< ViewFill , Policy > closure( *this , Policy( 0 , output.dimension_0() ) );
-
-      closure.execute();
-
-      execution_space::fence();
-    }
-};
-
-
-template< class OutputView >
-struct ViewFill< OutputView , typename std::enable_if< OutputView::Rank == 0 >::type > {
-  ViewFill( const OutputView & dst , const typename OutputView::const_value_type & src )
-    {
-      Kokkos::Impl::DeepCopy< typename OutputView::memory_space , Kokkos::HostSpace >
-        ( dst.data() , & src , sizeof(typename OutputView::const_value_type) );
-    }
-};
-
-
-template< class OutputView , class InputView >
-struct ViewRemap {
-
-  const OutputView output ;
-  const InputView  input ;
-  const size_t n0 ;
-  const size_t n1 ;
-  const size_t n2 ;
-  const size_t n3 ;
-  const size_t n4 ;
-  const size_t n5 ;
-  const size_t n6 ;
-  const size_t n7 ;
-
-  ViewRemap( const OutputView & arg_out , const InputView & arg_in )
-    : output( arg_out ), input( arg_in )
-    , n0( std::min( (size_t)arg_out.dimension(0) , (size_t)arg_in.dimension(0) ) )
-    , n1( std::min( (size_t)arg_out.dimension(1) , (size_t)arg_in.dimension(1) ) )
-    , n2( std::min( (size_t)arg_out.dimension(2) , (size_t)arg_in.dimension(2) ) )
-    , n3( std::min( (size_t)arg_out.dimension(3) , (size_t)arg_in.dimension(3) ) )
-    , n4( std::min( (size_t)arg_out.dimension(4) , (size_t)arg_in.dimension(4) ) )
-    , n5( std::min( (size_t)arg_out.dimension(5) , (size_t)arg_in.dimension(5) ) )
-    , n6( std::min( (size_t)arg_out.dimension(6) , (size_t)arg_in.dimension(6) ) )
-    , n7( std::min( (size_t)arg_out.dimension(7) , (size_t)arg_in.dimension(7) ) )
-    {
-      typedef typename OutputView::execution_space execution_space ;
-      typedef Kokkos::RangePolicy< execution_space > Policy ;
-      const Kokkos::Impl::ParallelFor< ViewRemap , Policy > closure( *this , Policy( 0 , n0 ) );
-      closure.execute();
-    }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()( const size_t i0 ) const
-  {
-    for ( size_t i1 = 0 ; i1 < n1 ; ++i1 ) {
-    for ( size_t i2 = 0 ; i2 < n2 ; ++i2 ) {
-    for ( size_t i3 = 0 ; i3 < n3 ; ++i3 ) {
-    for ( size_t i4 = 0 ; i4 < n4 ; ++i4 ) {
-    for ( size_t i5 = 0 ; i5 < n5 ; ++i5 ) {
-    for ( size_t i6 = 0 ; i6 < n6 ; ++i6 ) {
-    for ( size_t i7 = 0 ; i7 < n7 ; ++i7 ) {
-      output(i0,i1,i2,i3,i4,i5,i6,i7) = input(i0,i1,i2,i3,i4,i5,i6,i7);
-    }}}}}}}
-  }
-};
-
-*/
-
-} // namespace Impl 
-} // namespace Experimental 
-} // namespace Kokkos 
-
-
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
 
 namespace Kokkos {
 namespace Experimental {
@@ -746,7 +575,6 @@ void deep_copy
     std::is_same< typename ViewTraits<DT,DP...>::specialize , void >::value
     >::type * = 0 )
 {
-//  deep_copy( static_cast< const typename DynRankView<DT,DP...>::view_type &>(dst) , value );
   deep_copy( dst.ConstDownCast() , value );
 }
 
@@ -760,13 +588,12 @@ void deep_copy
     std::is_same< typename ViewTraits<ST,SP...>::specialize , void >::value
     >::type * = 0 )
 {
-//  deep_copy( dst , static_cast< const typename DynRankView<ST,SP...>::view_type & >(src) );
   deep_copy( dst , src.ConstDownCast() );
 }
 
 
 //----------------------------------------------------------------------------
-/** \brief  A deep copy between views of compatible type, and rank zero.  */
+/** \brief  A deep copy between views of compatible type */
 template< class DT , class ... DP , class ST , class ... SP >
 inline
 void deep_copy
@@ -777,39 +604,8 @@ void deep_copy
     std::is_same< typename ViewTraits<ST,SP...>::specialize , void >::value // &&
   )>::type * = 0 )
 {
-// Error here, but how to overload the function based on rank? Or, unnecessary since view is always rank8, thus it should always call the non-rank 0 deep_copy...
-//  if ( dst.rank() != 0 && src.rank() != 0 )
-//    { Kokkos::Impl::throw_runtime_exception("Runtime rank must be 0 for dst and src DynRankView"); }
-
-  //deep_copy( static_cast< const typename DynRankView<DT,DP...>::view_type & >(dst) , static_cast< const typename DynRankView<ST,SP...>::view_type & >(src) );
   deep_copy( dst.ConstDownCast() , src.ConstDownCast() );
-
 }
-
-
-//----------------------------------------------------------------------------
-/** \brief  A deep copy between views of the default specialization, compatible type,
- *          same non-zero rank, same contiguous layout.
- */
-/*
-template< class DT , class ... DP , class ST , class ... SP >
-inline
-void deep_copy
-  ( const DynRankView<DT,DP...> & dst
-  , const DynRankView<ST,SP...> & src
-  , typename std::enable_if<(
-    std::is_same< typename ViewTraits<DT,DP...>::specialize , void >::value &&
-    std::is_same< typename ViewTraits<ST,SP...>::specialize , void >::value // &&
-//    ( unsigned(DynRankView<DT,DP...>().rank() ) != 0 || //turn into runtime check
-//      unsigned(DynRankView<ST,SP...>().rank() ) != 0 )
-  )>::type * = 0 )
-{
-  if ( dst.rank() == 0 && src.rank() == 0 )
-    { Kokkos::Impl::throw_runtime_exception("Runtime rank must be 0 for dst and src DynRankView"); }
-
-  deep_copy( static_cast< const typename DynRankView<DT,DP...>::view_type & >(dst) ,  static_cast< const typename DynRankView<ST,SP...>::view_type & >(src) );
-}
-*/
 
 } //end Experimental
 } //end Kokkos
@@ -915,7 +711,7 @@ create_mirror_view( const DynRankView<T,P...> & src
                     )>::type * = 0
                   )
 {
-  return Kokkos::Experimental::create_mirror( src ); //should be the DynRankView host mirror above
+  return Kokkos::Experimental::create_mirror( src ); 
 }
 
 } //end Experimental
@@ -967,7 +763,6 @@ void realloc( DynRankView<T,P...> & v ,
 {
   typedef DynRankView<T,P...>  view_type ;
 
-// check this with DynRankView
   static_assert( Kokkos::Experimental::ViewTraits<T,P...>::is_managed , "Can only realloc managed views" );
 
   const std::string label = v.label();
@@ -978,7 +773,5 @@ void realloc( DynRankView<T,P...> & v ,
 
 } //end Experimental
 } //end Kokkos
-
-// Are all the using and namespace arguments required??
 
 #endif
