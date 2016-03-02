@@ -63,6 +63,9 @@
 
 #include <iomanip>
 
+#include <Kokkos_DynRankView.hpp>
+#include <TestDynViewAPI.hpp>
+
 namespace Test {
 
 class serial : public ::testing::Test {
@@ -77,6 +80,9 @@ protected:
   }
 };
 
+TEST_F( serial, dyn_view_api) {
+  TestDynViewAPI< double , Kokkos::Serial >();
+}
 
 TEST_F( serial , staticcrsgraph )
 {

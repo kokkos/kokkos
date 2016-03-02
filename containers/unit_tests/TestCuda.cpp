@@ -60,6 +60,9 @@
 #include <TestDualView.hpp>
 #include <TestSegmentedView.hpp>
 
+#include <Kokkos_DynRankView.hpp>
+#include <TestDynViewAPI.hpp>
+
 //----------------------------------------------------------------------------
 
 
@@ -81,6 +84,10 @@ protected:
     Kokkos::HostSpace::execution_space::finalize();
   }
 };
+
+TEST_F( cuda , dyn_view_api) {
+  TestDynViewAPI< double , Kokkos::Cuda >();
+}
 
 TEST_F( cuda , staticcrsgraph )
 {

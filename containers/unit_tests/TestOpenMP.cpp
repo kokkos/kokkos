@@ -58,6 +58,9 @@
 #include <TestSegmentedView.hpp>
 #include <TestComplex.hpp>
 
+#include <Kokkos_DynRankView.hpp>
+#include <TestDynViewAPI.hpp>
+
 #include <iomanip>
 
 namespace Test {
@@ -88,6 +91,10 @@ protected:
 TEST_F( openmp, complex )
 {
   testComplex<Kokkos::OpenMP> ();
+}
+
+TEST_F( openmp, dyn_view_api) {
+  TestDynViewAPI< double , Kokkos::OpenMP >();
 }
 
 TEST_F( openmp, bitset )
