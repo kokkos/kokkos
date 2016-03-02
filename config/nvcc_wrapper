@@ -127,6 +127,13 @@ do
     ;;
   #strip -Xcompiler because we add it
   -Xcompiler)
+    if [ $first_xcompiler_arg -eq 1 ]; then
+      xcompiler_args="$2"
+      first_xcompiler_arg=0
+    else
+      xcompiler_args="$xcompiler_args,$2"
+    fi
+    shift
     ;;
   #strip of "-x cu" because we add that
   -x)
