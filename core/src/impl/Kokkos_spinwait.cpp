@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include <cstdint>
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_spinwait.hpp>
 
@@ -82,6 +83,17 @@ void spinwait( volatile int & flag , const int value )
     YIELD ;
   }
 }
+
+#if defined( KOKKOS_USING_EXPERIMENTAL_HOST_TEAM_BARRIER )
+  template<>
+  void spinwait<IsNotEqual,int64_t>( volatile int64_t & flag , const int64_t value )
+  {
+    while ( flag != value ) {
+      YIELD ;
+    }
+  }
+#endif
+
 #endif
 
 } /* namespace Impl */

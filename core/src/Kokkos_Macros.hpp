@@ -420,6 +420,14 @@
 #endif
 
 //----------------------------------------------------------------------------
+/** Default team barrier environment variables: */
+
+#if defined( KOKKOS_USING_EXPERIMENTAL_HOST_TEAM_BARRIER )
+#define KOKKOS_HOST_CACHELINE_SIZE 64
+#define KOKKOS_HOST_TEAM_BARRIER_MASK 0x0101010101010101
+#endif
+
+//----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 #if ( defined( _POSIX_C_SOURCE ) && _POSIX_C_SOURCE >= 200112L ) || \

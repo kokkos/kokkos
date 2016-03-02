@@ -45,7 +45,7 @@
 #define KOKKOS_THREADSTEAM_HPP
 
 #include <stdio.h>
-
+#include <limits.h>
 #include <utility>
 #include <impl/Kokkos_spinwait.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
@@ -99,6 +99,15 @@ public:
   // All other threads will return false during the fan-out.
   KOKKOS_INLINE_FUNCTION bool team_fan_in() const
     {
+#if defined( KOKKOS_USING_EXPERIMENTAL_HOST_TEAM_BARRIER )
+      if ( m_team_size != 1 ) {
+        ThreadsExec::CoreBarrier *core_barrier = m_team_base[0]->core_barrier();
+        const int flip = core_barrier->set_arrive( m_team_rank );
+        const int64_t mask = static_cast<int64_t>( flip ? KOKKOS_HOST_TEAM_BARRIER_MASK : 0)
+          >> CHAR_BIT * ( sizeof( int64_t ) - m_team_size );
+        Impl::spinwait<Impl::IsNotEqual>( core_barrier->arrive() , mask );
+      }
+#else
       int n , j ;
 
       // Wait for fan-in threads
@@ -111,16 +120,26 @@ public:
         m_exec->state() = ThreadsExec::Rendezvous ;
         Impl::spinwait( m_exec->state() , ThreadsExec::Rendezvous );
       }
-
+#endif
       return ! m_team_rank_rev ;
     }
 
   KOKKOS_INLINE_FUNCTION void team_fan_out() const
     {
+#if defined( KOKKOS_USING_EXPERIMENTAL_HOST_TEAM_BARRIER )
+      if ( m_team_size != 1 ) {
+        ThreadsExec::CoreBarrier *core_barrier = m_team_base[0]->core_barrier();
+        const int flip = core_barrier->set_depart( m_team_rank );
+        const int64_t mask = static_cast<int64_t>( flip ? KOKKOS_HOST_TEAM_BARRIER_MASK : 0)
+          >> CHAR_BIT * ( sizeof( int64_t ) - m_team_size );
+        Impl::spinwait<Impl::IsNotEqual>( core_barrier->depart() , mask );
+      }
+#else
       int n , j ;
       for ( n = 1 ; ( ! ( m_team_rank_rev & n ) ) && ( ( j = m_team_rank_rev + n ) < m_team_size ) ; n <<= 1 ) {
         m_team_base[j]->state() = ThreadsExec::Active ;
       }
+#endif
     }
 
 public:
@@ -499,6 +518,10 @@ class TeamPolicyInternal< Kokkos::Threads , Properties ... >: public PolicyTrait
 {
 private:
 
+#if defined( KOKKOS_USING_EXPERIMENTAL_HOST_TEAM_BARRIER )
+  enum { TEAM_BARRIER_SIZE = 8 };
+#endif
+
   int m_league_size ;
   int m_team_size ;
   int m_team_alloc ;
@@ -514,7 +537,12 @@ private:
            , const int team_size_request )
    {
       const int pool_size  = traits::execution_space::thread_pool_size(0);
+#if defined( KOKKOS_USING_EXPERIMENTAL_HOST_TEAM_BARRIER )
+      const int team_max   = ( traits::execution_space::thread_pool_size(1) < TEAM_BARRIER_SIZE ?
+                               traits::execution_space::thread_pool_size(1) : TEAM_BARRIER_SIZE );
+#else
       const int team_max   = traits::execution_space::thread_pool_size(1);
+#endif
       const int team_grain = traits::execution_space::thread_pool_size(2);
 
       m_league_size = league_size_request ;
