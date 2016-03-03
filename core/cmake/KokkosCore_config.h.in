@@ -39,6 +39,7 @@
 #cmakedefine KOKKOS_HAVE_CUSPARSE
 #cmakedefine KOKKOS_ENABLE_PROFILING_COLLECT_KERNEL_DATA
 #cmakedefine KOKKOS_ENABLE_PROFILING_AGGREGATE_MPI
+#cmakedefine KOKKOS_CUDA_USE_LAMBDA
 
 // Don't forbid users from defining this macro on the command line,
 // but still make sure that CMake logic can control its definition.
