@@ -1086,7 +1086,7 @@ public:
         { ASSERT_EQ( hx(ip,i1,i2,i3) , T(0) ); }
       }}}}
     }
-#endif /* #if ! KOKKOS_USING_EXP_VIEW */
+#endif */ // #if ! KOKKOS_USING_EXP_VIEW
 
     // Testing with synchronous deep copy
     {
