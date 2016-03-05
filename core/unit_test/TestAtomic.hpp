@@ -319,7 +319,7 @@ T ExchLoopSerial(int loop) {
   data2[0] = 0;
   for(int i=0;i<loop;i++) {
 	T old = *data;
-	*data=(T) i;
+	*data = i;
 	*data2+=old;
   }
 
