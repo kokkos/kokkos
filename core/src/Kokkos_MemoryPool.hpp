@@ -57,9 +57,9 @@
 // While experimental, code can abort instead.  If KOKKOS_MEMPOOL_PRINTERR is
 // defined, the code will abort with an error message.  Otherwise, the code will
 // return with a value indicating failure when possible, or do nothing instead.
-//#define KOKKOS_MEMPOOL_PRINTERR
+// #define KOKKOS_MEMPOOL_PRINTERR
 
-//#define KOKKOS_MEMPOOL_PRINT_INFO
+// #define KOKKOS_MEMPOOL_PRINT_INFO
 
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
 #include <cmath>
@@ -179,7 +179,8 @@ private:
   template< class MemorySpace, class ExecutionSpace >
   inline
   MemPoolList( const MemorySpace & memspace, const ExecutionSpace &,
-               size_t base_chunk_size, size_t total_size,
+               const size_t arg_base_chunk_size,
+               const size_t arg_total_size,
                size_t num_chunk_sizes, size_t chunk_spacing )
     : m_track(), m_chunk_size(0), m_freelist(0), m_data(0), m_data_size(0),
       m_chunk_spacing(chunk_spacing)
@@ -191,12 +192,17 @@ private:
     typedef Impl::SharedAllocationRecord< MemorySpace, void >  SharedRecord;
     typedef Kokkos::RangePolicy< ExecutionSpace >              Range;
 
+    size_t base_chunk_size = arg_base_chunk_size ;
+
     // The base chunk size must be at least MIN_CHUNK_SIZE bytes as this is the
     // cache-line size for NVIDA GPUs.
     if ( base_chunk_size < MIN_CHUNK_SIZE ) {
+
+#ifdef KOKKOS_MEMPOOL_PRINT_INFO
       printf( "** Chunk size must be at least %u bytes.  Setting to %u. **\n",
               MIN_CHUNK_SIZE, MIN_CHUNK_SIZE);
       fflush( stdout );
+#endif
 
       base_chunk_size = MIN_CHUNK_SIZE;
     }
@@ -210,14 +216,18 @@ private:
       base_chunk_size = ( ( old_chunk_size + MIN_CHUNK_SIZE - 1 ) / MIN_CHUNK_SIZE ) *
                         MIN_CHUNK_SIZE;
 
+#ifdef KOKKOS_MEMPOOL_PRINT_INFO
       printf( "** Chunk size must be a multiple of %u bytes.  Given: %lu  Using: %lu. **\n",
               MIN_CHUNK_SIZE, old_chunk_size, base_chunk_size);
       fflush( stdout );
+#endif
+
     }
 
     // Force total_size to be a multiple of base_chunk_size.
-    total_size = ( ( total_size + base_chunk_size - 1 ) / base_chunk_size ) *
-                 base_chunk_size;
+    // Preserve the number of chunks originally requested.
+    const size_t total_size = base_chunk_size *
+      ( ( arg_total_size + arg_base_chunk_size - 1 ) / arg_base_chunk_size );
 
     m_data_size = total_size;
 

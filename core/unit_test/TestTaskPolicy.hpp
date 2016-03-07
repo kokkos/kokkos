@@ -357,7 +357,7 @@ void test_task_dep( const int n )
   enum { NTEST = 64 };
 
   const unsigned task_max_count  = 1024 ;
-  const unsigned task_max_size   = 256 ;
+  const unsigned task_max_size   = 64 ;
   const unsigned task_dependence = 4 ;
 
   Kokkos::Experimental::TaskPolicy<Space>
@@ -628,8 +628,13 @@ struct TaskLatchRun {
         future_type latch = policy.create_latch( total );
 
         for ( int i = 0 ; i < total ; ++i ) {
-          if ( policy.spawn( policy.task_create( TaskLatchAdd<ExecSpace>(latch,&count) , 0 ) ).is_null() ) {
-            Kokkos::abort("TaskLatchRun spawning FAILED" );
+          auto f = policy.task_create( TaskLatchAdd<ExecSpace>(latch,&count) , 0 );
+          if ( f.is_null() ) {
+            Kokkos::abort("TaskLatchAdd allocation FAILED" );
+          }
+
+          if ( policy.spawn( f ).is_null() ) {
+            Kokkos::abort("TaskLatcAdd spawning FAILED" );
           }
         }
 
@@ -649,9 +654,9 @@ void test_latch( int n )
   typedef TaskLatchRun< ExecSpace >        task_type ;
   typedef typename task_type::policy_type  policy_type ;
 
-  // Primary + latch + n LatchAdd
+  // Primary + latch + n*LatchAdd
   const unsigned task_max_count  = n + 2 ;
-  const unsigned task_max_size   = 256 ;
+  const unsigned task_max_size   = sizeof(task_type);
   const unsigned task_dependence = 4 ;
 
   policy_type
