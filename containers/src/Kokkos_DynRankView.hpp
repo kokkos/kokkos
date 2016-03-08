@@ -72,6 +72,14 @@ public:
   using view_type = View< DataType******** , Properties...>;
   using reference_type = typename view_type::reference_type; 
 
+
+  template< class D, class ... P , class ... Args >
+  friend
+  KOKKOS_INLINE_FUNCTION
+  DynRankView< D , P... >
+  subview( const DynRankView< D, P... > & src , Args ... args );
+
+
 private: 
   template < class , class ... > friend class DynRankView ;
   unsigned m_rank;
@@ -265,10 +273,28 @@ public:
     return *this;
   }
 
+/*
+  template< class RT , class ... RP >
+  KOKKOS_INLINE_FUNCTION
+  DynRankView & operator = (const View<RT********,RP...> & rhs )
+  {
+    view_type::operator = ( rhs );
+    m_rank = rhs.rank();
+    return *this;
+  }
+*/
+
   //----------------------------------------
   // Compatible subview constructor
   // may assign unmanaged from managed.
-  // ...
+  //
+  //Subview version of constructor accepting a rank 8 view
+  template< class RT , class ... RP >
+  KOKKOS_INLINE_FUNCTION
+  DynRankView( const Kokkos::Experimental::View<RT********,RP...> & rhs , unsigned RankVal )
+//    : view_type( rhs ) 
+//    , m_rank(RankVal)
+    { m_rank = RankVal; view_type::operator = (rhs); }
 
   //----------------------------------------
   // Allocation tracking properties
@@ -508,10 +534,73 @@ public:
             ) 
     {}
 
-  //----------------------------------------
-  //using Subview...
 
 };
+
+  //----------------------------------------
+  //using Subview...
+  //original from View
+/*
+template< class D, class ... P , class ... Args >
+KOKKOS_INLINE_FUNCTION
+typename Kokkos::Experimental::Impl::ViewMapping
+  < void // deduce subview type from source view traits
+  , ViewTraits< D , P... >
+  , Args ...
+  >::type
+subview( const View< D, P... > & src , Args ... args )
+{
+  static_assert( View< D , P... >::Rank == sizeof...(Args) , 
+    "subview requires one argument for each source View rank" );
+
+  return typename
+    Kokkos::Experimental::Impl::ViewMapping
+      < void // deduce subview type from source view traits
+      , ViewTraits< D , P ... >
+      , Args ... >::type( src , args ... ); 
+}
+*/
+
+#if 1
+template < typename iType >
+KOKKOS_INLINE_FUNCTION
+//constexpr const Kokkos::pair<iType,iType> variadic_sview_expansion( std::enable_if< std::is_integral<iType>::value, const iType>::type i ) { return Kokkos::pair<iType , iType>(i,i+1); }
+constexpr const Kokkos::pair<iType,iType> variadic_sview_expansion(  const iType i ) { return Kokkos::pair<iType , iType>(i,i+1); }
+
+template < typename iType >
+KOKKOS_INLINE_FUNCTION
+//constexpr const T variadic_sview_expansion( std::enable_if< std::is_same< T, Kokkos::pair<iType,iType> >::value, const Kokkos::pair<iType,iType> >::type var_pair ) { return var_pair; }
+constexpr const Kokkos::pair<iType,iType> variadic_sview_expansion( const Kokkos::pair<iType,iType> var_pair ) { return var_pair; }
+
+template < typename iType >
+KOKKOS_INLINE_FUNCTION
+//constexpr const T variadic_sview_expansion( std::enable_if< std::is_same< T, std::pair<iType,iType> >::value, const std::pair<iType,iType> >::type var_pair ) { return var_pair; }
+constexpr const std::pair<iType,iType> variadic_sview_expansion( const std::pair<iType,iType> var_pair ) { return var_pair; }
+
+KOKKOS_INLINE_FUNCTION
+//constexpr const T variadic_sview_expansion( std::enable_if< std::is_same<T , Kokkos::Experimental::Impl::ALL_t>::value, const Kokkos::Experimental::Impl::ALL_t>::type var_all ) { return var_all; }
+constexpr const Kokkos::Experimental::Impl::ALL_t variadic_sview_expansion( const Kokkos::Experimental::Impl::ALL_t var_all ) { return var_all; }
+#endif
+
+template< class D, class ... P , class ... Args >
+KOKKOS_INLINE_FUNCTION
+DynRankView< D , P... >
+subview( const DynRankView< D, P... > & src , Args ... args )
+{
+  unsigned numArgs = sizeof...(Args);
+
+  auto sview = src.ConstDownCast();
+  auto dsview = subview(sview , args...);
+
+// API intended
+//  return DynRankView< D , P... >( subview( sview , variadic_sview_expansion<Args>(args)... ) , numArgs ); 
+
+  return DynRankView< D , P... >( subview( sview , args...) , numArgs ); 
+
+  //return DynRankView< D , P... >( subview( src.ConstDownCast(),args...) , numArgs ); 
+  //return DynRankView< D , P... >( (const typename DynRankView<D,P...>::view_type)( subview( src.ConstDownCast(),args...) ) , numArgs ); 
+}
+
 
 } // namespace Experimental
 } // namespace Kokkos

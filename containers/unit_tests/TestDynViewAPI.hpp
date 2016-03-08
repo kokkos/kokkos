@@ -818,6 +818,7 @@ public:
   typedef Kokkos::Experimental::DynRankView< T , device > dView2 ;
   typedef Kokkos::Experimental::DynRankView< T , device > dView3 ;
   typedef Kokkos::Experimental::DynRankView< T , device > dView4 ;
+  typedef Kokkos::Experimental::DynRankView< T , device > dView8 ;
   typedef Kokkos::Experimental::DynRankView< const T , device > const_dView4 ;
 
   typedef Kokkos::Experimental::DynRankView< T, device, Kokkos::MemoryUnmanaged > dView4_unmanaged ;
@@ -829,7 +830,7 @@ public:
     run_test();
     run_test_scalar();
     run_test_const();
-//    run_test_subview();
+    run_test_subview();
 //    run_test_subview_strided();
 //    run_test_vector();
 
@@ -1175,24 +1176,31 @@ public:
     check_auto_conversion_to_const( x , x );
   }
 
-/*
+
   static void run_test_subview()
   {
-    typedef Kokkos::View< const T , device > sView ;
+    typedef Kokkos::Experimental::DynRankView< const T , device > sView ;
+//    typedef Kokkos::Experimental::View< const T******** , device > sView8 ;
 
     dView0 d0( "d0" );
+    dView8 d8( "d8" , N0 , N1 , N2 , 2 , 2 , 2 , 2 , 2 );
+
+    sView s0 = d0 ;
+//    sView s8 = Kokkos::Experimental::subview( d8 , 1,1,1,1,1,1,1,1); //Should be rank0 subview
+    dView8 ds8 = Kokkos::Experimental::subview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() );
+/*
     dView1 d1( "d1" , N0 );
     dView2 d2( "d2" , N0 );
     dView3 d3( "d3" , N0 );
     dView4 d4( "d4" , N0 );
-
-    sView s0 = d0 ;
     sView s1 = Kokkos::subview( d1 , 1 );
     sView s2 = Kokkos::subview( d2 , 1 , 1 );
     sView s3 = Kokkos::subview( d3 , 1 , 1 , 1 );
     sView s4 = Kokkos::subview( d4 , 1 , 1 , 1 , 1 );
+*/
   }
 
+/*
   static void run_test_subview_strided()
   {
     typedef Kokkos::View< int **** , Kokkos::LayoutLeft  , host >  view_left_4 ;
