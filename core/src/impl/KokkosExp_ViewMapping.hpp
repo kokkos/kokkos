@@ -259,9 +259,15 @@ struct ALL_t {
   constexpr const ALL_t & operator()() const { return *this ; }
 };
 
+struct EXTENT_ONE_t {
+  size_t value;
+  EXTENT_ONE_t( const size_t i) : value(i) {}
+};
+
 template< class T >
 struct is_integral_extent_type
-{ enum { value = std::is_same<T,Kokkos::Experimental::Impl::ALL_t>::value ? 1 : 0 }; };
+//{ enum { value = std::is_same<T,Kokkos::Experimental::Impl::ALL_t>::value ? 1 : 0 }; };
+{ enum { value = (std::is_same<T,Kokkos::Experimental::Impl::ALL_t>::value || std::is_same<T,Kokkos::Experimental::Impl::EXTENT_ONE_t>::value  ) ? 1 : 0 }; };
 
 template< class iType >
 struct is_integral_extent_type< std::pair<iType,iType> >
@@ -286,6 +292,10 @@ struct is_integral_extent
           >::type >::type >::type type ;
 
   enum { value = is_integral_extent_type<type>::value };
+// is_all?
+// is_integer?
+// is_less_all?
+// is_void?
 
   static_assert( value ||
                  std::is_integral<type>::value ||
@@ -330,7 +340,7 @@ private:
       ;
     }
 
-  // std::pair range
+  // ALL_t
   template< size_t ... DimArgs , class ... Args >
   KOKKOS_FORCEINLINE_FUNCTION
   bool set( unsigned domain_rank
@@ -341,6 +351,22 @@ private:
     {
       m_begin[  domain_rank ] = 0 ;
       m_length[ range_rank  ] = dim.extent( domain_rank );
+      m_index[  range_rank  ] = domain_rank ;
+
+      return set( domain_rank + 1 , range_rank + 1 , dim , args... );
+    }
+
+  // EXTENT_ONE_t
+  template< size_t ... DimArgs , class ... Args >
+  KOKKOS_FORCEINLINE_FUNCTION
+  bool set( unsigned domain_rank
+          , unsigned range_rank
+          , const ViewDimension< DimArgs ... > & dim
+          , const Kokkos::Experimental::Impl::EXTENT_ONE_t ext
+          , Args ... args )
+    {
+      m_begin[  domain_rank ] = ext.value ;
+      m_length[ range_rank  ] = 1 ;
       m_index[  range_rank  ] = domain_rank ;
 
       return set( domain_rank + 1 , range_rank + 1 , dim , args... );
@@ -2692,6 +2718,7 @@ private:
     , R6 = bool(is_integral_extent<6,Args...>::value)
     , R7 = bool(is_integral_extent<7,Args...>::value)
     };
+  //Query additional info
 
   enum { rank = unsigned(R0) + unsigned(R1) + unsigned(R2) + unsigned(R3)
               + unsigned(R4) + unsigned(R5) + unsigned(R6) + unsigned(R7) };
@@ -2713,11 +2740,16 @@ private:
         ||
         // OutputRank 1 or 2, InputLayout Left, Interval 0
         // because single stride one or second index has a stride.
-        ( rank <= 2 && R0 && std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutLeft >::value )
+        ( rank <= 2 && R0 && std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutLeft >::value ) //replace with input rank
         ||
         // OutputRank 1 or 2, InputLayout Right, Interval [InputRank-1]
         // because single stride one or second index has a stride.
-        ( rank <= 2 && R0_rev && std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutRight >::value )
+        ( rank <= 2 && R0_rev && std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutRight >::value ) //replace input rank
+        // Or case will help with DynRankView etc
+//        ||
+//        ( rank == 8 && SrcTraits::rank && R0 && std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutLeft >::value )
+//        ||
+//        ( rank == 8 && SrcTraits::rank && R0_rev && std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutRight >::value )
       ), typename SrcTraits::array_layout , Kokkos::LayoutStride
       >::type array_layout ;
 
@@ -2800,6 +2832,10 @@ public:
                                                   ) );
     }
 };
+
+
+
+//----------------------------------------------------------------------------
 
 }}} // namespace Kokkos::Experimental::Impl
 
