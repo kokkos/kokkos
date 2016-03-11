@@ -1181,16 +1181,30 @@ public:
     typedef Kokkos::Experimental::DynRankView< const T , device > sView ;
   //typedef Kokkos::Experimental::DynRankView< T , device > dView8 ;
     typedef Kokkos::Experimental::DynRankView< T , Kokkos::LayoutStride , device > dView8 ; //this works
+    typedef Kokkos::Experimental::DynRankView< T , Kokkos::LayoutStride , device > dView9 ; //this works
     //typedef Kokkos::Experimental::DynRankView< T , Kokkos::LayoutStride , Kokkos::Device<Kokkos::Serial , Kokkos::HostSpace > > dView8 ; //this works
 
 
     dView0 d0( "d0" );
     dView8 d8( "d8" , N0 , N1 , N2 , 2 , 2 , 2 , 2 , 2 );
+    dView9 d9( "d9" , N0 , N1 , N2 , 2 , 2 , 2 , 2 , 2 );
 
     sView s0 = d0 ;
 //    sView s8 = Kokkos::Experimental::subview( d8 , 1,1,1,1,1,1,1,1); //Should be rank0 subview
-    dView8 ds8 = Kokkos::Experimental::subview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() );
-//    dView8 ds8 = Kokkos::Experimental::subview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , 1 );// Does not compile yet...
+
+//Basic test - ALL
+//    dView8 ds8 = Kokkos::Experimental::subview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() ); //compiles and runs
+//  Send a single value for one rank
+//    dView8 ds8 = Kokkos::Experimental::subview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , 1 );
+//  Send a std::pair as a rank
+//    dView8 ds8 = Kokkos::Experimental::subview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , std::pair<unsigned,unsigned>(1,2) );
+//  Send a kokkos::pair as a rank
+    dView8 ds8 = Kokkos::Experimental::subview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
+
+// Breaks...
+//    dView9 ds5 = Kokkos::Experimental::subview( d9 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
+
+//
 /*
     dView1 d1( "d1" , N0 );
     dView2 d2( "d2" , N0 );

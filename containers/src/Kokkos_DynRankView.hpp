@@ -79,6 +79,11 @@ public:
   DynRankView< D , P... >
   subview( const DynRankView< D, P... > & src , Args ... args );
 
+  template< class D, class ... P , class ... Args >
+  friend
+  KOKKOS_INLINE_FUNCTION
+  DynRankView< D , P... >
+  dsubview( const DynRankView< D, P... > & src , Args ... args );
 
 private: 
   template < class , class ... > friend class DynRankView ;
@@ -550,50 +555,41 @@ public:
 //{}
 
 //template <class C, class iType = void>
-template <class C>
-constexpr C variadic_sview_expansion( C i ) { return i; }
 
-template <>
-constexpr Kokkos::Experimental::Impl::ALL_t variadic_sview_expansion<Kokkos::Experimental::Impl::ALL_t>
-( Kokkos::Experimental::Impl::ALL_t var_all ) { return var_all(); }
+//template <class C>
+//C variadic_sview_expansion( C i ) {return i;}
 
 
-template < typename iType , typename std::enable_if< std::is_integral<iType>::value >::type >
-//template < typename iType , typename std::enable_if< std::is_integral<iType>::value , void >::type* >
-constexpr Kokkos::Experimental::Impl::EXTENT_ONE_t variadic_sview_expansion( iType i ) { return Kokkos::Experimental::Impl::EXTENT_ONE_t(i); }
-
-#if 0
-
-Arg = int_type
-arg = fixed_value i
-Goal: return EXTENT_ONE_t type object EXTENT_ONE_t(i)
-template <>
-constexpr Kokkos::Experimental::Impl::EXTENT_ONE_t variadic_sview_expansion< Kokkos::Experimental::Impl::EXTENT_ONE_t >( Kokkos::Experimental::Impl::EXTENT_ONE_t ext_var ) { return ext_var; }
-
-
-template < typename allType , typename std::enable_if< std::is_same<allType , Kokkos::Experimental::Impl::ALL_t>::value >::type* >
-constexpr Kokkos::Experimental::Impl::ALL_t variadic_sview_expansion( Kokkos::Experimental::Impl::ALL_t var_all ) { return var_all; }
-
-template < typename iType , typename std::enable_if< std::is_integral<iType>::value>::type* >
-//KOKKOS_INLINE_FUNCTION
-//constexpr const Kokkos::Experimental::Impl::EXTENT_ONE_t variadic_sview_expansion( const iType i ) { return Kokkos::Experimental::Impl::EXTENT_ONE_t(i); }
-constexpr const Kokkos::Experimental::Impl::EXTENT_ONE_t variadic_sview_expansion( const iType i ) { return Kokkos::Experimental::Impl::EXTENT_ONE_t(i); }
+// Carter's
+template< typename T >
+typename std::conditional< std::is_integral<T>::value
+                         , Kokkos::Experimental::Impl::EXTENT_ONE_t
+                         , const T & >::type
+KOKKOS_INLINE_FUNCTION
+variadic_sview_expansion( const T & i ) 
+{ 
+  return
+  typename std::conditional< std::is_integral<T>::value
+                         , Kokkos::Experimental::Impl::EXTENT_ONE_t
+                         , const T & >::type( i );
+}
 
 /*
-template < typename iType >
-KOKKOS_INLINE_FUNCTION
-constexpr const Kokkos::pair<iType,iType> variadic_sview_expansion(  const iType i ) { return Kokkos::pair<iType , iType>(i,i+1); }
+template <class C , class T>
+C variadic_sview_expansion(T i);
+
+template <>
+Kokkos::Experimental::Impl::ALL_t variadic_sview_expansion<Kokkos::Experimental::Impl::ALL_t>
+( Kokkos::Experimental::Impl::ALL_t var_all ) { return var_all(); }
+
+template <>
+Kokkos::pair<size_t,size_t> variadic_sview_expansion( const Kokkos::pair<size_t,size_t> var_pair ) { return var_pair; }
+
+template <>
+typename Kokkos::Experimental::Impl::EXTENT_ONE_t variadic_sview_expansion< Kokkos::Experimental::Impl::EXTENT_ONE_t >( const size_t i ) { return Kokkos::Experimental::Impl::EXTENT_ONE_t(i); }
+
 */
 
-template < typename iType >
-//KOKKOS_INLINE_FUNCTION
-constexpr const Kokkos::pair<iType,iType> variadic_sview_expansion( const Kokkos::pair<iType,iType> var_pair ) { return var_pair; }
-
-template < typename iType >
-//KOKKOS_INLINE_FUNCTION
-constexpr const std::pair<iType,iType> variadic_sview_expansion( const std::pair<iType,iType> var_pair ) { return var_pair; }
-
-#endif
 
 template< class D, class ... P , class ... Args >
 KOKKOS_INLINE_FUNCTION
@@ -610,21 +606,58 @@ subview( const DynRankView< D, P... > & src , Args ... args )
 //old
     //return DynRankView< D , P... >( (const typename DynRankView<D,P...>::view_type)( subview( src.ConstDownCast(),args...) ) , numArgs ); 
 
-
 //Attempted fix - works, more verbose
 //  typename Kokkos::Experimental::Impl::ViewMapping<void , Kokkos::Experimental::ViewTraits< D******** , P... > , Args ...>::type 
 //  sview = subview( bview , args...); 
 //  return DynRankView< D , P... >(sview , numArgs);
 
-// API intended
-  return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)... ) , numArgs ); //worked with just ALL_t, breaks with EXTENT
-//  return DynRankView< D , P... >( (const typename DynRankView<D,P...>::view_type)(subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)... )) , numArgs ); //incompatible view error
-// api second attempt
-//  typename Kokkos::Experimental::Impl::ViewMapping<void , Kokkos::Experimental::ViewTraits< D******** , P... > , Args ...>::type 
-//  sview = subview( src.ConstDownCast() , args...); 
-//  return DynRankView<D,P...>(sview , numArgs);
+  typedef typename Kokkos::Experimental::Impl::EXTENT_ONE_t  EXTENT_ONE_t;
 
-}
+// API intended
+#define TESTONE 1
+#if TESTONE
+  std::cout << " numArgs in subview (dr) is " << numArgs <<std::endl;
+
+     return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)... ) , numArgs ); 
+/*
+  if ( numArgs == 0 )
+    { return DynRankView< D , P... >( subview( src.ConstDownCast() , EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0)  ) , numArgs ); }
+
+  else if ( numArgs == 1 )
+    { return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)..., EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0) ) , numArgs ); }
+
+  else if ( numArgs == 2 )
+    { return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)..., EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0) ) , numArgs ); }
+
+  else if ( numArgs == 3 )
+    { return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)..., EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0) ) , numArgs ); }
+
+  else if ( numArgs == 4 )
+    { return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)..., EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0) ) , numArgs ); }
+
+  else if ( numArgs == 5 )
+//    { std::cout << " in numArgs 5 " << std::endl; return DynRankView<D , P... >() ; }
+    { return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)..., EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0) ) , numArgs ); }
+
+  else if ( numArgs == 6 )
+    { return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)..., EXTENT_ONE_t(0),EXTENT_ONE_t(0) ) , numArgs ); }
+
+  else if ( numArgs == 7 )
+    { return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)..., EXTENT_ONE_t(0) ) , numArgs ); }
+
+  else if ( numArgs == 8 )
+    { return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)... ) , numArgs ); }
+*/
+#else 
+// api second attempt - retrieve subview first to interrogate
+  typename Kokkos::Experimental::Impl::ViewMapping<void , Kokkos::Experimental::ViewTraits< D******** , P... > , Args ...>::type 
+  sview = subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)...); 
+  static_assert( sview.rank == 8 , "subview rank did not return 8...");
+  return DynRankView<D,P...>(sview , numArgs);
+#endif
+#undef TESTONE
+
+} //end subview
 
 
 } // namespace Experimental

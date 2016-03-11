@@ -262,6 +262,10 @@ struct ALL_t {
 struct EXTENT_ONE_t {
   size_t value;
   EXTENT_ONE_t( const size_t i) : value(i) {}
+//  EXTENT_ONE_t() = default ; //causes error in dyn rank subview rank...
+//  EXTENT_ONE_t( const EXTENT_ONE_t & ) = default ;
+//  EXTENT_ONE_t & operator = ( const EXTENT_ONE_t & ) = default ;
+  //{ static_assert(false , "EXTENT_ONE_t called"); }
 };
 
 template< class T >
