@@ -99,6 +99,14 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
   "${TPL_ENABLE_Winthread}"
   )
 
+# use new/old View
+TRIBITS_ADD_OPTION_AND_DEFINE(
+  Kokkos_USING_DEPRECATED_VIEW
+  KOKKOS_USING_DEPRECATED_VIEW
+  "Choose whether to use the old, deprecated Kokkos::View"
+  OFF
+  )
+
 #------------------------------------------------------------------------------
 #
 # C) Process the subpackages for Kokkos
