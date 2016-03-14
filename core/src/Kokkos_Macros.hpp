@@ -440,14 +440,12 @@
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-/* Transitional macro to change between old and new View */
+/* Transitional macro to change between old and new View,
+ * default to use new View.
+ */
 
 #if ! defined( KOKKOS_USING_EXP_VIEW )
-#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
 #define KOKKOS_USING_EXP_VIEW 1
-#else
-#define KOKKOS_USING_EXP_VIEW 0
-#endif
 #endif
 
 #if KOKKOS_USING_EXP_VIEW
