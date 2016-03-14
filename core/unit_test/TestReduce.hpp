@@ -137,13 +137,11 @@ public:
     : value_count( arg_count )
     , nwork( arg_nwork ) {}
 
-/*
   KOKKOS_INLINE_FUNCTION
-  void init( value_type dst ) const
+  void init( ScalarType dst[] ) const
   {
     for ( unsigned i = 0 ; i < value_count ; ++i ) dst[i] = 0 ;
   }
-*/
 
   KOKKOS_INLINE_FUNCTION
   void join( volatile ScalarType dst[] ,
