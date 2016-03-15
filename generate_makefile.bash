@@ -122,6 +122,11 @@ else
     KOKKOS_PATH=$( cd $KOKKOS_PATH && pwd )
 fi
 
+if [ "${KOKKOS_PATH}"  = "${PWD}" ] || [ "${KOKKOS_PATH}"  = "${PWD}/" ]; then
+echo "Running generate_makefile.sh in the Kokkos root directory is not allowed"
+exit 
+fi
+
 KOKKOS_OPTIONS="KOKKOS_PATH=${KOKKOS_PATH}"
 
 if [ ${#COMPILER} -gt 0 ]; then
