@@ -300,6 +300,7 @@ TEST_F( cuda, view_api )
   typedef Kokkos::View< const int * , Kokkos::Cuda , Kokkos::MemoryTraits< Kokkos::RandomAccess | Kokkos::Unmanaged > > view_texture_unmanaged ;
 
   TestViewAPI< double , Kokkos::Cuda >();
+  TestViewAPI< double , Kokkos::CudaUVMSpace >();
 
 #if 0
   Kokkos::View<double, Kokkos::Cuda > x("x");

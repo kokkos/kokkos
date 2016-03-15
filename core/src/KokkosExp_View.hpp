@@ -127,6 +127,7 @@ struct ViewTraits< void >
 {
   typedef void  execution_space ;
   typedef void  memory_space ;
+  typedef void  HostMirrorSpace ;
   typedef void  array_layout ;
   typedef void  memory_traits ;
 };
@@ -137,6 +138,7 @@ struct ViewTraits< void , void , Prop ... >
   // Ignore an extraneous 'void'
   typedef typename ViewTraits<void,Prop...>::execution_space  execution_space ;
   typedef typename ViewTraits<void,Prop...>::memory_space     memory_space ;
+  typedef typename ViewTraits<void,Prop...>::HostMirrorSpace  HostMirrorSpace ;
   typedef typename ViewTraits<void,Prop...>::array_layout     array_layout ;
   typedef typename ViewTraits<void,Prop...>::memory_traits    memory_traits ;
 };
@@ -148,6 +150,7 @@ struct ViewTraits< typename std::enable_if< Kokkos::Impl::is_array_layout<ArrayL
 
   typedef typename ViewTraits<void,Prop...>::execution_space  execution_space ;
   typedef typename ViewTraits<void,Prop...>::memory_space     memory_space ;
+  typedef typename ViewTraits<void,Prop...>::HostMirrorSpace  HostMirrorSpace ;
   typedef          ArrayLayout                                array_layout ;
   typedef typename ViewTraits<void,Prop...>::memory_traits    memory_traits ;
 };
@@ -155,15 +158,18 @@ struct ViewTraits< typename std::enable_if< Kokkos::Impl::is_array_layout<ArrayL
 template< class Space , class ... Prop >
 struct ViewTraits< typename std::enable_if< Kokkos::Impl::is_space<Space>::value >::type , Space , Prop ... >
 {
-  // Specify Space, memory traits should be the only subsequent argument
+  // Specify Space, memory traits should be the only subsequent argument.
 
   static_assert( std::is_same< typename ViewTraits<void,Prop...>::execution_space , void >::value ||
                  std::is_same< typename ViewTraits<void,Prop...>::memory_space    , void >::value ||
+                 std::is_same< typename ViewTraits<void,Prop...>::HostMirrorSpace , void >::value ||
                  std::is_same< typename ViewTraits<void,Prop...>::array_layout    , void >::value
                , "Only one View Execution or Memory Space template argument" );
 
   typedef typename Space::execution_space                   execution_space ;
   typedef typename Space::memory_space                      memory_space ;
+  typedef typename Kokkos::Impl::is_space< Space >::host_mirror_space
+      HostMirrorSpace ;
   typedef typename execution_space::array_layout            array_layout ;
   typedef typename ViewTraits<void,Prop...>::memory_traits  memory_traits ;
 };
@@ -181,6 +187,7 @@ struct ViewTraits< typename std::enable_if< Kokkos::Impl::is_memory_traits<Memor
 
   typedef void          execution_space ;
   typedef void          memory_space ;
+  typedef void          HostMirrorSpace ;
   typedef void          array_layout ;
   typedef MemoryTraits  memory_traits ;
 };
@@ -214,7 +221,12 @@ private:
                     >::type
       ArrayLayout ;
 
-  typedef typename Kokkos::Impl::is_space< ExecutionSpace >::host_mirror_space
+  typedef typename
+    std::conditional
+      < ! std::is_same< typename prop::HostMirrorSpace , void >::value
+      , typename prop::HostMirrorSpace
+      , typename Kokkos::Impl::is_space< ExecutionSpace >::host_mirror_space
+      >::type
       HostMirrorSpace ;
 
   typedef typename

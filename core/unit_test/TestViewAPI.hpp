@@ -84,7 +84,7 @@ size_t allocation_count( const Kokkos::View<T,L,D,M,S> & view )
 template< typename T, class DeviceType>
 struct TestViewOperator
 {
-  typedef DeviceType  execution_space ;
+  typedef typename DeviceType::execution_space  execution_space ;
 
   static const unsigned N = 100 ;
   static const unsigned D = 3 ;
@@ -127,8 +127,8 @@ struct TestViewOperator_LeftAndRight ;
 template< class DataType , class DeviceType >
 struct TestViewOperator_LeftAndRight< DataType , DeviceType , 8 >
 {
-  typedef DeviceType                          execution_space ;
-  typedef typename execution_space::memory_space  memory_space ;
+  typedef typename DeviceType::execution_space    execution_space ;
+  typedef typename DeviceType::memory_space       memory_space ;
   typedef typename execution_space::size_type     size_type ;
 
   typedef int value_type ;
@@ -231,9 +231,9 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 8 >
 template< class DataType , class DeviceType >
 struct TestViewOperator_LeftAndRight< DataType , DeviceType , 7 >
 {
-  typedef DeviceType                          execution_space ;
-  typedef typename execution_space::memory_space  memory_space ;
-  typedef typename execution_space::size_type     size_type ;
+  typedef typename DeviceType::execution_space  execution_space ;
+  typedef typename DeviceType::memory_space     memory_space ;
+  typedef typename execution_space::size_type   size_type ;
 
   typedef int value_type ;
 
@@ -316,9 +316,9 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 7 >
 template< class DataType , class DeviceType >
 struct TestViewOperator_LeftAndRight< DataType , DeviceType , 6 >
 {
-  typedef DeviceType                          execution_space ;
-  typedef typename execution_space::memory_space  memory_space ;
-  typedef typename execution_space::size_type     size_type ;
+  typedef typename DeviceType::execution_space  execution_space ;
+  typedef typename DeviceType::memory_space     memory_space ;
+  typedef typename execution_space::size_type   size_type ;
 
   typedef int value_type ;
 
@@ -399,9 +399,9 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 6 >
 template< class DataType , class DeviceType >
 struct TestViewOperator_LeftAndRight< DataType , DeviceType , 5 >
 {
-  typedef DeviceType                          execution_space ;
-  typedef typename execution_space::memory_space  memory_space ;
-  typedef typename execution_space::size_type     size_type ;
+  typedef typename DeviceType::execution_space  execution_space ;
+  typedef typename DeviceType::memory_space     memory_space ;
+  typedef typename execution_space::size_type   size_type ;
 
   typedef int value_type ;
 
@@ -493,9 +493,9 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 5 >
 template< class DataType , class DeviceType >
 struct TestViewOperator_LeftAndRight< DataType , DeviceType , 4 >
 {
-  typedef DeviceType                          execution_space ;
-  typedef typename execution_space::memory_space  memory_space ;
-  typedef typename execution_space::size_type     size_type ;
+  typedef typename DeviceType::execution_space  execution_space ;
+  typedef typename DeviceType::memory_space     memory_space ;
+  typedef typename execution_space::size_type   size_type ;
 
   typedef int value_type ;
 
@@ -572,9 +572,9 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 4 >
 template< class DataType , class DeviceType >
 struct TestViewOperator_LeftAndRight< DataType , DeviceType , 3 >
 {
-  typedef DeviceType                          execution_space ;
-  typedef typename execution_space::memory_space  memory_space ;
-  typedef typename execution_space::size_type     size_type ;
+  typedef typename DeviceType::execution_space  execution_space ;
+  typedef typename DeviceType::memory_space     memory_space ;
+  typedef typename execution_space::size_type   size_type ;
 
   typedef int value_type ;
 
@@ -670,9 +670,9 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 3 >
 template< class DataType , class DeviceType >
 struct TestViewOperator_LeftAndRight< DataType , DeviceType , 2 >
 {
-  typedef DeviceType                          execution_space ;
-  typedef typename execution_space::memory_space  memory_space ;
-  typedef typename execution_space::size_type     size_type ;
+  typedef typename DeviceType::execution_space  execution_space ;
+  typedef typename DeviceType::memory_space     memory_space ;
+  typedef typename execution_space::size_type   size_type ;
 
   typedef int value_type ;
 
@@ -754,9 +754,9 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 2 >
 template< class DataType , class DeviceType >
 struct TestViewOperator_LeftAndRight< DataType , DeviceType , 1 >
 {
-  typedef DeviceType                          execution_space ;
-  typedef typename execution_space::memory_space  memory_space ;
-  typedef typename execution_space::size_type     size_type ;
+  typedef typename DeviceType::execution_space  execution_space ;
+  typedef typename DeviceType::memory_space     memory_space ;
+  typedef typename execution_space::size_type   size_type ;
 
   typedef int value_type ;
 
@@ -870,6 +870,11 @@ public:
   {
     typedef Kokkos::View< int , host > view_type ;
     typedef typename view_type::HostMirror mirror_type ;
+
+    static_assert( std::is_same< typename view_type::memory_space
+                               , typename mirror_type::memory_space
+                               >::value , "" );
+
     view_type a("a");
     mirror_type am = Kokkos::create_mirror_view(a);
     mirror_type ax = Kokkos::create_mirror(a);
