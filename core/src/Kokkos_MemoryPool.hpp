@@ -66,13 +66,13 @@
 namespace Kokkos {
 namespace Experimental {
 
-template < class Space , class ExecSpace = typename Space::execution_space >
+template < typename Space , typename ExecSpace = typename Space::execution_space >
 class MemoryPool;
 
 namespace Impl {
 
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
-template < class MemPool >
+template < typename MemPool >
 struct print_mempool {
   size_t      m_num_chunk_sizes;
   size_t *    m_chunk_size;
@@ -108,7 +108,7 @@ struct print_mempool {
 };
 #endif
 
-template < class MemPool >
+template < typename MemPool >
 struct initialize_mempool {
   char *  m_data;
   size_t  m_chunk_size;
@@ -139,10 +139,10 @@ private:
 
   typedef Impl::SharedAllocationTracker  Tracker;
 
-  template < class , class > friend class Kokkos::Experimental::MemoryPool;
-  template < class > friend class initialize_mempool;
+  template < typename , typename > friend class Kokkos::Experimental::MemoryPool;
+  template < typename > friend class initialize_mempool;
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
-  template < class > friend class print_mempool;
+  template < typename > friend struct print_mempool;
 #endif
 
   // Define some constants.
@@ -197,7 +197,7 @@ private:
   MemPoolList & operator = ( MemPoolList && ) = default;
   MemPoolList & operator = ( const MemPoolList & ) = default;
 
-  template < class MemorySpace, class ExecutionSpace >
+  template < typename MemorySpace, typename ExecutionSpace >
   inline
   MemPoolList( const MemorySpace & memspace, const ExecutionSpace &,
                size_t arg_base_chunk_size, size_t arg_total_size,
@@ -502,7 +502,7 @@ namespace Experimental {
 /// pool memory allocator for fast allocation of same-sized chunks of memory.
 /// The memory is only accessible on the host / device this allocator is
 /// associated with.
-template < class Space , class ExecSpace >
+template < typename Space , typename ExecSpace >
 class MemoryPool {
 private:
 
