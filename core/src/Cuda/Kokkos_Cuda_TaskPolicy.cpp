@@ -94,7 +94,9 @@ CudaTaskPolicyQueue
   )
   : m_space( Kokkos::CudaUVMSpace()
            , arg_task_max_size
-           , arg_task_max_size * arg_task_max_count )
+           , arg_task_max_size * arg_task_max_count
+           , 1 /* only one level of memory pool */
+           )
   , m_team { 0 , 0 , 0 }
   , m_serial { 0 , 0 , 0 }
   , m_team_size( 32 /* 1 warps */ )
@@ -700,9 +702,16 @@ TaskPolicy< Kokkos::Cuda >::TaskPolicy
 
   m_policy = reinterpret_cast< Impl::CudaTaskPolicyQueue * >( record->data() );
 
+  // Tasks are allocated with application's task size + sizeof(task_root_type)
+
+  const size_t full_task_size_estimate =
+    arg_task_max_size +
+    sizeof(task_root_type) +
+    sizeof(task_root_type*) * arg_task_default_dependence_capacity ;
+
   new( m_policy )
     Impl::CudaTaskPolicyQueue( arg_task_max_count
-                             , arg_task_max_size
+                             , full_task_size_estimate
                              , arg_task_default_dependence_capacity
                              , arg_task_team_size );
 

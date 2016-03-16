@@ -194,7 +194,12 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   get_result_type get() const
-    { return static_cast<TaskValue*>( m_task )->get(); }
+    {
+      if ( 0 == m_task ) {
+        Kokkos::abort( "Kokkos::Experimental::Future::get ERROR: is_null()");
+      }
+      return static_cast<TaskValue*>( m_task )->get();  
+    }
 
   //----------------------------------------
 };

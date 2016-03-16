@@ -57,9 +57,9 @@
 // While experimental, code can abort instead.  If KOKKOS_MEMPOOL_PRINTERR is
 // defined, the code will abort with an error message.  Otherwise, the code will
 // return with a value indicating failure when possible, or do nothing instead.
-//#define KOKKOS_MEMPOOL_PRINTERR
+// #define KOKKOS_MEMPOOL_PRINTERR
 
-//#define KOKKOS_MEMPOOL_PRINT_INFO
+// #define KOKKOS_MEMPOOL_PRINT_INFO
 
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
 #include <cmath>
@@ -179,7 +179,8 @@ private:
   template< class MemorySpace, class ExecutionSpace >
   inline
   MemPoolList( const MemorySpace & memspace, const ExecutionSpace &,
-               size_t base_chunk_size, size_t total_size,
+               const size_t arg_base_chunk_size,
+               const size_t arg_total_size,
                size_t num_chunk_sizes, size_t chunk_spacing )
     : m_track(), m_chunk_size(0), m_freelist(0), m_data(0), m_data_size(0),
       m_chunk_spacing(chunk_spacing)
@@ -191,12 +192,17 @@ private:
     typedef Impl::SharedAllocationRecord< MemorySpace, void >  SharedRecord;
     typedef Kokkos::RangePolicy< ExecutionSpace >              Range;
 
+    size_t base_chunk_size = arg_base_chunk_size ;
+
     // The base chunk size must be at least MIN_CHUNK_SIZE bytes as this is the
     // cache-line size for NVIDA GPUs.
     if ( base_chunk_size < MIN_CHUNK_SIZE ) {
+
+#ifdef KOKKOS_MEMPOOL_PRINT_INFO
       printf( "** Chunk size must be at least %u bytes.  Setting to %u. **\n",
               MIN_CHUNK_SIZE, MIN_CHUNK_SIZE);
       fflush( stdout );
+#endif
 
       base_chunk_size = MIN_CHUNK_SIZE;
     }
@@ -210,14 +216,18 @@ private:
       base_chunk_size = ( ( old_chunk_size + MIN_CHUNK_SIZE - 1 ) / MIN_CHUNK_SIZE ) *
                         MIN_CHUNK_SIZE;
 
+#ifdef KOKKOS_MEMPOOL_PRINT_INFO
       printf( "** Chunk size must be a multiple of %u bytes.  Given: %lu  Using: %lu. **\n",
               MIN_CHUNK_SIZE, old_chunk_size, base_chunk_size);
       fflush( stdout );
+#endif
+
     }
 
     // Force total_size to be a multiple of base_chunk_size.
-    total_size = ( ( total_size + base_chunk_size - 1 ) / base_chunk_size ) *
-                 base_chunk_size;
+    // Preserve the number of chunks originally requested.
+    const size_t total_size = base_chunk_size *
+      ( ( arg_total_size + arg_base_chunk_size - 1 ) / arg_base_chunk_size );
 
     m_data_size = total_size;
 
@@ -253,17 +263,42 @@ private:
     // Allocate the memory including the header.
     const size_t alloc_size = total_size + header_size;
 
+#ifdef KOKKOS_MEMPOOL_PRINT_INFO
+      printf( "** Allocating total %ld bytes\n", long(alloc_size));
+      fflush( stdout );
+#endif
+
     SharedRecord * rec =
       SharedRecord::allocate( memspace, "mempool", alloc_size );
 
+#ifdef KOKKOS_MEMPOOL_PRINT_INFO
+      printf( "** Allocated total %ld bytes at 0x%lx\n"
+            , long(alloc_size)
+            , long(rec->data())
+            );
+      fflush( stdout );
+#endif
+
     m_track.assign_allocated_record_to_uninitialized( rec );
 
-    // Get the pointers into the allocated memory.
-    char * mem = reinterpret_cast<char *>( rec->data() );
-    m_chunk_size = reinterpret_cast<size_t *>( mem );
-    m_freelist = reinterpret_cast<Link **>(
+    {
+      // Get the pointers into the allocated memory.
+      char * mem = reinterpret_cast<char *>( rec->data() );
+      m_chunk_size = reinterpret_cast<size_t *>( mem );
+      m_freelist = reinterpret_cast<Link **>(
                    mem + ( num_chunk_sizes + 1 ) * sizeof(void*) );
-    m_data = mem + header_size;
+      m_data = mem + header_size;
+
+#ifdef KOKKOS_MEMPOOL_PRINT_INFO
+      printf( "** Partitioning allocation 0x%lx : m_chunk_size[0x%lx] m_freelist[0x%lx] m_data[0x%lx]\n"
+            , (unsigned long) mem
+            , (unsigned long) m_chunk_size
+            , (unsigned long) m_freelist
+            , (unsigned long) m_data
+            );
+      fflush( stdout );
+#endif
+    }
 
     // Initialize the chunk sizes array.  Create num_chunk_sizes different
     // chunk sizes where each successive chunk size is
@@ -403,7 +438,9 @@ private:
     }
   }
 
+  KOKKOS_INLINE_FUNCTION
   size_t get_min_chunk_size() const { return m_chunk_size[0]; }
+
   size_t get_mem_size() const { return m_data_size; }
 };
 
@@ -444,8 +481,19 @@ private:
 
   Impl::MemPoolList  m_memory;
 
-  typedef typename Space::memory_space  backend_memory_space ;
   typedef ExecSpace                     execution_space ;
+  typedef typename Space::memory_space  backend_memory_space ;
+
+#if defined( KOKKOS_HAVE_CUDA )
+
+  // Current implementation requires CudaUVM memory space
+  // for Cuda memory pool.
+
+  static_assert(
+    ! std::is_same< typename Space::memory_space , Kokkos::CudaSpace >::value ,
+    "Kokkos::MemoryPool currently cannot use Kokkos::CudaSpace, you must use Kokkos::CudaUVMSpace" );
+
+#endif
 
 public:
 
@@ -466,8 +514,10 @@ public:
   /// \param base_chunk_size  Hand out memory in chunks of this size.
   /// \param total_size       Total size of the pool.
   MemoryPool( const backend_memory_space & memspace,
-              size_t base_chunk_size, size_t total_size,
-              size_t num_chunk_sizes = 4, size_t chunk_spacing = 4 )
+              size_t base_chunk_size,
+              size_t total_size,
+              size_t num_chunk_sizes = 4,
+              size_t chunk_spacing = 4 )
     : m_memory( memspace, execution_space(), base_chunk_size, total_size,
                 num_chunk_sizes, chunk_spacing )
   {}
@@ -484,12 +534,16 @@ public:
   void deallocate( void * const alloc_ptr, const size_t alloc_size ) const
   { m_memory.deallocate( alloc_ptr, alloc_size ); }
 
+  /// \brief  Is out of memory at this instant
   KOKKOS_INLINE_FUNCTION
   bool is_empty() const { return m_memory.is_empty(); }
 
-  // The following three functions are used for debugging.
-  void print_status() const { m_memory.print_status(); }
+  /// \brief  Minimum chunk size allocatable.
+  KOKKOS_INLINE_FUNCTION
   size_t get_min_chunk_size() const { return m_memory.get_min_chunk_size(); }
+
+  // The following unctions are used for debugging.
+  void print_status() const { m_memory.print_status(); }
   size_t get_mem_size() const { return m_memory.get_mem_size(); }
 };
 

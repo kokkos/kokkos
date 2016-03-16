@@ -127,18 +127,6 @@ TEST_F( cuda , memory_space )
   TestMemorySpace< Kokkos::Cuda >();
 }
 
-TEST_F( cuda , memory_pool )
-{
-  bool val = TestMemoryPool::test_mempool< Kokkos::Cuda, Kokkos::CudaUVMSpace >( 128, 128000 );
-  ASSERT_TRUE( val );
-
-  Kokkos::Cuda::fence();
-
-  TestMemoryPool::test_mempool2< Kokkos::Cuda, Kokkos::CudaUVMSpace >( 128, 2560000 );
-
-  Kokkos::Cuda::fence();
-}
-
 TEST_F( cuda, uvm )
 {
   if ( Kokkos::CudaUVMSpace::available() ) {
@@ -300,6 +288,7 @@ TEST_F( cuda, view_api )
   typedef Kokkos::View< const int * , Kokkos::Cuda , Kokkos::MemoryTraits< Kokkos::RandomAccess | Kokkos::Unmanaged > > view_texture_unmanaged ;
 
   TestViewAPI< double , Kokkos::Cuda >();
+  TestViewAPI< double , Kokkos::CudaUVMSpace >();
 
 #if 0
   Kokkos::View<double, Kokkos::Cuda > x("x");
@@ -519,6 +508,18 @@ TEST_F( cuda , team_scan )
   TestScanTeam< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >( 10 );
   TestScanTeam< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >( 10000 );
   TestScanTeam< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >( 10000 );
+}
+
+TEST_F( cuda , memory_pool )
+{
+  bool val_uvm = TestMemoryPool::test_mempool< Kokkos::Cuda, Kokkos::CudaUVMSpace >( 128, 128000 );
+  ASSERT_TRUE( val_uvm );
+
+  Kokkos::Cuda::fence();
+
+  TestMemoryPool::test_mempool2< Kokkos::Cuda, Kokkos::CudaUVMSpace >( 128, 2560000 );
+
+  Kokkos::Cuda::fence();
 }
 
 }
