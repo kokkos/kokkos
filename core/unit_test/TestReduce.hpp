@@ -212,8 +212,8 @@ public:
                               , ScalarType(nwork - iwork) };
 
     for ( size_type i = 0 ; i < value_count ; ++i ) {
-      dst[i] = i % 2 ? ( dst[i] < tmp[i] ? dst[i] : tmp[i] )
-                     : ( dst[i] > tmp[i] ? dst[i] : tmp[i] );
+      dst[i] = i % 2 ? ( dst[i] < tmp[i%2] ? dst[i] : tmp[i%2] )
+                     : ( dst[i] > tmp[i%2] ? dst[i] : tmp[i%2] );
     }
   }
 };
