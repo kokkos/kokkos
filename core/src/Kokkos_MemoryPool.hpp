@@ -140,7 +140,7 @@ private:
   typedef Impl::SharedAllocationTracker  Tracker;
 
   template < typename , typename > friend class Kokkos::Experimental::MemoryPool;
-  template < typename > friend class initialize_mempool;
+  template < typename > friend struct initialize_mempool;
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
   template < typename > friend struct print_mempool;
 #endif
