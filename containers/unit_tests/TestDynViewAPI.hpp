@@ -1178,6 +1178,8 @@ public:
 
   static void run_test_subview()
   {
+// LayoutStride may be causing issues with how it is declared...
+
     typedef Kokkos::Experimental::DynRankView< const T , device > sView ;
   //typedef Kokkos::Experimental::DynRankView< T , device > dView8 ;
     typedef Kokkos::Experimental::DynRankView< T , Kokkos::LayoutStride , device > dView8 ; //this works
@@ -1186,8 +1188,56 @@ public:
 
 
     dView0 d0( "d0" );
-    dView8 d8( "d8" , N0 , N1 , N2 , 2 , 2 , 2 , 2 , 2 );
-    dView9 d9( "d9" , N0 , N1 , N2 , 2 , 2 , 2 , 2 , 2 );
+    std::cout << " d0 rank " << d0.rank() <<std::endl;
+    std::cout << " d0 dim0 "<< d0.dimension_0() <<std::endl;
+    std::cout << " d0 dim1 "<< d0.dimension_1() <<std::endl;
+    std::cout << " d0 dim2 "<< d0.dimension_2() <<std::endl;
+    std::cout << " d0 dim3 "<< d0.dimension_3() <<std::endl;
+    std::cout << " d0 dim4 "<< d0.dimension_4() <<std::endl;
+    std::cout << " d0 dim5 "<< d0.dimension_5() <<std::endl;
+    std::cout << " d0 dim6 "<< d0.dimension_6() <<std::endl;
+    std::cout << " d0 dim7 "<< d0.dimension_7() <<std::endl;
+
+//    dView8 d7( "d7" , unsigned(N0) , unsigned(N1) , unsigned(N2) , 2 , 2 , 2 , 2 ); //rank 7 dynrank view 
+    unsigned order[] = { 6,5,4,3,2,1,0 }, dimen[] = { N0, N1, N2, 2, 2, 2, 2 };
+    dView8 d7( "d7", Kokkos::LayoutStride::order_dimensions(7, order, dimen) );
+    std::cout << " d7 rank " << d7.rank() <<std::endl;
+    std::cout << " d7 dim0 "<< d7.dimension_0() <<std::endl;
+    std::cout << " d7 dim1 "<< d7.dimension_1() <<std::endl;
+    std::cout << " d7 dim2 "<< d7.dimension_2() <<std::endl;
+    std::cout << " d7 dim3 "<< d7.dimension_3() <<std::endl;
+    std::cout << " d7 dim4 "<< d7.dimension_4() <<std::endl;
+    std::cout << " d7 dim5 "<< d7.dimension_5() <<std::endl;
+    std::cout << " d7 dim6 "<< d7.dimension_6() <<std::endl;
+    std::cout << " d7 dim7 "<< d7.dimension_7() <<std::endl;
+
+    //dView8 d8( "d8" , unsigned(N0) , unsigned(N1) , unsigned(N2) , 2 , 2 , 2 , 2 , 2 );
+    unsigned order2[] = { 7,6,5,4,3,2,1,0 }, dimen2[] = { N0, N1, N2, 2, 2, 2, 2, 2 };
+    dView8 d8( "d8", Kokkos::LayoutStride::order_dimensions(8, order2, dimen2) );
+    std::cout << " d8 rank " << d8.rank() <<std::endl;
+    std::cout << " d8 dim0 "<< d8.dimension_0() <<std::endl;
+    std::cout << " d8 dim1 "<< d8.dimension_1() <<std::endl;
+    std::cout << " d8 dim2 "<< d8.dimension_2() <<std::endl;
+    std::cout << " d8 dim3 "<< d8.dimension_3() <<std::endl;
+    std::cout << " d8 dim4 "<< d8.dimension_4() <<std::endl;
+    std::cout << " d8 dim5 "<< d8.dimension_5() <<std::endl;
+    std::cout << " d8 dim6 "<< d8.dimension_6() <<std::endl;
+    std::cout << " d8 dim7 "<< d8.dimension_7() <<std::endl;
+
+//    dView8 d5( "d5" , unsigned(N0) , unsigned(N1) , unsigned(N2) , 2 , 2 );
+    unsigned order3[] = { 4,3,2,1,0 }, dimen3[] = { N0, N1, N2, 2, 2 };
+    dView8 d5( "d5", Kokkos::LayoutStride::order_dimensions(5, order3, dimen3) );
+    std::cout << " d5 rank " << d5.rank() <<std::endl;
+    std::cout << " d5 dim0 "<< d5.dimension_0() <<std::endl;
+    std::cout << " d5 dim1 "<< d5.dimension_1() <<std::endl;
+    std::cout << " d5 dim2 "<< d5.dimension_2() <<std::endl;
+    std::cout << " d5 dim3 "<< d5.dimension_3() <<std::endl;
+    std::cout << " d5 dim4 "<< d5.dimension_4() <<std::endl;
+    std::cout << " d5 dim5 "<< d5.dimension_5() <<std::endl;
+    std::cout << " d5 dim6 "<< d5.dimension_6() <<std::endl;
+    std::cout << " d5 dim7 "<< d5.dimension_7() <<std::endl;
+
+    dView0 dtest("dtest" , N0 , N1 , N2 , 2 , 2 , 2 , 2 , 2);
 
     sView s0 = d0 ;
 //    sView s8 = Kokkos::Experimental::subview( d8 , 1,1,1,1,1,1,1,1); //Should be rank0 subview
@@ -1199,10 +1249,19 @@ public:
 //  Send a std::pair as a rank
 //    dView8 ds8 = Kokkos::Experimental::subview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , std::pair<unsigned,unsigned>(1,2) );
 //  Send a kokkos::pair as a rank
-    dView8 ds8 = Kokkos::Experimental::subview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
+//
+//    std::cout<<" dt8 rank 8 subview... "<<std::endl; //dView8 for layout stride or dView0 for lright? Neither compile...
+//    dView0 dt8 = Kokkos::Experimental::subdynrankview( dtest , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) ); //this causes error if not a strided layout, but if strided layout chose without proper initialization then issues with dimensions...
+
+    std::cout<<" ds8 rank 8 subview... "<<std::endl;
+    dView8 ds8 = Kokkos::Experimental::subdynrankview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
 
 // Breaks...
-//    dView9 ds5 = Kokkos::Experimental::subview( d9 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
+    std::cout<<" ds7 rank 7 subview... "<<std::endl;
+    dView8 ds7 = Kokkos::Experimental::subdynrankview( d7 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
+
+    std::cout<<" ds5 rank 5 subview... "<<std::endl;
+    dView8 ds5 = Kokkos::Experimental::subdynrankview( d5 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
 
 //
 /*
