@@ -67,7 +67,7 @@ namespace Kokkos {
 namespace Experimental {
 
 template < class Space , class ExecSpace = typename Space::execution_space >
-class MemoryPool ;
+class MemoryPool;
 
 namespace Impl {
 
@@ -210,7 +210,7 @@ private:
     typedef Impl::SharedAllocationRecord< MemorySpace, void >  SharedRecord;
     typedef Kokkos::RangePolicy< ExecutionSpace >              Range;
 
-    size_t base_chunk_size = arg_base_chunk_size ;
+    size_t base_chunk_size = arg_base_chunk_size;
 
     // The base chunk size must be at least MIN_CHUNKSIZE bytes as this is the
     // cache-line size for NVIDA GPUs.
@@ -290,10 +290,8 @@ private:
       SharedRecord::allocate( memspace, "mempool", alloc_size );
 
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
-      printf( "** Allocated total %ld bytes at 0x%lx\n"
-            , long(alloc_size)
-            , long(rec->data())
-            );
+      printf( "** Allocated total %ld bytes at 0x%lx\n",
+              long(alloc_size), long(rec->data()) );
       fflush( stdout );
 #endif
 
@@ -308,12 +306,9 @@ private:
       m_data = mem + header_size;
 
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
-      printf( "** Partitioning allocation 0x%lx : m_chunk_size[0x%lx] m_freelist[0x%lx] m_data[0x%lx]\n"
-            , (unsigned long) mem
-            , (unsigned long) m_chunk_size
-            , (unsigned long) m_freelist
-            , (unsigned long) m_data
-            );
+      printf( "** Partitioning allocation 0x%lx : m_chunk_size[0x%lx] m_freelist[0x%lx] m_data[0x%lx]\n",
+              (unsigned long) mem, (unsigned long) m_chunk_size,
+              (unsigned long) m_freelist, (unsigned long) m_data );
       fflush( stdout );
 #endif
     }
@@ -453,7 +448,7 @@ private:
     return m_chunk_size[l] == 0;
   }
 
-  // The following three functions are used for debugging.
+  // The following functions are used for debugging.
   void print_status() const
   {
     for ( size_t l = 0; m_chunk_size[l] > 0; ++l ) {
@@ -485,7 +480,7 @@ private:
  *  compilation unit.  For CUDA this requires nvcc command
  *  --relocatable-device-code=true
  *  When this command is set then the macro
- *  KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE 
+ *  KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE
  *  is also set.
  */
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA ) && \
@@ -513,8 +508,8 @@ private:
 
   Impl::MemPoolList  m_memory;
 
-  typedef ExecSpace                     execution_space ;
-  typedef typename Space::memory_space  backend_memory_space ;
+  typedef ExecSpace                     execution_space;
+  typedef typename Space::memory_space  backend_memory_space;
 
 #if defined( KOKKOS_HAVE_CUDA )
 
@@ -546,10 +541,8 @@ public:
   /// \param base_chunk_size  Hand out memory in chunks of this size.
   /// \param total_size       Total size of the pool.
   MemoryPool( const backend_memory_space & memspace,
-              size_t base_chunk_size,
-              size_t total_size,
-              size_t num_chunk_sizes = 4,
-              size_t chunk_spacing = 4 )
+              size_t base_chunk_size, size_t total_size,
+              size_t num_chunk_sizes = 4, size_t chunk_spacing = 4 )
     : m_memory( memspace, execution_space(), base_chunk_size, total_size,
                 num_chunk_sizes, chunk_spacing )
   {}
@@ -566,15 +559,15 @@ public:
   void deallocate( void * const alloc_ptr, const size_t alloc_size ) const
   { m_memory.deallocate( alloc_ptr, alloc_size ); }
 
-  /// \brief  Is out of memory at this instant
+  /// \brief Is out of memory at this instant
   KOKKOS_INLINE_FUNCTION
   bool is_empty() const { return m_memory.is_empty(); }
 
-  /// \brief  Minimum chunk size allocatable.
+  /// \brief Minimum chunk size allocatable.
   KOKKOS_INLINE_FUNCTION
   size_t get_min_chunk_size() const { return m_memory.get_min_chunk_size(); }
 
-  // The following unctions are used for debugging.
+  // The following functions are used for debugging.
   void print_status() const { m_memory.print_status(); }
   size_t get_mem_size() const { return m_memory.get_mem_size(); }
 };
