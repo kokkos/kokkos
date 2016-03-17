@@ -259,19 +259,9 @@ struct ALL_t {
   constexpr const ALL_t & operator()() const { return *this ; }
 };
 
-struct EXTENT_ONE_t {
-  size_t value;
-  EXTENT_ONE_t( const size_t i) : value(i) {}
-//  EXTENT_ONE_t() = default ; //causes error in dyn rank subview rank...
-//  EXTENT_ONE_t( const EXTENT_ONE_t & ) = default ;
-//  EXTENT_ONE_t & operator = ( const EXTENT_ONE_t & ) = default ;
-  //{ static_assert(false , "EXTENT_ONE_t called"); }
-};
-
 template< class T >
 struct is_integral_extent_type
-//{ enum { value = std::is_same<T,Kokkos::Experimental::Impl::ALL_t>::value ? 1 : 0 }; };
-{ enum { value = (std::is_same<T,Kokkos::Experimental::Impl::ALL_t>::value || std::is_same<T,Kokkos::Experimental::Impl::EXTENT_ONE_t>::value  ) ? 1 : 0 }; };
+{ enum { value = std::is_same<T,Kokkos::Experimental::Impl::ALL_t>::value ? 1 : 0 }; };
 
 template< class iType >
 struct is_integral_extent_type< std::pair<iType,iType> >
@@ -355,22 +345,6 @@ private:
     {
       m_begin[  domain_rank ] = 0 ;
       m_length[ range_rank  ] = dim.extent( domain_rank );
-      m_index[  range_rank  ] = domain_rank ;
-
-      return set( domain_rank + 1 , range_rank + 1 , dim , args... );
-    }
-
-  // EXTENT_ONE_t
-  template< size_t ... DimArgs , class ... Args >
-  KOKKOS_FORCEINLINE_FUNCTION
-  bool set( unsigned domain_rank
-          , unsigned range_rank
-          , const ViewDimension< DimArgs ... > & dim
-          , const Kokkos::Experimental::Impl::EXTENT_ONE_t ext
-          , Args ... args )
-    {
-      m_begin[  domain_rank ] = ext.value ;
-      m_length[ range_rank  ] = 1 ;
       m_index[  range_rank  ] = domain_rank ;
 
       return set( domain_rank + 1 , range_rank + 1 , dim , args... );
@@ -1247,7 +1221,14 @@ public:
       const SubviewExtents< DimRHS::rank , dimension_type::rank > & sub )
     : m_dim( sub.range_extent(0)
            , sub.range_extent(1)
-           , 0, 0, 0, 0, 0, 0 )
+           , sub.range_extent(2)
+           , sub.range_extent(3)
+           , sub.range_extent(4)
+           , sub.range_extent(5)
+           , sub.range_extent(6)
+           , sub.range_extent(7)
+           )
+//           , 0, 0, 0, 0, 0, 0 )
     , m_stride( ( 1 == sub.range_index(1) ? rhs.stride_1() :
                 ( 2 == sub.range_index(1) ? rhs.stride_2() :
                 ( 3 == sub.range_index(1) ? rhs.stride_3() :
@@ -1726,7 +1707,14 @@ public:
     )
     : m_dim( sub.range_extent(0)
            , sub.range_extent(1)
-           , 0, 0, 0, 0, 0, 0 )
+           , sub.range_extent(2)
+           , sub.range_extent(3)
+           , sub.range_extent(4)
+           , sub.range_extent(5)
+           , sub.range_extent(6)
+           , sub.range_extent(7)
+           )
+//           , 0, 0, 0, 0, 0, 0 ) //should be unnecessary with correct guards in subview ViewMapping and static_assert below
     , m_stride( 0 == sub.range_index(0) ? rhs.stride_0() : (
                 1 == sub.range_index(0) ? rhs.stride_1() : (
                 2 == sub.range_index(0) ? rhs.stride_2() : (

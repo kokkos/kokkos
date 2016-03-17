@@ -278,17 +278,6 @@ public:
     return *this;
   }
 
-/*
-  template< class RT , class ... RP >
-  KOKKOS_INLINE_FUNCTION
-  DynRankView & operator = (const View<RT********,RP...> & rhs )
-  {
-    view_type::operator = ( rhs );
-    m_rank = rhs.rank();
-    return *this;
-  }
-*/
-
   //----------------------------------------
   // Compatible subview constructor
   // may assign unmanaged from managed.
@@ -297,10 +286,16 @@ public:
   template< class RT , class ... RP >
   KOKKOS_INLINE_FUNCTION
   DynRankView( const Kokkos::Experimental::View<RT********,RP...> & rhs , unsigned RankVal )
-//    : view_type( rhs ) 
-//    , m_rank(RankVal)
-//    {}
-    { m_rank = RankVal; view_type::operator = (rhs); std::cout << "DRV ctor 1 and RankVal "<< RankVal << std::endl; }
+    : view_type( rhs ) 
+    , m_rank(RankVal)
+    {}
+/*
+    { 
+      m_rank = RankVal; 
+      view_type::operator = (rhs); 
+      std::cout << "DRV ctor 1 and RankVal "<< RankVal << std::endl;
+    }
+*/
 
   //----------------------------------------
   // Allocation tracking properties
@@ -340,6 +335,8 @@ public:
             : ( arg_layout.dimension[7] == 0 ? 7 
             : 8 ) ) ) ) ) ) )
             )  
+    {}
+/*
     {  std::cout << "DRV ctor 2"<<std::endl;
        std::cout << "  arg_layout dims \n" << arg_layout.dimension[0] << " "
                                            << arg_layout.dimension[1] << " "
@@ -350,6 +347,7 @@ public:
                                            << arg_layout.dimension[6] << " "
                                            << arg_layout.dimension[7] << std::endl;
     }
+*/
 
 //Wrappers
   template< class ... P >
@@ -382,7 +380,8 @@ public:
               : ( arg_layout.dimension[7] == 0 ? 7 
               : 8 ) ) ) ) ) ) )
             )  
-    {std::cout << "DRV ctor 3"<<std::endl;}
+    {}
+//    {std::cout << "DRV ctor 3"<<std::endl;}
 
   //----------------------------------------
   //Constructor(s)
@@ -406,7 +405,8 @@ public:
     , typename traits::array_layout
           ( arg_N0 , arg_N1 , arg_N2 , arg_N3 , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
       )
-    {std::cout << "DRV ctor 4"<<std::endl;}
+    {}
+//    {std::cout << "DRV ctor 4"<<std::endl;}
 
   template< class ... P >
   explicit KOKKOS_INLINE_FUNCTION
@@ -426,7 +426,8 @@ public:
     , typename traits::array_layout
           ( arg_N0 , arg_N1 , arg_N2 , arg_N3 , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
       )
-    {std::cout << "DRV ctor 5"<<std::endl;}
+    {}
+//    {std::cout << "DRV ctor 5"<<std::endl;}
 
   // Allocate with label and layout
   template< typename Label >
@@ -437,7 +438,8 @@ public:
           typename traits::array_layout >::type const & arg_layout
       )
     : DynRankView( Impl::ViewCtorProp< std::string >( arg_label ) , arg_layout )
-    {std::cout << "DRV ctor 6"<<std::endl;}
+    {}
+//    {std::cout << "DRV ctor 6"<<std::endl;}
 
   // Allocate label and layout, must disambiguate from subview constructor.
   template< typename Label >
@@ -458,7 +460,8 @@ public:
     , typename traits::array_layout
           ( arg_N0 , arg_N1 , arg_N2 , arg_N3 , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
           )
-    {std::cout << "DRV ctor 7 \n"<<std::endl;}
+    {}
+//    {std::cout << "DRV ctor 7 \n"<<std::endl;}
 
   // For backward compatibility
 /*
@@ -485,7 +488,8 @@ public:
       , const size_t arg_N7 = 0
       )
     : DynRankView(Impl::ViewCtorProp< std::string , Kokkos::Experimental::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::Experimental::WithoutInitializing ), arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7 ) 
-    {std::cout << "DRV ctor 8"<<std::endl;}
+    {}
+//    {std::cout << "DRV ctor 8"<<std::endl;}
 
   using view_type::memory_span;
 
@@ -501,14 +505,16 @@ public:
       , const size_t arg_N7 = 0
       )
     : DynRankView( Impl::ViewCtorProp<pointer_type>(arg_ptr) , arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7 )
-    {std::cout << "DRV ctor 9"<<std::endl;}
+    {}
+//    {std::cout << "DRV ctor 9"<<std::endl;}
 
   explicit KOKKOS_INLINE_FUNCTION
   DynRankView( pointer_type arg_ptr
       , typename traits::array_layout & arg_layout
       )
     : DynRankView( Impl::ViewCtorProp<pointer_type>(arg_ptr) , arg_layout )
-    {std::cout << "DRV ctor 10"<<std::endl;}
+    {}
+//    {std::cout << "DRV ctor 10"<<std::endl;}
 
 
   //----------------------------------------
@@ -547,8 +553,8 @@ public:
              : ( arg_N7 == 0 ? 7 
              : 8 ) ) ) ) ) ) ) 
             ) 
-    {std::cout << "DRV ctor 11"<<std::endl;}
-
+    {}
+//    {std::cout << "DRV ctor 11"<<std::endl;}
 
 };
 
@@ -557,6 +563,8 @@ public:
   //original from View
 
 // Carter's
+// EXTENT_ONE_t removed
+/*
 template< typename T >
 typename std::conditional< std::is_integral<T>::value
                          , Kokkos::Experimental::Impl::EXTENT_ONE_t
@@ -569,446 +577,91 @@ variadic_sview_expansion( const T & i )
                          , Kokkos::Experimental::Impl::EXTENT_ONE_t
                          , const T & >::type( i );
 }
-
-
-// Attempt at expand function when numArgs < 8
-#if 0
-template< unsigned I , typename ... Args >
-Kokkos::Experimental::Impl::EXTENT_ONE_t 
-expand(Args ... args)
-{
-  return Kokkos::Experimental::Impl::EXTENT_ONE_t(0);
-}
-/*
-template< typename ... Args >
-Kokkos::Experimental::Impl::EXTENT_ONE_t 
-expand< 0 , Args... >(Args ... args)// void , Args ... args )
-{
-  return Kokkos::Experimental::Impl::EXTENT_ONE_t(0);
-}
 */
 
-template< typename T , typename ... Args >
-typename std::conditional< std::is_integral<T>::value
-                         , Kokkos::Experimental::Impl::EXTENT_ONE_t
-                         , const T & >::type
-expand< 0 , Args... >( const T & i , Args ... args)
-{
-  return 
-  typename std::conditional< std::is_integral<T>::value
-                         , Kokkos::Experimental::Impl::EXTENT_ONE_t
-                         , const T & >::type( i );
-}
 
-template< unsigned I , typename T , typename ... Args >
-typename std::conditional< std::is_integral<T>::value || std::is_same<T,void>::value
-                         , Kokkos::Experimental::Impl::EXTENT_ONE_t
-                         , const T & >::type
-expand( const T & i , Args ... args)
-{
-  return expand< I-1 , Args... > (args...);
-}
+//Possible direction:
+// Remove EXTENT_ONE_t
+// Cleanup ViewMapping changes ...
+template < class Traits , class Arg0 = int, class Arg1 = int, class Arg2 = int, class Arg3 = int, class Arg4 = int, class Arg5 = int, class Arg6 = int, class Arg7 = int >
+struct Subdynrankview {
 
-#endif
+  typedef typename Kokkos::Experimental::Impl::ViewMapping
+    < void
+    , Traits
+    , typename std::conditional<std::is_integral<Arg0>::value, Kokkos::pair<Arg0,Arg0> , Arg0>::type 
+    , typename std::conditional<std::is_integral<Arg1>::value, Kokkos::pair<Arg1,Arg1> , Arg1>::type 
+    , typename std::conditional<std::is_integral<Arg2>::value, Kokkos::pair<Arg2,Arg2> , Arg2>::type 
+    , typename std::conditional<std::is_integral<Arg3>::value, Kokkos::pair<Arg3,Arg3> , Arg3>::type 
+    , typename std::conditional<std::is_integral<Arg4>::value, Kokkos::pair<Arg4,Arg4> , Arg4>::type 
+    , typename std::conditional<std::is_integral<Arg5>::value, Kokkos::pair<Arg5,Arg5> , Arg5>::type 
+    , typename std::conditional<std::is_integral<Arg6>::value, Kokkos::pair<Arg6,Arg6> , Arg6>::type 
+    , typename std::conditional<std::is_integral<Arg7>::value, Kokkos::pair<Arg7,Arg7> , Arg7>::type 
+    >::type ViewType ;
 
+  //typedef typename Kokkos::Experimental::Impl::ViewMapping < void , Traits , Args... >::type ViewType ;
+//  typedef typename Kokkos::Experimental::Impl::ViewMapping < void , Traits , Arg0 , Arg1 , Arg2 , Arg3 , Arg4 , Arg5 , Arg6 , Arg7 >::type ViewType ;
 
+  typedef DynRankView< typename ViewType::value_type , typename ViewType::array_layout , typename ViewType::device_type , typename ViewType::memory_traits >  type;
 
-/*
-template <class C , class T>
-C variadic_sview_expansion(T i);
+//Pass whole collection of args to a function with a rank number, 
+// scan through list for non-integer entry greater than or equal to rank
+// pass through; if no more remaining non-integer return the pair
+// Would be nice to have something like a stack to add args to, pop them off until non-integer reached
 
-template <>
-Kokkos::Experimental::Impl::ALL_t variadic_sview_expansion<Kokkos::Experimental::Impl::ALL_t>
-( Kokkos::Experimental::Impl::ALL_t var_all ) { return var_all(); }
+  template< typename T >
+  static typename std::enable_if< std::is_integral<T>::value ,Kokkos::pair<T,T> >::type
+  KOKKOS_INLINE_FUNCTION
+  convert ( const T & i ) 
+  { 
+    return
+    Kokkos::pair<T,T>( i , i+1 );
+  }
+  
+  template< typename T >
+  static typename std::enable_if< !std::is_integral<T>::value , const T & >::type
+  KOKKOS_INLINE_FUNCTION
+  convert ( const T & i ) 
+  { 
+    return i;
+  }
+  
 
-template <>
-Kokkos::pair<size_t,size_t> variadic_sview_expansion( const Kokkos::pair<size_t,size_t> var_pair ) { return var_pair; }
-
-template <>
-typename Kokkos::Experimental::Impl::EXTENT_ONE_t variadic_sview_expansion< Kokkos::Experimental::Impl::EXTENT_ONE_t >( const size_t i ) { return Kokkos::Experimental::Impl::EXTENT_ONE_t(i); }
-
-*/
-
-#if 0
-template < unsigned I , class ... Args >
-struct VarArgs;
-
-//template < unsigned I , class Arg0 , class ... Args >
-template < class Arg0 , class ... Args >
-struct VarArgs< 0 , Arg0 , Args... > 
-{
-  std::conditional< !std::is_same<Arg0 , void>::value , Arg0 , Kokkos::Experimental::Impl::EXTENT_ONE_t >::type arg;
-
-  VarArgs( std::enable_if< !std::is_same<Arg0 , void>::value , Arg0>::type arg_ , Args ... args)
-    : arg(arg_) {}
-
-  VarArgs( std::enable_if< std::is_same<Arg0 , void>::value >::type arg_ , Args ... args)
-    : arg( Kokkos::Experimental::Impl::EXTENT_ONE_t(0) ) {}
-
-  std::conditional< !std::is_same<Arg0 , void>::value , Arg0 , Kokkos::Experimental::Impl::EXTENT_ONE_t >::type 
-  operator()()
+  template < class T , class ... P >
+  static type subview( const Kokkos::Experimental::View<T******** , P... > & InputView , Arg0 arg0 = Arg0(), Arg1 arg1 = Arg1(), Arg2 arg2 = Arg2(), Arg3 arg3 = Arg3(), Arg4 arg4 = Arg4(), Arg5 arg5 = Arg5(), Arg6 arg6 = Arg6(), Arg7 arg7 = Arg7() )
   {
-    return arg;
+    const unsigned numArgs = unsigned(!std::is_integral<Arg0>::value) 
+                           + unsigned(!std::is_integral<Arg1>::value) 
+                           + unsigned(!std::is_integral<Arg2>::value) 
+                           + unsigned(!std::is_integral<Arg3>::value) 
+                           + unsigned(!std::is_integral<Arg4>::value) 
+                           + unsigned(!std::is_integral<Arg5>::value) 
+                           + unsigned(!std::is_integral<Arg6>::value) 
+                           + unsigned(!std::is_integral<Arg7>::value) ;
+
+    return type( Kokkos::Experimental::subview( InputView , convert(arg0) , convert(arg1) , convert(arg2) , convert(arg3) , convert(arg4) , convert(arg5) , convert(arg6) , convert(arg7) ) , numArgs );
   }
 
-}
-
-//template < unsigned I , class Arg0 , class Arg1 , class ... Args >
-template < class Arg0 , class Arg1 , class ... Args >
-struct VarArgs< 1 > 
-{
-  std::conditional< !std::is_same<Arg1 , void>::value , Arg1 , Kokkos::Experimental::Impl::EXTENT_ONE_t >::type arg;
-
-  VarArgs( Arg0 arg0 , std::enable_if< !std::is_same<Arg1 , void>::value , Arg1>::type arg_ , Args ... args)
-    : arg(arg_) {}
-
-  VarArgs( Arg0 arg0 , std::enable_if< std::is_same<Arg1 , void>::value >::type arg_ , Args ... args)
-    : arg( Kokkos::Experimental::Impl::EXTENT_ONE_t(0) ) {}
-
-  std::conditional< !std::is_same<Arg1 , void>::value , Arg1 , Kokkos::Experimental::Impl::EXTENT_ONE_t >::type 
-  operator()()
-  {
-    return arg;
-  }
-}
-
-//template < unsigned I , class Arg0 , class Arg1 , class Arg2 , class ... Args >
-template < class Arg0 , class Arg1 , class Arg2 , class ... Args >
-struct VarArgs< 2 > 
-{
-  std::conditional< !std::is_same<Arg2 , void>::value , Arg2 , Kokkos::Experimental::Impl::EXTENT_ONE_t >::type arg;
-
-  VarArgs( Arg0 arg0 , Arg1 arg1 , std::enable_if< !std::is_same<Arg2 , void>::value , Arg2>::type arg_ , Args ... args)
-    : arg(arg_) {}
-
-  VarArgs( Arg0 arg0 , Arg1 arg1 , std::enable_if< std::is_same<Arg2 , void>::value >::type arg_ , Args ... args)
-    : arg( Kokkos::Experimental::Impl::EXTENT_ONE_t(0) ) {}
-
-  std::conditional< !std::is_same<Arg2 , void>::value , Arg2 , Kokkos::Experimental::Impl::EXTENT_ONE_t >::type 
-  operator()()
-  {
-    return arg;
-  }
-}
-
-//template < unsigned I , class Arg0 , class Arg1 , class Arg2 , class Arg3 , class ... Args >
-template < class Arg0 , class Arg1 , class Arg2 , class Arg3 , class ... Args >
-struct VarArgs< 3 > 
-{
-  std::conditional< !std::is_same<Arg3 , void>::value , Arg3 , Kokkos::Experimental::Impl::EXTENT_ONE_t >::type arg;
-
-  VarArgs( Arg0 arg0 , Arg1 arg1 , Arg2 arg2 , std::enable_if< !std::is_same<Arg3 , void>::value , Arg3>::type arg_ , Args ... args)
-    : arg(arg_) {}
-
-  VarArgs( Arg0 arg0 , Arg1 arg1 , Arg2 arg2 , std::enable_if< std::is_same<Arg3 , void>::value >::type arg_ , Args ... args)
-    : arg( Kokkos::Experimental::Impl::EXTENT_ONE_t(0) ) {}
-
-  std::conditional< !std::is_same<Arg3 , void>::value , Arg3 , Kokkos::Experimental::Impl::EXTENT_ONE_t >::type 
-  operator()()
-  {
-    return arg;
-  }
-}
-
-//template < unsigned I , class Arg0 , class Arg1 , class Arg2 , class Arg3 , class Arg4 , class ... Args >
-template < class Arg0 , class Arg1 , class Arg2 , class Arg3 , class Arg4 , class ... Args >
-struct VarArgs< 4 > 
-{
-  std::conditional< !std::is_same<Arg4 , void>::value , Arg4 , Kokkos::Experimental::Impl::EXTENT_ONE_t >::type arg;
-
-  VarArgs( Arg0 arg0 , Arg1 arg1 , Arg2 arg2 , Arg3 arg3 , std::enable_if< !std::is_same<Arg4 , void>::value , Arg4>::type arg_ , Args ... args)
-    : arg(arg_) {}
-
-  VarArgs( Arg0 arg0 , Arg1 arg1 , Arg2 arg2 , Arg3 arg3 , std::enable_if< std::is_same<Arg4 , void>::value >::type arg_ , Args ... args)
-    : arg( Kokkos::Experimental::Impl::EXTENT_ONE_t(0) ) {}
-
-  std::conditional< !std::is_same<Arg4 , void>::value , Arg4 , Kokkos::Experimental::Impl::EXTENT_ONE_t >::type 
-  operator()()
-  {
-    return arg;
-  }
-}
-
-//template < unsigned I , class Arg0 , class Arg1 , class Arg2 , class Arg3 , class Arg4 , class Arg5 , class ... Args >
-template < class Arg0 , class Arg1 , class Arg2 , class Arg3 , class Arg4 , class Arg5 , class ... Args >
-struct VarArgs< 5 > 
-{
-  std::conditional< !std::is_same<Arg5 , void>::value , Arg5 , Kokkos::Experimental::Impl::EXTENT_ONE_t >::type arg;
-
-  VarArgs( Arg0 arg0 , Arg1 arg1 , Arg2 arg2 , Arg3 arg3 , Arg4 arg4 , std::enable_if< !std::is_same<Arg5 , void>::value , Arg5>::type arg_ , Args ... args)
-    : arg(arg_) {}
-
-  VarArgs( Arg0 arg0 , Arg1 arg1 , Arg2 arg2 , Arg3 arg3 , Arg4 arg4 , std::enable_if< std::is_same<Arg5 , void>::value >::type arg_ , Args ... args)
-    : arg( Kokkos::Experimental::Impl::EXTENT_ONE_t(0) ) {}
-
-  std::conditional< !std::is_same<Arg5 , void>::value , Arg5 , Kokkos::Experimental::Impl::EXTENT_ONE_t >::type 
-  operator()()
-  {
-    return arg;
-  }
-}
-
-//template < unsigned I , class Arg0 , class Arg1 , class Arg2 , class Arg3 , class Arg4 , class Arg5 , class Arg6 , class ... Args >
-template < class Arg0 , class Arg1 , class Arg2 , class Arg3 , class Arg4 , class Arg5 , class Arg6 , class ... Args >
-struct VarArgs< 6 > 
-{
-  std::conditional< !std::is_same<Arg6 , void>::value , Arg6 , Kokkos::Experimental::Impl::EXTENT_ONE_t >::type arg;
-
-  VarArgs( Arg0 arg0 , Arg1 arg1 , Arg2 arg2 , Arg3 arg3 , Arg4 arg4 , Arg5 arg5 , std::enable_if< !std::is_same<Arg6 , void>::value , Arg6>::type arg_ , Args ... args)
-    : arg(arg_) {}
-
-  VarArgs( Arg0 arg0 , Arg1 arg1 , Arg2 arg2 , Arg3 arg3 , Arg4 arg4 , Arg5 arg5 , std::enable_if< std::is_same<Arg6 , void>::value >::type arg_ , Args ... args)
-    : arg( Kokkos::Experimental::Impl::EXTENT_ONE_t(0) ) {}
-
-  std::conditional< !std::is_same<Arg6 , void>::value , Arg6 , Kokkos::Experimental::Impl::EXTENT_ONE_t >::type 
-  operator()()
-  {
-    return arg;
-  }
-}
-
-//template < unsigned I , class Arg0 , class Arg1 , class Arg2 , class Arg3 , class Arg4 , class Arg5 , class Arg6 , class Arg7 , class ... Args >
-template < class Arg0 , class Arg1 , class Arg2 , class Arg3 , class Arg4 , class Arg5 , class Arg6 , class Arg7 , class ... Args >
-struct VarArgs< 7 > 
-{
-  std::conditional< !std::is_same<Arg7 , void>::value , Arg7 , Kokkos::Experimental::Impl::EXTENT_ONE_t >::type arg;
-
-  VarArgs( Arg0 arg0 , Arg1 arg1 , Arg2 arg2 , Arg3 arg3 , Arg4 arg4 , Arg5 arg5 , Arg6 arg6 , std::enable_if< !std::is_same<Arg7 , void>::value , Arg7>::type arg_ , Args ... args)
-    : arg(arg_) {}
-
-  VarArgs( Arg0 arg0 , Arg1 arg1 , Arg2 arg2 , Arg3 arg3 , Arg4 arg4 , Arg5 arg5 , Arg6 arg6 , std::enable_if< std::is_same<Arg7 , void>::value >::type arg_ , Args ... args)
-    : arg( Kokkos::Experimental::Impl::EXTENT_ONE_t(0) ) {}
-
-  std::conditional< !std::is_same<Arg7 , void>::value , Arg7 , Kokkos::Experimental::Impl::EXTENT_ONE_t >::type 
-  operator()()
-  {
-    return arg;
-  }
-}
-
-#endif
+};
 
 
-template< class D, class ... P , typename iType >
+// Carter's idea
+template< class D , class ... P , class ...Args >
 KOKKOS_INLINE_FUNCTION
-DynRankView< D , P... >
-subdynrankview( const DynRankView< D, P... > & src , typename std::enable_if< std::is_integral<iType>::value, iType>::type arg0 )
+typename Subdynrankview< Kokkos::Experimental::ViewTraits< D********, P... > , Args... >::type
+subdynrankview( const DynRankView< D , P... > &src , Args...args)
 {
-  const unsigned numArgs = 0;
-  std::cout<< " 0 dyn rank rank "<<src.rank()<<std::endl;
-  if ( src.rank() != 0 )
+  if ( src.rank() != sizeof...(Args) )
     { Kokkos::Impl::throw_runtime_exception("Rank is not compatible"); }
 
-  typedef typename Kokkos::Experimental::Impl::EXTENT_ONE_t  EXTENT_ONE_t;
+typedef Subdynrankview< Kokkos::Experimental::ViewTraits< D********, P... > , Args... > metafcn;
+return 
+//typename metafcn::subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)... );
+metafcn::subview( src.ConstDownCast() , args... );
 
-  return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<iType>(arg0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0)) , numArgs ); 
-}
-
-template< class D, class ... P , class Arg0 >
-KOKKOS_INLINE_FUNCTION
-DynRankView< D , P... > 
-subdynrankview( const DynRankView< D, P... > & src , typename std::enable_if< !std::is_integral<Arg0>::value, Arg0>::type arg0 )
-{
-  const unsigned numArgs = 1;
-  std::cout<< " 1 dyn rank rank "<<src.rank()<<std::endl;
-  if ( src.rank() != 1 )
-    { Kokkos::Impl::throw_runtime_exception("Rank is not compatible"); }
-
-  typedef typename Kokkos::Experimental::Impl::EXTENT_ONE_t  EXTENT_ONE_t;
-
-  return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Arg0>(arg0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0)) , numArgs ); 
-}
-
-template< class D, class ... P , class Arg0 , class Arg1 >
-KOKKOS_INLINE_FUNCTION
-DynRankView< D , P... >
-subdynrankview( const DynRankView< D, P... > & src , Arg0 arg0 , Arg1 arg1 )
-{
-  const unsigned numArgs = 2;
-  std::cout<< " 2 dyn rank rank "<<src.rank()<<std::endl;
-  if ( src.rank() != 2 )
-    { Kokkos::Impl::throw_runtime_exception("Rank is not compatible"); }
-
-  typedef typename Kokkos::Experimental::Impl::EXTENT_ONE_t  EXTENT_ONE_t;
-
-  return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Arg0>(arg0) , variadic_sview_expansion<Arg1>(arg1) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0)) , numArgs ); 
-}
-
-template< class D, class ... P , class Arg0 , class Arg1 , class Arg2 >
-KOKKOS_INLINE_FUNCTION
-DynRankView< D , P... >
-subdynrankview( const DynRankView< D, P... > & src , Arg0 arg0 , Arg1 arg1 , Arg2 arg2 )
-{
-  const unsigned numArgs = 3;
-  std::cout<< " 3 dyn rank rank "<<src.rank()<<std::endl;
-  if ( src.rank() != 3 )
-    { Kokkos::Impl::throw_runtime_exception("Rank is not compatible"); }
-
-  typedef typename Kokkos::Experimental::Impl::EXTENT_ONE_t  EXTENT_ONE_t;
-
-  return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Arg0>(arg0) , variadic_sview_expansion<Arg1>(arg1) , variadic_sview_expansion<Arg2>(arg2) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0)) , numArgs ); 
-}
-
-template< class D, class ... P , class Arg0 , class Arg1 , class Arg2 , class Arg3 >
-KOKKOS_INLINE_FUNCTION
-DynRankView< D , P... >
-subdynrankview( const DynRankView< D, P... > & src , Arg0 arg0 , Arg1 arg1 , Arg2 arg2 , Arg3 arg3 )
-{
-  const unsigned numArgs = 4;
-  std::cout<< " 4 dyn rank rank "<<src.rank()<<std::endl;
-  if ( src.rank() != 4 )
-    { Kokkos::Impl::throw_runtime_exception("Rank is not compatible"); }
-
-  typedef typename Kokkos::Experimental::Impl::EXTENT_ONE_t  EXTENT_ONE_t;
-
-  return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Arg0>(arg0) , variadic_sview_expansion<Arg1>(arg1) , variadic_sview_expansion<Arg2>(arg2) , variadic_sview_expansion<Arg3>(arg3) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0)) , numArgs ); 
-}
-
-template< class D, class ... P , class Arg0 , class Arg1 , class Arg2 , class Arg3 , class Arg4 >
-KOKKOS_INLINE_FUNCTION
-DynRankView< D , P... >
-subdynrankview( const DynRankView< D, P... > & src , Arg0 arg0 , Arg1 arg1 , Arg2 arg2 , Arg3 arg3 , Arg4 arg4 )
-{
-  const unsigned numArgs = 5;
-  std::cout<< " 5 dyn rank rank "<<src.rank()<<std::endl;
-  if ( src.rank() != 5 )
-    { Kokkos::Impl::throw_runtime_exception("Rank is not compatible"); }
-
-  typedef typename Kokkos::Experimental::Impl::EXTENT_ONE_t  EXTENT_ONE_t;
-
-  return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Arg0>(arg0) , variadic_sview_expansion<Arg1>(arg1) , variadic_sview_expansion<Arg2>(arg2) , variadic_sview_expansion<Arg3>(arg3) , variadic_sview_expansion<Arg4>(arg4) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0)) , numArgs ); 
-}
-
-template< class D, class ... P , class Arg0 , class Arg1 , class Arg2 , class Arg3 , class Arg4 , class Arg5 >
-KOKKOS_INLINE_FUNCTION
-DynRankView< D , P... >
-subdynrankview( const DynRankView< D, P... > & src , Arg0 arg0 , Arg1 arg1 , Arg2 arg2 , Arg3 arg3 , Arg4 arg4 , Arg5 arg5 )
-{
-  const unsigned numArgs = 6;
-  std::cout<< " 6 dyn rank rank "<<src.rank()<<std::endl;
-  static_assert( src.rank() == 6 , "Rank is not compatible");
-
-  typedef typename Kokkos::Experimental::Impl::EXTENT_ONE_t  EXTENT_ONE_t;
-
-  return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Arg0>(arg0) , variadic_sview_expansion<Arg1>(arg1) , variadic_sview_expansion<Arg2>(arg2) , variadic_sview_expansion<Arg3>(arg3) , variadic_sview_expansion<Arg4>(arg4) , variadic_sview_expansion<Arg5>(arg5) , EXTENT_ONE_t(0) , EXTENT_ONE_t(0)) , numArgs ); 
-}
-
-template< class D, class ... P , class Arg0 , class Arg1 , class Arg2 , class Arg3 , class Arg4 , class Arg5 , class Arg6 >
-KOKKOS_INLINE_FUNCTION
-DynRankView< D , P... >
-subdynrankview( const DynRankView< D, P... > & src , Arg0 arg0 , Arg1 arg1 , Arg2 arg2 , Arg3 arg3 , Arg4 arg4 , Arg5 arg5 , Arg6 arg6 )
-{
-  const unsigned numArgs = 7;
-  std::cout<< " 7 dyn rank rank "<<src.rank()<<std::endl;
-  if ( src.rank() != 7 )
-    { Kokkos::Impl::throw_runtime_exception("Rank is not compatible"); }
-
-  typedef typename Kokkos::Experimental::Impl::EXTENT_ONE_t  EXTENT_ONE_t;
-
-  return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Arg0>(arg0) , variadic_sview_expansion<Arg1>(arg1) , variadic_sview_expansion<Arg2>(arg2) , variadic_sview_expansion<Arg3>(arg3) , variadic_sview_expansion<Arg4>(arg4) , variadic_sview_expansion<Arg5>(arg5) , variadic_sview_expansion<Arg6>(arg6) , EXTENT_ONE_t(0)) , numArgs ); 
-}
-
-template< class D, class ... P , class Arg0 , class Arg1 , class Arg2 , class Arg3 , class Arg4 , class Arg5 , class Arg6 , class Arg7 >
-KOKKOS_INLINE_FUNCTION
-DynRankView< D , P... >
-subdynrankview( const DynRankView< D, P... > & src , Arg0 arg0 , Arg1 arg1 , Arg2 arg2 , Arg3 arg3 , Arg4 arg4 , Arg5 arg5 , Arg6 arg6 , Arg7 arg7 )
-{
-  const unsigned numArgs = 8;
-  std::cout<< " 8 dyn rank rank "<<src.rank()<<std::endl;
-  if ( src.rank() != 8 )
-    { Kokkos::Impl::throw_runtime_exception("Rank is not compatible"); }
-
-  typedef typename Kokkos::Experimental::Impl::EXTENT_ONE_t  EXTENT_ONE_t;
-
-  return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Arg0>(arg0) , variadic_sview_expansion<Arg1>(arg1) , variadic_sview_expansion<Arg2>(arg2) , variadic_sview_expansion<Arg3>(arg3) , variadic_sview_expansion<Arg4>(arg4) , variadic_sview_expansion<Arg5>(arg5) , variadic_sview_expansion<Arg6>(arg6) , variadic_sview_expansion<Arg7>(arg7)) , numArgs ); 
 }
 
 // ************************************************** //
-#define FIRSTVER 0
-#if FIRSTVER
-template< class D, class ... P , class ... Args >
-KOKKOS_INLINE_FUNCTION
-DynRankView< D , P... > //change the P... to match subview return type
-subview( const DynRankView< D, P... > & src , Args ... args )
-{
-  static const unsigned numArgs = sizeof...(Args);
-
-  typedef typename Kokkos::Experimental::Impl::EXTENT_ONE_t  EXTENT_ONE_t;
-
-// API intended
-#define TESTONE 1
-#if TESTONE
-  std::cout << " numArgs in subview (dr) is " << numArgs <<std::endl;
-
-//may need some sort of 'std::enable_if' functionality, or suggested'expand<I>(args...)' routine
-#if 0
-  if ( numArgs == 7 )
-  { 
-//    static const unsigned totalArgs = sizeof...(Args , EXTENT_ONE_t);
-//    static_assert( totalArgs == 8 , "total concatenated args != 8 ");
-
-    typename Kokkos::Experimental::Impl::ViewMapping<void , Kokkos::Experimental::ViewTraits< D******** , P... > , Args ... , EXTENT_ONE_t >::type 
-  //sview = subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)...  ); 
-    sview = subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)... , EXTENT_ONE_t(0) ); 
-
-//    static_assert( sview.rank == 8 , "subview rank did not return 8...");
-
-      return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)... , EXTENT_ONE_t(0) ) , numArgs );
-  }
-#endif
-
-  if ( numArgs == 8 )
-  { 
-    typename Kokkos::Experimental::Impl::ViewMapping<void , Kokkos::Experimental::ViewTraits< D******** , P... > , Args ...>::type 
-    sview = subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)... );
-//    static_assert( sview.rank == 8 , "subview rank did not return 8...");
-
-      return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)... ) , numArgs ); 
-  }
-
-//     return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)... ) , numArgs ); 
-
-/*
-  if ( numArgs == 0 )
-    { return DynRankView< D , P... >( subview( src.ConstDownCast() , EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0)  ) , numArgs ); }
-
-  else if ( numArgs == 1 )
-    { return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)..., EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0) ) , numArgs ); }
-
-  else if ( numArgs == 2 )
-    { return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)..., EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0) ) , numArgs ); }
-
-  else if ( numArgs == 3 )
-    { return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)..., EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0) ) , numArgs ); }
-
-  else if ( numArgs == 4 )
-    { return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)..., EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0) ) , numArgs ); }
-
-  else if ( numArgs == 5 )
-//    { std::cout << " in numArgs 5 " << std::endl; return DynRankView<D , P... >() ; }
-    { return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)..., EXTENT_ONE_t(0),EXTENT_ONE_t(0),EXTENT_ONE_t(0) ) , numArgs ); }
-
-  else if ( numArgs == 6 )
-    { return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)..., EXTENT_ONE_t(0),EXTENT_ONE_t(0) ) , numArgs ); }
-
-  else if ( numArgs == 7 )
-    { return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)..., EXTENT_ONE_t(0) ) , numArgs ); }
-
-  else if ( numArgs == 8 )
-    { return DynRankView< D , P... >( subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)... ) , numArgs ); }
-*/
-#else 
-// api second attempt - retrieve subview first to interrogate
-  typename Kokkos::Experimental::Impl::ViewMapping<void , Kokkos::Experimental::ViewTraits< D******** , P... > , Args ...>::type 
-  sview = subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)...); 
-  static_assert( sview.rank == 8 , "subview rank did not return 8...");
-  return DynRankView<D,P...>(sview , numArgs);
-#endif
-#undef TESTONE
-
-} //end subview
-#endif //end FIRSTVER
-#undef FIRSTVER
 
 } // namespace Experimental
 } // namespace Kokkos
