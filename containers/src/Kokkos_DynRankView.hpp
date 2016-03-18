@@ -87,6 +87,8 @@ public:
   typedef typename traits::execution_space execution_space;
   typedef typename traits::memory_space memory_space;
 
+  typedef typename traits::size_type size_type;
+
   typedef typename traits::data_type data_type;
   typedef typename traits::const_data_type const_data_type;
   typedef typename traits::non_const_data_type non_const_data_type;
