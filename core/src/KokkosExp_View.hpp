@@ -1083,6 +1083,24 @@ public:
       return m_map.reference(i0,i1,i2,i3,i4,i5,i6,i7);
     }
 
+// For DynRankView...
+  template< typename I0 >
+  KOKKOS_FORCEINLINE_FUNCTION
+  typename std::enable_if<
+    ( Kokkos::Impl::are_integral<I0>::value
+      && ( 8 == Rank )
+      && is_default_map
+      && is_layout_stride
+    ), reference_type >::type
+  operator[]( const I0 & i0 ) const
+    {
+//      KOKKOS_VIEW_OPERATOR_VERIFY( (m_map,i0) )
+      KOKKOS_VIEW_OPERATOR_VERIFY( (m_map,i0,0,0,0,0,0,0,0) )
+
+      return m_map.m_handle[ m_map.m_offset.m_stride.S0 * i0 ];
+    }
+
+
 #undef KOKKOS_VIEW_OPERATOR_VERIFY
 
   //----------------------------------------

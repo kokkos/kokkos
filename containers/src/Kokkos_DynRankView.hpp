@@ -61,6 +61,12 @@ namespace Experimental {
  * \brief Container that creates a Kokkos view with runtime rank. 
  *   Essentially this is a rank 8 view with that wraps the access operators
  *   to yield the functionality of a view with rank that varies. 
+ *
+ *   Changes from View
+ *   1. The rank of the DynRankView is returned by the method rank()
+ *   2. Max rank of a DynRankView is 7
+ *   3. subview name is subdynrankview
+ *   4. Every subdynrankview is returned with LayoutStride
  */
 
 template< typename DataType , class ... Properties >
@@ -72,18 +78,12 @@ public:
   using view_type = View< DataType******** , Properties...>;
   using reference_type = typename view_type::reference_type; 
 
-
   template< class D, class ... P , class ... Args >
   friend
   KOKKOS_INLINE_FUNCTION
   DynRankView< D , P... >
   subview( const DynRankView< D, P... > & src , Args ... args );
 
-  template< class D, class ... P , class ... Args >
-  friend
-  KOKKOS_INLINE_FUNCTION
-  DynRankView< D , P... >
-  dsubview( const DynRankView< D, P... > & src , Args ... args );
 
 private: 
   template < class , class ... > friend class DynRankView ;
@@ -189,48 +189,48 @@ public:
   // Rank 1
   template< typename iType >
   KOKKOS_INLINE_FUNCTION
-  reference_type operator[](const iType i0) const
-    { return view_type::operator[](i0,0,0,0,0,0,0,0); }
+  reference_type operator[](const iType & i0) const
+    { if ( m_rank != 1 )  Kokkos::Impl::throw_runtime_exception("Rank is not compatible");  return view_type::operator[](i0); }
 
   template< typename iType >
   KOKKOS_INLINE_FUNCTION
-  reference_type operator()(const iType i0 ) const 
+  reference_type operator()(const iType & i0 ) const 
     { return view_type::operator()(i0,0,0,0,0,0,0,0); }
 
   // Rank 2
   template< typename iType0 , typename iType1 >
   KOKKOS_INLINE_FUNCTION
-  reference_type operator()(const iType0 i0 , const iType1 i1 ) const 
+  reference_type operator()(const iType0 & i0 , const iType1 & i1 ) const 
     { return view_type::operator()(i0,i1,0,0,0,0,0,0); }
 
   // Rank 3
   template< typename iType0 , typename iType1 , typename iType2 >
   KOKKOS_INLINE_FUNCTION
-  reference_type operator()(const iType0 i0 , const iType1 i1 , const iType2 i2 ) const 
+  reference_type operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 ) const 
     { return view_type::operator()(i0,i1,i2,0,0,0,0,0); }
 
   // Rank 4
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3 >
   KOKKOS_INLINE_FUNCTION
-  reference_type operator()(const iType0 i0 , const iType1 i1 , const iType2 i2 , const iType3 i3 ) const 
+  reference_type operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 ) const 
     { return view_type::operator()(i0,i1,i2,i3,0,0,0,0); }
 
   // Rank 5
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 >
   KOKKOS_INLINE_FUNCTION
-  reference_type operator()(const iType0 i0 , const iType1 i1 , const iType2 i2 , const iType3 i3 , const iType4 i4 ) const 
+  reference_type operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 ) const 
     { return view_type::operator()(i0,i1,i2,i3,i4,0,0,0); }
 
   // Rank 6
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 , typename iType5 >
   KOKKOS_INLINE_FUNCTION
-  reference_type operator()(const iType0 i0 , const iType1 i1 , const iType2 i2 , const iType3 i3 , const iType4 i4 , const iType5 i5 ) const 
+  reference_type operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 ) const 
     { return view_type::operator()(i0,i1,i2,i3,i4,i5,0,0); }
 
   // Rank 7
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 , typename iType5 , typename iType6 >
   KOKKOS_INLINE_FUNCTION
-  reference_type operator()(const iType0 i0 , const iType1 i1 , const iType2 i2 , const iType3 i3 , const iType4 i4 , const iType5 i5 , const iType6 i6 ) const 
+  reference_type operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 , const iType6 & i6 ) const 
     { return view_type::operator()(i0,i1,i2,i3,i4,i5,i6,0); }
 
   // Rank 8
@@ -621,19 +621,19 @@ private:
     , R4 = bool(is_integral_extent<4,Args...>::value)
     , R5 = bool(is_integral_extent<5,Args...>::value)
     , R6 = bool(is_integral_extent<6,Args...>::value)
-    , R7 = bool(is_integral_extent<7,Args...>::value)
+    , R7 = bool(is_integral_extent<7,Args...>::value) //sacado
     };
   //Query additional info
 
   enum { rank = unsigned(R0) + unsigned(R1) + unsigned(R2) + unsigned(R3)
-              + unsigned(R4) + unsigned(R5) + unsigned(R6) + unsigned(R7) }; //dyn rank, with correct use
+              + unsigned(R4) + unsigned(R5) + unsigned(R6) + unsigned(R7) }; //dyn rank, with correct use //sacado
 
   // Subview's layout
   typedef Kokkos::LayoutStride array_layout ;
 
   typedef typename SrcTraits::value_type  value_type ;
 
-  typedef value_type******** data_type ;
+  typedef value_type******** data_type ; //sacado
 
 public:
 
@@ -670,11 +670,11 @@ public:
 
   typedef typename SrcTraits::dimension dimension ;
 
-  template < class Arg0 = int, class Arg1 = int, class Arg2 = int, class Arg3 = int, class Arg4 = int, class Arg5 = int, class Arg6 = int, class Arg7 = int >
+  template < class Arg0 = int, class Arg1 = int, class Arg2 = int, class Arg3 = int, class Arg4 = int, class Arg5 = int, class Arg6 = int, class Arg7 = int > //sacado
   struct ExtentGenerator {
-    static SubviewExtents< 8 , rank > generator ( const dimension & dim , Arg0 arg0 = Arg0(), Arg1 arg1 = Arg1(), Arg2 arg2 = Arg2(), Arg3 arg3 = Arg3(), Arg4 arg4 = Arg4(), Arg5 arg5 = Arg5(), Arg6 arg6 = Arg6(), Arg7 arg7 = Arg7() )
+    static SubviewExtents< 8 , rank > generator ( const dimension & dim , Arg0 arg0 = Arg0(), Arg1 arg1 = Arg1(), Arg2 arg2 = Arg2(), Arg3 arg3 = Arg3(), Arg4 arg4 = Arg4(), Arg5 arg5 = Arg5(), Arg6 arg6 = Arg6(), Arg7 arg7 = Arg7() ) //sacado - remove Arg7, 8 to 7
     {
-       return SubviewExtents< 8 , rank>( dim , arg0 , arg1 , arg2 , arg3 , arg4 , arg5 , arg6 , arg7 );
+       return SubviewExtents< 8 , rank>( dim , arg0 , arg1 , arg2 , arg3 , arg4 , arg5 , arg6 , arg7 ); //sacado "
     }
   };
 
@@ -683,7 +683,7 @@ public:
 
   template < typename T , class ... P >
   KOKKOS_INLINE_FUNCTION
-  static ret_type subview( Kokkos::Experimental::View< T******** , P...> const & src 
+  static ret_type subview( Kokkos::Experimental::View< T******** , P...> const & src  //sacado
                     , Args ... args )
     {
 //      static_assert(
@@ -699,7 +699,7 @@ public:
                                                   , typename std::conditional< (rank==4) , ViewDimension<0,0,0,0>
                                                   , typename std::conditional< (rank==5) , ViewDimension<0,0,0,0,0>
                                                   , typename std::conditional< (rank==6) , ViewDimension<0,0,0,0,0,0>
-                                                  , typename std::conditional< (rank==7) , ViewDimension<0,0,0,0,0,0,0>
+                                                  , typename std::conditional< (rank==7) , ViewDimension<0,0,0,0,0,0,0> //sacado
                                                                                          , ViewDimension<0,0,0,0,0,0,0,0>
                                                   >::type >::type >::type >::type >::type >::type >::type >::type  DstDimType ;
 
@@ -707,9 +707,9 @@ public:
 //      typedef typename DstType::offset_type  dst_offset_type ;
       typedef typename DstType::handle_type  dst_handle_type ;
 
-      Kokkos::Experimental::View< T******** , typename traits_type::array_layout , typename traits_type::device_type , typename traits_type::memory_traits > dst( src ) ;
+      Kokkos::Experimental::View< T******** , typename traits_type::array_layout , typename traits_type::device_type , typename traits_type::memory_traits > dst( src ) ; //sacado
 
-      const SubviewExtents< 8 , rank > extents = 
+      const SubviewExtents< 8 , rank > extents = //sacado change 8 to 7
         ExtentGenerator< Args ... >::generator( src.m_map.m_offset.m_dim , args... ); 
 
 //      const SubviewExtents< 8 , rank >
@@ -724,7 +724,7 @@ public:
       dst.m_map.m_offset.m_dim.N4 = tempdst.m_dim.N4 ;
       dst.m_map.m_offset.m_dim.N5 = tempdst.m_dim.N5 ;
       dst.m_map.m_offset.m_dim.N6 = tempdst.m_dim.N6 ;
-      dst.m_map.m_offset.m_dim.N7 = tempdst.m_dim.N7 ;
+      dst.m_map.m_offset.m_dim.N7 = tempdst.m_dim.N7 ; //sacado
 
       dst.m_map.m_offset.m_stride.S0 = tempdst.m_stride.S0 ;
       dst.m_map.m_offset.m_stride.S1 = tempdst.m_stride.S1 ;
@@ -733,7 +733,7 @@ public:
       dst.m_map.m_offset.m_stride.S4 = tempdst.m_stride.S4 ;
       dst.m_map.m_offset.m_stride.S5 = tempdst.m_stride.S5 ;
       dst.m_map.m_offset.m_stride.S6 = tempdst.m_stride.S6 ;
-      dst.m_map.m_offset.m_stride.S7 = tempdst.m_stride.S7 ;
+      dst.m_map.m_offset.m_stride.S7 = tempdst.m_stride.S7 ; //sacado
 
       dst.m_map.m_handle = dst_handle_type( src.m_map.m_handle +
                                       src.m_map.m_offset( extents.domain_offset(0)
@@ -743,7 +743,7 @@ public:
                                                   , extents.domain_offset(4)
                                                   , extents.domain_offset(5)
                                                   , extents.domain_offset(6)
-                                                  , extents.domain_offset(7)
+                                                  , extents.domain_offset(7) //sacado
                                                   ) );
       return ret_type( dst , rank );
     }
@@ -755,6 +755,7 @@ public:
 //Possible direction:
 // Remove EXTENT_ONE_t
 // Cleanup ViewMapping changes ...
+#if 0
 template < class Traits , class Arg0 = int, class Arg1 = int, class Arg2 = int, class Arg3 = int, class Arg4 = int, class Arg5 = int, class Arg6 = int, class Arg7 = int >
 struct Subdynrankview {
 
@@ -771,16 +772,18 @@ struct Subdynrankview {
     , typename std::conditional<std::is_integral<Arg7>::value, Kokkos::pair<Arg7,Arg7> , Arg7>::type 
     >::type ViewType ;
 
-  //typedef typename Kokkos::Experimental::Impl::ViewMapping < void , Traits , Args... >::type ViewType ;
-//  typedef typename Kokkos::Experimental::Impl::ViewMapping < void , Traits , Arg0 , Arg1 , Arg2 , Arg3 , Arg4 , Arg5 , Arg6 , Arg7 >::type ViewType ;
+  //typedef DynRankView< typename ViewType::value_type , typename ViewType::array_layout , typename ViewType::device_type , typename ViewType::memory_traits >  type; //make array_layout Kokkos::LayoutStride to pass intel/14.0.4 compiler
 
-  typedef DynRankView< typename ViewType::value_type , typename ViewType::array_layout , typename ViewType::device_type , typename ViewType::memory_traits >  type;
+  typedef DynRankView< typename ViewType::value_type , Kokkos::LayoutStride , typename ViewType::device_type , typename ViewType::memory_traits >  type; //make array_layout Kokkos::LayoutStride to pass intel/14.0.4 compiler
+
+
 
 //Pass whole collection of args to a function with a rank number, 
 // scan through list for non-integer entry greater than or equal to rank
 // pass through; if no more remaining non-integer return the pair
 // Would be nice to have something like a stack to add args to, pop them off until non-integer reached
 
+/*
   template< typename T >
   static typename std::enable_if< std::is_integral<T>::value ,Kokkos::pair<T,T> >::type
   KOKKOS_INLINE_FUNCTION
@@ -813,20 +816,27 @@ struct Subdynrankview {
 
     return type( Kokkos::Experimental::subview( InputView , convert(arg0) , convert(arg1) , convert(arg2) , convert(arg3) , convert(arg4) , convert(arg5) , convert(arg6) , convert(arg7) ) , numArgs );
   }
-
+*/
 };
+#endif
 
 
 // Carter's idea
+
+template< class V , class ... Args >
+using Subdynrankview = typename Kokkos::Experimental::Impl::ViewMapping< Kokkos::Experimental::Impl::DynRankSubviewTag , V , Args... >::ret_type ;
+
 template< class D , class ... P , class ...Args >
 KOKKOS_INLINE_FUNCTION
-typename Subdynrankview< Kokkos::Experimental::ViewTraits< D********, P... > , Args... >::type
-subdynrankview( const DynRankView< D , P... > &src , Args...args)
+//typename Subdynrankview< Kokkos::Experimental::ViewTraits< D********, P... > , Args... >::type //original
+//typename Kokkos::Experimental::Impl::ViewMapping< Kokkos::Experimental::Impl::DynRankSubviewTag , Kokkos::Experimental::ViewTraits< D********, P... > , Args... >::ret_type //intel14 fix
+Subdynrankview< ViewTraits<D******** , P...> , Args... > //nicer looking return type //sacado
+subdynrankview( const Kokkos::Experimental::DynRankView< D , P... > &src , Args...args)
 {
   if ( src.rank() != sizeof...(Args) )
     { Kokkos::Impl::throw_runtime_exception("Rank is not compatible"); }
 
-  typedef Impl::ViewMapping< Impl::DynRankSubviewTag , Kokkos::Experimental::ViewTraits< D********, P... > , Args... > metafcn ;
+  typedef Kokkos::Experimental::Impl::ViewMapping< Kokkos::Experimental::Impl::DynRankSubviewTag , Kokkos::Experimental::ViewTraits< D********, P... > , Args... > metafcn ; //sacado
   return metafcn::subview( src.ConstDownCast() , args... );
 
 }

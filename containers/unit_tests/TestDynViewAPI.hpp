@@ -827,7 +827,7 @@ public:
     run_test_const();
     run_test_subview();
     run_test_subview_strided();
-//    run_test_vector();
+    run_test_vector();
 
     TestViewOperator< T , device >::testit();
     TestViewOperator_LeftAndRight< int , device , 8 >::testit(2,3,4,2,3,4,2,3); 
@@ -1155,7 +1155,7 @@ public:
 // LayoutStride may be causing issues with how it is declared...
 
     typedef Kokkos::Experimental::DynRankView< const T , device > sView ;
-    typedef Kokkos::Experimental::DynRankView< T , Kokkos::LayoutStride , device > dView8 ; //this works
+    typedef Kokkos::Experimental::DynRankView< T , Kokkos::LayoutStride , device > sdView ; //this works
 
     dView0 d0( "d0" );
 /*
@@ -1171,7 +1171,7 @@ public:
 */
 
     unsigned order[] = { 6,5,4,3,2,1,0 }, dimen[] = { N0, N1, N2, 2, 2, 2, 2 };
-    dView8 d7( "d7", Kokkos::LayoutStride::order_dimensions(7, order, dimen) );
+    sdView d7( "d7", Kokkos::LayoutStride::order_dimensions(7, order, dimen) );
 /*
     std::cout << " d7 rank " << d7.rank() <<std::endl;
     std::cout << " d7 dim0 "<< d7.dimension_0() <<std::endl;
@@ -1185,7 +1185,7 @@ public:
 */
 
     unsigned order2[] = { 7,6,5,4,3,2,1,0 }, dimen2[] = { N0, N1, N2, 2, 2, 2, 2, 2 };
-    dView8 d8( "d8", Kokkos::LayoutStride::order_dimensions(8, order2, dimen2) );
+    sdView d8( "d8", Kokkos::LayoutStride::order_dimensions(8, order2, dimen2) );
 /*
     std::cout << " d8 rank " << d8.rank() <<std::endl;
     std::cout << " d8 dim0 "<< d8.dimension_0() <<std::endl;
@@ -1199,7 +1199,7 @@ public:
 */
 
     unsigned order3[] = { 4,3,2,1,0 }, dimen3[] = { N0, N1, N2, 2, 2 };
-    dView8 d5( "d5", Kokkos::LayoutStride::order_dimensions(5, order3, dimen3) );
+    sdView d5( "d5", Kokkos::LayoutStride::order_dimensions(5, order3, dimen3) );
 /*
     std::cout << " d5 rank " << d5.rank() <<std::endl;
     std::cout << " d5 dim0 "<< d5.dimension_0() <<std::endl;
@@ -1215,27 +1215,27 @@ public:
     dView0 dtest("dtest" , N0 , N1 , N2 , 2 , 2 , 2 , 2 , 2);
 
     sView s0 = d0 ;
-    dView8 ds0 = Kokkos::Experimental::subdynrankview( d8 , 1,1,1,1,1,1,1,1); //Should be rank0 subview
+    sdView ds0 = Kokkos::Experimental::subdynrankview( d8 , 1,1,1,1,1,1,1,1); //Should be rank0 subview
 
 //Basic test - ALL
-    dView8 ds1 = Kokkos::Experimental::subdynrankview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() ); //compiles and runs
+    sdView ds1 = Kokkos::Experimental::subdynrankview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() ); //compiles and runs
 //  Send a single value for one rank
-    dView8 ds2 = Kokkos::Experimental::subdynrankview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , 1 );
+    sdView ds2 = Kokkos::Experimental::subdynrankview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , 1 );
 //  Send a std::pair as a rank
-    dView8 ds3 = Kokkos::Experimental::subdynrankview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , std::pair<unsigned,unsigned>(1,2) );
+    sdView ds3 = Kokkos::Experimental::subdynrankview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , std::pair<unsigned,unsigned>(1,2) );
 //  Send a kokkos::pair as a rank
     std::cout<<" dt8 rank 8 subview... "<<std::endl; 
-    dView8 dt8 = Kokkos::Experimental::subdynrankview( dtest , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
+    sdView dt8 = Kokkos::Experimental::subdynrankview( dtest , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
 
     std::cout<<" ds8 rank 8 subview... "<<std::endl;
-    dView8 ds8 = Kokkos::Experimental::subdynrankview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
+    sdView ds8 = Kokkos::Experimental::subdynrankview( d8 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
 
 // Breaks...
     std::cout<<" ds7 rank 7 subview... "<<std::endl;
-    dView8 ds7 = Kokkos::Experimental::subdynrankview( d7 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
+    sdView ds7 = Kokkos::Experimental::subdynrankview( d7 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
 
     std::cout<<" ds5 rank 5 subview... "<<std::endl;
-    dView8 ds5 = Kokkos::Experimental::subdynrankview( d5 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
+    sdView ds5 = Kokkos::Experimental::subdynrankview( d5 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
   }
 
   static void run_test_subview_strided()
@@ -1250,14 +1250,15 @@ public:
     drview_stride yl2 = Kokkos::Experimental::subdynrankview( xl2 , 1 , Kokkos::ALL() );
     drview_stride ys1 = Kokkos::Experimental::subdynrankview( xr2 , 0 , Kokkos::ALL() );
     drview_stride ys2 = Kokkos::Experimental::subdynrankview( xr2 , 1 , Kokkos::ALL() );
-//    drview_right yr1 = Kokkos::Experimental::subdynrankview( xr2 , 0 , Kokkos::ALL() ); //errors out
-//    drview_right yr2 = Kokkos::Experimental::subdynrankview( xr2 , 1 , Kokkos::ALL() );
+    drview_stride yr1 = Kokkos::Experimental::subdynrankview( xr2 , 0 , Kokkos::ALL() ); //errors out
+    drview_stride yr2 = Kokkos::Experimental::subdynrankview( xr2 , 1 , Kokkos::ALL() );
 
 // Original subview testing
-    typedef Kokkos::Experimental::View < int[100][200] , Kokkos::LayoutRight , host > view_right_2 ;
+/*
+//    typedef Kokkos::Experimental::View < int[100][200] , Kokkos::LayoutRight , host > view_right_2 ;
     typedef Kokkos::Experimental::View < int[100][200] , Kokkos::LayoutLeft , host > view_left_2 ;
 
-    typedef Kokkos::Experimental::View < int* , host > sview_1 ;
+//    typedef Kokkos::Experimental::View < int* , host > sview_1 ;
     typedef Kokkos::Experimental::View < int* , Kokkos::LayoutStride , host > strview_1 ;
 
     view_left_2 vl2("vl2");
@@ -1269,7 +1270,6 @@ public:
     std::cout << "  stvl1.dim0 " << stvl1.dimension_0() <<std::endl;//should be 200
     std::cout << "  stvl1.dim1 " << stvl1.dimension_1() <<std::endl;//should be 1
 
-/*
     typedef Kokkos::Experimental::View < int[20][5][3] , Kokkos::LayoutRight , host > view_right_3 ;
     typedef Kokkos::Experimental::View < int** , host > view_right_2 ;
 
@@ -1291,7 +1291,7 @@ public:
     std::cout << "\n";
 */
 
-// end subview testing
+// end original subview testing
 
     std::cout << "  xl2.dim0 " << xl2.dimension_0() <<std::endl;
     std::cout << "  xl2.dim1 " << xl2.dimension_1() <<std::endl;
@@ -1305,7 +1305,7 @@ public:
 //    std::cout << "  yr2.dim1 " << yr2.dimension_1() <<std::endl;
     ASSERT_EQ( yl1.dimension_0() , xl2.dimension_1() );
     ASSERT_EQ( yl2.dimension_0() , xl2.dimension_1() );
-/*
+
     ASSERT_EQ( yr1.dimension_0() , xr2.dimension_1() );
     ASSERT_EQ( yr2.dimension_0() , xr2.dimension_1() );
 
@@ -1314,37 +1314,12 @@ public:
     ASSERT_EQ( & yr1(0) - & xr2(0,0) , 0 );
     ASSERT_EQ( & yr2(0) - & xr2(1,0) , 0 );
 
-//old
-    typedef Kokkos::View< int **** , Kokkos::LayoutLeft  , host >  view_left_4 ;
-    typedef Kokkos::View< int **** , Kokkos::LayoutRight , host >  view_right_4 ;
-    typedef Kokkos::View< int **   , Kokkos::LayoutLeft  , host >  view_left_2 ;
-    typedef Kokkos::View< int **   , Kokkos::LayoutRight , host >  view_right_2 ;
 
-    typedef Kokkos::View< int * ,  Kokkos::LayoutStride , host >  view_stride_1 ;
-    typedef Kokkos::View< int ** ,  Kokkos::LayoutStride , host >  view_stride_2 ;
+    drview_left  xl4( "xl4", 10 , 20 , 30 , 40 );
+    drview_right xr4( "xr4", 10 , 20 , 30 , 40 );
 
-    view_left_2  xl2("xl2", 100 , 200 );
-    view_right_2 xr2("xr2", 100 , 200 );
-    view_stride_1  yl1 = Kokkos::subview( xl2 , 0 , Kokkos::ALL() );
-    view_stride_1  yl2 = Kokkos::subview( xl2 , 1 , Kokkos::ALL() );
-    view_stride_1  yr1 = Kokkos::subview( xr2 , 0 , Kokkos::ALL() );
-    view_stride_1  yr2 = Kokkos::subview( xr2 , 1 , Kokkos::ALL() );
-
-    ASSERT_EQ( yl1.dimension_0() , xl2.dimension_1() );
-    ASSERT_EQ( yl2.dimension_0() , xl2.dimension_1() );
-    ASSERT_EQ( yr1.dimension_0() , xr2.dimension_1() );
-    ASSERT_EQ( yr2.dimension_0() , xr2.dimension_1() );
-
-    ASSERT_EQ( & yl1(0) - & xl2(0,0) , 0 );
-    ASSERT_EQ( & yl2(0) - & xl2(1,0) , 0 );
-    ASSERT_EQ( & yr1(0) - & xr2(0,0) , 0 );
-    ASSERT_EQ( & yr2(0) - & xr2(1,0) , 0 );
-
-    view_left_4 xl4( "xl4" , 10 , 20 , 30 , 40 );
-    view_right_4 xr4( "xr4" , 10 , 20 , 30 , 40 );
-
-    view_stride_2 yl4 = Kokkos::subview( xl4 , 1 , Kokkos::ALL() , 2 , Kokkos::ALL() );
-    view_stride_2 yr4 = Kokkos::subview( xr4 , 1 , Kokkos::ALL() , 2 , Kokkos::ALL() );
+    drview_stride yl4 = Kokkos::Experimental::subdynrankview( xl4 , 1 , Kokkos::ALL() , 2 , Kokkos::ALL() );
+    drview_stride yr4 = Kokkos::Experimental::subdynrankview( xr4 , 1 , Kokkos::ALL() , 2 , Kokkos::ALL() );
 
     ASSERT_EQ( yl4.dimension_0() , xl4.dimension_1() );
     ASSERT_EQ( yl4.dimension_1() , xl4.dimension_3() );
@@ -1353,13 +1328,85 @@ public:
 
     ASSERT_EQ( & yl4(4,4) - & xl4(1,4,2,4) , 0 );
     ASSERT_EQ( & yr4(4,4) - & xr4(1,4,2,4) , 0 );
-*/
+
   }
 
-/*
   static void run_test_vector()
   {
     static const unsigned Length = 1000 , Count = 8 ;
+
+    typedef typename Kokkos::Experimental::DynRankView< T , Kokkos::LayoutLeft , host > vector_type ; //rank 1
+    typedef typename Kokkos::Experimental::DynRankView< T , Kokkos::LayoutLeft , host > multivector_type ; //rank 2
+
+    typedef typename Kokkos::Experimental::DynRankView< T , Kokkos::LayoutRight , host > vector_right_type ; //rank 1
+    typedef typename Kokkos::Experimental::DynRankView< T , Kokkos::LayoutRight , host > multivector_right_type ; //rank 2
+
+    typedef typename Kokkos::Experimental::DynRankView< const T , Kokkos::LayoutRight , host > const_vector_right_type ; //rank 1
+    typedef typename Kokkos::Experimental::DynRankView< const T , Kokkos::LayoutLeft , host > const_vector_type ; //rank 1
+    typedef typename Kokkos::Experimental::DynRankView< const T , Kokkos::LayoutLeft , host > const_multivector_type ; //rank 2
+
+    multivector_type mv = multivector_type( "mv" , Length , Count );
+    multivector_right_type mv_right = multivector_right_type( "mv" , Length , Count );
+
+    typedef typename Kokkos::Experimental::DynRankView< T , Kokkos::LayoutStride , host > svector_type ;
+    typedef typename Kokkos::Experimental::DynRankView< T , Kokkos::LayoutStride , host > smultivector_type ;
+    typedef typename Kokkos::Experimental::DynRankView< const T , Kokkos::LayoutStride , host > const_svector_right_type ;
+    typedef typename Kokkos::Experimental::DynRankView< const T , Kokkos::LayoutStride , host > const_svector_type ;
+
+    svector_type v1 = Kokkos::Experimental::subdynrankview( mv , Kokkos::ALL() , 0 );
+    svector_type v2 = Kokkos::Experimental::subdynrankview( mv , Kokkos::ALL() , 1 );
+    svector_type v3 = Kokkos::Experimental::subdynrankview( mv , Kokkos::ALL() , 2 );
+
+    svector_type rv1 = Kokkos::Experimental::subdynrankview( mv_right , 0 , Kokkos::ALL() );
+    svector_type rv2 = Kokkos::Experimental::subdynrankview( mv_right , 1 , Kokkos::ALL() );
+    svector_type rv3 = Kokkos::Experimental::subdynrankview( mv_right , 2 , Kokkos::ALL() );
+
+    smultivector_type mv1 = Kokkos::Experimental::subdynrankview( mv , std::make_pair( 1 , 998 ) ,
+                                                 std::make_pair( 2 , 5 ) );
+
+    smultivector_type mvr1 =
+      Kokkos::Experimental::subdynrankview( mv_right ,
+                       std::make_pair( 1 , 998 ) ,
+                       std::make_pair( 2 , 5 ) );
+
+    const_svector_type cv1 = Kokkos::Experimental::subdynrankview( mv , Kokkos::ALL(), 0 );
+    const_svector_type cv2 = Kokkos::Experimental::subdynrankview( mv , Kokkos::ALL(), 1 );
+    const_svector_type cv3 = Kokkos::Experimental::subdynrankview( mv , Kokkos::ALL(), 2 );
+
+    svector_type vr1 = Kokkos::Experimental::subdynrankview( mv , Kokkos::ALL() , 0 );
+    svector_type vr2 = Kokkos::Experimental::subdynrankview( mv , Kokkos::ALL() , 1 );
+    svector_type vr3 = Kokkos::Experimental::subdynrankview( mv , Kokkos::ALL() , 2 );
+
+    const_svector_right_type cvr1 = Kokkos::Experimental::subdynrankview( mv , Kokkos::ALL() , 0 );
+    const_svector_right_type cvr2 = Kokkos::Experimental::subdynrankview( mv , Kokkos::ALL() , 1 );
+    const_svector_right_type cvr3 = Kokkos::Experimental::subdynrankview( mv , Kokkos::ALL() , 2 );
+
+
+    ASSERT_TRUE( & v1[0] == & v1(0) );
+    ASSERT_TRUE( & v1[0] == & mv(0,0) );
+    ASSERT_TRUE( & v2[0] == & mv(0,1) );
+    ASSERT_TRUE( & v3[0] == & mv(0,2) );
+
+    ASSERT_TRUE( & cv1[0] == & mv(0,0) );
+    ASSERT_TRUE( & cv2[0] == & mv(0,1) );
+    ASSERT_TRUE( & cv3[0] == & mv(0,2) );
+
+    ASSERT_TRUE( & vr1[0] == & mv(0,0) );
+    ASSERT_TRUE( & vr2[0] == & mv(0,1) );
+    ASSERT_TRUE( & vr3[0] == & mv(0,2) );
+
+    ASSERT_TRUE( & cvr1[0] == & mv(0,0) );
+    ASSERT_TRUE( & cvr2[0] == & mv(0,1) );
+    ASSERT_TRUE( & cvr3[0] == & mv(0,2) );
+
+
+    ASSERT_TRUE( & mv1(0,0) == & mv( 1 , 2 ) );
+    ASSERT_TRUE( & mv1(1,1) == & mv( 2 , 3 ) );
+    ASSERT_TRUE( & mv1(3,2) == & mv( 4 , 4 ) );
+    ASSERT_TRUE( & mvr1(0,0) == & mv_right( 1 , 2 ) );
+    ASSERT_TRUE( & mvr1(1,1) == & mv_right( 2 , 3 ) );
+    ASSERT_TRUE( & mvr1(3,2) == & mv_right( 4 , 4 ) );
+/*
 
     typedef Kokkos::View< T* ,  Kokkos::LayoutLeft , host > vector_type ;
     typedef Kokkos::View< T** , Kokkos::LayoutLeft , host > multivector_type ;
@@ -1433,8 +1480,8 @@ public:
     const_multivector_type cmv( mv );
     typename multivector_type::const_type cmvX( cmv );
     typename const_multivector_type::const_type ccmvX( cmv );
-  }
 */
+  }
 };
 
 } // namespace Test
