@@ -1221,14 +1221,7 @@ public:
       const SubviewExtents< DimRHS::rank , dimension_type::rank > & sub )
     : m_dim( sub.range_extent(0)
            , sub.range_extent(1)
-           , sub.range_extent(2)
-           , sub.range_extent(3)
-           , sub.range_extent(4)
-           , sub.range_extent(5)
-           , sub.range_extent(6)
-           , sub.range_extent(7)
-           )
-//           , 0, 0, 0, 0, 0, 0 )
+           , 0, 0, 0, 0, 0, 0 )
     , m_stride( ( 1 == sub.range_index(1) ? rhs.stride_1() :
                 ( 2 == sub.range_index(1) ? rhs.stride_2() :
                 ( 3 == sub.range_index(1) ? rhs.stride_3() :
@@ -1707,14 +1700,7 @@ public:
     )
     : m_dim( sub.range_extent(0)
            , sub.range_extent(1)
-           , sub.range_extent(2)
-           , sub.range_extent(3)
-           , sub.range_extent(4)
-           , sub.range_extent(5)
-           , sub.range_extent(6)
-           , sub.range_extent(7)
-           )
-//           , 0, 0, 0, 0, 0, 0 ) //should be unnecessary with correct guards in subview ViewMapping and static_assert below
+           , 0, 0, 0, 0, 0, 0 ) 
     , m_stride( 0 == sub.range_index(0) ? rhs.stride_0() : (
                 1 == sub.range_index(0) ? rhs.stride_1() : (
                 2 == sub.range_index(0) ? rhs.stride_2() : (
@@ -1740,6 +1726,20 @@ public:
 
 template< unsigned Rank >
 struct ViewStride ;
+
+template<>
+struct ViewStride<0> {
+  enum { S0 = 0 , S1 = 0 , S2 = 0 , S3 = 0 , S4 = 0 , S5 = 0 , S6 = 0 , S7 = 0 };
+
+  ViewStride() = default ;
+  ViewStride( const ViewStride & ) = default ;
+  ViewStride & operator = ( const ViewStride & ) = default ;
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr ViewStride( size_t , size_t , size_t , size_t
+                      , size_t , size_t , size_t , size_t )
+    {}
+};
 
 template<>
 struct ViewStride<1> {
@@ -1874,7 +1874,8 @@ struct ViewStride<8> {
 
 template < class Dimension >
 struct ViewOffset< Dimension , Kokkos::LayoutStride
-                 , typename std::enable_if<( 0 < Dimension::rank )>::type >
+                 , void >
+//                 , typename std::enable_if<( 0 < Dimension::rank )>::type >
 {
 private:
   typedef ViewStride< Dimension::rank >  stride_type ;

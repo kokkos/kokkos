@@ -580,6 +580,178 @@ variadic_sview_expansion( const T & i )
 */
 
 
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+// Subview mapping.
+// Deduce destination view type from source view traits and subview arguments
+
+namespace Impl {
+
+struct DynRankSubviewTag {};
+
+template< class SrcTraits , class ... Args >
+struct ViewMapping
+  < typename std::enable_if<(
+      std::is_same< typename SrcTraits::specialize , void >::value
+      &&
+      (
+        std::is_same< typename SrcTraits::array_layout
+                    , Kokkos::LayoutLeft >::value ||
+        std::is_same< typename SrcTraits::array_layout
+                    , Kokkos::LayoutRight >::value ||
+        std::is_same< typename SrcTraits::array_layout
+                    , Kokkos::LayoutStride >::value
+      ) 
+    ), DynRankSubviewTag >::type
+  , SrcTraits
+  , Args ... >
+{
+private:
+
+//  static_assert( SrcTraits::rank == sizeof...(Args) ,
+//    "Subview mapping requires one argument for each dimension of source View" );
+
+  enum
+    { RZ = false
+    , R0 = bool(is_integral_extent<0,Args...>::value)
+    , R1 = bool(is_integral_extent<1,Args...>::value)
+    , R2 = bool(is_integral_extent<2,Args...>::value)
+    , R3 = bool(is_integral_extent<3,Args...>::value)
+    , R4 = bool(is_integral_extent<4,Args...>::value)
+    , R5 = bool(is_integral_extent<5,Args...>::value)
+    , R6 = bool(is_integral_extent<6,Args...>::value)
+    , R7 = bool(is_integral_extent<7,Args...>::value)
+    };
+  //Query additional info
+
+  enum { rank = unsigned(R0) + unsigned(R1) + unsigned(R2) + unsigned(R3)
+              + unsigned(R4) + unsigned(R5) + unsigned(R6) + unsigned(R7) }; //dyn rank, with correct use
+
+  // Subview's layout
+  typedef Kokkos::LayoutStride array_layout ;
+
+  typedef typename SrcTraits::value_type  value_type ;
+
+  typedef value_type******** data_type ;
+
+public:
+
+  typedef Kokkos::Experimental::ViewTraits
+    < data_type
+    , array_layout 
+    , typename SrcTraits::device_type
+    , typename SrcTraits::memory_traits > traits_type ;
+
+  typedef Kokkos::Experimental::View
+    < data_type
+    , array_layout 
+    , typename SrcTraits::device_type
+    , typename SrcTraits::memory_traits > type ;
+
+  template< class MemoryTraits >
+  struct apply {
+
+    static_assert( Kokkos::Impl::is_memory_traits< MemoryTraits >::value , "" );
+
+    typedef Kokkos::Experimental::ViewTraits
+      < data_type 
+      , array_layout
+      , typename SrcTraits::device_type
+      , MemoryTraits > traits_type ;
+
+    typedef Kokkos::Experimental::View
+      < data_type 
+      , array_layout
+      , typename SrcTraits::device_type
+      , MemoryTraits > type ;
+  };
+
+
+  typedef typename SrcTraits::dimension dimension ;
+
+  template < class Arg0 = int, class Arg1 = int, class Arg2 = int, class Arg3 = int, class Arg4 = int, class Arg5 = int, class Arg6 = int, class Arg7 = int >
+  struct ExtentGenerator {
+    static SubviewExtents< 8 , rank > generator ( const dimension & dim , Arg0 arg0 = Arg0(), Arg1 arg1 = Arg1(), Arg2 arg2 = Arg2(), Arg3 arg3 = Arg3(), Arg4 arg4 = Arg4(), Arg5 arg5 = Arg5(), Arg6 arg6 = Arg6(), Arg7 arg7 = Arg7() )
+    {
+       return SubviewExtents< 8 , rank>( dim , arg0 , arg1 , arg2 , arg3 , arg4 , arg5 , arg6 , arg7 );
+    }
+  };
+
+
+  typedef DynRankView< value_type , array_layout , typename SrcTraits::device_type , typename SrcTraits::memory_traits >  ret_type;
+
+  template < typename T , class ... P >
+  KOKKOS_INLINE_FUNCTION
+  static ret_type subview( Kokkos::Experimental::View< T******** , P...> const & src 
+                    , Args ... args )
+    {
+//      static_assert(
+//        ViewMapping< DstTraits , traits_type , void >::is_assignable ,
+//        "Subview destination type must be compatible with subview derived type" );
+
+      typedef ViewMapping< traits_type, void >  DstType ;
+
+     typedef typename std::conditional< (rank==0) , ViewDimension<>
+                                                  , typename std::conditional< (rank==1) , ViewDimension<0>
+                                                  , typename std::conditional< (rank==2) , ViewDimension<0,0>
+                                                  , typename std::conditional< (rank==3) , ViewDimension<0,0,0>
+                                                  , typename std::conditional< (rank==4) , ViewDimension<0,0,0,0>
+                                                  , typename std::conditional< (rank==5) , ViewDimension<0,0,0,0,0>
+                                                  , typename std::conditional< (rank==6) , ViewDimension<0,0,0,0,0,0>
+                                                  , typename std::conditional< (rank==7) , ViewDimension<0,0,0,0,0,0,0>
+                                                                                         , ViewDimension<0,0,0,0,0,0,0,0>
+                                                  >::type >::type >::type >::type >::type >::type >::type >::type  DstDimType ;
+
+      typedef ViewOffset< DstDimType , Kokkos::LayoutStride > dst_offset_type ;
+//      typedef typename DstType::offset_type  dst_offset_type ;
+      typedef typename DstType::handle_type  dst_handle_type ;
+
+      Kokkos::Experimental::View< T******** , typename traits_type::array_layout , typename traits_type::device_type , typename traits_type::memory_traits > dst( src ) ;
+
+      const SubviewExtents< 8 , rank > extents = 
+        ExtentGenerator< Args ... >::generator( src.m_map.m_offset.m_dim , args... ); 
+
+//      const SubviewExtents< 8 , rank >
+//        extents( src.m_offset.m_dim , args... );
+
+      dst_offset_type tempdst( src.m_map.m_offset , extents );
+
+      dst.m_map.m_offset.m_dim.N0 = tempdst.m_dim.N0 ;
+      dst.m_map.m_offset.m_dim.N1 = tempdst.m_dim.N1 ;
+      dst.m_map.m_offset.m_dim.N2 = tempdst.m_dim.N2 ;
+      dst.m_map.m_offset.m_dim.N3 = tempdst.m_dim.N3 ;
+      dst.m_map.m_offset.m_dim.N4 = tempdst.m_dim.N4 ;
+      dst.m_map.m_offset.m_dim.N5 = tempdst.m_dim.N5 ;
+      dst.m_map.m_offset.m_dim.N6 = tempdst.m_dim.N6 ;
+      dst.m_map.m_offset.m_dim.N7 = tempdst.m_dim.N7 ;
+
+      dst.m_map.m_offset.m_stride.S0 = tempdst.m_stride.S0 ;
+      dst.m_map.m_offset.m_stride.S1 = tempdst.m_stride.S1 ;
+      dst.m_map.m_offset.m_stride.S2 = tempdst.m_stride.S2 ;
+      dst.m_map.m_offset.m_stride.S3 = tempdst.m_stride.S3 ;
+      dst.m_map.m_offset.m_stride.S4 = tempdst.m_stride.S4 ;
+      dst.m_map.m_offset.m_stride.S5 = tempdst.m_stride.S5 ;
+      dst.m_map.m_offset.m_stride.S6 = tempdst.m_stride.S6 ;
+      dst.m_map.m_offset.m_stride.S7 = tempdst.m_stride.S7 ;
+
+      dst.m_map.m_handle = dst_handle_type( src.m_map.m_handle +
+                                      src.m_map.m_offset( extents.domain_offset(0)
+                                                  , extents.domain_offset(1)
+                                                  , extents.domain_offset(2)
+                                                  , extents.domain_offset(3)
+                                                  , extents.domain_offset(4)
+                                                  , extents.domain_offset(5)
+                                                  , extents.domain_offset(6)
+                                                  , extents.domain_offset(7)
+                                                  ) );
+      return ret_type( dst , rank );
+    }
+};
+} //close Impl
+
+
+
 //Possible direction:
 // Remove EXTENT_ONE_t
 // Cleanup ViewMapping changes ...
@@ -654,10 +826,8 @@ subdynrankview( const DynRankView< D , P... > &src , Args...args)
   if ( src.rank() != sizeof...(Args) )
     { Kokkos::Impl::throw_runtime_exception("Rank is not compatible"); }
 
-typedef Subdynrankview< Kokkos::Experimental::ViewTraits< D********, P... > , Args... > metafcn;
-return 
-//typename metafcn::subview( src.ConstDownCast() , variadic_sview_expansion<Args>(args)... );
-metafcn::subview( src.ConstDownCast() , args... );
+  typedef Impl::ViewMapping< Impl::DynRankSubviewTag , Kokkos::Experimental::ViewTraits< D********, P... > , Args... > metafcn ;
+  return metafcn::subview( src.ConstDownCast() , args... );
 
 }
 
