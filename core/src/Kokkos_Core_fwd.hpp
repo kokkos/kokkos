@@ -51,6 +51,11 @@
 #include <Kokkos_Macros.hpp>
 
 //----------------------------------------------------------------------------
+// Have assumed a 64bit build (8byte pointers) throughout the code base.
+
+static_assert( sizeof(void*) == 8
+             , "Kokkos assumes 64-bit build; i.e., 8-byte pointers" );
+
 //----------------------------------------------------------------------------
 
 namespace Kokkos {

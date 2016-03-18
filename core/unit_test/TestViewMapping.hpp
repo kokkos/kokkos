@@ -57,7 +57,6 @@ template< class Space >
 void test_view_mapping()
 {
   typedef typename Space::execution_space ExecSpace ;
-  typedef typename Space::memory_space    MemSpace ;
 
   typedef Kokkos::Experimental::Impl::ViewDimension<>  dim_0 ;
   typedef Kokkos::Experimental::Impl::ViewDimension<2> dim_s2 ;
@@ -1050,7 +1049,6 @@ template< class Space >
 void test_view_mapping_subview()
 {
   typedef typename Space::execution_space ExecSpace ;
-  typedef typename Space::memory_space    MemSpace ;
 
   TestViewMappingSubview< ExecSpace >::run();
 }
@@ -1180,7 +1178,6 @@ template< class Space >
 void test_view_mapping_operator()
 {
   typedef typename Space::execution_space ExecSpace ;
-  typedef typename Space::memory_space    MemSpace ;
 
   TestViewMapOperator< Kokkos::Experimental::View<int,Kokkos::LayoutLeft,ExecSpace> >::run();
   TestViewMapOperator< Kokkos::Experimental::View<int*,Kokkos::LayoutLeft,ExecSpace> >::run();
