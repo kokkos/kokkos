@@ -1839,6 +1839,171 @@ void deep_copy
 namespace Kokkos {
 namespace Experimental {
 
+/** \brief  Deep copy a value from Host memory into a view.  */
+template< class ExecSpace ,class DT , class ... DP >
+inline
+void deep_copy
+  ( const ExecSpace &
+  , const View<DT,DP...> & dst
+  , typename ViewTraits<DT,DP...>::const_value_type & value
+  , typename std::enable_if<
+    Kokkos::Impl::is_execution_space< ExecSpace >::value &&
+    std::is_same< typename ViewTraits<DT,DP...>::specialize , void >::value
+    >::type * = 0 )
+{
+  static_assert(
+    std::is_same< typename ViewTraits<DT,DP...>::non_const_value_type ,
+                  typename ViewTraits<DT,DP...>::value_type >::value
+    , "deep_copy requires non-const type" );
+
+  Kokkos::Experimental::Impl::ViewFill< View<DT,DP...> >( dst , value );
+}
+
+/** \brief  Deep copy into a value in Host memory from a view.  */
+template< class ExecSpace , class ST , class ... SP >
+inline
+void deep_copy
+  ( const ExecSpace & exec_space
+  , typename ViewTraits<ST,SP...>::non_const_value_type & dst
+  , const View<ST,SP...> & src
+  , typename std::enable_if<
+    Kokkos::Impl::is_execution_space< ExecSpace >::value &&
+    std::is_same< typename ViewTraits<ST,SP...>::specialize , void >::value
+    >::type * = 0 )
+{
+  static_assert( ViewTraits<ST,SP...>::rank == 0 
+               , "ERROR: Non-rank-zero view in deep_copy( value , View )" );
+
+  typedef ViewTraits<ST,SP...>               src_traits ;
+  typedef typename src_traits::memory_space  src_memory_space ;
+  Kokkos::Impl::DeepCopy< HostSpace , src_memory_space , ExecSpace >
+    ( exec_space , & dst , src.data() , sizeof(ST) );
+}
+
+//----------------------------------------------------------------------------
+/** \brief  A deep copy between views of compatible type, and rank zero.  */
+template< class ExecSpace , class DT , class ... DP , class ST , class ... SP >
+inline
+void deep_copy
+  ( const ExecSpace & exec_space
+  , const View<DT,DP...> & dst
+  , const View<ST,SP...> & src
+  , typename std::enable_if<(
+    Kokkos::Impl::is_execution_space< ExecSpace >::value &&
+    std::is_same< typename ViewTraits<DT,DP...>::specialize , void >::value &&
+    std::is_same< typename ViewTraits<ST,SP...>::specialize , void >::value &&
+    ( unsigned(ViewTraits<DT,DP...>::rank) == unsigned(0) &&
+      unsigned(ViewTraits<ST,SP...>::rank) == unsigned(0) )
+  )>::type * = 0 )
+{
+  static_assert(
+    std::is_same< typename ViewTraits<DT,DP...>::value_type ,
+                  typename ViewTraits<ST,SP...>::non_const_value_type >::value
+    , "deep_copy requires matching non-const destination type" );
+
+  typedef View<DT,DP...>  dst_type ;
+  typedef View<ST,SP...>  src_type ;
+
+  typedef typename dst_type::value_type    value_type ;
+  typedef typename dst_type::memory_space  dst_memory_space ;
+  typedef typename src_type::memory_space  src_memory_space ;
+
+  if ( dst.data() != src.data() ) {
+    Kokkos::Impl::DeepCopy< dst_memory_space , src_memory_space , ExecSpace >
+      ( exec_space , dst.data() , src.data() , sizeof(value_type) );
+  }
+}
+
+//----------------------------------------------------------------------------
+/** \brief  A deep copy between views of the default specialization, compatible type,
+ *          same non-zero rank, same contiguous layout.
+ */
+template< class ExecSpace &, class DT, class ... DP, class ST, class ... SP >
+inline
+void deep_copy
+  ( const ExecSpace & exec_space
+  , const View<DT,DP...> & dst
+  , const View<ST,SP...> & src
+  , typename std::enable_if<(
+    Kokkos::Impl::is_execution_space< ExecSpace >::value &&
+    std::is_same< typename ViewTraits<DT,DP...>::specialize , void >::value &&
+    std::is_same< typename ViewTraits<ST,SP...>::specialize , void >::value &&
+    ( unsigned(ViewTraits<DT,DP...>::rank) != 0 ||
+      unsigned(ViewTraits<ST,SP...>::rank) != 0 )
+  )>::type * = 0 )
+{
+  static_assert(
+    std::is_same< typename ViewTraits<DT,DP...>::value_type ,
+                  typename ViewTraits<DT,DP...>::non_const_value_type >::value
+    , "deep_copy requires non-const destination type" );
+
+  static_assert(
+    ( unsigned(ViewTraits<DT,DP...>::rank) ==
+      unsigned(ViewTraits<ST,SP...>::rank) )
+    , "deep_copy requires Views of equal rank" );
+
+  typedef View<DT,DP...>  dst_type ;
+  typedef View<ST,SP...>  src_type ;
+
+  typedef typename dst_type::execution_space  dst_execution_space ;
+  typedef typename dst_type::memory_space     dst_memory_space ;
+  typedef typename src_type::memory_space     src_memory_space ;
+
+  enum { DstExecCanAccessSrc =
+   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename dst_execution_space::memory_space , src_memory_space >::value };
+
+  if ( (void *) dst.data() != (void*) src.data() ) {
+
+    // Concern: If overlapping views then a parallel copy will be erroneous.
+    // ...
+
+    // If same type, equal layout, equal dimensions, equal span, and contiguous memory then can byte-wise copy
+
+    if ( std::is_same< typename ViewTraits<DT,DP...>::value_type ,
+                       typename ViewTraits<ST,SP...>::non_const_value_type >::value &&
+         (
+           std::is_same< typename ViewTraits<DT,DP...>::array_layout ,
+                         typename ViewTraits<ST,SP...>::array_layout >::value
+           ||
+           ( ViewTraits<DT,DP...>::rank == 1 &&
+             ViewTraits<ST,SP...>::rank == 1 )
+         ) &&
+         dst.span_is_contiguous() &&
+         src.span_is_contiguous() &&
+         dst.span() == src.span() &&
+         dst.dimension_0() == src.dimension_0() &&
+         dst.dimension_1() == src.dimension_1() &&
+         dst.dimension_2() == src.dimension_2() &&
+         dst.dimension_3() == src.dimension_3() &&
+         dst.dimension_4() == src.dimension_4() &&
+         dst.dimension_5() == src.dimension_5() &&
+         dst.dimension_6() == src.dimension_6() &&
+         dst.dimension_7() == src.dimension_7() ) {
+
+      const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
+
+      Kokkos::Impl::DeepCopy< dst_memory_space , src_memory_space , ExecSpace >
+        ( exec_space , dst.data() , src.data() , nbytes );
+    }
+    else if ( DstExecCanAccessSrc ) {
+      // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
+      Kokkos::Experimental::Impl::ViewRemap< dst_type , src_type >( dst , src );
+    }
+    else {
+      Kokkos::Impl::throw_runtime_exception("deep_copy given views that would require a temporary allocation");
+    }
+  }
+}
+
+} /* namespace Experimental */
+} /* namespace Kokkos */
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+namespace Experimental {
+
 template< class T , class ... P >
 inline
 typename Kokkos::Experimental::View<T,P...>::HostMirror
