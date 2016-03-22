@@ -174,6 +174,7 @@ public:
 
 private: 
   template < class , class ... > friend class DynRankView ;
+  template< class , class ... > friend class Impl::ViewMapping ;
   unsigned m_rank;
 
 public:
@@ -276,15 +277,7 @@ public:
   template< typename iType >
   KOKKOS_INLINE_FUNCTION
   reference_type operator[](const iType & i0) const
-    { 
-#if !defined(KOKKOS_HAVE_CUDA)
-      if ( m_rank != 1 ) { Kokkos::Impl::throw_runtime_exception("Rank is not compatible"); }
-#endif
-#if defined(KOKKOS_HAVE_CUDA)
-      if ( m_rank != 1 ) { Kokkos::abort("Rank is not compatible"); }
-#endif
-      return view_type::operator[](i0); 
-    }
+    { return view_type::operator()(i0,0,0,0,0,0,0); }
 
   template< typename iType >
   KOKKOS_INLINE_FUNCTION
@@ -327,7 +320,6 @@ public:
   reference_type operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 , const iType6 & i6 ) const 
     { return view_type::operator()(i0,i1,i2,i3,i4,i5,i6); }
 
-
   //----------------------------------------
   // Standard constructor, destructor, and assignment operators... 
 
@@ -365,17 +357,6 @@ public:
     m_rank = rhs.rank();
     return *this;
   }
-
-  //----------------------------------------
-  // Compatible subview constructor
-  // may assign unmanaged from managed.
-  //Subview version of constructor accepting a rank 7 view
-  template< class RT , class ... RP >
-  KOKKOS_INLINE_FUNCTION
-  DynRankView( const Kokkos::Experimental::View<RT*******,RP...> & rhs , unsigned RankVal )
-    : view_type( rhs ) 
-    , m_rank(RankVal)
-    {}
 
   //----------------------------------------
   // Allocation tracking properties
@@ -613,9 +594,8 @@ private:
     };
 
   enum { rank = unsigned(R0) + unsigned(R1) + unsigned(R2) + unsigned(R3)
-              + unsigned(R4) + unsigned(R5) + unsigned(R6) }; //dyn rank, with correct use 
+              + unsigned(R4) + unsigned(R5) + unsigned(R6) };
 
-  // Subview's layout
   typedef Kokkos::LayoutStride array_layout ;
 
   typedef typename SrcTraits::value_type  value_type ;
@@ -653,7 +633,7 @@ public:
       , array_layout
       , typename SrcTraits::device_type
       , MemoryTraits > type ;
-  }; //unnecessary function...
+  }; 
 
 
   typedef typename SrcTraits::dimension dimension ;
@@ -691,12 +671,14 @@ public:
       typedef ViewOffset< DstDimType , Kokkos::LayoutStride > dst_offset_type ;
       typedef typename DstType::handle_type  dst_handle_type ;
 
-      Kokkos::Experimental::View< T******* , typename traits_type::array_layout , typename traits_type::device_type , typename traits_type::memory_traits > dst( src ) ;
+      ret_type dst ;
 
       const SubviewExtents< 7 , rank > extents = 
-        ExtentGenerator< Args ... >::generator( src.m_map.m_offset.m_dim , args... ); 
+        ExtentGenerator< Args ... >::generator( src.m_map.m_offset.m_dim , args... ) ; 
 
-      dst_offset_type tempdst( src.m_map.m_offset , extents );
+      dst_offset_type tempdst( src.m_map.m_offset , extents ) ;
+
+      dst.m_track = src.m_track ;
 
       dst.m_map.m_offset.m_dim.N0 = tempdst.m_dim.N0 ;
       dst.m_map.m_offset.m_dim.N1 = tempdst.m_dim.N1 ;
@@ -723,7 +705,9 @@ public:
                                                   , extents.domain_offset(5)
                                                   , extents.domain_offset(6)
                                                   ) );
-      return ret_type( dst , rank );
+      dst.m_rank = rank ;
+
+      return dst ;
     }
 };
 
@@ -735,20 +719,11 @@ using Subdynrankview = typename Kokkos::Experimental::Impl::ViewMapping< Kokkos:
 
 template< class D , class ... P , class ...Args >
 KOKKOS_INLINE_FUNCTION
-  //typename Kokkos::Experimental::Impl::ViewMapping< Kokkos::Experimental::Impl::DynRankSubviewTag , Kokkos::Experimental::ViewTraits< D*******, P... > , Args... >::ret_type //intel14 fix
-Subdynrankview< ViewTraits<D******* , P...> , Args... > //nicer looking return type
+Subdynrankview< ViewTraits<D******* , P...> , Args... > 
 subdynrankview( const Kokkos::Experimental::DynRankView< D , P... > &src , Args...args)
   {
-//#if !defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA )
-#if !defined(KOKKOS_HAVE_CUDA)
     if ( src.rank() != sizeof...(Args) )
-      { Kokkos::Impl::throw_runtime_exception("Rank is not compatible"); }
-#endif
-//#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA )
-#if defined(KOKKOS_HAVE_CUDA)
-    if ( src.rank() != sizeof...(Args) )
-      { Kokkos::abort("Rank is not compatible"); }
-#endif
+      { Kokkos::abort("subdynrankview: ranks are not compatible"); }
   
     typedef Kokkos::Experimental::Impl::ViewMapping< Kokkos::Experimental::Impl::DynRankSubviewTag , Kokkos::Experimental::ViewTraits< D*******, P... > , Args... > metafcn ;
 

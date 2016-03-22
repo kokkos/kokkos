@@ -286,10 +286,6 @@ struct is_integral_extent
           >::type >::type >::type type ;
 
   enum { value = is_integral_extent_type<type>::value };
-// is_all?
-// is_integer?
-// is_less_all?
-// is_void?
 
   static_assert( value ||
                  std::is_integral<type>::value ||
@@ -1723,6 +1719,7 @@ public:
 
 //----------------------------------------------------------------------------
 /* Strided array layout only makes sense for 0 < rank */
+/* rank = 0 included for DynRankView case */
 
 template< unsigned Rank >
 struct ViewStride ;
@@ -1875,7 +1872,6 @@ struct ViewStride<8> {
 template < class Dimension >
 struct ViewOffset< Dimension , Kokkos::LayoutStride
                  , void >
-//                 , typename std::enable_if<( 0 < Dimension::rank )>::type >
 {
 private:
   typedef ViewStride< Dimension::rank >  stride_type ;
@@ -2711,7 +2707,6 @@ private:
     , R6 = bool(is_integral_extent<6,Args...>::value)
     , R7 = bool(is_integral_extent<7,Args...>::value)
     };
-  //Query additional info
 
   enum { rank = unsigned(R0) + unsigned(R1) + unsigned(R2) + unsigned(R3)
               + unsigned(R4) + unsigned(R5) + unsigned(R6) + unsigned(R7) };
@@ -2738,11 +2733,6 @@ private:
         // OutputRank 1 or 2, InputLayout Right, Interval [InputRank-1]
         // because single stride one or second index has a stride.
         ( rank <= 2 && R0_rev && std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutRight >::value ) //replace input rank
-        // Or case will help with DynRankView etc
-//        ||
-//        ( rank == 8 && SrcTraits::rank && R0 && std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutLeft >::value )
-//        ||
-//        ( rank == 8 && SrcTraits::rank && R0_rev && std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutRight >::value )
       ), typename SrcTraits::array_layout , Kokkos::LayoutStride
       >::type array_layout ;
 
