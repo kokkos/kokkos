@@ -330,7 +330,7 @@ private:
       ;
     }
 
-  // std::pair range
+  // ALL_t
   template< size_t ... DimArgs , class ... Args >
   KOKKOS_FORCEINLINE_FUNCTION
   bool set( unsigned domain_rank
@@ -1696,7 +1696,7 @@ public:
     )
     : m_dim( sub.range_extent(0)
            , sub.range_extent(1)
-           , 0, 0, 0, 0, 0, 0 )
+           , 0, 0, 0, 0, 0, 0 ) 
     , m_stride( 0 == sub.range_index(0) ? rhs.stride_0() : (
                 1 == sub.range_index(0) ? rhs.stride_1() : (
                 2 == sub.range_index(0) ? rhs.stride_2() : (
@@ -1719,9 +1719,24 @@ public:
 
 //----------------------------------------------------------------------------
 /* Strided array layout only makes sense for 0 < rank */
+/* rank = 0 included for DynRankView case */
 
 template< unsigned Rank >
 struct ViewStride ;
+
+template<>
+struct ViewStride<0> {
+  enum { S0 = 0 , S1 = 0 , S2 = 0 , S3 = 0 , S4 = 0 , S5 = 0 , S6 = 0 , S7 = 0 };
+
+  ViewStride() = default ;
+  ViewStride( const ViewStride & ) = default ;
+  ViewStride & operator = ( const ViewStride & ) = default ;
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr ViewStride( size_t , size_t , size_t , size_t
+                      , size_t , size_t , size_t , size_t )
+    {}
+};
 
 template<>
 struct ViewStride<1> {
@@ -1856,7 +1871,7 @@ struct ViewStride<8> {
 
 template < class Dimension >
 struct ViewOffset< Dimension , Kokkos::LayoutStride
-                 , typename std::enable_if<( 0 < Dimension::rank )>::type >
+                 , void >
 {
 private:
   typedef ViewStride< Dimension::rank >  stride_type ;
@@ -2713,11 +2728,11 @@ private:
         ||
         // OutputRank 1 or 2, InputLayout Left, Interval 0
         // because single stride one or second index has a stride.
-        ( rank <= 2 && R0 && std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutLeft >::value )
+        ( rank <= 2 && R0 && std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutLeft >::value ) //replace with input rank
         ||
         // OutputRank 1 or 2, InputLayout Right, Interval [InputRank-1]
         // because single stride one or second index has a stride.
-        ( rank <= 2 && R0_rev && std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutRight >::value )
+        ( rank <= 2 && R0_rev && std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutRight >::value ) //replace input rank
       ), typename SrcTraits::array_layout , Kokkos::LayoutStride
       >::type array_layout ;
 
@@ -2800,6 +2815,10 @@ public:
                                                   ) );
     }
 };
+
+
+
+//----------------------------------------------------------------------------
 
 }}} // namespace Kokkos::Experimental::Impl
 
