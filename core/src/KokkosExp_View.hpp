@@ -1443,7 +1443,7 @@ template< class V , class ... Args >
 using Subview =
   typename Kokkos::Experimental::Impl::ViewMapping
     < void /* deduce subview type from source view traits */
-    , V
+    , typename V::traits
     , Args ...
     >::type ;
 
