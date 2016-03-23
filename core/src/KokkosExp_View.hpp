@@ -1388,7 +1388,7 @@ public:
 
   explicit KOKKOS_INLINE_FUNCTION
   View( pointer_type arg_ptr
-      , typename traits::array_layout & arg_layout
+      , const typename traits::array_layout & arg_layout
       )
     : View( Impl::ViewCtorProp<pointer_type>(arg_ptr) , arg_layout )
     {}
@@ -1414,6 +1414,15 @@ public:
 
   explicit KOKKOS_INLINE_FUNCTION
   View( const typename traits::execution_space::scratch_memory_space & arg_space
+      , const typename traits::array_layout & arg_layout )
+    : View( Impl::ViewCtorProp<pointer_type>(
+              reinterpret_cast<pointer_type>(
+                arg_space.get_shmem( map_type::memory_span( arg_layout ) ) ) )
+         , arg_layout )
+    {}
+
+  explicit KOKKOS_INLINE_FUNCTION
+  View( const typename traits::execution_space::scratch_memory_space & arg_space
       , const size_t arg_N0 = 0 
       , const size_t arg_N1 = 0
       , const size_t arg_N2 = 0
@@ -1422,16 +1431,16 @@ public:
       , const size_t arg_N5 = 0
       , const size_t arg_N6 = 0
       , const size_t arg_N7 = 0 )
-    : m_track() // No memory tracking
-    , m_map( Impl::ViewCtorProp<pointer_type>( reinterpret_cast<pointer_type>(
-       arg_space.get_shmem(
-         map_type::memory_span(
-           typename traits::array_layout
-            ( arg_N0 , arg_N1 , arg_N2 , arg_N3
-            , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) ) ) ) )
-         , typename traits::array_layout
-            ( arg_N0 , arg_N1 , arg_N2 , arg_N3
-            , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+    : View( Impl::ViewCtorProp<pointer_type>(
+              reinterpret_cast<pointer_type>(
+                arg_space.get_shmem(
+                  map_type::memory_span(
+                    typename traits::array_layout
+                     ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+                     , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) ) ) ) )
+          , typename traits::array_layout
+             ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+             , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
        )
     {}
 };
