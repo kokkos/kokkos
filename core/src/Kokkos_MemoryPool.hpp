@@ -57,33 +57,29 @@
 // While experimental, code can abort instead.  If KOKKOS_MEMPOOL_PRINTERR is
 // defined, the code will abort with an error message.  Otherwise, the code will
 // return with a value indicating failure when possible, or do nothing instead.
-// #define KOKKOS_MEMPOOL_PRINTERR
+//#define KOKKOS_MEMPOOL_PRINTERR
 
-// #define KOKKOS_MEMPOOL_PRINT_INFO
-
-#ifdef KOKKOS_MEMPOOL_PRINT_INFO
-#include <cmath>
-#endif
+//#define KOKKOS_MEMPOOL_PRINT_INFO
 
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
 namespace Experimental {
 
-template < class Space , class ExecSpace = typename Space::execution_space >
-class MemoryPool ;
+template < typename Space , typename ExecSpace = typename Space::execution_space >
+class MemoryPool;
 
 namespace Impl {
 
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
-template < typename Link >
+template < typename MemPool >
 struct print_mempool {
-  size_t    m_num_chunk_sizes;
-  size_t *  m_chunk_size;
-  Link **   m_freelist;
-  char *    m_data;
+  size_t      m_num_chunk_sizes;
+  size_t *    m_chunk_size;
+  uint64_t *  m_freelist;
+  char *      m_data;
 
-  print_mempool( size_t ncs, size_t * cs, Link ** f, char * d )
+  print_mempool( size_t ncs, size_t * cs, uint64_t * f, char * d )
     : m_num_chunk_sizes(ncs), m_chunk_size(cs), m_freelist(f), m_data(d)
   {}
 
@@ -91,49 +87,50 @@ struct print_mempool {
   void operator()( size_t i ) const
   {
     if ( i == 0 ) {
-      // Get the padding size for printing an address.
-      char padding[32];
-      double ds = static_cast<double>( reinterpret_cast<unsigned long>( m_data ) );
-      size_t padding_size = static_cast<size_t>( ceil( ceil( log2( ds ) ) / 4 ) + 2 );
-
-      // Create the padding string.
-      for ( size_t j = 0; j < padding_size; ++j ) padding[j] = ' ';
-      padding[padding_size] = '\0';
-
       printf( "*** ON DEVICE ***\n");
-      printf( "m_chunk_size: 0x%lx\n", reinterpret_cast<unsigned long>( m_chunk_size ) );
-      printf( "  m_freelist: 0x%lx\n", reinterpret_cast<unsigned long>( m_freelist ) );
-      printf( "      m_data: 0x%lx\n", reinterpret_cast<unsigned long>( m_data ) );
+      printf( "m_chunk_size: 0x%llx\n", reinterpret_cast<uint64_t>( m_chunk_size ) );
+      printf( "  m_freelist: 0x%llx\n", reinterpret_cast<uint64_t>( m_freelist ) );
+      printf( "      m_data: 0x%llx\n", reinterpret_cast<uint64_t>( m_data ) );
       for ( size_t l = 0; l < m_num_chunk_sizes; ++l ) {
-        printf( "%2lu    freelist: 0x%lx    chunk_size: %6lu\n",
-                l, reinterpret_cast<unsigned long>( m_freelist[l] ), m_chunk_size[l] );
+        printf( "%2lu    freelist: %10llu    chunk_size: %6lu\n",
+               l, get_head_offset( m_freelist[l] ), m_chunk_size[l] );
       }
-      printf( "%s                    chunk_size: %6lu\n\n", padding,
+      printf( "                              chunk_size: %6lu\n\n",
               m_chunk_size[m_num_chunk_sizes] );
     }
   }
+
+  // This is only redefined here to avoid having to pass a MemPoolList object
+  // to the class.
+  KOKKOS_INLINE_FUNCTION
+  uint64_t get_head_offset(uint64_t head) const
+  { return ( head >> MemPool::TAGBITS ) << MemPool::LG_MIN_CHUNKSIZE; }
 };
 #endif
 
-template < typename Link >
+template < typename MemPool >
 struct initialize_mempool {
   char *  m_data;
   size_t  m_chunk_size;
   size_t  m_last_chunk;
+  size_t  m_base_offset;
 
-  initialize_mempool( char * d, size_t cs, size_t lc )
-    : m_data(d), m_chunk_size(cs), m_last_chunk(lc)
+  initialize_mempool( char * d, size_t cs, size_t lc, size_t bo )
+    : m_data(d), m_chunk_size(cs), m_last_chunk(lc), m_base_offset(bo)
   {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()( size_t i ) const
   {
-    Link * lp = reinterpret_cast<Link *>( m_data + i * m_chunk_size );
+    uint64_t * lp =
+      reinterpret_cast<uint64_t *>( m_data + m_base_offset + i * m_chunk_size );
 
     // All entries in the list point to the next entry except the last which
-    // is null.
-    lp->m_next = i < m_last_chunk ?
-                 reinterpret_cast<Link *>( m_data + (i + 1) * m_chunk_size ) : 0;
+    // uses a reserved value to indicate the end of the list.  The offset from
+    // the base pointer is stored in increments of the minimum chunk size.
+    *lp = i < m_last_chunk ?
+          m_base_offset + (i + 1) * m_chunk_size :
+          MemPool::FREELIST_END;
   }
 };
 
@@ -142,28 +139,52 @@ private:
 
   typedef Impl::SharedAllocationTracker  Tracker;
 
-  template< class , class > friend class Kokkos::Experimental::MemoryPool;
+  template < typename , typename > friend class Kokkos::Experimental::MemoryPool;
+  template < typename > friend struct initialize_mempool;
+#ifdef KOKKOS_MEMPOOL_PRINT_INFO
+  template < typename > friend struct print_mempool;
+#endif
 
-public:
+  // Define some constants.
+  enum {
+    // The head of a freelist is a 64 bit unsigned interger.  We divide it
+    // into 2 pieces.  The upper (64-TAGBITS) bits is the offset from the base
+    // data pointer of the allocator in increments of the minimum chunk size.
+    // The lower TAGBITS bits is the tag used to prevent ABA problems.  The
+    // largest two values that fit in the offset portion are reserved to
+    // represent the end of the freelist and that the freelist is locked.
+    //
+    // Using 32 bits for both the tag and offset and with a minimum chunk size
+    // of 128 bytes, the offset can address 549755813632 bytes (app. 512 GB)
+    // of memory.  This should be more than enough to address the whole address
+    // space of a GPU or MIC for the foreseeable future.
+    TAGBITS            = 32,
+    MIN_CHUNKSIZE      = 128,
 
-  /// \brief Structure used to create a linked list from the memory chunks.
-  ///
-  /// The chunks are cast to this type internally to create the lists.
-  struct Link {
-    Link * m_next;
+    TAGBITS_MASK       = ( uint64_t( 1 ) << TAGBITS ) - 1,
+    LG_MIN_CHUNKSIZE   = Kokkos::Impl::integral_power_of_two(MIN_CHUNKSIZE),
+
+    // The largest two values of the offset are reserved to indicate the end of a
+    // freelist (2^TAGBITS - 2) and that the freelist is locked (2^TAGBITS - 1).
+    // They are shifted so they can be compared directly to the result of
+    // get_head_offset().
+    FREELIST_END       = uint64_t( TAGBITS_MASK - 1 ) << LG_MIN_CHUNKSIZE,
+    FREELIST_LOCK      = uint64_t( TAGBITS_MASK ) << LG_MIN_CHUNKSIZE,
+
+    // This is the head value for a locked freelist.  It uses the lock value for
+    // the offset and 0 for the tagbits.
+    FREELIST_LOCK_HEAD = uint64_t( TAGBITS_MASK ) << TAGBITS
   };
-
-private:
 
   Tracker   m_track;
 
   // These three variables are pointers into device memory.
-  size_t *  m_chunk_size; // Array of chunk sizes of freelists.
-  Link **   m_freelist;   // Array of freelist heads.
-  char *    m_data;       // Beginning memory location used for chunks.
+  size_t *    m_chunk_size; // Array of chunk sizes of freelists.
+  uint64_t *  m_freelist;   // Array of freelist heads.
+  char *      m_data;       // Beginning memory location used for chunks.
 
-  size_t    m_data_size;
-  size_t    m_chunk_spacing;
+  size_t      m_data_size;
+  size_t      m_chunk_spacing;
 
 #if defined(KOKKOS_MEMPOOL_PRINT_INFO) && defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
   static long m_count;
@@ -176,49 +197,46 @@ private:
   MemPoolList & operator = ( MemPoolList && ) = default;
   MemPoolList & operator = ( const MemPoolList & ) = default;
 
-  template< class MemorySpace, class ExecutionSpace >
+  template < typename MemorySpace, typename ExecutionSpace >
   inline
   MemPoolList( const MemorySpace & memspace, const ExecutionSpace &,
-               const size_t arg_base_chunk_size,
-               const size_t arg_total_size,
+               size_t arg_base_chunk_size, size_t arg_total_size,
                size_t num_chunk_sizes, size_t chunk_spacing )
     : m_track(), m_chunk_size(0), m_freelist(0), m_data(0), m_data_size(0),
       m_chunk_spacing(chunk_spacing)
   {
-    enum { MIN_CHUNK_SIZE = 128 };
-
     static_assert( sizeof(size_t) <= sizeof(void*), "" );
 
     typedef Impl::SharedAllocationRecord< MemorySpace, void >  SharedRecord;
     typedef Kokkos::RangePolicy< ExecutionSpace >              Range;
 
-    size_t base_chunk_size = arg_base_chunk_size ;
+    size_t base_chunk_size = arg_base_chunk_size;
 
-    // The base chunk size must be at least MIN_CHUNK_SIZE bytes as this is the
+    // The base chunk size must be at least MIN_CHUNKSIZE bytes as this is the
     // cache-line size for NVIDA GPUs.
-    if ( base_chunk_size < MIN_CHUNK_SIZE ) {
+    if ( base_chunk_size < MIN_CHUNKSIZE ) {
 
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
       printf( "** Chunk size must be at least %u bytes.  Setting to %u. **\n",
-              MIN_CHUNK_SIZE, MIN_CHUNK_SIZE);
+              MIN_CHUNKSIZE, MIN_CHUNKSIZE);
       fflush( stdout );
 #endif
 
-      base_chunk_size = MIN_CHUNK_SIZE;
+      base_chunk_size = MIN_CHUNKSIZE;
     }
 
-    // The base chunk size must also be a multiple of MIN_CHUNK_SIZE bytes for
+    // The base chunk size must also be a multiple of MIN_CHUNKSIZE bytes for
     // correct memory alignment of the chunks.  If it isn't a multiple of
-    // MIN_CHUNK_SIZE, set it to the smallest multiple of MIN_CHUNK_SIZE
+    // MIN_CHUNKSIZE, set it to the smallest multiple of MIN_CHUNKSIZE
     // greater than the given chunk size.
-    if ( base_chunk_size % MIN_CHUNK_SIZE != 0 ) {
+    if ( base_chunk_size % MIN_CHUNKSIZE != 0 ) {
       size_t old_chunk_size = base_chunk_size;
-      base_chunk_size = ( ( old_chunk_size + MIN_CHUNK_SIZE - 1 ) / MIN_CHUNK_SIZE ) *
-                        MIN_CHUNK_SIZE;
+      base_chunk_size = ( ( old_chunk_size + MIN_CHUNKSIZE - 1 ) / MIN_CHUNKSIZE ) *
+                        MIN_CHUNKSIZE;
 
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
       printf( "** Chunk size must be a multiple of %u bytes.  Given: %lu  Using: %lu. **\n",
-              MIN_CHUNK_SIZE, old_chunk_size, base_chunk_size);
+              MIN_CHUNKSIZE, old_chunk_size, base_chunk_size);
       fflush( stdout );
 #endif
 
@@ -226,7 +244,7 @@ private:
 
     // Force total_size to be a multiple of base_chunk_size.
     // Preserve the number of chunks originally requested.
-    const size_t total_size = base_chunk_size *
+    size_t total_size = base_chunk_size *
       ( ( arg_total_size + arg_base_chunk_size - 1 ) / arg_base_chunk_size );
 
     m_data_size = total_size;
@@ -249,19 +267,19 @@ private:
 
     // We put a header at the beginnig of the device memory and use extra
     // chunks to store the header.  The header contains:
-    //   size_t  chunk_size[num_chunk_sizes+1]
-    //   Link *  freelist[num_chunk_sizes]
+    //   size_t     chunk_size[num_chunk_sizes+1]
+    //   uint64_t  freelist[num_chunk_sizes]
 
     // Calculate the size of the header where the size is rounded up to the
     // smallest multiple of base_chunk_size >= the needed size.  The size of the
     // chunk size array is calculated using sizeof(void*) to guarantee alignment
     // for the freelist array.  This assumes sizeof(size_t) <= sizeof(void*).
-    const size_t header_bytes = ( 2 * num_chunk_sizes + 1 ) * sizeof(void*);
-    const size_t header_size =
+    size_t header_bytes = ( 2 * num_chunk_sizes + 1 ) * sizeof(void*);
+    size_t header_size =
       ( header_bytes + base_chunk_size - 1 ) / base_chunk_size * base_chunk_size;
 
     // Allocate the memory including the header.
-    const size_t alloc_size = total_size + header_size;
+    size_t alloc_size = total_size + header_size;
 
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
       printf( "** Allocating total %ld bytes\n", long(alloc_size));
@@ -272,10 +290,8 @@ private:
       SharedRecord::allocate( memspace, "mempool", alloc_size );
 
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
-      printf( "** Allocated total %ld bytes at 0x%lx\n"
-            , long(alloc_size)
-            , long(rec->data())
-            );
+      printf( "** Allocated total %ld bytes at 0x%lx\n",
+              long(alloc_size), long(rec->data()) );
       fflush( stdout );
 #endif
 
@@ -285,17 +301,14 @@ private:
       // Get the pointers into the allocated memory.
       char * mem = reinterpret_cast<char *>( rec->data() );
       m_chunk_size = reinterpret_cast<size_t *>( mem );
-      m_freelist = reinterpret_cast<Link **>(
+      m_freelist = reinterpret_cast<uint64_t *>(
                    mem + ( num_chunk_sizes + 1 ) * sizeof(void*) );
       m_data = mem + header_size;
 
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
-      printf( "** Partitioning allocation 0x%lx : m_chunk_size[0x%lx] m_freelist[0x%lx] m_data[0x%lx]\n"
-            , (unsigned long) mem
-            , (unsigned long) m_chunk_size
-            , (unsigned long) m_freelist
-            , (unsigned long) m_data
-            );
+      printf( "** Partitioning allocation 0x%lx : m_chunk_size[0x%lx] m_freelist[0x%lx] m_data[0x%lx]\n",
+              (unsigned long) mem, (unsigned long) m_chunk_size,
+              (unsigned long) m_freelist, (unsigned long) m_data );
       fflush( stdout );
 #endif
     }
@@ -318,9 +331,9 @@ private:
     // by a smaller chunk size.
     size_t used_memory = 0;
     for ( size_t i = num_chunk_sizes; i > 0; --i ) {
-      // Set the starting point in the memory for the current chunk sizes's
-      // freelist.
-      m_freelist[i - 1] = reinterpret_cast<Link *>( m_data + used_memory );
+      // Set the starting position in the memory for the current chunk sizes's
+      // freelist and initialize the tag to 0.
+      m_freelist[i - 1] = create_head( used_memory, 0UL );
 
       size_t mem_avail =
         total_size - (i - 1) * ( total_size / num_chunk_sizes ) - used_memory;
@@ -332,26 +345,16 @@ private:
     }
 
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
-    // Get the padding size for printing an address.
-    char padding[32];
-    double ds = static_cast<double>( reinterpret_cast<unsigned long>( m_data ) );
-    size_t padding_size = static_cast<size_t>( ceil( ceil( log2( ds ) ) / 4 ) + 2 );
-
-    // Create the padding string.
-    for ( size_t j = 0; j < padding_size; ++j ) padding[j] = ' ';
-    padding[padding_size] = '\0';
-
     printf( "\n" );
     printf( "*** ON HOST ***\n");
-    printf( "m_chunk_size: 0x%lx\n", reinterpret_cast<unsigned long>( m_chunk_size ) );
-    printf( "  m_freelist: 0x%lx\n", reinterpret_cast<unsigned long>( m_freelist ) );
-    printf( "      m_data: 0x%lx\n", reinterpret_cast<unsigned long>( m_data ) );
+    printf( "m_chunk_size: 0x%llx\n", reinterpret_cast<uint64_t>( m_chunk_size ) );
+    printf( "  m_freelist: 0x%llx\n", reinterpret_cast<uint64_t>( m_freelist ) );
+    printf( "      m_data: 0x%llx\n", reinterpret_cast<uint64_t>( m_data ) );
     for ( size_t i = 0; i < num_chunk_sizes; ++i ) {
-      printf( "%2lu    freelist: 0x%lx    chunk_size: %6lu    num_chunks: %8lu\n",
-              i, reinterpret_cast<unsigned long>( m_freelist[i] ), m_chunk_size[i],
-              num_chunks[i] );
+      printf( "%2lu    freelist: %10llu    chunk_size: %6lu    num_chunks: %8lu\n",
+              i, get_head_offset( m_freelist[i] ), m_chunk_size[i], num_chunks[i] );
     }
-    printf( "%s                    chunk_size: %6lu\n\n", padding,
+    printf( "                              chunk_size: %6lu\n\n",
             m_chunk_size[num_chunk_sizes] );
     fflush( stdout );
 #endif
@@ -370,12 +373,11 @@ private:
     // Create the chunks for each freelist.
     for ( size_t i = 0; i < num_chunk_sizes; ++i ) {
       // Initialize the next pointers to point to the next chunk for all but the
-      // last chunk which has points to NULL.
-      initialize_mempool< Link >
-        im( reinterpret_cast<char *>( m_freelist[i] ),
-            m_chunk_size[i], num_chunks[i] - 1 );
+      // last chunk which uses a reserved value to indicate the end of the list.
+      initialize_mempool<MemPoolList> im( m_data, m_chunk_size[i], num_chunks[i] - 1,
+                                          get_head_offset( m_freelist[i] ) );
 
-      Kokkos::Impl::ParallelFor< initialize_mempool< Link >, Range >
+      Kokkos::Impl::ParallelFor< initialize_mempool<MemPoolList>, Range >
         closure( im, Range( 0, num_chunks[i] ) );
 
       closure.execute();
@@ -384,9 +386,9 @@ private:
     }
 
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
-    print_mempool < Link > pm( num_chunk_sizes, m_chunk_size, m_freelist, m_data );
+    print_mempool<MemPoolList> pm( num_chunk_sizes, m_chunk_size, m_freelist, m_data );
 
-    Kokkos::Impl::ParallelFor< print_mempool< Link >, Range >
+    Kokkos::Impl::ParallelFor< print_mempool<MemPoolList>, Range >
       closure( pm, Range( 0, 10 ) );
 
     closure.execute();
@@ -397,12 +399,15 @@ private:
 
   /// \brief Releases a lock on a freelist.
   KOKKOS_FUNCTION
-  void acquire_lock( size_t pos, Link * volatile * & freelist,
-                     Link * & old_head ) const;
+  uint64_t acquire_lock( volatile uint64_t * freelist ) const;
 
   /// \brief Releases a lock on a freelist.
   KOKKOS_FUNCTION
-  void release_lock( Link * volatile * freelist, Link * const new_head ) const;
+  void release_lock( volatile uint64_t * freelist, uint64_t new_head ) const;
+
+  /// \brief Tries to refill a freelist using a chunk from another freelist.
+  KOKKOS_FUNCTION
+  void * refill_freelist( size_t l_exp ) const;
 
   /// \brief Claim chunks of untracked memory from the pool.
   KOKKOS_FUNCTION
@@ -412,29 +417,51 @@ private:
   KOKKOS_FUNCTION
   void deallocate( void * alloc_ptr, size_t alloc_size ) const;
 
+  // \brief Pulls the offset from a freelist head.
+  KOKKOS_INLINE_FUNCTION
+  uint64_t get_head_offset(uint64_t head) const
+  { return ( head >> TAGBITS ) << LG_MIN_CHUNKSIZE; }
+
+  // \brief Pulls the tag from a freelist head.
+  KOKKOS_INLINE_FUNCTION
+  uint64_t get_head_tag(uint64_t head) const { return head & TAGBITS_MASK; }
+  // \brief Creates a freelist head from a offset and tag.
+  KOKKOS_INLINE_FUNCTION
+  uint64_t create_head(uint64_t offset, uint64_t tag) const
+  { return ( ( offset >> LG_MIN_CHUNKSIZE ) << TAGBITS ) | tag; }
+
+  // \brief Increments a tag.
+  KOKKOS_INLINE_FUNCTION
+  uint64_t increment_tag(uint64_t tag) const { return ( tag + 1 ) & TAGBITS_MASK; }
+
   /// \brief Tests if the memory pool is empty.
   KOKKOS_INLINE_FUNCTION
   bool is_empty() const
   {
     size_t l = 0;
-    while ( m_chunk_size[l] > 0 && m_freelist[l] == 0 ) ++l;
+    while ( m_chunk_size[l] > 0 &&
+            get_head_offset( m_freelist[l] ) == FREELIST_END )
+    {
+      ++l;
+    }
 
     return m_chunk_size[l] == 0;
   }
 
-  // The following three functions are used for debugging.
+  // The following functions are used for debugging.
   void print_status() const
   {
     for ( size_t l = 0; m_chunk_size[l] > 0; ++l ) {
       size_t count = 0;
-      Link * chunk = m_freelist[l];
+      uint64_t chunk = get_head_offset( m_freelist[l] );
 
-      while ( chunk != NULL ) {
+      while ( chunk != FREELIST_END ) {
         ++count;
-        chunk = chunk->m_next;
+        chunk = *reinterpret_cast<uint64_t *>( m_data + chunk );
       }
 
       printf( "chunk_size: %6lu    num_chunks: %8lu\n", m_chunk_size[l], count );
+      fflush(stdout);
     }
   }
 
@@ -453,7 +480,7 @@ private:
  *  compilation unit.  For CUDA this requires nvcc command
  *  --relocatable-device-code=true
  *  When this command is set then the macro
- *  KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE 
+ *  KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE
  *  is also set.
  */
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA ) && \
@@ -475,14 +502,14 @@ namespace Experimental {
 /// pool memory allocator for fast allocation of same-sized chunks of memory.
 /// The memory is only accessible on the host / device this allocator is
 /// associated with.
-template < class Space , class ExecSpace >
+template < typename Space , typename ExecSpace >
 class MemoryPool {
 private:
 
   Impl::MemPoolList  m_memory;
 
-  typedef ExecSpace                     execution_space ;
-  typedef typename Space::memory_space  backend_memory_space ;
+  typedef ExecSpace                     execution_space;
+  typedef typename Space::memory_space  backend_memory_space;
 
 #if defined( KOKKOS_HAVE_CUDA )
 
@@ -514,10 +541,8 @@ public:
   /// \param base_chunk_size  Hand out memory in chunks of this size.
   /// \param total_size       Total size of the pool.
   MemoryPool( const backend_memory_space & memspace,
-              size_t base_chunk_size,
-              size_t total_size,
-              size_t num_chunk_sizes = 4,
-              size_t chunk_spacing = 4 )
+              size_t base_chunk_size, size_t total_size,
+              size_t num_chunk_sizes = 4, size_t chunk_spacing = 4 )
     : m_memory( memspace, execution_space(), base_chunk_size, total_size,
                 num_chunk_sizes, chunk_spacing )
   {}
@@ -534,15 +559,15 @@ public:
   void deallocate( void * const alloc_ptr, const size_t alloc_size ) const
   { m_memory.deallocate( alloc_ptr, alloc_size ); }
 
-  /// \brief  Is out of memory at this instant
+  /// \brief Is out of memory at this instant
   KOKKOS_INLINE_FUNCTION
   bool is_empty() const { return m_memory.is_empty(); }
 
-  /// \brief  Minimum chunk size allocatable.
+  /// \brief Minimum chunk size allocatable.
   KOKKOS_INLINE_FUNCTION
   size_t get_min_chunk_size() const { return m_memory.get_min_chunk_size(); }
 
-  // The following unctions are used for debugging.
+  // The following functions are used for debugging.
   void print_status() const { m_memory.print_status(); }
   size_t get_mem_size() const { return m_memory.get_mem_size(); }
 };

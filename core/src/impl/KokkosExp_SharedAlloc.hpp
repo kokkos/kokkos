@@ -279,7 +279,14 @@ public:
   /** \brief  Assign a specialized record */
   inline
   void assign_allocated_record_to_uninitialized( Record * arg_record )
-    { Record::increment( m_record = arg_record ); }
+    {
+      if ( arg_record ) {
+        Record::increment( m_record = arg_record );
+      }
+      else {
+        m_record_bits = DO_NOT_DEREF_FLAG ;
+      }
+    }
 
   template< class MemorySpace >
   constexpr

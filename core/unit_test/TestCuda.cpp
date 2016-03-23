@@ -162,14 +162,18 @@ TEST_F( cuda, policy_construction) {
 TEST_F( cuda , impl_view_mapping )
 {
   test_view_mapping< Kokkos::Cuda >();
+  test_view_mapping< Kokkos::CudaUVMSpace >();
   test_view_mapping_subview< Kokkos::Cuda >();
+  test_view_mapping_subview< Kokkos::CudaUVMSpace >();
   test_view_mapping_operator< Kokkos::Cuda >();
+  test_view_mapping_operator< Kokkos::CudaUVMSpace >();
   TestViewMappingAtomic< Kokkos::Cuda >::run();
 }
 
 TEST_F( cuda , view_of_class )
 {
-  TestViewMappingClassValue< Kokkos::Cuda >::run();
+  TestViewMappingClassValue< Kokkos::CudaSpace >::run();
+  TestViewMappingClassValue< Kokkos::CudaUVMSpace >::run();
 }
 
 template< class MemSpace >

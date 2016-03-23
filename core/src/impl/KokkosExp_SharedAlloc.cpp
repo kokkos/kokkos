@@ -171,24 +171,30 @@ SharedAllocationRecord( SharedAllocationRecord<void,void> * arg_root
 {
   constexpr static SharedAllocationRecord * zero = 0 ;
 
-  // Insert into the root double-linked list for tracking
-  //
-  // before:  arg_root->m_next == next ; next->m_prev == arg_root
-  // after:   arg_root->m_next == this ; this->m_prev == arg_root ;
-  //              this->m_next == next ; next->m_prev == this
+  if ( 0 != arg_alloc_ptr ) {
 
-  m_prev = m_root ;
+    // Insert into the root double-linked list for tracking
+    //
+    // before:  arg_root->m_next == next ; next->m_prev == arg_root
+    // after:   arg_root->m_next == this ; this->m_prev == arg_root ;
+    //              this->m_next == next ; next->m_prev == this
 
-  // Read root->m_next and lock by setting to zero
-  while ( ( m_next = Kokkos::atomic_exchange( & m_root->m_next , zero ) ) == zero );
+    m_prev = m_root ;
 
-  m_next->m_prev = this ;
+    // Read root->m_next and lock by setting to zero
+    while ( ( m_next = Kokkos::atomic_exchange( & m_root->m_next , zero ) ) == zero );
 
-  // memory fence before completing insertion into linked list
-  Kokkos::memory_fence();
+    m_next->m_prev = this ;
 
-  if ( zero != Kokkos::atomic_exchange( & m_root->m_next , this ) ) {
-    Kokkos::Impl::throw_runtime_exception("Kokkos::Experimental::Impl::SharedAllocationRecord failed locking/unlocking");
+    // memory fence before completing insertion into linked list
+    Kokkos::memory_fence();
+
+    if ( zero != Kokkos::atomic_exchange( & m_root->m_next , this ) ) {
+      Kokkos::Impl::throw_runtime_exception("Kokkos::Experimental::Impl::SharedAllocationRecord failed locking/unlocking");
+    }
+  }
+  else {
+    Kokkos::Impl::throw_runtime_exception("Kokkos::Experimental::Impl::SharedAllocationRecord given NULL allocation");
   }
 }
 
