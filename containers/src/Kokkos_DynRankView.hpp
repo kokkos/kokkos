@@ -107,9 +107,10 @@ struct DynRankDimTraits {
   }
 
   // Create the layout for the rank-7 view.
+  // Non-strided Layout
   template <typename Layout>
   KOKKOS_INLINE_FUNCTION
-  static Layout createLayout( const Layout& layout )
+  static typename std::enable_if< (std::is_same<Layout , Kokkos::LayoutRight>::value || std::is_same<Layout , Kokkos::LayoutLeft>::value) , Layout >::type createLayout( const Layout& layout )
   {
     return Layout( layout.dimension[0] != 0 ? layout.dimension[0] : 1
                  , layout.dimension[1] != 0 ? layout.dimension[1] : 1
@@ -119,6 +120,30 @@ struct DynRankDimTraits {
                  , layout.dimension[5] != 0 ? layout.dimension[5] : 1
                  , layout.dimension[6] != 0 ? layout.dimension[6] : 1
                  , layout.dimension[7] != 0 ? layout.dimension[7] : 1
+                 );
+  }
+
+  // LayoutStride
+  template <typename Layout>
+  KOKKOS_INLINE_FUNCTION
+  static typename std::enable_if< (std::is_same<Layout , Kokkos::LayoutStride>::value) , Layout>::type createLayout( const Layout& layout )
+  {
+    return Layout( layout.dimension[0] != 0 ? layout.dimension[0] : 1
+                 , layout.stride[0] 
+                 , layout.dimension[1] != 0 ? layout.dimension[1] : 1
+                 , layout.stride[1] 
+                 , layout.dimension[2] != 0 ? layout.dimension[2] : 1
+                 , layout.stride[2] 
+                 , layout.dimension[3] != 0 ? layout.dimension[3] : 1
+                 , layout.stride[3] 
+                 , layout.dimension[4] != 0 ? layout.dimension[4] : 1
+                 , layout.stride[4] 
+                 , layout.dimension[5] != 0 ? layout.dimension[5] : 1
+                 , layout.stride[5] 
+                 , layout.dimension[6] != 0 ? layout.dimension[6] : 1
+                 , layout.stride[6] 
+                 , layout.dimension[7] != 0 ? layout.dimension[7] : 1
+                 , layout.stride[7] 
                  );
   }
 
@@ -652,7 +677,7 @@ public:
 
   template < typename T , class ... P >
   KOKKOS_INLINE_FUNCTION
-  static ret_type subview( Kokkos::Experimental::View< T******* , P...> const & src 
+  static ret_type subview( const unsigned src_rank , Kokkos::Experimental::View< T******* , P...> const & src 
                     , Args ... args )
     {
 
@@ -705,7 +730,14 @@ public:
                                                   , extents.domain_offset(5)
                                                   , extents.domain_offset(6)
                                                   ) );
-      dst.m_rank = rank ;
+
+      dst.m_rank = ( src_rank > 0 ? unsigned(R0) : 0 )
+                 + ( src_rank > 1 ? unsigned(R1) : 0 )
+                 + ( src_rank > 2 ? unsigned(R2) : 0 )
+                 + ( src_rank > 3 ? unsigned(R3) : 0 )
+                 + ( src_rank > 4 ? unsigned(R4) : 0 )
+                 + ( src_rank > 5 ? unsigned(R5) : 0 )
+                 + ( src_rank > 6 ? unsigned(R6) : 0 ) ;
 
       return dst ;
     }
@@ -722,12 +754,12 @@ KOKKOS_INLINE_FUNCTION
 Subdynrankview< ViewTraits<D******* , P...> , Args... > 
 subdynrankview( const Kokkos::Experimental::DynRankView< D , P... > &src , Args...args)
   {
-    if ( src.rank() != sizeof...(Args) )
-      { Kokkos::abort("subdynrankview: ranks are not compatible"); }
+    if ( src.rank() > sizeof...(Args) ) //allow sizeof...(Args) >= src.rank(), ignore the remaining args
+      { Kokkos::abort("subdynrankview: num of args must be >= rank of the source DynRankView"); }
   
     typedef Kokkos::Experimental::Impl::ViewMapping< Kokkos::Experimental::Impl::DynRankSubviewTag , Kokkos::Experimental::ViewTraits< D*******, P... > , Args... > metafcn ;
 
-    return metafcn::subview( src.ConstDownCast() , args... );
+    return metafcn::subview( src.rank() , src.ConstDownCast() , args... );
   }
 
 } // namespace Experimental
