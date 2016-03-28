@@ -128,7 +128,13 @@ struct are_integral { enum { value = true }; };
 
 template< typename T , class ... Args >
 struct are_integral<T,Args...> {
-  enum { value = std::is_integral<T>::value && are_integral<Args...>::value };
+  enum { value =
+    // Accept std::is_integral OR std::is_enum as an integral value
+    // since a simple enum value is automically convertable to an
+    // integral value.
+    ( std::is_integral<T>::value || std::is_enum<T>::value )
+    &&
+    are_integral<Args...>::value };
 };
 
 //----------------------------------------------------------------------------
