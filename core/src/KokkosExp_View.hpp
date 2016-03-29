@@ -1948,7 +1948,7 @@ void deep_copy
 /** \brief  A deep copy between views of the default specialization, compatible type,
  *          same non-zero rank, same contiguous layout.
  */
-template< class ExecSpace &, class DT, class ... DP, class ST, class ... SP >
+template< class ExecSpace , class DT, class ... DP, class ST, class ... SP >
 inline
 void deep_copy
   ( const ExecSpace & exec_space
