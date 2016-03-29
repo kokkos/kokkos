@@ -107,6 +107,9 @@ struct FunctorValueTraits< FunctorType , ArgTag , true /* == exists FunctorType:
 {
   typedef typename Impl::remove_extent< typename FunctorType::value_type >::type  value_type ;
 
+  static_assert( 0 == ( sizeof(value_type) % sizeof(int) ) ,
+    "Reduction functor's declared value_type requires: 0 == sizeof(value_type) % sizeof(int)" );
+
   // If not an array then what is the sizeof(value_type)
   enum { StaticValueSize = Impl::is_array< typename FunctorType::value_type >::value ? 0 : sizeof(value_type) };
 
@@ -339,6 +342,9 @@ public:
   typedef typename Impl::if_c< IS_VOID || IS_REJECT , void , ValueType   >::type  value_type ;
   typedef typename Impl::if_c< IS_VOID || IS_REJECT , void , ValueType * >::type  pointer_type ;
   typedef typename Impl::if_c< IS_VOID || IS_REJECT , void , ValueType & >::type  reference_type ;
+
+  static_assert( IS_VOID || IS_REJECT || 0 == ( sizeof(ValueType) % sizeof(int) ) ,
+    "Reduction functor's value_type deduced from functor::operator() requires: 0 == sizeof(value_type) % sizeof(int)" );
 
   enum { StaticValueSize = IS_VOID || IS_REJECT ? 0 : sizeof(ValueType) };
 
