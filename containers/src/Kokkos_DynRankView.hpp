@@ -210,41 +210,63 @@ public:
 
   typedef ViewTraits< DataType , Properties ... > traits ;
 
-  typedef typename traits::execution_space execution_space;
-  typedef typename traits::memory_space memory_space;
-  typedef typename traits::size_type size_type;
+  // Data type traits:
+  typedef typename traits::data_type            data_type;
+  typedef typename traits::const_data_type      const_data_type;
+  typedef typename traits::non_const_data_type  non_const_data_type;
 
-  typedef typename traits::data_type data_type;
-  typedef typename traits::const_data_type const_data_type;
-  typedef typename traits::non_const_data_type non_const_data_type;
+  // Compatible array of trivial type traits:
+  typedef typename traits::scalar_array_type            scalar_array_type ;
+  typedef typename traits::const_scalar_array_type      const_scalar_array_type ;
+  typedef typename traits::non_const_scalar_array_type  non_const_scalar_array_type ;
 
-  typedef typename traits::host_mirror_space host_mirror_space;
+  // Value type traits:
+  typedef typename traits::value_type            value_type ;
+  typedef typename traits::const_value_type      const_value_type ;
+  typedef typename traits::non_const_value_type  non_const_value_type ;
+
+  // Mapping traits:
+  typedef typename traits::array_layout   array_layout ;
+  typedef typename traits::specialize     specialize ;
+
+  // Execution space, memory space, memory access traits, and host mirror space:
+  typedef typename traits::execution_space    execution_space ;
+  typedef typename traits::memory_space       memory_space ;
+  typedef typename traits::device_type        device_type ;
+  typedef typename traits::memory_traits      memory_traits ;
+  typedef typename traits::host_mirror_space  host_mirror_space ;
+
+  typedef typename traits::size_type size_type ;
+
+  using view_type::is_hostspace ;
+  using view_type::is_managed ;
+  using view_type::is_random_access ;
 
   /** \brief  Compatible view of array of scalar types */
   typedef DynRankView< typename traits::scalar_array_type ,
                        typename traits::array_layout ,
-                typename traits::device_type ,
-                typename traits::memory_traits >
+                       typename traits::device_type ,
+                       typename traits::memory_traits >
     array_type ;
 
   /** \brief  Compatible view of const data type */
   typedef DynRankView< typename traits::const_data_type ,
-                typename traits::array_layout ,
-                typename traits::device_type ,
-                typename traits::memory_traits >
+                       typename traits::array_layout ,
+                       typename traits::device_type ,
+                       typename traits::memory_traits >
     const_type ;
 
   /** \brief  Compatible view of non-const data type */
   typedef DynRankView< typename traits::non_const_data_type ,
-                typename traits::array_layout ,
-                typename traits::device_type ,
-                typename traits::memory_traits >
+                       typename traits::array_layout ,
+                       typename traits::device_type ,
+                       typename traits::memory_traits >
     non_const_type ;
 
   /** \brief  Compatible HostMirror view */
   typedef DynRankView< typename traits::non_const_data_type ,
-                typename traits::array_layout ,
-                typename traits::host_mirror_space >
+                       typename traits::array_layout ,
+                       typename traits::host_mirror_space >
     HostMirror ;
 
   //----------------------------------------
