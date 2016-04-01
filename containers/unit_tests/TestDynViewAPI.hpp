@@ -1048,20 +1048,18 @@ public:
 
   static void run_test_subview()
   {
-// LayoutStride required for all returned DynRankView subdynrankview's
-    typedef Kokkos::Experimental::DynRankView< const T , device > sView ;
+    typedef Kokkos::Experimental::DynRankView< const T , device > cdView ;
+    typedef Kokkos::Experimental::DynRankView< T , device > dView ;
+  // LayoutStride required for all returned DynRankView subdynrankview's
     typedef Kokkos::Experimental::DynRankView< T , Kokkos::LayoutStride , device > sdView ; 
 
     dView0 d0( "d0" );
+    cdView s0 = d0 ;
 
+  //  N0 = 1000,N1 = 3,N2 = 5,N3 = 7 
     unsigned order[] = { 6,5,4,3,2,1,0 }, dimen[] = { N0, N1, N2, 2, 2, 2, 2 }; //LayoutRight equivalent
     sdView d7( "d7" , Kokkos::LayoutStride::order_dimensions(7, order, dimen) );
 
-    unsigned order3[] = { 4,3,2,1,0 }, dimen3[] = { N0, N1, N2, 2, 2 };
-    sdView d5( "d5" , Kokkos::LayoutStride::order_dimensions(5, order3, dimen3) );
-
-    sView s0 = d0 ;
-//    sdView ds0 = Kokkos::Experimental::subdynrankview( d7 , 1 , 1 , 1 , 1 , 1 , 1 , 1 ); //Should be rank0 subview
     sdView ds0 = Kokkos::subdynrankview( d7 , 1 , 1 , 1 , 1 , 1 , 1 , 1 ); //Should be rank0 subview
 
 //Basic test - ALL
@@ -1077,13 +1075,58 @@ public:
     dView0 dd0("dd0" , N0 , N1 , N2 , 2 , 2 , 2 , 2 ); //default layout
     sdView dtkp = Kokkos::Experimental::subdynrankview( dd0 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
 
-
 // Return rank 7 subview, taking a pair as one argument, layout stride input
     sdView ds7 = Kokkos::Experimental::subdynrankview( d7 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
+
+// Default Layout DynRankView
+    dView dv6("dv6" , N0 , N1 , N2 , N3 , 2 , 2 );
+
+// DynRankView with LayoutRight
+    typedef Kokkos::Experimental::DynRankView< T , Kokkos::LayoutRight , device > drView ;
+    drView dr5( "dr5" , N0 , N1 , N2 , 2 , 2 );
+
+// LayoutStride but arranged as LayoutRight
+    unsigned order3[] = { 4,3,2,1,0 }, dimen3[] = { N0, N1, N2, 2, 2 };
+    sdView d5( "d5" , Kokkos::LayoutStride::order_dimensions(5, order3, dimen3) );
+
+// Check LayoutRight dr5 and LayoutStride d5 dimensions agree (as they should) 
+    ASSERT_EQ( d5.dimension_0() , dr5.dimension_0() );
+    ASSERT_EQ( d5.dimension_1() , dr5.dimension_1() );
+    ASSERT_EQ( d5.dimension_2() , dr5.dimension_2() );
+    ASSERT_EQ( d5.dimension_3() , dr5.dimension_3() );
+    ASSERT_EQ( d5.dimension_4() , dr5.dimension_4() );
+    ASSERT_EQ( d5.dimension_5() , dr5.dimension_5() );
+    ASSERT_EQ( d5.rank() , dr5.rank() );
 
 // Rank 5 subview of rank 5 dynamic rank view, layout stride input
     sdView ds5 = Kokkos::Experimental::subdynrankview( d5 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) );
 
+// Pass in extra ALL arguments beyond the rank of the DynRank View.
+// This behavior is allowed - ignore the extra ALL arguments when
+//  the src.rank() < number of arguments, but be careful!
+    sdView ds5plus = Kokkos::Experimental::subdynrankview( d5 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::pair<unsigned,unsigned>(0,1) , Kokkos::ALL() );
+
+    ASSERT_EQ( ds5.dimension_0() , ds5plus.dimension_0() );
+    ASSERT_EQ( ds5.dimension_4() , ds5plus.dimension_4() );
+    ASSERT_EQ( ds5.dimension_5() , ds5plus.dimension_5() );
+    ASSERT_EQ( ds5.rank() , ds5plus.rank() );
+    ASSERT_EQ( ds5.rank() , 5 );
+
+#if ! defined( KOKKOS_HAVE_CUDA ) || defined ( KOKKOS_USE_CUDA_UVM )
+    ASSERT_EQ( & ds5(1,1,1,1) - & ds5plus(1,1,1,1) , 0 );
+    ASSERT_EQ( & ds5(1,1,1,1,0) - & ds5plus(1,1,1,1,0) , 0 );
+#endif
+
+// Similar test to rank 5 above, but create rank 4 subview
+// Check that the rank contracts (ds4 and ds4plus) and that subdynrankview can accept extra args (ds4plus)
+    sdView ds4 = Kokkos::Experimental::subdynrankview( d5 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , 0 );
+    sdView ds4plus = Kokkos::Experimental::subdynrankview( d5 , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , Kokkos::ALL() , 0 , Kokkos::ALL() );
+
+    ASSERT_EQ( ds4.rank() , ds4plus.rank() );
+    ASSERT_EQ( ds4.rank() , 4 );
+    ASSERT_EQ( ds4.dimension_0() , ds4plus.dimension_0() );
+    ASSERT_EQ( ds4.dimension_4() , ds4plus.dimension_4() );
+    ASSERT_EQ( ds4.dimension_5() , ds4plus.dimension_5() );
   }
 
   static void run_test_subview_strided()

@@ -1221,8 +1221,29 @@ public:
       // Copy the input allocation properties with possibly defaulted properties
       alloc_prop prop( arg_prop );
 
+//------------------------------------------------------------
+#if defined( KOKKOS_HAVE_CUDA )
+      // If allocating in CudaUVMSpace must fence before and after
+      // the allocation to protect against possible concurrent access
+      // on the CPU and the GPU.
+      // Fence using the trait's executon space (which will be Kokkos::Cuda)
+      // to avoid incomplete type errors from usng Kokkos::Cuda directly.
+      if ( std::is_same< Kokkos::CudaUVMSpace , typename traits::device_type::memory_space >::value ) {
+        traits::device_type::memory_space::execution_space::fence();
+      }
+#endif
+//------------------------------------------------------------
+
       Kokkos::Experimental::Impl::SharedAllocationRecord<> *
         record = m_map.allocate_shared( prop , arg_layout );
+
+//------------------------------------------------------------
+#if defined( KOKKOS_HAVE_CUDA )
+      if ( std::is_same< Kokkos::CudaUVMSpace , typename traits::device_type::memory_space >::value ) {
+        traits::device_type::memory_space::execution_space::fence();
+      }
+#endif
+//------------------------------------------------------------
 
       // Setup and initialization complete, start tracking
       m_track.assign_allocated_record_to_uninitialized( record );
@@ -1927,7 +1948,7 @@ void deep_copy
 /** \brief  A deep copy between views of the default specialization, compatible type,
  *          same non-zero rank, same contiguous layout.
  */
-template< class ExecSpace &, class DT, class ... DP, class ST, class ... SP >
+template< class ExecSpace , class DT, class ... DP, class ST, class ... SP >
 inline
 void deep_copy
   ( const ExecSpace & exec_space
