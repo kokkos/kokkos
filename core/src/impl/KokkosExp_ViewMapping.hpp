@@ -2620,7 +2620,7 @@ class ViewMapping< DstTraits , SrcTraits ,
     )
   )>::type >
 {
-public:
+private:
 
   enum { is_assignable_value_type =
     std::is_same< typename DstTraits::value_type
