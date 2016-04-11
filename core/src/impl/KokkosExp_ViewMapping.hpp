@@ -1439,9 +1439,9 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
     : m_dim( rhs.m_dim.N0, 0, 0, 0, 0, 0, 0, 0 )
     {
       static_assert( DimRHS::rank == 1 && dimension_type::rank == 1 && dimension_type::rank_dynamic == 1
-                   , "ViewOffset LayoutLeft and LayoutStride are only compatible when rank == 1" );
+                   , "ViewOffset LayoutLeft/Right and LayoutStride are only compatible when rank == 1" );
       if ( rhs.m_stride.S0 != 1 ) {
-        Kokkos::abort("Kokkos::Experimental::ViewOffset assignment of LayoutRight from LayoutStride  requires stride == 1" );
+        Kokkos::abort("Kokkos::Experimental::ViewOffset assignment of LayoutLeft/Right from LayoutStride  requires stride == 1" );
       }
     }
 
@@ -1713,7 +1713,6 @@ public:
       // At most subsequent dimension can be non-zero.
 
       static_assert( ( 2 == dimension_type::rank ) &&
-                     ( 2 == dimension_type::rank_dynamic ) &&
                      ( 2 <= DimRHS::rank )
                    , "ViewOffset subview construction requires compatible rank" );
     }
