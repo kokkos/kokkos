@@ -1118,6 +1118,9 @@ public:
     {
       typedef typename View<RT,RP...>::traits  SrcTraits ;
       typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
+      static_assert( Mapping::is_assignable_value_type , "Incompatible View copy construction (value_type)" );
+      static_assert( Mapping::is_assignable_dimension , "Incompatible View copy construction (dimension)" );
+      static_assert( Mapping::is_assignable_layout , "Incompatible View copy construction (layout)" );
       static_assert( Mapping::is_assignable , "Incompatible View copy construction" );
       Mapping::assign( m_map , rhs.m_map , rhs.m_track );
     }

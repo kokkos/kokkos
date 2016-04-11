@@ -233,16 +233,18 @@ struct ViewDimensionAssignable< ViewDimension< DstArgs ... >
   typedef ViewDimension< SrcArgs... > src ;
 
   enum { value =
-    unsigned(dst::rank) == unsigned(src::rank) &&
-    unsigned(dst::rank_dynamic) >= unsigned(src::rank_dynamic) &&
-    ( 0 < dst::rank_dynamic || size_t(dst::ArgN0) == size_t(src::ArgN0) ) &&
-    ( 1 < dst::rank_dynamic || size_t(dst::ArgN1) == size_t(src::ArgN1) ) &&
-    ( 2 < dst::rank_dynamic || size_t(dst::ArgN2) == size_t(src::ArgN2) ) &&
-    ( 3 < dst::rank_dynamic || size_t(dst::ArgN3) == size_t(src::ArgN3) ) &&
-    ( 4 < dst::rank_dynamic || size_t(dst::ArgN4) == size_t(src::ArgN4) ) &&
-    ( 5 < dst::rank_dynamic || size_t(dst::ArgN5) == size_t(src::ArgN5) ) &&
-    ( 6 < dst::rank_dynamic || size_t(dst::ArgN6) == size_t(src::ArgN6) ) &&
-    ( 7 < dst::rank_dynamic || size_t(dst::ArgN7) == size_t(src::ArgN7) ) };
+    unsigned(dst::rank) == unsigned(src::rank) && (
+      //Compile time check that potential static dimensions match
+      ( ( 1 > dst::rank_dynamic && 1 > src::rank_dynamic ) ? (size_t(dst::ArgN0) == size_t(src::ArgN0)) : true ) &&
+      ( ( 2 > dst::rank_dynamic && 2 > src::rank_dynamic ) ? (size_t(dst::ArgN1) == size_t(src::ArgN1)) : true ) &&
+      ( ( 3 > dst::rank_dynamic && 3 > src::rank_dynamic ) ? (size_t(dst::ArgN2) == size_t(src::ArgN2)) : true ) &&
+      ( ( 4 > dst::rank_dynamic && 4 > src::rank_dynamic ) ? (size_t(dst::ArgN3) == size_t(src::ArgN3)) : true ) &&
+      ( ( 5 > dst::rank_dynamic && 5 > src::rank_dynamic ) ? (size_t(dst::ArgN4) == size_t(src::ArgN4)) : true ) &&
+      ( ( 6 > dst::rank_dynamic && 6 > src::rank_dynamic ) ? (size_t(dst::ArgN5) == size_t(src::ArgN5)) : true ) &&
+      ( ( 7 > dst::rank_dynamic && 7 > src::rank_dynamic ) ? (size_t(dst::ArgN6) == size_t(src::ArgN6)) : true ) &&
+      ( ( 8 > dst::rank_dynamic && 8 > src::rank_dynamic ) ? (size_t(dst::ArgN7) == size_t(src::ArgN7)) : true )
+    )};
+
 };
 
 }}} // namespace Kokkos::Experimental::Impl
@@ -1454,7 +1456,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
     )
     : m_dim( sub.range_extent(0) , 0, 0, 0, 0, 0, 0, 0 )
     {
-      static_assert( ( 0 == dimension_type::rank ) ||
+      static_assert( ( 0 == dimension_type::rank_dynamic ) ||
                      ( 1 == dimension_type::rank && 1 == dimension_type::rank_dynamic && 1 <= DimRHS::rank )
                    , "ViewOffset subview construction requires compatible rank" );
     }
@@ -2618,7 +2620,7 @@ class ViewMapping< DstTraits , SrcTraits ,
     )
   )>::type >
 {
-private:
+public:
 
   enum { is_assignable_value_type =
     std::is_same< typename DstTraits::value_type
@@ -2664,6 +2666,29 @@ public:
 
       typedef typename DstType::offset_type  dst_offset_type ;
 
+      if ( size_t(DstTraits::dimension::rank_dynamic) < size_t(SrcTraits::dimension::rank_dynamic) ) {
+        typedef typename DstTraits::dimension dst_dim;
+        bool assignable =
+          ( ( 1 > DstTraits::dimension::rank_dynamic && 1 <= SrcTraits::dimension::rank_dynamic ) ?
+            dst_dim::ArgN0 == src.dimension_0() : true ) &&
+          ( ( 2 > DstTraits::dimension::rank_dynamic && 2 <= SrcTraits::dimension::rank_dynamic ) ?
+            dst_dim::ArgN1 == src.dimension_1() : true ) &&
+          ( ( 3 > DstTraits::dimension::rank_dynamic && 3 <= SrcTraits::dimension::rank_dynamic ) ?
+            dst_dim::ArgN2 == src.dimension_2() : true ) &&
+          ( ( 4 > DstTraits::dimension::rank_dynamic && 4 <= SrcTraits::dimension::rank_dynamic ) ?
+            dst_dim::ArgN3 == src.dimension_3() : true ) &&
+          ( ( 5 > DstTraits::dimension::rank_dynamic && 5 <= SrcTraits::dimension::rank_dynamic ) ?
+            dst_dim::ArgN4 == src.dimension_4() : true ) &&
+          ( ( 6 > DstTraits::dimension::rank_dynamic && 6 <= SrcTraits::dimension::rank_dynamic ) ?
+            dst_dim::ArgN5 == src.dimension_5() : true ) &&
+          ( ( 7 > DstTraits::dimension::rank_dynamic && 7 <= SrcTraits::dimension::rank_dynamic ) ?
+            dst_dim::ArgN6 == src.dimension_6() : true ) &&
+          ( ( 8 > DstTraits::dimension::rank_dynamic && 8 <= SrcTraits::dimension::rank_dynamic ) ?
+            dst_dim::ArgN7 == src.dimension_7() : true )
+          ;
+        if(!assignable)
+          Kokkos::abort("View Assignment: trying to assign runtime dimension to non matching compile time dimension.");
+      }
       dst.m_offset = dst_offset_type( src.m_offset );
       dst.m_handle = Kokkos::Experimental::Impl::ViewDataHandle< DstTraits >::assign( src.m_handle , src_track );
     }
