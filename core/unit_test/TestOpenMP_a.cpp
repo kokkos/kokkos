@@ -109,75 +109,60 @@ protected:
   }
 };
 
-
-TEST_F( openmp , impl_shared_alloc ) {
-  test_shared_alloc< Kokkos::HostSpace , Kokkos::OpenMP >();
+TEST_F( openmp, view_subview_auto_1d_left ) {
+  TestViewSubview::test_auto_1d< Kokkos::LayoutLeft,Kokkos::OpenMP >();
 }
 
-TEST_F( openmp, policy_construction) {
-  TestRangePolicyConstruction< Kokkos::OpenMP >();
-  TestTeamPolicyConstruction< Kokkos::OpenMP >();
+TEST_F( openmp, view_subview_auto_1d_right ) {
+  TestViewSubview::test_auto_1d< Kokkos::LayoutRight,Kokkos::OpenMP >();
 }
 
-TEST_F( openmp , impl_view_mapping ) {
-  test_view_mapping< Kokkos::OpenMP >();
-  test_view_mapping_subview< Kokkos::OpenMP >();
-  test_view_mapping_operator< Kokkos::OpenMP >();
-  TestViewMappingAtomic< Kokkos::OpenMP >::run();
+TEST_F( openmp, view_subview_auto_1d_stride ) {
+  TestViewSubview::test_auto_1d< Kokkos::LayoutStride,Kokkos::OpenMP >();
 }
 
-TEST_F( openmp, view_impl) {
-  test_view_impl< Kokkos::OpenMP >();
+TEST_F( openmp, view_subview_assign_strided ) {
+  TestViewSubview::test_1d_strided_assignment< Kokkos::OpenMP >();
 }
 
-TEST_F( openmp, view_api) {
-  TestViewAPI< double , Kokkos::OpenMP >();
+TEST_F( openmp, view_subview_left_0 ) {
+  TestViewSubview::test_left_0< Kokkos::OpenMP >();
 }
 
-TEST_F( openmp , view_nested_view )
-{
-  ::Test::view_nested_view< Kokkos::OpenMP >();
+TEST_F( openmp, view_subview_left_1 ) {
+  TestViewSubview::test_left_1< Kokkos::OpenMP >();
 }
 
-TEST_F( openmp , atomics )
-{
-  const int loop_count = 1e4 ;
+TEST_F( openmp, view_subview_left_2 ) {
+  TestViewSubview::test_left_2< Kokkos::OpenMP >();
+}
 
-  ASSERT_TRUE( ( TestAtomic::Loop<int,Kokkos::OpenMP>(loop_count,1) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<int,Kokkos::OpenMP>(loop_count,2) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<int,Kokkos::OpenMP>(loop_count,3) ) );
+TEST_F( openmp, view_subview_left_3 ) {
+  TestViewSubview::test_left_3< Kokkos::OpenMP >();
+}
 
-  ASSERT_TRUE( ( TestAtomic::Loop<unsigned int,Kokkos::OpenMP>(loop_count,1) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<unsigned int,Kokkos::OpenMP>(loop_count,2) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<unsigned int,Kokkos::OpenMP>(loop_count,3) ) );
+TEST_F( openmp, view_subview_right_0 ) {
+  TestViewSubview::test_right_0< Kokkos::OpenMP >();
+}
 
-  ASSERT_TRUE( ( TestAtomic::Loop<long int,Kokkos::OpenMP>(loop_count,1) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<long int,Kokkos::OpenMP>(loop_count,2) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<long int,Kokkos::OpenMP>(loop_count,3) ) );
+TEST_F( openmp, view_subview_right_1 ) {
+  TestViewSubview::test_right_1< Kokkos::OpenMP >();
+}
 
-  ASSERT_TRUE( ( TestAtomic::Loop<unsigned long int,Kokkos::OpenMP>(loop_count,1) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<unsigned long int,Kokkos::OpenMP>(loop_count,2) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<unsigned long int,Kokkos::OpenMP>(loop_count,3) ) );
+TEST_F( openmp, view_subview_right_3 ) {
+  TestViewSubview::test_right_3< Kokkos::OpenMP >();
+}
 
-  ASSERT_TRUE( ( TestAtomic::Loop<long long int,Kokkos::OpenMP>(loop_count,1) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<long long int,Kokkos::OpenMP>(loop_count,2) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<long long int,Kokkos::OpenMP>(loop_count,3) ) );
+TEST_F( openmp, view_subview_1d_assign ) {
+  TestViewSubview::test_1d_assign< Kokkos::OpenMP >();
+}
 
-  ASSERT_TRUE( ( TestAtomic::Loop<double,Kokkos::OpenMP>(loop_count,1) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<double,Kokkos::OpenMP>(loop_count,2) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<double,Kokkos::OpenMP>(loop_count,3) ) );
+TEST_F( openmp, view_subview_2d_from_3d ) {
+  TestViewSubview::test_2d_subview_3d< Kokkos::OpenMP >();
+}
 
-  ASSERT_TRUE( ( TestAtomic::Loop<float,Kokkos::OpenMP>(100,1) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<float,Kokkos::OpenMP>(100,2) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<float,Kokkos::OpenMP>(100,3) ) );
-
-  ASSERT_TRUE( ( TestAtomic::Loop<Kokkos::complex<double> ,Kokkos::OpenMP>(100,1) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<Kokkos::complex<double> ,Kokkos::OpenMP>(100,2) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<Kokkos::complex<double> ,Kokkos::OpenMP>(100,3) ) );
-
-  ASSERT_TRUE( ( TestAtomic::Loop<TestAtomic::SuperScalar<4> ,Kokkos::OpenMP>(100,1) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<TestAtomic::SuperScalar<4> ,Kokkos::OpenMP>(100,2) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop<TestAtomic::SuperScalar<4> ,Kokkos::OpenMP>(100,3) ) );
+TEST_F( openmp, view_subview_2d_from_5d ) {
+  TestViewSubview::test_2d_subview_5d< Kokkos::OpenMP >();
 }
 
 } // namespace test
