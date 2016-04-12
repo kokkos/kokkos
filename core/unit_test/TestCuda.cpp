@@ -458,6 +458,15 @@ TEST_F( cuda, atomic )
   ASSERT_TRUE( ( TestAtomic::Loop<float,Kokkos::Cuda>(100,1) ) );
   ASSERT_TRUE( ( TestAtomic::Loop<float,Kokkos::Cuda>(100,2) ) );
   ASSERT_TRUE( ( TestAtomic::Loop<float,Kokkos::Cuda>(100,3) ) );
+
+  ASSERT_TRUE( ( TestAtomic::Loop<Kokkos::complex<double> ,Kokkos::Cuda>(100,1) ) );
+  ASSERT_TRUE( ( TestAtomic::Loop<Kokkos::complex<double> ,Kokkos::Cuda>(100,2) ) );
+  ASSERT_TRUE( ( TestAtomic::Loop<Kokkos::complex<double> ,Kokkos::Cuda>(100,3) ) );
+
+  ASSERT_TRUE( ( TestAtomic::Loop<TestAtomic::SuperScalar<4> ,Kokkos::Cuda>(100,1) ) );
+  ASSERT_TRUE( ( TestAtomic::Loop<TestAtomic::SuperScalar<4> ,Kokkos::Cuda>(100,2) ) );
+  ASSERT_TRUE( ( TestAtomic::Loop<TestAtomic::SuperScalar<4> ,Kokkos::Cuda>(100,3) ) );
+
 }
 
 //----------------------------------------------------------------------------
@@ -558,6 +567,7 @@ TEST_F( cuda , team_vector )
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Cuda >(9) ) );
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Cuda >(10) ) );
 }
+
 }
 
 //----------------------------------------------------------------------------

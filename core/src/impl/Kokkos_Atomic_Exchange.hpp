@@ -106,12 +106,14 @@ T atomic_exchange( volatile T * const dest ,
 {
   T return_val;
   // This is a way to (hopefully) avoid dead lock in a warp
-  bool done = false;
-  while (! done ) {
+  int done = 1;
+  while ( done > 0 ) {
+    done++;
     if( Impl::lock_address_cuda_space( (void*) dest ) ) {
       return_val = *dest;
       *dest = val;
       Impl::unlock_address_cuda_space( (void*) dest );
+      done = 0;
     }
   }
   return return_val;
