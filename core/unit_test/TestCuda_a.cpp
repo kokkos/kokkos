@@ -101,7 +101,7 @@ protected:
 //----------------------------------------------------------------------------
 
 namespace Test {
-
+/*
 __global__
 void test_abort()
 {
@@ -276,7 +276,7 @@ TEST_F( cuda , impl_view_accessible )
   TestViewCudaAccessible< Kokkos::CudaHostPinnedSpace , Kokkos::Cuda >::run();
   TestViewCudaAccessible< Kokkos::CudaHostPinnedSpace , Kokkos::HostSpace::execution_space >::run();
 }
-/*
+*/
 //----------------------------------------------------------------------------
 
 TEST_F( cuda, view_impl )
@@ -366,7 +366,7 @@ TEST_F( cuda, view_subview_2d_from_5d ) {
   TestViewSubview::test_2d_subview_5d< Kokkos::CudaUVMSpace >();
 }
 
-
+/*
 TEST_F( cuda, range_tag )
 {
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_for(1000);

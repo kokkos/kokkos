@@ -101,7 +101,7 @@ protected:
 //----------------------------------------------------------------------------
 
 namespace Test {
-
+/*
 __global__
 void test_abort()
 {
@@ -276,7 +276,7 @@ TEST_F( cuda , impl_view_accessible )
   TestViewCudaAccessible< Kokkos::CudaHostPinnedSpace , Kokkos::Cuda >::run();
   TestViewCudaAccessible< Kokkos::CudaHostPinnedSpace , Kokkos::HostSpace::execution_space >::run();
 }
-/*
+
 //----------------------------------------------------------------------------
 
 TEST_F( cuda, view_impl )
@@ -436,7 +436,7 @@ TEST_F( cuda, reduce_dynamic_view )
   TestReduceDynamicView< long ,   Kokkos::Cuda >( 10000000 );
   TestReduceDynamicView< double , Kokkos::Cuda >( 1000000 );
 }
-
+*/
 TEST_F( cuda, atomic )
 {
   const int loop_count = 1e3 ;
@@ -577,11 +577,11 @@ TEST_F( cuda , team_vector )
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Cuda >(9) ) );
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Cuda >(10) ) );
 }
-*/
+
 }
 
 //----------------------------------------------------------------------------
-/*
+
 #if defined( KOKKOS_ENABLE_CUDA_TASK_POLICY )
 
 TEST_F( cuda , task_policy )

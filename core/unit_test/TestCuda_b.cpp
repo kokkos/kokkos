@@ -101,7 +101,7 @@ protected:
 //----------------------------------------------------------------------------
 
 namespace Test {
-
+/*
 __global__
 void test_abort()
 {
@@ -276,7 +276,7 @@ TEST_F( cuda , impl_view_accessible )
   TestViewCudaAccessible< Kokkos::CudaHostPinnedSpace , Kokkos::Cuda >::run();
   TestViewCudaAccessible< Kokkos::CudaHostPinnedSpace , Kokkos::HostSpace::execution_space >::run();
 }
-/*
+
 //----------------------------------------------------------------------------
 
 TEST_F( cuda, view_impl )
@@ -365,7 +365,7 @@ TEST_F( cuda, view_subview_2d_from_3d ) {
 TEST_F( cuda, view_subview_2d_from_5d ) {
   TestViewSubview::test_2d_subview_5d< Kokkos::CudaUVMSpace >();
 }
-
+*/
 
 TEST_F( cuda, range_tag )
 {
@@ -436,7 +436,7 @@ TEST_F( cuda, reduce_dynamic_view )
   TestReduceDynamicView< long ,   Kokkos::Cuda >( 10000000 );
   TestReduceDynamicView< double , Kokkos::Cuda >( 1000000 );
 }
-
+/*
 TEST_F( cuda, atomic )
 {
   const int loop_count = 1e3 ;
