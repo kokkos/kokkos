@@ -354,7 +354,17 @@ TEST_F( cuda, view_subview_right_3 ) {
   TestViewSubview::test_right_3< Kokkos::CudaUVMSpace >();
 }
 
+TEST_F( cuda, view_subview_1d_assign ) {
+  TestViewSubview::test_1d_assign< Kokkos::CudaUVMSpace >();
+}
 
+TEST_F( cuda, view_subview_2d_from_3d ) {
+  TestViewSubview::test_2d_subview_3d< Kokkos::CudaUVMSpace >();
+}
+
+TEST_F( cuda, view_subview_2d_from_5d ) {
+  TestViewSubview::test_2d_subview_5d< Kokkos::CudaUVMSpace >();
+}
 
 
 TEST_F( cuda, range_tag )

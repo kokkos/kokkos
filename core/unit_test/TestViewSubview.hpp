@@ -721,9 +721,11 @@ void test_1d_assign_impl() {
       a(i) = i;
 
     Kokkos::View<int[N0],Layout,Space> a1(a);
+    Kokkos::fence();
     test_Check1D(a1,a,std::pair<int,int>(0,N0));
 
     Kokkos::View<int[N0],LayoutSub,Space> a2(a1);
+    Kokkos::fence();
     test_Check1D(a2,a,std::pair<int,int>(0,N0));
     a1 = a;
     test_Check1D(a1,a,std::pair<int,int>(0,N0));
@@ -738,8 +740,10 @@ void test_1d_assign_impl() {
   { // Works
     Kokkos::View<int[N0],LayoutOrg,Space> a("A");
     Kokkos::View<int*,Layout,Space> a1(a);
+    Kokkos::fence();
     test_Check1D(a1,a,std::pair<int,int>(0,N0));
     a1 = a;
+    Kokkos::fence();
     test_Check1D(a1,a,std::pair<int,int>(0,N0));
   }
 }
@@ -754,9 +758,11 @@ void test_2d_subview_3d_impl_type() {
         a(i0,i1,i2) = i0*1000000+i1*1000+i2;
   Kokkos::View<TypeSub,LayoutSub,Space> a1;
   a1 = Kokkos::subview(a,3,Kokkos::ALL(),Kokkos::ALL());
+  Kokkos::fence();
   test_Check2D3D(a1,a,3,std::pair<int,int>(0,N1),std::pair<int,int>(0,N2));
 
   Kokkos::View<TypeSub,LayoutSub,Space> a2(a,3,Kokkos::ALL(),Kokkos::ALL());
+  Kokkos::fence();
   test_Check2D3D(a2,a,3,std::pair<int,int>(0,N1),std::pair<int,int>(0,N2));
 }
 
@@ -791,9 +797,11 @@ void test_2d_subview_5d_impl_type() {
             a(i0,i1,i2,i3,i4) = i0*1000000+i1*10000+i2*100+i3*10+i4;
   Kokkos::View<TypeSub,LayoutSub,Space> a1;
   a1 = Kokkos::subview(a,3,5,Kokkos::ALL(),Kokkos::ALL(),Kokkos::ALL());
+  Kokkos::fence();
   test_Check3D5D(a1,a,3,5,std::pair<int,int>(0,N2),std::pair<int,int>(0,N3),std::pair<int,int>(0,N4));
 
   Kokkos::View<TypeSub,LayoutSub,Space> a2(a,3,5,Kokkos::ALL(),Kokkos::ALL(),Kokkos::ALL());
+  Kokkos::fence();
   test_Check3D5D(a2,a,3,5,std::pair<int,int>(0,N2),std::pair<int,int>(0,N3),std::pair<int,int>(0,N4));
 }
 
