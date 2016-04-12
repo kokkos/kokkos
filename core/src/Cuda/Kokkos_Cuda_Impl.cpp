@@ -523,9 +523,15 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
     }
   #endif
 
+  cudaThreadSetCacheConfig(cudaFuncCachePreferShared);
+
   // Init the array for used for arbitrarily sized atomics
   Impl::init_lock_array_cuda_space();
 
+  #ifdef KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE
+  int* lock_array_ptr = lock_array_cuda_space_ptr();
+  cudaMemcpyToSymbol( kokkos_impl_cuda_atomic_lock_array , & lock_array_ptr , sizeof(int*) );
+  #endif
 }
 
 //----------------------------------------------------------------------------
