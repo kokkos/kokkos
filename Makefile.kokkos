@@ -288,6 +288,7 @@ endif
 #Add Architecture flags
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_AVX 1" >> KokkosCore_config.tmp )
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
 	KOKKOS_CXXFLAGS +=
 	KOKKOS_LDFLAGS +=
@@ -298,11 +299,13 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_POWER8), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_POWER8 1" >> KokkosCore_config.tmp )
 	KOKKOS_CXXFLAGS += -mcpu=power8
 	KOKKOS_LDFLAGS  += -mcpu=power8
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX2), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_AVX2 1" >> KokkosCore_config.tmp )
 	ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL), 1)
 		KOKKOS_CXXFLAGS += -xCORE-AVX2
 		KOKKOS_LDFLAGS  += -xCORE-AVX2
@@ -322,6 +325,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX2), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX512MIC), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_AVX512MIC 1" >> KokkosCore_config.tmp )
 	ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL), 1)
 		KOKKOS_CXXFLAGS += -xMIC-AVX512
 		KOKKOS_LDFLAGS  += -xMIC-AVX512
@@ -341,30 +345,45 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX512MIC), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KNC), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_KNC 1" >> KokkosCore_config.tmp )
 	KOKKOS_CXXFLAGS += -mmic
 	KOKKOS_LDFLAGS += -mmic
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER30), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER 1" >> KokkosCore_config.tmp )
+    tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER30 1" >> KokkosCore_config.tmp )
 	KOKKOS_CXXFLAGS += -arch=sm_30
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER32), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER 1" >> KokkosCore_config.tmp )
+    tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER32 1" >> KokkosCore_config.tmp )
 	KOKKOS_CXXFLAGS += -arch=sm_32
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER35), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER 1" >> KokkosCore_config.tmp )
+    tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER35 1" >> KokkosCore_config.tmp )
 	KOKKOS_CXXFLAGS += -arch=sm_35
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER37), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER 1" >> KokkosCore_config.tmp )
+    tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER37 1" >> KokkosCore_config.tmp )
 	KOKKOS_CXXFLAGS += -arch=sm_37
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL50), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL 1" >> KokkosCore_config.tmp )
+    tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL50 1" >> KokkosCore_config.tmp )
 	KOKKOS_CXXFLAGS += -arch=sm_50
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL52), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL 1" >> KokkosCore_config.tmp )
+    tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL52 1" >> KokkosCore_config.tmp )
 	KOKKOS_CXXFLAGS += -arch=sm_52
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL53), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL 1" >> KokkosCore_config.tmp )
+    tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL53 1" >> KokkosCore_config.tmp )
 	KOKKOS_CXXFLAGS += -arch=sm_53
 endif
 endif
