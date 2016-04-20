@@ -170,7 +170,6 @@ struct DynRankDimTraits {
                    , N6 != 0 ? N6 : 1
                    , N7 != 0 ? N7 : 1 );
   }
-
 };
 
 } //end Impl
@@ -321,10 +320,31 @@ public:
     { return view_type::operator()(0,0,0,0,0,0,0); }
   
   // Rank 1
+  // This assumes a contiguous underlying memory (i.e. no padding, no striding...)
   template< typename iType >
   KOKKOS_INLINE_FUNCTION
-  reference_type operator[](const iType & i0) const
-    { return view_type::operator()(i0,0,0,0,0,0,0); }
+  typename std::enable_if< std::is_same<value_type, scalar_array_type>::value && std::is_integral<iType>::value, reference_type>::type
+  operator[](const iType & i0) const
+    {
+      return data()[i0];
+    }
+
+  // This assumes a contiguous underlying memory (i.e. no padding, no striding...
+  // AND a Trilinos/Sacado scalar type )
+  template< typename iType >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !std::is_same<value_type, scalar_array_type>::value && std::is_integral<iType>::value, reference_type>::type
+  operator[](const iType & i0) const
+    {
+      auto map = implementation_map();
+
+      const size_t dim_scalar = map.dimension_scalar();
+      const size_t size = this->span() / dim_scalar;
+
+      typedef Kokkos::View<DataType*, array_layout, device_type, Kokkos::MemoryTraits<Kokkos::Unmanaged | memory_traits::RandomAccess | memory_traits::Atomic> > tmp_view_type;
+      tmp_view_type rankone_view(this->data(), size, dim_scalar);
+      return rankone_view(i0);
+    }
 
   template< typename iType >
   KOKKOS_INLINE_FUNCTION
@@ -1035,6 +1055,7 @@ void realloc( DynRankView<T,P...> & v ,
 }
 
 } //end Experimental
+
 } //end Kokkos
 
 
