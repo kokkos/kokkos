@@ -314,6 +314,15 @@ public:
   using view_type::stride_6;
   using view_type::stride_7;
 
+
+//operator[] - use carefully!!
+// subdynrankviews and non-contiguous views are not linearly indexed, 
+// only use if you are confident with your 1D index i0
+  template< typename iType >
+  KOKKOS_INLINE_FUNCTION
+  reference_type operator[](const iType & i0) const
+    { return data()[i0] ; }
+
   //operators ()
   // Rank 0
   KOKKOS_INLINE_FUNCTION
@@ -321,10 +330,12 @@ public:
     { return view_type::operator()(0,0,0,0,0,0,0); }
   
   // Rank 1
+/*
   template< typename iType >
   KOKKOS_INLINE_FUNCTION
   reference_type operator[](const iType & i0) const
     { return view_type::operator()(i0,0,0,0,0,0,0); }
+*/
 
   template< typename iType >
   KOKKOS_INLINE_FUNCTION
