@@ -635,7 +635,6 @@ public:
       // Functor's reduce memory, team scan memory, and team shared memory depend upon team size.
 
       const int shmem_size_total = m_shmem_begin + m_shmem_size ;
-
       if ( CudaTraits::SharedMemoryCapacity < shmem_size_total ) {
         Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelFor< Cuda > insufficient shared memory"));
       }
@@ -691,6 +690,14 @@ public:
   size_type *         m_scratch_flags ;
   size_type *         m_unified_space ;
 
+  // Shall we use the shfl based reduction or not (only use it for static sized types of more than 128bit
+  enum { UseShflReduction = ((sizeof(value_type)>2*sizeof(double)) && ValueTraits::StaticValueSize) };
+  // Some crutch to do function overloading
+private:
+  typedef double DummyShflReductionType;
+  typedef int DummySHMEMReductionType;
+
+public:
   template< class TagType >
   __device__ inline
   typename std::enable_if< std::is_same< TagType , void >::value >::type
@@ -703,10 +710,13 @@ public:
   exec_range( const Member & i , reference_type update ) const
     { m_functor( TagType() , i , update ); }
 
-#if ! defined( KOKKOS_EXPERIMENTAL_CUDA_SHFL_REDUCTION )
+  __device__ inline
+  void operator() () const {
+    run(Kokkos::Impl::if_c<UseShflReduction, DummyShflReductionType, DummySHMEMReductionType>::select(1,1.0) );
+  }
 
   __device__ inline
-  void operator()(void) const
+  void run(const DummySHMEMReductionType& ) const
   {
     const integral_nonzero_constant< size_type , ValueTraits::StaticValueSize / sizeof(size_type) >
       word_count( ValueTraits::value_size( m_functor ) / sizeof(size_type) );
@@ -748,20 +758,17 @@ public:
     }
   }
 
-#else /* defined( KOKKOS_EXPERIMENTAL_CUDA_SHFL_REDUCTION ) */
-
   __device__ inline
-   void operator()(void) const
+   void run(const DummyShflReductionType&) const
    {
 
-     value_type value = 0;
-
+     value_type value = value_type();
      // Number of blocks is bounded so that the reduction can be limited to two passes.
      // Each thread block is given an approximately equal amount of work to perform.
      // Accumulate the values for this block.
      // The accumulation ordering does not match the final pass, but is arithmatically equivalent.
 
-     const Policy range( m_policy , blockIdx.x , gridDim.x );
+     const WorkRange range( m_policy , blockIdx.x , gridDim.x );
 
      for ( Member iwork = range.begin() + threadIdx.y , iwork_end = range.end() ;
            iwork < iwork_end ; iwork += blockDim.y ) {
@@ -780,8 +787,6 @@ public:
        }
      }
    }
-
-#endif
 
   // Determine block size constrained by shared memory:
   static inline
@@ -808,11 +813,8 @@ public:
         // Required grid.x <= block.y
         const dim3 grid( std::min( int(block.y) , int( ( nwork + block.y - 1 ) / block.y ) ) , 1 , 1 );
   
-#ifdef KOKKOS_EXPERIMENTAL_CUDA_SHFL_REDUCTION
-      const int shmem = 0;
-#else
-      const int shmem = cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( m_functor , block.y );
-#endif
+      const int shmem = UseShflReduction?0:cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( m_functor , block.y );
+
   
       CudaParallelLaunch< ParallelReduce >( *this, grid, block, shmem ); // copy to device and execute
   

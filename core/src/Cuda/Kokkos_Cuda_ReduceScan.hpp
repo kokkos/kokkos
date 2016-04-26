@@ -170,7 +170,7 @@ bool cuda_inter_block_reduction( typename FunctorValueTraits< FunctorType , void
       if(id == 0)
         *m_scratch_flags = 0;
       last_block = true;
-      value = 0;
+      value = value_type();
 
       pointer_type const volatile global = (pointer_type) m_scratch_space ;
 
