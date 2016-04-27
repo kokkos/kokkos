@@ -672,6 +672,7 @@ private:
 
   typedef Kokkos::Impl::FunctorValueTraits< FunctorType, WorkTag > ValueTraits ;
   typedef Kokkos::Impl::FunctorValueInit<   FunctorType, WorkTag > ValueInit ;
+  typedef Kokkos::Impl::FunctorValueJoin<   FunctorType, WorkTag > ValueJoin ;
 
 public:
 
@@ -762,7 +763,8 @@ public:
    void run(const DummyShflReductionType&) const
    {
 
-     value_type value = value_type();
+     value_type value;
+     ValueInit::init( m_functor , &value);
      // Number of blocks is bounded so that the reduction can be limited to two passes.
      // Each thread block is given an approximately equal amount of work to perform.
      // Accumulate the values for this block.
@@ -776,10 +778,13 @@ public:
      }
 
      pointer_type const result = (pointer_type) (m_unified_space ? m_unified_space : m_scratch_space) ;
+
      int max_active_thread = range.end()-range.begin() < blockDim.y ? range.end() - range.begin():blockDim.y;
-     max_active_thread = max_active_thread == 0?blockDim.y:max_active_thread;
-     if(Impl::cuda_inter_block_reduction<FunctorType,Impl::JoinAdd<value_type> >
-            (value,Impl::JoinAdd<value_type>(),m_scratch_space,result,m_scratch_flags,max_active_thread)) {
+
+     max_active_thread = (max_active_thread == 0)?blockDim.y:max_active_thread;
+
+     if(Impl::cuda_inter_block_reduction<FunctorType,ValueJoin >
+            (value,ValueJoin(m_functor),m_scratch_space,result,m_scratch_flags,max_active_thread)) {
        const unsigned id = threadIdx.y*blockDim.x + threadIdx.x;
        if(id==0) {
          Kokkos::Impl::FunctorFinal< FunctorType , WorkTag >::final( m_functor , (void*) &value );
