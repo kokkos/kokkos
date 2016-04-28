@@ -81,8 +81,6 @@ public:
 
 private:
 
-  friend struct CudaTaskPolicyQueue ;
-
   CudaTaskPolicyQueue   * m_policy ;
   TaskMember * volatile * m_queue ;
   function_team_type      m_team ;    ///< Apply function on CUDA
