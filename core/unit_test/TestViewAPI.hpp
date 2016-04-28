@@ -821,6 +821,59 @@ struct TestViewOperator_LeftAndRight< DataType , DeviceType , 1 >
   }
 };
 
+template<class Layout, class DeviceType>
+struct TestViewMirror {
+
+  template<class MemoryTraits>
+  void static test_mirror() {
+    Kokkos::View<double*, Layout, Kokkos::HostSpace> a_org("A",1000);
+    Kokkos::View<double*, Layout, Kokkos::HostSpace, MemoryTraits> a_h = a_org;
+    auto a_h2 = Kokkos::create_mirror(Kokkos::HostSpace(),a_h);
+    auto a_d = Kokkos::create_mirror(DeviceType(),a_h);
+
+    int equal_ptr_h_h2  = (a_h.data() ==a_h2.data())?1:0;
+    int equal_ptr_h_d   = (a_h.data() ==a_d. data())?1:0;
+    int equal_ptr_h2_d  = (a_h2.data()==a_d. data())?1:0;
+
+    ASSERT_EQ(equal_ptr_h_h2,0);
+    ASSERT_EQ(equal_ptr_h_d ,0);
+    ASSERT_EQ(equal_ptr_h2_d,0);
+    
+
+    ASSERT_EQ(a_h.dimension_0(),a_h2.dimension_0());
+    ASSERT_EQ(a_h.dimension_0(),a_d .dimension_0());
+  }
+
+
+  template<class MemoryTraits>
+  void static test_mirror_view() {
+    Kokkos::View<double*, Layout, Kokkos::HostSpace> a_org("A",1000);
+    Kokkos::View<double*, Layout, Kokkos::HostSpace, MemoryTraits> a_h = a_org;
+    auto a_h2 = Kokkos::create_mirror_view(Kokkos::HostSpace(),a_h);
+    auto a_d = Kokkos::create_mirror_view(DeviceType(),a_h);
+
+    int equal_ptr_h_h2  = a_h.data() ==a_h2.data()?1:0;
+    int equal_ptr_h_d   = a_h.data() ==a_d. data()?1:0;
+    int equal_ptr_h2_d  = a_h2.data()==a_d. data()?1:0;
+
+    int is_same_memspace = std::is_same<Kokkos::HostSpace,typename DeviceType::memory_space>::value?1:0; 
+    ASSERT_EQ(equal_ptr_h_h2,1);
+    ASSERT_EQ(equal_ptr_h_d ,is_same_memspace);
+    ASSERT_EQ(equal_ptr_h2_d ,is_same_memspace);
+
+
+    ASSERT_EQ(a_h.dimension_0(),a_h2.dimension_0());
+    ASSERT_EQ(a_h.dimension_0(),a_d .dimension_0());
+  } 
+
+  void static testit() {
+    test_mirror<Kokkos::MemoryTraits<0>>();
+    test_mirror<Kokkos::MemoryTraits<Kokkos::Unmanaged>>();
+    test_mirror_view<Kokkos::MemoryTraits<0>>();
+    test_mirror_view<Kokkos::MemoryTraits<Kokkos::Unmanaged>>();
+  }
+};
+
 /*--------------------------------------------------------------------------*/
 
 template< typename T, class DeviceType >
@@ -864,6 +917,9 @@ public:
     TestViewOperator_LeftAndRight< int[2][3][4] , device >::testit();
     TestViewOperator_LeftAndRight< int[2][3] , device >::testit();
     TestViewOperator_LeftAndRight< int[2] , device >::testit();
+    TestViewMirror<Kokkos::LayoutLeft, device >::testit(); 
+    TestViewMirror<Kokkos::LayoutRight, device >::testit(); 
+
   }
 
   static void run_test_mirror()

@@ -2033,6 +2033,45 @@ void deep_copy
 
 namespace Kokkos {
 namespace Experimental {
+namespace Impl {
+
+// Deduce Mirror Types
+template<class Space, class T, class ... P>
+struct MirrorViewType {
+  // The incoming view_type
+  typedef typename Kokkos::Experimental::View<T,P...> src_view_type;
+  // The memory space for the mirror view
+  typedef typename Space::memory_space memory_space;
+  // Check whether it is the same memory space
+  enum { is_same_memspace = std::is_same<memory_space,typename src_view_type::memory_space>::value };
+  // The array_layout
+  typedef typename src_view_type::array_layout array_layout;
+  // The data type (we probably want it non-const since otherwise we can't even deep_copy to it.
+  typedef typename src_view_type::non_const_data_type data_type;
+  // The destination view type if it is not the same memory space
+  typedef Kokkos::Experimental::View<data_type,array_layout,Space> dest_view_type;
+  // If it is the same memory_space return the existsing view_type
+  // This will also keep the unmanaged trait if necessary
+  typedef typename std::conditional<is_same_memspace,src_view_type,dest_view_type>::type view_type;
+};
+
+template<class Space, class T, class ... P>
+struct MirrorType {
+  // The incoming view_type
+  typedef typename Kokkos::Experimental::View<T,P...> src_view_type;
+  // The memory space for the mirror view
+  typedef typename Space::memory_space memory_space;
+  // Check whether it is the same memory space
+  enum { is_same_memspace = std::is_same<memory_space,typename src_view_type::memory_space>::value };
+  // The array_layout
+  typedef typename src_view_type::array_layout array_layout;
+  // The data type (we probably want it non-const since otherwise we can't even deep_copy to it.
+  typedef typename src_view_type::non_const_data_type data_type;
+  // The destination view type if it is not the same memory space
+  typedef Kokkos::Experimental::View<data_type,array_layout,Space> view_type;
+};
+
+}
 
 template< class T , class ... P >
 inline
@@ -2094,6 +2133,13 @@ create_mirror( const Kokkos::Experimental::View<T,P...> & src
   return dst_type( std::string( src.label() ).append("_mirror") , layout );
 }
 
+
+// Create a mirror in a new space (specialization for different space)
+template<class Space, class T, class ... P>
+typename Impl::MirrorType<Space,T,P ...>::view_type create_mirror(const Space& , const Kokkos::Experimental::View<T,P...> & src) {
+  return typename Impl::MirrorType<Space,T,P ...>::view_type(src.label(),src.layout());
+}
+
 template< class T , class ... P >
 inline
 typename Kokkos::Experimental::View<T,P...>::HostMirror
@@ -2128,6 +2174,22 @@ create_mirror_view( const Kokkos::Experimental::View<T,P...> & src
                   )
 {
   return Kokkos::Experimental::create_mirror( src );
+}
+
+// Create a mirror view in a new space (specialization for same space)
+template<class Space, class T, class ... P>
+typename Impl::MirrorViewType<Space,T,P ...>::view_type
+create_mirror_view(const Space& , const Kokkos::Experimental::View<T,P...> & src
+  , typename std::enable_if<Impl::MirrorViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
+  return src;
+}
+
+// Create a mirror view in a new space (specialization for different space)
+template<class Space, class T, class ... P>
+typename Impl::MirrorViewType<Space,T,P ...>::view_type
+create_mirror_view(const Space& , const Kokkos::Experimental::View<T,P...> & src
+  , typename std::enable_if<!Impl::MirrorViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
+  return typename Impl::MirrorViewType<Space,T,P ...>::view_type(src.label(),src.layout());
 }
 
 } /* namespace Experimental */
