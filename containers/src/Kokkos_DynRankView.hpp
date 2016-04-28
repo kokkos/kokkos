@@ -339,10 +339,10 @@ public:
       auto map = implementation_map();
 
       const size_t dim_scalar = map.dimension_scalar();
-      const size_t size = this->span() / dim_scalar;
+      const size_t bytes = this->span() / dim_scalar;
 
       typedef Kokkos::View<DataType*, array_layout, device_type, Kokkos::MemoryTraits<Kokkos::Unmanaged | memory_traits::RandomAccess | memory_traits::Atomic> > tmp_view_type;
-      tmp_view_type rankone_view(this->data(), size, dim_scalar);
+      tmp_view_type rankone_view(this->data(), bytes, dim_scalar);
       return rankone_view(i0);
     }
 
