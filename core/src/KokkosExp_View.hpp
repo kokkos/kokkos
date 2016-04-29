@@ -1659,7 +1659,7 @@ struct ViewFill< OutputView , typename std::enable_if< OutputView::Rank == 0 >::
     }
 };
 
-template< class OutputView , class InputView >
+template< class OutputView , class InputView , class ExecSpace = typename OutputView::execution_space >
 struct ViewRemap {
 
   const OutputView output ;
@@ -1684,8 +1684,7 @@ struct ViewRemap {
     , n6( std::min( (size_t)arg_out.dimension_6() , (size_t)arg_in.dimension_6() ) )
     , n7( std::min( (size_t)arg_out.dimension_7() , (size_t)arg_in.dimension_7() ) )
     {
-      typedef typename OutputView::execution_space execution_space ;
-      typedef Kokkos::RangePolicy< execution_space > Policy ;
+      typedef Kokkos::RangePolicy< ExecSpace > Policy ;
       const Kokkos::Impl::ParallelFor< ViewRemap , Policy > closure( *this , Policy( 0 , n0 ) );
       closure.execute();
     }
@@ -1812,11 +1811,16 @@ void deep_copy
   typedef View<ST,SP...>  src_type ;
 
   typedef typename dst_type::execution_space  dst_execution_space ;
+  typedef typename src_type::execution_space  src_execution_space ;
   typedef typename dst_type::memory_space     dst_memory_space ;
   typedef typename src_type::memory_space     src_memory_space ;
 
   enum { DstExecCanAccessSrc =
    Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename dst_execution_space::memory_space , src_memory_space >::value };
+
+  enum { SrcExecCanAccessDst =
+   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename src_execution_space::memory_space , dst_memory_space >::value };
+
 
   if ( (void *) dst.data() != (void*) src.data() ) {
 
@@ -1899,6 +1903,10 @@ void deep_copy
     else if ( DstExecCanAccessSrc ) {
       // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
       Kokkos::Experimental::Impl::ViewRemap< dst_type , src_type >( dst , src );
+    }
+    else if ( SrcExecCanAccessDst ) {
+      // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
+      Kokkos::Experimental::Impl::ViewRemap< dst_type , src_type , src_execution_space >( dst , src );
     }
     else {
       Kokkos::Impl::throw_runtime_exception("deep_copy given views that would require a temporary allocation");
@@ -2022,11 +2030,15 @@ void deep_copy
   typedef View<ST,SP...>  src_type ;
 
   typedef typename dst_type::execution_space  dst_execution_space ;
+  typedef typename src_type::execution_space  src_execution_space ;
   typedef typename dst_type::memory_space     dst_memory_space ;
   typedef typename src_type::memory_space     src_memory_space ;
 
   enum { DstExecCanAccessSrc =
    Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename dst_execution_space::memory_space , src_memory_space >::value };
+
+  enum { SrcExecCanAccessDst =
+   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename src_execution_space::memory_space , dst_memory_space >::value };
 
   if ( (void *) dst.data() != (void*) src.data() ) {
 
@@ -2064,6 +2076,10 @@ void deep_copy
     else if ( DstExecCanAccessSrc ) {
       // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
       Kokkos::Experimental::Impl::ViewRemap< dst_type , src_type >( dst , src );
+    }
+    else if ( SrcExecCanAccessDst ) {
+      // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
+      Kokkos::Experimental::Impl::ViewRemap< dst_type , src_type , src_execution_space >( dst , src );
     }
     else {
       Kokkos::Impl::throw_runtime_exception("deep_copy given views that would require a temporary allocation");
