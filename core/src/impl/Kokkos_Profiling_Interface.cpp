@@ -47,7 +47,7 @@
 #include <string.h>
 
 namespace Kokkos {
-  namespace Experimental {
+  namespace Profiling {
     bool profileLibraryLoaded() {
        	return (NULL != initProfileLibrary);
     }
