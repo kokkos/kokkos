@@ -95,6 +95,12 @@ namespace Kokkos {
     }
     
     void initialize() {
+
+        // Make sure initialize calls happens only once
+        static int is_initialized = 0;
+        if(is_initialized) return;
+        is_initialized = 1;
+
         void* firstProfileLibrary;
 
         char* envProfileLibrary  = getenv("KOKKOS_PROFILE_LIBRARY");
@@ -153,6 +159,11 @@ namespace Kokkos {
     }
 
     void finalize() {
+      // Make sure finalize calls happens only once
+      static int is_finalized = 0;
+      if(is_finalized) return;
+      is_finalized = 1;
+
       if(NULL != finalizeProfileLibrary) {
         (*finalizeProfileLibrary)();
 

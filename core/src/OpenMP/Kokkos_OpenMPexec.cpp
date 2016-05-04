@@ -49,6 +49,7 @@
 #include <impl/Kokkos_Error.hpp>
 #include <iostream>
 #include <impl/Kokkos_CPUDiscovery.hpp>
+#include <impl/Kokkos_Profiling_Interface.hpp>
 
 #ifdef KOKKOS_HAVE_OPENMP
 
@@ -330,6 +331,10 @@ void OpenMP::initialize( unsigned thread_count ,
   }
   // Init the array for used for arbitrarily sized atomics
   Impl::init_lock_array_host_space();
+
+  #if (KOKKOS_ENABLE_PROFILING)
+    Kokkos::Profiling::initialize();
+  #endif
 }
 
 //----------------------------------------------------------------------------
@@ -350,6 +355,10 @@ void OpenMP::finalize()
   if ( Impl::s_using_hwloc && Kokkos::hwloc::can_bind_threads() ) {
     hwloc::unbind_this_thread();
   }
+
+  #if (KOKKOS_ENABLE_PROFILING)
+    Kokkos::Profiling::finalize();
+  #endif
 }
 
 //----------------------------------------------------------------------------
