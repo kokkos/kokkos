@@ -601,7 +601,7 @@ public:
     : DynRankView(Impl::ViewCtorProp< std::string , Kokkos::Experimental::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::Experimental::WithoutInitializing ), arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7 ) 
     {}
 
-  using view_type::memory_span;
+  using view_type::required_allocation_size;
 
   explicit KOKKOS_INLINE_FUNCTION
   DynRankView( pointer_type arg_ptr

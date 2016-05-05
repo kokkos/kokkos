@@ -1373,7 +1373,8 @@ public:
 
   //----------------------------------------
   // Memory span required to wrap these dimensions.
-  static constexpr size_t memory_span( const size_t arg_N0 = 0
+  static constexpr size_t required_allocation_size(
+                                       const size_t arg_N0 = 0
                                      , const size_t arg_N1 = 0
                                      , const size_t arg_N2 = 0
                                      , const size_t arg_N3 = 0
