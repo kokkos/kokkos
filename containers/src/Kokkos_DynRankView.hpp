@@ -172,6 +172,45 @@ struct DynRankDimTraits {
   }
 };
 
+  // Non-strided Layout
+  template <typename Layout , typename iType>
+  KOKKOS_INLINE_FUNCTION
+  static typename std::enable_if< (std::is_same<Layout , Kokkos::LayoutRight>::value || std::is_same<Layout , Kokkos::LayoutLeft>::value) && std::is_integral<iType>::value , Layout >::type reconstructLayout( const Layout& layout , iType dynrank )
+  {
+    return Layout( dynrank > 0 ? layout.dimension[0] : 0
+                 , dynrank > 1 ? layout.dimension[1] : 0
+                 , dynrank > 2 ? layout.dimension[2] : 0
+                 , dynrank > 3 ? layout.dimension[3] : 0
+                 , dynrank > 4 ? layout.dimension[4] : 0
+                 , dynrank > 5 ? layout.dimension[5] : 0
+                 , dynrank > 6 ? layout.dimension[6] : 0
+                 , dynrank > 7 ? layout.dimension[7] : 0
+                 );
+  }
+
+  // LayoutStride
+  template <typename Layout , typename iType>
+  KOKKOS_INLINE_FUNCTION
+  static typename std::enable_if< (std::is_same<Layout , Kokkos::LayoutStride>::value) && std::is_integral<iType>::value , Layout >::type reconstructLayout( const Layout& layout , iType dynrank )
+  {
+    return Layout( dynrank > 0 ? layout.dimension[0] : 0
+                 , dynrank > 0 ? layout.stride[0] : 0 
+                 , dynrank > 1 ? layout.dimension[1] : 0
+                 , dynrank > 1 ? layout.stride[1] : 0 
+                 , dynrank > 2 ? layout.dimension[2] : 0
+                 , dynrank > 2 ? layout.stride[2] : 0 
+                 , dynrank > 3 ? layout.dimension[3] : 0
+                 , dynrank > 3 ? layout.stride[3] : 0 
+                 , dynrank > 4 ? layout.dimension[4] : 0
+                 , dynrank > 4 ? layout.stride[4] : 0 
+                 , dynrank > 5 ? layout.dimension[5] : 0
+                 , dynrank > 5 ? layout.stride[5] : 0 
+                 , dynrank > 6 ? layout.dimension[6] : 0
+                 , dynrank > 6 ? layout.stride[6] : 0 
+                 , dynrank > 7 ? layout.dimension[7] : 0
+                 , dynrank > 7 ? layout.stride[7] : 0 
+                 );
+  }
 } //end Impl
 
 /* \class DynRankView
@@ -432,8 +471,8 @@ public:
   using view_type::label;
 
   //----------------------------------------
-  // Allocation according to allocation properties and array layout
 
+  // Allocation according to allocation properties and array layout
   template< class ... P >
   explicit inline
   DynRankView( const Impl::ViewCtorProp< P ... > & arg_prop
@@ -446,7 +485,7 @@ public:
       , m_rank( Impl::DynRankDimTraits<typename traits::specialize>::computeRank(arg_layout) )
     {}
 
-//Wrappers
+  // Wrappers
   template< class ... P >
   explicit KOKKOS_INLINE_FUNCTION
   DynRankView( const Impl::ViewCtorProp< P ... > & arg_prop
@@ -900,6 +939,48 @@ void deep_copy
 namespace Kokkos {
 namespace Experimental {
 
+
+namespace Impl {
+
+// Deduce Mirror Types
+template<class Space, class T, class ... P>
+struct MirrorDRViewType {
+  // The incoming view_type
+  typedef typename Kokkos::Experimental::DynRankView<T,P...> src_view_type;
+  // The memory space for the mirror view
+  typedef typename Space::memory_space memory_space;
+  // Check whether it is the same memory space
+  enum { is_same_memspace = std::is_same<memory_space,typename src_view_type::memory_space>::value };
+  // The array_layout
+  typedef typename src_view_type::array_layout array_layout;
+  // The data type (we probably want it non-const since otherwise we can't even deep_copy to it.
+  typedef typename src_view_type::non_const_data_type data_type;
+  // The destination view type if it is not the same memory space
+  typedef Kokkos::Experimental::DynRankView<data_type,array_layout,Space> dest_view_type;
+  // If it is the same memory_space return the existsing view_type
+  // This will also keep the unmanaged trait if necessary
+  typedef typename std::conditional<is_same_memspace,src_view_type,dest_view_type>::type view_type;
+};
+
+template<class Space, class T, class ... P>
+struct MirrorDRVType {
+  // The incoming view_type
+  typedef typename Kokkos::Experimental::DynRankView<T,P...> src_view_type;
+  // The memory space for the mirror view
+  typedef typename Space::memory_space memory_space;
+  // Check whether it is the same memory space
+  enum { is_same_memspace = std::is_same<memory_space,typename src_view_type::memory_space>::value };
+  // The array_layout
+  typedef typename src_view_type::array_layout array_layout;
+  // The data type (we probably want it non-const since otherwise we can't even deep_copy to it.
+  typedef typename src_view_type::non_const_data_type data_type;
+  // The destination view type if it is not the same memory space
+  typedef Kokkos::Experimental::DynRankView<data_type,array_layout,Space> view_type;
+};
+
+}
+
+
 template< class T , class ... P >
 inline
 typename DynRankView<T,P...>::HostMirror
@@ -961,6 +1042,13 @@ create_mirror( const DynRankView<T,P...> & src
   return dst_type( std::string( src.label() ).append("_mirror") , layout );
 }
 
+
+// Create a mirror in a new space (specialization for different space)
+template<class Space, class T, class ... P>
+typename Impl::MirrorDRVType<Space,T,P ...>::view_type create_mirror(const Space& , const Kokkos::Experimental::DynRankView<T,P...> & src) {
+  return typename Impl::MirrorDRVType<Space,T,P ...>::view_type(src.label(), Impl::reconstructLayout(src.layout(), src.rank()) );
+}
+
 template< class T , class ... P >
 inline
 typename DynRankView<T,P...>::HostMirror
@@ -995,6 +1083,22 @@ create_mirror_view( const DynRankView<T,P...> & src
                   )
 {
   return Kokkos::Experimental::create_mirror( src ); 
+}
+
+// Create a mirror view in a new space (specialization for same space)
+template<class Space, class T, class ... P>
+typename Impl::MirrorDRViewType<Space,T,P ...>::view_type
+create_mirror_view(const Space& , const Kokkos::Experimental::DynRankView<T,P...> & src
+  , typename std::enable_if<Impl::MirrorDRViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
+  return src;
+}
+
+// Create a mirror view in a new space (specialization for different space)
+template<class Space, class T, class ... P>
+typename Impl::MirrorDRViewType<Space,T,P ...>::view_type
+create_mirror_view(const Space& , const Kokkos::Experimental::DynRankView<T,P...> & src
+  , typename std::enable_if<!Impl::MirrorDRViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
+  return typename Impl::MirrorDRViewType<Space,T,P ...>::view_type(src.label(), Impl::reconstructLayout(src.layout(), src.rank()) );
 }
 
 } //end Experimental
