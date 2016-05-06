@@ -133,7 +133,11 @@
 // still identifies as 7.0
 #error "Cuda version 7.5 or greater required for host-to-device Lambda support"
 #endif
+#if ( CUDA_VERSION < 8000 )
 #define KOKKOS_LAMBDA [=]__device__
+#else
+#define KOKKOS_LAMBDA [=]__host__ __device__
+#endif
 #define KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA 1
 #endif
 #endif /* #if defined( KOKKOS_HAVE_CUDA ) && defined( __CUDACC__ ) */
