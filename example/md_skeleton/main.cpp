@@ -191,7 +191,7 @@ int main(int argc, char** argv) {
 
   printf("-> Running %i force calculations\n",iter);
 
-  Kokkos::Impl::Timer timer;
+  Kokkos::Timer timer;
 
   for(int i=0;i<iter;i++) {
     force(system,0);

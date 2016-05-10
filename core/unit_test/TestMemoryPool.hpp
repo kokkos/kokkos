@@ -277,7 +277,7 @@ bool test_mempool( size_t chunk_size, size_t total_size )
             << num_chunks << std::endl;
 
   double elapsed_time = 0;
-  Kokkos::Impl::Timer timer;
+  Kokkos::Timer timer;
 #endif
 
   pool_memory_space m_space( MemorySpace(), chunk_size, total_size );
@@ -431,7 +431,7 @@ void test_mempool2( size_t chunk_size, size_t total_size )
 
 #ifdef TESTMEMORYPOOL_PRINT
   double elapsed_time = 0;
-  Kokkos::Impl::Timer timer;
+  Kokkos::Timer timer;
 #endif
 
   pool_memory_space m_space( MemorySpace(), chunk_size, total_size,
