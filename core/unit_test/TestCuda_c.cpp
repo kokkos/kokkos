@@ -535,12 +535,15 @@ TEST_F( cuda , team_scan )
 
 TEST_F( cuda , memory_pool )
 {
-  bool val_uvm = TestMemoryPool::test_mempool< Kokkos::Cuda, Kokkos::CudaUVMSpace >( 128, 128000 );
-  ASSERT_TRUE( val_uvm );
+//  typedef Kokkos::CudaUVMSpace  device_type;
+  typedef Kokkos::Cuda          device_type;
+
+  bool val = TestMemoryPool::test_mempool< device_type >( 128, 128000000 );
+  ASSERT_TRUE( val );
 
   Kokkos::Cuda::fence();
 
-  TestMemoryPool::test_mempool2< Kokkos::Cuda, Kokkos::CudaUVMSpace >( 128, 2560000 );
+  TestMemoryPool::test_mempool2< device_type >( 64, 4, 100000, 200000 );
 
   Kokkos::Cuda::fence();
 }
