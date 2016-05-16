@@ -46,6 +46,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <sstream>
+#include <Kokkos_Core.hpp>
 #include <Threads/Kokkos_Threads_TaskPolicy.hpp>
 
 #if defined( KOKKOS_HAVE_PTHREAD )
