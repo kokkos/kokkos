@@ -452,7 +452,7 @@ void Test(int loop, int test, const char* type_name) {
 int main(int argc, char* argv[])
 {
   int type = -1;
-  int loop = 1000000;
+  int loop = 100000;
   int test = -1;
 
   for(int i=0;i<argc;i++)
