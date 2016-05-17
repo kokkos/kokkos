@@ -53,6 +53,7 @@
 #include <Cuda/Kokkos_Cuda_Internal.hpp>
 #include <impl/Kokkos_AllocationTracker.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_Profiling_Interface.hpp>
 
 /*--------------------------------------------------------------------------*/
 /* Standard 'C' libraries */
@@ -730,7 +731,13 @@ int Cuda::is_initialized()
 { return Impl::CudaInternal::singleton().is_initialized(); }
 
 void Cuda::initialize( const Cuda::SelectDevice config , size_t num_instances )
-{ Impl::CudaInternal::singleton().initialize( config.cuda_device_id , num_instances ); }
+{
+  Impl::CudaInternal::singleton().initialize( config.cuda_device_id , num_instances );
+
+  #if (KOKKOS_ENABLE_PROFILING)
+    Kokkos::Profiling::initialize();
+  #endif
+}
 
 std::vector<unsigned>
 Cuda::detect_device_arch()
@@ -763,7 +770,13 @@ Cuda::size_type Cuda::device_arch()
 }
 
 void Cuda::finalize()
-{ Impl::CudaInternal::singleton().finalize(); }
+{
+  Impl::CudaInternal::singleton().finalize();
+
+  #if (KOKKOS_ENABLE_PROFILING)
+    Kokkos::Profiling::finalize();
+  #endif
+}
 
 Cuda::Cuda()
   : m_device( Impl::CudaInternal::singleton().m_cudaDev )

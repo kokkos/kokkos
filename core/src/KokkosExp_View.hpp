@@ -1373,7 +1373,8 @@ public:
 
   //----------------------------------------
   // Memory span required to wrap these dimensions.
-  static constexpr size_t memory_span( const size_t arg_N0 = 0
+  static constexpr size_t required_allocation_size(
+                                       const size_t arg_N0 = 0
                                      , const size_t arg_N1 = 0
                                      , const size_t arg_N2 = 0
                                      , const size_t arg_N3 = 0
@@ -1659,7 +1660,7 @@ struct ViewFill< OutputView , typename std::enable_if< OutputView::Rank == 0 >::
     }
 };
 
-template< class OutputView , class InputView >
+template< class OutputView , class InputView , class ExecSpace = typename OutputView::execution_space >
 struct ViewRemap {
 
   const OutputView output ;
@@ -1684,8 +1685,7 @@ struct ViewRemap {
     , n6( std::min( (size_t)arg_out.dimension_6() , (size_t)arg_in.dimension_6() ) )
     , n7( std::min( (size_t)arg_out.dimension_7() , (size_t)arg_in.dimension_7() ) )
     {
-      typedef typename OutputView::execution_space execution_space ;
-      typedef Kokkos::RangePolicy< execution_space > Policy ;
+      typedef Kokkos::RangePolicy< ExecSpace > Policy ;
       const Kokkos::Impl::ParallelFor< ViewRemap , Policy > closure( *this , Policy( 0 , n0 ) );
       closure.execute();
     }
@@ -1812,11 +1812,16 @@ void deep_copy
   typedef View<ST,SP...>  src_type ;
 
   typedef typename dst_type::execution_space  dst_execution_space ;
+  typedef typename src_type::execution_space  src_execution_space ;
   typedef typename dst_type::memory_space     dst_memory_space ;
   typedef typename src_type::memory_space     src_memory_space ;
 
   enum { DstExecCanAccessSrc =
    Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename dst_execution_space::memory_space , src_memory_space >::value };
+
+  enum { SrcExecCanAccessDst =
+   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename src_execution_space::memory_space , dst_memory_space >::value };
+
 
   if ( (void *) dst.data() != (void*) src.data() ) {
 
@@ -1828,8 +1833,16 @@ void deep_copy
     if ( std::is_same< typename ViewTraits<DT,DP...>::value_type ,
                        typename ViewTraits<ST,SP...>::non_const_value_type >::value &&
          (
-           std::is_same< typename ViewTraits<DT,DP...>::array_layout ,
-                         typename ViewTraits<ST,SP...>::array_layout >::value
+           ( std::is_same< typename ViewTraits<DT,DP...>::array_layout ,
+                           typename ViewTraits<ST,SP...>::array_layout >::value
+             &&
+             ( std::is_same< typename ViewTraits<DT,DP...>::array_layout ,
+                             typename Kokkos::LayoutLeft>::value
+             ||
+               std::is_same< typename ViewTraits<DT,DP...>::array_layout ,
+                             typename Kokkos::LayoutRight>::value
+             )
+           )
            ||
            ( ViewTraits<DT,DP...>::rank == 1 &&
              ViewTraits<ST,SP...>::rank == 1 )
@@ -1850,9 +1863,51 @@ void deep_copy
 
       Kokkos::Impl::DeepCopy< dst_memory_space , src_memory_space >( dst.data() , src.data() , nbytes );
     }
+    else if ( std::is_same< typename ViewTraits<DT,DP...>::value_type ,
+                            typename ViewTraits<ST,SP...>::non_const_value_type >::value &&
+         (
+           ( std::is_same< typename ViewTraits<DT,DP...>::array_layout ,
+                           typename ViewTraits<ST,SP...>::array_layout >::value
+             &&
+             std::is_same< typename ViewTraits<DT,DP...>::array_layout ,
+                          typename Kokkos::LayoutStride>::value
+           )
+           ||
+           ( ViewTraits<DT,DP...>::rank == 1 &&
+             ViewTraits<ST,SP...>::rank == 1 )
+         ) &&
+         dst.span_is_contiguous() &&
+         src.span_is_contiguous() &&
+         dst.span() == src.span() &&
+         dst.dimension_0() == src.dimension_0() &&
+         dst.dimension_1() == src.dimension_1() &&
+         dst.dimension_2() == src.dimension_2() &&
+         dst.dimension_3() == src.dimension_3() &&
+         dst.dimension_4() == src.dimension_4() &&
+         dst.dimension_5() == src.dimension_5() &&
+         dst.dimension_6() == src.dimension_6() &&
+         dst.dimension_7() == src.dimension_7() &&
+         dst.stride_0() == src.stride_0() &&
+         dst.stride_1() == src.stride_1() &&
+         dst.stride_2() == src.stride_2() &&
+         dst.stride_3() == src.stride_3() &&
+         dst.stride_4() == src.stride_4() &&
+         dst.stride_5() == src.stride_5() &&
+         dst.stride_6() == src.stride_6() &&
+         dst.stride_7() == src.stride_7() 
+         ) {
+
+      const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
+
+      Kokkos::Impl::DeepCopy< dst_memory_space , src_memory_space >( dst.data() , src.data() , nbytes );
+    }
     else if ( DstExecCanAccessSrc ) {
       // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
       Kokkos::Experimental::Impl::ViewRemap< dst_type , src_type >( dst , src );
+    }
+    else if ( SrcExecCanAccessDst ) {
+      // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
+      Kokkos::Experimental::Impl::ViewRemap< dst_type , src_type , src_execution_space >( dst , src );
     }
     else {
       Kokkos::Impl::throw_runtime_exception("deep_copy given views that would require a temporary allocation");
@@ -1976,11 +2031,15 @@ void deep_copy
   typedef View<ST,SP...>  src_type ;
 
   typedef typename dst_type::execution_space  dst_execution_space ;
+  typedef typename src_type::execution_space  src_execution_space ;
   typedef typename dst_type::memory_space     dst_memory_space ;
   typedef typename src_type::memory_space     src_memory_space ;
 
   enum { DstExecCanAccessSrc =
    Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename dst_execution_space::memory_space , src_memory_space >::value };
+
+  enum { SrcExecCanAccessDst =
+   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename src_execution_space::memory_space , dst_memory_space >::value };
 
   if ( (void *) dst.data() != (void*) src.data() ) {
 
@@ -2019,6 +2078,10 @@ void deep_copy
       // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
       Kokkos::Experimental::Impl::ViewRemap< dst_type , src_type >( dst , src );
     }
+    else if ( SrcExecCanAccessDst ) {
+      // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
+      Kokkos::Experimental::Impl::ViewRemap< dst_type , src_type , src_execution_space >( dst , src );
+    }
     else {
       Kokkos::Impl::throw_runtime_exception("deep_copy given views that would require a temporary allocation");
     }
@@ -2033,6 +2096,45 @@ void deep_copy
 
 namespace Kokkos {
 namespace Experimental {
+namespace Impl {
+
+// Deduce Mirror Types
+template<class Space, class T, class ... P>
+struct MirrorViewType {
+  // The incoming view_type
+  typedef typename Kokkos::Experimental::View<T,P...> src_view_type;
+  // The memory space for the mirror view
+  typedef typename Space::memory_space memory_space;
+  // Check whether it is the same memory space
+  enum { is_same_memspace = std::is_same<memory_space,typename src_view_type::memory_space>::value };
+  // The array_layout
+  typedef typename src_view_type::array_layout array_layout;
+  // The data type (we probably want it non-const since otherwise we can't even deep_copy to it.
+  typedef typename src_view_type::non_const_data_type data_type;
+  // The destination view type if it is not the same memory space
+  typedef Kokkos::Experimental::View<data_type,array_layout,Space> dest_view_type;
+  // If it is the same memory_space return the existsing view_type
+  // This will also keep the unmanaged trait if necessary
+  typedef typename std::conditional<is_same_memspace,src_view_type,dest_view_type>::type view_type;
+};
+
+template<class Space, class T, class ... P>
+struct MirrorType {
+  // The incoming view_type
+  typedef typename Kokkos::Experimental::View<T,P...> src_view_type;
+  // The memory space for the mirror view
+  typedef typename Space::memory_space memory_space;
+  // Check whether it is the same memory space
+  enum { is_same_memspace = std::is_same<memory_space,typename src_view_type::memory_space>::value };
+  // The array_layout
+  typedef typename src_view_type::array_layout array_layout;
+  // The data type (we probably want it non-const since otherwise we can't even deep_copy to it.
+  typedef typename src_view_type::non_const_data_type data_type;
+  // The destination view type if it is not the same memory space
+  typedef Kokkos::Experimental::View<data_type,array_layout,Space> view_type;
+};
+
+}
 
 template< class T , class ... P >
 inline
@@ -2094,6 +2196,13 @@ create_mirror( const Kokkos::Experimental::View<T,P...> & src
   return dst_type( std::string( src.label() ).append("_mirror") , layout );
 }
 
+
+// Create a mirror in a new space (specialization for different space)
+template<class Space, class T, class ... P>
+typename Impl::MirrorType<Space,T,P ...>::view_type create_mirror(const Space& , const Kokkos::Experimental::View<T,P...> & src) {
+  return typename Impl::MirrorType<Space,T,P ...>::view_type(src.label(),src.layout());
+}
+
 template< class T , class ... P >
 inline
 typename Kokkos::Experimental::View<T,P...>::HostMirror
@@ -2128,6 +2237,22 @@ create_mirror_view( const Kokkos::Experimental::View<T,P...> & src
                   )
 {
   return Kokkos::Experimental::create_mirror( src );
+}
+
+// Create a mirror view in a new space (specialization for same space)
+template<class Space, class T, class ... P>
+typename Impl::MirrorViewType<Space,T,P ...>::view_type
+create_mirror_view(const Space& , const Kokkos::Experimental::View<T,P...> & src
+  , typename std::enable_if<Impl::MirrorViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
+  return src;
+}
+
+// Create a mirror view in a new space (specialization for different space)
+template<class Space, class T, class ... P>
+typename Impl::MirrorViewType<Space,T,P ...>::view_type
+create_mirror_view(const Space& , const Kokkos::Experimental::View<T,P...> & src
+  , typename std::enable_if<!Impl::MirrorViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
+  return typename Impl::MirrorViewType<Space,T,P ...>::view_type(src.label(),src.layout());
 }
 
 } /* namespace Experimental */

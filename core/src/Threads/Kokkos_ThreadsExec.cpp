@@ -53,6 +53,7 @@
 #include <Kokkos_Core.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_CPUDiscovery.hpp>
+#include <impl/Kokkos_Profiling_Interface.hpp>
 
 
 //----------------------------------------------------------------------------
@@ -758,6 +759,9 @@ void ThreadsExec::initialize( unsigned thread_count ,
   // Init the array for used for arbitrarily sized atomics
   Impl::init_lock_array_host_space();
 
+  #if (KOKKOS_ENABLE_PROFILING)
+    Kokkos::Profiling::initialize();
+  #endif
 }
 
 //----------------------------------------------------------------------------
@@ -807,6 +811,10 @@ void ThreadsExec::finalize()
   s_threads_process.m_pool_size       = 1 ;
   s_threads_process.m_pool_fan_size   = 0 ;
   s_threads_process.m_pool_state = ThreadsExec::Inactive ;
+
+  #if (KOKKOS_ENABLE_PROFILING)
+    Kokkos::Profiling::finalize();
+  #endif
 }
 
 //----------------------------------------------------------------------------

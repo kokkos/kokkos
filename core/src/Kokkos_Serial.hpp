@@ -56,6 +56,7 @@
 #include <Kokkos_MemoryTraits.hpp>
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
+#include <impl/Kokkos_Profiling_Interface.hpp>
 
 #if defined( KOKKOS_HAVE_SERIAL )
 
@@ -142,7 +143,9 @@ public:
 
     // Init the array of locks used for arbitrarily sized atomics
     Impl::init_lock_array_host_space();
-
+    #if (KOKKOS_ENABLE_PROFILING)
+      Kokkos::Profiling::initialize();
+    #endif
   }
 
   static int is_initialized() { return 1 ; }
@@ -151,7 +154,11 @@ public:
   static int concurrency() {return 1;};
 
   //! Free any resources being consumed by the device.
-  static void finalize() {}
+  static void finalize() {
+    #if (KOKKOS_ENABLE_PROFILING)
+      Kokkos::Profiling::finalize();
+    #endif
+  }
 
   //! Print configuration information to the given output stream.
   static void print_configuration( std::ostream & , const bool /* detail */ = false ) {}

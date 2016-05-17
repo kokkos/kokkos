@@ -178,8 +178,8 @@ void parallel_for( const ExecPolicy  & policy
 {
 #if (KOKKOS_ENABLE_PROFILING)
     uint64_t kpID = 0;
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-     	Kokkos::Experimental::beginParallelFor("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+     	Kokkos::Profiling::beginParallelFor("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
      }
 #endif
 
@@ -190,8 +190,8 @@ void parallel_for( const ExecPolicy  & policy
    closure.execute();
 
 #if (KOKKOS_ENABLE_PROFILING)
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-        Kokkos::Experimental::endParallelFor(kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+        Kokkos::Profiling::endParallelFor(kpID);
      }
 #endif
 }
@@ -210,8 +210,8 @@ void parallel_for( const size_t        work_count
 
 #if (KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-  	Kokkos::Experimental::beginParallelFor("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+  	Kokkos::Profiling::beginParallelFor("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
      }
 #endif
     
@@ -222,8 +222,8 @@ void parallel_for( const size_t        work_count
   closure.execute();
 
 #if (KOKKOS_ENABLE_PROFILING)
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-	Kokkos::Experimental::endParallelFor(kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+	Kokkos::Profiling::endParallelFor(kpID);
      }
 #endif
 }
@@ -312,8 +312,8 @@ void parallel_reduce( const ExecPolicy  & policy
 
 #if (KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-  	Kokkos::Experimental::beginParallelReduce("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+  	Kokkos::Profiling::beginParallelReduce("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
      }
 #endif
 
@@ -324,8 +324,8 @@ void parallel_reduce( const ExecPolicy  & policy
     closure.execute();
 
 #if (KOKKOS_ENABLE_PROFILING)
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-	Kokkos::Experimental::endParallelReduce(kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+	Kokkos::Profiling::endParallelReduce(kpID);
      }
 #endif
 }
@@ -359,8 +359,8 @@ void parallel_reduce( const size_t        work_count
 
 #if (KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-  	Kokkos::Experimental::beginParallelReduce("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+  	Kokkos::Profiling::beginParallelReduce("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
      }
 #endif
     
@@ -371,8 +371,8 @@ void parallel_reduce( const size_t        work_count
   closure.execute();
 
 #if (KOKKOS_ENABLE_PROFILING)
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-	Kokkos::Experimental::endParallelReduce(kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+	Kokkos::Profiling::endParallelReduce(kpID);
      }
 #endif
 
@@ -395,8 +395,8 @@ void parallel_reduce( const ExecPolicy  & policy
     
 #if (KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-	Kokkos::Experimental::beginParallelReduce("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+	Kokkos::Profiling::beginParallelReduce("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
      }
 #endif
     
@@ -407,8 +407,8 @@ void parallel_reduce( const ExecPolicy  & policy
   closure.execute();
 
 #if (KOKKOS_ENABLE_PROFILING)
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-	Kokkos::Experimental::endParallelReduce(kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+	Kokkos::Profiling::endParallelReduce(kpID);
      }
 #endif
 
@@ -456,8 +456,8 @@ void parallel_reduce( const ExecPolicy  & policy
 
 #if (KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-	Kokkos::Experimental::beginParallelReduce("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+	Kokkos::Profiling::beginParallelReduce("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
      }
 #endif
     
@@ -468,8 +468,8 @@ void parallel_reduce( const ExecPolicy  & policy
   closure.execute();
 
 #if (KOKKOS_ENABLE_PROFILING)
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-	Kokkos::Experimental::endParallelReduce(kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+	Kokkos::Profiling::endParallelReduce(kpID);
      }
 #endif
 
@@ -498,8 +498,8 @@ void parallel_reduce( const size_t        work_count
 
 #if (KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-	Kokkos::Experimental::beginParallelReduce("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+	Kokkos::Profiling::beginParallelReduce("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
      }
 #endif
 
@@ -510,8 +510,8 @@ void parallel_reduce( const size_t        work_count
   closure.execute();
     
 #if (KOKKOS_ENABLE_PROFILING)
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-	Kokkos::Experimental::endParallelReduce(kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+	Kokkos::Profiling::endParallelReduce(kpID);
      }
 #endif
 
@@ -563,8 +563,8 @@ void parallel_reduce( const size_t        work_count
 
 #if (KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-	Kokkos::Experimental::beginParallelReduce("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+	Kokkos::Profiling::beginParallelReduce("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
      }
 #endif
 
@@ -575,8 +575,8 @@ void parallel_reduce( const size_t        work_count
   closure.execute();
 
 #if (KOKKOS_ENABLE_PROFILING)
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-	Kokkos::Experimental::endParallelReduce(kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+	Kokkos::Profiling::endParallelReduce(kpID);
      }
 #endif
 
@@ -816,8 +816,8 @@ void parallel_scan( const ExecutionPolicy & policy
 {
 #if (KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-	Kokkos::Experimental::beginParallelScan("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+	Kokkos::Profiling::beginParallelScan("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
      }
 #endif
 
@@ -828,8 +828,8 @@ void parallel_scan( const ExecutionPolicy & policy
   closure.execute();
 
 #if (KOKKOS_ENABLE_PROFILING)
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-	Kokkos::Experimental::endParallelScan(kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+	Kokkos::Profiling::endParallelScan(kpID);
      }
 #endif
 
@@ -849,8 +849,8 @@ void parallel_scan( const size_t        work_count
 
 #if (KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-	Kokkos::Experimental::beginParallelScan("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+	Kokkos::Profiling::beginParallelScan("" == str ? typeid(FunctorType).name() : str, 0, &kpID);
      }
 #endif
     
@@ -861,8 +861,8 @@ void parallel_scan( const size_t        work_count
   closure.execute();
 
 #if (KOKKOS_ENABLE_PROFILING)
-     if(Kokkos::Experimental::profileLibraryLoaded()) {
-	Kokkos::Experimental::endParallelScan(kpID);
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+	Kokkos::Profiling::endParallelScan(kpID);
      }
 #endif
 
