@@ -1,4 +1,15 @@
 
+IF(COMMAND TRIBITS_PACKAGE_DECL)
+  SET(KOKKOS_HAS_TRILINOS ON CACHE BOOL "")
+ELSE()
+  SET(KOKKOS_HAS_TRILINOS OFF CACHE BOOL "")
+ENDIF()
+
+IF(NOT KOKKOS_HAS_TRILINOS)
+  CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11 FATAL_ERROR)
+  INCLUDE(cmake/tribits.cmake)
+ENDIF()
+
 #
 # A) Forward delcare the package so that certain options are also defined for
 # subpackages
