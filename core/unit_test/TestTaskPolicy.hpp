@@ -228,7 +228,7 @@ long eval_fib( long n )
 }
 
 template< class ExecSpace >
-void test_fib( long n , const unsigned task_max_count = 1024 )
+void test_fib( long n , const unsigned task_max_count = 4096 )
 {
   const unsigned task_max_size   = 256 ;
   const unsigned task_dependence = 4 ;
@@ -654,16 +654,21 @@ void test_latch( int n )
   typedef TaskLatchRun< ExecSpace >        task_type ;
   typedef typename task_type::policy_type  policy_type ;
 
-  // Primary + latch + n*LatchAdd
-  const unsigned task_max_count  = n + 2 ;
-  const unsigned task_max_size   = sizeof(task_type);
+  // Primary + latch + n * LatchAdd
+  //
+  // This test uses several two different block sizes for allocation from the
+  // memory pool, so the memory size requested must be big enough to cause two
+  // or more superblocks to be used.  Currently, the superblock size in the
+  // task policy is 2^16, so make the minimum requested memory size greater
+  // than this.
+  const unsigned task_max_count  = n + 2 < 256 ? 256 : n + 2;
+  const unsigned task_max_size   = 256;
   const unsigned task_dependence = 4 ;
 
   policy_type
     policy( task_max_count
           , task_max_size
           , task_dependence );
-
 
   policy.spawn( policy.proc_create( TaskLatchRun<ExecSpace>(policy,n) ) );
 

@@ -182,7 +182,7 @@ int main (int narg, char* arg[]) {
 
   // Run on the device.  This will cause a sync of idx to the device,
   // since it was marked as modified on the host.
-  Kokkos::Impl::Timer timer;
+  Kokkos::Timer timer;
   Kokkos::parallel_for(size,localsum<view_type::execution_space>(idx,dest,src));
   Kokkos::fence();
   double sec1_dev = timer.seconds();
