@@ -160,9 +160,9 @@ struct ViewTraits< typename std::enable_if< Kokkos::Impl::is_space<Space>::value
 {
   // Specify Space, memory traits should be the only subsequent argument.
 
-  static_assert( std::is_same< typename ViewTraits<void,Prop...>::execution_space , void >::value ||
-                 std::is_same< typename ViewTraits<void,Prop...>::memory_space    , void >::value ||
-                 std::is_same< typename ViewTraits<void,Prop...>::HostMirrorSpace , void >::value ||
+  static_assert( std::is_same< typename ViewTraits<void,Prop...>::execution_space , void >::value &&
+                 std::is_same< typename ViewTraits<void,Prop...>::memory_space    , void >::value &&
+                 std::is_same< typename ViewTraits<void,Prop...>::HostMirrorSpace , void >::value &&
                  std::is_same< typename ViewTraits<void,Prop...>::array_layout    , void >::value
                , "Only one View Execution or Memory Space template argument" );
 
@@ -179,9 +179,9 @@ struct ViewTraits< typename std::enable_if< Kokkos::Impl::is_memory_traits<Memor
 {
   // Specify memory trait, should not be any subsequent arguments
 
-  static_assert( std::is_same< typename ViewTraits<void,Prop...>::execution_space , void >::value ||
-                 std::is_same< typename ViewTraits<void,Prop...>::memory_space    , void >::value ||
-                 std::is_same< typename ViewTraits<void,Prop...>::array_layout    , void >::value ||
+  static_assert( std::is_same< typename ViewTraits<void,Prop...>::execution_space , void >::value &&
+                 std::is_same< typename ViewTraits<void,Prop...>::memory_space    , void >::value &&
+                 std::is_same< typename ViewTraits<void,Prop...>::array_layout    , void >::value &&
                  std::is_same< typename ViewTraits<void,Prop...>::memory_traits   , void >::value
                , "MemoryTrait is the final optional template argument for a View" );
 
