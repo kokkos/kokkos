@@ -69,6 +69,10 @@ namespace Impl {
 template <typename Specialize>
 struct DynRankDimTraits {
 
+  enum : size_t{unspecified = ~size_t(0)};
+
+  #define ISUNDEFRANK( N ) (N == unspecified || N == 0)
+
   // Compute the rank of the view from the nonzero dimension arguments.
   KOKKOS_INLINE_FUNCTION
   static size_t computeRank( const size_t N0
@@ -81,14 +85,16 @@ struct DynRankDimTraits {
                            , const size_t N7 )
   {
     return
-      (   (N6 == 0 && N5 == 0 && N4 == 0 && N3 == 0 && N2 == 0 && N1 == 0 && N0 == 0) ? 0
-      : ( (N6 == 0 && N5 == 0 && N4 == 0 && N3 == 0 && N2 == 0 && N1 == 0) ? 1
-      : ( (N6 == 0 && N5 == 0 && N4 == 0 && N3 == 0 && N2 == 0) ? 2
-      : ( (N6 == 0 && N5 == 0 && N4 == 0 && N3 == 0) ? 3
-      : ( (N6 == 0 && N5 == 0 && N4 == 0) ? 4
-      : ( (N6 == 0 && N5 == 0) ? 5
-      : ( (N6 == 0) ? 6
-      : 7 ) ) ) ) ) ) );
+      ( 
+        (  ISUNDEFRANK(N6) && ISUNDEFRANK(N5) && ISUNDEFRANK(N4) && ISUNDEFRANK(N3) && ISUNDEFRANK(N2) && ISUNDEFRANK(N1) && ISUNDEFRANK(N0) ) ? 0
+      : ( (ISUNDEFRANK(N6) && ISUNDEFRANK(N5) && ISUNDEFRANK(N4) && ISUNDEFRANK(N3) && ISUNDEFRANK(N2) && ISUNDEFRANK(N1)) ? 1
+      : ( (ISUNDEFRANK(N6) && ISUNDEFRANK(N5) && ISUNDEFRANK(N4) && ISUNDEFRANK(N3) && ISUNDEFRANK(N2)) ? 2
+      : ( (ISUNDEFRANK(N6) && ISUNDEFRANK(N5) && ISUNDEFRANK(N4) && ISUNDEFRANK(N3)) ? 3
+      : ( (ISUNDEFRANK(N6) && ISUNDEFRANK(N5) && ISUNDEFRANK(N4)) ? 4
+      : ( (ISUNDEFRANK(N6) && ISUNDEFRANK(N5)) ? 5
+      : ( (ISUNDEFRANK(N6)) ? 6
+      : 7 ) ) ) ) ) ) 
+      );
   }
 
   // Compute the rank of the view from the nonzero layout arguments.
@@ -112,14 +118,14 @@ struct DynRankDimTraits {
   KOKKOS_INLINE_FUNCTION
   static typename std::enable_if< (std::is_same<Layout , Kokkos::LayoutRight>::value || std::is_same<Layout , Kokkos::LayoutLeft>::value) , Layout >::type createLayout( const Layout& layout )
   {
-    return Layout( layout.dimension[0] != 0 ? layout.dimension[0] : 1
-                 , layout.dimension[1] != 0 ? layout.dimension[1] : 1
-                 , layout.dimension[2] != 0 ? layout.dimension[2] : 1
-                 , layout.dimension[3] != 0 ? layout.dimension[3] : 1
-                 , layout.dimension[4] != 0 ? layout.dimension[4] : 1
-                 , layout.dimension[5] != 0 ? layout.dimension[5] : 1
-                 , layout.dimension[6] != 0 ? layout.dimension[6] : 1
-                 , layout.dimension[7] != 0 ? layout.dimension[7] : 1
+    return Layout( (layout.dimension[0] != unspecified && layout.dimension[0] != 0) ? layout.dimension[0] : 1
+                 , (layout.dimension[1] != unspecified && layout.dimension[1] != 0) ? layout.dimension[1] : 1
+                 , (layout.dimension[2] != unspecified && layout.dimension[2] != 0) ? layout.dimension[2] : 1
+                 , (layout.dimension[3] != unspecified && layout.dimension[3] != 0) ? layout.dimension[3] : 1
+                 , (layout.dimension[4] != unspecified && layout.dimension[4] != 0) ? layout.dimension[4] : 1
+                 , (layout.dimension[5] != unspecified && layout.dimension[5] != 0) ? layout.dimension[5] : 1
+                 , (layout.dimension[6] != unspecified && layout.dimension[6] != 0) ? layout.dimension[6] : 1
+                 , (layout.dimension[7] != unspecified && layout.dimension[7] != 0) ? layout.dimension[7] : 1
                  );
   }
 
@@ -128,21 +134,21 @@ struct DynRankDimTraits {
   KOKKOS_INLINE_FUNCTION
   static typename std::enable_if< (std::is_same<Layout , Kokkos::LayoutStride>::value) , Layout>::type createLayout( const Layout& layout )
   {
-    return Layout( layout.dimension[0] != 0 ? layout.dimension[0] : 1
+    return Layout( (layout.dimension[0] != unspecified && layout.dimension[0] != 0) ? layout.dimension[0] : 1
                  , layout.stride[0] 
-                 , layout.dimension[1] != 0 ? layout.dimension[1] : 1
+                 , (layout.dimension[1] != unspecified && layout.dimension[1] != 0) ? layout.dimension[1] : 1
                  , layout.stride[1] 
-                 , layout.dimension[2] != 0 ? layout.dimension[2] : 1
+                 , (layout.dimension[2] != unspecified && layout.dimension[2] != 0) ? layout.dimension[2] : 1
                  , layout.stride[2] 
-                 , layout.dimension[3] != 0 ? layout.dimension[3] : 1
+                 , (layout.dimension[3] != unspecified && layout.dimension[3] != 0) ? layout.dimension[3] : 1
                  , layout.stride[3] 
-                 , layout.dimension[4] != 0 ? layout.dimension[4] : 1
+                 , (layout.dimension[4] != unspecified && layout.dimension[4] != 0) ? layout.dimension[4] : 1
                  , layout.stride[4] 
-                 , layout.dimension[5] != 0 ? layout.dimension[5] : 1
+                 , (layout.dimension[5] != unspecified && layout.dimension[5] != 0) ? layout.dimension[5] : 1
                  , layout.stride[5] 
-                 , layout.dimension[6] != 0 ? layout.dimension[6] : 1
+                 , (layout.dimension[6] != unspecified && layout.dimension[6] != 0) ? layout.dimension[6] : 1
                  , layout.stride[6] 
-                 , layout.dimension[7] != 0 ? layout.dimension[7] : 1
+                 , (layout.dimension[7] != unspecified && layout.dimension[7] != 0) ? layout.dimension[7] : 1
                  , layout.stride[7] 
                  );
   }
@@ -161,14 +167,14 @@ struct DynRankDimTraits {
                             , const size_t N7 )
   {
     return ViewType( arg
-                   , N0 != 0 ? N0 : 1
-                   , N1 != 0 ? N1 : 1
-                   , N2 != 0 ? N2 : 1
-                   , N3 != 0 ? N3 : 1
-                   , N4 != 0 ? N4 : 1
-                   , N5 != 0 ? N5 : 1
-                   , N6 != 0 ? N6 : 1
-                   , N7 != 0 ? N7 : 1 );
+                   , (N0 != unspecified && N0 != 0) ? N0 : 1
+                   , (N1 != unspecified && N1 != 0) ? N1 : 1
+                   , (N2 != unspecified && N2 != 0) ? N2 : 1
+                   , (N3 != unspecified && N3 != 0) ? N3 : 1
+                   , (N4 != unspecified && N4 != 0) ? N4 : 1
+                   , (N5 != unspecified && N5 != 0) ? N5 : 1
+                   , (N6 != unspecified && N6 != 0) ? N6 : 1
+                   , (N7 != unspecified && N7 != 0) ? N7 : 1 );
   }
 };
 
@@ -177,14 +183,14 @@ struct DynRankDimTraits {
   KOKKOS_INLINE_FUNCTION
   static typename std::enable_if< (std::is_same<Layout , Kokkos::LayoutRight>::value || std::is_same<Layout , Kokkos::LayoutLeft>::value) && std::is_integral<iType>::value , Layout >::type reconstructLayout( const Layout& layout , iType dynrank )
   {
-    return Layout( dynrank > 0 ? layout.dimension[0] : 0
-                 , dynrank > 1 ? layout.dimension[1] : 0
-                 , dynrank > 2 ? layout.dimension[2] : 0
-                 , dynrank > 3 ? layout.dimension[3] : 0
-                 , dynrank > 4 ? layout.dimension[4] : 0
-                 , dynrank > 5 ? layout.dimension[5] : 0
-                 , dynrank > 6 ? layout.dimension[6] : 0
-                 , dynrank > 7 ? layout.dimension[7] : 0
+    return Layout( dynrank > 0 ? layout.dimension[0] : ~size_t(0) 
+                 , dynrank > 1 ? layout.dimension[1] : ~size_t(0)
+                 , dynrank > 2 ? layout.dimension[2] : ~size_t(0)
+                 , dynrank > 3 ? layout.dimension[3] : ~size_t(0)
+                 , dynrank > 4 ? layout.dimension[4] : ~size_t(0)
+                 , dynrank > 5 ? layout.dimension[5] : ~size_t(0)
+                 , dynrank > 6 ? layout.dimension[6] : ~size_t(0)
+                 , dynrank > 7 ? layout.dimension[7] : ~size_t(0)
                  );
   }
 
@@ -193,22 +199,22 @@ struct DynRankDimTraits {
   KOKKOS_INLINE_FUNCTION
   static typename std::enable_if< (std::is_same<Layout , Kokkos::LayoutStride>::value) && std::is_integral<iType>::value , Layout >::type reconstructLayout( const Layout& layout , iType dynrank )
   {
-    return Layout( dynrank > 0 ? layout.dimension[0] : 0
-                 , dynrank > 0 ? layout.stride[0] : 0 
-                 , dynrank > 1 ? layout.dimension[1] : 0
-                 , dynrank > 1 ? layout.stride[1] : 0 
-                 , dynrank > 2 ? layout.dimension[2] : 0
-                 , dynrank > 2 ? layout.stride[2] : 0 
-                 , dynrank > 3 ? layout.dimension[3] : 0
-                 , dynrank > 3 ? layout.stride[3] : 0 
-                 , dynrank > 4 ? layout.dimension[4] : 0
-                 , dynrank > 4 ? layout.stride[4] : 0 
-                 , dynrank > 5 ? layout.dimension[5] : 0
-                 , dynrank > 5 ? layout.stride[5] : 0 
-                 , dynrank > 6 ? layout.dimension[6] : 0
-                 , dynrank > 6 ? layout.stride[6] : 0 
-                 , dynrank > 7 ? layout.dimension[7] : 0
-                 , dynrank > 7 ? layout.stride[7] : 0 
+    return Layout( dynrank > 0 ? layout.dimension[0] : ~size_t(0)
+                 , dynrank > 0 ? layout.stride[0] : (0) 
+                 , dynrank > 1 ? layout.dimension[1] : ~size_t(0)
+                 , dynrank > 1 ? layout.stride[1] : (0) 
+                 , dynrank > 2 ? layout.dimension[2] : ~size_t(0)
+                 , dynrank > 2 ? layout.stride[2] : (0) 
+                 , dynrank > 3 ? layout.dimension[3] : ~size_t(0)
+                 , dynrank > 3 ? layout.stride[3] : (0) 
+                 , dynrank > 4 ? layout.dimension[4] : ~size_t(0)
+                 , dynrank > 4 ? layout.stride[4] : (0) 
+                 , dynrank > 5 ? layout.dimension[5] : ~size_t(0)
+                 , dynrank > 5 ? layout.stride[5] : (0) 
+                 , dynrank > 6 ? layout.dimension[6] : ~size_t(0)
+                 , dynrank > 6 ? layout.stride[6] : (0) 
+                 , dynrank > 7 ? layout.dimension[7] : ~size_t(0)
+                 , dynrank > 7 ? layout.stride[7] : (0) 
                  );
   }
 } //end Impl
@@ -507,14 +513,14 @@ public:
   DynRankView( const Impl::ViewCtorProp< P ... > & arg_prop
       , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer
                                , size_t
-                               >::type const arg_N0 = 0
-      , const size_t arg_N1 = 0
-      , const size_t arg_N2 = 0
-      , const size_t arg_N3 = 0
-      , const size_t arg_N4 = 0
-      , const size_t arg_N5 = 0
-      , const size_t arg_N6 = 0
-      , const size_t arg_N7 = 0
+                               >::type const arg_N0 = ~size_t(0)
+      , const size_t arg_N1 = ~size_t(0)
+      , const size_t arg_N2 = ~size_t(0)
+      , const size_t arg_N3 = ~size_t(0)
+      , const size_t arg_N4 = ~size_t(0)
+      , const size_t arg_N5 = ~size_t(0)
+      , const size_t arg_N6 = ~size_t(0)
+      , const size_t arg_N7 = ~size_t(0)
       )
     : DynRankView( arg_prop
     , typename traits::array_layout
@@ -527,14 +533,14 @@ public:
   DynRankView( const Impl::ViewCtorProp< P ... > & arg_prop
       , typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer
                                , size_t
-                               >::type const arg_N0 = 0
-      , const size_t arg_N1 = 0
-      , const size_t arg_N2 = 0
-      , const size_t arg_N3 = 0
-      , const size_t arg_N4 = 0
-      , const size_t arg_N5 = 0
-      , const size_t arg_N6 = 0
-      , const size_t arg_N7 = 0
+                               >::type const arg_N0 = ~size_t(0)
+      , const size_t arg_N1 = ~size_t(0)
+      , const size_t arg_N2 = ~size_t(0)
+      , const size_t arg_N3 = ~size_t(0)
+      , const size_t arg_N4 = ~size_t(0)
+      , const size_t arg_N5 = ~size_t(0)
+      , const size_t arg_N6 = ~size_t(0)
+      , const size_t arg_N7 = ~size_t(0)
       )
     : DynRankView( arg_prop
     , typename traits::array_layout
@@ -559,14 +565,14 @@ public:
   DynRankView( const Label & arg_label
       , typename std::enable_if<
           Kokkos::Experimental::Impl::is_view_label<Label>::value ,
-        const size_t >::type arg_N0 = 0
-      , const size_t arg_N1 = 0
-      , const size_t arg_N2 = 0
-      , const size_t arg_N3 = 0
-      , const size_t arg_N4 = 0
-      , const size_t arg_N5 = 0
-      , const size_t arg_N6 = 0
-      , const size_t arg_N7 = 0
+        const size_t >::type arg_N0 = ~size_t(0) 
+      , const size_t arg_N1 = ~size_t(0)
+      , const size_t arg_N2 = ~size_t(0)
+      , const size_t arg_N3 = ~size_t(0)
+      , const size_t arg_N4 = ~size_t(0)
+      , const size_t arg_N5 = ~size_t(0)
+      , const size_t arg_N6 = ~size_t(0)
+      , const size_t arg_N7 = ~size_t(0)
       )
     : DynRankView( Impl::ViewCtorProp< std::string >( arg_label )
     , typename traits::array_layout
@@ -589,14 +595,14 @@ public:
 
   explicit inline
   DynRankView( const ViewAllocateWithoutInitializing & arg_prop
-      , const size_t arg_N0 = 0
-      , const size_t arg_N1 = 0
-      , const size_t arg_N2 = 0
-      , const size_t arg_N3 = 0
-      , const size_t arg_N4 = 0
-      , const size_t arg_N5 = 0
-      , const size_t arg_N6 = 0
-      , const size_t arg_N7 = 0
+      , const size_t arg_N0 = ~size_t(0)
+      , const size_t arg_N1 = ~size_t(0)
+      , const size_t arg_N2 = ~size_t(0)
+      , const size_t arg_N3 = ~size_t(0)
+      , const size_t arg_N4 = ~size_t(0)
+      , const size_t arg_N5 = ~size_t(0)
+      , const size_t arg_N6 = ~size_t(0)
+      , const size_t arg_N7 = ~size_t(0)
       )
     : DynRankView(Impl::ViewCtorProp< std::string , Kokkos::Experimental::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::Experimental::WithoutInitializing ), arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7 ) 
     {}
@@ -605,14 +611,14 @@ public:
 
   explicit KOKKOS_INLINE_FUNCTION
   DynRankView( pointer_type arg_ptr
-      , const size_t arg_N0 = 0
-      , const size_t arg_N1 = 0
-      , const size_t arg_N2 = 0
-      , const size_t arg_N3 = 0
-      , const size_t arg_N4 = 0
-      , const size_t arg_N5 = 0
-      , const size_t arg_N6 = 0
-      , const size_t arg_N7 = 0
+      , const size_t arg_N0 = ~size_t(0)
+      , const size_t arg_N1 = ~size_t(0)
+      , const size_t arg_N2 = ~size_t(0)
+      , const size_t arg_N3 = ~size_t(0)
+      , const size_t arg_N4 = ~size_t(0)
+      , const size_t arg_N5 = ~size_t(0)
+      , const size_t arg_N6 = ~size_t(0)
+      , const size_t arg_N7 = ~size_t(0)
       )
     : DynRankView( Impl::ViewCtorProp<pointer_type>(arg_ptr) , arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7 )
     {}
@@ -632,14 +638,14 @@ public:
 
   explicit KOKKOS_INLINE_FUNCTION
   DynRankView( const typename traits::execution_space::scratch_memory_space & arg_space
-      , const size_t arg_N0 = 0
-      , const size_t arg_N1 = 0
-      , const size_t arg_N2 = 0
-      , const size_t arg_N3 = 0
-      , const size_t arg_N4 = 0
-      , const size_t arg_N5 = 0
-      , const size_t arg_N6 = 0
-      , const size_t arg_N7 = 0 )
+      , const size_t arg_N0 = ~size_t(0)
+      , const size_t arg_N1 = ~size_t(0)
+      , const size_t arg_N2 = ~size_t(0)
+      , const size_t arg_N3 = ~size_t(0)
+      , const size_t arg_N4 = ~size_t(0)
+      , const size_t arg_N5 = ~size_t(0)
+      , const size_t arg_N6 = ~size_t(0)
+      , const size_t arg_N7 = ~size_t(0) )
     : view_type( Impl::DynRankDimTraits<typename traits::specialize>::template createView<view_type>( arg_space
                                                                                                     , arg_N0
                                                                                                     , arg_N1
@@ -762,7 +768,7 @@ public:
                     , Args ... args )
     {
 
-      typedef ViewMapping< traits_type, void >  DstType ;
+       typedef ViewMapping< traits_type, void >  DstType ;
 
        typedef typename std::conditional< (rank==0) , ViewDimension<>
                                                     , typename std::conditional< (rank==1) , ViewDimension<0>
