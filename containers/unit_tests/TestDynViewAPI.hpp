@@ -877,6 +877,8 @@ public:
     dView0 dx , dy , dz ;
     hView0 hx , hy , hz ;
 
+    ASSERT_TRUE( is_dyn_rank_view<dView0>::value );
+
     ASSERT_TRUE( dx.ptr_on_device() == 0 );
     ASSERT_TRUE( dy.ptr_on_device() == 0 );
     ASSERT_TRUE( dz.ptr_on_device() == 0 );
@@ -1178,8 +1180,26 @@ public:
     drView dr5( "dr5" , N0 , N1 , N2 , 2 , 2 );
 
 // LayoutStride but arranged as LayoutRight
-    unsigned order3[] = { 4,3,2,1,0 }, dimen3[] = { N0, N1, N2, 2, 2 };
-    sdView d5( "d5" , Kokkos::LayoutStride::order_dimensions(5, order3, dimen3) );
+  // NOTE: unused arg_layout dimensions must be set to ~size_t(0) so that rank deduction can properly take place
+    unsigned order5[] = { 4,3,2,1,0 }, dimen5[] = { N0, N1, N2, 2, 2 };
+    Kokkos::LayoutStride ls = Kokkos::LayoutStride::order_dimensions(5, order5, dimen5);
+    ls.dimension[5] = ~size_t(0);
+    ls.dimension[6] = ~size_t(0);
+    ls.dimension[7] = ~size_t(0);
+    sdView d5("d5", ls);
+
+//  LayoutStride arranged as LayoutRight - commented example that does not pass unit test
+//    unsigned order5[] = { 4,3,2,1,0 }, dimen5[] = { N0, N1, N2, 2, 2 };
+//    sdView d5( "d5" , Kokkos::LayoutStride::order_dimensions(5, order5, dimen5) );
+//
+//  Fails following unit test:
+//    ASSERT_EQ( d5.rank() , dr5.rank() );
+//
+//  Explanation: In construction of the Kokkos::LayoutStride below, since the remaining dimensions are not
+//   specified, they will default to values of 0 rather than ~size_t(0). 
+//  When passed to the DynRankView constructor the default dimensions (of 0) will be counted
+//   toward the dynamic rank and returning an incorrect value (i.e. rank 7 rather than 5).
+
 
 // Check LayoutRight dr5 and LayoutStride d5 dimensions agree (as they should) 
     ASSERT_EQ( d5.dimension_0() , dr5.dimension_0() );
@@ -1258,6 +1278,8 @@ public:
     ASSERT_EQ( yl4.dimension_1() , xl4.dimension_3() );
     ASSERT_EQ( yr4.dimension_0() , xr4.dimension_1() );
     ASSERT_EQ( yr4.dimension_1() , xr4.dimension_3() );
+    ASSERT_EQ( yl4.rank() , 2);
+    ASSERT_EQ( yr4.rank() , 2);
 
     ASSERT_EQ( & yl4(4,4) - & xl4(1,4,2,4) , 0 );
     ASSERT_EQ( & yr4(4,4) - & xr4(1,4,2,4) , 0 );
