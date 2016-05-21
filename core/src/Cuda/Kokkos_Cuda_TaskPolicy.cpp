@@ -46,6 +46,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <sstream>
+#include <Kokkos_Core.hpp>
 #include <Cuda/Kokkos_Cuda_TaskPolicy.hpp>
 
 #if defined( KOKKOS_ENABLE_CUDA_TASK_POLICY )
