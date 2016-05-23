@@ -771,6 +771,7 @@ namespace Kokkos {
     friend class Random_XorShift1024_Pool<DeviceType>;
   public:
 
+    typedef Random_XorShift1024_Pool<DeviceType> pool_type;
     typedef DeviceType device_type;
 
     enum {MAX_URAND = 0xffffffffU};
@@ -779,10 +780,10 @@ namespace Kokkos {
     enum {MAX_RAND64 = static_cast<int64_t>(0xffffffffffffffffULL/2-1)};
 
     KOKKOS_INLINE_FUNCTION
-    Random_XorShift1024 (uint64_t* state, int p, int state_idx = 0):
+    Random_XorShift1024 (const typename pool_type::state_data_type& state, int p, int state_idx = 0):
       p_(p),state_idx_(state_idx){
       for(int i=0 ; i<16; i++)
-        state_[i] = state[i];
+        state_[i] = state(state_idx,i);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -933,6 +934,7 @@ namespace Kokkos {
     state_data_type state_;
     int_view_type p_;
     int num_states_;
+    friend class Random_XorShift1024<DeviceType>;
 
   public:
     typedef Random_XorShift1024<DeviceType> generator_type;
@@ -1001,7 +1003,7 @@ namespace Kokkos {
     KOKKOS_INLINE_FUNCTION
     Random_XorShift1024<DeviceType> get_state() const {
       const int i = DeviceType::hardware_thread_id();
-      return Random_XorShift1024<DeviceType>(&state_(i,0),p_(i),i);
+      return Random_XorShift1024<DeviceType>(state_,p_(i),i);
     };
 
     KOKKOS_INLINE_FUNCTION
@@ -1020,10 +1022,12 @@ namespace Kokkos {
     int p_;
     const int state_idx_;
     uint64_t* state_;
+    const int stride_;
     friend class Random_XorShift1024_Pool<Kokkos::Cuda>;
   public:
 
     typedef Kokkos::Cuda device_type;
+    typedef Random_XorShift1024_Pool<device_type> pool_type;
 
     enum {MAX_URAND = 0xffffffffU};
     enum {MAX_URAND64 = 0xffffffffffffffffULL-1};
@@ -1031,30 +1035,30 @@ namespace Kokkos {
     enum {MAX_RAND64 = static_cast<int64_t>(0xffffffffffffffffULL/2-1)};
 
     KOKKOS_INLINE_FUNCTION
-    Random_XorShift1024 (uint64_t* state, int p, int state_idx = 0):
-      p_(p),state_idx_(state_idx),state_(state){
+    Random_XorShift1024 (const typename pool_type::state_data_type& state, int p, int state_idx = 0):
+      p_(p),state_idx_(state_idx),state_(&state(state_idx,0)),stride_(state.stride_1()){
     }
 
     KOKKOS_INLINE_FUNCTION
     uint32_t urand() {
-      uint64_t state_0 = state_[ p_ ];
-      uint64_t state_1 = state_[ p_ = ( p_ + 1 ) & 15 ];
+      uint64_t state_0 = state_[ p_ * stride_ ];
+      uint64_t state_1 = state_[ (p_ = ( p_ + 1 ) & 15) * stride_ ];
       state_1 ^= state_1 << 31;
       state_1 ^= state_1 >> 11;
       state_0 ^= state_0 >> 30;
-      uint64_t tmp = ( state_[ p_ ] = state_0 ^ state_1 ) * 1181783497276652981ULL;
+      uint64_t tmp = ( state_[ p_ * stride_ ] = state_0 ^ state_1 ) * 1181783497276652981ULL;
       tmp = tmp>>16;
       return static_cast<uint32_t>(tmp&MAX_URAND);
     }
 
     KOKKOS_INLINE_FUNCTION
     uint64_t urand64() {
-      uint64_t state_0 = state_[ p_ ];
-      uint64_t state_1 = state_[ p_ = ( p_ + 1 ) & 15 ];
+      uint64_t state_0 = state_[ p_ * stride_ ];
+      uint64_t state_1 = state_[ (p_ = ( p_ + 1 ) & 15) * stride_ ];
       state_1 ^= state_1 << 31;
       state_1 ^= state_1 >> 11;
       state_0 ^= state_0 >> 30;
-      return (( state_[ p_ ] = state_0 ^ state_1 ) * 1181783497276652981LL) - 1;
+      return (( state_[ p_ * stride_ ] = state_0 ^ state_1 ) * 1181783497276652981LL) - 1;
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -1227,9 +1231,9 @@ Random_XorShift1024<Kokkos::Cuda> Random_XorShift1024_Pool<Kokkos::Cuda>::get_st
       if(i>=num_states_) {i = i_offset;}
   }
 
-  return Random_XorShift1024<Kokkos::Cuda>(&state_(i,0), p_(i), i);
+  return Random_XorShift1024<Kokkos::Cuda>(state_, p_(i), i);
 #else
-  return Random_XorShift1024<Kokkos::Cuda>(&state_(0,0), p_(0), 0);
+  return Random_XorShift1024<Kokkos::Cuda>(state_, p_(0), 0);
 #endif
 }
 

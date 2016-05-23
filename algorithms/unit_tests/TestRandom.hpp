@@ -207,7 +207,6 @@ struct test_histogram1d_functor {
     density_1d (d1d),
     mean (1.0*num_draws/HIST_DIM1D*3)
   {
-    printf ("Mean: %e\n", mean);
   }
 
   KOKKOS_INLINE_FUNCTION void
