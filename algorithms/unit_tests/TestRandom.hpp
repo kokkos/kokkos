@@ -295,7 +295,7 @@ struct test_random_scalar {
       parallel_reduce (num_draws/1024, functor_type (pool, density_1d, density_3d), result);
 
       //printf("Result: %lf %lf %lf\n",result.mean/num_draws/3,result.variance/num_draws/3,result.covariance/num_draws/2);
-      double tolerance = 1.33*sqrt(1.0/num_draws);
+      double tolerance = 1.6*sqrt(1.0/num_draws);
       double mean_expect = 0.5*Kokkos::rand<rnd_type,Scalar>::max();
       double variance_expect = 1.0/3.0*mean_expect*mean_expect;
       double mean_eps = mean_expect/(result.mean/num_draws/3)-1.0;
@@ -330,10 +330,10 @@ struct test_random_scalar {
       double covariance_eps = (result.covariance/HIST_DIM1D - covariance_expect)/mean_expect;
       pass_hist1d_mean  = ((-0.0001 < mean_eps) &&
                            ( 0.0001 > mean_eps)) ? 1:0;
-      pass_hist1d_var   = ((-0.048 < variance_eps) &&
-                           ( 0.048 > variance_eps)) ? 1:0;
-      pass_hist1d_covar = ((-0.036 < covariance_eps) &&
-                           ( 0.036 > covariance_eps)) ? 1:0;
+      pass_hist1d_var   = ((-0.07 < variance_eps) &&
+                           ( 0.07 > variance_eps)) ? 1:0;
+      pass_hist1d_covar = ((-0.06 < covariance_eps) &&
+                           ( 0.06 > covariance_eps)) ? 1:0;
 
       cerr << "Density 1D: " << mean_eps
            << " " << variance_eps
