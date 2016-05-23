@@ -363,8 +363,8 @@ struct test_random_scalar {
       double covariance_eps = (result.covariance/HIST_DIM1D - covariance_expect)/mean_expect;
       pass_hist3d_mean  = ((-tolerance < mean_eps) &&
                            ( tolerance > mean_eps)) ? 1:0;
-      pass_hist3d_var   = ((-tolerance < variance_eps) &&
-                           ( tolerance > variance_eps)) ? 1:0;
+      pass_hist3d_var   = ((-1.2*tolerance < variance_eps) &&
+                           ( 1.2*tolerance > variance_eps)) ? 1:0;
       pass_hist3d_covar = ((-tolerance < covariance_eps) &&
                            ( tolerance > covariance_eps)) ? 1:0;
 
