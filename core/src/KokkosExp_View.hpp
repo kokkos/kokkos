@@ -2328,6 +2328,11 @@ template< class D , class ... P >
 using View = Kokkos::Experimental::View<D,P...> ;
 
 using Kokkos::Experimental::ALL ;
+using Kokkos::Experimental::WithoutInitializing ;
+using Kokkos::Experimental::AllowPadding ;
+using Kokkos::Experimental::view_alloc ;
+using Kokkos::Experimental::view_wrap ;
+
 using Kokkos::Experimental::deep_copy ;
 using Kokkos::Experimental::create_mirror ;
 using Kokkos::Experimental::create_mirror_view ;
