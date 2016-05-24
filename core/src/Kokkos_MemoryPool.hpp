@@ -53,6 +53,7 @@
 
 #include <limits>
 #include <algorithm>
+#include <chrono>
 
 // How should errors be handled?  In general, production code should return a
 // value indicating failure so the user can decide how the error is handled.
@@ -1450,8 +1451,8 @@ private:
     __asm__ volatile("rdtsc" : "=a" (a), "=d" (d));
     return ( (uint64_t) a) | ( ( (uint64_t) d ) << 32 );
 #else
-    // TODO: Need to implement for other architectures.
-#error "Need to implement get_clock_register() for architecture."
+    const uint64_t ticks = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    return ticks;
 #endif
   }
 };
