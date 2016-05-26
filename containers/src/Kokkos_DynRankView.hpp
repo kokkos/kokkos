@@ -579,17 +579,15 @@ public:
     {}
 
   // For backward compatibility
-/*
   explicit inline
   DynRankView( const ViewAllocateWithoutInitializing & arg_prop
       , const typename traits::array_layout & arg_layout
       )
     : view_type( Impl::ViewCtorProp< std::string , Kokkos::Experimental::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::Experimental::WithoutInitializing )
-          , arg_layout
+          , Impl::DynRankDimTraits<typename traits::specialize>::createLayout(arg_layout)
           )
-    //, m_rank(arg_N0 == 0 ? 0 : ( arg_N1 == 0 ? 1 : ( arg_N2 == 0 ? 2 : ( arg_N3 == 0 ? 3 : ( arg_N4 == 0 ? 4 : ( arg_N5 == 0 ? 5 : ( arg_N6 == 0 ? 6 : ( arg_N7 == 0 ? 7 : 8 ) ) ) ) ) ) ) ) //how to extract rank?
+     , m_rank( Impl::DynRankDimTraits<typename traits::specialize>::computeRank(arg_layout) )
     {}
-*/
 
   explicit inline
   DynRankView( const ViewAllocateWithoutInitializing & arg_prop
@@ -950,7 +948,6 @@ void deep_copy
 namespace Kokkos {
 namespace Experimental {
 
-
 namespace Impl {
 
 // Deduce Mirror Types
@@ -1126,22 +1123,23 @@ namespace Experimental {
 template< class T , class ... P >
 inline
 void resize( DynRankView<T,P...> & v ,
-             const size_t n0 = 0 ,
-             const size_t n1 = 0 ,
-             const size_t n2 = 0 ,
-             const size_t n3 = 0 ,
-             const size_t n4 = 0 ,
-             const size_t n5 = 0 ,
-             const size_t n6 = 0 ,
-             const size_t n7 = 0 )
+             const size_t n0 = ~size_t(0) ,
+             const size_t n1 = ~size_t(0) ,
+             const size_t n2 = ~size_t(0) ,
+             const size_t n3 = ~size_t(0) ,
+             const size_t n4 = ~size_t(0) ,
+             const size_t n5 = ~size_t(0) ,
+             const size_t n6 = ~size_t(0) ,
+             const size_t n7 = ~size_t(0) )
 {
   typedef DynRankView<T,P...>  drview_type ;
+  typedef View<T*******,P...>  view_type ;
 
   static_assert( Kokkos::Experimental::ViewTraits<T,P...>::is_managed , "Can only resize managed views" );
 
-  drview_type v_resized( v.label(), n0, n1, n2, n3, n4, n5, n6, n7 );
+  drview_type v_resized( v.label(), n0, n1, n2, n3, n4, n5, n6 );
 
-  Kokkos::Experimental::Impl::ViewRemap< drview_type , drview_type >( v_resized , v );
+  Kokkos::Experimental::Impl::ViewRemap< view_type , view_type >( v_resized.ConstDownCast(), v.ConstDownCast() );
 
   v = v_resized ;
 }
@@ -1150,23 +1148,23 @@ void resize( DynRankView<T,P...> & v ,
 template< class T , class ... P >
 inline
 void realloc( DynRankView<T,P...> & v ,
-              const size_t n0 = 0 ,
-              const size_t n1 = 0 ,
-              const size_t n2 = 0 ,
-              const size_t n3 = 0 ,
-              const size_t n4 = 0 ,
-              const size_t n5 = 0 ,
-              const size_t n6 = 0 ,
-              const size_t n7 = 0 )
+              const size_t n0 = ~size_t(0) ,
+              const size_t n1 = ~size_t(0) ,
+              const size_t n2 = ~size_t(0) ,
+              const size_t n3 = ~size_t(0) ,
+              const size_t n4 = ~size_t(0) ,
+              const size_t n5 = ~size_t(0) ,
+              const size_t n6 = ~size_t(0) ,
+              const size_t n7 = ~size_t(0) )
 {
-  typedef DynRankView<T,P...>  view_type ;
+  typedef DynRankView<T,P...>  drview_type ;
 
   static_assert( Kokkos::Experimental::ViewTraits<T,P...>::is_managed , "Can only realloc managed views" );
 
   const std::string label = v.label();
 
-  v = view_type(); // Deallocate first, if the only view to allocation
-  v = view_type( label, n0, n1, n2, n3, n4, n5, n6, n7 );
+  v = drview_type(); // Deallocate first, if the only view to allocation
+  v = drview_type( label, n0, n1, n2, n3, n4, n5, n6 );
 }
 
 } //end Experimental

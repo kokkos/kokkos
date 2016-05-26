@@ -721,6 +721,7 @@ public:
     run_test();
     run_test_scalar();
     run_test_const();
+    run_test_resize_realloc();
     run_test_subview();
     run_test_subview_strided();
     run_test_vector();
@@ -733,6 +734,25 @@ public:
     TestViewOperator_LeftAndRight< int , device , 3 >::testit(2,3,4);
     TestViewOperator_LeftAndRight< int , device , 2 >::testit(2,3);
     TestViewOperator_LeftAndRight< int , device , 1 >::testit(2);
+  }
+
+  static void run_test_resize_realloc()
+  {
+    dView0 drv0("drv0", 10, 20, 30);
+    ASSERT_EQ( drv0.rank(), 3);
+
+    Kokkos::Experimental::resize(drv0, 5, 10);
+    ASSERT_EQ( drv0.rank(), 2);
+    ASSERT_EQ( drv0.dimension_0(), 5);
+    ASSERT_EQ( drv0.dimension_1(), 10);
+    ASSERT_EQ( drv0.dimension_2(), 1);
+
+    Kokkos::Experimental::realloc(drv0, 10, 20);
+    ASSERT_EQ( drv0.rank(), 2);
+    ASSERT_EQ( drv0.dimension_0(), 10);
+    ASSERT_EQ( drv0.dimension_1(), 20);
+    ASSERT_EQ( drv0.dimension_2(), 1);
+
   }
 
   static void run_test_mirror()
@@ -874,10 +894,18 @@ public:
       (void) thing;
     }
 
+    dView0 d_uninitialized(Kokkos::ViewAllocateWithoutInitializing("uninit"),10,20);
+    ASSERT_TRUE( d_uninitialized.data() != nullptr );
+    ASSERT_EQ( d_uninitialized.rank() ,2 );
+    ASSERT_EQ( d_uninitialized.dimension_0() , 10 );
+    ASSERT_EQ( d_uninitialized.dimension_1() , 20 );
+    ASSERT_EQ( d_uninitialized.dimension_2() , 1  );
+
     dView0 dx , dy , dz ;
     hView0 hx , hy , hz ;
 
     ASSERT_TRUE( is_dyn_rank_view<dView0>::value );
+    ASSERT_FALSE( is_dyn_rank_view< Kokkos::View<double> >::value );
 
     ASSERT_TRUE( dx.ptr_on_device() == 0 );
     ASSERT_TRUE( dy.ptr_on_device() == 0 );
