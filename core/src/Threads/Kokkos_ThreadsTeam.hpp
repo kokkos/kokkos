@@ -433,10 +433,11 @@ public:
 
   void next_static()
     {
-      if ( ++m_league_rank < m_league_end ) {
+      if ( m_league_rank < m_league_end ) {
         team_barrier();
         set_team_shared();
       }
+      m_league_rank++;
     }
 
   bool valid_dynamic() {
@@ -468,10 +469,11 @@ public:
     if(m_invalid_thread)
       return;
 
-    team_barrier();
-    if ( ++m_league_rank < m_league_chunk_end ) {
+    if ( m_league_rank < m_league_chunk_end ) {
+      team_barrier();
       set_team_shared();
     }
+    m_league_rank++;
   }
 
   void set_league_shmem( const int arg_league_rank

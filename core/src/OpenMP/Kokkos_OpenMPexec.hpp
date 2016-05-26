@@ -627,10 +627,11 @@ public:
 
   void next_static()
     {
-      if ( ++m_league_rank < m_league_end ) {
+      if ( m_league_rank < m_league_end ) {
         team_barrier();
         new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_shmem );
       }
+      m_league_rank++;
     }
 
   bool valid_dynamic() {
@@ -661,10 +662,11 @@ public:
     if(m_invalid_thread)
       return;
 
-    team_barrier();
-    if ( ++m_league_rank < m_league_chunk_end ) {
+    if ( m_league_rank < m_league_chunk_end ) {
+      team_barrier();
       new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_shmem );
     }
+    m_league_rank++;
   }
 
   static inline int team_reduce_size() { return TEAM_REDUCE_SIZE ; }
