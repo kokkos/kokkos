@@ -817,9 +817,11 @@ public:
   static member_type member_single()
     {
       return
-        member_type( 0 /* shared memory */
-                   , 0 /* shared memory begin */
-                   , 0 /* shared memory size */
+        member_type( 0 /* shared memory pointer */
+                   , 0 /* shared memory begin offset */
+                   , 0 /* shared memory end offset */
+                   , 0 /* scratch level_1 pointer */
+                   , 0 /* scratch level_1 size */
                    , 0 /* league rank */
                    , 1 /* league size */ );
     }

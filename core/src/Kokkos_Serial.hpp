@@ -50,6 +50,7 @@
 #include <cstddef>
 #include <iosfwd>
 #include <Kokkos_Parallel.hpp>
+#include <Kokkos_TaskPolicy.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_ScratchSpace.hpp>
@@ -1099,6 +1100,10 @@ void single(const Impl::ThreadSingleStruct<Impl::SerialTeamMember>& , const Func
   lambda(val);
 }
 }
+
+//----------------------------------------------------------------------------
+
+#include <impl/Kokkos_Serial_Task.hpp>
 
 #endif // defined( KOKKOS_HAVE_SERIAL )
 #endif /* #define KOKKOS_SERIAL_HPP */

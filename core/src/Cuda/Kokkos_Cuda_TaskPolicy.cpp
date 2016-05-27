@@ -172,6 +172,8 @@ if ( IS_TEAM_LEAD && 0 != team_task ) {
           member( kokkos_impl_cuda_shared_memory<void>()
                 , 16                      /* shared_begin */
                 , team_task->m_shmem_size /* shared size */
+                , 0                       /* scratch level 1 pointer */
+                , 0                       /* scratch level 1 size */
                 , 0                       /* league rank */
                 , 1                       /* league size */
                 );

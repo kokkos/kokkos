@@ -45,7 +45,7 @@
 #define KOKKOS_MEMORYPOOL_HPP
 
 #include <Kokkos_Core_fwd.hpp>
-#include <Kokkos_ExecPolicy.hpp>
+#include <Kokkos_Parallel.hpp>
 #include <Kokkos_Atomic.hpp>
 #include <impl/Kokkos_BitOps.hpp>
 #include <impl/Kokkos_Error.hpp>

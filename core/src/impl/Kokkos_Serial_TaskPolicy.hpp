@@ -43,8 +43,8 @@
 
 // Experimental unified task-data parallel manycore LDRD
 
-#ifndef KOKKOS_SERIAL_TASKPOLICY_HPP
-#define KOKKOS_SERIAL_TASKPOLICY_HPP
+#ifndef KOKKOS_EXPERIMENTAL_SERIAL_TASKPOLICY_HPP
+#define KOKKOS_EXPERIMENTAL_SERIAL_TASKPOLICY_HPP
 
 #include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_HAVE_SERIAL )
@@ -669,5 +669,5 @@ void wait( TaskPolicy< Kokkos::Serial > & )
 //----------------------------------------------------------------------------
 
 #endif /* defined( KOKKOS_HAVE_SERIAL ) */
-#endif /* #define KOKKOS_SERIAL_TASK_HPP */
+#endif /* #define KOKKOS_EXPERIMENTAL_SERIAL_TASK_HPP */
 

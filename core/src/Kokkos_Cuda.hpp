@@ -56,6 +56,7 @@
 #include <Kokkos_CudaSpace.hpp>
 
 #include <Kokkos_Parallel.hpp>
+#include <Kokkos_TaskPolicy.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_MemoryTraits.hpp>
@@ -261,6 +262,7 @@ struct VerifyExecutionCanAccessMemorySpace
 #include <Cuda/KokkosExp_Cuda_View.hpp>
 
 #include <Cuda/Kokkos_Cuda_Parallel.hpp>
+#include <Cuda/Kokkos_Cuda_Task.hpp>
 
 //----------------------------------------------------------------------------
 

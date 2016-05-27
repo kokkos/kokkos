@@ -402,7 +402,27 @@ TEST_F( serial , memory_pool )
 
 //----------------------------------------------------------------------------
 
-TEST_F( serial , task_policy )
+TEST_F( serial , task_fib )
+{
+  for ( int i = 0 ; i < 25 ; ++i ) {
+    TestTaskPolicy::TestFib< Kokkos::Serial >::run(i);
+  }
+}
+
+TEST_F( serial , task_depend )
+{
+  for ( int i = 0 ; i < 25 ; ++i ) {
+    TestTaskPolicy::TestTaskDependence< Kokkos::Serial >::run(i);
+  }
+}
+
+TEST_F( serial , task_team )
+{
+  TestTaskPolicy::TestTaskTeam< Kokkos::Serial >::run(1000);
+  TestTaskPolicy::TestTaskTeamValue< Kokkos::Serial >::run(1000);
+}
+
+TEST_F( serial , old_task_policy )
 {
   TestTaskPolicy::test_task_dep< Kokkos::Serial >( 10 );
   // TestTaskPolicy::test_norm2< Kokkos::Serial >( 1000 );
@@ -412,7 +432,7 @@ TEST_F( serial , task_policy )
   for ( long i = 0 ; i < 25 ; ++i ) TestTaskPolicy::test_fib2< Kokkos::Serial >(i);
 }
 
-TEST_F( serial , task_team )
+TEST_F( serial , old_task_team )
 {
   TestTaskPolicy::test_task_team< Kokkos::Serial >(1000);
 }

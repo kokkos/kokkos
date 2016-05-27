@@ -71,6 +71,7 @@
 #include <TestAggregateReduction.hpp>
 #include <TestCompilerMacros.hpp>
 #include <TestMemoryPool.hpp>
+#include <TestTaskPolicy.hpp>
 
 
 #include <TestCXX11.hpp>
@@ -242,5 +243,37 @@ TEST_F( openmp , team_vector )
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::OpenMP >(9) ) );
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::OpenMP >(10) ) );
 }
+
+//----------------------------------------------------------------------------
+
+
+TEST_F( openmp , task_fib )
+{
+  for ( int i = 0 ; i < 25 ; ++i ) {
+    TestTaskPolicy::TestFib< Kokkos::OpenMP >::run(i, (i+1)*1000000 );
+  }
+}
+
+TEST_F( openmp , task_depend )
+{
+  for ( int i = 0 ; i < 25 ; ++i ) {
+    TestTaskPolicy::TestTaskDependence< Kokkos::OpenMP >::run(i);
+  }
+}
+
+TEST_F( openmp , task_team )
+{
+  TestTaskPolicy::TestTaskTeam< Kokkos::OpenMP >::run(1000);
+  TestTaskPolicy::TestTaskTeamValue< Kokkos::OpenMP >::run(1000);
+}
+
+
+
+
 } // namespace test
+
+
+
+
+
 
