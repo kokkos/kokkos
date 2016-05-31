@@ -75,6 +75,7 @@ struct FunctorValueTraits
   typedef void value_type ;
   typedef void pointer_type ;
   typedef void reference_type ;
+  typedef void functor_type ;
 
   enum { StaticValueSize = 0 };
 
@@ -88,7 +89,10 @@ struct FunctorValueTraits
 template<class ArgTag>
 struct FunctorValueTraits<void, ArgTag,false>
 {
-  typedef void reference_type;
+  typedef void value_type ;
+  typedef void pointer_type ;
+  typedef void reference_type ;
+  typedef void functor_type ;
 };
 
 /** \brief  FunctorType::value_type is explicitly declared so use it.
@@ -106,6 +110,7 @@ template< class FunctorType , class ArgTag >
 struct FunctorValueTraits< FunctorType , ArgTag , true /* == exists FunctorType::value_type */ >
 {
   typedef typename Impl::remove_extent< typename FunctorType::value_type >::type  value_type ;
+  typedef FunctorType functor_type;
 
   static_assert( 0 == ( sizeof(value_type) % sizeof(int) ) ,
     "Reduction functor's declared value_type requires: 0 == sizeof(value_type) % sizeof(int)" );
@@ -342,6 +347,7 @@ public:
   typedef typename Impl::if_c< IS_VOID || IS_REJECT , void , ValueType   >::type  value_type ;
   typedef typename Impl::if_c< IS_VOID || IS_REJECT , void , ValueType * >::type  pointer_type ;
   typedef typename Impl::if_c< IS_VOID || IS_REJECT , void , ValueType & >::type  reference_type ;
+  typedef FunctorType functor_type;
 
   static_assert( IS_VOID || IS_REJECT || 0 == ( sizeof(ValueType) % sizeof(int) ) ,
     "Reduction functor's value_type deduced from functor::operator() requires: 0 == sizeof(value_type) % sizeof(int)" );
