@@ -243,6 +243,7 @@ private:
 public:
 
   //! Tag this class as an execution policy
+  typedef RangePolicy execution_policy;
   typedef typename traits::index_type member_type ;
 
   KOKKOS_INLINE_FUNCTION const typename traits::execution_space & space() const { return m_space ; }
@@ -743,6 +744,7 @@ KOKKOS_INLINE_FUNCTION
 Impl::ThreadVectorRangeBoundariesStruct<iType,TeamMemberType> ThreadVectorRange(const TeamMemberType&, const iType& count);
 
 } // namespace Kokkos
+
 
 #endif /* #define KOKKOS_EXECPOLICY_HPP */
 
