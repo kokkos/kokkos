@@ -145,7 +145,9 @@ struct ParallelReduceReturnValue<typename std::enable_if<!Kokkos::is_view<Return
     return return_type(return_val,functor.value_count);
   }
 };
+}
 
+namespace Impl {
 template< class T, class ReturnType , class FunctorType>
 struct ParallelReducePolicyType;
 
@@ -173,6 +175,10 @@ struct ParallelReducePolicyType<typename std::enable_if<std::is_integral<PolicyT
 
 }
 
+namespace Impl {
+  template< class T, class ReturnType , class FunctorType>
+  struct ParallelReducePolicyType;
+}
 template< class LabelType, class PolicyType, class FunctorType, class ReturnType >
 inline
 void parallel_reduce_new(const LabelType& label,
@@ -188,17 +194,16 @@ void parallel_reduce_new(const LabelType& label,
   std::cout << label << std::endl;
 
   typedef typename Impl::ParallelReducePolicyType<void,PolicyType,FunctorType>::policy_type policy_type;
-  typedef Impl::FunctorValueTraits< FunctorType , typename policy_type::work_tag >  value_traits ;
   typedef Impl::ParallelReduceReturnValue<void,ReturnType,FunctorType> return_value_adapter;
 
   auto return_view = return_value_adapter::return_value(return_value,functor);
 
-  //Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
   Impl::ParallelReduce<FunctorType, policy_type >
      closure(functor,
              Impl::ParallelReducePolicyType<void,PolicyType,FunctorType>::policy(policy),
              return_view);
-  //Kokkos::Impl::shared_allocation_tracking_release_and_enable();
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
   closure.execute();
 }
 
@@ -214,17 +219,16 @@ void parallel_reduce_new(const PolicyType& policy,
   std::cout << "No Label" <<std::endl;
 
   typedef typename Impl::ParallelReducePolicyType<void,PolicyType,FunctorType>::policy_type policy_type;
-  typedef Impl::FunctorValueTraits< FunctorType , typename policy_type::work_tag >  value_traits ;
   typedef Impl::ParallelReduceReturnValue<void,ReturnType,FunctorType> return_value_adapter;
 
   auto return_view = return_value_adapter::return_value(return_value,functor);
 
-  //Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
   Impl::ParallelReduce<FunctorType, policy_type>
      closure(functor,
              Impl::ParallelReducePolicyType<void,PolicyType,FunctorType>::policy(policy),
              return_view);
-  //Kokkos::Impl::shared_allocation_tracking_release_and_enable();
+  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
   closure.execute();
 }
 
