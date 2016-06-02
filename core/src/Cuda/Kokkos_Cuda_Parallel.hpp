@@ -1766,8 +1766,19 @@ namespace Impl {
     typedef typename Kokkos::Impl::FunctorValueTraits< FunctorType ,Tag >::reference_type reference_type;
   };
 
+  template< class FunctorTypeIn, class ExecPolicy, class ValueType>
+  struct ParallelReduceFunctorType<FunctorTypeIn,ExecPolicy,ValueType,Cuda> {
+    enum {FunctorHasValueType = IsNonTrivialReduceFunctor<FunctorTypeIn>::value };
+    typedef typename Kokkos::Impl::if_c<FunctorHasValueType, FunctorTypeIn, Impl::CudaFunctorAdapter<FunctorTypeIn,ExecPolicy,ValueType> >::type functor_type;
+
+    static functor_type functor(const FunctorTypeIn& functor_in) {
+      return Impl::if_c<FunctorHasValueType,FunctorTypeIn,functor_type>::select(functor_in,functor_type(functor_in));
+    }
+  };
+
 }
 
+#ifndef NEW_PARALLEL_REDUCE
 // general policy and view ouput
 template< class ExecPolicy , class FunctorTypeIn , class ViewType >
 inline
@@ -2135,6 +2146,7 @@ void parallel_reduce( const std::string & str
   #endif
   (void) str;
 }
+#endif
 #endif
 } // namespace Kokkos
 #endif /* defined( __CUDACC__ ) */

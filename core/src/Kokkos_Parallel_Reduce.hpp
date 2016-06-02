@@ -113,6 +113,12 @@ struct ParallelReduceReturnValue;
 template< class ReturnType , class FunctorType >
 struct ParallelReduceReturnValue<typename std::enable_if<Kokkos::is_view<ReturnType>::value>::type, ReturnType, FunctorType> {
   typedef ReturnType return_type;
+
+  typedef typename return_type::value_type value_type_scalar;
+  typedef typename return_type::value_type value_type_array;
+
+  typedef typename if_c<return_type::rank==0,value_type_scalar,value_type_array>::type value_type;
+
   static return_type& return_value(ReturnType& return_val, const FunctorType&) {
     return return_val;
   }
@@ -126,6 +132,7 @@ struct ParallelReduceReturnValue<typename std::enable_if<!Kokkos::is_view<Return
                        , Kokkos::HostSpace
                        , Kokkos::MemoryUnmanaged
       > return_type;
+  typedef typename return_type::value_type value_type;
 
   static return_type return_value(ReturnType& return_val, const FunctorType&) {
     return return_type(&return_val);
@@ -139,6 +146,7 @@ struct ParallelReduceReturnValue<typename std::enable_if<!Kokkos::is_view<Return
                        , Kokkos::HostSpace
                        , Kokkos::MemoryUnmanaged
       > return_type;
+  typedef typename return_type::value_type value_type[];
 
   static return_type return_value(ReturnType& return_val,
                                   const FunctorType& functor) {
@@ -176,12 +184,19 @@ struct ParallelReducePolicyType<typename std::enable_if<std::is_integral<PolicyT
 }
 
 namespace Impl {
-  template< class T, class ReturnType , class FunctorType>
-  struct ParallelReducePolicyType;
+  template< class FunctorType, class ExecPolicy, class ValueType, class ExecutionSpace>
+  struct ParallelReduceFunctorType {
+    typedef FunctorType functor_type;
+    static const functor_type& functor(const functor_type& functor) {
+      return functor;
+    }
+  };
 }
+
+#ifdef NEW_PARALLEL_REDUCE
 template< class LabelType, class PolicyType, class FunctorType, class ReturnType >
 inline
-void parallel_reduce_new(const LabelType& label,
+void parallel_reduce(const LabelType& label,
                          const PolicyType& policy,
                          const FunctorType& functor,
                          ReturnType& return_value,
@@ -195,43 +210,48 @@ void parallel_reduce_new(const LabelType& label,
 
   typedef typename Impl::ParallelReducePolicyType<void,PolicyType,FunctorType>::policy_type policy_type;
   typedef Impl::ParallelReduceReturnValue<void,ReturnType,FunctorType> return_value_adapter;
+  typedef Impl::ParallelReduceFunctorType<FunctorType,policy_type,
+                                          typename return_value_adapter::value_type,
+                                          typename policy_type::execution_space> functor_adaptor;
 
   auto return_view = return_value_adapter::return_value(return_value,functor);
 
+#if (KOKKOS_ENABLE_PROFILING)
+  uint64_t kpID = 0;
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::beginParallelReduce(std::string(label), 0, &kpID);
+     }
+#endif
+
   Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
-  Impl::ParallelReduce<FunctorType, policy_type >
-     closure(functor,
+  Impl::ParallelReduce<typename functor_adaptor::functor_type, policy_type >
+     closure(functor_adaptor::functor(functor),
              Impl::ParallelReducePolicyType<void,PolicyType,FunctorType>::policy(policy),
              return_view);
   Kokkos::Impl::shared_allocation_tracking_release_and_enable();
   closure.execute();
+
+  #if (KOKKOS_ENABLE_PROFILING)
+     if(Kokkos::Profiling::profileLibraryLoaded()) {
+  Kokkos::Profiling::endParallelReduce(kpID);
+     }
+#endif
+
 }
 
 template< class PolicyType, class FunctorType, class ReturnType >
 inline
-void parallel_reduce_new(const PolicyType& policy,
+void parallel_reduce(const PolicyType& policy,
                          const FunctorType& functor,
                          ReturnType& return_value,
                          typename Impl::enable_if<
                          Kokkos::Impl::is_execution_policy<
                            typename Impl::ParallelReducePolicyType<void,PolicyType,FunctorType>::policy_type>::value
                          >::type * = 0) {
-  std::cout << "No Label" <<std::endl;
-
-  typedef typename Impl::ParallelReducePolicyType<void,PolicyType,FunctorType>::policy_type policy_type;
-  typedef Impl::ParallelReduceReturnValue<void,ReturnType,FunctorType> return_value_adapter;
-
-  auto return_view = return_value_adapter::return_value(return_value,functor);
-
-  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
-  Impl::ParallelReduce<FunctorType, policy_type>
-     closure(functor,
-             Impl::ParallelReducePolicyType<void,PolicyType,FunctorType>::policy(policy),
-             return_view);
-  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
-  closure.execute();
+  parallel_reduce("No Label",policy,functor,return_value);
 }
 
+#else
 template< class ExecPolicy , class FunctorType >
 inline
 void parallel_reduce( const ExecPolicy  & policy
@@ -590,6 +610,7 @@ void parallel_reduce( const std::string & str
   #endif
   (void) str;
 }
+#endif
 #endif
 
 } // namespace Kokkos
