@@ -435,6 +435,8 @@ TEST_F( threads , memory_pool )
   ASSERT_TRUE( val );
 
   TestMemoryPool::test_mempool2< Kokkos::Threads >( 64, 4, 1000000, 2000000 );
+
+  TestMemoryPool::test_memory_exhaustion< Kokkos::Threads >();
 }
 
 //----------------------------------------------------------------------------

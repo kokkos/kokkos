@@ -546,6 +546,10 @@ TEST_F( cuda , memory_pool )
   TestMemoryPool::test_mempool2< device_type >( 64, 4, 100000, 200000 );
 
   Kokkos::Cuda::fence();
+
+  TestMemoryPool::test_memory_exhaustion< Kokkos::Cuda >();
+
+  Kokkos::Cuda::fence();
 }
 
 }
