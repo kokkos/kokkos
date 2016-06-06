@@ -392,6 +392,8 @@ TEST_F( serial , memory_pool )
   ASSERT_TRUE( val );
 
   TestMemoryPool::test_mempool2< Kokkos::Serial >( 64, 4, 1000000, 2000000 );
+
+  TestMemoryPool::test_memory_exhaustion< Kokkos::Serial >();
 }
 
 //----------------------------------------------------------------------------

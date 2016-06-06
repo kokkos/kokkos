@@ -500,6 +500,8 @@ struct count_allocated_blocks {
 
 /// \class MemoryPool
 /// \brief Bitset based memory manager for pools of same-sized chunks of memory.
+/// \tparam Device Kokkos device that gives the execution and memory space the
+///                allocator will be used in.
 ///
 /// MemoryPool is a memory space that can be on host or device.  It provides a
 /// pool memory allocator for fast allocation of same-sized chunks of memory.
@@ -659,6 +661,13 @@ public:
   MemoryPool & operator = ( MemoryPool && ) = default;
   MemoryPool & operator = ( const MemoryPool & ) = default;
 
+  /// \brief Initializes the memory pool.
+  /// \param memspace The memory space from which the memory pool will allocate memory.
+  /// \param total_size The requested memory amount controlled by the allocator.  The
+  ///                   actual amount is rounded up to the smallest multiple of the
+  ///                   superblock size >= the requested size.
+  /// \param log2_superblock_size Log2 of the size of superblocks used by the allocator.
+  ///                             In most use cases, the default value should work.
   inline
   MemoryPool( const backend_memory_space & memspace,
               size_t total_size, size_t log2_superblock_size = 20 )
@@ -675,8 +684,8 @@ public:
       m_partfull_sb_size( m_ceil_num_sb * m_num_block_size / CHAR_BIT ),
       m_total_size( m_data_size +  m_sb_blocks_size + m_empty_sb_size + m_partfull_sb_size ),
       m_data(0),
-      m_active( "Active superblocks", m_num_block_size ),
-      m_sb_header( "Superblock headers", m_num_sb ),
+      m_active( "Active superblocks" ),
+      m_sb_header( "Superblock headers" ),
       m_track()
   {
     // Assumption.  The minimum block size must be a power of 2.
@@ -715,6 +724,11 @@ public:
       Kokkos::abort( "" );
     }
 
+    // Allocate memory for Views.  This is done here instead of at construction
+    // so that the runtime checks can be performed before allocating memory.
+    resize(m_active, m_num_block_size );
+    resize(m_sb_header, m_num_sb );
+
     // Allocate superblock memory.
     typedef Impl::SharedAllocationRecord< backend_memory_space, void >  SharedRecord;
     SharedRecord * rec =
@@ -742,7 +756,7 @@ public:
 
     deep_copy(m_active, host_active);
 
-    // Initialize the blocksize info
+    // Initialize the blocksize info.
     for ( size_t i = 0; i < m_num_block_size; ++i ) {
       uint32_t lg_block_size = i + LG_MIN_BLOCK_SIZE;
       uint32_t blocks_per_sb = m_sb_size >> lg_block_size;
@@ -803,7 +817,11 @@ public:
 #endif
   }
 
-  /// \brief Claim chunks of untracked memory from the pool.
+  /// \brief Allocate a chunk of memory.
+  /// \param alloc_size Size of the requested allocated in number of bytes.
+  ///
+  /// The function returns a void pointer to a memory location on success and
+  /// NULL on failure.
   KOKKOS_FUNCTION
   void * allocate( size_t alloc_size ) const
   {
@@ -919,9 +937,9 @@ public:
         }
 
         if ( need_new_sb ) {
-          sb_id = find_superblock( block_size_id, sb_id );
+          uint32_t new_sb_id = find_superblock( block_size_id, sb_id );
 
-          if ( sb_id == INVALID_SUPERBLOCK ) {
+          if ( new_sb_id == sb_id ) {
             allocation_done = true;
 #ifdef KOKKOS_MEMPOOL_PRINT_INFO
             printf( "** No superblocks available. **\n" );
@@ -929,6 +947,9 @@ public:
             fflush( stdout );
 #endif
 #endif
+          }
+          else {
+            sb_id = new_sb_id;
           }
         }
       }
@@ -946,88 +967,92 @@ public:
     return p;
   }
 
-  /// \brief Release claimed memory back into the pool.
+  /// \brief Release allocated memory back to the pool.
+  /// \param alloc_ptr Pointer to chunk of memory previously allocated by
+  ///                  the allocator.
+  /// \param alloc_size Size of the allocated memory in number of bytes.
   KOKKOS_FUNCTION
   void deallocate( void * alloc_ptr, size_t alloc_size ) const
   {
     char * ap = static_cast<char *>( alloc_ptr );
 
+    // Only deallocate memory controlled by this pool.
+    if ( ap >= m_data && ap + alloc_size <= m_data + m_data_size ) {
+      // Get the superblock for the address.  This can be calculated by math on
+      // the address since the superblocks are stored contiguously in one memory
+      // chunk.
+      uint32_t sb_id = ( ap - m_data ) >> m_lg_sb_size;
+
+      // Get the starting position for this superblock's bits in the bitset.
+      uint32_t pos_base = sb_id << m_lg_max_sb_blocks;
+
+      // Get the relative position for this memory location's bit in the bitset.
+      uint32_t offset = ( ap - m_data ) - ( size_t(sb_id) << m_lg_sb_size );
+      uint32_t lg_block_size = m_sb_header(sb_id).m_lg_block_size;
+      uint32_t block_size_id = lg_block_size - LG_MIN_BLOCK_SIZE;
+      uint32_t pos_rel = offset >> lg_block_size;
+
+      bool success;
+      unsigned prev_val;
+
+      Kokkos::tie( success, prev_val ) = m_sb_blocks.fetch_word_reset( pos_base + pos_rel );
+
+      // If the memory location was previously deallocated, do nothing.
+      if ( success ) {
+        uint32_t page_fill_level = Kokkos::Impl::bit_count( prev_val );
+
+        if ( page_fill_level == 1 ) {
+          // This page is now empty.  Increment the number of empty pages for the
+          // superblock.
+          uint32_t empty_pages = atomic_fetch_add( &m_sb_header(sb_id).m_empty_pages, 1 );
+
+          if ( !volatile_load( &m_sb_header(sb_id).m_is_active ) &&
+               empty_pages == m_blocksize_info[block_size_id].m_pages_per_sb - 1 )
+          {
+            // This deallocation caused the superblock to be empty.  Change the
+            // superblock category from partially full to empty.
+            unsigned pos = block_size_id * m_ceil_num_sb + sb_id;
+
+            if ( m_partfull_sb.reset( pos ) ) {
+              // Reset the empty pages and block size for the superblock.
+              volatile_store( &m_sb_header(sb_id).m_empty_pages, uint32_t(0) );
+              volatile_store( &m_sb_header(sb_id).m_lg_block_size, uint32_t(0) );
+
+              memory_fence();
+
+              m_empty_sb.set( sb_id );
+            }
+          }
+        }
+        else if ( page_fill_level == m_blocksize_info[block_size_id].m_page_full_level ) {
+          // This page is no longer full.  Decrement the number of full pages for
+          // the superblock.
+          uint32_t full_pages = atomic_fetch_sub( &m_sb_header(sb_id).m_full_pages, 1 );
+
+          if ( !volatile_load( &m_sb_header(sb_id).m_is_active ) &&
+               full_pages == m_blocksize_info[block_size_id].m_sb_full_level )
+          {
+            // This deallocation caused the number of full pages to decrease below
+            // the full threshold.  Change the superblock category from full to
+            // partially full.
+            unsigned pos = block_size_id * m_ceil_num_sb + sb_id;
+            m_partfull_sb.set( pos );
+          }
+        }
+      }
+    }
 #ifdef KOKKOS_MEMPOOL_PRINTERR
-    // Verify that the pointer is controlled by this pool.
-    if ( ap < m_data || ap + alloc_size > m_data + m_data_size ) {
+    else {
       printf( "\n** MemoryPool::deallocate() ADDRESS_OUT_OF_RANGE(0x%llx) **\n",
               reinterpret_cast<uint64_t>( alloc_ptr ) );
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
       fflush( stdout );
 #endif
-      Kokkos::abort( "" );
     }
 #endif
-
-    // Get the superblock for the address.  This can be calculated by math on
-    // the address since the superblocks are stored contiguously in one memory
-    // chunk.
-    uint32_t sb_id = ( ap - m_data ) >> m_lg_sb_size;
-
-    // Get the starting position for this superblock's bits in the bitset.
-    uint32_t pos_base = sb_id << m_lg_max_sb_blocks;
-
-    // Get the relative position for this memory location's bit in the bitset.
-    uint32_t offset = ( ap - m_data ) - ( size_t(sb_id) << m_lg_sb_size );
-    uint32_t lg_block_size = m_sb_header(sb_id).m_lg_block_size;
-    uint32_t block_size_id = lg_block_size - LG_MIN_BLOCK_SIZE;
-    uint32_t pos_rel = offset >> lg_block_size;
-
-    bool success;
-    unsigned prev_val;
-
-    Kokkos::tie( success, prev_val ) = m_sb_blocks.fetch_word_reset( pos_base + pos_rel );
-
-    if ( success ) {
-      uint32_t page_fill_level = Kokkos::Impl::bit_count( prev_val );
-
-      if ( page_fill_level == 1 ) {
-        // This page is now empty.  Increment the number of empty pages for the
-        // superblock.
-        uint32_t empty_pages = atomic_fetch_add( &m_sb_header(sb_id).m_empty_pages, 1 );
-
-        if ( !volatile_load( &m_sb_header(sb_id).m_is_active ) &&
-             empty_pages == m_blocksize_info[block_size_id].m_pages_per_sb - 1 )
-        {
-          // This deallocation caused the superblock to be empty.  Change the
-          // superblock category from partially full to empty.
-          unsigned pos = block_size_id * m_ceil_num_sb + sb_id;
-
-          if ( m_partfull_sb.reset( pos ) ) {
-            // Reset the empty pages and block size for the superblock.
-            volatile_store( &m_sb_header(sb_id).m_empty_pages, uint32_t(0) );
-            volatile_store( &m_sb_header(sb_id).m_lg_block_size, uint32_t(0) );
-
-            memory_fence();
-
-            m_empty_sb.set( sb_id );
-          }
-        }
-      }
-      else if ( page_fill_level == m_blocksize_info[block_size_id].m_page_full_level ) {
-        // This page is no longer full.  Decrement the number of full pages for
-        // the superblock.
-        uint32_t full_pages = atomic_fetch_sub( &m_sb_header(sb_id).m_full_pages, 1 );
-
-        if ( !volatile_load( &m_sb_header(sb_id).m_is_active ) &&
-             full_pages == m_blocksize_info[block_size_id].m_sb_full_level )
-        {
-          // This deallocation caused the number of full pages to decrease below
-          // the full threshold.  Change the superblock category from full to
-          // partially full.
-          unsigned pos = block_size_id * m_ceil_num_sb + sb_id;
-          m_partfull_sb.set( pos );
-        }
-      }
-    }
   }
 
-  /// \brief Tests if the memory pool is empty.
+  /// \brief Tests if the memory pool has no more memory available to allocate.
   KOKKOS_INLINE_FUNCTION
   bool is_empty() const
   {
@@ -1273,9 +1298,12 @@ private:
   /// \brief Finds a superblock with free space to become a new active superblock.
   ///
   /// If this function is called, the current active superblock needs to be replaced
-  /// because it is full.  All threads that encounter a full active superblock call
-  /// this function.  Only one will replace the active superblock.  The others spin
-  /// on a lock to wait until the active superblock has been replaced.
+  /// because it is full.  Initially, only the thread that sets the active superblock
+  /// to full calls this function.  Other threads can still allocate from the "full"
+  /// active superblock because a full superblock still has locations available.  If
+  /// a thread tries to allocate from the active superblock when it has no free
+  /// locations, then that thread will call this function, too, and spin on a lock
+  /// waiting until the active superblock has been replaced.
   KOKKOS_FUNCTION
   uint32_t find_superblock( int block_size_id, uint32_t old_sb ) const
   {

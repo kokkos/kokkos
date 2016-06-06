@@ -334,10 +334,6 @@ bool test_mempool( size_t chunk_size, size_t total_size )
   timer.reset();
 #endif
 
-  // Tests:
-  //   test for correct behvior when out of memory
-  //   test for correct behvior when interleaving allocate() and deallocate()
-
   {
     allocate_memory< pointer_view, pool_memory_space >
       am( pointers, num_chunks, chunk_size, mempool );
@@ -647,8 +643,8 @@ void test_mempool2( unsigned base_chunk_size, size_t num_chunk_sizes,
 #ifdef TESTMEMORYPOOL_PRINT
   printf( "\n*** test_mempool2() ***\n" );
   printf( "       num_chunk_sizes: %12zu\n", num_chunk_sizes );
-  printf( "       base_chunk_size: %12zu\n", base_chunk_size );
-  printf( "  ceil_base_chunk_size: %12zu\n", ceil_base_chunk_size );
+  printf( "       base_chunk_size: %12u\n", base_chunk_size );
+  printf( "  ceil_base_chunk_size: %12u\n", ceil_base_chunk_size );
   printf( "           phase1_size: %12zu\n", phase1_size );
   printf( "           phase2_size: %12zu\n", phase2_size );
   printf( "           phase3_size: %12zu\n", phase3_size );
@@ -721,6 +717,86 @@ void test_mempool2( unsigned base_chunk_size, size_t num_chunk_sizes,
   execution_space::fence();
   elapsed_time = timer.seconds();
   print_results( "phase3: ", elapsed_time );
+#ifdef TESTMEMORYPOOL_PRINT_STATUS
+  mempool.print_status();
+#endif
+#endif
+}
+
+// Tests for correct behavior when the allocator is out of memory.
+template < class Device >
+void test_memory_exhaustion()
+{
+#ifdef TESTMEMORYPOOL_PRINT
+  typedef typename Device::execution_space                 execution_space;
+#endif
+  typedef typename Device::memory_space                    memory_space;
+  typedef Device                                           device_type;
+  typedef Kokkos::View< pointer_obj *, device_type >       pointer_view;
+  typedef Kokkos::Experimental::MemoryPool< device_type >  pool_memory_space;
+
+  // The allocator will have a single superblock, and allocations will all be
+  // of the same chunk size.  The allocation loop will attempt to allocate
+  // twice the number of chunks as are available in the allocator.  The
+  // deallocation loop will only free the successfully allocated chunks.
+
+  size_t chunk_size = 128;
+  size_t num_chunks = 128;
+  size_t half_num_chunks = num_chunks / 2;
+  size_t superblock_size = chunk_size * half_num_chunks;
+  size_t lg_superblock_size =
+    Kokkos::Impl::integral_power_of_two( superblock_size );
+
+  pointer_view pointers( "pointers", num_chunks );
+
+#ifdef TESTMEMORYPOOL_PRINT
+  std::cout << "\n*** test_memory_exhaustion() ***" << std::endl;
+
+  double elapsed_time = 0;
+  Kokkos::Timer timer;
+#endif
+
+  pool_memory_space mempool( memory_space(), superblock_size,
+                             lg_superblock_size );
+
+#ifdef TESTMEMORYPOOL_PRINT
+  execution_space::fence();
+  elapsed_time = timer.seconds();
+  print_results( "initialize mempool: ", elapsed_time );
+#ifdef TESTMEMORYPOOL_PRINT_STATUS
+  mempool.print_status();
+#endif
+  timer.reset();
+#endif
+
+  {
+    allocate_memory< pointer_view, pool_memory_space >
+      am( pointers, num_chunks, chunk_size, mempool );
+  }
+
+#ifdef TESTMEMORYPOOL_PRINT
+  execution_space::fence();
+  elapsed_time = timer.seconds();
+  print_results( "allocate chunks: ", elapsed_time );
+#ifdef TESTMEMORYPOOL_PRINT_STATUS
+  mempool.print_status();
+#endif
+  timer.reset();
+#endif
+
+  {
+    // In parallel, the allocations that succeeded were not put contiguously
+    // into the pointers View.  The whole View can still be looped over and
+    // have deallocate called because deallocate will just do nothing for NULL
+    // pointers.
+    deallocate_memory< pointer_view, pool_memory_space >
+      dm( pointers, num_chunks, chunk_size, mempool );
+  }
+
+#ifdef TESTMEMORYPOOL_PRINT
+  execution_space::fence();
+  elapsed_time = timer.seconds();
+  print_results( "deallocate chunks: ", elapsed_time );
 #ifdef TESTMEMORYPOOL_PRINT_STATUS
   mempool.print_status();
 #endif
