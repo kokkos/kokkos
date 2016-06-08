@@ -213,6 +213,18 @@ struct DynRankDimTraits {
                  , dynrank > 7 ? layout.stride[7] : (0) 
                  );
   }
+
+  template < typename DynRankViewType , typename iType >
+  void verify_dynrankview_rank ( iType N , const DynRankViewType &drv )
+  {
+     //if ( drv.rank() != N )
+     if ( drv.rank() > N )
+       {
+         std::cout << " rank: " << drv.rank() << " Called from op with numArgs: " << N << std::endl;
+         Kokkos::abort( "Need at least rank arguments to the operator()" ); 
+       }
+  }
+
 } //end Impl
 
 /* \class DynRankView
@@ -227,6 +239,7 @@ struct DynRankDimTraits {
  *   4. Every subdynrankview is returned with LayoutStride
  *
  */
+
 
 template< typename DataType , class ... Properties >
 class DynRankView : private View< DataType*******, Properties... >
@@ -354,11 +367,33 @@ public:
   using view_type::stride_6;
   using view_type::stride_7;
 
+
+private:
+#if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
+
+#define KOKKOS_VIEW_OPERATOR_VERIFY( N , ARG ) \
+  Kokkos::Impl::VerifyExecutionCanAccessMemorySpace \
+    < Kokkos::Impl::ActiveExecutionMemorySpace , typename traits::memory_space >::verify(); \
+  Kokkos::Experimental::Impl::verify_dynrankview_rank ( N , *this ) ; \
+  Kokkos::Experimental::Impl::view_verify_operator_bounds ARG ; 
+
+#else
+
+#define KOKKOS_VIEW_OPERATOR_VERIFY( N , ARG ) \
+  Kokkos::Impl::VerifyExecutionCanAccessMemorySpace \
+    < Kokkos::Impl::ActiveExecutionMemorySpace , typename traits::memory_space >::verify();
+
+#endif
+
+public:
   //operators ()
   // Rank 0
   KOKKOS_INLINE_FUNCTION
   reference_type operator()() const
-    { return view_type::operator()(0,0,0,0,0,0,0); }
+    { 
+      KOKKOS_VIEW_OPERATOR_VERIFY( 0 , ( implementation_map() ) )
+      return implementation_map().reference();
+    }
   
   // Rank 1
   // This assumes a contiguous underlying memory (i.e. no padding, no striding...)
@@ -390,43 +425,66 @@ public:
   template< typename iType >
   KOKKOS_INLINE_FUNCTION
   reference_type operator()(const iType & i0 ) const 
-    { return view_type::operator()(i0,0,0,0,0,0,0); }
+    { 
+      KOKKOS_VIEW_OPERATOR_VERIFY( 1 , ( implementation_map() , i0 ) )
+      return implementation_map().reference(i0); 
+    }
 
   // Rank 2
   template< typename iType0 , typename iType1 >
   KOKKOS_INLINE_FUNCTION
   reference_type operator()(const iType0 & i0 , const iType1 & i1 ) const 
-    { return view_type::operator()(i0,i1,0,0,0,0,0); }
+    { 
+      KOKKOS_VIEW_OPERATOR_VERIFY( 2 , ( implementation_map() , i0 , i1 ) )
+      return implementation_map().reference(i0,i1); 
+    }
 
   // Rank 3
   template< typename iType0 , typename iType1 , typename iType2 >
   KOKKOS_INLINE_FUNCTION
   reference_type operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 ) const 
-    { return view_type::operator()(i0,i1,i2,0,0,0,0); }
+    { 
+      KOKKOS_VIEW_OPERATOR_VERIFY( 3 , ( implementation_map() , i0 , i1 , i2 ) )
+      return implementation_map().reference(i0,i1,i2); 
+    }
 
   // Rank 4
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3 >
   KOKKOS_INLINE_FUNCTION
   reference_type operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 ) const 
-    { return view_type::operator()(i0,i1,i2,i3,0,0,0); }
+    { 
+      KOKKOS_VIEW_OPERATOR_VERIFY( 4 , ( implementation_map() , i0 , i1 , i2 , i3 ) )
+      return implementation_map().reference(i0,i1,i2,i3); 
+    }
 
   // Rank 5
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 >
   KOKKOS_INLINE_FUNCTION
   reference_type operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 ) const 
-    { return view_type::operator()(i0,i1,i2,i3,i4,0,0); }
+    { 
+      KOKKOS_VIEW_OPERATOR_VERIFY( 5 , ( implementation_map() , i0 , i1 , i2 , i3 , i4 ) )
+      return implementation_map().reference(i0,i1,i2,i3,i4); 
+    }
 
   // Rank 6
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 , typename iType5 >
   KOKKOS_INLINE_FUNCTION
   reference_type operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 ) const 
-    { return view_type::operator()(i0,i1,i2,i3,i4,i5,0); }
+    { 
+      KOKKOS_VIEW_OPERATOR_VERIFY( 6 , ( implementation_map() , i0 , i1 , i2 , i3 , i4 , i5 ) )
+      return implementation_map().reference(i0,i1,i2,i3,i4,i5); 
+    }
 
   // Rank 7
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 , typename iType5 , typename iType6 >
   KOKKOS_INLINE_FUNCTION
   reference_type operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 , const iType6 & i6 ) const 
-    { return view_type::operator()(i0,i1,i2,i3,i4,i5,i6); }
+    { 
+      KOKKOS_VIEW_OPERATOR_VERIFY( 7 , ( implementation_map() , i0 , i1 , i2 , i3 , i4 , i5 , i6 ) )
+      return implementation_map().reference(i0,i1,i2,i3,i4,i5,i6); 
+    }
+
+#undef KOKKOS_VIEW_OPERATOR_VERIFY
 
   //----------------------------------------
   // Standard constructor, destructor, and assignment operators... 
@@ -950,6 +1008,7 @@ namespace Experimental {
 
 namespace Impl {
 
+
 // Deduce Mirror Types
 template<class Space, class T, class ... P>
 struct MirrorDRViewType {
@@ -1003,14 +1062,7 @@ create_mirror( const DynRankView<T,P...> & src
   typedef typename src_type::HostMirror  dst_type ;
 
   return dst_type( std::string( src.label() ).append("_mirror")
-                 , src.dimension(0)
-                 , src.dimension(1)
-                 , src.dimension(2)
-                 , src.dimension(3)
-                 , src.dimension(4)
-                 , src.dimension(5)
-                 , src.dimension(6)
-                 , src.dimension(7) );
+                 , Impl::reconstructLayout(src.layout(), src.rank()) );
 }
 
 
@@ -1027,27 +1079,8 @@ create_mirror( const DynRankView<T,P...> & src
   typedef DynRankView<T,P...>                   src_type ;
   typedef typename src_type::HostMirror  dst_type ;
 
-  Kokkos::LayoutStride layout ;
-
-  layout.dimension[0] = src.dimension(0);
-  layout.dimension[1] = src.dimension(1);
-  layout.dimension[2] = src.dimension(2);
-  layout.dimension[3] = src.dimension(3);
-  layout.dimension[4] = src.dimension(4);
-  layout.dimension[5] = src.dimension(5);
-  layout.dimension[6] = src.dimension(6);
-  layout.dimension[7] = src.dimension(7);
-
-  layout.stride[0] = src.stride(0);
-  layout.stride[1] = src.stride(1);
-  layout.stride[2] = src.stride(2);
-  layout.stride[3] = src.stride(3);
-  layout.stride[4] = src.stride(4);
-  layout.stride[5] = src.stride(5);
-  layout.stride[6] = src.stride(6);
-  layout.stride[7] = src.stride(7);
-
-  return dst_type( std::string( src.label() ).append("_mirror") , layout );
+  return dst_type( std::string( src.label() ).append("_mirror") 
+                 , Impl::reconstructLayout(src.layout(), src.rank()) );
 }
 
 
