@@ -923,8 +923,8 @@ public:
     dView0 dx , dy , dz ;
     hView0 hx , hy , hz ;
 
-    ASSERT_TRUE( is_dyn_rank_view<dView0>::value );
-    ASSERT_FALSE( is_dyn_rank_view< Kokkos::View<double> >::value );
+    ASSERT_TRUE( Kokkos::Experimental::is_dyn_rank_view<dView0>::value );
+    ASSERT_FALSE( Kokkos::Experimental::is_dyn_rank_view< Kokkos::View<double> >::value );
 
     ASSERT_TRUE( dx.ptr_on_device() == 0 );
     ASSERT_TRUE( dy.ptr_on_device() == 0 );
