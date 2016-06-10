@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -622,6 +622,28 @@ struct TestScratchTeam {
                              Functor() , result_type( & error_count ) );
 
     ASSERT_EQ( error_count , 0 );
+  }
+};
+}
+
+namespace Test {
+
+template< class ExecSpace >
+struct TestShmemSize {
+
+  TestShmemSize() { run(); }
+
+  void run()
+  {
+    typedef Kokkos::View< long***, ExecSpace > view_type;
+
+    size_t d1 = 5;
+    size_t d2 = 6;
+    size_t d3 = 7;
+
+    size_t size = view_type::shmem_size( d1, d2, d3 );
+
+    ASSERT_EQ( size, d1 * d2 * d3 * sizeof(long) );
   }
 };
 }

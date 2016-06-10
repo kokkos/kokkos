@@ -158,6 +158,10 @@ TEST_F( cuda, lambda_shared_team )
 }
 #endif
 
+TEST_F( cuda, shmem_size) {
+  TestShmemSize< Kokkos::Cuda >();
+}
+
 TEST_F( cuda, reduce_dynamic )
 {
   TestReduceDynamic< long ,   Kokkos::Cuda >( 10000000 );

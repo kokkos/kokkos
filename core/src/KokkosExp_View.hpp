@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -67,7 +67,7 @@ struct DeepCopy ;
 template< class DataType >
 struct ViewArrayAnalysis ;
 
-template< class DataType , class ArrayLayout 
+template< class DataType , class ArrayLayout
         , typename ValueType =
           typename ViewArrayAnalysis< DataType >::non_const_value_type
         >
@@ -82,13 +82,13 @@ struct ViewOperatorBoundsErrorAbort ;
 template<>
 struct ViewOperatorBoundsErrorAbort< Kokkos::HostSpace > {
   static void apply( const size_t rank
-                   , const size_t n0 , const size_t n1 
-                   , const size_t n2 , const size_t n3 
-                   , const size_t n4 , const size_t n5 
-                   , const size_t n6 , const size_t n7 
-                   , const size_t i0 , const size_t i1 
-                   , const size_t i2 , const size_t i3 
-                   , const size_t i4 , const size_t i5 
+                   , const size_t n0 , const size_t n1
+                   , const size_t n2 , const size_t n3
+                   , const size_t n4 , const size_t n5
+                   , const size_t n6 , const size_t n7
+                   , const size_t i0 , const size_t i1
+                   , const size_t i2 , const size_t i3
+                   , const size_t i4 , const size_t i5
                    , const size_t i6 , const size_t i7 );
 };
 
@@ -399,7 +399,7 @@ constexpr Kokkos::Experimental::Impl::ALL_t
 constexpr Kokkos::Experimental::Impl::WithoutInitializing_t
   WithoutInitializing = Kokkos::Experimental::Impl::WithoutInitializing_t();
 
-constexpr Kokkos::Experimental::Impl::AllowPadding_t       
+constexpr Kokkos::Experimental::Impl::AllowPadding_t
   AllowPadding        = Kokkos::Experimental::Impl::AllowPadding_t();
 
 }
@@ -418,7 +418,7 @@ inline
 Impl::ViewCtorProp< typename Impl::ViewCtorProp< void , Args >::type ... >
 view_alloc( Args const & ... args )
 {
-  typedef 
+  typedef
     Impl::ViewCtorProp< typename Impl::ViewCtorProp< void , Args >::type ... >
       return_type ;
 
@@ -433,7 +433,7 @@ inline
 Impl::ViewCtorProp< typename Impl::ViewCtorProp< void , Args >::type ... >
 view_wrap( Args const & ... args )
 {
-  typedef 
+  typedef
     Impl::ViewCtorProp< typename Impl::ViewCtorProp< void , Args >::type ... >
       return_type ;
 
@@ -489,21 +489,21 @@ public:
   typedef View< typename traits::scalar_array_type ,
                 typename traits::array_layout ,
                 typename traits::device_type ,
-                typename traits::memory_traits > 
+                typename traits::memory_traits >
     array_type ;
 
   /** \brief  Compatible view of const data type */
   typedef View< typename traits::const_data_type ,
                 typename traits::array_layout ,
                 typename traits::device_type ,
-                typename traits::memory_traits > 
+                typename traits::memory_traits >
     const_type ;
 
   /** \brief  Compatible view of non-const data type */
   typedef View< typename traits::non_const_data_type ,
                 typename traits::array_layout ,
                 typename traits::device_type ,
-                typename traits::memory_traits > 
+                typename traits::memory_traits >
     non_const_type ;
 
   /** \brief  Compatible HostMirror view */
@@ -1272,8 +1272,8 @@ public:
   explicit inline
   View( const Impl::ViewCtorProp< P ... > & arg_prop
       , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer
-                               , size_t 
-                               >::type const arg_N0 = 0 
+                               , size_t
+                               >::type const arg_N0 = 0
       , const size_t arg_N1 = 0
       , const size_t arg_N2 = 0
       , const size_t arg_N3 = 0
@@ -1293,8 +1293,8 @@ public:
   explicit KOKKOS_INLINE_FUNCTION
   View( const Impl::ViewCtorProp< P ... > & arg_prop
       , typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer
-                               , size_t 
-                               >::type const arg_N0 = 0 
+                               , size_t
+                               >::type const arg_N0 = 0
       , const size_t arg_N1 = 0
       , const size_t arg_N2 = 0
       , const size_t arg_N3 = 0
@@ -1419,15 +1419,24 @@ public:
   // Shared scratch memory constructor
 
   static inline
-  size_t shmem_size( const size_t arg_N0 = 0 ,
-                     const size_t arg_N1 = 0 ,
-                     const size_t arg_N2 = 0 ,
-                     const size_t arg_N3 = 0 ,
-                     const size_t arg_N4 = 0 ,
-                     const size_t arg_N5 = 0 ,
-                     const size_t arg_N6 = 0 ,
-                     const size_t arg_N7 = 0 )
+  size_t shmem_size( const size_t arg_N0 = ~size_t(0) ,
+                     const size_t arg_N1 = ~size_t(0) ,
+                     const size_t arg_N2 = ~size_t(0) ,
+                     const size_t arg_N3 = ~size_t(0) ,
+                     const size_t arg_N4 = ~size_t(0) ,
+                     const size_t arg_N5 = ~size_t(0) ,
+                     const size_t arg_N6 = ~size_t(0) ,
+                     const size_t arg_N7 = ~size_t(0) )
   {
+    const size_t num_passed_args =
+      ( arg_N0 != ~size_t(0) ) + ( arg_N1 != ~size_t(0) ) + ( arg_N2 != ~size_t(0) ) +
+      ( arg_N3 != ~size_t(0) ) + ( arg_N4 != ~size_t(0) ) + ( arg_N5 != ~size_t(0) ) +
+      ( arg_N6 != ~size_t(0) ) + ( arg_N7 != ~size_t(0) );
+
+    if ( num_passed_args != traits::rank_dynamic ) {
+      Kokkos::abort( "Kokkos::View::shmem_size() rank_dynamic != number of arguments.\n" );
+    }
+
     return map_type::memory_span(
            typename traits::array_layout
             ( arg_N0 , arg_N1 , arg_N2 , arg_N3
@@ -1445,7 +1454,7 @@ public:
 
   explicit KOKKOS_INLINE_FUNCTION
   View( const typename traits::execution_space::scratch_memory_space & arg_space
-      , const size_t arg_N0 = 0 
+      , const size_t arg_N0 = 0
       , const size_t arg_N1 = 0
       , const size_t arg_N2 = 0
       , const size_t arg_N3 = 0
@@ -1487,14 +1496,14 @@ typename Kokkos::Experimental::Impl::ViewMapping
   >::type
 subview( const View< D, P... > & src , Args ... args )
 {
-  static_assert( View< D , P... >::Rank == sizeof...(Args) , 
+  static_assert( View< D , P... >::Rank == sizeof...(Args) ,
     "subview requires one argument for each source View rank" );
 
   return typename
     Kokkos::Experimental::Impl::ViewMapping
       < void /* deduce subview type from source view traits */
       , ViewTraits< D , P ... >
-      , Args ... >::type( src , args ... ); 
+      , Args ... >::type( src , args ... );
 }
 
 template< class MemoryTraits , class D, class ... P , class ... Args >
@@ -1506,7 +1515,7 @@ typename Kokkos::Experimental::Impl::ViewMapping
   >::template apply< MemoryTraits >::type
 subview( const View< D, P... > & src , Args ... args )
 {
-  static_assert( View< D , P... >::Rank == sizeof...(Args) , 
+  static_assert( View< D , P... >::Rank == sizeof...(Args) ,
     "subview requires one argument for each source View rank" );
 
   return typename
@@ -1515,7 +1524,7 @@ subview( const View< D, P... > & src , Args ... args )
       , ViewTraits< D , P ... >
       , Args ... >
       ::template apply< MemoryTraits >
-      ::type( src , args ... ); 
+      ::type( src , args ... );
 }
 
 
@@ -1743,7 +1752,7 @@ void deep_copy
     std::is_same< typename ViewTraits<ST,SP...>::specialize , void >::value
     >::type * = 0 )
 {
-  static_assert( ViewTraits<ST,SP...>::rank == 0 
+  static_assert( ViewTraits<ST,SP...>::rank == 0
                , "ERROR: Non-rank-zero view in deep_copy( value , View )" );
 
   typedef ViewTraits<ST,SP...>               src_traits ;
@@ -1894,7 +1903,7 @@ void deep_copy
          dst.stride_4() == src.stride_4() &&
          dst.stride_5() == src.stride_5() &&
          dst.stride_6() == src.stride_6() &&
-         dst.stride_7() == src.stride_7() 
+         dst.stride_7() == src.stride_7()
          ) {
 
       const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
@@ -1956,7 +1965,7 @@ void deep_copy
     std::is_same< typename ViewTraits<ST,SP...>::specialize , void >::value
     >::type * = 0 )
 {
-  static_assert( ViewTraits<ST,SP...>::rank == 0 
+  static_assert( ViewTraits<ST,SP...>::rank == 0
                , "ERROR: Non-rank-zero view in deep_copy( value , View )" );
 
   typedef ViewTraits<ST,SP...>               src_traits ;
@@ -2215,7 +2224,7 @@ create_mirror_view( const Kokkos::Experimental::View<T,P...> & src
                       std::is_same< typename Kokkos::Experimental::View<T,P...>::data_type
                                   , typename Kokkos::Experimental::View<T,P...>::HostMirror::data_type
                                   >::value
-                    )>::type * = 0 
+                    )>::type * = 0
                   )
 {
   return src ;
@@ -2233,7 +2242,7 @@ create_mirror_view( const Kokkos::Experimental::View<T,P...> & src
                       std::is_same< typename Kokkos::Experimental::View<T,P...>::data_type
                                   , typename Kokkos::Experimental::View<T,P...>::HostMirror::data_type
                                   >::value
-                    )>::type * = 0 
+                    )>::type * = 0
                   )
 {
   return Kokkos::Experimental::create_mirror( src );
