@@ -195,7 +195,8 @@ void test_dynrankview_op_perf( const int par_size )
     typedef InitViewFunctor<DeviceType> FunctorType;
 
     timer.reset();
-    Kokkos::parallel_for( par_size, FunctorType(testview) );
+    Kokkos::RangePolicy<DeviceType> policy(0,par_size);
+    Kokkos::parallel_for( policy , FunctorType(testview) );
     DeviceType::fence();
     elapsed_time_view = timer.seconds();
     std::cout << " View time (init only): " << elapsed_time_view << std::endl;
@@ -203,7 +204,7 @@ void test_dynrankview_op_perf( const int par_size )
 
     timer.reset();
     Kokkos::View<double*,DeviceType> sumview("sumview",par_size);
-    Kokkos::parallel_for( par_size, typename FunctorType::SumComputationTest(testview, sumview) );
+    Kokkos::parallel_for( policy , typename FunctorType::SumComputationTest(testview, sumview) );
     DeviceType::fence();
     elapsed_time_compview = timer.seconds();
     std::cout << " View sum computation time: " << elapsed_time_view << std::endl;
@@ -213,7 +214,7 @@ void test_dynrankview_op_perf( const int par_size )
     typedef InitStrideViewFunctor<DeviceType> FunctorStrideType;
 
     timer.reset();
-    Kokkos::parallel_for( par_size, FunctorStrideType(teststrideview) );
+    Kokkos::parallel_for( policy , FunctorStrideType(teststrideview) );
     DeviceType::fence();
     elapsed_time_strideview = timer.seconds();
     std::cout << " Strided View time (init only): " << elapsed_time_strideview << std::endl;
@@ -223,7 +224,8 @@ void test_dynrankview_op_perf( const int par_size )
     typedef InitViewRank7Functor<DeviceType> FunctorType;
 
     timer.reset();
-    Kokkos::parallel_for( par_size, FunctorType(testview) );
+    Kokkos::RangePolicy<DeviceType> policy(0,par_size);
+    Kokkos::parallel_for( policy , FunctorType(testview) );
     DeviceType::fence();
     elapsed_time_view_rank7 = timer.seconds();
     std::cout << " View Rank7 time (init only): " << elapsed_time_view_rank7 << std::endl;
@@ -233,14 +235,15 @@ void test_dynrankview_op_perf( const int par_size )
     typedef InitDynRankViewFunctor<DeviceType> FunctorType;
 
     timer.reset();
-    Kokkos::parallel_for( par_size, FunctorType(testdrview) );
+    Kokkos::RangePolicy<DeviceType> policy(0,par_size);
+    Kokkos::parallel_for( policy , FunctorType(testdrview) );
     DeviceType::fence();
     elapsed_time_drview = timer.seconds();
     std::cout << " DynRankView time (init only): " << elapsed_time_drview << std::endl;
 
     timer.reset();
     Kokkos::DynRankView<double,DeviceType> sumview("sumview",par_size);
-    Kokkos::parallel_for( par_size, typename FunctorType::SumComputationTest(testdrview, sumview) );
+    Kokkos::parallel_for( policy , typename FunctorType::SumComputationTest(testdrview, sumview) );
     DeviceType::fence();
     elapsed_time_compdrview = timer.seconds();
     std::cout << " DynRankView sum computation time: " << elapsed_time_compdrview << std::endl;
