@@ -178,9 +178,10 @@ public:
 namespace Kokkos {
 namespace Impl {
 
-template< class FunctorType , class ... Traits >
+template< class FunctorType , class ReducerType, class ... Traits >
 class ParallelReduce< FunctorType
                     , Kokkos::RangePolicy< Traits ...>
+                    , ReducerType
                     , Kokkos::OpenMP
                     >
 {
@@ -192,9 +193,9 @@ private:
   typedef typename Policy::WorkRange    WorkRange ;
   typedef typename Policy::member_type  Member ;
 
-  typedef Kokkos::Impl::FunctorValueTraits< FunctorType, WorkTag > ValueTraits ;
-  typedef Kokkos::Impl::FunctorValueInit<   FunctorType, WorkTag > ValueInit ;
-  typedef Kokkos::Impl::FunctorValueJoin<   FunctorType, WorkTag > ValueJoin ;
+  typedef Kokkos::Impl::FunctorValueTraits< FunctorType, ReducerType, WorkTag > ValueTraits ;
+  typedef Kokkos::Impl::FunctorValueInit<   FunctorType, ReducerType, WorkTag > ValueInit ;
+  typedef Kokkos::Impl::FunctorValueJoin<   FunctorType, ReducerType, WorkTag > ValueJoin ;
 
   typedef typename ValueTraits::pointer_type    pointer_type ;
   typedef typename ValueTraits::reference_type  reference_type ;
