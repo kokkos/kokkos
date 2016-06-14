@@ -64,6 +64,9 @@
 namespace Kokkos {
 namespace Experimental {
 
+template< typename DataType , class ... Properties >
+class DynRankView;  //forward declare
+
 namespace Impl {
 
 template <typename Specialize>
@@ -225,6 +228,87 @@ struct DynRankDimTraits {
        }
   }
 
+
+/** \brief  Assign compatible default mappings */
+struct ViewToDynRankViewTag {};
+
+template< class DstTraits , class SrcTraits >
+class ViewMapping< DstTraits , SrcTraits ,
+  typename std::enable_if<(
+    std::is_same< typename DstTraits::memory_space , typename SrcTraits::memory_space >::value
+    &&
+    std::is_same< typename DstTraits::specialize , void >::value
+    &&
+    std::is_same< typename SrcTraits::specialize , void >::value
+    &&
+    (
+      std::is_same< typename DstTraits::array_layout , typename SrcTraits::array_layout >::value
+      ||
+      (
+        (
+          std::is_same< typename DstTraits::array_layout , Kokkos::LayoutLeft >::value ||
+          std::is_same< typename DstTraits::array_layout , Kokkos::LayoutRight >::value ||
+          std::is_same< typename DstTraits::array_layout , Kokkos::LayoutStride >::value
+        )
+        &&
+        (
+          std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutLeft >::value ||
+          std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutRight >::value ||
+          std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutStride >::value
+        )
+      )
+    )
+  ) , ViewToDynRankViewTag >::type >
+{
+private:
+
+  enum { is_assignable_value_type =
+    std::is_same< typename DstTraits::value_type
+                , typename SrcTraits::value_type >::value ||
+    std::is_same< typename DstTraits::value_type
+                , typename SrcTraits::const_value_type >::value };
+
+  enum { is_assignable_layout =
+    std::is_same< typename DstTraits::array_layout
+                , typename SrcTraits::array_layout >::value ||
+    std::is_same< typename DstTraits::array_layout
+                , Kokkos::LayoutStride >::value 
+    };
+
+public:
+
+  enum { is_assignable = is_assignable_value_type &&
+//                         is_assignable_dimension &&
+                         is_assignable_layout };
+
+//  typedef Kokkos::Experimental::Impl::SharedAllocationTracker  TrackType ;
+  typedef ViewMapping< DstTraits , void >  DstType ;
+  typedef ViewMapping< SrcTraits , void >  SrcType ;
+
+  //static void assign( Kokkos::Experimental::DynRankView< typename DstTraits::value_type, typename DstTraits::array_layout, typename DstTraits::device_type, typename DstTraits::memory_traits > & dst , const Kokkos::View< SrcTraits > & src )
+  //static void assign( Kokkos::Experimental::DynRankView< typename DstTraits::value_type, typename DstTraits::array_layout, typename DstTraits::device_type, typename DstTraits::memory_traits > & dst , const Kokkos::View< typename SrcTraits::data_type, typename SrcTraits::array_layout, typename SrcTraits::device_type, typename SrcTraits::memory_traits > & src )
+  template < typename DT , typename ... DP , typename ST , typename ... SP >
+  KOKKOS_INLINE_FUNCTION
+  static void assign( Kokkos::Experimental::DynRankView< DT , DP...> & dst ,  const Kokkos::View< ST , SP... > & src )
+    {
+      static_assert( is_assignable_value_type
+                   , "View assignment must have same value type or const = non-const" );
+
+      static_assert( is_assignable_layout
+                   , "View assignment must have compatible layout or have rank <= 1" );
+
+/* Removed dimension checks...
+*/
+
+      typedef typename DstType::offset_type  dst_offset_type ;
+      dst.m_map.m_offset = dst_offset_type(std::integral_constant<unsigned,0>() , src.layout() ); //Fix this for integer input1 for padding, etc
+      dst.m_map.m_handle = Kokkos::Experimental::Impl::ViewDataHandle< DstTraits >::assign( src.m_map.m_handle , src.m_track );
+      dst.m_track.assign( src.m_track , DstTraits::is_managed );
+      dst.m_rank = src.Rank ;
+    }
+};
+
+
 } //end Impl
 
 /* \class DynRankView
@@ -240,9 +324,6 @@ struct DynRankDimTraits {
  *
  */
 
-template< typename DataType , class ... Properties >
-class DynRankView;  //forward declare
-
 template< class > struct is_dyn_rank_view : public std::false_type {};
 
 template< class D, class ... P >
@@ -256,12 +337,11 @@ class DynRankView : public ViewTraits< DataType , Properties ... >
 
 private: 
   template < class , class ... > friend class DynRankView ;
+  template < class , class ... > friend class View ;
   template< class , class ... > friend class Impl::ViewMapping ;
 
-  unsigned m_rank;
-
 public: 
-//  using view_type = View< DataType******* , Properties...>;
+  typedef View< DataType******* , Properties...> view_type ; //Make sure DownCast() call still works...
 //  using reference_type = typename view_type::reference_type; 
 
   typedef ViewTraits< DataType******* , Properties ... > traits ;
@@ -274,12 +354,15 @@ private:
 
   track_type  m_track ;
   map_type    m_map ;
+  unsigned m_rank;
 
 public: 
-//  KOKKOS_INLINE_FUNCTION
-//  view_type & DownCast() const { return static_cast< view_type & > (*this); }
-//  KOKKOS_INLINE_FUNCTION
-//  const view_type & ConstDownCast() const { return static_cast< const view_type & > (*this); }
+  KOKKOS_INLINE_FUNCTION
+  //view_type & DownCast() const { return static_cast< view_type & > (*this); }
+  view_type & DownCast() const { return ( view_type & ) (*this); }
+  KOKKOS_INLINE_FUNCTION
+  //const view_type & ConstDownCast() const { return static_cast< const view_type & > (*this); }
+  const view_type & ConstDownCast() const { return (const view_type & ) (*this); }
 
 //Types below - at least the HostMirror requires the value_type, NOT the rank 7 data_type of the traits
 
@@ -656,7 +739,6 @@ public:
     , m_rank(rhs.m_rank)
     {
       typedef typename DynRankView<RT,RP...> ::traits SrcTraits ;
-//      typedef typename DynRankView<RT*******,RP...> ::traits SrcTraits ;
       typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits , void > Mapping ;
       static_assert( Mapping::is_assignable , "Incompatible DynRankView copy construction" );
       Mapping::assign( m_map , rhs.m_map , rhs.m_track );
@@ -667,7 +749,6 @@ public:
   DynRankView & operator = (const DynRankView<RT,RP...> & rhs )
     {
       typedef typename DynRankView<RT,RP...> ::traits SrcTraits ;
-//      typedef typename DynRankView<RT*******,RP...> ::traits SrcTraits ;
       typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits , void > Mapping ;
       static_assert( Mapping::is_assignable , "Incompatible DynRankView copy construction" );
       Mapping::assign( m_map , rhs.m_map , rhs.m_track );
@@ -678,12 +759,33 @@ public:
 
 //Experimental
 // Copy/Assign View to DynRankView
-// Issue: Ranks will likely differ, so ViewOffset ctor's cannot be used; some sort of overload required
+  template< class RT , class ... RP >
+  KOKKOS_INLINE_FUNCTION
+  DynRankView( const View<RT,RP...> & rhs )
+    : m_track()
+    , m_map()
+    , m_rank( rhs.Rank )
+    {
+      typedef typename View<RT,RP...>::traits  SrcTraits ;
+      typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits , Kokkos::Experimental::Impl::ViewToDynRankViewTag >  Mapping ;
+      static_assert( Mapping::is_assignable , "Incompatible DynRankView copy construction" );
+      Mapping::assign( *this , rhs );
+    }
 
+  template< class RT , class ... RP >
+  KOKKOS_INLINE_FUNCTION
+  DynRankView & operator = ( const View<RT,RP...> & rhs )
+    {
+      typedef typename View<RT,RP...>::traits  SrcTraits ;
+      typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits , Kokkos::Experimental::Impl::ViewToDynRankViewTag >  Mapping ;
+      static_assert( Mapping::is_assignable , "Incompatible DynRankView copy assignment" );
+      Mapping::assign( *this , rhs );
+      return *this ;
+    }
   //----------------------------------------
   // Allocation tracking properties
 
- KOKKOS_INLINE_FUNCTION
+  KOKKOS_INLINE_FUNCTION
   int use_count() const
     { return m_track.use_count(); }
 
@@ -875,7 +977,6 @@ public:
     : DynRankView( Impl::ViewCtorProp< std::string , Kokkos::Experimental::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::Experimental::WithoutInitializing )
           , Impl::DynRankDimTraits<typename traits::specialize>::createLayout(arg_layout)
       )
-//    , m_rank( Impl::DynRankDimTraits<typename traits::specialize>::computeRank(arg_layout) )
     {}
 
   explicit inline
@@ -970,7 +1071,7 @@ public:
                 arg_space.get_shmem( map_type::memory_span( 
                   Impl::DynRankDimTraits<typename traits::specialize>::createLayout( arg_layout ) //is this correct?
                 ) ) ) ) //will ~size_t(0), not 0, cause issues?
-         , arg_layout ) //since this is a forwarding Ctor safe without createLayout? No computeRank either?
+         , arg_layout ) //since this is a forwarding Ctor safe without createLayout? 
     {}
 
 // --------------
@@ -1218,14 +1319,6 @@ subdynrankview( const Kokkos::Experimental::DynRankView< D , P... > &src , Args.
 } // namespace Experimental
 } // namespace Kokkos
 
-// Moved up...
-/*
-template< class > struct is_dyn_rank_view : public std::false_type {};
-
-template< class D, class ... P >
-struct is_dyn_rank_view< Kokkos::Experimental::DynRankView<D,P...> > : public std::true_type {};
-*/
-
 namespace Kokkos {
 namespace Experimental {
 
@@ -1276,6 +1369,8 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+//START HERE
+// This and resize may be broken for Sacado (when used with deep_copy)
 template< class OutputView , typename Enable = void >
 struct DynRankViewFill {
 
@@ -1293,7 +1388,6 @@ struct DynRankViewFill {
     const size_t n4 = output.dimension_4();
     const size_t n5 = output.dimension_5();
     const size_t n6 = output.dimension_6();
-//    const size_t n7 = output.dimension_7();
 
     for ( size_t i1 = 0 ; i1 < n1 ; ++i1 ) {
     for ( size_t i2 = 0 ; i2 < n2 ; ++i2 ) {
@@ -1301,11 +1395,8 @@ struct DynRankViewFill {
     for ( size_t i4 = 0 ; i4 < n4 ; ++i4 ) {
     for ( size_t i5 = 0 ; i5 < n5 ; ++i5 ) {
     for ( size_t i6 = 0 ; i6 < n6 ; ++i6 ) {
-//    for ( size_t i7 = 0 ; i7 < n7 ; ++i7 ) {
-//      output(i0,i1,i2,i3,i4,i5,i6,i7) = input ;
       output(i0,i1,i2,i3,i4,i5,i6) = input ;
     }}}}}}
-    //}
   }
 
   DynRankViewFill( const OutputView & arg_out , const_value_type & arg_in )
@@ -1323,14 +1414,9 @@ struct DynRankViewFill {
 };
 
 template< class OutputView >
-struct DynRankViewFill< OutputView , void > { //if void does not help overload this function, what should be used?
+struct DynRankViewFill< OutputView , typename std::enable_if< OutputView::Rank == 0 >::type > { 
   DynRankViewFill( const OutputView & dst , const typename OutputView::const_value_type & src )
     {
-      if ( dst.rank() != 0 ) //src is not a view; rank was used from the traits previously, not applicable here
-        {
-          printf("  DynRankViewFill: This overload requires src = value\n");
-          Kokkos::abort("");
-        }
       Kokkos::Impl::DeepCopy< typename OutputView::memory_space , Kokkos::HostSpace >
         ( dst.data() , & src , sizeof(typename OutputView::const_value_type) );
     }
@@ -1376,10 +1462,10 @@ struct DynRankViewRemap {
     for ( size_t i5 = 0 ; i5 < n5 ; ++i5 ) {
     for ( size_t i6 = 0 ; i6 < n6 ; ++i6 ) {
 //    for ( size_t i7 = 0 ; i7 < n7 ; ++i7 ) {
-//      output(i0,i1,i2,i3,i4,i5,i6,i7) = input(i0,i1,i2,i3,i4,i5,i6,i7); //will this still work, no rank 8?
       output(i0,i1,i2,i3,i4,i5,i6) = input(i0,i1,i2,i3,i4,i5,i6);
+//      output(i0,i1,i2,i3,i4,i5,i6,i7) = input(i0,i1,i2,i3,i4,i5,i6,i7);
+//    }
     }}}}}}
-    //}
   }
 };
 
@@ -1390,8 +1476,6 @@ struct DynRankViewRemap {
 
 namespace Kokkos {
 namespace Experimental {
-
-//TODO reimplement 
 
 /** \brief  Deep copy a value from Host memory into a view.  */
 template< class DT , class ... DP >
@@ -1408,8 +1492,9 @@ void deep_copy
                   typename ViewTraits<DT,DP...>::value_type >::value
     , "deep_copy requires non-const type" );
 
-  //Kokkos::Experimental::Impl::DynRankViewFill< DynRankView<DT*******,DP...> >( dst , value );
+      printf(" In first deep_copy \n");
   Kokkos::Experimental::Impl::DynRankViewFill< DynRankView<DT,DP...> >( dst , value );
+//  Kokkos::Experimental::Impl::ViewFill< DynRankView<DT,DP...> >( dst , value ); //won't compile, defined for incompatible rank 8 view, no rank 8 operator for this view
 }
 
 /** \brief  Deep copy into a value in Host memory from a view.  */
@@ -1431,10 +1516,12 @@ void deep_copy
   typedef ViewTraits<ST,SP...>               src_traits ;
   typedef typename src_traits::memory_space  src_memory_space ;
   Kokkos::Impl::DeepCopy< HostSpace , src_memory_space >( & dst , src.data() , sizeof(ST) );
+      printf(" In  2deep_copy \n");
 }
 
 //----------------------------------------------------------------------------
 /** \brief  A deep copy between views of compatible type, and rank zero.  */
+/*
 template< class DT , class ... DP , class ST , class ... SP >
 inline
 void deep_copy
@@ -1460,8 +1547,9 @@ void deep_copy
   if ( dst.data() != src.data() ) {
     Kokkos::Impl::DeepCopy< dst_memory_space , src_memory_space >( dst.data() , src.data() , sizeof(value_type) );
   }
+      printf(" In  3 deep_copy \n");
 }
-
+*/
 //----------------------------------------------------------------------------
 /** \brief  A deep copy between views of the default specialization, compatible type,
  *          same non-zero rank, same contiguous layout.
@@ -1473,9 +1561,7 @@ void deep_copy
   , const DynRankView<ST,SP...> & src
   , typename std::enable_if<(
     std::is_same< typename ViewTraits<DT,DP...>::specialize , void >::value &&
-    std::is_same< typename ViewTraits<ST,SP...>::specialize , void >::value &&
-    ( unsigned(ViewTraits<DT,DP...>::rank) != 0 ||
-      unsigned(ViewTraits<ST,SP...>::rank) != 0 )
+    std::is_same< typename ViewTraits<ST,SP...>::specialize , void >::value
   )>::type * = 0 )
 {
   static_assert(
@@ -1503,8 +1589,12 @@ void deep_copy
     // ...
 
     // If same type, equal layout, equal dimensions, equal span, and contiguous memory then can byte-wise copy
-
-    if ( std::is_same< typename ViewTraits<DT,DP...>::value_type ,
+    if ( src.rank() == 0 && dst.rank() == 0 )
+    { 
+      typedef typename dst_type::value_type    value_type ;
+      Kokkos::Impl::DeepCopy< dst_memory_space , src_memory_space >( dst.data() , src.data() , sizeof(value_type) ); 
+    }
+    else if ( std::is_same< typename ViewTraits<DT,DP...>::value_type ,
                        typename ViewTraits<ST,SP...>::non_const_value_type >::value &&
          (
            ( std::is_same< typename ViewTraits<DT,DP...>::array_layout ,
@@ -1539,6 +1629,7 @@ void deep_copy
       const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
 
       Kokkos::Impl::DeepCopy< dst_memory_space , src_memory_space >( dst.data() , src.data() , nbytes );
+      printf(" In deep_copy if \n");
     }
     else if ( std::is_same< typename ViewTraits<DT,DP...>::value_type ,
                             typename ViewTraits<ST,SP...>::non_const_value_type >::value &&
@@ -1580,13 +1671,16 @@ void deep_copy
       const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
 
       Kokkos::Impl::DeepCopy< dst_memory_space , src_memory_space >( dst.data() , src.data() , nbytes );
+      printf(" In deep_copy first elseif \n");
     }
     else if ( DstExecCanAccessSrc ) {
       // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
+      printf(" In deep_copy second elseif \n");
       Kokkos::Experimental::Impl::DynRankViewRemap< dst_type , src_type >( dst , src );
     }
     else if ( SrcExecCanAccessDst ) {
       // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
+      printf(" In deep_copy third elseif \n");
       Kokkos::Experimental::Impl::DynRankViewRemap< dst_type , src_type , src_execution_space >( dst , src );
     }
     else {
@@ -1594,42 +1688,6 @@ void deep_copy
     }
   }
 }
-
-
-
-
-// ----------- previous DynRankView ---------------- //
-/*
-template< class DT , class ... DP >
-inline
-void deep_copy
-  ( const DynRankView<DT,DP...> & dst
-  , typename ViewTraits<DT,DP...>::const_value_type & value )
-{
-  deep_copy( dst.ConstDownCast() , value );
-}
-
-template< class ST , class ... SP >
-inline
-void deep_copy
-  ( typename ViewTraits<ST,SP...>::non_const_value_type & dst
-  , const DynRankView<ST,SP...> & src )
-{
-  deep_copy( dst , src.ConstDownCast() );
-}
-
-
-//----------------------------------------------------------------------------
-template< class DT , class ... DP , class ST , class ... SP >
-inline
-void deep_copy
-  ( const DynRankView<DT,DP...> & dst
-  , const DynRankView<ST,SP...> & src )
-{
-  deep_copy( dst.ConstDownCast() , src.ConstDownCast() );
-}
-*/
-// ----------- previous DynRankView ---------------- //
 
 } //end Experimental
 } //end Kokkos
@@ -1808,6 +1866,7 @@ void resize( DynRankView<T,P...> & v ,
   drview_type v_resized( v.label(), n0, n1, n2, n3, n4, n5, n6 );
 
 //  Kokkos::Experimental::Impl::ViewRemap< view_type , view_type >( v_resized.ConstDownCast(), v.ConstDownCast() );
+  printf(" Calling DynRankViewRemap from resize\n");
   Kokkos::Experimental::Impl::DynRankViewRemap< drview_type , drview_type >( v_resized, v );
 
   v = v_resized ;
@@ -1840,6 +1899,7 @@ void realloc( DynRankView<T,P...> & v ,
 
 } //end Kokkos
 
+using Kokkos::Experimental::is_dyn_rank_view ;
 
 namespace Kokkos {
 

@@ -715,6 +715,9 @@ public:
   typedef Kokkos::Experimental::DynRankView< T, device, Kokkos::MemoryUnmanaged > dView0_unmanaged ;
   typedef typename dView0::host_mirror_space host ;
 
+  typedef Kokkos::Experimental::View< T* , device >       View1 ;
+  typedef Kokkos::Experimental::View< T******* , device > View7 ;
+
   TestDynViewAPI()
   {
     run_test_mirror();
@@ -876,7 +879,7 @@ public:
 
   static void run_test_scalar()
   {
-    typedef typename dView0::HostMirror  hView0 ;
+    typedef typename dView0::HostMirror  hView0 ; //HostMirror of DynRankView is a DynRankView
 
     dView0 dx , dy ;
     hView0 hx , hy ;
@@ -896,6 +899,49 @@ public:
     ASSERT_EQ( hx(), hy() );
     ASSERT_EQ( dx.rank() , hx.rank() );
     ASSERT_EQ( dy.rank() , hy.rank() );
+
+    View7 vcast = dx.ConstDownCast();
+    ASSERT_EQ( dx.dimension_0() , vcast.dimension_0() );
+    ASSERT_EQ( dx.dimension_1() , vcast.dimension_1() );
+    ASSERT_EQ( dx.dimension_2() , vcast.dimension_2() );
+    ASSERT_EQ( dx.dimension_3() , vcast.dimension_3() );
+    ASSERT_EQ( dx.dimension_4() , vcast.dimension_4() );
+
+    View7 vcast1( dy.ConstDownCast() );
+    ASSERT_EQ( dy.dimension_0() , vcast1.dimension_0() );
+    ASSERT_EQ( dy.dimension_1() , vcast1.dimension_1() );
+    ASSERT_EQ( dy.dimension_2() , vcast1.dimension_2() );
+    ASSERT_EQ( dy.dimension_3() , vcast1.dimension_3() );
+    ASSERT_EQ( dy.dimension_4() , vcast1.dimension_4() );
+
+    dView0 dfromhx( hx );
+    ASSERT_EQ( dfromhx.rank() , hx.rank() );
+    ASSERT_EQ( dfromhx.dimension_0() , hx.dimension_0() );
+    ASSERT_EQ( dfromhx.dimension_1() , hx.dimension_1() );
+    dView0 dfromhy = hy ;
+    ASSERT_EQ( dfromhy.rank() , hy.rank() );
+    ASSERT_EQ( dfromhy.dimension_0() , hy.dimension_0() );
+    ASSERT_EQ( dfromhy.dimension_1() , hy.dimension_1() );
+
+
+    View7 vtest1("vtest1",2,2,2,2,2,2,2);
+    dView0 dfromv1( vtest1 );
+    ASSERT_EQ( dfromv1.rank() , vtest1.Rank );
+    ASSERT_EQ( dfromv1.dimension_0() , vtest1.dimension_0() );
+    ASSERT_EQ( dfromv1.dimension_1() , vtest1.dimension_1() );
+    ASSERT_EQ( dfromv1.use_count() , vtest1.use_count() );
+
+    dView0 dfromv2( vcast );
+    ASSERT_EQ( dfromv2.rank() , vcast.Rank );
+    ASSERT_EQ( dfromv2.dimension_0() , vcast.dimension_0() );
+    ASSERT_EQ( dfromv2.dimension_1() , vcast.dimension_1() );
+    ASSERT_EQ( dfromv2.use_count() , vcast.use_count() );
+
+    dView0 dfromv3 = vcast1;
+    ASSERT_EQ( dfromv3.rank() , vcast1.Rank );
+    ASSERT_EQ( dfromv3.dimension_0() , vcast1.dimension_0() );
+    ASSERT_EQ( dfromv3.dimension_1() , vcast1.dimension_1() );
+    ASSERT_EQ( dfromv3.use_count() , vcast1.use_count() );
   }
 
   static void run_test()
@@ -964,12 +1010,15 @@ public:
     ASSERT_EQ( hx.dimension_0() , unsigned(N0) );
     ASSERT_EQ( hy.dimension_0() , unsigned(N0) );
     ASSERT_EQ( dx.rank() , 4 );
+    ASSERT_EQ( dy.rank() , 4 );
     ASSERT_EQ( hx.rank() , 4 );
+    ASSERT_EQ( hy.rank() , 4 );
 
     ASSERT_EQ( dx.use_count() , size_t(1) );
 
     dView0_unmanaged unmanaged_dx = dx;
     ASSERT_EQ( dx.use_count() , size_t(1) );
+
 
     dView0_unmanaged unmanaged_from_ptr_dx = dView0_unmanaged(dx.ptr_on_device(),
                                                               dx.dimension_0(),
@@ -1029,6 +1078,19 @@ public:
 
     hx = Kokkos::Experimental::create_mirror( dx );
     hy = Kokkos::Experimental::create_mirror( dy );
+
+    ASSERT_EQ( hx.rank() , dx.rank() );
+    ASSERT_EQ( hy.rank() , dy.rank() );
+
+    ASSERT_EQ( hx.dimension_0() , unsigned(N0) );
+    ASSERT_EQ( hx.dimension_1() , unsigned(N1) );
+    ASSERT_EQ( hx.dimension_2() , unsigned(N2) );
+    ASSERT_EQ( hx.dimension_3() , unsigned(N3) );
+
+    ASSERT_EQ( hy.dimension_0() , unsigned(N0) );
+    ASSERT_EQ( hy.dimension_1() , unsigned(N1) );
+    ASSERT_EQ( hy.dimension_2() , unsigned(N2) );
+    ASSERT_EQ( hy.dimension_3() , unsigned(N3) );
 
     // T v1 = hx() ;    // Generates compile error as intended
     // T v2 = hx(0,0) ; // Generates compile error as intended
@@ -1132,7 +1194,9 @@ public:
       for ( size_t i3 = 0 ; i3 < N3 ; ++i3 ) {
         { ASSERT_EQ( hx(ip,i1,i2,i3) , T(0) ); }
       }}}}
+//    ASSERT_EQ( hx(0,0,0,0,0,0,0,0) , T(0) ); //Test rank8 op behaves properly
     }
+
     dz = dx ; ASSERT_EQ( dx, dz); ASSERT_NE( dy, dz);
     dz = dy ; ASSERT_EQ( dy, dz); ASSERT_NE( dx, dz);
 
