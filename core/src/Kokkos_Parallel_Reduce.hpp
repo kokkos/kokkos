@@ -44,61 +44,21 @@
 
 namespace Kokkos {
 
-template<class Scalar>
-struct Max {
-  typedef Max reducer_type;
-  typedef Scalar value_type;
-  value_type min_value;
-  value_type& result;
 
-  Max(value_type& result_):result(result_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  void join(value_type& dest, const value_type& src) {
-    dest = dest<src?dest:src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) {
-    dest = dest<src?dest:src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void init( value_type& val) {
-    val = min_value;
-  }
+template<class T, class Enable = void>
+struct is_reducer_type {
+  enum { value = 0 };
 };
 
-template<class Scalar>
-struct Add {
-  typedef Add reducer_type;
-  typedef Scalar value_type;
 
-  value_type& result;
-
-  Add(value_type& result_):result(result_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  void join(value_type& dest, const value_type& src) {
-    dest += src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) {
-    dest += src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void init( value_type& val) {
-    val = value_type();
-  }
-};
-
-namespace Impl {
 template<class T>
-struct is_reducer_type: public std::is_same<T,typename T::reducer_type> {};
+struct is_reducer_type<T,typename std::enable_if<
+                       std::is_same<T,typename T::reducer_type>::value
+                      >::type> {
+  enum { value = 1 };
+};
 }
-}
+
 
 namespace Kokkos {
 namespace Impl {
@@ -157,15 +117,12 @@ template< class ReturnType , class FunctorType>
 struct ParallelReduceReturnValue<typename std::enable_if<
                                    Kokkos::is_reducer_type<ReturnType>::value
                                 >::type, ReturnType, FunctorType> {
-  typedef Kokkos::View<  typename ReturnType::value_type
-                       , Kokkos::HostSpace
-                       , Kokkos::MemoryUnmanaged
-      > return_type;
+  typedef typename ReturnType::result_view_type return_type;
   typedef typename return_type::value_type value_type;
 
   static return_type return_value(ReturnType& return_val,
                                   const FunctorType& functor) {
-    return return_type(&return_val.result);
+    return return_val.result_view();
   }
 };
 }
@@ -208,7 +165,64 @@ namespace Impl {
   };
 }
 
+template<class Scalar>
+struct Max {
+  typedef Max reducer_type;
+  typedef Scalar value_type;
+  value_type min_value;
+  value_type& result;
+
+  Max(value_type& result_):result(result_) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void join(value_type& dest, const value_type& src) {
+    dest = dest<src?dest:src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void join(volatile value_type& dest, const volatile value_type& src) {
+    dest = dest<src?dest:src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void init( value_type& val) {
+    val = min_value;
+  }
+};
+
+template<class Scalar>
+struct Add {
+  typedef Add reducer_type;
+  typedef Scalar value_type;
+
+  typedef Kokkos::View<value_type, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> > result_view_type;
+
+  result_view_type result;
+
+  Add(value_type& result_):result(&result_) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void join(value_type& dest, const value_type& src) {
+    dest += src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void join(volatile value_type& dest, const volatile value_type& src) {
+    dest += src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void init( value_type& val) {
+    val = value_type();
+  }
+
+  result_view_type result_view() {
+    return result;
+  }
+};
+
 namespace Impl {
+
   template< class PolicyType, class FunctorType, class ReturnType >
   struct ParallelReduceAdaptor {
     typedef Impl::ParallelReduceReturnValue<void,ReturnType,FunctorType> return_value_adapter;
@@ -229,7 +243,7 @@ namespace Impl {
           #endif
 
           Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
-          Impl::ParallelReduce<typename functor_adaptor::functor_type, PolicyType >
+          Impl::ParallelReduce<typename functor_adaptor::functor_type, PolicyType, void* >
              closure(functor_adaptor::functor(functor),
                      policy,
                      return_value_adapter::return_value(return_value,functor));
@@ -245,6 +259,8 @@ namespace Impl {
 
   };
 }
+
+
 template< class PolicyType, class FunctorType, class ReturnType >
 inline
 void parallel_reduce(const std::string& label,
