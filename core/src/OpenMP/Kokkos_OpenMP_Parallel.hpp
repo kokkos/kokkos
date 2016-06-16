@@ -259,7 +259,7 @@ public:
       OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
       OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_reduce");
 
-      OpenMPexec::resize_scratch( ValueTraits::value_size( m_functor ) , 0 );
+      OpenMPexec::resize_scratch( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) , 0 );
 
 #pragma omp parallel
       {
@@ -279,7 +279,7 @@ public:
         ValueJoin::join( ReducerConditional::select(m_functor , m_reducer) , ptr , OpenMPexec::pool_rev(i)->scratch_reduce() );
       }
 
-      Kokkos::Impl::FunctorFinal<  FunctorType , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , ptr );
+      Kokkos::Impl::FunctorFinal<  ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , ptr );
 
       if ( m_result_ptr ) {
         const int n = ValueTraits::value_count( ReducerConditional::select(m_functor , m_reducer) );
@@ -329,7 +329,7 @@ public:
         ValueJoin::join( ReducerConditional::select(m_functor , m_reducer) , ptr , OpenMPexec::pool_rev(i)->scratch_reduce() );
       }
 
-      Kokkos::Impl::FunctorFinal<  FunctorType , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , ptr );
+      Kokkos::Impl::FunctorFinal<  ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , ptr );
 
       if ( m_result_ptr ) {
         const int n = ValueTraits::value_count( ReducerConditional::select(m_functor , m_reducer) );
@@ -346,7 +346,8 @@ public:
                 , Policy       arg_policy
                 , const ViewType    & arg_result_view
                 , typename std::enable_if<
-                           Kokkos::is_view< ViewType >::value
+                           Kokkos::is_view< ViewType >::value &&
+                           !Kokkos::is_reducer_type<ReducerType>::value
                   ,void*>::type = NULL)
     : m_functor( arg_functor )
     , m_policy(  arg_policy )

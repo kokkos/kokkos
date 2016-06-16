@@ -69,6 +69,7 @@ struct ParallelReduceReturnValue;
 template< class ReturnType , class FunctorType >
 struct ParallelReduceReturnValue<typename std::enable_if<Kokkos::is_view<ReturnType>::value>::type, ReturnType, FunctorType> {
   typedef ReturnType return_type;
+  typedef void* reducer_type;
 
   typedef typename return_type::value_type value_type_scalar;
   typedef typename return_type::value_type value_type_array[];
@@ -90,6 +91,9 @@ struct ParallelReduceReturnValue<typename std::enable_if<
                        , Kokkos::HostSpace
                        , Kokkos::MemoryUnmanaged
       > return_type;
+
+  typedef void* reducer_type;
+
   typedef typename return_type::value_type value_type;
 
   static return_type return_value(ReturnType& return_val, const FunctorType&) {
@@ -105,6 +109,9 @@ struct ParallelReduceReturnValue<typename std::enable_if<
                        , Kokkos::HostSpace
                        , Kokkos::MemoryUnmanaged
       > return_type;
+
+  typedef void* reducer_type;
+
   typedef typename return_type::value_type value_type[];
 
   static return_type return_value(ReturnType& return_val,
@@ -117,12 +124,13 @@ template< class ReturnType , class FunctorType>
 struct ParallelReduceReturnValue<typename std::enable_if<
                                    Kokkos::is_reducer_type<ReturnType>::value
                                 >::type, ReturnType, FunctorType> {
-  typedef typename ReturnType::result_view_type return_type;
+  typedef ReturnType return_type;
+  typedef ReturnType reducer_type;
   typedef typename return_type::value_type value_type;
 
   static return_type return_value(ReturnType& return_val,
                                   const FunctorType& functor) {
-    return return_val.result_view();
+    return return_val;
   }
 };
 }
@@ -206,20 +214,22 @@ public:
 
   Add(value_type& result_):result(&result_) {}
 
+  KOKKOS_INLINE_FUNCTION
+  void operator() (const int& , double& ) const {};
   //Required
   KOKKOS_INLINE_FUNCTION
-  void join(value_type& dest, const value_type& src) {
-    dest += src;
+  void join(value_type& dest, const value_type& src)  const {
+    dest += src + 1;
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) {
-    dest += src;
+  void join(volatile value_type& dest, const volatile value_type& src) const {
+    dest += src + 1;
   }
 
   //Optional
   KOKKOS_INLINE_FUNCTION
-  void init( value_type& val) {
+  void init( value_type& val)  const {
     val = value_type();
   }
 
@@ -229,7 +239,7 @@ public:
   //}
 
 
-  result_view_type result_view() {
+  result_view_type result_view() const {
     return result;
   }
 };
@@ -256,7 +266,7 @@ namespace Impl {
           #endif
 
           Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
-          Impl::ParallelReduce<typename functor_adaptor::functor_type, PolicyType, void* >
+          Impl::ParallelReduce<typename functor_adaptor::functor_type, PolicyType, typename return_value_adapter::reducer_type >
              closure(functor_adaptor::functor(functor),
                      policy,
                      return_value_adapter::return_value(return_value,functor));
