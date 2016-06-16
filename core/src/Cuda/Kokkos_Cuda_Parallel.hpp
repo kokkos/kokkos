@@ -656,9 +656,10 @@ public:
 namespace Kokkos {
 namespace Impl {
 
-template< class FunctorType , class ... Traits >
+template< class FunctorType , class ReducerType, class ... Traits >
 class ParallelReduce< FunctorType
                     , Kokkos::RangePolicy< Traits ... >
+                    , ReducerType
                     , Kokkos::Cuda 
                     >
 {
@@ -670,9 +671,12 @@ private:
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::member_type  Member ;
 
-  typedef Kokkos::Impl::FunctorValueTraits< FunctorType, WorkTag > ValueTraits ;
-  typedef Kokkos::Impl::FunctorValueInit<   FunctorType, WorkTag > ValueInit ;
-  typedef Kokkos::Impl::FunctorValueJoin<   FunctorType, WorkTag > ValueJoin ;
+  typedef Kokkos::Impl::if_c< std::is_same<void*,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
+  typedef typename ReducerConditional::type ReducerTypeFwd;
+
+  typedef Kokkos::Impl::FunctorValueTraits< ReducerTypeFwd, WorkTag > ValueTraits ;
+  typedef Kokkos::Impl::FunctorValueInit<   ReducerTypeFwd, WorkTag > ValueInit ;
+  typedef Kokkos::Impl::FunctorValueJoin<   ReducerTypeFwd, WorkTag > ValueJoin ;
 
 public:
 
@@ -686,6 +690,7 @@ public:
 
   const FunctorType   m_functor ;
   const Policy        m_policy ;
+  const ReducerType   m_reducer ;
   const pointer_type  m_result_ptr ;
   size_type *         m_scratch_space ;
   size_type *         m_scratch_flags ;
@@ -720,11 +725,11 @@ public:
   void run(const DummySHMEMReductionType& ) const
   {
     const integral_nonzero_constant< size_type , ValueTraits::StaticValueSize / sizeof(size_type) >
-      word_count( ValueTraits::value_size( m_functor ) / sizeof(size_type) );
+      word_count( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) / sizeof(size_type) );
 
     {
       reference_type value =
-        ValueInit::init( m_functor , kokkos_impl_cuda_shared_memory<size_type>() + threadIdx.y * word_count.value );
+        ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , kokkos_impl_cuda_shared_memory<size_type>() + threadIdx.y * word_count.value );
 
       // Number of blocks is bounded so that the reduction can be limited to two passes.
       // Each thread block is given an approximately equal amount of work to perform.
@@ -740,8 +745,8 @@ public:
     }
 
     // Reduce with final value at blockDim.y - 1 location.
-    if ( cuda_single_inter_block_reduce_scan<false,FunctorType,WorkTag>(
-           m_functor , blockIdx.x , gridDim.x ,
+    if ( cuda_single_inter_block_reduce_scan<false,ReducerTypeFwd,WorkTag>(
+           ReducerConditional::select(m_functor , m_reducer) , blockIdx.x , gridDim.x ,
            kokkos_impl_cuda_shared_memory<size_type>() , m_scratch_space , m_scratch_flags ) ) {
 
       // This is the final block with the final result at the final threads' location
@@ -750,7 +755,7 @@ public:
       size_type * const global = m_unified_space ? m_unified_space : m_scratch_space ;
 
       if ( threadIdx.y == 0 ) {
-        Kokkos::Impl::FunctorFinal< FunctorType , WorkTag >::final( m_functor , shared );
+        Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , shared );
       }
 
       if ( CudaTraits::WarpSize < word_count.value ) { __syncthreads(); }
@@ -764,7 +769,7 @@ public:
    {
 
      value_type value;
-     ValueInit::init( m_functor , &value);
+     ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , &value);
      // Number of blocks is bounded so that the reduction can be limited to two passes.
      // Each thread block is given an approximately equal amount of work to perform.
      // Accumulate the values for this block.
@@ -783,11 +788,11 @@ public:
 
      max_active_thread = (max_active_thread == 0)?blockDim.y:max_active_thread;
 
-     if(Impl::cuda_inter_block_reduction<FunctorType,ValueJoin >
-            (value,ValueJoin(m_functor),m_scratch_space,result,m_scratch_flags,max_active_thread)) {
+     if(Impl::cuda_inter_block_reduction<ReducerTypeFwd,ValueJoin >
+            (value,ValueJoin(ReducerConditional::select(m_functor , m_reducer)),m_scratch_space,result,m_scratch_flags,max_active_thread)) {
        const unsigned id = threadIdx.y*blockDim.x + threadIdx.x;
        if(id==0) {
-         Kokkos::Impl::FunctorFinal< FunctorType , WorkTag >::final( m_functor , (void*) &value );
+         Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , (void*) &value );
          *result = value;
        }
      }
@@ -809,9 +814,9 @@ public:
       if ( nwork ) {
         const int block_size = local_block_size( m_functor );
   
-        m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( m_functor ) * block_size /* block_size == max block_count */ );
+        m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_size /* block_size == max block_count */ );
         m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
-        m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( m_functor ) );
+        m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) );
   
         // REQUIRED ( 1 , N , 1 )
         const dim3 block( 1 , block_size , 1 );
@@ -827,18 +832,18 @@ public:
   
       if ( m_result_ptr ) {
         if ( m_unified_space ) {
-          const int count = ValueTraits::value_count( m_functor );
+          const int count = ValueTraits::value_count( ReducerConditional::select(m_functor , m_reducer)  );
           for ( int i = 0 ; i < count ; ++i ) { m_result_ptr[i] = pointer_type(m_unified_space)[i] ; }
         }
         else {
-          const int size = ValueTraits::value_size( m_functor );
+          const int size = ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer)  );
           DeepCopy<HostSpace,CudaSpace>( m_result_ptr , m_scratch_space , size );
         }
       }
     }
     else {
       if (m_result_ptr) {
-        ValueInit::init( m_functor , m_result_ptr ); 
+        ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , m_result_ptr );
       }
     }
   }
@@ -847,10 +852,25 @@ public:
   ParallelReduce( const FunctorType  & arg_functor 
                 , const Policy       & arg_policy 
                 , const HostViewType & arg_result
-                )
+                , typename std::enable_if<
+                   Kokkos::is_view< HostViewType >::value
+                ,void*>::type = NULL)
   : m_functor( arg_functor )
   , m_policy(  arg_policy )
+  , m_reducer( NULL )
   , m_result_ptr( arg_result.ptr_on_device() )
+  , m_scratch_space( 0 )
+  , m_scratch_flags( 0 )
+  , m_unified_space( 0 )
+  { }
+
+  ParallelReduce( const FunctorType  & arg_functor
+                , const Policy       & arg_policy
+                , const ReducerType & reducer)
+  : m_functor( arg_functor )
+  , m_policy(  arg_policy )
+  , m_reducer( reducer )
+  , m_result_ptr( reducer.result_view().ptr_on_device() )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
@@ -1778,7 +1798,7 @@ namespace Impl {
 
 }
 
-#ifndef NEW_PARALLEL_REDUCE
+#if false
 // general policy and view ouput
 template< class ExecPolicy , class FunctorTypeIn , class ViewType >
 inline
