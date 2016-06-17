@@ -496,9 +496,10 @@ public:
 
 /*--------------------------------------------------------------------------*/
 
-template< class FunctorType , class ... Traits >
+template< class FunctorType , class ReducerType , class ... Traits >
 class ParallelReduce< FunctorType
                     , Kokkos::RangePolicy< Traits ... >
+                    , ReducerType
                     , Kokkos::Serial
                     >
 {
@@ -506,14 +507,19 @@ private:
 
   typedef Kokkos::RangePolicy< Traits ... > Policy ;
   typedef typename Policy::work_tag                                  WorkTag ;
-  typedef Kokkos::Impl::FunctorValueTraits< FunctorType , WorkTag >  ValueTraits ;
-  typedef Kokkos::Impl::FunctorValueInit<   FunctorType , WorkTag >  ValueInit ;
+
+  typedef Kokkos::Impl::if_c< std::is_same<void*,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
+  typedef typename ReducerConditional::type ReducerTypeFwd;
+
+  typedef Kokkos::Impl::FunctorValueTraits< ReducerTypeFwd , WorkTag >  ValueTraits ;
+  typedef Kokkos::Impl::FunctorValueInit<   ReducerTypeFwd , WorkTag >  ValueInit ;
 
   typedef typename ValueTraits::pointer_type    pointer_type ;
   typedef typename ValueTraits::reference_type  reference_type ;
 
   const FunctorType   m_functor ;
   const Policy        m_policy ;
+  const ReducerType   m_reducer ;
   const pointer_type  m_result_ptr ;
 
 
@@ -522,15 +528,15 @@ private:
   typename std::enable_if< std::is_same< TagType , void >::value >::type
   exec( pointer_type ptr ) const
     {
-      reference_type update = ValueInit::init( m_functor , ptr );
+      reference_type update = ValueInit::init(  ReducerConditional::select(m_functor , m_reducer) , ptr );
 
       const typename Policy::member_type e = m_policy.end();
       for ( typename Policy::member_type i = m_policy.begin() ; i < e ; ++i ) {
         m_functor( i , update );
       }
 
-      Kokkos::Impl::FunctorFinal< FunctorType , TagType >::
-        final( m_functor , ptr );
+      Kokkos::Impl::FunctorFinal< ReducerTypeFwd , TagType >::
+        final(  ReducerConditional::select(m_functor , m_reducer) , ptr );
     }
 
   template< class TagType >
@@ -539,15 +545,15 @@ private:
   exec( pointer_type ptr ) const
     {
       const TagType t{} ;
-      reference_type update = ValueInit::init( m_functor , ptr );
+      reference_type update = ValueInit::init(  ReducerConditional::select(m_functor , m_reducer) , ptr );
 
       const typename Policy::member_type e = m_policy.end();
       for ( typename Policy::member_type i = m_policy.begin() ; i < e ; ++i ) {
         m_functor( t , i , update );
       }
 
-      Kokkos::Impl::FunctorFinal< FunctorType , TagType >::
-        final( m_functor , ptr );
+      Kokkos::Impl::FunctorFinal< ReducerTypeFwd , TagType >::
+        final(  ReducerConditional::select(m_functor , m_reducer) , ptr );
     }
 
 public:
@@ -556,25 +562,43 @@ public:
   void execute() const
     {
       pointer_type ptr = (pointer_type) Kokkos::Serial::scratch_memory_resize
-           ( ValueTraits::value_size( m_functor ) , 0 );
+           ( ValueTraits::value_size(  ReducerConditional::select(m_functor , m_reducer) ) , 0 );
 
       this-> template exec< WorkTag >( m_result_ptr ? m_result_ptr : ptr );
     }
 
-  template< class ViewType >
+  template< class HostViewType >
+  ParallelReduce( const FunctorType  & arg_functor ,
+                  const Policy       & arg_policy ,
+                  const HostViewType & arg_result_view ,
+                  typename std::enable_if<
+                               Kokkos::is_view< HostViewType >::value &&
+                              !Kokkos::is_reducer_type<ReducerType>::value
+                  ,void*>::type = NULL)
+    : m_functor( arg_functor )
+    , m_policy( arg_policy )
+    , m_reducer( NULL )
+    , m_result_ptr( arg_result_view.ptr_on_device() )
+    {
+      static_assert( Kokkos::is_view< HostViewType >::value
+        , "Kokkos::Serial reduce result must be a View" );
+
+      static_assert( std::is_same< typename HostViewType::memory_space , HostSpace >::value
+        , "Kokkos::Serial reduce result must be a View in HostSpace" );
+    }
+
+  inline
   ParallelReduce( const FunctorType & arg_functor
-                , const Policy      & arg_policy
-                , const ViewType    & arg_result )
+                , Policy       arg_policy
+                , const ReducerType& reducer )
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
-    , m_result_ptr( arg_result.ptr_on_device() )
+    , m_reducer( reducer )
+    , m_result_ptr(  reducer.result_view().data() )
     {
-      static_assert( Kokkos::is_view< ViewType >::value
-        , "Reduction result on Kokkos::Serial must be a Kokkos::View" );
-
-      static_assert( std::is_same< typename ViewType::memory_space
+      /*static_assert( std::is_same< typename ViewType::memory_space
                                       , Kokkos::HostSpace >::value
-        , "Reduction result on Kokkos::Serial must be a Kokkos::View in HostSpace" );
+        , "Reduction result on Kokkos::OpenMP must be a Kokkos::View in HostSpace" );*/
     }
 };
 
@@ -710,9 +734,10 @@ public:
 
 /*--------------------------------------------------------------------------*/
 
-template< class FunctorType , class ... Properties >
+template< class FunctorType , class ReducerType , class ... Properties >
 class ParallelReduce< FunctorType
                     , Kokkos::TeamPolicy< Properties ... >
+                    , ReducerType
                     , Kokkos::Serial
                     >
 {
@@ -721,30 +746,35 @@ private:
   typedef TeamPolicyInternal< Kokkos::Serial, Properties ... > Policy ;
   typedef typename Policy::member_type                       Member ;
   typedef typename Policy::work_tag                          WorkTag ;
-  typedef Kokkos::Impl::FunctorValueTraits< FunctorType , WorkTag > ValueTraits ;
-  typedef Kokkos::Impl::FunctorValueInit<   FunctorType , WorkTag > ValueInit ;
+
+  typedef Kokkos::Impl::if_c< std::is_same<void*,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
+  typedef typename ReducerConditional::type ReducerTypeFwd;
+
+  typedef Kokkos::Impl::FunctorValueTraits< ReducerTypeFwd , WorkTag >  ValueTraits ;
+  typedef Kokkos::Impl::FunctorValueInit<   ReducerTypeFwd , WorkTag >  ValueInit ;
 
   typedef typename ValueTraits::pointer_type    pointer_type ;
   typedef typename ValueTraits::reference_type  reference_type ;
 
   const FunctorType  m_functor ;
   const int          m_league ;
-  const int          m_shared ;
+  const ReducerType  m_reducer ;
         pointer_type m_result_ptr ;
+  const int          m_shared ;
 
   template< class TagType >
   inline
   typename std::enable_if< std::is_same< TagType , void >::value >::type
   exec( pointer_type ptr ) const
     {
-      reference_type update = ValueInit::init( m_functor , ptr );
+      reference_type update = ValueInit::init(  ReducerConditional::select(m_functor , m_reducer) , ptr );
 
       for ( int ileague = 0 ; ileague < m_league ; ++ileague ) {
         m_functor( Member(ileague,m_league,m_shared) , update );
       }
 
-      Kokkos::Impl::FunctorFinal< FunctorType , TagType >::
-        final( m_functor , ptr );
+      Kokkos::Impl::FunctorFinal< ReducerTypeFwd , TagType >::
+        final(  ReducerConditional::select(m_functor , m_reducer) , ptr );
     }
 
   template< class TagType >
@@ -754,14 +784,14 @@ private:
     {
       const TagType t{} ;
 
-      reference_type update = ValueInit::init( m_functor , ptr );
+      reference_type update = ValueInit::init(  ReducerConditional::select(m_functor , m_reducer) , ptr );
 
       for ( int ileague = 0 ; ileague < m_league ; ++ileague ) {
         m_functor( t , Member(ileague,m_league,m_shared) , update );
       }
 
-      Kokkos::Impl::FunctorFinal< FunctorType , TagType >::
-        final( m_functor , ptr );
+      Kokkos::Impl::FunctorFinal< ReducerTypeFwd , TagType >::
+        final(  ReducerConditional::select(m_functor , m_reducer) , ptr );
     }
 
 public:
@@ -770,7 +800,7 @@ public:
   void execute() const
     {
       pointer_type ptr = (pointer_type) Kokkos::Serial::scratch_memory_resize
-           ( ValueTraits::value_size( m_functor ) , m_shared );
+           ( ValueTraits::value_size(  ReducerConditional::select(m_functor , m_reducer) ) , m_shared );
 
       this-> template exec< WorkTag >( m_result_ptr ? m_result_ptr : ptr );
     }
@@ -778,12 +808,16 @@ public:
   template< class ViewType >
   ParallelReduce( const FunctorType  & arg_functor
                 , const Policy       & arg_policy
-                , const ViewType     & arg_result
-                )
+                , const ViewType     & arg_result ,
+                typename std::enable_if<
+                  Kokkos::is_view< ViewType >::value &&
+                  !Kokkos::is_reducer_type<ReducerType>::value
+                  ,void*>::type = NULL)
     : m_functor( arg_functor )
     , m_league( arg_policy.league_size() )
-    , m_shared( arg_policy.scratch_size() + FunctorTeamShmemSize< FunctorType >::value( m_functor , 1 ) )
+    , m_reducer( NULL )
     , m_result_ptr( arg_result.ptr_on_device() )
+    , m_shared( arg_policy.scratch_size() + FunctorTeamShmemSize< FunctorType >::value( m_functor , 1 ) )
     {
       static_assert( Kokkos::is_view< ViewType >::value
         , "Reduction result on Kokkos::Serial must be a Kokkos::View" );
@@ -792,6 +826,21 @@ public:
                                       , Kokkos::HostSpace >::value
         , "Reduction result on Kokkos::Serial must be a Kokkos::View in HostSpace" );
     }
+
+  inline
+  ParallelReduce( const FunctorType & arg_functor
+    , Policy       arg_policy
+    , const ReducerType& reducer )
+  : m_functor( arg_functor )
+  , m_league(  arg_policy.league_size() )
+  , m_reducer( reducer )
+  , m_result_ptr(  reducer.result_view().data() )
+  , m_shared( arg_policy.scratch_size() + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
+  {
+  /*static_assert( std::is_same< typename ViewType::memory_space
+                          , Kokkos::HostSpace >::value
+  , "Reduction result on Kokkos::OpenMP must be a Kokkos::View in HostSpace" );*/
+  }
 
 };
 
