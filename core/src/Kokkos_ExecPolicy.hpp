@@ -575,9 +575,11 @@ class TeamPolicy: public
   typedef Impl::TeamPolicyInternal<
        typename Impl::PolicyTraits<Properties ... >::execution_space,
        Properties ...> internal_policy;
+
   typedef Impl::PolicyTraits<Properties ... > traits;
 
 public:
+  typedef TeamPolicy execution_policy;
 
   TeamPolicy& operator = (const TeamPolicy&) = default;
  
