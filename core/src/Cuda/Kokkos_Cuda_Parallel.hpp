@@ -879,9 +879,10 @@ public:
 
 //----------------------------------------------------------------------------
 
-template< class FunctorType , class ... Properties >
+template< class FunctorType , class ReducerType, class ... Properties >
 class ParallelReduce< FunctorType
                     , Kokkos::TeamPolicy< Properties ... >
+                    , ReducerType
                     , Kokkos::Cuda
                     >
 {
@@ -891,9 +892,12 @@ private:
   typedef typename Policy::member_type  Member ;
   typedef typename Policy::work_tag     WorkTag ;
 
-  typedef Kokkos::Impl::FunctorValueTraits< FunctorType, WorkTag > ValueTraits ;
-  typedef Kokkos::Impl::FunctorValueInit<   FunctorType, WorkTag > ValueInit ;
-  typedef Kokkos::Impl::FunctorValueJoin<   FunctorType, WorkTag > ValueJoin ;
+  typedef Kokkos::Impl::if_c< std::is_same<void*,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
+  typedef typename ReducerConditional::type ReducerTypeFwd;
+
+  typedef Kokkos::Impl::FunctorValueTraits< ReducerTypeFwd, WorkTag > ValueTraits ;
+  typedef Kokkos::Impl::FunctorValueInit<   ReducerTypeFwd, WorkTag > ValueInit ;
+  typedef Kokkos::Impl::FunctorValueJoin<   ReducerTypeFwd, WorkTag > ValueJoin ;
 
   typedef typename ValueTraits::pointer_type    pointer_type ;
   typedef typename ValueTraits::reference_type  reference_type ;
@@ -921,6 +925,7 @@ private:
   //
 
   const FunctorType   m_functor ;
+  const ReducerType   m_reducer ;
   const pointer_type  m_result_ptr ;
   size_type *         m_scratch_space ;
   size_type *         m_scratch_flags ;
@@ -955,10 +960,10 @@ public:
   void run(const DummySHMEMReductionType&) const
   {
     const integral_nonzero_constant< size_type , ValueTraits::StaticValueSize / sizeof(size_type) >
-      word_count( ValueTraits::value_size( m_functor ) / sizeof(size_type) );
+      word_count( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) / sizeof(size_type) );
 
     reference_type value =
-      ValueInit::init( m_functor , kokkos_impl_cuda_shared_memory<size_type>() + threadIdx.y * word_count.value );
+      ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , kokkos_impl_cuda_shared_memory<size_type>() + threadIdx.y * word_count.value );
 
     // Iterate this block through the league
     for ( int league_rank = blockIdx.x ; league_rank < m_league_size ; league_rank += gridDim.x ) {
@@ -973,7 +978,7 @@ public:
 
     // Reduce with final value at blockDim.y - 1 location.
     if ( cuda_single_inter_block_reduce_scan<false,FunctorType,WorkTag>(
-           m_functor , blockIdx.x , gridDim.x ,
+           ReducerConditional::select(m_functor , m_reducer) , blockIdx.x , gridDim.x ,
            kokkos_impl_cuda_shared_memory<size_type>() , m_scratch_space , m_scratch_flags ) ) {
 
       // This is the final block with the final result at the final threads' location
@@ -982,7 +987,7 @@ public:
       size_type * const global = m_unified_space ? m_unified_space : m_scratch_space ;
 
       if ( threadIdx.y == 0 ) {
-        Kokkos::Impl::FunctorFinal< FunctorType , WorkTag >::final( m_functor , shared );
+        Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , shared );
       }
 
       if ( CudaTraits::WarpSize < word_count.value ) { __syncthreads(); }
@@ -995,7 +1000,7 @@ public:
   void run(const DummyShflReductionType&) const
   {
     value_type value;
-    ValueInit::init( m_functor , &value);
+    ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , &value);
 
     // Iterate this block through the league
     for ( int league_rank = blockIdx.x ; league_rank < m_league_size ; league_rank += gridDim.x ) {
@@ -1011,10 +1016,10 @@ public:
     pointer_type const result = (pointer_type) (m_unified_space ? m_unified_space : m_scratch_space) ;
 
     if(Impl::cuda_inter_block_reduction<FunctorType,ValueJoin >
-           (value,ValueJoin(m_functor),m_scratch_space,result,m_scratch_flags,blockDim.y)) {
+           (value,ValueJoin(ReducerConditional::select(m_functor , m_reducer)),m_scratch_space,result,m_scratch_flags,blockDim.y)) {
       const unsigned id = threadIdx.y*blockDim.x + threadIdx.x;
       if(id==0) {
-        Kokkos::Impl::FunctorFinal< FunctorType , WorkTag >::final( m_functor , (void*) &value );
+        Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , (void*) &value );
         *result = value;
       }
     }
@@ -1026,9 +1031,9 @@ public:
       const int block_count = UseShflReduction? std::min( m_league_size , size_type(1024) )
                                                :std::min( m_league_size , m_team_size );
 
-      m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( m_functor ) * block_count );
+      m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_count );
       m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
-      m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( m_functor ) );
+      m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) );
 
       const dim3 block( m_vector_size , m_team_size , 1 );
       const dim3 grid( block_count , 1 , 1 );
@@ -1040,11 +1045,11 @@ public:
 
       if ( m_result_ptr ) {
         if ( m_unified_space ) {
-          const int count = ValueTraits::value_count( m_functor );
+          const int count = ValueTraits::value_count( ReducerConditional::select(m_functor , m_reducer) );
           for ( int i = 0 ; i < count ; ++i ) { m_result_ptr[i] = pointer_type(m_unified_space)[i] ; }
         }
         else {
-          const int size = ValueTraits::value_size( m_functor );
+          const int size = ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) );
           DeepCopy<HostSpace,CudaSpace>( m_result_ptr, m_scratch_space, size );
         }
       }
@@ -1054,8 +1059,11 @@ public:
   ParallelReduce( const FunctorType  & arg_functor 
                 , const Policy       & arg_policy 
                 , const HostViewType & arg_result
-                )
+                , typename std::enable_if<
+                                   Kokkos::is_view< HostViewType >::value
+                                ,void*>::type = NULL)
   : m_functor( arg_functor )
+  , m_reducer( NULL )
   , m_result_ptr( arg_result.ptr_on_device() )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
@@ -1070,7 +1078,58 @@ public:
   {
     // Return Init value if the number of worksets is zero
     if( arg_policy.league_size() == 0) {
-      ValueInit::init( m_functor , arg_result.ptr_on_device() );
+      ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , arg_result.ptr_on_device() );
+      return ;
+    }
+
+    m_team_begin = UseShflReduction?0:cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( arg_functor , m_team_size );
+    m_shmem_begin = sizeof(double) * ( m_team_size + 2 );
+    m_shmem_size = arg_policy.scratch_size() + FunctorTeamShmemSize< FunctorType >::value( arg_functor , m_team_size );
+
+    // The global parallel_reduce does not support vector_length other than 1 at the moment
+    if( (arg_policy.vector_length() > 1) && !UseShflReduction )
+      Impl::throw_runtime_exception( "Kokkos::parallel_reduce with a TeamPolicy using a vector length of greater than 1 is not currently supported for CUDA for dynamic sized reduction types.");
+
+    if( (m_team_size < 32) && !UseShflReduction )
+      Impl::throw_runtime_exception( "Kokkos::parallel_reduce with a TeamPolicy using a team_size smaller than 32 is not currently supported with CUDA for dynamic sized reduction types.");
+
+    // Functor's reduce memory, team scan memory, and team shared memory depend upon team size.
+
+    const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size ;
+
+    if ( (! Kokkos::Impl::is_integral_power_of_two( m_team_size )  && !UseShflReduction ) ||
+         CudaTraits::SharedMemoryCapacity < shmem_size_total ) {
+      Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > bad team size"));
+    }
+
+    if ( m_team_size >
+         Kokkos::Impl::cuda_get_max_block_size< ParallelReduce >
+               ( arg_functor , arg_policy.vector_length(), arg_policy.scratch_size() ) / arg_policy.vector_length()) {
+      Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too large team size."));
+    }
+
+  }
+
+  ParallelReduce( const FunctorType  & arg_functor
+                , const Policy       & arg_policy
+                , const ReducerType & reducer)
+  : m_functor( arg_functor )
+  , m_reducer( reducer )
+  , m_result_ptr( reducer.result_view().ptr_on_device() )
+  , m_scratch_space( 0 )
+  , m_scratch_flags( 0 )
+  , m_unified_space( 0 )
+  , m_team_begin( 0 )
+  , m_shmem_begin( 0 )
+  , m_shmem_size( 0 )
+  , m_league_size( arg_policy.league_size() )
+  , m_team_size( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
+      Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( arg_functor , arg_policy.vector_length(), arg_policy.scratch_size() ) / arg_policy.vector_length() )
+  , m_vector_size( arg_policy.vector_length() )
+  {
+    // Return Init value if the number of worksets is zero
+    if( arg_policy.league_size() == 0) {
+      ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , m_result_ptr );
       return ;
     }
 
@@ -1725,6 +1784,11 @@ namespace Impl {
 
     __device__ inline
     void operator() (const typename ExecPolicy::member_type& i, ValueType& val) const {
+      //Insert Static Assert with decltype on ValueType equals second argument type of FunctorType::operator()
+      f(i,val);
+    }
+    __device__ inline
+    void operator() (typename ExecPolicy::member_type& i, ValueType& val) const {
       //Insert Static Assert with decltype on ValueType equals second argument type of FunctorType::operator()
       f(i,val);
     }

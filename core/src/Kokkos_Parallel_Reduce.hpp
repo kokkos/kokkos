@@ -214,8 +214,6 @@ public:
 
   Add(value_type& result_):result(&result_) {}
 
-  KOKKOS_INLINE_FUNCTION
-  void operator() (const int& , double& ) const {};
   //Required
   KOKKOS_INLINE_FUNCTION
   void join(value_type& dest, const value_type& src)  const {
