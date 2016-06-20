@@ -463,6 +463,9 @@ template< class > struct is_view : public std::false_type {};
 template< class D, class ... P >
 struct is_view< View<D,P...> > : public std::true_type {};
 
+template< class D, class ... P >
+struct is_view< const View<D,P...> > : public std::true_type {};
+
 template< class DataType , class ... Properties >
 class View : public ViewTraits< DataType , Properties ... > {
 private:
