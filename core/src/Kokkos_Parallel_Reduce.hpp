@@ -105,7 +105,7 @@ template< class ReturnType , class FunctorType>
 struct ParallelReduceReturnValue<typename std::enable_if<
                                   (is_array<ReturnType>::value || std::is_pointer<ReturnType>::value)
                                 >::type, ReturnType, FunctorType> {
-  typedef Kokkos::View<  ReturnType
+  typedef Kokkos::View<  typename std::remove_const<ReturnType>::type
                        , Kokkos::HostSpace
                        , Kokkos::MemoryUnmanaged
       > return_type;
@@ -336,7 +336,7 @@ void parallel_reduce(const std::string& label,
                      typename Impl::enable_if<
                        Kokkos::Impl::is_execution_policy<PolicyType>::value
                      >::type * = 0) {
-  Impl::ParallelReduceAdaptor<PolicyType,FunctorType,ReturnType>::execute(label,policy,functor,return_value);
+  Impl::ParallelReduceAdaptor<PolicyType,FunctorType,const ReturnType>::execute(label,policy,functor,return_value);
 }
 
 template< class PolicyType, class FunctorType, class ReturnType >
@@ -347,7 +347,7 @@ void parallel_reduce(const PolicyType& policy,
                      typename Impl::enable_if<
                        Kokkos::Impl::is_execution_policy<PolicyType>::value
                      >::type * = 0) {
-  Impl::ParallelReduceAdaptor<PolicyType,FunctorType,ReturnType>::execute("No Label",policy,functor,return_value);
+  Impl::ParallelReduceAdaptor<PolicyType,FunctorType,const ReturnType>::execute("No Label",policy,functor,return_value);
 }
 
 template< class FunctorType, class ReturnType >
@@ -356,7 +356,8 @@ void parallel_reduce(const size_t& policy,
                      const FunctorType& functor,
                      const ReturnType& return_value) {
   typedef typename Impl::ParallelReducePolicyType<void,size_t,FunctorType>::policy_type policy_type;
-  Impl::ParallelReduceAdaptor<policy_type,FunctorType,ReturnType>::execute("No Label",policy_type(0,policy),functor,return_value);
+
+  Impl::ParallelReduceAdaptor<policy_type,FunctorType,const ReturnType>::execute("No Label",policy_type(0,policy),functor,return_value);
 }
 
 template< class FunctorType, class ReturnType >
@@ -366,7 +367,7 @@ void parallel_reduce(const std::string& label,
                      const FunctorType& functor,
                      const ReturnType& return_value) {
   typedef typename Impl::ParallelReducePolicyType<void,size_t,FunctorType>::policy_type policy_type;
-  Impl::ParallelReduceAdaptor<policy_type,FunctorType,ReturnType>::execute(label,policy_type(0,policy),functor,return_value);
+  Impl::ParallelReduceAdaptor<policy_type,FunctorType,const ReturnType>::execute(label,policy_type(0,policy),functor,return_value);
 }
 
 // No Return Argument
