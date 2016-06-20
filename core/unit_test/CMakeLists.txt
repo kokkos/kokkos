@@ -44,7 +44,7 @@ ENDIF()
 IF(Kokkos_ENABLE_OpenMP)
   TRIBITS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_OpenMP
-    SOURCES UnitTestMain.cpp TestOpenMP.cpp
+    SOURCES UnitTestMain.cpp TestOpenMP.cpp TestOpenMP_a.cpp TestOpenMP_b.cpp TestOpenMP_c.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "
@@ -66,7 +66,7 @@ ENDIF()
 IF(Kokkos_ENABLE_Cuda)
   TRIBITS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Cuda
-    SOURCES UnitTestMain.cpp TestCuda.cpp
+    SOURCES UnitTestMain.cpp TestCuda.cpp TestCuda_a.cpp TestCuda_b.cpp TestCuda_c.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "
@@ -76,7 +76,7 @@ ENDIF()
 
 TRIBITS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_Default
-  SOURCES UnitTestMain.cpp TestDefaultDeviceType.cpp TestDefaultDeviceTypeInit.cpp
+  SOURCES UnitTestMain.cpp TestDefaultDeviceType.cpp TestDefaultDeviceType_a.cpp TestDefaultDeviceTypeInit.cpp
   COMM serial mpi
   NUM_MPI_PROCS 1
   FAIL_REGULAR_EXPRESSION "  FAILED  "
