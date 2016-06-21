@@ -116,7 +116,7 @@ struct ParallelReduceReturnValue;
 template< class ReturnType , class FunctorType >
 struct ParallelReduceReturnValue<typename std::enable_if<Kokkos::is_view<ReturnType>::value>::type, ReturnType, FunctorType> {
   typedef ReturnType return_type;
-  typedef void* reducer_type;
+  typedef InvalidType reducer_type;
 
   typedef typename return_type::value_type value_type_scalar;
   typedef typename return_type::value_type value_type_array[];
@@ -139,7 +139,7 @@ struct ParallelReduceReturnValue<typename std::enable_if<
                        , Kokkos::MemoryUnmanaged
       > return_type;
 
-  typedef void* reducer_type;
+  typedef InvalidType reducer_type;
 
   typedef typename return_type::value_type value_type;
 
@@ -157,7 +157,7 @@ struct ParallelReduceReturnValue<typename std::enable_if<
                        , Kokkos::MemoryUnmanaged
       > return_type;
 
-  typedef void* reducer_type;
+  typedef InvalidType reducer_type;
 
   typedef typename return_type::value_type value_type[];
 

@@ -193,10 +193,10 @@ private:
   typedef typename Policy::WorkRange    WorkRange ;
   typedef typename Policy::member_type  Member ;
 
-  typedef Kokkos::Impl::if_c< std::is_same<void*,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
+  typedef Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
   typedef typename ReducerConditional::type ReducerTypeFwd;
 
-  // Static Assert WorkTag void if ReducerType not void*
+  // Static Assert WorkTag void if ReducerType not InvalidType
 
   typedef Kokkos::Impl::FunctorValueTraits< ReducerTypeFwd, WorkTag > ValueTraits ;
   typedef Kokkos::Impl::FunctorValueInit<   ReducerTypeFwd, WorkTag > ValueInit ;
@@ -351,7 +351,7 @@ public:
                   ,void*>::type = NULL)
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
-    , m_reducer( NULL )
+    , m_reducer( InvalidType() )
     , m_result_ptr(  arg_result_view.data() )
     {
       /*static_assert( std::is_same< typename ViewType::memory_space
@@ -627,7 +627,7 @@ private:
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::member_type  Member ;
 
-  typedef Kokkos::Impl::if_c< std::is_same<void*,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
+  typedef Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
   typedef typename ReducerConditional::type ReducerTypeFwd;
 
   typedef Kokkos::Impl::FunctorValueTraits< ReducerTypeFwd , WorkTag >  ValueTraits ;
@@ -718,7 +718,7 @@ public:
                     ,void*>::type = NULL)
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
-    , m_reducer( NULL )
+    , m_reducer( InvalidType() )
     , m_result_ptr( arg_result.ptr_on_device() )
     , m_shmem_size( arg_policy.scratch_size() + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
     {}

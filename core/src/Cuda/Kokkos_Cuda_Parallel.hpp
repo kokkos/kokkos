@@ -671,7 +671,7 @@ private:
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::member_type  Member ;
 
-  typedef Kokkos::Impl::if_c< std::is_same<void*,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
+  typedef Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
   typedef typename ReducerConditional::type ReducerTypeFwd;
 
   typedef Kokkos::Impl::FunctorValueTraits< ReducerTypeFwd, WorkTag > ValueTraits ;
@@ -857,7 +857,7 @@ public:
                 ,void*>::type = NULL)
   : m_functor( arg_functor )
   , m_policy(  arg_policy )
-  , m_reducer( NULL )
+  , m_reducer( InvalidType() )
   , m_result_ptr( arg_result.ptr_on_device() )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
@@ -892,7 +892,7 @@ private:
   typedef typename Policy::member_type  Member ;
   typedef typename Policy::work_tag     WorkTag ;
 
-  typedef Kokkos::Impl::if_c< std::is_same<void*,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
+  typedef Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
   typedef typename ReducerConditional::type ReducerTypeFwd;
 
   typedef Kokkos::Impl::FunctorValueTraits< ReducerTypeFwd, WorkTag > ValueTraits ;
@@ -1063,7 +1063,7 @@ public:
                                    Kokkos::is_view< HostViewType >::value
                                 ,void*>::type = NULL)
   : m_functor( arg_functor )
-  , m_reducer( NULL )
+  , m_reducer( InvalidType() )
   , m_result_ptr( arg_result.ptr_on_device() )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
