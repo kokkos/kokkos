@@ -801,11 +801,11 @@ struct Functor2 {
   typedef double value_type[];
   const unsigned value_count;
 
-  Functor2(int n):value_count(n){}
+  Functor2(unsigned n):value_count(n){}
 
   KOKKOS_INLINE_FUNCTION
-  void operator() (const int& i,double update[]) const {
-    for(int j=0;j<value_count;j++)
+  void operator() (const unsigned& i,double update[]) const {
+    for(unsigned j=0;j<value_count;j++)
       update[j]+=i;
   }
 
