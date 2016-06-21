@@ -917,13 +917,17 @@ void AddFunctor(Args... args) {
 template<class ... Args>
 void AddFunctorLambdaRange(Args... args) {
   AddFunctor<0,Args...>(args...);
+  #ifdef  KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA
   AddLambdaRange(args...);
+  #endif
 }
 
 template<class ... Args>
 void AddFunctorLambdaTeam(Args... args) {
   AddFunctor<1,Args...>(args...);
+  #ifdef  KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA
   AddLambdaTeam(args...);
+  #endif
 }
 
 template<class ... Args>
