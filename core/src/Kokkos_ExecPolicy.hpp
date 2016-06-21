@@ -378,38 +378,6 @@ public:
 
 namespace Kokkos {
 
-namespace Experimental {
-
-/** \brief Scratch memory request accepting per team and per thread value
- *
- * An instance of this class can be given as the last argument to a 
- * TeamPolicy constructor. It sets the amount of user requested shared
- * memory for the team.
- */
-
-template< class MemorySpace >
-class TeamScratchRequest {
-  size_t m_per_team;
-  size_t m_per_thread;
-  
-public:
-  TeamScratchRequest(size_t per_team_, size_t per_thread_ = 0):
-   m_per_team(per_team_), m_per_thread(per_thread_) {
-  } 
-
-  size_t per_team() const {
-    return m_per_team;
-  }
-  size_t per_thread() const {
-    return m_per_thread;
-  }
-  size_t total(const size_t team_size) const {
-    return m_per_team + m_per_thread * team_size;
-  }
-}; 
-
-}
-
 namespace Impl {
 
 
@@ -453,10 +421,10 @@ public:
   TeamPolicyInternal( int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 );
 
   template<class MemorySpace>
-  TeamPolicyInternal( int league_size_request , int team_size_request , const Experimental::TeamScratchRequest<MemorySpace>& team_scratch_memory_request );
+  TeamPolicyInternal( int league_size_request , int team_size_request );
 
   template<class MemorySpace>
-  TeamPolicyInternal( int league_size_request , const Kokkos::AUTO_t & , const Experimental::TeamScratchRequest<MemorySpace>& team_scratch_memory_request );
+  TeamPolicyInternal( int league_size_request , const Kokkos::AUTO_t & );
 
   /** \brief  The actual league size (number of teams) of the policy.
    *
@@ -598,12 +566,12 @@ public:
     : internal_policy(league_size_request,Kokkos::AUTO(), vector_length_request) {}
 
   template<class MemorySpace>
-  TeamPolicy( int league_size_request , int team_size_request , const Experimental::TeamScratchRequest<MemorySpace>& team_scratch_memory_request )
-    : internal_policy(league_size_request,team_size_request, team_scratch_memory_request) {}
+  TeamPolicy( int league_size_request , int team_size_request  )
+    : internal_policy(league_size_request,team_size_request) {}
 
   template<class MemorySpace>
-  TeamPolicy( int league_size_request , const Kokkos::AUTO_t & , const Experimental::TeamScratchRequest<MemorySpace>& team_scratch_memory_request )
-    : internal_policy(league_size_request,Kokkos::AUTO(), team_scratch_memory_request) {}
+  TeamPolicy( int league_size_request , const Kokkos::AUTO_t &  )
+    : internal_policy(league_size_request,Kokkos::AUTO()) {}
 
 private:
   TeamPolicy(const internal_policy& p):internal_policy(p) {}
