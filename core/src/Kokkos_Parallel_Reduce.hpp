@@ -57,6 +57,53 @@ struct is_reducer_type<T,typename std::enable_if<
                       >::type> {
   enum { value = 1 };
 };
+
+namespace Experimental {
+template<class Scalar,class Space = HostSpace>
+struct Sum {
+public:
+  //Required
+  typedef Sum reducer_type;
+  typedef Scalar value_type;
+
+  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > result_view_type;
+
+private:
+  result_view_type result;
+
+public:
+
+  Sum(value_type& result_):result(&result_) {}
+  Sum(const result_view_type& result_):result(result_) {}
+
+  //Required
+  KOKKOS_INLINE_FUNCTION
+  void join(value_type& dest, const value_type& src)  const {
+    dest += src + 1;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void join(volatile value_type& dest, const volatile value_type& src) const {
+    dest += src + 1;
+  }
+
+  //Optional
+  KOKKOS_INLINE_FUNCTION
+  void init( value_type& val)  const {
+    val = value_type();
+  }
+
+  //Optional
+  //KOKKOS_INLINE_FUNCTION
+  //void final( value_type& val) {
+  //}
+
+
+  result_view_type result_view() const {
+    return result;
+  }
+};
+}
 }
 
 
@@ -173,75 +220,6 @@ namespace Impl {
   };
 }
 
-template<class Scalar>
-struct Max {
-  typedef Max reducer_type;
-  typedef Scalar value_type;
-  value_type min_value;
-  value_type& result;
-
-  Max(value_type& result_):result(result_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  void join(value_type& dest, const value_type& src) {
-    dest = dest<src?dest:src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) {
-    dest = dest<src?dest:src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void init( value_type& val) {
-    val = min_value;
-  }
-};
-
-template<class Scalar,class Space = HostSpace>
-struct Add {
-public:
-  //Required
-  typedef Add reducer_type;
-  typedef Scalar value_type;
-
-  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > result_view_type;
-
-private:
-  result_view_type result;
-
-public:
-
-  Add(value_type& result_):result(&result_) {}
-
-  //Required
-  KOKKOS_INLINE_FUNCTION
-  void join(value_type& dest, const value_type& src)  const {
-    dest += src + 1;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) const {
-    dest += src + 1;
-  }
-
-  //Optional
-  KOKKOS_INLINE_FUNCTION
-  void init( value_type& val)  const {
-    val = value_type();
-  }
-
-  //Optional
-  //KOKKOS_INLINE_FUNCTION
-  //void final( value_type& val) {
-  //}
-
-
-  result_view_type result_view() const {
-    return result;
-  }
-};
-
 namespace Impl {
 
   template< class PolicyType, class FunctorType, class ReturnType >
@@ -259,7 +237,7 @@ namespace Impl {
           #if (KOKKOS_ENABLE_PROFILING)
             uint64_t kpID = 0;
             if(Kokkos::Profiling::profileLibraryLoaded()) {
-              Kokkos::Profiling::beginParallelReduce(std::string(label), 0, &kpID);
+              Kokkos::Profiling::beginParallelReduce("" == label ? typeid(FunctorType).name() : label, 0, &kpID);
             }
           #endif
 
@@ -280,6 +258,52 @@ namespace Impl {
 
   };
 }
+/*! \fn void parallel_reduce(label,policy,functor,return_argument)
+    \brief Perform a parallel reduction.
+    \param label An optional Label giving the call name. Must be able to construct a std::string from the argument.
+    \param policy A Kokkos Execution Policy, such as an integer, a RangePolicy or a TeamPolicy.
+    \param functor A functor with a reduction operator, and optional init, join and final functions.
+    \param return_argument A return argument which can be a scalar, a View, or a ReducerStruct. This argument can be left out if the functor has a final function.
+*/
+
+/** \brief  Parallel reduction
+ *
+ * parallel_reduce performs parallel reductions with arbitrary functions - i.e.
+ * it is not solely data based. The call expects up to 4 arguments:
+ *
+ *
+ * Example of a parallel_reduce functor for a POD (plain old data) value type:
+ * \code
+ *  class FunctorType { // For POD value type
+ *  public:
+ *    typedef    ...     execution_space ;
+ *    typedef <podType>  value_type ;
+ *    void operator()( <intType> iwork , <podType> & update ) const ;
+ *    void init( <podType> & update ) const ;
+ *    void join( volatile       <podType> & update ,
+ *               volatile const <podType> & input ) const ;
+ *
+ *    typedef true_type has_final ;
+ *    void final( <podType> & update ) const ;
+ *  };
+ * \endcode
+ *
+ * Example of a parallel_reduce functor for an array of POD (plain old data) values:
+ * \code
+ *  class FunctorType { // For array of POD value
+ *  public:
+ *    typedef    ...     execution_space ;
+ *    typedef <podType>  value_type[] ;
+ *    void operator()( <intType> , <podType> update[] ) const ;
+ *    void init( <podType> update[] ) const ;
+ *    void join( volatile       <podType> update[] ,
+ *               volatile const <podType> input[] ) const ;
+ *
+ *    typedef true_type has_final ;
+ *    void final( <podType> update[] ) const ;
+ *  };
+ * \endcode
+ */
 
 // ReturnValue is scalar or array: take by reference
 
@@ -303,7 +327,7 @@ void parallel_reduce(const PolicyType& policy,
                      typename Impl::enable_if<
                        Kokkos::Impl::is_execution_policy<PolicyType>::value
                      >::type * = 0) {
-  Impl::ParallelReduceAdaptor<PolicyType,FunctorType,ReturnType>::execute("No Label",policy,functor,return_value);
+  Impl::ParallelReduceAdaptor<PolicyType,FunctorType,ReturnType>::execute("",policy,functor,return_value);
 }
 
 template< class FunctorType, class ReturnType >
@@ -312,7 +336,7 @@ void parallel_reduce(const size_t& policy,
                      const FunctorType& functor,
                      ReturnType& return_value) {
   typedef typename Impl::ParallelReducePolicyType<void,size_t,FunctorType>::policy_type policy_type;
-  Impl::ParallelReduceAdaptor<policy_type,FunctorType,ReturnType>::execute("No Label",policy_type(0,policy),functor,return_value);
+  Impl::ParallelReduceAdaptor<policy_type,FunctorType,ReturnType>::execute("",policy_type(0,policy),functor,return_value);
 }
 
 template< class FunctorType, class ReturnType >
@@ -347,7 +371,7 @@ void parallel_reduce(const PolicyType& policy,
                      typename Impl::enable_if<
                        Kokkos::Impl::is_execution_policy<PolicyType>::value
                      >::type * = 0) {
-  Impl::ParallelReduceAdaptor<PolicyType,FunctorType,const ReturnType>::execute("No Label",policy,functor,return_value);
+  Impl::ParallelReduceAdaptor<PolicyType,FunctorType,const ReturnType>::execute("",policy,functor,return_value);
 }
 
 template< class FunctorType, class ReturnType >
@@ -357,7 +381,7 @@ void parallel_reduce(const size_t& policy,
                      const ReturnType& return_value) {
   typedef typename Impl::ParallelReducePolicyType<void,size_t,FunctorType>::policy_type policy_type;
 
-  Impl::ParallelReduceAdaptor<policy_type,FunctorType,const ReturnType>::execute("No Label",policy_type(0,policy),functor,return_value);
+  Impl::ParallelReduceAdaptor<policy_type,FunctorType,const ReturnType>::execute("",policy_type(0,policy),functor,return_value);
 }
 
 template< class FunctorType, class ReturnType >
@@ -414,7 +438,7 @@ void parallel_reduce(const PolicyType& policy,
               > result_view_type;
   result_view_type result_view ;
 
-  Impl::ParallelReduceAdaptor<PolicyType,FunctorType,result_view_type>::execute("No Label",policy,functor,result_view);
+  Impl::ParallelReduceAdaptor<PolicyType,FunctorType,result_view_type>::execute("",policy,functor,result_view);
 }
 
 template< class FunctorType >
@@ -434,7 +458,7 @@ void parallel_reduce(const size_t& policy,
               > result_view_type;
   result_view_type result_view ;
 
-  Impl::ParallelReduceAdaptor<policy_type,FunctorType,result_view_type>::execute("No Label",policy_type(0,policy),functor,result_view);
+  Impl::ParallelReduceAdaptor<policy_type,FunctorType,result_view_type>::execute("",policy_type(0,policy),functor,result_view);
 }
 
 template< class FunctorType>
