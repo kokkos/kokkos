@@ -223,7 +223,6 @@ struct DynRankDimTraits {
      //if ( drv.rank() != N )
      if ( drv.rank() > N )
        {
-         std::cout << " rank: " << drv.rank() << " Called from op with numArgs: " << N << std::endl;
          Kokkos::abort( "Need at least rank arguments to the operator()" ); 
        }
   }
@@ -308,6 +307,11 @@ public:
     }
 };
 
+template < typename DataType , typename Specialize >
+struct DynRankViewDataTypeTraits
+{
+  typedef DataType******* type;
+};
 
 } //end Impl
 
@@ -338,17 +342,21 @@ class DynRankView : public ViewTraits< DataType , Properties ... >
 private: 
   template < class , class ... > friend class DynRankView ;
   template < class , class ... > friend class View ;
-  template< class , class ... > friend class Impl::ViewMapping ;
+  template < class , class ... > friend class Impl::ViewMapping ;
 
 public: 
-  typedef View< DataType******* , Properties...> view_type ; //Make sure DownCast() call still works...
+  typedef ViewTraits< DataType , Properties ... > drvtraits ;
+  typedef typename Impl::DynRankViewDataTypeTraits< DataType , typename drvtraits::specialize >::type drv_data_type ; //use this to replace DataType*******
+
+  //typedef View< DataType******* , Properties...> view_type ; 
+  typedef View< drv_data_type , Properties...> view_type ; 
 //  using reference_type = typename view_type::reference_type; 
 
-  typedef ViewTraits< DataType******* , Properties ... > traits ;
-  typedef ViewTraits< DataType , Properties ... > drvtraits ;
+  //typedef ViewTraits< DataType******* , Properties ... > traits ;
+  typedef ViewTraits< drv_data_type , Properties ... > traits ;
+
 
 private:
-
   typedef Kokkos::Experimental::Impl::ViewMapping< traits , void > map_type ;
   typedef Kokkos::Experimental::Impl::SharedAllocationTracker      track_type ;
 
@@ -573,8 +581,16 @@ public:
     { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 1 , ( m_map , i0 ) )
       return m_map.reference(i0); 
-//      KOKKOS_VIEW_OPERATOR_VERIFY( 1 , ( implementation_map() , i0 ) )
-//      return implementation_map().reference(i0); 
+    }
+
+  template< typename iType >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename drvtraits::specialize , void>::value && std::is_integral<iType>::value), reference_type>::type
+  operator()(const iType & i0 ) const 
+  //reference_type operator()(const iType & i0 ) const 
+    { 
+      KOKKOS_VIEW_OPERATOR_VERIFY( 1 , ( m_map , i0 ) )
+      return m_map.reference(i0,0,0,0,0,0,0); 
     }
 
   template< typename iType >
@@ -593,8 +609,15 @@ public:
     { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 2 , ( m_map , i0 , i1 ) )
       return m_map.reference(i0,i1); 
-//      KOKKOS_VIEW_OPERATOR_VERIFY( 2 , ( implementation_map() , i0 , i1 ) )
-//      return implementation_map().reference(i0,i1); 
+    }
+
+  template< typename iType0 , typename iType1 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename drvtraits::specialize , void>::value && std::is_integral<iType0>::value), reference_type>::type
+  operator()(const iType0 & i0 , const iType1 & i1 ) const 
+    { 
+      KOKKOS_VIEW_OPERATOR_VERIFY( 2 , ( m_map , i0 , i1 ) )
+      return m_map.reference(i0,i1,0,0,0,0,0); 
     }
 
   template< typename iType0 , typename iType1 >
@@ -613,8 +636,15 @@ public:
     { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 3 , ( m_map , i0 , i1 , i2 ) )
       return m_map.reference(i0,i1,i2); 
-//      KOKKOS_VIEW_OPERATOR_VERIFY( 3 , ( implementation_map() , i0 , i1 , i2 ) )
-//      return implementation_map().reference(i0,i1,i2); 
+    }
+
+  template< typename iType0 , typename iType1 , typename iType2 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename drvtraits::specialize , void>::value && std::is_integral<iType0>::value), reference_type>::type
+  operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 ) const 
+    { 
+      KOKKOS_VIEW_OPERATOR_VERIFY( 3 , ( m_map , i0 , i1 , i2 ) )
+      return m_map.reference(i0,i1,i2,0,0,0,0); 
     }
 
   template< typename iType0 , typename iType1 , typename iType2 >
@@ -633,8 +663,15 @@ public:
     { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 4 , ( m_map , i0 , i1 , i2 , i3 ) )
       return m_map.reference(i0,i1,i2,i3); 
-//      KOKKOS_VIEW_OPERATOR_VERIFY( 4 , ( implementation_map() , i0 , i1 , i2 , i3 ) )
-//      return implementation_map().reference(i0,i1,i2,i3); 
+    }
+
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename drvtraits::specialize , void>::value && std::is_integral<iType0>::value), reference_type>::type
+  operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 ) const 
+    { 
+      KOKKOS_VIEW_OPERATOR_VERIFY( 4 , ( m_map , i0 , i1 , i2 , i3 ) )
+      return m_map.reference(i0,i1,i2,i3,0,0,0); 
     }
 
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3 >
@@ -653,8 +690,15 @@ public:
     { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 5 , ( m_map , i0 , i1 , i2 , i3 , i4 ) )
       return m_map.reference(i0,i1,i2,i3,i4); 
-//      KOKKOS_VIEW_OPERATOR_VERIFY( 5 , ( implementation_map() , i0 , i1 , i2 , i3 , i4 ) )
-//      return implementation_map().reference(i0,i1,i2,i3,i4); 
+    }
+
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename drvtraits::specialize , void>::value && std::is_integral<iType0>::value), reference_type>::type
+  operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 ) const 
+    { 
+      KOKKOS_VIEW_OPERATOR_VERIFY( 5 , ( m_map , i0 , i1 , i2 , i3 , i4 ) )
+      return m_map.reference(i0,i1,i2,i3,i4,0,0); 
     }
 
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3 , typename iType4 >
@@ -673,8 +717,15 @@ public:
     { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 6 , ( m_map , i0 , i1 , i2 , i3 , i4 , i5 ) )
       return m_map.reference(i0,i1,i2,i3,i4,i5); 
-//      KOKKOS_VIEW_OPERATOR_VERIFY( 6 , ( implementation_map() , i0 , i1 , i2 , i3 , i4 , i5 ) )
-//      return implementation_map().reference(i0,i1,i2,i3,i4,i5); 
+    }
+
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 , typename iType5 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename drvtraits::specialize , void>::value && std::is_integral<iType0>::value), reference_type>::type
+  operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 ) const 
+    { 
+      KOKKOS_VIEW_OPERATOR_VERIFY( 6 , ( m_map , i0 , i1 , i2 , i3 , i4 , i5 ) )
+      return m_map.reference(i0,i1,i2,i3,i4,i5,0); 
     }
 
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3 , typename iType4 , typename iType5 >
@@ -693,8 +744,6 @@ public:
     { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 7 , ( m_map , i0 , i1 , i2 , i3 , i4 , i5 , i6 ) )
       return m_map.reference(i0,i1,i2,i3,i4,i5,i6); 
-//      KOKKOS_VIEW_OPERATOR_VERIFY( 7 , ( implementation_map() , i0 , i1 , i2 , i3 , i4 , i5 , i6 ) )
-//      return implementation_map().reference(i0,i1,i2,i3,i4,i5,i6); 
     }
 
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3 , typename iType4 , typename iType5 , typename iType6 >
@@ -759,6 +808,7 @@ public:
 
 //Experimental
 // Copy/Assign View to DynRankView
+
   template< class RT , class ... RP >
   KOKKOS_INLINE_FUNCTION
   DynRankView( const View<RT,RP...> & rhs )
@@ -778,10 +828,11 @@ public:
     {
       typedef typename View<RT,RP...>::traits  SrcTraits ;
       typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits , Kokkos::Experimental::Impl::ViewToDynRankViewTag >  Mapping ;
-      static_assert( Mapping::is_assignable , "Incompatible DynRankView copy assignment" );
+      static_assert( Mapping::is_assignable , "Incompatible View to DynRankView copy assignment" );
       Mapping::assign( *this , rhs );
       return *this ;
     }
+
   //----------------------------------------
   // Allocation tracking properties
 
@@ -1053,9 +1104,10 @@ public:
       ( arg_N3 != ~size_t(0) ) + ( arg_N4 != ~size_t(0) ) + ( arg_N5 != ~size_t(0) ) +
       ( arg_N6 != ~size_t(0) ) + ( arg_N7 != ~size_t(0) );
 
-    if ( num_passed_args != traits::rank_dynamic ) {
+    if ( std::is_same<traits::specialize , void>::value && num_passed_args != traits::rank_dynamic ) {
       Kokkos::abort( "Kokkos::View::shmem_size() rank_dynamic != number of arguments.\n" );
     }
+    {}
 
     return map_type::memory_span(
            typename traits::array_layout //need createLayout?
@@ -1072,7 +1124,7 @@ public:
                   Impl::DynRankDimTraits<typename traits::specialize>::createLayout( arg_layout ) //is this correct?
                 ) ) ) ) //will ~size_t(0), not 0, cause issues?
          , arg_layout ) //since this is a forwarding Ctor safe without createLayout? 
-    {}
+     {}
 
 // --------------
 // Reference createLayout, computeRank syntax
@@ -1316,6 +1368,15 @@ subdynrankview( const Kokkos::Experimental::DynRankView< D , P... > &src , Args.
     return metafcn::subview( src.rank() , src , args... );
   }
 
+//Wrapper to allow subview name
+template< class D , class ... P , class ...Args >
+KOKKOS_INLINE_FUNCTION
+Subdynrankview< ViewTraits<D******* , P...> , Args... > 
+subview( const Kokkos::Experimental::DynRankView< D , P... > &src , Args...args)
+  {
+    return subdynrankview( src , args... );
+  }
+
 } // namespace Experimental
 } // namespace Kokkos
 
@@ -1492,9 +1553,8 @@ void deep_copy
                   typename ViewTraits<DT,DP...>::value_type >::value
     , "deep_copy requires non-const type" );
 
-      printf(" In first deep_copy \n");
   Kokkos::Experimental::Impl::DynRankViewFill< DynRankView<DT,DP...> >( dst , value );
-//  Kokkos::Experimental::Impl::ViewFill< DynRankView<DT,DP...> >( dst , value ); //won't compile, defined for incompatible rank 8 view, no rank 8 operator for this view
+//  Kokkos::Experimental::Impl::ViewFill< DynRankView<DT,DP...> >( dst , value ); //won't compile, defined for incompatible rank 8 view, add rank 8 operator for this dynrankview?
 }
 
 /** \brief  Deep copy into a value in Host memory from a view.  */
@@ -1509,14 +1569,12 @@ void deep_copy
 {
   if ( src.rank() != 0 )
   {
-    printf("  ERROR: Non-rank-zero viewin deep_copy\n");
     Kokkos::abort("");
   }
 
   typedef ViewTraits<ST,SP...>               src_traits ;
   typedef typename src_traits::memory_space  src_memory_space ;
   Kokkos::Impl::DeepCopy< HostSpace , src_memory_space >( & dst , src.data() , sizeof(ST) );
-      printf(" In  2deep_copy \n");
 }
 
 //----------------------------------------------------------------------------
@@ -1629,7 +1687,6 @@ void deep_copy
       const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
 
       Kokkos::Impl::DeepCopy< dst_memory_space , src_memory_space >( dst.data() , src.data() , nbytes );
-      printf(" In deep_copy if \n");
     }
     else if ( std::is_same< typename ViewTraits<DT,DP...>::value_type ,
                             typename ViewTraits<ST,SP...>::non_const_value_type >::value &&
@@ -1671,16 +1728,13 @@ void deep_copy
       const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
 
       Kokkos::Impl::DeepCopy< dst_memory_space , src_memory_space >( dst.data() , src.data() , nbytes );
-      printf(" In deep_copy first elseif \n");
     }
     else if ( DstExecCanAccessSrc ) {
       // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
-      printf(" In deep_copy second elseif \n");
       Kokkos::Experimental::Impl::DynRankViewRemap< dst_type , src_type >( dst , src );
     }
     else if ( SrcExecCanAccessDst ) {
       // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
-      printf(" In deep_copy third elseif \n");
       Kokkos::Experimental::Impl::DynRankViewRemap< dst_type , src_type , src_execution_space >( dst , src );
     }
     else {
@@ -1866,7 +1920,6 @@ void resize( DynRankView<T,P...> & v ,
   drview_type v_resized( v.label(), n0, n1, n2, n3, n4, n5, n6 );
 
 //  Kokkos::Experimental::Impl::ViewRemap< view_type , view_type >( v_resized.ConstDownCast(), v.ConstDownCast() );
-  printf(" Calling DynRankViewRemap from resize\n");
   Kokkos::Experimental::Impl::DynRankViewRemap< drview_type , drview_type >( v_resized, v );
 
   v = v_resized ;
@@ -1910,6 +1963,7 @@ using Kokkos::Experimental::deep_copy ;
 using Kokkos::Experimental::create_mirror ;
 using Kokkos::Experimental::create_mirror_view ;
 using Kokkos::Experimental::subdynrankview ;
+using Kokkos::Experimental::subview ;
 using Kokkos::Experimental::resize ;
 using Kokkos::Experimental::realloc ;
 
