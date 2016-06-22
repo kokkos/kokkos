@@ -71,6 +71,7 @@ if [ "$MACHINE" = "sems" ]; then
 
 elif [ "$MACHINE" = "white" ]; then
     SKIP_HWLOC=True
+    export SLURM_TASKS_PER_NODE=32
 
     BASE_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>"
     IBM_MODULE_LIST="<COMPILER_NAME>/xl/c/<COMPILER_VERSION>"
