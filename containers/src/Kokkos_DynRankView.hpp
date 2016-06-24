@@ -340,7 +340,7 @@ class DynRankView : public ViewTraits< DataType , Properties ... >
 
 private: 
   template < class , class ... > friend class DynRankView ;
-  template < class , class ... > friend class View ;
+//  template < class , class ... > friend class Kokkos::Experimental::View ; //unnecessary now...
   template < class , class ... > friend class Impl::ViewMapping ;
 
 public: 
@@ -348,7 +348,7 @@ public:
   typedef typename Impl::DynRankViewDataTypeTraits< DataType , typename drvtraits::specialize >::type drv_data_type ; //use this to replace DataType*******
 
   //typedef View< DataType******* , Properties...> view_type ; 
-  typedef View< drv_data_type , Properties...> view_type ; 
+  typedef Kokkos::Experimental::View< drv_data_type , Properties...> view_type ; 
 //  using reference_type = typename view_type::reference_type; 
 
   //typedef ViewTraits< DataType******* , Properties ... > traits ;
