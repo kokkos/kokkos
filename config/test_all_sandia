@@ -14,6 +14,8 @@ if [[ "$HOSTNAME" =~ (white|ride).* ]]; then
     MACHINE=white
 elif [[ "$HOSTNAME" =~ .*bowman.* ]]; then
     MACHINE=bowman
+elif [[ "$HOSTNAME" =~ node.* ]]; then # Warning: very generic name
+    MACHINE=shepard
 elif [ ! -z "$SEMS_MODULEFILES_ROOT" ]; then
     MACHINE=sems
 else
@@ -104,6 +106,20 @@ elif [ "$MACHINE" = "bowman" ]; then
     )
 
     ARCH_FLAG="--arch=KNL"
+
+elif [ "$MACHINE" = "shepard" ]; then
+    source /etc/profile.d/modules.sh
+    SKIP_HWLOC=True
+    export SLURM_TASKS_PER_NODE=32
+
+    BASE_MODULE_LIST="<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
+
+    # Format: (compiler module-list build-list exe-name warning-flag)
+    COMPILERS=("intel/16.2.181 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+               "intel/17.0.042 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+    )
+
+    ARCH_FLAG="--arch=HSW"
 
 else
     echo "Unhandled machine $MACHINE" >&2
