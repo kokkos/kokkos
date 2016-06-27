@@ -715,16 +715,17 @@ public:
   typedef Kokkos::Experimental::DynRankView< T, device, Kokkos::MemoryUnmanaged > dView0_unmanaged ;
   typedef typename dView0::host_mirror_space host ;
 
+  typedef Kokkos::Experimental::View< T , device >        View0 ;
   typedef Kokkos::Experimental::View< T* , device >       View1 ;
   typedef Kokkos::Experimental::View< T******* , device > View7 ;
 
   TestDynViewAPI()
   {
-    run_test_mirror();
-    run_test();
-    run_test_scalar();
-    run_test_const();
     run_test_resize_realloc();
+    run_test_mirror();
+    run_test_scalar();
+    run_test();
+    run_test_const();
     run_test_subview();
     run_test_subview_strided();
     run_test_vector();
@@ -899,6 +900,14 @@ public:
     ASSERT_EQ( hx(), hy() );
     ASSERT_EQ( dx.rank() , hx.rank() );
     ASSERT_EQ( dy.rank() , hy.rank() );
+
+    View0 vx("vx");
+    Kokkos::deep_copy( vx , dx );
+    ASSERT_EQ( dx.getrank() , vx.getrank() );
+
+    dView0 dxx("dxx");
+    Kokkos::deep_copy( dxx , vx );
+    ASSERT_EQ( dxx.getrank() , vx.getrank() );
 
     View7 vcast = dx.ConstDownCast();
     ASSERT_EQ( dx.dimension_0() , vcast.dimension_0() );
@@ -1212,6 +1221,33 @@ public:
     ASSERT_TRUE( dx.ptr_on_device() == 0 );
     ASSERT_TRUE( dy.ptr_on_device() == 0 );
     ASSERT_TRUE( dz.ptr_on_device() == 0 );
+
+    // deep_copy from view to dynrankview
+    const int testdim = 4;
+    dView0 hdxx, dxx("dxx",testdim);
+    View1  hvxx, vxx("vxx",testdim);
+    hvxx = Kokkos::create_mirror_view(vxx); 
+    for (int i = 0; i < testdim; ++i)
+      { hvxx(i) = i; }
+    Kokkos::deep_copy(vxx,hvxx);
+    Kokkos::deep_copy(dxx,vxx);
+    hdxx = Kokkos::create_mirror_view(dxx);
+    Kokkos::deep_copy(hdxx,dxx);
+    for (int i = 0; i < testdim; ++i)
+      { ASSERT_EQ( hvxx(i) , hdxx(i) ); }
+
+    ASSERT_EQ( hdxx.getrank() , hvxx.getrank() );
+    ASSERT_EQ( hdxx.dimension_0() , testdim );
+    ASSERT_EQ( hdxx.dimension_0() , hvxx.dimension_0() );
+
+    // deep_copy from dynrankview to view
+    View1 hvdxx("hvdxx",testdim);
+    Kokkos::deep_copy(hvdxx , hdxx);
+    ASSERT_EQ( hdxx.getrank() , hvdxx.getrank() );
+    ASSERT_EQ( hvdxx.dimension_0() , testdim );
+    ASSERT_EQ( hdxx.dimension_0() , hvdxx.dimension_0() );
+    for (int i = 0; i < testdim; ++i)
+      { ASSERT_EQ( hvxx(i) , hvdxx(i) ); }
   }
 
   typedef T DataType ;

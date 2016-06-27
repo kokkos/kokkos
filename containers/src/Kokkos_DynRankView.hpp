@@ -531,6 +531,10 @@ public:
   KOKKOS_INLINE_FUNCTION
   constexpr unsigned rank() const { return m_rank; }
 
+  KOKKOS_INLINE_FUNCTION
+  constexpr unsigned getrank() const { return m_rank; } //needed for transition to common constexpr method in view and dynrankview to return rank
+
+
   //operators ()
   // Rank 0
   KOKKOS_INLINE_FUNCTION
@@ -1579,7 +1583,8 @@ void deep_copy
  *          same rank, same contiguous layout.
  */
 // Original working/tested version
-
+#define OLDDEEPCOPY 0
+#if OLDDEEPCOPY
 template< class DT , class ... DP , class ST , class ... SP >
 inline
 void deep_copy
@@ -1710,9 +1715,9 @@ void deep_copy
     }
   }
 }
-
+#else
 // New version - requires rank() in View
-/*
+
 template< class DstType , class SrcType >
 inline
 void deep_copy
@@ -1721,6 +1726,8 @@ void deep_copy
   , typename std::enable_if<(
     std::is_same< typename DstType::traits::specialize , void >::value &&
     std::is_same< typename SrcType::traits::specialize , void >::value
+    &&
+    ( Kokkos::Experimental::is_dyn_rank_view<DstType>::value || Kokkos::Experimental::is_dyn_rank_view<SrcType>::value)
   )>::type * = 0 )
 {
   static_assert(
@@ -1748,7 +1755,7 @@ void deep_copy
     // ...
 
     // If same type, equal layout, equal dimensions, equal span, and contiguous memory then can byte-wise copy
-    if ( src.rank() == 0 && dst.rank() == 0 )
+    if ( src.getrank() == 0 && dst.getrank() == 0 )
     { 
       typedef typename dst_type::value_type    value_type ;
       Kokkos::Impl::DeepCopy< dst_memory_space , src_memory_space >( dst.data() , src.data() , sizeof(value_type) ); 
@@ -1768,9 +1775,9 @@ void deep_copy
            )
            ||
            (
-             dst.rank() == 1
+             dst.getrank() == 1
              &&
-             src.rank() == 1
+             src.getrank() == 1
            )
          ) &&
          dst.span_is_contiguous() &&
@@ -1800,9 +1807,9 @@ void deep_copy
            )
            ||
            (
-             dst.rank() == 1
+             dst.getrank() == 1
              &&
-             src.rank() == 1
+             src.getrank() == 1
            )
          ) &&
          dst.span_is_contiguous() &&
@@ -1843,7 +1850,8 @@ void deep_copy
     }
   }
 }
-*/
+#endif 
+#undef OLDDDEPCOPY
 
 } //end Experimental
 } //end Kokkos

@@ -520,6 +520,11 @@ public:
 
   enum { Rank = map_type::Rank };
 
+  KOKKOS_INLINE_FUNCTION
+  static
+  constexpr unsigned getrank() { return map_type::Rank; }
+  //constexpr unsigned rank() { return map_type::Rank; }
+
   template< typename iType >
   KOKKOS_INLINE_FUNCTION constexpr
   typename std::enable_if< std::is_integral<iType>::value , size_t >::type
