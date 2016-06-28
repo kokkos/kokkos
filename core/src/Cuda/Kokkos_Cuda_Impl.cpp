@@ -191,7 +191,7 @@ namespace {
 
 class CudaInternalDevices {
 public:
-  enum { MAXIMUM_DEVICE_COUNT = 8 };
+  enum { MAXIMUM_DEVICE_COUNT = 64 };
   struct cudaDeviceProp  m_cudaProp[ MAXIMUM_DEVICE_COUNT ] ;
   int                    m_cudaDevCount ;
 
@@ -207,6 +207,9 @@ CudaInternalDevices::CudaInternalDevices()
 
   CUDA_SAFE_CALL (cudaGetDeviceCount( & m_cudaDevCount ) );
 
+  if(m_cudaDevCount > MAXIMUM_DEVICE_COUNT) {
+    Kokkos::abort("Sorry, you have more GPUs per node than we thought anybody would ever have. Please report this to github.com/kokkos/kokkos.");
+  }
   for ( int i = 0 ; i < m_cudaDevCount ; ++i ) {
     CUDA_SAFE_CALL( cudaGetDeviceProperties( m_cudaProp + i , i ) );
   }
