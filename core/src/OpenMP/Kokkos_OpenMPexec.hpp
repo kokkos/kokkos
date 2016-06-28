@@ -755,7 +755,11 @@ public:
 
   inline int team_size()   const { return m_team_size ; }
   inline int league_size() const { return m_league_size ; }
-  inline size_t scratch_size() const { return m_team_scratch_size + m_team_size*m_thread_scratch_size ; }
+  inline size_t scratch_size(int , int team_size_ = -1) const {
+    if(team_size_ < 0)
+      team_size_ = m_team_size;
+    return m_team_scratch_size + team_size_*m_thread_scratch_size ;
+  }
 
   /** \brief  Specify league size, request team size */
   TeamPolicyInternal( typename traits::execution_space &

@@ -51,6 +51,7 @@
 /* only compile this file if CUDA is enabled for Kokkos */
 #ifdef KOKKOS_HAVE_CUDA
 
+#include <Kokkos_Core.hpp>
 #include <Kokkos_Cuda.hpp>
 #include <Kokkos_CudaSpace.hpp>
 
@@ -824,16 +825,26 @@ print_records( std::ostream & s , const Kokkos::CudaHostPinnedSpace & space , bo
 
 namespace Kokkos {
 namespace {
-  __global__ void init_lock_array_kernel() {
+  __global__ void init_lock_array_kernel_atomic() {
     unsigned i = blockIdx.x*blockDim.x + threadIdx.x;
 
     if(i<CUDA_SPACE_ATOMIC_MASK+1)
-      kokkos_impl_cuda_atomic_lock_array[i] = 0;
+      kokkos_impl_cuda_lock_arrays.atomic[i] = 0;
+  }
+
+  __global__ void init_lock_array_kernel_scratch_threadid(int N) {
+    unsigned i = blockIdx.x*blockDim.x + threadIdx.x;
+
+    if(i<N) {
+      kokkos_impl_cuda_lock_arrays.scratch[i] = 0;
+      kokkos_impl_cuda_lock_arrays.threadid[i] = 0;
+    }
   }
 }
 
+
 namespace Impl {
-int* lock_array_cuda_space_ptr(bool deallocate) {
+int* atomic_lock_array_cuda_space_ptr(bool deallocate) {
   static int* ptr = NULL;
   if(deallocate) {
     cudaFree(ptr);
@@ -845,13 +856,60 @@ int* lock_array_cuda_space_ptr(bool deallocate) {
   return ptr;
 }
 
-void init_lock_array_cuda_space() {
-  int is_initialized = 0;
-  if(! is_initialized) {
-    int* lock_array_ptr = lock_array_cuda_space_ptr();
-    cudaMemcpyToSymbol( kokkos_impl_cuda_atomic_lock_array , & lock_array_ptr , sizeof(int*) );
-    init_lock_array_kernel<<<(CUDA_SPACE_ATOMIC_MASK+255)/256,256>>>();
+int* scratch_lock_array_cuda_space_ptr(bool deallocate) {
+  static int* ptr = NULL;
+  if(deallocate) {
+    cudaFree(ptr);
+    ptr = NULL;
   }
+
+  if(ptr==NULL && !deallocate)
+    cudaMalloc(&ptr,sizeof(int)*(Cuda::concurrency()));
+  return ptr;
+}
+
+int* threadid_lock_array_cuda_space_ptr(bool deallocate) {
+  static int* ptr = NULL;
+  if(deallocate) {
+    cudaFree(ptr);
+    ptr = NULL;
+  }
+
+  if(ptr==NULL && !deallocate)
+    cudaMalloc(&ptr,sizeof(int)*(Cuda::concurrency()));
+  return ptr;
+}
+
+void init_lock_arrays_cuda_space() {
+  static int is_initialized = 0;
+  if(! is_initialized) {
+    Kokkos::Impl::CudaLockArraysStruct locks;
+    locks.atomic = atomic_lock_array_cuda_space_ptr(false);
+    locks.scratch = scratch_lock_array_cuda_space_ptr(false);
+    locks.threadid = threadid_lock_array_cuda_space_ptr(false);
+    cudaMemcpyToSymbol( kokkos_impl_cuda_lock_arrays , & locks , sizeof(CudaLockArraysStruct) );
+    init_lock_array_kernel_atomic<<<(CUDA_SPACE_ATOMIC_MASK+255)/256,256>>>();
+    init_lock_array_kernel_scratch_threadid<<<(Kokkos::Cuda::concurrency()+255)/256,256>>>(Kokkos::Cuda::concurrency());
+  }
+}
+
+void* cuda_resize_scratch_space(size_t bytes, bool force_shrink) {
+  static void* ptr = NULL;
+  static size_t current_size = 0;
+  if(current_size == 0) {
+    current_size = bytes;
+    ptr = Kokkos::kokkos_malloc<Kokkos::CudaSpace>("CudaSpace::ScratchMemory",current_size);
+  }
+  if(bytes > current_size) {
+    current_size = bytes;
+    ptr = Kokkos::kokkos_realloc<Kokkos::CudaSpace>(ptr,current_size);
+  }
+  if((bytes < current_size) && (force_shrink)) {
+    current_size = bytes;
+    Kokkos::kokkos_free<Kokkos::CudaSpace>(ptr);
+    ptr = Kokkos::kokkos_malloc<Kokkos::CudaSpace>("CudaSpace::ScratchMemory",current_size);
+  }
+  return ptr;
 }
 
 }

@@ -420,11 +420,9 @@ public:
 
   TeamPolicyInternal( int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 );
 
-  template<class MemorySpace>
-  TeamPolicyInternal( int league_size_request , int team_size_request );
+/*  TeamPolicyInternal( int league_size_request , int team_size_request );
 
-  template<class MemorySpace>
-  TeamPolicyInternal( int league_size_request , const Kokkos::AUTO_t & );
+  TeamPolicyInternal( int league_size_request , const Kokkos::AUTO_t & );*/
 
   /** \brief  The actual league size (number of teams) of the policy.
    *
@@ -565,13 +563,11 @@ public:
   TeamPolicy( int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 )
     : internal_policy(league_size_request,Kokkos::AUTO(), vector_length_request) {}
 
-  template<class MemorySpace>
-  TeamPolicy( int league_size_request , int team_size_request  )
+/*  TeamPolicy( int league_size_request , int team_size_request  )
     : internal_policy(league_size_request,team_size_request) {}
 
-  template<class MemorySpace>
   TeamPolicy( int league_size_request , const Kokkos::AUTO_t &  )
-    : internal_policy(league_size_request,Kokkos::AUTO()) {}
+    : internal_policy(league_size_request,Kokkos::AUTO()) {}*/
 
 private:
   TeamPolicy(const internal_policy& p):internal_policy(p) {}

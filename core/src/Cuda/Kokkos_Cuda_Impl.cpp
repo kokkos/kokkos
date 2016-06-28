@@ -71,7 +71,7 @@ __device__ __constant__
 unsigned long kokkos_impl_cuda_constant_memory_buffer[ Kokkos::Impl::CudaTraits::ConstantMemoryUsage / sizeof(unsigned long) ] ;
 
 __device__ __constant__
-int* kokkos_impl_cuda_atomic_lock_array ;
+Kokkos::Impl::CudaLockArraysStruct kokkos_impl_cuda_lock_arrays ;
 
 #endif
 
@@ -527,11 +527,14 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
   cudaThreadSetCacheConfig(cudaFuncCachePreferShared);
 
   // Init the array for used for arbitrarily sized atomics
-  Impl::init_lock_array_cuda_space();
+  Impl::init_lock_arrays_cuda_space();
 
   #ifdef KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE
-  int* lock_array_ptr = lock_array_cuda_space_ptr();
-  cudaMemcpyToSymbol( kokkos_impl_cuda_atomic_lock_array , & lock_array_ptr , sizeof(int*) );
+  Kokkos::Impl::CudaLockArraysStruct locks;
+  locks.atomic = atomic_lock_array_cuda_space_ptr(false);
+  locks.scratch = scratch_lock_array_cuda_space_ptr(false);
+  locks.threadid = threadid_lock_array_cuda_space_ptr(false);
+  cudaMemcpyToSymbol( kokkos_impl_cuda_lock_arrays , & locks , sizeof(CudaLockArraysStruct) );
   #endif
 }
 
@@ -647,7 +650,10 @@ void CudaInternal::finalize()
 {
   if ( 0 != m_scratchSpace || 0 != m_scratchFlags ) {
 
-    lock_array_cuda_space_ptr(true);
+    atomic_lock_array_cuda_space_ptr(false);
+    scratch_lock_array_cuda_space_ptr(false);
+    threadid_lock_array_cuda_space_ptr(false);
+
     if ( m_stream ) {
       for ( size_type i = 1 ; i < m_streamCount ; ++i ) {
         cudaStreamDestroy( m_stream[i] );

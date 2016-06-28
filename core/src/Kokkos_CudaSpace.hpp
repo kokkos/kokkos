@@ -137,7 +137,7 @@ namespace Impl {
 /// where the hash value is derived from the address of the
 /// object for which an atomic operation is performed.
 /// This function initializes the locks to zero (unset).
-void init_lock_array_cuda_space();
+void init_lock_arrays_cuda_space();
 
 /// \brief Retrieve the pointer to the lock array for arbitrary size atomics.
 ///
@@ -146,7 +146,23 @@ void init_lock_array_cuda_space();
 /// object for which an atomic operation is performed.
 /// This function retrieves the lock array pointer.
 /// If the array is not yet allocated it will do so.
-int* lock_array_cuda_space_ptr(bool deallocate = false);
+int* atomic_lock_array_cuda_space_ptr(bool deallocate = false);
+
+/// \brief Retrieve the pointer to the scratch array for team and thread private global memory.
+///
+/// Team and Thread private scratch allocations in
+/// global memory are aquired via locks.
+/// This function retrieves the lock array pointer.
+/// If the array is not yet allocated it will do so.
+int* scratch_lock_array_cuda_space_ptr(bool deallocate = false);
+
+/// \brief Retrieve the pointer to the scratch array for unique identifiers.
+///
+/// Unique identifiers in the range 0-Cuda::concurrency
+/// are provided via locks.
+/// This function retrieves the lock array pointer.
+/// If the array is not yet allocated it will do so.
+int* threadid_lock_array_cuda_space_ptr(bool deallocate = false);
 }
 } // namespace Kokkos
 
