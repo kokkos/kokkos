@@ -592,13 +592,13 @@ public:
 
       const size_t team_reduce_size = Policy::member_type::team_reduce_size();
 
-      OpenMPexec::resize_scratch( 0 , team_reduce_size + m_shmem_size );
+      OpenMPexec::resize_scratch( 0 , team_reduce_size + m_shmem_size + m_policy.scratch_size(1));
 
 #pragma omp parallel
       {
         ParallelFor::template exec_team< WorkTag, typename Policy::schedule_type::type>
           ( m_functor
-          , Member( * OpenMPexec::get_thread_omp(), m_policy, m_shmem_size) );
+          , Member( * OpenMPexec::get_thread_omp(), m_policy, m_shmem_size, m_policy.scratch_size(1)) );
       }
 /* END #pragma omp parallel */
     }
@@ -720,7 +720,7 @@ public:
     , m_policy(  arg_policy )
     , m_reducer( InvalidType() )
     , m_result_ptr( arg_result.ptr_on_device() )
-    , m_shmem_size( arg_policy.scratch_size(0) + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
+    , m_shmem_size( arg_policy.scratch_size(0) + arg_policy.scratch_size(1) + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
     {}
 
   inline
@@ -731,7 +731,7 @@ public:
   , m_policy(  arg_policy )
   , m_reducer( reducer )
   , m_result_ptr(  reducer.result_view().data() )
-  , m_shmem_size( arg_policy.scratch_size(0) + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
+  , m_shmem_size( arg_policy.scratch_size(0) + arg_policy.scratch_size(1) + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
   {
   /*static_assert( std::is_same< typename ViewType::memory_space
                           , Kokkos::HostSpace >::value

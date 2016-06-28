@@ -330,7 +330,7 @@ public:
 
   Impl::OpenMPexec    & m_exec ;
   scratch_memory_space  m_team_shared ;
-  int                   m_team_shmem ;
+  int                   m_team_scratch_size[2] ;
   int                   m_team_base_rev ;
   int                   m_team_rank_rev ;
   int                   m_team_rank ;
@@ -568,11 +568,12 @@ public:
   inline
   OpenMPexecTeamMember( Impl::OpenMPexec & exec
                       , const TeamPolicyInternal< OpenMP, Properties ...> & team
-                      , const int shmem_size
+                      , const int shmem_size_L1
+                      , const int shmem_size_L2
                       )
     : m_exec( exec )
     , m_team_shared(0,0)
-    , m_team_shmem( shmem_size )
+    , m_team_scratch_size{ shmem_size_L1 , shmem_size_L2 }
     , m_team_base_rev(0)
     , m_team_rank_rev(0)
     , m_team_rank(0)
@@ -611,7 +612,9 @@ public:
         m_team_rank      = m_team_size - ( m_team_rank_rev + 1 );
         m_league_end     = league_iter_end ;
         m_league_rank    = league_iter_begin ;
-        new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_shmem );
+        new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_scratch_size[0] ,
+                                             ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE + m_team_scratch_size[0],
+                                               m_team_scratch_size[1]);
       }
 
       if ( (m_team_rank_rev == 0) && (m_invalid_thread == 0) ) {
@@ -629,7 +632,9 @@ public:
     {
       if ( m_league_rank < m_league_end ) {
         team_barrier();
-        new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_shmem );
+        new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_scratch_size[0] ,
+                                             ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE + m_team_scratch_size[0],
+                                               m_team_scratch_size[1]);
       }
       m_league_rank++;
     }
@@ -664,7 +669,9 @@ public:
 
     if ( m_league_rank < m_league_chunk_end ) {
       team_barrier();
-      new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_shmem );
+      new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_scratch_size[0] ,
+                                           ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE + m_team_scratch_size[0],
+                                             m_team_scratch_size[1]);
     }
     m_league_rank++;
   }
