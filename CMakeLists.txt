@@ -1,4 +1,3 @@
-
 IF(COMMAND TRIBITS_PACKAGE_DECL)
   SET(KOKKOS_HAS_TRILINOS ON CACHE BOOL "")
 ELSE()
@@ -7,8 +6,21 @@ ENDIF()
 
 IF(NOT KOKKOS_HAS_TRILINOS)
   CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11 FATAL_ERROR)
+  # hack in openmp
+  IF (Kokkos_ENABLE_OpenMP)
+    FIND_PACKAGE (OpenMP REQUIRED)
+    IF (OPENMP_FOUND)
+      SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+      SET (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_C_FLAGS}")
+    ENDIF ()
+  ENDIF (Kokkos_ENABLE_OpenMP)
+  IF (Kokkos_ENABLE_CUDA)
+    SET (CMAKE_CXX_COMPILER "${CMAKE_SOURCE_DIR}/bin/nvcc_wrapper")
+  ENDIF ()
   INCLUDE(cmake/tribits.cmake)
 ENDIF()
+
+SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 #
 # A) Forward delcare the package so that certain options are also defined for
@@ -78,7 +90,7 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
   "Enable C++11 support in Kokkos."
   "${${PROJECT_NAME}_ENABLE_CXX11}"
   )
-  
+
 TRIBITS_ADD_OPTION_AND_DEFINE(
   Kokkos_ENABLE_HWLOC
   KOKKOS_HAVE_HWLOC
@@ -144,4 +156,3 @@ TRIBITS_EXCLUDE_FILES(
   )
 
 TRIBITS_PACKAGE_POSTPROCESS()
-
