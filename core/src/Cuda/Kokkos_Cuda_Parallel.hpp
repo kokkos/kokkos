@@ -99,13 +99,13 @@ public:
 
   __device__ inline
   const execution_space::scratch_memory_space & team_shmem() const
-    { return m_team_shared.set_team_thread_mode(1,0) ; }
+    { return m_team_shared.set_team_thread_mode(0,1,0) ; }
   __device__ inline
-  const execution_space::scratch_memory_space & team_scratch(int) const
-    { return m_team_shared.set_team_thread_mode(1,0) ; }
+  const execution_space::scratch_memory_space & team_scratch(const int& level) const
+    { return m_team_shared.set_team_thread_mode(level,1,0) ; }
   __device__ inline
-  const execution_space::scratch_memory_space & thread_scratch(int) const
-    { return m_team_shared.set_team_thread_mode(team_size(),team_rank()) ; }
+  const execution_space::scratch_memory_space & thread_scratch(const int& level) const
+    { return m_team_shared.set_team_thread_mode(level,team_size(),team_rank()) ; }
 
   __device__ inline int league_rank() const { return m_league_rank ; }
   __device__ inline int league_size() const { return m_league_size ; }
@@ -216,11 +216,11 @@ public:
 #else
 
   const execution_space::scratch_memory_space & team_shmem() const
-    { return m_team_shared.set_team_thread_mode(1,0) ; }
-  const execution_space::scratch_memory_space & team_scratch(int) const
-    { return m_team_shared.set_team_thread_mode(1,0) ; }
-  const execution_space::scratch_memory_space & thread_scratch(int) const
-    { return m_team_shared.set_team_thread_mode(team_size(),team_rank()) ; }
+    { return m_team_shared.set_team_thread_mode(0, 1,0) ; }
+  const execution_space::scratch_memory_space & team_scratch(const int& level) const
+    { return m_team_shared.set_team_thread_mode(level,1,0) ; }
+  const execution_space::scratch_memory_space & thread_scratch(const int& level) const
+    { return m_team_shared.set_team_thread_mode(level,team_size(),team_rank()) ; }
 
   int league_rank() const {return 0;}
   int league_size() const {return 1;}
@@ -338,7 +338,7 @@ public:
   inline int vector_length()   const { return m_vector_length ; }
   inline int team_size()   const { return m_team_size ; }
   inline int league_size() const { return m_league_size ; }
-  inline size_t scratch_size(int level, int team_size_ = -1) const {
+  inline int scratch_size(int level, int team_size_ = -1) const {
     if(team_size_<0) team_size_ = m_team_size;
     return m_team_scratch_size[level] + team_size_*m_thread_scratch_size[level];
   }
@@ -353,8 +353,8 @@ public:
     : m_league_size( 0 )
     , m_team_size( 0 )
     , m_vector_length( 0 )
-    , m_team_scratch_size ( {0,0} )
-    , m_thread_scratch_size ( {0,0} )
+    , m_team_scratch_size {0,0}
+    , m_thread_scratch_size {0,0}
     , m_chunk_size ( 32 ) 
    {}
 
@@ -366,8 +366,8 @@ public:
     : m_league_size( league_size_ )
     , m_team_size( team_size_request )
     , m_vector_length( vector_length_request )
-    , m_team_scratch_size ( {0,0} )
-    , m_thread_scratch_size ( {0,0} )
+    , m_team_scratch_size {0,0}
+    , m_thread_scratch_size {0,0}
     , m_chunk_size ( 32 )
     {
       // Allow only power-of-two vector_length
@@ -393,8 +393,8 @@ public:
     : m_league_size( league_size_ )
     , m_team_size( -1 )
     , m_vector_length( vector_length_request )
-    , m_team_scratch_size ( {0,0} )
-    , m_thread_scratch_size ( {0,0} )
+    , m_team_scratch_size {0,0}
+    , m_thread_scratch_size {0,0}
     , m_chunk_size ( 32 )
     {
       // Allow only power-of-two vector_length
@@ -413,8 +413,8 @@ public:
     : m_league_size( league_size_ )
     , m_team_size( team_size_request )
     , m_vector_length ( vector_length_request )
-    , m_team_scratch_size ( {0,0} )
-    , m_thread_scratch_size ( {0,0} )
+    , m_team_scratch_size {0,0}
+    , m_thread_scratch_size {0,0}
     , m_chunk_size ( 32 )
     {
       // Allow only power-of-two vector_length
@@ -438,8 +438,8 @@ public:
     : m_league_size( league_size_ )
     , m_team_size( -1 )
     , m_vector_length ( vector_length_request )
-    , m_team_scratch_size ( {0,0} )
-    , m_thread_scratch_size ( {0,0} )
+    , m_team_scratch_size {0,0}
+    , m_thread_scratch_size {0,0}
     , m_chunk_size ( 32 )
     {
       // Allow only power-of-two vector_length
@@ -646,9 +646,9 @@ public:
         Kokkos::Impl::cuda_get_opt_block_size< ParallelFor >( arg_functor , arg_policy.vector_length(), arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) / arg_policy.vector_length() )
     , m_vector_size( arg_policy.vector_length() )
     , m_shmem_begin( sizeof(double) * ( m_team_size + 2 ) )
-    , m_shmem_size( arg_policy.scratch_size(1,m_team_size) + FunctorTeamShmemSize< FunctorType >::value( m_functor , m_team_size ) )
-    , m_scratch_ptr( {NULL,NULL} )
-    , m_scratch_size( {arg_policy.scratch_size(1,m_team_size),arg_policy.scratch_size(2,m_team_size)} )
+    , m_shmem_size( arg_policy.scratch_size(0,m_team_size) + FunctorTeamShmemSize< FunctorType >::value( m_functor , m_team_size ) )
+    , m_scratch_ptr{NULL,NULL}
+    , m_scratch_size{arg_policy.scratch_size(0,m_team_size),arg_policy.scratch_size(1,m_team_size)}
     {
       // Functor's reduce memory, team scan memory, and team shared memory depend upon team size.
       m_scratch_ptr[1] = cuda_resize_scratch_space(m_scratch_size[1]*(Cuda::concurrency()/(m_team_size*m_vector_size)));
@@ -1096,8 +1096,8 @@ public:
   , m_team_begin( 0 )
   , m_shmem_begin( 0 )
   , m_shmem_size( 0 )
-  , m_scratch_ptr( {NULL,NULL})
-  , m_scratch_size( {0,0} )
+  , m_scratch_ptr{NULL,NULL}
+  , m_scratch_size{0,0}
   , m_league_size( arg_policy.league_size() )
   , m_team_size( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
       Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( arg_functor , arg_policy.vector_length(),
@@ -1151,8 +1151,8 @@ public:
   , m_team_begin( 0 )
   , m_shmem_begin( 0 )
   , m_shmem_size( 0 )
-  , m_scratch_ptr( {NULL,NULL})
-  , m_scratch_size( {0,0} )
+  , m_scratch_ptr{NULL,NULL}
+  , m_scratch_size{0,0}
   , m_league_size( arg_policy.league_size() )
   , m_team_size( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
       Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( arg_functor , arg_policy.vector_length(),

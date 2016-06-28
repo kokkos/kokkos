@@ -74,6 +74,7 @@ private:
 
   mutable int m_multiplier;
   mutable int m_offset;
+  mutable int m_default_level;
 
   ScratchMemorySpace();
   ScratchMemorySpace & operator = ( const ScratchMemorySpace & );
@@ -98,7 +99,9 @@ public:
 
   template< typename IntType >
   KOKKOS_INLINE_FUNCTION
-  void* get_shmem (const IntType& size, const int level = 0) const {
+  void* get_shmem (const IntType& size, int level = -1) const {
+    if(level == -1)
+      level = m_default_level;
     if(level == 0) {
       void* tmp = m_iter_L0 + m_offset * align (size);
       if (m_end_L0 < (m_iter_L0 += align (size) * m_multiplier)) {
@@ -142,10 +145,12 @@ public:
     , m_end_L1(  m_iter_L1 + size_L1 )
     , m_multiplier( 1 )
     , m_offset( 0 )
+    , m_default_level( 0 )
     {}
 
   KOKKOS_INLINE_FUNCTION
-  const ScratchMemorySpace& set_team_thread_mode(const int& multiplier, const int& offset) const {
+  const ScratchMemorySpace& set_team_thread_mode(const int& level, const int& multiplier, const int& offset) const {
+    m_default_level = level;
     m_multiplier = multiplier;
     m_offset = offset;
     return *this;
