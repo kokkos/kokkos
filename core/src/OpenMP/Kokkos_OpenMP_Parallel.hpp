@@ -681,7 +681,7 @@ public:
 
         ParallelReduce::template exec_team< WorkTag >
           ( m_functor
-          , Member( exec , m_policy , m_shmem_size )
+          , Member( exec , m_policy , m_shmem_size, m_policy.scratch_size(1) )
           , ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , exec.scratch_reduce() ) );
       }
 /* END #pragma omp parallel */

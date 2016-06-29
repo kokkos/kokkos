@@ -1097,13 +1097,13 @@ public:
   , m_shmem_begin( 0 )
   , m_shmem_size( 0 )
   , m_scratch_ptr{NULL,NULL}
-  , m_scratch_size{0,0}
   , m_league_size( arg_policy.league_size() )
   , m_team_size( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
       Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( arg_functor , arg_policy.vector_length(),
                                                                arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) /
       arg_policy.vector_length() )
   , m_vector_size( arg_policy.vector_length() )
+  , m_scratch_size{arg_policy.scratch_size(0,m_team_size),arg_policy.scratch_size(1,m_team_size)}
   {
     // Return Init value if the number of worksets is zero
     if( arg_policy.league_size() == 0) {
@@ -1113,7 +1113,8 @@ public:
 
     m_team_begin = UseShflReduction?0:cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( arg_functor , m_team_size );
     m_shmem_begin = sizeof(double) * ( m_team_size + 2 );
-    m_shmem_size = arg_policy.scratch_size(1,m_team_size) + FunctorTeamShmemSize< FunctorType >::value( arg_functor , m_team_size );
+    m_shmem_size = arg_policy.scratch_size(0,m_team_size) + FunctorTeamShmemSize< FunctorType >::value( arg_functor , m_team_size );
+    m_scratch_ptr[1] = cuda_resize_scratch_space(m_scratch_size[1]*(Cuda::concurrency()/(m_team_size*m_vector_size)));
 
     // The global parallel_reduce does not support vector_length other than 1 at the moment
     if( (arg_policy.vector_length() > 1) && !UseShflReduction )
@@ -1126,9 +1127,12 @@ public:
 
     const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size ;
 
-    if ( (! Kokkos::Impl::is_integral_power_of_two( m_team_size )  && !UseShflReduction ) ||
-         CudaTraits::SharedMemoryCapacity < shmem_size_total ) {
+    if (! Kokkos::Impl::is_integral_power_of_two( m_team_size )  && !UseShflReduction ) {
       Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > bad team size"));
+    }
+
+    if ( CudaTraits::SharedMemoryCapacity < shmem_size_total ) {
+      Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too much L0 scratch memory"));
     }
 
     if ( m_team_size >
