@@ -142,6 +142,13 @@
 #endif
 #endif /* #if defined( KOKKOS_HAVE_CUDA ) && defined( __CUDACC__ ) */
 
+
+#if defined(KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA)
+   #if (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA && (CUDA_VERSION < 8000))
+      #define KOKKOS_IMPL_NEED_FUNCTOR_WRAPPER
+   #endif
+#endif
+
 /*--------------------------------------------------------------------------*/
 /* Language info: C++, CUDA, OPENMP */
 

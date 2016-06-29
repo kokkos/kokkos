@@ -225,10 +225,11 @@ namespace Impl {
   template< class PolicyType, class FunctorType, class ReturnType >
   struct ParallelReduceAdaptor {
     typedef Impl::ParallelReduceReturnValue<void,ReturnType,FunctorType> return_value_adapter;
+    #ifdef KOKKOS_IMPL_NEED_FUNCTOR_WRAPPER
     typedef Impl::ParallelReduceFunctorType<FunctorType,PolicyType,
                                             typename return_value_adapter::value_type,
                                             typename PolicyType::execution_space> functor_adaptor;
-
+    #endif
     static inline
     void execute(const std::string& label,
         const PolicyType& policy,
@@ -242,10 +243,17 @@ namespace Impl {
           #endif
 
           Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+          #ifdef KOKKOS_IMPL_NEED_FUNCTOR_WRAPPER
           Impl::ParallelReduce<typename functor_adaptor::functor_type, PolicyType, typename return_value_adapter::reducer_type >
              closure(functor_adaptor::functor(functor),
                      policy,
                      return_value_adapter::return_value(return_value,functor));
+          #else
+          Impl::ParallelReduce<FunctorType, PolicyType, typename return_value_adapter::reducer_type >
+             closure(functor,
+                     policy,
+                     return_value_adapter::return_value(return_value,functor));
+          #endif
           Kokkos::Impl::shared_allocation_tracking_release_and_enable();
           closure.execute();
 
