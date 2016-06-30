@@ -93,7 +93,7 @@ T atomic_fetch_add( volatile T * const dest ,
     assume.i = oldval.i ;
     newval.t = assume.t + val ;
     oldval.i = atomicCAS( (int*)dest , assume.i , newval.i );
-  } while ( assumed.i != oldval.i );
+  } while ( assume.i != oldval.i );
 
   return oldval.t ;
 }
