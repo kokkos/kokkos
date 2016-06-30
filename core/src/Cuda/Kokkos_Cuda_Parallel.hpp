@@ -807,7 +807,7 @@ public:
 
      max_active_thread = (max_active_thread == 0)?blockDim.y:max_active_thread;
 
-     if(Impl::cuda_inter_block_reduction<ReducerTypeFwd,ValueJoin >
+     if(Impl::cuda_inter_block_reduction<ReducerTypeFwd,ValueJoin,WorkTag>
             (value,ValueJoin(ReducerConditional::select(m_functor , m_reducer)),m_scratch_space,result,m_scratch_flags,max_active_thread)) {
        const unsigned id = threadIdx.y*blockDim.x + threadIdx.x;
        if(id==0) {
@@ -1040,7 +1040,7 @@ public:
 
     pointer_type const result = (pointer_type) (m_unified_space ? m_unified_space : m_scratch_space) ;
 
-    if(Impl::cuda_inter_block_reduction<FunctorType,ValueJoin >
+    if(Impl::cuda_inter_block_reduction<FunctorType,ValueJoin,WorkTag>
            (value,ValueJoin(ReducerConditional::select(m_functor , m_reducer)),m_scratch_space,result,m_scratch_flags,blockDim.y)) {
       const unsigned id = threadIdx.y*blockDim.x + threadIdx.x;
       if(id==0) {
@@ -1862,11 +1862,22 @@ namespace Impl {
     enum {value = true};
   };
 
+  template< class FunctorType, class Enable = void>
+    struct ReduceFunctorHasShmemSize {
+      enum {value = false};
+    };
+
+    template< class FunctorType>
+    struct ReduceFunctorHasShmemSize<FunctorType, typename Impl::enable_if< 0 < sizeof( & FunctorType::team_shmem_size ) >::type > {
+      enum {value = true};
+    };
+
   template< class FunctorType, bool Enable =
       ( FunctorDeclaresValueType<FunctorType,void>::value) ||
       ( ReduceFunctorHasInit<FunctorType>::value  ) ||
       ( ReduceFunctorHasJoin<FunctorType>::value  ) ||
-      ( ReduceFunctorHasFinal<FunctorType>::value )
+      ( ReduceFunctorHasFinal<FunctorType>::value ) ||
+      ( ReduceFunctorHasShmemSize<FunctorType>::value )
       >
   struct IsNonTrivialReduceFunctor {
     enum {value = false};
@@ -1889,9 +1900,9 @@ namespace Impl {
 
   template< class FunctorTypeIn, class ExecPolicy, class ValueType>
   struct ParallelReduceFunctorType<FunctorTypeIn,ExecPolicy,ValueType,Cuda> {
+
     enum {FunctorHasValueType = IsNonTrivialReduceFunctor<FunctorTypeIn>::value };
     typedef typename Kokkos::Impl::if_c<FunctorHasValueType, FunctorTypeIn, Impl::CudaFunctorAdapter<FunctorTypeIn,ExecPolicy,ValueType> >::type functor_type;
-
     static functor_type functor(const FunctorTypeIn& functor_in) {
       return Impl::if_c<FunctorHasValueType,FunctorTypeIn,functor_type>::select(functor_in,functor_type(functor_in));
     }
