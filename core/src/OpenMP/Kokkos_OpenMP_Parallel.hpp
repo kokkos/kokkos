@@ -598,7 +598,7 @@ public:
       {
         ParallelFor::template exec_team< WorkTag, typename Policy::schedule_type::type>
           ( m_functor
-          , Member( * OpenMPexec::get_thread_omp(), m_policy, m_shmem_size, m_policy.scratch_size(1)) );
+          , Member( * OpenMPexec::get_thread_omp(), m_policy, m_shmem_size, 0) );
       }
 /* END #pragma omp parallel */
     }
@@ -608,7 +608,7 @@ public:
                const Policy      & arg_policy )
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
-    , m_shmem_size( arg_policy.scratch_size(0) + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
+    , m_shmem_size( arg_policy.scratch_size(0) + arg_policy.scratch_size(1) + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
     {}
 };
 
@@ -681,7 +681,7 @@ public:
 
         ParallelReduce::template exec_team< WorkTag >
           ( m_functor
-          , Member( exec , m_policy , m_shmem_size, m_policy.scratch_size(1) )
+          , Member( exec , m_policy , m_shmem_size, 0 )
           , ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , exec.scratch_reduce() ) );
       }
 /* END #pragma omp parallel */

@@ -823,150 +823,161 @@ struct Functor2 {
   }
 };
 
-
-template<class ... Args>
-void CallParallelReduce(Args... args) {
-  Kokkos::parallel_reduce(args...);
-}
-
-template<class ... Args>
-void AddReturnArgument(Args... args) {
-  Kokkos::View<double,Kokkos::HostSpace> result_view("ResultView");
-  double expected_result = 1000.0*999.0/2.0;
-
-  double value = 0;
-  Kokkos::parallel_reduce(args...,value);
-  ASSERT_EQ(expected_result,value);
-
-  result_view() = 0;
-  CallParallelReduce(args...,result_view);
-  ASSERT_EQ(expected_result,result_view());
-
-  value = 0;
-  CallParallelReduce(args...,Kokkos::View<double,Kokkos::HostSpace,Kokkos::MemoryTraits<Kokkos::Unmanaged>>(&value));
-  ASSERT_EQ(expected_result,value);
-
-  result_view() = 0;
-  const Kokkos::View<double,Kokkos::HostSpace,Kokkos::MemoryTraits<Kokkos::Unmanaged>> result_view_const_um = result_view;
-  CallParallelReduce(args...,result_view_const_um);
-  ASSERT_EQ(expected_result,result_view_const_um());
-
-  value = 0;
-  CallParallelReduce(args...,AddPlus<double>(value));
-  if(Kokkos::DefaultExecutionSpace::concurrency() > 1)
-    ASSERT_TRUE(expected_result<value);
-  else
-    ASSERT_EQ(expected_result,value);
-
-  value = 0;
-  AddPlus<double> add(value);
-  CallParallelReduce(args...,add);
-  if(Kokkos::DefaultExecutionSpace::concurrency() > 1)
-    ASSERT_TRUE(expected_result<value);
-  else
-    ASSERT_EQ(expected_result,value);
-}
-
-
-template<class ... Args>
-void AddLambdaRange(Args... args) {
-  AddReturnArgument(args...,  KOKKOS_LAMBDA (const int&i , double& lsum) {
-    lsum += i;
-  });
-}
-
-template<class ... Args>
-void AddLambdaTeam(Args... args) {
-  AddReturnArgument(args..., KOKKOS_LAMBDA (const Kokkos::TeamPolicy<>::member_type& team, double& update) {
-    update+=1.0/team.team_size()*team.league_rank();
-  });
-}
-
-template<int ISTEAM, class ... Args>
-void AddFunctor(Args... args) {
-  Kokkos::View<double> result_view("FunctorView");
-  auto h_r = Kokkos::create_mirror_view(result_view);
-  FunctorScalar<ISTEAM> functor(result_view);
-  double expected_result = 1000.0*999.0/2.0;
-
-  AddReturnArgument(args..., functor);
-  AddReturnArgument(args..., FunctorScalar<ISTEAM>(result_view));
-  AddReturnArgument(args..., FunctorScalarInit<ISTEAM>(result_view));
-  AddReturnArgument(args..., FunctorScalarJoin<ISTEAM>(result_view));
-  AddReturnArgument(args..., FunctorScalarJoinInit<ISTEAM>(result_view));
-
-  h_r() = 0;
-  Kokkos::deep_copy(result_view,h_r);
-  CallParallelReduce(args..., FunctorScalarFinal<ISTEAM>(result_view));
-  Kokkos::deep_copy(h_r,result_view);
-  ASSERT_EQ(expected_result,h_r());
-
-  h_r() = 0;
-  Kokkos::deep_copy(result_view,h_r);
-  CallParallelReduce(args..., FunctorScalarJoinFinal<ISTEAM>(result_view));
-  Kokkos::deep_copy(h_r,result_view);
-  ASSERT_EQ(expected_result,h_r());
-
-  h_r() = 0;
-  Kokkos::deep_copy(result_view,h_r);
-  CallParallelReduce(args..., FunctorScalarJoinFinalInit<ISTEAM>(result_view));
-  Kokkos::deep_copy(h_r,result_view);
-  ASSERT_EQ(expected_result,h_r());
-}
-
-template<class ... Args>
-void AddFunctorLambdaRange(Args... args) {
-  AddFunctor<0,Args...>(args...);
-  #ifdef  KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA
-  AddLambdaRange(args...);
-  #endif
-}
-
-template<class ... Args>
-void AddFunctorLambdaTeam(Args... args) {
-  AddFunctor<1,Args...>(args...);
-  #ifdef  KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA
-  AddLambdaTeam(args...);
-  #endif
-}
-
-template<class ... Args>
-void AddPolicy(Args... args) {
-  int N = 1000;
-  Kokkos::RangePolicy<> policy(0,N);
-
-  AddFunctorLambdaRange(args...,1000);
-  AddFunctorLambdaRange(args...,N);
-  AddFunctorLambdaRange(args...,policy);
-  AddFunctorLambdaRange(args...,Kokkos::RangePolicy<>(0,N));
-  AddFunctorLambdaRange(args...,Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic> >(0,N));
-  AddFunctorLambdaRange(args...,Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Static> >(0,N).set_chunk_size(10));
-  AddFunctorLambdaRange(args...,Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic> >(0,N).set_chunk_size(10));
-
-  AddFunctorLambdaTeam(args...,Kokkos::TeamPolicy<>(N,Kokkos::AUTO));
-  AddFunctorLambdaTeam(args...,Kokkos::TeamPolicy<Kokkos::Schedule<Kokkos::Dynamic> >(N,Kokkos::AUTO));
-  AddFunctorLambdaTeam(args...,Kokkos::TeamPolicy<Kokkos::Schedule<Kokkos::Static> >(N,Kokkos::AUTO).set_chunk_size(10));
-  AddFunctorLambdaTeam(args...,Kokkos::TeamPolicy<Kokkos::Schedule<Kokkos::Dynamic> >(N,Kokkos::AUTO).set_chunk_size(10));
-}
-
-
-inline void AddLabel() {
-  std::string s("Std::String");
-  AddPolicy();
-  AddPolicy("Char Constant");
-  AddPolicy(s.c_str());
-  AddPolicy(s);
-}
-
 }
 }
 
-namespace {
+namespace Test {
 
-template<class Device = Kokkos::DefaultExecutionSpace>
+template<class ExecSpace = Kokkos::DefaultExecutionSpace>
 struct TestReduceCombinatoricalInstantiation {
+  template<class ... Args>
+  static void CallParallelReduce(Args... args) {
+    Kokkos::parallel_reduce(args...);
+  }
+
+  template<class ... Args>
+  static void AddReturnArgument(Args... args) {
+    Kokkos::View<double,Kokkos::HostSpace> result_view("ResultView");
+    double expected_result = 1000.0*999.0/2.0;
+
+    double value = 0;
+    Kokkos::parallel_reduce(args...,value);
+    ASSERT_EQ(expected_result,value);
+
+    result_view() = 0;
+    CallParallelReduce(args...,result_view);
+    ASSERT_EQ(expected_result,result_view());
+
+    value = 0;
+    CallParallelReduce(args...,Kokkos::View<double,Kokkos::HostSpace,Kokkos::MemoryTraits<Kokkos::Unmanaged>>(&value));
+    ASSERT_EQ(expected_result,value);
+
+    result_view() = 0;
+    const Kokkos::View<double,Kokkos::HostSpace,Kokkos::MemoryTraits<Kokkos::Unmanaged>> result_view_const_um = result_view;
+    CallParallelReduce(args...,result_view_const_um);
+    ASSERT_EQ(expected_result,result_view_const_um());
+
+    value = 0;
+    CallParallelReduce(args...,Test::ReduceCombinatorical::AddPlus<double>(value));
+    if((Kokkos::DefaultExecutionSpace::concurrency() > 1) && (ExecSpace::concurrency()>1))
+      ASSERT_TRUE(expected_result<value);
+    else if((Kokkos::DefaultExecutionSpace::concurrency() > 1) || (ExecSpace::concurrency()>1))
+      ASSERT_TRUE(expected_result<=value);
+    else
+      ASSERT_EQ(expected_result,value);
+
+    value = 0;
+    Test::ReduceCombinatorical::AddPlus<double> add(value);
+    CallParallelReduce(args...,add);
+    if((Kokkos::DefaultExecutionSpace::concurrency() > 1) && (ExecSpace::concurrency()>1))
+      ASSERT_TRUE(expected_result<value);
+    else if((Kokkos::DefaultExecutionSpace::concurrency() > 1) || (ExecSpace::concurrency()>1))
+      ASSERT_TRUE(expected_result<=value);
+    else
+      ASSERT_EQ(expected_result,value);
+  }
+
+
+  template<class ... Args>
+  static void AddLambdaRange(void*,Args... args) {
+    AddReturnArgument(args...,  KOKKOS_LAMBDA (const int&i , double& lsum) {
+      lsum += i;
+    });
+  }
+
+  template<class ... Args>
+  static void AddLambdaTeam(void*,Args... args) {
+    AddReturnArgument(args..., KOKKOS_LAMBDA (const Kokkos::TeamPolicy<>::member_type& team, double& update) {
+      update+=1.0/team.team_size()*team.league_rank();
+    });
+  }
+
+  template<class ... Args>
+  static void AddLambdaRange(Kokkos::InvalidType,Args... args) {
+  }
+
+  template<class ... Args>
+  static void AddLambdaTeam(Kokkos::InvalidType,Args... args) {
+  }
+
+  template<int ISTEAM, class ... Args>
+  static void AddFunctor(Args... args) {
+    Kokkos::View<double> result_view("FunctorView");
+    auto h_r = Kokkos::create_mirror_view(result_view);
+    Test::ReduceCombinatorical::FunctorScalar<ISTEAM> functor(result_view);
+    double expected_result = 1000.0*999.0/2.0;
+
+    AddReturnArgument(args..., functor);
+    AddReturnArgument(args..., Test::ReduceCombinatorical::FunctorScalar<ISTEAM>(result_view));
+    AddReturnArgument(args..., Test::ReduceCombinatorical::FunctorScalarInit<ISTEAM>(result_view));
+    AddReturnArgument(args..., Test::ReduceCombinatorical::FunctorScalarJoin<ISTEAM>(result_view));
+    AddReturnArgument(args..., Test::ReduceCombinatorical::FunctorScalarJoinInit<ISTEAM>(result_view));
+
+    h_r() = 0;
+    Kokkos::deep_copy(result_view,h_r);
+    CallParallelReduce(args..., Test::ReduceCombinatorical::FunctorScalarFinal<ISTEAM>(result_view));
+    Kokkos::deep_copy(h_r,result_view);
+    ASSERT_EQ(expected_result,h_r());
+
+    h_r() = 0;
+    Kokkos::deep_copy(result_view,h_r);
+    CallParallelReduce(args..., Test::ReduceCombinatorical::FunctorScalarJoinFinal<ISTEAM>(result_view));
+    Kokkos::deep_copy(h_r,result_view);
+    ASSERT_EQ(expected_result,h_r());
+
+    h_r() = 0;
+    Kokkos::deep_copy(result_view,h_r);
+    CallParallelReduce(args..., Test::ReduceCombinatorical::FunctorScalarJoinFinalInit<ISTEAM>(result_view));
+    Kokkos::deep_copy(h_r,result_view);
+    ASSERT_EQ(expected_result,h_r());
+  }
+
+  template<class ... Args>
+  static void AddFunctorLambdaRange(Args... args) {
+    AddFunctor<0,Args...>(args...);
+    #ifdef  KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA
+    AddLambdaRange(typename std::conditional<std::is_same<ExecSpace,Kokkos::DefaultExecutionSpace>::value,void*,Kokkos::InvalidType>::type(), args...);
+    #endif
+  }
+
+  template<class ... Args>
+  static void AddFunctorLambdaTeam(Args... args) {
+    AddFunctor<1,Args...>(args...);
+    #ifdef  KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA
+    AddLambdaTeam(typename std::conditional<std::is_same<ExecSpace,Kokkos::DefaultExecutionSpace>::value,void*,Kokkos::InvalidType>::type(), args...);
+    #endif
+  }
+
+  template<class ... Args>
+  static void AddPolicy(Args... args) {
+    int N = 1000;
+    Kokkos::RangePolicy<ExecSpace> policy(0,N);
+
+    AddFunctorLambdaRange(args...,1000);
+    AddFunctorLambdaRange(args...,N);
+    AddFunctorLambdaRange(args...,policy);
+    AddFunctorLambdaRange(args...,Kokkos::RangePolicy<ExecSpace>(0,N));
+    AddFunctorLambdaRange(args...,Kokkos::RangePolicy<ExecSpace,Kokkos::Schedule<Kokkos::Dynamic> >(0,N));
+    AddFunctorLambdaRange(args...,Kokkos::RangePolicy<ExecSpace,Kokkos::Schedule<Kokkos::Static> >(0,N).set_chunk_size(10));
+    AddFunctorLambdaRange(args...,Kokkos::RangePolicy<ExecSpace,Kokkos::Schedule<Kokkos::Dynamic> >(0,N).set_chunk_size(10));
+
+    AddFunctorLambdaTeam(args...,Kokkos::TeamPolicy<ExecSpace>(N,Kokkos::AUTO));
+    AddFunctorLambdaTeam(args...,Kokkos::TeamPolicy<ExecSpace,Kokkos::Schedule<Kokkos::Dynamic> >(N,Kokkos::AUTO));
+    AddFunctorLambdaTeam(args...,Kokkos::TeamPolicy<ExecSpace,Kokkos::Schedule<Kokkos::Static> >(N,Kokkos::AUTO).set_chunk_size(10));
+    AddFunctorLambdaTeam(args...,Kokkos::TeamPolicy<ExecSpace,Kokkos::Schedule<Kokkos::Dynamic> >(N,Kokkos::AUTO).set_chunk_size(10));
+  }
+
+
+  static void AddLabel() {
+    std::string s("Std::String");
+    AddPolicy();
+    AddPolicy("Char Constant");
+    AddPolicy(s.c_str());
+    AddPolicy(s);
+  }
+
   static void execute() {
-    Test::ReduceCombinatorical::AddLabel();
+    AddLabel();
   }
 };
 }

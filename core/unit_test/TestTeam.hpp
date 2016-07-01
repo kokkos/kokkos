@@ -729,7 +729,7 @@ struct ClassNoShmemSizeFunction {
     const int per_thread1 = 3*Kokkos::View<double*,ExecSpace,Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(16000);
     {
     Kokkos::TeamPolicy<TagFor,ExecSpace,ScheduleType> policy(10,8,16);
-    Kokkos::parallel_for(policy.set_scratch_size(0,Kokkos::PerTeam(per_team0),Kokkos::PerThread(per_thread0)).set_scratch_size(1,Kokkos::PerTeam(per_team1),Kokkos::PerThread(per_team1)),
+    Kokkos::parallel_for(policy.set_scratch_size(0,Kokkos::PerTeam(per_team0),Kokkos::PerThread(per_thread0)).set_scratch_size(1,Kokkos::PerTeam(per_team1),Kokkos::PerThread(per_thread1)),
       *this);
     Kokkos::fence();
     typename Kokkos::View<int,ExecSpace>::HostMirror h_errors = Kokkos::create_mirror_view(d_errors);
@@ -740,7 +740,7 @@ struct ClassNoShmemSizeFunction {
     {
     int error = 0;
     Kokkos::TeamPolicy<TagReduce,ExecSpace,ScheduleType> policy(10,8,16);
-    Kokkos::parallel_reduce(policy.set_scratch_size(0,Kokkos::PerTeam(per_team0),Kokkos::PerThread(per_thread0)).set_scratch_size(1,Kokkos::PerTeam(per_team1),Kokkos::PerThread(per_team1)),
+    Kokkos::parallel_reduce(policy.set_scratch_size(0,Kokkos::PerTeam(per_team0),Kokkos::PerThread(per_thread0)).set_scratch_size(1,Kokkos::PerTeam(per_team1),Kokkos::PerThread(per_thread1)),
       *this,error);
     Kokkos::fence();
     ASSERT_EQ(error,0);
@@ -771,7 +771,7 @@ struct ClassWithShmemSizeFunction {
     const int per_thread1 = 3*Kokkos::View<double*,ExecSpace,Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(16000);
     {
     Kokkos::TeamPolicy<TagFor,ExecSpace,ScheduleType> policy(10,8,16);
-    Kokkos::parallel_for(policy.set_scratch_size(1,Kokkos::PerTeam(per_team1),Kokkos::PerThread(per_team1)),
+    Kokkos::parallel_for(policy.set_scratch_size(1,Kokkos::PerTeam(per_team1),Kokkos::PerThread(per_thread1)),
       *this);
     Kokkos::fence();
     typename Kokkos::View<int,ExecSpace>::HostMirror h_errors= Kokkos::create_mirror_view(d_errors);
@@ -782,7 +782,7 @@ struct ClassWithShmemSizeFunction {
     {
     int error = 0;
     Kokkos::TeamPolicy<TagReduce,ExecSpace,ScheduleType> policy(10,8,16);
-    Kokkos::parallel_reduce(policy.set_scratch_size(1,Kokkos::PerTeam(per_team1),Kokkos::PerThread(per_team1)),
+    Kokkos::parallel_reduce(policy.set_scratch_size(1,Kokkos::PerTeam(per_team1),Kokkos::PerThread(per_thread1)),
       *this,error);
     Kokkos::fence();
     ASSERT_EQ(error,0);
@@ -799,7 +799,9 @@ struct ClassWithShmemSizeFunction {
 template< class ExecSpace, class ScheduleType >
 void test_team_mulit_level_scratch_test_lambda() {
 #ifdef KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA
-  Kokkos::View<int,ExecSpace,Kokkos::MemoryTraits<Kokkos::Atomic> > errors("Errors");
+  Kokkos::View<int,ExecSpace,Kokkos::MemoryTraits<Kokkos::Atomic> > errors;
+  Kokkos::View<int,ExecSpace> d_errors("Errors");
+  errors = d_errors;
 
   const int per_team0 = 3*Kokkos::View<double*,ExecSpace,Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(128);
   const int per_thread0 = 3*Kokkos::View<double*,ExecSpace,Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(16);
@@ -808,18 +810,18 @@ void test_team_mulit_level_scratch_test_lambda() {
   const int per_thread1 = 3*Kokkos::View<double*,ExecSpace,Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(16000);
 
   Kokkos::TeamPolicy<ExecSpace,ScheduleType> policy(10,8,16);
-  Kokkos::parallel_for(policy.set_scratch_size(0,Kokkos::PerTeam(per_team0),Kokkos::PerThread(per_thread0)).set_scratch_size(1,Kokkos::PerTeam(per_team1),Kokkos::PerThread(per_team1)),
+  Kokkos::parallel_for(policy.set_scratch_size(0,Kokkos::PerTeam(per_team0),Kokkos::PerThread(per_thread0)).set_scratch_size(1,Kokkos::PerTeam(per_team1),Kokkos::PerThread(per_thread1)),
     KOKKOS_LAMBDA(const typename Kokkos::TeamPolicy<ExecSpace>::member_type& team) {
     int error = test_team_mulit_level_scratch_loop_body<ExecSpace>(team);
     errors() += error;
   });
   Kokkos::fence();
   typename Kokkos::View<int,ExecSpace>::HostMirror h_errors= Kokkos::create_mirror_view(errors);
-  Kokkos::deep_copy(h_errors,errors);
+  Kokkos::deep_copy(h_errors,d_errors);
   ASSERT_EQ(h_errors(),0);
 
   int error = 0;
-  Kokkos::parallel_reduce(policy.set_scratch_size(0,Kokkos::PerTeam(per_team0),Kokkos::PerThread(per_thread0)).set_scratch_size(1,Kokkos::PerTeam(per_team1),Kokkos::PerThread(per_team1)),
+  Kokkos::parallel_reduce(policy.set_scratch_size(0,Kokkos::PerTeam(per_team0),Kokkos::PerThread(per_thread0)).set_scratch_size(1,Kokkos::PerTeam(per_team1),Kokkos::PerThread(per_thread1)),
     KOKKOS_LAMBDA(const typename Kokkos::TeamPolicy<ExecSpace>::member_type& team, int& count) {
       count += test_team_mulit_level_scratch_loop_body<ExecSpace>(team);
   },error);

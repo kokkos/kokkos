@@ -614,7 +614,7 @@ public:
         m_league_rank    = league_iter_begin ;
         new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_scratch_size[0] ,
                                              ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE + m_team_scratch_size[0],
-                                               m_team_scratch_size[1]);
+                                               0 );
       }
 
       if ( (m_team_rank_rev == 0) && (m_invalid_thread == 0) ) {
@@ -634,7 +634,7 @@ public:
         team_barrier();
         new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_scratch_size[0] ,
                                              ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE + m_team_scratch_size[0],
-                                               m_team_scratch_size[1]);
+                                               0);
       }
       m_league_rank++;
     }
@@ -671,7 +671,7 @@ public:
       team_barrier();
       new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_scratch_size[0] ,
                                            ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE + m_team_scratch_size[0],
-                                             m_team_scratch_size[1]);
+                                             0);
     }
     m_league_rank++;
   }
@@ -696,8 +696,10 @@ public:
     m_team_size = p.m_team_size;
     m_team_alloc = p.m_team_alloc;
     m_team_iter = p.m_team_iter;
-    m_team_scratch_size = p.m_team_scratch_size;
-    m_thread_scratch_size = p.m_thread_scratch_size;
+    m_team_scratch_size[0] = p.m_team_scratch_size[0];
+    m_thread_scratch_size[0] = p.m_thread_scratch_size[0];
+    m_team_scratch_size[1] = p.m_team_scratch_size[1];
+    m_thread_scratch_size[1] = p.m_thread_scratch_size[1];
     m_chunk_size = p.m_chunk_size;
     return *this;
   }
@@ -728,8 +730,8 @@ private:
   int m_team_alloc ;
   int m_team_iter ;
 
-  size_t m_team_scratch_size;
-  size_t m_thread_scratch_size;
+  size_t m_team_scratch_size[2];
+  size_t m_thread_scratch_size[2];
 
   int m_chunk_size;
 
@@ -762,10 +764,10 @@ public:
 
   inline int team_size()   const { return m_team_size ; }
   inline int league_size() const { return m_league_size ; }
-  inline size_t scratch_size(int , int team_size_ = -1) const {
+  inline size_t scratch_size(const int& level, int team_size_ = -1) const {
     if(team_size_ < 0)
       team_size_ = m_team_size;
-    return m_team_scratch_size + team_size_*m_thread_scratch_size ;
+    return m_team_scratch_size[level] + team_size_*m_thread_scratch_size[level] ;
   }
 
   /** \brief  Specify league size, request team size */
@@ -773,8 +775,8 @@ public:
             , int league_size_request
             , int team_size_request
             , int /* vector_length_request */ = 1 )
-            : m_team_scratch_size ( 0 )
-            , m_thread_scratch_size ( 0 )
+            : m_team_scratch_size { 0 , 0 }
+            , m_thread_scratch_size { 0 , 0 }
             , m_chunk_size(0)
     { init( league_size_request , team_size_request ); }
 
@@ -782,24 +784,24 @@ public:
             , int league_size_request
             , const Kokkos::AUTO_t & /* team_size_request */
             , int /* vector_length_request */ = 1)
-            : m_team_scratch_size ( 0 )
-            , m_thread_scratch_size ( 0 )
+            : m_team_scratch_size { 0 , 0 }
+            , m_thread_scratch_size { 0 , 0 }
             , m_chunk_size(0)
     { init( league_size_request , traits::execution_space::thread_pool_size(2) ); }
 
   TeamPolicyInternal( int league_size_request
             , int team_size_request
             , int /* vector_length_request */ = 1 )
-            : m_team_scratch_size ( 0 )
-            , m_thread_scratch_size ( 0 )
+            : m_team_scratch_size { 0 , 0 }
+            , m_thread_scratch_size { 0 , 0 }
             , m_chunk_size(0)
     { init( league_size_request , team_size_request ); }
 
   TeamPolicyInternal( int league_size_request
             , const Kokkos::AUTO_t & /* team_size_request */
             , int /* vector_length_request */ = 1 )
-            : m_team_scratch_size ( 0 )
-            , m_thread_scratch_size ( 0 )
+            : m_team_scratch_size { 0 , 0 }
+            , m_thread_scratch_size { 0 , 0 }
             , m_chunk_size(0)
     { init( league_size_request , traits::execution_space::thread_pool_size(2) ); }
 
@@ -816,24 +818,21 @@ public:
   }
 
   inline TeamPolicyInternal set_scratch_size(const int& level, const PerTeamValue& per_team) const {
-    (void) level;
     TeamPolicyInternal p = *this;
-    p.m_team_scratch_size = per_team.value;
+    p.m_team_scratch_size[level] = per_team.value;
     return p;
   };
 
   inline TeamPolicyInternal set_scratch_size(const int& level, const PerThreadValue& per_thread) const {
-    (void) level;
     TeamPolicyInternal p = *this;
-    p.m_thread_scratch_size = per_thread.value;
+    p.m_thread_scratch_size[level] = per_thread.value;
     return p;
   };
 
   inline TeamPolicyInternal set_scratch_size(const int& level, const PerTeamValue& per_team, const PerThreadValue& per_thread) const {
-    (void) level;
     TeamPolicyInternal p = *this;
-    p.m_team_scratch_size = per_team.value;
-    p.m_thread_scratch_size = per_thread.value;
+    p.m_team_scratch_size[level] = per_team.value;
+    p.m_thread_scratch_size[level] = per_thread.value;
     return p;
   };
 
