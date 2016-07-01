@@ -162,6 +162,11 @@ TEST_F( cuda, shmem_size) {
   TestShmemSize< Kokkos::Cuda >();
 }
 
+TEST_F( cuda, multi_level_scratch) {
+  TestMultiLevelScratchTeam< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >();
+  TestMultiLevelScratchTeam< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >();
+}
+
 TEST_F( cuda, reduce_dynamic )
 {
   TestReduceDynamic< long ,   Kokkos::Cuda >( 10000000 );

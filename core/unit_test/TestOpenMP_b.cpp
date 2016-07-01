@@ -183,5 +183,10 @@ TEST_F( openmp, shmem_size) {
   TestShmemSize< Kokkos::OpenMP >();
 }
 
+TEST_F( openmp, multi_level_scratch) {
+  TestMultiLevelScratchTeam< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >();
+  TestMultiLevelScratchTeam< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >();
+}
+
 } // namespace test
 
