@@ -112,7 +112,7 @@ public:
         // function still returns NULL if not enough memory.
         printf ("ScratchMemorySpace<...>::get_shmem: Failed to allocate "
                 "%ld byte(s); remaining capacity is %ld byte(s)\n", long(size),
-                long(m_end-m_iter));
+                long(m_end_L0-m_iter_L0));
         #endif // KOKKOS_HAVE_DEBUG
         tmp = 0;
       }
