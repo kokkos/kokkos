@@ -259,6 +259,8 @@ public:
   size_type * m_scratchUnified ;
   cudaStream_t * m_stream ;
 
+  static int was_initialized;
+  static int was_finalized;
 
   static CudaInternal & singleton();
 
@@ -297,6 +299,8 @@ public:
   size_type * scratch_unified( const size_type size );
 };
 
+int CudaInternal::was_initialized = 0;
+int CudaInternal::was_finalized = 0;
 //----------------------------------------------------------------------------
 
 
@@ -371,6 +375,10 @@ CudaInternal & CudaInternal::singleton()
 
 void CudaInternal::initialize( int cuda_device_id , int stream_count )
 {
+  if ( was_finalized ) Kokkos::abort("Calling Cuda::initialize after Cuda::finalize is illegal\n");
+  was_initialized = 1;
+  if ( is_initialized() ) return;
+
   enum { WordSize = sizeof(size_type) };
 
   if ( ! HostSpace::execution_space::is_initialized() ) {
@@ -651,6 +659,7 @@ CudaInternal::scratch_unified( const Cuda::size_type size )
 
 void CudaInternal::finalize()
 {
+  was_finalized = 1;
   if ( 0 != m_scratchSpace || 0 != m_scratchFlags ) {
 
     atomic_lock_array_cuda_space_ptr(false);
