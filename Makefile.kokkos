@@ -300,8 +300,8 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_POWER8), 1)
     tmp := $(shell echo "\#define KOKKOS_ARCH_POWER8 1" >> KokkosCore_config.tmp )
-	KOKKOS_CXXFLAGS += -mcpu=power8
-	KOKKOS_LDFLAGS  += -mcpu=power8
+	KOKKOS_CXXFLAGS += -mcpu=power8 -mtune=power8
+	KOKKOS_LDFLAGS  += -mcpu=power8 -mtune=power8
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX2), 1)
