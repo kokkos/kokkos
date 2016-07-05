@@ -391,10 +391,16 @@ public:
   KOKKOS_INLINE_FUNCTION
   reference_type operator()() const
     { 
+      return view_type::operator()(0,0,0,0,0,0,0);
+    }
+/*
+  KOKKOS_INLINE_FUNCTION
+  reference_type operator()() const
+    { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 0 , ( implementation_map() ) )
       return implementation_map().reference();
     }
-  
+ */ 
   // Rank 1
   // This assumes a contiguous underlying memory (i.e. no padding, no striding...)
   template< typename iType >
