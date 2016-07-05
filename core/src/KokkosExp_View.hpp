@@ -1436,7 +1436,7 @@ public:
       ( arg_N3 != ~size_t(0) ) + ( arg_N4 != ~size_t(0) ) + ( arg_N5 != ~size_t(0) ) +
       ( arg_N6 != ~size_t(0) ) + ( arg_N7 != ~size_t(0) );
 
-    if ( num_passed_args != traits::rank_dynamic ) {
+    if ( std::is_same<typename traits::specialize,void>::value && num_passed_args != traits::rank_dynamic ) {
       Kokkos::abort( "Kokkos::View::shmem_size() rank_dynamic != number of arguments.\n" );
     }
 
