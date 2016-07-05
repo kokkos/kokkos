@@ -424,64 +424,127 @@ public:
 
   template< typename iType >
   KOKKOS_INLINE_FUNCTION
-  reference_type operator()(const iType & i0 ) const 
+  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType>::value), reference_type>::type
+  operator()(const iType & i0 ) const 
     { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 1 , ( implementation_map() , i0 ) )
       return implementation_map().reference(i0); 
     }
 
+  template< typename iType >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename traits::specialize , void>::value && std::is_integral<iType>::value), reference_type>::type
+  operator()(const iType & i0 ) const
+    {
+      return view_type::operator()(i0,0,0,0,0,0,0);
+    }
+
   // Rank 2
   template< typename iType0 , typename iType1 >
   KOKKOS_INLINE_FUNCTION
-  reference_type operator()(const iType0 & i0 , const iType1 & i1 ) const 
+  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value), reference_type>::type
+  operator()(const iType0 & i0 , const iType1 & i1 ) const 
     { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 2 , ( implementation_map() , i0 , i1 ) )
       return implementation_map().reference(i0,i1); 
     }
 
+  template< typename iType0 , typename iType1 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value), reference_type>::type
+  operator()(const iType0 & i0 , const iType1 & i1 ) const
+    {
+      return view_type::operator()(i0,i1,0,0,0,0,0);
+    }
+
   // Rank 3
   template< typename iType0 , typename iType1 , typename iType2 >
   KOKKOS_INLINE_FUNCTION
-  reference_type operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 ) const 
+  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value), reference_type>::type
+  operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 ) const 
     { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 3 , ( implementation_map() , i0 , i1 , i2 ) )
       return implementation_map().reference(i0,i1,i2); 
     }
 
+  template< typename iType0 , typename iType1 , typename iType2 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value), reference_type>::type
+  operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 ) const
+    {
+      return view_type::operator()(i0,i1,i2,0,0,0,0);
+    }
+
   // Rank 4
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3 >
   KOKKOS_INLINE_FUNCTION
-  reference_type operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 ) const 
+  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value && std::is_integral<iType3>::value), reference_type>::type
+  operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 ) const 
     { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 4 , ( implementation_map() , i0 , i1 , i2 , i3 ) )
       return implementation_map().reference(i0,i1,i2,i3); 
     }
 
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value && std::is_integral<iType3>::value), reference_type>::type
+  operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 ) const
+    {
+      return view_type::operator()(i0,i1,i2,i3,0,0,0);
+    }
+
   // Rank 5
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 >
   KOKKOS_INLINE_FUNCTION
-  reference_type operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 ) const 
+  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value && std::is_integral<iType3>::value && std::is_integral<iType4>::value), reference_type>::type
+  operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 ) const 
     { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 5 , ( implementation_map() , i0 , i1 , i2 , i3 , i4 ) )
       return implementation_map().reference(i0,i1,i2,i3,i4); 
     }
 
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3 , typename iType4 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value && std::is_integral<iType3>::value && std::is_integral<iType4>::value), reference_type>::type
+  operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 ) const
+    {
+      return view_type::operator()(i0,i1,i2,i3,i4,0,0);
+    }
+
   // Rank 6
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 , typename iType5 >
   KOKKOS_INLINE_FUNCTION
-  reference_type operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 ) const 
+  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value && std::is_integral<iType3>::value && std::is_integral<iType4>::value && std::is_integral<iType5>::value), reference_type>::type
+  operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 ) const 
     { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 6 , ( implementation_map() , i0 , i1 , i2 , i3 , i4 , i5 ) )
       return implementation_map().reference(i0,i1,i2,i3,i4,i5); 
     }
 
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3 , typename iType4 , typename iType5 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value && std::is_integral<iType3>::value && std::is_integral<iType4>::value && std::is_integral<iType5>::value), reference_type>::type
+  operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 ) const
+    {
+      return view_type::operator()(i0,i1,i2,i3,i4,i5,0);
+    }
+
   // Rank 7
   template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 , typename iType5 , typename iType6 >
   KOKKOS_INLINE_FUNCTION
-  reference_type operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 , const iType6 & i6 ) const 
+  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value && std::is_integral<iType3>::value && std::is_integral<iType4>::value && std::is_integral<iType5>::value && std::is_integral<iType6>::value), reference_type>::type
+  operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 , const iType6 & i6 ) const 
     { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 7 , ( implementation_map() , i0 , i1 , i2 , i3 , i4 , i5 , i6 ) )
       return implementation_map().reference(i0,i1,i2,i3,i4,i5,i6); 
+    }
+
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3 , typename iType4 , typename iType5 , typename iType6 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value && std::is_integral<iType3>::value && std::is_integral<iType4>::value && std::is_integral<iType5>::value && std::is_integral<iType6>::value), reference_type>::type
+  operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 , const iType6 & i6 ) const
+    {
+      return view_type::operator()(i0,i1,i2,i3,i4,i5,i6);
     }
 
 #undef KOKKOS_VIEW_OPERATOR_VERIFY
