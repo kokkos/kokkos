@@ -318,8 +318,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX2), 1)
 
 			else
 				# Assume that this is a really a GNU compiler
-				KOKKOS_CXXFLAGS += -march=core-avx2
-				KOKKOS_LDFLAGS  += -march=core-avx2
+				KOKKOS_CXXFLAGS += -march=core-avx2 -mtune=core-avx2
+				KOKKOS_LDFLAGS  += -march=core-avx2 -mtune=core-avx2
 			endif
 		endif
 	endif
