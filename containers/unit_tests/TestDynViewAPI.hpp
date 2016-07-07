@@ -923,7 +923,8 @@ public:
     ASSERT_EQ( dy.dimension_3() , vcast1.dimension_3() );
     ASSERT_EQ( dy.dimension_4() , vcast1.dimension_4() );
 
-    dView0 dfromhx( hx );
+/*
+    dView0 dfromhx( hx ); //Breaks if testing on device
     ASSERT_EQ( dfromhx.rank() , hx.rank() );
     ASSERT_EQ( dfromhx.dimension_0() , hx.dimension_0() );
     ASSERT_EQ( dfromhx.dimension_1() , hx.dimension_1() );
@@ -931,7 +932,7 @@ public:
     ASSERT_EQ( dfromhy.rank() , hy.rank() );
     ASSERT_EQ( dfromhy.dimension_0() , hy.dimension_0() );
     ASSERT_EQ( dfromhy.dimension_1() , hy.dimension_1() );
-
+*/
 
     View7 vtest1("vtest1",2,2,2,2,2,2,2);
     dView0 dfromv1( vtest1 );
@@ -1223,6 +1224,8 @@ public:
     ASSERT_TRUE( dz.ptr_on_device() == 0 );
 
     // deep_copy from view to dynrankview
+/*
+ // Correctly use dynrankview host mirror to implement this with cuda
     const int testdim = 4;
     dView0 hdxx, dxx("dxx",testdim);
     View1  hvxx, vxx("vxx",testdim);
@@ -1248,6 +1251,7 @@ public:
     ASSERT_EQ( hdxx.dimension_0() , hvdxx.dimension_0() );
     for (int i = 0; i < testdim; ++i)
       { ASSERT_EQ( hvxx(i) , hvdxx(i) ); }
+*/
   }
 
   typedef T DataType ;

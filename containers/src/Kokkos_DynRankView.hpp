@@ -540,7 +540,9 @@ public:
   KOKKOS_INLINE_FUNCTION
   reference_type operator()() const
     { 
-      return view_type::operator()(0,0,0,0,0,0,0);
+      KOKKOS_VIEW_OPERATOR_VERIFY( 0 , ( implementation_map() ) )
+      return implementation_map().reference();
+      //return m_map.reference(0,0,0,0,0,0,0); 
     }
 /*
   KOKKOS_INLINE_FUNCTION
@@ -584,16 +586,6 @@ public:
     { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 1 , ( m_map , i0 ) )
       return m_map.reference(i0); 
-    }
-
-  template< typename iType >
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if< !(std::is_same<typename drvtraits::specialize , void>::value && std::is_integral<iType>::value), reference_type>::type
-  operator()(const iType & i0 ) const 
-  //reference_type operator()(const iType & i0 ) const 
-    { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 1 , ( m_map , i0 ) )
-      return m_map.reference(i0,0,0,0,0,0,0); 
     }
 
   template< typename iType >
