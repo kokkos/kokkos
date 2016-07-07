@@ -520,9 +520,12 @@ public:
 
   enum { Rank = map_type::Rank };
 
+ /** \brief Temporary method get_rank()
+  *         until rank() is implemented
+  */
   KOKKOS_INLINE_FUNCTION
   static
-  constexpr unsigned getrank() { return map_type::Rank; }
+  constexpr unsigned get_rank() { return map_type::Rank; }
   //constexpr unsigned rank() { return map_type::Rank; }
 
   template< typename iType >

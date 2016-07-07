@@ -532,7 +532,7 @@ public:
   constexpr unsigned rank() const { return m_rank; }
 
   KOKKOS_INLINE_FUNCTION
-  constexpr unsigned getrank() const { return m_rank; } //needed for transition to common constexpr method in view and dynrankview to return rank
+  constexpr unsigned get_rank() const { return m_rank; } //needed for transition to common constexpr method in view and dynrankview to return rank
 
 
   //operators ()
@@ -1755,7 +1755,7 @@ void deep_copy
     // ...
 
     // If same type, equal layout, equal dimensions, equal span, and contiguous memory then can byte-wise copy
-    if ( src.getrank() == 0 && dst.getrank() == 0 )
+    if ( src.get_rank() == 0 && dst.get_rank() == 0 )
     { 
       typedef typename dst_type::value_type    value_type ;
       Kokkos::Impl::DeepCopy< dst_memory_space , src_memory_space >( dst.data() , src.data() , sizeof(value_type) ); 
@@ -1775,9 +1775,9 @@ void deep_copy
            )
            ||
            (
-             dst.getrank() == 1
+             dst.get_rank() == 1
              &&
-             src.getrank() == 1
+             src.get_rank() == 1
            )
          ) &&
          dst.span_is_contiguous() &&
@@ -1807,9 +1807,9 @@ void deep_copy
            )
            ||
            (
-             dst.getrank() == 1
+             dst.get_rank() == 1
              &&
-             src.getrank() == 1
+             src.get_rank() == 1
            )
          ) &&
          dst.span_is_contiguous() &&

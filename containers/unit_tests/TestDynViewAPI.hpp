@@ -903,11 +903,11 @@ public:
 
     View0 vx("vx");
     Kokkos::deep_copy( vx , dx );
-    ASSERT_EQ( dx.getrank() , vx.getrank() );
+    ASSERT_EQ( dx.get_rank() , vx.get_rank() );
 
     dView0 dxx("dxx");
     Kokkos::deep_copy( dxx , vx );
-    ASSERT_EQ( dxx.getrank() , vx.getrank() );
+    ASSERT_EQ( dxx.get_rank() , vx.get_rank() );
 
     View7 vcast = dx.ConstDownCast();
     ASSERT_EQ( dx.dimension_0() , vcast.dimension_0() );
@@ -1236,14 +1236,14 @@ public:
     for (int i = 0; i < testdim; ++i)
       { ASSERT_EQ( hvxx(i) , hdxx(i) ); }
 
-    ASSERT_EQ( hdxx.getrank() , hvxx.getrank() );
+    ASSERT_EQ( hdxx.get_rank() , hvxx.get_rank() );
     ASSERT_EQ( hdxx.dimension_0() , testdim );
     ASSERT_EQ( hdxx.dimension_0() , hvxx.dimension_0() );
 
     // deep_copy from dynrankview to view
     View1 hvdxx("hvdxx",testdim);
     Kokkos::deep_copy(hvdxx , hdxx);
-    ASSERT_EQ( hdxx.getrank() , hvdxx.getrank() );
+    ASSERT_EQ( hdxx.get_rank() , hvdxx.get_rank() );
     ASSERT_EQ( hvdxx.dimension_0() , testdim );
     ASSERT_EQ( hdxx.dimension_0() , hvdxx.dimension_0() );
     for (int i = 0; i < testdim; ++i)
