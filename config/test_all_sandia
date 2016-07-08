@@ -92,6 +92,7 @@ elif [ "$MACHINE" = "white" ]; then
     )
 
     ARCH_FLAG="--arch=Power8"
+    NUM_JOBS_TO_RUN_IN_PARALLEL=8
 
 elif [ "$MACHINE" = "bowman" ]; then
     source /etc/profile.d/modules.sh
@@ -109,6 +110,7 @@ elif [ "$MACHINE" = "bowman" ]; then
     )
 
     ARCH_FLAG="--arch=KNL"
+    NUM_JOBS_TO_RUN_IN_PARALLEL=8
 
 elif [ "$MACHINE" = "shepard" ]; then
     source /etc/profile.d/modules.sh
@@ -123,6 +125,7 @@ elif [ "$MACHINE" = "shepard" ]; then
     )
 
     ARCH_FLAG="--arch=HSW"
+    NUM_JOBS_TO_RUN_IN_PARALLEL=8
 
 else
     echo "Unhandled machine $MACHINE" >&2
