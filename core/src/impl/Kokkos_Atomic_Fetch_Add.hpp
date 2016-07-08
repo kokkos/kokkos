@@ -156,9 +156,26 @@ T atomic_fetch_add( volatile T * const dest ,
 
 #elif defined(KOKKOS_ATOMICS_USE_GCC) || defined(KOKKOS_ATOMICS_USE_INTEL)
 
+#if defined( KOKKOS_ENABLE_ASM ) && defined ( KOKKOS_USE_ISA_X86_64 )
+KOKKOS_INLINE_FUNCTION
+int atomic_fetch_add( volatile int * dest , const int val )
+{
+	int original = val;
+
+	__asm__ __volatile__(
+      		"lock xadd %1, %0"
+      		: "+m" (*dest), "+r" (original)
+      		: "m" (*dest), "r" (original)
+      		: "memory"
+    	);
+
+	return original;
+}
+#else
 KOKKOS_INLINE_FUNCTION
 int atomic_fetch_add( volatile int * const dest , const int val )
-{ return __sync_fetch_and_add(dest,val); }
+{ return __sync_fetch_and_add(dest, val); }
+#endif
 
 KOKKOS_INLINE_FUNCTION
 long int atomic_fetch_add( volatile long int * const dest , const long int val )
