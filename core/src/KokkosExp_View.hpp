@@ -520,12 +520,10 @@ public:
 
   enum { Rank = map_type::Rank };
 
- /** \brief Temporary method get_rank()
-  *         until rank() is implemented
+ /** \brief rank() to be implemented
   */
-  KOKKOS_INLINE_FUNCTION
-  static
-  constexpr unsigned get_rank() { return map_type::Rank; }
+  //KOKKOS_INLINE_FUNCTION
+  //static
   //constexpr unsigned rank() { return map_type::Rank; }
 
   template< typename iType >
@@ -1486,6 +1484,15 @@ public:
        )
     {}
 };
+
+
+ /** \brief Temporary free function rank()
+  *         until rank() is implemented
+  *         in the View
+  */
+  template < typename D , class ... P >
+  KOKKOS_INLINE_FUNCTION
+  constexpr unsigned rank( const View<D , P...> & V ) { return V.Rank; } //Temporary until added to view
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
