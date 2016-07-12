@@ -2351,8 +2351,7 @@ namespace Kokkos {
 template< class D , class ... P >
 using ViewTraits = Kokkos::Experimental::ViewTraits<D,P...> ;
 
-using Experimental::View ; //modified due to gcc parser bug noticed in
-//sacado ViewFactoryTests.cpp
+using Experimental::View ; //modified due to gcc parser bug 
 //template< class D , class ... P >
 //using View = Kokkos::Experimental::View<D,P...> ;
 
