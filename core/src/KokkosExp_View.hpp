@@ -520,6 +520,12 @@ public:
 
   enum { Rank = map_type::Rank };
 
+ /** \brief rank() to be implemented
+  */
+  //KOKKOS_INLINE_FUNCTION
+  //static
+  //constexpr unsigned rank() { return map_type::Rank; }
+
   template< typename iType >
   KOKKOS_INLINE_FUNCTION constexpr
   typename std::enable_if< std::is_integral<iType>::value , size_t >::type
@@ -1479,6 +1485,15 @@ public:
     {}
 };
 
+
+ /** \brief Temporary free function rank()
+  *         until rank() is implemented
+  *         in the View
+  */
+  template < typename D , class ... P >
+  KOKKOS_INLINE_FUNCTION
+  constexpr unsigned rank( const View<D , P...> & V ) { return V.Rank; } //Temporary until added to view
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -2336,8 +2351,9 @@ namespace Kokkos {
 template< class D , class ... P >
 using ViewTraits = Kokkos::Experimental::ViewTraits<D,P...> ;
 
-template< class D , class ... P >
-using View = Kokkos::Experimental::View<D,P...> ;
+using Experimental::View ; //modified due to gcc parser bug 
+//template< class D , class ... P >
+//using View = Kokkos::Experimental::View<D,P...> ;
 
 using Kokkos::Experimental::ALL ;
 using Kokkos::Experimental::WithoutInitializing ;
