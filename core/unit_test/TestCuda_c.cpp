@@ -249,6 +249,11 @@ TEST_F( cuda , team_vector )
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Cuda >(10) ) );
 }
 
+TEST_F( cuda, triple_nested_parallelism )
+{
+  TestTripleNestedReduce< double, Kokkos::Cuda >( 8192, 2048 );
+}
+
 }
 
 //----------------------------------------------------------------------------
