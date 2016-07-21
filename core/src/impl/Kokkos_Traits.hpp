@@ -357,8 +357,30 @@ struct is_integral : public integral_constant< bool ,
     std::is_same< T , uint64_t >::value 
   )>
 {};
-
 //----------------------------------------------------------------------------
+
+template<typename T>
+struct is_label : public false_type {};
+
+template<>
+struct is_label<const char*> : public true_type {};
+
+template<>
+struct is_label<char*> : public true_type {};
+
+
+template<int N>
+struct is_label<const char[N]> : public true_type {};
+
+template<int N>
+struct is_label<char[N]> : public true_type {};
+
+
+template<>
+struct is_label<const std::string> : public true_type {};
+
+template<>
+struct is_label<std::string> : public true_type {};
 
 // These 'constexpr'functions can be used as
 // both regular functions and meta-function.

@@ -330,7 +330,7 @@ public:
 
   Impl::OpenMPexec    & m_exec ;
   scratch_memory_space  m_team_shared ;
-  int                   m_team_shmem ;
+  int                   m_team_scratch_size[2] ;
   int                   m_team_base_rev ;
   int                   m_team_rank_rev ;
   int                   m_team_rank ;
@@ -378,15 +378,15 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space& team_shmem() const
-    { return m_team_shared.set_team_thread_mode(1,0) ; }
+    { return m_team_shared.set_team_thread_mode(0,1,0) ; }
 
   KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space& team_scratch(int) const
-    { return m_team_shared.set_team_thread_mode(1,0) ; }
+    { return m_team_shared.set_team_thread_mode(0,1,0) ; }
 
   KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space& thread_scratch(int) const
-    { return m_team_shared.set_team_thread_mode(team_size(),team_rank()) ; }
+    { return m_team_shared.set_team_thread_mode(0,team_size(),team_rank()) ; }
 
   KOKKOS_INLINE_FUNCTION int league_rank() const { return m_league_rank ; }
   KOKKOS_INLINE_FUNCTION int league_size() const { return m_league_size ; }
@@ -568,11 +568,12 @@ public:
   inline
   OpenMPexecTeamMember( Impl::OpenMPexec & exec
                       , const TeamPolicyInternal< OpenMP, Properties ...> & team
-                      , const int shmem_size
+                      , const int shmem_size_L1
+                      , const int shmem_size_L2
                       )
     : m_exec( exec )
     , m_team_shared(0,0)
-    , m_team_shmem( shmem_size )
+    , m_team_scratch_size{ shmem_size_L1 , shmem_size_L2 }
     , m_team_base_rev(0)
     , m_team_rank_rev(0)
     , m_team_rank(0)
@@ -611,7 +612,9 @@ public:
         m_team_rank      = m_team_size - ( m_team_rank_rev + 1 );
         m_league_end     = league_iter_end ;
         m_league_rank    = league_iter_begin ;
-        new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_shmem );
+        new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_scratch_size[0] ,
+                                             ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE + m_team_scratch_size[0],
+                                               0 );
       }
 
       if ( (m_team_rank_rev == 0) && (m_invalid_thread == 0) ) {
@@ -627,10 +630,13 @@ public:
 
   void next_static()
     {
-      if ( ++m_league_rank < m_league_end ) {
+      if ( m_league_rank < m_league_end ) {
         team_barrier();
-        new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_shmem );
+        new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_scratch_size[0] ,
+                                             ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE + m_team_scratch_size[0],
+                                               0);
       }
+      m_league_rank++;
     }
 
   bool valid_dynamic() {
@@ -661,10 +667,13 @@ public:
     if(m_invalid_thread)
       return;
 
-    team_barrier();
-    if ( ++m_league_rank < m_league_chunk_end ) {
-      new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_shmem );
+    if ( m_league_rank < m_league_chunk_end ) {
+      team_barrier();
+      new( (void*) &m_team_shared ) space( ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE , m_team_scratch_size[0] ,
+                                           ( (char*) m_exec.pool_rev(m_team_base_rev)->scratch_thread() ) + TEAM_REDUCE_SIZE + m_team_scratch_size[0],
+                                             0);
     }
+    m_league_rank++;
   }
 
   static inline int team_reduce_size() { return TEAM_REDUCE_SIZE ; }
@@ -687,8 +696,10 @@ public:
     m_team_size = p.m_team_size;
     m_team_alloc = p.m_team_alloc;
     m_team_iter = p.m_team_iter;
-    m_team_scratch_size = p.m_team_scratch_size;
-    m_thread_scratch_size = p.m_thread_scratch_size;
+    m_team_scratch_size[0] = p.m_team_scratch_size[0];
+    m_thread_scratch_size[0] = p.m_thread_scratch_size[0];
+    m_team_scratch_size[1] = p.m_team_scratch_size[1];
+    m_thread_scratch_size[1] = p.m_thread_scratch_size[1];
     m_chunk_size = p.m_chunk_size;
     return *this;
   }
@@ -719,8 +730,8 @@ private:
   int m_team_alloc ;
   int m_team_iter ;
 
-  size_t m_team_scratch_size;
-  size_t m_thread_scratch_size;
+  size_t m_team_scratch_size[2];
+  size_t m_thread_scratch_size[2];
 
   int m_chunk_size;
 
@@ -753,15 +764,19 @@ public:
 
   inline int team_size()   const { return m_team_size ; }
   inline int league_size() const { return m_league_size ; }
-  inline size_t scratch_size() const { return m_team_scratch_size + m_team_size*m_thread_scratch_size ; }
+  inline size_t scratch_size(const int& level, int team_size_ = -1) const {
+    if(team_size_ < 0)
+      team_size_ = m_team_size;
+    return m_team_scratch_size[level] + team_size_*m_thread_scratch_size[level] ;
+  }
 
   /** \brief  Specify league size, request team size */
   TeamPolicyInternal( typename traits::execution_space &
             , int league_size_request
             , int team_size_request
             , int /* vector_length_request */ = 1 )
-            : m_team_scratch_size ( 0 )
-            , m_thread_scratch_size ( 0 )
+            : m_team_scratch_size { 0 , 0 }
+            , m_thread_scratch_size { 0 , 0 }
             , m_chunk_size(0)
     { init( league_size_request , team_size_request ); }
 
@@ -769,24 +784,24 @@ public:
             , int league_size_request
             , const Kokkos::AUTO_t & /* team_size_request */
             , int /* vector_length_request */ = 1)
-            : m_team_scratch_size ( 0 )
-            , m_thread_scratch_size ( 0 )
+            : m_team_scratch_size { 0 , 0 }
+            , m_thread_scratch_size { 0 , 0 }
             , m_chunk_size(0)
     { init( league_size_request , traits::execution_space::thread_pool_size(2) ); }
 
   TeamPolicyInternal( int league_size_request
             , int team_size_request
             , int /* vector_length_request */ = 1 )
-            : m_team_scratch_size ( 0 )
-            , m_thread_scratch_size ( 0 )
+            : m_team_scratch_size { 0 , 0 }
+            , m_thread_scratch_size { 0 , 0 }
             , m_chunk_size(0)
     { init( league_size_request , team_size_request ); }
 
   TeamPolicyInternal( int league_size_request
             , const Kokkos::AUTO_t & /* team_size_request */
             , int /* vector_length_request */ = 1 )
-            : m_team_scratch_size ( 0 )
-            , m_thread_scratch_size ( 0 )
+            : m_team_scratch_size { 0 , 0 }
+            , m_thread_scratch_size { 0 , 0 }
             , m_chunk_size(0)
     { init( league_size_request , traits::execution_space::thread_pool_size(2) ); }
 
@@ -803,24 +818,21 @@ public:
   }
 
   inline TeamPolicyInternal set_scratch_size(const int& level, const PerTeamValue& per_team) const {
-    (void) level;
     TeamPolicyInternal p = *this;
-    p.m_team_scratch_size = per_team.value;
+    p.m_team_scratch_size[level] = per_team.value;
     return p;
   };
 
   inline TeamPolicyInternal set_scratch_size(const int& level, const PerThreadValue& per_thread) const {
-    (void) level;
     TeamPolicyInternal p = *this;
-    p.m_thread_scratch_size = per_thread.value;
+    p.m_thread_scratch_size[level] = per_thread.value;
     return p;
   };
 
   inline TeamPolicyInternal set_scratch_size(const int& level, const PerTeamValue& per_team, const PerThreadValue& per_thread) const {
-    (void) level;
     TeamPolicyInternal p = *this;
-    p.m_team_scratch_size = per_team.value;
-    p.m_thread_scratch_size = per_thread.value;
+    p.m_team_scratch_size[level] = per_team.value;
+    p.m_thread_scratch_size[level] = per_thread.value;
     return p;
   };
 

@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -237,12 +237,16 @@ TEST_F( serial , team_shared_request) {
   TestSharedTeam< Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >();
 }
 
-#if defined(KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA) 
+#if defined(KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA)
 TEST_F( serial , team_lambda_shared_request) {
   TestLambdaSharedTeam< Kokkos::HostSpace, Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >();
   TestLambdaSharedTeam< Kokkos::HostSpace, Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >();
 }
 #endif
+
+TEST_F( serial, shmem_size) {
+  TestShmemSize< Kokkos::Serial >();
+}
 
 TEST_F( serial  , team_scan )
 {
@@ -392,6 +396,8 @@ TEST_F( serial , memory_pool )
   ASSERT_TRUE( val );
 
   TestMemoryPool::test_mempool2< Kokkos::Serial >( 64, 4, 1000000, 2000000 );
+
+  TestMemoryPool::test_memory_exhaustion< Kokkos::Serial >();
 }
 
 //----------------------------------------------------------------------------
