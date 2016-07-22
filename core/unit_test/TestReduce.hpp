@@ -470,12 +470,14 @@ public:
 
   //------------------------------------
 
-  TestTripleNestedReduce( const size_type & nrows , const size_type & ncols )
+  TestTripleNestedReduce( const size_type & nrows , const size_type & ncols 
+                        , const size_type & team_size , const size_type & vector_length )
   {
-    run_test( nrows , ncols );
+    run_test( nrows , ncols , team_size, vector_length );
   }
 
-  void run_test( const size_type & nrows , const size_type & ncols )
+  void run_test( const size_type & nrows , const size_type & ncols 
+               , const size_type & team_size, const size_type & vector_length )
   {
     //typedef Kokkos::LayoutLeft Layout;
     typedef Kokkos::LayoutRight Layout;
@@ -508,7 +510,7 @@ public:
     // Three level parallelism kernel to force caching of vector x 
     ScalarType result = 0.0;
     int chunk_size = 128;
-    Kokkos::parallel_reduce( team_policy( nrows/chunk_size , 32 , 32 ) , KOKKOS_LAMBDA ( const member_type& teamMember , double &update ) {
+    Kokkos::parallel_reduce( team_policy( nrows/chunk_size , team_size , vector_length ) , KOKKOS_LAMBDA ( const member_type& teamMember , double &update ) {
       const int row_start = teamMember.league_rank() * chunk_size;
       const int row_end   = row_start + chunk_size;
       Kokkos::parallel_for( Kokkos::TeamThreadRange( teamMember , row_start , row_end ) , [&] ( const int i ) {

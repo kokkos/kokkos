@@ -251,7 +251,9 @@ TEST_F( cuda , team_vector )
 
 TEST_F( cuda, triple_nested_parallelism )
 {
-  TestTripleNestedReduce< double, Kokkos::Cuda >( 8192, 2048 );
+  TestTripleNestedReduce< double, Kokkos::Cuda >( 8192, 2048 , 32 , 32 );
+  TestTripleNestedReduce< double, Kokkos::Cuda >( 8192, 2048 , 32 , 16 );
+  TestTripleNestedReduce< double, Kokkos::Cuda >( 8192, 2048 , 16 , 16 );
 }
 
 }
