@@ -216,6 +216,61 @@ void parallel_for
   }
 }
 
+// ------------------- jdsteve's scratchwork ------------------------------------------------------------
+
+__device__ inline int warp_lane() { return (threadIdx.y*blockDim.x+threadIdx.x) & (Impl::CudaTraits::WarpSize-1); } // == idx%warpsize
+__device__ inline int get_team_start_lane(int stride, int team_size)
+{
+  if (stride == 1) {
+    //return (warp_lane>>log_2<team_size>::val)<<log_2<team_size>::val; //TODO
+    return (int)(warp_lane()/team_size)*team_size;
+  } else {
+    // warp_lane % stride
+    return warp_lane() & (stride-1);
+  }
+}
+
+template< typename ValueType, class JoinType >
+__device__ inline ValueType shfl_reduction(const JoinType& join, ValueType& val, int team_size, int stride)
+{
+  for (int lane_delta=(team_size*stride)>>1; lane_delta>=stride; lane_delta>>=1) {
+    val = join(val, Kokkos::shfl_down(val, lane_delta, team_size*stride));
+  }
+  return val;
+}
+
+template< class ValueType >
+__device__ __inline__ ValueType shfl_broadcast(ValueType& val, int src_lane)
+{
+  return Kokkos::shfl(val, src_lane, Impl::CudaTraits::WarpSize);
+}
+
+template< typename iType, class Lambda, typename ValueType, class JoinType >
+KOKKOS_INLINE_FUNCTION
+void parallel_reduce
+  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
+   const Lambda & lambda, const JoinType& join, ValueType& init_result) {
+
+  ValueType result = init_result;
+
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+    lambda(i,result);
+  }
+
+  init_result = result;
+
+  // q: is this how to get team_size?
+  // q: loop_boundaries.increment == stride?
+  int team_size = loop_boundaries.thread.team_size();
+  int team_start_lane = get_team_start_lane(loop_boundaries.increment, team_size);
+
+  init_result = shfl_reduction<ValueType, JoinType>(join, init_result, team_size, loop_boundaries.increment);
+  init_result = shfl_broadcast<ValueType>( init_result, team_start_lane );
+}
+
+// ------------------------- end scratchwork ---------------------------------
+
+
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------
