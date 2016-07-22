@@ -260,7 +260,7 @@ TEST_F( cuda, triple_nested_parallelism )
 
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_ENABLE_CUDA_TASK_POLICY )
+#if defined( KOKKOS_ENABLE_TASKPOLICY )
 
 TEST_F( cuda , task_fib )
 {
@@ -282,11 +282,7 @@ TEST_F( cuda , task_team )
   TestTaskPolicy::TestTaskTeamValue< Kokkos::Cuda >::run(1000);
 }
 
-#endif // #if defined( KOKKOS_ENABLE_CUDA_TASK_POLICY )
-
 //----------------------------------------------------------------------------
-
-#if defined( KOKKOS_ENABLE_CUDA_TASK_POLICY )
 
 TEST_F( cuda , old_task_policy )
 {
@@ -313,5 +309,5 @@ TEST_F( cuda , old_task_latch )
   TestTaskPolicy::test_latch< Kokkos::Cuda >(1000);
 }
 
-#endif // #if defined( KOKKOS_ENABLE_CUDA_TASK_POLICY )
+#endif // #if defined( KOKKOS_ENABLE_TASKPOLICY )
 

@@ -43,7 +43,7 @@
 
 #include <Kokkos_Core.hpp>
 
-#if defined( KOKKOS_HAVE_SERIAL )
+#if defined( KOKKOS_HAVE_SERIAL ) && defined( KOKKOS_ENABLE_TASKPOLICY )
 
 #include <impl/Kokkos_TaskQueue_impl.hpp>
 
@@ -107,5 +107,5 @@ void TaskQueueSpecialization< Kokkos::Serial >::execute
 
 }} /* namespace Kokkos::Impl */
 
-#endif /* #if defined( KOKKOS_HAVE_SERIAL ) */
+#endif /* #if defined( KOKKOS_HAVE_SERIAL ) && defined( KOKKOS_ENABLE_TASKPOLICY ) */
 

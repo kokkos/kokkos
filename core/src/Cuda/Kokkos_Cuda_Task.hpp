@@ -44,7 +44,7 @@
 #ifndef KOKKOS_IMPL_CUDA_TASK_HPP
 #define KOKKOS_IMPL_CUDA_TASK_HPP
 
-#if defined( KOKKOS_ENABLE_CUDA_TASK_POLICY )
+#if defined( KOKKOS_ENABLE_TASKPOLICY )
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -221,6 +221,6 @@ void parallel_for
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#endif /* #if defined( KOKKOS_ENABLE_CUDA_TASK_POLICY ) */
+#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
 #endif /* #ifndef KOKKOS_IMPL_CUDA_TASK_HPP */
 

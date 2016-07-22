@@ -58,6 +58,8 @@
 #include <Kokkos_Atomic.hpp>
 #include <Qthread/Kokkos_Qthread_TaskPolicy.hpp>
 
+#if defined( KOKKOS_ENABLE_TASKPOLICY )
+
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
@@ -484,5 +486,6 @@ void wait( Kokkos::Experimental::TaskPolicy< Kokkos::Qthread > & policy )
 } // namespace Experimental
 } // namespace Kokkos
 
+#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
 #endif /* #if defined( KOKKOS_HAVE_QTHREAD ) */
 

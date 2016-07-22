@@ -47,18 +47,10 @@
 #define KOKKOS_CUDA_TASKPOLICY_HPP
 
 #include <Kokkos_Core_fwd.hpp>
-
-#if defined( KOKKOS_HAVE_CUDA ) && \
-    defined( KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE )
-
-#define KOKKOS_ENABLE_CUDA_TASK_POLICY
-
-/* The TaskPolicy< Cuda > capability requires nvcc using the option:
- *    --relocatable-device-code=true
- */
-
 #include <Kokkos_Cuda.hpp>
 #include <Kokkos_TaskPolicy.hpp>
+
+#if defined( KOKKOS_HAVE_CUDA ) && defined( KOKKOS_ENABLE_TASKPOLICY )
 
 //----------------------------------------------------------------------------
 
@@ -832,10 +824,10 @@ public:
 } /* namespace Experimental */
 } /* namespace Kokkos */
 
-#endif /* #if defined( KOKKOS_HAVE_CUDA ) && defined( KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE ) */
 
 //----------------------------------------------------------------------------
 
+#endif /* #if defined( KOKKOS_HAVE_CUDA ) && defined( KOKKOS_ENABLE_TASKPOLICY ) */
 #endif /* #ifndef KOKKOS_CUDA_TASKPOLICY_HPP */
 
 

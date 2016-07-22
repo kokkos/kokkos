@@ -46,6 +46,8 @@
 #ifndef KOKKOS_IMPL_TASKQUEUE_HPP
 #define KOKKOS_IMPL_TASKQUEUE_HPP
 
+#if defined( KOKKOS_ENABLE_TASKPOLICY )
+
 #include <string>
 #include <typeinfo>
 #include <stdexcept>
@@ -431,5 +433,6 @@ public:
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
 #endif /* #ifndef KOKKOS_IMPL_TASKQUEUE_HPP */
 

@@ -43,7 +43,7 @@
 
 #include <Kokkos_Core.hpp>
 
-#if defined( KOKKOS_HAVE_OPENMP )
+#if defined( KOKKOS_HAVE_OPENMP ) && defined( KOKKOS_ENABLE_TASKPOLICY )
 
 #include <impl/Kokkos_TaskQueue_impl.hpp>
 
@@ -269,6 +269,6 @@ fflush(stdout);
 
 //----------------------------------------------------------------------------
 
-#endif /* #if defined( KOKKOS_HAVE_OPENMP ) */
+#endif /* #if defined( KOKKOS_HAVE_OPENMP ) && defined( KOKKOS_ENABLE_TASKPOLICY ) */
 
 

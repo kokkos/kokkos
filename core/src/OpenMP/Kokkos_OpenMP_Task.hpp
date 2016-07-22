@@ -44,6 +44,8 @@
 #ifndef KOKKOS_IMPL_OPENMP_TASK_HPP
 #define KOKKOS_IMPL_OPENMP_TASK_HPP
 
+#if defined( KOKKOS_ENABLE_TASKPOLICY )
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -202,5 +204,6 @@ void parallel_for
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
 #endif /* #ifndef KOKKOS_IMPL_OPENMP_TASK_HPP */
 

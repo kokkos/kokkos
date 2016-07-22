@@ -49,7 +49,7 @@
 #include <Kokkos_Core.hpp>
 #include <Threads/Kokkos_Threads_TaskPolicy.hpp>
 
-#if defined( KOKKOS_HAVE_PTHREAD )
+#if defined( KOKKOS_HAVE_PTHREAD ) && defined( KOKKOS_ENABLE_TASKPOLICY )
 
 #define QLOCK   (reinterpret_cast<void*>( ~((uintptr_t)0) ))
 #define QDENIED (reinterpret_cast<void*>( ~((uintptr_t)0) - 1 ))
@@ -926,5 +926,5 @@ void Task::clear_dependence()
 } /* namespace Experimental */
 } /* namespace Kokkos */
 
-#endif /* #if defined( KOKKOS_HAVE_PTHREAD ) */
+#endif /* #if defined( KOKKOS_HAVE_PTHREAD ) && defined( KOKKOS_ENABLE_TASKPOLICY ) */
 

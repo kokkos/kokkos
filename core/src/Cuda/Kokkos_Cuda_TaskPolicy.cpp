@@ -49,7 +49,7 @@
 #include <Kokkos_Core.hpp>
 #include <Cuda/Kokkos_Cuda_TaskPolicy.hpp>
 
-#if defined( KOKKOS_ENABLE_CUDA_TASK_POLICY )
+#if defined( KOKKOS_ENABLE_TASKPOLICY )
 
 // #define DETAILED_PRINT
 
@@ -928,5 +928,5 @@ void Task::clear_dependence()
 } /* namespace Kokkos */
 
 
-#endif  /* #if defined( KOKKOS_ENABLE_CUDA_TASK_POLICY ) */
+#endif  /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
 

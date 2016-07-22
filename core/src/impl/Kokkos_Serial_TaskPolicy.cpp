@@ -45,7 +45,8 @@
 
 #include <impl/Kokkos_Serial_TaskPolicy.hpp>
 
-#if defined( KOKKOS_HAVE_SERIAL )
+#if defined( KOKKOS_HAVE_SERIAL ) && defined( KOKKOS_ENABLE_TASKPOLICY )
+
 #include <stdlib.h>
 #include <stdexcept>
 #include <iostream>
@@ -343,4 +344,5 @@ void Task::execute_ready_tasks()
 } // namespace Experimental
 } // namespace Kokkos
 
-#endif // defined( KOKKOS_HAVE_SERIAL )
+#endif /* #if defined( KOKKOS_HAVE_SERIAL ) && defined( KOKKOS_ENABLE_TASKPOLICY ) */
+

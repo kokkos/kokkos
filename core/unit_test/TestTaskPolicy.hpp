@@ -50,6 +50,8 @@
 #include <cmath>
 #include <Kokkos_TaskPolicy.hpp>
 
+#if defined( KOKKOS_ENABLE_TASKPOLICY )
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -1036,6 +1038,7 @@ void test_latch( int n )
 
 } // namespace TestTaskPolicy
 
+#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
 #endif /* #ifndef KOKKOS_UNITTEST_TASKPOLICY_HPP */
 
 

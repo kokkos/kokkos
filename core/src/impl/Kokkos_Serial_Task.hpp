@@ -44,6 +44,8 @@
 #ifndef KOKKOS_IMPL_SERIAL_TASK_HPP
 #define KOKKOS_IMPL_SERIAL_TASK_HPP
 
+#if defined( KOKKOS_ENABLE_TASKPOLICY )
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -160,5 +162,6 @@ void parallel_for(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskE
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
 #endif /* #ifndef KOKKOS_IMPL_SERIAL_TASK_HPP */
 

@@ -41,6 +41,8 @@
 //@HEADER
 */
 
+#if defined( KOKKOS_ENABLE_TASKPOLICY )
+
 namespace Kokkos {
 namespace Impl {
 
@@ -528,4 +530,6 @@ void TaskQueue< ExecSpace >::complete
 } /* namespace Impl */
 } /* namespace Kokkos */
 
+
+#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
 

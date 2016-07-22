@@ -246,6 +246,7 @@ TEST_F( openmp , team_vector )
 
 //----------------------------------------------------------------------------
 
+#if defined( KOKKOS_ENABLE_TASKPOLICY )
 
 TEST_F( openmp , task_fib )
 {
@@ -268,6 +269,7 @@ TEST_F( openmp , task_team )
 }
 
 
+#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
 
 
 } // namespace test

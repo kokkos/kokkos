@@ -69,6 +69,8 @@
 
 #include <impl/Kokkos_FunctorAdapter.hpp>
 
+#if defined( KOKKOS_ENABLE_TASKPOLICY )
+
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
@@ -657,5 +659,6 @@ public:
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
 #endif /* #define KOKKOS_QTHREAD_TASK_HPP */
 

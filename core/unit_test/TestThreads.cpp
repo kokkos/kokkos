@@ -483,6 +483,8 @@ TEST_F( threads , team_vector )
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Threads >(10) ) );
 }
 
+#if defined( KOKKOS_ENABLE_TASKPOLICY )
+
 TEST_F( threads , task_policy )
 {
   TestTaskPolicy::test_task_dep< Kokkos::Threads >( 10 );
@@ -507,6 +509,8 @@ TEST_F( threads , task_latch )
   TestTaskPolicy::test_latch< Kokkos::Threads >(10);
   TestTaskPolicy::test_latch< Kokkos::Threads >(1000);
 }
+
+#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
 
 } // namespace Test
 

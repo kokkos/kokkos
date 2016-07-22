@@ -402,6 +402,8 @@ TEST_F( serial , memory_pool )
 
 //----------------------------------------------------------------------------
 
+#if defined( KOKKOS_ENABLE_TASKPOLICY )
+
 TEST_F( serial , task_fib )
 {
   for ( int i = 0 ; i < 25 ; ++i ) {
@@ -436,6 +438,8 @@ TEST_F( serial , old_task_team )
 {
   TestTaskPolicy::test_task_team< Kokkos::Serial >(1000);
 }
+
+#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
 
 //----------------------------------------------------------------------------
 
