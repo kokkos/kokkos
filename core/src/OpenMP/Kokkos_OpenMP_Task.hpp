@@ -199,6 +199,31 @@ void parallel_for
   }
 }
 
+template<typename iType, class Lambda>
+KOKKOS_INLINE_FUNCTION
+void parallel_reduce
+  ( const Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::OpenMP > >& loop_boundaries
+  , const Lambda& lambda
+  , ValueType& initialized_result)
+{
+  
+  ValueType& result = initialized_result;
+
+  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+    lambda(i, result);
+  }
+
+  int team_rank = loop_boundaries.thread.team_rank();
+  static ValueType accum = 0;
+  team_barrier();//how to call this?
+  
+  if (team_rank == 0) {
+  
+  //TODO have single thread reduce across threads in team
+  }
+
+}
+
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------
