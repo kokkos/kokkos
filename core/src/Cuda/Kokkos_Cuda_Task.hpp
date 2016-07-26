@@ -274,20 +274,11 @@ void parallel_for
 
 // ------------------- jdsteve's scratchwork ------------------------------------------------------------
 
-__device__ inline int warp_lane() { return (threadIdx.y*blockDim.x+threadIdx.x) & (Impl::CudaTraits::WarpSize-1); } // == idx%warpsize
-__device__ inline int get_team_start_lane(int stride, int team_size)
-{
-  if (stride == 1) {
-    //return (warp_lane>>log_2<team_size>::val)<<log_2<team_size>::val; //TODO
-    return (int)(warp_lane()/team_size)*team_size;
-  } else {
-    // warp_lane % stride
-    return warp_lane() & (stride-1);
-  }
-}
+KOKKOS_INLINE_FUNCTION int warp_lane() { return (threadIdx.y*blockDim.x+threadIdx.x) & (Impl::CudaTraits::WarpSize-1); } // == idx%warpsize
+KOKKOS_INLINE_FUNCTION int team_start_lane() { return threadIdx.x; }
 
 template< typename ValueType, class JoinType >
-__device__ inline ValueType shfl_reduction(const JoinType& join, ValueType& val, int team_size, int stride)
+KOKKOS_INLINE_FUNCTION ValueType shfl_warp_reduction(const JoinType& join, ValueType& val, int team_size, int stride)
 {
   for (int lane_delta=(team_size*stride)>>1; lane_delta>=stride; lane_delta>>=1) {
     val = join(val, Kokkos::shfl_down(val, lane_delta, team_size*stride));
@@ -295,8 +286,19 @@ __device__ inline ValueType shfl_reduction(const JoinType& join, ValueType& val,
   return val;
 }
 
+// if no stride or team_size passed, assume:
+// stride == blockDim.x, team_size == blockDim.y, stride*team_size == warp_size
+template< typename ValueType, class JoinType >
+KOKKOS_INLINE_FUNCTION ValueType shfl_warp_reduction(const JoinType& join, ValueType& val)
+{
+  for (int lane_delta = Impl::CudaTraits::WarpSize>>1; lane_delta >= blockDim.x; lane_delta>>=1) {
+    val = join(val, Kokkos::shfl_down(val, lane_delta, Impl::CudaTraits::WarpSize));
+  }
+  return val;
+}
+
 template< class ValueType >
-__device__ __inline__ ValueType shfl_broadcast(ValueType& val, int src_lane)
+KOKKOS_INLINE_FUNCTION ValueType shfl_warp_broadcast(ValueType& val, int src_lane)
 {
   return Kokkos::shfl(val, src_lane, Impl::CudaTraits::WarpSize);
 }
@@ -305,7 +307,7 @@ template< typename iType, class Lambda, typename ValueType, class JoinType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
   (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
-   const Lambda & lambda, const JoinType& join, ValueType& init_result) {
+   const Lambda & lambda, const JoinType& join, ValueType& initialized_result) {
 
   ValueType result = init_result;
 
@@ -313,15 +315,36 @@ void parallel_reduce
     lambda(i,result);
   }
 
-  init_result = result;
+  initialized_result = result;
 
-  // q: is this how to get team_size?
-  // q: loop_boundaries.increment == stride?
   int team_size = loop_boundaries.thread.team_size();
-  int team_start_lane = get_team_start_lane(loop_boundaries.increment, team_size);
+  int team_start_lane = team_start_lane();
 
-  init_result = shfl_reduction<ValueType, JoinType>(join, init_result, team_size, loop_boundaries.increment);
-  init_result = shfl_broadcast<ValueType>( init_result, team_start_lane );
+  initialized_result = shfl_warp_reduction<ValueType, JoinType>(join, initialized_result);
+  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, team_start_lane );
+}
+
+// if no join() provided, use sum
+template< typename iType, class Lambda, typename ValueType >
+KOKKOS_INLINE_FUNCTION
+void parallel_reduce
+  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
+   const Lambda & lambda, ValueType& initialized_result) {
+
+  ValueType result = init_result;
+
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+    lambda(i,result);
+  }
+
+  initialized_result = result;
+
+  int team_size = loop_boundaries.thread.team_size();
+  int team_start_lane = team_start_lane();
+
+  initialized_result = shfl_warp_reduction([&] (const ValueType& val1, const ValueType& val2) { return val1 + val2; },
+                                           initialized_result);
+  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, team_start_lane );
 }
 
 // ------------------------- end scratchwork ---------------------------------
