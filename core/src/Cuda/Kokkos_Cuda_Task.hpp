@@ -274,11 +274,22 @@ void parallel_for
 
 // ------------------- jdsteve's scratchwork ------------------------------------------------------------
 
-KOKKOS_INLINE_FUNCTION int warp_lane() { return (threadIdx.y*blockDim.x+threadIdx.x) & (Impl::CudaTraits::WarpSize-1); } // == idx%warpsize
+// warp lane == idx%warpsize
+KOKKOS_INLINE_FUNCTION int warp_lane()
+{
+  return (threadIdx.y*blockDim.x+threadIdx.x) & (Impl::CudaTraits::WarpSize-1);\
+}
+
 KOKKOS_INLINE_FUNCTION int team_start_lane() { return threadIdx.x; }
 
+// team reduction for all teams within warp (team_size <= WarpSize)
+// assume stride*team_size == warp_size
 template< typename ValueType, class JoinType >
-KOKKOS_INLINE_FUNCTION ValueType shfl_warp_reduction(const JoinType& join, ValueType& val, int team_size, int stride)
+KOKKOS_INLINE_FUNCTION ValueType strided_shfl_warp_reduction
+  (const JoinType& join,
+   ValueType& val,
+   int team_size,
+   int stride)
 {
   for (int lane_delta=(team_size*stride)>>1; lane_delta>=stride; lane_delta>>=1) {
     val = join(val, Kokkos::shfl_down(val, lane_delta, team_size*stride));
@@ -286,10 +297,14 @@ KOKKOS_INLINE_FUNCTION ValueType shfl_warp_reduction(const JoinType& join, Value
   return val;
 }
 
+// team reduction for all teams within warp (team_size <= WarpSize)
+// assume stride*team_size == warp_size 
 // if no stride or team_size passed, assume:
-// stride == blockDim.x, team_size == blockDim.y, stride*team_size == warp_size
+// stride == blockDim.x, team_size == blockDim.y
 template< typename ValueType, class JoinType >
-KOKKOS_INLINE_FUNCTION ValueType shfl_warp_reduction(const JoinType& join, ValueType& val)
+KOKKOS_INLINE_FUNCTION ValueType strided_shfl_warp_reduction
+  (const JoinType& join,
+   ValueType& val)
 {
   for (int lane_delta = Impl::CudaTraits::WarpSize>>1; lane_delta >= blockDim.x; lane_delta>>=1) {
     val = join(val, Kokkos::shfl_down(val, lane_delta, Impl::CudaTraits::WarpSize));
@@ -297,19 +312,25 @@ KOKKOS_INLINE_FUNCTION ValueType shfl_warp_reduction(const JoinType& join, Value
   return val;
 }
 
+// broadcast within warp
 template< class ValueType >
-KOKKOS_INLINE_FUNCTION ValueType shfl_warp_broadcast(ValueType& val, int src_lane)
+KOKKOS_INLINE_FUNCTION ValueType shfl_warp_broadcast
+  (ValueType& val,
+   int src_lane)
 {
   return Kokkos::shfl(val, src_lane, Impl::CudaTraits::WarpSize);
 }
 
+// all-reduce for all teams within warp (team_size <= WarpSize)
 template< typename iType, class Lambda, typename ValueType, class JoinType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
   (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
-   const Lambda & lambda, const JoinType& join, ValueType& initialized_result) {
+   const Lambda & lambda,
+   const JoinType& join,
+   ValueType& initialized_result) {
 
-  ValueType result = init_result;
+  ValueType result = initialized_result;
 
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i,result);
@@ -320,18 +341,20 @@ void parallel_reduce
   int team_size = loop_boundaries.thread.team_size();
   int team_start_lane = team_start_lane();
 
-  initialized_result = shfl_warp_reduction<ValueType, JoinType>(join, initialized_result);
+  initialized_result = strided_shfl_warp_reduction<ValueType, JoinType>(join, initialized_result);
   initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, team_start_lane );
 }
 
+// all-reduce for all teams within warp (team_size <= WarpSize)
 // if no join() provided, use sum
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
   (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
-   const Lambda & lambda, ValueType& initialized_result) {
+   const Lambda & lambda,
+   ValueType& initialized_result) {
 
-  ValueType result = init_result;
+  ValueType result = initialized_result;
 
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i,result);
@@ -342,9 +365,45 @@ void parallel_reduce
   int team_size = loop_boundaries.thread.team_size();
   int team_start_lane = team_start_lane();
 
-  initialized_result = shfl_warp_reduction([&] (const ValueType& val1, const ValueType& val2) { return val1 + val2; },
-                                           initialized_result);
+  initialized_result = strided_shfl_warp_reduction(
+                          [&] (const ValueType& val1, const ValueType& val2) { return val1 + val2; },
+                          initialized_result);
   initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, team_start_lane );
+}
+
+// exclusive scan
+// assume stride*team_size == warp_size 
+// (stride == blockDim.x, team_size == blockDim.y)
+template< typename iType, class Lambda, typename ValueType >
+KOKKOS_INLINE_FUNCTION
+void parallel_scan
+  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
+   const Lambda & lambda,
+   ValueType& initialized_result) {
+
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+    lambda(i,result);
+  }
+
+  ValueType x = result;
+  ValueType y, accum;
+  // TODO improve performance?
+
+  // INCLUSIVE scan
+  for( int offset = blockDim.x ; offset < Impl::CudaTraits::WarpSize ; offset <<= 1 ) {
+    y = Kokkos::shfl_up(x, offset, Impl::CudaTraits::WarpSize);
+    if(team_rank()*blockDim.x >= offset) { x += y; }
+  }
+
+  // pass accum to all threads
+  accum = my_shfl_broadcast<ValueType>(x, team_start_lane()+Impl::CudaTraits::WarpSize-blockDim.x);
+  //TODO do something with accum
+
+  // make EXCLUSIVE scan by shifting values over one
+  initialized_result = Kokkos::shfl_up(x, blockDim.x, Impl::CudaTraits::WarpSize);
+
+  // set first val to 0 (for exclusive scan)
+  if (team_rank() == 0) { initialized_result = 0; } //TODO is there a better way to do this?
 }
 
 // ------------------------- end scratchwork ---------------------------------
