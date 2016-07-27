@@ -477,7 +477,7 @@ public:
       return f ;
     }
 
-  /**\brief  The process spawns a task with options
+  /**\brief  The host process spawns a task with options
    *
    *  1) High, Normal, or Low priority
    *  2) With or without dependence
@@ -486,7 +486,7 @@ public:
   template< typename FunctorType , typename ... Options >
   inline
   Future< typename FunctorType::value_type , ExecSpace >
-  proc_spawn( FunctorType const & arg_functor 
+  host_spawn( FunctorType const & arg_functor 
             , Options const & ... arg_options
             ) const
     {
