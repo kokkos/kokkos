@@ -275,12 +275,14 @@ void parallel_for
 // ------------------- jdsteve's scratchwork ------------------------------------------------------------
 
 // warp lane == idx%warpsize
+/*
 KOKKOS_INLINE_FUNCTION int warp_lane()
 {
-  return (threadIdx.y*blockDim.x+threadIdx.x) & (Impl::CudaTraits::WarpSize-1);\
+  return (threadIdx.y*blockDim.x+threadIdx.x) & (Impl::CudaTraits::WarpSize-1);
 }
+*/
 
-KOKKOS_INLINE_FUNCTION int team_start_lane() { return threadIdx.x; }
+KOKKOS_INLINE_FUNCTION int position_in_vec() { return threadIdx.x; }
 
 // team reduction for all teams within warp (team_size <= WarpSize)
 // assume stride*team_size == warp_size
@@ -293,21 +295,6 @@ KOKKOS_INLINE_FUNCTION ValueType strided_shfl_warp_reduction
 {
   for (int lane_delta=(team_size*stride)>>1; lane_delta>=stride; lane_delta>>=1) {
     val = join(val, Kokkos::shfl_down(val, lane_delta, team_size*stride));
-  }
-  return val;
-}
-
-// team reduction for all teams within warp (team_size <= WarpSize)
-// assume stride*team_size == warp_size 
-// if no stride or team_size passed, assume:
-// stride == blockDim.x, team_size == blockDim.y
-template< typename ValueType, class JoinType >
-KOKKOS_INLINE_FUNCTION ValueType strided_shfl_warp_reduction
-  (const JoinType& join,
-   ValueType& val)
-{
-  for (int lane_delta = Impl::CudaTraits::WarpSize>>1; lane_delta >= blockDim.x; lane_delta>>=1) {
-    val = join(val, Kokkos::shfl_down(val, lane_delta, Impl::CudaTraits::WarpSize));
   }
   return val;
 }
@@ -339,10 +326,9 @@ void parallel_reduce
   initialized_result = result;
 
   int team_size = loop_boundaries.thread.team_size();
-  int team_start_lane = team_start_lane();
-
-  initialized_result = strided_shfl_warp_reduction<ValueType, JoinType>(join, initialized_result);
-  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, team_start_lane );
+  //does this work for "single"?
+  initialized_result = strided_shfl_warp_reduction<ValueType, JoinType>(join, initialized_result, team_size, blockDim.x);
+  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, position_in_vec() );
 }
 
 // all-reduce for all teams within warp (team_size <= WarpSize)
@@ -363,17 +349,18 @@ void parallel_reduce
   initialized_result = result;
 
   int team_size = loop_boundaries.thread.team_size();
-  int team_start_lane = team_start_lane();
 
   initialized_result = strided_shfl_warp_reduction(
                           [&] (const ValueType& val1, const ValueType& val2) { return val1 + val2; },
-                          initialized_result);
-  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, team_start_lane );
+                          initialized_result,
+                          team_size,
+                          blockDim.x);
+  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, position_in_vec() );
 }
 
 // exclusive scan
 // assume stride*team_size == warp_size 
-// (stride == blockDim.x, team_size == blockDim.y)
+// (stride == blockDim.x == vec_length, team_size == blockDim.y)
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
 void parallel_scan
@@ -381,29 +368,32 @@ void parallel_scan
    const Lambda & lambda,
    ValueType& initialized_result) {
 
+  ValueType result = initialized_result; //TODO is this what we want?
+
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i,result);
   }
 
-  ValueType x = result;
+  //ValueType x = result;
   ValueType y, accum;
+  int member_rank = //TODO member's rank within team loop_boundaries.thread.team_rank();
   // TODO improve performance?
 
   // INCLUSIVE scan
   for( int offset = blockDim.x ; offset < Impl::CudaTraits::WarpSize ; offset <<= 1 ) {
-    y = Kokkos::shfl_up(x, offset, Impl::CudaTraits::WarpSize);
-    if(team_rank()*blockDim.x >= offset) { x += y; }
+    y = Kokkos::shfl_up(result, offset, Impl::CudaTraits::WarpSize);
+    if(member_rank*blockDim.x >= offset) { result += y; }
   }
 
   // pass accum to all threads
-  accum = my_shfl_broadcast<ValueType>(x, team_start_lane()+Impl::CudaTraits::WarpSize-blockDim.x);
+  accum = my_shfl_broadcast<ValueType>(result, position_in_vec()+Impl::CudaTraits::WarpSize-blockDim.x);
   //TODO do something with accum
 
   // make EXCLUSIVE scan by shifting values over one
-  initialized_result = Kokkos::shfl_up(x, blockDim.x, Impl::CudaTraits::WarpSize);
+  initialized_result = Kokkos::shfl_up(result, blockDim.x, Impl::CudaTraits::WarpSize);
 
   // set first val to 0 (for exclusive scan)
-  if (team_rank() == 0) { initialized_result = 0; } //TODO is there a better way to do this?
+  if (member_rank == 0) { initialized_result = 0; } //TODO is there a better way to do this?
 }
 
 // ------------------------- end scratchwork ---------------------------------
