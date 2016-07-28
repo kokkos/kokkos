@@ -206,6 +206,8 @@ void parallel_for
   }
 }
 
+//TODO versions with/without join op
+
 template<typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
@@ -220,15 +222,16 @@ void parallel_reduce
     lambda(i, result);
   }
 
-  int team_rank = loop_boundaries.thread.team_rank(); //TODO assuming this is the thread rank within the team
-  shared[team_rank] = result; //TODO how do we get this?
+  int team_rank = loop_boundaries.thread.team_rank(); // member num within the team
+  ValueType *shared = loop_boundaries.thread.team_shared();
+  shared[team_rank] = result;
 
   loop_boundaries.thread.team_barrier();
 
   // reduce across threads to thread 0
   if (team_rank == 0) {
-    for (int i = 0; i < loop_boundaries.thread.team_size(); i++) {
-      result += shared[i]; //TODO not necessarily sum
+    for (int i = 1; i < loop_boundaries.thread.team_size(); i++) {
+      shared[0] += shared[i];
     }
   }
 
