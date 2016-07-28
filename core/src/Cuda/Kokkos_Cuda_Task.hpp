@@ -282,7 +282,7 @@ KOKKOS_INLINE_FUNCTION int warp_lane()
 }
 */
 
-KOKKOS_INLINE_FUNCTION int position_in_vec() { return threadIdx.x; }
+//KOKKOS_INLINE_FUNCTION int position_in_vec() { return threadIdx.x; }
 
 // reduce across corresponding lanes between team members within warp
 // assume stride*team_size == warp_size
@@ -337,11 +337,12 @@ void parallel_reduce
   }
 
   initialized_result = result;
+  //Note: position in vec == threadIdx.x
 
   int team_size = loop_boundaries.thread.team_size();
   //does this work for "single"?
   initialized_result = strided_shfl_warp_reduction<ValueType, JoinType>(join, initialized_result, team_size, blockDim.x);
-  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, position_in_vec() );
+  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, threadIdx.x );
 }
 
 // all-reduce across corresponding vector lanes between team members within warp
@@ -360,6 +361,7 @@ void parallel_reduce
   }
 
   initialized_result = result;
+  //Note: position in vec == threadIdx.x
 
   int team_size = loop_boundaries.thread.team_size();
 
@@ -368,10 +370,8 @@ void parallel_reduce
                           initialized_result,
                           team_size,
                           blockDim.x);
-  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, position_in_vec() );
+  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, threadIdx.x );
 }
-
-// vector versions:
 
 // all-reduce within team members within warp
 template< typename iType, class Lambda, typename ValueType, class JoinType >
@@ -426,7 +426,7 @@ void parallel_reduce
 // (stride == blockDim.x == vec_length, team_size == blockDim.y)
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
-void parallel_scan
+void parallel_scan_excl
   (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
    const Lambda & lambda,
    ValueType& initialized_result) {
@@ -439,25 +439,25 @@ void parallel_scan
 
   //ValueType x = result;
   ValueType y, accum;
-  int member_rank = threadIdx.y; //TODO member's rank within team loop_boundaries.thread.team_rank();
+  //Note: member# == threadIdx.y
+  //Note: position in vec == threadIdx.x
   //TODO when should we use variables vs. cuda dims/ids?
-  // TODO improve performance?
 
   // INCLUSIVE scan
   for( int offset = blockDim.x ; offset < Impl::CudaTraits::WarpSize ; offset <<= 1 ) {
     y = Kokkos::shfl_up(result, offset, Impl::CudaTraits::WarpSize);
-    if(member_rank*blockDim.x >= offset) { result += y; }
+    if(threadIdx.y*blockDim.x >= offset) { result += y; }
   }
 
   // pass accum to all threads
-  accum = my_shfl_broadcast<ValueType>(result, position_in_vec()+Impl::CudaTraits::WarpSize-blockDim.x);
+  accum = my_shfl_broadcast<ValueType>(result, threadIdx.x+Impl::CudaTraits::WarpSize-blockDim.x);
   //TODO do something with accum
 
   // make EXCLUSIVE scan by shifting values over one
   initialized_result = Kokkos::shfl_up(result, blockDim.x, Impl::CudaTraits::WarpSize);
 
   // set first val to 0 (for exclusive scan)
-  if (member_rank == 0) { initialized_result = 0; }
+  if (threadIdx.y == 0) { initialized_result = 0; }
 }
 
 // exclusive scan within team member (vector) within warp
@@ -465,7 +465,7 @@ void parallel_scan
 // (stride == blockDim.x == vec_length, team_size == blockDim.y)
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
-void parallel_scan
+void parallel_scan_excl
   (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
    const Lambda & lambda,
    ValueType& initialized_result) {
@@ -479,10 +479,8 @@ void parallel_scan
   //ValueType x = result;
   ValueType y, accum;
   //Note: position in vec == threadIdx.x
-  //Note: vec length == blockDim.x
   //Note: member# == threadIdx.y
   //TODO when should we use variables vs. cuda dims/ids?
-  // TODO improve performance?
 
   // INCLUSIVE scan
   for( int offset = 1 ; offset < blockDim.x ; offset <<= 1 ) {
@@ -500,6 +498,73 @@ void parallel_scan
   // set first val to 0 (for exclusive scan)
   if (threadIdx.x == 0) { initialized_result = 0; }
 }
+
+// inclusive scan across corresponding vector lanes between team members within warp
+// assume stride*team_size == warp_size 
+// (stride == blockDim.x == vec_length, team_size == blockDim.y)
+template< typename iType, class Lambda, typename ValueType >
+KOKKOS_INLINE_FUNCTION
+void parallel_scan_incl
+  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
+   const Lambda & lambda,
+   ValueType& initialized_result) {
+
+  ValueType result = initialized_result; //TODO is this what we want?
+
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+    lambda(i,result);
+  }
+
+  //ValueType x = result;
+  ValueType y, accum;
+  //Note: member# == threadIdx.y
+  //Note: position in vec == threadIdx.x
+  //TODO when should we use variables vs. cuda dims/ids?
+
+  // INCLUSIVE scan
+  for( int offset = blockDim.x ; offset < Impl::CudaTraits::WarpSize ; offset <<= 1 ) {
+    y = Kokkos::shfl_up(result, offset, Impl::CudaTraits::WarpSize);
+    if(threadIdx.y*blockDim.x >= offset) { result += y; }
+  }
+
+  // pass accum to all threads
+  accum = my_shfl_broadcast<ValueType>(result, threadIdx.x+Impl::CudaTraits::WarpSize-blockDim.x);
+  //TODO do something with accum
+}
+
+// inclusive scan within team member (vector) within warp
+// assume stride*team_size == warp_size 
+// (stride == blockDim.x == vec_length, team_size == blockDim.y)
+template< typename iType, class Lambda, typename ValueType >
+KOKKOS_INLINE_FUNCTION
+void parallel_scan_incl
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
+   const Lambda & lambda,
+   ValueType& initialized_result) {
+
+  ValueType result = initialized_result; //TODO is this what we want?
+
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+    lambda(i,result);
+  }
+
+  //ValueType x = result;
+  ValueType y, accum;
+  //Note: position in vec == threadIdx.x
+  //Note: member# == threadIdx.y
+  //TODO when should we use variables vs. cuda dims/ids?
+
+  // INCLUSIVE scan
+  for( int offset = 1 ; offset < blockDim.x ; offset <<= 1 ) {
+    y = Kokkos::shfl_up(result, offset, blockDim.x);
+    if(threadIdx.x >= offset) { result += y; }
+  }
+
+  // pass accum to all threads
+  accum = my_shfl_broadcast<ValueType>(result, blockDim.x*threadIdx.y+blockDim.x-1);
+  //TODO do something with accum
+}
+
 
 // ------------------------- end scratchwork ---------------------------------
 
