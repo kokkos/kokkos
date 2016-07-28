@@ -121,7 +121,7 @@ public:
 #if defined( __CUDA_ARCH__ )
   __device__ void team_barrier() { __threadfence_block(); }
   __device__ int  team_rank() const { return threadIdx.y ; }
-  __device__ int  team_size() const { return blockDim.y ; }
+  __device__ int  team_size() const { return m_team_size ; }
 #else
   __host__ void team_barrier() {}
   __host__ int  team_rank() const { return 0 ; }
