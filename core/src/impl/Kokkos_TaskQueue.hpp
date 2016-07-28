@@ -81,10 +81,10 @@ namespace Impl {
 template< typename Space >
 class TaskQueueSpecialization ;
 
-/**
+/** \brief  Manage task allocation, deallocation, and scheduling.
  *
- *  Required: TaskQueue<Space> : public TaskQueue<void>
- *
+ *  Task execution is deferred to the TaskQueueSpecialization.
+ *  All other aspects of task management have shared implementation.
  */
 template< typename ExecSpace >
 class TaskQueue {
@@ -113,10 +113,10 @@ private:
 
   memory_pool               m_memory ;
   task_root_type * volatile m_ready[ NumQueue ][ 2 ];
-  long                      m_accum_alloc ;
-  int                       m_count_alloc ;
-  int                       m_max_alloc ;
-  int                       m_ready_count ;
+  long                      m_accum_alloc ; // Accumulated number of allocations
+  int                       m_count_alloc ; // Current number of allocations
+  int                       m_max_alloc ;   // Maximum number of allocations
+  int                       m_ready_count ; // Number of ready or executing
 
   //----------------------------------------
 
@@ -133,9 +133,23 @@ private:
     , unsigned const arg_memory_pool_superblock_capacity_log2
     );
 
+  // Schedule a task
+  //   Precondition:
+  //     task is not executing
+  //     task->m_next is the dependence or zero
+  //   Postcondition:
+  //     task->m_next is linked list membership
   KOKKOS_FUNCTION
-  void schedule( task_root_type * const , task_root_type * );
+  void schedule( task_root_type * const );
 
+  // Complete a task
+  //   Precondition:
+  //     task is not executing
+  //     task->m_next == LockTag  =>  task is complete
+  //     task->m_next != LockTag  =>  task is respawn
+  //   Postcondition:
+  //     task->m_wait == LockTag  =>  task is complete
+  //     task->m_wait != LockTag  =>  task is waiting
   KOKKOS_FUNCTION
   void complete( task_root_type * );
 
@@ -153,6 +167,7 @@ public:
 
   void execute() { specialization::execute( this ); }
 
+  // Assign task pointer with reference counting of assigned tasks
   template< typename LV , typename RV >
   KOKKOS_FUNCTION static
   void assign( TaskBase< execution_space,LV,void> ** const lhs
@@ -201,6 +216,13 @@ public:
 namespace Kokkos {
 namespace Impl {
 
+template<>
+class TaskBase< void , void , void > {
+public:
+  enum : int16_t   { TaskTeam = 0 , TaskSingle = 1 , Aggregate = 2 };
+  enum : uintptr_t { LockTag = ~uintptr_t(0) , EndTag = ~uintptr_t(1) };
+};
+
 /** \brief  Base class for task management, access, and execution.
  *
  *  Inheritance structure to allow static_cast from the task root type
@@ -220,49 +242,73 @@ namespace Impl {
  *
  *  States of a task:
  *
- *    Constructing State:
- *      m_apply == 0
- *      m_queue == 0
- *      m_ref_count == 0
+ *    Constructing State, NOT IN a linked list
+ *      m_wait == 0
+ *      m_next == 0
  *
- *    Waiting State:
+ *    Scheduling transition : Constructing -> Waiting
+ *      before:
+ *        m_wait == 0
+ *        m_next == this task's initial dependence, 0 if none
+ *      after:
+ *        m_wait == EndTag
+ *        m_next == EndTag
+ *
+ *    Waiting State, IN a linked list
  *      m_apply != 0
  *      m_queue != 0
  *      m_ref_count > 0
- *      m_wait == EndTag OR valid task
- *      m_next == EndTag OR valid task
+ *      m_wait == head of linked list of tasks waiting on this task
+ *      m_next == next of linked list of tasks
  *
- *    Executing State:
+ *    transition : Waiting -> Executing
+ *      before:
+ *        m_next == EndTag
+ *      after::
+ *        m_next == LockTag
+ *
+ *    Executing State, NOT IN a linked list
  *      m_apply != 0
  *      m_queue != 0
  *      m_ref_count > 0
- *      m_wait == EndTag OR valid task
+ *      m_wait == head of linked list of tasks waiting on this task
  *      m_next == LockTag
  *
- *    Executing-Respawn State:
+ *    Respawn transition : Executing -> Executing-Respawn
+ *      before:
+ *        m_next == LockTag
+ *      after:
+ *        m_next == this task's updated dependence, 0 if none
+ *
+ *    Executing-Respawn State, NOT IN a linked list
  *      m_apply != 0
  *      m_queue != 0
  *      m_ref_count > 0
- *      m_wait == EndTag OR valid task
- *      m_next == 0 OR valid task
+ *      m_wait == head of linked list of tasks waiting on this task
+ *      m_next == this task's updated dependence, 0 if none
  *
- *    Complete State:
- *      m_wait == LockTag, cannot add dependence
- *      m_next == LockTag, not a member of a wait queue
+ *    transition : Executing -> Complete
+ *      before:
+ *        m_wait == head of linked list
+ *      after:
+ *        m_wait == LockTag
  *
+ *    Complete State, NOT IN a linked list
+ *      m_wait == LockTag: cannot add dependence
+ *      m_next == LockTag: not a member of a wait queue
  *
- *  Invariants / conditions:
- *
- *    when m_next == LockTag then NOT a member of a queue
- *    when m_wait == LockTag then Complete 
  */
 template< typename ExecSpace >
 class TaskBase< ExecSpace , void , void >
 {
 public:
 
-  enum : int16_t   { TaskTeam = 0 , TaskSingle = 1 , Aggregate = 2 };
-  enum : uintptr_t { LockTag = ~uintptr_t(0) , EndTag = ~uintptr_t(1) };
+  enum : int16_t   { TaskTeam   = TaskBase<void,void,void>::TaskTeam
+                   , TaskSingle = TaskBase<void,void,void>::TaskSingle
+                   , Aggregate  = TaskBase<void,void,void>::Aggregate };
+
+  enum : uintptr_t { LockTag = TaskBase<void,void,void>::LockTag
+                   , EndTag  = TaskBase<void,void,void>::EndTag };
 
   using execution_space = ExecSpace ;
   using queue_type      = TaskQueue< execution_space > ;
@@ -275,8 +321,8 @@ public:
 
   function_type  m_apply ;     ///< Apply function pointer
   queue_type   * m_queue ;     ///< Queue in which this task resides
-  uintptr_t      m_wait ;      ///< Linked list of tasks waiting on this
-  uintptr_t      m_next ;      ///< Waiting linked-list next
+  TaskBase     * m_wait ;      ///< Linked list of tasks waiting on this
+  TaskBase     * m_next ;      ///< Waiting linked-list next
   int32_t        m_ref_count ; ///< Reference count
   int32_t        m_alloc_size ;///< Allocation size
   int32_t        m_dep_count ; ///< Aggregate's number of dependences
@@ -294,13 +340,13 @@ public:
   constexpr TaskBase() noexcept
     : m_apply(0)
     , m_queue(0)
-    , m_wait( EndTag  /* head of empty wait list */ )
-    , m_next( LockTag /* not a member of a queue */ )
+    , m_wait(0)
+    , m_next(0)
     , m_ref_count(0)
     , m_alloc_size(0)
     , m_dep_count(0)
-    , m_task_type(0)
-    , m_priority(0)
+    , m_task_type( TaskSingle )
+    , m_priority( 1 /* TaskRegularPriority */ )
     {}
 
   //----------------------------------------
@@ -399,8 +445,9 @@ public:
   KOKKOS_FUNCTION static
   void apply( root_type * root , void * exec )
     {
+      TaskBase    * const lock   = reinterpret_cast< TaskBase * >( root_type::LockTag );
+      TaskBase    * const task   = static_cast< TaskBase * >( root );
       member_type * const member = reinterpret_cast< member_type * >( exec );
-      TaskBase    * const task = static_cast< TaskBase * >( root );
 
       TaskBase::template apply_functor( task , member );
 
@@ -410,10 +457,11 @@ public:
 
       member->team_barrier();
 
-      if ( 0 == member->team_rank() &&
-           root_type::LockTag == task->m_next ) {
+      if ( 0 == member->team_rank() && lock == task->m_next ) {
         // Did not respawn, destroy the functor to free memory
         static_cast<functor_type*>(task)->~functor_type();
+        // Cannot destroy the task until its dependences
+        // have been processed.
       }
     }
 
