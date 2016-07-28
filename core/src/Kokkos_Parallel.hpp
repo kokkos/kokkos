@@ -57,7 +57,6 @@
 #include <typeinfo>
 #endif
 
-#include <impl/Kokkos_AllocationTracker.hpp>
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
