@@ -220,15 +220,23 @@ void parallel_reduce
     lambda(i, result);
   }
 
-  int team_rank = loop_boundaries.thread.team_rank();
-  static ValueType accum = 0;
-  team_barrier();//how to call this?
-  
+  int team_rank = loop_boundaries.thread.team_rank(); //TODO assuming this is the thread rank within the team
+  shared[team_rank] = result; //TODO how do we get this?
+
+  loop_boundaries.thread.team_barrier();
+
+  // reduce across threads to thread 0
   if (team_rank == 0) {
-  
-  //TODO have single thread reduce across threads in team
+    for (int i = 0; i < loop_boundaries.thread.team_size(); i++) {
+      result += shared[i]; //TODO not necessarily sum
+    }
   }
 
+  loop_boundaries.thread.team_barrier();
+
+  // broadcast result
+  initialized_result = shared[0];
+  
 }
 
 } /* namespace Kokkos */
