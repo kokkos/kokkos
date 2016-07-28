@@ -461,6 +461,9 @@ public:
 
 // Computes y^T*A*x
 // (modified from kokkos-tutorials/GTC2016/Exercises/ThreeLevelPar )
+
+#if ( ! defined( KOKKOS_HAVE_CUDA ) ) || defined( KOKKOS_CUDA_USE_LAMBDA )
+
 template< typename ScalarType , class DeviceType >
 class TestTripleNestedReduce
 {
@@ -528,6 +531,24 @@ public:
     ASSERT_EQ( solution , result );
   }
 };
+
+#else /* #if ( ! defined( KOKKOS_HAVE_CUDA ) ) || defined( KOKKOS_CUDA_USE_LAMBDA ) */
+
+template< typename ScalarType , class DeviceType >
+class TestTripleNestedReduce
+{
+public:
+  typedef DeviceType execution_space ;
+  typedef typename execution_space::size_type size_type ;
+
+  TestTripleNestedReduce( const size_type & , const size_type  
+                        , const size_type & , const size_type )
+  { }
+};
+
+#endif
+
+//--------------------------------------------------------------------------
 
 namespace Test {
 namespace ReduceCombinatorical {

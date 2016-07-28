@@ -148,6 +148,15 @@ void TaskQueueSpecialization< Kokkos::Cuda >::execute
 #if 0
 printf("cuda_task_queue_execute before\n");
 #endif
+
+  // Query the stack size, in bytes:
+  //
+  // size_t stack_size = 0 ;
+  // CUDA_SAFE_CALL( cudaDeviceGetLimit( & stack_size , cudaLimitStackSize ) );
+  //
+  // If not large enough then set the stack size, in bytes:
+  //
+  // CUDA_SAFE_CALL( cudaDeviceSetLimit( cudaLimitStackSize , stack_size ) );
  
   cuda_task_queue_execute<<< grid , block , shared , stream >>>( queue );
 

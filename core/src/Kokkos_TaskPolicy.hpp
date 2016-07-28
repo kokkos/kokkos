@@ -51,7 +51,7 @@
 #include <Kokkos_Core_fwd.hpp>
 
 // If compiling with CUDA then must be using CUDA 8 or better
-// and using relocateable device code to enable the task policy.
+// and use relocateable device code to enable the task policy.
 // nvcc relocatable device code option: --relocatable-device-code=true
 
 #if ( defined( KOKKOS_COMPILER_NVCC ) )
@@ -80,7 +80,7 @@
 
 namespace Kokkos {
 
-enum TaskType { TaskTeam = Impl::TaskBase<void,void,void>::TaskTeam
+enum TaskType { TaskTeam   = Impl::TaskBase<void,void,void>::TaskTeam
               , TaskSingle = Impl::TaskBase<void,void,void>::TaskSingle };
 
 enum TaskPriority { TaskHighPriority    = 0
@@ -102,8 +102,8 @@ namespace Impl {
 
 /*\brief  Implementation data for task data management, access, and execution.
  *
- *  Inheritance structure to allow static_cast from the task root type
- *  and a task's FunctorType.
+ *  CRTP Inheritance structure to allow static_cast from the
+ *  task root type and a task's FunctorType.
  *
  *    TaskBase< Space , ResultType , FunctorType >
  *      : TaskBase< Space , ResultType , void >
@@ -111,7 +111,7 @@ namespace Impl {
  *      { ... };
  *
  *    TaskBase< Space , ResultType , void >
- *      : TaskBase< void , void , void >
+ *      : TaskBase< Space , void , void >
  *      { ... };
  */
 template< typename Space , typename ResultType , typename FunctorType >
@@ -177,7 +177,8 @@ private:
 
 public:
 
-  using value_type = ValueType ;
+  using execution_space = typename Space::execution_space ;
+  using value_type      = ValueType ;
 
   //----------------------------------------
 
@@ -326,58 +327,64 @@ private:
 
   using track_type = Kokkos::Experimental::Impl::SharedAllocationTracker ;
   using queue_type = Kokkos::Impl::TaskQueue< ExecSpace > ;
+  using task_base  = Impl::TaskBase< ExecSpace , void , void > ;
 
   track_type   m_track ;
   queue_type * m_queue ;
 
-  struct TaskSpawnOptions {
+  //----------------------------------------
+  // Process optional arguments to spawn and respawn functions
 
-    Future<ExecSpace>  future ;
-    TaskType           type ;
-    TaskPriority       priority ;
+  KOKKOS_INLINE_FUNCTION static
+  void assign( task_base * const ) {}
 
-  private:
+  // TaskTeam or TaskSingle
+  template< typename ... Options >
+  KOKKOS_INLINE_FUNCTION static
+  void assign( task_base * const task
+             , TaskType const & arg
+             , Options const & ... opts )
+    {
+      task->m_task_type = arg ;
+      assign( task , opts ... );
+    }
 
-    KOKKOS_INLINE_FUNCTION
-    void assign() {}
+  // TaskHighPriority or TaskRegularPriority or TaskLowPriority
+  template< typename ... Options >
+  KOKKOS_INLINE_FUNCTION static
+  void assign( task_base * const task
+             , TaskPriority const & arg
+             , Options const & ... opts )
+    {
+      task->m_priority = arg ;
+      assign( task , opts ... );
+    }
 
-    template< typename ... Options >
-    KOKKOS_INLINE_FUNCTION
-    void assign( TaskType const & arg
-               , Options const & ... opts )
-      {
-        type = arg ;
-        assign( opts ... );
+  // Future for a dependence
+  template< typename A1 , typename A2 , typename ... Options >
+  KOKKOS_INLINE_FUNCTION static
+  void assign( task_base * const task
+             , Future< A1 , A2 > const & arg 
+             , Options const & ... opts )
+    {
+      // Assign dependence to task->m_next
+      // which will be processed within subsequent call to schedule.
+      // Error if the dependence is reset.
+
+      if ( 0 != Kokkos::atomic_exchange(& task->m_next, arg.m_task) ) {
+        Kokkos::abort("TaskPolicy ERROR: resetting task dependence");
       }
 
-    template< typename ... Options >
-    KOKKOS_INLINE_FUNCTION
-    void assign( TaskPriority const & arg
-               , Options const & ... opts )
-      {
-        priority = arg ;
-        assign( opts ... );
+      if ( 0 != arg.m_task ) {
+        // The future may be destroyed upon returning from this call
+        // so increment reference count to track this assignment.
+        Kokkos::atomic_fetch_add( &(arg.m_task->m_ref_count) , 1 );
       }
 
-    template< typename A1 , typename A2 , typename ... Options >
-    KOKKOS_INLINE_FUNCTION
-    void assign( Future< A1 , A2 > const & arg 
-               , Options const & ... opts )
-      {
-        future = arg ;
-        assign( opts ... );
-      }
+      assign( task , opts ... );
+    }
 
-  public:
-
-    template< typename ... Options >
-    KOKKOS_INLINE_FUNCTION
-    TaskSpawnOptions( Options const & ... opts )
-      : future()
-      , type( TaskTeam )
-      , priority( TaskRegularPriority )
-      { assign( opts ... ); }
-  };
+  //----------------------------------------
 
 public:
 
@@ -445,39 +452,40 @@ public:
       using future_type = Future< value_type , execution_space > ;
       using task_type   = Impl::TaskBase< execution_space
                                         , value_type
-                                        , FunctorType
-                                        > ;
-
-      TaskSpawnOptions const options( arg_options... );
+                                        , FunctorType > ;
 
       future_type f ;
 
+      // Allocate task from memory pool
       f.m_task =
-        reinterpret_cast< task_type * >( m_queue->allocate( sizeof(task_type) ) );
+        reinterpret_cast< task_type * >(m_queue->allocate(sizeof(task_type)));
 
       if ( f.m_task ) {
 
+        // Placement new construction
         new ( f.m_task ) task_type( arg_functor );
 
         // Reference count starts at two
         // +1 for matching decrement when task is complete
         // +1 for future
         f.m_task->m_queue      = m_queue ;
-        f.m_task->m_apply      = task_type::apply ;
         f.m_task->m_ref_count  = 2 ;
-        f.m_task->m_dep_count  = 0 ;
         f.m_task->m_alloc_size = sizeof(task_type);
-        f.m_task->m_task_type  = options.type ;
-        f.m_task->m_priority   = options.priority ;
 
-        m_queue->schedule( f.m_task , options.future.m_task );
+        assign( f.m_task , arg_options... );
+
+        // Spawning from within the execution space so the
+        // apply function pointer is guaranteed to be valid
+        f.m_task->m_apply = task_type::apply ;
+
+        m_queue->schedule( f.m_task );
         // this task may be updated or executed at any moment
       }
 
       return f ;
     }
 
-  /**\brief  The process spawns a task with options
+  /**\brief  The host process spawns a task with options
    *
    *  1) High, Normal, or Low priority
    *  2) With or without dependence
@@ -486,27 +494,26 @@ public:
   template< typename FunctorType , typename ... Options >
   inline
   Future< typename FunctorType::value_type , ExecSpace >
-  proc_spawn( FunctorType const & arg_functor 
+  host_spawn( FunctorType const & arg_functor 
             , Options const & ... arg_options
             ) const
     {
       using value_type  = typename FunctorType::value_type ;
-      using future_type = Future< value_type , ExecSpace > ;
-      using task_type   = Impl::TaskBase< ExecSpace , value_type , FunctorType > ;
-
-      TaskSpawnOptions const options( arg_options... );
+      using future_type = Future< value_type , execution_space > ;
+      using task_type   = Impl::TaskBase< execution_space
+                                        , value_type
+                                        , FunctorType > ;
 
       future_type f ;
 
+      // Allocate task from memory pool
       f.m_task = 
         reinterpret_cast<task_type*>( m_queue->allocate(sizeof(task_type)) );
 
       if ( f.m_task ) {
 
+        // Placement new construction
         new( f.m_task ) task_type( arg_functor );
-
-        queue_type::specialization::template
-          proc_set_apply< FunctorType >( & f.m_task->m_apply );
 
         // Reference count starts at two:
         // +1 to match decrement when task completes
@@ -514,11 +521,16 @@ public:
         f.m_task->m_queue      = m_queue ;
         f.m_task->m_ref_count  = 2 ;
         f.m_task->m_alloc_size = sizeof(task_type);
-        f.m_task->m_dep_count  = 0 ;
-        f.m_task->m_task_type  = options.type ;
-        f.m_task->m_priority   = options.priority ;
 
-        m_queue->schedule( f.m_task , options.future.m_task );
+        assign( f.m_task , arg_options... );
+
+        // Potentially spawning outside execution space so the
+        // apply function pointer must be obtained from execution space.
+        // Required for Cuda execution space function pointer.
+        queue_type::specialization::template
+          proc_set_apply< FunctorType >( & f.m_task->m_apply );
+
+        m_queue->schedule( f.m_task );
       }
       return f ;
     }
@@ -526,10 +538,17 @@ public:
   /**\brief  Return a future that is complete
    *         when all input futures are complete.
    */
+  template< typename A1 , typename A2 >
   KOKKOS_FUNCTION
   Future< ExecSpace >
-  when_all( int narg , Future< ExecSpace > const * arg ) const
+  when_all( int narg , Future< A1 , A2 > const * const arg ) const
     {
+      static_assert
+        ( std::is_same< execution_space
+                      , typename Future< A1 , A2 >::execution_space
+                      >::value
+        , "Future must have same execution space" );
+
       using future_type = Future< ExecSpace > ;
       using task_base   = Kokkos::Impl::TaskBase< ExecSpace , void , void > ;
 
@@ -552,17 +571,20 @@ public:
         f.m_task->m_alloc_size = size ;
         f.m_task->m_dep_count  = narg ;
         f.m_task->m_task_type  = task_base::Aggregate ;
-        f.m_task->m_priority   = 0 ;
 
         task_base ** const dep = f.m_task->aggregate_dependences();
 
         // Assign dependences to increment their reference count
+        // The futures may be destroyed upon returning from this call
+        // so increment reference count to track this assignment.
+
         for ( int i = 0 ; i < narg ; ++i ) {
-          dep[i] = 0 ;
-          queue_type::assign( dep + i , arg[i].m_task );
+          assert( arg[i].m_task->m_queue == m_queue );
+          dep[i] = arg[i].m_task ;
+          Kokkos::atomic_fetch_add( &(dep[i]->m_ref_count) , 1 );
         }
 
-        m_queue->schedule( f.m_task , 0 );
+        m_queue->schedule( f.m_task );
         // this when_all may be processed at any moment
       }
 
@@ -576,27 +598,33 @@ public:
    */
   template< class FunctorType , typename ... Options >
   KOKKOS_FUNCTION
-  void respawn( FunctorType * task_self , Options const & ... arg_options ) const
+  void respawn( FunctorType * task_self
+              , Options const & ... arg_options ) const
     {
-      using value_type = typename FunctorType::value_type ;
-      using task_base  = Kokkos::Impl::TaskBase< ExecSpace , void , void > ;
-      using task_type  = Kokkos::Impl::TaskBase< ExecSpace , value_type , FunctorType > ;
+      using value_type  = typename FunctorType::value_type ;
+      using task_type   = Impl::TaskBase< execution_space
+                                        , value_type
+                                        , FunctorType > ;
 
-      TaskSpawnOptions const options( arg_options... );
-
+      task_base * const zero = (task_base *) 0 ;
+      task_base * const lock = (task_base *) task_base::LockTag ;
       task_type * const task = static_cast< task_type * >( task_self );
 
-      if ( task_type::LockTag !=
-             Kokkos::atomic_exchange( & task->m_next , uintptr_t(0) ) ) {
-        Kokkos::abort("redundant respawn called within a task");
-      }
-      // Assign dependence to task->m_next
-      // This is a temporary holding place until completion of the task
-      // processes this dependency.
-      if ( 0 != options.future.m_task )
-        queue_type::assign( (task_base **)( & task->m_next ), options.future.m_task );
+      // Precondition:
+      //   task is in Executing state
+      //   therefore  m_next == LockTag
+      //
+      // Change to m_next == 0 for no dependence
 
-      task->m_priority = options.priority ;
+      if ( lock != Kokkos::atomic_exchange( & task->m_next, zero ) ) {
+        Kokkos::abort("TaskPolicy::respawn ERROR: already respawned");
+      }
+
+      assign( task , arg_options... );
+
+      // Postcondition:
+      //   task is in Executing-Respawn state
+      //   therefore  m_next == dependece or 0
     }
 
   //----------------------------------------

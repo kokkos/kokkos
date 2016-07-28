@@ -59,10 +59,8 @@ template class TaskQueue< Kokkos::OpenMP > ;
 
 TaskExec< Kokkos::OpenMP >::
 TaskExec( Kokkos::Impl::OpenMPexec & arg_exec , int const arg_team_size )
-  : m_pool_exec(  arg_exec )
-  , m_team_shared(
-       arg_exec.pool_rev( arg_exec.pool_rank_rev() / arg_team_size )
-         ->scratch_thread() )
+  : m_self_exec( arg_exec )
+  , m_team_exec( *arg_exec.pool_rev(arg_exec.pool_rank_rev() / arg_team_size) )
   , m_sync_mask( 0 )
   , m_sync_value( 0 )
   , m_sync_step( 0 )
@@ -71,10 +69,10 @@ TaskExec( Kokkos::Impl::OpenMPexec & arg_exec , int const arg_team_size )
   , m_team_size(  arg_team_size )
 {
   // This team spans
-  //    m_pool_exec.pool_rev( team_size * group_rank )
-  //    m_pool_exec.pool_rev( team_size * ( group_rank + 1 ) - 1 )
+  //    m_self_exec.pool_rev( team_size * group_rank )
+  //    m_self_exec.pool_rev( team_size * ( group_rank + 1 ) - 1 )
 
-  int64_t volatile * const sync = (int64_t *) m_pool_exec.scratch_thread();
+  int64_t volatile * const sync = (int64_t *) m_self_exec.scratch_reduce();
 
   sync[0] = int64_t(0) ;
   sync[1] = int64_t(0) ;
@@ -87,23 +85,22 @@ TaskExec( Kokkos::Impl::OpenMPexec & arg_exec , int const arg_team_size )
   Kokkos::memory_fence();
 }
 
-void * TaskExec< Kokkos::OpenMP >::team_shared() const
-{
-  return ((int64_t*)m_team_shared) + 2 ;
-}
-
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
 
 void TaskExec< Kokkos::OpenMP >::team_barrier()
 {
   if ( 1 < m_team_size ) {
 
+    if ( m_team_exec.scratch_reduce_size() < int(2 * sizeof(int64_t)) ) {
+      Kokkos::abort("TaskQueue<OpenMP> scratch_reduce memory too small");
+    }
+
     // Use team shared memory to synchronize.
     // Alternate memory locations between barriers to avoid a sequence
     // of barriers overtaking one another.
 
     int64_t volatile * const sync =
-      ((int64_t *) m_team_shared) + ( m_sync_step & 0x01 );
+      ((int64_t *) m_team_exec.scratch_reduce()) + ( m_sync_step & 0x01 );
 
     // This team member sets one byte within the sync variable
     int8_t volatile * const sync_self =
@@ -156,8 +153,8 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
   using execution_space = Kokkos::OpenMP ;
   using queue_type      = TaskQueue< execution_space > ;
   using task_root_type  = TaskBase< execution_space , void , void > ;
-  using PoolExec = Kokkos::Impl::OpenMPexec ;
-  using Member   = TaskExec< execution_space > ;
+  using PoolExec        = Kokkos::Impl::OpenMPexec ;
+  using Member          = TaskExec< execution_space > ;
 
   task_root_type * const end = (task_root_type *) task_root_type::EndTag ;
 
@@ -179,7 +176,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
 
     // Team shared memory
     task_root_type * volatile * const task_shared =
-      (task_root_type **) team_exec.team_shared();
+      (task_root_type **) team_exec.m_team_exec.scratch_thread();
 
 // Barrier across entire OpenMP thread pool to insure initialization
 #pragma omp barrier

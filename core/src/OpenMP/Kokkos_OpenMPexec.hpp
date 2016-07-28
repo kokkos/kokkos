@@ -145,6 +145,12 @@ public:
 
   inline long team_work_index() const { return m_team_work_index ; }
 
+  inline int scratch_reduce_size() const
+    { return m_scratch_reduce_end - m_scratch_exec_end ; }
+
+  inline int scratch_thread_size() const
+    { return m_scratch_thread_end - m_scratch_reduce_end ; }
+
   inline void * scratch_reduce() const { return ((char *) this) + m_scratch_exec_end ; }
   inline void * scratch_thread() const { return ((char *) this) + m_scratch_reduce_end ; }
 
@@ -157,15 +163,15 @@ public:
 
   ~OpenMPexec() {}
 
-  OpenMPexec( const int poolRank
-            , const int scratch_exec_size
-            , const int scratch_reduce_size
-            , const int scratch_thread_size )
-    : m_pool_rank( poolRank )
-    , m_pool_rank_rev( pool_size() - ( poolRank + 1 ) )
-    , m_scratch_exec_end( scratch_exec_size )
-    , m_scratch_reduce_end( m_scratch_exec_end   + scratch_reduce_size )
-    , m_scratch_thread_end( m_scratch_reduce_end + scratch_thread_size )
+  OpenMPexec( const int arg_poolRank
+            , const int arg_scratch_exec_size
+            , const int arg_scratch_reduce_size
+            , const int arg_scratch_thread_size )
+    : m_pool_rank( arg_poolRank )
+    , m_pool_rank_rev( pool_size() - ( arg_poolRank + 1 ) )
+    , m_scratch_exec_end( arg_scratch_exec_size )
+    , m_scratch_reduce_end( m_scratch_exec_end   + arg_scratch_reduce_size )
+    , m_scratch_thread_end( m_scratch_reduce_end + arg_scratch_thread_size )
     , m_barrier_state(0)
     {}
 

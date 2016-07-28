@@ -96,7 +96,20 @@ public:
 extern template class TaskQueue< Kokkos::Cuda > ;
 
 //----------------------------------------------------------------------------
-
+/**\brief  Impl::TaskExec<Cuda> is the TaskPolicy<Cuda>::member_type
+ *         passed to tasks running in a Cuda space.
+ *
+ *  Cuda thread blocks for tasking are dimensioned:
+ *    blockDim.x == vector length
+ *    blockDim.y == team size
+ *    blockDim.z == number of teams
+ *  where
+ *    blockDim.x * blockDim.y == WarpSize
+ *
+ *  Both single thread and thread team tasks are run by a full Cuda warp.
+ *  A single thread task is called by warp lane #0 and the remaining
+ *  lanes of the warp are idle.
+ */
 template<>
 class TaskExec< Kokkos::Cuda >
 {
@@ -119,7 +132,7 @@ private:
 public:
 
 #if defined( __CUDA_ARCH__ )
-  __device__ void team_barrier() { __threadfence_block(); }
+  __device__ void team_barrier() { /* __threadfence_block(); */ }
   __device__ int  team_rank() const { return threadIdx.y ; }
   __device__ int  team_size() const { return m_team_size ; }
 #else
@@ -129,6 +142,8 @@ public:
 #endif
 
 };
+
+//----------------------------------------------------------------------------
 
 template<typename iType>
 struct TeamThreadRangeBoundariesStruct<iType, TaskExec< Kokkos::Cuda > >
@@ -177,6 +192,37 @@ struct TeamThreadRangeBoundariesStruct<iType, TaskExec< Kokkos::Cuda > >
 
 };
 
+//----------------------------------------------------------------------------
+
+template<typename iType>
+struct ThreadVectorRangeBoundariesStruct<iType, TaskExec< Kokkos::Cuda > >
+{
+  typedef iType index_type;
+  const iType begin ;
+  const iType end ;
+  const iType increment ;
+  const TaskExec< Kokkos::Cuda > & thread;
+
+#if defined( __CUDA_ARCH__ )
+
+  __device__ inline
+  ThreadVectorRangeBoundariesStruct
+    ( const TaskExec< Kokkos::Cuda > & arg_thread, const iType& arg_count)
+    : begin( threadIdx.x )
+    , end(arg_count)
+    , increment( blockDim.x )
+    , thread(arg_thread)
+    {}
+
+#else
+
+  ThreadVectorRangeBoundariesStruct
+    ( const TaskExec< Kokkos::Cuda > & arg_thread, const iType& arg_count);
+
+#endif
+
+};
+
 }} /* namespace Kokkos::Impl */
 
 //----------------------------------------------------------------------------
@@ -200,10 +246,20 @@ TeamThreadRange( const Impl::TaskExec< Kokkos::Cuda > & thread, const iType & be
   return Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Cuda > >(thread,begin,end);
 }
 
-  /** \brief  Inter-thread parallel_for. Executes lambda(iType i) for each i=0..N-1.
-   *
-   * The range i=0..N-1 is mapped to all threads of the the calling thread team.
-   * This functionality requires C++11 support.*/
+template<typename iType>
+KOKKOS_INLINE_FUNCTION
+Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >
+ThreadVectorRange( const Impl::TaskExec< Kokkos::Cuda > & thread
+               , const iType & count )
+{
+  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >(thread,count);
+}
+
+/** \brief  Inter-thread parallel_for. Executes lambda(iType i) for each i=0..N-1.
+ *
+ * The range i=0..N-1 is mapped to all threads of the the calling thread team.
+ * This functionality requires C++11 support.
+*/
 template<typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION
 void parallel_for

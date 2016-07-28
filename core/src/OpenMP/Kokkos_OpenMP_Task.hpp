@@ -58,13 +58,17 @@ class TaskQueueSpecialization< Kokkos::OpenMP >
 public:
 
   using execution_space = Kokkos::OpenMP ;
-  using memory_space    = Kokkos::HostSpace ;
   using queue_type      = Kokkos::Impl::TaskQueue< execution_space > ;
   using task_base_type  = Kokkos::Impl::TaskBase< execution_space , void , void > ;
 
-  static
-  void execute( queue_type * const );
+  // Must specify memory space
+  using memory_space = Kokkos::HostSpace ;
 
+  // Must provide task queue execution function
+  static void execute( queue_type * const );
+
+  // Must provide mechanism to set function pointer in
+  // execution space from the host process.
   template< typename FunctorType >
   static
   void proc_set_apply( task_base_type::function_type * ptr )
@@ -98,8 +102,8 @@ private:
   friend class Kokkos::Impl::TaskQueue< Kokkos::OpenMP > ;
   friend class Kokkos::Impl::TaskQueueSpecialization< Kokkos::OpenMP > ;
 
-  PoolExec & m_pool_exec ;  ///< Thread pool data structure 
-  void     * m_team_shared ;
+  PoolExec & m_self_exec ;  ///< This thread's thread pool data structure 
+  PoolExec & m_team_exec ;  ///< Team thread's thread pool data structure
   int64_t    m_sync_mask ;
   int64_t    m_sync_value ;
   int        m_sync_step ;
@@ -109,9 +113,12 @@ private:
 
   TaskExec( PoolExec & arg_exec , int arg_team_size );
 
-  void * team_shared() const ;
-
 public:
+
+  /**\brief  The team_barrier uses the first 128bytes of share memory */
+  void * team_shared() const { return m_team_exec.scratch_thread(); }
+
+  int team_shared_size() const { return m_team_exec.scratch_thread_size(); }
 
   /**\brief  Whole team enters this function call
    *         before any teeam member returns from

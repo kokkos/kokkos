@@ -102,7 +102,6 @@ elif [ "$MACHINE" = "bowman" ]; then
     BASE_MODULE_LIST="<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
 
     OLD_INTEL_BUILD_LIST="Pthread,Serial,Pthread_Serial"
-    INTEL_BUILD_LIST="OpenMP,Pthread,Serial,OpenMP_Serial,Pthread_Serial"
 
     # Format: (compiler module-list build-list exe-name warning-flag)
     COMPILERS=("intel/16.2.181 $BASE_MODULE_LIST $OLD_INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
@@ -119,9 +118,11 @@ elif [ "$MACHINE" = "shepard" ]; then
 
     BASE_MODULE_LIST="<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
 
+    OLD_INTEL_BUILD_LIST="Pthread,Serial,Pthread_Serial"
+
     # Format: (compiler module-list build-list exe-name warning-flag)
-    COMPILERS=("intel/16.2.181 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-               "intel/17.0.042 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+    COMPILERS=("intel/16.2.181 $BASE_MODULE_LIST $OLD_INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+               "intel/17.0.064 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
     )
 
     ARCH_FLAG="--arch=HSW"

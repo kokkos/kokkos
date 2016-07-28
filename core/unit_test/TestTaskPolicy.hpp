@@ -154,7 +154,7 @@ struct TestFib
 
       policy_type root_policy( memory_space() , MemoryCapacity , Log2_SuperBlockSize );
 
-      future_type f = root_policy.proc_spawn( TestFib(root_policy,i) , Kokkos::TaskSingle );
+      future_type f = root_policy.host_spawn( TestFib(root_policy,i) , Kokkos::TaskSingle );
       Kokkos::wait( root_policy );
       ASSERT_EQ( eval_fib(i) , f.get() );
 
@@ -238,7 +238,7 @@ struct TestTaskDependence {
       typename accum_type::HostMirror host_accum =
         Kokkos::create_mirror_view( accum );
 
-      policy.proc_spawn( TestTaskDependence(n,policy,accum) , Kokkos::TaskSingle );
+      policy.host_spawn( TestTaskDependence(n,policy,accum) , Kokkos::TaskSingle );
 
       Kokkos::wait( policy );
 
@@ -317,7 +317,7 @@ struct TestTaskTeam {
       typename view_type::HostMirror
         host_result = Kokkos::create_mirror_view( root_result );
 
-      future_type f = root_policy.proc_spawn( TestTaskTeam( root_policy , root_result , n ) , Kokkos::TaskTeam );
+      future_type f = root_policy.host_spawn( TestTaskTeam( root_policy , root_result , n ) , Kokkos::TaskTeam );
 
       Kokkos::wait( root_policy );
 
@@ -404,7 +404,7 @@ struct TestTaskTeamValue {
       typename view_type::HostMirror
         host_result = Kokkos::create_mirror_view( root_result );
 
-      future_type fv = root_policy.proc_spawn
+      future_type fv = root_policy.host_spawn
         ( TestTaskTeamValue( root_policy, root_result, n ) , Kokkos::TaskTeam );
 
       Kokkos::wait( root_policy );
