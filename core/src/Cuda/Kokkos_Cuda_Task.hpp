@@ -284,7 +284,7 @@ KOKKOS_INLINE_FUNCTION int warp_lane()
 
 KOKKOS_INLINE_FUNCTION int position_in_vec() { return threadIdx.x; }
 
-// team reduction for all teams within warp (team_size <= WarpSize)
+// reduce across corresponding lanes between team members within warp
 // assume stride*team_size == warp_size
 template< typename ValueType, class JoinType >
 KOKKOS_INLINE_FUNCTION ValueType strided_shfl_warp_reduction
@@ -299,6 +299,19 @@ KOKKOS_INLINE_FUNCTION ValueType strided_shfl_warp_reduction
   return val;
 }
 
+// multiple within-warp non-strided reductions
+template< typename ValueType, class JoinType >
+KOKKOS_INLINE_FUNCTION ValueType multi_shfl_warp_reduction
+  (const JoinType& join,
+   ValueType& val,
+   int vec_length)
+{
+  for (int lane_delta=vec_length>>1; lane_delta; lane_delta>>=1) {
+    val = join(val, Kokkos::shfl_down(val, lane_delta, vec_length));
+  }
+  return val;
+}
+
 // broadcast within warp
 template< class ValueType >
 KOKKOS_INLINE_FUNCTION ValueType shfl_warp_broadcast
@@ -308,7 +321,7 @@ KOKKOS_INLINE_FUNCTION ValueType shfl_warp_broadcast
   return Kokkos::shfl(val, src_lane, Impl::CudaTraits::WarpSize);
 }
 
-// all-reduce for all teams within warp (team_size <= WarpSize)
+// all-reduce across corresponding vector lanes between team members within warp
 template< typename iType, class Lambda, typename ValueType, class JoinType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
@@ -331,7 +344,7 @@ void parallel_reduce
   initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, position_in_vec() );
 }
 
-// all-reduce for all teams within warp (team_size <= WarpSize)
+// all-reduce across corresponding vector lanes between team members within warp
 // if no join() provided, use sum
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
@@ -358,7 +371,57 @@ void parallel_reduce
   initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, position_in_vec() );
 }
 
-// exclusive scan
+// vector versions:
+
+// all-reduce within team members within warp
+template< typename iType, class Lambda, typename ValueType, class JoinType >
+KOKKOS_INLINE_FUNCTION
+void parallel_reduce
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
+   const Lambda & lambda,
+   const JoinType& join,
+   ValueType& initialized_result) {
+
+  ValueType result = initialized_result;
+
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+    lambda(i,result);
+  }
+
+  initialized_result = result;
+
+  //does this work for "single"?
+  initialized_result = multi_shfl_warp_reduction<ValueType, JoinType>(join, initialized_result, blockDim.x);
+  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, blockDim.x*threadIdx.y );
+  //threadIdx.y == member rank
+}
+
+// all-reduce within team members within warp
+// if no join() provided, use sum
+template< typename iType, class Lambda, typename ValueType >
+KOKKOS_INLINE_FUNCTION
+void parallel_reduce
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
+   const Lambda & lambda,
+   ValueType& initialized_result) {
+
+  ValueType result = initialized_result;
+
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+    lambda(i,result);
+  }
+
+  initialized_result = result;
+
+  initialized_result = multi_shfl_warp_reduction(
+                          [&] (const ValueType& val1, const ValueType& val2) { return val1 + val2; },
+                          initialized_result,
+                          blockDim.x);
+  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, blockDim.x*threadIdx.y );
+  //threadIdx.y == member rank
+}
+
+// exclusive scan across corresponding vector lanes between team members within warp
 // assume stride*team_size == warp_size 
 // (stride == blockDim.x == vec_length, team_size == blockDim.y)
 template< typename iType, class Lambda, typename ValueType >
@@ -376,7 +439,8 @@ void parallel_scan
 
   //ValueType x = result;
   ValueType y, accum;
-  int member_rank = //TODO member's rank within team loop_boundaries.thread.team_rank();
+  int member_rank = threadIdx.y; //TODO member's rank within team loop_boundaries.thread.team_rank();
+  //TODO when should we use variables vs. cuda dims/ids?
   // TODO improve performance?
 
   // INCLUSIVE scan
@@ -393,7 +457,48 @@ void parallel_scan
   initialized_result = Kokkos::shfl_up(result, blockDim.x, Impl::CudaTraits::WarpSize);
 
   // set first val to 0 (for exclusive scan)
-  if (member_rank == 0) { initialized_result = 0; } //TODO is there a better way to do this?
+  if (member_rank == 0) { initialized_result = 0; }
+}
+
+// exclusive scan within team member (vector) within warp
+// assume stride*team_size == warp_size 
+// (stride == blockDim.x == vec_length, team_size == blockDim.y)
+template< typename iType, class Lambda, typename ValueType >
+KOKKOS_INLINE_FUNCTION
+void parallel_scan
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
+   const Lambda & lambda,
+   ValueType& initialized_result) {
+
+  ValueType result = initialized_result; //TODO is this what we want?
+
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+    lambda(i,result);
+  }
+
+  //ValueType x = result;
+  ValueType y, accum;
+  //Note: position in vec == threadIdx.x
+  //Note: vec length == blockDim.x
+  //Note: member# == threadIdx.y
+  //TODO when should we use variables vs. cuda dims/ids?
+  // TODO improve performance?
+
+  // INCLUSIVE scan
+  for( int offset = 1 ; offset < blockDim.x ; offset <<= 1 ) {
+    y = Kokkos::shfl_up(result, offset, blockDim.x);
+    if(threadIdx.x >= offset) { result += y; }
+  }
+
+  // pass accum to all threads
+  accum = my_shfl_broadcast<ValueType>(result, blockDim.x*threadIdx.y+blockDim.x-1);
+  //TODO do something with accum
+
+  // make EXCLUSIVE scan by shifting values over one
+  initialized_result = Kokkos::shfl_up(result, 1, blockDim.x);
+
+  // set first val to 0 (for exclusive scan)
+  if (threadIdx.x == 0) { initialized_result = 0; }
 }
 
 // ------------------------- end scratchwork ---------------------------------
