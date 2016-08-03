@@ -84,10 +84,9 @@ struct SuperScalar {
   }
 
   KOKKOS_INLINE_FUNCTION
-  volatile SuperScalar& operator = (const SuperScalar& src) volatile  {
+  void operator = (const SuperScalar& src) volatile  {
     for(int i=0; i<N; i++)
       val[i] = src.val[i];
-    return *this;
   }
 
   KOKKOS_INLINE_FUNCTION
