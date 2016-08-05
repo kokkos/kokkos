@@ -122,6 +122,7 @@ public:
     }
     team_barrier();
     value = sh_val;
+    team_barrier();
   }
 
 #ifdef KOKKOS_HAVE_CXX11
