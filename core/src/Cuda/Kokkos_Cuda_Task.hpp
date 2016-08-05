@@ -274,16 +274,6 @@ void parallel_for
 
 // ------------------- jdsteve's scratchwork ------------------------------------------------------------
 
-// warp lane == idx%warpsize
-/*
-KOKKOS_INLINE_FUNCTION int warp_lane()
-{
-  return (threadIdx.y*blockDim.x+threadIdx.x) & (Impl::CudaTraits::WarpSize-1);
-}
-*/
-
-//KOKKOS_INLINE_FUNCTION int position_in_vec() { return threadIdx.x; }
-
 // reduce across corresponding lanes between team members within warp
 // assume stride*team_size == warp_size
 template< typename ValueType, class JoinType >
@@ -316,12 +306,15 @@ KOKKOS_INLINE_FUNCTION ValueType multi_shfl_warp_reduction
 template< class ValueType >
 KOKKOS_INLINE_FUNCTION ValueType shfl_warp_broadcast
   (ValueType& val,
-   int src_lane)
+   int src_lane,
+   int width)
 {
-  return Kokkos::shfl(val, src_lane, Impl::CudaTraits::WarpSize);
+  return Kokkos::shfl(val, src_lane, width);
 }
 
 // all-reduce across corresponding vector lanes between team members within warp
+//Note: position in vec == threadIdx.x
+//Note: vec length == blockDim.x
 template< typename iType, class Lambda, typename ValueType, class JoinType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
@@ -331,22 +324,24 @@ void parallel_reduce
    ValueType& initialized_result) {
 
   ValueType result = initialized_result;
-
-  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i,result);
   }
-
   initialized_result = result;
-  //Note: position in vec == threadIdx.x
 
-  int team_size = loop_boundaries.thread.team_size();
   //does this work for "single"?
-  initialized_result = strided_shfl_warp_reduction<ValueType, JoinType>(join, initialized_result, team_size, blockDim.x);
-  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, threadIdx.x );
+  initialized_result = strided_shfl_warp_reduction<ValueType, JoinType>(
+                          join,
+                          initialized_result,
+                          loop_boundaries.thread.team_size(),
+                          blockDim.x);
+  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, threadIdx.x, Impl::CudaTraits::WarpSize );
 }
 
 // all-reduce across corresponding vector lanes between team members within warp
 // if no join() provided, use sum
+//Note: position in vec == threadIdx.x
+//Note: vec length == blockDim.x
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
@@ -354,23 +349,21 @@ void parallel_reduce
    const Lambda & lambda,
    ValueType& initialized_result) {
 
+  //TODO what is the point of creating this temporary?
   ValueType result = initialized_result;
-
-  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i,result);
   }
-
   initialized_result = result;
-  //Note: position in vec == threadIdx.x
-
-  int team_size = loop_boundaries.thread.team_size();
 
   initialized_result = strided_shfl_warp_reduction(
                           [&] (const ValueType& val1, const ValueType& val2) { return val1 + val2; },
                           initialized_result,
-                          team_size,
+                          loop_boundaries.thread.team_size(),
                           blockDim.x);
-  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, threadIdx.x );
+  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, threadIdx.x, Impl::CudaTraits::WarpSize );
+  //printf("3-- bd: %d x %d, tid: (%d, %d), ws: %d, ir: %ld, r: %ld\n",
+  //        blockDim.x, blockDim.y, threadIdx.x, threadIdx.y, Impl::CudaTraits::WarpSize, initialized_result, result);
 }
 
 // all-reduce within team members within warp
@@ -383,16 +376,14 @@ void parallel_reduce
    ValueType& initialized_result) {
 
   ValueType result = initialized_result;
-
-  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i,result);
   }
-
   initialized_result = result;
 
   //does this work for "single"?
   initialized_result = multi_shfl_warp_reduction<ValueType, JoinType>(join, initialized_result, blockDim.x);
-  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, blockDim.x*threadIdx.y );
+  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, 0, blockDim.x );
   //threadIdx.y == member rank
 }
 
@@ -407,7 +398,7 @@ void parallel_reduce
 
   ValueType result = initialized_result;
 
-  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i,result);
   }
 
@@ -417,7 +408,7 @@ void parallel_reduce
                           [&] (const ValueType& val1, const ValueType& val2) { return val1 + val2; },
                           initialized_result,
                           blockDim.x);
-  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, blockDim.x*threadIdx.y );
+  initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, 0, blockDim.x );
   //threadIdx.y == member rank
 }
 
@@ -433,7 +424,7 @@ void parallel_scan_excl
 
   ValueType result = initialized_result; //TODO is this what we want?
 
-  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i,result);
   }
 
@@ -450,7 +441,7 @@ void parallel_scan_excl
   }
 
   // pass accum to all threads
-  accum = my_shfl_broadcast<ValueType>(result, threadIdx.x+Impl::CudaTraits::WarpSize-blockDim.x);
+  accum = shfl_warp_broadcast<ValueType>(result, threadIdx.x+Impl::CudaTraits::WarpSize-blockDim.x, Impl::CudaTraits::WarpSize);
   //TODO do something with accum
 
   // make EXCLUSIVE scan by shifting values over one
@@ -472,7 +463,7 @@ void parallel_scan_excl
 
   ValueType result = initialized_result; //TODO is this what we want?
 
-  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i,result);
   }
 
@@ -489,7 +480,7 @@ void parallel_scan_excl
   }
 
   // pass accum to all threads
-  accum = my_shfl_broadcast<ValueType>(result, blockDim.x*threadIdx.y+blockDim.x-1);
+  accum = shfl_warp_broadcast<ValueType>(result, blockDim.x-1, blockDim.x);
   //TODO do something with accum
 
   // make EXCLUSIVE scan by shifting values over one
@@ -511,7 +502,7 @@ void parallel_scan_incl
 
   ValueType result = initialized_result; //TODO is this what we want?
 
-  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i,result);
   }
 
@@ -528,7 +519,7 @@ void parallel_scan_incl
   }
 
   // pass accum to all threads
-  accum = my_shfl_broadcast<ValueType>(result, threadIdx.x+Impl::CudaTraits::WarpSize-blockDim.x);
+  accum = shfl_warp_broadcast<ValueType>(result, threadIdx.x+Impl::CudaTraits::WarpSize-blockDim.x);
   //TODO do something with accum
 }
 
@@ -544,7 +535,7 @@ void parallel_scan_incl
 
   ValueType result = initialized_result; //TODO is this what we want?
 
-  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i,result);
   }
 
@@ -561,7 +552,7 @@ void parallel_scan_incl
   }
 
   // pass accum to all threads
-  accum = my_shfl_broadcast<ValueType>(result, blockDim.x*threadIdx.y+blockDim.x-1);
+  accum = shfl_warp_broadcast<ValueType>(result, blockDim.x*threadIdx.y+blockDim.x-1);
   //TODO do something with accum
 }
 
