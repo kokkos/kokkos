@@ -257,7 +257,8 @@ namespace TestTaskPolicy {
 template< class ExecSpace >
 struct TestTaskTeam {
 
-  enum { SPAN = 8 };
+  //enum { SPAN = 8 };
+  enum { SPAN = 68 };
 
   typedef void value_type ;
   typedef Kokkos::TaskPolicy<ExecSpace>  policy_type ;
@@ -267,16 +268,19 @@ struct TestTaskTeam {
   policy_type  policy ;
   future_type  future ;
 
-  view_type  result ;
+  view_type  parfor_result ;
+  view_type  parreduce_check ;
   const long nvalue ;
 
   KOKKOS_INLINE_FUNCTION
   TestTaskTeam( const policy_type & arg_policy
-              , const view_type   & arg_result
+              , const view_type   & arg_parfor_result
+              , const view_type   & arg_parreduce_check
               , const long          arg_nvalue )
     : policy(arg_policy)
     , future()
-    , result( arg_result )
+    , parfor_result( arg_parfor_result )
+    , parreduce_check( arg_parreduce_check )
     , nvalue( arg_nvalue )
     {}
 
@@ -289,7 +293,7 @@ struct TestTaskTeam {
       if ( 0 < begin && future.is_null() ) {
         if ( member.team_rank() == 0 ) {
           future = policy.task_spawn
-            ( TestTaskTeam( policy , result , begin - 1 )
+            ( TestTaskTeam( policy , parfor_result , parreduce_check, begin - 1 )
             , Kokkos::TaskTeam );
 
           assert( ! future.is_null() );
@@ -300,7 +304,27 @@ struct TestTaskTeam {
       }
 
       Kokkos::parallel_for( Kokkos::TeamThreadRange(member,begin,end)
-                          , [&]( int i ) { result[i] = i + 1 ; }
+                          , [&]( int i ) { parfor_result[i] = i ; }
+                          );
+      // test parallel_reduce without join
+      long tot = 0;
+      Kokkos::parallel_reduce( Kokkos::TeamThreadRange(member,begin,end)
+                          , [&]( int i, long &res) { res += parfor_result[i]; }
+                          , tot);
+      long expected = (begin+end-1)*(end-begin)/2.0;
+      Kokkos::parallel_for( Kokkos::TeamThreadRange(member,begin,end)
+                          , [&]( int i ) { parreduce_check[i] = expected-tot ; }
+                          );
+
+      // test parallel_reduce with join
+      tot = 0;
+      Kokkos::parallel_reduce( Kokkos::TeamThreadRange(member,begin,end)
+                          , [&]( int i, long &res) { res += parfor_result[i]; }
+                          , [&]( const long& val1, const long& val2) { return val1 + val2; }
+                          , tot);
+      //printf("(%d)[%ld,%ld]: %ld =? %ld : %ld\n", member.team_rank(), begin, end, tot, expected, tot-expected );
+      Kokkos::parallel_for( Kokkos::TeamThreadRange(member,begin,end)
+                          , [&]( int i ) { parreduce_check[i] += expected-tot ; }
                           );
     }
 
@@ -312,23 +336,35 @@ struct TestTaskTeam {
       policy_type root_policy( typename policy_type::memory_space()
                         , memory_capacity );
 
-      view_type   root_result("result",n+1);
+      view_type   root_parfor_result("parfor_result",n+1);
+      view_type   root_parreduce_check("parreduce_check",n+1);
 
       typename view_type::HostMirror
-        host_result = Kokkos::create_mirror_view( root_result );
+        host_parfor_result = Kokkos::create_mirror_view( root_parfor_result );
 
-      future_type f = root_policy.host_spawn( TestTaskTeam( root_policy , root_result , n ) , Kokkos::TaskTeam );
+      typename view_type::HostMirror
+        host_parreduce_check = Kokkos::create_mirror_view( root_parreduce_check );
+
+      future_type f = root_policy.host_spawn(
+                        TestTaskTeam( root_policy , root_parfor_result , root_parreduce_check, n ) ,
+                        Kokkos::TaskTeam );
 
       Kokkos::wait( root_policy );
 
-      Kokkos::deep_copy( host_result , root_result );
+      Kokkos::deep_copy( host_parfor_result , root_parfor_result );
+      Kokkos::deep_copy( host_parreduce_check , root_parreduce_check );
 
       for ( long i = 0 ; i <= n ; ++i ) {
-        const long answer = i + 1 ;
-        if ( host_result(i) != answer ) {
-          std::cerr << "TestTaskTeam::run ERROR result(" << i << ") = "
-                    << host_result(i) << " != " << answer << std::endl ;
+        const long answer = i ;
+        if ( host_parfor_result(i) != answer ) {
+          std::cerr << "TestTaskTeam::run ERROR parallel_for result(" << i << ") = "
+                    << host_parfor_result(i) << " != " << answer << std::endl ;
         }
+        if ( host_parreduce_check(i) != 0 ) {
+          std::cerr << "TestTaskTeam::run ERROR parallel_reduce result(" << i << ") = "
+                    << host_parreduce_check(i) << " != 0" << std::endl ;
+        }
+
       }
     }
 };
