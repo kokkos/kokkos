@@ -205,10 +205,9 @@ void parallel_for
     lambda(i);
   }
 }
-
 //TODO versions with/without join op
 
-template<typename iType, class Lambda>
+template<typename iType, class Lambda, typename ValueType>
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
   ( const Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::OpenMP > >& loop_boundaries
@@ -239,9 +238,7 @@ void parallel_reduce
 
   // broadcast result
   initialized_result = shared[0];
-  
 }
-
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------
