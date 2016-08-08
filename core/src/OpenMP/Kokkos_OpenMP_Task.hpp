@@ -144,10 +144,12 @@ struct TeamThreadRangeBoundariesStruct<iType, TaskExec< Kokkos::OpenMP > >
   const iType begin ;
   const iType end ;
   enum {increment = 1};
-  const  TaskExec< Kokkos::OpenMP > & thread;
+  //TaskExec< Kokkos::OpenMP > & thread;
+  const TaskExec< Kokkos::OpenMP > & thread;
 
   KOKKOS_INLINE_FUNCTION
   TeamThreadRangeBoundariesStruct
+    //( TaskExec< Kokkos::OpenMP > & arg_thread, const iType& arg_count)
     ( const TaskExec< Kokkos::OpenMP > & arg_thread, const iType& arg_count)
     : begin(0)
     , end(arg_count)
@@ -156,6 +158,7 @@ struct TeamThreadRangeBoundariesStruct<iType, TaskExec< Kokkos::OpenMP > >
 
   KOKKOS_INLINE_FUNCTION
   TeamThreadRangeBoundariesStruct
+    //( TaskExec< Kokkos::OpenMP > & arg_thread
     ( const TaskExec< Kokkos::OpenMP > & arg_thread
     , const iType & arg_begin
     , const iType & arg_end
@@ -176,6 +179,7 @@ namespace Kokkos {
 template<typename iType>
 KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >
+//TeamThreadRange( Impl::TaskExec< Kokkos::OpenMP > & thread
 TeamThreadRange( const Impl::TaskExec< Kokkos::OpenMP > & thread
                , const iType & count )
 {
@@ -185,6 +189,7 @@ TeamThreadRange( const Impl::TaskExec< Kokkos::OpenMP > & thread
 template<typename iType>
 KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::OpenMP > >
+//TeamThreadRange( Impl:: TaskExec< Kokkos::OpenMP > & thread, const iType & begin , const iType & end )
 TeamThreadRange( const Impl:: TaskExec< Kokkos::OpenMP > & thread, const iType & begin , const iType & end )
 {
   return Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::OpenMP > >(thread,begin,end);
@@ -206,6 +211,7 @@ void parallel_for
   }
 }
 
+//TODO const issue
 template<typename iType, class Lambda, typename ValueType>
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
@@ -213,32 +219,111 @@ void parallel_reduce
   , const Lambda& lambda
   , ValueType& initialized_result)
 {
-  /*  
-  ValueType& result = initialized_result;
+  /*    
+  ValueType result = initialized_result;
 
+  //for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+  //  lambda(i, result);
+  //}
   for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i, result);
   }
 
   int team_rank = loop_boundaries.thread.team_rank(); // member num within the team
-  ValueType *shared = loop_boundaries.thread.team_shared();
-  shared[team_rank] = result;
 
+  printf("0-- tr: %d of %d, ir: %ld, r: %ld\n", team_rank, loop_boundaries.thread.team_size(),
+          initialized_result, result);
+
+  //ValueType *shared = (ValueType*) loop_boundaries.thread.team_shared();
+  //shared[team_rank] = result;
+
+  //#pragma omp barrier
   loop_boundaries.thread.team_barrier();
 
   // reduce across threads to thread 0
   if (team_rank == 0) {
     for (int i = 1; i < loop_boundaries.thread.team_size(); i++) {
-      shared[0] += shared[i];
+      //shared[0] += shared[i];
     }
   }
 
+  //#pragma omp barrier
   loop_boundaries.thread.team_barrier();
 
   // broadcast result
-  initialized_result = shared[0];
+  //initialized_result = shared[0];
+  initialized_result = result;
   */
 }
+
+// placeholder for future function
+template< typename iType, class Lambda, typename ValueType, class JoinType >
+KOKKOS_INLINE_FUNCTION
+void parallel_reduce
+  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >& loop_boundaries,
+   const Lambda & lambda,
+   const JoinType & join,
+   ValueType& initialized_result)
+{
+}
+// placeholder for future function
+template< typename iType, class Lambda, typename ValueType >
+KOKKOS_INLINE_FUNCTION
+void parallel_reduce
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >& loop_boundaries,
+   const Lambda & lambda,
+   ValueType& initialized_result)
+{
+}
+// placeholder for future function
+template< typename iType, class Lambda, typename ValueType, class JoinType >
+KOKKOS_INLINE_FUNCTION
+void parallel_reduce
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >& loop_boundaries,
+   const Lambda & lambda,
+   const JoinType & join,
+   ValueType& initialized_result)
+{
+}
+
+// placeholder for future function
+template< typename iType, class Lambda, typename ValueType >
+KOKKOS_INLINE_FUNCTION
+void parallel_scan_excl
+  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >& loop_boundaries,
+   const Lambda & lambda,
+   ValueType& initialized_result)
+{
+}
+// placeholder for future function
+template< typename iType, class Lambda, typename ValueType >
+KOKKOS_INLINE_FUNCTION
+void parallel_scan_incl
+  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >& loop_boundaries,
+   const Lambda & lambda,
+   ValueType& initialized_result)
+{
+}
+// placeholder for future function
+template< typename iType, class Lambda, typename ValueType >
+KOKKOS_INLINE_FUNCTION
+void parallel_scan_excl
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >& loop_boundaries,
+   const Lambda & lambda,
+   ValueType& initialized_result)
+{
+}
+// placeholder for future function
+template< typename iType, class Lambda, typename ValueType >
+KOKKOS_INLINE_FUNCTION
+void parallel_scan_incl
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >& loop_boundaries,
+   const Lambda & lambda,
+   ValueType& initialized_result)
+{
+}
+
+
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------

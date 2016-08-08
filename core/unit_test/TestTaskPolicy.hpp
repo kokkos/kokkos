@@ -288,6 +288,7 @@ struct TestTaskTeam {
 
   KOKKOS_INLINE_FUNCTION
   void operator()( typename policy_type::member_type const & member )
+  //void operator()( typename policy_type::member_type & member ) //TODO only non-const if omp?
     {
       const long end   = nvalue + 1 ;
       const long begin = 0 < end - SPAN ? end - SPAN : 0 ;
@@ -310,15 +311,17 @@ struct TestTaskTeam {
                           );
 
       // test parallel_reduce without join
+      
       long tot = 0;
       long expected = (begin+end-1)*(end-begin)/2.0;
       Kokkos::parallel_reduce( Kokkos::TeamThreadRange(member,begin,end)
                           , [&]( int i, long &res) { res += parfor_result[i]; }
                           , tot);
+      //printf("(%d)[%ld,%ld]: %ld =? %ld : %ld\n", member.team_rank(), begin, end, tot, expected, tot-expected );
       Kokkos::parallel_for( Kokkos::TeamThreadRange(member,begin,end)
                           , [&]( int i ) { parreduce_check[i] = expected-tot ; }
                           );
-
+      
       // test parallel_reduce with join
       tot = 0;
       Kokkos::parallel_reduce( Kokkos::TeamThreadRange(member,begin,end)
@@ -388,15 +391,16 @@ struct TestTaskTeam {
           std::cerr << "TestTaskTeam::run ERROR parallel_for result(" << i << ") = "
                     << host_parfor_result(i) << " != " << answer << std::endl ;
         }
+        
         if ( host_parreduce_check(i) != 0 ) {
           std::cerr << "TestTaskTeam::run ERROR parallel_reduce result(" << i << ") = "
                     << host_parreduce_check(i) << " != 0" << std::endl ;
         }
+        
         if ( host_parscan_check(i) != 0 ) {
           std::cerr << "TestTaskTeam::run ERROR parallel_scan result(" << i << ") = "
                     << host_parscan_check(i) << " != 0" << std::endl ;
         }
-
       }
     }
 };
@@ -492,7 +496,6 @@ struct TestTaskTeamValue {
       }
     }
 };
-
 } // namespace TestTaskPolicy
 
 //----------------------------------------------------------------------------
