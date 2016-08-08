@@ -530,8 +530,10 @@ void parallel_scan_incl
   }
 
   // pass accum to all threads
-  accum = shfl_warp_broadcast<ValueType>(result, threadIdx.x+Impl::CudaTraits::WarpSize-blockDim.x);
+  accum = shfl_warp_broadcast<ValueType>(result, threadIdx.x+Impl::CudaTraits::WarpSize-blockDim.x, Impl::CudaTraits::WarpSize);
   //TODO do something with accum
+
+  initialized_result = result;
 }
 
 // inclusive scan within team member (vector) within warp
@@ -562,8 +564,10 @@ void parallel_scan_incl
   }
 
   // pass accum to all threads
-  accum = shfl_warp_broadcast<ValueType>(result, blockDim.x*threadIdx.y+blockDim.x-1);
+  accum = shfl_warp_broadcast<ValueType>(result, blockDim.x*threadIdx.y+blockDim.x-1, Impl::CudaTraits::WarpSize);
   //TODO do something with accum
+
+  initialized_result = result;
 }
 
 
