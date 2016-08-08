@@ -176,6 +176,62 @@ void parallel_reduce
    ValueType& initialized_result)
 {
 }
+// placeholder for future function
+template< typename iType, class Lambda, typename ValueType >
+KOKKOS_INLINE_FUNCTION
+void parallel_reduce
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >& loop_boundaries,
+   const Lambda & lambda,
+   ValueType& initialized_result)
+{
+}
+// placeholder for future function
+template< typename iType, class Lambda, typename ValueType, class JoinType >
+KOKKOS_INLINE_FUNCTION
+void parallel_reduce
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >& loop_boundaries,
+   const Lambda & lambda,
+   const JoinType & join,
+   ValueType& initialized_result)
+{
+}
+
+// placeholder for future function
+template< typename iType, class Lambda, typename ValueType >
+KOKKOS_INLINE_FUNCTION
+void parallel_scan_excl
+  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >& loop_boundaries,
+   const Lambda & lambda,
+   ValueType& initialized_result)
+{
+}
+// placeholder for future function
+template< typename iType, class Lambda, typename ValueType >
+KOKKOS_INLINE_FUNCTION
+void parallel_scan_incl
+  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >& loop_boundaries,
+   const Lambda & lambda,
+   ValueType& initialized_result)
+{
+}
+// placeholder for future function
+template< typename iType, class Lambda, typename ValueType >
+KOKKOS_INLINE_FUNCTION
+void parallel_scan_excl
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >& loop_boundaries,
+   const Lambda & lambda,
+   ValueType& initialized_result)
+{
+}
+// placeholder for future function
+template< typename iType, class Lambda, typename ValueType >
+KOKKOS_INLINE_FUNCTION
+void parallel_scan_incl
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >& loop_boundaries,
+   const Lambda & lambda,
+   ValueType& initialized_result)
+{
+}
 
 } /* namespace Kokkos */
 
