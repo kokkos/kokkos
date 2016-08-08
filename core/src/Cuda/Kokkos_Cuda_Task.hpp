@@ -313,8 +313,11 @@ KOKKOS_INLINE_FUNCTION ValueType shfl_warp_broadcast
 }
 
 // all-reduce across corresponding vector lanes between team members within warp
-//Note: position in vec == threadIdx.x
-//Note: vec length == blockDim.x
+// assume vec_length*team_size == warp_size 
+// blockDim.x == vec_length == stride
+// blockDim.y == team_size
+// threadIdx.x == position in vec
+// threadIdx.y == member number
 template< typename iType, class Lambda, typename ValueType, class JoinType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
@@ -340,8 +343,11 @@ void parallel_reduce
 
 // all-reduce across corresponding vector lanes between team members within warp
 // if no join() provided, use sum
-//Note: position in vec == threadIdx.x
-//Note: vec length == blockDim.x
+// assume vec_length*team_size == warp_size 
+// blockDim.x == vec_length == stride
+// blockDim.y == team_size
+// threadIdx.x == position in vec
+// threadIdx.y == member number
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
@@ -367,6 +373,11 @@ void parallel_reduce
 }
 
 // all-reduce within team members within warp
+// assume vec_length*team_size == warp_size 
+// blockDim.x == vec_length == stride
+// blockDim.y == team_size
+// threadIdx.x == position in vec
+// threadIdx.y == member number
 template< typename iType, class Lambda, typename ValueType, class JoinType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
@@ -384,11 +395,15 @@ void parallel_reduce
   //does this work for "single"?
   initialized_result = multi_shfl_warp_reduction<ValueType, JoinType>(join, initialized_result, blockDim.x);
   initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, 0, blockDim.x );
-  //threadIdx.y == member rank
 }
 
 // all-reduce within team members within warp
 // if no join() provided, use sum
+// assume vec_length*team_size == warp_size 
+// blockDim.x == vec_length == stride
+// blockDim.y == team_size
+// threadIdx.x == position in vec
+// threadIdx.y == member number
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
@@ -409,12 +424,14 @@ void parallel_reduce
                           initialized_result,
                           blockDim.x);
   initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, 0, blockDim.x );
-  //threadIdx.y == member rank
 }
 
 // exclusive scan across corresponding vector lanes between team members within warp
-// assume stride*team_size == warp_size 
-// (stride == blockDim.x == vec_length, team_size == blockDim.y)
+// assume vec_length*team_size == warp_size 
+// blockDim.x == vec_length == stride
+// blockDim.y == team_size
+// threadIdx.x == position in vec
+// threadIdx.y == member number
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
 void parallel_scan_excl
@@ -428,11 +445,7 @@ void parallel_scan_excl
     lambda(i,result);
   }
 
-  //ValueType x = result;
   ValueType y, accum;
-  //Note: member# == threadIdx.y
-  //Note: position in vec == threadIdx.x
-  //TODO when should we use variables vs. cuda dims/ids?
 
   // INCLUSIVE scan
   for( int offset = blockDim.x ; offset < Impl::CudaTraits::WarpSize ; offset <<= 1 ) {
@@ -452,8 +465,11 @@ void parallel_scan_excl
 }
 
 // exclusive scan within team member (vector) within warp
-// assume stride*team_size == warp_size 
-// (stride == blockDim.x == vec_length, team_size == blockDim.y)
+// assume vec_length*team_size == warp_size 
+// blockDim.x == vec_length == stride
+// blockDim.y == team_size
+// threadIdx.x == position in vec
+// threadIdx.y == member number
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
 void parallel_scan_excl
@@ -467,11 +483,7 @@ void parallel_scan_excl
     lambda(i,result);
   }
 
-  //ValueType x = result;
   ValueType y, accum;
-  //Note: position in vec == threadIdx.x
-  //Note: member# == threadIdx.y
-  //TODO when should we use variables vs. cuda dims/ids?
 
   // INCLUSIVE scan
   for( int offset = 1 ; offset < blockDim.x ; offset <<= 1 ) {
@@ -491,8 +503,11 @@ void parallel_scan_excl
 }
 
 // inclusive scan across corresponding vector lanes between team members within warp
-// assume stride*team_size == warp_size 
-// (stride == blockDim.x == vec_length, team_size == blockDim.y)
+// assume vec_length*team_size == warp_size 
+// blockDim.x == vec_length == stride
+// blockDim.y == team_size
+// threadIdx.x == position in vec
+// threadIdx.y == member number
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
 void parallel_scan_incl
@@ -506,11 +521,7 @@ void parallel_scan_incl
     lambda(i,result);
   }
 
-  //ValueType x = result;
   ValueType y, accum;
-  //Note: member# == threadIdx.y
-  //Note: position in vec == threadIdx.x
-  //TODO when should we use variables vs. cuda dims/ids?
 
   // INCLUSIVE scan
   for( int offset = blockDim.x ; offset < Impl::CudaTraits::WarpSize ; offset <<= 1 ) {
@@ -524,8 +535,11 @@ void parallel_scan_incl
 }
 
 // inclusive scan within team member (vector) within warp
-// assume stride*team_size == warp_size 
-// (stride == blockDim.x == vec_length, team_size == blockDim.y)
+// assume vec_length*team_size == warp_size 
+// blockDim.x == vec_length == stride
+// blockDim.y == team_size
+// threadIdx.x == position in vec
+// threadIdx.y == member number
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
 void parallel_scan_incl
@@ -539,11 +553,7 @@ void parallel_scan_incl
     lambda(i,result);
   }
 
-  //ValueType x = result;
   ValueType y, accum;
-  //Note: position in vec == threadIdx.x
-  //Note: member# == threadIdx.y
-  //TODO when should we use variables vs. cuda dims/ids?
 
   // INCLUSIVE scan
   for( int offset = 1 ; offset < blockDim.x ; offset <<= 1 ) {
