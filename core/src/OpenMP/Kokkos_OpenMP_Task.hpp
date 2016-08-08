@@ -205,7 +205,6 @@ void parallel_for
     lambda(i);
   }
 }
-//TODO versions with/without join op
 
 template<typename iType, class Lambda, typename ValueType>
 KOKKOS_INLINE_FUNCTION
@@ -214,7 +213,7 @@ void parallel_reduce
   , const Lambda& lambda
   , ValueType& initialized_result)
 {
-  
+  /*  
   ValueType& result = initialized_result;
 
   for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
@@ -238,6 +237,7 @@ void parallel_reduce
 
   // broadcast result
   initialized_result = shared[0];
+  */
 }
 } /* namespace Kokkos */
 
