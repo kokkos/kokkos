@@ -66,6 +66,7 @@
 #include <TestViewOfClass.hpp>
 #include <TestViewSubview.hpp>
 #include <TestAtomic.hpp>
+#include <TestAtomicOperations.hpp>
 #include <TestRange.hpp>
 #include <TestTeam.hpp>
 #include <TestReduce.hpp>
@@ -349,6 +350,60 @@ TEST_F( serial , atomics )
   ASSERT_TRUE( ( TestAtomic::Loop<TestAtomic::SuperScalar<4> ,Kokkos::Serial>(100,3) ) );
 }
 
+TEST_F( serial , atomic_operations )
+{
+  //const int loop_count = 1e6 ;
+  const int loop_count = 1 ;
+
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<int,Kokkos::Serial>(loop_count,1) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<int,Kokkos::Serial>(loop_count,2) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<int,Kokkos::Serial>(loop_count,3) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<int,Kokkos::Serial>(loop_count,4) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<int,Kokkos::Serial>(loop_count,5) ) );
+//  ASSERT_TRUE( ( TestAtomicOperations::Loop<int,Kokkos::Serial>(loop_count,6) ) );
+
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned int,Kokkos::Serial>(loop_count,1) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned int,Kokkos::Serial>(loop_count,2) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned int,Kokkos::Serial>(loop_count,3) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned int,Kokkos::Serial>(loop_count,4) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned int,Kokkos::Serial>(loop_count,5) ) );
+//  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned int,Kokkos::Serial>(loop_count,6) ) );
+
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<long int,Kokkos::Serial>(loop_count,1) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<long int,Kokkos::Serial>(loop_count,2) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<long int,Kokkos::Serial>(loop_count,3) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<long int,Kokkos::Serial>(loop_count,4) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<long int,Kokkos::Serial>(loop_count,5) ) );
+//  ASSERT_TRUE( ( TestAtomicOperations::Loop<long int,Kokkos::Serial>(loop_count,6) ) );
+
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned long int,Kokkos::Serial>(loop_count,1) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned long int,Kokkos::Serial>(loop_count,2) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned long int,Kokkos::Serial>(loop_count,3) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned long int,Kokkos::Serial>(loop_count,4) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned long int,Kokkos::Serial>(loop_count,5) ) );
+//  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned long int,Kokkos::Serial>(loop_count,6) ) );
+
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<long long int,Kokkos::Serial>(loop_count,1) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<long long int,Kokkos::Serial>(loop_count,2) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<long long int,Kokkos::Serial>(loop_count,3) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<long long int,Kokkos::Serial>(loop_count,4) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<long long int,Kokkos::Serial>(loop_count,5) ) );
+//  ASSERT_TRUE( ( TestAtomicOperations::Loop<long long int,Kokkos::Serial>(loop_count,6) ) );
+
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<double,Kokkos::Serial>(loop_count,1) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<double,Kokkos::Serial>(loop_count,2) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<double,Kokkos::Serial>(loop_count,3) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<double,Kokkos::Serial>(loop_count,4) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<double,Kokkos::Serial>(loop_count,5) ) );
+//  ASSERT_TRUE( ( TestAtomicOperations::Loop<double,Kokkos::Serial>(loop_count,6) ) );
+
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<float,Kokkos::Serial>(1,1) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<float,Kokkos::Serial>(1,2) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<float,Kokkos::Serial>(1,3) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<float,Kokkos::Serial>(1,4) ) );
+  ASSERT_TRUE( ( TestAtomicOperations::Loop<float,Kokkos::Serial>(1,5) ) );
+//  ASSERT_TRUE( ( TestAtomicOperations::Loop<float,Kokkos::Serial>(1,6) ) );
+}
 //----------------------------------------------------------------------------
 
 TEST_F( serial, tile_layout )

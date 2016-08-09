@@ -43,10 +43,10 @@
 
 #include <Kokkos_Core.hpp>
 
-namespace TestAtomic {
+namespace TestAtomicOperations {
 
 // Struct for testing arbitrary size atomics
-
+/*
 template<int N>
 struct SuperScalar {
   double val[N];
@@ -146,6 +146,7 @@ std::ostream& operator<<(std::ostream& os, const SuperScalar<N>& dt)
     os << dt.val[N-1] << "}";
     return os;
 }
+*/
 
 template<class T,class DEVICE_TYPE>
 struct ZeroFunctor {
@@ -163,7 +164,7 @@ struct ZeroFunctor {
 //---------------------------------------------------
 //--------------atomic_fetch_max---------------------
 //---------------------------------------------------
-/*
+
 template<class T,class DEVICE_TYPE>
 struct MaxFunctor{
   typedef DEVICE_TYPE execution_space;
@@ -207,7 +208,208 @@ T MaxLoopSerial(int loop) {
   delete [] data;
   return val;
 }
-*/
+
+//---------------------------------------------------
+//--------------atomic_fetch_min---------------------
+//---------------------------------------------------
+
+template<class T,class DEVICE_TYPE>
+struct MinFunctor{
+  typedef DEVICE_TYPE execution_space;
+  typedef Kokkos::View<T,execution_space> type;
+  type data;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int) const {
+    Kokkos::atomic_fetch_min(&data(),(T)1);
+  }
+};
+
+template<class T, class execution_space >
+T MinLoop(int loop) {
+  struct ZeroFunctor<T,execution_space> f_zero;
+  typename ZeroFunctor<T,execution_space>::type data("Data");
+  typename ZeroFunctor<T,execution_space>::h_type h_data("HData");
+  f_zero.data = data;
+  Kokkos::parallel_for(1,f_zero);
+  execution_space::fence();
+
+  struct MinFunctor<T,execution_space> f_min;
+  f_min.data = data;
+  Kokkos::parallel_for(loop,f_min);
+  execution_space::fence();
+
+  Kokkos::deep_copy(h_data,data);
+  T val = h_data();
+  return val;
+}
+
+template<class T>
+T MinLoopSerial(int loop) {
+  T* data = new T[1];
+  data[0] = 0;
+
+//  for(int i=0;i<loop;i++)
+//  *data+=(T)1;
+
+  T val = *data;
+  delete [] data;
+  return val;
+}
+
+//-----------------------------------------------
+//--------------init_functor---------------------
+//-----------------------------------------------
+
+template<class T,class DEVICE_TYPE>
+struct InitFunctor {
+  typedef DEVICE_TYPE execution_space;
+  typedef typename Kokkos::View<T,execution_space> type;
+  typedef typename Kokkos::View<T,execution_space>::HostMirror h_type;
+  type data;
+  T init_value ;
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int) const {
+    data() = init_value;
+  }
+
+  InitFunctor(T _init_value) : init_value(_init_value) {}
+};
+
+//---------------------------------------------------
+//--------------atomic_fetch_mul---------------------
+//---------------------------------------------------
+
+template<class T,class DEVICE_TYPE>
+struct MulFunctor{
+  typedef DEVICE_TYPE execution_space;
+  typedef Kokkos::View<T,execution_space> type;
+  type data;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int) const {
+    Kokkos::atomic_fetch_mul(&data(),(T)4);
+  }
+};
+
+template<class T, class execution_space >
+T MulLoop(int loop) {
+  struct InitFunctor<T,execution_space> f_init( (T)8 );
+  typename InitFunctor<T,execution_space>::type data("Data");
+  typename InitFunctor<T,execution_space>::h_type h_data("HData");
+  f_init.data = data;
+  Kokkos::parallel_for(1,f_init);
+  execution_space::fence();
+
+  struct MulFunctor<T,execution_space> f;
+  f.data = data;
+  Kokkos::parallel_for(loop,f);
+  execution_space::fence();
+
+  Kokkos::deep_copy(h_data,data);
+  T val = h_data();
+  return val;
+}
+
+template<class T>
+T MulLoopSerial(int loop) {
+  T* data = new T[1];
+  data[0] = (T)32;
+
+  T val = *data;
+  delete [] data;
+  return val;
+}
+
+//---------------------------------------------------
+//--------------atomic_fetch_div---------------------
+//---------------------------------------------------
+
+template<class T,class DEVICE_TYPE>
+struct DivFunctor{
+  typedef DEVICE_TYPE execution_space;
+  typedef Kokkos::View<T,execution_space> type;
+  type data;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int) const {
+    Kokkos::atomic_fetch_div(&data(),(T)4);
+  }
+};
+
+template<class T, class execution_space >
+T DivLoop(int loop) {
+  struct InitFunctor<T,execution_space> f_init( (T)8 );
+  typename InitFunctor<T,execution_space>::type data("Data");
+  typename InitFunctor<T,execution_space>::h_type h_data("HData");
+  f_init.data = data;
+  Kokkos::parallel_for(1,f_init);
+  execution_space::fence();
+
+  struct DivFunctor<T,execution_space> f;
+  f.data = data;
+  Kokkos::parallel_for(loop,f);
+  execution_space::fence();
+
+  Kokkos::deep_copy(h_data,data);
+  T val = h_data();
+  return val;
+}
+
+template<class T>
+T DivLoopSerial(int loop) {
+  T* data = new T[1];
+  data[0] = (T)2;
+
+  T val = *data;
+  delete [] data;
+  return val;
+}
+
+//---------------------------------------------------
+//--------------atomic_fetch_mod---------------------
+//---------------------------------------------------
+
+template<class T,class DEVICE_TYPE>
+struct ModFunctor{
+  typedef DEVICE_TYPE execution_space;
+  typedef Kokkos::View<T,execution_space> type;
+  type data;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int) const {
+    Kokkos::atomic_fetch_mod(&data(),(T)4);
+  }
+};
+
+template<class T, class execution_space >
+T ModLoop(int loop) {
+  struct InitFunctor<T,execution_space> f_init( (T)8 );
+  typename InitFunctor<T,execution_space>::type data("Data");
+  typename InitFunctor<T,execution_space>::h_type h_data("HData");
+  f_init.data = data;
+  Kokkos::parallel_for(1,f_init);
+  execution_space::fence();
+
+  struct ModFunctor<T,execution_space> f;
+  f.data = data;
+  Kokkos::parallel_for(loop,f);
+  execution_space::fence();
+
+  Kokkos::deep_copy(h_data,data);
+  T val = h_data();
+  return val;
+}
+
+template<class T>
+T ModLoopSerial(int loop) {
+  T* data = new T[1];
+  data[0] = (T)0;
+
+  T val = *data;
+  delete [] data;
+  return val;
+}
 
 //---------------------------------------------------
 //--------------atomic_fetch_add---------------------
@@ -409,9 +611,11 @@ template<class T, class DeviceType >
 T LoopVariant(int loop, int test) {
   switch (test) {
     case 1: return AddLoop<T,DeviceType>(loop);
-    case 2: return CASLoop<T,DeviceType>(loop);
-    case 3: return ExchLoop<T,DeviceType>(loop);
-//    case 4: return MaxLoop<T,DeviceType>(1);
+    case 2: return MaxLoop<T,DeviceType>(1);
+    case 3: return MinLoop<T,DeviceType>(1);
+    case 4: return MulLoop<T,DeviceType>(1);
+    case 5: return DivLoop<T,DeviceType>(1);
+//    case 6: return ModLoop<T,DeviceType>(1); //can't compile with float/double/complex etc
   }
   return 0;
 }
@@ -420,9 +624,11 @@ template<class T>
 T LoopVariantSerial(int loop, int test) {
   switch (test) {
     case 1: return AddLoopSerial<T>(loop);
-    case 2: return CASLoopSerial<T>(loop);
-    case 3: return ExchLoopSerial<T>(loop);
-//    case 4: return MaxLoopSerial<T>(1);
+    case 2: return MaxLoopSerial<T>(1);
+    case 3: return MinLoopSerial<T>(1);
+    case 4: return MulLoopSerial<T>(1);
+    case 5: return DivLoopSerial<T>(1);
+//    case 6: return ModLoopSerial<T>(1); //can't compile with float/double/complex etc
   }
   return 0;
 }
@@ -445,7 +651,6 @@ bool Loop(int loop, int test)
               << resSerial << " != " << res
               << std::endl ;
   }
-
 
   return passed ;
 }
