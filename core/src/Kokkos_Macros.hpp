@@ -452,27 +452,16 @@
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-/* Transitional macro to change between old and new View,
- * default to use new View.
+/* Transitional macro to change between old and new View
+ * are no longer supported.
  */
 
-#if ! defined( KOKKOS_USING_EXP_VIEW )
 #if defined( KOKKOS_USING_DEPRECATED_VIEW )
-#define KOKKOS_USING_EXP_VIEW 0
-#else
-#define KOKKOS_USING_EXP_VIEW 1
-#endif
+#error "Kokkos deprecated View has been removed"
 #endif
 
-#if KOKKOS_USING_EXP_VIEW
-#if ! defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
+#define KOKKOS_USING_EXP_VIEW 1
 #define KOKKOS_USING_EXPERIMENTAL_VIEW
-#endif
-#else /* ! KOKKOS_USING_EXP_VIEW */
-#if defined( KOKKOS_USING_EXPERIMENTAL_VIEW )
-#error "KOKKOS_USING_EXP_VIEW and KOKKOS_USING_EXPERIMENAL_VIEW are both defined and are incompatible"
-#endif
-#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
