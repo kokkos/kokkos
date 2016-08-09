@@ -277,29 +277,29 @@ void parallel_for
 // reduce across corresponding lanes between team members within warp
 // assume stride*team_size == warp_size
 template< typename ValueType, class JoinType >
-KOKKOS_INLINE_FUNCTION ValueType strided_shfl_warp_reduction
+KOKKOS_INLINE_FUNCTION
+void strided_shfl_warp_reduction
   (const JoinType& join,
    ValueType& val,
    int team_size,
    int stride)
 {
   for (int lane_delta=(team_size*stride)>>1; lane_delta>=stride; lane_delta>>=1) {
-    val = join(val, Kokkos::shfl_down(val, lane_delta, team_size*stride));
+    join(val, Kokkos::shfl_down(val, lane_delta, team_size*stride));
   }
-  return val;
 }
 
 // multiple within-warp non-strided reductions
 template< typename ValueType, class JoinType >
-KOKKOS_INLINE_FUNCTION ValueType multi_shfl_warp_reduction
+KOKKOS_INLINE_FUNCTION
+void multi_shfl_warp_reduction
   (const JoinType& join,
    ValueType& val,
    int vec_length)
 {
   for (int lane_delta=vec_length>>1; lane_delta; lane_delta>>=1) {
-    val = join(val, Kokkos::shfl_down(val, lane_delta, vec_length));
+    join(val, Kokkos::shfl_down(val, lane_delta, vec_length));
   }
-  return val;
 }
 
 // broadcast within warp
@@ -333,7 +333,8 @@ void parallel_reduce
   initialized_result = result;
 
   //does this work for "single"?
-  initialized_result = strided_shfl_warp_reduction<ValueType, JoinType>(
+  //initialized_result = strided_shfl_warp_reduction<ValueType, JoinType>(
+  strided_shfl_warp_reduction<ValueType, JoinType>(
                           join,
                           initialized_result,
                           loop_boundaries.thread.team_size(),
@@ -362,8 +363,9 @@ void parallel_reduce
   }
   initialized_result = result;
 
-  initialized_result = strided_shfl_warp_reduction(
-                          [&] (const ValueType& val1, const ValueType& val2) { return val1 + val2; },
+  //initialized_result = strided_shfl_warp_reduction(
+  strided_shfl_warp_reduction(
+                          [&] (ValueType& val1, const ValueType& val2) { val1 += val2; },
                           initialized_result,
                           loop_boundaries.thread.team_size(),
                           blockDim.x);
@@ -393,7 +395,8 @@ void parallel_reduce
   initialized_result = result;
 
   //does this work for "single"?
-  initialized_result = multi_shfl_warp_reduction<ValueType, JoinType>(join, initialized_result, blockDim.x);
+  //initialized_result = multi_shfl_warp_reduction<ValueType, JoinType>(join, initialized_result, blockDim.x);
+  multi_shfl_warp_reduction<ValueType, JoinType>(join, initialized_result, blockDim.x);
   initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, 0, blockDim.x );
 }
 
@@ -419,8 +422,9 @@ void parallel_reduce
 
   initialized_result = result;
 
-  initialized_result = multi_shfl_warp_reduction(
-                          [&] (const ValueType& val1, const ValueType& val2) { return val1 + val2; },
+  //initialized_result = multi_shfl_warp_reduction(
+  multi_shfl_warp_reduction(
+                          [&] (ValueType& val1, const ValueType& val2) { val1 += val2; },
                           initialized_result,
                           blockDim.x);
   initialized_result = shfl_warp_broadcast<ValueType>( initialized_result, 0, blockDim.x );
@@ -438,7 +442,7 @@ void parallel_scan_excl
   (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
    const Lambda & lambda,
    ValueType& initialized_result) {
-
+  /*
   ValueType result = initialized_result; //TODO is this what we want?
 
   for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
@@ -462,6 +466,7 @@ void parallel_scan_excl
 
   // set first val to 0 (for exclusive scan)
   if (threadIdx.y == 0) { initialized_result = 0; }
+  */
 }
 
 // exclusive scan within team member (vector) within warp
@@ -476,7 +481,7 @@ void parallel_scan_excl
   (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
    const Lambda & lambda,
    ValueType& initialized_result) {
-
+  /*
   ValueType result = initialized_result; //TODO is this what we want?
 
   for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
@@ -500,6 +505,7 @@ void parallel_scan_excl
 
   // set first val to 0 (for exclusive scan)
   if (threadIdx.x == 0) { initialized_result = 0; }
+  */
 }
 
 // inclusive scan across corresponding vector lanes between team members within warp
@@ -514,7 +520,7 @@ void parallel_scan_incl
   (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
    const Lambda & lambda,
    ValueType& initialized_result) {
-
+  /*
   ValueType result = initialized_result; //TODO is this what we want?
 
   for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
@@ -534,6 +540,7 @@ void parallel_scan_incl
   //TODO do something with accum
 
   initialized_result = result;
+  */
 }
 
 // inclusive scan within team member (vector) within warp
@@ -548,7 +555,7 @@ void parallel_scan_incl
   (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
    const Lambda & lambda,
    ValueType& initialized_result) {
-
+/*
   ValueType result = initialized_result; //TODO is this what we want?
 
   for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
@@ -568,6 +575,7 @@ void parallel_scan_incl
   //TODO do something with accum
 
   initialized_result = result;
+  */
 }
 
 
