@@ -597,26 +597,15 @@ CudaInternal::scratch_space( const Cuda::size_type size )
 
     m_scratchSpaceCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
 
-#if ! KOKKOS_USING_EXP_VIEW
+     typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > Record ;
 
-    m_scratchSpaceTracker = CudaSpace::allocate_and_track( std::string("InternalScratchSpace") , sizeof( ScratchGrain ) * m_scratchSpaceCount );
+     Record * const r = Record::allocate( Kokkos::CudaSpace()
+                                        , "InternalScratchSpace"
+                                        , ( sizeof( ScratchGrain ) * m_scratchSpaceCount ) );
 
-    m_scratchSpace = reinterpret_cast<size_type *>(m_scratchSpaceTracker.alloc_ptr());
+     Record::increment( r );
 
-#else
-
-    typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > Record ;
-
-    Record * const r = Record::allocate( Kokkos::CudaSpace()
-                                       , "InternalScratchSpace"
-                                       , ( sizeof( ScratchGrain ) * m_scratchSpaceCount ) );
-
-    Record::increment( r );
-
-    m_scratchSpace = reinterpret_cast<size_type *>( r->data() );
-
-#endif
-
+     m_scratchSpace = reinterpret_cast<size_type *>( r->data() );
   }
 
   return m_scratchSpace ;
