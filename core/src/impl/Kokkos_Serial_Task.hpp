@@ -100,7 +100,7 @@ template<typename iType>
 struct TeamThreadRangeBoundariesStruct<iType, TaskExec< Kokkos::Serial > >
 {
   typedef iType index_type;
-  const iType begin ;
+  const iType start ;
   const iType end ;
   enum {increment = 1};
   //const  TaskExec< Kokkos::Serial > & thread;
@@ -110,7 +110,7 @@ struct TeamThreadRangeBoundariesStruct<iType, TaskExec< Kokkos::Serial > >
   TeamThreadRangeBoundariesStruct
     //( const TaskExec< Kokkos::Serial > & arg_thread, const iType& arg_count)
     ( TaskExec< Kokkos::Serial > & arg_thread, const iType& arg_count)
-    : begin(0)
+    : start(0)
     , end(arg_count)
     , thread(arg_thread)
     {}
@@ -119,10 +119,10 @@ struct TeamThreadRangeBoundariesStruct<iType, TaskExec< Kokkos::Serial > >
   TeamThreadRangeBoundariesStruct
     //( const TaskExec< Kokkos::Serial > & arg_thread
     ( TaskExec< Kokkos::Serial > & arg_thread
-    , const iType& arg_begin
+    , const iType& arg_start
     , const iType & arg_end
     )
-    : begin( arg_begin )
+    : start( arg_start )
     , end(   arg_end)
     , thread( arg_thread )
     {}
@@ -157,18 +157,18 @@ TeamThreadRange( Impl::TaskExec< Kokkos::Serial > & thread
 template<typename iType>
 KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Serial > >
-TeamThreadRange( const Impl:: TaskExec< Kokkos::Serial > & thread, const iType & begin , const iType & end )
+TeamThreadRange( const Impl:: TaskExec< Kokkos::Serial > & thread, const iType & start , const iType & end )
 {
-  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Serial > >(thread,begin,end);
+  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Serial > >(thread,start,end);
 }
 */
 //TODO const issue omp
 template<typename iType>
 KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Serial > >
-TeamThreadRange( Impl:: TaskExec< Kokkos::Serial > & thread, const iType & begin , const iType & end )
+TeamThreadRange( Impl:: TaskExec< Kokkos::Serial > & thread, const iType & start , const iType & end )
 {
-  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Serial > >(thread,begin,end);
+  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Serial > >(thread,start,end);
 }
 
   /** \brief  Inter-thread parallel_for. Executes lambda(iType i) for each i=0..N-1.
@@ -178,7 +178,7 @@ TeamThreadRange( Impl:: TaskExec< Kokkos::Serial > & thread, const iType & begin
 template<typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION
 void parallel_for(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Serial > >& loop_boundaries, const Lambda& lambda) {
-  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment)
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment)
     lambda(i);
 }
 
@@ -192,7 +192,7 @@ void parallel_reduce
 
   ValueType result = initialized_result;
 
-  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment)
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment)
     lambda(i, result);
 
   initialized_result = result;
@@ -208,7 +208,7 @@ void parallel_reduce
 {
   ValueType result = initialized_result;
 
-  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment)
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment)
     lambda(i, result);
 
   initialized_result = result;
@@ -233,55 +233,31 @@ void parallel_reduce
 {
 }
 
-template< typename iType, class Lambda, typename ValueType >
+template< typename ValueType, typename iType, class Lambda >
 KOKKOS_INLINE_FUNCTION
-void parallel_scan_excl
+void parallel_scan
   (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >& loop_boundaries,
-   const Lambda & lambda,
-   ValueType& initialized_result)
+   const Lambda & lambda)
 {
-  /*
-  ValueType result = initialized_result;
+  ValueType accum = 0 ;
+  ValueType val, local_total;
 
-  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment)
-    lambda(i, result);
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+    local_total = 0;
+    lambda(i,local_total,false);
+    val = accum;
+    lambda(i,val,true);
+    accum += local_total;
+  }
 
-  initialized_result = result;
-  */
 }
 
-template< typename iType, class Lambda, typename ValueType >
-KOKKOS_INLINE_FUNCTION
-void parallel_scan_incl
-  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >& loop_boundaries,
-   const Lambda & lambda,
-   ValueType& initialized_result)
-{
-  /*
-  ValueType result = initialized_result;
-
-  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment)
-    lambda(i, result);
-
-  initialized_result = result;
-  */
-}
 // placeholder for future function
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
-void parallel_scan_excl
+void parallel_scan
   (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >& loop_boundaries,
-   const Lambda & lambda,
-   ValueType& initialized_result)
-{
-}
-// placeholder for future function
-template< typename iType, class Lambda, typename ValueType >
-KOKKOS_INLINE_FUNCTION
-void parallel_scan_incl
-  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >& loop_boundaries,
-   const Lambda & lambda,
-   ValueType& initialized_result)
+   const Lambda & lambda)
 {
 }
 

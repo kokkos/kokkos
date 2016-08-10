@@ -269,7 +269,8 @@ TEST_F( cuda , task_depend )
 
 TEST_F( cuda , task_team )
 {
-  TestTaskPolicy::TestTaskTeam< Kokkos::Cuda >::run(1000);
+  //TestTaskPolicy::TestTaskTeam< Kokkos::Cuda >::run(1000);
+  TestTaskPolicy::TestTaskTeam< Kokkos::Cuda >::run(104);
   TestTaskPolicy::TestTaskTeamValue< Kokkos::Cuda >::run(1000);
 }
 

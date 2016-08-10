@@ -259,7 +259,9 @@ namespace TestTaskPolicy {
 template< class ExecSpace >
 struct TestTaskTeam {
 
-  enum { SPAN = 8 };
+  //enum { SPAN = 8 };
+  enum { SPAN = 33 };
+  //enum { SPAN = 1 };
 
   typedef void value_type ;
   typedef Kokkos::TaskPolicy<ExecSpace>  policy_type ;
@@ -271,6 +273,7 @@ struct TestTaskTeam {
 
   view_type  parfor_result ;
   view_type  parreduce_check ;
+  view_type  parscan_result ;
   view_type  parscan_check ;
   const long nvalue ;
 
@@ -278,19 +281,20 @@ struct TestTaskTeam {
   TestTaskTeam( const policy_type & arg_policy
               , const view_type   & arg_parfor_result
               , const view_type   & arg_parreduce_check
+              , const view_type   & arg_parscan_result
               , const view_type   & arg_parscan_check
               , const long          arg_nvalue )
     : policy(arg_policy)
     , future()
     , parfor_result( arg_parfor_result )
     , parreduce_check( arg_parreduce_check )
+    , parscan_result( arg_parscan_result )
     , parscan_check( arg_parscan_check )
     , nvalue( arg_nvalue )
     {}
 
   KOKKOS_INLINE_FUNCTION
-  //void operator()( typename policy_type::member_type const & member )
-  void operator()( typename policy_type::member_type & member ) //TODO only non-const if omp?
+  void operator()( typename policy_type::member_type & member )
     {
       const long end   = nvalue + 1 ;
       const long begin = 0 < end - SPAN ? end - SPAN : 0 ;
@@ -298,7 +302,12 @@ struct TestTaskTeam {
       if ( 0 < begin && future.is_null() ) {
         if ( member.team_rank() == 0 ) {
           future = policy.task_spawn
-            ( TestTaskTeam( policy , parfor_result , parreduce_check, parscan_check, begin - 1 )
+            ( TestTaskTeam( policy ,
+                            parfor_result ,
+                            parreduce_check,
+                            parscan_result,
+                            parscan_check,
+                            begin - 1 )
             , Kokkos::TaskTeam );
 
           assert( ! future.is_null() );
@@ -313,9 +322,9 @@ struct TestTaskTeam {
                           );
 
       // test parallel_reduce without join
-      
+    
       long tot = 0;
-      long expected = (begin+end-1)*(end-begin)/2.0;
+      long expected = (begin+end-1)*(end-begin)*0.5;
       
       Kokkos::parallel_reduce( Kokkos::TeamThreadRange(member,begin,end)
                           , [&]( int i, long &res) { res += parfor_result[i]; }
@@ -323,7 +332,9 @@ struct TestTaskTeam {
       Kokkos::parallel_for( Kokkos::TeamThreadRange(member,begin,end)
                           , [&]( int i ) { parreduce_check[i] = expected-tot ; }
                           );
+
       // test parallel_reduce with join
+
       tot = 0;
       Kokkos::parallel_reduce( Kokkos::TeamThreadRange(member,begin,end)
                           , [&]( int i, long &res) { res += parfor_result[i]; }
@@ -332,39 +343,50 @@ struct TestTaskTeam {
       Kokkos::parallel_for( Kokkos::TeamThreadRange(member,begin,end)
                           , [&]( int i ) { parreduce_check[i] += expected-tot ; }
                           );
-      /*
-      //printf("(%d)[%ld,%ld]: %ld =? %ld : %ld\n", member.team_rank(), begin, end, tot, expected, tot-expected );
+
       // test parallel_scan
-      long result = 0;
-      int team_range = end-begin; // may not be SPAN
-      Kokkos::parallel_scan_excl( Kokkos::TeamThreadRange(member,begin,end)
-                          , [&]( int i, long &res) { res += 1; }
-                          , result);
-      printf("(%d)[%ld,%ld]: %ld\n", member.team_rank(), begin, end, result);
-      Kokkos::parallel_for( Kokkos::TeamThreadRange(member,begin,end)
-                          //, [&]( int i ) { parscan_check[i] = (i-begin%team_range)%team_range-result ; }
-                          , [&]( int i ) { parscan_check[i] = (i-begin%team_range)%team_range ; }
+
+      // Exclusive scan
+      Kokkos::parallel_scan<long>( Kokkos::TeamThreadRange(member,begin,end)
+                          , [&]( int i, long &val , const bool final ) {
+                              if ( final ) { parscan_result[i] = val; }
+                              val += i;
+                            }
                           );
-      result = 0;
-      Kokkos::parallel_scan_incl( Kokkos::TeamThreadRange(member,begin,end)
-                          , [&]( int i, long &res) { res += 1; }
-                          , result);
-      Kokkos::parallel_for( Kokkos::TeamThreadRange(member,begin,end)
-                          , [&]( int i ) { parscan_check[i] += ((i-begin%team_range)%team_range+1)-result ; }
+
+      if ( member.team_rank() == 0 ) {
+        for ( long i = begin ; i < end ; ++i ) {
+          parscan_check[i] = (i*(i-1)-begin*(begin-1))*0.5-parscan_result[i];
+        }
+      }
+
+      // Inclusive scan
+      Kokkos::parallel_scan<long>( Kokkos::TeamThreadRange(member,begin,end)
+                          , [&]( int i, long &val , const bool final ) {
+                              val += i;
+                              if ( final ) { parscan_result[i] = val; }
+                            }
                           );
-      */
+
+      if ( member.team_rank() == 0 ) {
+        for ( long i = begin ; i < end ; ++i ) {
+          parscan_check[i] += (i*(i+1)-begin*(begin-1))*0.5-parscan_result[i];
+        }
+      }
     }
 
   static void run( long n )
     {
       // const unsigned memory_capacity = 10000 ; // causes memory pool infinite loop
-      const unsigned memory_capacity = 100000 ;
+      // const unsigned memory_capacity = 100000 ; // fails with SPAN=1 for serial and OMP
+      const unsigned memory_capacity = 400000 ;
 
       policy_type root_policy( typename policy_type::memory_space()
                         , memory_capacity );
 
       view_type   root_parfor_result("parfor_result",n+1);
       view_type   root_parreduce_check("parreduce_check",n+1);
+      view_type   root_parscan_result("parscan_result",n+1);
       view_type   root_parscan_check("parscan_check",n+1);
 
       typename view_type::HostMirror
@@ -372,12 +394,15 @@ struct TestTaskTeam {
       typename view_type::HostMirror
         host_parreduce_check = Kokkos::create_mirror_view( root_parreduce_check );
       typename view_type::HostMirror
+        host_parscan_result = Kokkos::create_mirror_view( root_parscan_result );
+      typename view_type::HostMirror
         host_parscan_check = Kokkos::create_mirror_view( root_parscan_check );
 
       future_type f = root_policy.host_spawn(
                         TestTaskTeam( root_policy ,
                                       root_parfor_result ,
                                       root_parreduce_check ,
+                                      root_parscan_result,
                                       root_parscan_check,
                                       n ) ,
                         Kokkos::TaskTeam );
@@ -386,6 +411,7 @@ struct TestTaskTeam {
 
       Kokkos::deep_copy( host_parfor_result , root_parfor_result );
       Kokkos::deep_copy( host_parreduce_check , root_parreduce_check );
+      Kokkos::deep_copy( host_parscan_result , root_parscan_result );
       Kokkos::deep_copy( host_parscan_check , root_parscan_check );
 
       for ( long i = 0 ; i <= n ; ++i ) {
@@ -394,17 +420,14 @@ struct TestTaskTeam {
           std::cerr << "TestTaskTeam::run ERROR parallel_for result(" << i << ") = "
                     << host_parfor_result(i) << " != " << answer << std::endl ;
         }
-        
         if ( host_parreduce_check(i) != 0 ) {
-          std::cerr << "TestTaskTeam::run ERROR parallel_reduce result(" << i << ") = "
+          std::cerr << "TestTaskTeam::run ERROR parallel_reduce check(" << i << ") = "
                     << host_parreduce_check(i) << " != 0" << std::endl ;
-        }
-        /*
+        } //TODO
         if ( host_parscan_check(i) != 0 ) {
-          std::cerr << "TestTaskTeam::run ERROR parallel_scan result(" << i << ") = "
+          std::cerr << "TestTaskTeam::run ERROR parallel_scan check(" << i << ") = "
                     << host_parscan_check(i) << " != 0" << std::endl ;
         }
-        */
       }
     }
 };

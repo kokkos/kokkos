@@ -153,8 +153,9 @@ namespace Kokkos {
 template<typename iType>
 KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >
-TeamThreadRange( Impl::TaskExec< Kokkos::OpenMP > & thread
-               , const iType & count )
+TeamThreadRange
+  ( Impl::TaskExec< Kokkos::OpenMP > & thread
+  , const iType & count )
 {
   return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >(thread,count);
 }
@@ -162,9 +163,12 @@ TeamThreadRange( Impl::TaskExec< Kokkos::OpenMP > & thread
 template<typename iType>
 KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::OpenMP > >
-TeamThreadRange( Impl:: TaskExec< Kokkos::OpenMP > & thread, const iType & begin , const iType & end )
+TeamThreadRange
+  ( Impl:: TaskExec< Kokkos::OpenMP > & thread
+  , const iType & start
+  , const iType & end )
 {
-  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::OpenMP > >(thread,begin,end);
+  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::OpenMP > >(thread,start,end);
 }
 
 /** \brief  Inter-thread parallel_for. Executes lambda(iType i) for each i=0..N-1.
@@ -184,7 +188,6 @@ void parallel_for
   }
 }
 
-//TODO const issue
 template<typename iType, class Lambda, typename ValueType>
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
@@ -197,11 +200,7 @@ void parallel_reduce
 
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i, result);
-    //printf("0-- tr: %d of %d, ir: %ld, r: %ld, i:[%d]\n", team_rank, loop_boundaries.thread.team_size(),
-    //        initialized_result, result, i);
   }
-  //printf("1-- tr: %d of %d, ir: %ld, r: %ld\n", team_rank, loop_boundaries.thread.team_size(),
-  //        initialized_result, result);
 
   if ( 1 < loop_boundaries.thread.team_size() ) {
 
@@ -223,15 +222,12 @@ void parallel_reduce
 
     // broadcast result
     initialized_result = shared[0];
-    //printf("2-- tr: %d of %d, ir: %ld, r: %ld\n", team_rank, loop_boundaries.thread.team_size(),
-    //        initialized_result, result);
   }
   else {
     initialized_result = result ;
   }
 }
 
-// placeholder for future function
 template< typename iType, class Lambda, typename ValueType, class JoinType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
@@ -245,11 +241,7 @@ void parallel_reduce
 
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i, result);
-    //printf("0-- tr: %d of %d, ir: %ld, r: %ld, i:[%d]\n", team_rank, loop_boundaries.thread.team_size(),
-    //        initialized_result, result, i);
   }
-  //printf("1-- tr: %d of %d, ir: %ld, r: %ld\n", team_rank, loop_boundaries.thread.team_size(),
-  //        initialized_result, result);
 
   if ( 1 < loop_boundaries.thread.team_size() ) {
     ValueType *shared = (ValueType*) loop_boundaries.thread.team_shared();
@@ -270,8 +262,6 @@ void parallel_reduce
 
     // broadcast result
     initialized_result = shared[0];
-    //printf("2-- tr: %d of %d, ir: %ld, r: %ld\n", team_rank, loop_boundaries.thread.team_size(),
-    //        initialized_result, result);
   }
   else {
     initialized_result = result ;
@@ -287,6 +277,7 @@ void parallel_reduce
    ValueType& initialized_result)
 {
 }
+
 // placeholder for future function
 template< typename iType, class Lambda, typename ValueType, class JoinType >
 KOKKOS_INLINE_FUNCTION
@@ -298,40 +289,57 @@ void parallel_reduce
 {
 }
 
-// placeholder for future function
-template< typename iType, class Lambda, typename ValueType >
+template< typename ValueType, typename iType, class Lambda >
 KOKKOS_INLINE_FUNCTION
-void parallel_scan_excl
+void parallel_scan
   (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >& loop_boundaries,
-   const Lambda & lambda,
-   ValueType& initialized_result)
+   const Lambda & lambda)
 {
+  ValueType accum = 0 ;
+  ValueType val, local_total;
+  ValueType *shared = (ValueType*) loop_boundaries.thread.team_shared();
+  int team_size = loop_boundaries.thread.team_size();
+  int team_rank = loop_boundaries.thread.team_rank(); // member num within the team
+
+  // Intra-member scan
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+    local_total = 0;
+    lambda(i,local_total,false);
+    val = accum;
+    lambda(i,val,true);
+    accum += local_total;
+  }
+
+  shared[team_rank] = accum;
+  loop_boundaries.thread.team_barrier();
+
+  // Member 0 do scan on accumulated totals
+  if (team_rank == 0) {
+    for( iType i = 1; i < team_size; i+=1) {
+      shared[i] += shared[i-1];
+    }
+    accum = 0; // Member 0 set accum to 0 in preparation for inter-member scan
+  }
+
+  loop_boundaries.thread.team_barrier();
+
+  // Inter-member scan adding in accumulated totals
+  if (team_rank != 0) { accum = shared[team_rank-1]; }
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+    local_total = 0;
+    lambda(i,local_total,false);
+    val = accum;
+    lambda(i,val,true);
+    accum += local_total;
+  }
 }
+
 // placeholder for future function
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
-void parallel_scan_incl
-  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >& loop_boundaries,
-   const Lambda & lambda,
-   ValueType& initialized_result)
-{
-}
-// placeholder for future function
-template< typename iType, class Lambda, typename ValueType >
-KOKKOS_INLINE_FUNCTION
-void parallel_scan_excl
+void parallel_scan
   (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >& loop_boundaries,
-   const Lambda & lambda,
-   ValueType& initialized_result)
-{
-}
-// placeholder for future function
-template< typename iType, class Lambda, typename ValueType >
-KOKKOS_INLINE_FUNCTION
-void parallel_scan_incl
-  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >& loop_boundaries,
-   const Lambda & lambda,
-   ValueType& initialized_result)
+   const Lambda & lambda)
 {
 }
 
