@@ -421,7 +421,7 @@ TEST_F( serial , task_depend )
 TEST_F( serial , task_team )
 {
   TestTaskPolicy::TestTaskTeam< Kokkos::Serial >::run(1000);
-  TestTaskPolicy::TestTaskTeamValue< Kokkos::Serial >::run(1000);
+  //TestTaskPolicy::TestTaskTeamValue< Kokkos::Serial >::run(1000); //put back after testing
 }
 
 TEST_F( serial , old_task_policy )
