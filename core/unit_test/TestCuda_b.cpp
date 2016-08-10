@@ -85,17 +85,8 @@
 
 class cuda : public ::testing::Test {
 protected:
-  static void SetUpTestCase()
-  {
-    Kokkos::Cuda::print_configuration( std::cout );
-    Kokkos::HostSpace::execution_space::initialize();
-    Kokkos::Cuda::initialize( Kokkos::Cuda::SelectDevice(0) );
-  }
-  static void TearDownTestCase()
-  {
-    Kokkos::Cuda::finalize();
-    Kokkos::HostSpace::execution_space::finalize();
-  }
+  static void SetUpTestCase();
+  static void TearDownTestCase();
 };
 
 //----------------------------------------------------------------------------

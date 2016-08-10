@@ -576,6 +576,16 @@ CudaInternal::scratch_space( const Cuda::size_type size )
   if ( verify_is_initialized("scratch_space") && m_scratchSpaceCount * sizeScratchGrain < size ) {
 
     m_scratchSpaceCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
+
+     typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > Record ;
+
+     Record * const r = Record::allocate( Kokkos::CudaSpace()
+                                        , "InternalScratchSpace"
+                                        , ( sizeof( ScratchGrain ) * m_scratchSpaceCount ) );
+
+     Record::increment( r );
+
+     m_scratchSpace = reinterpret_cast<size_type *>( r->data() );
   }
 
   return m_scratchSpace ;
