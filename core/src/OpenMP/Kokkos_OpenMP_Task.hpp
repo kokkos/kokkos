@@ -115,6 +115,7 @@ private:
 
 public:
 
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
   /**\brief  The team_barrier uses the first 128bytes of share memory */
   void * team_shared() const { return m_team_exec.scratch_thread(); }
 
@@ -124,10 +125,11 @@ public:
    *         before any teeam member returns from
    *         this function call.
    */
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
   void team_barrier();
 #else
   KOKKOS_INLINE_FUNCTION void team_barrier() {}
+  KOKKOS_INLINE_FUNCTION void * team_shared() const { return 0 ; }
+  KOKKOS_INLINE_FUNCTION int team_shared_size() const { return 0 ; }
 #endif
 
   KOKKOS_INLINE_FUNCTION
