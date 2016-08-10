@@ -159,56 +159,6 @@ struct ZeroFunctor {
   }
 };
 
-
-//---------------------------------------------------
-//--------------atomic_fetch_max---------------------
-//---------------------------------------------------
-/*
-template<class T,class DEVICE_TYPE>
-struct MaxFunctor{
-  typedef DEVICE_TYPE execution_space;
-  typedef Kokkos::View<T,execution_space> type;
-  type data;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(int) const {
-    Kokkos::atomic_fetch_max(&data(),(T)1);
-  }
-};
-
-template<class T, class execution_space >
-T MaxLoop(int loop) {
-  struct ZeroFunctor<T,execution_space> f_zero;
-  typename ZeroFunctor<T,execution_space>::type data("Data");
-  typename ZeroFunctor<T,execution_space>::h_type h_data("HData");
-  f_zero.data = data;
-  Kokkos::parallel_for(1,f_zero);
-  execution_space::fence();
-
-  struct MaxFunctor<T,execution_space> f_max;
-  f_max.data = data;
-  Kokkos::parallel_for(loop,f_max);
-  execution_space::fence();
-
-  Kokkos::deep_copy(h_data,data);
-  T val = h_data();
-  return val;
-}
-
-template<class T>
-T MaxLoopSerial(int loop) {
-  T* data = new T[1];
-  data[0] = 0;
-
-//  for(int i=0;i<loop;i++)
-  *data+=(T)1;
-
-  T val = *data;
-  delete [] data;
-  return val;
-}
-*/
-
 //---------------------------------------------------
 //--------------atomic_fetch_add---------------------
 //---------------------------------------------------
@@ -411,7 +361,6 @@ T LoopVariant(int loop, int test) {
     case 1: return AddLoop<T,DeviceType>(loop);
     case 2: return CASLoop<T,DeviceType>(loop);
     case 3: return ExchLoop<T,DeviceType>(loop);
-//    case 4: return MaxLoop<T,DeviceType>(1);
   }
   return 0;
 }
@@ -422,7 +371,6 @@ T LoopVariantSerial(int loop, int test) {
     case 1: return AddLoopSerial<T>(loop);
     case 2: return CASLoopSerial<T>(loop);
     case 3: return ExchLoopSerial<T>(loop);
-//    case 4: return MaxLoopSerial<T>(1);
   }
   return 0;
 }

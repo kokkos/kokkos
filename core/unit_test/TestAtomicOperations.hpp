@@ -45,108 +45,9 @@
 
 namespace TestAtomicOperations {
 
-// Struct for testing arbitrary size atomics
-/*
-template<int N>
-struct SuperScalar {
-  double val[N];
-
-  KOKKOS_INLINE_FUNCTION
-  SuperScalar() {
-    for(int i=0; i<N; i++)
-      val[i] = 0.0;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  SuperScalar(const SuperScalar& src) {
-    for(int i=0; i<N; i++)
-      val[i] = src.val[i];
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  SuperScalar(const volatile SuperScalar& src) {
-    for(int i=0; i<N; i++)
-      val[i] = src.val[i];
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  SuperScalar& operator = (const SuperScalar& src) {
-    for(int i=0; i<N; i++)
-      val[i] = src.val[i];
-    return *this;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  SuperScalar& operator = (const volatile SuperScalar& src) {
-    for(int i=0; i<N; i++)
-      val[i] = src.val[i];
-    return *this;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator = (const SuperScalar& src) volatile  {
-    for(int i=0; i<N; i++)
-      val[i] = src.val[i];
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  SuperScalar operator + (const SuperScalar& src) {
-    SuperScalar tmp = *this;
-    for(int i=0; i<N; i++)
-      tmp.val[i] += src.val[i];
-    return tmp;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  SuperScalar& operator += (const double& src) {
-    for(int i=0; i<N; i++)
-      val[i] += 1.0*(i+1)*src;
-    return *this;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  SuperScalar& operator += (const SuperScalar& src) {
-    for(int i=0; i<N; i++)
-      val[i] += src.val[i];
-    return *this;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  bool operator == (const SuperScalar& src) {
-    bool compare = true;
-    for(int i=0; i<N; i++)
-      compare = compare && ( val[i] == src.val[i]);
-    return compare;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  bool operator != (const SuperScalar& src) {
-    bool compare = true;
-    for(int i=0; i<N; i++)
-      compare = compare && ( val[i] == src.val[i]);
-    return !compare;
-  }
-
-
-
-  KOKKOS_INLINE_FUNCTION
-  SuperScalar(const double& src) {
-    for(int i=0; i<N; i++)
-      val[i] = 1.0 * (i+1) * src;
-  }
-
-};
-
-template<int N>
-std::ostream& operator<<(std::ostream& os, const SuperScalar<N>& dt)
-{
-    os << "{ ";
-    for(int i=0;i<N-1;i++)
-       os << dt.val[i] << ", ";
-    os << dt.val[N-1] << "}";
-    return os;
-}
-*/
+//-----------------------------------------------
+//--------------zero_functor---------------------
+//-----------------------------------------------
 
 template<class T,class DEVICE_TYPE>
 struct ZeroFunctor {
@@ -159,103 +60,6 @@ struct ZeroFunctor {
     data() = 0;
   }
 };
-
-
-//---------------------------------------------------
-//--------------atomic_fetch_max---------------------
-//---------------------------------------------------
-
-template<class T,class DEVICE_TYPE>
-struct MaxFunctor{
-  typedef DEVICE_TYPE execution_space;
-  typedef Kokkos::View<T,execution_space> type;
-  type data;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(int) const {
-    Kokkos::atomic_fetch_max(&data(),(T)1);
-  }
-};
-
-template<class T, class execution_space >
-T MaxLoop(int loop) {
-  struct ZeroFunctor<T,execution_space> f_zero;
-  typename ZeroFunctor<T,execution_space>::type data("Data");
-  typename ZeroFunctor<T,execution_space>::h_type h_data("HData");
-  f_zero.data = data;
-  Kokkos::parallel_for(1,f_zero);
-  execution_space::fence();
-
-  struct MaxFunctor<T,execution_space> f_max;
-  f_max.data = data;
-  Kokkos::parallel_for(loop,f_max);
-  execution_space::fence();
-
-  Kokkos::deep_copy(h_data,data);
-  T val = h_data();
-  return val;
-}
-
-template<class T>
-T MaxLoopSerial(int loop) {
-  T* data = new T[1];
-  data[0] = 0;
-
-//  for(int i=0;i<loop;i++)
-  *data+=(T)1;
-
-  T val = *data;
-  delete [] data;
-  return val;
-}
-
-//---------------------------------------------------
-//--------------atomic_fetch_min---------------------
-//---------------------------------------------------
-
-template<class T,class DEVICE_TYPE>
-struct MinFunctor{
-  typedef DEVICE_TYPE execution_space;
-  typedef Kokkos::View<T,execution_space> type;
-  type data;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(int) const {
-    Kokkos::atomic_fetch_min(&data(),(T)1);
-  }
-};
-
-template<class T, class execution_space >
-T MinLoop(int loop) {
-  struct ZeroFunctor<T,execution_space> f_zero;
-  typename ZeroFunctor<T,execution_space>::type data("Data");
-  typename ZeroFunctor<T,execution_space>::h_type h_data("HData");
-  f_zero.data = data;
-  Kokkos::parallel_for(1,f_zero);
-  execution_space::fence();
-
-  struct MinFunctor<T,execution_space> f_min;
-  f_min.data = data;
-  Kokkos::parallel_for(loop,f_min);
-  execution_space::fence();
-
-  Kokkos::deep_copy(h_data,data);
-  T val = h_data();
-  return val;
-}
-
-template<class T>
-T MinLoopSerial(int loop) {
-  T* data = new T[1];
-  data[0] = 0;
-
-//  for(int i=0;i<loop;i++)
-//  *data+=(T)1;
-
-  T val = *data;
-  delete [] data;
-  return val;
-}
 
 //-----------------------------------------------
 //--------------init_functor---------------------
@@ -276,6 +80,152 @@ struct InitFunctor {
   InitFunctor(T _init_value) : init_value(_init_value) {}
 };
 
+
+//---------------------------------------------------
+//--------------atomic_fetch_max---------------------
+//---------------------------------------------------
+
+template<class T,class DEVICE_TYPE>
+struct MaxFunctor{
+  typedef DEVICE_TYPE execution_space;
+  typedef Kokkos::View<T,execution_space> type;
+  type data;
+  T i0;
+  T i1;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int) const {
+    //Kokkos::atomic_fetch_max(&data(),(T)1);
+    Kokkos::atomic_fetch_max(&data(),(T)i1);
+  }
+  MaxFunctor( T _i0 , T _i1 ) : i0(_i0) , i1(_i1) {}
+};
+
+template<class T, class execution_space >
+T MaxAtomic(T i0 , T i1) {
+  struct InitFunctor<T,execution_space> f_init(i0);
+  typename InitFunctor<T,execution_space>::type data("Data");
+  typename InitFunctor<T,execution_space>::h_type h_data("HData");
+  f_init.data = data;
+  Kokkos::parallel_for(1,f_init);
+  execution_space::fence();
+
+  struct MaxFunctor<T,execution_space> f(i0,i1);
+  f.data = data;
+  Kokkos::parallel_for(1,f);
+  execution_space::fence();
+
+  Kokkos::deep_copy(h_data,data);
+  T val = h_data();
+  return val;
+}
+
+template<class T>
+T MaxAtomicCheck(T i0 , T i1) {
+  T* data = new T[1];
+  data[0] = 0;
+
+  *data = (i0 > i1 ? i0 : i1) ;
+
+  T val = *data;
+  delete [] data;
+  return val;
+}
+
+template<class T,class DeviceType>
+bool MaxAtomicTest(T i0, T i1)
+{
+  T res       = MaxAtomic<T,DeviceType>(i0,i1);
+  T resSerial = MaxAtomicCheck<T>(i0,i1);
+
+  bool passed = true;
+
+  if ( resSerial != res ) {
+    passed = false;
+
+    std::cout << "Loop<"
+              << typeid(T).name()
+              << ">( test = MaxAtomicTest"
+              << " FAILED : "
+              << resSerial << " != " << res
+              << std::endl ;
+  }
+
+  return passed ;
+}
+
+//---------------------------------------------------
+//--------------atomic_fetch_min---------------------
+//---------------------------------------------------
+
+template<class T,class DEVICE_TYPE>
+struct MinFunctor{
+  typedef DEVICE_TYPE execution_space;
+  typedef Kokkos::View<T,execution_space> type;
+  type data;
+  T i0;
+  T i1;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int) const {
+    Kokkos::atomic_fetch_min(&data(),(T)i1);
+  }
+  MinFunctor( T _i0 , T _i1 ) : i0(_i0) , i1(_i1) {}
+};
+
+template<class T, class execution_space >
+T MinAtomic(T i0 , T i1) {
+  struct InitFunctor<T,execution_space> f_init(i0);
+  typename InitFunctor<T,execution_space>::type data("Data");
+  typename InitFunctor<T,execution_space>::h_type h_data("HData");
+  f_init.data = data;
+  Kokkos::parallel_for(1,f_init);
+  execution_space::fence();
+
+  struct MinFunctor<T,execution_space> f(i0,i1);
+  f.data = data;
+  Kokkos::parallel_for(1,f);
+  execution_space::fence();
+
+  Kokkos::deep_copy(h_data,data);
+  T val = h_data();
+  return val;
+}
+
+template<class T>
+T MinAtomicCheck(T i0 , T i1) {
+  T* data = new T[1];
+  data[0] = 0;
+
+  *data = (i0 < i1 ? i0 : i1) ;
+
+  T val = *data;
+  delete [] data;
+  return val;
+}
+
+template<class T,class DeviceType>
+bool MinAtomicTest(T i0, T i1)
+{
+  T res       = MinAtomic<T,DeviceType>(i0,i1);
+  T resSerial = MinAtomicCheck<T>(i0,i1);
+
+  bool passed = true;
+
+  if ( resSerial != res ) {
+    passed = false;
+
+    std::cout << "Loop<"
+              << typeid(T).name()
+              << ">( test = MinAtomicTest"
+              << " FAILED : "
+              << resSerial << " != " << res
+              << std::endl ;
+  }
+
+  return passed ;
+}
+
 //---------------------------------------------------
 //--------------atomic_fetch_mul---------------------
 //---------------------------------------------------
@@ -285,25 +235,28 @@ struct MulFunctor{
   typedef DEVICE_TYPE execution_space;
   typedef Kokkos::View<T,execution_space> type;
   type data;
+  T i0;
+  T i1;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int) const {
-    Kokkos::atomic_fetch_mul(&data(),(T)4);
+    Kokkos::atomic_fetch_mul(&data(),(T)i1);
   }
+  MulFunctor( T _i0 , T _i1 ) : i0(_i0) , i1(_i1) {}
 };
 
 template<class T, class execution_space >
-T MulLoop(int loop) {
-  struct InitFunctor<T,execution_space> f_init( (T)8 );
+T MulAtomic(T i0 , T i1) {
+  struct InitFunctor<T,execution_space> f_init(i0);
   typename InitFunctor<T,execution_space>::type data("Data");
   typename InitFunctor<T,execution_space>::h_type h_data("HData");
   f_init.data = data;
   Kokkos::parallel_for(1,f_init);
   execution_space::fence();
 
-  struct MulFunctor<T,execution_space> f;
+  struct MulFunctor<T,execution_space> f(i0,i1);
   f.data = data;
-  Kokkos::parallel_for(loop,f);
+  Kokkos::parallel_for(1,f);
   execution_space::fence();
 
   Kokkos::deep_copy(h_data,data);
@@ -312,13 +265,37 @@ T MulLoop(int loop) {
 }
 
 template<class T>
-T MulLoopSerial(int loop) {
+T MulAtomicCheck(T i0 , T i1) {
   T* data = new T[1];
-  data[0] = (T)32;
+  data[0] = 0;
+
+  *data = i0*i1 ;
 
   T val = *data;
   delete [] data;
   return val;
+}
+
+template<class T,class DeviceType>
+bool MulAtomicTest(T i0, T i1)
+{
+  T res       = MulAtomic<T,DeviceType>(i0,i1);
+  T resSerial = MulAtomicCheck<T>(i0,i1);
+
+  bool passed = true;
+
+  if ( resSerial != res ) {
+    passed = false;
+
+    std::cout << "Loop<"
+              << typeid(T).name()
+              << ">( test = MulAtomicTest"
+              << " FAILED : "
+              << resSerial << " != " << res
+              << std::endl ;
+  }
+
+  return passed ;
 }
 
 //---------------------------------------------------
@@ -330,25 +307,28 @@ struct DivFunctor{
   typedef DEVICE_TYPE execution_space;
   typedef Kokkos::View<T,execution_space> type;
   type data;
+  T i0;
+  T i1;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int) const {
-    Kokkos::atomic_fetch_div(&data(),(T)4);
+    Kokkos::atomic_fetch_div(&data(),(T)i1);
   }
+  DivFunctor( T _i0 , T _i1 ) : i0(_i0) , i1(_i1) {}
 };
 
 template<class T, class execution_space >
-T DivLoop(int loop) {
-  struct InitFunctor<T,execution_space> f_init( (T)8 );
+T DivAtomic(T i0 , T i1) {
+  struct InitFunctor<T,execution_space> f_init(i0);
   typename InitFunctor<T,execution_space>::type data("Data");
   typename InitFunctor<T,execution_space>::h_type h_data("HData");
   f_init.data = data;
   Kokkos::parallel_for(1,f_init);
   execution_space::fence();
 
-  struct DivFunctor<T,execution_space> f;
+  struct DivFunctor<T,execution_space> f(i0,i1);
   f.data = data;
-  Kokkos::parallel_for(loop,f);
+  Kokkos::parallel_for(1,f);
   execution_space::fence();
 
   Kokkos::deep_copy(h_data,data);
@@ -357,13 +337,37 @@ T DivLoop(int loop) {
 }
 
 template<class T>
-T DivLoopSerial(int loop) {
+T DivAtomicCheck(T i0 , T i1) {
   T* data = new T[1];
-  data[0] = (T)2;
+  data[0] = 0;
+
+  *data = i0/i1 ;
 
   T val = *data;
   delete [] data;
   return val;
+}
+
+template<class T,class DeviceType>
+bool DivAtomicTest(T i0, T i1)
+{
+  T res       = DivAtomic<T,DeviceType>(i0,i1);
+  T resSerial = DivAtomicCheck<T>(i0,i1);
+
+  bool passed = true;
+
+  if ( resSerial != res ) {
+    passed = false;
+
+    std::cout << "Loop<"
+              << typeid(T).name()
+              << ">( test = DivAtomicTest"
+              << " FAILED : "
+              << resSerial << " != " << res
+              << std::endl ;
+  }
+
+  return passed ;
 }
 
 //---------------------------------------------------
@@ -375,25 +379,28 @@ struct ModFunctor{
   typedef DEVICE_TYPE execution_space;
   typedef Kokkos::View<T,execution_space> type;
   type data;
+  T i0;
+  T i1;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int) const {
-    Kokkos::atomic_fetch_mod(&data(),(T)4);
+    Kokkos::atomic_fetch_mod(&data(),(T)i1);
   }
+  ModFunctor( T _i0 , T _i1 ) : i0(_i0) , i1(_i1) {}
 };
 
 template<class T, class execution_space >
-T ModLoop(int loop) {
-  struct InitFunctor<T,execution_space> f_init( (T)8 );
+T ModAtomic(T i0 , T i1) {
+  struct InitFunctor<T,execution_space> f_init(i0);
   typename InitFunctor<T,execution_space>::type data("Data");
   typename InitFunctor<T,execution_space>::h_type h_data("HData");
   f_init.data = data;
   Kokkos::parallel_for(1,f_init);
   execution_space::fence();
 
-  struct ModFunctor<T,execution_space> f;
+  struct ModFunctor<T,execution_space> f(i0,i1);
   f.data = data;
-  Kokkos::parallel_for(loop,f);
+  Kokkos::parallel_for(1,f);
   execution_space::fence();
 
   Kokkos::deep_copy(h_data,data);
@@ -402,242 +409,22 @@ T ModLoop(int loop) {
 }
 
 template<class T>
-T ModLoopSerial(int loop) {
+T ModAtomicCheck(T i0 , T i1) {
   T* data = new T[1];
-  data[0] = (T)0;
+  data[0] = 0;
+
+  *data = i0%i1 ;
 
   T val = *data;
   delete [] data;
   return val;
-}
-
-//---------------------------------------------------
-//--------------atomic_fetch_add---------------------
-//---------------------------------------------------
-
-template<class T,class DEVICE_TYPE>
-struct AddFunctor{
-  typedef DEVICE_TYPE execution_space;
-  typedef Kokkos::View<T,execution_space> type;
-  type data;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(int) const {
-    Kokkos::atomic_fetch_add(&data(),(T)1);
-  }
-};
-
-template<class T, class execution_space >
-T AddLoop(int loop) {
-  struct ZeroFunctor<T,execution_space> f_zero;
-  typename ZeroFunctor<T,execution_space>::type data("Data");
-  typename ZeroFunctor<T,execution_space>::h_type h_data("HData");
-  f_zero.data = data;
-  Kokkos::parallel_for(1,f_zero);
-  execution_space::fence();
-
-  struct AddFunctor<T,execution_space> f_add;
-  f_add.data = data;
-  Kokkos::parallel_for(loop,f_add);
-  execution_space::fence();
-
-  Kokkos::deep_copy(h_data,data);
-  T val = h_data();
-  return val;
-}
-
-template<class T>
-T AddLoopSerial(int loop) {
-  T* data = new T[1];
-  data[0] = 0;
-
-  for(int i=0;i<loop;i++)
-  *data+=(T)1;
-
-  T val = *data;
-  delete [] data;
-  return val;
-}
-
-//------------------------------------------------------
-//--------------atomic_compare_exchange-----------------
-//------------------------------------------------------
-
-template<class T,class DEVICE_TYPE>
-struct CASFunctor{
-  typedef DEVICE_TYPE execution_space;
-  typedef Kokkos::View<T,execution_space> type;
-  type data;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(int) const {
-	  T old = data();
-	  T newval, assumed;
-	  do {
-	    assumed = old;
-	    newval = assumed + (T)1;
-	    old = Kokkos::atomic_compare_exchange(&data(), assumed, newval);
-	  }
-	  while( old != assumed );
-  }
-};
-
-template<class T, class execution_space >
-T CASLoop(int loop) {
-  struct ZeroFunctor<T,execution_space> f_zero;
-  typename ZeroFunctor<T,execution_space>::type data("Data");
-  typename ZeroFunctor<T,execution_space>::h_type h_data("HData");
-  f_zero.data = data;
-  Kokkos::parallel_for(1,f_zero);
-  execution_space::fence();
-
-  struct CASFunctor<T,execution_space> f_cas;
-  f_cas.data = data;
-  Kokkos::parallel_for(loop,f_cas);
-  execution_space::fence();
-
-  Kokkos::deep_copy(h_data,data);
-  T val = h_data();
-
-  return val;
-}
-
-template<class T>
-T CASLoopSerial(int loop) {
-  T* data = new T[1];
-  data[0] = 0;
-
-  for(int i=0;i<loop;i++) {
-	  T assumed;
-	  T newval;
-	  T old;
-	  do {
-	    assumed = *data;
-	    newval = assumed + (T)1;
-	    old = *data;
-	    *data = newval;
-	  }
-	  while(!(assumed==old));
-  }
-
-  T val = *data;
-  delete [] data;
-  return val;
-}
-
-//----------------------------------------------
-//--------------atomic_exchange-----------------
-//----------------------------------------------
-
-template<class T,class DEVICE_TYPE>
-struct ExchFunctor{
-  typedef DEVICE_TYPE execution_space;
-  typedef Kokkos::View<T,execution_space> type;
-  type data, data2;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(int i) const {
-    T old = Kokkos::atomic_exchange(&data(),(T)i);
-    Kokkos::atomic_fetch_add(&data2(),old);
-  }
-};
-
-template<class T, class execution_space >
-T ExchLoop(int loop) {
-  struct ZeroFunctor<T,execution_space> f_zero;
-  typename ZeroFunctor<T,execution_space>::type data("Data");
-  typename ZeroFunctor<T,execution_space>::h_type h_data("HData");
-  f_zero.data = data;
-  Kokkos::parallel_for(1,f_zero);
-  execution_space::fence();
-
-  typename ZeroFunctor<T,execution_space>::type data2("Data");
-  typename ZeroFunctor<T,execution_space>::h_type h_data2("HData");
-  f_zero.data = data2;
-  Kokkos::parallel_for(1,f_zero);
-  execution_space::fence();
-
-  struct ExchFunctor<T,execution_space> f_exch;
-  f_exch.data = data;
-  f_exch.data2 = data2;
-  Kokkos::parallel_for(loop,f_exch);
-  execution_space::fence();
-
-  Kokkos::deep_copy(h_data,data);
-  Kokkos::deep_copy(h_data2,data2);
-  T val = h_data() + h_data2();
-
-  return val;
-}
-
-template<class T>
-T ExchLoopSerial(typename std::conditional<!std::is_same<T,Kokkos::complex<double> >::value,int,void>::type loop) {
-  T* data = new T[1];
-  T* data2 = new T[1];
-  data[0] = 0;
-  data2[0] = 0;
-  for(int i=0;i<loop;i++) {
-	T old = *data;
-	*data=(T) i;
-	*data2+=old;
-  }
-
-  T val = *data2 + *data;
-  delete [] data;
-  delete [] data2;
-  return val;
-}
-
-template<class T>
-T ExchLoopSerial(typename std::conditional<std::is_same<T,Kokkos::complex<double> >::value,int,void>::type loop) {
-  T* data = new T[1];
-  T* data2 = new T[1];
-  data[0] = 0;
-  data2[0] = 0;
-  for(int i=0;i<loop;i++) {
-  T old = *data;
-  data->real() = (static_cast<double>(i));
-  data->imag() = 0;
-  *data2+=old;
-  }
-
-  T val = *data2 + *data;
-  delete [] data;
-  delete [] data2;
-  return val;
-}
-
-template<class T, class DeviceType >
-T LoopVariant(int loop, int test) {
-  switch (test) {
-    case 1: return AddLoop<T,DeviceType>(loop);
-    case 2: return MaxLoop<T,DeviceType>(1);
-    case 3: return MinLoop<T,DeviceType>(1);
-    case 4: return MulLoop<T,DeviceType>(1);
-    case 5: return DivLoop<T,DeviceType>(1);
-//    case 6: return ModLoop<T,DeviceType>(1); //can't compile with float/double/complex etc
-  }
-  return 0;
-}
-
-template<class T>
-T LoopVariantSerial(int loop, int test) {
-  switch (test) {
-    case 1: return AddLoopSerial<T>(loop);
-    case 2: return MaxLoopSerial<T>(1);
-    case 3: return MinLoopSerial<T>(1);
-    case 4: return MulLoopSerial<T>(1);
-    case 5: return DivLoopSerial<T>(1);
-//    case 6: return ModLoopSerial<T>(1); //can't compile with float/double/complex etc
-  }
-  return 0;
 }
 
 template<class T,class DeviceType>
-bool Loop(int loop, int test)
+bool ModAtomicTest(T i0, T i1)
 {
-  T res       = LoopVariant<T,DeviceType>(loop,test);
-  T resSerial = LoopVariantSerial<T>(loop,test);
+  T res       = ModAtomic<T,DeviceType>(i0,i1);
+  T resSerial = ModAtomicCheck<T>(i0,i1);
 
   bool passed = true;
 
@@ -646,8 +433,8 @@ bool Loop(int loop, int test)
 
     std::cout << "Loop<"
               << typeid(T).name()
-              << ">( test = "
-              << test << " FAILED : "
+              << ">( test = ModAtomicTest"
+              << " FAILED : "
               << resSerial << " != " << res
               << std::endl ;
   }
@@ -655,5 +442,400 @@ bool Loop(int loop, int test)
   return passed ;
 }
 
+//---------------------------------------------------
+//--------------atomic_fetch_and---------------------
+//---------------------------------------------------
+
+template<class T,class DEVICE_TYPE>
+struct AndFunctor{
+  typedef DEVICE_TYPE execution_space;
+  typedef Kokkos::View<T,execution_space> type;
+  type data;
+  T i0;
+  T i1;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int) const {
+    Kokkos::atomic_fetch_and(&data(),(T)i1);
+  }
+  AndFunctor( T _i0 , T _i1 ) : i0(_i0) , i1(_i1) {}
+};
+
+template<class T, class execution_space >
+T AndAtomic(T i0 , T i1) {
+  struct InitFunctor<T,execution_space> f_init(i0);
+  typename InitFunctor<T,execution_space>::type data("Data");
+  typename InitFunctor<T,execution_space>::h_type h_data("HData");
+  f_init.data = data;
+  Kokkos::parallel_for(1,f_init);
+  execution_space::fence();
+
+  struct AndFunctor<T,execution_space> f(i0,i1);
+  f.data = data;
+  Kokkos::parallel_for(1,f);
+  execution_space::fence();
+
+  Kokkos::deep_copy(h_data,data);
+  T val = h_data();
+  return val;
 }
+
+template<class T>
+T AndAtomicCheck(T i0 , T i1) {
+  T* data = new T[1];
+  data[0] = 0;
+
+  *data = i0&i1 ;
+
+  T val = *data;
+  delete [] data;
+  return val;
+}
+
+template<class T,class DeviceType>
+bool AndAtomicTest(T i0, T i1)
+{
+  T res       = AndAtomic<T,DeviceType>(i0,i1);
+  T resSerial = AndAtomicCheck<T>(i0,i1);
+
+  bool passed = true;
+
+  if ( resSerial != res ) {
+    passed = false;
+
+    std::cout << "Loop<"
+              << typeid(T).name()
+              << ">( test = AndAtomicTest"
+              << " FAILED : "
+              << resSerial << " != " << res
+              << std::endl ;
+  }
+
+  return passed ;
+}
+
+//---------------------------------------------------
+//--------------atomic_fetch_or----------------------
+//---------------------------------------------------
+
+template<class T,class DEVICE_TYPE>
+struct OrFunctor{
+  typedef DEVICE_TYPE execution_space;
+  typedef Kokkos::View<T,execution_space> type;
+  type data;
+  T i0;
+  T i1;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int) const {
+    Kokkos::atomic_fetch_or(&data(),(T)i1);
+  }
+  OrFunctor( T _i0 , T _i1 ) : i0(_i0) , i1(_i1) {}
+};
+
+template<class T, class execution_space >
+T OrAtomic(T i0 , T i1) {
+  struct InitFunctor<T,execution_space> f_init(i0);
+  typename InitFunctor<T,execution_space>::type data("Data");
+  typename InitFunctor<T,execution_space>::h_type h_data("HData");
+  f_init.data = data;
+  Kokkos::parallel_for(1,f_init);
+  execution_space::fence();
+
+  struct OrFunctor<T,execution_space> f(i0,i1);
+  f.data = data;
+  Kokkos::parallel_for(1,f);
+  execution_space::fence();
+
+  Kokkos::deep_copy(h_data,data);
+  T val = h_data();
+  return val;
+}
+
+template<class T>
+T OrAtomicCheck(T i0 , T i1) {
+  T* data = new T[1];
+  data[0] = 0;
+
+  *data = i0|i1 ;
+
+  T val = *data;
+  delete [] data;
+  return val;
+}
+
+template<class T,class DeviceType>
+bool OrAtomicTest(T i0, T i1)
+{
+  T res       = OrAtomic<T,DeviceType>(i0,i1);
+  T resSerial = OrAtomicCheck<T>(i0,i1);
+
+  bool passed = true;
+
+  if ( resSerial != res ) {
+    passed = false;
+
+    std::cout << "Loop<"
+              << typeid(T).name()
+              << ">( test = OrAtomicTest"
+              << " FAILED : "
+              << resSerial << " != " << res
+              << std::endl ;
+  }
+
+  return passed ;
+}
+
+//---------------------------------------------------
+//--------------atomic_fetch_xor---------------------
+//---------------------------------------------------
+
+template<class T,class DEVICE_TYPE>
+struct XorFunctor{
+  typedef DEVICE_TYPE execution_space;
+  typedef Kokkos::View<T,execution_space> type;
+  type data;
+  T i0;
+  T i1;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int) const {
+    Kokkos::atomic_fetch_xor(&data(),(T)i1);
+  }
+  XorFunctor( T _i0 , T _i1 ) : i0(_i0) , i1(_i1) {}
+};
+
+template<class T, class execution_space >
+T XorAtomic(T i0 , T i1) {
+  struct InitFunctor<T,execution_space> f_init(i0);
+  typename InitFunctor<T,execution_space>::type data("Data");
+  typename InitFunctor<T,execution_space>::h_type h_data("HData");
+  f_init.data = data;
+  Kokkos::parallel_for(1,f_init);
+  execution_space::fence();
+
+  struct XorFunctor<T,execution_space> f(i0,i1);
+  f.data = data;
+  Kokkos::parallel_for(1,f);
+  execution_space::fence();
+
+  Kokkos::deep_copy(h_data,data);
+  T val = h_data();
+  return val;
+}
+
+template<class T>
+T XorAtomicCheck(T i0 , T i1) {
+  T* data = new T[1];
+  data[0] = 0;
+
+  *data = i0^i1 ;
+
+  T val = *data;
+  delete [] data;
+  return val;
+}
+
+template<class T,class DeviceType>
+bool XorAtomicTest(T i0, T i1)
+{
+  T res       = XorAtomic<T,DeviceType>(i0,i1);
+  T resSerial = XorAtomicCheck<T>(i0,i1);
+
+  bool passed = true;
+
+  if ( resSerial != res ) {
+    passed = false;
+
+    std::cout << "Loop<"
+              << typeid(T).name()
+              << ">( test = XorAtomicTest"
+              << " FAILED : "
+              << resSerial << " != " << res
+              << std::endl ;
+  }
+
+  return passed ;
+}
+
+//---------------------------------------------------
+//--------------atomic_fetch_lshift---------------------
+//---------------------------------------------------
+
+template<class T,class DEVICE_TYPE>
+struct LShiftFunctor{
+  typedef DEVICE_TYPE execution_space;
+  typedef Kokkos::View<T,execution_space> type;
+  type data;
+  T i0;
+  T i1;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int) const {
+    Kokkos::atomic_fetch_lshift(&data(),(T)i1);
+  }
+  LShiftFunctor( T _i0 , T _i1 ) : i0(_i0) , i1(_i1) {}
+};
+
+template<class T, class execution_space >
+T LShiftAtomic(T i0 , T i1) {
+  struct InitFunctor<T,execution_space> f_init(i0);
+  typename InitFunctor<T,execution_space>::type data("Data");
+  typename InitFunctor<T,execution_space>::h_type h_data("HData");
+  f_init.data = data;
+  Kokkos::parallel_for(1,f_init);
+  execution_space::fence();
+
+  struct LShiftFunctor<T,execution_space> f(i0,i1);
+  f.data = data;
+  Kokkos::parallel_for(1,f);
+  execution_space::fence();
+
+  Kokkos::deep_copy(h_data,data);
+  T val = h_data();
+  return val;
+}
+
+template<class T>
+T LShiftAtomicCheck(T i0 , T i1) {
+  T* data = new T[1];
+  data[0] = 0;
+
+  *data = i0<<i1 ;
+
+  T val = *data;
+  delete [] data;
+  return val;
+}
+
+template<class T,class DeviceType>
+bool LShiftAtomicTest(T i0, T i1)
+{
+  T res       = LShiftAtomic<T,DeviceType>(i0,i1);
+  T resSerial = LShiftAtomicCheck<T>(i0,i1);
+
+  bool passed = true;
+
+  if ( resSerial != res ) {
+    passed = false;
+
+    std::cout << "Loop<"
+              << typeid(T).name()
+              << ">( test = LShiftAtomicTest"
+              << " FAILED : "
+              << resSerial << " != " << res
+              << std::endl ;
+  }
+
+  return passed ;
+}
+
+//---------------------------------------------------
+//--------------atomic_fetch_rshift---------------------
+//---------------------------------------------------
+
+template<class T,class DEVICE_TYPE>
+struct RShiftFunctor{
+  typedef DEVICE_TYPE execution_space;
+  typedef Kokkos::View<T,execution_space> type;
+  type data;
+  T i0;
+  T i1;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int) const {
+    Kokkos::atomic_fetch_rshift(&data(),(T)i1);
+  }
+  RShiftFunctor( T _i0 , T _i1 ) : i0(_i0) , i1(_i1) {}
+};
+
+template<class T, class execution_space >
+T RShiftAtomic(T i0 , T i1) {
+  struct InitFunctor<T,execution_space> f_init(i0);
+  typename InitFunctor<T,execution_space>::type data("Data");
+  typename InitFunctor<T,execution_space>::h_type h_data("HData");
+  f_init.data = data;
+  Kokkos::parallel_for(1,f_init);
+  execution_space::fence();
+
+  struct RShiftFunctor<T,execution_space> f(i0,i1);
+  f.data = data;
+  Kokkos::parallel_for(1,f);
+  execution_space::fence();
+
+  Kokkos::deep_copy(h_data,data);
+  T val = h_data();
+  return val;
+}
+
+template<class T>
+T RShiftAtomicCheck(T i0 , T i1) {
+  T* data = new T[1];
+  data[0] = 0;
+
+  *data = i0>>i1 ;
+
+  T val = *data;
+  delete [] data;
+  return val;
+}
+
+template<class T,class DeviceType>
+bool RShiftAtomicTest(T i0, T i1)
+{
+  T res       = RShiftAtomic<T,DeviceType>(i0,i1);
+  T resSerial = RShiftAtomicCheck<T>(i0,i1);
+
+  bool passed = true;
+
+  if ( resSerial != res ) {
+    passed = false;
+
+    std::cout << "Loop<"
+              << typeid(T).name()
+              << ">( test = RShiftAtomicTest"
+              << " FAILED : "
+              << resSerial << " != " << res
+              << std::endl ;
+  }
+
+  return passed ;
+}
+
+
+//---------------------------------------------------
+//--------------atomic_test_control------------------
+//---------------------------------------------------
+
+template<class T,class DeviceType>
+bool AtomicOperationsTestIntegralType( int i0 , int i1 , int test )
+{
+  switch (test) {
+    case 1: return MaxAtomicTest<T,DeviceType>( (T)i0 , (T)i1 );
+    case 2: return MinAtomicTest<T,DeviceType>( (T)i0 , (T)i1 );
+    case 3: return MulAtomicTest<T,DeviceType>( (T)i0 , (T)i1 );
+    case 4: return DivAtomicTest<T,DeviceType>( (T)i0 , (T)i1 );
+    case 5: return ModAtomicTest<T,DeviceType>( (T)i0 , (T)i1 );
+    case 6: return AndAtomicTest<T,DeviceType>( (T)i0 , (T)i1 );
+    case 7: return OrAtomicTest<T,DeviceType>( (T)i0 , (T)i1 );
+    case 8: return XorAtomicTest<T,DeviceType>( (T)i0 , (T)i1 );
+    case 9: return LShiftAtomicTest<T,DeviceType>( (T)i0 , (T)i1 );
+    case 10: return RShiftAtomicTest<T,DeviceType>( (T)i0 , (T)i1 );
+  }
+  return 0;
+}
+
+template<class T,class DeviceType>
+bool AtomicOperationsTestNonIntegralType( int i0 , int i1 , int test )
+{
+  switch (test) {
+    case 1: return MaxAtomicTest<T,DeviceType>( (T)i0 , (T)i1 );
+    case 2: return MinAtomicTest<T,DeviceType>( (T)i0 , (T)i1 );
+    case 3: return MulAtomicTest<T,DeviceType>( (T)i0 , (T)i1 );
+    case 4: return DivAtomicTest<T,DeviceType>( (T)i0 , (T)i1 );
+  }
+  return 0;
+}
+
+} // namespace
 

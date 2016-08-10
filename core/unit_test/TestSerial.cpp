@@ -352,57 +352,71 @@ TEST_F( serial , atomics )
 
 TEST_F( serial , atomic_operations )
 {
-  //const int loop_count = 1e6 ;
-  const int loop_count = 1 ;
+  const int start = 1; //Avoid zero for division
+  const int end = 11;
+  for (int i = start; i < end; ++i)
+  {
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Serial>(start, end-i, 1 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Serial>(start, end-i, 2 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Serial>(start, end-i, 3 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Serial>(start, end-i, 4 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Serial>(start, end-i, 5 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Serial>(start, end-i, 6 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Serial>(start, end-i, 7 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Serial>(start, end-i, 8 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Serial>(start, end-i, 9 ) ) );
 
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<int,Kokkos::Serial>(loop_count,1) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<int,Kokkos::Serial>(loop_count,2) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<int,Kokkos::Serial>(loop_count,3) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<int,Kokkos::Serial>(loop_count,4) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<int,Kokkos::Serial>(loop_count,5) ) );
-//  ASSERT_TRUE( ( TestAtomicOperations::Loop<int,Kokkos::Serial>(loop_count,6) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Serial>(start, end-i, 1 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Serial>(start, end-i, 2 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Serial>(start, end-i, 3 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Serial>(start, end-i, 4 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Serial>(start, end-i, 5 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Serial>(start, end-i, 6 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Serial>(start, end-i, 7 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Serial>(start, end-i, 8 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Serial>(start, end-i, 9 ) ) );
 
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned int,Kokkos::Serial>(loop_count,1) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned int,Kokkos::Serial>(loop_count,2) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned int,Kokkos::Serial>(loop_count,3) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned int,Kokkos::Serial>(loop_count,4) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned int,Kokkos::Serial>(loop_count,5) ) );
-//  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned int,Kokkos::Serial>(loop_count,6) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Serial>(start, end-i, 1 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Serial>(start, end-i, 2 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Serial>(start, end-i, 3 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Serial>(start, end-i, 4 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Serial>(start, end-i, 5 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Serial>(start, end-i, 6 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Serial>(start, end-i, 7 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Serial>(start, end-i, 8 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Serial>(start, end-i, 9 ) ) );
 
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<long int,Kokkos::Serial>(loop_count,1) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<long int,Kokkos::Serial>(loop_count,2) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<long int,Kokkos::Serial>(loop_count,3) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<long int,Kokkos::Serial>(loop_count,4) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<long int,Kokkos::Serial>(loop_count,5) ) );
-//  ASSERT_TRUE( ( TestAtomicOperations::Loop<long int,Kokkos::Serial>(loop_count,6) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Serial>(start, end-i, 1 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Serial>(start, end-i, 2 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Serial>(start, end-i, 3 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Serial>(start, end-i, 4 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Serial>(start, end-i, 5 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Serial>(start, end-i, 6 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Serial>(start, end-i, 7 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Serial>(start, end-i, 8 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Serial>(start, end-i, 9 ) ) );
 
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned long int,Kokkos::Serial>(loop_count,1) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned long int,Kokkos::Serial>(loop_count,2) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned long int,Kokkos::Serial>(loop_count,3) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned long int,Kokkos::Serial>(loop_count,4) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned long int,Kokkos::Serial>(loop_count,5) ) );
-//  ASSERT_TRUE( ( TestAtomicOperations::Loop<unsigned long int,Kokkos::Serial>(loop_count,6) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Serial>(start, end-i, 1 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Serial>(start, end-i, 2 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Serial>(start, end-i, 3 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Serial>(start, end-i, 4 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Serial>(start, end-i, 5 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Serial>(start, end-i, 6 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Serial>(start, end-i, 7 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Serial>(start, end-i, 8 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Serial>(start, end-i, 9 ) ) );
 
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<long long int,Kokkos::Serial>(loop_count,1) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<long long int,Kokkos::Serial>(loop_count,2) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<long long int,Kokkos::Serial>(loop_count,3) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<long long int,Kokkos::Serial>(loop_count,4) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<long long int,Kokkos::Serial>(loop_count,5) ) );
-//  ASSERT_TRUE( ( TestAtomicOperations::Loop<long long int,Kokkos::Serial>(loop_count,6) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<double,Kokkos::Serial>(start, end-i, 1 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<double,Kokkos::Serial>(start, end-i, 2 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<double,Kokkos::Serial>(start, end-i, 3 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<double,Kokkos::Serial>(start, end-i, 4 ) ) );
 
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<double,Kokkos::Serial>(loop_count,1) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<double,Kokkos::Serial>(loop_count,2) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<double,Kokkos::Serial>(loop_count,3) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<double,Kokkos::Serial>(loop_count,4) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<double,Kokkos::Serial>(loop_count,5) ) );
-//  ASSERT_TRUE( ( TestAtomicOperations::Loop<double,Kokkos::Serial>(loop_count,6) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<float,Kokkos::Serial>(start, end-i, 1 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<float,Kokkos::Serial>(start, end-i, 2 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<float,Kokkos::Serial>(start, end-i, 3 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<float,Kokkos::Serial>(start, end-i, 4 ) ) );
+  }
 
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<float,Kokkos::Serial>(1,1) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<float,Kokkos::Serial>(1,2) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<float,Kokkos::Serial>(1,3) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<float,Kokkos::Serial>(1,4) ) );
-  ASSERT_TRUE( ( TestAtomicOperations::Loop<float,Kokkos::Serial>(1,5) ) );
-//  ASSERT_TRUE( ( TestAtomicOperations::Loop<float,Kokkos::Serial>(1,6) ) );
 }
 //----------------------------------------------------------------------------
 
