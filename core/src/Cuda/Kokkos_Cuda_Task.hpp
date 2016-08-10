@@ -272,8 +272,6 @@ void parallel_for
   }
 }
 
-// ------------------- jdsteve's scratchwork ------------------------------------------------------------
-
 // reduce across corresponding lanes between team members within warp
 // assume stride*team_size == warp_size
 template< typename ValueType, class JoinType >
@@ -304,7 +302,8 @@ void multi_shfl_warp_reduction
 
 // broadcast within warp
 template< class ValueType >
-KOKKOS_INLINE_FUNCTION ValueType shfl_warp_broadcast
+KOKKOS_INLINE_FUNCTION
+ValueType shfl_warp_broadcast
   (ValueType& val,
    int src_lane,
    int width)
@@ -436,37 +435,41 @@ void parallel_reduce
 // blockDim.y == team_size
 // threadIdx.x == position in vec
 // threadIdx.y == member number
-template< typename iType, class Lambda, typename ValueType >
+template< typename ValueType, typename iType, class Lambda >
 KOKKOS_INLINE_FUNCTION
-void parallel_scan_excl
+void parallel_scan
   (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
-   const Lambda & lambda,
-   ValueType& initialized_result) {
-  /*
-  ValueType result = initialized_result; //TODO is this what we want?
+   const Lambda & lambda) {
+
+  ValueType accum = 0 ;
+  ValueType val, y;
 
   for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
-    lambda(i,result);
+    val = 0;
+
+    lambda(i,val,false);
+
+    // intra-blockDim.y exclusive scan on 'val'
+    // accum = accumulated, sum in total for this iteration
+
+    // INCLUSIVE scan
+    for( int offset = blockDim.x ; offset < Impl::CudaTraits::WarpSize ; offset <<= 1 ) {
+      y = Kokkos::shfl_up(val, offset, Impl::CudaTraits::WarpSize);
+      if(threadIdx.y*blockDim.x >= offset) { val += y; }
+    }
+
+    // pass accum to all threads
+    accum += shfl_warp_broadcast<ValueType>(val,
+                                            threadIdx.x+Impl::CudaTraits::WarpSize-blockDim.x,
+                                            Impl::CudaTraits::WarpSize);
+
+    // make EXCLUSIVE scan by shifting values over one
+    val = Kokkos::shfl_up(val, blockDim.x, Impl::CudaTraits::WarpSize);
+    if ( threadIdx.y == 0 ) { val = 0 ; }
+
+    val += accum ;
+    lambda(i,val,true);
   }
-
-  ValueType y, accum;
-
-  // INCLUSIVE scan
-  for( int offset = blockDim.x ; offset < Impl::CudaTraits::WarpSize ; offset <<= 1 ) {
-    y = Kokkos::shfl_up(result, offset, Impl::CudaTraits::WarpSize);
-    if(threadIdx.y*blockDim.x >= offset) { result += y; }
-  }
-
-  // pass accum to all threads
-  accum = shfl_warp_broadcast<ValueType>(result, threadIdx.x+Impl::CudaTraits::WarpSize-blockDim.x, Impl::CudaTraits::WarpSize);
-  //TODO do something with accum
-
-  // make EXCLUSIVE scan by shifting values over one
-  initialized_result = Kokkos::shfl_up(result, blockDim.x, Impl::CudaTraits::WarpSize);
-
-  // set first val to 0 (for exclusive scan)
-  if (threadIdx.y == 0) { initialized_result = 0; }
-  */
 }
 
 // exclusive scan within team member (vector) within warp
@@ -508,41 +511,6 @@ void parallel_scan_excl
   */
 }
 
-// inclusive scan across corresponding vector lanes between team members within warp
-// assume vec_length*team_size == warp_size 
-// blockDim.x == vec_length == stride
-// blockDim.y == team_size
-// threadIdx.x == position in vec
-// threadIdx.y == member number
-template< typename iType, class Lambda, typename ValueType >
-KOKKOS_INLINE_FUNCTION
-void parallel_scan_incl
-  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
-   const Lambda & lambda,
-   ValueType& initialized_result) {
-  /*
-  ValueType result = initialized_result; //TODO is this what we want?
-
-  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
-    lambda(i,result);
-  }
-
-  ValueType y, accum;
-
-  // INCLUSIVE scan
-  for( int offset = blockDim.x ; offset < Impl::CudaTraits::WarpSize ; offset <<= 1 ) {
-    y = Kokkos::shfl_up(result, offset, Impl::CudaTraits::WarpSize);
-    if(threadIdx.y*blockDim.x >= offset) { result += y; }
-  }
-
-  // pass accum to all threads
-  accum = shfl_warp_broadcast<ValueType>(result, threadIdx.x+Impl::CudaTraits::WarpSize-blockDim.x, Impl::CudaTraits::WarpSize);
-  //TODO do something with accum
-
-  initialized_result = result;
-  */
-}
-
 // inclusive scan within team member (vector) within warp
 // assume vec_length*team_size == warp_size 
 // blockDim.x == vec_length == stride
@@ -577,9 +545,6 @@ void parallel_scan_incl
   initialized_result = result;
   */
 }
-
-
-// ------------------------- end scratchwork ---------------------------------
 
 
 } /* namespace Kokkos */

@@ -41,135 +41,72 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_CUDA_ALLOCATION_TRACKING_HPP
-#define KOKKOS_CUDA_ALLOCATION_TRACKING_HPP
+#ifndef KOKKOS_BASIC_ALLOCATORS_HPP
+#define KOKKOS_BASIC_ALLOCATORS_HPP
 
-#include <Kokkos_Macros.hpp>
+#if ! KOKKOS_USING_EXP_VIEW
 
-/* only compile this file if CUDA is enabled for Kokkos */
-#ifdef KOKKOS_HAVE_CUDA
+namespace Kokkos { namespace Impl {
 
-#include <impl/Kokkos_Traits.hpp>
-#include <impl/Kokkos_AllocationTracker.hpp> // AllocatorAttributeBase
-
-namespace Kokkos {
-namespace Impl {
-
-template< class DestructFunctor >
-SharedAllocationRecord *
-shared_allocation_record( Kokkos::CudaSpace const & arg_space
-                        , void *            const   arg_alloc_ptr
-                        , DestructFunctor   const & arg_destruct )
-{
-  SharedAllocationRecord * const record = SharedAllocationRecord::get_record( arg_alloc_ptr );
-
-  // assert: record != 0
-
-  // assert: sizeof(DestructFunctor) <= record->m_destruct_size
-
-  // assert: record->m_destruct_function == 0
-
-  DestructFunctor * const functor =
-    reinterpret_cast< DestructFunctor * >(
-    reinterpret_cast< uintptr_t >( record ) + sizeof(SharedAllocationRecord) );
-
-  new( functor ) DestructFunctor( arg_destruct );
-
-  record->m_destruct_functor = & shared_allocation_destroy< DestructFunctor > ;
-  
-  return record ;
-}
-
-
-/// class CudaUnmanagedAllocator
+/// class UnmanagedAllocator
 /// does nothing when deallocate(ptr,size) is called
-struct CudaUnmanagedAllocator
+class UnmanagedAllocator
 {
-  static const char * name()
-  {
-    return "Cuda Unmanaged Allocator";
-  }
+public:
+  static const char * name() { return "Unmanaged Allocator"; }
 
   static void deallocate(void * /*ptr*/, size_t /*size*/) {}
-
-  static bool support_texture_binding() { return true; }
 };
 
-/// class CudaUnmanagedAllocator
-/// does nothing when deallocate(ptr,size) is called
-struct CudaUnmanagedUVMAllocator
-{
-  static const char * name()
-  {
-    return "Cuda Unmanaged UVM Allocator";
-  }
 
-  static void deallocate(void * /*ptr*/, size_t /*size*/) {}
-
-  static bool support_texture_binding() { return true; }
-};
-
-/// class CudaUnmanagedHostAllocator
-/// does nothing when deallocate(ptr,size) is called
-class CudaUnmanagedHostAllocator
+/// class MallocAllocator
+class MallocAllocator
 {
 public:
   static const char * name()
   {
-    return "Cuda Unmanaged Host Allocator";
-  }
-  // Unmanaged deallocate does nothing
-  static void deallocate(void * /*ptr*/, size_t /*size*/) {}
-};
-
-/// class CudaMallocAllocator
-class CudaMallocAllocator
-{
-public:
-  static const char * name()
-  {
-    return "Cuda Malloc Allocator";
+    return "Malloc Allocator";
   }
 
   static void* allocate(size_t size);
 
-  static void deallocate(void * ptr, size_t);
+  static void deallocate(void * ptr, size_t size);
 
   static void * reallocate(void * old_ptr, size_t old_size, size_t new_size);
-
-  static bool support_texture_binding() { return true; }
 };
 
-/// class CudaUVMAllocator
-class CudaUVMAllocator
+
+/// class AlignedAllocator
+/// memory aligned to Kokkos::Impl::MEMORY_ALIGNMENT
+class AlignedAllocator
 {
 public:
   static const char * name()
   {
-    return "Cuda UVM Allocator";
+    return "Aligned Allocator";
   }
 
   static void* allocate(size_t size);
 
-  static void deallocate(void * ptr, size_t);
+  static void deallocate(void * ptr, size_t size);
 
   static void * reallocate(void * old_ptr, size_t old_size, size_t new_size);
-
-  static bool support_texture_binding() { return true; }
 };
 
-/// class CudaHostAllocator
-class CudaHostAllocator
+
+/// class PageAlignedAllocator
+/// memory aligned to PAGE_SIZE
+class PageAlignedAllocator
 {
 public:
   static const char * name()
   {
-    return "Cuda Host Allocator";
+    return "Page Aligned Allocator";
   }
 
   static void* allocate(size_t size);
 
-  static void deallocate(void * ptr, size_t);
+  static void deallocate(void * ptr, size_t size);
 
   static void * reallocate(void * old_ptr, size_t old_size, size_t new_size);
 };
@@ -177,7 +114,8 @@ public:
 
 }} // namespace Kokkos::Impl
 
-#endif //KOKKOS_HAVE_CUDA
+#endif /* #if ! KOKKOS_USING_EXP_VIEW */
 
-#endif // #ifndef KOKKOS_CUDA_ALLOCATION_TRACKING_HPP
+#endif //KOKKOS_BASIC_ALLOCATORS_HPP
+
 

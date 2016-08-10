@@ -55,6 +55,7 @@
 #include <Kokkos_Cuda.hpp>
 #include <Kokkos_CudaSpace.hpp>
 
+#include <Cuda/Kokkos_Cuda_BasicAllocators.hpp>
 #include <Cuda/Kokkos_Cuda_Internal.hpp>
 #include <impl/Kokkos_Error.hpp>
 
@@ -107,6 +108,68 @@ void DeepCopyAsyncCuda( void * dst , const void * src , size_t n) {
 
 namespace Kokkos {
 
+#if ! KOKKOS_USING_EXP_VIEW
+
+namespace {
+
+void texture_object_attach_impl(  Impl::AllocationTracker const & tracker
+                                , unsigned type_size
+                                , ::cudaChannelFormatDesc const & desc
+                               )
+{
+  enum { TEXTURE_BOUND_1D = 2u << 27 };
+
+  if ( tracker.attribute() == NULL ) {
+    // check for correct allocator
+    const bool ok_alloc =  tracker.allocator()->support_texture_binding();
+
+    const bool ok_count = (tracker.alloc_size() / type_size) < TEXTURE_BOUND_1D;
+
+    if (ok_alloc && ok_count) {
+      Impl::TextureAttribute * attr = new Impl::TextureAttribute( tracker.alloc_ptr(), tracker.alloc_size(), desc );
+      tracker.set_attribute( attr );
+    }
+    else {
+      std::ostringstream oss;
+      oss << "Error: Cannot attach texture object";
+      if (!ok_alloc) {
+        oss << ", incompatabile allocator " << tracker.allocator()->name();
+      }
+      if (!ok_count) {
+        oss << ", array " << tracker.label() << " too large";
+      }
+      oss << ".";
+      Kokkos::Impl::throw_runtime_exception( oss.str() );
+    }
+  }
+
+  if ( NULL == dynamic_cast<Impl::TextureAttribute *>(tracker.attribute()) ) {
+    std::ostringstream oss;
+    oss << "Error: Allocation " << tracker.label() << " already has an attribute attached.";
+    Kokkos::Impl::throw_runtime_exception( oss.str() );
+  }
+
+}
+
+} // unnamed namespace
+
+/*--------------------------------------------------------------------------*/
+
+Impl::AllocationTracker CudaSpace::allocate_and_track( const std::string & label, const size_t size )
+{
+  return Impl::AllocationTracker( allocator(), size, label);
+}
+
+void CudaSpace::texture_object_attach(  Impl::AllocationTracker const & tracker
+                                      , unsigned type_size
+                                      , ::cudaChannelFormatDesc const & desc
+                                     )
+{
+  texture_object_attach_impl( tracker, type_size, desc );
+}
+
+#endif /* #if ! KOKKOS_USING_EXP_VIEW */
+
 void CudaSpace::access_error()
 {
   const std::string msg("Kokkos::CudaSpace::access_error attempt to execute Cuda function from non-Cuda space" );
@@ -121,6 +184,23 @@ void CudaSpace::access_error( const void * const )
 
 /*--------------------------------------------------------------------------*/
 
+#if ! KOKKOS_USING_EXP_VIEW
+
+Impl::AllocationTracker CudaUVMSpace::allocate_and_track( const std::string & label, const size_t size )
+{
+  return Impl::AllocationTracker( allocator(), size, label);
+}
+
+void CudaUVMSpace::texture_object_attach(  Impl::AllocationTracker const & tracker
+                                         , unsigned type_size
+                                         , ::cudaChannelFormatDesc const & desc
+                                        )
+{
+  texture_object_attach_impl( tracker, type_size, desc );
+}
+
+#endif /* #if ! KOKKOS_USING_EXP_VIEW */
+
 bool CudaUVMSpace::available()
 {
 #if defined( CUDA_VERSION ) && ( 6000 <= CUDA_VERSION ) && !defined(__APPLE__)
@@ -132,6 +212,15 @@ bool CudaUVMSpace::available()
 }
 
 /*--------------------------------------------------------------------------*/
+
+#if ! KOKKOS_USING_EXP_VIEW
+
+Impl::AllocationTracker CudaHostPinnedSpace::allocate_and_track( const std::string & label, const size_t size )
+{
+  return Impl::AllocationTracker( allocator(), size, label);
+}
+
+#endif /* #if ! KOKKOS_USING_EXP_VIEW */
 
 } // namespace Kokkos
 

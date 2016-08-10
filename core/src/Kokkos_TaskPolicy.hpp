@@ -75,6 +75,7 @@
 #include <Kokkos_MemoryPool.hpp>
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_TaskQueue.hpp>
+#include <cassert>
 
 //----------------------------------------------------------------------------
 
@@ -579,10 +580,9 @@ public:
         // so increment reference count to track this assignment.
 
         for ( int i = 0 ; i < narg ; ++i ) {
-          task_base * const t = dep[i] = arg[i].m_task ;
-          if ( 0 != t ) {
-            Kokkos::atomic_fetch_add( &(t->m_ref_count) , 1 );
-          }
+          assert( arg[i].m_task->m_queue == m_queue );
+          dep[i] = arg[i].m_task ;
+          Kokkos::atomic_fetch_add( &(dep[i]->m_ref_count) , 1 );
         }
 
         m_queue->schedule( f.m_task );

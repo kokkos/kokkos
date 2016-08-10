@@ -230,12 +230,11 @@ void parallel_reduce
 {
 }
 
-template< typename iType, class Lambda, typename ValueType >
+template< typename ValueType, typename iType, class Lambda >
 KOKKOS_INLINE_FUNCTION
-void parallel_scan_excl
+void parallel_scan
   (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >& loop_boundaries,
-   const Lambda & lambda,
-   ValueType& initialized_result)
+   const Lambda & lambda)
 {
   /*
   ValueType result = initialized_result;
@@ -247,22 +246,6 @@ void parallel_scan_excl
   */
 }
 
-template< typename iType, class Lambda, typename ValueType >
-KOKKOS_INLINE_FUNCTION
-void parallel_scan_incl
-  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >& loop_boundaries,
-   const Lambda & lambda,
-   ValueType& initialized_result)
-{
-  /*
-  ValueType result = initialized_result;
-
-  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment)
-    lambda(i, result);
-
-  initialized_result = result;
-  */
-}
 // placeholder for future function
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
@@ -272,6 +255,7 @@ void parallel_scan_excl
    ValueType& initialized_result)
 {
 }
+
 // placeholder for future function
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
