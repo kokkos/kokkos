@@ -93,6 +93,7 @@
 #include <cstring>
 
 #include <Kokkos_HostSpace.hpp>
+#include <impl/Kokkos_BasicAllocators.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <Kokkos_Atomic.hpp>
 
@@ -152,6 +153,21 @@ int HostSpace::in_parallel()
 }
 
 } // namespace Kokkos
+
+/*--------------------------------------------------------------------------*/
+
+#if ! KOKKOS_USING_EXP_VIEW
+
+namespace Kokkos {
+
+Impl::AllocationTracker HostSpace::allocate_and_track( const std::string & label, const size_t size )
+{
+  return Impl::AllocationTracker( allocator(), size, label );
+}
+
+} // namespace Kokkos
+
+#endif /* #if ! KOKKOS_USING_EXP_VIEW */
 
 /*--------------------------------------------------------------------------*/
 

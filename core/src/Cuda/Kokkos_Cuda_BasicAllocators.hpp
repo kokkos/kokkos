@@ -41,10 +41,12 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_CUDA_ALLOCATION_TRACKING_HPP
-#define KOKKOS_CUDA_ALLOCATION_TRACKING_HPP
+#ifndef KOKKOS_CUDA_BASIC_ALLOCATORS_HPP
+#define KOKKOS_CUDA_BASIC_ALLOCATORS_HPP
 
 #include <Kokkos_Macros.hpp>
+
+#if ! KOKKOS_USING_EXP_VIEW
 
 /* only compile this file if CUDA is enabled for Kokkos */
 #ifdef KOKKOS_HAVE_CUDA
@@ -52,34 +54,38 @@
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_AllocationTracker.hpp> // AllocatorAttributeBase
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos { namespace Impl {
 
-template< class DestructFunctor >
-SharedAllocationRecord *
-shared_allocation_record( Kokkos::CudaSpace const & arg_space
-                        , void *            const   arg_alloc_ptr
-                        , DestructFunctor   const & arg_destruct )
+
+// Cuda 5.0 <texture_types.h> defines 'cudaTextureObject_t'
+// to be an 'unsigned long long'.  This chould change with
+// future version of Cuda and this typedef would have to
+// change accordingly.
+
+#if defined( CUDA_VERSION ) && ( 5000 <= CUDA_VERSION )
+
+typedef enable_if<
+  sizeof(::cudaTextureObject_t) == sizeof(const void *) ,
+  ::cudaTextureObject_t >::type cuda_texture_object_type ;
+
+#else
+
+typedef const void * cuda_texture_object_type ;
+
+#endif
+
+
+struct TextureAttribute : public AllocatorAttributeBase
 {
-  SharedAllocationRecord * const record = SharedAllocationRecord::get_record( arg_alloc_ptr );
+  cuda_texture_object_type m_tex_obj ;
 
-  // assert: record != 0
+  TextureAttribute(  void * const alloc_ptr
+                   , size_t alloc_size
+                   , cudaChannelFormatDesc const & desc
+                  );
 
-  // assert: sizeof(DestructFunctor) <= record->m_destruct_size
-
-  // assert: record->m_destruct_function == 0
-
-  DestructFunctor * const functor =
-    reinterpret_cast< DestructFunctor * >(
-    reinterpret_cast< uintptr_t >( record ) + sizeof(SharedAllocationRecord) );
-
-  new( functor ) DestructFunctor( arg_destruct );
-
-  record->m_destruct_functor = & shared_allocation_destroy< DestructFunctor > ;
-  
-  return record ;
-}
-
+  ~TextureAttribute();
+};
 
 /// class CudaUnmanagedAllocator
 /// does nothing when deallocate(ptr,size) is called
@@ -179,5 +185,6 @@ public:
 
 #endif //KOKKOS_HAVE_CUDA
 
-#endif // #ifndef KOKKOS_CUDA_ALLOCATION_TRACKING_HPP
+#endif /* #if ! KOKKOS_USING_EXP_VIEW */
 
+#endif //KOKKOS_CUDA_BASIC_ALLOCATORS_HPP
