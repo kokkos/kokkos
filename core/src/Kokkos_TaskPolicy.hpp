@@ -435,6 +435,29 @@ public:
     }
 
   //----------------------------------------
+  /**\brief  Allocation size for a spawned task */
+  template< typename FunctorType >
+  KOKKOS_FUNCTION
+  size_t spawn_allocation_size() const
+    {
+      using task_type  = Impl::TaskBase< execution_space
+                                       , typename FunctorType::value_type
+                                       , FunctorType > ;
+
+      return m_queue->allocate_block_size( sizeof(task_type) );
+    }
+
+  /**\brief  Allocation size for a when_all aggregate */
+  KOKKOS_FUNCTION
+  size_t when_all_allocation_size( int narg ) const
+    {
+      using task_base  = Kokkos::Impl::TaskBase< ExecSpace , void , void > ;
+
+      return m_queue->allocate_block_size( sizeof(task_base) + narg * sizeof(task_base*) );
+    }
+
+  //----------------------------------------
+
   /**\brief  A task spawns a task with options
    *
    *  1) High, Normal, or Low priority

@@ -130,6 +130,13 @@ void TaskQueue< ExecSpace >::decrement
 
 template< typename ExecSpace >
 KOKKOS_FUNCTION
+size_t TaskQueue< ExecSpace >::allocate_block_size( size_t n )
+{
+  return m_memory.allocate_block_size( n );
+}
+
+template< typename ExecSpace >
+KOKKOS_FUNCTION
 void * TaskQueue< ExecSpace >::allocate( size_t n )
 {
   void * const p = m_memory.allocate(n);

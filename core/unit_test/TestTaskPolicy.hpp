@@ -159,11 +159,13 @@ struct TestFib
       ASSERT_EQ( eval_fib(i) , f.get() );
 
 #if 0
-      fprintf( stdout , "\nTestFib::run(%d) alloc_capacity(%d) task_max(%d) task_accum(%ld)\n"
+      fprintf( stdout , "\nTestFib::run(%d) spawn_size(%d) when_all_size(%d) alloc_capacity(%d) task_max(%d) task_accum(%ld)\n"
              , i
-             , policy.allocation_capacity()
-             , policy.allocated_task_count_max()
-             , policy.allocated_task_count_accum()
+             , int(root_policy.template spawn_allocation_size<TestFib>())
+             , int(root_policy.when_all_allocation_size(2))
+             , root_policy.allocation_capacity()
+             , root_policy.allocated_task_count_max()
+             , root_policy.allocated_task_count_accum()
              );
       fflush( stdout );
 #endif

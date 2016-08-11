@@ -817,6 +817,11 @@ public:
 #endif
   }
 
+  /// \brief  The actual block size allocated given alloc_size.
+  KOKKOS_INLINE_FUNCTION
+  size_t allocate_block_size( const size_t alloc_size ) const
+  { return size_t(1) << ( get_block_size_index( alloc_size ) + LG_MIN_BLOCK_SIZE); }
+
   /// \brief Allocate a chunk of memory.
   /// \param alloc_size Size of the requested allocated in number of bytes.
   ///

@@ -211,6 +211,9 @@ public:
     }
 
   KOKKOS_FUNCTION
+  size_t allocate_block_size( size_t n ); ///< Actual block size allocated
+
+  KOKKOS_FUNCTION
   void * allocate( size_t n ); ///< Allocate from the memory pool
 
   KOKKOS_FUNCTION
