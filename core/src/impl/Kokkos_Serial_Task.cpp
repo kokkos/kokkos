@@ -105,6 +105,42 @@ void TaskQueueSpecialization< Kokkos::Serial >::execute
   }
 }
 
+void TaskQueueSpecialization< Kokkos::Serial > ::
+  iff_single_thread_recursive_execute(
+    TaskQueue< Kokkos::Serial > * const queue )
+{
+  using execution_space = Kokkos::Serial ;
+  using queue_type      = TaskQueue< execution_space > ;
+  using task_root_type  = TaskBase< execution_space , void , void > ;
+  using Member          = TaskExec< execution_space > ;
+
+  task_root_type * const end = (task_root_type *) task_root_type::EndTag ;
+
+  Member exec ;
+
+  // Loop until no runnable task
+
+  task_root_type * task = end ;
+  
+  do {
+
+    task = end ;
+
+    for ( int i = 0 ; i < queue_type::NumQueue && end == task ; ++i ) {
+      for ( int j = 0 ; j < 2 && end == task ; ++j ) {
+        task = queue_type::pop_task( & queue->m_ready[i][j] );
+      }
+    }
+
+    if ( end == task ) break ;
+
+    (*task->m_apply)( task , & exec );
+
+    queue->complete( task );
+
+  } while(1);
+}
+
 }} /* namespace Kokkos::Impl */
 
 #endif /* #if defined( KOKKOS_HAVE_SERIAL ) && defined( KOKKOS_ENABLE_TASKPOLICY ) */

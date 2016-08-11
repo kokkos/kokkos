@@ -165,6 +165,16 @@ private:
 
 public:
 
+  // If and only if the execution space is a single thread
+  // then execute ready tasks.
+  KOKKOS_INLINE_FUNCTION
+  void iff_single_thread_recursive_execute()
+    {
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+      specialization::iff_single_thread_recursive_execute( this );
+#endif
+    }
+
   void execute() { specialization::execute( this ); }
 
   // Assign task pointer with reference counting of assigned tasks

@@ -49,7 +49,7 @@
 #include <Kokkos_Core.hpp>
 #include <Cuda/Kokkos_Cuda_TaskPolicy.hpp>
 
-#if defined( KOKKOS_ENABLE_TASKPOLICY )
+#if defined( KOKKOS_HAVE_CUDA ) && defined( KOKKOS_ENABLE_TASKPOLICY )
 
 // #define DETAILED_PRINT
 

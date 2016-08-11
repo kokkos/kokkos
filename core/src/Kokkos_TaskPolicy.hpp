@@ -454,6 +454,14 @@ public:
                                         , value_type
                                         , FunctorType > ;
 
+      //----------------------------------------
+      // Give single-thread back-ends an opportunity to clear
+      // queue of ready tasks before allocating a new task
+
+      m_queue->iff_single_thread_recursive_execute();
+
+      //----------------------------------------
+
       future_type f ;
 
       // Allocate task from memory pool

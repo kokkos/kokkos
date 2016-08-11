@@ -65,6 +65,9 @@ public:
   using task_base_type  = Kokkos::Impl::TaskBase< execution_space , void , void > ;
 
   static
+  void iff_single_thread_recursive_execute( queue_type * const );
+
+  static
   void execute( queue_type * const );
 
   template< typename FunctorType >

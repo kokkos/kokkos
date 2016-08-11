@@ -64,6 +64,9 @@ public:
   // Must specify memory space
   using memory_space = Kokkos::HostSpace ;
 
+  static
+  void iff_single_thread_recursive_execute( queue_type * const );
+
   // Must provide task queue execution function
   static void execute( queue_type * const );
 
@@ -90,7 +93,6 @@ class TaskExec< Kokkos::OpenMP >
 {
 private:
 
-  TaskExec() = delete ;
   TaskExec( TaskExec && ) = delete ;
   TaskExec( TaskExec const & ) = delete ;
   TaskExec & operator = ( TaskExec && ) = delete ;
@@ -102,8 +104,8 @@ private:
   friend class Kokkos::Impl::TaskQueue< Kokkos::OpenMP > ;
   friend class Kokkos::Impl::TaskQueueSpecialization< Kokkos::OpenMP > ;
 
-  PoolExec & m_self_exec ;  ///< This thread's thread pool data structure 
-  PoolExec & m_team_exec ;  ///< Team thread's thread pool data structure
+  PoolExec * const m_self_exec ;  ///< This thread's thread pool data structure 
+  PoolExec * const m_team_exec ;  ///< Team thread's thread pool data structure
   int64_t    m_sync_mask ;
   int64_t    m_sync_value ;
   int        m_sync_step ;
@@ -111,15 +113,17 @@ private:
   int        m_team_rank ;  ///< Which thread within a team
   int        m_team_size ;
 
+  TaskExec();
   TaskExec( PoolExec & arg_exec , int arg_team_size );
 
 public:
 
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-  /**\brief  The team_barrier uses the first 128bytes of share memory */
-  void * team_shared() const { return m_team_exec.scratch_thread(); }
+  void * team_shared() const
+    { return m_team_exec ? m_team_exec->scratch_thread() : (void*) 0 ; }
 
-  int team_shared_size() const { return m_team_exec.scratch_thread_size(); }
+  int team_shared_size() const
+    { return m_team_exec ? m_team_exec->scratch_thread_size() : 0 ; }
 
   /**\brief  Whole team enters this function call
    *         before any teeam member returns from
@@ -231,26 +235,32 @@ void parallel_reduce
   //printf("1-- tr: %d of %d, ir: %ld, r: %ld\n", team_rank, loop_boundaries.thread.team_size(),
   //        initialized_result, result);
 
-  ValueType *shared = (ValueType*) loop_boundaries.thread.team_shared();
+  if ( 1 < loop_boundaries.thread.team_size() ) {
 
-  loop_boundaries.thread.team_barrier();
-  shared[team_rank] = result;
+    ValueType *shared = (ValueType*) loop_boundaries.thread.team_shared();
 
-  loop_boundaries.thread.team_barrier();
+    loop_boundaries.thread.team_barrier();
+    shared[team_rank] = result;
 
-  // reduce across threads to thread 0
-  if (team_rank == 0) {
-    for (int i = 1; i < loop_boundaries.thread.team_size(); i++) {
-      shared[0] += shared[i];
+    loop_boundaries.thread.team_barrier();
+
+    // reduce across threads to thread 0
+    if (team_rank == 0) {
+      for (int i = 1; i < loop_boundaries.thread.team_size(); i++) {
+        shared[0] += shared[i];
+      }
     }
+
+    loop_boundaries.thread.team_barrier();
+
+    // broadcast result
+    initialized_result = shared[0];
+    //printf("2-- tr: %d of %d, ir: %ld, r: %ld\n", team_rank, loop_boundaries.thread.team_size(),
+    //        initialized_result, result);
   }
-
-  loop_boundaries.thread.team_barrier();
-
-  // broadcast result
-  initialized_result = shared[0];
-  //printf("2-- tr: %d of %d, ir: %ld, r: %ld\n", team_rank, loop_boundaries.thread.team_size(),
-  //        initialized_result, result);
+  else {
+    initialized_result = result ;
+  }
 }
 
 // placeholder for future function
@@ -273,26 +283,31 @@ void parallel_reduce
   //printf("1-- tr: %d of %d, ir: %ld, r: %ld\n", team_rank, loop_boundaries.thread.team_size(),
   //        initialized_result, result);
 
-  ValueType *shared = (ValueType*) loop_boundaries.thread.team_shared();
+  if ( 1 < loop_boundaries.thread.team_size() ) {
+    ValueType *shared = (ValueType*) loop_boundaries.thread.team_shared();
 
-  loop_boundaries.thread.team_barrier();
-  shared[team_rank] = result;
+    loop_boundaries.thread.team_barrier();
+    shared[team_rank] = result;
 
-  loop_boundaries.thread.team_barrier();
+    loop_boundaries.thread.team_barrier();
 
-  // reduce across threads to thread 0
-  if (team_rank == 0) {
-    for (int i = 1; i < loop_boundaries.thread.team_size(); i++) {
-      join(shared[0], shared[i]);
+    // reduce across threads to thread 0
+    if (team_rank == 0) {
+      for (int i = 1; i < loop_boundaries.thread.team_size(); i++) {
+        join(shared[0], shared[i]);
+      }
     }
+
+    loop_boundaries.thread.team_barrier();
+
+    // broadcast result
+    initialized_result = shared[0];
+    //printf("2-- tr: %d of %d, ir: %ld, r: %ld\n", team_rank, loop_boundaries.thread.team_size(),
+    //        initialized_result, result);
   }
-
-  loop_boundaries.thread.team_barrier();
-
-  // broadcast result
-  initialized_result = shared[0];
-  //printf("2-- tr: %d of %d, ir: %ld, r: %ld\n", team_rank, loop_boundaries.thread.team_size(),
-  //        initialized_result, result);
+  else {
+    initialized_result = result ;
+  }
 }
 
 // placeholder for future function

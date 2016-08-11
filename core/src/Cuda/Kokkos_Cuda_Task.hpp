@@ -70,6 +70,9 @@ public:
   using memory_space    = Kokkos::CudaUVMSpace ;
   using queue_type      = TaskQueue< execution_space > ;
 
+  static
+  void iff_single_thread_recursive_execute( queue_type * const ) {}
+
   __device__
   static void driver( queue_type * const );
 
