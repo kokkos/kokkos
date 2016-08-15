@@ -106,12 +106,12 @@ private:
 
   PoolExec * const m_self_exec ;  ///< This thread's thread pool data structure 
   PoolExec * const m_team_exec ;  ///< Team thread's thread pool data structure
-  int64_t    m_sync_mask ;
-  int64_t    m_sync_value ;
-  int        m_sync_step ;
-  int        m_group_rank ; ///< Which "team" subset of thread pool
-  int        m_team_rank ;  ///< Which thread within a team
-  int        m_team_size ;
+  int64_t          m_sync_mask ;
+  int64_t mutable  m_sync_value ;
+  int     mutable  m_sync_step ;
+  int              m_group_rank ; ///< Which "team" subset of thread pool
+  int              m_team_rank ;  ///< Which thread within a team
+  int              m_team_size ;
 
   TaskExec();
   TaskExec( PoolExec & arg_exec , int arg_team_size );
@@ -129,9 +129,9 @@ public:
    *         before any teeam member returns from
    *         this function call.
    */
-  void team_barrier();
+  void team_barrier() const ;
 #else
-  KOKKOS_INLINE_FUNCTION void team_barrier() {}
+  KOKKOS_INLINE_FUNCTION void team_barrier() const {}
   KOKKOS_INLINE_FUNCTION void * team_shared() const { return 0 ; }
   KOKKOS_INLINE_FUNCTION int team_shared_size() const { return 0 ; }
 #endif
@@ -141,39 +141,6 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   int team_size() const { return m_team_size ; }
-};
-
-template<typename iType>
-struct TeamThreadRangeBoundariesStruct<iType, TaskExec< Kokkos::OpenMP > >
-{
-  typedef iType index_type;
-  const iType begin ;
-  const iType end ;
-  //enum {increment = 1}; //TODO changed
-  const iType increment ;
-  TaskExec< Kokkos::OpenMP > & thread;
-
-  KOKKOS_INLINE_FUNCTION
-  TeamThreadRangeBoundariesStruct
-    ( TaskExec< Kokkos::OpenMP > & arg_thread, const iType& arg_count)
-    : begin(0)
-    , end(arg_count)
-    , increment( arg_thread.team_size() ) //TODO changed
-    , thread(arg_thread)
-    {}
-
-  KOKKOS_INLINE_FUNCTION
-  TeamThreadRangeBoundariesStruct
-    ( TaskExec< Kokkos::OpenMP > & arg_thread
-    , const iType & arg_begin
-    , const iType & arg_end
-    )
-    //: begin( arg_begin ) //TODO changed
-    : begin( arg_begin + arg_thread.team_rank() )
-    , end(   arg_end)
-    , increment( arg_thread.team_size() ) //TODO changed
-    , thread( arg_thread )
-    {}
 };
 
 }} /* namespace Kokkos::Impl */
@@ -200,10 +167,11 @@ TeamThreadRange( Impl:: TaskExec< Kokkos::OpenMP > & thread, const iType & begin
   return Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::OpenMP > >(thread,begin,end);
 }
 
-  /** \brief  Inter-thread parallel_for. Executes lambda(iType i) for each i=0..N-1.
-   *
-   * The range i=0..N-1 is mapped to all threads of the the calling thread team.
-   * This functionality requires C++11 support.*/
+/** \brief  Inter-thread parallel_for. Executes lambda(iType i) for each i=0..N-1.
+ *
+ * The range i=0..N-1 is mapped to all threads of the the calling thread team.
+ * This functionality requires C++11 support.
+*/
 template<typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION
 void parallel_for
@@ -211,7 +179,7 @@ void parallel_for
   , const Lambda& lambda
   )
 {
-  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i);
   }
 }
@@ -227,7 +195,7 @@ void parallel_reduce
   int team_rank = loop_boundaries.thread.team_rank(); // member num within the team
   ValueType result = initialized_result;
 
-  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i, result);
     //printf("0-- tr: %d of %d, ir: %ld, r: %ld, i:[%d]\n", team_rank, loop_boundaries.thread.team_size(),
     //        initialized_result, result, i);
@@ -275,7 +243,7 @@ void parallel_reduce
   int team_rank = loop_boundaries.thread.team_rank(); // member num within the team
   ValueType result = initialized_result;
 
-  for( iType i = loop_boundaries.begin; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i, result);
     //printf("0-- tr: %d of %d, ir: %ld, r: %ld, i:[%d]\n", team_rank, loop_boundaries.thread.team_size(),
     //        initialized_result, result, i);

@@ -100,7 +100,7 @@ TaskExec( Kokkos::Impl::OpenMPexec & arg_exec , int const arg_team_size )
 
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
 
-void TaskExec< Kokkos::OpenMP >::team_barrier()
+void TaskExec< Kokkos::OpenMP >::team_barrier() const
 {
   if ( 1 < m_team_size ) {
 
