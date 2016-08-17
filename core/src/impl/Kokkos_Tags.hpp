@@ -46,6 +46,7 @@
 
 #include <impl/Kokkos_Traits.hpp>
 #include <Kokkos_Core_fwd.hpp>
+#include <type_traits>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -82,7 +83,6 @@ struct have_##Type {                                                            
 #define KOKKOS_IS_CONCEPT( Concept )                                            \
 template <typename T>                                                           \
 struct is_##Concept {                                                           \
-  struct not_concept {};                                                        \
   template <typename U> static std::false_type have_concept(...);               \
   template <typename U> static auto have_concept( typename U::Concept* )        \
                           ->typename std::is_same<T, typename U::Concept>::type;\
@@ -94,6 +94,9 @@ struct is_##Concept {                                                           
 //----------------------------------------------------------------------------
 
 namespace Kokkos { namespace Impl {
+
+template <typename T>
+using is_void = std::is_same<void,T>;
 
 // is_memory_space<T>::value
 KOKKOS_IS_CONCEPT( memory_space );
@@ -109,6 +112,15 @@ KOKKOS_IS_CONCEPT( execution_policy );
 
 // is_array_layout<T>::value
 KOKKOS_IS_CONCEPT( array_layout );
+
+// is_iteration_pattern<T>::value
+KOKKOS_IS_CONCEPT( iteration_pattern );
+
+// is_schedule_type<T>::value
+KOKKOS_IS_CONCEPT( schedule_type );
+
+// is_index_type<T>::value
+KOKKOS_IS_CONCEPT( index_type );
 
 }} // namespace Kokkos::Impl
 
