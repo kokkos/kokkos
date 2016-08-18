@@ -87,6 +87,8 @@
 
 #include <TestPolicyConstruction.hpp>
 
+#include <TestMDRange.hpp>
+
 namespace Test {
 
 class threads : public ::testing::Test {
@@ -140,6 +142,12 @@ protected:
 
 TEST_F( threads , init ) {
   ;
+}
+
+TEST_F( threads , md_range ) {
+  TestMDRange_2D< Kokkos::Threads >::test_for2(100,100);
+
+  TestMDRange_3D< Kokkos::Threads >::test_for3(100,100,100);
 }
 
 TEST_F( threads , dispatch )

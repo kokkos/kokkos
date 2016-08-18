@@ -155,39 +155,41 @@ struct AnalyzePolicy<Base, T, Traits...> : public
 template <typename Base>
 struct AnalyzePolicy<Base>
 {
-  using type = Base;
+  using execution_space = typename std::conditional< is_void< typename Base::execution_space >::value
+                                                   , DefaultExecutionSpace
+                                                   , typename Base::execution_space
+                                                   >::type;
+
+  using schedule_type = typename std::conditional< is_void< typename Base::schedule_type >::value
+                                                 , Schedule< Static >
+                                                 , typename Base::schedule_type
+                                                 >::type;
+
+  using work_tag = typename Base::work_tag;
+
+  using index_type = typename std::conditional< is_void< typename Base::index_type >::value
+                                              , IndexType< typename execution_space::size_type >
+                                              , typename Base::index_type
+                                              >::type
+                                               ::type // nasty hack to make index_type into an integral_type
+                                              ;       // instead of the wrapped IndexType<T> for backwards compatibility
+
+  using iteration_pattern = typename std::conditional< is_void< typename Base::iteration_pattern >::value
+                                                     , void // TODO set default iteration pattern
+                                                     , typename Base::iteration_pattern
+                                                     >::type;
+  using type = PolicyTraitsBase< execution_space
+                               , schedule_type
+                               , work_tag
+                               , index_type
+                               , iteration_pattern
+                               >;
 };
 
 template <typename... Traits>
 struct PolicyTraits
-  : public AnalyzePolicy< PolicyTraitsBase<>, Traits...>::type
-{
-  using policy_traits =  Impl::PolicyTraits<Traits... >;
-
-  using execution_space = typename std::conditional< Impl::is_void< typename policy_traits::execution_space >::value
-                                                   , Kokkos::DefaultExecutionSpace
-                                                   , typename policy_traits::execution_space
-                                                   >::type;
-
-  using schedule_type = typename std::conditional< Impl::is_void< typename policy_traits::schedule_type >::value
-                                                 , Schedule< Static >
-                                                 , typename policy_traits::schedule_type
-                                                 >::type;
-
-  using work_tag = typename policy_traits::work_tag;
-
-  using wrap_index_type = typename std::conditional< Impl::is_void< typename policy_traits::index_type >::value
-                                                   , IndexType< typename execution_space::size_type >
-                                                   , typename policy_traits::index_type
-                                                   >::type;
-
-  using iteration_pattern = typename std::conditional< Impl::is_void< typename policy_traits::iteration_pattern >::value
-                                                     , void // Tile< Rank<1> >
-                                                     , typename policy_traits::iteration_pattern
-                                                     >::type;
-
-  using index_type = typename wrap_index_type::type;
-};
+  : public AnalyzePolicy< PolicyTraitsBase<>, Traits... >::type
+{};
 
 }} // namespace Kokkos::Impl
 

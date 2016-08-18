@@ -85,6 +85,8 @@
 
 #include <TestPolicyConstruction.hpp>
 
+#include <TestMDRange.hpp>
+
 namespace Test {
 
 class serial : public ::testing::Test {
@@ -98,6 +100,12 @@ protected:
       Kokkos::HostSpace::execution_space::finalize();
     }
 };
+
+TEST_F( serial , md_range ) {
+  TestMDRange_2D< Kokkos::Serial >::test_for2(100,100);
+
+  TestMDRange_3D< Kokkos::Serial >::test_for3(100,100,100);
+}
 
 TEST_F( serial , impl_shared_alloc ) {
   test_shared_alloc< Kokkos::HostSpace , Kokkos::Serial >();

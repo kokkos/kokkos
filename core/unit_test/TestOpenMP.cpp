@@ -81,6 +81,7 @@
 
 #include <TestPolicyConstruction.hpp>
 
+#include <TestMDRange.hpp>
 
 namespace Test {
 
@@ -109,6 +110,12 @@ protected:
   }
 };
 
+
+TEST_F( openmp , md_range ) {
+  TestMDRange_2D< Kokkos::OpenMP >::test_for2(100,100);
+
+  TestMDRange_3D< Kokkos::OpenMP >::test_for3(100,100,100);
+}
 
 TEST_F( openmp , impl_shared_alloc ) {
   test_shared_alloc< Kokkos::HostSpace , Kokkos::OpenMP >();
