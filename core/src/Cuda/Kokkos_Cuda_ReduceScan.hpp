@@ -366,7 +366,12 @@ bool cuda_single_inter_block_reduce_scan( const FunctorType     & functor ,
     size_type * const shared = shared_data + word_count.value * BlockSizeMask ;
     size_type * const global = global_data + word_count.value * block_id ;
 
+#if (__CUDA_ARCH__ < 500)
     for ( size_type i = threadIdx.y ; i < word_count.value ; i += blockDim.y ) { global[i] = shared[i] ; }
+#else
+    for ( size_type i = 0 ; i < word_count.value ; i += 1 ) { global[i] = shared[i] ; }
+#endif
+
   }
 
   // Contributing blocks note that their contribution has been completed via an atomic-increment flag
