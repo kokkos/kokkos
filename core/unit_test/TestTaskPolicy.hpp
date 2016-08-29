@@ -344,6 +344,7 @@ struct TestTaskTeam {
                           , [&]( int i ) { parreduce_check[i] += expected-tot ; }
                           );
 
+#if 0
       // test parallel_scan
 
       // Exclusive scan
@@ -373,6 +374,8 @@ struct TestTaskTeam {
           parscan_check[i] += (i*(i+1)-begin*(begin-1))*0.5-parscan_result[i];
         }
       }
+#endif
+
     }
 
   static void run( long n )

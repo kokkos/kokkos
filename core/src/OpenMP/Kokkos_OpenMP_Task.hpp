@@ -116,6 +116,8 @@ private:
   TaskExec();
   TaskExec( PoolExec & arg_exec , int arg_team_size );
 
+  void team_barrier_impl() const ;
+
 public:
 
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
@@ -129,7 +131,7 @@ public:
    *         before any teeam member returns from
    *         this function call.
    */
-  void team_barrier() const ;
+  void team_barrier() const { if ( 1 < m_team_size ) team_barrier_impl(); }
 #else
   KOKKOS_INLINE_FUNCTION void team_barrier() const {}
   KOKKOS_INLINE_FUNCTION void * team_shared() const { return 0 ; }

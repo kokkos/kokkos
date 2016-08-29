@@ -100,24 +100,22 @@ TaskExec( Kokkos::Impl::OpenMPexec & arg_exec , int const arg_team_size )
 
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
 
-void TaskExec< Kokkos::OpenMP >::team_barrier() const
+void TaskExec< Kokkos::OpenMP >::team_barrier_impl() const
 {
-  if ( 1 < m_team_size ) {
+  if ( m_team_exec->scratch_reduce_size() < int(2 * sizeof(int64_t)) ) {
+    Kokkos::abort("TaskQueue<OpenMP> scratch_reduce memory too small");
+  }
 
-    if ( m_team_exec->scratch_reduce_size() < int(2 * sizeof(int64_t)) ) {
-      Kokkos::abort("TaskQueue<OpenMP> scratch_reduce memory too small");
-    }
+  // Use team shared memory to synchronize.
+  // Alternate memory locations between barriers to avoid a sequence
+  // of barriers overtaking one another.
 
-    // Use team shared memory to synchronize.
-    // Alternate memory locations between barriers to avoid a sequence
-    // of barriers overtaking one another.
+  int64_t volatile * const sync =
+    ((int64_t *) m_team_exec->scratch_reduce()) + ( m_sync_step & 0x01 );
 
-    int64_t volatile * const sync =
-      ((int64_t *) m_team_exec->scratch_reduce()) + ( m_sync_step & 0x01 );
-
-    // This team member sets one byte within the sync variable
-    int8_t volatile * const sync_self =
-     ((int8_t *) sync) + m_team_rank ;
+  // This team member sets one byte within the sync variable
+  int8_t volatile * const sync_self =
+   ((int8_t *) sync) + m_team_rank ;
 
 #if 0
 fprintf( stdout
@@ -131,9 +129,9 @@ fprintf( stdout
 fflush(stdout);
 #endif
 
-    *sync_self = int8_t( m_sync_value & 0x03 ); // signal arrival
+  *sync_self = int8_t( m_sync_value & 0x03 ); // signal arrival
 
-    while ( m_sync_value != *sync ); // wait for team to arrive
+  while ( m_sync_value != *sync ); // wait for team to arrive
 
 #if 0
 fprintf( stdout
@@ -147,12 +145,11 @@ fprintf( stdout
 fflush(stdout);
 #endif
 
-    ++m_sync_step ;
+  ++m_sync_step ;
 
-    if ( 0 == ( 0x01 & m_sync_step ) ) { // Every other step
-      m_sync_value ^= m_sync_mask ;
-      if ( 1000 < m_sync_step ) m_sync_step = 0 ;
-    }
+  if ( 0 == ( 0x01 & m_sync_step ) ) { // Every other step
+    m_sync_value ^= m_sync_mask ;
+    if ( 1000 < m_sync_step ) m_sync_step = 0 ;
   }
 }
 
@@ -198,33 +195,40 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
 
     do {
 
+      task_root_type * task = 0 ;
+
       // Each team lead attempts to acquire either a thread team task
-      // or collection of single thread tasks for the team.
+      // or a single thread task for the team.
 
       if ( 0 == team_exec.team_rank() ) {
 
-        task_root_type * tmp =
-          0 < *((volatile int *) & queue->m_ready_count) ? end : 0 ;
+        task = 0 < *((volatile int *) & queue->m_ready_count) ? end : 0 ;
 
         // Loop by priority and then type
-        for ( int i = 0 ; i < queue_type::NumQueue && end == tmp ; ++i ) {
-          for ( int j = 0 ; j < 2 && end == tmp ; ++j ) {
-            tmp = queue_type::pop_task( & queue->m_ready[i][j] );
+        for ( int i = 0 ; i < queue_type::NumQueue && end == task ; ++i ) {
+          for ( int j = 0 ; j < 2 && end == task ; ++j ) {
+            task = queue_type::pop_task( & queue->m_ready[i][j] );
           }
         }
-
-        *task_shared = tmp ;
-
-        // Fence to be sure shared_task_array is stored
-        Kokkos::memory_fence();
       }
 
-      // Whole team waits for every team member to reach this statement
-      team_exec.team_barrier();
+      // Team lead broadcast acquired task to team members:
 
-      Kokkos::memory_fence();
+      if ( 1 < team_exec.team_size() ) {
 
-      task_root_type * const task = *task_shared ;
+        if ( 0 == team_exec.team_rank() ) *task_shared = task ;
+
+        // Fence to be sure task_shared is stored before the barrier
+        Kokkos::memory_fence();
+
+        // Whole team waits for every team member to reach this statement
+        team_exec.team_barrier();
+
+        // Fence to be sure task_shared is stored
+        Kokkos::memory_fence();
+
+        task = *task_shared ;
+      }
 
 #if 0
 fprintf( stdout
@@ -240,6 +244,9 @@ fflush(stdout);
       if ( 0 == task ) break ; // 0 == m_ready_count
 
       if ( end == task ) {
+        // All team members wait for whole team to reach this statement.
+        // Is necessary to prevent task_shared from being updated
+        // before it is read by all threads.
         team_exec.team_barrier();
       }
       else if ( task_root_type::TaskTeam == task->m_task_type ) {
