@@ -808,8 +808,10 @@ public:
 
      max_active_thread = (max_active_thread == 0)?blockDim.y:max_active_thread;
 
+    value_type init;
+    ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , &init);
      if(Impl::cuda_inter_block_reduction<ReducerTypeFwd,ValueJoin,WorkTag>
-            (value,ValueJoin(ReducerConditional::select(m_functor , m_reducer)),m_scratch_space,result,m_scratch_flags,max_active_thread)) {
+            (value,init,ValueJoin(ReducerConditional::select(m_functor , m_reducer)),m_scratch_space,result,m_scratch_flags,max_active_thread)) {
        const unsigned id = threadIdx.y*blockDim.x + threadIdx.x;
        if(id==0) {
          Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , (void*) &value );
@@ -1041,8 +1043,10 @@ public:
 
     pointer_type const result = (pointer_type) (m_unified_space ? m_unified_space : m_scratch_space) ;
 
+    value_type init;
+    ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , &init);
     if(Impl::cuda_inter_block_reduction<FunctorType,ValueJoin,WorkTag>
-           (value,ValueJoin(ReducerConditional::select(m_functor , m_reducer)),m_scratch_space,result,m_scratch_flags,blockDim.y)) {
+           (value,init,ValueJoin(ReducerConditional::select(m_functor , m_reducer)),m_scratch_space,result,m_scratch_flags,blockDim.y)) {
       const unsigned id = threadIdx.y*blockDim.x + threadIdx.x;
       if(id==0) {
         Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , (void*) &value );

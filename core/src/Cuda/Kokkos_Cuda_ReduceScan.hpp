@@ -133,6 +133,7 @@ inline void cuda_intra_block_reduction( ValueType& value,
 template< class FunctorType , class JoinOp , class ArgTag = void >
 __device__
 bool cuda_inter_block_reduction( typename FunctorValueTraits< FunctorType , ArgTag >::reference_type  value,
+                                 typename FunctorValueTraits< FunctorType , ArgTag >::reference_type  neutral,
                                  const JoinOp& join,
                                  Cuda::size_type * const m_scratch_space,
                                  typename FunctorValueTraits< FunctorType , ArgTag >::pointer_type const result,
@@ -170,7 +171,7 @@ bool cuda_inter_block_reduction( typename FunctorValueTraits< FunctorType , ArgT
       if(id == 0)
         *m_scratch_flags = 0;
       last_block = true;
-      value = value_type();
+      value = neutral;
 
       pointer_type const volatile global = (pointer_type) m_scratch_space ;
 
