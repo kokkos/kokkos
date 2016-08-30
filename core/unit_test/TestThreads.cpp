@@ -234,7 +234,7 @@ TEST_F( threads, view_aggregate ) {
 
 TEST_F( threads , range_tag )
 {
-  TestRange< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_for(2));
+  TestRange< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_for(2);
   TestRange< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_reduce(2);
   TestRange< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_scan(2);
   TestRange< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(3);
