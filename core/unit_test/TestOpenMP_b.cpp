@@ -103,6 +103,10 @@ TEST_F( openmp , range_tag )
 
 TEST_F( openmp , team_tag )
 {
+  TestTeamPolicy< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >::test_for(2);
+  TestTeamPolicy< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >::test_reduce(2);
+  TestTeamPolicy< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(2);
+  TestTeamPolicy< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(2);
   TestTeamPolicy< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >::test_for(1000);
   TestTeamPolicy< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >::test_reduce(1000);
   TestTeamPolicy< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(1000);

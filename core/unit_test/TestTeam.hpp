@@ -89,6 +89,23 @@ struct TestTeamPolicy {
       }
     }
 
+  static void test_small_league_size() {
+
+    int bs = 8; // batch size (number of elements per batch)
+    int ns = 16; // total number of "problems" to process
+
+    // calculate total scratch memory space size
+    const int level = 0;
+    int mem_size = 960;
+    const int num_teams = ns/bs;
+    const Kokkos::TeamPolicy<> policy(num_teams, Kokkos::AUTO());
+
+    Kokkos::parallel_for (policy.set_scratch_size(level, Kokkos::PerTeam(mem_size), Kokkos::PerThread(0)),
+      KOKKOS_LAMBDA (const Kokkos::TeamPolicy<>::member_type & team)
+    {
+    });
+  }
+
   static void test_for( const size_t league_size )
     {
       TestTeamPolicy functor( league_size );
@@ -97,6 +114,8 @@ struct TestTeamPolicy {
 
       Kokkos::parallel_for( Kokkos::TeamPolicy< ScheduleType,  ExecSpace >( league_size , team_size ) , functor );
       Kokkos::parallel_for( Kokkos::TeamPolicy< ScheduleType,  ExecSpace , VerifyInitTag >( league_size , team_size ) , functor );
+
+      test_small_league_size();
     }
 
   struct ReduceTag {};

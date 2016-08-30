@@ -95,6 +95,12 @@ namespace Test {
 
 TEST_F( cuda, range_tag )
 {
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_for(3);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_reduce(3);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_scan(3);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(3);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(3);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_scan(3);
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_for(1000);
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_reduce(1000);
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_scan(1000);
@@ -106,6 +112,10 @@ TEST_F( cuda, range_tag )
 
 TEST_F( cuda, team_tag )
 {
+  TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_for(3);
+  TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_reduce(3);
+  TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(3);
+  TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(3);
   TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_for(1000);
   TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_reduce(1000);
   TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(1000);

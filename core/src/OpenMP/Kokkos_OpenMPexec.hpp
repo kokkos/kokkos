@@ -558,7 +558,7 @@ public:
     , m_league_rank(0)
     , m_league_end(0)
     , m_league_size( team.league_size() )
-    , m_chunk_size( team.chunk_size() )
+    , m_chunk_size( team.chunk_size()>0?team.chunk_size():team.team_iter() )
     , m_league_chunk_end(0)
     , m_team_lead_exec( *exec.pool_rev( team.team_alloc() * (m_exec.pool_rank_rev()/team.team_alloc()) ))
     , m_team_alloc( team.team_alloc())
@@ -567,10 +567,9 @@ public:
       const int pool_team_rank_rev   = pool_rank_rev % team.team_alloc();
       const int pool_league_rank_rev = pool_rank_rev / team.team_alloc();
       const int pool_num_teams       = OpenMP::thread_pool_size(0)/team.team_alloc();
-      const int chunk_size           = team.chunk_size()>0?team.chunk_size():team.team_iter();
-      const int chunks_per_team      = ( team.league_size() + chunk_size*pool_num_teams-1 ) / (chunk_size*pool_num_teams);
-            int league_iter_end      = team.league_size() - pool_league_rank_rev * chunks_per_team * chunk_size;
-            int league_iter_begin    = league_iter_end - chunks_per_team * chunk_size;
+      const int chunks_per_team      = ( team.league_size() + m_chunk_size*pool_num_teams-1 ) / (m_chunk_size*pool_num_teams);
+            int league_iter_end      = team.league_size() - pool_league_rank_rev * chunks_per_team * m_chunk_size;
+            int league_iter_begin    = league_iter_end - chunks_per_team * m_chunk_size;
       if (league_iter_begin < 0)     league_iter_begin = 0;
       if (league_iter_end>team.league_size()) league_iter_end = team.league_size();
 
