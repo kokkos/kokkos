@@ -89,6 +89,18 @@ struct TestTeamPolicy {
       }
     }
 
+  // included for test_small_league_size
+  TestTeamPolicy()
+    : m_flags()
+  {}
+
+  // included for test_small_league_size
+  struct NoOpTag {} ;
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const NoOpTag & , const team_member & member ) const
+    {}
+
+
   static void test_small_league_size() {
 
     int bs = 8; // batch size (number of elements per batch)
@@ -98,12 +110,11 @@ struct TestTeamPolicy {
     const int level = 0;
     int mem_size = 960;
     const int num_teams = ns/bs;
-    const Kokkos::TeamPolicy<> policy(num_teams, Kokkos::AUTO());
+    const Kokkos::TeamPolicy< ExecSpace, NoOpTag > policy(num_teams, Kokkos::AUTO());
 
-    Kokkos::parallel_for (policy.set_scratch_size(level, Kokkos::PerTeam(mem_size), Kokkos::PerThread(0)),
-      KOKKOS_LAMBDA (const Kokkos::TeamPolicy<>::member_type & team)
-    {
-    });
+    Kokkos::parallel_for ( policy.set_scratch_size(level, Kokkos::PerTeam(mem_size), Kokkos::PerThread(0))
+                         , TestTeamPolicy()
+                         );
   }
 
   static void test_for( const size_t league_size )
