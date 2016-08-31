@@ -129,6 +129,14 @@ TEST_F( cuda, reduce )
   TestReduce< int , Kokkos::Cuda >( 0 );
 }
 
+TEST_F( cuda , reducers )
+{
+  TestReducers<int, Kokkos::Cuda>::execute_integer();
+  TestReducers<size_t, Kokkos::Cuda>::execute_integer();
+  TestReducers<double, Kokkos::Cuda>::execute_float();
+  TestReducers<Kokkos::complex<double>, Kokkos::Cuda>::execute_basic();
+}
+
 TEST_F( cuda, reduce_team )
 {
   TestReduceTeam< long ,   Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >( 3 );

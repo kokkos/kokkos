@@ -133,6 +133,14 @@ TEST_F( openmp, long_reduce_dynamic_view ) {
   TestReduceDynamicView< long ,   Kokkos::OpenMP >( 1000000 );
 }
 
+TEST_F( openmp , reducers )
+{
+  TestReducers<int, Kokkos::OpenMP>::execute_integer();
+  TestReducers<size_t, Kokkos::OpenMP>::execute_integer();
+  TestReducers<double, Kokkos::OpenMP>::execute_float();
+  TestReducers<Kokkos::complex<double>, Kokkos::OpenMP>::execute_basic();
+}
+
 TEST_F( openmp, team_long_reduce) {
   TestReduceTeam< long ,   Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >( 3 );
   TestReduceTeam< long ,   Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >( 3 );

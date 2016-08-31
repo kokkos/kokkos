@@ -207,6 +207,14 @@ TEST_F( serial, double_reduce) {
   TestReduce< double ,   Kokkos::Serial >( 1000000 );
 }
 
+TEST_F( serial , reducers )
+{
+  TestReducers<int, Kokkos::Serial>::execute_integer();
+  TestReducers<size_t, Kokkos::Serial>::execute_integer();
+  TestReducers<double, Kokkos::Serial>::execute_float();
+  TestReducers<Kokkos::complex<double>, Kokkos::Serial>::execute_basic();
+}
+
 TEST_F( serial, long_reduce_dynamic ) {
   TestReduceDynamic< long ,   Kokkos::Serial >( 1000000 );
 }

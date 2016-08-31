@@ -278,6 +278,14 @@ TEST_F( threads, double_reduce) {
   TestReduce< double ,   Kokkos::Threads >( 1000000 );
 }
 
+TEST_F( threads , reducers )
+{
+  TestReducers<int, Kokkos::Threads>::execute_integer();
+  TestReducers<size_t, Kokkos::Threads>::execute_integer();
+  TestReducers<double, Kokkos::Threads>::execute_float();
+  TestReducers<Kokkos::complex<double>, Kokkos::Threads>::execute_basic();
+}
+
 TEST_F( threads, team_long_reduce) {
   TestReduceTeam< long ,   Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >( 3 );
   TestReduceTeam< long ,   Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >( 3 );

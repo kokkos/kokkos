@@ -98,6 +98,7 @@ protected:
 
     Kokkos::OpenMP::initialize( threads_count );
     Kokkos::OpenMP::print_configuration( std::cout , true );
+    srand(10231);
   }
 
   static void TearDownTestCase()
