@@ -207,6 +207,10 @@ T AddLoopSerial(int loop) {
   return val;
 }
 
+//------------------------------------------------------
+//--------------atomic_compare_exchange-----------------
+//------------------------------------------------------
+
 template<class T,class DEVICE_TYPE>
 struct CASFunctor{
   typedef DEVICE_TYPE execution_space;
@@ -268,6 +272,10 @@ T CASLoopSerial(int loop) {
   delete [] data;
   return val;
 }
+
+//----------------------------------------------
+//--------------atomic_exchange-----------------
+//----------------------------------------------
 
 template<class T,class DEVICE_TYPE>
 struct ExchFunctor{
