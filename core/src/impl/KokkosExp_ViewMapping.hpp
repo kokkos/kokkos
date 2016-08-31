@@ -2338,11 +2338,7 @@ class ViewMapping< Traits ,
               , void >::is_mapping_plugin::value
   )>::type >
 {
-private:
-
-  template< class , class ... > friend class ViewMapping ;
-  template< class , class ... > friend class Kokkos::Experimental::View ;
-
+public:
   typedef ViewOffset< typename Traits::dimension
                     , typename Traits::array_layout
                     , void
@@ -2358,8 +2354,6 @@ private:
     : m_handle( arg_handle )
     , m_offset( arg_offset )
     {}
-
-public:
 
   //----------------------------------------
   // Domain dimensions
