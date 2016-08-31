@@ -138,6 +138,24 @@ unsigned long atomic_compare_exchange( volatile unsigned long * const dest ,
                                        const unsigned long val )
 { return __sync_val_compare_and_swap(dest,compare,val); }
 
+KOKKOS_INLINE_FUNCTION
+unsigned long long atomic_compare_exchange( volatile unsigned long long * const dest ,
+                                       const unsigned long long compare ,
+                                       const unsigned long long val )
+{ return __sync_val_compare_and_swap(dest,compare,val); }
+
+KOKKOS_INLINE_FUNCTION
+double atomic_compare_exchange( volatile double * const dest ,
+                                       const double compare ,
+                                       const double val )
+{ return atomic_compare_exchange(dest,compare,val); }
+
+KOKKOS_INLINE_FUNCTION
+long long atomic_compare_exchange( volatile long long * const dest ,
+                                       const long long compare ,
+                                       const long long val )
+{ return __sync_val_compare_and_swap(dest,compare,val); }
+
 #endif
 
 template < typename T >

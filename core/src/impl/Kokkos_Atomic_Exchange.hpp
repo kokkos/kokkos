@@ -159,10 +159,10 @@ void atomic_assign(
 template< typename T >
 KOKKOS_INLINE_FUNCTION
 T atomic_exchange( volatile T * const dest ,
-  typename Kokkos::Impl::enable_if< sizeof(T) == sizeof(int) || sizeof(T) == sizeof(long)
+  typename Kokkos::Impl::enable_if< sizeof(T) == sizeof(int) || sizeof(T) == sizeof(long long)
                                   , const T & >::type val )
 {
-  typedef typename Kokkos::Impl::if_c< sizeof(T) == sizeof(int) , int , long >::type type ;
+  typedef typename Kokkos::Impl::if_c< sizeof(T) == sizeof(int) , int , long long >::type type ;
 
   const type v = *((type*)&val); // Extract to be sure the value doesn't change
 
@@ -239,10 +239,10 @@ T atomic_exchange( volatile T * const dest ,
 template< typename T >
 KOKKOS_INLINE_FUNCTION
 void atomic_assign( volatile T * const dest ,
-  typename Kokkos::Impl::enable_if< sizeof(T) == sizeof(int) || sizeof(T) == sizeof(long)
+  typename Kokkos::Impl::enable_if< sizeof(T) == sizeof(int) || sizeof(T) == sizeof(long long)
                                   , const T & >::type val )
 {
-  typedef typename Kokkos::Impl::if_c< sizeof(T) == sizeof(int) , int , long >::type type ;
+  typedef typename Kokkos::Impl::if_c< sizeof(T) == sizeof(int) , int , long long >::type type ;
 
   const type v = *((type*)&val); // Extract to be sure the value doesn't change
 
