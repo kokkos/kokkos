@@ -265,6 +265,7 @@ class ViewMapping< DstTraits , SrcTraits ,
   ) , ViewToDynRankViewTag >::type >
 {
 private:
+
   enum { is_assignable_value_type =
     std::is_same< typename DstTraits::value_type
                 , typename SrcTraits::value_type >::value ||
@@ -340,7 +341,7 @@ class DynRankView : public ViewTraits< DataType , Properties ... >
 
 private: 
   template < class , class ... > friend class DynRankView ;
-//  template < class , class ... > friend class Kokkos::View ; //unnecessary now...
+//  template < class , class ... > friend class Kokkos::Experimental::View ; //unnecessary now...
   template < class , class ... > friend class Impl::ViewMapping ;
 
 public: 
@@ -536,7 +537,7 @@ public:
       //return m_map.reference(0,0,0,0,0,0,0); 
     }
 
-  // Rank 1 []
+  // Rank 1
   // This assumes a contiguous underlying memory (i.e. no padding, no striding...)
   template< typename iType >
   KOKKOS_INLINE_FUNCTION
@@ -562,34 +563,13 @@ public:
       return rankone_view(i0);
     }
 
-
-  // Rank 1 ()
   template< typename iType >
-  KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType>::value && !is_default_map ), reference_type>::type
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType>::value), reference_type>::type
   operator()(const iType & i0 ) const 
     { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 1 , ( m_map , i0 ) )
       return m_map.reference(i0); 
-    }
-
-  template< typename iType >
-  KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType>::value && is_default_map && !is_layout_stride ), reference_type>::type
-  operator()(const iType & i0 ) const 
-    { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 1 , ( m_map , i0 ) )
-      //return m_map.reference(i0); 
-      return m_map.m_handle[i0]; 
-    }
-
-  template< typename iType >
-  KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType>::value && is_default_map && is_layout_stride ), reference_type>::type
-  operator()(const iType & i0 ) const 
-    { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 1 , ( m_map , i0 ) )
-      return m_map.m_handle[ m_map.m_offset.m_stride.S0 * i0 ];
     }
 
   template< typename iType >
@@ -600,42 +580,14 @@ public:
       return m_map.reference(i0,0,0,0,0,0,0);
     }
 
+  // Rank 2
   template< typename iType0 , typename iType1 >
-  KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && !is_default_map), reference_type>::type
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value), reference_type>::type
   operator()(const iType0 & i0 , const iType1 & i1 ) const 
     { 
       KOKKOS_VIEW_OPERATOR_VERIFY( 2 , ( m_map , i0 , i1 ) )
       return m_map.reference(i0,i1); 
-    }
-
-  template< typename iType0 , typename iType1 >
-  KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && is_default_map && is_layout_left), reference_type>::type
-  operator()(const iType0 & i0 , const iType1 & i1 ) const 
-    { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 2 , ( m_map , i0 , i1 ) )
-      return m_map.m_handle[ i0 + m_map.m_offset.m_stride * i1 ];
-      //return m_map.reference(i0,i1); 
-    }
-
-  template< typename iType0 , typename iType1 >
-  KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && is_default_map && is_layout_right), reference_type>::type
-  operator()(const iType0 & i0 , const iType1 & i1 ) const 
-    { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 2 , ( m_map , i0 , i1 ) )
-      return m_map.m_handle[ i1 + m_map.m_offset.m_stride * i0 ];
-    }
-
-  template< typename iType0 , typename iType1 >
-  KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && is_default_map && is_layout_stride), reference_type>::type
-  operator()(const iType0 & i0 , const iType1 & i1 ) const 
-    { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 2 , ( m_map , i0 , i1 ) )
-      return m_map.m_handle[ i0 * m_map.m_offset.m_stride.S0 +
-                             i1 * m_map.m_offset.m_stride.S1 ];
     }
 
   template< typename iType0 , typename iType1 >
