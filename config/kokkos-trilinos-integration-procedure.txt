@@ -20,7 +20,7 @@ Summary:
 // -------------------------------------------------------------------------------- //
 
 Step 1:
-  1.1. Update kokkos develop branch
+  1.1. Update kokkos develop branch (NOT a fork)
 
          (From kokkos directory):
          git fetch --all
@@ -104,6 +104,8 @@ Step 4:
        git merge --no-ff origin/develop
 
   4.2. Update the tag in kokkos/config/master_history.txt
+       Tag description: MajorNumber.MinorNumber.WeeksSinceMinorNumberUpdate
+       Tag format: #.#.##
 
        # Prepend master_history.txt with 
        
