@@ -49,7 +49,7 @@
 #include <Kokkos_Core.hpp>
 #include <Cuda/Kokkos_Cuda_TaskPolicy.hpp>
 
-#if defined( KOKKOS_ENABLE_CUDA_TASK_POLICY )
+#if defined( KOKKOS_HAVE_CUDA ) && defined( KOKKOS_ENABLE_TASKPOLICY )
 
 // #define DETAILED_PRINT
 
@@ -172,6 +172,8 @@ if ( IS_TEAM_LEAD && 0 != team_task ) {
           member( kokkos_impl_cuda_shared_memory<void>()
                 , 16                      /* shared_begin */
                 , team_task->m_shmem_size /* shared size */
+                , 0                       /* scratch level 1 pointer */
+                , 0                       /* scratch level 1 size */
                 , 0                       /* league rank */
                 , 1                       /* league size */
                 );
@@ -926,5 +928,5 @@ void Task::clear_dependence()
 } /* namespace Kokkos */
 
 
-#endif  /* #if defined( KOKKOS_ENABLE_CUDA_TASK_POLICY ) */
+#endif  /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
 

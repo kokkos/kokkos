@@ -45,7 +45,7 @@
 #define KOKKOS_MEMORYPOOL_HPP
 
 #include <Kokkos_Core_fwd.hpp>
-#include <Kokkos_ExecPolicy.hpp>
+#include <Kokkos_Parallel.hpp>
 #include <Kokkos_Atomic.hpp>
 #include <impl/Kokkos_BitOps.hpp>
 #include <impl/Kokkos_Error.hpp>
@@ -816,6 +816,11 @@ public:
     printf( "\n" );
 #endif
   }
+
+  /// \brief  The actual block size allocated given alloc_size.
+  KOKKOS_INLINE_FUNCTION
+  size_t allocate_block_size( const size_t alloc_size ) const
+  { return size_t(1) << ( get_block_size_index( alloc_size ) + LG_MIN_BLOCK_SIZE); }
 
   /// \brief Allocate a chunk of memory.
   /// \param alloc_size Size of the requested allocated in number of bytes.

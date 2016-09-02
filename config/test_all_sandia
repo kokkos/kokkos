@@ -102,7 +102,6 @@ elif [ "$MACHINE" = "bowman" ]; then
     BASE_MODULE_LIST="<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
 
     OLD_INTEL_BUILD_LIST="Pthread,Serial,Pthread_Serial"
-    INTEL_BUILD_LIST="OpenMP,Pthread,Serial,OpenMP_Serial,Pthread_Serial"
 
     # Format: (compiler module-list build-list exe-name warning-flag)
     COMPILERS=("intel/16.2.181 $BASE_MODULE_LIST $OLD_INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
@@ -119,9 +118,11 @@ elif [ "$MACHINE" = "shepard" ]; then
 
     BASE_MODULE_LIST="<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
 
+    OLD_INTEL_BUILD_LIST="Pthread,Serial,Pthread_Serial"
+
     # Format: (compiler module-list build-list exe-name warning-flag)
-    COMPILERS=("intel/16.2.181 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-               "intel/17.0.042 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+    COMPILERS=("intel/16.2.181 $BASE_MODULE_LIST $OLD_INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+               "intel/17.0.064 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
     )
 
     ARCH_FLAG="--arch=HSW"
@@ -326,18 +327,19 @@ run_cmd() {
     fi
 }
 
-# report_and_log_test_results <SUCCESS> <DESC> <PHASE>
+# report_and_log_test_results <SUCCESS> <DESC> <COMMENT>
 report_and_log_test_result() {
     # Use sane var names
-    local success=$1; local desc=$2; local phase=$3;
+    local success=$1; local desc=$2; local comment=$3;
 
     if [ "$success" = "0" ]; then
 	echo "  PASSED $desc"
-        touch $PASSED_DIR/$desc
+        echo $comment > $PASSED_DIR/$desc
     else
+        # For failures, comment should be the name of the phase that failed
 	echo "  FAILED $desc" >&2
-        echo $phase > $FAILED_DIR/$desc
-        cat ${desc}.${phase}.log
+        echo $comment > $FAILED_DIR/$desc
+        cat ${desc}.${comment}.log
     fi
 }
 
@@ -395,6 +397,8 @@ single_build_and_test() {
 
     echo "  Starting job $desc"
 
+    local comment="no_comment"
+
     if [ "$TEST_SCRIPT" = "True" ]; then
         local rand=$[ 1 + $[ RANDOM % 10 ]]
         sleep $rand
@@ -403,13 +407,18 @@ single_build_and_test() {
         fi
     else
         run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$build $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" $extra_args &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
+        local -i build_start_time=$(date +%s)
         run_cmd make build-test >& ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
+        local -i build_end_time=$(date +%s)
+        comment="build_time=$(($build_end_time-$build_start_time))"
         if [[ "$BUILD_ONLY" == False ]]; then
             run_cmd make test >& ${desc}.test.log || { report_and_log_test_result 1 ${desc} test && return 0; }
+            local -i run_end_time=$(date +%s)
+            comment="$comment run_time=$(($run_end_time-$build_end_time))"
         fi
     fi
 
-    report_and_log_test_result 0 $desc
+    report_and_log_test_result 0 $desc "$comment"
 
     return 0
 }
@@ -487,7 +496,11 @@ wait_summarize_and_exit() {
     echo "PASSED TESTS"
     echo "#######################################################"
 
-    \ls -1 $PASSED_DIR | sort
+    local passed_test
+    for passed_test in $(\ls -1 $PASSED_DIR | sort)
+    do
+        echo $passed_test $(cat $PASSED_DIR/$passed_test)
+    done
 
     echo "#######################################################"
     echo "FAILED TESTS"
@@ -495,7 +508,7 @@ wait_summarize_and_exit() {
 
     local failed_test
     local -i rv=0
-    for failed_test in $(\ls -1 $FAILED_DIR)
+    for failed_test in $(\ls -1 $FAILED_DIR | sort)
     do
         echo $failed_test "("$(cat $FAILED_DIR/$failed_test)" failed)"
         rv=$rv+1

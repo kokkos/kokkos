@@ -81,23 +81,30 @@
 #include <TestTaskPolicy.hpp>
 #include <TestPolicyConstruction.hpp>
 
+#include <TestMDRange.hpp>
+
 //----------------------------------------------------------------------------
 
 class cuda : public ::testing::Test {
 protected:
-  static void SetUpTestCase()
+  static void SetUpTestCase();
+  static void TearDownTestCase();
+};
+
+void cuda::SetUpTestCase()
   {
     Kokkos::Cuda::print_configuration( std::cout );
     Kokkos::HostSpace::execution_space::initialize();
     Kokkos::Cuda::initialize( Kokkos::Cuda::SelectDevice(0) );
   }
-  static void TearDownTestCase()
+
+void cuda::TearDownTestCase()
   {
     Kokkos::Cuda::finalize();
     Kokkos::HostSpace::execution_space::finalize();
   }
-};
 
+//----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 namespace Test {
@@ -114,6 +121,12 @@ __global__
 void test_cuda_spaces_int_value( int * ptr )
 {
   if ( *ptr == 42 ) { *ptr = 2 * 42 ; }
+}
+
+TEST_F( cuda , md_range ) {
+  TestMDRange_2D< Kokkos::Cuda >::test_for2(100,100);
+
+  TestMDRange_3D< Kokkos::Cuda >::test_for3(100,100,100);
 }
 
 TEST_F( cuda , compiler_macros )

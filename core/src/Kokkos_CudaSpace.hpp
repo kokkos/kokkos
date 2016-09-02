@@ -54,10 +54,7 @@
 
 #include <Kokkos_HostSpace.hpp>
 
-#include <impl/Kokkos_AllocationTracker.hpp>
-
 #include <Cuda/Kokkos_Cuda_abort.hpp>
-#include <Cuda/Kokkos_Cuda_BasicAllocators.hpp>
 
 /*--------------------------------------------------------------------------*/
 
@@ -74,33 +71,6 @@ public:
   typedef Kokkos::Device<execution_space,memory_space> device_type;
 
   typedef unsigned int          size_type ;
-
-  /*--------------------------------*/
-
-#if ! KOKKOS_USING_EXP_VIEW
-
-  typedef Impl::CudaMallocAllocator allocator;
-
-  /** \brief  Allocate a contiguous block of memory.
-   *
-   *  The input label is associated with the block of memory.
-   *  The block of memory is tracked via reference counting where
-   *  allocation gives it a reference count of one.
-   */
-  static Impl::AllocationTracker allocate_and_track( const std::string & label, const size_t size );
-
-  /*--------------------------------*/
-  /** \brief  Cuda specific function to attached texture object to an allocation.
-   *          Output the texture object, base pointer, and offset from the input pointer.
-   */
-#if defined( __CUDACC__ )
-  static void texture_object_attach(  Impl::AllocationTracker const & tracker
-                                    , unsigned type_size
-                                    , ::cudaChannelFormatDesc const & desc
-                                   );
-#endif
-
-#endif /* #if ! KOKKOS_USING_EXP_VIEW */
 
   /*--------------------------------*/
 
@@ -188,33 +158,6 @@ public:
 
   /*--------------------------------*/
 
-#if ! KOKKOS_USING_EXP_VIEW
-
-  typedef Impl::CudaUVMAllocator allocator;
-
-  /** \brief  Allocate a contiguous block of memory.
-   *
-   *  The input label is associated with the block of memory.
-   *  The block of memory is tracked via reference counting where
-   *  allocation gives it a reference count of one.
-   */
-  static Impl::AllocationTracker allocate_and_track( const std::string & label, const size_t size );
-
-
-  /** \brief  Cuda specific function to attached texture object to an allocation.
-   *          Output the texture object, base pointer, and offset from the input pointer.
-   */
-#if defined( __CUDACC__ )
-  static void texture_object_attach(  Impl::AllocationTracker const & tracker
-                                    , unsigned type_size
-                                    , ::cudaChannelFormatDesc const & desc
-                                   );
-#endif
-
-#endif /* #if ! KOKKOS_USING_EXP_VIEW */
-
-  /*--------------------------------*/
-
   CudaUVMSpace();
   CudaUVMSpace( CudaUVMSpace && rhs ) = default ;
   CudaUVMSpace( const CudaUVMSpace & rhs ) = default ;
@@ -255,22 +198,6 @@ public:
   typedef CudaHostPinnedSpace         memory_space ;
   typedef Kokkos::Device<execution_space,memory_space> device_type;
   typedef unsigned int                size_type ;
-
-  /*--------------------------------*/
-
-#if ! KOKKOS_USING_EXP_VIEW
-
-  typedef Impl::CudaHostAllocator allocator ;
-
-  /** \brief  Allocate a contiguous block of memory.
-   *
-   *  The input label is associated with the block of memory.
-   *  The block of memory is tracked via reference counting where
-   *  allocation gives it a reference count of one.
-   */
-  static Impl::AllocationTracker allocate_and_track( const std::string & label, const size_t size );
-
-#endif /* #if ! KOKKOS_USING_EXP_VIEW */
 
   /*--------------------------------*/
 

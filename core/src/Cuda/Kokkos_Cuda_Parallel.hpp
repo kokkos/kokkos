@@ -122,6 +122,7 @@ public:
     }
     team_barrier();
     value = sh_val;
+    team_barrier();
   }
 
 #ifdef KOKKOS_HAVE_CXX11
@@ -658,9 +659,9 @@ public:
         Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelFor< Cuda > insufficient shared memory"));
       }
 
-      if ( m_team_size >
-           Kokkos::Impl::cuda_get_max_block_size< ParallelFor >
-                 ( arg_functor , arg_policy.vector_length(), arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) / arg_policy.vector_length()) {
+      if ( int(m_team_size) >
+           int(Kokkos::Impl::cuda_get_max_block_size< ParallelFor >
+                 ( arg_functor , arg_policy.vector_length(), arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) / arg_policy.vector_length())) {
         Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelFor< Cuda > requested too large team size."));
       }
     }
@@ -807,8 +808,10 @@ public:
 
      max_active_thread = (max_active_thread == 0)?blockDim.y:max_active_thread;
 
+    value_type init;
+    ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , &init);
      if(Impl::cuda_inter_block_reduction<ReducerTypeFwd,ValueJoin,WorkTag>
-            (value,ValueJoin(ReducerConditional::select(m_functor , m_reducer)),m_scratch_space,result,m_scratch_flags,max_active_thread)) {
+            (value,init,ValueJoin(ReducerConditional::select(m_functor , m_reducer)),m_scratch_space,result,m_scratch_flags,max_active_thread)) {
        const unsigned id = threadIdx.y*blockDim.x + threadIdx.x;
        if(id==0) {
          Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , (void*) &value );
@@ -1040,8 +1043,10 @@ public:
 
     pointer_type const result = (pointer_type) (m_unified_space ? m_unified_space : m_scratch_space) ;
 
+    value_type init;
+    ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , &init);
     if(Impl::cuda_inter_block_reduction<FunctorType,ValueJoin,WorkTag>
-           (value,ValueJoin(ReducerConditional::select(m_functor , m_reducer)),m_scratch_space,result,m_scratch_flags,blockDim.y)) {
+           (value,init,ValueJoin(ReducerConditional::select(m_functor , m_reducer)),m_scratch_space,result,m_scratch_flags,blockDim.y)) {
       const unsigned id = threadIdx.y*blockDim.x + threadIdx.x;
       if(id==0) {
         Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , (void*) &value );
@@ -1194,9 +1199,9 @@ public:
       Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > bad team size"));
     }
 
-    if ( m_team_size >
-         Kokkos::Impl::cuda_get_max_block_size< ParallelReduce >
-               ( arg_functor , arg_policy.vector_length(), arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) / arg_policy.vector_length()) {
+    if ( int(m_team_size) >
+         int(Kokkos::Impl::cuda_get_max_block_size< ParallelReduce >
+               ( arg_functor , arg_policy.vector_length(), arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) / arg_policy.vector_length())) {
       Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too large team size."));
     }
 

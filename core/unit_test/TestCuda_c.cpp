@@ -60,6 +60,7 @@
 
 #include <TestViewImpl.hpp>
 #include <TestAtomic.hpp>
+#include <TestAtomicOperations.hpp>
 
 #include <TestViewAPI.hpp>
 #include <TestViewSubview.hpp>
@@ -85,17 +86,8 @@
 
 class cuda : public ::testing::Test {
 protected:
-  static void SetUpTestCase()
-  {
-    Kokkos::Cuda::print_configuration( std::cout );
-    Kokkos::HostSpace::execution_space::initialize();
-    Kokkos::Cuda::initialize( Kokkos::Cuda::SelectDevice(0) );
-  }
-  static void TearDownTestCase()
-  {
-    Kokkos::Cuda::finalize();
-    Kokkos::HostSpace::execution_space::finalize();
-  }
+  static void SetUpTestCase();
+  static void TearDownTestCase();
 };
 
 //----------------------------------------------------------------------------
@@ -141,6 +133,75 @@ TEST_F( cuda, atomic )
   ASSERT_TRUE( ( TestAtomic::Loop<TestAtomic::SuperScalar<4> ,Kokkos::Cuda>(100,1) ) );
   ASSERT_TRUE( ( TestAtomic::Loop<TestAtomic::SuperScalar<4> ,Kokkos::Cuda>(100,2) ) );
   ASSERT_TRUE( ( TestAtomic::Loop<TestAtomic::SuperScalar<4> ,Kokkos::Cuda>(100,3) ) );
+
+}
+
+TEST_F( cuda , atomic_operations )
+{
+  const int start = 1; //Avoid zero for division
+  const int end = 11;
+  for (int i = start; i < end; ++i)
+  {
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Cuda>(start, end-i, 1 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Cuda>(start, end-i, 2 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Cuda>(start, end-i, 3 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Cuda>(start, end-i, 4 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Cuda>(start, end-i, 5 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Cuda>(start, end-i, 6 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Cuda>(start, end-i, 7 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Cuda>(start, end-i, 8 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Cuda>(start, end-i, 9 ) ) );
+
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Cuda>(start, end-i, 1 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Cuda>(start, end-i, 2 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Cuda>(start, end-i, 3 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Cuda>(start, end-i, 4 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Cuda>(start, end-i, 5 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Cuda>(start, end-i, 6 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Cuda>(start, end-i, 7 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Cuda>(start, end-i, 8 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Cuda>(start, end-i, 9 ) ) );
+
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Cuda>(start, end-i, 1 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Cuda>(start, end-i, 2 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Cuda>(start, end-i, 3 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Cuda>(start, end-i, 4 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Cuda>(start, end-i, 5 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Cuda>(start, end-i, 6 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Cuda>(start, end-i, 7 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Cuda>(start, end-i, 8 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Cuda>(start, end-i, 9 ) ) );
+
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Cuda>(start, end-i, 1 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Cuda>(start, end-i, 2 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Cuda>(start, end-i, 3 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Cuda>(start, end-i, 4 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Cuda>(start, end-i, 5 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Cuda>(start, end-i, 6 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Cuda>(start, end-i, 7 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Cuda>(start, end-i, 8 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Cuda>(start, end-i, 9 ) ) );
+
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Cuda>(start, end-i, 1 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Cuda>(start, end-i, 2 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Cuda>(start, end-i, 3 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Cuda>(start, end-i, 4 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Cuda>(start, end-i, 5 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Cuda>(start, end-i, 6 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Cuda>(start, end-i, 7 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Cuda>(start, end-i, 8 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Cuda>(start, end-i, 9 ) ) );
+
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<double,Kokkos::Cuda>(start, end-i, 1 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<double,Kokkos::Cuda>(start, end-i, 2 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<double,Kokkos::Cuda>(start, end-i, 3 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<double,Kokkos::Cuda>(start, end-i, 4 ) ) );
+
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<float,Kokkos::Cuda>(start, end-i, 1 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<float,Kokkos::Cuda>(start, end-i, 2 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<float,Kokkos::Cuda>(start, end-i, 3 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<float,Kokkos::Cuda>(start, end-i, 4 ) ) );
+  }
 
 }
 
@@ -249,13 +310,43 @@ TEST_F( cuda , team_vector )
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Cuda >(10) ) );
 }
 
+TEST_F( cuda, triple_nested_parallelism )
+{
+  TestTripleNestedReduce< double, Kokkos::Cuda >( 8192, 2048 , 32 , 32 );
+  TestTripleNestedReduce< double, Kokkos::Cuda >( 8192, 2048 , 32 , 16 );
+  TestTripleNestedReduce< double, Kokkos::Cuda >( 8192, 2048 , 16 , 16 );
+}
+
 }
 
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_ENABLE_CUDA_TASK_POLICY )
+#if defined( KOKKOS_ENABLE_TASKPOLICY )
 
-TEST_F( cuda , task_policy )
+TEST_F( cuda , task_fib )
+{
+  for ( int i = 0 ; i < 25 ; ++i ) {
+    TestTaskPolicy::TestFib< Kokkos::Cuda >::run(i, (i+1)*1000000 );
+  }
+}
+
+TEST_F( cuda , task_depend )
+{
+  for ( int i = 0 ; i < 25 ; ++i ) {
+    TestTaskPolicy::TestTaskDependence< Kokkos::Cuda >::run(i);
+  }
+}
+
+TEST_F( cuda , task_team )
+{
+  //TestTaskPolicy::TestTaskTeam< Kokkos::Cuda >::run(1000);
+  TestTaskPolicy::TestTaskTeam< Kokkos::Cuda >::run(104);
+  TestTaskPolicy::TestTaskTeamValue< Kokkos::Cuda >::run(1000);
+}
+
+//----------------------------------------------------------------------------
+
+TEST_F( cuda , old_task_policy )
 {
   TestTaskPolicy::test_task_dep< Kokkos::Cuda >( 10 );
 
@@ -269,16 +360,16 @@ TEST_F( cuda , task_policy )
   }
 }
 
-TEST_F( cuda , task_team )
+TEST_F( cuda , old_task_team )
 {
   TestTaskPolicy::test_task_team< Kokkos::Cuda >(1000);
 }
 
-TEST_F( cuda , task_latch )
+TEST_F( cuda , old_task_latch )
 {
   TestTaskPolicy::test_latch< Kokkos::Cuda >(10);
   TestTaskPolicy::test_latch< Kokkos::Cuda >(1000);
 }
 
-#endif /* #if defined( KOKKOS_ENABLE_CUDA_TASK_POLICY ) */
+#endif // #if defined( KOKKOS_ENABLE_TASKPOLICY )
 

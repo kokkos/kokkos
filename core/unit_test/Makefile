@@ -61,10 +61,6 @@ OBJ_HWLOC = TestHWLOC.o UnitTestMain.o gtest-all.o
 TARGETS += KokkosCore_UnitTest_HWLOC
 TEST_TARGETS += test-hwloc
 
-OBJ_ALLOCATIONTRACKER = TestAllocationTracker.o UnitTestMain.o gtest-all.o
-TARGETS += KokkosCore_UnitTest_AllocationTracker
-TEST_TARGETS += test-allocationtracker
-
 OBJ_DEFAULT = TestDefaultDeviceType.o TestDefaultDeviceType_a.o UnitTestMain.o gtest-all.o
 TARGETS += KokkosCore_UnitTest_Default
 TEST_TARGETS += test-default

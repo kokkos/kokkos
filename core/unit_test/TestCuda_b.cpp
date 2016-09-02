@@ -85,17 +85,8 @@
 
 class cuda : public ::testing::Test {
 protected:
-  static void SetUpTestCase()
-  {
-    Kokkos::Cuda::print_configuration( std::cout );
-    Kokkos::HostSpace::execution_space::initialize();
-    Kokkos::Cuda::initialize( Kokkos::Cuda::SelectDevice(0) );
-  }
-  static void TearDownTestCase()
-  {
-    Kokkos::Cuda::finalize();
-    Kokkos::HostSpace::execution_space::finalize();
-  }
+  static void SetUpTestCase();
+  static void TearDownTestCase();
 };
 
 //----------------------------------------------------------------------------
@@ -104,6 +95,12 @@ namespace Test {
 
 TEST_F( cuda, range_tag )
 {
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_for(3);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_reduce(3);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_scan(3);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(3);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(3);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_scan(3);
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_for(1000);
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_reduce(1000);
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_scan(1000);
@@ -115,6 +112,10 @@ TEST_F( cuda, range_tag )
 
 TEST_F( cuda, team_tag )
 {
+  TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_for(3);
+  TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_reduce(3);
+  TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(3);
+  TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(3);
   TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_for(1000);
   TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_reduce(1000);
   TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(1000);
@@ -126,6 +127,14 @@ TEST_F( cuda, reduce )
   TestReduce< long ,   Kokkos::Cuda >( 10000000 );
   TestReduce< double , Kokkos::Cuda >( 1000000 );
   TestReduce< int , Kokkos::Cuda >( 0 );
+}
+
+TEST_F( cuda , reducers )
+{
+  TestReducers<int, Kokkos::Cuda>::execute_integer();
+  TestReducers<size_t, Kokkos::Cuda>::execute_integer();
+  TestReducers<double, Kokkos::Cuda>::execute_float();
+  TestReducers<Kokkos::complex<double>, Kokkos::Cuda>::execute_basic();
 }
 
 TEST_F( cuda, reduce_team )

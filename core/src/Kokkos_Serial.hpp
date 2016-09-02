@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -50,6 +50,7 @@
 #include <cstddef>
 #include <iosfwd>
 #include <Kokkos_Parallel.hpp>
+#include <Kokkos_TaskPolicy.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_ScratchSpace.hpp>
@@ -57,6 +58,9 @@
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
+
+
+#include <KokkosExp_MDRangePolicy.hpp>
 
 #if defined( KOKKOS_HAVE_SERIAL )
 
@@ -446,7 +450,7 @@ namespace Kokkos {
 namespace Impl {
 
 template< class FunctorType , class ... Traits >
-class ParallelFor< FunctorType , 
+class ParallelFor< FunctorType ,
                    Kokkos::RangePolicy< Traits ... > ,
                    Kokkos::Serial
                  >
@@ -1099,6 +1103,10 @@ void single(const Impl::ThreadSingleStruct<Impl::SerialTeamMember>& , const Func
   lambda(val);
 }
 }
+
+//----------------------------------------------------------------------------
+
+#include <impl/Kokkos_Serial_Task.hpp>
 
 #endif // defined( KOKKOS_HAVE_SERIAL )
 #endif /* #define KOKKOS_SERIAL_HPP */

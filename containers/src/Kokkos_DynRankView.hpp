@@ -226,7 +226,7 @@ struct DynRankDimTraits {
   template < typename DynRankViewType , typename iType >
   void verify_dynrankview_rank ( iType N , const DynRankViewType &drv )
   {
-     if ( drv.rank() > N )
+    if ( static_cast<iType>(drv.rank()) > N )
        {
          Kokkos::abort( "Need at least rank arguments to the operator()" ); 
        }
