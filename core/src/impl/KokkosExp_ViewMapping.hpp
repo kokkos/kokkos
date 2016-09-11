@@ -2183,6 +2183,13 @@ struct ViewDataHandle {
   {
     return handle_type( arg_data_ptr );
   }
+
+  KOKKOS_INLINE_FUNCTION
+  static handle_type assign( handle_type const arg_data_ptr
+                           , size_t offset )
+  {
+    return handle_type( arg_data_ptr + offset );
+  } 
 };
 
 template< class Traits >
@@ -2205,6 +2212,14 @@ struct ViewDataHandle< Traits ,
                            , track_type const & /*arg_tracker*/ )
   {
     return handle_type( arg_data_ptr );
+  }
+
+  template<class SrcHandleType>
+  KOKKOS_INLINE_FUNCTION
+  static handle_type assign( const SrcHandleType& arg_handle
+                           , size_t offset )
+  {
+    return handle_type( arg_handle.ptr + offset );
   }
 };
 
@@ -2827,22 +2842,22 @@ public:
       typedef ViewMapping< DstTraits , void >  DstType ;
 
       typedef typename DstType::offset_type  dst_offset_type ;
-      typedef typename DstType::handle_type  dst_handle_type ;
 
       const SubviewExtents< SrcTraits::rank , rank >
         extents( src.m_offset.m_dim , args... );
 
       dst.m_offset = dst_offset_type( src.m_offset , extents );
-      dst.m_handle = dst_handle_type( src.m_handle +
-                                      src.m_offset( extents.domain_offset(0)
-                                                  , extents.domain_offset(1)
-                                                  , extents.domain_offset(2)
-                                                  , extents.domain_offset(3)
-                                                  , extents.domain_offset(4)
-                                                  , extents.domain_offset(5)
-                                                  , extents.domain_offset(6)
-                                                  , extents.domain_offset(7)
-                                                  ) );
+
+      dst.m_handle = ViewDataHandle< DstTraits >::assign(src.m_handle,
+          src.m_offset( extents.domain_offset(0)
+                      , extents.domain_offset(1)
+                      , extents.domain_offset(2)
+                      , extents.domain_offset(3)
+                      , extents.domain_offset(4)
+                      , extents.domain_offset(5)
+                      , extents.domain_offset(6)
+                      , extents.domain_offset(7)
+          ));
     }
 };
 
