@@ -235,6 +235,23 @@ TEST_F( threads, view_subview_right_3 ) {
   TestViewSubview::test_right_3< Kokkos::Threads >();
 }
 
+TEST_F( threads, view_subview_1d_assign ) {
+  TestViewSubview::test_1d_assign< Kokkos::Threads >();
+  TestViewSubview::test_1d_assign< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestViewSubview::test_1d_assign< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
+}
+
+TEST_F( threads, view_subview_2d_from_3d ) {
+  TestViewSubview::test_2d_subview_3d< Kokkos::Threads >();
+  TestViewSubview::test_2d_subview_3d< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestViewSubview::test_2d_subview_3d< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
+}
+
+TEST_F( threads, view_subview_2d_from_5d ) {
+  TestViewSubview::test_2d_subview_5d< Kokkos::Threads >();
+  TestViewSubview::test_2d_subview_5d< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestViewSubview::test_2d_subview_5d< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
+}
 
 TEST_F( threads, view_aggregate ) {
   TestViewAggregate< Kokkos::Threads >();

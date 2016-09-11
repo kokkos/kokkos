@@ -181,6 +181,24 @@ TEST_F( serial, view_subview_right_3 ) {
   TestViewSubview::test_right_3< Kokkos::Serial >();
 }
 
+TEST_F( serial, view_subview_1d_assign ) {
+  TestViewSubview::test_1d_assign< Kokkos::Serial >();
+  TestViewSubview::test_1d_assign< Kokkos::Serial , Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestViewSubview::test_1d_assign< Kokkos::Serial , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
+}
+
+TEST_F( serial, view_subview_2d_from_3d ) {
+  TestViewSubview::test_2d_subview_3d< Kokkos::Serial >();
+  TestViewSubview::test_2d_subview_3d< Kokkos::Serial , Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestViewSubview::test_2d_subview_3d< Kokkos::Serial , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
+}
+
+TEST_F( serial, view_subview_2d_from_5d ) {
+  TestViewSubview::test_2d_subview_5d< Kokkos::Serial >();
+  TestViewSubview::test_2d_subview_5d< Kokkos::Serial , Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestViewSubview::test_2d_subview_5d< Kokkos::Serial , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
+}
+
 TEST_F( serial , range_tag )
 {
   TestRange< Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >::test_for(1000);
