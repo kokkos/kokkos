@@ -73,6 +73,10 @@ IF (Kokkos_ENABLE_Pthread AND NOT TPL_ENABLE_Pthread)
   MESSAGE(FATAL_ERROR "You set Kokkos_ENABLE_Pthread=ON, but Trilinos' support for Pthread(s) is not enabled (TPL_ENABLE_Pthread=OFF).  This is not allowed.  Please enable Pthreads in Trilinos before attempting to enable Kokkos' support for Pthreads.")
 ENDIF ()
 
+IF (NOT TPL_ENABLE_Pthread)
+  ADD_DEFINITIONS(-DGTEST_HAS_PTHREAD=0)
+ENDIF()
+
 TRIBITS_ADD_OPTION_AND_DEFINE(
   Kokkos_ENABLE_OpenMP
   KOKKOS_HAVE_OPENMP
