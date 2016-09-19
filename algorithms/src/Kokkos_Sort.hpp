@@ -481,15 +481,11 @@ void sort(ViewType view, bool always_use_kokkos_sort = false) {
   typedef SortImpl::DefaultBinOp1D<ViewType> CompType;
   SortImpl::min_max<typename ViewType::non_const_value_type> val;
   parallel_reduce(view.dimension_0(),SortImpl::min_max_functor<ViewType>(view),val);
+  if(val.min == val.max) return;
   BinSort<ViewType, CompType> bin_sort(view,CompType(view.dimension_0()/2,val.min,val.max),true);
   bin_sort.create_permute_vector();
   bin_sort.sort(view);
 }
-
-/*template<class ViewType, class Comparator>
-void sort(ViewType view, Comparator comp, bool always_use_kokkos_sort = false) {
-
-}*/
 
 }
 
