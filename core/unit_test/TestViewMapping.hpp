@@ -804,6 +804,7 @@ void test_view_mapping()
   {
     typedef Kokkos::Experimental::View<int**,Space>  V ;
     typedef typename V::HostMirror  M ;
+    typedef typename Kokkos::Experimental::View<int**,Space>::array_layout layout_type;
 
     constexpr int N0 = 10 ;
     constexpr int N1 = 11 ;
@@ -825,6 +826,14 @@ void test_view_mapping()
       ASSERT_EQ( b(i0,i1) , c(i0,i1) );
 
     Kokkos::Experimental::resize( b , 5 , 6 );
+
+    for ( int i0 = 0 ; i0 < 5 ; ++i0 )
+    for ( int i1 = 0 ; i1 < 6 ; ++i1 ) {
+      int val = 1 + i0 + i1 * N0;
+      ASSERT_EQ( b(i0,i1) , c(i0,i1) );
+      ASSERT_EQ( b(i0,i1) , val );
+    }
+
     Kokkos::Experimental::realloc( c , 5 , 6 );
     Kokkos::Experimental::realloc( d , 5 , 6 );
 
@@ -834,6 +843,84 @@ void test_view_mapping()
     ASSERT_EQ( c.dimension_1() , 6 );
     ASSERT_EQ( d.dimension_0() , 5 );
     ASSERT_EQ( d.dimension_1() , 6 );
+
+    layout_type layout(7,8);
+    Kokkos::Experimental::resize( b , layout );
+    for ( int i0 = 0 ; i0 < 7 ; ++i0 )
+    for ( int i1 = 6 ; i1 < 8 ; ++i1 )
+      b(i0,i1) = 1 + i0 + i1 * N0 ;
+
+    for ( int i0 = 5 ; i0 < 7 ; ++i0 )
+    for ( int i1 = 0 ; i1 < 8 ; ++i1 )
+      b(i0,i1) = 1 + i0 + i1 * N0 ;
+
+    for ( int i0 = 0 ; i0 < 7 ; ++i0 )
+    for ( int i1 = 0 ; i1 < 8 ; ++i1 ) {
+       int val = 1 + i0 + i1 * N0;
+       ASSERT_EQ( b(i0,i1) , val );
+    }
+
+    Kokkos::Experimental::realloc( c , layout );
+    Kokkos::Experimental::realloc( d , layout );
+
+    ASSERT_EQ( b.dimension_0() , 7 );
+    ASSERT_EQ( b.dimension_1() , 8 );
+    ASSERT_EQ( c.dimension_0() , 7 );
+    ASSERT_EQ( c.dimension_1() , 8 );
+    ASSERT_EQ( d.dimension_0() , 7 );
+    ASSERT_EQ( d.dimension_1() , 8 );
+
+  }
+
+  {
+    typedef Kokkos::Experimental::View<int**,Kokkos::LayoutStride,Space>  V ;
+    typedef typename V::HostMirror  M ;
+    typedef typename Kokkos::Experimental::View<int**,Kokkos::LayoutStride,Space>::array_layout layout_type;
+
+    constexpr int N0 = 10 ;
+    constexpr int N1 = 11 ;
+
+    const int dimensions[] = {N0,N1};
+    const int order[] = {1,0};
+
+    V a("a",Kokkos::LayoutStride::order_dimensions(2,order,dimensions));
+    M b = Kokkos::Experimental::create_mirror(a);
+    M c = Kokkos::Experimental::create_mirror_view(a);
+    M d ;
+
+    for ( int i0 = 0 ; i0 < N0 ; ++i0 )
+    for ( int i1 = 0 ; i1 < N1 ; ++i1 )
+      b(i0,i1) = 1 + i0 + i1 * N0 ;
+
+    Kokkos::Experimental::deep_copy( a , b );
+    Kokkos::Experimental::deep_copy( c , a );
+
+    for ( int i0 = 0 ; i0 < N0 ; ++i0 )
+    for ( int i1 = 0 ; i1 < N1 ; ++i1 )
+      ASSERT_EQ( b(i0,i1) , c(i0,i1) );
+
+    const int dimensions2[] = {7,8};
+    const int order2[] = {1,0};
+    layout_type layout = layout_type::order_dimensions(2,order2,dimensions2);
+    Kokkos::Experimental::resize( b , layout );
+
+    for ( int i0 = 0 ; i0 < 7 ; ++i0 )
+    for ( int i1 = 0 ; i1 < 8 ; ++i1 ) {
+       int val = 1 + i0 + i1 * N0;
+       ASSERT_EQ( b(i0,i1) , c(i0,i1) );
+       ASSERT_EQ( b(i0,i1) , val );
+    }
+
+    Kokkos::Experimental::realloc( c , layout );
+    Kokkos::Experimental::realloc( d , layout );
+
+    ASSERT_EQ( b.dimension_0() , 7 );
+    ASSERT_EQ( b.dimension_1() , 8 );
+    ASSERT_EQ( c.dimension_0() , 7 );
+    ASSERT_EQ( c.dimension_1() , 8 );
+    ASSERT_EQ( d.dimension_0() , 7 );
+    ASSERT_EQ( d.dimension_1() , 8 );
+
   }
 
   {
