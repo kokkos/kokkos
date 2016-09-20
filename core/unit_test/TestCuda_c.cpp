@@ -252,6 +252,8 @@ TEST_F( cuda , scan )
 
 TEST_F( cuda , team_scan )
 {
+  TestScanTeam< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >( 0 );
+  TestScanTeam< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
   TestScanTeam< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >( 10 );
   TestScanTeam< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >( 10 );
   TestScanTeam< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >( 10000 );
