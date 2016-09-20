@@ -353,20 +353,11 @@ struct TestTaskTeam {
                               val += i;
                             }
                           );
-      Kokkos::parallel_for( Kokkos::TeamThreadRange(member,begin,end)
-                          , [&]( int i ) {
-                              parscan_check[i] = (i*(i-1)-begin*(begin-1))*0.5-parscan_result[i];
-                            }
-                          );
-
-
-      /*
       if ( member.team_rank() == 0 ) {
         for ( long i = begin ; i < end ; ++i ) {
           parscan_check[i] = (i*(i-1)-begin*(begin-1))*0.5-parscan_result[i];
         }
       }
-      */
 
       // Inclusive scan
       Kokkos::parallel_scan<long>( Kokkos::TeamThreadRange(member,begin,end)
@@ -375,19 +366,11 @@ struct TestTaskTeam {
                               if ( final ) { parscan_result[i] = val; }
                             }
                           );
-      Kokkos::parallel_for( Kokkos::TeamThreadRange(member,begin,end)
-                          , [&]( int i ) {
-                              parscan_check[i] += (i*(i+1)-begin*(begin-1))*0.5-parscan_result[i];
-                            }
-                          );
-
-      /*
       if ( member.team_rank() == 0 ) {
         for ( long i = begin ; i < end ; ++i ) {
           parscan_check[i] += (i*(i+1)-begin*(begin-1))*0.5-parscan_result[i];
         }
       }
-      */
       // ThreadVectorRange check
       /*
       long result = 0;
