@@ -1,84 +1,100 @@
-default:
+build:
+	mkdir -p 01_data_layouts
 	cd ./01_data_layouts; \
-	make -j 4
+	make build -j 4 -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/01_data_layouts/Makefile ${KOKKOS_OPTIONS}
+	mkdir -p 02_memory_traits
 	cd ./02_memory_traits; \
-	make -j 4
+	make build -j 4 -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/02_memory_traits/Makefile ${KOKKOS_OPTIONS}
+	mkdir -p 03_subviews
 	cd ./03_subviews; \
-	make -j 4
+	make build -j 4 -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/03_subviews/Makefile ${KOKKOS_OPTIONS}
+	mkdir -p 04_dualviews
 	cd ./04_dualviews; \
-	make -j 4
+	make build -j 4 -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/04_dualviews/Makefile ${KOKKOS_OPTIONS}
+	mkdir -p 05_NVIDIA_UVM
 	cd ./05_NVIDIA_UVM; \
-	make -j 4
-	cd ./06_AtomicViews; \
-	make -j 4
+	make build -j 4 -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/05_NVIDIA_UVM/Makefile ${KOKKOS_OPTIONS}
+	#mkdir -p 06_AtomicViews
+	#cd ./06_AtomicViews; \
+	#make build -j 4 -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/06_AtomicViews/Makefile ${KOKKOS_OPTIONS}
+	#mkdir -p 07_Overlapping_DeepCopy
+	#cd ./07_Overlapping_DeepCopy; \
+	#make build -j 4 -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/07_Overlapping_DeepCopy/Makefile ${KOKKOS_OPTIONS}
 
-openmp:
+build-insource:
 	cd ./01_data_layouts; \
-	make -j 4 KOKKOS_DEVICES=OpenMP
+	make build -j 4 ${KOKKOS_OPTIONS}
 	cd ./02_memory_traits; \
-	make -j 4 KOKKOS_DEVICES=OpenMP
+	make build -j 4 ${KOKKOS_OPTIONS}
 	cd ./03_subviews; \
-	make -j 4 KOKKOS_DEVICES=OpenMP
+	make build -j 4 ${KOKKOS_OPTIONS}
 	cd ./04_dualviews; \
-	make -j 4 KOKKOS_DEVICES=OpenMP
+	make build -j 4 ${KOKKOS_OPTIONS}
 	cd ./05_NVIDIA_UVM; \
-	make -j 4 KOKKOS_DEVICES=OpenMP
-	cd ./06_AtomicViews; \
-	make -j 4 KOKKOS_DEVICES=OpenMP
-
-pthreads:
+	make build -j 4 ${KOKKOS_OPTIONS}
+	#cd ./06_AtomicViews; \
+	#make build -j 4 ${KOKKOS_OPTIONS}
+	#cd ./07_Overlapping_DeepCopy; \
+	#make build -j 4 ${KOKKOS_OPTIONS}
+test:
 	cd ./01_data_layouts; \
-	make -j 4 KOKKOS_DEVICES=Pthreads
+	make test -j 4 -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/01_data_layouts/Makefile ${KOKKOS_OPTIONS}
 	cd ./02_memory_traits; \
-	make -j 4 KOKKOS_DEVICES=Pthreads
+	make test -j 4 -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/02_memory_traits/Makefile ${KOKKOS_OPTIONS}
 	cd ./03_subviews; \
-	make -j 4 KOKKOS_DEVICES=Pthreads
+	make test -j 4 -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/03_subviews/Makefile ${KOKKOS_OPTIONS}
 	cd ./04_dualviews; \
-	make -j 4 KOKKOS_DEVICES=Pthreads
+	make test -j 4 -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/04_dualviews/Makefile ${KOKKOS_OPTIONS}
 	cd ./05_NVIDIA_UVM; \
-	make -j 4 KOKKOS_DEVICES=Pthreads
-	cd ./06_AtomicViews; \
-	make -j 4 KOKKOS_DEVICES=Pthreads
+	make test -j 4 -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/05_NVIDIA_UVM/Makefile ${KOKKOS_OPTIONS}
+	#cd ./06_AtomicViews; \
+	#make test -j 4 -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/06_AtomicViews/Makefile ${KOKKOS_OPTIONS}
+	#cd ./07_Overlapping_DeepCopy; \
+	#make test -j 4 -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/07_Overlapping_DeepCopy/Makefile ${KOKKOS_OPTIONS}
 
-serial:
+test-insource:
 	cd ./01_data_layouts; \
-	make -j 4 KOKKOS_DEVICES=Serial
+	make test -j 4 ${KOKKOS_OPTIONS}
 	cd ./02_memory_traits; \
-	make -j 4 KOKKOS_DEVICES=Serial
+	make test -j 4 ${KOKKOS_OPTIONS}
 	cd ./03_subviews; \
-	make -j 4 KOKKOS_DEVICES=Serial
+	make test -j 4 ${KOKKOS_OPTIONS}
 	cd ./04_dualviews; \
-	make -j 4 KOKKOS_DEVICES=Serial
+	make test -j 4 ${KOKKOS_OPTIONS}
 	cd ./05_NVIDIA_UVM; \
-	make -j 4 KOKKOS_DEVICES=Serial
-	cd ./06_AtomicViews; \
-	make -j 4 KOKKOS_DEVICES=Serial
-
-cuda:
-	cd ./01_data_layouts; \
-	make -j 4 KOKKOS_DEVICES=Cuda,Serial
-	cd ./02_memory_traits; \
-	make -j 4 KOKKOS_DEVICES=Cuda,Serial
-	cd ./03_subviews; \
-	make -j 4 KOKKOS_DEVICES=Cuda,Serial
-	cd ./04_dualviews; \
-	make -j 4 KOKKOS_DEVICES=Cuda,Serial
-	cd ./05_NVIDIA_UVM; \
-	make -j 4 KOKKOS_DEVICES=Cuda,Serial
-	cd ./06_AtomicViews; \
-	make -j 4 KOKKOS_DEVICES=Cuda,Serial
-
+	make test -j 4 ${KOKKOS_OPTIONS}
+	#cd ./06_AtomicViews; \
+	#make test -j 4 ${KOKKOS_OPTIONS}
+	#cd ./07_Overlapping_DeepCopy; \
+	#make test -j 4 ${KOKKOS_OPTIONS}
 clean:
 	cd ./01_data_layouts; \
-	make clean
+	make clean -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/01_data_layouts/Makefile ${KOKKOS_OPTIONS}
 	cd ./02_memory_traits; \
-	make clean
+	make clean -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/02_memory_traits/Makefile ${KOKKOS_OPTIONS}
 	cd ./03_subviews; \
-	make clean
+	make clean -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/03_subviews/Makefile ${KOKKOS_OPTIONS}
 	cd ./04_dualviews; \
-	make clean
+	make clean -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/04_dualviews/Makefile ${KOKKOS_OPTIONS}
 	cd ./05_NVIDIA_UVM; \
-	make clean
-	cd ./06_AtomicViews; \
-	make clean
+	make clean -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/05_NVIDIA_UVM/Makefile ${KOKKOS_OPTIONS}
+	#cd ./06_AtomicViews; \
+	#make clean -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/06_AtomicViews/Makefile ${KOKKOS_OPTIONS}
+	#cd ./07_Overlapping_DeepCopy; \
+	#make clean -f ${KOKKOS_PATH}/example/tutorial/Advanced_Views/07_Overlapping_DeepCopy/Makefile ${KOKKOS_OPTIONS}
 
+clean-insource:
+	cd ./01_data_layouts; \
+	make clean ${KOKKOS_OPTIONS}
+	cd ./02_memory_traits; \
+	make clean ${KOKKOS_OPTIONS}
+	cd ./03_subviews; \
+	make clean ${KOKKOS_OPTIONS}
+	cd ./04_dualviews; \
+	make clean ${KOKKOS_OPTIONS}
+	cd ./05_NVIDIA_UVM; \
+	make clean ${KOKKOS_OPTIONS}
+	#cd ./06_AtomicViews; \
+	#make clean ${KOKKOS_OPTIONS}
+	#cd ./07_Overlapping_DeepCopy; \
+	#make clean ${KOKKOS_OPTIONS}

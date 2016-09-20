@@ -1,24 +1,22 @@
-default:
+build:
+	mkdir -p 01_random_numbers
 	cd ./01_random_numbers; \
-	make -j 4
+	make build -j 4 -f ${KOKKOS_PATH}/example/tutorial/Algorithms/01_random_numbers/Makefile ${KOKKOS_OPTIONS}
 
-openmp:
+build-insource:
 	cd ./01_random_numbers; \
-	make -j 4 KOKKOS_DEVICES=OpenMP
-
-pthreads:
+	make build -j 4 ${KOKKOS_OPTIONS}
+test:
 	cd ./01_random_numbers; \
-	make -j 4 KOKKOS_DEVICES=Pthreads
+	make test -j 4 -f ${KOKKOS_PATH}/example/tutorial/Algorithms/01_random_numbers/Makefile ${KOKKOS_OPTIONS}
 
-serial:
+test-insource:
 	cd ./01_random_numbers; \
-	make -j 4 KOKKOS_DEVICES=Serial
-
-cuda:
-	cd ./01_random_numbers; \
-	make -j 4 KOKKOS_DEVICES=Cuda,Serial
-
+	make test -j 4 ${KOKKOS_OPTIONS}
 clean:
 	cd ./01_random_numbers; \
-	make clean
+	make clean -f ${KOKKOS_PATH}/example/tutorial/Algorithms/01_random_numbers/Makefile ${KOKKOS_OPTIONS}
 
+clean-insource:
+	cd ./01_random_numbers; \
+	make clean ${KOKKOS_OPTIONS}
