@@ -173,6 +173,16 @@ TeamThreadRange
   return Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::OpenMP > >(thread,start,end);
 }
 
+template<typename iType>
+KOKKOS_INLINE_FUNCTION
+Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >
+ThreadVectorRange
+  ( Impl::TaskExec< Kokkos::OpenMP > & thread
+  , const iType & count )
+{
+  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >(thread,count);
+}
+
 /** \brief  Inter-thread parallel_for. Executes lambda(iType i) for each i=0..N-1.
  *
  * The range i=0..N-1 is mapped to all threads of the the calling thread team.

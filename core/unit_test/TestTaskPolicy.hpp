@@ -344,7 +344,6 @@ struct TestTaskTeam {
                           , [&]( int i ) { parreduce_check[i] += expected-tot ; }
                           );
 
-#if 0
       // test parallel_scan
 
       // Exclusive scan
@@ -354,7 +353,6 @@ struct TestTaskTeam {
                               val += i;
                             }
                           );
-
       if ( member.team_rank() == 0 ) {
         for ( long i = begin ; i < end ; ++i ) {
           parscan_check[i] = (i*(i-1)-begin*(begin-1))*0.5-parscan_result[i];
@@ -368,14 +366,30 @@ struct TestTaskTeam {
                               if ( final ) { parscan_result[i] = val; }
                             }
                           );
-
       if ( member.team_rank() == 0 ) {
         for ( long i = begin ; i < end ; ++i ) {
           parscan_check[i] += (i*(i+1)-begin*(begin-1))*0.5-parscan_result[i];
         }
       }
-#endif
-
+      // ThreadVectorRange check
+      /*
+      long result = 0;
+      expected = (begin+end-1)*(end-begin)*0.5;
+      Kokkos::parallel_reduce( Kokkos::TeamThreadRange( member , 0 , 1 )
+                             , [&] ( const int i , long & outerUpdate ) {
+                                 long sum_j = 0.0;
+                                 Kokkos::parallel_reduce( Kokkos::ThreadVectorRange( member , end - begin )
+                                                        , [&] ( const int j , long &innerUpdate ) {
+                                                            innerUpdate += begin+j;
+                                                          } , sum_j );
+                                 outerUpdate += sum_j ;
+                               } , result );
+      Kokkos::parallel_for( Kokkos::TeamThreadRange(member,begin,end)
+                          , [&]( int i ) {
+                              parreduce_check[i] += result-expected ;
+                            }
+                          );
+      */
     }
 
   static void run( long n )
@@ -426,7 +440,7 @@ struct TestTaskTeam {
         if ( host_parreduce_check(i) != 0 ) {
           std::cerr << "TestTaskTeam::run ERROR parallel_reduce check(" << i << ") = "
                     << host_parreduce_check(i) << " != 0" << std::endl ;
-        } //TODO
+        }
         if ( host_parscan_check(i) != 0 ) {
           std::cerr << "TestTaskTeam::run ERROR parallel_scan check(" << i << ") = "
                     << host_parscan_check(i) << " != 0" << std::endl ;
