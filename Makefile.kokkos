@@ -110,7 +110,7 @@ KOKKOS_INTERNAL_USE_ARCH_NVIDIA := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_AR
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_KEPLER32)  \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_KEPLER35)  \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_KEPLER37)  \
-                                                      + $(KOKKOS_INTERNAL_USE_ARCH_Pascal61)  \
+                                                      + $(KOKKOS_INTERNAL_USE_ARCH_PASCAL61)  \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL50) \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL52) \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL53) | bc))
