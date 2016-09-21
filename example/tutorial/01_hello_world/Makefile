@@ -6,7 +6,7 @@ default: build
 	echo "Start Build"
 
 ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
-CXX = ${KOKKOS_PATH}/config/nvcc_wrapper}
+CXX = ${KOKKOS_PATH}/config/nvcc_wrapper
 CXXFLAGS = -O3
 LINK = ${CXX}
 LINKFLAGS = 
@@ -44,4 +44,4 @@ clean: kokkos-clean
 # Compilation rules
 
 %.o:%.cpp $(KOKKOS_CPP_DEPENDS)
-	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) $(EXTRA_INC) -c $< -o $(notdir $@) -o $(notdir $@)
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) $(EXTRA_INC) -c $< -o $(notdir $@)

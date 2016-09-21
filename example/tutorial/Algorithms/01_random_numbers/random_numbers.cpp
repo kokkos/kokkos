@@ -71,11 +71,13 @@ typedef Kokkos::HostSpace::execution_space DefaultHostType;
 template<class GeneratorPool>
 struct generate_random {
 
-  // The GeneratorPool
-  GeneratorPool rand_pool;
 
   // Output View for the random numbers
   Kokkos::View<uint64_t*> vals;
+  
+  // The GeneratorPool
+  GeneratorPool rand_pool;
+  
   int samples;
 
   // Initialize all members

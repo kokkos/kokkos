@@ -6,7 +6,7 @@ default: build
 	echo "Start Build"
 
 ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
-CXX = ${KOKKOS_PATH}/config/nvcc_wrapper}
+CXX = ${KOKKOS_PATH}/config/nvcc_wrapper
 CXXFLAGS = -O3 --default-stream per-thread 
 LINK = ${CXX}
 LINKFLAGS = 

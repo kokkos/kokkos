@@ -6,7 +6,7 @@ default: build
 	echo "Start Build"
 
 ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
-CXX = ${KOKKOS_PATH}/config/nvcc_wrapper}
+CXX = ${KOKKOS_PATH}/config/nvcc_wrapper
 CXXFLAGS = -O3
 LINK = ${CXX}
 LINKFLAGS = 
@@ -22,6 +22,8 @@ EXE = 05_NVIDIA_UVM.host
 KOKKOS_DEVICES = "OpenMP"
 KOKKOS_ARCH = "SNB"
 endif
+
+KOKKOS_CUDA_OPTIONS += force_uvm
 
 DEPFLAGS = -M
 

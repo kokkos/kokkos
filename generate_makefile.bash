@@ -282,13 +282,13 @@ echo -e "\tmake -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_OPTIONS} clean"
 echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > example/tutorial/Makefile
 echo "" >> example/tutorial/Makefile
 echo "build:" >> example/tutorial/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_OPTIONS=${KOKKOS_OPTIONS} build">> example/tutorial/Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_OPTIONS='${KOKKOS_OPTIONS}' KOKKOS_PATH=${KOKKOS_PATH} build">> example/tutorial/Makefile
 echo "" >> example/tutorial/Makefile
 echo "test: build" >> example/tutorial/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_OPTIONS=${KOKKOS_OPTIONS} test" >> example/tutorial/Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_OPTIONS='${KOKKOS_OPTIONS}' KOKKOS_PATH=${KOKKOS_PATH} test" >> example/tutorial/Makefile
 echo "" >> example/tutorial/Makefile
 echo "clean:" >> example/tutorial/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_OPTIONS=${KOKKOS_OPTIONS} clean" >> example/tutorial/Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_OPTIONS='${KOKKOS_OPTIONS}' KOKKOS_PATH=${KOKKOS_PATH} clean" >> example/tutorial/Makefile
 
 
 if [ ${#KOKKOS_ENABLE_EXAMPLE_ICHOL} -gt 0 ]; then
