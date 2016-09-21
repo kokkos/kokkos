@@ -67,6 +67,7 @@ TaskQueue< ExecSpace >::TaskQueue
             , arg_memory_pool_superblock_capacity_log2 )
   , m_ready()
   , m_accum_alloc(0)
+  , m_count_alloc(0)
   , m_max_alloc(0)
   , m_ready_count(0)
 {
