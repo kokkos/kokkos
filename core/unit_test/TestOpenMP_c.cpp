@@ -146,6 +146,7 @@ TEST_F( openmp , view_aggregate )
 TEST_F( openmp , scan )
 {
   TestScan< Kokkos::OpenMP >::test_range( 1 , 1000 );
+  TestScan< Kokkos::OpenMP >( 0 );
   TestScan< Kokkos::OpenMP >( 1000000 );
   TestScan< Kokkos::OpenMP >( 10000000 );
   Kokkos::OpenMP::fence();
@@ -154,6 +155,8 @@ TEST_F( openmp , scan )
 
 TEST_F( openmp , team_scan )
 {
+  TestScanTeam< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >( 0 );
+  TestScanTeam< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
   TestScanTeam< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >( 10 );
   TestScanTeam< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Dynamic> >( 10 );
   TestScanTeam< Kokkos::OpenMP , Kokkos::Schedule<Kokkos::Static> >( 10000 );

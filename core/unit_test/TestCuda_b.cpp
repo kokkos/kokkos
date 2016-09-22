@@ -95,6 +95,13 @@ namespace Test {
 
 TEST_F( cuda, range_tag )
 {
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_for(0);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_reduce(0);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_scan(0);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(0);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(0);
+  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_scan(0);
+
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_for(3);
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_reduce(3);
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_scan(3);
@@ -112,6 +119,11 @@ TEST_F( cuda, range_tag )
 
 TEST_F( cuda, team_tag )
 {
+  TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_for(0);
+  TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_reduce(0);
+  TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(0);
+  TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(0);
+
   TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_for(3);
   TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_reduce(3);
   TestTeamPolicy< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(3);
@@ -139,6 +151,8 @@ TEST_F( cuda , reducers )
 
 TEST_F( cuda, reduce_team )
 {
+  TestReduceTeam< long ,   Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >( 0 );
+  TestReduceTeam< long ,   Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
   TestReduceTeam< long ,   Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >( 3 );
   TestReduceTeam< long ,   Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >( 3 );
   TestReduceTeam< long ,   Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >( 100000 );
@@ -178,12 +192,16 @@ TEST_F( cuda, multi_level_scratch) {
 
 TEST_F( cuda, reduce_dynamic )
 {
+  TestReduceDynamic< long ,   Kokkos::Cuda >( 0 );
+  TestReduceDynamic< double , Kokkos::Cuda >( 0 );
   TestReduceDynamic< long ,   Kokkos::Cuda >( 10000000 );
   TestReduceDynamic< double , Kokkos::Cuda >( 1000000 );
 }
 
 TEST_F( cuda, reduce_dynamic_view )
 {
+  TestReduceDynamicView< long ,   Kokkos::Cuda >( 0 );
+  TestReduceDynamicView< double , Kokkos::Cuda >( 0 );
   TestReduceDynamicView< long ,   Kokkos::Cuda >( 10000000 );
   TestReduceDynamicView< double , Kokkos::Cuda >( 1000000 );
 }

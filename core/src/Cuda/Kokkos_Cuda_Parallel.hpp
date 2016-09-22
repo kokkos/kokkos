@@ -1058,29 +1058,37 @@ public:
   inline
   void execute()
     {
-      const int block_count = UseShflReduction? std::min( m_league_size , size_type(1024) )
-                                               :std::min( m_league_size , m_team_size );
+      const int nwork = m_league_size * m_team_size ;
+      if ( nwork ) {
+        const int block_count = UseShflReduction? std::min( m_league_size , size_type(1024) )
+          :std::min( m_league_size , m_team_size );
 
-      m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_count );
-      m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
-      m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) );
+        m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_count );
+        m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
+        m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) );
 
-      const dim3 block( m_vector_size , m_team_size , 1 );
-      const dim3 grid( block_count , 1 , 1 );
-      const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size ;
+        const dim3 block( m_vector_size , m_team_size , 1 );
+        const dim3 grid( block_count , 1 , 1 );
+        const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size ;
 
-      CudaParallelLaunch< ParallelReduce >( *this, grid, block, shmem_size_total ); // copy to device and execute
+        CudaParallelLaunch< ParallelReduce >( *this, grid, block, shmem_size_total ); // copy to device and execute
 
-      Cuda::fence();
+        Cuda::fence();
 
-      if ( m_result_ptr ) {
-        if ( m_unified_space ) {
-          const int count = ValueTraits::value_count( ReducerConditional::select(m_functor , m_reducer) );
-          for ( int i = 0 ; i < count ; ++i ) { m_result_ptr[i] = pointer_type(m_unified_space)[i] ; }
+        if ( m_result_ptr ) {
+          if ( m_unified_space ) {
+            const int count = ValueTraits::value_count( ReducerConditional::select(m_functor , m_reducer) );
+            for ( int i = 0 ; i < count ; ++i ) { m_result_ptr[i] = pointer_type(m_unified_space)[i] ; }
+          }
+          else {
+            const int size = ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) );
+            DeepCopy<HostSpace,CudaSpace>( m_result_ptr, m_scratch_space, size );
+          }
         }
-        else {
-          const int size = ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) );
-          DeepCopy<HostSpace,CudaSpace>( m_result_ptr, m_scratch_space, size );
+      }
+      else {
+        if (m_result_ptr) {
+          ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , m_result_ptr );
         }
       }
     }
