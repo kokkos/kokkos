@@ -285,9 +285,9 @@ TEST_F( threads , range_tag )
 
 TEST_F( threads , team_tag )
 {
-//  TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_for(0); //seg fault 11
+  TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_for(0);
   TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_reduce(0);
-//  TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(0); //seg fault 11
+  TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(0);
   TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(0);
 
   TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_for(2);
@@ -298,6 +298,7 @@ TEST_F( threads , team_tag )
   TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_reduce(1000);
   TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(1000);
   TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(1000);
+
 }
 
 TEST_F( threads, long_reduce) {

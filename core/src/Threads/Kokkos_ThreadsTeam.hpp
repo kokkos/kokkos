@@ -406,6 +406,8 @@ public:
           m_exec->barrier();
         }
       }
+      else
+      { m_invalid_thread = 1; }
     }
 
   ThreadsExecTeamMember()
