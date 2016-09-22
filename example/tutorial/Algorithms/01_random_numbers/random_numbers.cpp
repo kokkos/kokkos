@@ -141,8 +141,8 @@ int main(int argc, char* args[]) {
   Kokkos::fence();
   double time_1024 = timer.seconds();
 
-  printf("#Time XorShift64*:   %lf %lf\n",time_64,1.0e-9*samples*size/time_64 );
-  printf("#Time XorShift1024*: %lf %lf\n",time_1024,1.0e-9*samples*size/time_1024 );
+  printf("#Time XorShift64*:   %e %e\n",time_64,1.0e-9*samples*size/time_64 );
+  printf("#Time XorShift1024*: %e %e\n",time_1024,1.0e-9*samples*size/time_1024 );
 
   Kokkos::deep_copy(vals.h_view,vals.d_view);
 

@@ -130,8 +130,8 @@ int main(int narg, char* arg[]) {
 
 
 
-  printf("Device Time with Sync: %lf without Sync: %lf \n",sec1_dev,sec2_dev);
-  printf("Host   Time with Sync: %lf without Sync: %lf \n",sec1_host,sec2_host);
+  printf("Device Time with Sync: %e without Sync: %e \n",sec1_dev,sec2_dev);
+  printf("Host   Time with Sync: %e without Sync: %e \n",sec1_host,sec2_host);
 
   Kokkos::finalize();
 }

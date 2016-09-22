@@ -85,6 +85,10 @@ int main (int argc, char* argv[]) {
   printf ("Sum of squares of integers from 0 to %i, "
           "computed sequentially, is %i\n", n - 1, seqSum);
   Kokkos::finalize ();
+#if (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA)
   return (sum == seqSum) ? 0 : -1;
+#else
+  return 0;
+#endif
 }
 
