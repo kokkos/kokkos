@@ -803,7 +803,7 @@ void test_2d_subview_3d_impl_layout() {
 }
 
 template<class Space, class Type, class TypeSub,class LayoutSub, class Layout, class LayoutOrg, class MemTraits>
-void test_2d_subview_5d_impl_type() {
+void test_3d_subview_5d_impl_type() {
   Kokkos::View<int*****,LayoutOrg,Space> a_org("A",N0,N1,N2,N3,N4);
   Kokkos::View<Type,Layout,Space,MemTraits> a(a_org);
   for(int i0=0; i0<N0; i0++)
@@ -823,66 +823,66 @@ void test_2d_subview_5d_impl_type() {
 }
 
 template<class Space, class LayoutSub, class Layout, class LayoutOrg, class MemTraits>
-void test_2d_subview_5d_impl_layout() {
-  test_2d_subview_5d_impl_type<Space, int[N0][N1][N2][N3][N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int[N0][N1][N2][N3][N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int[N0][N1][N2][N3][N4],int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int[N0][N1][N2][N3][N4],int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+void test_3d_subview_5d_impl_layout() {
+  test_3d_subview_5d_impl_type<Space, int[N0][N1][N2][N3][N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int[N0][N1][N2][N3][N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int[N0][N1][N2][N3][N4],int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int[N0][N1][N2][N3][N4],int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_5d_impl_type<Space, int*   [N1][N2][N3][N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int*   [N1][N2][N3][N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int*   [N1][N2][N3][N4],int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int*   [N1][N2][N3][N4],int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int*   [N1][N2][N3][N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int*   [N1][N2][N3][N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int*   [N1][N2][N3][N4],int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int*   [N1][N2][N3][N4],int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_5d_impl_type<Space, int**      [N2][N3][N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int**      [N2][N3][N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int**      [N2][N3][N4],int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int**      [N2][N3][N4],int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int**      [N2][N3][N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int**      [N2][N3][N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int**      [N2][N3][N4],int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int**      [N2][N3][N4],int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_5d_impl_type<Space, int***         [N3][N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int***         [N3][N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int***         [N3][N4],int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int***         [N3][N4],int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int***         [N3][N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int***         [N3][N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int***         [N3][N4],int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int***         [N3][N4],int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_5d_impl_type<Space, int****            [N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int****            [N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int****            [N4],int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int****            [N4],int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int****            [N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int****            [N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int****            [N4],int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int****            [N4],int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_5d_impl_type<Space, int*****               ,int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int*****               ,int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int*****               ,int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, int*****               ,int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int*****               ,int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int*****               ,int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int*****               ,int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int*****               ,int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_5d_impl_type<Space, const int[N0][N1][N2][N3][N4],const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int[N0][N1][N2][N3][N4],const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int[N0][N1][N2][N3][N4],const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int[N0][N1][N2][N3][N4],const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int[N0][N1][N2][N3][N4],const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int[N0][N1][N2][N3][N4],const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int[N0][N1][N2][N3][N4],const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int[N0][N1][N2][N3][N4],const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_5d_impl_type<Space, const int*   [N1][N2][N3][N4],const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int*   [N1][N2][N3][N4],const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int*   [N1][N2][N3][N4],const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int*   [N1][N2][N3][N4],const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int*   [N1][N2][N3][N4],const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int*   [N1][N2][N3][N4],const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int*   [N1][N2][N3][N4],const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int*   [N1][N2][N3][N4],const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_5d_impl_type<Space, const int**      [N2][N3][N4],const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int**      [N2][N3][N4],const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int**      [N2][N3][N4],const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int**      [N2][N3][N4],const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int**      [N2][N3][N4],const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int**      [N2][N3][N4],const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int**      [N2][N3][N4],const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int**      [N2][N3][N4],const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_5d_impl_type<Space, const int***         [N3][N4],const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int***         [N3][N4],const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int***         [N3][N4],const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int***         [N3][N4],const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int***         [N3][N4],const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int***         [N3][N4],const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int***         [N3][N4],const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int***         [N3][N4],const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_5d_impl_type<Space, const int****            [N4],const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int****            [N4],const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int****            [N4],const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int****            [N4],const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int****            [N4],const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int****            [N4],const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int****            [N4],const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int****            [N4],const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_5d_impl_type<Space, const int*****               ,const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int*****               ,const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int*****               ,const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
-  test_2d_subview_5d_impl_type<Space, const int*****               ,const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int*****               ,const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int*****               ,const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int*****               ,const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int*****               ,const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 }
 }
 
@@ -909,11 +909,11 @@ void test_2d_subview_3d() {
 }
 
 template<class Space, class MemTraits = void>
-void test_2d_subview_5d() {
-  Impl::test_2d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutRight, Kokkos::LayoutRight, MemTraits>();
-  Impl::test_2d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutStride,Kokkos::LayoutRight, MemTraits>();
-  Impl::test_2d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutLeft,  Kokkos::LayoutLeft,  MemTraits>();
-  Impl::test_2d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutStride,Kokkos::LayoutLeft,  MemTraits>();
+void test_3d_subview_5d() {
+  Impl::test_3d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutRight, Kokkos::LayoutRight, MemTraits>();
+  Impl::test_3d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutStride,Kokkos::LayoutRight, MemTraits>();
+  Impl::test_3d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutLeft,  Kokkos::LayoutLeft,  MemTraits>();
+  Impl::test_3d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutStride,Kokkos::LayoutLeft,  MemTraits>();
 }
 
 }
