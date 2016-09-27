@@ -50,7 +50,6 @@
 //----------------------------------------------------------------------------
 
 #include <Cuda/Kokkos_Cuda_TaskPolicy.hpp>
-#include <impl/Kokkos_ViewTileLeft.hpp>
 #include <TestTile.hpp>
 
 //----------------------------------------------------------------------------

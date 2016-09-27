@@ -50,7 +50,6 @@
 
 #include <Kokkos_Core.hpp>
 
-#include <impl/Kokkos_ViewTileLeft.hpp>
 #include <TestTile.hpp>
 
 #include <impl/Kokkos_Serial_TaskPolicy.hpp>
@@ -193,7 +192,7 @@ TEST_F( serial, view_subview_2d_from_3d ) {
   TestViewSubview::test_2d_subview_3d< Kokkos::Serial , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
 }
 
-TEST_F( serial, view_subview_2d_from_5d ) {
+TEST_F( serial, view_subview_3d_from_5d ) {
   TestViewSubview::test_3d_subview_5d< Kokkos::Serial >();
   TestViewSubview::test_3d_subview_5d< Kokkos::Serial , Kokkos::MemoryTraits<Kokkos::Atomic> >();
   TestViewSubview::test_3d_subview_5d< Kokkos::Serial , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();

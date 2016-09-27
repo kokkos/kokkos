@@ -146,7 +146,7 @@ TEST_F( openmp, view_subview_2d_from_3d ) {
   TestViewSubview::test_2d_subview_3d< Kokkos::OpenMP , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
 }
 
-TEST_F( openmp, view_subview_2d_from_5d ) {
+TEST_F( openmp, view_subview_3d_from_5d ) {
   TestViewSubview::test_3d_subview_5d< Kokkos::OpenMP >();
   TestViewSubview::test_3d_subview_5d< Kokkos::OpenMP , Kokkos::MemoryTraits<Kokkos::Atomic> >();
   TestViewSubview::test_3d_subview_5d< Kokkos::OpenMP , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();

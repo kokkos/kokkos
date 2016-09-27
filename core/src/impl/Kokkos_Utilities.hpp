@@ -79,6 +79,75 @@ template<typename... Args>
 KOKKOS_INLINE_FUNCTION
 void expand_variadic(Args &&...) {}
 
+//----------------------------------------
+// C++14 integer sequence
+template< typename T , T ... Ints >
+struct integer_sequence {
+  using value_type = T ;
+  static constexpr std::size_t size() { return sizeof...(Ints); }
+};
+
+template< typename T , std::size_t N >
+struct make_integer_sequence_helper ;
+
+template< typename T , T N >
+using make_integer_sequence =
+  typename make_integer_sequence_helper<T,N>::type ;
+
+
+template< typename T >
+struct make_integer_sequence_helper< T , 0 >
+{ using type = integer_sequence<T> ; };
+
+template< typename T >
+struct make_integer_sequence_helper< T , 1 >
+{ using type = integer_sequence<T,0> ; };
+
+template< typename T >
+struct make_integer_sequence_helper< T , 2 >
+{ using type = integer_sequence<T,0,1> ; };
+
+template< typename T >
+struct make_integer_sequence_helper< T , 3 >
+{ using type = integer_sequence<T,0,1,2> ; };
+
+template< typename T >
+struct make_integer_sequence_helper< T , 4 >
+{ using type = integer_sequence<T,0,1,2,3> ; };
+
+template< typename T >
+struct make_integer_sequence_helper< T , 5 >
+{ using type = integer_sequence<T,0,1,2,3,4> ; };
+
+template< typename T >
+struct make_integer_sequence_helper< T , 6 >
+{ using type = integer_sequence<T,0,1,2,3,4,5> ; };
+
+template< typename T >
+struct make_integer_sequence_helper< T , 7 >
+{ using type = integer_sequence<T,0,1,2,3,4,5,6> ; };
+
+template< typename T >
+struct make_integer_sequence_helper< T , 8 >
+{ using type = integer_sequence<T,0,1,2,3,4,5,6,7> ; };
+
+template< typename X , typename Y >
+struct make_integer_sequence_concat ;
+
+template< typename T , T ... x , T ... y >
+struct make_integer_sequence_concat< integer_sequence<T,x...>
+                                   , integer_sequence<T,y...> >
+{ using type = integer_sequence< T , x ... , (sizeof...(x)+y)... > ; };
+
+template< typename T , std::size_t N >
+struct make_integer_sequence_helper {
+  using type = typename make_integer_sequence_concat
+    < typename make_integer_sequence_helper< T , N/2 >::type
+    , typename make_integer_sequence_helper< T , N - N/2 >::type
+    >::type ;
+};
+
+//----------------------------------------
 
 }} // namespace Kokkos::Impl
 

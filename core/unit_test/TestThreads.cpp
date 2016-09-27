@@ -247,7 +247,7 @@ TEST_F( threads, view_subview_2d_from_3d ) {
   TestViewSubview::test_2d_subview_3d< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
 }
 
-TEST_F( threads, view_subview_2d_from_5d ) {
+TEST_F( threads, view_subview_3d_from_5d ) {
   TestViewSubview::test_3d_subview_5d< Kokkos::Threads >();
   TestViewSubview::test_3d_subview_5d< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::Atomic> >();
   TestViewSubview::test_3d_subview_5d< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();

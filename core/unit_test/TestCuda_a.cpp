@@ -50,7 +50,6 @@
 //----------------------------------------------------------------------------
 
 #include <Cuda/Kokkos_Cuda_TaskPolicy.hpp>
-#include <impl/Kokkos_ViewTileLeft.hpp>
 #include <TestTile.hpp>
 
 //----------------------------------------------------------------------------
@@ -179,7 +178,7 @@ TEST_F( cuda, view_subview_2d_from_3d ) {
   TestViewSubview::test_2d_subview_3d< Kokkos::CudaUVMSpace , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
 }
 
-TEST_F( cuda, view_subview_2d_from_5d ) {
+TEST_F( cuda, view_subview_3d_from_5d ) {
   TestViewSubview::test_3d_subview_5d< Kokkos::CudaUVMSpace >();
   TestViewSubview::test_3d_subview_5d< Kokkos::CudaUVMSpace , Kokkos::MemoryTraits<Kokkos::Atomic> >();
   TestViewSubview::test_3d_subview_5d< Kokkos::CudaUVMSpace , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
