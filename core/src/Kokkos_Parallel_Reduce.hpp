@@ -53,7 +53,8 @@ struct is_reducer_type {
 
 template<class T>
 struct is_reducer_type<T,typename std::enable_if<
-                       std::is_same<T,typename T::reducer_type>::value
+                       std::is_same<typename std::remove_cv<T>::type,
+                                    typename std::remove_cv<typename T::reducer_type>::type>::value
                       >::type> {
   enum { value = 1 };
 };
@@ -1124,7 +1125,8 @@ void parallel_reduce(const PolicyType& policy,
                      typename Impl::enable_if<
                        Kokkos::Impl::is_execution_policy<PolicyType>::value
                      >::type * = 0) {
-  Impl::ParallelReduceAdaptor<PolicyType,FunctorType,const ReturnType>::execute("",policy,functor,return_value);
+  ReturnType return_value_impl = return_value;
+  Impl::ParallelReduceAdaptor<PolicyType,FunctorType,ReturnType>::execute("",policy,functor,return_value_impl);
 }
 
 template< class FunctorType, class ReturnType >
@@ -1133,8 +1135,8 @@ void parallel_reduce(const size_t& policy,
                      const FunctorType& functor,
                      const ReturnType& return_value) {
   typedef typename Impl::ParallelReducePolicyType<void,size_t,FunctorType>::policy_type policy_type;
-
-  Impl::ParallelReduceAdaptor<policy_type,FunctorType,const ReturnType>::execute("",policy_type(0,policy),functor,return_value);
+  ReturnType return_value_impl = return_value;
+  Impl::ParallelReduceAdaptor<policy_type,FunctorType,ReturnType>::execute("",policy_type(0,policy),functor,return_value_impl);
 }
 
 template< class FunctorType, class ReturnType >
@@ -1144,7 +1146,8 @@ void parallel_reduce(const std::string& label,
                      const FunctorType& functor,
                      const ReturnType& return_value) {
   typedef typename Impl::ParallelReducePolicyType<void,size_t,FunctorType>::policy_type policy_type;
-  Impl::ParallelReduceAdaptor<policy_type,FunctorType,const ReturnType>::execute(label,policy_type(0,policy),functor,return_value);
+  ReturnType return_value_impl = return_value;
+  Impl::ParallelReduceAdaptor<policy_type,FunctorType,ReturnType>::execute(label,policy_type(0,policy),functor,return_value_impl);
 }
 
 // No Return Argument

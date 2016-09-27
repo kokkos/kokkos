@@ -131,6 +131,10 @@ void test_1D_sort(unsigned int n,bool force_kokkos) {
   typedef Kokkos::View<KeyType*,ExecutionSpace> KeyViewType;
   KeyViewType keys("Keys",n);
 
+  // Test sorting array with all numbers equal
+  Kokkos::deep_copy(keys,KeyType(1));
+  Kokkos::sort(keys,force_kokkos);
+
   Kokkos::Random_XorShift64_Pool<ExecutionSpace> g(1931);
   Kokkos::fill_random(keys,g,Kokkos::Random_XorShift64_Pool<ExecutionSpace>::generator_type::MAX_URAND);
 

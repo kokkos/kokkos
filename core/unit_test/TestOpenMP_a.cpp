@@ -136,14 +136,20 @@ TEST_F( openmp, view_subview_right_3 ) {
 
 TEST_F( openmp, view_subview_1d_assign ) {
   TestViewSubview::test_1d_assign< Kokkos::OpenMP >();
+  TestViewSubview::test_1d_assign< Kokkos::OpenMP , Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestViewSubview::test_1d_assign< Kokkos::OpenMP , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
 }
 
 TEST_F( openmp, view_subview_2d_from_3d ) {
   TestViewSubview::test_2d_subview_3d< Kokkos::OpenMP >();
+  TestViewSubview::test_2d_subview_3d< Kokkos::OpenMP , Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestViewSubview::test_2d_subview_3d< Kokkos::OpenMP , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
 }
 
 TEST_F( openmp, view_subview_2d_from_5d ) {
-  TestViewSubview::test_2d_subview_5d< Kokkos::OpenMP >();
+  TestViewSubview::test_3d_subview_5d< Kokkos::OpenMP >();
+  TestViewSubview::test_3d_subview_5d< Kokkos::OpenMP , Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestViewSubview::test_3d_subview_5d< Kokkos::OpenMP , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
 }
 
 } // namespace test

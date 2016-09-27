@@ -376,9 +376,14 @@ public:
   void run_test( const size_t nteam )
   {
     typedef Kokkos::View< long int , Kokkos::HostSpace , Kokkos::MemoryUnmanaged >  result_type ;
-
     const unsigned REPEAT = 100000 ;
-    const unsigned Repeat = ( REPEAT + nteam - 1 ) / nteam ;
+    unsigned Repeat;
+    if ( nteam == 0 )
+    {
+      Repeat = 1;
+    } else {
+      Repeat = ( REPEAT + nteam - 1 ) / nteam ; //error here
+    }
 
     functor_type functor ;
 

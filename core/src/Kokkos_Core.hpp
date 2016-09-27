@@ -72,6 +72,7 @@
 #include <Kokkos_Vectorization.hpp>
 #include <Kokkos_Atomic.hpp>
 #include <Kokkos_hwloc.hpp>
+#include <Kokkos_Timer.hpp>
 
 #ifdef KOKKOS_HAVE_CXX11
 #include <Kokkos_Complex.hpp>

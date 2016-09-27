@@ -49,11 +49,16 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 0)
 endif
 endif
 
+
+# Check compiler
+
 KOKKOS_INTERNAL_COMPILER_INTEL := $(shell $(CXX) --version        2>&1 | grep "Intel Corporation" | wc -l)
 KOKKOS_INTERNAL_COMPILER_PGI   := $(shell $(CXX) --version        2>&1 | grep PGI   | wc -l)
 KOKKOS_INTERNAL_COMPILER_XL    := $(shell $(CXX) -qversion        2>&1 | grep XL    | wc -l)
 KOKKOS_INTERNAL_COMPILER_CRAY  := $(shell $(CXX) -craype-verbose  2>&1 | grep "CC-" | wc -l)
 KOKKOS_INTERNAL_OS_CYGWIN      := $(shell uname | grep CYGWIN | wc -l)
+
+KOKKOS_INTERNAL_COMPILER_NVCC_VERSION := $(shell nvcc --version 2>&1 | grep release | cut -d' ' -f5 | cut -d',' -f1 | tr -d .)
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
   KOKKOS_INTERNAL_OPENMP_FLAG := -mp 
@@ -110,7 +115,7 @@ KOKKOS_INTERNAL_USE_ARCH_NVIDIA := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_AR
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_KEPLER32)  \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_KEPLER35)  \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_KEPLER37)  \
-                                                      + $(KOKKOS_INTERNAL_USE_ARCH_Pascal61)  \
+                                                      + $(KOKKOS_INTERNAL_USE_ARCH_PASCAL61)  \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL50) \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL52) \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL53) | bc))
@@ -285,8 +290,12 @@ ifeq ($(KOKKOS_INTERNAL_CUDA_USE_RELOC), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_CUDA_USE_LAMBDA), 1)
-  tmp := $(shell echo "\#define KOKKOS_CUDA_USE_LAMBDA 1" >> KokkosCore_config.tmp )
-  KOKKOS_CXXFLAGS += -expt-extended-lambda
+  ifeq ($(shell test $(KOKKOS_INTERNAL_COMPILER_NVCC_VERSION) -gt 70; echo $$?),0)
+    tmp := $(shell echo "\#define KOKKOS_CUDA_USE_LAMBDA 1" >> KokkosCore_config.tmp )
+    KOKKOS_CXXFLAGS += -expt-extended-lambda
+  else
+    $(warning Warning: Cuda Lambda support was requested but NVCC version is too low. This requires NVCC for Cuda version 7.5 or higher. Disabling Lambda support now.)
+  endif
 endif
 
 #Add Architecture flags

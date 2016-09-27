@@ -47,9 +47,13 @@
 #include <cstdio>
 #include <cstdlib>
 
+#ifdef KOKKOS_HAVE_CUDA
 typedef Kokkos::View<double*> view_type;
 typedef Kokkos::View<int**> idx_type;
-
+#else
+typedef Kokkos::View<double*,Kokkos::HostSpace> view_type;
+typedef Kokkos::View<int**,Kokkos::HostSpace> idx_type;
+#endif
 
 template<class Device>
 struct localsum {
@@ -68,7 +72,7 @@ struct localsum {
   KOKKOS_INLINE_FUNCTION
   void operator() (int i) const {
     double tmp = 0.0;
-    for(int j = 0; j < idx.dimension_1(); j++) {
+    for(int j = 0; j < int(idx.dimension_1()); j++) {
       const double val = src(idx(i,j));
       tmp += val*val + 0.5*(idx.dimension_0()*val -idx.dimension_1()*val);
     }
@@ -90,7 +94,7 @@ int main(int narg, char* arg[]) {
 
   // When using UVM Cuda views can be accessed on the Host directly
   for(int i=0; i<size; i++) {
-    for(int j=0; j<idx.dimension_1(); j++)
+    for(int j=0; j<int(idx.dimension_1()); j++)
       idx(i,j) = (size + i + (rand()%500 - 250))%size;
   }
 
@@ -126,8 +130,8 @@ int main(int narg, char* arg[]) {
 
 
 
-  printf("Device Time with Sync: %lf without Sync: %lf \n",sec1_dev,sec2_dev);
-  printf("Host   Time with Sync: %lf without Sync: %lf \n",sec1_host,sec2_host);
+  printf("Device Time with Sync: %e without Sync: %e \n",sec1_dev,sec2_dev);
+  printf("Host   Time with Sync: %e without Sync: %e \n",sec1_host,sec2_host);
 
   Kokkos::finalize();
 }

@@ -235,6 +235,23 @@ TEST_F( threads, view_subview_right_3 ) {
   TestViewSubview::test_right_3< Kokkos::Threads >();
 }
 
+TEST_F( threads, view_subview_1d_assign ) {
+  TestViewSubview::test_1d_assign< Kokkos::Threads >();
+  TestViewSubview::test_1d_assign< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestViewSubview::test_1d_assign< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
+}
+
+TEST_F( threads, view_subview_2d_from_3d ) {
+  TestViewSubview::test_2d_subview_3d< Kokkos::Threads >();
+  TestViewSubview::test_2d_subview_3d< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestViewSubview::test_2d_subview_3d< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
+}
+
+TEST_F( threads, view_subview_2d_from_5d ) {
+  TestViewSubview::test_3d_subview_5d< Kokkos::Threads >();
+  TestViewSubview::test_3d_subview_5d< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestViewSubview::test_3d_subview_5d< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
+}
 
 TEST_F( threads, view_aggregate ) {
   TestViewAggregate< Kokkos::Threads >();
@@ -243,6 +260,13 @@ TEST_F( threads, view_aggregate ) {
 
 TEST_F( threads , range_tag )
 {
+  TestRange< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_for(0);
+  TestRange< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_reduce(0);
+  TestRange< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_scan(0);
+  TestRange< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(0);
+  TestRange< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(0);
+  TestRange< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >::test_scan(0);
+
   TestRange< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_for(2);
   TestRange< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_reduce(2);
   TestRange< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_scan(2);
@@ -261,6 +285,11 @@ TEST_F( threads , range_tag )
 
 TEST_F( threads , team_tag )
 {
+  TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_for(0);
+  TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_reduce(0);
+  TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(0);
+  TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(0);
+
   TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_for(2);
   TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_reduce(2);
   TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(2);
@@ -269,13 +298,16 @@ TEST_F( threads , team_tag )
   TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >::test_reduce(1000);
   TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(1000);
   TestTeamPolicy< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(1000);
+
 }
 
 TEST_F( threads, long_reduce) {
+  TestReduce< long ,   Kokkos::Threads >( 0 );
   TestReduce< long ,   Kokkos::Threads >( 1000000 );
 }
 
 TEST_F( threads, double_reduce) {
+  TestReduce< double ,   Kokkos::Threads >( 0 );
   TestReduce< double ,   Kokkos::Threads >( 1000000 );
 }
 
@@ -288,6 +320,8 @@ TEST_F( threads , reducers )
 }
 
 TEST_F( threads, team_long_reduce) {
+  TestReduceTeam< long ,   Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >( 0 );
+  TestReduceTeam< long ,   Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
   TestReduceTeam< long ,   Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >( 3 );
   TestReduceTeam< long ,   Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >( 3 );
   TestReduceTeam< long ,   Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >( 100000 );
@@ -295,6 +329,8 @@ TEST_F( threads, team_long_reduce) {
 }
 
 TEST_F( threads, team_double_reduce) {
+  TestReduceTeam< double ,   Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >( 0 );
+  TestReduceTeam< double ,   Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
   TestReduceTeam< double ,   Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >( 3 );
   TestReduceTeam< double ,   Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >( 3 );
   TestReduceTeam< double ,   Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >( 100000 );
@@ -302,14 +338,17 @@ TEST_F( threads, team_double_reduce) {
 }
 
 TEST_F( threads, long_reduce_dynamic ) {
+  TestReduceDynamic< long ,   Kokkos::Threads >( 0 );
   TestReduceDynamic< long ,   Kokkos::Threads >( 1000000 );
 }
 
 TEST_F( threads, double_reduce_dynamic ) {
+  TestReduceDynamic< double ,   Kokkos::Threads >( 0 );
   TestReduceDynamic< double ,   Kokkos::Threads >( 1000000 );
 }
 
 TEST_F( threads, long_reduce_dynamic_view ) {
+  TestReduceDynamicView< long ,   Kokkos::Threads >( 0 );
   TestReduceDynamicView< long ,   Kokkos::Threads >( 1000000 );
 }
 
@@ -502,6 +541,7 @@ TEST_F( threads , scan_small )
 TEST_F( threads , scan )
 {
   TestScan< Kokkos::Threads >::test_range( 1 , 1000 );
+  TestScan< Kokkos::Threads >( 0 );
   TestScan< Kokkos::Threads >( 1000000 );
   TestScan< Kokkos::Threads >( 10000000 );
   Kokkos::Threads::fence();
@@ -511,6 +551,8 @@ TEST_F( threads , scan )
 
 TEST_F( threads , team_scan )
 {
+  TestScanTeam< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >( 0 );
+  TestScanTeam< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
   TestScanTeam< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >( 10 );
   TestScanTeam< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >( 10 );
   TestScanTeam< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >( 10000 );

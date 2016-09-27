@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,28 +36,51 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
 
-#ifndef KOKKOS_IMPLWALLTIME_HPP
-#define KOKKOS_IMPLWALLTIME_HPP
+#ifndef KOKKOS_CORE_IMPL_UTILITIES_HPP
+#define KOKKOS_CORE_IMPL_UTILITIES_HPP
 
-#include <Kokkos_Timer.hpp>
+#include <Kokkos_Macros.hpp>
+#include <type_traits>
 
-namespace Kokkos {
-namespace Impl {
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
-/** \brief  Time since construction 
- *   Timer promoted from Impl to Kokkos ns
- *   This file included for backwards compatibility
- */
+namespace Kokkos { namespace Impl {
 
-  using Kokkos::Timer ;
+// same as std::forward
+// needed to allow perfect forwarding on the device
+template <typename T>
+KOKKOS_INLINE_FUNCTION
+constexpr
+T&& forward( typename std::remove_reference<T>::type& arg ) noexcept
+{ return static_cast<T&&>(arg); }
 
-} // namespace Impl
-} // namespace Kokkos
+template <typename T>
+KOKKOS_INLINE_FUNCTION
+constexpr
+T&& forward( typename std::remove_reference<T>::type&& arg ) noexcept
+{ return static_cast<T&&>(arg); }
 
-#endif /* #ifndef KOKKOS_IMPLWALLTIME_HPP */
+// same as std::move
+// needed to allowing moving on the device
+template <typename T>
+KOKKOS_INLINE_FUNCTION
+constexpr
+typename std::remove_reference<T>::type&& move( T&& arg ) noexcept
+{ return static_cast<typename std::remove_reference<T>::type&&>(arg); }
 
+// empty function to allow expanding a variadic argument pack
+template<typename... Args>
+KOKKOS_INLINE_FUNCTION
+void expand_variadic(Args &&...) {}
+
+
+}} // namespace Kokkos::Impl
+
+
+#endif //KOKKOS_CORE_IMPL_UTILITIES

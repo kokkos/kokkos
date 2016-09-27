@@ -2280,7 +2280,11 @@ namespace Experimental {
 /** \brief  Resize a view with copying old data to new data at the corresponding indices. */
 template< class T , class ... P >
 inline
-void resize( Kokkos::Experimental::View<T,P...> & v ,
+typename std::enable_if<
+  std::is_same<typename Kokkos::Experimental::View<T,P...>::array_layout,Kokkos::LayoutLeft>::value ||
+  std::is_same<typename Kokkos::Experimental::View<T,P...>::array_layout,Kokkos::LayoutRight>::value
+>::type
+resize( Kokkos::Experimental::View<T,P...> & v ,
              const size_t n0 = 0 ,
              const size_t n1 = 0 ,
              const size_t n2 = 0 ,
@@ -2304,7 +2308,28 @@ void resize( Kokkos::Experimental::View<T,P...> & v ,
 /** \brief  Resize a view with copying old data to new data at the corresponding indices. */
 template< class T , class ... P >
 inline
-void realloc( Kokkos::Experimental::View<T,P...> & v ,
+void resize(       Kokkos::Experimental::View<T,P...> & v ,
+    const typename Kokkos::Experimental::View<T,P...>::array_layout & layout)
+{
+  typedef Kokkos::Experimental::View<T,P...>  view_type ;
+
+  static_assert( Kokkos::Experimental::ViewTraits<T,P...>::is_managed , "Can only resize managed views" );
+
+  view_type v_resized( v.label(), layout );
+
+  Kokkos::Experimental::Impl::ViewRemap< view_type , view_type >( v_resized , v );
+
+  v = v_resized ;
+}
+
+/** \brief  Resize a view with discarding old data. */
+template< class T , class ... P >
+inline
+typename std::enable_if<
+  std::is_same<typename Kokkos::Experimental::View<T,P...>::array_layout,Kokkos::LayoutLeft>::value ||
+  std::is_same<typename Kokkos::Experimental::View<T,P...>::array_layout,Kokkos::LayoutRight>::value
+>::type
+realloc( Kokkos::Experimental::View<T,P...> & v ,
               const size_t n0 = 0 ,
               const size_t n1 = 0 ,
               const size_t n2 = 0 ,
@@ -2324,6 +2349,21 @@ void realloc( Kokkos::Experimental::View<T,P...> & v ,
   v = view_type( label, n0, n1, n2, n3, n4, n5, n6, n7 );
 }
 
+/** \brief  Resize a view with discarding old data. */
+template< class T , class ... P >
+inline
+void realloc(      Kokkos::Experimental::View<T,P...> & v ,
+    const typename Kokkos::Experimental::View<T,P...>::array_layout & layout)
+{
+  typedef Kokkos::Experimental::View<T,P...>  view_type ;
+
+  static_assert( Kokkos::Experimental::ViewTraits<T,P...>::is_managed , "Can only realloc managed views" );
+
+  const std::string label = v.label();
+
+  v = view_type(); // Deallocate first, if the only view to allocation
+  v = view_type( label, layout );
+}
 } /* namespace Experimental */
 } /* namespace Kokkos */
 

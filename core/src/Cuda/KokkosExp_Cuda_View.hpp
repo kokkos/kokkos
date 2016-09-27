@@ -186,6 +186,15 @@ struct CudaTextureFetch {
     , m_ptr( arg_ptr )
     , m_offset( record.attach_texture_object_offset( reinterpret_cast<const AliasType*>( arg_ptr ) ) )
     {}
+
+  // Texture object spans the entire allocation.
+  // This handle may view a subset of the allocation, so an offset is required.
+  KOKKOS_INLINE_FUNCTION
+  CudaTextureFetch( const CudaTextureFetch & rhs , size_t offset )
+    : m_obj(     rhs.m_obj )
+    , m_ptr(     rhs.m_ptr + offset)
+    , m_offset( offset + rhs.m_offset )
+    {}
 };
 
 #if defined( KOKKOS_CUDA_USE_LDG_INTRINSIC )
@@ -199,8 +208,12 @@ struct CudaLDGFetch {
   KOKKOS_INLINE_FUNCTION
   ValueType operator[]( const iType & i ) const
     {
-      AliasType v = __ldg(reinterpret_cast<AliasType*>(&m_ptr[i]));
+      #ifdef __CUDA_ARCH__
+      AliasType v = __ldg(reinterpret_cast<const AliasType*>(&m_ptr[i]));
       return  *(reinterpret_cast<ValueType*> (&v));
+      #else
+      return m_ptr[i];
+      #endif
     }
 
   KOKKOS_INLINE_FUNCTION
@@ -238,11 +251,17 @@ struct CudaLDGFetch {
 
   template< class CudaMemorySpace >
   inline explicit
-  CudaTextureFetch( const ValueType * const arg_ptr
+  CudaLDGFetch( const ValueType * const arg_ptr
                   , Kokkos::Experimental::Impl::SharedAllocationRecord< CudaMemorySpace , void > const &
                   )
-    : m_ptr( arg_data_ptr )
+    : m_ptr( arg_ptr )
     {}
+
+  KOKKOS_INLINE_FUNCTION
+  CudaLDGFetch( CudaLDGFetch const rhs ,size_t offset)
+    : m_ptr( rhs.m_ptr + offset )
+    {}
+
 };
 
 #endif
@@ -305,6 +324,12 @@ public:
   static handle_type const & assign( handle_type const & arg_handle , track_type const & /* arg_tracker */ )
     {
       return arg_handle ;
+    }
+
+  KOKKOS_INLINE_FUNCTION
+  static handle_type const assign( handle_type const & arg_handle , size_t offset )
+    {
+      return handle_type(arg_handle,offset) ;
     }
 
   KOKKOS_INLINE_FUNCTION

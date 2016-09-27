@@ -711,20 +711,21 @@ void test_Check3D5D(SubView a, View b, int i0, int i1, std::pair<int,int> range2
   ASSERT_TRUE( errors == 0 );
 }
 
-template<class Space, class LayoutSub, class Layout, class LayoutOrg>
+template<class Space, class LayoutSub, class Layout, class LayoutOrg, class MemTraits>
 void test_1d_assign_impl() {
 
   { //Breaks
-    Kokkos::View<int*,LayoutOrg,Space> a("A",N0);
+    Kokkos::View<int*,LayoutOrg,Space> a_org("A",N0);
+    Kokkos::View<int*,LayoutOrg,Space,MemTraits> a(a_org);
     Kokkos::fence();
     for(int i=0; i<N0; i++)
-      a(i) = i;
+      a_org(i) = i;
 
-    Kokkos::View<int[N0],Layout,Space> a1(a);
+    Kokkos::View<int[N0],Layout,Space,MemTraits> a1(a);
     Kokkos::fence();
     test_Check1D(a1,a,std::pair<int,int>(0,N0));
 
-    Kokkos::View<int[N0],LayoutSub,Space> a2(a1);
+    Kokkos::View<int[N0],LayoutSub,Space,MemTraits> a2(a1);
     Kokkos::fence();
     test_Check1D(a2,a,std::pair<int,int>(0,N0));
     a1 = a;
@@ -738,8 +739,8 @@ void test_1d_assign_impl() {
   }
 
   { // Works
-    Kokkos::View<int[N0],LayoutOrg,Space> a("A");
-    Kokkos::View<int*,Layout,Space> a1(a);
+    Kokkos::View<int[N0],LayoutOrg,Space,MemTraits> a("A");
+    Kokkos::View<int*,Layout,Space,MemTraits> a1(a);
     Kokkos::fence();
     test_Check1D(a1,a,std::pair<int,int>(0,N0));
     a1 = a;
@@ -748,125 +749,171 @@ void test_1d_assign_impl() {
   }
 }
 
-template<class Space, class Type, class TypeSub,class LayoutSub, class Layout, class LayoutOrg>
+template<class Space, class Type, class TypeSub,class LayoutSub, class Layout, class LayoutOrg,class MemTraits>
 void test_2d_subview_3d_impl_type() {
   Kokkos::View<int***,LayoutOrg,Space> a_org("A",N0,N1,N2);
-  Kokkos::View<Type,Layout,Space> a(a_org);
+  Kokkos::View<Type,Layout,Space,MemTraits> a(a_org);
   for(int i0=0; i0<N0; i0++)
     for(int i1=0; i1<N1; i1++)
       for(int i2=0; i2<N2; i2++)
-        a(i0,i1,i2) = i0*1000000+i1*1000+i2;
-  Kokkos::View<TypeSub,LayoutSub,Space> a1;
+        a_org(i0,i1,i2) = i0*1000000+i1*1000+i2;
+  Kokkos::View<TypeSub,LayoutSub,Space,MemTraits> a1;
   a1 = Kokkos::subview(a,3,Kokkos::ALL(),Kokkos::ALL());
   Kokkos::fence();
   test_Check2D3D(a1,a,3,std::pair<int,int>(0,N1),std::pair<int,int>(0,N2));
 
-  Kokkos::View<TypeSub,LayoutSub,Space> a2(a,3,Kokkos::ALL(),Kokkos::ALL());
+  Kokkos::View<TypeSub,LayoutSub,Space,MemTraits> a2(a,3,Kokkos::ALL(),Kokkos::ALL());
   Kokkos::fence();
   test_Check2D3D(a2,a,3,std::pair<int,int>(0,N1),std::pair<int,int>(0,N2));
 }
 
-template<class Space, class LayoutSub, class Layout, class LayoutOrg>
+template<class Space, class LayoutSub, class Layout, class LayoutOrg, class MemTraits>
 void test_2d_subview_3d_impl_layout() {
-  test_2d_subview_3d_impl_type<Space,int[N0][N1][N2],int[N1][N2],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_3d_impl_type<Space,int[N0][N1][N2],int*   [N2],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_3d_impl_type<Space,int[N0][N1][N2],int**      ,LayoutSub, Layout, LayoutOrg>();
+  test_2d_subview_3d_impl_type<Space,int[N0][N1][N2],int[N1][N2],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_2d_subview_3d_impl_type<Space,int[N0][N1][N2],int*   [N2],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_2d_subview_3d_impl_type<Space,int[N0][N1][N2],int**      ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_3d_impl_type<Space,int*   [N1][N2],int[N1][N2],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_3d_impl_type<Space,int*   [N1][N2],int*   [N2],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_3d_impl_type<Space,int*   [N1][N2],int**      ,LayoutSub, Layout, LayoutOrg>();
+  test_2d_subview_3d_impl_type<Space,int*   [N1][N2],int[N1][N2],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_2d_subview_3d_impl_type<Space,int*   [N1][N2],int*   [N2],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_2d_subview_3d_impl_type<Space,int*   [N1][N2],int**      ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_3d_impl_type<Space,int**      [N2],int[N1][N2],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_3d_impl_type<Space,int**      [N2],int*   [N2],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_3d_impl_type<Space,int**      [N2],int**      ,LayoutSub, Layout, LayoutOrg>();
+  test_2d_subview_3d_impl_type<Space,int**      [N2],int[N1][N2],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_2d_subview_3d_impl_type<Space,int**      [N2],int*   [N2],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_2d_subview_3d_impl_type<Space,int**      [N2],int**      ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_3d_impl_type<Space,int***         ,int[N1][N2],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_3d_impl_type<Space,int***         ,int*   [N2],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_3d_impl_type<Space,int***         ,int**      ,LayoutSub, Layout, LayoutOrg>();
+  test_2d_subview_3d_impl_type<Space,int***         ,int[N1][N2],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_2d_subview_3d_impl_type<Space,int***         ,int*   [N2],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_2d_subview_3d_impl_type<Space,int***         ,int**      ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+
+  test_2d_subview_3d_impl_type<Space,const int[N0][N1][N2],const int[N1][N2],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_2d_subview_3d_impl_type<Space,const int[N0][N1][N2],const int*   [N2],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_2d_subview_3d_impl_type<Space,const int[N0][N1][N2],const int**      ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+
+  test_2d_subview_3d_impl_type<Space,const int*   [N1][N2],const int[N1][N2],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_2d_subview_3d_impl_type<Space,const int*   [N1][N2],const int*   [N2],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_2d_subview_3d_impl_type<Space,const int*   [N1][N2],const int**      ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+
+  test_2d_subview_3d_impl_type<Space,const int**      [N2],const int[N1][N2],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_2d_subview_3d_impl_type<Space,const int**      [N2],const int*   [N2],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_2d_subview_3d_impl_type<Space,const int**      [N2],const int**      ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+
+  test_2d_subview_3d_impl_type<Space,const int***         ,const int[N1][N2],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_2d_subview_3d_impl_type<Space,const int***         ,const int*   [N2],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_2d_subview_3d_impl_type<Space,const int***         ,const int**      ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 }
 
-template<class Space, class Type, class TypeSub,class LayoutSub, class Layout, class LayoutOrg>
-void test_2d_subview_5d_impl_type() {
+template<class Space, class Type, class TypeSub,class LayoutSub, class Layout, class LayoutOrg, class MemTraits>
+void test_3d_subview_5d_impl_type() {
   Kokkos::View<int*****,LayoutOrg,Space> a_org("A",N0,N1,N2,N3,N4);
-  Kokkos::View<Type,Layout,Space> a(a_org);
+  Kokkos::View<Type,Layout,Space,MemTraits> a(a_org);
   for(int i0=0; i0<N0; i0++)
     for(int i1=0; i1<N1; i1++)
       for(int i2=0; i2<N2; i2++)
         for(int i3=0; i3<N3; i3++)
           for(int i4=0; i4<N4; i4++)
-            a(i0,i1,i2,i3,i4) = i0*1000000+i1*10000+i2*100+i3*10+i4;
-  Kokkos::View<TypeSub,LayoutSub,Space> a1;
+            a_org(i0,i1,i2,i3,i4) = i0*1000000+i1*10000+i2*100+i3*10+i4;
+  Kokkos::View<TypeSub,LayoutSub,Space,MemTraits> a1;
   a1 = Kokkos::subview(a,3,5,Kokkos::ALL(),Kokkos::ALL(),Kokkos::ALL());
   Kokkos::fence();
   test_Check3D5D(a1,a,3,5,std::pair<int,int>(0,N2),std::pair<int,int>(0,N3),std::pair<int,int>(0,N4));
 
-  Kokkos::View<TypeSub,LayoutSub,Space> a2(a,3,5,Kokkos::ALL(),Kokkos::ALL(),Kokkos::ALL());
+  Kokkos::View<TypeSub,LayoutSub,Space,MemTraits> a2(a,3,5,Kokkos::ALL(),Kokkos::ALL(),Kokkos::ALL());
   Kokkos::fence();
   test_Check3D5D(a2,a,3,5,std::pair<int,int>(0,N2),std::pair<int,int>(0,N3),std::pair<int,int>(0,N4));
 }
 
-template<class Space, class LayoutSub, class Layout, class LayoutOrg>
-void test_2d_subview_5d_impl_layout() {
-  test_2d_subview_5d_impl_type<Space, int[N0][N1][N2][N3][N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int[N0][N1][N2][N3][N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int[N0][N1][N2][N3][N4],int**      [N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int[N0][N1][N2][N3][N4],int***         ,LayoutSub, Layout, LayoutOrg>();
+template<class Space, class LayoutSub, class Layout, class LayoutOrg, class MemTraits>
+void test_3d_subview_5d_impl_layout() {
+  test_3d_subview_5d_impl_type<Space, int[N0][N1][N2][N3][N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int[N0][N1][N2][N3][N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int[N0][N1][N2][N3][N4],int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int[N0][N1][N2][N3][N4],int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_5d_impl_type<Space, int*   [N1][N2][N3][N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int*   [N1][N2][N3][N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int*   [N1][N2][N3][N4],int**      [N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int*   [N1][N2][N3][N4],int***         ,LayoutSub, Layout, LayoutOrg>();
+  test_3d_subview_5d_impl_type<Space, int*   [N1][N2][N3][N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int*   [N1][N2][N3][N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int*   [N1][N2][N3][N4],int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int*   [N1][N2][N3][N4],int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_5d_impl_type<Space, int**      [N2][N3][N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int**      [N2][N3][N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int**      [N2][N3][N4],int**      [N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int**      [N2][N3][N4],int***         ,LayoutSub, Layout, LayoutOrg>();
+  test_3d_subview_5d_impl_type<Space, int**      [N2][N3][N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int**      [N2][N3][N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int**      [N2][N3][N4],int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int**      [N2][N3][N4],int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_5d_impl_type<Space, int***         [N3][N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int***         [N3][N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int***         [N3][N4],int**      [N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int***         [N3][N4],int***         ,LayoutSub, Layout, LayoutOrg>();
+  test_3d_subview_5d_impl_type<Space, int***         [N3][N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int***         [N3][N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int***         [N3][N4],int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int***         [N3][N4],int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_5d_impl_type<Space, int****            [N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int****            [N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int****            [N4],int**      [N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int****            [N4],int***         ,LayoutSub, Layout, LayoutOrg>();
+  test_3d_subview_5d_impl_type<Space, int****            [N4],int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int****            [N4],int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int****            [N4],int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int****            [N4],int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 
-  test_2d_subview_5d_impl_type<Space, int*****               ,int[N2][N3][N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int*****               ,int*   [N3][N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int*****               ,int**      [N4],LayoutSub, Layout, LayoutOrg>();
-  test_2d_subview_5d_impl_type<Space, int*****               ,int***         ,LayoutSub, Layout, LayoutOrg>();
+  test_3d_subview_5d_impl_type<Space, int*****               ,int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int*****               ,int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int*****               ,int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, int*****               ,int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+
+  test_3d_subview_5d_impl_type<Space, const int[N0][N1][N2][N3][N4],const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int[N0][N1][N2][N3][N4],const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int[N0][N1][N2][N3][N4],const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int[N0][N1][N2][N3][N4],const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+
+  test_3d_subview_5d_impl_type<Space, const int*   [N1][N2][N3][N4],const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int*   [N1][N2][N3][N4],const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int*   [N1][N2][N3][N4],const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int*   [N1][N2][N3][N4],const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+
+  test_3d_subview_5d_impl_type<Space, const int**      [N2][N3][N4],const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int**      [N2][N3][N4],const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int**      [N2][N3][N4],const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int**      [N2][N3][N4],const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+
+  test_3d_subview_5d_impl_type<Space, const int***         [N3][N4],const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int***         [N3][N4],const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int***         [N3][N4],const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int***         [N3][N4],const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+
+  test_3d_subview_5d_impl_type<Space, const int****            [N4],const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int****            [N4],const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int****            [N4],const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int****            [N4],const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
+
+  test_3d_subview_5d_impl_type<Space, const int*****               ,const int[N2][N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int*****               ,const int*   [N3][N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int*****               ,const int**      [N4],LayoutSub, Layout, LayoutOrg, MemTraits>();
+  test_3d_subview_5d_impl_type<Space, const int*****               ,const int***         ,LayoutSub, Layout, LayoutOrg, MemTraits>();
 }
 }
 
-template< class Space >
+template< class Space, class MemTraits = void>
 void test_1d_assign() {
-  Impl::test_1d_assign_impl<Space,Kokkos::LayoutLeft  ,Kokkos::LayoutLeft  ,Kokkos::LayoutLeft  >();
+  Impl::test_1d_assign_impl<Space,Kokkos::LayoutLeft  ,Kokkos::LayoutLeft  ,Kokkos::LayoutLeft, MemTraits>();
   //Impl::test_1d_assign_impl<Space,Kokkos::LayoutRight ,Kokkos::LayoutLeft  ,Kokkos::LayoutLeft  >();
-  Impl::test_1d_assign_impl<Space,Kokkos::LayoutStride,Kokkos::LayoutLeft  ,Kokkos::LayoutLeft  >();
+  Impl::test_1d_assign_impl<Space,Kokkos::LayoutStride,Kokkos::LayoutLeft  ,Kokkos::LayoutLeft, MemTraits>();
   //Impl::test_1d_assign_impl<Space,Kokkos::LayoutLeft  ,Kokkos::LayoutRight ,Kokkos::LayoutLeft  >();
-  Impl::test_1d_assign_impl<Space,Kokkos::LayoutRight ,Kokkos::LayoutRight ,Kokkos::LayoutRight  >();
-  Impl::test_1d_assign_impl<Space,Kokkos::LayoutStride,Kokkos::LayoutRight ,Kokkos::LayoutRight  >();
+  Impl::test_1d_assign_impl<Space,Kokkos::LayoutRight ,Kokkos::LayoutRight ,Kokkos::LayoutRight, MemTraits>();
+  Impl::test_1d_assign_impl<Space,Kokkos::LayoutStride,Kokkos::LayoutRight ,Kokkos::LayoutRight, MemTraits>();
   //Impl::test_1d_assign_impl<Space,Kokkos::LayoutLeft  ,Kokkos::LayoutStride,Kokkos::LayoutLeft  >();
   //Impl::test_1d_assign_impl<Space,Kokkos::LayoutRight ,Kokkos::LayoutStride,Kokkos::LayoutLeft  >();
-  Impl::test_1d_assign_impl<Space,Kokkos::LayoutStride,Kokkos::LayoutStride,Kokkos::LayoutLeft  >();
+  Impl::test_1d_assign_impl<Space,Kokkos::LayoutStride,Kokkos::LayoutStride,Kokkos::LayoutLeft, MemTraits>();
 }
 
-template<class Space >
+template<class Space, class MemTraits = void>
 void test_2d_subview_3d() {
-  Impl::test_2d_subview_3d_impl_layout<Space,Kokkos::LayoutRight ,Kokkos::LayoutRight, Kokkos::LayoutRight>();
-  Impl::test_2d_subview_3d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutRight, Kokkos::LayoutRight>();
-  Impl::test_2d_subview_3d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutStride,Kokkos::LayoutRight>();
-  Impl::test_2d_subview_3d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutLeft,  Kokkos::LayoutLeft>();
-  Impl::test_2d_subview_3d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutStride,Kokkos::LayoutLeft>();
+  Impl::test_2d_subview_3d_impl_layout<Space,Kokkos::LayoutRight ,Kokkos::LayoutRight, Kokkos::LayoutRight, MemTraits>();
+  Impl::test_2d_subview_3d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutRight, Kokkos::LayoutRight, MemTraits>();
+  Impl::test_2d_subview_3d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutStride,Kokkos::LayoutRight, MemTraits>();
+  Impl::test_2d_subview_3d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutLeft,  Kokkos::LayoutLeft,  MemTraits>();
+  Impl::test_2d_subview_3d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutStride,Kokkos::LayoutLeft,  MemTraits>();
 }
 
-template<class Space >
-void test_2d_subview_5d() {
-  Impl::test_2d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutRight, Kokkos::LayoutRight>();
-  Impl::test_2d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutStride,Kokkos::LayoutRight>();
-  Impl::test_2d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutLeft,  Kokkos::LayoutLeft>();
-  Impl::test_2d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutStride,Kokkos::LayoutLeft>();
+template<class Space, class MemTraits = void>
+void test_3d_subview_5d() {
+  Impl::test_3d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutRight, Kokkos::LayoutRight, MemTraits>();
+  Impl::test_3d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutStride,Kokkos::LayoutRight, MemTraits>();
+  Impl::test_3d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutLeft,  Kokkos::LayoutLeft,  MemTraits>();
+  Impl::test_3d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutStride,Kokkos::LayoutLeft,  MemTraits>();
 }
 
 }

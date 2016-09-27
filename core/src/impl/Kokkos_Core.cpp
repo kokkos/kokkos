@@ -350,11 +350,11 @@ void initialize(int& narg, char* arg[])
 
         if((strncmp(arg[iarg],"--kokkos-ndevices",17) == 0) || !kokkos_ndevices_found) {
           char *str;
-          if ((str = getenv("SLURM_LOCALID"))) {
-            int local_rank = atoi(str);
-            device = local_rank % ndevices;
-            if (device >= skip_device) device++;
-          }
+          //if ((str = getenv("SLURM_LOCALID"))) {
+          //  int local_rank = atoi(str);
+          //  device = local_rank % ndevices;
+          //  if (device >= skip_device) device++;
+          //}
           if ((str = getenv("MV2_COMM_WORLD_LOCAL_RANK"))) {
             int local_rank = atoi(str);
             device = local_rank % ndevices;

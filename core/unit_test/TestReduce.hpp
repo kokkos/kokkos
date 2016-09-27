@@ -373,8 +373,16 @@ public:
 
     for ( unsigned i = 0 ; i < Repeat ; ++i ) {
       for ( unsigned j = 0 ; j < Count ; ++j ) {
-        const unsigned long correct = j % 2 ? 1 : nwork ;
-        ASSERT_EQ( (ScalarType) correct , result[i][j] );
+        if ( nwork == 0 )
+        {
+          ScalarType amin( std::numeric_limits<ScalarType>::min() );
+          ScalarType amax( std::numeric_limits<ScalarType>::max() );
+          const ScalarType correct = (j%2) ? amax : amin;
+          ASSERT_EQ( (ScalarType) correct , result[i][j] );
+        } else {
+          const unsigned long correct = j % 2 ? 1 : nwork ;
+          ASSERT_EQ( (ScalarType) correct , result[i][j] );
+        }
       }
     }
   }

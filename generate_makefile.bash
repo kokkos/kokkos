@@ -184,6 +184,7 @@ mkdir example
 mkdir example/fixture
 mkdir example/feint
 mkdir example/fenl
+mkdir example/tutorial
 
 if [ ${#KOKKOS_ENABLE_EXAMPLE_ICHOL} -gt 0 ]; then
 mkdir example/ichol
@@ -278,6 +279,18 @@ echo "" >> example/fenl/Makefile
 echo "clean:" >> example/fenl/Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_OPTIONS} clean" >> example/fenl/Makefile
 
+echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > example/tutorial/Makefile
+echo "" >> example/tutorial/Makefile
+echo "build:" >> example/tutorial/Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_OPTIONS='${KOKKOS_OPTIONS}' KOKKOS_PATH=${KOKKOS_PATH} build">> example/tutorial/Makefile
+echo "" >> example/tutorial/Makefile
+echo "test: build" >> example/tutorial/Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_OPTIONS='${KOKKOS_OPTIONS}' KOKKOS_PATH=${KOKKOS_PATH} test" >> example/tutorial/Makefile
+echo "" >> example/tutorial/Makefile
+echo "clean:" >> example/tutorial/Makefile
+echo -e "\tmake -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_OPTIONS='${KOKKOS_OPTIONS}' KOKKOS_PATH=${KOKKOS_PATH} clean" >> example/tutorial/Makefile
+
+
 if [ ${#KOKKOS_ENABLE_EXAMPLE_ICHOL} -gt 0 ]; then
 echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > example/ichol/Makefile
 echo "" >> example/ichol/Makefile
@@ -312,6 +325,7 @@ echo -e "\tmake -C algorithms/unit_tests" >> Makefile
 echo -e "\tmake -C example/fixture" >> Makefile
 echo -e "\tmake -C example/feint" >> Makefile
 echo -e "\tmake -C example/fenl" >> Makefile
+echo -e "\tmake -C example/tutorial build" >> Makefile
 echo "" >> Makefile
 echo "test: build-test" >> Makefile
 echo -e "\tmake -C core/unit_test test" >> Makefile
@@ -322,6 +336,7 @@ echo -e "\tmake -C algorithms/unit_tests test" >> Makefile
 echo -e "\tmake -C example/fixture test" >> Makefile
 echo -e "\tmake -C example/feint test" >> Makefile
 echo -e "\tmake -C example/fenl test" >> Makefile
+echo -e "\tmake -C example/tutorial test" >> Makefile
 echo "" >> Makefile
 echo "clean:" >> Makefile
 echo -e "\tmake -C core/unit_test clean" >> Makefile
@@ -332,5 +347,6 @@ echo -e "\tmake -C algorithms/unit_tests clean" >> Makefile
 echo -e "\tmake -C example/fixture clean" >> Makefile
 echo -e "\tmake -C example/feint clean" >> Makefile
 echo -e "\tmake -C example/fenl clean" >> Makefile
+echo -e "\tmake -C example/tutorial clean" >> Makefile
 echo -e "\tcd core; \\" >> Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_OPTIONS} clean" >> Makefile
