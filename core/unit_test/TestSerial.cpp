@@ -194,9 +194,9 @@ TEST_F( serial, view_subview_2d_from_3d ) {
 }
 
 TEST_F( serial, view_subview_2d_from_5d ) {
-  TestViewSubview::test_2d_subview_5d< Kokkos::Serial >();
-  TestViewSubview::test_2d_subview_5d< Kokkos::Serial , Kokkos::MemoryTraits<Kokkos::Atomic> >();
-  TestViewSubview::test_2d_subview_5d< Kokkos::Serial , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
+  TestViewSubview::test_3d_subview_5d< Kokkos::Serial >();
+  TestViewSubview::test_3d_subview_5d< Kokkos::Serial , Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestViewSubview::test_3d_subview_5d< Kokkos::Serial , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
 }
 
 TEST_F( serial , range_tag )

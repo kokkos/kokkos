@@ -180,9 +180,9 @@ TEST_F( cuda, view_subview_2d_from_3d ) {
 }
 
 TEST_F( cuda, view_subview_2d_from_5d ) {
-  TestViewSubview::test_2d_subview_5d< Kokkos::CudaUVMSpace >();
-  TestViewSubview::test_2d_subview_5d< Kokkos::CudaUVMSpace , Kokkos::MemoryTraits<Kokkos::Atomic> >();
-  TestViewSubview::test_2d_subview_5d< Kokkos::CudaUVMSpace , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
+  TestViewSubview::test_3d_subview_5d< Kokkos::CudaUVMSpace >();
+  TestViewSubview::test_3d_subview_5d< Kokkos::CudaUVMSpace , Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestViewSubview::test_3d_subview_5d< Kokkos::CudaUVMSpace , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
 }
 
 }
