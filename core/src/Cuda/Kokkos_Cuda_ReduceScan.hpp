@@ -74,7 +74,11 @@ namespace Impl {
 template< class ValueType , class JoinOp>
 __device__
 inline void cuda_intra_warp_reduction( ValueType& result,
+#ifdef KOKKOS_CUDA_CLANG_WORKAROUND
+                                       JoinOp join,
+#else
                                        const JoinOp& join,
+#endif
                                        const int max_active_thread = blockDim.y) {
 
   unsigned int shift = 1;
@@ -94,7 +98,11 @@ inline void cuda_intra_warp_reduction( ValueType& result,
 template< class ValueType , class JoinOp>
 __device__
 inline void cuda_inter_warp_reduction( ValueType& value,
+#ifdef KOKKOS_CUDA_CLANG_WORKAROUND
+                                       JoinOp join,
+#else
                                        const JoinOp& join,
+#endif
                                        const int max_active_thread = blockDim.y) {
 
   #define STEP_WIDTH 4
@@ -139,6 +147,7 @@ bool cuda_inter_block_reduction( typename FunctorValueTraits< FunctorType , ArgT
                                  typename FunctorValueTraits< FunctorType , ArgTag >::pointer_type const result,
                                  Cuda::size_type * const m_scratch_flags,
                                  const int max_active_thread = blockDim.y) {
+#ifdef __CUDA_ARCH__
   typedef typename FunctorValueTraits< FunctorType , ArgTag >::pointer_type pointer_type;
   typedef typename FunctorValueTraits< FunctorType , ArgTag >::value_type value_type;
 
@@ -213,6 +222,9 @@ bool cuda_inter_block_reduction( typename FunctorValueTraits< FunctorType , ArgT
 
   //The last block has in its thread=0 the global reduction value through "value"
   return last_block;
+#else
+  return true;
+#endif
 }
 
 //----------------------------------------------------------------------------

@@ -250,9 +250,12 @@ struct AssertShapeBoundsAbort
                      const size_t i4 , const size_t i5 ,
                      const size_t i6 , const size_t i7 )
     {
-      AssertShapeBoundsAbort< Kokkos::HostSpace >
-        ::apply( rank ,    n0 , n1 , n2 , n3 , n4 , n5 , n6 , n7 ,
-                 arg_rank, i0 , i1 , i2 , i3 , i4 , i5 , i6 , i7 );
+      if(std::is_same<Kokkos::Impl::ActiveExecutionMemorySpace,Kokkos::HostSpace>::value)
+        AssertShapeBoundsAbort< Kokkos::HostSpace >
+          ::apply( rank ,    n0 , n1 , n2 , n3 , n4 , n5 , n6 , n7 ,
+                   arg_rank, i0 , i1 , i2 , i3 , i4 , i5 , i6 , i7 );
+      else
+        Kokkos::abort("Kokkos::View array bounds violation");
     }
 };
 

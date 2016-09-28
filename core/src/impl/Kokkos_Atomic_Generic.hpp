@@ -246,9 +246,9 @@ T atomic_fetch_oper( const Oper& op, volatile T * const dest ,
       *dest = Oper::apply(return_val, val);;
       Impl::unlock_address_cuda_space( (void*) dest );
       done=0;
+      return return_val;
     }
   }
-  return return_val;
 #endif
 }
 
@@ -280,9 +280,9 @@ T atomic_oper_fetch( const Oper& op, volatile T * const dest ,
       *dest = return_val;
       Impl::unlock_address_cuda_space( (void*) dest );
       done=0;
+      return return_val;
     }
   }
-  return return_val;
 #endif
 }
 

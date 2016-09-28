@@ -153,7 +153,7 @@
 /*--------------------------------------------------------------------------*/
 /* Language info: C++, CUDA, OPENMP */
 
-#if defined( __CUDA_ARCH__ ) && defined( KOKKOS_HAVE_CUDA )
+#if defined( KOKKOS_HAVE_CUDA )
   // Compiling Cuda code to 'ptx'
 
   #define KOKKOS_FORCEINLINE_FUNCTION  __device__  __host__  __forceinline__
@@ -184,10 +184,12 @@
 
 #else
 #if defined( KOKKOS_HAVE_CXX11 ) && ! defined( KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA )
+    #if !defined (KOKKOS_HAVE_CUDA) // Compiling with clang for Cuda does not work with LAMBDAs either
     // CUDA (including version 6.5) does not support giving lambdas as
     // arguments to global functions. Thus its not currently possible
     // to dispatch lambdas from the host.
     #define KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA 1
+    #endif
   #endif
 #endif /* #if defined( __NVCC__ ) */
 
@@ -195,7 +197,7 @@
   #define KOKKOS_LAMBDA [=]
 #endif
 
-#if ! defined( __CUDA_ARCH__ ) /* Not compiling Cuda code to 'ptx'. */
+//#if ! defined( __CUDA_ARCH__ ) /* Not compiling Cuda code to 'ptx'. */
 
 /* Intel compiler for host code */
 
@@ -243,7 +245,7 @@
   #endif
 #endif
 
-#endif /* #if ! defined( __CUDA_ARCH__ ) */
+//#endif /* #if ! defined( __CUDA_ARCH__ ) */
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/

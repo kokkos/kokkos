@@ -48,7 +48,7 @@ namespace Kokkos {
 
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_ATOMICS_USE_CUDA )
+#if defined( KOKKOS_HAVE_CUDA )
 
 // Support for int, unsigned int, unsigned long long int, and float
 
@@ -66,26 +66,26 @@ unsigned long long int atomic_fetch_and( volatile unsigned long long int * const
                                          const unsigned long long int val )
 { return atomicAnd((unsigned long long int*)dest,val); }
 #endif
-
+#endif
 //----------------------------------------------------------------------------
 
-#elif defined(KOKKOS_ATOMICS_USE_GCC) || defined(KOKKOS_ATOMICS_USE_INTEL)
+#if defined(KOKKOS_ATOMICS_USE_GCC) || defined(KOKKOS_ATOMICS_USE_INTEL)
 
-KOKKOS_INLINE_FUNCTION
+inline
 int atomic_fetch_and( volatile int * const dest , const int val )
 { return __sync_fetch_and_and(dest,val); }
 
-KOKKOS_INLINE_FUNCTION
+inline
 long int atomic_fetch_and( volatile long int * const dest , const long int val )
 { return __sync_fetch_and_and(dest,val); }
 
 #if defined( KOKKOS_ATOMICS_USE_GCC )
 
-KOKKOS_INLINE_FUNCTION
+inline
 unsigned int atomic_fetch_and( volatile unsigned int * const dest , const unsigned int val )
 { return __sync_fetch_and_and(dest,val); }
 
-KOKKOS_INLINE_FUNCTION
+inline
 unsigned long int atomic_fetch_and( volatile unsigned long int * const dest , const unsigned long int val )
 { return __sync_fetch_and_and(dest,val); }
 

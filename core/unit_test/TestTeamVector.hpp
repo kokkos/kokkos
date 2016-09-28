@@ -253,7 +253,11 @@ struct functor_team_reduce_join {
       , [&] (int i, Scalar& val) {
         val += i - team.league_rank () + team.league_size () + team.team_size ();
       }
-      , [&] (volatile Scalar& val, const volatile Scalar& src) {val+=src;}
+      , [&] (volatile Scalar& val, const volatile Scalar& src)
+#ifdef KOKKOS_CUDA_CLANG_WORKAROUND
+      __device__
+#endif
+        {val+=src;}
       , value
     );
 
@@ -382,7 +386,11 @@ struct functor_team_vector_reduce_join {
       , [&] (int i, Scalar& val) {
         val += i - team.league_rank () + team.league_size () + team.team_size ();
       }
-      , [&] (volatile Scalar& val, const volatile Scalar& src) {val+=src;}
+      , [&] (volatile Scalar& val, const volatile Scalar& src)
+#ifdef KOKKOS_CUDA_CLANG_WORKAROUND
+      __device__
+#endif
+        {val+=src;}
       , value
     );
 

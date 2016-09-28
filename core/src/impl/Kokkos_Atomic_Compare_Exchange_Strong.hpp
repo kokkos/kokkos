@@ -50,7 +50,7 @@ namespace Kokkos {
 // Cuda native CAS supports int, unsigned int, and unsigned long long int (non-standard type).
 // Must cast-away 'volatile' for the CAS call.
 
-#if defined( KOKKOS_ATOMICS_USE_CUDA )
+#if defined( KOKKOS_HAVE_CUDA )
 
 __inline__ __device__
 int atomic_compare_exchange( volatile int * const dest, const int compare, const int val)
@@ -110,17 +110,19 @@ T atomic_compare_exchange( volatile T * const dest , const T & compare ,
   return return_val;
 }
 
+#endif
+
 //----------------------------------------------------------------------------
 // GCC native CAS supports int, long, unsigned int, unsigned long.
 // Intel native CAS support int and long with the same interface as GCC.
 
-#elif defined(KOKKOS_ATOMICS_USE_GCC) || defined(KOKKOS_ATOMICS_USE_INTEL)
+#if defined(KOKKOS_ATOMICS_USE_GCC) || defined(KOKKOS_ATOMICS_USE_INTEL)
 
-KOKKOS_INLINE_FUNCTION
+inline
 int atomic_compare_exchange( volatile int * const dest, const int compare, const int val)
 { return __sync_val_compare_and_swap(dest,compare,val); }
 
-KOKKOS_INLINE_FUNCTION
+inline
 long atomic_compare_exchange( volatile long * const dest, const long compare, const long val )
 { return __sync_val_compare_and_swap(dest,compare,val); }
 
@@ -128,11 +130,11 @@ long atomic_compare_exchange( volatile long * const dest, const long compare, co
 
 // GCC supports unsigned
 
-KOKKOS_INLINE_FUNCTION
+inline
 unsigned int atomic_compare_exchange( volatile unsigned int * const dest, const unsigned int compare, const unsigned int val )
 { return __sync_val_compare_and_swap(dest,compare,val); }
 
-KOKKOS_INLINE_FUNCTION
+inline
 unsigned long atomic_compare_exchange( volatile unsigned long * const dest ,
                                        const unsigned long compare ,
                                        const unsigned long val )
@@ -141,7 +143,7 @@ unsigned long atomic_compare_exchange( volatile unsigned long * const dest ,
 #endif
 
 template < typename T >
-KOKKOS_INLINE_FUNCTION
+inline
 T atomic_compare_exchange( volatile T * const dest, const T & compare,
   typename Kokkos::Impl::enable_if< sizeof(T) == sizeof(int) , const T & >::type val )
 {
@@ -163,7 +165,7 @@ T atomic_compare_exchange( volatile T * const dest, const T & compare,
 }
 
 template < typename T >
-KOKKOS_INLINE_FUNCTION
+inline
 T atomic_compare_exchange( volatile T * const dest, const T & compare,
   typename Kokkos::Impl::enable_if< sizeof(T) != sizeof(int) &&
                                     sizeof(T) == sizeof(long) , const T & >::type val )
@@ -187,7 +189,7 @@ T atomic_compare_exchange( volatile T * const dest, const T & compare,
 
 #if defined( KOKKOS_ENABLE_ASM) && defined ( KOKKOS_USE_ISA_X86_64 )
 template < typename T >
-KOKKOS_INLINE_FUNCTION
+inline
 T atomic_compare_exchange( volatile T * const dest, const T & compare,
   typename Kokkos::Impl::enable_if< sizeof(T) != sizeof(int) &&
                                     sizeof(T) != sizeof(long) &&

@@ -92,7 +92,9 @@ struct ViewOperatorBoundsErrorAbort< Kokkos::CudaSpace > {
         ( n5 <= i5 ? i5 :
         ( n6 <= i6 ? i6 : i7 )))))));
       printf("Cuda view array bounds error index %d : FAILED %lu < %lu\n" , r , i , n );
+      #ifdef __CUDA_ARCH__
       Kokkos::Impl::cuda_abort("Cuda view array bounds error");
+      #endif
     }
 };
 

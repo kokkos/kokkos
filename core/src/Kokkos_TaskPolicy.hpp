@@ -62,9 +62,14 @@
 
   #endif
 #else
-
-#define KOKKOS_ENABLE_TASKPOLICY
-
+  #if ( defined( KOKKOS_HAVE_CUDA ) )
+    #if ( 8000 <= CUDA_VERSION ) && \
+      defined( KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE )
+      #define KOKKOS_ENABLE_TASKPOLICY
+    #endif
+  #else
+    #define KOKKOS_ENABLE_TASKPOLICY
+  #endif
 #endif
 
 

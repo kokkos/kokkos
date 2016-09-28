@@ -62,25 +62,25 @@
 namespace Kokkos {
 namespace Impl {
 
-template<>
-struct AssertShapeBoundsAbort< CudaSpace >
-{
-  KOKKOS_INLINE_FUNCTION
-  static void apply( const size_t /* rank */ ,
-                     const size_t /* n0 */ , const size_t /* n1 */ ,
-                     const size_t /* n2 */ , const size_t /* n3 */ ,
-                     const size_t /* n4 */ , const size_t /* n5 */ ,
-                     const size_t /* n6 */ , const size_t /* n7 */ ,
-
-                     const size_t /* arg_rank */ ,
-                     const size_t /* i0 */ , const size_t /* i1 */ ,
-                     const size_t /* i2 */ , const size_t /* i3 */ ,
-                     const size_t /* i4 */ , const size_t /* i5 */ ,
-                     const size_t /* i6 */ , const size_t /* i7 */ )
-    {
-      Kokkos::abort("Kokkos::View array bounds violation");
-    }
-};
+//template<>
+//struct AssertShapeBoundsAbort< CudaSpace >
+//{
+//  KOKKOS_INLINE_FUNCTION
+//  static void apply( const size_t /* rank */ ,
+//                     const size_t /* n0 */ , const size_t /* n1 */ ,
+//                     const size_t /* n2 */ , const size_t /* n3 */ ,
+//                     const size_t /* n4 */ , const size_t /* n5 */ ,
+//                     const size_t /* n6 */ , const size_t /* n7 */ ,
+//
+//                     const size_t /* arg_rank */ ,
+//                     const size_t /* i0 */ , const size_t /* i1 */ ,
+//                     const size_t /* i2 */ , const size_t /* i3 */ ,
+//                     const size_t /* i4 */ , const size_t /* i5 */ ,
+//                     const size_t /* i6 */ , const size_t /* i7 */ )
+//    {
+//      Kokkos::abort("Kokkos::View array bounds violation");
+//    }
+//};
 
 }
 }
