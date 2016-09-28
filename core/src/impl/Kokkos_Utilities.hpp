@@ -163,6 +163,7 @@ template <unsigned I, typename T, T h0, T... tail>
 struct integer_sequence_at<I, integer_sequence<T, h0, tail...> >
   : public integer_sequence_at<I-1u, integer_sequence<T,tail...> >
 {
+  static_assert( 8 <= I , "Reasoning Error" );
   static_assert( I < integer_sequence<T, h0, tail...>::size(), "Error: Index out of bounds");
 };
 
@@ -330,57 +331,81 @@ using reverse_integer_sequence = typename reverse_integer_sequence_helper<Intege
 //----------------------------------------
 
 template < typename IntegerSequence
-         , typename IntegerSequence::value_type Result = 0
+         , typename Result
          , typename ResultSequence = integer_sequence<typename IntegerSequence::value_type>
          >
 struct exclusive_scan_integer_sequence_helper;
 
-template <typename T, T Result, T h0, T... tail, T... results>
-struct exclusive_scan_integer_sequence_helper< integer_sequence<T, h0, tail...>, Result, integer_sequence<T, results...> >
-  : public exclusive_scan_integer_sequence_helper< integer_sequence<T, tail...>, Result+h0, integer_sequence<T, 0, (results+h0)...> >
+template <typename T, T h0, T... tail, typename Result, T... results>
+struct exclusive_scan_integer_sequence_helper
+  < integer_sequence<T, h0, tail...>
+  , Result
+  , integer_sequence<T, results...> >
+  : public exclusive_scan_integer_sequence_helper
+     < integer_sequence<T, tail...>
+     , std::integral_constant<T,Result::value+h0>
+     , integer_sequence<T, 0, (results+h0)...> >
 {};
 
-template <typename T, T Result, T... results>
-struct exclusive_scan_integer_sequence_helper< integer_sequence<T>, Result, integer_sequence<T, results...> >
+template <typename T, typename Result, T... results>
+struct exclusive_scan_integer_sequence_helper
+  < integer_sequence<T>, Result, integer_sequence<T, results...> >
 {
   using type = integer_sequence<T, results...>;
-  static constexpr T value = Result;
+  static constexpr T value = Result::value ;
 };
 
 template <typename IntegerSequence>
 struct exclusive_scan_integer_sequence
 {
-  using type = typename exclusive_scan_integer_sequence_helper< reverse_integer_sequence<IntegerSequence> >::type;
   using value_type = typename IntegerSequence::value_type;
-  static constexpr value_type value  = exclusive_scan_integer_sequence_helper< reverse_integer_sequence<IntegerSequence> >::value;
+  using helper = 
+    exclusive_scan_integer_sequence_helper
+       < reverse_integer_sequence<IntegerSequence>
+       , std::integral_constant< value_type , 0 >
+       > ;
+  using type = typename helper::type ;
+  static constexpr value_type value  = helper::value ;
 };
 
 //----------------------------------------
 
 template < typename IntegerSequence
-         , typename IntegerSequence::value_type Result = 0
+         , typename Result
          , typename ResultSequence = integer_sequence<typename IntegerSequence::value_type>
          >
 struct inclusive_scan_integer_sequence_helper;
 
-template <typename T, T Result, T h0, T... tail, T... results>
-struct inclusive_scan_integer_sequence_helper< integer_sequence<T, h0, tail...>, Result, integer_sequence<T, results...> >
-  : public inclusive_scan_integer_sequence_helper< integer_sequence<T, tail...>, Result+h0, integer_sequence<T, h0, (results+h0)...> >
+template <typename T, T h0, T... tail, typename Result, T... results>
+struct inclusive_scan_integer_sequence_helper
+  < integer_sequence<T, h0, tail...>
+  , Result
+  , integer_sequence<T, results...> >
+  : public inclusive_scan_integer_sequence_helper
+     < integer_sequence<T, tail...>
+     , std::integral_constant<T,Result::value+h0>
+     , integer_sequence<T, h0, (results+h0)...> >
 {};
 
-template <typename T, T Result, T... results>
-struct inclusive_scan_integer_sequence_helper< integer_sequence<T>, Result, integer_sequence<T, results...> >
+template <typename T, typename Result, T... results>
+struct inclusive_scan_integer_sequence_helper
+  < integer_sequence<T>, Result, integer_sequence<T, results...> >
 {
   using type = integer_sequence<T, results...>;
-  static constexpr T value = Result;
+  static constexpr T value = Result::value ;
 };
 
 template <typename IntegerSequence>
 struct inclusive_scan_integer_sequence
 {
-  using type = typename inclusive_scan_integer_sequence_helper< reverse_integer_sequence<IntegerSequence> >::type;
   using value_type = typename IntegerSequence::value_type;
-  static constexpr value_type value  = inclusive_scan_integer_sequence_helper< reverse_integer_sequence<IntegerSequence> >::value;
+  using helper = 
+    inclusive_scan_integer_sequence_helper
+       < reverse_integer_sequence<IntegerSequence>
+       , std::integral_constant< value_type , 0 >
+       > ;
+  using type = typename helper::type ;
+  static constexpr value_type value  = helper::value ;
 };
 
 }} // namespace Kokkos::Impl
