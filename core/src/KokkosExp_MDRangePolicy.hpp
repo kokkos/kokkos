@@ -59,7 +59,6 @@ enum class Iterate
   Default, // Default for the device
   Left,    // Left indices stride fastest
   Right,   // Right indices stride fastest
-  Flat,    // Do not tile, only valid for inner direction
 };
 
 template <typename ExecSpace>
@@ -112,7 +111,7 @@ struct MDRangePolicy
   static constexpr int rank = iteration_pattern::rank;
 
   static constexpr int outer_direction = static_cast<int> (
-      (iteration_pattern::outer_direction != Iterate::Default && iteration_pattern::outer_direction != Iterate::Flat)
+      (iteration_pattern::outer_direction != Iterate::Default)
     ? iteration_pattern::outer_direction
     : default_outer_direction< typename range_policy::execution_space>::value );
 
@@ -123,7 +122,6 @@ struct MDRangePolicy
 
 
   // Ugly ugly workaround intel 14 not handling scoped enum correctly
-  static constexpr int Flat = static_cast<int>( Iterate::Flat );
   static constexpr int Right = static_cast<int>( Iterate::Right );
 
 
@@ -147,12 +145,8 @@ struct MDRangePolicy
     for (int i=0; i<rank; ++i) {
       m_offset[i] = static_cast<index_type>(0);
       m_dim[i]    = static_cast<index_type>(u[i]);
-      if (inner_direction != Flat) {
-        // default tile size to 4
-        m_tile[i] = 4;
-      } else {
-        m_tile[i] = 1;
-      }
+      // default tile size to 4
+      m_tile[i] = 4;
       m_tile_dim[i] = (m_dim[i] + (m_tile[i] - 1)) / m_tile[i];
       m_num_tiles *= m_tile_dim[i];
     }
@@ -182,12 +176,8 @@ struct MDRangePolicy
     for (int i=0; i<rank; ++i) {
       m_offset[i] = static_cast<index_type>(a(i) <= b(i) ? a(i) : b(i));
       m_dim[i]    = static_cast<index_type>(a(i) <= b(i) ? b(i) - a(i) : a(i) - b(i));
-      if (inner_direction != Flat) {
-        // default tile size to 4
-        m_tile[i] = 4;
-      } else {
-        m_tile[i] = 1;
-      }
+      // default tile size to 4
+      m_tile[i] = 4;
       m_tile_dim[i] = (m_dim[i] + (m_tile[i] - 1)) / m_tile[i];
       m_num_tiles *= m_tile_dim[i];
     }
@@ -202,7 +192,6 @@ struct MDRangePolicy
     static_assert( std::is_integral<IA>::value, "Kokkos Error: corner A defined with non-integral type" );
     static_assert( std::is_integral<IB>::value, "Kokkos Error: corner B defined with non-integral type" );
     static_assert( std::is_integral<T>::value, "Kokkos Error: tile defined with non-integral type" );
-    static_assert( inner_direction != Flat, "Kokkos Error: tiling not support with flat iteration" );
 
     // TODO check size of lists equal to rank
     // static_asserts on initializer_list.size() require c++14
@@ -285,51 +274,12 @@ struct MDForFunctor
   KOKKOS_INLINE_FUNCTION
   MDForFunctor& operator=( MDForFunctor && ) = default;
 
-  // Rank-2, Flat, No Tag
+  // Rank-2, No Tag
   template <typename Idx>
   KOKKOS_FORCEINLINE_FUNCTION
   typename std::enable_if<(  std::is_integral<Idx>::value
                           && std::is_same<void, work_tag>::value
                           && MDRange::rank == 2
-                          && MDRange::inner_direction == MDRange::Flat
-                          )>::type
-  operator()(Idx t) const
-  {
-    if (  MDRange::outer_direction == MDRange::Right ) {
-      m_func( m_range.m_offset[0] + ( t / m_range.m_dim[1] )
-            , m_range.m_offset[1] + ( t % m_range.m_dim[1] ) );
-    } else {
-      m_func( m_range.m_offset[0] + ( t % m_range.m_dim[0] )
-            , m_range.m_offset[1] + ( t / m_range.m_dim[0] ) );
-    }
-  }
-
-  // Rank-2, Flat, Tag
-  template <typename Idx>
-  KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if<(  std::is_integral<Idx>::value
-                          && !std::is_same<void, work_tag>::value
-                          && MDRange::rank == 2
-                          && MDRange::inner_direction == MDRange::Flat
-                          )>::type
-  operator()(Idx t) const
-  {
-    if (  MDRange::outer_direction == MDRange::Right ) {
-      m_func( work_tag{}, m_range.m_offset[0] + ( t / m_range.m_dim[1] )
-            , m_range.m_offset[1] + ( t % m_range.m_dim[1] ) );
-    } else {
-      m_func( work_tag{}, m_range.m_offset[0] + ( t % m_range.m_dim[0] )
-            , m_range.m_offset[1] + ( t / m_range.m_dim[0] ) );
-    }
-  }
-
-  // Rank-2, Not Flat, No Tag
-  template <typename Idx>
-  KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if<(  std::is_integral<Idx>::value
-                          && std::is_same<void, work_tag>::value
-                          && MDRange::rank == 2
-                          && MDRange::inner_direction != MDRange::Flat
                           )>::type
   operator()(Idx t) const
   {
@@ -367,13 +317,12 @@ struct MDForFunctor
     }
   }
 
-  // Rank-2, Not Flat, Tag
+  // Rank-2, Tag
   template <typename Idx>
   KOKKOS_FORCEINLINE_FUNCTION
   typename std::enable_if<(  std::is_integral<Idx>::value
                           && !std::is_same<void, work_tag>::value
                           && MDRange::rank == 2
-                          && MDRange::inner_direction != MDRange::Flat
                           )>::type
   operator()(Idx t) const
   {
@@ -415,65 +364,13 @@ struct MDForFunctor
 
   //---------------------------------------------------------------------------
 
-  // Rank-3, Flat, No Tag
+
+  // Rank-3, No Tag
   template <typename Idx>
   KOKKOS_FORCEINLINE_FUNCTION
   typename std::enable_if<(  std::is_integral<Idx>::value
                           && std::is_same<void, work_tag>::value
                           && MDRange::rank == 3
-                          && MDRange::inner_direction == MDRange::Flat
-                          )>::type
-  operator()(Idx t) const
-  {
-    if (  MDRange::outer_direction == MDRange::Right ) {
-    const int64_t tmp_prod = m_range.m_dim[1]*m_range.m_dim[2];
-    m_func( m_range.m_offset[0] + (  t / tmp_prod )
-          , m_range.m_offset[1] + ( (t % tmp_prod) / m_range.m_dim[2] )
-          , m_range.m_offset[2] + ( (t % tmp_prod) % m_range.m_dim[2] )
-          );
-    } else {
-    const int64_t tmp_prod = m_range.m_dim[0]*m_range.m_dim[1];
-    m_func( m_range.m_offset[0] + ( (t % tmp_prod) % m_range.m_dim[0] )
-          , m_range.m_offset[1] + ( (t % tmp_prod) / m_range.m_dim[0] )
-          , m_range.m_offset[2] + (  t / tmp_prod )
-          );
-    }
-  }
-
-  // Rank-3, Flat, Tag
-  template <typename Idx>
-  KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if<(  std::is_integral<Idx>::value
-                          && !std::is_same<void, work_tag>::value
-                          && MDRange::rank == 3
-                          && MDRange::inner_direction == MDRange::Flat
-                          )>::type
-  operator()(Idx t) const
-  {
-    if (  MDRange::outer_direction == MDRange::Right ) {
-      const int64_t tmp_prod = m_range.m_dim[1]*m_range.m_dim[2];
-      m_func( work_tag{}
-            , m_range.m_offset[0] + (  t / tmp_prod )
-            , m_range.m_offset[1] + ( (t % tmp_prod) / m_range.m_dim[2] )
-            , m_range.m_offset[2] + ( (t % tmp_prod) % m_range.m_dim[2] )
-            );
-    } else {
-      const int64_t tmp_prod = m_range.m_dim[0]*m_range.m_dim[1];
-      m_func( work_tag{}
-            , m_range.m_offset[0] + ( (t % tmp_prod) % m_range.m_dim[0] )
-            , m_range.m_offset[1] + ( (t % tmp_prod) / m_range.m_dim[0] )
-            , m_range.m_offset[2] + (  t / tmp_prod )
-            );
-    }
-  }
-
-  // Rank-3, Not Flat, No Tag
-  template <typename Idx>
-  KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if<(  std::is_integral<Idx>::value
-                          && std::is_same<void, work_tag>::value
-                          && MDRange::rank == 3
-                          && MDRange::inner_direction != MDRange::Flat
                           )>::type
   operator()(Idx t) const
   {
@@ -519,13 +416,12 @@ struct MDForFunctor
     }
   }
 
-  // Rank-3, Not Flat, Tag
+  // Rank-3, Tag
   template <typename Idx>
   KOKKOS_FORCEINLINE_FUNCTION
   typename std::enable_if<(  std::is_integral<Idx>::value
                           && !std::is_same<void, work_tag>::value
                           && MDRange::rank == 3
-                          && MDRange::inner_direction != MDRange::Flat
                           )>::type
   operator()(Idx t) const
   {
