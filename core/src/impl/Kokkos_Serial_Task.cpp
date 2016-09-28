@@ -45,6 +45,7 @@
 
 #if defined( KOKKOS_HAVE_SERIAL ) && defined( KOKKOS_ENABLE_TASKPOLICY )
 
+#include <impl/Kokkos_Serial_Task.hpp>
 #include <impl/Kokkos_TaskQueue_impl.hpp>
 
 //----------------------------------------------------------------------------

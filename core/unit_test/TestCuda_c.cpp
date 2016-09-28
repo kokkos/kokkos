@@ -49,7 +49,6 @@
 
 //----------------------------------------------------------------------------
 
-#include <Cuda/Kokkos_Cuda_TaskPolicy.hpp>
 #include <TestTile.hpp>
 
 //----------------------------------------------------------------------------
@@ -346,31 +345,6 @@ TEST_F( cuda , task_team )
 }
 
 //----------------------------------------------------------------------------
-
-TEST_F( cuda , old_task_policy )
-{
-  TestTaskPolicy::test_task_dep< Kokkos::Cuda >( 10 );
-
-  for ( long i = 0 ; i < 15 ; ++i ) {
-      // printf("TestTaskPolicy::test_fib< Kokkos::Cuda >(%d);\n",i);
-    TestTaskPolicy::test_fib< Kokkos::Cuda >(i,4096);
-  }
-  for ( long i = 0 ; i < 35 ; ++i ) {
-      // printf("TestTaskPolicy::test_fib2< Kokkos::Cuda >(%d);\n",i);
-    TestTaskPolicy::test_fib2< Kokkos::Cuda >(i,4096);
-  }
-}
-
-TEST_F( cuda , old_task_team )
-{
-  TestTaskPolicy::test_task_team< Kokkos::Cuda >(1000);
-}
-
-TEST_F( cuda , old_task_latch )
-{
-  TestTaskPolicy::test_latch< Kokkos::Cuda >(10);
-  TestTaskPolicy::test_latch< Kokkos::Cuda >(1000);
-}
 
 #endif // #if defined( KOKKOS_ENABLE_TASKPOLICY )
 

@@ -53,8 +53,6 @@
 
 #include <Kokkos_Core.hpp>
 
-#include <Threads/Kokkos_Threads_TaskPolicy.hpp>
-
 //----------------------------------------------------------------------------
 
 #include <TestSharedAlloc.hpp>
