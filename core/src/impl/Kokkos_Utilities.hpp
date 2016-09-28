@@ -94,7 +94,6 @@ template< typename T , T N >
 using make_integer_sequence =
   typename make_integer_sequence_helper<T,N>::type ;
 
-
 template< typename T >
 struct make_integer_sequence_helper< T , 0 >
 { using type = integer_sequence<T> ; };
@@ -148,6 +147,241 @@ struct make_integer_sequence_helper {
 };
 
 //----------------------------------------
+
+template <std::size_t... Indices>
+using index_sequence = integer_sequence<std::size_t, Indices...>;
+
+template< std::size_t N >
+using make_index_sequence = make_integer_sequence< std::size_t, N>;
+
+//----------------------------------------
+
+template <unsigned I, typename IntegerSequence>
+struct integer_sequence_at;
+
+template <unsigned I, typename T, T h0, T... tail>
+struct integer_sequence_at<I, integer_sequence<T, h0, tail...> >
+  : public integer_sequence_at<I-1u, integer_sequence<T,tail...> >
+{
+  static_assert( I < integer_sequence<T, h0, tail...>::size(), "Error: Index out of bounds");
+};
+
+template < typename T, T h0, T... tail>
+struct integer_sequence_at<0u, integer_sequence<T,h0, tail...> >
+{
+  using type = T;
+  static constexpr T value = h0;
+};
+
+template < typename T, T h0, T h1, T... tail>
+struct integer_sequence_at<1u, integer_sequence<T, h0, h1, tail...> >
+{
+  using type = T;
+  static constexpr T value = h1;
+};
+
+template < typename T, T h0, T h1, T h2, T... tail>
+struct integer_sequence_at<2u, integer_sequence<T, h0, h1, h2, tail...> >
+{
+  using type = T;
+  static constexpr T value = h2;
+};
+
+template < typename T, T h0, T h1, T h2, T h3, T... tail>
+struct integer_sequence_at<3u, integer_sequence<T, h0, h1, h2, h3, tail...> >
+{
+  using type = T;
+  static constexpr T value = h3;
+};
+
+template < typename T, T h0, T h1, T h2, T h3, T h4, T... tail>
+struct integer_sequence_at<4u, integer_sequence<T, h0, h1, h2, h3, h4, tail...> >
+{
+  using type = T;
+  static constexpr T value = h4;
+};
+
+template < typename T, T h0, T h1, T h2, T h3, T h4, T h5, T... tail>
+struct integer_sequence_at<5u, integer_sequence<T, h0, h1, h2, h3, h4, h5, tail...> >
+{
+  using type = T;
+  static constexpr T value = h5;
+};
+
+template < typename T, T h0, T h1, T h2, T h3, T h4, T h5, T h6, T... tail>
+struct integer_sequence_at<6u, integer_sequence<T, h0, h1, h2, h3, h4, h5, h6, tail...> >
+{
+  using type = T;
+  static constexpr T value = h6;
+};
+
+template < typename T, T h0, T h1, T h2, T h3, T h4, T h5, T h6, T h7, T... tail>
+struct integer_sequence_at<7u, integer_sequence<T, h0, h1, h2, h3, h4, h5, h6, h7, tail...> >
+{
+  using type = T;
+  static constexpr T value = h7;
+};
+
+//----------------------------------------
+
+template <typename T>
+constexpr
+T at( const unsigned, integer_sequence<T> ) noexcept
+{ return ~static_cast<T>(0); }
+
+template <typename T, T h0, T... tail>
+constexpr
+T at( const unsigned i, integer_sequence<T, h0> ) noexcept
+{ return i==0u ? h0 : ~static_cast<T>(0); }
+
+template <typename T, T h0, T h1>
+constexpr
+T at( const unsigned i, integer_sequence<T, h0, h1> ) noexcept
+{ return i==0u ? h0 :
+         i==1u ? h1 : ~static_cast<T>(0);
+}
+
+template <typename T, T h0, T h1, T h2>
+constexpr
+T at( const unsigned i, integer_sequence<T, h0, h1, h2> ) noexcept
+{ return i==0u ? h0 :
+         i==1u ? h1 :
+         i==2u ? h2 : ~static_cast<T>(0);
+}
+
+template <typename T, T h0, T h1, T h2, T h3>
+constexpr
+T at( const unsigned i, integer_sequence<T, h0, h1, h2, h3> ) noexcept
+{ return i==0u ? h0 :
+         i==1u ? h1 :
+         i==2u ? h2 :
+         i==3u ? h3 : ~static_cast<T>(0);
+}
+
+template <typename T, T h0, T h1, T h2, T h3, T h4>
+constexpr
+T at( const unsigned i, integer_sequence<T, h0, h1, h2, h3, h4> ) noexcept
+{ return i==0u ? h0 :
+         i==1u ? h1 :
+         i==2u ? h2 :
+         i==3u ? h3 :
+         i==4u ? h4 : ~static_cast<T>(0);
+}
+
+template <typename T, T h0, T h1, T h2, T h3, T h4, T h5>
+constexpr
+T at( const unsigned i, integer_sequence<T, h0, h1, h2, h3, h4, h5> ) noexcept
+{ return i==0u ? h0 :
+         i==1u ? h1 :
+         i==2u ? h2 :
+         i==3u ? h3 :
+         i==4u ? h4 :
+         i==5u ? h5 : ~static_cast<T>(0);
+}
+
+template <typename T, T h0, T h1, T h2, T h3, T h4, T h5, T h6>
+constexpr
+T at( const unsigned i, integer_sequence<T, h0, h1, h2, h3, h4, h5, h6> ) noexcept
+{ return i==0u ? h0 :
+         i==1u ? h1 :
+         i==2u ? h2 :
+         i==3u ? h3 :
+         i==4u ? h4 :
+         i==5u ? h5 :
+         i==6u ? h6 : ~static_cast<T>(0);
+}
+
+template <typename T, T h0, T h1, T h2, T h3, T h4, T h5, T h6, T h7, T... tail>
+constexpr
+T at( const unsigned i, integer_sequence<T, h0, h1, h2, h3, h4, h5, h6, h7, tail...> ) noexcept
+{ return i==0u ? h0 :
+         i==1u ? h1 :
+         i==2u ? h2 :
+         i==3u ? h3 :
+         i==4u ? h4 :
+         i==5u ? h5 :
+         i==6u ? h6 :
+         i==7u ? h7 : at(i-8u, integer_sequence<T, tail...>{} );
+}
+
+//----------------------------------------
+
+
+template < typename IntegerSequence
+         , typename ResultSequence = integer_sequence<typename IntegerSequence::value_type>
+         >
+struct reverse_integer_sequence_helper;
+
+template <typename T, T h0, T... tail, T... results>
+struct reverse_integer_sequence_helper< integer_sequence<T, h0, tail...>, integer_sequence<T, results...> >
+  : public reverse_integer_sequence_helper< integer_sequence<T, tail...>, integer_sequence<T, h0, results...> >
+{};
+
+template <typename T, T... results>
+struct reverse_integer_sequence_helper< integer_sequence<T>, integer_sequence<T, results...> >
+{
+  using type = integer_sequence<T, results...>;
+};
+
+
+template <typename IntegerSequence>
+using reverse_integer_sequence = typename reverse_integer_sequence_helper<IntegerSequence>::type;
+
+//----------------------------------------
+
+template < typename IntegerSequence
+         , typename IntegerSequence::value_type Result = 0
+         , typename ResultSequence = integer_sequence<typename IntegerSequence::value_type>
+         >
+struct exclusive_scan_integer_sequence_helper;
+
+template <typename T, T Result, T h0, T... tail, T... results>
+struct exclusive_scan_integer_sequence_helper< integer_sequence<T, h0, tail...>, Result, integer_sequence<T, results...> >
+  : public exclusive_scan_integer_sequence_helper< integer_sequence<T, tail...>, Result+h0, integer_sequence<T, 0, (results+h0)...> >
+{};
+
+template <typename T, T Result, T... results>
+struct exclusive_scan_integer_sequence_helper< integer_sequence<T>, Result, integer_sequence<T, results...> >
+{
+  using type = integer_sequence<T, results...>;
+  static constexpr T value = Result;
+};
+
+template <typename IntegerSequence>
+struct exclusive_scan_integer_sequence
+{
+  using type = typename exclusive_scan_integer_sequence_helper< reverse_integer_sequence<IntegerSequence> >::type;
+  using value_type = typename IntegerSequence::value_type;
+  static constexpr value_type value  = exclusive_scan_integer_sequence_helper< reverse_integer_sequence<IntegerSequence> >::value;
+};
+
+//----------------------------------------
+
+template < typename IntegerSequence
+         , typename IntegerSequence::value_type Result = 0
+         , typename ResultSequence = integer_sequence<typename IntegerSequence::value_type>
+         >
+struct inclusive_scan_integer_sequence_helper;
+
+template <typename T, T Result, T h0, T... tail, T... results>
+struct inclusive_scan_integer_sequence_helper< integer_sequence<T, h0, tail...>, Result, integer_sequence<T, results...> >
+  : public inclusive_scan_integer_sequence_helper< integer_sequence<T, tail...>, Result+h0, integer_sequence<T, h0, (results+h0)...> >
+{};
+
+template <typename T, T Result, T... results>
+struct inclusive_scan_integer_sequence_helper< integer_sequence<T>, Result, integer_sequence<T, results...> >
+{
+  using type = integer_sequence<T, results...>;
+  static constexpr T value = Result;
+};
+
+template <typename IntegerSequence>
+struct inclusive_scan_integer_sequence
+{
+  using type = typename inclusive_scan_integer_sequence_helper< reverse_integer_sequence<IntegerSequence> >::type;
+  using value_type = typename IntegerSequence::value_type;
+  static constexpr value_type value  = inclusive_scan_integer_sequence_helper< reverse_integer_sequence<IntegerSequence> >::value;
+};
 
 }} // namespace Kokkos::Impl
 
