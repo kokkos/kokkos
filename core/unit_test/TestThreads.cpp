@@ -73,8 +73,8 @@
 #include <TestAggregate.hpp>
 #include <TestAggregateReduction.hpp>
 #include <TestCompilerMacros.hpp>
-#include <TestTaskPolicy.hpp>
 #include <TestMemoryPool.hpp>
+// #include <TestTaskPolicy.hpp>
 
 
 #include <TestCXX11.hpp>
@@ -622,30 +622,6 @@ TEST_F( threads , team_vector )
 
 #if defined( KOKKOS_ENABLE_TASKPOLICY )
 
-TEST_F( threads , task_policy )
-{
-  TestTaskPolicy::test_task_dep< Kokkos::Threads >( 10 );
-
-  for ( long i = 0 ; i < 25 ; ++i ) {
-//    printf( "test_fib():  %2ld\n", i );
-    TestTaskPolicy::test_fib< Kokkos::Threads >(i);
-  }
-  for ( long i = 0 ; i < 35 ; ++i ) {
-//    printf( "test_fib2(): %2ld\n", i );
-    TestTaskPolicy::test_fib2< Kokkos::Threads >(i);
-  }
-}
-
-TEST_F( threads , task_team )
-{
-  TestTaskPolicy::test_task_team< Kokkos::Threads >(1000);
-}
-
-TEST_F( threads , task_latch )
-{
-  TestTaskPolicy::test_latch< Kokkos::Threads >(10);
-  TestTaskPolicy::test_latch< Kokkos::Threads >(1000);
-}
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
 
