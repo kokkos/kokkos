@@ -238,16 +238,20 @@ T atomic_fetch_oper( const Oper& op, volatile T * const dest ,
   return return_val;
 #else
   // This is a way to (hopefully) avoid dead lock in a warp
-  int done = 1;
   T return_val;
-  while ( done>0 ) {
-    done++;
-    if( Impl::lock_address_cuda_space( (void*) dest ) ) {
-      return_val = *dest;
-      *dest = Oper::apply(return_val, val);;
-      Impl::unlock_address_cuda_space( (void*) dest );
-      done=0;
+  int done = 0;
+  unsigned int active = __ballot(1);
+  unsigned int done_active = 0;
+  while (active!=done_active) {
+    if(!done) {
+      if( Impl::lock_address_cuda_space( (void*) dest ) ) {
+        return_val = *dest;
+        *dest = Oper::apply(return_val, val);;
+        Impl::unlock_address_cuda_space( (void*) dest );
+        done=1;
+      }
     }
+    done_active = __ballot(done);
   }
   return return_val;
 #endif
@@ -272,17 +276,21 @@ T atomic_oper_fetch( const Oper& op, volatile T * const dest ,
   Impl::unlock_address_host_space( (void*) dest );
   return return_val;
 #else
-  // This is a way to (hopefully) avoid dead lock in a warp
-  int done = 1;
   T return_val;
-  while ( done>0 ) {
-    done++;
-    if( Impl::lock_address_cuda_space( (void*) dest ) ) {
-      return_val = Oper::apply(*dest, val);
-      *dest = return_val;
-      Impl::unlock_address_cuda_space( (void*) dest );
-      done=0;
+  // This is a way to (hopefully) avoid dead lock in a warp
+  int done = 0;
+  unsigned int active = __ballot(1);
+  unsigned int done_active = 0;
+  while (active!=done_active) {
+    if(!done) {
+      if( Impl::lock_address_cuda_space( (void*) dest ) ) {
+        return_val = Oper::apply(*dest, val);
+        *dest = return_val;
+        Impl::unlock_address_cuda_space( (void*) dest );
+        done=1;
+      }
     }
+    done_active = __ballot(done);
   }
   return return_val;
 #endif

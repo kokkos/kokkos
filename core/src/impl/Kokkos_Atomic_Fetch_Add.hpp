@@ -141,15 +141,20 @@ T atomic_fetch_add( volatile T * const dest ,
 {
   T return_val;
   // This is a way to (hopefully) avoid dead lock in a warp
-  int done = 1;
-  while ( done>0 ) {
-    done++;
-    if( Impl::lock_address_cuda_space( (void*) dest ) ) {
-      return_val = *dest;
-      *dest = return_val + val;
-      Impl::unlock_address_cuda_space( (void*) dest );
-      done = 0;
+  int done = 0;
+  unsigned int active = __ballot(1);
+  unsigned int done_active = 0;
+  while (active!=done_active) {
+    if(!done) {
+      bool locked = Impl::lock_address_cuda_space( (void*) dest );
+      if( locked ) {
+        return_val = *dest;
+        *dest = return_val + val;
+        Impl::unlock_address_cuda_space( (void*) dest );
+        done = 1;
+      }
     }
+    done_active = __ballot(done);
   }
   return return_val;
 }
