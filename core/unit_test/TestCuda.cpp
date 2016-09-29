@@ -191,8 +191,8 @@ struct TestViewCudaTexture {
 
   enum { N = 1000 };
 
-  using V = Kokkos::Experimental::View<double*,MemSpace> ;
-  using T = Kokkos::Experimental::View<const double*, MemSpace, Kokkos::MemoryRandomAccess > ;
+  using V = Kokkos::View<double*,MemSpace> ;
+  using T = Kokkos::View<const double*, MemSpace, Kokkos::MemoryRandomAccess > ;
 
   V m_base ;
   T m_tex ;
@@ -244,7 +244,7 @@ struct TestViewCudaAccessible {
 
   enum { N = 1000 };
 
-  using V = Kokkos::Experimental::View<double*,MemSpace> ;
+  using V = Kokkos::View<double*,MemSpace> ;
 
   V m_base ;
 

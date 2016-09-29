@@ -163,15 +163,15 @@ template< typename T , unsigned N0 , unsigned N1 , class ... P
         >
 struct ViewMapping
   < void
-  , Kokkos::Experimental::ViewTraits<T**,Kokkos::LayoutTileLeft<N0,N1,true>,P...>
+  , Kokkos::ViewTraits<T**,Kokkos::LayoutTileLeft<N0,N1,true>,P...>
   , Kokkos::LayoutTileLeft<N0,N1,true>
   , iType0
   , iType1 >
 {
   typedef Kokkos::LayoutTileLeft<N0,N1,true>  src_layout ;
-  typedef Kokkos::Experimental::ViewTraits< T** , src_layout , P... > src_traits ;
-  typedef Kokkos::Experimental::ViewTraits< T[N0][N1] , LayoutLeft , P ... > traits ;
-  typedef Kokkos::Experimental::View< T[N0][N1] , LayoutLeft , P ... > type ;
+  typedef Kokkos::ViewTraits< T** , src_layout , P... > src_traits ;
+  typedef Kokkos::ViewTraits< T[N0][N1] , LayoutLeft , P ... > traits ;
+  typedef Kokkos::View< T[N0][N1] , LayoutLeft , P ... > type ;
 
   KOKKOS_INLINE_FUNCTION static
   void assign( ViewMapping< traits , void > & dst
@@ -203,8 +203,8 @@ namespace Experimental {
 
 template< typename T , unsigned N0 , unsigned N1 , class ... P >
 KOKKOS_INLINE_FUNCTION
-Kokkos::Experimental::View< T[N0][N1] , LayoutLeft , P... >
-tile_subview( const Kokkos::Experimental::View<T**,Kokkos::LayoutTileLeft<N0,N1,true>,P...> & src
+Kokkos::View< T[N0][N1] , LayoutLeft , P... >
+tile_subview( const Kokkos::View<T**,Kokkos::LayoutTileLeft<N0,N1,true>,P...> & src
             , const size_t i_tile0
             , const size_t i_tile1
             )
@@ -213,7 +213,7 @@ tile_subview( const Kokkos::Experimental::View<T**,Kokkos::LayoutTileLeft<N0,N1,
   // by using the first subview argument as the layout.
   typedef Kokkos::LayoutTileLeft<N0,N1,true> SrcLayout ;
 
-  return Kokkos::Experimental::View< T[N0][N1] , LayoutLeft , P... >
+  return Kokkos::View< T[N0][N1] , LayoutLeft , P... >
     ( src , SrcLayout() , i_tile0 , i_tile1 );
 }
 

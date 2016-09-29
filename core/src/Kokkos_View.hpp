@@ -76,24 +76,17 @@ struct ViewDataAnalysis ;
 template< class , class ... >
 class ViewMapping { public: enum { is_assignable = false }; };
 
-template< class MemorySpace >
-struct ViewOperatorBoundsErrorAbort ;
-
-template<>
-struct ViewOperatorBoundsErrorAbort< Kokkos::HostSpace > {
-  static void apply( const size_t rank
-                   , const size_t n0 , const size_t n1
-                   , const size_t n2 , const size_t n3
-                   , const size_t n4 , const size_t n5
-                   , const size_t n6 , const size_t n7
-                   , const size_t i0 , const size_t i1
-                   , const size_t i2 , const size_t i3
-                   , const size_t i4 , const size_t i5
-                   , const size_t i6 , const size_t i7 );
-};
-
 } /* namespace Impl */
 } /* namespace Experimental */
+} /* namespace Kokkos */
+
+namespace Kokkos {
+namespace Impl {
+
+using Kokkos::Experimental::Impl::ViewMapping ;
+using Kokkos::Experimental::Impl::ViewDataAnalysis ;
+
+} /* namespace Impl */
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------
@@ -237,7 +230,7 @@ private:
 
   // Analyze data type's properties,
   // May be specialized based upon the layout and value type
-  typedef Kokkos::Experimental::Impl::ViewDataAnalysis< DataType , ArrayLayout > data_analysis ;
+  typedef Kokkos::Impl::ViewDataAnalysis< DataType , ArrayLayout > data_analysis ;
 
 public:
 
@@ -466,7 +459,7 @@ class View : public ViewTraits< DataType , Properties ... > {
 private:
 
   template< class , class ... > friend class View ;
-  template< class , class ... > friend class Kokkos::Experimental::Impl::ViewMapping ;
+  template< class , class ... > friend class Kokkos::Impl::ViewMapping ;
 
 public:
 
@@ -474,7 +467,7 @@ public:
 
 private:
 
-  typedef Kokkos::Experimental::Impl::ViewMapping< traits , void > map_type ;
+  typedef Kokkos::Impl::ViewMapping< traits , void > map_type ;
   typedef Kokkos::Impl::SharedAllocationTracker      track_type ;
 
   track_type  m_track ;
@@ -602,7 +595,7 @@ public:
   // Allow specializations to query their specialized map
 
   KOKKOS_INLINE_FUNCTION
-  const Kokkos::Experimental::Impl::ViewMapping< traits , void > &
+  const Kokkos::Impl::ViewMapping< traits , void > &
   implementation_map() const { return m_map ; }
 
   //----------------------------------------
@@ -629,7 +622,7 @@ private:
 #define KOKKOS_VIEW_OPERATOR_VERIFY( ARG ) \
   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace \
     < Kokkos::Impl::ActiveExecutionMemorySpace , typename traits::memory_space >::verify(); \
-  Kokkos::Experimental::Impl::view_verify_operator_bounds ARG ;
+  Kokkos::Impl::view_verify_operator_bounds ARG ;
 
 #else
 
@@ -1121,7 +1114,7 @@ public:
     , m_map()
     {
       typedef typename View<RT,RP...>::traits  SrcTraits ;
-      typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
+      typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
       static_assert( Mapping::is_assignable , "Incompatible View copy construction" );
       Mapping::assign( m_map , rhs.m_map , rhs.m_track );
     }
@@ -1131,7 +1124,7 @@ public:
   View & operator = ( const View<RT,RP...> & rhs )
     {
       typedef typename View<RT,RP...>::traits  SrcTraits ;
-      typedef Kokkos::Experimental::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
+      typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
       static_assert( Mapping::is_assignable , "Incompatible View copy assignment" );
       Mapping::assign( m_map , rhs.m_map , rhs.m_track );
       m_track.assign( rhs.m_track , traits::is_managed );
@@ -1151,14 +1144,14 @@ public:
     {
       typedef View< RT , RP... > SrcType ;
 
-      typedef Kokkos::Experimental::Impl::ViewMapping
+      typedef Kokkos::Impl::ViewMapping
         < void /* deduce destination view type from source view traits */
         , typename SrcType::traits
         , Arg0 , Args... > Mapping ;
 
       typedef typename Mapping::type DstType ;
 
-      static_assert( Kokkos::Experimental::Impl::ViewMapping< traits , typename DstType::traits , void >::is_assignable
+      static_assert( Kokkos::Impl::ViewMapping< traits , typename DstType::traits , void >::is_assignable
         , "Subview construction requires compatible view and subview arguments" );
 
       Mapping::assign( m_map, src_view.m_map, arg0 , args... );
@@ -1494,7 +1487,7 @@ public:
 
 template< class V , class ... Args >
 using Subview =
-  typename Kokkos::Experimental::Impl::ViewMapping
+  typename Kokkos::Impl::ViewMapping
     < void /* deduce subview type from source view traits */
     , typename V::traits
     , Args ...
@@ -1502,7 +1495,7 @@ using Subview =
 
 template< class D, class ... P , class ... Args >
 KOKKOS_INLINE_FUNCTION
-typename Kokkos::Experimental::Impl::ViewMapping
+typename Kokkos::Impl::ViewMapping
   < void /* deduce subview type from source view traits */
   , ViewTraits< D , P... >
   , Args ...
@@ -1513,7 +1506,7 @@ subview( const View< D, P... > & src , Args ... args )
     "subview requires one argument for each source View rank" );
 
   return typename
-    Kokkos::Experimental::Impl::ViewMapping
+    Kokkos::Impl::ViewMapping
       < void /* deduce subview type from source view traits */
       , ViewTraits< D , P ... >
       , Args ... >::type( src , args ... );
@@ -1521,7 +1514,7 @@ subview( const View< D, P... > & src , Args ... args )
 
 template< class MemoryTraits , class D, class ... P , class ... Args >
 KOKKOS_INLINE_FUNCTION
-typename Kokkos::Experimental::Impl::ViewMapping
+typename Kokkos::Impl::ViewMapping
   < void /* deduce subview type from source view traits */
   , ViewTraits< D , P... >
   , Args ...
@@ -1532,7 +1525,7 @@ subview( const View< D, P... > & src , Args ... args )
     "subview requires one argument for each source View rank" );
 
   return typename
-    Kokkos::Experimental::Impl::ViewMapping
+    Kokkos::Impl::ViewMapping
       < void /* deduce subview type from source view traits */
       , ViewTraits< D , P ... >
       , Args ... >

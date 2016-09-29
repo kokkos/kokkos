@@ -715,9 +715,9 @@ public:
   typedef Kokkos::Experimental::DynRankView< T, device, Kokkos::MemoryUnmanaged > dView0_unmanaged ;
   typedef typename dView0::host_mirror_space host_drv_space ;
 
-  typedef Kokkos::Experimental::View< T , device >        View0 ;
-  typedef Kokkos::Experimental::View< T* , device >       View1 ;
-  typedef Kokkos::Experimental::View< T******* , device > View7 ;
+  typedef Kokkos::View< T , device >        View0 ;
+  typedef Kokkos::View< T* , device >       View1 ;
+  typedef Kokkos::View< T******* , device > View7 ;
 
   typedef typename View0::host_mirror_space  host_view_space ;
 

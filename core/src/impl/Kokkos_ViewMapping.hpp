@@ -975,7 +975,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
       static_assert( DimRHS::rank == 1 && dimension_type::rank == 1 && dimension_type::rank_dynamic == 1
                    , "ViewOffset LayoutLeft and LayoutStride are only compatible when rank == 1" );
       if ( rhs.m_stride.S0 != 1 ) {
-        Kokkos::abort("Kokkos::Experimental::ViewOffset assignment of LayoutLeft from LayoutStride  requires stride == 1" );
+        Kokkos::abort("Kokkos::Impl::ViewOffset assignment of LayoutLeft from LayoutStride  requires stride == 1" );
       }
     }
 
@@ -1448,7 +1448,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
       static_assert( DimRHS::rank == 1 && dimension_type::rank == 1 && dimension_type::rank_dynamic == 1
                    , "ViewOffset LayoutLeft/Right and LayoutStride are only compatible when rank == 1" );
       if ( rhs.m_stride.S0 != 1 ) {
-        Kokkos::abort("Kokkos::Experimental::ViewOffset assignment of LayoutLeft/Right from LayoutStride  requires stride == 1" );
+        Kokkos::abort("Kokkos::Impl::ViewOffset assignment of LayoutLeft/Right from LayoutStride  requires stride == 1" );
       }
     }
 
@@ -2878,7 +2878,6 @@ public:
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 template< unsigned , class MapType >
@@ -2940,11 +2939,7 @@ void view_verify_operator_bounds
   }
 }
 
-
-class Error_view_scalar_reference_to_non_scalar_view ;
-
 } /* namespace Impl */
-} /* namespace Experimental */
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------
