@@ -315,13 +315,13 @@ public:
   template< class Device >
   KOKKOS_INLINE_FUNCTION
   const typename Impl::if_c<
-    Impl::is_same<typename t_dev::memory_space,
+    std::is_same<typename t_dev::memory_space,
                           typename Device::memory_space>::value,
     t_dev,
     t_host>::type& view () const
   {
     return Impl::if_c<
-      Impl::is_same<
+      std::is_same<
         typename t_dev::memory_space,
         typename Device::memory_space>::value,
       t_dev,
@@ -347,13 +347,13 @@ public:
   ///   appropriate template parameter.
   template<class Device>
   void sync( const typename Impl::enable_if<
-        ( Impl::is_same< typename traits::data_type , typename traits::non_const_data_type>::value) ||
-        ( Impl::is_same< Device , int>::value)
+        ( std::is_same< typename traits::data_type , typename traits::non_const_data_type>::value) ||
+        ( std::is_same< Device , int>::value)
         , int >::type& = 0)
   {
     const unsigned int dev =
       Impl::if_c<
-        Impl::is_same<
+        std::is_same<
           typename t_dev::memory_space,
           typename Device::memory_space>::value ,
         unsigned int,
@@ -370,7 +370,7 @@ public:
         modified_host() = modified_device() = 0;
       }
     }
-    if(Impl::is_same<typename t_host::memory_space,typename t_dev::memory_space>::value) {
+    if(std::is_same<typename t_host::memory_space,typename t_dev::memory_space>::value) {
       t_dev::execution_space::fence();
       t_host::execution_space::fence();
     }
@@ -378,13 +378,13 @@ public:
 
   template<class Device>
   void sync ( const typename Impl::enable_if<
-      ( ! Impl::is_same< typename traits::data_type , typename traits::non_const_data_type>::value ) ||
-      ( Impl::is_same< Device , int>::value)
+      ( ! std::is_same< typename traits::data_type , typename traits::non_const_data_type>::value ) ||
+      ( std::is_same< Device , int>::value)
       , int >::type& = 0 )
   {
     const unsigned int dev =
       Impl::if_c<
-        Impl::is_same<
+        std::is_same<
           typename t_dev::memory_space,
           typename Device::memory_space>::value,
         unsigned int,
@@ -405,7 +405,7 @@ public:
   {
     const unsigned int dev =
       Impl::if_c<
-        Impl::is_same<
+        std::is_same<
           typename t_dev::memory_space,
           typename Device::memory_space>::value ,
         unsigned int,
@@ -431,7 +431,7 @@ public:
   void modify () {
     const unsigned int dev =
       Impl::if_c<
-        Impl::is_same<
+        std::is_same<
           typename t_dev::memory_space,
           typename Device::memory_space>::value,
         unsigned int,
@@ -613,14 +613,14 @@ private:
 
   typedef DualView< SrcDataType , SrcArg1Type , SrcArg2Type , SrcArg3Type >  SrcViewType ;
 
-  enum { V0 = Impl::is_same< SubArg0_type , void >::value ? 1 : 0 };
-  enum { V1 = Impl::is_same< SubArg1_type , void >::value ? 1 : 0 };
-  enum { V2 = Impl::is_same< SubArg2_type , void >::value ? 1 : 0 };
-  enum { V3 = Impl::is_same< SubArg3_type , void >::value ? 1 : 0 };
-  enum { V4 = Impl::is_same< SubArg4_type , void >::value ? 1 : 0 };
-  enum { V5 = Impl::is_same< SubArg5_type , void >::value ? 1 : 0 };
-  enum { V6 = Impl::is_same< SubArg6_type , void >::value ? 1 : 0 };
-  enum { V7 = Impl::is_same< SubArg7_type , void >::value ? 1 : 0 };
+  enum { V0 = std::is_same< SubArg0_type , void >::value ? 1 : 0 };
+  enum { V1 = std::is_same< SubArg1_type , void >::value ? 1 : 0 };
+  enum { V2 = std::is_same< SubArg2_type , void >::value ? 1 : 0 };
+  enum { V3 = std::is_same< SubArg3_type , void >::value ? 1 : 0 };
+  enum { V4 = std::is_same< SubArg4_type , void >::value ? 1 : 0 };
+  enum { V5 = std::is_same< SubArg5_type , void >::value ? 1 : 0 };
+  enum { V6 = std::is_same< SubArg6_type , void >::value ? 1 : 0 };
+  enum { V7 = std::is_same< SubArg7_type , void >::value ? 1 : 0 };
 
   // The source view rank must be equal to the input argument rank
   // Once a void argument is encountered all subsequent arguments must be void.
@@ -671,11 +671,11 @@ private:
        ||
        // OutputRank 1 or 2, InputLayout Left, Interval 0
        // because single stride one or second index has a stride.
-       ( OutputRank <= 2 && R0 && Impl::is_same<SrcViewLayout,LayoutLeft>::value )
+       ( OutputRank <= 2 && R0 && std::is_same<SrcViewLayout,LayoutLeft>::value )
        ||
        // OutputRank 1 or 2, InputLayout Right, Interval [InputRank-1]
        // because single stride one or second index has a stride.
-       ( OutputRank <= 2 && R0_rev && Impl::is_same<SrcViewLayout,LayoutRight>::value )
+       ( OutputRank <= 2 && R0_rev && std::is_same<SrcViewLayout,LayoutRight>::value )
      ), SrcViewLayout , Kokkos::LayoutStride >::type OutputViewLayout ;
 
   // Choose data type as a purely dynamic rank array to accomodate a runtime range.
@@ -703,7 +703,7 @@ public:
   // If keeping the layout then match non-data type arguments
   // else keep execution space and memory traits.
   typedef typename
-    Impl::if_c< Impl::is_same< SrcViewLayout , OutputViewLayout >::value
+    Impl::if_c< std::is_same< SrcViewLayout , OutputViewLayout >::value
               , Kokkos::DualView< OutputData , SrcArg1Type , SrcArg2Type , SrcArg3Type >
               , Kokkos::DualView< OutputData , OutputViewLayout , OutputSpace
                             , typename SrcViewType::memory_traits >

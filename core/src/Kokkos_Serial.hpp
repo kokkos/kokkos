@@ -309,7 +309,7 @@ public:
 
 /*
  * < Kokkos::Serial , WorkArgTag >
- * < WorkArgTag , Impl::enable_if< Impl::is_same< Kokkos::Serial , Kokkos::DefaultExecutionSpace >::value >::type >
+ * < WorkArgTag , Impl::enable_if< std::is_same< Kokkos::Serial , Kokkos::DefaultExecutionSpace >::value >::type >
  *
  */
 namespace Impl {

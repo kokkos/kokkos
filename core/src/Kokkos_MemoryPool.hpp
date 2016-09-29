@@ -49,7 +49,7 @@
 #include <Kokkos_Atomic.hpp>
 #include <impl/Kokkos_BitOps.hpp>
 #include <impl/Kokkos_Error.hpp>
-#include <impl/KokkosExp_SharedAlloc.hpp>
+#include <impl/Kokkos_SharedAlloc.hpp>
 
 #include <limits>
 #include <algorithm>
@@ -609,7 +609,7 @@ public:
   };
 
 private:
-  typedef Impl::SharedAllocationTracker            Tracker;
+  typedef Kokkos::Impl::SharedAllocationTracker    Tracker;
   typedef View< uint32_t *, device_type >          UInt32View;
   typedef View< SuperblockHeader *, device_type >  SBHeaderView;
 
@@ -730,7 +730,7 @@ public:
     resize(m_sb_header, m_num_sb );
 
     // Allocate superblock memory.
-    typedef Impl::SharedAllocationRecord< backend_memory_space, void >  SharedRecord;
+    typedef Kokkos::Impl::SharedAllocationRecord< backend_memory_space, void >  SharedRecord;
     SharedRecord * rec =
       SharedRecord::allocate( memspace, "mempool", m_total_size );
 

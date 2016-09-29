@@ -133,12 +133,12 @@ void test_view_impl()
     (void) thing_36 ; // silence warning for unused variable
   }
 
-  ASSERT_TRUE( ( Kokkos::Impl::is_same< ExtractValueType<type_03>::type , int >::value ) );
-  ASSERT_TRUE( ( Kokkos::Impl::is_same< ExtractValueType<type_14>::type , double >::value ) );
-  ASSERT_TRUE( ( Kokkos::Impl::is_same< ExtractValueType<type_22>::type , long >::value ) );
-  ASSERT_TRUE( ( Kokkos::Impl::is_same< ExtractValueType<type_36>::type , short >::value ) );
+  ASSERT_TRUE( ( std::is_same< ExtractValueType<type_03>::type , int >::value ) );
+  ASSERT_TRUE( ( std::is_same< ExtractValueType<type_14>::type , double >::value ) );
+  ASSERT_TRUE( ( std::is_same< ExtractValueType<type_22>::type , long >::value ) );
+  ASSERT_TRUE( ( std::is_same< ExtractValueType<type_36>::type , short >::value ) );
 
-  ASSERT_FALSE( ( Kokkos::Impl::is_same< ExtractValueType<type_36>::type , int >::value ) );
+  ASSERT_FALSE( ( std::is_same< ExtractValueType<type_36>::type , int >::value ) );
 
   typedef typename DefineShape< type_01 >::type  shape_01_type ;
   typedef typename DefineShape< type_11 >::type  shape_11_type ;

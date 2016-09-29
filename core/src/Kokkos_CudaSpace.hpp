@@ -97,7 +97,7 @@ private:
 
   int  m_device ; ///< Which Cuda device
 
-  // friend class Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > ;
+  // friend class Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > ;
 };
 
 namespace Impl {
@@ -553,7 +553,6 @@ struct VerifyExecutionCanAccessMemorySpace< Kokkos::HostSpace , Kokkos::CudaHost
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 template<>
@@ -791,7 +790,6 @@ public:
 };
 
 } // namespace Impl
-} // namespace Experimental
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------

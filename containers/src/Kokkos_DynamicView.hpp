@@ -56,7 +56,7 @@ namespace Experimental {
  *         Subviews are not allowed.
  */
 template< typename DataType , typename ... P >
-class DynamicView : public Kokkos::Experimental::ViewTraits< DataType , P ... >
+class DynamicView : public Kokkos::ViewTraits< DataType , P ... >
 { 
 public:
 
