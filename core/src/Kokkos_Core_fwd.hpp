@@ -81,22 +81,32 @@ struct InvalidType {};
 
 namespace Kokkos {
 
-// Execution Spaces
-class Serial ;    ///< Execution space main process on CPU
-class Threads ;   ///< Execution space with pthreads back-end
-class OpenMP ;    ///< OpenMP execution space
-class Cuda ;      ///< Execution space for Cuda GPU
+class HostSpace ; ///< Memory space for main process and CPU execution spaces
 
-// Memory Spaces
-class HostSpace ;            ///< Memory space for main process and CPU execution spaces
+#ifdef KOKKOS_HAVE_HBWSPACE
+namespace Experimental {
+class HBWSpace ; /// Memory space for hbw_malloc from memkind (e.g. for KNL processor)
+}
+#endif
+
+#if defined( KOKKOS_HAVE_SERIAL )
+class Serial ;    ///< Execution space main process on CPU
+#endif // defined( KOKKOS_HAVE_SERIAL )
+
+#if defined( KOKKOS_HAVE_PTHREAD )
+class Threads ;  ///< Execution space with pthreads back-end
+#endif
+
+#if defined( KOKKOS_HAVE_OPENMP )
+class OpenMP ; ///< OpenMP execution space
+#endif
+
+#if defined( KOKKOS_HAVE_CUDA )
 class CudaSpace ;            ///< Memory space on Cuda GPU
 class CudaUVMSpace ;         ///< Memory space on Cuda GPU with UVM
 class CudaHostPinnedSpace ;  ///< Memory space on Host accessible to Cuda GPU
-
-namespace Experimental {
-class HBWSpace ;             ///< Memory space for hbw_malloc from memkind (e.g. for KNL processor)
-}
-
+class Cuda ;                 ///< Execution space for Cuda GPU
+#endif
 
 template<class ExecutionSpace, class MemorySpace>
 struct Device;
