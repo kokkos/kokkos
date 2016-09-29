@@ -61,9 +61,6 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template< class DstMemorySpace , class SrcMemorySpace >
-struct DeepCopy ;
-
 template< class DataType >
 struct ViewArrayAnalysis ;
 
