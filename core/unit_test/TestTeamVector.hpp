@@ -173,13 +173,21 @@ struct functor_team_for {
 
       // Accumulate value into per thread shared memory
       // This is non blocking
-      Kokkos::parallel_for(Kokkos::TeamThreadRange(team,131),[&] (int i) {
+      Kokkos::parallel_for(Kokkos::TeamThreadRange(team,131),[&] (int i)
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+      {
         values(team.team_rank ()) += i - team.league_rank () + team.league_size () + team.team_size ();
       });
       // Wait for all memory to be written
       team.team_barrier ();
       // One thread per team executes the comparison
-      Kokkos::single(Kokkos::PerTeam(team),[&]() {
+      Kokkos::single(Kokkos::PerTeam(team),[&]()
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+      {
             Scalar test = 0;
             Scalar value = 0;
             for (int i = 0; i < 131; ++i) {
@@ -213,12 +221,20 @@ struct functor_team_reduce {
   void operator() (typename policy_type::member_type team) const {
 
     Scalar value = Scalar();
-    Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,131),[&] (int i, Scalar& val) {
+    Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,131),[&] (int i, Scalar& val)
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+    {
       val += i - team.league_rank () + team.league_size () + team.team_size ();
     },value);
 
     team.team_barrier ();
-    Kokkos::single(Kokkos::PerTeam(team),[&]() {
+    Kokkos::single(Kokkos::PerTeam(team),[&]()
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+        {
          Scalar test = 0;
          for (int i = 0; i < 131; ++i) {
            test += i - team.league_rank () + team.league_size () + team.team_size ();
@@ -250,11 +266,15 @@ struct functor_team_reduce_join {
     Scalar value = 0;
 
     Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,131)
-      , [&] (int i, Scalar& val) {
+      , [&] (int i, Scalar& val)
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+      {
         val += i - team.league_rank () + team.league_size () + team.team_size ();
       }
       , [&] (volatile Scalar& val, const volatile Scalar& src)
-#ifdef KOKKOS_CUDA_CLANG_WORKAROUND
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
       __device__
 #endif
         {val+=src;}
@@ -262,7 +282,11 @@ struct functor_team_reduce_join {
     );
 
     team.team_barrier ();
-    Kokkos::single(Kokkos::PerTeam(team),[&]() {
+    Kokkos::single(Kokkos::PerTeam(team),[&]()
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+    {
          Scalar test = 0;
          for (int i = 0; i < 131; ++i) {
            test += i - team.league_rank () + team.league_size () + team.team_size ();
@@ -302,18 +326,34 @@ struct functor_team_vector_for {
               static_cast<unsigned int> (shmemSize));
     }
     else {
-      Kokkos::single(Kokkos::PerThread(team),[&] () {
+      Kokkos::single(Kokkos::PerThread(team),[&] ()
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+      {
         values(team.team_rank ()) = 0;
       });
 
-      Kokkos::parallel_for(Kokkos::TeamThreadRange(team,131),[&] (int i) {
-        Kokkos::single(Kokkos::PerThread(team),[&] () {
+      Kokkos::parallel_for(Kokkos::TeamThreadRange(team,131),[&] (int i)
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+      {
+        Kokkos::single(Kokkos::PerThread(team),[&] ()
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+        {
           values(team.team_rank ()) += i - team.league_rank () + team.league_size () + team.team_size ();
         });
       });
 
       team.team_barrier ();
-      Kokkos::single(Kokkos::PerTeam(team),[&]() {
+      Kokkos::single(Kokkos::PerTeam(team),[&]()
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+      {
         Scalar test = 0;
         Scalar value = 0;
         for (int i = 0; i < 131; ++i) {
@@ -347,12 +387,20 @@ struct functor_team_vector_reduce {
   void operator() (typename policy_type::member_type team) const {
 
     Scalar value = Scalar();
-    Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,131),[&] (int i, Scalar& val) {
+    Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,131),[&] (int i, Scalar& val)
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+    {
         val += i - team.league_rank () + team.league_size () + team.team_size ();
     },value);
 
     team.team_barrier ();
-    Kokkos::single(Kokkos::PerTeam(team),[&]() {
+    Kokkos::single(Kokkos::PerTeam(team),[&]()
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+    {
       Scalar test = 0;
       for (int i = 0; i < 131; ++i) {
         test += i - team.league_rank () + team.league_size () + team.team_size ();
@@ -383,11 +431,15 @@ struct functor_team_vector_reduce_join {
 
     Scalar value = 0;
     Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,131)
-      , [&] (int i, Scalar& val) {
+      , [&] (int i, Scalar& val)
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+      {
         val += i - team.league_rank () + team.league_size () + team.team_size ();
       }
       , [&] (volatile Scalar& val, const volatile Scalar& src)
-#ifdef KOKKOS_CUDA_CLANG_WORKAROUND
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
       __device__
 #endif
         {val+=src;}
@@ -395,7 +447,11 @@ struct functor_team_vector_reduce_join {
     );
 
     team.team_barrier ();
-    Kokkos::single(Kokkos::PerTeam(team),[&]() {
+    Kokkos::single(Kokkos::PerTeam(team),[&]()
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+    {
       Scalar test = 0;
       for (int i = 0; i < 131; ++i) {
          test += i - team.league_rank () + team.league_size () + team.team_size ();
@@ -426,16 +482,28 @@ struct functor_vec_single {
     // inside a parallel_for and write to it.
     Scalar value = 0;
 
-    Kokkos::parallel_for(Kokkos::ThreadVectorRange(team,13),[&] (int i) {
+    Kokkos::parallel_for(Kokkos::ThreadVectorRange(team,13),[&] (int i)
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+    {
       value = i; // This write is violating Kokkos semantics for nested parallelism
     });
 
-    Kokkos::single(Kokkos::PerThread(team),[&] (Scalar& val) {
+    Kokkos::single(Kokkos::PerThread(team),[&] (Scalar& val)
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+    {
       val = 1;
     },value);
 
     Scalar value2 = 0;
-    Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(team,13), [&] (int i, Scalar& val) {
+    Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(team,13), [&] (int i, Scalar& val)
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+    {
       val += value;
     },value2);
 
@@ -470,11 +538,19 @@ struct functor_vec_for {
       flag() = 1;
     }
     else {
-      Kokkos::parallel_for(Kokkos::ThreadVectorRange(team,13), [&] (int i) {
+      Kokkos::parallel_for(Kokkos::ThreadVectorRange(team,13), [&] (int i)
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+      {
         values(13*team.team_rank() + i) = i - team.team_rank() - team.league_rank() + team.league_size() + team.team_size();
       });
 
-      Kokkos::single(Kokkos::PerThread(team),[&] () {
+      Kokkos::single(Kokkos::PerThread(team),[&] ()
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+      {
         Scalar test = 0;
         Scalar value = 0;
         for (int i = 0; i < 13; ++i) {
@@ -504,11 +580,19 @@ struct functor_vec_red {
   void operator() (typename policy_type::member_type team) const {
     Scalar value = 0;
 
-    Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(team,13),[&] (int i, Scalar& val) {
+    Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(team,13),[&] (int i, Scalar& val)
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+    {
       val += i;
     }, value);
 
-    Kokkos::single(Kokkos::PerThread(team),[&] () {
+    Kokkos::single(Kokkos::PerThread(team),[&] ()
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+    {
       Scalar test = 0;
       for(int i = 0; i < 13; i++) {
         test+=i;
@@ -534,12 +618,24 @@ struct functor_vec_red_join {
     Scalar value = 1;
 
     Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(team,13)
-      , [&] (int i, Scalar& val) { val *= i; }
-      , [&] (Scalar& val, const Scalar& src) {val*=src;}
+      , [&] (int i, Scalar& val)
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+      { val *= i; }
+      , [&] (Scalar& val, const Scalar& src)
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+      {val*=src;}
       , value
     );
 
-    Kokkos::single(Kokkos::PerThread(team),[&] () {
+    Kokkos::single(Kokkos::PerThread(team),[&] ()
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+    {
       Scalar test = 1;
       for(int i = 0; i < 13; i++) {
         test*=i;
@@ -562,7 +658,11 @@ struct functor_vec_scan {
 
   KOKKOS_INLINE_FUNCTION
   void operator() (typename policy_type::member_type team) const {
-    Kokkos::parallel_scan(Kokkos::ThreadVectorRange(team,13),[&] (int i, Scalar& val, bool final) {
+    Kokkos::parallel_scan(Kokkos::ThreadVectorRange(team,13),[&] (int i, Scalar& val, bool final)
+#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
+      __device__
+#endif
+    {
       val += i;
       if(final) {
         Scalar test = 0;
