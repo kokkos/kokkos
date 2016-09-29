@@ -95,7 +95,7 @@ private:
 
 public:
 
-//#if defined( __CUDA_ARCH__ )
+#if defined( __CUDA_ARCH__ ) || defined( KOKKOS_CUDA_CLANG_WORKAROUND)
 
   __device__ inline
   const execution_space::scratch_memory_space & team_shmem() const
@@ -214,7 +214,9 @@ public:
     , m_league_size( arg_league_size ) 
     {}
 
-//#else
+#endif
+
+#if !defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
 
   const execution_space::scratch_memory_space & team_shmem() const
     { return m_team_shared.set_team_thread_mode(0, 1,0) ; }
@@ -244,16 +246,16 @@ public:
 
   //----------------------------------------
   // Private for the driver
-
-  //CudaTeamMember( void * shared
-  //              , const int shared_begin
-  //              , const int shared_end
-  //              , void*     scratch_level_1_ptr
-  //              , const int scratch_level_1_size
-  //              , const int arg_league_rank
-  //              , const int arg_league_size );
-
-//#endif
+#ifndef KOKKOS_CUDA_CLANG_WORKAROUND
+  CudaTeamMember( void * shared
+                , const int shared_begin
+                , const int shared_end
+                , void*     scratch_level_1_ptr
+                , const int scratch_level_1_size
+                , const int arg_league_rank
+                , const int arg_league_size );
+#endif
+#endif
 
 };
 

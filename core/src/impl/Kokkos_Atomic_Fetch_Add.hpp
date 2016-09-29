@@ -49,6 +49,7 @@ namespace Kokkos {
 //----------------------------------------------------------------------------
 
 #if defined( KOKKOS_HAVE_CUDA )
+#if defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
 
 // Support for int, unsigned int, unsigned long long int, and float
 
@@ -153,8 +154,9 @@ T atomic_fetch_add( volatile T * const dest ,
   return return_val;
 }
 #endif
+#endif
 //----------------------------------------------------------------------------
-
+#if !defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
 #if defined(KOKKOS_ATOMICS_USE_GCC) || defined(KOKKOS_ATOMICS_USE_INTEL)
 
 #if defined( KOKKOS_ENABLE_ASM ) && defined ( KOKKOS_USE_ISA_X86_64 )
@@ -326,7 +328,7 @@ T atomic_fetch_add( volatile T * const dest , const T val )
 }
 
 #endif
-
+#endif
 //----------------------------------------------------------------------------
 
 // Simpler version of atomic_fetch_add without the fetch

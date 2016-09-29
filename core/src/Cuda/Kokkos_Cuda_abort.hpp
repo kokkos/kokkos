@@ -100,12 +100,14 @@ void cuda_abort( const char * const message )
 //#if !defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
 
 namespace Kokkos {
+#if defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
 __device__ inline
 void abort( const char * const message ) {
 #ifdef __CUDA_ARCH__
   Kokkos::Impl::cuda_abort(message);
 #endif
 }
+#endif
 }
 //#endif
 #endif /* #if defined( __CUDACC__ ) && defined( KOKKOS_HAVE_CUDA ) */

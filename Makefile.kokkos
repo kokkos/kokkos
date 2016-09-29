@@ -443,6 +443,7 @@ KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/containers/src/impl/*.cpp)
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.cpp)
 	KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.hpp)
+	KOKKOS_CXXFLAGS += -I$(CUDA_PATH)/include
 	KOKKOS_LDFLAGS += -L$(CUDA_PATH)/lib64 
 	KOKKOS_LIBS += -lcudart -lcuda
 endif

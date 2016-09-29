@@ -49,6 +49,7 @@ namespace Kokkos {
 //----------------------------------------------------------------------------
 
 #if defined( KOKKOS_HAVE_CUDA )
+#if defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
 
 __inline__ __device__
 int atomic_exchange( volatile int * const dest , const int val )
@@ -153,9 +154,11 @@ void atomic_assign(
 }
 
 #endif
+#endif
 
 //----------------------------------------------------------------------------
 
+#if !defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
 #if defined(KOKKOS_ATOMICS_USE_GCC) || defined(KOKKOS_ATOMICS_USE_INTEL)
 
 template< typename T >
@@ -352,7 +355,7 @@ void atomic_assign( volatile T * const dest , const T val )
 }
 
 #endif
-
+#endif
 } // namespace Kokkos
 
 #endif

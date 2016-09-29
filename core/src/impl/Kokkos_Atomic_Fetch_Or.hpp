@@ -49,6 +49,7 @@ namespace Kokkos {
 //----------------------------------------------------------------------------
 
 #if defined( KOKKOS_HAVE_CUDA )
+#if defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
 
 // Support for int, unsigned int, unsigned long long int, and float
 
@@ -67,8 +68,9 @@ unsigned long long int atomic_fetch_or( volatile unsigned long long int * const 
 { return atomicOr((unsigned long long int*)dest,val); }
 #endif
 #endif
+#endif
 //----------------------------------------------------------------------------
-
+#if !defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
 #if defined(KOKKOS_ATOMICS_USE_GCC) || defined(KOKKOS_ATOMICS_USE_INTEL)
 
 inline
@@ -108,7 +110,7 @@ T atomic_fetch_or( volatile T * const dest , const T val )
 }
 
 #endif
-
+#endif
 //----------------------------------------------------------------------------
 
 // Simpler version of atomic_fetch_or without the fetch

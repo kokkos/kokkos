@@ -52,6 +52,7 @@ namespace Kokkos {
 
 #if defined( KOKKOS_HAVE_CUDA )
 
+#if defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
 __inline__ __device__
 int atomic_compare_exchange( volatile int * const dest, const int compare, const int val)
 { return atomicCAS((int*)dest,compare,val); }
@@ -109,13 +110,13 @@ T atomic_compare_exchange( volatile T * const dest , const T & compare ,
   }
   return return_val;
 }
-
+#endif
 #endif
 
 //----------------------------------------------------------------------------
 // GCC native CAS supports int, long, unsigned int, unsigned long.
 // Intel native CAS support int and long with the same interface as GCC.
-
+#if !defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
 #if defined(KOKKOS_ATOMICS_USE_GCC) || defined(KOKKOS_ATOMICS_USE_INTEL)
 
 inline
@@ -257,6 +258,7 @@ T atomic_compare_exchange( volatile T * const dest, const T compare, const T val
 }
 
 #endif
+#endif
 
 template <typename T>
 KOKKOS_INLINE_FUNCTION
@@ -264,7 +266,6 @@ bool atomic_compare_exchange_strong(volatile T* const dest, const T compare, con
 {
   return compare == atomic_compare_exchange(dest, compare, val);
 }
-
 //----------------------------------------------------------------------------
 
 } // namespace Kokkos

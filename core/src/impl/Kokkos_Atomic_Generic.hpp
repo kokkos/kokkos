@@ -239,16 +239,17 @@ T atomic_fetch_oper( const Oper& op, volatile T * const dest ,
 #else
   // This is a way to (hopefully) avoid dead lock in a warp
   int done = 1;
+  T return_val;
   while ( done>0 ) {
     done++;
     if( Impl::lock_address_cuda_space( (void*) dest ) ) {
-      T return_val = *dest;
+      return_val = *dest;
       *dest = Oper::apply(return_val, val);;
       Impl::unlock_address_cuda_space( (void*) dest );
       done=0;
-      return return_val;
     }
   }
+  return return_val;
 #endif
 }
 
@@ -273,16 +274,17 @@ T atomic_oper_fetch( const Oper& op, volatile T * const dest ,
 #else
   // This is a way to (hopefully) avoid dead lock in a warp
   int done = 1;
+  T return_val;
   while ( done>0 ) {
     done++;
     if( Impl::lock_address_cuda_space( (void*) dest ) ) {
-      T return_val = Oper::apply(*dest, val);
+      return_val = Oper::apply(*dest, val);
       *dest = return_val;
       Impl::unlock_address_cuda_space( (void*) dest );
       done=0;
-      return return_val;
     }
   }
+  return return_val;
 #endif
 }
 
