@@ -43,7 +43,7 @@
 #define TEST_TILE_HPP
 
 #include <Kokkos_Core.hpp>
-#include <impl/KokkosExp_ViewTile.hpp>
+#include <impl/Kokkos_ViewTile.hpp>
 
 namespace TestTile {
 
