@@ -116,7 +116,7 @@ class ViewMapping< Traits ,
 private:
 
   template< class , class ... > friend class ViewMapping ;
-  template< class , class ... > friend class Kokkos::Experimental::View ;
+  template< class , class ... > friend class Kokkos::View ;
 
   typedef ViewOffset< typename Traits::dimension
                     , typename Traits::array_layout
@@ -302,11 +302,11 @@ public:
 
   template< class ... P >
   SharedAllocationRecord<> *
-  allocate_shared( ViewCtorProp< P... > const & arg_prop
+  allocate_shared( Kokkos::Impl::ViewCtorProp< P... > const & arg_prop
                  , typename Traits::array_layout const & arg_layout
                  )
   {
-    typedef ViewCtorProp< P... > alloc_prop ;
+    typedef Kokkos::Impl::ViewCtorProp< P... > alloc_prop ;
 
     typedef typename alloc_prop::execution_space  execution_space ;
     typedef typename Traits::memory_space         memory_space ;
@@ -324,8 +324,8 @@ public:
 
     // Allocate memory from the memory space and create tracking record.
     record_type * const record =
-      record_type::allocate( ((ViewCtorProp<void,memory_space> const &) arg_prop ).value
-                           , ((ViewCtorProp<void,std::string>  const &) arg_prop ).value
+      record_type::allocate( ((Kokkos::Impl::ViewCtorProp<void,memory_space> const &) arg_prop ).value
+                           , ((Kokkos::Impl::ViewCtorProp<void,std::string>  const &) arg_prop ).value
                            , alloc_size );
 
     if ( alloc_size ) {
@@ -334,7 +334,7 @@ public:
 
       if ( alloc_prop::initialize ) {
         // The functor constructs and destroys
-        record->m_destroy = functor_type( ((ViewCtorProp<void,execution_space> const & )arg_prop).value
+        record->m_destroy = functor_type( ((Kokkos::Impl::ViewCtorProp<void,execution_space> const & )arg_prop).value
                                         , (pointer_type) m_handle
                                         , m_offset.span() * Array_N
                                         );
@@ -558,13 +558,13 @@ private:
 
 public:
 
-  typedef Kokkos::Experimental::ViewTraits
+  typedef Kokkos::ViewTraits
     < data_type
     , array_layout
     , typename SrcTraits::device_type
     , typename SrcTraits::memory_traits > traits_type ;
 
-  typedef Kokkos::Experimental::View
+  typedef Kokkos::View
     < data_type
     , array_layout
     , typename SrcTraits::device_type
