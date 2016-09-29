@@ -2182,7 +2182,7 @@ struct ViewDataHandle {
   typedef typename Traits::value_type   value_type  ;
   typedef typename Traits::value_type * handle_type ;
   typedef typename Traits::value_type & return_type ;
-  typedef Kokkos::Experimental::Impl::SharedAllocationTracker  track_type  ;
+  typedef Kokkos::Impl::SharedAllocationTracker  track_type  ;
 
   KOKKOS_INLINE_FUNCTION
   static handle_type assign( value_type * arg_data_ptr
@@ -2212,7 +2212,7 @@ struct ViewDataHandle< Traits ,
   typedef typename Traits::value_type  value_type ;
   typedef typename Kokkos::Impl::AtomicViewDataHandle< Traits >  handle_type ;
   typedef typename Kokkos::Impl::AtomicDataElement< Traits >     return_type ;
-  typedef Kokkos::Experimental::Impl::SharedAllocationTracker    track_type  ;
+  typedef Kokkos::Impl::SharedAllocationTracker                  track_type  ;
 
   KOKKOS_INLINE_FUNCTION
   static handle_type assign( value_type * arg_data_ptr
@@ -2561,7 +2561,7 @@ public:
    *  return that record for allocation tracking.
    */
   template< class ... P >
-  SharedAllocationRecord<> *
+  Kokkos::Impl::SharedAllocationRecord<> *
   allocate_shared( Kokkos::Impl::ViewCtorProp< P... > const & arg_prop
                  , typename Traits::array_layout const & arg_layout )
   {
@@ -2571,7 +2571,7 @@ public:
     typedef typename Traits::memory_space         memory_space ;
     typedef typename Traits::value_type           value_type ;
     typedef ViewValueFunctor< execution_space , value_type > functor_type ;
-    typedef SharedAllocationRecord< memory_space , functor_type > record_type ;
+    typedef Kokkos::Impl::SharedAllocationRecord< memory_space , functor_type > record_type ;
 
     // Query the mapping for byte-size of allocation.
     // If padding is allowed then pass in sizeof value type
@@ -2675,7 +2675,7 @@ public:
                          is_assignable_dimension &&
                          is_assignable_layout };
 
-  typedef Kokkos::Experimental::Impl::SharedAllocationTracker  TrackType ;
+  typedef Kokkos::Impl::SharedAllocationTracker  TrackType ;
   typedef ViewMapping< DstTraits , void >  DstType ;
   typedef ViewMapping< SrcTraits , void >  SrcType ;
 

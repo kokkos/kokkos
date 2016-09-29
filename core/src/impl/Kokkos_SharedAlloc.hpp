@@ -48,7 +48,6 @@
 #include <string>
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 template< class MemorySpace = void , class DestroyFunctor = void >
@@ -209,7 +208,7 @@ private:
                         , const size_t        arg_alloc
                         )
     /*  Allocate user memory as [ SharedAllocationHeader , user_memory ] */
-    : SharedAllocationRecord< MemorySpace , void >( arg_space , arg_label , arg_alloc , & Kokkos::Experimental::Impl::deallocate< MemorySpace , DestroyFunctor > )
+    : SharedAllocationRecord< MemorySpace , void >( arg_space , arg_label , arg_alloc , & Kokkos::Impl::deallocate< MemorySpace , DestroyFunctor > )
     , m_destroy()
     {}
 
@@ -394,7 +393,6 @@ public:
 
 
 } /* namespace Impl */
-} /* namespace Experimental */
 } /* namespace Kokkos */
 
 #endif

@@ -152,7 +152,7 @@ private:
 
   AllocationMechanism  m_alloc_mech ;
 
-  friend class Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::Experimental::HBWSpace , void > ;
+  friend class Kokkos::Impl::SharedAllocationRecord< Kokkos::Experimental::HBWSpace , void > ;
 };
 
 } // namespace Experimental
@@ -162,7 +162,6 @@ private:
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 template<>
@@ -239,7 +238,6 @@ public:
 };
 
 } // namespace Impl
-} // namespace Experimental
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------

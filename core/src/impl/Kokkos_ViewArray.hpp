@@ -301,7 +301,7 @@ public:
   //----------------------------------------
 
   template< class ... P >
-  SharedAllocationRecord<> *
+  Kokkos::Impl::SharedAllocationRecord<> *
   allocate_shared( Kokkos::Impl::ViewCtorProp< P... > const & arg_prop
                  , typename Traits::array_layout const & arg_layout
                  )
@@ -311,7 +311,7 @@ public:
     typedef typename alloc_prop::execution_space  execution_space ;
     typedef typename Traits::memory_space         memory_space ;
     typedef ViewValueFunctor< execution_space , scalar_type > functor_type ;
-    typedef SharedAllocationRecord< memory_space , functor_type > record_type ;
+    typedef Kokkos::Impl::SharedAllocationRecord< memory_space , functor_type > record_type ;
 
     // Query the mapping for byte-size of allocation.
     typedef std::integral_constant< unsigned ,
@@ -377,7 +377,7 @@ public:
 
   enum { is_assignable = true };
 
-  typedef Kokkos::Experimental::Impl::SharedAllocationTracker  TrackType ;
+  typedef Kokkos::Impl::SharedAllocationTracker  TrackType ;
   typedef ViewMapping< DstTraits , void >  DstType ;
   typedef ViewMapping< SrcTraits , void >  SrcType ;
 
@@ -436,7 +436,7 @@ public:
   enum { is_assignable = std::is_same< typename DstTraits::data_type ,    typename SrcTraits::scalar_array_type >::value &&
                          std::is_same< typename DstTraits::array_layout , typename SrcTraits::array_layout >::value };
 
-  typedef Kokkos::Experimental::Impl::SharedAllocationTracker  TrackType ;
+  typedef Kokkos::Impl::SharedAllocationTracker  TrackType ;
   typedef ViewMapping< DstTraits , void >  DstType ;
   typedef ViewMapping< SrcTraits , void >  SrcType ;
 

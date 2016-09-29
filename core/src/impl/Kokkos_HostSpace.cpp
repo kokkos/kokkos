@@ -339,7 +339,6 @@ void HostSpace::deallocate( void * const arg_alloc_ptr , const size_t arg_alloc_
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 SharedAllocationRecord< void , void >
@@ -438,7 +437,7 @@ SharedAllocationRecord< Kokkos::HostSpace , void >::get_record( void * alloc_ptr
   RecordHost                   * const record = head ? static_cast< RecordHost * >( head->m_record ) : (RecordHost *) 0 ;
 
   if ( ! alloc_ptr || record->m_alloc_ptr != head ) {
-    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void >::get_record ERROR" ) );
+    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Impl::SharedAllocationRecord< Kokkos::HostSpace , void >::get_record ERROR" ) );
   }
 
   return record ;
@@ -452,7 +451,6 @@ print_records( std::ostream & s , const Kokkos::HostSpace & space , bool detail 
 }
 
 } // namespace Impl
-} // namespace Experimental
 } // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

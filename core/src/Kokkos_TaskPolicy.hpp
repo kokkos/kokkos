@@ -323,7 +323,7 @@ class TaskPolicy
 {
 private:
 
-  using track_type = Kokkos::Experimental::Impl::SharedAllocationTracker ;
+  using track_type = Kokkos::Impl::SharedAllocationTracker ;
   using queue_type = Kokkos::Impl::TaskQueue< ExecSpace > ;
   using task_base  = Impl::TaskBase< ExecSpace , void , void > ;
 
@@ -412,7 +412,7 @@ public:
     : m_track()
     , m_queue(0)
     {
-      typedef Kokkos::Experimental::Impl::SharedAllocationRecord
+      typedef Kokkos::Impl::SharedAllocationRecord
         < memory_space , typename queue_type::Destroy >
           record_type ;
 

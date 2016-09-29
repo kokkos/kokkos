@@ -475,7 +475,7 @@ public:
 private:
 
   typedef Kokkos::Experimental::Impl::ViewMapping< traits , void > map_type ;
-  typedef Kokkos::Experimental::Impl::SharedAllocationTracker      track_type ;
+  typedef Kokkos::Impl::SharedAllocationTracker      track_type ;
 
   track_type  m_track ;
   map_type    m_map ;
@@ -1238,7 +1238,7 @@ public:
 #endif
 //------------------------------------------------------------
 
-      Kokkos::Experimental::Impl::SharedAllocationRecord<> *
+      Kokkos::Impl::SharedAllocationRecord<> *
         record = m_map.allocate_shared( prop , arg_layout );
 
 //------------------------------------------------------------
@@ -1594,11 +1594,11 @@ namespace Impl {
 
 inline
 void shared_allocation_tracking_claim_and_disable()
-{ Kokkos::Experimental::Impl::SharedAllocationRecord<void,void>::tracking_claim_and_disable(); }
+{ Kokkos::Impl::SharedAllocationRecord<void,void>::tracking_claim_and_disable(); }
 
 inline
 void shared_allocation_tracking_release_and_enable()
-{ Kokkos::Experimental::Impl::SharedAllocationRecord<void,void>::tracking_release_and_enable(); }
+{ Kokkos::Impl::SharedAllocationRecord<void,void>::tracking_release_and_enable(); }
 
 } /* namespace Impl */
 } /* namespace Kokkos */
@@ -2378,6 +2378,8 @@ using Kokkos::Impl::ViewCtorProp ;
 using Kokkos::Impl::is_view_label ;
 using Kokkos::Impl::WithoutInitializing_t ;
 using Kokkos::Impl::AllowPadding_t ;
+using Kokkos::Impl::SharedAllocationRecord ;
+using Kokkos::Impl::SharedAllocationTracker ;
 
 } /* namespace Impl */
 } /* namespace Experimental */
