@@ -245,6 +245,10 @@ public:
    *  This size takes into account execution space concurrency limitations and
    *  scratch memory space limitations for reductions, team reduce/scan, and
    *  team shared memory.
+   *
+   *  This function only works for single-operator functors.
+   *  With multi-operator functors it cannot be determined
+   *  which operator will be called.
    */
   template< class FunctorType >
   static int team_size_max( const FunctorType & );
@@ -254,6 +258,10 @@ public:
    *  This size takes into account execution space concurrency limitations and
    *  scratch memory space limitations for reductions, team reduce/scan, and
    *  team shared memory.
+   *
+   *  This function only works for single-operator functors.
+   *  With multi-operator functors it cannot be determined
+   *  which operator will be called.
    */
   template< class FunctorType >
   static int team_size_recommended( const FunctorType & );
