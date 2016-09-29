@@ -46,7 +46,6 @@
 
 
 #include <Kokkos_HostSpace.hpp>
-#include <impl/Kokkos_HBWAllocators.hpp>
 
 /*--------------------------------------------------------------------------*/
 #ifdef KOKKOS_HAVE_HBWSPACE

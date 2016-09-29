@@ -562,7 +562,7 @@ TEST_F( serial , template_meta_functions )
 #if defined( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_SERIAL )
 TEST_F( serial , cxx11 )
 {
-  if ( Kokkos::Impl::is_same< Kokkos::DefaultExecutionSpace , Kokkos::Serial >::value ) {
+  if ( std::is_same< Kokkos::DefaultExecutionSpace , Kokkos::Serial >::value ) {
     ASSERT_TRUE( ( TestCXX11::Test< Kokkos::Serial >(1) ) );
     ASSERT_TRUE( ( TestCXX11::Test< Kokkos::Serial >(2) ) );
     ASSERT_TRUE( ( TestCXX11::Test< Kokkos::Serial >(3) ) );

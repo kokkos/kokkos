@@ -84,8 +84,8 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
 #endif // defined( KOKKOS_HAVE_CUDA )
 
 #if defined( KOKKOS_HAVE_OPENMP )
-  if( Impl::is_same< Kokkos::OpenMP , Kokkos::DefaultExecutionSpace >::value ||
-      Impl::is_same< Kokkos::OpenMP , Kokkos::HostSpace::execution_space >::value ) {
+  if( std::is_same< Kokkos::OpenMP , Kokkos::DefaultExecutionSpace >::value ||
+      std::is_same< Kokkos::OpenMP , Kokkos::HostSpace::execution_space >::value ) {
     if(num_threads>0) {
       if(use_numa>0) {
         Kokkos::OpenMP::initialize(num_threads,use_numa);
@@ -104,8 +104,8 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
 #endif
 
 #if defined( KOKKOS_HAVE_PTHREAD )
-  if( Impl::is_same< Kokkos::Threads , Kokkos::DefaultExecutionSpace >::value ||
-      Impl::is_same< Kokkos::Threads , Kokkos::HostSpace::execution_space >::value ) {
+  if( std::is_same< Kokkos::Threads , Kokkos::DefaultExecutionSpace >::value ||
+      std::is_same< Kokkos::Threads , Kokkos::HostSpace::execution_space >::value ) {
     if(num_threads>0) {
       if(use_numa>0) {
         Kokkos::Threads::initialize(num_threads,use_numa);
@@ -129,14 +129,14 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
   // struct, you may remove this line of code.
   (void) args;
 
-  if( Impl::is_same< Kokkos::Serial , Kokkos::DefaultExecutionSpace >::value ||
-      Impl::is_same< Kokkos::Serial , Kokkos::HostSpace::execution_space >::value ) {
+  if( std::is_same< Kokkos::Serial , Kokkos::DefaultExecutionSpace >::value ||
+      std::is_same< Kokkos::Serial , Kokkos::HostSpace::execution_space >::value ) {
     Kokkos::Serial::initialize();
   }
 #endif
 
 #if defined( KOKKOS_HAVE_CUDA )
-  if( Impl::is_same< Kokkos::Cuda , Kokkos::DefaultExecutionSpace >::value || 0 < use_gpu ) {
+  if( std::is_same< Kokkos::Cuda , Kokkos::DefaultExecutionSpace >::value || 0 < use_gpu ) {
     if (use_gpu > -1) {
       Kokkos::Cuda::initialize( Kokkos::Cuda::SelectDevice( use_gpu ) );
     }
@@ -156,15 +156,15 @@ void finalize_internal( const bool all_spaces = false )
 {
 
 #if defined( KOKKOS_HAVE_CUDA )
-  if( Impl::is_same< Kokkos::Cuda , Kokkos::DefaultExecutionSpace >::value || all_spaces ) {
+  if( std::is_same< Kokkos::Cuda , Kokkos::DefaultExecutionSpace >::value || all_spaces ) {
     if(Kokkos::Cuda::is_initialized())
       Kokkos::Cuda::finalize();
   }
 #endif
 
 #if defined( KOKKOS_HAVE_OPENMP )
-  if( Impl::is_same< Kokkos::OpenMP , Kokkos::DefaultExecutionSpace >::value ||
-      Impl::is_same< Kokkos::OpenMP , Kokkos::HostSpace::execution_space >::value ||
+  if( std::is_same< Kokkos::OpenMP , Kokkos::DefaultExecutionSpace >::value ||
+      std::is_same< Kokkos::OpenMP , Kokkos::HostSpace::execution_space >::value ||
       all_spaces ) {
     if(Kokkos::OpenMP::is_initialized())
       Kokkos::OpenMP::finalize();
@@ -172,8 +172,8 @@ void finalize_internal( const bool all_spaces = false )
 #endif
 
 #if defined( KOKKOS_HAVE_PTHREAD )
-  if( Impl::is_same< Kokkos::Threads , Kokkos::DefaultExecutionSpace >::value ||
-      Impl::is_same< Kokkos::Threads , Kokkos::HostSpace::execution_space >::value ||
+  if( std::is_same< Kokkos::Threads , Kokkos::DefaultExecutionSpace >::value ||
+      std::is_same< Kokkos::Threads , Kokkos::HostSpace::execution_space >::value ||
       all_spaces ) {
     if(Kokkos::Threads::is_initialized())
       Kokkos::Threads::finalize();
@@ -181,8 +181,8 @@ void finalize_internal( const bool all_spaces = false )
 #endif
 
 #if defined( KOKKOS_HAVE_SERIAL )
-  if( Impl::is_same< Kokkos::Serial , Kokkos::DefaultExecutionSpace >::value ||
-      Impl::is_same< Kokkos::Serial , Kokkos::HostSpace::execution_space >::value ||
+  if( std::is_same< Kokkos::Serial , Kokkos::DefaultExecutionSpace >::value ||
+      std::is_same< Kokkos::Serial , Kokkos::HostSpace::execution_space >::value ||
       all_spaces ) {
     if(Kokkos::Serial::is_initialized())
       Kokkos::Serial::finalize();
@@ -199,28 +199,28 @@ void fence_internal()
 {
 
 #if defined( KOKKOS_HAVE_CUDA )
-  if( Impl::is_same< Kokkos::Cuda , Kokkos::DefaultExecutionSpace >::value ) {
+  if( std::is_same< Kokkos::Cuda , Kokkos::DefaultExecutionSpace >::value ) {
     Kokkos::Cuda::fence();
   }
 #endif
 
 #if defined( KOKKOS_HAVE_OPENMP )
-  if( Impl::is_same< Kokkos::OpenMP , Kokkos::DefaultExecutionSpace >::value ||
-      Impl::is_same< Kokkos::OpenMP , Kokkos::HostSpace::execution_space >::value ) {
+  if( std::is_same< Kokkos::OpenMP , Kokkos::DefaultExecutionSpace >::value ||
+      std::is_same< Kokkos::OpenMP , Kokkos::HostSpace::execution_space >::value ) {
     Kokkos::OpenMP::fence();
   }
 #endif
 
 #if defined( KOKKOS_HAVE_PTHREAD )
-  if( Impl::is_same< Kokkos::Threads , Kokkos::DefaultExecutionSpace >::value ||
-      Impl::is_same< Kokkos::Threads , Kokkos::HostSpace::execution_space >::value ) {
+  if( std::is_same< Kokkos::Threads , Kokkos::DefaultExecutionSpace >::value ||
+      std::is_same< Kokkos::Threads , Kokkos::HostSpace::execution_space >::value ) {
     Kokkos::Threads::fence();
   }
 #endif
 
 #if defined( KOKKOS_HAVE_SERIAL )
-  if( Impl::is_same< Kokkos::Serial , Kokkos::DefaultExecutionSpace >::value ||
-      Impl::is_same< Kokkos::Serial , Kokkos::HostSpace::execution_space >::value ) {
+  if( std::is_same< Kokkos::Serial , Kokkos::DefaultExecutionSpace >::value ||
+      std::is_same< Kokkos::Serial , Kokkos::HostSpace::execution_space >::value ) {
     Kokkos::Serial::fence();
   }
 #endif

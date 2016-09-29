@@ -461,7 +461,7 @@ bool try_std_sort(ViewType view) {
                      , view.stride_7()
                      };
 #endif
-  possible  = possible && Impl::is_same<typename ViewType::memory_space, HostSpace>::value;
+  possible  = possible && std::is_same<typename ViewType::memory_space, HostSpace>::value;
   possible  = possible && (ViewType::Rank == 1);
   possible  = possible && (stride[0] == 1);
   if(possible)  {

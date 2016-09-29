@@ -591,7 +591,7 @@ TEST_F( threads , template_meta_functions )
 #if defined( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_THREADS )
 TEST_F( threads , cxx11 )
 {
-  if ( Kokkos::Impl::is_same< Kokkos::DefaultExecutionSpace , Kokkos::Threads >::value ) {
+  if ( std::is_same< Kokkos::DefaultExecutionSpace , Kokkos::Threads >::value ) {
     ASSERT_TRUE( ( TestCXX11::Test< Kokkos::Threads >(1) ) );
     ASSERT_TRUE( ( TestCXX11::Test< Kokkos::Threads >(2) ) );
     ASSERT_TRUE( ( TestCXX11::Test< Kokkos::Threads >(3) ) );
