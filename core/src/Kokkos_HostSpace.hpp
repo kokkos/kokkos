@@ -54,8 +54,7 @@
 
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_Error.hpp>
-
-#include <impl/KokkosExp_SharedAlloc.hpp>
+#include <impl/Kokkos_SharedAlloc.hpp>
 
 /*--------------------------------------------------------------------------*/
 

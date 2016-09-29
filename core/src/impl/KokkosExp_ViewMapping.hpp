@@ -52,7 +52,7 @@
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Traits.hpp>
-#include <impl/KokkosExp_ViewCtor.hpp>
+#include <impl/Kokkos_ViewCtor.hpp>
 #include <impl/Kokkos_Atomic_View.hpp>
 
 //----------------------------------------------------------------------------
