@@ -54,6 +54,70 @@
 
 namespace Kokkos { namespace Experimental {
 
+namespace Impl {
+
+template < typename Integral, int Rank >
+struct IntegralArray
+{
+  static_assert( std::is_integral<Integral>::value, "Error: Integral is not an integral type" );
+  static_assert( Rank > 0, "Error: Rank <= 0" );
+
+  using value_type = Integral;
+
+  static constexpr int rank  = Rank;
+
+  KOKKOS_INLINE_FUNCTION
+  static constexpr int size() noexcept { return rank; }
+
+  template <unsigned I>
+  KOKKOS_INLINE_FUNCTION
+  constexpr value_type at() const noexcept
+  {
+    static_assert( I < rank, "Error: I >= Rank" );
+    return m_value[I];
+  }
+
+  template <typename IType>
+  KOKKOS_INLINE_FUNCTION
+  constexpr value_type operator[](IType i) const noexcept
+  {
+    static_assert( std::is_integral<IType>::value, "Error: IType is not an integral type" );
+    return m_value[i];
+  }
+
+  template <typename IType>
+  KOKKOS_INLINE_FUNCTION
+  void set(IType i, value_type v) noexcept
+  {
+    static_assert( std::is_integral<IType>::value, "Error: IType is not an integral type" );
+    m_value[i] = v;
+  }
+
+  template <typename... Args>
+  KOKKOS_INLINE_FUNCTION
+  constexpr IntegralArray( Args &&... args  ) noexcept
+    : m_value{ static_cast<Integral>(std::forward<Args>(args))... }
+  {
+    static_assert(sizeof...(Args) == rank, "Error: number of arguments not equal to rank");
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr IntegralArray() = default;
+  KOKKOS_INLINE_FUNCTION
+  constexpr IntegralArray( IntegralArray const& ) = default;
+  KOKKOS_INLINE_FUNCTION
+  constexpr IntegralArray( IntegralArray &&     ) = default;
+
+  KOKKOS_INLINE_FUNCTION
+  IntegralArray& operator=( IntegralArray const& ) = default;
+  KOKKOS_INLINE_FUNCTION
+  IntegralArray& operator=( IntegralArray &&     ) = default;
+
+private:
+  value_type m_value[rank] = {};
+};
+} // namespace Impl
+
 enum class Iterate
 {
   Default, // Default for the device
@@ -99,377 +163,464 @@ struct Rank
 // multi-dimensional iteration pattern
 template <typename... Properties>
 struct MDRangePolicy
+  : public Kokkos::Impl::PolicyTraits<Properties ...>
 {
+  using traits = Kokkos::Impl::PolicyTraits<Properties ...>;
   using range_policy = RangePolicy<Properties...>;
 
-  static_assert( !std::is_same<range_policy,void>::value
+  static_assert( !std::is_same<typename traits::iteration_pattern,void>::value
                , "Kokkos Error: MD iteration pattern not defined" );
 
-  using iteration_pattern   = typename range_policy::iteration_pattern;
-  using work_tag            = typename range_policy::work_tag;
+  using iteration_pattern   = typename traits::iteration_pattern;
+  using work_tag            = typename traits::work_tag;
 
   static constexpr int rank = iteration_pattern::rank;
 
   static constexpr int outer_direction = static_cast<int> (
       (iteration_pattern::outer_direction != Iterate::Default)
     ? iteration_pattern::outer_direction
-    : default_outer_direction< typename range_policy::execution_space>::value );
+    : default_outer_direction< typename traits::execution_space>::value );
 
   static constexpr int inner_direction = static_cast<int> (
       iteration_pattern::inner_direction != Iterate::Default
     ? iteration_pattern::inner_direction
-    : default_inner_direction< typename range_policy::execution_space>::value ) ;
+    : default_inner_direction< typename traits::execution_space>::value ) ;
 
 
   // Ugly ugly workaround intel 14 not handling scoped enum correctly
   static constexpr int Right = static_cast<int>( Iterate::Right );
+  static constexpr int Left  = static_cast<int>( Iterate::Left );
+
+  using index_type  = typename traits::index_type;
+  using point_type  = Kokkos::Experimental::Impl::IntegralArray<index_type,rank>;
+  using tile_type   = Kokkos::Experimental::Impl::IntegralArray<int,rank>;
 
 
-  using size_type   = typename range_policy::index_type;
-  using index_type  = typename std::make_signed<size_type>::type;
-
-
-  template <typename I>
-  MDRangePolicy( std::initializer_list<I> upper_corner )
+  MDRangePolicy( point_type const& lower, point_type const& upper, tile_type const& tile = tile_type{} )
+    : m_lower{lower}
+    , m_upper{upper}
+    , m_tile{tile}
+    , m_num_tiles{1}
   {
-    static_assert( std::is_integral<I>::value, "Kokkos Error: corner defined with non-integral type" );
-
-    // TODO check size of lists equal to rank
-    // static_asserts on initializer_list.size() require c++14
-
-    //static_assert( upper_corner.size() == rank, "Kokkos Error: upper_corner has incorrect rank" );
-
-    const auto u = upper_corner.begin();
-
-    m_num_tiles = 1;
+    index_type end;
     for (int i=0; i<rank; ++i) {
-      m_offset[i] = static_cast<index_type>(0);
-      m_dim[i]    = static_cast<index_type>(u[i]);
-      // default tile size to 4
-      m_tile[i] = 4;
-      m_tile_dim[i] = (m_dim[i] + (m_tile[i] - 1)) / m_tile[i];
-      m_num_tiles *= m_tile_dim[i];
+      end = upper[i] - lower[i];
+      m_tile_end.set(i, static_cast<index_type>((end + m_tile[i] -1) / m_tile[i]));
+      m_num_tiles *= m_tile_end[i];
     }
   }
 
-  template <typename IA, typename IB>
-  MDRangePolicy( std::initializer_list<IA> corner_a
-               , std::initializer_list<IB> corner_b
-               )
-  {
-    static_assert( std::is_integral<IA>::value, "Kokkos Error: corner A defined with non-integral type" );
-    static_assert( std::is_integral<IB>::value, "Kokkos Error: corner B defined with non-integral type" );
-
-    // TODO check size of lists equal to rank
-    // static_asserts on initializer_list.size() require c++14
-    //static_assert( corner_a.size() == rank, "Kokkos Error: corner_a has incorrect rank" );
-    //static_assert( corner_b.size() == rank, "Kokkos Error: corner_b has incorrect rank" );
-
-
-    using A = typename std::make_signed<IA>::type;
-    using B = typename std::make_signed<IB>::type;
-
-    const auto a = [=](int i) { return static_cast<A>(corner_a.begin()[i]); };
-    const auto b = [=](int i) { return static_cast<B>(corner_b.begin()[i]); };
-
-    m_num_tiles = 1;
-    for (int i=0; i<rank; ++i) {
-      m_offset[i] = static_cast<index_type>(a(i) <= b(i) ? a(i) : b(i));
-      m_dim[i]    = static_cast<index_type>(a(i) <= b(i) ? b(i) - a(i) : a(i) - b(i));
-      // default tile size to 4
-      m_tile[i] = 4;
-      m_tile_dim[i] = (m_dim[i] + (m_tile[i] - 1)) / m_tile[i];
-      m_num_tiles *= m_tile_dim[i];
-    }
-  }
-
-  template <typename IA, typename IB, typename T>
-  MDRangePolicy( std::initializer_list<IA> corner_a
-               , std::initializer_list<IB> corner_b
-               , std::initializer_list<T> tile
-               )
-  {
-    static_assert( std::is_integral<IA>::value, "Kokkos Error: corner A defined with non-integral type" );
-    static_assert( std::is_integral<IB>::value, "Kokkos Error: corner B defined with non-integral type" );
-    static_assert( std::is_integral<T>::value, "Kokkos Error: tile defined with non-integral type" );
-
-    // TODO check size of lists equal to rank
-    // static_asserts on initializer_list.size() require c++14
-    //static_assert( corner_a.size() == rank, "Kokkos Error: corner_a has incorrect rank" );
-    //static_assert( corner_b.size() == rank, "Kokkos Error: corner_b has incorrect rank" );
-    //static_assert( tile.size() == rank, "Kokkos Error: tile has incorrect rank" );
-
-    using A = typename std::make_signed<IA>::type;
-    using B = typename std::make_signed<IB>::type;
-
-    const auto a = [=](int i) { return static_cast<A>(corner_a.begin()[i]); };
-    const auto b = [=](int i) { return static_cast<B>(corner_b.begin()[i]); };
-    const auto t = tile.begin();
-
-    m_num_tiles = 1;
-    for (int i=0; i<rank; ++i) {
-      m_offset[i] = static_cast<index_type>(a(i) <= b(i) ? a(i) : b(i));
-      m_dim[i]    = static_cast<index_type>(a(i) <= b(i) ? b(i) - a(i) : a(i) - b(i));
-      m_tile[i]   = static_cast<int>(t[i] > (T)0 ? t[i] : (T)1 );
-      m_tile_dim[i] = (m_dim[i] + (m_tile[i] - 1)) / m_tile[i];
-      m_num_tiles *= m_tile_dim[i];
-    }
-  }
-
-  index_type   m_offset[rank];
-  index_type   m_dim[rank];
-  int          m_tile[rank];
-  index_type   m_tile_dim[rank];
-  size_type    m_num_tiles;       // product of tile dims
+  point_type m_lower;
+  point_type m_upper;
+  tile_type  m_tile;
+  point_type m_tile_end;
+  index_type m_num_tiles;
 };
 
 namespace Impl {
 
-// Serial, Threads, OpenMP
-// use enable_if to overload for Cuda
-template < typename MDRange, typename Functor, typename Enable = void >
-struct MDForFunctor
+
+template < typename RP
+         , typename Functor
+         , typename Dim 
+         , typename Tag
+         , typename ValueType
+         >
+struct HostIterateTile 
+  : protected HostIterateTile<RP, Functor, std::integral_constant<int,Dim::value-1>, Tag, ValueType>
 {
-  using work_tag   = typename MDRange::work_tag;
-  using index_type = typename MDRange::index_type;
-  using size_type  = typename MDRange::size_type;
+  static_assert( Dim::value <= RP::rank, "Error: greater than rank");
+  static_assert( Dim::value > 0, "Error: less than 0");
 
-  MDRange m_range;
-  Functor m_func;
+  using base_type = HostIterateTile<RP, Functor, std::integral_constant<int,Dim::value-1>, Tag, ValueType>;
+  using final_type = HostIterateTile<RP, Functor, std::integral_constant<int,0>, Tag, ValueType>;
 
-  KOKKOS_INLINE_FUNCTION
-  MDForFunctor( MDRange const& range, Functor const& f )
-    : m_range(range)
-    , m_func( f )
+  using index_type = typename RP::index_type;
+
+  template< typename... Args >
+  HostIterateTile( Args &&... args )
+    : base_type( std::forward<Args>(args)... )
   {}
 
-  KOKKOS_INLINE_FUNCTION
-  MDForFunctor( MDRange const& range, Functor && f )
-    : m_range(range)
-    , m_func( std::forward<Functor>(f) )
-  {}
-
-  KOKKOS_INLINE_FUNCTION
-  MDForFunctor( MDRange && range, Functor const& f )
-    : m_range( std::forward<MDRange>(range) )
-    , m_func( f )
-  {}
-
-  KOKKOS_INLINE_FUNCTION
-  MDForFunctor( MDRange && range, Functor && f )
-    : m_range( std::forward<MDRange>(range) )
-    , m_func( std::forward<Functor>(f) )
-  {}
-
-
-  KOKKOS_INLINE_FUNCTION
-  MDForFunctor( MDForFunctor const& ) = default;
-
-  KOKKOS_INLINE_FUNCTION
-  MDForFunctor& operator=( MDForFunctor const& ) = default;
-
-  KOKKOS_INLINE_FUNCTION
-  MDForFunctor( MDForFunctor && ) = default;
-
-  KOKKOS_INLINE_FUNCTION
-  MDForFunctor& operator=( MDForFunctor && ) = default;
-
-  // Rank-2, No Tag
-  template <typename Idx>
-  KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if<(  std::is_integral<Idx>::value
-                          && std::is_same<void, work_tag>::value
-                          && MDRange::rank == 2
-                          )>::type
-  operator()(Idx t) const
+  void apply()
   {
-    index_type t0, t1;
-    if (  MDRange::outer_direction == MDRange::Right ) {
-      t0 = t / m_range.m_tile_dim[1];
-      t1 = t % m_range.m_tile_dim[1];
+    if (RP::inner_direction == RP::Left) {
+      apply_left();
     } else {
-      t0 = t % m_range.m_tile_dim[0];
-      t1 = t / m_range.m_tile_dim[0];
-    }
-
-    const index_type b0 = t0 * m_range.m_tile[0] + m_range.m_offset[0];
-    const index_type b1 = t1 * m_range.m_tile[1] + m_range.m_offset[1];
-
-    const index_type e0 = b0 + m_range.m_tile[0] <= (m_range.m_dim[0] + m_range.m_offset[0] ) ? b0 + m_range.m_tile[0] : ( m_range.m_dim[0] + m_range.m_offset[0] );
-    const index_type e1 = b1 + m_range.m_tile[1] <= (m_range.m_dim[1] + m_range.m_offset[1] ) ? b1 + m_range.m_tile[1] : ( m_range.m_dim[1] + m_range.m_offset[1] );
-
-    if (  MDRange::inner_direction == MDRange::Right ) {
-      for (int i0=b0; i0<e0; ++i0) {
-      #if defined(KOKKOS_MDRANGE_IVDEP)
-      #pragma ivdep
-      #endif
-      for (int i1=b1; i1<e1; ++i1) {
-        m_func( i0, i1 );
-      }}
-    } else {
-      for (int i1=b1; i1<e1; ++i1) {
-      #if defined(KOKKOS_MDRANGE_IVDEP)
-      #pragma ivdep
-      #endif
-      for (int i0=b0; i0<e0; ++i0) {
-        m_func( i0, i1 );
-      }}
+      apply_right();
     }
   }
 
-  // Rank-2, Tag
-  template <typename Idx>
-  KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if<(  std::is_integral<Idx>::value
-                          && !std::is_same<void, work_tag>::value
-                          && MDRange::rank == 2
-                          )>::type
-  operator()(Idx t) const
+protected:
+
+  template< typename... Args>
+  void apply_left( Args &&... args )
   {
-    work_tag tag;
-
-    index_type t0, t1;
-    if (  MDRange::outer_direction == MDRange::Right ) {
-      t0 = t / m_range.m_tile_dim[1];
-      t1 = t % m_range.m_tile_dim[1];
-    } else {
-      t0 = t % m_range.m_tile_dim[0];
-      t1 = t / m_range.m_tile_dim[0];
-    }
-
-    const index_type b0 = t0 * m_range.m_tile[0] + m_range.m_offset[0];
-    const index_type b1 = t1 * m_range.m_tile[1] + m_range.m_offset[1];
-
-    const index_type e0 = b0 + m_range.m_tile[0] <= (m_range.m_dim[0] + m_range.m_offset[0] ) ? b0 + m_range.m_tile[0] : ( m_range.m_dim[0] + m_range.m_offset[0] );
-    const index_type e1 = b1 + m_range.m_tile[1] <= (m_range.m_dim[1] + m_range.m_offset[1] ) ? b1 + m_range.m_tile[1] : ( m_range.m_dim[1] + m_range.m_offset[1] );
-
-    if (  MDRange::inner_direction == MDRange::Right ) {
-      for (int i0=b0; i0<e0; ++i0) {
-      #if defined(KOKKOS_MDRANGE_IVDEP)
-      #pragma ivdep
-      #endif
-      for (int i1=b1; i1<e1; ++i1) {
-        m_func( tag, i0, i1 );
-      }}
-    } else {
-      for (int i1=b1; i1<e1; ++i1) {
-      #if defined(KOKKOS_MDRANGE_IVDEP)
-      #pragma ivdep
-      #endif
-      for (int i0=b0; i0<e0; ++i0) {
-        m_func( tag, i0, i1 );
-      }}
+    for (index_type i = final_type::m_begin.template at<Dim::value>(); i < final_type::m_end.template at<Dim::value>(); ++i) {
+      base_type::apply_left(i, std::forward<Args>(args)...);
     }
   }
 
-  //---------------------------------------------------------------------------
-
-
-  // Rank-3, No Tag
-  template <typename Idx>
-  KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if<(  std::is_integral<Idx>::value
-                          && std::is_same<void, work_tag>::value
-                          && MDRange::rank == 3
-                          )>::type
-  operator()(Idx t) const
+  template< typename... Args>
+  void apply_right( Args &&... args )
   {
-    index_type t0, t1, t2;
-    if (  MDRange::outer_direction == MDRange::Right ) {
-      const index_type tmp_prod = ( m_range.m_tile_dim[1]*m_range.m_tile_dim[2]);
-      t0 = t / tmp_prod;
-      t1 = ( t % tmp_prod ) / m_range.m_tile_dim[2];
-      t2 = ( t % tmp_prod ) % m_range.m_tile_dim[2];
-    } else {
-      const index_type tmp_prod = ( m_range.m_tile_dim[0]*m_range.m_tile_dim[1]);
-      t0 = ( t % tmp_prod ) % m_range.m_tile_dim[0];
-      t1 = ( t % tmp_prod ) / m_range.m_tile_dim[0];
-      t2 = t / tmp_prod;
-    }
-
-    const index_type b0 = t0 * m_range.m_tile[0] + m_range.m_offset[0];
-    const index_type b1 = t1 * m_range.m_tile[1] + m_range.m_offset[1];
-    const index_type b2 = t2 * m_range.m_tile[2] + m_range.m_offset[2];
-
-    const index_type e0 = b0 + m_range.m_tile[0] <= (m_range.m_dim[0] + m_range.m_offset[0] ) ? b0 + m_range.m_tile[0] : ( m_range.m_dim[0] + m_range.m_offset[0] );
-    const index_type e1 = b1 + m_range.m_tile[1] <= (m_range.m_dim[1] + m_range.m_offset[1] ) ? b1 + m_range.m_tile[1] : ( m_range.m_dim[1] + m_range.m_offset[1] );
-    const index_type e2 = b2 + m_range.m_tile[2] <= (m_range.m_dim[2] + m_range.m_offset[2] ) ? b2 + m_range.m_tile[2] : ( m_range.m_dim[2] + m_range.m_offset[2] );
-
-    if (  MDRange::inner_direction == MDRange::Right ) {
-      for (int i0=b0; i0<e0; ++i0) {
-      for (int i1=b1; i1<e1; ++i1) {
-      #if defined(KOKKOS_MDRANGE_IVDEP)
-      #pragma ivdep
-      #endif
-      for (int i2=b2; i2<e2; ++i2) {
-        m_func( i0, i1, i2 );
-      }}}
-    } else {
-      for (int i2=b2; i2<e2; ++i2) {
-      for (int i1=b1; i1<e1; ++i1) {
-      #if defined(KOKKOS_MDRANGE_IVDEP)
-      #pragma ivdep
-      #endif
-      for (int i0=b0; i0<e0; ++i0) {
-        m_func( i0, i1, i2 );
-      }}}
+    for (index_type i = final_type::m_begin.template at<RP::rank-Dim::value-1>(); i < final_type::m_end.template at<RP::rank-Dim::value-1>(); ++i) {
+      base_type::apply_right(std::forward<Args>(args)...,i);
     }
   }
 
-  // Rank-3, Tag
-  template <typename Idx>
-  KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if<(  std::is_integral<Idx>::value
-                          && !std::is_same<void, work_tag>::value
-                          && MDRange::rank == 3
-                          )>::type
-  operator()(Idx t) const
-  {
-    work_tag tag;
-
-    index_type t0, t1, t2;
-    if (  MDRange::outer_direction == MDRange::Right ) {
-      const index_type tmp_prod = ( m_range.m_tile_dim[1]*m_range.m_tile_dim[2]);
-      t0 = t / tmp_prod;
-      t1 = ( t % tmp_prod ) / m_range.m_tile_dim[2];
-      t2 = ( t % tmp_prod ) % m_range.m_tile_dim[2];
-    } else {
-      const index_type tmp_prod = ( m_range.m_tile_dim[0]*m_range.m_tile_dim[1]);
-      t0 = ( t % tmp_prod ) % m_range.m_tile_dim[0];
-      t1 = ( t % tmp_prod ) / m_range.m_tile_dim[0];
-      t2 = t / tmp_prod;
-    }
-
-    const index_type b0 = t0 * m_range.m_tile[0] + m_range.m_offset[0];
-    const index_type b1 = t1 * m_range.m_tile[1] + m_range.m_offset[1];
-    const index_type b2 = t2 * m_range.m_tile[2] + m_range.m_offset[2];
-
-    const index_type e0 = b0 + m_range.m_tile[0] <= (m_range.m_dim[0] + m_range.m_offset[0] ) ? b0 + m_range.m_tile[0] : ( m_range.m_dim[0] + m_range.m_offset[0] );
-    const index_type e1 = b1 + m_range.m_tile[1] <= (m_range.m_dim[1] + m_range.m_offset[1] ) ? b1 + m_range.m_tile[1] : ( m_range.m_dim[1] + m_range.m_offset[1] );
-    const index_type e2 = b2 + m_range.m_tile[2] <= (m_range.m_dim[2] + m_range.m_offset[2] ) ? b2 + m_range.m_tile[2] : ( m_range.m_dim[2] + m_range.m_offset[2] );
-
-    if (  MDRange::inner_direction == MDRange::Right ) {
-      for (int i0=b0; i0<e0; ++i0) {
-      for (int i1=b1; i1<e1; ++i1) {
-      #if defined(KOKKOS_MDRANGE_IVDEP)
-      #pragma ivdep
-      #endif
-      for (int i2=b2; i2<e2; ++i2) {
-        m_func( tag, i0, i1, i2 );
-      }}}
-    } else {
-      for (int i2=b2; i2<e2; ++i2) {
-      for (int i1=b1; i1<e1; ++i1) {
-      #if defined(KOKKOS_MDRANGE_IVDEP)
-      #pragma ivdep
-      #endif
-      for (int i0=b0; i0<e0; ++i0) {
-        m_func( tag, i0, i1, i2 );
-      }}}
-    }
-  }
 };
 
+template < typename RP
+         , typename Functor
+         >
+struct HostIterateTile<RP, Functor, std::integral_constant<int,0>, void, void>
+{
+  using index_type = typename RP::index_type;
+  using point_type = typename RP::point_type;
+
+  HostIterateTile( RP const& rp, Functor const& func, index_type tile_idx )
+    : m_rp{rp}
+    , m_func{func}
+  {
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_begin.set( i, (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] );
+        m_end.set( i, ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] );
+        tile_idx /= rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_begin.set( i, (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] );
+        m_end.set( i, ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] );
+        tile_idx /= rp.m_tile_end[i];
+      }
+    }
+  }
+
+  void apply()
+  {
+    if (RP::inner_direction == RP::Left) {
+      apply_left();
+    } else {
+      apply_right();
+    }
+  }
+
+protected:
+
+  template< typename... Args>
+  void apply_left( Args &&... args )
+  {
+    for (index_type i = m_begin.template at<0>(); i < m_end.template at<0>(); ++i) {
+      m_func(i, std::forward<Args>(args)...);
+    }
+  }
+
+  template< typename... Args>
+  void apply_right( Args &&... args )
+  {
+    for (index_type i = m_begin.template at<RP::rank-1>(); i < m_end.template at<RP::rank-1>(); ++i) {
+      m_func(std::forward<Args>(args)...,i);
+    }
+  }
+
+  RP        const& m_rp;
+  Functor   const& m_func;
+  point_type m_begin;
+  point_type m_end;
+};
+
+
+template < typename RP
+         , typename Functor
+         , typename Tag
+         >
+struct HostIterateTile<RP, Functor, std::integral_constant<int,0>, Tag, void>
+{
+  using index_type = typename RP::index_type;
+  using point_type = typename RP::point_type;
+
+  HostIterateTile( RP const& rp, Functor const& func, index_type tile_idx )
+    : m_rp{rp}
+    , m_func{func}
+  {
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_begin.set( i, (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] );
+        m_end.set( i, ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] );
+        tile_idx /= rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_begin.set( i, (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] );
+        m_end.set( i, ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] );
+        tile_idx /= rp.m_tile_end[i];
+      }
+    }
+  }
+
+  void apply()
+  {
+    if (RP::inner_direction == RP::Left) {
+      apply_left();
+    } else {
+      apply_right();
+    }
+  }
+
+protected:
+
+  template< typename... Args>
+  void apply_left( Args &&... args )
+  {
+    for (index_type i = m_begin.template at<0>(); i < m_end.template at<0>(); ++i) {
+      m_func(m_tag, i, std::forward<Args>(args)...);
+    }
+  }
+
+  template< typename... Args>
+  void apply_right( Args &&... args )
+  {
+    for (index_type i = m_begin.template at<RP::rank-1>(); i < m_end.template at<RP::rank-1>(); ++i) {
+      m_func(m_tag, std::forward<Args>(args)...,i);
+    }
+  }
+
+  RP         const& m_rp;
+  Functor    const& m_func;
+  point_type m_begin;
+  point_type m_end;
+  Tag        m_tag;
+};
+
+template < typename RP
+         , typename Functor
+         , typename ValueType
+         >
+struct HostIterateTile<RP, Functor, std::integral_constant<int,0>, void, ValueType>
+{
+  using index_type = typename RP::index_type;
+  using point_type = typename RP::point_type;
+
+  using value_type = ValueType;
+
+  HostIterateTile( RP const& rp, Functor const& func, index_type tile_idx, value_type & v )
+    : m_rp{rp}
+    , m_func{func}
+    , m_v{v}
+  {
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_begin.set( i, (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] );
+        m_end.set( i, ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] );
+        tile_idx /= rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_begin.set( i, (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] );
+        m_end.set( i, ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] );
+        tile_idx /= rp.m_tile_end[i];
+      }
+    }
+  }
+
+  void apply()
+  {
+    if (RP::inner_direction == RP::Left) {
+      apply_left();
+    } else {
+      apply_right();
+    }
+  }
+
+protected:
+
+  template< typename... Args>
+  void apply_left( Args &&... args )
+  {
+    for (index_type i = m_begin.template at<0>(); i < m_end.template at<0>(); ++i) {
+      m_func(i, std::forward<Args>(args)..., m_v);
+    }
+  }
+
+  template< typename... Args>
+  void apply_right( Args &&... args )
+  {
+    for (index_type i = m_begin.template at<RP::rank-1>(); i < m_end.template at<RP::rank-1>(); ++i) {
+      m_func(std::forward<Args>(args)...,i, m_v);
+    }
+  }
+
+  RP        const& m_rp;
+  Functor   const& m_func;
+  value_type     & m_v;
+  point_type m_begin;
+  point_type m_end;
+};
+
+template < typename RP
+         , typename Functor
+         , typename Tag
+         , typename ValueType
+         >
+struct HostIterateTile<RP, Functor, std::integral_constant<int,0>, Tag, ValueType>
+{
+  using index_type = typename RP::index_type;
+  using point_type = typename RP::point_type;
+
+  using value_type = ValueType;
+
+  HostIterateTile( RP const& rp, Functor const& func, index_type tile_idx, value_type & v )
+    : m_rp{rp}
+    , m_func{func}
+    , m_v{v}
+  {
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_begin.set( i, (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] );
+        m_end.set( i, ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] );
+        tile_idx /= rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_begin.set( i, (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] );
+        m_end.set( i, ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] );
+        tile_idx /= rp.m_tile_end[i];
+      }
+    }
+  }
+
+  void apply()
+  {
+    if (RP::inner_direction == RP::Left) {
+      apply_left();
+    } else {
+      apply_right();
+    }
+  }
+
+protected:
+
+  template< typename... Args>
+  void apply_left( Args &&... args )
+  {
+    for (index_type i = m_begin.template at<0>(); i < m_end.template at<0>(); ++i) {
+      m_func(m_tag, i, std::forward<Args>(args)..., m_v);
+    }
+  }
+
+  template< typename... Args>
+  void apply_right( Args &&... args )
+  {
+    for (index_type i = m_begin.template at<RP::rank-1>(); i < m_end.template at<RP::rank-1>(); ++i) {
+      m_func(m_tag, std::forward<Args>(args)...,i, m_v);
+    }
+  }
+
+  RP        const& m_rp;
+  Functor   const& m_func;
+  value_type     & m_v;
+  point_type m_begin;
+  point_type m_end;
+  Tag        m_tag;
+};
+
+
+// Serial, Threads, OpenMP
+// use enable_if to overload for Cuda
+template < typename MDRange, typename Functor, typename ValueType = void >
+struct MDFunctor
+{
+  using range_policy = MDRange;
+  using functor_type = Functor;
+  using value_type   = ValueType;
+  using work_tag     = typename range_policy::work_tag;
+  using index_type   = typename range_policy::index_type;
+  using iterate_type = typename Kokkos::Experimental::Impl::HostIterateTile< MDRange
+                                                                           , Functor
+                                                                           , std::integral_constant<int,MDRange::rank - 1>
+                                                                           , work_tag
+                                                                           , value_type  
+                                                                           >;
+
+  KOKKOS_INLINE_FUNCTION
+  MDFunctor( MDRange const& range, Functor const& f, ValueType & v )
+    : m_range( range )
+    , m_func( f )
+    , m_v( v )
+  {}
+
+
+  KOKKOS_INLINE_FUNCTION
+  MDFunctor( MDFunctor const& ) = default;
+
+  KOKKOS_INLINE_FUNCTION
+  MDFunctor& operator=( MDFunctor const& ) = default;
+
+  KOKKOS_INLINE_FUNCTION
+  MDFunctor( MDFunctor && ) = default;
+
+  KOKKOS_INLINE_FUNCTION
+  MDFunctor& operator=( MDFunctor && ) = default;
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  void operator()(index_type t, value_type & v) const
+  {
+    iterate_type(m_range, m_func, t, v).apply();
+  }
+  
+  MDRange   m_range;
+  Functor   m_func;
+  ValueType m_v;
+};
+
+template < typename MDRange, typename Functor >
+struct MDFunctor< MDRange, Functor, void >
+{
+  using range_policy = MDRange;
+  using functor_type = Functor;
+  using work_tag     = typename range_policy::work_tag;
+  using index_type   = typename range_policy::index_type;
+  using iterate_type = typename Kokkos::Experimental::Impl::HostIterateTile< MDRange
+                                                                           , Functor
+                                                                           , std::integral_constant<int,MDRange::rank - 1>
+                                                                           , work_tag
+                                                                           , void  
+                                                                           >;
+
+  KOKKOS_INLINE_FUNCTION
+  MDFunctor( MDRange const& range, Functor const& f )
+    : m_range( range )
+    , m_func( f )
+  {}
+
+
+  KOKKOS_INLINE_FUNCTION
+  MDFunctor( MDFunctor const& ) = default;
+
+  KOKKOS_INLINE_FUNCTION
+  MDFunctor& operator=( MDFunctor const& ) = default;
+
+  KOKKOS_INLINE_FUNCTION
+  MDFunctor( MDFunctor && ) = default;
+
+  KOKKOS_INLINE_FUNCTION
+  MDFunctor& operator=( MDFunctor && ) = default;
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  void operator()(index_type t) const
+  {
+    iterate_type(m_range, m_func, t).apply();
+  }
+  
+  MDRange m_range;
+  Functor m_func;
+};
 
 
 } // namespace Impl
@@ -481,7 +632,7 @@ void md_parallel_for( MDRange const& range
                     , const std::string& str = ""
                     )
 {
-  Impl::MDForFunctor<MDRange, Functor> g(range, f);
+  Impl::MDFunctor<MDRange, Functor, void> g(range, f);
 
   using range_policy = typename MDRange::range_policy;
 
@@ -494,11 +645,40 @@ void md_parallel_for( const std::string& str
                     , Functor const& f
                     )
 {
-  Impl::MDForFunctor<MDRange, Functor> g(range, f);
+  Impl::MDFunctor<MDRange, Functor, void> g(range, f);
 
   using range_policy = typename MDRange::range_policy;
 
   Kokkos::parallel_for( range_policy(0, range.m_num_tiles).set_chunk_size(1), g, str );
+}
+
+
+template <typename MDRange, typename Functor, typename ValueType>
+void md_parallel_reduce( MDRange const& range
+                    , Functor const& f
+                    , ValueType & v
+                    , const std::string& str = ""
+                    )
+{
+  Impl::MDFunctor<MDRange, Functor, ValueType> g(range, f, v);
+
+  using range_policy = typename MDRange::range_policy;
+
+  Kokkos::parallel_reduce( str, range_policy(0, range.m_num_tiles).set_chunk_size(1), g, v );
+}
+
+template <typename MDRange, typename Functor, typename ValueType>
+void md_parallel_reduce( const std::string& str
+                    , MDRange const& range
+                    , Functor const& f
+                    , ValueType & v
+                    )
+{
+  Impl::MDFunctor<MDRange, Functor, ValueType> g(range, f, v);
+
+  using range_policy = typename MDRange::range_policy;
+
+  Kokkos::parallel_reduce( str, range_policy(0, range.m_num_tiles).set_chunk_size(1), g, v );
 }
 
 }} // namespace Kokkos::Experimental

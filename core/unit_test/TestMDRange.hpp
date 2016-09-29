@@ -69,11 +69,67 @@ struct TestMDRange_2D {
     input_view(i,j) = 1;
   }
 
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const int i , const int j , double &lsum ) const 
+  {
+    lsum += input_view(i,j)*2;
+  }
+
+  static void test_reduce2( const int64_t N0, const int64_t N1 )
+  {
+
+    using namespace Kokkos::Experimental;
+    {
+      using range_policy = MDRangePolicy< ExecSpace, Rank<2>, Kokkos::IndexType<int> >;
+      using tile_type  = typename range_policy::tile_type;
+      using point_type = typename range_policy::point_type;
+
+      range_policy range( point_type{0,0}, point_type{N0,N1}, tile_type{3,3} );
+
+      TestMDRange_2D functor(N0,N1);
+
+      md_parallel_for( range, functor );
+      double sum = 0.0;
+      md_parallel_reduce( range, functor, sum );
+
+      ASSERT_EQ( sum , 2*N0*N1 );
+    }
+  }
+
 
   static void test_for2( const int64_t N0, const int64_t N1 )
   {
 
     using namespace Kokkos::Experimental;
+#define NEWFUNCTOR 1
+#if NEWFUNCTOR
+    {
+      using range_policy = MDRangePolicy< ExecSpace, Rank<2>, Kokkos::IndexType<int> >;
+      using tile_type  = typename range_policy::tile_type;
+      using point_type = typename range_policy::point_type;
+
+      range_policy range( point_type{0,0}, point_type{N0,N1}, tile_type{3,3} );
+      //range_type range( {0,0}, {N0,N1} );
+      TestMDRange_2D functor(N0,N1);
+
+      md_parallel_for( range, functor );
+
+      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
+      Kokkos::deep_copy( h_view , functor.input_view );
+
+      int counter = 0;
+      for ( int i=0; i<N0; ++i ) {
+        for ( int j=0; j<N1; ++j ) {
+          if ( h_view(i,j) != 1 ) {
+            ++counter;
+          }
+        }}
+      if ( counter != 0 )
+        printf(" Errors in test_for2; mismatches = %d\n\n",counter);
+      ASSERT_EQ( counter , 0 );
+    }
+
+#else
 
     {
       using range_type = MDRangePolicy< ExecSpace, Rank<2>, Kokkos::IndexType<int> >;
@@ -212,6 +268,9 @@ struct TestMDRange_2D {
       ASSERT_EQ( counter , 0 );
     }
 
+#endif
+#undef NEWFUNCTOR
+
   } //end test_for2
 }; //MDRange_2D
 
@@ -232,10 +291,66 @@ struct TestMDRange_3D {
     input_view(i,j,k) = 1;
   }
 
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const int i , const int j , const int k , double &lsum ) const 
+  {
+    lsum += input_view(i,j,k)*2;
+  }
+
+  static void test_reduce3( const int64_t N0, const int64_t N1, const int64_t N2 )
+  {
+
+    using namespace Kokkos::Experimental;
+    {
+      using range_policy = MDRangePolicy< ExecSpace, Rank<2>, Kokkos::IndexType<int> >;
+      using tile_type  = typename range_policy::tile_type;
+      using point_type = typename range_policy::point_type;
+
+      range_policy range( point_type{0,0,0}, point_type{N0,N1,N2}, tile_type{3,3,3} );
+
+      TestMDRange_3D functor(N0,N1,N2);
+
+      md_parallel_for( range, functor );
+      double sum = 0.0;
+      md_parallel_reduce( range, functor, sum );
+
+      ASSERT_EQ( sum , 2*N0*N1*N2 );
+    }
+  }
+
   static void test_for3( const int64_t N0, const int64_t N1, const int64_t N2 )
   {
     using namespace Kokkos::Experimental;
+#define NEWFUNCTOR 1
+#if NEWFUNCTOR
+    {
+      using range_policy = MDRangePolicy< ExecSpace, Rank<3>, Kokkos::IndexType<int> >;
+      using tile_type  = typename range_policy::tile_type;
+      using point_type = typename range_policy::point_type;
 
+      range_policy range( point_type{0,0,0}, point_type{N0,N1,N2}, tile_type{3,3,3} );
+
+      TestMDRange_3D functor(N0,N1,N2);
+
+      md_parallel_for( range, functor );
+
+      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
+      Kokkos::deep_copy( h_view , functor.input_view );
+
+      int counter = 0;
+      for ( int i=0; i<N0; ++i ) {
+        for ( int j=0; j<N1; ++j ) {
+          for ( int k=0; k<N2; ++k ) {
+          if ( h_view(i,j,k) != 1 ) {
+            ++counter;
+          }
+        }}}
+      if ( counter != 0 )
+        printf(" Errors in test_for3; mismatches = %d\n\n",counter);
+      ASSERT_EQ( counter , 0 );
+    }
+
+#else
     {
       using range_type = MDRangePolicy< ExecSpace, Rank<3>, Kokkos::IndexType<int> >;
 
@@ -380,6 +495,9 @@ struct TestMDRange_3D {
         printf(" Errors in test_for3; mismatches = %d\n\n",counter);
       ASSERT_EQ( counter , 0 );
     }
+
+#endif
+#undef NEWFUNCTOR
 
   } //end test_for3
 };
