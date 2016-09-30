@@ -64,7 +64,7 @@
 //----------------------------------------------------------------------------
 
 #include <Kokkos_Qthread.hpp>
-#include <Kokkos_TaskPolicy.hpp>
+#include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_View.hpp>
 
 #include <impl/Kokkos_FunctorAdapter.hpp>
