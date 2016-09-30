@@ -302,7 +302,7 @@ struct TestMDRange_3D {
 
     using namespace Kokkos::Experimental;
     {
-      using range_policy = MDRangePolicy< ExecSpace, Rank<2>, Kokkos::IndexType<int> >;
+      using range_policy = MDRangePolicy< ExecSpace, Rank<3>, Kokkos::IndexType<int> >;
       using tile_type  = typename range_policy::tile_type;
       using point_type = typename range_policy::point_type;
 
