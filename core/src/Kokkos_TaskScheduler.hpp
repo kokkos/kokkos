@@ -52,7 +52,7 @@
 // and use relocateable device code to enable the task policy.
 // nvcc relocatable device code option: --relocatable-device-code=true
 
-#if ( defined( KOKKOS_COMPILER_NVCC ) )
+#if ( defined( KOKKOS_HAVE_CUDA ) )
   #if ( 8000 <= CUDA_VERSION ) && \
       defined( KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE )
 
@@ -60,9 +60,7 @@
 
   #endif
 #else
-
-#define KOKKOS_ENABLE_TASKPOLICY
-
+  #define KOKKOS_ENABLE_TASKPOLICY
 #endif
 
 
