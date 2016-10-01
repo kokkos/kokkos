@@ -57,7 +57,7 @@
 
 namespace Kokkos {
 
-template< typename > class TaskPolicy ;
+template< typename > class TaskScheduler ;
 
 template< typename Arg1 = void , typename Arg2 = void > class Future ;
 
@@ -91,7 +91,7 @@ class TaskQueue {
 private:
 
   friend class TaskQueueSpecialization< ExecSpace > ;
-  friend class Kokkos::TaskPolicy< ExecSpace > ;
+  friend class Kokkos::TaskScheduler< ExecSpace > ;
 
   using execution_space = ExecSpace ;
   using specialization  = TaskQueueSpecialization< execution_space > ;
@@ -326,7 +326,7 @@ public:
   using execution_space = ExecSpace ;
   using queue_type      = TaskQueue< execution_space > ;
 
-  template< typename > friend class Kokkos::TaskPolicy ;
+  template< typename > friend class Kokkos::TaskScheduler ;
 
   typedef void (* function_type) ( TaskBase * , void * );
 

@@ -123,7 +123,7 @@ void TaskQueue< ExecSpace >::decrement
     task->m_queue->deallocate( task , task->m_alloc_size );
   }   
   else if ( count <= 1 ) { 
-    Kokkos::abort("TaskPolicy task has negative reference count or is incomplete" );
+    Kokkos::abort("TaskScheduler task has negative reference count or is incomplete" );
   }   
 }
 
