@@ -302,10 +302,10 @@ void cuda_intra_block_reduce_scan( const FunctorType & functor ,
 
         if ( ! ( rtid_inter + n < blockDim.y ) ) n = 0 ;
 
-        BLOCK_SCAN_STEP(tdata_inter,n,8)
-        BLOCK_SCAN_STEP(tdata_inter,n,7)
-        BLOCK_SCAN_STEP(tdata_inter,n,6)
-        BLOCK_SCAN_STEP(tdata_inter,n,5)
+        __threadfence_block(); BLOCK_SCAN_STEP(tdata_inter,n,8)
+        __threadfence_block(); BLOCK_SCAN_STEP(tdata_inter,n,7)
+        __threadfence_block(); BLOCK_SCAN_STEP(tdata_inter,n,6)
+        __threadfence_block(); BLOCK_SCAN_STEP(tdata_inter,n,5)
       }
     }
   }
@@ -325,13 +325,14 @@ void cuda_intra_block_reduce_scan( const FunctorType & functor ,
     BLOCK_SCAN_STEP(tdata_intra,n,3) __syncthreads();//__threadfence_block();
     BLOCK_SCAN_STEP(tdata_intra,n,2) __syncthreads();//__threadfence_block();
     BLOCK_SCAN_STEP(tdata_intra,n,1) __syncthreads();//__threadfence_block();
+    BLOCK_SCAN_STEP(tdata_intra,n,0) __syncthreads();
     #else
     BLOCK_SCAN_STEP(tdata_intra,n,4) __threadfence_block();
     BLOCK_SCAN_STEP(tdata_intra,n,3) __threadfence_block();
     BLOCK_SCAN_STEP(tdata_intra,n,2) __threadfence_block();
     BLOCK_SCAN_STEP(tdata_intra,n,1) __threadfence_block();
+    BLOCK_SCAN_STEP(tdata_intra,n,0) __threadfence_block();
     #endif
-    BLOCK_SCAN_STEP(tdata_intra,n,0)
   }
 
 #undef BLOCK_SCAN_STEP
