@@ -133,7 +133,7 @@
 // still identifies as 7.0
 #error "Cuda version 7.5 or greater required for host-to-device Lambda support"
 #endif
-#if ( CUDA_VERSION < 8000 )
+#if ( CUDA_VERSION < 8000 ) && defined(__NVCC__)
 #define KOKKOS_LAMBDA [=]__device__
 #else
 #define KOKKOS_LAMBDA [=]__host__ __device__
@@ -145,7 +145,7 @@
 
 #if defined(KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA)
    // Cuda version 8.0 still needs the functor wrapper
-   #if (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA /* && (CUDA_VERSION < 8000) */ )
+   #if (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA /* && (CUDA_VERSION < 8000) */ ) && defined(__NVCC__)
       #define KOKKOS_IMPL_NEED_FUNCTOR_WRAPPER
    #endif
 #endif
