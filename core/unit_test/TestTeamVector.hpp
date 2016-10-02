@@ -174,9 +174,6 @@ struct functor_team_for {
       // Accumulate value into per thread shared memory
       // This is non blocking
       Kokkos::parallel_for(Kokkos::TeamThreadRange(team,131),[&] (int i)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {
         values(team.team_rank ()) += i - team.league_rank () + team.league_size () + team.team_size ();
       });
@@ -184,9 +181,6 @@ struct functor_team_for {
       team.team_barrier ();
       // One thread per team executes the comparison
       Kokkos::single(Kokkos::PerTeam(team),[&]()
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {
             Scalar test = 0;
             Scalar value = 0;
@@ -222,18 +216,12 @@ struct functor_team_reduce {
 
     Scalar value = Scalar();
     Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,131),[&] (int i, Scalar& val)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
     {
       val += i - team.league_rank () + team.league_size () + team.team_size ();
     },value);
 
     team.team_barrier ();
     Kokkos::single(Kokkos::PerTeam(team),[&]()
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
         {
          Scalar test = 0;
          for (int i = 0; i < 131; ++i) {
@@ -267,25 +255,16 @@ struct functor_team_reduce_join {
 
     Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,131)
       , [&] (int i, Scalar& val)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {
         val += i - team.league_rank () + team.league_size () + team.team_size ();
       }
       , [&] (volatile Scalar& val, const volatile Scalar& src)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
         {val+=src;}
       , value
     );
 
     team.team_barrier ();
     Kokkos::single(Kokkos::PerTeam(team),[&]()
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
     {
          Scalar test = 0;
          for (int i = 0; i < 131; ++i) {
@@ -327,22 +306,13 @@ struct functor_team_vector_for {
     }
     else {
       Kokkos::single(Kokkos::PerThread(team),[&] ()
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {
         values(team.team_rank ()) = 0;
       });
 
       Kokkos::parallel_for(Kokkos::TeamThreadRange(team,131),[&] (int i)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {
         Kokkos::single(Kokkos::PerThread(team),[&] ()
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
         {
           values(team.team_rank ()) += i - team.league_rank () + team.league_size () + team.team_size ();
         });
@@ -350,9 +320,6 @@ struct functor_team_vector_for {
 
       team.team_barrier ();
       Kokkos::single(Kokkos::PerTeam(team),[&]()
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {
         Scalar test = 0;
         Scalar value = 0;
@@ -388,18 +355,12 @@ struct functor_team_vector_reduce {
 
     Scalar value = Scalar();
     Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,131),[&] (int i, Scalar& val)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
     {
         val += i - team.league_rank () + team.league_size () + team.team_size ();
     },value);
 
     team.team_barrier ();
     Kokkos::single(Kokkos::PerTeam(team),[&]()
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
     {
       Scalar test = 0;
       for (int i = 0; i < 131; ++i) {
@@ -432,25 +393,16 @@ struct functor_team_vector_reduce_join {
     Scalar value = 0;
     Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,131)
       , [&] (int i, Scalar& val)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {
         val += i - team.league_rank () + team.league_size () + team.team_size ();
       }
       , [&] (volatile Scalar& val, const volatile Scalar& src)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
         {val+=src;}
       , value
     );
 
     team.team_barrier ();
     Kokkos::single(Kokkos::PerTeam(team),[&]()
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
     {
       Scalar test = 0;
       for (int i = 0; i < 131; ++i) {
@@ -483,26 +435,17 @@ struct functor_vec_single {
     Scalar value = 0;
 
     Kokkos::parallel_for(Kokkos::ThreadVectorRange(team,13),[&] (int i)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
     {
       value = i; // This write is violating Kokkos semantics for nested parallelism
     });
 
     Kokkos::single(Kokkos::PerThread(team),[&] (Scalar& val)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
     {
       val = 1;
     },value);
 
     Scalar value2 = 0;
     Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(team,13), [&] (int i, Scalar& val)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
     {
       val += value;
     },value2);
@@ -539,17 +482,11 @@ struct functor_vec_for {
     }
     else {
       Kokkos::parallel_for(Kokkos::ThreadVectorRange(team,13), [&] (int i)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {
         values(13*team.team_rank() + i) = i - team.team_rank() - team.league_rank() + team.league_size() + team.team_size();
       });
 
       Kokkos::single(Kokkos::PerThread(team),[&] ()
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {
         Scalar test = 0;
         Scalar value = 0;
@@ -581,17 +518,11 @@ struct functor_vec_red {
     Scalar value = 0;
 
     Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(team,13),[&] (int i, Scalar& val)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
     {
       val += i;
     }, value);
 
     Kokkos::single(Kokkos::PerThread(team),[&] ()
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
     {
       Scalar test = 0;
       for(int i = 0; i < 13; i++) {
@@ -619,22 +550,13 @@ struct functor_vec_red_join {
 
     Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(team,13)
       , [&] (int i, Scalar& val)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       { val *= i; }
       , [&] (Scalar& val, const Scalar& src)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {val*=src;}
       , value
     );
 
     Kokkos::single(Kokkos::PerThread(team),[&] ()
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
     {
       Scalar test = 1;
       for(int i = 0; i < 13; i++) {
@@ -659,9 +581,6 @@ struct functor_vec_scan {
   KOKKOS_INLINE_FUNCTION
   void operator() (typename policy_type::member_type team) const {
     Kokkos::parallel_scan(Kokkos::ThreadVectorRange(team,13),[&] (int i, Scalar& val, bool final)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
     {
       val += i;
       if(final) {

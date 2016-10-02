@@ -682,9 +682,6 @@ int test_team_mulit_level_scratch_loop_body(const typename Kokkos::TeamPolicy<Ex
 
 
       Kokkos::parallel_for(Kokkos::TeamThreadRange(team,0,128), [&] (const int& i)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {
         a_team1(i) = 1000000 + i;
         a_team2(i) = 2000000 + i;
@@ -692,9 +689,6 @@ int test_team_mulit_level_scratch_loop_body(const typename Kokkos::TeamPolicy<Ex
       });
       team.team_barrier();
       Kokkos::parallel_for(Kokkos::ThreadVectorRange(team,16), [&] (const int& i)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {
         a_thread1(i) = 1000000 + 100000*team.team_rank() + 16-i;
         a_thread2(i) = 2000000 + 100000*team.team_rank() + 16-i;
@@ -702,9 +696,6 @@ int test_team_mulit_level_scratch_loop_body(const typename Kokkos::TeamPolicy<Ex
       });
 
       Kokkos::parallel_for(Kokkos::TeamThreadRange(team,0,128000), [&] (const int& i)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {
         b_team1(i) = 1000000 + i;
         b_team2(i) = 2000000 + i;
@@ -712,9 +703,6 @@ int test_team_mulit_level_scratch_loop_body(const typename Kokkos::TeamPolicy<Ex
       });
       team.team_barrier();
       Kokkos::parallel_for(Kokkos::ThreadVectorRange(team,16000), [&] (const int& i)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {
         b_thread1(i) = 1000000 + 100000*team.team_rank() + 16-i;
         b_thread2(i) = 2000000 + 100000*team.team_rank() + 16-i;
@@ -724,9 +712,6 @@ int test_team_mulit_level_scratch_loop_body(const typename Kokkos::TeamPolicy<Ex
       team.team_barrier();
       int error = 0;
       Kokkos::parallel_for(Kokkos::TeamThreadRange(team,0,128), [&] (const int& i)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {
         if(a_team1(i) != 1000000 + i) error++;
         if(a_team2(i) != 2000000 + i) error++;
@@ -734,9 +719,6 @@ int test_team_mulit_level_scratch_loop_body(const typename Kokkos::TeamPolicy<Ex
       });
       team.team_barrier();
       Kokkos::parallel_for(Kokkos::ThreadVectorRange(team,16), [&] (const int& i)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {
         if(a_thread1(i) != 1000000 + 100000*team.team_rank() + 16-i) error++;
         if(a_thread2(i) != 2000000 + 100000*team.team_rank() + 16-i) error++;
@@ -744,9 +726,6 @@ int test_team_mulit_level_scratch_loop_body(const typename Kokkos::TeamPolicy<Ex
       });
 
       Kokkos::parallel_for(Kokkos::TeamThreadRange(team,0,128000), [&] (const int& i)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {
         if(b_team1(i) != 1000000 + i) error++;
         if(b_team2(i) != 2000000 + i) error++;
@@ -754,9 +733,6 @@ int test_team_mulit_level_scratch_loop_body(const typename Kokkos::TeamPolicy<Ex
       });
       team.team_barrier();
       Kokkos::parallel_for(Kokkos::ThreadVectorRange(team,16000), [&] (const int& i)
-#if defined( KOKKOS_CUDA_CLANG_WORKAROUND ) && defined (__CUDA_ARCH__)
-      __device__
-#endif
       {
         if(b_thread1(i) != 1000000 + 100000*team.team_rank() + 16-i) error++;
         if(b_thread2(i) != 2000000 + 100000*team.team_rank() + 16-i) error++;

@@ -1591,14 +1591,8 @@ void parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::Cud
   }
 
   Impl::cuda_intra_warp_reduction(result,[&] (ValueType& dst, const ValueType& src)
-#ifdef KOKKOS_CUDA_CLANG_WORKAROUND
-      __device__
-#endif
       { dst+=src; });
   Impl::cuda_inter_warp_reduction(result,[&] (ValueType& dst, const ValueType& src)
-#ifdef KOKKOS_CUDA_CLANG_WORKAROUND
-      __device__
-#endif
       { dst+=src; });
 #endif
 }
