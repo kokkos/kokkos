@@ -74,11 +74,7 @@ namespace Impl {
 template< class ValueType , class JoinOp>
 __device__
 inline void cuda_intra_warp_reduction( ValueType& result,
-#ifdef KOKKOS_CUDA_CLANG_WORKAROUND
-                                       JoinOp join,
-#else
                                        const JoinOp& join,
-#endif
                                        const int max_active_thread = blockDim.y) {
 
   unsigned int shift = 1;
@@ -98,11 +94,7 @@ inline void cuda_intra_warp_reduction( ValueType& result,
 template< class ValueType , class JoinOp>
 __device__
 inline void cuda_inter_warp_reduction( ValueType& value,
-#ifdef KOKKOS_CUDA_CLANG_WORKAROUND
-                                       JoinOp join,
-#else
                                        const JoinOp& join,
-#endif
                                        const int max_active_thread = blockDim.y) {
 
   #define STEP_WIDTH 4
