@@ -75,16 +75,16 @@ struct TestMDRange_2D {
     lsum += input_view(i,j)*2;
   }
 
-  static void test_reduce2( const int64_t N0, const int64_t N1 )
+  static void test_reduce2( const int N0, const int N1 )
   {
-
     using namespace Kokkos::Experimental;
-    {
-      using range_policy = MDRangePolicy< ExecSpace, Rank<2>, Kokkos::IndexType<int> >;
-      using tile_type  = typename range_policy::tile_type;
-      using point_type = typename range_policy::point_type;
 
-      range_policy range( point_type{0,0}, point_type{N0,N1}, tile_type{3,3} );
+    {
+      using range_type = MDRangePolicy< ExecSpace, Rank<2>, Kokkos::IndexType<int> >;
+      using tile_type  = typename range_type::tile_type;
+      using point_type = typename range_type::point_type;
+
+      range_type range( point_type{0,0}, point_type{N0,N1}, tile_type{3,3} );
 
       TestMDRange_2D functor(N0,N1);
 
@@ -94,46 +94,100 @@ struct TestMDRange_2D {
 
       ASSERT_EQ( sum , 2*N0*N1 );
     }
-  }
 
-
-  static void test_for2( const int64_t N0, const int64_t N1 )
-  {
-
-    using namespace Kokkos::Experimental;
-#define NEWFUNCTOR 1
-#if NEWFUNCTOR
     {
-      using range_policy = MDRangePolicy< ExecSpace, Rank<2>, Kokkos::IndexType<int> >;
-      using tile_type  = typename range_policy::tile_type;
-      using point_type = typename range_policy::point_type;
+      using range_type = MDRangePolicy< ExecSpace, Rank<2, Iterate::Default, Iterate::Default>, Kokkos::IndexType<int> >;
+      using tile_type  = typename range_type::tile_type;
+      using point_type = typename range_type::point_type;
 
-      range_policy range( point_type{0,0}, point_type{N0,N1}, tile_type{3,3} );
-      //range_type range( {0,0}, {N0,N1} );
+      range_type range( point_type{0,0}, point_type{N0,N1}, tile_type{2,6} );
+
       TestMDRange_2D functor(N0,N1);
 
       md_parallel_for( range, functor );
+      double sum = 0.0;
+      md_parallel_reduce( range, functor, sum );
 
-      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
-      Kokkos::deep_copy( h_view , functor.input_view );
-
-      int counter = 0;
-      for ( int i=0; i<N0; ++i ) {
-        for ( int j=0; j<N1; ++j ) {
-          if ( h_view(i,j) != 1 ) {
-            ++counter;
-          }
-        }}
-      if ( counter != 0 )
-        printf(" Errors in test_for2; mismatches = %d\n\n",counter);
-      ASSERT_EQ( counter , 0 );
+      ASSERT_EQ( sum , 2*N0*N1 );
     }
 
-#else
+    {
+      using range_type = MDRangePolicy< ExecSpace, Rank<2, Iterate::Left, Iterate::Left>, Kokkos::IndexType<int> >;
+      using tile_type  = typename range_type::tile_type;
+      using point_type = typename range_type::point_type;
+
+      range_type range( point_type{0,0}, point_type{N0,N1}, tile_type{2,6} );
+
+      TestMDRange_2D functor(N0,N1);
+
+      md_parallel_for( range, functor );
+      double sum = 0.0;
+      md_parallel_reduce( range, functor, sum );
+
+      ASSERT_EQ( sum , 2*N0*N1 );
+    }
+
+    {
+      using range_type = MDRangePolicy< ExecSpace, Rank<2, Iterate::Left, Iterate::Right>, Kokkos::IndexType<int> >;
+      using tile_type  = typename range_type::tile_type;
+      using point_type = typename range_type::point_type;
+
+      range_type range( point_type{0,0}, point_type{N0,N1}, tile_type{2,6} );
+
+      TestMDRange_2D functor(N0,N1);
+
+      md_parallel_for( range, functor );
+      double sum = 0.0;
+      md_parallel_reduce( range, functor, sum );
+
+      ASSERT_EQ( sum , 2*N0*N1 );
+    }
+
+    {
+      using range_type = MDRangePolicy< ExecSpace, Rank<2, Iterate::Right, Iterate::Left>, Kokkos::IndexType<int> >;
+      using tile_type  = typename range_type::tile_type;
+      using point_type = typename range_type::point_type;
+
+      range_type range( point_type{0,0}, point_type{N0,N1}, tile_type{2,6} );
+
+      TestMDRange_2D functor(N0,N1);
+
+      md_parallel_for( range, functor );
+      double sum = 0.0;
+      md_parallel_reduce( range, functor, sum );
+
+      ASSERT_EQ( sum , 2*N0*N1 );
+    }
+
+    {
+      using range_type = MDRangePolicy< ExecSpace, Rank<2, Iterate::Right, Iterate::Right>, Kokkos::IndexType<int> >;
+      using tile_type  = typename range_type::tile_type;
+      using point_type = typename range_type::point_type;
+
+      range_type range( point_type{0,0}, point_type{N0,N1}, tile_type{2,6} );
+
+      TestMDRange_2D functor(N0,N1);
+
+      md_parallel_for( range, functor );
+      double sum = 0.0;
+      md_parallel_reduce( range, functor, sum );
+
+      ASSERT_EQ( sum , 2*N0*N1 );
+    }
+
+  } //end test_reduce2
+
+
+  static void test_for2( const int N0, const int N1 )
+  {
+    using namespace Kokkos::Experimental;
 
     {
       using range_type = MDRangePolicy< ExecSpace, Rank<2>, Kokkos::IndexType<int> >;
-      range_type range( {0,0}, {N0,N1} );
+      using tile_type  = typename range_type::tile_type;
+      using point_type = typename range_type::point_type;
+
+      range_type range( point_type{{0,0}}, point_type{{N0,N1}}, tile_type{{3,3}} );
       TestMDRange_2D functor(N0,N1);
 
       md_parallel_for( range, functor );
@@ -155,8 +209,10 @@ struct TestMDRange_2D {
 
     {
       using range_type = MDRangePolicy< ExecSpace, Rank<2, Iterate::Default, Iterate::Default >, Kokkos::IndexType<int> >;
+      using point_type = typename range_type::point_type;
+      using tile_type  = typename range_type::tile_type;
 
-      range_type range( {0,0}, {N0,N1} );
+      range_type range( point_type{{0,0}}, point_type{{N0,N1}}, tile_type{{4,4}} );
       TestMDRange_2D functor(N0,N1);
 
       md_parallel_for( range, functor );
@@ -177,9 +233,11 @@ struct TestMDRange_2D {
     }
 
     {
-      using range_type = MDRangePolicy< ExecSpace, Rank<2, Iterate::Left , Iterate::Left >, Kokkos::IndexType<int> >;
+      using range_type = MDRangePolicy< ExecSpace, Rank<2, Iterate::Left, Iterate::Left>, Kokkos::IndexType<int> >;
+      using point_type = typename range_type::point_type;
+      using tile_type  = typename range_type::tile_type;
 
-      range_type range( {0,0}, {N0,N1}, {3,3} );
+      range_type range( point_type{{0,0}}, point_type{{N0,N1}}, tile_type{{3,3}} );
       TestMDRange_2D functor(N0,N1);
 
       md_parallel_for( range, functor );
@@ -200,9 +258,11 @@ struct TestMDRange_2D {
     }
 
     {
-      using range_type = MDRangePolicy< ExecSpace, Rank<2, Iterate::Left , Iterate::Right >, Kokkos::IndexType<int> >;
+      using range_type = MDRangePolicy< ExecSpace, Rank<2, Iterate::Left, Iterate::Right>, Kokkos::IndexType<int> >;
+      using point_type = typename range_type::point_type;
+      using tile_type  = typename range_type::tile_type;
 
-      range_type range( {0,0}, {N0,N1}, {7,7} );
+      range_type range( point_type{{0,0}}, point_type{{N0,N1}}, tile_type{{7,7}} );
       TestMDRange_2D functor(N0,N1);
 
       md_parallel_for( range, functor );
@@ -223,9 +283,11 @@ struct TestMDRange_2D {
     }
 
     {
-      using range_type = MDRangePolicy< ExecSpace, Rank<2, Iterate::Right, Iterate::Left >, Kokkos::IndexType<int> >;
+      using range_type = MDRangePolicy< ExecSpace, Rank<2, Iterate::Right, Iterate::Left>, Kokkos::IndexType<int> >;
+      using point_type = typename range_type::point_type;
+      using tile_type  = typename range_type::tile_type;
 
-      range_type range( {0,0}, {N0,N1}, {16,16} );
+      range_type range( point_type{{0,0}}, point_type{{N0,N1}}, tile_type{{16,16}} );
       TestMDRange_2D functor(N0,N1);
 
       md_parallel_for( range, functor );
@@ -246,9 +308,11 @@ struct TestMDRange_2D {
     }
 
     {
-      using range_type = MDRangePolicy< ExecSpace, Rank<2, Iterate::Right, Iterate::Right >, Kokkos::IndexType<int> >;
+      using range_type = MDRangePolicy< ExecSpace, Rank<2, Iterate::Right, Iterate::Right>, Kokkos::IndexType<int> >;
+      using point_type = typename range_type::point_type;
+      using tile_type  = typename range_type::tile_type;
 
-      range_type range( {0,0}, {N0,N1}, {5,16} );
+      range_type range( point_type{{0,0}}, point_type{{N0,N1}}, tile_type{{5,16}} );
       TestMDRange_2D functor(N0,N1);
 
       md_parallel_for( range, functor );
@@ -267,10 +331,6 @@ struct TestMDRange_2D {
         printf(" Errors in test_for2; mismatches = %d\n\n",counter);
       ASSERT_EQ( counter , 0 );
     }
-
-#endif
-#undef NEWFUNCTOR
-
   } //end test_for2
 }; //MDRange_2D
 
@@ -297,16 +357,16 @@ struct TestMDRange_3D {
     lsum += input_view(i,j,k)*2;
   }
 
-  static void test_reduce3( const int64_t N0, const int64_t N1, const int64_t N2 )
+  static void test_reduce3( const int N0, const int N1, const int N2 )
   {
-
     using namespace Kokkos::Experimental;
-    {
-      using range_policy = MDRangePolicy< ExecSpace, Rank<3>, Kokkos::IndexType<int> >;
-      using tile_type  = typename range_policy::tile_type;
-      using point_type = typename range_policy::point_type;
 
-      range_policy range( point_type{0,0,0}, point_type{N0,N1,N2}, tile_type{3,3,3} );
+    {
+      using range_type = MDRangePolicy< ExecSpace, Rank<3>, Kokkos::IndexType<int> >;
+      using tile_type  = typename range_type::tile_type;
+      using point_type = typename range_type::point_type;
+
+      range_type range( point_type{0,0,0}, point_type{N0,N1,N2}, tile_type{3,3,3} );
 
       TestMDRange_3D functor(N0,N1,N2);
 
@@ -316,45 +376,100 @@ struct TestMDRange_3D {
 
       ASSERT_EQ( sum , 2*N0*N1*N2 );
     }
-  }
 
-  static void test_for3( const int64_t N0, const int64_t N1, const int64_t N2 )
-  {
-    using namespace Kokkos::Experimental;
-#define NEWFUNCTOR 1
-#if NEWFUNCTOR
     {
-      using range_policy = MDRangePolicy< ExecSpace, Rank<3>, Kokkos::IndexType<int> >;
-      using tile_type  = typename range_policy::tile_type;
-      using point_type = typename range_policy::point_type;
+      using range_type = MDRangePolicy< ExecSpace, Rank<3, Iterate::Default, Iterate::Default>, Kokkos::IndexType<int> >;
+      using tile_type  = typename range_type::tile_type;
+      using point_type = typename range_type::point_type;
 
-      range_policy range( point_type{0,0,0}, point_type{N0,N1,N2}, tile_type{3,3,3} );
+      range_type range( point_type{0,0,0}, point_type{N0,N1,N2}, tile_type{2,4,6} );
 
       TestMDRange_3D functor(N0,N1,N2);
 
       md_parallel_for( range, functor );
+      double sum = 0.0;
+      md_parallel_reduce( range, functor, sum );
 
-      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
-      Kokkos::deep_copy( h_view , functor.input_view );
-
-      int counter = 0;
-      for ( int i=0; i<N0; ++i ) {
-        for ( int j=0; j<N1; ++j ) {
-          for ( int k=0; k<N2; ++k ) {
-          if ( h_view(i,j,k) != 1 ) {
-            ++counter;
-          }
-        }}}
-      if ( counter != 0 )
-        printf(" Errors in test_for3; mismatches = %d\n\n",counter);
-      ASSERT_EQ( counter , 0 );
+      ASSERT_EQ( sum , 2*N0*N1*N2 );
     }
 
-#else
+    {
+      using range_type = MDRangePolicy< ExecSpace, Rank<3, Iterate::Left, Iterate::Left>, Kokkos::IndexType<int> >;
+      using tile_type  = typename range_type::tile_type;
+      using point_type = typename range_type::point_type;
+
+      range_type range( point_type{0,0,0}, point_type{N0,N1,N2}, tile_type{2,4,6} );
+
+      TestMDRange_3D functor(N0,N1,N2);
+
+      md_parallel_for( range, functor );
+      double sum = 0.0;
+      md_parallel_reduce( range, functor, sum );
+
+      ASSERT_EQ( sum , 2*N0*N1*N2 );
+    }
+
+    {
+      using range_type = MDRangePolicy< ExecSpace, Rank<3, Iterate::Left, Iterate::Right>, Kokkos::IndexType<int> >;
+      using tile_type  = typename range_type::tile_type;
+      using point_type = typename range_type::point_type;
+
+      range_type range( point_type{0,0,0}, point_type{N0,N1,N2}, tile_type{2,4,6} );
+
+      TestMDRange_3D functor(N0,N1,N2);
+
+      md_parallel_for( range, functor );
+      double sum = 0.0;
+      md_parallel_reduce( range, functor, sum );
+
+      ASSERT_EQ( sum , 2*N0*N1*N2 );
+    }
+
+    {
+      using range_type = MDRangePolicy< ExecSpace, Rank<3, Iterate::Right, Iterate::Left>, Kokkos::IndexType<int> >;
+      using tile_type  = typename range_type::tile_type;
+      using point_type = typename range_type::point_type;
+
+      range_type range( point_type{0,0,0}, point_type{N0,N1,N2}, tile_type{2,4,6} );
+
+      TestMDRange_3D functor(N0,N1,N2);
+
+      md_parallel_for( range, functor );
+      double sum = 0.0;
+      md_parallel_reduce( range, functor, sum );
+
+      ASSERT_EQ( sum , 2*N0*N1*N2 );
+    }
+
+    {
+      using range_type = MDRangePolicy< ExecSpace, Rank<3, Iterate::Right, Iterate::Right>, Kokkos::IndexType<int> >;
+      using tile_type  = typename range_type::tile_type;
+      using point_type = typename range_type::point_type;
+
+      range_type range( point_type{0,0,0}, point_type{N0,N1,N2}, tile_type{2,4,6} );
+
+      TestMDRange_3D functor(N0,N1,N2);
+
+      md_parallel_for( range, functor );
+      double sum = 0.0;
+      md_parallel_reduce( range, functor, sum );
+
+      ASSERT_EQ( sum , 2*N0*N1*N2 );
+    }
+
+  } //end test_reduce3
+
+  static void test_for3( const int N0, const int N1, const int N2 )
+  {
+    using namespace Kokkos::Experimental;
+
     {
       using range_type = MDRangePolicy< ExecSpace, Rank<3>, Kokkos::IndexType<int> >;
+      using point_type = typename range_type::point_type;
+      using tile_type  = typename range_type::tile_type;
 
-      range_type range( {0,0,0}, {N0,N1,N2} );
+      range_type range( point_type{{0,0,0}}, point_type{{N0,N1,N2}}, tile_type{{3,3,3}} );
+
       TestMDRange_3D functor(N0,N1,N2);
 
       md_parallel_for( range, functor );
@@ -377,33 +492,10 @@ struct TestMDRange_3D {
 
     {
       using range_type = MDRangePolicy< ExecSpace, Rank<3, Iterate::Default, Iterate::Default >, Kokkos::IndexType<int> >;
+      using point_type = typename range_type::point_type;
+      using tile_type  = typename range_type::tile_type;
 
-      range_type range( {0,0,0}, {N0,N1,N2} );
-      TestMDRange_3D functor(N0,N1,N2);
-
-      md_parallel_for( range, functor );
-
-      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
-      Kokkos::deep_copy( h_view , functor.input_view );
-
-      int counter = 0;
-      for ( int i=0; i<N0; ++i ) {
-        for ( int j=0; j<N1; ++j ) {
-          for ( int k=0; k<N2; ++k ) {
-          if ( h_view(i,j,k) != 1 ) {
-            ++counter;
-          }
-        }}}
-      if ( counter != 0 )
-        printf(" Errors in test_for3; mismatches = %d\n\n",counter);
-      ASSERT_EQ( counter , 0 );
-    }
-
-
-    {
-      using range_type = MDRangePolicy< ExecSpace, Rank<3, Iterate::Left, Iterate::Left >, Kokkos::IndexType<int> >;
-
-      range_type range( {0,0,0}, {N0,N1,N2}, {2,4,2} );
+      range_type range( point_type{{0,0,0}}, point_type{{N0,N1,N2}}, tile_type{{3,3,3}} );
       TestMDRange_3D functor(N0,N1,N2);
 
       md_parallel_for( range, functor );
@@ -425,9 +517,11 @@ struct TestMDRange_3D {
     }
 
     {
-      using range_type = MDRangePolicy< ExecSpace, Rank<3, Iterate::Left, Iterate::Right >, Kokkos::IndexType<int> >;
+      using range_type = MDRangePolicy< ExecSpace, Rank<3, Iterate::Left, Iterate::Left>, Kokkos::IndexType<int> >;
+      using point_type = typename range_type::point_type;
+      using tile_type  = typename range_type::tile_type;
 
-      range_type range( {0,0,0}, {N0,N1,N2}, {3,5,7} );
+      range_type range( point_type{{0,0,0}}, point_type{{N0,N1,N2}}, tile_type{{2,4,2}} );
       TestMDRange_3D functor(N0,N1,N2);
 
       md_parallel_for( range, functor );
@@ -449,9 +543,11 @@ struct TestMDRange_3D {
     }
 
     {
-      using range_type = MDRangePolicy< ExecSpace, Rank<3, Iterate::Right, Iterate::Left >, Kokkos::IndexType<int> >;
+      using range_type = MDRangePolicy< ExecSpace, Rank<3, Iterate::Left, Iterate::Right>, Kokkos::IndexType<int> >;
+      using point_type = typename range_type::point_type;
+      using tile_type  = typename range_type::tile_type;
 
-      range_type range( {0,0,0}, {N0,N1,N2}, {8,8,8} );
+      range_type range( point_type{{0,0,0}}, point_type{{N0,N1,N2}}, tile_type{{3,5,7}} );
       TestMDRange_3D functor(N0,N1,N2);
 
       md_parallel_for( range, functor );
@@ -473,9 +569,11 @@ struct TestMDRange_3D {
     }
 
     {
-      using range_type = MDRangePolicy< ExecSpace, Rank<3, Iterate::Right, Iterate::Right >, Kokkos::IndexType<int> >;
+      using range_type = MDRangePolicy< ExecSpace, Rank<3, Iterate::Right, Iterate::Left>, Kokkos::IndexType<int> >;
+      using point_type = typename range_type::point_type;
+      using tile_type  = typename range_type::tile_type;
 
-      range_type range( {0,0,0}, {N0,N1,N2}, {2,4,2} );
+      range_type range( point_type{{0,0,0}}, point_type{{N0,N1,N2}}, tile_type{{8,8,8}} );
       TestMDRange_3D functor(N0,N1,N2);
 
       md_parallel_for( range, functor );
@@ -496,9 +594,31 @@ struct TestMDRange_3D {
       ASSERT_EQ( counter , 0 );
     }
 
-#endif
-#undef NEWFUNCTOR
+    {
+      using range_type = MDRangePolicy< ExecSpace, Rank<3, Iterate::Right, Iterate::Right>, Kokkos::IndexType<int> >;
+      using point_type = typename range_type::point_type;
+      using tile_type  = typename range_type::tile_type;
 
+      range_type range( point_type{{0,0,0}}, point_type{{N0,N1,N2}}, tile_type{{2,4,2}} );
+      TestMDRange_3D functor(N0,N1,N2);
+
+      md_parallel_for( range, functor );
+
+      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
+      Kokkos::deep_copy( h_view , functor.input_view );
+
+      int counter = 0;
+      for ( int i=0; i<N0; ++i ) {
+        for ( int j=0; j<N1; ++j ) {
+          for ( int k=0; k<N2; ++k ) {
+          if ( h_view(i,j,k) != 1 ) {
+            ++counter;
+          }
+        }}}
+      if ( counter != 0 )
+        printf(" Errors in test_for3; mismatches = %d\n\n",counter);
+      ASSERT_EQ( counter , 0 );
+    }
   } //end test_for3
 };
 

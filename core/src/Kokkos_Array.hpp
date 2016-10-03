@@ -59,9 +59,7 @@ template< class T      = void
         , class Proxy  = void
         >
 struct Array {
-private:
   T m_elem[N];
-public:
 
   typedef T &                                 reference ;
   typedef typename std::add_const<T>::type &  const_reference ;
@@ -93,10 +91,11 @@ public:
   KOKKOS_INLINE_FUNCTION pointer       data()       { return & m_elem[0] ; }
   KOKKOS_INLINE_FUNCTION const_pointer data() const { return & m_elem[0] ; }
 
-  ~Array() = default ;
-  Array() = default ;
-  Array( const Array & ) = default ;
-  Array & operator = ( const Array & ) = default ;
+  // Do not default unless move and move-assignment are also defined
+  // ~Array() = default ;
+  // Array() = default ;
+  // Array( const Array & ) = default ;
+  // Array & operator = ( const Array & ) = default ;
 
   // Some supported compilers are not sufficiently C++11 compliant
   // for default move constructor and move assignment operator.

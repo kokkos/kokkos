@@ -54,70 +54,6 @@
 
 namespace Kokkos { namespace Experimental {
 
-namespace Impl {
-
-template < typename Integral, int Rank >
-struct IntegralArray
-{
-  static_assert( std::is_integral<Integral>::value, "Error: Integral is not an integral type" );
-  static_assert( Rank > 0, "Error: Rank <= 0" );
-
-  using value_type = Integral;
-
-  static constexpr int rank  = Rank;
-
-  KOKKOS_INLINE_FUNCTION
-  static constexpr int size() noexcept { return rank; }
-
-  template <unsigned I>
-  KOKKOS_INLINE_FUNCTION
-  constexpr value_type at() const noexcept
-  {
-    static_assert( I < rank, "Error: I >= Rank" );
-    return m_value[I];
-  }
-
-  template <typename IType>
-  KOKKOS_INLINE_FUNCTION
-  constexpr value_type operator[](IType i) const noexcept
-  {
-    static_assert( std::is_integral<IType>::value, "Error: IType is not an integral type" );
-    return m_value[i];
-  }
-
-  template <typename IType>
-  KOKKOS_INLINE_FUNCTION
-  void set(IType i, value_type v) noexcept
-  {
-    static_assert( std::is_integral<IType>::value, "Error: IType is not an integral type" );
-    m_value[i] = v;
-  }
-
-  template <typename... Args>
-  KOKKOS_INLINE_FUNCTION
-  constexpr IntegralArray( Args &&... args  ) noexcept
-    : m_value{ static_cast<Integral>(std::forward<Args>(args))... }
-  {
-    static_assert(sizeof...(Args) == rank, "Error: number of arguments not equal to rank");
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  constexpr IntegralArray() = default;
-  KOKKOS_INLINE_FUNCTION
-  constexpr IntegralArray( IntegralArray const& ) = default;
-  KOKKOS_INLINE_FUNCTION
-  constexpr IntegralArray( IntegralArray &&     ) = default;
-
-  KOKKOS_INLINE_FUNCTION
-  IntegralArray& operator=( IntegralArray const& ) = default;
-  KOKKOS_INLINE_FUNCTION
-  IntegralArray& operator=( IntegralArray &&     ) = default;
-
-private:
-  value_type m_value[rank] = {};
-};
-} // namespace Impl
-
 enum class Iterate
 {
   Default, // Default for the device
@@ -192,8 +128,8 @@ struct MDRangePolicy
   static constexpr int Left  = static_cast<int>( Iterate::Left );
 
   using index_type  = typename traits::index_type;
-  using point_type  = Kokkos::Experimental::Impl::IntegralArray<index_type,rank>;
-  using tile_type   = Kokkos::Experimental::Impl::IntegralArray<int,rank>;
+  using point_type  = Kokkos::Array<index_type,rank>;
+  using tile_type   = Kokkos::Array<int,rank>;
 
 
   MDRangePolicy( point_type const& lower, point_type const& upper, tile_type const& tile = tile_type{} )
@@ -205,7 +141,7 @@ struct MDRangePolicy
     index_type end;
     for (int i=0; i<rank; ++i) {
       end = upper[i] - lower[i];
-      m_tile_end.set(i, static_cast<index_type>((end + m_tile[i] -1) / m_tile[i]));
+      m_tile_end[i] = static_cast<index_type>((end + m_tile[i] -1) / m_tile[i]);
       m_num_tiles *= m_tile_end[i];
     }
   }
@@ -256,7 +192,7 @@ protected:
   template< typename... Args>
   void apply_left( Args &&... args )
   {
-    for (index_type i = final_type::m_begin.template at<Dim::value>(); i < final_type::m_end.template at<Dim::value>(); ++i) {
+    for (index_type i = final_type::m_begin[Dim::value]; i < final_type::m_end[Dim::value]; ++i) {
       base_type::apply_left(i, std::forward<Args>(args)...);
     }
   }
@@ -264,7 +200,7 @@ protected:
   template< typename... Args>
   void apply_right( Args &&... args )
   {
-    for (index_type i = final_type::m_begin.template at<RP::rank-Dim::value-1>(); i < final_type::m_end.template at<RP::rank-Dim::value-1>(); ++i) {
+    for (index_type i = final_type::m_begin[RP::rank-Dim::value-1]; i < final_type::m_end[RP::rank-Dim::value-1]; ++i) {
       base_type::apply_right(std::forward<Args>(args)...,i);
     }
   }
@@ -285,15 +221,15 @@ struct HostIterateTile<RP, Functor, std::integral_constant<int,0>, void, void>
   {
     if (RP::outer_direction == RP::Left) {
       for (int i=0; i<RP::rank; ++i) {
-        m_begin.set( i, (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] );
-        m_end.set( i, ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] );
+        m_begin[i] = (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] ;
+        m_end[i] = ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] ;
         tile_idx /= rp.m_tile_end[i];
       }
     }
     else {
       for (int i=RP::rank-1; i>=0; --i) {
-        m_begin.set( i, (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] );
-        m_end.set( i, ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] );
+        m_begin[i] = (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] ;
+        m_end[i] = ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] ;
         tile_idx /= rp.m_tile_end[i];
       }
     }
@@ -313,7 +249,7 @@ protected:
   template< typename... Args>
   void apply_left( Args &&... args )
   {
-    for (index_type i = m_begin.template at<0>(); i < m_end.template at<0>(); ++i) {
+    for (index_type i = m_begin[0]; i < m_end[0]; ++i) {
       m_func(i, std::forward<Args>(args)...);
     }
   }
@@ -321,7 +257,7 @@ protected:
   template< typename... Args>
   void apply_right( Args &&... args )
   {
-    for (index_type i = m_begin.template at<RP::rank-1>(); i < m_end.template at<RP::rank-1>(); ++i) {
+    for (index_type i = m_begin[RP::rank-1]; i < m_end[RP::rank-1]; ++i) {
       m_func(std::forward<Args>(args)...,i);
     }
   }
@@ -348,15 +284,15 @@ struct HostIterateTile<RP, Functor, std::integral_constant<int,0>, Tag, void>
   {
     if (RP::outer_direction == RP::Left) {
       for (int i=0; i<RP::rank; ++i) {
-        m_begin.set( i, (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] );
-        m_end.set( i, ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] );
+        m_begin[i] = (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] ;
+        m_end[i] = ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] ;
         tile_idx /= rp.m_tile_end[i];
       }
     }
     else {
       for (int i=RP::rank-1; i>=0; --i) {
-        m_begin.set( i, (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] );
-        m_end.set( i, ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] );
+        m_begin[i] = (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] ;
+        m_end[i] = ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] ;
         tile_idx /= rp.m_tile_end[i];
       }
     }
@@ -376,7 +312,7 @@ protected:
   template< typename... Args>
   void apply_left( Args &&... args )
   {
-    for (index_type i = m_begin.template at<0>(); i < m_end.template at<0>(); ++i) {
+    for (index_type i = m_begin[0]; i < m_end[0]; ++i) {
       m_func(m_tag, i, std::forward<Args>(args)...);
     }
   }
@@ -384,7 +320,7 @@ protected:
   template< typename... Args>
   void apply_right( Args &&... args )
   {
-    for (index_type i = m_begin.template at<RP::rank-1>(); i < m_end.template at<RP::rank-1>(); ++i) {
+    for (index_type i = m_begin[RP::rank-1]; i < m_end[RP::rank-1]; ++i) {
       m_func(m_tag, std::forward<Args>(args)...,i);
     }
   }
@@ -414,15 +350,15 @@ struct HostIterateTile<RP, Functor, std::integral_constant<int,0>, void, ValueTy
   {
     if (RP::outer_direction == RP::Left) {
       for (int i=0; i<RP::rank; ++i) {
-        m_begin.set( i, (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] );
-        m_end.set( i, ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] );
+        m_begin[i] =  (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] ;
+        m_end[i] = ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] ;
         tile_idx /= rp.m_tile_end[i];
       }
     }
     else {
       for (int i=RP::rank-1; i>=0; --i) {
-        m_begin.set( i, (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] );
-        m_end.set( i, ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] );
+        m_begin[i] = (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] ;
+        m_end[i] = ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] ;
         tile_idx /= rp.m_tile_end[i];
       }
     }
@@ -442,7 +378,7 @@ protected:
   template< typename... Args>
   void apply_left( Args &&... args )
   {
-    for (index_type i = m_begin.template at<0>(); i < m_end.template at<0>(); ++i) {
+    for (index_type i = m_begin[0]; i < m_end[0]; ++i) {
       m_func(i, std::forward<Args>(args)..., m_v);
     }
   }
@@ -450,7 +386,7 @@ protected:
   template< typename... Args>
   void apply_right( Args &&... args )
   {
-    for (index_type i = m_begin.template at<RP::rank-1>(); i < m_end.template at<RP::rank-1>(); ++i) {
+    for (index_type i = m_begin[RP::rank-1]; i < m_end[RP::rank-1]; ++i) {
       m_func(std::forward<Args>(args)...,i, m_v);
     }
   }
@@ -481,15 +417,15 @@ struct HostIterateTile<RP, Functor, std::integral_constant<int,0>, Tag, ValueTyp
   {
     if (RP::outer_direction == RP::Left) {
       for (int i=0; i<RP::rank; ++i) {
-        m_begin.set( i, (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] );
-        m_end.set( i, ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] );
+        m_begin[i] = (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] ;
+        m_end[i] = ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] ;
         tile_idx /= rp.m_tile_end[i];
       }
     }
     else {
       for (int i=RP::rank-1; i>=0; --i) {
-        m_begin.set( i, (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] );
-        m_end.set( i, ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] );
+        m_begin[i] = (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] ;
+        m_end[i] = ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] ;
         tile_idx /= rp.m_tile_end[i];
       }
     }
@@ -509,7 +445,7 @@ protected:
   template< typename... Args>
   void apply_left( Args &&... args )
   {
-    for (index_type i = m_begin.template at<0>(); i < m_end.template at<0>(); ++i) {
+    for (index_type i = m_begin[0]; i < m_end[0]; ++i) {
       m_func(m_tag, i, std::forward<Args>(args)..., m_v);
     }
   }
@@ -517,7 +453,7 @@ protected:
   template< typename... Args>
   void apply_right( Args &&... args )
   {
-    for (index_type i = m_begin.template at<RP::rank-1>(); i < m_end.template at<RP::rank-1>(); ++i) {
+    for (index_type i = m_begin[RP::rank-1]; i < m_end[RP::rank-1]; ++i) {
       m_func(m_tag, std::forward<Args>(args)...,i, m_v);
     }
   }
