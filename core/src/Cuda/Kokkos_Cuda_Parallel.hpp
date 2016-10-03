@@ -95,27 +95,42 @@ private:
 
 public:
 
-#if defined( __CUDA_ARCH__ ) || defined( KOKKOS_CUDA_CLANG_WORKAROUND)
-
-  __device__ inline
+  KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space & team_shmem() const
     { return m_team_shared.set_team_thread_mode(0,1,0) ; }
-  __device__ inline
+  KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space & team_scratch(const int& level) const
     { return m_team_shared.set_team_thread_mode(level,1,0) ; }
-  __device__ inline
+  KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space & thread_scratch(const int& level) const
     { return m_team_shared.set_team_thread_mode(level,team_size(),team_rank()) ; }
 
-  __device__ inline int league_rank() const { return m_league_rank ; }
-  __device__ inline int league_size() const { return m_league_size ; }
-  __device__ inline int team_rank() const { return threadIdx.y ; }
-  __device__ inline int team_size() const { return blockDim.y ; }
+  KOKKOS_INLINE_FUNCTION int league_rank() const { return m_league_rank ; }
+  KOKKOS_INLINE_FUNCTION int league_size() const { return m_league_size ; }
+  KOKKOS_INLINE_FUNCTION int team_rank() const {
+    #ifdef __CUDA_ARCH__
+    return threadIdx.y ;
+    #else
+    return 1;
+    #endif
+  }
+  KOKKOS_INLINE_FUNCTION int team_size() const {
+    #ifdef __CUDA_ARCH__
+    return blockDim.y ;
+    #else
+    return 1;
+    #endif
+  }
 
-  __device__ inline void team_barrier() const { __syncthreads(); }
+  KOKKOS_INLINE_FUNCTION void team_barrier() const {
+    #ifdef __CUDA_ARCH__
+    __syncthreads();
+    #endif
+  }
 
   template<class ValueType>
-  __device__ inline void team_broadcast(ValueType& value, const int& thread_id) const {
+  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& value, const int& thread_id) const {
+    #ifdef __CUDA_ARCH__
     __shared__ ValueType sh_val;
     if(threadIdx.x == 0 && threadIdx.y == thread_id) {
       sh_val = value;
@@ -123,26 +138,17 @@ public:
     team_barrier();
     value = sh_val;
     team_barrier();
+    #endif
   }
 
-#ifdef KOKKOS_HAVE_CXX11
   template< class ValueType, class JoinOp >
-  __device__ inline
+  KOKKOS_INLINE_FUNCTION
   typename JoinOp::value_type team_reduce( const ValueType & value
-                                         , const JoinOp & op_in ) const
-    {
+                                         , const JoinOp & op_in ) const {
+      #ifdef __CUDA_ARCH__
       typedef JoinLambdaAdapter<ValueType,JoinOp> JoinOpFunctor ;
       const JoinOpFunctor op(op_in);
       ValueType * const base_data = (ValueType *) m_team_reduce ;
-#else
-  template< class JoinOp >
-  __device__ inline
-  typename JoinOp::value_type team_reduce( const typename JoinOp::value_type & value
-                                         , const JoinOp & op ) const
-    {
-      typedef JoinOp JoinOpFunctor ;
-      typename JoinOp::value_type * const base_data = (typename JoinOp::value_type *) m_team_reduce ;
-#endif
 
       __syncthreads(); // Don't write in to shared data until all threads have entered this function
 
@@ -153,6 +159,9 @@ public:
       Impl::cuda_intra_block_reduce_scan<false,JoinOpFunctor,void>( op , base_data );
 
       return base_data[ blockDim.y - 1 ];
+      #else
+      return typename JoinOp::value_type();
+      #endif
     }
 
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering
@@ -165,8 +174,8 @@ public:
    *  non-deterministic.
    */
   template< typename Type >
-  __device__ inline Type team_scan( const Type & value , Type * const global_accum ) const
-    {
+  KOKKOS_INLINE_FUNCTION Type team_scan( const Type & value , Type * const global_accum ) const {
+      #ifdef __CUDA_ARCH__
       Type * const base_data = (Type *) m_team_reduce ;
 
       __syncthreads(); // Don't write in to shared data until all threads have entered this function
@@ -186,6 +195,9 @@ public:
       }
 
       return base_data[ threadIdx.y ];
+      #else
+      return Type();
+      #endif
     }
 
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering.
@@ -194,13 +206,14 @@ public:
    *    reduction_total = dev.team_scan( value ) + value ;
    */
   template< typename Type >
-  __device__ inline Type team_scan( const Type & value ) const
-    { return this->template team_scan<Type>( value , 0 ); }
+  KOKKOS_INLINE_FUNCTION Type team_scan( const Type & value ) const {
+    return this->template team_scan<Type>( value , 0 );
+  }
 
   //----------------------------------------
   // Private for the driver
 
-  __device__ inline
+  KOKKOS_INLINE_FUNCTION
   CudaTeamMember( void * shared
                 , const int shared_begin
                 , const int shared_size
@@ -213,49 +226,6 @@ public:
     , m_league_rank( arg_league_rank ) 
     , m_league_size( arg_league_size ) 
     {}
-
-#endif
-
-#if !defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
-
-  const execution_space::scratch_memory_space & team_shmem() const
-    { return m_team_shared.set_team_thread_mode(0, 1,0) ; }
-  const execution_space::scratch_memory_space & team_scratch(const int& level) const
-    { return m_team_shared.set_team_thread_mode(level,1,0) ; }
-  const execution_space::scratch_memory_space & thread_scratch(const int& level) const
-    { return m_team_shared.set_team_thread_mode(level,team_size(),team_rank()) ; }
-
-  int league_rank() const {return 0;}
-  int league_size() const {return 1;}
-  int team_rank() const {return 0;}
-  int team_size() const {return 1;}
-
-  void team_barrier() const {}
-  template<class ValueType>
-  void team_broadcast(ValueType& value, const int& thread_id) const {}
-
-  template< class JoinOp >
-  typename JoinOp::value_type team_reduce( const typename JoinOp::value_type & value
-                                         , const JoinOp & op ) const {return typename JoinOp::value_type();}
-
-  template< typename Type >
-  Type team_scan( const Type & value , Type * const global_accum ) const {return Type();}
-
-  template< typename Type >
-  Type team_scan( const Type & value ) const {return Type();}
-
-  //----------------------------------------
-  // Private for the driver
-#ifndef KOKKOS_CUDA_CLANG_WORKAROUND
-  CudaTeamMember( void * shared
-                , const int shared_begin
-                , const int shared_end
-                , void*     scratch_level_1_ptr
-                , const int scratch_level_1_size
-                , const int arg_league_rank
-                , const int arg_league_size );
-#endif
-#endif
 
 };
 
