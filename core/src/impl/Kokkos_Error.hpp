@@ -68,10 +68,16 @@ std::string human_memory_size(size_t arg_bytes);
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST ) || defined( KOKKOS_CUDA_CLANG_WORKAROUND )
 namespace Kokkos {
 inline
-void abort( const char * const message ) { Kokkos::Impl::host_abort(message); }
+void abort( const char * const message ) {
+#ifndef __CUDA_ARCH__
+  Kokkos::Impl::host_abort(message);
+#endif
+}
+
 }
 #endif /* defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA ) */
 

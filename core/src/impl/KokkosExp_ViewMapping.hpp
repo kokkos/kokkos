@@ -44,4 +44,3 @@
 // Deprecated file for backward compatibility
 
 #include <Kokkos_ViewMapping.hpp>
-

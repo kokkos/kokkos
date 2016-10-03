@@ -128,15 +128,18 @@
 
 #ifdef KOKKOS_CUDA_USE_LAMBDA
 #if ( CUDA_VERSION < 7000 )
-// CUDA supports C++11 lambdas generated in host code to be given
-// to the device starting with version 7.5. But the release candidate (7.5.6)
-// still identifies as 7.0
-#error "Cuda version 7.5 or greater required for host-to-device Lambda support"
+  // CUDA supports C++11 lambdas generated in host code to be given
+  // to the device starting with version 7.5. But the release candidate (7.5.6)
+  // still identifies as 7.0
+  #error "Cuda version 7.5 or greater required for host-to-device Lambda support"
 #endif
-#if ( CUDA_VERSION < 8000 )
-#define KOKKOS_LAMBDA [=]__device__
+#if ( CUDA_VERSION < 8000 ) && defined(__NVCC__)
+  #define KOKKOS_LAMBDA [=]__device__
 #else
-#define KOKKOS_LAMBDA [=]__host__ __device__
+  #define KOKKOS_LAMBDA [=]__host__ __device__
+  #if defined( KOKKOS_HAVE_CXX1Z )
+    #define KOKKOS_CLASS_LAMBDA        [=,*this] __host__ __device__
+  #endif
 #endif
 #define KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA 1
 #endif
@@ -145,7 +148,7 @@
 
 #if defined(KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA)
    // Cuda version 8.0 still needs the functor wrapper
-   #if (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA /* && (CUDA_VERSION < 8000) */ )
+   #if (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA /* && (CUDA_VERSION < 8000) */ ) && defined(__NVCC__)
       #define KOKKOS_IMPL_NEED_FUNCTOR_WRAPPER
    #endif
 #endif
@@ -153,13 +156,12 @@
 /*--------------------------------------------------------------------------*/
 /* Language info: C++, CUDA, OPENMP */
 
-#if defined( __CUDA_ARCH__ ) && defined( KOKKOS_HAVE_CUDA )
+#if defined( KOKKOS_HAVE_CUDA )
   // Compiling Cuda code to 'ptx'
 
   #define KOKKOS_FORCEINLINE_FUNCTION  __device__  __host__  __forceinline__
   #define KOKKOS_INLINE_FUNCTION       __device__  __host__  inline
   #define KOKKOS_FUNCTION              __device__  __host__
-
 #endif /* #if defined( __CUDA_ARCH__ ) */
 
 #if defined( _OPENMP )
@@ -184,10 +186,12 @@
 
 #else
 #if defined( KOKKOS_HAVE_CXX11 ) && ! defined( KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA )
+    #if !defined (KOKKOS_HAVE_CUDA) // Compiling with clang for Cuda does not work with LAMBDAs either
     // CUDA (including version 6.5) does not support giving lambdas as
     // arguments to global functions. Thus its not currently possible
     // to dispatch lambdas from the host.
     #define KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA 1
+    #endif
   #endif
 #endif /* #if defined( __NVCC__ ) */
 
@@ -195,7 +199,11 @@
   #define KOKKOS_LAMBDA [=]
 #endif
 
-#if ! defined( __CUDA_ARCH__ ) /* Not compiling Cuda code to 'ptx'. */
+#if defined( KOKKOS_HAVE_CXX1Z ) && !defined (KOKKOS_CLASS_LAMBDA)
+  #define KOKKOS_CLASS_LAMBDA [=,*this]
+#endif
+
+//#if ! defined( __CUDA_ARCH__ ) /* Not compiling Cuda code to 'ptx'. */
 
 /* Intel compiler for host code */
 
@@ -243,7 +251,7 @@
   #endif
 #endif
 
-#endif /* #if ! defined( __CUDA_ARCH__ ) */
+//#endif /* #if ! defined( __CUDA_ARCH__ ) */
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/

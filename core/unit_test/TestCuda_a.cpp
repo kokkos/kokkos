@@ -118,7 +118,9 @@ TEST_F( cuda, view_api )
 
 TEST_F( cuda , view_nested_view )
 {
+#ifndef KOKKOS_CUDA_CLANG_WORKAROUND
   ::Test::view_nested_view< Kokkos::Cuda >();
+#endif
 }
 
 TEST_F( cuda, view_subview_auto_1d_left ) {

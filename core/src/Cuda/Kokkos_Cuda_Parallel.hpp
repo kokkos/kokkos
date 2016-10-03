@@ -95,7 +95,7 @@ private:
 
 public:
 
-#if defined( __CUDA_ARCH__ )
+#if defined( __CUDA_ARCH__ ) || defined( KOKKOS_CUDA_CLANG_WORKAROUND)
 
   __device__ inline
   const execution_space::scratch_memory_space & team_shmem() const
@@ -214,7 +214,9 @@ public:
     , m_league_size( arg_league_size ) 
     {}
 
-#else
+#endif
+
+#if !defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
 
   const execution_space::scratch_memory_space & team_shmem() const
     { return m_team_shared.set_team_thread_mode(0, 1,0) ; }
@@ -244,7 +246,7 @@ public:
 
   //----------------------------------------
   // Private for the driver
-
+#ifndef KOKKOS_CUDA_CLANG_WORKAROUND
   CudaTeamMember( void * shared
                 , const int shared_begin
                 , const int shared_end
@@ -252,8 +254,8 @@ public:
                 , const int scratch_level_1_size
                 , const int arg_league_rank
                 , const int arg_league_size );
-
-#endif /* #if ! defined( __CUDA_ARCH__ ) */
+#endif
+#endif
 
 };
 
@@ -1114,9 +1116,18 @@ public:
   , m_team_size( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
       Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( arg_functor , arg_policy.vector_length(),
                                                                arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) /
-      arg_policy.vector_length() )
+                                                               arg_policy.vector_length() )
   , m_vector_size( arg_policy.vector_length() )
-  , m_scratch_size{arg_policy.scratch_size(0,m_team_size),arg_policy.scratch_size(1,m_team_size)}
+  , m_scratch_size{
+    arg_policy.scratch_size(0,( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
+        Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( arg_functor , arg_policy.vector_length(),
+                                                                 arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) /
+                                                                 arg_policy.vector_length() )
+    ), arg_policy.scratch_size(1,( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
+        Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( arg_functor , arg_policy.vector_length(),
+                                                                 arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) /
+                                                                 arg_policy.vector_length() )
+        )}
   {
     // Return Init value if the number of worksets is zero
     if( arg_policy.league_size() == 0) {
@@ -1350,7 +1361,7 @@ private:
       }
 
       // Scan block values into locations shared_data[1..blockDim.y]
-      cuda_intra_block_reduce_scan<true,FunctorType,WorkTag>( m_functor , ValueTraits::pointer_type(shared_data+word_count.value) );
+      cuda_intra_block_reduce_scan<true,FunctorType,WorkTag>( m_functor , typename ValueTraits::pointer_type(shared_data+word_count.value) );
 
       {
         size_type * const block_total = shared_data + word_count.value * blockDim.y ;
@@ -1579,9 +1590,10 @@ void parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::Cud
     lambda(i,result);
   }
 
-  Impl::cuda_intra_warp_reduction(result,[&] (ValueType& dst, const ValueType& src) { dst+=src; });
-  Impl::cuda_inter_warp_reduction(result,[&] (ValueType& dst, const ValueType& src) { dst+=src; });
-
+  Impl::cuda_intra_warp_reduction(result,[&] (ValueType& dst, const ValueType& src)
+      { dst+=src; });
+  Impl::cuda_inter_warp_reduction(result,[&] (ValueType& dst, const ValueType& src)
+      { dst+=src; });
 #endif
 }
 

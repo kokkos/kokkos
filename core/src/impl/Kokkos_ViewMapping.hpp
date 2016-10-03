@@ -2268,7 +2268,7 @@ struct ViewValueFunctor< ExecSpace , ValueType , false /* is_scalar */ >
   KOKKOS_INLINE_FUNCTION
   void operator()( const size_t i ) const
     {
-      if ( destroy ) { (ptr+i)->~ValueType(); }
+      if ( destroy ) { (ptr+i)->~ValueType(); } //KOKKOS_CUDA_CLANG_WORKAROUND this line causes ptax error __cxa_begin_catch in nested_view unit-test
       else           { new (ptr+i) ValueType(); }
     }
 
