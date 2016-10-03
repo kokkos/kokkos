@@ -2924,13 +2924,13 @@ void view_error_operator_bounds
 template< class MapType , class ... Args >
 KOKKOS_INLINE_FUNCTION
 void view_verify_operator_bounds
-  ( const MapType & map , Args ... args )
+  ( const char* label , const MapType & map , Args ... args )
 {
   if ( ! view_verify_operator_bounds<0>( map , args ... ) ) {
-#if defined( KOKKOS_ACTIVE_EXECUTION_SPACE_HOST )
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     enum { LEN = 1024 };
     char buffer[ LEN ];
-    int n = snprintf(buf,LEN,"View bounds error(" );
+    int n = snprintf(buffer,LEN,"View bounds error of view %s (", label);
     view_error_operator_bounds<0>( buffer + n , LEN - n , map , args ... );
     Kokkos::Impl::throw_runtime_exception(std::string(buffer));
 #else
