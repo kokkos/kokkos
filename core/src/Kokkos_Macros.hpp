@@ -114,11 +114,11 @@
 #error "#include <cuda.h> did not define CUDA_VERSION"
 #endif
 
-#if ( CUDA_VERSION < 6050 )
-// CUDA supports (inofficially) C++11 in device code starting with
-// version 6.5. This includes auto type and device code internal
+#if ( CUDA_VERSION < 7000 )
+// CUDA supports C++11 in device code starting with
+// version 7.0. This includes auto type and device code internal
 // lambdas.
-#error "Cuda version 6.5 or greater required"
+#error "Cuda version 7.0 or greater required"
 #endif
 
 #if defined( __CUDA_ARCH__ ) && ( __CUDA_ARCH__ < 300 )
@@ -127,7 +127,7 @@
 #endif
 
 #ifdef KOKKOS_CUDA_USE_LAMBDA
-#if ( CUDA_VERSION < 7000 )
+#if ( CUDA_VERSION < 7050 )
   // CUDA supports C++11 lambdas generated in host code to be given
   // to the device starting with version 7.5. But the release candidate (7.5.6)
   // still identifies as 7.0
