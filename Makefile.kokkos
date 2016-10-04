@@ -127,11 +127,13 @@ KOKKOS_INTERNAL_USE_ARCH_MAXWELL50 := $(strip $(shell echo $(KOKKOS_ARCH) | grep
 KOKKOS_INTERNAL_USE_ARCH_MAXWELL52 := $(strip $(shell echo $(KOKKOS_ARCH) | grep Maxwell52 | wc -l))
 KOKKOS_INTERNAL_USE_ARCH_MAXWELL53 := $(strip $(shell echo $(KOKKOS_ARCH) | grep Maxwell53 | wc -l))
 KOKKOS_INTERNAL_USE_ARCH_PASCAL61 := $(strip $(shell echo $(KOKKOS_ARCH) | grep Pascal61 | wc -l))
+KOKKOS_INTERNAL_USE_ARCH_PASCAL60 := $(strip $(shell echo $(KOKKOS_ARCH) | grep Pascal60 | wc -l))
 KOKKOS_INTERNAL_USE_ARCH_NVIDIA := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_KEPLER30)  \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_KEPLER32)  \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_KEPLER35)  \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_KEPLER37)  \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_PASCAL61)  \
+                                                      + $(KOKKOS_INTERNAL_USE_ARCH_PASCAL60)  \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL50) \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL52) \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL53) | bc))
@@ -144,6 +146,7 @@ KOKKOS_INTERNAL_USE_ARCH_NVIDIA := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_AR
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_KEPLER35)  \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_KEPLER37)  \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_PASCAL61)  \
+                                                      + $(KOKKOS_INTERNAL_USE_ARCH_PASCAL60)  \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL50) \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL52) \
                                                       + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL53) | bc))
@@ -435,6 +438,11 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_PASCAL61), 1)
     tmp := $(shell echo "\#define KOKKOS_ARCH_PASCAL 1" >> KokkosCore_config.tmp )
     tmp := $(shell echo "\#define KOKKOS_ARCH_PASCAL61 1" >> KokkosCore_config.tmp )
         KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_61
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_PASCAL60), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_PASCAL 1" >> KokkosCore_config.tmp )
+    tmp := $(shell echo "\#define KOKKOS_ARCH_PASCAL60 1" >> KokkosCore_config.tmp )
+        KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_60
 endif
 endif
  
