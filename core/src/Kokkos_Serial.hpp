@@ -50,7 +50,7 @@
 #include <cstddef>
 #include <iosfwd>
 #include <Kokkos_Parallel.hpp>
-#include <Kokkos_TaskPolicy.hpp>
+#include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_ScratchSpace.hpp>
@@ -306,7 +306,7 @@ public:
 
 /*
  * < Kokkos::Serial , WorkArgTag >
- * < WorkArgTag , Impl::enable_if< Impl::is_same< Kokkos::Serial , Kokkos::DefaultExecutionSpace >::value >::type >
+ * < WorkArgTag , Impl::enable_if< std::is_same< Kokkos::Serial , Kokkos::DefaultExecutionSpace >::value >::type >
  *
  */
 namespace Impl {

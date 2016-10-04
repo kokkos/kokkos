@@ -70,7 +70,6 @@ struct ViewAllocateWithoutInitializing {
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 struct WithoutInitializing_t {};
@@ -242,7 +241,6 @@ public:
 };
 
 } /* namespace Impl */
-} /* namespace Experimental */
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------

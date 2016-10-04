@@ -113,7 +113,6 @@ void fence();
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
 
 /* Allocate memory from a memory space.
  * The allocation is tracked in Kokkos memory tracking system, so
@@ -156,17 +155,7 @@ void * kokkos_realloc( void * arg_alloc , const size_t arg_alloc_size )
     reallocate_tracked( arg_alloc , arg_alloc_size );
 }
 
-} // namespace Experimental
 } // namespace Kokkos
-
-
-namespace Kokkos {
-
-using Kokkos::Experimental::kokkos_malloc ;
-using Kokkos::Experimental::kokkos_realloc ;
-using Kokkos::Experimental::kokkos_free ;
-
-}
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

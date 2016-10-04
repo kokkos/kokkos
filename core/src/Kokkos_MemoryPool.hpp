@@ -49,7 +49,7 @@
 #include <Kokkos_Atomic.hpp>
 #include <impl/Kokkos_BitOps.hpp>
 #include <impl/Kokkos_Error.hpp>
-#include <impl/KokkosExp_SharedAlloc.hpp>
+#include <impl/Kokkos_SharedAlloc.hpp>
 
 #include <limits>
 #include <algorithm>
@@ -609,7 +609,7 @@ public:
   };
 
 private:
-  typedef Impl::SharedAllocationTracker            Tracker;
+  typedef Kokkos::Impl::SharedAllocationTracker    Tracker;
   typedef View< uint32_t *, device_type >          UInt32View;
   typedef View< SuperblockHeader *, device_type >  SBHeaderView;
 
@@ -730,7 +730,7 @@ public:
     resize(m_sb_header, m_num_sb );
 
     // Allocate superblock memory.
-    typedef Impl::SharedAllocationRecord< backend_memory_space, void >  SharedRecord;
+    typedef Kokkos::Impl::SharedAllocationRecord< backend_memory_space, void >  SharedRecord;
     SharedRecord * rec =
       SharedRecord::allocate( memspace, "mempool", m_total_size );
 
@@ -839,6 +839,9 @@ public:
       int block_size_id = get_block_size_index( alloc_size );
       uint32_t blocks_per_sb = m_blocksize_info[block_size_id].m_blocks_per_sb;
       uint32_t pages_per_sb = m_blocksize_info[block_size_id].m_pages_per_sb;
+      #ifdef KOKKOS_CUDA_CLANG_WORKAROUND
+      if(pages_per_sb == 0) return NULL; //Without this test it looks like pages_per_sb might come back wrong
+      #endif
       unsigned word_size = blocks_per_sb > 32 ? 32 : blocks_per_sb;
       unsigned word_mask = ( uint64_t(1) << word_size ) - 1;
 

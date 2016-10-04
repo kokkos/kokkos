@@ -154,9 +154,9 @@ struct is_space : public Impl::false_type {};
 template< class C >
 struct is_space< C
                  , typename Impl::enable_if<(
-                     Impl::is_same< C , typename C::execution_space >::value ||
-                     Impl::is_same< C , typename C::memory_space    >::value ||
-                     Impl::is_same< C , Device<
+                     std::is_same< C , typename C::execution_space >::value ||
+                     std::is_same< C , typename C::memory_space    >::value ||
+                     std::is_same< C , Device<
                                              typename C::execution_space,
                                              typename C::memory_space> >::value
                    )>::type
@@ -170,10 +170,10 @@ struct is_space< C
   // If the execution space's memory space is host accessible then use that execution space.
   // else use the HostSpace.
   typedef
-      typename Impl::if_c< Impl::is_same< memory_space , HostSpace >::value
+      typename Impl::if_c< std::is_same< memory_space , HostSpace >::value
 #ifdef KOKKOS_HAVE_CUDA
-                        || Impl::is_same< memory_space , CudaUVMSpace>::value
-                        || Impl::is_same< memory_space , CudaHostPinnedSpace>::value
+                        || std::is_same< memory_space , CudaUVMSpace>::value
+                        || std::is_same< memory_space , CudaHostPinnedSpace>::value
 #endif
                           , memory_space , HostSpace >::type
       host_memory_space ;
@@ -183,7 +183,7 @@ struct is_space< C
   // else use the DefaultHostExecutionSpace.
 #ifdef KOKKOS_HAVE_CUDA
   typedef
-      typename Impl::if_c< Impl::is_same< execution_space , Cuda >::value
+      typename Impl::if_c< std::is_same< execution_space , Cuda >::value
                           , DefaultHostExecutionSpace , execution_space >::type
       host_execution_space ;
 #else

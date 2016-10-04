@@ -199,7 +199,7 @@ TEST_F( openmp , template_meta_functions )
 #if defined( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_OPENMP )
 TEST_F( openmp , cxx11 )
 {
-  if ( Kokkos::Impl::is_same< Kokkos::DefaultExecutionSpace , Kokkos::OpenMP >::value ) {
+  if ( std::is_same< Kokkos::DefaultExecutionSpace , Kokkos::OpenMP >::value ) {
     ASSERT_TRUE( ( TestCXX11::Test< Kokkos::OpenMP >(1) ) );
     ASSERT_TRUE( ( TestCXX11::Test< Kokkos::OpenMP >(2) ) );
     ASSERT_TRUE( ( TestCXX11::Test< Kokkos::OpenMP >(3) ) );

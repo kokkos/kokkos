@@ -20,14 +20,12 @@ Kokkos_TaskQueue.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/impl/Kokkos_Ta
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/impl/Kokkos_TaskQueue.cpp
 Kokkos_Serial_Task.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/impl/Kokkos_Serial_Task.cpp
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/impl/Kokkos_Serial_Task.cpp
-Kokkos_Shape.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/impl/Kokkos_Shape.cpp
-	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/impl/Kokkos_Shape.cpp
 Kokkos_spinwait.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/impl/Kokkos_spinwait.cpp
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/impl/Kokkos_spinwait.cpp
 Kokkos_Profiling_Interface.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/impl/Kokkos_Profiling_Interface.cpp
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/impl/Kokkos_Profiling_Interface.cpp
-KokkosExp_SharedAlloc.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/impl/KokkosExp_SharedAlloc.cpp
-	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/impl/KokkosExp_SharedAlloc.cpp
+Kokkos_SharedAlloc.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/impl/Kokkos_SharedAlloc.cpp
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/impl/Kokkos_SharedAlloc.cpp
 Kokkos_MemoryPool.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/impl/Kokkos_MemoryPool.cpp
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/impl/Kokkos_MemoryPool.cpp
 
@@ -67,6 +65,4 @@ endif
 
 Kokkos_HBWSpace.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/impl/Kokkos_HBWSpace.cpp
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/impl/Kokkos_HBWSpace.cpp
-Kokkos_HBWAllocators.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/impl/Kokkos_HBWAllocators.cpp
-	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/impl/Kokkos_HBWAllocators.cpp
 

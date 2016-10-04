@@ -393,12 +393,14 @@ public:
     typedef typename if_c< sizeof(ValueType) < TEAM_REDUCE_SIZE
                          , ValueType , void >::type type ;
 
-    type * const local_value = ((type*) m_exec.scratch_thread());
-    if(team_rank() == thread_id)
-      *local_value = value;
+    type volatile * const shared_value =
+      ((type*) m_exec.pool_rev( m_team_base_rev )->scratch_thread());
+
+    if ( team_rank() == thread_id ) *shared_value = value;
     memory_fence();
-    team_barrier();
-    value = *local_value;
+    team_barrier(); // Wait for 'thread_id' to write
+    value = *shared_value ;
+    team_barrier(); // Wait for team members to read
 #endif
   }
 

@@ -341,7 +341,6 @@ class DynRankView : public ViewTraits< DataType , Properties ... >
 
 private: 
   template < class , class ... > friend class DynRankView ;
-//  template < class , class ... > friend class Kokkos::Experimental::View ; //unnecessary now...
   template < class , class ... > friend class Impl::ViewMapping ;
 
 public: 
@@ -511,7 +510,7 @@ private:
   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace \
     < Kokkos::Impl::ActiveExecutionMemorySpace , typename traits::memory_space >::verify(); \
   Kokkos::Experimental::Impl::verify_dynrankview_rank ( N , *this ) ; \
-  Kokkos::Experimental::Impl::view_verify_operator_bounds ARG ; 
+  Kokkos::Impl::view_verify_operator_bounds ARG ; 
 
 #else
 
@@ -1136,13 +1135,13 @@ private:
 
 public:
 
-  typedef Kokkos::Experimental::ViewTraits
+  typedef Kokkos::ViewTraits
     < data_type
     , array_layout 
     , typename SrcTraits::device_type
     , typename SrcTraits::memory_traits > traits_type ;
 
-  typedef Kokkos::Experimental::View
+  typedef Kokkos::View
     < data_type
     , array_layout 
     , typename SrcTraits::device_type
@@ -1154,13 +1153,13 @@ public:
 
     static_assert( Kokkos::Impl::is_memory_traits< MemoryTraits >::value , "" );
 
-    typedef Kokkos::Experimental::ViewTraits
+    typedef Kokkos::ViewTraits
       < data_type 
       , array_layout
       , typename SrcTraits::device_type
       , MemoryTraits > traits_type ;
 
-    typedef Kokkos::Experimental::View
+    typedef Kokkos::View
       < data_type 
       , array_layout
       , typename SrcTraits::device_type
@@ -1264,7 +1263,7 @@ subdynrankview( const Kokkos::Experimental::DynRankView< D , P... > &src , Args.
     if ( src.rank() > sizeof...(Args) ) //allow sizeof...(Args) >= src.rank(), ignore the remaining args
       { Kokkos::abort("subdynrankview: num of args must be >= rank of the source DynRankView"); }
   
-    typedef Kokkos::Experimental::Impl::ViewMapping< Kokkos::Experimental::Impl::DynRankSubviewTag , Kokkos::Experimental::ViewTraits< D*******, P... > , Args... > metafcn ;
+    typedef Kokkos::Experimental::Impl::ViewMapping< Kokkos::Experimental::Impl::DynRankSubviewTag , Kokkos::ViewTraits< D*******, P... > , Args... > metafcn ;
 
     return metafcn::subview( src.rank() , src , args... );
   }
@@ -1666,7 +1665,7 @@ inline
 typename DynRankView<T,P...>::HostMirror
 create_mirror( const DynRankView<T,P...> & src
              , typename std::enable_if<
-                 ! std::is_same< typename Kokkos::Experimental::ViewTraits<T,P...>::array_layout
+                 ! std::is_same< typename Kokkos::ViewTraits<T,P...>::array_layout
                                , Kokkos::LayoutStride >::value
                >::type * = 0
              )
@@ -1684,7 +1683,7 @@ inline
 typename DynRankView<T,P...>::HostMirror
 create_mirror( const DynRankView<T,P...> & src
              , typename std::enable_if<
-                 std::is_same< typename Kokkos::Experimental::ViewTraits<T,P...>::array_layout
+                 std::is_same< typename Kokkos::ViewTraits<T,P...>::array_layout
                              , Kokkos::LayoutStride >::value
                >::type * = 0
              )
@@ -1779,7 +1778,7 @@ void resize( DynRankView<T,P...> & v ,
 {
   typedef DynRankView<T,P...>  drview_type ;
 
-  static_assert( Kokkos::Experimental::ViewTraits<T,P...>::is_managed , "Can only resize managed views" );
+  static_assert( Kokkos::ViewTraits<T,P...>::is_managed , "Can only resize managed views" );
 
   drview_type v_resized( v.label(), n0, n1, n2, n3, n4, n5, n6 );
 
@@ -1803,7 +1802,7 @@ void realloc( DynRankView<T,P...> & v ,
 {
   typedef DynRankView<T,P...>  drview_type ;
 
-  static_assert( Kokkos::Experimental::ViewTraits<T,P...>::is_managed , "Can only realloc managed views" );
+  static_assert( Kokkos::ViewTraits<T,P...>::is_managed , "Can only realloc managed views" );
 
   const std::string label = v.label();
 

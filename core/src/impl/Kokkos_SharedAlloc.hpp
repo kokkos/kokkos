@@ -48,7 +48,6 @@
 #include <string>
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 template< class MemorySpace = void , class DestroyFunctor = void >
@@ -109,6 +108,7 @@ protected:
                         );
 
 public:
+  inline std::string get_label() const { return std::string("Unmanaged"); }
 
   static int tracking_enabled() { return s_tracking_enabled ; }
 
@@ -209,7 +209,7 @@ private:
                         , const size_t        arg_alloc
                         )
     /*  Allocate user memory as [ SharedAllocationHeader , user_memory ] */
-    : SharedAllocationRecord< MemorySpace , void >( arg_space , arg_label , arg_alloc , & Kokkos::Experimental::Impl::deallocate< MemorySpace , DestroyFunctor > )
+    : SharedAllocationRecord< MemorySpace , void >( arg_space , arg_label , arg_alloc , & Kokkos::Impl::deallocate< MemorySpace , DestroyFunctor > )
     , m_destroy()
     {}
 
@@ -237,6 +237,9 @@ public:
 #endif
     }
 };
+
+template< class MemorySpace >
+class SharedAllocationRecord<MemorySpace,void> : public SharedAllocationRecord< void , void > {};
 
 union SharedAllocationTracker {
 private:
@@ -297,9 +300,9 @@ public:
   template< class MemorySpace >
   std::string get_label() const
     {
-      return ( m_record_bits & DO_NOT_DEREF_FLAG )
+      return ( m_record_bits == DO_NOT_DEREF_FLAG )
              ? std::string()
-             : static_cast< SharedAllocationRecord< MemorySpace , void > * >( m_record )->get_label()
+             : reinterpret_cast< SharedAllocationRecord< MemorySpace , void > * >( m_record_bits & ~DO_NOT_DEREF_FLAG )->get_label()
              ;
     }
 
@@ -394,7 +397,6 @@ public:
 
 
 } /* namespace Impl */
-} /* namespace Experimental */
 } /* namespace Kokkos */
 
 #endif
