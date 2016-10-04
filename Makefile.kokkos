@@ -303,6 +303,7 @@ endif
 
 tmp := $(shell echo "/* Cuda Settings */" >> KokkosCore_config.tmp)
 
+ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 ifeq ($(KOKKOS_INTERNAL_CUDA_USE_LDG), 1)
 	tmp := $(shell echo "\#define KOKKOS_CUDA_USE_LDG_INTRINSIC 1" >> KokkosCore_config.tmp )
 endif
@@ -327,6 +328,7 @@ ifeq ($(KOKKOS_INTERNAL_CUDA_USE_LAMBDA), 1)
   else
     $(warning Warning: Cuda Lambda support was requested but NVCC version is too low. This requires NVCC for Cuda version 7.5 or higher. Disabling Lambda support now.)
   endif
+endif
 endif
 
 #Add Architecture flags
