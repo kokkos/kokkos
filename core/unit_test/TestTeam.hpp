@@ -681,7 +681,7 @@ int test_team_mulit_level_scratch_loop_body(const typename Kokkos::TeamPolicy<Ex
       Kokkos::View<double*,ExecSpace,Kokkos::MemoryTraits<Kokkos::Unmanaged>> b_thread3(team.thread_scratch(1),16000);
 
 
-      Kokkos::parallel_for(Kokkos::TeamThreadRange(team,0,128), [&] (const int& i) {
+      Kokkos::parallel_for(Kokkos::TeamThreadRange(team,int(0),unsigned(128)), [&] (const int& i) {
         a_team1(i) = 1000000 + i;
         a_team2(i) = 2000000 + i;
         a_team3(i) = 3000000 + i;

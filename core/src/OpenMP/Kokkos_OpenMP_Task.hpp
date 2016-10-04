@@ -156,21 +156,20 @@ template<typename iType>
 KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >
 TeamThreadRange
-  ( Impl::TaskExec< Kokkos::OpenMP > & thread
-  , const iType & count )
+  ( Impl::TaskExec< Kokkos::OpenMP > & thread, const iType & count )
 {
   return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMP > >(thread,count);
 }
 
-template<typename iType>
+template<typename iType1, typename iType2>
 KOKKOS_INLINE_FUNCTION
-Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::OpenMP > >
+Impl::TeamThreadRangeBoundariesStruct< typename std::common_type< iType1, iType2 >::type,
+                                       Impl::TaskExec< Kokkos::OpenMP > >
 TeamThreadRange
-  ( Impl:: TaskExec< Kokkos::OpenMP > & thread
-  , const iType & start
-  , const iType & end )
+  ( Impl:: TaskExec< Kokkos::OpenMP > & thread, const iType1 & begin, const iType2 & end )
 {
-  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::OpenMP > >(thread,start,end);
+  typedef typename std::common_type<iType1, iType2>::type iType;
+  return Impl::TeamThreadRangeBoundariesStruct<iType, Impl::TaskExec< Kokkos::OpenMP > >(thread, begin, end);
 }
 
 template<typename iType>
