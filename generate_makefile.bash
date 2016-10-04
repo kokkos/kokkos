@@ -88,6 +88,7 @@ case $key in
     echo "                               Kepler35  = NVIDIA Kepler generation CC 3.5"
     echo "                               Kepler37  = NVIDIA Kepler generation CC 3.7"
     echo "                               Maxwell50 = NVIDIA Maxwell generation CC 5.0"
+    echo "                               Pascal61 = NVIDIA Pascal generation CC 6.1"
     echo "                               Power8 = IBM Power 8 CPUs"
     echo ""
     echo "--compiler=/Path/To/Compiler set the compiler"
