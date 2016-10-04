@@ -64,7 +64,11 @@ KOKKOS_INTERNAL_COMPILER_NVCC  := $(shell $(CXX) --version        2>&1 | grep "n
 KOKKOS_INTERNAL_COMPILER_CLANG := $(shell $(CXX) --version        2>&1 | grep "clang" | wc -l)
 KOKKOS_INTERNAL_OS_CYGWIN      := $(shell uname | grep CYGWIN | wc -l)
 
-KOKKOS_INTERNAL_COMPILER_NVCC_VERSION := $(shell nvcc --version 2>&1 | grep release | cut -d' ' -f5 | cut -d',' -f1 | tr -d .)
+ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
+  KOKKOS_INTERNAL_NVCC_PATH := $(shell which nvcc)
+  CUDA_PATH ?= $(KOKKOS_INTERNAL_NVCC_PATH:/bin/nvcc=)
+  KOKKOS_INTERNAL_COMPILER_NVCC_VERSION := $(shell nvcc --version 2>&1 | grep release | cut -d' ' -f5 | cut -d',' -f1 | tr -d .)
+endif
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 2)
   KOKKOS_INTERNAL_COMPILER_CLANG = 1
@@ -494,7 +498,8 @@ endif
 
 #Explicitly set the GCC Toolchain for Clang
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-    KOKKOS_INTERNAL_GCC_TOOLCHAIN = $(shell which g++ | awk '{print substr($$0, 1, length($$0)-8)}')
+    KOKKOS_INTERNAL_GCC_PATH = $(shell which g++)
+    KOKKOS_INTERNAL_GCC_TOOLCHAIN = $(KOKKOS_INTERNAL_GCC_PATH:/bin/g++=)
     KOKKOS_CXXFLAGS += --gcc-toolchain=$(KOKKOS_INTERNAL_GCC_TOOLCHAIN) -DKOKKOS_CUDA_CLANG_WORKAROUND -DKOKKOS_CUDA_USE_LDG_INTRINSIC
     KOKKOS_LDFLAGS += --gcc-toolchain=$(KOKKOS_INTERNAL_GCC_TOOLCHAIN)
 endif
