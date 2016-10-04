@@ -65,10 +65,13 @@ KOKKOS_INTERNAL_COMPILER_CLANG := $(shell $(CXX) --version        2>&1 | grep "c
 KOKKOS_INTERNAL_OS_CYGWIN      := $(shell uname | grep CYGWIN | wc -l)
 
 KOKKOS_INTERNAL_COMPILER_NVCC_VERSION := $(shell nvcc --version 2>&1 | grep release | cut -d' ' -f5 | cut -d',' -f1 | tr -d .)
-KOKKOS_INTERNAL_COMPILER_CLANG_VERSION := $(shell clang --version | grep version | cut -d ' ' -f3 | tr -d '.')
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 2)
   KOKKOS_INTERNAL_COMPILER_CLANG = 1
+endif
+
+ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+  KOKKOS_INTERNAL_COMPILER_CLANG_VERSION := $(shell clang --version | grep version | cut -d ' ' -f3 | tr -d '.')
   ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     ifeq ($(shell test $(KOKKOS_INTERNAL_COMPILER_CLANG_VERSION) -lt 400; echo $$?),0)
       $(error Compiling Cuda code directly with Clang requires version 4.0.0 or higher)    
