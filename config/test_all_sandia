@@ -126,7 +126,6 @@ if [ "$MACHINE" = "sems" ]; then
                "intel/16.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "clang/3.5.2 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/3.6.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-               "cuda/6.5.14 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "cuda/7.0.28 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "cuda/7.5.18 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
     )
@@ -221,7 +220,6 @@ elif [ "$MACHINE" = "apollo" ]; then
                "intel/16.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "clang/3.5.2 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/3.6.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-               "cuda/6.5.14 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "cuda/7.0.28 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "cuda/7.5.18 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
     )

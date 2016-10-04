@@ -51,16 +51,6 @@
 
 #include <cuda.h>
 
-#if ! defined( CUDA_VERSION ) || ( CUDA_VERSION < 6050 )
-#error "Cuda version 6.5 or greater required"
-#endif
-
-#if defined( __CUDA_ARCH__ )
-#if ( __CUDA_ARCH__ < 300 )
-#error "Cuda device capability 3.0 or greater required"
-#endif
-#endif
-
 extern "C" {
 /*  Cuda runtime function, declared in <crt/device_runtime.h>
  *  Requires capability 2.x or better.
