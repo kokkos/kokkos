@@ -84,7 +84,7 @@ struct TestMDRange_2D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
-      range_type range( point_type{0,0}, point_type{N0,N1}, tile_type{3,3} );
+      range_type range( point_type{{0,0}}, point_type{{N0,N1}}, tile_type{{3,3}} );
 
       TestMDRange_2D functor(N0,N1);
 
@@ -100,7 +100,7 @@ struct TestMDRange_2D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
-      range_type range( point_type{0,0}, point_type{N0,N1}, tile_type{2,6} );
+      range_type range( point_type{{0,0}}, point_type{{N0,N1}}, tile_type{{2,6}} );
 
       TestMDRange_2D functor(N0,N1);
 
@@ -116,7 +116,7 @@ struct TestMDRange_2D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
-      range_type range( point_type{0,0}, point_type{N0,N1}, tile_type{2,6} );
+      range_type range( point_type{{0,0}}, point_type{{N0,N1}}, tile_type{{2,6}} );
 
       TestMDRange_2D functor(N0,N1);
 
@@ -132,7 +132,7 @@ struct TestMDRange_2D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
-      range_type range( point_type{0,0}, point_type{N0,N1}, tile_type{2,6} );
+      range_type range( point_type{{0,0}}, point_type{{N0,N1}}, tile_type{{2,6}} );
 
       TestMDRange_2D functor(N0,N1);
 
@@ -148,7 +148,7 @@ struct TestMDRange_2D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
-      range_type range( point_type{0,0}, point_type{N0,N1}, tile_type{2,6} );
+      range_type range( point_type{{0,0}}, point_type{{N0,N1}}, tile_type{{2,6}} );
 
       TestMDRange_2D functor(N0,N1);
 
@@ -164,7 +164,7 @@ struct TestMDRange_2D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
-      range_type range( point_type{0,0}, point_type{N0,N1}, tile_type{2,6} );
+      range_type range( point_type{{0,0}}, point_type{{N0,N1}}, tile_type{{2,6}} );
 
       TestMDRange_2D functor(N0,N1);
 
@@ -366,7 +366,7 @@ struct TestMDRange_3D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
-      range_type range( point_type{0,0,0}, point_type{N0,N1,N2}, tile_type{3,3,3} );
+      range_type range( point_type{{0,0,0}}, point_type{{N0,N1,N2}}, tile_type{{3,3,3}} );
 
       TestMDRange_3D functor(N0,N1,N2);
 
@@ -382,7 +382,7 @@ struct TestMDRange_3D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
-      range_type range( point_type{0,0,0}, point_type{N0,N1,N2}, tile_type{2,4,6} );
+      range_type range( point_type{{0,0,0}}, point_type{{N0,N1,N2}}, tile_type{{2,4,6}} );
 
       TestMDRange_3D functor(N0,N1,N2);
 
@@ -398,7 +398,7 @@ struct TestMDRange_3D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
-      range_type range( point_type{0,0,0}, point_type{N0,N1,N2}, tile_type{2,4,6} );
+      range_type range( point_type{{0,0,0}}, point_type{{N0,N1,N2}}, tile_type{{2,4,6}} );
 
       TestMDRange_3D functor(N0,N1,N2);
 
@@ -430,7 +430,7 @@ struct TestMDRange_3D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
-      range_type range( point_type{0,0,0}, point_type{N0,N1,N2}, tile_type{2,4,6} );
+      range_type range( point_type{{0,0,0}}, point_type{{N0,N1,N2}}, tile_type{{2,4,6}} );
 
       TestMDRange_3D functor(N0,N1,N2);
 
@@ -446,7 +446,7 @@ struct TestMDRange_3D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
-      range_type range( point_type{0,0,0}, point_type{N0,N1,N2}, tile_type{2,4,6} );
+      range_type range( point_type{{0,0,0}}, point_type{{N0,N1,N2}}, tile_type{{2,4,6}} );
 
       TestMDRange_3D functor(N0,N1,N2);
 
