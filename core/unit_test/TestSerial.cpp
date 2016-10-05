@@ -302,6 +302,11 @@ TEST_F( serial, shmem_size) {
   TestShmemSize< Kokkos::Serial >();
 }
 
+TEST_F( serial, multi_level_scratch) {
+  TestMultiLevelScratchTeam< Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >();
+  TestMultiLevelScratchTeam< Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >();
+}
+
 TEST_F( serial  , team_scan )
 {
   TestScanTeam< Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >( 0 );

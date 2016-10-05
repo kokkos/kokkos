@@ -59,7 +59,6 @@
 #include <impl/Kokkos_FunctorAdapter.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 
-
 #include <KokkosExp_MDRangePolicy.hpp>
 
 #if defined( KOKKOS_HAVE_SERIAL )
@@ -250,7 +249,6 @@ public:
   const scratch_memory_space & thread_scratch(int) const
     { return m_space ; }
 
-
   KOKKOS_INLINE_FUNCTION int league_rank() const { return m_league_rank ; }
   KOKKOS_INLINE_FUNCTION int league_size() const { return m_league_size ; }
   KOKKOS_INLINE_FUNCTION int team_rank() const { return 0 ; }
@@ -305,7 +303,6 @@ public:
 };
 
 } // namespace Impl
-
 
 /*
  * < Kokkos::Serial , WorkArgTag >
@@ -401,7 +398,6 @@ public:
     , m_league_size( league_size_request )
     , m_chunk_size ( 32 )
     {}
-
 
   inline int chunk_size() const { return m_chunk_size ; }
 
@@ -524,7 +520,6 @@ private:
   const Policy        m_policy ;
   const ReducerType   m_reducer ;
   const pointer_type  m_result_ptr ;
-
 
   template< class TagType >
   inline
@@ -895,20 +890,22 @@ struct TeamThreadRangeBoundariesStruct<iType,SerialTeamMember> {
 
 } // namespace Impl
 
-template<typename iType>
+template< typename iType >
 KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct<iType,Impl::SerialTeamMember>
 TeamThreadRange( const Impl::SerialTeamMember& thread, const iType & count )
 {
-  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::SerialTeamMember>(thread,count);
+  return Impl::TeamThreadRangeBoundariesStruct< iType, Impl::SerialTeamMember >( thread, count );
 }
 
-template<typename iType>
+template< typename iType1, typename iType2 >
 KOKKOS_INLINE_FUNCTION
-Impl::TeamThreadRangeBoundariesStruct<iType,Impl::SerialTeamMember>
-TeamThreadRange( const Impl::SerialTeamMember& thread, const iType & begin , const iType & end )
+Impl::TeamThreadRangeBoundariesStruct< typename std::common_type< iType1, iType2 >::type,
+                                       Impl::SerialTeamMember >
+TeamThreadRange( const Impl::SerialTeamMember& thread, const iType1 & begin, const iType2 & end )
 {
-  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::SerialTeamMember>(thread,begin,end);
+  typedef typename std::common_type< iType1, iType2 >::type iType;
+  return Impl::TeamThreadRangeBoundariesStruct< iType, Impl::SerialTeamMember >( thread, iType(begin), iType(end) );
 }
 
 template<typename iType>
@@ -1113,4 +1110,3 @@ void single(const Impl::ThreadSingleStruct<Impl::SerialTeamMember>& , const Func
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-

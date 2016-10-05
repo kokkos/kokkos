@@ -366,6 +366,11 @@ TEST_F( threads, shmem_size) {
   TestShmemSize< Kokkos::Threads >();
 }
 
+TEST_F( threads, multi_level_scratch) {
+  TestMultiLevelScratchTeam< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >();
+  TestMultiLevelScratchTeam< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >();
+}
+
 TEST_F( threads , view_remap )
 {
   enum { N0 = 3 , N1 = 2 , N2 = 8 , N3 = 9 };
