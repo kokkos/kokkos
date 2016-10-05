@@ -133,9 +133,9 @@ struct MDRangePolicy
 
 
   MDRangePolicy( point_type const& lower, point_type const& upper, tile_type const& tile = tile_type{} )
-    : m_lower{lower}
-    , m_upper{upper}
-    , m_tile{tile}
+    : m_lower(lower)
+    , m_upper(upper)
+    , m_tile(tile)
     , m_num_tiles{1}
   {
     index_type end;
