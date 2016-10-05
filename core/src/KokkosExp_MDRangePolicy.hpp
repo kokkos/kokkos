@@ -44,12 +44,18 @@
 #ifndef KOKKOS_CORE_EXP_MD_RANGE_POLICY_HPP
 #define KOKKOS_CORE_EXP_MD_RANGE_POLICY_HPP
 
-#include <Kokkos_ExecPolicy.hpp>
-#include <Kokkos_Parallel.hpp>
-#include <initializer_list>
+#include <initializer_list> //unnecessary now?
 
 #if defined(KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION) && defined(KOKKOS_HAVE_PRAGMA_IVDEP) && !defined(__CUDA_ARCH__)
 #define KOKKOS_MDRANGE_IVDEP
+#endif
+
+#include<impl/KokkosExp_Host_IterateTile.hpp>
+#include <Kokkos_ExecPolicy.hpp>
+#include <Kokkos_Parallel.hpp>
+
+#if defined( __CUDACC__ ) && defined( KOKKOS_HAVE_CUDA )
+#include<Cuda/KokkosExp_Cuda_IterateTile.hpp>
 #endif
 
 namespace Kokkos { namespace Experimental {
@@ -93,7 +99,6 @@ struct Rank
   static constexpr Iterate outer_direction = OuterDir;
   static constexpr Iterate inner_direction = InnerDir;
 };
-
 
 
 // multi-dimensional iteration pattern
@@ -153,8 +158,8 @@ struct MDRangePolicy
   index_type m_num_tiles;
 };
 
+#if 0
 namespace Impl {
-
 
 template < typename RP
          , typename Functor
@@ -174,6 +179,7 @@ struct HostIterateTile
   using index_type = typename RP::index_type;
 
   template< typename... Args >
+  KOKKOS_INLINE_FUNCTION
   HostIterateTile( Args &&... args )
     : base_type( std::forward<Args>(args)... )
   {}
@@ -215,6 +221,7 @@ struct HostIterateTile<RP, Functor, std::integral_constant<int,0>, void, void>
   using index_type = typename RP::index_type;
   using point_type = typename RP::point_type;
 
+  KOKKOS_INLINE_FUNCTION
   HostIterateTile( RP const& rp, Functor const& func, index_type tile_idx )
     : m_rp{rp}
     , m_func{func}
@@ -278,6 +285,7 @@ struct HostIterateTile<RP, Functor, std::integral_constant<int,0>, Tag, void>
   using index_type = typename RP::index_type;
   using point_type = typename RP::point_type;
 
+  KOKKOS_INLINE_FUNCTION
   HostIterateTile( RP const& rp, Functor const& func, index_type tile_idx )
     : m_rp{rp}
     , m_func{func}
@@ -343,6 +351,7 @@ struct HostIterateTile<RP, Functor, std::integral_constant<int,0>, void, ValueTy
 
   using value_type = ValueType;
 
+  KOKKOS_INLINE_FUNCTION
   HostIterateTile( RP const& rp, Functor const& func, index_type tile_idx, value_type & v )
     : m_rp{rp}
     , m_func{func}
@@ -410,6 +419,7 @@ struct HostIterateTile<RP, Functor, std::integral_constant<int,0>, Tag, ValueTyp
 
   using value_type = ValueType;
 
+  KOKKOS_INLINE_FUNCTION
   HostIterateTile( RP const& rp, Functor const& func, index_type tile_idx, value_type & v )
     : m_rp{rp}
     , m_func{func}
@@ -467,8 +477,293 @@ protected:
 };
 
 
+// ------------------------------------------------------------------ //
+#if 0
+// Cuda IterateTile
+#if defined( __CUDACC__ ) && defined( KOKKOS_HAVE_CUDA )
+
+template < int N , typename RP >
+struct BlockGridSizes;
+
+template< typename RP >
+struct BlockGridSizes<2 , RP>
+{
+  BlockGridSizes( RP const& _rp, dim3 & _blocksize, dim3 & _gridsize )
+    : m_rp(_rp)
+    , block(_blocksize)
+    , grid(_gridsize)
+  {}
+
+  void apply()
+  {
+    // max blocks 65535 per blockdim or total?
+    // when should tile dims be checked to be < 1024 and power of two (or add padding)?
+    if (RP::outer_direction == RP::Left) {
+      blocksize( m_rp.m_tile[0] , m_rp.m_tile[1] , 1); //pad for mult of 16? check within max num threads bounds? 
+      gridsize( std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , 65535 ) , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , 65535 ) , 1);
+    }
+    else
+    {
+      blocksize( m_rp.m_tile[1] , m_rp.m_tile[0] , 1); 
+      gridsize( std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.x - 1 ) / block.x , 65535 ) , std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.y - 1 ) / block.y , 65535 ) , 1);
+    }
+  }
+
+  dim3 &block;
+  dim3 &grid;
+  RP const& m_rp;
+};
+
+// ------------------------------------------------------------------ //
+
+template < int N , typename RP , typename Tag >
+struct apply_left;
+template < int N , typename RP , typename Tag >
+struct apply_right;
+
+// Specializations for void tag type
+
+// Rank2
+template< typename RP >
+struct apply_left<2,RP,void >
+{
+  using index_type = typename RP::index_type;
+
+  __device__
+  apply_left( RP const& _rp )
+  : m_rp(_rp)
+  {}
+
+  inline __device__
+  void exec_range()
+  {
+    // Loop over size maxnumblocks until full range covered
+    for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
+      //Execute kernel with extracted tile_id0
+      const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
+      if ( offset_1 < m_rp.m_upper[1] ) {
+        for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
+          const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+          if ( offset_0 < m_rp.m_upper[0] ) {
+            m_func(offset_0 , offset_1);
+          }
+        } //end inner for
+      } //end outer if
+    } //end outer for
+  } //end exec_range
+
+private:
+  RP const& m_rp;
+};
+
+template< typename RP >
+struct apply_right<2,RP,void>
+{
+  using index_type = typename RP::index_type;
+
+  __device__ 
+  apply_right( RP const& _rp )
+  : m_rp(_rp)
+  {}
+
+  inline __device__
+  void exec_range()
+  {
+    for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
+      const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+      if ( offset_0 < m_rp.m_upper[0] ) {
+        for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
+          //Execute kernel with extracted tile_id0
+          const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
+          if ( offset_1 < m_rp.m_upper[1] ) {
+            m_func(offset_0 , offset_1);
+          }
+        } //end inner for
+      } //end outer if
+    } //end outer for
+  }
+
+private:
+  RP const& m_rp;
+};
+
+template< typename RP , typename Tag >
+struct apply_left<2,RP,Tag>
+{
+  using index_type = typename RP::index_type;
+
+  inline __device__
+  apply_left( RP const& _rp )
+  : m_rp(_rp)
+  {}
+
+  inline __device__
+  void exec_range()
+  {
+    // Loop over size maxnumblocks until full range covered
+    for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
+      //Execute kernel with extracted tile_id0
+      const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
+      if ( offset_1 < m_rp.m_upper[1] ) {
+        for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
+          const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+          if ( offset_0 < m_rp.m_upper[0] ) {
+            m_func(Tag(), offset_0 , offset_1);
+          }
+        } //end inner for
+      } //end outer if
+    } //end outer for
+  }
+
+private:
+  RP const& m_rp;
+};
+
+template< typename RP , typename Tag >
+struct apply_right<2,RP,Tag>
+{
+  using index_type = typename RP::index_type;
+
+  inline __device__
+  apply_right( RP const& _rp )
+  : m_rp(_rp)
+  {}
+
+  inline __device__
+  void exec_range()
+  {
+    for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
+      const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+      if ( offset_0 < m_rp.m_upper[0] ) {
+        for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
+          //Execute kernel with extracted tile_id0
+          const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
+          if ( offset_1 < m_rp.m_upper[1] ) {
+            m_func(Tag(), offset_0 , offset_1);
+          }
+        } //end inner for
+      } //end outer if
+    } //end outer for
+  }
+
+private:
+  RP const& m_rp;
+};
+
+// ----------------------------------------------------------------------------------
+
+template < typename RP
+         , typename Functor
+         , typename Tag
+//         , typename std::enable_if< std::is_same<Tag,void>::value >::type*
+         >
+struct DeviceIterateTile
+{
+  using index_type = typename RP::index_type;
+  using point_type = typename RP::point_type;
+
+  struct VoidDummy {};
+  typedef typename std::conditional< std::is_same<Tag, void>::value, VoidDummy, Tag>::type usable_tag;
+
+  DeviceIterateTile( RP const& rp, Functor const& func )
+    : m_rp{rp}
+    , m_func{func}
+  {}
+
+private:
+  inline __device__  
+  void apply() const
+  {
+    if (RP::inner_direction == RP::Left) {
+      apply_left<RP::rank,RP,Tag>(m_rp).exec_range();
+    } else {
+      apply_right<RP::rank,RP,Tag>(m_rp).exec_range();
+    }
+  }
+
+public:
+
+  inline
+  __device__
+  void operator()(void) const
+  {
+    this-> apply();
+  }
+
+  inline
+  void execute() const
+  {
+    dim3 block, grid;
+    BlockGridSizes<RP::rank,RP>(m_rp,block,grid).apply();
+
+    CudaParallelLaunch< DeviceIterateTile >( *this , grid , block , 0 );
+  }
+
+protected:
+
+  RP        const& m_rp;
+  Functor   const& m_func;
+};
+
+template < typename RP
+         , typename Functor
+         , typename Tag
+         , typename std::enable_if< !std::is_same<Tag,void>::value >::type*
+         >
+struct DeviceIterateTile
+{
+  using index_type = typename RP::index_type;
+  using point_type = typename RP::point_type;
+
+//FIX: Tiles are determined by GPU blockIds
+  DeviceIterateTile( RP const& rp, Functor const& func )
+    : m_rp{rp}
+    , m_func{func}
+  {}
+
+public:
+
+  inline
+  __device__
+  void operator()(void) const
+  {
+    this-> apply();
+  }
+
+  inline
+  void execute() const
+  {
+    dim3 block, grid;
+    BlockGridSizes<RP::rank>(m_rp,block,grid);
+//    get_block_thread_sizes<RP::rank>(block,grid);
+
+    CudaParallelLaunch< DeviceIterateTile >( *this , grid , block , 0 );
+  }
+
+
+private:
+  KOKKOS_INLINE_FUNCTION
+  void apply()
+  {
+    if (RP::inner_direction == RP::Left) {
+      apply_left<RP::rank>(m_rp).exec_range();
+    } else {
+      apply_right<RP::rank>(m_rp).exec_range();;
+    }
+  }
+
+protected:
+
+  RP        const& m_rp;
+  Functor   const& m_func;
+};
+#endif
+
+#endif // KOKKOS_HAVE_CUDA
+
+// MDFunctor - wraps the range_policy and functor to pass to IterateTile
 // Serial, Threads, OpenMP
-// use enable_if to overload for Cuda
+// Cuda uses DeviceIterateTile directly within md_parallel_for
 template < typename MDRange, typename Functor, typename ValueType = void >
 struct MDFunctor
 {
@@ -558,14 +853,19 @@ struct MDFunctor< MDRange, Functor, void >
   Functor m_func;
 };
 
-
 } // namespace Impl
+#endif
 
-
-template <typename MDRange, typename Functor>
+//md_parallel_for
+template <typename MDRange, typename Functor, typename Enable = void>
 void md_parallel_for( MDRange const& range
                     , Functor const& f
                     , const std::string& str = ""
+                    , typename std::enable_if<( true
+                      #if defined( KOKKOS_HAVE_CUDA)
+                      && !std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Cuda>::value
+                      #endif
+                      ) >::type* = 0
                     )
 {
   Impl::MDFunctor<MDRange, Functor, void> g(range, f);
@@ -579,6 +879,11 @@ template <typename MDRange, typename Functor>
 void md_parallel_for( const std::string& str
                     , MDRange const& range
                     , Functor const& f
+                    , typename std::enable_if<( true
+                      #if defined( KOKKOS_HAVE_CUDA)
+                      && !std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Cuda>::value
+                      #endif
+                      ) >::type* = 0
                     )
 {
   Impl::MDFunctor<MDRange, Functor, void> g(range, f);
@@ -588,7 +893,40 @@ void md_parallel_for( const std::string& str
   Kokkos::parallel_for( range_policy(0, range.m_num_tiles).set_chunk_size(1), g, str );
 }
 
+// Cuda specialization
+#if defined( __CUDACC__ ) && defined( KOKKOS_HAVE_CUDA )
+template <typename MDRange, typename Functor>
+void md_parallel_for( const std::string& str
+                    , MDRange const& range
+                    , Functor const& f
+                    , typename std::enable_if<( true
+                      #if defined( KOKKOS_HAVE_CUDA)
+                      && std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Cuda>::value
+                      #endif
+                      ) >::type* = 0
+                    )
+{
+  Impl::DeviceIterateTile<MDRange, Functor, typename MDRange::work_tag> closure(range, f); 
+  closure.execute();
+}
 
+template <typename MDRange, typename Functor>
+void md_parallel_for( MDRange const& range
+                    , Functor const& f
+                    , const std::string& str = ""
+                    , typename std::enable_if<( true
+                      #if defined( KOKKOS_HAVE_CUDA)
+                      && std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Cuda>::value
+                      #endif
+                      ) >::type* = 0
+                    )
+{
+  Impl::DeviceIterateTile<MDRange, Functor, typename MDRange::work_tag> closure(range, f); 
+  closure.execute();
+}
+#endif
+
+//md_parallel_reduce
 template <typename MDRange, typename Functor, typename ValueType>
 void md_parallel_reduce( MDRange const& range
                     , Functor const& f

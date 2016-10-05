@@ -59,8 +59,6 @@
 #include <impl/Kokkos_FunctorAdapter.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 
-#include <KokkosExp_MDRangePolicy.hpp>
-
 #if defined( KOKKOS_HAVE_SERIAL )
 
 namespace Kokkos {
@@ -1115,6 +1113,8 @@ void single(const Impl::ThreadSingleStruct<Impl::SerialTeamMember>& , const Func
 //----------------------------------------------------------------------------
 
 #include <impl/Kokkos_Serial_Task.hpp>
+
+#include <KokkosExp_MDRangePolicy.hpp>
 
 #endif // defined( KOKKOS_HAVE_SERIAL )
 #endif /* #define KOKKOS_SERIAL_HPP */
