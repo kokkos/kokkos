@@ -118,10 +118,6 @@ TEST_F( serial , impl_view_mapping ) {
   TestViewMappingAtomic< Kokkos::Serial >::run();
 }
 
-TEST_F( serial, view_impl) {
-  test_view_impl< Kokkos::Serial >();
-}
-
 TEST_F( serial, view_api) {
   TestViewAPI< double , Kokkos::Serial >();
 }
@@ -361,7 +357,6 @@ TEST_F( serial , view_remap )
 TEST_F( serial , view_aggregate )
 {
   TestViewAggregate< Kokkos::Serial >();
-  TestViewAggregateReduction< Kokkos::Serial >();
 }
 
 //----------------------------------------------------------------------------
@@ -510,11 +505,6 @@ TEST_F( serial , compiler_macros )
 }
 
 //----------------------------------------------------------------------------
-
-TEST_F( serial , memory_space )
-{
-  TestMemorySpace< Kokkos::Serial >();
-}
 
 TEST_F( serial , memory_pool )
 {

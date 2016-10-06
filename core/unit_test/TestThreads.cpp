@@ -173,10 +173,6 @@ TEST_F( threads , impl_view_mapping ) {
 }
 
 
-TEST_F( threads, view_impl) {
-  test_view_impl< Kokkos::Threads >();
-}
-
 TEST_F( threads, view_api) {
   TestViewAPI< double , Kokkos::Threads >();
 }
@@ -250,7 +246,6 @@ TEST_F( threads, view_subview_3d_from_5d ) {
 
 TEST_F( threads, view_aggregate ) {
   TestViewAggregate< Kokkos::Threads >();
-  TestViewAggregateReduction< Kokkos::Threads >();
 }
 
 TEST_F( threads , range_tag )
@@ -564,11 +559,6 @@ TEST_F( threads , team_scan )
 TEST_F( threads , compiler_macros )
 {
   ASSERT_TRUE( ( TestCompilerMacros::Test< Kokkos::Threads >() ) );
-}
-
-TEST_F( threads , memory_space )
-{
-  TestMemorySpace< Kokkos::Threads >();
 }
 
 TEST_F( threads , memory_pool )
