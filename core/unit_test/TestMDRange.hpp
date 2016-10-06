@@ -75,6 +75,7 @@ struct TestMDRange_2D {
     lsum += input_view(i,j)*2;
   }
 
+
   static void test_reduce2( const int N0, const int N1 )
   {
     using namespace Kokkos::Experimental;
@@ -187,7 +188,7 @@ struct TestMDRange_2D {
       typedef typename range_type::tile_type tile_type;
       typedef typename range_type::point_type point_type;
 
-      range_type range( point_type{{0,0}}, point_type{{N0,N1}}, tile_type{{4,4}} );
+      range_type range( point_type{{0,0}}, point_type{{N0,N1}}, tile_type{{3,3}} );
       TestMDRange_2D functor(N0,N1);
 
       md_parallel_for( range, functor );
@@ -231,7 +232,7 @@ struct TestMDRange_2D {
         printf(" Errors in test_for2; mismatches = %d\n\n",counter);
       ASSERT_EQ( counter , 0 );
     }
-/*
+
     {
       typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<2, Iterate::Left, Iterate::Left>, Kokkos::IndexType<int> > range_type;
       typedef typename range_type::tile_type tile_type;
@@ -331,9 +332,10 @@ struct TestMDRange_2D {
         printf(" Errors in test_for2; mismatches = %d\n\n",counter);
       ASSERT_EQ( counter , 0 );
     }
-    */
+
   } //end test_for2
 }; //MDRange_2D
+
 
 template <typename ExecSpace >
 struct TestMDRange_3D {
@@ -457,8 +459,8 @@ struct TestMDRange_3D {
 
       ASSERT_EQ( sum , 2*N0*N1*N2 );
     }
-
   } //end test_reduce3
+
 
   static void test_for3( const int N0, const int N1, const int N2 )
   {
@@ -623,8 +625,5 @@ struct TestMDRange_3D {
   } //end test_for3
 };
 
-} /* namespace */
-} /* namespace Test */
-
+} /* namespace */ } /* namespace Test */
 /*--------------------------------------------------------------------------*/
-
