@@ -70,6 +70,20 @@ static void cuda_parallel_launch( const DriverType driver )
   driver();
 }
 
+template< class DriverType >
+struct CudaLaunch
+{
+  inline
+  CudaLaunch( const DriverType & driver
+                    , const dim3       & grid
+                    , const dim3       & block
+            )
+  {
+      cuda_parallel_launch< DriverType ><<< grid , block >>>(driver);
+  }
+
+};
+
 // ------------------------------------------------------------------ //
 // Cuda IterateTile
 #if defined( __CUDACC__ ) && defined( KOKKOS_HAVE_CUDA )
@@ -301,13 +315,15 @@ public:
       if (RP::outer_direction == RP::Left) {
         const dim3 block( m_rp.m_tile[0] , m_rp.m_tile[1] , 1); //pad for mult of 16? check within max num threads bounds? 
         const dim3 grid( std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks ) , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks ) , 1);
-        cuda_parallel_launch<<<grid,block>>>(*this);
+        //cuda_parallel_launch<<<grid,block>>>(*this);
+        CudaLaunch< DeviceIterateTile >( *this , grid , block );
       }
       else
       {
         const dim3 block( m_rp.m_tile[1] , m_rp.m_tile[0] , 1); 
         const dim3 grid( std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.x - 1 ) / block.x , maxblocks ) , std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.y - 1 ) / block.y , maxblocks ) , 1);
-        cuda_parallel_launch<<<grid,block>>>(*this);
+        //cuda_parallel_launch<<<grid,block>>>(*this);
+        CudaLaunch< DeviceIterateTile >( *this , grid , block );
       }
     }
     else
