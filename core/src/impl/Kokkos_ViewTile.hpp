@@ -145,9 +145,9 @@ public:
   //----------------------------------------
 
   ~ViewOffset() = default ;
-  ViewOffset() = default ;
-  ViewOffset( const ViewOffset & ) = default ;
-  ViewOffset & operator = ( const ViewOffset & ) = default ;
+  KOKKOS_INLINE_FUNCTION ViewOffset() = default ;
+  KOKKOS_INLINE_FUNCTION ViewOffset( const ViewOffset & ) = default ;
+  KOKKOS_INLINE_FUNCTION ViewOffset & operator = ( const ViewOffset & ) = default ;
 
   template< unsigned TrivialScalarSize >
   KOKKOS_INLINE_FUNCTION

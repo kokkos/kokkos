@@ -56,7 +56,6 @@
 #include <TestSharedAlloc.hpp>
 #include <TestViewMapping.hpp>
 
-#include <TestViewImpl.hpp>
 #include <TestAtomic.hpp>
 #include <TestAtomicOperations.hpp>
 
@@ -69,9 +68,7 @@
 #include <TestRange.hpp>
 #include <TestTeam.hpp>
 #include <TestAggregate.hpp>
-#include <TestAggregateReduction.hpp>
 #include <TestCompilerMacros.hpp>
-#include <TestMemorySpaceTracking.hpp>
 #include <TestMemoryPool.hpp>
 #include <TestTeamVector.hpp>
 #include <TestTemplateMetaFunctions.hpp>
@@ -233,7 +230,6 @@ TEST_F( cuda, tile_layout)
 TEST_F( cuda , view_aggregate )
 {
   TestViewAggregate< Kokkos::Cuda >();
-  TestViewAggregateReduction< Kokkos::Cuda >();
 }
 
 TEST_F( cuda , scan )

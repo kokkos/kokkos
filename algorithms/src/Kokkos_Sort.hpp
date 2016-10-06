@@ -351,10 +351,6 @@ namespace Impl {
 template<class ViewType>
 bool try_std_sort(ViewType view) {
   bool possible = true;
-#if ! KOKKOS_USING_EXP_VIEW
-  size_t stride[8];
-  view.stride(stride);
-#else
   size_t stride[8] = { view.stride_0()
                      , view.stride_1()
                      , view.stride_2()
@@ -364,7 +360,6 @@ bool try_std_sort(ViewType view) {
                      , view.stride_6()
                      , view.stride_7()
                      };
-#endif
   possible  = possible && std::is_same<typename ViewType::memory_space, HostSpace>::value;
   possible  = possible && (ViewType::Rank == 1);
   possible  = possible && (stride[0] == 1);

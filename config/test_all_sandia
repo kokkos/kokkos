@@ -444,8 +444,6 @@ single_build_and_test() {
         export TMPDIR=$(pwd)
     fi
 
-    # cxxflags="-DKOKKOS_USING_EXP_VIEW=1 $cxxflags"
-
     echo "  Starting job $desc"
 
     local comment="no_comment"

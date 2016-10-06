@@ -56,7 +56,6 @@
 #include <TestSharedAlloc.hpp>
 #include <TestViewMapping.hpp>
 
-#include <TestViewImpl.hpp>
 #include <TestAtomic.hpp>
 
 #include <TestViewAPI.hpp>
@@ -68,9 +67,7 @@
 #include <TestRange.hpp>
 #include <TestTeam.hpp>
 #include <TestAggregate.hpp>
-#include <TestAggregateReduction.hpp>
 #include <TestCompilerMacros.hpp>
-#include <TestMemorySpaceTracking.hpp>
 #include <TestMemoryPool.hpp>
 #include <TestTeamVector.hpp>
 #include <TestTemplateMetaFunctions.hpp>
@@ -130,11 +127,6 @@ TEST_F( cuda , md_range ) {
 TEST_F( cuda , compiler_macros )
 {
   ASSERT_TRUE( ( TestCompilerMacros::Test< Kokkos::Cuda >() ) );
-}
-
-TEST_F( cuda , memory_space )
-{
-  TestMemorySpace< Kokkos::Cuda >();
 }
 
 TEST_F( cuda, uvm )

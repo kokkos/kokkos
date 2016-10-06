@@ -56,7 +56,6 @@
 #include <TestSharedAlloc.hpp>
 #include <TestViewMapping.hpp>
 
-#include <TestViewImpl.hpp>
 #include <TestAtomic.hpp>
 
 #include <TestViewAPI.hpp>
@@ -68,9 +67,7 @@
 #include <TestRange.hpp>
 #include <TestTeam.hpp>
 #include <TestAggregate.hpp>
-#include <TestAggregateReduction.hpp>
 #include <TestCompilerMacros.hpp>
-#include <TestMemorySpaceTracking.hpp>
 #include <TestMemoryPool.hpp>
 #include <TestTeamVector.hpp>
 #include <TestTemplateMetaFunctions.hpp>
@@ -90,13 +87,6 @@ protected:
 //----------------------------------------------------------------------------
 
 namespace Test {
-
-TEST_F( cuda, view_impl )
-{
-  // test_abort<<<32,32>>>(); // Aborts the kernel with CUDA version 4.1 or greater
-
-  test_view_impl< Kokkos::Cuda >();
-}
 
 TEST_F( cuda, view_api )
 {

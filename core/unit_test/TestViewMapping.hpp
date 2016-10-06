@@ -99,47 +99,67 @@ void test_view_mapping()
   ASSERT_LE( sizeof(dim_s0_s0_s0_s0_s0_s0_s0) , 8 * sizeof(unsigned) );
   ASSERT_EQ( sizeof(dim_s0_s0_s0_s0_s0_s0_s0_s0) , 8 * sizeof(unsigned) );
 
-  ASSERT_EQ( int(dim_0::rank) , int(0) );
-  ASSERT_EQ( int(dim_0::rank_dynamic) , int(0) );
+  static_assert( int(dim_0::rank) == int(0) , "" );
+  static_assert( int(dim_0::rank_dynamic) == int(0) , "" );
+  static_assert( int(dim_0::ArgN0) == 1 , "" );
+  static_assert( int(dim_0::ArgN1) == 1 , "" );
+  static_assert( int(dim_0::ArgN2) == 1 , "" );
 
-  ASSERT_EQ( int(dim_s2::rank) , int(1) );
-  ASSERT_EQ( int(dim_s2::rank_dynamic) , int(0) );
+  static_assert( int(dim_s2::rank) == int(1) , "" );
+  static_assert( int(dim_s2::rank_dynamic) == int(0) , "" );
+  static_assert( int(dim_s2::ArgN0) == 2 , "" );
+  static_assert( int(dim_s2::ArgN1) == 1 , "" );
 
-  ASSERT_EQ( int(dim_s2_s3::rank) , int(2) );
-  ASSERT_EQ( int(dim_s2_s3::rank_dynamic) , int(0) );
+  static_assert( int(dim_s2_s3::rank) == int(2) , "" );
+  static_assert( int(dim_s2_s3::rank_dynamic) == int(0) , "" );
+  static_assert( int(dim_s2_s3::ArgN0) == 2 , "" );
+  static_assert( int(dim_s2_s3::ArgN1) == 3 , "" );
+  static_assert( int(dim_s2_s3::ArgN2) == 1 , "" );
 
-  ASSERT_EQ( int(dim_s2_s3_s4::rank) , int(3) );
-  ASSERT_EQ( int(dim_s2_s3_s4::rank_dynamic) , int(0) );
+  static_assert( int(dim_s2_s3_s4::rank) == int(3) , "" );
+  static_assert( int(dim_s2_s3_s4::rank_dynamic) == int(0) , "" );
+  static_assert( int(dim_s2_s3_s4::ArgN0) == 2 , "" );
+  static_assert( int(dim_s2_s3_s4::ArgN1) == 3 , "" );
+  static_assert( int(dim_s2_s3_s4::ArgN2) == 4 , "" );
+  static_assert( int(dim_s2_s3_s4::ArgN3) == 1 , "" );
 
-  ASSERT_EQ( int(dim_s0::rank) , int(1) );
-  ASSERT_EQ( int(dim_s0::rank_dynamic) , int(1) );
+  static_assert( int(dim_s0::rank) == int(1) , "" );
+  static_assert( int(dim_s0::rank_dynamic) == int(1) , "" );
 
-  ASSERT_EQ( int(dim_s0_s3::rank) , int(2) );
-  ASSERT_EQ( int(dim_s0_s3::rank_dynamic) , int(1) );
+  static_assert( int(dim_s0_s3::rank) == int(2) , "" );
+  static_assert( int(dim_s0_s3::rank_dynamic) == int(1) , "" );
+  static_assert( int(dim_s0_s3::ArgN0) == 0 , "" );
+  static_assert( int(dim_s0_s3::ArgN1) == 3 , "" );
 
-  ASSERT_EQ( int(dim_s0_s3_s4::rank) , int(3) );
-  ASSERT_EQ( int(dim_s0_s3_s4::rank_dynamic) , int(1) );
+  static_assert( int(dim_s0_s3_s4::rank) == int(3) , "" );
+  static_assert( int(dim_s0_s3_s4::rank_dynamic) == int(1) , "" );
+  static_assert( int(dim_s0_s3_s4::ArgN0) == 0 , "" );
+  static_assert( int(dim_s0_s3_s4::ArgN1) == 3 , "" );
+  static_assert( int(dim_s0_s3_s4::ArgN2) == 4 , "" );
 
-  ASSERT_EQ( int(dim_s0_s0_s4::rank) , int(3) );
-  ASSERT_EQ( int(dim_s0_s0_s4::rank_dynamic) , int(2) );
+  static_assert( int(dim_s0_s0_s4::rank) == int(3) , "" );
+  static_assert( int(dim_s0_s0_s4::rank_dynamic) == int(2) , "" );
+  static_assert( int(dim_s0_s0_s4::ArgN0) == 0 , "" );
+  static_assert( int(dim_s0_s0_s4::ArgN1) == 0 , "" );
+  static_assert( int(dim_s0_s0_s4::ArgN2) == 4 , "" );
 
-  ASSERT_EQ( int(dim_s0_s0_s0::rank) , int(3) );
-  ASSERT_EQ( int(dim_s0_s0_s0::rank_dynamic) , int(3) );
+  static_assert( int(dim_s0_s0_s0::rank) == int(3) , "" );
+  static_assert( int(dim_s0_s0_s0::rank_dynamic) == int(3) , "" );
 
-  ASSERT_EQ( int(dim_s0_s0_s0_s0::rank) , int(4) );
-  ASSERT_EQ( int(dim_s0_s0_s0_s0::rank_dynamic) , int(4) );
+  static_assert( int(dim_s0_s0_s0_s0::rank) == int(4) , "" );
+  static_assert( int(dim_s0_s0_s0_s0::rank_dynamic) == int(4) , "" );
 
-  ASSERT_EQ( int(dim_s0_s0_s0_s0_s0::rank) , int(5) );
-  ASSERT_EQ( int(dim_s0_s0_s0_s0_s0::rank_dynamic) , int(5) );
+  static_assert( int(dim_s0_s0_s0_s0_s0::rank) == int(5) , "" );
+  static_assert( int(dim_s0_s0_s0_s0_s0::rank_dynamic) == int(5) , "" );
 
-  ASSERT_EQ( int(dim_s0_s0_s0_s0_s0_s0::rank) , int(6) );
-  ASSERT_EQ( int(dim_s0_s0_s0_s0_s0_s0::rank_dynamic) , int(6) );
+  static_assert( int(dim_s0_s0_s0_s0_s0_s0::rank) == int(6) , "" );
+  static_assert( int(dim_s0_s0_s0_s0_s0_s0::rank_dynamic) == int(6) , "" );
 
-  ASSERT_EQ( int(dim_s0_s0_s0_s0_s0_s0_s0::rank) , int(7) );
-  ASSERT_EQ( int(dim_s0_s0_s0_s0_s0_s0_s0::rank_dynamic) , int(7) );
+  static_assert( int(dim_s0_s0_s0_s0_s0_s0_s0::rank) == int(7) , "" );
+  static_assert( int(dim_s0_s0_s0_s0_s0_s0_s0::rank_dynamic) == int(7) , "" );
 
-  ASSERT_EQ( int(dim_s0_s0_s0_s0_s0_s0_s0_s0::rank) , int(8) );
-  ASSERT_EQ( int(dim_s0_s0_s0_s0_s0_s0_s0_s0::rank_dynamic) , int(8) );
+  static_assert( int(dim_s0_s0_s0_s0_s0_s0_s0_s0::rank) == int(8) , "" );
+  static_assert( int(dim_s0_s0_s0_s0_s0_s0_s0_s0::rank_dynamic) == int(8) , "" );
 
   dim_s0          d1( 2, 3, 4, 5, 6, 7, 8, 9 ); 
   dim_s0_s0       d2( 2, 3, 4, 5, 6, 7, 8, 9 );
@@ -534,6 +554,13 @@ void test_view_mapping()
 
     static_assert( a_int_r1::dimension::rank == 1 , "" );
     static_assert( a_int_r1::dimension::rank_dynamic == 1 , "" );
+    static_assert( a_int_r5::dimension::ArgN0 == 0 , "" );
+    static_assert( a_int_r5::dimension::ArgN1 == 0 , "" );
+    static_assert( a_int_r5::dimension::ArgN2 == 4 , "" );
+    static_assert( a_int_r5::dimension::ArgN3 == 5 , "" );
+    static_assert( a_int_r5::dimension::ArgN4 == 6 , "" );
+    static_assert( a_int_r5::dimension::ArgN5 == 1 , "" );
+
     static_assert( std::is_same< typename a_int_r1::dimension , ViewDimension<0> >::value , "" );
     static_assert( std::is_same< typename a_int_r1::non_const_value_type , int >::value , "" );
 
@@ -545,8 +572,14 @@ void test_view_mapping()
     static_assert( a_const_int_r5::dimension::rank == 5 , "" );
     static_assert( a_const_int_r5::dimension::rank_dynamic == 2 , "" );
 
-    static_assert( std::is_same< typename a_const_int_r5::dimension , ViewDimension<0,0,4,5,6> >::value , "" );
+    static_assert( a_const_int_r5::dimension::ArgN0 == 0 , "" );
+    static_assert( a_const_int_r5::dimension::ArgN1 == 0 , "" );
+    static_assert( a_const_int_r5::dimension::ArgN2 == 4 , "" );
+    static_assert( a_const_int_r5::dimension::ArgN3 == 5 , "" );
+    static_assert( a_const_int_r5::dimension::ArgN4 == 6 , "" );
+    static_assert( a_const_int_r5::dimension::ArgN5 == 1 , "" );
 
+    static_assert( std::is_same< typename a_const_int_r5::dimension , ViewDimension<0,0,4,5,6> >::value , "" );
     static_assert( std::is_same< typename a_const_int_r5::non_const_value_type , int >::value , "" );
 
     static_assert( a_int_r5::dimension::rank == 5 , "" );
@@ -960,7 +993,7 @@ void test_view_mapping()
     ASSERT_EQ( a.use_count() , 1 );
     ASSERT_EQ( b.use_count() , 0 );
 
-#if KOKKOS_USING_EXP_VIEW && ! defined ( KOKKOS_CUDA_USE_LAMBDA )
+#if ! defined ( KOKKOS_CUDA_USE_LAMBDA )
     /* Cannot launch host lambda when CUDA lambda is enabled */
 
     typedef typename Kokkos::Impl::is_space< Space >::host_execution_space

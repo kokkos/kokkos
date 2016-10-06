@@ -57,7 +57,6 @@
 #include <TestSharedAlloc.hpp>
 #include <TestViewMapping.hpp>
 
-#include <TestViewImpl.hpp>
 
 #include <TestViewAPI.hpp>
 #include <TestViewOfClass.hpp>
@@ -69,7 +68,6 @@
 #include <TestReduce.hpp>
 #include <TestScan.hpp>
 #include <TestAggregate.hpp>
-#include <TestAggregateReduction.hpp>
 #include <TestCompilerMacros.hpp>
 #include <TestTaskPolicy.hpp>
 #include <TestMemoryPool.hpp>
@@ -78,7 +76,6 @@
 #include <TestCXX11.hpp>
 #include <TestCXX11Deduction.hpp>
 #include <TestTeamVector.hpp>
-#include <TestMemorySpaceTracking.hpp>
 #include <TestTemplateMetaFunctions.hpp>
 
 #include <TestPolicyConstruction.hpp>

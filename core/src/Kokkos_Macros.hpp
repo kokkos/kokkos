@@ -464,10 +464,6 @@
  * are no longer supported.
  */
 
-#if defined( KOKKOS_USING_DEPRECATED_VIEW )
-#error "Kokkos deprecated View has been removed"
-#endif
-
 #define KOKKOS_USING_EXP_VIEW 1
 #define KOKKOS_USING_EXPERIMENTAL_VIEW
 

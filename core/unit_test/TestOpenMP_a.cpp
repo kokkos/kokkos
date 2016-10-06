@@ -53,7 +53,6 @@
 
 //----------------------------------------------------------------------------
 
-#include <TestViewImpl.hpp>
 #include <TestAtomic.hpp>
 
 #include <TestViewAPI.hpp>
@@ -68,7 +67,6 @@
 #include <TestReduce.hpp>
 #include <TestScan.hpp>
 #include <TestAggregate.hpp>
-#include <TestAggregateReduction.hpp>
 #include <TestCompilerMacros.hpp>
 #include <TestMemoryPool.hpp>
 
@@ -76,7 +74,6 @@
 #include <TestCXX11.hpp>
 #include <TestCXX11Deduction.hpp>
 #include <TestTeamVector.hpp>
-#include <TestMemorySpaceTracking.hpp>
 #include <TestTemplateMetaFunctions.hpp>
 
 #include <TestPolicyConstruction.hpp>

@@ -53,7 +53,6 @@
 
 //----------------------------------------------------------------------------
 
-#include <TestViewImpl.hpp>
 #include <TestAtomic.hpp>
 
 #include <TestViewAPI.hpp>
@@ -68,7 +67,6 @@
 #include <TestReduce.hpp>
 #include <TestScan.hpp>
 #include <TestAggregate.hpp>
-#include <TestAggregateReduction.hpp>
 #include <TestCompilerMacros.hpp>
 #include <TestMemoryPool.hpp>
 #include <TestTaskPolicy.hpp>
@@ -77,7 +75,6 @@
 #include <TestCXX11.hpp>
 #include <TestCXX11Deduction.hpp>
 #include <TestTeamVector.hpp>
-#include <TestMemorySpaceTracking.hpp>
 #include <TestTemplateMetaFunctions.hpp>
 
 #include <TestPolicyConstruction.hpp>
@@ -138,7 +135,6 @@ TEST_F( openmp , view_remap )
 TEST_F( openmp , view_aggregate )
 {
   TestViewAggregate< Kokkos::OpenMP >();
-  TestViewAggregateReduction< Kokkos::OpenMP >();
 }
 
 //----------------------------------------------------------------------------
@@ -171,11 +167,6 @@ TEST_F( openmp , compiler_macros )
 }
 
 //----------------------------------------------------------------------------
-
-TEST_F( openmp , memory_space )
-{
-  TestMemorySpace< Kokkos::OpenMP >();
-}
 
 TEST_F( openmp , memory_pool )
 {

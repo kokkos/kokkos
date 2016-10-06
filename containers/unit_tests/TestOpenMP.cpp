@@ -56,7 +56,6 @@
 #include <TestVector.hpp>
 #include <TestDualView.hpp>
 #include <TestDynamicView.hpp>
-#include <TestSegmentedView.hpp>
 #include <TestComplex.hpp>
 
 #include <Kokkos_DynRankView.hpp>
@@ -143,11 +142,6 @@ TEST_F( openmp , staticcrsgraph )
       test_dualview_combinations<int,Kokkos::OpenMP>(size);                     \
   }
 
-#define OPENMP_SEGMENTEDVIEW_TEST( size )                             \
-  TEST_F( openmp, segmentedview_##size##x) {       \
-      test_segmented_view<double,Kokkos::OpenMP>(size);                     \
-  }
-
 OPENMP_INSERT_TEST(close, 100000, 90000, 100, 500, true)
 OPENMP_INSERT_TEST(far, 100000, 90000, 100, 500, false)
 OPENMP_FAILED_INSERT_TEST( 10000, 1000 )
@@ -156,7 +150,6 @@ OPENMP_DEEP_COPY( 10000, 1 )
 OPENMP_VECTOR_COMBINE_TEST( 10 )
 OPENMP_VECTOR_COMBINE_TEST( 3057 )
 OPENMP_DUALVIEW_COMBINE_TEST( 10 )
-OPENMP_SEGMENTEDVIEW_TEST( 10000 )
 
 #undef OPENMP_INSERT_TEST
 #undef OPENMP_FAILED_INSERT_TEST
@@ -164,7 +157,6 @@ OPENMP_SEGMENTEDVIEW_TEST( 10000 )
 #undef OPENMP_DEEP_COPY
 #undef OPENMP_VECTOR_COMBINE_TEST
 #undef OPENMP_DUALVIEW_COMBINE_TEST
-#undef OPENMP_SEGMENTEDVIEW_TEST
 #endif
 
 

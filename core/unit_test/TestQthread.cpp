@@ -48,7 +48,6 @@
 
 //----------------------------------------------------------------------------
 
-#include <TestViewImpl.hpp>
 #include <TestAtomic.hpp>
 
 #include <TestViewAPI.hpp>

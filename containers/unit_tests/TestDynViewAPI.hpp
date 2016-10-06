@@ -1127,8 +1127,7 @@ public:
     // T v2 = hx(0,0) ; // Generates compile error as intended
     // hx(0,0) = v2 ;   // Generates compile error as intended
 
-/*
-#if ! KOKKOS_USING_EXP_VIEW
+#if 0 /* Asynchronous deep copies not implemented for dynamic rank view */
     // Testing with asynchronous deep copy with respect to device
     {
       size_t count = 0 ;
@@ -1193,7 +1192,7 @@ public:
         { ASSERT_EQ( hx(ip,i1,i2,i3) , T(0) ); }
       }}}}
     }
-#endif */ // #if ! KOKKOS_USING_EXP_VIEW
+#endif
 
     // Testing with synchronous deep copy
     {

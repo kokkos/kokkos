@@ -48,7 +48,6 @@
 #if !defined(KOKKOS_HAVE_CUDA) || defined(__CUDACC__)
 //----------------------------------------------------------------------------
 
-#include <TestViewImpl.hpp>
 #include <TestAtomic.hpp>
 
 #include <TestViewAPI.hpp>
@@ -79,10 +78,6 @@ protected:
 
 TEST_F( defaultdevicetype, test_utilities) {
   test_utilities();
-}
-
-TEST_F( defaultdevicetype, view_impl) {
-  test_view_impl< Kokkos::DefaultExecutionSpace >();
 }
 
 TEST_F( defaultdevicetype, view_api) {

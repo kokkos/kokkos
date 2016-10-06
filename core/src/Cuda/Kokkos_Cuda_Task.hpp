@@ -240,10 +240,13 @@ TeamThreadRange( const Impl::TaskExec< Kokkos::Cuda > & thread, const iType & co
   return Impl::TeamThreadRangeBoundariesStruct< iType, Impl::TaskExec< Kokkos::Cuda > >( thread, count );
 }
 
-template<typename iType>
+template<typename iType1, typename iType2>
 KOKKOS_INLINE_FUNCTION
-Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >
-TeamThreadRange( const Impl::TaskExec< Kokkos::Cuda > & thread, const iType1 & begin, const iType2 & end )
+Impl::TeamThreadRangeBoundariesStruct
+  < typename std::common_type<iType1,iType2>::type
+  , Impl::TaskExec< Kokkos::Cuda > >
+TeamThreadRange( const Impl::TaskExec< Kokkos::Cuda > & thread
+               , const iType1 & begin, const iType2 & end )
 {
   typedef typename std::common_type< iType1, iType2 >::type iType;
   return Impl::TeamThreadRangeBoundariesStruct< iType, Impl::TaskExec< Kokkos::Cuda > >(
