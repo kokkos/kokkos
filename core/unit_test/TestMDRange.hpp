@@ -204,7 +204,7 @@ struct TestMDRange_2D {
           }
         }}
       if ( counter != 0 )
-        printf(" Errors in test_for2; mismatches = %d\n\n",counter);
+        printf("No info: Errors in test_for2; mismatches = %d\n\n",counter);
       ASSERT_EQ( counter , 0 );
     }
 
@@ -229,7 +229,7 @@ struct TestMDRange_2D {
           }
         }}
       if ( counter != 0 )
-        printf(" Errors in test_for2; mismatches = %d\n\n",counter);
+        printf("D D: Errors in test_for2; mismatches = %d\n\n",counter);
       ASSERT_EQ( counter , 0 );
     }
 
@@ -254,7 +254,7 @@ struct TestMDRange_2D {
           }
         }}
       if ( counter != 0 )
-        printf(" Errors in test_for2; mismatches = %d\n\n",counter);
+        printf("L L: Errors in test_for2; mismatches = %d\n\n",counter);
       ASSERT_EQ( counter , 0 );
     }
 
@@ -279,7 +279,7 @@ struct TestMDRange_2D {
           }
         }}
       if ( counter != 0 )
-        printf(" Errors in test_for2; mismatches = %d\n\n",counter);
+        printf("L R: Errors in test_for2; mismatches = %d\n\n",counter);
       ASSERT_EQ( counter , 0 );
     }
 
@@ -304,7 +304,7 @@ struct TestMDRange_2D {
           }
         }}
       if ( counter != 0 )
-        printf(" Errors in test_for2; mismatches = %d\n\n",counter);
+        printf("R L: Errors in test_for2; mismatches = %d\n\n",counter);
       ASSERT_EQ( counter , 0 );
     }
 
@@ -329,7 +329,7 @@ struct TestMDRange_2D {
           }
         }}
       if ( counter != 0 )
-        printf(" Errors in test_for2; mismatches = %d\n\n",counter);
+        printf("R R: Errors in test_for2; mismatches = %d\n\n",counter);
       ASSERT_EQ( counter , 0 );
     }
 
