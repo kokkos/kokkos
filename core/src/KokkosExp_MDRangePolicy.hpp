@@ -93,7 +93,7 @@ struct Rank
 {
   static_assert( N != 0u, "Kokkos Error: rank 0 undefined");
   static_assert( N != 1u, "Kokkos Error: rank 1 is not a multi-dimensional range");
-  static_assert( N < 4u, "Kokkos Error: Unsupported rank...");
+  static_assert( N < 5u, "Kokkos Error: Unsupported rank...");
 
   using iteration_pattern = Rank<N, OuterDir, InnerDir>;
 

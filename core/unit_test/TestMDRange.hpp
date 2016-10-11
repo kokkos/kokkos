@@ -625,5 +625,68 @@ struct TestMDRange_3D {
   } //end test_for3
 };
 
+
+
+
+template <typename ExecSpace >
+struct TestMDRange_4D {
+
+  using DataType = int ;
+  using ViewType     = typename Kokkos::View< DataType**** ,  ExecSpace > ;
+  using HostViewType = typename ViewType::HostMirror ;
+
+  ViewType input_view ;
+
+  TestMDRange_4D( const DataType N0, const DataType N1, const DataType N2 , const DataType N3 ) : input_view("input_view", N0, N1, N2, N3) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const int i , const int j , const int k , const int l ) const
+  {
+    input_view(i,j,k,l) = 1;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const int i , const int j , const int k , const int l , double &lsum ) const 
+  {
+    lsum += input_view(i,j,k,l)*2;
+  }
+
+
+  static void test_for4( const int N0, const int N1, const int N2 , const int N3 )
+  {
+    using namespace Kokkos::Experimental;
+
+    {
+      typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<4>, Kokkos::IndexType<int> > range_type;
+      typedef typename range_type::tile_type tile_type;
+      typedef typename range_type::point_type point_type;
+
+      range_type range( point_type{{0,0,0,0}}, point_type{{N0,N1,N2,N3}}, tile_type{{4,4,4,4}} );
+
+      TestMDRange_4D functor(N0,N1,N2,N3);
+
+      md_parallel_for( range, functor );
+
+      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
+      Kokkos::deep_copy( h_view , functor.input_view );
+
+      int counter = 0;
+      for ( int i=0; i<N0; ++i ) {
+        for ( int j=0; j<N1; ++j ) {
+          for ( int k=0; k<N2; ++k ) {
+            for ( int l=0; l<N3; ++l ) {
+            if ( h_view(i,j,k,l) != 1 ) {
+              ++counter;
+          }
+        }}}}
+      if ( counter != 0 )
+        printf(" Errors in test_for4; mismatches = %d\n\n",counter);
+      ASSERT_EQ( counter , 0 );
+    }
+
+  }
+};
+
+
 } /* namespace */ } /* namespace Test */
 /*--------------------------------------------------------------------------*/

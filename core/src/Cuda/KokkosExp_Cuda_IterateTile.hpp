@@ -251,15 +251,6 @@ struct apply_impl<3,RP,Functor,void >
   {
 // LL
     if (RP::inner_direction == RP::Left) {
-      /*
-         index_type offset_1 = blockIdx.y*m_rp.m_tile[1] + threadIdx.y;
-         index_type offset_0 = blockIdx.x*m_rp.m_tile[0] + threadIdx.x;
-
-         for ( index_type j = offset_1; j < m_rp.m_upper[1], threadIdx.y < m_rp.m_tile[1]; j += (gridDim.y*m_rp.m_tile[1]) ) {
-         for ( index_type i = offset_0; i < m_rp.m_upper[0], threadIdx.x < m_rp.m_tile[0]; i += (gridDim.x*m_rp.m_tile[0]) ) {
-         m_func(i, j);
-         } }
-         */
       for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) { 
         const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
         if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
@@ -279,15 +270,6 @@ struct apply_impl<3,RP,Functor,void >
     } 
 // LR
   else {
-    /*
-       index_type offset_1 = blockIdx.y*m_rp.m_tile[1] + threadIdx.y;
-       index_type offset_0 = blockIdx.x*m_rp.m_tile[0] + threadIdx.x;
-
-       for ( index_type i = offset_0; i < m_rp.m_upper[0], threadIdx.x < m_rp.m_tile[0]; i += (gridDim.x*m_rp.m_tile[0]) ) {
-       for ( index_type j = offset_1; j < m_rp.m_upper[1], threadIdx.y < m_rp.m_tile[1]; j += (gridDim.y*m_rp.m_tile[1]) ) {
-       m_func(i, j);
-       } }
-       */
     for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
       const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
       if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
@@ -332,15 +314,6 @@ struct apply_impl<3,RP,Functor,Tag>
   {
     if (RP::inner_direction == RP::Left) {
       // Loop over size maxnumblocks until full range covered
-      /*
-         index_type offset_1 = blockIdx.y*m_rp.m_tile[1] + threadIdx.y;
-         index_type offset_0 = blockIdx.x*m_rp.m_tile[0] + threadIdx.x;
-
-         for ( index_type j = offset_1; j < m_rp.m_upper[1], threadIdx.y < m_rp.m_tile[1]; j += (gridDim.y*m_rp.m_tile[1]) ) {
-         for ( index_type i = offset_0; i < m_rp.m_upper[0], threadIdx.x < m_rp.m_tile[0]; i += (gridDim.x*m_rp.m_tile[0]) ) {
-         m_func(Tag(), i, j);
-         } }
-         */
       for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) { 
         const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
         if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
@@ -359,15 +332,6 @@ struct apply_impl<3,RP,Functor,Tag>
       } //end outer for
     }
     else {
-      /*
-         index_type offset_1 = blockIdx.y*m_rp.m_tile[1] + threadIdx.y;
-         index_type offset_0 = blockIdx.x*m_rp.m_tile[0] + threadIdx.x;
-
-         for ( index_type i = offset_0; i < m_rp.m_upper[0], threadIdx.x < m_rp.m_tile[0]; i += (gridDim.x*m_rp.m_tile[0]) ) {
-         for ( index_type j = offset_1; j < m_rp.m_upper[1], threadIdx.y < m_rp.m_tile[1]; j += (gridDim.y*m_rp.m_tile[1]) ) {
-         m_func(Tag(), i, j);
-         } }
-         */
       for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
         const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
         if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
@@ -393,6 +357,210 @@ private:
   const Functor & m_func;
 };
 
+
+//Rank 4
+// Specializations for void tag type
+template< typename RP , typename Functor >
+struct apply_impl<4,RP,Functor,void >
+{
+  using index_type = typename RP::index_type;
+
+  __device__
+  apply_impl( const RP & _rp , const Functor & _f )
+  : m_rp(_rp)
+  , m_func(_f)
+  {}
+
+  inline __device__
+  void exec_range() const
+  {
+// LL
+    if (RP::inner_direction == RP::Left) {
+      // Loop over size maxnumblocks until full range covered
+
+      const index_type numbl0 = ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0];
+      const index_type numbl1 = ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1];
+      index_type tile_id0 = blockIdx.x % numbl0;
+      index_type tile_id1 = blockIdx.x / numbl0;
+      const index_type thr_id0 = threadIdx.x % m_rp.m_tile[0];
+      const index_type thr_id1 = threadIdx.x / m_rp.m_tile[0];
+
+      index_type offset_0 = tile_id0*m_rp.m_tile[0] + thr_id0;
+      index_type offset_1 = tile_id1*m_rp.m_tile[1] + thr_id1;
+
+      for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) { 
+        const index_type offset_3 = tile_id3*m_rp.m_tile[3] + threadIdx.z;
+        if ( offset_3 < m_rp.m_upper[3] && threadIdx.z < m_rp.m_tile[3] ) {
+
+          for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) { 
+            const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.y;
+            if ( offset_2 < m_rp.m_upper[2] && threadIdx.y < m_rp.m_tile[2] ) {
+
+              //FIX: Stride by the min of numbl and 65535
+              for ( ; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += numbl1 ) {  //what do we stride by?
+//                const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+                if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
+
+                //FIX: Stride by the min of numbl and 65535
+                  for ( ; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += numbl0 ) {  //what do we stride by?
+//                    const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+                    if ( offset_0 < m_rp.m_upper[0] && thr_id0 < m_rp.m_tile[0] ) {
+
+                      m_func(offset_0 , offset_1 , offset_2 , offset_3);
+
+                    }
+                  }
+                }
+              } //end inner for
+            } //end inner for
+          } //end outer if
+        } //end outer if
+      } //end outer for
+    }
+// LR
+    else {
+
+      const index_type numbl0 = ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0];
+      const index_type numbl1 = ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1];
+      index_type tile_id0 = blockIdx.x / numbl1;
+      index_type tile_id1 = blockIdx.x % numbl1;
+      const index_type thr_id0 = threadIdx.x / m_rp.m_tile[1];
+      const index_type thr_id1 = threadIdx.x % m_rp.m_tile[1];
+
+      index_type offset_0 = tile_id0*m_rp.m_tile[0] + thr_id0;
+      index_type offset_1 = tile_id1*m_rp.m_tile[1] + thr_id1;
+
+
+      for ( ; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += numbl0 ) { 
+        //        const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+        if ( offset_0 < m_rp.m_upper[0] && thr_id0 < m_rp.m_tile[0] ) {
+          for ( ; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += numbl1 ) { 
+            //        const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+            if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
+              for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) { 
+                const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.y;
+                if ( offset_2 < m_rp.m_upper[2] && threadIdx.y < m_rp.m_tile[2] ) {
+                  for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) { 
+                    const index_type offset_3 = tile_id3*m_rp.m_tile[3] + threadIdx.z;
+                    if ( offset_3 < m_rp.m_upper[3] && threadIdx.z < m_rp.m_tile[3] ) {
+                      m_func(offset_0 , offset_1 , offset_2 , offset_3);
+                    }
+                  }
+                }
+              } //end inner for
+            } //end outer if
+          } //end inner for
+        } //end outer if
+      } //end outer for
+    }
+
+  } //end exec_range
+
+private:
+  const RP & m_rp;
+  const Functor & m_func;
+
+};
+
+// Tag specialization
+template< typename RP , typename Functor , typename Tag >
+struct apply_impl<4,RP,Functor,Tag>
+{
+  using index_type = typename RP::index_type;
+
+  inline __device__
+  apply_impl( const RP & _rp , const Functor & _f )
+  : m_rp(_rp)
+  , m_func(_f)
+  {}
+
+  inline __device__
+  void exec_range() const
+  {
+    if (RP::inner_direction == RP::Left) {
+      // Loop over size maxnumblocks until full range covered
+
+      const index_type numbl0 = ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0];
+      const index_type numbl1 = ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1];
+      const index_type tile_id0 = blockIdx.x % numbl0;
+      const index_type tile_id1 = blockIdx.x / numbl0;
+      const index_type thr_id0 = threadIdx.x % m_rp.m_tile[0];
+      const index_type thr_id1 = threadIdx.x / m_rp.m_tile[0];
+
+      index_type offset_0 = tile_id0*m_rp.m_tile[0] + thr_id0;
+      index_type offset_1 = tile_id1*m_rp.m_tile[1] + thr_id1;
+
+      for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) { 
+        const index_type offset_3 = tile_id3*m_rp.m_tile[3] + threadIdx.z;
+        if ( offset_3 < m_rp.m_upper[3] && threadIdx.z < m_rp.m_tile[3] ) {
+
+          for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) { 
+            const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.y;
+            if ( offset_2 < m_rp.m_upper[2] && threadIdx.y < m_rp.m_tile[2] ) {
+
+              //FIX: Stride by the min of numbl and 65535
+              for ( ; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += numbl1 ) {  //what do we stride by?
+//                const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+                if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
+
+                //FIX: Stride by the min of numbl and 65535
+                  for ( ; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += numbl0 ) {  //what do we stride by?
+//                    const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+                    if ( offset_0 < m_rp.m_upper[0] && thr_id0 < m_rp.m_tile[0] ) {
+
+                      m_func(Tag(), offset_0 , offset_1 , offset_2 , offset_3);
+
+                    }
+                  }
+                }
+              } //end inner for
+            } //end inner for
+          } //end outer if
+        } //end outer if
+      } //end outer for
+    }
+    else {
+
+      const index_type numbl0 = ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0];
+      const index_type numbl1 = ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1];
+      index_type tile_id0 = blockIdx.x / numbl1;
+      index_type tile_id1 = blockIdx.x % numbl1;
+      const index_type thr_id0 = threadIdx.x / m_rp.m_tile[1];
+      const index_type thr_id1 = threadIdx.x % m_rp.m_tile[1];
+
+      index_type offset_0 = tile_id0*m_rp.m_tile[0] + thr_id0;
+      index_type offset_1 = tile_id1*m_rp.m_tile[1] + thr_id1;
+
+
+      for ( ; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += numbl0 ) { 
+        //        const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+        if ( offset_0 < m_rp.m_upper[0] && thr_id0 < m_rp.m_tile[0] ) {
+          for ( ; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += numbl1 ) { 
+            //        const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+            if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
+              for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) { 
+                const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.y;
+                if ( offset_2 < m_rp.m_upper[2] && threadIdx.y < m_rp.m_tile[2] ) {
+                  for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) { 
+                    const index_type offset_3 = tile_id3*m_rp.m_tile[3] + threadIdx.z;
+                    if ( offset_3 < m_rp.m_upper[3] && threadIdx.z < m_rp.m_tile[3] ) {
+                      m_func(Tag() , offset_0 , offset_1 , offset_2 , offset_3);
+                    }
+                  }
+                }
+              } //end inner for
+            } //end outer if
+          } //end inner for
+        } //end outer if
+      } //end outer for
+    }
+
+  } //end exec_range
+
+private:
+  const RP & m_rp;
+  const Functor & m_func;
+};
 
 // ----------------------------------------------------------------------------------
 
@@ -432,13 +600,12 @@ public:
   inline
   void execute() const
   {
-    const unsigned int maxblocks = 65535;
+    const unsigned int maxblocks = 65535; //not true for newer archs
     if ( RP::rank == 2 )
     {
       const dim3 block( m_rp.m_tile[0] , m_rp.m_tile[1] , 1); //pad for mult of 16? check within max num threads bounds? 
       const dim3 grid( std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks ) , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks ) , 1);
       CudaLaunch< DeviceIterateTile >( *this , grid , block );
-
     }
     else if ( RP::rank == 3 )
     {
@@ -449,22 +616,21 @@ public:
         , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.z - 1 ) / block.z , maxblocks ) 
         );
       CudaLaunch< DeviceIterateTile >( *this , grid , block );
-
     }
     else if ( RP::rank == 4 )
     {
       // id0,id1 encoded within threadIdx.x; id2 to threadIdx.y; id3 to threadIdx.z
+      // TODO: Check product of tiles fits within max size < 1024
       const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2] , m_rp.m_tile[3] ); //pad for mult of 16? check within max num threads bounds? 
       const dim3 grid( 
           std::min( ( ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] 
                     *  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] )
-                  , maxblocks ) 
+                  , static_cast<int>(maxblocks) ) 
           //std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks ) 
         , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.y - 1 ) / block.y , maxblocks ) 
         , std::min( ( m_rp.m_upper[3] - m_rp.m_lower[3] + block.z - 1 ) / block.z , maxblocks ) 
         );
       CudaLaunch< DeviceIterateTile >( *this , grid , block );
-
     }
     else
     {
