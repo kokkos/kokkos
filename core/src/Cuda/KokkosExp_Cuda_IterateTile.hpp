@@ -84,30 +84,24 @@ struct CudaLaunch
                     , const dim3       & block
             )
   {
-    printf(" in CudaLaunch; about to call cuda_parallel_launch...\n\n");
-      cuda_parallel_launch< DriverType ><<< grid , block >>>(driver);
-    printf(" in CudaLaunch; completed call cuda_parallel_launch...\n\n");
+    cuda_parallel_launch< DriverType ><<< grid , block >>>(driver);
   }
 
 };
 
 // ------------------------------------------------------------------ //
+template< int N , typename RP , typename Functor , typename Tag >
+struct apply_impl;
 
-template < int N , typename RP , typename Functor , typename Tag >
-struct apply_left;
-template < int N , typename RP , typename Functor , typename Tag >
-struct apply_right;
-
+//Rank 2
 // Specializations for void tag type
-
-// Rank2
 template< typename RP , typename Functor >
-struct apply_left<2,RP,Functor,void >
+struct apply_impl<2,RP,Functor,void >
 {
   using index_type = typename RP::index_type;
 
   __device__
-  apply_left( const RP & _rp , const Functor & _f )
+  apply_impl( const RP & _rp , const Functor & _f )
   : m_rp(_rp)
   , m_func(_f)
   {}
@@ -115,7 +109,8 @@ struct apply_left<2,RP,Functor,void >
   inline __device__
   void exec_range() const
   {
-    // Loop over size maxnumblocks until full range covered
+// LL
+  if (RP::inner_direction == RP::Left) {
  /*
     index_type offset_1 = blockIdx.y*m_rp.m_tile[1] + threadIdx.y;
     index_type offset_0 = blockIdx.x*m_rp.m_tile[0] + threadIdx.x;
@@ -136,28 +131,9 @@ struct apply_left<2,RP,Functor,void >
         } //end inner for
       } //end outer if
     } //end outer for
-
-  } //end exec_range
-
-private:
-  const RP & m_rp;
-  const Functor & m_func;
-};
-
-template< typename RP , typename Functor >
-struct apply_right<2,RP,Functor,void>
-{
-  using index_type = typename RP::index_type;
-
-  __device__ 
-  apply_right( const RP & _rp , const Functor & _f)
-  : m_rp(_rp)
-  , m_func(_f)
-  {}
-
-  inline __device__
-  void exec_range() const
-  {
+  } 
+// LR
+  else {
 /*
     index_type offset_1 = blockIdx.y*m_rp.m_tile[1] + threadIdx.y;
     index_type offset_0 = blockIdx.x*m_rp.m_tile[0] + threadIdx.x;
@@ -166,17 +142,6 @@ struct apply_right<2,RP,Functor,void>
     for ( index_type j = offset_1; j < m_rp.m_upper[1], threadIdx.y < m_rp.m_tile[1]; j += (gridDim.y*m_rp.m_tile[1]) ) {
             m_func(i, j);
     } }
-*/
-
-
-/*
-    for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
-      const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
-      if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
-        for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
-          const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
-          if ( offset_1 < m_rp.m_upper[1] && threadIdx.x < m_rp.m_tile[1] ) {
-            m_func(offset_0 , offset_1);
 */
     for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
       const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
@@ -189,23 +154,24 @@ struct apply_right<2,RP,Functor,void>
         } //end inner for
       } //end outer if
     } //end outer for
-
   }
+
+  } //end exec_range
 
 private:
   const RP & m_rp;
   const Functor & m_func;
+
 };
 
-// Tag type specialization
-
+// Tag specialization
 template< typename RP , typename Functor , typename Tag >
-struct apply_left<2,RP,Functor,Tag>
+struct apply_impl<2,RP,Functor,Tag>
 {
   using index_type = typename RP::index_type;
 
   inline __device__
-  apply_left( const RP & _rp , const Functor & _f )
+  apply_impl( const RP & _rp , const Functor & _f )
   : m_rp(_rp)
   , m_func(_f)
   {}
@@ -213,6 +179,7 @@ struct apply_left<2,RP,Functor,Tag>
   inline __device__
   void exec_range() const
   {
+  if (RP::inner_direction == RP::Left) {
     // Loop over size maxnumblocks until full range covered
 /*
     index_type offset_1 = blockIdx.y*m_rp.m_tile[1] + threadIdx.y;
@@ -234,28 +201,8 @@ struct apply_left<2,RP,Functor,Tag>
         } //end inner for
       } //end outer if
     } //end outer for
-
   }
-
-private:
-  const RP & m_rp;
-  const Functor & m_func;
-};
-
-template< typename RP , typename Functor , typename Tag >
-struct apply_right<2,RP,Functor,Tag>
-{
-  using index_type = typename RP::index_type;
-
-  inline __device__
-  apply_right( const RP & _rp , const Functor & _f )
-  : m_rp(_rp)
-  , m_func(_f)
-  {}
-
-  inline __device__
-  void exec_range() const
-  {
+  else {
 /*
     index_type offset_1 = blockIdx.y*m_rp.m_tile[1] + threadIdx.y;
     index_type offset_0 = blockIdx.x*m_rp.m_tile[0] + threadIdx.x;
@@ -264,15 +211,6 @@ struct apply_right<2,RP,Functor,Tag>
     for ( index_type j = offset_1; j < m_rp.m_upper[1], threadIdx.y < m_rp.m_tile[1]; j += (gridDim.y*m_rp.m_tile[1]) ) {
             m_func(Tag(), i, j);
     } }
-*/
-/*
-    for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
-      const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
-      if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
-        for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
-          const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
-          if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
-            m_func(Tag(), offset_0 , offset_1);
 */
     for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
       const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
@@ -285,13 +223,176 @@ struct apply_right<2,RP,Functor,Tag>
         } //end inner for
       } //end outer if
     } //end outer for
-
   }
+
+  } //end exec_range
 
 private:
   const RP & m_rp;
   const Functor & m_func;
 };
+
+
+//Rank 3
+// Specializations for void tag type
+template< typename RP , typename Functor >
+struct apply_impl<3,RP,Functor,void >
+{
+  using index_type = typename RP::index_type;
+
+  __device__
+  apply_impl( const RP & _rp , const Functor & _f )
+  : m_rp(_rp)
+  , m_func(_f)
+  {}
+
+  inline __device__
+  void exec_range() const
+  {
+// LL
+    if (RP::inner_direction == RP::Left) {
+      /*
+         index_type offset_1 = blockIdx.y*m_rp.m_tile[1] + threadIdx.y;
+         index_type offset_0 = blockIdx.x*m_rp.m_tile[0] + threadIdx.x;
+
+         for ( index_type j = offset_1; j < m_rp.m_upper[1], threadIdx.y < m_rp.m_tile[1]; j += (gridDim.y*m_rp.m_tile[1]) ) {
+         for ( index_type i = offset_0; i < m_rp.m_upper[0], threadIdx.x < m_rp.m_tile[0]; i += (gridDim.x*m_rp.m_tile[0]) ) {
+         m_func(i, j);
+         } }
+         */
+      for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) { 
+        const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
+        if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
+          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
+            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
+            if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+              for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
+                const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+                if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+                  m_func(offset_0 , offset_1 , offset_2);
+                }
+              } //end inner for
+            } //end outer if
+          } //end outer for
+        } //end outer if
+      } //end outer for
+    } 
+// LR
+  else {
+    /*
+       index_type offset_1 = blockIdx.y*m_rp.m_tile[1] + threadIdx.y;
+       index_type offset_0 = blockIdx.x*m_rp.m_tile[0] + threadIdx.x;
+
+       for ( index_type i = offset_0; i < m_rp.m_upper[0], threadIdx.x < m_rp.m_tile[0]; i += (gridDim.x*m_rp.m_tile[0]) ) {
+       for ( index_type j = offset_1; j < m_rp.m_upper[1], threadIdx.y < m_rp.m_tile[1]; j += (gridDim.y*m_rp.m_tile[1]) ) {
+       m_func(i, j);
+       } }
+       */
+    for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
+      const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+      if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+        for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
+          const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
+          if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+
+            for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) { 
+              const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
+              if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
+                m_func(offset_0 , offset_1 , offset_2);
+              }
+            } //end inner for
+          } //end outer if
+        } //end inner for
+      } //end outer if
+    } //end outer for
+  }
+
+  } //end exec_range
+
+private:
+  const RP & m_rp;
+  const Functor & m_func;
+
+};
+
+// Tag specialization
+template< typename RP , typename Functor , typename Tag >
+struct apply_impl<3,RP,Functor,Tag>
+{
+  using index_type = typename RP::index_type;
+
+  inline __device__
+  apply_impl( const RP & _rp , const Functor & _f )
+  : m_rp(_rp)
+  , m_func(_f)
+  {}
+
+  inline __device__
+  void exec_range() const
+  {
+    if (RP::inner_direction == RP::Left) {
+      // Loop over size maxnumblocks until full range covered
+      /*
+         index_type offset_1 = blockIdx.y*m_rp.m_tile[1] + threadIdx.y;
+         index_type offset_0 = blockIdx.x*m_rp.m_tile[0] + threadIdx.x;
+
+         for ( index_type j = offset_1; j < m_rp.m_upper[1], threadIdx.y < m_rp.m_tile[1]; j += (gridDim.y*m_rp.m_tile[1]) ) {
+         for ( index_type i = offset_0; i < m_rp.m_upper[0], threadIdx.x < m_rp.m_tile[0]; i += (gridDim.x*m_rp.m_tile[0]) ) {
+         m_func(Tag(), i, j);
+         } }
+         */
+      for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) { 
+        const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
+        if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
+          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
+            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
+            if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+              for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
+                const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+                if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+                  m_func(Tag(), offset_0 , offset_1 , offset_2);
+                }
+              } //end inner for
+            } //end inner for
+          } //end outer if
+        } //end outer if
+      } //end outer for
+    }
+    else {
+      /*
+         index_type offset_1 = blockIdx.y*m_rp.m_tile[1] + threadIdx.y;
+         index_type offset_0 = blockIdx.x*m_rp.m_tile[0] + threadIdx.x;
+
+         for ( index_type i = offset_0; i < m_rp.m_upper[0], threadIdx.x < m_rp.m_tile[0]; i += (gridDim.x*m_rp.m_tile[0]) ) {
+         for ( index_type j = offset_1; j < m_rp.m_upper[1], threadIdx.y < m_rp.m_tile[1]; j += (gridDim.y*m_rp.m_tile[1]) ) {
+         m_func(Tag(), i, j);
+         } }
+         */
+      for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
+        const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+        if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
+            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
+            if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+              for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) { 
+                const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
+                if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
+                  m_func(Tag(), offset_0 , offset_1 , offset_2);
+                }
+              }
+            }
+          } //end inner for
+        } //end outer if
+      } //end outer for
+    }
+
+  } //end exec_range
+
+private:
+  const RP & m_rp;
+  const Functor & m_func;
+};
+
 
 // ----------------------------------------------------------------------------------
 
@@ -316,12 +417,8 @@ private:
   inline __device__  
   void apply() const
   {
-    if (RP::inner_direction == RP::Left) {
-      apply_left<RP::rank,RP,Functor,Tag>(m_rp,m_func).exec_range();
-    } else {
-      apply_right<RP::rank,RP,Functor,Tag>(m_rp,m_func).exec_range();
-    }
-  }
+    apply_impl<RP::rank,RP,Functor,Tag>(m_rp,m_func).exec_range();
+  } //end apply
 
 public:
 
@@ -340,50 +437,42 @@ public:
     {
       const dim3 block( m_rp.m_tile[0] , m_rp.m_tile[1] , 1); //pad for mult of 16? check within max num threads bounds? 
       const dim3 grid( std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks ) , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks ) , 1);
-      printf("entered execute() if RP::rank==2 block\n\n");
       CudaLaunch< DeviceIterateTile >( *this , grid , block );
-      printf("finished execute() if RP::rank==2 block\n\n");
 
-      // LL vs LR for outer tile does not make sense in Cuda when using multidim block and grid; 
-      // LL and LR prescribe a 1D index to a multi-dimensional index according to the access pattern
-      // GPU is in charge of doing this
-      // i.e. given bounds per dim, this determines the num blocks; grid size is chosen by user;
-      // Only time layout important is if num blocks exceed the max num blocks - outer direction used
-      // If dim > 3, then inner layout can have significance - encode the outer dims in the slow dim
+    }
+    else if ( RP::rank == 3 )
+    {
+      const dim3 block( m_rp.m_tile[0] , m_rp.m_tile[1] , m_rp.m_tile[2] ); //pad for mult of 16? check within max num threads bounds? 
+      const dim3 grid( 
+          std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks ) 
+        , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks ) 
+        , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.z - 1 ) / block.z , maxblocks ) 
+        );
+      CudaLaunch< DeviceIterateTile >( *this , grid , block );
 
-/*
-      printf("entered execute() if RP::rank==2 block\n\n");
-      if (RP::outer_direction == RP::Left) {
-        const dim3 block( m_rp.m_tile[0] , m_rp.m_tile[1] , 1); //pad for mult of 16? check within max num threads bounds? 
-        const dim3 grid( std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks ) , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks ) , 1);
-        printf(" LL 2D num threads: %u x %u\n",m_rp.m_tile[0],m_rp.m_tile[1] );
-        printf(" LL 2D num blocks: %u x %u\n"
-            , std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks )
-            , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks )
-            );
-        //cuda_parallel_launch<<<grid,block>>>(*this);
-        CudaLaunch< DeviceIterateTile >( *this , grid , block );
-      }
-      else
-      {
-        const dim3 block( m_rp.m_tile[1] , m_rp.m_tile[0] , 1); 
-        const dim3 grid( std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.x - 1 ) / block.x , maxblocks ) , std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.y - 1 ) / block.y , maxblocks ) , 1);
-        printf(" LR 2D num threads: %u x %u\n",m_rp.m_tile[1],m_rp.m_tile[0] );
-        printf(" LR 2D num blocks: %u x %u\n"
-            , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.x - 1 ) / block.x , maxblocks )
-            , std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.y - 1 ) / block.y , maxblocks )
-            );
-        //cuda_parallel_launch<<<grid,block>>>(*this);
-        CudaLaunch< DeviceIterateTile >( *this , grid , block );
-      }
-*/
+    }
+    else if ( RP::rank == 4 )
+    {
+      // id0,id1 encoded within threadIdx.x; id2 to threadIdx.y; id3 to threadIdx.z
+      const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2] , m_rp.m_tile[3] ); //pad for mult of 16? check within max num threads bounds? 
+      const dim3 grid( 
+          std::min( ( ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] 
+                    *  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] )
+                  , maxblocks ) 
+          //std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks ) 
+        , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.y - 1 ) / block.y , maxblocks ) 
+        , std::min( ( m_rp.m_upper[3] - m_rp.m_lower[3] + block.z - 1 ) / block.z , maxblocks ) 
+        );
+      CudaLaunch< DeviceIterateTile >( *this , grid , block );
+
     }
     else
     {
       printf(" Exceeded rank bounds with Cuda\n");
     }
 //    CudaParallelLaunch< DeviceIterateTile >( *this , grid , block , 0 );
-  }
+
+  } //end execute
 
 protected:
   const RP         m_rp;
