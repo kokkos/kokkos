@@ -45,7 +45,7 @@ Primary tested compilers on X86 are:
   Intel 14.0.4
   Intel 15.0.2
   Intel 16.0.1
-  Intel 17.0.064
+  Intel 17.0.098
   Clang 3.5.2
   Clang 3.6.1
   Clang 3.9.0
@@ -54,6 +54,10 @@ Primary tested compilers on Power 8 are:
   IBM XL 13.1.3 (OpenMP,Serial)
   GCC 4.9.2 (OpenMP,Serial)
   GCC 5.3.0 (OpenMP,Serial)
+
+Primary tested compilers on Intel KNL are:
+   Intel 16.2.181 
+   Intel 17.0.098 
 
 Secondary tested compilers are:
   CUDA 7.0 (with gcc 4.7.2)
@@ -65,9 +69,6 @@ Other compilers working:
   X86:
    PGI 15.4
    Cygwin 2.1.0 64bit with gcc 4.9.3
-  KNL:
-   Intel 16.2.181 (the FENL example causes internal compiler error)
-   Intel 17.0.042 (the FENL example causes internal compiler error)
 
 Known non-working combinations:
   Power8:

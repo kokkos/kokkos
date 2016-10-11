@@ -162,7 +162,7 @@ elif [ "$MACHINE" = "bowman" ]; then
 
     # Format: (compiler module-list build-list exe-name warning-flag)
     COMPILERS=("intel/16.2.181 $BASE_MODULE_LIST $OLD_INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-               "intel/17.0.064 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+               "intel/17.0.098 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
     )
 
     ARCH_FLAG="--arch=KNL"
@@ -179,7 +179,7 @@ elif [ "$MACHINE" = "shepard" ]; then
 
     # Format: (compiler module-list build-list exe-name warning-flag)
     COMPILERS=("intel/16.2.181 $BASE_MODULE_LIST $OLD_INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-               "intel/17.0.064 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+               "intel/17.0.098 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
     )
 
     ARCH_FLAG="--arch=HSW"
