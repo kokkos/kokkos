@@ -151,7 +151,7 @@ struct MDRangePolicy
       if ( m_tile[i] < 1 )
       {
         m_tile[i] = 1;
-        printf("MDRange: Tile dimension %d inappropriate (i.e. < 1) - dim is now defaulted to 1\n");
+        printf("MDRange: Tile dimension %d inappropriate (i.e. < 1) - dim is now defaulted to 1\n",i);
       }
       m_tile_end[i] = static_cast<index_type>((end + m_tile[i] -1) / m_tile[i]);
       m_num_tiles *= m_tile_end[i];
