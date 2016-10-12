@@ -684,9 +684,354 @@ struct TestMDRange_4D {
       ASSERT_EQ( counter , 0 );
     }
 
-  }
+    {
+      typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<4, Iterate::Default, Iterate::Default>, Kokkos::IndexType<int> > range_type;
+      typedef typename range_type::tile_type tile_type;
+      typedef typename range_type::point_type point_type;
+
+      range_type range( point_type{{0,0,0,0}}, point_type{{N0,N1,N2,N3}}, tile_type{{4,4,4,4}} );
+
+      TestMDRange_4D functor(N0,N1,N2,N3);
+
+      md_parallel_for( range, functor );
+
+      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
+      Kokkos::deep_copy( h_view , functor.input_view );
+
+      int counter = 0;
+      for ( int i=0; i<N0; ++i ) {
+        for ( int j=0; j<N1; ++j ) {
+          for ( int k=0; k<N2; ++k ) {
+            for ( int l=0; l<N3; ++l ) {
+            if ( h_view(i,j,k,l) != 1 ) {
+              ++counter;
+          }
+        }}}}
+      if ( counter != 0 )
+        printf(" Errors in test_for4; mismatches = %d\n\n",counter);
+      ASSERT_EQ( counter , 0 );
+    }
+
+    {
+      typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<4, Iterate::Left, Iterate::Left>, Kokkos::IndexType<int> > range_type;
+      typedef typename range_type::tile_type tile_type;
+      typedef typename range_type::point_type point_type;
+
+      range_type range( point_type{{0,0,0,0}}, point_type{{N0,N1,N2,N3}}, tile_type{{4,4,4,4}} );
+
+      TestMDRange_4D functor(N0,N1,N2,N3);
+
+      md_parallel_for( range, functor );
+
+      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
+      Kokkos::deep_copy( h_view , functor.input_view );
+
+      int counter = 0;
+      for ( int i=0; i<N0; ++i ) {
+        for ( int j=0; j<N1; ++j ) {
+          for ( int k=0; k<N2; ++k ) {
+            for ( int l=0; l<N3; ++l ) {
+            if ( h_view(i,j,k,l) != 1 ) {
+              ++counter;
+          }
+        }}}}
+      if ( counter != 0 )
+        printf(" Errors in test_for4; mismatches = %d\n\n",counter);
+      ASSERT_EQ( counter , 0 );
+    }
+
+    {
+      typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<4, Iterate::Left, Iterate::Right>, Kokkos::IndexType<int> > range_type;
+      typedef typename range_type::tile_type tile_type;
+      typedef typename range_type::point_type point_type;
+
+      range_type range( point_type{{0,0,0,0}}, point_type{{N0,N1,N2,N3}}, tile_type{{4,4,4,4}} );
+
+      TestMDRange_4D functor(N0,N1,N2,N3);
+
+      md_parallel_for( range, functor );
+
+      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
+      Kokkos::deep_copy( h_view , functor.input_view );
+
+      int counter = 0;
+      for ( int i=0; i<N0; ++i ) {
+        for ( int j=0; j<N1; ++j ) {
+          for ( int k=0; k<N2; ++k ) {
+            for ( int l=0; l<N3; ++l ) {
+            if ( h_view(i,j,k,l) != 1 ) {
+              ++counter;
+          }
+        }}}}
+      if ( counter != 0 )
+        printf(" Errors in test_for4; mismatches = %d\n\n",counter);
+      ASSERT_EQ( counter , 0 );
+    }
+
+    {
+      typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<4, Iterate::Right, Iterate::Left>, Kokkos::IndexType<int> > range_type;
+      typedef typename range_type::tile_type tile_type;
+      typedef typename range_type::point_type point_type;
+
+      range_type range( point_type{{0,0,0,0}}, point_type{{N0,N1,N2,N3}}, tile_type{{4,4,4,4}} );
+
+      TestMDRange_4D functor(N0,N1,N2,N3);
+
+      md_parallel_for( range, functor );
+
+      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
+      Kokkos::deep_copy( h_view , functor.input_view );
+
+      int counter = 0;
+      for ( int i=0; i<N0; ++i ) {
+        for ( int j=0; j<N1; ++j ) {
+          for ( int k=0; k<N2; ++k ) {
+            for ( int l=0; l<N3; ++l ) {
+            if ( h_view(i,j,k,l) != 1 ) {
+              ++counter;
+          }
+        }}}}
+      if ( counter != 0 )
+        printf(" Errors in test_for4; mismatches = %d\n\n",counter);
+      ASSERT_EQ( counter , 0 );
+    }
+
+    {
+      typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<4, Iterate::Right, Iterate::Right>, Kokkos::IndexType<int> > range_type;
+      typedef typename range_type::tile_type tile_type;
+      typedef typename range_type::point_type point_type;
+
+      range_type range( point_type{{0,0,0,0}}, point_type{{N0,N1,N2,N3}}, tile_type{{4,4,4,4}} );
+
+      TestMDRange_4D functor(N0,N1,N2,N3);
+
+      md_parallel_for( range, functor );
+
+      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
+      Kokkos::deep_copy( h_view , functor.input_view );
+
+      int counter = 0;
+      for ( int i=0; i<N0; ++i ) {
+        for ( int j=0; j<N1; ++j ) {
+          for ( int k=0; k<N2; ++k ) {
+            for ( int l=0; l<N3; ++l ) {
+            if ( h_view(i,j,k,l) != 1 ) {
+              ++counter;
+          }
+        }}}}
+      if ( counter != 0 )
+        printf(" Errors in test_for4; mismatches = %d\n\n",counter);
+      ASSERT_EQ( counter , 0 );
+    }
+
+  } //end test_for4
 };
 
+
+template <typename ExecSpace >
+struct TestMDRange_5D {
+
+  using DataType = int ;
+  using ViewType     = typename Kokkos::View< DataType***** ,  ExecSpace > ;
+  using HostViewType = typename ViewType::HostMirror ;
+
+  ViewType input_view ;
+
+  TestMDRange_5D( const DataType N0, const DataType N1, const DataType N2 , const DataType N3 , const DataType N4 ) : input_view("input_view", N0, N1, N2, N3, N4) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const int i , const int j , const int k , const int l , const int m ) const
+  {
+    input_view(i,j,k,l,m) = 1;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const int i , const int j , const int k , const int l , const int m , double &lsum ) const 
+  {
+    lsum += input_view(i,j,k,l,m)*2;
+  }
+
+
+  static void test_for5( const int N0, const int N1, const int N2 , const int N3 , const int N4 )
+  {
+    using namespace Kokkos::Experimental;
+
+    {
+      typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<5>, Kokkos::IndexType<int> > range_type;
+      typedef typename range_type::tile_type tile_type;
+      typedef typename range_type::point_type point_type;
+
+      range_type range( point_type{{0,0,0,0,0}}, point_type{{N0,N1,N2,N3,N4}}, tile_type{{4,4,4,2,2}} );
+
+      TestMDRange_5D functor(N0,N1,N2,N3,N4);
+
+      md_parallel_for( range, functor );
+
+      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
+      Kokkos::deep_copy( h_view , functor.input_view );
+
+      int counter = 0;
+      for ( int i=0; i<N0; ++i ) {
+        for ( int j=0; j<N1; ++j ) {
+          for ( int k=0; k<N2; ++k ) {
+            for ( int l=0; l<N3; ++l ) {
+              for ( int m=0; m<N4; ++m ) {
+              if ( h_view(i,j,k,l,m) != 1 ) {
+                ++counter;
+              }
+      }}}}}
+      if ( counter != 0 )
+        printf(" Errors in test_for5; mismatches = %d\n\n",counter);
+      ASSERT_EQ( counter , 0 );
+    }
+
+    {
+      typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<5, Iterate::Default, Iterate::Default>, Kokkos::IndexType<int> > range_type;
+      typedef typename range_type::tile_type tile_type;
+      typedef typename range_type::point_type point_type;
+
+      range_type range( point_type{{0,0,0,0,0}}, point_type{{N0,N1,N2,N3,N4}}, tile_type{{4,4,4,2,2}} );
+
+      TestMDRange_5D functor(N0,N1,N2,N3,N4);
+
+      md_parallel_for( range, functor );
+
+      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
+      Kokkos::deep_copy( h_view , functor.input_view );
+
+      int counter = 0;
+      for ( int i=0; i<N0; ++i ) {
+        for ( int j=0; j<N1; ++j ) {
+          for ( int k=0; k<N2; ++k ) {
+            for ( int l=0; l<N3; ++l ) {
+              for ( int m=0; m<N4; ++m ) {
+              if ( h_view(i,j,k,l,m) != 1 ) {
+                ++counter;
+              }
+      }}}}}
+      if ( counter != 0 )
+        printf(" Errors in test_for5; mismatches = %d\n\n",counter);
+      ASSERT_EQ( counter , 0 );
+    }
+
+    {
+      typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<5, Iterate::Left, Iterate::Left>, Kokkos::IndexType<int> > range_type;
+      typedef typename range_type::tile_type tile_type;
+      typedef typename range_type::point_type point_type;
+
+      range_type range( point_type{{0,0,0,0,0}}, point_type{{N0,N1,N2,N3,N4}}, tile_type{{4,4,4,2,2}} );
+
+      TestMDRange_5D functor(N0,N1,N2,N3,N4);
+
+      md_parallel_for( range, functor );
+
+      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
+      Kokkos::deep_copy( h_view , functor.input_view );
+
+      int counter = 0;
+      for ( int i=0; i<N0; ++i ) {
+        for ( int j=0; j<N1; ++j ) {
+          for ( int k=0; k<N2; ++k ) {
+            for ( int l=0; l<N3; ++l ) {
+              for ( int m=0; m<N4; ++m ) {
+              if ( h_view(i,j,k,l,m) != 1 ) {
+                ++counter;
+              }
+      }}}}}
+      if ( counter != 0 )
+        printf(" Errors in test_for5; mismatches = %d\n\n",counter);
+      ASSERT_EQ( counter , 0 );
+    }
+
+    {
+      typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<5, Iterate::Left, Iterate::Right>, Kokkos::IndexType<int> > range_type;
+      typedef typename range_type::tile_type tile_type;
+      typedef typename range_type::point_type point_type;
+
+      range_type range( point_type{{0,0,0,0,0}}, point_type{{N0,N1,N2,N3,N4}}, tile_type{{4,4,4,2,2}} );
+
+      TestMDRange_5D functor(N0,N1,N2,N3,N4);
+
+      md_parallel_for( range, functor );
+
+      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
+      Kokkos::deep_copy( h_view , functor.input_view );
+
+      int counter = 0;
+      for ( int i=0; i<N0; ++i ) {
+        for ( int j=0; j<N1; ++j ) {
+          for ( int k=0; k<N2; ++k ) {
+            for ( int l=0; l<N3; ++l ) {
+              for ( int m=0; m<N4; ++m ) {
+              if ( h_view(i,j,k,l,m) != 1 ) {
+                ++counter;
+              }
+      }}}}}
+      if ( counter != 0 )
+        printf(" Errors in test_for5; mismatches = %d\n\n",counter);
+      ASSERT_EQ( counter , 0 );
+    }
+
+    {
+      typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<5, Iterate::Right, Iterate::Left>, Kokkos::IndexType<int> > range_type;
+      typedef typename range_type::tile_type tile_type;
+      typedef typename range_type::point_type point_type;
+
+      range_type range( point_type{{0,0,0,0,0}}, point_type{{N0,N1,N2,N3,N4}}, tile_type{{4,4,4,2,2}} );
+
+      TestMDRange_5D functor(N0,N1,N2,N3,N4);
+
+      md_parallel_for( range, functor );
+
+      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
+      Kokkos::deep_copy( h_view , functor.input_view );
+
+      int counter = 0;
+      for ( int i=0; i<N0; ++i ) {
+        for ( int j=0; j<N1; ++j ) {
+          for ( int k=0; k<N2; ++k ) {
+            for ( int l=0; l<N3; ++l ) {
+              for ( int m=0; m<N4; ++m ) {
+              if ( h_view(i,j,k,l,m) != 1 ) {
+                ++counter;
+              }
+      }}}}}
+      if ( counter != 0 )
+        printf(" Errors in test_for5; mismatches = %d\n\n",counter);
+      ASSERT_EQ( counter , 0 );
+    }
+
+    {
+      typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<5, Iterate::Right, Iterate::Right>, Kokkos::IndexType<int> > range_type;
+      typedef typename range_type::tile_type tile_type;
+      typedef typename range_type::point_type point_type;
+
+      range_type range( point_type{{0,0,0,0,0}}, point_type{{N0,N1,N2,N3,N4}}, tile_type{{4,4,4,2,2}} );
+
+      TestMDRange_5D functor(N0,N1,N2,N3,N4);
+
+      md_parallel_for( range, functor );
+
+      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
+      Kokkos::deep_copy( h_view , functor.input_view );
+
+      int counter = 0;
+      for ( int i=0; i<N0; ++i ) {
+        for ( int j=0; j<N1; ++j ) {
+          for ( int k=0; k<N2; ++k ) {
+            for ( int l=0; l<N3; ++l ) {
+              for ( int m=0; m<N4; ++m ) {
+              if ( h_view(i,j,k,l,m) != 1 ) {
+                ++counter;
+              }
+      }}}}}
+      if ( counter != 0 )
+        printf(" Errors in test_for5; mismatches = %d\n\n",counter);
+      ASSERT_EQ( counter , 0 );
+    }
+
+  }
+};
 
 } /* namespace */ } /* namespace Test */
 /*--------------------------------------------------------------------------*/
