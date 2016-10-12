@@ -148,9 +148,22 @@ struct MDRangePolicy
     index_type end;
     for (int i=0; i<rank; ++i) {
       end = upper[i] - lower[i];
+      if ( m_tile[i] < 1 )
+      {
+        m_tile[i] = 1;
+        printf("MDRange: Tile dimension %d inappropriate (i.e. < 1) - dim is now defaulted to 1\n");
+      }
       m_tile_end[i] = static_cast<index_type>((end + m_tile[i] -1) / m_tile[i]);
       m_num_tiles *= m_tile_end[i];
     }
+#if defined(KOKKOS_HAVE_CUDA)
+    index_type total_tile_size_check = 1;
+    for (int i=0; i<rank; ++i) {
+      total_tile_size_check *= m_tile[i];
+    }
+    if ( total_tile_size_check > 1024 )
+      Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
+#endif
   }
 
   point_type m_lower;

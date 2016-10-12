@@ -123,14 +123,15 @@ struct apply_impl<2,RP,Functor,void >
     for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
       const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
       if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+
         for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
           const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
           if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
             m_func(offset_0 , offset_1);
           }
-        } //end inner for
-      } //end outer if
-    } //end outer for
+        }
+      }
+    }
   } 
 // LR
   else {
@@ -146,14 +147,15 @@ struct apply_impl<2,RP,Functor,void >
     for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
       const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
       if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+
         for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
           const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
           if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
             m_func(offset_0 , offset_1);
           }
-        } //end inner for
-      } //end outer if
-    } //end outer for
+        }
+      }
+    }
   }
 
   } //end exec_range
@@ -164,7 +166,7 @@ private:
 
 };
 
-// Tag specialization
+// Specializations for tag type
 template< typename RP , typename Functor , typename Tag >
 struct apply_impl<2,RP,Functor,Tag>
 {
@@ -193,14 +195,15 @@ struct apply_impl<2,RP,Functor,Tag>
     for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
       const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
       if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+
         for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
           const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
           if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
             m_func(Tag(), offset_0 , offset_1);
           }
-        } //end inner for
-      } //end outer if
-    } //end outer for
+        }
+      }
+    }
   }
   else {
 /*
@@ -215,14 +218,15 @@ struct apply_impl<2,RP,Functor,Tag>
     for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
       const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
       if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+
         for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
           const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
           if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
             m_func(Tag(), offset_0 , offset_1);
           }
-        } //end inner for
-      } //end outer if
-    } //end outer for
+        }
+      }
+    }
   }
 
   } //end exec_range
@@ -254,25 +258,28 @@ struct apply_impl<3,RP,Functor,void >
       for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) { 
         const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
         if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
+
           for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
             const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
             if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+
               for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
                 const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
                 if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
                   m_func(offset_0 , offset_1 , offset_2);
                 }
-              } //end inner for
-            } //end outer if
-          } //end outer for
-        } //end outer if
-      } //end outer for
+              }
+            }
+          }
+        }
+      }
     } 
 // LR
   else {
     for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
       const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
       if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+
         for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
           const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
           if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
@@ -282,11 +289,11 @@ struct apply_impl<3,RP,Functor,void >
               if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
                 m_func(offset_0 , offset_1 , offset_2);
               }
-            } //end inner for
-          } //end outer if
-        } //end inner for
-      } //end outer if
-    } //end outer for
+            }
+          }
+        }
+      }
+    }
   }
 
   } //end exec_range
@@ -294,10 +301,9 @@ struct apply_impl<3,RP,Functor,void >
 private:
   const RP & m_rp;
   const Functor & m_func;
-
 };
 
-// Tag specialization
+// Specializations for void tag type
 template< typename RP , typename Functor , typename Tag >
 struct apply_impl<3,RP,Functor,Tag>
 {
@@ -313,31 +319,34 @@ struct apply_impl<3,RP,Functor,Tag>
   void exec_range() const
   {
     if (RP::inner_direction == RP::Left) {
-      // Loop over size maxnumblocks until full range covered
       for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) { 
         const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
         if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
+
           for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
             const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
             if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+
               for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
                 const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
                 if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
                   m_func(Tag(), offset_0 , offset_1 , offset_2);
                 }
-              } //end inner for
-            } //end inner for
-          } //end outer if
-        } //end outer if
-      } //end outer for
+              }
+            }
+          }
+        }
+      }
     }
     else {
       for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
         const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
         if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+
           for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
             const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
             if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+
               for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) { 
                 const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
                 if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
@@ -345,9 +354,9 @@ struct apply_impl<3,RP,Functor,Tag>
                 }
               }
             }
-          } //end inner for
-        } //end outer if
-      } //end outer for
+          }
+        }
+      }
     }
 
   } //end exec_range
@@ -376,8 +385,6 @@ struct apply_impl<4,RP,Functor,void >
   {
 // LL
     if (RP::inner_direction == RP::Left) {
-      // Loop over size maxnumblocks until full range covered
-
       const index_type numbl0 = ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0];
       const index_type numbl1 = ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1];
       const index_type tile_id0 = blockIdx.x % numbl0;
@@ -406,15 +413,14 @@ struct apply_impl<4,RP,Functor,void >
                     }
                   }
                 }
-              } //end inner for
-            } //end inner for
-          } //end outer if
-        } //end outer if
-      } //end outer for
+              }
+            }
+          }
+        }
+      }
     }
 // LR
     else {
-
       const index_type numbl0 = ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0];
       const index_type numbl1 = ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1];
       const index_type tile_id0 = blockIdx.x / numbl1;
@@ -425,12 +431,15 @@ struct apply_impl<4,RP,Functor,void >
       for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) { 
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
         if ( offset_0 < m_rp.m_upper[0] && thr_id0 < m_rp.m_tile[0] ) {
+
           for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) { 
             const index_type offset_1 = j*m_rp.m_tile[1] + thr_id1;
             if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
+
               for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) { 
                 const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.y;
                 if ( offset_2 < m_rp.m_upper[2] && threadIdx.y < m_rp.m_tile[2] ) {
+
                   for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) { 
                     const index_type offset_3 = tile_id3*m_rp.m_tile[3] + threadIdx.z;
                     if ( offset_3 < m_rp.m_upper[3] && threadIdx.z < m_rp.m_tile[3] ) {
@@ -438,11 +447,11 @@ struct apply_impl<4,RP,Functor,void >
                     }
                   }
                 }
-              } //end inner for
-            } //end outer if
-          } //end inner for
-        } //end outer if
-      } //end outer for
+              }
+            }
+          }
+        }
+      }
     }
 
   } //end exec_range
@@ -450,10 +459,9 @@ struct apply_impl<4,RP,Functor,void >
 private:
   const RP & m_rp;
   const Functor & m_func;
-
 };
 
-// Tag specialization
+// Specializations for void tag type
 template< typename RP , typename Functor , typename Tag >
 struct apply_impl<4,RP,Functor,Tag>
 {
@@ -469,8 +477,6 @@ struct apply_impl<4,RP,Functor,Tag>
   void exec_range() const
   {
     if (RP::inner_direction == RP::Left) {
-      // Loop over size maxnumblocks until full range covered
-
       const index_type numbl0 = ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0];
       const index_type numbl1 = ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1];
       const index_type tile_id0 = blockIdx.x % numbl0;
@@ -485,10 +491,12 @@ struct apply_impl<4,RP,Functor,Tag>
           for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) { 
             const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.y;
             if ( offset_2 < m_rp.m_upper[2] && threadIdx.y < m_rp.m_tile[2] ) {
+
               //FIX: Stride by the min of numbl and 65535
               for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) {  //what do we stride by?
                 const index_type offset_1 = j*m_rp.m_tile[1] + thr_id1;
                 if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
+
                 //FIX: Stride by the min of numbl and 65535
                   for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) {  //what do we stride by?
                     const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
@@ -497,14 +505,13 @@ struct apply_impl<4,RP,Functor,Tag>
                     }
                   }
                 }
-              } //end inner for
-            } //end inner for
-          } //end outer if
-        } //end outer if
-      } //end outer for
+              }
+            }
+          }
+        }
+      }
     }
     else {
-
       const index_type numbl0 = ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0];
       const index_type numbl1 = ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1];
       const index_type tile_id0 = blockIdx.x / numbl1;
@@ -515,12 +522,15 @@ struct apply_impl<4,RP,Functor,Tag>
       for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) { 
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
         if ( offset_0 < m_rp.m_upper[0] && thr_id0 < m_rp.m_tile[0] ) {
+
           for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) { 
             const index_type offset_1 = tile_id1*m_rp.m_tile[1] + thr_id1;
             if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
+
               for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) { 
                 const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.y;
                 if ( offset_2 < m_rp.m_upper[2] && threadIdx.y < m_rp.m_tile[2] ) {
+
                   for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) { 
                     const index_type offset_3 = tile_id3*m_rp.m_tile[3] + threadIdx.z;
                     if ( offset_3 < m_rp.m_upper[3] && threadIdx.z < m_rp.m_tile[3] ) {
@@ -528,11 +538,11 @@ struct apply_impl<4,RP,Functor,Tag>
                     }
                   }
                 }
-              } //end inner for
-            } //end outer if
-          } //end inner for
-        } //end outer if
-      } //end outer for
+              }
+            }
+          }
+        }
+      }
     }
 
   } //end exec_range
@@ -561,8 +571,6 @@ struct apply_impl<5,RP,Functor,void >
   {
 // LL
     if (RP::inner_direction == RP::Left) {
-      // Loop over size maxnumblocks until full range covered
-
       const index_type numbl0 = ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0];
       const index_type numbl1 = ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1];
       const index_type tile_id0 = blockIdx.x % numbl0;
@@ -604,11 +612,11 @@ struct apply_impl<5,RP,Functor,void >
                     }
                   }
                 }
-              } //end inner for
-            } //end inner for
-          } //end outer if
-        } //end outer if
-      } //end outer for
+              }
+            }
+          }
+        }
+      }
     }
 // LR
     else {
@@ -629,6 +637,7 @@ struct apply_impl<5,RP,Functor,void >
       for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) { 
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
         if ( offset_0 < m_rp.m_upper[0] && thr_id0 < m_rp.m_tile[0] ) {
+
           for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) { 
             const index_type offset_1 = j*m_rp.m_tile[1] + thr_id1;
             if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
@@ -650,11 +659,11 @@ struct apply_impl<5,RP,Functor,void >
                     }
                   }
                 }
-              } //end inner for
-            } //end outer if
-          } //end inner for
-        } //end outer if
-      } //end outer for
+              }
+            }
+          }
+        }
+      }
     }
 
   } //end exec_range
@@ -662,7 +671,6 @@ struct apply_impl<5,RP,Functor,void >
 private:
   const RP & m_rp;
   const Functor & m_func;
-
 };
 
 // Specializations for tag type
@@ -682,8 +690,6 @@ struct apply_impl<5,RP,Functor,Tag>
   {
 // LL
     if (RP::inner_direction == RP::Left) {
-      // Loop over size maxnumblocks until full range covered
-
       const index_type numbl0 = ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0];
       const index_type numbl1 = ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1];
       const index_type tile_id0 = blockIdx.x % numbl0;
@@ -725,11 +731,11 @@ struct apply_impl<5,RP,Functor,Tag>
                     }
                   }
                 }
-              } //end inner for
-            } //end inner for
-          } //end outer if
-        } //end outer if
-      } //end outer for
+              }
+            }
+          }
+        }
+      }
     }
 // LR
     else {
@@ -750,6 +756,7 @@ struct apply_impl<5,RP,Functor,Tag>
       for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) { 
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
         if ( offset_0 < m_rp.m_upper[0] && thr_id0 < m_rp.m_tile[0] ) {
+
           for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) { 
             const index_type offset_1 = j*m_rp.m_tile[1] + thr_id1;
             if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
@@ -761,6 +768,7 @@ struct apply_impl<5,RP,Functor,Tag>
                   for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += gridDim.z ) { 
                     const index_type offset_3 = l*m_rp.m_tile[3] + thr_id3;
                     if ( offset_3 < m_rp.m_upper[3] && thr_id3 < m_rp.m_tile[3] ) {
+
                       for ( index_type tile_id4 = blockIdx.z; tile_id4 < m_rp.m_tile_end[4]; tile_id4 += gridDim.z ) { 
                         const index_type offset_4 = tile_id4*m_rp.m_tile[4] + threadIdx.z;
                         if ( offset_4 < m_rp.m_upper[4] && threadIdx.z < m_rp.m_tile[4] ) {
@@ -770,11 +778,11 @@ struct apply_impl<5,RP,Functor,Tag>
                     }
                   }
                 }
-              } //end inner for
-            } //end outer if
-          } //end inner for
-        } //end outer if
-      } //end outer for
+              }
+            }
+          }
+        }
+      }
     }
 
   } //end exec_range
@@ -782,9 +790,7 @@ struct apply_impl<5,RP,Functor,Tag>
 private:
   const RP & m_rp;
   const Functor & m_func;
-
 };
-
 
 
 //Rank 6
@@ -805,8 +811,6 @@ struct apply_impl<6,RP,Functor,void >
   {
 // LL
     if (RP::inner_direction == RP::Left) {
-      // Loop over size maxnumblocks until full range covered
-
       const index_type numbl0 = ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0];
       const index_type numbl1 = ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1];
       const index_type tile_id0 = blockIdx.x % numbl0;
@@ -861,11 +865,11 @@ struct apply_impl<6,RP,Functor,void >
                     }
                   }
                 }
-              } //end inner for
-            } //end inner for
-          } //end outer if
-        } //end outer if
-      } //end outer for
+              }
+            }
+          }
+        }
+      }
     }
 // LR
     else {
@@ -908,6 +912,7 @@ struct apply_impl<6,RP,Functor,void >
                       for ( index_type m = tile_id4; m < m_rp.m_tile_end[4]; m += numbl4 ) { 
                         const index_type offset_4 = m*m_rp.m_tile[4] + thr_id4;
                         if ( offset_4 < m_rp.m_upper[4] && thr_id4 < m_rp.m_tile[4] ) {
+
                           for ( index_type n = tile_id5; n < m_rp.m_tile_end[5]; n += numbl5 ) { 
                             const index_type offset_5 = n*m_rp.m_tile[5] + thr_id5;
                             if ( offset_5 < m_rp.m_upper[5] && thr_id5 < m_rp.m_tile[5] ) {
@@ -919,11 +924,11 @@ struct apply_impl<6,RP,Functor,void >
                     }
                   }
                 }
-              } //end inner for
-            } //end outer if
-          } //end inner for
-        } //end outer if
-      } //end outer for
+              }
+            }
+          }
+        }
+      }
     }
 
   } //end exec_range
@@ -931,7 +936,6 @@ struct apply_impl<6,RP,Functor,void >
 private:
   const RP & m_rp;
   const Functor & m_func;
-
 };
 
 // Specializations for tag type
@@ -951,8 +955,6 @@ struct apply_impl<6,RP,Functor,Tag>
   {
 // LL
     if (RP::inner_direction == RP::Left) {
-      // Loop over size maxnumblocks until full range covered
-
       const index_type numbl0 = ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0];
       const index_type numbl1 = ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1];
       const index_type tile_id0 = blockIdx.x % numbl0;
@@ -1007,11 +1009,11 @@ struct apply_impl<6,RP,Functor,Tag>
                     }
                   }
                 }
-              } //end inner for
-            } //end inner for
-          } //end outer if
-        } //end outer if
-      } //end outer for
+              }
+            }
+          }
+        }
+      }
     }
 // LR
     else {
@@ -1039,6 +1041,7 @@ struct apply_impl<6,RP,Functor,Tag>
       for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) { 
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
         if ( offset_0 < m_rp.m_upper[0] && thr_id0 < m_rp.m_tile[0] ) {
+
           for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) { 
             const index_type offset_1 = j*m_rp.m_tile[1] + thr_id1;
             if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
@@ -1054,6 +1057,7 @@ struct apply_impl<6,RP,Functor,Tag>
                       for ( index_type m = tile_id4; m < m_rp.m_tile_end[4]; m += numbl4 ) { 
                         const index_type offset_4 = m*m_rp.m_tile[4] + thr_id4;
                         if ( offset_4 < m_rp.m_upper[4] && thr_id4 < m_rp.m_tile[4] ) {
+
                           for ( index_type n = tile_id5; n < m_rp.m_tile_end[5]; n += numbl5 ) { 
                             const index_type offset_5 = n*m_rp.m_tile[5] + thr_id5;
                             if ( offset_5 < m_rp.m_upper[5] && thr_id5 < m_rp.m_tile[5] ) {
@@ -1065,11 +1069,11 @@ struct apply_impl<6,RP,Functor,Tag>
                     }
                   }
                 }
-              } //end inner for
-            } //end outer if
-          } //end inner for
-        } //end outer if
-      } //end outer for
+              }
+            }
+          }
+        }
+      }
     }
 
   } //end exec_range
@@ -1077,7 +1081,6 @@ struct apply_impl<6,RP,Functor,Tag>
 private:
   const RP & m_rp;
   const Functor & m_func;
-
 };
 
 // ----------------------------------------------------------------------------------
