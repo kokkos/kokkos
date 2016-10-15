@@ -157,8 +157,7 @@ struct ViewTraits< typename std::enable_if< Kokkos::Impl::is_space<Space>::value
 
   typedef typename Space::execution_space                   execution_space ;
   typedef typename Space::memory_space                      memory_space ;
-  typedef typename Kokkos::Impl::is_space< Space >::host_mirror_space
-      HostMirrorSpace ;
+  typedef typename Kokkos::Impl::HostMirror< Space >::Space HostMirrorSpace ;
   typedef typename execution_space::array_layout            array_layout ;
   typedef typename ViewTraits<void,Prop...>::memory_traits  memory_traits ;
 };
@@ -214,7 +213,7 @@ private:
     std::conditional
       < ! std::is_same< typename prop::HostMirrorSpace , void >::value
       , typename prop::HostMirrorSpace
-      , typename Kokkos::Impl::is_space< ExecutionSpace >::host_mirror_space
+      , typename Kokkos::Impl::HostMirror< ExecutionSpace >::Space
       >::type
       HostMirrorSpace ;
 

@@ -2689,15 +2689,16 @@ public:
 template< class DstTraits , class SrcTraits >
 class ViewMapping< DstTraits , SrcTraits ,
   typename std::enable_if<(
-    std::is_same< typename DstTraits::memory_space , typename SrcTraits::memory_space >::value
-    &&
+    /* default mappings */
     std::is_same< typename DstTraits::specialize , void >::value
     &&
     std::is_same< typename SrcTraits::specialize , void >::value
     &&
     (
+      /* same layout */
       std::is_same< typename DstTraits::array_layout , typename SrcTraits::array_layout >::value
       ||
+      /* known layout */
       (
         (
           std::is_same< typename DstTraits::array_layout , Kokkos::LayoutLeft >::value ||
@@ -2715,6 +2716,16 @@ class ViewMapping< DstTraits , SrcTraits ,
   )>::type >
 {
 private:
+
+  enum { is_assignable_space =
+#if 1
+   Kokkos::Impl::MemorySpaceAccess
+     < typename DstTraits::memory_space
+     , typename SrcTraits::memory_space >::assignable };
+#else
+   std::is_same< typename DstTraits::memory_space
+               , typename SrcTraits::memory_space >::value };
+#endif
 
   enum { is_assignable_value_type =
     std::is_same< typename DstTraits::value_type
@@ -2738,7 +2749,8 @@ private:
 
 public:
 
-  enum { is_assignable = is_assignable_value_type &&
+  enum { is_assignable = is_assignable_space &&
+                         is_assignable_value_type &&
                          is_assignable_dimension &&
                          is_assignable_layout };
 
@@ -2749,6 +2761,9 @@ public:
   KOKKOS_INLINE_FUNCTION
   static void assign( DstType & dst , const SrcType & src , const TrackType & src_track )
     {
+      static_assert( is_assignable_space
+                   , "View assignment must have compatible spaces" );
+
       static_assert( is_assignable_value_type
                    , "View assignment must have same value type or const = non-const" );
 

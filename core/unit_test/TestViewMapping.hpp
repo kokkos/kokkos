@@ -996,7 +996,7 @@ void test_view_mapping()
 #if ! defined ( KOKKOS_CUDA_USE_LAMBDA )
     /* Cannot launch host lambda when CUDA lambda is enabled */
 
-    typedef typename Kokkos::Impl::is_space< Space >::host_execution_space
+    typedef typename Kokkos::Impl::HostMirror< Space >::Space::execution_space
       host_exec_space ;
 
     Kokkos::parallel_for(

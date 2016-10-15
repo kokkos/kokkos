@@ -129,6 +129,50 @@ TEST_F( cuda , compiler_macros )
   ASSERT_TRUE( ( TestCompilerMacros::Test< Kokkos::Cuda >() ) );
 }
 
+TEST_F( cuda , space_access )
+{
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::HostSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::CudaSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::CudaUVMSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::CudaUVMSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaHostPinnedSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::CudaHostPinnedSpace >::assignable , "" );
+
+  static_assert(
+    std::is_same< Kokkos::Impl::HostMirror< Kokkos::Cuda >::Space
+                , Kokkos::HostSpace >::value , "" );
+
+  static_assert(
+    std::is_same< Kokkos::Impl::HostMirror< Kokkos::CudaSpace >::Space
+                , Kokkos::HostSpace >::value , "" );
+
+  static_assert(
+    std::is_same< Kokkos::Impl::HostMirror< Kokkos::CudaUVMSpace >::Space
+                , Kokkos::Device< Kokkos::HostSpace::execution_space
+                                , Kokkos::CudaUVMSpace > >::value , "" );
+
+  static_assert(
+    std::is_same< Kokkos::Impl::HostMirror< Kokkos::CudaHostPinnedSpace >::Space
+                , Kokkos::CudaHostPinnedSpace >::value , "" );
+
+  static_assert(
+    std::is_same< Kokkos::Device< Kokkos::HostSpace::execution_space
+                                , Kokkos::CudaUVMSpace >
+                , Kokkos::Device< Kokkos::HostSpace::execution_space
+                                , Kokkos::CudaUVMSpace > >::value , "" );
+}
+
 TEST_F( cuda, uvm )
 {
   if ( Kokkos::CudaUVMSpace::available() ) {

@@ -226,6 +226,117 @@ public:
 namespace Kokkos {
 namespace Impl {
 
+static_assert( Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::CudaSpace >::assignable , "" );
+static_assert( Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::CudaUVMSpace >::assignable , "" );
+static_assert( Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::CudaHostPinnedSpace >::assignable , "" );
+
+template<>
+struct MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaSpace > {
+  enum { assignable = false };
+  enum { accessible = false };
+  enum { deepcopy   = true };
+};
+
+template<>
+struct MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaUVMSpace > {
+  // HostSpace::execution_space != CudaUVMSpace::execution_space
+  enum { assignable = false };
+  enum { accessible = true };
+  enum { deepcopy   = true };
+};
+
+template<>
+struct MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaHostPinnedSpace > {
+  // HostSpace::execution_space == CudaHostPinnedSpace::execution_space
+  enum { assignable = true };
+  enum { accessible = true };
+  enum { deepcopy   = true };
+};
+
+
+template<>
+struct MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::HostSpace > {
+  enum { assignable = false };
+  enum { accessible = false };
+  enum { deepcopy   = true };
+};
+
+template<>
+struct MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::CudaUVMSpace > {
+  enum { assignable = true };
+  enum { accessible = true };
+  enum { deepcopy   = true };
+};
+
+template<>
+struct MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::CudaHostPinnedSpace > {
+  // CudaSpace::execution_space != CudaHostPinnedSpace::execution_space
+  enum { assignable = false };
+  enum { accessible = true }; // CudaSpace::execution_space
+  enum { deepcopy   = true };
+};
+
+
+template<>
+struct MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::HostSpace > {
+  // CudaUVMSpace::execution_space == Cuda
+  // Cuda cannot access HostSpace
+  enum { assignable = false };
+  enum { accessible = false };
+  enum { deepcopy   = true };
+};
+
+template<>
+struct MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::CudaSpace > {
+  // CudaUVMSpace::execution_space == CudaSpace::execution_space
+  // Can access CudaUVMSpace from Host but cannot access CudaSpace from Host
+  enum { assignable = false };
+
+  // CudaUVMSpace::execution_space can access CudaSpace
+  enum { accessible = true };
+  enum { deepcopy   = true };
+};
+
+template<>
+struct MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::CudaHostPinnedSpace > {
+  // CudaUVMSpace::execution_space != CudaHostPinnedSpace::execution_space
+  enum { assignable = false };
+  enum { accessible = true }; // CudaUVMSpace::execution_space
+  enum { deepcopy   = true };
+};
+
+
+template<>
+struct MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::HostSpace > {
+  // Can access CudaHostPinnedSpace from Cuda
+  // Cannot access HostSpace from Cuda
+  enum { assignable = false }; // Cannot access from Cuda
+  enum { accessible = false }; // CudaHostPinnedSpace::execution_space
+  enum { deepcopy   = true };
+};
+
+template<>
+struct MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::CudaSpace > {
+  enum { assignable = false }; // Cannot access from Host
+  enum { accessible = false };
+  enum { deepcopy   = true };
+};
+
+template<>
+struct MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::CudaUVMSpace > {
+  enum { assignable = false }; // different execution_space
+  enum { accessible = true };  // same accessibility
+  enum { deepcopy   = true };
+};
+
+}} // namespace Kokkos::Impl
+
+/*--------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------*/
+
+namespace Kokkos {
+namespace Impl {
+
 void DeepCopyAsyncCuda( void * dst , const void * src , size_t n);
 
 template<> struct DeepCopy< CudaSpace , CudaSpace , Cuda>

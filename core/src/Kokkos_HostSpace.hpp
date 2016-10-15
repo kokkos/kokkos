@@ -50,6 +50,7 @@
 #include <typeinfo>
 
 #include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_Concepts.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 
 #include <impl/Kokkos_Traits.hpp>
@@ -161,6 +162,47 @@ private:
   friend class Kokkos::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > ;
 };
 
+} // namespace Kokkos
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+namespace Impl {
+
+static_assert( Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::HostSpace >::assignable , "" );
+
+
+template< typename S >
+struct HostMirror {
+private:
+
+  // If input execution space can access HostSpace then keep it.
+  // Example: Kokkos::OpenMP can access, Kokkos::Cuda cannot
+  enum { keep_exe = Kokkos::Impl::MemorySpaceAccess
+    < typename S::execution_space::memory_space , Kokkos::HostSpace >
+      ::accessible };
+
+  // If HostSpace can access memory space then keep it.
+  // Example:  Cannot access Kokkos::CudaSpace, can access Kokkos::CudaUVMSpace
+  enum { keep_mem = Kokkos::Impl::MemorySpaceAccess
+    < Kokkos::HostSpace , typename S::memory_space >::accessible };
+
+public:
+
+  typedef typename std::conditional
+    < keep_exe && keep_mem /* Can keep whole space */
+    , S
+    , typename std::conditional
+        < keep_mem /* Can keep memory space, use default Host execution space */
+        , Kokkos::Device< Kokkos::HostSpace::execution_space
+                        , typename S::memory_space >
+        , Kokkos::HostSpace
+        >::type
+    >::type  Space ;
+};
+
+} // namespace Impl
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
