@@ -1562,7 +1562,7 @@ struct TestReducers {
        if(h_values(i)<reference_min) {
          reference_min = h_values(i);
          reference_minloc = i;
-       }
+       } 
      }
      Kokkos::deep_copy(values,h_values);
 
@@ -1578,8 +1578,16 @@ struct TestReducers {
        Kokkos::Experimental::MinMaxLoc<Scalar,int> reducer_scalar(minmax_scalar);
        Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0,N),f,reducer_scalar);
        ASSERT_EQ(minmax_scalar.min_val,reference_min);
+       for(int i=0; i<N; i++) {
+         if((i == minmax_scalar.min_loc) && (h_values(i)==reference_min))
+           reference_minloc = i;
+       }   
        ASSERT_EQ(minmax_scalar.min_loc,reference_minloc);
        ASSERT_EQ(minmax_scalar.max_val,reference_max);
+       for(int i=0; i<N; i++) {
+         if((i == minmax_scalar.max_loc) && (h_values(i)==reference_max))
+           reference_maxloc = i;
+       }
        ASSERT_EQ(minmax_scalar.max_loc,reference_maxloc);
        value_type minmax_scalar_view = reducer_scalar.result_view()();
        ASSERT_EQ(minmax_scalar_view.min_val,reference_min);
