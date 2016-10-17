@@ -302,6 +302,61 @@ struct is_integral_extent
                , "subview argument must be either integral or integral extent" );
 };
 
+// Rules for subview arguments and layouts matching
+
+template<class LayoutDest, class LayoutSrc, int RankDest, int RankSrc, int CurrentArg, class ... SubViewArgs>
+struct SubviewLegalArgsCompileTime;
+
+// Rules which allow LayoutLeft to LayoutLeft assignment
+
+template<int RankDest, int RankSrc, int CurrentArg, class Arg, class ... SubViewArgs>
+struct SubviewLegalArgsCompileTime<Kokkos::LayoutLeft, Kokkos::LayoutLeft, RankDest, RankSrc, CurrentArg, Arg, SubViewArgs...> {
+  enum { value      =(((CurrentArg==RankDest-1) && (Kokkos::Experimental::Impl::is_integral_extent_type<Arg>::value)) ||
+                      ((CurrentArg>=RankDest) && (std::is_integral<Arg>::value)) ||
+                      ((CurrentArg<RankDest) && (std::is_same<Arg,Kokkos::Impl::ALL_t>::value)) ||
+                      ((CurrentArg==0) && (Kokkos::Experimental::Impl::is_integral_extent_type<Arg>::value))
+                     ) && (SubviewLegalArgsCompileTime<Kokkos::LayoutLeft, Kokkos::LayoutLeft, RankDest, RankSrc, CurrentArg+1, SubViewArgs...>::value)};
+};
+
+template<int RankDest, int RankSrc, int CurrentArg, class Arg>
+struct SubviewLegalArgsCompileTime<Kokkos::LayoutLeft, Kokkos::LayoutLeft, RankDest, RankSrc, CurrentArg, Arg> {
+  enum { value = ((CurrentArg==RankDest-1) || (std::is_integral<Arg>::value)) &&
+                 (CurrentArg==RankSrc-1) };
+};
+
+// Rules which allow LayoutRight to LayoutRight assignment 
+
+template<int RankDest, int RankSrc, int CurrentArg, class Arg, class ... SubViewArgs>
+struct SubviewLegalArgsCompileTime<Kokkos::LayoutRight, Kokkos::LayoutRight, RankDest, RankSrc, CurrentArg, Arg, SubViewArgs...> {
+  enum { value      =(((CurrentArg==RankSrc-RankDest) && (Kokkos::Experimental::Impl::is_integral_extent_type<Arg>::value)) ||
+                      ((CurrentArg<RankSrc-RankDest) && (std::is_integral<Arg>::value)) ||
+                      ((CurrentArg>=RankSrc-RankDest) && (std::is_same<Arg,Kokkos::Impl::ALL_t>::value))
+                     ) && (SubviewLegalArgsCompileTime<Kokkos::LayoutRight, Kokkos::LayoutRight, RankDest, RankSrc, CurrentArg+1, SubViewArgs...>::value)};
+};
+
+template<int RankDest, int RankSrc, int CurrentArg, class Arg>
+struct SubviewLegalArgsCompileTime<Kokkos::LayoutRight, Kokkos::LayoutRight, RankDest, RankSrc, CurrentArg, Arg> {
+  enum { value = ((CurrentArg==RankSrc-1) && (std::is_same<Arg,Kokkos::Impl::ALL_t>::value)) };
+};
+
+// Rules which allow assignment to LayoutStride
+
+template<int RankDest, int RankSrc, int CurrentArg, class ... SubViewArgs>
+struct SubviewLegalArgsCompileTime<Kokkos::LayoutStride,Kokkos::LayoutLeft,RankDest,RankSrc,CurrentArg,SubViewArgs...> {
+  enum { value = true };
+};
+
+template<int RankDest, int RankSrc, int CurrentArg, class ... SubViewArgs>
+struct SubviewLegalArgsCompileTime<Kokkos::LayoutStride,Kokkos::LayoutRight,RankDest,RankSrc,CurrentArg,SubViewArgs...> {
+  enum { value = true };
+};
+
+template<int RankDest, int RankSrc, int CurrentArg, class ... SubViewArgs>
+struct SubviewLegalArgsCompileTime<Kokkos::LayoutStride,Kokkos::LayoutStride,RankDest,RankSrc,CurrentArg,SubViewArgs...> {
+  enum { value = true };
+};
+
+
 template< unsigned DomainRank , unsigned RangeRank >
 struct SubviewExtents {
 private:
@@ -1226,7 +1281,12 @@ public:
       const SubviewExtents< DimRHS::rank , dimension_type::rank > & sub )
     : m_dim( sub.range_extent(0)
            , sub.range_extent(1)
-           , 0, 0, 0, 0, 0, 0 )
+           , sub.range_extent(2)
+           , sub.range_extent(3)
+           , sub.range_extent(4)
+           , sub.range_extent(5)
+           , sub.range_extent(6)
+           , sub.range_extent(7))
     , m_stride( ( 1 == sub.range_index(1) ? rhs.stride_1() :
                 ( 2 == sub.range_index(1) ? rhs.stride_2() :
                 ( 3 == sub.range_index(1) ? rhs.stride_3() :
@@ -1235,10 +1295,10 @@ public:
                 ( 6 == sub.range_index(1) ? rhs.stride_6() :
                 ( 7 == sub.range_index(1) ? rhs.stride_7() : 0 ))))))))
     {
-      static_assert( ( 2 == dimension_type::rank ) &&
-                     ( 2 == dimension_type::rank_dynamic ) &&
-                     ( 2 <= DimRHS::rank )
-                   , "ViewOffset subview construction requires compatible rank" );
+      //static_assert( ( 2 == dimension_type::rank ) &&
+      //               ( 2 == dimension_type::rank_dynamic ) &&
+      //               ( 2 <= DimRHS::rank )
+      //             , "ViewOffset subview construction requires compatible rank" );
     }
 };
 
@@ -1705,7 +1765,12 @@ public:
     )
     : m_dim( sub.range_extent(0)
            , sub.range_extent(1)
-           , 0, 0, 0, 0, 0, 0 ) 
+           , sub.range_extent(2)
+           , sub.range_extent(3)
+           , sub.range_extent(4)
+           , sub.range_extent(5)
+           , sub.range_extent(6)
+           , sub.range_extent(7))
     , m_stride( 0 == sub.range_index(0) ? rhs.stride_0() : (
                 1 == sub.range_index(0) ? rhs.stride_1() : (
                 2 == sub.range_index(0) ? rhs.stride_2() : (
@@ -1714,14 +1779,16 @@ public:
                 5 == sub.range_index(0) ? rhs.stride_5() : (
                 6 == sub.range_index(0) ? rhs.stride_6() : 0 )))))))
     {
-      // This subview must be 2 == rank and 2 == rank_dynamic
+/*      // This subview must be 2 == rank and 2 == rank_dynamic
       // due to only having stride #0.
       // The source dimension #0 must be non-zero for stride-one leading dimension.
       // At most subsequent dimension can be non-zero.
 
-      static_assert( ( 2 == dimension_type::rank ) &&
-                     ( 2 <= DimRHS::rank )
+      static_assert( (( 2 == dimension_type::rank ) &&
+                      ( 2 <= DimRHS::rank )) ||
+                     ()
                    , "ViewOffset subview construction requires compatible rank" );
+*/
     }
 };
 
@@ -2777,6 +2844,9 @@ private:
   typedef typename std::conditional<
       ( /* Same array layout IF */
         ( rank == 0 ) /* output rank zero */
+        ||
+        SubviewLegalArgsCompileTime<typename SrcTraits::array_layout, typename SrcTraits::array_layout,
+                                    rank, SrcTraits::rank, 0, Args...>::value 
         ||
         // OutputRank 1 or 2, InputLayout Left, Interval 0
         // because single stride one or second index has a stride.
