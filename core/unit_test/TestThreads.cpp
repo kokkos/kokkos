@@ -244,6 +244,18 @@ TEST_F( threads, view_subview_3d_from_5d ) {
   TestViewSubview::test_3d_subview_5d< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
 }
 
+TEST_F( threads, view_subview_layoutleft_to_layoutleft) {
+  TestViewSubview::test_layoutleft_to_layoutleft< Kokkos::Threads >(); 
+  TestViewSubview::test_layoutleft_to_layoutleft< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::Atomic> >(); 
+  TestViewSubview::test_layoutleft_to_layoutleft< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::RandomAccess> >(); 
+}
+
+TEST_F( threads, view_subview_layoutright_to_layoutright) {
+  TestViewSubview::test_layoutright_to_layoutright< Kokkos::Threads >();
+  TestViewSubview::test_layoutright_to_layoutright< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestViewSubview::test_layoutright_to_layoutright< Kokkos::Threads , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
+}
+
 TEST_F( threads, view_aggregate ) {
   TestViewAggregate< Kokkos::Threads >();
 }

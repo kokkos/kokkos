@@ -173,4 +173,16 @@ TEST_F( cuda, view_subview_3d_from_5d ) {
   TestViewSubview::test_3d_subview_5d< Kokkos::CudaUVMSpace , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
 }
 
+TEST_F( cuda, view_subview_layoutleft_to_layoutleft) {
+  TestViewSubview::test_layoutleft_to_layoutleft< Kokkos::Cuda >();
+  TestViewSubview::test_layoutleft_to_layoutleft< Kokkos::Cuda , Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestViewSubview::test_layoutleft_to_layoutleft< Kokkos::Cuda , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
+}
+
+TEST_F( cuda, view_subview_layoutright_to_layoutright) {
+  TestViewSubview::test_layoutright_to_layoutright< Kokkos::Cuda >();
+  TestViewSubview::test_layoutright_to_layoutright< Kokkos::Cuda , Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestViewSubview::test_layoutright_to_layoutright< Kokkos::Cuda , Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
+}
+
 }
