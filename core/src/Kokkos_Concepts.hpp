@@ -46,6 +46,9 @@
 
 #include <type_traits>
 
+// Needed for 'is_space<S>::host_mirror_space
+#include <Kokkos_Core_fwd.hpp>
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -176,6 +179,34 @@ public:
 
   typedef typename is_exe::space execution_space ;
   typedef typename is_mem::space memory_space ;
+
+  // For backward compatibility, deprecated in favor of
+  // Kokkos::Impl::HostMirror<S>::host_mirror_space
+
+  typedef typename std::conditional
+    < std::is_same< memory_space , Kokkos::HostSpace >::value
+#if defined( KOKKOS_HAVE_CUDA )
+      || std::is_same< memory_space , Kokkos::CudaUVMSpace >::value
+      || std::is_same< memory_space , Kokkos::CudaHostPinnedSpace >::value
+#endif /* #if defined( KOKKOS_HAVE_CUDA ) */
+    , memory_space
+    , Kokkos::HostSpace
+    >::type  host_memory_space ;
+
+#if defined( KOKKOS_HAVE_CUDA )
+  typedef typename std::conditional
+    < std::is_same< execution_space , Kokkos::Cuda >::value
+    , Kokkos::DefaultHostExecutionSpace , execution_space
+    >::type  host_execution_space ;
+#else
+  typedef execution_space  host_execution_space ;
+#endif
+
+  typedef typename std::conditional
+    < std::is_same< execution_space , host_execution_space >::value &&
+      std::is_same< memory_space ,    host_memory_space    >::value
+    , T , Kokkos::Device< host_execution_space , host_memory_space >
+    >::type  host_mirror_space ;
 };
 
 // For backward compatiblity
