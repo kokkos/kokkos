@@ -433,26 +433,32 @@ struct MDFunctor< MDRange, Functor, void >
                                                                            , void  
                                                                            >;
 
-  KOKKOS_INLINE_FUNCTION
+//  KOKKOS_INLINE_FUNCTION
+  inline
   MDFunctor( MDRange const& range, Functor const& f )
     : m_range( range )
     , m_func( f )
   {}
 
 
-  KOKKOS_INLINE_FUNCTION
+//  KOKKOS_INLINE_FUNCTION
+  inline
   MDFunctor( MDFunctor const& ) = default;
 
-  KOKKOS_INLINE_FUNCTION
+//  KOKKOS_INLINE_FUNCTION
+  inline
   MDFunctor& operator=( MDFunctor const& ) = default;
 
-  KOKKOS_INLINE_FUNCTION
+//  KOKKOS_INLINE_FUNCTION
+  inline
   MDFunctor( MDFunctor && ) = default;
 
-  KOKKOS_INLINE_FUNCTION
+//  KOKKOS_INLINE_FUNCTION
+  inline
   MDFunctor& operator=( MDFunctor && ) = default;
 
-  KOKKOS_FORCEINLINE_FUNCTION
+//  KOKKOS_FORCEINLINE_FUNCTION
+  inline
   void operator()(index_type t) const
   {
     iterate_type(m_range, m_func, t).apply();

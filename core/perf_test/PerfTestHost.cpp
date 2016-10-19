@@ -104,11 +104,11 @@ protected:
   }
 };
 
-TEST_F( host, mdrange_ll ) {
+TEST_F( host, mdrange_lr ) {
   EXPECT_NO_THROW( (run_test_mdrange<TestHostDevice , Kokkos::LayoutRight>( 5, 10, TestHostDeviceName )) );
 }
 
-TEST_F( host, mdrange_lr ) {
+TEST_F( host, mdrange_ll ) {
   EXPECT_NO_THROW( (run_test_mdrange<TestHostDevice , Kokkos::LayoutLeft>( 5, 10, TestHostDeviceName )) );
 }
 

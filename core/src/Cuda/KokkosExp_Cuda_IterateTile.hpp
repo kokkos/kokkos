@@ -1136,6 +1136,7 @@ public:
         , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks ) 
         , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.z - 1 ) / block.z , maxblocks ) 
         );
+
       CudaLaunch< DeviceIterateTile >( *this , grid , block );
     }
     else if ( RP::rank == 4 )
@@ -1191,8 +1192,8 @@ public:
     else
     {
       printf(" Exceeded rank bounds with Cuda\n");
+      Kokkos::abort("Aborting");
     }
-//    CudaParallelLaunch< DeviceIterateTile >( *this , grid , block , 0 );
 
   } //end execute
 

@@ -112,22 +112,13 @@ struct MultiDimRangePerf3D
     double dt_min = 0;
 
     if ( std::is_same<TestLayout, Kokkos::LayoutRight>::value ) {
-      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Right,iterate_type::Right>, execution_space > policy_init({0,0,0},{icount,jcount,kcount},{1,1,1}); // Rank<3> for Init functor
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Right,iterate_type::Right>, execution_space > policy_init({0,0,0},{icount,jcount,kcount},{Ti,Tj,Tk}); 
 
-#if defined(KOKKOS_HAVE_CUDA) //Remove the Cuda-specific tile-sizes...
-    //TODO: Modify so user can provide the Cuda tile sizes
-    const int t0 = 4, t1 = 4, t2 = 16;
-
-    typedef typename Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Right, iterate_type::Right>, execution_space > MDRangeType;
-    using tile_type = typename MDRangeType::tile_type;
-    Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Right, iterate_type::Right>, execution_space > policy({{0,0,0}},{icount,jcount,kcount},{{t0,t1,t2}} ); //cuda
-
-#else
     typedef typename Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Right, iterate_type::Right>, execution_space > MDRangeType;
     using tile_type = typename MDRangeType::tile_type;
     using point_type = typename MDRangeType::point_type;
-    Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Right, iterate_type::Right>, execution_space > policy(point_type{{0,0,0}},point_type{{icount,jcount,kcount}},tile_type{{Ti,Tj,Tk}} ); //host
-#endif
+
+    Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Right, iterate_type::Right>, execution_space > policy(point_type{{0,0,0}},point_type{{icount,jcount,kcount}},tile_type{{Ti,Tj,Tk}} );
 
     Kokkos::Experimental::md_parallel_for( policy, Init(Atest, icount, jcount, kcount) );
     execution_space::fence();
@@ -165,17 +156,9 @@ struct MultiDimRangePerf3D
 
     } 
     else {
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Left,iterate_type::Left>, execution_space > policy_init({0,0,0},{icount,jcount,kcount},{Ti,Tj,Tk}); 
 
-      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Left,iterate_type::Left>, execution_space > policy_init({0,0,0},{icount,jcount,kcount},{1,1,1}); // Rank<3> for Init functor
-
-#if KOKKOS_HAVE_CUDA //Remove the Cuda-specific tile-sizes...
-    //TODO: Modify so user can provide the Cuda tile sizes
-    const int t0 = 16, t1 = 4, t2 = 4;
-
-    Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Left, iterate_type::Left>, execution_space > policy({0,0,0},{icount,jcount,kcount},{t0,t1,t2} ); //cuda
-#else
-    Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Left, iterate_type::Left>, execution_space > policy({0,0,0},{icount,jcount,kcount},{Ti,Tj,Tk} ); //host
-#endif
+    Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Left, iterate_type::Left>, execution_space > policy({0,0,0},{icount,jcount,kcount},{Ti,Tj,Tk} ); 
 
     Kokkos::Experimental::md_parallel_for( policy, Init(Atest, icount, jcount, kcount) );
     execution_space::fence();

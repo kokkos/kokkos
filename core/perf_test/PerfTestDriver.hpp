@@ -85,9 +85,10 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
     std::cout << "Performance tests for MDRange Layout Left\n" << std::endl;
   }
 
-  for (int i = exp_beg ; i < exp_end ; ++i) {
 
+  for (int i = exp_beg ; i < exp_end ; ++i) {
     const int range_length = (1<<i) + range_offset;
+
     int t0_min = 0, t1_min = 0, t2_min = 0;
     double seconds_min = 0.0;
 
@@ -103,16 +104,19 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
 #endif
     while ( tfast >= min_bnd ) {
       int tmid = min_bnd;
-      while ( tmid <= tfast ) {
-//        if ( std::is_same<LayoutType, Kokkos::LayoutRight>::value ) {
-          t0 = min_bnd;
-          t1 = tmid;
-          t2 = tfast;
-//        } else {
-          int t2_rev = min_bnd;
-          int t1_rev = tmid;
-          int t0_rev = tfast;
-//        }
+      while ( tmid < tfast ) { 
+        t0 = min_bnd;
+        t1 = tmid;
+        t2 = tfast;
+        int t2_rev = min_bnd;
+        int t1_rev = tmid;
+        int t0_rev = tfast;
+
+        //Note: Product of tile sizes must be < 1024 for Cuda
+        if ( t0*t1*t2 > 1024 ) {
+          printf("  Exceeded Cuda tile limits; onto next range set\n\n");
+          break;
+        }
 
         // Run 1 with tiles LayoutRight style
         const double seconds_1 = MultiDimRangePerf3D< DeviceType , double , LayoutType >::test_multi_index(range_length,range_length,range_length, t0, t1, t2) ;
@@ -213,8 +217,7 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
   } //end for
 
     // Test: The MDRange as collapse 2 - cannot use the MDRangePolicy in this way...
-//    const double seconds_1 = MultiDimRangePerf3D_Collapse< DeviceType , double , Kokkos::LayoutRight >::test_multi_index_collapse(range_length,range_length,range_length) ;
-
+//    const double seconds = MultiDimRangePerf3D_Collapse< DeviceType , double , Kokkos::LayoutRight >::test_multi_index_collapse(range_length,range_length,range_length) ;
 }
 
 
