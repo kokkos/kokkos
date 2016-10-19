@@ -1,0 +1,692 @@
+/*
+//@HEADER
+// ************************************************************************
+// 
+//                        Kokkos v. 2.0
+//              Copyright (2014) Sandia Corporation
+// 
+// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// the U.S. Government retains certain rights in this software.
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+// 1. Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution.
+//
+// 3. Neither the name of the Corporation nor the names of the
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
+// 
+// ************************************************************************
+//@HEADER
+*/
+
+namespace Test {
+template< class DeviceType 
+        , typename ScalarType = double  
+        , typename TestLayout = Kokkos::LayoutRight  
+        >
+struct MultiDimRangePerf3D
+{
+  typedef DeviceType execution_space;
+  typedef typename execution_space::size_type  size_type;
+
+  using iterate_type = Kokkos::Experimental::Iterate;
+
+  iterate_type inner_direction; //these are unnecessary
+  iterate_type outer_direction;
+
+//  typedef MultiDimRangePerf3D<DeviceType,ScalarType,TestLayout> self_type;
+
+  typedef Kokkos::View<ScalarType***, TestLayout, DeviceType> view_type;
+  typedef typename view_type::HostMirror host_view_type;
+
+  view_type A;
+  const int irange;
+  const int jrange;
+  const int krange;
+
+  MultiDimRangePerf3D()
+  {
+    if ( std::is_same<TestLayout , Kokkos::LayoutRight>::value ) {
+      inner_direction = iterate_type::Right;
+      outer_direction = iterate_type::Right;
+    }
+    else {
+      inner_direction = iterate_type::Left;
+      outer_direction = iterate_type::Left;
+    }
+  }
+
+  MultiDimRangePerf3D(const view_type & A_, const int &irange_,  const int &jrange_, const int &krange_)
+  : A(A_), irange(irange_), jrange(jrange_), krange(krange_)
+  {
+    if ( std::is_same<TestLayout , Kokkos::LayoutRight>::value ) {
+      inner_direction = iterate_type::Right;
+      outer_direction = iterate_type::Right;
+    }
+    else {
+      inner_direction = iterate_type::Left;
+      outer_direction = iterate_type::Left;
+    }
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int i, const int j, const int k) const
+  {
+    A(i,j,k) = (double)(i*i + j - k*i + 2.0*k*j - j*j*j);
+  }
+
+  struct Init
+  {
+    view_type input;
+    const int irange;
+    const int jrange;
+    const int krange;
+
+    Init(const view_type & input_, const int &irange_,  const int &jrange_, const int &krange_)
+    : input(input_), irange(irange_), jrange(jrange_), krange(krange_) {}
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const int i, const int j, const int k) const
+    {
+      input(i,j,k) = 0;
+    }
+  };
+
+
+  static double test_multi_index(const unsigned int icount, const unsigned int jcount, const unsigned int kcount, const int Ti = 1, const int Tj = 1, const int Tk = 1, const int iter = 1)
+  {
+    //This test performs multidim range over all dims
+    view_type Atest("Atest", icount, jcount, kcount);
+    typedef MultiDimRangePerf3D<execution_space,ScalarType,TestLayout> FunctorType;
+
+    double dt_min = 0;
+
+    if ( std::is_same<TestLayout, Kokkos::LayoutRight>::value ) {
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Right,iterate_type::Right>, execution_space > policy_init({0,0,0},{icount,jcount,kcount},{1,1,1}); // Rank<3> for Init functor
+
+#if defined(KOKKOS_HAVE_CUDA) //Remove the Cuda-specific tile-sizes...
+    //TODO: Modify so user can provide the Cuda tile sizes
+    const int t0 = 4, t1 = 4, t2 = 16;
+
+    typedef typename Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Right, iterate_type::Right>, execution_space > MDRangeType;
+    using tile_type = typename MDRangeType::tile_type;
+    Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Right, iterate_type::Right>, execution_space > policy({{0,0,0}},{icount,jcount,kcount},{{t0,t1,t2}} ); //cuda
+
+#else
+    typedef typename Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Right, iterate_type::Right>, execution_space > MDRangeType;
+    using tile_type = typename MDRangeType::tile_type;
+    using point_type = typename MDRangeType::point_type;
+    Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Right, iterate_type::Right>, execution_space > policy(point_type{{0,0,0}},point_type{{icount,jcount,kcount}},tile_type{{Ti,Tj,Tk}} ); //host
+#endif
+
+    Kokkos::Experimental::md_parallel_for( policy, Init(Atest, icount, jcount, kcount) );
+    execution_space::fence();
+
+    for (int i = 0; i < iter; ++i)
+    {
+      Kokkos::Timer timer;
+      Kokkos::Experimental::md_parallel_for( policy, FunctorType(Atest, icount, jcount, kcount) );
+      execution_space::fence();
+      const double dt = timer.seconds();
+      if ( 0 == i ) dt_min = dt ;
+      else dt_min = dt < dt_min ? dt : dt_min ;
+
+      //Correctness check - only the first run
+      if ( 0 == i )
+      {
+        int numErrors = 0;
+        host_view_type Ahost("Ahost", icount, jcount, kcount);
+        Kokkos::deep_copy(Ahost, Atest);
+        for ( int l = 0; l < icount; ++l ) {
+        for ( int j = 0; j < jcount; ++j ) {
+        for ( int k = 0; k < kcount; ++k ) {
+          double check = (l*l + j - k*l + 2.0*k*j - j*j*j);
+          if ( Ahost(l,j,k) - check != 0 ) {
+            ++numErrors;
+//            std::cout << "  Correctness error at " << l << " "<<j<<" "<<k<<"\n"
+//                      << "  multi Ahost = " << Ahost(l,j,k) << "  expected = " << check  << std::endl;
+            //exit(-1);
+          }
+        } } }
+        if ( numErrors != 0 ) { std::cout << " multi: errors " << numErrors <<  std::endl; }
+        //else { std::cout << " multi: No errors!" <<  std::endl; }
+      }
+    } //end for
+
+    } 
+    else {
+
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Left,iterate_type::Left>, execution_space > policy_init({0,0,0},{icount,jcount,kcount},{1,1,1}); // Rank<3> for Init functor
+
+#if KOKKOS_HAVE_CUDA //Remove the Cuda-specific tile-sizes...
+    //TODO: Modify so user can provide the Cuda tile sizes
+    const int t0 = 16, t1 = 4, t2 = 4;
+
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<2,iterate_type::Left,iterate_type::Left>, execution_space > policy({0,0},{icount,jcount},{t0,t1} ); // Collapse inner two 'slow' dims LR
+    Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Left, iterate_type::Left>, execution_space > policy({0,0,0},{icount,jcount,kcount},{t0,t1,t2} ); //host
+#else
+    Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Left, iterate_type::Left>, execution_space > policy({0,0,0},{icount,jcount,kcount},{Ti,Tj,Tk} ); //host
+#endif
+
+    Kokkos::Experimental::md_parallel_for( policy, Init(Atest, icount, jcount, kcount) );
+    execution_space::fence();
+
+    for (int i = 0; i < iter; ++i)
+    {
+      Kokkos::Timer timer;
+      Kokkos::Experimental::md_parallel_for( policy, FunctorType(Atest, icount, jcount, kcount) );
+      execution_space::fence();
+      const double dt = timer.seconds();
+      if ( 0 == i ) dt_min = dt ;
+      else dt_min = dt < dt_min ? dt : dt_min ;
+
+      //Correctness check - only the first run
+      if ( 0 == i )
+      {
+        int numErrors = 0;
+        host_view_type Ahost("Ahost", icount, jcount, kcount);
+        Kokkos::deep_copy(Ahost, Atest);
+        for ( int l = 0; l < icount; ++l ) {
+        for ( int j = 0; j < jcount; ++j ) {
+        for ( int k = 0; k < kcount; ++k ) {
+          double check = (l*l + j - k*l + 2.0*k*j - j*j*j);
+          if ( Ahost(l,j,k) - check != 0 ) {
+            ++numErrors;
+//            std::cout << "  Correctness error at " << l << " "<<j<<" "<<k<<"\n"
+//                      << "  multi Ahost = " << Ahost(l,j,k) << "  expected = " << check  << std::endl;
+            //exit(-1);
+          }
+        } } }
+        if ( numErrors != 0 ) { std::cout << " multi: errors " << numErrors <<  std::endl; }
+        //else { std::cout << " multi: No errors!" <<  std::endl; }
+
+      }
+    } //end for
+    }
+
+    return dt_min;
+  } 
+
+};
+
+
+template< class DeviceType 
+        , typename ScalarType = double  
+        , typename TestLayout = Kokkos::LayoutRight  
+        >
+struct MultiDimRangePerf3D_Collapse
+{
+  // 3D Range, but will collapse only 2 dims => Rank<2> for multi-dim; unroll 2 dims in one-dim
+
+  typedef DeviceType execution_space;
+  typedef typename execution_space::size_type  size_type;
+
+  using iterate_type = Kokkos::Experimental::Iterate;
+
+  iterate_type inner_direction; //these shouldn't be necessary after all
+  iterate_type outer_direction;
+
+//  typedef MultiDimRangePerf3D<DeviceType,ScalarType,TestLayout> self_type;
+
+  typedef Kokkos::View<ScalarType***, TestLayout, DeviceType> view_type;
+  typedef typename view_type::HostMirror host_view_type;
+
+  view_type A;
+  const int irange;
+  const int jrange;
+  const int krange;
+
+  MultiDimRangePerf3D_Collapse()
+  {
+    if ( std::is_same<TestLayout , Kokkos::LayoutRight>::value ) {
+      inner_direction = iterate_type::Right;
+      outer_direction = iterate_type::Right;
+    }
+    else {
+      inner_direction = iterate_type::Left;
+      outer_direction = iterate_type::Left;
+    }
+  }
+
+  MultiDimRangePerf3D_Collapse(const view_type & A_, const int &irange_,  const int &jrange_, const int &krange_)
+  : A(A_), irange(irange_), jrange(jrange_), krange(krange_)
+  {
+    if ( std::is_same<TestLayout , Kokkos::LayoutRight>::value ) {
+      inner_direction = iterate_type::Right;
+      outer_direction = iterate_type::Right;
+    }
+    else {
+      inner_direction = iterate_type::Left;
+      outer_direction = iterate_type::Left;
+    }
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int r) const
+  {
+    if ( std::is_same<TestLayout, Kokkos::LayoutRight>::value )
+    {
+//id(i,j,k) = k + j*Nk + i*Nk*Nj = k + Nk*(j + i*Nj) = k + Nk*r
+//      const int i = r / (jrange*krange);
+//      const int j = (r - i*jrange*krange)/jrange;
+//r = j + i*Nj
+      const int i = r / (jrange); 
+      const int j = ( r - i*jrange);
+      for (int k = 0; k < krange; ++k) {
+        A(i,j,k) = (double)(i*i + j - k*i + 2.0*k*j - j*j*j);
+      }
+    }
+    else if ( std::is_same<TestLayout, Kokkos::LayoutLeft>::value )
+    {
+//id(i,j,k) = i + j*Ni + k*Ni*Nj = i + Ni*(j + k*Nj) = i + Ni*r
+//      const int k = r / (irange*jrange); 
+//      const int j = ( r - k*irange*jrange)/irange;
+//r = j + k*Nj
+      const int k = r / (jrange); 
+      const int j = ( r - k*jrange);
+      for (int i = 0; i < irange; ++i)
+        A(i,j,k) = (double)(i*i + j - k*i + 2.0*k*j - j*j*j);
+    }
+
+  }
+
+
+  struct Init
+  {
+    view_type input;
+    const int irange;
+    const int jrange;
+    const int krange;
+
+    Init(const view_type & input_, const int &irange_,  const int &jrange_, const int &krange_)
+    : input(input_), irange(irange_), jrange(jrange_), krange(krange_) {}
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const int r) const
+    {
+    if ( std::is_same<TestLayout, Kokkos::LayoutRight>::value )
+    {
+      const int i = r / (jrange*krange); 
+      const int j = ( r - i*jrange*krange)/krange;
+      const int k = r - i*jrange*krange - j*krange;
+      input(i,j,k) = 0;
+    }
+    else if ( std::is_same<TestLayout, Kokkos::LayoutLeft>::value )
+    {
+      const int k = r / (irange*jrange); 
+      const int j = ( r - k*irange*jrange)/irange;
+      const int i = r - k*irange*jrange - j*irange;
+      input(i,j,k) = 0;
+    }
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const int i, const int j, const int k) const
+    {
+      input(i,j,k) = 0;
+    }
+
+  };
+
+#if 0
+  // Cannot use the MDRangePolicy in this way
+  static double test_multi_index_collapse(const unsigned int icount, const unsigned int jcount, const unsigned int kcount, const unsigned Ti = 1, const unsigned Tj = 1, const int iter = 1)
+  {
+    //This test refers to 'collapsing' two dims using the Experimental::MDRangePolicy
+    view_type Atest("Atest", icount, jcount, kcount);
+
+    typedef MultiDimRangePerf3D<execution_space,ScalarType,TestLayout> FunctorType;
+    //typedef MultiDimRangePerf3D<execution_space,ScalarType,TestLayout,InnerDir,OuterDir> FunctorType;
+
+    double dt_min = 0;
+
+    if ( std::is_same<TestLayout, Kokkos::LayoutRight>::value ) {
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Right,iterate_type::Right>, execution_space > policy_init({0,0,0},{icount,jcount,kcount}); // Rank<3> for Init functor
+
+#if KOKKOS_HAVE_CUDA
+    //TODO: Modify so user can provide the Cuda tile sizes
+    const int t0 = 4, t1 = 16;
+
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<2,iterate_type::Right,iterate_type::Right>, execution_space > policy({0,0},{icount,jcount},{t0,t1} ); // Collapse inner two 'slow' dims LR
+#else
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<2,iterate_type::Right,iterate_type::Right>, execution_space > policy({0,0},{icount,jcount},{Ti,Tj} ); // Collapse inner two 'slow' dims LR
+#endif
+
+    Kokkos::Experimental::md_parallel_for( policy_init, Init(Atest,icount,jcount,kcount) );
+    execution_space::fence();
+
+    for (int i = 0; i < iter; ++i)
+    {
+      Kokkos::Timer timer;
+      Kokkos::Experimental::md_parallel_for(policy, FunctorType(Atest, icount, jcount, kcount));
+      execution_space::fence();
+      const double dt = timer.seconds();
+      if ( 0 == i ) dt_min = dt ;
+      else dt_min = dt < dt_min ? dt : dt_min ;
+
+      //Correctness check
+      if ( 0 == i )
+      {
+        int numErrors = 0;
+        host_view_type Ahost("Ahost", icount, jcount, kcount);
+        Kokkos::deep_copy(Ahost, Atest);
+        for ( int l = 0; l < icount; ++l ) {
+        for ( int j = 0; j < jcount; ++j ) {
+        for ( int k = 0; k < kcount; ++k ) {
+          double check = (l*l + j - k*l + 2.0*k*j - j*j*j);
+          if ( Ahost(l,j,k) - check != 0 ) {
+            ++numErrors;
+//           std::cout << "  Correctness error at " << l << " "<<j<<" "<<k<<"\n"
+//                      << "  flat Ahost = " << Ahost(l,j,k) << "  expected = " << check  << std::endl;
+            //exit(-1);
+          }
+        } } }
+        if ( numErrors != 0 ) { std::cout << " multi collapse2: errors " << numErrors <<  std::endl; }
+        else { std::cout << " multi collapse2: No errors!" <<  std::endl; }
+//        if ( numErrors == 0 ) { std::cout << " flattened: 0 errors, good deal " << std::endl; }
+      }
+    } //end for
+
+    } else {
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Left,iterate_type::Left>, execution_space > policy_init({0,0,0},{icount,jcount,kcount}); // Rank<3> for Init functor
+
+#if KOKKOS_HAVE_CUDA
+    //TODO: Modify so user can provide the Cuda tile sizes
+
+    const int t0 = 16, t1 = 4;
+
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<2,iterate_type::Left,iterate_type::Left>, execution_space > policy({0,0},{icount,jcount},{t0,t1} ); // Collapse inner two 'slow' dims LR
+#else
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<2,iterate_type::Left,iterate_type::Left>, execution_space > policy({0,0},{icount,jcount},{Ti,Tj} ); // Collapse inner two 'slow' dims LR
+#endif
+
+    Kokkos::Experimental::md_parallel_for( policy_init, Init(Atest,icount,jcount,kcount) );
+    execution_space::fence();
+
+    for (int i = 0; i < iter; ++i)
+    {
+      Kokkos::Timer timer;
+      Kokkos::Experimental::md_parallel_for(policy, FunctorType(Atest, icount, jcount, kcount));
+      execution_space::fence();
+      const double dt = timer.seconds();
+      if ( 0 == i ) dt_min = dt ;
+      else dt_min = dt < dt_min ? dt : dt_min ;
+
+      //Correctness check
+      if ( 0 == i )
+      {
+        int numErrors = 0;
+        host_view_type Ahost("Ahost", icount, jcount, kcount);
+        Kokkos::deep_copy(Ahost, Atest);
+        for ( int l = 0; l < icount; ++l ) {
+        for ( int j = 0; j < jcount; ++j ) {
+        for ( int k = 0; k < kcount; ++k ) {
+          double check = (l*l + j - k*l + 2.0*k*j - j*j*j);
+          if ( Ahost(l,j,k) - check != 0 ) {
+            ++numErrors;
+//           std::cout << "  Correctness error at " << l << " "<<j<<" "<<k<<"\n"
+//                      << "  flat Ahost = " << Ahost(l,j,k) << "  expected = " << check  << std::endl;
+            //exit(-1);
+          }
+        } } }
+        if ( numErrors != 0 ) { std::cout << " multi collapse2: errors " << numErrors <<  std::endl; }
+        else { std::cout << " multi collapse2: No errors!" <<  std::endl; }
+//        if ( numErrors == 0 ) { std::cout << " flattened: 0 errors, good deal " << std::endl; }
+      }
+    } //end for
+    } //end else
+
+    return dt_min;
+  } 
+#endif
+
+  static double test_index_collapse(const unsigned int icount, const unsigned int jcount, const unsigned int kcount, const int iter = 1)
+  {
+    // This test refers to collapsing two dims while using the RangePolicy
+    view_type Atest("Atest", icount, jcount, kcount);
+    typedef MultiDimRangePerf3D_Collapse<execution_space,ScalarType,TestLayout> FunctorType;
+
+    int collapse_index_range = 0;
+    if ( std::is_same<TestLayout, Kokkos::LayoutRight>::value ) {
+      collapse_index_range = icount*jcount;
+//      std::cout << "   LayoutRight " << std::endl;
+    } else if ( std::is_same<TestLayout, Kokkos::LayoutLeft>::value ) {
+      collapse_index_range = kcount*jcount;
+//      std::cout << "   LayoutLeft " << std::endl;
+    } else {
+      std::cout << "  LayoutRight or LayoutLeft required - will pass 0 as range instead " << std::endl;
+    }
+
+    Kokkos::RangePolicy<execution_space> policy(0, (collapse_index_range) );
+//    std::cout << "   Full flattened range (i.e. product of ranges) " << icount*jcount*kcount << std::endl;
+//    std::cout << "   Value outside of the if-guard " << collapse_index_range << std::endl;
+
+    double dt_min = 0;
+
+    Kokkos::parallel_for( policy, Init(Atest,icount,jcount,kcount) );
+    execution_space::fence();
+
+    for (int i = 0; i < iter; ++i)
+    {
+      Kokkos::Timer timer;
+      Kokkos::parallel_for(policy, FunctorType(Atest, icount, jcount, kcount));
+      execution_space::fence();
+      const double dt = timer.seconds();
+      if ( 0 == i ) dt_min = dt ;
+      else dt_min = dt < dt_min ? dt : dt_min ;
+
+      //Correctness check
+      if ( 0 == i )
+      {
+        int numErrors = 0;
+        host_view_type Ahost("Ahost", icount, jcount, kcount);
+        Kokkos::deep_copy(Ahost, Atest);
+        for ( int l = 0; l < icount; ++l ) {
+        for ( int j = 0; j < jcount; ++j ) {
+        for ( int k = 0; k < kcount; ++k ) {
+          double check = (l*l + j - k*l + 2.0*k*j - j*j*j);
+          if ( Ahost(l,j,k) - check != 0 ) {
+            ++numErrors;
+//           std::cout << "  Correctness error at " << l << " "<<j<<" "<<k<<"\n"
+//                      << "  flat Ahost = " << Ahost(l,j,k) << "  expected = " << check  << std::endl;
+            //exit(-1);
+          }
+        } } }
+        if ( numErrors != 0 ) { std::cout << " RP collapse2: errors " << numErrors <<  std::endl; }
+        //else { std::cout << " RP collapse2: Pass! " << std::endl; }
+//        if ( numErrors == 0 ) { std::cout << " flattened: 0 errors, good deal " << std::endl; }
+      }
+    }
+
+    return dt_min;
+  } 
+
+};
+
+template< class DeviceType 
+        , typename ScalarType = double  
+        , typename TestLayout = Kokkos::LayoutRight  
+        >
+struct MultiDimRangePerf3D_CollapseAll
+{
+  // 3D Range, but will collapse only 2 dims => Rank<2> for multi-dim; unroll 2 dims in one-dim
+
+  typedef DeviceType execution_space;
+  typedef typename execution_space::size_type  size_type;
+
+  using iterate_type = Kokkos::Experimental::Iterate;
+
+  iterate_type inner_direction;
+  iterate_type outer_direction;
+
+//  typedef MultiDimRangePerf3D<DeviceType,ScalarType,TestLayout> self_type;
+
+  typedef Kokkos::View<ScalarType***, TestLayout, DeviceType> view_type;
+  typedef typename view_type::HostMirror host_view_type;
+
+  view_type A;
+  const int irange;
+  const int jrange;
+  const int krange;
+
+  MultiDimRangePerf3D_CollapseAll()
+  {
+    if ( std::is_same<TestLayout , Kokkos::LayoutRight>::value ) {
+      inner_direction = iterate_type::Right;
+      outer_direction = iterate_type::Right;
+    }
+    else {
+      inner_direction = iterate_type::Left;
+      outer_direction = iterate_type::Left;
+    }
+  }
+
+  MultiDimRangePerf3D_CollapseAll(const view_type & A_, const int &irange_,  const int &jrange_, const int &krange_)
+  : A(A_), irange(irange_), jrange(jrange_), krange(krange_)
+  {
+    if ( std::is_same<TestLayout , Kokkos::LayoutRight>::value ) {
+      inner_direction = iterate_type::Right;
+      outer_direction = iterate_type::Right;
+    }
+    else {
+      inner_direction = iterate_type::Left;
+      outer_direction = iterate_type::Left;
+    }
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int r) const
+  {
+    if ( std::is_same<TestLayout, Kokkos::LayoutRight>::value )
+    {
+      const int i = r / (jrange*krange); 
+      const int j = ( r - i*jrange*krange)/krange;
+      const int k = r - i*jrange*krange - j*krange;
+        A(i,j,k) = (double)(i*i + j - k*i + 2.0*k*j - j*j*j);
+    }
+    else if ( std::is_same<TestLayout, Kokkos::LayoutLeft>::value )
+    {
+      const int k = r / (irange*jrange); 
+      const int j = ( r - k*irange*jrange)/irange;
+      const int i = r - k*irange*jrange - j*irange;
+        A(i,j,k) = (double)(i*i + j - k*i + 2.0*k*j - j*j*j);
+    }
+
+  }
+
+
+  struct Init
+  {
+    view_type input;
+    const int irange;
+    const int jrange;
+    const int krange;
+
+    Init(const view_type & input_, const int &irange_,  const int &jrange_, const int &krange_)
+    : input(input_), irange(irange_), jrange(jrange_), krange(krange_) {}
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const int r) const
+    {
+    if ( std::is_same<TestLayout, Kokkos::LayoutRight>::value )
+    {
+      const int i = r / (jrange*krange); 
+      const int j = ( r - i*jrange*krange)/krange;
+      const int k = r - i*jrange*krange - j*krange;
+      input(i,j,k) = 0;
+    }
+    else if ( std::is_same<TestLayout, Kokkos::LayoutLeft>::value )
+    {
+      const int k = r / (irange*jrange); 
+      const int j = ( r - k*irange*jrange)/irange;
+      const int i = r - k*irange*jrange - j*irange;
+      input(i,j,k) = 0;
+    }
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const int i, const int j, const int k) const
+    {
+      input(i,j,k) = 0;
+    }
+
+  };
+
+
+  static double test_collapse_all(const unsigned int icount, const unsigned int jcount, const unsigned int kcount, const int iter = 1)
+  {
+    //This test refers to collapsing all dims using the RangePolicy
+    view_type Atest("Atest", icount, jcount, kcount);
+    typedef MultiDimRangePerf3D_CollapseAll<execution_space,ScalarType,TestLayout> FunctorType;
+
+    int flat_index_range = 0;
+    flat_index_range = icount*jcount*kcount;
+    Kokkos::RangePolicy<execution_space> policy(0, flat_index_range );
+//    std::cout << "   Full flattened range (i.e. product of ranges) " << icount*jcount*kcount << std::endl;
+//    std::cout << "   Value outside of the if-guard " << flat_index_range << std::endl;
+
+    double dt_min = 0;
+
+    Kokkos::parallel_for( policy, Init(Atest,icount,jcount,kcount) );
+    execution_space::fence();
+
+    for (int i = 0; i < iter; ++i)
+    {
+      Kokkos::Timer timer;
+      Kokkos::parallel_for(policy, FunctorType(Atest, icount, jcount, kcount));
+      execution_space::fence();
+      const double dt = timer.seconds();
+      if ( 0 == i ) dt_min = dt ;
+      else dt_min = dt < dt_min ? dt : dt_min ;
+
+      //Correctness check
+      if ( 0 == i )
+      {
+        int numErrors = 0;
+        host_view_type Ahost("Ahost", icount, jcount, kcount);
+        Kokkos::deep_copy(Ahost, Atest);
+        for ( int l = 0; l < icount; ++l ) {
+        for ( int j = 0; j < jcount; ++j ) {
+        for ( int k = 0; k < kcount; ++k ) {
+          double check = (l*l + j - k*l + 2.0*k*j - j*j*j);
+          if ( Ahost(l,j,k) - check != 0 ) {
+            ++numErrors;
+//           std::cout << "  Correctness error at " << l << " "<<j<<" "<<k<<"\n"
+//                      << "  flat Ahost = " << Ahost(l,j,k) << "  expected = " << check  << std::endl;
+            //exit(-1);
+          }
+        } } }
+        if ( numErrors != 0 ) { std::cout << " RP collapse all: errors " << numErrors <<  std::endl; }
+        //else { std::cout << " RP collapse all: Pass! " << std::endl; }
+//        if ( numErrors == 0 ) { std::cout << " flattened: 0 errors, good deal " << std::endl; }
+      }
+    }
+
+    return dt_min;
+  } 
+
+};
+
+} //end namespace Test
