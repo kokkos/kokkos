@@ -66,18 +66,6 @@ struct MultiDimRangePerf3D
   const int jrange;
   const int krange;
 
-  MultiDimRangePerf3D()
-  {
-    if ( std::is_same<TestLayout , Kokkos::LayoutRight>::value ) {
-      inner_direction = iterate_type::Right;
-      outer_direction = iterate_type::Right;
-    }
-    else {
-      inner_direction = iterate_type::Left;
-      outer_direction = iterate_type::Left;
-    }
-  }
-
   MultiDimRangePerf3D(const view_type & A_, const int &irange_,  const int &jrange_, const int &krange_)
   : A(A_), irange(irange_), jrange(jrange_), krange(krange_)
   {
@@ -115,7 +103,7 @@ struct MultiDimRangePerf3D
   };
 
 
-  static double test_multi_index(const unsigned int icount, const unsigned int jcount, const unsigned int kcount, const int Ti = 1, const int Tj = 1, const int Tk = 1, const int iter = 1)
+  static double test_multi_index(const int icount, const int jcount, const int kcount, const int Ti = 1, const int Tj = 1, const int Tk = 1, const int iter = 1)
   {
     //This test performs multidim range over all dims
     view_type Atest("Atest", icount, jcount, kcount);
@@ -184,8 +172,7 @@ struct MultiDimRangePerf3D
     //TODO: Modify so user can provide the Cuda tile sizes
     const int t0 = 16, t1 = 4, t2 = 4;
 
-      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<2,iterate_type::Left,iterate_type::Left>, execution_space > policy({0,0},{icount,jcount},{t0,t1} ); // Collapse inner two 'slow' dims LR
-    Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Left, iterate_type::Left>, execution_space > policy({0,0,0},{icount,jcount,kcount},{t0,t1,t2} ); //host
+    Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Left, iterate_type::Left>, execution_space > policy({0,0,0},{icount,jcount,kcount},{t0,t1,t2} ); //cuda
 #else
     Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Left, iterate_type::Left>, execution_space > policy({0,0,0},{icount,jcount,kcount},{Ti,Tj,Tk} ); //host
 #endif
@@ -257,18 +244,6 @@ struct MultiDimRangePerf3D_Collapse
   const int irange;
   const int jrange;
   const int krange;
-
-  MultiDimRangePerf3D_Collapse()
-  {
-    if ( std::is_same<TestLayout , Kokkos::LayoutRight>::value ) {
-      inner_direction = iterate_type::Right;
-      outer_direction = iterate_type::Right;
-    }
-    else {
-      inner_direction = iterate_type::Left;
-      outer_direction = iterate_type::Left;
-    }
-  }
 
   MultiDimRangePerf3D_Collapse(const view_type & A_, const int &irange_,  const int &jrange_, const int &krange_)
   : A(A_), irange(irange_), jrange(jrange_), krange(krange_)
@@ -462,7 +437,7 @@ struct MultiDimRangePerf3D_Collapse
   } 
 #endif
 
-  static double test_index_collapse(const unsigned int icount, const unsigned int jcount, const unsigned int kcount, const int iter = 1)
+  static double test_index_collapse(const int icount, const int jcount, const int kcount, const int iter = 1)
   {
     // This test refers to collapsing two dims while using the RangePolicy
     view_type Atest("Atest", icount, jcount, kcount);
@@ -551,18 +526,6 @@ struct MultiDimRangePerf3D_CollapseAll
   const int jrange;
   const int krange;
 
-  MultiDimRangePerf3D_CollapseAll()
-  {
-    if ( std::is_same<TestLayout , Kokkos::LayoutRight>::value ) {
-      inner_direction = iterate_type::Right;
-      outer_direction = iterate_type::Right;
-    }
-    else {
-      inner_direction = iterate_type::Left;
-      outer_direction = iterate_type::Left;
-    }
-  }
-
   MultiDimRangePerf3D_CollapseAll(const view_type & A_, const int &irange_,  const int &jrange_, const int &krange_)
   : A(A_), irange(irange_), jrange(jrange_), krange(krange_)
   {
@@ -635,7 +598,7 @@ struct MultiDimRangePerf3D_CollapseAll
   };
 
 
-  static double test_collapse_all(const unsigned int icount, const unsigned int jcount, const unsigned int kcount, const int iter = 1)
+  static double test_collapse_all(const int icount, const int jcount, const int kcount, const int iter = 1)
   {
     //This test refers to collapsing all dims using the RangePolicy
     view_type Atest("Atest", icount, jcount, kcount);
