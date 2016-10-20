@@ -140,32 +140,59 @@ struct MDRangePolicy
 
 
   MDRangePolicy( point_type const& lower, point_type const& upper, tile_type const& tile = tile_type{} )
-    : m_lower(lower)
-    , m_upper(upper)
-    , m_tile(tile)
+    : m_lower{lower}
+    , m_upper{upper}
+    , m_tile{tile}
     , m_num_tiles{1}
   {
-    index_type end;
-    for (int i=0; i<rank; ++i) {
-      end = upper[i] - lower[i];
-      if ( m_tile[i] < 1 )
-      {
-        m_tile[i] = 1;
-        printf("MDRange: Tile dimension %d inappropriate (i.e. < 1) - dim is now defaulted to 1\n",i);
+    // Host
+    if ( true
+       #if defined(KOKKOS_HAVE_CUDA)
+         && !std::is_same< typename traits::execution_space, Kokkos::Cuda >::value
+       #endif
+       )
+    {
+      index_type span;
+      for (int i=0; i<rank; ++i) {
+        span = upper[i] - lower[i];
+        if ( m_tile[i] <= 0 ) {
+          if (  (inner_direction == Right && (i < rank-1))
+              || (inner_direction == Left && (i > 0)) )
+          {
+            m_tile[i] = 2;
+          }
+          else {
+            m_tile[i] = span;
+          }
+        }
+        m_tile_end[i] = static_cast<index_type>((span + m_tile[i] -1) / m_tile[i]);
+        m_num_tiles *= m_tile_end[i];
       }
-      m_tile_end[i] = static_cast<index_type>((end + m_tile[i] -1) / m_tile[i]);
-      m_num_tiles *= m_tile_end[i];
     }
-#if defined(KOKKOS_HAVE_CUDA)
-    index_type total_tile_size_check = 1;
-    for (int i=0; i<rank; ++i) {
-      total_tile_size_check *= m_tile[i];
+    #if defined(KOKKOS_HAVE_CUDA)
+    else // Cuda
+    {
+      index_type span;
+      for (int i=0; i<rank; ++i) {
+        span = upper[i] - lower[i];
+        if ( m_tile[i] <= 0 ) {
+          // TODO: determine what is a good default tile size for cuda
+          // many be rank dependent
+          m_tile = 8;
+        }
+        m_tile_end[i] = static_cast<index_type>((span + m_tile[i] -1) / m_tile[i]);
+        m_num_tiles *= m_tile_end[i];
+      }
+      index_type total_tile_size_check = 1;
+      for (int i=0; i<rank; ++i) {
+        total_tile_size_check *= m_tile[i];
+      }
+      if ( total_tile_size_check > 1024 ) {
+        printf(" Tile dimensions exceed Cuda limits\n");
+        Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
+      }
     }
-    if ( total_tile_size_check > 1024 )
-    { 
-      printf(" Tile dimensions exceed Cuda limits\n");
-      Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims"); }
-#endif
+    #endif
   }
 
   point_type m_lower;
@@ -228,7 +255,7 @@ void md_parallel_for( const std::string& str
                       ) >::type* = 0
                     )
 {
-  Impl::DeviceIterateTile<MDRange, Functor, typename MDRange::work_tag> closure(range, f); 
+  Impl::DeviceIterateTile<MDRange, Functor, typename MDRange::work_tag> closure(range, f);
   closure.execute();
 }
 
@@ -243,7 +270,7 @@ void md_parallel_for( MDRange const& range
                       ) >::type* = 0
                     )
 {
-  Impl::DeviceIterateTile<MDRange, Functor, typename MDRange::work_tag> closure(range, f); 
+  Impl::DeviceIterateTile<MDRange, Functor, typename MDRange::work_tag> closure(range, f);
   closure.execute();
 }
 #endif

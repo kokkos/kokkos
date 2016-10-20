@@ -54,11 +54,11 @@ namespace Kokkos { namespace Experimental { namespace Impl {
 
 template < typename RP
          , typename Functor
-         , typename Dim 
+         , typename Dim
          , typename Tag
          , typename ValueType
          >
-struct HostIterateTile 
+struct HostIterateTile
   : protected HostIterateTile<RP, Functor, std::integral_constant<int,Dim::value-1>, Tag, ValueType>
 {
   static_assert( Dim::value <= RP::rank, "Error: greater than rank");
@@ -385,7 +385,7 @@ struct MDFunctor
                                                                            , Functor
                                                                            , std::integral_constant<int,MDRange::rank - 1>
                                                                            , work_tag
-                                                                           , value_type  
+                                                                           , value_type
                                                                            >;
 
   KOKKOS_INLINE_FUNCTION
@@ -413,7 +413,7 @@ struct MDFunctor
   {
     iterate_type(m_range, m_func, t, v).apply();
   }
-  
+
   MDRange   m_range;
   Functor   m_func;
   ValueType m_v;
@@ -430,7 +430,7 @@ struct MDFunctor< MDRange, Functor, void >
                                                                            , Functor
                                                                            , std::integral_constant<int,MDRange::rank - 1>
                                                                            , work_tag
-                                                                           , void  
+                                                                           , void
                                                                            >;
 
 //  KOKKOS_INLINE_FUNCTION
@@ -463,7 +463,7 @@ struct MDFunctor< MDRange, Functor, void >
   {
     iterate_type(m_range, m_func, t).apply();
   }
-  
+
   MDRange m_range;
   Functor m_func;
 };
