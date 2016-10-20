@@ -112,11 +112,13 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
         int t1_rev = tmid;
         int t0_rev = tfast;
 
+#if defined(KOKKOS_HAVE_CUDA)
         //Note: Product of tile sizes must be < 1024 for Cuda
         if ( t0*t1*t2 > 1024 ) {
           printf("  Exceeded Cuda tile limits; onto next range set\n\n");
           break;
         }
+#endif
 
         // Run 1 with tiles LayoutRight style
         const double seconds_1 = MultiDimRangePerf3D< DeviceType , double , LayoutType >::test_multi_index(range_length,range_length,range_length, t0, t1, t2) ;
