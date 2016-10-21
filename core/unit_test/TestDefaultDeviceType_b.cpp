@@ -67,8 +67,8 @@ protected:
 };
 
 
-TEST_F( defaultdevicetype, reduce_instantiation_a) {
-  TestReduceCombinatoricalInstantiation<>::execute_a();
+TEST_F( defaultdevicetype, reduce_instantiation_b) {
+  TestReduceCombinatoricalInstantiation<>::execute_b();
 }
 
 } // namespace test

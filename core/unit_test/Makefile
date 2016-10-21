@@ -3,7 +3,9 @@ KOKKOS_PATH = ../..
 GTEST_PATH = ../../tpls/gtest
 
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test
+vpath %.cpp ${KOKKOS_PATH}/core/unit_test/serial
 TEST_HEADERS = $(wildcard $(KOKKOS_PATH)/core/unit_test/*.hpp)
+TEST_HEADERS += $(wildcard $(KOKKOS_PATH)/core/unit_test/*/*.hpp)
 
 default: build_all
 	echo "End Build"
@@ -46,7 +48,13 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
-	OBJ_SERIAL = TestSerial.o UnitTestMain.o gtest-all.o
+	OBJ_SERIAL = TestSerial_Other.o TestSerial_Reductions.o TestSerial_Atomics.o TestSerial_Team.o 
+	OBJ_SERIAL += TestSerial_SubView_a.o TestSerial_SubView_b.o 
+	OBJ_SERIAL += TestSerial_SubView_c01.o TestSerial_SubView_c02.o TestSerial_SubView_c03.o
+	OBJ_SERIAL += TestSerial_SubView_c04.o  TestSerial_SubView_c05.o  TestSerial_SubView_c06.o  
+	OBJ_SERIAL += TestSerial_SubView_c07.o  TestSerial_SubView_c08.o  TestSerial_SubView_c09.o
+	OBJ_SERIAL += TestSerial_SubView_c10.o TestSerial_SubView_c11.o TestSerial_SubView_c12.o
+	OBJ_SERIAL += TestSerial_ViewAPI_a.o TestSerial_ViewAPI_b.o UnitTestMain.o gtest-all.o 
 	TARGETS += KokkosCore_UnitTest_Serial
 	TEST_TARGETS += test-serial
 endif
@@ -61,7 +69,7 @@ OBJ_HWLOC = TestHWLOC.o UnitTestMain.o gtest-all.o
 TARGETS += KokkosCore_UnitTest_HWLOC
 TEST_TARGETS += test-hwloc
 
-OBJ_DEFAULT = TestDefaultDeviceType.o TestDefaultDeviceType_a.o UnitTestMain.o gtest-all.o
+OBJ_DEFAULT = TestDefaultDeviceType.o TestDefaultDeviceType_a.o TestDefaultDeviceType_b.o UnitTestMain.o gtest-all.o
 TARGETS += KokkosCore_UnitTest_Default
 TEST_TARGETS += test-default
 

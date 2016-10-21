@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,41 +36,64 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
-
 #include <gtest/gtest.h>
+
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_LAMBDA
+#undef KOKKOS_LAMBDA
+#endif
+#define KOKKOS_LAMBDA [=]
 
 #include <Kokkos_Core.hpp>
 
-#if !defined(KOKKOS_HAVE_CUDA) || defined(__CUDACC__)
+#include <TestTile.hpp>
+
 //----------------------------------------------------------------------------
 
-#include <TestReduce.hpp>
+#include <TestSharedAlloc.hpp>
+#include <TestViewMapping.hpp>
 
+
+#include <TestViewAPI.hpp>
+#include <TestViewOfClass.hpp>
+#include <TestViewSubview.hpp>
+#include <TestAtomic.hpp>
+#include <TestAtomicOperations.hpp>
+#include <TestRange.hpp>
+#include <TestTeam.hpp>
+#include <TestReduce.hpp>
+#include <TestScan.hpp>
+#include <TestAggregate.hpp>
+#include <TestCompilerMacros.hpp>
+#include <TestTaskPolicy.hpp>
+#include <TestMemoryPool.hpp>
+
+
+#include <TestCXX11.hpp>
+#include <TestCXX11Deduction.hpp>
+#include <TestTeamVector.hpp>
+#include <TestTemplateMetaFunctions.hpp>
+
+#include <TestPolicyConstruction.hpp>
+
+#include <TestMDRange.hpp>
 
 namespace Test {
 
-class defaultdevicetype : public ::testing::Test {
+class serial : public ::testing::Test {
 protected:
   static void SetUpTestCase()
-  {
-    Kokkos::initialize();
-  }
-
+    {
+      Kokkos::HostSpace::execution_space::initialize();
+    }
   static void TearDownTestCase()
-  {
-    Kokkos::finalize();
-  }
+    {
+      Kokkos::HostSpace::execution_space::finalize();
+    }
 };
 
-
-TEST_F( defaultdevicetype, reduce_instantiation_a) {
-  TestReduceCombinatoricalInstantiation<>::execute_a();
 }
-
-} // namespace test
-
-#endif

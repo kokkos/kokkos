@@ -1067,16 +1067,19 @@ struct TestReduceCombinatoricalInstantiation {
   }
 
 
-  static void AddLabel() {
-    std::string s("Std::String");
+  static void execute_a() {
     AddPolicy();
-    AddPolicy("Char Constant");
-    AddPolicy(s.c_str());
-    AddPolicy(s);
   }
 
-  static void execute() {
-    AddLabel();
+  static void execute_b() {
+    std::string s("Std::String");
+    AddPolicy(s.c_str());
+    AddPolicy("Char Constant");
+  }
+
+  static void execute_c() {
+    std::string s("Std::String");
+    AddPolicy(s);
   }
 };
 

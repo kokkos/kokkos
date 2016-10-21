@@ -1042,14 +1042,18 @@ void test_2d_subview_3d() {
 }
 
 template<class Space, class MemTraits = void>
-void test_3d_subview_5d() {
+void test_3d_subview_5d_right() {
   Impl::test_3d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutRight, Kokkos::LayoutRight, MemTraits>();
   Impl::test_3d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutStride,Kokkos::LayoutRight, MemTraits>();
+}
+
+template<class Space, class MemTraits = void>
+void test_3d_subview_5d_left() {
   Impl::test_3d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutLeft,  Kokkos::LayoutLeft,  MemTraits>();
   Impl::test_3d_subview_5d_impl_layout<Space,Kokkos::LayoutStride,Kokkos::LayoutStride,Kokkos::LayoutLeft,  MemTraits>();
-
-
 }
+
+
 
 namespace Impl {
 
