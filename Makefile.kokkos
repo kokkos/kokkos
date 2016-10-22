@@ -325,11 +325,16 @@ ifeq ($(KOKKOS_INTERNAL_CUDA_USE_RELOC), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_CUDA_USE_LAMBDA), 1)
-  ifeq ($(shell test $(KOKKOS_INTERNAL_COMPILER_NVCC_VERSION) -gt 70; echo $$?),0)
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
+    ifeq ($(shell test $(KOKKOS_INTERNAL_COMPILER_NVCC_VERSION) -gt 70; echo $$?),0)
 	tmp := $(shell echo "\#define KOKKOS_CUDA_USE_LAMBDA 1" >> KokkosCore_config.tmp )
 	KOKKOS_CXXFLAGS += -expt-extended-lambda
-  else
-    $(warning Warning: Cuda Lambda support was requested but NVCC version is too low. This requires NVCC for Cuda version 7.5 or higher. Disabling Lambda support now.)
+    else
+      $(warning Warning: Cuda Lambda support was requested but NVCC version is too low. This requires NVCC for Cuda version 7.5 or higher. Disabling Lambda support now.)
+    endif
+  endif
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+    tmp := $(shell echo "\#define KOKKOS_CUDA_USE_LAMBDA 1" >> KokkosCore_config.tmp )
   endif
 endif
 endif
