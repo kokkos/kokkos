@@ -46,7 +46,7 @@ namespace Test {
 
 TEST_F( threads , atomics )
 {
-  const int loop_count = 1e6 ;
+  const int loop_count = 1e4 ;
 
   ASSERT_TRUE( ( TestAtomic::Loop<int,Kokkos::Threads>(loop_count,1) ) );
   ASSERT_TRUE( ( TestAtomic::Loop<int,Kokkos::Threads>(loop_count,2) ) );

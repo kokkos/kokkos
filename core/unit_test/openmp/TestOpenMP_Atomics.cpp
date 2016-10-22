@@ -46,7 +46,7 @@ namespace Test {
 
 TEST_F( openmp , atomics )
 {
-  const int loop_count = 1e6 ;
+  const int loop_count = 1e4 ;
 
   ASSERT_TRUE( ( TestAtomic::Loop<int,Kokkos::OpenMP>(loop_count,1) ) );
   ASSERT_TRUE( ( TestAtomic::Loop<int,Kokkos::OpenMP>(loop_count,2) ) );
