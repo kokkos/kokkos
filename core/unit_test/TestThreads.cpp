@@ -474,6 +474,8 @@ TEST_F( threads , atomic_operations )
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Threads>(start, end-i, 7 ) ) );
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Threads>(start, end-i, 8 ) ) );
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Threads>(start, end-i, 9 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Threads>(start, end-i, 11 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<int,Kokkos::Threads>(start, end-i, 12 ) ) );
 
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Threads>(start, end-i, 1 ) ) );
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Threads>(start, end-i, 2 ) ) );
@@ -484,6 +486,8 @@ TEST_F( threads , atomic_operations )
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Threads>(start, end-i, 7 ) ) );
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Threads>(start, end-i, 8 ) ) );
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Threads>(start, end-i, 9 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Threads>(start, end-i, 11 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned int,Kokkos::Threads>(start, end-i, 12 ) ) );
 
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Threads>(start, end-i, 1 ) ) );
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Threads>(start, end-i, 2 ) ) );
@@ -494,6 +498,8 @@ TEST_F( threads , atomic_operations )
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Threads>(start, end-i, 7 ) ) );
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Threads>(start, end-i, 8 ) ) );
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Threads>(start, end-i, 9 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Threads>(start, end-i, 11 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long int,Kokkos::Threads>(start, end-i, 12 ) ) );
 
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Threads>(start, end-i, 1 ) ) );
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Threads>(start, end-i, 2 ) ) );
@@ -504,6 +510,8 @@ TEST_F( threads , atomic_operations )
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Threads>(start, end-i, 7 ) ) );
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Threads>(start, end-i, 8 ) ) );
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Threads>(start, end-i, 9 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Threads>(start, end-i, 11 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<unsigned long int,Kokkos::Threads>(start, end-i, 12 ) ) );
 
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Threads>(start, end-i, 1 ) ) );
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Threads>(start, end-i, 2 ) ) );
@@ -514,6 +522,8 @@ TEST_F( threads , atomic_operations )
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Threads>(start, end-i, 7 ) ) );
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Threads>(start, end-i, 8 ) ) );
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Threads>(start, end-i, 9 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Threads>(start, end-i, 11 ) ) );
+    ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestIntegralType<long long int,Kokkos::Threads>(start, end-i, 12 ) ) );
 
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<double,Kokkos::Threads>(start, end-i, 1 ) ) );
     ASSERT_TRUE( ( TestAtomicOperations::AtomicOperationsTestNonIntegralType<double,Kokkos::Threads>(start, end-i, 2 ) ) );
