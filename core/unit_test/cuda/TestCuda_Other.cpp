@@ -172,6 +172,7 @@ TEST_F( cuda, tile_layout )
 }
 
 #if defined (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA)
+#if defined (KOKKOS_COMPILER_CLANG)
 TEST_F( cuda , dispatch )
 {
   const int repeat = 100 ;
@@ -181,6 +182,7 @@ TEST_F( cuda , dispatch )
                         , KOKKOS_LAMBDA( int ) {} );
   }}
 }
+#endif
 #endif
 
 } // namespace test
