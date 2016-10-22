@@ -251,59 +251,59 @@ echo -e "\tmake -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_OPTION
 echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > example/fixture/Makefile
 echo "" >> example/fixture/Makefile
 echo "all:" >> example/fixture/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_OPTIONS}" >> example/fixture/Makefile
+echo -e "\tmake -j -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_OPTIONS}" >> example/fixture/Makefile
 echo "" >> example/fixture/Makefile
 echo "test: all" >> example/fixture/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_OPTIONS} test" >> example/fixture/Makefile
+echo -e "\tmake -j -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_OPTIONS} test" >> example/fixture/Makefile
 echo "" >> example/fixture/Makefile
 echo "clean:" >> example/fixture/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_OPTIONS} clean" >> example/fixture/Makefile
+echo -e "\tmake -j -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_OPTIONS} clean" >> example/fixture/Makefile
 
 echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > example/feint/Makefile
 echo "" >> example/feint/Makefile
 echo "all:" >> example/feint/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_OPTIONS}" >> example/feint/Makefile
+echo -e "\tmake -j -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_OPTIONS}" >> example/feint/Makefile
 echo "" >> example/feint/Makefile
 echo "test: all" >> example/feint/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_OPTIONS} test" >> example/feint/Makefile
+echo -e "\tmake -j -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_OPTIONS} test" >> example/feint/Makefile
 echo "" >> example/feint/Makefile
 echo "clean:" >> example/feint/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_OPTIONS} clean" >> example/feint/Makefile
+echo -e "\tmake -j -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_OPTIONS} clean" >> example/feint/Makefile
 
 echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > example/fenl/Makefile
 echo "" >> example/fenl/Makefile
 echo "all:" >> example/fenl/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_OPTIONS}" >> example/fenl/Makefile
+echo -e "\tmake -j -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_OPTIONS}" >> example/fenl/Makefile
 echo "" >> example/fenl/Makefile
 echo "test: all" >> example/fenl/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_OPTIONS} test" >> example/fenl/Makefile
+echo -e "\tmake -j -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_OPTIONS} test" >> example/fenl/Makefile
 echo "" >> example/fenl/Makefile
 echo "clean:" >> example/fenl/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_OPTIONS} clean" >> example/fenl/Makefile
+echo -e "\tmake -j -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_OPTIONS} clean" >> example/fenl/Makefile
 
 echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > example/tutorial/Makefile
 echo "" >> example/tutorial/Makefile
 echo "build:" >> example/tutorial/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_OPTIONS='${KOKKOS_OPTIONS}' KOKKOS_PATH=${KOKKOS_PATH} build">> example/tutorial/Makefile
+echo -e "\tmake -j -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_OPTIONS='${KOKKOS_OPTIONS}' KOKKOS_PATH=${KOKKOS_PATH} build">> example/tutorial/Makefile
 echo "" >> example/tutorial/Makefile
 echo "test: build" >> example/tutorial/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_OPTIONS='${KOKKOS_OPTIONS}' KOKKOS_PATH=${KOKKOS_PATH} test" >> example/tutorial/Makefile
+echo -e "\tmake -j -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_OPTIONS='${KOKKOS_OPTIONS}' KOKKOS_PATH=${KOKKOS_PATH} test" >> example/tutorial/Makefile
 echo "" >> example/tutorial/Makefile
 echo "clean:" >> example/tutorial/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_OPTIONS='${KOKKOS_OPTIONS}' KOKKOS_PATH=${KOKKOS_PATH} clean" >> example/tutorial/Makefile
+echo -e "\tmake -j -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_OPTIONS='${KOKKOS_OPTIONS}' KOKKOS_PATH=${KOKKOS_PATH} clean" >> example/tutorial/Makefile
 
 
 if [ ${#KOKKOS_ENABLE_EXAMPLE_ICHOL} -gt 0 ]; then
 echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > example/ichol/Makefile
 echo "" >> example/ichol/Makefile
 echo "all:" >> example/ichol/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_OPTIONS}" >> example/ichol/Makefile
+echo -e "\tmake -j -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_OPTIONS}" >> example/ichol/Makefile
 echo "" >> example/ichol/Makefile
 echo "test: all" >> example/ichol/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_OPTIONS} test" >> example/ichol/Makefile
+echo -e "\tmake -j -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_OPTIONS} test" >> example/ichol/Makefile
 echo "" >> example/ichol/Makefile
 echo "clean:" >> example/ichol/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_OPTIONS} clean" >> example/ichol/Makefile
+echo -e "\tmake -j -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_OPTIONS} clean" >> example/ichol/Makefile
 fi
 
 # Generate top level directory makefile.
