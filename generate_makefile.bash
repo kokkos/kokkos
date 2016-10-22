@@ -81,6 +81,7 @@ case $key in
     echo ""
     echo "--arch=[OPTIONS]:            set target architectures. Options are:"
     echo "                               ARMv80    = ARMv8.0 Compatible CPU"
+    echo "                               ARMv81    = ARMv8.1 Compatible CPU"
     echo "                               SNB       = Intel Sandy/Ivy Bridge CPUs"
     echo "                               HSW       = Intel Haswell CPUs"
     echo "                               KNC       = Intel Knights Corner Xeon Phi"
