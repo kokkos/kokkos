@@ -68,9 +68,6 @@ TEST_F( cuda , range_tag )
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(0);
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(0);
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_scan(0);
-  #if defined (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA) 
-  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_dynamic_policy(0);
-  #endif
 
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_for(2);
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_reduce(2);
@@ -79,9 +76,6 @@ TEST_F( cuda , range_tag )
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(3);
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(3);
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_scan(3);
-  #if defined (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA) 
-  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_dynamic_policy(3);
-  #endif
 
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_for(1000);
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Static> >::test_reduce(1000);
@@ -90,9 +84,6 @@ TEST_F( cuda , range_tag )
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_for(1001);
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(1001);
   TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_scan(1001);
-  #if defined (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA) 
-  TestRange< Kokkos::Cuda , Kokkos::Schedule<Kokkos::Dynamic> >::test_dynamic_policy(1000);
-  #endif
 }
 
 
