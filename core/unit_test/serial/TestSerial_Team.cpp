@@ -62,6 +62,11 @@ TEST_F( serial , team_shared_request) {
   TestSharedTeam< Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >();
 }
 
+TEST_F( serial, team_scratch_request) {
+  TestScratchTeam< Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >();
+  TestScratchTeam< Kokkos::Serial , Kokkos::Schedule<Kokkos::Dynamic> >();
+}
+
 #if defined(KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA)
 TEST_F( serial , team_lambda_shared_request) {
   TestLambdaSharedTeam< Kokkos::HostSpace, Kokkos::Serial , Kokkos::Schedule<Kokkos::Static> >();

@@ -67,6 +67,11 @@ TEST_F( threads , team_shared_request) {
   TestSharedTeam< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >();
 }
 
+TEST_F( threads, team_scratch_request) {
+  TestScratchTeam< Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >();
+  TestScratchTeam< Kokkos::Threads , Kokkos::Schedule<Kokkos::Dynamic> >();
+}
+
 #if defined(KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA)
 TEST_F( threads , team_lambda_shared_request) {
   TestLambdaSharedTeam< Kokkos::HostSpace, Kokkos::Threads , Kokkos::Schedule<Kokkos::Static> >();
