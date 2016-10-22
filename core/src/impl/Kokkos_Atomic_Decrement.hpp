@@ -41,6 +41,8 @@
 //@HEADER
 */
 
+#include "impl/Kokkos_Atomic_Fetch_Sub.hpp"
+
 #if defined( KOKKOS_ATOMIC_HPP) && ! defined( KOKKOS_ATOMIC_DECREMENT )
 #define KOKKOS_ATOMIC_DECREMENT
 
