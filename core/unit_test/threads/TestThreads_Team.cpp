@@ -103,12 +103,20 @@ TEST_F( threads , team_vector )
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Threads >(10) ) );
 }
 
+#ifdef KOKKOS_COMPILER_GNU
+#if ( KOKKOS_COMPILER_GNU == 472 )
+#define SKIP_TEST
+#endif
+#endif
+
+#ifndef SKIP_TEST
 TEST_F( threads, triple_nested_parallelism )
 {
   TestTripleNestedReduce< double, Kokkos::Threads >( 8192, 2048 , 32 , 32 );
   TestTripleNestedReduce< double, Kokkos::Threads >( 8192, 2048 , 32 , 16 );
   TestTripleNestedReduce< double, Kokkos::Threads >( 8192, 2048 , 16 , 16 );
 }
+#endif
 
 } // namespace test
 
