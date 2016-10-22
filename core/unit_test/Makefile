@@ -5,6 +5,7 @@ GTEST_PATH = ../../tpls/gtest
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/serial
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/threads
+vpath %.cpp ${KOKKOS_PATH}/core/unit_test/openmp
 TEST_HEADERS = $(wildcard $(KOKKOS_PATH)/core/unit_test/*.hpp)
 TEST_HEADERS += $(wildcard $(KOKKOS_PATH)/core/unit_test/*/*.hpp)
 
@@ -49,7 +50,13 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
-	OBJ_OPENMP = TestOpenMP_c.o TestOpenMP_b.o TestOpenMP_a.o TestOpenMP.o UnitTestMain.o gtest-all.o
+	OBJ_OPENMP = TestOpenMP_Other.o TestOpenMP_Reductions.o TestOpenMP_Atomics.o TestOpenMP_Team.o
+	OBJ_OPENMP += TestOpenMP_SubView_a.o TestOpenMP_SubView_b.o
+	OBJ_OPENMP += TestOpenMP_SubView_c01.o TestOpenMP_SubView_c02.o TestOpenMP_SubView_c03.o
+	OBJ_OPENMP += TestOpenMP_SubView_c04.o  TestOpenMP_SubView_c05.o  TestOpenMP_SubView_c06.o
+	OBJ_OPENMP += TestOpenMP_SubView_c07.o  TestOpenMP_SubView_c08.o  TestOpenMP_SubView_c09.o
+	OBJ_OPENMP += TestOpenMP_SubView_c10.o TestOpenMP_SubView_c11.o TestOpenMP_SubView_c12.o
+	OBJ_OPENMP += TestOpenMP_ViewAPI_a.o TestOpenMP_ViewAPI_b.o UnitTestMain.o gtest-all.o
 	TARGETS += KokkosCore_UnitTest_OpenMP
 	TEST_TARGETS += test-openmp
 endif
