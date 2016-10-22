@@ -34,13 +34,15 @@ TEST_TARGETS =
 TARGETS =
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
-	OBJ_CUDA = TestCuda_Other.o TestCuda_Reductions.o TestCuda_Atomics.o TestCuda_Team.o
+	OBJ_CUDA = TestCuda_Other.o TestCuda_Reductions_a.o TestCuda_Reductions_b.o TestCuda_Atomics.o TestCuda_Team.o TestCuda_Spaces.o
 	OBJ_CUDA += TestCuda_SubView_a.o TestCuda_SubView_b.o
 	OBJ_CUDA += TestCuda_SubView_c01.o TestCuda_SubView_c02.o TestCuda_SubView_c03.o
 	OBJ_CUDA += TestCuda_SubView_c04.o  TestCuda_SubView_c05.o  TestCuda_SubView_c06.o
 	OBJ_CUDA += TestCuda_SubView_c07.o  TestCuda_SubView_c08.o  TestCuda_SubView_c09.o
 	OBJ_CUDA += TestCuda_SubView_c10.o TestCuda_SubView_c11.o TestCuda_SubView_c12.o
-	OBJ_CUDA += TestCuda_ViewAPI_a.o TestCuda_ViewAPI_b.o UnitTestMain.o gtest-all.o
+	OBJ_CUDA += TestCuda_ViewAPI_a.o TestCuda_ViewAPI_b.o  TestCuda_ViewAPI_c.o TestCuda_ViewAPI_d.o
+	OBJ_CUDA += TestCuda_ViewAPI_e.o TestCuda_ViewAPI_f.o  TestCuda_ViewAPI_g.o TestCuda_ViewAPI_h.o
+	OBJ_CUDA += UnitTestMain.o gtest-all.o
 	TARGETS += KokkosCore_UnitTest_Cuda
 	TEST_TARGETS += test-cuda
 endif
@@ -91,7 +93,7 @@ OBJ_HWLOC = TestHWLOC.o UnitTestMain.o gtest-all.o
 TARGETS += KokkosCore_UnitTest_HWLOC
 TEST_TARGETS += test-hwloc
 
-OBJ_DEFAULT = TestDefaultDeviceType.o TestDefaultDeviceType_a.o TestDefaultDeviceType_b.o UnitTestMain.o gtest-all.o
+OBJ_DEFAULT = TestDefaultDeviceType.o TestDefaultDeviceType_a.o TestDefaultDeviceType_b.o TestDefaultDeviceType_c.o TestDefaultDeviceType_d.o UnitTestMain.o gtest-all.o
 TARGETS += KokkosCore_UnitTest_Default
 TEST_TARGETS += test-default
 

@@ -98,5 +98,12 @@ TEST_F( serial , team_vector )
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Serial >(10) ) );
 }
 
+TEST_F( serial, triple_nested_parallelism )
+{
+  TestTripleNestedReduce< double, Kokkos::Serial >( 8192, 2048 , 32 , 32 );
+  TestTripleNestedReduce< double, Kokkos::Serial >( 8192, 2048 , 32 , 16 );
+  TestTripleNestedReduce< double, Kokkos::Serial >( 8192, 2048 , 16 , 16 );
+}
+
 } // namespace test
 
