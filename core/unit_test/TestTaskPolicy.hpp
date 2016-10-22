@@ -58,6 +58,7 @@ namespace TestTaskPolicy {
 
 namespace {
 
+inline
 long eval_fib( long n )
 {
   constexpr long mask = 0x03 ;
