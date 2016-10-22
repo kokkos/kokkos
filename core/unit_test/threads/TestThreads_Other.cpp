@@ -111,7 +111,7 @@ TEST_F( threads , memory_pool )
 //----------------------------------------------------------------------------
 
 #if defined( KOKKOS_ENABLE_TASKPOLICY )
-
+/*
 TEST_F( threads , task_fib )
 {
   for ( int i = 0 ; i < 25 ; ++i ) {
@@ -131,7 +131,7 @@ TEST_F( threads , task_team )
   TestTaskPolicy::TestTaskTeam< Kokkos::Threads >::run(1000);
   //TestTaskPolicy::TestTaskTeamValue< Kokkos::Threads >::run(1000); //put back after testing
 }
-
+*/
 #endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
 
 //----------------------------------------------------------------------------
