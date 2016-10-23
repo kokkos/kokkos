@@ -88,40 +88,14 @@ class threads : public ::testing::Test {
 protected:
   static void SetUpTestCase()
   {
-    // Finalize without initialize is a no-op:
-    Kokkos::Threads::finalize();
-
     const unsigned numa_count       = Kokkos::hwloc::get_available_numa_count();
     const unsigned cores_per_numa   = Kokkos::hwloc::get_available_cores_per_numa();
     const unsigned threads_per_core = Kokkos::hwloc::get_available_threads_per_core();
 
     unsigned threads_count = 0 ;
 
-    // Initialize and finalize with no threads:
-    Kokkos::Threads::initialize( 1u );
-    Kokkos::Threads::finalize();
-
     threads_count = std::max( 1u , numa_count )
                   * std::max( 2u , cores_per_numa * threads_per_core );
-
-    Kokkos::Threads::initialize( threads_count );
-    Kokkos::Threads::finalize();
-
-    threads_count = std::max( 1u , numa_count * 2 )
-                  * std::max( 2u , ( cores_per_numa * threads_per_core ) / 2 );
-
-    Kokkos::Threads::initialize( threads_count );
-    Kokkos::Threads::finalize();
-
-    // Quick attempt to verify thread start/terminate don't have race condition:
-    threads_count = std::max( 1u , numa_count )
-                  * std::max( 2u , ( cores_per_numa * threads_per_core ) / 2 );
-    for ( unsigned i = 0 ; i < 10 ; ++i ) {
-      Kokkos::Threads::initialize( threads_count );
-      Kokkos::Threads::sleep();
-      Kokkos::Threads::wake();
-      Kokkos::Threads::finalize();
-    }
 
     Kokkos::Threads::initialize( threads_count );
     Kokkos::Threads::print_configuration( std::cout , true /* detailed */ );
