@@ -357,6 +357,11 @@ echo -e "\tmake -C example/feint test" >> Makefile
 echo -e "\tmake -C example/fenl test" >> Makefile
 echo -e "\tmake -C example/tutorial test" >> Makefile
 echo "" >> Makefile
+echo "unit-tests-only:" >> Makefile
+echo -e "\tmake -C core/unit_test test" >> Makefile
+echo -e "\tmake -C containers/unit_tests test" >> Makefile
+echo -e "\tmake -C algorithms/unit_tests test" >> Makefile
+echo "" >> Makefile
 echo "clean:" >> Makefile
 echo -e "\tmake -C core/unit_test clean" >> Makefile
 echo -e "\tmake -C core/perf_test clean" >> Makefile
