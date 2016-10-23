@@ -79,7 +79,7 @@ class host : public ::testing::Test {
 protected:
   static void SetUpTestCase()
   {
-    if(Kokkos::hwloc::available) {
+    if(Kokkos::hwloc::available()) {
       const unsigned numa_count       = Kokkos::hwloc::get_available_numa_count();
       const unsigned cores_per_numa   = Kokkos::hwloc::get_available_cores_per_numa();
       const unsigned threads_per_core = Kokkos::hwloc::get_available_threads_per_core();
