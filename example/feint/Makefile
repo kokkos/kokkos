@@ -6,20 +6,18 @@ EXAMPLE_HEADERS = $(wildcard $(KOKKOS_PATH)/example/common/*.hpp ${KOKKOS_PATH}/
 
 default: build_all
 	echo "End Build"
-        
-include $(KOKKOS_PATH)/Makefile.kokkos
 
-ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
-	CXX = $(NVCC_WRAPPER)
-	CXXFLAGS ?= -O3
-	LINK = $(CXX)
-	LDFLAGS ?= -lpthread
+ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
+  CXX = $(KOKKOS_PATH)/config/nvcc_wrapper
 else
-	CXX ?= g++
-	CXXFLAGS ?= -O3
-	LINK ?= $(CXX)
-	LDFLAGS ?= -lpthread
+  CXX = g++
 endif
+
+CXXFLAGS = -O3
+LINK ?= $(CXX)
+LDFLAGS ?= 
+
+include $(KOKKOS_PATH)/Makefile.kokkos        
 
 KOKKOS_CXXFLAGS +=	\
 	-I${KOKKOS_PATH}/example/common	\

@@ -89,7 +89,7 @@ protected:
       threads_count = std::max( 1u , numa_count )
                     * std::max( 2u , cores_per_numa * threads_per_core );
                   
-      Kokkos::Threads::initialize( threads_count );
+      TestHostDevice::initialize( threads_count );
     } else {
       const unsigned thread_count = 4 ;   
       TestHostDevice::initialize( thread_count );
