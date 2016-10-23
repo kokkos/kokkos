@@ -16,7 +16,7 @@ CXXFLAGS = -O3 -I$(SRC_DIR)
 LDFLAGS ?=
 
 ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
-  CXX = $(KOKKOS_PATH)/config/nvcc_wrapper
+  CXX = $(KOKKOS_PATH)/bin/nvcc_wrapper
   EXE = $(addsuffix .cuda, $(shell basename $(SRC_DIR)))
   CXXFLAGS += -I$(SRC_DIR) -I$(CUDA_PATH) -O3
   LDFLAGS += -L$(CUDA_PATH)/lib64 -lcusparse

@@ -77,6 +77,11 @@ build-makefile-kokkos:
 	echo "KOKKOS_LINK_DEPENDS  = $(KOKKOS_LINK_DEPENDS)" >> Makefile.kokkos
 	echo "KOKKOS_LIBS = $(KOKKOS_LIBS)" >> Makefile.kokkos
 	echo "KOKKOS_LDFLAGS = $(KOKKOS_LDFLAGS)" >> Makefile.kokkos
+	echo "" >> Makefile.kokkos
+	echo "#Internal settings which need to propagated for Kokkos examples" >> Makefile.kokkos
+	echo "KOKKOS_INTERNAL_USE_CUDA = ${KOKKOS_INTERNAL_USE_CUDA}" >> Makefile.kokkos
+	echo "KOKKOS_INTERNAL_USE_OPENMP = ${KOKKOS_INTERNAL_USE_OPENMP}" >> Makefile.kokkos
+	echo "KOKKOS_INTERNAL_USE_PTHREADS = ${KOKKOS_INTERNAL_USE_PTHREADS}" >> Makefile.kokkos
 	sed \
 		-e 's|$(KOKKOS_PATH)/core/src|$(PREFIX)/include|g' \
 		-e 's|$(KOKKOS_PATH)/containers/src|$(PREFIX)/include|g' \
@@ -98,27 +103,27 @@ mkdir:
 
 copy-cuda: mkdir
 	mkdir -p $(PREFIX)/include/Cuda
-	cp $(KOKKOS_HEADERS_CUDA) $(PREFIX)/include/Cuda
+	cp -u $(KOKKOS_HEADERS_CUDA) $(PREFIX)/include/Cuda
 
 copy-threads: mkdir
 	mkdir -p $(PREFIX)/include/Threads
-	cp $(KOKKOS_HEADERS_THREADS) $(PREFIX)/include/Threads
+	cp -u $(KOKKOS_HEADERS_THREADS) $(PREFIX)/include/Threads
 
 copy-qthread: mkdir
 	mkdir -p $(PREFIX)/include/Qthread
-	cp $(KOKKOS_HEADERS_QTHREAD) $(PREFIX)/include/Qthread
+	cp -u $(KOKKOS_HEADERS_QTHREAD) $(PREFIX)/include/Qthread
 
 copy-openmp: mkdir
 	mkdir -p $(PREFIX)/include/OpenMP
-	cp $(KOKKOS_HEADERS_OPENMP) $(PREFIX)/include/OpenMP
+	cp -u $(KOKKOS_HEADERS_OPENMP) $(PREFIX)/include/OpenMP
 
 install: mkdir $(CONDITIONAL_COPIES) build-lib 
-	cp $(NVCC_WRAPPER) $(PREFIX)/bin
-	cp $(KOKKOS_HEADERS_INCLUDE) $(PREFIX)/include
-	cp $(KOKKOS_HEADERS_INCLUDE_IMPL) $(PREFIX)/include/impl
-	cp Makefile.kokkos $(PREFIX)
-	cp libkokkos.a $(PREFIX)/lib
-	cp KokkosCore_config.h $(PREFIX)/include
+	cp -u $(NVCC_WRAPPER) $(PREFIX)/bin
+	cp -u $(KOKKOS_HEADERS_INCLUDE) $(PREFIX)/include
+	cp -u $(KOKKOS_HEADERS_INCLUDE_IMPL) $(PREFIX)/include/impl
+	cp -u Makefile.kokkos $(PREFIX)
+	cp -u libkokkos.a $(PREFIX)/lib
+	cp -u KokkosCore_config.h $(PREFIX)/include
 
 clean: kokkos-clean
 	rm -f Makefile.kokkos

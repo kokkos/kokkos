@@ -1,12 +1,13 @@
 KOKKOS_PATH = ../../..
-SRC = $(wildcard ${KOKKOS_PATH}/example/tutorial/03_simple_view/*.cpp)
+KOKKOS_SRC_PATH = ${KOKKOS_PATH}
+SRC = $(wildcard ${KOKKOS_SRC_PATH}/example/tutorial/03_simple_view/*.cpp)
 vpath %.cpp $(sort $(dir $(SRC)))
 
 default: build
 	echo "Start Build"
 
 ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
-CXX = ${KOKKOS_PATH}/config/nvcc_wrapper
+CXX = ${KOKKOS_PATH}/bin/nvcc_wrapper
 CXXFLAGS = -O3
 LINK = ${CXX}
 LINKFLAGS = 

@@ -13,7 +13,7 @@ default: build
 	echo "Start Build"
 
 ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
-  CXX = $(KOKKOS_PATH)/config/nvcc_wrapper
+  CXX = $(KOKKOS_PATH)/bin/nvcc_wrapper
   EXE = $(addsuffix .cuda, $(shell basename $(SRC_DIR)))
 else
   CXX = g++
