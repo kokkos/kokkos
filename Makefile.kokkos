@@ -3,7 +3,7 @@
 #Options: OpenMP,Serial,Pthreads,Cuda
 #KOKKOS_DEVICES ?= "OpenMP"
 KOKKOS_DEVICES ?= "Pthreads"
-#Options: KNC,SNB,HSW,Kepler,Kepler30,Kepler32,Kepler35,Kepler37,Maxwell,Maxwell50,Maxwell52,Maxwell53,ARMv8,BGQ,Power7,Power8,KNL,BDW
+#Options: KNC,SNB,HSW,Kepler,Kepler30,Kepler32,Kepler35,Kepler37,Maxwell,Maxwell50,Maxwell52,Maxwell53,ARMv80,ARMv81,ARMv8-ThunderX,BGQ,Power7,Power8,KNL,BDW
 KOKKOS_ARCH ?= ""
 #Options: yes,no
 KOKKOS_DEBUG ?= "no"
@@ -160,7 +160,9 @@ KOKKOS_INTERNAL_USE_ARCH_NVIDIA := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_AR
 endif
 
 #ARM based
-KOKKOS_INTERNAL_USE_ARCH_ARMV80 := $(strip $(shell echo $(KOKKOS_ARCH) | grep ARMv8 | wc -l))
+KOKKOS_INTERNAL_USE_ARCH_ARMV80 := $(strip $(shell echo $(KOKKOS_ARCH) | grep ARMv80 | wc -l))
+KOKKOS_INTERNAL_USE_ARCH_ARMV81 := $(strip $(shell echo $(KOKKOS_ARCH) | grep ARMv81 | wc -l))
+KOKKOS_INTERNAL_USE_ARCH_ARMV8_THUNDERX := $(strip $(shell echo $(KOKKOS_ARCH) | grep ARMv8-ThunderX | wc -l))
 
 #IBM based
 KOKKOS_INTERNAL_USE_ARCH_BGQ := $(strip $(shell echo $(KOKKOS_ARCH) | grep BGQ | wc -l))
@@ -182,7 +184,7 @@ KOKKOS_INTERNAL_USE_ISA_KNC        := $(strip $(shell echo $(KOKKOS_INTERNAL_USE
 KOKKOS_INTERNAL_USE_ISA_POWERPCLE  := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_POWER8) | bc ))
 
 #Incompatible flags?
-KOKKOS_INTERNAL_USE_ARCH_MULTIHOST := $(strip $(shell echo "$(KOKKOS_INTERNAL_USE_ARCH_AVX)+$(KOKKOS_INTERNAL_USE_ARCH_AVX2)+$(KOKKOS_INTERNAL_USE_ARCH_KNC)+$(KOKKOS_INTERNAL_USE_ARCH_IBM)+$(KOKKOS_INTERNAL_USE_ARCH_AMDAVX)+$(KOKKOS_INTERNAL_USE_ARCH_ARMV80)>1" | bc ))
+KOKKOS_INTERNAL_USE_ARCH_MULTIHOST := $(strip $(shell echo "$(KOKKOS_INTERNAL_USE_ARCH_AVX)+$(KOKKOS_INTERNAL_USE_ARCH_AVX2)+$(KOKKOS_INTERNAL_USE_ARCH_KNC)+$(KOKKOS_INTERNAL_USE_ARCH_IBM)+$(KOKKOS_INTERNAL_USE_ARCH_AMDAVX)+$(KOKKOS_INTERNAL_USE_ARCH_ARMV80)+$(KOKKOS_INTERNAL_USE_ARCH_ARMV81)+$(KOKKOS_INTERNAL_USE_ARCH_ARMV8_THUNDERX)>1" | bc ))
 KOKKOS_INTERNAL_USE_ARCH_MULTIGPU := $(strip $(shell echo "$(KOKKOS_INTERNAL_USE_ARCH_NVIDIA)>1" | bc))
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MULTIHOST), 1)
@@ -333,6 +335,55 @@ endif
 endif
 
 #Add Architecture flags
+
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ARMV80), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_ARMV80 1" >> KokkosCore_config.tmp )
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+	KOKKOS_CXXFLAGS +=
+	KOKKOS_LDFLAGS +=
+    else
+	ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
+		KOKKOS_CXXFLAGS +=
+		KOKKOS_LDFLAGS +=
+	else
+		KOKKOS_CXXFLAGS += -march=armv8-a
+		KOKKOS_LDFLAGS += -march=armv8-a
+	endif
+    endif
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ARMV81), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_ARMV81 1" >> KokkosCore_config.tmp )
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+	KOKKOS_CXXFLAGS +=
+	KOKKOS_LDFLAGS +=
+    else
+	ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
+		KOKKOS_CXXFLAGS +=
+		KOKKOS_LDFLAGS +=
+	else
+		KOKKOS_CXXFLAGS += -march=armv8.1-a
+		KOKKOS_LDFLAGS += -march=armv8.1-a
+	endif
+    endif
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ARMV8_THUNDERX), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_ARMV80 1" >> KokkosCore_config.tmp )
+    tmp := $(shell echo "\#define KOKKOS_ARCH_ARMV8_THUNDERX 1" >> KokkosCore_config.tmp )
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+	KOKKOS_CXXFLAGS +=
+	KOKKOS_LDFLAGS +=
+    else
+	ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
+		KOKKOS_CXXFLAGS +=
+		KOKKOS_LDFLAGS +=
+	else
+		KOKKOS_CXXFLAGS += -march=armv8-a -mtune=thunderx
+		KOKKOS_LDFLAGS += -march=armv8-a -mtune=thunderx
+	endif
+    endif
+endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX), 1)
     tmp := $(shell echo "\#define KOKKOS_ARCH_AVX 1" >> KokkosCore_config.tmp )
