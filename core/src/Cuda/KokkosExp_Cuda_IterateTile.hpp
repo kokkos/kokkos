@@ -1145,9 +1145,9 @@ public:
       // TODO: Check product of tiles fits within max size < 1024
       const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2] , m_rp.m_tile[3] ); //pad for mult of 16? check within max num threads bounds? 
       const dim3 grid( 
-          std::min( ( static_cast<int>(( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] 
+          std::min( ( static_cast<index_type>(( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] 
                     *  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ))
-                  , static_cast<int>(maxblocks) ) 
+                  , static_cast<index_type>(maxblocks) ) 
           //std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks ) 
         , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.y - 1 ) / block.y , maxblocks ) 
         , std::min( ( m_rp.m_upper[3] - m_rp.m_lower[3] + block.z - 1 ) / block.z , maxblocks ) 
@@ -1160,12 +1160,12 @@ public:
       // TODO: Check product of tiles fits within max size < 1024
       const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2]*m_rp.m_tile[3] , m_rp.m_tile[4] ); //pad for mult of 16? check within max num threads bounds? 
       const dim3 grid( 
-          std::min( static_cast<int>(( ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] 
+          std::min( static_cast<index_type>(( ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] 
                    *  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ))
-                  , static_cast<int>(maxblocks) ) 
-        , std::min( static_cast<int>(( ( m_rp.m_upper[2] - m_rp.m_lower[2] + m_rp.m_tile[2] - 1 ) / m_rp.m_tile[2] 
+                  , static_cast<index_type>(maxblocks) ) 
+        , std::min( static_cast<index_type>(( ( m_rp.m_upper[2] - m_rp.m_lower[2] + m_rp.m_tile[2] - 1 ) / m_rp.m_tile[2] 
                    *  ( m_rp.m_upper[3] - m_rp.m_lower[3] + m_rp.m_tile[3] - 1 ) / m_rp.m_tile[3] ))
-                  , static_cast<int>(maxblocks) ) 
+                  , static_cast<index_type>(maxblocks) ) 
         //, std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.y - 1 ) / block.y , maxblocks ) 
         , std::min( ( m_rp.m_upper[4] - m_rp.m_lower[4] + block.z - 1 ) / block.z , maxblocks ) 
         );
@@ -1177,15 +1177,15 @@ public:
       // TODO: Check product of tiles fits within max size < 1024
       const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2]*m_rp.m_tile[3] , m_rp.m_tile[4]*m_rp.m_tile[5] ); //pad for mult of 16? check within max num threads bounds? 
       const dim3 grid( 
-          std::min( static_cast<int>(( ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] 
+          std::min( static_cast<index_type>(( ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] 
                    *  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ))
-                  , static_cast<int>(maxblocks) ) 
-        , std::min( static_cast<int>(( ( m_rp.m_upper[2] - m_rp.m_lower[2] + m_rp.m_tile[2] - 1 ) / m_rp.m_tile[2] 
+                  , static_cast<index_type>(maxblocks) ) 
+        , std::min( static_cast<index_type>(( ( m_rp.m_upper[2] - m_rp.m_lower[2] + m_rp.m_tile[2] - 1 ) / m_rp.m_tile[2] 
                    *  ( m_rp.m_upper[3] - m_rp.m_lower[3] + m_rp.m_tile[3] - 1 ) / m_rp.m_tile[3] ))
-                  , static_cast<int>(maxblocks) ) 
-        , std::min( static_cast<int>(( ( m_rp.m_upper[4] - m_rp.m_lower[4] + m_rp.m_tile[4] - 1 ) / m_rp.m_tile[4] 
+                  , static_cast<index_type>(maxblocks) ) 
+        , std::min( static_cast<index_type>(( ( m_rp.m_upper[4] - m_rp.m_lower[4] + m_rp.m_tile[4] - 1 ) / m_rp.m_tile[4] 
                    *  ( m_rp.m_upper[5] - m_rp.m_lower[5] + m_rp.m_tile[5] - 1 ) / m_rp.m_tile[5] ))
-                  , static_cast<int>(maxblocks) ) 
+                  , static_cast<index_type>(maxblocks) ) 
         );
       CudaLaunch< DeviceIterateTile >( *this , grid , block );
     }

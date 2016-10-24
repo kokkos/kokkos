@@ -136,7 +136,7 @@ struct MDRangePolicy
 
   using index_type  = typename traits::index_type;
   using point_type  = Kokkos::Array<index_type,rank>;
-  using tile_type   = Kokkos::Array<int,rank>;
+  using tile_type   = Kokkos::Array<index_type,rank>;
 
 
   MDRangePolicy( point_type const& lower, point_type const& upper, tile_type const& tile = tile_type{} )

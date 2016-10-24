@@ -53,11 +53,6 @@ struct MultiDimRangePerf3D
 
   using iterate_type = Kokkos::Experimental::Iterate;
 
-  iterate_type inner_direction; //these are unnecessary
-  iterate_type outer_direction;
-
-//  typedef MultiDimRangePerf3D<DeviceType,ScalarType,TestLayout> self_type;
-
   typedef Kokkos::View<ScalarType***, TestLayout, DeviceType> view_type;
   typedef typename view_type::HostMirror host_view_type;
 
@@ -68,16 +63,7 @@ struct MultiDimRangePerf3D
 
   MultiDimRangePerf3D(const view_type & A_, const int &irange_,  const int &jrange_, const int &krange_)
   : A(A_), irange(irange_), jrange(jrange_), krange(krange_)
-  {
-    if ( std::is_same<TestLayout , Kokkos::LayoutRight>::value ) {
-      inner_direction = iterate_type::Right;
-      outer_direction = iterate_type::Right;
-    }
-    else {
-      inner_direction = iterate_type::Left;
-      outer_direction = iterate_type::Left;
-    }
-  }
+  {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int i, const int j, const int k) const
@@ -103,7 +89,7 @@ struct MultiDimRangePerf3D
   };
 
 
-  static double test_multi_index(const int icount, const int jcount, const int kcount, const int Ti = 1, const int Tj = 1, const int Tk = 1, const int iter = 1)
+  static double test_multi_index(const unsigned icount, const unsigned jcount, const unsigned kcount, const unsigned int Ti = 1, const unsigned int Tj = 1, const unsigned int Tk = 1, const int iter = 1)
   {
     //This test performs multidim range over all dims
     view_type Atest("Atest", icount, jcount, kcount);
@@ -215,11 +201,6 @@ struct MultiDimRangePerf3D_Collapse
 
   using iterate_type = Kokkos::Experimental::Iterate;
 
-  iterate_type inner_direction; //these shouldn't be necessary after all
-  iterate_type outer_direction;
-
-//  typedef MultiDimRangePerf3D<DeviceType,ScalarType,TestLayout> self_type;
-
   typedef Kokkos::View<ScalarType***, TestLayout, DeviceType> view_type;
   typedef typename view_type::HostMirror host_view_type;
 
@@ -230,16 +211,7 @@ struct MultiDimRangePerf3D_Collapse
 
   MultiDimRangePerf3D_Collapse(const view_type & A_, const int &irange_,  const int &jrange_, const int &krange_)
   : A(A_), irange(irange_), jrange(jrange_), krange(krange_)
-  {
-    if ( std::is_same<TestLayout , Kokkos::LayoutRight>::value ) {
-      inner_direction = iterate_type::Right;
-      outer_direction = iterate_type::Right;
-    }
-    else {
-      inner_direction = iterate_type::Left;
-      outer_direction = iterate_type::Left;
-    }
-  }
+  {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int r) const
@@ -420,7 +392,7 @@ struct MultiDimRangePerf3D_Collapse
   } 
 #endif
 
-  static double test_index_collapse(const int icount, const int jcount, const int kcount, const int iter = 1)
+  static double test_index_collapse(const unsigned icount, const unsigned jcount, const unsigned kcount, const int iter = 1)
   {
     // This test refers to collapsing two dims while using the RangePolicy
     view_type Atest("Atest", icount, jcount, kcount);
@@ -581,7 +553,7 @@ struct MultiDimRangePerf3D_CollapseAll
   };
 
 
-  static double test_collapse_all(const int icount, const int jcount, const int kcount, const int iter = 1)
+  static double test_collapse_all(const unsigned icount, const unsigned jcount, const unsigned kcount, const int iter = 1)
   {
     //This test refers to collapsing all dims using the RangePolicy
     view_type Atest("Atest", icount, jcount, kcount);

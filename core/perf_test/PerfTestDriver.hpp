@@ -86,13 +86,20 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
   }
 
 
+#define MDRANGE_PERFORMANCE_OUTPUT_VERBOSE 0
   for (int i = exp_beg ; i < exp_end ; ++i) {
     const int range_length = (1<<i) + range_offset;
+
+    std::cout << "--------------------------------------------------------------\n"
+      << "MDRange Test:  range bounds: " << range_length << " , " << range_length << " , " << range_length 
+      << "\n--------------------------------------------------------------"
+      << std::endl;
 
     int t0_min = 0, t1_min = 0, t2_min = 0;
     double seconds_min = 0.0;
 
     // Test 1: The MDRange in full
+    {
     int t0 = 1, t1 = 1, t2 = 1;
     int counter = 1;
 #if !defined(KOKKOS_HAVE_CUDA)
@@ -123,11 +130,12 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
         // Run 1 with tiles LayoutRight style
         const double seconds_1 = MultiDimRangePerf3D< DeviceType , double , LayoutType >::test_multi_index(range_length,range_length,range_length, t0, t1, t2) ;
 
+#if MDRANGE_PERFORMANCE_OUTPUT_VERBOSE
         std::cout << label_mdrange
-          << " , " << range_length
           << " , " << t0 << " , " << t1 << " , " << t2
           << " , " << seconds_1
           << std::endl ;
+#endif
 
         if ( counter == 1 ) {
           seconds_min = seconds_1;
@@ -148,11 +156,12 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
         // Run 2 with tiles LayoutLeft style
         const double seconds_1rev = MultiDimRangePerf3D< DeviceType , double , LayoutType >::test_multi_index(range_length,range_length,range_length, t0_rev, t1_rev, t2_rev) ;
 
+#if MDRANGE_PERFORMANCE_OUTPUT_VERBOSE
         std::cout << label_mdrange
-          << " , " << range_length
           << " , " << t0_rev << " , " << t1_rev << " , " << t2_rev
           << " , " << seconds_1rev
           << std::endl ;
+#endif
 
         if ( seconds_1rev < seconds_min ) 
         { 
@@ -166,10 +175,10 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
         tmid <<= 1;
       } //end inner while
       tfast >>=1;
-    }
+    } //end outer while
 
-    std::cout << "\n\n"
-      << "\n--------------------------------------------------------------\n"
+    std::cout << "\n"
+      << "--------------------------------------------------------------\n"
       << label_mdrange
       << "\n Min values "
       << "\n Range length per dim (3D): " << range_length
@@ -177,6 +186,80 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
       << "\n Min time: " << seconds_min
       << "\n---------------------------------------------------------------"
       << std::endl ;
+    } //end scope
+
+#if !defined(KOKKOS_HAVE_CUDA)
+  int t0c_min = 0, t1c_min = 0, t2c_min = 0;
+  double seconds_min_c = 0.0;
+  int counter = 1;
+  {
+    int min_bnd = 8;
+    // Test 1_c: MDRange with 0 for 'inner' tile dim; this case will utilize the full span in that direction, should be similar to Collapse<2>
+    if ( std::is_same<LayoutType, Kokkos::LayoutRight>::value ) {
+      for ( unsigned int T0 = min_bnd; T0 < range_length; T0<<=1 ) {
+        for ( unsigned int T1 = min_bnd; T1 < range_length; T1<<=1 ) {
+          const double seconds_c = MultiDimRangePerf3D< DeviceType , double , LayoutType >::test_multi_index(range_length,range_length,range_length, T0, T1, 0) ;
+
+#if MDRANGE_PERFORMANCE_OUTPUT_VERBOSE
+          std::cout << " MDRange LR with '0' tile - collapse-like \n"
+          << label_mdrange
+          << " , " << T0 << " , " << T1 << " , " << range_length
+          << " , " << seconds_c
+          << std::endl ;
+#endif
+
+          t2c_min = range_length;
+          if ( counter == 1 ) {
+            seconds_min_c = seconds_c;
+            t0c_min = T0;
+            t1c_min = T1;
+          } 
+          else {
+            if ( seconds_c < seconds_min_c ) 
+            { 
+              seconds_min = seconds_c; 
+              t0c_min = T0;
+              t1c_min = T1;
+            }
+          }
+          ++counter;
+        }
+      }
+    }
+    else {
+      for ( unsigned int T1 = min_bnd; T1 <= range_length; T1<<=1 ) {
+        for ( unsigned int T2 = min_bnd; T2 <= range_length; T2<<=1 ) {
+          const double seconds_c = MultiDimRangePerf3D< DeviceType , double , LayoutType >::test_multi_index(range_length,range_length,range_length, 0, T1, T2) ;
+
+#if defined( MDRANGE_PERFORMANCE_OUTPUT_VERBOSE )
+          std::cout << " MDRange LL with '0' tile - collapse-like \n"
+          << label_mdrange
+          << " , " <<range_length << " < " << T1 << " , " << T2
+          << " , " << seconds_c
+          << std::endl ;
+#endif
+
+
+          t0c_min = range_length;
+          if ( counter == 1 ) {
+            seconds_min_c = seconds_c;
+            t1c_min = T1;
+            t2c_min = T2;
+          } 
+          else {
+            if ( seconds_c < seconds_min_c ) 
+            { 
+              seconds_min = seconds_c; 
+              t1c_min = T1;
+              t2c_min = T2;
+            }
+          }
+          ++counter;
+        }
+      }
+    }
+  } //end scope test 2
+#endif
 
 
     // Test 2: RangePolicy Collapse2 style
@@ -196,30 +279,61 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
       << std::endl ;
 
     // Compare fastest times... will never be collapse all
-    if ( seconds_min < seconds_2 ) {
-      std::cout << "--------------------------------------------------------------\n"
-                << " Fastest run: MDRange\n"
-                << " Time: " << seconds_min
-                << " Difference: " << seconds_2 - seconds_min
-                << "\n--------------------------------------------------------------"
-                << "\n\n"
-                << std::endl;
-
+    if ( seconds_min < seconds_min_c ) {
+      if ( seconds_min < seconds_2 ) {
+        std::cout << "--------------------------------------------------------------\n"
+          << " Fastest run: MDRange tiled\n"
+          << " Time: " << seconds_min
+          << " Difference: " << seconds_2 - seconds_min
+          << " Other times: \n"
+          << "   MDrange Collapse type: " << seconds_min_c << "\n"
+          << "   Collapse2 Range Policy: " << seconds_2 << "\n"
+          << "\n--------------------------------------------------------------"
+          << "\n\n"
+          << std::endl;
+      }
+      else if ( seconds_min > seconds_2 ) {
+        std::cout << " Fastest run: Collapse2 RangePolicy\n"
+          << " Time: " << seconds_2
+          << " Difference: " << seconds_min - seconds_2
+          << " Other times: \n"
+          << "   MDrange Tiled: " << seconds_min << "\n"
+          << "   MDrange Collapse type: " << seconds_min_c << "\n"
+          << "\n--------------------------------------------------------------"
+          << "\n\n"
+          << std::endl;
+      }
     }
-    else if ( seconds_min > seconds_2 ) {
-      std::cout << " Fastest run: Collapse2 RangePolicy\n"
-                << " Time: " << seconds_2
-                << " Difference: " << seconds_min - seconds_2
-                << "\n--------------------------------------------------------------"
-                << "\n\n"
-                << std::endl;
-
-    }
+    else if ( seconds_min > seconds_min_c ) {
+      if ( seconds_min_c < seconds_2 ) {
+        std::cout << "--------------------------------------------------------------\n"
+          << " Fastest run: MDRange Collapse type\n"
+          << " Time: " << seconds_min_c
+          << " Difference: " << seconds_2 - seconds_min_c
+          << " Other times: \n"
+          << "   MDrange Tiled: " << seconds_min << "\n"
+          << "   Collapse2 Range Policy: " << seconds_2 << "\n"
+          << "\n--------------------------------------------------------------"
+          << "\n\n"
+          << std::endl;
+      }
+      else if ( seconds_min_c > seconds_2 ) {
+        std::cout << " Fastest run: Collapse2 RangePolicy\n"
+          << " Time: " << seconds_2
+          << " Difference: " << seconds_min_c - seconds_2
+          << " Other times: \n"
+          << "   MDrange Tiled: " << seconds_min << "\n"
+          << "   MDrange Collapse type: " << seconds_min_c << "\n"
+          << "\n--------------------------------------------------------------"
+          << "\n\n"
+          << std::endl;
+      }
+    } // end else if
 
   } //end for
 
-    // Test: The MDRange as collapse 2 - cannot use the MDRangePolicy in this way...
-//    const double seconds = MultiDimRangePerf3D_Collapse< DeviceType , double , Kokkos::LayoutRight >::test_multi_index_collapse(range_length,range_length,range_length) ;
+#undef MDRANGE_PERFORMANCE_OUTPUT_VERBOSE
+
 }
 
 
