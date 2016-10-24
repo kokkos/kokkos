@@ -46,10 +46,6 @@
 
 #include <initializer_list> //unnecessary now?
 
-#if defined(KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION) && defined(KOKKOS_HAVE_PRAGMA_IVDEP) && !defined(__CUDA_ARCH__)
-#define KOKKOS_MDRANGE_IVDEP
-#endif
-
 #include<impl/KokkosExp_Host_IterateTile.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_Parallel.hpp>

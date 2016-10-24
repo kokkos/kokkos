@@ -50,6 +50,11 @@
 
 #include <Kokkos_Macros.hpp>
 
+#if defined(KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION) && defined(KOKKOS_HAVE_PRAGMA_IVDEP) && !defined(__CUDA_ARCH__)
+#define KOKKOS_MDRANGE_IVDEP
+#endif
+
+
 namespace Kokkos { namespace Experimental { namespace Impl {
 
 template < typename RP
@@ -147,6 +152,9 @@ protected:
   template< typename... Args>
   void apply_left( Args &&... args )
   {
+#if defined(KOKKOS_MDRANGE_IVDEP)
+#pragma ivdep
+#endif
     for (index_type i = m_begin[0]; i < m_end[0]; ++i) {
       m_func(i, std::forward<Args>(args)...);
     }
@@ -155,6 +163,9 @@ protected:
   template< typename... Args>
   void apply_right( Args &&... args )
   {
+#if defined(KOKKOS_MDRANGE_IVDEP)
+#pragma ivdep
+#endif
     for (index_type i = m_begin[RP::rank-1]; i < m_end[RP::rank-1]; ++i) {
       m_func(std::forward<Args>(args)...,i);
     }
@@ -211,6 +222,9 @@ protected:
   template< typename... Args>
   void apply_left( Args &&... args )
   {
+#if defined(KOKKOS_MDRANGE_IVDEP)
+#pragma ivdep
+#endif
     for (index_type i = m_begin[0]; i < m_end[0]; ++i) {
       m_func(m_tag, i, std::forward<Args>(args)...);
     }
@@ -219,6 +233,9 @@ protected:
   template< typename... Args>
   void apply_right( Args &&... args )
   {
+#if defined(KOKKOS_MDRANGE_IVDEP)
+#pragma ivdep
+#endif
     for (index_type i = m_begin[RP::rank-1]; i < m_end[RP::rank-1]; ++i) {
       m_func(m_tag, std::forward<Args>(args)...,i);
     }
