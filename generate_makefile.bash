@@ -140,9 +140,6 @@ KOKKOS_OPTIONS="KOKKOS_SRC_PATH=${KOKKOS_SRC_PATH}"
 if [ ${#COMPILER} -gt 0 ]; then
 KOKKOS_OPTIONS="${KOKKOS_OPTIONS} CXX=${COMPILER}"
 fi
-if [ ${#PREFIX} -gt 0 ]; then
-KOKKOS_OPTIONS="${KOKKOS_OPTIONS} PREFIX=${PREFIX}"
-fi
 if [ ${#KOKKOS_DEVICES} -gt 0 ]; then
 KOKKOS_OPTIONS="${KOKKOS_OPTIONS} KOKKOS_DEVICES=${KOKKOS_DEVICES}"
 fi
@@ -181,9 +178,19 @@ KOKKOS_OPTIONS="${KOKKOS_OPTIONS} KOKKOS_CUDA_OPTIONS=${KOKKOS_CUDA_OPT}"
 fi
 
 KOKKOS_OPTIONS_NO_KOKKOS_PATH="${KOKKOS_OPTIONS}"
-KOKKOS_INSTALL_PATH="${PWD}/install"
+
+KOKKOS_TEST_INSTALL_PATH="${PWD}/install"
+if [ ${#PREFIX} -gt 0 ]; then
+KOKKOS_INSTALL_PATH="${PREFIX}"
+else
+KOKKOS_INSTALL_PATH=${KOKKOS_TEST_INSTALL_PATH}
+fi
+
 
 mkdir install
+echo "#Makefile to satisfy existens of target kokkos-clean before installing the library" > install/Makefile.kokkos
+echo "kokkos-clean:" >> install/Makefile.kokkos
+echo "" >> install/Makefile.kokkos
 mkdir core
 mkdir core/unit_test
 mkdir core/perf_test
@@ -261,7 +268,7 @@ echo "" >> algorithms/unit_tests/Makefile
 echo "clean:" >> algorithms/unit_tests/Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_OPTIONS} clean" >> algorithms/unit_tests/Makefile
 
-KOKKOS_OPTIONS="${KOKKOS_OPTIONS_NO_KOKKOS_PATH} KOKKOS_PATH=${KOKKOS_INSTALL_PATH}"
+KOKKOS_OPTIONS="${KOKKOS_OPTIONS_NO_KOKKOS_PATH} KOKKOS_PATH=${KOKKOS_TEST_INSTALL_PATH}"
 
 echo "KOKKOS_OPTIONS=${KOKKOS_OPTIONS}" > example/fixture/Makefile
 echo "" >> example/fixture/Makefile
@@ -335,7 +342,15 @@ echo "install: kokkoslib" >> Makefile
 echo -e "\tcd core; \\" >> Makefile
 echo -e "\tmake -j -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_OPTIONS} PREFIX=${KOKKOS_INSTALL_PATH} install" >> Makefile
 echo "" >> Makefile
-echo "build-test: install" >> Makefile
+echo "kokkoslib-test:" >> Makefile
+echo -e "\tcd core; \\" >> Makefile
+echo -e "\tmake -j -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_OPTIONS} PREFIX=${KOKKOS_TEST_INSTALL_PATH} build-lib" >> Makefile
+echo "" >> Makefile
+echo "install-test: kokkoslib-test" >> Makefile
+echo -e "\tcd core; \\" >> Makefile
+echo -e "\tmake -j -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_OPTIONS} PREFIX=${KOKKOS_TEST_INSTALL_PATH} install" >> Makefile
+echo "" >> Makefile
+echo "build-test: install-test" >> Makefile
 echo -e "\tmake -C core/unit_test" >> Makefile
 echo -e "\tmake -C core/perf_test" >> Makefile
 echo -e "\tmake -C containers/unit_tests" >> Makefile

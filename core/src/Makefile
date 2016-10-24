@@ -82,6 +82,10 @@ build-makefile-kokkos:
 	echo "KOKKOS_INTERNAL_USE_CUDA = ${KOKKOS_INTERNAL_USE_CUDA}" >> Makefile.kokkos
 	echo "KOKKOS_INTERNAL_USE_OPENMP = ${KOKKOS_INTERNAL_USE_OPENMP}" >> Makefile.kokkos
 	echo "KOKKOS_INTERNAL_USE_PTHREADS = ${KOKKOS_INTERNAL_USE_PTHREADS}" >> Makefile.kokkos
+	echo "" >> Makefile.kokkos
+	echo "#Fake kokkos-clean target" >> Makefile.kokkos
+	echo "kokkos-clean:" >> Makefile.kokkos
+	echo "" >> Makefile.kokkos
 	sed \
 		-e 's|$(KOKKOS_PATH)/core/src|$(PREFIX)/include|g' \
 		-e 's|$(KOKKOS_PATH)/containers/src|$(PREFIX)/include|g' \
