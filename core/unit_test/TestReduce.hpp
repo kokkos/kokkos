@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -481,13 +481,13 @@ public:
 
   //------------------------------------
 
-  TestTripleNestedReduce( const size_type & nrows , const size_type & ncols 
+  TestTripleNestedReduce( const size_type & nrows , const size_type & ncols
                         , const size_type & team_size , const size_type & vector_length )
   {
     run_test( nrows , ncols , team_size, vector_length );
   }
 
-  void run_test( const size_type & nrows , const size_type & ncols 
+  void run_test( const size_type & nrows , const size_type & ncols
                , const size_type & team_size, const size_type & vector_length )
   {
     //typedef Kokkos::LayoutLeft Layout;
@@ -518,7 +518,7 @@ public:
       } );
     } );
 
-    // Three level parallelism kernel to force caching of vector x 
+    // Three level parallelism kernel to force caching of vector x
     ScalarType result = 0.0;
     int chunk_size = 128;
     Kokkos::parallel_reduce( team_policy( nrows/chunk_size , team_size , vector_length ) , KOKKOS_LAMBDA ( const member_type& teamMember , double &update ) {
@@ -549,7 +549,7 @@ public:
   typedef DeviceType execution_space ;
   typedef typename execution_space::size_type size_type ;
 
-  TestTripleNestedReduce( const size_type & , const size_type  
+  TestTripleNestedReduce( const size_type & , const size_type
                         , const size_type & , const size_type )
   { }
 };
@@ -1431,6 +1431,9 @@ struct TestReducers {
       if(h_values(i)<reference_min) {
         reference_min = h_values(i);
         reference_loc = i;
+      } else if (h_values(i) == reference_min) {
+        // make min unique
+        h_values(i) += std::numeric_limits<Scalar>::epsilon();
       }
     }
     Kokkos::deep_copy(values,h_values);
@@ -1495,6 +1498,9 @@ struct TestReducers {
       if(h_values(i)>reference_max) {
         reference_max = h_values(i);
         reference_loc = i;
+      } else if (h_values(i) == reference_max) {
+        // make max unique
+        h_values(i) -= std::numeric_limits<Scalar>::epsilon();
       }
     }
     Kokkos::deep_copy(values,h_values);
@@ -1558,14 +1564,24 @@ struct TestReducers {
      int reference_maxloc = -1;
      for(int i=0; i<N; i++) {
        h_values(i) = (Scalar)(rand()%100000);
+     }
+     for(int i=0; i<N; i++) {
        if(h_values(i)>reference_max) {
          reference_max = h_values(i);
          reference_maxloc = i;
+       } else if (h_values(i) == reference_max) {
+         // make max unique
+         h_values(i) -= std::numeric_limits<Scalar>::epsilon();
        }
+     }
+     for(int i=0; i<N; i++) {
        if(h_values(i)<reference_min) {
          reference_min = h_values(i);
          reference_minloc = i;
-       } 
+       } else if (h_values(i) == reference_min) {
+         // make min unique
+         h_values(i) += std::numeric_limits<Scalar>::epsilon();
+       }
      }
      Kokkos::deep_copy(values,h_values);
 
@@ -1584,7 +1600,7 @@ struct TestReducers {
        for(int i=0; i<N; i++) {
          if((i == minmax_scalar.min_loc) && (h_values(i)==reference_min))
            reference_minloc = i;
-       }   
+       }
        ASSERT_EQ(minmax_scalar.min_loc,reference_minloc);
        ASSERT_EQ(minmax_scalar.max_val,reference_max);
        for(int i=0; i<N; i++) {
