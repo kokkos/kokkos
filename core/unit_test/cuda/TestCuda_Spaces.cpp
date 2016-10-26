@@ -120,6 +120,31 @@ TEST_F( cuda, uvm )
   }
 }
 
+TEST_F( cuda, uvm_num_allocs )
+{
+  if ( Kokkos::CudaUVMSpace::available() ) {
+
+    struct TestMaxUVMAllocs {
+      using view_type         = Kokkos::View< double* , Kokkos::CudaUVMSpace >;
+      using view_of_view_type = Kokkos::View< view_type[ 65537 ] , Kokkos::CudaUVMSpace >;
+
+      TestMaxUVMAllocs()
+      : view_allocs_test("view_allocs_test")
+      {
+        for ( auto i = 0; i < max_num_allocs_plus_one; ++i ) {
+          view_allocs_test(i) = view_type("inner_view",1);
+        } //end for
+      }
+
+      const int max_num_allocs_plus_one = 65537;
+      view_of_view_type view_allocs_test ;
+    } ;
+
+    // The constructor should throw runtime error once 65536 uvm allocations exceeded
+    EXPECT_ANY_THROW( TestMaxUVMAllocs() );
+  }
+}
+
 template< class MemSpace , class ExecSpace >
 struct TestViewCudaAccessible {
 
