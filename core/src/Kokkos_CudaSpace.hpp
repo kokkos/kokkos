@@ -175,7 +175,6 @@ public:
   /*--------------------------------*/
 
 private:
-
   int  m_device ; ///< Which Cuda device
 };
 
