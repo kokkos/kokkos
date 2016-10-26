@@ -201,7 +201,7 @@ public:
 #endif
 
       if ( *lhs ) decrement( *lhs );
-      if ( rhs ) { Kokkos::atomic_fetch_add( &(rhs->m_ref_count) , 1 ); }
+      if ( rhs ) { Kokkos::atomic_increment( &(rhs->m_ref_count) ); }
 
       // Force write of *lhs
 

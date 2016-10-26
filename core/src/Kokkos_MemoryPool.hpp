@@ -442,7 +442,7 @@ struct create_histogram {
 
         total_allocated_blocks += page_allocated_blocks;
 
-        atomic_fetch_add( &m_page_histogram(page_allocated_blocks), 1 );
+	atomic_increment(&m_page_histogram(page_allocated_blocks) );
       }
 
       r.first += double(total_allocated_blocks) / blocks_per_sb;
@@ -921,7 +921,7 @@ public:
               if ( used_bits == 0 ) {
                 // This page was empty.  Decrement the number of empty pages for
                 // the superblock.
-                atomic_fetch_sub( &m_sb_header(sb_id).m_empty_pages, 1 );
+		atomic_decrement( &m_sb_header(sb_id).m_empty_pages );
               }
               else if ( used_bits == m_blocksize_info[block_size_id].m_page_full_level - 1 )
               {

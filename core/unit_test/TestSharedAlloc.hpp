@@ -62,7 +62,7 @@ struct SharedAllocDestroy {
 
   void destroy_shared_allocation()
     {
-      Kokkos::atomic_fetch_add( count , 1 );
+      Kokkos::atomic_increment( count );
     }
 
 };
