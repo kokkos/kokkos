@@ -442,7 +442,7 @@ struct create_histogram {
 
         total_allocated_blocks += page_allocated_blocks;
 
-        atomic_fetch_add( &m_page_histogram(page_allocated_blocks), 1 );
+	atomic_increment(&m_page_histogram(page_allocated_blocks) );
       }
 
       r.first += double(total_allocated_blocks) / blocks_per_sb;

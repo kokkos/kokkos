@@ -374,7 +374,7 @@ private:
       if ( 0 != arg.m_task ) {
         // The future may be destroyed upon returning from this call
         // so increment reference count to track this assignment.
-        Kokkos::atomic_fetch_add( &(arg.m_task->m_ref_count) , 1 );
+	Kokkos::atomic_increment( &(arg.m_task->m_ref_count) );
       }
 
       assign( task , opts ... );
@@ -612,7 +612,7 @@ public:
         for ( int i = 0 ; i < narg ; ++i ) {
           task_base * const t = dep[i] = arg[i].m_task ;
           if ( 0 != t ) {
-            Kokkos::atomic_fetch_add( &(t->m_ref_count) , 1 );
+	    Kokkos::atomic_increment( &(t->m_ref_count) );
           }
         }
 
