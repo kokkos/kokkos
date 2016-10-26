@@ -462,7 +462,7 @@ public:
 
     if(m_league_chunk_end > m_league_size) m_league_chunk_end = m_league_size;
 
-    if(m_league_rank>=0)
+    if((m_league_rank>=0) && (m_league_rank < m_league_chunk_end))
       return true;
     return false;
   }
