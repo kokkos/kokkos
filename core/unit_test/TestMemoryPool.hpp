@@ -66,11 +66,17 @@ namespace TestMemoryPool {
 
 struct pointer_obj {
   uint64_t *  ptr;
+
+  KOKKOS_INLINE_FUNCTION
+  pointer_obj() : ptr( 0 ) {}
 };
 
 struct pointer_obj2 {
   void *  ptr;
   size_t  size;
+
+  KOKKOS_INLINE_FUNCTION
+  pointer_obj2() : ptr( 0 ), size( 0 ) {}
 };
 
 template < typename PointerView, typename Allocator >
@@ -304,7 +310,7 @@ bool test_mempool( size_t chunk_size, size_t total_size )
   typedef Kokkos::View< pointer_obj *, device_type >       pointer_view;
   typedef Kokkos::Experimental::MemoryPool< device_type >  pool_memory_space;
 
-  uint64_t result;
+  uint64_t result = 0;
   size_t num_chunks = total_size / chunk_size;
   bool return_val = true;
 
