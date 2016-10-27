@@ -228,6 +228,20 @@ public:
 
   KOKKOS_FORCEINLINE_FUNCTION
   Kokkos::pair< bool, word_type >
+  fetch_word_set( size_type i ) const
+  {
+    size_type word_pos = i >> LG_WORD_SIZE;
+    word_type mask = word_type(1) << ( i & WORD_MASK );
+
+    Kokkos::pair<bool, word_type> result;
+    result.second = atomic_fetch_or( &m_words[ word_pos ], mask );
+    result.first = !( result.second & mask );
+
+    return result;
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  Kokkos::pair< bool, word_type >
   fetch_word_reset( size_type i ) const
   {
     size_type word_pos = i >> LG_WORD_SIZE;
@@ -241,12 +255,10 @@ public:
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  Kokkos::pair< bool, size_type >
-  set_any_in_word( size_type i, word_type & prev_val ) const
+  Kokkos::pair< bool, word_type >
+  set_any_in_word( size_type & pos ) const
   {
-    prev_val = 0;
-
-    size_type word_pos = i >> LG_WORD_SIZE;
+    size_type word_pos = pos >> LG_WORD_SIZE;
     word_type word = volatile_load( &m_words[ word_pos ] );
 
     // Loop until there are no more unset bits in the word.
@@ -260,23 +272,21 @@ public:
 
       if ( !( word & mask ) ) {
         // Successfully set the bit.
-        prev_val = word;
+        pos = ( word_pos << LG_WORD_SIZE ) + bit;
 
-        return Kokkos::pair<bool, size_type>( true, ( word_pos << LG_WORD_SIZE ) + bit );
+        return Kokkos::pair<bool, word_type>( true, word );
       }
     }
 
     // Didn't find a free bit in this word.
-    return Kokkos::pair<bool, size_type>( false, i );
+    return Kokkos::pair<bool, word_type>( false, word_type(0) );
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  Kokkos::pair< bool, size_type >
-  set_any_in_word( size_type i, word_type & prev_val, word_type word_mask ) const
+  Kokkos::pair< bool, word_type >
+  set_any_in_word( size_type & pos, word_type word_mask ) const
   {
-    prev_val = 0;
-
-    size_type word_pos = i >> LG_WORD_SIZE;
+    size_type word_pos = pos >> LG_WORD_SIZE;
     word_type word = volatile_load( &m_words[ word_pos ] );
     word = ( ~word ) & word_mask;
 
@@ -291,25 +301,23 @@ public:
 
       if ( !( word & mask ) ) {
         // Successfully set the bit.
-        prev_val = word;
+        pos = ( word_pos << LG_WORD_SIZE ) + bit;
 
-        return Kokkos::pair<bool, size_type>( true, ( word_pos << LG_WORD_SIZE ) + bit );
+        return Kokkos::pair<bool, word_type>( true, word );
       }
 
       word = ( ~word ) & word_mask;
     }
 
     // Didn't find a free bit in this word.
-    return Kokkos::pair<bool, size_type>( false, i );
+    return Kokkos::pair<bool, word_type>( false, word_type(0) );
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  Kokkos::pair< bool, size_type >
-  reset_any_in_word( size_type i, word_type & prev_val ) const
+  Kokkos::pair< bool, word_type >
+  reset_any_in_word( size_type & pos ) const
   {
-    prev_val = 0;
-
-    size_type word_pos = i >> LG_WORD_SIZE;
+    size_type word_pos = pos >> LG_WORD_SIZE;
     word_type word = volatile_load( &m_words[ word_pos ] );
 
     // Loop until there are no more set bits in the word.
@@ -323,23 +331,21 @@ public:
 
       if ( word & mask ) {
         // Successfully reset the bit.
-        prev_val = word;
+        pos = ( word_pos << LG_WORD_SIZE ) + bit;
 
-        return Kokkos::pair<bool, size_type>( true, ( word_pos << LG_WORD_SIZE ) + bit );
+        return Kokkos::pair<bool, word_type>( true, word );
       }
     }
 
     // Didn't find a free bit in this word.
-    return Kokkos::pair<bool, size_type>( false, i );
+    return Kokkos::pair<bool, word_type>( false, word_type(0) );
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  Kokkos::pair< bool, size_type >
-  reset_any_in_word( size_type i, word_type & prev_val, word_type word_mask ) const
+  Kokkos::pair< bool, word_type >
+  reset_any_in_word( size_type & pos, word_type word_mask ) const
   {
-    prev_val = 0;
-
-    size_type word_pos = i >> LG_WORD_SIZE;
+    size_type word_pos = pos >> LG_WORD_SIZE;
     word_type word = volatile_load( &m_words[ word_pos ] );
     word = word & word_mask;
 
@@ -354,16 +360,16 @@ public:
 
       if ( word & mask ) {
         // Successfully reset the bit.
-        prev_val = word;
+        pos = ( word_pos << LG_WORD_SIZE ) + bit;
 
-        return Kokkos::pair<bool, size_type>( true, ( word_pos << LG_WORD_SIZE ) + bit );
+        return Kokkos::pair<bool, word_type>( true, word );
       }
 
       word = word & word_mask;
     }
 
     // Didn't find a free bit in this word.
-    return Kokkos::pair<bool, size_type>( false, i );
+    return Kokkos::pair<bool, word_type>( false, word_type(0) );
   }
 };
 
@@ -892,8 +898,7 @@ public:
             bool success = false;
             unsigned prev_val = 0;
 
-            Kokkos::tie( success, pos ) =
-              m_sb_blocks.set_any_in_word( pos, prev_val, word_mask );
+            Kokkos::tie( success, prev_val ) = m_sb_blocks.set_any_in_word( pos, word_mask );
 
             if ( !success ) {
               if ( ++pages_searched >= pages_per_sb ) {
@@ -1354,7 +1359,7 @@ private:
         bool success = false;
         unsigned prev_val = 0;
 
-        Kokkos::tie( success, pos ) = m_partfull_sb.reset_any_in_word( pos, prev_val );
+        Kokkos::tie( success, prev_val ) = m_partfull_sb.reset_any_in_word( pos );
 
         if ( !success ) {
           if ( ++tries >= max_tries ) {
@@ -1408,7 +1413,7 @@ private:
           bool success = false;
           unsigned prev_val = 0;
 
-          Kokkos::tie( success, pos ) = m_empty_sb.reset_any_in_word( pos, prev_val );
+          Kokkos::tie( success, prev_val ) = m_empty_sb.reset_any_in_word( pos );
 
           if ( !success ) {
             if ( ++tries >= max_tries ) {
