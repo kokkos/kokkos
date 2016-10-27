@@ -923,6 +923,8 @@ public:
             }
             else {
               // Reserved a memory location to allocate.
+              memory_fence();
+
               search_done = true;
               allocation_done = true;
 
@@ -1017,6 +1019,8 @@ public:
 
       bool success = false;
       unsigned prev_val = 0;
+
+      memory_fence();
 
       Kokkos::tie( success, prev_val ) = m_sb_blocks.fetch_word_reset( pos_base + pos_rel );
 
