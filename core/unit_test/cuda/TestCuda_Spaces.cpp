@@ -79,10 +79,6 @@ TEST_F( cuda , space_access )
     Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::CudaHostPinnedSpace >::assignable , "" );
 
   static_assert(
-    std::is_same< Kokkos::Impl::HostMirror< Kokkos::Cuda >::Space
-                , Kokkos::HostSpace >::value , "" );
-
-  static_assert(
     std::is_same< Kokkos::Impl::HostMirror< Kokkos::CudaSpace >::Space
                 , Kokkos::HostSpace >::value , "" );
 
