@@ -61,6 +61,9 @@
 #include <Kokkos_DynRankView.hpp>
 #include <TestDynViewAPI.hpp>
 
+#include <Kokkos_ErrorReporter.hpp>
+#include <TestErrorReporter.hpp>
+
 #include <iomanip>
 
 namespace Test {
@@ -168,6 +171,31 @@ TEST_F( openmp , dynamic_view )
   for ( int i = 0 ; i < 10 ; ++i ) {
     TestDynView::run( 100000 + 100 * i );
   }
+}
+
+#ifndef __INTEL_COMPILER
+#ifdef __GNUG__
+#if ((__GNUC__ == 4) && (__GNUC_MINOR__ < 8))
+#define COMPILER_HAS_FLAKY_LAMBDA_CAPTURE
+#endif
+#endif
+#endif
+
+#ifndef COMPILER_HAS_FLAKY_LAMBDA_CAPTURE
+TEST_F(openmp, ErrorReporterViaLambda)
+{
+  TestErrorReporter<ErrorReporterDriverUseLambda<Kokkos::OpenMP>>();
+}
+#endif
+
+TEST_F(openmp, ErrorReporter)
+{
+  TestErrorReporter<ErrorReporterDriver<Kokkos::OpenMP>>();
+}
+
+TEST_F(openmp, ErrorReporterNativeOpenMP)
+{
+  TestErrorReporter<ErrorReporterDriverNativeOpenMP>();
 }
 
 } // namespace test
