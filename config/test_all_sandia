@@ -153,7 +153,7 @@ elif [ "$MACHINE" = "white" ]; then
     )
 
     ARCH_FLAG="--arch=Power8,Kepler37"
-    NUM_JOBS_TO_RUN_IN_PARALLEL=8
+    NUM_JOBS_TO_RUN_IN_PARALLEL=2
 
 elif [ "$MACHINE" = "bowman" ]; then
     source /etc/profile.d/modules.sh
@@ -170,7 +170,7 @@ elif [ "$MACHINE" = "bowman" ]; then
     )
 
     ARCH_FLAG="--arch=KNL"
-    NUM_JOBS_TO_RUN_IN_PARALLEL=8
+    NUM_JOBS_TO_RUN_IN_PARALLEL=2
 
 elif [ "$MACHINE" = "shepard" ]; then
     source /etc/profile.d/modules.sh
@@ -187,7 +187,7 @@ elif [ "$MACHINE" = "shepard" ]; then
     )
 
     ARCH_FLAG="--arch=HSW"
-    NUM_JOBS_TO_RUN_IN_PARALLEL=8
+    NUM_JOBS_TO_RUN_IN_PARALLEL=2
 
 elif [ "$MACHINE" = "apollo" ]; then
     source /projects/sems/modulefiles/utils/sems-modules-init.sh
@@ -230,7 +230,7 @@ elif [ "$MACHINE" = "apollo" ]; then
     )
 
     ARCH_FLAG="--arch=SNB,Kepler35"
-    NUM_JOBS_TO_RUN_IN_PARALLEL=3
+    NUM_JOBS_TO_RUN_IN_PARALLEL=2
 else
     echo "Unhandled machine $MACHINE" >&2
     exit 1
