@@ -5,19 +5,17 @@ PREFIX ?= /usr/local/lib/kokkos
 default: messages build-lib
 	echo "End Build"
 
-include $(KOKKOS_PATH)/Makefile.kokkos
-
-ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
-	CXX = $(NVCC_WRAPPER)
-	CXXFLAGS ?= -O3
-	LINK = $(NVCC_WRAPPER)
-	LINKFLAGS ?= 
+ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
+  CXX = $(KOKKOS_PATH)/config/nvcc_wrapper
 else
-	CXX ?= g++
-	CXXFLAGS ?= -O3
-	LINK ?= g++
-	LINKFLAGS ?=  
+  CXX = g++
 endif
+
+CXXFLAGS = -O3
+LINK ?= $(CXX)
+LDFLAGS ?= 
+
+include $(KOKKOS_PATH)/Makefile.kokkos
 
 PWD = $(shell pwd)
 
