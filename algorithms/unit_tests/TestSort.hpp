@@ -178,7 +178,7 @@ void test_3D_sort(unsigned int n) {
   typename KeyViewType::value_type min[3] = {0,0,0};
   typename KeyViewType::value_type max[3] = {100,100,100};
 
-  typedef Kokkos::SortImpl::DefaultBinOp3D< KeyViewType > BinOp;
+  typedef Kokkos::BinOp3D< KeyViewType > BinOp;
   BinOp bin_op(bin_max,min,max);
   Kokkos::BinSort< KeyViewType , BinOp >
     Sorter(keys,bin_op,false);

@@ -58,7 +58,7 @@
 #endif
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_Parallel.hpp>
-#include <Kokkos_TaskPolicy.hpp>
+#include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_Tags.hpp>
 

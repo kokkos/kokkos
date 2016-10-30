@@ -48,8 +48,8 @@
 #include <cstdlib>
 
 #ifdef KOKKOS_HAVE_CUDA
-typedef Kokkos::View<double*> view_type;
-typedef Kokkos::View<int**> idx_type;
+typedef Kokkos::View<double*, Kokkos::CudaUVMSpace> view_type;
+typedef Kokkos::View<int**, Kokkos::CudaUVMSpace> idx_type;
 #else
 typedef Kokkos::View<double*,Kokkos::HostSpace> view_type;
 typedef Kokkos::View<int**,Kokkos::HostSpace> idx_type;
@@ -63,7 +63,7 @@ struct localsum {
   // Get the view types on the particular device the functor is instantiated for
   idx_type::const_type idx;
   view_type dest;
-  Kokkos::View<view_type::const_data_type, view_type::array_layout, view_type::execution_space, Kokkos::MemoryRandomAccess > src;
+  Kokkos::View<view_type::const_data_type, view_type::array_layout, view_type::device_type, Kokkos::MemoryRandomAccess > src;
 
   localsum(idx_type idx_, view_type dest_,
       view_type src_):idx(idx_),dest(dest_),src(src_) {
@@ -91,6 +91,8 @@ int main(int narg, char* arg[]) {
   view_type src("Src",size);
 
   srand(134231);
+
+  Kokkos::fence();
 
   // When using UVM Cuda views can be accessed on the Host directly
   for(int i=0; i<size; i++) {

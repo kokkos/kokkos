@@ -99,47 +99,67 @@ void test_view_mapping()
   ASSERT_LE( sizeof(dim_s0_s0_s0_s0_s0_s0_s0) , 8 * sizeof(unsigned) );
   ASSERT_EQ( sizeof(dim_s0_s0_s0_s0_s0_s0_s0_s0) , 8 * sizeof(unsigned) );
 
-  ASSERT_EQ( int(dim_0::rank) , int(0) );
-  ASSERT_EQ( int(dim_0::rank_dynamic) , int(0) );
+  static_assert( int(dim_0::rank) == int(0) , "" );
+  static_assert( int(dim_0::rank_dynamic) == int(0) , "" );
+  static_assert( int(dim_0::ArgN0) == 1 , "" );
+  static_assert( int(dim_0::ArgN1) == 1 , "" );
+  static_assert( int(dim_0::ArgN2) == 1 , "" );
 
-  ASSERT_EQ( int(dim_s2::rank) , int(1) );
-  ASSERT_EQ( int(dim_s2::rank_dynamic) , int(0) );
+  static_assert( int(dim_s2::rank) == int(1) , "" );
+  static_assert( int(dim_s2::rank_dynamic) == int(0) , "" );
+  static_assert( int(dim_s2::ArgN0) == 2 , "" );
+  static_assert( int(dim_s2::ArgN1) == 1 , "" );
 
-  ASSERT_EQ( int(dim_s2_s3::rank) , int(2) );
-  ASSERT_EQ( int(dim_s2_s3::rank_dynamic) , int(0) );
+  static_assert( int(dim_s2_s3::rank) == int(2) , "" );
+  static_assert( int(dim_s2_s3::rank_dynamic) == int(0) , "" );
+  static_assert( int(dim_s2_s3::ArgN0) == 2 , "" );
+  static_assert( int(dim_s2_s3::ArgN1) == 3 , "" );
+  static_assert( int(dim_s2_s3::ArgN2) == 1 , "" );
 
-  ASSERT_EQ( int(dim_s2_s3_s4::rank) , int(3) );
-  ASSERT_EQ( int(dim_s2_s3_s4::rank_dynamic) , int(0) );
+  static_assert( int(dim_s2_s3_s4::rank) == int(3) , "" );
+  static_assert( int(dim_s2_s3_s4::rank_dynamic) == int(0) , "" );
+  static_assert( int(dim_s2_s3_s4::ArgN0) == 2 , "" );
+  static_assert( int(dim_s2_s3_s4::ArgN1) == 3 , "" );
+  static_assert( int(dim_s2_s3_s4::ArgN2) == 4 , "" );
+  static_assert( int(dim_s2_s3_s4::ArgN3) == 1 , "" );
 
-  ASSERT_EQ( int(dim_s0::rank) , int(1) );
-  ASSERT_EQ( int(dim_s0::rank_dynamic) , int(1) );
+  static_assert( int(dim_s0::rank) == int(1) , "" );
+  static_assert( int(dim_s0::rank_dynamic) == int(1) , "" );
 
-  ASSERT_EQ( int(dim_s0_s3::rank) , int(2) );
-  ASSERT_EQ( int(dim_s0_s3::rank_dynamic) , int(1) );
+  static_assert( int(dim_s0_s3::rank) == int(2) , "" );
+  static_assert( int(dim_s0_s3::rank_dynamic) == int(1) , "" );
+  static_assert( int(dim_s0_s3::ArgN0) == 0 , "" );
+  static_assert( int(dim_s0_s3::ArgN1) == 3 , "" );
 
-  ASSERT_EQ( int(dim_s0_s3_s4::rank) , int(3) );
-  ASSERT_EQ( int(dim_s0_s3_s4::rank_dynamic) , int(1) );
+  static_assert( int(dim_s0_s3_s4::rank) == int(3) , "" );
+  static_assert( int(dim_s0_s3_s4::rank_dynamic) == int(1) , "" );
+  static_assert( int(dim_s0_s3_s4::ArgN0) == 0 , "" );
+  static_assert( int(dim_s0_s3_s4::ArgN1) == 3 , "" );
+  static_assert( int(dim_s0_s3_s4::ArgN2) == 4 , "" );
 
-  ASSERT_EQ( int(dim_s0_s0_s4::rank) , int(3) );
-  ASSERT_EQ( int(dim_s0_s0_s4::rank_dynamic) , int(2) );
+  static_assert( int(dim_s0_s0_s4::rank) == int(3) , "" );
+  static_assert( int(dim_s0_s0_s4::rank_dynamic) == int(2) , "" );
+  static_assert( int(dim_s0_s0_s4::ArgN0) == 0 , "" );
+  static_assert( int(dim_s0_s0_s4::ArgN1) == 0 , "" );
+  static_assert( int(dim_s0_s0_s4::ArgN2) == 4 , "" );
 
-  ASSERT_EQ( int(dim_s0_s0_s0::rank) , int(3) );
-  ASSERT_EQ( int(dim_s0_s0_s0::rank_dynamic) , int(3) );
+  static_assert( int(dim_s0_s0_s0::rank) == int(3) , "" );
+  static_assert( int(dim_s0_s0_s0::rank_dynamic) == int(3) , "" );
 
-  ASSERT_EQ( int(dim_s0_s0_s0_s0::rank) , int(4) );
-  ASSERT_EQ( int(dim_s0_s0_s0_s0::rank_dynamic) , int(4) );
+  static_assert( int(dim_s0_s0_s0_s0::rank) == int(4) , "" );
+  static_assert( int(dim_s0_s0_s0_s0::rank_dynamic) == int(4) , "" );
 
-  ASSERT_EQ( int(dim_s0_s0_s0_s0_s0::rank) , int(5) );
-  ASSERT_EQ( int(dim_s0_s0_s0_s0_s0::rank_dynamic) , int(5) );
+  static_assert( int(dim_s0_s0_s0_s0_s0::rank) == int(5) , "" );
+  static_assert( int(dim_s0_s0_s0_s0_s0::rank_dynamic) == int(5) , "" );
 
-  ASSERT_EQ( int(dim_s0_s0_s0_s0_s0_s0::rank) , int(6) );
-  ASSERT_EQ( int(dim_s0_s0_s0_s0_s0_s0::rank_dynamic) , int(6) );
+  static_assert( int(dim_s0_s0_s0_s0_s0_s0::rank) == int(6) , "" );
+  static_assert( int(dim_s0_s0_s0_s0_s0_s0::rank_dynamic) == int(6) , "" );
 
-  ASSERT_EQ( int(dim_s0_s0_s0_s0_s0_s0_s0::rank) , int(7) );
-  ASSERT_EQ( int(dim_s0_s0_s0_s0_s0_s0_s0::rank_dynamic) , int(7) );
+  static_assert( int(dim_s0_s0_s0_s0_s0_s0_s0::rank) == int(7) , "" );
+  static_assert( int(dim_s0_s0_s0_s0_s0_s0_s0::rank_dynamic) == int(7) , "" );
 
-  ASSERT_EQ( int(dim_s0_s0_s0_s0_s0_s0_s0_s0::rank) , int(8) );
-  ASSERT_EQ( int(dim_s0_s0_s0_s0_s0_s0_s0_s0::rank_dynamic) , int(8) );
+  static_assert( int(dim_s0_s0_s0_s0_s0_s0_s0_s0::rank) == int(8) , "" );
+  static_assert( int(dim_s0_s0_s0_s0_s0_s0_s0_s0::rank_dynamic) == int(8) , "" );
 
   dim_s0          d1( 2, 3, 4, 5, 6, 7, 8, 9 ); 
   dim_s0_s0       d2( 2, 3, 4, 5, 6, 7, 8, 9 );
@@ -534,6 +554,13 @@ void test_view_mapping()
 
     static_assert( a_int_r1::dimension::rank == 1 , "" );
     static_assert( a_int_r1::dimension::rank_dynamic == 1 , "" );
+    static_assert( a_int_r5::dimension::ArgN0 == 0 , "" );
+    static_assert( a_int_r5::dimension::ArgN1 == 0 , "" );
+    static_assert( a_int_r5::dimension::ArgN2 == 4 , "" );
+    static_assert( a_int_r5::dimension::ArgN3 == 5 , "" );
+    static_assert( a_int_r5::dimension::ArgN4 == 6 , "" );
+    static_assert( a_int_r5::dimension::ArgN5 == 1 , "" );
+
     static_assert( std::is_same< typename a_int_r1::dimension , ViewDimension<0> >::value , "" );
     static_assert( std::is_same< typename a_int_r1::non_const_value_type , int >::value , "" );
 
@@ -545,8 +572,14 @@ void test_view_mapping()
     static_assert( a_const_int_r5::dimension::rank == 5 , "" );
     static_assert( a_const_int_r5::dimension::rank_dynamic == 2 , "" );
 
-    static_assert( std::is_same< typename a_const_int_r5::dimension , ViewDimension<0,0,4,5,6> >::value , "" );
+    static_assert( a_const_int_r5::dimension::ArgN0 == 0 , "" );
+    static_assert( a_const_int_r5::dimension::ArgN1 == 0 , "" );
+    static_assert( a_const_int_r5::dimension::ArgN2 == 4 , "" );
+    static_assert( a_const_int_r5::dimension::ArgN3 == 5 , "" );
+    static_assert( a_const_int_r5::dimension::ArgN4 == 6 , "" );
+    static_assert( a_const_int_r5::dimension::ArgN5 == 1 , "" );
 
+    static_assert( std::is_same< typename a_const_int_r5::dimension , ViewDimension<0,0,4,5,6> >::value , "" );
     static_assert( std::is_same< typename a_const_int_r5::non_const_value_type , int >::value , "" );
 
     static_assert( a_int_r5::dimension::rank == 5 , "" );
@@ -616,8 +649,8 @@ void test_view_mapping()
   {
     constexpr int N = 10 ;
 
-    typedef Kokkos::Experimental::View<int*,Space>        T ;
-    typedef Kokkos::Experimental::View<const int*,Space>  C ;
+    typedef Kokkos::View<int*,Space>        T ;
+    typedef Kokkos::View<const int*,Space>  C ;
 
     int data[N] ;
 
@@ -688,8 +721,8 @@ void test_view_mapping()
 
   {
     constexpr int N = 10 ;
-    typedef Kokkos::Experimental::View<int*,Space>        T ;
-    typedef Kokkos::Experimental::View<const int*,Space>  C ;
+    typedef Kokkos::View<int*,Space>        T ;
+    typedef Kokkos::View<const int*,Space>  C ;
 
     T vr1("vr1",N);
     C cr1(vr1);
@@ -731,8 +764,8 @@ void test_view_mapping()
   // Testing proper handling of zero-length allocations
   {
     constexpr int N = 0 ;
-    typedef Kokkos::Experimental::View<int*,Space>        T ;
-    typedef Kokkos::Experimental::View<const int*,Space>  C ;
+    typedef Kokkos::View<int*,Space>        T ;
+    typedef Kokkos::View<const int*,Space>  C ;
 
     T vr1("vr1",N);
     C cr1(vr1);
@@ -771,7 +804,7 @@ void test_view_mapping()
   }
 
   {
-    typedef Kokkos::Experimental::ViewTraits<int***,Kokkos::LayoutStride,ExecSpace>  traits_t ;
+    typedef Kokkos::ViewTraits<int***,Kokkos::LayoutStride,ExecSpace>  traits_t ;
     typedef Kokkos::Experimental::Impl::ViewDimension<0,0,0>                         dims_t ;
     typedef Kokkos::Experimental::Impl::ViewOffset< dims_t , Kokkos::LayoutStride >  offset_t ;
 
@@ -802,9 +835,9 @@ void test_view_mapping()
   }
 
   {
-    typedef Kokkos::Experimental::View<int**,Space>  V ;
+    typedef Kokkos::View<int**,Space>  V ;
     typedef typename V::HostMirror  M ;
-    typedef typename Kokkos::Experimental::View<int**,Space>::array_layout layout_type;
+    typedef typename Kokkos::View<int**,Space>::array_layout layout_type;
 
     constexpr int N0 = 10 ;
     constexpr int N1 = 11 ;
@@ -873,9 +906,9 @@ void test_view_mapping()
   }
 
   {
-    typedef Kokkos::Experimental::View<int**,Kokkos::LayoutStride,Space>  V ;
+    typedef Kokkos::View<int**,Kokkos::LayoutStride,Space>  V ;
     typedef typename V::HostMirror  M ;
-    typedef typename Kokkos::Experimental::View<int**,Kokkos::LayoutStride,Space>::array_layout layout_type;
+    typedef typename Kokkos::View<int**,Kokkos::LayoutStride,Space>::array_layout layout_type;
 
     constexpr int N0 = 10 ;
     constexpr int N1 = 11 ;
@@ -924,8 +957,8 @@ void test_view_mapping()
   }
 
   {
-    typedef Kokkos::Experimental::View<int*,Space> V ;
-    typedef Kokkos::Experimental::View<int*,Space,Kokkos::MemoryUnmanaged> U ;
+    typedef Kokkos::View<int*,Space> V ;
+    typedef Kokkos::View<int*,Space,Kokkos::MemoryUnmanaged> U ;
 
 
     V a("a",10);
@@ -960,10 +993,10 @@ void test_view_mapping()
     ASSERT_EQ( a.use_count() , 1 );
     ASSERT_EQ( b.use_count() , 0 );
 
-#if KOKKOS_USING_EXP_VIEW && ! defined ( KOKKOS_CUDA_USE_LAMBDA )
+#if ! defined ( KOKKOS_CUDA_USE_LAMBDA )
     /* Cannot launch host lambda when CUDA lambda is enabled */
 
-    typedef typename Kokkos::Impl::is_space< Space >::host_execution_space
+    typedef typename Kokkos::Impl::HostMirror< Space >::Space::execution_space
       host_exec_space ;
 
     Kokkos::parallel_for(
@@ -991,31 +1024,31 @@ struct TestViewMappingSubview
   typedef Kokkos::pair<int,int> range ;
 
   enum { AN = 10 };
-  typedef Kokkos::Experimental::View<int*,ExecSpace>  AT ;
-  typedef Kokkos::Experimental::View<const int*,ExecSpace>  ACT ;
-  typedef Kokkos::Experimental::Subview< AT , range >  AS ;
+  typedef Kokkos::View<int*,ExecSpace>  AT ;
+  typedef Kokkos::View<const int*,ExecSpace>  ACT ;
+  typedef Kokkos::Subview< AT , range >  AS ;
 
   enum { BN0 = 10 , BN1 = 11 , BN2 = 12 };
-  typedef Kokkos::Experimental::View<int***,ExecSpace>  BT ;
-  typedef Kokkos::Experimental::Subview< BT , range , range , range >  BS ;
+  typedef Kokkos::View<int***,ExecSpace>  BT ;
+  typedef Kokkos::Subview< BT , range , range , range >  BS ;
 
   enum { CN0 = 10 , CN1 = 11 , CN2 = 12 };
-  typedef Kokkos::Experimental::View<int***[13][14],ExecSpace>  CT ;
-  typedef Kokkos::Experimental::Subview< CT , range , range , range , int , int >  CS ;
+  typedef Kokkos::View<int***[13][14],ExecSpace>  CT ;
+  typedef Kokkos::Subview< CT , range , range , range , int , int >  CS ;
 
   enum { DN0 = 10 , DN1 = 11 , DN2 = 12 , DN3 = 13 , DN4 = 14 };
-  typedef Kokkos::Experimental::View<int***[DN3][DN4],ExecSpace>  DT ;
-  typedef Kokkos::Experimental::Subview< DT , int , range , range , range , int >  DS ;
+  typedef Kokkos::View<int***[DN3][DN4],ExecSpace>  DT ;
+  typedef Kokkos::Subview< DT , int , range , range , range , int >  DS ;
 
 
-  typedef Kokkos::Experimental::View<int***[13][14],Kokkos::LayoutLeft,ExecSpace>  DLT ;
-  typedef Kokkos::Experimental::Subview< DLT , range , int , int , int , int >  DLS1 ;
+  typedef Kokkos::View<int***[13][14],Kokkos::LayoutLeft,ExecSpace>  DLT ;
+  typedef Kokkos::Subview< DLT , range , int , int , int , int >  DLS1 ;
 
   static_assert( DLS1::rank == 1 && std::is_same< typename DLS1::array_layout , Kokkos::LayoutLeft >::value
                , "Subview layout error for rank 1 subview of left-most range of LayoutLeft" );
 
-  typedef Kokkos::Experimental::View<int***[13][14],Kokkos::LayoutRight,ExecSpace>  DRT ;
-  typedef Kokkos::Experimental::Subview< DRT , int , int , int , int , range >  DRS1 ;
+  typedef Kokkos::View<int***[13][14],Kokkos::LayoutRight,ExecSpace>  DRT ;
+  typedef Kokkos::Subview< DRT , int , int , int , int , range >  DRS1 ;
 
   static_assert( DRS1::rank == 1 && std::is_same< typename DRS1::array_layout , Kokkos::LayoutRight >::value
                , "Subview layout error for rank 1 subview of right-most range of LayoutRight" );
@@ -1266,23 +1299,23 @@ void test_view_mapping_operator()
 {
   typedef typename Space::execution_space ExecSpace ;
 
-  TestViewMapOperator< Kokkos::Experimental::View<int,Kokkos::LayoutLeft,ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::Experimental::View<int*,Kokkos::LayoutLeft,ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::Experimental::View<int**,Kokkos::LayoutLeft,ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::Experimental::View<int***,Kokkos::LayoutLeft,ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::Experimental::View<int****,Kokkos::LayoutLeft,ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::Experimental::View<int*****,Kokkos::LayoutLeft,ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::Experimental::View<int******,Kokkos::LayoutLeft,ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::Experimental::View<int*******,Kokkos::LayoutLeft,ExecSpace> >::run();
+  TestViewMapOperator< Kokkos::View<int,Kokkos::LayoutLeft,ExecSpace> >::run();
+  TestViewMapOperator< Kokkos::View<int*,Kokkos::LayoutLeft,ExecSpace> >::run();
+  TestViewMapOperator< Kokkos::View<int**,Kokkos::LayoutLeft,ExecSpace> >::run();
+  TestViewMapOperator< Kokkos::View<int***,Kokkos::LayoutLeft,ExecSpace> >::run();
+  TestViewMapOperator< Kokkos::View<int****,Kokkos::LayoutLeft,ExecSpace> >::run();
+  TestViewMapOperator< Kokkos::View<int*****,Kokkos::LayoutLeft,ExecSpace> >::run();
+  TestViewMapOperator< Kokkos::View<int******,Kokkos::LayoutLeft,ExecSpace> >::run();
+  TestViewMapOperator< Kokkos::View<int*******,Kokkos::LayoutLeft,ExecSpace> >::run();
 
-  TestViewMapOperator< Kokkos::Experimental::View<int,Kokkos::LayoutRight,ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::Experimental::View<int*,Kokkos::LayoutRight,ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::Experimental::View<int**,Kokkos::LayoutRight,ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::Experimental::View<int***,Kokkos::LayoutRight,ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::Experimental::View<int****,Kokkos::LayoutRight,ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::Experimental::View<int*****,Kokkos::LayoutRight,ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::Experimental::View<int******,Kokkos::LayoutRight,ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::Experimental::View<int*******,Kokkos::LayoutRight,ExecSpace> >::run();
+  TestViewMapOperator< Kokkos::View<int,Kokkos::LayoutRight,ExecSpace> >::run();
+  TestViewMapOperator< Kokkos::View<int*,Kokkos::LayoutRight,ExecSpace> >::run();
+  TestViewMapOperator< Kokkos::View<int**,Kokkos::LayoutRight,ExecSpace> >::run();
+  TestViewMapOperator< Kokkos::View<int***,Kokkos::LayoutRight,ExecSpace> >::run();
+  TestViewMapOperator< Kokkos::View<int****,Kokkos::LayoutRight,ExecSpace> >::run();
+  TestViewMapOperator< Kokkos::View<int*****,Kokkos::LayoutRight,ExecSpace> >::run();
+  TestViewMapOperator< Kokkos::View<int******,Kokkos::LayoutRight,ExecSpace> >::run();
+  TestViewMapOperator< Kokkos::View<int*******,Kokkos::LayoutRight,ExecSpace> >::run();
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1294,8 +1327,8 @@ struct TestViewMappingAtomic {
 
   typedef Kokkos::MemoryTraits< Kokkos::Atomic >  mem_trait ;
 
-  typedef Kokkos::Experimental::View< int * , ExecSpace > T ;
-  typedef Kokkos::Experimental::View< int * , ExecSpace , mem_trait >  T_atom ;
+  typedef Kokkos::View< int * , ExecSpace > T ;
+  typedef Kokkos::View< int * , ExecSpace , mem_trait >  T_atom ;
 
   T      x ;
   T_atom x_atom ;

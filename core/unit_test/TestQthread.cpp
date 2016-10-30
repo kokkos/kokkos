@@ -46,11 +46,8 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Qthread.hpp>
 
-#include <Qthread/Kokkos_Qthread_TaskPolicy.hpp>
-
 //----------------------------------------------------------------------------
 
-#include <TestViewImpl.hpp>
 #include <TestAtomic.hpp>
 
 #include <TestViewAPI.hpp>

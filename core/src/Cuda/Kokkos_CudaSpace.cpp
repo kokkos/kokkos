@@ -65,6 +65,9 @@ namespace Kokkos {
 namespace Impl {
 
 namespace {
+
+  static int num_uvm_allocations = 0;
+
    cudaStream_t get_deep_copy_stream() {
      static cudaStream_t s = 0;
      if( s == 0) {
@@ -165,7 +168,15 @@ void * CudaSpace::allocate( const size_t arg_alloc_size ) const
 
 void * CudaUVMSpace::allocate( const size_t arg_alloc_size ) const
 {
+
   void * ptr = NULL;
+
+  Kokkos::Impl::num_uvm_allocations += 1 ;
+
+  if ( Kokkos::Impl::num_uvm_allocations > 65536 ) {
+    Kokkos::Impl::num_uvm_allocations = 0 ; //Reset to 0 before throwing exception
+    Kokkos::Impl::throw_runtime_exception( "CudaUVM error: The maximum limit of UVM allocations is 65536" ) ;
+  }
 
   CUDA_SAFE_CALL( cudaMallocManaged( &ptr, arg_alloc_size , cudaMemAttachGlobal ) );
 
@@ -191,6 +202,7 @@ void CudaSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_all
 void CudaUVMSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_alloc_size */ ) const
 {
   try {
+    Kokkos::Impl::num_uvm_allocations -= 1;
     CUDA_SAFE_CALL( cudaFree( arg_alloc_ptr ) );
   } catch(...) {}
 }
@@ -208,7 +220,6 @@ void CudaHostPinnedSpace::deallocate( void * const arg_alloc_ptr , const size_t 
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 SharedAllocationRecord< void , void >
@@ -587,7 +598,7 @@ SharedAllocationRecord< Kokkos::CudaSpace , void >::get_record( void * alloc_ptr
   RecordCuda * const record = alloc_ptr ? static_cast< RecordCuda * >( head.m_record ) : (RecordCuda *) 0 ;
 
   if ( ! alloc_ptr || record->m_alloc_ptr != head_cuda ) {
-    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void >::get_record ERROR" ) );
+    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void >::get_record ERROR" ) );
   }
 
 #else
@@ -598,7 +609,7 @@ SharedAllocationRecord< Kokkos::CudaSpace , void >::get_record( void * alloc_ptr
   RecordCuda * const record = static_cast< RecordCuda * >( RecordBase::find( & s_root_record , alloc_ptr ) );
 
   if ( record == 0 ) {
-    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void >::get_record ERROR" ) );
+    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void >::get_record ERROR" ) );
   }
 
 #endif
@@ -615,7 +626,7 @@ SharedAllocationRecord< Kokkos::CudaUVMSpace , void >::get_record( void * alloc_
   Header * const h = alloc_ptr ? reinterpret_cast< Header * >( alloc_ptr ) - 1 : (Header *) 0 ;
 
   if ( ! alloc_ptr || h->m_record->m_alloc_ptr != h ) {
-    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaUVMSpace , void >::get_record ERROR" ) );
+    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaUVMSpace , void >::get_record ERROR" ) );
   }
 
   return static_cast< RecordCuda * >( h->m_record );
@@ -630,7 +641,7 @@ SharedAllocationRecord< Kokkos::CudaHostPinnedSpace , void >::get_record( void *
   Header * const h = alloc_ptr ? reinterpret_cast< Header * >( alloc_ptr ) - 1 : (Header *) 0 ;
 
   if ( ! alloc_ptr || h->m_record->m_alloc_ptr != h ) {
-    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaHostPinnedSpace , void >::get_record ERROR" ) );
+    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaHostPinnedSpace , void >::get_record ERROR" ) );
   }
 
   return static_cast< RecordCuda * >( h->m_record );
@@ -728,7 +739,6 @@ print_records( std::ostream & s , const Kokkos::CudaHostPinnedSpace & space , bo
 }
 
 } // namespace Impl
-} // namespace Experimental
 } // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

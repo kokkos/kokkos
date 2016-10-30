@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -45,6 +45,8 @@
 #define KOKKOS_IMPL_SERIAL_TASK_HPP
 
 #if defined( KOKKOS_ENABLE_TASKPOLICY )
+
+#include <impl/Kokkos_TaskQueue.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -154,45 +156,26 @@ struct ThreadVectorRangeBoundariesStruct<iType, TaskExec< Kokkos::Serial > >
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-/*
-template<typename iType>
-KOKKOS_INLINE_FUNCTION
-Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >
-TeamThreadRange( const Impl::TaskExec< Kokkos::Serial > & thread
-               , const iType & count )
-{
-  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >(thread,count);
-}
-*/
+
 // OMP version needs non-const TaskExec
-template<typename iType>
+template< typename iType >
 KOKKOS_INLINE_FUNCTION
-Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >
-TeamThreadRange
-  ( Impl::TaskExec< Kokkos::Serial > & thread
-  , const iType & count )
+Impl::TeamThreadRangeBoundariesStruct< iType, Impl::TaskExec< Kokkos::Serial > >
+TeamThreadRange( Impl::TaskExec< Kokkos::Serial > & thread, const iType & count )
 {
-  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >(thread,count);
+  return Impl::TeamThreadRangeBoundariesStruct< iType, Impl::TaskExec< Kokkos::Serial > >( thread, count );
 }
-/*
-template<typename iType>
-KOKKOS_INLINE_FUNCTION
-Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Serial > >
-TeamThreadRange( const Impl:: TaskExec< Kokkos::Serial > & thread, const iType & start , const iType & end )
-{
-  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Serial > >(thread,start,end);
-}
-*/
+
 // OMP version needs non-const TaskExec
-template<typename iType>
+template< typename iType1, typename iType2 >
 KOKKOS_INLINE_FUNCTION
-Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Serial > >
-TeamThreadRange
-  ( Impl:: TaskExec< Kokkos::Serial > & thread
-  , const iType & start
-  , const iType & end )
+Impl::TeamThreadRangeBoundariesStruct< typename std::common_type< iType1, iType2 >::type,
+                                       Impl::TaskExec< Kokkos::Serial > >
+TeamThreadRange( Impl::TaskExec< Kokkos::Serial > & thread, const iType1 & start, const iType2 & end )
 {
-  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Serial > >(thread,start,end);
+  typedef typename std::common_type< iType1, iType2 >::type iType;
+  return Impl::TeamThreadRangeBoundariesStruct< iType, Impl::TaskExec< Kokkos::Serial > >(
+           thread, iType(start), iType(end) );
 }
 
 // OMP version needs non-const TaskExec
@@ -212,7 +195,7 @@ ThreadVectorRange
    * This functionality requires C++11 support.*/
 template<typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION
-void parallel_for(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Serial > >& loop_boundaries, const Lambda& lambda) {
+void parallel_for(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >& loop_boundaries, const Lambda& lambda) {
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment)
     lambda(i);
 }

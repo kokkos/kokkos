@@ -196,7 +196,7 @@ void Task::assign( Task ** const lhs , Task * rhs , const bool no_throw )
   static const char msg_error_dependences[] = ": destroy task that has dependences" ;
   static const char msg_error_exception[]   = ": caught internal exception" ;
 
-  if ( rhs ) { Kokkos::atomic_fetch_add( & (*rhs).m_ref_count , 1 ); }
+  if ( rhs ) { Kokkos::atomic_increment( &(*rhs).m_ref_count ); }
 
   Task * const lhs_val = Kokkos::atomic_exchange( lhs , rhs );
 
