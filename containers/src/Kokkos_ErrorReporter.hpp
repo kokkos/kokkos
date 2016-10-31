@@ -100,13 +100,13 @@ public:
 
 private:
 
-  typedef Kokkos::View<report_type *, device_type>        reports_view_t;
-  typedef Kokkos::DualView<report_type *, device_type>    reports_dualview_t;
+  typedef Kokkos::View<report_type *, execution_space>        reports_view_t;
+  typedef Kokkos::DualView<report_type *, execution_space>    reports_dualview_t;
 
   typedef typename reports_dualview_t::host_mirror_space  host_mirror_space;
-  Kokkos::DualView<int, device_type>   m_numReportsAttempted;
+  Kokkos::DualView<int, execution_space>   m_numReportsAttempted;
   reports_dualview_t                   m_reports;
-  Kokkos::DualView<int *, device_type> m_reporters;
+  Kokkos::DualView<int *, execution_space> m_reporters;
 
 };
 
