@@ -265,6 +265,10 @@
   #define KOKKOS_HAVE_PRAGMA_VECTOR 1
   #define KOKKOS_HAVE_PRAGMA_SIMD 1
 
+  #ifdef KOKKOS_USE_RESTRICT
+  #define KOKKOS_RESTRICT __restrict__
+  #endif
+
   #if ( 1400 > KOKKOS_COMPILER_INTEL )
     #if ( 1300 > KOKKOS_COMPILER_INTEL )
       #error "Compiling with Intel version earlier than 13.0 is not supported. Official minimal version is 14.0."

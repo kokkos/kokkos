@@ -63,6 +63,7 @@ enum MemoryTraitsFlags
   { Unmanaged  = 0x01
   , RandomAccess = 0x02
   , Atomic = 0x04
+  , Restrict = 0x08
   };
 
 template < unsigned T >
@@ -73,6 +74,7 @@ struct MemoryTraits {
   enum { Unmanaged    = T & unsigned(Kokkos::Unmanaged) };
   enum { RandomAccess = T & unsigned(Kokkos::RandomAccess) };
   enum { Atomic       = T & unsigned(Kokkos::Atomic) };
+  enum { Restrict     = T & unsigned(Kokkos::Restrict) };
 
 };
 
