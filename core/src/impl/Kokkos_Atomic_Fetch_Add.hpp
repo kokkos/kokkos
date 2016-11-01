@@ -70,6 +70,12 @@ __inline__ __device__
 float atomic_fetch_add( volatile float * const dest , const float val )
 { return atomicAdd((float*)dest,val); }
 
+#if ( 600 <= __CUDA_ARCH__ )
+__inline__ __device__
+double atomic_fetch_add( volatile double * const dest , const double val )
+{ return atomicAdd((double*)dest,val); }
+#endif
+
 template < typename T >
 __inline__ __device__
 T atomic_fetch_add( volatile T * const dest ,
