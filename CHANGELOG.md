@@ -1,5 +1,17 @@
 # Change Log
 
+## [2.02.01](https://github.com/kokkos/kokkos/tree/2.02.01) (2016-11-01)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/2.02.00...2.02.01)
+
+**Implemented enhancements:**
+
+- Add Changelog generation to our process. [\#506](https://github.com/kokkos/kokkos/issues/506)
+
+**Fixed bugs:**
+
+- Test scratch\_request fails in Serial with Debug enabled [\#520](https://github.com/kokkos/kokkos/issues/520)
+- Bug In BoundsCheck for DynRankView [\#516](https://github.com/kokkos/kokkos/issues/516)
+
 ## [2.02.00](https://github.com/kokkos/kokkos/tree/2.02.00) (2016-10-30)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/2.01.10...2.02.00)
 
