@@ -60,8 +60,6 @@ void test_cuda_spaces_int_value( int * ptr )
 
 TEST_F( cuda , space_access )
 {
-        int num_allocs = Kokkos::CudaUVMSpace::get_num_allocs() ;
-        printf(" num of uvm allocs at tests begin: %d\n",num_allocs);
 
   static_assert(
     Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::HostSpace >::assignable , "" );

@@ -46,6 +46,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
+#include <atomic>
 #include <Kokkos_Macros.hpp>
 
 /* only compile this file if CUDA is enabled for Kokkos */
@@ -66,7 +67,7 @@ namespace Impl {
 
 namespace {
 
-  static int num_uvm_allocations = 0;
+  static std::atomic<int> num_uvm_allocations(0) ;
 
    cudaStream_t get_deep_copy_stream() {
      static cudaStream_t s = 0;
@@ -136,9 +137,9 @@ bool CudaUVMSpace::available()
 
 /*--------------------------------------------------------------------------*/
 
-int CudaUVMSpace::get_num_allocs()
+int CudaUVMSpace::number_of_allocations()
 {
-  return Kokkos::Impl::num_uvm_allocations;
+  return Kokkos::Impl::num_uvm_allocations.load();
 }
 
 } // namespace Kokkos
@@ -175,16 +176,18 @@ void * CudaUVMSpace::allocate( const size_t arg_alloc_size ) const
 {
   void * ptr = NULL;
 
+  enum { max_uvm_allocations = 65536 };
+
   if ( arg_alloc_size > 0 ) 
   {
-    Kokkos::atomic_increment( &Kokkos::Impl::num_uvm_allocations ) ;
+    Kokkos::Impl::num_uvm_allocations++;
+
+    if ( Kokkos::Impl::num_uvm_allocations.load() > max_uvm_allocations ) {
+      Kokkos::Impl::throw_runtime_exception( "CudaUVM error: The maximum limit of UVM allocations exceeded (currently 65536)." ) ;
+    }
+
+    CUDA_SAFE_CALL( cudaMallocManaged( &ptr, arg_alloc_size , cudaMemAttachGlobal ) );
   } 
-
-  if ( Kokkos::Impl::num_uvm_allocations > 65536 ) {
-    Kokkos::Impl::throw_runtime_exception( "CudaUVM error: The maximum limit of UVM allocations is 65536" ) ;
-  }
-
-  CUDA_SAFE_CALL( cudaMallocManaged( &ptr, arg_alloc_size , cudaMemAttachGlobal ) );
 
   return ptr ;
 }
@@ -208,8 +211,10 @@ void CudaSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_all
 void CudaUVMSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_alloc_size */ ) const
 {
   try {
-    CUDA_SAFE_CALL( cudaFree( arg_alloc_ptr ) );
-    Kokkos::atomic_decrement( &Kokkos::Impl::num_uvm_allocations ) ;
+    if ( arg_alloc_ptr != nullptr ) {
+      Kokkos::Impl::num_uvm_allocations--;
+      CUDA_SAFE_CALL( cudaFree( arg_alloc_ptr ) );
+    }
   } catch(...) {}
 }
 

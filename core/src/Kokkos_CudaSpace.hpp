@@ -156,7 +156,13 @@ public:
   /** \brief  If UVM capability is available */
   static bool available();
 
-  static int get_num_allocs();
+
+  /*--------------------------------*/
+  /** \brief  CudaUVMSpace specific routine */
+  static int number_of_allocations();
+
+  /*--------------------------------*/
+
 
   /*--------------------------------*/
 
