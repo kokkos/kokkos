@@ -136,6 +136,11 @@ bool CudaUVMSpace::available()
 
 /*--------------------------------------------------------------------------*/
 
+int CudaUVMSpace::get_num_allocs()
+{
+  return Kokkos::Impl::num_uvm_allocations;
+}
+
 } // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
@@ -168,13 +173,14 @@ void * CudaSpace::allocate( const size_t arg_alloc_size ) const
 
 void * CudaUVMSpace::allocate( const size_t arg_alloc_size ) const
 {
-
   void * ptr = NULL;
 
-  Kokkos::Impl::num_uvm_allocations += 1 ;
+  if ( arg_alloc_size > 0 ) 
+  {
+    Kokkos::atomic_increment( &Kokkos::Impl::num_uvm_allocations ) ;
+  } 
 
   if ( Kokkos::Impl::num_uvm_allocations > 65536 ) {
-    Kokkos::Impl::num_uvm_allocations = 0 ; //Reset to 0 before throwing exception
     Kokkos::Impl::throw_runtime_exception( "CudaUVM error: The maximum limit of UVM allocations is 65536" ) ;
   }
 
@@ -202,8 +208,8 @@ void CudaSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_all
 void CudaUVMSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_alloc_size */ ) const
 {
   try {
-    Kokkos::Impl::num_uvm_allocations -= 1;
     CUDA_SAFE_CALL( cudaFree( arg_alloc_ptr ) );
+    Kokkos::atomic_decrement( &Kokkos::Impl::num_uvm_allocations ) ;
   } catch(...) {}
 }
 
@@ -513,6 +519,7 @@ void SharedAllocationRecord< Kokkos::CudaUVMSpace , void >::
 deallocate_tracked( void * const arg_alloc_ptr )
 {
   if ( arg_alloc_ptr != 0 ) {
+
     SharedAllocationRecord * const r = get_record( arg_alloc_ptr );
 
     RecordBase::decrement( r );

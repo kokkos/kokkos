@@ -156,6 +156,8 @@ public:
   /** \brief  If UVM capability is available */
   static bool available();
 
+  static int get_num_allocs();
+
   /*--------------------------------*/
 
   CudaUVMSpace();

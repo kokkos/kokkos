@@ -60,6 +60,9 @@ void test_cuda_spaces_int_value( int * ptr )
 
 TEST_F( cuda , space_access )
 {
+        int num_allocs = Kokkos::CudaUVMSpace::get_num_allocs() ;
+        printf(" num of uvm allocs at tests begin: %d\n",num_allocs);
+
   static_assert(
     Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::HostSpace >::assignable , "" );
 
@@ -113,32 +116,65 @@ TEST_F( cuda, uvm )
     EXPECT_EQ( *uvm_ptr, int(2*42) );
 
     Kokkos::kokkos_free< Kokkos::CudaUVMSpace >(uvm_ptr );
+
   }
 }
 
 TEST_F( cuda, uvm_num_allocs )
 {
+  // The max number of uvm allocations allowed is 65536
+  #define MAX_NUM_ALLOCS 65536
+
   if ( Kokkos::CudaUVMSpace::available() ) {
 
     struct TestMaxUVMAllocs {
+
       using view_type         = Kokkos::View< double* , Kokkos::CudaUVMSpace >;
-      using view_of_view_type = Kokkos::View< view_type[ 65537 ] , Kokkos::CudaUVMSpace >;
+      using view_of_view_type = Kokkos::View< view_type[ MAX_NUM_ALLOCS ] 
+                                            , Kokkos::CudaUVMSpace >;
 
       TestMaxUVMAllocs()
       : view_allocs_test("view_allocs_test")
       {
-        for ( auto i = 0; i < max_num_allocs_plus_one; ++i ) {
-          view_allocs_test(i) = view_type("inner_view",1);
-        } //end for
+
+        for ( auto i = 0; i < MAX_NUM_ALLOCS ; ++i ) {
+
+          // Kokkos will throw a runtime exception if an attempt is made to 
+          // allocate more than the maximum number of uvm allocations
+
+          // In this test, the max num of allocs occurs when i = MAX_NUM_ALLOCS - 1
+          // since the 'outer' view counts as one UVM allocation, leaving
+          // 65535 possible UVM allocations, that is 'i in [0 , 65535)'
+
+          // The test will catch the exception thrown in this case and continue
+
+          if ( i == ( MAX_NUM_ALLOCS - 1) ) {
+            EXPECT_ANY_THROW( { view_allocs_test(i) = view_type("inner_view",1); } ) ;
+          }
+          else {
+            EXPECT_NO_THROW( { view_allocs_test(i) = view_type("inner_view",1); } ) ;
+          }
+
+        } //end allocation for loop
+
+        for ( auto i = 0; i < MAX_NUM_ALLOCS -1; ++i ) {
+
+          view_allocs_test(i) = view_type();
+
+        } //end deallocation for loop
+
+        view_allocs_test = view_of_view_type(); // deallocate the view of views
       }
 
-      const int max_num_allocs_plus_one = 65537;
+      // Member
       view_of_view_type view_allocs_test ;
     } ;
 
-    // The constructor should throw runtime error once 65536 uvm allocations exceeded
-    EXPECT_ANY_THROW( TestMaxUVMAllocs() );
+    // trigger the test via the TestMaxUVMAllocs constructor
+    TestMaxUVMAllocs() ;
+
   }
+  #undef MAX_NUM_ALLOCS 
 }
 
 template< class MemSpace , class ExecSpace >
