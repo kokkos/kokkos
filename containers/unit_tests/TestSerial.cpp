@@ -66,6 +66,9 @@
 #include <Kokkos_DynRankView.hpp>
 #include <TestDynViewAPI.hpp>
 
+#include <Kokkos_ErrorReporter.hpp>
+#include <TestErrorReporter.hpp>
+
 namespace Test {
 
 class serial : public ::testing::Test {
@@ -159,6 +162,26 @@ TEST_F( serial , dynamic_view )
     TestDynView::run( 100000 + 100 * i );
   }
 }
+
+#ifndef __INTEL_COMPILER
+#ifdef __GNUG__
+#if ((__GNUC__ == 4) && (__GNUC_MINOR__ < 8))
+#define COMPILER_HAS_FLAKY_LAMBDA_CAPTURE
+#endif
+#endif
+#endif
+
+TEST_F(serial, ErrorReporter)
+{
+  TestErrorReporter<ErrorReporterDriver<Kokkos::Serial>>();
+}
+
+#ifndef COMPILER_HAS_FLAKY_LAMBDA_CAPTURE
+TEST_F(serial, ErrorReporterViaLambda)
+{
+  TestErrorReporter<ErrorReporterDriverUseLambda<Kokkos::Serial>>();
+}
+#endif
 
 } // namespace Test
 
