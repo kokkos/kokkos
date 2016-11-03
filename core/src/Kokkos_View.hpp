@@ -630,7 +630,7 @@ private:
 #else
 
 #define KOKKOS_VIEW_OPERATOR_VERIFY( ARG ) \
-  View::template verify_space< Kokkos::Impl::ActiveExecutionMemorySpace >::check(); \
+  View::template verify_space< Kokkos::Impl::ActiveExecutionMemorySpace >::check();
 
 #endif
 
