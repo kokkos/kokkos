@@ -47,9 +47,7 @@ namespace Test {
 __global__
 void test_abort()
 {
-  Kokkos::Impl::VerifyExecutionCanAccessMemorySpace<
-    Kokkos::CudaSpace ,
-    Kokkos::HostSpace >::verify();
+  Kokkos::abort("test_abort");
 }
 
 __global__
@@ -60,9 +58,27 @@ void test_cuda_spaces_int_value( int * ptr )
 
 TEST_F( cuda , space_access )
 {
+  //--------------------------------------
 
   static_assert(
     Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::HostSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaHostPinnedSpace >::assignable , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaSpace >::assignable , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaSpace >::accessible , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaUVMSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaUVMSpace >::accessible , "" );
+
+  //--------------------------------------
 
   static_assert(
     Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::CudaSpace >::assignable , "" );
@@ -71,13 +87,86 @@ TEST_F( cuda , space_access )
     Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::CudaUVMSpace >::assignable , "" );
 
   static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::CudaHostPinnedSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::CudaHostPinnedSpace >::accessible , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::HostSpace >::assignable , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::HostSpace >::accessible , "" );
+
+  //--------------------------------------
+
+  static_assert(
     Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::CudaUVMSpace >::assignable , "" );
 
   static_assert(
-    Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaHostPinnedSpace >::assignable , "" );
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::CudaSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::CudaSpace >::accessible , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::HostSpace >::assignable , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::HostSpace >::accessible , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::CudaHostPinnedSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::CudaHostPinnedSpace >::accessible , "" );
+
+  //--------------------------------------
 
   static_assert(
     Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::CudaHostPinnedSpace >::assignable , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::HostSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::HostSpace >::accessible , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::CudaSpace >::assignable , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::CudaSpace >::accessible , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::CudaUVMSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::CudaUVMSpace >::accessible , "" );
+
+  //--------------------------------------
+
+  static_assert(
+    ! Kokkos::Impl::SpaceAccessibility< Kokkos::Cuda , Kokkos::HostSpace >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility< Kokkos::Cuda , Kokkos::CudaSpace >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility< Kokkos::Cuda , Kokkos::CudaUVMSpace >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility< Kokkos::Cuda , Kokkos::CudaHostPinnedSpace >::accessible , "" );
+
+  static_assert(
+    ! Kokkos::Impl::SpaceAccessibility< Kokkos::HostSpace , Kokkos::CudaSpace >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility< Kokkos::HostSpace , Kokkos::CudaUVMSpace >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility< Kokkos::HostSpace , Kokkos::CudaHostPinnedSpace >::accessible , "" );
+
 
   static_assert(
     std::is_same< Kokkos::Impl::HostMirror< Kokkos::CudaSpace >::Space
@@ -97,6 +186,30 @@ TEST_F( cuda , space_access )
                                 , Kokkos::CudaUVMSpace >
                 , Kokkos::Device< Kokkos::HostSpace::execution_space
                                 , Kokkos::CudaUVMSpace > >::value , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility
+      < Kokkos::Impl::HostMirror< Kokkos::Cuda >::Space
+      , Kokkos::HostSpace
+      >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility
+      < Kokkos::Impl::HostMirror< Kokkos::CudaSpace >::Space
+      , Kokkos::HostSpace
+      >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility
+      < Kokkos::Impl::HostMirror< Kokkos::CudaUVMSpace >::Space
+      , Kokkos::HostSpace
+      >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility
+      < Kokkos::Impl::HostMirror< Kokkos::CudaHostPinnedSpace >::Space
+      , Kokkos::HostSpace
+      >::accessible , "" );
 }
 
 TEST_F( cuda, uvm )

@@ -504,21 +504,27 @@ private:
       ( is_layout_left || is_layout_right || is_layout_stride )
   };
 
+  template< class Space , bool = Kokkos::Impl::MemorySpaceAccess< Space , typename traits::memory_space >::accessible > struct verify_space
+    { KOKKOS_FORCEINLINE_FUNCTION static void check() {} };
+
+  template< class Space > struct verify_space<Space,false>
+    { KOKKOS_FORCEINLINE_FUNCTION static void check()
+        { Kokkos::abort("Kokkos::DynRankView ERROR: attempt to access inaccessible memory space"); };
+    };
+
 // Bounds checking macros
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
 
 // N is dynamic rank - 1
 #define KOKKOS_VIEW_OPERATOR_VERIFY( N , ARG ) \
-  Kokkos::Impl::VerifyExecutionCanAccessMemorySpace \
-    < Kokkos::Impl::ActiveExecutionMemorySpace , typename traits::memory_space >::verify(); \
+  DynRankView::template verify_space< Kokkos::Impl::ActiveExecutionMemorySpace >::check(); \
   Kokkos::Experimental::Impl::verify_dynrankview_rank ( N , *this ) ; \
   Kokkos::Impl::view_verify_operator_bounds ARG ; 
 
 #else
 
 #define KOKKOS_VIEW_OPERATOR_VERIFY( N , ARG ) \
-  Kokkos::Impl::VerifyExecutionCanAccessMemorySpace \
-    < Kokkos::Impl::ActiveExecutionMemorySpace , typename traits::memory_space >::verify();
+  DynRankView::template verify_space< Kokkos::Impl::ActiveExecutionMemorySpace >::check();
 
 #endif
 
@@ -1560,10 +1566,10 @@ void deep_copy
   typedef typename src_type::memory_space     src_memory_space ;
 
   enum { DstExecCanAccessSrc =
-   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename dst_execution_space::memory_space , src_memory_space >::value };
+   Kokkos::Impl::SpaceAccessibility< dst_execution_space , src_memory_space >::accessible };
 
   enum { SrcExecCanAccessDst =
-   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename src_execution_space::memory_space , dst_memory_space >::value };
+   Kokkos::Impl::SpaceAccessibility< src_execution_space , dst_memory_space >::accessible };
 
   if ( (void *) dst.data() != (void*) src.data() ) {
 
