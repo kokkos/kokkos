@@ -494,13 +494,14 @@ run_in_background() {
     local compiler=$1
 
     local -i num_jobs=$NUM_JOBS_TO_RUN_IN_PARALLEL
-    if [[ "$BUILD_ONLY" == True ]]; then
-        num_jobs=8
-    else
+    # don't override command line input
+    # if [[ "$BUILD_ONLY" == True ]]; then
+        # num_jobs=8
+    # else
         if [[ "$compiler" == cuda* ]]; then
             num_jobs=1
         fi
-    fi
+    # fi
     wait_for_jobs $num_jobs
 
     single_build_and_test $* &
