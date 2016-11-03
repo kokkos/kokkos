@@ -76,6 +76,15 @@ struct TestMDRange_2D {
   }
 
 
+  // tagged operators
+  struct InitTag {};
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const InitTag & , const int i , const int j ) const
+  {
+    input_view(i,j) = 1;
+  }
+
+
   static void test_reduce2( const int N0, const int N1 )
   {
     using namespace Kokkos::Experimental;
@@ -182,6 +191,34 @@ struct TestMDRange_2D {
   static void test_for2( const int N0, const int N1 )
   {
     using namespace Kokkos::Experimental;
+
+//FIXME: Tag broken...
+
+    {
+      typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<2>, Kokkos::IndexType<int> , InitTag > range_type;
+      typedef typename range_type::tile_type tile_type;
+      typedef typename range_type::point_type point_type;
+
+      range_type range( point_type{{0,0}}, point_type{{N0,N1}}, tile_type{{3,3}} );
+      TestMDRange_2D functor(N0,N1);
+
+      md_parallel_for( range, functor );
+
+      HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
+      Kokkos::deep_copy( h_view , functor.input_view );
+
+      int counter = 0;
+      for ( int i=0; i<N0; ++i ) {
+        for ( int j=0; j<N1; ++j ) {
+          if ( h_view(i,j) != 1 ) {
+            ++counter;
+          }
+        }}
+      if ( counter != 0 )
+        printf("Defaults + InitTag op(): Errors in test_for2; mismatches = %d\n\n",counter);
+      ASSERT_EQ( counter , 0 );
+    }
+
 
     {
       typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<2>, Kokkos::IndexType<int> > range_type;

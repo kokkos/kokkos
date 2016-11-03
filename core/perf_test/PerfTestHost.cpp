@@ -105,11 +105,11 @@ protected:
 };
 
 TEST_F( host, mdrange_lr ) {
-  EXPECT_NO_THROW( (run_test_mdrange<TestHostDevice , Kokkos::LayoutRight>( 5, 10, TestHostDeviceName )) );
+  EXPECT_NO_THROW( (run_test_mdrange<TestHostDevice , Kokkos::LayoutRight>( 5, 6, TestHostDeviceName )) );
 }
-
+/*
 TEST_F( host, mdrange_ll ) {
-  EXPECT_NO_THROW( (run_test_mdrange<TestHostDevice , Kokkos::LayoutLeft>( 5, 10, TestHostDeviceName )) );
+  EXPECT_NO_THROW( (run_test_mdrange<TestHostDevice , Kokkos::LayoutLeft>( 5, 6, TestHostDeviceName )) );
 }
 
 TEST_F( host, hexgrad ) {
@@ -119,7 +119,7 @@ TEST_F( host, hexgrad ) {
 TEST_F( host, gramschmidt ) {
   EXPECT_NO_THROW(run_test_gramschmidt< TestHostDevice>( 10, 20, TestHostDeviceName ));
 }
-
+*/
 } // namespace Test
 
 

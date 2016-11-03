@@ -107,6 +107,11 @@ struct MDRangePolicy
   using traits = Kokkos::Impl::PolicyTraits<Properties ...>;
   using range_policy = RangePolicy<Properties...>;
 
+  using impl_range_policy = RangePolicy< typename traits::execution_space
+                                       , typename traits::schedule_type
+                                       , typename traits::index_type
+                                       > ;
+
   static_assert( !std::is_same<typename traits::iteration_pattern,void>::value
                , "Kokkos Error: MD iteration pattern not defined" );
 
@@ -215,7 +220,8 @@ void md_parallel_for( MDRange const& range
 {
   Impl::MDFunctor<MDRange, Functor, void> g(range, f);
 
-  using range_policy = typename MDRange::range_policy;
+  //using range_policy = typename MDRange::range_policy;
+  using range_policy = typename MDRange::impl_range_policy;
 
   Kokkos::parallel_for( range_policy(0, range.m_num_tiles).set_chunk_size(1), g, str );
 }
@@ -233,7 +239,8 @@ void md_parallel_for( const std::string& str
 {
   Impl::MDFunctor<MDRange, Functor, void> g(range, f);
 
-  using range_policy = typename MDRange::range_policy;
+  //using range_policy = typename MDRange::range_policy;
+  using range_policy = typename MDRange::impl_range_policy;
 
   Kokkos::parallel_for( range_policy(0, range.m_num_tiles).set_chunk_size(1), g, str );
 }
@@ -284,7 +291,8 @@ void md_parallel_reduce( MDRange const& range
 {
   Impl::MDFunctor<MDRange, Functor, ValueType> g(range, f, v);
 
-  using range_policy = typename MDRange::range_policy;
+  //using range_policy = typename MDRange::range_policy;
+  using range_policy = typename MDRange::impl_range_policy;
 
   Kokkos::parallel_reduce( str, range_policy(0, range.m_num_tiles).set_chunk_size(1), g, v );
 }
@@ -298,7 +306,8 @@ void md_parallel_reduce( const std::string& str
 {
   Impl::MDFunctor<MDRange, Functor, ValueType> g(range, f, v);
 
-  using range_policy = typename MDRange::range_policy;
+  //using range_policy = typename MDRange::range_policy;
+  using range_policy = typename MDRange::impl_range_policy;
 
   Kokkos::parallel_reduce( str, range_policy(0, range.m_num_tiles).set_chunk_size(1), g, v );
 }
