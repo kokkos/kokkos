@@ -230,6 +230,17 @@ namespace Kokkos {
 namespace Impl {
 
 template<>
+struct MemorySpaceAccess
+  < Kokkos::Cuda::memory_space
+  , Kokkos::Cuda::scratch_memory_space
+  >
+{
+  enum { assignable = false };
+  enum { accessible = true };
+  enum { deepcopy   = false };
+};
+
+template<>
 struct VerifyExecutionCanAccessMemorySpace
   < Kokkos::CudaSpace
   , Kokkos::Cuda::scratch_memory_space

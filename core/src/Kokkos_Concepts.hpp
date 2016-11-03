@@ -283,13 +283,16 @@ private:
   static_assert( Kokkos::is_space< AccessSpace >::value
                , "template argument #1 must be a Kokkos space" );
 
-  static_assert( Kokkos::Impl::MemorySpaceAccess
-                   < typename AccessSpace::execution_space::memory_space
-                   , typename AccessSpace::memory_space >::value
-               , "template argument #1 is an invalid space" );
-
   static_assert( Kokkos::is_memory_space< MemorySpace >::value
                , "template argument #2 must be a Kokkos memory space" );
+
+  // The input AccessSpace may be a Device<ExecSpace,MemSpace>
+  // verify that it is a valid combination of spaces.
+  static_assert( Kokkos::Impl::MemorySpaceAccess
+                   < typename AccessSpace::execution_space::memory_space
+                   , typename AccessSpace::memory_space
+                   >::accessible
+               , "template argument #1 is an invalid space" );
 
   typedef Kokkos::Impl::MemorySpaceAccess
     < typename AccessSpace::execution_space::memory_space , MemorySpace >
