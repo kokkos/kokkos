@@ -85,6 +85,7 @@ case $key in
     echo "                               ARMv8-ThunderX = ARMv8 Cavium ThunderX CPU"
     echo "                               SNB            = Intel Sandy/Ivy Bridge CPUs"
     echo "                               HSW            = Intel Haswell CPUs"
+    echo "                               BDW            = Intel Broadwell Xeon E-class CPUs"
     echo "                               KNC            = Intel Knights Corner Xeon Phi"
     echo "                               KNL            = Intel Knights Landing Xeon Phi"
     echo "                               Kepler30       = NVIDIA Kepler generation CC 3.0"
