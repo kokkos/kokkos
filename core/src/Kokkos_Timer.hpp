@@ -99,7 +99,7 @@ public:
     #else
       struct timeval m_new ;
 
-      ::gettimeofday( & m_new , ((struct timezone *) NULL ) );
+      gettimeofday( & m_new , ((struct timezone *) NULL ) );
 
       return ( (double) ( m_new.tv_sec  - m_old.tv_sec ) ) +
              ( (double) ( m_new.tv_usec - m_old.tv_usec ) * 1.0e-6 );
