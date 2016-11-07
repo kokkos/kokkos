@@ -41,56 +41,52 @@
 //@HEADER
 */
 
-#include<Kokkos_Core.hpp>
-#include<impl/Kokkos_Timer.hpp>
-#include<bench.hpp>
+template<class Scalar, int UNROLL>
+struct RunGather {
+  static void run(int N, int K, int D, int R, int F);
+};
 
-int main(int argc, char* argv[]) {
-  Kokkos::initialize();
-  
+#define UNROLL 1
+#include<gather_unroll.hpp>
+#undef UNROLL
+#define UNROLL 2
+#include<gather_unroll.hpp>
+#undef UNROLL
+#define UNROLL 3
+#include<gather_unroll.hpp>
+#undef UNROLL
+#define UNROLL 4
+#include<gather_unroll.hpp>
+#undef UNROLL
+#define UNROLL 5
+#include<gather_unroll.hpp>
+#undef UNROLL
+#define UNROLL 6
+#include<gather_unroll.hpp>
+#undef UNROLL
+#define UNROLL 7
+#include<gather_unroll.hpp>
+#undef UNROLL
+#define UNROLL 8
+#include<gather_unroll.hpp>
+#undef UNROLL
 
-  if(argc<10) { 
-    printf("Arguments: N K R D U F T S\n");
-    printf("  P:   Precision (1==float, 2==double)\n");
-    printf("  N,K: dimensions of the 2D array to allocate\n");
-    printf("  R:   how often to loop through the K dimension with each team\n");
-    printf("  D:   distance between loaded elements (stride)\n");
-    printf("  U:   how many independent flops to do per load\n");
-    printf("  F:   how many times to repeat the U unrolled operations before reading next element\n");
-    printf("  T:   team size\n");
-    printf("  S:   shared memory per team (used to control occupancy on GPUs)\n");
-    printf("Example Input GPU:\n");
-    printf("  Bandwidth Bound : 2 100000 1024 1 1 1 1 256 6000\n");
-    printf("  Cache Bound     : 2 100000 256 32 1 1 1 256 6000\n");
-    printf("  Compute Bound   : 2 100000 1024 1 1 8 64 256 6000\n");
-    printf("  Load Slots Used : 2 20000 256 32 16 1 1 256 6000\n");
-    printf("  Inefficient Load: 2 20000 256 32 2 1 1 256 6000\n");
-    Kokkos::finalize();
-    return 0;
-  }
-  
-
-  int P = atoi(argv[1]);
-  int N = atoi(argv[2]);
-  int K = atoi(argv[3]);
-  int R = atoi(argv[4]);
-  int D = atoi(argv[5]);
-  int U = atoi(argv[6]);
-  int F = atoi(argv[7]);
-  int T = atoi(argv[8]);
-  int S = atoi(argv[9]);
-
-  if(U>8) {printf("U must be 1-8\n"); return 0;} 
-  if( (D!=1) && (D!=2) && (D!=4) && (D!=8) && (D!=16) && (D!=32)) {printf("D must be one of 1,2,4,8,16,32\n"); return 0;}
-  if( (P!=1) && (P!=2) ) {printf("P must be one of 1,2\n"); return 0;}
-
-  if(P==1) {
-    run_stride_unroll<float>(N,K,R,D,U,F,T,S);
-  }
-  if(P==2) {
-    run_stride_unroll<double>(N,K,R,D,U,F,T,S);
-  }
-
-  Kokkos::finalize();
+template<class Scalar>
+void run_gather_test(int N, int K, int D, int R, int U, int F) {
+ if(U == 1)
+   RunGather<Scalar,1>::run(N,K,D,R,F);
+ if(U == 2)
+   RunGather<Scalar,2>::run(N,K,D,R,F);
+ if(U == 3)
+   RunGather<Scalar,3>::run(N,K,D,R,F);
+ if(U == 4)
+   RunGather<Scalar,4>::run(N,K,D,R,F);
+ if(U == 5)
+   RunGather<Scalar,5>::run(N,K,D,R,F);
+ if(U == 6)
+   RunGather<Scalar,6>::run(N,K,D,R,F);
+ if(U == 7)
+   RunGather<Scalar,7>::run(N,K,D,R,F);
+ if(U == 8)
+   RunGather<Scalar,8>::run(N,K,D,R,F);
 }
-
