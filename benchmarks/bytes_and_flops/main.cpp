@@ -61,10 +61,10 @@ int main(int argc, char* argv[]) {
     printf("  S:   shared memory per team (used to control occupancy on GPUs)\n");
     printf("Example Input GPU:\n");
     printf("  Bandwidth Bound : 2 100000 1024 1 1 1 1 256 6000\n");
-    printf("  Cache Bound     : 2 100000 256 32 1 1 1 256 6000\n");
+    printf("  Cache Bound     : 2 100000 1024 64 1 1 1 512 20000\n");
     printf("  Compute Bound   : 2 100000 1024 1 1 8 64 256 6000\n");
     printf("  Load Slots Used : 2 20000 256 32 16 1 1 256 6000\n");
-    printf("  Inefficient Load: 2 20000 256 32 2 1 1 256 6000\n");
+    printf("  Inefficient Load: 2 20000 256 32 2 1 1 256 20000\n");
     Kokkos::finalize();
     return 0;
   }
