@@ -189,9 +189,9 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
       << std::endl ;
     } //end scope
 
+  double seconds_min_c = 0.0;
 #if !defined(KOKKOS_HAVE_CUDA)
   int t0c_min = 0, t1c_min = 0, t2c_min = 0;
-  double seconds_min_c = 0.0;
   int counter = 1;
   {
     int min_bnd = 8;

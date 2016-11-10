@@ -179,7 +179,7 @@ struct MDRangePolicy
         if ( m_tile[i] <= 0 ) {
           // TODO: determine what is a good default tile size for cuda
           // many be rank dependent
-          m_tile = 8;
+          m_tile[i] = 8;
         }
         m_tile_end[i] = static_cast<index_type>((span + m_tile[i] -1) / m_tile[i]);
         m_num_tiles *= m_tile_end[i];
