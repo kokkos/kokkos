@@ -105,11 +105,11 @@ protected:
 };
 
 TEST_F( host, mdrange_lr ) {
-  EXPECT_NO_THROW( (run_test_mdrange<TestHostDevice , Kokkos::LayoutRight>( 5, 12, TestHostDeviceName )) );
+  EXPECT_NO_THROW( (run_test_mdrange<TestHostDevice , Kokkos::LayoutRight> (5, 11, TestHostDeviceName) ) );
 }
 /*
 TEST_F( host, mdrange_ll ) {
-  EXPECT_NO_THROW( (run_test_mdrange<TestHostDevice , Kokkos::LayoutLeft>( 5, 6, TestHostDeviceName )) );
+  EXPECT_NO_THROW( (run_test_mdrange<TestHostDevice , Kokkos::LayoutLeft> (5, 8, TestHostDeviceName) ) ); //uncommenting and running both leads to segfault during run of the test above?????
 }
 
 TEST_F( host, hexgrad ) {

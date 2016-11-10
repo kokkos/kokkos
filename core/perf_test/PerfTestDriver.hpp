@@ -90,10 +90,11 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
   for (int i = exp_beg ; i < exp_end ; ++i) {
     const int range_length = (1<<i) + range_offset;
 
-    std::cout << "--------------------------------------------------------------\n"
+    std::cout << "\n--------------------------------------------------------------\n"
+      << "--------------------------------------------------------------\n"
       << "MDRange Test:  range bounds: " << range_length << " , " << range_length << " , " << range_length 
-      << "\n--------------------------------------------------------------"
-      << std::endl;
+      << "\n--------------------------------------------------------------";
+//      << std::endl;
 
     int t0_min = 0, t1_min = 0, t2_min = 0;
     double seconds_min = 0.0;
@@ -231,7 +232,7 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
         for ( unsigned int T2 = min_bnd; T2 <= range_length; T2<<=1 ) {
           const double seconds_c = MultiDimRangePerf3D< DeviceType , double , LayoutType >::test_multi_index(range_length,range_length,range_length, 0, T1, T2) ;
 
-#if defined( MDRANGE_PERFORMANCE_OUTPUT_VERBOSE )
+#if MDRANGE_PERFORMANCE_OUTPUT_VERBOSE
           std::cout << " MDRange LL with '0' tile - collapse-like \n"
           << label_mdrange
           << " , " <<range_length << " < " << T1 << " , " << T2
@@ -259,8 +260,8 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
       }
     }
 
-    std::cout << "\n"
-      << "--------------------------------------------------------------\n"
+    std::cout 
+//      << "--------------------------------------------------------------\n"
       << label_mdrange
       << "  Collapse<2> style: "
       << "\n Min values "
@@ -286,7 +287,7 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
     std::cout << label_range_col_all
       << " , " << range_length
       << " , " << seconds_3
-      << "\n"
+      << "\n---------------------------------------------------------------"
       << std::endl ;
 
     // Compare fastest times... will never be collapse all
@@ -300,6 +301,7 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
           << "   MDrange Collapse type: " << seconds_min_c << "\n"
           << "   Collapse2 Range Policy: " << seconds_2 << "\n"
           << "\n--------------------------------------------------------------"
+          << "\n--------------------------------------------------------------"
           << "\n\n"
           << std::endl;
       }
@@ -310,6 +312,7 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
           << " Other times: \n"
           << "   MDrange Tiled: " << seconds_min << "\n"
           << "   MDrange Collapse type: " << seconds_min_c << "\n"
+          << "\n--------------------------------------------------------------"
           << "\n--------------------------------------------------------------"
           << "\n\n"
           << std::endl;
@@ -325,6 +328,7 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
           << "   MDrange Tiled: " << seconds_min << "\n"
           << "   Collapse2 Range Policy: " << seconds_2 << "\n"
           << "\n--------------------------------------------------------------"
+          << "\n--------------------------------------------------------------"
           << "\n\n"
           << std::endl;
       }
@@ -335,6 +339,7 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
           << " Other times: \n"
           << "   MDrange Tiled: " << seconds_min << "\n"
           << "   MDrange Collapse type: " << seconds_min_c << "\n"
+          << "\n--------------------------------------------------------------"
           << "\n--------------------------------------------------------------"
           << "\n\n"
           << std::endl;
