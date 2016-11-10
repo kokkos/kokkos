@@ -140,7 +140,7 @@ T atomic_fetch_add( volatile T * const dest ,
 template < typename T >
 __inline__ __device__
 T atomic_fetch_add( volatile T * const dest ,
-    typename ::Kokkos::Impl::enable_if<
+    typename Kokkos::Impl::enable_if<
                   ( sizeof(T) != 4 )
                && ( sizeof(T) != 8 )
              , const T >::type& val )
@@ -297,7 +297,7 @@ T atomic_fetch_add( volatile T * const dest ,
 template < typename T >
 inline
 T atomic_fetch_add( volatile T * const dest ,
-    typename ::Kokkos::Impl::enable_if<
+    typename Kokkos::Impl::enable_if<
                   ( sizeof(T) != 4 )
                && ( sizeof(T) != 8 )
               #if defined(KOKKOS_ENABLE_ASM) && defined ( KOKKOS_USE_ISA_X86_64 )
