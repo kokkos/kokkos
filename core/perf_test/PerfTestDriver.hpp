@@ -217,7 +217,7 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
           else {
             if ( seconds_c < seconds_min_c ) 
             { 
-              seconds_min = seconds_c; 
+              seconds_min_c = seconds_c; 
               t0c_min = T0;
               t1c_min = T1;
             }
@@ -249,7 +249,7 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
           else {
             if ( seconds_c < seconds_min_c ) 
             { 
-              seconds_min = seconds_c; 
+              seconds_min_c = seconds_c; 
               t1c_min = T1;
               t2c_min = T2;
             }
@@ -258,6 +258,17 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
         }
       }
     }
+
+    std::cout << "\n"
+      << "--------------------------------------------------------------\n"
+      << label_mdrange
+      << "  Collapse<2> style: "
+      << "\n Min values "
+      << "\n Range length per dim (3D): " << range_length
+      << "\n TileDims:  " << t0c_min << " , " << t1c_min << " , " << t2c_min
+      << "\n Min time: " << seconds_min_c
+      << "\n---------------------------------------------------------------"
+      << std::endl ;
   } //end scope test 2
 #endif
 

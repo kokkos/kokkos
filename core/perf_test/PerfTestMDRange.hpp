@@ -114,19 +114,19 @@ struct MultiDimRangePerf3D
     double dt_min = 0;
 
     if ( std::is_same<TestLayout, Kokkos::LayoutRight>::value ) {
-      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Right,iterate_type::Right>, execution_space > policy_init({{0,0,0}},{{icount,jcount,kcount}},{{Ti,Tj,Tk}}); 
-      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Right,iterate_type::Right>, execution_space > policy_initB({{0,0,0}},{{icount+2,jcount+2,kcount+2}},{{Ti,Tj,Tk}}); 
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Right, iterate_type::Right>, execution_space > policy_init({{0,0,0}},{{icount,jcount,kcount}},{{Ti,Tj,Tk}}); 
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Right, iterate_type::Right>, execution_space > policy_initB({{0,0,0}},{{icount+2,jcount+2,kcount+2}},{{Ti,Tj,Tk}}); 
 
-    typedef typename Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Right, iterate_type::Right>, execution_space > MDRangeType;
-    using tile_type = typename MDRangeType::tile_type;
-    using point_type = typename MDRangeType::point_type;
+      typedef typename Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Right, iterate_type::Right>, execution_space > MDRangeType;
+      using tile_type = typename MDRangeType::tile_type;
+      using point_type = typename MDRangeType::point_type;
 
-    Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Right, iterate_type::Right>, execution_space > policy(point_type{{0,0,0}},point_type{{icount,jcount,kcount}},tile_type{{Ti,Tj,Tk}} );
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Right, iterate_type::Right>, execution_space > policy(point_type{{0,0,0}},point_type{{icount,jcount,kcount}},tile_type{{Ti,Tj,Tk}} );
 
-    Kokkos::Experimental::md_parallel_for( policy_init, Init(Atest, icount, jcount, kcount) );
-    execution_space::fence();
-    Kokkos::Experimental::md_parallel_for( policy_initB, Init(Btest, icount+2, jcount+2, kcount+2) );
-    execution_space::fence();
+      Kokkos::Experimental::md_parallel_for( policy_init, Init(Atest, icount, jcount, kcount) );
+      execution_space::fence();
+      Kokkos::Experimental::md_parallel_for( policy_initB, Init(Btest, icount+2, jcount+2, kcount+2) );
+      execution_space::fence();
 
     for (int i = 0; i < iter; ++i)
     {
@@ -175,12 +175,12 @@ struct MultiDimRangePerf3D
       Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Left,iterate_type::Left>, execution_space > policy_init({{0,0,0}},{{icount,jcount,kcount}},{{Ti,Tj,Tk}}); 
       Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Right,iterate_type::Right>, execution_space > policy_initB({{0,0,0}},{{icount+2,jcount+2,kcount+2}},{{Ti,Tj,Tk}}); 
 
-    Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Left, iterate_type::Left>, execution_space > policy({{0,0,0}},{{icount,jcount,kcount}},{{Ti,Tj,Tk}} ); 
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Left, iterate_type::Left>, execution_space > policy({{0,0,0}},{{icount,jcount,kcount}},{{Ti,Tj,Tk}} ); 
 
-    Kokkos::Experimental::md_parallel_for( policy_init, Init(Atest, icount, jcount, kcount) );
-    execution_space::fence();
-    Kokkos::Experimental::md_parallel_for( policy_initB, Init(Btest, icount+2, jcount+2, kcount+2) );
-    execution_space::fence();
+      Kokkos::Experimental::md_parallel_for( policy_init, Init(Atest, icount, jcount, kcount) );
+      execution_space::fence();
+      Kokkos::Experimental::md_parallel_for( policy_initB, Init(Btest, icount+2, jcount+2, kcount+2) );
+      execution_space::fence();
 
     for (int i = 0; i < iter; ++i)
     {
@@ -272,9 +272,9 @@ struct MultiDimRangePerf3D_Collapse
       for (int k = 0; k < krange; ++k) {
     //    A(i,j,k) = (double)(i*i + j - k*i + 2.0*k*j - j*j*j);
         A(i,j,k) = 0.143*(double)( B(i+2,j,k) + B(i+1,j,k)
-            + B(i,j+2,k) + B(i,j+1,k)
-            + B(i,j,k+2) + B(i,j,k+1)
-            + B(i,j,k) );
+                                 + B(i,j+2,k) + B(i,j+1,k)
+                                 + B(i,j,k+2) + B(i,j,k+1)
+                                 + B(i,j,k) );
       }
     }
     else if ( std::is_same<TestLayout, Kokkos::LayoutLeft>::value )
@@ -285,12 +285,13 @@ struct MultiDimRangePerf3D_Collapse
 //r = j + k*Nj
       const int k = r / (jrange); 
       const int j = ( r - k*jrange);
-      for (int i = 0; i < irange; ++i)
+      for (int i = 0; i < irange; ++i) {
     //    A(i,j,k) = (double)(i*i + j - k*i + 2.0*k*j - j*j*j);
         A(i,j,k) = 0.143*(double)( B(i+2,j,k) + B(i+1,j,k)
-            + B(i,j+2,k) + B(i,j+1,k)
-            + B(i,j,k+2) + B(i,j,k+1)
-            + B(i,j,k) );
+                                 + B(i,j+2,k) + B(i,j+1,k)
+                                 + B(i,j,k+2) + B(i,j,k+1)
+                                 + B(i,j,k) );
+      }
     }
 
   }
@@ -309,20 +310,20 @@ struct MultiDimRangePerf3D_Collapse
     KOKKOS_INLINE_FUNCTION
     void operator()(const int r) const
     {
-    if ( std::is_same<TestLayout, Kokkos::LayoutRight>::value )
-    {
-      const int i = r / (jrange*krange); 
-      const int j = ( r - i*jrange*krange)/krange;
-      const int k = r - i*jrange*krange - j*krange;
-      input(i,j,k) = 1;
-    }
-    else if ( std::is_same<TestLayout, Kokkos::LayoutLeft>::value )
-    {
-      const int k = r / (irange*jrange); 
-      const int j = ( r - k*irange*jrange)/irange;
-      const int i = r - k*irange*jrange - j*irange;
-      input(i,j,k) = 1;
-    }
+      if ( std::is_same<TestLayout, Kokkos::LayoutRight>::value )
+      {
+        const int i = r / (jrange*krange); 
+        const int j = ( r - i*jrange*krange)/krange;
+        const int k = r - i*jrange*krange - j*krange;
+        input(i,j,k) = 1;
+      }
+      else if ( std::is_same<TestLayout, Kokkos::LayoutLeft>::value )
+      {
+        const int k = r / (irange*jrange); 
+        const int j = ( r - k*irange*jrange)/irange;
+        const int i = r - k*irange*jrange - j*irange;
+        input(i,j,k) = 1;
+      }
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -333,117 +334,6 @@ struct MultiDimRangePerf3D_Collapse
 
   };
 
-#if 0
-  // Cannot use the MDRangePolicy in this way
-  static double test_multi_index_collapse(const unsigned int icount, const unsigned int jcount, const unsigned int kcount, const unsigned Ti = 1, const unsigned Tj = 1, const int iter = 1)
-  {
-    //This test refers to 'collapsing' two dims using the Experimental::MDRangePolicy
-    view_type Atest("Atest", icount, jcount, kcount);
-
-    typedef MultiDimRangePerf3D<execution_space,ScalarType,TestLayout> FunctorType;
-    //typedef MultiDimRangePerf3D<execution_space,ScalarType,TestLayout,InnerDir,OuterDir> FunctorType;
-
-    double dt_min = 0;
-
-    if ( std::is_same<TestLayout, Kokkos::LayoutRight>::value ) {
-      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Right,iterate_type::Right>, execution_space > policy_init({0,0,0},{icount,jcount,kcount}); // Rank<3> for Init functor
-
-#if KOKKOS_HAVE_CUDA
-    //TODO: Modify so user can provide the Cuda tile sizes
-    const int t0 = 4, t1 = 16;
-
-      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<2,iterate_type::Right,iterate_type::Right>, execution_space > policy({0,0},{icount,jcount},{t0,t1} ); // Collapse inner two 'slow' dims LR
-#else
-      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<2,iterate_type::Right,iterate_type::Right>, execution_space > policy({0,0},{icount,jcount},{Ti,Tj} ); // Collapse inner two 'slow' dims LR
-#endif
-
-    Kokkos::Experimental::md_parallel_for( policy_init, Init(Atest,icount,jcount,kcount) );
-    execution_space::fence();
-
-    for (int i = 0; i < iter; ++i)
-    {
-      Kokkos::Timer timer;
-      Kokkos::Experimental::md_parallel_for(policy, FunctorType(Atest, icount, jcount, kcount));
-      execution_space::fence();
-      const double dt = timer.seconds();
-      if ( 0 == i ) dt_min = dt ;
-      else dt_min = dt < dt_min ? dt : dt_min ;
-
-      //Correctness check
-      if ( 0 == i )
-      {
-        int numErrors = 0;
-        host_view_type Ahost("Ahost", icount, jcount, kcount);
-        Kokkos::deep_copy(Ahost, Atest);
-        for ( int l = 0; l < icount; ++l ) {
-        for ( int j = 0; j < jcount; ++j ) {
-        for ( int k = 0; k < kcount; ++k ) {
-          double check = (l*l + j - k*l + 2.0*k*j - j*j*j);
-          if ( Ahost(l,j,k) - check != 0 ) {
-            ++numErrors;
-//           std::cout << "  Correctness error at " << l << " "<<j<<" "<<k<<"\n"
-//                      << "  flat Ahost = " << Ahost(l,j,k) << "  expected = " << check  << std::endl;
-            //exit(-1);
-          }
-        } } }
-        if ( numErrors != 0 ) { std::cout << " multi collapse2: errors " << numErrors <<  std::endl; }
-        else { std::cout << " multi collapse2: No errors!" <<  std::endl; }
-//        if ( numErrors == 0 ) { std::cout << " flattened: 0 errors, good deal " << std::endl; }
-      }
-    } //end for
-
-    } else {
-      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Left,iterate_type::Left>, execution_space > policy_init({0,0,0},{icount,jcount,kcount}); // Rank<3> for Init functor
-
-#if KOKKOS_HAVE_CUDA
-    //TODO: Modify so user can provide the Cuda tile sizes
-
-    const int t0 = 16, t1 = 4;
-
-      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<2,iterate_type::Left,iterate_type::Left>, execution_space > policy({0,0},{icount,jcount},{t0,t1} ); // Collapse inner two 'slow' dims LR
-#else
-      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<2,iterate_type::Left,iterate_type::Left>, execution_space > policy({0,0},{icount,jcount},{Ti,Tj} ); // Collapse inner two 'slow' dims LR
-#endif
-
-    Kokkos::Experimental::md_parallel_for( policy_init, Init(Atest,icount,jcount,kcount) );
-    execution_space::fence();
-
-    for (int i = 0; i < iter; ++i)
-    {
-      Kokkos::Timer timer;
-      Kokkos::Experimental::md_parallel_for(policy, FunctorType(Atest, icount, jcount, kcount));
-      execution_space::fence();
-      const double dt = timer.seconds();
-      if ( 0 == i ) dt_min = dt ;
-      else dt_min = dt < dt_min ? dt : dt_min ;
-
-      //Correctness check
-      if ( 0 == i )
-      {
-        int numErrors = 0;
-        host_view_type Ahost("Ahost", icount, jcount, kcount);
-        Kokkos::deep_copy(Ahost, Atest);
-        for ( int l = 0; l < icount; ++l ) {
-        for ( int j = 0; j < jcount; ++j ) {
-        for ( int k = 0; k < kcount; ++k ) {
-          double check = (l*l + j - k*l + 2.0*k*j - j*j*j);
-          if ( Ahost(l,j,k) - check != 0 ) {
-            ++numErrors;
-//           std::cout << "  Correctness error at " << l << " "<<j<<" "<<k<<"\n"
-//                      << "  flat Ahost = " << Ahost(l,j,k) << "  expected = " << check  << std::endl;
-            //exit(-1);
-          }
-        } } }
-        if ( numErrors != 0 ) { std::cout << " multi collapse2: errors " << numErrors <<  std::endl; }
-        else { std::cout << " multi collapse2: No errors!" <<  std::endl; }
-//        if ( numErrors == 0 ) { std::cout << " flattened: 0 errors, good deal " << std::endl; }
-      }
-    } //end for
-    } //end else
-
-    return dt_min;
-  } 
-#endif
 
   static double test_index_collapse(const unsigned icount, const unsigned jcount, const unsigned kcount, const int iter = 1)
   {
@@ -464,16 +354,18 @@ struct MultiDimRangePerf3D_Collapse
 //      std::cout << "   LayoutLeft " << std::endl;
     } else {
       std::cout << "  LayoutRight or LayoutLeft required - will pass 0 as range instead " << std::endl;
+      exit(-1);
     }
 
     Kokkos::RangePolicy<execution_space> policy(0, (collapse_index_range) );
-    Kokkos::RangePolicy<execution_space> policy_initB(0, (collapse_index_range) );
+    Kokkos::RangePolicy<execution_space> policy_initB(0, (collapse_index_rangeB) );
 //    std::cout << "   Full flattened range (i.e. product of ranges) " << icount*jcount*kcount << std::endl;
 //    std::cout << "   Value outside of the if-guard " << collapse_index_range << std::endl;
 
     double dt_min = 0;
 
     Kokkos::parallel_for( policy, Init(Atest,icount,jcount,kcount) );
+    execution_space::fence();
     Kokkos::parallel_for( policy_initB, Init(Btest,icount+2,jcount+2,kcount+2) );
     execution_space::fence();
 
@@ -499,10 +391,10 @@ struct MultiDimRangePerf3D_Collapse
         for ( int j = 0; j < jcount; ++j ) {
         for ( int k = 0; k < kcount; ++k ) {
           //double check = (l*l + j - k*l + 2.0*k*j - j*j*j);
-          double check  = 0.143*(double)( Bhost(i+2,j,k) + Bhost(i+1,j,k)
-                                        + Bhost(i,j+2,k) + Bhost(i,j+1,k)
-                                        + Bhost(i,j,k+2) + Bhost(i,j,k+1)
-                                        + Bhost(i,j,k) );
+          double check  = 0.143*(double)( Bhost(l+2,j,k) + Bhost(l+1,j,k)
+                                        + Bhost(l,j+2,k) + Bhost(l,j+1,k)
+                                        + Bhost(l,j,k+2) + Bhost(l,j,k+1)
+                                        + Bhost(l,j,k) );
           if ( Ahost(l,j,k) - check != 0 ) {
             ++numErrors;
 //           std::cout << "  Correctness error at " << l << " "<<j<<" "<<k<<"\n"
@@ -670,10 +562,10 @@ struct MultiDimRangePerf3D_CollapseAll
         for ( int j = 0; j < jcount; ++j ) {
         for ( int k = 0; k < kcount; ++k ) {
           //double check = (l*l + j - k*l + 2.0*k*j - j*j*j);
-          double check  = 0.143*(double)( Bhost(i+2,j,k) + Bhost(i+1,j,k)
-                                        + Bhost(i,j+2,k) + Bhost(i,j+1,k)
-                                        + Bhost(i,j,k+2) + Bhost(i,j,k+1)
-                                        + Bhost(i,j,k) );
+          double check  = 0.143*(double)( Bhost(l+2,j,k) + Bhost(l+1,j,k)
+                                        + Bhost(l,j+2,k) + Bhost(l,j+1,k)
+                                        + Bhost(l,j,k+2) + Bhost(l,j,k+1)
+                                        + Bhost(l,j,k) );
           if ( Ahost(l,j,k) - check != 0 ) {
             ++numErrors;
 //           std::cout << "  Correctness error at " << l << " "<<j<<" "<<k<<"\n"

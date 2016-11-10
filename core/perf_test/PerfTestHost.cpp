@@ -105,7 +105,7 @@ protected:
 };
 
 TEST_F( host, mdrange_lr ) {
-  EXPECT_NO_THROW( (run_test_mdrange<TestHostDevice , Kokkos::LayoutRight>( 5, 6, TestHostDeviceName )) );
+  EXPECT_NO_THROW( (run_test_mdrange<TestHostDevice , Kokkos::LayoutRight>( 5, 12, TestHostDeviceName )) );
 }
 /*
 TEST_F( host, mdrange_ll ) {
