@@ -114,8 +114,8 @@ struct MultiDimRangePerf3D
     double dt_min = 0;
 
     if ( std::is_same<TestLayout, Kokkos::LayoutRight>::value ) {
-      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Right,iterate_type::Right>, execution_space > policy_init({0,0,0},{icount,jcount,kcount},{Ti,Tj,Tk}); 
-      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Right,iterate_type::Right>, execution_space > policy_initB({0,0,0},{icount+2,jcount+2,kcount+2},{Ti,Tj,Tk}); 
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Right,iterate_type::Right>, execution_space > policy_init({{0,0,0}},{{icount,jcount,kcount}},{{Ti,Tj,Tk}}); 
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Right,iterate_type::Right>, execution_space > policy_initB({{0,0,0}},{{icount+2,jcount+2,kcount+2}},{{Ti,Tj,Tk}}); 
 
     typedef typename Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Right, iterate_type::Right>, execution_space > MDRangeType;
     using tile_type = typename MDRangeType::tile_type;
@@ -172,10 +172,10 @@ struct MultiDimRangePerf3D
 
     } 
     else {
-      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Left,iterate_type::Left>, execution_space > policy_init({0,0,0},{icount,jcount,kcount},{Ti,Tj,Tk}); 
-      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Right,iterate_type::Right>, execution_space > policy_initB({0,0,0},{icount+2,jcount+2,kcount+2},{Ti,Tj,Tk}); 
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Left,iterate_type::Left>, execution_space > policy_init({{0,0,0}},{{icount,jcount,kcount}},{{Ti,Tj,Tk}}); 
+      Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Right,iterate_type::Right>, execution_space > policy_initB({{0,0,0}},{{icount+2,jcount+2,kcount+2}},{{Ti,Tj,Tk}}); 
 
-    Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Left, iterate_type::Left>, execution_space > policy({0,0,0},{icount,jcount,kcount},{Ti,Tj,Tk} ); 
+    Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Left, iterate_type::Left>, execution_space > policy({{0,0,0}},{{icount,jcount,kcount}},{{Ti,Tj,Tk}} ); 
 
     Kokkos::Experimental::md_parallel_for( policy_init, Init(Atest, icount, jcount, kcount) );
     execution_space::fence();
