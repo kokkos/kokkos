@@ -978,10 +978,19 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
   } // end check bounds
 
 
+  template <int Rank>
+  struct RankTag 
+  {
+    typedef RankTag type;
+    enum { value = (int)Rank };
+  };
+
+
   template <typename IType>
   inline
-  typename std::enable_if< std::is_convertible<IType, index_type>::value && RP::rank == 2>::type
-  operator()(IType tile_idx) const
+  //typename std::enable_if< std::is_convertible<IType, index_type>::value && RP::rank == 2>::type
+  //operator()(IType tile_idx) const
+  void operator_impl( IType tile_idx , const RankTag<2> ) const
   {
     point_type m_offset;
     point_type m_tiledims;
@@ -1034,8 +1043,9 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  typename std::enable_if< std::is_convertible<IType, index_type>::value && RP::rank == 3>::type
-  operator()(IType tile_idx) const
+  //typename std::enable_if< std::is_convertible<IType, index_type>::value && RP::rank == 3>::type
+  //operator()(IType tile_idx) const
+  void operator_impl( IType tile_idx , const RankTag<3> ) const
   {
     point_type m_offset;
     point_type m_tiledims;
@@ -1088,8 +1098,9 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  typename std::enable_if< std::is_convertible<IType, index_type>::value && RP::rank == 4>::type
-  operator()(IType tile_idx) const
+  //typename std::enable_if< std::is_convertible<IType, index_type>::value && RP::rank == 4>::type
+  //operator()(IType tile_idx) const
+  void operator_impl( IType tile_idx , const RankTag<4> ) const
   {
     point_type m_offset;
     point_type m_tiledims;
@@ -1142,8 +1153,9 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  typename std::enable_if< std::is_convertible<IType, index_type>::value && RP::rank == 5>::type
-  operator()(IType tile_idx) const
+  //typename std::enable_if< std::is_convertible<IType, index_type>::value && RP::rank == 5>::type
+  //operator()(IType tile_idx) const
+  void operator_impl( IType tile_idx , const RankTag<5> ) const
   {
     point_type m_offset;
     point_type m_tiledims;
@@ -1196,8 +1208,9 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  typename std::enable_if< std::is_convertible<IType, index_type>::value && RP::rank == 6>::type
-  operator()(IType tile_idx) const
+  //typename std::enable_if< std::is_convertible<IType, index_type>::value && RP::rank == 6>::type
+  //operator()(IType tile_idx) const
+  void operator_impl( IType tile_idx , const RankTag<6> ) const
   {
     point_type m_offset;
     point_type m_tiledims;
@@ -1250,8 +1263,9 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  typename std::enable_if< std::is_convertible<IType, index_type>::value && RP::rank == 7>::type
-  operator()(IType tile_idx) const
+  //typename std::enable_if< std::is_convertible<IType, index_type>::value && RP::rank == 7>::type
+  //operator()(IType tile_idx) const
+  void operator_impl( IType tile_idx , const RankTag<7> ) const
   {
     point_type m_offset;
     point_type m_tiledims;
@@ -1304,8 +1318,9 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  typename std::enable_if< std::is_convertible<IType, index_type>::value && RP::rank == 8>::type
-  operator()(IType tile_idx) const
+  //typename std::enable_if< std::is_convertible<IType, index_type>::value && RP::rank == 8>::type
+  //operator()(IType tile_idx) const
+  void operator_impl( IType tile_idx , const RankTag<8> ) const
   {
     point_type m_offset;
     point_type m_tiledims;
