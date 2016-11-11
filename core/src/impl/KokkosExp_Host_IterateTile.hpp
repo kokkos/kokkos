@@ -390,68 +390,68 @@ protected:
 #else
 
 #define LOOP_1L(tile) \
-  for( int i0=0; i0<tile[0]; ++i0)
+  for( int i0=0; i0<static_cast<int>(tile[0]); ++i0)
 
 #define LOOP_2L(tile) \
-  for( int i1=0; i1<tile[1]; ++i1) \
+  for( int i1=0; i1<static_cast<int>(tile[1]); ++i1) \
   LOOP_1L(tile)
 
 #define LOOP_3L(tile) \
-  for( int i2=0; i2<tile[2]; ++i2) \
+  for( int i2=0; i2<static_cast<int>(tile[2]); ++i2) \
   LOOP_2L(tile)
 
 #define LOOP_4L(tile) \
-  for( int i3=0; i3<tile[3]; ++i3) \
+  for( int i3=0; i3<static_cast<int>(tile[3]); ++i3) \
   LOOP_3L(tile)
 
 #define LOOP_5L(tile) \
-  for( int i4=0; i4<tile[4]; ++i4) \
+  for( int i4=0; i4<static_cast<int>(tile[4]); ++i4) \
   LOOP_4L(tile)
 
 #define LOOP_6L(tile) \
-  for( int i5=0; i5<tile[5]; ++i5) \
+  for( int i5=0; i5<static_cast<int>(tile[5]); ++i5) \
   LOOP_5L(tile)
 
 #define LOOP_7L(tile) \
-  for( int i6=0; i6<tile[6]; ++i6) \
+  for( int i6=0; i6<static_cast<int>(tile[6]); ++i6) \
   LOOP_6L(tile)
 
 #define LOOP_8L(tile) \
-  for( int i7=0; i7<tile[7]; ++i7) \
+  for( int i7=0; i7<static_cast<int>(tile[7]); ++i7) \
   LOOP_7L(tile)
 
 
 
 #define LOOP_1R(tile) \
-  for ( int i0=0; i0<tile[0]; ++i0 )
+  for ( int i0=0; i0<static_cast<int>(tile[0]); ++i0 )
 
 #define LOOP_2R(tile) \
   LOOP_1R(tile) \
-  for ( int i1=0; i1<tile[1]; ++i1 )
+  for ( int i1=0; i1<static_cast<int>(tile[1]); ++i1 )
 
 #define LOOP_3R(tile) \
   LOOP_2R(tile) \
-  for ( int i2=0; i2<tile[2]; ++i2 )
+  for ( int i2=0; i2<static_cast<int>(tile[2]); ++i2 )
 
 #define LOOP_4R(tile) \
   LOOP_3R(tile) \
-  for ( int i3=0; i3<tile[3]; ++i3 )
+  for ( int i3=0; i3<static_cast<int>(tile[3]); ++i3 )
 
 #define LOOP_5R(tile) \
   LOOP_4R(tile) \
-  for ( int i4=0; i4<tile[4]; ++i4 )
+  for ( int i4=0; i4<static_cast<int>(tile[4]); ++i4 )
 
 #define LOOP_6R(tile) \
   LOOP_5R(tile) \
-  for ( int i5=0; i5<tile[5]; ++i5 )
+  for ( int i5=0; i5<static_cast<int>(tile[5]); ++i5 )
 
 #define LOOP_7R(tile) \
   LOOP_6R(tile) \
-  for ( int i6=0; i6<tile[6]; ++i6 )
+  for ( int i6=0; i6<static_cast<int>(tile[6]); ++i6 )
 
 #define LOOP_8R(tile) \
   LOOP_7R(tile) \
-  for ( int i7=0; i7<tile[7]; ++i7 )
+  for ( int i7=0; i7<static_cast<int>(tile[7]); ++i7 )
 
 
 #define LOOP_ARGS_1 i0 + m_offset[0]
@@ -556,12 +556,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
     if (RP::inner_direction == RP::Left) {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_2L(m_tiledims) {
           apply( LOOP_ARGS_2 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_2L(m_tiledims) {
           apply( LOOP_ARGS_2 );
         }
@@ -569,12 +569,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     } // end RP::Left
     else {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_2R(m_tiledims) {
           apply( LOOP_ARGS_2 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_2R(m_tiledims) {
           apply( LOOP_ARGS_2 );
         }
@@ -611,12 +611,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
     if (RP::inner_direction == RP::Left) {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_3L(m_tiledims) {
           apply( LOOP_ARGS_3 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_3L(m_tiledims) {
           apply( LOOP_ARGS_3 );
         }
@@ -624,12 +624,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     } // end RP::Left
     else {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_3R(m_tiledims) {
           apply( LOOP_ARGS_3 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_3R(m_tiledims) {
           apply( LOOP_ARGS_3 );
         }
@@ -666,12 +666,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
     if (RP::inner_direction == RP::Left) {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_4L(m_tiledims) {
           apply( LOOP_ARGS_4 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_4L(m_tiledims) {
           apply( LOOP_ARGS_4 );
         }
@@ -679,12 +679,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     } // end RP::Left
     else {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_4R(m_tiledims) {
           apply( LOOP_ARGS_4 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_4R(m_tiledims) {
           apply( LOOP_ARGS_4 );
         }
@@ -721,12 +721,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
     if (RP::inner_direction == RP::Left) {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_5L(m_tiledims) {
           apply( LOOP_ARGS_5 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_5L(m_tiledims) {
           apply( LOOP_ARGS_5 );
         }
@@ -734,12 +734,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     } // end RP::Left
     else {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_5R(m_tiledims) {
           apply( LOOP_ARGS_5 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_5R(m_tiledims) {
           apply( LOOP_ARGS_5 );
         }
@@ -776,12 +776,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
     if (RP::inner_direction == RP::Left) {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_6L(m_tiledims) {
           apply( LOOP_ARGS_6 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_6L(m_tiledims) {
           apply( LOOP_ARGS_6 );
         }
@@ -789,12 +789,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     } // end RP::Left
     else {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_6R(m_tiledims) {
           apply( LOOP_ARGS_6 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_6R(m_tiledims) {
           apply( LOOP_ARGS_6 );
         }
@@ -831,12 +831,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
     if (RP::inner_direction == RP::Left) {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_7L(m_tiledims) {
           apply( LOOP_ARGS_7 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_7L(m_tiledims) {
           apply( LOOP_ARGS_7 );
         }
@@ -844,12 +844,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     } // end RP::Left
     else {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_7R(m_tiledims) {
           apply( LOOP_ARGS_7 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_7R(m_tiledims) {
           apply( LOOP_ARGS_7 );
         }
@@ -886,12 +886,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
     if (RP::inner_direction == RP::Left) {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_8L(m_tiledims) {
           apply( LOOP_ARGS_8 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_8L(m_tiledims) {
           apply( LOOP_ARGS_8 );
         }
@@ -899,12 +899,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     } // end RP::Left
     else {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_8R(m_tiledims) {
           apply( LOOP_ARGS_8 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_8R(m_tiledims) {
           apply( LOOP_ARGS_8 );
         }
@@ -1004,12 +1004,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
     if (RP::inner_direction == RP::Left) {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_2L(m_tiledims) {
           apply( LOOP_ARGS_2 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_2L(m_tiledims) {
           apply( LOOP_ARGS_2 );
         }
@@ -1017,12 +1017,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     } // end RP::Left
     else {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_2R(m_tiledims) {
           apply( LOOP_ARGS_2 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_2R(m_tiledims) {
           apply( LOOP_ARGS_2 );
         }
@@ -1058,12 +1058,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
     if (RP::inner_direction == RP::Left) {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_3L(m_tiledims) {
           apply( LOOP_ARGS_3 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_3L(m_tiledims) {
           apply( LOOP_ARGS_3 );
         }
@@ -1071,12 +1071,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     } // end RP::Left
     else {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_3R(m_tiledims) {
           apply( LOOP_ARGS_3 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_3R(m_tiledims) {
           apply( LOOP_ARGS_3 );
         }
@@ -1112,12 +1112,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
     if (RP::inner_direction == RP::Left) {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_4L(m_tiledims) {
           apply( LOOP_ARGS_4 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_4L(m_tiledims) {
           apply( LOOP_ARGS_4 );
         }
@@ -1125,12 +1125,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     } // end RP::Left
     else {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_4R(m_tiledims) {
           apply( LOOP_ARGS_4 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_4R(m_tiledims) {
           apply( LOOP_ARGS_4 );
         }
@@ -1166,12 +1166,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
     if (RP::inner_direction == RP::Left) {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_5L(m_tiledims) {
           apply( LOOP_ARGS_5 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_5L(m_tiledims) {
           apply( LOOP_ARGS_5 );
         }
@@ -1179,12 +1179,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     } // end RP::Left
     else {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_5R(m_tiledims) {
           apply( LOOP_ARGS_5 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_5R(m_tiledims) {
           apply( LOOP_ARGS_5 );
         }
@@ -1220,12 +1220,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
     if (RP::inner_direction == RP::Left) {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_6L(m_tiledims) {
           apply( LOOP_ARGS_6 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_6L(m_tiledims) {
           apply( LOOP_ARGS_6 );
         }
@@ -1233,12 +1233,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     } // end RP::Left
     else {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_6R(m_tiledims) {
           apply( LOOP_ARGS_6 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_6R(m_tiledims) {
           apply( LOOP_ARGS_6 );
         }
@@ -1274,12 +1274,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
     if (RP::inner_direction == RP::Left) {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_7L(m_tiledims) {
           apply( LOOP_ARGS_7 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_7L(m_tiledims) {
           apply( LOOP_ARGS_7 );
         }
@@ -1287,12 +1287,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     } // end RP::Left
     else {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_7R(m_tiledims) {
           apply( LOOP_ARGS_7 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_7R(m_tiledims) {
           apply( LOOP_ARGS_7 );
         }
@@ -1328,12 +1328,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
     if (RP::inner_direction == RP::Left) {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_8L(m_tiledims) {
           apply( LOOP_ARGS_8 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_8L(m_tiledims) {
           apply( LOOP_ARGS_8 );
         }
@@ -1341,12 +1341,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     } // end RP::Left
     else {
      if ( full_tile ) {
-      #pragma simd
+//      #pragma simd
         LOOP_8R(m_tiledims) {
           apply( LOOP_ARGS_8 );
         }
       } else {
-      #pragma simd
+//      #pragma simd
         LOOP_8R(m_tiledims) {
           apply( LOOP_ARGS_8 );
         }

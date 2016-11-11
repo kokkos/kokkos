@@ -146,9 +146,9 @@ struct MultiDimRangePerf3D
         host_view_type Bhost("Bhost", icount+2, jcount+2, kcount+2);
         Kokkos::deep_copy(Bhost, Btest);
 
-        for ( int l = 0; l < icount; ++l ) {
-        for ( int j = 0; j < jcount; ++j ) {
-        for ( int k = 0; k < kcount; ++k ) {
+        for ( int l = 0; l < static_cast<int>(icount); ++l ) {
+        for ( int j = 0; j < static_cast<int>(jcount); ++j ) {
+        for ( int k = 0; k < static_cast<int>(kcount); ++k ) {
           //double check = (l*l + j - k*l + 2.0*k*j - j*j*j);
           double check  = 0.143*(double)( Bhost(i+2,j,k) + Bhost(i+1,j,k)
                                         + Bhost(i,j+2,k) + Bhost(i,j+1,k)
@@ -200,9 +200,9 @@ struct MultiDimRangePerf3D
         host_view_type Bhost("Bhost", icount+2, jcount+2, kcount+2);
         Kokkos::deep_copy(Bhost, Btest);
 
-        for ( int l = 0; l < icount; ++l ) {
-        for ( int j = 0; j < jcount; ++j ) {
-        for ( int k = 0; k < kcount; ++k ) {
+        for ( int l = 0; l < static_cast<int>(icount); ++l ) {
+        for ( int j = 0; j < static_cast<int>(jcount); ++j ) {
+        for ( int k = 0; k < static_cast<int>(kcount); ++k ) {
           //double check = (l*l + j - k*l + 2.0*k*j - j*j*j);
           double check  = 0.143*(double)( Bhost(i+2,j,k) + Bhost(i+1,j,k)
                                         + Bhost(i,j+2,k) + Bhost(i,j+1,k)
@@ -387,9 +387,9 @@ struct MultiDimRangePerf3D_Collapse
         host_view_type Bhost("Bhost", icount+2, jcount+2, kcount+2);
         Kokkos::deep_copy(Bhost, Btest);
 
-        for ( int l = 0; l < icount; ++l ) {
-        for ( int j = 0; j < jcount; ++j ) {
-        for ( int k = 0; k < kcount; ++k ) {
+        for ( int l = 0; l < static_cast<int>(icount); ++l ) {
+        for ( int j = 0; j < static_cast<int>(jcount); ++j ) {
+        for ( int k = 0; k < static_cast<int>(kcount); ++k ) {
           //double check = (l*l + j - k*l + 2.0*k*j - j*j*j);
           double check  = 0.143*(double)( Bhost(l+2,j,k) + Bhost(l+1,j,k)
                                         + Bhost(l,j+2,k) + Bhost(l,j+1,k)
@@ -558,9 +558,9 @@ struct MultiDimRangePerf3D_CollapseAll
         host_view_type Bhost("Bhost", icount+2, jcount+2, kcount+2);
         Kokkos::deep_copy(Bhost, Btest);
 
-        for ( int l = 0; l < icount; ++l ) {
-        for ( int j = 0; j < jcount; ++j ) {
-        for ( int k = 0; k < kcount; ++k ) {
+        for ( int l = 0; l < static_cast<int>(icount); ++l ) {
+        for ( int j = 0; j < static_cast<int>(jcount); ++j ) {
+        for ( int k = 0; k < static_cast<int>(kcount); ++k ) {
           //double check = (l*l + j - k*l + 2.0*k*j - j*j*j);
           double check  = 0.143*(double)( Bhost(l+2,j,k) + Bhost(l+1,j,k)
                                         + Bhost(l,j+2,k) + Bhost(l,j+1,k)

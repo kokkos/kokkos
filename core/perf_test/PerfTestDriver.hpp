@@ -197,8 +197,8 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
     int min_bnd = 8;
     // Test 1_c: MDRange with 0 for 'inner' tile dim; this case will utilize the full span in that direction, should be similar to Collapse<2>
     if ( std::is_same<LayoutType, Kokkos::LayoutRight>::value ) {
-      for ( unsigned int T0 = min_bnd; T0 < range_length; T0<<=1 ) {
-        for ( unsigned int T1 = min_bnd; T1 < range_length; T1<<=1 ) {
+      for ( unsigned int T0 = min_bnd; T0 < static_cast<unsigned int>(range_length); T0<<=1 ) {
+        for ( unsigned int T1 = min_bnd; T1 < static_cast<unsigned int>(range_length); T1<<=1 ) {
           const double seconds_c = MultiDimRangePerf3D< DeviceType , double , LayoutType >::test_multi_index(range_length,range_length,range_length, T0, T1, 0) ;
 
 #if MDRANGE_PERFORMANCE_OUTPUT_VERBOSE
@@ -228,8 +228,8 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
       }
     }
     else {
-      for ( unsigned int T1 = min_bnd; T1 <= range_length; T1<<=1 ) {
-        for ( unsigned int T2 = min_bnd; T2 <= range_length; T2<<=1 ) {
+      for ( unsigned int T1 = min_bnd; T1 <= static_cast<unsigned int>(range_length); T1<<=1 ) {
+        for ( unsigned int T2 = min_bnd; T2 <= static_cast<unsigned int>(range_length); T2<<=1 ) {
           const double seconds_c = MultiDimRangePerf3D< DeviceType , double , LayoutType >::test_multi_index(range_length,range_length,range_length, 0, T1, T2) ;
 
 #if MDRANGE_PERFORMANCE_OUTPUT_VERBOSE
