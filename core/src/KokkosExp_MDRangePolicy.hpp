@@ -287,6 +287,11 @@ void md_parallel_reduce( MDRange const& range
                     , Functor const& f
                     , ValueType & v
                     , const std::string& str = ""
+                    , typename std::enable_if<( true
+                      #if defined( KOKKOS_HAVE_CUDA)
+                      && !std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Cuda>::value
+                      #endif
+                      ) >::type* = 0
                     )
 {
   Impl::MDFunctor<MDRange, Functor, ValueType> g(range, f, v);
@@ -302,6 +307,11 @@ void md_parallel_reduce( const std::string& str
                     , MDRange const& range
                     , Functor const& f
                     , ValueType & v
+                    , typename std::enable_if<( true
+                      #if defined( KOKKOS_HAVE_CUDA)
+                      && !std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Cuda>::value
+                      #endif
+                      ) >::type* = 0
                     )
 {
   Impl::MDFunctor<MDRange, Functor, ValueType> g(range, f, v);
@@ -311,6 +321,41 @@ void md_parallel_reduce( const std::string& str
 
   Kokkos::parallel_reduce( str, range_policy(0, range.m_num_tiles).set_chunk_size(1), g, v );
 }
+
+// Cuda - parallel_reduce not implemented yet
+/*
+template <typename MDRange, typename Functor, typename ValueType>
+void md_parallel_reduce( MDRange const& range
+                    , Functor const& f
+                    , ValueType & v
+                    , const std::string& str = ""
+                    , typename std::enable_if<( true
+                      #if defined( KOKKOS_HAVE_CUDA)
+                      && std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Cuda>::value
+                      #endif
+                      ) >::type* = 0
+                    )
+{
+  Impl::DeviceIterateTile<MDRange, Functor, typename MDRange::work_tag> closure(range, f, v);
+  closure.execute();
+}
+
+template <typename MDRange, typename Functor, typename ValueType>
+void md_parallel_reduce( const std::string& str
+                    , MDRange const& range
+                    , Functor const& f
+                    , ValueType & v
+                    , typename std::enable_if<( true
+                      #if defined( KOKKOS_HAVE_CUDA)
+                      && std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Cuda>::value
+                      #endif
+                      ) >::type* = 0
+                    )
+{
+  Impl::DeviceIterateTile<MDRange, Functor, typename MDRange::work_tag> closure(range, f, v);
+  closure.execute();
+}
+*/
 
 }} // namespace Kokkos::Experimental
 
