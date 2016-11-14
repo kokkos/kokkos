@@ -494,7 +494,8 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
   {
   }
 
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   bool check_iteration_bounds( point_type& partial_tile , point_type& offset ) const {
     bool is_full_tile = true;
 
@@ -523,16 +524,16 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
 
   template <typename IType>
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void
   operator()(IType tile_idx) const
   { operator_impl( tile_idx , RankTag<RP::rank>() ); }
   // added due to compiler error when using sfinae to choose operator based on rank
 
   template <typename IType>
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<2> ) const
   {
     point_type m_offset;
@@ -585,8 +586,8 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
 
   template <typename IType>
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<3> ) const
   {
     point_type m_offset;
@@ -639,8 +640,8 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
 
   template <typename IType>
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<4> ) const
   {
     point_type m_offset;
@@ -693,8 +694,8 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
 
   template <typename IType>
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<5> ) const
   {
     point_type m_offset;
@@ -747,8 +748,8 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
 
   template <typename IType>
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<6> ) const
   {
     point_type m_offset;
@@ -801,8 +802,8 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
 
   template <typename IType>
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<7> ) const
   {
     point_type m_offset;
@@ -855,8 +856,8 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
 
   template <typename IType>
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<8> ) const
   {
     point_type m_offset;
@@ -952,8 +953,8 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
   {
   }
 
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   bool check_iteration_bounds( point_type& partial_tile , point_type& offset ) const {
     bool is_full_tile = true;
 
@@ -982,8 +983,8 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
 
   template <typename IType>
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void
   operator()(IType tile_idx) const
   { operator_impl( tile_idx , RankTag<RP::rank>() ); }
@@ -991,8 +992,8 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
 
   template <typename IType>
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<2> ) const
   {
     point_type m_offset;
@@ -1045,8 +1046,8 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
 
   template <typename IType>
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<3> ) const
   {
     point_type m_offset;
@@ -1099,8 +1100,8 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
 
   template <typename IType>
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<4> ) const
   {
     point_type m_offset;
@@ -1153,8 +1154,8 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
 
   template <typename IType>
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<5> ) const
   {
     point_type m_offset;
@@ -1207,8 +1208,8 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
 
   template <typename IType>
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<6> ) const
   {
     point_type m_offset;
@@ -1261,8 +1262,8 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
 
   template <typename IType>
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<7> ) const
   {
     point_type m_offset;
@@ -1315,8 +1316,8 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
 
   template <typename IType>
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<8> ) const
   {
     point_type m_offset;
@@ -1423,32 +1424,32 @@ struct MDFunctor
 
 #endif
 
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   MDFunctor( MDRange const& range, Functor const& f, ValueType & v )
     : m_range( range )
     , m_func( f )
   {}
 
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   MDFunctor( MDFunctor const& ) = default;
 
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   MDFunctor& operator=( MDFunctor const& ) = default;
 
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   MDFunctor( MDFunctor && ) = default;
 
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   MDFunctor& operator=( MDFunctor && ) = default;
 
 //  KOKKOS_FORCEINLINE_FUNCTION //Caused cuda warning - __host__ warning
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void operator()(index_type t, value_type & v) const
   {
 #if OLDITERATETILE
@@ -1486,31 +1487,31 @@ struct MDFunctor< MDRange, Functor, void >
 
 #endif
 
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   MDFunctor( MDRange const& range, Functor const& f )
     : m_range( range )
     , m_func( f )
   {}
 
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   MDFunctor( MDFunctor const& ) = default;
 
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   MDFunctor& operator=( MDFunctor const& ) = default;
 
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   MDFunctor( MDFunctor && ) = default;
 
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   MDFunctor& operator=( MDFunctor && ) = default;
 
-  //inline
-  inline __attribute__((always_inline))
+  inline
+  //inline __attribute__((always_inline))
   void operator()(index_type t) const
   {
 #if OLDITERATETILE
