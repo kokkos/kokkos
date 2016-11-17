@@ -192,6 +192,17 @@ namespace Kokkos {
 namespace Impl {
 
 template<>
+struct MemorySpaceAccess 
+  < Kokkos::Serial::memory_space
+  , Kokkos::Serial::scratch_memory_space
+  >
+{
+  enum { assignable = false };
+  enum { accessible = true };
+  enum { deepcopy   = false };
+};
+
+template<>
 struct VerifyExecutionCanAccessMemorySpace
   < Kokkos::Serial::memory_space
   , Kokkos::Serial::scratch_memory_space

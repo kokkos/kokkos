@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,77 +36,57 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
 
-#ifndef KOKKOS_TIMER_HPP
-#define KOKKOS_TIMER_HPP
-
-#include <stddef.h>
-
-#ifdef _MSC_VER
-#undef KOKKOS_USE_LIBRT
-#include <gettimeofday.c>
-#else
-#ifdef KOKKOS_USE_LIBRT
-#include <ctime>
-#else
-#include <sys/time.h>
-#endif
-#endif
-
-namespace Kokkos {
-
-/** \brief  Time since construction */
-
-class Timer {
-private:
-  #ifdef KOKKOS_USE_LIBRT
-	struct timespec m_old;
-  #else
-	struct timeval m_old ;
-  #endif
-  Timer( const Timer & );
-  Timer & operator = ( const Timer & );
-public:
-
-  inline
-  void reset() {
-    #ifdef KOKKOS_USE_LIBRT
-	  clock_gettime(CLOCK_REALTIME, &m_old);
-    #else
-	  gettimeofday( & m_old , ((struct timezone *) NULL ) );
-    #endif
-  }
-
-  inline
-  ~Timer() {}
-
-  inline
-  Timer() { reset(); }
-
-  inline
-  double seconds() const
-  {
-    #ifdef KOKKOS_USE_LIBRT
-      struct timespec m_new;
-      clock_gettime(CLOCK_REALTIME, &m_new);
-
-      return ( (double) ( m_new.tv_sec  - m_old.tv_sec ) ) +
-             ( (double) ( m_new.tv_nsec - m_old.tv_nsec ) * 1.0e-9 );
-    #else
-      struct timeval m_new ;
-
-      gettimeofday( & m_new , ((struct timezone *) NULL ) );
-
-      return ( (double) ( m_new.tv_sec  - m_old.tv_sec ) ) +
-             ( (double) ( m_new.tv_usec - m_old.tv_usec ) * 1.0e-6 );
-    #endif
-  }
+template<class Scalar, int UNROLL>
+struct RunGather {
+  static void run(int N, int K, int D, int R, int F);
 };
 
-} // namespace Kokkos
+#define UNROLL 1
+#include<gather_unroll.hpp>
+#undef UNROLL
+#define UNROLL 2
+#include<gather_unroll.hpp>
+#undef UNROLL
+#define UNROLL 3
+#include<gather_unroll.hpp>
+#undef UNROLL
+#define UNROLL 4
+#include<gather_unroll.hpp>
+#undef UNROLL
+#define UNROLL 5
+#include<gather_unroll.hpp>
+#undef UNROLL
+#define UNROLL 6
+#include<gather_unroll.hpp>
+#undef UNROLL
+#define UNROLL 7
+#include<gather_unroll.hpp>
+#undef UNROLL
+#define UNROLL 8
+#include<gather_unroll.hpp>
+#undef UNROLL
 
-#endif /* #ifndef KOKKOS_TIMER_HPP */
+template<class Scalar>
+void run_gather_test(int N, int K, int D, int R, int U, int F) {
+ if(U == 1)
+   RunGather<Scalar,1>::run(N,K,D,R,F);
+ if(U == 2)
+   RunGather<Scalar,2>::run(N,K,D,R,F);
+ if(U == 3)
+   RunGather<Scalar,3>::run(N,K,D,R,F);
+ if(U == 4)
+   RunGather<Scalar,4>::run(N,K,D,R,F);
+ if(U == 5)
+   RunGather<Scalar,5>::run(N,K,D,R,F);
+ if(U == 6)
+   RunGather<Scalar,6>::run(N,K,D,R,F);
+ if(U == 7)
+   RunGather<Scalar,7>::run(N,K,D,R,F);
+ if(U == 8)
+   RunGather<Scalar,8>::run(N,K,D,R,F);
+}

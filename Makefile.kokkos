@@ -54,6 +54,19 @@ endif
 
 KOKKOS_INTERNAL_USE_CUDA := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Cuda | wc -l))
 
+ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
+  KOKKOS_INTERNAL_NVCC_PATH := $(shell which nvcc)
+  CUDA_PATH ?= $(KOKKOS_INTERNAL_NVCC_PATH:/bin/nvcc=)
+  KOKKOS_INTERNAL_COMPILER_NVCC_VERSION := $(shell nvcc --version 2>&1 | grep release | cut -d' ' -f5 | cut -d',' -f1 | tr -d .)
+endif
+
+# Check OS
+
+KOKKOS_OS                      := $(shell uname -s)
+KOKKOS_INTERNAL_OS_CYGWIN      := $(shell uname -s | grep CYGWIN | wc -l)
+KOKKOS_INTERNAL_OS_LINUX       := $(shell uname -s | grep Linux  | wc -l)
+KOKKOS_INTERNAL_OS_DARWIN      := $(shell uname -s | grep Darwin | wc -l)
+
 # Check compiler
 
 KOKKOS_INTERNAL_COMPILER_INTEL := $(shell $(CXX) --version        2>&1 | grep "Intel Corporation" | wc -l)
@@ -62,13 +75,6 @@ KOKKOS_INTERNAL_COMPILER_XL    := $(shell $(CXX) -qversion        2>&1 | grep XL
 KOKKOS_INTERNAL_COMPILER_CRAY  := $(shell $(CXX) -craype-verbose  2>&1 | grep "CC-" | wc -l)
 KOKKOS_INTERNAL_COMPILER_NVCC  := $(shell $(CXX) --version        2>&1 | grep "nvcc" | wc -l)
 KOKKOS_INTERNAL_COMPILER_CLANG := $(shell $(CXX) --version        2>&1 | grep "clang" | wc -l)
-KOKKOS_INTERNAL_OS_CYGWIN      := $(shell uname | grep CYGWIN | wc -l)
-
-ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
-  KOKKOS_INTERNAL_NVCC_PATH := $(shell which nvcc)
-  CUDA_PATH ?= $(KOKKOS_INTERNAL_NVCC_PATH:/bin/nvcc=)
-  KOKKOS_INTERNAL_COMPILER_NVCC_VERSION := $(shell nvcc --version 2>&1 | grep release | cut -d' ' -f5 | cut -d',' -f1 | tr -d .)
-endif
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 2)
   KOKKOS_INTERNAL_COMPILER_CLANG = 1
@@ -273,7 +279,7 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_ENABLE_DEBUG), 1)
 ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
-	KOKKOS_CXXFLAGS += -G
+	KOKKOS_CXXFLAGS += -lineinfo
 endif
 	KOKKOS_CXXFLAGS += -g 
 	KOKKOS_LDFLAGS += -g -ldl
