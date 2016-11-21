@@ -75,7 +75,7 @@ private:
   template< class TagType >
   inline static
   typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_range( const FunctorType & functor
+  exec_range( const FunctorType functor
             , const Member ibeg , const Member iend )
     {
       #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
