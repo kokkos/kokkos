@@ -76,7 +76,8 @@ public:
   int getNumReportAttempts();
 
   void getReports(std::vector<int> &reporters_out, std::vector<report_type> &reports_out);
-  void getReports(Kokkos::View<int*, Kokkos::HostSpace> &reporters_out, Kokkos::View<report_type*, Kokkos::HostSpace> &reports_out);
+  void getReports( typename Kokkos::View<int*, typename DeviceType::execution_space >::HostMirror &reporters_out,
+                   typename Kokkos::View<report_type*, typename DeviceType::execution_space >::HostMirror &reports_out);
 
   void clear();
 
@@ -152,11 +153,13 @@ void ErrorReporter<ReportType, DeviceType>::getReports(std::vector<int> &reporte
 }
 
 template <typename ReportType, typename DeviceType>
-void ErrorReporter<ReportType, DeviceType>::getReports(Kokkos::View<int*, Kokkos::HostSpace> &reporters_out, Kokkos::View<report_type*, Kokkos::HostSpace> &reports_out)
+void ErrorReporter<ReportType, DeviceType>::getReports(
+    typename Kokkos::View<int*, typename DeviceType::execution_space >::HostMirror &reporters_out,
+    typename Kokkos::View<report_type*, typename DeviceType::execution_space >::HostMirror &reports_out)
 {
   int num_reports = getNumReports();
-  reporters_out = Kokkos::View<int*, Kokkos::HostSpace>("ErrorReport::reporters_out",num_reports);
-  reports_out = Kokkos::View<report_type*, Kokkos::HostSpace>("ErrorReport::reports_out",num_reports);
+  reporters_out = typename Kokkos::View<int*, typename DeviceType::execution_space >::HostMirror("ErrorReport::reporters_out",num_reports);
+  reports_out = typename Kokkos::View<report_type*, typename DeviceType::execution_space >::HostMirror("ErrorReport::reports_out",num_reports);
 
   if (num_reports > 0) {
     m_reports.template sync<host_mirror_space>();

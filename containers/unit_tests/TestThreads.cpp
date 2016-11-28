@@ -175,13 +175,7 @@ TEST_F( threads , dynamic_view )
 }
 
 
-#ifdef KOKKOS_COMPILER_GNU
-#if ( 480 > KOKKOS_COMPILER_GNU )
-#define COMPILER_HAS_FLAKY_LAMBDA_CAPTURE
-#endif
-#endif
-
-#ifndef COMPILER_HAS_FLAKY_LAMBDA_CAPTURE
+#if defined(KOKKOS_CLASS_LAMBDA)
 TEST_F(threads, ErrorReporterViaLambda)
 {
   TestErrorReporter<ErrorReporterDriverUseLambda<Kokkos::Threads>>();

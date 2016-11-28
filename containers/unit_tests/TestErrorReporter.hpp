@@ -46,6 +46,7 @@
 
 #include <gtest/gtest.h>
 #include <iostream>
+#include <Kokkos_Core.hpp>
 
 namespace Test {
 
@@ -103,6 +104,40 @@ struct ErrorReporterDriverBase {
   }
 };
 
+template <typename ErrorReporterDriverType>
+void TestErrorReporter()
+{
+  typedef ErrorReporterDriverType tester_type;
+  std::vector<int> reporters;
+  std::vector<typename tester_type::report_type> reports;
+
+  tester_type test1(100, 10);
+  test1.m_errorReporter.getReports(reporters, reports);
+  checkReportersAndReportsAgree(reporters, reports);
+
+  tester_type test2(10, 100);
+  test2.m_errorReporter.getReports(reporters, reports);
+  checkReportersAndReportsAgree(reporters, reports);
+
+  typename Kokkos::View<int*, typename ErrorReporterDriverType::execution_space >::HostMirror view_reporters;
+  typename Kokkos::View<typename tester_type::report_type*, typename ErrorReporterDriverType::execution_space >::HostMirror
+     view_reports;
+  test2.m_errorReporter.getReports(view_reporters, view_reports);
+
+  int num_reports = view_reporters.extent(0);
+  reporters.clear();
+  reports.clear();
+  reporters.reserve(num_reports);
+  reports.reserve(num_reports);
+
+  for (int i = 0; i < num_reports; ++i) {
+    reporters.push_back(view_reporters(i));
+    reports.push_back(view_reports(i));
+  }
+  checkReportersAndReportsAgree(reporters, reports);
+
+}
+
 
 template <typename DeviceType>
 struct ErrorReporterDriver : public ErrorReporterDriverBase<DeviceType>
@@ -140,54 +175,18 @@ struct ErrorReporterDriver : public ErrorReporterDriverBase<DeviceType>
   }
 };
 
-
-template <typename ErrorReporterDriverType>
-void TestErrorReporter()
-{
-  typedef ErrorReporterDriverType tester_type;
-  std::vector<int> reporters;
-  std::vector<typename tester_type::report_type> reports;
-
-  tester_type test1(100, 10);
-  test1.m_errorReporter.getReports(reporters, reports);
-  checkReportersAndReportsAgree(reporters, reports);
-
-  tester_type test2(10, 100);
-  test2.m_errorReporter.getReports(reporters, reports);
-  checkReportersAndReportsAgree(reporters, reports);
-
-  Kokkos::View<int*, Kokkos::HostSpace> view_reporters;
-  Kokkos::View<typename tester_type::report_type*, Kokkos::HostSpace> view_reports;
-  test2.m_errorReporter.getReports(view_reporters, view_reports);
-
-  int num_reports = view_reporters.extent(0);
-  reporters.clear();
-  reports.clear();
-  reporters.reserve(num_reports);
-  reports.reserve(num_reports);
-
-  for (int i = 0; i < num_reports; ++i) {
-    reporters.push_back(view_reporters(i));
-    reports.push_back(view_reports(i));
-  }
-  checkReportersAndReportsAgree(reporters, reports);
-
-}
-
-
-#ifdef KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA
+#if defined(KOKKOS_CLASS_LAMBDA)
 template <typename DeviceType>
 struct ErrorReporterDriverUseLambda : public ErrorReporterDriverBase<DeviceType>
 {
+
   typedef ErrorReporterDriverBase<DeviceType>                             driver_base;
   typedef typename driver_base::error_reporter_type::execution_space  execution_space;
 
   ErrorReporterDriverUseLambda(int reporter_capacity, int test_size)
     : driver_base(reporter_capacity, test_size)
   {
-    Kokkos::parallel_for(Kokkos::RangePolicy<execution_space>(0,test_size),
-                         KOKKOS_LAMBDA(const int work_idx)
-    {
+    Kokkos::parallel_for(Kokkos::RangePolicy<execution_space>(0,test_size), KOKKOS_CLASS_LAMBDA (const int work_idx) {
       if (driver_base::error_condition(work_idx)) {
         double val = M_PI * static_cast<double>(work_idx);
         typename driver_base::report_type report = {work_idx, -2*work_idx, val};
@@ -196,6 +195,7 @@ struct ErrorReporterDriverUseLambda : public ErrorReporterDriverBase<DeviceType>
     });
     driver_base::check_expectations(reporter_capacity, test_size);
   }
+
 };
 #endif
 
@@ -204,6 +204,7 @@ struct ErrorReporterDriverUseLambda : public ErrorReporterDriverBase<DeviceType>
 struct ErrorReporterDriverNativeOpenMP : public ErrorReporterDriverBase<Kokkos::OpenMP>
 {
   typedef ErrorReporterDriverBase<Kokkos::OpenMP>  driver_base;
+  typedef typename driver_base::error_reporter_type::execution_space  execution_space;
 
   ErrorReporterDriverNativeOpenMP(int reporter_capacity, int test_size)
     : driver_base(reporter_capacity, test_size)
