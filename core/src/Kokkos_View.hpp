@@ -613,18 +613,24 @@ private:
       ( is_layout_left || is_layout_right || is_layout_stride )
   };
 
+  template< class Space , bool = Kokkos::Impl::MemorySpaceAccess< Space , typename traits::memory_space >::accessible > struct verify_space
+    { KOKKOS_FORCEINLINE_FUNCTION static void check() {} };
+
+  template< class Space > struct verify_space<Space,false>
+    { KOKKOS_FORCEINLINE_FUNCTION static void check()
+        { Kokkos::abort("Kokkos::View ERROR: attempt to access inaccessible memory space"); };
+    };
+
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
 
 #define KOKKOS_VIEW_OPERATOR_VERIFY( ARG ) \
-  Kokkos::Impl::VerifyExecutionCanAccessMemorySpace \
-    < Kokkos::Impl::ActiveExecutionMemorySpace , typename traits::memory_space >::verify(); \
+  View::template verify_space< Kokkos::Impl::ActiveExecutionMemorySpace >::check(); \
   Kokkos::Impl::view_verify_operator_bounds ARG ;
 
 #else
 
 #define KOKKOS_VIEW_OPERATOR_VERIFY( ARG ) \
-  Kokkos::Impl::VerifyExecutionCanAccessMemorySpace \
-    < Kokkos::Impl::ActiveExecutionMemorySpace , typename traits::memory_space >::verify();
+  View::template verify_space< Kokkos::Impl::ActiveExecutionMemorySpace >::check();
 
 #endif
 
@@ -1907,10 +1913,10 @@ void deep_copy
   typedef typename src_type::memory_space     src_memory_space ;
 
   enum { DstExecCanAccessSrc =
-   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename dst_execution_space::memory_space , src_memory_space >::value };
+   Kokkos::Impl::SpaceAccessibility< dst_execution_space , src_memory_space >::accessible };
 
   enum { SrcExecCanAccessDst =
-   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename src_execution_space::memory_space , dst_memory_space >::value };
+   Kokkos::Impl::SpaceAccessibility< src_execution_space , dst_memory_space >::accessible };
 
 
   if ( (void *) dst.data() != (void*) src.data() ) {
@@ -2124,10 +2130,10 @@ void deep_copy
   typedef typename src_type::memory_space     src_memory_space ;
 
   enum { DstExecCanAccessSrc =
-   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename dst_execution_space::memory_space , src_memory_space >::value };
+   Kokkos::Impl::SpaceAccessibility< dst_execution_space , src_memory_space >::accessible };
 
   enum { SrcExecCanAccessDst =
-   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename src_execution_space::memory_space , dst_memory_space >::value };
+   Kokkos::Impl::SpaceAccessibility< src_execution_space , dst_memory_space >::accessible };
 
   if ( (void *) dst.data() != (void*) src.data() ) {
 

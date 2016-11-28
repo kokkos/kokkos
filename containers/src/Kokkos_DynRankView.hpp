@@ -224,6 +224,7 @@ struct DynRankDimTraits {
   }
 
   template < typename DynRankViewType , typename iType >
+  KOKKOS_INLINE_FUNCTION
   void verify_dynrankview_rank ( iType N , const DynRankViewType &drv )
   {
     if ( static_cast<iType>(drv.rank()) > N )
@@ -503,20 +504,27 @@ private:
       ( is_layout_left || is_layout_right || is_layout_stride )
   };
 
+  template< class Space , bool = Kokkos::Impl::MemorySpaceAccess< Space , typename traits::memory_space >::accessible > struct verify_space
+    { KOKKOS_FORCEINLINE_FUNCTION static void check() {} };
+
+  template< class Space > struct verify_space<Space,false>
+    { KOKKOS_FORCEINLINE_FUNCTION static void check()
+        { Kokkos::abort("Kokkos::DynRankView ERROR: attempt to access inaccessible memory space"); };
+    };
+
 // Bounds checking macros
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
 
+// N is dynamic rank - 1
 #define KOKKOS_VIEW_OPERATOR_VERIFY( N , ARG ) \
-  Kokkos::Impl::VerifyExecutionCanAccessMemorySpace \
-    < Kokkos::Impl::ActiveExecutionMemorySpace , typename traits::memory_space >::verify(); \
+  DynRankView::template verify_space< Kokkos::Impl::ActiveExecutionMemorySpace >::check(); \
   Kokkos::Experimental::Impl::verify_dynrankview_rank ( N , *this ) ; \
   Kokkos::Impl::view_verify_operator_bounds ARG ; 
 
 #else
 
 #define KOKKOS_VIEW_OPERATOR_VERIFY( N , ARG ) \
-  Kokkos::Impl::VerifyExecutionCanAccessMemorySpace \
-    < Kokkos::Impl::ActiveExecutionMemorySpace , typename traits::memory_space >::verify();
+  DynRankView::template verify_space< Kokkos::Impl::ActiveExecutionMemorySpace >::check();
 
 #endif
 
@@ -531,7 +539,11 @@ public:
   KOKKOS_INLINE_FUNCTION
   reference_type operator()() const
     { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 0 , ( implementation_map() ) )
+      #ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+        KOKKOS_VIEW_OPERATOR_VERIFY( 0 , (NULL , m_map) )
+      #else
+        KOKKOS_VIEW_OPERATOR_VERIFY( 0 , (m_track.template get_label<typename traits::memory_space>().c_str(),m_map) )
+      #endif
       return implementation_map().reference();
       //return m_map.reference(0,0,0,0,0,0,0); 
     }
@@ -567,7 +579,11 @@ public:
   typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType>::value), reference_type>::type
   operator()(const iType & i0 ) const 
     { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 1 , ( m_map , i0 ) )
+      #ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+        KOKKOS_VIEW_OPERATOR_VERIFY( 1 , (NULL , m_map , i0) )
+      #else
+        KOKKOS_VIEW_OPERATOR_VERIFY( 1 , (m_track.template get_label<typename traits::memory_space>().c_str(),m_map,i0) )
+      #endif
       return m_map.reference(i0); 
     }
 
@@ -576,6 +592,11 @@ public:
   typename std::enable_if< !(std::is_same<typename traits::specialize , void>::value && std::is_integral<iType>::value), reference_type>::type
   operator()(const iType & i0 ) const
     {
+      #ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+        KOKKOS_VIEW_OPERATOR_VERIFY( 1 , (NULL , m_map , i0) )
+      #else
+        KOKKOS_VIEW_OPERATOR_VERIFY( 1 , (m_track.template get_label<typename traits::memory_space>().c_str(),m_map,i0) )
+      #endif
       return m_map.reference(i0,0,0,0,0,0,0);
     }
 
@@ -585,7 +606,11 @@ public:
   typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value), reference_type>::type
   operator()(const iType0 & i0 , const iType1 & i1 ) const 
     { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 2 , ( m_map , i0 , i1 ) )
+      #ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+        KOKKOS_VIEW_OPERATOR_VERIFY( 2 , (NULL , m_map , i0 , i1) )
+      #else
+        KOKKOS_VIEW_OPERATOR_VERIFY( 2 , (m_track.template get_label<typename traits::memory_space>().c_str(),m_map,i0,i1) )
+      #endif
       return m_map.reference(i0,i1); 
     }
 
@@ -594,7 +619,11 @@ public:
   typename std::enable_if< !(std::is_same<typename drvtraits::specialize , void>::value && std::is_integral<iType0>::value), reference_type>::type
   operator()(const iType0 & i0 , const iType1 & i1 ) const 
     { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 2 , ( m_map , i0 , i1 ) )
+      #ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+        KOKKOS_VIEW_OPERATOR_VERIFY( 2 , (NULL , m_map , i0 , i1) )
+      #else
+        KOKKOS_VIEW_OPERATOR_VERIFY( 2 , (m_track.template get_label<typename traits::memory_space>().c_str(),m_map,i0,i1) )
+      #endif
       return m_map.reference(i0,i1,0,0,0,0,0); 
     }
 
@@ -604,7 +633,11 @@ public:
   typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value), reference_type>::type
   operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 ) const 
     { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 3 , ( m_map , i0 , i1 , i2 ) )
+      #ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+        KOKKOS_VIEW_OPERATOR_VERIFY( 3 , (NULL , m_map , i0 , i1 , i2) )
+      #else
+        KOKKOS_VIEW_OPERATOR_VERIFY( 3 , (m_track.template get_label<typename traits::memory_space>().c_str(),m_map,i0,i1,i2) )
+      #endif
       return m_map.reference(i0,i1,i2); 
     }
 
@@ -613,7 +646,11 @@ public:
   typename std::enable_if< !(std::is_same<typename drvtraits::specialize , void>::value && std::is_integral<iType0>::value), reference_type>::type
   operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 ) const 
     { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 3 , ( m_map , i0 , i1 , i2 ) )
+      #ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+        KOKKOS_VIEW_OPERATOR_VERIFY( 3 , (NULL , m_map , i0 , i1 , i2) )
+      #else
+        KOKKOS_VIEW_OPERATOR_VERIFY( 3 , (m_track.template get_label<typename traits::memory_space>().c_str(),m_map,i0,i1,i2) )
+      #endif
       return m_map.reference(i0,i1,i2,0,0,0,0); 
     }
 
@@ -623,7 +660,11 @@ public:
   typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value && std::is_integral<iType3>::value), reference_type>::type
   operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 ) const 
     { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 4 , ( m_map , i0 , i1 , i2 , i3 ) )
+      #ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+        KOKKOS_VIEW_OPERATOR_VERIFY( 4 , (NULL , m_map , i0 , i1 , i2 , i3) )
+      #else
+        KOKKOS_VIEW_OPERATOR_VERIFY( 4 , (m_track.template get_label<typename traits::memory_space>().c_str(),m_map,i0,i1,i2,i3) )
+      #endif
       return m_map.reference(i0,i1,i2,i3); 
     }
 
@@ -632,7 +673,11 @@ public:
   typename std::enable_if< !(std::is_same<typename drvtraits::specialize , void>::value && std::is_integral<iType0>::value), reference_type>::type
   operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 ) const 
     { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 4 , ( m_map , i0 , i1 , i2 , i3 ) )
+      #ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+        KOKKOS_VIEW_OPERATOR_VERIFY( 4 , (NULL , m_map , i0 , i1 , i2 , i3) )
+      #else
+        KOKKOS_VIEW_OPERATOR_VERIFY( 4 , (m_track.template get_label<typename traits::memory_space>().c_str(),m_map,i0,i1,i2,i3) )
+      #endif
       return m_map.reference(i0,i1,i2,i3,0,0,0); 
     }
 
@@ -642,7 +687,11 @@ public:
   typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value && std::is_integral<iType3>::value && std::is_integral<iType4>::value), reference_type>::type
   operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 ) const 
     { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 5 , ( m_map , i0 , i1 , i2 , i3 , i4 ) )
+      #ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+        KOKKOS_VIEW_OPERATOR_VERIFY( 5 , (NULL , m_map , i0 , i1 , i2 , i3, i4) )
+      #else
+        KOKKOS_VIEW_OPERATOR_VERIFY( 5 , (m_track.template get_label<typename traits::memory_space>().c_str(),m_map,i0,i1,i2,i3,i4) )
+      #endif
       return m_map.reference(i0,i1,i2,i3,i4); 
     }
 
@@ -651,7 +700,11 @@ public:
   typename std::enable_if< !(std::is_same<typename drvtraits::specialize , void>::value && std::is_integral<iType0>::value), reference_type>::type
   operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 ) const 
     { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 5 , ( m_map , i0 , i1 , i2 , i3 , i4 ) )
+      #ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+        KOKKOS_VIEW_OPERATOR_VERIFY( 5 , (NULL , m_map , i0 , i1 , i2 , i3, i4) )
+      #else
+        KOKKOS_VIEW_OPERATOR_VERIFY( 5 , (m_track.template get_label<typename traits::memory_space>().c_str(),m_map,i0,i1,i2,i3,i4) )
+      #endif
       return m_map.reference(i0,i1,i2,i3,i4,0,0); 
     }
 
@@ -661,7 +714,11 @@ public:
   typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value && std::is_integral<iType3>::value && std::is_integral<iType4>::value && std::is_integral<iType5>::value), reference_type>::type
   operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 ) const 
     { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 6 , ( m_map , i0 , i1 , i2 , i3 , i4 , i5 ) )
+      #ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+        KOKKOS_VIEW_OPERATOR_VERIFY( 6 , (NULL , m_map , i0 , i1 , i2 , i3, i4 , i5) )
+      #else
+        KOKKOS_VIEW_OPERATOR_VERIFY( 6 , (m_track.template get_label<typename traits::memory_space>().c_str(),m_map,i0,i1,i2,i3,i4,i5) )
+      #endif
       return m_map.reference(i0,i1,i2,i3,i4,i5); 
     }
 
@@ -670,7 +727,11 @@ public:
   typename std::enable_if< !(std::is_same<typename drvtraits::specialize , void>::value && std::is_integral<iType0>::value), reference_type>::type
   operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 ) const 
     { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 6 , ( m_map , i0 , i1 , i2 , i3 , i4 , i5 ) )
+      #ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+        KOKKOS_VIEW_OPERATOR_VERIFY( 6 , (NULL , m_map , i0 , i1 , i2 , i3, i4 , i5) )
+      #else
+        KOKKOS_VIEW_OPERATOR_VERIFY( 6 , (m_track.template get_label<typename traits::memory_space>().c_str(),m_map,i0,i1,i2,i3,i4,i5) )
+      #endif
       return m_map.reference(i0,i1,i2,i3,i4,i5,0); 
     }
 
@@ -680,7 +741,11 @@ public:
   typename std::enable_if< (std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value && std::is_integral<iType3>::value && std::is_integral<iType4>::value && std::is_integral<iType5>::value && std::is_integral<iType6>::value), reference_type>::type
   operator()(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 , const iType6 & i6 ) const 
     { 
-      KOKKOS_VIEW_OPERATOR_VERIFY( 7 , ( m_map , i0 , i1 , i2 , i3 , i4 , i5 , i6 ) )
+      #ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+        KOKKOS_VIEW_OPERATOR_VERIFY( 7 , (NULL , m_map , i0 , i1 , i2 , i3, i4 , i5 , i6) )
+      #else
+        KOKKOS_VIEW_OPERATOR_VERIFY( 7 , (m_track.template get_label<typename traits::memory_space>().c_str(),m_map,i0,i1,i2,i3,i4,i5,i6) )
+      #endif
       return m_map.reference(i0,i1,i2,i3,i4,i5,i6); 
     }
 
@@ -1501,10 +1566,10 @@ void deep_copy
   typedef typename src_type::memory_space     src_memory_space ;
 
   enum { DstExecCanAccessSrc =
-   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename dst_execution_space::memory_space , src_memory_space >::value };
+   Kokkos::Impl::SpaceAccessibility< dst_execution_space , src_memory_space >::accessible };
 
   enum { SrcExecCanAccessDst =
-   Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< typename src_execution_space::memory_space , dst_memory_space >::value };
+   Kokkos::Impl::SpaceAccessibility< src_execution_space , dst_memory_space >::accessible };
 
   if ( (void *) dst.data() != (void*) src.data() ) {
 

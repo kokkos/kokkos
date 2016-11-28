@@ -586,7 +586,7 @@ struct ScratchTeamFunctor {
   KOKKOS_INLINE_FUNCTION
   void operator()( const typename policy_type::member_type & ind , value_type & update ) const
   {
-    const shared_int_array_type scratch_ptr( ind.team_scratch(1) , 2*ind.team_size() );
+    const shared_int_array_type scratch_ptr( ind.team_scratch(1) , 3*ind.team_size() );
     const shared_int_array_type scratch_A( ind.team_scratch(1) , SHARED_TEAM_COUNT );
     const shared_int_array_type scratch_B( ind.thread_scratch(1) , SHARED_THREAD_COUNT );
 
@@ -650,7 +650,7 @@ struct TestScratchTeam {
     typename Functor::value_type error_count = 0 ;
 
     int team_scratch_size   = Functor::shared_int_array_type::shmem_size(Functor::SHARED_TEAM_COUNT) +
-                              Functor::shared_int_array_type::shmem_size(2*team_size);
+                              Functor::shared_int_array_type::shmem_size(3*team_size);
     int thread_scratch_size = Functor::shared_int_array_type::shmem_size(Functor::SHARED_THREAD_COUNT);
     Kokkos::parallel_reduce( team_exec.set_scratch_size(0,Kokkos::PerTeam(team_scratch_size),
                                                           Kokkos::PerThread(thread_scratch_size)) ,

@@ -46,6 +46,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
+#include <atomic>
 #include <Kokkos_Macros.hpp>
 
 /* only compile this file if CUDA is enabled for Kokkos */
@@ -66,7 +67,7 @@ namespace Impl {
 
 namespace {
 
-  static int num_uvm_allocations = 0;
+  static std::atomic<int> num_uvm_allocations(0) ;
 
    cudaStream_t get_deep_copy_stream() {
      static cudaStream_t s = 0;
@@ -136,6 +137,11 @@ bool CudaUVMSpace::available()
 
 /*--------------------------------------------------------------------------*/
 
+int CudaUVMSpace::number_of_allocations()
+{
+  return Kokkos::Impl::num_uvm_allocations.load();
+}
+
 } // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
@@ -168,17 +174,20 @@ void * CudaSpace::allocate( const size_t arg_alloc_size ) const
 
 void * CudaUVMSpace::allocate( const size_t arg_alloc_size ) const
 {
-
   void * ptr = NULL;
 
-  Kokkos::Impl::num_uvm_allocations += 1 ;
+  enum { max_uvm_allocations = 65536 };
 
-  if ( Kokkos::Impl::num_uvm_allocations > 65536 ) {
-    Kokkos::Impl::num_uvm_allocations = 0 ; //Reset to 0 before throwing exception
-    Kokkos::Impl::throw_runtime_exception( "CudaUVM error: The maximum limit of UVM allocations is 65536" ) ;
-  }
+  if ( arg_alloc_size > 0 ) 
+  {
+    Kokkos::Impl::num_uvm_allocations++;
 
-  CUDA_SAFE_CALL( cudaMallocManaged( &ptr, arg_alloc_size , cudaMemAttachGlobal ) );
+    if ( Kokkos::Impl::num_uvm_allocations.load() > max_uvm_allocations ) {
+      Kokkos::Impl::throw_runtime_exception( "CudaUVM error: The maximum limit of UVM allocations exceeded (currently 65536)." ) ;
+    }
+
+    CUDA_SAFE_CALL( cudaMallocManaged( &ptr, arg_alloc_size , cudaMemAttachGlobal ) );
+  } 
 
   return ptr ;
 }
@@ -202,8 +211,10 @@ void CudaSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_all
 void CudaUVMSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_alloc_size */ ) const
 {
   try {
-    Kokkos::Impl::num_uvm_allocations -= 1;
-    CUDA_SAFE_CALL( cudaFree( arg_alloc_ptr ) );
+    if ( arg_alloc_ptr != nullptr ) {
+      Kokkos::Impl::num_uvm_allocations--;
+      CUDA_SAFE_CALL( cudaFree( arg_alloc_ptr ) );
+    }
   } catch(...) {}
 }
 
@@ -513,6 +524,7 @@ void SharedAllocationRecord< Kokkos::CudaUVMSpace , void >::
 deallocate_tracked( void * const arg_alloc_ptr )
 {
   if ( arg_alloc_ptr != 0 ) {
+
     SharedAllocationRecord * const r = get_record( arg_alloc_ptr );
 
     RecordBase::decrement( r );
