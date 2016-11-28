@@ -76,6 +76,7 @@ public:
   int getNumReportAttempts();
 
   void getReports(std::vector<int> &reporters_out, std::vector<report_type> &reports_out);
+  void getReports(Kokkos::View<int*, Kokkos::HostSpace> &reporters_out, Kokkos::View<report_type*, Kokkos::HostSpace> &reports_out);
 
   void clear();
 
@@ -146,6 +147,24 @@ void ErrorReporter<ReportType, DeviceType>::getReports(std::vector<int> &reporte
     for (int i = 0; i < num_reports; ++i) {
       reporters_out.push_back(m_reporters.h_view(i));
       reports_out.push_back(m_reports.h_view(i));
+    }
+  }
+}
+
+template <typename ReportType, typename DeviceType>
+void ErrorReporter<ReportType, DeviceType>::getReports(Kokkos::View<int*, Kokkos::HostSpace> &reporters_out, Kokkos::View<report_type*, Kokkos::HostSpace> &reports_out)
+{
+  int num_reports = getNumReports();
+  reporters_out = Kokkos::View<int*, Kokkos::HostSpace>("ErrorReport::reporters_out",num_reports);
+  reports_out = Kokkos::View<report_type*, Kokkos::HostSpace>("ErrorReport::reports_out",num_reports);
+
+  if (num_reports > 0) {
+    m_reports.template sync<host_mirror_space>();
+    m_reporters.template sync<host_mirror_space>();
+
+    for (int i = 0; i < num_reports; ++i) {
+      reporters_out(i) = m_reporters.h_view(i);
+      reports_out(i) = m_reports.h_view(i);
     }
   }
 }

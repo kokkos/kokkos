@@ -155,10 +155,27 @@ void TestErrorReporter()
   tester_type test2(10, 100);
   test2.m_errorReporter.getReports(reporters, reports);
   checkReportersAndReportsAgree(reporters, reports);
+
+  Kokkos::View<int*, Kokkos::HostSpace> view_reporters;
+  Kokkos::View<typename tester_type::report_type*, Kokkos::HostSpace> view_reports;
+  test2.m_errorReporter.getReports(view_reporters, view_reports);
+
+  int num_reports = view_reporters.extent(0);
+  reporters.clear();
+  reports.clear();
+  reporters.reserve(num_reports);
+  reports.reserve(num_reports);
+
+  for (int i = 0; i < num_reports; ++i) {
+    reporters.push_back(view_reporters(i));
+    reports.push_back(view_reports(i));
+  }
+  checkReportersAndReportsAgree(reporters, reports);
+
 }
 
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifdef KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA
 template <typename DeviceType>
 struct ErrorReporterDriverUseLambda : public ErrorReporterDriverBase<DeviceType>
 {
@@ -183,7 +200,7 @@ struct ErrorReporterDriverUseLambda : public ErrorReporterDriverBase<DeviceType>
 #endif
 
 
-#ifdef _OPENMP
+#ifdef KOKKOS_HAVE_OPENMP
 struct ErrorReporterDriverNativeOpenMP : public ErrorReporterDriverBase<Kokkos::OpenMP>
 {
   typedef ErrorReporterDriverBase<Kokkos::OpenMP>  driver_base;
