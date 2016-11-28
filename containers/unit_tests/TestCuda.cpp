@@ -211,6 +211,13 @@ TEST_F( cuda , dynamic_view )
 }
 
 
+#ifdef KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA
+TEST_F(cuda, ErrorReporter)
+{
+  TestErrorReporterUseLambda<ErrorReporterDriver<Kokkos::Cuda>>();
+}
+#endif
+
 TEST_F(cuda, ErrorReporter)
 {
   TestErrorReporter<ErrorReporterDriver<Kokkos::Cuda>>();

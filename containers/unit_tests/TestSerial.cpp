@@ -163,18 +163,11 @@ TEST_F( serial , dynamic_view )
   }
 }
 
-#ifndef __INTEL_COMPILER
-#ifdef __GNUG__
-#if ((__GNUC__ == 4) && (__GNUC_MINOR__ < 8))
+#ifdef KOKKOS_COMPILER_GNU
+#if ( 480 > KOKKOS_COMPILER_GNU )
 #define COMPILER_HAS_FLAKY_LAMBDA_CAPTURE
 #endif
 #endif
-#endif
-
-TEST_F(serial, ErrorReporter)
-{
-  TestErrorReporter<ErrorReporterDriver<Kokkos::Serial>>();
-}
 
 #ifndef COMPILER_HAS_FLAKY_LAMBDA_CAPTURE
 TEST_F(serial, ErrorReporterViaLambda)
@@ -182,6 +175,12 @@ TEST_F(serial, ErrorReporterViaLambda)
   TestErrorReporter<ErrorReporterDriverUseLambda<Kokkos::Serial>>();
 }
 #endif
+
+TEST_F(serial, ErrorReporter)
+{
+  TestErrorReporter<ErrorReporterDriver<Kokkos::Serial>>();
+}
+
 
 } // namespace Test
 

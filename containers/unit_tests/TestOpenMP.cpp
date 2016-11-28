@@ -173,11 +173,9 @@ TEST_F( openmp , dynamic_view )
   }
 }
 
-#ifndef __INTEL_COMPILER
-#ifdef __GNUG__
-#if ((__GNUC__ == 4) && (__GNUC_MINOR__ < 8))
+#ifdef KOKKOS_COMPILER_GNU
+#if ( 480 > KOKKOS_COMPILER_GNU )
 #define COMPILER_HAS_FLAKY_LAMBDA_CAPTURE
-#endif
 #endif
 #endif
 
