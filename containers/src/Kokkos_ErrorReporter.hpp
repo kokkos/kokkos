@@ -49,7 +49,7 @@
 #include <Kokkos_View.hpp>
 #include <Kokkos_DualView.hpp>
 
-namespace kokkos {
+namespace Kokkos {
 namespace Experimental {
 
 template <typename ReportType, typename DeviceType>

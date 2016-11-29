@@ -81,7 +81,7 @@ template <typename DeviceType>
 struct ErrorReporterDriverBase {
 
   typedef ThreeValReport<int, int, double>                                      report_type;
-  typedef kokkos::Experimental::ErrorReporter<report_type, DeviceType>  error_reporter_type;
+  typedef Kokkos::Experimental::ErrorReporter<report_type, DeviceType>  error_reporter_type;
   error_reporter_type m_errorReporter;
 
   ErrorReporterDriverBase(int reporter_capacity, int test_size)
