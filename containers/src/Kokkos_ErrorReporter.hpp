@@ -88,7 +88,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   bool add_report(int reporter_id, report_type report) const
   {
-    int idx = Kokkos::atomic_fetch_add(&m_numReportsAttempted.d_view(), 1);
+    int idx = Kokkos::atomic_fetch_add(&m_numReportsAttempted(), 1);
 
     if (idx >= 0 && (idx < static_cast<int>(m_reports.d_view.dimension_0()))) {
       m_reporters.d_view(idx) = reporter_id;
@@ -106,7 +106,7 @@ private:
   typedef Kokkos::DualView<report_type *, execution_space>    reports_dualview_t;
 
   typedef typename reports_dualview_t::host_mirror_space  host_mirror_space;
-  Kokkos::DualView<int, execution_space>   m_numReportsAttempted;
+  Kokkos::View<int, execution_space>   m_numReportsAttempted;
   reports_dualview_t                   m_reports;
   Kokkos::DualView<int *, execution_space> m_reporters;
 
@@ -116,9 +116,8 @@ private:
 template <typename ReportType, typename DeviceType>
 inline int ErrorReporter<ReportType, DeviceType>::getNumReports() 
 {
-  m_numReportsAttempted.template sync<host_mirror_space>();
-
-  int num_reports = m_numReportsAttempted.h_view();
+  int num_reports = 0;
+  Kokkos::deep_copy(num_reports,m_numReportsAttempted);
   if (num_reports > static_cast<int>(m_reports.h_view.dimension_0())) {
     num_reports = m_reports.h_view.dimension_0();
   }
@@ -128,8 +127,9 @@ inline int ErrorReporter<ReportType, DeviceType>::getNumReports()
 template <typename ReportType, typename DeviceType>
 inline int ErrorReporter<ReportType, DeviceType>::getNumReportAttempts()
 {
-  m_numReportsAttempted.template sync<host_mirror_space>();
-  return m_numReportsAttempted.h_view();
+  int num_reports = 0;
+  Kokkos::deep_copy(num_reports,m_numReportsAttempted);
+  return num_reports;
 }
 
 template <typename ReportType, typename DeviceType>
@@ -175,11 +175,8 @@ void ErrorReporter<ReportType, DeviceType>::getReports(
 template <typename ReportType, typename DeviceType>
 void ErrorReporter<ReportType, DeviceType>::clear()
 {
-  m_numReportsAttempted.template modify<host_mirror_space>();
-  m_numReportsAttempted.h_view() = 0;
-  m_numReportsAttempted.template sync<execution_space>();
-
-  m_numReportsAttempted.template modify<execution_space>();
+  int num_reports=0;
+  Kokkos::deep_copy(m_numReportsAttempted, num_reports);
   m_reports.template modify<execution_space>();
   m_reporters.template modify<execution_space>();
 }
