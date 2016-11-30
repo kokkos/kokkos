@@ -69,6 +69,8 @@ namespace Kokkos {
     typedef void (*finalizeFunction)();
     typedef void (*beginFunction)(const char*, const uint32_t, uint64_t*);
     typedef void (*endFunction)(uint64_t);
+    typedef void (*pushFunction)(const char*);
+    typedef void (*popFunction)();
 
     static initFunction initProfileLibrary = NULL;
     static finalizeFunction finalizeProfileLibrary = NULL;
@@ -79,6 +81,9 @@ namespace Kokkos {
     static endFunction endScanCallee = NULL;
     static endFunction endReduceCallee = NULL;
 
+    static pushFunction pushRegionCallee = NULL;
+    static popFunction popRegionCallee = NULL;
+
     bool profileLibraryLoaded();
 
     void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID);
@@ -87,6 +92,9 @@ namespace Kokkos {
     void endParallelScan(const uint64_t kernelID);
     void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID);
     void endParallelReduce(const uint64_t kernelID);
+
+    void pushRegion(const std::string& kName);
+    void popRegion();
 
     void initialize();
     void finalize();
@@ -107,6 +115,8 @@ namespace Kokkos {
         endReduceCallee = NULL;
         initProfileLibrary = NULL;
         finalizeProfileLibrary = NULL;
+        pushRegionCallee = NULL;
+        popRegionCallee = NULL;
       }
     }
 
