@@ -2297,7 +2297,6 @@ struct ViewDataHandle< Traits ,
   }
 };
 
-#ifdef KOKKOS_USE_RESTRICT
 template< class Traits >
 struct ViewDataHandle< Traits ,
   typename std::enable_if<( std::is_same< typename Traits::non_const_value_type
@@ -2334,7 +2333,6 @@ struct ViewDataHandle< Traits ,
     return handle_type( arg_data_ptr + offset );
   }
 };
-#endif
 
 template< class Traits >
 struct ViewDataHandle< Traits ,
@@ -2356,7 +2354,7 @@ struct ViewDataHandle< Traits ,
                           )>::type >
 {
   typedef typename Traits::value_type  value_type ;
-  typedef typename Traits::value_type * __attribute__((align_value (64))) handle_type ;
+  typedef typename Traits::value_type * KOKKOS_ALIGN(KOKKOS_ALIGN_SIZE) handle_type ;
   typedef typename Traits::value_type & return_type ;
   typedef Kokkos::Impl::SharedAllocationTracker  track_type  ;
 
@@ -2364,7 +2362,7 @@ struct ViewDataHandle< Traits ,
   static handle_type assign( value_type * arg_data_ptr
                            , track_type const & /*arg_tracker*/ )
   {
-    if(((const uintptr_t)((const void*) arg_data_ptr)%64) != 0) Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
+    if(((const uintptr_t)((const void*) arg_data_ptr)%KOKKOS_ALIGN_SIZE) != 0) Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
     printf("Jup\n");
     return handle_type( arg_data_ptr );
   }
@@ -2373,7 +2371,49 @@ struct ViewDataHandle< Traits ,
   static handle_type assign( handle_type const arg_data_ptr
                            , size_t offset )
   {
-    if(((const uintptr_t)((const void*) (arg_data_ptr+offset))%64) != 0) Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
+    if(((const uintptr_t)((const void*) (arg_data_ptr+offset))%KOKKOS_ALIGN_SIZE) != 0) Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
+    return handle_type( arg_data_ptr + offset );
+  }
+};
+
+template< class Traits >
+struct ViewDataHandle< Traits ,
+  typename std::enable_if<( std::is_same< typename Traits::non_const_value_type
+                                        , typename Traits::value_type >::value
+                            &&
+                            std::is_same< typename Traits::specialize , void >::value
+                            &&
+                            Traits::memory_traits::Aligned
+                            &&
+                            Traits::memory_traits::Restrict
+#ifdef KOKKOS_HAVE_CUDA
+                            &&
+                            (!( std::is_same< typename Traits::memory_space,Kokkos::CudaSpace>::value ||
+                                std::is_same< typename Traits::memory_space,Kokkos::CudaUVMSpace>::value ))
+#endif
+                            &&
+                            (!Traits::memory_traits::Atomic)
+                          )>::type >
+{
+  typedef typename Traits::value_type  value_type ;
+  typedef typename Traits::value_type * KOKKOS_RESTRICT KOKKOS_ALIGN(KOKKOS_ALIGN_SIZE) handle_type ;
+  typedef typename Traits::value_type & return_type ;
+  typedef Kokkos::Impl::SharedAllocationTracker  track_type  ;
+
+  KOKKOS_INLINE_FUNCTION
+  static handle_type assign( value_type * arg_data_ptr
+                           , track_type const & /*arg_tracker*/ )
+  {
+    if(((const uintptr_t)((const void*) arg_data_ptr)%KOKKOS_ALIGN_SIZE) != 0) Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
+    printf("Jup\n");
+    return handle_type( arg_data_ptr );
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static handle_type assign( handle_type const arg_data_ptr
+                           , size_t offset )
+  {
+    if(((const uintptr_t)((const void*) (arg_data_ptr+offset))%KOKKOS_ALIGN_SIZE) != 0) Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
     return handle_type( arg_data_ptr + offset );
   }
 };
