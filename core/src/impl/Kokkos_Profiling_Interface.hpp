@@ -62,6 +62,11 @@
 namespace Kokkos {
   namespace Profiling {
 
+    struct SpaceHandle {
+      SpaceHandle(const char* space_name);
+      char name[64];
+    };
+
     typedef void (*initFunction)(const int,
 	const uint64_t,
 	const uint32_t,
@@ -70,14 +75,29 @@ namespace Kokkos {
     typedef void (*beginFunction)(const char*, const uint32_t, uint64_t*);
     typedef void (*endFunction)(uint64_t);
 
+    typedef void (*pushFunction)(const char*);
+    typedef void (*popFunction)();
+
+    typedef void (*allocateDataFunction)(const SpaceHandle, const char*, const void*, const uint64_t);
+    typedef void (*deallocateDataFunction)(const SpaceHandle, const char*, const void*, const uint64_t);
+
+
     static initFunction initProfileLibrary = NULL;
     static finalizeFunction finalizeProfileLibrary = NULL;
+
     static beginFunction beginForCallee = NULL;
     static beginFunction beginScanCallee = NULL;
     static beginFunction beginReduceCallee = NULL;
     static endFunction endForCallee = NULL;
     static endFunction endScanCallee = NULL;
     static endFunction endReduceCallee = NULL;
+
+    static pushFunction pushRegionCallee = NULL;
+    static popFunction popRegionCallee = NULL;
+
+    static allocateDataFunction allocateDataCallee = NULL;
+    static deallocateDataFunction deallocateDataCallee = NULL;
+
 
     bool profileLibraryLoaded();
 
@@ -87,6 +107,12 @@ namespace Kokkos {
     void endParallelScan(const uint64_t kernelID);
     void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID);
     void endParallelReduce(const uint64_t kernelID);
+
+    void pushRegion(const std::string& kName);
+    void popRegion();
+
+    void allocateData(const SpaceHandle space, const std::string label, const void* ptr, const uint64_t size);
+    void deallocateData(const SpaceHandle space, const std::string label, const void* ptr, const uint64_t size);
 
     void initialize();
     void finalize();
@@ -105,8 +131,14 @@ namespace Kokkos {
         endScanCallee = NULL;
         endForCallee = NULL;
         endReduceCallee = NULL;
+
+        allocateDataCallee = NULL;
+        deallocateDataCallee = NULL;
+
         initProfileLibrary = NULL;
         finalizeProfileLibrary = NULL;
+        pushRegionCallee = NULL;
+        popRegionCallee = NULL;
       }
     }
 

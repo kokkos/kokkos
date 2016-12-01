@@ -62,6 +62,10 @@
 #include <memkind.h>
 #endif
 
+#if (KOKKOS_ENABLE_PROFILING)
+#include <impl/Kokkos_Profiling_Interface.hpp>
+#endif
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 #ifdef KOKKOS_HAVE_HBWSPACE
@@ -219,6 +223,10 @@ void HBWSpace::deallocate( void * const arg_alloc_ptr , const size_t arg_alloc_s
   }
 }
 
+constexpr const char* HBWSpace::name() {
+  return m_name;
+}
+
 } // namespace Experimental
 } // namespace Kokkos
 
@@ -241,6 +249,14 @@ deallocate( SharedAllocationRecord< void , void > * arg_rec )
 SharedAllocationRecord< Kokkos::Experimental::HBWSpace , void >::
 ~SharedAllocationRecord()
 {
+  #if (KOKKOS_ENABLE_PROFILING)
+  if(Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::deallocateData(
+      Kokkos::Profiling::SpaceHandle(Kokkos::Experimental::HBWSpace::name()),RecordBase::m_alloc_ptr->m_label,
+      data(),size());
+  }
+  #endif
+
   m_space.deallocate( SharedAllocationRecord< void , void >::m_alloc_ptr
                     , SharedAllocationRecord< void , void >::m_alloc_size
                     );
@@ -262,6 +278,12 @@ SharedAllocationRecord( const Kokkos::Experimental::HBWSpace & arg_space
       )
   , m_space( arg_space )
 {
+  #if (KOKKOS_ENABLE_PROFILING)
+  if(Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::allocateData(Kokkos::Profiling::SpaceHandle(arg_space.name()),arg_label,data(),arg_alloc_size);
+  }
+  #endif
+
   // Fill in the Header information
   RecordBase::m_alloc_ptr->m_record = static_cast< SharedAllocationRecord< void , void > * >( this );
 
@@ -305,7 +327,7 @@ reallocate_tracked( void * const arg_alloc_ptr
   SharedAllocationRecord * const r_old = get_record( arg_alloc_ptr );
   SharedAllocationRecord * const r_new = allocate( r_old->m_space , r_old->get_label() , arg_alloc_size );
 
-  Kokkos::Impl::DeepCopy<HBWSpace,HBWSpace>( r_new->data() , r_old->data()
+  Kokkos::Impl::DeepCopy<Kokkos::Experimental::HBWSpace,Kokkos::Experimental::HBWSpace>( r_new->data() , r_old->data()
                                              , std::min( r_old->size() , r_new->size() ) );
 
   RecordBase::increment( r_new );

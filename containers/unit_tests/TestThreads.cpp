@@ -66,6 +66,9 @@
 #include <Kokkos_DynRankView.hpp>
 #include <TestDynViewAPI.hpp>
 
+#include <Kokkos_ErrorReporter.hpp>
+#include <TestErrorReporter.hpp>
+
 namespace Test {
 
 class threads : public ::testing::Test {
@@ -161,7 +164,6 @@ THREADS_DUALVIEW_COMBINE_TEST( 10 )
 #undef THREADS_DUALVIEW_COMBINE_TEST
 
 
-
 TEST_F( threads , dynamic_view )
 {
   typedef TestDynamicView< double , Kokkos::Threads >
@@ -170,6 +172,19 @@ TEST_F( threads , dynamic_view )
   for ( int i = 0 ; i < 10 ; ++i ) {
     TestDynView::run( 100000 + 100 * i );
   }
+}
+
+
+#if defined(KOKKOS_CLASS_LAMBDA)
+TEST_F(threads, ErrorReporterViaLambda)
+{
+  TestErrorReporter<ErrorReporterDriverUseLambda<Kokkos::Threads>>();
+}
+#endif
+
+TEST_F(threads, ErrorReporter)
+{
+  TestErrorReporter<ErrorReporterDriver<Kokkos::Threads>>();
 }
 
 } // namespace Test
