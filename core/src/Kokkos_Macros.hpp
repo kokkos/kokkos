@@ -265,6 +265,20 @@
   #define KOKKOS_HAVE_PRAGMA_VECTOR 1
   #define KOKKOS_HAVE_PRAGMA_SIMD 1
 
+  #define KOKKOS_RESTRICT __restrict__
+
+  #ifndef KOKKOS_ALIGN
+  #define KOKKOS_ALIGN(size) __attribute__((aligned(size)))
+  #endif
+
+  #ifndef KOKKOS_ALIGN_PTR
+  #define KOKKOS_ALIGN_PTR(size) __attribute__((align_value(size)))
+  #endif
+
+  #ifndef KOKKOS_ALIGN_SIZE
+  #define KOKKOS_ALIGN_SIZE 64
+  #endif
+
   #if ( 1400 > KOKKOS_COMPILER_INTEL )
     #if ( 1300 > KOKKOS_COMPILER_INTEL )
       #error "Compiling with Intel version earlier than 13.0 is not supported. Official minimal version is 14.0."
@@ -272,11 +286,11 @@
       #warning "Compiling with Intel version 13.x probably works but is not officially supported. Official minimal version is 14.0."
     #endif
   #endif
-  #if ( 1200 <= KOKKOS_COMPILER_INTEL ) && ! defined( KOKKOS_ENABLE_ASM ) && ! defined( _WIN32 )
+  #if ! defined( KOKKOS_ENABLE_ASM ) && ! defined( _WIN32 )
     #define KOKKOS_ENABLE_ASM 1
   #endif
 
-  #if ( 1200 <= KOKKOS_COMPILER_INTEL ) && ! defined( KOKKOS_FORCEINLINE_FUNCTION )
+  #if ! defined( KOKKOS_FORCEINLINE_FUNCTION )
     #if !defined (_WIN32)
       #define KOKKOS_FORCEINLINE_FUNCTION  inline __attribute__((always_inline))
     #else
@@ -393,10 +407,30 @@
 #define KOKKOS_FUNCTION /**/
 #endif
 
+
+//----------------------------------------------------------------------------
+///** Define empty macro for restrict if necessary: */
+
+#if ! defined(KOKKOS_RESTRICT)
+#define KOKKOS_RESTRICT
+#endif
+
 //----------------------------------------------------------------------------
 /** Define Macro for alignment: */
+#if ! defined KOKKOS_ALIGN_SIZE
+#define KOKKOS_ALIGN_SIZE 16
+#endif
+
+#if ! defined(KOKKOS_ALIGN)
+#define KOKKOS_ALIGN(size) __attribute__((aligned(size)))
+#endif
+
+#if ! defined(KOKKOS_ALIGN_PTR)
+#define KOKKOS_ALIGN_PTR(size) __attribute__((aligned(size)))
+#endif
+
 #if ! defined(KOKKOS_ALIGN_16)
-#define KOKKOS_ALIGN_16 __attribute__((aligned(16)))
+#define KOKKOS_ALIGN_16 KOKKOS_ALIGN(16)
 #endif
 
 //----------------------------------------------------------------------------
