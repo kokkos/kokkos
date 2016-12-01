@@ -79,6 +79,9 @@ KOKKOS_INTERNAL_COMPILER_CLANG := $(shell $(CXX) --version        2>&1 | grep "c
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 2)
   KOKKOS_INTERNAL_COMPILER_CLANG = 1
 endif
+ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 2)
+  KOKKOS_INTERNAL_COMPILER_XL = 1
+endif
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
   KOKKOS_INTERNAL_COMPILER_CLANG_VERSION := $(shell clang --version | grep version | cut -d ' ' -f3 | tr -d '.')
