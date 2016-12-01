@@ -52,6 +52,20 @@ namespace Kokkos {
        	return (NULL != initProfileLibrary);
     }
 
+    void pushRegion(const std::string& kName) {
+	if( NULL != pushRegionCallee ) {
+	    Kokkos::fence();
+            (*pushRegionCallee)(kName.c_str());
+	}
+    }
+
+    void popRegion() {
+	if( NULL != popRegionCallee ) {
+	    Kokkos::fence();
+	    (*popRegionCallee)();
+        }
+    }
+
     void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID) {
         if(NULL != beginForCallee) {
             Kokkos::fence();
@@ -145,6 +159,11 @@ namespace Kokkos {
                 initProfileLibrary = *((initFunction*) &p7);
                 auto p8 = dlsym(firstProfileLibrary, "kokkosp_finalize_library");
                 finalizeProfileLibrary = *((finalizeFunction*) &p8);
+
+		auto p9 = dlsym(firstProfileLibrary, "kokkosp_push_profile_region");
+		pushRegionCallee = *((pushFunction*) &p9);
+		auto p10 = dlsym(firstProfileLibrary, "kokkosp_pop_profile_region");
+		popRegionCallee = *((popFunction*) &p10);
             }
         }
 
@@ -178,6 +197,8 @@ namespace Kokkos {
         endReduceCallee = NULL;
         initProfileLibrary = NULL;
         finalizeProfileLibrary = NULL;
+        pushRegionCallee = NULL;
+	popRegionCallee = NULL;
       }
     }
   }
