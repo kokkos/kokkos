@@ -268,7 +268,11 @@
   #define KOKKOS_RESTRICT __restrict__
 
   #ifndef KOKKOS_ALIGN
-  #define KOKKOS_ALIGN(size) __attribute__((align_value (size)))
+  #define KOKKOS_ALIGN(size) __attribute__((aligned(size)))
+  #endif
+
+  #ifndef KOKKOS_ALIGN_PTR
+  #define KOKKOS_ALIGN_PTR(size) __attribute__((align_value(size)))
   #endif
 
   #ifndef KOKKOS_ALIGN_SIZE
@@ -419,6 +423,10 @@
 
 #if ! defined(KOKKOS_ALIGN)
 #define KOKKOS_ALIGN(size) __attribute__((aligned(size)))
+#endif
+
+#if ! defined(KOKKOS_ALIGN_PTR)
+#define KOKKOS_ALIGN_PTR(size) __attribute__((aligned(size)))
 #endif
 
 #if ! defined(KOKKOS_ALIGN_16)

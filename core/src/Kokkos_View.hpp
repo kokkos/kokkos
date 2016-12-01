@@ -573,9 +573,6 @@ public:
 
   typedef typename map_type::reference_type  reference_type ;
   typedef typename map_type::pointer_type    pointer_type ;
-  //typedef typename map_type::handle_type     handle_type;
-typedef double * __restrict__ __attribute__ ((align_value (64))) handle_type;
-  handle_type m_handle;
 
   enum { reference_type_is_lvalue_reference = std::is_lvalue_reference< reference_type >::value };
 
@@ -599,7 +596,7 @@ typedef double * __restrict__ __attribute__ ((align_value (64))) handle_type;
 
   //----------------------------------------
 
-public:
+private:
 
   enum {
     is_layout_left = std::is_same< typename traits::array_layout
@@ -677,8 +674,9 @@ public:
       #else
         KOKKOS_VIEW_OPERATOR_VERIFY( (m_track.template get_label<typename traits::memory_space>().c_str(),m_map,i0,args...) )
       #endif
+
       return m_map.reference(i0);
-   }
+    }
 
   template< typename I0
           , class ... Args >
@@ -698,8 +696,7 @@ public:
       #else
         KOKKOS_VIEW_OPERATOR_VERIFY( (m_track.template get_label<typename traits::memory_space>().c_str(),m_map,i0,args...) )
       #endif
-      //static_assert(false,"Not right");
-      //return m_handle[ i0 ];
+
       return m_map.m_handle[ i0 ];
     }
 
@@ -1198,16 +1195,16 @@ public:
   View() : m_track(), m_map() {}
 
   KOKKOS_INLINE_FUNCTION
-  View( const View & rhs ) : m_track( rhs.m_track ), m_map( rhs.m_map ),m_handle( rhs.m_handle) {}
+  View( const View & rhs ) : m_track( rhs.m_track ), m_map( rhs.m_map ) {}
 
   KOKKOS_INLINE_FUNCTION
-  View( View && rhs ) : m_track( rhs.m_track ), m_map( rhs.m_map ),m_handle( rhs.m_handle) {}
+  View( View && rhs ) : m_track( rhs.m_track ), m_map( rhs.m_map ) {}
 
   KOKKOS_INLINE_FUNCTION
-  View & operator = ( const View & rhs ) { m_track = rhs.m_track ; m_map = rhs.m_map ; m_handle = rhs.m_handle; return *this ; }
+  View & operator = ( const View & rhs ) { m_track = rhs.m_track ; m_map = rhs.m_map ; return *this ; }
 
   KOKKOS_INLINE_FUNCTION
-  View & operator = ( View && rhs ) { m_track = rhs.m_track ; m_map = rhs.m_map ; m_handle = rhs.m_handle; return *this ; }
+  View & operator = ( View && rhs ) { m_track = rhs.m_track ; m_map = rhs.m_map ; return *this ; }
 
   //----------------------------------------
   // Compatible view copy constructor and assignment
@@ -1223,7 +1220,6 @@ public:
       typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
       static_assert( Mapping::is_assignable , "Incompatible View copy construction" );
       Mapping::assign( m_map , rhs.m_map , rhs.m_track );
-      m_handle = m_map.m_handle;
     }
 
   template< class RT , class ... RP >
@@ -1235,7 +1231,6 @@ public:
       static_assert( Mapping::is_assignable , "Incompatible View copy assignment" );
       Mapping::assign( m_map , rhs.m_map , rhs.m_track );
       m_track.assign( rhs.m_track , traits::is_managed );
-      m_handle = m_map.m_handle;
       return *this ;
     }
 
@@ -1263,7 +1258,6 @@ public:
         , "Subview construction requires compatible view and subview arguments" );
 
       Mapping::assign( m_map, src_view.m_map, arg0 , args... );
-      m_handle = m_map.m_handle;
     }
 
   //----------------------------------------
@@ -1353,7 +1347,6 @@ public:
 
       // Setup and initialization complete, start tracking
       m_track.assign_allocated_record_to_uninitialized( record );
-      m_handle = m_map.m_handle;
     }
 
   // Wrap memory according to properties and array layout
@@ -1372,7 +1365,6 @@ public:
                     , typename Impl::ViewCtorProp< P... >::pointer_type
                     >::value ,
         "Constructing View to wrap user memory must supply matching pointer type" );
-      m_handle = m_map.m_handle;
     }
 
   // Simple dimension-only layout

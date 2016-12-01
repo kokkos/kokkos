@@ -2299,10 +2299,10 @@ struct ViewDataHandle< Traits ,
 
 template< class Traits >
 struct ViewDataHandle< Traits ,
-  typename std::enable_if<( std::is_same< typename Traits::non_const_value_type
-                                        , typename Traits::value_type >::value
-                            &&
+  typename std::enable_if<( 
                             std::is_same< typename Traits::specialize , void >::value
+                            &&
+                            (!Traits::memory_traits::Aligned)
                             &&
                             Traits::memory_traits::Restrict
 #ifdef KOKKOS_HAVE_CUDA
@@ -2336,9 +2336,7 @@ struct ViewDataHandle< Traits ,
 
 template< class Traits >
 struct ViewDataHandle< Traits ,
-  typename std::enable_if<( std::is_same< typename Traits::non_const_value_type
-                                        , typename Traits::value_type >::value
-                            &&
+  typename std::enable_if<( 
                             std::is_same< typename Traits::specialize , void >::value
                             &&
                             Traits::memory_traits::Aligned
@@ -2354,7 +2352,7 @@ struct ViewDataHandle< Traits ,
                           )>::type >
 {
   typedef typename Traits::value_type  value_type ;
-  typedef typename Traits::value_type * KOKKOS_ALIGN(KOKKOS_ALIGN_SIZE) handle_type ;
+  typedef typename Traits::value_type * KOKKOS_ALIGN_PTR(KOKKOS_ALIGN_SIZE) handle_type ;
   typedef typename Traits::value_type & return_type ;
   typedef Kokkos::Impl::SharedAllocationTracker  track_type  ;
 
@@ -2378,9 +2376,7 @@ struct ViewDataHandle< Traits ,
 
 template< class Traits >
 struct ViewDataHandle< Traits ,
-  typename std::enable_if<( std::is_same< typename Traits::non_const_value_type
-                                        , typename Traits::value_type >::value
-                            &&
+  typename std::enable_if<( 
                             std::is_same< typename Traits::specialize , void >::value
                             &&
                             Traits::memory_traits::Aligned
@@ -2396,7 +2392,7 @@ struct ViewDataHandle< Traits ,
                           )>::type >
 {
   typedef typename Traits::value_type  value_type ;
-  typedef typename Traits::value_type * KOKKOS_RESTRICT KOKKOS_ALIGN(KOKKOS_ALIGN_SIZE) handle_type ;
+  typedef typename Traits::value_type * KOKKOS_RESTRICT KOKKOS_ALIGN_PTR(KOKKOS_ALIGN_SIZE) handle_type ;
   typedef typename Traits::value_type & return_type ;
   typedef Kokkos::Impl::SharedAllocationTracker  track_type  ;
 
@@ -2556,7 +2552,7 @@ private:
                     , typename Traits::array_layout
                     , void
                     >  offset_type ;
-public:
+
   typedef typename ViewDataHandle< Traits >::handle_type  handle_type ;
 
   handle_type  m_handle ;
