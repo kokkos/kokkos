@@ -88,6 +88,9 @@ public:
   void deallocate( void * const arg_alloc_ptr
                  , const size_t arg_alloc_size ) const ;
 
+  /**\brief Return Name of the MemorySpace */
+  static constexpr const char* name();
+
   /*--------------------------------*/
   /** \brief  Error reporting for HostSpace attempt to access CudaSpace */
   static void access_error();
@@ -97,7 +100,8 @@ private:
 
   int  m_device ; ///< Which Cuda device
 
-  // friend class Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > ;
+  static constexpr const char* m_name = "Cuda";
+  friend class Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > ;
 };
 
 namespace Impl {
@@ -180,10 +184,16 @@ public:
   void deallocate( void * const arg_alloc_ptr
                  , const size_t arg_alloc_size ) const ;
 
+  /**\brief Return Name of the MemorySpace */
+  static constexpr const char* name();
+
   /*--------------------------------*/
 
 private:
   int  m_device ; ///< Which Cuda device
+
+  static constexpr const char* m_name = "CudaUVM";
+
 };
 
 } // namespace Kokkos
@@ -221,6 +231,13 @@ public:
   /**\brief  Deallocate untracked memory in the space */
   void deallocate( void * const arg_alloc_ptr
                  , const size_t arg_alloc_size ) const ;
+
+  /**\brief Return Name of the MemorySpace */
+  static constexpr const char* name();
+
+private:
+
+  static constexpr const char* m_name = "CudaHostPinned";
 
   /*--------------------------------*/
 };

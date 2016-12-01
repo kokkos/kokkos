@@ -155,10 +155,13 @@ public:
   void deallocate( void * const arg_alloc_ptr 
                  , const size_t arg_alloc_size ) const ;
 
+  /**\brief Return Name of the MemorySpace */
+  static constexpr const char* name();
+
 private:
 
   AllocationMechanism  m_alloc_mech ;
-
+  static constexpr const char* m_name = "Host";
   friend class Kokkos::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > ;
 };
 

@@ -43,7 +43,9 @@
 
 #include <algorithm>
 #include <Kokkos_Macros.hpp>
-
+#if (KOKKOS_ENABLE_PROFILING)
+#include <impl/Kokkos_Profiling_Interface.hpp>
+#endif
 /*--------------------------------------------------------------------------*/
 
 #if defined( __INTEL_COMPILER ) && ! defined ( KOKKOS_HAVE_CUDA )
@@ -333,6 +335,9 @@ void HostSpace::deallocate( void * const arg_alloc_ptr , const size_t arg_alloc_
   }
 }
 
+constexpr const char* HostSpace::name() {
+  return m_name;
+}
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
@@ -354,6 +359,14 @@ deallocate( SharedAllocationRecord< void , void > * arg_rec )
 SharedAllocationRecord< Kokkos::HostSpace , void >::
 ~SharedAllocationRecord()
 {
+  #if (KOKKOS_ENABLE_PROFILING)
+  if(Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::deallocateData(
+      Kokkos::Profiling::SpaceHandle(Kokkos::HostSpace::name()),RecordBase::m_alloc_ptr->m_label,
+      data(),size());
+  }
+  #endif
+
   m_space.deallocate( SharedAllocationRecord< void , void >::m_alloc_ptr
                     , SharedAllocationRecord< void , void >::m_alloc_size
                     );
@@ -375,6 +388,11 @@ SharedAllocationRecord( const Kokkos::HostSpace & arg_space
       )
   , m_space( arg_space )
 {
+#if (KOKKOS_ENABLE_PROFILING)
+  if(Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::allocateData(Kokkos::Profiling::SpaceHandle(arg_space.name()),arg_label,data(),arg_alloc_size);
+   }
+#endif
   // Fill in the Header information
   RecordBase::m_alloc_ptr->m_record = static_cast< SharedAllocationRecord< void , void > * >( this );
 

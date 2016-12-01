@@ -155,6 +155,10 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
 void finalize_internal( const bool all_spaces = false )
 {
 
+#if (KOKKOS_ENABLE_PROFILING)
+    Kokkos::Profiling::finalize();
+#endif
+
 #if defined( KOKKOS_HAVE_CUDA )
   if( std::is_same< Kokkos::Cuda , Kokkos::DefaultExecutionSpace >::value || all_spaces ) {
     if(Kokkos::Cuda::is_initialized())
@@ -188,11 +192,6 @@ void finalize_internal( const bool all_spaces = false )
       Kokkos::Serial::finalize();
   }
 #endif
-
-#if (KOKKOS_ENABLE_PROFILING)
-    Kokkos::Profiling::finalize();
-#endif
-
 }
 
 void fence_internal()
