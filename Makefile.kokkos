@@ -97,14 +97,18 @@ endif
 ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
   KOKKOS_INTERNAL_OPENMP_FLAG := -mp 
 else
-  ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-    KOKKOS_INTERNAL_OPENMP_FLAG := -qsmp=omp
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+    KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp=libomp
   else
-    ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
-      # OpenMP is turned on by default in Cray compiler environment
-      KOKKOS_INTERNAL_OPENMP_FLAG :=
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
+      KOKKOS_INTERNAL_OPENMP_FLAG := -qsmp=omp
     else
-      KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
+      ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+        # OpenMP is turned on by default in Cray compiler environment
+        KOKKOS_INTERNAL_OPENMP_FLAG :=
+      else
+        KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
+      endif
     endif
   endif
 endif
