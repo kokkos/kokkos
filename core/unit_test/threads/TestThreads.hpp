@@ -40,6 +40,8 @@
 // ************************************************************************
 //@HEADER
 */
+#ifndef KOKKOS_TEST_THREADSHPP
+#define KOKKOS_TEST_THREADSHPP
 #include <gtest/gtest.h>
 
 #include <Kokkos_Macros.hpp>
@@ -109,3 +111,4 @@ protected:
 
 
 }
+#endif

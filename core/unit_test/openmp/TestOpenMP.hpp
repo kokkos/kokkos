@@ -40,6 +40,8 @@
 // ************************************************************************
 //@HEADER
 */
+#ifndef KOKKOS_TEST_OPENMPHPP
+#define KOKKOS_TEST_OPENMPHPP
 #include <gtest/gtest.h>
 
 #include <Kokkos_Macros.hpp>
@@ -111,3 +113,4 @@ protected:
 };
 
 }
+#endif
