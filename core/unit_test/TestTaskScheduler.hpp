@@ -132,7 +132,7 @@ struct TestFib
           policy.respawn( this , Kokkos::TaskHighPriority , fib_all );
         }
         else {
-#if 0
+#if 1
       printf( "TestFib(%ld) insufficient memory alloc_capacity(%d) task_max(%d) task_accum(%ld)\n"
              , n
              , policy.allocation_capacity()

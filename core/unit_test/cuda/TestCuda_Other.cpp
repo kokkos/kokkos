@@ -113,7 +113,7 @@ TEST_F( cuda , memory_pool )
 TEST_F( cuda , task_fib )
 {
   for ( int i = 0 ; i < 25 ; ++i ) {
-    TestTaskScheduler::TestFib< Kokkos::Cuda >::run(i);
+    TestTaskScheduler::TestFib< Kokkos::Cuda >::run(i, (i+1)*(i+1)*10000 );
   }
 }
 
