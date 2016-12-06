@@ -165,13 +165,28 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
 
 #------------------------------------------------------------------------------
 #
-# C) Process the subpackages for Kokkos
+# C) Install Kokkos' executable scripts
+#
+
+
+# nvcc_wrapper is Kokkos' wrapper for NVIDIA's NVCC CUDA compiler.
+# Kokkos needs nvcc_wrapper in order to build.  Other libraries and
+# executables also need nvcc_wrapper.  Thus, we need to install it.
+# If the argument of DESTINATION is a relative path, CMake computes it
+# as relative to ${CMAKE_INSTALL_PATH}.
+
+INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/nvcc_wrapper DESTINATION bin)
+
+
+#------------------------------------------------------------------------------
+#
+# D) Process the subpackages for Kokkos
 #
 
 TRIBITS_PROCESS_SUBPACKAGES()
 
 #
-# D) If Kokkos itself is enabled, process the Kokkos package
+# E) If Kokkos itself is enabled, process the Kokkos package
 #
 
 TRIBITS_PACKAGE_DEF()
