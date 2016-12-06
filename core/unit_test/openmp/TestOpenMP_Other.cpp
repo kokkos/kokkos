@@ -110,29 +110,29 @@ TEST_F( openmp , memory_pool )
 
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_ENABLE_TASKPOLICY )
+#if defined( KOKKOS_ENABLE_TASKDAG )
 
 TEST_F( openmp , task_fib )
 {
   for ( int i = 0 ; i < 25 ; ++i ) {
-    TestTaskPolicy::TestFib< Kokkos::OpenMP >::run(i, (i+1)*1000000 );
+    TestTaskScheduler::TestFib< Kokkos::OpenMP >::run(i, (i+1)*1000000 );
   }
 }
 
 TEST_F( openmp , task_depend )
 {
   for ( int i = 0 ; i < 25 ; ++i ) {
-    TestTaskPolicy::TestTaskDependence< Kokkos::OpenMP >::run(i);
+    TestTaskScheduler::TestTaskDependence< Kokkos::OpenMP >::run(i);
   }
 }
 
 TEST_F( openmp , task_team )
 {
-  TestTaskPolicy::TestTaskTeam< Kokkos::OpenMP >::run(1000);
-  //TestTaskPolicy::TestTaskTeamValue< Kokkos::OpenMP >::run(1000); //put back after testing
+  TestTaskScheduler::TestTaskTeam< Kokkos::OpenMP >::run(1000);
+  //TestTaskScheduler::TestTaskTeamValue< Kokkos::OpenMP >::run(1000); //put back after testing
 }
 
-#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
+#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
 
 //----------------------------------------------------------------------------
 

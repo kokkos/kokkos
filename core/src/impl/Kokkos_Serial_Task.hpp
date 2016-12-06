@@ -44,7 +44,7 @@
 #ifndef KOKKOS_IMPL_SERIAL_TASK_HPP
 #define KOKKOS_IMPL_SERIAL_TASK_HPP
 
-#if defined( KOKKOS_ENABLE_TASKPOLICY )
+#if defined( KOKKOS_ENABLE_TASKDAG )
 
 #include <impl/Kokkos_TaskQueue.hpp>
 
@@ -303,6 +303,6 @@ void parallel_scan
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
+#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
 #endif /* #ifndef KOKKOS_IMPL_SERIAL_TASK_HPP */
 

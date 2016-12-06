@@ -95,29 +95,29 @@ TEST_F( serial , memory_pool )
 
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_ENABLE_TASKPOLICY )
+#if defined( KOKKOS_ENABLE_TASKDAG )
 
 TEST_F( serial , task_fib )
 {
   for ( int i = 0 ; i < 25 ; ++i ) {
-    TestTaskPolicy::TestFib< Kokkos::Serial >::run(i);
+    TestTaskScheduler::TestFib< Kokkos::Serial >::run(i);
   }
 }
 
 TEST_F( serial , task_depend )
 {
   for ( int i = 0 ; i < 25 ; ++i ) {
-    TestTaskPolicy::TestTaskDependence< Kokkos::Serial >::run(i);
+    TestTaskScheduler::TestTaskDependence< Kokkos::Serial >::run(i);
   }
 }
 
 TEST_F( serial , task_team )
 {
-  TestTaskPolicy::TestTaskTeam< Kokkos::Serial >::run(1000);
-  //TestTaskPolicy::TestTaskTeamValue< Kokkos::Serial >::run(1000); //put back after testing
+  TestTaskScheduler::TestTaskTeam< Kokkos::Serial >::run(1000);
+  //TestTaskScheduler::TestTaskTeamValue< Kokkos::Serial >::run(1000); //put back after testing
 }
 
-#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
+#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
 
 //----------------------------------------------------------------------------
 

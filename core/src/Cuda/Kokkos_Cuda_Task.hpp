@@ -44,7 +44,7 @@
 #ifndef KOKKOS_IMPL_CUDA_TASK_HPP
 #define KOKKOS_IMPL_CUDA_TASK_HPP
 
-#if defined( KOKKOS_ENABLE_TASKPOLICY )
+#if defined( KOKKOS_ENABLE_TASKDAG )
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -99,7 +99,7 @@ public:
 extern template class TaskQueue< Kokkos::Cuda > ;
 
 //----------------------------------------------------------------------------
-/**\brief  Impl::TaskExec<Cuda> is the TaskPolicy<Cuda>::member_type
+/**\brief  Impl::TaskExec<Cuda> is the TaskScheduler<Cuda>::member_type
  *         passed to tasks running in a Cuda space.
  *
  *  Cuda thread blocks for tasking are dimensioned:
@@ -518,6 +518,6 @@ void parallel_scan
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
+#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
 #endif /* #ifndef KOKKOS_IMPL_CUDA_TASK_HPP */
 

@@ -108,29 +108,29 @@ TEST_F( cuda , memory_pool )
 
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_ENABLE_TASKPOLICY )
+#if defined( KOKKOS_ENABLE_TASKDAG )
 
 TEST_F( cuda , task_fib )
 {
   for ( int i = 0 ; i < 25 ; ++i ) {
-    TestTaskPolicy::TestFib< Kokkos::Cuda >::run(i);
+    TestTaskScheduler::TestFib< Kokkos::Cuda >::run(i);
   }
 }
 
 TEST_F( cuda , task_depend )
 {
   for ( int i = 0 ; i < 25 ; ++i ) {
-    TestTaskPolicy::TestTaskDependence< Kokkos::Cuda >::run(i);
+    TestTaskScheduler::TestTaskDependence< Kokkos::Cuda >::run(i);
   }
 }
 
 TEST_F( cuda , task_team )
 {
-  TestTaskPolicy::TestTaskTeam< Kokkos::Cuda >::run(1000);
-  //TestTaskPolicy::TestTaskTeamValue< Kokkos::Cuda >::run(1000); //put back after testing
+  TestTaskScheduler::TestTaskTeam< Kokkos::Cuda >::run(1000);
+  //TestTaskScheduler::TestTaskTeamValue< Kokkos::Cuda >::run(1000); //put back after testing
 }
 
-#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
+#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
 
 //----------------------------------------------------------------------------
 

@@ -2360,8 +2360,9 @@ struct ViewDataHandle< Traits ,
   static handle_type assign( value_type * arg_data_ptr
                            , track_type const & /*arg_tracker*/ )
   {
-    if(((const uintptr_t)((const void*) arg_data_ptr)%KOKKOS_ALIGN_SIZE) != 0) Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
-    printf("Jup\n");
+    if ( reinterpret_cast<uintptr_t>(arg_data_ptr) % KOKKOS_ALIGN_SIZE ) {
+      Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
+    }
     return handle_type( arg_data_ptr );
   }
 
@@ -2369,7 +2370,9 @@ struct ViewDataHandle< Traits ,
   static handle_type assign( handle_type const arg_data_ptr
                            , size_t offset )
   {
-    if(((const uintptr_t)((const void*) (arg_data_ptr+offset))%KOKKOS_ALIGN_SIZE) != 0) Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
+    if ( reinterpret_cast<uintptr_t>(arg_data_ptr+offset) % KOKKOS_ALIGN_SIZE ) {
+      Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
+    }
     return handle_type( arg_data_ptr + offset );
   }
 };
@@ -2400,8 +2403,9 @@ struct ViewDataHandle< Traits ,
   static handle_type assign( value_type * arg_data_ptr
                            , track_type const & /*arg_tracker*/ )
   {
-    if(((const uintptr_t)((const void*) arg_data_ptr)%KOKKOS_ALIGN_SIZE) != 0) Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
-    printf("Jup\n");
+    if ( reinterpret_cast<uintptr_t>(arg_data_ptr) % KOKKOS_ALIGN_SIZE ) {
+      Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
+    }
     return handle_type( arg_data_ptr );
   }
 
@@ -2409,7 +2413,9 @@ struct ViewDataHandle< Traits ,
   static handle_type assign( handle_type const arg_data_ptr
                            , size_t offset )
   {
-    if(((const uintptr_t)((const void*) (arg_data_ptr+offset))%KOKKOS_ALIGN_SIZE) != 0) Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
+    if ( reinterpret_cast<uintptr_t>(arg_data_ptr+offset) % KOKKOS_ALIGN_SIZE ) {
+      Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
+    }
     return handle_type( arg_data_ptr + offset );
   }
 };

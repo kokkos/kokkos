@@ -67,7 +67,7 @@
 #include <TestScan.hpp>
 #include <TestAggregate.hpp>
 #include <TestCompilerMacros.hpp>
-#include <TestTaskPolicy.hpp>
+#include <TestTaskScheduler.hpp>
 #include <TestMemoryPool.hpp>
 
 

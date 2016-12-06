@@ -46,7 +46,7 @@
 #ifndef KOKKOS_IMPL_TASKQUEUE_HPP
 #define KOKKOS_IMPL_TASKQUEUE_HPP
 
-#if defined( KOKKOS_ENABLE_TASKPOLICY )
+#if defined( KOKKOS_ENABLE_TASKDAG )
 
 #include <string>
 #include <typeinfo>
@@ -56,18 +56,28 @@
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-
-template< typename > class TaskScheduler ;
-
-template< typename Arg1 = void , typename Arg2 = void > class Future ;
-
-} /* namespace Kokkos */
-
-namespace Kokkos {
 namespace Impl {
 
-template< typename , typename , typename > class TaskBase ;
-template< typename > class TaskExec ;
+/*\brief  Implementation data for task data management, access, and execution.
+ *
+ *  Curiously recurring template pattern (CRTP)
+ *  to allow static_cast from the
+ *  task root type and a task's FunctorType.
+ *
+ *    TaskBase< Space , ResultType , FunctorType >
+ *      : TaskBase< Space , ResultType , void >
+ *      , FunctorType
+ *      { ... };
+ *
+ *    TaskBase< Space , ResultType , void >
+ *      : TaskBase< Space , void , void >
+ *      { ... };
+ */
+template< typename Space , typename ResultType , typename FunctorType >
+class TaskBase ;
+
+template< typename Space >
+class TaskExec ;
 
 } /* namespace Impl */
 } /* namespace Kokkos */
@@ -494,6 +504,6 @@ public:
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
+#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
 #endif /* #ifndef KOKKOS_IMPL_TASKQUEUE_HPP */
 

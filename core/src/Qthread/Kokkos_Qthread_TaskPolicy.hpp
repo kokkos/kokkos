@@ -43,8 +43,8 @@
 
 // Experimental unified task-data parallel manycore LDRD
 
-#ifndef KOKKOS_QTHREAD_TASKPOLICY_HPP
-#define KOKKOS_QTHREAD_TASKPOLICY_HPP
+#ifndef KOKKOS_QTHREAD_TASKSCHEDULER_HPP
+#define KOKKOS_QTHREAD_TASKSCHEDULER_HPP
 
 #include <string>
 #include <typeinfo>
@@ -69,7 +69,7 @@
 
 #include <impl/Kokkos_FunctorAdapter.hpp>
 
-#if defined( KOKKOS_ENABLE_TASKPOLICY )
+#if defined( KOKKOS_ENABLE_TASKDAG )
 
 //----------------------------------------------------------------------------
 
@@ -659,6 +659,6 @@ public:
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
+#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
 #endif /* #define KOKKOS_QTHREAD_TASK_HPP */
 

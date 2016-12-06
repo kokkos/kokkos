@@ -110,29 +110,29 @@ TEST_F( threads , memory_pool )
 
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_ENABLE_TASKPOLICY )
+#if defined( KOKKOS_ENABLE_TASKDAG )
 /*
 TEST_F( threads , task_fib )
 {
   for ( int i = 0 ; i < 25 ; ++i ) {
-    TestTaskPolicy::TestFib< Kokkos::Threads >::run(i);
+    TestTaskScheduler::TestFib< Kokkos::Threads >::run(i);
   }
 }
 
 TEST_F( threads , task_depend )
 {
   for ( int i = 0 ; i < 25 ; ++i ) {
-    TestTaskPolicy::TestTaskDependence< Kokkos::Threads >::run(i);
+    TestTaskScheduler::TestTaskDependence< Kokkos::Threads >::run(i);
   }
 }
 
 TEST_F( threads , task_team )
 {
-  TestTaskPolicy::TestTaskTeam< Kokkos::Threads >::run(1000);
-  //TestTaskPolicy::TestTaskTeamValue< Kokkos::Threads >::run(1000); //put back after testing
+  TestTaskScheduler::TestTaskTeam< Kokkos::Threads >::run(1000);
+  //TestTaskScheduler::TestTaskTeamValue< Kokkos::Threads >::run(1000); //put back after testing
 }
 */
-#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
+#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
 
 //----------------------------------------------------------------------------
 
