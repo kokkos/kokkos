@@ -15,11 +15,6 @@ if [ ! -d "${TRILINOS_PRISTINE_PATH}" ]; then
   git clone https://github.com/trilinos/trilinos ${TRILINOS_PRISTINE_PATH}
 fi
 
-cd ${KOKKOS_PATH}
-git checkout develop
-git pull
-cd ..
-
 cd ${TRILINOS_UPDATED_PATH}
 git checkout develop
 git reset --hard origin/develop
