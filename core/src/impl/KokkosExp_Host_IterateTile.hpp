@@ -527,7 +527,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-//  void operator_impl( IType tile_idx , const RankTag<2> ) const
   typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 2) ) >::type 
   apply_impl( IType tile_idx ) const
   {
@@ -582,7 +581,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //void operator_impl( IType tile_idx , const RankTag<3> ) const
   typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 3) ) >::type 
   apply_impl( IType tile_idx ) const
   {
@@ -637,7 +635,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-//  void operator_impl( IType tile_idx , const RankTag<4> ) const
   typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 4) ) >::type 
   apply_impl( IType tile_idx ) const
   {
@@ -692,7 +689,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //void operator_impl( IType tile_idx , const RankTag<5> ) const
   typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 5) ) >::type 
   apply_impl( IType tile_idx ) const
   {
@@ -747,7 +743,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //void operator_impl( IType tile_idx , const RankTag<6> ) const
   typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 6) ) >::type 
   apply_impl( IType tile_idx ) const
   {
@@ -802,7 +797,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //void operator_impl( IType tile_idx , const RankTag<7> ) const
   typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 7) ) >::type 
   apply_impl( IType tile_idx ) const
   {
@@ -857,7 +851,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //void operator_impl( IType tile_idx , const RankTag<8> ) const
   typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 8) ) >::type 
   apply_impl( IType tile_idx ) const
   {
@@ -1364,14 +1357,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 #if REMOVEOPERATOR
   template <typename IType>
   inline
-  void
-  operator()(IType tile_idx) const
-  { operator_impl( tile_idx , RankTag<RP::rank>() ); }
-  // added due to compiler error when using sfinae to choose operator based on rank w/ cuda+serial
-
-  template <typename IType>
-  inline
-  //void operator_impl( IType tile_idx , const RankTag<2> ) const
   typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 2) ) >::type 
   apply_impl( IType tile_idx ) const
   {
@@ -1426,7 +1411,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //void operator_impl( IType tile_idx , const RankTag<3> ) const
   typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 3) ) >::type 
   apply_impl( IType tile_idx ) const
   {
@@ -1481,7 +1465,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //void operator_impl( IType tile_idx , const RankTag<4> ) const
   typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 4) ) >::type 
   apply_impl( IType tile_idx ) const
   {
@@ -1536,7 +1519,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //void operator_impl( IType tile_idx , const RankTag<5> ) const
   typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 5) ) >::type 
   apply_impl( IType tile_idx ) const
   {
@@ -1591,7 +1573,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //void operator_impl( IType tile_idx , const RankTag<6> ) const
   typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 6) ) >::type 
   apply_impl( IType tile_idx ) const
   {
@@ -1646,7 +1627,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //void operator_impl( IType tile_idx , const RankTag<7> ) const
   typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 7) ) >::type 
   apply_impl( IType tile_idx ) const
   {
@@ -1701,7 +1681,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //void operator_impl( IType tile_idx , const RankTag<8> ) const
   typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 8) ) >::type 
   apply_impl( IType tile_idx ) const
   {
@@ -2279,8 +2258,6 @@ struct MDFunctor< MDRange, Functor, void >
     iterate_type(m_range, m_func, v).apply_impl(t);
   #else
     iterate_type(m_range, m_func)(t);
-    //iterate_type f(m_range, m_func);
-    //f(t); 
   #endif
 #endif
   }
