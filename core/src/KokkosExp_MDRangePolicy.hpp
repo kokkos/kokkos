@@ -179,9 +179,16 @@ struct MDRangePolicy
         if ( m_tile[i] <= 0 ) {
           // TODO: determine what is a good default tile size for cuda
           // many be rank dependent
-          m_tile[i] = 8;
+          if (  (inner_direction == Right && (i < rank-1))
+              || (inner_direction == Left && (i > 0)) )
+          {
+            m_tile[i] = 2;
+          }
+          else {
+            m_tile[i] = 16;
+          }
         }
-        m_tile_end[i] = static_cast<index_type>((span + m_tile[i] -1) / m_tile[i]);
+        m_tile_end[i] = static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
         m_num_tiles *= m_tile_end[i];
       }
       index_type total_tile_size_check = 1;
@@ -190,7 +197,10 @@ struct MDRangePolicy
       }
       if ( total_tile_size_check > 1024 ) {
         printf(" Tile dimensions exceed Cuda limits\n");
-        Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
+        //TODO I think abort is the right thing to do...
+        Kokkos::abort(" Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
+        //Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
+
       }
     }
     #endif

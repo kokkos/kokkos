@@ -464,6 +464,8 @@ protected:
 #define LOOP_ARGS_8 LOOP_ARGS_7, i7 + m_offset[7]
 
 
+#define REMOVEOPERATOR 0
+
 template <typename T>
 using is_void = std::is_same< T , void >;
 
@@ -495,7 +497,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
   }
 
   inline
-  //inline __attribute__((always_inline))
   bool check_iteration_bounds( point_type& partial_tile , point_type& offset ) const {
     bool is_full_tile = true;
 
@@ -522,18 +523,403 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     enum { value = (int)Rank };
   };
 
+#if REMOVEOPERATOR
 
   template <typename IType>
   inline
-  //inline __attribute__((always_inline))
+//  void operator_impl( IType tile_idx , const RankTag<2> ) const
+  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 2) ) >::type 
+  apply_impl( IType tile_idx ) const
+  {
+    point_type m_offset;
+    point_type m_tiledims;
+
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+
+    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
+    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ; 
+
+    if (RP::inner_direction == RP::Left) {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_2L(m_tiledims) {
+          apply( LOOP_ARGS_2 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_2L(m_tiledims) {
+          apply( LOOP_ARGS_2 );
+        }
+      }
+    } // end RP::Left
+    else {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_2R(m_tiledims) {
+          apply( LOOP_ARGS_2 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_2R(m_tiledims) {
+          apply( LOOP_ARGS_2 );
+        }
+      }
+    } // end RP::Right
+
+  } //end op() rank == 2
+
+
+  template <typename IType>
+  inline
+  //void operator_impl( IType tile_idx , const RankTag<3> ) const
+  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 3) ) >::type 
+  apply_impl( IType tile_idx ) const
+  {
+    point_type m_offset;
+    point_type m_tiledims;
+
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+
+    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
+    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
+
+    if (RP::inner_direction == RP::Left) {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_3L(m_tiledims) {
+          apply( LOOP_ARGS_3 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_3L(m_tiledims) {
+          apply( LOOP_ARGS_3 );
+        }
+      }
+    } // end RP::Left
+    else {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_3R(m_tiledims) {
+          apply( LOOP_ARGS_3 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_3R(m_tiledims) {
+          apply( LOOP_ARGS_3 );
+        }
+      }
+    } // end RP::Right
+
+  } //end op() rank == 3
+
+
+  template <typename IType>
+  inline
+//  void operator_impl( IType tile_idx , const RankTag<4> ) const
+  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 4) ) >::type 
+  apply_impl( IType tile_idx ) const
+  {
+    point_type m_offset;
+    point_type m_tiledims;
+
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+
+    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
+    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
+
+    if (RP::inner_direction == RP::Left) {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_4L(m_tiledims) {
+          apply( LOOP_ARGS_4 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_4L(m_tiledims) {
+          apply( LOOP_ARGS_4 );
+        }
+      }
+    } // end RP::Left
+    else {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_4R(m_tiledims) {
+          apply( LOOP_ARGS_4 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_4R(m_tiledims) {
+          apply( LOOP_ARGS_4 );
+        }
+      }
+    } // end RP::Right
+
+  } //end op() rank == 4
+
+
+  template <typename IType>
+  inline
+  //void operator_impl( IType tile_idx , const RankTag<5> ) const
+  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 5) ) >::type 
+  apply_impl( IType tile_idx ) const
+  {
+    point_type m_offset;
+    point_type m_tiledims;
+
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+
+    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
+    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
+
+    if (RP::inner_direction == RP::Left) {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_5L(m_tiledims) {
+          apply( LOOP_ARGS_5 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_5L(m_tiledims) {
+          apply( LOOP_ARGS_5 );
+        }
+      }
+    } // end RP::Left
+    else {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_5R(m_tiledims) {
+          apply( LOOP_ARGS_5 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_5R(m_tiledims) {
+          apply( LOOP_ARGS_5 );
+        }
+      }
+    } // end RP::Right
+
+  } //end op() rank == 5
+
+
+  template <typename IType>
+  inline
+  //void operator_impl( IType tile_idx , const RankTag<6> ) const
+  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 6) ) >::type 
+  apply_impl( IType tile_idx ) const
+  {
+    point_type m_offset;
+    point_type m_tiledims;
+
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+
+    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
+    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
+
+    if (RP::inner_direction == RP::Left) {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_6L(m_tiledims) {
+          apply( LOOP_ARGS_6 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_6L(m_tiledims) {
+          apply( LOOP_ARGS_6 );
+        }
+      }
+    } // end RP::Left
+    else {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_6R(m_tiledims) {
+          apply( LOOP_ARGS_6 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_6R(m_tiledims) {
+          apply( LOOP_ARGS_6 );
+        }
+      }
+    } // end RP::Right
+
+  } //end op() rank == 6
+
+
+  template <typename IType>
+  inline
+  //void operator_impl( IType tile_idx , const RankTag<7> ) const
+  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 7) ) >::type 
+  apply_impl( IType tile_idx ) const
+  {
+    point_type m_offset;
+    point_type m_tiledims;
+
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+
+    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
+    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
+
+    if (RP::inner_direction == RP::Left) {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_7L(m_tiledims) {
+          apply( LOOP_ARGS_7 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_7L(m_tiledims) {
+          apply( LOOP_ARGS_7 );
+        }
+      }
+    } // end RP::Left
+    else {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_7R(m_tiledims) {
+          apply( LOOP_ARGS_7 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_7R(m_tiledims) {
+          apply( LOOP_ARGS_7 );
+        }
+      }
+    } // end RP::Right
+
+  } //end op() rank == 7
+
+
+  template <typename IType>
+  inline
+  //void operator_impl( IType tile_idx , const RankTag<8> ) const
+  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 8) ) >::type 
+  apply_impl( IType tile_idx ) const
+  {
+    point_type m_offset;
+    point_type m_tiledims;
+
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+
+    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
+    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
+
+    if (RP::inner_direction == RP::Left) {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_8L(m_tiledims) {
+          apply( LOOP_ARGS_8 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_8L(m_tiledims) {
+          apply( LOOP_ARGS_8 );
+        }
+      }
+    } // end RP::Left
+    else {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_8R(m_tiledims) {
+          apply( LOOP_ARGS_8 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_8R(m_tiledims) {
+          apply( LOOP_ARGS_8 );
+        }
+      }
+    } // end RP::Right
+
+  } //end op() rank == 8
+
+
+#else
+  template <typename IType>
+  inline
   void
   operator()(IType tile_idx) const
   { operator_impl( tile_idx , RankTag<RP::rank>() ); }
-  // added due to compiler error when using sfinae to choose operator based on rank
+  // added due to compiler error when using sfinae to choose operator based on rank w/ cuda+serial
 
   template <typename IType>
   inline
-  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<2> ) const
   {
     point_type m_offset;
@@ -587,7 +973,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<3> ) const
   {
     point_type m_offset;
@@ -641,7 +1026,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<4> ) const
   {
     point_type m_offset;
@@ -695,7 +1079,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<5> ) const
   {
     point_type m_offset;
@@ -749,7 +1132,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<6> ) const
   {
     point_type m_offset;
@@ -803,7 +1185,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<7> ) const
   {
     point_type m_offset;
@@ -857,7 +1238,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<8> ) const
   {
     point_type m_offset;
@@ -907,7 +1287,7 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     } // end RP::Right
 
   } //end op() rank == 8
-
+#endif
 
     template <typename... Args>
     typename std::enable_if<( sizeof...(Args) == RP::rank && std::is_same<Tag,void>::value), void>::type
@@ -954,7 +1334,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
   }
 
   inline
-  //inline __attribute__((always_inline))
   bool check_iteration_bounds( point_type& partial_tile , point_type& offset ) const {
     bool is_full_tile = true;
 
@@ -982,9 +1361,402 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
   };
 
 
+#if REMOVEOPERATOR
   template <typename IType>
   inline
-  //inline __attribute__((always_inline))
+  void
+  operator()(IType tile_idx) const
+  { operator_impl( tile_idx , RankTag<RP::rank>() ); }
+  // added due to compiler error when using sfinae to choose operator based on rank w/ cuda+serial
+
+  template <typename IType>
+  inline
+  //void operator_impl( IType tile_idx , const RankTag<2> ) const
+  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 2) ) >::type 
+  apply_impl( IType tile_idx ) const
+  {
+    point_type m_offset;
+    point_type m_tiledims;
+
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+
+    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
+    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ; 
+
+    if (RP::inner_direction == RP::Left) {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_2L(m_tiledims) {
+          apply( LOOP_ARGS_2 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_2L(m_tiledims) {
+          apply( LOOP_ARGS_2 );
+        }
+      }
+    } // end RP::Left
+    else {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_2R(m_tiledims) {
+          apply( LOOP_ARGS_2 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_2R(m_tiledims) {
+          apply( LOOP_ARGS_2 );
+        }
+      }
+    } // end RP::Right
+
+  } //end op() rank == 2
+
+
+  template <typename IType>
+  inline
+  //void operator_impl( IType tile_idx , const RankTag<3> ) const
+  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 3) ) >::type 
+  apply_impl( IType tile_idx ) const
+  {
+    point_type m_offset;
+    point_type m_tiledims;
+
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+
+    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
+    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
+
+    if (RP::inner_direction == RP::Left) {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_3L(m_tiledims) {
+          apply( LOOP_ARGS_3 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_3L(m_tiledims) {
+          apply( LOOP_ARGS_3 );
+        }
+      }
+    } // end RP::Left
+    else {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_3R(m_tiledims) {
+          apply( LOOP_ARGS_3 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_3R(m_tiledims) {
+          apply( LOOP_ARGS_3 );
+        }
+      }
+    } // end RP::Right
+
+  } //end op() rank == 3
+
+
+  template <typename IType>
+  inline
+  //void operator_impl( IType tile_idx , const RankTag<4> ) const
+  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 4) ) >::type 
+  apply_impl( IType tile_idx ) const
+  {
+    point_type m_offset;
+    point_type m_tiledims;
+
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+
+    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
+    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
+
+    if (RP::inner_direction == RP::Left) {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_4L(m_tiledims) {
+          apply( LOOP_ARGS_4 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_4L(m_tiledims) {
+          apply( LOOP_ARGS_4 );
+        }
+      }
+    } // end RP::Left
+    else {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_4R(m_tiledims) {
+          apply( LOOP_ARGS_4 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_4R(m_tiledims) {
+          apply( LOOP_ARGS_4 );
+        }
+      }
+    } // end RP::Right
+
+  } //end op() rank == 4
+
+
+  template <typename IType>
+  inline
+  //void operator_impl( IType tile_idx , const RankTag<5> ) const
+  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 5) ) >::type 
+  apply_impl( IType tile_idx ) const
+  {
+    point_type m_offset;
+    point_type m_tiledims;
+
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+
+    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
+    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
+
+    if (RP::inner_direction == RP::Left) {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_5L(m_tiledims) {
+          apply( LOOP_ARGS_5 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_5L(m_tiledims) {
+          apply( LOOP_ARGS_5 );
+        }
+      }
+    } // end RP::Left
+    else {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_5R(m_tiledims) {
+          apply( LOOP_ARGS_5 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_5R(m_tiledims) {
+          apply( LOOP_ARGS_5 );
+        }
+      }
+    } // end RP::Right
+
+  } //end op() rank == 5
+
+
+  template <typename IType>
+  inline
+  //void operator_impl( IType tile_idx , const RankTag<6> ) const
+  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 6) ) >::type 
+  apply_impl( IType tile_idx ) const
+  {
+    point_type m_offset;
+    point_type m_tiledims;
+
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+
+    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
+    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
+
+    if (RP::inner_direction == RP::Left) {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_6L(m_tiledims) {
+          apply( LOOP_ARGS_6 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_6L(m_tiledims) {
+          apply( LOOP_ARGS_6 );
+        }
+      }
+    } // end RP::Left
+    else {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_6R(m_tiledims) {
+          apply( LOOP_ARGS_6 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_6R(m_tiledims) {
+          apply( LOOP_ARGS_6 );
+        }
+      }
+    } // end RP::Right
+
+  } //end op() rank == 6
+
+
+  template <typename IType>
+  inline
+  //void operator_impl( IType tile_idx , const RankTag<7> ) const
+  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 7) ) >::type 
+  apply_impl( IType tile_idx ) const
+  {
+    point_type m_offset;
+    point_type m_tiledims;
+
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+
+    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
+    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
+
+    if (RP::inner_direction == RP::Left) {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_7L(m_tiledims) {
+          apply( LOOP_ARGS_7 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_7L(m_tiledims) {
+          apply( LOOP_ARGS_7 );
+        }
+      }
+    } // end RP::Left
+    else {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_7R(m_tiledims) {
+          apply( LOOP_ARGS_7 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_7R(m_tiledims) {
+          apply( LOOP_ARGS_7 );
+        }
+      }
+    } // end RP::Right
+
+  } //end op() rank == 7
+
+
+  template <typename IType>
+  inline
+  //void operator_impl( IType tile_idx , const RankTag<8> ) const
+  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 8) ) >::type 
+  apply_impl( IType tile_idx ) const
+  {
+    point_type m_offset;
+    point_type m_tiledims;
+
+    if (RP::outer_direction == RP::Left) {
+      for (int i=0; i<RP::rank; ++i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+    else {
+      for (int i=RP::rank-1; i>=0; --i) {
+        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+
+    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
+    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
+
+    if (RP::inner_direction == RP::Left) {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_8L(m_tiledims) {
+          apply( LOOP_ARGS_8 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_8L(m_tiledims) {
+          apply( LOOP_ARGS_8 );
+        }
+      }
+    } // end RP::Left
+    else {
+     if ( full_tile ) {
+//      #pragma simd
+        LOOP_8R(m_tiledims) {
+          apply( LOOP_ARGS_8 );
+        }
+      } else {
+//      #pragma simd
+        LOOP_8R(m_tiledims) {
+          apply( LOOP_ARGS_8 );
+        }
+      }
+    } // end RP::Right
+
+  } //end op() rank == 8
+
+
+#else
+  template <typename IType>
+  inline
   void
   operator()(IType tile_idx) const
   { operator_impl( tile_idx , RankTag<RP::rank>() ); }
@@ -993,7 +1765,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<2> ) const
   {
     point_type m_offset;
@@ -1047,7 +1818,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<3> ) const
   {
     point_type m_offset;
@@ -1101,7 +1871,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<4> ) const
   {
     point_type m_offset;
@@ -1155,7 +1924,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<5> ) const
   {
     point_type m_offset;
@@ -1209,7 +1977,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<6> ) const
   {
     point_type m_offset;
@@ -1263,7 +2030,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<7> ) const
   {
     point_type m_offset;
@@ -1317,7 +2083,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   template <typename IType>
   inline
-  //inline __attribute__((always_inline))
   void operator_impl( IType tile_idx , const RankTag<8> ) const
   {
     point_type m_offset;
@@ -1367,6 +2132,7 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     } // end RP::Right
 
   } //end op() rank == 8
+#endif
 
 
     template <typename... Args>
@@ -1425,37 +2191,35 @@ struct MDFunctor
 #endif
 
   inline
-  //inline __attribute__((always_inline))
   MDFunctor( MDRange const& range, Functor const& f, ValueType & v )
     : m_range( range )
     , m_func( f )
   {}
 
   inline
-  //inline __attribute__((always_inline))
   MDFunctor( MDFunctor const& ) = default;
 
   inline
-  //inline __attribute__((always_inline))
   MDFunctor& operator=( MDFunctor const& ) = default;
 
   inline
-  //inline __attribute__((always_inline))
   MDFunctor( MDFunctor && ) = default;
 
   inline
-  //inline __attribute__((always_inline))
   MDFunctor& operator=( MDFunctor && ) = default;
 
 //  KOKKOS_FORCEINLINE_FUNCTION //Caused cuda warning - __host__ warning
   inline
-  //inline __attribute__((always_inline))
   void operator()(index_type t, value_type & v) const
   {
 #if OLDITERATETILE
     iterate_type(m_range, m_func, t , v).apply();
 #else
+  #if REMOVEOPERATOR
+    iterate_type(m_range, m_func, v).apply_impl(t);
+  #else
     iterate_type(m_range, m_func, v)(t);
+  #endif 
 #endif
   }
 
@@ -1488,38 +2252,36 @@ struct MDFunctor< MDRange, Functor, void >
 #endif
 
   inline
-  //inline __attribute__((always_inline))
   MDFunctor( MDRange const& range, Functor const& f )
     : m_range( range )
     , m_func( f )
   {}
 
   inline
-  //inline __attribute__((always_inline))
   MDFunctor( MDFunctor const& ) = default;
 
   inline
-  //inline __attribute__((always_inline))
   MDFunctor& operator=( MDFunctor const& ) = default;
 
   inline
-  //inline __attribute__((always_inline))
   MDFunctor( MDFunctor && ) = default;
 
   inline
-  //inline __attribute__((always_inline))
   MDFunctor& operator=( MDFunctor && ) = default;
 
   inline
-  //inline __attribute__((always_inline))
   void operator()(index_type t) const
   {
 #if OLDITERATETILE
     iterate_type(m_range, m_func, t).apply();
 #else
-    //iterate_type(m_range, m_func)(t);
-    iterate_type f(m_range, m_func);
-    f(t); 
+  #if REMOVEOPERATOR
+    iterate_type(m_range, m_func, v).apply_impl(t);
+  #else
+    iterate_type(m_range, m_func)(t);
+    //iterate_type f(m_range, m_func);
+    //f(t); 
+  #endif
 #endif
   }
 
@@ -1527,6 +2289,7 @@ struct MDFunctor< MDRange, Functor, void >
   Functor m_func;
 };
 
+#undef REMOVEOPERATOR
 #undef OLDITERATETILE
 
 } } } //end namespace Kokkos::Experimental::Impl

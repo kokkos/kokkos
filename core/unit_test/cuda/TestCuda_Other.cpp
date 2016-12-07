@@ -49,12 +49,14 @@ TEST_F( cuda , init ) {
   ;
 }
 
-TEST_F( cuda , md_range ) {
+TEST_F( cuda , mdrange_for ) {
   TestMDRange_2D< Kokkos::Cuda >::test_for2(100,100);
 
   TestMDRange_3D< Kokkos::Cuda >::test_for3(100,100,100);
 
   TestMDRange_4D< Kokkos::Cuda >::test_for4(100,10,100,10);
+
+//  TestMDRange_5D< Kokkos::Cuda >::test_for5(100,10,100,10,5);
 }
 
 TEST_F( cuda, policy_construction) {
