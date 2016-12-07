@@ -464,7 +464,7 @@ protected:
 #define LOOP_ARGS_8 LOOP_ARGS_7, i7 + m_offset[7]
 
 
-#define REMOVEOPERATOR 0
+#define REMOVEOPERATOR 1
 
 template <typename T>
 using is_void = std::is_same< T , void >;
@@ -2255,7 +2255,7 @@ struct MDFunctor< MDRange, Functor, void >
     iterate_type(m_range, m_func, t).apply();
 #else
   #if REMOVEOPERATOR
-    iterate_type(m_range, m_func, v).apply_impl(t);
+    iterate_type(m_range, m_func).apply_impl(t);
   #else
     iterate_type(m_range, m_func)(t);
   #endif
