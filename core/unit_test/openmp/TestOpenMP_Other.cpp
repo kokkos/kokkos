@@ -115,7 +115,7 @@ TEST_F( openmp , memory_pool )
 TEST_F( openmp , task_fib )
 {
   for ( int i = 0 ; i < 25 ; ++i ) {
-    TestTaskScheduler::TestFib< Kokkos::OpenMP >::run(i, (i+1)*(i+1)*1000 );
+    TestTaskScheduler::TestFib< Kokkos::OpenMP >::run(i, (i+1)*(i+1)*10000 );
   }
 }
 
