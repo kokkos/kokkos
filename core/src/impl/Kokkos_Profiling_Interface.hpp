@@ -48,6 +48,7 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Macros.hpp>
 #include <string>
+#include <cinttypes>
 
 #if (KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Profiling_DeviceInfo.hpp>
