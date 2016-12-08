@@ -57,338 +57,6 @@
 
 namespace Kokkos { namespace Experimental { namespace Impl {
 
-#define OLDITERATETILE 0
-#if OLDITERATETILE
-template < typename RP
-         , typename Functor
-         , typename Dim
-         , typename Tag
-         , typename ValueType
-         >
-struct HostIterateTile
-  : protected HostIterateTile<RP, Functor, std::integral_constant<int,Dim::value-1>, Tag, ValueType>
-{
-  static_assert( Dim::value <= RP::rank, "Error: greater than rank");
-  static_assert( Dim::value > 0, "Error: less than 0");
-
-  using base_type = HostIterateTile<RP, Functor, std::integral_constant<int,Dim::value-1>, Tag, ValueType>;
-  using final_type = HostIterateTile<RP, Functor, std::integral_constant<int,0>, Tag, ValueType>;
-
-  using index_type = typename RP::index_type;
-
-  template< typename... Args >
-  //inline //compiler warning
-  HostIterateTile( Args &&... args )
-    : base_type( std::forward<Args>(args)... )
-  {}
-
-  void apply()
-  {
-    if (RP::inner_direction == RP::Left) {
-      apply_left();
-    } else {
-      apply_right();
-    }
-  }
-
-protected:
-
-  template< typename... Args>
-  void apply_left( Args &&... args )
-  {
-    for (index_type i = final_type::m_begin[Dim::value]; i < final_type::m_end[Dim::value]; ++i) {
-      base_type::apply_left(i, std::forward<Args>(args)...);
-    }
-  }
-
-  template< typename... Args>
-  void apply_right( Args &&... args )
-  {
-    for (index_type i = final_type::m_begin[RP::rank-Dim::value-1]; i < final_type::m_end[RP::rank-Dim::value-1]; ++i) {
-      base_type::apply_right(std::forward<Args>(args)...,i);
-    }
-  }
-
-};
-
-template < typename RP
-         , typename Functor
-         >
-struct HostIterateTile<RP, Functor, std::integral_constant<int,0>, void, void>
-{
-  using index_type = typename RP::index_type;
-  using point_type = typename RP::point_type;
-
-  //KOKKOS_INLINE_FUNCTION
-  HostIterateTile( RP const& rp, Functor const& func, index_type tile_idx )
-    : m_rp{rp}
-    , m_func{func}
-  {
-    if (RP::outer_direction == RP::Left) {
-      for (int i=0; i<RP::rank; ++i) {
-        m_begin[i] = (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] ;
-        m_end[i] = ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] ;
-        tile_idx /= rp.m_tile_end[i];
-      }
-    }
-    else {
-      for (int i=RP::rank-1; i>=0; --i) {
-        m_begin[i] = (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] ;
-        m_end[i] = ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] ;
-        tile_idx /= rp.m_tile_end[i];
-      }
-    }
-  }
-
-  void apply()
-  {
-    if (RP::inner_direction == RP::Left) {
-      apply_left();
-    } else {
-      apply_right();
-    }
-  }
-
-protected:
-
-  template< typename... Args>
-  void apply_left( Args &&... args )
-  {
-#if defined(KOKKOS_MDRANGE_IVDEP)
-#pragma ivdep
-#endif
-    for (index_type i = m_begin[0]; i < m_end[0]; ++i) {
-      m_func(i, std::forward<Args>(args)...);
-    }
-  }
-
-  template< typename... Args>
-  void apply_right( Args &&... args )
-  {
-#if defined(KOKKOS_MDRANGE_IVDEP)
-#pragma ivdep
-#endif
-    for (index_type i = m_begin[RP::rank-1]; i < m_end[RP::rank-1]; ++i) {
-      m_func(std::forward<Args>(args)...,i);
-    }
-  }
-
-  RP        const& m_rp;
-  Functor   const& m_func;
-  point_type m_begin;
-  point_type m_end;
-};
-
-
-template < typename RP
-         , typename Functor
-         , typename Tag
-         >
-struct HostIterateTile<RP, Functor, std::integral_constant<int,0>, Tag, void>
-{
-  using index_type = typename RP::index_type;
-  using point_type = typename RP::point_type;
-
-  KOKKOS_INLINE_FUNCTION
-  HostIterateTile( RP const& rp, Functor const& func, index_type tile_idx )
-    : m_rp{rp}
-    , m_func{func}
-  {
-    if (RP::outer_direction == RP::Left) {
-      for (int i=0; i<RP::rank; ++i) {
-        m_begin[i] = (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] ;
-        m_end[i] = ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] ;
-        tile_idx /= rp.m_tile_end[i];
-      }
-    }
-    else {
-      for (int i=RP::rank-1; i>=0; --i) {
-        m_begin[i] = (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] ;
-        m_end[i] = ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] ;
-        tile_idx /= rp.m_tile_end[i];
-      }
-    }
-  }
-
-  void apply()
-  {
-    if (RP::inner_direction == RP::Left) {
-      apply_left();
-    } else {
-      apply_right();
-    }
-  }
-
-protected:
-
-  template< typename... Args>
-  void apply_left( Args &&... args )
-  {
-#if defined(KOKKOS_MDRANGE_IVDEP)
-#pragma ivdep
-#endif
-    for (index_type i = m_begin[0]; i < m_end[0]; ++i) {
-      m_func(m_tag, i, std::forward<Args>(args)...);
-    }
-  }
-
-  template< typename... Args>
-  void apply_right( Args &&... args )
-  {
-#if defined(KOKKOS_MDRANGE_IVDEP)
-#pragma ivdep
-#endif
-    for (index_type i = m_begin[RP::rank-1]; i < m_end[RP::rank-1]; ++i) {
-      m_func(m_tag, std::forward<Args>(args)...,i);
-    }
-  }
-
-  RP         const& m_rp;
-  Functor    const& m_func;
-  point_type m_begin;
-  point_type m_end;
-  Tag        m_tag;
-};
-
-template < typename RP
-         , typename Functor
-         , typename ValueType
-         >
-struct HostIterateTile<RP, Functor, std::integral_constant<int,0>, void, ValueType>
-{
-  using index_type = typename RP::index_type;
-  using point_type = typename RP::point_type;
-
-  using value_type = ValueType;
-
-  KOKKOS_INLINE_FUNCTION
-  HostIterateTile( RP const& rp, Functor const& func, index_type tile_idx, value_type & v )
-    : m_rp{rp}
-    , m_func{func}
-    , m_v{v}
-  {
-    if (RP::outer_direction == RP::Left) {
-      for (int i=0; i<RP::rank; ++i) {
-        m_begin[i] =  (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] ;
-        m_end[i] = ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] ;
-        tile_idx /= rp.m_tile_end[i];
-      }
-    }
-    else {
-      for (int i=RP::rank-1; i>=0; --i) {
-        m_begin[i] = (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] ;
-        m_end[i] = ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] ;
-        tile_idx /= rp.m_tile_end[i];
-      }
-    }
-  }
-
-  void apply()
-  {
-    if (RP::inner_direction == RP::Left) {
-      apply_left();
-    } else {
-      apply_right();
-    }
-  }
-
-protected:
-
-  template< typename... Args>
-  void apply_left( Args &&... args )
-  {
-    for (index_type i = m_begin[0]; i < m_end[0]; ++i) {
-      m_func(i, std::forward<Args>(args)..., m_v);
-    }
-  }
-
-  template< typename... Args>
-  void apply_right( Args &&... args )
-  {
-    for (index_type i = m_begin[RP::rank-1]; i < m_end[RP::rank-1]; ++i) {
-      m_func(std::forward<Args>(args)...,i, m_v);
-    }
-  }
-
-  RP        const& m_rp;
-  Functor   const& m_func;
-  value_type     & m_v;
-  point_type m_begin;
-  point_type m_end;
-};
-
-template < typename RP
-         , typename Functor
-         , typename Tag
-         , typename ValueType
-         >
-struct HostIterateTile<RP, Functor, std::integral_constant<int,0>, Tag, ValueType>
-{
-  using index_type = typename RP::index_type;
-  using point_type = typename RP::point_type;
-
-  using value_type = ValueType;
-
-  KOKKOS_INLINE_FUNCTION
-  HostIterateTile( RP const& rp, Functor const& func, index_type tile_idx, value_type & v )
-    : m_rp{rp}
-    , m_func{func}
-    , m_v{v}
-  {
-    if (RP::outer_direction == RP::Left) {
-      for (int i=0; i<RP::rank; ++i) {
-        m_begin[i] = (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] ;
-        m_end[i] = ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] ;
-        tile_idx /= rp.m_tile_end[i];
-      }
-    }
-    else {
-      for (int i=RP::rank-1; i>=0; --i) {
-        m_begin[i] = (tile_idx % rp.m_tile_end[i]) * rp.m_tile[i] + rp.m_lower[i] ;
-        m_end[i] = ((m_begin[i] + rp.m_tile[i]) <= rp.m_upper[i]) ? (m_begin[i] + rp.m_tile[i]) : rp.m_upper[i] ;
-        tile_idx /= rp.m_tile_end[i];
-      }
-    }
-  }
-
-  void apply()
-  {
-    if (RP::inner_direction == RP::Left) {
-      apply_left();
-    } else {
-      apply_right();
-    }
-  }
-
-protected:
-
-  template< typename... Args>
-  void apply_left( Args &&... args )
-  {
-    for (index_type i = m_begin[0]; i < m_end[0]; ++i) {
-      m_func(m_tag, i, std::forward<Args>(args)..., m_v);
-    }
-  }
-
-  template< typename... Args>
-  void apply_right( Args &&... args )
-  {
-    for (index_type i = m_begin[RP::rank-1]; i < m_end[RP::rank-1]; ++i) {
-      m_func(m_tag, std::forward<Args>(args)...,i, m_v);
-    }
-  }
-
-  RP         const& m_rp;
-  Functor    const& m_func;
-  value_type     & m_v;
-  point_type m_begin;
-  point_type m_end;
-  Tag        m_tag;
-};
-
-// Refactored implementation
-#else
-
 #define LOOP_1L(tile) \
   for( int i0=0; i0<static_cast<int>(tile[0]); ++i0)
 
@@ -419,7 +87,6 @@ protected:
 #define LOOP_8L(tile) \
   for( int i7=0; i7<static_cast<int>(tile[7]); ++i7) \
   LOOP_7L(tile)
-
 
 
 #define LOOP_1R(tile) \
@@ -464,7 +131,7 @@ protected:
 #define LOOP_ARGS_8 LOOP_ARGS_7, i7 + m_offset[7]
 
 
-#define REMOVEOPERATOR 1
+#define REMOVEOPERATOR 0
 
 template <typename T>
 using is_void = std::is_same< T , void >;
@@ -2137,8 +1804,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 };
 
 
-#endif
-
 // ------------------------------------------------------------------ //
 
 // MDFunctor - wraps the range_policy and functor to pass to IterateTile
@@ -2153,21 +1818,12 @@ struct MDFunctor
   using value_type   = ValueType;
   using work_tag     = typename range_policy::work_tag;
   using index_type   = typename range_policy::index_type;
-#if OLDITERATETILE 
-  using iterate_type = typename Kokkos::Experimental::Impl::HostIterateTile< MDRange
-                                                                           , Functor
-                                                                           , std::integral_constant<int,MDRange::rank - 1>
-                                                                           , work_tag
-                                                                           , value_type
-                                                                           >;
-#else
   using iterate_type = typename Kokkos::Experimental::Impl::HostIterateTile< MDRange
                                                                            , Functor
                                                                            , work_tag
                                                                            , value_type
                                                                            >;
 
-#endif
 
   inline
   MDFunctor( MDRange const& range, Functor const& f, ValueType & v )
@@ -2191,15 +1847,11 @@ struct MDFunctor
   inline
   void operator()(index_type t, value_type & v) const
   {
-#if OLDITERATETILE
-    iterate_type(m_range, m_func, t , v).apply();
-#else
   #if REMOVEOPERATOR
     iterate_type(m_range, m_func, v).apply_impl(t);
   #else
     iterate_type(m_range, m_func, v)(t);
   #endif 
-#endif
   }
 
   MDRange   m_range;
@@ -2214,21 +1866,12 @@ struct MDFunctor< MDRange, Functor, void >
   using functor_type = Functor;
   using work_tag     = typename range_policy::work_tag;
   using index_type   = typename range_policy::index_type;
-#if OLDITERATETILE 
-  using iterate_type = typename Kokkos::Experimental::Impl::HostIterateTile< MDRange
-                                                                           , Functor
-                                                                           , std::integral_constant<int,MDRange::rank - 1>
-                                                                           , work_tag
-                                                                           , void
-                                                                           >;
-#else
   using iterate_type = typename Kokkos::Experimental::Impl::HostIterateTile< MDRange
                                                                            , Functor
                                                                            , work_tag
                                                                            , void
                                                                            >;
 
-#endif
 
   inline
   MDFunctor( MDRange const& range, Functor const& f )
@@ -2251,15 +1894,11 @@ struct MDFunctor< MDRange, Functor, void >
   inline
   void operator()(index_type t) const
   {
-#if OLDITERATETILE
-    iterate_type(m_range, m_func, t).apply();
-#else
   #if REMOVEOPERATOR
     iterate_type(m_range, m_func).apply_impl(t);
   #else
     iterate_type(m_range, m_func)(t);
   #endif
-#endif
   }
 
   MDRange m_range;
@@ -2267,7 +1906,6 @@ struct MDFunctor< MDRange, Functor, void >
 };
 
 #undef REMOVEOPERATOR
-#undef OLDITERATETILE
 
 } } } //end namespace Kokkos::Experimental::Impl
 
