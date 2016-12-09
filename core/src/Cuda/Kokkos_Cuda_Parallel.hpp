@@ -1476,18 +1476,30 @@ namespace Impl {
 
 #ifdef __CUDA_ARCH__
     __device__ inline
-    ThreadVectorRangeBoundariesStruct (const CudaTeamMember& thread, const iType& count):
+    ThreadVectorRangeBoundariesStruct (const CudaTeamMember, const iType& count):
     start( threadIdx.x ),
     end( count ),
     increment( blockDim.x )
     {}
+    __device__ inline
+    ThreadVectorRangeBoundariesStruct (const iType& count):
+        start( threadIdx.x ),
+        end( count ),
+        increment( blockDim.x )
+     {}
 #else
     KOKKOS_INLINE_FUNCTION
-    ThreadVectorRangeBoundariesStruct (const CudaTeamMember& thread_, const iType& count):
+    ThreadVectorRangeBoundariesStruct (const CudaTeamMember, const iType& count):
       start( 0 ),
       end( count ),
       increment( 1 )
     {}
+    KOKKOS_INLINE_FUNCTION
+        ThreadVectorRangeBoundariesStruct (const iType& count):
+          start( 0 ),
+          end( count ),
+          increment( 1 )
+        {}
 #endif
     };
 
