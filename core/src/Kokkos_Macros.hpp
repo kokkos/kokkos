@@ -343,14 +343,11 @@
     #define KOKKOS_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
   #endif
 
-  #if ! defined( KOKKOS_ENABLE_ASM ) && \
-      ! ( defined( __powerpc) || \
-          defined(__powerpc__) || \
-          defined(__powerpc64__) || \
-          defined(__POWERPC__) || \
-          defined(__ppc__) || \
-          defined(__ppc64__) || \
-          defined(__PGIC__) )
+  #if ! defined( KOKKOS_ENABLE_ASM ) && ! defined( __PGIC__ ) && \
+      ( defined( __amd64 ) || \
+        defined( __amd64__ ) || \
+        defined( __x86_64 ) || \
+        defined( __x86_64__ ) )
     #define KOKKOS_ENABLE_ASM 1
   #endif
 
