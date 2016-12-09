@@ -173,22 +173,22 @@ template < typename T >
 inline
 T atomic_compare_exchange( volatile T * const dest, const T & compare,
   typename Kokkos::Impl::enable_if< sizeof(T) != sizeof(int) &&
-                                    sizeof(T) == sizeof(long) , const T & >::type val )
+                                    sizeof(T) == sizeof(long long) , const T & >::type val )
 {
 #ifdef KOKKOS_HAVE_CXX11
   union U {
-    long i ;
+    long long i ;
     T t ;
     KOKKOS_INLINE_FUNCTION U() {};
   } tmp ;
 #else
   union U {
-    long i ;
+    long long i ;
     T t ;
   } tmp ;
 #endif
 
-  tmp.i = __sync_val_compare_and_swap( (long*) dest , *((long*)&compare) , *((long*)&val) );
+  tmp.i = __sync_val_compare_and_swap( (long long*) dest , *((long long*)&compare) , *((long long*)&val) );
   return tmp.t ;
 }
 
