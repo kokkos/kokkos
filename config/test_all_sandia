@@ -50,7 +50,8 @@ SKIP_HWLOC=False
 SPOT_CHECK=False
 
 PRINT_HELP=False
-
+OPT_FLAG=""
+KOKKOS_OPTIONS=""
 
 
 #
@@ -90,6 +91,13 @@ SPOT_CHECK=True
 ;;
 --arch*)
 ARCH_FLAG="--arch=${key#*=}"
+;;
+--opt-flag*)
+OPT_FLAG="${key#*=}"
+;;
+--with-cuda-options*)
+KOKKOS_CUDA_OPTIONS="--with-cuda-options=${key#*=}"
+;;
 --help*)
 PRINT_HELP=True
 ;;
@@ -124,7 +132,7 @@ if [ "$MACHINE" = "sems" ]; then
 
     if [ -z "$ARCH_FLAG" ]; then
       ARCH_FLAG=""
-    endif
+    fi 
 
   if [ "$SPOT_CHECK" = "True" ]; then
     # Format: (compiler module-list build-list exe-name warning-flag)
@@ -172,7 +180,7 @@ elif [ "$MACHINE" = "white" ]; then
     )
     if [ -z "$ARCH_FLAG" ]; then
       ARCH_FLAG="--arch=Power8,Kepler37"
-    endif
+    fi
     NUM_JOBS_TO_RUN_IN_PARALLEL=2
 
 elif [ "$MACHINE" = "bowman" ]; then
@@ -191,7 +199,7 @@ elif [ "$MACHINE" = "bowman" ]; then
 
     if [ -z "$ARCH_FLAG" ]; then
       ARCH_FLAG="--arch=KNL"
-    endif
+    fi
     NUM_JOBS_TO_RUN_IN_PARALLEL=2
 
 elif [ "$MACHINE" = "shepard" ]; then
@@ -210,7 +218,7 @@ elif [ "$MACHINE" = "shepard" ]; then
 
     if [ -z "$ARCH_FLAG" ]; then
       ARCH_FLAG="--arch=HSW"
-    endif
+    fi
     NUM_JOBS_TO_RUN_IN_PARALLEL=2
 
 elif [ "$MACHINE" = "apollo" ]; then
@@ -267,7 +275,7 @@ elif [ "$MACHINE" = "apollo" ]; then
 
     if [ -z "$ARCH_FLAG" ]; then
       ARCH_FLAG="--arch=SNB,Kepler35"
-    endif
+    fi
     NUM_JOBS_TO_RUN_IN_PARALLEL=2
 else
     echo "Unhandled machine $MACHINE" >&2
@@ -292,6 +300,9 @@ echo "--skip-hwloc: Do not do hwloc tests"
 echo "--num=N: Number of jobs to run in parallel "
 echo "--dry-run: Just print what would be executed"
 echo "--build-only: Just do builds, don't run anything"
+echo "--opt-flag=FLAG: Optimization flag (default: -O3)"
+echo "--arch=ARCHITECTURE: overwrite architecture flags"
+echo "--with-cuda-options=OPT: set KOKKOS_CUDA_OPTIONS"
 echo "--build-list=BUILD,BUILD,BUILD..."
 echo "    Provide a comma-separated list of builds instead of running all builds"
 echo "    Valid items:"
@@ -475,16 +486,24 @@ single_build_and_test() {
         local extra_args=--with-hwloc=$(dirname $(dirname $(which hwloc-info)))
     fi
 
+    if [[ "$OPT_FLAG" = "" ]]; then
+      OPT_FLAG="-O3"
+    fi
+
     if [[ "$build_type" = *debug* ]]; then
         local extra_args="$extra_args --debug"
         local cxxflags="-g $compiler_warning_flags"
     else
-        local cxxflags="-O3 $compiler_warning_flags"
+        local cxxflags="$OPT_FLAG $compiler_warning_flags"
     fi
 
     if [[ "$compiler" == cuda* ]]; then
         cxxflags="--keep --keep-dir=$(pwd) $cxxflags"
         export TMPDIR=$(pwd)
+    fi
+
+    if [[ "$KOKKOS_CUDA_OPTIONS" != "" ]]; then
+        local extra_args="$extra_args $KOKKOS_CUDA_OPTIONS"
     fi
 
     echo "  Starting job $desc"
