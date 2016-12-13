@@ -343,6 +343,8 @@ void TaskQueue< ExecSpace >::schedule
   task_root_type * const lock = (task_root_type *) task_root_type::LockTag ;
   task_root_type * const end  = (task_root_type *) task_root_type::EndTag ;
 
+  bool respawn = false ;
+
   //----------------------------------------
   {
     // If Constructing then task->m_wait == 0
@@ -359,6 +361,8 @@ void TaskQueue< ExecSpace >::schedule
 
     // if ( init == 0 ) Constructing       ->  Waiting
     // else             Executing-Respawn  ->  Waiting
+
+    if ( 0 != init ) respawn = true ;
   }
   //----------------------------------------
 
@@ -378,12 +382,15 @@ void TaskQueue< ExecSpace >::schedule
     const bool is_ready =
       ( 0 == dep ) || ( ! push_task( & dep->m_wait , task ) );
 
-    // Reference count for dep was incremented when assigned
-    // to task->m_next so that if it completed prior to the
-    // above push_task dep would not be destroyed.
-    // dep reference count can now be decremented,
-    // which may deallocate the task.
-    TaskQueue::assign( & dep , (task_root_type *)0 );
+    if ( ( 0 != dep ) && respawn ) {
+      // Reference count for dep was incremented when
+      // respawn assigned dependency to task->m_next
+      // so that if dep completed prior to the
+      // above push_task dep would not be destroyed.
+      // dep reference count can now be decremented,
+      // which may deallocate the task.
+      TaskQueue::assign( & dep , (task_root_type *)0 );
+    }
 
     if ( is_ready ) {
 
