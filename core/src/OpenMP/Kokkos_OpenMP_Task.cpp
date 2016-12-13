@@ -207,7 +207,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
         // Loop by priority and then type
         for ( int i = 0 ; i < queue_type::NumQueue && end == task ; ++i ) {
           for ( int j = 0 ; j < 2 && end == task ; ++j ) {
-            task = queue_type::pop_task( & queue->m_ready[i][j] );
+            task = queue_type::pop_ready_task( & queue->m_ready[i][j] );
           }
         }
       }
@@ -306,7 +306,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::
       // Loop by priority and then type
       for ( int i = 0 ; i < queue_type::NumQueue && end == task ; ++i ) {
         for ( int j = 0 ; j < 2 && end == task ; ++j ) {
-          task = queue_type::pop_task( & queue->m_ready[i][j] );
+          task = queue_type::pop_ready_task( & queue->m_ready[i][j] );
         }
       }
 

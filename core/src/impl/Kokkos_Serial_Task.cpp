@@ -75,13 +75,13 @@ void TaskQueueSpecialization< Kokkos::Serial >::execute
 
     for ( int i = 0 ; i < queue_type::NumQueue && end == task ; ++i ) {
       for ( int j = 0 ; j < 2 && end == task ; ++j ) {
-        task = queue_type::pop_task( & queue->m_ready[i][j] );
+        task = queue_type::pop_ready_task( & queue->m_ready[i][j] );
       }
     }
 
     if ( end != task ) {
 
-      // pop_task resulted in lock == task->m_next
+      // pop_ready_task resulted in lock == task->m_next
       // In the executing state
 
       (*task->m_apply)( task , & exec );
@@ -129,7 +129,7 @@ void TaskQueueSpecialization< Kokkos::Serial > ::
 
     for ( int i = 0 ; i < queue_type::NumQueue && end == task ; ++i ) {
       for ( int j = 0 ; j < 2 && end == task ; ++j ) {
-        task = queue_type::pop_task( & queue->m_ready[i][j] );
+        task = queue_type::pop_ready_task( & queue->m_ready[i][j] );
       }
     }
 

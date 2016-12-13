@@ -149,8 +149,8 @@ private:
   //     task->m_next is the dependence or zero
   //   Postcondition:
   //     task->m_next is linked list membership
-  KOKKOS_FUNCTION
-  void schedule( task_root_type * const );
+  KOKKOS_FUNCTION void schedule_runnable(  task_root_type * const );
+  KOKKOS_FUNCTION void schedule_aggregate( task_root_type * const );
 
   // Reschedule a task
   //   Precondition:
@@ -178,7 +178,7 @@ private:
                        , task_root_type * const );
 
   KOKKOS_FUNCTION
-  static task_root_type * pop_task( task_root_type * volatile * const );
+  static task_root_type * pop_ready_task( task_root_type * volatile * const );
 
   KOKKOS_FUNCTION static
   void decrement( task_root_type * task );

@@ -542,7 +542,7 @@ public:
         // reference count does not need to be incremented for
         // the assignment.
 
-        queue->schedule( f.m_task );
+        queue->schedule_runnable( f.m_task );
         // This task may be updated or executed at any moment,
         // even during the call to 'schedule'.
       }
@@ -631,7 +631,7 @@ public:
 
             for ( int i = 0 ; i < narg ; ++i ) { dep[i] = arg[i].m_task ; }
 
-            queue->schedule( f.m_task );
+            queue->schedule_aggregate( f.m_task );
             // this when_all may be processed at any moment
           }
         }
