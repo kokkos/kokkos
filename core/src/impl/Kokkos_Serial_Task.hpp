@@ -72,16 +72,10 @@ public:
   static
   void execute( queue_type * const );
 
-  template< typename FunctorType >
+  template< typename TaskType >
   static
-  void proc_set_apply( task_base_type::function_type * ptr )
-    {
-      using TaskType = TaskBase< Kokkos::Serial
-                               , typename FunctorType::value_type
-                               , FunctorType
-                               > ;
-       *ptr = TaskType::apply ;
-    }
+  typename TaskType::function_type
+  get_function_pointer() { return TaskType::apply ; }
 };
 
 extern template class TaskQueue< Kokkos::Serial > ;

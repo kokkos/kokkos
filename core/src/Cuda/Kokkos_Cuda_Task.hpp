@@ -79,13 +79,15 @@ public:
   static
   void execute( queue_type * const );
 
-  template< typename FunctorType >
+  template< typename TaskType >
   static
-  void proc_set_apply( TaskBase<execution_space,void,void>::function_type * ptr )
+  typename TaskType::function_type
+  get_function_pointer()
     {
-      using TaskType = TaskBase< execution_space
-                               , typename FunctorType::value_type
-                               , FunctorType > ;
+      using function_type = typename TaskType::function_type ;
+
+      function_type * const ptr =
+        (function_type*) cuda_internal_scratch_unified( sizeof(function_type) );
 
       CUDA_SAFE_CALL( cudaDeviceSynchronize() );
 
@@ -93,6 +95,8 @@ public:
 
       CUDA_SAFE_CALL( cudaGetLastError() );
       CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+
+      return *ptr ;
     }
 };
 
