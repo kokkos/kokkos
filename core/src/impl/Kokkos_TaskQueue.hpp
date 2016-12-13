@@ -376,6 +376,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION ~TaskBase() = default ;
 
+  // Constructor for a runnable task
   KOKKOS_INLINE_FUNCTION
   constexpr TaskBase( function_type arg_apply
                     , queue_type  * arg_queue
@@ -396,6 +397,7 @@ public:
     , m_priority(   arg_priority )
     {}
 
+  // Constructor for an aggregate task
   KOKKOS_INLINE_FUNCTION
   constexpr TaskBase( queue_type  * arg_queue
                     , int           arg_ref_count
@@ -474,6 +476,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION ~TaskBase() = default ;
 
+  // Constructor for runnable task
   KOKKOS_INLINE_FUNCTION
   constexpr TaskBase( function_type arg_apply
                     , queue_type  * arg_queue
@@ -568,16 +571,12 @@ public:
       if ( 0 == member->team_rank() && !(task->requested_respawn()) ) {
         // Did not respawn, destroy the functor to free memory.
         static_cast<functor_type*>(task)->~functor_type();
-        // Cannot destroy the task until its dependences have been processed.
+        // Cannot destroy and deallocate the task until its dependences
+        // have been processed.
       }
     }
 
-  KOKKOS_INLINE_FUNCTION
-  TaskBase( FunctorType && arg_functor )
-    : base_type()
-    , functor_type( arg_functor )
-    {}
-
+  // Constructor for runnable task
   KOKKOS_INLINE_FUNCTION
   constexpr TaskBase( function_type arg_apply
                     , queue_type  * arg_queue

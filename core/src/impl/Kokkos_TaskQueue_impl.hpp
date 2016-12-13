@@ -234,7 +234,6 @@ TaskQueue< ExecSpace >::pop_ready_task
   // Pop task from a concurrently pushed and popped ready task queue.
   // The queue is a linked list where 'task->m_next' form the links.
 
-  task_root_type * const zero = (task_root_type *) 0 ;
   task_root_type * const lock = (task_root_type *) task_root_type::LockTag ;
   task_root_type * const end  = (task_root_type *) task_root_type::EndTag ;
 
@@ -253,53 +252,48 @@ TaskQueue< ExecSpace >::pop_ready_task
     // (1) lock, (2) end, or (3) a valid task.
     // Thus zero will never appear in the queue.
     //
-    // If queue is locked then just read by guaranteeing
-    // the CAS will fail.
+    // If queue is locked then just read by guaranteeing the CAS will fail.
 
     if ( lock == task ) task = 0 ;
 
     task_root_type * const x = task ;
 
-    task = Kokkos::atomic_compare_exchange(queue,task,lock);
+    task = Kokkos::atomic_compare_exchange(queue,x,lock);
 
-    if ( x == task ) break ; // CAS succeeded and queue is locked
-  }
+    if ( x == task ) {
+      // CAS succeeded and queue is locked
+      //
+      // This thread has locked the queue and removed 'task' from the queue.
+      // Extract the next entry of the queue from 'task->m_next'
+      // and mark 'task' as popped from a queue by setting
+      // 'task->m_next = lock'.
+      //
+      // Place the next entry in the head of the queue,
+      // which also unlocks the queue.
+      //
+      // This thread has exclusive access to
+      // the queue and the popped task's m_next.
 
-  if ( end != task ) {
+      *queue = task->m_next ; task->m_next = lock ;
 
-    // This thread has locked the queue and removed 'task' from the queue.
-    // Extract the next entry of the queue from 'task->m_next'
-    // and mark 'task' as popped from a queue by setting
-    // 'task->m_next = lock'.
+      Kokkos::memory_fence();
 
-    task_root_type * const next =
-      Kokkos::atomic_exchange( & task->m_next , lock );
+#if 0
+      printf( "pop_ready_task( 0x%lx 0x%lx { 0x%lx 0x%lx %d %d %d } )\n"
+            , uintptr_t(queue)
+            , uintptr_t(task)
+            , uintptr_t(task->m_wait)
+            , uintptr_t(task->m_next)
+            , int(task->m_task_type)
+            , int(task->m_priority)
+            , int(task->m_ref_count) );
+#endif
 
-    // Place the next entry in the head of the queue,
-    // which also unlocks the queue.
-
-    task_root_type * const unlock =
-      Kokkos::atomic_exchange( queue , next );
-
-    if ( next == zero || next == lock || lock != unlock ) {
-      Kokkos::abort("TaskQueue::pop_ready_task ERROR");
+      return task ;
     }
   }
 
-#if 0
-  if ( end != task ) {
-    printf( "pop_ready_task( 0x%lx 0x%lx { 0x%lx 0x%lx %d %d %d } )\n"
-          , uintptr_t(queue)
-          , uintptr_t(task)
-          , uintptr_t(task->m_wait)
-          , uintptr_t(task->m_next)
-          , int(task->m_task_type)
-          , int(task->m_priority)
-          , int(task->m_ref_count) );
-  }
-#endif
-
-  return task ;
+  return end ;
 }
 
 //----------------------------------------------------------------------------
@@ -322,7 +316,7 @@ void TaskQueue< ExecSpace >::schedule_runnable
   //     task->m_wait == 0
   //     task->m_next == dependence or 0
   //   Respawn state:
-  //     task->m_wait == head of linked list
+  //     task->m_wait == head of linked list: 'end' or valid task
   //     task->m_next == dependence or 0
   //
   //  Task state transition:
@@ -634,11 +628,10 @@ void TaskQueue< ExecSpace >::complete
       // which may have been deleted.
 
       while ( x != end ) {
+        // Have exclusive access to 'x' until it is scheduled
+        // Set x->m_next = zero  <=  no dependence, not a respawn
 
-        // Set x->m_next = zero  <=  no dependence
-
-        task_root_type * const next =
-          (task_root_type *) Kokkos::atomic_exchange( & x->m_next , zero );
+        task_root_type * const next = x->m_next ; x->m_next = 0 ;
 
         if ( task_root_type::Aggregate != x->m_task_type ) {
           schedule_runnable( x );
