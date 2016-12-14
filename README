@@ -96,9 +96,10 @@ master branch, without -Werror and only for a select set of backends.
 
 In the 'example/tutorial' directory you will find step by step tutorial
 examples which explain many of the features of Kokkos. They work with
-simple Makefiles. To build with g++ and OpenMP simply type 'make openmp'
-in the 'example/tutorial' directory. This will build all examples in the
-subfolders.
+simple Makefiles. To build with g++ and OpenMP simply set the KOKKOS_PATH
+environment variable to the top-level Kokkos source directory (e.g. for bash
+'export KOKKOS_PATH=$HOME/kokkos/kokkos') and then type 'make' in the
+'example/tutorial' directory. This will build all examples in the subfolders.
 
 ============================================================================
 ====Running Unit Tests======================================================
