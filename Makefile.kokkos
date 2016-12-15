@@ -497,6 +497,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX512XEON), 1)
 
 			else
 				# Nothing here yet
+				KOKKOS_CXXFLAGS += -march=skylake-avx512
+				KOKKOS_LDFLAGS  += -march=skylake-avx512
 			endif
 		endif
 	endif
