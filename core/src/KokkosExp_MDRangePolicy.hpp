@@ -136,9 +136,15 @@ struct MDRangePolicy
   static constexpr int Left  = static_cast<int>( Iterate::Left );
 
   using index_type  = typename traits::index_type;
-  using point_type  = Kokkos::Array<index_type,rank>;
-  using tile_type   = Kokkos::Array<index_type,rank>;
-
+  using point_type  = Kokkos::Array<long,rank>; //was index_type
+  using tile_type   = Kokkos::Array<long,rank>;
+  // If point_type or tile_type is not templated on a signed integral type (if it is unsigned), 
+  // then if user passes in intializer_list of runtime-determined values of 
+  // signed integral type that are not const will receive a compiler error due 
+  // to an invalid case for implicit conversion - 
+  // "conversion from integer or unscoped enumeration type to integer type that cannot represent all values of the original, except where source is a constant expression whose value can be stored exactly in the target type"
+  // This would require the user to either pass a matching index_type parameter
+  // as template parameter to the MDRangePolicy or static_cast the individual values
 
   MDRangePolicy( point_type const& lower, point_type const& upper, tile_type const& tile = tile_type{} )
     : m_lower(lower)
