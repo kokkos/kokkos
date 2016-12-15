@@ -1,4 +1,3 @@
-KOKKOS_PATH=../../
 build:
 	mkdir -p 01_hello_world
 	cd ./01_hello_world; \

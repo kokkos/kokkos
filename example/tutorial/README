@@ -1,3 +1,6 @@
+First set the KOKKOS_PATH environment variable to the top-level Kokkos
+source directory (e.g. for bash 'export KOKKOS_PATH=$HOME/kokkos/kokkos').
+
 Build the examples by typing in each directory: 
 make -j 16
 
