@@ -1,4 +1,7 @@
-KOKKOS_PATH = ../..
+ifndef KOKKOS_PATH
+  MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
+  KOKKOS_PATH = $(subst Makefile,,$(MAKEFILE_PATH))../..
+endif
 
 PREFIX ?= /usr/local/lib/kokkos
 
