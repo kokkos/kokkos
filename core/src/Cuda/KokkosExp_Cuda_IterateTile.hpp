@@ -1166,6 +1166,7 @@ template < typename RP
 struct DeviceIterateTile
 {
   using index_type = typename RP::index_type;
+  using array_index_type = typename RP::array_index_type;
   using point_type = typename RP::point_type;
 
   struct VoidDummy {};
@@ -1197,7 +1198,7 @@ public:
   {
     //pad numthreads for mult of 2^p
 
-    const unsigned int maxblocks = 65535; //not true for newer archs
+    const array_index_type maxblocks = 65535; //not true for newer archs
     if ( RP::rank == 2 )
     {
       const dim3 block( m_rp.m_tile[0] , m_rp.m_tile[1] , 1); 
