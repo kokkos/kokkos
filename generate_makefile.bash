@@ -63,6 +63,20 @@ case $key in
     ;;
     --compiler*)
     COMPILER="${key#*=}"
+    CNUM=`which ${COMPILER} 2>&1 >/dev/null | grep "no ${COMPILER}" | wc -l`
+    if [ ${CNUM} -gt 0 ]; then
+      echo "Invalid compiler by --compiler command: '${COMPILER}'"
+      exit
+    fi
+    if [[ ! -n  ${COMPILER} ]]; then
+      echo "Empty compiler specified by --compiler command."
+      exit
+    fi
+    CNUM=`which ${COMPILER} | grep ${COMPILER} | wc -l`
+    if [ ${CNUM} -eq 0 ]; then
+      echo "Invalid compiler by --compiler command: '${COMPILER}'"
+      exit
+    fi 
     ;;
     --with-options*)
     KOKKOS_OPT="${key#*=}"
