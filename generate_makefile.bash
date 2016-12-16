@@ -110,6 +110,7 @@ case $key in
     echo "                               Pascal61       = NVIDIA Pascal generation CC 6.1"
     echo "                               Maxwell50      = NVIDIA Maxwell generation CC 5.0"
     echo "                               Power8         = IBM POWER8 CPUs"
+    echo "                               Power9         = IBM POWER9 CPUs"
     echo ""
     echo "--compiler=/Path/To/Compiler set the compiler"
     echo "--debug,-dbg:                enable Debugging"
