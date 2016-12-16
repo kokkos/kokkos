@@ -57,7 +57,21 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
 TRIBITS_ADD_OPTION_AND_DEFINE(
   Kokkos_ENABLE_Cuda_UVM
   KOKKOS_USE_CUDA_UVM
-  "Enable CUDA Unified Virtual Memory support in Kokkos."
+  "Enable CUDA Unified Virtual Memory as the default in Kokkos."
+  OFF
+  )
+
+TRIBITS_ADD_OPTION_AND_DEFINE(
+  Kokkos_ENABLE_Cuda_RDC
+  KOKKOS_HAVE_CUDA_RDC
+  "Enable CUDA Relocatable Device Code support in Kokkos."
+  OFF
+  )
+
+TRIBITS_ADD_OPTION_AND_DEFINE(
+  Kokkos_ENABLE_Cuda_Lambda
+  KOKKOS_HAVE_CUDA_LAMBDA
+  "Enable CUDA LAMBDA support in Kokkos."
   OFF
   )
 
