@@ -34,8 +34,8 @@ TRIBITS_PACKAGE_DECL(Kokkos) # ENABLE_SHADOWING_WARNINGS)
 # for compatibility with Kokkos' Makefile build system.
 
 TRIBITS_ADD_OPTION_AND_DEFINE(
-  ${PACKAGE_NAME}_ENABLE_DEBUG
-  ${PACKAGE_NAME_UC}_HAVE_DEBUG
+  Kokkos_ENABLE_DEBUG
+  KOKKOS_HAVE_DEBUG
   "Enable run-time debug checks.  These checks may be expensive, so they are disabled by default in a release build."
   ${${PROJECT_NAME}_ENABLE_DEBUG}
 )
