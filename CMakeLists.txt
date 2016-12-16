@@ -34,8 +34,8 @@ TRIBITS_PACKAGE_DECL(Kokkos) # ENABLE_SHADOWING_WARNINGS)
 # for compatibility with Kokkos' Makefile build system.
 
 TRIBITS_ADD_OPTION_AND_DEFINE(
-  ${PACKAGE_NAME}_ENABLE_DEBUG
-  ${PACKAGE_NAME_UC}_HAVE_DEBUG
+  Kokkos_ENABLE_DEBUG
+  KOKKOS_HAVE_DEBUG
   "Enable run-time debug checks.  These checks may be expensive, so they are disabled by default in a release build."
   ${${PROJECT_NAME}_ENABLE_DEBUG}
 )
@@ -57,7 +57,21 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
 TRIBITS_ADD_OPTION_AND_DEFINE(
   Kokkos_ENABLE_Cuda_UVM
   KOKKOS_USE_CUDA_UVM
-  "Enable CUDA Unified Virtual Memory support in Kokkos."
+  "Enable CUDA Unified Virtual Memory as the default in Kokkos."
+  OFF
+  )
+
+TRIBITS_ADD_OPTION_AND_DEFINE(
+  Kokkos_ENABLE_Cuda_RDC
+  KOKKOS_HAVE_CUDA_RDC
+  "Enable CUDA Relocatable Device Code support in Kokkos."
+  OFF
+  )
+
+TRIBITS_ADD_OPTION_AND_DEFINE(
+  Kokkos_ENABLE_Cuda_Lambda
+  KOKKOS_HAVE_CUDA_LAMBDA
+  "Enable CUDA LAMBDA support in Kokkos."
   OFF
   )
 
@@ -165,13 +179,28 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
 
 #------------------------------------------------------------------------------
 #
-# C) Process the subpackages for Kokkos
+# C) Install Kokkos' executable scripts
+#
+
+
+# nvcc_wrapper is Kokkos' wrapper for NVIDIA's NVCC CUDA compiler.
+# Kokkos needs nvcc_wrapper in order to build.  Other libraries and
+# executables also need nvcc_wrapper.  Thus, we need to install it.
+# If the argument of DESTINATION is a relative path, CMake computes it
+# as relative to ${CMAKE_INSTALL_PATH}.
+
+INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/nvcc_wrapper DESTINATION bin)
+
+
+#------------------------------------------------------------------------------
+#
+# D) Process the subpackages for Kokkos
 #
 
 TRIBITS_PROCESS_SUBPACKAGES()
 
 #
-# D) If Kokkos itself is enabled, process the Kokkos package
+# E) If Kokkos itself is enabled, process the Kokkos package
 #
 
 TRIBITS_PACKAGE_DEF()

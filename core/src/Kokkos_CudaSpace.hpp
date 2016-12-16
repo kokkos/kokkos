@@ -88,6 +88,9 @@ public:
   void deallocate( void * const arg_alloc_ptr
                  , const size_t arg_alloc_size ) const ;
 
+  /**\brief Return Name of the MemorySpace */
+  static constexpr const char* name();
+
   /*--------------------------------*/
   /** \brief  Error reporting for HostSpace attempt to access CudaSpace */
   static void access_error();
@@ -97,7 +100,8 @@ private:
 
   int  m_device ; ///< Which Cuda device
 
-  // friend class Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > ;
+  static constexpr const char* m_name = "Cuda";
+  friend class Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > ;
 };
 
 namespace Impl {
@@ -156,6 +160,14 @@ public:
   /** \brief  If UVM capability is available */
   static bool available();
 
+
+  /*--------------------------------*/
+  /** \brief  CudaUVMSpace specific routine */
+  static int number_of_allocations();
+
+  /*--------------------------------*/
+
+
   /*--------------------------------*/
 
   CudaUVMSpace();
@@ -172,10 +184,16 @@ public:
   void deallocate( void * const arg_alloc_ptr
                  , const size_t arg_alloc_size ) const ;
 
+  /**\brief Return Name of the MemorySpace */
+  static constexpr const char* name();
+
   /*--------------------------------*/
 
 private:
   int  m_device ; ///< Which Cuda device
+
+  static constexpr const char* m_name = "CudaUVM";
+
 };
 
 } // namespace Kokkos
@@ -214,6 +232,13 @@ public:
   void deallocate( void * const arg_alloc_ptr
                  , const size_t arg_alloc_size ) const ;
 
+  /**\brief Return Name of the MemorySpace */
+  static constexpr const char* name();
+
+private:
+
+  static constexpr const char* m_name = "CudaHostPinned";
+
   /*--------------------------------*/
 };
 
@@ -228,6 +253,8 @@ namespace Impl {
 static_assert( Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::CudaSpace >::assignable , "" );
 static_assert( Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::CudaUVMSpace >::assignable , "" );
 static_assert( Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::CudaHostPinnedSpace >::assignable , "" );
+
+//----------------------------------------
 
 template<>
 struct MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaSpace > {
@@ -252,6 +279,7 @@ struct MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaHostPinnedSpace > {
   enum { deepcopy   = true };
 };
 
+//----------------------------------------
 
 template<>
 struct MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::HostSpace > {
@@ -262,6 +290,7 @@ struct MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::HostSpace > {
 
 template<>
 struct MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::CudaUVMSpace > {
+  // CudaSpace::execution_space == CudaUVMSpace::execution_space
   enum { assignable = true };
   enum { accessible = true };
   enum { deepcopy   = true };
@@ -275,13 +304,14 @@ struct MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::CudaHostPinnedSpace > {
   enum { deepcopy   = true };
 };
 
+//----------------------------------------
+// CudaUVMSpace::execution_space == Cuda
+// CudaUVMSpace accessible to both Cuda and Host
 
 template<>
 struct MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::HostSpace > {
-  // CudaUVMSpace::execution_space == Cuda
-  // Cuda cannot access HostSpace
   enum { assignable = false };
-  enum { accessible = false };
+  enum { accessible = false }; // Cuda cannot access HostSpace
   enum { deepcopy   = true };
 };
 
@@ -305,12 +335,14 @@ struct MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::CudaHostPinnedSpace > {
 };
 
 
+//----------------------------------------
+// CudaHostPinnedSpace::execution_space == HostSpace::execution_space
+// CudaHostPinnedSpace accessible to both Cuda and Host
+
 template<>
 struct MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::HostSpace > {
-  // Can access CudaHostPinnedSpace from Cuda
-  // Cannot access HostSpace from Cuda
   enum { assignable = false }; // Cannot access from Cuda
-  enum { accessible = false }; // CudaHostPinnedSpace::execution_space
+  enum { accessible = true };  // CudaHostPinnedSpace::execution_space
   enum { deepcopy   = true };
 };
 
@@ -327,6 +359,8 @@ struct MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::CudaUVMSpace > {
   enum { accessible = true };  // same accessibility
   enum { deepcopy   = true };
 };
+
+//----------------------------------------
 
 }} // namespace Kokkos::Impl
 

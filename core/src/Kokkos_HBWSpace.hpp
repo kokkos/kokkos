@@ -147,10 +147,13 @@ public:
   void deallocate( void * const arg_alloc_ptr 
                  , const size_t arg_alloc_size ) const ;
 
+  /**\brief Return Name of the MemorySpace */
+  static constexpr const char* name();
+
 private:
 
   AllocationMechanism  m_alloc_mech ;
-
+  static constexpr const char* m_name = "HBW";
   friend class Kokkos::Impl::SharedAllocationRecord< Kokkos::Experimental::HBWSpace , void > ;
 };
 
@@ -238,6 +241,31 @@ public:
 
 } // namespace Impl
 } // namespace Kokkos
+
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+namespace Impl {
+
+static_assert( Kokkos::Impl::MemorySpaceAccess< Kokkos::Experimental::HBWSpace , Kokkos::Experimental::HBWSpace >::assignable , "" );
+
+template<>
+struct MemorySpaceAccess< Kokkos::HostSpace , Kokkos::Experimental::HBWSpace > {
+  enum { assignable = true };
+  enum { accessible = true };
+  enum { deepcopy   = true };
+};
+
+template<>
+struct MemorySpaceAccess< Kokkos::Experimental::HBWSpace , Kokkos::HostSpace> {
+  enum { assignable = false };
+  enum { accessible = true };
+  enum { deepcopy   = true };
+};
+
+}}
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

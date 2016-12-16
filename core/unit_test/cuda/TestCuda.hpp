@@ -40,6 +40,8 @@
 // ************************************************************************
 //@HEADER
 */
+#ifndef KOKKOS_TEST_CUDAHPP
+#define KOKKOS_TEST_CUDAHPP
 #include <gtest/gtest.h>
 
 #include <Kokkos_Macros.hpp>
@@ -65,7 +67,7 @@
 #include <TestScan.hpp>
 #include <TestAggregate.hpp>
 #include <TestCompilerMacros.hpp>
-#include <TestTaskPolicy.hpp>
+#include <TestTaskScheduler.hpp>
 #include <TestMemoryPool.hpp>
 
 
@@ -102,3 +104,4 @@ void cuda::TearDownTestCase()
   }
 #endif
 }
+#endif

@@ -3,7 +3,7 @@
 #Options: OpenMP,Serial,Pthreads,Cuda
 #KOKKOS_DEVICES ?= "OpenMP"
 KOKKOS_DEVICES ?= "Pthreads"
-#Options: KNC,SNB,HSW,Kepler,Kepler30,Kepler32,Kepler35,Kepler37,Maxwell,Maxwell50,Maxwell52,Maxwell53,ARMv80,ARMv81,ARMv8-ThunderX,BGQ,Power7,Power8,KNL,BDW
+#Options: KNC,SNB,HSW,Kepler,Kepler30,Kepler32,Kepler35,Kepler37,Maxwell,Maxwell50,Maxwell52,Maxwell53,ARMv80,ARMv81,ARMv8-ThunderX,BGQ,Power7,Power8,KNL,BDW,SKX
 KOKKOS_ARCH ?= ""
 #Options: yes,no
 KOKKOS_DEBUG ?= "no"
@@ -54,6 +54,19 @@ endif
 
 KOKKOS_INTERNAL_USE_CUDA := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Cuda | wc -l))
 
+ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
+  KOKKOS_INTERNAL_NVCC_PATH := $(shell which nvcc)
+  CUDA_PATH ?= $(KOKKOS_INTERNAL_NVCC_PATH:/bin/nvcc=)
+  KOKKOS_INTERNAL_COMPILER_NVCC_VERSION := $(shell nvcc --version 2>&1 | grep release | cut -d' ' -f5 | cut -d',' -f1 | tr -d .)
+endif
+
+# Check OS
+
+KOKKOS_OS                      := $(shell uname -s)
+KOKKOS_INTERNAL_OS_CYGWIN      := $(shell uname -s | grep CYGWIN | wc -l)
+KOKKOS_INTERNAL_OS_LINUX       := $(shell uname -s | grep Linux  | wc -l)
+KOKKOS_INTERNAL_OS_DARWIN      := $(shell uname -s | grep Darwin | wc -l)
+
 # Check compiler
 
 KOKKOS_INTERNAL_COMPILER_INTEL := $(shell $(CXX) --version        2>&1 | grep "Intel Corporation" | wc -l)
@@ -62,16 +75,12 @@ KOKKOS_INTERNAL_COMPILER_XL    := $(shell $(CXX) -qversion        2>&1 | grep XL
 KOKKOS_INTERNAL_COMPILER_CRAY  := $(shell $(CXX) -craype-verbose  2>&1 | grep "CC-" | wc -l)
 KOKKOS_INTERNAL_COMPILER_NVCC  := $(shell $(CXX) --version        2>&1 | grep "nvcc" | wc -l)
 KOKKOS_INTERNAL_COMPILER_CLANG := $(shell $(CXX) --version        2>&1 | grep "clang" | wc -l)
-KOKKOS_INTERNAL_OS_CYGWIN      := $(shell uname | grep CYGWIN | wc -l)
-
-ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
-  KOKKOS_INTERNAL_NVCC_PATH := $(shell which nvcc)
-  CUDA_PATH ?= $(KOKKOS_INTERNAL_NVCC_PATH:/bin/nvcc=)
-  KOKKOS_INTERNAL_COMPILER_NVCC_VERSION := $(shell nvcc --version 2>&1 | grep release | cut -d' ' -f5 | cut -d',' -f1 | tr -d .)
-endif
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 2)
   KOKKOS_INTERNAL_COMPILER_CLANG = 1
+endif
+ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 2)
+  KOKKOS_INTERNAL_COMPILER_XL = 1
 endif
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
@@ -88,14 +97,18 @@ endif
 ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
   KOKKOS_INTERNAL_OPENMP_FLAG := -mp 
 else
-  ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-    KOKKOS_INTERNAL_OPENMP_FLAG := -qsmp=omp
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+    KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp=libomp
   else
-    ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
-      # OpenMP is turned on by default in Cray compiler environment
-      KOKKOS_INTERNAL_OPENMP_FLAG :=
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
+      KOKKOS_INTERNAL_OPENMP_FLAG := -qsmp=omp
     else
-      KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
+      ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+        # OpenMP is turned on by default in Cray compiler environment
+        KOKKOS_INTERNAL_OPENMP_FLAG :=
+      else
+        KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
+      endif
     endif
   endif
 endif
@@ -122,6 +135,7 @@ KOKKOS_INTERNAL_USE_ARCH_KNC := $(strip $(shell echo $(KOKKOS_ARCH) | grep KNC |
 KOKKOS_INTERNAL_USE_ARCH_SNB := $(strip $(shell echo $(KOKKOS_ARCH) | grep SNB | wc -l))
 KOKKOS_INTERNAL_USE_ARCH_HSW := $(strip $(shell echo $(KOKKOS_ARCH) | grep HSW | wc -l))
 KOKKOS_INTERNAL_USE_ARCH_BDW := $(strip $(shell echo $(KOKKOS_ARCH) | grep BDW | wc -l))
+KOKKOS_INTERNAL_USE_ARCH_SKX := $(strip $(shell echo $(KOKKOS_ARCH) | grep SKX | wc -l))
 KOKKOS_INTERNAL_USE_ARCH_KNL := $(strip $(shell echo $(KOKKOS_ARCH) | grep KNL | wc -l))
 
 #NVIDIA based
@@ -174,12 +188,13 @@ KOKKOS_INTERNAL_USE_ARCH_IBM := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_
 KOKKOS_INTERNAL_USE_ARCH_AMDAVX := $(strip $(shell echo $(KOKKOS_ARCH) | grep AMDAVX | wc -l))
 
 #Any AVX?
-KOKKOS_INTERNAL_USE_ARCH_AVX       := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_SNB)+$(KOKKOS_INTERNAL_USE_ARCH_AMDAVX) | bc ))
-KOKKOS_INTERNAL_USE_ARCH_AVX2      := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_HSW)+$(KOKKOS_INTERNAL_USE_ARCH_BDW) | bc ))
-KOKKOS_INTERNAL_USE_ARCH_AVX512MIC := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_KNL) | bc ))
+KOKKOS_INTERNAL_USE_ARCH_AVX        := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_SNB)+$(KOKKOS_INTERNAL_USE_ARCH_AMDAVX) | bc ))
+KOKKOS_INTERNAL_USE_ARCH_AVX2       := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_HSW)+$(KOKKOS_INTERNAL_USE_ARCH_BDW) | bc ))
+KOKKOS_INTERNAL_USE_ARCH_AVX512MIC  := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_KNL) | bc ))
+KOKKOS_INTERNAL_USE_ARCH_AVX512XEON := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_SKX) | bc ))
 
 # Decide what ISA level we are able to support
-KOKKOS_INTERNAL_USE_ISA_X86_64     := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_SNB)+$(KOKKOS_INTERNAL_USE_ARCH_HSW)+$(KOKKOS_INTERNAL_USE_ARCH_BDW)+$(KOKKOS_INTERNAL_USE_ARCH_KNL) | bc ))
+KOKKOS_INTERNAL_USE_ISA_X86_64     := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_SNB)+$(KOKKOS_INTERNAL_USE_ARCH_HSW)+$(KOKKOS_INTERNAL_USE_ARCH_BDW)+$(KOKKOS_INTERNAL_USE_ARCH_KNL)+$(KOKKOS_INTERNAL_USE_ARCH_SKX) | bc ))
 KOKKOS_INTERNAL_USE_ISA_KNC        := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_KNC) | bc ))
 KOKKOS_INTERNAL_USE_ISA_POWERPCLE  := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_POWER8) | bc ))
 
@@ -464,6 +479,26 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX512MIC), 1)
 				# Asssume that this is really a GNU compiler
 				KOKKOS_CXXFLAGS += -march=knl
 				KOKKOS_LDFLAGS  += -march=knl
+			endif
+		endif
+	endif
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX512XEON), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_AVX512XEON 1" >> KokkosCore_config.tmp )
+	ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL), 1)
+		KOKKOS_CXXFLAGS += -xCORE-AVX512
+		KOKKOS_LDFLAGS  += -xCORE-AVX512
+	else
+		ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+
+		else
+			ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
+
+			else
+				# Nothing here yet
+				KOKKOS_CXXFLAGS += -march=skylake-avx512
+				KOKKOS_LDFLAGS  += -march=skylake-avx512
 			endif
 		endif
 	endif

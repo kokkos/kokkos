@@ -46,6 +46,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
+#include <atomic>
 #include <Kokkos_Macros.hpp>
 
 /* only compile this file if CUDA is enabled for Kokkos */
@@ -58,6 +59,11 @@
 #include <Cuda/Kokkos_Cuda_Internal.hpp>
 #include <impl/Kokkos_Error.hpp>
 
+#if (KOKKOS_ENABLE_PROFILING)
+#include <impl/Kokkos_Profiling_Interface.hpp>
+#endif
+
+
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
@@ -66,7 +72,7 @@ namespace Impl {
 
 namespace {
 
-  static int num_uvm_allocations = 0;
+  static std::atomic<int> num_uvm_allocations(0) ;
 
    cudaStream_t get_deep_copy_stream() {
      static cudaStream_t s = 0;
@@ -122,6 +128,7 @@ void CudaSpace::access_error( const void * const )
   Kokkos::Impl::throw_runtime_exception( msg );
 }
 
+
 /*--------------------------------------------------------------------------*/
 
 bool CudaUVMSpace::available()
@@ -135,6 +142,11 @@ bool CudaUVMSpace::available()
 }
 
 /*--------------------------------------------------------------------------*/
+
+int CudaUVMSpace::number_of_allocations()
+{
+  return Kokkos::Impl::num_uvm_allocations.load();
+}
 
 } // namespace Kokkos
 
@@ -168,17 +180,20 @@ void * CudaSpace::allocate( const size_t arg_alloc_size ) const
 
 void * CudaUVMSpace::allocate( const size_t arg_alloc_size ) const
 {
-
   void * ptr = NULL;
 
-  Kokkos::Impl::num_uvm_allocations += 1 ;
+  enum { max_uvm_allocations = 65536 };
 
-  if ( Kokkos::Impl::num_uvm_allocations > 65536 ) {
-    Kokkos::Impl::num_uvm_allocations = 0 ; //Reset to 0 before throwing exception
-    Kokkos::Impl::throw_runtime_exception( "CudaUVM error: The maximum limit of UVM allocations is 65536" ) ;
-  }
+  if ( arg_alloc_size > 0 ) 
+  {
+    Kokkos::Impl::num_uvm_allocations++;
 
-  CUDA_SAFE_CALL( cudaMallocManaged( &ptr, arg_alloc_size , cudaMemAttachGlobal ) );
+    if ( Kokkos::Impl::num_uvm_allocations.load() > max_uvm_allocations ) {
+      Kokkos::Impl::throw_runtime_exception( "CudaUVM error: The maximum limit of UVM allocations exceeded (currently 65536)." ) ;
+    }
+
+    CUDA_SAFE_CALL( cudaMallocManaged( &ptr, arg_alloc_size , cudaMemAttachGlobal ) );
+  } 
 
   return ptr ;
 }
@@ -202,8 +217,10 @@ void CudaSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_all
 void CudaUVMSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_alloc_size */ ) const
 {
   try {
-    Kokkos::Impl::num_uvm_allocations -= 1;
-    CUDA_SAFE_CALL( cudaFree( arg_alloc_ptr ) );
+    if ( arg_alloc_ptr != nullptr ) {
+      Kokkos::Impl::num_uvm_allocations--;
+      CUDA_SAFE_CALL( cudaFree( arg_alloc_ptr ) );
+    }
   } catch(...) {}
 }
 
@@ -212,6 +229,18 @@ void CudaHostPinnedSpace::deallocate( void * const arg_alloc_ptr , const size_t 
   try {
     CUDA_SAFE_CALL( cudaFreeHost( arg_alloc_ptr ) );
   } catch(...) {}
+}
+
+constexpr const char* CudaSpace::name() {
+  return m_name;
+}
+
+constexpr const char* CudaUVMSpace::name() {
+  return m_name;
+}
+
+constexpr const char* CudaHostPinnedSpace::name() {
+  return m_name;
 }
 
 } // namespace Kokkos
@@ -346,6 +375,18 @@ deallocate( SharedAllocationRecord< void , void > * arg_rec )
 SharedAllocationRecord< Kokkos::CudaSpace , void >::
 ~SharedAllocationRecord()
 {
+  #if (KOKKOS_ENABLE_PROFILING)
+  if(Kokkos::Profiling::profileLibraryLoaded()) {
+
+    SharedAllocationHeader header ;
+    Kokkos::Impl::DeepCopy<CudaSpace,HostSpace>::DeepCopy( & header , RecordBase::m_alloc_ptr , sizeof(SharedAllocationHeader) );
+
+    Kokkos::Profiling::deallocateData(
+      Kokkos::Profiling::SpaceHandle(Kokkos::CudaSpace::name()),header.m_label,
+      data(),size());
+  }
+  #endif
+
   m_space.deallocate( SharedAllocationRecord< void , void >::m_alloc_ptr
                     , SharedAllocationRecord< void , void >::m_alloc_size
                     );
@@ -354,6 +395,15 @@ SharedAllocationRecord< Kokkos::CudaSpace , void >::
 SharedAllocationRecord< Kokkos::CudaUVMSpace , void >::
 ~SharedAllocationRecord()
 {
+  #if (KOKKOS_ENABLE_PROFILING)
+  if(Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::fence(); //Make sure I can access the label ...
+    Kokkos::Profiling::deallocateData(
+      Kokkos::Profiling::SpaceHandle(Kokkos::CudaUVMSpace::name()),RecordBase::m_alloc_ptr->m_label,
+      data(),size());
+  }
+  #endif
+
   m_space.deallocate( SharedAllocationRecord< void , void >::m_alloc_ptr
                     , SharedAllocationRecord< void , void >::m_alloc_size
                     );
@@ -362,6 +412,14 @@ SharedAllocationRecord< Kokkos::CudaUVMSpace , void >::
 SharedAllocationRecord< Kokkos::CudaHostPinnedSpace , void >::
 ~SharedAllocationRecord()
 {
+  #if (KOKKOS_ENABLE_PROFILING)
+  if(Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::deallocateData(
+      Kokkos::Profiling::SpaceHandle(Kokkos::CudaHostPinnedSpace::name()),RecordBase::m_alloc_ptr->m_label,
+      data(),size());
+  }
+  #endif
+
   m_space.deallocate( SharedAllocationRecord< void , void >::m_alloc_ptr
                     , SharedAllocationRecord< void , void >::m_alloc_size
                     );
@@ -384,6 +442,12 @@ SharedAllocationRecord( const Kokkos::CudaSpace & arg_space
   , m_tex_obj( 0 )
   , m_space( arg_space )
 {
+  #if (KOKKOS_ENABLE_PROFILING)
+  if(Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::allocateData(Kokkos::Profiling::SpaceHandle(arg_space.name()),arg_label,data(),arg_alloc_size);
+  }
+  #endif
+
   SharedAllocationHeader header ;
 
   // Fill in the Header information
@@ -415,7 +479,12 @@ SharedAllocationRecord( const Kokkos::CudaUVMSpace & arg_space
   , m_tex_obj( 0 )
   , m_space( arg_space )
 {
-  // Fill in the Header information, directly accessible via UVM
+  #if (KOKKOS_ENABLE_PROFILING)
+  if(Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::allocateData(Kokkos::Profiling::SpaceHandle(arg_space.name()),arg_label,data(),arg_alloc_size);
+  }
+  #endif
+ // Fill in the Header information, directly accessible via UVM
 
   RecordBase::m_alloc_ptr->m_record = this ;
 
@@ -441,6 +510,11 @@ SharedAllocationRecord( const Kokkos::CudaHostPinnedSpace & arg_space
       )
   , m_space( arg_space )
 {
+  #if (KOKKOS_ENABLE_PROFILING)
+  if(Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::allocateData(Kokkos::Profiling::SpaceHandle(arg_space.name()),arg_label,data(),arg_alloc_size);
+  }
+  #endif
   // Fill in the Header information, directly accessible via UVM
 
   RecordBase::m_alloc_ptr->m_record = this ;
@@ -513,6 +587,7 @@ void SharedAllocationRecord< Kokkos::CudaUVMSpace , void >::
 deallocate_tracked( void * const arg_alloc_ptr )
 {
   if ( arg_alloc_ptr != 0 ) {
+
     SharedAllocationRecord * const r = get_record( arg_alloc_ptr );
 
     RecordBase::decrement( r );

@@ -2297,6 +2297,128 @@ struct ViewDataHandle< Traits ,
   }
 };
 
+template< class Traits >
+struct ViewDataHandle< Traits ,
+  typename std::enable_if<( 
+                            std::is_same< typename Traits::specialize , void >::value
+                            &&
+                            (!Traits::memory_traits::Aligned)
+                            &&
+                            Traits::memory_traits::Restrict
+#ifdef KOKKOS_HAVE_CUDA
+                            &&
+                            (!( std::is_same< typename Traits::memory_space,Kokkos::CudaSpace>::value ||
+                                std::is_same< typename Traits::memory_space,Kokkos::CudaUVMSpace>::value ))
+#endif
+                            &&
+                            (!Traits::memory_traits::Atomic)
+                          )>::type >
+{
+  typedef typename Traits::value_type  value_type ;
+  typedef typename Traits::value_type * KOKKOS_RESTRICT handle_type ;
+  typedef typename Traits::value_type & KOKKOS_RESTRICT return_type ;
+  typedef Kokkos::Impl::SharedAllocationTracker  track_type  ;
+
+  KOKKOS_INLINE_FUNCTION
+  static handle_type assign( value_type * arg_data_ptr
+                           , track_type const & /*arg_tracker*/ )
+  {
+    return handle_type( arg_data_ptr );
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static handle_type assign( handle_type const arg_data_ptr
+                           , size_t offset )
+  {
+    return handle_type( arg_data_ptr + offset );
+  }
+};
+
+template< class Traits >
+struct ViewDataHandle< Traits ,
+  typename std::enable_if<( 
+                            std::is_same< typename Traits::specialize , void >::value
+                            &&
+                            Traits::memory_traits::Aligned
+			    &&
+                            (!Traits::memory_traits::Restrict)
+#ifdef KOKKOS_HAVE_CUDA
+                            &&
+                            (!( std::is_same< typename Traits::memory_space,Kokkos::CudaSpace>::value ||
+                                std::is_same< typename Traits::memory_space,Kokkos::CudaUVMSpace>::value ))
+#endif
+                            &&
+                            (!Traits::memory_traits::Atomic)
+                          )>::type >
+{
+  typedef typename Traits::value_type  value_type ;
+  typedef typename Traits::value_type * KOKKOS_ALIGN_PTR(KOKKOS_ALIGN_SIZE) handle_type ;
+  typedef typename Traits::value_type & return_type ;
+  typedef Kokkos::Impl::SharedAllocationTracker  track_type  ;
+
+  KOKKOS_INLINE_FUNCTION
+  static handle_type assign( value_type * arg_data_ptr
+                           , track_type const & /*arg_tracker*/ )
+  {
+    if ( reinterpret_cast<uintptr_t>(arg_data_ptr) % KOKKOS_ALIGN_SIZE ) {
+      Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
+    }
+    return handle_type( arg_data_ptr );
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static handle_type assign( handle_type const arg_data_ptr
+                           , size_t offset )
+  {
+    if ( reinterpret_cast<uintptr_t>(arg_data_ptr+offset) % KOKKOS_ALIGN_SIZE ) {
+      Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
+    }
+    return handle_type( arg_data_ptr + offset );
+  }
+};
+
+template< class Traits >
+struct ViewDataHandle< Traits ,
+  typename std::enable_if<( 
+                            std::is_same< typename Traits::specialize , void >::value
+                            &&
+                            Traits::memory_traits::Aligned
+                            &&
+                            Traits::memory_traits::Restrict
+#ifdef KOKKOS_HAVE_CUDA
+                            &&
+                            (!( std::is_same< typename Traits::memory_space,Kokkos::CudaSpace>::value ||
+                                std::is_same< typename Traits::memory_space,Kokkos::CudaUVMSpace>::value ))
+#endif
+                            &&
+                            (!Traits::memory_traits::Atomic)
+                          )>::type >
+{
+  typedef typename Traits::value_type  value_type ;
+  typedef typename Traits::value_type * KOKKOS_RESTRICT KOKKOS_ALIGN_PTR(KOKKOS_ALIGN_SIZE) handle_type ;
+  typedef typename Traits::value_type & return_type ;
+  typedef Kokkos::Impl::SharedAllocationTracker  track_type  ;
+
+  KOKKOS_INLINE_FUNCTION
+  static handle_type assign( value_type * arg_data_ptr
+                           , track_type const & /*arg_tracker*/ )
+  {
+    if ( reinterpret_cast<uintptr_t>(arg_data_ptr) % KOKKOS_ALIGN_SIZE ) {
+      Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
+    }
+    return handle_type( arg_data_ptr );
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static handle_type assign( handle_type const arg_data_ptr
+                           , size_t offset )
+  {
+    if ( reinterpret_cast<uintptr_t>(arg_data_ptr+offset) % KOKKOS_ALIGN_SIZE ) {
+      Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
+    }
+    return handle_type( arg_data_ptr + offset );
+  }
+};
 }}} // namespace Kokkos::Experimental::Impl
 
 //----------------------------------------------------------------------------

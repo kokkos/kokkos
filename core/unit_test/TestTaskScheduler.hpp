@@ -42,19 +42,19 @@
 */
 
 
-#ifndef KOKKOS_UNITTEST_TASKPOLICY_HPP
-#define KOKKOS_UNITTEST_TASKPOLICY_HPP
+#ifndef KOKKOS_UNITTEST_TASKSCHEDULER_HPP
+#define KOKKOS_UNITTEST_TASKSCHEDULER_HPP
 
 #include <stdio.h>
 #include <iostream>
 #include <cmath>
 
-#if defined( KOKKOS_ENABLE_TASKPOLICY )
+#if defined( KOKKOS_ENABLE_TASKDAG )
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace TestTaskPolicy {
+namespace TestTaskScheduler {
 
 namespace {
 
@@ -77,7 +77,7 @@ long eval_fib( long n )
 template< typename Space >
 struct TestFib
 {
-  typedef Kokkos::TaskPolicy<Space>  policy_type ;
+  typedef Kokkos::TaskScheduler<Space>  policy_type ;
   typedef Kokkos::Future<long,Space> future_type ;
   typedef long value_type ;
 
@@ -132,7 +132,7 @@ struct TestFib
           policy.respawn( this , Kokkos::TaskHighPriority , fib_all );
         }
         else {
-#if 0
+#if 1
       printf( "TestFib(%ld) insufficient memory alloc_capacity(%d) task_max(%d) task_accum(%ld)\n"
              , n
              , policy.allocation_capacity()
@@ -173,16 +173,16 @@ struct TestFib
 
 };
 
-} // namespace TestTaskPolicy
+} // namespace TestTaskScheduler
 
 //----------------------------------------------------------------------------
 
-namespace TestTaskPolicy {
+namespace TestTaskScheduler {
 
 template< class Space >
 struct TestTaskDependence {
 
-  typedef Kokkos::TaskPolicy<Space>  policy_type ;
+  typedef Kokkos::TaskScheduler<Space>  policy_type ;
   typedef Kokkos::Future<Space>      future_type ;
   typedef Kokkos::View<long,Space>   accum_type ;
   typedef void value_type ;
@@ -250,11 +250,11 @@ struct TestTaskDependence {
     }
 };
 
-} // namespace TestTaskPolicy
+} // namespace TestTaskScheduler
 
 //----------------------------------------------------------------------------
 
-namespace TestTaskPolicy {
+namespace TestTaskScheduler {
 
 template< class ExecSpace >
 struct TestTaskTeam {
@@ -264,7 +264,7 @@ struct TestTaskTeam {
   //enum { SPAN = 1 };
 
   typedef void value_type ;
-  typedef Kokkos::TaskPolicy<ExecSpace>  policy_type ;
+  typedef Kokkos::TaskScheduler<ExecSpace>  policy_type ;
   typedef Kokkos::Future<ExecSpace>      future_type ;
   typedef Kokkos::View<long*,ExecSpace>  view_type ;
 
@@ -455,7 +455,7 @@ struct TestTaskTeamValue {
   enum { SPAN = 8 };
 
   typedef long value_type ;
-  typedef Kokkos::TaskPolicy<ExecSpace>         policy_type ;
+  typedef Kokkos::TaskScheduler<ExecSpace>         policy_type ;
   typedef Kokkos::Future<value_type,ExecSpace>  future_type ;
   typedef Kokkos::View<long*,ExecSpace>         view_type ;
 
@@ -540,12 +540,12 @@ struct TestTaskTeamValue {
       }
     }
 };
-} // namespace TestTaskPolicy
+} // namespace TestTaskScheduler
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
-#endif /* #ifndef KOKKOS_UNITTEST_TASKPOLICY_HPP */
+#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
+#endif /* #ifndef KOKKOS_UNITTEST_TASKSCHEDULER_HPP */
 
 

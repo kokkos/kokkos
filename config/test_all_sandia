@@ -47,11 +47,11 @@ BUILD_ONLY=False
 declare -i NUM_JOBS_TO_RUN_IN_PARALLEL=3
 TEST_SCRIPT=False
 SKIP_HWLOC=False
-
-ARCH_FLAG=""
+SPOT_CHECK=False
 
 PRINT_HELP=False
-
+OPT_FLAG=""
+KOKKOS_OPTIONS=""
 
 
 #
@@ -86,6 +86,18 @@ NUM_JOBS_TO_RUN_IN_PARALLEL="${key#*=}"
 --dry-run*)
 DRYRUN=True
 ;;
+--spot-check*)
+SPOT_CHECK=True
+;;
+--arch*)
+ARCH_FLAG="--arch=${key#*=}"
+;;
+--opt-flag*)
+OPT_FLAG="${key#*=}"
+;;
+--with-cuda-options*)
+KOKKOS_CUDA_OPTIONS="--with-cuda-options=${key#*=}"
+;;
 --help*)
 PRINT_HELP=True
 ;;
@@ -115,8 +127,22 @@ if [ "$MACHINE" = "sems" ]; then
     source /projects/sems/modulefiles/utils/sems-modules-init.sh
 
     BASE_MODULE_LIST="sems-env,kokkos-env,sems-<COMPILER_NAME>/<COMPILER_VERSION>,kokkos-hwloc/1.10.1/base"
-    CUDA_MODULE_LIST="sems-env,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/4.7.2"
+    CUDA_MODULE_LIST="sems-env,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/4.8.4,kokkos-hwloc/1.10.1/base"
+    CUDA8_MODULE_LIST="sems-env,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0,kokkos-hwloc/1.10.1/base"
 
+    if [ -z "$ARCH_FLAG" ]; then
+      ARCH_FLAG=""
+    fi 
+
+  if [ "$SPOT_CHECK" = "True" ]; then
+    # Format: (compiler module-list build-list exe-name warning-flag)
+    COMPILERS=("gcc/4.7.2 $BASE_MODULE_LIST "OpenMP,Pthread" g++ $GCC_WARNING_FLAGS"
+               "gcc/5.1.0 $BASE_MODULE_LIST "Serial" g++ $GCC_WARNING_FLAGS"
+               "intel/16.0.1 $BASE_MODULE_LIST "OpenMP" icpc $INTEL_WARNING_FLAGS"
+               "clang/3.9.0 $BASE_MODULE_LIST "Pthread_Serial" clang++ $CLANG_WARNING_FLAGS"
+               "cuda/8.0.44 $CUDA8_MODULE_LIST "Cuda_OpenMP" $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
+    )
+  else
     # Format: (compiler module-list build-list exe-name warning-flag)
     COMPILERS=("gcc/4.7.2 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/4.8.4 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
@@ -131,8 +157,9 @@ if [ "$MACHINE" = "sems" ]; then
                "clang/3.9.0 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "cuda/7.0.28 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "cuda/7.5.18 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/8.0.44 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
+               "cuda/8.0.44 $CUDA8_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
     )
+  fi
 
 elif [ "$MACHINE" = "white" ]; then
     source /etc/profile.d/modules.sh
@@ -151,8 +178,9 @@ elif [ "$MACHINE" = "white" ]; then
                "ibm/13.1.3 $IBM_MODULE_LIST $IBM_BUILD_LIST xlC $IBM_WARNING_FLAGS"
                "cuda/8.0.44 $CUDA_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
     )
-
-    ARCH_FLAG="--arch=Power8,Kepler37"
+    if [ -z "$ARCH_FLAG" ]; then
+      ARCH_FLAG="--arch=Power8,Kepler37"
+    fi
     NUM_JOBS_TO_RUN_IN_PARALLEL=2
 
 elif [ "$MACHINE" = "bowman" ]; then
@@ -169,7 +197,9 @@ elif [ "$MACHINE" = "bowman" ]; then
                "intel/17.0.098 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
     )
 
-    ARCH_FLAG="--arch=KNL"
+    if [ -z "$ARCH_FLAG" ]; then
+      ARCH_FLAG="--arch=KNL"
+    fi
     NUM_JOBS_TO_RUN_IN_PARALLEL=2
 
 elif [ "$MACHINE" = "shepard" ]; then
@@ -186,7 +216,9 @@ elif [ "$MACHINE" = "shepard" ]; then
                "intel/17.0.098 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
     )
 
-    ARCH_FLAG="--arch=HSW"
+    if [ -z "$ARCH_FLAG" ]; then
+      ARCH_FLAG="--arch=HSW"
+    fi
     NUM_JOBS_TO_RUN_IN_PARALLEL=2
 
 elif [ "$MACHINE" = "apollo" ]; then
@@ -202,17 +234,28 @@ elif [ "$MACHINE" = "apollo" ]; then
     SKIP_HWLOC=True
 
     BASE_MODULE_LIST="sems-env,kokkos-env,sems-<COMPILER_NAME>/<COMPILER_VERSION>,kokkos-hwloc/1.10.1/base"
-    CUDA_MODULE_LIST="sems-env,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/4.7.2"
+    CUDA_MODULE_LIST="sems-env,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/4.8.4,kokkos-hwloc/1.10.1/base"
+    CUDA8_MODULE_LIST="sems-env,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0,kokkos-hwloc/1.10.1/base"
 
     CLANG_MODULE_LIST="sems-env,kokkos-env,sems-git,sems-cmake/3.5.2,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/8.0.44"
     NVCC_MODULE_LIST="sems-env,kokkos-env,sems-git,sems-cmake/3.5.2,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0"
 
     BUILD_LIST_CUDA_NVCC="Cuda_Serial,Cuda_OpenMP"
     BUILD_LIST_CUDA_CLANG="Cuda_Serial,Cuda_Pthread"
-    BUILD_LIST_CLANG="Serial,Pthread"
+    BUILD_LIST_CLANG="Serial,Pthread,OpenMP"
 
+  if [ "$SPOT_CHECK" = "True" ]; then
     # Format: (compiler module-list build-list exe-name warning-flag)
-    COMPILERS=("cuda/8.0.44 $NVCC_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
+    COMPILERS=("gcc/4.7.2 $BASE_MODULE_LIST "OpenMP,Pthread" g++ $GCC_WARNING_FLAGS"
+               "gcc/5.1.0 $BASE_MODULE_LIST "Serial" g++ $GCC_WARNING_FLAGS"
+               "intel/16.0.1 $BASE_MODULE_LIST "OpenMP" icpc $INTEL_WARNING_FLAGS"
+               "clang/3.9.0 $BASE_MODULE_LIST "Pthread_Serial" clang++ $CLANG_WARNING_FLAGS"
+               "clang/head $CLANG_MODULE_LIST "Cuda_Pthread" clang++ $CUDA_WARNING_FLAGS"
+               "cuda/8.0.44 $CUDA_MODULE_LIST "Cuda_OpenMP" $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
+    )
+  else
+    # Format: (compiler module-list build-list exe-name warning-flag)
+    COMPILERS=("cuda/8.0.44 $CUDA8_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "clang/head $CLANG_MODULE_LIST $BUILD_LIST_CUDA_CLANG clang++ $CUDA_WARNING_FLAGS"
                "clang/3.9.0 $CLANG_MODULE_LIST $BUILD_LIST_CLANG clang++ $CLANG_WARNING_FLAGS"
                "gcc/4.7.2 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
@@ -228,8 +271,11 @@ elif [ "$MACHINE" = "apollo" ]; then
                "cuda/7.0.28 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "cuda/7.5.18 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
     )
+  fi
 
-    ARCH_FLAG="--arch=SNB,Kepler35"
+    if [ -z "$ARCH_FLAG" ]; then
+      ARCH_FLAG="--arch=SNB,Kepler35"
+    fi
     NUM_JOBS_TO_RUN_IN_PARALLEL=2
 else
     echo "Unhandled machine $MACHINE" >&2
@@ -254,6 +300,9 @@ echo "--skip-hwloc: Do not do hwloc tests"
 echo "--num=N: Number of jobs to run in parallel "
 echo "--dry-run: Just print what would be executed"
 echo "--build-only: Just do builds, don't run anything"
+echo "--opt-flag=FLAG: Optimization flag (default: -O3)"
+echo "--arch=ARCHITECTURE: overwrite architecture flags"
+echo "--with-cuda-options=OPT: set KOKKOS_CUDA_OPTIONS"
 echo "--build-list=BUILD,BUILD,BUILD..."
 echo "    Provide a comma-separated list of builds instead of running all builds"
 echo "    Valid items:"
@@ -437,16 +486,24 @@ single_build_and_test() {
         local extra_args=--with-hwloc=$(dirname $(dirname $(which hwloc-info)))
     fi
 
+    if [[ "$OPT_FLAG" = "" ]]; then
+      OPT_FLAG="-O3"
+    fi
+
     if [[ "$build_type" = *debug* ]]; then
         local extra_args="$extra_args --debug"
         local cxxflags="-g $compiler_warning_flags"
     else
-        local cxxflags="-O3 $compiler_warning_flags"
+        local cxxflags="$OPT_FLAG $compiler_warning_flags"
     fi
 
     if [[ "$compiler" == cuda* ]]; then
         cxxflags="--keep --keep-dir=$(pwd) $cxxflags"
         export TMPDIR=$(pwd)
+    fi
+
+    if [[ "$KOKKOS_CUDA_OPTIONS" != "" ]]; then
+        local extra_args="$extra_args $KOKKOS_CUDA_OPTIONS"
     fi
 
     echo "  Starting job $desc"
@@ -494,13 +551,14 @@ run_in_background() {
     local compiler=$1
 
     local -i num_jobs=$NUM_JOBS_TO_RUN_IN_PARALLEL
-    if [[ "$BUILD_ONLY" == True ]]; then
-        num_jobs=8
-    else
+    # don't override command line input
+    # if [[ "$BUILD_ONLY" == True ]]; then
+        # num_jobs=8
+    # else
         if [[ "$compiler" == cuda* ]]; then
             num_jobs=1
         fi
-    fi
+    # fi
     wait_for_jobs $num_jobs
 
     single_build_and_test $* &

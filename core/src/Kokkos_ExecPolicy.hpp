@@ -507,7 +507,9 @@ struct ThreadVectorRangeBoundariesStruct {
   enum {increment = 1};
 
   KOKKOS_INLINE_FUNCTION
-  ThreadVectorRangeBoundariesStruct ( const TeamMemberType& thread, const iType& count ) : end( count ) {}
+  ThreadVectorRangeBoundariesStruct ( const TeamMemberType, const iType& count ) : end( count ) {}
+  KOKKOS_INLINE_FUNCTION
+  ThreadVectorRangeBoundariesStruct ( const iType& count ) : end( count ) {}
 };
 
 template<class TeamMemberType>

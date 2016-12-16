@@ -34,10 +34,14 @@ TARGETS =
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	OBJ_CUDA = TestCuda_Other.o TestCuda_Reductions_a.o TestCuda_Reductions_b.o TestCuda_Atomics.o TestCuda_Team.o TestCuda_Spaces.o
 	OBJ_CUDA += TestCuda_SubView_a.o TestCuda_SubView_b.o
+ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
+        OBJ_OPENMP += TestCuda_SubView_c_all.o
+else
 	OBJ_CUDA += TestCuda_SubView_c01.o TestCuda_SubView_c02.o TestCuda_SubView_c03.o
 	OBJ_CUDA += TestCuda_SubView_c04.o  TestCuda_SubView_c05.o  TestCuda_SubView_c06.o
 	OBJ_CUDA += TestCuda_SubView_c07.o  TestCuda_SubView_c08.o  TestCuda_SubView_c09.o
 	OBJ_CUDA += TestCuda_SubView_c10.o TestCuda_SubView_c11.o TestCuda_SubView_c12.o
+endif
 	OBJ_CUDA += TestCuda_ViewAPI_a.o TestCuda_ViewAPI_b.o  TestCuda_ViewAPI_c.o TestCuda_ViewAPI_d.o
 	OBJ_CUDA += TestCuda_ViewAPI_e.o TestCuda_ViewAPI_f.o  TestCuda_ViewAPI_g.o TestCuda_ViewAPI_h.o
 	OBJ_CUDA += UnitTestMain.o gtest-all.o
@@ -60,10 +64,14 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	OBJ_OPENMP = TestOpenMP_Other.o TestOpenMP_Reductions.o TestOpenMP_Atomics.o TestOpenMP_Team.o
 	OBJ_OPENMP += TestOpenMP_SubView_a.o TestOpenMP_SubView_b.o
+ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
+        OBJ_OPENMP += TestOpenMP_SubView_c_all.o
+else
 	OBJ_OPENMP += TestOpenMP_SubView_c01.o TestOpenMP_SubView_c02.o TestOpenMP_SubView_c03.o
 	OBJ_OPENMP += TestOpenMP_SubView_c04.o  TestOpenMP_SubView_c05.o  TestOpenMP_SubView_c06.o
 	OBJ_OPENMP += TestOpenMP_SubView_c07.o  TestOpenMP_SubView_c08.o  TestOpenMP_SubView_c09.o
 	OBJ_OPENMP += TestOpenMP_SubView_c10.o TestOpenMP_SubView_c11.o TestOpenMP_SubView_c12.o
+endif
 	OBJ_OPENMP += TestOpenMP_ViewAPI_a.o TestOpenMP_ViewAPI_b.o UnitTestMain.o gtest-all.o
 	TARGETS += KokkosCore_UnitTest_OpenMP
 	TEST_TARGETS += test-openmp
@@ -72,10 +80,14 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
 	OBJ_SERIAL = TestSerial_Other.o TestSerial_Reductions.o TestSerial_Atomics.o TestSerial_Team.o 
 	OBJ_SERIAL += TestSerial_SubView_a.o TestSerial_SubView_b.o 
+ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
+        OBJ_OPENMP += TestSerial_SubView_c_all.o
+else
 	OBJ_SERIAL += TestSerial_SubView_c01.o TestSerial_SubView_c02.o TestSerial_SubView_c03.o
 	OBJ_SERIAL += TestSerial_SubView_c04.o  TestSerial_SubView_c05.o  TestSerial_SubView_c06.o  
 	OBJ_SERIAL += TestSerial_SubView_c07.o  TestSerial_SubView_c08.o  TestSerial_SubView_c09.o
 	OBJ_SERIAL += TestSerial_SubView_c10.o TestSerial_SubView_c11.o TestSerial_SubView_c12.o
+endif
 	OBJ_SERIAL += TestSerial_ViewAPI_a.o TestSerial_ViewAPI_b.o UnitTestMain.o gtest-all.o 
 	TARGETS += KokkosCore_UnitTest_Serial
 	TEST_TARGETS += test-serial

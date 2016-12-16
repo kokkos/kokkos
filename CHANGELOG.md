@@ -1,5 +1,38 @@
 # Change Log
 
+## [2.02.07](https://github.com/kokkos/kokkos/tree/2.02.07) (2016-12-16)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/2.02.01...2.02.07)
+
+**Implemented enhancements:**
+
+- Add CMake option to enable Cuda Lambda support [\#589](https://github.com/kokkos/kokkos/issues/589)
+- Add CMake option to enable Cuda RDC support [\#588](https://github.com/kokkos/kokkos/issues/588)
+- Add Initial Intel Sky Lake Xeon-HPC Compiler Support to Kokkos Make System [\#584](https://github.com/kokkos/kokkos/issues/584)
+- Building Tutorial Examples  [\#582](https://github.com/kokkos/kokkos/issues/582)
+- Internal way for using ThreadVectorRange without TeamHandle  [\#574](https://github.com/kokkos/kokkos/issues/574)
+- Testing: Add testing for uvm and rdc [\#571](https://github.com/kokkos/kokkos/issues/571)
+- Profiling: Add Memory Tracing and Region Markers [\#557](https://github.com/kokkos/kokkos/issues/557)
+- nvcc\_wrapper not installed with Kokkos built with CUDA through CMake [\#543](https://github.com/kokkos/kokkos/issues/543)
+- Improve DynRankView debug check [\#541](https://github.com/kokkos/kokkos/issues/541)
+- Benchmarks: Add Gather benchmark [\#536](https://github.com/kokkos/kokkos/issues/536)
+- Testing: add spot\_check option to test\_all\_sandia [\#535](https://github.com/kokkos/kokkos/issues/535)
+- Deprecate Kokkos::Impl::VerifyExecutionCanAccessMemorySpace [\#527](https://github.com/kokkos/kokkos/issues/527)
+- Add AtomicAdd support for 64bit float for Pascal [\#522](https://github.com/kokkos/kokkos/issues/522)
+- Add Restrict and Aligned memory trait [\#517](https://github.com/kokkos/kokkos/issues/517)
+- Kokkos Tests are Not Run using Compiler Optimization [\#501](https://github.com/kokkos/kokkos/issues/501)
+- Add support for clang 3.7 w/ openmp backend [\#393](https://github.com/kokkos/kokkos/issues/393)
+- Provide an error throw class [\#79](https://github.com/kokkos/kokkos/issues/79)
+
+**Fixed bugs:**
+
+- Cuda UVM Allocation test broken with UVM as default space [\#586](https://github.com/kokkos/kokkos/issues/586)
+- Bug \(develop branch only\): multiple tests are now failing when forcing uvm usage. [\#570](https://github.com/kokkos/kokkos/issues/570)
+- Error in generate\_makefile.sh for Kokkos when Compiler is Empty String/Fails [\#568](https://github.com/kokkos/kokkos/issues/568)
+- XL 13.1.4 incorrect C++11 flag [\#553](https://github.com/kokkos/kokkos/issues/553)
+- Improve DynRankView debug check [\#541](https://github.com/kokkos/kokkos/issues/541)
+- Installing Library on MAC broken due to cp -u [\#539](https://github.com/kokkos/kokkos/issues/539)
+- Intel Nightly Testing with Debug enabled fails [\#534](https://github.com/kokkos/kokkos/issues/534)
+
 ## [2.02.01](https://github.com/kokkos/kokkos/tree/2.02.01) (2016-11-01)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/2.02.00...2.02.01)
 

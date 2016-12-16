@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TASKPOLICY_HPP
-#define KOKKOS_TASKPOLICY_HPP
+#ifndef KOKKOS_TASKSCHEDULER_HPP
+#define KOKKOS_TASKSCHEDULER_HPP
 
 //----------------------------------------------------------------------------
 
@@ -56,68 +56,38 @@
   #if ( 8000 <= CUDA_VERSION ) && \
       defined( KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE )
 
-  #define KOKKOS_ENABLE_TASKPOLICY
+  #define KOKKOS_ENABLE_TASKDAG
 
   #endif
 #else
-  #define KOKKOS_ENABLE_TASKPOLICY
+  #define KOKKOS_ENABLE_TASKDAG
 #endif
 
 
-#if defined( KOKKOS_ENABLE_TASKPOLICY )
+#if defined( KOKKOS_ENABLE_TASKDAG )
 
 //----------------------------------------------------------------------------
 
 #include <Kokkos_MemoryPool.hpp>
 #include <impl/Kokkos_Tags.hpp>
-#include <impl/Kokkos_TaskQueue.hpp>
 
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
 
-enum TaskType { TaskTeam   = Impl::TaskBase<void,void,void>::TaskTeam
-              , TaskSingle = Impl::TaskBase<void,void,void>::TaskSingle };
+// Forward declarations used in Impl::TaskQueue
 
-enum TaskPriority { TaskHighPriority    = 0
-                  , TaskRegularPriority = 1
-                  , TaskLowPriority     = 2 };
+template< typename Arg1 = void , typename Arg2 = void >
+class Future ;
 
 template< typename Space >
 class TaskScheduler ;
 
-template< typename Space >
-void wait( TaskScheduler< Space > const & );
-
 } // namespace Kokkos
 
+#include <impl/Kokkos_TaskQueue.hpp>
+
 //----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Impl {
-
-/*\brief  Implementation data for task data management, access, and execution.
- *
- *  CRTP Inheritance structure to allow static_cast from the
- *  task root type and a task's FunctorType.
- *
- *    TaskBase< Space , ResultType , FunctorType >
- *      : TaskBase< Space , ResultType , void >
- *      , FunctorType
- *      { ... };
- *
- *    TaskBase< Space , ResultType , void >
- *      : TaskBase< Space , void , void >
- *      { ... };
- */
-template< typename Space , typename ResultType , typename FunctorType >
-class TaskBase ;
-
-template< typename Space >
-class TaskExec ;
-
-}} // namespace Kokkos::Impl
-
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
@@ -129,7 +99,7 @@ namespace Kokkos {
  *  Future< value , space >
  *
  */
-template< typename Arg1 /* = void */ , typename Arg2 /* = void */ >
+template< typename Arg1 , typename Arg2 >
 class Future {
 private:
 
@@ -137,8 +107,8 @@ private:
   template< typename , typename > friend class Future ;
   template< typename , typename , typename > friend class Impl::TaskBase ;
 
-  enum { Arg1_is_space  = Kokkos::Impl::is_space< Arg1 >::value };
-  enum { Arg2_is_space  = Kokkos::Impl::is_space< Arg2 >::value };
+  enum { Arg1_is_space  = Kokkos::is_space< Arg1 >::value };
+  enum { Arg2_is_space  = Kokkos::is_space< Arg2 >::value };
   enum { Arg1_is_value  = ! Arg1_is_space &&
                           ! std::is_same< Arg1 , void >::value };
   enum { Arg2_is_value  = ! Arg2_is_space &&
@@ -188,7 +158,13 @@ public:
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
-  ~Future() { if ( m_task ) queue_type::assign( & m_task , (task_base*)0 ); }
+  void clear()
+    { if ( m_task ) queue_type::assign( & m_task , (task_base*)0 ); }
+
+  //----------------------------------------
+
+  KOKKOS_INLINE_FUNCTION
+  ~Future() { clear(); }
 
   //----------------------------------------
 
@@ -207,7 +183,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   Future & operator = ( Future && rhs )
     {
-      if ( m_task ) queue_type::assign( & m_task , (task_base*)0 );
+      clear();
       m_task = rhs.m_task ;
       rhs.m_task = 0 ;
       return *this ;
@@ -290,7 +266,7 @@ public:
           std::is_same< value_type , typename Future<A1,A2>::value_type >::value
         , "Assigned Futures must have the same value_type" );
 
-      if ( m_task ) queue_type::assign( & m_task , (task_base*) 0 );
+      clear();
       m_task = rhs.m_task ;
       rhs.m_task = 0 ;
       return *this ;
@@ -312,6 +288,30 @@ public:
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+
+enum TaskType { TaskTeam   = Impl::TaskBase<void,void,void>::TaskTeam
+              , TaskSingle = Impl::TaskBase<void,void,void>::TaskSingle };
+
+enum TaskPriority { TaskHighPriority    = 0
+                  , TaskRegularPriority = 1
+                  , TaskLowPriority     = 2 };
+
+template< typename Space >
+void wait( TaskScheduler< Space > const & );
+
+} // namespace Kokkos
+
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+
+
+
+} // namespace Kokkos
+
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
@@ -690,16 +690,11 @@ inline
 void wait( TaskScheduler< ExecSpace > const & policy )
 { policy.m_queue->execute(); }
 
-// For backward compatibility
-template< typename ExecSpace >
-using
-TaskPolicy = TaskScheduler< ExecSpace > ;
-
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
-#endif /* #ifndef KOKKOS_TASKPOLICY_HPP */
+#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
+#endif /* #ifndef KOKKOS_TASKSCHEDULER_HPP */
 

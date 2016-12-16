@@ -76,6 +76,22 @@ protected:
   }
 };
 
+TEST_F( defaultdevicetype, host_space_access )
+{
+  typedef Kokkos::HostSpace::execution_space host_exec_space ;
+  typedef Kokkos::Device< host_exec_space , Kokkos::HostSpace > device_space ;
+  typedef Kokkos::Impl::HostMirror< Kokkos::DefaultExecutionSpace >::Space mirror_space ;
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility< host_exec_space , Kokkos::HostSpace >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility< device_space , Kokkos::HostSpace >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility< mirror_space , Kokkos::HostSpace >::accessible , "" );
+}
+
 TEST_F( defaultdevicetype, view_api) {
   TestViewAPI< double , Kokkos::DefaultExecutionSpace >();
 }

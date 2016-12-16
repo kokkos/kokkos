@@ -40,6 +40,8 @@
 // ************************************************************************
 //@HEADER
 */
+#ifndef KOKKOS_TEST_THREADSHPP
+#define KOKKOS_TEST_THREADSHPP
 #include <gtest/gtest.h>
 
 #include <Kokkos_Macros.hpp>
@@ -69,7 +71,7 @@
 #include <TestScan.hpp>
 #include <TestAggregate.hpp>
 #include <TestCompilerMacros.hpp>
-#include <TestTaskPolicy.hpp>
+#include <TestTaskScheduler.hpp>
 #include <TestMemoryPool.hpp>
 
 
@@ -109,3 +111,4 @@ protected:
 
 
 }
+#endif

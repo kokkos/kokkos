@@ -230,6 +230,39 @@ namespace Kokkos {
 namespace Impl {
 
 template<>
+struct MemorySpaceAccess
+  < Kokkos::CudaSpace
+  , Kokkos::Cuda::scratch_memory_space
+  >
+{
+  enum { assignable = false };
+  enum { accessible = true };
+  enum { deepcopy   = false };
+};
+
+#if defined( KOKKOS_USE_CUDA_UVM )
+
+// If forcing use of UVM everywhere
+// then must assume that CudaUVMSpace
+// can be a stand-in for CudaSpace.
+// This will fail when a strange host-side execution space
+// that defines CudaUVMSpace as its preferredmemory space.
+
+template<>
+struct MemorySpaceAccess
+  < Kokkos::CudaUVMSpace
+  , Kokkos::Cuda::scratch_memory_space
+  >
+{
+  enum { assignable = false };
+  enum { accessible = true };
+  enum { deepcopy   = false };
+};
+
+#endif
+
+
+template<>
 struct VerifyExecutionCanAccessMemorySpace
   < Kokkos::CudaSpace
   , Kokkos::Cuda::scratch_memory_space

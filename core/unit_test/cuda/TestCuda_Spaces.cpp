@@ -47,9 +47,7 @@ namespace Test {
 __global__
 void test_abort()
 {
-  Kokkos::Impl::VerifyExecutionCanAccessMemorySpace<
-    Kokkos::CudaSpace ,
-    Kokkos::HostSpace >::verify();
+  Kokkos::abort("test_abort");
 }
 
 __global__
@@ -60,8 +58,27 @@ void test_cuda_spaces_int_value( int * ptr )
 
 TEST_F( cuda , space_access )
 {
+  //--------------------------------------
+
   static_assert(
     Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::HostSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaHostPinnedSpace >::assignable , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaSpace >::assignable , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaSpace >::accessible , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaUVMSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaUVMSpace >::accessible , "" );
+
+  //--------------------------------------
 
   static_assert(
     Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::CudaSpace >::assignable , "" );
@@ -70,13 +87,86 @@ TEST_F( cuda , space_access )
     Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::CudaUVMSpace >::assignable , "" );
 
   static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::CudaHostPinnedSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::CudaHostPinnedSpace >::accessible , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::HostSpace >::assignable , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::HostSpace >::accessible , "" );
+
+  //--------------------------------------
+
+  static_assert(
     Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::CudaUVMSpace >::assignable , "" );
 
   static_assert(
-    Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace , Kokkos::CudaHostPinnedSpace >::assignable , "" );
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::CudaSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::CudaSpace >::accessible , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::HostSpace >::assignable , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::HostSpace >::accessible , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::CudaHostPinnedSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaUVMSpace , Kokkos::CudaHostPinnedSpace >::accessible , "" );
+
+  //--------------------------------------
 
   static_assert(
     Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::CudaHostPinnedSpace >::assignable , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::HostSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::HostSpace >::accessible , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::CudaSpace >::assignable , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::CudaSpace >::accessible , "" );
+
+  static_assert(
+    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::CudaUVMSpace >::assignable , "" );
+
+  static_assert(
+    Kokkos::Impl::MemorySpaceAccess< Kokkos::CudaHostPinnedSpace , Kokkos::CudaUVMSpace >::accessible , "" );
+
+  //--------------------------------------
+
+  static_assert(
+    ! Kokkos::Impl::SpaceAccessibility< Kokkos::Cuda , Kokkos::HostSpace >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility< Kokkos::Cuda , Kokkos::CudaSpace >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility< Kokkos::Cuda , Kokkos::CudaUVMSpace >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility< Kokkos::Cuda , Kokkos::CudaHostPinnedSpace >::accessible , "" );
+
+  static_assert(
+    ! Kokkos::Impl::SpaceAccessibility< Kokkos::HostSpace , Kokkos::CudaSpace >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility< Kokkos::HostSpace , Kokkos::CudaUVMSpace >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility< Kokkos::HostSpace , Kokkos::CudaHostPinnedSpace >::accessible , "" );
+
 
   static_assert(
     std::is_same< Kokkos::Impl::HostMirror< Kokkos::CudaSpace >::Space
@@ -96,6 +186,30 @@ TEST_F( cuda , space_access )
                                 , Kokkos::CudaUVMSpace >
                 , Kokkos::Device< Kokkos::HostSpace::execution_space
                                 , Kokkos::CudaUVMSpace > >::value , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility
+      < Kokkos::Impl::HostMirror< Kokkos::Cuda >::Space
+      , Kokkos::HostSpace
+      >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility
+      < Kokkos::Impl::HostMirror< Kokkos::CudaSpace >::Space
+      , Kokkos::HostSpace
+      >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility
+      < Kokkos::Impl::HostMirror< Kokkos::CudaUVMSpace >::Space
+      , Kokkos::HostSpace
+      >::accessible , "" );
+
+  static_assert(
+    Kokkos::Impl::SpaceAccessibility
+      < Kokkos::Impl::HostMirror< Kokkos::CudaHostPinnedSpace >::Space
+      , Kokkos::HostSpace
+      >::accessible , "" );
 }
 
 TEST_F( cuda, uvm )
@@ -113,32 +227,72 @@ TEST_F( cuda, uvm )
     EXPECT_EQ( *uvm_ptr, int(2*42) );
 
     Kokkos::kokkos_free< Kokkos::CudaUVMSpace >(uvm_ptr );
+
   }
 }
 
 TEST_F( cuda, uvm_num_allocs )
 {
+  // The max number of uvm allocations allowed is 65536
+  #define MAX_NUM_ALLOCS 65536
+
   if ( Kokkos::CudaUVMSpace::available() ) {
 
     struct TestMaxUVMAllocs {
+
       using view_type         = Kokkos::View< double* , Kokkos::CudaUVMSpace >;
-      using view_of_view_type = Kokkos::View< view_type[ 65537 ] , Kokkos::CudaUVMSpace >;
+      using view_of_view_type = Kokkos::View< view_type[ MAX_NUM_ALLOCS ] 
+                                            , Kokkos::CudaUVMSpace >;
 
       TestMaxUVMAllocs()
       : view_allocs_test("view_allocs_test")
       {
-        for ( auto i = 0; i < max_num_allocs_plus_one; ++i ) {
-          view_allocs_test(i) = view_type("inner_view",1);
-        } //end for
+
+        for ( auto i = 0; i < MAX_NUM_ALLOCS ; ++i ) {
+
+          // Kokkos will throw a runtime exception if an attempt is made to 
+          // allocate more than the maximum number of uvm allocations
+
+          // In this test, the max num of allocs occurs when i = MAX_NUM_ALLOCS - 1
+          // since the 'outer' view counts as one UVM allocation, leaving
+          // 65535 possible UVM allocations, that is 'i in [0 , 65535)'
+
+          // The test will catch the exception thrown in this case and continue
+
+          if ( i == ( MAX_NUM_ALLOCS - 1) ) {
+            EXPECT_ANY_THROW( { view_allocs_test(i) = view_type("inner_view",1); } ) ;
+          }
+          else {
+            if(i<MAX_NUM_ALLOCS - 1000) {
+              EXPECT_NO_THROW( { view_allocs_test(i) = view_type("inner_view",1); } ) ;
+            } else { // This might or might not throw depending on compilation options. 
+              try {
+                view_allocs_test(i) = view_type("inner_view",1);
+              }
+              catch (...) {}
+            }
+          }
+
+        } //end allocation for loop
+
+        for ( auto i = 0; i < MAX_NUM_ALLOCS -1; ++i ) {
+
+          view_allocs_test(i) = view_type();
+
+        } //end deallocation for loop
+
+        view_allocs_test = view_of_view_type(); // deallocate the view of views
       }
 
-      const int max_num_allocs_plus_one = 65537;
+      // Member
       view_of_view_type view_allocs_test ;
     } ;
 
-    // The constructor should throw runtime error once 65536 uvm allocations exceeded
-    EXPECT_ANY_THROW( TestMaxUVMAllocs() );
+    // trigger the test via the TestMaxUVMAllocs constructor
+    TestMaxUVMAllocs() ;
+
   }
+  #undef MAX_NUM_ALLOCS 
 }
 
 template< class MemSpace , class ExecSpace >

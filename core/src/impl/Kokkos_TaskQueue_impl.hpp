@@ -41,7 +41,7 @@
 //@HEADER
 */
 
-#if defined( KOKKOS_ENABLE_TASKPOLICY )
+#if defined( KOKKOS_ENABLE_TASKDAG )
 
 namespace Kokkos {
 namespace Impl {
@@ -566,5 +566,5 @@ void TaskQueue< ExecSpace >::complete
 } /* namespace Kokkos */
 
 
-#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
+#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
 

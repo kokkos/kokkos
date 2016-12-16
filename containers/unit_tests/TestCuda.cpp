@@ -63,6 +63,9 @@
 #include <Kokkos_DynRankView.hpp>
 #include <TestDynViewAPI.hpp>
 
+#include <Kokkos_ErrorReporter.hpp>
+#include <TestErrorReporter.hpp>
+
 //----------------------------------------------------------------------------
 
 
@@ -207,6 +210,18 @@ TEST_F( cuda , dynamic_view )
   }
 }
 
+
+#if defined(KOKKOS_CLASS_LAMBDA)
+TEST_F(cuda, ErrorReporterViaLambda)
+{
+  TestErrorReporter<ErrorReporterDriverUseLambda<Kokkos::Cuda>>();
+}
+#endif
+
+TEST_F(cuda, ErrorReporter)
+{
+  TestErrorReporter<ErrorReporterDriver<Kokkos::Cuda>>();
+}
 
 }
 
