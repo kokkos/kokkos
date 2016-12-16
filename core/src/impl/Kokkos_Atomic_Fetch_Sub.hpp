@@ -175,16 +175,16 @@ template < typename T >
 inline
 T atomic_fetch_sub( volatile T * const dest ,
   typename Kokkos::Impl::enable_if< sizeof(T) != sizeof(int) &&
-                                    sizeof(T) == sizeof(long) , const T >::type val )
+                                    sizeof(T) == sizeof(long long) , const T >::type val )
 {
-  union { long i ; T t ; } assume , oldval , newval ;
+  union { long long i ; T t ; } assume , oldval , newval ;
 
   oldval.t = *dest ;
 
   do {
     assume.i = oldval.i ;
     newval.t = assume.t - val ;
-    oldval.i = __sync_val_compare_and_swap( (long*) dest , assume.i , newval.i );
+    oldval.i = __sync_val_compare_and_swap( (long long*) dest , assume.i , newval.i );
   } while ( assume.i != oldval.i );
 
   return oldval.t ;
