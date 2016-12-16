@@ -65,6 +65,7 @@
 #include <TestViewSubview.hpp>
 #include <TestAtomic.hpp>
 #include <TestAtomicOperations.hpp>
+#include <TestAtomicViews.hpp>
 #include <TestRange.hpp>
 #include <TestTeam.hpp>
 #include <TestReduce.hpp>
