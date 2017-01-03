@@ -55,6 +55,14 @@
 #endif
 
 
+#ifdef KOKKOS_MDRANGE_IVDEP
+ #define IVDEP_MDRANGE _Pragma("ivdep")
+#else
+ #define IVDEP_MDRANGE
+#endif
+
+
+
 namespace Kokkos { namespace Experimental { namespace Impl {
 
 #define LOOP_1L(tile) \
@@ -131,7 +139,462 @@ namespace Kokkos { namespace Experimental { namespace Impl {
 #define LOOP_ARGS_8 LOOP_ARGS_7, i7 + m_offset[7]
 
 
-#define REMOVEOPERATOR 0
+
+// New Loop Macros...
+//#define IVDEP_TEMP
+
+#define APPLY( func, ... ) \
+  func( __VA_ARGS__ );
+
+// LayoutRight
+// d = 0 to start
+#define LOOP_R_1( func, type, m_offset, extent, d, ... )    \
+  IVDEP_MDRANGE                            \
+  for( type i0 = (type)0; i0 < extent[d]; ++i0) { \
+    APPLY( func, ##__VA_ARGS__, i0 + m_offset[d] )              \
+  }
+
+#define LOOP_R_2( func, type, m_offset, extent, d, ... )             \
+  for( type i1 = (type)0; i1 < extent[d]; ++i1) {          \
+    LOOP_R_1( func, type, m_offset, extent, d+1, ##__VA_ARGS__, i1 + m_offset[d] ) \
+  }
+
+#define LOOP_R_3( func, type, m_offset, extent, d, ... )             \
+  for( type i2 = (type)0; i2 < extent[d]; ++i2) {          \
+    LOOP_R_2( func, type, m_offset, extent, d+1, ##__VA_ARGS__, i2 + m_offset[d] ) \
+  }
+
+#define LOOP_R_4( func, type, m_offset, extent, d, ... )             \
+  for( type i3 = (type)0; i3 < extent[d]; ++i3) {          \
+    LOOP_R_3( func, type, m_offset, extent, d+1, ##__VA_ARGS__, i3 + m_offset[d] ) \
+  }
+
+#define LOOP_R_5( func, type, m_offset, extent, d, ... )             \
+  for( type i4 = (type)0; i4 < extent[d]; ++i4) {          \
+    LOOP_R_4( func, type, m_offset, extent, d+1, ##__VA_ARGS__, i4 + m_offset[d] ) \
+  }
+
+#define LOOP_R_6( func, type, m_offset, extent, d, ... )             \
+  for( type i5 = (type)0; i5 < extent[d]; ++i5) {          \
+    LOOP_R_5( func, type, m_offset, extent, d+1, ##__VA_ARGS__, i5 + m_offset[d] ) \
+  }
+
+#define LOOP_R_7( func, type, m_offset, extent, d, ... )             \
+  for( type i6 = (type)0; i6 < extent[d]; ++i6) {          \
+    LOOP_R_6( func, type, m_offset, extent, d+1, ##__VA_ARGS__, i6 + m_offset[d] ) \
+  }
+
+#define LOOP_R_8( func, type, m_offset, extent, d, ... )             \
+  for( type i7 = (type)0; i7 < extent[d]; ++i7) {          \
+    LOOP_R_7( func, type, m_offset, extent, d+1, ##__VA_ARGS__, i7 + m_offset[d] ) \
+  }
+
+//LayoutLeft
+// d = rank-1 to start
+#define LOOP_L_1( func, type, m_offset, extent, d, ... )    \
+  IVDEP_MDRANGE                            \
+  for( type i0 = (type)0; i0 < extent[d]; ++i0) { \
+    APPLY( func, i0 + m_offset[d] , ##__VA_ARGS__ )              \
+  }
+
+#define LOOP_L_2( func, type, m_offset, extent, d, ... )             \
+  for( type i1 = (type)0; i1 < extent[d]; ++i1) {          \
+    LOOP_L_1( func, type, m_offset, extent, d-1, i1 + m_offset[d], ##__VA_ARGS__ ) \
+  }
+
+#define LOOP_L_3( func, type, m_offset, extent, d, ... )             \
+  for( type i2 = (type)0; i2 < extent[d]; ++i2) {          \
+    LOOP_L_2( func, type, m_offset, extent, d-1, i2 + m_offset[d], ##__VA_ARGS__ ) \
+  }
+
+#define LOOP_L_4( func, type, m_offset, extent, d, ... )             \
+  for( type i3 = (type)0; i3 < extent[d]; ++i3) {          \
+    LOOP_L_3( func, type, m_offset, extent, d-1, i3 + m_offset[d], ##__VA_ARGS__ ) \
+  }
+
+#define LOOP_L_5( func, type, m_offset, extent, d, ... )             \
+  for( type i4 = (type)0; i4 < extent[d]; ++i4) {          \
+    LOOP_L_4( func, type, m_offset, extent, d-1, i4 + m_offset[d], ##__VA_ARGS__ ) \
+  }
+
+#define LOOP_L_6( func, type, m_offset, extent, d, ... )             \
+  for( type i5 = (type)0; i5 < extent[d]; ++i5) {          \
+    LOOP_L_5( func, type, m_offset, extent, d-1, i5 + m_offset[d], ##__VA_ARGS__ ) \
+  }
+
+#define LOOP_L_7( func, type, m_offset, extent, d, ... )             \
+  for( type i6 = (type)0; i6 < extent[d]; ++i6) {          \
+    LOOP_L_6( func, type, m_offset, extent, d-1, i6 + m_offset[d], ##__VA_ARGS__ ) \
+  }
+
+#define LOOP_L_8( func, type, m_offset, extent, d, ... )             \
+  for( type i7 = (type)0; i7 < extent[d]; ++i7) {          \
+    LOOP_L_7( func, type, m_offset, extent, d-1, i7 + m_offset[d], ##__VA_ARGS__ ) \
+  }
+
+// Left vs Right
+#define LOOP_LAYOUT_1( func, type, is_left, m_offset, extent, rank )  \
+  if (is_left) { LOOP_L_1( func, type, m_offset, extent, rank-1 ) }  \
+  else         { LOOP_R_1( func, type, m_offset, extent, 0 ) }  
+
+#define LOOP_LAYOUT_2( func, type, is_left, m_offset, extent, rank )  \
+  if (is_left) { LOOP_L_2( func, type, m_offset, extent, rank-1 ) }  \
+  else         { LOOP_R_2( func, type, m_offset, extent, 0 ) }  
+
+#define LOOP_LAYOUT_3( func, type, is_left, m_offset, extent, rank )  \
+  if (is_left) { LOOP_L_3( func, type, m_offset, extent, rank-1 ) }  \
+  else         { LOOP_R_3( func, type, m_offset, extent, 0 ) }  
+
+#define LOOP_LAYOUT_4( func, type, is_left, m_offset, extent, rank )  \
+  if (is_left) { LOOP_L_4( func, type, m_offset, extent, rank-1 ) }  \
+  else         { LOOP_R_4( func, type, m_offset, extent, 0 ) }  
+
+#define LOOP_LAYOUT_5( func, type, is_left, m_offset, extent, rank )  \
+  if (is_left) { LOOP_L_5( func, type, m_offset, extent, rank-1 ) }  \
+  else         { LOOP_R_5( func, type, m_offset, extent, 0 ) }  
+
+#define LOOP_LAYOUT_6( func, type, is_left, m_offset, extent, rank )  \
+  if (is_left) { LOOP_L_6( func, type, m_offset, extent, rank-1 ) }  \
+  else         { LOOP_R_6( func, type, m_offset, extent, 0 ) }  
+
+#define LOOP_LAYOUT_7( func, type, is_left, m_offset, extent, rank )  \
+  if (is_left) { LOOP_L_7( func, type, m_offset, extent, rank-1 ) }  \
+  else         { LOOP_R_7( func, type, m_offset, extent, 0 ) }  
+
+#define LOOP_LAYOUT_8( func, type, is_left, m_offset, extent, rank )  \
+  if (is_left) { LOOP_L_8( func, type, m_offset, extent, rank-1 ) }  \
+  else         { LOOP_R_8( func, type, m_offset, extent, 0 ) }  
+
+// Partial vs Full Tile
+#define TILE_LOOP_1( func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
+  if (cond) { LOOP_LAYOUT_1( func, type, is_left, m_offset, extent_full, rank ) } \
+  else      { LOOP_LAYOUT_1( func, type, is_left, m_offset, extent_partial, rank ) }
+
+#define TILE_LOOP_2( func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
+  if (cond) { LOOP_LAYOUT_2( func, type, is_left, m_offset, extent_full, rank ) } \
+  else      { LOOP_LAYOUT_2( func, type, is_left, m_offset, extent_partial, rank ) }
+
+#define TILE_LOOP_3( func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
+  if (cond) { LOOP_LAYOUT_3( func, type, is_left, m_offset, extent_full, rank ) } \
+  else      { LOOP_LAYOUT_3( func, type, is_left, m_offset, extent_partial, rank ) }
+
+#define TILE_LOOP_4( func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
+  if (cond) { LOOP_LAYOUT_4( func, type, is_left, m_offset, extent_full, rank ) } \
+  else      { LOOP_LAYOUT_4( func, type, is_left, m_offset, extent_partial, rank ) }
+
+#define TILE_LOOP_5( func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
+  if (cond) { LOOP_LAYOUT_5( func, type, is_left, m_offset, extent_full, rank ) } \
+  else      { LOOP_LAYOUT_5( func, type, is_left, m_offset, extent_partial, rank ) }
+
+#define TILE_LOOP_6( func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
+  if (cond) { LOOP_LAYOUT_6( func, type, is_left, m_offset, extent_full, rank ) } \
+  else      { LOOP_LAYOUT_6( func, type, is_left, m_offset, extent_partial, rank ) }
+
+#define TILE_LOOP_7( func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
+  if (cond) { LOOP_LAYOUT_7( func, type, is_left, m_offset, extent_full, rank ) } \
+  else      { LOOP_LAYOUT_7( func, type, is_left, m_offset, extent_partial, rank ) }
+
+#define TILE_LOOP_8( func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
+  if (cond) { LOOP_LAYOUT_8( func, type, is_left, m_offset, extent_full, rank ) } \
+  else      { LOOP_LAYOUT_8( func, type, is_left, m_offset, extent_partial, rank ) }
+
+
+// Reduction version
+
+#define APPLY_REDUX( val, func, ... ) \
+  func( __VA_ARGS__, val );
+
+// LayoutRight
+// d = 0 to start
+#define LOOP_R_1_REDUX( val, func, type, m_offset, extent, d, ... )    \
+  IVDEP_MDRANGE                            \
+  for( type i0 = (type)0; i0 < extent[d]; ++i0) { \
+    APPLY_REDUX( val, func, ##__VA_ARGS__, i0 + m_offset[d] )              \
+  }
+
+#define LOOP_R_2_REDUX( val, func, type, m_offset, extent, d, ... )             \
+  for( type i1 = (type)0; i1 < extent[d]; ++i1) {          \
+    LOOP_R_1_REDUX( val, func, type, m_offset, extent, d+1, ##__VA_ARGS__, i1 + m_offset[d] ) \
+  }
+
+#define LOOP_R_3_REDUX( val, func, type, m_offset, extent, d, ... )             \
+  for( type i2 = (type)0; i2 < extent[d]; ++i2) {          \
+    LOOP_R_2_REDUX( val, func, type, m_offset, extent, d+1, ##__VA_ARGS__, i2 + m_offset[d] ) \
+  }
+
+#define LOOP_R_4_REDUX( val, func, type, m_offset, extent, d, ... )             \
+  for( type i3 = (type)0; i3 < extent[d]; ++i3) {          \
+    LOOP_R_3_REDUX( val, func, type, m_offset, extent, d+1, ##__VA_ARGS__, i3 + m_offset[d] ) \
+  }
+
+#define LOOP_R_5_REDUX( val, func, type, m_offset, extent, d, ... )             \
+  for( type i4 = (type)0; i4 < extent[d]; ++i4) {          \
+    LOOP_R_4_REDUX( val, func, type, m_offset, extent, d+1, ##__VA_ARGS__, i4 + m_offset[d] ) \
+  }
+
+#define LOOP_R_6_REDUX( val, func, type, m_offset, extent, d, ... )             \
+  for( type i5 = (type)0; i5 < extent[d]; ++i5) {          \
+    LOOP_R_5_REDUX( val, func, type, m_offset, extent, d+1, ##__VA_ARGS__, i5 + m_offset[d] ) \
+  }
+
+#define LOOP_R_7_REDUX( val, func, type, m_offset, extent, d, ... )             \
+  for( type i6 = (type)0; i6 < extent[d]; ++i6) {          \
+    LOOP_R_6_REDUX( val, func, type, m_offset, extent, d+1, ##__VA_ARGS__, i6 + m_offset[d] ) \
+  }
+
+#define LOOP_R_8_REDUX( val, func, type, m_offset, extent, d, ... )             \
+  for( type i7 = (type)0; i7 < extent[d]; ++i7) {          \
+    LOOP_R_7_REDUX( val, func, type, m_offset, extent, d+1, ##__VA_ARGS__, i7 + m_offset[d] ) \
+  }
+
+//LayoutLeft
+// d = rank-1 to start
+#define LOOP_L_1_REDUX( val, func, type, m_offset, extent, d, ... )    \
+  IVDEP_MDRANGE                            \
+  for( type i0 = (type)0; i0 < extent[d]; ++i0) { \
+    APPLY_REDUX( val, func, i0 + m_offset[d] , ##__VA_ARGS__ )              \
+  }
+
+#define LOOP_L_2_REDUX( val, func, type, m_offset, extent, d, ... )             \
+  for( type i1 = (type)0; i1 < extent[d]; ++i1) {          \
+    LOOP_L_1_REDUX( val, func, type, m_offset, extent, d-1, i1 + m_offset[d], ##__VA_ARGS__ ) \
+  }
+
+#define LOOP_L_3_REDUX( val, func, type, m_offset, extent, d, ... )             \
+  for( type i2 = (type)0; i2 < extent[d]; ++i2) {          \
+    LOOP_L_2_REDUX( val, func, type, m_offset, extent, d-1, i2 + m_offset[d], ##__VA_ARGS__ ) \
+  }
+
+#define LOOP_L_4_REDUX( val, func, type, m_offset, extent, d, ... )             \
+  for( type i3 = (type)0; i3 < extent[d]; ++i3) {          \
+    LOOP_L_3_REDUX( val, func, type, m_offset, extent, d-1, i3 + m_offset[d], ##__VA_ARGS__ ) \
+  }
+
+#define LOOP_L_5_REDUX( val, func, type, m_offset, extent, d, ... )             \
+  for( type i4 = (type)0; i4 < extent[d]; ++i4) {          \
+    LOOP_L_4_REDUX( val, func, type, m_offset, extent, d-1, i4 + m_offset[d], ##__VA_ARGS__ ) \
+  }
+
+#define LOOP_L_6_REDUX( val, func, type, m_offset, extent, d, ... )             \
+  for( type i5 = (type)0; i5 < extent[d]; ++i5) {          \
+    LOOP_L_5_REDUX( val, func, type, m_offset, extent, d-1, i5 + m_offset[d], ##__VA_ARGS__ ) \
+  }
+
+#define LOOP_L_7_REDUX( val, func, type, m_offset, extent, d, ... )             \
+  for( type i6 = (type)0; i6 < extent[d]; ++i6) {          \
+    LOOP_L_6_REDUX( val, func, type, m_offset, extent, d-1, i6 + m_offset[d], ##__VA_ARGS__ ) \
+  }
+
+#define LOOP_L_8_REDUX( val, func, type, m_offset, extent, d, ... )             \
+  for( type i7 = (type)0; i7 < extent[d]; ++i7) {          \
+    LOOP_L_7_REDUX( val, func, type, m_offset, extent, d-1, i7 + m_offset[d], ##__VA_ARGS__ ) \
+  }
+
+// Left vs Right
+#define LOOP_LAYOUT_1_REDUX( val, func, type, is_left, m_offset, extent, rank )  \
+  if (is_left) { LOOP_L_1_REDUX( val, func, type, m_offset, extent, rank-1 ) }  \
+  else         { LOOP_R_1_REDUX( val, func, type, m_offset, extent, 0 ) }  
+
+#define LOOP_LAYOUT_2_REDUX( val, func, type, is_left, m_offset, extent, rank )  \
+  if (is_left) { LOOP_L_2_REDUX( val, func, type, m_offset, extent, rank-1 ) }  \
+  else         { LOOP_R_2_REDUX( val, func, type, m_offset, extent, 0 ) }  
+
+#define LOOP_LAYOUT_3_REDUX( val, func, type, is_left, m_offset, extent, rank )  \
+  if (is_left) { LOOP_L_3_REDUX( val, func, type, m_offset, extent, rank-1 ) }  \
+  else         { LOOP_R_3_REDUX( val, func, type, m_offset, extent, 0 ) }  
+
+#define LOOP_LAYOUT_4_REDUX( val, func, type, is_left, m_offset, extent, rank )  \
+  if (is_left) { LOOP_L_4_REDUX( val, func, type, m_offset, extent, rank-1 ) }  \
+  else         { LOOP_R_4_REDUX( val, func, type, m_offset, extent, 0 ) }  
+
+#define LOOP_LAYOUT_5_REDUX( val, func, type, is_left, m_offset, extent, rank )  \
+  if (is_left) { LOOP_L_5_REDUX( val, func, type, m_offset, extent, rank-1 ) }  \
+  else         { LOOP_R_5_REDUX( val, func, type, m_offset, extent, 0 ) }  
+
+#define LOOP_LAYOUT_6_REDUX( val, func, type, is_left, m_offset, extent, rank )  \
+  if (is_left) { LOOP_L_6_REDUX( val, func, type, m_offset, extent, rank-1 ) }  \
+  else         { LOOP_R_6_REDUX( val, func, type, m_offset, extent, 0 ) }  
+
+#define LOOP_LAYOUT_7_REDUX( val, func, type, is_left, m_offset, extent, rank )  \
+  if (is_left) { LOOP_L_7_REDUX( val, func, type, m_offset, extent, rank-1 ) }  \
+  else         { LOOP_R_7_REDUX( val, func, type, m_offset, extent, 0 ) }  
+
+#define LOOP_LAYOUT_8_REDUX( val, func, type, is_left, m_offset, extent, rank )  \
+  if (is_left) { LOOP_L_8_REDUX( val, func, type, m_offset, extent, rank-1 ) }  \
+  else         { LOOP_R_8_REDUX( val, func, type, m_offset, extent, 0 ) }  
+
+// Partial vs Full Tile
+#define TILE_LOOP_1_REDUX( val, func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
+  if (cond) { LOOP_LAYOUT_1_REDUX( val, func, type, is_left, m_offset, extent_full, rank ) } \
+  else      { LOOP_LAYOUT_1_REDUX( val, func, type, is_left, m_offset, extent_partial, rank ) }
+
+#define TILE_LOOP_2_REDUX( val, func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
+  if (cond) { LOOP_LAYOUT_2_REDUX( val, func, type, is_left, m_offset, extent_full, rank ) } \
+  else      { LOOP_LAYOUT_2_REDUX( val, func, type, is_left, m_offset, extent_partial, rank ) }
+
+#define TILE_LOOP_3_REDUX( val, func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
+  if (cond) { LOOP_LAYOUT_3_REDUX( val, func, type, is_left, m_offset, extent_full, rank ) } \
+  else      { LOOP_LAYOUT_3_REDUX( val, func, type, is_left, m_offset, extent_partial, rank ) }
+
+#define TILE_LOOP_4_REDUX( val, func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
+  if (cond) { LOOP_LAYOUT_4_REDUX( val, func, type, is_left, m_offset, extent_full, rank ) } \
+  else      { LOOP_LAYOUT_4_REDUX( val, func, type, is_left, m_offset, extent_partial, rank ) }
+
+#define TILE_LOOP_5_REDUX( val, func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
+  if (cond) { LOOP_LAYOUT_5_REDUX( val, func, type, is_left, m_offset, extent_full, rank ) } \
+  else      { LOOP_LAYOUT_5_REDUX( val, func, type, is_left, m_offset, extent_partial, rank ) }
+
+#define TILE_LOOP_6_REDUX( val, func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
+  if (cond) { LOOP_LAYOUT_6_REDUX( val, func, type, is_left, m_offset, extent_full, rank ) } \
+  else      { LOOP_LAYOUT_6_REDUX( val, func, type, is_left, m_offset, extent_partial, rank ) }
+
+#define TILE_LOOP_7_REDUX( val, func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
+  if (cond) { LOOP_LAYOUT_7_REDUX( val, func, type, is_left, m_offset, extent_full, rank ) } \
+  else      { LOOP_LAYOUT_7_REDUX( val, func, type, is_left, m_offset, extent_partial, rank ) }
+
+#define TILE_LOOP_8_REDUX( val, func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
+  if (cond) { LOOP_LAYOUT_8_REDUX( val, func, type, is_left, m_offset, extent_full, rank ) } \
+  else      { LOOP_LAYOUT_8_REDUX( val, func, type, is_left, m_offset, extent_partial, rank ) }
+
+
+// end New Loop Macros
+
+// Structs for calling loops
+template < int Rank, bool IsLeft, typename IType >
+struct Tile_Loop_Type;
+
+template < bool IsLeft, typename IType >
+struct Tile_Loop_Type<1, IsLeft, IType>
+{
+  template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
+  static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
+  {
+    TILE_LOOP_1( func, IType, IsLeft, cond, offset, a, b, 1 );
+  }
+
+  template < typename ValType, typename Func, typename Offset, typename ExtentA, typename ExtentB >
+  static void apply(ValType &value, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
+  {
+    TILE_LOOP_1_REDUX( value, func, IType, IsLeft, cond, offset, a, b, 1 );
+  }
+};
+
+template < bool IsLeft, typename IType >
+struct Tile_Loop_Type<2, IsLeft, IType>
+{
+  template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
+  static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
+  {
+    TILE_LOOP_2( func, IType, IsLeft, cond, offset, a, b, 2 );
+  }
+
+  template < typename ValType, typename Func, typename Offset, typename ExtentA, typename ExtentB >
+  static void apply(ValType &value, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
+  {
+    TILE_LOOP_2_REDUX( value, func, IType, IsLeft, cond, offset, a, b, 2 );
+  }
+};
+
+template < bool IsLeft, typename IType >
+struct Tile_Loop_Type<3, IsLeft, IType>
+{
+  template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
+  static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
+  {
+    TILE_LOOP_3( func, IType, IsLeft, cond, offset, a, b, 3 );
+  }
+
+  template < typename ValType, typename Func, typename Offset, typename ExtentA, typename ExtentB >
+  static void apply(ValType &value, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
+  {
+    TILE_LOOP_3_REDUX( value, func, IType, IsLeft, cond, offset, a, b, 3 );
+  }
+};
+
+template < bool IsLeft, typename IType >
+struct Tile_Loop_Type<4, IsLeft, IType>
+{
+  template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
+  static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
+  {
+    TILE_LOOP_4( func, IType, IsLeft, cond, offset, a, b, 4 );
+  }
+
+  template < typename ValType, typename Func, typename Offset, typename ExtentA, typename ExtentB >
+  static void apply(ValType &value, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
+  {
+    TILE_LOOP_4_REDUX( value, func, IType, IsLeft, cond, offset, a, b, 4 );
+  }
+};
+
+template < bool IsLeft, typename IType >
+struct Tile_Loop_Type<5, IsLeft, IType>
+{
+  template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
+  static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
+  {
+    TILE_LOOP_5( func, IType, IsLeft, cond, offset, a, b, 5 );
+  }
+
+  template < typename ValType, typename Func, typename Offset, typename ExtentA, typename ExtentB >
+  static void apply(ValType &value, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
+  {
+    TILE_LOOP_5_REDUX( value, func, IType, IsLeft, cond, offset, a, b, 5 );
+  }
+};
+
+template < bool IsLeft, typename IType >
+struct Tile_Loop_Type<6, IsLeft, IType>
+{
+  template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
+  static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
+  {
+    TILE_LOOP_6( func, IType, IsLeft, cond, offset, a, b, 6 );
+  }
+
+  template < typename ValType, typename Func, typename Offset, typename ExtentA, typename ExtentB >
+  static void apply(ValType &value, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
+  {
+    TILE_LOOP_6_REDUX( value, func, IType, IsLeft, cond, offset, a, b, 6 );
+  }
+};
+
+template < bool IsLeft, typename IType >
+struct Tile_Loop_Type<7, IsLeft, IType>
+{
+  template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
+  static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
+  {
+    TILE_LOOP_7( func, IType, IsLeft, cond, offset, a, b, 7 );
+  }
+
+  template < typename ValType, typename Func, typename Offset, typename ExtentA, typename ExtentB >
+  static void apply(ValType &value, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
+  {
+    TILE_LOOP_7_REDUX( value, func, IType, IsLeft, cond, offset, a, b, 7 );
+  }
+};
+
+template < bool IsLeft, typename IType >
+struct Tile_Loop_Type<8, IsLeft, IType>
+{
+  template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
+  static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
+  {
+    TILE_LOOP_8( func, IType, IsLeft, cond, offset, a, b, 8 );
+  }
+
+  template < typename ValType, typename Func, typename Offset, typename ExtentA, typename ExtentB >
+  static void apply(ValType &value, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
+  {
+    TILE_LOOP_8_REDUX( value, func, IType, IsLeft, cond, offset, a, b, 8 );
+  }
+};
+
+// end Structs for calling loops
+#define NEW_LOOP_MACROS 1
+
+
 
 template <typename T>
 using is_void = std::is_same< T , void >;
@@ -144,6 +607,7 @@ template < typename RP
          >
 struct HostIterateTile;
 
+//For ParallelFor
 template < typename RP
          , typename Functor
          , typename Tag
@@ -190,13 +654,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     enum { value = (int)Rank };
   };
 
-#if REMOVEOPERATOR
-
+#if NEW_LOOP_MACROS
   template <typename IType>
   inline
-  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 2) ) >::type 
-  apply_impl( IType tile_idx ) const
-  {
+  void
+  operator()(IType tile_idx) const
+  { 
     point_type m_offset;
     point_type m_tiledims;
 
@@ -216,361 +679,11 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
     const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ; 
 
-    if (RP::inner_direction == RP::Left) {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_2L(m_tiledims) {
-          apply( LOOP_ARGS_2 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_2L(m_tiledims) {
-          apply( LOOP_ARGS_2 );
-        }
-      }
-    } // end RP::Left
-    else {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_2R(m_tiledims) {
-          apply( LOOP_ARGS_2 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_2R(m_tiledims) {
-          apply( LOOP_ARGS_2 );
-        }
-      }
-    } // end RP::Right
+    Tile_Loop_Type< RP::rank, (RP::inner_direction == RP::Left), index_type >::apply( m_func, full_tile, m_offset, m_rp.m_tile, m_tiledims);
 
-  } //end op() rank == 2
+  }
 
-
-  template <typename IType>
-  inline
-  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 3) ) >::type 
-  apply_impl( IType tile_idx ) const
-  {
-    point_type m_offset;
-    point_type m_tiledims;
-
-    if (RP::outer_direction == RP::Left) {
-      for (int i=0; i<RP::rank; ++i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-    else {
-      for (int i=RP::rank-1; i>=0; --i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-
-    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
-    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
-
-    if (RP::inner_direction == RP::Left) {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_3L(m_tiledims) {
-          apply( LOOP_ARGS_3 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_3L(m_tiledims) {
-          apply( LOOP_ARGS_3 );
-        }
-      }
-    } // end RP::Left
-    else {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_3R(m_tiledims) {
-          apply( LOOP_ARGS_3 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_3R(m_tiledims) {
-          apply( LOOP_ARGS_3 );
-        }
-      }
-    } // end RP::Right
-
-  } //end op() rank == 3
-
-
-  template <typename IType>
-  inline
-  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 4) ) >::type 
-  apply_impl( IType tile_idx ) const
-  {
-    point_type m_offset;
-    point_type m_tiledims;
-
-    if (RP::outer_direction == RP::Left) {
-      for (int i=0; i<RP::rank; ++i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-    else {
-      for (int i=RP::rank-1; i>=0; --i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-
-    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
-    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
-
-    if (RP::inner_direction == RP::Left) {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_4L(m_tiledims) {
-          apply( LOOP_ARGS_4 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_4L(m_tiledims) {
-          apply( LOOP_ARGS_4 );
-        }
-      }
-    } // end RP::Left
-    else {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_4R(m_tiledims) {
-          apply( LOOP_ARGS_4 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_4R(m_tiledims) {
-          apply( LOOP_ARGS_4 );
-        }
-      }
-    } // end RP::Right
-
-  } //end op() rank == 4
-
-
-  template <typename IType>
-  inline
-  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 5) ) >::type 
-  apply_impl( IType tile_idx ) const
-  {
-    point_type m_offset;
-    point_type m_tiledims;
-
-    if (RP::outer_direction == RP::Left) {
-      for (int i=0; i<RP::rank; ++i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-    else {
-      for (int i=RP::rank-1; i>=0; --i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-
-    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
-    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
-
-    if (RP::inner_direction == RP::Left) {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_5L(m_tiledims) {
-          apply( LOOP_ARGS_5 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_5L(m_tiledims) {
-          apply( LOOP_ARGS_5 );
-        }
-      }
-    } // end RP::Left
-    else {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_5R(m_tiledims) {
-          apply( LOOP_ARGS_5 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_5R(m_tiledims) {
-          apply( LOOP_ARGS_5 );
-        }
-      }
-    } // end RP::Right
-
-  } //end op() rank == 5
-
-
-  template <typename IType>
-  inline
-  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 6) ) >::type 
-  apply_impl( IType tile_idx ) const
-  {
-    point_type m_offset;
-    point_type m_tiledims;
-
-    if (RP::outer_direction == RP::Left) {
-      for (int i=0; i<RP::rank; ++i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-    else {
-      for (int i=RP::rank-1; i>=0; --i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-
-    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
-    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
-
-    if (RP::inner_direction == RP::Left) {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_6L(m_tiledims) {
-          apply( LOOP_ARGS_6 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_6L(m_tiledims) {
-          apply( LOOP_ARGS_6 );
-        }
-      }
-    } // end RP::Left
-    else {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_6R(m_tiledims) {
-          apply( LOOP_ARGS_6 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_6R(m_tiledims) {
-          apply( LOOP_ARGS_6 );
-        }
-      }
-    } // end RP::Right
-
-  } //end op() rank == 6
-
-
-  template <typename IType>
-  inline
-  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 7) ) >::type 
-  apply_impl( IType tile_idx ) const
-  {
-    point_type m_offset;
-    point_type m_tiledims;
-
-    if (RP::outer_direction == RP::Left) {
-      for (int i=0; i<RP::rank; ++i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-    else {
-      for (int i=RP::rank-1; i>=0; --i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-
-    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
-    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
-
-    if (RP::inner_direction == RP::Left) {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_7L(m_tiledims) {
-          apply( LOOP_ARGS_7 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_7L(m_tiledims) {
-          apply( LOOP_ARGS_7 );
-        }
-      }
-    } // end RP::Left
-    else {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_7R(m_tiledims) {
-          apply( LOOP_ARGS_7 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_7R(m_tiledims) {
-          apply( LOOP_ARGS_7 );
-        }
-      }
-    } // end RP::Right
-
-  } //end op() rank == 7
-
-
-  template <typename IType>
-  inline
-  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 8) ) >::type 
-  apply_impl( IType tile_idx ) const
-  {
-    point_type m_offset;
-    point_type m_tiledims;
-
-    if (RP::outer_direction == RP::Left) {
-      for (int i=0; i<RP::rank; ++i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-    else {
-      for (int i=RP::rank-1; i>=0; --i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-
-    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
-    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
-
-    if (RP::inner_direction == RP::Left) {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_8L(m_tiledims) {
-          apply( LOOP_ARGS_8 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_8L(m_tiledims) {
-          apply( LOOP_ARGS_8 );
-        }
-      }
-    } // end RP::Left
-    else {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_8R(m_tiledims) {
-          apply( LOOP_ARGS_8 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_8R(m_tiledims) {
-          apply( LOOP_ARGS_8 );
-        }
-      }
-    } // end RP::Right
-
-  } //end op() rank == 8
-
-
-#else
+#else 
   template <typename IType>
   inline
   void
@@ -949,6 +1062,7 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
   } //end op() rank == 8
 #endif
 
+
     template <typename... Args>
     typename std::enable_if<( sizeof...(Args) == RP::rank && std::is_same<Tag,void>::value), void>::type
     apply(Args &&... args) const
@@ -1021,12 +1135,12 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
   };
 
 
-#if REMOVEOPERATOR
+#if NEW_LOOP_MACROS
   template <typename IType>
   inline
-  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 2) ) >::type 
-  apply_impl( IType tile_idx ) const
-  {
+  void
+  operator()(IType tile_idx) const
+  { 
     point_type m_offset;
     point_type m_tiledims;
 
@@ -1046,361 +1160,11 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
     const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ; 
 
-    if (RP::inner_direction == RP::Left) {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_2L(m_tiledims) {
-          apply( LOOP_ARGS_2 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_2L(m_tiledims) {
-          apply( LOOP_ARGS_2 );
-        }
-      }
-    } // end RP::Left
-    else {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_2R(m_tiledims) {
-          apply( LOOP_ARGS_2 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_2R(m_tiledims) {
-          apply( LOOP_ARGS_2 );
-        }
-      }
-    } // end RP::Right
+    Tile_Loop_Type< RP::rank, (RP::inner_direction == RP::Left), index_type >::apply( m_v, m_func, full_tile, m_offset, m_rp.m_tile, m_tiledims);
 
-  } //end op() rank == 2
+  }
 
-
-  template <typename IType>
-  inline
-  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 3) ) >::type 
-  apply_impl( IType tile_idx ) const
-  {
-    point_type m_offset;
-    point_type m_tiledims;
-
-    if (RP::outer_direction == RP::Left) {
-      for (int i=0; i<RP::rank; ++i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-    else {
-      for (int i=RP::rank-1; i>=0; --i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-
-    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
-    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
-
-    if (RP::inner_direction == RP::Left) {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_3L(m_tiledims) {
-          apply( LOOP_ARGS_3 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_3L(m_tiledims) {
-          apply( LOOP_ARGS_3 );
-        }
-      }
-    } // end RP::Left
-    else {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_3R(m_tiledims) {
-          apply( LOOP_ARGS_3 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_3R(m_tiledims) {
-          apply( LOOP_ARGS_3 );
-        }
-      }
-    } // end RP::Right
-
-  } //end op() rank == 3
-
-
-  template <typename IType>
-  inline
-  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 4) ) >::type 
-  apply_impl( IType tile_idx ) const
-  {
-    point_type m_offset;
-    point_type m_tiledims;
-
-    if (RP::outer_direction == RP::Left) {
-      for (int i=0; i<RP::rank; ++i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-    else {
-      for (int i=RP::rank-1; i>=0; --i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-
-    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
-    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
-
-    if (RP::inner_direction == RP::Left) {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_4L(m_tiledims) {
-          apply( LOOP_ARGS_4 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_4L(m_tiledims) {
-          apply( LOOP_ARGS_4 );
-        }
-      }
-    } // end RP::Left
-    else {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_4R(m_tiledims) {
-          apply( LOOP_ARGS_4 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_4R(m_tiledims) {
-          apply( LOOP_ARGS_4 );
-        }
-      }
-    } // end RP::Right
-
-  } //end op() rank == 4
-
-
-  template <typename IType>
-  inline
-  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 5) ) >::type 
-  apply_impl( IType tile_idx ) const
-  {
-    point_type m_offset;
-    point_type m_tiledims;
-
-    if (RP::outer_direction == RP::Left) {
-      for (int i=0; i<RP::rank; ++i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-    else {
-      for (int i=RP::rank-1; i>=0; --i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-
-    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
-    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
-
-    if (RP::inner_direction == RP::Left) {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_5L(m_tiledims) {
-          apply( LOOP_ARGS_5 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_5L(m_tiledims) {
-          apply( LOOP_ARGS_5 );
-        }
-      }
-    } // end RP::Left
-    else {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_5R(m_tiledims) {
-          apply( LOOP_ARGS_5 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_5R(m_tiledims) {
-          apply( LOOP_ARGS_5 );
-        }
-      }
-    } // end RP::Right
-
-  } //end op() rank == 5
-
-
-  template <typename IType>
-  inline
-  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 6) ) >::type 
-  apply_impl( IType tile_idx ) const
-  {
-    point_type m_offset;
-    point_type m_tiledims;
-
-    if (RP::outer_direction == RP::Left) {
-      for (int i=0; i<RP::rank; ++i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-    else {
-      for (int i=RP::rank-1; i>=0; --i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-
-    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
-    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
-
-    if (RP::inner_direction == RP::Left) {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_6L(m_tiledims) {
-          apply( LOOP_ARGS_6 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_6L(m_tiledims) {
-          apply( LOOP_ARGS_6 );
-        }
-      }
-    } // end RP::Left
-    else {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_6R(m_tiledims) {
-          apply( LOOP_ARGS_6 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_6R(m_tiledims) {
-          apply( LOOP_ARGS_6 );
-        }
-      }
-    } // end RP::Right
-
-  } //end op() rank == 6
-
-
-  template <typename IType>
-  inline
-  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 7) ) >::type 
-  apply_impl( IType tile_idx ) const
-  {
-    point_type m_offset;
-    point_type m_tiledims;
-
-    if (RP::outer_direction == RP::Left) {
-      for (int i=0; i<RP::rank; ++i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-    else {
-      for (int i=RP::rank-1; i>=0; --i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-
-    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
-    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
-
-    if (RP::inner_direction == RP::Left) {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_7L(m_tiledims) {
-          apply( LOOP_ARGS_7 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_7L(m_tiledims) {
-          apply( LOOP_ARGS_7 );
-        }
-      }
-    } // end RP::Left
-    else {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_7R(m_tiledims) {
-          apply( LOOP_ARGS_7 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_7R(m_tiledims) {
-          apply( LOOP_ARGS_7 );
-        }
-      }
-    } // end RP::Right
-
-  } //end op() rank == 7
-
-
-  template <typename IType>
-  inline
-  typename std::enable_if< ( std::is_integral<IType>::value && (RP::rank == 8) ) >::type 
-  apply_impl( IType tile_idx ) const
-  {
-    point_type m_offset;
-    point_type m_tiledims;
-
-    if (RP::outer_direction == RP::Left) {
-      for (int i=0; i<RP::rank; ++i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ; 
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-    else {
-      for (int i=RP::rank-1; i>=0; --i) {
-        m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
-        tile_idx /= m_rp.m_tile_end[i];
-      }
-    }
-
-    //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
-    const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ;
-
-    if (RP::inner_direction == RP::Left) {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_8L(m_tiledims) {
-          apply( LOOP_ARGS_8 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_8L(m_tiledims) {
-          apply( LOOP_ARGS_8 );
-        }
-      }
-    } // end RP::Left
-    else {
-     if ( full_tile ) {
-//      #pragma simd
-        LOOP_8R(m_tiledims) {
-          apply( LOOP_ARGS_8 );
-        }
-      } else {
-//      #pragma simd
-        LOOP_8R(m_tiledims) {
-          apply( LOOP_ARGS_8 );
-        }
-      }
-    } // end RP::Right
-
-  } //end op() rank == 8
-
-
-#else
+#else 
   template <typename IType>
   inline
   void
@@ -1847,11 +1611,7 @@ struct MDFunctor
   inline
   void operator()(index_type t, value_type & v) const
   {
-  #if REMOVEOPERATOR
-    iterate_type(m_range, m_func, v).apply_impl(t);
-  #else
     iterate_type(m_range, m_func, v)(t);
-  #endif 
   }
 
   MDRange   m_range;
@@ -1894,18 +1654,14 @@ struct MDFunctor< MDRange, Functor, void >
   inline
   void operator()(index_type t) const
   {
-  #if REMOVEOPERATOR
-    iterate_type(m_range, m_func).apply_impl(t);
-  #else
     iterate_type(m_range, m_func)(t);
-  #endif
   }
 
   MDRange m_range;
   Functor m_func;
 };
 
-#undef REMOVEOPERATOR
+#undef NEW_LOOP_MACROS
 
 } } } //end namespace Kokkos::Experimental::Impl
 
