@@ -15,14 +15,14 @@ The KokkosP interface and associated tools are developed by the Application
 Performance Team and Kokkos core developers at Sandia National Laboratories.
 
 To learn more about Kokkos consider watching one of our presentations:
-GTC 2015:
-  http://on-demand.gputechconf.com/gtc/2015/video/S5166.html
-  http://on-demand.gputechconf.com/gtc/2015/presentation/S5166-H-Carter-Edwards.pdf
+ * GTC 2015:
+   - http://on-demand.gputechconf.com/gtc/2015/video/S5166.html
+   - http://on-demand.gputechconf.com/gtc/2015/presentation/S5166-H-Carter-Edwards.pdf
 
-A programming guide can be found under doc/Kokkos_PG.pdf. This is an initial version
+A programming guide can be found under `doc/Kokkos_PG.pdf`. This is an initial version
 and feedback is greatly appreciated.
 
-A separate repository with extensive tutorial material can be found under 
+A separate repository with extensive tutorial material can be found under
 https://github.com/kokkos/kokkos-tutorials.
 
 If you have a patch to contribute please feel free to issue a pull request against
