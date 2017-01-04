@@ -150,86 +150,86 @@ namespace Kokkos { namespace Experimental { namespace Impl {
 // d = 0 to start
 #define LOOP_R_1( func, type, m_offset, extent, d, ... )    \
   IVDEP_MDRANGE                            \
-  for( type i0 = (type)0; i0 < extent[d]; ++i0) { \
-    APPLY( func, ##__VA_ARGS__, i0 + m_offset[d] )              \
+  for( type i0 = (type)0; i0 < static_cast<type>(extent[d]); ++i0) { \
+    APPLY( func , __VA_ARGS__, i0 + m_offset[d] )              \
   }
 
 #define LOOP_R_2( func, type, m_offset, extent, d, ... )             \
-  for( type i1 = (type)0; i1 < extent[d]; ++i1) {          \
-    LOOP_R_1( func, type, m_offset, extent, d+1, ##__VA_ARGS__, i1 + m_offset[d] ) \
+  for( type i1 = (type)0; i1 < static_cast<type>(extent[d]); ++i1) {          \
+    LOOP_R_1( func, type, m_offset, extent, d+1 , __VA_ARGS__, i1 + m_offset[d] ) \
   }
 
 #define LOOP_R_3( func, type, m_offset, extent, d, ... )             \
-  for( type i2 = (type)0; i2 < extent[d]; ++i2) {          \
-    LOOP_R_2( func, type, m_offset, extent, d+1, ##__VA_ARGS__, i2 + m_offset[d] ) \
+  for( type i2 = (type)0; i2 < static_cast<type>(extent[d]); ++i2) {          \
+    LOOP_R_2( func, type, m_offset, extent, d+1 , __VA_ARGS__, i2 + m_offset[d] ) \
   }
 
 #define LOOP_R_4( func, type, m_offset, extent, d, ... )             \
-  for( type i3 = (type)0; i3 < extent[d]; ++i3) {          \
-    LOOP_R_3( func, type, m_offset, extent, d+1, ##__VA_ARGS__, i3 + m_offset[d] ) \
+  for( type i3 = (type)0; i3 < static_cast<type>(extent[d]); ++i3) {          \
+    LOOP_R_3( func, type, m_offset, extent, d+1 , __VA_ARGS__, i3 + m_offset[d] ) \
   }
 
 #define LOOP_R_5( func, type, m_offset, extent, d, ... )             \
-  for( type i4 = (type)0; i4 < extent[d]; ++i4) {          \
-    LOOP_R_4( func, type, m_offset, extent, d+1, ##__VA_ARGS__, i4 + m_offset[d] ) \
+  for( type i4 = (type)0; i4 < static_cast<type>(extent[d]); ++i4) {          \
+    LOOP_R_4( func, type, m_offset, extent, d+1 , __VA_ARGS__, i4 + m_offset[d] ) \
   }
 
 #define LOOP_R_6( func, type, m_offset, extent, d, ... )             \
-  for( type i5 = (type)0; i5 < extent[d]; ++i5) {          \
-    LOOP_R_5( func, type, m_offset, extent, d+1, ##__VA_ARGS__, i5 + m_offset[d] ) \
+  for( type i5 = (type)0; i5 < static_cast<type>(extent[d]); ++i5) {          \
+    LOOP_R_5( func, type, m_offset, extent, d+1 , __VA_ARGS__, i5 + m_offset[d] ) \
   }
 
 #define LOOP_R_7( func, type, m_offset, extent, d, ... )             \
-  for( type i6 = (type)0; i6 < extent[d]; ++i6) {          \
-    LOOP_R_6( func, type, m_offset, extent, d+1, ##__VA_ARGS__, i6 + m_offset[d] ) \
+  for( type i6 = (type)0; i6 < static_cast<type>(extent[d]); ++i6) {          \
+    LOOP_R_6( func, type, m_offset, extent, d+1 , __VA_ARGS__, i6 + m_offset[d] ) \
   }
 
 #define LOOP_R_8( func, type, m_offset, extent, d, ... )             \
-  for( type i7 = (type)0; i7 < extent[d]; ++i7) {          \
-    LOOP_R_7( func, type, m_offset, extent, d+1, ##__VA_ARGS__, i7 + m_offset[d] ) \
+  for( type i7 = (type)0; i7 < static_cast<type>(extent[d]); ++i7) {          \
+    LOOP_R_7( func, type, m_offset, extent, d+1 , __VA_ARGS__, i7 + m_offset[d] ) \
   }
 
 //LayoutLeft
 // d = rank-1 to start
 #define LOOP_L_1( func, type, m_offset, extent, d, ... )    \
   IVDEP_MDRANGE                            \
-  for( type i0 = (type)0; i0 < extent[d]; ++i0) { \
-    APPLY( func, i0 + m_offset[d] , ##__VA_ARGS__ )              \
+  for( type i0 = (type)0; i0 < static_cast<type>(extent[d]); ++i0) { \
+    APPLY( func, i0 + m_offset[d] , __VA_ARGS__ )              \
   }
 
 #define LOOP_L_2( func, type, m_offset, extent, d, ... )             \
-  for( type i1 = (type)0; i1 < extent[d]; ++i1) {          \
-    LOOP_L_1( func, type, m_offset, extent, d-1, i1 + m_offset[d], ##__VA_ARGS__ ) \
+  for( type i1 = (type)0; i1 < static_cast<type>(extent[d]); ++i1) {          \
+    LOOP_L_1( func, type, m_offset, extent, d-1, i1 + m_offset[d] , __VA_ARGS__ ) \
   }
 
 #define LOOP_L_3( func, type, m_offset, extent, d, ... )             \
-  for( type i2 = (type)0; i2 < extent[d]; ++i2) {          \
-    LOOP_L_2( func, type, m_offset, extent, d-1, i2 + m_offset[d], ##__VA_ARGS__ ) \
+  for( type i2 = (type)0; i2 < static_cast<type>(extent[d]); ++i2) {          \
+    LOOP_L_2( func, type, m_offset, extent, d-1, i2 + m_offset[d] , __VA_ARGS__ ) \
   }
 
 #define LOOP_L_4( func, type, m_offset, extent, d, ... )             \
-  for( type i3 = (type)0; i3 < extent[d]; ++i3) {          \
-    LOOP_L_3( func, type, m_offset, extent, d-1, i3 + m_offset[d], ##__VA_ARGS__ ) \
+  for( type i3 = (type)0; i3 < static_cast<type>(extent[d]); ++i3) {          \
+    LOOP_L_3( func, type, m_offset, extent, d-1, i3 + m_offset[d] , __VA_ARGS__ ) \
   }
 
 #define LOOP_L_5( func, type, m_offset, extent, d, ... )             \
-  for( type i4 = (type)0; i4 < extent[d]; ++i4) {          \
-    LOOP_L_4( func, type, m_offset, extent, d-1, i4 + m_offset[d], ##__VA_ARGS__ ) \
+  for( type i4 = (type)0; i4 < static_cast<type>(extent[d]); ++i4) {          \
+    LOOP_L_4( func, type, m_offset, extent, d-1, i4 + m_offset[d] , __VA_ARGS__ ) \
   }
 
 #define LOOP_L_6( func, type, m_offset, extent, d, ... )             \
-  for( type i5 = (type)0; i5 < extent[d]; ++i5) {          \
-    LOOP_L_5( func, type, m_offset, extent, d-1, i5 + m_offset[d], ##__VA_ARGS__ ) \
+  for( type i5 = (type)0; i5 < static_cast<type>(extent[d]); ++i5) {          \
+    LOOP_L_5( func, type, m_offset, extent, d-1, i5 + m_offset[d] , __VA_ARGS__ ) \
   }
 
 #define LOOP_L_7( func, type, m_offset, extent, d, ... )             \
-  for( type i6 = (type)0; i6 < extent[d]; ++i6) {          \
-    LOOP_L_6( func, type, m_offset, extent, d-1, i6 + m_offset[d], ##__VA_ARGS__ ) \
+  for( type i6 = (type)0; i6 < static_cast<type>(extent[d]); ++i6) {          \
+    LOOP_L_6( func, type, m_offset, extent, d-1, i6 + m_offset[d] , __VA_ARGS__ ) \
   }
 
 #define LOOP_L_8( func, type, m_offset, extent, d, ... )             \
-  for( type i7 = (type)0; i7 < extent[d]; ++i7) {          \
-    LOOP_L_7( func, type, m_offset, extent, d-1, i7 + m_offset[d], ##__VA_ARGS__ ) \
+  for( type i7 = (type)0; i7 < static_cast<type>(extent[d]); ++i7) {          \
+    LOOP_L_7( func, type, m_offset, extent, d-1, i7 + m_offset[d] , __VA_ARGS__ ) \
   }
 
 // Left vs Right
@@ -308,86 +308,86 @@ namespace Kokkos { namespace Experimental { namespace Impl {
 // d = 0 to start
 #define LOOP_R_1_REDUX( val, func, type, m_offset, extent, d, ... )    \
   IVDEP_MDRANGE                            \
-  for( type i0 = (type)0; i0 < extent[d]; ++i0) { \
-    APPLY_REDUX( val, func, ##__VA_ARGS__, i0 + m_offset[d] )              \
+  for( type i0 = (type)0; i0 < static_cast<type>(extent[d]); ++i0) { \
+    APPLY_REDUX( val, func , __VA_ARGS__, i0 + m_offset[d] )              \
   }
 
 #define LOOP_R_2_REDUX( val, func, type, m_offset, extent, d, ... )             \
-  for( type i1 = (type)0; i1 < extent[d]; ++i1) {          \
-    LOOP_R_1_REDUX( val, func, type, m_offset, extent, d+1, ##__VA_ARGS__, i1 + m_offset[d] ) \
+  for( type i1 = (type)0; i1 < static_cast<type>(extent[d]); ++i1) {          \
+    LOOP_R_1_REDUX( val, func, type, m_offset, extent, d+1 , __VA_ARGS__, i1 + m_offset[d] ) \
   }
 
 #define LOOP_R_3_REDUX( val, func, type, m_offset, extent, d, ... )             \
-  for( type i2 = (type)0; i2 < extent[d]; ++i2) {          \
-    LOOP_R_2_REDUX( val, func, type, m_offset, extent, d+1, ##__VA_ARGS__, i2 + m_offset[d] ) \
+  for( type i2 = (type)0; i2 < static_cast<type>(extent[d]); ++i2) {          \
+    LOOP_R_2_REDUX( val, func, type, m_offset, extent, d+1 , __VA_ARGS__, i2 + m_offset[d] ) \
   }
 
 #define LOOP_R_4_REDUX( val, func, type, m_offset, extent, d, ... )             \
-  for( type i3 = (type)0; i3 < extent[d]; ++i3) {          \
-    LOOP_R_3_REDUX( val, func, type, m_offset, extent, d+1, ##__VA_ARGS__, i3 + m_offset[d] ) \
+  for( type i3 = (type)0; i3 < static_cast<type>(extent[d]); ++i3) {          \
+    LOOP_R_3_REDUX( val, func, type, m_offset, extent, d+1 , __VA_ARGS__, i3 + m_offset[d] ) \
   }
 
 #define LOOP_R_5_REDUX( val, func, type, m_offset, extent, d, ... )             \
-  for( type i4 = (type)0; i4 < extent[d]; ++i4) {          \
-    LOOP_R_4_REDUX( val, func, type, m_offset, extent, d+1, ##__VA_ARGS__, i4 + m_offset[d] ) \
+  for( type i4 = (type)0; i4 < static_cast<type>(extent[d]); ++i4) {          \
+    LOOP_R_4_REDUX( val, func, type, m_offset, extent, d+1 , __VA_ARGS__, i4 + m_offset[d] ) \
   }
 
 #define LOOP_R_6_REDUX( val, func, type, m_offset, extent, d, ... )             \
-  for( type i5 = (type)0; i5 < extent[d]; ++i5) {          \
-    LOOP_R_5_REDUX( val, func, type, m_offset, extent, d+1, ##__VA_ARGS__, i5 + m_offset[d] ) \
+  for( type i5 = (type)0; i5 < static_cast<type>(extent[d]); ++i5) {          \
+    LOOP_R_5_REDUX( val, func, type, m_offset, extent, d+1 , __VA_ARGS__, i5 + m_offset[d] ) \
   }
 
 #define LOOP_R_7_REDUX( val, func, type, m_offset, extent, d, ... )             \
-  for( type i6 = (type)0; i6 < extent[d]; ++i6) {          \
-    LOOP_R_6_REDUX( val, func, type, m_offset, extent, d+1, ##__VA_ARGS__, i6 + m_offset[d] ) \
+  for( type i6 = (type)0; i6 < static_cast<type>(extent[d]); ++i6) {          \
+    LOOP_R_6_REDUX( val, func, type, m_offset, extent, d+1 , __VA_ARGS__, i6 + m_offset[d] ) \
   }
 
 #define LOOP_R_8_REDUX( val, func, type, m_offset, extent, d, ... )             \
-  for( type i7 = (type)0; i7 < extent[d]; ++i7) {          \
-    LOOP_R_7_REDUX( val, func, type, m_offset, extent, d+1, ##__VA_ARGS__, i7 + m_offset[d] ) \
+  for( type i7 = (type)0; i7 < static_cast<type>(extent[d]); ++i7) {          \
+    LOOP_R_7_REDUX( val, func, type, m_offset, extent, d+1 , __VA_ARGS__, i7 + m_offset[d] ) \
   }
 
 //LayoutLeft
 // d = rank-1 to start
 #define LOOP_L_1_REDUX( val, func, type, m_offset, extent, d, ... )    \
   IVDEP_MDRANGE                            \
-  for( type i0 = (type)0; i0 < extent[d]; ++i0) { \
-    APPLY_REDUX( val, func, i0 + m_offset[d] , ##__VA_ARGS__ )              \
+  for( type i0 = (type)0; i0 < static_cast<type>(extent[d]); ++i0) { \
+    APPLY_REDUX( val, func, i0 + m_offset[d] , __VA_ARGS__ )              \
   }
 
 #define LOOP_L_2_REDUX( val, func, type, m_offset, extent, d, ... )             \
-  for( type i1 = (type)0; i1 < extent[d]; ++i1) {          \
-    LOOP_L_1_REDUX( val, func, type, m_offset, extent, d-1, i1 + m_offset[d], ##__VA_ARGS__ ) \
+  for( type i1 = (type)0; i1 < static_cast<type>(extent[d]); ++i1) {          \
+    LOOP_L_1_REDUX( val, func, type, m_offset, extent, d-1, i1 + m_offset[d] , __VA_ARGS__ ) \
   }
 
 #define LOOP_L_3_REDUX( val, func, type, m_offset, extent, d, ... )             \
-  for( type i2 = (type)0; i2 < extent[d]; ++i2) {          \
-    LOOP_L_2_REDUX( val, func, type, m_offset, extent, d-1, i2 + m_offset[d], ##__VA_ARGS__ ) \
+  for( type i2 = (type)0; i2 < static_cast<type>(extent[d]); ++i2) {          \
+    LOOP_L_2_REDUX( val, func, type, m_offset, extent, d-1, i2 + m_offset[d] , __VA_ARGS__ ) \
   }
 
 #define LOOP_L_4_REDUX( val, func, type, m_offset, extent, d, ... )             \
-  for( type i3 = (type)0; i3 < extent[d]; ++i3) {          \
-    LOOP_L_3_REDUX( val, func, type, m_offset, extent, d-1, i3 + m_offset[d], ##__VA_ARGS__ ) \
+  for( type i3 = (type)0; i3 < static_cast<type>(extent[d]); ++i3) {          \
+    LOOP_L_3_REDUX( val, func, type, m_offset, extent, d-1, i3 + m_offset[d] , __VA_ARGS__ ) \
   }
 
 #define LOOP_L_5_REDUX( val, func, type, m_offset, extent, d, ... )             \
-  for( type i4 = (type)0; i4 < extent[d]; ++i4) {          \
-    LOOP_L_4_REDUX( val, func, type, m_offset, extent, d-1, i4 + m_offset[d], ##__VA_ARGS__ ) \
+  for( type i4 = (type)0; i4 < static_cast<type>(extent[d]); ++i4) {          \
+    LOOP_L_4_REDUX( val, func, type, m_offset, extent, d-1, i4 + m_offset[d] , __VA_ARGS__ ) \
   }
 
 #define LOOP_L_6_REDUX( val, func, type, m_offset, extent, d, ... )             \
-  for( type i5 = (type)0; i5 < extent[d]; ++i5) {          \
-    LOOP_L_5_REDUX( val, func, type, m_offset, extent, d-1, i5 + m_offset[d], ##__VA_ARGS__ ) \
+  for( type i5 = (type)0; i5 < static_cast<type>(extent[d]); ++i5) {          \
+    LOOP_L_5_REDUX( val, func, type, m_offset, extent, d-1, i5 + m_offset[d] , __VA_ARGS__ ) \
   }
 
 #define LOOP_L_7_REDUX( val, func, type, m_offset, extent, d, ... )             \
-  for( type i6 = (type)0; i6 < extent[d]; ++i6) {          \
-    LOOP_L_6_REDUX( val, func, type, m_offset, extent, d-1, i6 + m_offset[d], ##__VA_ARGS__ ) \
+  for( type i6 = (type)0; i6 < static_cast<type>(extent[d]); ++i6) {          \
+    LOOP_L_6_REDUX( val, func, type, m_offset, extent, d-1, i6 + m_offset[d] , __VA_ARGS__ ) \
   }
 
 #define LOOP_L_8_REDUX( val, func, type, m_offset, extent, d, ... )             \
-  for( type i7 = (type)0; i7 < extent[d]; ++i7) {          \
-    LOOP_L_7_REDUX( val, func, type, m_offset, extent, d-1, i7 + m_offset[d], ##__VA_ARGS__ ) \
+  for( type i7 = (type)0; i7 < static_cast<type>(extent[d]); ++i7) {          \
+    LOOP_L_7_REDUX( val, func, type, m_offset, extent, d-1, i7 + m_offset[d] , __VA_ARGS__ ) \
   }
 
 // Left vs Right
