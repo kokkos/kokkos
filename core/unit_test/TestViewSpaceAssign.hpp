@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-//
+// 
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-//
+// 
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-//
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,76 +36,47 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-//
+// 
 // ************************************************************************
 //@HEADER
 */
-#ifndef KOKKOS_TEST_CUDAHPP
-#define KOKKOS_TEST_CUDAHPP
+
 #include <gtest/gtest.h>
 
-#include <Kokkos_Macros.hpp>
-
 #include <Kokkos_Core.hpp>
+#include <stdexcept>
+#include <sstream>
+#include <iostream>
 
-#include <TestTile.hpp>
-
-//----------------------------------------------------------------------------
-
-#include <TestSharedAlloc.hpp>
-#include <TestViewMapping.hpp>
-
-
-#include <TestViewAPI.hpp>
-#include <TestViewOfClass.hpp>
-#include <TestViewSubview.hpp>
-#include <TestViewSpaceAssign.hpp>
-#include <TestAtomic.hpp>
-#include <TestAtomicOperations.hpp>
-
-#include <TestAtomicViews.hpp>
-
-#include <TestRange.hpp>
-#include <TestTeam.hpp>
-#include <TestReduce.hpp>
-#include <TestScan.hpp>
-#include <TestAggregate.hpp>
-#include <TestCompilerMacros.hpp>
-#include <TestTaskScheduler.hpp>
-#include <TestMemoryPool.hpp>
-
-
-#include <TestCXX11.hpp>
-#include <TestCXX11Deduction.hpp>
-#include <TestTeamVector.hpp>
-#include <TestTemplateMetaFunctions.hpp>
-
-#include <TestPolicyConstruction.hpp>
-
-#include <TestMDRange.hpp>
+/*--------------------------------------------------------------------------*/
 
 namespace Test {
 
-// For Some Reason I can only have the definition of SetUp and TearDown in one cpp file ...
-class cuda : public ::testing::Test {
-protected:
-  static void SetUpTestCase();
-  static void TearDownTestCase();
-};
+template< typename SpaceDst , typename SpaceSrc >
+void view_space_assign()
+{
+  Kokkos::View<double*,SpaceDst> a =
+  Kokkos::View<double*,SpaceSrc>("a",1);
 
-#ifdef TEST_CUDA_INSTANTIATE_SETUP_TEARDOWN
-void cuda::SetUpTestCase()
-  {
-    Kokkos::Cuda::print_configuration( std::cout );
-    Kokkos::HostSpace::execution_space::initialize();
-    Kokkos::Cuda::initialize( Kokkos::Cuda::SelectDevice(0) );
-  }
+  Kokkos::View<double*,Kokkos::LayoutLeft,SpaceDst> b =
+  Kokkos::View<double*,Kokkos::LayoutLeft,SpaceSrc>("b",1);
 
-void cuda::TearDownTestCase()
-  {
-    Kokkos::Cuda::finalize();
-    Kokkos::HostSpace::execution_space::finalize();
-  }
-#endif
+  Kokkos::View<double*,Kokkos::LayoutRight,SpaceDst> c =
+  Kokkos::View<double*,Kokkos::LayoutRight,SpaceSrc>("c",1);
+
+  Kokkos::View<double*,SpaceDst,Kokkos::MemoryRandomAccess> d =
+  Kokkos::View<double*,SpaceSrc>("d",1);
+
+  Kokkos::View<double*,Kokkos::LayoutLeft,SpaceDst,Kokkos::MemoryRandomAccess> e =
+  Kokkos::View<double*,Kokkos::LayoutLeft,SpaceSrc>("e",1);
+
+  // Rank-one layout can assign:
+  Kokkos::View<double*,Kokkos::LayoutRight,SpaceDst> f =
+  Kokkos::View<double*,Kokkos::LayoutLeft,SpaceSrc>("f",1);
 }
-#endif
+
+
+} // namespace Test
+
+/*--------------------------------------------------------------------------*/
+
