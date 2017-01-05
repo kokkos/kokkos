@@ -238,40 +238,96 @@ namespace Kokkos { namespace Experimental { namespace Impl {
   }
 
 // Left vs Right
-// TODO: To get past gcc and clang compiler errors due to empty va_args,
-// Replace LOOP_*_* below with its body - this will prevent the case when va_args is empty
-// Do also for the redux versions
+// TODO: rank not necessary to pass through, can hardcode the values
 #define LOOP_LAYOUT_1( func, type, is_left, m_offset, extent, rank )  \
-  if (is_left) { LOOP_L_1( func, type, m_offset, extent, rank-1 ) }  \
-  else         { LOOP_R_1( func, type, m_offset, extent, 0 ) }  
+  KOKKOS_IVDEP_MDRANGE                            \
+  for( type i0 = (type)0; i0 < static_cast<type>(extent[0]); ++i0) { \
+    APPLY( func, i0 + m_offset[0] )              \
+  } 
 
 #define LOOP_LAYOUT_2( func, type, is_left, m_offset, extent, rank )  \
-  if (is_left) { LOOP_L_2( func, type, m_offset, extent, rank-1 ) }  \
-  else         { LOOP_R_2( func, type, m_offset, extent, 0 ) }  
+  if (is_left) { \
+    for( type i1 = (type)0; i1 < static_cast<type>(extent[rank-1]); ++i1) {   \
+      LOOP_L_1( func, type, m_offset, extent, rank-2, i1 + m_offset[rank-1] ) \
+    } \
+  } \
+  else         { \
+    for( type i1 = (type)0; i1 < static_cast<type>(extent[0]); ++i1) { \
+      LOOP_R_1( func, type, m_offset, extent, 1 , i1 + m_offset[0] )   \
+    } \
+  } 
 
 #define LOOP_LAYOUT_3( func, type, is_left, m_offset, extent, rank )  \
-  if (is_left) { LOOP_L_3( func, type, m_offset, extent, rank-1 ) }  \
-  else         { LOOP_R_3( func, type, m_offset, extent, 0 ) }  
+  if (is_left) { \
+    for( type i2 = (type)0; i2 < static_cast<type>(extent[rank-1]); ++i2) {   \
+      LOOP_L_2( func, type, m_offset, extent, rank-2, i2 + m_offset[rank-1] ) \
+    } \
+  } \
+  else         { \
+    for( type i2 = (type)0; i2 < static_cast<type>(extent[0]); ++i2) { \
+      LOOP_R_2( func, type, m_offset, extent, 1 , i2 + m_offset[0] )   \
+    } \
+  } 
 
 #define LOOP_LAYOUT_4( func, type, is_left, m_offset, extent, rank )  \
-  if (is_left) { LOOP_L_4( func, type, m_offset, extent, rank-1 ) }  \
-  else         { LOOP_R_4( func, type, m_offset, extent, 0 ) }  
+  if (is_left) { \
+    for( type i3 = (type)0; i3 < static_cast<type>(extent[rank-1]); ++i3) {   \
+      LOOP_L_3( func, type, m_offset, extent, rank-2, i3 + m_offset[rank-1] ) \
+    } \
+  } \
+  else         { \
+    for( type i3 = (type)0; i3 < static_cast<type>(extent[0]); ++i3) { \
+      LOOP_R_3( func, type, m_offset, extent, 1 , i3 + m_offset[0] )   \
+    } \
+  } 
 
 #define LOOP_LAYOUT_5( func, type, is_left, m_offset, extent, rank )  \
-  if (is_left) { LOOP_L_5( func, type, m_offset, extent, rank-1 ) }  \
-  else         { LOOP_R_5( func, type, m_offset, extent, 0 ) }  
+  if (is_left) { \
+    for( type i4 = (type)0; i4 < static_cast<type>(extent[rank-1]); ++i4) {   \
+      LOOP_L_4( func, type, m_offset, extent, rank-2, i4 + m_offset[rank-1] ) \
+    } \
+  } \
+  else         { \
+    for( type i4 = (type)0; i4 < static_cast<type>(extent[0]); ++i4) { \
+      LOOP_R_4( func, type, m_offset, extent, 1 , i4 + m_offset[0] )   \
+    } \
+  } 
 
 #define LOOP_LAYOUT_6( func, type, is_left, m_offset, extent, rank )  \
-  if (is_left) { LOOP_L_6( func, type, m_offset, extent, rank-1 ) }  \
-  else         { LOOP_R_6( func, type, m_offset, extent, 0 ) }  
+  if (is_left) { \
+    for( type i5 = (type)0; i5 < static_cast<type>(extent[rank-1]); ++i5) {   \
+      LOOP_L_5( func, type, m_offset, extent, rank-2, i5 + m_offset[rank-1] ) \
+    } \
+  } \
+  else         { \
+    for( type i5 = (type)0; i5 < static_cast<type>(extent[0]); ++i5) { \
+      LOOP_R_5( func, type, m_offset, extent, 1 , i5 + m_offset[0] )   \
+    } \
+  } 
 
 #define LOOP_LAYOUT_7( func, type, is_left, m_offset, extent, rank )  \
-  if (is_left) { LOOP_L_7( func, type, m_offset, extent, rank-1 ) }  \
-  else         { LOOP_R_7( func, type, m_offset, extent, 0 ) }  
+  if (is_left) { \
+    for( type i6 = (type)0; i6 < static_cast<type>(extent[rank-1]); ++i6) {   \
+      LOOP_L_6( func, type, m_offset, extent, rank-2, i6 + m_offset[rank-1] ) \
+    } \
+  } \
+  else         { \
+    for( type i6 = (type)0; i6 < static_cast<type>(extent[0]); ++i6) { \
+      LOOP_R_6( func, type, m_offset, extent, 1 , i6 + m_offset[0] )   \
+    } \
+  } 
 
 #define LOOP_LAYOUT_8( func, type, is_left, m_offset, extent, rank )  \
-  if (is_left) { LOOP_L_8( func, type, m_offset, extent, rank-1 ) }  \
-  else         { LOOP_R_8( func, type, m_offset, extent, 0 ) }  
+  if (is_left) { \
+    for( type i7 = (type)0; i7 < static_cast<type>(extent[rank-1]); ++i7) {   \
+      LOOP_L_7( func, type, m_offset, extent, rank-2, i7 + m_offset[rank-1] ) \
+    } \
+  } \
+  else         { \
+    for( type i7 = (type)0; i7 < static_cast<type>(extent[0]); ++i7) { \
+      LOOP_R_7( func, type, m_offset, extent, 1 , i7 + m_offset[0] )   \
+    } \
+  } 
 
 // Partial vs Full Tile
 #define TILE_LOOP_1( func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
@@ -400,36 +456,94 @@ namespace Kokkos { namespace Experimental { namespace Impl {
 
 // Left vs Right
 #define LOOP_LAYOUT_1_REDUX( val, func, type, is_left, m_offset, extent, rank )  \
-  if (is_left) { LOOP_L_1_REDUX( val, func, type, m_offset, extent, rank-1 ) }  \
-  else         { LOOP_R_1_REDUX( val, func, type, m_offset, extent, 0 ) }  
+  KOKKOS_IVDEP_MDRANGE                            \
+  for( type i0 = (type)0; i0 < static_cast<type>(extent[0]); ++i0) { \
+    APPLY_REDUX( val, func, i0 + m_offset[0] )              \
+  } 
 
 #define LOOP_LAYOUT_2_REDUX( val, func, type, is_left, m_offset, extent, rank )  \
-  if (is_left) { LOOP_L_2_REDUX( val, func, type, m_offset, extent, rank-1 ) }  \
-  else         { LOOP_R_2_REDUX( val, func, type, m_offset, extent, 0 ) }  
+  if (is_left) { \
+    for( type i1 = (type)0; i1 < static_cast<type>(extent[rank-1]); ++i1) {   \
+      LOOP_L_1_REDUX( val, func, type, m_offset, extent, rank-2, i1 + m_offset[rank-1] ) \
+    } \
+  } \
+  else         { \
+    for( type i1 = (type)0; i1 < static_cast<type>(extent[0]); ++i1) { \
+      LOOP_R_1_REDUX( val, func, type, m_offset, extent, 1 , i1 + m_offset[0] )   \
+    } \
+  } 
 
 #define LOOP_LAYOUT_3_REDUX( val, func, type, is_left, m_offset, extent, rank )  \
-  if (is_left) { LOOP_L_3_REDUX( val, func, type, m_offset, extent, rank-1 ) }  \
-  else         { LOOP_R_3_REDUX( val, func, type, m_offset, extent, 0 ) }  
+  if (is_left) { \
+    for( type i2 = (type)0; i2 < static_cast<type>(extent[rank-1]); ++i2) {   \
+      LOOP_L_2_REDUX( val, func, type, m_offset, extent, rank-2, i2 + m_offset[rank-1] ) \
+    } \
+  } \
+  else         { \
+    for( type i2 = (type)0; i2 < static_cast<type>(extent[0]); ++i2) { \
+      LOOP_R_2_REDUX( val, func, type, m_offset, extent, 1 , i2 + m_offset[0] )   \
+    } \
+  } 
 
 #define LOOP_LAYOUT_4_REDUX( val, func, type, is_left, m_offset, extent, rank )  \
-  if (is_left) { LOOP_L_4_REDUX( val, func, type, m_offset, extent, rank-1 ) }  \
-  else         { LOOP_R_4_REDUX( val, func, type, m_offset, extent, 0 ) }  
+  if (is_left) { \
+    for( type i3 = (type)0; i3 < static_cast<type>(extent[rank-1]); ++i3) {   \
+      LOOP_L_3_REDUX( val, func, type, m_offset, extent, rank-2, i3 + m_offset[rank-1] ) \
+    } \
+  } \
+  else         { \
+    for( type i3 = (type)0; i3 < static_cast<type>(extent[0]); ++i3) { \
+      LOOP_R_3_REDUX( val, func, type, m_offset, extent, 1 , i3 + m_offset[0] )   \
+    } \
+  } 
 
 #define LOOP_LAYOUT_5_REDUX( val, func, type, is_left, m_offset, extent, rank )  \
-  if (is_left) { LOOP_L_5_REDUX( val, func, type, m_offset, extent, rank-1 ) }  \
-  else         { LOOP_R_5_REDUX( val, func, type, m_offset, extent, 0 ) }  
+  if (is_left) { \
+    for( type i4 = (type)0; i4 < static_cast<type>(extent[rank-1]); ++i4) {   \
+      LOOP_L_4_REDUX( val, func, type, m_offset, extent, rank-2, i4 + m_offset[rank-1] ) \
+    } \
+  } \
+  else         { \
+    for( type i4 = (type)0; i4 < static_cast<type>(extent[0]); ++i4) { \
+      LOOP_R_4_REDUX( val, func, type, m_offset, extent, 1 , i4 + m_offset[0] )   \
+    } \
+  } 
 
 #define LOOP_LAYOUT_6_REDUX( val, func, type, is_left, m_offset, extent, rank )  \
-  if (is_left) { LOOP_L_6_REDUX( val, func, type, m_offset, extent, rank-1 ) }  \
-  else         { LOOP_R_6_REDUX( val, func, type, m_offset, extent, 0 ) }  
+  if (is_left) { \
+    for( type i5 = (type)0; i5 < static_cast<type>(extent[rank-1]); ++i5) {   \
+      LOOP_L_5_REDUX( val, func, type, m_offset, extent, rank-2, i5 + m_offset[rank-1] ) \
+    } \
+  } \
+  else         { \
+    for( type i5 = (type)0; i5 < static_cast<type>(extent[0]); ++i5) { \
+      LOOP_R_5_REDUX( val, func, type, m_offset, extent, 1 , i5 + m_offset[0] )   \
+    } \
+  } 
 
 #define LOOP_LAYOUT_7_REDUX( val, func, type, is_left, m_offset, extent, rank )  \
-  if (is_left) { LOOP_L_7_REDUX( val, func, type, m_offset, extent, rank-1 ) }  \
-  else         { LOOP_R_7_REDUX( val, func, type, m_offset, extent, 0 ) }  
+  if (is_left) { \
+    for( type i6 = (type)0; i6 < static_cast<type>(extent[rank-1]); ++i6) {   \
+      LOOP_L_6_REDUX( val, func, type, m_offset, extent, rank-2, i6 + m_offset[rank-1] ) \
+    } \
+  } \
+  else         { \
+    for( type i6 = (type)0; i6 < static_cast<type>(extent[0]); ++i6) { \
+      LOOP_R_6_REDUX( val, func, type, m_offset, extent, 1 , i6 + m_offset[0] )   \
+    } \
+  } 
 
 #define LOOP_LAYOUT_8_REDUX( val, func, type, is_left, m_offset, extent, rank )  \
-  if (is_left) { LOOP_L_8_REDUX( val, func, type, m_offset, extent, rank-1 ) }  \
-  else         { LOOP_R_8_REDUX( val, func, type, m_offset, extent, 0 ) }  
+  if (is_left) { \
+    for( type i7 = (type)0; i7 < static_cast<type>(extent[rank-1]); ++i7) {   \
+      LOOP_L_7_REDUX( val, func, type, m_offset, extent, rank-2, i7 + m_offset[rank-1] ) \
+    } \
+  } \
+  else         { \
+    for( type i7 = (type)0; i7 < static_cast<type>(extent[0]); ++i7) { \
+      LOOP_R_7_REDUX( val, func, type, m_offset, extent, 1 , i7 + m_offset[0] )   \
+    } \
+  } 
 
 // Partial vs Full Tile
 #define TILE_LOOP_1_REDUX( val, func, type, is_left, cond, m_offset, extent_full, extent_partial, rank ) \
