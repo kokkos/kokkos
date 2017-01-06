@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include <limits>
 #include <impl/Kokkos_HostThreadTeam.hpp>
 
 namespace Kokkos {
@@ -48,87 +49,167 @@ namespace Impl {
 
 //----------------------------------------------------------------------------
 
-void HostThreadTeamMember::form_active_team
+void HostThreadTeamMember::organize_pool
   ( HostThreadTeamMember * members[] , const int size )
 {
-  // Verify not already a member of another team
-  for ( int i = 0 ; i < size ; ++i ) {
+  bool ok = true ;
 
+  // Verify not already a member of a pool:
+  for ( int rank = 0 ; rank < size && ok ; ++rank ) {
+    ok = ( 0 != members[rank] ) && ( 0 == members[rank]->m_pool_scratch );
   }
 
-  HostThreadTeamMember & leader = * members[0];
+  if ( ok ) {
+    int64_t * const root_scratch = members[0]->m_scratch ;
 
-  for ( int i = 0 ; i < size ; ++i ) {
+    HostThreadTeamMember ** const pool =
+      (HostThreadTeamMember **) (root_scratch + m_pool_members);
 
-    ((HostThreadTeamMember **)( leader.m_scratch ))[i] = members[i] ;
-
-    HostThreadTeamMember & mem = * members[i] ;
-
-    mem.m_shared          = leader.m_scratch ;
-    mem.m_team_rank_steal = ( i + 1 ) % size ;
-    mem.m_team_rank       = i ;
-    mem.m_team_size       = size ;
-    mem.m_league_rank     = 0 ;
-    mem.m_league_size     = 1 ;
-    mem.m_rendezvous_step = 0 ;
+    for ( int rank = 0 ; rank < size ; ++rank ) {
+      HostThreadTeamMember * const mem = members[ rank ] ;
+      mem->m_pool_scratch = root_scratch ;
+      mem->m_team_scratch = root_scratch ;
+      mem->m_pool_rank    = rank ;
+      mem->m_pool_size    = size ;
+      mem->m_team_base    = 0 ;
+      mem->m_team_rank    = rank ;
+      mem->m_team_size    = size ;
+      mem->m_league_rank  = 0 ;
+      mem->m_league_size  = 1 ;
+      mem->m_pool_rendezvous_step = 0 ;
+      mem->m_team_rendezvous_step = 0 ;
+      pool[ rank ] = mem ;
+    }
+  }
+  else {
+    // Error
   }
 }
 
-// Team leader disbands the team
-void HostThreadTeamMember::disband_active_team()
+void HostThreadTeamMember::disband_pool()
 {
-  // Precondition:
-  //   this == ((HostThreadTeamMember**)m_shared)[0]
+  const bool ok_root = 0 != m_pool_scratch && this == pool_member(0);
 
-  for ( int r = m_team_size - 1 ; 0 <= r ; --r ) {
+  if ( ok_root ) {
+    int const size = m_pool_size ;
 
-    HostThreadTeamMember & mem =
-      *((HostThreadTeamMember**)m_shared)[r] ;
+    HostThreadTeamMember ** const pool =
+      (HostThreadTeamMember **) (m_pool_scratch + m_pool_members);
 
-    ((HostThreadTeamMember**)m_shared)[r] = 0 ;
+    for ( int rank = 0 ; rank < size ; ++rank ) {
+      HostThreadTeamMember * const mem = pool[ rank ] ; pool[rank] = 0 ;
+      mem->m_pool_scratch = 0 ;
+      mem->m_team_scratch = 0 ;
+      mem->m_pool_rank    = 0 ;
+      mem->m_pool_size    = 0 ;
+      mem->m_team_rank    = 0 ;
+      mem->m_team_size    = 0 ;
+      mem->m_league_rank  = 0 ;
+      mem->m_league_size  = 0 ;
+      mem->m_pool_rendezvous_step = 0 ;
+      mem->m_team_rendezvous_step = 0 ;
+    }
+  }
+  else {
+    // Error
+  }
+}
 
-    mem.m_shared          = 0 ;
-    mem.m_team_rank_steal = 0 ;
-    mem.m_team_rank       = 0 ;
-    mem.m_team_size       = 0 ;
-    mem.m_league_rank     = 0 ;
-    mem.m_league_size     = 0 ;
-    mem.m_rendezvous_step = 0 ;
+void HostThreadTeamMember::organize_team( const int team_size )
+{
+  const bool ok_pool = 0 != m_pool_scratch ;
+  const bool ok_team = 0 == m_team_scratch ;
+
+  if ( ok_pool && ok_team ) {
+
+    HostThreadTeamMember * const * const pool =
+      (HostThreadTeamMember **) (m_pool_scratch + m_pool_members);
+
+    const int league_size = ( m_pool_size + team_size - 1 ) / team_size ;
+    const int team_alloc_size = m_pool_size / league_size ;
+    const int team_alloc_rank = m_pool_rank % team_alloc_size ;
+
+    if ( team_alloc_rank < team_size ) {
+
+      const int league_rank    = m_pool_size / team_alloc_size ;
+      const int team_base_rank = league_rank * team_alloc_size ;
+
+      m_team_scratch = pool[ team_base_rank ]->m_scratch ;
+      m_team_base    = team_base_rank ;
+      m_team_rank    = team_alloc_rank ;
+      m_team_size    = team_size ;
+      m_league_rank  = league_rank ;
+      m_league_size  = league_size ;
+    }
+    else {
+      m_team_scratch = 0 ;
+      m_team_base    = 0 ;
+      m_team_rank    = 0 ;
+      m_team_size    = 0 ;
+      m_league_rank  = 0 ;
+      m_league_size  = 0 ;
+    }
+    m_team_rendezvous_step = 0 ;
+  }
+  else {
+    // Error
+  }
+}
+
+void HostThreadTeamMember::disband_team()
+{
+  const bool ok_pool = 0 != m_pool_scratch ;
+
+  if ( ok_pool ) {
+    HostThreadTeamMember * const * const pool =
+      (HostThreadTeamMember **) (m_pool_scratch + m_pool_members);
+
+    m_team_scratch = pool[0]->m_scratch ;
+    m_team_base    = 0 ;
+    m_team_rank    = m_pool_rank ;
+    m_team_size    = m_pool_size ;
+    m_league_rank  = 0 ;
+    m_league_size  = 1 ;
+    m_team_rendezvous_step = 0 ;
+  }
+  else {
+    // Error
   }
 }
 
 //----------------------------------------------------------------------------
-/* pattern for team_rendezvous
+/* pattern for rendezvous
  *
- *  if ( team_rendezvous() ) {
+ *  if ( rendezvous() ) {
  *     ... all other threads are still in team_rendezvous() ...
- *     team_rendezvous_release();
+ *     rendezvous_release();
  *     ... all other threads are released from team_rendezvous() ...
  *  }
  */
 
-int HostThreadTeamMember::team_rendezvous( int const root ) const noexcept
+int HostThreadTeamMember::rendezvous( int64_t * const buffer
+                                    , int & rendezvous_step
+                                    , int const size
+                                    , int const rank ) noexcept
 {
   // Requires:
-  //   Called by all team members
+  //   Called by rank = [ 0 .. size )
 
   // A sequence of rendezvous uses alternating locations in memory
   // and alternating synchronization values to prevent rendezvous
   // from overtaking one another.
 
-  // Each team member has a designated byte to set in the span
+  // Each member has a designated byte to set in the span
 
   // 1 <= step <= 4
 
-  const int size  = m_team_size ;
-  const int rank  = root ? ( m_team_rank + root ) % size : m_team_rank ;
   const int base  = rank ? 0 : 1 ;
-  const int step  = ( m_rendezvous_step & 03 ) + 1 ; m_rendezvous_step = step ;
+  const int step  = ( rendezvous_step & 03 ) + 1 ; rendezvous_step = step ;
 
   // For an upper bound of 64 threads per team the shared array is uint64_t[16].
   // For this step the interval begins at ( step & 01 ) * 8
 
-  int64_t volatile * const sync_base = rendezvous_memory() + (( step & 01 ) << 3 );
+  int64_t volatile * const sync_base = buffer + (( step & 01 ) << 3 );
 
   union {
     int64_t full ;
@@ -181,19 +262,132 @@ int HostThreadTeamMember::team_rendezvous( int const root ) const noexcept
   return base ; // rank == 0
 }
 
-void HostThreadTeamMember::team_rendezvous_release() const noexcept
+void HostThreadTeamMember::
+  rendezvous_release( int64_t * const buffer
+                    , int const rendezvous_step ) noexcept
 {
   // Requires:
   //   Called after team_rendezvous
   //   Called only by true == team_rendezvous(root)
 
   int64_t volatile * const sync_base =
-    rendezvous_memory() + (( m_rendezvous_step & 01 ) << 3 );
+    buffer + (( rendezvous_step & 01 ) << 3 );
 
   Kokkos::memory_fence();
 
-  *((volatile int8_t*) sync_base) = int8_t( m_rendezvous_step );
+  *((volatile int8_t*) sync_base) = int8_t( rendezvous_step );
 }
+
+//----------------------------------------------------------------------------
+
+int HostThreadTeamMember::get_stealing() noexcept
+{
+  pair_int_t w( -1 , -1 );
+
+  // Attempt first from beginning of my work range
+  for ( int attempt = m_steal_range.first < m_steal_range.second ; attempt ; ) {
+
+    // Query and attempt to update m_work_range
+    //   from: [ w.first     , w.second )
+    //   to:   [ w.first + 1 , w.second ) = w_new
+    //
+    // If w is invalid then is just a query.
+
+    const pair_int_t w_new( w.first + 1 , w.second );
+
+    w = Kokkos::atomic_compare_exchange( & m_steal_range, w, w_new );
+
+    if ( w.first < w.second ) {
+      // m_work_range is viable
+
+      // If steal is successful then don't repeat attempt to steal
+      attempt = ! ( w_new.first  == w.first + 1 &&
+                    w_new.second == w.second );
+    }
+    else {
+      // m_work_range is not viable
+      w.first  = -1 ;
+      w.second = -1 ;
+
+      attempt = 0 ;
+    }
+  }
+
+  if ( w.first == -1 && m_steal_rank != m_team_rank ) {
+
+    HostThreadTeamMember * const * const team =
+      ((HostThreadTeamMember**)( m_pool_scratch + m_pool_members ))
+      + m_team_base ;
+
+    // Attempt from begining failed, try to steal from end of neighbor
+
+    pair_int_t volatile * steal_range =
+      & ( team[ m_steal_rank ]->m_steal_range );
+
+    for ( int attempt = true ; attempt ; ) {
+
+      // Query and attempt to update steal_work_range
+      //   from: [ w.first , w.second )
+      //   to:   [ w.first , w.second - 1 ) = w_new
+      //
+      // If w is invalid then is just a query.
+
+      const pair_int_t w_new( w.first , w.second - 1 );
+
+      w = Kokkos::atomic_compare_exchange( steal_range, w, w_new );
+
+      if ( w.first < w.second ) {
+        // steal_work_range is viable
+
+        // If steal is successful then don't repeat attempt to steal
+        attempt = ! ( w_new.first  == w.first &&
+                      w_new.second == w.second - 1 );
+      }
+      else {
+        // steal_work_range is not viable, move to next member
+        w.first  = -1 ;
+        w.second = -1 ;
+
+        m_steal_rank = ( m_steal_rank + 1 ) % m_team_size ;
+
+        steal_range = & ( team[ m_steal_rank ]->m_steal_range );
+
+        // If tried all other members then don't repeat attempt to steal
+        attempt = m_steal_rank != m_pool_rank ;
+      }
+    }
+
+    if ( w.first != -1 ) w.first = w.second - 1 ;
+  }
+
+  // May exit because successfully stole work and w is good.
+  // May exit because no work left to steal and w = (-1,-1).
+
+  return w.first ;
+}
+
+int HostThreadTeamMember::
+  set_stealing( long const length , int const chunk ) noexcept
+{
+  // Steal chunk length has minimum value required to
+  // to index chunks with an 'int'.
+  // Can be larger if requested by policy.
+
+  const int min_steal_chunk =
+    1 + ( length / std::numeric_limits<int>::max() );
+
+  const int steal_chunk = chunk > min_steal_chunk
+                        ? chunk : min_steal_chunk ;
+
+  const int steal_length = ( length + steal_chunk - 1 ) / steal_chunk ;
+  const int steal_part   = ( steal_length + m_team_size - 1 ) / m_team_size ;
+
+  m_steal_range.first  = steal_part * m_team_rank ;
+  m_steal_range.second = m_steal_range.first + steal_part ;
+
+  return steal_chunk ;
+}
+
 
 } // namespace Impl
 } // namespace Kokkos

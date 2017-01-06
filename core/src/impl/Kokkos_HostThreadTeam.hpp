@@ -46,9 +46,9 @@
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Pair.hpp>
-#include <Kokkos_MemoryTraits.hpp>
 #include <Kokkos_Atomic.hpp>
 #include <Kokkos_ExecPolicy.hpp>
+#include <impl/Kokkos_FunctorAdapter.hpp>
 #include <impl/Kokkos_Reducer.hpp>
 
 //----------------------------------------------------------------------------
@@ -58,120 +58,258 @@ namespace Kokkos {
 namespace Impl {
 
 class HostThreadTeamMember {
+public:
+  // Assume upper bounds on number of threads:
+  //   pool size       <= 1024 threads
+  //   pool rendezvous <= 2 * ( 1024 / 8 ) = 256
+  //   team size       <= 64 threads
+  //   team rendezvous <= 2 * ( 64 / 8 ) = 16
+
+  enum : int { max_pool_members  = 1024 };
+  enum : int { max_team_members  = 64 };
+  enum : int { max_pool_rendezvous  = 2 * ( max_pool_members / 8 ) };
+  enum : int { max_team_rendezvous  = 2 * ( max_team_members / 8 ) };
+
 private:
 
   // per-thread scratch memory buffer chunks:
-  //   [ 0                  .. m_rendezvous_begin )
-  //   [ m_rendezvous_begin .. m_collective_begin )
-  //   [ m_collective_begin .. m_shared_begin )
-  //   [ m_shared_begin     .. m_local_begin )
-  //   [ m_local_begin      .. m_scratch_end )
+  //
+  //   [ pool_members ]     = [ m_pool_members    .. m_pool_rendezvous )
+  //   [ pool_rendezvous ]  = [ m_pool_rendezvous .. m_team_rendezvous )
+  //   [ team_rendezvous ]  = [ m_team_rendezvous .. m_pool_reduction )
+  //   [ pool_reduction ]   = [ m_pool_reduction  .. m_team_reduction )
+  //   [ team_reduction ]   = [ m_team_reduction  .. m_team_shared )
+  //   [ team_shared ]      = [ m_team_shared     .. m_thread_local )
+  //   [ thread_local ]     = [ m_thread_local    .. m_scratch_size )
 
-  enum : int { m_rendezvous_begin = 64 };
-  enum : int { m_collective_begin = m_rendezvous_begin + 16 };
+  enum : int { m_pool_members    = 0 };
+  enum : int { m_pool_rendezvous = m_pool_members    + max_pool_members };
+  enum : int { m_team_rendezvous = m_pool_rendezvous + max_pool_rendezvous };
+  enum : int { m_pool_reduction  = m_team_rendezvous + max_team_rendezvous };
 
-  Kokkos::pair<int,int>  m_work_range ; // Work range, 64bit alignment
+  using pair_int_t = Kokkos::pair<int,int> ;
 
+  pair_int_t  m_steal_range ;
   int64_t   * m_scratch ;       // per-thread buffer
-  int64_t   * m_shared ;        // == m_team[0]->m_scratch
-  int         m_shared_begin ;
-  int         m_local_begin ;
-  int         m_scratch_end ;
-  int         m_team_rank_steal ; // work stealing rank
+  int64_t   * m_pool_scratch ;  // == pool[0]->m_scratch
+  int64_t   * m_team_scratch ;  // == pool[ 0 + m_team_base ]->m_scratch
+  int         m_pool_rank ;
+  int         m_pool_size ;
+  int         m_team_reduction ;
+  int         m_team_shared ;
+  int         m_thread_local ;
+  int         m_scratch_size ;
+  int         m_team_base ;
   int         m_team_rank ;
   int         m_team_size ;
   int         m_league_rank ;
   int         m_league_size ;
-  int mutable m_rendezvous_step ;  
+  int         m_steal_rank ; // work stealing rank
+  int mutable m_pool_rendezvous_step ;  
+  int mutable m_team_rendezvous_step ;  
+
+  HostThreadTeamMember * pool_member( int r ) const noexcept
+    { return ((HostThreadTeamMember**)(m_pool_scratch+m_pool_members))[r]; }
+
+  HostThreadTeamMember * team_member( int r ) const noexcept
+    { return ((HostThreadTeamMember**)(m_pool_scratch+m_pool_members))[m_team_base+r]; }
 
   // Memory chunks:
 
-  HostThreadTeamMember * member( int r ) const noexcept
-    { return ((HostThreadTeamMember*const*)m_shared)[r]; }
+  int64_t * pool_reduction() const noexcept
+    { return m_pool_scratch + m_pool_reduction ; }
 
-  int64_t * rendezvous_memory() const noexcept
-    { return m_shared + m_rendezvous_begin ; }
+  int64_t * pool_reduction_local() const noexcept
+    { return m_scratch + m_pool_reduction ; }
 
-  int64_t * collective_memory() const noexcept
-    { return m_shared + m_collective_begin ; }
+  int64_t * team_reduction() const noexcept
+    { return m_team_scratch + m_team_reduction ; }
 
-  int64_t * shared_memory() const noexcept
-    { return m_shared + m_shared_begin ; }
+  int64_t * team_reduction_local() const noexcept
+    { return m_scratch + m_team_reduction ; }
 
-  int64_t * local_memory() const noexcept
-    { return m_scratch + m_local_begin ; }
+  int64_t * team_shared() const noexcept
+    { return m_team_scratch + m_team_shared ; }
+
+  int64_t * local_scratch() const noexcept
+    { return m_scratch + m_thread_local ; }
 
   // Rendezvous pattern:
-  //   if ( team_rendezvous(root) ) {
+  //   if ( rendezvous(root) ) {
   //     ... only root thread here while all others wait ...
-  //     team_rendezvous_release();
+  //     rendezvous_release();
   //   }
   //   else {
   //     ... all other threads release here ...
   //   }
-  int  team_rendezvous( int const root = 0 ) const noexcept ;
-  void team_rendezvous_release() const noexcept ;
+  static
+  int rendezvous( int64_t * const buffer
+                , int & rendezvous_step
+                , int const size
+                , int const rank ) noexcept ;
+
+  static
+  void rendezvous_release( int64_t * const buffer
+                         , int const rendezvous_step ) noexcept ;
+
+  inline
+  int team_rendezvous( int const root ) const noexcept
+    {
+      return rendezvous( m_team_scratch + m_team_rendezvous
+                       , m_team_rendezvous_step
+                       , m_team_size
+                       , ( m_team_rank + m_team_size - root ) % m_team_size );
+    }
+
+  inline
+  int team_rendezvous() const noexcept
+    {
+      return rendezvous( m_team_scratch + m_team_rendezvous
+                       , m_team_rendezvous_step
+                       , m_team_size
+                       , m_team_rank );
+    }
+
+  inline
+  void team_rendezvous_release() const noexcept
+    {
+      rendezvous_release( m_team_scratch + m_team_rendezvous
+                        , m_team_rendezvous_step );
+    }
+
+  inline
+  int pool_rendezvous() const noexcept
+    {
+      return rendezvous( m_pool_scratch + m_pool_rendezvous
+                       , m_pool_rendezvous_step
+                       , m_pool_size
+                       , m_pool_rank );
+    }
+
+  inline
+  void pool_rendezvous_release() const noexcept
+    {
+      rendezvous_release( m_pool_scratch + m_pool_rendezvous
+                        , m_pool_rendezvous_step );
+    }
 
 public:
 
   //----------------------------------------
 
   constexpr HostThreadTeamMember() noexcept
-    : m_work_range(-1,-1)
+    : m_steal_range(-1,-1)
     , m_scratch(0)
-    , m_shared(0)
-    , m_shared_begin(0)
-    , m_local_begin(0)
-    , m_scratch_end(0)
-    , m_team_rank_steal(0)
+    , m_pool_scratch(0)
+    , m_team_scratch(0)
+    , m_pool_rank(0)
+    , m_pool_size(0)
+    , m_team_reduction(0)
+    , m_team_shared(0)
+    , m_thread_local(0)
+    , m_scratch_size(0)
+    , m_team_base(0)
     , m_team_rank(0)
     , m_team_size(0)
     , m_league_rank(0)
     , m_league_size(0)
-    , m_rendezvous_step(0)
+    , m_steal_rank(0)
+    , m_pool_rendezvous_step(0)
+    , m_team_rendezvous_step(0)
     {}
 
-  // Form active team from members[0..size)
-  // Requires:
-  //   1) each member is unique
-  //   2) each member not alread a member of another team
-  static void form_active_team( HostThreadTeamMember * members[]
-                              , const int size );
+  // Organize array of members into a pool.
+  // The 0th member is the root of the pool.
+  // Requires members are not already in a pool.
+  static void organize_pool( HostThreadTeamMember * members[]
+                           , const int size );
 
-  // The leader of an active team disbands that team
-  void disband_active_team();
+  // Root of a pool disbands the pool.
+  void disband_pool();
+
+  // Each thread within a pool organizes itself into a team
+  void organize_team( const int team_size );
+
+  // Each thread within a pool disbands itself from a team
+  void disband_team();
 
   //----------------------------------------
 
-  template< class MemorySpace >
-  void resize_scratch( int collect_size
-                     , int shared_size
-                     , int local_size )
+  static constexpr int align_to_int64( int n )
     {
-      enum : int { align = Kokkos::Impl::MEMORY_ALIGNMENT };
+      enum : int { mask  = 0x0f }; // align to 16 bytes
+      enum : int { shift = 3 };    // size to 8 bytes
+      return ( ( n + mask ) & ~mask ) >> shift ;
+    }
 
-      collect_size += collect_size % align ? align - collect_size % align : 0 ;
-      shared_size  += shared_size  % align ? align - shared_size  % align : 0 ;
-      local_size   += local_size   % align ? align - local_size   % align : 0 ;
+  constexpr int pool_reduce_bytes() const
+    { return sizeof(int64_t) * ( m_team_reduction - m_pool_reduction ); }
 
-      const size_t total =
-        m_collective_begin + collect_size + shared_size + local_size ;
+  constexpr int team_reduce_bytes() const
+    { return sizeof(int64_t) * ( m_team_shared - m_team_reduction ); }
 
-      if ( m_scratch_end < total ) {
-        MemorySpace space ; // default space
+  constexpr int team_shared_bytes() const
+    { return sizeof(int64_t) * ( m_thread_local - m_team_shared ); }
 
-        space.deallocate( m_scratch , m_scratch_end );
+  constexpr int thread_local_bytes() const
+    { return sizeof(int64_t) * ( m_scratch_size - m_thread_local ); }
 
-        m_scratch = space.allocate( total );
+  constexpr int scratch_bytes() const
+    { return sizeof(int64_t) * m_scratch_size ; }
 
-        m_shared_begin = m_collective_begin + collect_size ;
-        m_local_begin  = m_shared_begin     + shared_size ;
-        m_scratch_end  = total ;
-      }
-      else {
-        m_shared_begin = m_collective_begin + collect_size ;
-        m_local_begin  = m_shared_begin     + shared_size ;
-      }
+  // Given:
+  //   pool_reduce  = number bytes for pool reduction
+  //   team_reduce  = number bytes for team reduction
+  //   team_shared  = number bytes for team shared memory
+  //   thread_local = number bytes for thread local memory
+  // Return:
+  //   total number of bytes that must be allocated
+  static
+  size_t scratch_size( int pool_reduce_size
+                     , int team_reduce_size
+                     , int team_shared_size
+                     , int thread_local_size )
+    {
+      pool_reduce_size  = align_to_int64( pool_reduce_size );
+      team_reduce_size  = align_to_int64( team_reduce_size );
+      team_shared_size  = align_to_int64( team_shared_size );
+      thread_local_size = align_to_int64( thread_local_size );
+ 
+      const size_t total_size =
+        m_pool_reduction +
+        pool_reduce_size +
+        team_reduce_size +
+        team_shared_size +
+        thread_local_size ;
+
+      return total_size ;
+    }
+
+  // Given:
+  //   alloc_ptr    = pointer to allocated memory
+  //   alloc_size   = size of allocated memory
+  //   collect_size = number bytes for collective reduction/scan operations
+  //   shared_size  = number bytes for team-shared memory
+  //   local_size   = number bytes for thread-local memory
+  // Return:
+  //   total number of bytes that must be allocated
+  void scratch_assign( void * const alloc_ptr
+                     , size_t const alloc_size
+                     , int pool_reduce_size
+                     , int team_reduce_size
+                     , int team_shared_size
+                     , int /* thread_local_size */ )
+    {
+      pool_reduce_size  = align_to_int64( pool_reduce_size );
+      team_reduce_size  = align_to_int64( team_reduce_size );
+      team_shared_size  = align_to_int64( team_shared_size );
+      // thread_local_size = align_to_int64( thread_local_size );
+
+      m_scratch        = (int64_t *) alloc_ptr ;
+      m_team_reduction = m_pool_reduction + pool_reduce_size ;
+      m_team_shared    = m_team_reduction + team_reduce_size ;
+      m_thread_local   = m_team_shared    + team_shared_size ;
+      m_scratch_size   = alloc_size ;
     }
 
   //----------------------------------------
@@ -325,90 +463,18 @@ public:
   //----------------------------------------
   // Work stealing
 
-  int get_work_local_begin() noexcept
-    {
-      using pair_t = Kokkos::pair<int,int> ;
+  // Set the initial stealing work distribution by partitioning
+  // [ 0 .. length ) among team members with a minimum of 'chunk' granularity.  
+  // The total stealing range is
+  //    [ 0 .. ( length + actual_chunk - 1 ) / actual_chunk )
+  // Return actual_chunk
+  int set_stealing( long const length , int const chunk ) noexcept ;
 
-      pair_t w( -1 , -1 );
-
-      for ( int attempt = true ; attempt ; ) {
-
-        // Query and attempt to update m_work_range
-        //   from: [ w.first     , w.second )
-        //   to:   [ w.first + 1 , w.second ) = w_new
-        //
-        // If w is invalid then is just a query.
-
-        const pair_t w_new( w.first + 1 , w.second );
-
-        w = Kokkos::atomic_compare_exchange( & m_work_range, w, w_new );
-
-        if ( w.first < w.second ) { 
-          // m_work_range is viable
-
-          // If steal is successful then don't repeat attempt to steal
-          attempt = ! ( w_new.first  == w.first + 1 &&
-                        w_new.second == w.second );
-        }
-        else {
-          // m_work_range is not viable
-          w.first  = -1 ;
-          w.second = -1 ;
-
-          attempt = false ;
-        }
-      }
-
-      return w.first ;
-    }
-
-  int get_work_steal_end() noexcept
-    {
-      using pair_t = Kokkos::pair<int,int> ;
-
-      pair_t volatile * steal_work_range =
-        & member(m_team_rank_steal)->m_work_range ;
-
-      pair_t w( -1 , -1 );
-
-      for ( int attempt = true ; attempt ; ) {
-
-        // Query and attempt to update steal_work_range
-        //   from: [ w.first , w.second )
-        //   to:   [ w.first , w.second - 1 ) = w_new
-        //
-        // If w is invalid then is just a query.
-
-        const pair_t w_new( w.first , w.second - 1 );
-
-        w = Kokkos::atomic_compare_exchange( steal_work_range, w, w_new );
-
-        if ( w.first < w.second ) { 
-          // steal_work_range is viable
-
-          // If steal is successful then don't repeat attempt to steal
-          attempt = ! ( w_new.first  == w.first &&
-                        w_new.second == w.second - 1 );
-        }
-        else {
-          // steal_work_range is not viable, move to next member
-          w.first  = -1 ;
-          w.second = -1 ;
-
-          m_team_rank_steal = ( m_team_rank_steal + 1 ) % m_team_size ;
-
-          steal_work_range = & member(m_team_rank_steal)->m_work_range ;
-
-          // If tried all other members then don't repeat attempt to steal
-          attempt = m_team_rank_steal != m_team_rank ;
-        }
-      }
-
-      // May exit because successfully stole work and w_old is good.
-      // May exit because no work left to steal and w_old = (-1,-1).
-
-      return w.second ;
-    }
+  // Get a work stealing chunk index within the range
+  //    [ 0 .. ( length + actual_chunk - 1 ) / actual_chunk )
+  // First try to steal from beginning of own thread's partition.
+  // If that fails then try to steal from end of another threads' partition.
+  int get_stealing() noexcept ;
 };
 
 //----------------------------------------------------------------------------
@@ -579,7 +645,6 @@ void parallel_reduce
 {
 }
 
-#if 0
 
 template< typename iType, class Closure >
 KOKKOS_INLINE_FUNCTION
@@ -591,13 +656,16 @@ void parallel_scan
 {
   // Extract ValueType from the closure
 
-  ValueType accum = 0 ;
+  using value_type =
+    typename Kokkos::Impl::FunctorValueTraits< Closure , void >::value_type ;
+
+  value_type accum = 0 ;
 
   // Intra-member scan
   for ( iType i = loop_boundaries.start
       ; i <  loop_boundaries.end
       ; i += loop_boundaries.increment ) {
-    lambda(i,accum,false);
+    closure(i,accum,false);
   }
 
   // 'accum' output is the exclusive prefix sum
@@ -606,9 +674,11 @@ void parallel_scan
   for ( iType i = loop_boundaries.start
       ; i <  loop_boundaries.end
       ; i += loop_boundaries.increment ) {
-    lambda(i,accum,true);
+    closure(i,accum,true);
   }
 }
+
+#if 0
 
 // placeholder for future function
 template< typename iType, class Lambda, typename ValueType >
