@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_CORE_EXP_FEW_HPP
-#define KOKKOS_CORE_EXP_FEW_HPP
+#ifndef KOKKOS_FEW_HPP
+#define KOKKOS_FEW_HPP
 
 #include <Kokkos_Macros.hpp>
 #include <type_traits>
@@ -123,5 +123,5 @@ class Few {
 
 }} // namespace Kokkos::Experimental
 
-#endif //KOKKOS_CORE_EXP_FEW_HPP
+#endif //KOKKOS_FEW_HPP
 
