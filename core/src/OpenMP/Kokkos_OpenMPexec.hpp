@@ -46,11 +46,27 @@
 
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_spinwait.hpp>
+#include <impl/Kokkos_HostThreadTeam.hpp>
 
 #include <Kokkos_Atomic.hpp>
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
+
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+namespace Impl {
+
+// Get thread team data structure for omp_get_thread_num()
+HostThreadTeamData * openmp_get_thread_team_data();
+
+} // namespace Impl
+} // namespace Kokkos
+
+//----------------------------------------------------------------------------
+
 namespace Kokkos {
 namespace Impl {
 

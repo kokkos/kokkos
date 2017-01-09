@@ -184,6 +184,125 @@ void OpenMPexec::resize_scratch( size_t reduce_size , size_t thread_size )
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+namespace Impl {
+namespace {
+
+int g_openmp_thread_team_rank[ HostThreadTeamData::max_pool_members ] = { 0 };
+
+HostThreadTeamData * g_openmp_thread_team_data[ HostThreadTeamData::max_pool_members ] = { 0 };
+
+} // namespace
+
+
+void openmp_clear_thread_team_data()
+{
+  const size_t member_bytes =
+    sizeof(int64_t) *
+    HostThreadTeamData::align_to_int64( sizeof(HostThreadTeamData) );
+
+  const int old_alloc_bytes =
+    g_openmp_thread_team_data[0] ?
+    ( member_bytes + g_openmp_thread_team_data[0]->scratch_bytes() ) : 0 ;
+
+  if ( old_alloc_bytes ) { g_openmp_thread_team_data[0]->disband_pool(); }
+
+  Kokkos::HostSpace space ;
+
+#pragma omp parallel
+  {
+    const int rank = g_openmp_thread_team_rank[ omp_get_thread_num() ];
+
+    if ( old_alloc_bytes ) {
+      space.deallocate( g_openmp_thread_team_data[rank] , old_alloc_bytes );
+    }
+
+    g_openmp_thread_team_data[ rank ] = 0 ;
+  }
+/* END #pragma omp parallel */
+}
+
+void openmp_resize_thread_team_data( size_t pool_reduce_bytes
+                                   , size_t team_reduce_bytes
+                                   , size_t team_shared_bytes
+                                   , size_t thread_local_bytes )
+{
+  const size_t member_bytes =
+    sizeof(int64_t) *
+    HostThreadTeamData::align_to_int64( sizeof(HostThreadTeamData) );
+
+  HostThreadTeamData * root = g_openmp_thread_team_data[0] ;
+
+  const size_t old_pool_reduce  = root ? root->pool_reduce_bytes() : 0 ;
+  const size_t old_team_reduce  = root ? root->team_reduce_bytes() : 0 ;
+  const size_t old_team_shared  = root ? root->team_shared_bytes() : 0 ;
+  const size_t old_thread_local = root ? root->thread_local_bytes() : 0 ;
+  const int old_alloc_bytes     = root ? ( member_bytes + root->scratch_bytes() ) : 0 ;
+
+  // Allocate if any of the old allocation is tool small:
+
+  const bool allocate = ( old_pool_reduce  < pool_reduce_bytes ) ||
+                        ( old_team_reduce  < team_reduce_bytes ) ||
+                        ( old_team_shared  < team_shared_bytes ) ||
+                        ( old_thread_local < thread_local_bytes );
+
+  if ( allocate ) {
+
+    if ( root ) { root->disband_pool(); root = 0 ; }
+
+    if ( pool_reduce_bytes < old_pool_reduce ) { pool_reduce_bytes = old_pool_reduce ; }
+    if ( team_reduce_bytes < old_team_reduce ) { team_reduce_bytes = old_team_reduce ; }
+    if ( team_shared_bytes < old_team_shared ) { team_shared_bytes = old_team_shared ; }
+    if ( thread_local_bytes < old_thread_local ) { thread_local_bytes = old_thread_local ; }
+
+    const size_t alloc_bytes =
+      member_bytes +
+      HostThreadTeamData::scratch_size( pool_reduce_bytes
+                                      , team_reduce_bytes
+                                      , team_shared_bytes
+                                      , thread_local_bytes );
+
+    const int pool_size = omp_get_num_threads();
+
+    Kokkos::HostSpace space ;
+
+#pragma omp parallel
+    {
+      const int rank = g_openmp_thread_team_rank[ omp_get_thread_num() ];
+
+      if ( old_alloc_bytes ) {
+        space.deallocate( g_openmp_thread_team_data[rank] , old_alloc_bytes );
+      }
+
+      void * const ptr = space.allocate( alloc_bytes );
+
+      g_openmp_thread_team_data[ rank ] = new( ptr ) HostThreadTeamData();
+
+      g_openmp_thread_team_data[ rank ]->
+        scratch_assign( ((char *)ptr) + member_bytes
+                      , alloc_bytes
+                      , pool_reduce_bytes
+                      , team_reduce_bytes
+                      , team_shared_bytes
+                      , thread_local_bytes );
+    }
+/* END #pragma omp parallel */
+
+    HostThreadTeamData::organize_pool( g_openmp_thread_team_data , pool_size );
+  }
+}
+
+HostThreadTeamData * openmp_get_thread_team_data()
+{
+  return g_openmp_thread_team_data[ g_openmp_thread_team_rank[ omp_get_thread_num() ] ];
+}
+
+} // namespace Impl
+} // namespace Kokkos
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
 
 //----------------------------------------------------------------------------
 
@@ -276,6 +395,10 @@ void OpenMP::initialize( unsigned thread_count ,
                                    : omp_rank ;
 
         Impl::OpenMPexec::m_map_rank[ omp_rank ] = thread_r ;
+
+        // New, unified host thread team data:
+        Impl::g_openmp_thread_team_rank[ omp_rank ] =
+          thread_count - ( thread_r + 1 );
       }
 /* END #pragma omp critical */
     }
@@ -287,6 +410,20 @@ void OpenMP::initialize( unsigned thread_count ,
       Impl::OpenMPexec::m_pool_topo[2] = Impl::s_using_hwloc ? thread_count / ( use_numa_count * use_cores_per_numa ) : 1;
 
       Impl::OpenMPexec::resize_scratch( 1024 , 1024 );
+
+      // New, unified host thread team data:
+      {
+        size_t pool_reduce_bytes  =   32 * thread_count ;
+        size_t team_reduce_bytes  =   32 * thread_count ;
+        size_t team_shared_bytes  = 1024 * thread_count ;
+        size_t thread_local_bytes = 1024 ;
+
+        Impl::openmp_resize_thread_team_data( pool_reduce_bytes
+                                            , team_reduce_bytes
+                                            , team_shared_bytes
+                                            , thread_local_bytes
+                                            );
+      }
     }
   }
 
@@ -322,6 +459,9 @@ void OpenMP::finalize()
   Impl::OpenMPexec::verify_is_process( "OpenMP::finalize" );
 
   Impl::OpenMPexec::clear_scratch();
+
+  // New, unified host thread team data:
+  Impl::openmp_clear_thread_team_data();
 
   Impl::OpenMPexec::m_pool_topo[0] = 0 ;
   Impl::OpenMPexec::m_pool_topo[1] = 0 ;

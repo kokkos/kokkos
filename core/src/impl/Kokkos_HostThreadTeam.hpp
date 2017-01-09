@@ -339,7 +339,9 @@ public:
 
 class HostThreadTeamMember {
 private:
+
   HostThreadTeamData & m_data ;
+
 public:
 
   constexpr HostThreadTeamMember( HostThreadTeamData & arg ) noexcept
