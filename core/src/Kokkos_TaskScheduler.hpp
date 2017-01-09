@@ -558,14 +558,13 @@ public:
          , TaskPriority  const & arg_priority
          )
     {
-      // Postcondition: task is in Executing state
+      // Precondition: task is in Executing state
 
       using value_type  = typename FunctorType::value_type ;
       using task_type   = Impl::TaskBase< execution_space
                                         , value_type
                                         , FunctorType > ;
 
-      task_base * const lock = (task_base *) task_base::LockTag ;
       task_type * const task = static_cast< task_type * >( arg_self );
 
       task->m_priority = static_cast<int>(arg_priority);

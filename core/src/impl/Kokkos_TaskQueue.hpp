@@ -433,9 +433,13 @@ public:
   KOKKOS_INLINE_FUNCTION
   void add_dependence( TaskBase* dep )
     {
+      // Precondition: lock == m_next
+
+      TaskBase * const lock = (TaskBase *) LockTag ;
+
       // Assign dependence to m_next.  It will be processed in the subsequent
       // call to schedule.  Error if the dependence is reset.
-      if ( 0 != Kokkos::atomic_exchange( & m_next, dep ) ) {
+      if ( lock != Kokkos::atomic_exchange( & m_next, dep ) ) {
         Kokkos::abort("TaskScheduler ERROR: resetting task dependence");
       }
 

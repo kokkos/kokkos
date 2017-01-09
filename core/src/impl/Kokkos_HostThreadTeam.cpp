@@ -49,8 +49,8 @@ namespace Impl {
 
 //----------------------------------------------------------------------------
 
-void HostThreadTeamMember::organize_pool
-  ( HostThreadTeamMember * members[] , const int size )
+void HostThreadTeamData::organize_pool
+  ( HostThreadTeamData * members[] , const int size )
 {
   bool ok = true ;
 
@@ -62,11 +62,11 @@ void HostThreadTeamMember::organize_pool
   if ( ok ) {
     int64_t * const root_scratch = members[0]->m_scratch ;
 
-    HostThreadTeamMember ** const pool =
-      (HostThreadTeamMember **) (root_scratch + m_pool_members);
+    HostThreadTeamData ** const pool =
+      (HostThreadTeamData **) (root_scratch + m_pool_members);
 
     for ( int rank = 0 ; rank < size ; ++rank ) {
-      HostThreadTeamMember * const mem = members[ rank ] ;
+      HostThreadTeamData * const mem = members[ rank ] ;
       mem->m_pool_scratch = root_scratch ;
       mem->m_team_scratch = root_scratch ;
       mem->m_pool_rank    = rank ;
@@ -86,18 +86,18 @@ void HostThreadTeamMember::organize_pool
   }
 }
 
-void HostThreadTeamMember::disband_pool()
+void HostThreadTeamData::disband_pool()
 {
   const bool ok_root = 0 != m_pool_scratch && this == pool_member(0);
 
   if ( ok_root ) {
     int const size = m_pool_size ;
 
-    HostThreadTeamMember ** const pool =
-      (HostThreadTeamMember **) (m_pool_scratch + m_pool_members);
+    HostThreadTeamData ** const pool =
+      (HostThreadTeamData **) (m_pool_scratch + m_pool_members);
 
     for ( int rank = 0 ; rank < size ; ++rank ) {
-      HostThreadTeamMember * const mem = pool[ rank ] ; pool[rank] = 0 ;
+      HostThreadTeamData * const mem = pool[ rank ] ; pool[rank] = 0 ;
       mem->m_pool_scratch = 0 ;
       mem->m_team_scratch = 0 ;
       mem->m_pool_rank    = 0 ;
@@ -115,15 +115,15 @@ void HostThreadTeamMember::disband_pool()
   }
 }
 
-void HostThreadTeamMember::organize_team( const int team_size )
+void HostThreadTeamData::organize_team( const int team_size )
 {
   const bool ok_pool = 0 != m_pool_scratch ;
   const bool ok_team = 0 == m_team_scratch ;
 
   if ( ok_pool && ok_team ) {
 
-    HostThreadTeamMember * const * const pool =
-      (HostThreadTeamMember **) (m_pool_scratch + m_pool_members);
+    HostThreadTeamData * const * const pool =
+      (HostThreadTeamData **) (m_pool_scratch + m_pool_members);
 
     const int league_size = ( m_pool_size + team_size - 1 ) / team_size ;
     const int team_alloc_size = m_pool_size / league_size ;
@@ -156,13 +156,13 @@ void HostThreadTeamMember::organize_team( const int team_size )
   }
 }
 
-void HostThreadTeamMember::disband_team()
+void HostThreadTeamData::disband_team()
 {
   const bool ok_pool = 0 != m_pool_scratch ;
 
   if ( ok_pool ) {
-    HostThreadTeamMember * const * const pool =
-      (HostThreadTeamMember **) (m_pool_scratch + m_pool_members);
+    HostThreadTeamData * const * const pool =
+      (HostThreadTeamData **) (m_pool_scratch + m_pool_members);
 
     m_team_scratch = pool[0]->m_scratch ;
     m_team_base    = 0 ;
@@ -187,7 +187,7 @@ void HostThreadTeamMember::disband_team()
  *  }
  */
 
-int HostThreadTeamMember::rendezvous( int64_t * const buffer
+int HostThreadTeamData::rendezvous( int64_t * const buffer
                                     , int & rendezvous_step
                                     , int const size
                                     , int const rank ) noexcept
@@ -262,7 +262,7 @@ int HostThreadTeamMember::rendezvous( int64_t * const buffer
   return base ; // rank == 0
 }
 
-void HostThreadTeamMember::
+void HostThreadTeamData::
   rendezvous_release( int64_t * const buffer
                     , int const rendezvous_step ) noexcept
 {
@@ -280,7 +280,7 @@ void HostThreadTeamMember::
 
 //----------------------------------------------------------------------------
 
-int HostThreadTeamMember::get_stealing() noexcept
+int HostThreadTeamData::get_stealing() noexcept
 {
   pair_int_t w( -1 , -1 );
 
@@ -315,8 +315,8 @@ int HostThreadTeamMember::get_stealing() noexcept
 
   if ( w.first == -1 && m_steal_rank != m_team_rank ) {
 
-    HostThreadTeamMember * const * const team =
-      ((HostThreadTeamMember**)( m_pool_scratch + m_pool_members ))
+    HostThreadTeamData * const * const team =
+      ((HostThreadTeamData**)( m_pool_scratch + m_pool_members ))
       + m_team_base ;
 
     // Attempt from begining failed, try to steal from end of neighbor
@@ -366,7 +366,7 @@ int HostThreadTeamMember::get_stealing() noexcept
   return w.first ;
 }
 
-int HostThreadTeamMember::
+int HostThreadTeamData::
   set_stealing( long const length , int const chunk ) noexcept
 {
   // Steal chunk length has minimum value required to
