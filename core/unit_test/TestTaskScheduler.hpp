@@ -340,10 +340,12 @@ struct TestTaskTeam {
       // test parallel_reduce with join
 
       tot = 0;
-      Kokkos::parallel_reduce( Kokkos::TeamThreadRange(member,begin,end)
-                          , [&]( int i, long &res) { res += parfor_result[i]; }
-                          , [&]( long& val1, const long& val2) { val1 += val2; }
-                          , tot);
+      Kokkos::parallel_reduce
+        ( Kokkos::TeamThreadRange(member,begin,end)
+        , [&]( int i, long &res) { res += parfor_result[i]; }
+        , Kokkos::Sum( tot )
+        );
+
       Kokkos::parallel_for( Kokkos::TeamThreadRange(member,begin,end)
                           , [&]( int i ) { parreduce_check[i] += expected-tot ; }
                           );

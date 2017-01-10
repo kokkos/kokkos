@@ -236,7 +236,7 @@ void openmp_resize_thread_team_data( size_t pool_reduce_bytes
   const size_t old_team_reduce  = root ? root->team_reduce_bytes() : 0 ;
   const size_t old_team_shared  = root ? root->team_shared_bytes() : 0 ;
   const size_t old_thread_local = root ? root->thread_local_bytes() : 0 ;
-  const int old_alloc_bytes     = root ? ( member_bytes + root->scratch_bytes() ) : 0 ;
+  const size_t old_alloc_bytes  = root ? ( member_bytes + root->scratch_bytes() ) : 0 ;
 
   // Allocate if any of the old allocation is tool small:
 
@@ -261,7 +261,7 @@ void openmp_resize_thread_team_data( size_t pool_reduce_bytes
                                       , team_shared_bytes
                                       , thread_local_bytes );
 
-    const int pool_size = omp_get_num_threads();
+    const int pool_size = omp_get_max_threads();
 
     Kokkos::HostSpace space ;
 

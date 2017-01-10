@@ -118,9 +118,6 @@ namespace Impl {
 template< typename Space , typename ResultType , typename FunctorType >
 class TaskBase ;
 
-template< typename Space >
-class TaskExec ;
-
 } // namespace Impl
 } // namespace Kokkos
 
@@ -416,7 +413,8 @@ public:
 
   using execution_space  = ExecSpace ;
   using memory_space     = typename queue_type::memory_space ;
-  using member_type      = Kokkos::Impl::TaskExec< ExecSpace > ;
+  using member_type      =
+    typename Kokkos::Impl::TaskQueueSpecialization< ExecSpace >::member_type ;
 
   KOKKOS_INLINE_FUNCTION
   TaskScheduler() : m_track(), m_queue(0) {}

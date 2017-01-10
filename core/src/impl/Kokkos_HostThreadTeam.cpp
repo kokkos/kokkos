@@ -43,6 +43,7 @@
 
 #include <limits>
 #include <impl/Kokkos_HostThreadTeam.hpp>
+#include <impl/Kokkos_Error.hpp>
 
 namespace Kokkos {
 namespace Impl {
@@ -60,29 +61,36 @@ void HostThreadTeamData::organize_pool
   }
 
   if ( ok ) {
+
     int64_t * const root_scratch = members[0]->m_scratch ;
 
-    HostThreadTeamData ** const pool =
-      (HostThreadTeamData **) (root_scratch + m_pool_members);
+    for ( int i = m_pool_rendezvous ; i < m_pool_reduce ; ++i ) {
+      root_scratch[i] = 0 ;
+    }
 
-    for ( int rank = 0 ; rank < size ; ++rank ) {
-      HostThreadTeamData * const mem = members[ rank ] ;
-      mem->m_pool_scratch = root_scratch ;
-      mem->m_team_scratch = root_scratch ;
-      mem->m_pool_rank    = rank ;
-      mem->m_pool_size    = size ;
-      mem->m_team_base    = 0 ;
-      mem->m_team_rank    = rank ;
-      mem->m_team_size    = size ;
-      mem->m_league_rank  = 0 ;
-      mem->m_league_size  = 1 ;
-      mem->m_pool_rendezvous_step = 0 ;
-      mem->m_team_rendezvous_step = 0 ;
-      pool[ rank ] = mem ;
+    {
+      HostThreadTeamData ** const pool =
+        (HostThreadTeamData **) (root_scratch + m_pool_members);
+
+      for ( int rank = 0 ; rank < size ; ++rank ) {
+        HostThreadTeamData * const mem = members[ rank ] ;
+        mem->m_pool_scratch = root_scratch ;
+        mem->m_team_scratch = root_scratch ;
+        mem->m_pool_rank    = rank ;
+        mem->m_pool_size    = size ;
+        mem->m_team_base    = 0 ;
+        mem->m_team_rank    = rank ;
+        mem->m_team_size    = size ;
+        mem->m_league_rank  = 0 ;
+        mem->m_league_size  = 1 ;
+        mem->m_pool_rendezvous_step = 0 ;
+        mem->m_team_rendezvous_step = 0 ;
+        pool[ rank ] = mem ;
+      }
     }
   }
   else {
-    // Error
+    Kokkos::Impl::throw_runtime_exception("Kokkos::Impl::HostThreadTeamData::organize_pool ERROR pool already exists");
   }
 }
 
@@ -111,14 +119,21 @@ void HostThreadTeamData::disband_pool()
     }
   }
   else {
+    Kokkos::Impl::throw_runtime_exception("Kokkos::Impl::HostThreadTeamData::disband_pool ERROR pool does not exist");
     // Error
   }
 }
 
-void HostThreadTeamData::organize_team( const int team_size )
+int HostThreadTeamData::organize_team( const int team_size )
 {
   const bool ok_pool = 0 != m_pool_scratch ;
-  const bool ok_team = 0 == m_team_scratch ;
+  const bool ok_team =
+    m_team_scratch == m_pool_scratch &&
+    m_team_base    == 0 &&
+    m_team_rank    == m_pool_rank &&
+    m_team_size    == m_pool_size &&
+    m_league_rank  == 0 &&
+    m_league_size  == 1 ;
 
   if ( ok_pool && ok_team ) {
 
@@ -128,32 +143,36 @@ void HostThreadTeamData::organize_team( const int team_size )
     const int league_size = ( m_pool_size + team_size - 1 ) / team_size ;
     const int team_alloc_size = m_pool_size / league_size ;
     const int team_alloc_rank = m_pool_rank % team_alloc_size ;
+    const int league_rank     = m_pool_rank / team_alloc_size ;
+    const int team_base_rank  = league_rank * team_alloc_size ;
 
-    if ( team_alloc_rank < team_size ) {
-
-      const int league_rank    = m_pool_size / team_alloc_size ;
-      const int team_base_rank = league_rank * team_alloc_size ;
-
-      m_team_scratch = pool[ team_base_rank ]->m_scratch ;
-      m_team_base    = team_base_rank ;
-      m_team_rank    = team_alloc_rank ;
-      m_team_size    = team_size ;
-      m_league_rank  = league_rank ;
-      m_league_size  = league_size ;
-    }
-    else {
-      m_team_scratch = 0 ;
-      m_team_base    = 0 ;
-      m_team_rank    = 0 ;
-      m_team_size    = 0 ;
-      m_league_rank  = 0 ;
-      m_league_size  = 0 ;
-    }
+    m_team_scratch = pool[ team_base_rank ]->m_scratch ;
+    m_team_base    = team_base_rank ;
+    m_team_rank    = team_alloc_rank < team_size ? team_alloc_rank : -1 ;
+    m_team_size    = team_size ;
+    m_league_rank  = league_rank ;
+    m_league_size  = league_size ;
     m_team_rendezvous_step = 0 ;
+
+    if ( team_base_rank == m_pool_rank ) {
+      for ( int i = m_team_rendezvous ; i < m_pool_reduce ; ++i ) {
+        m_scratch[i] = 0 ;
+      }
+    }
+
+    // Organizing threads into a team performs a barrier across the
+    // entire pool to insure proper initialization of the team
+    // rendezvous mechanism before a team rendezvous can be performed.
+
+    if ( pool_rendezvous() ) {
+      pool_rendezvous_release();
+    }
   }
   else {
-    // Error
+    Kokkos::Impl::throw_runtime_exception("Kokkos::Impl::HostThreadTeamData::organize_team ERROR");
   }
+
+  return 0 <= m_team_rank ;
 }
 
 void HostThreadTeamData::disband_team()
@@ -173,11 +192,23 @@ void HostThreadTeamData::disband_team()
     m_team_rendezvous_step = 0 ;
   }
   else {
-    // Error
+    Kokkos::Impl::throw_runtime_exception("Kokkos::Impl::HostThreadTeamData::disband_tem ERROR pool does not exist");
   }
 }
 
 //----------------------------------------------------------------------------
+
+namespace {
+
+void wait_until_equal( int64_t const value , int64_t volatile * const sync )
+{
+  while ( value != *sync ) {
+    // TBD: backoff
+  }
+}
+
+}
+
 /* pattern for rendezvous
  *
  *  if ( rendezvous() ) {
@@ -203,8 +234,9 @@ int HostThreadTeamData::rendezvous( int64_t * const buffer
 
   // 1 <= step <= 4
 
-  const int base  = rank ? 0 : 1 ;
-  const int step  = ( rendezvous_step & 03 ) + 1 ; rendezvous_step = step ;
+  const int step = ( rendezvous_step & 03 ) + 1 ;
+
+  rendezvous_step = step ;
 
   // For an upper bound of 64 threads per team the shared array is uint64_t[16].
   // For this step the interval begins at ( step & 01 ) * 8
@@ -234,19 +266,16 @@ int HostThreadTeamData::rendezvous( int64_t * const buffer
       value.full = 0 ;
       const int n = ( size - group ) < 8 ? size - group : 8 ;
       for ( int i = 0 ; i < n ; ++i ) value.byte[i] = step ;
-      int64_t volatile * const sync = sync_base + rank ;
-      while ( value.full != *sync );
+      wait_until_equal( value.full , sync_base + rank );
     }
   }
 
-  if ( rank ) {
-    // All previous memory stores must be complete.
-    // Then store value at this thread's designated byte in the shared array.
+  // All previous memory stores must be complete.
+   // Then store value at this thread's designated byte in the shared array.
 
-    Kokkos::memory_fence();
+  Kokkos::memory_fence();
 
-    *(((volatile int8_t*) sync_base) + rank ) = int8_t( step );
-  }
+  *(((volatile int8_t*) sync_base) + rank ) = rank ? int8_t( step ) : 0 ;
 
   { // "Inner" rendezvous for ranks [ 0 .. 8 )
     // Effects:
@@ -255,11 +284,11 @@ int HostThreadTeamData::rendezvous( int64_t * const buffer
 
     value.full = 0 ;
     const int n = size < 8 ? size : 8 ;
-    for ( int i = base ; i < n ; ++i ) value.byte[i] = step ;
-    while ( value.full != *sync_base );
+    for ( int i = rank ? 0 : 1 ; i < n ; ++i ) value.byte[i] = step ;
+    wait_until_equal( value.full , sync_base );
   }
 
-  return base ; // rank == 0
+  return rank ? 0 : 1 ; // rank == 0
 }
 
 void HostThreadTeamData::
@@ -273,6 +302,7 @@ void HostThreadTeamData::
   int64_t volatile * const sync_base =
     buffer + (( rendezvous_step & 01 ) << 3 );
 
+  // Memory fence to be sure all prevous writes are complete:
   Kokkos::memory_fence();
 
   *((volatile int8_t*) sync_base) = int8_t( rendezvous_step );

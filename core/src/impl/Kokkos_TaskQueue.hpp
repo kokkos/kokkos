@@ -76,9 +76,6 @@ namespace Impl {
 template< typename Space , typename ResultType , typename FunctorType >
 class TaskBase ;
 
-template< typename Space >
-class TaskExec ;
-
 } /* namespace Impl */
 } /* namespace Kokkos */
 
@@ -522,13 +519,14 @@ private:
 
 public:
 
-  using root_type     = TaskBase< ExecSpace , void , void > ;
-  using base_type     = TaskBase< ExecSpace , ResultType , void > ;
-  using function_type = typename root_type::function_type ;
-  using queue_type    = typename root_type::queue_type ;
-  using member_type   = TaskExec< ExecSpace > ;
-  using functor_type  = FunctorType ;
-  using result_type   = ResultType ;
+  using root_type       = TaskBase< ExecSpace , void , void > ;
+  using base_type       = TaskBase< ExecSpace , ResultType , void > ;
+  using specialization  = TaskQueueSpecialization< ExecSpace > ;
+  using function_type   = typename root_type::function_type ;
+  using queue_type      = typename root_type::queue_type ;
+  using member_type     = typename specialization::member_type ;
+  using functor_type    = FunctorType ;
+  using result_type     = ResultType ;
 
   template< typename Type >
   KOKKOS_INLINE_FUNCTION static

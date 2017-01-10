@@ -160,19 +160,21 @@ private:
   inline
   int team_rendezvous( int const root ) const noexcept
     {
-      return rendezvous( m_team_scratch + m_team_rendezvous
-                       , m_team_rendezvous_step
-                       , m_team_size
-                       , ( m_team_rank + m_team_size - root ) % m_team_size );
+      return m_team_rank < m_team_size ?
+        rendezvous( m_team_scratch + m_team_rendezvous
+                  , m_team_rendezvous_step
+                  , m_team_size
+                  , ( m_team_rank + m_team_size - root ) % m_team_size ) : 0 ;
     }
 
   inline
   int team_rendezvous() const noexcept
     {
-      return rendezvous( m_team_scratch + m_team_rendezvous
-                       , m_team_rendezvous_step
-                       , m_team_size
-                       , m_team_rank );
+      return m_team_rank < m_team_size ?
+        rendezvous( m_team_scratch + m_team_rendezvous
+                  , m_team_rendezvous_step
+                  , m_team_size
+                  , m_team_rank ) : 0 ;
     }
 
   inline
@@ -208,16 +210,16 @@ public:
     , m_pool_scratch(0)
     , m_team_scratch(0)
     , m_pool_rank(0)
-    , m_pool_size(0)
+    , m_pool_size(1)
     , m_team_reduce(0)
     , m_team_shared(0)
     , m_thread_local(0)
     , m_scratch_size(0)
     , m_team_base(0)
     , m_team_rank(0)
-    , m_team_size(0)
+    , m_team_size(1)
     , m_league_rank(0)
-    , m_league_size(0)
+    , m_league_size(1)
     , m_steal_rank(0)
     , m_pool_rendezvous_step(0)
     , m_team_rendezvous_step(0)
@@ -226,14 +228,21 @@ public:
   // Organize array of members into a pool.
   // The 0th member is the root of the pool.
   // Requires members are not already in a pool.
+  // Pool members are ordered as "close" - sorted by NUMA and then CORE
   static void organize_pool( HostThreadTeamData * members[]
                            , const int size );
 
   // Root of a pool disbands the pool.
   void disband_pool();
 
-  // Each thread within a pool organizes itself into a team
-  void organize_team( const int team_size );
+  // Each thread within a pool organizes itself into a team.
+  // Organizing threads into a team performs a barrier across the
+  // entire pool to insure proper initialization of the team
+  // rendezvous mechanism before a team rendezvous can be performed.
+  //
+  // Return true  if a valid member of a team.
+  // Return false if not a member and thread should be idled.
+  int organize_team( const int team_size );
 
   // Each thread within a pool disbands itself from a team
   void disband_team();
@@ -261,6 +270,9 @@ public:
 
   constexpr int scratch_bytes() const
     { return sizeof(int64_t) * m_scratch_size ; }
+
+  int64_t * scratch_buffer() const noexcept
+    { return m_scratch ; }
 
   // Given:
   //   pool_reduce_size  = number bytes for pool reduce
@@ -357,23 +369,27 @@ public:
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
-  int team_rank() const noexcept { return m_data.m_team_size ; }
+  int team_rank() const noexcept { return m_data.m_team_rank ; }
 
   KOKKOS_INLINE_FUNCTION
-  int team_size() const noexcept { return m_data.m_team_rank ; }
+  int team_size() const noexcept { return m_data.m_team_size ; }
 
   KOKKOS_INLINE_FUNCTION
-  int league_rank() const noexcept { return m_data.m_league_size ; }
+  int league_rank() const noexcept { return m_data.m_league_rank ; }
 
   KOKKOS_INLINE_FUNCTION
-  int league_size() const noexcept { return m_data.m_league_rank ; }
+  int league_size() const noexcept { return m_data.m_league_size ; }
 
   //----------------------------------------
   // Team collectives
 
   KOKKOS_INLINE_FUNCTION void team_barrier() const noexcept
-#if defined( KOKKOS_ACTIVE_EXECUTION_SPACE_HOST )
-    { if ( m_data.team_rendezvous() ) m_data.team_rendezvous_release(); }
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+    {
+      if ( 1 < m_data.m_team_size ) {
+        if ( m_data.team_rendezvous() ) m_data.team_rendezvous_release();
+      }
+    }
 #else
     {}
 #endif
@@ -381,29 +397,31 @@ public:
   template< typename T >
   KOKKOS_INLINE_FUNCTION
   void team_broadcast( T & value , const int source_team_rank = 0 ) const noexcept
-#if defined( KOKKOS_ACTIVE_EXECUTION_SPACE_HOST )
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     {
-      T volatile * const shared_value = (T*) m_data.team_reduce();
+      if ( 1 < m_data.m_team_size ) {
+        T volatile * const shared_value = (T*) m_data.team_reduce();
 
-      // Don't overwrite shared memory until all threads arrive
+        // Don't overwrite shared memory until all threads arrive
 
-      if ( m_data.team_rendezvous( source_team_rank ) ) {
-        // All threads have entered 'team_rendezvous'
-        // only this thread returned from 'team_rendezvous'
-        // with a return value of 'true'
+        if ( m_data.team_rendezvous( source_team_rank ) ) {
+          // All threads have entered 'team_rendezvous'
+          // only this thread returned from 'team_rendezvous'
+          // with a return value of 'true'
 
-        *shared_value = value ;
+          *shared_value = value ;
 
-        m_data.team_rendezvous_release();
-        // This thread released all other threads from 'team_rendezvous'
-        // with a return value of 'false'
-      }
-      else {
-        value = *shared_value ;
+          m_data.team_rendezvous_release();
+          // This thread released all other threads from 'team_rendezvous'
+          // with a return value of 'false'
+        }
+          else {
+          value = *shared_value ;
+        }
       }
     }
 #else
-    {}
+    { Kokkos::abort("HostThreadTeamMember team_broadcast\n"); }
 #endif
 
   // team_reduce( Sum(result) );
@@ -412,92 +430,105 @@ public:
   template< typename ReducerType >
   KOKKOS_INLINE_FUNCTION
   void team_reduce( ReducerType const & reducer ) const noexcept
-#if defined( KOKKOS_ACTIVE_EXECUTION_SPACE_HOST )
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     {
       static_assert( Kokkos::is_reducer< ReducerType >::value
                    , "team_reduce requires a reducer object" );
 
-      using value_type = typename ReducerType::value_type ;
+      if ( 1 < m_data.m_team_size ) {
 
-      value_type volatile * const shared_value =
-        (value_type*) m_data.team_reduce();
+        using value_type = typename ReducerType::value_type ;
 
-      value_type * const member_value =
-        shared_value + m_data.team_rank() * reducer.length();
+        value_type volatile * const shared_value =
+          (value_type*) m_data.team_reduce();
 
-      // Don't overwrite shared memory until all threads arrive
+        value_type volatile * const member_value =
+          shared_value + m_data.m_team_rank * reducer.length();
 
-      team_barrier();
+        // Don't overwrite shared memory until all threads arrive
 
-      for ( int i = 0 ; i < reducer.length() ; ++i ) {
-        member_value[i] = reducer[i];
-      }
+        team_barrier();
 
-      // Wait for all team members to store data
-
-      if ( team_rendezvous() ) {
-        // All threads have entered 'team_rendezvous'
-        // only this thread returned from 'team_rendezvous'
-        // with a return value of 'true'
-        //
-        // This thread sums contributed values
-        for ( int i = 1 ; i < m_team_size ; ++i ) {
-          reducer.join( shared_value , shared_value + i * reducer.length() );
+        for ( int i = 0 ; i < reducer.length() ; ++i ) {
+          member_value[i] = reducer[i];
         }
-        m_data.team_rendezvous_release();
-        // This thread released all other threads from 'team_rendezvous'
-        // with a return value of 'false'
-      }
 
-      for ( int i = 0 ; i < reducer.length() ; ++i ) {
-        reducer[i] = shared_value[i] ;
+        // Wait for all team members to store data
+
+        if ( m_data.team_rendezvous() ) {
+          // All threads have entered 'team_rendezvous'
+          // only this thread returned from 'team_rendezvous'
+          // with a return value of 'true'
+          //
+          // This thread sums contributed values
+          for ( int i = 1 ; i < m_data.m_team_size ; ++i ) {
+            reducer.join( shared_value , shared_value + i * reducer.length() );
+          }
+          m_data.team_rendezvous_release();
+          // This thread released all other threads from 'team_rendezvous'
+          // with a return value of 'false'
+        }
+
+        for ( int i = 0 ; i < reducer.length() ; ++i ) {
+          reducer[i] = shared_value[i] ;
+        }
       }
     }
 #else
-    {}
+    { Kokkos::abort("HostThreadTeamMember team_reduce\n"); }
 #endif
 
   template< typename T >
   KOKKOS_INLINE_FUNCTION
   void team_scan( T & value , T * const global = 0 ) const noexcept
-#if defined( KOKKOS_ACTIVE_EXECUTION_SPACE_HOST )
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     {
-      T volatile * const shared_value = (T*) m_data.team_reduce();
+      if ( 1 < m_data.m_team_size ) {
 
-      // Don't overwrite shared memory until all threads arrive
-      team_barrier();
+        T volatile * const shared_value = (T*) m_data.team_reduce();
 
-      shared_value[ m_data.team_rank() + 1 ] = value ;
+        // Don't overwrite shared memory until all threads arrive
+        team_barrier();
 
-      if ( m_data.team_rendezvous() ) {
-        // All threads have entered 'team_rendezvous'
-        // only this thread returned from 'team_rendezvous'
-        // with a return value of 'true'
-        //
-        // This thread scans contributed values
-        for ( int i = 1 ; i < m_team_size ; ++i ) {
-          shared_value[i+1] += shared_value[i] ;
-        }
+        shared_value[ m_data.m_team_rank + 1 ] = value ;
 
-        shared_value[0] = 0 ;
-
-        // If adding to global value then atomic_fetch_add to that value
-        // and sum previous value to every entry of the scan.
-        if ( global ) {
-          shared_value[0] =
-            Kokkos::atomic_fetch_add( global , shared_value[m_team_size] );
-          for ( int i = 1 ; i < m_team_size ; ++i ) {
-            shared_value[i] += shared_value[0] ;
+        if ( m_data.team_rendezvous() ) {
+          // All threads have entered 'team_rendezvous'
+          // only this thread returned from 'team_rendezvous'
+          // with a return value of 'true'
+          //
+          // This thread scans contributed values
+          for ( int i = 1 ; i < m_data.m_team_size ; ++i ) {
+            shared_value[i+1] += shared_value[i] ;
           }
+
+          shared_value[0] = 0 ;
+
+          // If adding to global value then atomic_fetch_add to that value
+          // and sum previous value to every entry of the scan.
+          if ( global ) {
+            shared_value[0] =
+              Kokkos::atomic_fetch_add( global
+                                      , shared_value[m_data.m_team_size] );
+            for ( int i = 1 ; i < m_data.m_team_size ; ++i ) {
+              shared_value[i] += shared_value[0] ;
+            }
+          }
+
+          m_data.team_rendezvous_release();
         }
 
-        m_data.team_rendezvous_release();
+        value = shared_value[ m_data.m_team_rank ];
       }
-
-      value = shared_value[ m_team_rank ];
+      else if ( global ) {
+        value = Kokkos::atomic_fetch_add( global , value );
+      }
+      else {
+        value = 0 ;
+      }
     }
 #else
-    {}
+    { Kokkos::abort("HostThreadTeamMember team_scan\n"); }
 #endif
 
 };
@@ -565,46 +596,6 @@ void parallel_for
   }
 }
 
-template<typename iType, class Lambda, typename ValueType>
-KOKKOS_INLINE_FUNCTION
-void parallel_reduce
-  ( const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember >& loop_boundaries
-  , const Lambda& lambda
-  , ValueType& initialized_result)
-{
-  int team_rank = loop_boundaries.thread.team_rank(); // member num within the team
-  ValueType result = initialized_result;
-
-  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
-    lambda(i, result);
-  }
-
-  if ( 1 < loop_boundaries.thread.team_size() ) {
-
-    ValueType *shared = (ValueType*) loop_boundaries.thread.team_shared();
-
-    loop_boundaries.thread.team_barrier();
-    shared[team_rank] = result;
-
-    loop_boundaries.thread.team_barrier();
-
-    // reduce across threads to thread 0
-    if (team_rank == 0) {
-      for (int i = 1; i < loop_boundaries.thread.team_size(); i++) {
-        shared[0] += shared[i];
-      }
-    }
-
-    loop_boundaries.thread.team_barrier();
-
-    // broadcast result
-    initialized_result = shared[0];
-  }
-  else {
-    initialized_result = result ;
-  }
-}
-
 template< typename iType, class Closure, class Reducer >
 KOKKOS_INLINE_FUNCTION
 typename std::enable_if< Kokkos::is_reducer< Reducer >::value >::type
@@ -615,12 +606,12 @@ parallel_reduce
   , Reducer  const & reducer
   )
 {
-  reducer.init( reducer.reference() );
+  reducer.init( reducer.result() );
 
   for( iType i = loop_boundaries.start
      ; i <  loop_boundaries.end
      ; i += loop_boundaries.increment ) {
-    closure( i , reducer.reference() );
+    closure( i , reducer.result() );
   }
 
   loop_boundaries.thread.team_reduce( reducer );
@@ -628,7 +619,8 @@ parallel_reduce
 
 template< typename iType, typename Closure, typename ValueType >
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if< std::is_trivial<ValueType>::value >::type
+typename std::enable_if< std::is_trivial<ValueType>::value &&
+                         ! Kokkos::is_reducer<ValueType>::value >::type
 parallel_reduce
   ( Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember >
              const & loop_boundaries
@@ -636,18 +628,21 @@ parallel_reduce
   , ValueType      & result
   )
 {
-  Impl::ReduceSum< ValueType > reducer( result );
+  Impl::Reducer< ValueType , Impl::ReduceSum > reducer( result );
 
-  reducer.init( reducer.value() );
+  reducer.init( reducer.result() );
 
   for( iType i = loop_boundaries.start
      ; i <  loop_boundaries.end
      ; i += loop_boundaries.increment ) {
-    closure( i , reducer.value() );
+    closure( i , reducer.result() );
   }
 
   loop_boundaries.thread.team_reduce( reducer );
 }
+
+#if 0
+// placeholders for future functions
 
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
@@ -658,7 +653,6 @@ void parallel_reduce
 {
 }
 
-// placeholder for future function
 template< typename iType, class Lambda, typename ValueType, class JoinType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
@@ -668,6 +662,7 @@ void parallel_reduce
    ValueType& initialized_result)
 {
 }
+#endif
 
 
 template< typename iType, class Closure >

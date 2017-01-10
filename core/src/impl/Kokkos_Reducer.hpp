@@ -70,12 +70,18 @@ template< typename T
         , typename MemorySpace = void >
 struct Reducer
 {
+private:
+
+  enum : int { rank = std::rank<T>::value };
+
+public:
+
   using reducer      = Reducer ;
   using memory_space = MemorySpace ;
   using value_type   = typename std::remove_extent<T>::type ;
   using reduce_op    = ReduceOp< value_type > ;
   using reference_type =
-    typename std::conditional< std::rank<T>::value
+    typename std::conditional< ( rank != 0 )
                              , value_type *
                              , value_type &
                              >::type ;
@@ -117,18 +123,6 @@ struct Reducer
   void init( value_type * dest ) const noexcept
     { for ( int i = 0 ; i < m_length ; ++i ) reduce_op::init( dest[i] ); }
 
-
-  KOKKOS_INLINE_FUNCTION
-  constexpr int length() const noexcept { return m_length ; }
-
-  KOKKOS_INLINE_FUNCTION
-  value_type & operator[]( int i ) const noexcept
-    { return m_result[i]; }
-
-  KOKKOS_INLINE_FUNCTION
-  reference_type reference() const noexcept
-    { return m_result ; }
-
   KOKKOS_INLINE_FUNCTION
   constexpr Reducer() noexcept
     : m_result(0), m_length(0) {}
@@ -144,6 +138,31 @@ struct Reducer
   KOKKOS_INLINE_FUNCTION
   constexpr Reducer( int arg_length ) noexcept
     : m_result(0), m_length( arg_length ) {}
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr int length() const noexcept { return m_length ; }
+
+  KOKKOS_INLINE_FUNCTION
+  value_type & operator[]( int i ) const noexcept
+    { return m_result[i]; }
+
+private:
+
+  template< int Rank >
+  static constexpr
+  typename std::enable_if< ( 0 != Rank ) , reference_type >::type
+  ref( value_type * p ) noexcept { return p ; }
+
+  template< int Rank >
+  static constexpr
+  typename std::enable_if< ( 0 == Rank ) , reference_type >::type
+  ref( value_type * p ) noexcept { return *p ; }
+
+public:
+
+  KOKKOS_INLINE_FUNCTION
+  reference_type result() const noexcept
+    { return Reducer::template ref< rank >( m_result ); }
 
 private:
 
