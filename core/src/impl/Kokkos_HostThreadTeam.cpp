@@ -42,13 +42,58 @@
 */
 
 #include <limits>
+#include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_HostThreadTeam.hpp>
 #include <impl/Kokkos_Error.hpp>
 
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+#if ( KOKKOS_ENABLE_ASM )
+  #if defined( __arm__ ) || defined( __aarch64__ )
+    /* No-operation instruction to idle the thread. */
+    #define YIELD   asm volatile("nop")
+  #else
+    /* Pause instruction to prevent excess processor bus usage */
+    #define YIELD   asm volatile("pause\n":::"memory")
+  #endif
+#elif defined ( KOKKOS_HAVE_WINTHREAD )
+  #include <process.h>
+  #define YIELD  Sleep(0)
+#elif defined ( _WIN32)  && defined (_MSC_VER)
+  /* Windows w/ Visual Studio */
+  #define NOMINMAX
+  #include <winsock2.h>
+  #include <windows.h>
+#define YIELD YieldProcessor();
+#elif defined ( _WIN32 )
+  /* Windows w/ Intel*/
+  #define YIELD __asm__ __volatile__("pause\n":::"memory")
+#else
+  #include <sched.h>
+  #define YIELD  sched_yield()
+#endif
+
 namespace Kokkos {
 namespace Impl {
+namespace {
+
+void wait_until_equal( int64_t const value , int64_t volatile * const sync )
+{
+  while ( value != *sync ) {
+    YIELD ;
+  }
+}
+
+}
+} // namespace Impl
+} // namespace Kokkos
 
 //----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+namespace Impl {
 
 void HostThreadTeamData::organize_pool
   ( HostThreadTeamData * members[] , const int size )
@@ -197,18 +242,6 @@ void HostThreadTeamData::disband_team()
 }
 
 //----------------------------------------------------------------------------
-
-namespace {
-
-void wait_until_equal( int64_t const value , int64_t volatile * const sync )
-{
-  while ( value != *sync ) {
-    // TBD: backoff
-  }
-}
-
-}
-
 /* pattern for rendezvous
  *
  *  if ( rendezvous() ) {
@@ -271,7 +304,7 @@ int HostThreadTeamData::rendezvous( int64_t * const buffer
   }
 
   // All previous memory stores must be complete.
-   // Then store value at this thread's designated byte in the shared array.
+  // Then store value at this thread's designated byte in the shared array.
 
   Kokkos::memory_fence();
 
