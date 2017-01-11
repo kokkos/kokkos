@@ -522,6 +522,144 @@ public:
 namespace Kokkos {
 namespace Impl {
 
+/*
+template< class FunctorType , class ... Properties >
+class ParallelFor< FunctorType
+                 , Kokkos::TeamPolicy< Properties ... >
+                 , Kokkos::OpenMP
+                 >
+{
+private:
+
+  typedef Kokkos::Impl::TeamPolicyInternal< Kokkos::OpenMP, Properties ... >
+    Policy ;
+
+  typedef typename Policy::work_tag             WorkTag ;
+  typedef typename Policy::schedule_type::type  SchedTag ;
+
+  typedef HostThreadTeamMember< Kokkos::OpenMP > Member ;
+  typedef Kokkos::OpenMP::scratch_memory_space   scratch_space ;
+
+  const FunctorType  m_functor ;
+  const Policy       m_policy ;
+  const int          m_shmem_size ;
+
+  template< class TagType, class Schedule >
+  inline static
+  typename std::enable_if< std::is_same< TagType , void >::value &&
+                           std::is_same< Schedule , Kokkos::Static >::value
+                         >::type
+  exec_team( const FunctorType  & functor
+           , HostThreadTeamData & data
+           , const int league_size )
+    {
+      int league_rank = -1 ;
+      while ( 0 <= ( league_rank = data.get_work_static() ) ) {
+        scratch_space space( data.team_shared() , data.team_shared_bytes() );
+
+        functor( Member( data, space, league_rank, league_size ) );
+      }
+    }
+
+  template< class TagType, class Schedule >
+  inline static
+  typename std::enable_if< (! std::is_same< TagType , void >::value) &&
+                           std::is_same<Schedule,Kokkos::Static>::value
+                         >::type
+  exec_team( const FunctorType & functor
+           , HostThreadTeamData & data
+           , const int league_size )
+    {
+      const TagType t{} ;
+      int league_rank = -1 ;
+      while ( 0 <= ( league_rank = data.get_work_static() ) ) {
+        scratch_space space( data.team_shared() , data.team_shared_bytes() );
+
+        functor( t , Member( data, space, league_rank, league_size ) );
+      }
+    }
+
+  template< class TagType, class Schedule >
+  inline static
+  typename std::enable_if< std::is_same< TagType , void >::value && std::is_same<Schedule,Kokkos::Dynamic>::value>::type
+  exec_team( const FunctorType & functor , Member member )
+    {
+      int league_rank = -1 ;
+      while ( 0 <= ( league_rank = data.get_work_static() ) ) {
+        scratch_space space( data.team_shared() , data.team_shared_bytes() );
+
+        functor( Member( data, space, league_rank, league_size ) );
+      }
+    }
+      #pragma omp barrier
+      for ( ; member.valid_dynamic() ; member.next_dynamic() ) {
+        functor( member );
+      }
+    }
+
+  template< class TagType, class Schedule >
+  inline static
+  typename std::enable_if< (! std::is_same< TagType , void >::value) && std::is_same<Schedule,Kokkos::Dynamic>::value >::type
+  exec_team( const FunctorType & functor , Member member )
+    {
+      #pragma omp barrier
+      const TagType t{} ;
+      for ( ; member.valid_dynamic() ; member.next_dynamic() ) {
+        functor( t , member );
+      }
+    }
+
+public:
+
+  inline
+  void execute() const
+    {
+      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
+      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
+
+      const size_t pool_reduce_size = 0 ; // Never shrinks
+      const size_t team_reduce_size = Policy::member_type::team_reduce_size();
+      const size_t team_shared_size = m_shmem_size + m_policy.scratch_size(1);
+      const size_t thread_local_size = 0 ; // Never shrinks
+
+      openmp_resize_thread_team_data( pool_reduce_size
+                                    , team_reduce_size
+                                    , team_shared_size
+                                    , thread_local_size );
+
+
+#pragma omp parallel
+      {
+        HostThreadTeamData & data = openmp_get_thread_team_data();
+
+        if ( data.organize_team( m_policy.team_size() ) ) {
+
+          data.set_work_partition( m_policy.league_size(), data.league_size() );
+
+          ParallelFor::template exec_team< WorkTag, SchedTag >( m_functor , data );
+      }
+// END #pragma omp parallel
+    }
+
+  inline
+  ParallelFor( const FunctorType & arg_functor ,
+               const Policy      & arg_policy )
+    : m_functor( arg_functor )
+    , m_policy(  arg_policy )
+    , m_shmem_size( arg_policy.scratch_size(0) + arg_policy.scratch_size(1) + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
+    {}
+};
+*/
+
+} // namespace Impl
+} // namespace Kokkos
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+namespace Impl {
+
 template< class FunctorType , class ... Properties >
 class ParallelFor< FunctorType
                  , Kokkos::TeamPolicy< Properties ... >
@@ -532,6 +670,9 @@ private:
 
   typedef Kokkos::Impl::TeamPolicyInternal< Kokkos::OpenMP, Properties ... > Policy ;
   typedef typename Policy::work_tag     WorkTag ;
+
+  // typedef HostThreadTeamMember Member ;
+
   typedef typename Policy::member_type  Member ;
 
   const FunctorType  m_functor ;

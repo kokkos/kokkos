@@ -117,17 +117,19 @@ void HostThreadTeamData::organize_pool
       HostThreadTeamData ** const pool =
         (HostThreadTeamData **) (root_scratch + m_pool_members);
 
+      // team size == 1, league size == pool_size
+
       for ( int rank = 0 ; rank < size ; ++rank ) {
         HostThreadTeamData * const mem = members[ rank ] ;
         mem->m_pool_scratch = root_scratch ;
-        mem->m_team_scratch = root_scratch ;
+        mem->m_team_scratch = mem->m_scratch ;
         mem->m_pool_rank    = rank ;
         mem->m_pool_size    = size ;
-        mem->m_team_base    = 0 ;
-        mem->m_team_rank    = rank ;
-        mem->m_team_size    = size ;
-        mem->m_league_rank  = 0 ;
-        mem->m_league_size  = 1 ;
+        mem->m_team_base    = rank ;
+        mem->m_team_rank    = 0 ;
+        mem->m_team_size    = 1 ;
+        mem->m_league_rank  = rank ;
+        mem->m_league_size  = size ;
         mem->m_pool_rendezvous_step = 0 ;
         mem->m_team_rendezvous_step = 0 ;
         pool[ rank ] = mem ;
@@ -173,12 +175,12 @@ int HostThreadTeamData::organize_team( const int team_size )
 {
   const bool ok_pool = 0 != m_pool_scratch ;
   const bool ok_team =
-    m_team_scratch == m_pool_scratch &&
-    m_team_base    == 0 &&
-    m_team_rank    == m_pool_rank &&
-    m_team_size    == m_pool_size &&
-    m_league_rank  == 0 &&
-    m_league_size  == 1 ;
+    m_team_scratch == m_scratch &&
+    m_team_base    == m_pool_rank &&
+    m_team_rank    == 0 &&
+    m_team_size    == 1 &&
+    m_league_rank  == m_pool_rank &&
+    m_league_size  == m_pool_size ;
 
   if ( ok_pool && ok_team ) {
 
@@ -228,12 +230,12 @@ void HostThreadTeamData::disband_team()
     HostThreadTeamData * const * const pool =
       (HostThreadTeamData **) (m_pool_scratch + m_pool_members);
 
-    m_team_scratch = pool[0]->m_scratch ;
-    m_team_base    = 0 ;
-    m_team_rank    = m_pool_rank ;
-    m_team_size    = m_pool_size ;
-    m_league_rank  = 0 ;
-    m_league_size  = 1 ;
+    m_team_scratch = m_scratch ;
+    m_team_base    = m_pool_rank ;
+    m_team_rank    = 0 ;
+    m_team_size    = 1 ;
+    m_league_rank  = m_pool_rank ;
+    m_league_size  = m_pool_size ;
     m_team_rendezvous_step = 0 ;
   }
   else {
@@ -303,25 +305,29 @@ int HostThreadTeamData::rendezvous( int64_t * const buffer
     }
   }
 
-  // All previous memory stores must be complete.
-  // Then store value at this thread's designated byte in the shared array.
+  if ( rank ) {
+    // All previous memory stores must be complete.
+    // Then store value at this thread's designated byte in the shared array.
 
-  Kokkos::memory_fence();
+    Kokkos::memory_fence();
 
-  *(((volatile int8_t*) sync_base) + rank ) = rank ? int8_t( step ) : 0 ;
+    ((volatile int8_t*) sync_base)[rank] = int8_t( step );
+  }
 
-  { // "Inner" rendezvous for ranks [ 0 .. 8 )
+  { // "Inner" rendezvous for ranks [ 0 .. 7 ]
     // Effects:
     //   0  < rank < size  wait for [0..7]
     //   0 == rank         wait for [1..7]
 
     value.full = 0 ;
     const int n = size < 8 ? size : 8 ;
-    for ( int i = rank ? 0 : 1 ; i < n ; ++i ) value.byte[i] = step ;
+    for ( int i = 1 ; i < n ; ++i ) value.byte[i] = step ;
+    value.byte[0] = rank ? step : ((volatile int8_t*) sync_base)[0];
+
     wait_until_equal( value.full , sync_base );
   }
 
-  return rank ? 0 : 1 ; // rank == 0
+  return rank ? 0 : 1 ;
 }
 
 void HostThreadTeamData::
@@ -338,17 +344,17 @@ void HostThreadTeamData::
   // Memory fence to be sure all prevous writes are complete:
   Kokkos::memory_fence();
 
-  *((volatile int8_t*) sync_base) = int8_t( rendezvous_step );
+  ((volatile int8_t*) sync_base)[0] = int8_t( rendezvous_step );
 }
 
 //----------------------------------------------------------------------------
 
-int HostThreadTeamData::get_stealing() noexcept
+int HostThreadTeamData::get_work_stealing() noexcept
 {
   pair_int_t w( -1 , -1 );
 
   // Attempt first from beginning of my work range
-  for ( int attempt = m_steal_range.first < m_steal_range.second ; attempt ; ) {
+  for ( int attempt = m_work_range.first < m_work_range.second ; attempt ; ) {
 
     // Query and attempt to update m_work_range
     //   from: [ w.first     , w.second )
@@ -358,7 +364,7 @@ int HostThreadTeamData::get_stealing() noexcept
 
     const pair_int_t w_new( w.first + 1 , w.second );
 
-    w = Kokkos::atomic_compare_exchange( & m_steal_range, w, w_new );
+    w = Kokkos::atomic_compare_exchange( & m_work_range, w, w_new );
 
     if ( w.first < w.second ) {
       // m_work_range is viable
@@ -385,7 +391,7 @@ int HostThreadTeamData::get_stealing() noexcept
     // Attempt from begining failed, try to steal from end of neighbor
 
     pair_int_t volatile * steal_range =
-      & ( team[ m_steal_rank ]->m_steal_range );
+      & ( team[ m_steal_rank ]->m_work_range );
 
     for ( int attempt = true ; attempt ; ) {
 
@@ -413,7 +419,7 @@ int HostThreadTeamData::get_stealing() noexcept
 
         m_steal_rank = ( m_steal_rank + 1 ) % m_team_size ;
 
-        steal_range = & ( team[ m_steal_rank ]->m_steal_range );
+        steal_range = & ( team[ m_steal_rank ]->m_work_range );
 
         // If tried all other members then don't repeat attempt to steal
         attempt = m_steal_rank != m_pool_rank ;
@@ -428,29 +434,6 @@ int HostThreadTeamData::get_stealing() noexcept
 
   return w.first ;
 }
-
-int HostThreadTeamData::
-  set_stealing( long const length , int const chunk ) noexcept
-{
-  // Steal chunk length has minimum value required to
-  // to index chunks with an 'int'.
-  // Can be larger if requested by policy.
-
-  const int min_steal_chunk =
-    1 + ( length / std::numeric_limits<int>::max() );
-
-  const int steal_chunk = chunk > min_steal_chunk
-                        ? chunk : min_steal_chunk ;
-
-  const int steal_length = ( length + steal_chunk - 1 ) / steal_chunk ;
-  const int steal_part   = ( steal_length + m_team_size - 1 ) / m_team_size ;
-
-  m_steal_range.first  = steal_part * m_team_rank ;
-  m_steal_range.second = m_steal_range.first + steal_part ;
-
-  return steal_chunk ;
-}
-
 
 } // namespace Impl
 } // namespace Kokkos

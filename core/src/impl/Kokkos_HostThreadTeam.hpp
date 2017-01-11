@@ -57,12 +57,13 @@
 namespace Kokkos {
 namespace Impl {
 
+template< class HostExecSpace >
 class HostThreadTeamMember ;
 
 class HostThreadTeamData {
 public:
 
-  friend class HostThreadTeamMember ;
+  template< class > friend class HostThreadTeamMember ;
 
   // Assume upper bounds on number of threads:
   //   pool size       <= 1024 threads
@@ -94,7 +95,7 @@ private:
 
   using pair_int_t = Kokkos::pair<int,int> ;
 
-  pair_int_t  m_steal_range ;
+  pair_int_t  m_work_range ;
   int64_t   * m_scratch ;       // per-thread buffer
   int64_t   * m_pool_scratch ;  // == pool[0]->m_scratch
   int64_t   * m_team_scratch ;  // == pool[ 0 + m_team_base ]->m_scratch
@@ -118,26 +119,6 @@ private:
 
   HostThreadTeamData * team_member( int r ) const noexcept
     { return ((HostThreadTeamData**)(m_pool_scratch+m_pool_members))[m_team_base+r]; }
-
-  // Memory chunks:
-
-  int64_t * pool_reduce() const noexcept
-    { return m_pool_scratch + m_pool_reduce ; }
-
-  int64_t * pool_reduce_local() const noexcept
-    { return m_scratch + m_pool_reduce ; }
-
-  int64_t * team_reduce() const noexcept
-    { return m_team_scratch + m_team_reduce ; }
-
-  int64_t * team_reduce_local() const noexcept
-    { return m_scratch + m_team_reduce ; }
-
-  int64_t * team_shared() const noexcept
-    { return m_team_scratch + m_team_shared ; }
-
-  int64_t * local_scratch() const noexcept
-    { return m_scratch + m_thread_local ; }
 
   // Rendezvous pattern:
   //   if ( rendezvous(root) ) {
@@ -205,7 +186,7 @@ public:
   //----------------------------------------
 
   constexpr HostThreadTeamData() noexcept
-    : m_steal_range(-1,-1)
+    : m_work_range(-1,-1)
     , m_scratch(0)
     , m_pool_scratch(0)
     , m_team_scratch(0)
@@ -229,6 +210,7 @@ public:
   // The 0th member is the root of the pool.
   // Requires members are not already in a pool.
   // Pool members are ordered as "close" - sorted by NUMA and then CORE
+  // Initialized with team_size == 1
   static void organize_pool( HostThreadTeamData * members[]
                            , const int size );
 
@@ -245,6 +227,7 @@ public:
   int organize_team( const int team_size );
 
   // Each thread within a pool disbands itself from a team
+  // and returns to team_size == 1
   void disband_team();
 
   //----------------------------------------
@@ -271,8 +254,28 @@ public:
   constexpr int scratch_bytes() const
     { return sizeof(int64_t) * m_scratch_size ; }
 
+  // Memory chunks:
+
   int64_t * scratch_buffer() const noexcept
     { return m_scratch ; }
+
+  int64_t * pool_reduce() const noexcept
+    { return m_pool_scratch + m_pool_reduce ; }
+
+  int64_t * pool_reduce_local() const noexcept
+    { return m_scratch + m_pool_reduce ; }
+
+  int64_t * team_reduce() const noexcept
+    { return m_team_scratch + m_team_reduce ; }
+
+  int64_t * team_reduce_local() const noexcept
+    { return m_scratch + m_team_reduce ; }
+
+  int64_t * team_shared() const noexcept
+    { return m_team_scratch + m_team_shared ; }
+
+  int64_t * local_scratch() const noexcept
+    { return m_scratch + m_thread_local ; }
 
   // Given:
   //   pool_reduce_size  = number bytes for pool reduce
@@ -331,33 +334,68 @@ public:
     }
 
   //----------------------------------------
-  // Work stealing
+  // Set the initial work partitioning of [ 0 .. length )
 
-  // Set the initial stealing work distribution by partitioning
-  // [ 0 .. length ) among team members with a minimum of 'chunk' granularity.  
-  // The total stealing range is
-  //    [ 0 .. ( length + actual_chunk - 1 ) / actual_chunk )
-  // Return actual_chunk
-  int set_stealing( long const length , int const chunk ) noexcept ;
+  void set_work_partition( int const length
+                         , int const part_rank
+                         , int const part_size ) noexcept
+    {
+      int const chunk = ( length + part_size - 1 ) / part_size ;
 
-  // Get a work stealing chunk index within the range
-  //    [ 0 .. ( length + actual_chunk - 1 ) / actual_chunk )
+      m_work_range.first  = chunk * part_rank ;
+      m_work_range.second = m_work_range.first + chunk < part_size 
+                          ? m_work_range.first + chunk : part_size ;
+    }
+
+  // Get one work index within the range
+  int get_work_static() noexcept
+    {
+      return m_work_range.first < m_work_range.second ?
+             m_work_range.first++ : -1 ;
+    }
+
+  // Get a work index within the range.
   // First try to steal from beginning of own thread's partition.
   // If that fails then try to steal from end of another threads' partition.
-  int get_stealing() noexcept ;
+  int get_work_stealing() noexcept ;
 };
 
 //----------------------------------------------------------------------------
 
+template< class HostExecSpace >
 class HostThreadTeamMember {
+public:
+
+  using scratch_memory_space = typename HostExecSpace::scratch_memory_space ;
+
 private:
 
-  HostThreadTeamData & m_data ;
+
+  HostThreadTeamData   & m_data ;
+  scratch_memory_space & m_scratch ;
+  int const              m_league_rank ;
+  int const              m_league_size ;
 
 public:
 
-  constexpr HostThreadTeamMember( HostThreadTeamData & arg ) noexcept
-    : m_data( arg ) {}
+  constexpr HostThreadTeamMember( HostThreadTeamData   & arg_data
+                                , scratch_memory_space & arg_space ) noexcept
+    : m_data( arg_data )
+    , m_scratch( arg_space )
+    , m_league_rank(0)
+    , m_league_size(1)
+    {}
+
+  constexpr HostThreadTeamMember( HostThreadTeamData   & arg_data
+                                , scratch_memory_space & arg_space
+                                , int const arg_league_rank
+                                , int const arg_league_size
+                                ) noexcept
+    : m_data( arg_data )
+    , m_scratch( arg_space )
+    , m_league_rank( arg_league_rank )
+    , m_league_size( arg_league_size )
+    {}
 
   ~HostThreadTeamMember() = default ;
   HostThreadTeamMember() = delete ;
@@ -375,11 +413,25 @@ public:
   int team_size() const noexcept { return m_data.m_team_size ; }
 
   KOKKOS_INLINE_FUNCTION
-  int league_rank() const noexcept { return m_data.m_league_rank ; }
+  int league_rank() const noexcept { return m_league_rank ; }
 
   KOKKOS_INLINE_FUNCTION
-  int league_size() const noexcept { return m_data.m_league_size ; }
+  int league_size() const noexcept { return m_league_size ; }
 
+  //----------------------------------------
+
+  KOKKOS_INLINE_FUNCTION
+  scratch_memory_space team_shmem() const
+    { return m_scratch.set_team_thread_mode(0,1,0); }
+  
+  KOKKOS_INLINE_FUNCTION
+  scratch_memory_space team_scratch(int) const
+    { return m_scratch.set_team_thread_mode(0,1,0); }
+  
+  KOKKOS_INLINE_FUNCTION
+  scratch_memory_space thread_scratch(int) const
+    { return m_scratch.set_team_thread_mode(0,m_data.m_team_size,m_data.m_team_rank); }
+  
   //----------------------------------------
   // Team collectives
 
@@ -541,39 +593,39 @@ public:
 
 namespace Kokkos {
 
-template<typename iType>
+template<class Space,typename iType>
 KOKKOS_INLINE_FUNCTION
-Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember>
-TeamThreadRange( Impl::HostThreadTeamMember const & member
+Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >
+TeamThreadRange( Impl::HostThreadTeamMember<Space> const & member
                , iType const & count )
 {
   return
     Impl::TeamThreadRangeBoundariesStruct
-      <iType,Impl::HostThreadTeamMember>(member,0,count);
+      <iType,Impl::HostThreadTeamMember<Space> >(member,0,count);
 }
 
-template<typename iType1, typename iType2>
+template<class Space, typename iType1, typename iType2>
 KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct
   < typename std::common_type< iType1, iType2 >::type
-  , Impl::HostThreadTeamMember >
-TeamThreadRange( Impl::HostThreadTeamMember const & member
+  , Impl::HostThreadTeamMember<Space> >
+TeamThreadRange( Impl::HostThreadTeamMember<Space> const & member
                , iType1 const & begin , iType2 const & end )
 {
   return
     Impl::TeamThreadRangeBoundariesStruct
       < typename std::common_type< iType1, iType2 >::type
-      , Impl::HostThreadTeamMember >( member , begin , end );
+      , Impl::HostThreadTeamMember<Space> >( member , begin , end );
 }
 
-template<typename iType>
+template<class Space, typename iType>
 KOKKOS_INLINE_FUNCTION
-Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::HostThreadTeamMember >
+Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >
 ThreadVectorRange
-  ( Impl::HostThreadTeamMember & member
+  ( Impl::HostThreadTeamMember<Space> & member
   , const iType & count )
 {
-  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::HostThreadTeamMember >(member,count);
+  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >(member,count);
 }
 
 /** \brief  Inter-thread parallel_for. Executes lambda(iType i) for each i=0..N-1.
@@ -581,10 +633,10 @@ ThreadVectorRange
  * The range i=0..N-1 is mapped to all threads of the the calling thread team.
  * This functionality requires C++11 support.
 */
-template<typename iType, class Closure>
+template<typename iType, class Space, class Closure>
 KOKKOS_INLINE_FUNCTION
 void parallel_for
-  ( Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember >
+  ( Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >
       const & loop_boundaries
   , Closure const & closure
   )
@@ -596,11 +648,11 @@ void parallel_for
   }
 }
 
-template< typename iType, class Closure, class Reducer >
+template< typename iType, class Space, class Closure, class Reducer >
 KOKKOS_INLINE_FUNCTION
 typename std::enable_if< Kokkos::is_reducer< Reducer >::value >::type
 parallel_reduce
-  ( Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember >
+  ( Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >
              const & loop_boundaries
   , Closure  const & closure
   , Reducer  const & reducer
@@ -617,12 +669,12 @@ parallel_reduce
   loop_boundaries.thread.team_reduce( reducer );
 }
 
-template< typename iType, typename Closure, typename ValueType >
+template< typename iType, class Space, typename Closure, typename ValueType >
 KOKKOS_INLINE_FUNCTION
 typename std::enable_if< std::is_trivial<ValueType>::value &&
                          ! Kokkos::is_reducer<ValueType>::value >::type
 parallel_reduce
-  ( Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember >
+  ( Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >
              const & loop_boundaries
   , Closure  const & closure
   , ValueType      & result
@@ -665,10 +717,10 @@ void parallel_reduce
 #endif
 
 
-template< typename iType, class Closure >
+template< typename iType, class Space, class Closure >
 KOKKOS_INLINE_FUNCTION
 void parallel_scan
-  ( Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember >
+  ( Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >
        const & loop_boundaries
   , Closure const & closure
   )

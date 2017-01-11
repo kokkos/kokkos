@@ -103,9 +103,10 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
   ( TaskQueue< Kokkos::OpenMP > * const queue )
 {
   using execution_space = Kokkos::OpenMP ;
+  using scratch_space   = execution_space::scratch_memory_space ;
   using queue_type      = TaskQueue< execution_space > ;
   using task_root_type  = TaskBase< execution_space , void , void > ;
-  using Member          = Impl::HostThreadTeamMember ;
+  using Member          = Impl::HostThreadTeamMember< execution_space > ;
 
   static task_root_type * const end =
     (task_root_type *) task_root_type::EndTag ;
@@ -132,8 +133,9 @@ fflush(stdout);
 
     if ( self.organize_team( team_size ) ) {
 
-      Member single_exec( team_data_single );
-      Member team_exec( self );
+      scratch_space space( self.team_shared() , self.team_shared_bytes() );
+      Member single_exec( team_data_single , space );
+      Member team_exec( self , space );
 
 #if 0
 fprintf(stdout,"TaskQueue<OpenMP> (%d of %d : %d of %d) running\n"
@@ -256,15 +258,22 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::
     ( TaskQueue< Kokkos::OpenMP > * const queue )
 {
   using execution_space = Kokkos::OpenMP ;
+  using scratch_space   = execution_space::scratch_memory_space ;
   using queue_type      = TaskQueue< execution_space > ;
   using task_root_type  = TaskBase< execution_space , void , void > ;
-  using Member          = Impl::HostThreadTeamMember ;
+  using Member          = Impl::HostThreadTeamMember< execution_space > ;
 
   if ( 1 == omp_get_num_threads() ) {
 
     task_root_type * const end = (task_root_type *) task_root_type::EndTag ;
 
-    Member single_exec( HostThreadTeamDataSingleton::singleton() );
+    HostThreadTeamData & team_data_single =
+      HostThreadTeamDataSingleton::singleton();
+
+    scratch_space space( team_data_single.team_shared()
+                       , team_data_single.team_shared_bytes() );
+
+    Member single_exec( team_data_single , space );
 
     task_root_type * task = end ;
 

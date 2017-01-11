@@ -59,6 +59,12 @@
 namespace Kokkos {
 namespace Impl {
 
+// Resize thread team data scratch memory
+void openmp_resize_thread_team_data( size_t pool_reduce_bytes
+                                   , size_t team_reduce_bytes
+                                   , size_t team_shared_bytes
+                                   , size_t thread_local_bytes );
+
 // Get thread team data structure for omp_get_thread_num()
 HostThreadTeamData * openmp_get_thread_team_data();
 
