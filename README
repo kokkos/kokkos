@@ -151,4 +151,12 @@ MPI rank of an application uses a single GPU [can be the same GPU for
 multiple MPI ranks]) you can set CUDA_MANAGED_FORCE_DEVICE_ALLOC=1.
 This will enforce proper UVM allocations, but can lead to errors if 
 more than a single GPU is used by a single process.
- 
+
+===========================================================================
+====Contributing===========================================================
+===========================================================================
+
+Contributions to Kokkos are welcome. In order to do so, please open an issue
+where a feature request or bug can be discussed. Then issue a pull request
+with your contribution. Pull requests must be issued against the develop branch. 
+
