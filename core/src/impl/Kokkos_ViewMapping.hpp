@@ -2621,12 +2621,10 @@ public:
   typedef typename ViewDataHandle< Traits >::return_type  reference_type ;
   typedef typename Traits::value_type *                   pointer_type ;
 
-  /** \brief  If data references are lvalue_reference than can query pointer to memory */
+  /** \brief  Query raw pointer to memory */
   KOKKOS_INLINE_FUNCTION constexpr pointer_type data() const
     {
-      return std::is_lvalue_reference< reference_type >::value
-             ? (pointer_type) m_handle
-             : (pointer_type) 0 ;
+      return m_handle; 
     }
 
   //----------------------------------------
