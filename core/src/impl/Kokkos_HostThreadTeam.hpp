@@ -108,6 +108,7 @@ private:
   int         m_team_base ;
   int         m_team_rank ;
   int         m_team_size ;
+  int         m_team_alloc ;
   int         m_league_rank ;
   int         m_league_size ;
   int         m_steal_rank ; // work stealing rank
@@ -137,6 +138,8 @@ private:
   static
   void rendezvous_release( int64_t * const buffer
                          , int const rendezvous_step ) noexcept ;
+
+public:
 
   inline
   int team_rendezvous( int const root ) const noexcept
@@ -181,8 +184,6 @@ private:
                         , m_pool_rendezvous_step );
     }
 
-public:
-
   //----------------------------------------
 
   constexpr HostThreadTeamData() noexcept
@@ -199,6 +200,7 @@ public:
     , m_team_base(0)
     , m_team_rank(0)
     , m_team_size(1)
+    , m_team_alloc(1)
     , m_league_rank(0)
     , m_league_size(1)
     , m_steal_rank(0)
@@ -206,11 +208,12 @@ public:
     , m_team_rendezvous_step(0)
     {}
 
+  //----------------------------------------
   // Organize array of members into a pool.
   // The 0th member is the root of the pool.
   // Requires members are not already in a pool.
   // Pool members are ordered as "close" - sorted by NUMA and then CORE
-  // Initialized with team_size == 1
+  // Each thread is its own team with team_size == 1.
   static void organize_pool( HostThreadTeamData * members[]
                            , const int size );
 
@@ -218,6 +221,7 @@ public:
   void disband_pool();
 
   // Each thread within a pool organizes itself into a team.
+  // Must be called by all threads of the pool.
   // Organizing threads into a team performs a barrier across the
   // entire pool to insure proper initialization of the team
   // rendezvous mechanism before a team rendezvous can be performed.
@@ -226,8 +230,9 @@ public:
   // Return false if not a member and thread should be idled.
   int organize_team( const int team_size );
 
-  // Each thread within a pool disbands itself from a team
-  // and returns to team_size == 1
+  // Each thread within a pool disbands itself from current team.
+  // Each thread becomes its own team with team_size == 1.
+  // Must be called by all threads of the pool.
   void disband_team();
 
   //----------------------------------------
@@ -334,17 +339,17 @@ public:
     }
 
   //----------------------------------------
-  // Set the initial work partitioning of [ 0 .. length )
+  // Set the initial work partitioning of [ 0 .. length ) among the teams
 
-  void set_work_partition( int const length
-                         , int const part_rank
-                         , int const part_size ) noexcept
+  void set_work_partition( int const length ) noexcept
     {
-      int const chunk = ( length + part_size - 1 ) / part_size ;
+      int const chunk = ( length + m_league_size - 1 ) / m_league_size ;
 
-      m_work_range.first  = chunk * part_rank ;
-      m_work_range.second = m_work_range.first + chunk < part_size 
-                          ? m_work_range.first + chunk : part_size ;
+      m_work_range.first  = chunk * m_league_rank ;
+      m_work_range.second = m_work_range.first + chunk < m_league_size 
+                          ? m_work_range.first + chunk : m_league_size ;
+
+      m_steal_rank = ( m_team_base + m_team_alloc ) % m_team_alloc ;
     }
 
   // Get one work index within the range
@@ -355,8 +360,8 @@ public:
     }
 
   // Get a work index within the range.
-  // First try to steal from beginning of own thread's partition.
-  // If that fails then try to steal from end of another threads' partition.
+  // First try to steal from beginning of own teams's partition.
+  // If that fails then try to steal from end of another teams' partition.
   int get_work_stealing() noexcept ;
 };
 
@@ -370,29 +375,26 @@ public:
 
 private:
 
-
-  HostThreadTeamData   & m_data ;
-  scratch_memory_space & m_scratch ;
-  int const              m_league_rank ;
-  int const              m_league_size ;
+  scratch_memory_space m_scratch ;
+  HostThreadTeamData & m_data ;
+  int const            m_league_rank ;
+  int const            m_league_size ;
 
 public:
 
-  constexpr HostThreadTeamMember( HostThreadTeamData   & arg_data
-                                , scratch_memory_space & arg_space ) noexcept
-    : m_data( arg_data )
-    , m_scratch( arg_space )
+  constexpr HostThreadTeamMember( HostThreadTeamData & arg_data ) noexcept
+    : m_scratch( arg_data.team_shared() , arg_data.team_shared_bytes() )
+    , m_data( arg_data )
     , m_league_rank(0)
     , m_league_size(1)
     {}
 
-  constexpr HostThreadTeamMember( HostThreadTeamData   & arg_data
-                                , scratch_memory_space & arg_space
-                                , int const arg_league_rank
-                                , int const arg_league_size
+  constexpr HostThreadTeamMember( HostThreadTeamData & arg_data
+                                , int const            arg_league_rank
+                                , int const            arg_league_size
                                 ) noexcept
-    : m_data( arg_data )
-    , m_scratch( arg_space )
+    : m_scratch( arg_data.team_shared() , arg_data.team_shared_bytes() )
+    , m_data( arg_data )
     , m_league_rank( arg_league_rank )
     , m_league_size( arg_league_size )
     {}
@@ -421,15 +423,15 @@ public:
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
-  scratch_memory_space team_shmem() const
+  const scratch_memory_space & team_shmem() const
     { return m_scratch.set_team_thread_mode(0,1,0); }
   
   KOKKOS_INLINE_FUNCTION
-  scratch_memory_space team_scratch(int) const
+  const scratch_memory_space & team_scratch(int) const
     { return m_scratch.set_team_thread_mode(0,1,0); }
   
   KOKKOS_INLINE_FUNCTION
-  scratch_memory_space thread_scratch(int) const
+  const scratch_memory_space & thread_scratch(int) const
     { return m_scratch.set_team_thread_mode(0,m_data.m_team_size,m_data.m_team_rank); }
   
   //----------------------------------------

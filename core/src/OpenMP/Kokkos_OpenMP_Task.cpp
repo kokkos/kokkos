@@ -133,9 +133,8 @@ fflush(stdout);
 
     if ( self.organize_team( team_size ) ) {
 
-      scratch_space space( self.team_shared() , self.team_shared_bytes() );
-      Member single_exec( team_data_single , space );
-      Member team_exec( self , space );
+      Member single_exec( team_data_single );
+      Member team_exec( self );
 
 #if 0
 fprintf(stdout,"TaskQueue<OpenMP> (%d of %d : %d of %d) running\n"
@@ -270,10 +269,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::
     HostThreadTeamData & team_data_single =
       HostThreadTeamDataSingleton::singleton();
 
-    scratch_space space( team_data_single.team_shared()
-                       , team_data_single.team_shared_bytes() );
-
-    Member single_exec( team_data_single , space );
+    Member single_exec( team_data_single );
 
     task_root_type * task = end ;
 

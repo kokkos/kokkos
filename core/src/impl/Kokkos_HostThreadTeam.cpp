@@ -128,6 +128,7 @@ void HostThreadTeamData::organize_pool
         mem->m_team_base    = rank ;
         mem->m_team_rank    = 0 ;
         mem->m_team_size    = 1 ;
+        mem->m_team_alloc   = 1 ;
         mem->m_league_rank  = rank ;
         mem->m_league_size  = size ;
         mem->m_pool_rendezvous_step = 0 ;
@@ -159,6 +160,7 @@ void HostThreadTeamData::disband_pool()
       mem->m_pool_size    = 0 ;
       mem->m_team_rank    = 0 ;
       mem->m_team_size    = 0 ;
+      mem->m_team_alloc   = 0 ;
       mem->m_league_rank  = 0 ;
       mem->m_league_size  = 0 ;
       mem->m_pool_rendezvous_step = 0 ;
@@ -173,21 +175,30 @@ void HostThreadTeamData::disband_pool()
 
 int HostThreadTeamData::organize_team( const int team_size )
 {
+  // Pool is initialized
   const bool ok_pool = 0 != m_pool_scratch ;
+
+  // Team is not set
   const bool ok_team =
     m_team_scratch == m_scratch &&
     m_team_base    == m_pool_rank &&
     m_team_rank    == 0 &&
     m_team_size    == 1 &&
+    m_team_alloc   == 1 &&
     m_league_rank  == m_pool_rank &&
     m_league_size  == m_pool_size ;
 
-  if ( ok_pool && ok_team ) {
+  // Pool and be symmetrically partitioned per team_size
+  const bool ok_size =
+    0 <  team_size &&
+    0 == m_pool_size % ( ( m_pool_size + team_size - 1 ) / team_size );
+
+  if ( ok_pool && ok_team && ok_size ) {
 
     HostThreadTeamData * const * const pool =
       (HostThreadTeamData **) (m_pool_scratch + m_pool_members);
 
-    const int league_size = ( m_pool_size + team_size - 1 ) / team_size ;
+    const int league_size     = ( m_pool_size + team_size - 1 ) / team_size ;
     const int team_alloc_size = m_pool_size / league_size ;
     const int team_alloc_rank = m_pool_rank % team_alloc_size ;
     const int league_rank     = m_pool_rank / team_alloc_size ;
@@ -197,6 +208,7 @@ int HostThreadTeamData::organize_team( const int team_size )
     m_team_base    = team_base_rank ;
     m_team_rank    = team_alloc_rank < team_size ? team_alloc_rank : -1 ;
     m_team_size    = team_size ;
+    m_team_alloc   = team_alloc_size ;
     m_league_rank  = league_rank ;
     m_league_size  = league_size ;
     m_team_rendezvous_step = 0 ;
@@ -353,80 +365,92 @@ int HostThreadTeamData::get_work_stealing() noexcept
 {
   pair_int_t w( -1 , -1 );
 
-  // Attempt first from beginning of my work range
-  for ( int attempt = m_work_range.first < m_work_range.second ; attempt ; ) {
+  if ( 1 == m_team_size || team_rendezvous() ) {
 
-    // Query and attempt to update m_work_range
-    //   from: [ w.first     , w.second )
-    //   to:   [ w.first + 1 , w.second ) = w_new
-    //
-    // If w is invalid then is just a query.
+    // Attempt first from beginning of my work range
+    for ( int attempt = m_work_range.first < m_work_range.second ; attempt ; ) {
 
-    const pair_int_t w_new( w.first + 1 , w.second );
-
-    w = Kokkos::atomic_compare_exchange( & m_work_range, w, w_new );
-
-    if ( w.first < w.second ) {
-      // m_work_range is viable
-
-      // If steal is successful then don't repeat attempt to steal
-      attempt = ! ( w_new.first  == w.first + 1 &&
-                    w_new.second == w.second );
-    }
-    else {
-      // m_work_range is not viable
-      w.first  = -1 ;
-      w.second = -1 ;
-
-      attempt = 0 ;
-    }
-  }
-
-  if ( w.first == -1 && m_steal_rank != m_team_rank ) {
-
-    HostThreadTeamData * const * const team =
-      ((HostThreadTeamData**)( m_pool_scratch + m_pool_members ))
-      + m_team_base ;
-
-    // Attempt from begining failed, try to steal from end of neighbor
-
-    pair_int_t volatile * steal_range =
-      & ( team[ m_steal_rank ]->m_work_range );
-
-    for ( int attempt = true ; attempt ; ) {
-
-      // Query and attempt to update steal_work_range
-      //   from: [ w.first , w.second )
-      //   to:   [ w.first , w.second - 1 ) = w_new
+      // Query and attempt to update m_work_range
+      //   from: [ w.first     , w.second )
+      //   to:   [ w.first + 1 , w.second ) = w_new
       //
       // If w is invalid then is just a query.
 
-      const pair_int_t w_new( w.first , w.second - 1 );
+      const pair_int_t w_new( w.first + 1 , w.second );
 
-      w = Kokkos::atomic_compare_exchange( steal_range, w, w_new );
+      w = Kokkos::atomic_compare_exchange( & m_work_range, w, w_new );
 
       if ( w.first < w.second ) {
-        // steal_work_range is viable
+        // m_work_range is viable
 
         // If steal is successful then don't repeat attempt to steal
-        attempt = ! ( w_new.first  == w.first &&
-                      w_new.second == w.second - 1 );
+        attempt = ! ( w_new.first  == w.first + 1 &&
+                      w_new.second == w.second );
       }
       else {
-        // steal_work_range is not viable, move to next member
+        // m_work_range is not viable
         w.first  = -1 ;
         w.second = -1 ;
 
-        m_steal_rank = ( m_steal_rank + 1 ) % m_team_size ;
-
-        steal_range = & ( team[ m_steal_rank ]->m_work_range );
-
-        // If tried all other members then don't repeat attempt to steal
-        attempt = m_steal_rank != m_pool_rank ;
+        attempt = 0 ;
       }
     }
 
-    if ( w.first != -1 ) w.first = w.second - 1 ;
+    if ( w.first == -1 && m_steal_rank != m_pool_rank ) {
+
+      HostThreadTeamData * const * const pool =
+        (HostThreadTeamData**)( m_pool_scratch + m_pool_members );
+
+      // Attempt from begining failed, try to steal from end of neighbor
+
+      pair_int_t volatile * steal_range =
+        & ( pool[ m_steal_rank ]->m_work_range );
+
+      for ( int attempt = true ; attempt ; ) {
+
+        // Query and attempt to update steal_work_range
+        //   from: [ w.first , w.second )
+        //   to:   [ w.first , w.second - 1 ) = w_new
+        //
+        // If w is invalid then is just a query.
+
+        const pair_int_t w_new( w.first , w.second - 1 );
+
+        w = Kokkos::atomic_compare_exchange( steal_range, w, w_new );
+
+        if ( w.first < w.second ) {
+          // steal_work_range is viable
+
+          // If steal is successful then don't repeat attempt to steal
+          attempt = ! ( w_new.first  == w.first &&
+                        w_new.second == w.second - 1 );
+        }
+        else {
+          // steal_work_range is not viable, move to next member
+          w.first  = -1 ;
+          w.second = -1 ;
+
+          m_steal_rank = ( m_steal_rank + m_team_alloc ) % m_pool_size ;
+
+          steal_range = & ( pool[ m_steal_rank ]->m_work_range );
+
+          // If tried all other members then don't repeat attempt to steal
+          attempt = m_steal_rank != m_pool_rank ;
+        }
+      }
+
+      if ( w.first != -1 ) w.first = w.second - 1 ;
+    }
+
+    if ( 1 < m_team_size ) {
+      // Must share the work index
+      *((int volatile *) team_reduce()) = w.first ;
+
+      team_rendezvous_release();
+    }
+  }
+  else if ( 1 < m_team_size ) {
+    w.first = *((int volatile *) team_reduce());
   }
 
   // May exit because successfully stole work and w is good.
