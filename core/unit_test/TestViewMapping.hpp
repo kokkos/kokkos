@@ -1389,6 +1389,25 @@ struct TestViewMappingAtomic {
     Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace, TagVerify >( 0, N ), self, error_count );
 
     ASSERT_EQ( 0, error_count );
+
+    typename TestViewMappingAtomic::T_atom::HostMirror x_host = Kokkos::create_mirror_view( self.x );
+    Kokkos::deep_copy( x_host, self.x );
+
+    error_count = -1;
+
+    Kokkos::parallel_reduce( Kokkos::RangePolicy< Kokkos::DefaultHostExecutionSpace, TagVerify >( 0, N ), 
+      [=] ( const TagVerify &, const int i, long & tmp_error_count )
+    {
+      if ( i < 2 ) {
+        if ( x_host( i ) != int( i + N / 2 ) ) ++tmp_error_count ;
+      }
+      else {
+        if ( x_host( i ) != int( i ) ) ++tmp_error_count ;
+      }
+    }, error_count);
+
+    ASSERT_EQ( 0 , error_count );
+    Kokkos::deep_copy( self.x, x_host );
   }
 };
 

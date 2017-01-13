@@ -46,6 +46,10 @@
 
 #include <Kokkos_Core_fwd.hpp>
 
+#if defined( KOKKOS_HAVE_OPENMP) && !defined(_OPENMP)
+#error "You enabled Kokkos OpenMP support without enabling OpenMP in the compiler!"
+#endif
+
 #if defined( KOKKOS_HAVE_OPENMP ) && defined( _OPENMP )
 
 #include <omp.h>
