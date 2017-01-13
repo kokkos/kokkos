@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_QTHREAD_HPP
-#define KOKKOS_QTHREAD_HPP
+#ifndef KOKKOS_QTHREADS_HPP
+#define KOKKOS_QTHREADS_HPP
 
 #include <cstddef>
 #include <iosfwd>
@@ -57,7 +57,7 @@
 
 namespace Kokkos {
 namespace Impl {
-class QthreadExec ;
+class QthreadsExec ;
 } // namespace Impl
 } // namespace Kokkos
 
@@ -65,14 +65,14 @@ class QthreadExec ;
 
 namespace Kokkos {
 
-/** \brief  Execution space supported by Qthread */
-class Qthread {
+/** \brief  Execution space supported by Qthreads */
+class Qthreads {
 public:
   //! \name Type declarations that all Kokkos devices must provide.
   //@{
 
   //! Tag this class as an execution space
-  typedef Qthread                  execution_space ;
+  typedef Qthreads                 execution_space ;
   typedef Kokkos::HostSpace        memory_space ;
   //! This execution space preferred device_type
   typedef Kokkos::Device<execution_space,memory_space> device_type;
@@ -80,13 +80,13 @@ public:
   typedef Kokkos::LayoutRight      array_layout ;
   typedef memory_space::size_type  size_type ;
 
-  typedef ScratchMemorySpace< Qthread > scratch_memory_space ;
+  typedef ScratchMemorySpace< Qthreads > scratch_memory_space ;
 
   //@}
   /*------------------------------------------------------------------------*/
 
   /** \brief  Initialization will construct one or more instances */
-  static Qthread & instance( int = 0 );
+  static Qthreads & instance( int = 0 );
 
   /** \brief  Set the execution space to a "sleep" state.
    *
@@ -146,8 +146,8 @@ namespace Impl {
 
 template<>
 struct MemorySpaceAccess 
-  < Kokkos::Qthread::memory_space
-  , Kokkos::Qthread::scratch_memory_space
+  < Kokkos::Qthreads::memory_space
+  , Kokkos::Qthreads::scratch_memory_space
   >
 {
   enum { assignable = false };
@@ -157,8 +157,8 @@ struct MemorySpaceAccess
 
 template<>
 struct VerifyExecutionCanAccessMemorySpace
-  < Kokkos::Qthread::memory_space
-  , Kokkos::Qthread::scratch_memory_space
+  < Kokkos::Qthreads::memory_space
+  , Kokkos::Qthreads::scratch_memory_space
   >
 {
   enum { value = true };
@@ -173,10 +173,10 @@ struct VerifyExecutionCanAccessMemorySpace
 /*--------------------------------------------------------------------------*/
 
 #include <Kokkos_Parallel.hpp>
-#include <Qthread/Kokkos_QthreadExec.hpp>
-#include <Qthread/Kokkos_Qthread_Parallel.hpp>
+#include <Qthreads/Kokkos_QthreadsExec.hpp>
+#include <Qthreads/Kokkos_Qthreads_Parallel.hpp>
 
-#endif /* #define KOKKOS_QTHREAD_HPP */
+#endif /* #define KOKKOS_QTHREADS_HPP */
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

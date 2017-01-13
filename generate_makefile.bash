@@ -35,9 +35,9 @@ case $key in
     --with-serial)
     KOKKOS_DEVICES="${KOKKOS_DEVICES},Serial"
     ;;
-    --with-qthread*)
-    KOKKOS_DEVICES="${KOKKOS_DEVICES},Qthread"
-    QTHREAD_PATH="${key#*=}"
+    --with-qthreads*)
+    KOKKOS_DEVICES="${KOKKOS_DEVICES},Qthreads"
+    QTHREADS_PATH="${key#*=}"
     ;;
     --with-devices*)
     DEVICES="${key#*=}"
@@ -86,12 +86,12 @@ case $key in
     echo "--kokkos-path=/Path/To/Kokkos: Path to the Kokkos root directory"
     echo "--prefix=/Install/Path:        Path to where the Kokkos library should be installed"
     echo ""
-    echo "--with-cuda[=/Path/To/Cuda]:      enable Cuda and set path to Cuda Toolkit"
-    echo "--with-openmp:                    enable OpenMP backend"
-    echo "--with-pthread:                   enable Pthreads backend"
-    echo "--with-serial:                    enable Serial backend"
-    echo "--with-qthread=/Path/To/Qthread:  enable Qthread backend"
-    echo "--with-devices:                   explicitly add a set of backends"
+    echo "--with-cuda[=/Path/To/Cuda]:       enable Cuda and set path to Cuda Toolkit"
+    echo "--with-openmp:                     enable OpenMP backend"
+    echo "--with-pthread:                    enable Pthreads backend"
+    echo "--with-serial:                     enable Serial backend"
+    echo "--with-qthreads=/Path/To/Qthreads: enable Qthreads backend"
+    echo "--with-devices:                    explicitly add a set of backends"
     echo ""
     echo "--arch=[OPTIONS]:            set target architectures. Options are:"
     echo "                               ARMv80         = ARMv8.0 Compatible CPU"
@@ -184,8 +184,8 @@ fi
 if [ ${#HWLOC_PATH} -gt 0 ]; then
 KOKKOS_SETTINGS="${KOKKOS_SETTINGS} HWLOC_PATH=${HWLOC_PATH} KOKKOS_USE_TPLS=hwloc"
 fi
-if [ ${#QTHREAD_PATH} -gt 0 ]; then
-KOKKOS_SETTINGS="${KOKKOS_SETTINGS} QTHREAD_PATH=${QTHREAD_PATH}"
+if [ ${#QTHREADS_PATH} -gt 0 ]; then
+KOKKOS_SETTINGS="${KOKKOS_SETTINGS} QTHREADS_PATH=${QTHREADS_PATH}"
 fi
 if [ ${#KOKKOS_OPT} -gt 0 ]; then
 KOKKOS_SETTINGS="${KOKKOS_SETTINGS} KOKKOS_OPTIONS=${KOKKOS_OPT}"

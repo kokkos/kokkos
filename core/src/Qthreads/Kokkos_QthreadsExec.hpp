@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_QTHREADEXEC_HPP
-#define KOKKOS_QTHREADEXEC_HPP
+#ifndef KOKKOS_QTHREADSEXEC_HPP
+#define KOKKOS_QTHREADSEXEC_HPP
 
 #include <impl/Kokkos_spinwait.hpp>
 
@@ -53,17 +53,17 @@ namespace Impl {
 
 //----------------------------------------------------------------------------
 
-class QthreadExec ;
+class QthreadsExec ;
 
-typedef void (*QthreadExecFunctionPointer)( QthreadExec & , const void * );
+typedef void (*QthreadsExecFunctionPointer)( QthreadsExec & , const void * );
 
-class QthreadExec {
+class QthreadsExec {
 private:
 
   enum { Inactive = 0 , Active = 1 };
 
-  const QthreadExec * const * m_worker_base ;
-  const QthreadExec * const * m_shepherd_base ;
+  const QthreadsExec * const * m_worker_base ;
+  const QthreadsExec * const * m_shepherd_base ;
 
   void  * m_scratch_alloc ;  ///< Scratch memory [ reduce , team , shared ]
   int     m_reduce_end ;     ///< End of scratch reduction memory
@@ -84,18 +84,18 @@ private:
   int mutable volatile m_worker_state ;
 
 
-  friend class Kokkos::Qthread ;
+  friend class Kokkos::Qthreads ;
 
-  ~QthreadExec();
-  QthreadExec( const QthreadExec & );
-  QthreadExec & operator = ( const QthreadExec & );
+  ~QthreadsExec();
+  QthreadsExec( const QthreadsExec & );
+  QthreadsExec & operator = ( const QthreadsExec & );
 
 public:
 
-  QthreadExec();
+  QthreadsExec();
 
-  /** Execute the input function on all available Qthread workers */
-  static void exec_all( Qthread & , QthreadExecFunctionPointer , const void * );
+  /** Execute the input function on all available Qthreads workers */
+  static void exec_all( Qthreads & , QthreadsExecFunctionPointer , const void * );
 
   //----------------------------------------
   /** Barrier across all workers participating in the 'exec_all' */
@@ -106,16 +106,16 @@ public:
       int n , j ;
 
       for ( n = 1 ; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < m_worker_size ) ; n <<= 1 ) {
-        Impl::spinwait( m_worker_base[j]->m_worker_state , QthreadExec::Active );
+        Impl::spinwait( m_worker_base[j]->m_worker_state , QthreadsExec::Active );
       }
 
       if ( rev_rank ) {
-        m_worker_state = QthreadExec::Inactive ;
-        Impl::spinwait( m_worker_state , QthreadExec::Inactive );
+        m_worker_state = QthreadsExec::Inactive ;
+        Impl::spinwait( m_worker_state , QthreadsExec::Inactive );
       }
 
       for ( n = 1 ; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < m_worker_size ) ; n <<= 1 ) {
-        m_worker_base[j]->m_worker_state = QthreadExec::Active ;
+        m_worker_base[j]->m_worker_state = QthreadsExec::Active ;
       }
     }
 
@@ -129,16 +129,16 @@ public:
         int n , j ;
 
         for ( n = 1 ; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < team_size ) ; n <<= 1 ) {
-          Impl::spinwait( m_shepherd_base[j]->m_worker_state , QthreadExec::Active );
+          Impl::spinwait( m_shepherd_base[j]->m_worker_state , QthreadsExec::Active );
         }
 
         if ( rev_rank ) {
-          m_worker_state = QthreadExec::Inactive ;
-          Impl::spinwait( m_worker_state , QthreadExec::Inactive );
+          m_worker_state = QthreadsExec::Inactive ;
+          Impl::spinwait( m_worker_state , QthreadsExec::Inactive );
         }
 
         for ( n = 1 ; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < team_size ) ; n <<= 1 ) {
-          m_shepherd_base[j]->m_worker_state = QthreadExec::Active ;
+          m_shepherd_base[j]->m_worker_state = QthreadsExec::Active ;
         }
       }
     }
@@ -158,20 +158,20 @@ public:
       int n , j ;
 
       for ( n = 1 ; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < m_worker_size ) ; n <<= 1 ) {
-        const QthreadExec & fan = *m_worker_base[j];
+        const QthreadsExec & fan = *m_worker_base[j];
 
-        Impl::spinwait( fan.m_worker_state , QthreadExec::Active );
+        Impl::spinwait( fan.m_worker_state , QthreadsExec::Active );
 
         ValueJoin::join( ReducerConditional::select(func , reduce) , m_scratch_alloc , fan.m_scratch_alloc );
       }
 
       if ( rev_rank ) {
-        m_worker_state = QthreadExec::Inactive ;
-        Impl::spinwait( m_worker_state , QthreadExec::Inactive );
+        m_worker_state = QthreadsExec::Inactive ;
+        Impl::spinwait( m_worker_state , QthreadsExec::Inactive );
       }
 
       for ( n = 1 ; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < m_worker_size ) ; n <<= 1 ) {
-        m_worker_base[j]->m_worker_state = QthreadExec::Active ;
+        m_worker_base[j]->m_worker_state = QthreadsExec::Active ;
       }
     }
 
@@ -190,12 +190,12 @@ public:
       int n , j ;
 
       for ( n = 1 ; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < m_worker_size ) ; n <<= 1 ) {
-        Impl::spinwait( m_worker_base[j]->m_worker_state , QthreadExec::Active );
+        Impl::spinwait( m_worker_base[j]->m_worker_state , QthreadsExec::Active );
       }
 
       if ( rev_rank ) {
-        m_worker_state = QthreadExec::Inactive ;
-        Impl::spinwait( m_worker_state , QthreadExec::Inactive );
+        m_worker_state = QthreadsExec::Inactive ;
+        Impl::spinwait( m_worker_state , QthreadsExec::Inactive );
       }
       else {
         // Root thread scans across values before releasing threads
@@ -220,7 +220,7 @@ public:
       }
 
       for ( n = 1 ; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < m_worker_size ) ; n <<= 1 ) {
-        m_worker_base[j]->m_worker_state = QthreadExec::Active ;
+        m_worker_base[j]->m_worker_state = QthreadsExec::Active ;
       }
     }
 
@@ -257,12 +257,12 @@ public:
       int n , j ;
 
       for ( n = 1 ; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < team_size ) ; n <<= 1 ) {
-        Impl::spinwait( m_shepherd_base[j]->m_worker_state , QthreadExec::Active );
+        Impl::spinwait( m_shepherd_base[j]->m_worker_state , QthreadsExec::Active );
       }
 
       if ( rev_rank ) {
-        m_worker_state = QthreadExec::Inactive ;
-        Impl::spinwait( m_worker_state , QthreadExec::Inactive );
+        m_worker_state = QthreadsExec::Inactive ;
+        Impl::spinwait( m_worker_state , QthreadsExec::Inactive );
       }
       else {
         Type & accum = * m_shepherd_base[0]->shepherd_team_scratch_value<Type>();
@@ -277,7 +277,7 @@ public:
       }
 
       for ( n = 1 ; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < team_size ) ; n <<= 1 ) {
-        m_shepherd_base[j]->m_worker_state = QthreadExec::Active ;
+        m_shepherd_base[j]->m_worker_state = QthreadsExec::Active ;
       }
 
       return *shepherd_team_scratch_value<Type>();
@@ -301,12 +301,12 @@ public:
       int n , j ;
 
       for ( n = 1 ; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < team_size ) ; n <<= 1 ) {
-        Impl::spinwait( m_shepherd_base[j]->m_worker_state , QthreadExec::Active );
+        Impl::spinwait( m_shepherd_base[j]->m_worker_state , QthreadsExec::Active );
       }
 
       if ( rev_rank ) {
-        m_worker_state = QthreadExec::Inactive ;
-        Impl::spinwait( m_worker_state , QthreadExec::Inactive );
+        m_worker_state = QthreadsExec::Inactive ;
+        Impl::spinwait( m_worker_state , QthreadsExec::Inactive );
       }
       else {
         volatile Type & accum = * m_shepherd_base[0]->shepherd_team_scratch_value<Type>();
@@ -321,7 +321,7 @@ public:
       }
 
       for ( n = 1 ; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < team_size ) ; n <<= 1 ) {
-        m_shepherd_base[j]->m_worker_state = QthreadExec::Active ;
+        m_shepherd_base[j]->m_worker_state = QthreadsExec::Active ;
       }
 
       return *shepherd_team_scratch_value<Type>();
@@ -342,12 +342,12 @@ public:
       int n , j ;
 
       for ( n = 1 ; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < team_size ) ; n <<= 1 ) {
-        Impl::spinwait( m_shepherd_base[j]->m_worker_state , QthreadExec::Active );
+        Impl::spinwait( m_shepherd_base[j]->m_worker_state , QthreadsExec::Active );
       }
 
       if ( rev_rank ) {
-        m_worker_state = QthreadExec::Inactive ;
-        Impl::spinwait( m_worker_state , QthreadExec::Inactive );
+        m_worker_state = QthreadsExec::Inactive ;
+        Impl::spinwait( m_worker_state , QthreadsExec::Inactive );
       }
       else {
         // Root thread scans across values before releasing threads
@@ -375,7 +375,7 @@ public:
       }
 
       for ( n = 1 ; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < team_size ) ; n <<= 1 ) {
-        m_shepherd_base[j]->m_worker_state = QthreadExec::Active ;
+        m_shepherd_base[j]->m_worker_state = QthreadsExec::Active ;
       }
 
       return *shepherd_team_scratch_value<Type>();
@@ -391,7 +391,7 @@ public:
       return ( size + ALLOC_GRAIN_MASK ) & ~ALLOC_GRAIN_MASK ;
     }
 
-  void shared_reset( Qthread::scratch_memory_space & );
+  void shared_reset( Qthreads::scratch_memory_space & );
 
   void * exec_all_reduce_value() const { return m_scratch_alloc ; }
 
@@ -420,14 +420,14 @@ public:
 namespace Kokkos {
 namespace Impl {
 
-class QthreadTeamPolicyMember {
+class QthreadsTeamPolicyMember {
 private:
 
-  typedef Kokkos::Qthread                        execution_space ;
+  typedef Kokkos::Qthreads                        execution_space ;
   typedef execution_space::scratch_memory_space  scratch_memory_space ;
 
 
-        Impl::QthreadExec   & m_exec ;
+        Impl::QthreadsExec   & m_exec ;
   scratch_memory_space        m_team_shared ;
   const int                   m_team_size ;
   const int                   m_team_rank ;
@@ -513,16 +513,16 @@ public:
 
   struct TaskTeam {};
 
-  QthreadTeamPolicyMember();
-  explicit QthreadTeamPolicyMember( const TaskTeam & );
+  QthreadsTeamPolicyMember();
+  explicit QthreadsTeamPolicyMember( const TaskTeam & );
 
   //----------------------------------------
   // Private for the driver ( for ( member_type i(exec,team); i ; i.next_team() ) { ... }
 
   // Initialize
   template< class ... Properties >
-  QthreadTeamPolicyMember( Impl::QthreadExec & exec
-                         , const Kokkos::Impl::TeamPolicyInternal<Qthread,Properties...> & team )
+  QthreadsTeamPolicyMember( Impl::QthreadsExec & exec
+                         , const Kokkos::Impl::TeamPolicyInternal<Qthreads,Properties...> & team )
     : m_exec( exec )
     , m_team_shared(0,0)
     , m_team_size(   team.m_team_size )
@@ -543,7 +543,7 @@ public:
 
 
 template< class ... Properties >
-class TeamPolicyInternal< Kokkos::Qthread , Properties ... >
+class TeamPolicyInternal< Kokkos::Qthreads , Properties ... >
   : public PolicyTraits< Properties... >
 {
 private:
@@ -556,7 +556,7 @@ public:
 
   //! Tag this class as a kokkos execution policy
   typedef TeamPolicyInternal  execution_policy ;
-  typedef Qthread             execution_space ;
+  typedef Qthreads             execution_space ;
   typedef PolicyTraits< Properties ... >  traits ;
 
   //----------------------------------------
@@ -564,7 +564,7 @@ public:
   template< class FunctorType >
   inline static
   int team_size_max( const FunctorType & )
-    { return Qthread::instance().shepherd_worker_size(); }
+    { return Qthreads::instance().shepherd_worker_size(); }
 
   template< class FunctorType >
   static int team_size_recommended( const FunctorType & f )
@@ -581,7 +581,7 @@ public:
   inline int league_size() const { return m_league_size ; }
 
   // One active team per shepherd
-  TeamPolicyInternal( Kokkos::Qthread & q
+  TeamPolicyInternal( Kokkos::Qthreads & q
                     , const int league_size
                     , const int team_size
                     , const int /* vector_length */ = 0
@@ -599,15 +599,15 @@ public:
                     , const int /* vector_length */ = 0
                     )
     : m_league_size( league_size )
-    , m_team_size( team_size < Qthread::instance().shepherd_worker_size()
-                 ? team_size : Qthread::instance().shepherd_worker_size() )
-    , m_shepherd_iter( ( league_size + Qthread::instance().shepherd_size() - 1 ) / Qthread::instance().shepherd_size() )
+    , m_team_size( team_size < Qthreads::instance().shepherd_worker_size()
+                 ? team_size : Qthreads::instance().shepherd_worker_size() )
+    , m_shepherd_iter( ( league_size + Qthreads::instance().shepherd_size() - 1 ) / Qthreads::instance().shepherd_size() )
     {
     }
 
-  typedef Impl::QthreadTeamPolicyMember member_type ;
+  typedef Impl::QthreadsTeamPolicyMember member_type ;
 
-  friend class Impl::QthreadTeamPolicyMember ;
+  friend class Impl::QthreadsTeamPolicyMember ;
 };
 
 } /* namespace Impl */
@@ -616,5 +616,5 @@ public:
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#endif /* #define KOKKOS_QTHREADEXEC_HPP */
+#endif /* #define KOKKOS_QTHREADSEXEC_HPP */
 

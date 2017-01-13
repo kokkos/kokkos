@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -50,8 +50,6 @@
 #include <sstream>
 #include <iostream>
 
-/*--------------------------------------------------------------------------*/
-
 #include <impl/Kokkos_ViewArray.hpp>
 
 namespace Test {
@@ -59,51 +57,42 @@ namespace Test {
 template< class DeviceType >
 void TestViewAggregate()
 {
-  typedef Kokkos::Array<double,32>  value_type ;
+  typedef Kokkos::Array< double, 32 >  value_type;
+  typedef Kokkos::Experimental::Impl::ViewDataAnalysis< value_type *, Kokkos::LayoutLeft, value_type > analysis_1d;
 
-  typedef Kokkos::Experimental::Impl::
-    ViewDataAnalysis< value_type * , Kokkos::LayoutLeft , value_type >
-      analysis_1d ;
+  static_assert( std::is_same< typename analysis_1d::specialize, Kokkos::Array<> >::value, "" );
 
-  static_assert( std::is_same< typename analysis_1d::specialize , Kokkos::Array<> >::value , "" );
+  typedef Kokkos::ViewTraits< value_type **, DeviceType > a32_traits;
+  typedef Kokkos::ViewTraits< typename a32_traits::scalar_array_type, DeviceType > flat_traits;
 
+  static_assert( std::is_same< typename a32_traits::specialize, Kokkos::Array<> >::value, "" );
+  static_assert( std::is_same< typename a32_traits::value_type, value_type >::value, "" );
+  static_assert( a32_traits::rank == 2, "" );
+  static_assert( a32_traits::rank_dynamic == 2, "" );
 
-  typedef Kokkos::ViewTraits< value_type ** , DeviceType > a32_traits ;
-  typedef Kokkos::ViewTraits< typename a32_traits::scalar_array_type , DeviceType > flat_traits ;
+  static_assert( std::is_same< typename flat_traits::specialize, void >::value, "" );
+  static_assert( flat_traits::rank == 3, "" );
+  static_assert( flat_traits::rank_dynamic == 2, "" );
+  static_assert( flat_traits::dimension::N2 == 32, "" );
 
-  static_assert( std::is_same< typename a32_traits::specialize , Kokkos::Array<> >::value , "" );
-  static_assert( std::is_same< typename a32_traits::value_type , value_type >::value , "" );
-  static_assert( a32_traits::rank == 2 , "" );
-  static_assert( a32_traits::rank_dynamic == 2 , "" );
+  typedef Kokkos::View< Kokkos::Array< double, 32 > **, DeviceType > a32_type;
+  typedef typename a32_type::array_type  a32_flat_type;
 
-  static_assert( std::is_same< typename flat_traits::specialize , void >::value , "" );
-  static_assert( flat_traits::rank == 3 , "" );
-  static_assert( flat_traits::rank_dynamic == 2 , "" );
-  static_assert( flat_traits::dimension::N2 == 32 , "" );
+  static_assert( std::is_same< typename a32_type::value_type, value_type >::value, "" );
+  static_assert( std::is_same< typename a32_type::pointer_type, double * >::value, "" );
+  static_assert( a32_type::Rank == 2, "" );
+  static_assert( a32_flat_type::Rank == 3, "" );
 
-
-  typedef Kokkos::View< Kokkos::Array<double,32> ** , DeviceType > a32_type ;
-
-  typedef typename a32_type::array_type  a32_flat_type ;
-
-  static_assert( std::is_same< typename a32_type::value_type , value_type >::value , "" );
-  static_assert( std::is_same< typename a32_type::pointer_type , double * >::value , "" );
-  static_assert( a32_type::Rank == 2 , "" );
-  static_assert( a32_flat_type::Rank == 3 , "" );
-
-  a32_type x("test",4,5);
+  a32_type x( "test", 4, 5 );
   a32_flat_type y( x );
 
-  ASSERT_EQ( x.extent(0) , 4 );
-  ASSERT_EQ( x.extent(1) , 5 );
-  ASSERT_EQ( y.extent(0) , 4 );
-  ASSERT_EQ( y.extent(1) , 5 );
-  ASSERT_EQ( y.extent(2) , 32 );
+  ASSERT_EQ( x.extent( 0 ), 4 );
+  ASSERT_EQ( x.extent( 1 ), 5 );
+  ASSERT_EQ( y.extent( 0 ), 4 );
+  ASSERT_EQ( y.extent( 1 ), 5 );
+  ASSERT_EQ( y.extent( 2 ), 32 );
 }
 
-}
-
-/*--------------------------------------------------------------------------*/
-/*--------------------------------------------------------------------------*/
+} // namespace Test
 
 #endif /* #ifndef TEST_AGGREGATE_HPP */

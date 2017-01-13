@@ -49,7 +49,7 @@
  *
  *  KOKKOS_HAVE_CUDA                Kokkos::Cuda execution and memory spaces
  *  KOKKOS_HAVE_PTHREAD             Kokkos::Threads execution space
- *  KOKKOS_HAVE_QTHREAD             Kokkos::Qthread execution space
+ *  KOKKOS_HAVE_QTHREADS            Kokkos::Qthreads execution space
  *  KOKKOS_HAVE_OPENMP              Kokkos::OpenMP  execution space
  *  KOKKOS_HAVE_HWLOC               HWLOC library is available
  *  KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK    insert array bounds checks, is expensive!
