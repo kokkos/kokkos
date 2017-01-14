@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -45,19 +45,17 @@
 #define KOKKOS_MACROS_HPP
 
 //----------------------------------------------------------------------------
-/** Pick up configure/build options via #define macros:
+/** Pick up configure / build options via #define macros:
  *
- *  KOKKOS_HAVE_CUDA                Kokkos::Cuda execution and memory spaces
- *  KOKKOS_HAVE_PTHREAD             Kokkos::Threads execution space
- *  KOKKOS_HAVE_QTHREADS            Kokkos::Qthreads execution space
- *  KOKKOS_HAVE_OPENMP              Kokkos::OpenMP  execution space
- *  KOKKOS_HAVE_HWLOC               HWLOC library is available
- *  KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK    insert array bounds checks, is expensive!
- *  KOKKOS_HAVE_CXX11               enable C++11 features
- *
- *  KOKKOS_HAVE_MPI                 negotiate MPI/execution space interactions
- *
- *  KOKKOS_USE_CUDA_UVM             Use CUDA UVM for Cuda memory space
+ *  KOKKOS_HAVE_CUDA                  Kokkos::Cuda execution and memory spaces
+ *  KOKKOS_HAVE_PTHREAD               Kokkos::Threads execution space
+ *  KOKKOS_HAVE_QTHREADS              Kokkos::Qthreads execution space
+ *  KOKKOS_HAVE_OPENMP                Kokkos::OpenMP  execution space
+ *  KOKKOS_HAVE_HWLOC                 HWLOC library is available.
+ *  KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK  Insert array bounds checks, is expensive!
+ *  KOKKOS_HAVE_CXX11                 Enable C++11 features.
+ *  KOKKOS_HAVE_MPI                   Negotiate MPI/execution space interactions.
+ *  KOKKOS_USE_CUDA_UVM               Use CUDA UVM for Cuda memory space.
  */
 
 #ifndef KOKKOS_DONT_INCLUDE_CORE_CONFIG_H
@@ -115,9 +113,8 @@
 #endif
 
 #if ( CUDA_VERSION < 7000 )
-// CUDA supports C++11 in device code starting with
-// version 7.0. This includes auto type and device code internal
-// lambdas.
+// CUDA supports C++11 in device code starting with version 7.0.
+// This includes auto type and device code internal lambdas.
 #error "Cuda version 7.0 or greater required"
 #endif
 
@@ -144,7 +141,6 @@
 #define KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA 1
 #endif
 #endif /* #if defined( KOKKOS_HAVE_CUDA ) && defined( __CUDACC__ ) */
-
 
 #if defined(KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA)
    // Cuda version 8.0 still needs the functor wrapper
@@ -254,7 +250,6 @@
 //#endif /* #if ! defined( __CUDA_ARCH__ ) */
 
 /*--------------------------------------------------------------------------*/
-/*--------------------------------------------------------------------------*/
 /* Intel compiler macros */
 
 #if defined( KOKKOS_COMPILER_INTEL )
@@ -308,7 +303,6 @@
 /* Cray compiler macros */
 
 #if defined( KOKKOS_COMPILER_CRAYC )
-
 
 #endif
 
@@ -404,7 +398,6 @@
 #define KOKKOS_FUNCTION /**/
 #endif
 
-
 //----------------------------------------------------------------------------
 ///** Define empty macro for restrict if necessary: */
 
@@ -438,18 +431,20 @@
 #if 1 < ( ( defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_CUDA ) ? 1 : 0 ) + \
           ( defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_OPENMP ) ? 1 : 0 ) + \
           ( defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_THREADS ) ? 1 : 0 ) + \
+          ( defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_QTHREADS ) ? 1 : 0 ) + \
           ( defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_SERIAL ) ? 1 : 0 ) )
 
-#error "More than one KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_* specified" ;
+#error "More than one KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_* specified";
 
 #endif
 
 /** If default is not specified then chose from enabled execution spaces.
- *  Priority: CUDA, OPENMP, THREADS, SERIAL
+ *  Priority: CUDA, OPENMP, THREADS, QTHREADS, SERIAL
  */
 #if   defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_CUDA )
 #elif defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_OPENMP )
 #elif defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_THREADS )
+#elif defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_QTHREADS )
 #elif defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_SERIAL )
 #elif defined ( KOKKOS_HAVE_CUDA )
 #define KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_CUDA
@@ -457,6 +452,8 @@
 #define KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_OPENMP
 #elif defined ( KOKKOS_HAVE_PTHREAD )
 #define KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_THREADS
+#elif defined ( KOKKOS_HAVE_QTHREADS )
+#define KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_QTHREADS
 #else
 #define KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_SERIAL
 #endif
@@ -471,7 +468,6 @@
 #endif
 
 //----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
 
 #if ( defined( _POSIX_C_SOURCE ) && _POSIX_C_SOURCE >= 200112L ) || \
     ( defined( _XOPEN_SOURCE )   && _XOPEN_SOURCE   >= 600 )
@@ -481,15 +477,12 @@
 #endif
 
 //----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
 /**Enable Profiling by default**/
 
 #ifndef KOKKOS_ENABLE_PROFILING
 #define KOKKOS_ENABLE_PROFILING 1
 #endif
 
-//----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 /* Transitional macro to change between old and new View
  * are no longer supported.
@@ -498,8 +491,4 @@
 #define KOKKOS_USING_EXP_VIEW 1
 #define KOKKOS_USING_EXPERIMENTAL_VIEW
 
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
 #endif /* #ifndef KOKKOS_MACROS_HPP */
-

@@ -1,6 +1,6 @@
 # Default settings common options.
 
-# Options: OpenMP,Serial,Pthreads,Cuda
+# Options: Cuda,OpenMP,Pthreads,Qthreads,Serial
 #KOKKOS_DEVICES ?= "OpenMP"
 KOKKOS_DEVICES ?= "Pthreads"
 # Options: KNC,SNB,HSW,Kepler,Kepler30,Kepler32,Kepler35,Kepler37,Maxwell,Maxwell50,Maxwell52,Maxwell53,ARMv80,ARMv81,ARMv8-ThunderX,BGQ,Power7,Power8,Power9,KNL,BDW,SKX
@@ -39,8 +39,8 @@ KOKKOS_INTERNAL_CUDA_USE_LAMBDA := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) |
 # Check for Kokkos Host Execution Spaces one of which must be on.
 KOKKOS_INTERNAL_USE_OPENMP := $(strip $(shell echo $(KOKKOS_DEVICES) | grep OpenMP | wc -l))
 KOKKOS_INTERNAL_USE_PTHREADS := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Pthread | wc -l))
-KOKKOS_INTERNAL_USE_SERIAL := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Serial | wc -l))
 KOKKOS_INTERNAL_USE_QTHREADS := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Qthreads | wc -l))
+KOKKOS_INTERNAL_USE_SERIAL := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Serial | wc -l))
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 0)
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 0)
@@ -232,6 +232,10 @@ tmp := $(shell echo "----------------------------------------------*/" >> Kokkos
 
 tmp := $(shell echo "/* Execution Spaces */" >> KokkosCore_config.tmp)
 
+ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
+  tmp := $(shell echo "\#define KOKKOS_HAVE_CUDA 1" >> KokkosCore_config.tmp )
+endif
+
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
   tmp := $(shell echo '\#define KOKKOS_HAVE_OPENMP 1' >> KokkosCore_config.tmp)
 endif
@@ -240,16 +244,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
   tmp := $(shell echo "\#define KOKKOS_HAVE_PTHREAD 1" >> KokkosCore_config.tmp )
 endif
 
-ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
-  tmp := $(shell echo "\#define KOKKOS_HAVE_SERIAL 1" >> KokkosCore_config.tmp )
-endif
-
 ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
   tmp := $(shell echo "\#define KOKKOS_HAVE_QTHREADS 1" >> KokkosCore_config.tmp )
 endif
 
-ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
-  tmp := $(shell echo "\#define KOKKOS_HAVE_CUDA 1" >> KokkosCore_config.tmp )
+ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
+  tmp := $(shell echo "\#define KOKKOS_HAVE_SERIAL 1" >> KokkosCore_config.tmp )
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ISA_X86_64), 1)
@@ -615,6 +615,19 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   KOKKOS_LIBS += -lcudart -lcuda
 endif
 
+ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
+  KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/OpenMP/*.cpp)
+  KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/OpenMP/*.hpp)
+
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
+    KOKKOS_CXXFLAGS += -Xcompiler $(KOKKOS_INTERNAL_OPENMP_FLAG)
+  else
+    KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_OPENMP_FLAG)
+  endif
+
+  KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_OPENMP_FLAG)
+endif
+
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Threads/*.cpp)
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Threads/*.hpp)
@@ -627,19 +640,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
   KOKKOS_CPPFLAGS += -I$(QTHREADS_PATH)/include
   KOKKOS_LDFLAGS += -L$(QTHREADS_PATH)/lib
   KOKKOS_LIBS += -lqthread
-endif
-
-ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
-  KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/OpenMP/*.cpp)
-  KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/OpenMP/*.hpp)
-
-  ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
-    KOKKOS_CXXFLAGS += -Xcompiler $(KOKKOS_INTERNAL_OPENMP_FLAG)
-  else
-    KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_OPENMP_FLAG)
-  endif
-
-  KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_OPENMP_FLAG)
 endif
 
 # Explicitly set the GCC Toolchain for Clang.
