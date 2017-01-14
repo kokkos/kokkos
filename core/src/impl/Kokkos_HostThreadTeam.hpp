@@ -660,12 +660,12 @@ parallel_reduce
   , Reducer  const & reducer
   )
 {
-  reducer.init( reducer.result() );
+  reducer.init( reducer.data() );
 
   for( iType i = loop_boundaries.start
      ; i <  loop_boundaries.end
      ; i += loop_boundaries.increment ) {
-    closure( i , reducer.result() );
+    closure( i , reducer.reference() );
   }
 
   loop_boundaries.thread.team_reduce( reducer );
@@ -682,14 +682,14 @@ parallel_reduce
   , ValueType      & result
   )
 {
-  Impl::Reducer< ValueType , Impl::ReduceSum > reducer( result );
+  Impl::Reducer< ValueType , Impl::ReduceSum > reducer( & result );
 
-  reducer.init( reducer.result() );
+  reducer.init( reducer.data() );
 
   for( iType i = loop_boundaries.start
      ; i <  loop_boundaries.end
      ; i += loop_boundaries.increment ) {
-    closure( i , reducer.result() );
+    closure( i , reducer.reference() );
   }
 
   loop_boundaries.thread.team_reduce( reducer );

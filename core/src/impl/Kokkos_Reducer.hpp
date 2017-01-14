@@ -87,32 +87,8 @@ public:
                              >::type ;
 
   KOKKOS_INLINE_FUNCTION
-  void join( value_type & dest
-           , value_type const & src ) const noexcept
-    { reduce_op::join( dest , src ); }
-
-  KOKKOS_INLINE_FUNCTION
-  void join( value_type volatile & dest
-           , value_type const volatile & src ) const noexcept
-    { reduce_op::join( dest , src ); }
-
-  KOKKOS_INLINE_FUNCTION
-  void init( value_type & dest ) const noexcept
-    { reduce_op::init( dest ); }
-
-
-  KOKKOS_INLINE_FUNCTION
-  void join( value_type * const dest
-           , value_type const * const src ) const noexcept
-    {
-      for ( int i = 0 ; i < m_length ; ++i ) {
-        reduce_op::join( dest[i] , src[i] );
-      }
-    }
-
-  KOKKOS_INLINE_FUNCTION
   void join( value_type volatile * const dest
-           , value_type const volatile * const src ) const noexcept
+           , value_type volatile const * const src ) const noexcept
     {
       for ( int i = 0 ; i < m_length ; ++i ) {
         reduce_op::join( dest[i] , src[i] );
@@ -128,16 +104,8 @@ public:
     : m_result(0), m_length(0) {}
 
   KOKKOS_INLINE_FUNCTION explicit
-  constexpr Reducer( value_type & arg ) noexcept
-    : m_result( & arg ), m_length(1) {}
-
-  KOKKOS_INLINE_FUNCTION
-  constexpr Reducer( value_type * const arg_value , int arg_length ) noexcept
+  constexpr Reducer( value_type * arg_value , int arg_length = 1 ) noexcept
     : m_result( arg_value ), m_length( arg_length ) {}
-
-  KOKKOS_INLINE_FUNCTION
-  constexpr Reducer( int arg_length ) noexcept
-    : m_result(0), m_length( arg_length ) {}
 
   KOKKOS_INLINE_FUNCTION
   constexpr int length() const noexcept { return m_length ; }
@@ -145,6 +113,10 @@ public:
   KOKKOS_INLINE_FUNCTION
   value_type & operator[]( int i ) const noexcept
     { return m_result[i]; }
+
+  KOKKOS_INLINE_FUNCTION
+  value_type * data() const noexcept
+    { return m_result ; }
 
 private:
 
@@ -161,7 +133,7 @@ private:
 public:
 
   KOKKOS_INLINE_FUNCTION
-  reference_type result() const noexcept
+  reference_type reference() const noexcept
     { return Reducer::template ref< rank >( m_result ); }
 
 private:
@@ -179,7 +151,7 @@ Sum( ValueType & arg_value )
 {
   static_assert( std::is_trivial<ValueType>::value
                , "Kokkos reducer requires trivial value type" );
-  return Impl::Reducer< ValueType , Impl::ReduceSum >( arg_value );
+  return Impl::Reducer< ValueType , Impl::ReduceSum >( & arg_value );
 }
 
 template< typename ValueType >

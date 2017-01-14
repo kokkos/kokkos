@@ -193,17 +193,18 @@ private:
   typedef typename Policy::WorkRange    WorkRange ;
   typedef typename Policy::member_type  Member ;
 
+  typedef FunctorAnalysis< FunctorPattern::REDUCE , Policy , FunctorType > Analysis ;
+
   typedef Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
   typedef typename ReducerConditional::type ReducerTypeFwd;
 
   // Static Assert WorkTag void if ReducerType not InvalidType
 
-  typedef Kokkos::Impl::FunctorValueTraits< ReducerTypeFwd, WorkTag > ValueTraits ;
   typedef Kokkos::Impl::FunctorValueInit<   ReducerTypeFwd, WorkTag > ValueInit ;
   typedef Kokkos::Impl::FunctorValueJoin<   ReducerTypeFwd, WorkTag > ValueJoin ;
 
-  typedef typename ValueTraits::pointer_type    pointer_type ;
-  typedef typename ValueTraits::reference_type  reference_type ;
+  typedef typename Analysis::pointer_type    pointer_type ;
+  typedef typename Analysis::reference_type  reference_type ;
 
   const FunctorType   m_functor ;
   const Policy        m_policy ;
@@ -259,7 +260,7 @@ public:
       OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
       OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_reduce");
 
-      OpenMPexec::resize_scratch( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) , 0 );
+      OpenMPexec::resize_scratch( Analysis::value_size( ReducerConditional::select(m_functor , m_reducer) ) , 0 );
 
 #pragma omp parallel
       {
@@ -282,7 +283,7 @@ public:
       Kokkos::Impl::FunctorFinal<  ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , ptr );
 
       if ( m_result_ptr ) {
-        const int n = ValueTraits::value_count( ReducerConditional::select(m_functor , m_reducer) );
+        const int n = Analysis::value_count( ReducerConditional::select(m_functor , m_reducer) );
 
         for ( int j = 0 ; j < n ; ++j ) { m_result_ptr[j] = ptr[j] ; }
       }
@@ -296,7 +297,7 @@ public:
       OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
       OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_reduce");
 
-      OpenMPexec::resize_scratch( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) , 0 );
+      OpenMPexec::resize_scratch( Analysis::value_size( ReducerConditional::select(m_functor , m_reducer) ) , 0 );
 
 #pragma omp parallel
       {
@@ -332,7 +333,7 @@ public:
       Kokkos::Impl::FunctorFinal<  ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , ptr );
 
       if ( m_result_ptr ) {
-        const int n = ValueTraits::value_count( ReducerConditional::select(m_functor , m_reducer) );
+        const int n = Analysis::value_count( ReducerConditional::select(m_functor , m_reducer) );
 
         for ( int j = 0 ; j < n ; ++j ) { m_result_ptr[j] = ptr[j] ; }
       }
@@ -394,17 +395,18 @@ private:
 
   typedef Kokkos::RangePolicy< Traits ... > Policy ;
 
+  typedef FunctorAnalysis< FunctorPattern::SCAN , Policy , FunctorType > Analysis ;
+
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::WorkRange    WorkRange ;
   typedef typename Policy::member_type  Member ;
 
-  typedef Kokkos::Impl::FunctorValueTraits< FunctorType, WorkTag > ValueTraits ;
   typedef Kokkos::Impl::FunctorValueInit<   FunctorType, WorkTag > ValueInit ;
   typedef Kokkos::Impl::FunctorValueJoin<   FunctorType, WorkTag > ValueJoin ;
   typedef Kokkos::Impl::FunctorValueOps<    FunctorType, WorkTag > ValueOps ;
 
-  typedef typename ValueTraits::pointer_type    pointer_type ;
-  typedef typename ValueTraits::reference_type  reference_type ;
+  typedef typename Analysis::pointer_type    pointer_type ;
+  typedef typename Analysis::reference_type  reference_type ;
 
   const FunctorType   m_functor ;
   const Policy        m_policy ;
@@ -452,7 +454,7 @@ public:
       OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_scan");
       OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_scan");
 
-      OpenMPexec::resize_scratch( 2 * ValueTraits::value_size( m_functor ) , 0 );
+      OpenMPexec::resize_scratch( 2 * Analysis::value_size( m_functor ) , 0 );
 
 #pragma omp parallel
       {
@@ -460,7 +462,7 @@ public:
         const WorkRange range( m_policy, exec.pool_rank(), exec.pool_size() );
         const pointer_type ptr =
           pointer_type( exec.scratch_reduce() ) +
-          ValueTraits::value_count( m_functor );
+          Analysis::value_count( m_functor );
         ParallelScan::template exec_range< WorkTag >
           ( m_functor , range.begin() , range.end()
           , ValueInit::init( m_functor , ptr ) , false );
@@ -469,7 +471,7 @@ public:
 
       {
         const unsigned thread_count = OpenMPexec::pool_size();
-        const unsigned value_count  = ValueTraits::value_count( m_functor );
+        const unsigned value_count  = Analysis::value_count( m_functor );
 
         pointer_type ptr_prev = 0 ;
 
@@ -765,18 +767,21 @@ private:
 
   typedef Kokkos::Impl::TeamPolicyInternal< Kokkos::OpenMP, Properties ... >         Policy ;
 
+  typedef FunctorAnalysis< FunctorPattern::REDUCE , Policy , FunctorType > Analysis ;
+
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::member_type  Member ;
 
-  typedef Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
+  typedef Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value
+                            , FunctorType, ReducerType> ReducerConditional;
+
   typedef typename ReducerConditional::type ReducerTypeFwd;
 
-  typedef Kokkos::Impl::FunctorValueTraits< ReducerTypeFwd , WorkTag >  ValueTraits ;
   typedef Kokkos::Impl::FunctorValueInit<   ReducerTypeFwd , WorkTag >  ValueInit ;
   typedef Kokkos::Impl::FunctorValueJoin<   ReducerTypeFwd , WorkTag >  ValueJoin ;
 
-  typedef typename ValueTraits::pointer_type    pointer_type ;
-  typedef typename ValueTraits::reference_type  reference_type ;
+  typedef typename Analysis::pointer_type    pointer_type ;
+  typedef typename Analysis::reference_type  reference_type ;
 
   const FunctorType  m_functor ;
   const Policy       m_policy ;
@@ -814,7 +819,7 @@ public:
 
       const size_t team_reduce_size = Policy::member_type::team_reduce_size();
 
-      OpenMPexec::resize_scratch( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) , team_reduce_size + m_shmem_size );
+      OpenMPexec::resize_scratch( Analysis::value_size( ReducerConditional::select(m_functor , m_reducer) ) , team_reduce_size + m_shmem_size );
 
 #pragma omp parallel
       {
@@ -841,7 +846,7 @@ public:
         Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , ptr );
 
         if ( m_result_ptr ) {
-          const int n = ValueTraits::value_count( ReducerConditional::select(m_functor , m_reducer) );
+          const int n = Analysis::value_count( ReducerConditional::select(m_functor , m_reducer) );
 
           for ( int j = 0 ; j < n ; ++j ) { m_result_ptr[j] = ptr[j] ; }
         }
