@@ -305,19 +305,19 @@ public:
       team_shared_size  = align_to_int64( team_shared_size );
       thread_local_size = align_to_int64( thread_local_size );
  
-      const size_t total_size =
+      const size_t total_bytes = (
         m_pool_reduce +
         pool_reduce_size +
         team_reduce_size +
         team_shared_size +
-        thread_local_size ;
+        thread_local_size ) * sizeof(int64_t);
 
-      return total_size ;
+      return total_bytes ;
     }
 
   // Given:
   //   alloc_ptr         = pointer to allocated memory
-  //   alloc_size        = size of allocated memory
+  //   alloc_size        = number bytes of allocated memory
   //   pool_reduce_size  = number bytes for pool reduce/scan operations
   //   team_reduce_size  = number bytes for team reduce/scan operations
   //   team_shared_size  = number bytes for team-shared memory
@@ -339,8 +339,22 @@ public:
       m_scratch      = (int64_t *) alloc_ptr ;
       m_team_reduce  = m_pool_reduce + pool_reduce_size ;
       m_team_shared  = m_team_reduce + team_reduce_size ;
-      m_thread_local = m_team_shared    + team_shared_size ;
-      m_scratch_size = alloc_size ;
+      m_thread_local = m_team_shared + team_shared_size ;
+      m_scratch_size = align_to_int64( alloc_size );
+
+#if 0
+fprintf(stdout,"HostThreadTeamData::scratch_assign { %d %d %d %d %d %d %d }\n"
+       , int(m_pool_members)
+       , int(m_pool_rendezvous)
+       , int(m_pool_reduce)
+       , int(m_team_reduce)
+       , int(m_team_shared)
+       , int(m_thread_local)
+       , int(m_scratch_size)
+       );
+fflush(stdout);
+#endif
+
     }
 
   //----------------------------------------
@@ -474,7 +488,7 @@ public:
           // This thread released all other threads from 'team_rendezvous'
           // with a return value of 'false'
         }
-          else {
+        else {
           value = *shared_value ;
         }
       }
