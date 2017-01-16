@@ -365,6 +365,9 @@ struct TestTaskTeam {
         }
       }
 
+      // don't overwrite 'parscan_result' until it has been tested
+      member.team_barrier();
+
       // Inclusive scan
       Kokkos::parallel_scan<long>( Kokkos::TeamThreadRange(member,begin,end)
                           , [&]( int i, long &val , const bool final ) {

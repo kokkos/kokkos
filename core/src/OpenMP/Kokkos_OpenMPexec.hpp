@@ -68,6 +68,9 @@ void openmp_resize_thread_team_data( size_t pool_reduce_bytes
 // Get thread team data structure for omp_get_thread_num()
 HostThreadTeamData * openmp_get_thread_team_data();
 
+// Get thread team data structure for rank
+HostThreadTeamData * openmp_get_thread_team_data( int );
+
 } // namespace Impl
 } // namespace Kokkos
 
@@ -858,7 +861,8 @@ private:
   }
 
 public:
-  typedef Impl::OpenMPexecTeamMember member_type ;
+  //  typedef Impl::OpenMPexecTeamMember member_type ;
+  typedef Impl::HostThreadTeamMember< Kokkos::OpenMP > member_type ;
 };
 } // namespace Impl
 

@@ -447,6 +447,12 @@ int HostThreadTeamData::get_work_stealing() noexcept
   // May exit because successfully stole work and w is good.
   // May exit because no work left to steal and w = (-1,-1).
 
+#if 0
+fprintf(stdout,"HostThreadTeamData::get_work_stealing() pool(%d of %d) %d\n"
+       , m_pool_rank , m_pool_size , w.first );
+fflush(stdout);
+#endif
+
   return w.first ;
 }
 

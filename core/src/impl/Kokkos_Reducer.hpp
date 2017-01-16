@@ -44,6 +44,21 @@
 #ifndef KOKKOS_IMPL_REDUCER_HPP
 #define KOKKOS_IMPL_REDUCER_HPP
 
+#include <impl/Kokkos_Traits.hpp>
+
+//----------------------------------------------------------------------------
+/*  Reducer abstraction:
+ *  1) Provides 'join' operation
+ *  2) Provides 'init' operation
+ *  3) Provides 'copy' operation
+ *  4) Optionally provides result value in a memory space
+ *
+ *  Created from:
+ *  1) Functor::operator()( destination , source )
+ *  2) Functor::{ join , init )
+ */
+//----------------------------------------------------------------------------
+
 namespace Kokkos {
 namespace Impl {
 
@@ -51,74 +66,129 @@ template< typename value_type >
 struct ReduceSum
 {
   KOKKOS_INLINE_FUNCTION static
-  void join( value_type & dest
+  void copy( value_type & dest
            , value_type const & src ) noexcept
     { dest = src ; }
+
+  KOKKOS_INLINE_FUNCTION static
+  void init( value_type & dest ) noexcept
+    { new( &dest ) value_type(); }
 
   KOKKOS_INLINE_FUNCTION static
   void join( value_type volatile & dest
            , value_type const volatile & src ) noexcept
     { dest += src ; }
-
-  KOKKOS_INLINE_FUNCTION static
-  void init( value_type & dest ) noexcept
-    { dest = value_type(0); }
 };
 
 template< typename T
-        , template<typename> class ReduceOp = ReduceSum
+        , class ReduceOp = ReduceSum< T >
         , typename MemorySpace = void >
 struct Reducer
+  : private ReduceOp
+  , private integral_nonzero_constant
+    < int , ( std::rank<T>::value == 1 ? std::extent<T>::value : 1 )>
 {
 private:
 
+  // Determine if T is simple array
+
   enum : int { rank = std::rank<T>::value };
+
+  static_assert( rank <= 1 , "Kokkos::Impl::Reducer type is at most rank-one" );
+
+  using length_t =
+    integral_nonzero_constant<int,( rank == 1 ? std::extent<T>::value : 1 )> ;
 
 public:
 
-  using reducer      = Reducer ;
-  using memory_space = MemorySpace ;
-  using value_type   = typename std::remove_extent<T>::type ;
-  using reduce_op    = ReduceOp< value_type > ;
+  using reducer        = Reducer ;
+  using memory_space   = MemorySpace ;
+  using value_type     = typename std::remove_extent<T>::type ;
   using reference_type =
     typename std::conditional< ( rank != 0 )
                              , value_type *
                              , value_type &
                              >::type ;
-
-  KOKKOS_INLINE_FUNCTION
-  void join( value_type volatile * const dest
-           , value_type volatile const * const src ) const noexcept
-    {
-      for ( int i = 0 ; i < m_length ; ++i ) {
-        reduce_op::join( dest[i] , src[i] );
-      }
-    }
-
-  KOKKOS_INLINE_FUNCTION
-  void init( value_type * dest ) const noexcept
-    { for ( int i = 0 ; i < m_length ; ++i ) reduce_op::init( dest[i] ); }
-
-  KOKKOS_INLINE_FUNCTION
-  constexpr Reducer() noexcept
-    : m_result(0), m_length(0) {}
-
-  KOKKOS_INLINE_FUNCTION explicit
-  constexpr Reducer( value_type * arg_value , int arg_length = 1 ) noexcept
-    : m_result( arg_value ), m_length( arg_length ) {}
-
-  KOKKOS_INLINE_FUNCTION
-  constexpr int length() const noexcept { return m_length ; }
-
-  KOKKOS_INLINE_FUNCTION
-  value_type & operator[]( int i ) const noexcept
-    { return m_result[i]; }
-
-  KOKKOS_INLINE_FUNCTION
-  value_type * data() const noexcept
-    { return m_result ; }
-
 private:
+
+  //--------------------------------------------------------------------------
+  // Determine what functions 'ReduceOp' provides:
+  //   copy( destination , source )
+  //   init( destination )
+  //
+  //   operator()( destination , source )
+  //   join( destination , source )
+  //
+  // Provide defaults for missing optional operations
+
+  template< class R , typename = void > struct COPY ;
+  template< class R , typename = void > struct INIT ;
+  template< class R , typename = void > struct JOIN ;
+
+  template< class R , typename >
+  struct COPY {
+    KOKKOS_INLINE_FUNCTION static
+    void copy( R const &
+             , value_type * dst
+             , value_type const * src ) { *dst = *src ; }
+  };
+
+  template< class R >
+  struct COPY< R , decltype( ((R*)0)->copy( *((value_type*)0)
+                                          , *((value_type const *)0) ) ) >
+  {
+    KOKKOS_INLINE_FUNCTION static
+    void copy( R const & r
+             , value_type * dst
+             , value_type const * src ) { r.copy( *dst , *src ); }
+  };
+
+  template< class R , typename >
+  struct INIT {
+    KOKKOS_INLINE_FUNCTION static
+    void init( R const & , value_type * dst ) { new(dst) value_type(); }
+  };
+
+  template< class R >
+  struct INIT< R , decltype( ((R*)0)->init( *((value_type*)0 ) ) ) >
+  {
+    KOKKOS_INLINE_FUNCTION static
+    void init( R const & r , value_type * dst ) { r.init( *dst ); }
+  };
+
+  template< class R , typename > struct JOIN
+    {
+      static_assert( std::is_same<R,void>::value
+                   , "Kokkos::Impl::Reducer ERROR missing join operator" );
+    };
+
+  template< class R >
+  struct JOIN< R , decltype( ((R*)0)->operator()
+                             ( *((value_type volatile *)0)
+                             , *((value_type const volatile *)0) ) ) >
+  {
+    KOKKOS_INLINE_FUNCTION static
+    void join( R const & r
+             , value_type volatile * dst
+             , value_type volatile const * src )
+      { r(*dst,*src); }
+  };
+  
+  template< class R >
+  struct JOIN< R , decltype( ((R*)0)->join
+                             ( *((value_type volatile *)0)
+                             , *((value_type const volatile *)0) ) ) >
+  {
+    KOKKOS_INLINE_FUNCTION static
+    void join( R const & r
+             , value_type volatile * dst
+             , value_type volatile const * src )
+      { r.join(*dst,*src); }
+  };
+  
+  //--------------------------------------------------------------------------
+
+  value_type * const m_result ;
 
   template< int Rank >
   static constexpr
@@ -132,36 +202,105 @@ private:
 
 public:
 
+  //--------------------------------------------------------------------------
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr int length() const noexcept
+     { return length_t::value ; }
+
+  KOKKOS_INLINE_FUNCTION
+  value_type * data() const noexcept
+    { return m_result ; }
+
   KOKKOS_INLINE_FUNCTION
   reference_type reference() const noexcept
     { return Reducer::template ref< rank >( m_result ); }
 
-private:
+  //--------------------------------------------------------------------------
 
-  value_type * const m_result ;
-  int          const m_length ;
+  KOKKOS_INLINE_FUNCTION
+  void copy( value_type * const dest
+           , value_type const * const src ) const noexcept
+    {
+      for ( int i = 0 ; i < length() ; ++i ) {
+        Reducer::template COPY<ReduceOp>::copy( (ReduceOp &) *this , dest + i , src + i );
+      }
+    }
+
+  KOKKOS_INLINE_FUNCTION
+  void init( value_type * dest ) const noexcept
+    {
+      for ( int i = 0 ; i < length() ; ++i ) {
+        Reducer::template INIT<ReduceOp>::init( (ReduceOp &) *this , dest + i );
+      }
+    }
+
+  KOKKOS_INLINE_FUNCTION
+  void join( value_type volatile * const dest
+           , value_type volatile const * const src ) const noexcept
+    {
+      for ( int i = 0 ; i < length() ; ++i ) {
+        Reducer::template JOIN<ReduceOp>::join( (ReduceOp &) *this , dest + i , src + i );
+      }
+    }
+
+  //--------------------------------------------------------------------------
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr Reducer() noexcept : ReduceOp(), length_t(0), m_result(0) {}
+
+  KOKKOS_INLINE_FUNCTION explicit
+  constexpr Reducer( value_type * arg_value , int arg_length = 1 ) noexcept
+    : ReduceOp(), length_t( arg_length ), m_result( arg_value ) {}
+
+  KOKKOS_INLINE_FUNCTION explicit
+  constexpr Reducer( ReduceOp const & arg_op
+                   , value_type     * arg_value = 0
+                   , int arg_length = 1 ) noexcept
+    : ReduceOp( arg_op ), length_t( arg_length ), m_result( arg_value ) {}
+
+  Reducer( Reducer const & ) = default ;
+  Reducer( Reducer && ) = default ;
+  Reducer & operator = ( Reducer const & ) = default ;
+  Reducer & operator = ( Reducer && ) = default ;
+  ~Reducer() = default ;
 };
 
 } // namespace Impl
+} // namespace Kokkos
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
 
 template< typename ValueType >
 constexpr
-Impl::Reducer< ValueType , Impl::ReduceSum >
+Impl::Reducer< ValueType , Impl::ReduceSum< ValueType > >
 Sum( ValueType & arg_value )
 {
   static_assert( std::is_trivial<ValueType>::value
                , "Kokkos reducer requires trivial value type" );
-  return Impl::Reducer< ValueType , Impl::ReduceSum >( & arg_value );
+  return Impl::Reducer< ValueType , Impl::ReduceSum< ValueType > >( & arg_value );
 }
 
 template< typename ValueType >
 constexpr
-Impl::Reducer< ValueType[] , Impl::ReduceSum >
+Impl::Reducer< ValueType[] , Impl::ReduceSum< ValueType > >
 Sum( ValueType * arg_value , int arg_length )
 {
   static_assert( std::is_trivial<ValueType>::value
                , "Kokkos reducer requires trivial value type" );
-  return Impl::Reducer< ValueType[] , Impl::ReduceSum >( arg_value , arg_length );
+  return Impl::Reducer< ValueType[] , Impl::ReduceSum< ValueType > >( arg_value , arg_length );
+}
+
+//----------------------------------------------------------------------------
+
+template< typename ValueType , class JoinType >
+Impl::Reducer< ValueType , JoinType >
+reducer( ValueType & value , JoinType const & lambda )
+{
+  return Impl::Reducer< ValueType , JoinType >( lambda , & value );
 }
 
 } // namespace Kokkos

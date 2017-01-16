@@ -291,6 +291,11 @@ void openmp_resize_thread_team_data( size_t pool_reduce_bytes
   }
 }
 
+HostThreadTeamData * openmp_get_thread_team_data( int i )
+{
+  return g_openmp_thread_team_data[ i ];
+}
+
 HostThreadTeamData * openmp_get_thread_team_data()
 {
   return g_openmp_thread_team_data[ g_openmp_thread_team_rank[ omp_get_thread_num() ] ];

@@ -56,7 +56,7 @@
 namespace Kokkos {
 namespace Impl {
 
-struct FunctorPattern {
+struct FunctorPatternInterface {
   struct FOR {};
   struct REDUCE {};
   struct SCAN {};
@@ -67,15 +67,29 @@ struct FunctorPattern {
  *  If C++11 enabled and 'value_type' is not explicitly declared then attempt
  *  to deduce the type from FunctorType::operator().
  */
-template< typename Pattern , class Policy , class Functor >
+template< typename PatternInterface , class Policy , class Functor >
 struct FunctorAnalysis {
 private:
 
+  using FOR    = FunctorPatternInterface::FOR ;
+  using REDUCE = FunctorPatternInterface::REDUCE ;
+  using SCAN   = FunctorPatternInterface::SCAN ;
+
+  //----------------------------------------
+
+  template< typename P , bool = true >
+  struct has_work_tag { using type = void ; };
+
+  template< typename P >
+  struct has_work_tag
+    < P , ! std::is_same< typename P::work_tag , void >::value >
+  {
+    using type = typename P::work_tag ;
+  };
+
+  using Tag = typename has_work_tag< Policy >::type ;
+
   struct VOID {};
-
-  using Tag = typename Policy::work_tag ;
-
-  enum { tag_is_void = std::is_same<Tag,void>::value };
 
   using WTag = typename
     std::conditional< std::is_same<Tag,void>::value , VOID , Tag >::type ;
@@ -104,14 +118,14 @@ private:
   // to determine the reduction or scan value_type.
 
   template< typename F
-          , typename P = Pattern
+          , typename P = PatternInterface
           , typename V = typename has_value_type<F>::type
-          , bool     T = tag_is_void
+          , bool     T = std::is_same< Tag , void >::value
           >
   struct deduce_value_type { using type = V ; };
 
   template< typename F >
-  struct deduce_value_type< F , FunctorPattern::REDUCE , void , true > {
+  struct deduce_value_type< F , REDUCE , void , true > {
 
     template< typename M , typename A >
     KOKKOS_INLINE_FUNCTION static
@@ -121,7 +135,7 @@ private:
   };
 
   template< typename F >
-  struct deduce_value_type< F , FunctorPattern::REDUCE , void , false > {
+  struct deduce_value_type< F , REDUCE , void , false > {
 
     template< typename M , typename A >
     KOKKOS_INLINE_FUNCTION static
@@ -135,17 +149,17 @@ private:
   };
 
   template< typename F >
-  struct deduce_value_type< F , FunctorPattern::SCAN , void , true > {
+  struct deduce_value_type< F , SCAN , void , true > {
 
     template< typename M , typename A , typename I >
     KOKKOS_INLINE_FUNCTION static
-    A deduce( std::true_type , void (Functor::*)( M , A & , I ) const );
+    A deduce( void (Functor::*)( M , A & , I ) const );
 
     using type = decltype( deduce( & F::operator() ) );
   };
 
   template< typename F >
-  struct deduce_value_type< F , FunctorPattern::SCAN , void , false > {
+  struct deduce_value_type< F , SCAN , void , false > {
 
     template< typename M , typename A , typename I >
     KOKKOS_INLINE_FUNCTION static
