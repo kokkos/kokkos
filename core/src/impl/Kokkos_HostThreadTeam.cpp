@@ -236,23 +236,14 @@ int HostThreadTeamData::organize_team( const int team_size )
 
 void HostThreadTeamData::disband_team()
 {
-  const bool ok_pool = 0 != m_pool_scratch ;
-
-  if ( ok_pool ) {
-    HostThreadTeamData * const * const pool =
-      (HostThreadTeamData **) (m_pool_scratch + m_pool_members);
-
-    m_team_scratch = m_scratch ;
-    m_team_base    = m_pool_rank ;
-    m_team_rank    = 0 ;
-    m_team_size    = 1 ;
-    m_league_rank  = m_pool_rank ;
-    m_league_size  = m_pool_size ;
-    m_team_rendezvous_step = 0 ;
-  }
-  else {
-    Kokkos::Impl::throw_runtime_exception("Kokkos::Impl::HostThreadTeamData::disband_tem ERROR pool does not exist");
-  }
+  m_team_scratch = m_scratch ;
+  m_team_base    = m_pool_rank ;
+  m_team_rank    = 0 ;
+  m_team_size    = 1 ;
+  m_team_alloc   = 1 ;
+  m_league_rank  = m_pool_rank ;
+  m_league_size  = m_pool_size ;
+  m_team_rendezvous_step = 0 ;
 }
 
 //----------------------------------------------------------------------------

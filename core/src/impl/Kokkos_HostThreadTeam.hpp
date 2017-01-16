@@ -237,6 +237,11 @@ public:
 
   //----------------------------------------
 
+  constexpr int pool_rank() const { return m_pool_rank ; }
+  constexpr int pool_size() const { return m_pool_size ; }
+
+  //----------------------------------------
+
   static constexpr int align_to_int64( int n )
     {
       enum : int { mask  = 0x0f }; // align to 16 bytes
