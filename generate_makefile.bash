@@ -1,6 +1,7 @@
 #!/bin/bash
 
 KOKKOS_DEVICES=""
+MAKE_J_OPTION="32"
 
 while [[ $# > 0 ]]
 do
@@ -66,6 +67,9 @@ do
     --debug|-dbg)
       KOKKOS_DEBUG=yes
       ;;
+    --make-j*)
+      MAKE_J_OPTION="${key#*=}"
+      ;;
     --compiler*)
       COMPILER="${key#*=}"
       CNUM=`which ${COMPILER} 2>&1 >/dev/null | grep "no ${COMPILER}" | wc -l`
@@ -88,51 +92,55 @@ do
       ;;
     --help)
       echo "Kokkos configure options:"
-      echo "--kokkos-path=/Path/To/Kokkos:     Path to the Kokkos root directory"
-      echo "--qthreads-path=/Path/To/Qthreads: Path to Qthreads install directory"
-      echo "                                     overrides path given by --with-qthreads"
-      echo "--prefix=/Install/Path:            Path to where the Kokkos library should be installed"
+      echo "--kokkos-path=/Path/To/Kokkos:        Path to the Kokkos root directory."
+      echo "--qthreads-path=/Path/To/Qthreads:    Path to Qthreads install directory."
+      echo "                                        Overrides path given by --with-qthreads."
+      echo "--prefix=/Install/Path:               Path to install the Kokkos library."
       echo ""
-      echo "--with-cuda[=/Path/To/Cuda]:         enable Cuda and set path to Cuda Toolkit"
-      echo "--with-openmp:                       enable OpenMP backend"
-      echo "--with-pthread:                      enable Pthreads backend"
-      echo "--with-serial:                       enable Serial backend"
-      echo "--with-qthreads[=/Path/To/Qthreads]: enable Qthreads backend"
-      echo "--with-devices:                      explicitly add a set of backends"
+      echo "--with-cuda[=/Path/To/Cuda]:          Enable Cuda and set path to Cuda Toolkit."
+      echo "--with-openmp:                        Enable OpenMP backend."
+      echo "--with-pthread:                       Enable Pthreads backend."
+      echo "--with-serial:                        Enable Serial backend."
+      echo "--with-qthreads[=/Path/To/Qthreads]:  Enable Qthreads backend."
+      echo "--with-devices:                       Explicitly add a set of backends."
       echo ""
-      echo "--arch=[OPTIONS]:            set target architectures. Options are:"
-      echo "                               ARMv80         = ARMv8.0 Compatible CPU"
-      echo "                               ARMv81         = ARMv8.1 Compatible CPU"
-      echo "                               ARMv8-ThunderX = ARMv8 Cavium ThunderX CPU"
-      echo "                               SNB            = Intel Sandy/Ivy Bridge CPUs"
-      echo "                               HSW            = Intel Haswell CPUs"
-      echo "                               BDW            = Intel Broadwell Xeon E-class CPUs"
-      echo "                               SKX            = Intel Sky Lake Xeon E-class HPC CPUs (AVX512)"
-      echo "                               KNC            = Intel Knights Corner Xeon Phi"
-      echo "                               KNL            = Intel Knights Landing Xeon Phi"
-      echo "                               Kepler30       = NVIDIA Kepler generation CC 3.0"
-      echo "                               Kepler35       = NVIDIA Kepler generation CC 3.5"
-      echo "                               Kepler37       = NVIDIA Kepler generation CC 3.7"
-      echo "                               Pascal60       = NVIDIA Pascal generation CC 6.0"
-      echo "                               Pascal61       = NVIDIA Pascal generation CC 6.1"
-      echo "                               Maxwell50      = NVIDIA Maxwell generation CC 5.0"
-      echo "                               Power8         = IBM POWER8 CPUs"
-      echo "                               Power9         = IBM POWER9 CPUs"
+      echo "--arch=[OPT]:  Set target architectures. Options are:"
+      echo "                 ARMv80         = ARMv8.0 Compatible CPU"
+      echo "                 ARMv81         = ARMv8.1 Compatible CPU"
+      echo "                 ARMv8-ThunderX = ARMv8 Cavium ThunderX CPU"
+      echo "                 SNB            = Intel Sandy/Ivy Bridge CPUs"
+      echo "                 HSW            = Intel Haswell CPUs"
+      echo "                 BDW            = Intel Broadwell Xeon E-class CPUs"
+      echo "                 SKX            = Intel Sky Lake Xeon E-class HPC CPUs (AVX512)"
+      echo "                 KNC            = Intel Knights Corner Xeon Phi"
+      echo "                 KNL            = Intel Knights Landing Xeon Phi"
+      echo "                 Kepler30       = NVIDIA Kepler generation CC 3.0"
+      echo "                 Kepler35       = NVIDIA Kepler generation CC 3.5"
+      echo "                 Kepler37       = NVIDIA Kepler generation CC 3.7"
+      echo "                 Pascal60       = NVIDIA Pascal generation CC 6.0"
+      echo "                 Pascal61       = NVIDIA Pascal generation CC 6.1"
+      echo "                 Maxwell50      = NVIDIA Maxwell generation CC 5.0"
+      echo "                 Power8         = IBM POWER8 CPUs"
+      echo "                 Power9         = IBM POWER9 CPUs"
       echo ""
-      echo "--compiler=/Path/To/Compiler set the compiler"
-      echo "--debug,-dbg:                enable Debugging"
-      echo "--cxxflags=[FLAGS]           overwrite CXXFLAGS for library build and test build"
-      echo "                               This will still set certain required flags via"
-      echo "                               KOKKOS_CXXFLAGS (such as -fopenmp, --std=c++11, etc.)"
-      echo "--ldflags=[FLAGS]            overwrite LDFLAGS for library build and test build"
-      echo "                               This will still set certain required flags via"
-      echo "                               KOKKOS_LDFLAGS (such as -fopenmp, -lpthread, etc.)"
-      echo "--with-gtest=/Path/To/Gtest: set path to gtest (used in unit and performance tests"
-      echo "--with-hwloc=/Path/To/Hwloc: set path to hwloc"
-      echo "--with-options=[OPTIONS]:    additional options to Kokkos:"
-      echo "                               aggressive_vectorization = add ivdep on loops"
-      echo "--with-cuda-options=[OPTIONS]: additional options to CUDA:"
-      echo "                               force_uvm, use_ldg, enable_lambda, rdc"
+      echo "--compiler=/Path/To/Compiler  Set the compiler."
+      echo "--debug,-dbg:                 Enable Debugging."
+      echo "--cxxflags=[FLAGS]            Overwrite CXXFLAGS for library build and test"
+      echo "                                build.  This will still set certain required"
+      echo "                                flags via KOKKOS_CXXFLAGS (such as -fopenmp,"
+      echo "                                --std=c++11, etc.)."
+      echo "--ldflags=[FLAGS]             Overwrite LDFLAGS for library build and test"
+      echo "                                build. This will still set certain required"
+      echo "                                flags via KOKKOS_LDFLAGS (such as -fopenmp,"
+      echo "                                -lpthread, etc.)."
+      echo "--with-gtest=/Path/To/Gtest:  Set path to gtest.  (Used in unit and performance"
+      echo "                                tests.)"
+      echo "--with-hwloc=/Path/To/Hwloc:  Set path to hwloc."
+      echo "--with-options=[OPT]:         Additional options to Kokkos:"
+      echo "                                aggressive_vectorization = add ivdep on loops"
+      echo "--with-cuda-options=[OPT]:    Additional options to CUDA:"
+      echo "                                force_uvm, use_ldg, enable_lambda, rdc"
+      echo "--make-j=[NUM]:               Set -j flag used during build."
       exit 0
       ;;
     *)
@@ -251,7 +259,7 @@ KOKKOS_SETTINGS="${KOKKOS_SETTINGS_NO_KOKKOS_PATH} KOKKOS_PATH=${KOKKOS_PATH}"
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > core/unit_test/Makefile
 echo "" >> core/unit_test/Makefile
 echo "all:" >> core/unit_test/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/core/unit_test/Makefile ${KOKKOS_SETTINGS}" >> core/unit_test/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/core/unit_test/Makefile ${KOKKOS_SETTINGS}" >> core/unit_test/Makefile
 echo "" >> core/unit_test/Makefile
 echo "test: all" >> core/unit_test/Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/core/unit_test/Makefile ${KOKKOS_SETTINGS} test" >> core/unit_test/Makefile
@@ -262,7 +270,7 @@ echo -e "\tmake -f ${KOKKOS_PATH}/core/unit_test/Makefile ${KOKKOS_SETTINGS} cle
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > core/perf_test/Makefile
 echo "" >> core/perf_test/Makefile
 echo "all:" >> core/perf_test/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/core/perf_test/Makefile ${KOKKOS_SETTINGS}" >> core/perf_test/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/core/perf_test/Makefile ${KOKKOS_SETTINGS}" >> core/perf_test/Makefile
 echo "" >> core/perf_test/Makefile
 echo "test: all" >> core/perf_test/Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/core/perf_test/Makefile ${KOKKOS_SETTINGS} test" >> core/perf_test/Makefile
@@ -273,7 +281,7 @@ echo -e "\tmake -f ${KOKKOS_PATH}/core/perf_test/Makefile ${KOKKOS_SETTINGS} cle
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > containers/unit_tests/Makefile
 echo "" >> containers/unit_tests/Makefile
 echo "all:" >> containers/unit_tests/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/containers/unit_tests/Makefile ${KOKKOS_SETTINGS}" >> containers/unit_tests/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/containers/unit_tests/Makefile ${KOKKOS_SETTINGS}" >> containers/unit_tests/Makefile
 echo "" >> containers/unit_tests/Makefile
 echo "test: all" >> containers/unit_tests/Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/containers/unit_tests/Makefile ${KOKKOS_SETTINGS} test" >> containers/unit_tests/Makefile
@@ -284,7 +292,7 @@ echo -e "\tmake -f ${KOKKOS_PATH}/containers/unit_tests/Makefile ${KOKKOS_SETTIN
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > containers/performance_tests/Makefile
 echo "" >> containers/performance_tests/Makefile
 echo "all:" >> containers/performance_tests/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/containers/performance_tests/Makefile ${KOKKOS_SETTINGS}" >> containers/performance_tests/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/containers/performance_tests/Makefile ${KOKKOS_SETTINGS}" >> containers/performance_tests/Makefile
 echo "" >> containers/performance_tests/Makefile
 echo "test: all" >> containers/performance_tests/Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/containers/performance_tests/Makefile ${KOKKOS_SETTINGS} test" >> containers/performance_tests/Makefile
@@ -295,7 +303,7 @@ echo -e "\tmake -f ${KOKKOS_PATH}/containers/performance_tests/Makefile ${KOKKOS
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > algorithms/unit_tests/Makefile
 echo "" >> algorithms/unit_tests/Makefile
 echo "all:" >> algorithms/unit_tests/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_SETTINGS}" >> algorithms/unit_tests/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_SETTINGS}" >> algorithms/unit_tests/Makefile
 echo "" >> algorithms/unit_tests/Makefile
 echo "test: all" >> algorithms/unit_tests/Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_SETTINGS} test" >> algorithms/unit_tests/Makefile
@@ -308,59 +316,59 @@ KOKKOS_SETTINGS="${KOKKOS_SETTINGS_NO_KOKKOS_PATH} KOKKOS_PATH=${KOKKOS_TEST_INS
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > example/fixture/Makefile
 echo "" >> example/fixture/Makefile
 echo "all:" >> example/fixture/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_SETTINGS}" >> example/fixture/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_SETTINGS}" >> example/fixture/Makefile
 echo "" >> example/fixture/Makefile
 echo "test: all" >> example/fixture/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_SETTINGS} test" >> example/fixture/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_SETTINGS} test" >> example/fixture/Makefile
 echo "" >> example/fixture/Makefile
 echo "clean:" >> example/fixture/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_SETTINGS} clean" >> example/fixture/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_SETTINGS} clean" >> example/fixture/Makefile
 
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > example/feint/Makefile
 echo "" >> example/feint/Makefile
 echo "all:" >> example/feint/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_SETTINGS}" >> example/feint/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_SETTINGS}" >> example/feint/Makefile
 echo "" >> example/feint/Makefile
 echo "test: all" >> example/feint/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_SETTINGS} test" >> example/feint/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_SETTINGS} test" >> example/feint/Makefile
 echo "" >> example/feint/Makefile
 echo "clean:" >> example/feint/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_SETTINGS} clean" >> example/feint/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_SETTINGS} clean" >> example/feint/Makefile
 
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > example/fenl/Makefile
 echo "" >> example/fenl/Makefile
 echo "all:" >> example/fenl/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_SETTINGS}" >> example/fenl/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_SETTINGS}" >> example/fenl/Makefile
 echo "" >> example/fenl/Makefile
 echo "test: all" >> example/fenl/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_SETTINGS} test" >> example/fenl/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_SETTINGS} test" >> example/fenl/Makefile
 echo "" >> example/fenl/Makefile
 echo "clean:" >> example/fenl/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_SETTINGS} clean" >> example/fenl/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_SETTINGS} clean" >> example/fenl/Makefile
 
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > example/tutorial/Makefile
 echo "" >> example/tutorial/Makefile
 echo "build:" >> example/tutorial/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_SETTINGS='${KOKKOS_SETTINGS}' KOKKOS_PATH=${KOKKOS_PATH} build">> example/tutorial/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_SETTINGS='${KOKKOS_SETTINGS}' KOKKOS_PATH=${KOKKOS_PATH} build">> example/tutorial/Makefile
 echo "" >> example/tutorial/Makefile
 echo "test: build" >> example/tutorial/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_SETTINGS='${KOKKOS_SETTINGS}' KOKKOS_PATH=${KOKKOS_PATH} test" >> example/tutorial/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_SETTINGS='${KOKKOS_SETTINGS}' KOKKOS_PATH=${KOKKOS_PATH} test" >> example/tutorial/Makefile
 echo "" >> example/tutorial/Makefile
 echo "clean:" >> example/tutorial/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_SETTINGS='${KOKKOS_SETTINGS}' KOKKOS_PATH=${KOKKOS_PATH} clean" >> example/tutorial/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_SETTINGS='${KOKKOS_SETTINGS}' KOKKOS_PATH=${KOKKOS_PATH} clean" >> example/tutorial/Makefile
 
 
 if [ ${#KOKKOS_ENABLE_EXAMPLE_ICHOL} -gt 0 ]; then
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > example/ichol/Makefile
 echo "" >> example/ichol/Makefile
 echo "all:" >> example/ichol/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_SETTINGS}" >> example/ichol/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_SETTINGS}" >> example/ichol/Makefile
 echo "" >> example/ichol/Makefile
 echo "test: all" >> example/ichol/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_SETTINGS} test" >> example/ichol/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_SETTINGS} test" >> example/ichol/Makefile
 echo "" >> example/ichol/Makefile
 echo "clean:" >> example/ichol/Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_SETTINGS} clean" >> example/ichol/Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_SETTINGS} clean" >> example/ichol/Makefile
 fi
 
 KOKKOS_SETTINGS="${KOKKOS_SETTINGS_NO_KOKKOS_PATH} KOKKOS_PATH=${KOKKOS_PATH}"
@@ -371,19 +379,19 @@ echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > Makefile
 echo "" >> Makefile
 echo "kokkoslib:" >> Makefile
 echo -e "\tcd core; \\" >> Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_INSTALL_PATH} build-lib" >> Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_INSTALL_PATH} build-lib" >> Makefile
 echo "" >> Makefile
 echo "install: kokkoslib" >> Makefile
 echo -e "\tcd core; \\" >> Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_INSTALL_PATH} install" >> Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_INSTALL_PATH} install" >> Makefile
 echo "" >> Makefile
 echo "kokkoslib-test:" >> Makefile
 echo -e "\tcd core; \\" >> Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_TEST_INSTALL_PATH} build-lib" >> Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_TEST_INSTALL_PATH} build-lib" >> Makefile
 echo "" >> Makefile
 echo "install-test: kokkoslib-test" >> Makefile
 echo -e "\tcd core; \\" >> Makefile
-echo -e "\tmake -j -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_TEST_INSTALL_PATH} install" >> Makefile
+echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_TEST_INSTALL_PATH} install" >> Makefile
 echo "" >> Makefile
 echo "build-test: install-test" >> Makefile
 echo -e "\tmake -C core/unit_test" >> Makefile
