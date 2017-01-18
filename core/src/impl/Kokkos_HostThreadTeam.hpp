@@ -880,7 +880,10 @@ void parallel_scan
   // Extract ValueType from the closure
 
   using value_type =
-    typename Kokkos::Impl::FunctorValueTraits< Closure , void >::value_type ;
+    typename Kokkos::Impl::FunctorAnalysis
+      < Kokkos::Impl::FunctorPatternInterface::SCAN
+      , void
+      , Closure >::value_type ;
 
   value_type accum = 0 ;
 
@@ -909,13 +912,11 @@ void parallel_scan
   , ClosureType const & closure
   )
 {
-  typedef Kokkos::Impl::FunctorAnalysis
-    < Impl::FunctorPatternInterface::SCAN
-    , void
-    , ClosureType
-    > Analysis ;
-
-  typedef typename Analysis::value_type value_type ;
+  using value_type = typename
+    Kokkos::Impl::FunctorAnalysis
+      < Impl::FunctorPatternInterface::SCAN
+      , void
+      , ClosureType >::value_type ;
 
   value_type scan_val = value_type();
 

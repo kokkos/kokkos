@@ -353,7 +353,7 @@ struct TestTaskTeam {
       // test parallel_scan
 
       // Exclusive scan
-      Kokkos::parallel_scan<long>( Kokkos::TeamThreadRange(member,begin,end)
+      Kokkos::parallel_scan( Kokkos::TeamThreadRange(member,begin,end)
                           , [&]( int i, long &val , const bool final ) {
                               if ( final ) { parscan_result[i] = val; }
                               val += i;
@@ -369,7 +369,7 @@ struct TestTaskTeam {
       member.team_barrier();
 
       // Inclusive scan
-      Kokkos::parallel_scan<long>( Kokkos::TeamThreadRange(member,begin,end)
+      Kokkos::parallel_scan( Kokkos::TeamThreadRange(member,begin,end)
                           , [&]( int i, long &val , const bool final ) {
                               val += i;
                               if ( final ) { parscan_result[i] = val; }
