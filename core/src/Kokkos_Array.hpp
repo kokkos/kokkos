@@ -97,6 +97,17 @@ public:
   Array() = default ;
   Array( const Array & ) = default ;
   Array & operator = ( const Array & ) = default ;
+  // This constructor uses a variadic template rather than taking a
+  // std::initializer_list.
+  // Reasons for doing that are the constexpr version of
+  // std::initializer_list::size() is only available with C++14 and
+  // initialization of member C array with an initialization list is
+  // problematic.
+  template <typename... Args>
+  Array( Args&&... args ) : m_elem{args...} {
+      static_assert( sizeof...(Args) == N,
+                     "Invalid number of elements in the initializer_list");
+  }
 
   // Some supported compilers are not sufficiently C++11 compliant
   // for default move constructor and move assignment operator.
