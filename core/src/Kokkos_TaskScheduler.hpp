@@ -741,9 +741,10 @@ host_spawn( Impl::TaskPolicyData<TaskEnum,DepFutureType> const & arg_policy
   using exec_space = typename DepFutureType::execution_space ;
   using scheduler  = TaskScheduler< exec_space > ;
 
-  using task_type = Impl::TaskBase< exec_space
-                                  , typename FunctorType::value_type
-                                  , FunctorType > ;
+  typedef Impl::TaskBase< exec_space
+                        , typename FunctorType::value_type
+                        , FunctorType
+                        > task_type ;
 
   static_assert( TaskEnum == task_type::TaskTeam ||
                  TaskEnum == task_type::TaskSingle
@@ -776,9 +777,11 @@ task_spawn( Impl::TaskPolicyData<TaskEnum,DepFutureType> const & arg_policy
 {
   using exec_space = typename DepFutureType::execution_space ;
   using scheduler  = TaskScheduler< exec_space > ;
-  using task_type  = Impl::TaskBase< exec_space
-                                   , typename FunctorType::value_type
-                                   , FunctorType > ;
+
+  typedef Impl::TaskBase< exec_space
+                        , typename FunctorType::value_type
+                        , FunctorType
+                        > task_type ;
 
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST ) && \
     defined( KOKKOS_HAVE_CUDA )

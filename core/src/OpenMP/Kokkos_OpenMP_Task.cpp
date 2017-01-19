@@ -62,23 +62,23 @@ private:
   HostThreadTeamDataSingleton() : HostThreadTeamData()
     {
       Kokkos::OpenMP::memory_space space ;
-      const size_t pool_reduce_bytes  =   32 ;
-      const size_t team_reduce_bytes  =   32 ;
-      const size_t team_shared_bytes  = 1024 ;
-      const size_t thread_local_bytes = 1024 ;
+      const size_t num_pool_reduce_bytes  =   32 ;
+      const size_t num_team_reduce_bytes  =   32 ;
+      const size_t num_team_shared_bytes  = 1024 ;
+      const size_t num_thread_local_bytes = 1024 ;
       const size_t alloc_bytes =
-        HostThreadTeamData::scratch_size( pool_reduce_bytes
-                                        , team_reduce_bytes
-                                        , team_shared_bytes
-                                        , thread_local_bytes );
+        HostThreadTeamData::scratch_size( num_pool_reduce_bytes
+                                        , num_team_reduce_bytes
+                                        , num_team_shared_bytes
+                                        , num_thread_local_bytes );
 
       HostThreadTeamData::scratch_assign
         ( space.allocate( alloc_bytes )
         , alloc_bytes
-        , pool_reduce_bytes
-        , team_reduce_bytes
-        , team_shared_bytes
-        , thread_local_bytes );
+        , num_pool_reduce_bytes
+        , num_team_reduce_bytes
+        , num_team_shared_bytes
+        , num_thread_local_bytes );
     }
 
   ~HostThreadTeamDataSingleton()

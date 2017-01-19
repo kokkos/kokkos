@@ -471,6 +471,22 @@ public:
     {}
 #endif
 
+  template< class Closure >
+  KOKKOS_INLINE_FUNCTION
+  void team_barrier( Closure const & f ) const noexcept
+    {
+      if ( 1 == m_data.m_team_size || m_data.team_rendezvous() ) {
+
+        // All threads have entered 'team_rendezvous'
+        // only this thread returned from 'team_rendezvous'
+        // with a return value of 'true'
+
+        f();
+
+        if ( 1 < m_data.m_team_size ) { m_data.team_rendezvous_release(); }
+      }
+    }
+
   //--------------------------------------------------------------------------
 
   template< typename T >
@@ -502,6 +518,37 @@ public:
 #else
     { Kokkos::abort("HostThreadTeamMember team_broadcast\n"); }
 #endif
+
+  //--------------------------------------------------------------------------
+
+  template< class Closure , typename T >
+  KOKKOS_INLINE_FUNCTION
+  void team_broadcast( Closure const & f , T & value ) const noexcept
+    {
+      T volatile * const shared_value = (T*) m_data.team_reduce();
+
+      // Don't overwrite shared memory until all threads arrive
+
+      if ( 1 == m_data.m_team_size || m_data.team_rendezvous() ) {
+
+        // All threads have entered 'team_rendezvous'
+        // only this thread returned from 'team_rendezvous'
+        // with a return value of 'true'
+
+        f( value );
+
+        if ( 1 < m_data.m_team_size ) {
+          *shared_value = value ;
+
+          m_data.team_rendezvous_release();
+          // This thread released all other threads from 'team_rendezvous'
+          // with a return value of 'false'
+        }
+      }
+      else {
+        value = *shared_value ;
+      }
+    }
 
   //--------------------------------------------------------------------------
   // team_reduce( Sum(result) );
@@ -952,15 +999,14 @@ template< class Space , class FunctorType >
 KOKKOS_INLINE_FUNCTION
 void single( const Impl::ThreadSingleStruct< Impl::HostThreadTeamMember<Space> > & single , const FunctorType & functor )
 {
-  if ( single.team_member.team_rank() == 0 ) functor();
+  single.team_member.team_barrier( functor );
 }
 
 template< class Space , class FunctorType , typename ValueType >
 KOKKOS_INLINE_FUNCTION
 void single( const Impl::ThreadSingleStruct< Impl::HostThreadTeamMember<Space> > & single , const FunctorType & functor , ValueType & val )
 {
-  if ( single.team_member.team_rank() == 0 ) functor(val);
-  single.team_member.team_broadcast(val);
+  single.team_member.team_broadcast( functor , val );
 }
 
 template< class Space , class FunctorType >

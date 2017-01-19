@@ -54,6 +54,8 @@
 namespace Kokkos {
 namespace Impl {
 
+template< class > class TaskExec ;
+
 //----------------------------------------------------------------------------
 
 template<>
@@ -65,6 +67,7 @@ public:
   using memory_space    = Kokkos::HostSpace ;
   using queue_type      = Kokkos::Impl::TaskQueue< execution_space > ;
   using task_base_type  = Kokkos::Impl::TaskBase< execution_space , void , void > ;
+  using member_type     = TaskExec< Kokkos::Serial > ;
 
   static
   void iff_single_thread_recursive_execute( queue_type * const );

@@ -61,6 +61,8 @@ void set_cuda_task_base_apply_function_pointer
 
 }
 
+template< class > class TaskExec ;
+
 template<>
 class TaskQueueSpecialization< Kokkos::Cuda >
 {
@@ -69,6 +71,7 @@ public:
   using execution_space = Kokkos::Cuda ;
   using memory_space    = Kokkos::CudaUVMSpace ;
   using queue_type      = TaskQueue< execution_space > ;
+  using member_type     = TaskExec< Kokkos::Cuda > ;
 
   static
   void iff_single_thread_recursive_execute( queue_type * const ) {}

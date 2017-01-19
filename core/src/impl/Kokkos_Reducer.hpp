@@ -246,15 +246,25 @@ public:
 
   //--------------------------------------------------------------------------
 
-  KOKKOS_INLINE_FUNCTION
-  constexpr Reducer() noexcept : ReduceOp(), length_t(0), m_result(0) {}
-
+  template< typename ArgT >
   KOKKOS_INLINE_FUNCTION explicit
-  constexpr Reducer( value_type * arg_value , int arg_length = 1 ) noexcept
+  constexpr Reducer
+    ( ArgT * arg_value
+    , typename std::enable_if
+        < std::is_same<ArgT,value_type>::value &&
+          std::is_default_constructible< ReduceOp >::value
+        , int >::type arg_length = 1
+    ) noexcept
     : ReduceOp(), length_t( arg_length ), m_result( arg_value ) {}
 
   KOKKOS_INLINE_FUNCTION explicit
   constexpr Reducer( ReduceOp const & arg_op
+                   , value_type     * arg_value = 0
+                   , int arg_length = 1 ) noexcept
+    : ReduceOp( arg_op ), length_t( arg_length ), m_result( arg_value ) {}
+
+  KOKKOS_INLINE_FUNCTION explicit
+  constexpr Reducer( ReduceOp      && arg_op
                    , value_type     * arg_value = 0
                    , int arg_length = 1 ) noexcept
     : ReduceOp( arg_op ), length_t( arg_length ), m_result( arg_value ) {}

@@ -285,8 +285,8 @@ private:
       int  const chunk_min = ( total + std::numeric_limits<int>::max() )
                              / std::numeric_limits<int>::max();
 
-      int const chunk = m_policy.chunk_size() > chunk_min
-                      ? m_policy.chunk_size() : chunk_min ;
+      int const chunk = int(m_policy.chunk_size()) > chunk_min
+                      ? int(m_policy.chunk_size()) : chunk_min ;
 
       // Number of work items (chunks) for stealing
       int const nwork = ( total + chunk - 1 ) / chunk ;
