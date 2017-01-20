@@ -395,16 +395,13 @@ struct functor_team_vector_reduce_join {
 
     Scalar value = 0;
 
-    auto reduce =
-      Kokkos::reducer( value ,
-       [] (volatile Scalar& val, const volatile Scalar& src) {val+=src;} );
-
     Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,131)
       , [&] (int i, Scalar& val)
       {
         val += i - team.league_rank () + team.league_size () + team.team_size ();
       }
-      , reduce );
+      , [] (volatile Scalar& val, const volatile Scalar& src) {val+=src;}
+      , value );
 
     Kokkos::single(Kokkos::PerTeam(team),[&]()
     {

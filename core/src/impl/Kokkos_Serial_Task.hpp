@@ -267,12 +267,17 @@ void parallel_reduce
   initialized_result = result;
 }
 
-template< typename ValueType, typename iType, class Lambda >
+template< typename iType, class Lambda >
 KOKKOS_INLINE_FUNCTION
 void parallel_scan
   (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Serial > >& loop_boundaries,
    const Lambda & lambda)
 {
+  typedef typename
+    Impl::FunctorAnalysis
+      < Impl::FunctorPatternInterface::SCAN , void , Lambda >::value_type
+        ValueType ;
+
   ValueType accum = 0 ;
   ValueType val, local_total;
 

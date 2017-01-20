@@ -103,7 +103,6 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
   ( TaskQueue< Kokkos::OpenMP > * const queue )
 {
   using execution_space = Kokkos::OpenMP ;
-  using scratch_space   = execution_space::scratch_memory_space ;
   using queue_type      = TaskQueue< execution_space > ;
   using task_root_type  = TaskBase< execution_space , void , void > ;
   using Member          = Impl::HostThreadTeamMember< execution_space > ;
@@ -272,7 +271,6 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::
     ( TaskQueue< Kokkos::OpenMP > * const queue )
 {
   using execution_space = Kokkos::OpenMP ;
-  using scratch_space   = execution_space::scratch_memory_space ;
   using queue_type      = TaskQueue< execution_space > ;
   using task_root_type  = TaskBase< execution_space , void , void > ;
   using Member          = Impl::HostThreadTeamMember< execution_space > ;

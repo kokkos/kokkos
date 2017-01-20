@@ -849,6 +849,30 @@ parallel_reduce
   loop_boundaries.thread.team_reduce( reducer );
 }
 
+template< typename iType, class Space
+         , class Closure, class Joiner , typename ValueType >
+KOKKOS_INLINE_FUNCTION
+void parallel_reduce
+  ( Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >
+             const & loop_boundaries
+  , Closure  const & closure
+  , Joiner   const & joiner
+  , ValueType      & result
+  )
+{
+  Impl::Reducer< ValueType , Joiner > reducer( joiner , & result );
+
+  reducer.init( reducer.data() );
+
+  for( iType i = loop_boundaries.start
+     ; i <  loop_boundaries.end
+     ; i += loop_boundaries.increment ) {
+    closure( i , reducer.reference() );
+  }
+
+  loop_boundaries.thread.team_reduce( reducer );
+}
+
 //----------------------------------------------------------------------------
 /** \brief  Inter-thread vector parallel_reduce.
  *
