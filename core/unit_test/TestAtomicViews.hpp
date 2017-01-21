@@ -244,11 +244,11 @@ public:
     ASSERT_EQ( ax.use_count() , size_t(4) );
     ASSERT_EQ( const_ax.use_count() , ax.use_count() );
 
-    ASSERT_FALSE( ax.data() != 0 );
+    ASSERT_FALSE( ax.data() == 0 );
     ASSERT_FALSE( const_ax.data() == 0 ); // referenceable ptr
-    ASSERT_FALSE( unmanaged_ax.data() != 0 );
-    ASSERT_FALSE( unmanaged_ax_from_ptr_dx.data() != 0 );
-    ASSERT_FALSE( ay.data() != 0 );
+    ASSERT_FALSE( unmanaged_ax.data() == 0 );
+    ASSERT_FALSE( unmanaged_ax_from_ptr_dx.data() == 0 );
+    ASSERT_FALSE( ay.data() == 0 );
 //    ASSERT_NE( ax , ay );
 //    Above test results in following runtime error from gtest:
 //    Expected: (ax) != (ay), actual: 32-byte object <30-01 D0-A0 D8-7F 00-00 00-31 44-0C 01-00 00-00 E8-03 00-00 00-00 00-00 69-00 00-00 00-00 00-00> vs 32-byte object <80-01 D0-A0 D8-7F 00-00 00-A1 4A-0C 01-00 00-00 E8-03 00-00 00-00 00-00 69-00 00-00 00-00 00-00>
