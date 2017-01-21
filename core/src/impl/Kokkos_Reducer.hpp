@@ -158,44 +158,39 @@ private:
 
   template< class R , typename > struct JOIN
     {
-      static_assert( std::is_same<R,void>::value
-                   , "Kokkos::Impl::Reducer ERROR missing join operator" );
+      // If no join function then try operator()
+      KOKKOS_INLINE_FUNCTION static
+      void join( R const & r
+               , value_type volatile * dst
+               , value_type volatile const * src )
+        { r.operator()(*dst,*src); }
     };
-
-  template< class R >
-  struct JOIN< R , decltype( ((R*)0)->operator()
-                             ( *((value_type volatile *)0)
-                             , *((value_type const volatile *)0) ) ) >
-  {
-    KOKKOS_INLINE_FUNCTION static
-    void join( R const & r
-             , value_type volatile * dst
-             , value_type volatile const * src )
-      { r(*dst,*src); }
-  };
   
   template< class R >
   struct JOIN< R , decltype( ((R*)0)->join
                              ( *((value_type volatile *)0)
                              , *((value_type const volatile *)0) ) ) >
-  {
-    KOKKOS_INLINE_FUNCTION static
-    void join( R const & r
-             , value_type volatile * dst
-             , value_type volatile const * src )
-      { r.join(*dst,*src); }
-  };
+    {
+      // If has join function use it
+      KOKKOS_INLINE_FUNCTION static
+      void join( R const & r
+               , value_type volatile * dst
+               , value_type volatile const * src )
+        { r.join(*dst,*src); }
+    };
   
   //--------------------------------------------------------------------------
 
   value_type * const m_result ;
 
   template< int Rank >
+  KOKKOS_INLINE_FUNCTION
   static constexpr
   typename std::enable_if< ( 0 != Rank ) , reference_type >::type
   ref( value_type * p ) noexcept { return p ; }
 
   template< int Rank >
+  KOKKOS_INLINE_FUNCTION
   static constexpr
   typename std::enable_if< ( 0 == Rank ) , reference_type >::type
   ref( value_type * p ) noexcept { return *p ; }
@@ -273,7 +268,6 @@ public:
   Reducer( Reducer && ) = default ;
   Reducer & operator = ( Reducer const & ) = default ;
   Reducer & operator = ( Reducer && ) = default ;
-  ~Reducer() = default ;
 };
 
 } // namespace Impl

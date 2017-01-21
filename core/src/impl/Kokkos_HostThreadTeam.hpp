@@ -243,12 +243,15 @@ public:
 
   //----------------------------------------
 
+private:
+
+  enum : int { mask_to_16 = 0x0f }; // align to 16 bytes
+  enum : int { shift_to_8 = 3 };    // size to 8 bytes
+
+public:
+
   static constexpr int align_to_int64( int n )
-    {
-      enum : int { mask  = 0x0f }; // align to 16 bytes
-      enum : int { shift = 3 };    // size to 8 bytes
-      return ( ( n + mask ) & ~mask ) >> shift ;
-    }
+    { return ( ( n + mask_to_16 ) & ~mask_to_16 ) >> shift_to_8 ; }
 
   constexpr int pool_reduce_bytes() const
     { return sizeof(int64_t) * ( m_team_reduce - m_pool_reduce ); }
