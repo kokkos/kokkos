@@ -59,7 +59,13 @@ template< class T      = void
         , class Proxy  = void
         >
 struct Array {
-private:
+public:
+  /**
+   * The elements of this C array shall not be accessed directly. The data
+   * member has to be declared public to enable aggregate initialization as for
+   * std::array. We mark it as private in the documentation.
+   * @private
+   */
   T m_elem[N];
 public:
 
