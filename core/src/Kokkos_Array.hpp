@@ -66,7 +66,7 @@ public:
    * std::array. We mark it as private in the documentation.
    * @private
    */
-  T m_elem[N];
+  T m_internal_implementation_private_member_data[N];
 public:
 
   typedef T &                                 reference ;
@@ -85,7 +85,7 @@ public:
   reference operator[]( const iType & i )
     {
       static_assert( std::is_integral<iType>::value , "Must be integral argument" );
-      return m_elem[i];
+      return m_internal_implementation_private_member_data[i];
     }
 
   template< typename iType >
@@ -93,11 +93,17 @@ public:
   const_reference operator[]( const iType & i ) const
     {
       static_assert( std::is_integral<iType>::value , "Must be integral argument" );
-      return m_elem[i];
+      return m_internal_implementation_private_member_data[i];
     }
 
-  KOKKOS_INLINE_FUNCTION pointer       data()       { return & m_elem[0] ; }
-  KOKKOS_INLINE_FUNCTION const_pointer data() const { return & m_elem[0] ; }
+  KOKKOS_INLINE_FUNCTION pointer       data()
+    {
+      return & m_internal_implementation_private_member_data[0];
+    }
+  KOKKOS_INLINE_FUNCTION const_pointer data() const
+    {
+      return & m_internal_implementation_private_member_data[0];
+    }
 
   ~Array() = default ;
   Array() = default ;
