@@ -99,6 +99,22 @@ void TestViewAggregate()
   ASSERT_EQ( y.extent(0) , 4 );
   ASSERT_EQ( y.extent(1) , 5 );
   ASSERT_EQ( y.extent(2) , 32 );
+
+
+  // Initialize arrays from brace-init-list as for std::array
+  Kokkos::Array<float, 2> aggregate_initialization_syntax_1 = { 1.41, 3.14 };
+  ASSERT_FLOAT_EQ( aggregate_initialization_syntax_1[0], 1.41 );
+  ASSERT_FLOAT_EQ( aggregate_initialization_syntax_1[1], 3.14 );
+  Kokkos::Array<int, 3> aggregate_initialization_syntax_2{ 0, 1, 2 }; // since C++11
+  for (int i = 0; i < 3; ++i)
+      ASSERT_EQ( aggregate_initialization_syntax_2[i], i );
+
+  // Note that this is a valid initialization
+  Kokkos::Array<double, 3> initialized_with_one_argument_missing = { 255, 255 };
+  for (int i = 0; i < 2; ++i)
+      ASSERT_DOUBLE_EQ( initialized_with_one_argument_missing[i], 255 );
+  // But the following line would not compile
+//  Kokkos::Array<double,3> initialized_with_too_many{1, 2, 3, 4};
 }
 
 }
