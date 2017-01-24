@@ -59,14 +59,8 @@ template< class T      = void
         , class Proxy  = void
         >
 struct Array {
-public:
-  /**
-   * The elements of this C array shall not be accessed directly. The data
-   * member has to be declared public to enable aggregate initialization as for
-   * std::array. We mark it as private in the documentation.
-   * @private
-   */
-  T m_internal_implementation_private_member_data[N];
+private:
+  T m_elem[N];
 public:
 
   typedef T &                                 reference ;
@@ -85,7 +79,7 @@ public:
   reference operator[]( const iType & i )
     {
       static_assert( std::is_integral<iType>::value , "Must be integral argument" );
-      return m_internal_implementation_private_member_data[i];
+      return m_elem[i];
     }
 
   template< typename iType >
@@ -93,17 +87,11 @@ public:
   const_reference operator[]( const iType & i ) const
     {
       static_assert( std::is_integral<iType>::value , "Must be integral argument" );
-      return m_internal_implementation_private_member_data[i];
+      return m_elem[i];
     }
 
-  KOKKOS_INLINE_FUNCTION pointer       data()
-    {
-      return & m_internal_implementation_private_member_data[0];
-    }
-  KOKKOS_INLINE_FUNCTION const_pointer data() const
-    {
-      return & m_internal_implementation_private_member_data[0];
-    }
+  KOKKOS_INLINE_FUNCTION pointer       data()       { return & m_elem[0] ; }
+  KOKKOS_INLINE_FUNCTION const_pointer data() const { return & m_elem[0] ; }
 
   ~Array() = default ;
   Array() = default ;
