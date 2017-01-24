@@ -211,7 +211,6 @@ void serial_resize_thread_team_data( size_t pool_reduce_bytes
                                    , size_t team_shared_bytes
                                    , size_t thread_local_bytes );
 
-// Get thread team data structure for omp_get_thread_num()
 HostThreadTeamData * serial_get_thread_team_data();
 
 } /* namespace Impl */
