@@ -477,14 +477,16 @@ public:
 
       HostThreadTeamData & data = *serial_get_thread_team_data();
 
+      pointer_type ptr =
+        m_result_ptr ? m_result_ptr : pointer_type(data.pool_reduce_local());
+
       reference_type update =
-        ValueInit::init(  ReducerConditional::select(m_functor , m_reducer) ,
-        ( m_result_ptr ? m_result_ptr : pointer_type(data.pool_reduce_local()) ) );
+        ValueInit::init(  ReducerConditional::select(m_functor , m_reducer) , ptr );
 
       this-> template exec< WorkTag >( update );
 
       Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTag >::
-        final(  ReducerConditional::select(m_functor , m_reducer) , &update );
+        final(  ReducerConditional::select(m_functor , m_reducer) , ptr );
     }
 
   template< class HostViewType >
@@ -498,7 +500,7 @@ public:
     : m_functor( arg_functor )
     , m_policy( arg_policy )
     , m_reducer( InvalidType() )
-    , m_result_ptr( arg_result_view.ptr_on_device() )
+    , m_result_ptr( arg_result_view.data() )
     {
       static_assert( Kokkos::is_view< HostViewType >::value
         , "Kokkos::Serial reduce result must be a View" );
@@ -754,14 +756,16 @@ public:
 
       HostThreadTeamData & data = *serial_get_thread_team_data();
 
+      pointer_type ptr =
+        m_result_ptr ? m_result_ptr : pointer_type(data.pool_reduce_local());
+
       reference_type update =
-        ValueInit::init( ReducerConditional::select(m_functor , m_reducer) ,
-        ( m_result_ptr ? m_result_ptr : pointer_type(data.pool_reduce_local()) ) );
+        ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , ptr );
 
       this-> template exec< WorkTag >( data , update );
 
       Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTag >::
-        final(  ReducerConditional::select(m_functor , m_reducer) , &update );
+        final(  ReducerConditional::select(m_functor , m_reducer) , ptr );
     }
 
   template< class ViewType >
@@ -775,7 +779,7 @@ public:
     : m_functor( arg_functor )
     , m_league( arg_policy.league_size() )
     , m_reducer( InvalidType() )
-    , m_result_ptr( arg_result.ptr_on_device() )
+    , m_result_ptr( arg_result.data() )
     , m_shared( arg_policy.scratch_size(0) +
                 arg_policy.scratch_size(1) +
                 FunctorTeamShmemSize< FunctorType >::value( m_functor , 1 ) )

@@ -67,6 +67,9 @@ void serial_resize_thread_team_data( size_t pool_reduce_bytes
 {
   HostThreadTeamData & root = g_serial_thread_team_data ;
 
+  if ( pool_reduce_bytes < 512 ) pool_reduce_bytes = 512 ;
+  if ( team_reduce_bytes < 512 ) team_reduce_bytes = 512 ;
+
   const size_t old_pool_reduce  = g_serial_thread_team_data.pool_reduce_bytes();
   const size_t old_team_reduce  = g_serial_thread_team_data.team_reduce_bytes();
   const size_t old_team_shared  = g_serial_thread_team_data.team_shared_bytes();

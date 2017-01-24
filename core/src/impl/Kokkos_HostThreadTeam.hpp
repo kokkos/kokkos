@@ -259,7 +259,7 @@ public:
     { return ( ( n + mask_to_16 ) & ~mask_to_16 ) >> shift_to_8 ; }
 
   constexpr int pool_reduce_bytes() const
-    { return sizeof(int64_t) * ( m_team_reduce - m_pool_reduce ); }
+    { return m_scratch_size ? sizeof(int64_t) * ( m_team_reduce - m_pool_reduce ) : 0 ; }
 
   constexpr int team_reduce_bytes() const
     { return sizeof(int64_t) * ( m_team_shared - m_team_reduce ); }
