@@ -364,6 +364,10 @@ struct TestTaskTeam {
                               val += i;
                             }
                           );
+
+      // Wait for 'parscan_result' before testing it
+      member.team_barrier();
+
       if ( member.team_rank() == 0 ) {
         for ( long i = begin ; i < end ; ++i ) {
           parscan_check[i] = (i*(i-1)-begin*(begin-1))*0.5-parscan_result[i];
@@ -380,6 +384,10 @@ struct TestTaskTeam {
                               if ( final ) { parscan_result[i] = val; }
                             }
                           );
+
+      // Wait for 'parscan_result' before testing it
+      member.team_barrier();
+
       if ( member.team_rank() == 0 ) {
         for ( long i = begin ; i < end ; ++i ) {
           parscan_check[i] += (i*(i+1)-begin*(begin-1))*0.5-parscan_result[i];

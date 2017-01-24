@@ -142,34 +142,37 @@ public:
   inline
   int team_rendezvous( int const root ) const noexcept
     {
-      return m_team_rank < m_team_size ?
-        rendezvous( m_team_scratch + m_team_rendezvous
-                  , m_team_rendezvous_step
-                  , m_team_size
-                  , ( m_team_rank + m_team_size - root ) % m_team_size ) : 0 ;
+      return 1 == m_team_size ? 1 :
+             rendezvous( m_team_scratch + m_team_rendezvous
+                       , m_team_rendezvous_step
+                       , m_team_size
+                       , ( m_team_rank + m_team_size - root ) % m_team_size );
     }
 
   inline
   int team_rendezvous() const noexcept
     {
-      return m_team_rank < m_team_size ?
-        rendezvous( m_team_scratch + m_team_rendezvous
-                  , m_team_rendezvous_step
-                  , m_team_size
-                  , m_team_rank ) : 0 ;
+      return 1 == m_team_size ? 1 :
+             rendezvous( m_team_scratch + m_team_rendezvous
+                       , m_team_rendezvous_step
+                       , m_team_size
+                       , m_team_rank );
     }
 
   inline
   void team_rendezvous_release() const noexcept
     {
-      rendezvous_release( m_team_scratch + m_team_rendezvous
-                        , m_team_rendezvous_step );
+      if ( 1 < m_team_size ) {
+        rendezvous_release( m_team_scratch + m_team_rendezvous
+                          , m_team_rendezvous_step );
+      }
     }
 
   inline
   int pool_rendezvous() const noexcept
     {
-      return rendezvous( m_pool_scratch + m_pool_rendezvous
+      return 1 == m_pool_size ? 1 :
+             rendezvous( m_pool_scratch + m_pool_rendezvous
                        , m_pool_rendezvous_step
                        , m_pool_size
                        , m_pool_rank );
@@ -178,8 +181,10 @@ public:
   inline
   void pool_rendezvous_release() const noexcept
     {
-      rendezvous_release( m_pool_scratch + m_pool_rendezvous
-                        , m_pool_rendezvous_step );
+      if ( 1 < m_pool_size ) {
+        rendezvous_release( m_pool_scratch + m_pool_rendezvous
+                          , m_pool_rendezvous_step );
+      }
     }
 
   //----------------------------------------
@@ -466,9 +471,7 @@ public:
   KOKKOS_INLINE_FUNCTION void team_barrier() const noexcept
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     {
-      if ( 1 < m_data.m_team_size ) {
-        if ( m_data.team_rendezvous() ) m_data.team_rendezvous_release();
-      }
+      if ( m_data.team_rendezvous() ) m_data.team_rendezvous_release();
     }
 #else
     {}
@@ -478,7 +481,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   void team_barrier( Closure const & f ) const noexcept
     {
-      if ( 1 == m_data.m_team_size || m_data.team_rendezvous() ) {
+      if ( m_data.team_rendezvous() ) {
 
         // All threads have entered 'team_rendezvous'
         // only this thread returned from 'team_rendezvous'
@@ -486,7 +489,7 @@ public:
 
         f();
 
-        if ( 1 < m_data.m_team_size ) { m_data.team_rendezvous_release(); }
+        m_data.team_rendezvous_release();
       }
     }
 
@@ -532,7 +535,7 @@ public:
 
       // Don't overwrite shared memory until all threads arrive
 
-      if ( 1 == m_data.m_team_size || m_data.team_rendezvous() ) {
+      if ( m_data.team_rendezvous() ) {
 
         // All threads have entered 'team_rendezvous'
         // only this thread returned from 'team_rendezvous'
@@ -540,13 +543,11 @@ public:
 
         f( value );
 
-        if ( 1 < m_data.m_team_size ) {
-          *shared_value = value ;
+        if ( 1 < m_data.m_team_size ) { *shared_value = value ; }
 
-          m_data.team_rendezvous_release();
-          // This thread released all other threads from 'team_rendezvous'
-          // with a return value of 'false'
-        }
+        m_data.team_rendezvous_release();
+        // This thread released all other threads from 'team_rendezvous'
+        // with a return value of 'false'
       }
       else {
         value = *shared_value ;
@@ -616,45 +617,40 @@ public:
              , JoinOp    const & join ) const noexcept
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     {
-      if ( 1 < m_data.m_team_size ) {
+      if ( 0 != m_data.m_team_rank ) {
+        // Non-root copies to their local buffer:
+        *((ValueType*) m_data.team_reduce_local()) = value ;
+      }
+
+      // Root does not overwrite shared memory until all threads arrive
+      // and copy to their local buffer.
+
+      if ( m_data.team_rendezvous() ) {
         const Impl::Reducer< ValueType , JoinOp > reducer( join );
 
-        if ( 0 != m_data.m_team_rank ) {
-          // Non-root copies to their local buffer:
-          *((ValueType*) m_data.team_reduce_local()) = value ;
+        // All threads have entered 'team_rendezvous'
+        // only this thread returned from 'team_rendezvous'
+        // with a return value of 'true'
+        //
+        // This thread sums contributed values
+
+        ValueType * const dst = (ValueType*) m_data.team_reduce_local();
+
+        *dst = value ;
+
+        for ( int i = 1 ; i < m_data.m_team_size ; ++i ) {
+          ValueType * const src =
+            (ValueType*) m_data.team_member(i)->team_reduce_local();
+
+          reducer.join( dst , src );
         }
 
-        // Root does not overwrite shared memory until all threads arrive
-        // and copy to their local buffer.
-
-        if ( m_data.team_rendezvous() ) {
-          // All threads have entered 'team_rendezvous'
-          // only this thread returned from 'team_rendezvous'
-          // with a return value of 'true'
-          //
-          // This thread sums contributed values
-
-          ValueType * const dst = (ValueType*) m_data.team_reduce_local();
-
-          *dst = value ;
-
-          for ( int i = 1 ; i < m_data.m_team_size ; ++i ) {
-            ValueType * const src =
-              (ValueType*) m_data.team_member(i)->team_reduce_local();
-
-            reducer.join( dst , src );
-          }
-
-          m_data.team_rendezvous_release();
-          // This thread released all other threads from 'team_rendezvous'
-          // with a return value of 'false'
-        }
-
-        return *((ValueType*) m_data.team_reduce());
+        m_data.team_rendezvous_release();
+        // This thread released all other threads from 'team_rendezvous'
+        // with a return value of 'false'
       }
-      else {
-        return value ;
-      }
+
+      return *((ValueType*) m_data.team_reduce());
     }
 #else
     { Kokkos::abort("HostThreadTeamMember team_reduce\n"); }
@@ -666,57 +662,55 @@ public:
   T team_scan( T const & value , T * const global = 0 ) const noexcept
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     {
-      if ( 1 < m_data.m_team_size ) {
+      if ( 0 != m_data.m_team_rank ) {
+        // Non-root copies to their local buffer:
+        ((T*) m_data.team_reduce_local())[1] = value ;
+      }
 
-        if ( 0 != m_data.m_team_rank ) {
-          // Non-root copies to their local buffer:
-          ((T*) m_data.team_reduce_local())[1] = value ;
+      // Root does not overwrite shared memory until all threads arrive
+      // and copy to their local buffer.
+
+      if ( m_data.team_rendezvous() ) {
+        // All threads have entered 'team_rendezvous'
+        // only this thread returned from 'team_rendezvous'
+        // with a return value of 'true'
+        //
+        // This thread scans contributed values
+
+        {
+          T * prev = (T*) m_data.team_reduce_local();
+
+          prev[0] = 0 ;
+          prev[1] = value ;
+
+          for ( int i = 1 ; i < m_data.m_team_size ; ++i ) {
+            T * const ptr = (T*) m_data.team_member(i)->team_reduce_local();
+
+            ptr[0] = prev[0] + prev[1] ;
+
+            prev = ptr ;
+          }
         }
 
-        // Root does not overwrite shared memory until all threads arrive
-        // and copy to their local buffer.
-
-        if ( m_data.team_rendezvous() ) {
-          // All threads have entered 'team_rendezvous'
-          // only this thread returned from 'team_rendezvous'
-          // with a return value of 'true'
-          //
-          // This thread scans contributed values
+        // If adding to global value then atomic_fetch_add to that value
+        // and sum previous value to every entry of the scan.
+        if ( global ) {
+          T * prev = (T*) m_data.team_reduce_local();
 
           {
-            T * prev = (T*) m_data.team_reduce_local();
-
-            prev[0] = 0 ;
-            prev[1] = value ;
-
-            for ( int i = 1 ; i < m_data.m_team_size ; ++i ) {
-              T * const ptr = (T*) m_data.team_member(i)->team_reduce_local();
-
-              ptr[0] = prev[0] + prev[1] ;
-
-              prev = ptr ;
-            }
+            T * ptr  = (T*) m_data.team_member( m_data.m_team_size - 1 )->team_reduce_local();
+            prev[0] = Kokkos::atomic_fetch_add( global , ptr[0] + ptr[1] );
           }
 
-          // If adding to global value then atomic_fetch_add to that value
-          // and sum previous value to every entry of the scan.
-          if ( global ) {
-            T * prev = (T*) m_data.team_reduce_local();
-
-            {
-              T * ptr  = (T*) m_data.team_member( m_data.m_team_size - 1 )->team_reduce_local();
-              prev[0] = Kokkos::atomic_fetch_add( global , ptr[0] + ptr[1] );
-            }
-
-            for ( int i = 1 ; i < m_data.m_team_size ; ++i ) {
-              T * ptr = (T*) m_data.team_member(i)->team_reduce_local();
-              ptr[0] += prev[0] ;
-            }
+          for ( int i = 1 ; i < m_data.m_team_size ; ++i ) {
+            T * ptr = (T*) m_data.team_member(i)->team_reduce_local();
+            ptr[0] += prev[0] ;
           }
-
-          m_data.team_rendezvous_release();
         }
+
+        m_data.team_rendezvous_release();
       }
+
       return ((T*) m_data.team_reduce_local())[0];
     }
 #else
@@ -1026,7 +1020,9 @@ template< class Space , class FunctorType >
 KOKKOS_INLINE_FUNCTION
 void single( const Impl::ThreadSingleStruct< Impl::HostThreadTeamMember<Space> > & single , const FunctorType & functor )
 {
-  single.team_member.team_barrier( functor );
+  if ( single.team_member.team_rank() == 0 ) functor();
+  // 'single' does not perform a barrier.
+  // single.team_member.team_barrier( functor );
 }
 
 template< class Space , class FunctorType , typename ValueType >

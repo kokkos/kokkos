@@ -127,7 +127,7 @@ private:
     {
       // The minimum chunk size so that the stealing index can be an int.
       // Insure that 1 <= chunk_min even if total == 0
-      long const total = m_policy.end() - m_policy.begin();
+      Member const total = m_policy.end() - m_policy.begin();
       int  const chunk_min = ( total + std::numeric_limits<int>::max() )
                              / std::numeric_limits<int>::max();
 
@@ -281,7 +281,7 @@ private:
     {
       // The minimum chunk size so that the stealing index can be an int.
       // Insure that 1 <= chunk_min even if total == 0
-      long const total = m_policy.end() - m_policy.begin();
+      Member const total = m_policy.end() - m_policy.begin();
       int  const chunk_min = ( total + std::numeric_limits<int>::max() )
                              / std::numeric_limits<int>::max();
 
@@ -695,7 +695,10 @@ public:
                const Policy      & arg_policy )
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
-    , m_shmem_size( arg_policy.scratch_size(0) + arg_policy.scratch_size(1) + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
+    , m_shmem_size( arg_policy.scratch_size(0) +
+                    arg_policy.scratch_size(1) +
+                    FunctorTeamShmemSize< FunctorType >
+                      ::value( arg_functor , arg_policy.team_size() ) )
     {}
 };
 
@@ -898,7 +901,10 @@ public:
     , m_policy(  arg_policy )
     , m_reducer( InvalidType() )
     , m_result_ptr( arg_result.ptr_on_device() )
-    , m_shmem_size( arg_policy.scratch_size(0) + arg_policy.scratch_size(1) + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
+    , m_shmem_size( arg_policy.scratch_size(0) +
+                    arg_policy.scratch_size(1) +
+                    FunctorTeamShmemSize< FunctorType >
+                      ::value( arg_functor , arg_policy.team_size() ) )
     {}
 
   inline
@@ -909,7 +915,10 @@ public:
   , m_policy(  arg_policy )
   , m_reducer( reducer )
   , m_result_ptr(  reducer.result_view().data() )
-  , m_shmem_size( arg_policy.scratch_size(0) + arg_policy.scratch_size(1) + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
+  , m_shmem_size( arg_policy.scratch_size(0) +
+                  arg_policy.scratch_size(1) +
+                  FunctorTeamShmemSize< FunctorType >
+                    ::value( arg_functor , arg_policy.team_size() ) )
   {
   /*static_assert( std::is_same< typename ViewType::memory_space
                           , Kokkos::HostSpace >::value
