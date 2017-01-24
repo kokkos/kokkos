@@ -205,6 +205,18 @@ inline
 unsigned long int atomic_fetch_add( volatile unsigned long int * const dest , const unsigned long int val )
 { return __sync_fetch_and_add(dest,val); }
 
+KOKKOS_INLINE_FUNCTION
+double atomic_fetch_add( volatile double * const dest , const double val )
+{ return atomic_fetch_add(dest,val); }
+
+KOKKOS_INLINE_FUNCTION
+unsigned long long int atomic_fetch_add( volatile unsigned long long int * const dest , const unsigned long long int val )
+{ return __sync_fetch_and_add(dest,val); }
+
+KOKKOS_INLINE_FUNCTION
+long long int atomic_fetch_add( volatile long long int * const dest , const long long int val )
+{ return __sync_fetch_and_add(dest,val); }
+
 #endif
 
 template < typename T >
