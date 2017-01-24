@@ -214,15 +214,17 @@ public:
   //----------------------------------------
   // Organize array of members into a pool.
   // The 0th member is the root of the pool.
-  // Requires members are not already in a pool.
+  // Requires: members are not already in a pool.
+  // Requires: called by one thread.
   // Pool members are ordered as "close" - sorted by NUMA and then CORE
   // Each thread is its own team with team_size == 1.
   static void organize_pool( HostThreadTeamData * members[]
                            , const int size );
 
-  // Root of a pool disbands the pool.
+  // Called by each thread within the pool
   void disband_pool();
 
+  //----------------------------------------
   // Each thread within a pool organizes itself into a team.
   // Must be called by all threads of the pool.
   // Organizing threads into a team performs a barrier across the

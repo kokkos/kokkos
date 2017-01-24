@@ -124,7 +124,7 @@ fflush(stdout);
 
 #pragma omp parallel
   {
-    Impl::HostThreadTeamData & self = *Impl::openmp_get_thread_team_data();
+    Impl::HostThreadTeamData & self = *Impl::OpenMPexec::get_thread_data();
 
     // Organizing threads into a team performs a barrier across the
     // entire pool to insure proper initialization of the team

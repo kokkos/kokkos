@@ -144,33 +144,20 @@ void HostThreadTeamData::organize_pool
 
 void HostThreadTeamData::disband_pool()
 {
-  const bool ok_root = 0 != m_pool_scratch && this == pool_member(0);
-
-  if ( ok_root ) {
-    int const size = m_pool_size ;
-
-    HostThreadTeamData ** const pool =
-      (HostThreadTeamData **) (m_pool_scratch + m_pool_members);
-
-    for ( int rank = 0 ; rank < size ; ++rank ) {
-      HostThreadTeamData * const mem = pool[ rank ] ; pool[rank] = 0 ;
-      mem->m_pool_scratch = 0 ;
-      mem->m_team_scratch = 0 ;
-      mem->m_pool_rank    = 0 ;
-      mem->m_pool_size    = 0 ;
-      mem->m_team_rank    = 0 ;
-      mem->m_team_size    = 0 ;
-      mem->m_team_alloc   = 0 ;
-      mem->m_league_rank  = 0 ;
-      mem->m_league_size  = 0 ;
-      mem->m_pool_rendezvous_step = 0 ;
-      mem->m_team_rendezvous_step = 0 ;
-    }
-  }
-  else {
-    Kokkos::Impl::throw_runtime_exception("Kokkos::Impl::HostThreadTeamData::disband_pool ERROR pool does not exist");
-    // Error
-  }
+   m_work_range.first  = -1 ;
+   m_work_range.second = -1 ;
+   m_pool_scratch = 0 ;
+   m_team_scratch = 0 ;
+   m_pool_rank    = 0 ;
+   m_pool_size    = 1 ;
+   m_team_base    = 0 ;
+   m_team_rank    = 0 ;
+   m_team_size    = 1 ;
+   m_team_alloc   = 1 ;
+   m_league_rank  = 0 ;
+   m_league_size  = 1 ;
+   m_pool_rendezvous_step = 0 ;
+   m_team_rendezvous_step = 0 ;
 }
 
 int HostThreadTeamData::organize_team( const int team_size )

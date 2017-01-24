@@ -55,25 +55,6 @@
 #include <fstream>
 
 //----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Impl {
-
-// Resize thread team data scratch memory
-void openmp_resize_thread_team_data( size_t pool_reduce_bytes
-                                   , size_t team_reduce_bytes
-                                   , size_t team_shared_bytes
-                                   , size_t thread_local_bytes );
-
-// Get thread team data structure for omp_get_thread_num()
-HostThreadTeamData * openmp_get_thread_team_data();
-
-// Get thread team data structure for rank
-HostThreadTeamData * openmp_get_thread_team_data( int );
-
-} // namespace Impl
-} // namespace Kokkos
-
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
@@ -85,41 +66,19 @@ namespace Impl {
 class OpenMPexec {
 public:
 
+  friend class Kokkos::OpenMP ;
+
   enum { MAX_THREAD_COUNT = 4096 };
 
 private:
 
-  static OpenMPexec * m_pool[ MAX_THREAD_COUNT ]; // Indexed by: m_pool_rank_rev
-
   static int          m_pool_topo[ 4 ];
   static int          m_map_rank[ MAX_THREAD_COUNT ];
 
-  friend class Kokkos::OpenMP ;
+  static HostThreadTeamData * m_pool[ MAX_THREAD_COUNT ];
 
-  int const  m_pool_rank ;
-  int const  m_pool_rank_rev ;
-  int const  m_scratch_exec_end ;
-  int const  m_scratch_reduce_end ;
-  int const  m_scratch_thread_end ;
-
-  int volatile  m_barrier_state ;
-
-  // Members for dynamic scheduling
-  // Which thread am I stealing from currently
-  int m_current_steal_target;
-  // This thread's owned work_range
-  Kokkos::pair<long,long> m_work_range KOKKOS_ALIGN_16;
-  // Team Offset if one thread determines work_range for others
-  long m_team_work_index;
-
-  // Is this thread stealing (i.e. its owned work_range is exhausted
-  bool m_stealing;
-
-  OpenMPexec();
-  OpenMPexec( const OpenMPexec & );
-  OpenMPexec & operator = ( const OpenMPexec & );
-
-  static void clear_scratch();
+  static
+  void clear_thread_data();
 
 public:
 
@@ -133,47 +92,9 @@ public:
   inline static
   int pool_size( int depth = 0 ) { return m_pool_topo[ depth ]; }
 
-  inline static
-  OpenMPexec * pool_rev( int pool_rank_rev ) { return m_pool[ pool_rank_rev ]; }
-
-  inline int pool_rank() const { return m_pool_rank ; }
-  inline int pool_rank_rev() const { return m_pool_rank_rev ; }
-
-  inline long team_work_index() const { return m_team_work_index ; }
-
-  inline int scratch_reduce_size() const
-    { return m_scratch_reduce_end - m_scratch_exec_end ; }
-
-  inline int scratch_thread_size() const
-    { return m_scratch_thread_end - m_scratch_reduce_end ; }
-
-  inline void * scratch_reduce() const { return ((char *) this) + m_scratch_exec_end ; }
-  inline void * scratch_thread() const { return ((char *) this) + m_scratch_reduce_end ; }
-
-  inline
-  void state_wait( int state )
-    { Impl::spinwait( m_barrier_state , state ); }
-
-  inline
-  void state_set( int state ) { m_barrier_state = state ; }
-
-  ~OpenMPexec() {}
-
-  OpenMPexec( const int arg_poolRank
-            , const int arg_scratch_exec_size
-            , const int arg_scratch_reduce_size
-            , const int arg_scratch_thread_size )
-    : m_pool_rank( arg_poolRank )
-    , m_pool_rank_rev( pool_size() - ( arg_poolRank + 1 ) )
-    , m_scratch_exec_end( arg_scratch_exec_size )
-    , m_scratch_reduce_end( m_scratch_exec_end   + arg_scratch_reduce_size )
-    , m_scratch_thread_end( m_scratch_reduce_end + arg_scratch_thread_size )
-    , m_barrier_state(0)
-    {}
-
   static void finalize();
 
-  static void initialize( const unsigned  team_count ,
+  static void initialize( const unsigned team_count ,
                           const unsigned threads_per_team ,
                           const unsigned numa_count ,
                           const unsigned cores_per_numa );
@@ -181,133 +102,20 @@ public:
   static void verify_is_process( const char * const );
   static void verify_initialized( const char * const );
 
-  static void resize_scratch( size_t reduce_size , size_t thread_size );
+
+  static
+  void resize_thread_data( size_t pool_reduce_bytes
+                         , size_t team_reduce_bytes
+                         , size_t team_shared_bytes
+                         , size_t thread_local_bytes );
 
   inline static
-  OpenMPexec * get_thread_omp() { return m_pool[ m_map_rank[ omp_get_thread_num() ] ]; }
+  HostThreadTeamData * get_thread_data() noexcept
+    { return m_pool[ m_map_rank[ omp_get_thread_num() ] ]; }
 
-  /* Dynamic Scheduling related functionality */
-  // Initialize the work range for this thread
-  inline void set_work_range(const long& begin, const long& end, const long& chunk_size) {
-    m_work_range.first = (begin+chunk_size-1)/chunk_size;
-    m_work_range.second = end>0?(end+chunk_size-1)/chunk_size:m_work_range.first;
-  }
-
-  // Claim and index from this thread's range from the beginning
-  inline long get_work_index_begin () {
-    Kokkos::pair<long,long> work_range_new = m_work_range;
-    Kokkos::pair<long,long> work_range_old = work_range_new;
-    if(work_range_old.first>=work_range_old.second)
-      return -1;
-
-    work_range_new.first+=1;
-
-    bool success = false;
-    while(!success) {
-      work_range_new = Kokkos::atomic_compare_exchange(&m_work_range,work_range_old,work_range_new);
-      success = ( (work_range_new == work_range_old) ||
-                  (work_range_new.first>=work_range_new.second));
-      work_range_old = work_range_new;
-      work_range_new.first+=1;
-    }
-    if(work_range_old.first<work_range_old.second)
-      return work_range_old.first;
-    else
-      return -1;
-  }
-
-  // Claim and index from this thread's range from the end
-  inline long get_work_index_end () {
-    Kokkos::pair<long,long> work_range_new = m_work_range;
-    Kokkos::pair<long,long> work_range_old = work_range_new;
-    if(work_range_old.first>=work_range_old.second)
-      return -1;
-    work_range_new.second-=1;
-    bool success = false;
-    while(!success) {
-      work_range_new = Kokkos::atomic_compare_exchange(&m_work_range,work_range_old,work_range_new);
-      success = ( (work_range_new == work_range_old) ||
-                  (work_range_new.first>=work_range_new.second) );
-      work_range_old = work_range_new;
-      work_range_new.second-=1;
-    }
-    if(work_range_old.first<work_range_old.second)
-      return work_range_old.second-1;
-    else
-      return -1;
-  }
-
-  // Reset the steal target
-  inline void reset_steal_target() {
-    m_current_steal_target = (m_pool_rank+1)%m_pool_topo[0];
-    m_stealing = false;
-  }
-
-  // Reset the steal target
-  inline void reset_steal_target(int team_size) {
-    m_current_steal_target = (m_pool_rank_rev+team_size);
-    if(m_current_steal_target>=m_pool_topo[0])
-      m_current_steal_target = 0;//m_pool_topo[0]-1;
-    m_stealing = false;
-  }
-
-  // Get a steal target; start with my-rank + 1 and go round robin, until arriving at this threads rank
-  // Returns -1 fi no active steal target available
-  inline int get_steal_target() {
-    while(( m_pool[m_current_steal_target]->m_work_range.second <=
-            m_pool[m_current_steal_target]->m_work_range.first  ) &&
-          (m_current_steal_target!=m_pool_rank) ) {
-      m_current_steal_target = (m_current_steal_target+1)%m_pool_topo[0];
-    }
-    if(m_current_steal_target == m_pool_rank)
-      return -1;
-    else
-      return m_current_steal_target;
-  }
-
-  inline int get_steal_target(int team_size) {
-
-    while(( m_pool[m_current_steal_target]->m_work_range.second <=
-            m_pool[m_current_steal_target]->m_work_range.first  ) &&
-          (m_current_steal_target!=m_pool_rank_rev) ) {
-      if(m_current_steal_target + team_size < m_pool_topo[0])
-        m_current_steal_target = (m_current_steal_target+team_size);
-      else
-        m_current_steal_target = 0;
-    }
-
-    if(m_current_steal_target == m_pool_rank_rev)
-      return -1;
-    else
-      return m_current_steal_target;
-  }
-
-  inline long steal_work_index (int team_size = 0) {
-    long index = -1;
-    int steal_target = team_size>0?get_steal_target(team_size):get_steal_target();
-    while ( (steal_target != -1) && (index == -1)) {
-      index = m_pool[steal_target]->get_work_index_end();
-      if(index == -1)
-        steal_target = team_size>0?get_steal_target(team_size):get_steal_target();
-    }
-    return index;
-  }
-
-  // Get a work index. Claim from owned range until its exhausted, then steal from other thread
-  inline long get_work_index (int team_size = 0) {
-    long work_index = -1;
-    if(!m_stealing) work_index = get_work_index_begin();
-
-    if( work_index == -1) {
-      memory_fence();
-      m_stealing = true;
-      work_index = steal_work_index(team_size);
-    }
-    m_team_work_index = work_index;
-    memory_fence();
-    return work_index;
-  }
-
+  inline static
+  HostThreadTeamData * get_thread_data( int i ) noexcept
+    { return m_pool[i]; }
 };
 
 } // namespace Impl

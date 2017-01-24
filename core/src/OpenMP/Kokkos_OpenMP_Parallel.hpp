@@ -111,7 +111,7 @@ private:
     {
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *openmp_get_thread_team_data();
+        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
 
         const WorkRange range( m_policy, data.pool_rank(), data.pool_size() );
 
@@ -139,7 +139,7 @@ private:
 
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *openmp_get_thread_team_data();
+        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
 
         data.set_work_partition( nwork );
 
@@ -262,7 +262,7 @@ private:
     {
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *openmp_get_thread_team_data();
+        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
 
         const WorkRange range( m_policy, data.pool_rank(), data.pool_size() );
 
@@ -293,7 +293,7 @@ private:
 
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *openmp_get_thread_team_data();
+        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
 
         data.set_work_partition( nwork );
 
@@ -330,7 +330,7 @@ public:
       const size_t pool_reduce_bytes =
         Analysis::value_size( ReducerConditional::select(m_functor, m_reducer));
 
-      openmp_resize_thread_team_data( pool_reduce_bytes
+      OpenMPexec::resize_thread_data( pool_reduce_bytes
                                     , 0 // team_reduce_bytes
                                     , 0 // team_shared_bytes
                                     , 0 // thread_local_bytes
@@ -340,12 +340,12 @@ public:
 
       // Reduction:
 
-      const pointer_type ptr = pointer_type( openmp_get_thread_team_data(0)->pool_reduce_local() );
+      const pointer_type ptr = pointer_type( OpenMPexec::get_thread_data(0)->pool_reduce_local() );
 
       for ( int i = 1 ; i < OpenMPexec::pool_size() ; ++i ) {
         ValueJoin::join( ReducerConditional::select(m_functor , m_reducer)
                        , ptr
-                       , openmp_get_thread_team_data(i)->pool_reduce_local() );
+                       , OpenMPexec::get_thread_data(i)->pool_reduce_local() );
       }
 
       Kokkos::Impl::FunctorFinal<  ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , ptr );
@@ -475,7 +475,7 @@ public:
       const int    value_count       = Analysis::value_count( m_functor );
       const size_t pool_reduce_bytes = 2 * Analysis::value_size( m_functor );
 
-      openmp_resize_thread_team_data( pool_reduce_bytes
+      OpenMPexec::resize_thread_data( pool_reduce_bytes
                                     , 0 // team_reduce_bytes
                                     , 0 // team_shared_bytes
                                     , 0 // thread_local_bytes
@@ -483,7 +483,7 @@ public:
 
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *openmp_get_thread_team_data();
+        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
 
         const WorkRange range( m_policy, data.pool_rank(), data.pool_size() );
 
@@ -667,7 +667,7 @@ public:
       const size_t team_shared_size = m_shmem_size + m_policy.scratch_size(1);
       const size_t thread_local_size = 0 ; // Never shrinks
 
-      openmp_resize_thread_team_data( pool_reduce_size
+      OpenMPexec::resize_thread_data( pool_reduce_size
                                     , team_reduce_size
                                     , team_shared_size
                                     , thread_local_size );
@@ -675,7 +675,7 @@ public:
 
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *openmp_get_thread_team_data();
+        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
 
         if ( data.organize_team( m_policy.team_size() ) ) {
 
@@ -841,7 +841,7 @@ public:
       const size_t team_shared_size = m_shmem_size + m_policy.scratch_size(1);
       const size_t thread_local_size = 0 ; // Never shrinks
 
-      openmp_resize_thread_team_data( pool_reduce_size
+      OpenMPexec::resize_thread_data( pool_reduce_size
                                     , team_reduce_size
                                     , team_shared_size
                                     , thread_local_size );
@@ -849,7 +849,7 @@ public:
 
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *openmp_get_thread_team_data();
+        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
 
         if ( data.organize_team( m_policy.team_size() ) ) {
 
@@ -869,12 +869,12 @@ public:
 
       // Reduction:
 
-      const pointer_type ptr = pointer_type( openmp_get_thread_team_data(0)->pool_reduce_local() );
+      const pointer_type ptr = pointer_type( OpenMPexec::get_thread_data(0)->pool_reduce_local() );
 
       for ( int i = 1 ; i < OpenMPexec::pool_size() ; ++i ) {
         ValueJoin::join( ReducerConditional::select(m_functor , m_reducer)
                        , ptr
-                       , openmp_get_thread_team_data(i)->pool_reduce_local() );
+                       , OpenMPexec::get_thread_data(i)->pool_reduce_local() );
       }
 
       Kokkos::Impl::FunctorFinal<  ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , ptr );

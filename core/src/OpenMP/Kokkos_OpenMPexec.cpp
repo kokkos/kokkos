@@ -86,7 +86,7 @@ int OpenMPexec::m_map_rank[ OpenMPexec::MAX_THREAD_COUNT ] = { 0 };
 
 int OpenMPexec::m_pool_topo[ 4 ] = { 0 };
 
-OpenMPexec * OpenMPexec::m_pool[ OpenMPexec::MAX_THREAD_COUNT ] = { 0 };
+HostThreadTeamData * OpenMPexec::m_pool[ OpenMPexec::MAX_THREAD_COUNT ] = { 0 };
 
 void OpenMPexec::verify_is_process( const char * const label )
 {
@@ -113,70 +113,6 @@ void OpenMPexec::verify_initialized( const char * const label )
 
 }
 
-void OpenMPexec::clear_scratch()
-{
-#pragma omp parallel
-  {
-    const int rank_rev = m_map_rank[ omp_get_thread_num() ];
-    typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > Record ;
-    if ( m_pool[ rank_rev ] ) {
-      Record * const r = Record::get_record( m_pool[ rank_rev ] );
-      m_pool[ rank_rev ] = 0 ;
-      Record::decrement( r );
-    }
-  }
-/* END #pragma omp parallel */
-}
-
-void OpenMPexec::resize_scratch( size_t reduce_size , size_t thread_size )
-{
-  enum { ALIGN_MASK = Kokkos::Impl::MEMORY_ALIGNMENT - 1 };
-  enum { ALLOC_EXEC = ( sizeof(OpenMPexec) + ALIGN_MASK ) & ~ALIGN_MASK };
-
-  const size_t old_reduce_size = m_pool[0] ? m_pool[0]->m_scratch_reduce_end : 0 ;
-  const size_t old_thread_size = m_pool[0] ? m_pool[0]->m_scratch_thread_end - m_pool[0]->m_scratch_reduce_end : 0 ;
-
-  reduce_size = ( reduce_size + ALIGN_MASK ) & ~ALIGN_MASK ;
-  thread_size = ( thread_size + ALIGN_MASK ) & ~ALIGN_MASK ;
-
-  // Requesting allocation and old allocation is too small:
-
-  const bool allocate = ( old_reduce_size < reduce_size ) ||
-                        ( old_thread_size < thread_size );
-
-  if ( allocate ) {
-    if ( reduce_size < old_reduce_size ) { reduce_size = old_reduce_size ; }
-    if ( thread_size < old_thread_size ) { thread_size = old_thread_size ; }
-  }
-
-  const size_t alloc_size = allocate ? ALLOC_EXEC + reduce_size + thread_size : 0 ;
-  const int    pool_size  = m_pool_topo[0] ;
-
-  if ( allocate ) {
-
-    clear_scratch();
-
-#pragma omp parallel
-    {
-      const int rank_rev = m_map_rank[ omp_get_thread_num() ];
-      const int rank     = pool_size - ( rank_rev + 1 );
-
-      typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > Record ;
-
-      Record * const r = Record::allocate( Kokkos::HostSpace()
-                                         , "openmp_scratch"
-                                         , alloc_size );
-
-      Record::increment( r );
-
-      m_pool[ rank_rev ] = reinterpret_cast<OpenMPexec*>( r->data() );
-
-      new ( m_pool[ rank_rev ] ) OpenMPexec( rank , ALLOC_EXEC , reduce_size , thread_size );
-    }
-/* END #pragma omp parallel */
-  }
-}
-
 } // namespace Impl
 } // namespace Kokkos
 
@@ -185,43 +121,35 @@ void OpenMPexec::resize_scratch( size_t reduce_size , size_t thread_size )
 
 namespace Kokkos {
 namespace Impl {
-namespace {
 
-int g_openmp_thread_team_rank[ HostThreadTeamData::max_pool_members ] = { 0 };
-
-HostThreadTeamData * g_openmp_thread_team_data[ HostThreadTeamData::max_pool_members ] = { 0 };
-
-} // namespace
-
-
-void openmp_clear_thread_team_data()
+void OpenMPexec::clear_thread_data()
 {
   const size_t member_bytes =
     sizeof(int64_t) *
     HostThreadTeamData::align_to_int64( sizeof(HostThreadTeamData) );
 
   const int old_alloc_bytes =
-    g_openmp_thread_team_data[0] ?
-    ( member_bytes + g_openmp_thread_team_data[0]->scratch_bytes() ) : 0 ;
-
-  if ( old_alloc_bytes ) { g_openmp_thread_team_data[0]->disband_pool(); }
+    m_pool[0] ? ( member_bytes + m_pool[0]->scratch_bytes() ) : 0 ;
 
   Kokkos::HostSpace space ;
 
 #pragma omp parallel
   {
-    const int rank = g_openmp_thread_team_rank[ omp_get_thread_num() ];
+    const int rank = m_map_rank[ omp_get_thread_num() ];
 
-    if ( old_alloc_bytes ) {
-      space.deallocate( g_openmp_thread_team_data[rank] , old_alloc_bytes );
+    if ( 0 != m_pool[rank] ) {
+
+      m_pool[rank]->disband_pool();
+
+      space.deallocate( m_pool[rank] , old_alloc_bytes );
+
+      m_pool[rank] = 0 ;
     }
-
-    g_openmp_thread_team_data[ rank ] = 0 ;
   }
 /* END #pragma omp parallel */
 }
 
-void openmp_resize_thread_team_data( size_t pool_reduce_bytes
+void OpenMPexec::resize_thread_data( size_t pool_reduce_bytes
                                    , size_t team_reduce_bytes
                                    , size_t team_shared_bytes
                                    , size_t thread_local_bytes )
@@ -230,7 +158,7 @@ void openmp_resize_thread_team_data( size_t pool_reduce_bytes
     sizeof(int64_t) *
     HostThreadTeamData::align_to_int64( sizeof(HostThreadTeamData) );
 
-  HostThreadTeamData * root = g_openmp_thread_team_data[0] ;
+  HostThreadTeamData * root = m_pool[0] ;
 
   const size_t old_pool_reduce  = root ? root->pool_reduce_bytes() : 0 ;
   const size_t old_team_reduce  = root ? root->team_reduce_bytes() : 0 ;
@@ -246,8 +174,6 @@ void openmp_resize_thread_team_data( size_t pool_reduce_bytes
                         ( old_thread_local < thread_local_bytes );
 
   if ( allocate ) {
-
-    if ( root ) { root->disband_pool(); root = 0 ; }
 
     if ( pool_reduce_bytes < old_pool_reduce ) { pool_reduce_bytes = old_pool_reduce ; }
     if ( team_reduce_bytes < old_team_reduce ) { team_reduce_bytes = old_team_reduce ; }
@@ -267,17 +193,20 @@ void openmp_resize_thread_team_data( size_t pool_reduce_bytes
 
 #pragma omp parallel
     {
-      const int rank = g_openmp_thread_team_rank[ omp_get_thread_num() ];
+      const int rank = m_map_rank[ omp_get_thread_num() ];
 
-      if ( old_alloc_bytes ) {
-        space.deallocate( g_openmp_thread_team_data[rank] , old_alloc_bytes );
+      if ( 0 != m_pool[rank] ) {
+
+        m_pool[rank]->disband_pool();
+
+        space.deallocate( m_pool[rank] , old_alloc_bytes );
       }
 
       void * const ptr = space.allocate( alloc_bytes );
 
-      g_openmp_thread_team_data[ rank ] = new( ptr ) HostThreadTeamData();
+      m_pool[ rank ] = new( ptr ) HostThreadTeamData();
 
-      g_openmp_thread_team_data[ rank ]->
+      m_pool[ rank ]->
         scratch_assign( ((char *)ptr) + member_bytes
                       , alloc_bytes
                       , pool_reduce_bytes
@@ -287,18 +216,8 @@ void openmp_resize_thread_team_data( size_t pool_reduce_bytes
     }
 /* END #pragma omp parallel */
 
-    HostThreadTeamData::organize_pool( g_openmp_thread_team_data , pool_size );
+    HostThreadTeamData::organize_pool( m_pool , pool_size );
   }
-}
-
-HostThreadTeamData * openmp_get_thread_team_data( int i )
-{
-  return g_openmp_thread_team_data[ i ];
-}
-
-HostThreadTeamData * openmp_get_thread_team_data()
-{
-  return g_openmp_thread_team_data[ g_openmp_thread_team_rank[ omp_get_thread_num() ] ];
 }
 
 } // namespace Impl
@@ -321,14 +240,14 @@ void OpenMP::initialize( unsigned thread_count ,
   // Before any other call to OMP query the maximum number of threads
   // and save the value for re-initialization unit testing.
 
-  //Using omp_get_max_threads(); is problematic in conjunction with
-  //Hwloc on Intel (essentially an initial call to the OpenMP runtime
-  //without a parallel region before will set a process mask for a single core
-  //The runtime will than bind threads for a parallel region to other cores on the
-  //entering the first parallel region and make the process mask the aggregate of
-  //the thread masks. The intend seems to be to make serial code run fast, if you
-  //compile with OpenMP enabled but don't actually use parallel regions or so
-  //static int omp_max_threads = omp_get_max_threads();
+  // Using omp_get_max_threads(); is problematic in conjunction with
+  // Hwloc on Intel (essentially an initial call to the OpenMP runtime
+  // without a parallel region before will set a process mask for a single core
+  // The runtime will than bind threads for a parallel region to other cores on the
+  // entering the first parallel region and make the process mask the aggregate of
+  // the thread masks. The intend seems to be to make serial code run fast, if you
+  // compile with OpenMP enabled but don't actually use parallel regions or so
+  // static int omp_max_threads = omp_get_max_threads();
   int nthreads = 0;
   #pragma omp parallel
   {
@@ -392,18 +311,12 @@ void OpenMP::initialize( unsigned thread_count ,
         // Call to 'bind_this_thread' is not thread safe so place this whole block in a critical region.
         // Call to 'new' may not be thread safe as well.
 
-        // Reverse the rank for threads so that the scan operation reduces to the highest rank thread.
-
         const unsigned omp_rank    = omp_get_thread_num();
         const unsigned thread_r    = Impl::s_using_hwloc && Kokkos::hwloc::can_bind_threads()
                                    ? Kokkos::hwloc::bind_this_thread( thread_count , threads_coord )
                                    : omp_rank ;
 
         Impl::OpenMPexec::m_map_rank[ omp_rank ] = thread_r ;
-
-        // New, unified host thread team data:
-        Impl::g_openmp_thread_team_rank[ omp_rank ] =
-          thread_count - ( thread_r + 1 );
       }
 /* END #pragma omp critical */
     }
@@ -414,8 +327,6 @@ void OpenMP::initialize( unsigned thread_count ,
       Impl::OpenMPexec::m_pool_topo[1] = Impl::s_using_hwloc ? thread_count / use_numa_count : thread_count;
       Impl::OpenMPexec::m_pool_topo[2] = Impl::s_using_hwloc ? thread_count / ( use_numa_count * use_cores_per_numa ) : 1;
 
-      Impl::OpenMPexec::resize_scratch( 1024 , 1024 );
-
       // New, unified host thread team data:
       {
         size_t pool_reduce_bytes  =   32 * thread_count ;
@@ -423,7 +334,7 @@ void OpenMP::initialize( unsigned thread_count ,
         size_t team_shared_bytes  = 1024 * thread_count ;
         size_t thread_local_bytes = 1024 ;
 
-        Impl::openmp_resize_thread_team_data( pool_reduce_bytes
+        Impl::OpenMPexec::resize_thread_data( pool_reduce_bytes
                                             , team_reduce_bytes
                                             , team_shared_bytes
                                             , thread_local_bytes
@@ -463,10 +374,8 @@ void OpenMP::finalize()
   Impl::OpenMPexec::verify_initialized( "OpenMP::finalize" );
   Impl::OpenMPexec::verify_is_process( "OpenMP::finalize" );
 
-  Impl::OpenMPexec::clear_scratch();
-
   // New, unified host thread team data:
-  Impl::openmp_clear_thread_team_data();
+  Impl::OpenMPexec::clear_thread_data();
 
   Impl::OpenMPexec::m_pool_topo[0] = 0 ;
   Impl::OpenMPexec::m_pool_topo[1] = 0 ;
