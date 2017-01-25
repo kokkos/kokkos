@@ -40,8 +40,8 @@
 // ************************************************************************
 //@HEADER
 */
-#ifndef KOKKOS_TEST_SERIAL_HPP
-#define KOKKOS_TEST_SERIAL_HPP
+#ifndef KOKKOS_TEST_SERIALHPP
+#define KOKKOS_TEST_SERIALHPP
 #include <gtest/gtest.h>
 
 #include <Kokkos_Macros.hpp>

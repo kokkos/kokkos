@@ -68,7 +68,7 @@
 
 namespace Test {
 
-#ifdef KOKKOS_ENABLE_OPENMP
+#ifdef KOKKOS_HAVE_OPENMP
 class openmp : public ::testing::Test {
 protected:
   static void SetUpTestCase()

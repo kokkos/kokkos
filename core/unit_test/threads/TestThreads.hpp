@@ -40,8 +40,8 @@
 // ************************************************************************
 //@HEADER
 */
-#ifndef KOKKOS_TEST_THREADS_HPP
-#define KOKKOS_TEST_THREADS_HPP
+#ifndef KOKKOS_TEST_THREADSHPP
+#define KOKKOS_TEST_THREADSHPP
 #include <gtest/gtest.h>
 
 #include <Kokkos_Macros.hpp>

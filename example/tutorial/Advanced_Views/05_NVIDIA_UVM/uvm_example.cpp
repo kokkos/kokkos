@@ -47,7 +47,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#ifdef KOKKOS_ENABLE_CUDA
+#ifdef KOKKOS_HAVE_CUDA
 typedef Kokkos::View<double*, Kokkos::CudaUVMSpace> view_type;
 typedef Kokkos::View<int**, Kokkos::CudaUVMSpace> idx_type;
 #else

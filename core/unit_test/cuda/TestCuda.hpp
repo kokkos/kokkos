@@ -40,8 +40,8 @@
 // ************************************************************************
 //@HEADER
 */
-#ifndef KOKKOS_TEST_CUDA_HPP
-#define KOKKOS_TEST_CUDA_HPP
+#ifndef KOKKOS_TEST_CUDAHPP
+#define KOKKOS_TEST_CUDAHPP
 #include <gtest/gtest.h>
 
 #include <Kokkos_Macros.hpp>

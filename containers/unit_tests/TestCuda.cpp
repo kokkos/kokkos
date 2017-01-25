@@ -69,7 +69,7 @@
 //----------------------------------------------------------------------------
 
 
-#ifdef KOKKOS_ENABLE_CUDA
+#ifdef KOKKOS_HAVE_CUDA
 
 namespace Test {
 
@@ -225,5 +225,5 @@ TEST_F(cuda, ErrorReporter)
 
 }
 
-#endif  /* #ifdef KOKKOS_ENABLE_CUDA */
+#endif  /* #ifdef KOKKOS_HAVE_CUDA */
 
