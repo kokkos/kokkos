@@ -47,10 +47,10 @@
 #include <stddef.h>
 
 #ifdef _MSC_VER
-#undef KOKKOS_ENABLE_LIBRT
+#undef KOKKOS_USE_LIBRT
 #include <gettimeofday.c>
 #else
-#ifdef KOKKOS_ENABLE_LIBRT
+#ifdef KOKKOS_USE_LIBRT
 #include <ctime>
 #else
 #include <sys/time.h>
@@ -63,7 +63,7 @@ namespace Kokkos {
 
 class Timer {
 private:
-  #ifdef KOKKOS_ENABLE_LIBRT
+  #ifdef KOKKOS_USE_LIBRT
 	struct timespec m_old;
   #else
 	struct timeval m_old ;
@@ -74,7 +74,7 @@ public:
 
   inline
   void reset() {
-    #ifdef KOKKOS_ENABLE_LIBRT
+    #ifdef KOKKOS_USE_LIBRT
 	  clock_gettime(CLOCK_REALTIME, &m_old);
     #else
 	  gettimeofday( & m_old , ((struct timezone *) NULL ) );
@@ -90,7 +90,7 @@ public:
   inline
   double seconds() const
   {
-    #ifdef KOKKOS_ENABLE_LIBRT
+    #ifdef KOKKOS_USE_LIBRT
       struct timespec m_new;
       clock_gettime(CLOCK_REALTIME, &m_new);
 

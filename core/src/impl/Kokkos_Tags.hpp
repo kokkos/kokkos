@@ -51,17 +51,17 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-/** KOKKOS_IMPL_HAS_TYPE( Type )
+/** KOKKOS_HAVE_TYPE( Type )
  *
  * defines a meta-function that check if a type expose an internal typedef or
  * type alias which matches Type
  *
  * e.g.
- *   KOKKOS_IMPL_HAS_TYPE( array_layout );
+ *   KOKKOS_HAVE_TYPE( array_layout );
  *   struct Foo { using array_layout = void; };
  *   have_array_layout<Foo>::value == 1;
  */
-#define KOKKOS_IMPL_HAS_TYPE( TYPE ) \
+#define KOKKOS_HAVE_TYPE( TYPE ) \
 template <typename T> struct have_ ## TYPE { \
 private: \
   template <typename U, typename = void > struct X : std::false_type {}; \

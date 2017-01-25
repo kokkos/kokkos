@@ -127,7 +127,7 @@ public:
 
 //----------------------------------------------------------------------------
 
-#ifdef KOKKOS_ENABLE_MPI
+#ifdef KOKKOS_HAVE_MPI
 
 namespace TestFEMesh {
 
@@ -190,7 +190,7 @@ void verify_parallel(
 
 } // namespace TestFEMesh
 
-#else /* ! #ifdef KOKKOS_ENABLE_MPI */
+#else /* ! #ifdef KOKKOS_HAVE_MPI */
 
 namespace TestFEMesh {
 
@@ -205,7 +205,7 @@ void verify_parallel(
 
 } // namespace TestFEMesh
 
-#endif /* ! #ifdef KOKKOS_ENABLE_MPI */
+#endif /* ! #ifdef KOKKOS_HAVE_MPI */
 
 //----------------------------------------------------------------------------
 

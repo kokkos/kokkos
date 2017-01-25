@@ -45,7 +45,7 @@
 
 #include <Kokkos_Core.hpp>
 
-#if defined( KOKKOS_ENABLE_PTHREAD )
+#if defined( KOKKOS_HAVE_PTHREAD )
 
 #include <Kokkos_Bitset.hpp>
 #include <Kokkos_UnorderedMap.hpp>
@@ -190,5 +190,5 @@ TEST_F(threads, ErrorReporter)
 } // namespace Test
 
 
-#endif /* #if defined( KOKKOS_ENABLE_PTHREAD ) */
+#endif /* #if defined( KOKKOS_HAVE_PTHREAD ) */
 

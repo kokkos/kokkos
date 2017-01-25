@@ -61,7 +61,7 @@
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_HAVE_DEBUG
 #include<iostream>
 #endif
 

@@ -55,7 +55,7 @@
 
 namespace Test {
 
-#ifdef KOKKOS_ENABLE_SERIAL
+#ifdef KOKKOS_HAVE_SERIAL
 class serial : public ::testing::Test {
 protected:
   static void SetUpTestCase()
@@ -93,7 +93,7 @@ SERIAL_SORT_UNSIGNED(171)
 #undef SERIAL_RANDOM_XORSHIFT1024
 #undef SERIAL_SORT_UNSIGNED
 
-#endif // KOKKOS_ENABLE_SERIAL
+#endif // KOKKOS_HAVE_SERIAL
 } // namespace Test
 
 
