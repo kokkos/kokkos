@@ -45,7 +45,7 @@
 
 #include <Kokkos_Core.hpp>
 
-#if ! defined(KOKKOS_HAVE_SERIAL)
+#if ! defined(KOKKOS_ENABLE_SERIAL)
 #  error "It doesn't make sense to build this file unless the Kokkos::Serial device is enabled.  If you see this message, it probably means that there is an error in Kokkos' CMake build infrastructure."
 #else
 
@@ -178,6 +178,6 @@ TEST_F(serial, ErrorReporter)
 
 } // namespace Test
 
-#endif // KOKKOS_HAVE_SERIAL
+#endif // KOKKOS_ENABLE_SERIAL
 
 
