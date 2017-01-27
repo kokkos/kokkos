@@ -96,6 +96,18 @@ TEST_F( cuda , staticcrsgraph )
 {
   TestStaticCrsGraph::run_test_graph< Kokkos::Cuda >();
   TestStaticCrsGraph::run_test_graph2< Kokkos::Cuda >();
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(1, 0);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(1, 1000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(1, 10000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(1, 100000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(3, 0);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(3, 1000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(3, 10000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(3, 100000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(75, 0);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(75, 1000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(75, 10000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(75, 100000);
 }
 
 
