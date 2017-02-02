@@ -443,8 +443,12 @@ struct SharedTeamFunctor {
 
     if ((shared_A.ptr_on_device () == NULL && SHARED_COUNT > 0) ||
         (shared_B.ptr_on_device () == NULL && SHARED_COUNT > 0)) {
-      printf ("Failed to allocate shared memory of size %lu\n",
-              static_cast<unsigned long> (SHARED_COUNT));
+      printf ("member( %d/%d , %d/%d ) Failed to allocate shared memory of size %lu\n"
+             , ind.league_rank()
+             , ind.league_size()
+             , ind.team_rank()
+             , ind.team_size()
+             , static_cast<unsigned long> (SHARED_COUNT));
       ++update; // failure to allocate is an error
     }
     else {

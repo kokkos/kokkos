@@ -86,7 +86,7 @@
  *  KOKKOS_ENABLE_INTEL_ATOMICS
  *  KOKKOS_ENABLE_OPENMP_ATOMICS
  *
- *  A suite of 'KOKKOS_HAVE_PRAGMA_...' are defined for internal use.
+ *  A suite of 'KOKKOS_ENABLE_PRAGMA_...' are defined for internal use.
  *
  *  Macros for marking functions to run in an execution space:
  *
@@ -437,7 +437,7 @@
           ( defined ( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS ) ? 1 : 0 ) + \
           ( defined ( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL ) ? 1 : 0 ) )
 
-#error "More than one KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_* specified" ;
+#error "More than one KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_* specified" ;
 
 #endif
 
