@@ -124,8 +124,8 @@ build-cmake-kokkos:
 	echo "set(KOKKOS_CXX_STANDARD $(KOKKOS_CXX_STANDARD) CACHE STRING \"Kokkos C++ standard\")" >> kokkos.cmake
 	echo "set(KOKKOS_OPTIONS $(KOKKOS_OPTIONS) CACHE STRING \"Kokkos options\")" >> kokkos.cmake
 	echo "set(KOKKOS_CUDA_OPTIONS $(KOKKOS_CUDA_OPTIONS) CACHE STRING \"Kokkos Cuda options\")" >> kokkos.cmake
-	echo "if(NOT DEFINED ENV{CXX})" >> kokkos.cmake
-	echo "  set(CMAKE_CXX_COMPILER \"$(CXX)\")" >> kokkos.cmake
+	echo "if(NOT $ENV{CXX})" >> kokkos.cmake
+	echo '  message(WARNING "You are currently using compiler $${CMAKE_CXX_COMPILER} while Kokkos was built with $(CXX) ; make sure this is the behavior you intended to be.")' >> kokkos.cmake
 	echo "endif()" >> kokkos.cmake
 	echo "if(NOT DEFINED ENV{NVCC_WRAPPER})" >> kokkos.cmake
 	echo "  set(NVCC_WRAPPER \"$(NVCC_WRAPPER)\" CACHE FILEPATH \"Path to command nvcc_wrapper\")" >> kokkos.cmake
