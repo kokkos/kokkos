@@ -58,11 +58,20 @@ struct my_complex {
     im = 0.0;
     dummy = 0;
   }
+
   KOKKOS_INLINE_FUNCTION
   my_complex(const my_complex& src) {
     re = src.re;
     im = src.im;
     dummy = src.dummy;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  my_complex & operator = (const my_complex& src) {
+    re = src.re;
+    im = src.im;
+    dummy = src.dummy;
+    return *this ;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -177,8 +186,10 @@ struct functor_team_for {
       {
         values(team.team_rank ()) += i - team.league_rank () + team.league_size () + team.team_size ();
       });
+
       // Wait for all memory to be written
-      team.team_barrier ();
+      team.team_barrier();
+
       // One thread per team executes the comparison
       Kokkos::single(Kokkos::PerTeam(team),[&]()
       {
@@ -215,12 +226,13 @@ struct functor_team_reduce {
   void operator() (typename policy_type::member_type team) const {
 
     Scalar value = Scalar();
-    Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,131),[&] (int i, Scalar& val)
-    {
-      val += i - team.league_rank () + team.league_size () + team.team_size ();
-    },value);
+    Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,131),
+      [&] (int i, Scalar& val)
+      {
+        val += i - team.league_rank () + team.league_size () + team.team_size ();
+      },value);
 
-    team.team_barrier ();
+    team.team_barrier();
     Kokkos::single(Kokkos::PerTeam(team),[&]()
         {
          Scalar test = 0;
@@ -258,12 +270,10 @@ struct functor_team_reduce_join {
       {
         val += i - team.league_rank () + team.league_size () + team.team_size ();
       }
-      , [&] (volatile Scalar& val, const volatile Scalar& src)
-        {val+=src;}
-      , value
-    );
+      , [] (volatile Scalar& val, const volatile Scalar& src) {val+=src;}
+      , value );
 
-    team.team_barrier ();
+    team.team_barrier();
     Kokkos::single(Kokkos::PerTeam(team),[&]()
     {
          Scalar test = 0;
@@ -305,6 +315,7 @@ struct functor_team_vector_for {
               static_cast<unsigned int> (shmemSize));
     }
     else {
+      team.team_barrier();
       Kokkos::single(Kokkos::PerThread(team),[&] ()
       {
         values(team.team_rank ()) = 0;
@@ -318,7 +329,7 @@ struct functor_team_vector_for {
         });
       });
 
-      team.team_barrier ();
+      team.team_barrier();
       Kokkos::single(Kokkos::PerTeam(team),[&]()
       {
         Scalar test = 0;
@@ -359,7 +370,7 @@ struct functor_team_vector_reduce {
         val += i - team.league_rank () + team.league_size () + team.team_size ();
     },value);
 
-    team.team_barrier ();
+    team.team_barrier();
     Kokkos::single(Kokkos::PerTeam(team),[&]()
     {
       Scalar test = 0;
@@ -391,17 +402,16 @@ struct functor_team_vector_reduce_join {
   void operator() (typename policy_type::member_type team) const {
 
     Scalar value = 0;
+
     Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,131)
       , [&] (int i, Scalar& val)
       {
         val += i - team.league_rank () + team.league_size () + team.team_size ();
       }
-      , [&] (volatile Scalar& val, const volatile Scalar& src)
-        {val+=src;}
-      , value
-    );
+      , [] (volatile Scalar& val, const volatile Scalar& src) {val+=src;}
+      , value );
 
-    team.team_barrier ();
+    team.team_barrier();
     Kokkos::single(Kokkos::PerTeam(team),[&]()
     {
       Scalar test = 0;
