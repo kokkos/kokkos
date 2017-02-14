@@ -159,6 +159,7 @@ public:
   bool sort_within_bins;
 
 public:
+  BinSort() {}
 
   // Constructor: takes the keys, the binning_operator and optionally whether to sort within bins (default false)
   BinSort(const_key_view_type keys_, BinSortOp bin_op_,
@@ -269,6 +270,8 @@ struct BinOp1D {
   typename KeyViewType::const_value_type range_;
   typename KeyViewType::const_value_type min_;
 
+  BinOp1D() {}
+
   //Construct BinOp with number of bins, minimum value and maxuimum value
   BinOp1D(int max_bins__, typename KeyViewType::const_value_type min,
                                typename KeyViewType::const_value_type max )
@@ -302,12 +305,14 @@ struct BinOp3D {
   typename KeyViewType::non_const_value_type range_[3];
   typename KeyViewType::non_const_value_type min_[3];
 
+  BinOp3D() {}
+
   BinOp3D(int max_bins__[], typename KeyViewType::const_value_type min[],
                                typename KeyViewType::const_value_type max[] )
   {
-    max_bins_[0] = max_bins__[0]+1;
-    max_bins_[1] = max_bins__[1]+1;
-    max_bins_[2] = max_bins__[2]+1;
+    max_bins_[0] = max_bins__[0];
+    max_bins_[1] = max_bins__[1];
+    max_bins_[2] = max_bins__[2];
     mul_[0] = 1.0*max_bins__[0]/(max[0]-min[0]);
     mul_[1] = 1.0*max_bins__[1]/(max[1]-min[1]);
     mul_[2] = 1.0*max_bins__[2]/(max[2]-min[2]);
