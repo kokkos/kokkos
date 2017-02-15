@@ -265,12 +265,14 @@ public:
 
 template<class KeyViewType>
 struct BinOp1D {
-  const int max_bins_;
-  const double mul_;
+  int max_bins_;
+  double mul_;
   typename KeyViewType::const_value_type range_;
   typename KeyViewType::const_value_type min_;
 
-  BinOp1D() {}
+  BinOp1D():max_bins_(0),mul_(0.0),
+            range_(typename KeyViewType::const_value_type()),
+            min_(typename KeyViewType::const_value_type()) {}
 
   //Construct BinOp with number of bins, minimum value and maxuimum value
   BinOp1D(int max_bins__, typename KeyViewType::const_value_type min,
