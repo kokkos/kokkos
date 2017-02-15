@@ -166,14 +166,16 @@ IF(Kokkos_ENABLE_Cuda)
   )
 ENDIF()
 
-TRIBITS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_Default
-  SOURCES UnitTestMain.cpp TestDefaultDeviceType.cpp TestDefaultDeviceType_a.cpp
-  COMM serial mpi
-  NUM_MPI_PROCS 1
-  FAIL_REGULAR_EXPRESSION "  FAILED  "
-    TESTONLYLIBS kokkos_gtest
-)
+if (KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA)
+  TRIBITS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_Default
+    SOURCES UnitTestMain.cpp TestDefaultDeviceType.cpp TestDefaultDeviceType_a.cpp
+    COMM serial mpi
+    NUM_MPI_PROCS 1
+    FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest
+  )
+endif()
 
 foreach(INITTESTS_NUM RANGE 1 16)
 TRIBITS_ADD_EXECUTABLE_AND_TEST(

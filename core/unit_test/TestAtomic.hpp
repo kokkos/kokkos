@@ -318,42 +318,42 @@ T ExchLoop(int loop) {
   return val;
 }
 
-template<class T>
-T ExchLoopSerial(typename std::conditional<!std::is_same<T,Kokkos::complex<double> >::value,int,void>::type loop) {
-  T* data = new T[1];
-  T* data2 = new T[1];
-  data[0] = 0;
-  data2[0] = 0;
-  for(int i=0;i<loop;i++) {
-	T old = *data;
-	*data=(T) i;
-	*data2+=old;
-  }
+// template<class T>
+// T ExchLoopSerial(typename std::conditional<!std::is_same<T,Kokkos::complex<double> >::value,int,void>::type loop) {
+//   T* data = new T[1];
+//   T* data2 = new T[1];
+//   data[0] = 0;
+//   data2[0] = 0;
+//   for(int i=0;i<loop;i++) {
+// 	T old = *data;
+// 	*data=(T) i;
+// 	*data2+=old;
+//   }
+// 
+//   T val = *data2 + *data;
+//   delete [] data;
+//   delete [] data2;
+//   return val;
+// }
 
-  T val = *data2 + *data;
-  delete [] data;
-  delete [] data2;
-  return val;
-}
-
-template<class T>
-T ExchLoopSerial(typename std::conditional<std::is_same<T,Kokkos::complex<double> >::value,int,void>::type loop) {
-  T* data = new T[1];
-  T* data2 = new T[1];
-  data[0] = 0;
-  data2[0] = 0;
-  for(int i=0;i<loop;i++) {
-  T old = *data;
-  data->real() = (static_cast<double>(i));
-  data->imag() = 0;
-  *data2+=old;
-  }
-
-  T val = *data2 + *data;
-  delete [] data;
-  delete [] data2;
-  return val;
-}
+// template<class T>
+// T ExchLoopSerial(typename std::conditional<std::is_same<T,Kokkos::complex<double> >::value,int,void>::type loop) {
+//   T* data = new T[1];
+//   T* data2 = new T[1];
+//   data[0] = 0;
+//   data2[0] = 0;
+//   for(int i=0;i<loop;i++) {
+//   T old = *data;
+//   data->real() = (static_cast<double>(i));
+//   data->imag() = 0;
+//   *data2+=old;
+//   }
+// 
+//   T val = *data2 + *data;
+//   delete [] data;
+//   delete [] data2;
+//   return val;
+// }
 
 template<class T, class DeviceType >
 T LoopVariant(int loop, int test) {
@@ -370,7 +370,7 @@ T LoopVariantSerial(int loop, int test) {
   switch (test) {
     case 1: return AddLoopSerial<T>(loop);
     case 2: return CASLoopSerial<T>(loop);
-    case 3: return ExchLoopSerial<T>(loop);
+    // case 3: return ExchLoopSerial<T>(loop);
   }
   return 0;
 }
