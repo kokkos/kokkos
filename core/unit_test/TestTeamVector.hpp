@@ -527,6 +527,7 @@ struct functor_vec_red {
   void operator() (typename policy_type::member_type team) const {
     Scalar value = 0;
 
+    // When no reducer is given the default is summation
     Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(team,13),[&] (int i, Scalar& val)
     {
       val += i;
@@ -556,11 +557,14 @@ struct functor_vec_red_join {
 
   KOKKOS_INLINE_FUNCTION
   void operator() (typename policy_type::member_type team) const {
+
+    // Must initialize to identity value for the reduce operation,
+    // for this test (identity,operation) = ( 1 , *= )
     Scalar value = 1;
 
     Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(team,13)
       , [&] (int i, Scalar& val)
-      { val *= i; }
+      { val *= (i%5+1); }
       , [&] (Scalar& val, const Scalar& src)
       {val*=src;}
       , value
@@ -570,7 +574,7 @@ struct functor_vec_red_join {
     {
       Scalar test = 1;
       for(int i = 0; i < 13; i++) {
-        test*=i;
+        test*=(i%5+1);
       }
       if(test!=value) {
         printf("FAILED vector_par_reduce_join %i %i %f %f\n",team.league_rank(),team.team_rank(),(double) test,(double) value);
@@ -628,7 +632,7 @@ bool test_scalar(int nteams, int team_size, int test) {
   typename Kokkos::View<int,Kokkos::LayoutLeft,ExecutionSpace>::HostMirror h_flag("h_flag");
   h_flag() = 0 ;
   Kokkos::deep_copy(d_flag,h_flag);
-  
+
   if(test==0)
   Kokkos::parallel_for( std::string("A") , Kokkos::TeamPolicy<ExecutionSpace>(nteams,team_size,8),
       functor_vec_red<Scalar, ExecutionSpace>(d_flag));

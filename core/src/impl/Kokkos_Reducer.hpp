@@ -121,10 +121,6 @@ private:
   //
   // Provide defaults for missing optional operations
 
-  //template< class R , typename = void > struct COPY ;
-  //template< class R , typename = void > struct INIT ;
-  //template< class R , typename = void > struct JOIN ;
-
   template< class R , typename = void>
   struct COPY {
     KOKKOS_INLINE_FUNCTION static
@@ -156,26 +152,20 @@ private:
     void init( R const & r , value_type * dst ) { r.init( *dst ); }
   };
 
-  template< class R , typename = void > struct JOIN
+  template< class R , typename V , typename = void > struct JOIN
     {
       // If no join function then try operator()
       KOKKOS_INLINE_FUNCTION static
-      void join( R const & r
-               , value_type volatile * dst
-               , value_type volatile const * src )
+      void join( R const & r , V * dst , V const * src )
         { r.operator()(*dst,*src); }
     };
 
-  template< class R >
-  struct JOIN< R , decltype( ((R*)0)->join
-                             ( *((value_type volatile *)0)
-                             , *((value_type const volatile *)0) ) ) >
+  template< class R , typename V >
+  struct JOIN< R , V , decltype( ((R*)0)->join ( *((V *)0) , *((V const *)0) ) ) >
     {
       // If has join function use it
       KOKKOS_INLINE_FUNCTION static
-      void join( R const & r
-               , value_type volatile * dst
-               , value_type volatile const * src )
+      void join( R const & r , V * dst , V const * src )
         { r.join(*dst,*src); }
     };
 
@@ -231,11 +221,20 @@ public:
     }
 
   KOKKOS_INLINE_FUNCTION
+  void join( value_type * const dest
+           , value_type const * const src ) const noexcept
+    {
+      for ( int i = 0 ; i < length() ; ++i ) {
+        Reducer::template JOIN<ReduceOp,value_type>::join( (ReduceOp &) *this , dest + i , src + i );
+      }
+    }
+
+  KOKKOS_INLINE_FUNCTION
   void join( value_type volatile * const dest
            , value_type volatile const * const src ) const noexcept
     {
       for ( int i = 0 ; i < length() ; ++i ) {
-        Reducer::template JOIN<ReduceOp>::join( (ReduceOp &) *this , dest + i , src + i );
+        Reducer::template JOIN<ReduceOp,value_type volatile>::join( (ReduceOp &) *this , dest + i , src + i );
       }
     }
 

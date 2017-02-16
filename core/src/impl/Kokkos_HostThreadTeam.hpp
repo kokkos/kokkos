@@ -655,7 +655,7 @@ public:
       return *((ValueType*) m_data.team_reduce());
     }
 #else
-    { Kokkos::abort("HostThreadTeamMember team_reduce\n"); }
+    { Kokkos::abort("HostThreadTeamMember team_reduce\n"); return ValueType(); }
 #endif
 
 
@@ -716,7 +716,7 @@ public:
       return ((T*) m_data.team_reduce_local())[0];
     }
 #else
-    { Kokkos::abort("HostThreadTeamMember team_scan\n"); }
+    { Kokkos::abort("HostThreadTeamMember team_scan\n"); return T(); }
 #endif
 
 };
