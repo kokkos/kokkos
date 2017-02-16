@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,13 +36,13 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
 
-#ifndef KOKKOS_ARRAY
-#define KOKKOS_ARRAY
+#ifndef KOKKOS_ARRAY_HPP
+#define KOKKOS_ARRAY_HPP
 
 #include <type_traits>
 #include <algorithm>
@@ -59,7 +59,15 @@ template< class T      = void
         , class Proxy  = void
         >
 struct Array {
-  T m_elem[N];
+public:
+  /**
+   * The elements of this C array shall not be accessed directly. The data
+   * member has to be declared public to enable aggregate initialization as for
+   * std::array. We mark it as private in the documentation.
+   * @private
+   */
+  T m_internal_implementation_private_member_data[N];
+public:
 
   typedef T &                                 reference ;
   typedef typename std::add_const<T>::type &  const_reference ;
@@ -77,7 +85,7 @@ struct Array {
   reference operator[]( const iType & i )
     {
       static_assert( std::is_integral<iType>::value , "Must be integral argument" );
-      return m_elem[i];
+      return m_internal_implementation_private_member_data[i];
     }
 
   template< typename iType >
@@ -85,11 +93,17 @@ struct Array {
   const_reference operator[]( const iType & i ) const
     {
       static_assert( std::is_integral<iType>::value , "Must be integral argument" );
-      return m_elem[i];
+      return m_internal_implementation_private_member_data[i];
     }
 
-  KOKKOS_INLINE_FUNCTION pointer       data()       { return & m_elem[0] ; }
-  KOKKOS_INLINE_FUNCTION const_pointer data() const { return & m_elem[0] ; }
+  KOKKOS_INLINE_FUNCTION pointer       data()
+    {
+      return & m_internal_implementation_private_member_data[0];
+    }
+  KOKKOS_INLINE_FUNCTION const_pointer data() const
+    {
+      return & m_internal_implementation_private_member_data[0];
+    }
 
   // Do not default unless move and move-assignment are also defined
   // ~Array() = default ;
@@ -297,5 +311,5 @@ public:
 
 } // namespace Kokkos
 
-#endif /* #ifndef KOKKOS_ARRAY */
+#endif /* #ifndef KOKKOS_ARRAY_HPP */
 

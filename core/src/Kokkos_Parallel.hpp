@@ -59,9 +59,10 @@
 
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_Traits.hpp>
+#include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
 
-#ifdef KOKKOS_HAVE_DEBUG
+#ifdef KOKKOS_DEBUG
 #include<iostream>
 #endif
 

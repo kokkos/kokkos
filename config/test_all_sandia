@@ -522,11 +522,6 @@ single_build_and_test() {
         local cxxflags="$OPT_FLAG $compiler_warning_flags"
     fi
 
-    if [[ "$compiler" == cuda* ]]; then
-        cxxflags="--keep --keep-dir=$(pwd) $cxxflags"
-        export TMPDIR=$(pwd)
-    fi
-
     if [[ "$KOKKOS_CUDA_OPTIONS" != "" ]]; then
         local extra_args="$extra_args $KOKKOS_CUDA_OPTIONS"
     fi

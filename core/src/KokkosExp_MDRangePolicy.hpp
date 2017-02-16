@@ -313,7 +313,6 @@ void md_parallel_reduce( MDRange const& range
 
   //using range_policy = typename MDRange::range_policy;
   using range_policy = typename MDRange::impl_range_policy;
-
   Kokkos::parallel_reduce( str, range_policy(0, range.m_num_tiles).set_chunk_size(1), g, v );
 }
 

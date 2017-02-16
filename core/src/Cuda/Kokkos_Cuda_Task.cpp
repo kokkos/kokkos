@@ -43,7 +43,7 @@
 
 #include <Kokkos_Core.hpp>
 
-#if defined( KOKKOS_HAVE_CUDA ) && defined( KOKKOS_ENABLE_TASKDAG )
+#if defined( KOKKOS_ENABLE_CUDA ) && defined( KOKKOS_ENABLE_TASKDAG )
 
 #include <impl/Kokkos_TaskQueue_impl.hpp>
 
@@ -91,7 +91,7 @@ void TaskQueueSpecialization< Kokkos::Cuda >::driver
       // Loop by priority and then type
       for ( int i = 0 ; i < Queue::NumQueue && end == task.ptr ; ++i ) {
         for ( int j = 0 ; j < 2 && end == task.ptr ; ++j ) {
-          task.ptr = Queue::pop_task( & queue->m_ready[i][j] );
+          task.ptr = Queue::pop_ready_task( & queue->m_ready[i][j] );
         }
       }
 
@@ -174,6 +174,6 @@ printf("cuda_task_queue_execute after\n");
 
 //----------------------------------------------------------------------------
 
-#endif /* #if defined( KOKKOS_HAVE_CUDA ) && defined( KOKKOS_ENABLE_TASKDAG ) */
+#endif /* #if defined( KOKKOS_ENABLE_CUDA ) && defined( KOKKOS_ENABLE_TASKDAG ) */
 
 
