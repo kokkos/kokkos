@@ -185,7 +185,9 @@ int HostThreadTeamData::organize_team( const int team_size )
     HostThreadTeamData * const * const pool =
       (HostThreadTeamData **) (m_pool_scratch + m_pool_members);
 
-    const int league_size     = ( m_pool_size + team_size - 1 ) / team_size ;
+    // "league_size" in this context is the number of concurrent teams
+    // that the pool can accommodate.  Excess threads are idle.
+    const int league_size     = m_pool_size / team_size ;
     const int team_alloc_size = m_pool_size / league_size ;
     const int team_alloc_rank = m_pool_rank % team_alloc_size ;
     const int league_rank     = m_pool_rank / team_alloc_size ;
