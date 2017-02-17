@@ -248,6 +248,8 @@ decrement( SharedAllocationRecord< void , void > * arg_record )
       root_next = arg_record->m_next ; 
     }
 
+    Kokkos::memory_fence();
+
     // Unlock the list:
     if ( zero != Kokkos::atomic_exchange( & arg_record->m_root->m_next , root_next ) ) {
       Kokkos::Impl::throw_runtime_exception("Kokkos::Impl::SharedAllocationRecord failed decrement unlocking");

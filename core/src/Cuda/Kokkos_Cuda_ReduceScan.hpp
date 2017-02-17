@@ -63,6 +63,7 @@ namespace Kokkos {
 namespace Impl {
 
 //----------------------------------------------------------------------------
+// Shuffle operations require input to be a register (stack) variable
 
 template< typename T >
 __device__ inline
@@ -137,77 +138,6 @@ void cuda_shfl_up( T & out , T const & in , int delta ,
   for ( int i = 0 ; i < N ; ++i ) {
     reinterpret_cast<int*>(&out)[i] =
       __shfl_up( reinterpret_cast<int const *>(&in)[i] , delta , width );
-  }
-}
-
-//----------------------------------------------------------------------------
-/** \brief  Reduce within a warp over blockDim.x, the "vector" dimension.
- *
- *  This will be called within a nested, intra-team parallel operation.
- *  Use shuffle operations to avoid conflicts with shared memory usage.
- *
- *  Requires:
- *    blockDim.x is power of 2
- *    blockDim.x <= 32 (one warp)
- *
- *  Cannot use "butterfly" pattern because floating point
- *  addition is non-associative.  Therefore, must broadcast
- *  the final result.
- */
-template< class Reducer >
-__device__ inline
-void cuda_intra_warp_vector_reduce( Reducer const & reducer )
-{
-  static_assert(
-    std::is_reference< typename Reducer::reference_type >::value , "" );
-
-  if ( 1 < blockDim.x ) {
-
-    typename Reducer::value_type tmp ;
-
-    for ( int i = blockDim.x ; ( i >>= 1 ) ; ) {
-
-      cuda_shfl_down( tmp , reducer.reference() , i , blockDim.x );
-
-      if ( threadIdx.x < i ) { reducer.join( reducer.data() , & tmp ); }
-    }
-
-    // Broadcast from root "lane" to all other "lanes"
-
-    cuda_shfl( reducer.reference() , reducer.reference() , 0 , blockDim.x );
-  }
-}
-
-/** \brief  Inclusive scan over blockDim.x, the "vector" dimension.
- *
- *  This will be called within a nested, intra-team parallel operation.
- *  Use shuffle operations to avoid conflicts with shared memory usage.
- *
- *  Algorithm is concurrent bottom-up reductions in triangular pattern
- *  where each CUDA thread is the root of a reduction tree from the
- *  zeroth CUDA thread to itself.
- *
- *  Requires:
- *    blockDim.x is power of 2
- *    blockDim.x <= 32 (one warp)
- */
-template< typename ValueType >
-__device__ inline
-void cuda_intra_warp_vector_inclusive_scan( ValueType & local )
-{
-  ValueType tmp ;
-
-  // Bottom up:
-  //   [t] += [t-1] if t >= 1
-  //   [t] += [t-2] if t >= 2
-  //   [t] += [t-4] if t >= 4
-  // ...
-
-  for ( int i = 1 ; i < blockDim.x ; i <<= 1 ) {
-
-    cuda_shfl_up( tmp , local , i , blockDim.x );
-
-    if ( i <= threadIdx.x ) { local += tmp ; }
   }
 }
 

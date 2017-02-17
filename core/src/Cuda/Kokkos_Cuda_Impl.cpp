@@ -661,6 +661,15 @@ void CudaInternal::finalize()
 Cuda::size_type cuda_internal_multiprocessor_count()
 { return CudaInternal::singleton().m_multiProcCount ; }
 
+CudaSpace::size_type cuda_internal_maximum_concurrent_block_count()
+{
+  // Compute capability 5.0 through 6.2
+  enum : int { max_resident_blocks_per_multiprocessor = 32 };
+
+   return CudaInternal::singleton().m_multiProcCount
+          * max_resident_blocks_per_multiprocessor ;
+};
+
 Cuda::size_type cuda_internal_maximum_warp_count()
 { return CudaInternal::singleton().m_maxWarpCount ; }
 

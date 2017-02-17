@@ -52,6 +52,7 @@
 #include <TestTile.hpp>
 #include <TestSharedAlloc.hpp>
 #include <TestViewMapping.hpp>
+#include <TestFunctorAnalysis.hpp>
 #include <TestViewAPI.hpp>
 #include <TestViewOfClass.hpp>
 #include <TestViewSubview.hpp>
