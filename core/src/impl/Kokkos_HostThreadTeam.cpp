@@ -175,12 +175,11 @@ int HostThreadTeamData::organize_team( const int team_size )
     m_league_rank  == m_pool_rank &&
     m_league_size  == m_pool_size ;
 
-  // Pool and be symmetrically partitioned per team_size
-  const bool ok_size =
-    0 <  team_size &&
-    0 == m_pool_size % ( ( m_pool_size + team_size - 1 ) / team_size );
+  if ( ok_pool && ok_team ) {
 
-  if ( ok_pool && ok_team && ok_size ) {
+    if ( team_size <= 0 ) return 0 ; // No teams to organize
+
+    if ( team_size == 1 ) return 1 ; // Already organized in teams of one
 
     HostThreadTeamData * const * const pool =
       (HostThreadTeamData **) (m_pool_scratch + m_pool_members);
