@@ -735,8 +735,8 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   inline
   HostIterateTile( RP const& rp, Functor const& func )
-    : m_rp{rp}
-    , m_func{func}
+    : m_rp(rp)
+    , m_func(func)
   {
   }
 
@@ -1193,7 +1193,7 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   RP         const& m_rp;
   Functor    const& m_func;
-  typename std::conditional< std::is_same<Tag,void>::value,int,Tag>::type m_tag{};
+  typename std::conditional< std::is_same<Tag,void>::value,int,Tag>::type m_tag;
 //  value_type  & m_v;
 
 };
@@ -1214,10 +1214,13 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   inline
   HostIterateTile( RP const& rp, Functor const& func, value_type & v )
-    : m_rp{rp}
-    , m_func{func}
-    , m_v{v} // use with non-void ValueType struct
+    : m_rp(rp) //Cuda 7.0 does not like braces...
+    , m_func(func)
+    , m_v(v) // use with non-void ValueType struct
   {
+// Errors due to braces rather than parenthesis for init (with cuda 7.0)
+//      /home/ndellin/kokkos/core/src/impl/KokkosExp_Host_IterateTile.hpp:1216:98: error: too many braces around initializer for ‘int’ [-fpermissive]
+//      /home/ndellin/kokkos/core/src/impl/KokkosExp_Host_IterateTile.hpp:1216:98: error: aggregate value used where an integer was expected
   }
 
   inline
@@ -1676,7 +1679,7 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
   RP         const& m_rp;
   Functor    const& m_func;
   value_type  & m_v;
-  typename std::conditional< std::is_same<Tag,void>::value,int,Tag>::type m_tag{};
+  typename std::conditional< std::is_same<Tag,void>::value,int,Tag>::type m_tag;
 
 };
 
