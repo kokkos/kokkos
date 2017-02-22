@@ -79,22 +79,6 @@ endif
 	TEST_TARGETS += test-openmp
 endif
 
-ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
-	OBJ_SERIAL = TestSerial_Other.o TestSerial_Reductions.o TestSerial_Atomics.o TestSerial_Team.o
-	OBJ_SERIAL += TestSerial_SubView_a.o TestSerial_SubView_b.o
-ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-	OBJ_OPENMP += TestSerial_SubView_c_all.o
-else
-	OBJ_SERIAL += TestSerial_SubView_c01.o TestSerial_SubView_c02.o TestSerial_SubView_c03.o
-	OBJ_SERIAL += TestSerial_SubView_c04.o TestSerial_SubView_c05.o TestSerial_SubView_c06.o
-	OBJ_SERIAL += TestSerial_SubView_c07.o TestSerial_SubView_c08.o TestSerial_SubView_c09.o
-	OBJ_SERIAL += TestSerial_SubView_c10.o TestSerial_SubView_c11.o TestSerial_SubView_c12.o
-endif
-	OBJ_SERIAL += TestSerial_ViewAPI_a.o TestSerial_ViewAPI_b.o UnitTestMain.o gtest-all.o
-	TARGETS += KokkosCore_UnitTest_Serial
-	TEST_TARGETS += test-serial
-endif
-
 ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
 	OBJ_QTHREADS = TestQthreads_Other.o TestQthreads_Reductions.o TestQthreads_Atomics.o TestQthreads_Team.o
 	OBJ_QTHREADS += TestQthreads_SubView_a.o TestQthreads_SubView_b.o
@@ -109,6 +93,22 @@ endif
 	OBJ_QTHREADS += TestQthreads_ViewAPI_a.o TestQthreads_ViewAPI_b.o UnitTestMain.o gtest-all.o
 	TARGETS += KokkosCore_UnitTest_Qthreads
 	TEST_TARGETS += test-qthreads
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
+	OBJ_SERIAL = TestSerial_Other.o TestSerial_Reductions.o TestSerial_Atomics.o TestSerial_Team.o
+	OBJ_SERIAL += TestSerial_SubView_a.o TestSerial_SubView_b.o
+ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
+	OBJ_OPENMP += TestSerial_SubView_c_all.o
+else
+	OBJ_SERIAL += TestSerial_SubView_c01.o TestSerial_SubView_c02.o TestSerial_SubView_c03.o
+	OBJ_SERIAL += TestSerial_SubView_c04.o TestSerial_SubView_c05.o TestSerial_SubView_c06.o
+	OBJ_SERIAL += TestSerial_SubView_c07.o TestSerial_SubView_c08.o TestSerial_SubView_c09.o
+	OBJ_SERIAL += TestSerial_SubView_c10.o TestSerial_SubView_c11.o TestSerial_SubView_c12.o
+endif
+	OBJ_SERIAL += TestSerial_ViewAPI_a.o TestSerial_ViewAPI_b.o UnitTestMain.o gtest-all.o
+	TARGETS += KokkosCore_UnitTest_Serial
+	TEST_TARGETS += test-serial
 endif
 
 OBJ_HWLOC = TestHWLOC.o UnitTestMain.o gtest-all.o

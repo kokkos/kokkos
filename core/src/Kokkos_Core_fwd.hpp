@@ -131,10 +131,8 @@ namespace Kokkos {
   typedef OpenMP DefaultExecutionSpace;
 #elif defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_THREADS )
   typedef Threads DefaultExecutionSpace;
-#elif defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_THREADS )
-  typedef Threads DefaultExecutionSpace;
-#elif defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_QTHREADS )
-  typedef Qthreads DefaultExecutionSpace;
+//#elif defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_QTHREADS )
+//  typedef Qthreads DefaultExecutionSpace;
 #elif defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_SERIAL )
   typedef Serial DefaultExecutionSpace;
 #else
@@ -145,14 +143,16 @@ namespace Kokkos {
   typedef OpenMP DefaultHostExecutionSpace;
 #elif defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_THREADS )
   typedef Threads DefaultHostExecutionSpace;
-#elif defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_QTHREADS )
-  typedef Qthreads DefaultHostExecutionSpace;
+//#elif defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_QTHREADS )
+//  typedef Qthreads DefaultHostExecutionSpace;
 #elif defined ( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_SERIAL )
   typedef Serial DefaultHostExecutionSpace;
 #elif defined ( KOKKOS_HAVE_OPENMP )
   typedef OpenMP DefaultHostExecutionSpace;
 #elif defined ( KOKKOS_HAVE_PTHREAD )
   typedef Threads DefaultHostExecutionSpace;
+//#elif defined ( KOKKOS_HAVE_QTHREADS )
+//  typedef Qthreads DefaultHostExecutionSpace;
 #elif defined ( KOKKOS_HAVE_SERIAL )
   typedef Serial DefaultHostExecutionSpace;
 #else

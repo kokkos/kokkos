@@ -113,14 +113,14 @@ public:
   typedef Kokkos::OpenMP    execution_space;
 #elif defined( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_THREADS )
   typedef Kokkos::Threads   execution_space;
-#elif defined( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_QTHREADS )
-  typedef Kokkos::Qthreads  execution_space;
+//#elif defined( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_QTHREADS )
+//  typedef Kokkos::Qthreads  execution_space;
 #elif defined( KOKKOS_HAVE_OPENMP )
   typedef Kokkos::OpenMP    execution_space;
 #elif defined( KOKKOS_HAVE_PTHREAD )
   typedef Kokkos::Threads   execution_space;
-#elif defined( KOKKOS_HAVE_QTHREADS )
-  typedef Kokkos::Qthreads  execution_space;
+//#elif defined( KOKKOS_HAVE_QTHREADS )
+//  typedef Kokkos::Qthreads  execution_space;
 #elif defined( KOKKOS_HAVE_SERIAL )
   typedef Kokkos::Serial    execution_space;
 #else

@@ -69,7 +69,7 @@ void init_lock_array_hbw_space();
 /// This function tries to aquire the lock for the hash value derived
 /// from the provided ptr. If the lock is successfully aquired the
 /// function returns true. Otherwise it returns false.
-bool lock_address_hbw_space( void* pt r);
+bool lock_address_hbw_space( void* ptr );
 
 /// \brief Release lock for the address
 ///
@@ -110,14 +110,14 @@ public:
   typedef Kokkos::OpenMP    execution_space;
 #elif defined( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_THREADS )
   typedef Kokkos::Threads   execution_space;
-#elif defined( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_QTHREADS )
-  typedef Kokkos::Qthreads  execution_space;
+//#elif defined( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_QTHREADS )
+//  typedef Kokkos::Qthreads  execution_space;
 #elif defined( KOKKOS_HAVE_OPENMP )
   typedef Kokkos::OpenMP    execution_space;
 #elif defined( KOKKOS_HAVE_PTHREAD )
   typedef Kokkos::Threads   execution_space;
-#elif defined( KOKKOS_HAVE_QTHREADS )
-  typedef Kokkos::Qthreads  execution_space;
+//#elif defined( KOKKOS_HAVE_QTHREADS )
+//  typedef Kokkos::Qthreads  execution_space;
 #elif defined( KOKKOS_HAVE_SERIAL )
   typedef Kokkos::Serial    execution_space;
 #else
