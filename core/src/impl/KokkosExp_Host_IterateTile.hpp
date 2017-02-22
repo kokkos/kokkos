@@ -65,6 +65,10 @@
 
 namespace Kokkos { namespace Experimental { namespace Impl {
 
+// Temporary, for testing new loop macros
+#define KOKKOS_ENABLE_NEW_LOOP_MACROS 0
+
+
 #define LOOP_1L(tile) \
   for( int i0=0; i0<static_cast<int>(tile[0]); ++i0)
 
@@ -705,8 +709,6 @@ struct Tile_Loop_Type<8, IsLeft, IType>
 };
 
 // end Structs for calling loops
-#define NEW_LOOP_MACROS 1
-
 
 
 template <typename T>
@@ -767,7 +769,7 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     enum { value = (int)Rank };
   };
 
-#if NEW_LOOP_MACROS
+#if KOKKOS_ENABLE_NEW_LOOP_MACROS
   template <typename IType>
   inline
   void
@@ -1251,7 +1253,7 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
   };
 
 
-#if NEW_LOOP_MACROS
+#if KOKKOS_ENABLE_NEW_LOOP_MACROS
   template <typename IType>
   inline
   void
@@ -1777,7 +1779,7 @@ struct MDFunctor< MDRange, Functor, void >
   Functor m_func;
 };
 
-#undef NEW_LOOP_MACROS
+#undef KOKKOS_ENABLE_NEW_LOOP_MACROS
 
 } } } //end namespace Kokkos::Experimental::Impl
 
