@@ -43,7 +43,7 @@
 
 #include <Kokkos_Core_fwd.hpp>
 
-#if defined( KOKKOS_HAVE_QTHREADS )
+#if defined( KOKKOS_ENABLE_QTHREADS )
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -516,6 +516,4 @@ QthreadsTeamPolicyMember::QthreadsTeamPolicyMember( const QthreadsTeamPolicyMemb
 
 } // namespace Kokkos
 
-//----------------------------------------------------------------------------
-
-#endif // #if defined( KOKKOS_HAVE_QTHREADS )
+#endif // #if defined( KOKKOS_ENABLE_QTHREADS )

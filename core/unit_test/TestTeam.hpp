@@ -428,8 +428,13 @@ struct SharedTeamFunctor {
     if ( ( shared_A.ptr_on_device () == NULL && SHARED_COUNT > 0 ) ||
          ( shared_B.ptr_on_device () == NULL && SHARED_COUNT > 0 ) )
     {
-      printf( "Failed to allocate shared memory of size %lu\n",
-              static_cast<unsigned long>( SHARED_COUNT ) );
+      printf ("member( %d/%d , %d/%d ) Failed to allocate shared memory of size %lu\n"
+             , ind.league_rank()
+             , ind.league_size()
+             , ind.team_rank()
+             , ind.team_size()
+             , static_cast<unsigned long>( SHARED_COUNT )
+             );
 
       ++update; // Failure to allocate is an error.
     }
@@ -485,7 +490,7 @@ struct TestSharedTeam {
 
 namespace Test {
 
-#if defined ( KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA )
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
 template< class MemorySpace, class ExecSpace, class ScheduleType >
 struct TestLambdaSharedTeam {
   TestLambdaSharedTeam() { run(); }
@@ -504,7 +509,7 @@ struct TestLambdaSharedTeam {
     const int SHARED_COUNT = 1000;
     int team_size = 1;
 
-#ifdef KOKKOS_HAVE_CUDA
+#ifdef KOKKOS_ENABLE_CUDA
     if ( std::is_same< ExecSpace, Kokkos::Cuda >::value ) team_size = 128;
 #endif
 
@@ -860,7 +865,7 @@ struct ClassWithShmemSizeFunction {
 
 template< class ExecSpace, class ScheduleType >
 void test_team_mulit_level_scratch_test_lambda() {
-#ifdef KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA
+#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
   Kokkos::View< int, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic> > errors;
   Kokkos::View< int, ExecSpace > d_errors( "Errors" );
   errors = d_errors;
@@ -906,7 +911,7 @@ struct TestMultiLevelScratchTeam {
 
   void run()
   {
-#ifdef KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA
+#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
     Test::test_team_mulit_level_scratch_test_lambda< ExecSpace, ScheduleType >();
 #endif
     Test::ClassNoShmemSizeFunction< ExecSpace, ScheduleType > c1;

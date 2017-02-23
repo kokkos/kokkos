@@ -51,7 +51,7 @@
 #include <Kokkos_Macros.hpp>
 
 /* only compile this file if CUDA is enabled for Kokkos */
-#if defined( __CUDACC__ ) && defined( KOKKOS_HAVE_CUDA )
+#if defined( __CUDACC__ ) && defined( KOKKOS_ENABLE_CUDA )
 
 #include <utility>
 #include <Kokkos_Parallel.hpp>
@@ -1621,14 +1621,25 @@ void parallel_for(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::Cuda
 #endif
 }
 
-/** \brief  Intra-thread vector parallel_reduce. Executes lambda(iType i, ValueType & val) for each i=0..N-1.
+/** \brief  Intra-thread vector parallel_reduce.
  *
- * The range i=0..N-1 is mapped to all vector lanes of the the calling thread and a summation of
- * val is performed and put into result. This functionality requires C++11 support.*/
+ *  Calls lambda(iType i, ValueType & val) for each i=[0..N).
+ *
+ *  The range [0..N) is mapped to all vector lanes of
+ *  the calling thread and a reduction of val is performed using +=
+ *  and output into result.
+ *
+ *  The identity value for the += operator is assumed to be the default
+ *  constructed value.
+ */
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
-void parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember >&
-      loop_boundaries, const Lambda & lambda, ValueType& result) {
+void parallel_reduce
+  ( Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember >
+      const & loop_boundaries
+  , Lambda const & lambda
+  , ValueType & result )
+{
 #ifdef __CUDA_ARCH__
   result = ValueType();
 
@@ -1636,52 +1647,42 @@ void parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::C
     lambda(i,result);
   }
 
-  if (loop_boundaries.increment > 1)
-    result += shfl_down(result, 1,loop_boundaries.increment);
-  if (loop_boundaries.increment > 2)
-    result += shfl_down(result, 2,loop_boundaries.increment);
-  if (loop_boundaries.increment > 4)
-    result += shfl_down(result, 4,loop_boundaries.increment);
-  if (loop_boundaries.increment > 8)
-    result += shfl_down(result, 8,loop_boundaries.increment);
-  if (loop_boundaries.increment > 16)
-    result += shfl_down(result, 16,loop_boundaries.increment);
+  Impl::cuda_intra_warp_vector_reduce(
+    Impl::Reducer< ValueType , Impl::ReduceSum< ValueType > >( & result ) );
 
-  result = shfl(result,0,loop_boundaries.increment);
 #endif
 }
 
-/** \brief  Intra-thread vector parallel_reduce. Executes lambda(iType i, ValueType & val) for each i=0..N-1.
+/** \brief  Intra-thread vector parallel_reduce.
  *
- * The range i=0..N-1 is mapped to all vector lanes of the the calling thread and a reduction of
- * val is performed using JoinType(ValueType& val, const ValueType& update) and put into init_result.
- * The input value of init_result is used as initializer for temporary variables of ValueType. Therefore
- * the input value should be the neutral element with respect to the join operation (e.g. '0 for +-' or
- * '1 for *'). This functionality requires C++11 support.*/
+ *  Calls lambda(iType i, ValueType & val) for each i=[0..N).
+ *
+ *  The range [0..N) is mapped to all vector lanes of
+ *  the calling thread and a reduction of val is performed
+ *  using JoinType::operator()(ValueType& val, const ValueType& update)
+ *  and output into result.
+ *
+ *  The input value of result must be the identity value for the
+ *  reduction operation; e.g., ( 0 , += ) or ( 1 , *= ).
+ */
 template< typename iType, class Lambda, typename ValueType, class JoinType >
 KOKKOS_INLINE_FUNCTION
-void parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember >&
-      loop_boundaries, const Lambda & lambda, const JoinType& join, ValueType& init_result) {
-
+void parallel_reduce
+  ( Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember >
+      const & loop_boundaries
+  , Lambda const & lambda
+  , JoinType const & join
+  , ValueType & result )
+{
 #ifdef __CUDA_ARCH__
-  ValueType result = init_result;
 
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i,result);
   }
 
-  if (loop_boundaries.increment > 1)
-    join( result, shfl_down(result, 1,loop_boundaries.increment));
-  if (loop_boundaries.increment > 2)
-    join( result, shfl_down(result, 2,loop_boundaries.increment));
-  if (loop_boundaries.increment > 4)
-    join( result, shfl_down(result, 4,loop_boundaries.increment));
-  if (loop_boundaries.increment > 8)
-    join( result, shfl_down(result, 8,loop_boundaries.increment));
-  if (loop_boundaries.increment > 16)
-    join( result, shfl_down(result, 16,loop_boundaries.increment));
+  Impl::cuda_intra_warp_vector_reduce(
+    Impl::Reducer< ValueType , JoinType >( join , & result ) );
 
-  init_result = shfl(result,0,loop_boundaries.increment);
 #endif
 }
 

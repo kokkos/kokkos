@@ -46,7 +46,7 @@
 
 #include <Kokkos_Core_fwd.hpp>
 
-#ifdef KOKKOS_HAVE_QTHREADS
+#ifdef KOKKOS_ENABLE_QTHREADS
 
 // Defines to enable experimental Qthreads functionality.
 #define QTHREAD_LOCAL_PRIORITY
@@ -58,9 +58,6 @@
 #include <iosfwd>
 
 #include <Kokkos_HostSpace.hpp>
-#ifdef KOKKOS_HAVE_HBWSPACE
-#include <Kokkos_HBWSpace.hpp>
-#endif
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_Parallel.hpp>
 //#include <Kokkos_MemoryTraits.hpp>
@@ -196,6 +193,6 @@ struct VerifyExecutionCanAccessMemorySpace
 //#include <Qthreads/Kokkos_Qthreads_Task.hpp> // Uncomment when Tasking working.
 //#include <Qthreads/Kokkos_Qthreads_TaskQueue.hpp> // Uncomment when Tasking working.
 
-#endif // #define KOKKOS_HAVE_QTHREADS
+#endif // #define KOKKOS_ENABLE_QTHREADS
 
 #endif // #define KOKKOS_QTHREADS_HPP

@@ -1012,7 +1012,7 @@ void test_view_mapping()
     ASSERT_EQ( a.use_count(), 1 );
     ASSERT_EQ( b.use_count(), 0 );
 
-#if !defined ( KOKKOS_CUDA_USE_LAMBDA )
+#if !defined( KOKKOS_ENABLE_CUDA_LAMBDA )
     // Cannot launch host lambda when CUDA lambda is enabled.
 
     typedef typename Kokkos::Impl::HostMirror< Space >::Space::execution_space host_exec_space;
@@ -1026,7 +1026,7 @@ void test_view_mapping()
       ASSERT_EQ( a.use_count(), 2 );
       ASSERT_EQ( x.use_count(), 2 );
     });
-#endif // #if !defined ( KOKKOS_CUDA_USE_LAMBDA )
+#endif // #if !defined( KOKKOS_ENABLE_CUDA_LAMBDA )
   }
 }
 

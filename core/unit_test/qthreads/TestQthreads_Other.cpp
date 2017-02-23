@@ -154,7 +154,7 @@ TEST_F( qthreads, task_team )
 
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_HAVE_DEFAULT_DEVICE_TYPE_QTHREADS )
+#if defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS )
 
 TEST_F( qthreads, cxx11 )
 {

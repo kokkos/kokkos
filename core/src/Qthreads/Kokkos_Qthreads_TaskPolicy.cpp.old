@@ -41,11 +41,11 @@
 //@HEADER
 */
 
-// Experimental unified task-data parallel manycore LDRD
+// Experimental unified task-data parallel manycore LDRD.
 
 #include <Kokkos_Core_fwd.hpp>
 
-#if defined( KOKKOS_HAVE_QTHREADS )
+#if defined( KOKKOS_ENABLE_QTHREADS )
 
 #include <stdio.h>
 
@@ -59,8 +59,6 @@
 #include <Qthreads/Kokkos_Qthreads_TaskPolicy.hpp>
 
 #if defined( KOKKOS_ENABLE_TASKDAG )
-
-//----------------------------------------------------------------------------
 
 namespace Kokkos {
 namespace Experimental {
@@ -486,6 +484,5 @@ void wait( Kokkos::Experimental::TaskPolicy< Kokkos::Qthreads > & policy )
 } // namespace Experimental
 } // namespace Kokkos
 
-#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
-#endif /* #if defined( KOKKOS_HAVE_QTHREADS ) */
-
+#endif // #if defined( KOKKOS_ENABLE_TASKDAG )
+#endif // #if defined( KOKKOS_ENABLE_QTHREADS )

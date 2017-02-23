@@ -76,7 +76,7 @@
 
 namespace Test {
 
-// For Some Reason I can only have the definition of SetUp and TearDown in one cpp file ...
+// For some reason I can only have the definition of SetUp and TearDown in one cpp file ...
 class cuda : public ::testing::Test {
 protected:
   static void SetUpTestCase();

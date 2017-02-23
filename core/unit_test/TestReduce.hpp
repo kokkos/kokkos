@@ -473,7 +473,7 @@ public:
 // Computes y^T*A*x
 // ( modified from kokkos-tutorials/GTC2016/Exercises/ThreeLevelPar )
 
-#if ( ! defined( KOKKOS_HAVE_CUDA ) ) || defined( KOKKOS_CUDA_USE_LAMBDA )
+#if ( ! defined( KOKKOS_ENABLE_CUDA ) ) || defined( KOKKOS_ENABLE_CUDA_LAMBDA )
 
 template< typename ScalarType, class DeviceType >
 class TestTripleNestedReduce
@@ -543,7 +543,7 @@ public:
   }
 };
 
-#else /* #if ( ! defined( KOKKOS_HAVE_CUDA ) ) || defined( KOKKOS_CUDA_USE_LAMBDA ) */
+#else // #if ( ! defined( KOKKOS_ENABLE_CUDA ) ) || defined( KOKKOS_ENABLE_CUDA_LAMBDA )
 
 template< typename ScalarType, class DeviceType >
 class TestTripleNestedReduce
@@ -1056,17 +1056,17 @@ struct TestReduceCombinatoricalInstantiation {
   template< class ... Args >
   static void AddFunctorLambdaRange( Args... args ) {
     AddFunctor< 0, Args... >( args... );
-    #ifdef KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA
+#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
     AddLambdaRange( typename std::conditional< std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void*, Kokkos::InvalidType >::type(), args... );
-    #endif
+#endif
   }
 
   template< class ... Args >
   static void AddFunctorLambdaTeam( Args... args ) {
     AddFunctor< 1, Args... >( args... );
-    #ifdef KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA
+#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
     AddLambdaTeam( typename std::conditional< std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void*, Kokkos::InvalidType >::type(), args... );
-    #endif
+#endif
   }
 
   template< class ... Args >

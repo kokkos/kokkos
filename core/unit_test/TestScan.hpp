@@ -47,9 +47,10 @@ namespace Test {
 
 template< class Device, class WorkSpec = size_t >
 struct TestScan {
-
   typedef  Device    execution_space;
   typedef  long int  value_type;
+
+  Kokkos::View< int, Device, Kokkos::MemoryTraits<Kokkos::Atomic> > errors;
 
   KOKKOS_INLINE_FUNCTION
   void operator()( const int iwork, value_type & update, const bool final_pass ) const
@@ -67,7 +68,11 @@ struct TestScan {
       const value_type answer = n & 1 ? ( n * ( ( n + 1 ) / 2 ) ) : ( ( n / 2 ) * ( n + 1 ) );
 
       if ( answer != update ) {
-        printf( "TestScan(%d,%ld) != %ld\n", iwork, update, answer );
+        errors()++;
+
+        if ( errors() < 20 ) {
+          printf( "TestScan(%d,%ld) != %ld\n", iwork, update, answer );
+        }
       }
     }
   }
@@ -80,12 +85,24 @@ struct TestScan {
              volatile const value_type & input ) const
   { update += input; }
 
-  TestScan( const WorkSpec & N ) { parallel_scan( N, *this ); }
-
-  TestScan( const WorkSpec & Start, const WorkSpec & N )
+  TestScan( const WorkSpec & N )
   {
-    typedef Kokkos::RangePolicy<execution_space> exec_policy;
-    parallel_scan( exec_policy( Start, N ), *this );
+    Kokkos::View< int, Device > errors_a( "Errors" );
+    Kokkos::deep_copy( errors_a, 0 );
+    errors = errors_a;
+
+    parallel_scan( N , *this );
+  }
+
+  TestScan( const WorkSpec & Start , const WorkSpec & N )
+  {
+    typedef Kokkos::RangePolicy< execution_space > exec_policy ;
+
+    Kokkos::View< int, Device > errors_a( "Errors" );
+    Kokkos::deep_copy( errors_a, 0 );
+    errors = errors_a;
+
+    parallel_scan( exec_policy( Start , N ) , *this );
   }
 
   static void test_range( const WorkSpec & begin, const WorkSpec & end )

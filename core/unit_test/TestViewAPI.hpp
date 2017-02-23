@@ -1162,8 +1162,8 @@ public:
     // For CUDA the constant random access View does not return
     // an lvalue reference due to retrieving through texture cache
     // therefore not allowed to query the underlying pointer.
-#if defined( KOKKOS_HAVE_CUDA )
-    if ( ! std::is_same< typename device::execution_space, Kokkos::Cuda >::value )
+#if defined( KOKKOS_ENABLE_CUDA )
+    if ( !std::is_same< typename device::execution_space, Kokkos::Cuda >::value )
 #endif
     {
       ASSERT_TRUE( x.ptr_on_device() == xr.ptr_on_device() );

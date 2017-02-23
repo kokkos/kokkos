@@ -68,6 +68,14 @@ struct my_complex {
   }
 
   KOKKOS_INLINE_FUNCTION
+  my_complex & operator=( const my_complex & src ) {
+    re = src.re;
+    im = src.im;
+    dummy = src.dummy;
+    return *this ;
+  }
+
+  KOKKOS_INLINE_FUNCTION
   my_complex( const volatile my_complex & src ) {
     re = src.re;
     im = src.im;
@@ -277,7 +285,7 @@ struct functor_team_reduce_join {
     {
       val += i - team.league_rank() + team.league_size() + team.team_size();
     },
-      [&] ( volatile Scalar & val, const volatile Scalar & src ) { val += src; },
+      [] ( volatile Scalar & val, const volatile Scalar & src ) { val += src; },
       value
     );
 
@@ -327,6 +335,8 @@ struct functor_team_vector_for {
               static_cast<unsigned int>( shmemSize ) );
     }
     else {
+      team.team_barrier();
+
       Kokkos::single( Kokkos::PerThread( team ), [&] ()
       {
         values( team.team_rank() ) = 0;
@@ -428,7 +438,7 @@ struct functor_team_vector_reduce_join {
     {
       val += i - team.league_rank() + team.league_size() + team.team_size();
     },
-      [&] ( volatile Scalar & val, const volatile Scalar & src ) { val += src; },
+      [] ( volatile Scalar & val, const volatile Scalar & src ) { val += src; },
       value
     );
 
@@ -557,6 +567,7 @@ struct functor_vec_red {
   void operator()( typename policy_type::member_type team ) const {
     Scalar value = 0;
 
+    // When no reducer is given the default is summation.
     Kokkos::parallel_reduce( Kokkos::ThreadVectorRange( team, 13 ), [&] ( int i, Scalar & val )
     {
       val += i;
@@ -589,11 +600,14 @@ struct functor_vec_red_join {
 
   KOKKOS_INLINE_FUNCTION
   void operator()( typename policy_type::member_type team ) const {
+    // Must initialize to the identity value for the reduce operation
+    // for this test:
+    //   ( identity, operation ) = ( 1 , *= )
     Scalar value = 1;
 
     Kokkos::parallel_reduce( Kokkos::ThreadVectorRange( team, 13 ), [&] ( int i, Scalar & val )
     {
-      val *= i;
+      val *= ( i % 5 + 1 );
     },
       [&] ( Scalar & val, const Scalar & src ) { val *= src; },
       value
@@ -603,7 +617,7 @@ struct functor_vec_red_join {
     {
       Scalar test = 1;
 
-      for ( int i = 0; i < 13; i++ ) test *= i;
+      for ( int i = 0; i < 13; i++ ) test *= ( i % 5 + 1 );
 
       if ( test != value ) {
         printf( "FAILED vector_par_reduce_join %i %i %f %f\n",

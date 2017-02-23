@@ -112,7 +112,7 @@ double AddTestFunctor() {
   return result;
 }
 
-#if defined( KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA )
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
 template< class DeviceType, bool PWRTest >
 double AddTestLambda() {
   Kokkos::View< double**, DeviceType > a( "A", 100, 5 );
@@ -239,7 +239,7 @@ double ReduceTestFunctor() {
   return result;
 }
 
-#if defined( KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA )
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
 template< class DeviceType, bool PWRTest >
 double ReduceTestLambda() {
   typedef Kokkos::TeamPolicy< DeviceType > policy_type;
@@ -317,7 +317,7 @@ double TestVariantFunctor( int test ) {
 
 template< class DeviceType >
 bool Test( int test ) {
-#ifdef KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA
+#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
   double res_functor = TestVariantFunctor< DeviceType >( test );
   double res_lambda = TestVariantLambda< DeviceType >( test );
 

@@ -81,7 +81,7 @@ TEST_F( qthreads, team_scratch_request )
 #endif
 }
 
-#if defined( KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA )
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
 TEST_F( qthreads, team_lambda_shared_request )
 {
 #if 0
