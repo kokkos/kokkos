@@ -151,6 +151,9 @@ do
   shift
 done
 
+# Remove leading ',' from KOKKOS_DEVICES.
+KOKKOS_DEVICES=$(echo $KOKKOS_DEVICES | sed 's/^,//')
+
 # If KOKKOS_PATH undefined, assume parent dir of this script is the KOKKOS_PATH.
 if [ -z "$KOKKOS_PATH" ]; then
   KOKKOS_PATH=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
