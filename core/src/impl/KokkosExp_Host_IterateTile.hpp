@@ -66,7 +66,7 @@
 namespace Kokkos { namespace Experimental { namespace Impl {
 
 // Temporary, for testing new loop macros
-#define KOKKOS_ENABLE_NEW_LOOP_MACROS 0
+#define KOKKOS_ENABLE_NEW_LOOP_MACROS 1
 
 
 #define LOOP_1L(type, tile) \
@@ -1019,7 +1019,7 @@ namespace Kokkos { namespace Experimental { namespace Impl {
 // Structs for calling loops
 // original
 
-#if 1
+#if 0
 template < int Rank, bool IsLeft, typename IType >
 struct Tile_Loop_Type;
 
@@ -1153,11 +1153,11 @@ struct Tile_Loop_Type<8, IsLeft, IType>
 
 #else
 
-template < int Rank, bool IsLeft, typename IType, typename Tagged >
+template < int Rank, bool IsLeft, typename IType, typename Tagged, typename Enable = void >
 struct Tile_Loop_Type;
 
 template < bool IsLeft, typename IType >
-struct Tile_Loop_Type<1, IsLeft, IType, void>
+struct Tile_Loop_Type<1, IsLeft, IType, void, void >
 {
   template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
   static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
@@ -1170,22 +1170,10 @@ struct Tile_Loop_Type<1, IsLeft, IType, void>
   {
     TILE_LOOP_1_REDUX( value, func, IType, IsLeft, cond, offset, a, b, 1 );
   }
-
-  template < typename Tag, typename Func, typename Offset, typename ExtentA, typename ExtentB >
-  static void apply(const Tag tag, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
-  {
-    TAGGED_TILE_LOOP_1( tag, func, IType, IsLeft, cond, offset, a, b, 1 );
-  }
-
-  template < typename ValType, typename Tag, typename Func, typename Offset, typename ExtentA, typename ExtentB >
-  static void apply(ValType &value, const Tag tag, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
-  {
-    TAGGED_TILE_LOOP_1_REDUX( value, tag, func, IType, IsLeft, cond, offset, a, b, 1 );
-  }
 };
 
 template < bool IsLeft, typename IType >
-struct Tile_Loop_Type<2, IsLeft, IType, void>
+struct Tile_Loop_Type<2, IsLeft, IType, void, void>
 {
   template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
   static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
@@ -1198,22 +1186,10 @@ struct Tile_Loop_Type<2, IsLeft, IType, void>
   {
     TILE_LOOP_2_REDUX( value, func, IType, IsLeft, cond, offset, a, b, 2 );
   }
-
-  template < typename Tag, typename Func, typename Offset, typename ExtentA, typename ExtentB >
-  static void apply(const Tag tag, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
-  {
-    TAGGED_TILE_LOOP_2( tag, func, IType, IsLeft, cond, offset, a, b, 2 );
-  }
-
-  template < typename ValType, typename Tag, typename Func, typename Offset, typename ExtentA, typename ExtentB >
-  static void apply(ValType &value, const Tag tag, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
-  {
-    TAGGED_TILE_LOOP_2_REDUX( value, tag, func, IType, IsLeft, cond, offset, a, b, 2 );
-  }
 };
 
 template < bool IsLeft, typename IType >
-struct Tile_Loop_Type<3, IsLeft, IType, void>
+struct Tile_Loop_Type<3, IsLeft, IType, void, void>
 {
   template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
   static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
@@ -1226,22 +1202,10 @@ struct Tile_Loop_Type<3, IsLeft, IType, void>
   {
     TILE_LOOP_3_REDUX( value, func, IType, IsLeft, cond, offset, a, b, 3 );
   }
-
-  template < typename Tag, typename Func, typename Offset, typename ExtentA, typename ExtentB >
-  static void apply(const Tag tag, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
-  {
-    TAGGED_TILE_LOOP_3( tag, func, IType, IsLeft, cond, offset, a, b, 3 );
-  }
-
-  template < typename ValType, typename Tag, typename Func, typename Offset, typename ExtentA, typename ExtentB >
-  static void apply(ValType &value, const Tag tag, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
-  {
-    TAGGED_TILE_LOOP_3_REDUX( value, tag, func, IType, IsLeft, cond, offset, a, b, 3 );
-  }
 };
 
 template < bool IsLeft, typename IType >
-struct Tile_Loop_Type<4, IsLeft, IType, void>
+struct Tile_Loop_Type<4, IsLeft, IType, void, void>
 {
   template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
   static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
@@ -1254,22 +1218,10 @@ struct Tile_Loop_Type<4, IsLeft, IType, void>
   {
     TILE_LOOP_4_REDUX( value, func, IType, IsLeft, cond, offset, a, b, 4 );
   }
-
-  template < typename Tag, typename Func, typename Offset, typename ExtentA, typename ExtentB >
-  static void apply(const Tag tag, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
-  {
-    TAGGED_TILE_LOOP_4( tag, func, IType, IsLeft, cond, offset, a, b, 4 );
-  }
-
-  template < typename ValType, typename Tag, typename Func, typename Offset, typename ExtentA, typename ExtentB >
-  static void apply(ValType &value, const Tag tag, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
-  {
-    TAGGED_TILE_LOOP_4_REDUX( value, tag, func, IType, IsLeft, cond, offset, a, b, 4 );
-  }
 };
 
 template < bool IsLeft, typename IType >
-struct Tile_Loop_Type<5, IsLeft, IType, void>
+struct Tile_Loop_Type<5, IsLeft, IType, void, void>
 {
   template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
   static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
@@ -1282,22 +1234,10 @@ struct Tile_Loop_Type<5, IsLeft, IType, void>
   {
     TILE_LOOP_5_REDUX( value, func, IType, IsLeft, cond, offset, a, b, 5 );
   }
-
-  template < typename Tag, typename Func, typename Offset, typename ExtentA, typename ExtentB >
-  static void apply(const Tag tag, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
-  {
-    TAGGED_TILE_LOOP_5( tag, func, IType, IsLeft, cond, offset, a, b, 5 );
-  }
-
-  template < typename ValType, typename Tag, typename Func, typename Offset, typename ExtentA, typename ExtentB >
-  static void apply(ValType &value, const Tag tag, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
-  {
-    TAGGED_TILE_LOOP_5_REDUX( value, tag, func, IType, IsLeft, cond, offset, a, b, 5 );
-  }
 };
 
 template < bool IsLeft, typename IType >
-struct Tile_Loop_Type<6, IsLeft, IType, void>
+struct Tile_Loop_Type<6, IsLeft, IType, void, void>
 {
   template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
   static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
@@ -1310,22 +1250,10 @@ struct Tile_Loop_Type<6, IsLeft, IType, void>
   {
     TILE_LOOP_6_REDUX( value, func, IType, IsLeft, cond, offset, a, b, 6 );
   }
-
-  template < typename Tag, typename Func, typename Offset, typename ExtentA, typename ExtentB >
-  static void apply(const Tag tag, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
-  {
-    TAGGED_TILE_LOOP_6( tag, func, IType, IsLeft, cond, offset, a, b, 6 );
-  }
-
-  template < typename ValType, typename Tag, typename Func, typename Offset, typename ExtentA, typename ExtentB >
-  static void apply(ValType &value, const Tag tag, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
-  {
-    TAGGED_TILE_LOOP_6_REDUX( value, tag, func, IType, IsLeft, cond, offset, a, b, 6 );
-  }
 };
 
 template < bool IsLeft, typename IType >
-struct Tile_Loop_Type<7, IsLeft, IType, void>
+struct Tile_Loop_Type<7, IsLeft, IType, void, void>
 {
   template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
   static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
@@ -1338,22 +1266,10 @@ struct Tile_Loop_Type<7, IsLeft, IType, void>
   {
     TILE_LOOP_7_REDUX( value, func, IType, IsLeft, cond, offset, a, b, 7 );
   }
-
-  template < typename Tag, typename Func, typename Offset, typename ExtentA, typename ExtentB >
-  static void apply(const Tag tag, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
-  {
-    TAGGED_TILE_LOOP_7( tag, func, IType, IsLeft, cond, offset, a, b, 7 );
-  }
-
-  template < typename ValType, typename Tag, typename Func, typename Offset, typename ExtentA, typename ExtentB >
-  static void apply(ValType &value, const Tag tag, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
-  {
-    TAGGED_TILE_LOOP_7_REDUX( value, tag, func, IType, IsLeft, cond, offset, a, b, 7 );
-  }
 };
 
 template < bool IsLeft, typename IType >
-struct Tile_Loop_Type<8, IsLeft, IType, void>
+struct Tile_Loop_Type<8, IsLeft, IType, void, void>
 {
   template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
   static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
@@ -1366,27 +1282,12 @@ struct Tile_Loop_Type<8, IsLeft, IType, void>
   {
     TILE_LOOP_8_REDUX( value, func, IType, IsLeft, cond, offset, a, b, 8 );
   }
-
-  template < typename Tag, typename Func, typename Offset, typename ExtentA, typename ExtentB >
-  static void apply(const Tag tag, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
-  {
-    TAGGED_TILE_LOOP_8( tag, func, IType, IsLeft, cond, offset, a, b, 8 );
-  }
-
-  template < typename ValType, typename Tag, typename Func, typename Offset, typename ExtentA, typename ExtentB >
-  static void apply(ValType &value, const Tag tag, Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
-  {
-    TAGGED_TILE_LOOP_8_REDUX( value, tag, func, IType, IsLeft, cond, offset, a, b, 8 );
-  }
 };
 
 // tagged versions
 
-template < int Rank, bool IsLeft, typename IType, typename Tagged >
-struct Tile_Loop_Type;
-
 template < bool IsLeft, typename IType, typename Tagged >
-struct Tile_Loop_Type<1, IsLeft, IType, Tagged>
+struct Tile_Loop_Type<1, IsLeft, IType, Tagged, typename std::enable_if< !std::is_same<Tagged,void>::value>::type >
 {
   template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
   static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
@@ -1402,7 +1303,7 @@ struct Tile_Loop_Type<1, IsLeft, IType, Tagged>
 };
 
 template < bool IsLeft, typename IType, typename Tagged >
-struct Tile_Loop_Type<2, IsLeft, IType, Tagged>
+struct Tile_Loop_Type<2, IsLeft, IType, Tagged, typename std::enable_if< !std::is_same<Tagged,void>::value>::type>
 {
   template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
   static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
@@ -1418,7 +1319,7 @@ struct Tile_Loop_Type<2, IsLeft, IType, Tagged>
 };
 
 template < bool IsLeft, typename IType, typename Tagged >
-struct Tile_Loop_Type<3, IsLeft, IType, Tagged>
+struct Tile_Loop_Type<3, IsLeft, IType, Tagged, typename std::enable_if< !std::is_same<Tagged,void>::value>::type>
 {
   template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
   static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
@@ -1434,7 +1335,7 @@ struct Tile_Loop_Type<3, IsLeft, IType, Tagged>
 };
 
 template < bool IsLeft, typename IType, typename Tagged >
-struct Tile_Loop_Type<4, IsLeft, IType, Tagged>
+struct Tile_Loop_Type<4, IsLeft, IType, Tagged, typename std::enable_if< !std::is_same<Tagged,void>::value>::type>
 {
   template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
   static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
@@ -1450,7 +1351,7 @@ struct Tile_Loop_Type<4, IsLeft, IType, Tagged>
 };
 
 template < bool IsLeft, typename IType, typename Tagged >
-struct Tile_Loop_Type<5, IsLeft, IType, Tagged>
+struct Tile_Loop_Type<5, IsLeft, IType, Tagged, typename std::enable_if< !std::is_same<Tagged,void>::value>::type>
 {
   template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
   static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
@@ -1466,7 +1367,7 @@ struct Tile_Loop_Type<5, IsLeft, IType, Tagged>
 };
 
 template < bool IsLeft, typename IType, typename Tagged >
-struct Tile_Loop_Type<6, IsLeft, IType, Tagged>
+struct Tile_Loop_Type<6, IsLeft, IType, Tagged, typename std::enable_if< !std::is_same<Tagged,void>::value>::type>
 {
   template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
   static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
@@ -1482,7 +1383,7 @@ struct Tile_Loop_Type<6, IsLeft, IType, Tagged>
 };
 
 template < bool IsLeft, typename IType, typename Tagged >
-struct Tile_Loop_Type<7, IsLeft, IType, Tagged>
+struct Tile_Loop_Type<7, IsLeft, IType, Tagged, typename std::enable_if< !std::is_same<Tagged,void>::value>::type>
 {
   template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
   static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
@@ -1498,7 +1399,7 @@ struct Tile_Loop_Type<7, IsLeft, IType, Tagged>
 };
 
 template < bool IsLeft, typename IType, typename Tagged >
-struct Tile_Loop_Type<8, IsLeft, IType, Tagged>
+struct Tile_Loop_Type<8, IsLeft, IType, Tagged, typename std::enable_if< !std::is_same<Tagged,void>::value>::type>
 {
   template < typename Func, typename Offset, typename ExtentA, typename ExtentB >
   static void apply(Func const& func, bool cond, Offset const& offset, ExtentA const& a, ExtentB const& b)
@@ -1600,7 +1501,7 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
     const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ; 
 
-    Tile_Loop_Type< RP::rank, (RP::inner_direction == RP::Left), index_type >::apply( m_func, full_tile, m_offset, m_rp.m_tile, m_tiledims );
+    Tile_Loop_Type< RP::rank, (RP::inner_direction == RP::Left), index_type, Tag >::apply( m_func, full_tile, m_offset, m_rp.m_tile, m_tiledims );
 /*
     if ( std::is_same< Tag, void >::value ) {
       Tile_Loop_Type< RP::rank, (RP::inner_direction == RP::Left), index_type, void >::apply( m_func, full_tile, m_offset, m_rp.m_tile, m_tiledims );
@@ -2092,7 +1993,7 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
     //Check if offset+tiledim in bounds - if not, replace tile dims with the partial tile dims
     const bool full_tile = check_iteration_bounds(m_tiledims , m_offset) ; 
 
-    Tile_Loop_Type< RP::rank, (RP::inner_direction == RP::Left), index_type >::apply( m_v, m_func, full_tile, m_offset, m_rp.m_tile, m_tiledims );
+    Tile_Loop_Type< RP::rank, (RP::inner_direction == RP::Left), index_type, Tag >::apply( m_v, m_func, full_tile, m_offset, m_rp.m_tile, m_tiledims );
 /*
     if ( std::is_same< Tag, void >::value ) {
       Tile_Loop_Type< RP::rank, (RP::inner_direction == RP::Left), index_type, void >::apply( m_v, m_func, full_tile, m_offset, m_rp.m_tile, m_tiledims );
