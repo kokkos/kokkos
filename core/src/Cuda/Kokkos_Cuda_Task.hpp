@@ -442,18 +442,26 @@ void parallel_reduce
 // blockDim.y == team_size
 // threadIdx.x == position in vec
 // threadIdx.y == member number
-template< typename ValueType, typename iType, class Lambda >
+template< typename iType, class Closure >
 KOKKOS_INLINE_FUNCTION
 void parallel_scan
   (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
-   const Lambda & lambda) {
+   const Closure & closure )
+{
+  // Extract value_type from closure
 
-  ValueType accum = 0 ;
-  ValueType val, y, local_total;
+  using value_type =
+    typename Kokkos::Impl::FunctorAnalysis
+      < Kokkos::Impl::FunctorPatternInterface::SCAN
+      , void
+      , Closure >::value_type ;
+
+  value_type accum = 0 ;
+  value_type val, y, local_total;
 
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     val = 0;
-    lambda(i,val,false);
+    closure(i,val,false);
 
     // intra-blockDim.y exclusive scan on 'val'
     // accum = accumulated, sum in total for this iteration
@@ -465,7 +473,7 @@ void parallel_scan
     }
 
     // pass accum to all threads
-    local_total = shfl_warp_broadcast<ValueType>(val,
+    local_total = shfl_warp_broadcast<value_type>(val,
                                             threadIdx.x+Impl::CudaTraits::WarpSize-blockDim.x,
                                             Impl::CudaTraits::WarpSize);
 
@@ -474,7 +482,7 @@ void parallel_scan
     if ( threadIdx.y == 0 ) { val = 0 ; }
 
     val += accum;
-    lambda(i,val,true);
+    closure(i,val,true);
     accum += local_total;
   }
 }
@@ -485,18 +493,26 @@ void parallel_scan
 // blockDim.y == team_size
 // threadIdx.x == position in vec
 // threadIdx.y == member number
-template< typename iType, class Lambda, typename ValueType >
+template< typename iType, class Closure >
 KOKKOS_INLINE_FUNCTION
 void parallel_scan
   (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
-   const Lambda & lambda)
+   const Closure & closure )
 {
-  ValueType accum = 0 ;
-  ValueType val, y, local_total;
+  // Extract value_type from closure
+
+  using value_type =
+    typename Kokkos::Impl::FunctorAnalysis
+      < Kokkos::Impl::FunctorPatternInterface::SCAN
+      , void
+      , Closure >::value_type ;
+
+  value_type accum = 0 ;
+  value_type val, y, local_total;
 
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     val = 0;
-    lambda(i,val,false);
+    closure(i,val,false);
 
     // intra-blockDim.x exclusive scan on 'val'
     // accum = accumulated, sum in total for this iteration
@@ -508,14 +524,14 @@ void parallel_scan
     }
 
     // pass accum to all threads
-    local_total = shfl_warp_broadcast<ValueType>(val, blockDim.x-1, blockDim.x);
+    local_total = shfl_warp_broadcast<value_type>(val, blockDim.x-1, blockDim.x);
 
     // make EXCLUSIVE scan by shifting values over one
     val = Kokkos::shfl_up(val, 1, blockDim.x);
     if ( threadIdx.x == 0 ) { val = 0 ; }
 
     val += accum;
-    lambda(i,val,true);
+    closure(i,val,true);
     accum += local_total;
   }
 }

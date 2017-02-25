@@ -346,7 +346,7 @@ struct TestTaskTeam {
 #if 0
         , Kokkos::Sum( tot )
 #else
-        , []( volatile long & dst , const volatile long & src ) { dst += src ; }
+        , []( long & dst , const long & src ) { dst += src ; }
         , tot
 #endif
         );

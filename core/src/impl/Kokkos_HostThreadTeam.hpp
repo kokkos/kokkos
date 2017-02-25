@@ -655,7 +655,7 @@ public:
       return *((ValueType*) m_data.team_reduce());
     }
 #else
-    { Kokkos::abort("HostThreadTeamMember team_reduce\n"); }
+    { Kokkos::abort("HostThreadTeamMember team_reduce\n"); return ValueType(); }
 #endif
 
 
@@ -716,7 +716,7 @@ public:
       return ((T*) m_data.team_reduce_local())[0];
     }
 #else
-    { Kokkos::abort("HostThreadTeamMember team_scan\n"); }
+    { Kokkos::abort("HostThreadTeamMember team_scan\n"); return T(); }
 #endif
 
 };
@@ -895,9 +895,7 @@ void parallel_reduce
   for( iType i =  loop_boundaries.start ;
              i <  loop_boundaries.end ;
              i += loop_boundaries.increment) {
-    ValueType tmp = ValueType();
-    lambda(i,tmp);
-    result+=tmp;
+    lambda(i,result);
   }
 }
 
@@ -921,21 +919,16 @@ void parallel_reduce
   (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >& loop_boundaries,
    const Lambda & lambda,
    const JoinType & join,
-   ValueType& init_result)
+   ValueType& result)
 {
-  ValueType result = init_result;
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
   for( iType i =  loop_boundaries.start ;
              i <  loop_boundaries.end ;
              i += loop_boundaries.increment ) {
-    ValueType tmp = ValueType();
-    lambda(i,tmp);
-    join(result,tmp);
+    lambda(i,result);
   }
-
-  init_result = result;
 }
 
 //----------------------------------------------------------------------------
