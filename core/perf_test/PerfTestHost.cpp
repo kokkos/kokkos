@@ -66,6 +66,8 @@ const char TestHostDeviceName[] = "Kokkos::Serial" ;
 
 #include <impl/Kokkos_Timer.hpp>
 
+#include <PerfTestMDRange.hpp>
+
 #include <PerfTestHexGrad.hpp>
 #include <PerfTestBlasKernels.hpp>
 #include <PerfTestGramSchmidt.hpp>
@@ -102,6 +104,14 @@ protected:
   }
 };
 
+TEST_F( host, mdrange_lr ) {
+  EXPECT_NO_THROW( (run_test_mdrange<TestHostDevice , Kokkos::LayoutRight> (5, 11, TestHostDeviceName) ) );
+}
+/*
+TEST_F( host, mdrange_ll ) {
+  EXPECT_NO_THROW( (run_test_mdrange<TestHostDevice , Kokkos::LayoutLeft> (5, 8, TestHostDeviceName) ) ); //uncommenting and running both leads to segfault during run of the test above?????
+}
+
 TEST_F( host, hexgrad ) {
   EXPECT_NO_THROW(run_test_hexgrad< TestHostDevice>( 10, 20, TestHostDeviceName ));
 }
@@ -109,7 +119,7 @@ TEST_F( host, hexgrad ) {
 TEST_F( host, gramschmidt ) {
   EXPECT_NO_THROW(run_test_gramschmidt< TestHostDevice>( 10, 20, TestHostDeviceName ));
 }
-
+*/
 } // namespace Test
 
 

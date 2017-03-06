@@ -105,10 +105,11 @@ public:
       return & m_internal_implementation_private_member_data[0];
     }
 
-  ~Array() = default ;
-  Array() = default ;
-  Array( const Array & ) = default ;
-  Array & operator = ( const Array & ) = default ;
+  // Do not default unless move and move-assignment are also defined
+  // ~Array() = default ;
+  // Array() = default ;
+  // Array( const Array & ) = default ;
+  // Array & operator = ( const Array & ) = default ;
 
   // Some supported compilers are not sufficiently C++11 compliant
   // for default move constructor and move assignment operator.
