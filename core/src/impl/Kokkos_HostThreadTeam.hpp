@@ -379,7 +379,12 @@ fflush(stdout);
       m_work_range.second = m_work_range.first + chunk < length
                           ? m_work_range.first + chunk : length ;
 
-      m_steal_rank = ( m_team_base + m_team_alloc ) % m_pool_size ;
+      // We need to figure out whether the next team is active
+      // m_steal_rank + m_team_alloc could be the next base_rank to steal from
+      // but only if there are another m_team_size threads available so that that
+      // base rank has a full team. 
+      m_steal_rank = m_team_base + m_team_alloc + m_team_size <= m_pool_size ? 
+                     m_team_base + m_team_alloc : 0;
     }
 
   // Get one work index within the range

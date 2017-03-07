@@ -194,7 +194,15 @@ int HostThreadTeamData::organize_team( const int team_size )
 
     m_team_scratch = pool[ team_base_rank ]->m_scratch ;
     m_team_base    = team_base_rank ;
-    m_team_rank    = team_alloc_rank < team_size ? team_alloc_rank : -1 ;
+    // This needs to check overflow, if m_pool_size % team_alloc_size !=0 
+    // there are two corner cases:
+    // (i) if team_alloc_size == team_size there might be a non-full 
+    //     zombi team around (for example m_pool_size = 5 and team_size = 2
+    // (ii) if team_alloc > team_size then the last team might have less 
+    //      threads than the others
+    m_team_rank    = ( team_base_rank + team_size <= m_pool_size ) &&
+                     ( team_alloc_rank < team_size ) ?
+                     team_alloc_rank : -1;
     m_team_size    = team_size ;
     m_team_alloc   = team_alloc_size ;
     m_league_rank  = league_rank ;
@@ -409,7 +417,12 @@ int HostThreadTeamData::get_work_stealing() noexcept
           w.first  = -1 ;
           w.second = -1 ;
 
-          m_steal_rank = ( m_steal_rank + m_team_alloc ) % m_pool_size ;
+          // We need to figure out whether the next team is active
+          // m_steal_rank + m_team_alloc could be the next base_rank to steal from
+          // but only if there are another m_team_size threads available so that that
+          // base rank has a full team. 
+          m_steal_rank = m_steal_rank + m_team_alloc + m_team_size <= m_pool_size ?
+                         m_steal_rank + m_team_alloc : 0;
 
           steal_range = & ( pool[ m_steal_rank ]->m_work_range );
 

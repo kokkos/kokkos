@@ -578,15 +578,19 @@ private:
       std::is_same< Schedule , Kokkos::Static >::value>::type
   exec_team( const FunctorType & functor
            , HostThreadTeamData & data
-           , const int league_size )
+           , const int league_size 
+           , const int active )
     {
       int league_rank = -1 ;
-      while ( 0 <= ( league_rank = data.get_work_static() ) ) {
-        // Don't allow team members to lap one another
-        // so that they don't overwrite shared memory.
-        if ( data.team_rendezvous() ) { data.team_rendezvous_release(); }
-        functor( Member( data, league_rank, league_size ) );
-      }
+  
+      // Note: some threads may not be active
+      if ( active ) 
+        while ( 0 <= ( league_rank = data.get_work_static() ) ) {
+          // Don't allow team members to lap one another
+          // so that they don't overwrite shared memory.
+          if ( data.team_rendezvous() ) { data.team_rendezvous_release(); }
+          functor( Member( data, league_rank, league_size ) );
+        }
     }
 
   template< class TagType, class Schedule >
@@ -596,16 +600,20 @@ private:
       std::is_same<Schedule,Kokkos::Static>::value >::type
   exec_team( const FunctorType & functor
            , HostThreadTeamData & data
-           , const int league_size )
+           , const int league_size 
+           , const int active )
     {
       const TagType t{} ;
       int league_rank = -1 ;
-      while ( 0 <= ( league_rank = data.get_work_static() ) ) {
-        // Don't allow team members to lap one another
-        // so that they don't overwrite shared memory.
-        if ( data.team_rendezvous() ) { data.team_rendezvous_release(); }
-        functor( t , Member( data, league_rank, league_size ) );
-      }
+  
+      // Note: some threads may not be active
+      if ( active )
+        while ( 0 <= ( league_rank = data.get_work_static() ) ) {
+          // Don't allow team members to lap one another
+          // so that they don't overwrite shared memory.
+          if ( data.team_rendezvous() ) { data.team_rendezvous_release(); }
+          functor( t , Member( data, league_rank, league_size ) );
+        }
     }
 
   template< class TagType, class Schedule >
@@ -615,19 +623,23 @@ private:
       std::is_same<Schedule,Kokkos::Dynamic>::value>::type
   exec_team( const FunctorType & functor
            , HostThreadTeamData & data
-           , const int league_size )
+           , const int league_size 
+           , const int active)
     {
       // All teams must have set data partition before stealing
 
       #pragma omp barrier
 
       int league_rank = -1 ;
-      while ( 0 <= ( league_rank = data.get_work_stealing() ) ) {
-        // get_work_stealing already contains a barrier
-        // so an additional barrier is not necessary
-        // to prevent "lapping" of teams and overwrite of share memory
-        functor( Member( data, league_rank, league_size ) );
-      }
+ 
+      // Note: some threads may not be active
+      if ( active )
+        while ( 0 <= ( league_rank = data.get_work_stealing() ) ) {
+          // get_work_stealing already contains a barrier
+          // so an additional barrier is not necessary
+          // to prevent "lapping" of teams and overwrite of share memory
+          functor( Member( data, league_rank, league_size ) );
+        }
     }
 
   template< class TagType, class Schedule >
@@ -637,7 +649,8 @@ private:
       std::is_same<Schedule,Kokkos::Dynamic>::value >::type
   exec_team( const FunctorType & functor
            , HostThreadTeamData & data
-           , const int league_size )
+           , const int league_size 
+           , const int active)
     {
       const TagType t{} ;
 
@@ -646,11 +659,14 @@ private:
       #pragma omp barrier
 
       int league_rank = -1 ;
-      while ( 0 <= ( league_rank = data.get_work_stealing() ) ) {
-        // get_work_stealing already contains a barrier
-        // so an additional barrier is not necessary
-        // to prevent "lapping" of teams and overwrite of share memory
-        functor( t , Member( data, league_rank, league_size ) );
+      
+      // Note: some threads may not be active
+      if ( active )
+        while ( 0 <= ( league_rank = data.get_work_stealing() ) ) {
+          // get_work_stealing already contains a barrier
+          // so an additional barrier is not necessary
+          // to prevent "lapping" of teams and overwrite of share memory
+          functor( t , Member( data, league_rank, league_size ) );
       }
     }
 
@@ -677,12 +693,12 @@ public:
       {
         HostThreadTeamData & data = *OpenMPexec::get_thread_data();
 
-        if ( data.organize_team( m_policy.team_size() ) ) {
+        int active = data.organize_team( m_policy.team_size() ); 
 
+        if(active)
           data.set_work_partition( m_policy.league_size() );
 
-          ParallelFor::template exec_team< WorkTag, SchedTag >( m_functor , data , m_policy.league_size() );
-        }
+        ParallelFor::template exec_team< WorkTag, SchedTag >( m_functor , data , m_policy.league_size() , active );
 
         data.disband_team();
       }
@@ -748,15 +764,18 @@ private:
   exec_team( const FunctorType  & functor
            , HostThreadTeamData & data
            , reference_type     & update
-           , const int league_size )
+           , const int league_size 
+           , const int active )
     {
       int league_rank = -1 ;
-      while ( 0 <= ( league_rank = data.get_work_static() ) ) {
-        // Don't allow team members to lap one another
-        // so that they don't overwrite shared memory.
-        if ( data.team_rendezvous() ) { data.team_rendezvous_release(); }
-        functor( Member( data, league_rank, league_size ) , update );
-      }
+      
+      if ( active )
+        while ( 0 <= ( league_rank = data.get_work_static() ) ) {
+          // Don't allow team members to lap one another
+          // so that they don't overwrite shared memory.
+          if ( data.team_rendezvous() ) { data.team_rendezvous_release(); }
+          functor( Member( data, league_rank, league_size ) , update );
+        }
     }
 
   template< class TagType, class Schedule >
@@ -767,16 +786,19 @@ private:
   exec_team( const FunctorType  & functor
            , HostThreadTeamData & data
            , reference_type     & update
-           , const int league_size )
+           , const int league_size 
+           , const int active )
     {
       const TagType t{} ;
       int league_rank = -1 ;
-      while ( 0 <= ( league_rank = data.get_work_static() ) ) {
-        // Don't allow team members to lap one another
-        // so that they don't overwrite shared memory.
-        if ( data.team_rendezvous() ) { data.team_rendezvous_release(); }
-        functor( t , Member( data, league_rank, league_size ) , update );
-      }
+      
+      if ( active )
+        while ( 0 <= ( league_rank = data.get_work_static() ) ) {
+          // Don't allow team members to lap one another
+          // so that they don't overwrite shared memory.
+          if ( data.team_rendezvous() ) { data.team_rendezvous_release(); }
+          functor( t , Member( data, league_rank, league_size ) , update );
+        }
     }
 
   template< class TagType, class Schedule >
@@ -787,19 +809,22 @@ private:
   exec_team( const FunctorType & functor
            , HostThreadTeamData & data
            , reference_type     & update
-           , const int league_size )
+           , const int league_size 
+           , const int active )
     {
       // All teams must have set data partition before stealing
 
       #pragma omp barrier
 
       int league_rank = -1 ;
-      while ( 0 <= ( league_rank = data.get_work_stealing() ) ) {
-        // get_work_stealing already contains a barrier
-        // so an additional barrier is not necessary
-        // to prevent "lapping" of teams and overwrite of share memory
-        functor( Member( data, league_rank, league_size ) , update );
-      }
+      
+      if ( active )
+        while ( 0 <= ( league_rank = data.get_work_stealing() ) ) {
+          // get_work_stealing already contains a barrier
+          // so an additional barrier is not necessary
+          // to prevent "lapping" of teams and overwrite of share memory
+          functor( Member( data, league_rank, league_size ) , update );
+        }
     }
 
   template< class TagType, class Schedule >
@@ -810,7 +835,8 @@ private:
   exec_team( const FunctorType & functor
            , HostThreadTeamData & data
            , reference_type     & update
-           , const int league_size )
+           , const int league_size 
+           , const int active )
     {
       const TagType t{} ;
       // All teams must have set data partition before stealing
@@ -818,12 +844,14 @@ private:
       #pragma omp barrier
 
       int league_rank = -1 ;
-      while ( 0 <= ( league_rank = data.get_work_stealing() ) ) {
-        // get_work_stealing already contains a barrier
-        // so an additional barrier is not necessary
-        // to prevent "lapping" of teams and overwrite of share memory
-        functor( t , Member( data, league_rank, league_size ) , update );
-      }
+
+      if ( active )
+        while ( 0 <= ( league_rank = data.get_work_stealing() ) ) {
+          // get_work_stealing already contains a barrier
+          // so an additional barrier is not necessary
+          // to prevent "lapping" of teams and overwrite of share memory
+          functor( t , Member( data, league_rank, league_size ) , update );
+        }
     }
 
 public:
@@ -851,17 +879,17 @@ public:
       {
         HostThreadTeamData & data = *OpenMPexec::get_thread_data();
 
-        if ( data.organize_team( m_policy.team_size() ) ) {
+        const int active =  data.organize_team( m_policy.team_size() );
 
-          data.set_work_partition( m_policy.league_size() );
+        data.set_work_partition( m_policy.league_size() );
 
-          reference_type update =
-            ValueInit::init( ReducerConditional::select(m_functor , m_reducer)
+        reference_type update =
+          ValueInit::init( ReducerConditional::select(m_functor , m_reducer)
                            , data.pool_reduce_local() );
 
-          ParallelReduce::template exec_team< WorkTag, SchedTag >
-            ( m_functor , data , update , m_policy.league_size() );
-        }
+        ParallelReduce::template exec_team< WorkTag, SchedTag >
+          ( m_functor , data , update , m_policy.league_size() , active);
+        
 
         data.disband_team();
       }
