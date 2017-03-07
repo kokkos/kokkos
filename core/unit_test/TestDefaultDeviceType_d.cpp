@@ -211,6 +211,7 @@ TEST_F( defaultdevicetype , cxx11 )
   ASSERT_TRUE( ( TestCXX11::Test< Kokkos::DefaultExecutionSpace >(4) ) );
 }
 
+#if !defined(KOKKOS_CUDA_CLANG_WORKAROUND) && !defined(KOKKOS_ARCH_PASCAL)
 TEST_F( defaultdevicetype , team_vector )
 {
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::DefaultExecutionSpace >(0) ) );
@@ -220,6 +221,7 @@ TEST_F( defaultdevicetype , team_vector )
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::DefaultExecutionSpace >(4) ) );
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::DefaultExecutionSpace >(5) ) );
 }
+#endif
 
 TEST_F( defaultdevicetype , malloc )
 {
