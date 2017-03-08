@@ -614,7 +614,7 @@ public:
         typename Policy::member_type( kokkos_impl_cuda_shared_memory<void>()
                                     , m_shmem_begin
                                     , m_shmem_size
-                                    , m_scratch_ptr[1] + threadid/(blockDim.x*blockDim.y) * m_scratch_size[1]
+                                    , (void*) ( ((char*)m_scratch_ptr[1]) + threadid/(blockDim.x*blockDim.y) * m_scratch_size[1])
                                     , m_scratch_size[1]
                                     , league_rank
                                     , m_league_size ) );
@@ -1007,7 +1007,7 @@ public:
         ( Member( kokkos_impl_cuda_shared_memory<char>() + m_team_begin
                                         , m_shmem_begin
                                         , m_shmem_size
-                                        , m_scratch_ptr[1] + threadid / (blockDim.x * blockDim.y) * m_scratch_size[1]
+                                        , (void*) ( ((char*)m_scratch_ptr[1]) + threadid/(blockDim.x*blockDim.y) * m_scratch_size[1])
                                         , m_scratch_size[1]
                                         , league_rank
                                         , m_league_size )
@@ -1046,7 +1046,7 @@ public:
         ( Member( kokkos_impl_cuda_shared_memory<char>() + m_team_begin
                                         , m_shmem_begin
                                         , m_shmem_size
-                                        , m_scratch_ptr[1] + threadid / (blockDim.x * blockDim.y) * m_scratch_size[1]
+                                        , (void*) ( ((char*)m_scratch_ptr[1]) + threadid/(blockDim.x*blockDim.y) * m_scratch_size[1])
                                         , m_scratch_size[1]
                                         , league_rank
                                         , m_league_size )
