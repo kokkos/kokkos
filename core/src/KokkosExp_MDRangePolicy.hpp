@@ -69,14 +69,22 @@ template <typename ExecSpace>
 struct default_outer_direction
 {
   using type = Iterate;
+  #if defined( KOKKOS_ENABLE_CUDA)
+  static constexpr Iterate value = Iterate::Left;
+  #else
   static constexpr Iterate value = Iterate::Right;
+  #endif
 };
 
 template <typename ExecSpace>
 struct default_inner_direction
 {
   using type = Iterate;
+  #if defined( KOKKOS_ENABLE_CUDA)
+  static constexpr Iterate value = Iterate::Left;
+  #else
   static constexpr Iterate value = Iterate::Right;
+  #endif
 };
 
 
@@ -173,7 +181,7 @@ struct MDRangePolicy
             m_tile[i] = span;
           }
         }
-        m_tile_end[i] = static_cast<index_type>((span + m_tile[i] -1) / m_tile[i]);
+        m_tile_end[i] = static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
         m_num_tiles *= m_tile_end[i];
       }
     }
@@ -202,7 +210,7 @@ struct MDRangePolicy
       for (int i=0; i<rank; ++i) {
         total_tile_size_check *= m_tile[i];
       }
-      if ( total_tile_size_check > 1024 ) {
+      if ( total_tile_size_check > 1024 ) { // improve this check - 1024,1024,64 max per dim, but NOT the product for total num_threads; more restrictions with debug
         printf(" Tile dimensions exceed Cuda limits\n");
         Kokkos::abort(" Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
         //Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
