@@ -351,6 +351,10 @@ public:
         const int team_rank_rev = pool_rank_rev % team.team_alloc();
         const size_t pool_league_size     = m_exec->pool_size() / team.team_alloc() ;
         const size_t pool_league_rank_rev = pool_rank_rev / team.team_alloc() ;
+        if(pool_league_rank_rev >= pool_league_size) {
+          m_invalid_thread = 1;
+          return;
+        }
         const size_t pool_league_rank     = pool_league_size - ( pool_league_rank_rev + 1 );
 
         const int pool_num_teams       = m_exec->pool_size()/team.team_alloc();
