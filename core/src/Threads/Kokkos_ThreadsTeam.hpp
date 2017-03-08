@@ -49,6 +49,7 @@
 #include <utility>
 #include <impl/Kokkos_spinwait.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
+#include <impl/Kokkos_HostThreadTeam.hpp>
 
 #include <Kokkos_Atomic.hpp>
 
@@ -350,6 +351,10 @@ public:
         const int team_rank_rev = pool_rank_rev % team.team_alloc();
         const size_t pool_league_size     = m_exec->pool_size() / team.team_alloc() ;
         const size_t pool_league_rank_rev = pool_rank_rev / team.team_alloc() ;
+        if(pool_league_rank_rev >= pool_league_size) {
+          m_invalid_thread = 1;
+          return;
+        }
         const size_t pool_league_rank     = pool_league_size - ( pool_league_rank_rev + 1 );
 
         const int pool_num_teams       = m_exec->pool_size()/team.team_alloc();
@@ -505,7 +510,8 @@ private:
            , const int team_size_request )
    {
       const int pool_size  = traits::execution_space::thread_pool_size(0);
-      const int team_max   = traits::execution_space::thread_pool_size(1);
+      const int max_host_team_size =  Impl::HostThreadTeamData::max_team_members;
+      const int team_max   = pool_size<max_host_team_size?pool_size:max_host_team_size;
       const int team_grain = traits::execution_space::thread_pool_size(2);
 
       m_league_size = league_size_request ;
@@ -552,8 +558,12 @@ public:
 
   template< class FunctorType >
   inline static
-  int team_size_max( const FunctorType & )
-    { return traits::execution_space::thread_pool_size(1); }
+  int team_size_max( const FunctorType & ) {
+      int pool_size = traits::execution_space::thread_pool_size(1);
+      int max_host_team_size =  Impl::HostThreadTeamData::max_team_members;
+      return pool_size<max_host_team_size?pool_size:max_host_team_size;
+    }
+
 
   template< class FunctorType >
   static int team_size_recommended( const FunctorType & )

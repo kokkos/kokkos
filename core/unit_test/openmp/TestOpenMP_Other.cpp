@@ -50,10 +50,33 @@ TEST_F( openmp, init )
   ;
 }
 
-TEST_F( openmp, md_range )
+TEST_F( openmp, mdrange_for )
 {
-  TestMDRange_2D< Kokkos::OpenMP >::test_for2( 100, 100 );
-  TestMDRange_3D< Kokkos::OpenMP >::test_for3( 100, 100, 100 );
+  Kokkos::Timer timer;
+  TestMDRange_2D< Kokkos::OpenMP >::test_for2( 10000, 1000 );
+  std::cout << " 2D: " << timer.seconds() << std::endl;
+
+  timer.reset();
+  TestMDRange_3D< Kokkos::OpenMP >::test_for3( 100, 100, 1000 );
+  std::cout << " 3D: " << timer.seconds() << std::endl;
+
+  timer.reset();
+  TestMDRange_4D< Kokkos::OpenMP >::test_for4( 100, 10, 100, 100 );
+  std::cout << " 4D: " << timer.seconds() << std::endl;
+
+  timer.reset();
+  TestMDRange_5D< Kokkos::OpenMP >::test_for5( 100, 10, 10, 100, 50 );
+  std::cout << " 5D: " << timer.seconds() << std::endl;
+
+  timer.reset();
+  TestMDRange_6D< Kokkos::OpenMP >::test_for6( 10, 10, 10, 10, 50, 50 );
+  std::cout << " 6D: " << timer.seconds() << std::endl;
+}
+
+TEST_F( openmp, mdrange_reduce )
+{
+  TestMDRange_2D< Kokkos::OpenMP >::test_reduce2( 100, 100 );
+  TestMDRange_3D< Kokkos::OpenMP >::test_reduce3( 100, 10, 100 );
 }
 
 TEST_F( openmp, policy_construction )

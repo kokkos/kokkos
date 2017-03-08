@@ -689,32 +689,32 @@ int test_team_mulit_level_scratch_loop_body( const typename Kokkos::TeamPolicy<E
   // types for begin and end.
   Kokkos::parallel_for( Kokkos::TeamThreadRange( team, int( 0 ), unsigned( 128 ) ), [&] ( const int & i )
   {
-    a_team1( i ) = 1000000 + i;
-    a_team2( i ) = 2000000 + i;
-    a_team3( i ) = 3000000 + i;
+    a_team1( i ) = 1000000 + i + team.league_rank() * 100000;
+    a_team2( i ) = 2000000 + i + team.league_rank() * 100000;
+    a_team3( i ) = 3000000 + i + team.league_rank() * 100000;
   });
   team.team_barrier();
 
   Kokkos::parallel_for( Kokkos::ThreadVectorRange( team, 16 ), [&] ( const int & i )
   {
-    a_thread1( i ) = 1000000 + 100000* team.team_rank() + 16 - i;
-    a_thread2( i ) = 2000000 + 100000* team.team_rank() + 16 - i;
-    a_thread3( i ) = 3000000 + 100000* team.team_rank() + 16 - i;
+    a_thread1( i ) = 1000000 + 100000 * team.team_rank() + 16 - i + team.league_rank() * 100000;
+    a_thread2( i ) = 2000000 + 100000 * team.team_rank() + 16 - i + team.league_rank() * 100000;
+    a_thread3( i ) = 3000000 + 100000 * team.team_rank() + 16 - i + team.league_rank() * 100000;
   });
 
   Kokkos::parallel_for( Kokkos::TeamThreadRange( team, 0, 128000 ), [&] ( const int & i )
   {
-    b_team1( i ) = 1000000 + i;
-    b_team2( i ) = 2000000 + i;
-    b_team3( i ) = 3000000 + i;
+    b_team1( i ) = 1000000 + i + team.league_rank() * 100000;
+    b_team2( i ) = 2000000 + i + team.league_rank() * 100000;
+    b_team3( i ) = 3000000 + i + team.league_rank() * 100000;
   });
   team.team_barrier();
 
   Kokkos::parallel_for( Kokkos::ThreadVectorRange( team, 16000 ), [&] ( const int & i )
   {
-    b_thread1( i ) = 1000000 + 100000 * team.team_rank() + 16 - i;
-    b_thread2( i ) = 2000000 + 100000 * team.team_rank() + 16 - i;
-    b_thread3( i ) = 3000000 + 100000 * team.team_rank() + 16 - i;
+    b_thread1( i ) = 1000000 + 100000 * team.team_rank() + 16 - i + team.league_rank() * 100000;
+    b_thread2( i ) = 2000000 + 100000 * team.team_rank() + 16 - i + team.league_rank() * 100000;
+    b_thread3( i ) = 3000000 + 100000 * team.team_rank() + 16 - i + team.league_rank() * 100000;
   });
 
   team.team_barrier();
@@ -722,32 +722,32 @@ int test_team_mulit_level_scratch_loop_body( const typename Kokkos::TeamPolicy<E
   int error = 0;
   Kokkos::parallel_for( Kokkos::TeamThreadRange( team, 0, 128 ), [&] ( const int & i )
   {
-    if ( a_team1( i ) != 1000000 + i ) error++;
-    if ( a_team2( i ) != 2000000 + i ) error++;
-    if ( a_team3( i ) != 3000000 + i ) error++;
+    if ( a_team1( i ) != 1000000 + i + team.league_rank() * 100000 ) error++;
+    if ( a_team2( i ) != 2000000 + i + team.league_rank() * 100000 ) error++;
+    if ( a_team3( i ) != 3000000 + i + team.league_rank() * 100000 ) error++;
   });
   team.team_barrier();
 
   Kokkos::parallel_for( Kokkos::ThreadVectorRange( team, 16 ), [&] ( const int & i )
   {
-    if ( a_thread1( i ) != 1000000 + 100000 * team.team_rank() + 16 - i ) error++;
-    if ( a_thread2( i ) != 2000000 + 100000 * team.team_rank() + 16 - i ) error++;
-    if ( a_thread3( i ) != 3000000 + 100000 * team.team_rank() + 16 - i ) error++;
+    if ( a_thread1( i ) != 1000000 + 100000 * team.team_rank() + 16 - i + team.league_rank() * 100000 ) error++;
+    if ( a_thread2( i ) != 2000000 + 100000 * team.team_rank() + 16 - i + team.league_rank() * 100000 ) error++;
+    if ( a_thread3( i ) != 3000000 + 100000 * team.team_rank() + 16 - i + team.league_rank() * 100000 ) error++;
   });
 
   Kokkos::parallel_for( Kokkos::TeamThreadRange( team, 0, 128000 ), [&] ( const int & i )
   {
-    if ( b_team1( i ) != 1000000 + i ) error++;
-    if ( b_team2( i ) != 2000000 + i ) error++;
-    if ( b_team3( i ) != 3000000 + i ) error++;
+    if ( b_team1( i ) != 1000000 + i + team.league_rank() * 100000 ) error++;
+    if ( b_team2( i ) != 2000000 + i + team.league_rank() * 100000 ) error++;
+    if ( b_team3( i ) != 3000000 + i + team.league_rank() * 100000 ) error++;
   });
   team.team_barrier();
 
   Kokkos::parallel_for( Kokkos::ThreadVectorRange( team, 16000 ), [&] ( const int & i )
   {
-    if ( b_thread1( i ) != 1000000 + 100000 * team.team_rank() + 16 - i ) error++;
-    if ( b_thread2( i ) != 2000000 + 100000 * team.team_rank() + 16 - i ) error++;
-    if ( b_thread3( i ) != 3000000 + 100000 * team.team_rank() + 16 - i ) error++;
+    if ( b_thread1( i ) != 1000000 + 100000 * team.team_rank() + 16 - i + team.league_rank() * 100000 ) error++;
+    if ( b_thread2( i ) != 2000000 + 100000 * team.team_rank() + 16 - i + team.league_rank() * 100000 ) error++;
+    if ( b_thread3( i ) != 3000000 + 100000 * team.team_rank() + 16 - i + team.league_rank() * 100000 ) error++;
   });
 
   return error;

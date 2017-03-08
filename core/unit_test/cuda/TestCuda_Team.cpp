@@ -99,6 +99,7 @@ TEST_F( cuda, multi_level_scratch )
   TestMultiLevelScratchTeam< Kokkos::Cuda, Kokkos::Schedule<Kokkos::Dynamic> >();
 }
 
+#if !defined(KOKKOS_CUDA_CLANG_WORKAROUND) && !defined(KOKKOS_ARCH_PASCAL)
 TEST_F( cuda, team_vector )
 {
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Cuda >( 0 ) ) );
@@ -113,6 +114,7 @@ TEST_F( cuda, team_vector )
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Cuda >( 9 ) ) );
   ASSERT_TRUE( ( TestTeamVector::Test< Kokkos::Cuda >( 10 ) ) );
 }
+#endif
 
 TEST_F( cuda, triple_nested_parallelism )
 {

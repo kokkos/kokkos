@@ -586,13 +586,35 @@ public:
   void operator()(void) const
   {
     // Iterate this block through the league
+    int threadid = 0;
+    if ( m_scratch_size[1]>0 ) {
+      __shared__ int base_thread_id;
+      if (threadIdx.x==0 && threadIdx.y==0 ) {
+        threadid = ((blockIdx.x*blockDim.z + threadIdx.z) * blockDim.x * blockDim.y) % kokkos_impl_cuda_lock_arrays.n;
+        threadid = ((threadid + blockDim.x * blockDim.y-1)/(blockDim.x * blockDim.y)) * blockDim.x * blockDim.y;
+        if(threadid > kokkos_impl_cuda_lock_arrays.n) threadid-=blockDim.x * blockDim.y;
+        int done = 0;
+        while (!done) {
+          done = (0 == atomicCAS(&kokkos_impl_cuda_lock_arrays.atomic[threadid],0,1));
+          if(!done) {
+            threadid += blockDim.x * blockDim.y;
+            if(threadid > kokkos_impl_cuda_lock_arrays.n) threadid = 0;
+          }
+        }
+        base_thread_id = threadid;
+      }
+      __syncthreads();
+      threadid = base_thread_id;
+    }
+
+
     for ( int league_rank = blockIdx.x ; league_rank < m_league_size ; league_rank += gridDim.x ) {
 
       this-> template exec_team< WorkTag >(
         typename Policy::member_type( kokkos_impl_cuda_shared_memory<void>()
                                     , m_shmem_begin
                                     , m_shmem_size
-                                    , m_scratch_ptr[1]
+                                    , (void*) ( ((char*)m_scratch_ptr[1]) + threadid/(blockDim.x*blockDim.y) * m_scratch_size[1])
                                     , m_scratch_size[1]
                                     , league_rank
                                     , m_league_size ) );
@@ -946,11 +968,32 @@ public:
 
   __device__ inline
   void operator() () const {
-    run(Kokkos::Impl::if_c<UseShflReduction, DummyShflReductionType, DummySHMEMReductionType>::select(1,1.0) );
+    int threadid = 0;
+    if ( m_scratch_size[1]>0 ) {
+      __shared__ int base_thread_id;
+      if (threadIdx.x==0 && threadIdx.y==0 ) {
+        threadid = ((blockIdx.x*blockDim.z + threadIdx.z) * blockDim.x * blockDim.y) % kokkos_impl_cuda_lock_arrays.n;
+        threadid = ((threadid + blockDim.x * blockDim.y-1)/(blockDim.x * blockDim.y)) * blockDim.x * blockDim.y;
+        if(threadid > kokkos_impl_cuda_lock_arrays.n) threadid-=blockDim.x * blockDim.y;
+        int done = 0;
+        while (!done) {
+          done = (0 == atomicCAS(&kokkos_impl_cuda_lock_arrays.atomic[threadid],0,1));
+          if(!done) {
+            threadid += blockDim.x * blockDim.y;
+            if(threadid > kokkos_impl_cuda_lock_arrays.n) threadid = 0;
+          }
+        }
+        base_thread_id = threadid;
+      }
+      __syncthreads();
+      threadid = base_thread_id;
+    }
+
+    run(Kokkos::Impl::if_c<UseShflReduction, DummyShflReductionType, DummySHMEMReductionType>::select(1,1.0), threadid );
   }
 
   __device__ inline
-  void run(const DummySHMEMReductionType&) const
+  void run(const DummySHMEMReductionType&, const int& threadid) const
   {
     const integral_nonzero_constant< size_type , ValueTraits::StaticValueSize / sizeof(size_type) >
       word_count( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) / sizeof(size_type) );
@@ -964,7 +1007,7 @@ public:
         ( Member( kokkos_impl_cuda_shared_memory<char>() + m_team_begin
                                         , m_shmem_begin
                                         , m_shmem_size
-                                        , m_scratch_ptr[1]
+                                        , (void*) ( ((char*)m_scratch_ptr[1]) + threadid/(blockDim.x*blockDim.y) * m_scratch_size[1])
                                         , m_scratch_size[1]
                                         , league_rank
                                         , m_league_size )
@@ -992,7 +1035,7 @@ public:
   }
 
   __device__ inline
-  void run(const DummyShflReductionType&) const
+  void run(const DummyShflReductionType&, const int& threadid) const
   {
     value_type value;
     ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , &value);
@@ -1003,7 +1046,7 @@ public:
         ( Member( kokkos_impl_cuda_shared_memory<char>() + m_team_begin
                                         , m_shmem_begin
                                         , m_shmem_size
-                                        , m_scratch_ptr[1]
+                                        , (void*) ( ((char*)m_scratch_ptr[1]) + threadid/(blockDim.x*blockDim.y) * m_scratch_size[1])
                                         , m_scratch_size[1]
                                         , league_rank
                                         , m_league_size )

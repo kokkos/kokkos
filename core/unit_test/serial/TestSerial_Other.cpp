@@ -45,10 +45,19 @@
 
 namespace Test {
 
-TEST_F( serial, md_range )
+TEST_F( serial , mdrange_for )
 {
   TestMDRange_2D< Kokkos::Serial >::test_for2( 100, 100 );
-  TestMDRange_3D< Kokkos::Serial >::test_for3( 100, 100, 100 );
+  TestMDRange_3D< Kokkos::Serial >::test_for3( 100, 10, 100 );
+  TestMDRange_4D< Kokkos::Serial >::test_for4( 100, 10, 10, 10 );
+  TestMDRange_5D< Kokkos::Serial >::test_for5( 100, 10, 10, 10, 5 );
+  TestMDRange_6D< Kokkos::Serial >::test_for6( 10, 10, 10, 10, 5, 5 );
+}
+
+TEST_F( serial , mdrange_reduce )
+{
+  TestMDRange_2D< Kokkos::Serial >::test_reduce2( 100, 100 );
+  TestMDRange_3D< Kokkos::Serial >::test_reduce3( 100, 10, 100 );
 }
 
 TEST_F( serial, policy_construction )

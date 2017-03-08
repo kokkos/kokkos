@@ -50,10 +50,17 @@ TEST_F( threads, init )
   ;
 }
 
-TEST_F( threads, md_range )
-{
+TEST_F( threads , mdrange_for ) {
   TestMDRange_2D< Kokkos::Threads >::test_for2( 100, 100 );
-  TestMDRange_3D< Kokkos::Threads >::test_for3( 100, 100, 100 );
+  TestMDRange_3D< Kokkos::Threads >::test_for3( 100, 10, 100 );
+  TestMDRange_4D< Kokkos::Threads >::test_for4( 100, 10, 10, 10 );
+  TestMDRange_5D< Kokkos::Threads >::test_for5( 100, 10, 10, 10, 5 );
+  TestMDRange_6D< Kokkos::Threads >::test_for6( 10, 10, 10, 10, 5, 5 );
+}
+
+TEST_F( threads , mdrange_reduce ) {
+  TestMDRange_2D< Kokkos::Threads >::test_reduce2( 100, 100 );
+  TestMDRange_3D< Kokkos::Threads >::test_reduce3( 100, 10, 100 );
 }
 
 TEST_F( threads, policy_construction )

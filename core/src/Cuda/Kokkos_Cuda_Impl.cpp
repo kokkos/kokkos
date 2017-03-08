@@ -536,6 +536,7 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
   locks.atomic = atomic_lock_array_cuda_space_ptr(false);
   locks.scratch = scratch_lock_array_cuda_space_ptr(false);
   locks.threadid = threadid_lock_array_cuda_space_ptr(false);
+  locks.n = Kokkos::Cuda::concurrency();
   cudaMemcpyToSymbol( kokkos_impl_cuda_lock_arrays , & locks , sizeof(CudaLockArraysStruct) );
   #endif
 }
@@ -620,9 +621,9 @@ void CudaInternal::finalize()
   was_finalized = 1;
   if ( 0 != m_scratchSpace || 0 != m_scratchFlags ) {
 
-    atomic_lock_array_cuda_space_ptr(false);
-    scratch_lock_array_cuda_space_ptr(false);
-    threadid_lock_array_cuda_space_ptr(false);
+    atomic_lock_array_cuda_space_ptr(true);
+    scratch_lock_array_cuda_space_ptr(true);
+    threadid_lock_array_cuda_space_ptr(true);
 
     if ( m_stream ) {
       for ( size_type i = 1 ; i < m_streamCount ; ++i ) {

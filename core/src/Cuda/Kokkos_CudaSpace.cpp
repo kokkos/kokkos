@@ -883,6 +883,7 @@ void init_lock_arrays_cuda_space() {
     locks.atomic = atomic_lock_array_cuda_space_ptr(false);
     locks.scratch = scratch_lock_array_cuda_space_ptr(false);
     locks.threadid = threadid_lock_array_cuda_space_ptr(false);
+    locks.n = Kokkos::Cuda::concurrency();
     cudaMemcpyToSymbol( kokkos_impl_cuda_lock_arrays , & locks , sizeof(CudaLockArraysStruct) );
     init_lock_array_kernel_atomic<<<(CUDA_SPACE_ATOMIC_MASK+255)/256,256>>>();
     init_lock_array_kernel_scratch_threadid<<<(Kokkos::Cuda::concurrency()+255)/256,256>>>(Kokkos::Cuda::concurrency());
