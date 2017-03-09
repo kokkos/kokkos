@@ -57,6 +57,10 @@
 #include <Kokkos_OpenMP.hpp>
 #endif
 
+#if defined( KOKKOS_ENABLE_QTHREADS )
+#include <Kokkos_Qthreads.hpp>
+#endif
+
 #if defined( KOKKOS_ENABLE_PTHREAD )
 #include <Kokkos_Threads.hpp>
 #endif
@@ -159,4 +163,3 @@ void * kokkos_realloc( void * arg_alloc , const size_t arg_alloc_size )
 //----------------------------------------------------------------------------
 
 #endif
-

@@ -31,23 +31,23 @@ KOKKOS_HEADERS_INCLUDE += $(wildcard $(KOKKOS_PATH)/algorithms/src/*.hpp)
 CONDITIONAL_COPIES =
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
-	KOKKOS_HEADERS_CUDA += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.hpp)
-	CONDITIONAL_COPIES += copy-cuda
+  KOKKOS_HEADERS_CUDA += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.hpp)
+  CONDITIONAL_COPIES += copy-cuda
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
-	KOKKOS_HEADERS_THREADS += $(wildcard $(KOKKOS_PATH)/core/src/Threads/*.hpp)
-	CONDITIONAL_COPIES += copy-threads
+  KOKKOS_HEADERS_THREADS += $(wildcard $(KOKKOS_PATH)/core/src/Threads/*.hpp)
+  CONDITIONAL_COPIES += copy-threads
 endif
 
-ifeq ($(KOKKOS_INTERNAL_USE_QTHREAD), 1)
-	KOKKOS_HEADERS_QTHREAD += $(wildcard $(KOKKOS_PATH)/core/src/Qthread/*.hpp)
-	CONDITIONAL_COPIES += copy-qthread
+ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
+  KOKKOS_HEADERS_QTHREADS += $(wildcard $(KOKKOS_PATH)/core/src/Qthreads/*.hpp)
+  CONDITIONAL_COPIES += copy-qthreads
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
-	KOKKOS_HEADERS_OPENMP += $(wildcard $(KOKKOS_PATH)/core/src/OpenMP/*.hpp)
-	CONDITIONAL_COPIES += copy-openmp
+  KOKKOS_HEADERS_OPENMP += $(wildcard $(KOKKOS_PATH)/core/src/OpenMP/*.hpp)
+  CONDITIONAL_COPIES += copy-openmp
 endif
 
 ifeq ($(KOKKOS_OS),CYGWIN)
@@ -97,6 +97,7 @@ build-makefile-kokkos:
 	echo "" >> Makefile.kokkos
 	echo "#Internal settings which need to propagated for Kokkos examples" >> Makefile.kokkos
 	echo "KOKKOS_INTERNAL_USE_CUDA = ${KOKKOS_INTERNAL_USE_CUDA}" >> Makefile.kokkos
+	echo "KOKKOS_INTERNAL_USE_QTHREADS = ${KOKKOS_INTERNAL_USE_QTHREADS}" >> Makefile.kokkos
 	echo "KOKKOS_INTERNAL_USE_OPENMP = ${KOKKOS_INTERNAL_USE_OPENMP}" >> Makefile.kokkos
 	echo "KOKKOS_INTERNAL_USE_PTHREADS = ${KOKKOS_INTERNAL_USE_PTHREADS}" >> Makefile.kokkos
 	echo "" >> Makefile.kokkos
@@ -178,9 +179,9 @@ copy-threads: mkdir
 	mkdir -p $(PREFIX)/include/Threads
 	cp $(COPY_FLAG) $(KOKKOS_HEADERS_THREADS) $(PREFIX)/include/Threads
 
-copy-qthread: mkdir
-	mkdir -p $(PREFIX)/include/Qthread
-	cp $(COPY_FLAG) $(KOKKOS_HEADERS_QTHREAD) $(PREFIX)/include/Qthread
+copy-qthreads: mkdir
+	mkdir -p $(PREFIX)/include/Qthreads
+	cp $(COPY_FLAG) $(KOKKOS_HEADERS_QTHREADS) $(PREFIX)/include/Qthreads
 
 copy-openmp: mkdir
 	mkdir -p $(PREFIX)/include/OpenMP

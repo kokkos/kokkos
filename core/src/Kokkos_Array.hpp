@@ -84,7 +84,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   reference operator[]( const iType & i )
     {
-      static_assert( std::is_integral<iType>::value , "Must be integral argument" );
+      static_assert( ( std::is_integral<iType>::value || std::is_enum<iType>::value ) , "Must be integral argument" );
       return m_internal_implementation_private_member_data[i];
     }
 
@@ -92,7 +92,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   const_reference operator[]( const iType & i ) const
     {
-      static_assert( std::is_integral<iType>::value , "Must be integral argument" );
+      static_assert( ( std::is_integral<iType>::value || std::is_enum<iType>::value ) , "Must be integral argument" );
       return m_internal_implementation_private_member_data[i];
     }
 
@@ -137,7 +137,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   value_type operator[]( const iType & )
     {
-      static_assert( std::is_integral<iType>::value , "Must be integer argument" );
+      static_assert( ( std::is_integral<iType>::value || std::is_enum<iType>::value ) , "Must be integer argument" );
       return value_type();
     }
 
@@ -145,7 +145,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   value_type operator[]( const iType & ) const
     {
-      static_assert( std::is_integral<iType>::value , "Must be integer argument" );
+      static_assert( ( std::is_integral<iType>::value || std::is_enum<iType>::value ) , "Must be integer argument" );
       return value_type();
     }
 
@@ -194,7 +194,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   reference operator[]( const iType & i )
     {
-      static_assert( std::is_integral<iType>::value , "Must be integral argument" );
+      static_assert( ( std::is_integral<iType>::value || std::is_enum<iType>::value ) , "Must be integral argument" );
       return m_elem[i];
     }
 
@@ -202,7 +202,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   const_reference operator[]( const iType & i ) const
     {
-      static_assert( std::is_integral<iType>::value , "Must be integral argument" );
+      static_assert( ( std::is_integral<iType>::value || std::is_enum<iType>::value ) , "Must be integral argument" );
       return m_elem[i];
     }
 
@@ -263,7 +263,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   reference operator[]( const iType & i )
     {
-      static_assert( std::is_integral<iType>::value , "Must be integral argument" );
+      static_assert( ( std::is_integral<iType>::value || std::is_enum<iType>::value ) , "Must be integral argument" );
       return m_elem[i*m_stride];
     }
 
@@ -271,7 +271,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   const_reference operator[]( const iType & i ) const
     {
-      static_assert( std::is_integral<iType>::value , "Must be integral argument" );
+      static_assert( ( std::is_integral<iType>::value || std::is_enum<iType>::value ) , "Must be integral argument" );
       return m_elem[i*m_stride];
     }
 
