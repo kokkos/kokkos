@@ -246,7 +246,6 @@ struct TestMDRange_2D {
 
     {
       typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<2>, InitTag > range_type;
-      //typedef typename range_type::tile_type tile_type;
       typedef typename range_type::point_type point_type;
 
       range_type range( point_type{ { 0, 0 } }, point_type{ { N0, N1 } } );
@@ -586,7 +585,6 @@ struct TestMDRange_3D {
 
     {
       typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<3> > range_type;
-      //typedef typename range_type::tile_type tile_type;
       typedef typename range_type::point_type point_type;
 
       range_type range( point_type{ { 0, 0, 0 } }, point_type{ { N0, N1, N2 } } );
@@ -863,7 +861,6 @@ struct TestMDRange_4D {
 
     {
       typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<4> > range_type;
-      //typedef typename range_type::tile_type tile_type;
       typedef typename range_type::point_type point_type;
 
       range_type range( point_type{ { 0, 0, 0, 0 } }, point_type{ { N0, N1, N2, N3 } } );
@@ -897,7 +894,7 @@ struct TestMDRange_4D {
       typedef typename range_type::tile_type tile_type;
       typedef typename range_type::point_type point_type;
 
-      range_type range( point_type{ { 0, 0, 0, 0 } }, point_type{ { N0, N1, N2, N3 } }, tile_type{ { 3, 3, 3, 3 } } );
+      range_type range( point_type{ { 0, 0, 0, 0 } }, point_type{ { N0, N1, N2, N3 } }, tile_type{ { 3, 11, 3, 3 } } );
       TestMDRange_4D functor( N0, N1, N2, N3 );
 
       md_parallel_for( range, functor );
@@ -917,7 +914,7 @@ struct TestMDRange_4D {
       }
 
       if ( counter != 0 ) {
-        printf( "Defaults + InitTag op(): Errors in test_for4; mismatches = %d\n\n", counter );
+        printf("Defaults +m_tile > m_upper dim2 InitTag op(): Errors in test_for4; mismatches = %d\n\n",counter);
       }
 
       ASSERT_EQ( counter, 0 );
@@ -1153,7 +1150,6 @@ struct TestMDRange_5D {
 
     {
       typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<5> > range_type;
-      //typedef typename range_type::tile_type tile_type;
       typedef typename range_type::point_type point_type;
 
       range_type range( point_type{ { 0, 0, 0, 0, 0 } }, point_type{ { N0, N1, N2, N3, N4 } } );
@@ -1188,7 +1184,7 @@ struct TestMDRange_5D {
       typedef typename range_type::tile_type tile_type;
       typedef typename range_type::point_type point_type;
 
-      range_type range( point_type{ { 0, 0, 0, 0, 0 } }, point_type{ { N0, N1, N2, N3, N4 } }, tile_type{ { 3, 3, 3, 3, 3 } } );
+      range_type range( point_type{ { 0, 0, 0, 0, 0 } }, point_type{ { N0, N1, N2, N3, N4 } }, tile_type{ { 3, 3, 3, 3, 7 } } );
       TestMDRange_5D functor( N0, N1, N2, N3, N4 );
 
       md_parallel_for( range, functor );
@@ -1451,7 +1447,6 @@ struct TestMDRange_6D {
 
     {
       typedef typename Kokkos::Experimental::MDRangePolicy< ExecSpace, Rank<6> > range_type;
-      //typedef typename range_type::tile_type tile_type;
       typedef typename range_type::point_type point_type;
 
       range_type range( point_type{ { 0, 0, 0, 0, 0, 0 } }, point_type{ { N0, N1, N2, N3, N4, N5 } } );
@@ -1487,7 +1482,7 @@ struct TestMDRange_6D {
       typedef typename range_type::tile_type tile_type;
       typedef typename range_type::point_type point_type;
 
-      range_type range( point_type{ { 0, 0, 0, 0, 0, 0 } }, point_type{ { N0, N1, N2, N3, N4, N5 } }, tile_type{ { 3, 3, 3, 3, 3, 3 } } );
+      range_type range( point_type{ { 0, 0, 0, 0, 0, 0 } }, point_type{ { N0, N1, N2, N3, N4, N5 } }, tile_type{ { 3, 3, 3, 3, 2, 3 } } ); //tile dims 3,3,3,3,3,3 more than cuda can handle with debugging
       TestMDRange_6D functor( N0, N1, N2, N3, N4, N5 );
 
       md_parallel_for( range, functor );

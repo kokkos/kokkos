@@ -388,10 +388,11 @@ struct apply_impl<4,RP,Functor,void >
   {
 // LL
     if (RP::inner_direction == RP::Left) {
-      const index_type temp0  =  ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] ;
-      const index_type temp1  =  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ;
+      const index_type temp0  =  m_rp.m_tile_end[0];
+      const index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
-      const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
+      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x % numbl0;
       const index_type tile_id1 = blockIdx.x / numbl0;
@@ -425,10 +426,11 @@ struct apply_impl<4,RP,Functor,void >
     }
 // LR
     else {
-      const index_type temp0  =  ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] ;
-      const index_type temp1  =  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ;
-      const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
+      const index_type temp0  =  m_rp.m_tile_end[0];
+      const index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
+      ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x / numbl1;
       const index_type tile_id1 = blockIdx.x % numbl1;
@@ -486,10 +488,11 @@ struct apply_impl<4,RP,Functor,Tag>
   void exec_range() const
   {
     if (RP::inner_direction == RP::Left) {
-      const index_type temp0  =  ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] ;
-      const index_type temp1  =  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ;
+      const index_type temp0  =  m_rp.m_tile_end[0];
+      const index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
-      const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
+      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x % numbl0;
       const index_type tile_id1 = blockIdx.x / numbl0;
@@ -522,10 +525,11 @@ struct apply_impl<4,RP,Functor,Tag>
       }
     }
     else {
-      const index_type temp0  =  ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] ;
-      const index_type temp1  =  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ;
-      const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
+      const index_type temp0  =  m_rp.m_tile_end[0];
+      const index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
+      ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x / numbl1;
       const index_type tile_id1 = blockIdx.x % numbl1;
@@ -587,20 +591,22 @@ struct apply_impl<5,RP,Functor,void >
 // LL
     if (RP::inner_direction == RP::Left) {
 
-      index_type temp0  =  ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] ;
-      index_type temp1  =  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ;
+      index_type temp0  =  m_rp.m_tile_end[0];
+      index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
-      const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
+      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x % numbl0;
       const index_type tile_id1 = blockIdx.x / numbl0;
       const index_type thr_id0 = threadIdx.x % m_rp.m_tile[0];
       const index_type thr_id1 = threadIdx.x / m_rp.m_tile[0];
 
-      temp0  =  ( m_rp.m_upper[2] - m_rp.m_lower[2] + m_rp.m_tile[2] - 1 ) / m_rp.m_tile[2] ;
-      temp1  =  ( m_rp.m_upper[3] - m_rp.m_lower[3] + m_rp.m_tile[3] - 1 ) / m_rp.m_tile[3] ;
+      temp0  =  m_rp.m_tile_end[2];
+      temp1  =  m_rp.m_tile_end[3];
       const index_type numbl2 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
-      const index_type numbl3 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl3 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl2 ) :
+      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id2 = blockIdx.y % numbl2;
       const index_type tile_id3 = blockIdx.y / numbl2;
@@ -640,20 +646,22 @@ struct apply_impl<5,RP,Functor,void >
     }
 // LR
     else {
-      index_type temp0  =  ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] ;
-      index_type temp1  =  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ;
-      const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
+      index_type temp0  =  m_rp.m_tile_end[0];
+      index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
+      ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x / numbl1;
       const index_type tile_id1 = blockIdx.x % numbl1;
       const index_type thr_id0 = threadIdx.x / m_rp.m_tile[1];
       const index_type thr_id1 = threadIdx.x % m_rp.m_tile[1];
 
-      temp0  =  ( m_rp.m_upper[2] - m_rp.m_lower[2] + m_rp.m_tile[2] - 1 ) / m_rp.m_tile[2] ;
-      temp1  =  ( m_rp.m_upper[3] - m_rp.m_lower[3] + m_rp.m_tile[3] - 1 ) / m_rp.m_tile[3] ;
-      const index_type numbl2 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
+      temp0  =  m_rp.m_tile_end[2];
+      temp1  =  m_rp.m_tile_end[3];
       const index_type numbl3 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl2 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl3 ) :
+      (  temp0 <= max_blocks ? temp0 : max_blocks ) );
       
       const index_type tile_id2 = blockIdx.y / numbl3;
       const index_type tile_id3 = blockIdx.y % numbl3;
@@ -718,20 +726,22 @@ struct apply_impl<5,RP,Functor,Tag>
   {
 // LL
     if (RP::inner_direction == RP::Left) {
-      index_type temp0  =  ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] ;
-      index_type temp1  =  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ;
+      index_type temp0  =  m_rp.m_tile_end[0];
+      index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
-      const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
+      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x % numbl0;
       const index_type tile_id1 = blockIdx.x / numbl0;
       const index_type thr_id0 = threadIdx.x % m_rp.m_tile[0];
       const index_type thr_id1 = threadIdx.x / m_rp.m_tile[0];
 
-      temp0  =  ( m_rp.m_upper[2] - m_rp.m_lower[2] + m_rp.m_tile[2] - 1 ) / m_rp.m_tile[2] ;
-      temp1  =  ( m_rp.m_upper[3] - m_rp.m_lower[3] + m_rp.m_tile[3] - 1 ) / m_rp.m_tile[3] ;
+      temp0  =  m_rp.m_tile_end[2];
+      temp1  =  m_rp.m_tile_end[3];
       const index_type numbl2 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
-      const index_type numbl3 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl3 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl2 ) :
+      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id2 = blockIdx.y % numbl2;
       const index_type tile_id3 = blockIdx.y / numbl2;
@@ -771,20 +781,22 @@ struct apply_impl<5,RP,Functor,Tag>
     }
 // LR
     else {
-      index_type temp0  =  ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] ;
-      index_type temp1  =  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ;
-      const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
+      index_type temp0  =  m_rp.m_tile_end[0];
+      index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
+      ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x / numbl1;
       const index_type tile_id1 = blockIdx.x % numbl1;
       const index_type thr_id0 = threadIdx.x / m_rp.m_tile[1];
       const index_type thr_id1 = threadIdx.x % m_rp.m_tile[1];
 
-      temp0  =  ( m_rp.m_upper[2] - m_rp.m_lower[2] + m_rp.m_tile[2] - 1 ) / m_rp.m_tile[2] ;
-      temp1  =  ( m_rp.m_upper[3] - m_rp.m_lower[3] + m_rp.m_tile[3] - 1 ) / m_rp.m_tile[3] ;
-      const index_type numbl2 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
+      temp0  =  m_rp.m_tile_end[2];
+      temp1  =  m_rp.m_tile_end[3];
       const index_type numbl3 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl2 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl3 ) :
+      (  temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id2 = blockIdx.y / numbl3;
       const index_type tile_id3 = blockIdx.y % numbl3;
@@ -851,30 +863,33 @@ struct apply_impl<6,RP,Functor,void >
   {
 // LL
     if (RP::inner_direction == RP::Left) {
-      index_type temp0  =  ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] ;
-      index_type temp1  =  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ;
+      index_type temp0  =  m_rp.m_tile_end[0]; 
+      index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
-      const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
+      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x % numbl0;
       const index_type tile_id1 = blockIdx.x / numbl0;
       const index_type thr_id0 = threadIdx.x % m_rp.m_tile[0];
       const index_type thr_id1 = threadIdx.x / m_rp.m_tile[0];
 
-      temp0  =  ( m_rp.m_upper[2] - m_rp.m_lower[2] + m_rp.m_tile[2] - 1 ) / m_rp.m_tile[2] ;
-      temp1  =  ( m_rp.m_upper[3] - m_rp.m_lower[3] + m_rp.m_tile[3] - 1 ) / m_rp.m_tile[3] ;
+      temp0  =  m_rp.m_tile_end[2];
+      temp1  =  m_rp.m_tile_end[3];
       const index_type numbl2 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
-      const index_type numbl3 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl3 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl2 ) :
+      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id2 = blockIdx.y % numbl2;
       const index_type tile_id3 = blockIdx.y / numbl2;
       const index_type thr_id2 = threadIdx.y % m_rp.m_tile[2];
       const index_type thr_id3 = threadIdx.y / m_rp.m_tile[2];
 
-      temp0  =  ( m_rp.m_upper[4] - m_rp.m_lower[4] + m_rp.m_tile[4] - 1 ) / m_rp.m_tile[4] ;
-      temp1  =  ( m_rp.m_upper[5] - m_rp.m_lower[5] + m_rp.m_tile[5] - 1 ) / m_rp.m_tile[5] ;
+      temp0  =  m_rp.m_tile_end[4];
+      temp1  =  m_rp.m_tile_end[5];
       const index_type numbl4 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
-      const index_type numbl5 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl5 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl4 ) :
+      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id4 = blockIdx.z % numbl4;
       const index_type tile_id5 = blockIdx.z / numbl4;
@@ -920,30 +935,33 @@ struct apply_impl<6,RP,Functor,void >
     }
 // LR
     else {
-      index_type temp0  =  ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] ;
-      index_type temp1  =  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ;
-      const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
+      index_type temp0  =  m_rp.m_tile_end[0];
+      index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
+      ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x / numbl1;
       const index_type tile_id1 = blockIdx.x % numbl1;
       const index_type thr_id0 = threadIdx.x / m_rp.m_tile[1];
       const index_type thr_id1 = threadIdx.x % m_rp.m_tile[1];
 
-      temp0  =  ( m_rp.m_upper[2] - m_rp.m_lower[2] + m_rp.m_tile[2] - 1 ) / m_rp.m_tile[2] ;
-      temp1  =  ( m_rp.m_upper[3] - m_rp.m_lower[3] + m_rp.m_tile[3] - 1 ) / m_rp.m_tile[3] ;
-      const index_type numbl2 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
+      temp0  =  m_rp.m_tile_end[2];
+      temp1  =  m_rp.m_tile_end[3];
       const index_type numbl3 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl2 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl3 ) :
+      (  temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id2 = blockIdx.y / numbl3;
       const index_type tile_id3 = blockIdx.y % numbl3;
       const index_type thr_id2 = threadIdx.y / m_rp.m_tile[3];
       const index_type thr_id3 = threadIdx.y % m_rp.m_tile[3];
 
-      temp0  =  ( m_rp.m_upper[4] - m_rp.m_lower[4] + m_rp.m_tile[4] - 1 ) / m_rp.m_tile[4] ;
-      temp1  =  ( m_rp.m_upper[5] - m_rp.m_lower[5] + m_rp.m_tile[5] - 1 ) / m_rp.m_tile[5] ;
-      const index_type numbl4 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
+      temp0  =  m_rp.m_tile_end[4];
+      temp1  =  m_rp.m_tile_end[5];
       const index_type numbl5 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl4 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl5 ) :
+      (  temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id4 = blockIdx.z / numbl5;
       const index_type tile_id5 = blockIdx.z % numbl5;
@@ -953,6 +971,7 @@ struct apply_impl<6,RP,Functor,void >
       for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) { 
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
         if ( offset_0 < m_rp.m_upper[0] && thr_id0 < m_rp.m_tile[0] ) {
+
           for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) { 
             const index_type offset_1 = j*m_rp.m_tile[1] + thr_id1;
             if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
@@ -1013,30 +1032,33 @@ struct apply_impl<6,RP,Functor,Tag>
   {
 // LL
     if (RP::inner_direction == RP::Left) {
-      index_type temp0  =  ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] ;
-      index_type temp1  =  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ;
+      index_type temp0  =  m_rp.m_tile_end[0];
+      index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
-      const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
+      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x % numbl0;
       const index_type tile_id1 = blockIdx.x / numbl0;
       const index_type thr_id0 = threadIdx.x % m_rp.m_tile[0];
       const index_type thr_id1 = threadIdx.x / m_rp.m_tile[0];
 
-      temp0  =  ( m_rp.m_upper[2] - m_rp.m_lower[2] + m_rp.m_tile[2] - 1 ) / m_rp.m_tile[2] ;
-      temp1  =  ( m_rp.m_upper[3] - m_rp.m_lower[3] + m_rp.m_tile[3] - 1 ) / m_rp.m_tile[3] ;
+      temp0  =  m_rp.m_tile_end[2];
+      temp1  =  m_rp.m_tile_end[3];
       const index_type numbl2 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
-      const index_type numbl3 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl3 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl2 ) :
+      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id2 = blockIdx.y % numbl2;
       const index_type tile_id3 = blockIdx.y / numbl2;
       const index_type thr_id2 = threadIdx.y % m_rp.m_tile[2];
       const index_type thr_id3 = threadIdx.y / m_rp.m_tile[2];
 
-      temp0  =  ( m_rp.m_upper[4] - m_rp.m_lower[4] + m_rp.m_tile[4] - 1 ) / m_rp.m_tile[4] ;
-      temp1  =  ( m_rp.m_upper[5] - m_rp.m_lower[5] + m_rp.m_tile[5] - 1 ) / m_rp.m_tile[5] ;
+      temp0  =  m_rp.m_tile_end[4];
+      temp1  =  m_rp.m_tile_end[5];
       const index_type numbl4 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
-      const index_type numbl5 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl5 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl4 ) :
+      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id4 = blockIdx.z % numbl4;
       const index_type tile_id5 = blockIdx.z / numbl4;
@@ -1082,30 +1104,33 @@ struct apply_impl<6,RP,Functor,Tag>
     }
 // LR
     else {
-      index_type temp0  =  ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] ;
-      index_type temp1  =  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ;
-      const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
+      index_type temp0  =  m_rp.m_tile_end[0];
+      index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
+      ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x / numbl1;
       const index_type tile_id1 = blockIdx.x % numbl1;
       const index_type thr_id0 = threadIdx.x / m_rp.m_tile[1];
       const index_type thr_id1 = threadIdx.x % m_rp.m_tile[1];
 
-      temp0  =  ( m_rp.m_upper[2] - m_rp.m_lower[2] + m_rp.m_tile[2] - 1 ) / m_rp.m_tile[2] ;
-      temp1  =  ( m_rp.m_upper[3] - m_rp.m_lower[3] + m_rp.m_tile[3] - 1 ) / m_rp.m_tile[3] ;
-      const index_type numbl2 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
+      temp0  =  m_rp.m_tile_end[2];
+      temp1  =  m_rp.m_tile_end[3];
       const index_type numbl3 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl2 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl3 ) :
+      (  temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id2 = blockIdx.y / numbl3;
       const index_type tile_id3 = blockIdx.y % numbl3;
       const index_type thr_id2 = threadIdx.y / m_rp.m_tile[3];
       const index_type thr_id3 = threadIdx.y % m_rp.m_tile[3];
 
-      temp0  =  ( m_rp.m_upper[4] - m_rp.m_lower[4] + m_rp.m_tile[4] - 1 ) / m_rp.m_tile[4] ;
-      temp1  =  ( m_rp.m_upper[5] - m_rp.m_lower[5] + m_rp.m_tile[5] - 1 ) / m_rp.m_tile[5] ;
-      const index_type numbl4 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
+      temp0  =  m_rp.m_tile_end[4];
+      temp1  =  m_rp.m_tile_end[5];
       const index_type numbl5 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
+      const index_type numbl4 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl5 ) :
+      (  temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id4 = blockIdx.z / numbl5;
       const index_type tile_id5 = blockIdx.z % numbl5;
@@ -1196,13 +1221,15 @@ public:
   inline
   void execute() const
   {
-    //pad numthreads for mult of 2^p
-
-    const array_index_type maxblocks = 65535; //not true for newer archs
+    const array_index_type maxblocks = 65535; //not true for blockIdx.x for newer archs
     if ( RP::rank == 2 )
     {
       const dim3 block( m_rp.m_tile[0] , m_rp.m_tile[1] , 1); 
-      const dim3 grid( std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks ) , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks ) , 1);
+      const dim3 grid( 
+            std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks ) 
+          , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks ) 
+          , 1
+          );
       CudaLaunch< DeviceIterateTile >( *this , grid , block );
     }
     else if ( RP::rank == 3 )
@@ -1213,7 +1240,6 @@ public:
         , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks ) 
         , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.z - 1 ) / block.z , maxblocks ) 
         );
-
       CudaLaunch< DeviceIterateTile >( *this , grid , block );
     }
     else if ( RP::rank == 4 )
@@ -1221,8 +1247,7 @@ public:
       // id0,id1 encoded within threadIdx.x; id2 to threadIdx.y; id3 to threadIdx.z
       const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2] , m_rp.m_tile[3] ); 
       const dim3 grid( 
-          std::min( ( static_cast<index_type>(( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] 
-                    *  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ))
+          std::min( static_cast<index_type>( m_rp.m_tile_end[0] * m_rp.m_tile_end[1] )
                   , static_cast<index_type>(maxblocks) ) 
         , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.y - 1 ) / block.y , maxblocks ) 
         , std::min( ( m_rp.m_upper[3] - m_rp.m_lower[3] + block.z - 1 ) / block.z , maxblocks ) 
@@ -1231,14 +1256,12 @@ public:
     }
     else if ( RP::rank == 5 )
     {
-      // id0,id1 encoded within threadIdx.x; id2 to threadIdx.y; id3 to threadIdx.z
+      // id0,id1 encoded within threadIdx.x; id2,id3 to threadIdx.y; id4 to threadIdx.z
       const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2]*m_rp.m_tile[3] , m_rp.m_tile[4] ); 
       const dim3 grid( 
-          std::min( static_cast<index_type>(( ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] 
-                   *  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ))
+          std::min( static_cast<index_type>( m_rp.m_tile_end[0] * m_rp.m_tile_end[1] )
                   , static_cast<index_type>(maxblocks) ) 
-        , std::min( static_cast<index_type>(( ( m_rp.m_upper[2] - m_rp.m_lower[2] + m_rp.m_tile[2] - 1 ) / m_rp.m_tile[2] 
-                   *  ( m_rp.m_upper[3] - m_rp.m_lower[3] + m_rp.m_tile[3] - 1 ) / m_rp.m_tile[3] ))
+        , std::min( static_cast<index_type>( m_rp.m_tile_end[2] * m_rp.m_tile_end[3] )
                   , static_cast<index_type>(maxblocks) ) 
         , std::min( ( m_rp.m_upper[4] - m_rp.m_lower[4] + block.z - 1 ) / block.z , maxblocks ) 
         );
@@ -1246,17 +1269,14 @@ public:
     }
     else if ( RP::rank == 6 )
     {
-      // id0,id1 encoded within threadIdx.x; id2 to threadIdx.y; id3 to threadIdx.z
+      // id0,id1 encoded within threadIdx.x; id2,id3 to threadIdx.y; id4,id5 to threadIdx.z
       const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2]*m_rp.m_tile[3] , m_rp.m_tile[4]*m_rp.m_tile[5] );
       const dim3 grid( 
-          std::min( static_cast<index_type>(( ( m_rp.m_upper[0] - m_rp.m_lower[0] + m_rp.m_tile[0] - 1 ) / m_rp.m_tile[0] 
-                   *  ( m_rp.m_upper[1] - m_rp.m_lower[1] + m_rp.m_tile[1] - 1 ) / m_rp.m_tile[1] ))
+          std::min( static_cast<index_type>( m_rp.m_tile_end[0] * m_rp.m_tile_end[1] )
                   , static_cast<index_type>(maxblocks) ) 
-        , std::min( static_cast<index_type>(( ( m_rp.m_upper[2] - m_rp.m_lower[2] + m_rp.m_tile[2] - 1 ) / m_rp.m_tile[2] 
-                   *  ( m_rp.m_upper[3] - m_rp.m_lower[3] + m_rp.m_tile[3] - 1 ) / m_rp.m_tile[3] ))
+        ,  std::min( static_cast<index_type>( m_rp.m_tile_end[2] * m_rp.m_tile_end[3] )
                   , static_cast<index_type>(maxblocks) ) 
-        , std::min( static_cast<index_type>(( ( m_rp.m_upper[4] - m_rp.m_lower[4] + m_rp.m_tile[4] - 1 ) / m_rp.m_tile[4] 
-                   *  ( m_rp.m_upper[5] - m_rp.m_lower[5] + m_rp.m_tile[5] - 1 ) / m_rp.m_tile[5] ))
+        , std::min( static_cast<index_type>( m_rp.m_tile_end[4] * m_rp.m_tile_end[5] )
                   , static_cast<index_type>(maxblocks) ) 
         );
       CudaLaunch< DeviceIterateTile >( *this , grid , block );
