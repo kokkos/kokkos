@@ -78,6 +78,11 @@ struct ReduceSum
   void join( value_type volatile & dest
            , value_type const volatile & src ) noexcept
     { dest += src ; }
+
+  KOKKOS_INLINE_FUNCTION static
+  void join( value_type & dest
+           , value_type const & src ) noexcept
+    { dest += src ; }
 };
 
 template< typename T
