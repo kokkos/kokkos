@@ -69,7 +69,7 @@ struct MultiDimRangePerf3D
   KOKKOS_INLINE_FUNCTION
   void operator()(const long i, const long j, const long k) const
   {
-    A(i,j,k) = 0.143*(ScalarType)( B(i+2,j,k) + B(i+1,j,k)
+    A(i,j,k) = 0.25*(ScalarType)( B(i+2,j,k) + B(i+1,j,k)
                              + B(i,j+2,k) + B(i,j+1,k)
                              + B(i,j,k+2) + B(i,j,k+1)
                              + B(i,j,k) );
@@ -104,7 +104,7 @@ struct MultiDimRangePerf3D
   };
 
 
-  static double test_multi_index(const unsigned icount, const unsigned jcount, const unsigned kcount, const unsigned long Ti = 1, const unsigned long Tj = 1, const unsigned long Tk = 1, const long iter = 1)
+  static double test_multi_index(const unsigned int icount, const unsigned int jcount, const unsigned int kcount, const unsigned int Ti = 1, const unsigned int Tj = 1, const unsigned int Tk = 1, const long iter = 1)
   {
     //This test performs multidim range over all dims
     view_type Atest("Atest", icount, jcount, kcount);
@@ -152,17 +152,17 @@ struct MultiDimRangePerf3D
         for ( long l = 0; l < static_cast<long>(icount); ++l ) {
         for ( long j = 0; j < static_cast<long>(jcount); ++j ) {
         for ( long k = 0; k < static_cast<long>(kcount); ++k ) {
-          ScalarType check  = 0.143*(ScalarType)( Bhost(i+2,j,k) + Bhost(i+1,j,k)
-                                        + Bhost(i,j+2,k) + Bhost(i,j+1,k)
-                                        + Bhost(i,j,k+2) + Bhost(i,j,k+1)
-                                        + Bhost(i,j,k) );
+          ScalarType check  = 0.25*(ScalarType)( Bhost(l+2,j,k) + Bhost(l+1,j,k)
+                                        + Bhost(l,j+2,k) + Bhost(l,j+1,k)
+                                        + Bhost(l,j,k+2) + Bhost(l,j,k+1)
+                                        + Bhost(l,j,k) );
           if ( Ahost(l,j,k) - check != 0 ) {
             ++numErrors;
             std::cout << "  Correctness error at index: " << l << ","<<j<<","<<k<<"\n"
                       << "  multi Ahost = " << Ahost(l,j,k) << "  expected = " << check  
                       << "  multi Bhost(ijk) = " << Bhost(l,j,k) 
-                      << "  multi Bhost(i+1jk) = " << Bhost(l+1,j,k) 
-                      << "  multi Bhost(i+2jk) = " << Bhost(l+2,j,k) 
+                      << "  multi Bhost(l+1jk) = " << Bhost(l+1,j,k) 
+                      << "  multi Bhost(l+2jk) = " << Bhost(l+2,j,k) 
                       << "  multi Bhost(ij+1k) = " << Bhost(l,j+1,k) 
                       << "  multi Bhost(ij+2k) = " << Bhost(l,j+2,k) 
                       << "  multi Bhost(ijk+1) = " << Bhost(l,j,k+1) 
@@ -183,9 +183,9 @@ struct MultiDimRangePerf3D
       Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,iterate_type::Left,iterate_type::Left>, execution_space > policy_initB({{0,0,0}},{{icount+2,jcount+2,kcount+2}},{{Ti,Tj,Tk}}); 
 
       typedef typename Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Left, iterate_type::Left>, execution_space > MDRangeType;
-      using tile_type = typename MDRangeType::tile_type;
-      using point_type = typename MDRangeType::point_type;
 
+      //using tile_type = typename MDRangeType::tile_type;
+      //using point_type = typename MDRangeType::point_type;
       //Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Left, iterate_type::Left>, execution_space > policy(point_type{{0,0,0}},point_type{{icount,jcount,kcount}},tile_type{{Ti,Tj,Tk}} );
       Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, iterate_type::Left, iterate_type::Left>, execution_space > policy({{0,0,0}},{{icount,jcount,kcount}},{{Ti,Tj,Tk}} ); 
 
@@ -217,17 +217,17 @@ struct MultiDimRangePerf3D
         for ( long l = 0; l < static_cast<long>(icount); ++l ) {
         for ( long j = 0; j < static_cast<long>(jcount); ++j ) {
         for ( long k = 0; k < static_cast<long>(kcount); ++k ) {
-          ScalarType check  = 0.143*(ScalarType)( Bhost(i+2,j,k) + Bhost(i+1,j,k)
-                                        + Bhost(i,j+2,k) + Bhost(i,j+1,k)
-                                        + Bhost(i,j,k+2) + Bhost(i,j,k+1)
-                                        + Bhost(i,j,k) );
+          ScalarType check  = 0.25*(ScalarType)( Bhost(l+2,j,k) + Bhost(l+1,j,k)
+                                        + Bhost(l,j+2,k) + Bhost(l,j+1,k)
+                                        + Bhost(l,j,k+2) + Bhost(l,j,k+1)
+                                        + Bhost(l,j,k) );
           if ( Ahost(l,j,k) - check != 0 ) {
             ++numErrors;
             std::cout << "  Correctness error at index: " << l << ","<<j<<","<<k<<"\n"
                       << "  multi Ahost = " << Ahost(l,j,k) << "  expected = " << check  
                       << "  multi Bhost(ijk) = " << Bhost(l,j,k) 
-                      << "  multi Bhost(i+1jk) = " << Bhost(l+1,j,k) 
-                      << "  multi Bhost(i+2jk) = " << Bhost(l+2,j,k) 
+                      << "  multi Bhost(l+1jk) = " << Bhost(l+1,j,k) 
+                      << "  multi Bhost(l+2jk) = " << Bhost(l+2,j,k) 
                       << "  multi Bhost(ij+1k) = " << Bhost(l,j+1,k) 
                       << "  multi Bhost(ij+2k) = " << Bhost(l,j+2,k) 
                       << "  multi Bhost(ijk+1) = " << Bhost(l,j,k+1) 
@@ -286,7 +286,7 @@ struct RangePolicyCollapseTwo
       long i = int(r / jrange); 
       long j = int( r - i*jrange);
       for (int k = 0; k < krange; ++k) {
-        A(i,j,k) = 0.143*(ScalarType)( B(i+2,j,k) + B(i+1,j,k)
+        A(i,j,k) = 0.25*(ScalarType)( B(i+2,j,k) + B(i+1,j,k)
                                  + B(i,j+2,k) + B(i,j+1,k)
                                  + B(i,j,k+2) + B(i,j,k+1)
                                  + B(i,j,k) );
@@ -299,7 +299,7 @@ struct RangePolicyCollapseTwo
       long k = int(r / jrange); 
       long j = int( r - k*jrange);
       for (int i = 0; i < irange; ++i) {
-        A(i,j,k) = 0.143*(ScalarType)( B(i+2,j,k) + B(i+1,j,k)
+        A(i,j,k) = 0.25*(ScalarType)( B(i+2,j,k) + B(i+1,j,k)
                                  + B(i,j+2,k) + B(i,j+1,k)
                                  + B(i,j,k+2) + B(i,j,k+1)
                                  + B(i,j,k) );
@@ -341,7 +341,7 @@ struct RangePolicyCollapseTwo
   };
 
 
-  static double test_index_collapse_two(const unsigned icount, const unsigned jcount, const unsigned kcount, const long iter = 1)
+  static double test_index_collapse_two(const unsigned int icount, const unsigned int jcount, const unsigned int kcount, const long iter = 1)
   {
     // This test refers to collapsing two dims while using the RangePolicy
     view_type Atest("Atest", icount, jcount, kcount);
@@ -396,7 +396,7 @@ struct RangePolicyCollapseTwo
         for ( long l = 0; l < static_cast<long>(icount); ++l ) {
         for ( long j = 0; j < static_cast<long>(jcount); ++j ) {
         for ( long k = 0; k < static_cast<long>(kcount); ++k ) {
-          ScalarType check  = 0.143*(ScalarType)( Bhost(l+2,j,k) + Bhost(l+1,j,k)
+          ScalarType check  = 0.25*(ScalarType)( Bhost(l+2,j,k) + Bhost(l+1,j,k)
                                         + Bhost(l,j+2,k) + Bhost(l,j+1,k)
                                         + Bhost(l,j,k+2) + Bhost(l,j,k+1)
                                         + Bhost(l,j,k) );
@@ -451,7 +451,7 @@ struct RangePolicyCollapseAll
       long i = int(r / (jrange*krange)); 
       long j = int(( r - i*jrange*krange)/krange);
       long k = int(r - i*jrange*krange - j*krange);
-        A(i,j,k) = 0.143*(ScalarType)( B(i+2,j,k) + B(i+1,j,k)
+        A(i,j,k) = 0.25*(ScalarType)( B(i+2,j,k) + B(i+1,j,k)
             + B(i,j+2,k) + B(i,j+1,k)
             + B(i,j,k+2) + B(i,j,k+1)
             + B(i,j,k) );
@@ -461,7 +461,7 @@ struct RangePolicyCollapseAll
       long k = int(r / (irange*jrange)); 
       long j = int(( r - k*irange*jrange)/irange);
       long i = int(r - k*irange*jrange - j*irange);
-        A(i,j,k) = 0.143*(ScalarType)( B(i+2,j,k) + B(i+1,j,k)
+        A(i,j,k) = 0.25*(ScalarType)( B(i+2,j,k) + B(i+1,j,k)
             + B(i,j+2,k) + B(i,j+1,k)
             + B(i,j,k+2) + B(i,j,k+1)
             + B(i,j,k) );
@@ -500,7 +500,7 @@ struct RangePolicyCollapseAll
   };
 
 
-  static double test_collapse_all(const unsigned icount, const unsigned jcount, const unsigned kcount, const long iter = 1)
+  static double test_collapse_all(const unsigned int icount, const unsigned int jcount, const unsigned int kcount, const long iter = 1)
   {
     //This test refers to collapsing all dims using the RangePolicy
     view_type Atest("Atest", icount, jcount, kcount);
@@ -541,7 +541,7 @@ struct RangePolicyCollapseAll
         for ( long l = 0; l < static_cast<long>(icount); ++l ) {
         for ( long j = 0; j < static_cast<long>(jcount); ++j ) {
         for ( long k = 0; k < static_cast<long>(kcount); ++k ) {
-          ScalarType check  = 0.143*(ScalarType)( Bhost(l+2,j,k) + Bhost(l+1,j,k)
+          ScalarType check  = 0.25*(ScalarType)( Bhost(l+2,j,k) + Bhost(l+1,j,k)
                                         + Bhost(l,j+2,k) + Bhost(l,j+1,k)
                                         + Bhost(l,j,k+2) + Bhost(l,j,k+1)
                                         + Bhost(l,j,k) );
