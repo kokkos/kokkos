@@ -210,7 +210,7 @@ struct MDRangePolicy
       for (int i=0; i<rank; ++i) {
         total_tile_size_check *= m_tile[i];
       }
-      if ( total_tile_size_check > 1024 ) { // improve this check - 1024,1024,64 max per dim, but NOT the product for total num_threads; more restrictions with debug
+      if ( total_tile_size_check >= 1024 ) { // improve this check - 1024,1024,64 max per dim (Kepler), but product num_threads < 1024; more restrictions pending register limit
         printf(" Tile dimensions exceed Cuda limits\n");
         Kokkos::abort(" Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
         //Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");

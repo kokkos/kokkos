@@ -64,6 +64,8 @@ template< class DeviceType , class LayoutType >
 void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], int range_offset = 0,  int tile_offset = 0 )
 // exp_beg = 6 => 2^6 = 64 is starting range length
 {
+#define MDRANGE_PERFORMANCE_OUTPUT_VERBOSE 0
+
   std::string label_mdrange ;
   label_mdrange.append( "\"MDRange< double , " );
   label_mdrange.append( deviceTypeName );
@@ -80,20 +82,24 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
   label_range_col_all.append( " >\"" );
 
   if ( std::is_same<LayoutType, Kokkos::LayoutRight>::value) {
-    std::cout << "Performance tests for MDRange Layout Right" << std::endl;
+    std::cout << "--------------------------------------------------------------\n"
+      << "Performance tests for MDRange Layout Right"
+      << "\n--------------------------------------------------------------" << std::endl;
   } else {
-    std::cout << "Performance tests for MDRange Layout Left\n" << std::endl;
+    std::cout << "--------------------------------------------------------------\n"
+      << "Performance tests for MDRange Layout Left"
+      << "\n--------------------------------------------------------------" << std::endl;
   }
 
 
-#define MDRANGE_PERFORMANCE_OUTPUT_VERBOSE 0
   for (int i = exp_beg ; i < exp_end ; ++i) {
     const int range_length = (1<<i) + range_offset;
 
     std::cout << "\n--------------------------------------------------------------\n"
       << "--------------------------------------------------------------\n"
       << "MDRange Test:  range bounds: " << range_length << " , " << range_length << " , " << range_length 
-      << "\n--------------------------------------------------------------";
+      << "\n--------------------------------------------------------------\n"
+      << "--------------------------------------------------------------\n";
 //      << std::endl;
 
     int t0_min = 0, t1_min = 0, t2_min = 0;
@@ -122,7 +128,7 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
 
 #if defined(KOKKOS_HAVE_CUDA)
         //Note: Product of tile sizes must be < 1024 for Cuda
-        if ( t0*t1*t2 > 1024 ) {
+        if ( t0*t1*t2 >= 1024 ) {
           printf("  Exceeded Cuda tile limits; onto next range set\n\n");
           break;
         }
@@ -191,8 +197,8 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
       << std::endl ;
     } //end scope
 
-  double seconds_min_c = 0.0;
 #if !defined(KOKKOS_HAVE_CUDA)
+  double seconds_min_c = 0.0;
   int t0c_min = 0, t1c_min = 0, t2c_min = 0;
   int counter = 1;
   {
@@ -300,9 +306,11 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
 
     // Compare fastest times... will never be collapse all so ignore it
     // seconds_min = tiled MDRange
-    // seconds_min_c = collapse<2>-like MDRange (tiledim = span for fast dim)
+    // seconds_min_c = collapse<2>-like MDRange (tiledim = span for fast dim) - only for non-Cuda, else tile too long
     // seconds_2 = collapse<2>-style RangePolicy
     // seconds_3 = collapse<3>-style RangePolicy
+
+#if !defined(KOKKOS_HAVE_CUDA)
     if ( seconds_min < seconds_min_c ) {
       if ( seconds_min < seconds_2 ) {
         std::cout << "--------------------------------------------------------------\n"
@@ -314,7 +322,7 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
           << "   Collapse2 Range Policy: " << seconds_2 << "\n"
           << "\n--------------------------------------------------------------"
           << "\n--------------------------------------------------------------"
-          << "\n\n"
+          //<< "\n\n"
           << std::endl;
       }
       else if ( seconds_min > seconds_2 ) {
@@ -326,7 +334,7 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
           << "   MDrange collapse-like (tiledim = span on fast dim) type: " << seconds_min_c << "\n"
           << "\n--------------------------------------------------------------"
           << "\n--------------------------------------------------------------"
-          << "\n\n"
+          //<< "\n\n"
           << std::endl;
       }
     }
@@ -341,7 +349,7 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
           << "   Collapse2 Range Policy: " << seconds_2 << "\n"
           << "\n--------------------------------------------------------------"
           << "\n--------------------------------------------------------------"
-          << "\n\n"
+          //<< "\n\n"
           << std::endl;
       }
       else if ( seconds_min_c > seconds_2 ) {
@@ -353,10 +361,35 @@ void run_test_mdrange( int exp_beg , int exp_end, const char deviceTypeName[], i
           << "   MDrange collapse-like (tiledim = span on fast dim) type: " << seconds_min_c << "\n"
           << "\n--------------------------------------------------------------"
           << "\n--------------------------------------------------------------"
-          << "\n\n"
+          //<< "\n\n"
           << std::endl;
       }
     } // end else if
+#else
+      if ( seconds_min < seconds_2 ) {
+        std::cout << "--------------------------------------------------------------\n"
+          << " Fastest run: MDRange tiled\n"
+          << " Time: " << seconds_min
+          << " Difference: " << seconds_2 - seconds_min
+          << " Other times: \n"
+          << "   Collapse2 Range Policy: " << seconds_2 << "\n"
+          << "\n--------------------------------------------------------------"
+          << "\n--------------------------------------------------------------"
+          //<< "\n\n"
+          << std::endl;
+      }
+      else if ( seconds_min > seconds_2 ) {
+        std::cout << " Fastest run: Collapse2 RangePolicy\n"
+          << " Time: " << seconds_2
+          << " Difference: " << seconds_min - seconds_2
+          << " Other times: \n"
+          << "   MDrange Tiled: " << seconds_min << "\n"
+          << "\n--------------------------------------------------------------"
+          << "\n--------------------------------------------------------------"
+          //<< "\n\n"
+          << std::endl;
+      }
+#endif
 
   } //end for
 
