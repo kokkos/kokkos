@@ -3,7 +3,7 @@
 # so that the CXX flags are not set correctly for Apple Clang.  Forcing them to
 # set this catches the issue.
 if(${CMAKE_MINIMUM_REQUIRED_VERSION} VERSION_LESS 3.1)
-  message(FATAL_ERROR "Kokkos requires you to set the minimum cmake version to 3.1 or higher.")
+  message(FATAL_ERROR "Kokkos requires you to set the minimum CMake version to 3.1 or higher.")
 endif()
 
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
@@ -84,7 +84,7 @@ set(KOKKOS_ENABLE_PROFILING ON CACHE BOOL "Enable profiling.")
 set(KOKKOS_QTHREADS_DIR "" CACHE PATH "Location of Qthreads library.")
 
 # CUDA options.
-set(KOKKOS_CUDA_DIR "" CACHE PATH "Location of cuda library.  Defaults to where nvcc installed.")
+set(KOKKOS_CUDA_DIR "" CACHE PATH "Location of CUDA library.  Defaults to where nvcc installed.")
 
 set(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC OFF CACHE BOOL "Enable CUDA LDG.")
 
@@ -147,9 +147,7 @@ function(set_kokkos_cxx_compiler)
     if(INTERNAL_CXX_COMPILER_VERSION VERSION_LESS 4.7.2)
       message(FATAL_ERROR "${KOKKOS_MESSAGE_TEXT}")
     endif()
-  elseif(INTERNAL_CXX_COMPILER_ID MATCHES AppleClang)
-    # Do nothing.
-  elseif(INTERNAL_CXX_COMPILER_ID MATCHES Clang)
+  elseif(INTERNAL_CXX_COMPILER_ID STREQUAL Clang)
     if(INTERNAL_CXX_COMPILER_VERSION VERSION_LESS 3.5.2)
       message(FATAL_ERROR "${KOKKOS_MESSAGE_TEXT}")
     endif()
@@ -206,7 +204,7 @@ function(set_kokkos_compiler_standard)
   endif()
 
   if(INTERNAL_USE_COMPILE_FEATURES)
-    # Use the compile features aspect of Cmake to transitively cause C++ flags
+    # Use the compile features aspect of CMake to transitively cause C++ flags
     # to populate to user code.
 
     # I'm using a hack by requiring features that I know force the lowest version
@@ -224,7 +222,7 @@ function(set_kokkos_compiler_standard)
     if(KOKKOS_CXX_COMPILER_ID MATCHES Intel)
       # Versions of CMAKE before 3.6 don't support CXX_STANDARD or C++ compile
       # features for the Intel compiler.  Set compiler flags transitively here
-      # such that they trickle down to a call to TARGET_COMPILE_OPTIONS().
+      # such that they trickle down to a call to target_compile_options().
 
       # The following three blocks of code were copied from
       # /Modules/Compiler/Intel-CXX.cmake from CMake 3.7 and then modified.
@@ -256,7 +254,7 @@ function(set_kokkos_compiler_standard)
     elseif(KOKKOS_CXX_COMPILER_ID MATCHES Cray)
       # CMAKE doesn't support CXX_STANDARD or C++ compile features for the Cray
       # compiler.  Set compiler options transitively here such that they trickle
-      # down to a call to TARGET_COMPILE_OPTIONS().
+      # down to a call to target_compile_options().
       set(INTERNAL_CXX11_STANDARD_COMPILE_OPTION "-hstd=c++11")
       set(INTERNAL_CXX11_EXTENSION_COMPILE_OPTION "-hstd=c++11")
       set(INTERNAL_CXX14_STANDARD_COMPILE_OPTION "-hstd=c++11")
@@ -264,7 +262,7 @@ function(set_kokkos_compiler_standard)
     elseif(KOKKOS_CXX_COMPILER_ID MATCHES PGI)
       # CMAKE doesn't support CXX_STANDARD or C++ compile features for the PGI
       # compiler.  Set compiler options transitively here such that they trickle
-      # down to a call to TARGET_COMPILE_OPTIONS().
+      # down to a call to target_compile_options().
       set(INTERNAL_CXX11_STANDARD_COMPILE_OPTION "--c++11")
       set(INTERNAL_CXX11_EXTENSION_COMPILE_OPTION "--c++11")
       set(INTERNAL_CXX14_STANDARD_COMPILE_OPTION "--c++11")
@@ -272,7 +270,7 @@ function(set_kokkos_compiler_standard)
     elseif(KOKKOS_CXX_COMPILER_ID MATCHES XL)
       # CMAKE doesn't support CXX_STANDARD or C++ compile features for the XL
       # compiler.  Set compiler options transitively here such that they trickle
-      # down to a call to TARGET_COMPILE_OPTIONS().
+      # down to a call to target_compile_options().
       set(INTERNAL_CXX11_STANDARD_COMPILE_OPTION "-std=c++11")
       set(INTERNAL_CXX11_EXTENSION_COMPILE_OPTION "-std=c++11")
       set(INTERNAL_CXX14_STANDARD_COMPILE_OPTION "-std=c++11")
@@ -282,7 +280,7 @@ function(set_kokkos_compiler_standard)
       # support CXX_STANDARD for NVCC until CMake 3.8.  Even then, how it uses
       # CXX_STANDARD for NVCC won't work for us since we are really using
       # nvcc_wrapper.  Set compiler options transitively here such that they trickle
-      # down to a call to TARGET_COMPILE_OPTIONS().
+      # down to a call to target_compile_options().
       set(INTERNAL_CXX11_STANDARD_COMPILE_OPTION "-std=c++11")
       set(INTERNAL_CXX11_EXTENSION_COMPILE_OPTION "-std=c++11")
       set(INTERNAL_CXX14_STANDARD_COMPILE_OPTION "-std=c++11")
@@ -339,9 +337,54 @@ set_kokkos_cxx_compiler()
 
 set_kokkos_compiler_standard()
 
-######################## CONFIGURE BASED ON USER OPTIONS #######################
+######################### INITIALIZE INTERNAL VARIABLES ########################
 
+# Add Kokkos' modules to CMake's module path.
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${Kokkos_SOURCE_DIR}/cmake/Modules/")
+
+# Start with all global variables set to false.  This guarantees correct
+# results with changes and multiple configures.
+set(KOKKOS_HAVE_CUDA OFF CACHE INTERNAL "")
+set(KOKKOS_USE_CUDA_UVM OFF CACHE INTERNAL "")
+set(KOKKOS_HAVE_CUDA_RDC OFF CACHE INTERNAL "")
+set(KOKKOS_HAVE_CUDA_LAMBDA OFF CACHE INTERNAL "")
+set(KOKKOS_HAVE_OPENMP OFF CACHE INTERNAL "")
+set(KOKKOS_HAVE_PTHREAD OFF CACHE INTERNAL "")
+set(KOKKOS_HAVE_QTHREADS OFF CACHE INTERNAL "")
+set(KOKKOS_HAVE_SERIAL OFF CACHE INTERNAL "")
+set(KOKKOS_HAVE_HWLOC OFF CACHE INTERNAL "")
+set(KOKKOS_ENABLE_HBWSPACE OFF CACHE INTERNAL "")
+set(KOKKOS_HAVE_DEBUG OFF CACHE INTERNAL "")
+set(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK OFF CACHE INTERNAL "")
+set(KOKKOS_ENABLE_PROFILING_INTERNAL OFF CACHE INTERNAL "")
+set(KOKKOS_CUDA_CLANG_WORKAROUND OFF CACHE INTERNAL "")
+set(KOKKOS_ENABLE_ISA_X86_64 OFF CACHE INTERNAL "")
+set(KOKKOS_ENABLE_ISA_KNC OFF CACHE INTERNAL "")
+set(KOKKOS_ENABLE_ISA_POWERPCLE OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_ARMV80 OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_ARMV81 OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_ARMV8_THUNDERX OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_AVX OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_AVX2 OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_AVX512MIC OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_AVX512XEON OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_KNC OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_POWER8 OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_POWER9 OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_KEPLER OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_KEPLER30 OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_KEPLER32 OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_KEPLER35 OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_KEPLER37 OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_MAXWELL OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_MAXWELL50 OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_MAXWELL52 OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_MAXWELL53 OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_PASCAL OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_PASCAL60 OFF CACHE INTERNAL "")
+set(KOKKOS_ARCH_PASCAL61 OFF CACHE INTERNAL "")
+
+############################## SET BACKEND OPTIONS #############################
 
 # Make sure at least one backend is selected.
 if(NOT KOKKOS_ENABLE_CUDA AND NOT KOKKOS_ENABLE_OPENMP AND NOT KOKKOS_ENABLE_PTHREAD AND NOT KOKKOS_ENABLE_QTHREADS AND NOT KOKKOS_ENABLE_SERIAL)
@@ -362,7 +405,7 @@ endif()
 file(GLOB KOKKOS_CORE_SRCS core/src/impl/*.cpp)
 file(GLOB KOKKOS_CONTAINERS_SRCS containers/src/impl/*.cpp)
 
-# Set options for specific backends.
+# Set options if using CUDA backend.
 if(KOKKOS_ENABLE_CUDA)
   if(KOKKOS_CUDA_DIR)
     set(CUDA_TOOLKIT_ROOT_DIR ${KOKKOS_CUDA_DIR})
@@ -378,166 +421,14 @@ if(KOKKOS_ENABLE_CUDA)
     endif()
   endif()
 
-  if(CUDA_FOUND)
-    list(APPEND KOKKOS_INCLUDE_DIRS ${CUDA_INCLUDE_DIRS})
-    list(APPEND KOKKOS_LD_FLAGS -L${CUDA_TOOLKIT_ROOT_DIR}/lib64)
-    list(APPEND KOKKOS_LIBS cudart cuda)
-  endif()
+  list(APPEND KOKKOS_INCLUDE_DIRS ${CUDA_INCLUDE_DIRS})
+  list(APPEND KOKKOS_LD_FLAGS -L${CUDA_TOOLKIT_ROOT_DIR}/lib64)
+  list(APPEND KOKKOS_LIBS cudart cuda)
 
   set(KOKKOS_HAVE_CUDA ON CACHE INTERNAL "")
   file(GLOB KOKKOS_CUDA_SRCS core/src/Cuda/*.cpp)
   list(APPEND KOKKOS_CORE_SRCS ${KOKKOS_CUDA_SRCS})
-endif()
 
-if(KOKKOS_ENABLE_OPENMP)
-  find_package(OpenMP REQUIRED)
-
-  if(OPENMP_FOUND)
-    if(KOKKOS_CXX_COMPILER_ID MATCHES NVIDIA)
-      list(APPEND KOKKOS_CXX_FLAGS -Xcompiler)
-    endif()
-
-    list(APPEND KOKKOS_CXX_FLAGS ${OpenMP_CXX_FLAGS})
-    list(APPEND KOKKOS_LD_FLAGS ${OpenMP_CXX_FLAGS})
-  endif()
-
-  set(KOKKOS_HAVE_OPENMP ON CACHE INTERNAL "")
-  file(GLOB KOKKOS_OPENMP_SRCS core/src/OpenMP/*.cpp)
-  list(APPEND KOKKOS_CORE_SRCS ${KOKKOS_OPENMP_SRCS})
-endif()
-
-if(KOKKOS_ENABLE_PTHREAD)
-  find_package(Threads REQUIRED)
-
-  if(THREADS_FOUND)
-    list(APPEND KOKKOS_LIBS Threads::Threads)
-  endif()
-
-  set(KOKKOS_HAVE_PTHREAD ON CACHE INTERNAL "")
-  file(GLOB KOKKOS_PTHREAD_SRCS core/src/Threads/*.cpp)
-  list(APPEND KOKKOS_CORE_SRCS ${KOKKOS_PTHREAD_SRCS})
-endif()
-
-if(KOKKOS_ENABLE_QTHREADS)
-  if(KOKKOS_QTHREADS_DIR)
-    list(APPEND CMAKE_PREFIX_PATH ${KOKKOS_QTHREADS_DIR})
-  endif()
-
-  find_package(Qthreads)
-
-  if(NOT QTHREADS_FOUND)
-    if(KOKKOS_QTHREADS_DIR)
-      message(FATAL_ERROR "Couldn't find Qthreads in default locations, and KOKKOS_QTHREADS_DIR points to an invalid installation.")
-    else()
-      message(FATAL_ERROR "Couldn't find Qthreads in default locations.  Set KOKKOS_QTHREADS_DIR.")
-    endif()
-  endif()
-
-  list(APPEND KOKKOS_INCLUDE_DIRS ${QTHREADS_INCLUDE_DIR})
-  list(APPEND KOKKOS_LIBS ${QTHREADS_LIBRARIES})
-
-  set(KOKKOS_HAVE_QTHREADS ON CACHE INTERNAL "")
-  file(GLOB KOKKOS_QTHREADS_SRCS core/src/Threads/*.cpp)
-  list(APPEND KOKKOS_CORE_SRCS ${KOKKOS_QTHREADS_SRCS})
-
-  if(KOKKOS_QTHREADS_DIR)
-    list(REMOVE_AT CMAKE_PREFIX_PATH -1)
-  endif()
-endif()
-
-if(KOKKOS_ENABLE_SERIAL)
-  set(KOKKOS_HAVE_SERIAL ON CACHE INTERNAL "")
-else()
-  # Remove serial source files.
-  list(REMOVE_ITEM KOKKOS_CORE_SRCS
-       "${Kokkos_SOURCE_DIR}/core/src/impl/Kokkos_Serial.cpp"
-       "${Kokkos_SOURCE_DIR}/core/src/impl/Kokkos_Serial_Task.cpp")
-endif()
-
-# Set options if using hwloc.
-if(KOKKOS_ENABLE_HWLOC)
-  if(KOKKOS_HWLOC_DIR)
-    list(APPEND CMAKE_PREFIX_PATH ${KOKKOS_HWLOC_DIR})
-  endif()
-
-  find_package(HWLOC)
-
-  if(NOT HWLOC_FOUND)
-    if(KOKKOS_HWLOC_DIR)
-      message(FATAL_ERROR "Couldn't find HWLOC in default locations, and KOKKOS_HWLOC_DIR points to an invalid installation.")
-    else()
-      message(FATAL_ERROR "Couldn't find HWLOC in default locations.  Set KOKKOS_HWLOC_DIR.")
-    endif()
-  endif()
-
-  list(APPEND KOKKOS_INCLUDE_DIRS ${HWLOC_INCLUDE_DIR})
-  list(APPEND KOKKOS_LIBS ${HWLOC_LIBRARIES})
-
-  set(KOKKOS_HAVE_HWLOC ON CACHE INTERNAL "")
-
-  if(KOKKOS_HWLOC_DIR)
-    list(REMOVE_AT CMAKE_PREFIX_PATH -1)
-  endif()
-endif()
-
-# Set options if using memkind.
-if(KOKKOS_ENABLE_MEMKIND)
-  if(KOKKOS_MEMKIND_DIR)
-    list(APPEND CMAKE_PREFIX_PATH ${KOKKOS_MEMKIND_DIR})
-  endif()
-
-  find_package(Memkind)
-
-  if(NOT MEMKIND_FOUND)
-    if(KOKKOS_MEMKIND_DIR)
-      message(FATAL_ERROR "Couldn't find Memkind in default locations, and KOKKOS_MEMKIND_DIR points to an invalid installation.")
-    else()
-      message(FATAL_ERROR "Couldn't find Memkind in default locations.  Set KOKKOS_MEMKIND_DIR.")
-    endif()
-  endif()
-
-  set(KOKKOS_ENABLE_HBWSPACE ON CACHE INTERNAL "")
-  list(APPEND KOKKOS_INCLUDE_DIRS ${MEMKIND_INCLUDE_DIR})
-  list(APPEND KOKKOS_LIBS ${MEMKIND_LIBRARIES})
-
-  if(KOKKOS_MEMKIND_DIR)
-    list(REMOVE_AT CMAKE_PREFIX_PATH -1)
-  endif()
-else()
-  # Remove HBW source file.
-  list(REMOVE_ITEM KOKKOS_CORE_SRCS
-       "${Kokkos_SOURCE_DIR}/core/src/impl/Kokkos_HBWSpace.cpp")
-endif()
-
-# Set options if using librt.
-if(KOKKOS_ENABLE_LIBRT)
-  list(APPEND KOKKOS_LIBS rt)
-endif()
-
-# Set debugging if requested.
-if(KOKKOS_DEBUG)
-  set(KOKKOS_HAVE_DEBUG ON CACHE INTERNAL "")
-  set(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK ON CACHE INTERNAL "")
-
-  if(KOKKOS_CXX_COVIDIA)
-    list(APPEND KOKKOS_CXX_FLAGS -lineinfo)
-  endif()
-
-  list(APPEND KOKKOS_CXX_FLAGS -g)
-  list(APPEND KOKKOS_LD_FLAGS -g)
-endif()
-
-# Set profiling if requested.
-if(KOKKOS_ENABLE_PROFILING)
-  set(KOKKOS_ENABLE_PROFILING_INTERNAL ON CACHE INTERNAL "")
-  list(APPEND KOKKOS_LIBS dl)
-else()
-  # Remove profiling source file.
-  list(REMOVE_ITEM KOKKOS_CORE_SRCS
-       "${Kokkos_SOURCE_DIR}/core/src/impl/Kokkos_Profiling_Interface.cpp")
-endif()
-
-if(KOKKOS_ENABLE_CUDA)
   # Force CUDA_LDG_INTRINSIC on when using Clang.
   if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
     set(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC ON CACHE BOOL "Enable CUDA LDG." FORCE)
@@ -569,17 +460,71 @@ if(KOKKOS_ENABLE_CUDA)
   endif()
 endif()
 
-if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
-  set(KOKKOS_CUDA_CLANG_WORKAROUND ON CACHE INTERNAL "")
+# Set options if using OpenMP backend.
+if(KOKKOS_ENABLE_OPENMP)
+  find_package(OpenMP REQUIRED)
 
-  find_program(KOKKOS_GCC_PATH g++)
-  if(NOT KOKKOS_GCC_PATH)
-    message(FATAL_ERROR "Can't find GCC path to get toolchain for Clang.")
+  if(OPENMP_FOUND)
+    if(KOKKOS_CXX_COMPILER_ID MATCHES NVIDIA)
+      list(APPEND KOKKOS_CXX_FLAGS -Xcompiler)
+    endif()
+
+    list(APPEND KOKKOS_CXX_FLAGS ${OpenMP_CXX_FLAGS})
+    list(APPEND KOKKOS_LD_FLAGS ${OpenMP_CXX_FLAGS})
   endif()
-  string(REPLACE "/bin/g++" "" KOKKOS_GCC_PATH ${KOKKOS_GCC_PATH})
 
-  list(APPEND KOKKOS_CXX_FLAGS --gcc-toolchain=${KOKKOS_GCC_PATH})
-  list(APPEND KOKKOS_LD_FLAGS --gcc-toolchain=${KOKKOS_GCC_PATH})
+  set(KOKKOS_HAVE_OPENMP ON CACHE INTERNAL "")
+  file(GLOB KOKKOS_OPENMP_SRCS core/src/OpenMP/*.cpp)
+  list(APPEND KOKKOS_CORE_SRCS ${KOKKOS_OPENMP_SRCS})
+endif()
+
+# Set options if using Pthreads backend.
+if(KOKKOS_ENABLE_PTHREAD)
+  find_package(Threads REQUIRED)
+
+  list(APPEND KOKKOS_LIBS Threads::Threads)
+
+  set(KOKKOS_HAVE_PTHREAD ON CACHE INTERNAL "")
+  file(GLOB KOKKOS_PTHREAD_SRCS core/src/Threads/*.cpp)
+  list(APPEND KOKKOS_CORE_SRCS ${KOKKOS_PTHREAD_SRCS})
+endif()
+
+# Set options if using Qthreads backend.
+if(KOKKOS_ENABLE_QTHREADS)
+  if(KOKKOS_QTHREADS_DIR)
+    list(APPEND CMAKE_PREFIX_PATH ${KOKKOS_QTHREADS_DIR})
+  endif()
+
+  find_package(Qthreads)
+
+  if(NOT QTHREADS_FOUND)
+    if(KOKKOS_QTHREADS_DIR)
+      message(FATAL_ERROR "Couldn't find Qthreads in default locations, and KOKKOS_QTHREADS_DIR points to an invalid installation.")
+    else()
+      message(FATAL_ERROR "Couldn't find Qthreads in default locations.  Set KOKKOS_QTHREADS_DIR.")
+    endif()
+  endif()
+
+  list(APPEND KOKKOS_INCLUDE_DIRS ${QTHREADS_INCLUDE_DIR})
+  list(APPEND KOKKOS_LIBS ${QTHREADS_LIBRARIES})
+
+  set(KOKKOS_HAVE_QTHREADS ON CACHE INTERNAL "")
+  file(GLOB KOKKOS_QTHREADS_SRCS core/src/Threads/*.cpp)
+  list(APPEND KOKKOS_CORE_SRCS ${KOKKOS_QTHREADS_SRCS})
+
+  if(KOKKOS_QTHREADS_DIR)
+    list(REMOVE_AT CMAKE_PREFIX_PATH -1)
+  endif()
+endif()
+
+# Set options if using Serial backend.
+if(KOKKOS_ENABLE_SERIAL)
+  set(KOKKOS_HAVE_SERIAL ON CACHE INTERNAL "")
+else()
+  # Remove serial source files.
+  list(REMOVE_ITEM KOKKOS_CORE_SRCS
+       "${Kokkos_SOURCE_DIR}/core/src/impl/Kokkos_Serial.cpp"
+       "${Kokkos_SOURCE_DIR}/core/src/impl/Kokkos_Serial_Task.cpp")
 endif()
 
 ########################### SET ARCHITECTURE OPTIONS ###########################
@@ -609,11 +554,13 @@ endif()
 # Decide what ISA level we are able to support.
 if(KOKKOS_HOST_ARCH STREQUAL SNB OR KOKKOS_HOST_ARCH STREQUAL HSW OR KOKKOS_HOST_ARCH STREQUAL BDW OR
    KOKKOS_HOST_ARCH STREQUAL SKX OR KOKKOS_HOST_ARCH STREQUAL KNL)
- set(KOKKOS_ENABLE_ISA_X86_64 ON CACHE INTERNAL "")
+  set(KOKKOS_ENABLE_ISA_X86_64 ON CACHE INTERNAL "")
 endif()
+
 if(KOKKOS_HOST_ARCH STREQUAL KNC)
   set(KOKKOS_ENABLE_ISA_KNC ON CACHE INTERNAL "")
 endif()
+
 if(KOKKOS_HOST_ARCH STREQUAL Power8 OR KOKKOS_HOST_ARCH STREQUAL Power9)
   set(KOKKOS_ENABLE_ISA_POWERPCLE ON CACHE INTERNAL "")
 endif()
@@ -775,6 +722,105 @@ if(KOKKOS_ENABLE_CUDA)
   endif()
 endif()
 
+############################### SET OTHER OPTIONS ##############################
+
+# Set options if using hwloc.
+if(KOKKOS_ENABLE_HWLOC)
+  if(KOKKOS_HWLOC_DIR)
+    list(APPEND CMAKE_PREFIX_PATH ${KOKKOS_HWLOC_DIR})
+  endif()
+
+  find_package(HWLOC)
+
+  if(NOT HWLOC_FOUND)
+    if(KOKKOS_HWLOC_DIR)
+      message(FATAL_ERROR "Couldn't find HWLOC in default locations, and KOKKOS_HWLOC_DIR points to an invalid installation.")
+    else()
+      message(FATAL_ERROR "Couldn't find HWLOC in default locations.  Set KOKKOS_HWLOC_DIR.")
+    endif()
+  endif()
+
+  list(APPEND KOKKOS_INCLUDE_DIRS ${HWLOC_INCLUDE_DIR})
+  list(APPEND KOKKOS_LIBS ${HWLOC_LIBRARIES})
+
+  set(KOKKOS_HAVE_HWLOC ON CACHE INTERNAL "")
+
+  if(KOKKOS_HWLOC_DIR)
+    list(REMOVE_AT CMAKE_PREFIX_PATH -1)
+  endif()
+endif()
+
+# Set options if using memkind.
+if(KOKKOS_ENABLE_MEMKIND)
+  if(KOKKOS_MEMKIND_DIR)
+    list(APPEND CMAKE_PREFIX_PATH ${KOKKOS_MEMKIND_DIR})
+  endif()
+
+  find_package(Memkind)
+
+  if(NOT MEMKIND_FOUND)
+    if(KOKKOS_MEMKIND_DIR)
+      message(FATAL_ERROR "Couldn't find Memkind in default locations, and KOKKOS_MEMKIND_DIR points to an invalid installation.")
+    else()
+      message(FATAL_ERROR "Couldn't find Memkind in default locations.  Set KOKKOS_MEMKIND_DIR.")
+    endif()
+  endif()
+
+  set(KOKKOS_ENABLE_HBWSPACE ON CACHE INTERNAL "")
+  list(APPEND KOKKOS_INCLUDE_DIRS ${MEMKIND_INCLUDE_DIR})
+  list(APPEND KOKKOS_LIBS ${MEMKIND_LIBRARIES})
+
+  if(KOKKOS_MEMKIND_DIR)
+    list(REMOVE_AT CMAKE_PREFIX_PATH -1)
+  endif()
+else()
+  # Remove HBW source file.
+  list(REMOVE_ITEM KOKKOS_CORE_SRCS
+       "${Kokkos_SOURCE_DIR}/core/src/impl/Kokkos_HBWSpace.cpp")
+endif()
+
+# Set options if using librt.
+if(KOKKOS_ENABLE_LIBRT)
+  list(APPEND KOKKOS_LIBS rt)
+endif()
+
+# Set debugging if requested.
+if(KOKKOS_DEBUG)
+  set(KOKKOS_HAVE_DEBUG ON CACHE INTERNAL "")
+  set(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK ON CACHE INTERNAL "")
+
+  if(KOKKOS_CXX_COVIDIA)
+    list(APPEND KOKKOS_CXX_FLAGS -lineinfo)
+  endif()
+
+  list(APPEND KOKKOS_CXX_FLAGS -g)
+  list(APPEND KOKKOS_LD_FLAGS -g)
+endif()
+
+# Set profiling if requested.
+if(KOKKOS_ENABLE_PROFILING)
+  set(KOKKOS_ENABLE_PROFILING_INTERNAL ON CACHE INTERNAL "")
+  list(APPEND KOKKOS_LIBS dl)
+else()
+  # Remove profiling source file.
+  list(REMOVE_ITEM KOKKOS_CORE_SRCS
+       "${Kokkos_SOURCE_DIR}/core/src/impl/Kokkos_Profiling_Interface.cpp")
+endif()
+
+# Use GCC toolchain with Clang.
+if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+  set(KOKKOS_CUDA_CLANG_WORKAROUND ON CACHE INTERNAL "")
+
+  find_program(KOKKOS_GCC_PATH g++)
+  if(NOT KOKKOS_GCC_PATH)
+    message(FATAL_ERROR "Can't find GCC path to get toolchain for Clang.")
+  endif()
+  string(REPLACE "/bin/g++" "" KOKKOS_GCC_PATH ${KOKKOS_GCC_PATH})
+
+  list(APPEND KOKKOS_CXX_FLAGS --gcc-toolchain=${KOKKOS_GCC_PATH})
+  list(APPEND KOKKOS_LD_FLAGS --gcc-toolchain=${KOKKOS_GCC_PATH})
+endif()
+
 ################################ SET UP PROJECT ################################
 
 configure_file(
@@ -801,7 +847,10 @@ if(KOKKOS_SEPARATE_LIBS)
     PUBLIC ${KOKKOS_CXX_FLAGS}
   )
 
-  target_compile_features(kokkos PUBLIC ${KOKKOS_CXX11_FEATURES})
+  target_compile_features(
+    kokkos
+    PUBLIC ${KOKKOS_CXX11_FEATURES}
+  )
 
   target_link_libraries(
     kokkoscore
@@ -827,7 +876,8 @@ if(KOKKOS_SEPARATE_LIBS)
 
   # kokkosalgorithms - Build as interface library since no source files.
   add_library(
-    kokkosalgorithms INTERFACE
+    kokkosalgorithms
+    INTERFACE
   )
 
   target_include_directories(
@@ -861,7 +911,10 @@ else()
     PUBLIC ${KOKKOS_CXX_FLAGS}
   )
 
-  target_compile_features(kokkos PUBLIC ${KOKKOS_CXX11_FEATURES})
+  target_compile_features(
+    kokkos
+    PUBLIC ${KOKKOS_CXX11_FEATURES}
+  )
 
   target_link_libraries(
     kokkos
