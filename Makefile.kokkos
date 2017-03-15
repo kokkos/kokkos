@@ -60,24 +60,30 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 endif
 
 # Check OS.
-KOKKOS_OS                      := $(shell uname -s)
-KOKKOS_INTERNAL_OS_CYGWIN      := $(shell uname -s | grep CYGWIN | wc -l)
-KOKKOS_INTERNAL_OS_LINUX       := $(shell uname -s | grep Linux  | wc -l)
-KOKKOS_INTERNAL_OS_DARWIN      := $(shell uname -s | grep Darwin | wc -l)
+KOKKOS_OS                      := $(strip $(shell uname -s))
+KOKKOS_INTERNAL_OS_CYGWIN      := $(strip $(shell uname -s | grep CYGWIN | wc -l))
+KOKKOS_INTERNAL_OS_LINUX       := $(strip $(shell uname -s | grep Linux  | wc -l))
+KOKKOS_INTERNAL_OS_DARWIN      := $(strip $(shell uname -s | grep Darwin | wc -l))
 
 # Check compiler.
-KOKKOS_INTERNAL_COMPILER_INTEL := $(shell $(CXX) --version       2>&1 | grep "Intel Corporation" | wc -l)
-KOKKOS_INTERNAL_COMPILER_PGI   := $(shell $(CXX) --version       2>&1 | grep PGI                 | wc -l)
-KOKKOS_INTERNAL_COMPILER_XL    := $(shell $(CXX) -qversion       2>&1 | grep XL                  | wc -l)
-KOKKOS_INTERNAL_COMPILER_CRAY  := $(shell $(CXX) -craype-verbose 2>&1 | grep "CC-"               | wc -l)
-KOKKOS_INTERNAL_COMPILER_NVCC  := $(shell $(CXX) --version       2>&1 | grep "nvcc"              | wc -l)
-KOKKOS_INTERNAL_COMPILER_CLANG := $(shell $(CXX) --version       2>&1 | grep "clang"             | wc -l)
+KOKKOS_INTERNAL_COMPILER_INTEL       := $(strip $(shell $(CXX) --version       2>&1 | grep "Intel Corporation" | wc -l))
+KOKKOS_INTERNAL_COMPILER_PGI         := $(strip $(shell $(CXX) --version       2>&1 | grep PGI                 | wc -l))
+KOKKOS_INTERNAL_COMPILER_XL          := $(strip $(shell $(CXX) -qversion       2>&1 | grep XL                  | wc -l))
+KOKKOS_INTERNAL_COMPILER_CRAY        := $(strip $(shell $(CXX) -craype-verbose 2>&1 | grep "CC-"               | wc -l))
+KOKKOS_INTERNAL_COMPILER_NVCC        := $(strip $(shell $(CXX) --version       2>&1 | grep nvcc                | wc -l))
+KOKKOS_INTERNAL_COMPILER_CLANG       := $(strip $(shell $(CXX) --version       2>&1 | grep clang               | wc -l))
+KOKKOS_INTERNAL_COMPILER_APPLE_CLANG := $(strip $(shell $(CXX) --version       2>&1 | grep "Apple LLVM"        | wc -l))
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 2)
   KOKKOS_INTERNAL_COMPILER_CLANG = 1
 endif
 ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 2)
   KOKKOS_INTERNAL_COMPILER_XL = 1
+endif
+
+# Apple Clang passes both clang and apple clang tests, so turn off clang.
+ifeq ($(KOKKOS_INTERNAL_COMPILER_APPLE_CLANG), 1)
+  KOKKOS_INTERNAL_COMPILER_CLANG = 0
 endif
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
@@ -99,14 +105,18 @@ else
   ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
     KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp=libomp
   else
-    ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-      KOKKOS_INTERNAL_OPENMP_FLAG := -qsmp=omp
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_APPLE_CLANG), 1)
+      KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp=libomp
     else
-      ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
-        # OpenMP is turned on by default in Cray compiler environment.
-        KOKKOS_INTERNAL_OPENMP_FLAG :=
+      ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
+        KOKKOS_INTERNAL_OPENMP_FLAG := -qsmp=omp
       else
-        KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
+        ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+          # OpenMP is turned on by default in Cray compiler environment.
+          KOKKOS_INTERNAL_OPENMP_FLAG :=
+        else
+          KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
+        endif
       endif
     endif
   endif
@@ -361,10 +371,10 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
       tmp := $(shell echo "\#define KOKKOS_CUDA_USE_LAMBDA 1" >> KokkosCore_config.tmp )
     endif
   endif
-endif
 
-ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-  tmp := $(shell echo "\#define KOKKOS_CUDA_CLANG_WORKAROUND" >> KokkosCore_config.tmp )
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+    tmp := $(shell echo "\#define KOKKOS_CUDA_CLANG_WORKAROUND" >> KokkosCore_config.tmp )
+  endif
 endif
 
 # Add Architecture flags.
