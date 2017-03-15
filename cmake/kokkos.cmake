@@ -1,6 +1,6 @@
 # If the user doesn't have 'cmake_minimum_required(VERSION 3.1)' (or a higher
 # version) as the first line of their code, the policies can be set incorrectly
-# so that the CXX flags are not set correctly for Apple Clang.  Forcing them to
+# so that the CXX flags are not set correctly for AppleClang.  Forcing them to
 # set this catches the issue.
 if(${CMAKE_MINIMUM_REQUIRED_VERSION} VERSION_LESS 3.1)
   message(FATAL_ERROR "Kokkos requires you to set the minimum CMake version to 3.1 or higher.")
@@ -143,7 +143,7 @@ function(set_kokkos_cxx_compiler)
   set(KOKKOS_MESSAGE_TEXT "${KOKKOS_MESSAGE_TEXT}\n    IBM XL    13.1.3 or higher")
   set(KOKKOS_MESSAGE_TEXT "${KOKKOS_MESSAGE_TEXT}\n    NVCC       7.0.0 or higher\n")
 
-  if(INTERNAL_CXX_COMPILER_ID MATCHES GNU)
+  if(INTERNAL_CXX_COMPILER_ID STREQUAL GNU)
     if(INTERNAL_CXX_COMPILER_VERSION VERSION_LESS 4.7.2)
       message(FATAL_ERROR "${KOKKOS_MESSAGE_TEXT}")
     endif()
@@ -151,15 +151,15 @@ function(set_kokkos_cxx_compiler)
     if(INTERNAL_CXX_COMPILER_VERSION VERSION_LESS 3.5.2)
       message(FATAL_ERROR "${KOKKOS_MESSAGE_TEXT}")
     endif()
-  elseif(INTERNAL_CXX_COMPILER_ID MATCHES Intel)
+  elseif(INTERNAL_CXX_COMPILER_ID STREQUAL Intel)
     if(INTERNAL_CXX_COMPILER_VERSION VERSION_LESS 14.0.4)
       message(FATAL_ERROR "${KOKKOS_MESSAGE_TEXT}")
     endif()
-  elseif(INTERNAL_CXX_COMPILER_ID MATCHES XL)
+  elseif(INTERNAL_CXX_COMPILER_ID STREQUAL XL)
     if(INTERNAL_CXX_COMPILER_VERSION VERSION_LESS 13.1.3)
       message(FATAL_ERROR "${KOKKOS_MESSAGE_TEXT}")
     endif()
-  elseif(INTERNAL_CXX_COMPILER_ID MATCHES NVIDIA)
+  elseif(INTERNAL_CXX_COMPILER_ID STREQUAL NVIDIA)
     if(INTERNAL_CXX_COMPILER_VERSION VERSION_LESS 7.0.0)
       message(FATAL_ERROR "${KOKKOS_MESSAGE_TEXT}")
     endif()
@@ -176,12 +176,16 @@ endfunction()
 # KOKKOS_CXX_FLAGS.  Values set by the user to CMAKE_CXX_STANDARD and
 # CMAKE_CXX_EXTENSIONS are honored.
 function(set_kokkos_compiler_standard)
-  # This table lists the versions of CMake that supports CXX_STANDARD and the
-  # CXX compile features for different compilers:
+  # The following table lists the versions of CMake that supports CXX_STANDARD
+  # and the CXX compile features for different compilers.  The versions are
+  # based on CMake documentation, looking at CMake code, and verifying by
+  # testing with specific CMake versions.
   #
   #   COMPILER                      CXX_STANDARD     Compile Features
   #   ---------------------------------------------------------------
-  #   GNU, Clang, Apple Clang           3.1                3.3
+  #   Clang                             3.1                3.1
+  #   GNU                               3.1                3.2
+  #   AppleClang                        3.2                3.2
   #   Intel                             3.6                3.6
   #   Cray                              No                 No
   #   PGI                               No                 No
@@ -193,11 +197,15 @@ function(set_kokkos_compiler_standard)
   #   since we are really using nvcc_wrapper and not NVCC.
 
   # Check if we can use compile features.
-  if(KOKKOS_CXX_COMPILER_ID MATCHES Clang OR KOKKOS_CXX_COMPILER_ID MATCHES GNU)
-    if(NOT CMAKE_VERSION VERSION_LESS 3.3)
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+    if(NOT CMAKE_VERSION VERSION_LESS 3.1)
       set(INTERNAL_USE_COMPILE_FEATURES ON)
     endif()
-  elseif(KOKKOS_CXX_COMPILER_ID MATCHES Intel)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL AppleClang OR KOKKOS_CXX_COMPILER_ID STREQUAL GNU)
+    if(NOT CMAKE_VERSION VERSION_LESS 3.2)
+      set(INTERNAL_USE_COMPILE_FEATURES ON)
+    endif()
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
     if(NOT CMAKE_VERSION VERSION_LESS 3.6)
       set(INTERNAL_USE_COMPILE_FEATURES ON)
     endif()
@@ -219,13 +227,35 @@ function(set_kokkos_compiler_standard)
     # CXX compile features are not yet implemented for this combination of
     # compiler and version of CMake.
 
-    if(KOKKOS_CXX_COMPILER_ID MATCHES Intel)
+    if(KOKKOS_CXX_COMPILER_ID STREQUAL AppleClang)
+      # Versions of CMAKE before 3.2 don't support CXX_STANDARD or C++ compile
+      # features for the AppleClang compiler.  Set compiler flags transitively
+      # here such that they trickle down to a call to target_compile_options().
+
+      # The following two blocks of code were copied from
+      # /Modules/Compiler/AppleClang-CXX.cmake from CMake 3.7.2 and then
+      # modified.
+      if(NOT KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 4.0)
+        set(INTERNAL_CXX11_STANDARD_COMPILE_OPTION "-std=c++11")
+        set(INTERNAL_CXX11_EXTENSION_COMPILE_OPTION "-std=gnu++11")
+      endif()
+
+      if(NOT KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 6.1)
+        set(INTERNAL_CXX14_STANDARD_COMPILE_OPTION "-std=c++14")
+        set(INTERNAL_CXX14_EXTENSION_COMPILE_OPTION "-std=gnu++14")
+      elseif(NOT KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 5.1)
+        # AppleClang 5.0 knows this flag, but does not set a __cplusplus macro
+        # greater than 201103L.
+        set(INTERNAL_CXX14_STANDARD_COMPILE_OPTION "-std=c++1y")
+        set(INTERNAL_CXX14_EXTENSION_COMPILE_OPTION "-std=gnu++1y")
+      endif()
+    elseif(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
       # Versions of CMAKE before 3.6 don't support CXX_STANDARD or C++ compile
       # features for the Intel compiler.  Set compiler flags transitively here
       # such that they trickle down to a call to target_compile_options().
 
       # The following three blocks of code were copied from
-      # /Modules/Compiler/Intel-CXX.cmake from CMake 3.7 and then modified.
+      # /Modules/Compiler/Intel-CXX.cmake from CMake 3.7.2 and then modified.
       if("x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
         set(_std -Qstd)
         set(_ext c++)
@@ -251,7 +281,7 @@ function(set_kokkos_compiler_standard)
         set(INTERNAL_CXX11_STANDARD_COMPILE_OPTION "${_std}=c++0x")
         set(INTERNAL_CXX11_EXTENSION_COMPILE_OPTION "${_std}=${_ext}0x")
       endif()
-    elseif(KOKKOS_CXX_COMPILER_ID MATCHES Cray)
+    elseif(KOKKOS_CXX_COMPILER_ID STREQUAL Cray)
       # CMAKE doesn't support CXX_STANDARD or C++ compile features for the Cray
       # compiler.  Set compiler options transitively here such that they trickle
       # down to a call to target_compile_options().
@@ -259,7 +289,7 @@ function(set_kokkos_compiler_standard)
       set(INTERNAL_CXX11_EXTENSION_COMPILE_OPTION "-hstd=c++11")
       set(INTERNAL_CXX14_STANDARD_COMPILE_OPTION "-hstd=c++11")
       set(INTERNAL_CXX14_EXTENSION_COMPILE_OPTION "-hstd=c++11")
-    elseif(KOKKOS_CXX_COMPILER_ID MATCHES PGI)
+    elseif(KOKKOS_CXX_COMPILER_ID STREQUAL PGI)
       # CMAKE doesn't support CXX_STANDARD or C++ compile features for the PGI
       # compiler.  Set compiler options transitively here such that they trickle
       # down to a call to target_compile_options().
@@ -267,7 +297,7 @@ function(set_kokkos_compiler_standard)
       set(INTERNAL_CXX11_EXTENSION_COMPILE_OPTION "--c++11")
       set(INTERNAL_CXX14_STANDARD_COMPILE_OPTION "--c++11")
       set(INTERNAL_CXX14_EXTENSION_COMPILE_OPTION "--c++11")
-    elseif(KOKKOS_CXX_COMPILER_ID MATCHES XL)
+    elseif(KOKKOS_CXX_COMPILER_ID STREQUAL XL)
       # CMAKE doesn't support CXX_STANDARD or C++ compile features for the XL
       # compiler.  Set compiler options transitively here such that they trickle
       # down to a call to target_compile_options().
@@ -275,7 +305,7 @@ function(set_kokkos_compiler_standard)
       set(INTERNAL_CXX11_EXTENSION_COMPILE_OPTION "-std=c++11")
       set(INTERNAL_CXX14_STANDARD_COMPILE_OPTION "-std=c++11")
       set(INTERNAL_CXX14_EXTENSION_COMPILE_OPTION "-std=c++11")
-    elseif(KOKKOS_CXX_COMPILER_ID MATCHES NVIDIA)
+    elseif(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
       # CMAKE doesn't support C++ compile features for NVCC at all and doesn't
       # support CXX_STANDARD for NVCC until CMake 3.8.  Even then, how it uses
       # CXX_STANDARD for NVCC won't work for us since we are really using
@@ -286,9 +316,10 @@ function(set_kokkos_compiler_standard)
       set(INTERNAL_CXX14_STANDARD_COMPILE_OPTION "-std=c++11")
       set(INTERNAL_CXX14_EXTENSION_COMPILE_OPTION "-std=c++11")
     else()
-      # Assume one of GNU, Clang, or AppleClang.  These are handled correctly by
-      # CMake when the user explicitly requests a C++ standard.  If the user
-      # didn't explicitly request a standard, transitively require C++11.
+      # Assume GNU or Clang.  CMAKE_CXX_STANDARD is handled correctly by CMake
+      # 3.1 and above  for these compilers.  If the user explicitly requests a
+      # C++ standard, CMake takes care of it.  If not, transitively require
+      # C++11.
       if(NOT CMAKE_CXX_STANDARD)
         set(INTERNAL_CXX11_STANDARD_COMPILE_OPTION ${CMAKE_CXX11_STANDARD_COMPILE_OPTION})
         set(INTERNAL_CXX11_EXTENSION_COMPILE_OPTION ${CMAKE_CXX11_EXTENSION_COMPILE_OPTION})
@@ -348,6 +379,7 @@ set(KOKKOS_HAVE_CUDA OFF CACHE INTERNAL "")
 set(KOKKOS_USE_CUDA_UVM OFF CACHE INTERNAL "")
 set(KOKKOS_HAVE_CUDA_RDC OFF CACHE INTERNAL "")
 set(KOKKOS_HAVE_CUDA_LAMBDA OFF CACHE INTERNAL "")
+set(KOKKOS_CUDA_CLANG_WORKAROUND OFF CACHE INTERNAL "")
 set(KOKKOS_HAVE_OPENMP OFF CACHE INTERNAL "")
 set(KOKKOS_HAVE_PTHREAD OFF CACHE INTERNAL "")
 set(KOKKOS_HAVE_QTHREADS OFF CACHE INTERNAL "")
@@ -357,7 +389,6 @@ set(KOKKOS_ENABLE_HBWSPACE OFF CACHE INTERNAL "")
 set(KOKKOS_HAVE_DEBUG OFF CACHE INTERNAL "")
 set(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK OFF CACHE INTERNAL "")
 set(KOKKOS_ENABLE_PROFILING_INTERNAL OFF CACHE INTERNAL "")
-set(KOKKOS_CUDA_CLANG_WORKAROUND OFF CACHE INTERNAL "")
 set(KOKKOS_ENABLE_ISA_X86_64 OFF CACHE INTERNAL "")
 set(KOKKOS_ENABLE_ISA_KNC OFF CACHE INTERNAL "")
 set(KOKKOS_ENABLE_ISA_POWERPCLE OFF CACHE INTERNAL "")
@@ -429,11 +460,6 @@ if(KOKKOS_ENABLE_CUDA)
   file(GLOB KOKKOS_CUDA_SRCS core/src/Cuda/*.cpp)
   list(APPEND KOKKOS_CORE_SRCS ${KOKKOS_CUDA_SRCS})
 
-  # Force CUDA_LDG_INTRINSIC on when using Clang.
-  if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
-    set(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC ON CACHE BOOL "Enable CUDA LDG." FORCE)
-  endif()
-
   # Set CUDA UVM if requested.
   if(KOKKOS_ENABLE_CUDA_UVM)
     set(KOKKOS_USE_CUDA_UVM ON CACHE INTERNAL "")
@@ -450,13 +476,20 @@ if(KOKKOS_ENABLE_CUDA)
   if(KOKKOS_ENABLE_CUDA_LAMBDA)
     set(KOKKOS_HAVE_CUDA_LAMBDA ON CACHE INTERNAL "")
 
-    if(KOKKOS_CXX_COMPILER_ID MATCHES NVIDIA)
+    if(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
       if(KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 7.5)
         message(FATAL_ERROR "CUDA lambda support requires CUDA 7.5 or higher.  Disable it or use a 7.5 or later compiler.")
       else()
         list(APPEND KOKKOS_CXX_FLAGS -expt-extended-lambda)
       endif()
     endif()
+  endif()
+
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+    set(KOKKOS_CUDA_CLANG_WORKAROUND ON CACHE INTERNAL "")
+
+    # Force CUDA_LDG_INTRINSIC on when using Clang.
+    set(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC ON CACHE BOOL "Enable CUDA LDG." FORCE)
   endif()
 endif()
 
@@ -465,7 +498,7 @@ if(KOKKOS_ENABLE_OPENMP)
   find_package(OpenMP REQUIRED)
 
   if(OPENMP_FOUND)
-    if(KOKKOS_CXX_COMPILER_ID MATCHES NVIDIA)
+    if(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
       list(APPEND KOKKOS_CXX_FLAGS -Xcompiler)
     endif()
 
@@ -569,8 +602,8 @@ endif()
 if(KOKKOS_HOST_ARCH STREQUAL ARMv80)
   set(KOKKOS_ARCH_ARMV80 ON CACHE INTERNAL "")
 
-  if(KOKKOS_CXX_COMPILER_ID MATCHES Cray)
-  elseif(KOKKOS_CXX_COMPILER_ID MATCHES PGI)
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL Cray)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL PGI)
   else()
     list(APPEND KOKKOS_CXX_FLAGS -march=armv8-a)
     list(APPEND KOKKOS_LD_FLAGS -march=armv8-a)
@@ -578,8 +611,8 @@ if(KOKKOS_HOST_ARCH STREQUAL ARMv80)
 elseif(KOKKOS_HOST_ARCH STREQUAL ARMv81)
   set(KOKKOS_ARCH_ARMV81 ON CACHE INTERNAL "")
 
-  if(KOKKOS_CXX_COMPILER_ID MATCHES Cray)
-  elseif(KOKKOS_CXX_COMPILER_ID MATCHES PGI)
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL Cray)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL PGI)
   else()
     list(APPEND KOKKOS_CXX_FLAGS -march=armv8.1-a)
     list(APPEND KOKKOS_LD_FLAGS -march=armv8.1-a)
@@ -588,8 +621,8 @@ elseif(KOKKOS_HOST_ARCH STREQUAL ARMv8-ThunderX)
   set(KOKKOS_ARCH_ARMV80 ON CACHE INTERNAL "")
   set(KOKKOS_ARCH_ARMV8_THUNDERX ON CACHE INTERNAL "")
 
-  if(KOKKOS_CXX_COMPILER_ID MATCHES Cray)
-  elseif(KOKKOS_CXX_COMPILER_ID MATCHES PGI)
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL Cray)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL PGI)
   else()
     list(APPEND KOKKOS_CXX_FLAGS -march=armv8-a -mtune=thunderx)
     list(APPEND KOKKOS_LD_FLAGS -march=armv8-a -mtune=thunderx)
@@ -597,11 +630,11 @@ elseif(KOKKOS_HOST_ARCH STREQUAL ARMv8-ThunderX)
 elseif(KOKKOS_HOST_ARCH STREQUAL SNB OR KOKKOS_HOST_ARCH STREQUAL AMDAVX)
   set(KOKKOS_ARCH_AVX ON CACHE INTERNAL "")
 
-  if(KOKKOS_CXX_COMPILER_ID MATCHES Intel)
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
     list(APPEND KOKKOS_CXX_FLAGS -mavx)
     list(APPEND KOKKOS_LD_FLAGS -mavx)
-  elseif(KOKKOS_CXX_COMPILER_ID MATCHES Cray)
-  elseif(KOKKOS_CXX_COMPILER_ID MATCHES PGI)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL Cray)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL PGI)
     list(APPEND KOKKOS_CXX_FLAGS -tp=sandybridge)
     list(APPEND KOKKOS_LD_FLAGS -tp=sandybridge)
   else()
@@ -611,11 +644,11 @@ elseif(KOKKOS_HOST_ARCH STREQUAL SNB OR KOKKOS_HOST_ARCH STREQUAL AMDAVX)
 elseif(KOKKOS_HOST_ARCH STREQUAL HSW OR KOKKOS_HOST_ARCH STREQUAL BDW)
   set(KOKKOS_ARCH_AVX2 ON CACHE INTERNAL "")
 
-  if(KOKKOS_CXX_COMPILER_ID MATCHES Intel)
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
     list(APPEND KOKKOS_CXX_FLAGS -xCORE-AVX2)
     list(APPEND KOKKOS_LD_FLAGS -xCORE-AVX2)
-  elseif(KOKKOS_CXX_COMPILER_ID MATCHES Cray)
-  elseif(KOKKOS_CXX_COMPILER_ID MATCHES PGI)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL Cray)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL PGI)
     list(APPEND KOKKOS_CXX_FLAGS -tp=haswell)
     list(APPEND KOKKOS_LD_FLAGS -tp=haswell)
   else()
@@ -625,11 +658,11 @@ elseif(KOKKOS_HOST_ARCH STREQUAL HSW OR KOKKOS_HOST_ARCH STREQUAL BDW)
 elseif(KOKKOS_HOST_ARCH STREQUAL KNL)
   set(KOKKOS_ARCH_AVX512MIC ON CACHE INTERNAL "")
 
-  if(KOKKOS_CXX_COMPILER_ID MATCHES Intel)
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
     list(APPEND KOKKOS_CXX_FLAGS -xMIC-AVX512)
     list(APPEND KOKKOS_LD_FLAGS -xMIC-AVX512)
-  elseif(KOKKOS_CXX_COMPILER_ID MATCHES Cray)
-  elseif(KOKKOS_CXX_COMPILER_ID MATCHES PGI)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL Cray)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL PGI)
   else()
     list(APPEND KOKKOS_CXX_FLAGS -march=knl)
     list(APPEND KOKKOS_LD_FLAGS -march=knl)
@@ -637,11 +670,11 @@ elseif(KOKKOS_HOST_ARCH STREQUAL KNL)
 elseif(KOKKOS_HOST_ARCH STREQUAL SKX)
   set(KOKKOS_ARCH_AVX512XEON ON CACHE INTERNAL "")
 
-  if(KOKKOS_CXX_COMPILER_ID MATCHES Intel)
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
     list(APPEND KOKKOS_CXX_FLAGS -xCORE-AVX512)
     list(APPEND KOKKOS_LD_FLAGS -xCORE-AVX512)
-  elseif(KOKKOS_CXX_COMPILER_ID MATCHES Cray)
-  elseif(KOKKOS_CXX_COMPILER_ID MATCHES PGI)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL Cray)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL PGI)
   else()
     list(APPEND KOKKOS_CXX_FLAGS -march=skylake-avx512)
     list(APPEND KOKKOS_LD_FLAGS -march=skylake-avx512)
@@ -653,7 +686,7 @@ elseif(KOKKOS_HOST_ARCH STREQUAL KNC)
 elseif(KOKKOS_HOST_ARCH STREQUAL Power8)
   set(KOKKOS_ARCH_POWER8 ON CACHE INTERNAL "")
 
-  if(KOKKOS_CXX_COMPILER_ID MATCHES PGI)
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL PGI)
   else()
     list(APPEND KOKKOS_CXX_FLAGS -mcpu=power8 -mtune=power8)
     list(APPEND KOKKOS_LD_FLAGS -mcpu=power8 -mtune=power8)
@@ -661,7 +694,7 @@ elseif(KOKKOS_HOST_ARCH STREQUAL Power8)
 elseif(KOKKOS_HOST_ARCH STREQUAL Power9)
   set(KOKKOS_ARCH_POWER9 ON CACHE INTERNAL "")
 
-  if(KOKKOS_CXX_COMPILER_ID MATCHES PGI)
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL PGI)
   else()
     list(APPEND KOKKOS_CXX_FLAGS -mcpu=power9 -mtune=power9)
     list(APPEND KOKKOS_LD_FLAGS -mcpu=power9 -mtune=power9)
@@ -670,7 +703,7 @@ endif()
 
 # Add GPU architecture options.
 if(KOKKOS_ENABLE_CUDA)
-  if(KOKKOS_CXX_COMPILER_ID MATCHES NVIDIA)
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
     set(KOKKOS_COMPILER_CUDA_ARCH_FLAG -arch)
   elseif(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
     if(KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 4.0.0)
@@ -809,8 +842,6 @@ endif()
 
 # Use GCC toolchain with Clang.
 if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
-  set(KOKKOS_CUDA_CLANG_WORKAROUND ON CACHE INTERNAL "")
-
   find_program(KOKKOS_GCC_PATH g++)
   if(NOT KOKKOS_GCC_PATH)
     message(FATAL_ERROR "Can't find GCC path to get toolchain for Clang.")
