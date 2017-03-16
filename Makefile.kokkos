@@ -483,8 +483,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_HSW), 1)
         KOKKOS_LDFLAGS  += -tp=haswell
       else
         # Assume that this is a really a GNU compiler.
-        KOKKOS_CXXFLAGS += -march=haswell -mtune=haswell
-        KOKKOS_LDFLAGS  += -march=haswell -mtune=haswell
+        KOKKOS_CXXFLAGS += -march=core-avx2 -mtune=core-avx2
+        KOKKOS_LDFLAGS  += -march=core-avx2 -mtune=core-avx2
       endif
     endif
   endif
