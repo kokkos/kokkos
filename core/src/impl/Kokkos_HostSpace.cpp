@@ -98,6 +98,10 @@
 #include <impl/Kokkos_Error.hpp>
 #include <Kokkos_Atomic.hpp>
 
+#if defined( KOKKOS_ENABLE_ASM) && defined ( KOKKOS_ENABLE_ISA_X86_64 )
+#include <immintrin.h>
+#endif
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -490,15 +494,48 @@ void init_lock_array_host_space() {
 }
 
 bool lock_address_host_space(void* ptr) {
+#if defined( KOKKOS_ENABLE_ISA_X86_64 ) && defined ( KOKKOS_ENABLE_TM )
+  const unsigned status = _xbegin();
+
+  if( _XBEGIN_STARTED == status ) {
+	const int val = HOST_SPACE_ATOMIC_LOCKS[(( size_t(ptr) >> 2 ) &
+		HOST_SPACE_ATOMIC_MASK) ^ HOST_SPACE_ATOMIC_XOR_MASK];
+
+	if( 0 == val ) {
+		HOST_SPACE_ATOMIC_LOCKS[(( size_t(ptr) >> 2 ) &
+                   HOST_SPACE_ATOMIC_MASK) ^ HOST_SPACE_ATOMIC_XOR_MASK] = 1;
+	} else {
+		_xabort( 1 );
+	}
+
+	_xend();
+
+	return 1;
+  } else {
+#endif
   return 0 == atomic_compare_exchange( &HOST_SPACE_ATOMIC_LOCKS[
       (( size_t(ptr) >> 2 ) & HOST_SPACE_ATOMIC_MASK) ^ HOST_SPACE_ATOMIC_XOR_MASK] ,
                                   0 , 1);
+#if defined( KOKKOS_ENABLE_ISA_X86_64 ) && defined ( KOKKOS_ENABLE_TM )
+  }
+#endif
 }
 
 void unlock_address_host_space(void* ptr) {
+#if defined( KOKKOS_ENABLE_ISA_X86_64 ) && defined ( KOKKOS_ENABLE_TM )
+  const unsigned status = _xbegin();
+
+  if( _XBEGIN_STARTED == status ) {
+	HOST_SPACE_ATOMIC_LOCKS[(( size_t(ptr) >> 2 ) &
+        	HOST_SPACE_ATOMIC_MASK) ^ HOST_SPACE_ATOMIC_XOR_MASK] = 0;
+  } else {
+#endif
    atomic_exchange( &HOST_SPACE_ATOMIC_LOCKS[
       (( size_t(ptr) >> 2 ) & HOST_SPACE_ATOMIC_MASK) ^ HOST_SPACE_ATOMIC_XOR_MASK] ,
                     0);
+#if defined( KOKKOS_ENABLE_ISA_X86_64 ) && defined ( KOKKOS_ENABLE_TM )
+  }
+#endif
 }
 
 }

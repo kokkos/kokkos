@@ -44,10 +44,6 @@
 #if defined( KOKKOS_ATOMIC_HPP ) && ! defined( KOKKOS_ATOMIC_FETCH_ADD_HPP )
 #define KOKKOS_ATOMIC_FETCH_ADD_HPP
 
-#if defined(KOKKOS_ENABLE_ISA_X86_64) && defined(KOKKOS_ENABLE_ASM)
-#include <immintrin.h>
-#endif
-
 namespace Kokkos {
 
 //----------------------------------------------------------------------------
@@ -281,42 +277,22 @@ T atomic_fetch_add( volatile T * const dest ,
               #endif
                  , const T >::type& val )
 {
-  T return_val;
+  while( !Impl::lock_address_host_space( (void*) dest ) );
+  T return_val = *dest;
 
-#define KOKKOS_ENABLE_TM
-#if defined(KOKKOS_ENABLE_TM) && defined(KOKKOS_ENABLE_ISA_X86_64)
-  unsigned transaction_status = _xbegin();
-
-  if( transaction_status == _XBEGIN_STARTED ) {
-	return_val = *dest;
-
-	const T tmp = return_val + val;
-	*dest = tmp;
-
-	_xend();
-  } else {
-#endif
-
-  	while( !Impl::lock_address_host_space( (void*) dest ) );
-  	return_val = *dest;
-
-	// Don't use the following line of code here:
-  	//
-  	//const T tmp = *dest = return_val + val;
-  	//
-  	// Instead, put each assignment in its own statement.  This is
-  	// because the overload of T::operator= for volatile *this should
-  	// return void, not volatile T&.  See Kokkos #177:
-  	//
-  	// https://github.com/kokkos/kokkos/issues/177
-  	*dest = return_val + val;
-  	const T tmp = *dest;
-  	(void) tmp;
-  	Impl::unlock_address_host_space( (void*) dest );
-
-#if defined(KOKKOS_ENABLE_TM) && defined(KOKKOS_ENABLE_ISA_X86_64)
-  }
-#endif
+  // Don't use the following line of code here:
+  //
+  //const T tmp = *dest = return_val + val;
+  //
+  // Instead, put each assignment in its own statement.  This is
+  // because the overload of T::operator= for volatile *this should
+  // return void, not volatile T&.  See Kokkos #177:
+  //
+  // https://github.com/kokkos/kokkos/issues/177
+  *dest = return_val + val;
+  const T tmp = *dest;
+  (void) tmp;
+  Impl::unlock_address_host_space( (void*) dest );
 
   return return_val;
 }
