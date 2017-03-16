@@ -468,7 +468,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_POWER9), 1)
   endif
 endif
 
-ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX2), 1)
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_HSW), 1)
   tmp := $(shell echo "\#define KOKKOS_ARCH_AVX2 1" >> KokkosCore_config.tmp )
 
   ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL), 1)
@@ -483,8 +483,30 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX2), 1)
         KOKKOS_LDFLAGS  += -tp=haswell
       else
         # Assume that this is a really a GNU compiler.
-        KOKKOS_CXXFLAGS += -march=core-avx2 -mtune=core-avx2
-        KOKKOS_LDFLAGS  += -march=core-avx2 -mtune=core-avx2
+        KOKKOS_CXXFLAGS += -march=haswell -mtune=haswell
+        KOKKOS_LDFLAGS  += -march=haswell -mtune=haswell
+      endif
+    endif
+  endif
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_BDW), 1)
+  tmp := $(shell echo "\#define KOKKOS_ARCH_AVX2 1" >> KokkosCore_config.tmp )
+
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL), 1)
+    KOKKOS_CXXFLAGS += -xCORE-AVX2
+    KOKKOS_LDFLAGS  += -xCORE-AVX2
+  else
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+
+    else
+      ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
+        KOKKOS_CXXFLAGS += -tp=haswell
+        KOKKOS_LDFLAGS  += -tp=haswell
+      else
+        # Assume that this is a really a GNU compiler.
+        KOKKOS_CXXFLAGS += -march=broadwell -mtune=broadwell -mrtm
+        KOKKOS_LDFLAGS  += -march=broadwell -mtune=broadwell -mrtm
       endif
     endif
   endif
@@ -504,8 +526,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX512MIC), 1)
 
       else
         # Asssume that this is really a GNU compiler.
-        KOKKOS_CXXFLAGS += -march=knl
-        KOKKOS_LDFLAGS  += -march=knl
+        KOKKOS_CXXFLAGS += -march=knl -mtune=knl
+        KOKKOS_LDFLAGS  += -march=knl -mtune=knl
       endif
     endif
   endif
@@ -525,8 +547,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX512XEON), 1)
 
       else
         # Nothing here yet.
-        KOKKOS_CXXFLAGS += -march=skylake-avx512 -mrtm
-        KOKKOS_LDFLAGS  += -march=skylake-avx512 -mrtm
+        KOKKOS_CXXFLAGS += -march=skylake-avx512 -mtune=skylake-avx512 -mrtm
+        KOKKOS_LDFLAGS  += -march=skylake-avx512 -mtune=skylake-avx512 -mrtm
       endif
     endif
   endif
