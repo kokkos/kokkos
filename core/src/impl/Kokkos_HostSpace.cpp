@@ -48,10 +48,6 @@
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #endif
 
-#if defined( KOKKOS_ENABLE_ISA_X86_64 ) && defined ( KOKKOS_ENABLE_TM )
-#include <immintrin.h>
-#endif
-
 /*--------------------------------------------------------------------------*/
 
 #if defined( __INTEL_COMPILER ) && ! defined ( KOKKOS_ENABLE_CUDA )
@@ -104,7 +100,7 @@
 #include <impl/Kokkos_Error.hpp>
 #include <Kokkos_Atomic.hpp>
 
-#if defined( KOKKOS_ENABLE_ASM) && defined ( KOKKOS_ENABLE_ISA_X86_64 )
+#if ( defined( KOKKOS_ENABLE_ASM ) || defined ( KOKKOS_ENABLE_TM ) ) && defined ( KOKKOS_ENABLE_ISA_X86_64 )
 #include <immintrin.h>
 #endif
 
