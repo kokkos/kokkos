@@ -543,46 +543,55 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER30), 1)
   tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER 1" >> KokkosCore_config.tmp )
   tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER30 1" >> KokkosCore_config.tmp )
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_30
+  KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_30
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER32), 1)
   tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER 1" >> KokkosCore_config.tmp )
   tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER32 1" >> KokkosCore_config.tmp )
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_32
+  KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_30
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER35), 1)
   tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER 1" >> KokkosCore_config.tmp )
   tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER35 1" >> KokkosCore_config.tmp )
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_35
+  KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_35
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER37), 1)
   tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER 1" >> KokkosCore_config.tmp )
   tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER37 1" >> KokkosCore_config.tmp )
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_37
+  KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_37
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL50), 1)
   tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL 1" >> KokkosCore_config.tmp )
   tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL50 1" >> KokkosCore_config.tmp )
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_50
+  KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_50
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL52), 1)
   tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL 1" >> KokkosCore_config.tmp )
   tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL52 1" >> KokkosCore_config.tmp )
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_52
+  KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_52
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL53), 1)
   tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL 1" >> KokkosCore_config.tmp )
   tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL53 1" >> KokkosCore_config.tmp )
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_53
+  KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_53
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_PASCAL61), 1)
   tmp := $(shell echo "\#define KOKKOS_ARCH_PASCAL 1" >> KokkosCore_config.tmp )
   tmp := $(shell echo "\#define KOKKOS_ARCH_PASCAL61 1" >> KokkosCore_config.tmp )
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_61
+  KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_61
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_PASCAL60), 1)
   tmp := $(shell echo "\#define KOKKOS_ARCH_PASCAL 1" >> KokkosCore_config.tmp )
   tmp := $(shell echo "\#define KOKKOS_ARCH_PASCAL60 1" >> KokkosCore_config.tmp )
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_60
+  KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_60
 endif
 
 endif
