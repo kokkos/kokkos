@@ -505,8 +505,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_BDW), 1)
         KOKKOS_LDFLAGS  += -tp=haswell
       else
         # Assume that this is a really a GNU compiler.
-        KOKKOS_CXXFLAGS += -march=broadwell -mtune=broadwell -mrtm
-        KOKKOS_LDFLAGS  += -march=broadwell -mtune=broadwell -mrtm
+        KOKKOS_CXXFLAGS += -march=core-avx2 -mtune=core-avx2 -mrtm
+        KOKKOS_LDFLAGS  += -march=core-avx2 -mtune=core-avx2 -mrtm
       endif
     endif
   endif
