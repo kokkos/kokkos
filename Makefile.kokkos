@@ -549,7 +549,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER32), 1)
   tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER 1" >> KokkosCore_config.tmp )
   tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER32 1" >> KokkosCore_config.tmp )
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_32
-  KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_30
+  KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_32
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER35), 1)
   tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER 1" >> KokkosCore_config.tmp )
