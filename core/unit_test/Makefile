@@ -126,10 +126,6 @@ TARGETS += ${INITTESTS_TARGETS}
 INITTESTS_TEST_TARGETS := $(addprefix test-default-init-,${INITTESTS_NUMBERS})
 TEST_TARGETS += ${INITTESTS_TEST_TARGETS}
 
-OBJ_SYNCHRONIC = TestSynchronic.o UnitTestMain.o gtest-all.o
-TARGETS += KokkosCore_UnitTest_Synchronic
-TEST_TARGETS += test-synchronic
-
 KokkosCore_UnitTest_Cuda: $(OBJ_CUDA) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_CUDA) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_Cuda
 
@@ -157,9 +153,6 @@ KokkosCore_UnitTest_Default: $(OBJ_DEFAULT) $(KOKKOS_LINK_DEPENDS)
 ${INITTESTS_TARGETS}: KokkosCore_UnitTest_DefaultDeviceTypeInit_%: TestDefaultDeviceTypeInit_%.o UnitTestMain.o gtest-all.o $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) TestDefaultDeviceTypeInit_$*.o UnitTestMain.o gtest-all.o $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_DefaultDeviceTypeInit_$*
 
-KokkosCore_UnitTest_Synchronic: $(OBJ_SYNCHRONIC) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_SYNCHRONIC) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_Synchronic
-
 test-cuda: KokkosCore_UnitTest_Cuda
 	./KokkosCore_UnitTest_Cuda
 
@@ -186,9 +179,6 @@ test-default: KokkosCore_UnitTest_Default
 
 ${INITTESTS_TEST_TARGETS}: test-default-init-%: KokkosCore_UnitTest_DefaultDeviceTypeInit_%
 	./KokkosCore_UnitTest_DefaultDeviceTypeInit_$*
-
-test-synchronic: KokkosCore_UnitTest_Synchronic
-	./KokkosCore_UnitTest_Synchronic
 
 build_all: $(TARGETS)
 
