@@ -1171,9 +1171,9 @@ public:
       Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too much L0 scratch memory"));
     }
 
-    if ( m_team_size >
-         Kokkos::Impl::cuda_get_max_block_size< ParallelReduce >
-               ( arg_functor , arg_policy.vector_length(), arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) / arg_policy.vector_length()) {
+    if ( unsigned(m_team_size) >
+         unsigned(Kokkos::Impl::cuda_get_max_block_size< ParallelReduce >
+               ( arg_functor , arg_policy.vector_length(), arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) / arg_policy.vector_length())) {
       Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too large team size."));
     }
 
