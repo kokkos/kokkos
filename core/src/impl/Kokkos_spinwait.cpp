@@ -54,12 +54,12 @@
   #if ( KOKKOS_ENABLE_ASM )
     #if defined( __arm__ ) || defined( __aarch64__ )
       /* No-operation instruction to idle the thread. */
-      #define KOKKOS_INTERNAL_PAUSE   asm volatile("nop\n" "nop\n")
+      #define KOKKOS_INTERNAL_PAUSE
     #else
       /* Pause instruction to prevent excess processor bus usage */
       #define KOKKOS_INTERNAL_PAUSE   asm volatile("pause\n":::"memory")
     #endif
-    #define KOKKOS_INTERNAL_NOP2    KOKKOS_INTERNAL_PAUSE
+    #define KOKKOS_INTERNAL_NOP2    asm volatile("nop\n" "nop\n")
     #define KOKKOS_INTERNAL_NOP4    KOKKOS_INTERNAL_NOP2;  KOKKOS_INTERNAL_NOP2
     #define KOKKOS_INTERNAL_NOP8    KOKKOS_INTERNAL_NOP4;  KOKKOS_INTERNAL_NOP4;
     #define KOKKOS_INTERNAL_NOP16   KOKKOS_INTERNAL_NOP8;  KOKKOS_INTERNAL_NOP8;
@@ -73,6 +73,7 @@
       case 3u:  KOKKOS_INTERNAL_NOP16; break;
       default: KOKKOS_INTERNAL_NOP32;
       }
+      KOKKOS_INTERNAL_PAUSE;
     }
     }
   #else
@@ -102,7 +103,7 @@
     }
   #else
     #define KOKKOS_INTERNAL_PAUSE   __asm__ __volatile__("pause\n":::"memory")
-    #define KOKKOS_INTERNAL_NOP2    KOKKOS_INTERNAL_PAUSE
+    #define KOKKOS_INTERNAL_NOP2    __asm__ __volatile__("nop\n" "nop")
     #define KOKKOS_INTERNAL_NOP4    KOKKOS_INTERNAL_NOP2;  KOKKOS_INTERNAL_NOP2
     #define KOKKOS_INTERNAL_NOP8    KOKKOS_INTERNAL_NOP4;  KOKKOS_INTERNAL_NOP4;
     #define KOKKOS_INTERNAL_NOP16   KOKKOS_INTERNAL_NOP8;  KOKKOS_INTERNAL_NOP8;
@@ -116,6 +117,7 @@
       case 3:  KOKKOS_INTERNAL_NOP16; break;
       default: KOKKOS_INTERNAL_NOP32;
       }
+      KOKKOS_INTERNAL_PAUSE;
     }
     }
   #endif
