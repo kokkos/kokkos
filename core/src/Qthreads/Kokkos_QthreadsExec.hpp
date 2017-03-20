@@ -101,12 +101,12 @@ public:
     int n, j;
 
     for ( n = 1; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < m_worker_size ); n <<= 1 ) {
-      Impl::spinwait( m_worker_base[j]->m_worker_state, QthreadsExec::Active );
+      Impl::spinwait_while_equal( m_worker_base[j]->m_worker_state, QthreadsExec::Active );
     }
 
     if ( rev_rank ) {
       m_worker_state = QthreadsExec::Inactive;
-      Impl::spinwait( m_worker_state, QthreadsExec::Inactive );
+      Impl::spinwait_while_equal( m_worker_state, QthreadsExec::Inactive );
     }
 
     for ( n = 1; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < m_worker_size ); n <<= 1 ) {
@@ -124,12 +124,12 @@ public:
       int n, j;
 
       for ( n = 1; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < team_size ); n <<= 1 ) {
-        Impl::spinwait( m_shepherd_base[j]->m_worker_state, QthreadsExec::Active );
+        Impl::spinwait_while_equal( m_shepherd_base[j]->m_worker_state, QthreadsExec::Active );
       }
 
       if ( rev_rank ) {
         m_worker_state = QthreadsExec::Inactive;
-        Impl::spinwait( m_worker_state, QthreadsExec::Inactive );
+        Impl::spinwait_while_equal( m_worker_state, QthreadsExec::Inactive );
       }
 
       for ( n = 1; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < team_size ); n <<= 1 ) {
@@ -154,14 +154,14 @@ public:
     for ( n = 1; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < m_worker_size ); n <<= 1 ) {
       const QthreadsExec & fan = *m_worker_base[j];
 
-      Impl::spinwait( fan.m_worker_state, QthreadsExec::Active );
+      Impl::spinwait_while_equal( fan.m_worker_state, QthreadsExec::Active );
 
       ValueJoin::join( ReducerConditional::select( func, reduce ), m_scratch_alloc, fan.m_scratch_alloc );
     }
 
     if ( rev_rank ) {
       m_worker_state = QthreadsExec::Inactive;
-      Impl::spinwait( m_worker_state, QthreadsExec::Inactive );
+      Impl::spinwait_while_equal( m_worker_state, QthreadsExec::Inactive );
     }
 
     for ( n = 1; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < m_worker_size ); n <<= 1 ) {
@@ -183,12 +183,12 @@ public:
     int n, j;
 
     for ( n = 1; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < m_worker_size ); n <<= 1 ) {
-      Impl::spinwait( m_worker_base[j]->m_worker_state, QthreadsExec::Active );
+      Impl::spinwait_while_equal( m_worker_base[j]->m_worker_state, QthreadsExec::Active );
     }
 
     if ( rev_rank ) {
       m_worker_state = QthreadsExec::Inactive;
-      Impl::spinwait( m_worker_state, QthreadsExec::Inactive );
+      Impl::spinwait_while_equal( m_worker_state, QthreadsExec::Inactive );
     }
     else {
       // Root thread scans across values before releasing threads.
@@ -252,12 +252,12 @@ public:
     int n, j;
 
     for ( n = 1; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < team_size ); n <<= 1 ) {
-      Impl::spinwait( m_shepherd_base[j]->m_worker_state, QthreadsExec::Active );
+      Impl::spinwait_while_equal( m_shepherd_base[j]->m_worker_state, QthreadsExec::Active );
     }
 
     if ( rev_rank ) {
       m_worker_state = QthreadsExec::Inactive;
-      Impl::spinwait( m_worker_state, QthreadsExec::Inactive );
+      Impl::spinwait_while_equal( m_worker_state, QthreadsExec::Inactive );
     }
     else {
       Type & accum = *m_shepherd_base[0]->shepherd_team_scratch_value<Type>();
@@ -298,12 +298,12 @@ public:
     int n, j;
 
     for ( n = 1; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < team_size ); n <<= 1 ) {
-      Impl::spinwait( m_shepherd_base[j]->m_worker_state, QthreadsExec::Active );
+      Impl::spinwait_while_equal( m_shepherd_base[j]->m_worker_state, QthreadsExec::Active );
     }
 
     if ( rev_rank ) {
       m_worker_state = QthreadsExec::Inactive;
-      Impl::spinwait( m_worker_state, QthreadsExec::Inactive );
+      Impl::spinwait_while_equal( m_worker_state, QthreadsExec::Inactive );
     }
     else {
       volatile Type & accum = *m_shepherd_base[0]->shepherd_team_scratch_value<Type>();
@@ -339,12 +339,12 @@ public:
     int n, j;
 
     for ( n = 1; ( ! ( rev_rank & n ) ) && ( ( j = rev_rank + n ) < team_size ); n <<= 1 ) {
-      Impl::spinwait( m_shepherd_base[j]->m_worker_state, QthreadsExec::Active );
+      Impl::spinwait_while_equal( m_shepherd_base[j]->m_worker_state, QthreadsExec::Active );
     }
 
     if ( rev_rank ) {
       m_worker_state = QthreadsExec::Inactive;
-      Impl::spinwait( m_worker_state, QthreadsExec::Inactive );
+      Impl::spinwait_while_equal( m_worker_state, QthreadsExec::Inactive );
     }
     else {
       // Root thread scans across values before releasing threads.
