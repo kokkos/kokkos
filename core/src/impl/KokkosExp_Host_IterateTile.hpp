@@ -50,7 +50,7 @@
 
 #include <Kokkos_Macros.hpp>
 
-#if defined(KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION) && defined(KOKKOS_HAVE_PRAGMA_IVDEP) && !defined(__CUDA_ARCH__)
+#if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && defined(KOKKOS_HAVE_PRAGMA_IVDEP) && !defined(__CUDA_ARCH__)
 #define KOKKOS_MDRANGE_IVDEP
 #endif
 

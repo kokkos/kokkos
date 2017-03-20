@@ -83,7 +83,7 @@ private:
   exec_range( const FunctorType & functor
             , const Member ibeg , const Member iend )
     {
-      #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
+      #if defined( KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION ) && \
           defined( KOKKOS_ENABLE_PRAGMA_IVDEP )
       #pragma ivdep
       #endif
@@ -99,7 +99,7 @@ private:
             , const Member ibeg , const Member iend )
     {
       const TagType t{} ;
-      #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
+      #if defined( KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION ) && \
           defined( KOKKOS_ENABLE_PRAGMA_IVDEP )
       #pragma ivdep
       #endif
@@ -308,7 +308,7 @@ private:
             , const Member & ibeg , const Member & iend
             , reference_type update )
     {
-      #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
+      #if defined( KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION ) && \
           defined( KOKKOS_ENABLE_PRAGMA_IVDEP )
       #pragma ivdep
       #endif
@@ -325,7 +325,7 @@ private:
             , reference_type update )
     {
       const TagType t{} ;
-      #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
+      #if defined( KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION ) && \
           defined( KOKKOS_ENABLE_PRAGMA_IVDEP )
       #pragma ivdep
       #endif
@@ -584,7 +584,7 @@ private:
             , const Member & ibeg , const Member & iend
             , reference_type update , const bool final )
     {
-      #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
+      #if defined( KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION ) && \
           defined( KOKKOS_ENABLE_PRAGMA_IVDEP )
       #pragma ivdep
       #endif
@@ -601,7 +601,7 @@ private:
             , reference_type update , const bool final )
     {
       const TagType t{} ;
-      #if defined( KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ) && \
+      #if defined( KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION ) && \
           defined( KOKKOS_ENABLE_PRAGMA_IVDEP )
       #pragma ivdep
       #endif

@@ -75,23 +75,23 @@ set(KOKKOS_MEMKIND_DIR "" CACHE PATH "Location of memkind library.")
 
 set(KOKKOS_ENABLE_LIBRT OFF CACHE BOOL "Enable librt for more precise timer.")
 
-# Turn on kokkos debugging.
+# Enable debugging.
 set(KOKKOS_DEBUG OFF CACHE BOOL "Enable debugging in Kokkos.")
 
+# Enable profiling.
 set(KOKKOS_ENABLE_PROFILING ON CACHE BOOL "Enable profiling.")
+
+# Enable aggressive vectorization.
+set(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION OFF CACHE BOOL "Enable aggressive vectorization.")
 
 # Qthreads options.
 set(KOKKOS_QTHREADS_DIR "" CACHE PATH "Location of Qthreads library.")
 
 # CUDA options.
 set(KOKKOS_CUDA_DIR "" CACHE PATH "Location of CUDA library.  Defaults to where nvcc installed.")
-
 set(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC OFF CACHE BOOL "Enable CUDA LDG.")
-
 set(KOKKOS_ENABLE_CUDA_UVM OFF CACHE BOOL "Enable CUDA unified virtual memory.")
-
 set(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE OFF CACHE BOOL "Enable relocatable device code for CUDA.")
-
 set(KOKKOS_ENABLE_CUDA_LAMBDA ON CACHE BOOL "Enable lambdas for CUDA.")
 
 ################################### FUNCTIONS ##################################
