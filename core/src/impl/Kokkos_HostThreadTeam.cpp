@@ -256,8 +256,7 @@ int HostThreadTeamData::rendezvous( int64_t * const buffer
       //   rank waits for [ rank*8 .. (rank+1)*8 )
 
       value.full = 0 ;
-      const int n = ( size - group ) < 8 ? size - group : 8 ;
-      for ( int i = 0 ; i < n ; ++i ) value.byte[i] = step ;
+      for ( int i = 0 ; i < 8 ; ++i ) value.byte[i] = step ;
       spinwait_until_equal( sync_base[rank], value.full );
     }
   }
@@ -269,6 +268,10 @@ int HostThreadTeamData::rendezvous( int64_t * const buffer
     Kokkos::memory_fence();
 
     ((volatile int8_t*) sync_base)[rank] = int8_t( step );
+    if ( ( rank == size-1 ) && ( size%8 != 0) ) {
+      for ( int rank_extra = rank+1; rank_extra < ((size+7)/8) * 8; rank_extra++ )
+        ((volatile int8_t*) sync_base)[rank_extra] = int8_t( step );
+    }
   }
 
   { // "Inner" rendezvous for ranks [ 0 .. 7 ]
@@ -277,8 +280,7 @@ int HostThreadTeamData::rendezvous( int64_t * const buffer
     //   0 == rank         wait for [1..7]
 
     value.full = 0 ;
-    const int n = size < 8 ? size : 8 ;
-    for ( int i = 1 ; i < n ; ++i ) value.byte[i] = step ;
+    for ( int i = 1 ; i < 8 ; ++i ) value.byte[i] = step ;
     value.byte[0] = rank ? step : ((volatile int8_t*) sync_base)[0];
 
     spinwait_until_equal( sync_base[0], value.full );
