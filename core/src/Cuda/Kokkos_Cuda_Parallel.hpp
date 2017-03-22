@@ -61,7 +61,7 @@
 #include <Cuda/Kokkos_Cuda_Internal.hpp>
 #include <Kokkos_Vectorization.hpp>
 
-#if (KOKKOS_ENABLE_PROFILING)
+#if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <typeinfo>
 #endif

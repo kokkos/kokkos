@@ -724,7 +724,7 @@ void ThreadsExec::initialize( unsigned thread_count ,
   // Init the array for used for arbitrarily sized atomics
   Impl::init_lock_array_host_space();
 
-  #if (KOKKOS_ENABLE_PROFILING)
+  #if defined(KOKKOS_ENABLE_PROFILING)
     Kokkos::Profiling::initialize();
   #endif
 }
@@ -777,7 +777,7 @@ void ThreadsExec::finalize()
   s_threads_process.m_pool_fan_size   = 0 ;
   s_threads_process.m_pool_state = ThreadsExec::Inactive ;
 
-  #if (KOKKOS_ENABLE_PROFILING)
+  #if defined(KOKKOS_ENABLE_PROFILING)
     Kokkos::Profiling::finalize();
   #endif
 }
