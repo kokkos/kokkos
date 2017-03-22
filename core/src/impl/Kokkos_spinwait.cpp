@@ -51,7 +51,7 @@
 /*--------------------------------------------------------------------------*/
 
 #if !defined( _WIN32 )
-  #if ( KOKKOS_ENABLE_ASM )
+  #if defined( KOKKOS_ENABLE_ASM )
     #if defined( __arm__ ) || defined( __aarch64__ )
       /* No-operation instruction to idle the thread. */
       #define KOKKOS_INTERNAL_PAUSE

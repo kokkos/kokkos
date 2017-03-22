@@ -146,7 +146,7 @@
 
 #if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
    // Cuda version 8.0 still needs the functor wrapper
-   #if ( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA /* && ( CUDA_VERSION < 8000 ) */ ) && defined( __NVCC__ )
+   #if /* ( CUDA_VERSION < 8000 ) && */  defined( __NVCC__ )
       #define KOKKOS_IMPL_NEED_FUNCTOR_WRAPPER
    #endif
 #endif
