@@ -196,17 +196,18 @@ function(set_kokkos_compiler_standard)
   # CMake recognizes the host compiler when calling nvcc_wrapper, this just
   # works.  Both NVCC and nvcc_wrapper only recognize '-std=c++11' which means
   # that we can only use host compilers for CUDA builds that use those flags.
+  # It also means that extensions (gnu++11) can't be turned on for CUDA builds.
 
   # Check if we can use compile features.
-  if(CXX_COMPILER_ID STREQUAL Clang)
+  if(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
     if(NOT CMAKE_VERSION VERSION_LESS 3.1)
       set(INTERNAL_USE_COMPILE_FEATURES ON)
     endif()
-  elseif(CXX_COMPILER_ID STREQUAL AppleClang OR CXX_COMPILER_ID STREQUAL GNU)
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL AppleClang OR CMAKE_CXX_COMPILER_ID STREQUAL GNU)
     if(NOT CMAKE_VERSION VERSION_LESS 3.2)
       set(INTERNAL_USE_COMPILE_FEATURES ON)
     endif()
-  elseif(CXX_COMPILER_ID STREQUAL Intel)
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
     if(NOT CMAKE_VERSION VERSION_LESS 3.6)
       set(INTERNAL_USE_COMPILE_FEATURES ON)
     endif()
@@ -228,7 +229,7 @@ function(set_kokkos_compiler_standard)
     # CXX compile features are not yet implemented for this combination of
     # compiler and version of CMake.
 
-    if(CXX_COMPILER_ID STREQUAL AppleClang)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL AppleClang)
       # Versions of CMAKE before 3.2 don't support CXX_STANDARD or C++ compile
       # features for the AppleClang compiler.  Set compiler flags transitively
       # here such that they trickle down to a call to target_compile_options().
@@ -236,21 +237,21 @@ function(set_kokkos_compiler_standard)
       # The following two blocks of code were copied from
       # /Modules/Compiler/AppleClang-CXX.cmake from CMake 3.7.2 and then
       # modified.
-      if(NOT CXX_COMPILER_VERSION VERSION_LESS 4.0)
+      if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.0)
         set(INTERNAL_CXX11_STANDARD_COMPILE_OPTION "-std=c++11")
         set(INTERNAL_CXX11_EXTENSION_COMPILE_OPTION "-std=gnu++11")
       endif()
 
-      if(NOT CXX_COMPILER_VERSION VERSION_LESS 6.1)
+      if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.1)
         set(INTERNAL_CXX14_STANDARD_COMPILE_OPTION "-std=c++14")
         set(INTERNAL_CXX14_EXTENSION_COMPILE_OPTION "-std=gnu++14")
-      elseif(NOT CXX_COMPILER_VERSION VERSION_LESS 5.1)
+      elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.1)
         # AppleClang 5.0 knows this flag, but does not set a __cplusplus macro
         # greater than 201103L.
         set(INTERNAL_CXX14_STANDARD_COMPILE_OPTION "-std=c++1y")
         set(INTERNAL_CXX14_EXTENSION_COMPILE_OPTION "-std=gnu++1y")
       endif()
-    elseif(CXX_COMPILER_ID STREQUAL Intel)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
       # Versions of CMAKE before 3.6 don't support CXX_STANDARD or C++ compile
       # features for the Intel compiler.  Set compiler flags transitively here
       # such that they trickle down to a call to target_compile_options().
@@ -265,24 +266,24 @@ function(set_kokkos_compiler_standard)
         set(_ext gnu++)
       endif()
 
-      if(NOT CXX_COMPILER_VERSION VERSION_LESS 15.0.2)
+      if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15.0.2)
         set(INTERNAL_CXX14_STANDARD_COMPILE_OPTION "${_std}=c++14")
         # TODO: There is no gnu++14 value supported; figure out what to do.
         set(INTERNAL_CXX14_EXTENSION_COMPILE_OPTION "${_std}=c++14")
-      elseif(NOT CXX_COMPILER_VERSION VERSION_LESS 15.0.0)
+      elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15.0.0)
         set(INTERNAL_CXX14_STANDARD_COMPILE_OPTION "${_std}=c++1y")
         # TODO: There is no gnu++14 value supported; figure out what to do.
         set(INTERNAL_CXX14_EXTENSION_COMPILE_OPTION "${_std}=c++1y")
       endif()
 
-      if(NOT CXX_COMPILER_VERSION VERSION_LESS 13.0)
+      if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.0)
         set(INTERNAL_CXX11_STANDARD_COMPILE_OPTION "${_std}=c++11")
         set(INTERNAL_CXX11_EXTENSION_COMPILE_OPTION "${_std}=${_ext}11")
-      elseif(NOT CXX_COMPILER_VERSION VERSION_LESS 12.1)
+      elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 12.1)
         set(INTERNAL_CXX11_STANDARD_COMPILE_OPTION "${_std}=c++0x")
         set(INTERNAL_CXX11_EXTENSION_COMPILE_OPTION "${_std}=${_ext}0x")
       endif()
-    elseif(CXX_COMPILER_ID STREQUAL Cray)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL Cray)
       # CMAKE doesn't support CXX_STANDARD or C++ compile features for the Cray
       # compiler.  Set compiler options transitively here such that they trickle
       # down to a call to target_compile_options().
@@ -290,7 +291,7 @@ function(set_kokkos_compiler_standard)
       set(INTERNAL_CXX11_EXTENSION_COMPILE_OPTION "-hstd=c++11")
       set(INTERNAL_CXX14_STANDARD_COMPILE_OPTION "-hstd=c++11")
       set(INTERNAL_CXX14_EXTENSION_COMPILE_OPTION "-hstd=c++11")
-    elseif(CXX_COMPILER_ID STREQUAL PGI)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL PGI)
       # CMAKE doesn't support CXX_STANDARD or C++ compile features for the PGI
       # compiler.  Set compiler options transitively here such that they trickle
       # down to a call to target_compile_options().
@@ -298,7 +299,7 @@ function(set_kokkos_compiler_standard)
       set(INTERNAL_CXX11_EXTENSION_COMPILE_OPTION "--c++11")
       set(INTERNAL_CXX14_STANDARD_COMPILE_OPTION "--c++11")
       set(INTERNAL_CXX14_EXTENSION_COMPILE_OPTION "--c++11")
-    elseif(CXX_COMPILER_ID STREQUAL XL)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL XL)
       # CMAKE doesn't support CXX_STANDARD or C++ compile features for the XL
       # compiler.  Set compiler options transitively here such that they trickle
       # down to a call to target_compile_options().
@@ -307,10 +308,9 @@ function(set_kokkos_compiler_standard)
       set(INTERNAL_CXX14_STANDARD_COMPILE_OPTION "-std=c++11")
       set(INTERNAL_CXX14_EXTENSION_COMPILE_OPTION "-std=c++11")
     else()
-      # Assume GNU or Clang.  CMAKE_CXX_STANDARD is handled correctly by CMake
-      # 3.1 and above  for these compilers.  If the user explicitly requests a
-      # C++ standard, CMake takes care of it.  If not, transitively require
-      # C++11.
+      # Assume GNU.  CMAKE_CXX_STANDARD is handled correctly by CMake 3.1 and
+      # above for this compiler.  If the user explicitly requests a C++
+      # standard, CMake takes care of it.  If not, transitively require C++11.
       if(NOT CMAKE_CXX_STANDARD)
         set(INTERNAL_CXX11_STANDARD_COMPILE_OPTION ${CMAKE_CXX11_STANDARD_COMPILE_OPTION})
         set(INTERNAL_CXX11_EXTENSION_COMPILE_OPTION ${CMAKE_CXX11_EXTENSION_COMPILE_OPTION})
