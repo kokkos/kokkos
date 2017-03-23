@@ -165,6 +165,24 @@ function(set_kokkos_cxx_compiler)
     endif()
   endif()
 
+  # Enforce that extensions are turned off for nvcc_wrapper.
+  if(INTERNAL_CXX_COMPILER_ID STREQUAL NVIDIA)
+    if(NOT DEFINED CMAKE_CXX_EXTENSIONS OR CMAKE_CXX_EXTENSIONS STREQUAL ON)
+      message(FATAL_ERROR "NVCC doesn't support C++ extensions.  Please set CMAKE_CXX_EXTENSIONS to OFF.")
+    endif()
+  endif()
+
+  if(KOKKOS_ENABLE_CUDA)
+    # Enforce that the compiler can compile CUDA code.
+    if(INTERNAL_CXX_COMPILER_ID STREQUAL Clang)
+      if(INTERNAL_CXX_COMPILER_VERSION VERSION_LESS 4.0.0)
+        message(FATAL_ERROR "Compiling CUDA code directly with Clang requires version 4.0.0 or higher.")
+      endif()
+    elseif(NOT INTERNAL_CXX_COMPILER_ID STREQUAL NVIDIA)
+      message(FATAL_ERROR "Invalid compiler for CUDA.  The compiler must be nvcc_wrapper or Clang.")
+    endif()
+  endif()
+
   set(KOKKOS_CXX_COMPILER ${INTERNAL_CXX_COMPILER} PARENT_SCOPE)
   set(KOKKOS_CXX_COMPILER_ID ${INTERNAL_CXX_COMPILER_ID} PARENT_SCOPE)
   set(KOKKOS_CXX_COMPILER_VERSION ${INTERNAL_CXX_COMPILER_VERSION} PARENT_SCOPE)
@@ -476,6 +494,7 @@ if(KOKKOS_ENABLE_CUDA)
     endif()
   endif()
 
+  # Set Clang specific options.
   if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
     set(KOKKOS_CUDA_CLANG_WORKAROUND ON CACHE INTERNAL "")
 
@@ -697,14 +716,8 @@ if(KOKKOS_ENABLE_CUDA)
   if(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
     set(KOKKOS_COMPILER_CUDA_ARCH_FLAG -arch)
   elseif(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
-    if(KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 4.0.0)
-      message(FATAL_ERROR "Compiling CUDA code directly with Clang requires version 4.0.0 or higher.")
-    endif()
-
     list(APPEND KOKKOS_CXX_FLAGS -x cuda)
     set(KOKKOS_COMPILER_CUDA_ARCH_FLAG --cuda-gpu-arch)
-  else()
-    message(FATAL_ERROR "Invalid compiler for CUDA.  The compiler must be nvcc_wrapper or Clang.")
   endif()
 
   if(KOKKOS_GPU_ARCH STREQUAL Kepler30)
