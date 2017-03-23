@@ -17,7 +17,10 @@
 # transitively added to targets which depend on the library.
 #
 # The CMake variables CMAKE_CXX_STANDARD and CMAKE_CXX_EXTENSIONS are
-# respected.
+# respected.  We recommend that you set CMAKE_CXX_EXTENSIONS to OFF.
+# Otherwise, CMake defaults to using extensions for the C++ standard, and the
+# GNU extensions (-std=gnu++11) will be used for compilers that support it
+# instead of standard C++11 (-std=c++11).
 #
 # A bunch of build options are added as variables (all starting with KOKKOS_)
 # to the build.  Check them out using ccmake or the CMake GUI.
