@@ -93,7 +93,7 @@ protected:
                                    std::max( 2u, ( cores_per_numa * threads_per_core ) / 2 );
 
     Kokkos::OpenMP::initialize( threads_count );
-    Kokkos::OpenMP::print_configuration( std::cout, true );
+    Kokkos::print_configuration( std::cout, true );
     srand( 10231 );
   }
 

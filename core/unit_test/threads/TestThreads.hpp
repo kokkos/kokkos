@@ -95,7 +95,7 @@ protected:
                   * std::max( 2u, cores_per_numa * threads_per_core );
 
     Kokkos::Threads::initialize( threads_count );
-    Kokkos::Threads::print_configuration( std::cout, true /* detailed */ );
+    Kokkos::print_configuration( std::cout, true /* detailed */ );
   }
 
   static void TearDownTestCase()
