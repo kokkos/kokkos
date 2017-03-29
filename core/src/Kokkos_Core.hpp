@@ -80,6 +80,7 @@
 
 #include <Kokkos_Complex.hpp>
 
+#include <iosfwd>
 
 //----------------------------------------------------------------------------
 
@@ -108,6 +109,9 @@ void finalize();
 void finalize_all();
 
 void fence();
+
+/** \brief Print "Bill of Materials" */
+void print_configuration( std::ostream & , const bool detail = false );
 
 } // namespace Kokkos
 
