@@ -70,7 +70,8 @@
 #include <TestScan.hpp>
 #include <TestAggregate.hpp>
 #include <TestCompilerMacros.hpp>
-#include <TestTaskScheduler.hpp>
+//TODO Threads current does not support the task scheduler tests
+//#include <TestTaskScheduler.hpp>
 #include <TestMemoryPool.hpp>
 #include <TestCXX11.hpp>
 #include <TestCXX11Deduction.hpp>

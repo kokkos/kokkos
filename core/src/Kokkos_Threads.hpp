@@ -44,9 +44,11 @@
 #ifndef KOKKOS_THREADS_HPP
 #define KOKKOS_THREADS_HPP
 
-#include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_Macros.hpp>
 
-#if defined( KOKKOS_ENABLE_PTHREAD )
+#if defined( KOKKOS_ENABLE_THREADS ) && !defined( KOKKOS_ENABLE_EXPTHREADS )
+
+#include <Kokkos_Core_fwd.hpp>
 
 #include <cstddef>
 #include <iosfwd>
@@ -190,7 +192,7 @@ namespace Kokkos {
 namespace Impl {
 
 template<>
-struct MemorySpaceAccess 
+struct MemorySpaceAccess
   < Kokkos::Threads::memory_space
   , Kokkos::Threads::scratch_memory_space
   >
@@ -227,6 +229,6 @@ struct VerifyExecutionCanAccessMemorySpace
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#endif /* #if defined( KOKKOS_ENABLE_PTHREAD ) */
+#endif /* #if defined( KOKKOS_ENABLE_THREADS ) && !defined( KOKKOS_ENABLE_EXPTHREADS ) */
 #endif /* #define KOKKOS_THREADS_HPP */
 

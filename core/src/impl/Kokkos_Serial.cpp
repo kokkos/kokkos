@@ -41,13 +41,16 @@
 //@HEADER
 */
 
+#include <Kokkos_Macros.hpp>
+
+#if defined( KOKKOS_ENABLE_SERIAL )
+
 #include <stdlib.h>
 #include <sstream>
 #include <Kokkos_Serial.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_Error.hpp>
 
-#if defined( KOKKOS_ENABLE_SERIAL )
 
 /*--------------------------------------------------------------------------*/
 
@@ -177,6 +180,8 @@ void Serial::finalize()
 
 } // namespace Kokkos
 
+#else
+
+void g_IMPL_KOKKOS_SERIAL_PREVENT_EMPTY_LINK_ERROR() {}
+
 #endif // defined( KOKKOS_ENABLE_SERIAL )
-
-

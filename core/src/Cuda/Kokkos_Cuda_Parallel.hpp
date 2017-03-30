@@ -44,14 +44,14 @@
 #ifndef KOKKOS_CUDA_PARALLEL_HPP
 #define KOKKOS_CUDA_PARALLEL_HPP
 
-#include <iostream>
-#include <algorithm>
-#include <stdio.h>
-
 #include <Kokkos_Macros.hpp>
 
 /* only compile this file if CUDA is enabled for Kokkos */
 #if defined( __CUDACC__ ) && defined( KOKKOS_ENABLE_CUDA )
+
+#include <iostream>
+#include <algorithm>
+#include <stdio.h>
 
 #include <utility>
 #include <Kokkos_Parallel.hpp>

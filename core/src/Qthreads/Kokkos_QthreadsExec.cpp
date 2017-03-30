@@ -41,9 +41,11 @@
 //@HEADER
 */
 
-#include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_Macros.hpp>
 
 #if defined( KOKKOS_ENABLE_QTHREADS )
+
+#include <Kokkos_Core_fwd.hpp>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -515,5 +517,9 @@ QthreadsTeamPolicyMember::QthreadsTeamPolicyMember( const QthreadsTeamPolicyMemb
 } // namespace Impl
 
 } // namespace Kokkos
+
+#else
+
+void g_KOKKOS_QTHREADS_EXEC_PREVENT_EMPTY_LINK_ERROR() {}
 
 #endif // #if defined( KOKKOS_ENABLE_QTHREADS )

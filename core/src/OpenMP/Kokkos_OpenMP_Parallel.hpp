@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -44,9 +44,13 @@
 #ifndef KOKKOS_OPENMP_PARALLEL_HPP
 #define KOKKOS_OPENMP_PARALLEL_HPP
 
+#include <Kokkos_Macros.hpp>
+
+#if defined( KOKKOS_ENABLE_OPENMP ) && !defined( KOKKOS_ENABLE_EXPTHREADS )
+
 #include <omp.h>
 #include <iostream>
-#include <OpenMP/Kokkos_OpenMPexec.hpp>
+#include <OpenMP/Kokkos_OpenMP_Exec.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
 
 //----------------------------------------------------------------------------
@@ -58,7 +62,7 @@ namespace Impl {
 template< class FunctorType , class ... Traits >
 class ParallelFor< FunctorType
                  , Kokkos::RangePolicy< Traits ... >
-                 , Kokkos::OpenMP 
+                 , Kokkos::OpenMP
                  >
 {
 private:
@@ -111,7 +115,7 @@ private:
     {
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
+        HostThreadTeamData & data = *OpenMPExec::get_thread_data();
 
         const WorkRange range( m_policy, data.pool_rank(), data.pool_size() );
 
@@ -139,7 +143,7 @@ private:
 
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
+        HostThreadTeamData & data = *OpenMPExec::get_thread_data();
 
         data.set_work_partition( nwork );
 
@@ -165,8 +169,8 @@ public:
 
   inline void execute() const
   {
-    OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
-    OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
+    OpenMPExec::verify_is_process("Kokkos::OpenMP parallel_for");
+    OpenMPExec::verify_initialized("Kokkos::OpenMP parallel_for");
     this->template execute_schedule<typename Policy::schedule_type::type>();
   }
 
@@ -262,7 +266,7 @@ private:
     {
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
+        HostThreadTeamData & data = *OpenMPExec::get_thread_data();
 
         const WorkRange range( m_policy, data.pool_rank(), data.pool_size() );
 
@@ -293,7 +297,7 @@ private:
 
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
+        HostThreadTeamData & data = *OpenMPExec::get_thread_data();
 
         data.set_work_partition( nwork );
 
@@ -324,13 +328,13 @@ public:
 
   inline void execute() const
     {
-      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
-      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_reduce");
+      OpenMPExec::verify_is_process("Kokkos::OpenMP parallel_reduce");
+      OpenMPExec::verify_initialized("Kokkos::OpenMP parallel_reduce");
 
       const size_t pool_reduce_bytes =
         Analysis::value_size( ReducerConditional::select(m_functor, m_reducer));
 
-      OpenMPexec::resize_thread_data( pool_reduce_bytes
+      OpenMPExec::resize_thread_data( pool_reduce_bytes
                                     , 0 // team_reduce_bytes
                                     , 0 // team_shared_bytes
                                     , 0 // thread_local_bytes
@@ -340,12 +344,12 @@ public:
 
       // Reduction:
 
-      const pointer_type ptr = pointer_type( OpenMPexec::get_thread_data(0)->pool_reduce_local() );
+      const pointer_type ptr = pointer_type( OpenMPExec::get_thread_data(0)->pool_reduce_local() );
 
-      for ( int i = 1 ; i < OpenMPexec::pool_size() ; ++i ) {
+      for ( int i = 1 ; i < OpenMPExec::pool_size() ; ++i ) {
         ValueJoin::join( ReducerConditional::select(m_functor , m_reducer)
                        , ptr
-                       , OpenMPexec::get_thread_data(i)->pool_reduce_local() );
+                       , OpenMPExec::get_thread_data(i)->pool_reduce_local() );
       }
 
       Kokkos::Impl::FunctorFinal<  ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , ptr );
@@ -469,13 +473,13 @@ public:
   inline
   void execute() const
     {
-      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_scan");
-      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_scan");
+      OpenMPExec::verify_is_process("Kokkos::OpenMP parallel_scan");
+      OpenMPExec::verify_initialized("Kokkos::OpenMP parallel_scan");
 
       const int    value_count       = Analysis::value_count( m_functor );
       const size_t pool_reduce_bytes = 2 * Analysis::value_size( m_functor );
 
-      OpenMPexec::resize_thread_data( pool_reduce_bytes
+      OpenMPExec::resize_thread_data( pool_reduce_bytes
                                     , 0 // team_reduce_bytes
                                     , 0 // team_shared_bytes
                                     , 0 // thread_local_bytes
@@ -483,7 +487,7 @@ public:
 
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
+        HostThreadTeamData & data = *OpenMPExec::get_thread_data();
 
         const WorkRange range( m_policy, data.pool_rank(), data.pool_size() );
 
@@ -578,13 +582,13 @@ private:
       std::is_same< Schedule , Kokkos::Static >::value>::type
   exec_team( const FunctorType & functor
            , HostThreadTeamData & data
-           , const int league_size 
+           , const int league_size
            , const int active )
     {
       int league_rank = -1 ;
-  
+
       // Note: some threads may not be active
-      if ( active ) 
+      if ( active )
         while ( 0 <= ( league_rank = data.get_work_static() ) ) {
           // Don't allow team members to lap one another
           // so that they don't overwrite shared memory.
@@ -600,12 +604,12 @@ private:
       std::is_same<Schedule,Kokkos::Static>::value >::type
   exec_team( const FunctorType & functor
            , HostThreadTeamData & data
-           , const int league_size 
+           , const int league_size
            , const int active )
     {
       const TagType t{} ;
       int league_rank = -1 ;
-  
+
       // Note: some threads may not be active
       if ( active )
         while ( 0 <= ( league_rank = data.get_work_static() ) ) {
@@ -623,7 +627,7 @@ private:
       std::is_same<Schedule,Kokkos::Dynamic>::value>::type
   exec_team( const FunctorType & functor
            , HostThreadTeamData & data
-           , const int league_size 
+           , const int league_size
            , const int active)
     {
       // All teams must have set data partition before stealing
@@ -631,7 +635,7 @@ private:
       #pragma omp barrier
 
       int league_rank = -1 ;
- 
+
       // Note: some threads may not be active
       if ( active )
         while ( 0 <= ( league_rank = data.get_work_stealing() ) ) {
@@ -649,7 +653,7 @@ private:
       std::is_same<Schedule,Kokkos::Dynamic>::value >::type
   exec_team( const FunctorType & functor
            , HostThreadTeamData & data
-           , const int league_size 
+           , const int league_size
            , const int active)
     {
       const TagType t{} ;
@@ -659,7 +663,7 @@ private:
       #pragma omp barrier
 
       int league_rank = -1 ;
-      
+
       // Note: some threads may not be active
       if ( active )
         while ( 0 <= ( league_rank = data.get_work_stealing() ) ) {
@@ -675,15 +679,15 @@ public:
   inline
   void execute() const
     {
-      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
-      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
+      OpenMPExec::verify_is_process("Kokkos::OpenMP parallel_for");
+      OpenMPExec::verify_initialized("Kokkos::OpenMP parallel_for");
 
       const size_t pool_reduce_size = 0 ; // Never shrinks
       const size_t team_reduce_size = TEAM_REDUCE_SIZE * m_policy.team_size();
       const size_t team_shared_size = m_shmem_size + m_policy.scratch_size(1);
       const size_t thread_local_size = 0 ; // Never shrinks
 
-      OpenMPexec::resize_thread_data( pool_reduce_size
+      OpenMPExec::resize_thread_data( pool_reduce_size
                                     , team_reduce_size
                                     , team_shared_size
                                     , thread_local_size );
@@ -691,9 +695,9 @@ public:
 
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
+        HostThreadTeamData & data = *OpenMPExec::get_thread_data();
 
-        int active = data.organize_team( m_policy.team_size() ); 
+        int active = data.organize_team( m_policy.team_size() );
 
         if(active)
           data.set_work_partition( m_policy.league_size() );
@@ -764,11 +768,11 @@ private:
   exec_team( const FunctorType  & functor
            , HostThreadTeamData & data
            , reference_type     & update
-           , const int league_size 
+           , const int league_size
            , const int active )
     {
       int league_rank = -1 ;
-      
+
       if ( active )
         while ( 0 <= ( league_rank = data.get_work_static() ) ) {
           // Don't allow team members to lap one another
@@ -786,12 +790,12 @@ private:
   exec_team( const FunctorType  & functor
            , HostThreadTeamData & data
            , reference_type     & update
-           , const int league_size 
+           , const int league_size
            , const int active )
     {
       const TagType t{} ;
       int league_rank = -1 ;
-      
+
       if ( active )
         while ( 0 <= ( league_rank = data.get_work_static() ) ) {
           // Don't allow team members to lap one another
@@ -809,7 +813,7 @@ private:
   exec_team( const FunctorType & functor
            , HostThreadTeamData & data
            , reference_type     & update
-           , const int league_size 
+           , const int league_size
            , const int active )
     {
       // All teams must have set data partition before stealing
@@ -817,7 +821,7 @@ private:
       #pragma omp barrier
 
       int league_rank = -1 ;
-      
+
       if ( active )
         while ( 0 <= ( league_rank = data.get_work_stealing() ) ) {
           // get_work_stealing already contains a barrier
@@ -835,7 +839,7 @@ private:
   exec_team( const FunctorType & functor
            , HostThreadTeamData & data
            , reference_type     & update
-           , const int league_size 
+           , const int league_size
            , const int active )
     {
       const TagType t{} ;
@@ -859,8 +863,8 @@ public:
   inline
   void execute() const
     {
-      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
-      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_reduce");
+      OpenMPExec::verify_is_process("Kokkos::OpenMP parallel_reduce");
+      OpenMPExec::verify_initialized("Kokkos::OpenMP parallel_reduce");
 
       const size_t pool_reduce_size =
         Analysis::value_size( ReducerConditional::select(m_functor, m_reducer));
@@ -869,7 +873,7 @@ public:
       const size_t team_shared_size = m_shmem_size + m_policy.scratch_size(1);
       const size_t thread_local_size = 0 ; // Never shrinks
 
-      OpenMPexec::resize_thread_data( pool_reduce_size
+      OpenMPExec::resize_thread_data( pool_reduce_size
                                     , team_reduce_size
                                     , team_shared_size
                                     , thread_local_size );
@@ -877,7 +881,7 @@ public:
 
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
+        HostThreadTeamData & data = *OpenMPExec::get_thread_data();
 
         const int active =  data.organize_team( m_policy.team_size() );
 
@@ -889,7 +893,7 @@ public:
 
         ParallelReduce::template exec_team< WorkTag, SchedTag >
           ( m_functor , data , update , m_policy.league_size() , active);
-        
+
 
         data.disband_team();
       }
@@ -897,12 +901,12 @@ public:
 
       // Reduction:
 
-      const pointer_type ptr = pointer_type( OpenMPexec::get_thread_data(0)->pool_reduce_local() );
+      const pointer_type ptr = pointer_type( OpenMPExec::get_thread_data(0)->pool_reduce_local() );
 
-      for ( int i = 1 ; i < OpenMPexec::pool_size() ; ++i ) {
+      for ( int i = 1 ; i < OpenMPExec::pool_size() ; ++i ) {
         ValueJoin::join( ReducerConditional::select(m_functor , m_reducer)
                        , ptr
-                       , OpenMPexec::get_thread_data(i)->pool_reduce_local() );
+                       , OpenMPExec::get_thread_data(i)->pool_reduce_local() );
       }
 
       Kokkos::Impl::FunctorFinal<  ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , ptr );
@@ -961,5 +965,5 @@ public:
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#endif //#if defined( KOKKOS_ENABLE_OPENMP ) && !defined( KOKKOS_ENABLE_EXPTHREADS )
 #endif /* KOKKOS_OPENMP_PARALLEL_HPP */
-

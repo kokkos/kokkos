@@ -44,10 +44,12 @@
 /*--------------------------------------------------------------------------*/
 /* Kokkos interfaces */
 
-#include <Kokkos_Core.hpp>
+#include <Kokkos_Macros.hpp>
 
 /* only compile this file if CUDA is enabled for Kokkos */
 #ifdef KOKKOS_ENABLE_CUDA
+
+#include <Kokkos_Core.hpp>
 
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 #include <Cuda/Kokkos_Cuda_Internal.hpp>
@@ -773,6 +775,10 @@ void Cuda::fence()
 }
 
 } // namespace Kokkos
+
+#else
+
+void g_KOKKOS_CUDA_IMPL_PREVENT_EMPTY_LINK_ERROR() {} ;
 
 #endif // KOKKOS_ENABLE_CUDA
 //----------------------------------------------------------------------------

@@ -234,4 +234,8 @@ namespace Kokkos {
   }
 }
 
+#else
+
+void g_IMPL_KOKKOS_PROFILING_INTERFACE_PREVENT_EMPTY_LINK_ERROR() {}
+
 #endif

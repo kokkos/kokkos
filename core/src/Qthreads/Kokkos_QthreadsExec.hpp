@@ -44,6 +44,10 @@
 #ifndef KOKKOS_QTHREADSEXEC_HPP
 #define KOKKOS_QTHREADSEXEC_HPP
 
+#include <Kokkos_Macros.hpp>
+
+#ifdef KOKKOS_ENABLE_QTHREADS
+
 #include <impl/Kokkos_spinwait.hpp>
 
 //----------------------------------------------------------------------------
@@ -637,4 +641,5 @@ public:
 
 //----------------------------------------------------------------------------
 
+#endif // KOKKOS_ENABLE_QTHREADS
 #endif // #define KOKKOS_QTHREADSEXEC_HPP
