@@ -550,66 +550,65 @@ endif
 # Figure out the architecture flag for Cuda.
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
-    KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG=-arch
+    KOKKOS_INTERNAL_CUDA_ARCH_FLAG=-arch
   endif
   ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-    KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG=--cuda-gpu-arch
+    KOKKOS_INTERNAL_CUDA_ARCH_FLAG=--cuda-gpu-arch
     KOKKOS_CXXFLAGS += -x cuda
   endif
 
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER30), 1)
     tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER 1" >> KokkosCore_config.tmp )
     tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER30 1" >> KokkosCore_config.tmp )
-    KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_30
-    KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_30
+    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_30
   endif
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER32), 1)
     tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER 1" >> KokkosCore_config.tmp )
     tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER32 1" >> KokkosCore_config.tmp )
-    KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_32
-    KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_32
+    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_32
   endif
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER35), 1)
     tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER 1" >> KokkosCore_config.tmp )
     tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER35 1" >> KokkosCore_config.tmp )
-    KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_35
-    KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_35
+    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_35
   endif
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER37), 1)
     tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER 1" >> KokkosCore_config.tmp )
     tmp := $(shell echo "\#define KOKKOS_ARCH_KEPLER37 1" >> KokkosCore_config.tmp )
-    KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_37
-    KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_37
+    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_37
   endif
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL50), 1)
     tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL 1" >> KokkosCore_config.tmp )
     tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL50 1" >> KokkosCore_config.tmp )
-    KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_50
-    KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_50
+    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_50
   endif
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL52), 1)
     tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL 1" >> KokkosCore_config.tmp )
     tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL52 1" >> KokkosCore_config.tmp )
-    KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_52
-    KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_52
+    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_52
   endif
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL53), 1)
     tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL 1" >> KokkosCore_config.tmp )
     tmp := $(shell echo "\#define KOKKOS_ARCH_MAXWELL53 1" >> KokkosCore_config.tmp )
-    KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_53
-    KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_53
+    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_53
   endif
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_PASCAL60), 1)
     tmp := $(shell echo "\#define KOKKOS_ARCH_PASCAL 1" >> KokkosCore_config.tmp )
     tmp := $(shell echo "\#define KOKKOS_ARCH_PASCAL60 1" >> KokkosCore_config.tmp )
-    KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_60
-    KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_60
+    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_60
   endif
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_PASCAL61), 1)
     tmp := $(shell echo "\#define KOKKOS_ARCH_PASCAL 1" >> KokkosCore_config.tmp )
     tmp := $(shell echo "\#define KOKKOS_ARCH_PASCAL61 1" >> KokkosCore_config.tmp )
-    KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_61
-    KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_COMPILER_CUDA_ARCH_FLAG)=sm_61
+    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_61
+  endif
+
+  ifneq ($(KOKKOS_INTERNAL_USE_ARCH_NVIDIA), 0)
+    KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)
+
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
+      KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)
+    endif
   endif
 endif
 
@@ -636,9 +635,13 @@ KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/containers/src/impl/*.cpp)
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.cpp)
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.hpp)
-  KOKKOS_CXXFLAGS += -I$(CUDA_PATH)/include
+  KOKKOS_CPPFLAGS += -I$(CUDA_PATH)/include
   KOKKOS_LDFLAGS += -L$(CUDA_PATH)/lib64
   KOKKOS_LIBS += -lcudart -lcuda
+
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+    KOKKOS_CXXFLAGS += --cuda-path=$(CUDA_PATH)
+  endif
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
