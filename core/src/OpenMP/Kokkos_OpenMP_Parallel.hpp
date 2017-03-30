@@ -44,6 +44,10 @@
 #ifndef KOKKOS_OPENMP_PARALLEL_HPP
 #define KOKKOS_OPENMP_PARALLEL_HPP
 
+#include <Kokkos_Macros.hpp>
+
+#if defined( KOKKOS_ENABLE_OPENMP ) && !defined( KOKKOS_ENABLE_EXPTHREADS )
+
 #include <omp.h>
 #include <iostream>
 #include <OpenMP/Kokkos_OpenMP_Exec.hpp>
@@ -961,5 +965,5 @@ public:
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#endif //#if defined( KOKKOS_ENABLE_OPENMP ) && !defined( KOKKOS_ENABLE_EXPTHREADS )
 #endif /* KOKKOS_OPENMP_PARALLEL_HPP */
-

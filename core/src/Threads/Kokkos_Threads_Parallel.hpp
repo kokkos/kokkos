@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -44,8 +44,12 @@
 #ifndef KOKKOS_THREADS_PARALLEL_HPP
 #define KOKKOS_THREADS_PARALLEL_HPP
 
+#include <Kokkos_Macros.hpp>
+
+#if defined( KOKKOS_ENABLE_THREADS ) && !defined( KOKKOS_ENABLE_EXPTHREADS )
+
 #include <vector>
-#include <iostream> 
+#include <iostream>
 
 #include <Kokkos_Parallel.hpp>
 
@@ -348,7 +352,7 @@ private:
     const WorkRange range( self.m_policy, exec.pool_rank(), exec.pool_size() );
 
     ParallelReduce::template exec_range< WorkTag >
-      ( self.m_functor , range.begin() , range.end() 
+      ( self.m_functor , range.begin() , range.end()
       , ValueInit::init( ReducerConditional::select(self.m_functor , self.m_reducer) , exec.reduce_memory() ) );
 
     exec.template fan_in_reduce< ReducerTypeFwd , WorkTag >( ReducerConditional::select(self.m_functor , self.m_reducer) );
@@ -654,5 +658,5 @@ public:
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#endif //#if defined( KOKKOS_ENABLE_THREADS ) && !defined( KOKKOS_ENABLE_EXPTHREADS )
 #endif /* #define KOKKOS_THREADS_PARALLEL_HPP */
-

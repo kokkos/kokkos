@@ -424,6 +424,15 @@
 #endif
 
 //------------------------------------------------------------------------------
+// Determine if a threading backend has been enabled
+//------------------------------------------------------------------------------
+#if defined( KOKKOS_ENABLE_PTHREAD ) || defined( KOKKOS_ENABLE_WINTHREAD )
+#ifndef KOKKOS_ENABLE_THREADS
+#define KOKKOS_ENABLE_THREADS 1
+#endif
+#endif
+
+//------------------------------------------------------------------------------
 // Deprecated macros
 //------------------------------------------------------------------------------
 #ifdef KOKKOS_HAVE_CXX11

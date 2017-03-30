@@ -44,9 +44,11 @@
 #ifndef KOKKOS_QTHREADS_HPP
 #define KOKKOS_QTHREADS_HPP
 
-#include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_Macros.hpp>
 
 #ifdef KOKKOS_ENABLE_QTHREADS
+
+#include <Kokkos_Core_fwd.hpp>
 
 // Defines to enable experimental Qthreads functionality.
 #define QTHREAD_LOCAL_PRIORITY

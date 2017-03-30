@@ -44,6 +44,10 @@
 #ifndef KOKKOS_OPENMPEXEC_HPP
 #define KOKKOS_OPENMPEXEC_HPP
 
+#include <Kokkos_Macros.hpp>
+
+#if defined( KOKKOS_ENABLE_OPENMP ) && !defined( KOKKOS_ENABLE_EXPTHREADS )
+
 #include <Kokkos_OpenMP.hpp>
 
 #include <impl/Kokkos_Traits.hpp>
@@ -351,4 +355,5 @@ unsigned OpenMP::hardware_thread_id() { return thread_pool_rank(); }
 
 } // namespace Kokkos
 
+#endif //#if defined( KOKKOS_ENABLE_OPENMP ) && !defined( KOKKOS_ENABLE_EXPTHREADS )
 #endif /* #ifndef KOKKOS_OPENMPEXEC_HPP */

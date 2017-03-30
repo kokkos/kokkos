@@ -41,8 +41,10 @@
 //@HEADER
 */
 
-#include <algorithm>
 #include <Kokkos_Macros.hpp>
+
+#include <algorithm>
+
 #if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #endif

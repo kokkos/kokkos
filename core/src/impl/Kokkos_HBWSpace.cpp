@@ -44,6 +44,7 @@
 
 #include <Kokkos_Macros.hpp>
 
+#ifdef KOKKOS_ENABLE_HBWSPACE
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -58,9 +59,8 @@
 #include <Kokkos_HBWSpace.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <Kokkos_Atomic.hpp>
-#ifdef KOKKOS_ENABLE_HBWSPACE
+
 #include <memkind.h>
-#endif
 
 #if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Profiling_Interface.hpp>
@@ -68,7 +68,6 @@
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-#ifdef KOKKOS_ENABLE_HBWSPACE
 #define MEMKIND_TYPE MEMKIND_HBW //hbw_get_kind(HBW_PAGESIZE_4KB)
 
 namespace Kokkos {
@@ -396,4 +395,8 @@ void unlock_address_hbw_space(void* ptr) {
 }
 }
 }
-#endif
+#else
+
+void g_IMPL_KOKKOS_HBWSPACE_PREVENT_EMPTY_LINK_ERROR() {}
+
+#endif // KOKKOS_ENABLE_HBWSPACE

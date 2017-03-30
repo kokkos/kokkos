@@ -48,7 +48,7 @@
 /** Pick up configure / build options via #define macros:
  *
  *  KOKKOS_ENABLE_CUDA                Kokkos::Cuda execution and memory spaces
- *  KOKKOS_ENABLE_PTHREAD             Kokkos::Threads execution space
+ *  KOKKOS_ENABLE_THREADS             Kokkos::Threads execution space
  *  KOKKOS_ENABLE_QTHREADS            Kokkos::Qthreads execution space
  *  KOKKOS_ENABLE_OPENMP              Kokkos::OpenMP execution space
  *  KOKKOS_ENABLE_HWLOC               HWLOC library is available.
@@ -432,7 +432,7 @@
   #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA
 #elif defined( KOKKOS_ENABLE_OPENMP )
   #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP
-#elif defined( KOKKOS_ENABLE_PTHREAD )
+#elif defined( KOKKOS_ENABLE_THREADS )
   #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS
 //#elif defined( KOKKOS_ENABLE_QTHREADS )
 //  #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS
@@ -463,6 +463,24 @@
 
 #ifndef KOKKOS_ENABLE_PROFILING
   #define KOKKOS_ENABLE_PROFILING 1
+#endif
+
+//----------------------------------------------------------------------------
+// Enable TaskDag
+
+// If compiling with CUDA then must be using CUDA 8 or better
+// and use relocateable device code to enable the task policy.
+// nvcc relocatable device code option: --relocatable-device-code=true
+
+#if ( defined( KOKKOS_ENABLE_CUDA ) )
+  #if ( 8000 <= CUDA_VERSION ) && \
+      defined( KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE )
+
+  #define KOKKOS_ENABLE_TASKDAG 1
+
+  #endif
+#else
+  #define KOKKOS_ENABLE_TASKDAG 1
 #endif
 
 #endif // #ifndef KOKKOS_MACROS_HPP

@@ -44,6 +44,10 @@
 #ifndef KOKKOS_THREADSTEAM_HPP
 #define KOKKOS_THREADSTEAM_HPP
 
+#include <Kokkos_Macros.hpp>
+
+#if defined( KOKKOS_ENABLE_THREADS ) && !defined( KOKKOS_ENABLE_EXPTHREADS )
+
 #include <stdio.h>
 
 #include <utility>
@@ -916,5 +920,5 @@ void single(const Impl::ThreadSingleStruct<Impl::ThreadsExecTeamMember>& single_
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#endif //#if defined( KOKKOS_ENABLE_THREADS ) && !defined( KOKKOS_ENABLE_EXPTHREADS )
 #endif /* #define KOKKOS_THREADSTEAM_HPP */
-

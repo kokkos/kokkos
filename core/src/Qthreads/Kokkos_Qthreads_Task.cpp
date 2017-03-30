@@ -41,10 +41,11 @@
 //@HEADER
 */
 
-#include <Kokkos_Core.hpp>
+#include <Kokkos_Macros.hpp>
 
 #if defined( KOKKOS_ENABLE_QTHREADS ) && defined( KOKKOS_ENABLE_TASKPOLICY )
 
+#include <Kokkos_Core.hpp>
 #include <impl/Kokkos_TaskQueue_impl.hpp>
 
 //----------------------------------------------------------------------------
@@ -314,7 +315,8 @@ void TaskQueueSpecialization< Kokkos::Qthreads >::
 }} /* namespace Kokkos::Impl */
 
 //----------------------------------------------------------------------------
+#else
+
+void g_KOKKOS_QTHREADS_TASK_PREVENT_EMPTY_LINK_ERROR() {}
 
 #endif /* #if defined( KOKKOS_ENABLE_QTHREADS ) && defined( KOKKOS_ENABLE_TASKPOLICY ) */
-
-

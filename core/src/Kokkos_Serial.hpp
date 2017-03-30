@@ -47,6 +47,10 @@
 #ifndef KOKKOS_SERIAL_HPP
 #define KOKKOS_SERIAL_HPP
 
+#include <Kokkos_Macros.hpp>
+
+#if defined( KOKKOS_ENABLE_SERIAL )
+
 #include <cstddef>
 #include <iosfwd>
 #include <Kokkos_Parallel.hpp>
@@ -63,7 +67,6 @@
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
-#if defined( KOKKOS_ENABLE_SERIAL )
 
 namespace Kokkos {
 

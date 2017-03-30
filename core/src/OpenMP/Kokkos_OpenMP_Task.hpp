@@ -44,7 +44,9 @@
 #ifndef KOKKOS_IMPL_OPENMP_TASK_HPP
 #define KOKKOS_IMPL_OPENMP_TASK_HPP
 
-#if defined( KOKKOS_ENABLE_TASKDAG )
+#include <Kokkos_Macros.hpp>
+
+#if defined( KOKKOS_ENABLE_OPENMP ) && defined( KOKKOS_ENABLE_TASKDAG ) && !defined( KOKKOS_ENABLE_EXPTHREADS )
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -84,6 +86,5 @@ extern template class TaskQueue< Kokkos::OpenMP > ;
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
+#endif //#if defined( KOKKOS_ENABLE_OPENMP ) && defined( KOKKOS_ENABLE_TASKDAG ) && !defined( KOKKOS_ENABLE_EXPTHREADS )
 #endif /* #ifndef KOKKOS_IMPL_OPENMP_TASK_HPP */
-

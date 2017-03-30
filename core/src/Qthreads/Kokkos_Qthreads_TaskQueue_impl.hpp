@@ -41,7 +41,9 @@
 //@HEADER
 */
 
-#if defined( KOKKOS_ENABLE_TASKPOLICY )
+#include <Kokkos_Macros.hpp>
+
+#if defined( KOKKOS_ENABLE_QTHREADS ) && defined( KOKKOS_ENABLE_TASKPOLICY )
 
 namespace Kokkos {
 namespace Impl {
@@ -432,5 +434,5 @@ fflush(stdout);
 } /* namespace Kokkos */
 
 
-#endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
+#endif /* #if defined( KOKKOS_ENABLE_QTHREADS ) && defined( KOKKOS_ENABLE_TASKPOLICY ) */
 

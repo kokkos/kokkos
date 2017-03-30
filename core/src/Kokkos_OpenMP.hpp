@@ -44,13 +44,15 @@
 #ifndef KOKKOS_OPENMP_HPP
 #define KOKKOS_OPENMP_HPP
 
-#include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_Macros.hpp>
 
-#if defined( KOKKOS_ENABLE_OPENMP) && !defined(_OPENMP)
+#if defined( KOKKOS_ENABLE_OPENMP ) && !defined( KOKKOS_ENABLE_EXPTHREADS )
+
+#if !defined(_OPENMP)
 #error "You enabled Kokkos OpenMP support without enabling OpenMP in the compiler!"
 #endif
 
-#if defined( KOKKOS_ENABLE_OPENMP )
+#include <Kokkos_Core_fwd.hpp>
 
 #include <cstddef>
 #include <iosfwd>
@@ -198,7 +200,7 @@ struct VerifyExecutionCanAccessMemorySpace
 #include <KokkosExp_MDRangePolicy.hpp>
 /*--------------------------------------------------------------------------*/
 
-#endif /* #if defined( KOKKOS_ENABLE_OPENMP ) */
+#endif /* #if defined( KOKKOS_ENABLE_OPENMP ) && !defined( KOKKOS_ENABLE_EXPTHREADS ) */
 #endif /* #ifndef KOKKOS_OPENMP_HPP */
 
 

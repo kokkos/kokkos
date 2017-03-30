@@ -44,6 +44,10 @@
 #ifndef KOKKOS_QTHREADS_PARALLEL_HPP
 #define KOKKOS_QTHREADS_PARALLEL_HPP
 
+#include <Kokkos_Macros.hpp>
+
+#ifdef KOKKOS_ENABLE_QTHREADS
+
 #include <vector>
 
 #include <Kokkos_Parallel.hpp>
@@ -724,4 +728,5 @@ void single(const Impl::ThreadSingleStruct<Impl::QthreadsTeamPolicyMember>& sing
 
 } // namespace Kokkos
 
+#endif // KOKKOS_ENABLE_QTHREADS
 #endif /* #define KOKKOS_QTHREADS_PARALLEL_HPP */
