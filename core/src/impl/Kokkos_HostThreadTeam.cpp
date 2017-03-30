@@ -45,49 +45,7 @@
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_HostThreadTeam.hpp>
 #include <impl/Kokkos_Error.hpp>
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-#if ( KOKKOS_ENABLE_ASM )
-  #if defined( __arm__ ) || defined( __aarch64__ )
-    /* No-operation instruction to idle the thread. */
-    #define YIELD   asm volatile("nop")
-  #else
-    /* Pause instruction to prevent excess processor bus usage */
-    #define YIELD   asm volatile("pause\n":::"memory")
-  #endif
-#elif defined ( KOKKOS_ENABLE_WINTHREAD )
-  #include <process.h>
-  #define YIELD  Sleep(0)
-#elif defined ( _WIN32)  && defined (_MSC_VER)
-  /* Windows w/ Visual Studio */
-  #define NOMINMAX
-  #include <winsock2.h>
-  #include <windows.h>
-#define YIELD YieldProcessor();
-#elif defined ( _WIN32 )
-  /* Windows w/ Intel*/
-  #define YIELD __asm__ __volatile__("pause\n":::"memory")
-#else
-  #include <sched.h>
-  #define YIELD  sched_yield()
-#endif
-
-namespace Kokkos {
-namespace Impl {
-namespace {
-
-void wait_until_equal( int64_t const value , int64_t volatile * const sync )
-{
-  while ( value != *sync ) {
-    YIELD ;
-  }
-}
-
-}
-} // namespace Impl
-} // namespace Kokkos
+#include <impl/Kokkos_spinwait.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -194,11 +152,11 @@ int HostThreadTeamData::organize_team( const int team_size )
 
     m_team_scratch = pool[ team_base_rank ]->m_scratch ;
     m_team_base    = team_base_rank ;
-    // This needs to check overflow, if m_pool_size % team_alloc_size !=0 
+    // This needs to check overflow, if m_pool_size % team_alloc_size !=0
     // there are two corner cases:
-    // (i) if team_alloc_size == team_size there might be a non-full 
+    // (i) if team_alloc_size == team_size there might be a non-full
     //     zombi team around (for example m_pool_size = 5 and team_size = 2
-    // (ii) if team_alloc > team_size then the last team might have less 
+    // (ii) if team_alloc > team_size then the last team might have less
     //      threads than the others
     m_team_rank    = ( team_base_rank + team_size <= m_pool_size ) &&
                      ( team_alloc_rank < team_size ) ?
@@ -298,9 +256,8 @@ int HostThreadTeamData::rendezvous( int64_t * const buffer
       //   rank waits for [ rank*8 .. (rank+1)*8 )
 
       value.full = 0 ;
-      const int n = ( size - group ) < 8 ? size - group : 8 ;
-      for ( int i = 0 ; i < n ; ++i ) value.byte[i] = step ;
-      wait_until_equal( value.full , sync_base + rank );
+      for ( int i = 0 ; i < 8 ; ++i ) value.byte[i] = step ;
+      spinwait_until_equal( sync_base[rank], value.full );
     }
   }
 
@@ -311,6 +268,10 @@ int HostThreadTeamData::rendezvous( int64_t * const buffer
     Kokkos::memory_fence();
 
     ((volatile int8_t*) sync_base)[rank] = int8_t( step );
+    if ( ( rank == size-1 ) && ( size%8 != 0) ) {
+      for ( int rank_extra = rank+1; rank_extra < ((size+7)/8) * 8; rank_extra++ )
+        ((volatile int8_t*) sync_base)[rank_extra] = int8_t( step );
+    }
   }
 
   { // "Inner" rendezvous for ranks [ 0 .. 7 ]
@@ -319,11 +280,10 @@ int HostThreadTeamData::rendezvous( int64_t * const buffer
     //   0 == rank         wait for [1..7]
 
     value.full = 0 ;
-    const int n = size < 8 ? size : 8 ;
-    for ( int i = 1 ; i < n ; ++i ) value.byte[i] = step ;
+    for ( int i = 1 ; i < 8 ; ++i ) value.byte[i] = step ;
     value.byte[0] = rank ? step : ((volatile int8_t*) sync_base)[0];
 
-    wait_until_equal( value.full , sync_base );
+    spinwait_until_equal( sync_base[0], value.full );
   }
 
   return rank ? 0 : 1 ;
@@ -420,7 +380,7 @@ int HostThreadTeamData::get_work_stealing() noexcept
           // We need to figure out whether the next team is active
           // m_steal_rank + m_team_alloc could be the next base_rank to steal from
           // but only if there are another m_team_size threads available so that that
-          // base rank has a full team. 
+          // base rank has a full team.
           m_steal_rank = m_steal_rank + m_team_alloc + m_team_size <= m_pool_size ?
                          m_steal_rank + m_team_alloc : 0;
 

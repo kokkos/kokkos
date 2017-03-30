@@ -246,7 +246,10 @@ inline void cuda_inter_warp_reduction( ValueType& value,
                                        const int max_active_thread = blockDim.y) {
 
   #define STEP_WIDTH 4
-  __shared__ char sh_result[sizeof(ValueType)*STEP_WIDTH];
+  // Depending on the ValueType _shared__ memory must be aligned up to 8byte boundaries
+  // The reason not to use ValueType directly is that for types with constructors it 
+  // could lead to race conditions
+  __shared__ double sh_result[(sizeof(ValueType)+7)/8*STEP_WIDTH];
   ValueType* result = (ValueType*) & sh_result;
   const unsigned step = 32 / blockDim.x;
   unsigned shift = STEP_WIDTH;

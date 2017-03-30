@@ -60,7 +60,7 @@
 // /home/ndellin/kokkos/core/src/Cuda/Kokkos_CudaExec.hpp(84): error: incomplete type is not allowed
 // As a result, recreate cuda_parallel_launch and associated code
 
-#if (KOKKOS_ENABLE_PROFILING)
+#if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <typeinfo>
 #endif
@@ -121,11 +121,11 @@ struct apply_impl<2,RP,Functor,void >
             m_func(i, j);
     } }
 */
-    for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
+    for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
       const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
       if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
 
-        for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
+        for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
           const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
           if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
             m_func(offset_0 , offset_1);
@@ -133,7 +133,7 @@ struct apply_impl<2,RP,Functor,void >
         }
       }
     }
-  } 
+  }
 // LR
   else {
 /*
@@ -145,11 +145,11 @@ struct apply_impl<2,RP,Functor,void >
             m_func(i, j);
     } }
 */
-    for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
+    for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
       const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
       if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
 
-        for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
+        for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
           const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
           if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
             m_func(offset_0 , offset_1);
@@ -193,11 +193,11 @@ struct apply_impl<2,RP,Functor,Tag>
             m_func(Tag(), i, j);
     } }
 */
-    for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
+    for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
       const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
       if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
 
-        for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
+        for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
           const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
           if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
             m_func(Tag(), offset_0 , offset_1);
@@ -216,11 +216,11 @@ struct apply_impl<2,RP,Functor,Tag>
             m_func(Tag(), i, j);
     } }
 */
-    for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
+    for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
       const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
       if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
 
-        for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
+        for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
           const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
           if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
             m_func(Tag(), offset_0 , offset_1);
@@ -256,15 +256,15 @@ struct apply_impl<3,RP,Functor,void >
   {
 // LL
     if (RP::inner_direction == RP::Left) {
-      for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) { 
+      for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) {
         const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
         if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
 
-          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
+          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
             const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
             if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
 
-              for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
+              for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
                 const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
                 if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
                   m_func(offset_0 , offset_1 , offset_2);
@@ -274,18 +274,18 @@ struct apply_impl<3,RP,Functor,void >
           }
         }
       }
-    } 
+    }
 // LR
   else {
-    for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
+    for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
       const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
       if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
 
-        for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
+        for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
           const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
           if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
 
-            for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) { 
+            for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) {
               const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
               if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
                 m_func(offset_0 , offset_1 , offset_2);
@@ -320,15 +320,15 @@ struct apply_impl<3,RP,Functor,Tag>
   void exec_range() const
   {
     if (RP::inner_direction == RP::Left) {
-      for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) { 
+      for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) {
         const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
         if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
 
-          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
+          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
             const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
             if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
 
-              for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
+              for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
                 const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
                 if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
                   m_func(Tag(), offset_0 , offset_1 , offset_2);
@@ -340,15 +340,15 @@ struct apply_impl<3,RP,Functor,Tag>
       }
     }
     else {
-      for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) { 
+      for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
         const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
         if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
 
-          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) { 
+          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
             const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
             if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
 
-              for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) { 
+              for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) {
                 const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
                 if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
                   m_func(Tag(), offset_0 , offset_1 , offset_2);
@@ -399,11 +399,11 @@ struct apply_impl<4,RP,Functor,void >
       const index_type thr_id0 = threadIdx.x % m_rp.m_tile[0];
       const index_type thr_id1 = threadIdx.x / m_rp.m_tile[0];
 
-      for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) { 
+      for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) {
         const index_type offset_3 = tile_id3*m_rp.m_tile[3] + threadIdx.z;
         if ( offset_3 < m_rp.m_upper[3] && threadIdx.z < m_rp.m_tile[3] ) {
 
-          for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) { 
+          for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) {
             const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.y;
             if ( offset_2 < m_rp.m_upper[2] && threadIdx.y < m_rp.m_tile[2] ) {
 
@@ -437,19 +437,19 @@ struct apply_impl<4,RP,Functor,void >
       const index_type thr_id0 = threadIdx.x / m_rp.m_tile[1];
       const index_type thr_id1 = threadIdx.x % m_rp.m_tile[1];
 
-      for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) { 
+      for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) {
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
         if ( offset_0 < m_rp.m_upper[0] && thr_id0 < m_rp.m_tile[0] ) {
 
-          for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) { 
+          for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) {
             const index_type offset_1 = j*m_rp.m_tile[1] + thr_id1;
             if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
 
-              for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) { 
+              for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) {
                 const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.y;
                 if ( offset_2 < m_rp.m_upper[2] && threadIdx.y < m_rp.m_tile[2] ) {
 
-                  for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) { 
+                  for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) {
                     const index_type offset_3 = tile_id3*m_rp.m_tile[3] + threadIdx.z;
                     if ( offset_3 < m_rp.m_upper[3] && threadIdx.z < m_rp.m_tile[3] ) {
                       m_func(offset_0 , offset_1 , offset_2 , offset_3);
@@ -499,11 +499,11 @@ struct apply_impl<4,RP,Functor,Tag>
       const index_type thr_id0 = threadIdx.x % m_rp.m_tile[0];
       const index_type thr_id1 = threadIdx.x / m_rp.m_tile[0];
 
-      for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) { 
+      for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) {
         const index_type offset_3 = tile_id3*m_rp.m_tile[3] + threadIdx.z;
         if ( offset_3 < m_rp.m_upper[3] && threadIdx.z < m_rp.m_tile[3] ) {
 
-          for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) { 
+          for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) {
             const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.y;
             if ( offset_2 < m_rp.m_upper[2] && threadIdx.y < m_rp.m_tile[2] ) {
 
@@ -536,19 +536,19 @@ struct apply_impl<4,RP,Functor,Tag>
       const index_type thr_id0 = threadIdx.x / m_rp.m_tile[1];
       const index_type thr_id1 = threadIdx.x % m_rp.m_tile[1];
 
-      for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) { 
+      for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) {
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
         if ( offset_0 < m_rp.m_upper[0] && thr_id0 < m_rp.m_tile[0] ) {
 
-          for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) { 
+          for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) {
             const index_type offset_1 = tile_id1*m_rp.m_tile[1] + thr_id1;
             if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
 
-              for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) { 
+              for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) {
                 const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.y;
                 if ( offset_2 < m_rp.m_upper[2] && threadIdx.y < m_rp.m_tile[2] ) {
 
-                  for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) { 
+                  for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) {
                     const index_type offset_3 = tile_id3*m_rp.m_tile[3] + threadIdx.z;
                     if ( offset_3 < m_rp.m_upper[3] && threadIdx.z < m_rp.m_tile[3] ) {
                       m_func(Tag() , offset_0 , offset_1 , offset_2 , offset_3);
@@ -613,15 +613,15 @@ struct apply_impl<5,RP,Functor,void >
       const index_type thr_id2 = threadIdx.y % m_rp.m_tile[2];
       const index_type thr_id3 = threadIdx.y / m_rp.m_tile[2];
 
-      for ( index_type tile_id4 = blockIdx.z; tile_id4 < m_rp.m_tile_end[4]; tile_id4 += gridDim.z ) { 
+      for ( index_type tile_id4 = blockIdx.z; tile_id4 < m_rp.m_tile_end[4]; tile_id4 += gridDim.z ) {
         const index_type offset_4 = tile_id4*m_rp.m_tile[4] + threadIdx.z;
         if ( offset_4 < m_rp.m_upper[4] && threadIdx.z < m_rp.m_tile[4] ) {
 
-          for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) { 
+          for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) {
             const index_type offset_3 = l*m_rp.m_tile[3] + thr_id3;
             if ( offset_3 < m_rp.m_upper[3] && thr_id3 < m_rp.m_tile[3] ) {
 
-              for ( index_type k = tile_id2; k < m_rp.m_tile_end[2]; k += numbl2 ) { 
+              for ( index_type k = tile_id2; k < m_rp.m_tile_end[2]; k += numbl2 ) {
                 const index_type offset_2 = k*m_rp.m_tile[2] + thr_id2;
                 if ( offset_2 < m_rp.m_upper[2] && thr_id2 < m_rp.m_tile[2] ) {
 
@@ -662,29 +662,29 @@ struct apply_impl<5,RP,Functor,void >
       const index_type numbl3 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
       const index_type numbl2 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl3 ) :
       (  temp0 <= max_blocks ? temp0 : max_blocks ) );
-      
+
       const index_type tile_id2 = blockIdx.y / numbl3;
       const index_type tile_id3 = blockIdx.y % numbl3;
       const index_type thr_id2 = threadIdx.y / m_rp.m_tile[3];
       const index_type thr_id3 = threadIdx.y % m_rp.m_tile[3];
 
-      for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) { 
+      for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) {
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
         if ( offset_0 < m_rp.m_upper[0] && thr_id0 < m_rp.m_tile[0] ) {
 
-          for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) { 
+          for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) {
             const index_type offset_1 = j*m_rp.m_tile[1] + thr_id1;
             if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
 
-              for ( index_type k = tile_id2; k < m_rp.m_tile_end[2]; k += numbl2 ) { 
+              for ( index_type k = tile_id2; k < m_rp.m_tile_end[2]; k += numbl2 ) {
                 const index_type offset_2 = k*m_rp.m_tile[2] + thr_id2;
                 if ( offset_2 < m_rp.m_upper[2] && thr_id2 < m_rp.m_tile[2] ) {
 
-                  for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) { 
+                  for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) {
                     const index_type offset_3 = l*m_rp.m_tile[3] + thr_id3;
                     if ( offset_3 < m_rp.m_upper[3] && thr_id3 < m_rp.m_tile[3] ) {
 
-                      for ( index_type tile_id4 = blockIdx.z; tile_id4 < m_rp.m_tile_end[4]; tile_id4 += gridDim.z ) { 
+                      for ( index_type tile_id4 = blockIdx.z; tile_id4 < m_rp.m_tile_end[4]; tile_id4 += gridDim.z ) {
                         const index_type offset_4 = tile_id4*m_rp.m_tile[4] + threadIdx.z;
                         if ( offset_4 < m_rp.m_upper[4] && threadIdx.z < m_rp.m_tile[4] ) {
                           m_func(offset_0 , offset_1 , offset_2 , offset_3 , offset_4);
@@ -748,15 +748,15 @@ struct apply_impl<5,RP,Functor,Tag>
       const index_type thr_id2 = threadIdx.y % m_rp.m_tile[2];
       const index_type thr_id3 = threadIdx.y / m_rp.m_tile[2];
 
-      for ( index_type tile_id4 = blockIdx.z; tile_id4 < m_rp.m_tile_end[4]; tile_id4 += gridDim.z ) { 
+      for ( index_type tile_id4 = blockIdx.z; tile_id4 < m_rp.m_tile_end[4]; tile_id4 += gridDim.z ) {
         const index_type offset_4 = tile_id4*m_rp.m_tile[4] + threadIdx.z;
         if ( offset_4 < m_rp.m_upper[4] && threadIdx.z < m_rp.m_tile[4] ) {
 
-          for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) { 
+          for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) {
             const index_type offset_3 = l*m_rp.m_tile[3] + thr_id3;
             if ( offset_3 < m_rp.m_upper[3] && thr_id3 < m_rp.m_tile[3] ) {
 
-              for ( index_type k = tile_id2; k < m_rp.m_tile_end[2]; k += numbl2 ) { 
+              for ( index_type k = tile_id2; k < m_rp.m_tile_end[2]; k += numbl2 ) {
                 const index_type offset_2 = k*m_rp.m_tile[2] + thr_id2;
                 if ( offset_2 < m_rp.m_upper[2] && thr_id2 < m_rp.m_tile[2] ) {
 
@@ -803,23 +803,23 @@ struct apply_impl<5,RP,Functor,Tag>
       const index_type thr_id2 = threadIdx.y / m_rp.m_tile[3];
       const index_type thr_id3 = threadIdx.y % m_rp.m_tile[3];
 
-      for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) { 
+      for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) {
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
         if ( offset_0 < m_rp.m_upper[0] && thr_id0 < m_rp.m_tile[0] ) {
 
-          for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) { 
+          for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) {
             const index_type offset_1 = j*m_rp.m_tile[1] + thr_id1;
             if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
 
-              for ( index_type k = tile_id2; k < m_rp.m_tile_end[2]; k += numbl2 ) { 
+              for ( index_type k = tile_id2; k < m_rp.m_tile_end[2]; k += numbl2 ) {
                 const index_type offset_2 = k*m_rp.m_tile[2] + thr_id2;
                 if ( offset_2 < m_rp.m_upper[2] && thr_id2 < m_rp.m_tile[2] ) {
 
-                  for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) { 
+                  for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) {
                     const index_type offset_3 = l*m_rp.m_tile[3] + thr_id3;
                     if ( offset_3 < m_rp.m_upper[3] && thr_id3 < m_rp.m_tile[3] ) {
 
-                      for ( index_type tile_id4 = blockIdx.z; tile_id4 < m_rp.m_tile_end[4]; tile_id4 += gridDim.z ) { 
+                      for ( index_type tile_id4 = blockIdx.z; tile_id4 < m_rp.m_tile_end[4]; tile_id4 += gridDim.z ) {
                         const index_type offset_4 = tile_id4*m_rp.m_tile[4] + threadIdx.z;
                         if ( offset_4 < m_rp.m_upper[4] && threadIdx.z < m_rp.m_tile[4] ) {
                           m_func(Tag() , offset_0 , offset_1 , offset_2 , offset_3 , offset_4);
@@ -863,7 +863,7 @@ struct apply_impl<6,RP,Functor,void >
   {
 // LL
     if (RP::inner_direction == RP::Left) {
-      index_type temp0  =  m_rp.m_tile_end[0]; 
+      index_type temp0  =  m_rp.m_tile_end[0];
       index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
       const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
@@ -896,19 +896,19 @@ struct apply_impl<6,RP,Functor,void >
       const index_type thr_id4 = threadIdx.z % m_rp.m_tile[4];
       const index_type thr_id5 = threadIdx.z / m_rp.m_tile[4];
 
-      for ( index_type n = tile_id5; n < m_rp.m_tile_end[5]; n += numbl5 ) { 
+      for ( index_type n = tile_id5; n < m_rp.m_tile_end[5]; n += numbl5 ) {
         const index_type offset_5 = n*m_rp.m_tile[5] + thr_id5;
         if ( offset_5 < m_rp.m_upper[5] && thr_id5 < m_rp.m_tile[5] ) {
 
-          for ( index_type m = tile_id4; m < m_rp.m_tile_end[4]; m += numbl4 ) { 
+          for ( index_type m = tile_id4; m < m_rp.m_tile_end[4]; m += numbl4 ) {
             const index_type offset_4 = m*m_rp.m_tile[4] + thr_id4;
             if ( offset_4 < m_rp.m_upper[4] && thr_id4 < m_rp.m_tile[4] ) {
 
-              for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) { 
+              for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) {
                 const index_type offset_3 = l*m_rp.m_tile[3] + thr_id3;
                 if ( offset_3 < m_rp.m_upper[3] && thr_id3 < m_rp.m_tile[3] ) {
 
-                  for ( index_type k = tile_id2; k < m_rp.m_tile_end[2]; k += numbl2 ) { 
+                  for ( index_type k = tile_id2; k < m_rp.m_tile_end[2]; k += numbl2 ) {
                     const index_type offset_2 = k*m_rp.m_tile[2] + thr_id2;
                     if ( offset_2 < m_rp.m_upper[2] && thr_id2 < m_rp.m_tile[2] ) {
 
@@ -968,27 +968,27 @@ struct apply_impl<6,RP,Functor,void >
       const index_type thr_id4 = threadIdx.z / m_rp.m_tile[5];
       const index_type thr_id5 = threadIdx.z % m_rp.m_tile[5];
 
-      for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) { 
+      for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) {
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
         if ( offset_0 < m_rp.m_upper[0] && thr_id0 < m_rp.m_tile[0] ) {
 
-          for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) { 
+          for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) {
             const index_type offset_1 = j*m_rp.m_tile[1] + thr_id1;
             if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
 
-              for ( index_type k = tile_id2; k < m_rp.m_tile_end[2]; k += numbl2 ) { 
+              for ( index_type k = tile_id2; k < m_rp.m_tile_end[2]; k += numbl2 ) {
                 const index_type offset_2 = k*m_rp.m_tile[2] + thr_id2;
                 if ( offset_2 < m_rp.m_upper[2] && thr_id2 < m_rp.m_tile[2] ) {
 
-                  for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) { 
+                  for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) {
                     const index_type offset_3 = l*m_rp.m_tile[3] + thr_id3;
                     if ( offset_3 < m_rp.m_upper[3] && thr_id3 < m_rp.m_tile[3] ) {
 
-                      for ( index_type m = tile_id4; m < m_rp.m_tile_end[4]; m += numbl4 ) { 
+                      for ( index_type m = tile_id4; m < m_rp.m_tile_end[4]; m += numbl4 ) {
                         const index_type offset_4 = m*m_rp.m_tile[4] + thr_id4;
                         if ( offset_4 < m_rp.m_upper[4] && thr_id4 < m_rp.m_tile[4] ) {
 
-                          for ( index_type n = tile_id5; n < m_rp.m_tile_end[5]; n += numbl5 ) { 
+                          for ( index_type n = tile_id5; n < m_rp.m_tile_end[5]; n += numbl5 ) {
                             const index_type offset_5 = n*m_rp.m_tile[5] + thr_id5;
                             if ( offset_5 < m_rp.m_upper[5] && thr_id5 < m_rp.m_tile[5] ) {
                               m_func(offset_0 , offset_1 , offset_2 , offset_3 , offset_4 , offset_5);
@@ -1065,19 +1065,19 @@ struct apply_impl<6,RP,Functor,Tag>
       const index_type thr_id4 = threadIdx.z % m_rp.m_tile[4];
       const index_type thr_id5 = threadIdx.z / m_rp.m_tile[4];
 
-      for ( index_type n = tile_id5; n < m_rp.m_tile_end[5]; n += numbl5 ) { 
+      for ( index_type n = tile_id5; n < m_rp.m_tile_end[5]; n += numbl5 ) {
         const index_type offset_5 = n*m_rp.m_tile[5] + thr_id5;
         if ( offset_5 < m_rp.m_upper[5] && thr_id5 < m_rp.m_tile[5] ) {
 
-          for ( index_type m = tile_id4; m < m_rp.m_tile_end[4]; m += numbl4 ) { 
+          for ( index_type m = tile_id4; m < m_rp.m_tile_end[4]; m += numbl4 ) {
             const index_type offset_4 = m*m_rp.m_tile[4] + thr_id4;
             if ( offset_4 < m_rp.m_upper[4] && thr_id4 < m_rp.m_tile[4] ) {
 
-              for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) { 
+              for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) {
                 const index_type offset_3 = l*m_rp.m_tile[3] + thr_id3;
                 if ( offset_3 < m_rp.m_upper[3] && thr_id3 < m_rp.m_tile[3] ) {
 
-                  for ( index_type k = tile_id2; k < m_rp.m_tile_end[2]; k += numbl2 ) { 
+                  for ( index_type k = tile_id2; k < m_rp.m_tile_end[2]; k += numbl2 ) {
                     const index_type offset_2 = k*m_rp.m_tile[2] + thr_id2;
                     if ( offset_2 < m_rp.m_upper[2] && thr_id2 < m_rp.m_tile[2] ) {
 
@@ -1137,27 +1137,27 @@ struct apply_impl<6,RP,Functor,Tag>
       const index_type thr_id4 = threadIdx.z / m_rp.m_tile[5];
       const index_type thr_id5 = threadIdx.z % m_rp.m_tile[5];
 
-      for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) { 
+      for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) {
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
         if ( offset_0 < m_rp.m_upper[0] && thr_id0 < m_rp.m_tile[0] ) {
 
-          for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) { 
+          for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) {
             const index_type offset_1 = j*m_rp.m_tile[1] + thr_id1;
             if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
 
-              for ( index_type k = tile_id2; k < m_rp.m_tile_end[2]; k += numbl2 ) { 
+              for ( index_type k = tile_id2; k < m_rp.m_tile_end[2]; k += numbl2 ) {
                 const index_type offset_2 = k*m_rp.m_tile[2] + thr_id2;
                 if ( offset_2 < m_rp.m_upper[2] && thr_id2 < m_rp.m_tile[2] ) {
 
-                  for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) { 
+                  for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) {
                     const index_type offset_3 = l*m_rp.m_tile[3] + thr_id3;
                     if ( offset_3 < m_rp.m_upper[3] && thr_id3 < m_rp.m_tile[3] ) {
 
-                      for ( index_type m = tile_id4; m < m_rp.m_tile_end[4]; m += numbl4 ) { 
+                      for ( index_type m = tile_id4; m < m_rp.m_tile_end[4]; m += numbl4 ) {
                         const index_type offset_4 = m*m_rp.m_tile[4] + thr_id4;
                         if ( offset_4 < m_rp.m_upper[4] && thr_id4 < m_rp.m_tile[4] ) {
 
-                          for ( index_type n = tile_id5; n < m_rp.m_tile_end[5]; n += numbl5 ) { 
+                          for ( index_type n = tile_id5; n < m_rp.m_tile_end[5]; n += numbl5 ) {
                             const index_type offset_5 = n*m_rp.m_tile[5] + thr_id5;
                             if ( offset_5 < m_rp.m_upper[5] && thr_id5 < m_rp.m_tile[5] ) {
                               m_func(Tag() , offset_0 , offset_1 , offset_2 , offset_3 , offset_4 , offset_5);
@@ -1203,7 +1203,7 @@ struct DeviceIterateTile
   {}
 
 private:
-  inline __device__  
+  inline __device__
   void apply() const
   {
     apply_impl<RP::rank,RP,Functor,Tag>(m_rp,m_func).exec_range();
@@ -1224,46 +1224,46 @@ public:
     const array_index_type maxblocks = 65535; //not true for blockIdx.x for newer archs
     if ( RP::rank == 2 )
     {
-      const dim3 block( m_rp.m_tile[0] , m_rp.m_tile[1] , 1); 
-      const dim3 grid( 
-            std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks ) 
-          , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks ) 
+      const dim3 block( m_rp.m_tile[0] , m_rp.m_tile[1] , 1);
+      const dim3 grid(
+            std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks )
+          , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks )
           , 1
           );
       CudaLaunch< DeviceIterateTile >( *this , grid , block );
     }
     else if ( RP::rank == 3 )
     {
-      const dim3 block( m_rp.m_tile[0] , m_rp.m_tile[1] , m_rp.m_tile[2] ); 
-      const dim3 grid( 
-          std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks ) 
-        , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks ) 
-        , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.z - 1 ) / block.z , maxblocks ) 
+      const dim3 block( m_rp.m_tile[0] , m_rp.m_tile[1] , m_rp.m_tile[2] );
+      const dim3 grid(
+          std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks )
+        , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks )
+        , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.z - 1 ) / block.z , maxblocks )
         );
       CudaLaunch< DeviceIterateTile >( *this , grid , block );
     }
     else if ( RP::rank == 4 )
     {
       // id0,id1 encoded within threadIdx.x; id2 to threadIdx.y; id3 to threadIdx.z
-      const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2] , m_rp.m_tile[3] ); 
-      const dim3 grid( 
+      const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2] , m_rp.m_tile[3] );
+      const dim3 grid(
           std::min( static_cast<index_type>( m_rp.m_tile_end[0] * m_rp.m_tile_end[1] )
-                  , static_cast<index_type>(maxblocks) ) 
-        , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.y - 1 ) / block.y , maxblocks ) 
-        , std::min( ( m_rp.m_upper[3] - m_rp.m_lower[3] + block.z - 1 ) / block.z , maxblocks ) 
+                  , static_cast<index_type>(maxblocks) )
+        , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.y - 1 ) / block.y , maxblocks )
+        , std::min( ( m_rp.m_upper[3] - m_rp.m_lower[3] + block.z - 1 ) / block.z , maxblocks )
         );
       CudaLaunch< DeviceIterateTile >( *this , grid , block );
     }
     else if ( RP::rank == 5 )
     {
       // id0,id1 encoded within threadIdx.x; id2,id3 to threadIdx.y; id4 to threadIdx.z
-      const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2]*m_rp.m_tile[3] , m_rp.m_tile[4] ); 
-      const dim3 grid( 
+      const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2]*m_rp.m_tile[3] , m_rp.m_tile[4] );
+      const dim3 grid(
           std::min( static_cast<index_type>( m_rp.m_tile_end[0] * m_rp.m_tile_end[1] )
-                  , static_cast<index_type>(maxblocks) ) 
+                  , static_cast<index_type>(maxblocks) )
         , std::min( static_cast<index_type>( m_rp.m_tile_end[2] * m_rp.m_tile_end[3] )
-                  , static_cast<index_type>(maxblocks) ) 
-        , std::min( ( m_rp.m_upper[4] - m_rp.m_lower[4] + block.z - 1 ) / block.z , maxblocks ) 
+                  , static_cast<index_type>(maxblocks) )
+        , std::min( ( m_rp.m_upper[4] - m_rp.m_lower[4] + block.z - 1 ) / block.z , maxblocks )
         );
       CudaLaunch< DeviceIterateTile >( *this , grid , block );
     }
@@ -1271,13 +1271,13 @@ public:
     {
       // id0,id1 encoded within threadIdx.x; id2,id3 to threadIdx.y; id4,id5 to threadIdx.z
       const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2]*m_rp.m_tile[3] , m_rp.m_tile[4]*m_rp.m_tile[5] );
-      const dim3 grid( 
+      const dim3 grid(
           std::min( static_cast<index_type>( m_rp.m_tile_end[0] * m_rp.m_tile_end[1] )
-                  , static_cast<index_type>(maxblocks) ) 
+                  , static_cast<index_type>(maxblocks) )
         ,  std::min( static_cast<index_type>( m_rp.m_tile_end[2] * m_rp.m_tile_end[3] )
-                  , static_cast<index_type>(maxblocks) ) 
+                  , static_cast<index_type>(maxblocks) )
         , std::min( static_cast<index_type>( m_rp.m_tile_end[4] * m_rp.m_tile_end[5] )
-                  , static_cast<index_type>(maxblocks) ) 
+                  , static_cast<index_type>(maxblocks) )
         );
       CudaLaunch< DeviceIterateTile >( *this , grid , block );
     }

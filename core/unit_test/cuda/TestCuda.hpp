@@ -86,7 +86,7 @@ protected:
 #ifdef TEST_CUDA_INSTANTIATE_SETUP_TEARDOWN
 void cuda::SetUpTestCase()
 {
-  Kokkos::Cuda::print_configuration( std::cout );
+  Kokkos::print_configuration( std::cout );
   Kokkos::HostSpace::execution_space::initialize();
   Kokkos::Cuda::initialize( Kokkos::Cuda::SelectDevice( 0 ) );
 }
