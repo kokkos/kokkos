@@ -104,71 +104,44 @@ private:
       }
     }
 
-  template< class Schedule >
-  inline
-  typename std::enable_if< std::is_same<Schedule,Kokkos::Static>::value >::type
-    execute_schedule() const
-    {
-#pragma omp parallel
-      {
-        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
-
-        const WorkRange range( m_policy, data.pool_rank(), data.pool_size() );
-
-        ParallelFor::template exec_range< WorkTag >( m_functor , range.begin() , range.end() );
-      }
-/* END #pragma omp parallel */
-    }
-
-  template<class Schedule>
-  inline
-  typename std::enable_if< std::is_same<Schedule,Kokkos::Dynamic>::value >::type
-    execute_schedule() const
-    {
-      // The minimum chunk size so that the stealing index can be an int.
-      // Insure that 1 <= chunk_min even if total == 0
-      Member const total = m_policy.end() - m_policy.begin();
-      int  const chunk_min = ( total + std::numeric_limits<int>::max() )
-                             / std::numeric_limits<int>::max();
-
-      int const chunk = int(m_policy.chunk_size()) > chunk_min
-                      ? int(m_policy.chunk_size()) : chunk_min ;
-
-      // Number of work items (chunks) for stealing
-      int const nwork = ( total + chunk - 1 ) / chunk ;
-
-#pragma omp parallel
-      {
-        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
-
-        data.set_work_partition( nwork );
-
-        // Do not start stealing until all threads have finished
-        // setting their work partition.
-
-        #pragma omp barrier
-
-        int iwork = 0 ;
-
-        while ( 0 <= ( iwork = data.get_work_stealing() ) ) {
-          Member const begin = m_policy.begin() + iwork * chunk ;
-          Member const end   = begin + chunk < m_policy.end()
-                             ? begin + chunk : m_policy.end();
-
-          ParallelFor::template exec_range< WorkTag >( m_functor , begin, end );
-        }
-      }
-/* END #pragma omp parallel */
-    }
-
 public:
 
   inline void execute() const
-  {
-    OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
-    OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
-    this->template execute_schedule<typename Policy::schedule_type::type>();
-  }
+    {
+      enum { is_dynamic = std::is_same< typename Policy::schedule_type::type
+                                      , Kokkos::Dynamic >::value };
+
+      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
+      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
+
+#pragma omp parallel
+      {
+        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
+
+        data.set_work_partition( m_policy.end() - m_policy.begin()
+                               , m_policy.chunk_size() );
+
+        if ( is_dynamic ) {
+          // Make sure work partition is set before stealing
+          if ( data.pool_rendezvous() ) data.pool_rendezvous_release();
+        }
+
+        std::pair<int64_t,int64_t> range(0,0);
+
+        do {
+
+          range = is_dynamic ? data.get_work_stealing_chunk()
+                             : data.get_work_partition();
+
+          ParallelFor::template
+            exec_range< WorkTag >( m_functor
+                                 , range.first  + m_policy.begin()
+                                 , range.second + m_policy.begin() );
+
+        } while ( is_dynamic && 0 <= range.first );
+      }
+      // END #pragma omp parallel
+    }
 
   inline
   ParallelFor( const FunctorType & arg_functor
@@ -255,77 +228,15 @@ private:
       }
     }
 
-  template<class Schedule>
-  inline
-  typename std::enable_if< std::is_same<Schedule,Kokkos::Static>::value >::type
-    execute_schedule() const
-    {
-#pragma omp parallel
-      {
-        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
-
-        const WorkRange range( m_policy, data.pool_rank(), data.pool_size() );
-
-        ParallelReduce::template exec_range< WorkTag >
-          ( m_functor , range.begin() , range.end()
-          , ValueInit::init( ReducerConditional::select(m_functor , m_reducer)
-                           , data.pool_reduce_local() ) );
-      }
-/* END #pragma omp parallel */
-    }
-
-  template<class Schedule>
-  inline
-  typename std::enable_if< std::is_same<Schedule,Kokkos::Dynamic>::value >::type
-    execute_schedule() const
-    {
-      // The minimum chunk size so that the stealing index can be an int.
-      // Insure that 1 <= chunk_min even if total == 0
-      Member const total = m_policy.end() - m_policy.begin();
-      int  const chunk_min = ( total + std::numeric_limits<int>::max() )
-                             / std::numeric_limits<int>::max();
-
-      int const chunk = int(m_policy.chunk_size()) > chunk_min
-                      ? int(m_policy.chunk_size()) : chunk_min ;
-
-      // Number of work items (chunks) for stealing
-      int const nwork = ( total + chunk - 1 ) / chunk ;
-
-#pragma omp parallel
-      {
-        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
-
-        data.set_work_partition( nwork );
-
-        // Do not start stealing until all threads have finished
-        // setting their work partition.
-
-        #pragma omp barrier
-
-        reference_type update =
-          ValueInit::init( ReducerConditional::select(m_functor , m_reducer)
-                         , data.pool_reduce_local() );
-
-        int iwork = 0 ;
-
-        while ( 0 <= ( iwork = data.get_work_stealing() ) ) {
-          Member const begin = m_policy.begin() + iwork * chunk ;
-          Member const end   = begin + chunk < m_policy.end()
-                             ? begin + chunk : m_policy.end();
-
-          ParallelReduce::template
-            exec_range< WorkTag >( m_functor , begin, end , update );
-        }
-      }
-/* END #pragma omp parallel */
-    }
-
 public:
 
   inline void execute() const
     {
-      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
-      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_reduce");
+      enum { is_dynamic = std::is_same< typename Policy::schedule_type::type
+                                      , Kokkos::Dynamic >::value };
+
+      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
+      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
 
       const size_t pool_reduce_bytes =
         Analysis::value_size( ReducerConditional::select(m_functor, m_reducer));
@@ -336,7 +247,38 @@ public:
                                     , 0 // thread_local_bytes
                                     );
 
-      this->template execute_schedule<typename Policy::schedule_type::type>();
+#pragma omp parallel
+      {
+        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
+
+        data.set_work_partition( m_policy.end() - m_policy.begin()
+                               , m_policy.chunk_size() );
+
+        if ( is_dynamic ) {
+          // Make sure work partition is set before stealing
+          if ( data.pool_rendezvous() ) data.pool_rendezvous_release();
+        }
+
+        reference_type update =
+          ValueInit::init( ReducerConditional::select(m_functor , m_reducer)
+                         , data.pool_reduce_local() );
+
+        std::pair<int64_t,int64_t> range(0,0);
+
+        do {
+
+          range = is_dynamic ? data.get_work_stealing_chunk()
+                             : data.get_work_partition();
+
+          ParallelReduce::template
+            exec_range< WorkTag >( m_functor
+                                 , range.first  + m_policy.begin()
+                                 , range.second + m_policy.begin()
+                                 , update );
+
+        } while ( is_dynamic && 0 <= range.first );
+      }
+// END #pragma omp parallel
 
       // Reduction:
 
@@ -571,102 +513,48 @@ private:
   const Policy       m_policy ;
   const int          m_shmem_size ;
 
-  template< class TagType, class Schedule >
+  template< class TagType >
   inline static
-  typename std::enable_if
-    < std::is_same< TagType , void >::value &&
-      std::is_same< Schedule , Kokkos::Static >::value>::type
+  typename std::enable_if< ( std::is_same< TagType , void >::value ) >::type
   exec_team( const FunctorType & functor
            , HostThreadTeamData & data
-           , const int league_size 
-           , const int active )
+           , const int league_rank_begin
+           , const int league_rank_end
+           , const int league_size )
     {
-      int league_rank = -1 ;
-  
-      // Note: some threads may not be active
-      if ( active ) 
-        while ( 0 <= ( league_rank = data.get_work_static() ) ) {
+      for ( int r = league_rank_begin ; r < league_rank_end ; ) {
+
+        functor( Member( data, r , league_size ) );
+
+        if ( ++r < league_rank_end ) {
           // Don't allow team members to lap one another
           // so that they don't overwrite shared memory.
           if ( data.team_rendezvous() ) { data.team_rendezvous_release(); }
-          functor( Member( data, league_rank, league_size ) );
         }
+      }
     }
 
-  template< class TagType, class Schedule >
+
+  template< class TagType >
   inline static
-  typename std::enable_if
-    < (! std::is_same< TagType , void >::value) &&
-      std::is_same<Schedule,Kokkos::Static>::value >::type
+  typename std::enable_if< ( ! std::is_same< TagType , void >::value ) >::type
   exec_team( const FunctorType & functor
            , HostThreadTeamData & data
-           , const int league_size 
-           , const int active )
+           , const int league_rank_begin
+           , const int league_rank_end
+           , const int league_size )
     {
-      const TagType t{} ;
-      int league_rank = -1 ;
-  
-      // Note: some threads may not be active
-      if ( active )
-        while ( 0 <= ( league_rank = data.get_work_static() ) ) {
+      const TagType t{};
+
+      for ( int r = league_rank_begin ; r < league_rank_end ; ) {
+
+        functor( t , Member( data, r , league_size ) );
+
+        if ( ++r < league_rank_end ) {
           // Don't allow team members to lap one another
           // so that they don't overwrite shared memory.
           if ( data.team_rendezvous() ) { data.team_rendezvous_release(); }
-          functor( t , Member( data, league_rank, league_size ) );
         }
-    }
-
-  template< class TagType, class Schedule >
-  inline static
-  typename std::enable_if
-    < std::is_same< TagType , void >::value &&
-      std::is_same<Schedule,Kokkos::Dynamic>::value>::type
-  exec_team( const FunctorType & functor
-           , HostThreadTeamData & data
-           , const int league_size 
-           , const int active)
-    {
-      // All teams must have set data partition before stealing
-
-      #pragma omp barrier
-
-      int league_rank = -1 ;
- 
-      // Note: some threads may not be active
-      if ( active )
-        while ( 0 <= ( league_rank = data.get_work_stealing() ) ) {
-          // get_work_stealing already contains a barrier
-          // so an additional barrier is not necessary
-          // to prevent "lapping" of teams and overwrite of share memory
-          functor( Member( data, league_rank, league_size ) );
-        }
-    }
-
-  template< class TagType, class Schedule >
-  inline static
-  typename std::enable_if
-    < (! std::is_same< TagType , void >::value) &&
-      std::is_same<Schedule,Kokkos::Dynamic>::value >::type
-  exec_team( const FunctorType & functor
-           , HostThreadTeamData & data
-           , const int league_size 
-           , const int active)
-    {
-      const TagType t{} ;
-
-      // All teams must have set data partition before stealing
-
-      #pragma omp barrier
-
-      int league_rank = -1 ;
-      
-      // Note: some threads may not be active
-      if ( active )
-        while ( 0 <= ( league_rank = data.get_work_stealing() ) ) {
-          // get_work_stealing already contains a barrier
-          // so an additional barrier is not necessary
-          // to prevent "lapping" of teams and overwrite of share memory
-          functor( t , Member( data, league_rank, league_size ) );
       }
     }
 
@@ -675,6 +563,8 @@ public:
   inline
   void execute() const
     {
+      enum { is_dynamic = std::is_same< SchedTag , Kokkos::Dynamic >::value };
+
       OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
       OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
 
@@ -688,17 +578,40 @@ public:
                                     , team_shared_size
                                     , thread_local_size );
 
-
 #pragma omp parallel
       {
         HostThreadTeamData & data = *OpenMPexec::get_thread_data();
 
-        int active = data.organize_team( m_policy.team_size() ); 
+        const int active = data.organize_team( m_policy.team_size() );
 
-        if(active)
-          data.set_work_partition( m_policy.league_size() );
+        if ( active ) {
+          data.set_work_partition( m_policy.league_size()
+                                 , ( 0 < m_policy.chunk_size()
+                                   ? m_policy.chunk_size()
+                                   : m_policy.team_iter() ) );
+        }
 
-        ParallelFor::template exec_team< WorkTag, SchedTag >( m_functor , data , m_policy.league_size() , active );
+        if ( is_dynamic ) {
+          // Must synchronize to make sure each team has set its
+          // partition before begining the work stealing loop.
+          if ( data.pool_rendezvous() ) data.pool_rendezvous_release();
+        }
+
+        if ( active ) {
+
+          std::pair<int64_t,int64_t> range(0,0);
+
+          do {
+
+            range = is_dynamic ? data.get_work_stealing_chunk()
+                               : data.get_work_partition();
+
+            ParallelFor::template exec_team< WorkTag >
+              ( m_functor , data
+              , range.first , range.second , m_policy.league_size() );
+
+          } while ( is_dynamic && 0 <= range.first );
+        }
 
         data.disband_team();
       }
@@ -756,102 +669,51 @@ private:
   const pointer_type m_result_ptr ;
   const int          m_shmem_size ;
 
-  template< class TagType, class Schedule >
+  template< class TagType >
   inline static
-  typename std::enable_if
-    < std::is_same< TagType , void >::value &&
-      std::is_same< Schedule , Kokkos::Static >::value>::type
-  exec_team( const FunctorType  & functor
-           , HostThreadTeamData & data
-           , reference_type     & update
-           , const int league_size 
-           , const int active )
-    {
-      int league_rank = -1 ;
-      
-      if ( active )
-        while ( 0 <= ( league_rank = data.get_work_static() ) ) {
-          // Don't allow team members to lap one another
-          // so that they don't overwrite shared memory.
-          if ( data.team_rendezvous() ) { data.team_rendezvous_release(); }
-          functor( Member( data, league_rank, league_size ) , update );
-        }
-    }
-
-  template< class TagType, class Schedule >
-  inline static
-  typename std::enable_if
-    < ( ! std::is_same< TagType , void >::value ) &&
-      std::is_same< Schedule , Kokkos::Static >::value>::type
-  exec_team( const FunctorType  & functor
-           , HostThreadTeamData & data
-           , reference_type     & update
-           , const int league_size 
-           , const int active )
-    {
-      const TagType t{} ;
-      int league_rank = -1 ;
-      
-      if ( active )
-        while ( 0 <= ( league_rank = data.get_work_static() ) ) {
-          // Don't allow team members to lap one another
-          // so that they don't overwrite shared memory.
-          if ( data.team_rendezvous() ) { data.team_rendezvous_release(); }
-          functor( t , Member( data, league_rank, league_size ) , update );
-        }
-    }
-
-  template< class TagType, class Schedule >
-  inline static
-  typename std::enable_if
-    < std::is_same< TagType , void >::value &&
-      std::is_same<Schedule,Kokkos::Dynamic>::value>::type
+  typename std::enable_if< ( std::is_same< TagType , void >::value ) >::type
   exec_team( const FunctorType & functor
            , HostThreadTeamData & data
            , reference_type     & update
-           , const int league_size 
-           , const int active )
+           , const int league_rank_begin
+           , const int league_rank_end
+           , const int league_size )
     {
-      // All teams must have set data partition before stealing
+      for ( int r = league_rank_begin ; r < league_rank_end ; ) {
 
-      #pragma omp barrier
+        functor( Member( data, r , league_size ) , update );
 
-      int league_rank = -1 ;
-      
-      if ( active )
-        while ( 0 <= ( league_rank = data.get_work_stealing() ) ) {
-          // get_work_stealing already contains a barrier
-          // so an additional barrier is not necessary
-          // to prevent "lapping" of teams and overwrite of share memory
-          functor( Member( data, league_rank, league_size ) , update );
+        if ( ++r < league_rank_end ) {
+          // Don't allow team members to lap one another
+          // so that they don't overwrite shared memory.
+          if ( data.team_rendezvous() ) { data.team_rendezvous_release(); }
         }
+      }
     }
 
-  template< class TagType, class Schedule >
+
+  template< class TagType >
   inline static
-  typename std::enable_if
-    < ( ! std::is_same< TagType , void >::value ) &&
-      std::is_same<Schedule,Kokkos::Dynamic>::value>::type
+  typename std::enable_if< ( ! std::is_same< TagType , void >::value ) >::type
   exec_team( const FunctorType & functor
            , HostThreadTeamData & data
            , reference_type     & update
-           , const int league_size 
-           , const int active )
+           , const int league_rank_begin
+           , const int league_rank_end
+           , const int league_size )
     {
-      const TagType t{} ;
-      // All teams must have set data partition before stealing
+      const TagType t{};
 
-      #pragma omp barrier
+      for ( int r = league_rank_begin ; r < league_rank_end ; ) {
 
-      int league_rank = -1 ;
+        functor( t , Member( data, r , league_size ) , update );
 
-      if ( active )
-        while ( 0 <= ( league_rank = data.get_work_stealing() ) ) {
-          // get_work_stealing already contains a barrier
-          // so an additional barrier is not necessary
-          // to prevent "lapping" of teams and overwrite of share memory
-          functor( t , Member( data, league_rank, league_size ) , update );
+        if ( ++r < league_rank_end ) {
+          // Don't allow team members to lap one another
+          // so that they don't overwrite shared memory.
+          if ( data.team_rendezvous() ) { data.team_rendezvous_release(); }
         }
+      }
     }
 
 public:
@@ -859,6 +721,8 @@ public:
   inline
   void execute() const
     {
+      enum { is_dynamic = std::is_same< SchedTag , Kokkos::Dynamic >::value };
+
       OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
       OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_reduce");
 
@@ -874,22 +738,43 @@ public:
                                     , team_shared_size
                                     , thread_local_size );
 
-
 #pragma omp parallel
       {
         HostThreadTeamData & data = *OpenMPexec::get_thread_data();
 
-        const int active =  data.organize_team( m_policy.team_size() );
+        const int active = data.organize_team( m_policy.team_size() );
 
-        data.set_work_partition( m_policy.league_size() );
+        if ( active ) {
+          data.set_work_partition( m_policy.league_size()
+                                 , ( 0 < m_policy.chunk_size()
+                                   ? m_policy.chunk_size()
+                                   : m_policy.team_iter() ) );
+        }
 
-        reference_type update =
-          ValueInit::init( ReducerConditional::select(m_functor , m_reducer)
+        if ( is_dynamic ) {
+          // Must synchronize to make sure each team has set its
+          // partition before begining the work stealing loop.
+          if ( data.pool_rendezvous() ) data.pool_rendezvous_release();
+        }
+
+        if ( active ) {
+          reference_type update =
+            ValueInit::init( ReducerConditional::select(m_functor , m_reducer)
                            , data.pool_reduce_local() );
 
-        ParallelReduce::template exec_team< WorkTag, SchedTag >
-          ( m_functor , data , update , m_policy.league_size() , active);
-        
+          std::pair<int64_t,int64_t> range(0,0);
+
+          do {
+
+            range = is_dynamic ? data.get_work_stealing_chunk()
+                               : data.get_work_partition();
+
+            ParallelReduce::template exec_team< WorkTag >
+              ( m_functor , data , update
+              , range.first , range.second , m_policy.league_size() );
+
+          } while ( is_dynamic && 0 <= range.first );
+        }
 
         data.disband_team();
       }

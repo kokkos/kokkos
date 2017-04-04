@@ -97,6 +97,7 @@ private:
   using pair_int_t = Kokkos::pair<int,int> ;
 
   pair_int_t  m_work_range ;
+  int64_t     m_work_end ;
   int64_t   * m_scratch ;       // per-thread buffer
   int64_t   * m_pool_scratch ;  // == pool[0]->m_scratch
   int64_t   * m_team_scratch ;  // == pool[ 0 + m_team_base ]->m_scratch
@@ -112,6 +113,7 @@ private:
   int         m_team_alloc ;
   int         m_league_rank ;
   int         m_league_size ;
+  int         m_work_chunk ;
   int         m_steal_rank ; // work stealing rank
   int mutable m_pool_rendezvous_step ;
   int mutable m_team_rendezvous_step ;
@@ -128,8 +130,8 @@ private:
   //     ... all other threads release here ...
   //   }
   //
-  // Requires: buffer[ 2 * ( max_threads / 8 ) + 2 ]; 0 == max_threads % 8
-  //  
+  // Requires: buffer[ ( max_threads / 8 ) * 4 + 4 ]; 0 == max_threads % 8
+  //
   static
   int rendezvous( int64_t * const buffer
                 , int & rendezvous_step
@@ -194,6 +196,7 @@ public:
 
   constexpr HostThreadTeamData() noexcept
     : m_work_range(-1,-1)
+    , m_work_end(0)
     , m_scratch(0)
     , m_pool_scratch(0)
     , m_team_scratch(0)
@@ -209,6 +212,7 @@ public:
     , m_team_alloc(1)
     , m_league_rank(0)
     , m_league_size(1)
+    , m_work_chunk(0)
     , m_steal_rank(0)
     , m_pool_rendezvous_step(0)
     , m_team_rendezvous_step(0)
@@ -372,35 +376,63 @@ fflush(stdout);
     }
 
   //----------------------------------------
-  // Set the initial work partitioning of [ 0 .. length ) among the teams
-
-  void set_work_partition( int const length ) noexcept
-    {
-      int const chunk = ( length + m_league_size - 1 ) / m_league_size ;
-
-      m_work_range.first  = chunk * m_league_rank ;
-      m_work_range.second = m_work_range.first + chunk < length
-                          ? m_work_range.first + chunk : length ;
-
-      // We need to figure out whether the next team is active
-      // m_steal_rank + m_team_alloc could be the next base_rank to steal from
-      // but only if there are another m_team_size threads available so that that
-      // base rank has a full team. 
-      m_steal_rank = m_team_base + m_team_alloc + m_team_size <= m_pool_size ? 
-                     m_team_base + m_team_alloc : 0;
-    }
-
-  // Get one work index within the range
-  int get_work_static() noexcept
-    {
-      return m_work_range.first < m_work_range.second ?
-             m_work_range.first++ : -1 ;
-    }
-
   // Get a work index within the range.
   // First try to steal from beginning of own teams's partition.
   // If that fails then try to steal from end of another teams' partition.
   int get_work_stealing() noexcept ;
+
+  //----------------------------------------
+  // Set the initial work partitioning of [ 0 .. length ) among the teams
+  // with granularity of chunk
+
+  void set_work_partition( int64_t const length
+                         , int     const chunk ) noexcept
+    {
+      // Minimum chunk size to insure that
+      //   m_work_end < std::numeric_limits<int>::max() * m_work_chunk
+
+      int const chunk_min = ( length + std::numeric_limits<int>::max() )
+                            / std::numeric_limits<int>::max();
+
+      m_work_end   = length ;
+      m_work_chunk = std::max( chunk , chunk_min );
+
+      // Number of work chunks and partitioning of that number:
+      int const num  = ( m_work_end + m_work_chunk - 1 ) / m_work_chunk ;
+      int const part = ( num + m_league_size - 1 ) / m_league_size ;
+
+      m_work_range.first  = part * m_league_rank ;
+      m_work_range.second = m_work_range.first + part ;
+
+      // Steal from next team, round robin
+      // The next team is offset by m_team_alloc if it fits in the pool.
+
+      m_steal_rank = m_team_base + m_team_alloc + m_team_size <= m_pool_size ? 
+                     m_team_base + m_team_alloc : 0 ;
+    }
+
+  std::pair<int64_t,int64_t> get_work_partition() noexcept
+    {
+      return std::pair<int64_t,int64_t>
+        ( m_work_range.first * m_work_chunk
+        , m_work_range.second * m_work_chunk < m_work_end
+        ? m_work_range.second * m_work_chunk : m_work_end );
+    }
+
+  std::pair<int64_t,int64_t> get_work_stealing_chunk() noexcept
+    {
+      std::pair<int64_t,int64_t> x(-1,-1);
+
+      const int i = get_work_stealing();
+
+      if ( 0 <= i ) {
+        x.first  = m_work_chunk * i ;
+        x.second = x.first + m_work_chunk < m_work_end
+                 ? x.first + m_work_chunk : m_work_end ;
+      }
+
+      return x ;
+    }
 };
 
 //----------------------------------------------------------------------------
