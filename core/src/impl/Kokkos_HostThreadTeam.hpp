@@ -68,14 +68,14 @@ public:
 
   // Assume upper bounds on number of threads:
   //   pool size       <= 1024 threads
-  //   pool rendezvous <= 2 * ( 1024 / 8 ) = 256
+  //   pool rendezvous <= ( 1024 / 8 ) * 4 + 4 = 2052
   //   team size       <= 64 threads
-  //   team rendezvous <= 2 * ( 64 / 8 ) = 16
+  //   team rendezvous <= ( 64 / 8 ) * 4 + 4 = 36
 
   enum : int { max_pool_members  = 1024 };
   enum : int { max_team_members  = 64 };
-  enum : int { max_pool_rendezvous  = 2 * ( max_pool_members / 8 ) };
-  enum : int { max_team_rendezvous  = 2 * ( max_team_members / 8 ) };
+  enum : int { max_pool_rendezvous  = ( max_pool_members / 8 ) * 4 + 4 };
+  enum : int { max_team_rendezvous  = ( max_team_members / 8 ) * 4 + 4 };
 
 private:
 
@@ -127,6 +127,9 @@ private:
   //   else {
   //     ... all other threads release here ...
   //   }
+  //
+  // Requires: buffer[ 2 * ( max_threads / 8 ) + 2 ]; 0 == max_threads % 8
+  //  
   static
   int rendezvous( int64_t * const buffer
                 , int & rendezvous_step

@@ -94,6 +94,8 @@ void HostThreadTeamData::organize_pool
         pool[ rank ] = mem ;
       }
     }
+
+    Kokkos::memory_fence();
   }
   else {
     Kokkos::Impl::throw_runtime_exception("Kokkos::Impl::HostThreadTeamData::organize_pool ERROR pool already exists");
@@ -168,9 +170,13 @@ int HostThreadTeamData::organize_team( const int team_size )
     m_team_rendezvous_step = 0 ;
 
     if ( team_base_rank == m_pool_rank ) {
+      // Initialize team's rendezvous memory
       for ( int i = m_team_rendezvous ; i < m_pool_reduce ; ++i ) {
         m_scratch[i] = 0 ;
       }
+      // Make sure team's rendezvous memory initialized
+      // is written before proceeding.
+      Kokkos::memory_fence();
     }
 
     // Organizing threads into a team performs a barrier across the
@@ -211,79 +217,107 @@ void HostThreadTeamData::disband_team()
  */
 
 int HostThreadTeamData::rendezvous( int64_t * const buffer
-                                    , int & rendezvous_step
-                                    , int const size
-                                    , int const rank ) noexcept
+                                  , int & rendezvous_step
+                                  , int const size
+                                  , int const rank ) noexcept
 {
+  enum : int { shift_byte = 3 };
+  enum : int { size_byte  = ( 01 << shift_byte ) }; // == 8
+  enum : int { mask_byte  = size_byte - 1 };
+
+  enum : int { shift_mem_cycle = 2 };
+  enum : int { size_mem_cycle  = ( 01 << shift_mem_cycle ) }; // == 4
+  enum : int { mask_mem_cycle  = size_mem_cycle - 1 };
+
+  // Cycle step values: 1 <= step <= size_val_cycle
+  // An odd multiple of memory cycle so that when a memory location
+  // is reused it has a different value.
+  // Must be representable within a single byte: size_val_cycle < 16
+
+  enum : int { size_val_cycle = 3 * size_mem_cycle };
+
   // Requires:
   //   Called by rank = [ 0 .. size )
+  //   buffer aligned to int64_t[4]
 
-  // A sequence of rendezvous uses alternating locations in memory
-  // and alternating synchronization values to prevent rendezvous
-  // from overtaking one another.
+  // A sequence of rendezvous uses four cycled locations in memory
+  // and non-equal cycled synchronization values to
+  // 1) prevent rendezvous from overtaking one another and
+  // 2) give each spin wait location an int64_t[4] span
+  //    so that it has its own cache line.
 
-  // Each member has a designated byte to set in the span
-
-  // 1 <= step <= 4
-
-  const int step = ( rendezvous_step & 03 ) + 1 ;
+  const int step = ( rendezvous_step % size_val_cycle ) + 1 ;
 
   rendezvous_step = step ;
 
-  // For an upper bound of 64 threads per team the shared array is uint64_t[16].
-  // For this step the interval begins at ( step & 01 ) * 8
+  // The leading int64_t[4] span is for thread 0 to write
+  // and all other threads to read spin-wait.
+  // sync_offset is the index into this array for this step.
 
-  int64_t volatile * const sync_base = buffer + (( step & 01 ) << 3 );
+  const int sync_offset = ( step & mask_mem_cycle ) + size_mem_cycle ;
 
   union {
     int64_t full ;
     int8_t  byte[8] ;
   } value ;
 
-  for ( int shift = 6 ; shift ; ) {
-    const int group = rank << shift ; shift -= 3 ;
-    const int start = 1    << shift ;
+  if ( rank ) {
 
-    if ( start <= rank && group < size ) {
-      // "Outer" rendezvous for ranks
-      //   Iteration #0: [ 8 .. 64 ) waits for [ 64 .. 512 )
-      //   Iteration #1: [ 1 .. 8 )  waits for [  8 ..  64 )
-      //
-      // Requires:
-      //   size <= 512
-      //
-      // Effects:
-      //   rank waits for [ rank*8 .. (rank+1)*8 )
+    const int group_begin = rank << shift_byte ; // == rank * size_byte
+
+    if ( group_begin < size ) {
+
+      //  This thread waits for threads
+      //   [ group_begin .. group_begin + 8 )
+      //   [ rank*8      .. rank*8 + 8      )
+      // to write to their designated bytes.
+
+      const int end = group_begin + size_byte < size
+                    ? size_byte : size - group_begin ;
 
       value.full = 0 ;
-      for ( int i = 0 ; i < 8 ; ++i ) value.byte[i] = step ;
-      spinwait_until_equal( sync_base[rank], value.full );
+      for ( int i = 0 ; i < end ; ++i ) value.byte[i] = int8_t( step );
+
+      spinwait_until_equal( buffer[ (rank << shift_mem_cycle) + sync_offset ]
+                          , value.full );
     }
-  }
 
-  if ( rank ) {
-    // All previous memory stores must be complete.
-    // Then store value at this thread's designated byte in the shared array.
+    {
+      // This thread sets its designated byte.
+      //   ( rank % size_byte ) +
+      //   ( ( rank / size_byte ) * size_byte * size_mem_cycle ) +
+      //   ( sync_offset * size_byte )
+      const int offset = ( rank & mask_byte )
+                       + ( ( rank & ~mask_byte ) << shift_mem_cycle )
+                       + ( sync_offset << shift_byte );
 
-    Kokkos::memory_fence();
+      // All of this thread's previous memory stores must be complete before
+      // this thread stores the step value at this thread's designated byte
+      // in the shared synchronization array.
 
-    ((volatile int8_t*) sync_base)[rank] = int8_t( step );
-    if ( ( rank == size-1 ) && ( size%8 != 0) ) {
-      for ( int rank_extra = rank+1; rank_extra < ((size+7)/8) * 8; rank_extra++ )
-        ((volatile int8_t*) sync_base)[rank_extra] = int8_t( step );
+      Kokkos::memory_fence();
+
+      ((volatile int8_t*) buffer)[ offset ] = int8_t( step );
+
+      // Memory fence to push the previous store out
+      Kokkos::memory_fence();
     }
-  }
 
-  { // "Inner" rendezvous for ranks [ 0 .. 7 ]
-    // Effects:
-    //   0  < rank < size  wait for [0..7]
-    //   0 == rank         wait for [1..7]
+    // Wait for thread 0 to release all other threads
+
+    spinwait_until_equal( buffer[ step & mask_mem_cycle ] , int64_t(step) );
+
+  }
+  else {
+    // Thread 0 waits for threads [1..7]
+    // to write to their designated bytes.
+
+    const int end = size_byte < size ? 8 : size ;
 
     value.full = 0 ;
-    for ( int i = 1 ; i < 8 ; ++i ) value.byte[i] = step ;
-    value.byte[0] = rank ? step : ((volatile int8_t*) sync_base)[0];
+    for ( int i = 1 ; i < end ; ++i ) value.byte[i] = int8_t( step );
 
-    spinwait_until_equal( sync_base[0], value.full );
+    spinwait_until_equal( buffer[ sync_offset ], value.full );
   }
 
   return rank ? 0 : 1 ;
@@ -293,17 +327,22 @@ void HostThreadTeamData::
   rendezvous_release( int64_t * const buffer
                     , int const rendezvous_step ) noexcept
 {
+  enum : int { shift_mem_cycle = 2 };
+  enum : int { size_mem_cycle  = ( 01 << shift_mem_cycle ) }; // == 4
+  enum : int { mask_mem_cycle  = size_mem_cycle - 1 };
+
   // Requires:
   //   Called after team_rendezvous
   //   Called only by true == team_rendezvous(root)
 
-  int64_t volatile * const sync_base =
-    buffer + (( rendezvous_step & 01 ) << 3 );
-
-  // Memory fence to be sure all prevous writes are complete:
+  // Memory fence to be sure all previous writes are complete:
   Kokkos::memory_fence();
 
-  ((volatile int8_t*) sync_base)[0] = int8_t( rendezvous_step );
+  ((volatile int64_t*) buffer)[ rendezvous_step & mask_mem_cycle ] =
+     int64_t( rendezvous_step );
+
+  // Memory fence to push the store out
+  Kokkos::memory_fence();
 }
 
 //----------------------------------------------------------------------------
