@@ -48,6 +48,7 @@
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_Atomic.hpp>
 #include <impl/Kokkos_BitOps.hpp>
+#include <impl/Kokkos_ConcurrentBitset.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
@@ -76,6 +77,15 @@ namespace Kokkos {
 namespace Experimental {
 
 namespace MempoolImpl {
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+// Bitset infrastructure
+//
+/** TODO: Consolidation with containers/src/Kokkos_Bitset.hpp resulting in
+ *       a bitset residing in core/src/Kokkos_Bitset.hpp .
+ *       Need function to claim any unset bit and return its ordinal.
+ */
 
 template < typename T, typename ExecutionSpace >
 struct initialize_array {
@@ -226,6 +236,11 @@ public:
     return atomic_fetch_and( &m_words[ word_pos ], ~mask ) & mask;
   }
 
+  /**
+   *   Set bit 'i'
+   *   and return if successful and the previous value of
+   *   the full word in which the bit resides.
+   */
   KOKKOS_FORCEINLINE_FUNCTION
   Kokkos::pair< bool, word_type >
   fetch_word_set( size_type i ) const
@@ -240,6 +255,11 @@ public:
     return result;
   }
 
+  /**
+   *   Clear bit 'i'
+   *   and return if successful and the previous value of
+   *   the full word in which the bit resides.
+   */
   KOKKOS_FORCEINLINE_FUNCTION
   Kokkos::pair< bool, word_type >
   fetch_word_reset( size_type i ) const
@@ -254,6 +274,12 @@ public:
     return result;
   }
 
+  /**
+   *   Set any bit in the word in which 'pos' resides
+   *   and return if successful and the previous value of
+   *   the full word in which the bit resides.
+   *   Updates 'pos' to the actual bit that was set.
+   */
   KOKKOS_FORCEINLINE_FUNCTION
   Kokkos::pair< bool, word_type >
   set_any_in_word( size_type & pos ) const
@@ -282,6 +308,12 @@ public:
     return Kokkos::pair<bool, word_type>( false, word_type(0) );
   }
 
+  /**
+   *   Set a bit within the mask in the word in which 'pos' resides
+   *   and return if successful and the previous value of
+   *   the full word in which the bit resides.
+   *   Updates 'pos' to the actual bit that was set.
+   */
   KOKKOS_FORCEINLINE_FUNCTION
   Kokkos::pair< bool, word_type >
   set_any_in_word( size_type & pos, word_type word_mask ) const
@@ -373,6 +405,15 @@ public:
   }
 };
 
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+// Obtaining metrics and analysis for the content of a Bitset.
+// This is used for printing diagnostics associated with Memory Pool's
+// use of bitsets.
+
+//
+//  number of pages with [I] allocated blocks, I = 0..31
+//
 template < typename UInt32View, typename BSHeaderView, typename SBHeaderView,
            typename MempoolBitset >
 struct create_histogram {
@@ -496,8 +537,13 @@ struct count_allocated_blocks {
 };
 #endif
 
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
 }
 
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 /// \class MemoryPool
 /// \brief Bitset based memory manager for pools of same-sized chunks of memory.
 /// \tparam Device Kokkos device that gives the execution and memory space the
@@ -561,12 +607,78 @@ private:
   // tracked by the active superblocks array.  Full superblocks aren't tracked
   // at all.
 
+  //------------------------------------------------------------------------
+  //  Superblock ID in the ACTIVE STATE
+  //    Requires:
+  //      m_active(block_size_id) == ID
+  //      m_sb_header(ID).m_is_active == true
+  //      m_empty_sb(ID) == false
+  //      m_partfull_sb(*,ID) == false
+  //    Consequently:
+  //      block_size_id == m_sb_header(ID).m_lg_block_size - LG_MIN_BLOCK_SIZE
+  //
+  //
+  //  Superblock ID in the EMPTY STATE requires:
+  //    Requires:
+  //      m_empty_sb(ID) == true
+  //      m_active(block_size_id) != ID
+  //      m_sb_header(ID).m_is_active == false
+  //      m_partfull_sb(*,ID) == false
+  //    Consequently:
+  //      m_sb_header(ID).m_lg_block_size == 0 ; assumed by empty() and histogram
+  //      m_sb_header(ID).m_full_pages == 0
+  //      m_sb_header(ID).m_empty_pages == 0
+  //
+  //
+  //  Superblock ID in the PART_FULL STATE requires:
+  //    Requires:
+  //      m_partfull_sb(block_size_id,ID) == true ; for exactly one block size
+  //      m_active(block_size_id) != ID
+  //      m_sb_header(ID).m_is_active == false
+  //      m_empty_sb(ID) == false
+  //    Consequently:
+  //      block_size_id == m_sb_header(ID).m_lg_block_size - LG_MIN_BLOCK_SIZE
+  //      m_sb_header(ID).m_full_pages > 0
+  //      m_sb_header(ID).m_empty_pages < m_blocksize_info[ block_size_id ].m_pages_per_sb
+  //
+  //
+  //  Superblock ID in the FULL STATE requires:
+  //    Requires:
+  //      NOT in ACTIVE state
+  //      NOT in EMPTY state
+  //      NOT in PART_FULL state
+  //    Consequently:
+  //      block_size_id == m_sb_header(ID).m_lg_block_size - LG_MIN_BLOCK_SIZE
+  //      m_sb_header(ID).m_full_pages >= m_blocksize_info[block_size_id].m_sb_full_level
+  //
+  //------------------------------------------------------------------------
+  //  STATE management strategy ideas
+  //
+  //    1a) Add m_full(ID) bitset or m_sb_header(ID).m_is_full
+  //        to represent FULL state.  This set never needs to be searched.
+  //
+  //    1b) Eliminate the FULL state entirely, rely upon the find_superblock
+  //        to filter out too-filled superblocks when searching the partfull set.
+  //        Downside is increased search time to find partially full superblock
+  //        as the number of full blocks increases.
+  //
+  //    2) m_active(block_size_id), m_empty_sb(ID), m_partfull(K,ID), m_full(ID)
+  //       are mutually exclusive.  Remove from current before setting in next
+  //       and both updates are via atomics.
+  //
+  //    3) eliminate m_sb_header(ID).m_is_active
+  //
+  //------------------------------------------------------------------------
+
   typedef typename Device::execution_space    execution_space;
   typedef typename Device::memory_space       backend_memory_space;
   typedef Device                              device_type;
   typedef MempoolImpl::Bitset< device_type >  MempoolBitset;
 
   // Define some constants.
+  // TODO: There are floating point parameters to consider, use constexpr ?
+  //       const double superblock_full_fraction = .8;
+  //       const double page_full_fraction = .875;
   enum {
     MIN_BLOCK_SIZE     = 64,
     LG_MIN_BLOCK_SIZE  = Kokkos::Impl::integral_power_of_two( MIN_BLOCK_SIZE ),
@@ -584,6 +696,7 @@ private:
   };
 
 public:
+
   // Stores information about each superblock.
   struct SuperblockHeader {
     uint32_t  m_full_pages;
@@ -641,6 +754,11 @@ private:
   MempoolBitset    m_partfull_sb;       // Bitsets representing partially full superblocks.
   Tracker          m_track;             // Tracker for superblock memory.
   BlockSizeHeader  m_blocksize_info[MAX_BLOCK_SIZES];  // Header info for block sizes.
+
+  // Bitset m_sb_blocks is logically a 2D array : block X superblock.
+  // The number of blocks per superblock is dynamic so the 'block' dimension
+  // is sized for the maximum number of blocks (minumum block size) for a superblock.
+  // Thus when using the first dimension must be aware when a partial word is used.
 
   // There were several methods tried for storing the block size header info: in a View,
   // in a View of const data, and in a RandomAccess View.  All of these were slower than
@@ -832,6 +950,11 @@ public:
   ///
   /// The function returns a void pointer to a memory location on success and
   /// NULL on failure.
+  ///
+  ///
+  ///  TODO:  Debug diagnostic to track the number of allocations in-flight
+  ///         for a given superblock with an atomically incremented/decremented counter.
+  ///
   KOKKOS_FUNCTION
   void * allocate( size_t alloc_size ) const
   {
@@ -841,23 +964,42 @@ public:
     // (failed allocation) for any size above this.
     if ( alloc_size <= m_sb_size )
     {
+      // Map the alloc_size to the smallest block size in which it can reside.
+      // The array of block sizes is determined and fixed at initialization.
       int block_size_id = get_block_size_index( alloc_size );
+
+      // The superblock size is determined and fixed at initialization
+      // thus the number of blocks per superblock is similarly fixed.
       uint32_t blocks_per_sb = m_blocksize_info[block_size_id].m_blocks_per_sb;
+
+      // Page size is determined as block size * mininum of 
+      //   maximum is number of bits per word
+      //   superblock size / block size
       uint32_t pages_per_sb = m_blocksize_info[block_size_id].m_pages_per_sb;
 
 #ifdef KOKKOS_IMPL_CUDA_CLANG_WORKAROUND
       // Without this test it looks like pages_per_sb might come back wrong.
+      // ... assume compiler bug?
       if ( pages_per_sb == 0 ) return NULL;
 #endif
 
-      unsigned word_size = blocks_per_sb > 32 ? 32 : blocks_per_sb;
+      // If blocks_per_sb < BLOCKS_PER_PAGE
+      // then only one page in the superblock
+      // and the page mask is smaller than BLOCKS_PER_PAGE.
+      unsigned word_size = blocks_per_sb > BLOCKS_PER_PAGE ? BLOCKS_PER_PAGE : blocks_per_sb;
       unsigned word_mask = ( uint64_t(1) << word_size ) - 1;
 
-      // Instead of forcing an atomic read to guarantee the updated value,
-      // reading the old value is actually beneficial because more threads will
-      // attempt allocations on the old active superblock instead of waiting on
-      // the new active superblock.  This will help hide the latency of
-      // switching the active superblock.
+      //----------------------------------------
+      // Query the active superblock associated with block size.
+      //
+      //   This superblock may be in the midst of being switched out
+      //   and the value is SUPERBLOCK_LOCK.
+      //
+      //   Instead of forcing an atomic read to guarantee the updated value,
+      //   reading the old value is actually beneficial because more threads will
+      //   attempt allocations on the old active superblock instead of waiting on
+      //   the new active superblock.  This will help hide the latency of
+      //   switching the active superblock.
       uint32_t sb_id = volatile_load( &m_active(block_size_id) );
 
       // If the active is locked, keep reading it atomically until the lock is
@@ -866,18 +1008,29 @@ public:
         sb_id = atomic_fetch_or( &m_active(block_size_id), uint32_t(0) );
       }
 
-      load_fence();
+      // Alternative:
+      //   uint32_t sb_id = SUPERBLOCK_LOCK ;
+      //   do { sb_id = volatile_load(&m_active(block_size_id) ); } while( sb_id == SUPERBLOCK_LOCK );
+      //
+      //----------------------------------------
+
+      load_fence();  // Make sure to get current superblock header information
 
       bool allocation_done = false;
 
       while ( !allocation_done ) {
         bool need_new_sb = false;
 
+        // Superblock ID is invalid when
+        // no superblock has been assigned to the block size yet.
+
         if ( sb_id != INVALID_SUPERBLOCK ) {
-          // Use the value from the clock register as the hash value.
+          // Get a "random" value for the hash lookup.
+          //   Use the value from the clock register as the hash value.
           uint64_t hash_val = get_clock_register();
 
-          // Get the starting position for this superblock's bits in the bitset.
+          // Get the starting position for this superblock's bits in the bitset
+          // which is block X superblock array.
           uint32_t pos_base = sb_id << m_lg_max_sb_blocks;
 
           // Mod the hash value to choose a page in the superblock.  The
@@ -897,6 +1050,16 @@ public:
           while ( !search_done ) {
             bool success = false;
             unsigned prev_val = 0;
+
+            // Get any block within the page in which 'pos' resides,
+            // any block is acceptable.
+            //
+            // REQUIRES:  The superblock identified by 'sb_id' is currently associated with
+            // this block size and is in the active, full, or partially full state.
+            // RISK/DANGER:  As a race condition this 'sb_id' superblock theoretically could have
+            // transitioned to empty and even subsequently claimed for another block size,
+            // this is a catastrophic state to be in.
+            // MITIGATION: ???
 
             Kokkos::tie( success, prev_val ) = m_sb_blocks.set_any_in_word( pos, word_mask );
 
@@ -923,7 +1086,7 @@ public:
             }
             else {
               // Reserved a memory location to allocate.
-              memory_fence();
+              memory_fence(); // TODO: is really necessary?
 
               search_done = true;
               allocation_done = true;
@@ -932,6 +1095,12 @@ public:
 
               p = m_data + ( size_t(sb_id) << m_lg_sb_size ) +
                   ( ( pos - pos_base ) << lg_block_size );
+
+              //------------------------------
+              // Maintain count of number of pages within the superblock that
+              // are empty and have more allocated blocks than the "page full" threshold.
+              // These counts are used to determine if a superblock is empty or
+              // full above the "superblock full" threshold.
 
               uint32_t used_bits = Kokkos::Impl::bit_count( prev_val );
 
@@ -951,6 +1120,7 @@ public:
                   need_new_sb = true;
                 }
               }
+              //------------------------------
             }
           }
         }
@@ -962,9 +1132,26 @@ public:
         }
 
         if ( need_new_sb ) {
+          // find_superblock:
+          //   If active superblock is full then
+          //   * transition "old" active superblock to full,
+          //     which may then have other subsequent state transitions...
+          //   * first look for partially full superblock to transition to the active
+          //   * second look for empty superblock to transition to the active
+          //
+          // If no superblock available then returns sb_id
+
           uint32_t new_sb_id = find_superblock( block_size_id, sb_id );
 
           if ( new_sb_id == sb_id ) {
+
+            // RISK/DANGER:  If a severe race occured where the block
+            //      went active -> full -> part_full -> active and 'this' thread
+            //      did not detect intermediate states then the allocation will
+            //      fail with space available.
+            // MITIGATION:
+            //   find_superblock returns INVALID_SUPERBLOCK if a superblock could not be found
+
             allocation_done = true;
 #ifdef KOKKOS_ENABLE_MEMPOOL_PRINT_INFO
             printf( "** No superblocks available. **\n" );
@@ -1001,6 +1188,9 @@ public:
   {
     char * ap = static_cast<char *>( alloc_ptr );
 
+    // TO EVALUATE:  An outstanding request to allow, in serial on the host,
+    //  the memory pool to grow in very large chunks...
+
     // Only deallocate memory controlled by this pool.
     if ( ap >= m_data && ap + alloc_size <= m_data + m_data_size ) {
       // Get the superblock for the address.  This can be calculated by math on
@@ -1009,6 +1199,7 @@ public:
       uint32_t sb_id = ( ap - m_data ) >> m_lg_sb_size;
 
       // Get the starting position for this superblock's bits in the bitset.
+      // ... ( 0 , sb_id ) bit in the 2D bitset of block X superblock
       uint32_t pos_base = sb_id << m_lg_max_sb_blocks;
 
       // Get the relative position for this memory location's bit in the bitset.
@@ -1017,11 +1208,14 @@ public:
       uint32_t block_size_id = lg_block_size - LG_MIN_BLOCK_SIZE;
       uint32_t pos_rel = offset >> lg_block_size;
 
+      // ( pos_rel , sb_id ) is the bit in the 2D bitset block X superblock
+
       bool success = false;
       unsigned prev_val = 0;
 
       memory_fence();
 
+      // Release the block:
       Kokkos::tie( success, prev_val ) = m_sb_blocks.fetch_word_reset( pos_base + pos_rel );
 
       // If the memory location was previously deallocated, do nothing.
@@ -1033,11 +1227,21 @@ public:
           // superblock.
           uint32_t empty_pages = atomic_fetch_add( &m_sb_header(sb_id).m_empty_pages, 1 );
 
+          // RISK/DANGER [ACTIVATE-PART]:
+          //   A find_superblock may have decided to make active before this deallocation occured.
+          //   That m_sb_header(sb_id).m_is_active and ( m_active(block_size_id) == new_sb )
+          //    are out-of-sync.  
+          // MITIGATE:
+          //   remove m_is_active and
+          //   rely upon m_partfull_sb.reset( pos ) == true to take out of PART_FULL state
+
           if ( !volatile_load( &m_sb_header(sb_id).m_is_active ) &&
                empty_pages == m_blocksize_info[block_size_id].m_pages_per_sb - 1 )
           {
             // This deallocation caused the superblock to be empty.  Change the
             // superblock category from partially full to empty.
+            // StateTransition : part_full -> empty
+
             unsigned pos = block_size_id * m_ceil_num_sb + sb_id;
 
             if ( m_partfull_sb.reset( pos ) ) {
@@ -1047,14 +1251,27 @@ public:
 
               store_fence();
 
+              // Make available in the empty set, state transition is complete.
               m_empty_sb.set( sb_id );
             }
+            // else: an impossible condition??
           }
         }
         else if ( page_fill_level == m_blocksize_info[block_size_id].m_page_full_level ) {
           // This page is no longer full.  Decrement the number of full pages for
           // the superblock.
+          // StateTransition : full -> part_full
+
           uint32_t full_pages = atomic_fetch_sub( &m_sb_header(sb_id).m_full_pages, 1 );
+
+          // RISK/DANGER [FULL-PART] :
+          //   Possible that find_superblock is in the process of swapping,
+          //   that m_sb_header(sb_id).m_is_active and ( m_active(block_size_id) == new_sb )
+          //   are out-of-sync
+          //   then the transition will not occur and the block will be stuck in the full state.
+          // MITIGATE:
+          //   remove m_is_active and
+          //   rely upon m_full_sb.reset( pos ) == true to take out of FULL state
 
           if ( !volatile_load( &m_sb_header(sb_id).m_is_active ) &&
                full_pages == m_blocksize_info[block_size_id].m_sb_full_level )
@@ -1062,11 +1279,18 @@ public:
             // This deallocation caused the number of full pages to decrease below
             // the full threshold.  Change the superblock category from full to
             // partially full.
+            //
+            // RACE CONDITION:  May have already been placed in partfull by another thread
+            //   prior MITIGATION fixes this race condition
+            //
             unsigned pos = block_size_id * m_ceil_num_sb + sb_id;
             m_partfull_sb.set( pos );
           }
         }
       }
+      // else {
+      //   multiple deallocate of the same location
+      // }
     }
 #ifdef KOKKOS_ENABLE_MEMPOOL_PRINTERR
     else {
@@ -1080,6 +1304,14 @@ public:
   }
 
   /// \brief Tests if the memory pool has no more memory available to allocate.
+  ///
+  ///  Requires caller has access to memory pool's memory space.
+  ///
+  ///  Expect to be called from within parallel kernel.
+  ///
+  ///  TODO:  Does not make sense to call this in parallel.
+  ///         If only callable in serial/host then could evaluate exactly...
+  ///
   KOKKOS_INLINE_FUNCTION
   bool is_empty() const
   {
@@ -1336,7 +1568,8 @@ private:
   KOKKOS_FUNCTION
   uint32_t find_superblock( int block_size_id, uint32_t old_sb ) const
   {
-    // Try to grab the lock on the head.
+    // Try to grab the lock on the active superblock slot associated with block size.
+    // If succeeds then ACTIVE -> NO_STATE
     uint32_t lock_sb =
       Kokkos::atomic_compare_exchange( &m_active(block_size_id), old_sb, SUPERBLOCK_LOCK );
 
@@ -1344,9 +1577,17 @@ private:
 
     // Initialize the new superblock to be the previous one so the previous
     // superblock is returned if a new superblock can't be found.
+    //
+    //   find_superblock returns INVALID_SUPERBLOCK if a superblock could not be found
+    //   so new_sb = INVALID_SUPERBLOCK to start
     uint32_t new_sb = lock_sb;
 
     if ( lock_sb == old_sb ) {
+      // RISK/DANGER [FULL-PART]:
+      //   Then ( m_active(block_size_id) != old_sb ) but
+      //   still have ( m_sb_header(old_sb).m_is_active ) == true )
+      // MITIGATION: remove m_is_active
+
       // This thread has the lock.
 
       // 1. Look for a partially filled superblock that is of the right block
@@ -1364,6 +1605,11 @@ private:
         bool success = false;
         unsigned prev_val = 0;
 
+        // m_partfull_sb is a two dimensional bitset number of
+        // superblocks X number of block sizes.
+        // The superblocks dimension is padded to word size.
+
+        // If succeeds then PART_FULL -> {NO_STATE}
         Kokkos::tie( success, prev_val ) = m_partfull_sb.reset_any_in_word( pos );
 
         if ( !success ) {
@@ -1377,6 +1623,17 @@ private:
         }
         else {
           // Found a superblock.
+
+          // Put old superblock into full state
+          // m_full_sb.set(old_sb) 
+
+
+          // RISK/DANGER :
+          //   The partially full superblock could become empty
+          //   and then transitioned to the empty state before is can be processed.
+          //   The risk probability is moderate.
+          // MITIGATION: is in {NO_STATE} so cannot be transitioned to EMPTY
+
 
           // It is possible that the newly found superblock is the same as the
           // old superblock.  In this case putting the old value back in yields
@@ -1406,6 +1663,8 @@ private:
       }
 
       // 2. Look for an empty superblock.
+      //    revise to if ( new_sb == INVALID_SUPERBLOCK )
+      //
       if ( new_sb == lock_sb ) {
         tries = 0;
         search_done = false;
@@ -1417,6 +1676,9 @@ private:
         while ( !search_done ) {
           bool success = false;
           unsigned prev_val = 0;
+
+          // RISK/DANGER:  Another thread may be referencing this superblock as not empty.
+          // See the allocation RISK/DANGER note.
 
           Kokkos::tie( success, prev_val ) = m_empty_sb.reset_any_in_word( pos );
 
@@ -1431,6 +1693,9 @@ private:
           }
           else {
             // Found a superblock.
+
+            // Put old superblock into full state
+            // m_full_sb.set(old_sb) 
 
             // It is possible that the newly found superblock is the same as
             // the old superblock.  In this case putting the old value back in
@@ -1467,6 +1732,16 @@ private:
       }
 
       // Write the new active superblock to release the lock.
+      //   if ( new_sb == INVALID_SUPERBLOCK ) then
+      //     atomic_exchange( &m_active(block_size_id), old_sb );
+      //   else
+      //     atomic_exchange( &m_active(block_size_id), new_sb );
+      //
+      //     didn't find a part full or empty superblock to replace
+      //     so put the previous superblock back,
+      //     still want to return INVALID_SUPERBLOCK
+      //     to indicate that the attempt to update failed.
+      //
       atomic_exchange( &m_active(block_size_id), new_sb );
     }
     else {
@@ -1484,7 +1759,9 @@ private:
       // Assertions:
       //   1. An invalid superblock should never be found here.
       //   2. If the new superblock is the same as the previous superblock, the
-      //      allocator is empty.
+      //      allocator is empty or a severe race occured where the block
+      //      went active -> full -> part_full -> active and 'this' thread
+      //      did not detect intermediate states.
 #ifdef KOKKOS_ENABLE_MEMPOOL_PRINTERR
       if ( new_sb == INVALID_SUPERBLOCK ) {
         printf( "\n** MemoryPool::find_superblock() FOUND_INACTIVE_SUPERBLOCK **\n" );
@@ -1499,6 +1776,8 @@ private:
     return new_sb;
   }
 
+  //----------------------------------------
+  /// TODO:  A free function
   /// Returns 64 bits from a clock register.
   KOKKOS_FORCEINLINE_FUNCTION
   uint64_t get_clock_register(void) const
@@ -1527,6 +1806,7 @@ private:
     return ticks;
 #endif
   }
+  //----------------------------------------
 };
 
 } // namespace Experimental
