@@ -274,9 +274,9 @@ public:
   void sort( ValuesViewType const & values)
   {
     typedef
-      Kokkos::View< typename KeyViewType::data_type,
-                    typename KeyViewType::array_layout,
-                    typename KeyViewType::device_type >
+      Kokkos::View< typename ValuesViewType::data_type,
+                    typename ValuesViewType::array_layout,
+                    typename ValuesViewType::device_type >
         scratch_view_type ;
 
     const size_t len = range_end - range_begin ;
