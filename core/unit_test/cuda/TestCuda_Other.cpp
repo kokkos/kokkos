@@ -101,6 +101,13 @@ TEST_F( cuda, compiler_macros )
 
 //----------------------------------------------------------------------------
 
+TEST_F( cuda , concurrent_bitset )
+{
+  test_concurrent_bitset< Kokkos::Cuda >( 100000 );
+}
+
+//----------------------------------------------------------------------------
+
 TEST_F( cuda, memory_pool )
 {
   bool val = TestMemoryPool::test_mempool< Kokkos::Cuda >( 128, 128000000 );
@@ -110,6 +117,13 @@ TEST_F( cuda, memory_pool )
 
   TestMemoryPool::test_memory_exhaustion< Kokkos::Cuda >();
 }
+
+
+TEST_F( cuda, memory_pool_v2 )
+{
+  TestMemoryPool::test_memory_pool_v2< Kokkos::Cuda >(false,false);
+}
+
 
 //----------------------------------------------------------------------------
 

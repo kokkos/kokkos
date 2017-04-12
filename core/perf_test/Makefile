@@ -24,14 +24,25 @@ KOKKOS_CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/core/perf_test
 TEST_TARGETS = 
 TARGETS = 
 
+#
+
 OBJ_PERF = PerfTestHost.o PerfTestCuda.o PerfTestMain.o gtest-all.o
 TARGETS += KokkosCore_PerformanceTest
 TEST_TARGETS += test-performance
+
+#
 
 OBJ_ATOMICS = test_atomic.o 
 TARGETS += KokkosCore_PerformanceTest_Atomics
 TEST_TARGETS += test-atomic
 
+#
+
+OBJ_MEMPOOL = test_mempool.o 
+TARGETS += KokkosCore_PerformanceTest_Mempool
+TEST_TARGETS += test-mempool
+
+#
 
 KokkosCore_PerformanceTest: $(OBJ_PERF) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_PERF) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_PerformanceTest
@@ -39,11 +50,17 @@ KokkosCore_PerformanceTest: $(OBJ_PERF) $(KOKKOS_LINK_DEPENDS)
 KokkosCore_PerformanceTest_Atomics: $(OBJ_ATOMICS) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_ATOMICS) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_PerformanceTest_Atomics
 
+KokkosCore_PerformanceTest_Mempool: $(OBJ_MEMPOOL) $(KOKKOS_LINK_DEPENDS)
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_MEMPOOL) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_PerformanceTest_Mempool
+
 test-performance: KokkosCore_PerformanceTest
 	./KokkosCore_PerformanceTest
 
 test-atomic: KokkosCore_PerformanceTest_Atomics
 	./KokkosCore_PerformanceTest_Atomics
+
+test-mempool: KokkosCore_PerformanceTest_Mempool
+	./KokkosCore_PerformanceTest_Mempool
 
 
 build_all: $(TARGETS)

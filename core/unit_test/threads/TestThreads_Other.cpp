@@ -117,6 +117,11 @@ TEST_F( threads, memory_pool )
   TestMemoryPool::test_memory_exhaustion< Kokkos::Threads >();
 }
 
+TEST_F( threads, memory_pool_v2 )
+{
+  TestMemoryPool::test_memory_pool_v2< Kokkos::Threads >(false,false);
+}
+
 //----------------------------------------------------------------------------
 
 #if defined( KOKKOS_ENABLE_TASKDAG )

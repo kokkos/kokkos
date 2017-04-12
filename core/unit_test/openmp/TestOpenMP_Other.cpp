@@ -123,6 +123,13 @@ TEST_F( openmp, compiler_macros )
 
 //----------------------------------------------------------------------------
 
+TEST_F( openmp , concurrent_bitset )
+{
+  test_concurrent_bitset< Kokkos::OpenMP >( 100000 );
+}
+
+//----------------------------------------------------------------------------
+
 TEST_F( openmp, memory_pool )
 {
   bool val = TestMemoryPool::test_mempool< Kokkos::OpenMP >( 128, 128000000 );
@@ -131,6 +138,12 @@ TEST_F( openmp, memory_pool )
   TestMemoryPool::test_mempool2< Kokkos::OpenMP >( 64, 4, 1000000, 2000000 );
 
   TestMemoryPool::test_memory_exhaustion< Kokkos::OpenMP >();
+}
+
+
+TEST_F( openmp, memory_pool_v2 )
+{
+  TestMemoryPool::test_memory_pool_v2< Kokkos::OpenMP >(false,false);
 }
 
 //----------------------------------------------------------------------------

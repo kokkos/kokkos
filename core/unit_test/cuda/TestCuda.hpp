@@ -74,6 +74,7 @@
 #include <TestTemplateMetaFunctions.hpp>
 #include <TestPolicyConstruction.hpp>
 #include <TestMDRange.hpp>
+#include <TestConcurrentBitset.hpp>
 
 namespace Test {
 

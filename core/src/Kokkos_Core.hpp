@@ -69,8 +69,9 @@
 #include <Kokkos_Cuda.hpp>
 #endif
 
-#include <Kokkos_MemoryPool.hpp>
 #include <Kokkos_Pair.hpp>
+#include <Kokkos_MemoryPool.hpp>
+#include <Kokkos_MemoryPoolv2.hpp>
 #include <Kokkos_Array.hpp>
 #include <Kokkos_View.hpp>
 #include <Kokkos_Vectorization.hpp>

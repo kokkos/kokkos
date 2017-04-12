@@ -41,61 +41,66 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TEST_SERIAL_HPP
-#define KOKKOS_TEST_SERIAL_HPP
-
-#include <gtest/gtest.h>
+#ifndef KOKKOS_CLOCKTIC_HPP
+#define KOKKOS_CLOCKTIC_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <stdint.h>
+#include <chrono>
 
-#ifdef KOKKOS_LAMBDA
-#undef KOKKOS_LAMBDA
+namespace Kokkos {
+namespace Impl {
+
+/**\brief  Quick query of clock register tics
+ *
+ *  Primary use case is to, with low overhead,
+ *  obtain a integral value that consistently varies
+ *  across concurrent threads of execution within
+ *  a parallel algorithm.
+ *  This value is often used to "randomly" seed an
+ *  attempt to acquire an indexed resource (e.g., bit)
+ *  from an array of resources (e.g., bitset) such that
+ *  concurrent threads will have high likelihood of
+ *  having different index-seed values.
+ */
+KOKKOS_FORCEINLINE_FUNCTION
+uint64_t clock_tic(void) noexcept
+{
+#if defined( __CUDA_ARCH__ )
+
+  // Return value of 64-bit hi-res clock register.
+
+  return clock64();
+
+#elif defined( __i386__ ) || defined( __x86_64 )
+
+  // Return value of 64-bit hi-res clock register.
+
+  unsigned a = 0, d = 0;
+
+  __asm__ volatile( "rdtsc" : "=a" (a), "=d" (d) );
+
+  return ( (uint64_t) a ) | ( ( (uint64_t) d ) << 32 );
+
+#elif defined( __powerpc )     || defined( __powerpc__ ) || \
+      defined( __powerpc64__ ) || defined( __POWERPC__ ) || \
+      defined( __ppc__ )       || defined( __ppc64__ )
+
+  unsigned int cycles = 0;
+
+  asm volatile( "mftb %0" : "=r" (cycles) );
+
+  return (uint64_t) cycles;
+
+#else
+
+  return (uint64_t)
+    std::chrono::high_resolution_clock::now().time_since_epoch().count();
+
 #endif
-#define KOKKOS_LAMBDA [=]
+}
 
-#include <Kokkos_Core.hpp>
+} // namespace Impl
+} // namespace Kokkos
 
-#include <TestTile.hpp>
-#include <TestSharedAlloc.hpp>
-#include <TestViewMapping.hpp>
-#include <TestFunctorAnalysis.hpp>
-#include <TestViewAPI.hpp>
-#include <TestViewOfClass.hpp>
-#include <TestViewSubview.hpp>
-#include <TestAtomic.hpp>
-#include <TestAtomicOperations.hpp>
-#include <TestAtomicViews.hpp>
-#include <TestRange.hpp>
-#include <TestTeam.hpp>
-#include <TestReduce.hpp>
-#include <TestScan.hpp>
-#include <TestAggregate.hpp>
-#include <TestCompilerMacros.hpp>
-#include <TestTaskScheduler.hpp>
-#include <TestMemoryPool.hpp>
-#include <TestCXX11.hpp>
-#include <TestCXX11Deduction.hpp>
-#include <TestTeamVector.hpp>
-#include <TestTemplateMetaFunctions.hpp>
-#include <TestPolicyConstruction.hpp>
-#include <TestMDRange.hpp>
-#include <TestConcurrentBitset.hpp>
-
-namespace Test {
-
-class serial : public ::testing::Test {
-protected:
-  static void SetUpTestCase()
-  {
-    Kokkos::HostSpace::execution_space::initialize();
-  }
-
-  static void TearDownTestCase()
-  {
-    Kokkos::HostSpace::execution_space::finalize();
-  }
-};
-
-} // namespace Test
-
-#endif
+#endif // KOKKOS_CLOCKTIC_HPP

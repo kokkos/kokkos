@@ -48,7 +48,6 @@
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_Atomic.hpp>
 #include <impl/Kokkos_BitOps.hpp>
-#include <impl/Kokkos_ConcurrentBitset.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
@@ -82,10 +81,6 @@ namespace MempoolImpl {
 //----------------------------------------------------------------------------
 // Bitset infrastructure
 //
-/** TODO: Consolidation with containers/src/Kokkos_Bitset.hpp resulting in
- *       a bitset residing in core/src/Kokkos_Bitset.hpp .
- *       Need function to claim any unset bit and return its ordinal.
- */
 
 template < typename T, typename ExecutionSpace >
 struct initialize_array {
