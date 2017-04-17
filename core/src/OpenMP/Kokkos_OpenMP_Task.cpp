@@ -209,7 +209,7 @@ fflush(stdout);
         // Team lead either found 0 == m_ready_count or a team task
         // Team lead broadcast acquired task:
 
-        team_exec.team_broadcast( task );
+        team_exec.team_broadcast( task , 0);
 
         if ( 0 != task ) { // Thread Team Task
 

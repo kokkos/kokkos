@@ -539,7 +539,7 @@ public:
 
   template< typename T >
   KOKKOS_INLINE_FUNCTION
-  void team_broadcast( T & value , const int source_team_rank = 0 ) const noexcept
+  void team_broadcast( T & value , const int source_team_rank ) const noexcept
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     {
       if ( 1 < m_data.m_team_size ) {
@@ -571,13 +571,13 @@ public:
 
   template< class Closure , typename T >
   KOKKOS_INLINE_FUNCTION
-  void team_broadcast( Closure const & f , T & value ) const noexcept
+  void team_broadcast( Closure const & f , T & value , const int source_team_rank) const noexcept
     {
       T volatile * const shared_value = (T*) m_data.team_reduce();
 
       // Don't overwrite shared memory until all threads arrive
 
-      if ( m_data.team_rendezvous() ) {
+      if ( m_data.team_rendezvous(source_team_rank) ) {
 
         // All threads have entered 'team_rendezvous'
         // only this thread returned from 'team_rendezvous'
@@ -1064,7 +1064,7 @@ template< class Space , class FunctorType , typename ValueType >
 KOKKOS_INLINE_FUNCTION
 void single( const Impl::ThreadSingleStruct< Impl::HostThreadTeamMember<Space> > & single , const FunctorType & functor , ValueType & val )
 {
-  single.team_member.team_broadcast( functor , val );
+  single.team_member.team_broadcast( functor , val , 0 );
 }
 
 template< class Space , class FunctorType >
