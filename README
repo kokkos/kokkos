@@ -67,7 +67,8 @@ Primary tested compilers on Intel KNL are:
    Intel 16.2.181 (with gcc 4.7.2)
    Intel 17.0.098 (with gcc 4.7.2)
    Intel 17.1.132 (with gcc 4.9.3)
-   Intel 17.0.061 (beta) (with gcc 4.9.3)
+   Intel 17.2.174 (with gcc 4.9.3)
+   Intel 18.0.061 (beta) (with gcc 4.9.3)
 
 Secondary tested compilers are:
   CUDA 7.0 (with gcc 4.8.4)
