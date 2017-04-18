@@ -774,6 +774,9 @@ public:
               , range.first , range.second , m_policy.league_size() );
 
           } while ( is_dynamic && 0 <= range.first );
+        } else {
+          ValueInit::init( ReducerConditional::select(m_functor , m_reducer)
+                           , data.pool_reduce_local() );
         }
 
         data.disband_team();
