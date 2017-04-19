@@ -391,6 +391,8 @@ public:
         // Hint for which superblock can support this allocation:
         // This superblock should be (not guaranteed due to concurrency)
         // of the given blocks size and have unclaimed blocks.
+        //
+        // TODO:  Could index hint array with block_count_lg2
 
         volatile uint32_t * const hint_sb_id_ptr = m_sb_state_array +
           m_sb_hint_offset + ( block_size_lg2 - LG2_MIN_BLOCK_SIZE );
@@ -630,13 +632,20 @@ public:
   // end allocate
   //--------------------------------------------------------------------------
 
+  /**\brief  Return an allocated block of memory to the pool.
+   *
+   *  Requires: p is return value from allocate( alloc_size );
+   *
+   *  For now the alloc_size is ignored.
+   */
   KOKKOS_INLINE_FUNCTION
-  void deallocate( void * p ) const noexcept
+  void deallocate( void * p , size_t /* alloc_size */ ) const noexcept
     {
       // Determine which superblock and block
       ptrdiff_t d = ((char*)p) -
                     ((char*)( m_sb_state_array + m_sb_data_offset ));
 
+      // Verify contained within the memory pool's superblocks:
       const int ok_contains =
         ( 0 <= d ) && ( size_t(d) < ( m_sb_count << m_sb_size_lg2 ) );
 
@@ -647,15 +656,16 @@ public:
 
         const int sb_id = d >> m_sb_size_lg2 ;
 
-        // Mask into the superblock size
-        d &= ptrdiff_t( 1 << m_sb_size_lg2 ) - 1 ;
-
+        // State array for the superblock.
         volatile uint32_t * const sb_state_array =
           m_sb_state_array + ( sb_id * m_sb_state_size );
 
         const uint32_t block_count_lg2 = (*sb_state_array) >> state_shift ;
         const uint32_t block_size_lg2  = m_sb_size_lg2 - block_count_lg2 ;
         const uint32_t block_size_mask = ( 1 << block_size_lg2 ) - 1 ;
+
+        // Mask into the superblock size
+        d &= ptrdiff_t( 1 << m_sb_size_lg2 ) - 1 ;
 
         ok_block_aligned = 0 == ( d & block_size_mask );
 

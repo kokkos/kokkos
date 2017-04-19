@@ -147,6 +147,14 @@ int bit_count( unsigned i )
 #endif
 }
 
+KOKKOS_INLINE_FUNCTION
+int integral_power_of_two_that_contains( const unsigned N )
+{
+  const int i = Kokkos::Impl::bit_scan_reverse( N );
+  return ( (1u << i) < N ) ? i + 1 : i ;
+}
+
+
 } // namespace Impl
 } // namespace Kokkos
 

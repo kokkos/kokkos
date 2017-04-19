@@ -848,7 +848,8 @@ struct TestMemoryPoolv2_Functor {
   void operator()( TagDealloc , int i , long & update ) const noexcept
     {
       if ( ptrs(i) && ( 0 == i % 3 ) ) {
-        pool.deallocate( (void*) ptrs(i) );
+        unsigned alloc_size = 32 * ( 1 + ( i % 5 ));
+        pool.deallocate( (void*) ptrs(i) , alloc_size );
         ptrs(i) = 0 ;
         ++update ;
       }
@@ -872,9 +873,10 @@ struct TestMemoryPoolv2_Functor {
   void operator()( TagMixItUp , int i , long & update ) const noexcept
     {
       if ( ptrs(i) && ( 0 == i % 3 ) ) {
-        pool.deallocate( (void*) ptrs(i) );
 
         unsigned alloc_size = 32 * ( 1 + ( i % 5 ));
+
+        pool.deallocate( (void*) ptrs(i) , alloc_size );
 
         ptrs(i) = (uintptr_t)  pool.allocate( alloc_size );
 
