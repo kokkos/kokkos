@@ -104,6 +104,12 @@ class Threads;   ///< Execution space with pthreads back-end.
 class OpenMP;    ///< OpenMP execution space.
 #endif
 
+#if defined( KOKKOS_ENABLE_OPENMPTARGET )
+class OpenMPTarget;    ///< OpenMPTarget execution space.
+class HostSpace;
+#endif
+
+
 #if defined( KOKKOS_ENABLE_CUDA )
 class CudaSpace;            ///< Memory space on Cuda GPU
 class CudaUVMSpace;         ///< Memory space on Cuda GPU with UVM
@@ -121,12 +127,14 @@ struct Device;
 
 /// Define Kokkos::DefaultExecutionSpace as per configuration option
 /// or chosen from the enabled execution spaces in the following order:
-/// Kokkos::Cuda, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Serial
+/// Kokkos::Cuda, Kokkos::OpenMPTarget, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Serial
 
 namespace Kokkos {
 
 #if   defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA )
   typedef Cuda DefaultExecutionSpace;
+#elif defined ( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET )
+  typedef OpenMPTarget DefaultExecutionSpace ;
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP )
   typedef OpenMP DefaultExecutionSpace;
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS )
@@ -136,7 +144,7 @@ namespace Kokkos {
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL )
   typedef Serial DefaultExecutionSpace;
 #else
-#  error "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::Cuda, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Qthreads, or Kokkos::Serial."
+#  error "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::Cuda, Kokkos::OpenMPTarget, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Qthreads, or Kokkos::Serial."
 #endif
 
 #if defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP )
