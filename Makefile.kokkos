@@ -117,7 +117,6 @@ else
     KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -DKOKKOS_BUG_WORKAROUND_IBM_CLANG_OMP45_VIEW_INIT -fopenmp-implicit-declare-target -fopenmp-targets=nvptx64-nvidia-cuda -fopenmp -fopenmp=libomp
   endif
 endif
-$(warning "Hello $(KOKKOS_INTERNAL_COMPILER_CLANG) $(KOKKOS_INTERNAL_OPENMPTARGET_FLAG)")
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
   KOKKOS_INTERNAL_CXX11_FLAG := --c++11
