@@ -219,6 +219,92 @@ struct MDRangePolicy
     #endif
   }
 
+
+  template < typename LT , typename UT , typename TT = array_index_type >
+  MDRangePolicy( std::initializer_list<LT> const& lower, std::initializer_list<UT> const& upper, std::initializer_list<TT> const& tile = {} )
+  {
+#if 0
+    // This should work, less duplicated code but not yet extensively tested
+    point_type lower_tmp, upper_tmp;
+    tile_type tile_tmp;
+    for ( auto i = 0; i < rank; ++i ) {
+      lower_tmp[i] = static_cast<array_index_type>(lower.begin()[i]);
+      upper_tmp[i] = static_cast<array_index_type>(upper.begin()[i]);
+      tile_tmp[i]  = static_cast<array_index_type>(tile.begin()[i]);
+    }
+
+    MDRangePolicy( lower_tmp, upper_tmp, tile_tmp );
+
+#else
+    for ( auto i = 0; i < rank; ++i ) {
+      m_lower[i] = static_cast<array_index_type>(lower.begin()[i]);
+      m_upper[i] = static_cast<array_index_type>(upper.begin()[i]);
+      m_tile[i]  = static_cast<array_index_type>(tile.begin()[i]);
+    }
+
+    m_num_tiles = 1;
+
+
+    // Host
+    if ( true
+       #if defined(KOKKOS_ENABLE_CUDA)
+         && !std::is_same< typename traits::execution_space, Kokkos::Cuda >::value
+       #endif
+       )
+    {
+      index_type span;
+      for (int i=0; i<rank; ++i) {
+        span = m_upper[i] - m_lower[i];
+        if ( m_tile[i] <= 0 ) {
+          if (  (inner_direction == Right && (i < rank-1))
+              || (inner_direction == Left && (i > 0)) )
+          {
+            m_tile[i] = 2;
+          }
+          else {
+            m_tile[i] = span;
+          }
+        }
+        m_tile_end[i] = static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
+        m_num_tiles *= m_tile_end[i];
+      }
+    }
+    #if defined(KOKKOS_ENABLE_CUDA)
+    else // Cuda
+    {
+      index_type span;
+      for (int i=0; i<rank; ++i) {
+        span = m_upper[i] - m_lower[i];
+        if ( m_tile[i] <= 0 ) {
+          // TODO: determine what is a good default tile size for cuda
+          // may be rank dependent
+          if (  (inner_direction == Right && (i < rank-1))
+              || (inner_direction == Left && (i > 0)) )
+          {
+            m_tile[i] = 2;
+          }
+          else {
+            m_tile[i] = 16;
+          }
+        }
+        m_tile_end[i] = static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
+        m_num_tiles *= m_tile_end[i];
+      }
+      index_type total_tile_size_check = 1;
+      for (int i=0; i<rank; ++i) {
+        total_tile_size_check *= m_tile[i];
+      }
+      if ( total_tile_size_check >= 1024 ) { // improve this check - 1024,1024,64 max per dim (Kepler), but product num_threads < 1024; more restrictions pending register limit
+        printf(" Tile dimensions exceed Cuda limits\n");
+        Kokkos::abort(" Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
+        //Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
+      }
+    }
+    #endif
+#endif
+  }
+
+
   point_type m_lower;
   point_type m_upper;
   tile_type  m_tile;
