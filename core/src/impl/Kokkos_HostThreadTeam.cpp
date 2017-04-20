@@ -278,6 +278,8 @@ int HostThreadTeamData::rendezvous( int64_t * const buffer
       value.full = 0 ;
       for ( int i = 0 ; i < end ; ++i ) value.byte[i] = int8_t( step );
 
+      store_fence(); // This should not be needed but fixes #742
+
       spinwait_until_equal( buffer[ (rank << shift_mem_cycle) + sync_offset ]
                           , value.full );
     }
