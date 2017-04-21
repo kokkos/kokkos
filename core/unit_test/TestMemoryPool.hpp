@@ -912,20 +912,26 @@ void test_memory_pool_v2( const bool print_statistics
   typedef Kokkos::Experimental::MemoryPoolv2< DeviceType > pool_type ;
   typedef TestMemoryPoolv2_Functor< DeviceType > functor_type ;
 
-  typedef typename functor_type::TagAlloc TagAlloc ;
+  typedef typename functor_type::TagAlloc   TagAlloc ;
   typedef typename functor_type::TagDealloc TagDealloc ;
   typedef typename functor_type::TagRealloc TagRealloc ;
   typedef typename functor_type::TagMixItUp TagMixItUp ;
 
-  const size_t total_alloc_size = 10000000 ;
-  const long   nfill            = 70000 ;
+  const size_t    total_alloc_size = 10000000 ;
+  const unsigned  min_block_size   = 64 ;
+  const unsigned  max_block_size   = 256 ;
+  const long      nfill            = 70000 ;
 
   for ( uint32_t k = 0 , min_superblock_size = 10000 ;
         k < 3 ; ++k , min_superblock_size *= 10 ) {
 
     typename pool_type::usage_statistics stats ;
 
-    pool_type pool( memory_space() , total_alloc_size , min_superblock_size );
+    pool_type pool( memory_space()
+                  , total_alloc_size
+                  , min_block_size
+                  , max_block_size
+                  , min_superblock_size );
 
     functor_type functor(pool,nfill);
 

@@ -62,10 +62,16 @@ struct ConcurrentBitset {
 
   view_unsigned_type  bitset ;
   view_int_type       acquired ;
+  uint32_t            bitset_count_lg2 ;
+  uint32_t            bitset_count_mask ;
 
-  ConcurrentBitset( const view_unsigned_type & arg_bitset
+  ConcurrentBitset( const uint32_t arg_bitset_count_lg2
+                  , const view_unsigned_type & arg_bitset
                   , const view_int_type & arg_acquired )
-    : bitset( arg_bitset ), acquired( arg_acquired ) {}
+    : bitset( arg_bitset ), acquired( arg_acquired )
+    , bitset_count_lg2( arg_bitset_count_lg2 )
+    , bitset_count_mask( uint32_t( 1u << arg_bitset_count_lg2 ) - 1 )
+    {}
 
   struct TagAcquire {};
   struct TagRelease {};
@@ -74,10 +80,11 @@ struct ConcurrentBitset {
   KOKKOS_INLINE_FUNCTION
   void operator()( TagAcquire , int i , long & update ) const
     {
-      unsigned hint = Kokkos::Impl::clock_tic();
+      unsigned hint = Kokkos::Impl::clock_tic() & bitset_count_mask ;
 
       Kokkos::pair<int,int> result =
-        Kokkos::Impl::concurrent_bitset::acquire( bitset.data() , hint );
+        Kokkos::Impl::concurrent_bitset::acquire_bounded_lg2
+          ( bitset.data() , bitset_count_lg2 , hint );
 
       acquired(i) = result.first ;
 
@@ -99,10 +106,11 @@ struct ConcurrentBitset {
     {
       if ( acquired(i) < 0 ) {
 
-        unsigned hint = Kokkos::Impl::clock_tic();
+        unsigned hint = Kokkos::Impl::clock_tic() & bitset_count_mask ;
 
         Kokkos::pair<int,int> result =
-          result = Kokkos::Impl::concurrent_bitset::acquire( bitset.data() , hint );
+          result = Kokkos::Impl::concurrent_bitset::acquire_bounded_lg2
+            ( bitset.data() , bitset_count_lg2 , hint );
 
         acquired(i) = result.first ;
 
@@ -125,7 +133,7 @@ void test_concurrent_bitset( int bit_count )
   bit_count = 1 << bit_count_lg2 ;
 
   const int buffer_length =
-    Kokkos::Impl::concurrent_bitset::buffer_length(bit_count_lg2);
+    Kokkos::Impl::concurrent_bitset::buffer_bound_lg2(bit_count_lg2);
 
   view_unsigned_type bitset("bitset",buffer_length);
 
@@ -138,12 +146,7 @@ void test_concurrent_bitset( int bit_count )
   typename view_unsigned_type::HostMirror bitset_host =
     Kokkos::create_mirror_view( bitset );
 
-  typename view_int_type::HostMirror acquired_host =
-    Kokkos::create_mirror_view( acquired );
-
-  Kokkos::Impl::concurrent_bitset::buffer_init( bit_count_lg2 , bitset_host.data() );
-
-  Kokkos::deep_copy( bitset , bitset_host );
+  Kokkos::deep_copy( bitset , 0u );
 
   long total = 0 ;
   long total_release = 0 ;
@@ -151,19 +154,19 @@ void test_concurrent_bitset( int bit_count )
 
   Kokkos::parallel_reduce
     ( Kokkos::RangePolicy< DeviceType , typename Functor::TagAcquire >(0,n)
-    , Functor( bitset , acquired )
+    , Functor( bit_count_lg2 , bitset , acquired )
     , total );
 
   ASSERT_EQ( bit_count , total );
 
   Kokkos::parallel_reduce
     ( Kokkos::RangePolicy< DeviceType , typename Functor::TagRelease >(0,n)
-    , Functor( bitset , acquired )
+    , Functor( bit_count_lg2 , bitset , acquired )
     , total_release );
 
   Kokkos::parallel_reduce
     ( Kokkos::RangePolicy< DeviceType , typename Functor::TagReacquire >(0,n)
-    , Functor( bitset , acquired )
+    , Functor( bit_count_lg2 , bitset , acquired )
     , total_reacquire );
 
   ASSERT_EQ( total_release , total_reacquire );
