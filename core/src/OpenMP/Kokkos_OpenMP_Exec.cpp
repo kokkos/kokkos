@@ -41,7 +41,10 @@
 //@HEADER
 */
 
-#include <stdio.h>
+#include <Kokkos_Macros.hpp>
+#if defined( KOKKOS_ENABLE_OPENMP )
+
+#include <cstdio>
 #include <limits>
 #include <iostream>
 #include <vector>
@@ -51,7 +54,6 @@
 #include <impl/Kokkos_CPUDiscovery.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 
-#ifdef KOKKOS_ENABLE_OPENMP
 
 namespace Kokkos {
 namespace Impl {
@@ -459,4 +461,7 @@ int OpenMP::concurrency() {
 
 } // namespace Kokkos
 
+#else
+void KOKKOS_CORE_SRC_OPENMP_EXEC_PREVENT_LINK_ERROR() {}
 #endif //KOKKOS_ENABLE_OPENMP
+

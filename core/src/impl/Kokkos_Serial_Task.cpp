@@ -150,6 +150,6 @@ void TaskQueueSpecialization< Kokkos::Serial > ::
 }} /* namespace Kokkos::Impl */
 
 #else
-void KOKKOS_CORE_SRC_SERIAL_KOKKOS_SERIAL_TASK_PREVENT_LINK_ERROR() {}
+void KOKKOS_CORE_SRC_IMPL_SERIAL_TASK_PREVENT_LINK_ERROR() {}
 #endif /* #if defined( KOKKOS_ENABLE_SERIAL ) && defined( KOKKOS_ENABLE_TASKDAG ) */
 

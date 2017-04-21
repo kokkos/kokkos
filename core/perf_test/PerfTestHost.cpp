@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,10 +36,13 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
+
+#include <Kokkos_Macros.hpp>
+#if defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_PTHREAD ) || defined( KOKKOS_ENABLE_SERIAL )
 
 #include <gtest/gtest.h>
 
@@ -59,9 +62,6 @@ const char TestHostDeviceName[] = "Kokkos::Threads" ;
 
 typedef Kokkos::Serial TestHostDevice ;
 const char TestHostDeviceName[] = "Kokkos::Serial" ;
-
-#else
-#  error "You must enable at least one of the following execution spaces in order to build this test: Kokkos::Threads, Kokkos::OpenMP, or Kokkos::Serial."
 #endif
 
 #include <impl/Kokkos_Timer.hpp>
@@ -90,10 +90,10 @@ protected:
 
       threads_count = std::max( 1u , numa_count )
                     * std::max( 2u , cores_per_numa * threads_per_core );
-                  
+
       TestHostDevice::initialize( threads_count );
     } else {
-      const unsigned thread_count = 4 ;   
+      const unsigned thread_count = 4 ;
       TestHostDevice::initialize( thread_count );
     }
   }
@@ -122,4 +122,7 @@ TEST_F( host, gramschmidt ) {
 
 } // namespace Test
 
+#else
+void KOKKOS_CORE_PERF_TEST_HOST_PREVENT_LINK_ERROR() {}
+#endif
 

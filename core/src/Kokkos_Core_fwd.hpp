@@ -257,3 +257,4 @@ template< class FunctorType, class ExecPolicy, class ExecutionSapce =
 } // namespace Kokkos
 
 #endif /* #ifndef KOKKOS_CORE_FWD_HPP */
+

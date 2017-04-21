@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,10 +36,13 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
+
+#include <Kokkos_Macros.hpp>
+#if defined( KOKKOS_ENABLE_CUDA )
 
 #include <stdint.h>
 #include <string>
@@ -51,8 +54,6 @@
 #include <gtest/gtest.h>
 
 #include <Kokkos_Core.hpp>
-
-#if defined( KOKKOS_ENABLE_CUDA )
 
 #include <TestDynRankView.hpp>
 
@@ -79,7 +80,7 @@ protected:
   }
 };
 
-TEST_F( cuda, dynrankview_perf ) 
+TEST_F( cuda, dynrankview_perf )
 {
   std::cout << "Cuda" << std::endl;
   std::cout << " DynRankView vs View: Initialization Only " << std::endl;
@@ -105,5 +106,6 @@ TEST_F( cuda, unordered_map_performance_far)
 }
 
 }
-
+#else
+void KOKKOS_CONTAINERS_PERFORMANCE_TESTS_TESTCUDA_PREVENT_EMPTY_LINK_ERROR() {}
 #endif  /* #if defined( KOKKOS_ENABLE_CUDA ) */

@@ -41,11 +41,13 @@
 //@HEADER
 */
 
+
+#include <Kokkos_Macros.hpp>
+#if defined( KOKKOS_ENABLE_PTHREAD )
+
 #include <Kokkos_Core_fwd.hpp>
 
-#if defined( KOKKOS_ENABLE_PTHREAD ) || defined( KOKKOS_ENABLE_WINTHREAD )
-
-#include <stdint.h>
+#include <cstdint>
 #include <limits>
 #include <utility>
 #include <iostream>
@@ -821,6 +823,7 @@ int Threads::thread_pool_rank()
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-
+#else
+void KOKKOS_CORE_SRC_THREADS_EXEC_PREVENT_LINK_ERROR() {}
 #endif /* #if defined( KOKKOS_ENABLE_PTHREAD ) || defined( KOKKOS_ENABLE_WINTHREAD ) */
 

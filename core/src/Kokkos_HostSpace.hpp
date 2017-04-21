@@ -265,7 +265,7 @@ public:
     return (SharedAllocationRecord *) 0;
 #endif
   }
-   
+
 
   /**\brief  Allocate tracked memory in the space */
   static
@@ -316,3 +316,4 @@ struct DeepCopy< HostSpace, HostSpace, ExecutionSpace > {
 } // namespace Kokkos
 
 #endif // #define KOKKOS_HOSTSPACE_HPP
+

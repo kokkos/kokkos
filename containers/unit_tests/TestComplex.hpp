@@ -261,3 +261,4 @@ void testComplex ()
 } // namespace Test
 
 #endif // KOKKOS_TEST_COMPLEX_HPP
+

@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,10 +36,13 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
+
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_OPENMP
 
 #include <gtest/gtest.h>
 
@@ -68,7 +71,6 @@
 
 namespace Test {
 
-#ifdef KOKKOS_ENABLE_OPENMP
 class openmp : public ::testing::Test {
 protected:
   static void SetUpTestCase()
@@ -172,7 +174,6 @@ OPENMP_DUALVIEW_COMBINE_TEST( 10 )
 #undef OPENMP_DEEP_COPY
 #undef OPENMP_VECTOR_COMBINE_TEST
 #undef OPENMP_DUALVIEW_COMBINE_TEST
-#endif
 
 
 TEST_F( openmp , dynamic_view )
@@ -203,4 +204,8 @@ TEST_F(openmp, ErrorReporterNativeOpenMP)
 }
 
 } // namespace test
+
+#else
+void KOKKOS_CONTAINERS_UNIT_TESTS_TESTOPENMP_PREVENT_EMPTY_LINK_ERROR() {}
+#endif
 

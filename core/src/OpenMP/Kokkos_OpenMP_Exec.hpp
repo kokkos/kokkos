@@ -44,6 +44,9 @@
 #ifndef KOKKOS_OPENMPEXEC_HPP
 #define KOKKOS_OPENMPEXEC_HPP
 
+#include <Kokkos_Macros.hpp>
+#if defined( KOKKOS_ENABLE_OPENMP )
+
 #include <Kokkos_OpenMP.hpp>
 
 #include <impl/Kokkos_Traits.hpp>
@@ -346,4 +349,6 @@ int OpenMP::thread_pool_rank()
 
 } // namespace Kokkos
 
+#endif
 #endif /* #ifndef KOKKOS_OPENMPEXEC_HPP */
+

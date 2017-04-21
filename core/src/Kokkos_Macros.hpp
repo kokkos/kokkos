@@ -472,3 +472,4 @@
 #endif
 
 #endif // #ifndef KOKKOS_MACROS_HPP
+
