@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,14 +36,15 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
 
-#include <Kokkos_Core.hpp>
-
+#include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_SERIAL ) && defined( KOKKOS_ENABLE_TASKDAG )
+
+#include <Kokkos_Core.hpp>
 
 #include <impl/Kokkos_Serial_Task.hpp>
 #include <impl/Kokkos_TaskQueue_impl.hpp>
@@ -126,7 +127,7 @@ void TaskQueueSpecialization< Kokkos::Serial > ::
   // Loop until no runnable task
 
   task_root_type * task = end ;
-  
+
   do {
 
     task = end ;
@@ -148,5 +149,7 @@ void TaskQueueSpecialization< Kokkos::Serial > ::
 
 }} /* namespace Kokkos::Impl */
 
+#else
+void KOKKOS_CORE_SRC_SERIAL_KOKKOS_SERIAL_TASK_PREVENT_LINK_ERROR() {}
 #endif /* #if defined( KOKKOS_ENABLE_SERIAL ) && defined( KOKKOS_ENABLE_TASKDAG ) */
 

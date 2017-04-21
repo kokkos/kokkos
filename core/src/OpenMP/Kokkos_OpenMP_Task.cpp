@@ -41,9 +41,10 @@
 //@HEADER
 */
 
-#include <Kokkos_Core.hpp>
-
+#include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_OPENMP ) && defined( KOKKOS_ENABLE_TASKDAG )
+
+#include <Kokkos_Core.hpp>
 
 #include <impl/Kokkos_TaskQueue_impl.hpp>
 #include <impl/Kokkos_HostThreadTeam.hpp>
@@ -310,7 +311,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::
 }} /* namespace Kokkos::Impl */
 
 //----------------------------------------------------------------------------
-
+#else
+void KOKKOS_CORE_SRC_OPENMP_KOKKOS_OPENMP_TASK_PREVENT_LINK_ERROR() {}
 #endif /* #if defined( KOKKOS_ENABLE_OPENMP ) && defined( KOKKOS_ENABLE_TASKDAG ) */
-
 

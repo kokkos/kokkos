@@ -44,6 +44,7 @@
 #ifndef KOKKOS_IMPL_OPENMP_TASK_HPP
 #define KOKKOS_IMPL_OPENMP_TASK_HPP
 
+#include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_TASKDAG )
 
 //----------------------------------------------------------------------------

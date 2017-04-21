@@ -46,25 +46,10 @@
 
 //----------------------------------------------------------------------------
 
-#include <Kokkos_Core_fwd.hpp>
-
-// If compiling with CUDA then must be using CUDA 8 or better
-// and use relocateable device code to enable the task policy.
-// nvcc relocatable device code option: --relocatable-device-code=true
-
-#if ( defined( KOKKOS_ENABLE_CUDA ) )
-  #if ( 8000 <= CUDA_VERSION ) && \
-      defined( KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE )
-
-  #define KOKKOS_ENABLE_TASKDAG
-
-  #endif
-#else
-  #define KOKKOS_ENABLE_TASKDAG
-#endif
-
+#include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_TASKDAG )
 
+#include <Kokkos_Core_fwd.hpp>
 //----------------------------------------------------------------------------
 
 #include <Kokkos_MemoryPool.hpp>
@@ -849,3 +834,4 @@ void wait( TaskScheduler< ExecSpace > const & scheduler )
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
 #endif /* #ifndef KOKKOS_TASKSCHEDULER_HPP */
+
