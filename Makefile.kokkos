@@ -326,8 +326,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_MEMKIND), 1)
   tmp := $(shell echo "\#define KOKKOS_HAVE_HBWSPACE 1" >> KokkosCore_config.tmp )
 endif
 
-ifeq ($(KOKKOS_INTERNAL_DISABLE_PROFILING), 1)
-  tmp := $(shell echo "\#define KOKKOS_ENABLE_PROFILING 0" >> KokkosCore_config.tmp )
+ifeq ($(KOKKOS_INTERNAL_DISABLE_PROFILING), 0)
+  tmp := $(shell echo "\#define KOKKOS_ENABLE_PROFILING" >> KokkosCore_config.tmp )
 endif
 
 tmp := $(shell echo "/* Optimization Settings */" >> KokkosCore_config.tmp)
