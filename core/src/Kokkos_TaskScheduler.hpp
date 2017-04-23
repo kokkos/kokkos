@@ -67,7 +67,7 @@
 
 //----------------------------------------------------------------------------
 
-#include <Kokkos_MemoryPool.hpp>
+#include <Kokkos_MemoryPoolv2.hpp>
 #include <impl/Kokkos_Tags.hpp>
 
 //----------------------------------------------------------------------------
@@ -432,8 +432,11 @@ public:
   TaskScheduler & operator = ( TaskScheduler const & rhs ) = default ;
 
   TaskScheduler( memory_space const & arg_memory_space
-               , unsigned const arg_memory_pool_capacity
-               , unsigned const arg_memory_pool_log2_superblock = 12 )
+               , size_t const mempool_capacity
+               , unsigned const mempool_min_block_size  // = 1u << 6
+               , unsigned const mempool_max_block_size  // = 1u << 10
+               , unsigned const mempool_superblock_size // = 1u << 12
+               )
     : m_track()
     , m_queue(0)
     {
@@ -449,8 +452,10 @@ public:
 
       m_queue = new( record->data() )
         queue_type( arg_memory_space
-                  , arg_memory_pool_capacity
-                  , arg_memory_pool_log2_superblock );
+                  , mempool_capacity
+                  , mempool_min_block_size
+                  , mempool_max_block_size
+                  , mempool_superblock_size );
 
       record->m_destroy.m_queue = m_queue ;
 
@@ -641,7 +646,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   int allocation_capacity() const noexcept
-    { return m_queue->m_memory.get_mem_size(); }
+    { return m_queue->m_memory.capacity(); }
 
   KOKKOS_INLINE_FUNCTION
   int allocated_task_count() const noexcept

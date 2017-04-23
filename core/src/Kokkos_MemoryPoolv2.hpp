@@ -405,6 +405,14 @@ private:
 
 public:
 
+  KOKKOS_INLINE_FUNCTION
+  uint32_t allocate_block_size( uint32_t alloc_size ) const noexcept
+    {
+      return alloc_size <= (1UL << m_max_block_size_lg2)
+           ? ( 1u << get_block_size_lg2( alloc_size ) )
+           : 0 ;
+    }
+
   //--------------------------------------------------------------------------
   /**\brief  Allocate a block of memory that is at least 'alloc_size'
    *

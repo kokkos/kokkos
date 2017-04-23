@@ -46,6 +46,7 @@
 
 #include <stdint.h>
 #include <Kokkos_Atomic.hpp>
+#include <impl/Kokkos_BitOps.hpp>
 #include <impl/Kokkos_ClockTic.hpp>
 
 namespace Kokkos {
