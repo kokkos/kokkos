@@ -44,7 +44,7 @@
 #include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_SERIAL )
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <sstream>
 #include <Kokkos_Serial.hpp>
 #include <impl/Kokkos_Traits.hpp>

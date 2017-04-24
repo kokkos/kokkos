@@ -45,7 +45,7 @@
 #define KOKKOS_BITOPS_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <stdint.h>
+#include <cstdint>
 #include <climits>
 
 namespace Kokkos {

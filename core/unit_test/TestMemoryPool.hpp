@@ -45,7 +45,7 @@
 #ifndef KOKKOS_UNITTEST_MEMPOOL_HPP
 #define KOKKOS_UNITTEST_MEMPOOL_HPP
 
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <cmath>
 #include <algorithm>

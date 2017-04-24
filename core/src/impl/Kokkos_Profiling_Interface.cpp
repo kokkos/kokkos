@@ -45,7 +45,7 @@
 #if defined(KOKKOS_ENABLE_PROFILING)
 
 #include <impl/Kokkos_Profiling_Interface.hpp>
-#include <string.h>
+#include <cstring>
 
 namespace Kokkos {
 namespace Profiling {

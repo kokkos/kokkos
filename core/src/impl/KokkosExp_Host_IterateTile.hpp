@@ -57,7 +57,7 @@
 
 #include <iostream>
 #include <algorithm>
-#include <stdio.h>
+#include <cstdio>
 
 namespace Kokkos { namespace Experimental { namespace Impl {
 
