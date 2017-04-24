@@ -48,17 +48,9 @@
 #include <Kokkos_Core.hpp>
 #include <impl/Kokkos_Timer.hpp>
 
-#define USE_MEMORY_POOL_V2
-
 using ExecSpace   = Kokkos::DefaultExecutionSpace ;
 using MemorySpace = Kokkos::DefaultExecutionSpace::memory_space ;
-
-using MemoryPool =
-#if defined( USE_MEMORY_POOL_V2 )
-Kokkos::Experimental::MemoryPoolv2< ExecSpace > ;
-#else
-Kokkos::Experimental::MemoryPool< ExecSpace > ;
-#endif
+using MemoryPool  = Kokkos::MemoryPool< ExecSpace > ;
 
 struct TestFunctor {
 
@@ -87,23 +79,12 @@ struct TestFunctor {
     {
       MemorySpace m ;
 
-#if defined( USE_MEMORY_POOL_V2 )
-
       const unsigned min_block_size = chunk ;
       const unsigned max_block_size = chunk * arg_stride_chunk ;
       pool = MemoryPool( m , total_alloc_size
                            , min_block_size
                            , max_block_size
                            , min_superblock_size );
-#else
-
-      const unsigned superblock_size_lg2 =
-        Kokkos::Impl::
-         integral_power_of_two_that_contains( min_superblock_size );
-
-      pool = MemoryPool( m , total_alloc_size , superblock_size_lg2 );
-
-#endif
 
       ptrs = ptrs_type( Kokkos::view_alloc( m , "ptrs") , number_alloc );
       stride_alloc = arg_stride_alloc ;

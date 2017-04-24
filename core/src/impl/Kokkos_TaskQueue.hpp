@@ -104,7 +104,7 @@ private:
   using specialization  = TaskQueueSpecialization< execution_space > ;
   using memory_space    = typename specialization::memory_space ;
   using device_type     = Kokkos::Device< execution_space , memory_space > ;
-  using memory_pool     = Kokkos::Experimental::MemoryPoolv2< device_type > ;
+  using memory_pool     = Kokkos::MemoryPool< device_type > ;
   using task_root_type  = Kokkos::Impl::TaskBase<execution_space,void,void> ;
 
   struct Destroy {

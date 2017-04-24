@@ -60,7 +60,7 @@ private:
   using execution_space = Kokkos::Qthread ;
   using memory_space    = Kokkos::HostSpace
   using device_type     = Kokkos::Device< execution_space, memory_space > ;
-  using memory_pool     = Kokkos::Experimental::MemoryPool< device_type > ;
+  using memory_pool     = Kokkos::MemoryPool< device_type > ;
   using task_root_type  = Kokkos::Impl::TaskBase< execution_space, void, void > ;
 
   friend class Kokkos::TaskScheduler< execution_space > ;

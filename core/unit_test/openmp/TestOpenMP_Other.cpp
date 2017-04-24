@@ -132,17 +132,6 @@ TEST_F( openmp , concurrent_bitset )
 
 TEST_F( openmp, memory_pool )
 {
-  bool val = TestMemoryPool::test_mempool< Kokkos::OpenMP >( 128, 128000000 );
-  ASSERT_TRUE( val );
-
-  TestMemoryPool::test_mempool2< Kokkos::OpenMP >( 64, 4, 1000000, 2000000 );
-
-  TestMemoryPool::test_memory_exhaustion< Kokkos::OpenMP >();
-}
-
-
-TEST_F( openmp, memory_pool_v2 )
-{
   TestMemoryPool::test_memory_pool_v2< Kokkos::OpenMP >(false,false);
 }
 
