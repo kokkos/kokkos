@@ -236,10 +236,16 @@ struct MDRangePolicy
     MDRangePolicy( lower_tmp, upper_tmp, tile_tmp );
 
 #else
+    if(m_lower.size()!=rank || m_upper.size() != rank)
+      Kokkos::abort("MDRangePolicy: Constructor initializer lists have wrong size");
+
     for ( auto i = 0; i < rank; ++i ) {
       m_lower[i] = static_cast<array_index_type>(lower.begin()[i]);
       m_upper[i] = static_cast<array_index_type>(upper.begin()[i]);
-      m_tile[i]  = static_cast<array_index_type>(tile.begin()[i]);
+      if(tile.size()==rank)
+        m_tile[i] = static_cast<array_index_type>(tile.begin()[i]);
+      else
+        m_tile[i] = 0;
     }
 
     m_num_tiles = 1;
