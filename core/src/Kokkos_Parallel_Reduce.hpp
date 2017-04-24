@@ -1102,7 +1102,7 @@ namespace Impl {
             }
           #endif
 
-          Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+          Kokkos::Impl::shared_allocation_tracking_disable();
           #ifdef KOKKOS_IMPL_NEED_FUNCTOR_WRAPPER
           Impl::ParallelReduce<typename functor_adaptor::functor_type, PolicyType, typename return_value_adapter::reducer_type >
              closure(functor_adaptor::functor(functor),
@@ -1114,7 +1114,7 @@ namespace Impl {
                      policy,
                      return_value_adapter::return_value(return_value,functor));
           #endif
-          Kokkos::Impl::shared_allocation_tracking_release_and_enable();
+          Kokkos::Impl::shared_allocation_tracking_enable();
           closure.execute();
 
           #if defined(KOKKOS_ENABLE_PROFILING)

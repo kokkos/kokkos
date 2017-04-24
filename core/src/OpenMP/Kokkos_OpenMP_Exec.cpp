@@ -48,9 +48,10 @@
 #include <limits>
 #include <iostream>
 #include <vector>
+
 #include <Kokkos_Core.hpp>
+
 #include <impl/Kokkos_Error.hpp>
-#include <iostream>
 #include <impl/Kokkos_CPUDiscovery.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 
@@ -439,6 +440,13 @@ void OpenMP::print_configuration( std::ostream & s , const bool detail )
           coord[ omp_get_thread_num() ] = hwloc::get_this_thread_coordinate();
         }
 /* END #pragma omp critical */
+      }
+/* END #pragma omp parallel */
+
+      // Enable allocation tracking
+#pragma omp parallel
+      {
+        Impl::SharedAllocationRecord< void, void >::tracking_enable();
       }
 /* END #pragma omp parallel */
 

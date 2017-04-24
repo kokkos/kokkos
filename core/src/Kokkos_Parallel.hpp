@@ -183,9 +183,9 @@ void parallel_for( const ExecPolicy  & policy
      }
 #endif
 
-    Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+    Kokkos::Impl::shared_allocation_tracking_disable();
     Impl::ParallelFor< FunctorType , ExecPolicy > closure( functor , policy );
-    Kokkos::Impl::shared_allocation_tracking_release_and_enable();
+    Kokkos::Impl::shared_allocation_tracking_enable();
 
    closure.execute();
 
@@ -215,9 +215,9 @@ void parallel_for( const size_t        work_count
      }
 #endif
 
-  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+  Kokkos::Impl::shared_allocation_tracking_disable();
   Impl::ParallelFor< FunctorType , policy > closure( functor , policy(0,work_count) );
-  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
+  Kokkos::Impl::shared_allocation_tracking_enable();
 
   closure.execute();
 
@@ -425,9 +425,9 @@ void parallel_scan( const ExecutionPolicy & policy
      }
 #endif
 
-  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+  Kokkos::Impl::shared_allocation_tracking_disable();
   Impl::ParallelScan< FunctorType , ExecutionPolicy > closure( functor , policy );
-  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
+  Kokkos::Impl::shared_allocation_tracking_enable();
 
   closure.execute();
 
@@ -458,9 +458,9 @@ void parallel_scan( const size_t        work_count
      }
 #endif
 
-  Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
+  Kokkos::Impl::shared_allocation_tracking_disable();
   Impl::ParallelScan< FunctorType , policy > closure( functor , policy(0,work_count) );
-  Kokkos::Impl::shared_allocation_tracking_release_and_enable();
+  Kokkos::Impl::shared_allocation_tracking_enable();
 
   closure.execute();
 
