@@ -41,7 +41,11 @@
 //@HEADER
 */
 
-#if defined( KOKKOS_ENABLE_TASKPOLICY )
+#ifndef KOKKOS_QTHREADS_TASKQUEUE_HPP
+#define KOKKOS_QTHREADS_TASKQUEUE_HPP
+
+#include <Kokkos_Macros.hpp>
+#if defined( KOKKOS_ENABLE_QTHREADS ) && defined( KOKKOS_ENABLE_TASKPOLICY )
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -317,3 +321,5 @@ public:
 //----------------------------------------------------------------------------
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
+#endif // KOKKOS_QTHREADS_TASKQUEUE_HPP
+

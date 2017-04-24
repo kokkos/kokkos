@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_TASKDAG )
 
 namespace Kokkos {
@@ -383,7 +384,7 @@ void TaskQueue< ExecSpace >::schedule_runnable
   // task_root_type * dep = Kokkos::atomic_exchange( & task->m_next , zero );
   task_root_type * dep = task->m_next ; task->m_next = zero ;
 
-  const bool is_ready = 
+  const bool is_ready =
     ( 0 == dep ) || ( ! push_task( & dep->m_wait , task ) );
 
   if ( ( 0 != dep ) && respawn ) {
@@ -663,3 +664,4 @@ void TaskQueue< ExecSpace >::complete
 } /* namespace Kokkos */
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
+

@@ -46,6 +46,7 @@
 #ifndef KOKKOS_IMPL_TASKQUEUE_HPP
 #define KOKKOS_IMPL_TASKQUEUE_HPP
 
+#include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_TASKDAG )
 
 #include <string>
@@ -489,7 +490,7 @@ public:
                     , int           arg_task_type
                     , int           arg_priority
                     )
-    : root_type( arg_apply 
+    : root_type( arg_apply
                , arg_queue
                , arg_dependence
                , arg_ref_count
@@ -591,7 +592,7 @@ public:
                     , int           arg_priority
                     , FunctorType && arg_functor
                     )
-    : base_type( arg_apply 
+    : base_type( arg_apply
                , arg_queue
                , arg_dependence
                , arg_ref_count
@@ -614,3 +615,4 @@ public:
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
 #endif /* #ifndef KOKKOS_IMPL_TASKQUEUE_HPP */
+

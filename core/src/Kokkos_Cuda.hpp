@@ -44,11 +44,10 @@
 #ifndef KOKKOS_CUDA_HPP
 #define KOKKOS_CUDA_HPP
 
-#include <Kokkos_Core_fwd.hpp>
-
-// If CUDA execution space is enabled then use this header file.
-
+#include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_CUDA )
+
+#include <Kokkos_Core_fwd.hpp>
 
 #include <iosfwd>
 #include <vector>
@@ -300,6 +299,4 @@ struct VerifyExecutionCanAccessMemorySpace
 
 #endif /* #if defined( KOKKOS_ENABLE_CUDA ) */
 #endif /* #ifndef KOKKOS_CUDA_HPP */
-
-
 

@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -44,9 +44,12 @@
 #ifndef KOKKOS_OPENMP_PARALLEL_HPP
 #define KOKKOS_OPENMP_PARALLEL_HPP
 
+#include <Kokkos_Macros.hpp>
+#if defined( KOKKOS_ENABLE_OPENMP )
+
 #include <omp.h>
 #include <iostream>
-#include <OpenMP/Kokkos_OpenMPexec.hpp>
+#include <OpenMP/Kokkos_OpenMP_Exec.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
 
 //----------------------------------------------------------------------------
@@ -58,7 +61,7 @@ namespace Impl {
 template< class FunctorType , class ... Traits >
 class ParallelFor< FunctorType
                  , Kokkos::RangePolicy< Traits ... >
-                 , Kokkos::OpenMP 
+                 , Kokkos::OpenMP
                  >
 {
 private:
@@ -77,7 +80,7 @@ private:
   exec_range( const FunctorType & functor
             , const Member ibeg , const Member iend )
     {
-      #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
+      #ifdef KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
       #pragma ivdep
       #endif
@@ -94,7 +97,7 @@ private:
             , const Member ibeg , const Member iend )
     {
       const TagType t{} ;
-      #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
+      #ifdef KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
       #pragma ivdep
       #endif
@@ -111,12 +114,12 @@ public:
       enum { is_dynamic = std::is_same< typename Policy::schedule_type::type
                                       , Kokkos::Dynamic >::value };
 
-      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
-      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
+      OpenMPExec::verify_is_process("Kokkos::OpenMP parallel_for");
+      OpenMPExec::verify_initialized("Kokkos::OpenMP parallel_for");
 
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
+        HostThreadTeamData & data = *OpenMPExec::get_thread_data();
 
         data.set_work_partition( m_policy.end() - m_policy.begin()
                                , m_policy.chunk_size() );
@@ -200,7 +203,7 @@ private:
             , const Member ibeg , const Member iend
             , reference_type update )
     {
-      #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
+      #ifdef KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
       #pragma ivdep
       #endif
@@ -218,7 +221,7 @@ private:
             , reference_type update )
     {
       const TagType t{} ;
-      #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
+      #ifdef KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
       #pragma ivdep
       #endif
@@ -235,13 +238,13 @@ public:
       enum { is_dynamic = std::is_same< typename Policy::schedule_type::type
                                       , Kokkos::Dynamic >::value };
 
-      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
-      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
+      OpenMPExec::verify_is_process("Kokkos::OpenMP parallel_for");
+      OpenMPExec::verify_initialized("Kokkos::OpenMP parallel_for");
 
       const size_t pool_reduce_bytes =
         Analysis::value_size( ReducerConditional::select(m_functor, m_reducer));
 
-      OpenMPexec::resize_thread_data( pool_reduce_bytes
+      OpenMPExec::resize_thread_data( pool_reduce_bytes
                                     , 0 // team_reduce_bytes
                                     , 0 // team_shared_bytes
                                     , 0 // thread_local_bytes
@@ -249,7 +252,7 @@ public:
 
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
+        HostThreadTeamData & data = *OpenMPExec::get_thread_data();
 
         data.set_work_partition( m_policy.end() - m_policy.begin()
                                , m_policy.chunk_size() );
@@ -282,12 +285,12 @@ public:
 
       // Reduction:
 
-      const pointer_type ptr = pointer_type( OpenMPexec::get_thread_data(0)->pool_reduce_local() );
+      const pointer_type ptr = pointer_type( OpenMPExec::get_thread_data(0)->pool_reduce_local() );
 
-      for ( int i = 1 ; i < OpenMPexec::pool_size() ; ++i ) {
+      for ( int i = 1 ; i < OpenMPExec::pool_size() ; ++i ) {
         ValueJoin::join( ReducerConditional::select(m_functor , m_reducer)
                        , ptr
-                       , OpenMPexec::get_thread_data(i)->pool_reduce_local() );
+                       , OpenMPExec::get_thread_data(i)->pool_reduce_local() );
       }
 
       Kokkos::Impl::FunctorFinal<  ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , ptr );
@@ -378,7 +381,7 @@ private:
             , const Member ibeg , const Member iend
             , reference_type update , const bool final )
     {
-      #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
+      #ifdef KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
       #pragma ivdep
       #endif
@@ -396,7 +399,7 @@ private:
             , reference_type update , const bool final )
     {
       const TagType t{} ;
-      #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
+      #ifdef KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION
       #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
       #pragma ivdep
       #endif
@@ -411,13 +414,13 @@ public:
   inline
   void execute() const
     {
-      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_scan");
-      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_scan");
+      OpenMPExec::verify_is_process("Kokkos::OpenMP parallel_scan");
+      OpenMPExec::verify_initialized("Kokkos::OpenMP parallel_scan");
 
       const int    value_count       = Analysis::value_count( m_functor );
       const size_t pool_reduce_bytes = 2 * Analysis::value_size( m_functor );
 
-      OpenMPexec::resize_thread_data( pool_reduce_bytes
+      OpenMPExec::resize_thread_data( pool_reduce_bytes
                                     , 0 // team_reduce_bytes
                                     , 0 // team_shared_bytes
                                     , 0 // thread_local_bytes
@@ -425,7 +428,7 @@ public:
 
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
+        HostThreadTeamData & data = *OpenMPExec::get_thread_data();
 
         const WorkRange range( m_policy, data.pool_rank(), data.pool_size() );
 
@@ -565,22 +568,22 @@ public:
     {
       enum { is_dynamic = std::is_same< SchedTag , Kokkos::Dynamic >::value };
 
-      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_for");
-      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_for");
+      OpenMPExec::verify_is_process("Kokkos::OpenMP parallel_for");
+      OpenMPExec::verify_initialized("Kokkos::OpenMP parallel_for");
 
       const size_t pool_reduce_size = 0 ; // Never shrinks
       const size_t team_reduce_size = TEAM_REDUCE_SIZE * m_policy.team_size();
       const size_t team_shared_size = m_shmem_size + m_policy.scratch_size(1);
       const size_t thread_local_size = 0 ; // Never shrinks
 
-      OpenMPexec::resize_thread_data( pool_reduce_size
+      OpenMPExec::resize_thread_data( pool_reduce_size
                                     , team_reduce_size
                                     , team_shared_size
                                     , thread_local_size );
 
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
+        HostThreadTeamData & data = *OpenMPExec::get_thread_data();
 
         const int active = data.organize_team( m_policy.team_size() );
 
@@ -723,8 +726,8 @@ public:
     {
       enum { is_dynamic = std::is_same< SchedTag , Kokkos::Dynamic >::value };
 
-      OpenMPexec::verify_is_process("Kokkos::OpenMP parallel_reduce");
-      OpenMPexec::verify_initialized("Kokkos::OpenMP parallel_reduce");
+      OpenMPExec::verify_is_process("Kokkos::OpenMP parallel_reduce");
+      OpenMPExec::verify_initialized("Kokkos::OpenMP parallel_reduce");
 
       const size_t pool_reduce_size =
         Analysis::value_size( ReducerConditional::select(m_functor, m_reducer));
@@ -733,14 +736,14 @@ public:
       const size_t team_shared_size = m_shmem_size + m_policy.scratch_size(1);
       const size_t thread_local_size = 0 ; // Never shrinks
 
-      OpenMPexec::resize_thread_data( pool_reduce_size
+      OpenMPExec::resize_thread_data( pool_reduce_size
                                     , team_reduce_size
                                     , team_shared_size
                                     , thread_local_size );
 
 #pragma omp parallel
       {
-        HostThreadTeamData & data = *OpenMPexec::get_thread_data();
+        HostThreadTeamData & data = *OpenMPExec::get_thread_data();
 
         const int active = data.organize_team( m_policy.team_size() );
 
@@ -785,12 +788,12 @@ public:
 
       // Reduction:
 
-      const pointer_type ptr = pointer_type( OpenMPexec::get_thread_data(0)->pool_reduce_local() );
+      const pointer_type ptr = pointer_type( OpenMPExec::get_thread_data(0)->pool_reduce_local() );
 
-      for ( int i = 1 ; i < OpenMPexec::pool_size() ; ++i ) {
+      for ( int i = 1 ; i < OpenMPExec::pool_size() ; ++i ) {
         ValueJoin::join( ReducerConditional::select(m_functor , m_reducer)
                        , ptr
-                       , OpenMPexec::get_thread_data(i)->pool_reduce_local() );
+                       , OpenMPExec::get_thread_data(i)->pool_reduce_local() );
       }
 
       Kokkos::Impl::FunctorFinal<  ReducerTypeFwd , WorkTag >::final( ReducerConditional::select(m_functor , m_reducer) , ptr );
@@ -849,5 +852,6 @@ public:
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#endif
 #endif /* KOKKOS_OPENMP_PARALLEL_HPP */
 

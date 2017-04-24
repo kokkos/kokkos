@@ -159,3 +159,4 @@ int integral_power_of_two_that_contains( const unsigned N )
 } // namespace Kokkos
 
 #endif // KOKKOS_BITOPS_HPP
+

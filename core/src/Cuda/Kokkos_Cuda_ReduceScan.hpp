@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -45,8 +45,6 @@
 #define KOKKOS_CUDA_REDUCESCAN_HPP
 
 #include <Kokkos_Macros.hpp>
-
-/* only compile this file if CUDA is enabled for Kokkos */
 #if defined( __CUDACC__ ) && defined( KOKKOS_ENABLE_CUDA )
 
 #include <utility>
@@ -177,7 +175,7 @@ inline void cuda_inter_warp_reduction( ValueType& value,
 
   #define STEP_WIDTH 4
   // Depending on the ValueType _shared__ memory must be aligned up to 8byte boundaries
-  // The reason not to use ValueType directly is that for types with constructors it 
+  // The reason not to use ValueType directly is that for types with constructors it
   // could lead to race conditions
   __shared__ double sh_result[(sizeof(ValueType)+7)/8*STEP_WIDTH];
   ValueType* result = (ValueType*) & sh_result;

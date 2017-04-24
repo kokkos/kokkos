@@ -41,11 +41,13 @@
 //@HEADER
 */
 
+
+#include <Kokkos_Macros.hpp>
+#if defined( KOKKOS_ENABLE_THREADS )
+
 #include <Kokkos_Core_fwd.hpp>
 
-#if defined( KOKKOS_ENABLE_PTHREAD ) || defined( KOKKOS_ENABLE_WINTHREAD )
-
-#include <stdint.h>
+#include <cstdint>
 #include <limits>
 #include <utility>
 #include <iostream>
@@ -512,8 +514,8 @@ void ThreadsExec::print_configuration( std::ostream & s , const bool detail )
 
   s << "Kokkos::Threads" ;
 
-#if defined( KOKKOS_ENABLE_PTHREAD )
-  s << " KOKKOS_ENABLE_PTHREAD" ;
+#if defined( KOKKOS_ENABLE_THREADS )
+  s << " KOKKOS_ENABLE_THREADS" ;
 #endif
 #if defined( KOKKOS_ENABLE_HWLOC )
   s << " hwloc[" << numa_count << "x" << cores_per_numa << "x" << threads_per_core << "]" ;
@@ -821,6 +823,7 @@ int Threads::thread_pool_rank()
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-
-#endif /* #if defined( KOKKOS_ENABLE_PTHREAD ) || defined( KOKKOS_ENABLE_WINTHREAD ) */
+#else
+void KOKKOS_CORE_SRC_THREADS_EXEC_PREVENT_LINK_ERROR() {}
+#endif /* #if defined( KOKKOS_ENABLE_THREADS ) */
 
