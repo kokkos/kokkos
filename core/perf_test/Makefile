@@ -44,6 +44,12 @@ TEST_TARGETS += test-mempool
 
 #
 
+OBJ_TASKDAG = test_taskdag.o 
+TARGETS += KokkosCore_PerformanceTest_TaskDAG
+TEST_TARGETS += test-taskdag
+
+#
+
 KokkosCore_PerformanceTest: $(OBJ_PERF) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_PERF) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_PerformanceTest
 
@@ -53,6 +59,9 @@ KokkosCore_PerformanceTest_Atomics: $(OBJ_ATOMICS) $(KOKKOS_LINK_DEPENDS)
 KokkosCore_PerformanceTest_Mempool: $(OBJ_MEMPOOL) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_MEMPOOL) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_PerformanceTest_Mempool
 
+KokkosCore_PerformanceTest_TaskDAG: $(OBJ_TASKDAG) $(KOKKOS_LINK_DEPENDS)
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_TASKDAG) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_PerformanceTest_TaskDAG
+
 test-performance: KokkosCore_PerformanceTest
 	./KokkosCore_PerformanceTest
 
@@ -61,6 +70,9 @@ test-atomic: KokkosCore_PerformanceTest_Atomics
 
 test-mempool: KokkosCore_PerformanceTest_Mempool
 	./KokkosCore_PerformanceTest_Mempool
+
+test-taskdag: KokkosCore_PerformanceTest_TaskDAG
+	./KokkosCore_PerformanceTest_TaskDAG
 
 
 build_all: $(TARGETS)
@@ -77,3 +89,4 @@ clean: kokkos-clean
 
 gtest-all.o:$(GTEST_PATH)/gtest/gtest-all.cc 
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) $(EXTRA_INC) -c $(GTEST_PATH)/gtest/gtest-all.cc
+
