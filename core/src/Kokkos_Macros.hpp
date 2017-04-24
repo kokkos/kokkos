@@ -48,7 +48,7 @@
 /** Pick up configure / build options via #define macros:
  *
  *  KOKKOS_ENABLE_CUDA                Kokkos::Cuda execution and memory spaces
- *  KOKKOS_ENABLE_PTHREAD             Kokkos::Threads execution space
+ *  KOKKOS_ENABLE_THREADS             Kokkos::Threads execution space
  *  KOKKOS_ENABLE_QTHREADS            Kokkos::Qthreads execution space
  *  KOKKOS_ENABLE_OPENMP              Kokkos::OpenMP execution space
  *  KOKKOS_ENABLE_HWLOC               HWLOC library is available.
@@ -432,7 +432,7 @@
   #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA
 #elif defined( KOKKOS_ENABLE_OPENMP )
   #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP
-#elif defined( KOKKOS_ENABLE_PTHREAD )
+#elif defined( KOKKOS_ENABLE_THREADS )
   #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS
 //#elif defined( KOKKOS_ENABLE_QTHREADS )
 //  #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS

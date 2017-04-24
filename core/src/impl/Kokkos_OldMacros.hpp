@@ -429,6 +429,12 @@
 #endif
 #endif
 
+#if defined( KOKKOS_ENABLE_PTHREAD ) || defined( KOKKOS_ENABLE_WINTHREAD )
+#ifndef KOKKOS_ENABLE_THREADS
+#define KOKKOS_ENABLE_THREADS
+#endif
+#endif
+
 //------------------------------------------------------------------------------
 // Deprecated macros
 //------------------------------------------------------------------------------

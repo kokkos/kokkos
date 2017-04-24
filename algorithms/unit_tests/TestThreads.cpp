@@ -42,7 +42,7 @@
 */
 
 #include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_PTHREAD
+#ifdef KOKKOS_ENABLE_THREADS
 
 #include <gtest/gtest.h>
 

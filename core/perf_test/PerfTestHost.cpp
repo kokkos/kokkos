@@ -42,7 +42,7 @@
 */
 
 #include <Kokkos_Macros.hpp>
-#if defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_PTHREAD ) || defined( KOKKOS_ENABLE_SERIAL )
+#if defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_THREADS ) || defined( KOKKOS_ENABLE_SERIAL )
 
 #include <gtest/gtest.h>
 
@@ -53,7 +53,7 @@
 typedef Kokkos::OpenMP TestHostDevice ;
 const char TestHostDeviceName[] = "Kokkos::OpenMP" ;
 
-#elif defined( KOKKOS_ENABLE_PTHREAD )
+#elif defined( KOKKOS_ENABLE_THREADS )
 
 typedef Kokkos::Threads TestHostDevice ;
 const char TestHostDeviceName[] = "Kokkos::Threads" ;

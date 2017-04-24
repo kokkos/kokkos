@@ -45,7 +45,7 @@
 #define KOKKOS_THREADS_HPP
 
 #include <Kokkos_Macros.hpp>
-#if defined( KOKKOS_ENABLE_PTHREAD )
+#if defined( KOKKOS_ENABLE_THREADS )
 
 #include <Kokkos_Core_fwd.hpp>
 
@@ -228,6 +228,6 @@ struct VerifyExecutionCanAccessMemorySpace
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#endif /* #if defined( KOKKOS_ENABLE_PTHREAD ) */
+#endif /* #if defined( KOKKOS_ENABLE_THREADS ) */
 #endif /* #define KOKKOS_THREADS_HPP */
 

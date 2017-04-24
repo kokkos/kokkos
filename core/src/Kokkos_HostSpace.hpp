@@ -117,7 +117,7 @@ public:
 //  typedef Kokkos::Qthreads  execution_space;
 #elif defined( KOKKOS_ENABLE_OPENMP )
   typedef Kokkos::OpenMP    execution_space;
-#elif defined( KOKKOS_ENABLE_PTHREAD )
+#elif defined( KOKKOS_ENABLE_THREADS )
   typedef Kokkos::Threads   execution_space;
 //#elif defined( KOKKOS_ENABLE_QTHREADS )
 //  typedef Kokkos::Qthreads  execution_space;

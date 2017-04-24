@@ -42,7 +42,7 @@
 */
 
 #include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_PTHREAD
+#ifdef KOKKOS_ENABLE_THREADS
 
 #include <gtest/gtest.h>
 
@@ -204,5 +204,5 @@ TEST_F(threads, ErrorReporter)
 
 #else
 void KOKKOS_CONTAINERS_UNIT_TESTS_TESTTHREADS_PREVENT_EMPTY_LINK_ERROR() {}
-#endif /* #if defined( KOKKOS_ENABLE_PTHREAD ) */
+#endif /* #if defined( KOKKOS_ENABLE_THREADS ) */
 

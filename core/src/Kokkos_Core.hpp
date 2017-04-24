@@ -61,7 +61,7 @@
 #include <Kokkos_Qthreads.hpp>
 #endif
 
-#if defined( KOKKOS_ENABLE_PTHREAD )
+#if defined( KOKKOS_ENABLE_THREADS )
 #include <Kokkos_Threads.hpp>
 #endif
 

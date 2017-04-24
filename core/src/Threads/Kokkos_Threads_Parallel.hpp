@@ -45,7 +45,7 @@
 #define KOKKOS_THREADS_PARALLEL_HPP
 
 #include <Kokkos_Macros.hpp>
-#if defined( KOKKOS_ENABLE_PTHREAD )
+#if defined( KOKKOS_ENABLE_THREADS )
 
 #include <vector>
 #include <iostream>
