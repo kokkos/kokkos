@@ -44,11 +44,13 @@
 #ifndef KOKKOS_UNITTEST_TASKSCHEDULER_HPP
 #define KOKKOS_UNITTEST_TASKSCHEDULER_HPP
 
+#include <Kokkos_Macros.hpp>
+#if defined( KOKKOS_ENABLE_TASKDAG )
+
 #include <stdio.h>
 #include <iostream>
 #include <cmath>
 
-#if defined( KOKKOS_ENABLE_TASKDAG )
 
 namespace TestTaskScheduler {
 
@@ -557,5 +559,5 @@ struct TestTaskTeamValue {
 } // namespace TestTaskScheduler
 
 #endif // #if defined( KOKKOS_ENABLE_TASKDAG )
-
 #endif // #ifndef KOKKOS_UNITTEST_TASKSCHEDULER_HPP
+

@@ -125,3 +125,4 @@ int bit_count( unsigned i )
 } // namespace Kokkos
 
 #endif // KOKKOS_BITOPS_HPP
+

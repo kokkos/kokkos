@@ -70,7 +70,10 @@
 #include <TestScan.hpp>
 #include <TestAggregate.hpp>
 #include <TestCompilerMacros.hpp>
-#include <TestTaskScheduler.hpp>
+
+//TODO enable task scheduler tests for threads
+//#include <TestTaskScheduler.hpp>
+
 #include <TestMemoryPool.hpp>
 #include <TestCXX11.hpp>
 #include <TestCXX11Deduction.hpp>

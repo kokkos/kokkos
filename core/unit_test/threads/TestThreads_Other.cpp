@@ -119,8 +119,8 @@ TEST_F( threads, memory_pool )
 
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_ENABLE_TASKDAG )
-/*
+// TODO enable task schedule tests for threads
+#if 0 && defined( KOKKOS_ENABLE_TASKDAG )
 TEST_F( threads, task_fib )
 {
   for ( int i = 0; i < 25; ++i ) {
@@ -140,8 +140,7 @@ TEST_F( threads, task_team )
   TestTaskScheduler::TestTaskTeam< Kokkos::Threads >::run( 1000 );
   //TestTaskScheduler::TestTaskTeamValue< Kokkos::Threads >::run( 1000 ); // Put back after testing.
 }
-*/
-#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
+#endif
 
 //----------------------------------------------------------------------------
 

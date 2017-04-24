@@ -1557,3 +1557,4 @@ private:
 #endif
 
 #endif // KOKKOS_MEMORYPOOL_HPP
+
