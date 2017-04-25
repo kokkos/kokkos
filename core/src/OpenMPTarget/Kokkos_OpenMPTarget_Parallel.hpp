@@ -130,12 +130,13 @@ namespace Impl {
 template<class FunctorType, class PolicyType, class ReducerType, class PointerType, class ValueType, int FunctorHasJoin, int UseReducerType>
 struct ParallelReduceSpecialize {
   static inline void execute(const FunctorType& f, const PolicyType& p , PointerType result_ptr) {
+    printf("Error: Invalid Specialization %i %i\n",FunctorHasJoin,UseReducerType);
   }
 };
 
-template<class FunctorType, class PolicyType, class ReducerType, class PointerType, class ValueType>
-struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType, PointerType, ValueType, 0,0> {
-  
+template<class FunctorType, class ReducerType, class PointerType, class ValueType, class ... PolicyArgs>
+struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>, ReducerType, PointerType, ValueType, 0,0> {
+  typedef Kokkos::RangePolicy<PolicyArgs...> PolicyType;
   template< class TagType >
   inline static
   typename std::enable_if< std::is_same< TagType , void >::value >::type
@@ -179,6 +180,56 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType, PointerTyp
       execute_impl<typename PolicyType::work_tag>(f,p,ptr);
     }
 };
+/*
+template<class FunctorType, class PolicyType, class ReducerType, class PointerType, class ValueType>
+struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType, PointerType, ValueType, 0,1> {
+
+  #pragma omp declare reduction(custom: ValueType : ReducerType::join(omp_out, omp_in)) initializer ( ReducerType::init(omp_priv) )
+
+  template< class TagType >
+  inline static
+  typename std::enable_if< std::is_same< TagType , void >::value >::type
+  execute_impl(const FunctorType& f, const PolicyType& p, PointerType result_ptr)
+    {
+      OpenMPTargetexec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetexec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      const typename PolicyType::member_type begin = p.begin();
+      const typename PolicyType::member_type end = p.end();
+
+      ValueType result = ValueType();
+      #pragma omp target teams distribute parallel for num_teams(512) map(to:f) map(tofrom:result) reduction(custom: result)
+      for(int i=begin; i<end; i++)
+        f(i,result);
+
+      *result_ptr=result;
+    }
+
+
+  template< class TagType >
+  inline static
+  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
+  execute_impl(const FunctorType& f, const PolicyType& p, PointerType result_ptr)
+    {
+      OpenMPTargetexec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetexec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      const typename PolicyType::member_type begin = p.begin();
+      const typename PolicyType::member_type end = p.end();
+
+      ValueType result = ValueType();
+      #pragma omp target teams distribute parallel for num_teams(512) map(to:f) map(tofrom: result) reduction(custom: result)
+      for(int i=begin; i<end; i++)
+        f(TagType(),i,result);
+
+      *result_ptr=result;
+    }
+
+
+    inline static
+    void execute(const FunctorType& f, const PolicyType& p, PointerType ptr) {
+      execute_impl<typename PolicyType::work_tag>(f,p,ptr);
+    }
+};
+*/
 
 template< class FunctorType , class ReducerType, class ... Traits >
 class ParallelReduce< FunctorType
@@ -438,11 +489,15 @@ private:
       const int league_size = m_policy.league_size();
       const int team_size = m_policy.team_size();
       const int vector_length = m_policy.vector_length();
+      const int nteams = OpenMPTargetexec::MAX_ACTIVE_TEAMS<league_size?OpenMPTargetexec::MAX_ACTIVE_TEAMS:league_size;
 
+      OpenMPTargetexec::resize_scratch(0,Policy::member_type::TEAM_REDUCE_SIZE,0,0);
+      void* scratch_ptr = OpenMPTargetexec::get_scratch_ptr();
 
-      #pragma omp target teams distribute parallel for num_teams(league_size) num_threads(team_size*vector_length) schedule(static,1) map(to:this->m_functor)
+      #pragma omp target teams distribute parallel for num_teams(league_size) num_threads(team_size*vector_length) schedule(static,1) \
+          map(to:this->m_functor,scratch_ptr) 
       for(int i=0 ; i<league_size*team_size*vector_length ; i++) {
-        typename Policy::member_type team(league_size,team_size,vector_length, 0,0);
+        typename Policy::member_type team(i/(team_size*vector_length),league_size,team_size,vector_length, scratch_ptr, 0,0);
         m_functor(team);
       }
     }
@@ -458,12 +513,15 @@ private:
       const int league_size = m_policy.league_size();
       const int team_size = m_policy.team_size();
       const int vector_length = m_policy.vector_length();
+      const int nteams = OpenMPTargetexec::MAX_ACTIVE_TEAMS<league_size?OpenMPTargetexec::MAX_ACTIVE_TEAMS:league_size;
 
-
-      #pragma omp target teams distribute parallel for num_teams(league_size) num_threads(team_size*vector_length) map(to:this->m_functor)
+      OpenMPTargetexec::resize_scratch(0,Policy::member_type::TEAM_REDUCE_SIZE,0,0);
+      void* scratch_ptr = OpenMPTargetexec::get_scratch_ptr();
+      #pragma omp target teams distribute parallel for num_teams(league_size) num_threads(team_size*vector_length) schedule(static,1) \
+         map(to:this->m_functor,scratch_ptr)
       for(int i=0 ; i<league_size ; i++) {
-        //typename Policy::member_type team(league_size,team_size,vector_length, 0,0);
-        //m_functor(team);
+        typename Policy::member_type team(i/(team_size*vector_length),league_size,team_size,vector_length, scratch_ptr, 0,0);
+        m_functor(TagType(), team);
       }
     }
 
@@ -476,6 +534,73 @@ public:
     , m_policy(  arg_policy )
     , m_shmem_size( arg_policy.scratch_size(0) + arg_policy.scratch_size(1) + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
     {}
+};
+
+template<class FunctorType, class ReducerType, class PointerType, class ValueType, class ... PolicyArgs>
+struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>, ReducerType, PointerType, ValueType, 0,0> {
+  typedef TeamPolicyInternal<PolicyArgs...> PolicyType;
+
+  template< class TagType >
+  inline static
+  typename std::enable_if< std::is_same< TagType , void >::value >::type
+  execute_impl(const FunctorType& f, const PolicyType& p, PointerType result_ptr)
+    {
+      OpenMPTargetexec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetexec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      
+      const int league_size = p.league_size();
+      const int team_size = p.team_size();
+      const int vector_length = p.vector_length();
+      const int nteams = OpenMPTargetexec::MAX_ACTIVE_TEAMS<league_size?OpenMPTargetexec::MAX_ACTIVE_TEAMS:league_size;
+      
+      OpenMPTargetexec::resize_scratch(0,PolicyType::member_type::TEAM_REDUCE_SIZE,0,0);
+      void* scratch_ptr = OpenMPTargetexec::get_scratch_ptr(); 
+
+      ValueType result = ValueType();
+      #pragma omp target teams distribute parallel for num_teams(nteams) num_threads(team_size*vector_length) \
+         map(to:f,scratch_ptr) map(tofrom:result) reduction(+: result) schedule(static,1)
+      for(int i=0 ; i<league_size*team_size*vector_length ; i++) {
+        typename PolicyType::member_type team(i/(team_size*vector_length),league_size,team_size,vector_length, scratch_ptr, 0,0);
+        f(team,result);
+        if(team.m_vector_lane!=0) result = 0;
+      }
+
+      *result_ptr=result;
+    }
+
+
+  template< class TagType >
+  inline static
+  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
+  execute_impl(const FunctorType& f, const PolicyType& p, PointerType result_ptr)
+    {
+      OpenMPTargetexec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetexec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+
+      const int league_size = p.league_size();
+      const int team_size = p.team_size();
+      const int vector_length = p.vector_length();
+      const int nteams = OpenMPTargetexec::MAX_ACTIVE_TEAMS<league_size?OpenMPTargetexec::MAX_ACTIVE_TEAMS:league_size;
+
+      OpenMPTargetexec::resize_scratch(0,PolicyType::member_type::TEAM_REDUCE_SIZE,0,0);
+      void* scratch_ptr = OpenMPTargetexec::get_scratch_ptr();
+
+      ValueType result = ValueType();
+      #pragma omp target teams distribute parallel for num_teams(nteams) num_threads(team_size*vector_length) \
+         map(to:f,scratch_ptr) map(tofrom:result) reduction(+: result) schedule(static,1)
+      for(int i=0 ; i<league_size*team_size*vector_length ; i++) {
+        typename PolicyType::member_type team(i/(team_size*vector_length),league_size,team_size,vector_length, scratch_ptr, 0,0);
+        f(TagType(),team,result);
+        if(team.vector_lane!=0) result = 0;
+      }
+      *result_ptr=result;
+    }
+
+
+    inline static
+    void execute(const FunctorType& f, const PolicyType& p, PointerType ptr) {
+      execute_impl<typename PolicyType::work_tag>(f,p,ptr);
+    }
 };
 
 
@@ -502,6 +627,12 @@ private:
 
   typedef typename ValueTraits::pointer_type    pointer_type ;
   typedef typename ValueTraits::reference_type  reference_type ;
+  typedef typename ValueTraits::value_type      value_type ;
+
+  enum {HasJoin = ReduceFunctorHasJoin<FunctorType>::value };
+  enum {UseReducer = is_reducer_type<ReducerType>::value };
+
+  typedef ParallelReduceSpecialize<FunctorType,Policy,ReducerType,pointer_type,typename ValueTraits::value_type,HasJoin,UseReducer> ParForSpecialize;
 
   const FunctorType  m_functor ;
   const Policy       m_policy ;
@@ -509,39 +640,13 @@ private:
   const pointer_type m_result_ptr ;
   const int          m_shmem_size ;
 
-  template< class TagType >
-  inline static
-  typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_team( const FunctorType & functor , Member member , reference_type update )
-    {
-      for ( ; member.valid_static() ; member.next_static() ) {
-        functor( member , update );
-      }
-    }
-
-  template< class TagType >
-  inline static
-  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_team( const FunctorType & functor , Member member , reference_type update )
-    {
-      const TagType t{} ;
-      for ( ; member.valid_static() ; member.next_static() ) {
-        functor( t , member , update );
-      }
-    }
-
 public:
 
   inline
-  void execute() const
-    {
-      OpenMPTargetexec::verify_is_process("Kokkos::OpenMPTarget parallel_reduce");
+  void execute() const {
+    ParForSpecialize::execute(m_functor,m_policy,m_result_ptr);   
+  }
 
-//      const size_t team_reduce_size = Policy::member_type::team_reduce_size();
-
-//      OpenMPTargetexec::resize_scratch( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) , team_reduce_size + m_shmem_size );
-      
-   }
   template< class ViewType >
   inline
   ParallelReduce( const FunctorType  & arg_functor ,

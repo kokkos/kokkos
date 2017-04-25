@@ -57,232 +57,25 @@ namespace Impl {
 //----------------------------------------------------------------------------
 /** \brief  Data for OpenMPTarget thread execution */
 
+
 class OpenMPTargetexec {
-public:
-
-  enum { MAX_THREAD_COUNT = 4096 };
-
+public: 
+  enum { MAX_ACTIVE_THREADS = 256*8*56*4 };
+  enum { MAX_ACTIVE_TEAMS = MAX_ACTIVE_THREADS/32 };
+  
 private:
-
-  static OpenMPTargetexec * m_pool[ MAX_THREAD_COUNT ]; // Indexed by: m_pool_rank_rev
-
-  static int          m_pool_topo[ 4 ];
-  static int          m_map_rank[ MAX_THREAD_COUNT ];
-
-  friend class Kokkos::OpenMPTarget ;
-
-  int const  m_pool_rank ;
-  int const  m_pool_rank_rev ;
-  int const  m_scratch_exec_end ;
-  int const  m_scratch_reduce_end ;
-  int const  m_scratch_thread_end ;
-
-  int volatile  m_barrier_state ;
-
-  // Members for dynamic scheduling
-  // Which thread am I stealing from currently
-  int m_current_steal_target;
-  // This thread's owned work_range
-  Kokkos::pair<long,long> m_work_range KOKKOS_ALIGN(16);
-  // Team Offset if one thread determines work_range for others
-  long m_team_work_index;
-
-  // Is this thread stealing (i.e. its owned work_range is exhausted
-  bool m_stealing;
-
-  OpenMPTargetexec();
-  OpenMPTargetexec( const OpenMPTargetexec & );
-  OpenMPTargetexec & operator = ( const OpenMPTargetexec & );
-
-  static void clear_scratch();
+  static void* scratch_ptr;
 
 public:
-
-  // Topology of a cache coherent thread pool:
-  //   TOTAL = NUMA x GRAIN
-  //   pool_size( depth = 0 )
-  //   pool_size(0) = total number of threads
-  //   pool_size(1) = number of threads per NUMA
-  //   pool_size(2) = number of threads sharing finest grain memory hierarchy
-
-  inline static
-  int pool_size( int depth = 0 ) { return m_pool_topo[ depth ]; }
-
-  inline static
-  OpenMPTargetexec * pool_rev( int pool_rank_rev ) { return m_pool[ pool_rank_rev ]; }
-
-  inline int pool_rank() const { return m_pool_rank ; }
-  inline int pool_rank_rev() const { return m_pool_rank_rev ; }
-
-  inline long team_work_index() const { return m_team_work_index ; }
-
-  inline int scratch_reduce_size() const
-    { return m_scratch_reduce_end - m_scratch_exec_end ; }
-
-  inline int scratch_thread_size() const
-    { return m_scratch_thread_end - m_scratch_reduce_end ; }
-
-  inline void * scratch_reduce() const { return ((char *) this) + m_scratch_exec_end ; }
-  inline void * scratch_thread() const { return ((char *) this) + m_scratch_reduce_end ; }
-
-  inline
-  void state_wait( int state )
-    { Impl::spinwait_while_equal( m_barrier_state , state ); }
-
-  inline
-  void state_set( int state ) { m_barrier_state = state ; }
-
-  ~OpenMPTargetexec() {}
-
-  OpenMPTargetexec( const int arg_poolRank
-            , const int arg_scratch_exec_size
-            , const int arg_scratch_reduce_size
-            , const int arg_scratch_thread_size )
-    : m_pool_rank( arg_poolRank )
-    , m_pool_rank_rev( pool_size() - ( arg_poolRank + 1 ) )
-    , m_scratch_exec_end( arg_scratch_exec_size )
-    , m_scratch_reduce_end( m_scratch_exec_end   + arg_scratch_reduce_size )
-    , m_scratch_thread_end( m_scratch_reduce_end + arg_scratch_thread_size )
-    , m_barrier_state(0)
-    {}
-
-  static void finalize();
-
-  static void initialize( const unsigned  team_count ,
-                          const unsigned threads_per_team ,
-                          const unsigned numa_count ,
-                          const unsigned cores_per_numa );
-
   static void verify_is_process( const char * const );
   static void verify_initialized( const char * const );
 
-  static void resize_scratch( size_t reduce_size , size_t thread_size );
+  static void* get_scratch_ptr();  
+  static void clear_scratch();
+  static void resize_scratch( int64_t reduce_bytes , int64_t team_reduce_bytes, int64_t team_shared_bytes, int64_t thread_local_bytes );
 
-  inline static
-  OpenMPTargetexec * get_thread_omp() { return m_pool[ m_map_rank[ omp_get_thread_num() ] ]; }
-
-  /* Dynamic Scheduling related functionality */
-  // Initialize the work range for this thread
-  inline void set_work_range(const long& begin, const long& end, const long& chunk_size) {
-    m_work_range.first = (begin+chunk_size-1)/chunk_size;
-    m_work_range.second = end>0?(end+chunk_size-1)/chunk_size:m_work_range.first;
-  }
-
-  // Claim and index from this thread's range from the beginning
-  inline long get_work_index_begin () {
-    Kokkos::pair<long,long> work_range_new = m_work_range;
-    Kokkos::pair<long,long> work_range_old = work_range_new;
-    if(work_range_old.first>=work_range_old.second)
-      return -1;
-
-    work_range_new.first+=1;
-
-    bool success = false;
-    while(!success) {
-      work_range_new = Kokkos::atomic_compare_exchange(&m_work_range,work_range_old,work_range_new);
-      success = ( (work_range_new == work_range_old) || 
-                  (work_range_new.first>=work_range_new.second));
-      work_range_old = work_range_new;
-      work_range_new.first+=1;
-    }
-    if(work_range_old.first<work_range_old.second)
-      return work_range_old.first;
-    else
-      return -1;
-  }
-
-  // Claim and index from this thread's range from the end
-  inline long get_work_index_end () {
-    Kokkos::pair<long,long> work_range_new = m_work_range;
-    Kokkos::pair<long,long> work_range_old = work_range_new;
-    if(work_range_old.first>=work_range_old.second)
-      return -1;
-    work_range_new.second-=1;
-    bool success = false;
-    while(!success) {
-      work_range_new = Kokkos::atomic_compare_exchange(&m_work_range,work_range_old,work_range_new);
-      success = ( (work_range_new == work_range_old) ||
-                  (work_range_new.first>=work_range_new.second) );
-      work_range_old = work_range_new;
-      work_range_new.second-=1;
-    }
-    if(work_range_old.first<work_range_old.second)
-      return work_range_old.second-1;
-    else
-      return -1;
-  }
-
-  // Reset the steal target
-  inline void reset_steal_target() {
-    m_current_steal_target = (m_pool_rank+1)%m_pool_topo[0];
-    m_stealing = false;
-  }
-
-  // Reset the steal target
-  inline void reset_steal_target(int team_size) {
-    m_current_steal_target = (m_pool_rank_rev+team_size);
-    if(m_current_steal_target>=m_pool_topo[0])
-      m_current_steal_target = 0;//m_pool_topo[0]-1;
-    m_stealing = false;
-  }
-
-  // Get a steal target; start with my-rank + 1 and go round robin, until arriving at this threads rank
-  // Returns -1 fi no active steal target available
-  inline int get_steal_target() {
-    while(( m_pool[m_current_steal_target]->m_work_range.second <=
-            m_pool[m_current_steal_target]->m_work_range.first  ) &&
-          (m_current_steal_target!=m_pool_rank) ) {
-      m_current_steal_target = (m_current_steal_target+1)%m_pool_topo[0];
-    }
-    if(m_current_steal_target == m_pool_rank)
-      return -1;
-    else
-      return m_current_steal_target;
-  }
-
-  inline int get_steal_target(int team_size) {
-
-    while(( m_pool[m_current_steal_target]->m_work_range.second <=
-            m_pool[m_current_steal_target]->m_work_range.first  ) &&
-          (m_current_steal_target!=m_pool_rank_rev) ) {
-      if(m_current_steal_target + team_size < m_pool_topo[0])
-        m_current_steal_target = (m_current_steal_target+team_size);
-      else
-        m_current_steal_target = 0;
-    }
-
-    if(m_current_steal_target == m_pool_rank_rev)
-      return -1;
-    else
-      return m_current_steal_target;
-  }
-
-  inline long steal_work_index (int team_size = 0) {
-    long index = -1;
-    int steal_target = team_size>0?get_steal_target(team_size):get_steal_target();
-    while ( (steal_target != -1) && (index == -1)) {
-      index = m_pool[steal_target]->get_work_index_end();
-      if(index == -1)
-        steal_target = team_size>0?get_steal_target(team_size):get_steal_target();
-    }
-    return index;
-  }
-
-  // Get a work index. Claim from owned range until its exhausted, then steal from other thread
-  inline long get_work_index (int team_size = 0) {
-    long work_index = -1;
-    if(!m_stealing) work_index = get_work_index_begin();
-
-    if( work_index == -1) {
-      memory_fence();
-      m_stealing = true;
-      work_index = steal_work_index(team_size);
-    }
-    m_team_work_index = work_index;
-    memory_fence();
-    return work_index;
-  }
-
+  static void* m_scratch_ptr;
+  static int64_t m_scratch_size;
 };
 
 } // namespace Impl
@@ -313,6 +106,7 @@ public:
   int                   m_league_size ;
   int                   m_vector_length ;
   int                   m_vector_lane ;
+  void* 		m_glb_scratch ;
 
   /*
   // Fan-in team threads, root of the fan-in which does not block returns true
@@ -392,63 +186,37 @@ public:
   KOKKOS_INLINE_FUNCTION ValueType
     team_reduce( const ValueType & value
                , const JoinOp & op_in ) const {
-/*  #if ! defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-    { return ValueType(); }
-  #else
-    {
-      memory_fence();
+
+      #pragma omp barrier
+
       typedef ValueType value_type;
       const JoinLambdaAdapter<value_type,JoinOp> op(op_in);
-  #endif
-#else // KOKKOS_HAVE_CXX11
-  template< class JoinOp >
-  KOKKOS_INLINE_FUNCTION typename JoinOp::value_type
-    team_reduce( const typename JoinOp::value_type & value
-               , const JoinOp & op ) const
-  #if ! defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-    { return typename JoinOp::value_type(); }
-  #else
-    {
-      typedef typename JoinOp::value_type value_type;
-  #endif
-#endif // KOKKOS_HAVE_CXX11
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+      
       // Make sure there is enough scratch space:
       typedef typename if_c< sizeof(value_type) < TEAM_REDUCE_SIZE
                            , value_type , void >::type type ;
 
-      type * const local_value = ((type*) m_exec.scratch_thread());
-
-      // Set this thread's contribution
-      *local_value = value ;
-
-      // Fence to make sure the base team member has access:
-      memory_fence();
-
-      if ( team_fan_in() ) {
-        // The last thread to synchronize returns true, all other threads wait for team_fan_out()
-        type * const team_value  = ((type*) m_exec.pool_rev( m_team_base_rev )->scratch_thread());
-
-        // Join to the team value:
-        for ( int i = 1 ; i < m_team_size ; ++i ) {
-          op.join( *team_value , *((type*) m_exec.pool_rev( m_team_base_rev + i )->scratch_thread()) );
-        }
-        memory_fence();
-
-        // The base team member may "lap" the other team members,
-        // copy to their local value before proceeding.
-        for ( int i = 1 ; i < m_team_size ; ++i ) {
-          *((type*) m_exec.pool_rev( m_team_base_rev + i )->scratch_thread()) = *team_value ;
-        }
-
-        // Fence to make sure all team members have access
-        memory_fence();
+      const int n_values = TEAM_REDUCE_SIZE/sizeof(value_type);
+      type * team_scratch = (type*) ((char*)m_glb_scratch + TEAM_REDUCE_SIZE*omp_get_team_num()); 
+      for(int i = m_team_rank; i < n_values; i+= m_team_size) {
+        team_scratch[i] = value_type();
       }
 
-      team_fan_out();
+      #pragma omp barrier
 
-      return *((type volatile const *)local_value);*/
-      return ValueType();
+      for(int k=0; k<m_team_size; k+=n_values) {
+        if((k <= m_team_rank) && (k+n_values > m_team_rank))
+          team_scratch[m_team_rank%n_values]+=value;
+        #pragma omp barrier
+      }
+      
+      for(int d = 1; d<n_values;d*=2) {
+        if((m_team_rank+d<n_values) && (m_team_rank%(2*d)==0)) {
+          team_scratch[m_team_rank] += team_scratch[m_team_rank+d];
+        }
+        #pragma omp barrier
+      }
+      return team_scratch[0];
     }
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering
    *          with intra-team non-deterministic ordering accumulation.
@@ -524,7 +292,8 @@ private:
 public:
 
   inline
-  OpenMPTargetexecTeamMember( const int league_size, const int team_size, const int vector_length //const TeamPolicyInternal< OpenMPTarget, Properties ...> & team
+  OpenMPTargetexecTeamMember( const int league_rank, const int league_size, const int team_size, const int vector_length //const TeamPolicyInternal< OpenMPTarget, Properties ...> & team
+                      , void* const glb_scratch
                       , const int shmem_size_L1
                       , const int shmem_size_L2
                       )
@@ -533,11 +302,12 @@ public:
     , m_team_rank(0)
     , m_vector_length( vector_length )
     , m_team_size( team_size )
-    , m_league_rank( omp_get_team_num() )
+    , m_league_rank( league_rank )
     , m_league_size( league_size )
+    , m_glb_scratch( glb_scratch )
     {
       const int omp_tid = omp_get_thread_num();
-      m_league_rank = omp_get_team_num();
+      m_league_rank = league_rank;
       m_team_rank = omp_tid/m_vector_length;
       m_vector_lane = omp_tid%m_vector_length;
     }
@@ -732,7 +502,8 @@ namespace Kokkos {
 inline
 int OpenMPTarget::thread_pool_size( int depth )
 {
-  return Impl::OpenMPTargetexec::pool_size(depth);
+  //return Impl::OpenMPTargetexec::pool_size(depth);
+  return omp_get_max_threads();
 }
 
 KOKKOS_INLINE_FUNCTION

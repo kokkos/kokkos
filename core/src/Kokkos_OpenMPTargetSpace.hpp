@@ -50,6 +50,9 @@
 #include <typeinfo>
 
 #include <Kokkos_Core_fwd.hpp>
+
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+
 #include <Kokkos_HostSpace.hpp>
 #include <omp.h>
 /*--------------------------------------------------------------------------*/
@@ -256,6 +259,6 @@ struct VerifyExecutionCanAccessMemorySpace< Kokkos::HostSpace , Kokkos::OpenMPTa
 } // namespace Impl
 } // namespace Kokkos
 
-
-#endif /* #define KOKKOS_HOSTSPACE_HPP */
+#endif
+#endif /* #define KOKKOS_OPENMPTARGETSPACE_HPP */
 
