@@ -77,14 +77,7 @@ protected:
   {
     std::cout << std::setprecision(5) << std::scientific;
 
-    unsigned threads_count = 4 ;
-
-    if ( Kokkos::hwloc::available() ) {
-      threads_count = Kokkos::hwloc::get_available_numa_count() *
-                      Kokkos::hwloc::get_available_cores_per_numa();
-    }
-
-    Kokkos::OpenMP::initialize( threads_count );
+    Kokkos::OpenMP::initialize();
   }
 
   static void TearDownTestCase()

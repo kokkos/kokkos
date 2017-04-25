@@ -42,14 +42,13 @@
 */
 
 #include <Kokkos_Core.hpp>
-#include <impl/Kokkos_ThreadPrivate.hpp>
 
 namespace Kokkos {
 namespace Impl {
 
 namespace {
 
-KOKKOS_IMPL_HOST_THREADPRIVATE( int, t_tracking_enabled, 1 );
+__thread int t_tracking_enabled = 1;
 
 }
 

@@ -195,7 +195,12 @@ void check_correct_initialization( const Kokkos::InitArguments & argstruct ) {
     else {
 #ifdef KOKKOS_ENABLE_OPENMP
       if ( std::is_same< Kokkos::HostSpace::execution_space, Kokkos::OpenMP >::value ) {
-        expected_nthreads = omp_get_max_threads();
+        expected_nthreads = 0;
+        #pragma omp parallel
+        {
+          #pragma omp atomic
+          ++expected_nthreads;
+        }
       }
       else
 #endif

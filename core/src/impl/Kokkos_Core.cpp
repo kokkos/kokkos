@@ -687,6 +687,12 @@ void print_configuration( std::ostream & out , const bool detail )
 #else
   msg << "no" << std::endl;
 #endif
+  msg << "  KOKKOS_ENABLE_PROC_BIND: ";
+#ifdef KOKKOS_ENABLE_PROC_BIND
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
   msg << "  KOKKOS_ENABLE_PROFILING: ";
 #ifdef KOKKOS_ENABLE_PROFILING
   msg << "yes" << std::endl;

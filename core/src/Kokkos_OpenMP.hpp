@@ -47,10 +47,6 @@
 #include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_OPENMP)
 
-#if !defined(_OPENMP)
-#error "You enabled Kokkos OpenMP support without enabling OpenMP in the compiler!"
-#endif
-
 #include <Kokkos_Core_fwd.hpp>
 
 #include <cstddef>
@@ -81,17 +77,17 @@ public:
 
   //! Tag this class as a kokkos execution space
   using execution_space = OpenMP;
+
   #ifdef KOKKOS_ENABLE_HBWSPACE
   using memory_space = Experimental::HBWSpace;
   #else
   using memory_space = HostSpace;
   #endif
+
   //! This execution space preferred device_type
-  using device_type = Kokkos::Device<execution_space,memory_space>;
-
-  using array_layout = LayoutRight;
-  using size_type = memory_space::size_type;
-
+  using device_type          = Kokkos::Device< execution_space, memory_space >;
+  using array_layout         = LayoutRight;
+  using size_type            = memory_space::size_type;
   using scratch_memory_space = ScratchMemorySpace< OpenMP >;
 
   //@}
@@ -125,14 +121,43 @@ public:
    *  2) Allocate a HostThread for each OpenMP thread to hold its
    *     topology and fan in/out data.
    */
-  static void initialize( unsigned thread_count = 0 ,
-                          unsigned use_numa_count = 0 ,
-                          unsigned use_cores_per_numa = 0 );
+  static void initialize( int thread_count = 0 ,
+                          int use_numa_count = 0 ,
+                          int use_cores_per_numa = 0 );
 
-  static int is_initialized();
+  static bool is_initialized();
 
   /** \brief  Return the maximum amount of concurrency.  */
   static int concurrency();
+
+  // Require num_partitions * partition_size <= thread_pool_size(0)
+  // F is a functor of the form
+  //   void( int partition_id, int num_partitions )
+  template <typename F>
+  static void partition( F const& f
+                       , int num_partitions = 0
+                       , int partition_size = 0
+                       );
+
+
+  // my be used to coordinate work between partition instances
+  // SHOULD NOT be used within a parallel algorithm
+  //
+  // This lock should be used with with a scoped lock guard
+  // i.e. std::unique_lock<Lock>
+  // to ensure that lock and unlock occur from the same omp task
+  //
+  // cannot be copied or moved
+  // has the following functions available
+  //
+  // Lock()
+  // ~Lock()
+  //
+  // void lock()
+  // void unlock()
+  // bool try_lock()
+  //
+  class Lock;
 
   //@}
   //------------------------------------
@@ -150,10 +175,10 @@ public:
 
   //------------------------------------
 
-  inline static unsigned max_hardware_threads() { return thread_pool_size(0); }
+  inline static int max_hardware_threads();
 
   KOKKOS_INLINE_FUNCTION static
-  unsigned hardware_thread_id() { return thread_pool_rank(); }
+  int hardware_thread_id();
 };
 
 } // namespace Kokkos
