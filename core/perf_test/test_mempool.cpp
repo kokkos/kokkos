@@ -44,6 +44,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <limits>
 
 #include <Kokkos_Core.hpp>
 #include <impl/Kokkos_Timer.hpp>
@@ -57,7 +58,7 @@ struct TestFunctor {
 
   typedef Kokkos::View< uintptr_t * , ExecSpace >  ptrs_type ;
 
-  enum : unsigned { chunk = 64 };
+  enum : unsigned { chunk = 32 };
 
   MemoryPool  pool ;
   ptrs_type   ptrs ;
@@ -244,10 +245,10 @@ int main( int argc , char* argv[] )
        repeat_inner = atoi( a + strlen(repeat_inner_flag) );
   }
 
-  const int mean_chunk   = TestFunctor::chunk * ( 1 + ( chunk_span / 2 ) );
   int chunk_span_bytes = 0;
   for (int i = 0; i < chunk_span; ++i) {
     auto chunk_bytes = TestFunctor::chunk * ( 1 + i );
+    if (chunk_bytes < 64) chunk_bytes = 64;
     auto block_bytes_lg2 = Kokkos::Impl::integral_power_of_two_that_contains( chunk_bytes );
     auto block_bytes = (1 << block_bytes_lg2);
     chunk_span_bytes += block_bytes;
@@ -276,10 +277,20 @@ int main( int argc , char* argv[] )
               << " " << repeat_outer_flag << "##"
               << " " << repeat_inner_flag << "##"
               << std::endl ;
+    return 0;
   }
-  else {
 
-    Kokkos::initialize(argc,argv);
+  Kokkos::initialize(argc,argv);
+
+  double sum_fill_time = 0;
+  double sum_cycle_time = 0;
+  double sum_both_time = 0;
+  double min_fill_time = std::numeric_limits<double>::max();
+  double min_cycle_time = std::numeric_limits<double>::max();
+  double min_both_time = std::numeric_limits<double>::max();
+  //one alloc in fill, alloc/dealloc pair in repeat_inner
+  auto nops = number_alloc * ( 1 + 2 * repeat_inner );
+  for ( int i = 0 ; i < repeat_outer ; ++i ) {
 
     TestFunctor functor( total_alloc_size
                        , min_superblock_size
@@ -288,20 +299,31 @@ int main( int argc , char* argv[] )
                        , chunk_span
                        , repeat_inner );
 
-    if ( ! functor.test_fill() ) {
-      Kokkos::abort("  fill failed");
-    }
-
     Kokkos::Impl::Timer timer ;
 
-    for ( int i = 0 ; i < repeat_outer ; ++i ) {
-      error |= ! functor.test_alloc_dealloc();
+    if ( ! functor.test_fill() ) {
+      Kokkos::abort("fill ");
     }
 
-    time = timer.seconds();
+    auto t0 = timer.seconds();
 
-    Kokkos::finalize();
+    if ( ! functor.test_alloc_dealloc() ) {
+      Kokkos::abort("alloc/dealloc ");
+    }
+
+    auto t1 = timer.seconds();
+    auto this_fill_time = t0;
+    auto this_cycle_time = t1 - t0;
+    auto this_both_time = t1;
+    sum_fill_time += this_fill_time;
+    sum_cycle_time += this_cycle_time;
+    sum_both_time += this_both_time;
+    min_fill_time = std::min(min_fill_time, this_fill_time);
+    min_cycle_time = std::min(min_cycle_time, this_cycle_time);
+    min_both_time = std::min(min_both_time, this_both_time);
   }
+
+  Kokkos::finalize();
 
   printf( "\"mempool: alloc super stride level span inner outer number\" %ld %d %d %d %d %d %d %d\n"
         , total_alloc_size
@@ -313,14 +335,24 @@ int main( int argc , char* argv[] )
         , repeat_outer
         , number_alloc );
 
-  printf( "\"mempool: alloc/dealloc test time\" %.8f\n"
-        , time );
+  auto avg_fill_time = sum_fill_time / repeat_outer;
+  auto avg_cycle_time = sum_cycle_time / repeat_outer;
+  auto avg_both_time = sum_both_time / repeat_outer;
 
-  printf( "\"mempool: alloc/dealloc pairs per second\" %f\n"
-        , (number_alloc * repeat_inner) / time );
+  printf( "\"mempool: fill time (min, avg)\" %.8f %.8f\n"
+        , min_fill_time
+        , avg_fill_time );
 
-  if ( error ) { printf("  TEST FAILED\n"); }
+  printf( "\"mempool: alloc/realloc time (min, avg)\" %.8f %.8f\n"
+        , min_cycle_time
+        , avg_cycle_time );
 
-  return 0 ;
+  printf( "\"mempool: test time (min, avg)\" %.8f %.8f\n"
+        , min_both_time
+        , avg_both_time );
+
+  printf( "\"mempool: transactions per second (max, avg)\" %g %g\n"
+        , nops / min_both_time
+        , nops / avg_both_time );
 }
 
