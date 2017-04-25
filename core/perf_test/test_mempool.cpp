@@ -61,27 +61,27 @@ struct TestFunctor {
 
   MemoryPool  pool ;
   ptrs_type   ptrs ;
-  unsigned    stride_chunk ;
+  unsigned    chunk_span ;
   unsigned    fill_stride ;
   unsigned    range_iter ;
-  unsigned    repeat ;
+  unsigned    repeat_inner ;
 
   TestFunctor( size_t    total_alloc_size
              , unsigned  min_superblock_size
              , unsigned  number_alloc
              , unsigned  arg_stride_alloc
-             , unsigned  arg_stride_chunk
+             , unsigned  arg_chunk_span
              , unsigned  arg_repeat )
     : pool()
     , ptrs()
-    , stride_chunk(0)
+    , chunk_span(0)
     , fill_stride(0)
-    , repeat(0)
+    , repeat_inner(0)
     {
       MemorySpace m ;
 
       const unsigned min_block_size = chunk ;
-      const unsigned max_block_size = chunk * arg_stride_chunk ;
+      const unsigned max_block_size = chunk * arg_chunk_span ;
       pool = MemoryPool( m , total_alloc_size
                            , min_block_size
                            , max_block_size
@@ -89,9 +89,9 @@ struct TestFunctor {
 
       ptrs = ptrs_type( Kokkos::view_alloc( m , "ptrs") , number_alloc );
       fill_stride = arg_stride_alloc ;
-      stride_chunk = arg_stride_chunk ;
+      chunk_span = arg_chunk_span ;
       range_iter   = fill_stride * number_alloc ;
-      repeat       = arg_repeat ;
+      repeat_inner       = arg_repeat ;
     }
 
   //----------------------------------------
@@ -109,7 +109,7 @@ struct TestFunctor {
 
         const int j = i / fill_stride ;
 
-        const unsigned size_alloc = chunk * ( 1 + ( j % stride_chunk ) );
+        const unsigned size_alloc = chunk * ( 1 + ( j % chunk_span ) );
 
         ptrs(j) = (uintptr_t) pool.allocate(size_alloc);
 
@@ -139,7 +139,7 @@ struct TestFunctor {
 
         const int j = i / fill_stride ;
 
-        const unsigned size_alloc = chunk * ( 1 + ( j % stride_chunk ) );
+        const unsigned size_alloc = chunk * ( 1 + ( j % chunk_span ) );
 
         pool.deallocate( (void*) ptrs(j) , size_alloc );
       }
@@ -165,9 +165,9 @@ struct TestFunctor {
 
         if ( 0 == j % 3 ) {
 
-          for ( int k = 0 ; k < repeat ; ++k ) {
+          for ( int k = 0 ; k < repeat_inner ; ++k ) {
 
-            const unsigned size_alloc = chunk * ( 1 + ( j % stride_chunk ) );
+            const unsigned size_alloc = chunk * ( 1 + ( j % chunk_span ) );
 
             pool.deallocate( (void*) ptrs(j) , size_alloc );
         
@@ -243,8 +243,25 @@ int main( int argc , char* argv[] )
   }
 
   const int mean_chunk   = TestFunctor::chunk * ( 1 + ( chunk_span / 2 ) );
-  const int number_alloc = double(total_alloc_size) * double(fill_level) /
-                           ( double(mean_chunk) * double(100) );
+  int chunk_span_bytes = 0;
+  for (int i = 0; i < chunk_span; ++i) {
+    auto chunk_bytes = TestFunctor::chunk * ( 1 + i );
+    auto block_bytes_lg2 = Kokkos::Impl::integral_power_of_two_that_contains( chunk_bytes );
+    auto block_bytes = (1 << block_bytes_lg2);
+    chunk_span_bytes += block_bytes;
+  }
+  std::cerr << "chunk span bytes " << chunk_span_bytes << '\n';
+  auto actual_superblock_bytes_lg2 = Kokkos::Impl::integral_power_of_two_that_contains( min_superblock_size );
+  auto actual_superblock_bytes = (1 << actual_superblock_bytes_lg2);
+  std::cerr << "guessed superblock size " << actual_superblock_bytes << '\n';
+  auto superblock_mask = actual_superblock_bytes - 1;
+  auto nsuperblocks = (total_alloc_size + superblock_mask) >> actual_superblock_bytes_lg2;
+  std::cerr << "guessed superblock count " << nsuperblocks << '\n';
+  auto actual_total_bytes = nsuperblocks * actual_superblock_bytes;
+  auto bytes_wanted = (actual_total_bytes * fill_level) / 100;
+  auto chunk_spans = bytes_wanted / chunk_span_bytes;
+  auto number_alloc = int( chunk_spans * chunk_span );
+  std::cerr << "number_alloc " << number_alloc << '\n';
 
   double time = 0 ;
 
