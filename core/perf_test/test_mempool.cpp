@@ -252,18 +252,14 @@ int main( int argc , char* argv[] )
     auto block_bytes = (1 << block_bytes_lg2);
     chunk_span_bytes += block_bytes;
   }
-  std::cerr << "chunk span bytes " << chunk_span_bytes << '\n';
   auto actual_superblock_bytes_lg2 = Kokkos::Impl::integral_power_of_two_that_contains( min_superblock_size );
   auto actual_superblock_bytes = (1 << actual_superblock_bytes_lg2);
-  std::cerr << "guessed superblock size " << actual_superblock_bytes << '\n';
   auto superblock_mask = actual_superblock_bytes - 1;
   auto nsuperblocks = (total_alloc_size + superblock_mask) >> actual_superblock_bytes_lg2;
-  std::cerr << "guessed superblock count " << nsuperblocks << '\n';
   auto actual_total_bytes = nsuperblocks * actual_superblock_bytes;
   auto bytes_wanted = (actual_total_bytes * fill_level) / 100;
   auto chunk_spans = bytes_wanted / chunk_span_bytes;
   auto number_alloc = int( chunk_spans * chunk_span );
-  std::cerr << "number_alloc " << number_alloc << '\n';
 
   double time = 0 ;
 
