@@ -173,7 +173,7 @@ struct TestFunctor {
             const unsigned size_alloc = chunk * ( 1 + ( j % chunk_span ) );
 
             pool.deallocate( (void*) ptrs(j) , size_alloc );
-        
+
             ptrs(j) = (uintptr_t) pool.allocate(size_alloc);
 
             if ( 0 == ptrs(j) ) update++ ;
@@ -261,10 +261,6 @@ int main( int argc , char* argv[] )
   auto bytes_wanted = (actual_total_bytes * fill_level) / 100;
   auto chunk_spans = bytes_wanted / chunk_span_bytes;
   auto number_alloc = int( chunk_spans * chunk_span );
-
-  double time = 0 ;
-
-  int error = 0 ;
 
   if ( ask_help ) {
     std::cout << "command line options:"
