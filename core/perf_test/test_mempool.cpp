@@ -51,7 +51,7 @@
 using ExecSpace   = Kokkos::DefaultExecutionSpace ;
 using MemorySpace = Kokkos::DefaultExecutionSpace::memory_space ;
 
-using MemoryPool = Kokkos::Experimental::MemoryPool< ExecSpace > ;
+using MemoryPool = Kokkos::MemoryPool< ExecSpace > ;
 
 struct TestFunctor {
 
