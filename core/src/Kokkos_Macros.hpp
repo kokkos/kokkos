@@ -51,7 +51,7 @@
  *  KOKKOS_ENABLE_THREADS             Kokkos::Threads execution space
  *  KOKKOS_ENABLE_QTHREADS            Kokkos::Qthreads execution space
  *  KOKKOS_ENABLE_OPENMP              Kokkos::OpenMP execution space
- *  KOKKOS_ENABLE_OPENMPTARGET        Kokkos::OpenMPTarget execution space
+ *  KOKKOS_ENABLE_OPENMPTARGET        Kokkos::Experimental::OpenMPTarget execution space
  *  KOKKOS_ENABLE_HWLOC               HWLOC library is available.
  *  KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK  Insert array bounds checks, is expensive!
  *  KOKKOS_ENABLE_MPI                 Negotiate MPI/execution space interactions.

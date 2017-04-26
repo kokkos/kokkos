@@ -59,7 +59,7 @@ namespace Impl {
 template< class FunctorType , class ... Traits >
 class ParallelFor< FunctorType
                  , Kokkos::RangePolicy< Traits ... >
-                 , Kokkos::OpenMPTarget 
+                 , Kokkos::Experimental::OpenMPTarget 
                  >
 {
 private:
@@ -84,8 +84,8 @@ public:
   typename std::enable_if< std::is_same< TagType , void >::value >::type
   execute_impl() const
     {
-      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
       const typename Policy::member_type begin = m_policy.begin();
       const typename Policy::member_type end = m_policy.end();
       
@@ -100,8 +100,8 @@ public:
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   execute_impl() const
     {
-      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
       const typename Policy::member_type begin = m_policy.begin();
       const typename Policy::member_type end = m_policy.end();
 
@@ -142,8 +142,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
   typename std::enable_if< std::is_same< TagType , void >::value >::type
   execute_impl(const FunctorType& f, const PolicyType& p, PointerType result_ptr)
     {
-      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
       const typename PolicyType::member_type begin = p.begin();
       const typename PolicyType::member_type end = p.end();
       
@@ -161,8 +161,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   execute_impl(const FunctorType& f, const PolicyType& p, PointerType result_ptr)
     {
-      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
       const typename PolicyType::member_type begin = p.begin();
       const typename PolicyType::member_type end = p.end();
 
@@ -191,8 +191,8 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType, PointerTyp
   typename std::enable_if< std::is_same< TagType , void >::value >::type
   execute_impl(const FunctorType& f, const PolicyType& p, PointerType result_ptr)
     {
-      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
       const typename PolicyType::member_type begin = p.begin();
       const typename PolicyType::member_type end = p.end();
 
@@ -210,8 +210,8 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType, PointerTyp
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   execute_impl(const FunctorType& f, const PolicyType& p, PointerType result_ptr)
     {
-      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
       const typename PolicyType::member_type begin = p.begin();
       const typename PolicyType::member_type end = p.end();
 
@@ -235,7 +235,7 @@ template< class FunctorType , class ReducerType, class ... Traits >
 class ParallelReduce< FunctorType
                     , Kokkos::RangePolicy< Traits ...>
                     , ReducerType
-                    , Kokkos::OpenMPTarget
+                    , Kokkos::Experimental::OpenMPTarget
                     >
 {
 private:
@@ -289,7 +289,7 @@ public:
     {
       /*static_assert( std::is_same< typename ViewType::memory_space
                                       , Kokkos::HostSpace >::value
-        , "Reduction result on Kokkos::OpenMPTarget must be a Kokkos::View in HostSpace" );*/
+        , "Reduction result on Kokkos::Experimental::OpenMPTarget must be a Kokkos::View in HostSpace" );*/
     }
 
   inline
@@ -303,7 +303,7 @@ public:
     {
       /*static_assert( std::is_same< typename ViewType::memory_space
                                       , Kokkos::HostSpace >::value
-        , "Reduction result on Kokkos::OpenMPTarget must be a Kokkos::View in HostSpace" );*/
+        , "Reduction result on Kokkos::Experimental::OpenMPTarget must be a Kokkos::View in HostSpace" );*/
     }
 
 };
@@ -320,7 +320,7 @@ namespace Impl {
 template< class FunctorType , class ... Traits >
 class ParallelScan< FunctorType
                   , Kokkos::RangePolicy< Traits ... >
-                  , Kokkos::OpenMPTarget
+                  , Kokkos::Experimental::OpenMPTarget
                   >
 {
 private:
@@ -382,8 +382,8 @@ public:
   inline
   void execute() const
     {
-/*      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_scan");
-      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_scan");
+/*      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget parallel_scan");
+      OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_scan");
 
       OpenMPTargetExec::resize_scratch( 2 * ValueTraits::value_size( m_functor ) , 0 );
 
@@ -457,12 +457,12 @@ namespace Impl {
 template< class FunctorType , class ... Properties >
 class ParallelFor< FunctorType
                  , Kokkos::TeamPolicy< Properties ... >
-                 , Kokkos::OpenMPTarget
+                 , Kokkos::Experimental::OpenMPTarget
                  >
 {
 private:
 
-  typedef Kokkos::Impl::TeamPolicyInternal< Kokkos::OpenMPTarget, Properties ... > Policy ;
+  typedef Kokkos::Impl::TeamPolicyInternal< Kokkos::Experimental::OpenMPTarget, Properties ... > Policy ;
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::member_type  Member ;
 
@@ -473,8 +473,8 @@ private:
 public:
 
   inline void execute() const {
-    OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-    OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+    OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget parallel_for");
+    OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
     execute_impl<WorkTag>();
   }
 
@@ -484,8 +484,8 @@ private:
   typename std::enable_if< std::is_same< TagType , void >::value >::type
   execute_impl() const
     {
-      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
       const int league_size = m_policy.league_size();
       const int team_size = m_policy.team_size();
       const int vector_length = m_policy.vector_length();
@@ -508,8 +508,8 @@ private:
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   execute_impl() const
     {
-      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
       const int league_size = m_policy.league_size();
       const int team_size = m_policy.team_size();
       const int vector_length = m_policy.vector_length();
@@ -545,8 +545,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>, 
   typename std::enable_if< std::is_same< TagType , void >::value >::type
   execute_impl(const FunctorType& f, const PolicyType& p, PointerType result_ptr)
     {
-      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
       
       const int league_size = p.league_size();
       const int team_size = p.team_size();
@@ -574,8 +574,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>, 
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   execute_impl(const FunctorType& f, const PolicyType& p, PointerType result_ptr)
     {
-      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
 
       const int league_size = p.league_size();
       const int team_size = p.team_size();
@@ -608,12 +608,12 @@ template< class FunctorType , class ReducerType, class ... Properties >
 class ParallelReduce< FunctorType
                     , Kokkos::TeamPolicy< Properties ... >
                     , ReducerType
-                    , Kokkos::OpenMPTarget
+                    , Kokkos::Experimental::OpenMPTarget
                     >
 {
 private:
 
-  typedef Kokkos::Impl::TeamPolicyInternal< Kokkos::OpenMPTarget, Properties ... >         Policy ;
+  typedef Kokkos::Impl::TeamPolicyInternal< Kokkos::Experimental::OpenMPTarget, Properties ... >         Policy ;
 
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::member_type  Member ;
@@ -675,7 +675,7 @@ public:
   {
   /*static_assert( std::is_same< typename ViewType::memory_space
                           , Kokkos::HostSpace >::value
-  , "Reduction result on Kokkos::OpenMPTarget must be a Kokkos::View in HostSpace" );*/
+  , "Reduction result on Kokkos::Experimental::OpenMPTarget must be a Kokkos::View in HostSpace" );*/
   }
 
 };

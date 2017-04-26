@@ -64,7 +64,7 @@
 
 
 namespace Kokkos {
-
+namespace Experimental {
 /* Default allocation mechanism */
 OpenMPTargetSpace::OpenMPTargetSpace()
 {}
@@ -90,7 +90,7 @@ void OpenMPTargetSpace::deallocate( void * const arg_alloc_ptr , const size_t ar
 
   }
 }
-
+} // namespace Experimental
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
@@ -100,9 +100,9 @@ namespace Kokkos {
 namespace Impl {
 
 SharedAllocationRecord< void , void >
-SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >::s_root_record ;
+SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void >::s_root_record ;
 
-SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >::
+SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void >::
 ~SharedAllocationRecord()
 {
   m_space.deallocate( SharedAllocationRecord< void , void >::m_alloc_ptr
@@ -112,27 +112,27 @@ SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >::
 
 //TODO: Implement deep copy back see CudaSpace 
 std::string
-SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >::get_label() const {
+SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void >::get_label() const {
   return std::string("OpenMPTargetAllocation");
 }
 
-SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >* 
-SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >::
-allocate( const Kokkos::OpenMPTargetSpace & arg_space,
+SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void >* 
+SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void >::
+allocate( const Kokkos::Experimental::OpenMPTargetSpace & arg_space,
           const std::string               & arg_label ,
           const size_t                      arg_alloc_size) {
-  return new SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >(arg_space,arg_label,arg_alloc_size);
+  return new SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void >(arg_space,arg_label,arg_alloc_size);
 }
 
 void
-SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >::
+SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void >::
 deallocate( SharedAllocationRecord<void, void> * arg_rec )
 {
   delete static_cast<SharedAllocationRecord*>(arg_rec);
 }
 
-SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >::
-SharedAllocationRecord( const Kokkos::OpenMPTargetSpace & arg_space
+SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void >::
+SharedAllocationRecord( const Kokkos::Experimental::OpenMPTargetSpace & arg_space
                       , const std::string       & arg_label
                       , const size_t              arg_alloc_size
                       , const SharedAllocationRecord< void , void >::function_type arg_dealloc
@@ -140,7 +140,7 @@ SharedAllocationRecord( const Kokkos::OpenMPTargetSpace & arg_space
   // Pass through allocated [ SharedAllocationHeader , user_memory ]
   // Pass through deallocation function
   : SharedAllocationRecord< void , void >
-      ( & SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >::s_root_record
+      ( & SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void >::s_root_record
       , reinterpret_cast<SharedAllocationHeader*>( arg_space.allocate( sizeof(SharedAllocationHeader) + arg_alloc_size ) )
       , sizeof(SharedAllocationHeader) + arg_alloc_size
       , arg_dealloc
@@ -163,8 +163,8 @@ SharedAllocationRecord( const Kokkos::OpenMPTargetSpace & arg_space
 
 //----------------------------------------------------------------------------
 
-void * SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >::
-allocate_tracked( const Kokkos::OpenMPTargetSpace & arg_space
+void * SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void >::
+allocate_tracked( const Kokkos::Experimental::OpenMPTargetSpace & arg_space
                 , const std::string & arg_alloc_label 
                 , const size_t arg_alloc_size )
 {
@@ -178,7 +178,7 @@ allocate_tracked( const Kokkos::OpenMPTargetSpace & arg_space
   return r->data();
 }
 
-void SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >::
+void SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void >::
 deallocate_tracked( void * const arg_alloc_ptr )
 {
   if ( arg_alloc_ptr != 0 ) {
@@ -188,7 +188,7 @@ deallocate_tracked( void * const arg_alloc_ptr )
   }
 }
 
-void * SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >::
+void * SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void >::
 reallocate_tracked( void * const arg_alloc_ptr
                   , const size_t arg_alloc_size )
 {
@@ -204,25 +204,25 @@ reallocate_tracked( void * const arg_alloc_ptr
   return r_new->data();
 }
 
-SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void > *
-SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >::get_record( void * alloc_ptr )
+SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void > *
+SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void >::get_record( void * alloc_ptr )
 {
   typedef SharedAllocationHeader  Header ;
-  typedef SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >  RecordHost ;
+  typedef SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void >  RecordHost ;
 
   SharedAllocationHeader const * const head   = alloc_ptr ? Header::get_header( alloc_ptr ) : (SharedAllocationHeader *)0 ;
   RecordHost                   * const record = head ? static_cast< RecordHost * >( head->m_record ) : (RecordHost *) 0 ;
 
   if ( ! alloc_ptr || record->m_alloc_ptr != head ) {
-    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >::get_record ERROR" ) );
+    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void >::get_record ERROR" ) );
   }
 
   return record ;
 }
 
 // Iterate records to print orphaned memory ...
-void SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >::
-print_records( std::ostream & s , const Kokkos::OpenMPTargetSpace & space , bool detail )
+void SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void >::
+print_records( std::ostream & s , const Kokkos::Experimental::OpenMPTargetSpace & space , bool detail )
 {
   SharedAllocationRecord< void , void >::print_host_accessible_records( s , "OpenMPTargetSpace" , & s_root_record , detail );
 }
@@ -240,7 +240,7 @@ template< class >
 struct ViewOperatorBoundsErrorAbort ;
 
 template<>
-struct ViewOperatorBoundsErrorAbort< Kokkos::OpenMPTargetSpace > {
+struct ViewOperatorBoundsErrorAbort< Kokkos::Experimental::OpenMPTargetSpace > {
  static void apply( const size_t rank
                   , const size_t n0 , const size_t n1
                   , const size_t n2 , const size_t n3
@@ -252,7 +252,7 @@ struct ViewOperatorBoundsErrorAbort< Kokkos::OpenMPTargetSpace > {
                   , const size_t i6 , const size_t i7 );
 };
 
-void ViewOperatorBoundsErrorAbort< Kokkos::OpenMPTargetSpace >::
+void ViewOperatorBoundsErrorAbort< Kokkos::Experimental::OpenMPTargetSpace >::
 apply( const size_t rank
      , const size_t n0 , const size_t n1
      , const size_t n2 , const size_t n3

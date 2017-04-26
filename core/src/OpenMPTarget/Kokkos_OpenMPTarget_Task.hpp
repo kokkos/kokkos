@@ -53,11 +53,11 @@ namespace Kokkos {
 namespace Impl {
 
 template<>
-class TaskQueueSpecialization< Kokkos::OpenMPTarget >
+class TaskQueueSpecialization< Kokkos::Experimental::OpenMPTarget >
 {
 public:
 
-  using execution_space = Kokkos::OpenMPTarget ;
+  using execution_space = Kokkos::Experimental::OpenMPTarget ;
   using queue_type      = Kokkos::Impl::TaskQueue< execution_space > ;
   using task_base_type  = Kokkos::Impl::TaskBase< execution_space , void , void > ;
 
@@ -76,7 +76,7 @@ public:
   static
   void proc_set_apply( task_base_type::function_type * ptr )
     {
-      using TaskType = TaskBase< Kokkos::OpenMPTarget
+      using TaskType = TaskBase< Kokkos::Experimental::OpenMPTarget
                                , typename FunctorType::value_type
                                , FunctorType
                                > ;
@@ -84,12 +84,12 @@ public:
     }
 };
 
-extern template class TaskQueue< Kokkos::OpenMPTarget > ;
+extern template class TaskQueue< Kokkos::Experimental::OpenMPTarget > ;
 
 //----------------------------------------------------------------------------
 
 template<>
-class TaskExec< Kokkos::OpenMPTarget >
+class TaskExec< Kokkos::Experimental::OpenMPTarget >
 {
 private:
 
@@ -101,8 +101,8 @@ private:
 
   using PoolExec = Kokkos::Impl::OpenMPTargetExec ;
 
-  friend class Kokkos::Impl::TaskQueue< Kokkos::OpenMPTarget > ;
-  friend class Kokkos::Impl::TaskQueueSpecialization< Kokkos::OpenMPTarget > ;
+  friend class Kokkos::Impl::TaskQueue< Kokkos::Experimental::OpenMPTarget > ;
+  friend class Kokkos::Impl::TaskQueueSpecialization< Kokkos::Experimental::OpenMPTarget > ;
 
   PoolExec * const m_self_exec ;  ///< This thread's thread pool data structure 
   PoolExec * const m_team_exec ;  ///< Team thread's thread pool data structure
@@ -154,23 +154,23 @@ namespace Kokkos {
 
 template<typename iType>
 KOKKOS_INLINE_FUNCTION
-Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMPTarget > >
+Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Experimental::OpenMPTarget > >
 TeamThreadRange
-  ( Impl::TaskExec< Kokkos::OpenMPTarget > & thread
+  ( Impl::TaskExec< Kokkos::Experimental::OpenMPTarget > & thread
   , const iType & count )
 {
-  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMPTarget > >(thread,count);
+  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Experimental::OpenMPTarget > >(thread,count);
 }
 
 template<typename iType>
 KOKKOS_INLINE_FUNCTION
-Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::OpenMPTarget > >
+Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Experimental::OpenMPTarget > >
 TeamThreadRange
-  ( Impl:: TaskExec< Kokkos::OpenMPTarget > & thread
+  ( Impl:: TaskExec< Kokkos::Experimental::OpenMPTarget > & thread
   , const iType & start
   , const iType & end )
 {
-  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::OpenMPTarget > >(thread,start,end);
+  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Experimental::OpenMPTarget > >(thread,start,end);
 }
 
 /** \brief  Inter-thread parallel_for. Executes lambda(iType i) for each i=0..N-1.
@@ -181,7 +181,7 @@ TeamThreadRange
 template<typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION
 void parallel_for
-  ( const Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::OpenMPTarget > >& loop_boundaries
+  ( const Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Experimental::OpenMPTarget > >& loop_boundaries
   , const Lambda& lambda
   )
 {
@@ -193,7 +193,7 @@ void parallel_for
 template<typename iType, class Lambda, typename ValueType>
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
-  ( const Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::OpenMPTarget > >& loop_boundaries
+  ( const Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Experimental::OpenMPTarget > >& loop_boundaries
   , const Lambda& lambda
   , ValueType& initialized_result)
 {
@@ -233,7 +233,7 @@ void parallel_reduce
 template< typename iType, class Lambda, typename ValueType, class JoinType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
-  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMPTarget > >& loop_boundaries,
+  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Experimental::OpenMPTarget > >& loop_boundaries,
    const Lambda & lambda,
    const JoinType & join,
    ValueType& initialized_result)
@@ -274,7 +274,7 @@ void parallel_reduce
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
-  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMPTarget > >& loop_boundaries,
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Experimental::OpenMPTarget > >& loop_boundaries,
    const Lambda & lambda,
    ValueType& initialized_result)
 {
@@ -284,7 +284,7 @@ void parallel_reduce
 template< typename iType, class Lambda, typename ValueType, class JoinType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
-  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMPTarget > >& loop_boundaries,
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Experimental::OpenMPTarget > >& loop_boundaries,
    const Lambda & lambda,
    const JoinType & join,
    ValueType& initialized_result)
@@ -294,7 +294,7 @@ void parallel_reduce
 template< typename ValueType, typename iType, class Lambda >
 KOKKOS_INLINE_FUNCTION
 void parallel_scan
-  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMPTarget > >& loop_boundaries,
+  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Experimental::OpenMPTarget > >& loop_boundaries,
    const Lambda & lambda)
 {
   ValueType accum = 0 ;
@@ -340,7 +340,7 @@ void parallel_scan
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
 void parallel_scan
-  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::OpenMPTarget > >& loop_boundaries,
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Experimental::OpenMPTarget > >& loop_boundaries,
    const Lambda & lambda)
 {
 }

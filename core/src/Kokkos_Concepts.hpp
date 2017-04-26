@@ -202,7 +202,7 @@ public:
 #else
   #if defined( KOKKOS_ENABLE_OPENMPTARGET )
     typedef typename std::conditional
-      < std::is_same< execution_space , Kokkos::OpenMPTarget >::value
+      < std::is_same< execution_space , Kokkos::Experimental::OpenMPTarget >::value
       , Kokkos::DefaultHostExecutionSpace , execution_space
       >::type  host_execution_space ;
   #else

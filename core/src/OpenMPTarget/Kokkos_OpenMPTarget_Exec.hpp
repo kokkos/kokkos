@@ -95,7 +95,7 @@ public:
   /** \brief  Thread states for team synchronization */
   enum { Active = 0 , Rendezvous = 1 };
 
-  typedef Kokkos::OpenMPTarget                         execution_space ;
+  typedef Kokkos::Experimental::OpenMPTarget                         execution_space ;
   typedef execution_space::scratch_memory_space  scratch_memory_space ;
 
   scratch_memory_space  m_team_shared ;
@@ -318,7 +318,7 @@ public:
 
 
 template< class ... Properties >
-class TeamPolicyInternal< Kokkos::OpenMPTarget, Properties ... >: public PolicyTraits<Properties ...>
+class TeamPolicyInternal< Kokkos::Experimental::OpenMPTarget, Properties ... >: public PolicyTraits<Properties ...>
 {
 public:
 
@@ -498,6 +498,7 @@ public:
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+namespace Experimental {
 
 inline
 int OpenMPTarget::thread_pool_size( int depth )
@@ -512,6 +513,7 @@ int OpenMPTarget::thread_pool_rank()
   return omp_get_thread_num();
 }
 
+} // namespace Experimental
 } // namespace Kokkos
 
 

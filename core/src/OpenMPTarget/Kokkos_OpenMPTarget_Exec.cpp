@@ -80,7 +80,12 @@ bool s_using_hwloc = false;
 
 
 namespace Kokkos {
+namespace Experimental {
 bool OpenMPTarget::m_is_initialized = false;
+}
+}
+
+namespace Kokkos {
 namespace Impl {
 
 
@@ -101,13 +106,13 @@ void OpenMPTargetExec::verify_is_process( const char * const label )
 
 void OpenMPTargetExec::verify_initialized( const char * const label )
 {
-  if ( 0 == OpenMPTarget::is_initialized() ) {
+  if ( 0 == Kokkos::Experimental::OpenMPTarget::is_initialized() ) {
     std::string msg( label );
     msg.append( " ERROR: not initialized" );
     Kokkos::Impl::throw_runtime_exception( msg );
   }
 
-  if ( omp_get_max_threads() != Kokkos::OpenMPTarget::thread_pool_size(0) ) {
+  if ( omp_get_max_threads() != Kokkos::Experimental::OpenMPTarget::thread_pool_size(0) ) {
     std::string msg( label );
     msg.append( " ERROR: Initialized but threads modified inappropriately" );
     Kokkos::Impl::throw_runtime_exception( msg );
@@ -120,7 +125,7 @@ int64_t OpenMPTargetExec::m_scratch_size = 0;
 
 void OpenMPTargetExec::clear_scratch()
 {
-  OpenMPTargetSpace space;
+  Kokkos::Experimental::OpenMPTargetSpace space;
   space.deallocate(m_scratch_ptr,m_scratch_size);
   m_scratch_ptr = NULL;
   m_scratch_size = NULL;
@@ -132,7 +137,7 @@ void OpenMPTargetExec::resize_scratch( int64_t reduce_bytes ,
                                        int64_t team_reduce_bytes, 
                                        int64_t team_shared_bytes, int64_t thread_local_bytes) 
 {
-  OpenMPTargetSpace space;
+  Kokkos::Experimental::OpenMPTargetSpace space;
   uint64_t total_size = MAX_ACTIVE_TEAMS * reduce_bytes +            // Inter Team Reduction  
                         MAX_ACTIVE_TEAMS * team_reduce_bytes  +    // Intra Team Reduction
                         MAX_ACTIVE_TEAMS * team_shared_bytes +       // Team Local Scratch
@@ -152,7 +157,7 @@ void OpenMPTargetExec::resize_scratch( int64_t reduce_bytes ,
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-
+namespace Experimental {
 //----------------------------------------------------------------------------
 
 int OpenMPTarget::is_initialized()
@@ -167,7 +172,7 @@ void OpenMPTarget::initialize( unsigned thread_count ,
 
 
   // Init the array for used for arbitrarily sized atomics
-  Impl::init_lock_array_host_space();
+  Kokkos::Impl::init_lock_array_host_space();
 
   #ifdef KOKKOS_ENABLE_PROFILING
     Kokkos::Profiling::initialize();
@@ -179,14 +184,14 @@ void OpenMPTarget::initialize( unsigned thread_count ,
 
 void OpenMPTarget::finalize()
 {
-  Impl::OpenMPTargetExec::verify_initialized( "OpenMPTarget::finalize" );
-  Impl::OpenMPTargetExec::verify_is_process( "OpenMPTarget::finalize" );
+  Kokkos::Impl::OpenMPTargetExec::verify_initialized( "OpenMPTarget::finalize" );
+  Kokkos::Impl::OpenMPTargetExec::verify_is_process( "OpenMPTarget::finalize" );
 
   m_is_initialized = false;
 
   omp_set_num_threads(1);
 
-  if ( Impl::s_using_hwloc && Kokkos::hwloc::can_bind_threads() ) {
+  if ( Kokkos::Impl::s_using_hwloc && Kokkos::hwloc::can_bind_threads() ) {
     hwloc::unbind_this_thread();
   }
 
@@ -199,9 +204,9 @@ void OpenMPTarget::finalize()
 
 void OpenMPTarget::print_configuration( std::ostream & s , const bool detail )
 {
-  Impl::OpenMPTargetExec::verify_is_process( "OpenMPTarget::print_configuration" );
+  Kokkos::Impl::OpenMPTargetExec::verify_is_process( "OpenMPTarget::print_configuration" );
 /*
-  s << "Kokkos::OpenMPTarget" ;
+  s << "Kokkos::Experimental::OpenMPTarget" ;
 
 #if defined( KOKKOS_ENABLE_OPENMPTARGET )
   s << " KOKKOS_ENABLE_OPENMPTARGET" ;
@@ -260,7 +265,7 @@ void OpenMPTarget::print_configuration( std::ostream & s , const bool detail )
 int OpenMPTarget::concurrency() {
   return thread_pool_size(0);
 }
-
+} // namespace Experimental
 } // namespace Kokkos
 
 #endif //KOKKOS_ENABLE_OPENMPTARGET

@@ -87,6 +87,7 @@ namespace Impl {
 } // namespace Kokkos
 
 namespace Kokkos {
+namespace Experimental {
 
 /// \class OpenMPTargetSpace
 /// \brief Memory management for host memory.
@@ -106,7 +107,7 @@ public:
   /// Every memory space has a default execution space.  This is
   /// useful for things like initializing a View (which happens in
   /// parallel using the View's default execution space).
-  typedef Kokkos::OpenMPTarget   execution_space ;
+  typedef Kokkos::Experimental::OpenMPTarget   execution_space ;
 
   //! This memory space preferred device_type
   typedef Kokkos::Device<execution_space,memory_space> device_type;
@@ -130,9 +131,9 @@ public:
 
 private:
 
-  friend class Kokkos::Impl::SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void > ;
+  friend class Kokkos::Impl::SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void > ;
 };
-
+} // namespace Experimental
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
@@ -142,12 +143,12 @@ namespace Kokkos {
 namespace Impl {
 
 template<>
-class SharedAllocationRecord< Kokkos::OpenMPTargetSpace , void >
+class SharedAllocationRecord< Kokkos::Experimental::OpenMPTargetSpace , void >
   : public SharedAllocationRecord< void , void >
 {
 private:
 
-  friend Kokkos::OpenMPTargetSpace ;
+  friend Kokkos::Experimental::OpenMPTargetSpace ;
 
   typedef SharedAllocationRecord< void , void >  RecordBase ;
 
@@ -159,14 +160,14 @@ private:
   /**\brief  Root record for tracked allocations from this OpenMPTargetSpace instance */
   static RecordBase s_root_record ;
 
-  const Kokkos::OpenMPTargetSpace m_space ;
+  const Kokkos::Experimental::OpenMPTargetSpace m_space ;
 
 protected:
 
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default ;
 
-  SharedAllocationRecord( const Kokkos::OpenMPTargetSpace        & arg_space
+  SharedAllocationRecord( const Kokkos::Experimental::OpenMPTargetSpace        & arg_space
                         , const std::string              & arg_label
                         , const size_t                     arg_alloc_size
                         , const RecordBase::function_type  arg_dealloc = & deallocate
@@ -177,14 +178,14 @@ public:
   std::string get_label() const;
 
   KOKKOS_INLINE_FUNCTION static
-  SharedAllocationRecord * allocate( const Kokkos::OpenMPTargetSpace &  arg_space
+  SharedAllocationRecord * allocate( const Kokkos::Experimental::OpenMPTargetSpace &  arg_space
                                    , const std::string       &  arg_label
                                    , const size_t               arg_alloc_size
                                    );
 
   /**\brief  Allocate tracked memory in the space */
   static
-  void * allocate_tracked( const Kokkos::OpenMPTargetSpace & arg_space
+  void * allocate_tracked( const Kokkos::Experimental::OpenMPTargetSpace & arg_space
                          , const std::string & arg_label
                          , const size_t arg_alloc_size );
 
@@ -200,7 +201,7 @@ public:
 
   static SharedAllocationRecord * get_record( void * arg_alloc_ptr );
 
-  static void print_records( std::ostream & , const Kokkos::OpenMPTargetSpace & , bool detail = false );
+  static void print_records( std::ostream & , const Kokkos::Experimental::OpenMPTargetSpace & , bool detail = false );
 };
 
 } // namespace Impl
@@ -214,7 +215,7 @@ namespace Impl {
 
 //TODO: implement all possible deep_copies
 template<class ExecutionSpace>
-struct DeepCopy<OpenMPTargetSpace,OpenMPTargetSpace,ExecutionSpace> {
+struct DeepCopy<Kokkos::Experimental::OpenMPTargetSpace,Kokkos::Experimental::OpenMPTargetSpace,ExecutionSpace> {
   DeepCopy( void * dst , const void * src , size_t n ) {
     omp_target_memcpy( dst , const_cast<void*> (src) , n, 0, 0, omp_get_default_device(), omp_get_default_device());
   }
@@ -226,7 +227,7 @@ struct DeepCopy<OpenMPTargetSpace,OpenMPTargetSpace,ExecutionSpace> {
 
 
 template<class ExecutionSpace>
-struct DeepCopy<OpenMPTargetSpace,HostSpace,ExecutionSpace> {
+struct DeepCopy<Kokkos::Experimental::OpenMPTargetSpace,HostSpace,ExecutionSpace> {
   DeepCopy( void * dst , const void * src , size_t n ) {
     omp_target_memcpy( dst , const_cast<void*> (src) , n, 0, 0, omp_get_default_device(), omp_get_initial_device());
   }
@@ -237,7 +238,7 @@ struct DeepCopy<OpenMPTargetSpace,HostSpace,ExecutionSpace> {
 };
 
 template<class ExecutionSpace>
-struct DeepCopy<HostSpace,OpenMPTargetSpace,ExecutionSpace> {
+struct DeepCopy<HostSpace,Kokkos::Experimental::OpenMPTargetSpace,ExecutionSpace> {
   DeepCopy( void * dst , const void * src , size_t n ) {
     omp_target_memcpy( dst , const_cast<void*> (src) , n, 0, 0, omp_get_initial_device(), omp_get_default_device());
   }
@@ -249,7 +250,7 @@ struct DeepCopy<HostSpace,OpenMPTargetSpace,ExecutionSpace> {
 
 
 template<>
-struct VerifyExecutionCanAccessMemorySpace< Kokkos::HostSpace , Kokkos::OpenMPTargetSpace >
+struct VerifyExecutionCanAccessMemorySpace< Kokkos::HostSpace , Kokkos::Experimental::OpenMPTargetSpace >
 {
   enum { value = false };
   inline static void verify( void ) { }

@@ -47,8 +47,8 @@ namespace Test {
 
 TEST_F( openmptarget, impl_view_mapping_a )
 {
-  test_view_mapping< Kokkos::OpenMPTarget >();
-  test_view_mapping_operator< Kokkos::OpenMPTarget >();
+  test_view_mapping< Kokkos::Experimental::OpenMPTarget >();
+  test_view_mapping_operator< Kokkos::Experimental::OpenMPTarget >();
 }
 
 } // namespace Test

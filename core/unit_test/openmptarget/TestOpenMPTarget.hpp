@@ -85,14 +85,14 @@ class openmptarget : public ::testing::Test {
 protected:
   static void SetUpTestCase()
   {
-    Kokkos::OpenMPTarget::initialize( );
+    Kokkos::Experimental::OpenMPTarget::initialize( );
     Kokkos::print_configuration( std::cout, true );
     srand( 10231 );
   }
 
   static void TearDownTestCase()
   {
-    Kokkos::OpenMPTarget::finalize();
+    Kokkos::Experimental::OpenMPTarget::finalize();
   }
 };
 

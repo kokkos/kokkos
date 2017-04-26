@@ -53,11 +53,11 @@
 namespace Kokkos {
 namespace Impl {
 
-template class TaskQueue< Kokkos::OpenMPTarget > ;
+template class TaskQueue< Kokkos::Experimental::OpenMPTarget > ;
 
 //----------------------------------------------------------------------------
 
-TaskExec< Kokkos::OpenMPTarget >::
+TaskExec< Kokkos::Experimental::OpenMPTarget >::
 TaskExec()
   : m_self_exec( 0 )
   , m_team_exec( 0 )
@@ -70,7 +70,7 @@ TaskExec()
 {
 }
 
-TaskExec< Kokkos::OpenMPTarget >::
+TaskExec< Kokkos::Experimental::OpenMPTarget >::
 TaskExec( Kokkos::Impl::OpenMPTargetExec & arg_exec , int const arg_team_size )
   : m_self_exec( & arg_exec )
   , m_team_exec( arg_exec.pool_rev(arg_exec.pool_rank_rev() / arg_team_size) )
@@ -100,7 +100,7 @@ TaskExec( Kokkos::Impl::OpenMPTargetExec & arg_exec , int const arg_team_size )
 
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
 
-void TaskExec< Kokkos::OpenMPTarget >::team_barrier_impl() const
+void TaskExec< Kokkos::Experimental::OpenMPTarget >::team_barrier_impl() const
 {
   if ( m_team_exec->scratch_reduce_size() < int(2 * sizeof(int64_t)) ) {
     Kokkos::abort("TaskQueue<OpenMPTarget> scratch_reduce memory too small");
@@ -157,10 +157,10 @@ fflush(stdout);
 
 //----------------------------------------------------------------------------
 
-void TaskQueueSpecialization< Kokkos::OpenMPTarget >::execute
-  ( TaskQueue< Kokkos::OpenMPTarget > * const queue )
+void TaskQueueSpecialization< Kokkos::Experimental::OpenMPTarget >::execute
+  ( TaskQueue< Kokkos::Experimental::OpenMPTarget > * const queue )
 {
-  using execution_space = Kokkos::OpenMPTarget ;
+  using execution_space = Kokkos::Experimental::OpenMPTarget ;
   using queue_type      = TaskQueue< execution_space > ;
   using task_root_type  = TaskBase< execution_space , void , void > ;
   using PoolExec        = Kokkos::Impl::OpenMPTargetExec ;
@@ -282,11 +282,11 @@ fflush(stdout);
 
 }
 
-void TaskQueueSpecialization< Kokkos::OpenMPTarget >::
+void TaskQueueSpecialization< Kokkos::Experimental::OpenMPTarget >::
   iff_single_thread_recursive_execute
-    ( TaskQueue< Kokkos::OpenMPTarget > * const queue )
+    ( TaskQueue< Kokkos::Experimental::OpenMPTarget > * const queue )
 {
-  using execution_space = Kokkos::OpenMPTarget ;
+  using execution_space = Kokkos::Experimental::OpenMPTarget ;
   using queue_type      = TaskQueue< execution_space > ;
   using task_root_type  = TaskBase< execution_space , void , void > ;
   using Member          = TaskExec< execution_space > ;

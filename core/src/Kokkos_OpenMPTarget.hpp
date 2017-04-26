@@ -63,7 +63,7 @@
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
-
+namespace Experimental {
 /// \class OpenMPTarget
 /// \brief Kokkos device for multicore processors in the host memory space.
 class OpenMPTarget {
@@ -146,7 +146,7 @@ public:
 private:
   static bool m_is_initialized;
 };
-
+} // namespace Experimental
 } // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
@@ -157,8 +157,8 @@ namespace Impl {
 
 template<>
 struct VerifyExecutionCanAccessMemorySpace
-  < Kokkos::OpenMPTarget::memory_space
-  , Kokkos::OpenMPTarget::scratch_memory_space
+  < Kokkos::Experimental::OpenMPTarget::memory_space
+  , Kokkos::Experimental::OpenMPTarget::scratch_memory_space
   >
 {
   enum { value = true };
