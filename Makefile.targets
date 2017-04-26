@@ -53,8 +53,8 @@ Kokkos_Qthreads_Task.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/Qthreads/K
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
-Kokkos_OpenMPexec.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/OpenMP/Kokkos_OpenMPexec.cpp
-	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/OpenMP/Kokkos_OpenMPexec.cpp
+Kokkos_OpenMP_Exec.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/OpenMP/Kokkos_OpenMP_Exec.cpp
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/OpenMP/Kokkos_OpenMP_Exec.cpp
 Kokkos_OpenMP_Task.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/OpenMP/Kokkos_OpenMP_Task.cpp
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/OpenMP/Kokkos_OpenMP_Task.cpp
 endif

@@ -90,9 +90,9 @@ do
       if [ ${CNUM} -eq 0 ]; then
         echo "Invalid compiler by --compiler command: '${COMPILER}'"
         exit
-      fi 
+      fi
       ;;
-      --with-options*)
+    --with-options*)
       KOKKOS_OPT="${key#*=}"
       ;;
     --help)
@@ -169,7 +169,7 @@ fi
 
 if [ "${KOKKOS_PATH}"  = "${PWD}" ] || [ "${KOKKOS_PATH}"  = "${PWD}/" ]; then
   echo "Running generate_makefile.sh in the Kokkos root directory is not allowed"
-  exit 
+  exit
 fi
 
 KOKKOS_SRC_PATH=${KOKKOS_PATH}
@@ -236,7 +236,6 @@ if [ ${#PREFIX} -gt 0 ]; then
 else
   KOKKOS_INSTALL_PATH=${KOKKOS_TEST_INSTALL_PATH}
 fi
-
 
 mkdir install
 echo "#Makefile to satisfy existens of target kokkos-clean before installing the library" > install/Makefile.kokkos
@@ -364,7 +363,6 @@ echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/tutorial/Makefile 
 echo "" >> example/tutorial/Makefile
 echo "clean:" >> example/tutorial/Makefile
 echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_SETTINGS='${KOKKOS_SETTINGS}' KOKKOS_PATH=${KOKKOS_PATH} clean" >> example/tutorial/Makefile
-
 
 if [ ${#KOKKOS_ENABLE_EXAMPLE_ICHOL} -gt 0 ]; then
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > example/ichol/Makefile

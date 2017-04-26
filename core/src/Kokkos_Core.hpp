@@ -66,7 +66,7 @@
 #include <Kokkos_Qthreads.hpp>
 #endif
 
-#if defined( KOKKOS_ENABLE_PTHREAD )
+#if defined( KOKKOS_ENABLE_THREADS )
 #include <Kokkos_Threads.hpp>
 #endif
 
@@ -172,3 +172,4 @@ void * kokkos_realloc( void * arg_alloc , const size_t arg_alloc_size )
 //----------------------------------------------------------------------------
 
 #endif
+

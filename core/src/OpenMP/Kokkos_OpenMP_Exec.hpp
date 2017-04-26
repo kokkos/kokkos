@@ -44,6 +44,9 @@
 #ifndef KOKKOS_OPENMPEXEC_HPP
 #define KOKKOS_OPENMPEXEC_HPP
 
+#include <Kokkos_Macros.hpp>
+#if defined( KOKKOS_ENABLE_OPENMP )
+
 #include <Kokkos_OpenMP.hpp>
 
 #include <impl/Kokkos_Traits.hpp>
@@ -66,7 +69,7 @@ namespace Impl {
 //----------------------------------------------------------------------------
 /** \brief  Data for OpenMP thread execution */
 
-class OpenMPexec {
+class OpenMPExec {
 public:
 
   friend class Kokkos::OpenMP ;
@@ -325,16 +328,20 @@ public:
 namespace Kokkos {
 
 inline
+bool OpenMP::in_parallel()
+{ return omp_in_parallel(); }
+
+inline
 int OpenMP::thread_pool_size( int depth )
 {
-  return Impl::OpenMPexec::pool_size(depth);
+  return Impl::OpenMPExec::pool_size(depth);
 }
 
 KOKKOS_INLINE_FUNCTION
 int OpenMP::thread_pool_rank()
 {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-  return Impl::OpenMPexec::m_map_rank[ omp_get_thread_num() ];
+  return Impl::OpenMPExec::m_map_rank[ omp_get_thread_num() ];
 #else
   return -1 ;
 #endif
@@ -342,4 +349,6 @@ int OpenMP::thread_pool_rank()
 
 } // namespace Kokkos
 
+#endif
 #endif /* #ifndef KOKKOS_OPENMPEXEC_HPP */
+

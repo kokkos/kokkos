@@ -41,16 +41,15 @@
 //@HEADER
 */
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_CUDA
+
 #include <stdlib.h>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
 #include <atomic>
-#include <Kokkos_Macros.hpp>
-
-/* only compile this file if CUDA is enabled for Kokkos */
-#ifdef KOKKOS_ENABLE_CUDA
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Cuda.hpp>
@@ -911,5 +910,7 @@ void* cuda_resize_scratch_space(size_t bytes, bool force_shrink) {
 
 }
 }
+#else
+void KOKKOS_CORE_SRC_CUDA_CUDASPACE_PREVENT_LINK_ERROR() {}
 #endif // KOKKOS_ENABLE_CUDA
 

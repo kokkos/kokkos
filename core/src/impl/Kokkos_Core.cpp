@@ -75,10 +75,10 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
 #endif
 
   // Protect declarations, to prevent "unused variable" warnings.
-#if defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_PTHREAD ) || defined( KOKKOS_ENABLE_OPENMPTARGET )
+#if defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_THREADS ) || defined( KOKKOS_ENABLE_OPENMPTARGET )
   const int num_threads = args.num_threads;
   const int use_numa = args.num_numa;
-#endif // defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_PTHREAD )
+#endif // defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_THREADS )
 #if defined( KOKKOS_ENABLE_CUDA )
   const int use_gpu = args.device_id;
 #endif // defined( KOKKOS_ENABLE_CUDA )
@@ -103,7 +103,7 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
   }
 #endif
 
-#if defined( KOKKOS_ENABLE_PTHREAD )
+#if defined( KOKKOS_ENABLE_THREADS )
   if( std::is_same< Kokkos::Threads , Kokkos::DefaultExecutionSpace >::value ||
       std::is_same< Kokkos::Threads , Kokkos::HostSpace::execution_space >::value ) {
     if(num_threads>0) {
@@ -201,7 +201,7 @@ void finalize_internal( const bool all_spaces = false )
   }
 #endif
 
-#if defined( KOKKOS_ENABLE_PTHREAD )
+#if defined( KOKKOS_ENABLE_THREADS )
   if( std::is_same< Kokkos::Threads , Kokkos::DefaultExecutionSpace >::value ||
       std::is_same< Kokkos::Threads , Kokkos::HostSpace::execution_space >::value ||
       all_spaces ) {
@@ -236,7 +236,7 @@ void fence_internal()
   }
 #endif
 
-#if defined( KOKKOS_ENABLE_PTHREAD )
+#if defined( KOKKOS_ENABLE_THREADS )
   if( std::is_same< Kokkos::Threads , Kokkos::DefaultExecutionSpace >::value ||
       std::is_same< Kokkos::Threads , Kokkos::HostSpace::execution_space >::value ) {
     Kokkos::Threads::fence();
@@ -537,20 +537,8 @@ void print_configuration( std::ostream & out , const bool detail )
 #else
   msg << "no" << std::endl;
 #endif
-  msg << "  KOKKOS_ENABLE_PTHREAD: ";
-#ifdef KOKKOS_ENABLE_PTHREAD
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-  msg << "  KOKKOS_ENABLE_STDTHREAD: ";
-#ifdef KOKKOS_ENABLE_STDTHREAD
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-  msg << "  KOKKOS_ENABLE_WINTHREAD: ";
-#ifdef KOKKOS_ENABLE_WINTHREAD
+  msg << "  KOKKOS_ENABLE_THREADS: ";
+#ifdef KOKKOS_ENABLE_THREADS
   msg << "yes" << std::endl;
 #else
   msg << "no" << std::endl;
@@ -780,7 +768,7 @@ void print_configuration( std::ostream & out , const bool detail )
 #ifdef KOKKOS_ENABLE_OPENMP
   OpenMP::print_configuration(msg, detail);
 #endif
-#if defined( KOKKOS_ENABLE_PTHREAD ) || defined( WINTHREAD )
+#if defined( KOKKOS_ENABLE_THREADS )
   Threads::print_configuration(msg, detail);
 #endif
 #ifdef KOKKOS_ENABLE_QTHREADS
