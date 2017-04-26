@@ -172,7 +172,7 @@ struct VerifyExecutionCanAccessMemorySpace
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#include <OpenMPTarget/Kokkos_OpenMPTargetexec.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Task.hpp>
 
