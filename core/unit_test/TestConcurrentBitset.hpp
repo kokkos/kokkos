@@ -108,8 +108,7 @@ struct ConcurrentBitset {
 
         unsigned hint = Kokkos::Impl::clock_tic() & bitset_count_mask ;
 
-        Kokkos::pair<int,int> result =
-          result = Kokkos::Impl::concurrent_bitset::acquire_bounded_lg2
+        Kokkos::pair<int,int> result  = Kokkos::Impl::concurrent_bitset::acquire_bounded_lg2
             ( bitset.data() , bitset_count_lg2 , hint );
 
         acquired(i) = result.first ;
