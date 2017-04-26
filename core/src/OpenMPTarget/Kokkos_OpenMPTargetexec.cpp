@@ -169,7 +169,7 @@ void OpenMPTarget::initialize( unsigned thread_count ,
   // Init the array for used for arbitrarily sized atomics
   Impl::init_lock_array_host_space();
 
-  #if (KOKKOS_ENABLE_PROFILING)
+  #ifdef KOKKOS_ENABLE_PROFILING
     Kokkos::Profiling::initialize();
   #endif
   m_is_initialized = true;
@@ -190,7 +190,7 @@ void OpenMPTarget::finalize()
     hwloc::unbind_this_thread();
   }
 
-  #if (KOKKOS_ENABLE_PROFILING)
+  #ifdef KOKKOS_ENABLE_PROFILING
     Kokkos::Profiling::finalize();
   #endif
 }
