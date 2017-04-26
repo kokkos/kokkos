@@ -41,9 +41,10 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_PARALLEL_REDUCE_HPP
+#define KOKKOS_PARALLEL_REDUCE_HPP
 
 namespace Kokkos {
-
 
 template<class T, class Enable = void>
 struct is_reducer_type {
@@ -1351,6 +1352,7 @@ void parallel_reduce(const std::string& label,
   Impl::ParallelReduceAdaptor<policy_type,FunctorType,result_view_type>::execute(label,policy_type(0,policy),functor,result_view);
 }
 
-
-
 } //namespace Kokkos
+
+#endif // KOKKOS_PARALLEL_REDUCE_HPP
+

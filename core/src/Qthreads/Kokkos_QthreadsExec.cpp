@@ -41,12 +41,13 @@
 //@HEADER
 */
 
-#include <Kokkos_Core_fwd.hpp>
-
+#include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_QTHREADS )
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <Kokkos_Core_fwd.hpp>
+
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <utility>
@@ -516,4 +517,7 @@ QthreadsTeamPolicyMember::QthreadsTeamPolicyMember( const QthreadsTeamPolicyMemb
 
 } // namespace Kokkos
 
+#else
+void KOKKOS_SRC_QTHREADS_EXEC_PREVENT_LINK_ERROR() {}
 #endif // #if defined( KOKKOS_ENABLE_QTHREADS )
+

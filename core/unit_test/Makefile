@@ -16,7 +16,7 @@ default: build_all
 	echo "End Build"
 
 ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
-  CXX = $(KOKKOS_PATH)/config/nvcc_wrapper
+  CXX = $(KOKKOS_PATH)/bin/nvcc_wrapper
 else
   CXX = g++
 endif

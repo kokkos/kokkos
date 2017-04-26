@@ -44,7 +44,10 @@
 #ifndef KOKKOS_THREADSTEAM_HPP
 #define KOKKOS_THREADSTEAM_HPP
 
-#include <stdio.h>
+#include <Kokkos_Macros.hpp>
+#if defined( KOKKOS_ENABLE_THREADS )
+
+#include <cstdio>
 
 #include <utility>
 #include <impl/Kokkos_spinwait.hpp>
@@ -915,6 +918,6 @@ void single(const Impl::ThreadSingleStruct<Impl::ThreadsExecTeamMember>& single_
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-
+#endif
 #endif /* #define KOKKOS_THREADSTEAM_HPP */
 

@@ -96,7 +96,7 @@ class Serial;    ///< Execution space main process on CPU.
 class Qthreads;  ///< Execution space with Qthreads back-end.
 #endif
 
-#if defined( KOKKOS_ENABLE_PTHREAD )
+#if defined( KOKKOS_ENABLE_THREADS )
 class Threads;   ///< Execution space with pthreads back-end.
 #endif
 
@@ -149,7 +149,7 @@ namespace Kokkos {
   typedef Serial DefaultHostExecutionSpace;
 #elif defined( KOKKOS_ENABLE_OPENMP )
   typedef OpenMP DefaultHostExecutionSpace;
-#elif defined( KOKKOS_ENABLE_PTHREAD )
+#elif defined( KOKKOS_ENABLE_THREADS )
   typedef Threads DefaultHostExecutionSpace;
 //#elif defined( KOKKOS_ENABLE_QTHREADS )
 //  typedef Qthreads DefaultHostExecutionSpace;
@@ -257,3 +257,4 @@ template< class FunctorType, class ExecPolicy, class ExecutionSapce =
 } // namespace Kokkos
 
 #endif /* #ifndef KOKKOS_CORE_FWD_HPP */
+
