@@ -289,7 +289,6 @@ int main( int argc , char* argv[] )
   double min_cycle_time = std::numeric_limits<double>::max();
   double min_both_time = std::numeric_limits<double>::max();
   //one alloc in fill, alloc/dealloc pair in repeat_inner
-  auto nops = number_alloc * ( 1 + 2 * repeat_inner );
   for ( int i = 0 ; i < repeat_outer ; ++i ) {
 
     TestFunctor functor( total_alloc_size
@@ -343,7 +342,7 @@ int main( int argc , char* argv[] )
         , min_fill_time
         , avg_fill_time );
 
-  printf( "\"mempool: alloc/realloc time (min, avg)\" %.8f %.8f\n"
+  printf( "\"mempool: cycle time (min, avg)\" %.8f %.8f\n"
         , min_cycle_time
         , avg_cycle_time );
 
@@ -351,8 +350,12 @@ int main( int argc , char* argv[] )
         , min_both_time
         , avg_both_time );
 
-  printf( "\"mempool: transactions per second (max, avg)\" %g %g\n"
-        , nops / min_both_time
-        , nops / avg_both_time );
+  printf( "\"mempool: fill ops per second (max, avg)\" %g %g\n"
+        , number_alloc / min_fill_time
+        , number_alloc / avg_fill_time );
+
+  printf( "\"mempool: cycle ops per second (max, avg)\" %g %g\n"
+        , (2 * number_alloc * repeat_inner) / min_cycle_time
+        , (2 * number_alloc * repeat_inner) / avg_cycle_time );
 }
 
