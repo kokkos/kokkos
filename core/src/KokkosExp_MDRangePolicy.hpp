@@ -52,6 +52,7 @@
 
 #if defined( __CUDACC__ ) && defined( KOKKOS_ENABLE_CUDA )
 #include<Cuda/KokkosExp_Cuda_IterateTile.hpp>
+#include <Cuda/KokkosExp_Cuda_IterateTile_Refactor.hpp>
 #endif
 
 namespace Kokkos { namespace Experimental {
@@ -120,28 +121,16 @@ struct MDRangePolicy
                                        , typename traits::index_type
                                        > ;
 
+  typedef MDRangePolicy execution_policy; // needed for is_execution_space interrogation
+
   static_assert( !std::is_same<typename traits::iteration_pattern,void>::value
                , "Kokkos Error: MD iteration pattern not defined" );
 
   using iteration_pattern   = typename traits::iteration_pattern;
   using work_tag            = typename traits::work_tag;
+  using member_type = typename range_policy::member_type;
 
-  static constexpr int rank = iteration_pattern::rank;
-
-  static constexpr int outer_direction = static_cast<int> (
-      (iteration_pattern::outer_direction != Iterate::Default)
-    ? iteration_pattern::outer_direction
-    : default_outer_direction< typename traits::execution_space>::value );
-
-  static constexpr int inner_direction = static_cast<int> (
-      iteration_pattern::inner_direction != Iterate::Default
-    ? iteration_pattern::inner_direction
-    : default_inner_direction< typename traits::execution_space>::value ) ;
-
-
-  // Ugly ugly workaround intel 14 not handling scoped enum correctly
-  static constexpr int Right = static_cast<int>( Iterate::Right );
-  static constexpr int Left  = static_cast<int>( Iterate::Left );
+  enum { rank = static_cast<int>(iteration_pattern::rank) };
 
   using index_type  = typename traits::index_type;
   using array_index_type = long;
@@ -155,11 +144,51 @@ struct MDRangePolicy
   // This would require the user to either pass a matching index_type parameter
   // as template parameter to the MDRangePolicy or static_cast the individual values
 
+  point_type m_lower;
+  point_type m_upper;
+  tile_type  m_tile;
+  point_type m_tile_end;
+  index_type m_num_tiles;
+  index_type m_prod_tile_dims;
+
+#if 0
+  // enum impl definition - causes warning when comparing in if statement without casting
+  enum { outer_direction = static_cast<int> (
+      (iteration_pattern::outer_direction != Iterate::Default)
+    ? iteration_pattern::outer_direction
+    : default_outer_direction< typename traits::execution_space>::value ) };
+
+  enum { inner_direction = static_cast<int> (
+      iteration_pattern::inner_direction != Iterate::Default
+    ? iteration_pattern::inner_direction
+    : default_inner_direction< typename traits::execution_space>::value ) };
+
+  enum { Right = static_cast<int>( Iterate::Right ) };
+  enum { Left  = static_cast<int>( Iterate::Left ) };
+#else
+  //static constexpr int rank = iteration_pattern::rank;
+
+  static constexpr int outer_direction = static_cast<int> (
+      (iteration_pattern::outer_direction != Iterate::Default)
+    ? iteration_pattern::outer_direction
+    : default_outer_direction< typename traits::execution_space>::value );
+
+  static constexpr int inner_direction = static_cast<int> (
+      iteration_pattern::inner_direction != Iterate::Default
+    ? iteration_pattern::inner_direction
+    : default_inner_direction< typename traits::execution_space>::value ) ;
+
+  // Ugly ugly workaround intel 14 not handling scoped enum correctly
+  static constexpr int Right = static_cast<int>( Iterate::Right );
+  static constexpr int Left  = static_cast<int>( Iterate::Left );
+#endif
+
   MDRangePolicy( point_type const& lower, point_type const& upper, tile_type const& tile = tile_type{} )
     : m_lower(lower)
     , m_upper(upper)
     , m_tile(tile)
     , m_num_tiles(1)
+    , m_prod_tile_dims(1)
   {
     // Host
     if ( true
@@ -172,8 +201,8 @@ struct MDRangePolicy
       for (int i=0; i<rank; ++i) {
         span = upper[i] - lower[i];
         if ( m_tile[i] <= 0 ) {
-          if (  (inner_direction == Right && (i < rank-1))
-              || (inner_direction == Left && (i > 0)) )
+          if (  ((int)inner_direction == (int)Right && (i < rank-1))
+              || ((int)inner_direction == (int)Left && (i > 0)) )
           {
             m_tile[i] = 2;
           }
@@ -183,6 +212,7 @@ struct MDRangePolicy
         }
         m_tile_end[i] = static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
         m_num_tiles *= m_tile_end[i];
+        m_prod_tile_dims *= m_tile[i];
       }
     }
     #if defined(KOKKOS_ENABLE_CUDA)
@@ -190,14 +220,18 @@ struct MDRangePolicy
     {
       index_type span;
       for (int i=0; i<rank; ++i) {
-        span = upper[i] - lower[i];
+        span = m_upper[i] - m_lower[i];
         if ( m_tile[i] <= 0 ) {
           // TODO: determine what is a good default tile size for cuda
           // may be rank dependent
-          if (  (inner_direction == Right && (i < rank-1))
-              || (inner_direction == Left && (i > 0)) )
+          if (  ((int)inner_direction == (int)Right && (i < rank-1))
+              || ((int)inner_direction == (int)Left && (i > 0)) )
           {
-            m_tile[i] = 2;
+            if ( m_prod_tile_dims < 512 ) {
+              m_tile[i] = 2;
+            } else {
+              m_tile[i] = 1;
+            }
           }
           else {
             m_tile[i] = 16;
@@ -205,12 +239,9 @@ struct MDRangePolicy
         }
         m_tile_end[i] = static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
         m_num_tiles *= m_tile_end[i];
+        m_prod_tile_dims *= m_tile[i];
       }
-      index_type total_tile_size_check = 1;
-      for (int i=0; i<rank; ++i) {
-        total_tile_size_check *= m_tile[i];
-      }
-      if ( total_tile_size_check >= 1024 ) { // improve this check - 1024,1024,64 max per dim (Kepler), but product num_threads < 1024; more restrictions pending register limit
+      if ( m_prod_tile_dims > 512 ) { // improve this check - 1024,1024,64 max per dim (Kepler), but product num_threads < 1024; more restrictions pending register limit
         printf(" Tile dimensions exceed Cuda limits\n");
         Kokkos::abort(" Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
         //Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
@@ -249,6 +280,7 @@ struct MDRangePolicy
     }
 
     m_num_tiles = 1;
+    m_prod_tile_dims = 1;
 
 
     // Host
@@ -262,8 +294,8 @@ struct MDRangePolicy
       for (int i=0; i<rank; ++i) {
         span = m_upper[i] - m_lower[i];
         if ( m_tile[i] <= 0 ) {
-          if (  (inner_direction == Right && (i < rank-1))
-              || (inner_direction == Left && (i > 0)) )
+          if (  ((int)inner_direction == (int)Right && (i < rank-1))
+              || ((int)inner_direction == (int)Left && (i > 0)) )
           {
             m_tile[i] = 2;
           }
@@ -273,6 +305,7 @@ struct MDRangePolicy
         }
         m_tile_end[i] = static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
         m_num_tiles *= m_tile_end[i];
+        m_prod_tile_dims *= m_tile[i];
       }
     }
     #if defined(KOKKOS_ENABLE_CUDA)
@@ -284,10 +317,14 @@ struct MDRangePolicy
         if ( m_tile[i] <= 0 ) {
           // TODO: determine what is a good default tile size for cuda
           // may be rank dependent
-          if (  (inner_direction == Right && (i < rank-1))
-              || (inner_direction == Left && (i > 0)) )
+          if (  ((int)inner_direction == (int)Right && (i < rank-1))
+              || ((int)inner_direction == (int)Left && (i > 0)) )
           {
-            m_tile[i] = 2;
+            if ( m_prod_tile_dims < 512 ) {
+              m_tile[i] = 2;
+            } else {
+              m_tile[i] = 1;
+            }
           }
           else {
             m_tile[i] = 16;
@@ -295,12 +332,9 @@ struct MDRangePolicy
         }
         m_tile_end[i] = static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
         m_num_tiles *= m_tile_end[i];
+        m_prod_tile_dims *= m_tile[i];
       }
-      index_type total_tile_size_check = 1;
-      for (int i=0; i<rank; ++i) {
-        total_tile_size_check *= m_tile[i];
-      }
-      if ( total_tile_size_check >= 1024 ) { // improve this check - 1024,1024,64 max per dim (Kepler), but product num_threads < 1024; more restrictions pending register limit
+      if ( m_prod_tile_dims > 512 ) { // improve this check - 1024,1024,64 max per dim (Kepler), but product num_threads < 1024; more restrictions pending register limit
         printf(" Tile dimensions exceed Cuda limits\n");
         Kokkos::abort(" Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
         //Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
@@ -310,12 +344,6 @@ struct MDRangePolicy
 #endif
   }
 
-
-  point_type m_lower;
-  point_type m_upper;
-  tile_type  m_tile;
-  point_type m_tile_end;
-  index_type m_num_tiles;
 };
 // ------------------------------------------------------------------ //
 
@@ -409,7 +437,8 @@ void md_parallel_reduce( MDRange const& range
                       ) >::type* = 0
                     )
 {
-  Impl::MDFunctor<MDRange, Functor, ValueType> g(range, f, v);
+  //Impl::MDFunctor<MDRange, Functor, ValueType> g(range, f, v);
+  Impl::MDFunctor<MDRange, Functor, ValueType> g(range, f);
 
   //using range_policy = typename MDRange::range_policy;
   using range_policy = typename MDRange::impl_range_policy;
@@ -428,7 +457,8 @@ void md_parallel_reduce( const std::string& str
                       ) >::type* = 0
                     )
 {
-  Impl::MDFunctor<MDRange, Functor, ValueType> g(range, f, v);
+  //Impl::MDFunctor<MDRange, Functor, ValueType> g(range, f, v);
+  Impl::MDFunctor<MDRange, Functor, ValueType> g(range, f);
 
   //using range_policy = typename MDRange::range_policy;
   using range_policy = typename MDRange::impl_range_policy;
