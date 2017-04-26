@@ -666,7 +666,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
-  KOKKOS_SRC += $(KOKKOS_PATH)/core/src/OpenMPTarget/Kokkos_OpenMPTargetexec.cpp $(KOKKOS_PATH)/core/src/OpenMPTarget/Kokkos_OpenMPTargetSpace.cpp
+  KOKKOS_SRC += $(KOKKOS_PATH)/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Exec.cpp $(KOKKOS_PATH)/core/src/OpenMPTarget/Kokkos_OpenMPTargetSpace.cpp
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/OpenMPTarget/*.hpp)
   ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     KOKKOS_CXXFLAGS += -Xcompiler $(KOKKOS_INTERNAL_OPENMPTARGET_FLAG)

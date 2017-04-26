@@ -58,7 +58,7 @@ namespace Impl {
 /** \brief  Data for OpenMPTarget thread execution */
 
 
-class OpenMPTargetexec {
+class OpenMPTargetExec {
 public: 
   enum { MAX_ACTIVE_THREADS = 256*8*56*4 };
   enum { MAX_ACTIVE_TEAMS = MAX_ACTIVE_THREADS/32 };
@@ -87,7 +87,7 @@ public:
 namespace Kokkos {
 namespace Impl {
 
-class OpenMPTargetexecTeamMember {
+class OpenMPTargetExecTeamMember {
 public:
 
   enum { TEAM_REDUCE_SIZE = 512 };
@@ -292,7 +292,7 @@ private:
 public:
 
   inline
-  OpenMPTargetexecTeamMember( const int league_rank, const int league_size, const int team_size, const int vector_length //const TeamPolicyInternal< OpenMPTarget, Properties ...> & team
+  OpenMPTargetExecTeamMember( const int league_rank, const int league_size, const int team_size, const int vector_length //const TeamPolicyInternal< OpenMPTarget, Properties ...> & team
                       , void* const glb_scratch
                       , const int shmem_size_L1
                       , const int shmem_size_L2
@@ -487,7 +487,7 @@ private:
   }
 
 public:
-  typedef Impl::OpenMPTargetexecTeamMember member_type ;
+  typedef Impl::OpenMPTargetExecTeamMember member_type ;
 };
 } // namespace Impl
 
@@ -502,7 +502,7 @@ namespace Kokkos {
 inline
 int OpenMPTarget::thread_pool_size( int depth )
 {
-  //return Impl::OpenMPTargetexec::pool_size(depth);
+  //return Impl::OpenMPTargetExec::pool_size(depth);
   return omp_get_max_threads();
 }
 
@@ -519,33 +519,33 @@ namespace Kokkos {
 
 template<typename iType>
 KOKKOS_INLINE_FUNCTION
-Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember>
-  TeamThreadRange(const Impl::OpenMPTargetexecTeamMember& thread, const iType& count) {
-  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember>(thread,count);
+Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember>
+  TeamThreadRange(const Impl::OpenMPTargetExecTeamMember& thread, const iType& count) {
+  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember>(thread,count);
 }
 
 template<typename iType>
 KOKKOS_INLINE_FUNCTION
-Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember>
-  TeamThreadRange(const Impl::OpenMPTargetexecTeamMember& thread, const iType& begin, const iType& end) {
-  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember>(thread,begin,end);
+Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember>
+  TeamThreadRange(const Impl::OpenMPTargetExecTeamMember& thread, const iType& begin, const iType& end) {
+  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember>(thread,begin,end);
 }
 
 template<typename iType>
 KOKKOS_INLINE_FUNCTION
-Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember >
-  ThreadVectorRange(const Impl::OpenMPTargetexecTeamMember& thread, const iType& count) {
-  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember >(thread,count);
+Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember >
+  ThreadVectorRange(const Impl::OpenMPTargetExecTeamMember& thread, const iType& count) {
+  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember >(thread,count);
 }
 
 KOKKOS_INLINE_FUNCTION
-Impl::ThreadSingleStruct<Impl::OpenMPTargetexecTeamMember> PerTeam(const Impl::OpenMPTargetexecTeamMember& thread) {
-  return Impl::ThreadSingleStruct<Impl::OpenMPTargetexecTeamMember>(thread);
+Impl::ThreadSingleStruct<Impl::OpenMPTargetExecTeamMember> PerTeam(const Impl::OpenMPTargetExecTeamMember& thread) {
+  return Impl::ThreadSingleStruct<Impl::OpenMPTargetExecTeamMember>(thread);
 }
 
 KOKKOS_INLINE_FUNCTION
-Impl::VectorSingleStruct<Impl::OpenMPTargetexecTeamMember> PerThread(const Impl::OpenMPTargetexecTeamMember& thread) {
-  return Impl::VectorSingleStruct<Impl::OpenMPTargetexecTeamMember>(thread);
+Impl::VectorSingleStruct<Impl::OpenMPTargetExecTeamMember> PerThread(const Impl::OpenMPTargetExecTeamMember& thread) {
+  return Impl::VectorSingleStruct<Impl::OpenMPTargetExecTeamMember>(thread);
 }
 } // namespace Kokkos
 
@@ -557,7 +557,7 @@ namespace Kokkos {
    * This functionality requires C++11 support.*/
 template<typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION
-void parallel_for(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember>& loop_boundaries, const Lambda& lambda) {
+void parallel_for(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember>& loop_boundaries, const Lambda& lambda) {
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment)
     lambda(i);
 }
@@ -568,7 +568,7 @@ void parallel_for(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMP
  * val is performed and put into result. This functionality requires C++11 support.*/
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
-void parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember>& loop_boundaries,
+void parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
                      const Lambda & lambda, ValueType& result) {
 
   result = ValueType();
@@ -591,7 +591,7 @@ void parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::Ope
  * '1 for *'). This functionality requires C++11 support.*/
 template< typename iType, class Lambda, typename ValueType, class JoinType >
 KOKKOS_INLINE_FUNCTION
-void parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember>& loop_boundaries,
+void parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
                      const Lambda & lambda, const JoinType& join, ValueType& init_result) {
 
   ValueType result = init_result;
@@ -615,7 +615,7 @@ namespace Kokkos {
  * This functionality requires C++11 support.*/
 template<typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION
-void parallel_for(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember >&
+void parallel_for(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember >&
     loop_boundaries, const Lambda& lambda) {
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment)
     lambda(i);
@@ -627,7 +627,7 @@ void parallel_for(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::Open
  * val is performed and put into result. This functionality requires C++11 support.*/
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
-void parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember >&
+void parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember >&
       loop_boundaries, const Lambda & lambda, ValueType& result) {
   result = ValueType();
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
@@ -646,7 +646,7 @@ void parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::O
  * '1 for *'). This functionality requires C++11 support.*/
 template< typename iType, class Lambda, typename ValueType, class JoinType >
 KOKKOS_INLINE_FUNCTION
-void parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember >&
+void parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember >&
       loop_boundaries, const Lambda & lambda, const JoinType& join, ValueType& init_result) {
 
   ValueType result = init_result;
@@ -673,7 +673,7 @@ void parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::O
  * This functionality requires C++11 support.*/
 template< typename iType, class FunctorType >
 KOKKOS_INLINE_FUNCTION
-void parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember >&
+void parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember >&
       loop_boundaries, const FunctorType & lambda) {
 
   typedef Kokkos::Impl::FunctorValueTraits< FunctorType , void > ValueTraits ;
@@ -695,25 +695,25 @@ namespace Kokkos {
 
 template<class FunctorType>
 KOKKOS_INLINE_FUNCTION
-void single(const Impl::VectorSingleStruct<Impl::OpenMPTargetexecTeamMember>& single_struct, const FunctorType& lambda) {
+void single(const Impl::VectorSingleStruct<Impl::OpenMPTargetExecTeamMember>& single_struct, const FunctorType& lambda) {
   lambda();
 }
 
 template<class FunctorType>
 KOKKOS_INLINE_FUNCTION
-void single(const Impl::ThreadSingleStruct<Impl::OpenMPTargetexecTeamMember>& single_struct, const FunctorType& lambda) {
+void single(const Impl::ThreadSingleStruct<Impl::OpenMPTargetExecTeamMember>& single_struct, const FunctorType& lambda) {
   if(single_struct.team_member.team_rank()==0) lambda();
 }
 
 template<class FunctorType, class ValueType>
 KOKKOS_INLINE_FUNCTION
-void single(const Impl::VectorSingleStruct<Impl::OpenMPTargetexecTeamMember>& single_struct, const FunctorType& lambda, ValueType& val) {
+void single(const Impl::VectorSingleStruct<Impl::OpenMPTargetExecTeamMember>& single_struct, const FunctorType& lambda, ValueType& val) {
   lambda(val);
 }
 
 template<class FunctorType, class ValueType>
 KOKKOS_INLINE_FUNCTION
-void single(const Impl::ThreadSingleStruct<Impl::OpenMPTargetexecTeamMember>& single_struct, const FunctorType& lambda, ValueType& val) {
+void single(const Impl::ThreadSingleStruct<Impl::OpenMPTargetExecTeamMember>& single_struct, const FunctorType& lambda, ValueType& val) {
   if(single_struct.team_member.team_rank()==0) {
     lambda(val);
   }

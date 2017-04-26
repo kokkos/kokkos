@@ -84,13 +84,13 @@ bool OpenMPTarget::m_is_initialized = false;
 namespace Impl {
 
 
-//int OpenMPTargetexec::m_map_rank[ OpenMPTargetexec::MAX_THREAD_COUNT ] = { 0 };
+//int OpenMPTargetExec::m_map_rank[ OpenMPTargetExec::MAX_THREAD_COUNT ] = { 0 };
 
-//int OpenMPTargetexec::m_pool_topo[ 4 ] = { 0 };
+//int OpenMPTargetExec::m_pool_topo[ 4 ] = { 0 };
 
-//OpenMPTargetexec * OpenMPTargetexec::m_pool[ OpenMPTargetexec::MAX_THREAD_COUNT ] = { 0 };
+//OpenMPTargetExec * OpenMPTargetExec::m_pool[ OpenMPTargetExec::MAX_THREAD_COUNT ] = { 0 };
 
-void OpenMPTargetexec::verify_is_process( const char * const label )
+void OpenMPTargetExec::verify_is_process( const char * const label )
 {
   if ( omp_in_parallel() ) {
     std::string msg( label );
@@ -99,7 +99,7 @@ void OpenMPTargetexec::verify_is_process( const char * const label )
   }
 }
 
-void OpenMPTargetexec::verify_initialized( const char * const label )
+void OpenMPTargetExec::verify_initialized( const char * const label )
 {
   if ( 0 == OpenMPTarget::is_initialized() ) {
     std::string msg( label );
@@ -115,10 +115,10 @@ void OpenMPTargetexec::verify_initialized( const char * const label )
 
 }
 
-void*    OpenMPTargetexec::m_scratch_ptr  = NULL;
-int64_t OpenMPTargetexec::m_scratch_size = 0;
+void*    OpenMPTargetExec::m_scratch_ptr  = NULL;
+int64_t OpenMPTargetExec::m_scratch_size = 0;
 
-void OpenMPTargetexec::clear_scratch()
+void OpenMPTargetExec::clear_scratch()
 {
   OpenMPTargetSpace space;
   space.deallocate(m_scratch_ptr,m_scratch_size);
@@ -126,9 +126,9 @@ void OpenMPTargetexec::clear_scratch()
   m_scratch_size = NULL;
 }
 
-void* OpenMPTargetexec::get_scratch_ptr() { return m_scratch_ptr; }
+void* OpenMPTargetExec::get_scratch_ptr() { return m_scratch_ptr; }
 
-void OpenMPTargetexec::resize_scratch( int64_t reduce_bytes , 
+void OpenMPTargetExec::resize_scratch( int64_t reduce_bytes , 
                                        int64_t team_reduce_bytes, 
                                        int64_t team_shared_bytes, int64_t thread_local_bytes) 
 {
@@ -156,7 +156,7 @@ namespace Kokkos {
 //----------------------------------------------------------------------------
 
 int OpenMPTarget::is_initialized()
-{ return m_is_initialized; }// != Impl::OpenMPTargetexec::m_pool[0]; }
+{ return m_is_initialized; }// != Impl::OpenMPTargetExec::m_pool[0]; }
 
 void OpenMPTarget::initialize( unsigned thread_count ,
                          unsigned use_numa_count ,
@@ -179,8 +179,8 @@ void OpenMPTarget::initialize( unsigned thread_count ,
 
 void OpenMPTarget::finalize()
 {
-  Impl::OpenMPTargetexec::verify_initialized( "OpenMPTarget::finalize" );
-  Impl::OpenMPTargetexec::verify_is_process( "OpenMPTarget::finalize" );
+  Impl::OpenMPTargetExec::verify_initialized( "OpenMPTarget::finalize" );
+  Impl::OpenMPTargetExec::verify_is_process( "OpenMPTarget::finalize" );
 
   m_is_initialized = false;
 
@@ -199,7 +199,7 @@ void OpenMPTarget::finalize()
 
 void OpenMPTarget::print_configuration( std::ostream & s , const bool detail )
 {
-  Impl::OpenMPTargetexec::verify_is_process( "OpenMPTarget::print_configuration" );
+  Impl::OpenMPTargetExec::verify_is_process( "OpenMPTarget::print_configuration" );
 /*
   s << "Kokkos::OpenMPTarget" ;
 
@@ -217,12 +217,12 @@ void OpenMPTarget::print_configuration( std::ostream & s , const bool detail )
     ;
 #endif
 
-  const bool is_initialized = 0 != Impl::OpenMPTargetexec::m_pool[0] ;
+  const bool is_initialized = 0 != Impl::OpenMPTargetExec::m_pool[0] ;
 
   if ( is_initialized ) {
-    const int numa_count      = Kokkos::Impl::OpenMPTargetexec::m_pool_topo[0] / Kokkos::Impl::OpenMPTargetexec::m_pool_topo[1] ;
-    const int core_per_numa   = Kokkos::Impl::OpenMPTargetexec::m_pool_topo[1] / Kokkos::Impl::OpenMPTargetexec::m_pool_topo[2] ;
-    const int thread_per_core = Kokkos::Impl::OpenMPTargetexec::m_pool_topo[2] ;
+    const int numa_count      = Kokkos::Impl::OpenMPTargetExec::m_pool_topo[0] / Kokkos::Impl::OpenMPTargetExec::m_pool_topo[1] ;
+    const int core_per_numa   = Kokkos::Impl::OpenMPTargetExec::m_pool_topo[1] / Kokkos::Impl::OpenMPTargetExec::m_pool_topo[2] ;
+    const int thread_per_core = Kokkos::Impl::OpenMPTargetExec::m_pool_topo[2] ;
 
     s << " thread_pool_topology[ " << numa_count
       << " x " << core_per_numa
@@ -231,7 +231,7 @@ void OpenMPTarget::print_configuration( std::ostream & s , const bool detail )
       << std::endl ;
 
     if ( detail ) {
-      std::vector< std::pair<unsigned,unsigned> > coord( Kokkos::Impl::OpenMPTargetexec::m_pool_topo[0] );
+      std::vector< std::pair<unsigned,unsigned> > coord( Kokkos::Impl::OpenMPTargetExec::m_pool_topo[0] );
 
 #pragma omp parallel
       {
@@ -245,7 +245,7 @@ void OpenMPTarget::print_configuration( std::ostream & s , const bool detail )
 
       for ( unsigned i = 0 ; i < coord.size() ; ++i ) {
         s << "  thread omp_rank[" << i << "]"
-          << " kokkos_rank[" << Impl::OpenMPTargetexec::m_map_rank[ i ] << "]"
+          << " kokkos_rank[" << Impl::OpenMPTargetExec::m_map_rank[ i ] << "]"
           << " hwloc_coord[" << coord[i].first << "." << coord[i].second << "]"
           << std::endl ;
       }

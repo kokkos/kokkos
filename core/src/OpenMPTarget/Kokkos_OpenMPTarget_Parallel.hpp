@@ -84,8 +84,8 @@ public:
   typename std::enable_if< std::is_same< TagType , void >::value >::type
   execute_impl() const
     {
-      OpenMPTargetexec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetexec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
       const typename Policy::member_type begin = m_policy.begin();
       const typename Policy::member_type end = m_policy.end();
       
@@ -100,8 +100,8 @@ public:
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   execute_impl() const
     {
-      OpenMPTargetexec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetexec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
       const typename Policy::member_type begin = m_policy.begin();
       const typename Policy::member_type end = m_policy.end();
 
@@ -142,8 +142,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
   typename std::enable_if< std::is_same< TagType , void >::value >::type
   execute_impl(const FunctorType& f, const PolicyType& p, PointerType result_ptr)
     {
-      OpenMPTargetexec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetexec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
       const typename PolicyType::member_type begin = p.begin();
       const typename PolicyType::member_type end = p.end();
       
@@ -161,8 +161,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   execute_impl(const FunctorType& f, const PolicyType& p, PointerType result_ptr)
     {
-      OpenMPTargetexec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetexec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
       const typename PolicyType::member_type begin = p.begin();
       const typename PolicyType::member_type end = p.end();
 
@@ -191,8 +191,8 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType, PointerTyp
   typename std::enable_if< std::is_same< TagType , void >::value >::type
   execute_impl(const FunctorType& f, const PolicyType& p, PointerType result_ptr)
     {
-      OpenMPTargetexec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetexec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
       const typename PolicyType::member_type begin = p.begin();
       const typename PolicyType::member_type end = p.end();
 
@@ -210,8 +210,8 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType, PointerTyp
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   execute_impl(const FunctorType& f, const PolicyType& p, PointerType result_ptr)
     {
-      OpenMPTargetexec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetexec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
       const typename PolicyType::member_type begin = p.begin();
       const typename PolicyType::member_type end = p.end();
 
@@ -382,14 +382,14 @@ public:
   inline
   void execute() const
     {
-/*      OpenMPTargetexec::verify_is_process("Kokkos::OpenMPTarget parallel_scan");
-      OpenMPTargetexec::verify_initialized("Kokkos::OpenMPTarget parallel_scan");
+/*      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_scan");
+      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_scan");
 
-      OpenMPTargetexec::resize_scratch( 2 * ValueTraits::value_size( m_functor ) , 0 );
+      OpenMPTargetExec::resize_scratch( 2 * ValueTraits::value_size( m_functor ) , 0 );
 
 #pragma omp parallel
       {
-        OpenMPTargetexec & exec = * OpenMPTargetexec::get_thread_omp();
+        OpenMPTargetExec & exec = * OpenMPTargetExec::get_thread_omp();
         const WorkRange range( m_policy, exec.pool_rank(), exec.pool_size() );
         const pointer_type ptr =
           pointer_type( exec.scratch_reduce() ) +
@@ -400,14 +400,14 @@ public:
       }
 
       {
-        const unsigned thread_count = OpenMPTargetexec::pool_size();
+        const unsigned thread_count = OpenMPTargetExec::pool_size();
         const unsigned value_count  = ValueTraits::value_count( m_functor );
 
         pointer_type ptr_prev = 0 ;
 
         for ( unsigned rank_rev = thread_count ; rank_rev-- ; ) {
 
-          pointer_type ptr = pointer_type( OpenMPTargetexec::pool_rev(rank_rev)->scratch_reduce() );
+          pointer_type ptr = pointer_type( OpenMPTargetExec::pool_rev(rank_rev)->scratch_reduce() );
 
           if ( ptr_prev ) {
             for ( unsigned i = 0 ; i < value_count ; ++i ) { ptr[i] = ptr_prev[ i + value_count ] ; }
@@ -423,7 +423,7 @@ public:
 
 #pragma omp parallel
       {
-        OpenMPTargetexec & exec = * OpenMPTargetexec::get_thread_omp();
+        OpenMPTargetExec & exec = * OpenMPTargetExec::get_thread_omp();
         const WorkRange range( m_policy, exec.pool_rank(), exec.pool_size() );
         const pointer_type ptr = pointer_type( exec.scratch_reduce() );
         ParallelScan::template exec_range< WorkTag >
@@ -473,8 +473,8 @@ private:
 public:
 
   inline void execute() const {
-    OpenMPTargetexec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-    OpenMPTargetexec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+    OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
+    OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
     execute_impl<WorkTag>();
   }
 
@@ -484,15 +484,15 @@ private:
   typename std::enable_if< std::is_same< TagType , void >::value >::type
   execute_impl() const
     {
-      OpenMPTargetexec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetexec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
       const int league_size = m_policy.league_size();
       const int team_size = m_policy.team_size();
       const int vector_length = m_policy.vector_length();
-      const int nteams = OpenMPTargetexec::MAX_ACTIVE_TEAMS<league_size?OpenMPTargetexec::MAX_ACTIVE_TEAMS:league_size;
+      const int nteams = OpenMPTargetExec::MAX_ACTIVE_TEAMS<league_size?OpenMPTargetExec::MAX_ACTIVE_TEAMS:league_size;
 
-      OpenMPTargetexec::resize_scratch(0,Policy::member_type::TEAM_REDUCE_SIZE,0,0);
-      void* scratch_ptr = OpenMPTargetexec::get_scratch_ptr();
+      OpenMPTargetExec::resize_scratch(0,Policy::member_type::TEAM_REDUCE_SIZE,0,0);
+      void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
       #pragma omp target teams distribute parallel for num_teams(league_size) num_threads(team_size*vector_length) schedule(static,1) \
           map(to:this->m_functor,scratch_ptr) 
@@ -508,15 +508,15 @@ private:
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   execute_impl() const
     {
-      OpenMPTargetexec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetexec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
       const int league_size = m_policy.league_size();
       const int team_size = m_policy.team_size();
       const int vector_length = m_policy.vector_length();
-      const int nteams = OpenMPTargetexec::MAX_ACTIVE_TEAMS<league_size?OpenMPTargetexec::MAX_ACTIVE_TEAMS:league_size;
+      const int nteams = OpenMPTargetExec::MAX_ACTIVE_TEAMS<league_size?OpenMPTargetExec::MAX_ACTIVE_TEAMS:league_size;
 
-      OpenMPTargetexec::resize_scratch(0,Policy::member_type::TEAM_REDUCE_SIZE,0,0);
-      void* scratch_ptr = OpenMPTargetexec::get_scratch_ptr();
+      OpenMPTargetExec::resize_scratch(0,Policy::member_type::TEAM_REDUCE_SIZE,0,0);
+      void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
       #pragma omp target teams distribute parallel for num_teams(league_size) num_threads(team_size*vector_length) schedule(static,1) \
          map(to:this->m_functor,scratch_ptr)
       for(int i=0 ; i<league_size ; i++) {
@@ -545,16 +545,16 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>, 
   typename std::enable_if< std::is_same< TagType , void >::value >::type
   execute_impl(const FunctorType& f, const PolicyType& p, PointerType result_ptr)
     {
-      OpenMPTargetexec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetexec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
       
       const int league_size = p.league_size();
       const int team_size = p.team_size();
       const int vector_length = p.vector_length();
-      const int nteams = OpenMPTargetexec::MAX_ACTIVE_TEAMS<league_size?OpenMPTargetexec::MAX_ACTIVE_TEAMS:league_size;
+      const int nteams = OpenMPTargetExec::MAX_ACTIVE_TEAMS<league_size?OpenMPTargetExec::MAX_ACTIVE_TEAMS:league_size;
       
-      OpenMPTargetexec::resize_scratch(0,PolicyType::member_type::TEAM_REDUCE_SIZE,0,0);
-      void* scratch_ptr = OpenMPTargetexec::get_scratch_ptr(); 
+      OpenMPTargetExec::resize_scratch(0,PolicyType::member_type::TEAM_REDUCE_SIZE,0,0);
+      void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr(); 
 
       ValueType result = ValueType();
       #pragma omp target teams distribute parallel for num_teams(nteams) num_threads(team_size*vector_length) \
@@ -574,16 +574,16 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>, 
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   execute_impl(const FunctorType& f, const PolicyType& p, PointerType result_ptr)
     {
-      OpenMPTargetexec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
-      OpenMPTargetexec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_is_process("Kokkos::OpenMPTarget parallel_for");
+      OpenMPTargetExec::verify_initialized("Kokkos::OpenMPTarget parallel_for");
 
       const int league_size = p.league_size();
       const int team_size = p.team_size();
       const int vector_length = p.vector_length();
-      const int nteams = OpenMPTargetexec::MAX_ACTIVE_TEAMS<league_size?OpenMPTargetexec::MAX_ACTIVE_TEAMS:league_size;
+      const int nteams = OpenMPTargetExec::MAX_ACTIVE_TEAMS<league_size?OpenMPTargetExec::MAX_ACTIVE_TEAMS:league_size;
 
-      OpenMPTargetexec::resize_scratch(0,PolicyType::member_type::TEAM_REDUCE_SIZE,0,0);
-      void* scratch_ptr = OpenMPTargetexec::get_scratch_ptr();
+      OpenMPTargetExec::resize_scratch(0,PolicyType::member_type::TEAM_REDUCE_SIZE,0,0);
+      void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
       ValueType result = ValueType();
       #pragma omp target teams distribute parallel for num_teams(nteams) num_threads(team_size*vector_length) \
@@ -688,20 +688,20 @@ namespace Kokkos {
 namespace Impl {
 
   template<typename iType>
-  struct TeamThreadRangeBoundariesStruct<iType,OpenMPTargetexecTeamMember> {
+  struct TeamThreadRangeBoundariesStruct<iType,OpenMPTargetExecTeamMember> {
     typedef iType index_type;
     const iType start;
     const iType end;
     const iType increment;
 
     inline
-    TeamThreadRangeBoundariesStruct (const OpenMPTargetexecTeamMember& thread_, const iType& count):
+    TeamThreadRangeBoundariesStruct (const OpenMPTargetExecTeamMember& thread_, const iType& count):
       start( thread_.team_rank() ),
       end( count ),
       increment( thread_.team_size() )
     {}
     inline
-    TeamThreadRangeBoundariesStruct (const OpenMPTargetexecTeamMember& thread_, const iType& begin_, const iType& end_):
+    TeamThreadRangeBoundariesStruct (const OpenMPTargetExecTeamMember& thread_, const iType& begin_, const iType& end_):
       start( begin_+thread_.team_rank() ),
       end( end_ ),
       increment( thread_.team_size() )
@@ -709,20 +709,20 @@ namespace Impl {
   };
 
   template<typename iType>
-  struct ThreadVectorRangeBoundariesStruct<iType,OpenMPTargetexecTeamMember> {
+  struct ThreadVectorRangeBoundariesStruct<iType,OpenMPTargetExecTeamMember> {
     typedef iType index_type;
     const iType start;
     const iType end;
     const iType increment;
 
     inline
-    ThreadVectorRangeBoundariesStruct (const OpenMPTargetexecTeamMember& thread_, const iType& count):
+    ThreadVectorRangeBoundariesStruct (const OpenMPTargetExecTeamMember& thread_, const iType& count):
       start( thread_.m_vector_lane ),
       end( count ),
       increment( thread_.m_vector_length )
     {}
     inline
-    ThreadVectorRangeBoundariesStruct (const OpenMPTargetexecTeamMember& thread_, const iType& begin_, const iType& end_):
+    ThreadVectorRangeBoundariesStruct (const OpenMPTargetExecTeamMember& thread_, const iType& begin_, const iType& end_):
       start( begin_+thread_.m_vector_lane ),
       end( end_ ),
       increment( thread_.m_vector_length )
@@ -731,30 +731,30 @@ namespace Impl {
 
   template<typename iType>
   KOKKOS_INLINE_FUNCTION
-  Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember>
-    TeamThreadRange(const Impl::OpenMPTargetexecTeamMember& thread, const iType& count) {
-    return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember>(thread,count);
+  Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember>
+    TeamThreadRange(const Impl::OpenMPTargetExecTeamMember& thread, const iType& count) {
+    return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember>(thread,count);
   }
   
   template<typename iType>
   KOKKOS_INLINE_FUNCTION
-  Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember>
-    TeamThreadRange(const Impl::OpenMPTargetexecTeamMember& thread, const iType& begin, const iType& end) {
-    return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember>(thread,begin,end);
+  Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember>
+    TeamThreadRange(const Impl::OpenMPTargetExecTeamMember& thread, const iType& begin, const iType& end) {
+    return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember>(thread,begin,end);
   }
 
   template<typename iType>
   KOKKOS_INLINE_FUNCTION
-  Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember >
-    ThreadVectorRange(const Impl::OpenMPTargetexecTeamMember& thread, const iType& count) {
-    return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember >(thread,count);
+  Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember >
+    ThreadVectorRange(const Impl::OpenMPTargetExecTeamMember& thread, const iType& count) {
+    return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember >(thread,count);
   }
 
   template<typename iType>
   KOKKOS_INLINE_FUNCTION
-  Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember>
-    ThreadVectorRange(const Impl::OpenMPTargetexecTeamMember& thread, const iType& begin, const iType& end) {
-    return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetexecTeamMember>(thread,begin,end);
+  Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember>
+    ThreadVectorRange(const Impl::OpenMPTargetExecTeamMember& thread, const iType& begin, const iType& end) {
+    return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember>(thread,begin,end);
   }
 
 }

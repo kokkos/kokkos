@@ -99,7 +99,7 @@ private:
   TaskExec & operator = ( TaskExec const & ) = delete ;
 
 
-  using PoolExec = Kokkos::Impl::OpenMPTargetexec ;
+  using PoolExec = Kokkos::Impl::OpenMPTargetExec ;
 
   friend class Kokkos::Impl::TaskQueue< Kokkos::OpenMPTarget > ;
   friend class Kokkos::Impl::TaskQueueSpecialization< Kokkos::OpenMPTarget > ;

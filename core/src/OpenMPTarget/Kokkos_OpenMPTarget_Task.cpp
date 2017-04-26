@@ -71,7 +71,7 @@ TaskExec()
 }
 
 TaskExec< Kokkos::OpenMPTarget >::
-TaskExec( Kokkos::Impl::OpenMPTargetexec & arg_exec , int const arg_team_size )
+TaskExec( Kokkos::Impl::OpenMPTargetExec & arg_exec , int const arg_team_size )
   : m_self_exec( & arg_exec )
   , m_team_exec( arg_exec.pool_rev(arg_exec.pool_rank_rev() / arg_team_size) )
   , m_sync_mask( 0 )
@@ -163,7 +163,7 @@ void TaskQueueSpecialization< Kokkos::OpenMPTarget >::execute
   using execution_space = Kokkos::OpenMPTarget ;
   using queue_type      = TaskQueue< execution_space > ;
   using task_root_type  = TaskBase< execution_space , void , void > ;
-  using PoolExec        = Kokkos::Impl::OpenMPTargetexec ;
+  using PoolExec        = Kokkos::Impl::OpenMPTargetExec ;
   using Member          = TaskExec< execution_space > ;
 
   task_root_type * const end = (task_root_type *) task_root_type::EndTag ;
