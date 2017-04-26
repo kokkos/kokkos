@@ -1,25 +1,21 @@
 #!/bin/bash -e
 NT=$1
 PROG="./KokkosCore_PerformanceTest_Mempool"
-COMMON_ARGS="--kokkos-threads=$NT --fill_stride=1 --alloc_size=10000000 --super_size=1000000 --chunk_span=5 --repeat_inner=100"
+COMMON_ARGS="--kokkos-threads=$NT --fill_stride=1 --alloc_size=10027008 --super_size=65536 --repeat_inner=100 --chunk_span=4 --repeat_outer=10"
 
 postproc() {
-cat log | tail -n 1 | rev | cut -d ' ' -f 1 | rev >> yvals
+cat log | grep "fill ops per second" | rev | cut -d ' ' -f 2 | rev >> yvals_fill
+cat log | grep "cycle ops per second" | rev | cut -d ' ' -f 2 | rev >> yvals_cycle
 }
 
-for yset in 1
+rm -f xvals yvals_fill yvals_cycle
+for x in 75 95
 do
-  rm -f xvals yvals
-  for x in 20 40 60 80 100 
-  do
-    echo "yset $yset x fill $x"
-    echo $x >> xvals
-    $PROG $COMMON_ARGS --fill_level=$x > log
-    postproc
-  done
-  rm -f yvals$yset
-  mv yvals yvals$yset
+  echo "test fill level $x"
+  echo $x >> xvals
+  $PROG $COMMON_ARGS --fill_level=$x 2>&1 | tee log
+  postproc
 done
 
-rm -f datapoints_fill
-paste -d',' xvals yvals1 > datapoints_fill
+rm -f datapoints
+paste xvals yvals_fill yvals_cycle > datapoints.txt
