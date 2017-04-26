@@ -1135,48 +1135,6 @@ struct TestViewMappingSubview
       if ( & Da( 1, i0, i1, i2, 2 ) != & Db( i0 - 1, i1 - 1, i2 - 1 ) ) ++error_count;
     }
   }
-
-  static void run()
-  {
-    TestViewMappingSubview self;
-
-    ASSERT_EQ( self.Aa.dimension_0(), AN );
-    ASSERT_EQ( self.Ab.dimension_0(), AN - 2 );
-    ASSERT_EQ( self.Ac.dimension_0(), AN - 2 );
-    ASSERT_EQ( self.Ba.dimension_0(), BN0 );
-    ASSERT_EQ( self.Ba.dimension_1(), BN1 );
-    ASSERT_EQ( self.Ba.dimension_2(), BN2 );
-    ASSERT_EQ( self.Bb.dimension_0(), BN0 - 2 );
-    ASSERT_EQ( self.Bb.dimension_1(), BN1 - 2 );
-    ASSERT_EQ( self.Bb.dimension_2(), BN2 - 2 );
-
-    ASSERT_EQ( self.Ca.dimension_0(), CN0 );
-    ASSERT_EQ( self.Ca.dimension_1(), CN1 );
-    ASSERT_EQ( self.Ca.dimension_2(), CN2 );
-    ASSERT_EQ( self.Ca.dimension_3(), 13 );
-    ASSERT_EQ( self.Ca.dimension_4(), 14 );
-    ASSERT_EQ( self.Cb.dimension_0(), CN0 - 2 );
-    ASSERT_EQ( self.Cb.dimension_1(), CN1 - 2 );
-    ASSERT_EQ( self.Cb.dimension_2(), CN2 - 2 );
-
-    ASSERT_EQ( self.Da.dimension_0(), DN0 );
-    ASSERT_EQ( self.Da.dimension_1(), DN1 );
-    ASSERT_EQ( self.Da.dimension_2(), DN2 );
-    ASSERT_EQ( self.Da.dimension_3(), DN3 );
-    ASSERT_EQ( self.Da.dimension_4(), DN4 );
-
-    ASSERT_EQ( self.Db.dimension_0(), DN1 - 2 );
-    ASSERT_EQ( self.Db.dimension_1(), DN2 - 2 );
-    ASSERT_EQ( self.Db.dimension_2(), DN3 - 2 );
-
-    ASSERT_EQ( self.Da.stride_1(), self.Db.stride_0() );
-    ASSERT_EQ( self.Da.stride_2(), self.Db.stride_1() );
-    ASSERT_EQ( self.Da.stride_3(), self.Db.stride_2() );
-
-    long error_count = -1;
-    Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, 1 ), self, error_count );
-    ASSERT_EQ( error_count, 0 );
-  }
 };
 
 template< class Space >
@@ -1184,7 +1142,44 @@ void test_view_mapping_subview()
 {
   typedef typename Space::execution_space ExecSpace;
 
-  TestViewMappingSubview< ExecSpace >::run();
+  TestViewMappingSubview< ExecSpace > self;
+
+  ASSERT_EQ( self.Aa.dimension_0(), TestViewMappingSubview< ExecSpace >::AN );
+  ASSERT_EQ( self.Ab.dimension_0(), TestViewMappingSubview< ExecSpace >::AN - 2 );
+  ASSERT_EQ( self.Ac.dimension_0(), TestViewMappingSubview< ExecSpace >::AN - 2 );
+  ASSERT_EQ( self.Ba.dimension_0(), TestViewMappingSubview< ExecSpace >::BN0 );
+  ASSERT_EQ( self.Ba.dimension_1(), TestViewMappingSubview< ExecSpace >::BN1 );
+  ASSERT_EQ( self.Ba.dimension_2(), TestViewMappingSubview< ExecSpace >::BN2 );
+  ASSERT_EQ( self.Bb.dimension_0(), TestViewMappingSubview< ExecSpace >::BN0 - 2 );
+  ASSERT_EQ( self.Bb.dimension_1(), TestViewMappingSubview< ExecSpace >::BN1 - 2 );
+  ASSERT_EQ( self.Bb.dimension_2(), TestViewMappingSubview< ExecSpace >::BN2 - 2 );
+
+  ASSERT_EQ( self.Ca.dimension_0(), TestViewMappingSubview< ExecSpace >::CN0 );
+  ASSERT_EQ( self.Ca.dimension_1(), TestViewMappingSubview< ExecSpace >::CN1 );
+  ASSERT_EQ( self.Ca.dimension_2(), TestViewMappingSubview< ExecSpace >::CN2 );
+  ASSERT_EQ( self.Ca.dimension_3(), 13 );
+  ASSERT_EQ( self.Ca.dimension_4(), 14 );
+  ASSERT_EQ( self.Cb.dimension_0(), TestViewMappingSubview< ExecSpace >::CN0 - 2 );
+  ASSERT_EQ( self.Cb.dimension_1(), TestViewMappingSubview< ExecSpace >::CN1 - 2 );
+  ASSERT_EQ( self.Cb.dimension_2(), TestViewMappingSubview< ExecSpace >::CN2 - 2 );
+
+  ASSERT_EQ( self.Da.dimension_0(), TestViewMappingSubview< ExecSpace >::DN0 );
+  ASSERT_EQ( self.Da.dimension_1(), TestViewMappingSubview< ExecSpace >::DN1 );
+  ASSERT_EQ( self.Da.dimension_2(), TestViewMappingSubview< ExecSpace >::DN2 );
+  ASSERT_EQ( self.Da.dimension_3(), TestViewMappingSubview< ExecSpace >::DN3 );
+  ASSERT_EQ( self.Da.dimension_4(), TestViewMappingSubview< ExecSpace >::DN4 );
+
+  ASSERT_EQ( self.Db.dimension_0(), TestViewMappingSubview< ExecSpace >::DN1 - 2 );
+  ASSERT_EQ( self.Db.dimension_1(), TestViewMappingSubview< ExecSpace >::DN2 - 2 );
+  ASSERT_EQ( self.Db.dimension_2(), TestViewMappingSubview< ExecSpace >::DN3 - 2 );
+
+  ASSERT_EQ( self.Da.stride_1(), self.Db.stride_0() );
+  ASSERT_EQ( self.Da.stride_2(), self.Db.stride_1() );
+  ASSERT_EQ( self.Da.stride_3(), self.Db.stride_2() );
+
+  long error_count = -1;
+  Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, 1 ), self, error_count );
+  ASSERT_EQ( error_count, 0 );
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1268,29 +1263,31 @@ struct TestViewMapOperator {
     }
   }
 
-  constexpr static size_t N0 = 10;
-  constexpr static size_t N1 =  9;
-  constexpr static size_t N2 =  8;
-  constexpr static size_t N3 =  7;
-  constexpr static size_t N4 =  6;
-  constexpr static size_t N5 =  5;
-  constexpr static size_t N6 =  4;
-  constexpr static size_t N7 =  3;
+  enum { N0 = 10 };
+  enum { N1 = 9 };
+  enum { N2 = 8 };
+  enum { N3 = 7 };
+  enum { N4 = 6 };
+  enum { N5 = 5 };
+  enum { N6 = 4 };
+  enum { N7 = 3 };
 
   TestViewMapOperator() : v( "Test", N0, N1, N2, N3, N4, N5, N6, N7 ) {}
+};
 
-  static void run()
-  {
-    TestViewMapOperator self;
+template< class ViewType>
+void TestViewMapOperator_run()
+{
+    TestViewMapOperator<ViewType> self;
 
-    ASSERT_EQ( self.v.dimension_0(), ( 0 < ViewType::rank ? N0 : 1 ) );
-    ASSERT_EQ( self.v.dimension_1(), ( 1 < ViewType::rank ? N1 : 1 ) );
-    ASSERT_EQ( self.v.dimension_2(), ( 2 < ViewType::rank ? N2 : 1 ) );
-    ASSERT_EQ( self.v.dimension_3(), ( 3 < ViewType::rank ? N3 : 1 ) );
-    ASSERT_EQ( self.v.dimension_4(), ( 4 < ViewType::rank ? N4 : 1 ) );
-    ASSERT_EQ( self.v.dimension_5(), ( 5 < ViewType::rank ? N5 : 1 ) );
-    ASSERT_EQ( self.v.dimension_6(), ( 6 < ViewType::rank ? N6 : 1 ) );
-    ASSERT_EQ( self.v.dimension_7(), ( 7 < ViewType::rank ? N7 : 1 ) );
+    ASSERT_EQ( self.v.dimension_0(), ( 0 < ViewType::rank ? TestViewMapOperator<ViewType>::N0 : 1 ) );
+    ASSERT_EQ( self.v.dimension_1(), ( 1 < ViewType::rank ? TestViewMapOperator<ViewType>::N1 : 1 ) );
+    ASSERT_EQ( self.v.dimension_2(), ( 2 < ViewType::rank ? TestViewMapOperator<ViewType>::N2 : 1 ) );
+    ASSERT_EQ( self.v.dimension_3(), ( 3 < ViewType::rank ? TestViewMapOperator<ViewType>::N3 : 1 ) );
+    ASSERT_EQ( self.v.dimension_4(), ( 4 < ViewType::rank ? TestViewMapOperator<ViewType>::N4 : 1 ) );
+    ASSERT_EQ( self.v.dimension_5(), ( 5 < ViewType::rank ? TestViewMapOperator<ViewType>::N5 : 1 ) );
+    ASSERT_EQ( self.v.dimension_6(), ( 6 < ViewType::rank ? TestViewMapOperator<ViewType>::N6 : 1 ) );
+    ASSERT_EQ( self.v.dimension_7(), ( 7 < ViewType::rank ? TestViewMapOperator<ViewType>::N7 : 1 ) );
 
     ASSERT_LE( self.v.dimension_0() *
                self.v.dimension_1() *
@@ -1306,31 +1303,30 @@ struct TestViewMapOperator {
     Kokkos::RangePolicy< typename ViewType::execution_space > range( 0, self.v.dimension_0() );
     Kokkos::parallel_reduce( range, self, error_count );
     ASSERT_EQ( 0, error_count );
-  }
-};
+}
 
 template< class Space >
 void test_view_mapping_operator()
 {
   typedef typename Space::execution_space ExecSpace;
 
-  TestViewMapOperator< Kokkos::View<int, Kokkos::LayoutLeft, ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::View<int*, Kokkos::LayoutLeft, ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::View<int**, Kokkos::LayoutLeft, ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::View<int***, Kokkos::LayoutLeft, ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::View<int****, Kokkos::LayoutLeft, ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::View<int*****, Kokkos::LayoutLeft, ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::View<int******, Kokkos::LayoutLeft, ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::View<int*******, Kokkos::LayoutLeft, ExecSpace> >::run();
+  TestViewMapOperator_run< Kokkos::View<int, Kokkos::LayoutLeft, ExecSpace> >();
+  TestViewMapOperator_run< Kokkos::View<int*, Kokkos::LayoutLeft, ExecSpace> >();
+  TestViewMapOperator_run< Kokkos::View<int**, Kokkos::LayoutLeft, ExecSpace> >();
+  TestViewMapOperator_run< Kokkos::View<int***, Kokkos::LayoutLeft, ExecSpace> >();
+  TestViewMapOperator_run< Kokkos::View<int****, Kokkos::LayoutLeft, ExecSpace> >();
+  TestViewMapOperator_run< Kokkos::View<int*****, Kokkos::LayoutLeft, ExecSpace> >();
+  TestViewMapOperator_run< Kokkos::View<int******, Kokkos::LayoutLeft, ExecSpace> >();
+  TestViewMapOperator_run< Kokkos::View<int*******, Kokkos::LayoutLeft, ExecSpace> >();
 
-  TestViewMapOperator< Kokkos::View<int, Kokkos::LayoutRight, ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::View<int*, Kokkos::LayoutRight, ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::View<int**, Kokkos::LayoutRight, ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::View<int***, Kokkos::LayoutRight, ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::View<int****, Kokkos::LayoutRight, ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::View<int*****, Kokkos::LayoutRight, ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::View<int******, Kokkos::LayoutRight, ExecSpace> >::run();
-  TestViewMapOperator< Kokkos::View<int*******, Kokkos::LayoutRight, ExecSpace> >::run();
+  TestViewMapOperator_run< Kokkos::View<int, Kokkos::LayoutRight, ExecSpace> >();
+  TestViewMapOperator_run< Kokkos::View<int*, Kokkos::LayoutRight, ExecSpace> >();
+  TestViewMapOperator_run< Kokkos::View<int**, Kokkos::LayoutRight, ExecSpace> >();
+  TestViewMapOperator_run< Kokkos::View<int***, Kokkos::LayoutRight, ExecSpace> >();
+  TestViewMapOperator_run< Kokkos::View<int****, Kokkos::LayoutRight, ExecSpace> >();
+  TestViewMapOperator_run< Kokkos::View<int*****, Kokkos::LayoutRight, ExecSpace> >();
+  TestViewMapOperator_run< Kokkos::View<int******, Kokkos::LayoutRight, ExecSpace> >();
+  TestViewMapOperator_run< Kokkos::View<int*******, Kokkos::LayoutRight, ExecSpace> >();
 }
 
 /*--------------------------------------------------------------------------*/

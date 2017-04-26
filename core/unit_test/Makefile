@@ -6,6 +6,7 @@ vpath %.cpp ${KOKKOS_PATH}/core/unit_test
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/serial
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/threads
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/openmp
+vpath %.cpp ${KOKKOS_PATH}/core/unit_test/openmptarget
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/qthreads
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/cuda
 
@@ -79,6 +80,20 @@ endif
 	TEST_TARGETS += test-openmp
 endif
 
+ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
+         OBJ_OPENMPTARGET = UnitTestMain.o gtest-all.o
+#        OBJ_OPENMPTARGET += TestOpenMP_Other.o TestOpenMP_Reductions.o TestOpenMP_Atomics.o TestOpenMP_Team.o
+#        OBJ_OPENMPTARGET += TestOpenMP_SubView_a.o TestOpenMP_SubView_b.o
+#        OBJ_OPENMPTARGET += TestOpenMP_SubView_c01.o TestOpenMP_SubView_c02.o TestOpenMP_SubView_c03.o
+#        OBJ_OPENMPTARGET += TestOpenMP_SubView_c04.o TestOpenMP_SubView_c05.o TestOpenMP_SubView_c06.o
+#        OBJ_OPENMPTARGET += TestOpenMP_SubView_c07.o TestOpenMP_SubView_c08.o TestOpenMP_SubView_c09.o
+#        OBJ_OPENMPTARGET += TestOpenMP_SubView_c10.o TestOpenMP_SubView_c11.o TestOpenMP_SubView_c12.o
+        OBJ_OPENMPTARGET += TestOpenMPTarget_ViewAPI_a.o 
+#TestOpenMP_ViewAPI_b.o
+        TARGETS += KokkosCore_UnitTest_OpenMPTarget
+        TEST_TARGETS += test-openmptarget
+endif
+
 ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
 	OBJ_QTHREADS = TestQthreads_Other.o TestQthreads_Reductions.o TestQthreads_Atomics.o TestQthreads_Team.o
 	OBJ_QTHREADS += TestQthreads_SubView_a.o TestQthreads_SubView_b.o
@@ -115,7 +130,11 @@ OBJ_HWLOC = TestHWLOC.o UnitTestMain.o gtest-all.o
 TARGETS += KokkosCore_UnitTest_HWLOC
 TEST_TARGETS += test-hwloc
 
-OBJ_DEFAULT = TestDefaultDeviceType.o TestDefaultDeviceType_a.o TestDefaultDeviceType_b.o TestDefaultDeviceType_c.o TestDefaultDeviceType_d.o UnitTestMain.o gtest-all.o
+OBJ_DEFAULT = UnitTestMain.o gtest-all.o
+ifneq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
+  OBJ_DEFAULT += TestDefaultDeviceType.o TestDefaultDeviceType_a.o TestDefaultDeviceType_b.o TestDefaultDeviceType_c.o TestDefaultDeviceType_d.o
+endif
+
 TARGETS += KokkosCore_UnitTest_Default
 TEST_TARGETS += test-default
 
@@ -134,6 +153,9 @@ KokkosCore_UnitTest_Threads: $(OBJ_THREADS) $(KOKKOS_LINK_DEPENDS)
 
 KokkosCore_UnitTest_OpenMP: $(OBJ_OPENMP) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_OPENMP) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_OpenMP
+
+KokkosCore_UnitTest_OpenMPTarget: $(OBJ_OPENMPTARGET) $(KOKKOS_LINK_DEPENDS)
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_OPENMPTARGET) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_OpenMPTarget
 
 KokkosCore_UnitTest_Serial: $(OBJ_SERIAL) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_SERIAL) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_Serial
@@ -161,6 +183,9 @@ test-threads: KokkosCore_UnitTest_Threads
 
 test-openmp: KokkosCore_UnitTest_OpenMP
 	./KokkosCore_UnitTest_OpenMP
+
+test-openmptarget: KokkosCore_UnitTest_OpenMPTarget
+	./KokkosCore_UnitTest_OpenMPTarget
 
 test-serial: KokkosCore_UnitTest_Serial
 	./KokkosCore_UnitTest_Serial
