@@ -49,7 +49,7 @@
 
 #include <iostream>
 #include <algorithm>
-#include <stdio.h>
+#include <cstdio>
 
 #include <utility>
 
