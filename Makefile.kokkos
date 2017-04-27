@@ -210,6 +210,9 @@ KOKKOS_INTERNAL_USE_ISA_X86_64    := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_
 KOKKOS_INTERNAL_USE_ISA_KNC       := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_KNC) | bc ))
 KOKKOS_INTERNAL_USE_ISA_POWERPCLE := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_POWER8)+$(KOKKOS_INTERNAL_USE_ARCH_POWER9) | bc ))
 
+# Decide whether we can support transactional memory
+KOKKOS_INTERNAL_USE_TM            := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_BDW)+$(KOKKOS_INTERNAL_USE_ARCH_SKX) | bc ))
+
 # Incompatible flags?
 KOKKOS_INTERNAL_USE_ARCH_MULTIHOST := $(strip $(shell echo "$(KOKKOS_INTERNAL_USE_ARCH_AVX)+$(KOKKOS_INTERNAL_USE_ARCH_AVX2)+$(KOKKOS_INTERNAL_USE_ARCH_AVX512MIC)+$(KOKKOS_INTERNAL_USE_ARCH_AVX512XEON)+$(KOKKOS_INTERNAL_USE_ARCH_KNC)+$(KOKKOS_INTERNAL_USE_ARCH_IBM)+$(KOKKOS_INTERNAL_USE_ARCH_ARM)>1" | bc ))
 KOKKOS_INTERNAL_USE_ARCH_MULTIGPU := $(strip $(shell echo "$(KOKKOS_INTERNAL_USE_ARCH_NVIDIA)>1" | bc))
@@ -264,6 +267,12 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
   tmp := $(shell echo "\#define KOKKOS_HAVE_SERIAL 1" >> KokkosCore_config.tmp )
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_TM), 1)
+  tmp := $(shell echo "\#ifndef __CUDA_ARCH__" >> KokkosCore_config.tmp )
+  tmp := $(shell echo "\#define KOKKOS_ENABLE_TM" >> KokkosCore_config.tmp )
+  tmp := $(shell echo "\#endif" >> KokkosCore_config.tmp )
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ISA_X86_64), 1)
@@ -477,7 +486,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_POWER9), 1)
   endif
 endif
 
-ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX2), 1)
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_HSW), 1)
   tmp := $(shell echo "\#define KOKKOS_ARCH_AVX2 1" >> KokkosCore_config.tmp )
 
   ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL), 1)
@@ -499,6 +508,28 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX2), 1)
   endif
 endif
 
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_BDW), 1)
+  tmp := $(shell echo "\#define KOKKOS_ARCH_AVX2 1" >> KokkosCore_config.tmp )
+
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL), 1)
+    KOKKOS_CXXFLAGS += -xCORE-AVX2
+    KOKKOS_LDFLAGS  += -xCORE-AVX2
+  else
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+
+    else
+      ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
+        KOKKOS_CXXFLAGS += -tp=haswell
+        KOKKOS_LDFLAGS  += -tp=haswell
+      else
+        # Assume that this is a really a GNU compiler.
+        KOKKOS_CXXFLAGS += -march=core-avx2 -mtune=core-avx2 -mrtm
+        KOKKOS_LDFLAGS  += -march=core-avx2 -mtune=core-avx2 -mrtm
+      endif
+    endif
+  endif
+endif
+
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX512MIC), 1)
   tmp := $(shell echo "\#define KOKKOS_ARCH_AVX512MIC 1" >> KokkosCore_config.tmp )
 
@@ -513,8 +544,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX512MIC), 1)
 
       else
         # Asssume that this is really a GNU compiler.
-        KOKKOS_CXXFLAGS += -march=knl
-        KOKKOS_LDFLAGS  += -march=knl
+        KOKKOS_CXXFLAGS += -march=knl -mtune=knl
+        KOKKOS_LDFLAGS  += -march=knl -mtune=knl
       endif
     endif
   endif
@@ -534,8 +565,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX512XEON), 1)
 
       else
         # Nothing here yet.
-        KOKKOS_CXXFLAGS += -march=skylake-avx512
-        KOKKOS_LDFLAGS  += -march=skylake-avx512
+        KOKKOS_CXXFLAGS += -march=skylake-avx512 -mtune=skylake-avx512 -mrtm
+        KOKKOS_LDFLAGS  += -march=skylake-avx512 -mtune=skylake-avx512 -mrtm
       endif
     endif
   endif

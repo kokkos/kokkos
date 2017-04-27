@@ -51,10 +51,10 @@ TEST_TARGETS += test-taskdag
 #
 
 KokkosCore_PerformanceTest: $(OBJ_PERF) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_PERF) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_PerformanceTest
+	$(LINK) $(EXTRA_PATH) $(OBJ_PERF) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_PerformanceTest
 
 KokkosCore_PerformanceTest_Atomics: $(OBJ_ATOMICS) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_ATOMICS) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_PerformanceTest_Atomics
+	$(LINK) $(EXTRA_PATH) $(OBJ_ATOMICS) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_PerformanceTest_Atomics
 
 KokkosCore_PerformanceTest_Mempool: $(OBJ_MEMPOOL) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_MEMPOOL) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_PerformanceTest_Mempool
