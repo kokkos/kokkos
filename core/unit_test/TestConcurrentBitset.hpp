@@ -170,7 +170,7 @@ void test_concurrent_bitset( int bit_count )
 
   ASSERT_EQ( total_release , total_reacquire );
 
-};
+}
 
 } // namespace Test
 

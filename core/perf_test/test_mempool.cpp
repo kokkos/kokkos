@@ -126,7 +126,7 @@ struct TestFunctor {
 
       Kokkos::parallel_reduce( policy(0,range_iter), *this , result );
 
-      if ( result == ptrs.extent(0) ) return true;
+      if ( result == long(ptrs.extent(0)) ) return true;
       pool.print_state( std::cerr );
       return false;
     }
@@ -168,7 +168,7 @@ struct TestFunctor {
 
         if ( 0 == j % 3 ) {
 
-          for ( int k = 0 ; k < repeat_inner ; ++k ) {
+          for ( unsigned k = 0 ; k < repeat_inner ; ++k ) {
 
             const unsigned size_alloc = chunk * ( 1 + ( j % chunk_span ) );
 

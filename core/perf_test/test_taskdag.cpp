@@ -41,16 +41,26 @@
 //@HEADER
 */
 
+#include <Kokkos_Core.hpp>
+
+#if ! defined( KOKKOS_ENABLE_TASKDAG ) || \
+    defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS )
+
+int main()
+{
+  return 0 ;
+}
+
+#else
+
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
-
-#include <Kokkos_Core.hpp>
-#include <impl/Kokkos_Timer.hpp>
-
 #include <limits>
 
-using ExecSpace   = Kokkos::DefaultExecutionSpace ;
+#include <impl/Kokkos_Timer.hpp>
+
+using ExecSpace = Kokkos::DefaultExecutionSpace ;
 
 inline
 long eval_fib( long n )
@@ -238,7 +248,7 @@ int main( int argc , char* argv[] )
   for ( int i = 0 ; i < test_repeat_outer ; ++i ) {
     Kokkos::Impl::Timer timer ;
 
-    Functor::FutureType f =
+    Functor::FutureType ftmp =
       Kokkos::host_spawn( Kokkos::TaskSingle( sched )
                         , Functor( sched , fib_input )
                         );
@@ -269,4 +279,6 @@ int main( int argc , char* argv[] )
 
   return 0 ;
 }
+
+#endif
 

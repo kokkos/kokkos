@@ -188,13 +188,13 @@ void test_memory_pool_v2( const bool print_statistics
     pool.get_usage_statistics( stats );
 
     const int fill_error = ( nfill != result ) ||
-                           ( nfill != stats.consumed_blocks );
+                           ( nfill != long(stats.consumed_blocks) );
 
     if ( fill_error || print_statistics ) print_memory_pool_stats< pool_type >( stats );
     if ( fill_error || print_superblocks ) pool.print_state( std::cout );
 
     ASSERT_EQ( nfill , result );
-    ASSERT_EQ( nfill , stats.consumed_blocks );
+    ASSERT_EQ( nfill , long(stats.consumed_blocks) );
 
     Kokkos::parallel_reduce
       ( Kokkos::RangePolicy< execution_space , TagDealloc >(0,nfill)
@@ -204,12 +204,12 @@ void test_memory_pool_v2( const bool print_statistics
 
     pool.get_usage_statistics( stats );
 
-    const int del_error = ( nfill - ndel ) != stats.consumed_blocks ;
+    const int del_error = ( nfill - ndel ) != long(stats.consumed_blocks);
 
     if ( del_error || print_statistics ) print_memory_pool_stats< pool_type >( stats );
     if ( del_error || print_superblocks ) pool.print_state( std::cout );
 
-    ASSERT_EQ( ( nfill - ndel ) , stats.consumed_blocks );
+    ASSERT_EQ( ( nfill - ndel ) , long(stats.consumed_blocks) );
 
     Kokkos::parallel_reduce
       ( Kokkos::RangePolicy< execution_space , TagRealloc >(0,nfill)
@@ -220,13 +220,13 @@ void test_memory_pool_v2( const bool print_statistics
     pool.get_usage_statistics( stats );
 
     const int refill_error = ( ndel != result ) ||
-                             ( nfill != stats.consumed_blocks );
+                             ( nfill != long(stats.consumed_blocks) );
 
     if ( refill_error || print_statistics ) print_memory_pool_stats< pool_type >( stats );
     if ( refill_error || print_superblocks ) pool.print_state( std::cout );
 
     ASSERT_EQ( ndel , result );
-    ASSERT_EQ( nfill , stats.consumed_blocks );
+    ASSERT_EQ( nfill , long(stats.consumed_blocks) );
 
     Kokkos::parallel_reduce
       ( Kokkos::RangePolicy< execution_space , TagMixItUp >(0,nfill)
@@ -237,13 +237,13 @@ void test_memory_pool_v2( const bool print_statistics
     pool.get_usage_statistics( stats );
 
     const int mix_error = ( ndel != result ) ||
-                          ( nfill != stats.consumed_blocks );
+                          ( nfill != long(stats.consumed_blocks) );
 
     if ( mix_error || print_statistics ) print_memory_pool_stats< pool_type >( stats );
     if ( mix_error || print_superblocks ) pool.print_state( std::cout );
 
     ASSERT_EQ( ndel , result );
-    ASSERT_EQ( nfill , stats.consumed_blocks );
+    ASSERT_EQ( nfill , long(stats.consumed_blocks) );
   }
 }
 

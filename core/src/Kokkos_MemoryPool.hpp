@@ -363,11 +363,11 @@ public:
         accessible ? m_sb_state_array
                    : (uint32_t *) host.allocate(header_size);
 
-      for ( int i = 0 ; i < m_data_offset ; ++i ) sb_state_array[i] = 0 ;
+      for ( uint32_t i = 0 ; i < m_data_offset ; ++i ) sb_state_array[i] = 0 ;
 
       // Initial assignment of empty superblocks to block sizes:
 
-      for ( int i = 0 , j = 0 ; i < number_block_sizes ; ++i ) {
+      for ( uint32_t i = 0 , j = 0 ; i < number_block_sizes ; ++i ) {
         const uint32_t block_size_lg2  = i + m_min_block_size_lg2 ;
         const uint32_t block_count_lg2 = m_sb_size_lg2 - block_size_lg2 ;
         const uint32_t block_state     = block_count_lg2 << state_shift ;
@@ -380,7 +380,7 @@ public:
 
         sb_state_array[ hint_begin ] = j ;
 
-        for ( int k = 0 ; k < m_sb_per_block_size && j < m_sb_count ; ++k , ++j ) {
+        for ( uint32_t k = 0 ; k < m_sb_per_block_size && j < m_sb_count ; ++k , ++j ) {
           sb_state_array[ j * m_sb_state_size ] = block_state ;
         }
 
@@ -403,9 +403,9 @@ private:
    * Restrict lower bound to minimum block size.
    */
   KOKKOS_FORCEINLINE_FUNCTION
-  int get_block_size_lg2( size_t n ) const noexcept
+  unsigned get_block_size_lg2( unsigned n ) const noexcept
     {
-      const int i = Kokkos::Impl::integral_power_of_two_that_contains( n );
+      const unsigned i = Kokkos::Impl::integral_power_of_two_that_contains( n );
 
       return i < m_min_block_size_lg2 ? m_min_block_size_lg2 : i ;
     }
@@ -437,7 +437,6 @@ public:
       void * p = 0 ;
 
       if ( alloc_size <= (1UL << m_max_block_size_lg2) ) {
-      // if ( alloc_size <= (1UL << m_sb_size_lg2) ) {
 
         // Allocation will fit within a superblock
         // that has block sizes ( 1 << block_size_lg2 )
@@ -535,7 +534,7 @@ public:
           sb_state_array =
             m_sb_state_array + block_size_sb_id_begin * m_sb_state_size ;
 
-          for ( int i = 0 , id = block_size_sb_id_begin ;
+          for ( uint32_t i = 0 , id = block_size_sb_id_begin ;
                 i < m_sb_count && sb_id < 0 ; ++i ) {
 
             //  Query state of the candidate superblock.
@@ -642,7 +641,7 @@ public:
             }
           }
 
-          if ( update_hint && ( hint_sb_id != sb_id ) ) {
+          if ( update_hint && ( int(hint_sb_id) != sb_id ) ) {
 
 // printf("  update hint block_size_lg2(%d) sb_id(%d)\n" , block_size_lg2 , sb_id );
 
