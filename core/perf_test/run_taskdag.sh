@@ -8,7 +8,7 @@ cat log | grep "tasks per second" | rev | cut -d ' ' -f 2 | rev >> yvals
 }
 
 rm -f xvals yvals
-for x in 22 24
+for x in 21 23
 do
   echo "test input $x"
   echo $x >> xvals
