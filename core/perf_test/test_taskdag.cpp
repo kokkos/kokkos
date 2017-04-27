@@ -48,6 +48,8 @@
 #include <Kokkos_Core.hpp>
 #include <impl/Kokkos_Timer.hpp>
 
+#include <limits>
+
 using ExecSpace   = Kokkos::DefaultExecutionSpace ;
 
 inline
@@ -178,7 +180,6 @@ int main( int argc , char* argv[] )
   long task_count_max = 0 ;
   long task_count_accum = 0 ;
   long test_result = 0 ;
-  double time = 0 ;
 
   if ( ask_help ) {
     std::cout << "command line options:"
@@ -188,19 +189,54 @@ int main( int argc , char* argv[] )
               << " " << input_value << "##"
               << " " << repeat_outer << "##"
               << std::endl ;
+    return -1;
   }
-  else {
 
-    typedef TestFib< ExecSpace >  Functor ;
+  typedef TestFib< ExecSpace >  Functor ;
 
-    Kokkos::initialize(argc,argv);
+  Kokkos::initialize(argc,argv);
 
-    Functor::Scheduler sched( Functor::MemorySpace()
-                            , total_alloc_size
-                            , min_block_size
-                            , max_block_size
-                            , min_superblock_size
-                            );
+  Functor::Scheduler sched( Functor::MemorySpace()
+                          , total_alloc_size
+                          , min_block_size
+                          , max_block_size
+                          , min_superblock_size
+                          );
+
+  Functor::FutureType f =
+    Kokkos::host_spawn( Kokkos::TaskSingle( sched )
+                      , Functor( sched , fib_input )
+                      );
+
+  Kokkos::wait( sched );
+
+  test_result = f.get();
+
+  task_count_max   = sched.allocated_task_count_max();
+  task_count_accum = sched.allocated_task_count_accum();
+
+  if ( number_alloc != task_count_accum ) {
+    std::cout << " number_alloc( " << number_alloc << " )"
+              << " != task_count_accum( " << task_count_accum << " )"
+              << std::endl ;
+  }
+
+  if ( fib_output != test_result ) {
+    std::cout << " answer( " << fib_output << " )"
+              << " != result( " << test_result << " )"
+              << std::endl ;
+  }
+
+  if ( fib_output != test_result || number_alloc != task_count_accum ) {
+    printf("  TEST FAILED\n");
+    return -1;
+  }
+
+  double min_time = std::numeric_limits<double>::max();
+  double time_sum = 0;
+
+  for ( int i = 0 ; i < test_repeat_outer ; ++i ) {
+    Kokkos::Impl::Timer timer ;
 
     Functor::FutureType f =
       Kokkos::host_spawn( Kokkos::TaskSingle( sched )
@@ -208,57 +244,28 @@ int main( int argc , char* argv[] )
                         );
 
     Kokkos::wait( sched );
-
-    test_result = f.get();
-
-    task_count_max   = sched.allocated_task_count_max();
-    task_count_accum = sched.allocated_task_count_accum();
-
-    if ( number_alloc != task_count_accum ) {
-      std::cout << " number_alloc( " << number_alloc << " )"
-                << " != task_count_accum( " << task_count_accum << " )"
-                << std::endl ;
-    }
-
-    if ( fib_output != test_result ) {
-      std::cout << " answer( " << fib_output << " )"
-                << " != result( " << test_result << " )"
-                << std::endl ;
-    }
-
-    if ( number_alloc == task_count_accum && fib_output == test_result ) {
-
-      Kokkos::Impl::Timer timer ;
-
-      for ( int i = 0 ; i < test_repeat_outer ; ++i ) {
-
-        Functor::FutureType f =
-          Kokkos::host_spawn( Kokkos::TaskSingle( sched )
-                            , Functor( sched , fib_input )
-                            );
-
-        Kokkos::wait( sched );
-      }
-
-      time = timer.seconds();
-    }
-
-    Kokkos::finalize();
+    auto this_time = timer.seconds();
+    min_time = std::min(min_time, this_time);
+    time_sum += this_time;
   }
 
-  printf( "\"mempool: alloc super repeat input output task-accum task-max time\" %ld %d %d %d %ld %ld %ld %f\n"
+  auto avg_time = time_sum / test_repeat_outer;
+
+  Kokkos::finalize();
+
+  printf( "\"taskdag: alloc super repeat input output task-accum task-max\" %ld %d %d %d %ld %ld %ld\n"
         , total_alloc_size
         , min_superblock_size
         , test_repeat_outer
         , fib_input
         , fib_output
         , task_count_accum
-        , task_count_max
-        , time );
+        , task_count_max );
 
-  if ( ! ask_help && ( fib_output != test_result ) ) {
-    printf("  TEST FAILED\n");
-  }
+  printf( "\"taskdag: time (min, avg)\" %g %g\n", min_time, avg_time);
+  printf( "\"taskdag: tasks per second (max, avg)\" %g %g\n"
+        , number_alloc / min_time
+        , number_alloc / avg_time );
 
   return 0 ;
 }
