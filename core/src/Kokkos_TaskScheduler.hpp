@@ -398,6 +398,7 @@ public:
 
   using execution_space  = ExecSpace ;
   using memory_space     = typename queue_type::memory_space ;
+  using memory_pool      = typename queue_type::memory_pool ;
   using member_type      =
     typename Kokkos::Impl::TaskQueueSpecialization< ExecSpace >::member_type ;
 
@@ -416,12 +417,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   TaskScheduler & operator = ( TaskScheduler const & rhs ) = default ;
 
-  TaskScheduler( memory_space const & arg_memory_space
-               , size_t const mempool_capacity
-               , unsigned const mempool_min_block_size  // = 1u << 6
-               , unsigned const mempool_max_block_size  // = 1u << 10
-               , unsigned const mempool_superblock_size // = 1u << 12
-               )
+  TaskScheduler( memory_pool const & arg_memory_pool )
     : m_track()
     , m_queue(0)
     {
@@ -430,22 +426,36 @@ public:
           record_type ;
 
       record_type * record =
-        record_type::allocate( arg_memory_space
+        record_type::allocate( memory_space()
                              , "TaskQueue"
                              , sizeof(queue_type)
                              );
 
-      m_queue = new( record->data() )
-        queue_type( arg_memory_space
-                  , mempool_capacity
-                  , mempool_min_block_size
-                  , mempool_max_block_size
-                  , mempool_superblock_size );
+      m_queue = new( record->data() ) queue_type( arg_memory_pool );
 
       record->m_destroy.m_queue = m_queue ;
 
       m_track.assign_allocated_record_to_uninitialized( record );
     }
+
+  TaskScheduler( memory_space const & arg_memory_space
+               , size_t const mempool_capacity
+               , unsigned const mempool_min_block_size  // = 1u << 6
+               , unsigned const mempool_max_block_size  // = 1u << 10
+               , unsigned const mempool_superblock_size // = 1u << 12
+               )
+    : TaskScheduler( memory_pool( arg_memory_space
+                                , mempool_capacity
+                                , mempool_min_block_size
+                                , mempool_max_block_size
+                                , mempool_superblock_size ) )
+    {}
+
+  //----------------------------------------
+
+  KOKKOS_INLINE_FUNCTION
+  memory_pool * memory() const noexcept
+    { return m_queue ? m_queue->m_memory : (memory_pool*) 0 ; }
 
   //----------------------------------------
   /**\brief  Allocation size for a spawned task */

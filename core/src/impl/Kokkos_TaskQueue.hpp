@@ -135,13 +135,7 @@ private:
   TaskQueue & operator = ( TaskQueue && ) = delete ;
   TaskQueue & operator = ( TaskQueue const & ) = delete ;
 
-  TaskQueue
-    ( const memory_space & arg_space
-    , size_t   const mempool_capacity
-    , unsigned const mempool_min_block_size
-    , unsigned const mempool_max_block_size
-    , unsigned const mempool_superblock_size
-    );
+  TaskQueue( const memory_pool & arg_memory_pool );
 
   // Schedule a task
   //   Precondition:

@@ -59,17 +59,8 @@ void TaskQueue< ExecSpace >::Destroy::destroy_shared_allocation()
 
 template< typename ExecSpace >
 TaskQueue< ExecSpace >::TaskQueue
-  ( const TaskQueue< ExecSpace >::memory_space & arg_space
-  , size_t   const mempool_capacity
-  , unsigned const mempool_min_block_size
-  , unsigned const mempool_max_block_size
-  , unsigned const mempool_superblock_size
-  )
-  : m_memory( arg_space
-            , mempool_capacity
-            , mempool_min_block_size
-            , mempool_max_block_size
-            , mempool_superblock_size )
+  ( typename TaskQueue< ExecSpace >::memory_pool const & arg_memory_pool )
+  : m_memory( arg_memory_pool )
   , m_ready()
   , m_accum_alloc(0)
   , m_count_alloc(0)
