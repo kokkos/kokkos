@@ -56,7 +56,7 @@
 
 /*--------------------------------------------------------------------------*/
 /* Standard 'C' libraries */
-#include <stdlib.h>
+#include <cstdlib>
 
 /* Standard 'C++' libraries */
 #include <vector>

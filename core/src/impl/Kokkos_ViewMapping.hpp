@@ -3126,16 +3126,18 @@ void view_error_operator_bounds
   view_error_operator_bounds<R+1>(buf+n,len-n,map,args...);
 }
 
-template< class MapType , class ... Args >
+template< class MemorySpace , class MapType , class ... Args >
 KOKKOS_INLINE_FUNCTION
 void view_verify_operator_bounds
-  ( const char* label , const MapType & map , Args ... args )
+  ( Kokkos::Impl::SharedAllocationTracker const & tracker
+  , const MapType & map , Args ... args )
 {
   if ( ! view_verify_operator_bounds<0>( map , args ... ) ) {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     enum { LEN = 1024 };
     char buffer[ LEN ];
-    int n = snprintf(buffer,LEN,"View bounds error of view %s (", label);
+    const std::string label = tracker.template get_label<MemorySpace>();
+    int n = snprintf(buffer,LEN,"View bounds error of view %s (",label.c_str());
     view_error_operator_bounds<0>( buffer + n , LEN - n , map , args ... );
     Kokkos::Impl::throw_runtime_exception(std::string(buffer));
 #else

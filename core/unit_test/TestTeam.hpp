@@ -41,7 +41,7 @@
 //@HEADER
 */
 
-#include <stdio.h>
+#include <cstdio>
 #include <stdexcept>
 #include <sstream>
 #include <iostream>

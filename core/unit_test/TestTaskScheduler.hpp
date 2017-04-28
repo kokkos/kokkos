@@ -47,7 +47,7 @@
 #include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_TASKDAG )
 
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <cmath>
 

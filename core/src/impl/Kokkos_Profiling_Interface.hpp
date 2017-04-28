@@ -55,7 +55,7 @@
 #include <impl/Kokkos_Profiling_DeviceInfo.hpp>
 #include <dlfcn.h>
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 
 #define KOKKOSP_INTERFACE_VERSION 20150628
 
