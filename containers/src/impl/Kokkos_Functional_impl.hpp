@@ -43,7 +43,7 @@
 #define KOKKOS_FUNCTIONAL_IMPL_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <stdint.h>
+#include <cstdint>
 
 namespace Kokkos { namespace Impl {
 

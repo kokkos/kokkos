@@ -41,7 +41,7 @@
 //@HEADER
 */
 
-#include <stdio.h>
+#include <cstdio>
 
 namespace Test {
 

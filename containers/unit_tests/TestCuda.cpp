@@ -46,7 +46,7 @@
 
 #include <iostream>
 #include <iomanip>
-#include <stdint.h>
+#include <cstdint>
 
 #include <gtest/gtest.h>
 
