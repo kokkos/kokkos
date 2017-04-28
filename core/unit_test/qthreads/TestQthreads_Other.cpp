@@ -111,12 +111,7 @@ TEST_F( qthreads, compiler_macros )
 TEST_F( qthreads, memory_pool )
 {
 #if 0
-  bool val = TestMemoryPool::test_mempool< Kokkos::Qthreads >( 128, 128000000 );
-  ASSERT_TRUE( val );
 
-  TestMemoryPool::test_mempool2< Kokkos::Qthreads >( 64, 4, 1000000, 2000000 );
-
-  TestMemoryPool::test_memory_exhaustion< Kokkos::Qthreads >();
 #endif
 }
 

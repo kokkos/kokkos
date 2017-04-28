@@ -87,6 +87,13 @@ TEST_F( serial, range_tag )
 
 //----------------------------------------------------------------------------
 
+TEST_F( serial , concurrent_bitset )
+{
+  test_concurrent_bitset< Kokkos::Serial >( 100000 );
+}
+
+//----------------------------------------------------------------------------
+
 TEST_F( serial, compiler_macros )
 {
   ASSERT_TRUE( ( TestCompilerMacros::Test< Kokkos::Serial >() ) );
@@ -96,12 +103,7 @@ TEST_F( serial, compiler_macros )
 
 TEST_F( serial, memory_pool )
 {
-  bool val = TestMemoryPool::test_mempool< Kokkos::Serial >( 128, 128000000 );
-  ASSERT_TRUE( val );
-
-  TestMemoryPool::test_mempool2< Kokkos::Serial >( 64, 4, 1000000, 2000000 );
-
-  TestMemoryPool::test_memory_exhaustion< Kokkos::Serial >();
+  TestMemoryPool::test_memory_pool_v2< Kokkos::Serial >(false,false);
 }
 
 //----------------------------------------------------------------------------

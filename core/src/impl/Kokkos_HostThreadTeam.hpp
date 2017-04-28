@@ -507,8 +507,9 @@ public:
   const scratch_memory_space & thread_scratch(int) const
     { return m_scratch.set_team_thread_mode(0,m_data.m_team_size,m_data.m_team_rank); }
 
-  //----------------------------------------
+  //--------------------------------------------------------------------------
   // Team collectives
+  //--------------------------------------------------------------------------
 
   KOKKOS_INLINE_FUNCTION void team_barrier() const noexcept
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
@@ -518,22 +519,6 @@ public:
 #else
     {}
 #endif
-
-  template< class Closure >
-  KOKKOS_INLINE_FUNCTION
-  void team_barrier( Closure const & f ) const noexcept
-    {
-      if ( m_data.team_rendezvous() ) {
-
-        // All threads have entered 'team_rendezvous'
-        // only this thread returned from 'team_rendezvous'
-        // with a return value of 'true'
-
-        f();
-
-        m_data.team_rendezvous_release();
-      }
-    }
 
   //--------------------------------------------------------------------------
 
@@ -1055,9 +1040,8 @@ template< class Space , class FunctorType >
 KOKKOS_INLINE_FUNCTION
 void single( const Impl::ThreadSingleStruct< Impl::HostThreadTeamMember<Space> > & single , const FunctorType & functor )
 {
-  if ( single.team_member.team_rank() == 0 ) functor();
   // 'single' does not perform a barrier.
-  // single.team_member.team_barrier( functor );
+  if ( single.team_member.team_rank() == 0 ) functor();
 }
 
 template< class Space , class FunctorType , typename ValueType >

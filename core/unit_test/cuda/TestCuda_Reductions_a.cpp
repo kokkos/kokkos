@@ -45,7 +45,12 @@
 
 namespace Test {
 
-TEST_F( cuda, reducers )
+TEST_F( cuda , functor_analysis )
+{
+  test_functor_analysis< Kokkos::Cuda >();
+}
+
+TEST_F( cuda , reducers )
 {
   TestReducers< int, Kokkos::Cuda >::execute_integer();
   TestReducers< size_t, Kokkos::Cuda >::execute_integer();

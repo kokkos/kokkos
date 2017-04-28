@@ -139,9 +139,15 @@ struct TestFib
   {
     typedef typename sched_type::memory_space memory_space;
 
-    enum { Log2_SuperBlockSize = 12 };
+    enum { MinBlockSize   =   64 };
+    enum { MaxBlockSize   = 1024 };
+    enum { SuperBlockSize = 1u << 12 };
 
-    sched_type root_sched( memory_space(), MemoryCapacity, Log2_SuperBlockSize );
+    sched_type root_sched( memory_space()
+                         , MemoryCapacity
+                         , MinBlockSize
+                         , MaxBlockSize
+                         , SuperBlockSize );
 
     future_type f = Kokkos::host_spawn( Kokkos::TaskSingle( root_sched )
                                       , TestFib( root_sched, i ) );
@@ -222,8 +228,15 @@ struct TestTaskDependence {
 
     // enum { MemoryCapacity = 4000 }; // Triggers infinite loop in memory pool.
     enum { MemoryCapacity = 16000 };
-    enum { Log2_SuperBlockSize = 12 };
-    sched_type sched( memory_space(), MemoryCapacity, Log2_SuperBlockSize );
+    enum { MinBlockSize   =   64 };
+    enum { MaxBlockSize   = 1024 };
+    enum { SuperBlockSize = 1u << 12 };
+
+    sched_type sched( memory_space()
+                    , MemoryCapacity
+                    , MinBlockSize
+                    , MaxBlockSize
+                    , SuperBlockSize );
 
     accum_type accum( "accum" );
 
@@ -413,7 +426,15 @@ struct TestTaskTeam {
     //const unsigned memory_capacity = 100000; // Fails with SPAN=1 for serial and OMP.
     const unsigned memory_capacity = 400000;
 
-    sched_type root_sched( typename sched_type::memory_space(), memory_capacity );
+    enum { MinBlockSize   =   64 };
+    enum { MaxBlockSize   = 1024 };
+    enum { SuperBlockSize = 1u << 12 };
+
+    sched_type root_sched( typename sched_type::memory_space()
+                         , memory_capacity
+                         , MinBlockSize
+                         , MaxBlockSize
+                         , SuperBlockSize );
 
     view_type root_parfor_result( "parfor_result", n + 1 );
     view_type root_parreduce_check( "parreduce_check", n + 1 );
@@ -526,8 +547,15 @@ struct TestTaskTeamValue {
     //const unsigned memory_capacity = 10000; // Causes memory pool infinite loop.
     const unsigned memory_capacity = 100000;
 
+    enum { MinBlockSize   =   64 };
+    enum { MaxBlockSize   = 1024 };
+    enum { SuperBlockSize = 1u << 12 };
+
     sched_type root_sched( typename sched_type::memory_space()
-                          , memory_capacity );
+                         , memory_capacity
+                         , MinBlockSize
+                         , MaxBlockSize
+                         , SuperBlockSize );
 
     view_type root_result( "result", n + 1 );
 
