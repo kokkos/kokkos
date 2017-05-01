@@ -725,7 +725,7 @@ parallel_reduce
   for( iType i = loop_boundaries.start + threadIdx.y
      ; i < loop_boundaries.end
      ; i += blockDim.y ) {
-    closure(i,result);
+    closure(i,reducer.reference());
   }
 
   loop_boundaries.member.team_reduce( reducer );
