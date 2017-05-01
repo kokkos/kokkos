@@ -296,6 +296,24 @@ struct TestTaskTeam {
   KOKKOS_INLINE_FUNCTION
   void operator()( typename sched_type::member_type & member )
   {
+#define KOKKOS_IMPL_UNIT_TEST_TASK_TEAM 1
+
+#if defined( __CUDA_ARCH__ )
+  #if ( 600 <= __CUDA_ARCH__ )
+    // TODO: Resolve bug in task team reduction for Pascal
+    #undef KOKKOS_IMPL_UNIT_TEST_TASK_TEAM
+    #define KOKKOS_IMPL_UNIT_TEST_TASK_TEAM 0
+  #endif
+#endif
+
+#if ! KOKKOS_IMPL_UNIT_TEST_TASK_TEAM
+
+    Kokkos::parallel_for( Kokkos::TeamThreadRange( member, 0, nvalue + 1 )
+                        , [&] ( int i ) { parfor_result[i] = i; }
+                        );
+
+#else
+
     const long end   = nvalue + 1;
     const long begin = 0 < end - SPAN ? end - SPAN : 0;
 
@@ -418,6 +436,10 @@ struct TestTaskTeam {
       parreduce_check[i] += result - expected;
     });
 */
+
+#endif /* KOKKOS_IMPL_UNIT_TEST_TASK_TEAM */
+#undef KOKKOS_IMPL_UNIT_TEST_TASK_TEAM
+
   }
 
   static void run( long n )
@@ -466,24 +488,31 @@ struct TestTaskTeam {
     Kokkos::deep_copy( host_parscan_result, root_parscan_result );
     Kokkos::deep_copy( host_parscan_check, root_parscan_check );
 
+    long error_count = 0 ;
+
     for ( long i = 0; i <= n; ++i ) {
       const long answer = i;
 
       if ( host_parfor_result( i ) != answer ) {
+        ++error_count ;
         std::cerr << "TestTaskTeam::run ERROR parallel_for result(" << i << ") = "
                   << host_parfor_result( i ) << " != " << answer << std::endl;
       }
 
       if ( host_parreduce_check( i ) != 0 ) {
+        ++error_count ;
         std::cerr << "TestTaskTeam::run ERROR parallel_reduce check(" << i << ") = "
                   << host_parreduce_check( i ) << " != 0" << std::endl;
       }
 
       if ( host_parscan_check( i ) != 0 ) {
+        ++error_count ;
         std::cerr << "TestTaskTeam::run ERROR parallel_scan check(" << i << ") = "
                   << host_parscan_check( i ) << " != 0" << std::endl;
       }
     }
+
+    ASSERT_EQ( 0L , error_count );
   }
 };
 
