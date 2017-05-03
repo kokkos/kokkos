@@ -96,10 +96,7 @@ int rendezvous( int64_t * const buffer
 
   const int sync_offset = ( step & mask_mem_cycle ) + size_mem_cycle ;
 
-  union {
-    int64_t full ;
-    int8_t  byte[8] ;
-  } value ;
+  int64_t value = 0;
 
   if ( rank ) {
 
@@ -115,13 +112,13 @@ int rendezvous( int64_t * const buffer
       const int end = group_begin + size_byte < size
                     ? size_byte : size - group_begin ;
 
-      value.full = 0 ;
-      for ( int i = 0 ; i < end ; ++i ) value.byte[i] = int8_t( step );
 
-      store_fence(); // This should not be needed but fixes #742
+      for ( int i = 0 ; i < end ; ++i ) {
+        value |= step << (i*size_byte);
+      }
 
       spinwait_until_equal( buffer[ (rank << shift_mem_cycle) + sync_offset ]
-                          , value.full );
+                          , value );
     }
 
     {
@@ -156,10 +153,11 @@ int rendezvous( int64_t * const buffer
 
     const int end = size_byte < size ? 8 : size ;
 
-    value.full = 0 ;
-    for ( int i = 1 ; i < end ; ++i ) value.byte[i] = int8_t( step );
+    for ( int i = 1 ; i < end ; ++i ) {
+      value |= step << (i*size_byte);
+    }
 
-    spinwait_until_equal( buffer[ sync_offset ], value.full );
+    spinwait_until_equal( buffer[ sync_offset ], value );
   }
 
   return rank ? 0 : 1 ;
