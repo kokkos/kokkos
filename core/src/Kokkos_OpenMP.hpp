@@ -168,7 +168,9 @@ public:
    *    depth = 1  gives the number of threads in a NUMA region, typically sharing L3 cache.
    *    depth = 2  gives the number of threads at the finest granularity, typically sharing L1 cache.
    */
-  inline static int thread_pool_size( int depth = 0 );
+  inline static int thread_pool_size( int depth );
+
+  inline static int thread_pool_size();
 
   /** \brief  The rank of the executing thread in this thread pool */
   KOKKOS_INLINE_FUNCTION static int thread_pool_rank();

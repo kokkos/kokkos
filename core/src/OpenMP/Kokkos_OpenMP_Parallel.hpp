@@ -460,7 +460,7 @@ public:
       {
         HostThreadTeamData & data = *(m_instance->get_thread_data());
 
-        const WorkRange range( m_policy, data.pool_rank(), data.pool_size() );
+        const WorkRange range( m_policy, t_openmp_pool_rank, t_openmp_pool_size );
 
         reference_type update_sum =
           ValueInit::init( m_functor , data.pool_reduce_local() );
@@ -472,7 +472,7 @@ public:
 
           pointer_type ptr_prev = 0 ;
 
-          const int n = data.pool_size();
+          const int n = t_openmp_pool_size;
 
           for ( int i = 0 ; i < n ; ++i ) {
 

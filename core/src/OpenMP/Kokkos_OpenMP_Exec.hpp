@@ -352,6 +352,12 @@ int OpenMP::thread_pool_size( int depth )
   return depth < 2 ? Impl::t_openmp_pool_size : 1;
 }
 
+inline
+int OpenMP::thread_pool_size()
+{
+  return Impl::t_openmp_pool_size;
+}
+
 KOKKOS_INLINE_FUNCTION
 int OpenMP::thread_pool_rank()
 {
