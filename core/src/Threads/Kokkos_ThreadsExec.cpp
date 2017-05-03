@@ -80,9 +80,7 @@ const void * volatile s_current_function_arg = 0 ;
 
 struct Sentinel {
   Sentinel()
-  {
-    HostSpace::register_in_parallel( ThreadsExec::in_parallel );
-  }
+  {}
 
   ~Sentinel()
   {

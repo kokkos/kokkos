@@ -130,14 +130,6 @@ public:
   //! This memory space preferred device_type
   typedef Kokkos::Device< execution_space, memory_space > device_type;
 
-  /*--------------------------------*/
-  /* Functions unique to the HostSpace */
-  static int in_parallel();
-
-  static void register_in_parallel( int (*)() );
-
-  /*--------------------------------*/
-
   /**\brief  Default memory space instance */
   HostSpace();
   HostSpace( HostSpace && rhs ) = default;
