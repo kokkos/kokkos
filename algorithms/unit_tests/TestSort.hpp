@@ -212,7 +212,12 @@ void test_dynamic_view_sort(unsigned int n )
   const size_t upper_bound = 2 * n ;
 
   typename KeyDynamicViewType::memory_pool
-    pool( memory_space() , 2 * n * sizeof(KeyType) );
+    pool( memory_space()
+        , n * sizeof(KeyType) * 1.2
+        ,     500 /* min block size in bytes */
+        ,   30000 /* max block size in bytes */
+        , 1000000 /* min superblock size in bytes */
+        );
 
   KeyDynamicViewType keys("Keys",pool,upper_bound);
 

@@ -44,7 +44,7 @@
 #ifndef KOKKOS_SHARED_ALLOC_HPP
 #define KOKKOS_SHARED_ALLOC_HPP
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 namespace Kokkos {

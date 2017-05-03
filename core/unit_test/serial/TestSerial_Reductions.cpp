@@ -45,6 +45,11 @@
 
 namespace Test {
 
+TEST_F( serial, functor_analysis )
+{
+  test_functor_analysis< Kokkos::Serial >();
+}
+
 TEST_F( serial, long_reduce )
 {
   TestReduce< long, Kokkos::Serial >( 0 );

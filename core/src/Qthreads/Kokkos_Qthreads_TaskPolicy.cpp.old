@@ -49,9 +49,9 @@
 
 #include <Kokkos_Core_fwd.hpp>
 
-#include <stdio.h>
+#include <cstdio>
+#include <cstdlib>
 
-#include <stdlib.h>
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
