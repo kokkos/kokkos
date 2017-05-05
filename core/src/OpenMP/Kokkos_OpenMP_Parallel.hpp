@@ -220,11 +220,6 @@ private:
             , const Member ibeg , const Member iend
             , reference_type update )
     {
-      #ifdef KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION
-      #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-      #pragma ivdep
-      #endif
-      #endif
       for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
         functor( iwork , update );
       }
@@ -238,11 +233,6 @@ private:
             , reference_type update )
     {
       const TagType t{} ;
-      #ifdef KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION
-      #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-      #pragma ivdep
-      #endif
-      #endif
       for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
         functor( t , iwork , update );
       }
@@ -406,11 +396,6 @@ private:
             , const Member ibeg , const Member iend
             , reference_type update , const bool final )
     {
-      #ifdef KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION
-      #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-      #pragma ivdep
-      #endif
-      #endif
       for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
         functor( iwork , update , final );
       }
@@ -424,11 +409,6 @@ private:
             , reference_type update , const bool final )
     {
       const TagType t{} ;
-      #ifdef KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION
-      #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-      #pragma ivdep
-      #endif
-      #endif
       for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
         functor( t , iwork , update , final );
       }

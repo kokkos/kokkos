@@ -395,6 +395,16 @@ operator * (const RealType& x, const complex<RealType>& y) {
   return complex<RealType> (x * y.real (), x * y.imag ());
 }
 
+/// \brief Binary * operator for RealType times complex.
+///
+/// This function exists because the compiler doesn't know that
+/// RealType and complex<RealType> commute with respect to operator*.
+template<class RealType>
+KOKKOS_INLINE_FUNCTION
+complex<RealType>
+operator * (const complex<RealType>& y, const RealType& x) {
+  return complex<RealType> (x * y.real (), x * y.imag ());
+}
 
 //! Imaginary part of a complex number.
 template<class RealType>
@@ -425,6 +435,12 @@ complex<RealType> conj (const complex<RealType>& x) {
   return complex<RealType> (real (x), -imag (x));
 }
 
+//! Exponential of a complex number.
+template<class RealType>
+KOKKOS_INLINE_FUNCTION
+complex<RealType> exp (const complex<RealType>& x) {
+  return std::exp(x.real()) * complex<RealType> (std::cos (x.imag()),  std::sin(x.imag()));
+}
 
 //! Binary operator / for complex and real numbers
 template<class RealType1, class RealType2>
@@ -531,6 +547,7 @@ std::ostream& operator >> (std::ostream& os, complex<RealType>& x) {
   x = x_std; // only assigns on success of above
   return os;
 }
+
 
 
 } // namespace Kokkos
