@@ -356,7 +356,7 @@ struct TaskPolicyData
   TaskPolicyData & operator = ( TaskPolicyData const & ) = default ;
 
   KOKKOS_INLINE_FUNCTION
-  TaskPolicyData( DepFutureType             && arg_future
+  TaskPolicyData( DepFutureType        const & arg_future
                 , Kokkos::TaskPriority const & arg_priority )
     : m_scheduler( 0 )
     , m_dependence( arg_future )
