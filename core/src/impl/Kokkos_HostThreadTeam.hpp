@@ -51,7 +51,6 @@
 #include <impl/Kokkos_FunctorAdapter.hpp>
 #include <impl/Kokkos_Reducer.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
-#include <impl/Kokkos_Rendezvous.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -75,8 +74,8 @@ public:
 
   enum : int { max_pool_members  = 1024 };
   enum : int { max_team_members  = 64 };
-  enum : int { max_pool_rendezvous  = rendezvous_buffer_size( max_pool_members ) };
-  enum : int { max_team_rendezvous  = rendezvous_buffer_size( max_team_members / 8 ) };
+  enum : int { max_pool_rendezvous  = ( max_pool_members / 8 ) * 4 + 4 };
+  enum : int { max_team_rendezvous  = ( max_team_members / 8 ) * 4 + 4 };
 
 private:
 
@@ -116,9 +115,32 @@ private:
   int         m_league_size ;
   int         m_work_chunk ;
   int         m_steal_rank ; // work stealing rank
+  int mutable m_pool_rendezvous_step ;
+  int mutable m_team_rendezvous_step ;
 
   HostThreadTeamData * team_member( int r ) const noexcept
     { return ((HostThreadTeamData**)(m_pool_scratch+m_pool_members))[m_team_base+r]; }
+
+  // Rendezvous pattern:
+  //   if ( rendezvous(root) ) {
+  //     ... only root thread here while all others wait ...
+  //     rendezvous_release();
+  //   }
+  //   else {
+  //     ... all other threads release here ...
+  //   }
+  //
+  // Requires: buffer[ ( max_threads / 8 ) * 4 + 4 ]; 0 == max_threads % 8
+  //
+  static
+  int rendezvous( int64_t * const buffer
+                , int & rendezvous_step
+                , int const size
+                , int const rank ) noexcept ;
+
+  static
+  void rendezvous_release( int64_t * const buffer
+                         , int const rendezvous_step ) noexcept ;
 
 public:
 
@@ -127,6 +149,7 @@ public:
     {
       return 1 == m_team_size ? 1 :
              rendezvous( m_team_scratch + m_team_rendezvous
+                       , m_team_rendezvous_step
                        , m_team_size
                        , ( m_team_rank + m_team_size - root ) % m_team_size );
     }
@@ -136,6 +159,7 @@ public:
     {
       return 1 == m_team_size ? 1 :
              rendezvous( m_team_scratch + m_team_rendezvous
+                       , m_team_rendezvous_step
                        , m_team_size
                        , m_team_rank );
     }
@@ -144,7 +168,8 @@ public:
   void team_rendezvous_release() const noexcept
     {
       if ( 1 < m_team_size ) {
-        rendezvous_release( m_team_scratch + m_team_rendezvous );
+        rendezvous_release( m_team_scratch + m_team_rendezvous
+                          , m_team_rendezvous_step );
       }
     }
 
@@ -153,6 +178,7 @@ public:
     {
       return 1 == m_pool_size ? 1 :
              rendezvous( m_pool_scratch + m_pool_rendezvous
+                       , m_pool_rendezvous_step
                        , m_pool_size
                        , m_pool_rank );
     }
@@ -161,7 +187,8 @@ public:
   void pool_rendezvous_release() const noexcept
     {
       if ( 1 < m_pool_size ) {
-        rendezvous_release( m_pool_scratch + m_pool_rendezvous );
+        rendezvous_release( m_pool_scratch + m_pool_rendezvous
+                          , m_pool_rendezvous_step );
       }
     }
 
@@ -187,6 +214,8 @@ public:
     , m_league_size(1)
     , m_work_chunk(0)
     , m_steal_rank(0)
+    , m_pool_rendezvous_step(0)
+    , m_team_rendezvous_step(0)
     {}
 
   //----------------------------------------
@@ -378,7 +407,7 @@ fflush(stdout);
       // Steal from next team, round robin
       // The next team is offset by m_team_alloc if it fits in the pool.
 
-      m_steal_rank = m_team_base + m_team_alloc + m_team_size <= m_pool_size ?
+      m_steal_rank = m_team_base + m_team_alloc + m_team_size <= m_pool_size ? 
                      m_team_base + m_team_alloc : 0 ;
     }
 
