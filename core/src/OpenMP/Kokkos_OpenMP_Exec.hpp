@@ -92,7 +92,7 @@ public:
 
   void clear_thread_data();
 
-  void validate_partition( int & num_partitions, int & partition_size );
+  static void validate_partition( int & num_partitions, int & partition_size );
 
 private:
   OpenMPExec( int control_id )
@@ -396,7 +396,7 @@ void OpenMP::partition( F const& f
   const int prev_pool_size = Impl::t_openmp_pool_size;
   Exec * prev_instance     = Impl::t_openmp_instance;
 
-  prev_instance->validate_partition( num_partitions, partition_size );
+  Exec::validate_partition( num_partitions, partition_size );
 
   OpenMP::memory_space space;
 
