@@ -139,6 +139,11 @@ TEST_F( openmp, memory_pool )
 
 #if defined( KOKKOS_ENABLE_TASKDAG )
 
+TEST_F( openmp, task_spawn )
+{
+  TestTaskScheduler::TestTaskSpawn< Kokkos::OpenMP >::run();
+}
+
 TEST_F( openmp, task_fib )
 {
   const int N = 24 ; // 25 triggers tbd bug on Cuda/Pascal

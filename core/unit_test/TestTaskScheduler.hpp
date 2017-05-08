@@ -177,6 +177,54 @@ struct TestFib
 namespace TestTaskScheduler {
 
 template< class Space >
+struct TestTaskSpawn {
+  typedef Kokkos::TaskScheduler< Space >  sched_type;
+  typedef Kokkos::Future< Space >         future_type;
+  typedef void                            value_type;
+
+  sched_type   m_sched ;
+  future_type  m_future ;
+
+  KOKKOS_INLINE_FUNCTION
+  TestTaskSpawn( const sched_type & arg_sched
+               , const future_type & arg_future
+               )
+    : m_sched( arg_sched )
+    , m_future( arg_future )
+    {}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( typename sched_type::member_type & )
+  {
+    if ( ! m_future.is_null() ) {
+      Kokkos::task_spawn( Kokkos::TaskSingle( m_sched ) , TestTaskSpawn( m_sched , future_type() ) );
+    }
+  }
+
+  static void run()
+  {
+    typedef typename sched_type::memory_space memory_space;
+
+    // enum { MemoryCapacity = 4000 }; // Triggers infinite loop in memory pool.
+    enum { MemoryCapacity = 16000 };
+    enum { MinBlockSize   =   64 };
+    enum { MaxBlockSize   = 1024 };
+    enum { SuperBlockSize = 1u << 12 };
+
+    sched_type sched( memory_space()
+                    , MemoryCapacity
+                    , MinBlockSize
+                    , MaxBlockSize
+                    , SuperBlockSize );
+
+    auto f = Kokkos::host_spawn( Kokkos::TaskSingle( sched ), TestTaskSpawn( sched, future_type() ) );
+    Kokkos::host_spawn( Kokkos::TaskSingle( f ), TestTaskSpawn( sched, f ) );
+
+    Kokkos::wait( sched );
+  }
+};
+
+template< class Space >
 struct TestTaskDependence {
   typedef Kokkos::TaskScheduler< Space >  sched_type;
   typedef Kokkos::Future< Space >         future_type;

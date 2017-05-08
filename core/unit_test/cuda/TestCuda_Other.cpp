@@ -118,6 +118,11 @@ TEST_F( cuda, memory_pool )
 
 #if defined( KOKKOS_ENABLE_TASKDAG )
 
+TEST_F( cuda, task_spawn )
+{
+  TestTaskScheduler::TestTaskSpawn< Kokkos::Cuda >::run();
+}
+
 TEST_F( cuda, task_fib )
 {
   const int N = 24 ; // 25 triggers tbd bug on Pascal
