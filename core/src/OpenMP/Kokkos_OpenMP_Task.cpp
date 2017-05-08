@@ -116,13 +116,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
 
   Impl::OpenMPExec * instance = t_openmp_instance;
 
-  const int team_size = t_openmp_pool_size;  // Threads per core
-
-#if 0
-fprintf(stdout,"TaskQueue<OpenMP> execute %d\n", team_size );
-fflush(stdout);
-#endif
-
+  const int team_size = 1;  // Threads per core
 
   instance->set_in_parallel();
 #ifdef KOKKOS_ENABLE_PROC_BIND
