@@ -484,9 +484,13 @@ bool operator == (const complex<RealType>& x, const complex<RealType>& y) {
   return real (x) == real (y) && imag (x) == imag (y);
 }
 
-//! Equality operator for std::complex and Kokkos::complex.
+/// \brief Equality operator for std::complex and Kokkos::complex.
+///
+/// This cannot be a device function, since std::real is not.
+/// Otherwise, CUDA builds will give compiler warnings ("warning:
+/// calling a constexpr __host__ function("real") from a __host__
+/// __device__ function("operator==") is not allowed").
 template<class RealType>
-KOKKOS_INLINE_FUNCTION
 bool operator == (const std::complex<RealType>& x, const complex<RealType>& y) {
   return std::real (x) == real (y) && std::imag (x) == imag (y);
 }
