@@ -6,9 +6,22 @@ ENDIF()
 
 IF(NOT KOKKOS_HAS_TRILINOS)
   CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11 FATAL_ERROR)
+  # hack in openmp
+  IF (Kokkos_ENABLE_OpenMP)
+    FIND_PACKAGE (OpenMP REQUIRED)
+    IF (OPENMP_FOUND)
+      SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+      SET (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_C_FLAGS}")
+    ENDIF ()
+  ENDIF (Kokkos_ENABLE_OpenMP)
+  IF (Kokkos_ENABLE_CUDA)
+    SET (CMAKE_CXX_COMPILER "${CMAKE_SOURCE_DIR}/bin/nvcc_wrapper")
+  ENDIF ()
   INCLUDE(cmake/tribits.cmake)
   SET(CMAKE_CXX_STANDARD 11)
 ENDIF()
+
+SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 #
 # A) Forward delcare the package so that certain options are also defined for
