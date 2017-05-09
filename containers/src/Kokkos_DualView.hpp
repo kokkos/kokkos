@@ -442,6 +442,10 @@ public:
       modified_host () = (modified_device () > modified_host () ?
                           modified_device () : modified_host ())  + 1;
     }
+
+    if (modified_host() && modified_device())
+      std::cout << "Kokkos::DualView::modify WARNING: Concurrent modification of host"
+                      " and device views in DualView: " << d_view.label() << std::endl;
   }
 
   //@}
