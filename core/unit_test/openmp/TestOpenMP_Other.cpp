@@ -230,9 +230,6 @@ TEST_F( openmp, partition_master )
   auto master = [&errors, &mtx](int partition_id, int num_partitions) {
 
     const int pool_size = Kokkos::OpenMP::thread_pool_size();
-    if ( partition_id == 0) {
-      printf( "partitons: %2d   size: %2d\n", num_partitions, pool_size);
-    }
 
     {
       std::unique_lock<Mutex> lock(mtx);
@@ -284,13 +281,22 @@ TEST_F( openmp, partition_master )
   Kokkos::OpenMP::partition_master( master );
   ASSERT_EQ( errors, 0 );
 
-  Kokkos::OpenMP::partition_master( master, 4 );
+  Kokkos::OpenMP::partition_master( master, 4, 0 );
   ASSERT_EQ( errors, 0 );
 
   Kokkos::OpenMP::partition_master( master, 0, 4 );
   ASSERT_EQ( errors, 0 );
 
   Kokkos::OpenMP::partition_master( master, 2, 2 );
+  ASSERT_EQ( errors, 0 );
+
+  Kokkos::OpenMP::partition_master( master, 8, 0 );
+  ASSERT_EQ( errors, 0 );
+
+  Kokkos::OpenMP::partition_master( master, 0, 8 );
+  ASSERT_EQ( errors, 0 );
+
+  Kokkos::OpenMP::partition_master( master, 8, 8 );
   ASSERT_EQ( errors, 0 );
 }
 
