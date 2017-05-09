@@ -442,6 +442,13 @@ complex<RealType> exp (const complex<RealType>& x) {
   return std::exp(x.real()) * complex<RealType> (std::cos (x.imag()),  std::sin(x.imag()));
 }
 
+//! Exponential of a complex number.
+template<class RealType>
+KOKKOS_INLINE_FUNCTION
+complex<RealType> pow (const complex<RealType>& x) {
+  return std::exp(x.real()) * complex<RealType> (std::cos (x.imag()),  std::sin(x.imag()));
+}
+
 //! Binary operator / for complex and real numbers
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION

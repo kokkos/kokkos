@@ -52,14 +52,17 @@ endif
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
-	OBJ_THREADS = TestThreads_Other.o TestThreads_Reductions.o TestThreads_Atomics.o TestThreads_Team.o
+  OBJ_THREADS = UnitTestMain.o gtest_all.o
+	OBJ_THREADS += TestThreads_Other.o TestThreads_Reductions.o TestThreads_Atomics.o TestThreads_Team.o
 	OBJ_THREADS += TestThreads_SubView_a.o TestThreads_SubView_b.o
 	OBJ_THREADS += TestThreads_SubView_c01.o TestThreads_SubView_c02.o TestThreads_SubView_c03.o
 	OBJ_THREADS += TestThreads_SubView_c04.o TestThreads_SubView_c05.o TestThreads_SubView_c06.o
 	OBJ_THREADS += TestThreads_SubView_c07.o TestThreads_SubView_c08.o TestThreads_SubView_c09.o
 	OBJ_THREADS += TestThreads_SubView_c10.o TestThreads_SubView_c11.o TestThreads_SubView_c12.o
 	OBJ_THREADS += TestThreads_ViewAPI_a.o TestThreads_ViewAPI_b.o UnitTestMain.o gtest-all.o
-	TARGETS += KokkosCore_UnitTest_Threads
+  OBJ_THREADSNEW = UnitTestMainInit.o gtest_all.o
+  OBJ_THREADSNEW += TestThreads_Complex.o
+  TARGETS += KokkosCore_UnitTest_Threads KokkosCore_UnitTestNew_Threads
 	TEST_TARGETS += test-threads
 endif
 
@@ -132,6 +135,9 @@ KokkosCore_UnitTest_Cuda: $(OBJ_CUDA) $(KOKKOS_LINK_DEPENDS)
 KokkosCore_UnitTest_Threads: $(OBJ_THREADS) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_THREADS) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Threads
 
+KokkosCore_UnitTestNew_Threads: $(OBJ_THREADSNEW) $(KOKKOS_LINK_DEPENDS)
+	$(LINK) $(EXTRA_PATH) $(OBJ_THREADSNEW) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTestNew_Threads
+
 KokkosCore_UnitTest_OpenMP: $(OBJ_OPENMP) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_OPENMP) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_OpenMP
 
@@ -156,8 +162,9 @@ ${INITTESTS_TARGETS}: KokkosCore_UnitTest_DefaultDeviceTypeInit_%: TestDefaultDe
 test-cuda: KokkosCore_UnitTest_Cuda
 	./KokkosCore_UnitTest_Cuda
 
-test-threads: KokkosCore_UnitTest_Threads
+test-threads: KokkosCore_UnitTest_Threads KokkosCore_UnitTestNew_Threads
 	./KokkosCore_UnitTest_Threads
+	./KokkosCore_UnitTestNew_Threads
 
 test-openmp: KokkosCore_UnitTest_OpenMP
 	./KokkosCore_UnitTest_OpenMP
