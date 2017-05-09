@@ -43,6 +43,8 @@
 
 #include <openmp/TestOpenMP.hpp>
 
+#include <mutex>
+
 namespace Test {
 
 TEST_F( openmp, init )
@@ -215,6 +217,81 @@ TEST_F( openmp, dispatch )
                           , KOKKOS_LAMBDA( int ) {} );
     }
   }
+}
+
+
+TEST_F( openmp, partition_master )
+{
+  using Mutex = Kokkos::Experimental::MasterLock<Kokkos::OpenMP>;
+
+  Mutex mtx;
+  int errors = 0;
+
+  auto master = [&errors, &mtx](int partition_id, int num_partitions) {
+
+    const int pool_size = Kokkos::OpenMP::thread_pool_size();
+    if ( partition_id == 0) {
+      printf( "partitons: %2d   size: %2d\n", num_partitions, pool_size);
+    }
+
+    {
+      std::unique_lock<Mutex> lock(mtx);
+      if ( Kokkos::OpenMP::in_parallel() ) {
+        ++errors;
+      }
+      if ( Kokkos::OpenMP::thread_pool_rank() != 0 ) {
+        ++errors;
+      }
+    }
+
+    {
+      int local_errors = 0;
+      Kokkos::parallel_reduce( 1000
+                           , [pool_size]( const int , int & errs ) {
+          if ( Kokkos::OpenMP::thread_pool_size() != pool_size ) {
+            ++errs;
+          }
+        }
+        , local_errors
+      );
+      Kokkos::atomic_add( &errors, local_errors );
+    }
+
+    Kokkos::Experimental::UniqueToken< Kokkos::OpenMP > token;
+
+    Kokkos::View<int*> count( "",  token.size() );
+
+    Kokkos::parallel_for( 1000, KOKKOS_LAMBDA ( const int ) {
+      int i = token.acquire();
+      ++count[i];
+      token.release(i);
+    });
+
+    Kokkos::View<int> sum ("");
+    Kokkos::parallel_for( token.size(), KOKKOS_LAMBDA ( const int i ) {
+      Kokkos::atomic_add( sum.data(), count[i] );
+    });
+
+    if (sum() != 1000) {
+      Kokkos::atomic_add( &errors, 1 );
+    }
+  };
+
+  master(0,1);
+
+  ASSERT_EQ( errors, 0 );
+
+  Kokkos::OpenMP::partition_master( master );
+  ASSERT_EQ( errors, 0 );
+
+  Kokkos::OpenMP::partition_master( master, 4 );
+  ASSERT_EQ( errors, 0 );
+
+  Kokkos::OpenMP::partition_master( master, 0, 4 );
+  ASSERT_EQ( errors, 0 );
+
+  Kokkos::OpenMP::partition_master( master, 2, 2 );
+  ASSERT_EQ( errors, 0 );
 }
 
 } // namespace Test

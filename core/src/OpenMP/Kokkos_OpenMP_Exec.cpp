@@ -59,7 +59,6 @@
 namespace Kokkos {
 namespace Impl {
 
-int g_openmp_initialized = 0;
 int g_openmp_hardware_max_threads = 1;
 
 __thread int t_openmp_pool_rank = 0;
@@ -78,8 +77,8 @@ void OpenMPExec::validate_partition( int & num_partitions
   }
   else if( num_partitions < 1 && partition_size < 1) {
     int idle = nthreads;
-    for (int np = 2; np < nthreads ; ++np) {
-      for (int ps = 1; ps < nthreads/np; ++ps) {
+    for (int np = 2; np <= nthreads ; ++np) {
+      for (int ps = 1; ps <= nthreads/np; ++ps) {
         if (nthreads - np*ps < idle) {
           idle = nthreads - np*ps;
           num_partitions = np;
@@ -273,41 +272,49 @@ namespace Kokkos {
 
 //----------------------------------------------------------------------------
 
-
-void OpenMP::initialize( int thread_count , int, int )
+int OpenMP::get_current_max_threads() noexcept
 {
+  // Using omp_get_max_threads(); is problematic in conjunction with
+  // Hwloc on Intel (essentially an initial call to the OpenMP runtime
+  // without a parallel region before will set a process mask for a single core
+  // The runtime will than bind threads for a parallel region to other cores on the
+  // entering the first parallel region and make the process mask the aggregate of
+  // the thread masks. The intend seems to be to make serial code run fast, if you
+  // compile with OpenMP enabled but don't actually use parallel regions or so
+  // static int omp_max_threads = omp_get_max_threads();
+
+  int count = 0;
+#ifdef KOKKOS_ENABLE_PROC_BIND
+  #pragma omp parallel proc_bind(spread)
+#else
+  #pragma omp parallel
+#endif
+  {
+    #pragma omp atomic
+     ++count;
+  }
+  return count;
+}
 
 
-  const bool is_initialized = Impl::g_openmp_initialized ;
+void OpenMP::initialize( int thread_count )
+{
+  if ( Impl::t_openmp_instance )
+  {
+    finalize();
+  }
 
-  if ( ! is_initialized && !omp_in_parallel() ) {
+  if ( !omp_in_parallel() ) {
+
+    OpenMP::memory_space space ;
+
 
     omp_set_nested( 1 );
-
-    Impl::g_openmp_initialized = true;
-
 
     // Before any other call to OMP query the maximum number of threads
     // and save the value for re-initialization unit testing.
 
-    // Using omp_get_max_threads(); is problematic in conjunction with
-    // Hwloc on Intel (essentially an initial call to the OpenMP runtime
-    // without a parallel region before will set a process mask for a single core
-    // The runtime will than bind threads for a parallel region to other cores on the
-    // entering the first parallel region and make the process mask the aggregate of
-    // the thread masks. The intend seems to be to make serial code run fast, if you
-    // compile with OpenMP enabled but don't actually use parallel regions or so
-    // static int omp_max_threads = omp_get_max_threads();
-    Impl::g_openmp_hardware_max_threads = 0;
-#ifdef KOKKOS_ENABLE_PROC_BIND
-    #pragma omp parallel proc_bind(spread)
-#else
-    #pragma omp parallel
-#endif
-    {
-      #pragma omp atomic
-      ++Impl::g_openmp_hardware_max_threads;
-    }
+    Impl::g_openmp_hardware_max_threads = get_current_max_threads();
 
     int process_num_threads = Impl::g_openmp_hardware_max_threads;
 
@@ -336,7 +343,6 @@ void OpenMP::initialize( int thread_count , int, int )
       omp_set_num_threads(Impl::g_openmp_hardware_max_threads);
     }
 
-    OpenMP::memory_space space ;
     void * const ptr = space.allocate( sizeof(Impl::OpenMPExec) );
 
     Impl::OpenMPExec * new_instance = new (ptr) Impl::OpenMPExec( 0 );
@@ -370,10 +376,8 @@ void OpenMP::initialize( int thread_count , int, int )
     }
   }
 
-  if ( is_initialized || omp_in_parallel() ) {
-    std::string msg("Kokkos::OpenMP::initialize ERROR ");
-    if( is_initialized ) msg.append(": already initialized");
-    if( omp_in_parallel() ) msg.append(": in parallel");
+  if ( omp_in_parallel() ) {
+    std::string msg("Kokkos::OpenMP::initialize ERROR : in parallel");
     Kokkos::Impl::throw_runtime_exception(msg);
   }
 
@@ -396,40 +400,46 @@ void OpenMP::initialize( int thread_count , int, int )
 
 void OpenMP::finalize()
 {
-  if ( !Impl::g_openmp_initialized || omp_in_parallel() )
+  if ( omp_in_parallel() )
   {
     std::string msg("Kokkos::OpenMP::finalize ERROR ");
-    if( !Impl::g_openmp_initialized ) msg.append(": not initialized");
+    if( !Impl::t_openmp_instance ) msg.append(": not initialized");
     if( omp_in_parallel() ) msg.append(": in parallel");
     Kokkos::Impl::throw_runtime_exception(msg);
   }
 
-  using Exec = Impl::OpenMPExec;
-  Exec * instance = Impl::t_openmp_instance;
-  instance->~Exec();
+  if ( Impl::t_openmp_instance ) {
 
-  OpenMP::memory_space space;
-  space.deallocate( instance, sizeof(Exec) );
+    const int nthreads = Impl::t_openmp_pool_size <= Impl::g_openmp_hardware_max_threads
+                       ? Impl::g_openmp_hardware_max_threads
+                       : Impl::t_openmp_pool_size;
+
+    using Exec = Impl::OpenMPExec;
+    Exec * instance = Impl::t_openmp_instance;
+    instance->~Exec();
+
+    OpenMP::memory_space space;
+    space.deallocate( instance, sizeof(Exec) );
 
 #ifdef KOKKOS_ENABLE_PROC_BIND
-  #pragma omp parallel num_threads(Impl::g_openmp_hardware_max_threads) proc_bind(spread)
+    #pragma omp parallel num_threads(nthreads) proc_bind(spread)
 #else
-  #pragma omp parallel num_threads(Impl::g_openmp_hardware_max_threads)
+    #pragma omp parallel num_threads(nthreads)
 #endif
-  {
-    Impl::t_openmp_pool_rank   = 0;
-    Impl::t_openmp_pool_size   = 0;
-    Impl::t_openmp_hardware_id = 0;
-    Impl::t_openmp_instance    = nullptr;
-    Impl::SharedAllocationRecord< void, void >::tracking_disable();
+    {
+      Impl::t_openmp_pool_rank   = 0;
+      Impl::t_openmp_pool_size   = 0;
+      Impl::t_openmp_hardware_id = 0;
+      Impl::t_openmp_instance    = nullptr;
+      Impl::SharedAllocationRecord< void, void >::tracking_disable();
+    }
+
+    // allow main thread to track
+    Impl::SharedAllocationRecord< void, void >::tracking_enable();
+
+    Impl::t_openmp_pool_size = 1;
+    Impl::g_openmp_hardware_max_threads = 1;
   }
-
-  // allow main thread to track
-  Impl::SharedAllocationRecord< void, void >::tracking_enable();
-
-  Impl::t_openmp_pool_size = 1;
-  Impl::g_openmp_hardware_max_threads = 1;
-  Impl::g_openmp_initialized = 0;
 
   #if defined(KOKKOS_ENABLE_PROFILING)
     Kokkos::Profiling::finalize();
@@ -438,7 +448,7 @@ void OpenMP::finalize()
 
 //----------------------------------------------------------------------------
 
-void OpenMP::print_configuration( std::ostream & s , const bool detail )
+void OpenMP::print_configuration( std::ostream & s , const bool verbose )
 {
   s << "Kokkos::OpenMP" ;
 
@@ -462,10 +472,24 @@ void OpenMP::print_configuration( std::ostream & s , const bool detail )
   }
 }
 
+std::vector<OpenMP> OpenMP::partition(...)
+{ return std::vector<OpenMP>(1); }
+
+OpenMP OpenMP::create_instance(...) { return OpenMP(); }
+
+
+#if !defined( KOKKOS_DISABLE_DEPRECATED )
+
 int OpenMP::concurrency() {
   return Impl::g_openmp_hardware_max_threads;
 }
 
+void OpenMP::initialize( int thread_count , int, int )
+{
+  initialize(thread_count);
+}
+
+#endif
 
 } // namespace Kokkos
 
