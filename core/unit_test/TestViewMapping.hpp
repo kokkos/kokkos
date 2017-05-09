@@ -1344,7 +1344,7 @@ struct TestViewMappingAtomic {
   T      x;
   T_atom x_atom;
 
-  constexpr static size_t N = 100000;
+  enum { N = 100000};
 
   struct TagInit {};
   struct TagUpdate {};
@@ -1369,33 +1369,37 @@ struct TestViewMappingAtomic {
     : x( "x", N )
     , x_atom( x )
     {}
+};
 
-  static void run()
-  {
-    ASSERT_TRUE( T::reference_type_is_lvalue_reference );
-    ASSERT_FALSE( T_atom::reference_type_is_lvalue_reference );
+template< class Space >
+static void TestViewMappingAtomic_run()
+{
+   typedef TestViewMappingAtomic<Space> t_Test;
 
-    TestViewMappingAtomic self;
+    ASSERT_TRUE( t_Test::T::reference_type_is_lvalue_reference );
+    ASSERT_FALSE( t_Test::T_atom::reference_type_is_lvalue_reference );
 
-    Kokkos::parallel_for( Kokkos::RangePolicy< ExecSpace, TagInit >( 0, N ), self );
-    Kokkos::parallel_for( Kokkos::RangePolicy< ExecSpace, TagUpdate >( 0, N ), self );
+    t_Test self;
+
+    Kokkos::parallel_for( Kokkos::RangePolicy< typename t_Test::ExecSpace, typename t_Test::TagInit >( 0, t_Test::N ), self );
+    Kokkos::parallel_for( Kokkos::RangePolicy< typename t_Test::ExecSpace, typename t_Test::TagUpdate >( 0, t_Test::N ), self );
 
     long error_count = -1;
 
-    Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace, TagVerify >( 0, N ), self, error_count );
+    Kokkos::parallel_reduce( Kokkos::RangePolicy< typename t_Test::ExecSpace, typename t_Test::TagVerify >( 0, t_Test::N ), self, error_count );
 
     ASSERT_EQ( 0, error_count );
 
-    typename TestViewMappingAtomic::T_atom::HostMirror x_host = Kokkos::create_mirror_view( self.x );
+    typename t_Test::T_atom::HostMirror x_host = Kokkos::create_mirror_view( self.x );
     Kokkos::deep_copy( x_host, self.x );
 
     error_count = -1;
 
-    Kokkos::parallel_reduce( Kokkos::RangePolicy< Kokkos::DefaultHostExecutionSpace, TagVerify >( 0, N ), 
-      [=] ( const TagVerify &, const int i, long & tmp_error_count )
+    Kokkos::parallel_reduce( Kokkos::RangePolicy< Kokkos::DefaultHostExecutionSpace, typename t_Test::TagVerify >( 0, t_Test::N ), 
+      [=] ( const typename t_Test::TagVerify &, const int i, long & tmp_error_count )
     {
       if ( i < 2 ) {
-        if ( x_host( i ) != int( i + N / 2 ) ) ++tmp_error_count ;
+        if ( x_host( i ) != int( i + t_Test::N / 2 ) ) ++tmp_error_count ;
       }
       else {
         if ( x_host( i ) != int( i ) ) ++tmp_error_count ;
@@ -1408,15 +1412,10 @@ struct TestViewMappingAtomic {
 };
 
 /*--------------------------------------------------------------------------*/
-
-template< class Space >
-struct TestViewMappingClassValue {
-  typedef typename Space::execution_space ExecSpace;
-  typedef typename Space::memory_space    MemSpace;
-
-  struct ValueType {
+namespace Test {
+struct ValueType {
     KOKKOS_INLINE_FUNCTION
-    ValueType()
+    ValueType() 
     {
 #if 0
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA )
@@ -1442,18 +1441,20 @@ struct TestViewMappingClassValue {
 #endif
     }
   };
+}
 
-  static void run()
+template< class Space >
+void TestViewMappingClassValue_run()
+{
+  typedef typename Space::execution_space ExecSpace;
+  typedef typename Space::memory_space    MemSpace;
+
+  ExecSpace::fence();
   {
-    using namespace Kokkos::Experimental;
-
-    ExecSpace::fence();
-    {
-      View< ValueType, ExecSpace > a( "a" );
-      ExecSpace::fence();
-    }
+    Kokkos::View< Test::ValueType, ExecSpace > a( "a" );
     ExecSpace::fence();
   }
-};
+  ExecSpace::fence();
+}
 
-} // namespace Test
+

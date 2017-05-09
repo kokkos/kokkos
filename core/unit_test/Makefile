@@ -88,8 +88,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
 #        OBJ_OPENMPTARGET += TestOpenMP_SubView_c04.o TestOpenMP_SubView_c05.o TestOpenMP_SubView_c06.o
 #        OBJ_OPENMPTARGET += TestOpenMP_SubView_c07.o TestOpenMP_SubView_c08.o TestOpenMP_SubView_c09.o
 #        OBJ_OPENMPTARGET += TestOpenMP_SubView_c10.o TestOpenMP_SubView_c11.o TestOpenMP_SubView_c12.o
-        OBJ_OPENMPTARGET += TestOpenMPTarget_ViewAPI_a.o 
-#TestOpenMP_ViewAPI_b.o
+        OBJ_OPENMPTARGET += TestOpenMPTarget_ViewAPI_a.o TestOpenMPTarget_ViewAPI_b.o
         TARGETS += KokkosCore_UnitTest_OpenMPTarget
         TEST_TARGETS += test-openmptarget
 endif

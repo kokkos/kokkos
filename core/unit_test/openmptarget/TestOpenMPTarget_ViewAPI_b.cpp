@@ -41,46 +41,47 @@
 //@HEADER
 */
 
-#include <serial/TestSerial.hpp>
+#include <openmptarget/TestOpenMPTarget.hpp>
 
 namespace Test {
 
-TEST_F( serial, impl_shared_alloc )
+TEST_F( openmptarget, impl_shared_alloc )
 {
-  test_shared_alloc< Kokkos::HostSpace, Kokkos::Serial >();
+  test_shared_alloc< Kokkos::Experimental::OpenMPTargetSpace, Kokkos::HostSpace::execution_space >();
 }
 
-TEST_F( serial, impl_view_mapping_b )
+TEST_F( openmptarget, impl_view_mapping_b )
 {
-  test_view_mapping_subview< Kokkos::Serial >();
-  TestViewMappingAtomic_run< Kokkos::Serial >();
+  test_view_mapping_subview< Kokkos::Experimental::OpenMPTarget >();
+  TestViewMappingAtomic_run< Kokkos::Experimental::OpenMPTarget >();
 }
 
-TEST_F( serial, view_api )
+TEST_F( openmptarget, view_api )
 {
-  TestViewAPI< double, Kokkos::Serial >();
+  TestViewAPI< double, Kokkos::Experimental::OpenMPTarget >();
 }
 
-TEST_F( serial, view_nested_view )
+TEST_F( openmptarget, view_nested_view )
 {
-  ::Test::view_nested_view< Kokkos::Serial >();
+  ::Test::view_nested_view< Kokkos::Experimental::OpenMPTarget >();
 }
 
-TEST_F( serial, view_remap )
+/* KOKKOS_IGNORED_TEST
+TEST_F( openmptarget, view_remap )
 {
   enum { N0 = 3, N1 = 2, N2 = 8, N3 = 9 };
 
   typedef Kokkos::View< double*[N1][N2][N3],
                         Kokkos::LayoutRight,
-                        Kokkos::Serial > output_type;
+                        Kokkos::Experimental::OpenMPTarget > output_type;
 
   typedef Kokkos::View< int**[N2][N3],
                         Kokkos::LayoutLeft,
-                        Kokkos::Serial > input_type;
+                        Kokkos::Experimental::OpenMPTarget > input_type;
 
   typedef Kokkos::View< int*[N0][N2][N3],
                         Kokkos::LayoutLeft,
-                        Kokkos::Serial > diff_type;
+                        Kokkos::Experimental::OpenMPTarget > diff_type;
 
   output_type output( "output", N0 );
   input_type  input ( "input", N0, N1 );
@@ -110,15 +111,16 @@ TEST_F( serial, view_remap )
     ASSERT_EQ( value, ( (int) output( i0, i1, i2, i3 ) ) );
   }
 }
+*/
 
-TEST_F( serial, view_aggregate )
+TEST_F( openmptarget, view_aggregate )
 {
-  TestViewAggregate< Kokkos::Serial >();
+  TestViewAggregate< Kokkos::Experimental::OpenMPTarget >();
 }
 
-TEST_F( serial, template_meta_functions )
+TEST_F( openmptarget, template_meta_functions )
 {
-  TestTemplateMetaFunctions< int, Kokkos::Serial >();
+  TestTemplateMetaFunctions< int, Kokkos::Experimental::OpenMPTarget >();
 }
 
 } // namespace Test

@@ -68,8 +68,8 @@ struct TestViewOperator
 {
   typedef typename DeviceType::execution_space  execution_space;
 
-  static const unsigned N = 100;
-  static const unsigned D = 3;
+  enum { N = 100 };
+  enum { D = 3 };
 
   typedef Kokkos::View< T*[D], execution_space > view_type;
 
@@ -80,11 +80,6 @@ struct TestViewOperator
     : v1( "v1", N )
     , v2( "v2", N )
     {}
-
-  static void testit()
-  {
-    Kokkos::parallel_for( N, TestViewOperator() );
-  }
 
   KOKKOS_INLINE_FUNCTION
   void operator()( const unsigned i ) const
@@ -839,7 +834,8 @@ public:
     run_test_subview_strided();
     run_test_vector();
 
-    TestViewOperator< T, device >::testit();
+
+    {TestViewOperator< T, device > f; Kokkos::parallel_for(int(N0),f);}
     TestViewOperator_LeftAndRight< int[2][3][4][2][3][4][2][3], device >::testit();
     TestViewOperator_LeftAndRight< int[2][3][4][2][3][4][2], device >::testit();
     TestViewOperator_LeftAndRight< int[2][3][4][2][3][4], device >::testit();
