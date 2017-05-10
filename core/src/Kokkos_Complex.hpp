@@ -457,7 +457,7 @@ template<class RealType>
 KOKKOS_INLINE_FUNCTION
 RealType abs (const complex<RealType>& x) {
   // FIXME (mfh 31 Oct 2014) Scale to avoid unwarranted overflow.
-  return ::sqrt (real (x) * real (x) + imag (x) * imag (x));
+  return std::sqrt (real (x) * real (x) + imag (x) * imag (x));
 }
 
 //! Power of a complex number
