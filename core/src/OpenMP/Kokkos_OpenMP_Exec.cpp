@@ -229,6 +229,8 @@ void OpenMPExec::resize_thread_data( size_t pool_reduce_bytes
 
     OpenMP::memory_space space ;
 
+    memory_fence();
+
 #ifdef KOKKOS_ENABLE_PROC_BIND
     #pragma omp parallel num_threads(pool_size) proc_bind(spread)
 #else
@@ -254,7 +256,10 @@ void OpenMPExec::resize_thread_data( size_t pool_reduce_bytes
                       , pool_reduce_bytes
                       , team_reduce_bytes
                       , team_shared_bytes
-                      , thread_local_bytes );
+                      , thread_local_bytes
+                      );
+
+      memory_fence();
     }
 /* END #pragma omp parallel */
 

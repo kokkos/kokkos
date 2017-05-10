@@ -201,6 +201,21 @@ void OpenMP::partition_master( F const& f
       Impl::t_openmp_pool_size = partition_size;
     }
 
+    {
+      memory_fence();
+
+      size_t pool_reduce_bytes  =   32 * partition_size ;
+      size_t team_reduce_bytes  =   32 * partition_size ;
+      size_t team_shared_bytes  = 1024 * partition_size ;
+      size_t thread_local_bytes = 1024 ;
+
+      new_instance->resize_thread_data( pool_reduce_bytes
+                                      , team_reduce_bytes
+                                      , team_shared_bytes
+                                      , thread_local_bytes
+                                      );
+    }
+
     f( omp_get_thread_num(), omp_get_num_threads() );
 
     new_instance->~Exec();
@@ -218,6 +233,7 @@ void OpenMP::partition_master( F const& f
     Impl::t_openmp_pool_rank = omp_get_thread_num();
     Impl::t_openmp_pool_size = prev_pool_size;
   }
+  memory_fence();
 }
 
 

@@ -58,9 +58,11 @@ void HostThreadTeamData::organize_pool
 {
   bool ok = true ;
 
+  memory_fence();
+
   // Verify not already a member of a pool:
   for ( int rank = 0 ; rank < size && ok ; ++rank ) {
-    ok = ( 0 != members[rank] ) && ( 0 == members[rank]->m_pool_scratch );
+    ok = ( nullptr != members[rank] ) && ( 0 == members[rank]->m_pool_scratch );
   }
 
   if ( ok ) {
