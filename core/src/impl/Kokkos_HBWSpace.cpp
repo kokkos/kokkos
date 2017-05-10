@@ -44,11 +44,10 @@
 
 #include <Kokkos_Macros.hpp>
 
-
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <memory.h>
+#include <cstddef>
+#include <cstdlib>
+#include <cstdint>
+#include <cstring>
 
 #include <iostream>
 #include <sstream>

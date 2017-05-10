@@ -70,7 +70,7 @@ struct InvNorm2 : public Kokkos::DotSingle< VectorView > {
   KOKKOS_INLINE_FUNCTION
   void final( value_type & result ) const
   {
-    result = sqrt( result );
+    result = std::sqrt( result );
     Rjj() = result ;
     inv() = ( 0 < result ) ? 1.0 / result : 0 ;
   }
@@ -157,7 +157,7 @@ struct ModifiedGramSchmidt
 
     for ( size_type j = 0 ; j < count ; ++j ) {
       // Reduction   : tmp = dot( Q(:,j) , Q(:,j) );
-      // PostProcess : tmp = sqrt( tmp ); R(j,j) = tmp ; tmp = 1 / tmp ;
+      // PostProcess : tmp = std::sqrt( tmp ); R(j,j) = tmp ; tmp = 1 / tmp ;
       const vector_type Qj  = Kokkos::subview( Q_ , Kokkos::ALL() , j );
       const value_view  Rjj = Kokkos::subview( R_ , j , j );
 

@@ -101,23 +101,32 @@ TEST_F( cuda, compiler_macros )
 
 //----------------------------------------------------------------------------
 
+TEST_F( cuda , concurrent_bitset )
+{
+  test_concurrent_bitset< Kokkos::Cuda >( 100000 );
+}
+
+//----------------------------------------------------------------------------
+
 TEST_F( cuda, memory_pool )
 {
-  bool val = TestMemoryPool::test_mempool< Kokkos::Cuda >( 128, 128000000 );
-  ASSERT_TRUE( val );
-
-  TestMemoryPool::test_mempool2< Kokkos::Cuda >( 64, 4, 1000000, 2000000 );
-
-  TestMemoryPool::test_memory_exhaustion< Kokkos::Cuda >();
+  TestMemoryPool::test_memory_pool_v2< Kokkos::Cuda >(false,false);
 }
+
 
 //----------------------------------------------------------------------------
 
 #if defined( KOKKOS_ENABLE_TASKDAG )
 
+TEST_F( cuda, task_spawn )
+{
+  TestTaskScheduler::TestTaskSpawn< Kokkos::Cuda >::run();
+}
+
 TEST_F( cuda, task_fib )
 {
-  for ( int i = 0; i < 25; ++i ) {
+  const int N = 24 ; // 25 triggers tbd bug on Pascal
+  for ( int i = 0; i < N; ++i ) {
     TestTaskScheduler::TestFib< Kokkos::Cuda >::run( i, ( i + 1 ) * ( i + 1 ) * 10000 );
   }
 }

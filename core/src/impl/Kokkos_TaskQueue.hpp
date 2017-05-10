@@ -105,7 +105,7 @@ private:
   using specialization  = TaskQueueSpecialization< execution_space > ;
   using memory_space    = typename specialization::memory_space ;
   using device_type     = Kokkos::Device< execution_space , memory_space > ;
-  using memory_pool     = Kokkos::Experimental::MemoryPool< device_type > ;
+  using memory_pool     = Kokkos::MemoryPool< device_type > ;
   using task_root_type  = Kokkos::Impl::TaskBase<execution_space,void,void> ;
 
   struct Destroy {
@@ -135,11 +135,7 @@ private:
   TaskQueue & operator = ( TaskQueue && ) = delete ;
   TaskQueue & operator = ( TaskQueue const & ) = delete ;
 
-  TaskQueue
-    ( const memory_space & arg_space
-    , unsigned const arg_memory_pool_capacity
-    , unsigned const arg_memory_pool_superblock_capacity_log2
-    );
+  TaskQueue( const memory_pool & arg_memory_pool );
 
   // Schedule a task
   //   Precondition:

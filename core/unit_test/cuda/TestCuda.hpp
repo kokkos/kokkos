@@ -52,6 +52,7 @@
 #include <TestTile.hpp>
 #include <TestSharedAlloc.hpp>
 #include <TestViewMapping.hpp>
+#include <TestFunctorAnalysis.hpp>
 #include <TestViewAPI.hpp>
 #include <TestViewOfClass.hpp>
 #include <TestViewSubview.hpp>
@@ -73,6 +74,7 @@
 #include <TestTemplateMetaFunctions.hpp>
 #include <TestPolicyConstruction.hpp>
 #include <TestMDRange.hpp>
+#include <TestConcurrentBitset.hpp>
 
 namespace Test {
 

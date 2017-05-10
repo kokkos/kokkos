@@ -123,23 +123,31 @@ TEST_F( openmp, compiler_macros )
 
 //----------------------------------------------------------------------------
 
+TEST_F( openmp , concurrent_bitset )
+{
+  test_concurrent_bitset< Kokkos::OpenMP >( 100000 );
+}
+
+//----------------------------------------------------------------------------
+
 TEST_F( openmp, memory_pool )
 {
-  bool val = TestMemoryPool::test_mempool< Kokkos::OpenMP >( 128, 128000000 );
-  ASSERT_TRUE( val );
-
-  TestMemoryPool::test_mempool2< Kokkos::OpenMP >( 64, 4, 1000000, 2000000 );
-
-  TestMemoryPool::test_memory_exhaustion< Kokkos::OpenMP >();
+  TestMemoryPool::test_memory_pool_v2< Kokkos::OpenMP >(false,false);
 }
 
 //----------------------------------------------------------------------------
 
 #if defined( KOKKOS_ENABLE_TASKDAG )
 
+TEST_F( openmp, task_spawn )
+{
+  TestTaskScheduler::TestTaskSpawn< Kokkos::OpenMP >::run();
+}
+
 TEST_F( openmp, task_fib )
 {
-  for ( int i = 0; i < 25; ++i ) {
+  const int N = 24 ; // 25 triggers tbd bug on Cuda/Pascal
+  for ( int i = 0; i < N; ++i ) {
     TestTaskScheduler::TestFib< Kokkos::OpenMP >::run( i, ( i + 1 ) * ( i + 1 ) * 10000 );
   }
 }

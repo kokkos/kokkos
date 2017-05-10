@@ -44,7 +44,7 @@
 #include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_CUDA )
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <iostream>
 #include <iomanip>

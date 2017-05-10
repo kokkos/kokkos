@@ -39,10 +39,11 @@
 // ************************************************************************
 //@HEADER
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <strings.h>
+#include <cmath>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include <utility>
 #include <string>
