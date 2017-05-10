@@ -57,7 +57,7 @@ struct TestComplexConstruction {
     d_results = Kokkos::View<Kokkos::complex<double>*,ExecSpace>("TestComplexConstruction",10);
     h_results = Kokkos::create_mirror_view(d_results);
    
-    Kokkos::parallel_for(1, *this);
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0,1), *this);
     Kokkos::fence();
     Kokkos::deep_copy(h_results,d_results);
 
@@ -117,7 +117,7 @@ struct TestComplexBasicMath {
     d_results = Kokkos::View<Kokkos::complex<double>*,ExecSpace>("TestComplexBasicMath",20);
     h_results = Kokkos::create_mirror_view(d_results);
 
-    Kokkos::parallel_for(1, *this);
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0,1), *this);
     Kokkos::fence();
     Kokkos::deep_copy(h_results,d_results);
 
@@ -206,7 +206,7 @@ struct TestComplexSpecialFunctions {
     d_results = Kokkos::View<Kokkos::complex<double>*,ExecSpace>("TestComplexSpecialFunctions",20);
     h_results = Kokkos::create_mirror_view(d_results);
 
-    Kokkos::parallel_for(1, *this);
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0,1), *this);
     Kokkos::fence();
     Kokkos::deep_copy(h_results,d_results);
 
