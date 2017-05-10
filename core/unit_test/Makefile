@@ -33,7 +33,8 @@ TEST_TARGETS =
 TARGETS =
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
-	OBJ_CUDA = TestCuda_Other.o TestCuda_Reductions_a.o TestCuda_Reductions_b.o TestCuda_Atomics.o TestCuda_Team.o TestCuda_Spaces.o
+	OBJ_CUDA = UnitTestMain.o gtest-all.o
+	OBJ_CUDA += TestCuda_Other.o TestCuda_Reductions_a.o TestCuda_Reductions_b.o TestCuda_Atomics.o TestCuda_Team.o TestCuda_Spaces.o
 	OBJ_CUDA += TestCuda_SubView_a.o TestCuda_SubView_b.o
 ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
 	OBJ_OPENMP += TestCuda_SubView_c_all.o
@@ -46,20 +47,30 @@ endif
 	OBJ_CUDA += TestCuda_ViewAPI_a.o TestCuda_ViewAPI_b.o TestCuda_ViewAPI_c.o TestCuda_ViewAPI_d.o
 	OBJ_CUDA += TestCuda_ViewAPI_e.o TestCuda_ViewAPI_f.o TestCuda_ViewAPI_g.o TestCuda_ViewAPI_h.o
 	OBJ_CUDA += TestCuda_ViewAPI_s.o
-	OBJ_CUDA += UnitTestMain.o gtest-all.o
 	TARGETS += KokkosCore_UnitTest_Cuda
+
+	OBJ_CUDA2 = UnitTestMainInit.o gtest-all.o
+	OBJ_CUDA2 += TestCuda_Complex.o
+	TARGETS += KokkosCore_UnitTest_Cuda2
+
 	TEST_TARGETS += test-cuda
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
-	OBJ_THREADS = TestThreads_Other.o TestThreads_Reductions.o TestThreads_Atomics.o TestThreads_Team.o
+	OBJ_THREADS = UnitTestMain.o gtest-all.o
+	OBJ_THREADS += TestThreads_Other.o TestThreads_Reductions.o TestThreads_Atomics.o TestThreads_Team.o
 	OBJ_THREADS += TestThreads_SubView_a.o TestThreads_SubView_b.o
 	OBJ_THREADS += TestThreads_SubView_c01.o TestThreads_SubView_c02.o TestThreads_SubView_c03.o
 	OBJ_THREADS += TestThreads_SubView_c04.o TestThreads_SubView_c05.o TestThreads_SubView_c06.o
 	OBJ_THREADS += TestThreads_SubView_c07.o TestThreads_SubView_c08.o TestThreads_SubView_c09.o
 	OBJ_THREADS += TestThreads_SubView_c10.o TestThreads_SubView_c11.o TestThreads_SubView_c12.o
-	OBJ_THREADS += TestThreads_ViewAPI_a.o TestThreads_ViewAPI_b.o UnitTestMain.o gtest-all.o
+	OBJ_THREADS += TestThreads_ViewAPI_a.o TestThreads_ViewAPI_b.o
 	TARGETS += KokkosCore_UnitTest_Threads
+
+	OBJ_THREADS2 = UnitTestMainInit.o gtest-all.o
+	OBJ_THREADS2 += TestThreads_Complex.o
+	TARGETS += KokkosCore_UnitTest_Threads2
+
 	TEST_TARGETS += test-threads
 endif
 
@@ -76,6 +87,11 @@ else
 endif
 	OBJ_OPENMP += TestOpenMP_ViewAPI_a.o TestOpenMP_ViewAPI_b.o UnitTestMain.o gtest-all.o
 	TARGETS += KokkosCore_UnitTest_OpenMP
+
+	OBJ_OPENMP2 = UnitTestMainInit.o gtest-all.o
+	OBJ_OPENMP2 += TestOpenMP_Complex.o
+	TARGETS += KokkosCore_UnitTest_OpenMP2
+
 	TEST_TARGETS += test-openmp
 endif
 
@@ -92,6 +108,11 @@ else
 endif
 	OBJ_QTHREADS += TestQthreads_ViewAPI_a.o TestQthreads_ViewAPI_b.o UnitTestMain.o gtest-all.o
 	TARGETS += KokkosCore_UnitTest_Qthreads
+
+	OBJ_QTHREADS2 = UnitTestMainInit.o gtest-all.o
+	OBJ_QTHREADS2 += TestQthreads_Complex.o
+	TARGETS += KokkosCore_UnitTest_Qthreads2
+
 	TEST_TARGETS += test-qthreads
 endif
 
@@ -108,6 +129,11 @@ else
 endif
 	OBJ_SERIAL += TestSerial_ViewAPI_a.o TestSerial_ViewAPI_b.o UnitTestMain.o gtest-all.o
 	TARGETS += KokkosCore_UnitTest_Serial
+
+	OBJ_SERIAL2 = UnitTestMainInit.o gtest-all.o
+	OBJ_SERIAL2 += TestSerial_Complex.o
+	TARGETS += KokkosCore_UnitTest_Serial2
+
 	TEST_TARGETS += test-serial
 endif
 
@@ -129,17 +155,32 @@ TEST_TARGETS += ${INITTESTS_TEST_TARGETS}
 KokkosCore_UnitTest_Cuda: $(OBJ_CUDA) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_CUDA) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Cuda
 
+KokkosCore_UnitTest_Cuda2: $(OBJ_CUDA2) $(KOKKOS_LINK_DEPENDS)
+	$(LINK) $(EXTRA_PATH) $(OBJ_CUDA2) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Cuda2
+
 KokkosCore_UnitTest_Threads: $(OBJ_THREADS) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_THREADS) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Threads
+
+KokkosCore_UnitTest_Threads2: $(OBJ_THREADS2) $(KOKKOS_LINK_DEPENDS)
+	$(LINK) $(EXTRA_PATH) $(OBJ_THREADS2) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Threads2
 
 KokkosCore_UnitTest_OpenMP: $(OBJ_OPENMP) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_OPENMP) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_OpenMP
 
+KokkosCore_UnitTest_OpenMP2: $(OBJ_OPENMP2) $(KOKKOS_LINK_DEPENDS)
+	$(LINK) $(EXTRA_PATH) $(OBJ_OPENMP2) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_OpenMP2
+
 KokkosCore_UnitTest_Serial: $(OBJ_SERIAL) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_SERIAL) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Serial
 
+KokkosCore_UnitTest_Serial2: $(OBJ_SERIAL2) $(KOKKOS_LINK_DEPENDS)
+	$(LINK) $(EXTRA_PATH) $(OBJ_SERIAL2) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Serial2
+
 KokkosCore_UnitTest_Qthreads: $(OBJ_QTHREADS) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_QTHREADS) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Qthreads
+
+KokkosCore_UnitTest_Qthreads2: $(OBJ_QTHREADS2) $(KOKKOS_LINK_DEPENDS)
+	$(LINK) $(EXTRA_PATH) $(OBJ_QTHREADS2) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Qthreads2
 
 KokkosCore_UnitTest_HWLOC: $(OBJ_HWLOC) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_HWLOC) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_HWLOC
@@ -153,20 +194,25 @@ KokkosCore_UnitTest_Default: $(OBJ_DEFAULT) $(KOKKOS_LINK_DEPENDS)
 ${INITTESTS_TARGETS}: KokkosCore_UnitTest_DefaultDeviceTypeInit_%: TestDefaultDeviceTypeInit_%.o UnitTestMain.o gtest-all.o $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) TestDefaultDeviceTypeInit_$*.o UnitTestMain.o gtest-all.o $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_DefaultDeviceTypeInit_$*
 
-test-cuda: KokkosCore_UnitTest_Cuda
+test-cuda: KokkosCore_UnitTest_Cuda KokkosCore_UnitTest_Cuda2
 	./KokkosCore_UnitTest_Cuda
+	./KokkosCore_UnitTest_Cuda2
 
-test-threads: KokkosCore_UnitTest_Threads
+test-threads: KokkosCore_UnitTest_Threads KokkosCore_UnitTest_Threads2
 	./KokkosCore_UnitTest_Threads
+	./KokkosCore_UnitTest_Threads2
 
-test-openmp: KokkosCore_UnitTest_OpenMP
+test-openmp: KokkosCore_UnitTest_OpenMP KokkosCore_UnitTest_OpenMP2
 	./KokkosCore_UnitTest_OpenMP
+	./KokkosCore_UnitTest_OpenMP2
 
-test-serial: KokkosCore_UnitTest_Serial
+test-serial: KokkosCore_UnitTest_Serial KokkosCore_UnitTest_Serial2
 	./KokkosCore_UnitTest_Serial
+	./KokkosCore_UnitTest_Serial2
 
-test-qthreads: KokkosCore_UnitTest_Qthreads
+test-qthreads: KokkosCore_UnitTest_Qthreads KokkosCore_UnitTest_Qthreads2
 	./KokkosCore_UnitTest_Qthreads
+	./KokkosCore_UnitTest_Qthreads2
 
 test-hwloc: KokkosCore_UnitTest_HWLOC
 	./KokkosCore_UnitTest_HWLOC
@@ -189,7 +235,7 @@ clean: kokkos-clean
 
 # Compilation rules
 
-%.o:%.cpp $(KOKKOS_CPP_DEPENDS) $(TEST_HEADERS)
+%.o:%.cpp $(KOKKOS_CPP_DEPENDS)
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) $(EXTRA_INC) -c $<
 
 gtest-all.o:$(GTEST_PATH)/gtest/gtest-all.cc
