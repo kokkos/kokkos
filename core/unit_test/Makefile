@@ -52,15 +52,15 @@ endif
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
-  OBJ_THREADS = UnitTestMain.o gtest_all.o
+  OBJ_THREADS = UnitTestMain.o gtest-all.o
 	OBJ_THREADS += TestThreads_Other.o TestThreads_Reductions.o TestThreads_Atomics.o TestThreads_Team.o
 	OBJ_THREADS += TestThreads_SubView_a.o TestThreads_SubView_b.o
 	OBJ_THREADS += TestThreads_SubView_c01.o TestThreads_SubView_c02.o TestThreads_SubView_c03.o
 	OBJ_THREADS += TestThreads_SubView_c04.o TestThreads_SubView_c05.o TestThreads_SubView_c06.o
 	OBJ_THREADS += TestThreads_SubView_c07.o TestThreads_SubView_c08.o TestThreads_SubView_c09.o
 	OBJ_THREADS += TestThreads_SubView_c10.o TestThreads_SubView_c11.o TestThreads_SubView_c12.o
-	OBJ_THREADS += TestThreads_ViewAPI_a.o TestThreads_ViewAPI_b.o UnitTestMain.o gtest-all.o
-  OBJ_THREADSNEW = UnitTestMainInit.o gtest_all.o
+	OBJ_THREADS += TestThreads_ViewAPI_a.o TestThreads_ViewAPI_b.o
+  OBJ_THREADSNEW = UnitTestMainInit.o gtest-all.o
   OBJ_THREADSNEW += TestThreads_Complex.o
   TARGETS += KokkosCore_UnitTest_Threads KokkosCore_UnitTestNew_Threads
 	TEST_TARGETS += test-threads
@@ -196,7 +196,7 @@ clean: kokkos-clean
 
 # Compilation rules
 
-%.o:%.cpp $(KOKKOS_CPP_DEPENDS) $(TEST_HEADERS)
+%.o:%.cpp $(KOKKOS_CPP_DEPENDS)
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) $(EXTRA_INC) -c $<
 
 gtest-all.o:$(GTEST_PATH)/gtest/gtest-all.cc
