@@ -114,8 +114,6 @@ private:
   int         m_league_size ;
   int         m_work_chunk ;
   int         m_steal_rank ; // work stealing rank
-  int mutable m_pool_rendezvous_step ;
-  int mutable m_team_rendezvous_step ;
 
   HostThreadTeamData * team_member( int r ) const noexcept
     { return ((HostThreadTeamData**)(m_pool_scratch+m_pool_members))[m_team_base+r]; }
@@ -127,7 +125,6 @@ public:
     {
       return 1 == m_team_size ? 1 :
              rendezvous( m_team_scratch + m_team_rendezvous
-                       , m_team_rendezvous_step
                        , m_team_size
                        , ( m_team_rank + m_team_size - root ) % m_team_size );
     }
@@ -137,7 +134,6 @@ public:
     {
       return 1 == m_team_size ? 1 :
              rendezvous( m_team_scratch + m_team_rendezvous
-                       , m_team_rendezvous_step
                        , m_team_size
                        , m_team_rank );
     }
@@ -146,8 +142,7 @@ public:
   void team_rendezvous_release() const noexcept
     {
       if ( 1 < m_team_size ) {
-        rendezvous_release( m_team_scratch + m_team_rendezvous
-                          , m_team_rendezvous_step );
+        rendezvous_release( m_team_scratch + m_team_rendezvous );
       }
     }
 
@@ -156,7 +151,6 @@ public:
     {
       return 1 == m_pool_size ? 1 :
              rendezvous( m_pool_scratch + m_pool_rendezvous
-                       , m_pool_rendezvous_step
                        , m_pool_size
                        , m_pool_rank );
     }
@@ -165,8 +159,7 @@ public:
   void pool_rendezvous_release() const noexcept
     {
       if ( 1 < m_pool_size ) {
-        rendezvous_release( m_pool_scratch + m_pool_rendezvous
-                          , m_pool_rendezvous_step );
+        rendezvous_release( m_pool_scratch + m_pool_rendezvous );
       }
     }
 
@@ -192,8 +185,6 @@ public:
     , m_league_size(1)
     , m_work_chunk(0)
     , m_steal_rank(0)
-    , m_pool_rendezvous_step(0)
-    , m_team_rendezvous_step(0)
     {}
 
   //----------------------------------------

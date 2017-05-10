@@ -91,8 +91,6 @@ void HostThreadTeamData::organize_pool
         mem->m_team_alloc   = 1 ;
         mem->m_league_rank  = rank ;
         mem->m_league_size  = size ;
-        mem->m_pool_rendezvous_step = 0 ;
-        mem->m_team_rendezvous_step = 0 ;
         pool[ rank ] = mem ;
       }
     }
@@ -118,8 +116,6 @@ void HostThreadTeamData::disband_pool()
    m_team_alloc   = 1 ;
    m_league_rank  = 0 ;
    m_league_size  = 1 ;
-   m_pool_rendezvous_step = 0 ;
-   m_team_rendezvous_step = 0 ;
 }
 
 int HostThreadTeamData::organize_team( const int team_size )
@@ -169,7 +165,6 @@ int HostThreadTeamData::organize_team( const int team_size )
     m_team_alloc   = team_alloc_size ;
     m_league_rank  = league_rank ;
     m_league_size  = league_size ;
-    m_team_rendezvous_step = 0 ;
 
     if ( team_base_rank == m_pool_rank ) {
       // Initialize team's rendezvous memory
@@ -205,7 +200,6 @@ void HostThreadTeamData::disband_team()
   m_team_alloc   = 1 ;
   m_league_rank  = m_pool_rank ;
   m_league_size  = m_pool_size ;
-  m_team_rendezvous_step = 0 ;
 }
 
 

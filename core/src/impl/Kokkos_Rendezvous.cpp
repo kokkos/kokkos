@@ -58,8 +58,7 @@ namespace Kokkos { namespace Impl {
  *  }
  */
 
-int rendezvous( int64_t * const buffer
-              , int & rendezvous_step
+int rendezvous( volatile int64_t * const buffer
               , int const size
               , int const rank
               ) noexcept
@@ -89,20 +88,13 @@ int rendezvous( int64_t * const buffer
   // 2) give each spin wait location an int64_t[4] span
   //    so that it has its own cache line.
 
-  const int step = ( rendezvous_step % size_val_cycle ) + 1 ;
-
-  rendezvous_step = step ;
+  const int64_t step = (buffer[0] % size_val_cycle ) + 1 ;
 
   // The leading int64_t[4] span is for thread 0 to write
   // and all other threads to read spin-wait.
   // sync_offset is the index into this array for this step.
 
-  const int sync_offset = ( step & mask_mem_cycle ) + size_mem_cycle ;
-
-  union {
-    int64_t full ;
-    int8_t  byte[8] ;
-  } value ;
+  const int sync_offset = ( step & mask_mem_cycle ) + size_mem_cycle + size_mem_cycle ;
 
   if ( rank ) {
 
@@ -118,13 +110,15 @@ int rendezvous( int64_t * const buffer
       const int end = group_begin + size_byte < size
                     ? size_byte : size - group_begin ;
 
-      value.full = 0 ;
-      for ( int i = 0 ; i < end ; ++i ) value.byte[i] = int8_t( step );
+      int64_t value = 0;
+      for ( int i = 0 ; i < end ; ++i ) {
+        value |= step << (i * size_byte );
+      }
 
       store_fence(); // This should not be needed but fixes #742
 
       spinwait_until_equal( buffer[ (rank << shift_mem_cycle) + sync_offset ]
-                          , value.full );
+                          , value );
     }
 
     {
@@ -150,7 +144,7 @@ int rendezvous( int64_t * const buffer
 
     // Wait for thread 0 to release all other threads
 
-    spinwait_until_equal( buffer[ step & mask_mem_cycle ] , int64_t(step) );
+    spinwait_until_equal( buffer[ (step & mask_mem_cycle) + size_mem_cycle ] , int64_t(step) );
 
   }
   else {
@@ -159,32 +153,36 @@ int rendezvous( int64_t * const buffer
 
     const int end = size_byte < size ? 8 : size ;
 
-    value.full = 0 ;
-    for ( int i = 1 ; i < end ; ++i ) value.byte[i] = int8_t( step );
+    int64_t value = 0;
+    for ( int i = 1 ; i < end ; ++i ) {
+      value |= step << (i * size_byte );
+    }
 
-    spinwait_until_equal( buffer[ sync_offset ], value.full );
+    spinwait_until_equal( buffer[ sync_offset ], value );
   }
 
   return rank ? 0 : 1 ;
 }
 
-void rendezvous_release( int64_t * const buffer
-                       , int const rendezvous_step
-                       ) noexcept
+void rendezvous_release( volatile int64_t * const buffer ) noexcept
 {
   enum : int { shift_mem_cycle = 2 };
   enum : int { size_mem_cycle  = ( 01 << shift_mem_cycle ) }; // == 4
   enum : int { mask_mem_cycle  = size_mem_cycle - 1 };
+  enum : int { size_val_cycle = 3 * size_mem_cycle };
 
   // Requires:
   //   Called after team_rendezvous
   //   Called only by true == team_rendezvous(root)
 
+  // update step
+  const int64_t step = (buffer[0] % size_val_cycle ) + 1;
+  buffer[0] = step;
+
   // Memory fence to be sure all previous writes are complete:
   Kokkos::memory_fence();
 
-  ((volatile int64_t*) buffer)[ rendezvous_step & mask_mem_cycle ] =
-     int64_t( rendezvous_step );
+  buffer[ (step & mask_mem_cycle) + size_mem_cycle ] = step;
 
   // Memory fence to push the store out
   Kokkos::memory_fence();

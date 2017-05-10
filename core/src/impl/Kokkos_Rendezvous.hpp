@@ -64,13 +64,11 @@ constexpr int rendezvous_buffer_size( int max_members ) noexcept
 //   }
 //
 // Requires: buffer[ rendezvous_buffer_size( max_threads ) ];
-int rendezvous( int64_t * const buffer
-              , int & rendezvous_step
+int rendezvous( volatile int64_t * const buffer
               , int const size
               , int const rank ) noexcept ;
 
-void rendezvous_release( int64_t * const buffer
-                       , int const rendezvous_step ) noexcept ;
+void rendezvous_release( volatile int64_t * const buffer ) noexcept ;
 
 
 }} // namespace Kokkos::Impl
