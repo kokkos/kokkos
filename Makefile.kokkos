@@ -247,6 +247,12 @@ tmp := $(shell echo "Makefile constructed configuration:" >> KokkosCore_config.t
 tmp := $(shell date >> KokkosCore_config.tmp)
 tmp := $(shell echo "----------------------------------------------*/" >> KokkosCore_config.tmp)
 
+tmp := $(shell echo '\#if !defined(KOKKOS_MACROS_HPP) || defined(KOKKOS_CORE_CONFIG_H)' >> KokkosCore_config.tmp)
+tmp := $(shell echo '\#error "Do not include KokkosCore_config.h directly; include Kokkos_Macros.hpp instead."' >> KokkosCore_config.tmp)
+tmp := $(shell echo '\#else' >> KokkosCore_config.tmp)
+tmp := $(shell echo '\#define KOKKOS_CORE_CONFIG_H' >> KokkosCore_config.tmp)
+tmp := $(shell echo '\#endif' >> KokkosCore_config.tmp)
+
 tmp := $(shell echo "/* Execution Spaces */" >> KokkosCore_config.tmp)
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
