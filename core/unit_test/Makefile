@@ -60,17 +60,18 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 	OBJ_THREADS = UnitTestMain.o gtest-all.o
 	OBJ_THREADS += TestThreads_Other.o TestThreads_Reductions.o TestThreads_Atomics.o TestThreads_Team.o
-	OBJ_THREADS += TestThreads_SubView_a.o TestThreads_SubView_b.o
-	OBJ_THREADS += TestThreads_SubView_c01.o TestThreads_SubView_c02.o TestThreads_SubView_c03.o
-	OBJ_THREADS += TestThreads_SubView_c04.o TestThreads_SubView_c05.o TestThreads_SubView_c06.o
-	OBJ_THREADS += TestThreads_SubView_c07.o TestThreads_SubView_c08.o TestThreads_SubView_c09.o
-	OBJ_THREADS += TestThreads_SubView_c10.o TestThreads_SubView_c11.o TestThreads_SubView_c12.o
 	OBJ_THREADS += TestThreads_ViewAPI_b.o
 	TARGETS += KokkosCore_UnitTest_Threads
 
 	OBJ_THREADS2 = UnitTestMainInit.o gtest-all.o
 	OBJ_THREADS2 += TestThreads_Complex.o
 	OBJ_THREADS2 += TestThreads_ViewMapping_a.o TestThreads_ViewMapping_b.o TestThreads_ViewMapping_subview.o
+	OBJ_THREADS2 += TestThreads_ViewOfClass.o
+	OBJ_THREADS2 += TestThreads_SubView_a.o TestThreads_SubView_b.o
+	OBJ_THREADS2 += TestThreads_SubView_c01.o TestThreads_SubView_c02.o TestThreads_SubView_c03.o
+	OBJ_THREADS2 += TestThreads_SubView_c04.o TestThreads_SubView_c05.o TestThreads_SubView_c06.o
+	OBJ_THREADS2 += TestThreads_SubView_c07.o TestThreads_SubView_c08.o TestThreads_SubView_c09.o
+	OBJ_THREADS2 += TestThreads_SubView_c10.o TestThreads_SubView_c11.o TestThreads_SubView_c12.o
 	TARGETS += KokkosCore_UnitTest_Threads2
 
 	TEST_TARGETS += test-threads
