@@ -41,72 +41,12 @@
 //@HEADER
 */
 
-#include <threads/TestThreads.hpp>
-
+#include <threads/TestThreads_Category.hpp>
+#include <TestReduce.hpp>
+#include <TestCXX11Deduction.hpp>
+/*
 namespace Test {
 
-TEST_F( threads, long_reduce )
-{
-  TestReduce< long, Kokkos::Threads >( 0 );
-  TestReduce< long, Kokkos::Threads >( 1000000 );
-}
-
-TEST_F( threads, double_reduce )
-{
-  TestReduce< double, Kokkos::Threads >( 0 );
-  TestReduce< double, Kokkos::Threads >( 1000000 );
-}
-
-TEST_F( threads, reducers )
-{
-  TestReducers< int, Kokkos::Threads >::execute_integer();
-  TestReducers< size_t, Kokkos::Threads >::execute_integer();
-  TestReducers< double, Kokkos::Threads >::execute_float();
-  TestReducers< Kokkos::complex<double>, Kokkos::Threads >::execute_basic();
-}
-
-TEST_F( threads, long_reduce_dynamic )
-{
-  TestReduceDynamic< long, Kokkos::Threads >( 0 );
-  TestReduceDynamic< long, Kokkos::Threads >( 1000000 );
-}
-
-TEST_F( threads, double_reduce_dynamic )
-{
-  TestReduceDynamic< double, Kokkos::Threads >( 0 );
-  TestReduceDynamic< double, Kokkos::Threads >( 1000000 );
-}
-
-TEST_F( threads, long_reduce_dynamic_view )
-{
-  TestReduceDynamicView< long, Kokkos::Threads >( 0 );
-  TestReduceDynamicView< long, Kokkos::Threads >( 1000000 );
-}
-
-TEST_F( threads, scan )
-{
-  TestScan< Kokkos::Threads >::test_range( 1, 1000 );
-  TestScan< Kokkos::Threads >( 0 );
-  TestScan< Kokkos::Threads >( 100000 );
-  TestScan< Kokkos::Threads >( 10000000 );
-  Kokkos::Threads::fence();
-}
-
-#if 0
-TEST_F( threads, scan_small )
-{
-  typedef TestScan< Kokkos::Threads, Kokkos::Impl::ThreadsExecUseScanSmall > TestScanFunctor;
-
-  for ( int i = 0; i < 1000; ++i ) {
-    TestScanFunctor( 10 );
-    TestScanFunctor( 10000 );
-  }
-  TestScanFunctor( 1000000 );
-  TestScanFunctor( 10000000 );
-
-  Kokkos::Threads::fence();
-}
-#endif
 
 TEST_F( threads, team_scan )
 {
@@ -138,9 +78,5 @@ TEST_F( threads, team_double_reduce )
   TestReduceTeam< double, Kokkos::Threads, Kokkos::Schedule<Kokkos::Dynamic> >( 100000 );
 }
 
-TEST_F( threads, reduction_deduction )
-{
-  TestCXX11::test_reduction_deduction< Kokkos::Threads >();
-}
-
 } // namespace Test
+*/

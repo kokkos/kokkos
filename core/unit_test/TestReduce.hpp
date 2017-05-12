@@ -2059,4 +2059,42 @@ struct TestReducers {
   }
 };
 
+
+TEST_F( TEST_CATEGORY, long_reduce )
+{
+  TestReduce< long, TEST_EXECSPACE >( 0 );
+  TestReduce< long, TEST_EXECSPACE >( 1000000 );
+}
+
+TEST_F( TEST_CATEGORY, double_reduce )
+{
+  TestReduce< double, TEST_EXECSPACE >( 0 );
+  TestReduce< double, TEST_EXECSPACE >( 1000000 );
+}
+
+TEST_F( TEST_CATEGORY, reducers )
+{
+  TestReducers< int, TEST_EXECSPACE >::execute_integer();
+  TestReducers< size_t, TEST_EXECSPACE >::execute_integer();
+  TestReducers< double, TEST_EXECSPACE >::execute_float();
+  TestReducers< Kokkos::complex<double>, TEST_EXECSPACE >::execute_basic();
+}
+
+TEST_F( TEST_CATEGORY, long_reduce_dynamic )
+{
+  TestReduceDynamic< long, TEST_EXECSPACE >( 0 );
+  TestReduceDynamic< long, TEST_EXECSPACE >( 1000000 );
+}
+
+TEST_F( TEST_CATEGORY, double_reduce_dynamic )
+{
+  TestReduceDynamic< double, TEST_EXECSPACE >( 0 );
+  TestReduceDynamic< double, TEST_EXECSPACE >( 1000000 );
+}
+
+TEST_F( TEST_CATEGORY, long_reduce_dynamic_view )
+{
+  TestReduceDynamicView< long, TEST_EXECSPACE >( 0 );
+  TestReduceDynamicView< long, TEST_EXECSPACE >( 1000000 );
+}
 } // namespace Test

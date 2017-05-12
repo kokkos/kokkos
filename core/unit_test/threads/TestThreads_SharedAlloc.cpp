@@ -42,5 +42,14 @@
 */
 
 #include <threads/TestThreads_Category.hpp>
-#include <TestViewAPI.hpp>
+#include <TestSharedAlloc.hpp>
 
+namespace Test {
+
+
+TEST_F( TEST_CATEGORY, impl_shared_alloc )
+{
+  test_shared_alloc< Kokkos::HostSpace, TEST_EXECSPACE >();
+}
+
+} // namespace Test
