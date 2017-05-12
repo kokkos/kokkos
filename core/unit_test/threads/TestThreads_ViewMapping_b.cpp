@@ -41,14 +41,6 @@
 //@HEADER
 */
 
-#include <threads/TestThreads.hpp>
+#include <threads/TestThreads_Category.hpp>
+#include <TestViewMapping_b.hpp>
 
-namespace Test {
-
-TEST_F( threads, impl_view_mapping_a )
-{
-  test_view_mapping< Kokkos::Threads >();
-  test_view_mapping_operator< Kokkos::Threads >();
-}
-
-} // namespace Test

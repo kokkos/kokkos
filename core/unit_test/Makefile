@@ -65,11 +65,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 	OBJ_THREADS += TestThreads_SubView_c04.o TestThreads_SubView_c05.o TestThreads_SubView_c06.o
 	OBJ_THREADS += TestThreads_SubView_c07.o TestThreads_SubView_c08.o TestThreads_SubView_c09.o
 	OBJ_THREADS += TestThreads_SubView_c10.o TestThreads_SubView_c11.o TestThreads_SubView_c12.o
-	OBJ_THREADS += TestThreads_ViewAPI_a.o TestThreads_ViewAPI_b.o
+	OBJ_THREADS += TestThreads_ViewAPI_b.o
 	TARGETS += KokkosCore_UnitTest_Threads
 
 	OBJ_THREADS2 = UnitTestMainInit.o gtest-all.o
 	OBJ_THREADS2 += TestThreads_Complex.o
+	OBJ_THREADS2 += TestThreads_ViewMapping_a.o TestThreads_ViewMapping_b.o TestThreads_ViewMapping_subview.o
 	TARGETS += KokkosCore_UnitTest_Threads2
 
 	TEST_TARGETS += test-threads
