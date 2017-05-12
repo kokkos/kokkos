@@ -55,11 +55,6 @@ TEST_F( threads, view_api )
   TestViewAPI< double, Kokkos::Threads >();
 }
 
-TEST_F( threads, view_nested_view )
-{
-  ::Test::view_nested_view< Kokkos::Threads >();
-}
-
 TEST_F( threads, view_remap )
 {
   enum { N0 = 3, N1 = 2, N2 = 8, N3 = 9 };
