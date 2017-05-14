@@ -59,11 +59,13 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 	OBJ_THREADS = UnitTestMain.o gtest-all.o
-	OBJ_THREADS += TestThreads_Other.o TestThreads_Team.o
+	OBJ_THREADS += TestThreads_Team.o
 	TARGETS += KokkosCore_UnitTest_Threads
 
 	OBJ_THREADS2 = UnitTestMainInit.o gtest-all.o
+	OBJ_THREADS2 += TestThreads_Init.o
 	OBJ_THREADS2 += TestThreads_SharedAlloc.o
+	OBJ_THREADS2 += TestThreads_RangePolicy.o
 	OBJ_THREADS2 += TestThreads_ViewAPI_b.o
 	OBJ_THREADS2 += TestThreads_ViewMapping_a.o TestThreads_ViewMapping_b.o TestThreads_ViewMapping_subview.o
 	OBJ_THREADS2 += TestThreads_ViewOfClass.o
@@ -77,6 +79,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 	OBJ_THREADS2 += TestThreads_AtomicOperations.o TestThreads_AtomicViews.o TestThreads_Atomics.o
 	OBJ_THREADS2 += TestThreads_Other2.o
 	OBJ_THREADS2 += TestThreads_TeamReductionScan.o
+	OBJ_THREADS2 += TestThreads_MDRange.o
 
 	TARGETS += KokkosCore_UnitTest_Threads2
 

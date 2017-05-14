@@ -41,71 +41,30 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TEST_THREADS_HPP
-#define KOKKOS_TEST_THREADS_HPP
-
-#include <gtest/gtest.h>
-
-#include <Kokkos_Macros.hpp>
-
-#ifdef KOKKOS_LAMBDA
-#undef KOKKOS_LAMBDA
-#endif
-#define KOKKOS_LAMBDA [=]
+#include <cstdio>
+#include <stdexcept>
+#include <sstream>
+#include <iostream>
 
 #include <Kokkos_Core.hpp>
 
-#include <TestTile.hpp>
-//#include <TestSharedAlloc.hpp>
-//#include <TestViewAPI.hpp>
-//#include <TestViewOfClass.hpp>
-//#include <TestViewSubview.hpp>
-//#include <TestAtomic.hpp>
-//#include <TestAtomicOperations.hpp>
-//#include <TestAtomicViews.hpp>
-#include <TestRange.hpp>
-#include <TestTeam.hpp>
-//#include <TestReduce.hpp>
-//#include <TestScan.hpp>
-//#include <TestAggregate.hpp>
-//#include <TestCompilerMacros.hpp>
-
-//TODO enable task scheduler tests for threads
-//#include <TestTaskScheduler.hpp>
-
-//#include <TestMemoryPool.hpp>
-//#include <TestCXX11.hpp>
-//#include <TestCXX11Deduction.hpp>
-#include <TestTeamVector.hpp>
-//#include <TestTemplateMetaFunctions.hpp>
-//#include <TestPolicyConstruction.hpp>
-//#include <TestMDRange.hpp>
-
 namespace Test {
+TEST_F( TEST_CATEGORY, init )
+{
+   ;
+}
 
-class threads : public ::testing::Test {
-protected:
-  static void SetUpTestCase()
-  {
-    const unsigned numa_count       = Kokkos::hwloc::get_available_numa_count();
-    const unsigned cores_per_numa   = Kokkos::hwloc::get_available_cores_per_numa();
-    const unsigned threads_per_core = Kokkos::hwloc::get_available_threads_per_core();
-
-    unsigned threads_count = 0;
-
-    threads_count = std::max( 1u, numa_count )
-                  * std::max( 2u, cores_per_numa * threads_per_core );
-
-    Kokkos::Threads::initialize( threads_count );
-    Kokkos::print_configuration( std::cout, true /* detailed */ );
+#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
+TEST_F( TEST_CATEGORY, dispatch )
+{
+  const int repeat = 100;
+  for ( int i = 0; i < repeat; ++i ) {
+    for ( int j = 0; j < repeat; ++j ) {
+      Kokkos::parallel_for( Kokkos::RangePolicy< TEST_EXECSPACE >( 0, j )
+                          , KOKKOS_LAMBDA( int ) {} );
+    }
   }
-
-  static void TearDownTestCase()
-  {
-    Kokkos::Threads::finalize();
-  }
-};
-
-} // namespace Test
-
+}
 #endif
+
+}

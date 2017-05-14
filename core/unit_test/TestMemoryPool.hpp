@@ -257,4 +257,11 @@ void test_memory_pool_v2( const bool print_statistics
 #undef STRIDE
 #undef STRIDE_ALLOC
 
+namespace Test {
+
+TEST_F( TEST_CATEGORY, memory_pool )
+{
+  TestMemoryPool::test_memory_pool_v2< TEST_EXECSPACE >(false,false);
+}
+}
 #endif
