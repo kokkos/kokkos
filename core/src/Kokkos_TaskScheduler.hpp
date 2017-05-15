@@ -370,6 +370,15 @@ struct TaskPolicyData
     , m_dependence()
     , m_priority( static_cast<int>( arg_priority ) )
     {}
+
+  KOKKOS_INLINE_FUNCTION
+  TaskPolicyData( scheduler_type       const & arg_scheduler
+                , DepFutureType        const & arg_future
+                , Kokkos::TaskPriority const & arg_priority )
+    : m_scheduler( & arg_scheduler )
+    , m_dependence( arg_future )
+    , m_priority( static_cast<int>( arg_priority ) )
+    {}
 };
 
 } // namespace Impl
@@ -502,7 +511,12 @@ public:
           : (queue_type*) 0 );
 
       if ( 0 == queue ) {
-        Kokkos::abort("Kokkos spawn given null Future" );
+        Kokkos::abort("Kokkos spawn requires scheduler or non-null Future");
+      }
+
+      if ( arg_policy.m_dependence.m_task != 0 &&
+           arg_policy.m_dependence.m_task->m_queue != queue ) {
+        Kokkos::abort("Kokkos spawn given incompatible scheduler and Future");
       }
 
       //----------------------------------------
@@ -696,6 +710,22 @@ TaskTeam( T            const & arg
       >( arg , arg_priority );
 }
 
+template< typename E , typename F >
+Kokkos::Impl::
+  TaskPolicyData< Kokkos::Impl::TaskBase<void,void,void>::TaskTeam , F >
+KOKKOS_INLINE_FUNCTION
+TaskTeam( TaskScheduler<E> const & arg_scheduler
+        , F                const & arg_future
+        , typename std::enable_if< Kokkos::is_future<F>::value ,
+            TaskPriority >::type const & arg_priority = TaskPriority::Regular
+        )
+{
+  return
+    Kokkos::Impl::TaskPolicyData
+      < Kokkos::Impl::TaskBase<void,void,void>::TaskTeam , F >
+        ( arg_scheduler , arg_future , arg_priority );
+}
+
 // Construct a TaskSingle execution policy
 
 template< typename T >
@@ -719,6 +749,22 @@ TaskSingle( T            const & arg
       , typename std::conditional< Kokkos::is_future< T >::value , T ,
         typename Kokkos::Future< typename T::execution_space > >::type
       >( arg , arg_priority );
+}
+
+template< typename E , typename F >
+Kokkos::Impl::
+  TaskPolicyData< Kokkos::Impl::TaskBase<void,void,void>::TaskSingle , F >
+KOKKOS_INLINE_FUNCTION
+TaskSingle( TaskScheduler<E> const & arg_scheduler
+          , F                const & arg_future
+          , typename std::enable_if< Kokkos::is_future<F>::value ,
+              TaskPriority >::type const & arg_priority = TaskPriority::Regular
+          )
+{
+  return
+    Kokkos::Impl::TaskPolicyData
+      < Kokkos::Impl::TaskBase<void,void,void>::TaskSingle , F >
+        ( arg_scheduler , arg_future , arg_priority );
 }
 
 //----------------------------------------------------------------------------

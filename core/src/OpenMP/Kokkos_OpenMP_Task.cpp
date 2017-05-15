@@ -111,12 +111,18 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
   static task_root_type * const end =
     (task_root_type *) task_root_type::EndTag ;
 
+
   HostThreadTeamData & team_data_single =
     HostThreadTeamDataSingleton::singleton();
 
   Impl::OpenMPExec * instance = t_openmp_instance;
 
   const int team_size = 1;  // Threads per core
+  instance->resize_thread_data( 0 /* global reduce buffer */
+                              , 512 * team_size /* team reduce buffer */
+                              , 0 /* team shared buffer */
+                              , 0 /* thread local buffer */
+                              );
 
   instance->set_in_parallel();
 #ifdef KOKKOS_ENABLE_PROC_BIND
