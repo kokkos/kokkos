@@ -663,6 +663,29 @@ struct TestTaskTeamValue {
 
 } // namespace TestTaskScheduler
 
+namespace Test {
+TEST_F( TEST_CATEGORY, task_fib )
+{
+  const int N = 24 ; // 25 triggers tbd bug on Cuda/Pascal
+  for ( int i = 0; i < N; ++i ) {
+    TestTaskScheduler::TestFib< TEST_EXECSPACE >::run( i );
+  }
+}
+
+TEST_F( TEST_CATEGORY, task_depend )
+{
+  for ( int i = 0; i < 25; ++i ) {
+    TestTaskScheduler::TestTaskDependence< TEST_EXECSPACE >::run( i );
+  }
+}
+
+TEST_F( TEST_CATEGORY, task_team )
+{
+  TestTaskScheduler::TestTaskTeam< TEST_EXECSPACE >::run( 1000 );
+  //TestTaskScheduler::TestTaskTeamValue< TEST_EXECSPACE >::run( 1000 ); // Put back after testing.
+}
+
+}
 #endif // #if defined( KOKKOS_ENABLE_TASKDAG )
 #endif // #ifndef KOKKOS_UNITTEST_TASKSCHEDULER_HPP
 
