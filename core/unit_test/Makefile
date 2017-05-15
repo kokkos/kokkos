@@ -141,22 +141,31 @@ endif
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
-	OBJ_SERIAL = TestSerial_Other.o TestSerial_Reductions.o TestSerial_Atomics.o TestSerial_Team.o
-	OBJ_SERIAL += TestSerial_SubView_a.o TestSerial_SubView_b.o
+        OBJ_SERIAL = UnitTestMainInit.o gtest-all.o
+        OBJ_SERIAL += TestSerial_Init.o
+        OBJ_SERIAL += TestSerial_SharedAlloc.o
+        OBJ_SERIAL += TestSerial_RangePolicy.o
+        OBJ_SERIAL += TestSerial_ViewAPI_b.o
+        OBJ_SERIAL += TestSerial_ViewMapping_a.o TestSerial_ViewMapping_b.o TestSerial_ViewMapping_subview.o
+        OBJ_SERIAL += TestSerial_ViewOfClass.o
 ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-	OBJ_OPENMP += TestSerial_SubView_c_all.o
+	OBJ_SERIAL += TestSerial_SubView_c_all.o
 else
-	OBJ_SERIAL += TestSerial_SubView_c01.o TestSerial_SubView_c02.o TestSerial_SubView_c03.o
-	OBJ_SERIAL += TestSerial_SubView_c04.o TestSerial_SubView_c05.o TestSerial_SubView_c06.o
-	OBJ_SERIAL += TestSerial_SubView_c07.o TestSerial_SubView_c08.o TestSerial_SubView_c09.o
-	OBJ_SERIAL += TestSerial_SubView_c10.o TestSerial_SubView_c11.o TestSerial_SubView_c12.o
+        OBJ_SERIAL += TestSerial_SubView_a.o TestSerial_SubView_b.o
+        OBJ_SERIAL += TestSerial_SubView_c01.o TestSerial_SubView_c02.o TestSerial_SubView_c03.o
+        OBJ_SERIAL += TestSerial_SubView_c04.o TestSerial_SubView_c05.o TestSerial_SubView_c06.o
+        OBJ_SERIAL += TestSerial_SubView_c07.o TestSerial_SubView_c08.o TestSerial_SubView_c09.o
+        OBJ_SERIAL += TestSerial_SubView_c10.o TestSerial_SubView_c11.o TestSerial_SubView_c12.o
 endif
-	OBJ_SERIAL += TestSerial_ViewAPI_a.o TestSerial_ViewAPI_b.o UnitTestMain.o gtest-all.o
+        OBJ_SERIAL += TestSerial_Reductions.o TestSerial_Scan.o
+        OBJ_SERIAL += TestSerial_Complex.o
+        OBJ_SERIAL += TestSerial_AtomicOperations.o TestSerial_AtomicViews.o TestSerial_Atomics.o
+        OBJ_SERIAL += TestSerial_Team.o TestSerial_TeamScratch.o
+        OBJ_SERIAL += TestSerial_TeamReductionScan.o
+        OBJ_SERIAL += TestSerial_Other.o
+        OBJ_SERIAL += TestSerial_MDRange.o
+	
 	TARGETS += KokkosCore_UnitTest_Serial
-
-	OBJ_SERIAL2 = UnitTestMainInit.o gtest-all.o
-	OBJ_SERIAL2 += TestSerial_Complex.o
-	TARGETS += KokkosCore_UnitTest_Serial2
 
 	TEST_TARGETS += test-serial
 endif
@@ -201,9 +210,6 @@ KokkosCore_UnitTest_OpenMPTarget: $(OBJ_OPENMPTARGET) $(KOKKOS_LINK_DEPENDS)
 KokkosCore_UnitTest_Serial: $(OBJ_SERIAL) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_SERIAL) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Serial
 
-KokkosCore_UnitTest_Serial2: $(OBJ_SERIAL2) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(EXTRA_PATH) $(OBJ_SERIAL2) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Serial2
-
 KokkosCore_UnitTest_Qthreads: $(OBJ_QTHREADS) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_QTHREADS) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Qthreads
 
@@ -226,7 +232,7 @@ test-cuda: KokkosCore_UnitTest_Cuda KokkosCore_UnitTest_Cuda2
 	./KokkosCore_UnitTest_Cuda
 	./KokkosCore_UnitTest_Cuda2
 
-test-threads: KokkosCore_UnitTest_Threads KokkosCore_UnitTest_Threads
+test-threads: KokkosCore_UnitTest_Threads
 	./KokkosCore_UnitTest_Threads
 
 test-openmp: KokkosCore_UnitTest_OpenMP KokkosCore_UnitTest_OpenMP2
@@ -236,9 +242,8 @@ test-openmp: KokkosCore_UnitTest_OpenMP KokkosCore_UnitTest_OpenMP2
 test-openmptarget: KokkosCore_UnitTest_OpenMPTarget
 	./KokkosCore_UnitTest_OpenMPTarget
 
-test-serial: KokkosCore_UnitTest_Serial KokkosCore_UnitTest_Serial2
+test-serial: KokkosCore_UnitTest_Serial
 	./KokkosCore_UnitTest_Serial
-	./KokkosCore_UnitTest_Serial2
 
 test-qthreads: KokkosCore_UnitTest_Qthreads KokkosCore_UnitTest_Qthreads2
 	./KokkosCore_UnitTest_Qthreads
