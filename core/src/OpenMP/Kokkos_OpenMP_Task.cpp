@@ -111,6 +111,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
   static task_root_type * const end =
     (task_root_type *) task_root_type::EndTag ;
 
+
   HostThreadTeamData & team_data_single =
     HostThreadTeamDataSingleton::singleton();
 
@@ -122,6 +123,11 @@ fprintf(stdout,"TaskQueue<OpenMP> execute %d\n", team_size );
 fflush(stdout);
 #endif
 
+  OpenMPExec::resize_thread_data( 0 /* global reduce buffer */
+                                , 512 * team_size /* team reduce buffer */
+                                , 0 /* team shared buffer */
+                                , 0 /* thread local buffer */
+                                );
 
 #pragma omp parallel
   {
