@@ -41,21 +41,6 @@
 //@HEADER
 */
 
-#include <cuda/TestCuda.hpp>
+#include <cuda/TestCuda_Category.hpp>
+#include <TestViewMapping_b.hpp>
 
-namespace Test {
-
-TEST_F( cuda , functor_analysis )
-{
-  test_functor_analysis< Kokkos::Cuda >();
-}
-
-TEST_F( cuda , reducers )
-{
-  TestReducers< int, Kokkos::Cuda >::execute_integer();
-  TestReducers< size_t, Kokkos::Cuda >::execute_integer();
-  TestReducers< double, Kokkos::Cuda >::execute_float();
-  TestReducers< Kokkos::complex<double>, Kokkos::Cuda >::execute_basic();
-}
-
-} // namespace Test

@@ -35,25 +35,36 @@ TEST_TARGETS =
 TARGETS =
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
-	OBJ_CUDA = UnitTestMain.o gtest-all.o
-	OBJ_CUDA += TestCuda_Other.o TestCuda_Reductions_a.o TestCuda_Reductions_b.o TestCuda_Atomics.o TestCuda_Team.o TestCuda_Spaces.o
-	OBJ_CUDA += TestCuda_SubView_a.o TestCuda_SubView_b.o
+	OBJ_CUDA = UnitTestMainInit.o gtest-all.o
+	OBJ_CUDA += TestCuda_Init.o
+	OBJ_CUDA += TestCuda_SharedAlloc.o TestCudaUVM_SharedAlloc.o TestCudaHostPinned_SharedAlloc.o
+	OBJ_CUDA += TestCuda_RangePolicy.o
+	OBJ_CUDA += TestCuda_ViewAPI_b.o
+	OBJ_CUDA += TestCuda_ViewMapping_a.o TestCuda_ViewMapping_b.o TestCuda_ViewMapping_subview.o
+	OBJ_CUDA += TestCudaUVM_ViewAPI.o
+	OBJ_CUDA += TestCudaUVM_ViewMapping_a.o TestCudaUVM_ViewMapping_b.o TestCudaUVM_ViewMapping_subview.o
+	OBJ_CUDA += TestCudaHostPinned_ViewAPI.o
+	OBJ_CUDA += TestCudaHostPinned_ViewMapping_a.o TestCudaHostPinned_ViewMapping_b.o TestCudaHostPinned_ViewMapping_subview.o
+	OBJ_CUDA += TestCuda_ViewOfClass.o
 ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-	OBJ_OPENMP += TestCuda_SubView_c_all.o
+	OBJ_CUDA += TestCuda_SubView_c_all.o
 else
+	OBJ_CUDA += TestCuda_SubView_a.o TestCuda_SubView_b.o
 	OBJ_CUDA += TestCuda_SubView_c01.o TestCuda_SubView_c02.o TestCuda_SubView_c03.o
 	OBJ_CUDA += TestCuda_SubView_c04.o TestCuda_SubView_c05.o TestCuda_SubView_c06.o
 	OBJ_CUDA += TestCuda_SubView_c07.o TestCuda_SubView_c08.o TestCuda_SubView_c09.o
 	OBJ_CUDA += TestCuda_SubView_c10.o TestCuda_SubView_c11.o TestCuda_SubView_c12.o
 endif
-	OBJ_CUDA += TestCuda_ViewAPI_a.o TestCuda_ViewAPI_b.o TestCuda_ViewAPI_c.o TestCuda_ViewAPI_d.o
-	OBJ_CUDA += TestCuda_ViewAPI_e.o TestCuda_ViewAPI_f.o TestCuda_ViewAPI_g.o TestCuda_ViewAPI_h.o
-	OBJ_CUDA += TestCuda_ViewAPI_s.o
+	OBJ_CUDA += TestCuda_Reductions.o TestCuda_Scan.o
+	OBJ_CUDA += TestCuda_Complex.o
+	OBJ_CUDA += TestCuda_AtomicOperations.o TestCuda_AtomicViews.o TestCuda_Atomics.o
+	OBJ_CUDA += TestCuda_Team.o TestCuda_TeamScratch.o
+	OBJ_CUDA += TestCuda_TeamReductionScan.o
+	OBJ_CUDA += TestCuda_Other.o
+	OBJ_CUDA += TestCuda_MDRange.o
+	OBJ_CUDA += TestCuda_Task.o
+	
 	TARGETS += KokkosCore_UnitTest_Cuda
-
-	OBJ_CUDA2 = UnitTestMainInit.o gtest-all.o
-	OBJ_CUDA2 += TestCuda_Complex.o
-	TARGETS += KokkosCore_UnitTest_Cuda2
 
 	TEST_TARGETS += test-cuda
 endif
@@ -86,30 +97,30 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
-        OBJ_OPENMP = UnitTestMainInit.o gtest-all.o
-        OBJ_OPENMP += TestOpenMP_Init.o
-        OBJ_OPENMP += TestOpenMP_SharedAlloc.o
-        OBJ_OPENMP += TestOpenMP_RangePolicy.o
-        OBJ_OPENMP += TestOpenMP_ViewAPI_b.o
-        OBJ_OPENMP += TestOpenMP_ViewMapping_a.o TestOpenMP_ViewMapping_b.o TestOpenMP_ViewMapping_subview.o
-        OBJ_OPENMP += TestOpenMP_ViewOfClass.o
+	OBJ_OPENMP = UnitTestMainInit.o gtest-all.o
+	OBJ_OPENMP += TestOpenMP_Init.o
+	OBJ_OPENMP += TestOpenMP_SharedAlloc.o
+	OBJ_OPENMP += TestOpenMP_RangePolicy.o
+	OBJ_OPENMP += TestOpenMP_ViewAPI_b.o
+	OBJ_OPENMP += TestOpenMP_ViewMapping_a.o TestOpenMP_ViewMapping_b.o TestOpenMP_ViewMapping_subview.o
+	OBJ_OPENMP += TestOpenMP_ViewOfClass.o
 ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-	    OBJ_OPENMP += TestOpenMP_SubView_c_all.o
+	OBJ_OPENMP += TestOpenMP_SubView_c_all.o
 else
-        OBJ_OPENMP += TestOpenMP_SubView_a.o TestOpenMP_SubView_b.o
-        OBJ_OPENMP += TestOpenMP_SubView_c01.o TestOpenMP_SubView_c02.o TestOpenMP_SubView_c03.o
-        OBJ_OPENMP += TestOpenMP_SubView_c04.o TestOpenMP_SubView_c05.o TestOpenMP_SubView_c06.o
-        OBJ_OPENMP += TestOpenMP_SubView_c07.o TestOpenMP_SubView_c08.o TestOpenMP_SubView_c09.o
-        OBJ_OPENMP += TestOpenMP_SubView_c10.o TestOpenMP_SubView_c11.o TestOpenMP_SubView_c12.o
+	OBJ_OPENMP += TestOpenMP_SubView_a.o TestOpenMP_SubView_b.o
+	OBJ_OPENMP += TestOpenMP_SubView_c01.o TestOpenMP_SubView_c02.o TestOpenMP_SubView_c03.o
+	OBJ_OPENMP += TestOpenMP_SubView_c04.o TestOpenMP_SubView_c05.o TestOpenMP_SubView_c06.o
+	OBJ_OPENMP += TestOpenMP_SubView_c07.o TestOpenMP_SubView_c08.o TestOpenMP_SubView_c09.o
+	OBJ_OPENMP += TestOpenMP_SubView_c10.o TestOpenMP_SubView_c11.o TestOpenMP_SubView_c12.o
 endif
-        OBJ_OPENMP += TestOpenMP_Reductions.o TestOpenMP_Scan.o
-        OBJ_OPENMP += TestOpenMP_Complex.o
-        OBJ_OPENMP += TestOpenMP_AtomicOperations.o TestOpenMP_AtomicViews.o TestOpenMP_Atomics.o
-        OBJ_OPENMP += TestOpenMP_Team.o TestOpenMP_TeamScratch.o
-        OBJ_OPENMP += TestOpenMP_TeamReductionScan.o
-        OBJ_OPENMP += TestOpenMP_Other.o
-        OBJ_OPENMP += TestOpenMP_MDRange.o
-        OBJ_OPENMP += TestOpenMP_Task.o
+	OBJ_OPENMP += TestOpenMP_Reductions.o TestOpenMP_Scan.o
+	OBJ_OPENMP += TestOpenMP_Complex.o
+	OBJ_OPENMP += TestOpenMP_AtomicOperations.o TestOpenMP_AtomicViews.o TestOpenMP_Atomics.o
+	OBJ_OPENMP += TestOpenMP_Team.o TestOpenMP_TeamScratch.o
+	OBJ_OPENMP += TestOpenMP_TeamReductionScan.o
+	OBJ_OPENMP += TestOpenMP_Other.o
+	OBJ_OPENMP += TestOpenMP_MDRange.o
+	OBJ_OPENMP += TestOpenMP_Task.o
 	
 	TARGETS += KokkosCore_UnitTest_OpenMP
 

@@ -1,3 +1,4 @@
+
 /*
 //@HEADER
 // ************************************************************************
@@ -41,13 +42,6 @@
 //@HEADER
 */
 
-#include <cuda/TestCuda.hpp>
+#include<cuda/TestCuda_Category.hpp>
+#include<TestScan.hpp>
 
-namespace Test {
-
-TEST_F( cuda, view_api_b )
-{
-  TestViewAPI< double, Kokkos::CudaUVMSpace >();
-}
-
-} // namespace Test

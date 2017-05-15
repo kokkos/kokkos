@@ -41,14 +41,25 @@
 //@HEADER
 */
 
-#include <cuda/TestCuda_Category.hpp>
-#include <TestViewSubview.hpp>
+#ifndef KOKKOS_TEST_THREADS_HPP
+#define KOKKOS_TEST_THREADS_HPP
+
+#include <gtest/gtest.h>
 
 namespace Test {
 
-TEST_F( TEST_CATEGORY, view_subview_3d_from_5d_right )
-{
-  TestViewSubview::test_3d_subview_5d_right< TEST_EXECSPACE >();
-}
+class cuda_hostpinned : public ::testing::Test {
+protected:
+  static void SetUpTestCase() {
+  }
+
+  static void TearDownTestCase() {
+  }
+};
 
 } // namespace Test
+
+#define TEST_CATEGORY cuda_hostpinned
+#define TEST_EXECSPACE Kokkos::CudaHostPinnedSpace
+
+#endif

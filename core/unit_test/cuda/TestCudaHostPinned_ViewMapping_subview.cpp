@@ -41,14 +41,6 @@
 //@HEADER
 */
 
-#include <cuda/TestCuda.hpp>
+#include <cuda/TestCudaHostPinned_Category.hpp>
+#include <TestViewMapping_subview.hpp>
 
-namespace Test {
-
-TEST_F( cuda, view_space_assign )
-{
-  view_space_assign< Kokkos::HostSpace, Kokkos::CudaHostPinnedSpace >();
-  view_space_assign< Kokkos::CudaSpace, Kokkos::CudaUVMSpace >();
-}
-
-} // namespace Test

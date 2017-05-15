@@ -41,14 +41,15 @@
 //@HEADER
 */
 
-#include <cuda/TestCuda_Category.hpp>
-#include <TestViewSubview.hpp>
+#include <cuda/TestCudaUVM_Category.hpp>
+#include <TestSharedAlloc.hpp>
 
 namespace Test {
 
-TEST_F( TEST_CATEGORY, view_subview_3d_from_5d_right )
+
+TEST_F( TEST_CATEGORY, impl_shared_alloc )
 {
-  TestViewSubview::test_3d_subview_5d_right< TEST_EXECSPACE >();
+  test_shared_alloc< TEST_EXECSPACE, Kokkos::DefaultHostExecutionSpace >();
 }
 
 } // namespace Test

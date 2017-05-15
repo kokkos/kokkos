@@ -41,13 +41,6 @@
 //@HEADER
 */
 
-#include <cuda/TestCuda.hpp>
+#include <cuda/TestCudaHostPinned_Category.hpp>
+#include <TestViewMapping_a.hpp>
 
-namespace Test {
-
-TEST_F( cuda, view_api_c )
-{
-  TestViewAPI< double, Kokkos::CudaHostPinnedSpace >();
-}
-
-} // namespace Test

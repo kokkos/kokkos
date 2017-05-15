@@ -41,25 +41,6 @@
 //@HEADER
 */
 
-#include <cuda/TestCuda.hpp>
+#include <cuda/TestCudaUVM_Category.hpp>
+#include <TestViewMapping_a.hpp>
 
-namespace Test {
-
-TEST_F( cuda, impl_shared_alloc )
-{
-  test_shared_alloc< Kokkos::CudaSpace, Kokkos::HostSpace::execution_space >();
-  test_shared_alloc< Kokkos::CudaUVMSpace, Kokkos::HostSpace::execution_space >();
-  test_shared_alloc< Kokkos::CudaHostPinnedSpace, Kokkos::HostSpace::execution_space >();
-}
-
-TEST_F( cuda, impl_view_mapping_b )
-{
-  test_view_mapping_subview< Kokkos::CudaSpace >();
-  test_view_mapping_subview< Kokkos::CudaUVMSpace >();
-  test_view_mapping_subview< Kokkos::CudaHostPinnedSpace >();
-  TestViewMappingAtomic< Kokkos::CudaSpace >::run();
-  TestViewMappingAtomic< Kokkos::CudaUVMSpace >::run();
-  TestViewMappingAtomic< Kokkos::CudaHostPinnedSpace >::run();
-}
-
-} // namespace Test

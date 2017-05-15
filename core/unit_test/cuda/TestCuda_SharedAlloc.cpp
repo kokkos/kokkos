@@ -41,16 +41,15 @@
 //@HEADER
 */
 
-#include <cuda/TestCuda.hpp>
+#include <cuda/TestCuda_Category.hpp>
+#include <TestSharedAlloc.hpp>
 
 namespace Test {
 
-TEST_F( cuda, view_api_a )
-{
-  typedef Kokkos::View< const int *, Kokkos::Cuda, Kokkos::MemoryTraits<Kokkos::RandomAccess> > view_texture_managed;
-  typedef Kokkos::View< const int *, Kokkos::Cuda, Kokkos::MemoryTraits<Kokkos::RandomAccess | Kokkos::Unmanaged> > view_texture_unmanaged;
 
-  TestViewAPI< double, Kokkos::Cuda >();
+TEST_F( TEST_CATEGORY, impl_shared_alloc )
+{
+  test_shared_alloc< Kokkos::CudaSpace, Kokkos::DefaultHostExecutionSpace >();
 }
 
 } // namespace Test

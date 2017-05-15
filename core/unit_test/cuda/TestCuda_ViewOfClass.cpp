@@ -42,13 +42,5 @@
 */
 
 #include <cuda/TestCuda_Category.hpp>
-#include <TestViewSubview.hpp>
+#include <TestViewOfClass.hpp>
 
-namespace Test {
-
-TEST_F( TEST_CATEGORY, view_subview_3d_from_5d_right )
-{
-  TestViewSubview::test_3d_subview_5d_right< TEST_EXECSPACE >();
-}
-
-} // namespace Test
