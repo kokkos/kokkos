@@ -743,3 +743,125 @@ bool Test( int test ) {
 }
 
 } // namespace TestTeamVector
+
+namespace Test {
+
+// Computes y^T*A*x
+// ( modified from kokkos-tutorials/GTC2016/Exercises/ThreeLevelPar )
+
+#if ( ! defined( KOKKOS_ENABLE_CUDA ) ) || (defined( KOKKOS_ENABLE_CUDA_LAMBDA ) && (8000 <= CUDA_VERSION))
+
+template< typename ScalarType, class DeviceType >
+class TestTripleNestedReduce
+{
+public:
+  typedef DeviceType execution_space;
+  typedef typename execution_space::size_type size_type;
+
+  TestTripleNestedReduce( const size_type & nrows, const size_type & ncols
+                        , const size_type & team_size, const size_type & vector_length )
+  {
+    run_test( nrows, ncols, team_size, vector_length );
+  }
+
+  void run_test( const size_type & nrows, const size_type & ncols
+               , const size_type & team_size, const size_type & vector_length )
+  {
+    //typedef Kokkos::LayoutLeft Layout;
+    typedef Kokkos::LayoutRight Layout;
+
+    typedef Kokkos::View< ScalarType*, DeviceType >            ViewVector;
+    typedef Kokkos::View< ScalarType**, Layout, DeviceType >   ViewMatrix;
+
+    ViewVector y( "y", nrows );
+    ViewVector x( "x", ncols );
+    ViewMatrix A( "A", nrows, ncols );
+
+    typedef Kokkos::RangePolicy<DeviceType> range_policy;
+
+    // Initialize y vector.
+    Kokkos::parallel_for( range_policy( 0, nrows ), KOKKOS_LAMBDA ( const int i ) { y( i ) = 1; } );
+
+    // Initialize x vector.
+    Kokkos::parallel_for( range_policy( 0, ncols ), KOKKOS_LAMBDA ( const int i ) { x( i ) = 1; } );
+
+    typedef Kokkos::TeamPolicy< DeviceType >                        team_policy;
+    typedef typename Kokkos::TeamPolicy< DeviceType >::member_type  member_type;
+
+    // Initialize A matrix, note 2D indexing computation.
+    Kokkos::parallel_for( team_policy( nrows, Kokkos::AUTO ), KOKKOS_LAMBDA ( const member_type & teamMember ) {
+      const int j = teamMember.league_rank();
+      Kokkos::parallel_for( Kokkos::TeamThreadRange( teamMember, ncols ), [&] ( const int i ) {
+        A( j, i ) = 1;
+      } );
+    } );
+
+    // Three level parallelism kernel to force caching of vector x.
+    ScalarType result = 0.0;
+    int chunk_size = 128;
+    Kokkos::parallel_reduce( team_policy( nrows / chunk_size, team_size, vector_length ),
+                             KOKKOS_LAMBDA ( const member_type & teamMember, double & update ) {
+      const int row_start = teamMember.league_rank() * chunk_size;
+      const int row_end   = row_start + chunk_size;
+      Kokkos::parallel_for( Kokkos::TeamThreadRange( teamMember, row_start, row_end ), [&] ( const int i ) {
+        ScalarType sum_i = 0.0;
+        Kokkos::parallel_reduce( Kokkos::ThreadVectorRange( teamMember, ncols ), [&] ( const int j, ScalarType &innerUpdate ) {
+          innerUpdate += A( i, j ) * x( j );
+        }, sum_i );
+        Kokkos::single( Kokkos::PerThread( teamMember ), [&] () {
+          update += y( i ) * sum_i;
+        } );
+      } );
+    }, result );
+
+    const ScalarType solution = (ScalarType) nrows * (ScalarType) ncols;
+    ASSERT_EQ( solution, result );
+  }
+};
+
+#else // #if ( ! defined( KOKKOS_ENABLE_CUDA ) ) || defined( KOKKOS_ENABLE_CUDA_LAMBDA )
+
+template< typename ScalarType, class DeviceType >
+class TestTripleNestedReduce
+{
+public:
+  typedef DeviceType execution_space;
+  typedef typename execution_space::size_type size_type;
+
+  TestTripleNestedReduce( const size_type &, const size_type
+                        , const size_type &, const size_type )
+  {}
+};
+
+#endif
+        
+TEST_F( TEST_CATEGORY, team_vector )
+{
+  ASSERT_TRUE( ( TestTeamVector::Test< TEST_EXECSPACE >( 0 ) ) );
+  ASSERT_TRUE( ( TestTeamVector::Test< TEST_EXECSPACE >( 1 ) ) );
+  ASSERT_TRUE( ( TestTeamVector::Test< TEST_EXECSPACE >( 2 ) ) );
+  ASSERT_TRUE( ( TestTeamVector::Test< TEST_EXECSPACE >( 3 ) ) );
+  ASSERT_TRUE( ( TestTeamVector::Test< TEST_EXECSPACE >( 4 ) ) );
+  ASSERT_TRUE( ( TestTeamVector::Test< TEST_EXECSPACE >( 5 ) ) );
+  ASSERT_TRUE( ( TestTeamVector::Test< TEST_EXECSPACE >( 6 ) ) );
+  ASSERT_TRUE( ( TestTeamVector::Test< TEST_EXECSPACE >( 7 ) ) );
+  ASSERT_TRUE( ( TestTeamVector::Test< TEST_EXECSPACE >( 8 ) ) );
+  ASSERT_TRUE( ( TestTeamVector::Test< TEST_EXECSPACE >( 9 ) ) );
+  ASSERT_TRUE( ( TestTeamVector::Test< TEST_EXECSPACE >( 10 ) ) );
+}
+#ifdef KOKKOS_COMPILER_GNU
+#if ( KOKKOS_COMPILER_GNU == 472 )
+#define SKIP_TEST
+#endif
+#endif
+
+#ifndef SKIP_TEST
+TEST_F( TEST_CATEGORY, triple_nested_parallelism )
+{
+  TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 32, 32 );
+  TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 32, 16 );
+  TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 16, 16 );
+}
+#endif
+
+}

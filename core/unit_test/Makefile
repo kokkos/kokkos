@@ -3,6 +3,7 @@ KOKKOS_PATH = ../..
 GTEST_PATH = ../../tpls/gtest
 
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test
+vpath %.cpp ${KOKKOS_PATH}/core/unit_test/default
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/serial
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/threads
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/openmp
@@ -58,9 +59,6 @@ endif
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
-	OBJ_THREADS = UnitTestMain.o gtest-all.o
-	OBJ_THREADS += TestThreads_Team.o
-	TARGETS += KokkosCore_UnitTest_Threads
 
 	OBJ_THREADS2 = UnitTestMainInit.o gtest-all.o
 	OBJ_THREADS2 += TestThreads_Init.o
@@ -77,8 +75,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 	OBJ_THREADS2 += TestThreads_Reductions.o TestThreads_Scan.o
 	OBJ_THREADS2 += TestThreads_Complex.o
 	OBJ_THREADS2 += TestThreads_AtomicOperations.o TestThreads_AtomicViews.o TestThreads_Atomics.o
-	OBJ_THREADS2 += TestThreads_Other2.o
+	OBJ_THREADS2 += TestThreads_Team.o TestThreads_TeamScratch.o
 	OBJ_THREADS2 += TestThreads_TeamReductionScan.o
+	OBJ_THREADS2 += TestThreads_Other2.o
 	OBJ_THREADS2 += TestThreads_MDRange.o
 
 	TARGETS += KokkosCore_UnitTest_Threads2
