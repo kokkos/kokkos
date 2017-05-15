@@ -1,14 +1,3 @@
-# If the user doesn't have 'cmake_minimum_required(VERSION 3.1)' (or a higher
-# version) as the first line of their code, the policies can be set incorrectly
-# so that the CXX flags are not set correctly for AppleClang.  Forcing them to
-# set this catches the issue.
-if(${CMAKE_MINIMUM_REQUIRED_VERSION} VERSION_LESS 3.1)
-  message(FATAL_ERROR "Kokkos requires you to set the minimum CMake version to 3.1 or higher.")
-endif()
-
-cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
-project(Kokkos CXX)
-
 ############################# USER SETTABLE OPTIONS ############################
 
 # Set which Kokkos backend to use.
@@ -374,7 +363,6 @@ endfunction()
 #       -ccbin flag.
 
 # TODO: Fully add CUDA support for Clang.
-
 set_kokkos_cxx_compiler()
 
 set_kokkos_compiler_standard()
@@ -855,7 +843,7 @@ else()
 endif()
 
 # Use GCC toolchain with Clang.
-if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND NOT APPLE)
   find_program(KOKKOS_GCC_PATH g++)
   if(NOT KOKKOS_GCC_PATH)
     message(FATAL_ERROR "Can't find GCC path to get toolchain for Clang.")
