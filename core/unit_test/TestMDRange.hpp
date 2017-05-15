@@ -1726,9 +1726,11 @@ TEST_F( TEST_CATEGORY , mdrange_for ) {
   TestMDRange_6D< TEST_EXECSPACE >::test_for6( 10, 10, 10, 10, 5, 5 );
 }
 
+#ifndef KOKKOS_ENABLE_CUDA
 TEST_F( TEST_CATEGORY , mdrange_reduce ) {
   TestMDRange_2D< TEST_EXECSPACE >::test_reduce2( 100, 100 );
   TestMDRange_3D< TEST_EXECSPACE >::test_reduce3( 100, 10, 100 );
 }
+#endif
 
 } // namespace Test

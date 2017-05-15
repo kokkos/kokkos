@@ -657,7 +657,7 @@ struct TestScratchTeam {
 
     int thread_scratch_size = Functor::shared_int_array_type::shmem_size( Functor::SHARED_THREAD_COUNT );
 
-    Kokkos::parallel_reduce( team_exec.set_scratch_size( 0, Kokkos::PerTeam( team_scratch_size ),
+    Kokkos::parallel_reduce( team_exec.set_scratch_size( 1, Kokkos::PerTeam( team_scratch_size ),
                                                          Kokkos::PerThread( thread_scratch_size ) ),
                              Functor(), result_type( & error_count ) );
 

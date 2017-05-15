@@ -41,7 +41,7 @@
 //@HEADER
 */
 
-#include <cuda/TestCuda_Category.hpp>
+#include <cuda/TestCudaUVM_Category.hpp>
 #include <TestViewSubview.hpp>
 
 namespace Test {

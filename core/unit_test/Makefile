@@ -214,17 +214,11 @@ TEST_TARGETS += ${INITTESTS_TEST_TARGETS}
 KokkosCore_UnitTest_Cuda: $(OBJ_CUDA) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_CUDA) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Cuda
 
-KokkosCore_UnitTest_Cuda2: $(OBJ_CUDA2) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(EXTRA_PATH) $(OBJ_CUDA2) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Cuda2
-
 KokkosCore_UnitTest_Threads: $(OBJ_THREADS) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_THREADS) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Threads
 
 KokkosCore_UnitTest_OpenMP: $(OBJ_OPENMP) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_OPENMP) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_OpenMP
-
-KokkosCore_UnitTest_OpenMP2: $(OBJ_OPENMP2) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(EXTRA_PATH) $(OBJ_OPENMP2) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_OpenMP2
 
 KokkosCore_UnitTest_OpenMPTarget: $(OBJ_OPENMPTARGET) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_OPENMPTARGET) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_OpenMPTarget
@@ -250,14 +244,13 @@ KokkosCore_UnitTest_Default: $(OBJ_DEFAULT) $(KOKKOS_LINK_DEPENDS)
 ${INITTESTS_TARGETS}: KokkosCore_UnitTest_DefaultDeviceTypeInit_%: TestDefaultDeviceTypeInit_%.o UnitTestMain.o gtest-all.o $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) TestDefaultDeviceTypeInit_$*.o UnitTestMain.o gtest-all.o $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_DefaultDeviceTypeInit_$*
 
-test-cuda: KokkosCore_UnitTest_Cuda KokkosCore_UnitTest_Cuda2
+test-cuda: KokkosCore_UnitTest_Cuda
 	./KokkosCore_UnitTest_Cuda
-	./KokkosCore_UnitTest_Cuda2
 
 test-threads: KokkosCore_UnitTest_Threads
 	./KokkosCore_UnitTest_Threads
 
-test-openmp: KokkosCore_UnitTest_OpenMP KokkosCore_UnitTest_OpenMP
+test-openmp: KokkosCore_UnitTest_OpenMP
 	./KokkosCore_UnitTest_OpenMP
 
 test-openmptarget: KokkosCore_UnitTest_OpenMPTarget

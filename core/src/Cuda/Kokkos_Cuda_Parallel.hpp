@@ -1702,11 +1702,6 @@ namespace Impl {
 
   };
 
-  template< class FunctorType>
-  struct IsNonTrivialReduceFunctor<FunctorType, true> {
-    enum {value = true};
-  };
-
   template<class FunctorType, class ResultType, class Tag, bool Enable = IsNonTrivialReduceFunctor<FunctorType>::value >
   struct FunctorReferenceType {
     typedef ResultType& reference_type;

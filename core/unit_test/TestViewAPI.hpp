@@ -1338,6 +1338,7 @@ TEST_F( TEST_CATEGORY, view_remap )
   input_type  input ( "input", N0, N1 );
   diff_type   diff  ( "diff", N0 );
 
+  Kokkos::fence();
   int value = 0;
 
   for ( size_t i3 = 0; i3 < N3; ++i3 )
@@ -1348,8 +1349,10 @@ TEST_F( TEST_CATEGORY, view_remap )
     input( i0, i1, i2, i3 ) = ++value;
   }
 
+  Kokkos::fence();
   // Kokkos::deep_copy( diff, input ); // Throw with incompatible shape.
   Kokkos::deep_copy( output, input );
+  Kokkos::fence();
 
   value = 0;
 

@@ -122,6 +122,7 @@ void test_auto_1d ()
 
   fill_2D< mv_type, Space > f1( X, ONE );
   Kokkos::parallel_for( X.dimension_0(), f1 );
+  Kokkos::fence();
   Kokkos::deep_copy( X_h, X );
   for ( size_type j = 0; j < numCols; ++j ) {
     for ( size_type i = 0; i < numRows; ++i ) {
@@ -131,6 +132,7 @@ void test_auto_1d ()
 
   fill_2D< mv_type, Space > f2( X, 0.0 );
   Kokkos::parallel_for( X.dimension_0(), f2 );
+  Kokkos::fence();
   Kokkos::deep_copy( X_h, X );
   for ( size_type j = 0; j < numCols; ++j ) {
     for ( size_type i = 0; i < numRows; ++i ) {
@@ -140,6 +142,7 @@ void test_auto_1d ()
 
   fill_2D< mv_type, Space > f3( X, TWO );
   Kokkos::parallel_for( X.dimension_0(), f3 );
+  Kokkos::fence();
   Kokkos::deep_copy( X_h, X );
   for ( size_type j = 0; j < numCols; ++j ) {
     for ( size_type i = 0; i < numRows; ++i ) {
@@ -152,6 +155,7 @@ void test_auto_1d ()
 
     fill_1D< decltype( X_j ), Space > f4( X_j, ZERO );
     Kokkos::parallel_for( X_j.dimension_0(), f4 );
+    Kokkos::fence();
     Kokkos::deep_copy( X_h, X );
     for ( size_type i = 0; i < numRows; ++i ) {
       ASSERT_TRUE( X_h( i, j ) == ZERO );
@@ -161,6 +165,7 @@ void test_auto_1d ()
       auto X_jj = Kokkos::subview ( X, Kokkos::ALL, jj );
       fill_1D< decltype( X_jj ), Space > f5( X_jj, ONE );
       Kokkos::parallel_for( X_jj.dimension_0(), f5 );
+      Kokkos::fence();
       Kokkos::deep_copy( X_h, X );
       for ( size_type i = 0; i < numRows; ++i ) {
         ASSERT_TRUE( X_h( i, jj ) == ONE );
