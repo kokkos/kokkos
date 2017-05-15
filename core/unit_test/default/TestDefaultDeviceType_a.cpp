@@ -47,22 +47,11 @@
 
 #if !defined( KOKKOS_ENABLE_CUDA ) || defined( __CUDACC__ )
 
-#include <TestReduce.hpp>
+#include <default/TestDefaultDeviceType_Category.hpp>
+#include <TestReduceCombinatorical.hpp>
 
 namespace Test {
 
-class defaultdevicetype : public ::testing::Test {
-protected:
-  static void SetUpTestCase()
-  {
-    Kokkos::initialize();
-  }
-
-  static void TearDownTestCase()
-  {
-    Kokkos::finalize();
-  }
-};
 
 TEST_F( defaultdevicetype, reduce_instantiation_a )
 {

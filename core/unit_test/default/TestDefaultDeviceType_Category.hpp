@@ -41,33 +41,27 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_TEST_THREADS_HPP
+#define KOKKOS_TEST_THREADS_HPP
+
 #include <gtest/gtest.h>
-
-#include <Kokkos_Core.hpp>
-
-#if !defined( KOKKOS_ENABLE_CUDA ) || defined( __CUDACC__ )
-
-#include <default/TestDefaultDeviceType_Category.hpp>
-#include <TestUtilities.hpp>
 
 namespace Test {
 
-TEST_F( defaultdevicetype, test_utilities )
-{
-  test_utilities();
-}
+class defaultdevicetype : public ::testing::Test {
+protected:
+  static void SetUpTestCase()
+  {
+  }
 
-TEST_F( defaultdevicetype, malloc )
-{
-  int* data = (int*) Kokkos::kokkos_malloc( 100 * sizeof( int ) );
-  ASSERT_NO_THROW( data = (int*) Kokkos::kokkos_realloc( data, 120 * sizeof( int ) ) );
-  Kokkos::kokkos_free( data );
-
-  int* data2 = (int*) Kokkos::kokkos_malloc( 0 );
-  ASSERT_TRUE( data2 == NULL );
-  Kokkos::kokkos_free( data2 );
-}
+  static void TearDownTestCase()
+  {
+  }
+};
 
 } // namespace Test
+
+#define TEST_CATEGORY defaultdevicetype
+#define TEST_EXECSPACE Kokkos::DefaultExecutionSpace
 
 #endif

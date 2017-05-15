@@ -44,25 +44,14 @@
 #include <gtest/gtest.h>
 
 #include <Kokkos_Core.hpp>
+#include <default/TestDefaultDeviceType_Category.hpp>
 
 #if !defined( KOKKOS_ENABLE_CUDA ) || defined( __CUDACC__ )
 
 namespace Test {
 
-class defaultdevicetype : public ::testing::Test {
-protected:
-  static void SetUpTestCase()
-  {
-    Kokkos::initialize();
-  }
 
-  static void TearDownTestCase()
-  {
-    Kokkos::finalize();
-  }
-};
-
-TEST_F( defaultdevicetype, host_space_access )
+TEST_F( TEST_CATEGORY, host_space_access )
 {
   typedef Kokkos::HostSpace::execution_space host_exec_space;
   typedef Kokkos::Device< host_exec_space, Kokkos::HostSpace > device_space;

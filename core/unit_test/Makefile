@@ -60,27 +60,27 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 
-	OBJ_THREADS2 = UnitTestMainInit.o gtest-all.o
-	OBJ_THREADS2 += TestThreads_Init.o
-	OBJ_THREADS2 += TestThreads_SharedAlloc.o
-	OBJ_THREADS2 += TestThreads_RangePolicy.o
-	OBJ_THREADS2 += TestThreads_ViewAPI_b.o
-	OBJ_THREADS2 += TestThreads_ViewMapping_a.o TestThreads_ViewMapping_b.o TestThreads_ViewMapping_subview.o
-	OBJ_THREADS2 += TestThreads_ViewOfClass.o
-	OBJ_THREADS2 += TestThreads_SubView_a.o TestThreads_SubView_b.o
-	OBJ_THREADS2 += TestThreads_SubView_c01.o TestThreads_SubView_c02.o TestThreads_SubView_c03.o
-	OBJ_THREADS2 += TestThreads_SubView_c04.o TestThreads_SubView_c05.o TestThreads_SubView_c06.o
-	OBJ_THREADS2 += TestThreads_SubView_c07.o TestThreads_SubView_c08.o TestThreads_SubView_c09.o
-	OBJ_THREADS2 += TestThreads_SubView_c10.o TestThreads_SubView_c11.o TestThreads_SubView_c12.o
-	OBJ_THREADS2 += TestThreads_Reductions.o TestThreads_Scan.o
-	OBJ_THREADS2 += TestThreads_Complex.o
-	OBJ_THREADS2 += TestThreads_AtomicOperations.o TestThreads_AtomicViews.o TestThreads_Atomics.o
-	OBJ_THREADS2 += TestThreads_Team.o TestThreads_TeamScratch.o
-	OBJ_THREADS2 += TestThreads_TeamReductionScan.o
-	OBJ_THREADS2 += TestThreads_Other2.o
-	OBJ_THREADS2 += TestThreads_MDRange.o
+	OBJ_THREADS = UnitTestMainInit.o gtest-all.o
+	OBJ_THREADS += TestThreads_Init.o
+	OBJ_THREADS += TestThreads_SharedAlloc.o
+	OBJ_THREADS += TestThreads_RangePolicy.o
+	OBJ_THREADS += TestThreads_ViewAPI_b.o
+	OBJ_THREADS += TestThreads_ViewMapping_a.o TestThreads_ViewMapping_b.o TestThreads_ViewMapping_subview.o
+	OBJ_THREADS += TestThreads_ViewOfClass.o
+	OBJ_THREADS += TestThreads_SubView_a.o TestThreads_SubView_b.o
+	OBJ_THREADS += TestThreads_SubView_c01.o TestThreads_SubView_c02.o TestThreads_SubView_c03.o
+	OBJ_THREADS += TestThreads_SubView_c04.o TestThreads_SubView_c05.o TestThreads_SubView_c06.o
+	OBJ_THREADS += TestThreads_SubView_c07.o TestThreads_SubView_c08.o TestThreads_SubView_c09.o
+	OBJ_THREADS += TestThreads_SubView_c10.o TestThreads_SubView_c11.o TestThreads_SubView_c12.o
+	OBJ_THREADS += TestThreads_Reductions.o TestThreads_Scan.o
+	OBJ_THREADS += TestThreads_Complex.o
+	OBJ_THREADS += TestThreads_AtomicOperations.o TestThreads_AtomicViews.o TestThreads_Atomics.o
+	OBJ_THREADS += TestThreads_Team.o TestThreads_TeamScratch.o
+	OBJ_THREADS += TestThreads_TeamReductionScan.o
+	OBJ_THREADS += TestThreads_Other.o
+	OBJ_THREADS += TestThreads_MDRange.o
 
-	TARGETS += KokkosCore_UnitTest_Threads2
+	TARGETS += KokkosCore_UnitTest_Threads
 
 	TEST_TARGETS += test-threads
 endif
@@ -165,7 +165,7 @@ OBJ_HWLOC = TestHWLOC.o UnitTestMain.o gtest-all.o
 TARGETS += KokkosCore_UnitTest_HWLOC
 TEST_TARGETS += test-hwloc
 
-OBJ_DEFAULT = UnitTestMain.o gtest-all.o
+OBJ_DEFAULT = UnitTestMainInit.o gtest-all.o
 ifneq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
   OBJ_DEFAULT += TestDefaultDeviceType.o TestDefaultDeviceType_a.o TestDefaultDeviceType_b.o TestDefaultDeviceType_c.o TestDefaultDeviceType_d.o
 endif
@@ -188,9 +188,6 @@ KokkosCore_UnitTest_Cuda2: $(OBJ_CUDA2) $(KOKKOS_LINK_DEPENDS)
 
 KokkosCore_UnitTest_Threads: $(OBJ_THREADS) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_THREADS) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Threads
-
-KokkosCore_UnitTest_Threads2: $(OBJ_THREADS2) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(EXTRA_PATH) $(OBJ_THREADS2) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Threads2
 
 KokkosCore_UnitTest_OpenMP: $(OBJ_OPENMP) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_OPENMP) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_OpenMP
@@ -229,9 +226,8 @@ test-cuda: KokkosCore_UnitTest_Cuda KokkosCore_UnitTest_Cuda2
 	./KokkosCore_UnitTest_Cuda
 	./KokkosCore_UnitTest_Cuda2
 
-test-threads: KokkosCore_UnitTest_Threads KokkosCore_UnitTest_Threads2
+test-threads: KokkosCore_UnitTest_Threads KokkosCore_UnitTest_Threads
 	./KokkosCore_UnitTest_Threads
-	./KokkosCore_UnitTest_Threads2
 
 test-openmp: KokkosCore_UnitTest_OpenMP KokkosCore_UnitTest_OpenMP2
 	./KokkosCore_UnitTest_OpenMP
