@@ -194,7 +194,11 @@ void OpenMP::partition_master( F const& f
 
     Exec * new_instance = new (ptr) Exec( Impl::t_openmp_hardware_id );
 
+#ifdef KOKKOS_ENABLE_PROC_BIND
     #pragma omp parallel num_threads(partition_size) proc_bind(spread)
+#else
+    #pragma omp parallel num_threads(partition_size)
+#endif
     {
       Impl::t_openmp_instance  = new_instance;
       Impl::t_openmp_pool_rank = omp_get_thread_num();
