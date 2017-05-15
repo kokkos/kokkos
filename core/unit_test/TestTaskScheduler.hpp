@@ -668,7 +668,7 @@ TEST_F( TEST_CATEGORY, task_fib )
 {
   const int N = 24 ; // 25 triggers tbd bug on Cuda/Pascal
   for ( int i = 0; i < N; ++i ) {
-    TestTaskScheduler::TestFib< TEST_EXECSPACE >::run( i );
+    TestTaskScheduler::TestFib< TEST_EXECSPACE >::run( i , ( i + 1 ) * ( i + 1 ) * 10000 );
   }
 }
 
