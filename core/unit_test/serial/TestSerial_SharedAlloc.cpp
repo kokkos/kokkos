@@ -41,61 +41,15 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TEST_SERIAL_HPP
-#define KOKKOS_TEST_SERIAL_HPP
-
-#include <gtest/gtest.h>
-
-#include <Kokkos_Macros.hpp>
-
-#ifdef KOKKOS_LAMBDA
-#undef KOKKOS_LAMBDA
-#endif
-#define KOKKOS_LAMBDA [=]
-
-#include <Kokkos_Core.hpp>
-
-#include <TestTile.hpp>
+#include <serial/TestSerial_Category.hpp>
 #include <TestSharedAlloc.hpp>
-#include <TestViewMapping.hpp>
-#include <TestFunctorAnalysis.hpp>
-#include <TestViewAPI.hpp>
-#include <TestViewOfClass.hpp>
-#include <TestViewSubview.hpp>
-#include <TestAtomic.hpp>
-#include <TestAtomicOperations.hpp>
-#include <TestAtomicViews.hpp>
-#include <TestRange.hpp>
-#include <TestTeam.hpp>
-#include <TestReduce.hpp>
-#include <TestScan.hpp>
-#include <TestAggregate.hpp>
-#include <TestCompilerMacros.hpp>
-#include <TestTaskScheduler.hpp>
-#include <TestMemoryPool.hpp>
-#include <TestCXX11.hpp>
-#include <TestCXX11Deduction.hpp>
-#include <TestTeamVector.hpp>
-#include <TestTemplateMetaFunctions.hpp>
-#include <TestPolicyConstruction.hpp>
-#include <TestMDRange.hpp>
-#include <TestConcurrentBitset.hpp>
 
 namespace Test {
 
-class serial : public ::testing::Test {
-protected:
-  static void SetUpTestCase()
-  {
-    Kokkos::HostSpace::execution_space::initialize();
-  }
 
-  static void TearDownTestCase()
-  {
-    Kokkos::HostSpace::execution_space::finalize();
-  }
-};
+TEST_F( TEST_CATEGORY, impl_shared_alloc )
+{
+  test_shared_alloc< Kokkos::HostSpace, TEST_EXECSPACE >();
+}
 
 } // namespace Test
-
-#endif

@@ -43,5 +43,8 @@
 */
 
 #include<serial/TestSerial_Category.hpp>
-#include<TestComplex.hpp>
+#include<TestInit.hpp>
+#include<TestCompilerMacros.hpp>
+#include<TestPolicyConstruction.hpp>
+
 

@@ -44,39 +44,3 @@
 #include <threads/TestThreads_Category.hpp>
 #include <TestReduce.hpp>
 #include <TestCXX11Deduction.hpp>
-/*
-namespace Test {
-
-
-TEST_F( threads, team_scan )
-{
-  TestScanTeam< Kokkos::Threads, Kokkos::Schedule<Kokkos::Static> >( 0 );
-  TestScanTeam< Kokkos::Threads, Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
-  TestScanTeam< Kokkos::Threads, Kokkos::Schedule<Kokkos::Static> >( 10 );
-  TestScanTeam< Kokkos::Threads, Kokkos::Schedule<Kokkos::Dynamic> >( 10 );
-  TestScanTeam< Kokkos::Threads, Kokkos::Schedule<Kokkos::Static> >( 10000 );
-  TestScanTeam< Kokkos::Threads, Kokkos::Schedule<Kokkos::Dynamic> >( 10000 );
-}
-
-TEST_F( threads, team_long_reduce )
-{
-  TestReduceTeam< long, Kokkos::Threads, Kokkos::Schedule<Kokkos::Static> >( 0 );
-  TestReduceTeam< long, Kokkos::Threads, Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
-  TestReduceTeam< long, Kokkos::Threads, Kokkos::Schedule<Kokkos::Static> >( 3 );
-  TestReduceTeam< long, Kokkos::Threads, Kokkos::Schedule<Kokkos::Dynamic> >( 3 );
-  TestReduceTeam< long, Kokkos::Threads, Kokkos::Schedule<Kokkos::Static> >( 100000 );
-  TestReduceTeam< long, Kokkos::Threads, Kokkos::Schedule<Kokkos::Dynamic> >( 100000 );
-}
-
-TEST_F( threads, team_double_reduce )
-{
-  TestReduceTeam< double, Kokkos::Threads, Kokkos::Schedule<Kokkos::Static> >( 0 );
-  TestReduceTeam< double, Kokkos::Threads, Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
-  TestReduceTeam< double, Kokkos::Threads, Kokkos::Schedule<Kokkos::Static> >( 3 );
-  TestReduceTeam< double, Kokkos::Threads, Kokkos::Schedule<Kokkos::Dynamic> >( 3 );
-  TestReduceTeam< double, Kokkos::Threads, Kokkos::Schedule<Kokkos::Static> >( 100000 );
-  TestReduceTeam< double, Kokkos::Threads, Kokkos::Schedule<Kokkos::Dynamic> >( 100000 );
-}
-
-} // namespace Test
-*/
