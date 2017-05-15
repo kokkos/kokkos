@@ -270,7 +270,7 @@ clean: kokkos-clean
 
 # Compilation rules
 
-%.o:%.cpp $(KOKKOS_CPP_DEPENDS)
+%.o:%.cpp $(KOKKOS_CPP_DEPENDS) $(TEST_HEADERS)
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) $(EXTRA_INC) -c $<
 
 gtest-all.o:$(GTEST_PATH)/gtest/gtest-all.cc

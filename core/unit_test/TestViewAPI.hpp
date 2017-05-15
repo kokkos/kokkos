@@ -68,7 +68,7 @@ struct TestViewOperator
 {
   typedef typename DeviceType::execution_space  execution_space;
 
-  enum { N = 100 };
+  enum { N = 1000 };
   enum { D = 3 };
 
   typedef Kokkos::View< T*[D], execution_space > view_type;
