@@ -42,13 +42,42 @@
 */
 
 #include <openmp/TestOpenMP_Category.hpp>
-#include <TestViewSubview.hpp>
+#include <TestTeam.hpp>
 
 namespace Test {
 
-TEST_F( TEST_CATEGORY, view_subview_3d_from_5d_right_atomic )
+TEST_F( TEST_CATEGORY, team_shared_request )
 {
-  TestViewSubview::test_3d_subview_5d_right< TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestSharedTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >();
+  TestSharedTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >();
+}
+
+TEST_F( TEST_CATEGORY, team_scratch_request )
+{
+  TestScratchTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >();
+  TestScratchTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >();
+}
+
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
+#if !defined(KOKKOS_ENABLE_CUDA) || ( 8000 <= CUDA_VERSION )
+TEST_F( TEST_CATEGORY, team_lambda_shared_request )
+{
+  TestLambdaSharedTeam< Kokkos::HostSpace, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >();
+  TestLambdaSharedTeam< Kokkos::HostSpace, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >();
+}
+#endif
+#endif
+
+TEST_F( TEST_CATEGORY, shmem_size )
+{
+  TestShmemSize< TEST_EXECSPACE >();
+}
+
+TEST_F( TEST_CATEGORY, multi_level_scratch )
+{
+  TestMultiLevelScratchTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >();
+  TestMultiLevelScratchTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >();
 }
 
 } // namespace Test
+

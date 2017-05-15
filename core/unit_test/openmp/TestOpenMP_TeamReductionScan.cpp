@@ -42,13 +42,40 @@
 */
 
 #include <openmp/TestOpenMP_Category.hpp>
-#include <TestViewSubview.hpp>
+#include <TestTeam.hpp>
 
 namespace Test {
 
-TEST_F( TEST_CATEGORY, view_subview_3d_from_5d_right_atomic )
+
+TEST_F( TEST_CATEGORY, team_scan )
 {
-  TestViewSubview::test_3d_subview_5d_right< TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::Atomic> >();
+  TestScanTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 0 );
+  TestScanTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
+  TestScanTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 10 );
+  TestScanTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 10 );
+  TestScanTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 10000 );
+  TestScanTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 10000 );
+}
+
+TEST_F( TEST_CATEGORY, team_long_reduce )
+{
+  TestReduceTeam< long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 0 );
+  TestReduceTeam< long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
+  TestReduceTeam< long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 3 );
+  TestReduceTeam< long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 3 );
+  TestReduceTeam< long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 100000 );
+  TestReduceTeam< long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 100000 );
+}
+
+TEST_F( TEST_CATEGORY, team_double_reduce )
+{
+  TestReduceTeam< double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 0 );
+  TestReduceTeam< double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
+  TestReduceTeam< double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 3 );
+  TestReduceTeam< double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 3 );
+  TestReduceTeam< double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 100000 );
+  TestReduceTeam< double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 100000 );
 }
 
 } // namespace Test
+

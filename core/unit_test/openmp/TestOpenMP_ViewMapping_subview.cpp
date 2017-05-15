@@ -41,14 +41,6 @@
 //@HEADER
 */
 
-#include <openmp/TestOpenMP.hpp>
+#include <openmp/TestOpenMP_Category.hpp>
+#include <TestViewMapping_subview.hpp>
 
-namespace Test {
-
-TEST_F( openmp, impl_view_mapping_a )
-{
-  test_view_mapping< Kokkos::OpenMP >();
-  test_view_mapping_operator< Kokkos::OpenMP >();
-}
-
-} // namespace Test

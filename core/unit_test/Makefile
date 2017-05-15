@@ -86,22 +86,32 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
-	OBJ_OPENMP = TestOpenMP_Other.o TestOpenMP_Reductions.o TestOpenMP_Atomics.o TestOpenMP_Team.o
-	OBJ_OPENMP += TestOpenMP_SubView_a.o TestOpenMP_SubView_b.o
+        OBJ_OPENMP = UnitTestMainInit.o gtest-all.o
+        OBJ_OPENMP += TestOpenMP_Init.o
+        OBJ_OPENMP += TestOpenMP_SharedAlloc.o
+        OBJ_OPENMP += TestOpenMP_RangePolicy.o
+        OBJ_OPENMP += TestOpenMP_ViewAPI_b.o
+        OBJ_OPENMP += TestOpenMP_ViewMapping_a.o TestOpenMP_ViewMapping_b.o TestOpenMP_ViewMapping_subview.o
+        OBJ_OPENMP += TestOpenMP_ViewOfClass.o
 ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-	OBJ_OPENMP += TestOpenMP_SubView_c_all.o
+	    OBJ_OPENMP += TestOpenMP_SubView_c_all.o
 else
-	OBJ_OPENMP += TestOpenMP_SubView_c01.o TestOpenMP_SubView_c02.o TestOpenMP_SubView_c03.o
-	OBJ_OPENMP += TestOpenMP_SubView_c04.o TestOpenMP_SubView_c05.o TestOpenMP_SubView_c06.o
-	OBJ_OPENMP += TestOpenMP_SubView_c07.o TestOpenMP_SubView_c08.o TestOpenMP_SubView_c09.o
-	OBJ_OPENMP += TestOpenMP_SubView_c10.o TestOpenMP_SubView_c11.o TestOpenMP_SubView_c12.o
+        OBJ_OPENMP += TestOpenMP_SubView_a.o TestOpenMP_SubView_b.o
+        OBJ_OPENMP += TestOpenMP_SubView_c01.o TestOpenMP_SubView_c02.o TestOpenMP_SubView_c03.o
+        OBJ_OPENMP += TestOpenMP_SubView_c04.o TestOpenMP_SubView_c05.o TestOpenMP_SubView_c06.o
+        OBJ_OPENMP += TestOpenMP_SubView_c07.o TestOpenMP_SubView_c08.o TestOpenMP_SubView_c09.o
+        OBJ_OPENMP += TestOpenMP_SubView_c10.o TestOpenMP_SubView_c11.o TestOpenMP_SubView_c12.o
 endif
-	OBJ_OPENMP += TestOpenMP_ViewAPI_a.o TestOpenMP_ViewAPI_b.o UnitTestMain.o gtest-all.o
+        OBJ_OPENMP += TestOpenMP_Reductions.o TestOpenMP_Scan.o
+        OBJ_OPENMP += TestOpenMP_Complex.o
+        OBJ_OPENMP += TestOpenMP_AtomicOperations.o TestOpenMP_AtomicViews.o TestOpenMP_Atomics.o
+        OBJ_OPENMP += TestOpenMP_Team.o TestOpenMP_TeamScratch.o
+        OBJ_OPENMP += TestOpenMP_TeamReductionScan.o
+        OBJ_OPENMP += TestOpenMP_Other.o
+        OBJ_OPENMP += TestOpenMP_MDRange.o
+        OBJ_OPENMP += TestOpenMP_Task.o
+	
 	TARGETS += KokkosCore_UnitTest_OpenMP
-
-	OBJ_OPENMP2 = UnitTestMainInit.o gtest-all.o
-	OBJ_OPENMP2 += TestOpenMP_Complex.o
-	TARGETS += KokkosCore_UnitTest_OpenMP2
 
 	TEST_TARGETS += test-openmp
 endif
@@ -149,7 +159,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
         OBJ_SERIAL += TestSerial_ViewMapping_a.o TestSerial_ViewMapping_b.o TestSerial_ViewMapping_subview.o
         OBJ_SERIAL += TestSerial_ViewOfClass.o
 ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-	OBJ_SERIAL += TestSerial_SubView_c_all.o
+	    OBJ_SERIAL += TestSerial_SubView_c_all.o
 else
         OBJ_SERIAL += TestSerial_SubView_a.o TestSerial_SubView_b.o
         OBJ_SERIAL += TestSerial_SubView_c01.o TestSerial_SubView_c02.o TestSerial_SubView_c03.o
@@ -236,9 +246,8 @@ test-cuda: KokkosCore_UnitTest_Cuda KokkosCore_UnitTest_Cuda2
 test-threads: KokkosCore_UnitTest_Threads
 	./KokkosCore_UnitTest_Threads
 
-test-openmp: KokkosCore_UnitTest_OpenMP KokkosCore_UnitTest_OpenMP2
+test-openmp: KokkosCore_UnitTest_OpenMP KokkosCore_UnitTest_OpenMP
 	./KokkosCore_UnitTest_OpenMP
-	./KokkosCore_UnitTest_OpenMP2
 
 test-openmptarget: KokkosCore_UnitTest_OpenMPTarget
 	./KokkosCore_UnitTest_OpenMPTarget

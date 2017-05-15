@@ -38,7 +38,7 @@ KOKKOS_INTERNAL_CUDA_USE_LAMBDA := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) |
 
 # Check for Kokkos Host Execution Spaces one of which must be on.
 KOKKOS_INTERNAL_USE_OPENMPTARGET := $(strip $(shell echo $(KOKKOS_DEVICES) | grep OpenMPTarget | wc -l))
-KOKKOS_INTERNAL_USE_OPENMP := $(strip $(shell echo $(KOKKOS_DEVICES//OpenMPTarget/) | grep OpenMP | wc -l))
+KOKKOS_INTERNAL_USE_OPENMP := $(strip $(shell echo $(subst OpenMPTarget,,$(KOKKOS_DEVICES)) | grep OpenMP | wc -l))
 KOKKOS_INTERNAL_USE_PTHREADS := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Pthread | wc -l))
 KOKKOS_INTERNAL_USE_QTHREADS := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Qthreads | wc -l))
 KOKKOS_INTERNAL_USE_SERIAL := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Serial | wc -l))
