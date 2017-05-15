@@ -103,7 +103,6 @@ TEST_F( serial, compiler_macros )
 
 TEST_F( serial, memory_pool )
 {
-  TestMemoryPool::test_host_memory_pool_stats<>();
   TestMemoryPool::test_memory_pool_v2< Kokkos::Serial >(false,false);
 }
 
