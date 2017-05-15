@@ -48,4 +48,3 @@
 #include<TestMemoryPool.hpp>
 #include<TestCXX11.hpp>
 #include<TestTile.hpp>
-

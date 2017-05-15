@@ -68,8 +68,8 @@ private:
 
   /*  Defaults for min block, max block, and superblock sizes */
   enum : uint32_t { MIN_BLOCK_SIZE_LG2  =  6  /*   64 bytes */ };
-  enum : uint32_t { MAX_BLOCK_SIZE_LG2  = 12  /*   4k bytes */ };
-  enum : uint32_t { SUPERBLOCK_SIZE_LG2 = 16  /*  64k bytes */ };
+  enum : uint32_t { MAX_BLOCK_SIZE_LG2  = 16  /*  64k bytes */ };
+  enum : uint32_t { SUPERBLOCK_SIZE_LG2 = 18  /* 256k bytes */ };
 
   enum : uint32_t { HINT_PER_BLOCK_SIZE = 2 };
 
@@ -100,11 +100,11 @@ private:
   uint32_t   m_sb_state_size ;
   uint32_t   m_sb_size_lg2 ;
   uint32_t   m_sb_count ;
+  uint32_t   m_sb_per_block_size ;
   uint32_t   m_min_block_size_lg2 ;
   uint32_t   m_max_block_size_lg2 ;
   uint32_t   m_hint_offset ;   // Offset to K * #block_size array of hints
   uint32_t   m_data_offset ;   // Offset to 0th superblock data
-  uint32_t   m_padding ;
 
 public:
 
@@ -261,6 +261,7 @@ public:
     , m_sb_state_size(0)
     , m_sb_size_lg2(0)
     , m_sb_count(0)
+    , m_sb_per_block_size(0)
     , m_min_block_size_lg2(0)
     , m_max_block_size_lg2(0)
     , m_hint_offset(0)
@@ -327,7 +328,13 @@ public:
       // Number of block sizes
 
       const uint32_t number_block_sizes =
+         // 1 + m_sb_size_lg2 - m_min_block_size_lg2 ;
          1 + m_max_block_size_lg2 - m_min_block_size_lg2 ;
+
+      // Number of superblocks "reserved" for each block size:
+
+      m_sb_per_block_size =
+       ( m_sb_count + number_block_sizes - 1 ) / number_block_sizes ;
 
       // Array length for possible block sizes
       // Hint array is one uint32_t per block size
@@ -367,18 +374,17 @@ public:
         const uint32_t hint_begin = m_hint_offset + i * HINT_PER_BLOCK_SIZE ;
 
         // for block size index 'i':
+        //   sb_id_base = m_sb_per_block_size * i
         //   sb_id_hint = sb_state_array[ hint_begin ];
         //   sb_id_end  = sb_state_array[ hint_begin + 1 ];
 
         sb_state_array[ hint_begin ] = j ;
-        sb_state_array[ hint_begin + 1 ] = j ;
 
-        const uint32_t kbeg = ( i * m_sb_count ) / number_block_sizes ;
-        const uint32_t kend = ( ( i + 1 ) * m_sb_count ) / number_block_sizes ;
-
-        for ( uint32_t k = kbeg ; k < kend ; ++k , ++j ) {
+        for ( uint32_t k = 0 ; k < m_sb_per_block_size && j < m_sb_count ; ++k , ++j ) {
           sb_state_array[ j * m_sb_state_size ] = block_state ;
         }
+
+        sb_state_array[ hint_begin + 1 ] = j - sb_state_array[ hint_begin ];
       }
 
       if ( ! accessible ) {
@@ -441,14 +447,16 @@ public:
         const uint32_t block_state      = block_count_lg2 << state_shift ;
         const uint32_t block_count_mask = block_count - 1 ;
 
-        // hint_sb_id_ptr[0] is the dynamically changing hint
-        // hint_sb_id_ptr[1] is the designated start point for this block size
+        const uint32_t block_size_id = block_size_lg2 - m_min_block_size_lg2 ;
+        const uint32_t block_size_sb_id_begin =
+          block_size_id * m_sb_per_block_size < m_sb_count ?
+          block_size_id * m_sb_per_block_size : m_sb_count ;
 
+// printf("  allocate block_size_lg2(%d) block_size_id(%d) block_size_sb_id_begin(%d)\n" , block_size_lg2 , block_size_id , block_size_sb_id_begin );
+      
         volatile uint32_t * const hint_sb_id_ptr =
-          m_sb_state_array + m_hint_offset +
-          ( block_size_lg2 - m_min_block_size_lg2 ) * HINT_PER_BLOCK_SIZE ;
-
-        const uint32_t block_size_sb_id_begin = hint_sb_id_ptr[1] ;
+          m_sb_state_array + m_hint_offset
+                           + block_size_id * HINT_PER_BLOCK_SIZE ;
 
         // Fast query clock register 'tic' to pseudo-randomize
         // the guess for which block within a superblock should
@@ -580,12 +588,36 @@ public:
 
               sb_state_array = m_sb_state_array + ( sb_id * m_sb_state_size );
 
-              //  If successfully changed assignment of empty superblock 'sb_id'
-              //  to this block_size then update the hint.
+              if ( state_empty ==
+                     Kokkos::atomic_compare_exchange
+                       (sb_state_array,state_empty,block_state) ) {
 
-              update_hint = state_empty ==
-                Kokkos::atomic_compare_exchange
-                  (sb_state_array,state_empty,block_state);
+                //  Successfully changed assignment of
+                //  empty superblock 'sb_id'
+                //  to this block_size.
+
+                update_hint = true ;
+
+#if 0
+                //  The span of superblocks for this block size
+                //  is likely to have changed.
+
+                const int sb_id_new_count =
+                  block_size_sb_id_begin < sb_id ?
+                    1 + sb_id - block_size_sb_id_begin : (
+                  block_size_sb_id_begin > sb_id ?
+                    1 + sb_id + m_sb_count - block_size_sb_id_begin : (
+                  m_sb_count ) );
+
+                const int sb_id_count = *( hint_sb_id_ptr + 1 );
+
+                if ( sb_id_count < sb_id_new_count ) {
+                  Kokkos::atomic_compare_exchange
+                    ( hint_sb_id_ptr + 1 , sb_id_count , sb_id_new_count );
+                }
+#endif
+
+              }
             }
             else if ( 0 < retry_limit ) {
               //  Failed to find a partfull superblock.
