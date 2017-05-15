@@ -132,6 +132,7 @@ TEST_F( openmp , concurrent_bitset )
 
 TEST_F( openmp, memory_pool )
 {
+  TestMemoryPool::test_host_memory_pool_stats<>();
   TestMemoryPool::test_memory_pool_v2< Kokkos::OpenMP >(false,false);
 }
 
