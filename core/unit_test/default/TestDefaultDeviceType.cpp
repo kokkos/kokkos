@@ -47,17 +47,6 @@
 
 #if !defined( KOKKOS_ENABLE_CUDA ) || defined( __CUDACC__ )
 
-#include <TestAtomic.hpp>
-#include <TestViewAPI.hpp>
-#include <TestReduce.hpp>
-#include <TestScan.hpp>
-#include <TestTeam.hpp>
-#include <TestAggregate.hpp>
-#include <TestCompilerMacros.hpp>
-#include <TestCXX11.hpp>
-#include <TestTeamVector.hpp>
-#include <TestUtilities.hpp>
-
 namespace Test {
 
 class defaultdevicetype : public ::testing::Test {
@@ -87,11 +76,6 @@ TEST_F( defaultdevicetype, host_space_access )
 
   static_assert(
     Kokkos::Impl::SpaceAccessibility< mirror_space, Kokkos::HostSpace >::accessible, "" );
-}
-
-TEST_F( defaultdevicetype, view_api )
-{
-  TestViewAPI< double, Kokkos::DefaultExecutionSpace >();
 }
 
 } // namespace Test
