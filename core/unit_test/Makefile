@@ -164,6 +164,7 @@ endif
         OBJ_SERIAL += TestSerial_TeamReductionScan.o
         OBJ_SERIAL += TestSerial_Other.o
         OBJ_SERIAL += TestSerial_MDRange.o
+        OBJ_SERIAL += TestSerial_Task.o
 	
 	TARGETS += KokkosCore_UnitTest_Serial
 
