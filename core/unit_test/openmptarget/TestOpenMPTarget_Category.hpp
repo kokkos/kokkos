@@ -60,6 +60,6 @@ protected:
 } // namespace Test
 
 #define TEST_CATEGORY openmptarget
-#define TEST_EXECSPACE Kokkos::OpenMPTarget
+#define TEST_EXECSPACE Kokkos::Experimental::OpenMPTarget
 
 #endif

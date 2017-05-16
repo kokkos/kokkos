@@ -41,14 +41,14 @@
 //@HEADER
 */
 
-#include <openmptarget/TestOpenMPTarget.hpp>
+#include <openmptarget/TestOpenMPTarget_Category.hpp>
+#include <TestViewSubview.hpp>
 
 namespace Test {
 
-TEST_F( openmptarget, impl_view_mapping_a )
+TEST_F( TEST_CATEGORY, view_subview_1d_assign )
 {
-  test_view_mapping< Kokkos::Experimental::OpenMPTarget >();
-  test_view_mapping_operator< Kokkos::Experimental::OpenMPTarget >();
+  TestViewSubview::test_1d_assign< TEST_EXECSPACE >();
 }
 
 } // namespace Test

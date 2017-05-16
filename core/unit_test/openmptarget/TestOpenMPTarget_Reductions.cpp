@@ -42,4 +42,5 @@
 */
 
 #include <openmptarget/TestOpenMPTarget_Category.hpp>
-#include <TestViewAPI.hpp>
+#include <TestReduce.hpp>
+#include <TestCXX11Deduction.hpp>

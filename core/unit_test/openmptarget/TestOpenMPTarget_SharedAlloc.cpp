@@ -42,4 +42,14 @@
 */
 
 #include <openmptarget/TestOpenMPTarget_Category.hpp>
-#include <TestViewAPI.hpp>
+#include <TestSharedAlloc.hpp>
+
+namespace Test {
+
+
+TEST_F( TEST_CATEGORY, impl_shared_alloc )
+{
+  test_shared_alloc< Kokkos::Experimental::OpenMPTargetSpace, Kokkos::DefaultHostExecutionSpace >();
+}
+
+} // namespace Test

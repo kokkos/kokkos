@@ -271,6 +271,7 @@ TEST_F( TEST_CATEGORY, range_reduce )
   { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >f(1001); f.test_reduce(); }
 }
 
+#ifndef KOKKOS_ENABLE_OPENMPTARGET 
 TEST_F( TEST_CATEGORY, range_scan )
 {
   { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >f(0); f.test_scan(); }
@@ -291,5 +292,5 @@ TEST_F( TEST_CATEGORY, range_scan )
   { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >f(1001); f.test_dynamic_policy(); }
 #endif
 }
-
+#endif
 } // namespace Test

@@ -1,3 +1,4 @@
+
 /*
 //@HEADER
 // ************************************************************************
@@ -41,5 +42,9 @@
 //@HEADER
 */
 
-#include <openmptarget/TestOpenMPTarget_Category.hpp>
-#include <TestViewAPI.hpp>
+#include<openmptarget/TestOpenMPTarget_Category.hpp>
+#include<TestInit.hpp>
+#include<TestCompilerMacros.hpp>
+#include<TestPolicyConstruction.hpp>
+
+

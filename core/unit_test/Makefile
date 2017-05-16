@@ -128,16 +128,38 @@ endif
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
-         OBJ_OPENMPTARGET = UnitTestMain.o gtest-all.o
-#        OBJ_OPENMPTARGET += TestOpenMP_Other.o TestOpenMP_Reductions.o TestOpenMP_Atomics.o TestOpenMP_Team.o
-#        OBJ_OPENMPTARGET += TestOpenMP_SubView_a.o TestOpenMP_SubView_b.o
-#        OBJ_OPENMPTARGET += TestOpenMP_SubView_c01.o TestOpenMP_SubView_c02.o TestOpenMP_SubView_c03.o
-#        OBJ_OPENMPTARGET += TestOpenMP_SubView_c04.o TestOpenMP_SubView_c05.o TestOpenMP_SubView_c06.o
-#        OBJ_OPENMPTARGET += TestOpenMP_SubView_c07.o TestOpenMP_SubView_c08.o TestOpenMP_SubView_c09.o
-#        OBJ_OPENMPTARGET += TestOpenMP_SubView_c10.o TestOpenMP_SubView_c11.o TestOpenMP_SubView_c12.o
-        OBJ_OPENMPTARGET += TestOpenMPTarget_ViewAPI_a.o TestOpenMPTarget_ViewAPI_b.o
-        TARGETS += KokkosCore_UnitTest_OpenMPTarget
-        TEST_TARGETS += test-openmptarget
+	OBJ_OPENMPTARGET = UnitTestMainInit.o gtest-all.o
+	OBJ_OPENMPTARGET += TestOpenMPTarget_Init.o
+	#OBJ_OPENMPTARGET += TestOpenMPTarget_SharedAlloc.o
+	OBJ_OPENMPTARGET += TestOpenMPTarget_RangePolicy.o
+	OBJ_OPENMPTARGET += TestOpenMPTarget_ViewAPI_b.o #Some commented out code
+	OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_a.o 
+        OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_b.o 
+        OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_subview.o
+	#OBJ_OPENMPTARGET += TestOpenMPTarget_ViewOfClass.o
+	OBJ_OPENMPTARGET += TestOpenMPTarget_SubView_a.o TestOpenMPTarget_SubView_b.o
+	#The following subview tests need something like UVM:
+        #OBJ_OPENMPTARGET += TestOpenMPTarget_SubView_c01.o TestOpenMPTarget_SubView_c02.o TestOpenMPTarget_SubView_c03.o
+	#OBJ_OPENMPTARGET += TestOpenMPTarget_SubView_c04.o TestOpenMPTarget_SubView_c05.o TestOpenMPTarget_SubView_c06.o
+	#OBJ_OPENMPTARGET += TestOpenMPTarget_SubView_c07.o TestOpenMPTarget_SubView_c08.o TestOpenMPTarget_SubView_c09.o
+	#OBJ_OPENMPTARGET += TestOpenMPTarget_SubView_c10.o TestOpenMPTarget_SubView_c11.o TestOpenMPTarget_SubView_c12.o
+	#OBJ_OPENMPTARGET += TestOpenMPTarget_Reductions.o # Need custom reductions
+        #OBJ_OPENMPTARGET += TestOpenMPTarget_Scan.o
+	OBJ_OPENMPTARGET += TestOpenMPTarget_Complex.o
+	OBJ_OPENMPTARGET += TestOpenMPTarget_AtomicOperations.o 
+        OBJ_OPENMPTARGET += TestOpenMPTarget_AtomicViews.o 
+        OBJ_OPENMPTARGET += TestOpenMPTarget_Atomics.o # Commented Out Arbitrary Type Atomics
+	#OBJ_OPENMPTARGET += TestOpenMPTarget_Team.o # There is still a static function in this
+        #OBJ_OPENMPTARGET += TestOpenMPTarget_TeamScratch.o
+	#OBJ_OPENMPTARGET += TestOpenMPTarget_TeamReductionScan.o
+	#OBJ_OPENMPTARGET += TestOpenMPTarget_Other.o
+	#OBJ_OPENMPTARGET += TestOpenMPTarget_MDRange.o
+	#OBJ_OPENMPTARGET += TestOpenMPTarget_Task.o
+	
+	TARGETS += KokkosCore_UnitTest_OpenMPTarget
+
+	TEST_TARGETS += test-openmptarget
+
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)

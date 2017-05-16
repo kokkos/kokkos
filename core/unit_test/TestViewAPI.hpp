@@ -828,6 +828,7 @@ public:
 
 
     {TestViewOperator< T, device > f; Kokkos::parallel_for(int(N0),f);}
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
     TestViewOperator_LeftAndRight< int[2][3][4][2][3][4][2][3], device > f8; f8.testit();
     TestViewOperator_LeftAndRight< int[2][3][4][2][3][4][2], device > f7; f7.testit();
     TestViewOperator_LeftAndRight< int[2][3][4][2][3][4], device >f6; f6.testit();
@@ -836,6 +837,7 @@ public:
     TestViewOperator_LeftAndRight< int[2][3][4], device >f3; f3.testit();
     TestViewOperator_LeftAndRight< int[2][3], device >f2; f2.testit();
     TestViewOperator_LeftAndRight< int[2], device >f1; f1.testit();
+#endif
     TestViewMirror< Kokkos::LayoutLeft, device >::testit();
     TestViewMirror< Kokkos::LayoutRight, device >::testit();
   }
@@ -871,8 +873,9 @@ public:
     Kokkos::deep_copy( dx, hx );
     Kokkos::deep_copy( dy, dx );
     Kokkos::deep_copy( hy, dy );
-
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
     ASSERT_EQ( hx(), hy() );
+#endif
   }
 
   static void run_test()
@@ -993,7 +996,9 @@ public:
     ASSERT_EQ( dy.dimension_3(), unsigned( N3 ) );
 
     ASSERT_EQ( unmanaged_from_ptr_dx.capacity(), unsigned( N0 ) * unsigned( N1 ) * unsigned( N2 ) * unsigned( N3 ) );
-
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+return;
+#endif
     hx = Kokkos::create_mirror( dx );
     hy = Kokkos::create_mirror( dy );
 
@@ -1317,9 +1322,13 @@ TEST_F( TEST_CATEGORY, view_remap )
   enum { N0 = 3, N1 = 2, N2 = 8, N3 = 9 };
 
   #ifdef KOKKOS_ENABLE_CUDA
-  #define EXECSPACE std::conditional<std::is_same<TEST_EXECSPACE,Kokkos::Cuda>::value,Kokkos::CudaHostPinnedSpace,TEST_EXECSPACE>::type
+    #define EXECSPACE std::conditional<std::is_same<TEST_EXECSPACE,Kokkos::Cuda>::value,Kokkos::CudaHostPinnedSpace,TEST_EXECSPACE>::type
   #else
-  #define EXECSPACE TEST_EXECSPACE
+    #ifdef KOKKOS_ENABLE_OPENMPTARGET
+      #define EXECSPACE Kokkos::HostSpace
+    #else
+      #define EXECSPACE TEST_EXECSPACE
+    #endif
   #endif
 
   typedef Kokkos::View< double*[N1][N2][N3],

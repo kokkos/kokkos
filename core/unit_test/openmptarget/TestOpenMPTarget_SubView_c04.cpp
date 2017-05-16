@@ -42,4 +42,13 @@
 */
 
 #include <openmptarget/TestOpenMPTarget_Category.hpp>
-#include <TestViewAPI.hpp>
+#include <TestViewSubview.hpp>
+
+namespace Test {
+
+TEST_F( TEST_CATEGORY, view_subview_2d_from_3d )
+{
+  TestViewSubview::test_2d_subview_3d< TEST_EXECSPACE >();
+}
+
+} // namespace Test
