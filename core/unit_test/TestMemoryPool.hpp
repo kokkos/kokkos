@@ -302,7 +302,16 @@ void test_memory_pool_v2( const bool print_statistics
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-} // namespace TestMemoryPool
+} // namespace TestMemoryPool {
+
+namespace Test {
+
+TEST_F( TEST_CATEGORY, memory_pool )
+{
+  TestMemoryPool::test_host_memory_pool_stats<>();
+  TestMemoryPool::test_memory_pool_v2< TEST_EXECSPACE >(false,false);
+}
+}
 
 #endif
 

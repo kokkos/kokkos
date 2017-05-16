@@ -51,6 +51,7 @@
  *  KOKKOS_ENABLE_THREADS             Kokkos::Threads execution space
  *  KOKKOS_ENABLE_QTHREADS            Kokkos::Qthreads execution space
  *  KOKKOS_ENABLE_OPENMP              Kokkos::OpenMP execution space
+ *  KOKKOS_ENABLE_OPENMPTARGET        Kokkos::Experimental::OpenMPTarget execution space
  *  KOKKOS_ENABLE_HWLOC               HWLOC library is available.
  *  KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK  Insert array bounds checks, is expensive!
  *  KOKKOS_ENABLE_MPI                 Negotiate MPI/execution space interactions.
@@ -414,6 +415,7 @@
 // There is zero or one default execution space specified.
 
 #if 1 < ( ( defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA ) ? 1 : 0 ) + \
+          ( defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET ) ? 1 : 0 ) + \
           ( defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP ) ? 1 : 0 ) + \
           ( defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS ) ? 1 : 0 ) + \
           ( defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS ) ? 1 : 0 ) + \
@@ -424,12 +426,15 @@
 // If default is not specified then chose from enabled execution spaces.
 // Priority: CUDA, OPENMP, THREADS, QTHREADS, SERIAL
 #if   defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA )
+#elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET )
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP )
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS )
 //#elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS )
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL )
 #elif defined( KOKKOS_ENABLE_CUDA )
   #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA
+#elif defined( KOKKOS_ENABLE_OPENMPTARGET )
+  #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET
 #elif defined( KOKKOS_ENABLE_OPENMP )
   #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP
 #elif defined( KOKKOS_ENABLE_THREADS )

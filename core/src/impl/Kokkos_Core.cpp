@@ -75,7 +75,7 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
 #endif
 
   // Protect declarations, to prevent "unused variable" warnings.
-#if defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_THREADS )
+#if defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_THREADS ) || defined( KOKKOS_ENABLE_OPENMPTARGET )
   const int num_threads = args.num_threads;
   const int use_numa = args.num_numa;
 #endif // defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_THREADS )
@@ -135,6 +135,25 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
   }
 #endif
 
+#if defined( KOKKOS_ENABLE_OPENMPTARGET )
+  if( Impl::is_same< Kokkos::Experimental::OpenMPTarget , Kokkos::DefaultExecutionSpace >::value ) {
+    if(num_threads>0) {
+      if(use_numa>0) {
+        Kokkos::Experimental::OpenMPTarget::initialize(num_threads,use_numa);
+      }
+      else {
+        Kokkos::Experimental::OpenMPTarget::initialize(num_threads);
+      }
+    } else {
+      Kokkos::Experimental::OpenMPTarget::initialize();
+    }
+    //std::cout << "Kokkos::initialize() fyi: OpenMP enabled and initialized" << std::endl ;
+  }
+  else {
+    //std::cout << "Kokkos::initialize() fyi: OpenMP enabled but not initialized" << std::endl ;
+  }
+#endif
+
 #if defined( KOKKOS_ENABLE_CUDA )
   if( std::is_same< Kokkos::Cuda , Kokkos::DefaultExecutionSpace >::value || 0 < use_gpu ) {
     if (use_gpu > -1) {
@@ -163,6 +182,13 @@ void finalize_internal( const bool all_spaces = false )
   if( std::is_same< Kokkos::Cuda , Kokkos::DefaultExecutionSpace >::value || all_spaces ) {
     if(Kokkos::Cuda::is_initialized())
       Kokkos::Cuda::finalize();
+  }
+#endif
+
+#if defined( KOKKOS_ENABLE_OPENMPTARGET )
+  if( std::is_same< Kokkos::Experimental::OpenMPTarget , Kokkos::DefaultExecutionSpace >::value || all_spaces ) {
+    if(Kokkos::Experimental::OpenMPTarget::is_initialized())
+      Kokkos::Experimental::OpenMPTarget::finalize();
   }
 #endif
 
