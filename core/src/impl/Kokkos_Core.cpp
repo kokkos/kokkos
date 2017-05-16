@@ -288,7 +288,7 @@ void initialize(int& narg, char* arg[])
         }
         kokkos_threads_found=1;
         narg--;
-      } else if (Impl::check_int_arg(arg[iarg], "--threads", &num_threads)) {
+      } else if (!kokkos_threads_found && Impl::check_int_arg(arg[iarg], "--threads", &num_threads)) {
         iarg++;
       } else if (Impl::check_int_arg(arg[iarg], "--kokkos-numa", &numa)) {
         for(int k=iarg;k<narg-1;k++) {
@@ -296,7 +296,7 @@ void initialize(int& narg, char* arg[])
         }
         kokkos_numa_found=1;
         narg--;
-      } else if (Impl::check_int_arg(arg[iarg], "--numa", &numa)) {
+      } else if (!kokkos_numa_found && Impl::check_int_arg(arg[iarg], "--numa", &numa)) {
         iarg++;
       } else if (Impl::check_int_arg(arg[iarg], "--kokkos-device", &device)) {
         for(int k=iarg;k<narg-1;k++) {
@@ -304,7 +304,7 @@ void initialize(int& narg, char* arg[])
         }
         kokkos_device_found=1;
         narg--;
-      } else if (Impl::check_int_arg(arg[iarg], "--device", &device)) {
+      } else if (!kokkos_device_found && Impl::check_int_arg(arg[iarg], "--device", &device)) {
         iarg++;
       } else if (Impl::check_arg(arg[iarg], "--kokkos-ndevices") || Impl::check_arg(arg[iarg], "--ndevices")) {
 
