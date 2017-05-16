@@ -54,6 +54,58 @@
 
 namespace TestMemoryPool {
 
+template< typename MemSpace = Kokkos::HostSpace >
+void test_host_memory_pool_stats()
+{
+  typedef typename MemSpace::execution_space   Space ;
+  typedef typename Kokkos::MemoryPool< Space > MemPool ;
+
+  const size_t MemoryCapacity = 32000 ;
+  const size_t MinBlockSize   =    64 ;
+  const size_t MaxBlockSize   =  1024 ;
+  const size_t SuperBlockSize =  4096 ;
+
+  MemPool pool( MemSpace()
+              , MemoryCapacity
+              , MinBlockSize
+              , MaxBlockSize
+              , SuperBlockSize
+              );
+
+  {
+    typename MemPool::usage_statistics stats ;
+
+    pool.get_usage_statistics( stats );
+
+    ASSERT_LE( MemoryCapacity , stats.capacity_bytes );
+    ASSERT_LE( MinBlockSize , stats.min_block_bytes );
+    ASSERT_LE( MaxBlockSize , stats.max_block_bytes );
+    ASSERT_LE( SuperBlockSize , stats.superblock_bytes );
+  }
+
+  void * p0064 = pool.allocate(64);
+  void * p0128 = pool.allocate(128);
+  void * p0256 = pool.allocate(256);
+  void * p1024 = pool.allocate(1024);
+
+  // Aborts because exceeds max block size:
+  // void * p2048 = pool.allocate(2048);
+
+  ASSERT_NE( p0064 , (void*) 0 );
+  ASSERT_NE( p0128 , (void*) 0 );
+  ASSERT_NE( p0256 , (void*) 0 );
+  ASSERT_NE( p1024 , (void*) 0 );
+
+  pool.deallocate( p0064 , 64 );
+  pool.deallocate( p0128 , 128 );
+  pool.deallocate( p0256 , 256 );
+  pool.deallocate( p1024 , 1024 );
+
+}
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
 template< class DeviceType >
 struct TestMemoryPool_Functor {
 
@@ -256,8 +308,10 @@ namespace Test {
 
 TEST_F( TEST_CATEGORY, memory_pool )
 {
+  TestMemoryPool::test_host_memory_pool_stats<>();
   TestMemoryPool::test_memory_pool_v2< TEST_EXECSPACE >(false,false);
 }
 }
 
 #endif
+

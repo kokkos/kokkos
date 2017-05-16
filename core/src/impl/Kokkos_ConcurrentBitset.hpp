@@ -236,9 +236,10 @@ public:
       const uint32_t state = (uint32_t)
         Kokkos::atomic_fetch_add( (volatile int *) buffer , 1 );
 
-      const uint32_t state_bit_used = state & state_used_mask ;
       const uint32_t state_error =
         state_header != ( state & state_header_mask );
+
+      const uint32_t state_bit_used = state & state_used_mask ;
 
       if ( state_error || ( bit_bound <= state_bit_used ) ) {
         Kokkos::atomic_fetch_add( (volatile int *) buffer , -1 );
