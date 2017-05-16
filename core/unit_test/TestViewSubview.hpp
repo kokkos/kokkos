@@ -40,7 +40,8 @@
 // ************************************************************************
 //@HEADER
 */
-
+#ifndef TESTVIEWSUBVIEW_HPP_
+#define TESTVIEWSUBVIEW_HPP_
 #include <gtest/gtest.h>
 
 #include <Kokkos_Core.hpp>
@@ -1294,3 +1295,4 @@ void test_layoutright_to_layoutright() {
 }
 
 } // namespace TestViewSubview
+#endif
