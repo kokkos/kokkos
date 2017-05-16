@@ -157,6 +157,13 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
   )
 
 TRIBITS_ADD_OPTION_AND_DEFINE(
+  Kokkos_ENABLE_Debug_DualView_Modify_Check
+  KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
+  "Enable abort when Kokkos::DualView modified on host and device without sync."
+  "${Kokkos_ENABLE_DEBUG}"
+  )
+
+TRIBITS_ADD_OPTION_AND_DEFINE(
   Kokkos_ENABLE_Profiling
   KOKKOS_ENABLE_PROFILING
   "Enable KokkosP profiling support for kernel data collections."
