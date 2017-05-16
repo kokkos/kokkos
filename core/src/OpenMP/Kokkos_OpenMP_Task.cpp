@@ -116,6 +116,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
     HostThreadTeamDataSingleton::singleton();
 
   Impl::OpenMPExec * instance = t_openmp_instance;
+  const int pool_size = OpenMP::thread_pool_size();
 
   const int team_size = 1;  // Threads per core
   instance->resize_thread_data( 0 /* global reduce buffer */
@@ -124,11 +125,10 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
                               , 0 /* thread local buffer */
                               );
 
-  instance->set_in_parallel();
 #ifdef KOKKOS_ENABLE_PROC_BIND
-  #pragma omp parallel num_threads(t_openmp_pool_size) proc_bind(spread)
+  #pragma omp parallel num_threads(pool_size) proc_bind(spread)
 #else
-  #pragma omp parallel num_threads(t_openmp_pool_size)
+  #pragma omp parallel num_threads(pool_size)
 #endif
   {
     Impl::HostThreadTeamData & self = *(instance->get_thread_data());
@@ -207,7 +207,6 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
     }
     self.disband_team();
   }
-  instance->unset_in_parallel();
 }
 
 void TaskQueueSpecialization< Kokkos::OpenMP >::
@@ -219,7 +218,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::
   using task_root_type  = TaskBase< execution_space , void , void > ;
   using Member          = Impl::HostThreadTeamMember< execution_space > ;
 
-  if ( 1 == Impl::t_openmp_pool_size ) {
+  if ( 1 == OpenMP::thread_pool_size() ) {
 
     task_root_type * const end = (task_root_type *) task_root_type::EndTag ;
 
