@@ -179,8 +179,8 @@ inline void cuda_inter_warp_reduction( ValueType& value,
   // could lead to race conditions
   __shared__ double sh_result[(sizeof(ValueType)+7)/8*STEP_WIDTH];
   ValueType* result = (ValueType*) & sh_result;
-  const unsigned step = 32 / blockDim.x;
-  unsigned shift = STEP_WIDTH;
+  const int step = 32 / blockDim.x;
+  int shift = STEP_WIDTH;
   const int id = threadIdx.y%step==0?threadIdx.y/step:65000;
   if(id < STEP_WIDTH ) {
     result[id] = value;
@@ -225,7 +225,7 @@ bool cuda_inter_block_reduction( typename FunctorValueTraits< FunctorType , ArgT
   //Do the intra-block reduction with shfl operations and static shared memory
   cuda_intra_block_reduction(value,join,max_active_thread);
 
-  const unsigned id = threadIdx.y*blockDim.x + threadIdx.x;
+  const int id = threadIdx.y*blockDim.x + threadIdx.x;
 
   //One thread in the block writes block result to global scratch_memory
   if(id == 0 ) {
@@ -257,35 +257,35 @@ bool cuda_inter_block_reduction( typename FunctorValueTraits< FunctorType , ArgT
 
       //Reduce all global values with splitting work over threads in one warp
       const int step_size = blockDim.x*blockDim.y < 32 ? blockDim.x*blockDim.y : 32;
-      for(int i=id; i<gridDim.x; i+=step_size) {
+      for(int i=id; i<(int)gridDim.x; i+=step_size) {
         value_type tmp = global[i];
         join(value, tmp);
       }
 
       //Perform shfl reductions within the warp only join if contribution is valid (allows gridDim.x non power of two and <32)
-      if (blockDim.x*blockDim.y > 1) {
+      if (int(blockDim.x*blockDim.y) > 1) {
         value_type tmp = Kokkos::shfl_down(value, 1,32);
-        if( id + 1 < gridDim.x )
+        if( id + 1 < int(gridDim.x) )
           join(value, tmp);
       }
-      if (blockDim.x*blockDim.y > 2) {
+      if (int(blockDim.x*blockDim.y) > 2) {
         value_type tmp = Kokkos::shfl_down(value, 2,32);
-        if( id + 2 < gridDim.x )
+        if( id + 2 < int(gridDim.x) )
           join(value, tmp);
       }
-      if (blockDim.x*blockDim.y > 4) {
+      if (int(blockDim.x*blockDim.y) > 4) {
         value_type tmp = Kokkos::shfl_down(value, 4,32);
-        if( id + 4 < gridDim.x )
+        if( id + 4 < int(gridDim.x) )
           join(value, tmp);
       }
-      if (blockDim.x*blockDim.y > 8) {
+      if (int(blockDim.x*blockDim.y) > 8) {
         value_type tmp = Kokkos::shfl_down(value, 8,32);
-        if( id + 8 < gridDim.x )
+        if( id + 8 < int(gridDim.x) )
           join(value, tmp);
       }
-      if (blockDim.x*blockDim.y > 16) {
+      if (int(blockDim.x*blockDim.y) > 16) {
         value_type tmp = Kokkos::shfl_down(value, 16,32);
-        if( id + 16 < gridDim.x )
+        if( id + 16 < int(gridDim.x) )
           join(value, tmp);
       }
     }
@@ -457,11 +457,11 @@ bool cuda_single_inter_block_reduce_scan( const FunctorType     & functor ,
     size_type * const shared = shared_data + word_count.value * BlockSizeMask ;
     size_type * const global = global_data + word_count.value * block_id ;
 
-#if (__CUDA_ARCH__ < 500)
-    for ( size_type i = threadIdx.y ; i < word_count.value ; i += blockDim.y ) { global[i] = shared[i] ; }
-#else
-    for ( size_type i = 0 ; i < word_count.value ; i += 1 ) { global[i] = shared[i] ; }
-#endif
+//#if (__CUDA_ARCH__ < 500)
+    for ( int i = int(threadIdx.y) ; i < int(word_count.value) ; i += int(blockDim.y) ) { global[i] = shared[i] ; }
+//#else
+//    for ( size_type i = 0 ; i < word_count.value ; i += 1 ) { global[i] = shared[i] ; }
+//#endif
 
   }
 

@@ -685,6 +685,11 @@ bool test_scalar( int nteams, int team_size, int test ) {
                           functor_vec_red< Scalar, ExecutionSpace >( d_flag ) );
   }
   else if ( test == 1 ) {
+    #if defined(KOKKOS_ENABLE_CUDA)
+    #if defined(KOKKOS_CUDA_CLANG_WORKAROUND) || defined(KOKKOS_ARCH_PASCAL)
+    if(!std::is_same<ExecutionSpace,Kokkos::Cuda>::value)
+    #endif
+    #endif
     Kokkos::parallel_for( Kokkos::TeamPolicy< ExecutionSpace >( nteams, team_size, 8 ),
                           functor_vec_red_join< Scalar, ExecutionSpace >( d_flag ) );
   }

@@ -169,7 +169,6 @@ template< class Space >
 void test_view_mapping_class_value()
 {
   typedef typename Space::execution_space ExecSpace;
-  typedef typename Space::memory_space    MemSpace;
 
   ExecSpace::fence();
   {
