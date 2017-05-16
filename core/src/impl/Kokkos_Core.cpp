@@ -46,6 +46,7 @@
 #include <cctype>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <cstdlib>
 
 //----------------------------------------------------------------------------
@@ -226,6 +227,39 @@ void fence_internal()
 
 }
 
+bool check_arg(char const* arg, char const* expected) {
+  std::size_t arg_len = std::strlen(arg);
+  std::size_t exp_len = std::strlen(expected);
+  if (arg_len < exp_len) return false;
+  if (std::strncmp(arg, expected, exp_len) != 0) return false;
+  if (arg_len == exp_len) return true;
+  /* if expected is "--threads", ignore "--threads-for-application"
+     by checking this character          ---------^
+     to see if it continues to make a longer name */
+  if (std::isalnum(arg[exp_len]) || arg[exp_len] == '-' || arg[exp_len] == '_') {
+    return false;
+  }
+  return true;
+}
+
+bool check_int_arg(char const* arg, char const* expected, int* value) {
+  if (!check_arg(arg, expected)) return false;
+  std::size_t arg_len = std::strlen(arg);
+  std::size_t exp_len = std::strlen(expected);
+  bool okay = true;
+  if (arg_len == exp_len || arg[exp_len] != '=') okay = false;
+  char const* number = arg + exp_len + 1;
+  if (!Impl::is_unsigned_int(number) || strlen(number) == 0) okay = false;
+  *value = std::atoi(number);
+  if (!okay) {
+    std::ostringstream ss;
+    ss << "Error: expecting an '=INT' after command line argument '" << expected << "'";
+    ss << ". Raised by Kokkos::initialize(int narg, char* argc[]).";
+    Impl::throw_runtime_exception( ss.str() );
+  }
+  return true;
+}
+
 } // namespace
 } // namespace Impl
 } // namespace Kokkos
@@ -248,76 +282,31 @@ void initialize(int& narg, char* arg[])
     int iarg = 0;
 
     while (iarg < narg) {
-      if ((strncmp(arg[iarg],"--kokkos-threads",16) == 0) || (strncmp(arg[iarg],"--threads",9) == 0)) {
-        //Find the number of threads (expecting --threads=XX)
-        if (!((strncmp(arg[iarg],"--kokkos-threads=",17) == 0) || (strncmp(arg[iarg],"--threads=",10) == 0)))
-          Impl::throw_runtime_exception("Error: expecting an '=INT' after command line argument '--threads/--kokkos-threads'. Raised by Kokkos::initialize(int narg, char* argc[]).");
-
-        char* number =  strchr(arg[iarg],'=')+1;
-
-        if(!Impl::is_unsigned_int(number) || (strlen(number)==0))
-          Impl::throw_runtime_exception("Error: expecting an '=INT' after command line argument '--threads/--kokkos-threads'. Raised by Kokkos::initialize(int narg, char* argc[]).");
-
-        if((strncmp(arg[iarg],"--kokkos-threads",16) == 0) || !kokkos_threads_found)
-          num_threads = atoi(number);
-
-        //Remove the --kokkos-threads argument from the list but leave --threads
-        if(strncmp(arg[iarg],"--kokkos-threads",16) == 0) {
-          for(int k=iarg;k<narg-1;k++) {
-            arg[k] = arg[k+1];
-          }
-          kokkos_threads_found=1;
-          narg--;
-        } else {
-          iarg++;
+      if (Impl::check_int_arg(arg[iarg], "--kokkos-threads", &num_threads)) {
+        for(int k=iarg;k<narg-1;k++) {
+          arg[k] = arg[k+1];
         }
-      } else if ((strncmp(arg[iarg],"--kokkos-numa",13) == 0) || (strncmp(arg[iarg],"--numa",6) == 0)) {
-        //Find the number of numa (expecting --numa=XX)
-        if (!((strncmp(arg[iarg],"--kokkos-numa=",14) == 0) || (strncmp(arg[iarg],"--numa=",7) == 0)))
-          Impl::throw_runtime_exception("Error: expecting an '=INT' after command line argument '--numa/--kokkos-numa'. Raised by Kokkos::initialize(int narg, char* argc[]).");
-
-        char* number =  strchr(arg[iarg],'=')+1;
-
-        if(!Impl::is_unsigned_int(number) || (strlen(number)==0))
-          Impl::throw_runtime_exception("Error: expecting an '=INT' after command line argument '--numa/--kokkos-numa'. Raised by Kokkos::initialize(int narg, char* argc[]).");
-
-        if((strncmp(arg[iarg],"--kokkos-numa",13) == 0) || !kokkos_numa_found)
-          numa = atoi(number);
-
-        //Remove the --kokkos-numa argument from the list but leave --numa
-        if(strncmp(arg[iarg],"--kokkos-numa",13) == 0) {
-          for(int k=iarg;k<narg-1;k++) {
-            arg[k] = arg[k+1];
-          }
-          kokkos_numa_found=1;
-          narg--;
-        } else {
-          iarg++;
+        kokkos_threads_found=1;
+        narg--;
+      } else if (Impl::check_int_arg(arg[iarg], "--threads", &num_threads)) {
+        iarg++;
+      } else if (Impl::check_int_arg(arg[iarg], "--kokkos-numa", &numa)) {
+        for(int k=iarg;k<narg-1;k++) {
+          arg[k] = arg[k+1];
         }
-      } else if ((strncmp(arg[iarg],"--kokkos-device",15) == 0) || (strncmp(arg[iarg],"--device",8) == 0)) {
-        //Find the number of device (expecting --device=XX)
-        if (!((strncmp(arg[iarg],"--kokkos-device=",16) == 0) || (strncmp(arg[iarg],"--device=",9) == 0)))
-          Impl::throw_runtime_exception("Error: expecting an '=INT' after command line argument '--device/--kokkos-device'. Raised by Kokkos::initialize(int narg, char* argc[]).");
-
-        char* number =  strchr(arg[iarg],'=')+1;
-
-        if(!Impl::is_unsigned_int(number) || (strlen(number)==0))
-          Impl::throw_runtime_exception("Error: expecting an '=INT' after command line argument '--device/--kokkos-device'. Raised by Kokkos::initialize(int narg, char* argc[]).");
-
-        if((strncmp(arg[iarg],"--kokkos-device",15) == 0) || !kokkos_device_found)
-          device = atoi(number);
-
-        //Remove the --kokkos-device argument from the list but leave --device
-        if(strncmp(arg[iarg],"--kokkos-device",15) == 0) {
-          for(int k=iarg;k<narg-1;k++) {
-            arg[k] = arg[k+1];
-          }
-          kokkos_device_found=1;
-          narg--;
-        } else {
-          iarg++;
+        kokkos_numa_found=1;
+        narg--;
+      } else if (Impl::check_int_arg(arg[iarg], "--numa", &numa)) {
+        iarg++;
+      } else if (Impl::check_int_arg(arg[iarg], "--kokkos-device", &device)) {
+        for(int k=iarg;k<narg-1;k++) {
+          arg[k] = arg[k+1];
         }
-      } else if ((strncmp(arg[iarg],"--kokkos-ndevices",17) == 0) || (strncmp(arg[iarg],"--ndevices",10) == 0)) {
+        kokkos_device_found=1;
+        narg--;
+      } else if (Impl::check_int_arg(arg[iarg], "--device", &device)) {
+        iarg++;
+      } else if (Impl::check_arg(arg[iarg], "--kokkos-ndevices") || Impl::check_arg(arg[iarg], "--ndevices")) {
 
         //Find the number of device (expecting --device=XX)
         if (!((strncmp(arg[iarg],"--kokkos-ndevices=",18) == 0) || (strncmp(arg[iarg],"--ndevices=",11) == 0)))
