@@ -113,7 +113,6 @@ private:
 public:
 
   static void verify_is_master( const char * const );
-  static void verify_initialized( const char * const );
 
   void resize_thread_data( size_t pool_reduce_bytes
                          , size_t team_reduce_bytes
@@ -193,7 +192,7 @@ void OpenMP::partition_master( F const& f
 
     OpenMP::memory_space space;
 
-#ifdef KOKKOS_ENABLE_PROC_BIND
+#ifdef KOKKOS_IMPL_ENABLE_PROC_BIND
 #pragma omp parallel num_threads(num_partitions) proc_bind(spread)
 #else
 #pragma omp parallel num_threads(num_partitions)
