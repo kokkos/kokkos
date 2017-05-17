@@ -360,10 +360,7 @@ void OpenMP::initialize( int thread_count )
 
     void * const ptr = space.allocate( sizeof(Impl::OpenMPExec) );
 
-    Impl::t_openmp_instance = new (ptr) Impl::OpenMPExec( 0
-                                                        , Impl::g_openmp_hardware_max_threads
-                                                        , omp_get_level()
-                                                        );
+    Impl::t_openmp_instance = new (ptr) Impl::OpenMPExec( Impl::g_openmp_hardware_max_threads );
 
     // New, unified host thread team data:
     {

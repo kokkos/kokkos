@@ -94,10 +94,9 @@ public:
                                 );
 
 private:
-  OpenMPExec( int control_id, int arg_pool_size, int level )
-    : m_control_id{ control_id }
-    , m_pool_size{ arg_pool_size }
-    , m_level{ level }
+  OpenMPExec( int arg_pool_size )
+    : m_pool_size{ arg_pool_size }
+    , m_level{ omp_get_level() }
     , m_pool()
   {}
 
@@ -106,7 +105,6 @@ private:
     clear_thread_data();
   }
 
-  int m_control_id;
   int m_pool_size;
   int m_level;
 
@@ -189,7 +187,7 @@ void OpenMP::partition_master( F const& f
   if (omp_get_nested()) {
     using Exec = Impl::OpenMPExec;
 
-    Exec * prev_instance     = Impl::t_openmp_instance;
+    Exec * prev_instance = Impl::t_openmp_instance;
 
     Exec::validate_partition( prev_instance->m_pool_size, num_partitions, partition_size );
 
@@ -203,11 +201,7 @@ void OpenMP::partition_master( F const& f
     {
       void * const ptr = space.allocate( sizeof(Exec) );
 
-      Impl::t_openmp_instance = new (ptr) Exec( Impl::t_openmp_hardware_id
-          , partition_size
-          , omp_get_level()
-          );
-
+      Impl::t_openmp_instance = new (ptr) Exec( partition_size );
 
       size_t pool_reduce_bytes  =   32 * partition_size ;
       size_t team_reduce_bytes  =   32 * partition_size ;
