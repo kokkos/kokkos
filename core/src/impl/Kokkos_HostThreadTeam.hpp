@@ -908,7 +908,8 @@ void parallel_reduce
  */
 template< typename iType, class Space , class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
-void parallel_reduce
+typename std::enable_if< ! Kokkos::is_reducer<ValueType>::value >::type
+parallel_reduce
   (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >& loop_boundaries,
    const Lambda & lambda,
    ValueType& result)
@@ -921,6 +922,23 @@ void parallel_reduce
   }
 }
 
+template< typename iType, class Space , class Lambda, typename ReducerType >
+KOKKOS_INLINE_FUNCTION
+typename std::enable_if< Kokkos::is_reducer< ReducerType >::value >::type
+parallel_reduce
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >& loop_boundaries,
+   const Lambda & lambda,
+   const ReducerType& reducer)
+{
+  typename ReducerType::value_type tmp;
+  reducer.init(&tmp);
+  for( iType i =  loop_boundaries.start ;
+             i <  loop_boundaries.end ;
+             i += loop_boundaries.increment) {
+    lambda(i,tmp);
+  }
+  reducer.join(reducer.data(),&tmp);
+}
 
 /** \brief  Intra-thread vector parallel_reduce.
  *
