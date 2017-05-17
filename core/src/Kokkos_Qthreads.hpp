@@ -151,6 +151,8 @@ public:
 
   int shepherd_size() const;
   int shepherd_worker_size() const;
+
+  static const char* name();
 };
 
 } // namespace Kokkos

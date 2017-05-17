@@ -781,6 +781,8 @@ void Cuda::fence()
   Kokkos::Impl::cuda_device_synchronize();
 }
 
+const char* Cuda::name() { return "Cuda"; }
+
 } // namespace Kokkos
 #else
 void KOKKOS_CORE_SRC_CUDA_IMPL_PREVENT_LINK_ERROR() {}
