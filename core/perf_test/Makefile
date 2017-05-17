@@ -26,7 +26,9 @@ TARGETS =
 
 #
 
-OBJ_PERF = PerfTestHost.o PerfTestCuda.o PerfTestMain.o gtest-all.o
+OBJ_PERF = PerfTestMain.o gtest-all.o
+OBJ_PERF += PerfTestGramSchmidt.o
+OBJ_PERF += PerfTestHexGrad.o
 TARGETS += KokkosCore_PerformanceTest
 TEST_TARGETS += test-performance
 

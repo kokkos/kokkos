@@ -41,6 +41,10 @@
 //@HEADER
 */
 
+#include <Kokkos_Core.hpp>
+#include <gtest/gtest.h>
+#include <PerfTest_Category.hpp>
+
 namespace Test {
 
 template< class DeviceType ,
@@ -263,6 +267,48 @@ struct HexGrad
     return dt_min ;
   }
 };
+
+template< class DeviceType >
+void run_test_hexgrad( int exp_beg , int exp_end, int num_trials, const char deviceTypeName[] )
+{
+  std::string label_hexgrad ;
+  label_hexgrad.append( "\"HexGrad< double , " );
+  label_hexgrad.append( deviceTypeName );
+  label_hexgrad.append( " >\"" );
+
+  for (int i = exp_beg ; i < exp_end ; ++i) {
+    double min_seconds = 0.0 ;
+    double max_seconds = 0.0 ;
+    double avg_seconds = 0.0 ;
+
+    const int parallel_work_length = 1<<i;
+
+    for ( int j = 0 ; j < num_trials ; ++j ) {
+      const double seconds = HexGrad< DeviceType >::test(parallel_work_length) ;
+
+      if ( 0 == j ) {
+        min_seconds = seconds ;
+        max_seconds = seconds ;
+      }
+      else {
+        if ( seconds < min_seconds ) min_seconds = seconds ;
+        if ( seconds > max_seconds ) max_seconds = seconds ;
+      }
+      avg_seconds += seconds ;
+    }
+    avg_seconds /= num_trials ;
+
+    std::cout << label_hexgrad
+      << " , " << parallel_work_length
+      << " , " << min_seconds
+      << " , " << ( min_seconds / parallel_work_length )
+      << std::endl ;
+  }
+}
+
+TEST_F( default_exec, hexgrad ) {
+  EXPECT_NO_THROW(run_test_hexgrad< Kokkos::DefaultExecutionSpace >( 10, 20, 5, Kokkos::DefaultExecutionSpace::name() ));
+}
 
 }
 
