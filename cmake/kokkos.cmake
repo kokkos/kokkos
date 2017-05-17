@@ -965,11 +965,14 @@ if(KOKKOS_SEPARATE_LIBS)
     ${KOKKOS_CORE_SRCS}
   )
 
+  # Adjust the include directories so the installed target doesn't include
+  # files from the build and source directories
   target_include_directories(
-    kokkoscore
-    PUBLIC ${Kokkos_SOURCE_DIR}/core/src
-    PUBLIC ${KOKKOS_INCLUDE_DIRS}
-    PUBLIC ${Kokkos_BINARY_DIR}     # To include generated KokkosCore_config.h.
+    kokkoscore PUBLIC
+    $<BUILD_INTERFACE:${Kokkos_SOURCE_DIR}/core/src>
+    $<BUILD_INTERFACE:${KOKKOS_INCLUDE_DIRS}>
+    $<BUILD_INTERFACE:${Kokkos_BINARY_DIR}>     # To include generated KokkosCore_config.h.
+    $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
   )
 
   target_compile_options(
@@ -978,8 +981,28 @@ if(KOKKOS_SEPARATE_LIBS)
   )
 
   target_compile_features(
-    kokkos
+    kokkoscore
     PUBLIC ${KOKKOS_CXX11_FEATURES}
+  )
+
+  # Install the kokkoscore library
+  INSTALL (TARGETS kokkoscore
+           ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+           LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+           RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+  )
+
+  # Install the kokkoscore headers
+  INSTALL (DIRECTORY
+           ${Kokkos_SOURCE_DIR}/core/src/
+           DESTINATION include
+           FILES_MATCHING PATTERN "*.hpp"
+  )
+
+  # Install KokkosCore_config.h header
+  INSTALL (FILES
+           ${Kokkos_BINARY_DIR}/KokkosCore_config.h
+           DESTINATION include
   )
 
   target_link_libraries(
@@ -994,14 +1017,32 @@ if(KOKKOS_SEPARATE_LIBS)
     ${KOKKOS_CONTAINERS_SRCS}
   )
 
+  # Adjust the include directories so the installed target doesn't include
+  # files from the build and source directories
   target_include_directories(
-    kokkoscontainers
-    PUBLIC ${Kokkos_SOURCE_DIR}/containers/src
+    kokkoscontainers PUBLIC
+    $<BUILD_INTERFACE:${Kokkos_SOURCE_DIR}/containers/src>
+    $<BUILD_INTERFACE:${KOKKOS_INCLUDE_DIRS}>
+    $<BUILD_INTERFACE:${Kokkos_BINARY_DIR}>     # To include generated KokkosCore_config.h.
+    $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
   )
 
   target_link_libraries(
     kokkoscontainers
     kokkoscore
+  )
+
+  # Install the kokkocontainers library
+  INSTALL (TARGETS kokkoscontainers
+           ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+           LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+           RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+
+  # Install the kokkoscontainers headers
+  INSTALL (DIRECTORY
+           ${Kokkos_SOURCE_DIR}/containers/src/
+           DESTINATION include
+           FILES_MATCHING PATTERN "*.hpp"
   )
 
   # kokkosalgorithms - Build as interface library since no source files.
@@ -1019,6 +1060,20 @@ if(KOKKOS_SEPARATE_LIBS)
     kokkosalgorithms
     INTERFACE kokkoscore
   )
+
+  # Install the kokkoalgorithms library
+  INSTALL (TARGETS kokkosalgorithms
+           ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+           LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+           RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+
+  # Install the kokkosalgorithms headers
+  INSTALL (DIRECTORY
+           ${Kokkos_SOURCE_DIR}/algorithms/src/
+           DESTINATION include
+           FILES_MATCHING PATTERN "*.hpp"
+  )
+
 else()
   # kokkos
   add_library(
@@ -1027,13 +1082,16 @@ else()
     ${KOKKOS_CONTAINERS_SRCS}
   )
 
+  # Adjust the include directories so the installed target doesn't include
+  # files from the build and source directories
   target_include_directories(
-    kokkos
-    PUBLIC ${Kokkos_SOURCE_DIR}/core/src
-    PUBLIC ${Kokkos_SOURCE_DIR}/containers/src
-    PUBLIC ${Kokkos_SOURCE_DIR}/algorithms/src
-    PUBLIC ${KOKKOS_INCLUDE_DIRS}
-    PUBLIC ${Kokkos_BINARY_DIR}     # To include generated KokkosCore_config.h.
+    kokkos PUBLIC
+    $<BUILD_INTERFACE:${Kokkos_SOURCE_DIR}/core/src>
+    $<BUILD_INTERFACE:${Kokkos_SOURCE_DIR}/containers/src>
+    $<BUILD_INTERFACE:${Kokkos_SOURCE_DIR}/algorithms/src>
+    $<BUILD_INTERFACE:${KOKKOS_INCLUDE_DIRS}>
+    $<BUILD_INTERFACE:${Kokkos_BINARY_DIR}>     # To include generated KokkosCore_config.h.
+    $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
   )
 
   target_compile_options(
@@ -1051,4 +1109,34 @@ else()
     ${KOKKOS_LD_FLAGS}
     ${KOKKOS_LIBS}
   )
+
+  # Install the kokkos library
+  INSTALL (TARGETS kokkos
+           ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+           LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+           RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+
+
+  # Install the kokkos headers
+  INSTALL (DIRECTORY
+           ${Kokkos_SOURCE_DIR}/core/src/
+           DESTINATION include
+           FILES_MATCHING PATTERN "*.hpp"
+  )
+  INSTALL (DIRECTORY
+           ${Kokkos_SOURCE_DIR}/containers/src/
+           DESTINATION include
+           FILES_MATCHING PATTERN "*.hpp"
+  )
+  INSTALL (DIRECTORY
+           ${Kokkos_SOURCE_DIR}/algorithms/src/
+           DESTINATION include
+           FILES_MATCHING PATTERN "*.hpp"
+  )
+
+  INSTALL (FILES
+           ${Kokkos_BINARY_DIR}/KokkosCore_config.h
+           DESTINATION include
+  )
+
 endif()
