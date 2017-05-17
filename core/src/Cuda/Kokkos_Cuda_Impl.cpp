@@ -404,9 +404,23 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
     // Query what compute capability architecture a kernel executes:
     m_cudaArch = cuda_kernel_arch();
 
-    if ( m_cudaArch != cudaProp.major * 100 + cudaProp.minor * 10 ) {
+    int compiled_major = m_cudaArch / 100;
+    int compiled_minor = ( m_cudaArch % 100 ) / 10;
+
+    if ( compiled_major < 5 && cudaProp.major >= 5 ) {
+      std::stringstream ss;
+      ss << "Kokkos::Cuda::initialize ERROR: running kernels compiled for compute capability "
+         << compiled_major << "." << compiled_minor
+         << " (< 5.0) on device with compute capability "
+         << cudaProp.major << "." << cudaProp.minor
+         << " (>=5.0), this would give incorrect results!"
+         << std::endl ;
+      std::string msg = ss.str();
+      Kokkos::abort( msg.c_str() );
+    }
+    if ( compiled_major != cudaProp.major || compiled_minor != cudaProp.minor ) {
       std::cerr << "Kokkos::Cuda::initialize WARNING: running kernels compiled for compute capability "
-                << ( m_cudaArch / 100 ) << "." << ( ( m_cudaArch % 100 ) / 10 )
+                << compiled_major << "." << compiled_minor
                 << " on device with compute capability "
                 << cudaProp.major << "." << cudaProp.minor
                 << " , this will likely reduce potential performance."
