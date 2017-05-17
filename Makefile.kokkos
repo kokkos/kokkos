@@ -31,13 +31,15 @@ KOKKOS_INTERNAL_USE_MEMKIND := $(strip $(shell echo $(KOKKOS_USE_TPLS) | grep "e
 # Check for advanced settings.
 KOKKOS_INTERNAL_OPT_RANGE_AGGRESSIVE_VECTORIZATION := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "aggressive_vectorization" | wc -l))
 KOKKOS_INTERNAL_DISABLE_PROFILING := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "disable_profiling" | wc -l))
+KOKKOS_INTERNAL_DISABLE_DUALVIEW_MODIFY_CHECK := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "disable_dualview_modify_check" | wc -l))
 KOKKOS_INTERNAL_CUDA_USE_LDG := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) | grep "use_ldg" | wc -l))
 KOKKOS_INTERNAL_CUDA_USE_UVM := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) | grep "force_uvm" | wc -l))
 KOKKOS_INTERNAL_CUDA_USE_RELOC := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) | grep "rdc" | wc -l))
 KOKKOS_INTERNAL_CUDA_USE_LAMBDA := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) | grep "enable_lambda" | wc -l))
 
 # Check for Kokkos Host Execution Spaces one of which must be on.
-KOKKOS_INTERNAL_USE_OPENMP := $(strip $(shell echo $(KOKKOS_DEVICES) | grep OpenMP | wc -l))
+KOKKOS_INTERNAL_USE_OPENMPTARGET := $(strip $(shell echo $(KOKKOS_DEVICES) | grep OpenMPTarget | wc -l))
+KOKKOS_INTERNAL_USE_OPENMP := $(strip $(shell echo $(subst OpenMPTarget,,$(KOKKOS_DEVICES)) | grep OpenMP | wc -l))
 KOKKOS_INTERNAL_USE_PTHREADS := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Pthread | wc -l))
 KOKKOS_INTERNAL_USE_QTHREADS := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Qthreads | wc -l))
 KOKKOS_INTERNAL_USE_SERIAL := $(strip $(shell echo $(KOKKOS_DEVICES) | grep Serial | wc -l))
@@ -121,6 +123,13 @@ else
     endif
   endif
 endif
+ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
+  KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -DKOKKOS_IBM_XL_OMP45_WORKAROUND -qsmp=omp -qoffload -qnoeh
+else
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+    KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -DKOKKOS_BUG_WORKAROUND_IBM_CLANG_OMP45_VIEW_INIT -fopenmp-implicit-declare-target -fopenmp-targets=nvptx64-nvidia-cuda -fopenmp -fopenmp=libomp
+  endif
+endif
 
 # Set C++11 flags.
 ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
@@ -183,6 +192,15 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_NVIDIA), 0)
                                                         + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL53) | bc))
 endif
 
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_NVIDIA), 1)
+  ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+      KOKKOS_INTERNAL_NVCC_PATH := $(shell which nvcc)
+      CUDA_PATH ?= $(KOKKOS_INTERNAL_NVCC_PATH:/bin/nvcc=)
+      KOKKOS_INTERNAL_OPENMPTARGET_FLAG := $(KOKKOS_INTERNAL_OPENMPTARGET_FLAG) --cuda-path=$(CUDA_PATH)
+    endif
+  endif
+endif
 # ARM based.
 KOKKOS_INTERNAL_USE_ARCH_ARMV80 := $(strip $(shell echo $(KOKKOS_ARCH) | grep ARMv80 | wc -l))
 KOKKOS_INTERNAL_USE_ARCH_ARMV81 := $(strip $(shell echo $(KOKKOS_ARCH) | grep ARMv81 | wc -l))
@@ -259,6 +277,10 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   tmp := $(shell echo "\#define KOKKOS_HAVE_CUDA 1" >> KokkosCore_config.tmp )
 endif
 
+ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
+        tmp := $(shell echo '\#define KOKKOS_ENABLE_OPENMPTARGET 1' >> KokkosCore_config.tmp)
+endif
+
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
   tmp := $(shell echo '\#define KOKKOS_HAVE_OPENMP 1' >> KokkosCore_config.tmp)
 endif
@@ -320,6 +342,9 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_DEBUG), 1)
   KOKKOS_LDFLAGS += -g -ldl
   tmp := $(shell echo "\#define KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK 1" >> KokkosCore_config.tmp )
   tmp := $(shell echo "\#define KOKKOS_HAVE_DEBUG 1" >> KokkosCore_config.tmp )
+  ifeq ($(KOKKOS_INTERNAL_DISABLE_DUALVIEW_MODIFY_CHECK), 0)
+    tmp := $(shell echo "\#define KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK 1" >> KokkosCore_config.tmp )
+  endif
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HWLOC), 1)
@@ -679,6 +704,17 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
     KOKKOS_CXXFLAGS += --cuda-path=$(CUDA_PATH)
   endif
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
+  KOKKOS_SRC += $(KOKKOS_PATH)/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Exec.cpp $(KOKKOS_PATH)/core/src/OpenMPTarget/Kokkos_OpenMPTargetSpace.cpp
+  KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/OpenMPTarget/*.hpp)
+  ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
+    KOKKOS_CXXFLAGS += -Xcompiler $(KOKKOS_INTERNAL_OPENMPTARGET_FLAG)
+  else
+    KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_OPENMPTARGET_FLAG)
+  endif
+  KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_OPENMPTARGET_FLAG)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)

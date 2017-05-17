@@ -211,8 +211,6 @@ struct TestComplexSpecialFunctions {
     Kokkos::deep_copy(h_results,d_results);
 
     std::complex<double> a(1.5,2.5);
-    std::complex<double> b(3.25,5.75);
-    std::complex<double> d(1.0,2.0);
     double c = 9.3;
 
     std::complex<double> r;

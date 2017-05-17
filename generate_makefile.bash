@@ -3,6 +3,8 @@
 KOKKOS_DEVICES=""
 MAKE_J_OPTION="32"
 
+KOKKOS_DO_EXAMPLES="1"
+
 while [[ $# > 0 ]]
 do
   key="$1"
@@ -69,6 +71,9 @@ do
       ;;
     --make-j*)
       MAKE_J_OPTION="${key#*=}"
+      ;;
+    --no-examples)
+      KOKKOS_DO_EXAMPLES="0"
       ;;
     --compiler*)
       COMPILER="${key#*=}"
@@ -400,10 +405,12 @@ echo -e "\tmake -C core/perf_test" >> Makefile
 echo -e "\tmake -C containers/unit_tests" >> Makefile
 echo -e "\tmake -C containers/performance_tests" >> Makefile
 echo -e "\tmake -C algorithms/unit_tests" >> Makefile
+if [ ${KOKKOS_DO_EXAMPLES} -gt 0 ]; then
 echo -e "\tmake -C example/fixture" >> Makefile
 echo -e "\tmake -C example/feint" >> Makefile
 echo -e "\tmake -C example/fenl" >> Makefile
 echo -e "\tmake -C example/tutorial build" >> Makefile
+fi
 echo "" >> Makefile
 echo "test: build-test" >> Makefile
 echo -e "\tmake -C core/unit_test test" >> Makefile
@@ -411,10 +418,12 @@ echo -e "\tmake -C core/perf_test test" >> Makefile
 echo -e "\tmake -C containers/unit_tests test" >> Makefile
 echo -e "\tmake -C containers/performance_tests test" >> Makefile
 echo -e "\tmake -C algorithms/unit_tests test" >> Makefile
+if [ ${KOKKOS_DO_EXAMPLES} -gt 0 ]; then
 echo -e "\tmake -C example/fixture test" >> Makefile
 echo -e "\tmake -C example/feint test" >> Makefile
 echo -e "\tmake -C example/fenl test" >> Makefile
 echo -e "\tmake -C example/tutorial test" >> Makefile
+fi
 echo "" >> Makefile
 echo "unit-tests-only:" >> Makefile
 echo -e "\tmake -C core/unit_test test" >> Makefile
@@ -427,9 +436,11 @@ echo -e "\tmake -C core/perf_test clean" >> Makefile
 echo -e "\tmake -C containers/unit_tests clean" >> Makefile
 echo -e "\tmake -C containers/performance_tests clean" >> Makefile
 echo -e "\tmake -C algorithms/unit_tests clean" >> Makefile
+if [ ${KOKKOS_DO_EXAMPLES} -gt 0 ]; then
 echo -e "\tmake -C example/fixture clean" >> Makefile
 echo -e "\tmake -C example/feint clean" >> Makefile
 echo -e "\tmake -C example/fenl clean" >> Makefile
 echo -e "\tmake -C example/tutorial clean" >> Makefile
+fi
 echo -e "\tcd core; \\" >> Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} clean" >> Makefile
