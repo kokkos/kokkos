@@ -347,8 +347,6 @@ int OpenMP::thread_pool_rank()
 #endif
 }
 
-const char* OpenMP::name() { return "OpenMP"; }
-
 } // namespace Kokkos
 
 #endif

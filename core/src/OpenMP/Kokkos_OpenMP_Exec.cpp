@@ -459,6 +459,8 @@ int OpenMP::concurrency() {
   return thread_pool_size(0);
 }
 
+const char* OpenMP::name() { return "OpenMP"; }
+
 } // namespace Kokkos
 
 #else
