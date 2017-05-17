@@ -44,6 +44,8 @@
 #ifndef KOKKOS_PARALLEL_REDUCE_HPP
 #define KOKKOS_PARALLEL_REDUCE_HPP
 
+#include <Kokkos_NumericTraits.hpp>
+
 namespace Kokkos {
 
 template<class T, class Enable = void>
@@ -270,25 +272,6 @@ public:
 private:
   value_type* value;
 
-  template<class ValueType, bool is_arithmetic = std::is_arithmetic<ValueType>::value >
-  struct InitWrapper;
-
-  template<class ValueType >
-  struct InitWrapper<ValueType,true> {
-    static ValueType value() {
-      return std::numeric_limits<value_type>::min();
-    }
-  };
-
-  template<class ValueType >
-  struct InitWrapper<ValueType,false> {
-    static ValueType value() {
-      return value_type();
-    }
-  };
-
-  typedef InitWrapper<value_type> init_wrapper;
-
 public:
 
   KOKKOS_INLINE_FUNCTION
@@ -312,7 +295,7 @@ public:
   //Required
   KOKKOS_INLINE_FUNCTION
   void init( value_type& val)  const {
-    val = init_wrapper::value();
+    val = reduction_identity<value_type>::max();
   }
 
   KOKKOS_INLINE_FUNCTION
