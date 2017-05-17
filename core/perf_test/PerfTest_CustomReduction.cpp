@@ -63,10 +63,20 @@ void custom_reduction_test(int N, int R, int num_trials) {
     Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,32), [&] (const int& j, Scalar& thread_max) {
       Scalar t_max;
       Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(team,32), [&] (const int& k, Scalar& max_) {
-        if(a((i*32 + j)*32 + k)>lmax) lmax = a((i*32 + j)*32 + k);
+        const Scalar val =  a((i*32 + j)*32 + k);
+        if(val>lmax) lmax = val;
+        if((k == 11) && (j==17) && (i==2)) lmax = 11.5;
+#ifdef GENERIC_REDUCER
       },Kokkos::Max<Scalar>(t_max));
+#else
+      },Kokkos::Experimental::Max<Scalar>(t_max));
+#endif
       if(t_max>thread_max) thread_max = t_max;
+#ifdef GENERIC_REDUCER
     },Kokkos::Max<Scalar>(team_max));
+#else
+    },Kokkos::Experimental::Max<Scalar>(team_max));
+#endif
     }
     if(team_max>lmax) lmax = team_max;
   },Kokkos::Experimental::Max<Scalar>(max));
@@ -84,9 +94,17 @@ void custom_reduction_test(int N, int R, int num_trials) {
           const Scalar val =  a((i*32 + j)*32 + k);
           if(val>lmax) lmax = val;
           if((k == 11) && (j==17) && (i==2)) lmax = 11.5;
+#ifdef GENERIC_REDUCER
         },Kokkos::Max<Scalar>(t_max));
+#else
+        },Kokkos::Experimental::Max<Scalar>(t_max));
+#endif
         if(t_max>thread_max) thread_max = t_max;
+#ifdef GENERIC_REDUCER
       },Kokkos::Max<Scalar>(team_max));
+#else
+      },Kokkos::Experimental::Max<Scalar>(team_max));
+#endif
       }
       if(team_max>lmax) lmax = team_max;
     },Kokkos::Experimental::Max<Scalar>(max));

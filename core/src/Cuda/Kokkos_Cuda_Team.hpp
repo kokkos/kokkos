@@ -216,7 +216,7 @@ public:
 
         // Root of each vector lane reduces:
         if ( 0 == threadIdx.x && wx < i ) {
-          reducer.join( & tmp , reducer.data() );
+          reducer.join( tmp , reducer.reference() );
         }
       }
 
@@ -257,7 +257,7 @@ public:
           if ( 0 == wx && i <= wy ) {
             const int k = wy - i ;
             if ( k < nsh ) {
-              reducer.join( ((value_type*) m_team_reduce) + k , & tmp );
+              reducer.join( *((value_type*) m_team_reduce + k) , tmp );
             }
           }
         }
@@ -273,8 +273,8 @@ public:
           for ( int i = 1 << ( 32 - __clz(nsh-1) ) ; ( i >>= 1 ) ; ) {
             const int k = wx + i ;
             if ( wx < i && k < nsh ) {
-              reducer.join( ((value_type*)m_team_reduce) + wx
-                          , ((value_type*)m_team_reduce) + k );
+              reducer.join( ((value_type*)m_team_reduce)[wx]
+                          , ((value_type*)m_team_reduce)[k] );
               __threadfence_block();
             }
           }
@@ -357,7 +357,7 @@ public:
   vector_reduce( ReducerType const & reducer )
     {
       static_assert
-        ( std::is_reference< typename ReducerType::reference_type >::value
+        ( std::is_reference< typename ReducerType::value_type& >::value
         , "CudaTeamMember::vector_reduce limited to simple reduction type" );
 
       #ifdef __CUDA_ARCH__
@@ -368,7 +368,7 @@ public:
 
           for ( int i = blockDim.x ; ( i >>= 1 ) ; ) {
             cuda_shfl_down( reducer.reference() , tmp , i , blockDim.x );
-            if ( threadIdx.x < i ) { reducer.join( & tmp , reducer.data() ); }
+            if ( threadIdx.x < i ) { reducer.join( tmp , reducer.reference() ); }
           }
 
           // Broadcast from root lane to all other lanes.
@@ -720,7 +720,7 @@ parallel_reduce
 {
 #ifdef __CUDA_ARCH__
 
-  reducer.init( reducer.data() );
+  reducer.init( reducer.reference() );
 
   for( iType i = loop_boundaries.start + threadIdx.y
      ; i < loop_boundaries.end
@@ -855,7 +855,7 @@ parallel_reduce
 {
 #ifdef __CUDA_ARCH__
 
-  reducer.init( reducer.data() );
+  reducer.init( reducer.reference() );
 
   for ( iType i = loop_boundaries.start + threadIdx.x
       ; i < loop_boundaries.end

@@ -801,7 +801,7 @@ public:
     : m_functor( arg_functor )
     , m_league(  arg_policy.league_size() )
     , m_reducer( reducer )
-    , m_result_ptr(  reducer.result_view().data() )
+    , m_result_ptr(  reducer.view().data() )
     , m_shared( arg_policy.scratch_size(0) +
                 arg_policy.scratch_size(1) +
                 FunctorTeamShmemSize< FunctorType >::value( arg_functor , 1 ) )
