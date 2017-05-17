@@ -914,15 +914,13 @@ void parallel_reduce
    ValueType& result)
 {
   result = ValueType();
-#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-#pragma ivdep
-#endif
   for( iType i =  loop_boundaries.start ;
              i <  loop_boundaries.end ;
              i += loop_boundaries.increment) {
     lambda(i,result);
   }
 }
+
 
 /** \brief  Intra-thread vector parallel_reduce.
  *
@@ -946,9 +944,6 @@ void parallel_reduce
    const JoinType & join,
    ValueType& result)
 {
-#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-#pragma ivdep
-#endif
   for( iType i =  loop_boundaries.start ;
              i <  loop_boundaries.end ;
              i += loop_boundaries.increment ) {
