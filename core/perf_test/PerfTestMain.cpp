@@ -45,7 +45,7 @@
 #include <Kokkos_Core.hpp>
 
 namespace Test {
-const int command_line_num_args(int n = 0) {
+int command_line_num_args(int n = 0) {
   static int n_args = 0;
   if(n>0)
     n_args = n;
