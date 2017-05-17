@@ -68,8 +68,8 @@ private:
 
   /*  Defaults for min block, max block, and superblock sizes */
   enum : uint32_t { MIN_BLOCK_SIZE_LG2  =  6  /*   64 bytes */ };
-  enum : uint32_t { MAX_BLOCK_SIZE_LG2  = 16  /*  64k bytes */ };
-  enum : uint32_t { SUPERBLOCK_SIZE_LG2 = 18  /* 256k bytes */ };
+  enum : uint32_t { MAX_BLOCK_SIZE_LG2  = 12  /*   4k bytes */ };
+  enum : uint32_t { SUPERBLOCK_SIZE_LG2 = 16  /*  64k bytes */ };
 
   enum : uint32_t { HINT_PER_BLOCK_SIZE = 2 };
 
@@ -99,12 +99,12 @@ private:
   uint32_t * m_sb_state_array ;
   uint32_t   m_sb_state_size ;
   uint32_t   m_sb_size_lg2 ;
-  uint32_t   m_sb_count ;
-  uint32_t   m_sb_per_block_size ;
-  uint32_t   m_min_block_size_lg2 ;
   uint32_t   m_max_block_size_lg2 ;
-  uint32_t   m_hint_offset ;   // Offset to K * #block_size array of hints
-  uint32_t   m_data_offset ;   // Offset to 0th superblock data
+  uint32_t   m_min_block_size_lg2 ;
+  int32_t    m_sb_count ;
+  int32_t    m_hint_offset ;   // Offset to K * #block_size array of hints
+  int32_t    m_data_offset ;   // Offset to 0th superblock data
+  int32_t    m_unused_padding ;
 
 public:
 
@@ -112,7 +112,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   size_t capacity() const noexcept
-    { return ( 1LU << m_sb_size_lg2 ) * m_sb_count ; }
+    { return size_t(m_sb_count) << m_sb_size_lg2 ; }
 
   KOKKOS_INLINE_FUNCTION
   size_t min_block_size() const noexcept
@@ -162,7 +162,7 @@ public:
 
       const uint32_t * sb_state_ptr = sb_state_array ;
 
-      for ( uint32_t i = 0 ; i < m_sb_count
+      for ( int32_t i = 0 ; i < m_sb_count
           ; ++i , sb_state_ptr += m_sb_state_size ) {
 
         const uint32_t block_count_lg2 = (*sb_state_ptr) >> state_shift ;
@@ -202,10 +202,10 @@ public:
 
       const uint32_t * sb_state_ptr = sb_state_array ;
 
-      s << "pool_size(" << ( ( 1 << m_sb_size_lg2 ) * m_sb_count ) << ")"
+      s << "pool_size(" << ( size_t(m_sb_count) << m_sb_size_lg2 ) << ")"
         << " superblock_size(" << ( 1 << m_sb_size_lg2 ) << ")" << std::endl ;
 
-      for ( uint32_t i = 0 ; i < m_sb_count
+      for ( int32_t i = 0 ; i < m_sb_count
           ; ++i , sb_state_ptr += m_sb_state_size ) {
 
         if ( *sb_state_ptr ) {
@@ -260,12 +260,12 @@ public:
     , m_sb_state_array(0)
     , m_sb_state_size(0)
     , m_sb_size_lg2(0)
-    , m_sb_count(0)
-    , m_sb_per_block_size(0)
-    , m_min_block_size_lg2(0)
     , m_max_block_size_lg2(0)
+    , m_min_block_size_lg2(0)
+    , m_sb_count(0)
     , m_hint_offset(0)
     , m_data_offset(0)
+    , m_unused_padding(0)
     {
       const uint32_t int_align_lg2  = 3 ; /* align as int[8] */
       const uint32_t int_align_mask = ( 1u << int_align_lg2 ) - 1 ;
@@ -327,19 +327,13 @@ public:
 
       // Number of block sizes
 
-      const uint32_t number_block_sizes =
-         // 1 + m_sb_size_lg2 - m_min_block_size_lg2 ;
+      const int32_t number_block_sizes =
          1 + m_max_block_size_lg2 - m_min_block_size_lg2 ;
-
-      // Number of superblocks "reserved" for each block size:
-
-      m_sb_per_block_size =
-       ( m_sb_count + number_block_sizes - 1 ) / number_block_sizes ;
 
       // Array length for possible block sizes
       // Hint array is one uint32_t per block size
 
-      const uint32_t block_size_array_size =
+      const int32_t block_size_array_size =
         ( number_block_sizes + int_align_mask ) & ~int_align_mask ;
 
       m_hint_offset = all_sb_state_size ;
@@ -349,7 +343,8 @@ public:
       // Allocation:
 
       const size_t header_size = m_data_offset * sizeof(uint32_t);
-      const size_t alloc_size  = header_size + ( m_sb_count << m_sb_size_lg2 );
+      const size_t alloc_size  = header_size +
+                                 ( size_t(m_sb_count) << m_sb_size_lg2 );
 
       Record * rec = Record::allocate( memspace , "MemoryPool" , alloc_size );
 
@@ -363,35 +358,41 @@ public:
         accessible ? m_sb_state_array
                    : (uint32_t *) host.allocate(header_size);
 
-      for ( uint32_t i = 0 ; i < m_data_offset ; ++i ) sb_state_array[i] = 0 ;
+      for ( int32_t i = 0 ; i < m_data_offset ; ++i ) sb_state_array[i] = 0 ;
 
       // Initial assignment of empty superblocks to block sizes:
 
-      for ( uint32_t i = 0 , j = 0 ; i < number_block_sizes ; ++i ) {
+      for ( int32_t i = 0 ; i < number_block_sizes ; ++i ) {
         const uint32_t block_size_lg2  = i + m_min_block_size_lg2 ;
         const uint32_t block_count_lg2 = m_sb_size_lg2 - block_size_lg2 ;
         const uint32_t block_state     = block_count_lg2 << state_shift ;
         const uint32_t hint_begin = m_hint_offset + i * HINT_PER_BLOCK_SIZE ;
 
         // for block size index 'i':
-        //   sb_id_base = m_sb_per_block_size * i
-        //   sb_id_hint = sb_state_array[ hint_begin ];
-        //   sb_id_end  = sb_state_array[ hint_begin + 1 ];
+        //   sb_id_hint  = sb_state_array[ hint_begin ];
+        //   sb_id_begin = sb_state_array[ hint_begin + 1 ];
 
-        sb_state_array[ hint_begin ] = j ;
+        const int32_t jbeg = ( i * m_sb_count ) / number_block_sizes ;
+        const int32_t jend = ( ( i + 1 ) * m_sb_count ) / number_block_sizes ;
 
-        for ( uint32_t k = 0 ; k < m_sb_per_block_size && j < m_sb_count ; ++k , ++j ) {
+        sb_state_array[ hint_begin ] = uint32_t(jbeg);
+        sb_state_array[ hint_begin + 1 ] = uint32_t(jbeg);
+
+        for ( int32_t j = jbeg ; j < jend ; ++j ) {
           sb_state_array[ j * m_sb_state_size ] = block_state ;
         }
-
-        sb_state_array[ hint_begin + 1 ] = j - sb_state_array[ hint_begin ];
       }
+
+      // Write out initialized state:
 
       if ( ! accessible ) {
         Kokkos::Impl::DeepCopy< base_memory_space , Kokkos::HostSpace >
           ( m_sb_state_array , sb_state_array , header_size );
 
         host.deallocate( sb_state_array, header_size );
+      }
+      else {
+        Kokkos::memory_fence();
       }
     }
 
@@ -428,35 +429,37 @@ public:
    *
    *  If concurrent allocations and deallocations are taking place
    *  then a single allocation attempt may fail due to lack of available space.
-   *  The allocation attempt will retry up to 'retry_limit' times.
+   *  The allocation attempt will try up to 'attempt_limit' times.
    */
   KOKKOS_FUNCTION
   void * allocate( size_t alloc_size
-                 , uint32_t retry_limit = 0 ) const noexcept
+                 , int32_t attempt_limit = 1 ) const noexcept
     {
       void * p = 0 ;
 
-      if ( alloc_size <= (1UL << m_max_block_size_lg2) ) {
+      const uint32_t block_size_lg2 = get_block_size_lg2( alloc_size );
+
+      if ( block_size_lg2 <= m_max_block_size_lg2 ) {
 
         // Allocation will fit within a superblock
         // that has block sizes ( 1 << block_size_lg2 )
 
-        const uint32_t block_size_lg2   = get_block_size_lg2( alloc_size );
         const uint32_t block_count_lg2  = m_sb_size_lg2 - block_size_lg2 ;
-        const uint32_t block_count      = 1u << block_count_lg2 ;
         const uint32_t block_state      = block_count_lg2 << state_shift ;
+        const uint32_t block_count      = 1u << block_count_lg2 ;
         const uint32_t block_count_mask = block_count - 1 ;
 
-        const uint32_t block_size_id = block_size_lg2 - m_min_block_size_lg2 ;
-        const uint32_t block_size_sb_id_begin =
-          block_size_id * m_sb_per_block_size < m_sb_count ?
-          block_size_id * m_sb_per_block_size : m_sb_count ;
+        // Superblock hints for this block size:
+        //   hint_sb_id_ptr[0] is the dynamically changing hint
+        //   hint_sb_id_ptr[1] is the static start point
 
-// printf("  allocate block_size_lg2(%d) block_size_id(%d) block_size_sb_id_begin(%d)\n" , block_size_lg2 , block_size_id , block_size_sb_id_begin );
-      
-        volatile uint32_t * const hint_sb_id_ptr =
-          m_sb_state_array + m_hint_offset
-                           + block_size_id * HINT_PER_BLOCK_SIZE ;
+        volatile uint32_t * const hint_sb_id_ptr
+          = m_sb_state_array     /* memory pool state array */
+          + m_hint_offset        /* offset to hint portion of array */
+          + HINT_PER_BLOCK_SIZE  /* number of hints per block size */
+            * ( block_size_lg2 - m_min_block_size_lg2 ); /* block size id */
+
+        const int32_t sb_id_begin = int32_t( hint_sb_id_ptr[1] );
 
         // Fast query clock register 'tic' to pseudo-randomize
         // the guess for which block within a superblock should
@@ -471,33 +474,36 @@ public:
 #endif
           );
 
-        int sb_id = -1 ;
+        int32_t sb_id = -1 ;
 
         volatile uint32_t * sb_state_array = 0 ;
 
-        while(1) {
+        while ( attempt_limit ) {
 
-          uint32_t hint_sb_id = 0 ;
+          int32_t hint_sb_id = -1 ;
 
           if ( sb_id < 0 ) {
 
-            hint_sb_id = *hint_sb_id_ptr ;
+            sb_id = hint_sb_id = int32_t( *hint_sb_id_ptr );
 
-            sb_id = hint_sb_id ;
-
-            sb_state_array = m_sb_state_array + m_sb_state_size * sb_id ;
+            sb_state_array = m_sb_state_array + ( sb_id * m_sb_state_size );
           }
 
-          if ( 0 <= sb_id ) {
+          // Require:
+          //   0 <= sb_id
+          //   sb_state_array == m_sb_state_array + m_sb_state_size * sb_id
+
+          if ( block_state == ( state_header_mask & *sb_state_array ) ) {
+
+            // This superblock state is assigned to this block size.
+            // Try to claim a bit.
 
             const Kokkos::pair<int,int> result =
               CB::acquire_bounded_lg2( sb_state_array
-                                     , block_count_lg2 /* count */
+                                     , block_count_lg2
                                      , block_id_hint
                                      , block_state
                                      );
-
-// printf("  acquire block_count_lg2(%d) block_state(0x%x) sb_id(%d) bit(%d)\n" , block_count_lg2 , block_state , sb_id , result.first );
 
             // If result.first < 0 then failed to acquire
             // due to either full or buffer was wrong state.
@@ -514,6 +520,9 @@ public:
 
               break ; // Success
             }
+
+// printf("  acquire block_count_lg2(%d) block_state(0x%x) sb_id(%d) result(%d,%d)\n" , block_count_lg2 , block_state , sb_id , result.first , result.second );
+
           }
           //------------------------------------------------------------------
           //  Arrive here if failed to acquire a block.
@@ -525,17 +534,11 @@ public:
 
           sb_id = -1 ;
 
-          bool update_hint = false ;
+          int32_t sb_id_empty = -1 ;
 
-          uint32_t state_empty = 0 ;
+          sb_state_array = m_sb_state_array + sb_id_begin * m_sb_state_size ;
 
-          int sb_id_empty = -1 ;
-
-          sb_state_array =
-            m_sb_state_array + block_size_sb_id_begin * m_sb_state_size ;
-
-          for ( uint32_t i = 0 , id = block_size_sb_id_begin ;
-                i < m_sb_count && sb_id < 0 ; ++i ) {
+          for ( int32_t i = 0 , id = sb_id_begin ; i < m_sb_count ; ++i ) {
 
             //  Query state of the candidate superblock.
             //  Note that the state may change at any moment
@@ -544,40 +547,53 @@ public:
             const uint32_t state = *sb_state_array ;
             const uint32_t used  = state & state_used_mask ;
 
-            if ( ( ( state & state_header_mask ) == block_state ) &&
-                 ( used < block_count ) ) {
-              //  Superblock is the required block size and
-              //  its block count is below the threshold.
-              sb_id = id ;
+            if ( block_state == ( state & state_header_mask ) ) {
 
-              update_hint = used + 1 < block_count ;
+              //  Superblock is assigned to this block size
+
+              if ( used < block_count ) { 
+
+                // There is room to allocate one block
+
+                sb_id = id ;
+
+                if ( used + 1 < block_count ) {
+
+                  // There is room to allocate more than one block
+
+                  Kokkos::atomic_compare_exchange
+                    ( hint_sb_id_ptr , uint32_t(hint_sb_id) , uint32_t(sb_id) );
+                }
+
+                break ;
+              }
+            }
+            else if ( ( used == 0 ) && ( sb_id_empty == -1 ) ) {
+
+              // Superblock is not assigned to this block size
+              // and is the first empty superblock encountered.
+              // Save this id to use if a partfull superblock is not found.
+
+              sb_id_empty = id ;
+            }
+
+            if ( ++id < m_sb_count ) {
+              sb_state_array += m_sb_state_size ;
             }
             else {
-
-              if ( ( used == 0 ) && ( sb_id_empty == -1 ) ) {
-                // The first empty superblock following the
-                // designated superblock, save to use if a
-                // partfull superblock is not found.
-                sb_id_empty = id ;
-                state_empty = state ;
-              }
-
-              if ( ++id < m_sb_count ) {
-                sb_state_array += m_sb_state_size ;
-              }
-              else {
-                id = 0 ;
-                sb_state_array = m_sb_state_array ;
-              }
+              id = 0 ;
+              sb_state_array = m_sb_state_array ;
             }
           }
 
 // printf("  search m_sb_count(%d) sb_id(%d) sb_id_empty(%d)\n" , m_sb_count , sb_id , sb_id_empty );
 
           if ( sb_id < 0 ) {
+
+            //  Did not find a partfull superblock for this block size.
+
             if ( 0 <= sb_id_empty ) {
 
-              //  Did not find a partfull superblock
               //  Found first empty superblock following designated superblock
               //  Attempt to claim it for this block size.
               //  If the claim fails assume that another thread claimed it
@@ -588,65 +604,25 @@ public:
 
               sb_state_array = m_sb_state_array + ( sb_id * m_sb_state_size );
 
+              //  If successfully changed assignment of empty superblock 'sb_id'
+              //  to this block_size then update the hint.
+
+              const uint32_t state_empty = state_header_mask & *sb_state_array ;
+
               if ( state_empty ==
                      Kokkos::atomic_compare_exchange
                        (sb_state_array,state_empty,block_state) ) {
 
-                //  Successfully changed assignment of
-                //  empty superblock 'sb_id'
-                //  to this block_size.
+                // If this thread claimed the block then update the hint
 
-                update_hint = true ;
-
-#if 0
-                //  The span of superblocks for this block size
-                //  is likely to have changed.
-
-                const int sb_id_new_count =
-                  block_size_sb_id_begin < sb_id ?
-                    1 + sb_id - block_size_sb_id_begin : (
-                  block_size_sb_id_begin > sb_id ?
-                    1 + sb_id + m_sb_count - block_size_sb_id_begin : (
-                  m_sb_count ) );
-
-                const int sb_id_count = *( hint_sb_id_ptr + 1 );
-
-                if ( sb_id_count < sb_id_new_count ) {
-                  Kokkos::atomic_compare_exchange
-                    ( hint_sb_id_ptr + 1 , sb_id_count , sb_id_new_count );
-                }
-#endif
-
+                Kokkos::atomic_compare_exchange
+                  ( hint_sb_id_ptr , uint32_t(hint_sb_id) , uint32_t(sb_id) );
               }
             }
-            else if ( 0 < retry_limit ) {
-              //  Failed to find a partfull superblock.
-              //  Failed to find an empty superblock.
-
-              //  There is a slim chance that during all of this
-              //  searching some other thread has deallocated and
-              //  space became available.
-              //  Iterating on this slim chance is a performance penalty
-              //  with use case dependent probability of success.
-
-              --retry_limit ;
-            }
             else {
-              //  Failed to find a partfull superblock.
-              //  Failed to find an empty superblock.
-              //  Retries have exhausted.
-              //  Allocation fails.
-
-              break ;
+              // Did not find a potentially usable superblock
+              --attempt_limit ;
             }
-          }
-
-          if ( update_hint && ( int(hint_sb_id) != sb_id ) ) {
-
-// printf("  update hint block_size_lg2(%d) sb_id(%d)\n" , block_size_lg2 , sb_id );
-
-            Kokkos::atomic_compare_exchange
-                ( hint_sb_id_ptr , hint_sb_id , sb_id );
           }
         } // end allocation attempt loop
 
@@ -676,7 +652,7 @@ public:
 
       // Verify contained within the memory pool's superblocks:
       const int ok_contains =
-        ( 0 <= d ) && ( size_t(d) < ( m_sb_count << m_sb_size_lg2 ) );
+        ( 0 <= d ) && ( size_t(d) < ( size_t(m_sb_count) << m_sb_size_lg2 ) );
 
       int ok_block_aligned = 0 ;
       int ok_dealloc_once  = 0 ;
@@ -718,7 +694,7 @@ public:
       }
 
       if ( ! ok_contains || ! ok_block_aligned || ! ok_dealloc_once ) {
-#if 1
+#if 0
         printf("Kokkos MemoryPool deallocate(0x%lx) contains(%d) block_aligned(%d) dealloc_once(%d)\n",(uintptr_t)p,ok_contains,ok_block_aligned,ok_dealloc_once);
 #endif
         Kokkos::abort("Kokkos MemoryPool::deallocate given erroneous pointer");

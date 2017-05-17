@@ -326,12 +326,28 @@ public:
   }
 };
 
-//! Binary + operator for complex.
+//! Binary + operator for complex complex.
 template<class RealType>
 KOKKOS_INLINE_FUNCTION
 complex<RealType>
 operator + (const complex<RealType>& x, const complex<RealType>& y) {
   return complex<RealType> (x.real () + y.real (), x.imag () + y.imag ());
+}
+
+//! Binary + operator for complex scalar.
+template<class RealType>
+KOKKOS_INLINE_FUNCTION
+complex<RealType>
+operator + (const complex<RealType>& x, const RealType& y) {
+  return complex<RealType> (x.real () + y , x.imag ());
+}
+
+//! Binary + operator for scalar complex.
+template<class RealType>
+KOKKOS_INLINE_FUNCTION
+complex<RealType>
+operator + (const RealType& x, const complex<RealType>& y) {
+  return complex<RealType> (x + y.real (), y.imag ());
 }
 
 //! Unary + operator for complex.
@@ -348,6 +364,22 @@ KOKKOS_INLINE_FUNCTION
 complex<RealType>
 operator - (const complex<RealType>& x, const complex<RealType>& y) {
   return complex<RealType> (x.real () - y.real (), x.imag () - y.imag ());
+}
+
+//! Binary - operator for complex scalar.
+template<class RealType>
+KOKKOS_INLINE_FUNCTION
+complex<RealType>
+operator - (const complex<RealType>& x, const RealType& y) {
+  return complex<RealType> (x.real () - y , x.imag ());
+}
+
+//! Binary - operator for scalar complex.
+template<class RealType>
+KOKKOS_INLINE_FUNCTION
+complex<RealType>
+operator - (const RealType& x, const complex<RealType>& y) {
+  return complex<RealType> (x - y.real (), - y.imag ());
 }
 
 //! Unary - operator for complex.
@@ -425,7 +457,25 @@ template<class RealType>
 KOKKOS_INLINE_FUNCTION
 RealType abs (const complex<RealType>& x) {
   // FIXME (mfh 31 Oct 2014) Scale to avoid unwarranted overflow.
-  return ::sqrt (real (x) * real (x) + imag (x) * imag (x));
+  return std::sqrt (real (x) * real (x) + imag (x) * imag (x));
+}
+
+//! Power of a complex number
+template<class RealType>
+KOKKOS_INLINE_FUNCTION
+Kokkos::complex<RealType> pow (const complex<RealType>& x, const RealType& e) {
+  RealType r = abs(x);
+  RealType phi = std::atan(x.imag()/x.real());
+  return std::pow(r,e) * Kokkos::complex<RealType>(std::cos(phi*e),std::sin(phi*e)); 
+}
+
+//! Square root of a complex number.
+template<class RealType>
+KOKKOS_INLINE_FUNCTION
+Kokkos::complex<RealType> sqrt (const complex<RealType>& x) {
+  RealType r = abs(x);
+  RealType phi = std::atan(x.imag()/x.real());
+  return std::sqrt(r) * Kokkos::complex<RealType>(std::cos(phi*0.5),std::sin(phi*0.5));
 }
 
 //! Conjugate of a complex number.
@@ -439,6 +489,13 @@ complex<RealType> conj (const complex<RealType>& x) {
 template<class RealType>
 KOKKOS_INLINE_FUNCTION
 complex<RealType> exp (const complex<RealType>& x) {
+  return std::exp(x.real()) * complex<RealType> (std::cos (x.imag()),  std::sin(x.imag()));
+}
+
+//! Exponential of a complex number.
+template<class RealType>
+KOKKOS_INLINE_FUNCTION
+complex<RealType> pow (const complex<RealType>& x) {
   return std::exp(x.real()) * complex<RealType> (std::cos (x.imag()),  std::sin(x.imag()));
 }
 
@@ -475,6 +532,14 @@ operator / (const complex<RealType>& x, const complex<RealType>& y) {
     result /= y_scaled_abs;
     return result;
   }
+}
+
+//! Binary operator / for complex and real numbers
+template<class RealType1, class RealType2>
+KOKKOS_INLINE_FUNCTION
+complex<RealType1>
+operator / (const RealType1& x, const complex<RealType2>& y) {
+  return complex<RealType1> (x)/y;
 }
 
 //! Equality operator for two complex numbers.

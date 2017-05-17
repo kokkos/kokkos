@@ -1,5 +1,8 @@
-#ifndef KOKKOS_CORE_CONFIG_H
+#if !defined(KOKKOS_MACROS_HPP) || defined(KOKKOS_CORE_CONFIG_H)
+#error "Don't include KokkosCore_config.h directly; include Kokkos_Macros.hpp instead."
+#else
 #define KOKKOS_CORE_CONFIG_H
+#endif
 
 /* The trivial 'src/build_common.sh' creates a config
  * that must stay in sync with this file.
@@ -21,6 +24,7 @@
 
 #cmakedefine KOKKOS_HAVE_DEBUG
 #cmakedefine KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
+#cmakedefine KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
 #cmakedefine KOKKOS_ENABLE_PROFILING
 
 #cmakedefine KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION
@@ -103,4 +107,3 @@
 #cmakedefine KOKKOS_HAVE_CXX11
 
 #endif // KOKKOS_FOR_SIERRA
-#endif // KOKKOS_CORE_CONFIG_H

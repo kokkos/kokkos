@@ -1702,62 +1702,6 @@ namespace Impl {
 
   };
 
-  template< class FunctorType, class Enable = void>
-  struct ReduceFunctorHasInit {
-    enum {value = false};
-  };
-
-  template< class FunctorType>
-  struct ReduceFunctorHasInit<FunctorType, typename Impl::enable_if< 0 < sizeof( & FunctorType::init ) >::type > {
-    enum {value = true};
-  };
-
-  template< class FunctorType, class Enable = void>
-  struct ReduceFunctorHasJoin {
-    enum {value = false};
-  };
-
-  template< class FunctorType>
-  struct ReduceFunctorHasJoin<FunctorType, typename Impl::enable_if< 0 < sizeof( & FunctorType::join ) >::type > {
-    enum {value = true};
-  };
-
-  template< class FunctorType, class Enable = void>
-  struct ReduceFunctorHasFinal {
-    enum {value = false};
-  };
-
-  template< class FunctorType>
-  struct ReduceFunctorHasFinal<FunctorType, typename Impl::enable_if< 0 < sizeof( & FunctorType::final ) >::type > {
-    enum {value = true};
-  };
-
-  template< class FunctorType, class Enable = void>
-    struct ReduceFunctorHasShmemSize {
-      enum {value = false};
-    };
-
-    template< class FunctorType>
-    struct ReduceFunctorHasShmemSize<FunctorType, typename Impl::enable_if< 0 < sizeof( & FunctorType::team_shmem_size ) >::type > {
-      enum {value = true};
-    };
-
-  template< class FunctorType, bool Enable =
-      ( FunctorDeclaresValueType<FunctorType,void>::value) ||
-      ( ReduceFunctorHasInit<FunctorType>::value  ) ||
-      ( ReduceFunctorHasJoin<FunctorType>::value  ) ||
-      ( ReduceFunctorHasFinal<FunctorType>::value ) ||
-      ( ReduceFunctorHasShmemSize<FunctorType>::value )
-      >
-  struct IsNonTrivialReduceFunctor {
-    enum {value = false};
-  };
-
-  template< class FunctorType>
-  struct IsNonTrivialReduceFunctor<FunctorType, true> {
-    enum {value = true};
-  };
-
   template<class FunctorType, class ResultType, class Tag, bool Enable = IsNonTrivialReduceFunctor<FunctorType>::value >
   struct FunctorReferenceType {
     typedef ResultType& reference_type;

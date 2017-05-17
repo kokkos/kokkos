@@ -73,8 +73,6 @@ class OpenMPExec;
 
 extern int g_openmp_hardware_max_threads;
 
-extern __thread int t_openmp_pool_rank;
-extern __thread int t_openmp_pool_size;
 extern __thread int t_openmp_hardware_id;
 extern __thread OpenMPExec * t_openmp_instance;
 
@@ -90,12 +88,15 @@ public:
 
   void clear_thread_data();
 
-  static void validate_partition( int & num_partitions, int & partition_size );
+  static void validate_partition( const int nthreads
+                                , int & num_partitions
+                                , int & partition_size
+                                );
 
 private:
-  OpenMPExec( int control_id )
-    : m_control_id{ control_id }
-    , m_in_parallel( false )
+  OpenMPExec( int arg_pool_size )
+    : m_pool_size{ arg_pool_size }
+    , m_level{ omp_get_level() }
     , m_pool()
   {}
 
@@ -104,26 +105,14 @@ private:
     clear_thread_data();
   }
 
-  int                  m_control_id ;
-  int                  m_in_parallel;
+  int m_pool_size;
+  int m_level;
+
   HostThreadTeamData * m_pool[ MAX_THREAD_COUNT ];
 
 public:
 
-  // Topology of a cache coherent thread pool:
-  //   TOTAL = NUMA x GRAIN
-  //   pool_size( depth = 0 )
-  //   pool_size(0) = total number of threads
-  //   pool_size(1) = number of threads per NUMA
-  //   pool_size(2) = number of threads sharing finest grain memory hierarchy
-
-  inline bool in_parallel() const noexcept
-  { return m_in_parallel; }
-
-  inline void set_in_parallel()   { m_in_parallel = true; }
-  inline void unset_in_parallel() { m_in_parallel = false; }
-
-  static void verify_is_process( const char * const );
+  static void verify_is_master( const char * const );
   static void verify_initialized( const char * const );
 
   void resize_thread_data( size_t pool_reduce_bytes
@@ -133,7 +122,7 @@ public:
 
   inline
   HostThreadTeamData * get_thread_data() const noexcept
-  { return m_pool[ t_openmp_pool_rank ]; }
+  { return m_pool[ m_level == omp_get_level() ? 0 : omp_get_thread_num() ]; }
 
   inline
   HostThreadTeamData * get_thread_data( int i ) const noexcept
@@ -157,7 +146,29 @@ bool OpenMP::is_initialized() noexcept
 inline
 bool OpenMP::in_parallel( OpenMP const& ) noexcept
 {
-  return Impl::t_openmp_instance->in_parallel();
+  //t_openmp_instance is only non-null on a master thread
+  return   !Impl::t_openmp_instance
+         || Impl::t_openmp_instance->m_level < omp_get_level()
+         ;
+}
+
+inline
+int OpenMP::thread_pool_size() noexcept
+{
+  return   OpenMP::in_parallel()
+         ? omp_get_num_threads()
+         : Impl::t_openmp_instance->m_pool_size
+         ;
+}
+
+KOKKOS_INLINE_FUNCTION
+int OpenMP::thread_pool_rank() noexcept
+{
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+  return Impl::t_openmp_instance ? 0 : omp_get_thread_num();
+#else
+  return -1 ;
+#endif
 }
 
 inline
@@ -167,75 +178,57 @@ inline
 bool OpenMP::is_asynchronous( OpenMP const& instance ) noexcept
 { return false; }
 
-
-
 template <typename F>
 void OpenMP::partition_master( F const& f
                              , int num_partitions
                              , int partition_size
                              )
 {
-  using Exec = Impl::OpenMPExec;
+  if (omp_get_nested()) {
+    using Exec = Impl::OpenMPExec;
 
-  const int prev_pool_size = Impl::t_openmp_pool_size;
-  Exec * prev_instance     = Impl::t_openmp_instance;
+    Exec * prev_instance = Impl::t_openmp_instance;
 
-  Exec::validate_partition( num_partitions, partition_size );
+    Exec::validate_partition( prev_instance->m_pool_size, num_partitions, partition_size );
 
-  OpenMP::memory_space space;
+    OpenMP::memory_space space;
 
 #ifdef KOKKOS_ENABLE_PROC_BIND
-  #pragma omp parallel num_threads(num_partitions) proc_bind(spread)
+#pragma omp parallel num_threads(num_partitions) proc_bind(spread)
 #else
-  #pragma omp parallel num_threads(num_partitions)
+#pragma omp parallel num_threads(num_partitions)
 #endif
-  {
-    void * const ptr = space.allocate( sizeof(Exec) );
-
-    Exec * new_instance = new (ptr) Exec( Impl::t_openmp_hardware_id );
-
-    #pragma omp parallel num_threads(partition_size) proc_bind(spread)
     {
-      Impl::t_openmp_instance  = new_instance;
-      Impl::t_openmp_pool_rank = omp_get_thread_num();
-      Impl::t_openmp_pool_size = partition_size;
+      void * const ptr = space.allocate( sizeof(Exec) );
+
+      Impl::t_openmp_instance = new (ptr) Exec( partition_size );
+
+      size_t pool_reduce_bytes  =   32 * partition_size ;
+      size_t team_reduce_bytes  =   32 * partition_size ;
+      size_t team_shared_bytes  = 1024 * partition_size ;
+      size_t thread_local_bytes = 1024 ;
+
+      Impl::t_openmp_instance->resize_thread_data( pool_reduce_bytes
+                                                 , team_reduce_bytes
+                                                 , team_shared_bytes
+                                                 , thread_local_bytes
+                                                 );
+
+      f( omp_get_thread_num(), omp_get_num_threads() );
+
+      Impl::t_openmp_instance->~Exec();
+      space.deallocate( Impl::t_openmp_instance, sizeof(Exec) );
+      Impl::t_openmp_instance = nullptr;
     }
 
-    f( omp_get_thread_num(), omp_get_num_threads() );
-
-    new_instance->~Exec();
-    space.deallocate( new_instance, sizeof(Exec) );
-  }
-
-  // reset pool_rank and instance
-#ifdef KOKKOS_ENABLE_PROC_BIND
-  #pragma omp parallel num_threads( prev_pool_size ) proc_bind(spread)
-#else
-  #pragma omp parallel num_threads( prev_pool_size )
-#endif
-  {
     Impl::t_openmp_instance  = prev_instance;
-    Impl::t_openmp_pool_rank = omp_get_thread_num();
-    Impl::t_openmp_pool_size = prev_pool_size;
+  }
+  else {
+    // nested openmp not enabled
+    f(0,1);
   }
 }
 
-
-inline
-int OpenMP::thread_pool_size() noexcept
-{
-  return Impl::t_openmp_pool_size;
-}
-
-KOKKOS_INLINE_FUNCTION
-int OpenMP::thread_pool_rank() noexcept
-{
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-  return Impl::t_openmp_pool_rank;
-#else
-  return -1 ;
-#endif
-}
 
 namespace Experimental {
 
@@ -274,11 +267,11 @@ public:
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
   inline
-  int size() const noexcept { return Kokkos::Impl::t_openmp_pool_size; }
+  int size() const noexcept { return Kokkos::OpenMP::thread_pool_size(); }
 
   /// \brief acquire value such that 0 <= value < size()
   inline
-  int acquire() const  noexcept { return Kokkos::Impl::t_openmp_pool_rank; }
+  int acquire() const  noexcept { return Kokkos::OpenMP::thread_pool_rank(); }
 
   /// \brief release a value acquired by generate
   inline
@@ -318,7 +311,9 @@ public:
 inline
 int OpenMP::thread_pool_size( int depth )
 {
-  return depth < 2 ? Impl::t_openmp_pool_size : 1;
+  return depth < 2
+         ? thread_pool_size()
+         : 1;
 }
 
 KOKKOS_INLINE_FUNCTION

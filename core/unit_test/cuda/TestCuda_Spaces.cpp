@@ -41,7 +41,7 @@
 //@HEADER
 */
 
-#include <cuda/TestCuda.hpp>
+#include <cuda/TestCuda_Category.hpp>
 
 namespace Test {
 

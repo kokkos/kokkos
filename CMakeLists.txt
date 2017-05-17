@@ -5,6 +5,9 @@ ELSE()
 ENDIF()
 
 IF(NOT KOKKOS_HAS_TRILINOS)
+  cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
+  project(Kokkos CXX)
+
   INCLUDE(cmake/kokkos.cmake)
 ELSE()
 #------------------------------------------------------------------------------
@@ -151,6 +154,13 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
   KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   "Enable Kokkos::View run-time bounds checking."
   "${Kokkos_ENABLE_Debug_Bounds_Check_DEFAULT}"
+  )
+
+TRIBITS_ADD_OPTION_AND_DEFINE(
+  Kokkos_ENABLE_Debug_DualView_Modify_Check
+  KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
+  "Enable abort when Kokkos::DualView modified on host and device without sync."
+  "${Kokkos_ENABLE_DEBUG}"
   )
 
 TRIBITS_ADD_OPTION_AND_DEFINE(

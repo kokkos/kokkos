@@ -275,6 +275,10 @@ public:
           ch[jc_try] = reinterpret_cast<value_type*>(
             m_pool.allocate( sizeof(value_type) << m_chunk_shift ));
 
+          if ( 0 == ch[jc_try] ) {
+            Kokkos::abort("DynamicView::resize_parallel exhausted memory pool");
+          }
+
           Kokkos::memory_fence();
         }
       }

@@ -1171,14 +1171,14 @@ struct internal_force
                             dot8<Scalar,execution_space>( grad_y , grad_y ) +
                             dot8<Scalar,execution_space>( grad_z , grad_z ) );
 
-    const Scalar dtrial = sqrt(elem_mass(ielem) * aspect / dil);
+    const Scalar dtrial = std::sqrt(elem_mass(ielem) * aspect / dil);
     const Scalar traced = (rot_stretch(ielem, 0) + rot_stretch(ielem, 1) + rot_stretch(ielem, 2));
 
     const Scalar eps = traced < 0 ? (lin_bulk_visc - quad_bulk_visc * traced * dtrial) : lin_bulk_visc ;
 
     const Scalar bulkq = eps * dil * dtrial * traced;
 
-    Scalar cur_time_step = dtrial * ( sqrt( 1.0 + eps * eps) - eps);
+    Scalar cur_time_step = dtrial * ( std::sqrt( 1.0 + eps * eps) - eps);
 
     // force fixed time step if input
 
