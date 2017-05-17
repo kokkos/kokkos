@@ -265,7 +265,18 @@ void run_test_gramschmidt( int exp_beg , int exp_end, int num_trials, const char
 }
 
 TEST_F( default_exec, gramschmidt ) {
-  EXPECT_NO_THROW(run_test_gramschmidt< Kokkos::DefaultExecutionSpace>( 10, 20, 5, Kokkos::DefaultExecutionSpace::name()  ));
+  int exp_beg = 10;
+  int exp_end = 20;
+  int num_trials = 5;
+
+  if(command_line_num_args()>1)
+    exp_beg = atoi(command_line_arg(1));
+  if(command_line_num_args()>2)
+    exp_end = atoi(command_line_arg(2));
+  if(command_line_num_args()>3)
+    num_trials = atoi(command_line_arg(3));
+
+  EXPECT_NO_THROW(run_test_gramschmidt< Kokkos::DefaultExecutionSpace>( exp_beg, exp_end, num_trials, Kokkos::DefaultExecutionSpace::name()  ));
 }
 
 }

@@ -48,6 +48,9 @@
 
 namespace Test {
 
+extern const int command_line_num_args(int n = 0);
+extern const char* command_line_arg(int k, char** input_args = NULL);
+
 class default_exec : public ::testing::Test {
 protected:
   static void SetUpTestCase() {
