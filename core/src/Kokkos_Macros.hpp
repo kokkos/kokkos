@@ -285,8 +285,8 @@
     #endif
   #endif
 
-  #if ( KOKKOS_COMPILER_INTEL >= 1500 )
-    #define KOKKOS_ENABLE_PROC_BIND
+  #if ( KOKKOS_COMPILER_INTEL >= 1500 ) && !defined( KOKKOS_DISABLE_PROC_BIND )
+    #define KOKKOS_IMPL_ENABLE_PROC_BIND
   #endif
 
 
@@ -318,7 +318,9 @@
 
 #if defined( KOKKOS_COMPILER_IBM )
   #define KOKKOS_ENABLE_PRAGMA_UNROLL 1
-  #define KOKKOS_ENABLE_PROC_BIND
+  #if !defined( KOKKOS_DISABLE_PROC_BIND )
+    #define KOKKOS_IMPL_ENABLE_PROC_BIND
+  #endif
   //#define KOKKOS_ENABLE_PRAGMA_IVDEP 1
   //#define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
   //#define KOKKOS_ENABLE_PRAGMA_VECTOR 1
@@ -329,8 +331,8 @@
 // CLANG compiler macros
 
 #if defined( KOKKOS_COMPILER_CLANG )
-  #if ( KOKKOS_COMPILER_CLANG >= 390 )
-    #define KOKKOS_ENABLE_PROC_BIND
+  #if ( KOKKOS_COMPILER_CLANG >= 390 ) && !defined( KOKKOS_DISABLE_PROCBIND )
+    #define KOKKOS_IMPL_ENABLE_PROC_BIND
   #endif
   //#define KOKKOS_ENABLE_PRAGMA_UNROLL 1
   //#define KOKKOS_ENABLE_PRAGMA_IVDEP 1
@@ -357,8 +359,8 @@
     #define KOKKOS_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
   #endif
 
-  #if ( KOKKOS_COMPILER_GNU >= 490 )
-    #define KOKKOS_ENABLE_PROC_BIND
+  #if ( KOKKOS_COMPILER_GNU >= 490 ) && !defined( KOKKOS_DISABLE_PROC_BIND )
+    #define KOKKOS_IMPL_ENABLE_PROC_BIND
   #endif
 
   #if !defined( KOKKOS_ENABLE_ASM ) && !defined( __PGIC__ ) && \

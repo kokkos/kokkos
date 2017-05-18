@@ -126,7 +126,7 @@ public:
       OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
 
       const int pool_size = OpenMP::thread_pool_size();
-#ifdef KOKKOS_ENABLE_PROC_BIND
+#ifdef KOKKOS_IMPL_ENABLE_PROC_BIND
       #pragma omp parallel num_threads(pool_size) proc_bind(spread)
 #else
       #pragma omp parallel num_threads(pool_size)
@@ -255,7 +255,7 @@ public:
                                     );
 
       const int pool_size = OpenMP::thread_pool_size();
-#ifdef KOKKOS_ENABLE_PROC_BIND
+#ifdef KOKKOS_IMPL_ENABLE_PROC_BIND
       #pragma omp parallel num_threads(pool_size) proc_bind(spread)
 #else
       #pragma omp parallel num_threads(pool_size)
@@ -427,7 +427,7 @@ public:
                                     );
 
       const int pool_size = OpenMP::thread_pool_size();
-#ifdef KOKKOS_ENABLE_PROC_BIND
+#ifdef KOKKOS_IMPL_ENABLE_PROC_BIND
       #pragma omp parallel num_threads(pool_size) proc_bind(spread)
 #else
       #pragma omp parallel num_threads(pool_size)
@@ -587,7 +587,7 @@ public:
                                     , thread_local_size );
 
       const int pool_size = OpenMP::thread_pool_size();
-#ifdef KOKKOS_ENABLE_PROC_BIND
+#ifdef KOKKOS_IMPL_ENABLE_PROC_BIND
       #pragma omp parallel num_threads(pool_size) proc_bind(spread)
 #else
       #pragma omp parallel num_threads(pool_size)
@@ -752,7 +752,7 @@ public:
                                     , thread_local_size );
 
       const int pool_size = OpenMP::thread_pool_size();
-#ifdef KOKKOS_ENABLE_PROC_BIND
+#ifdef KOKKOS_IMPL_ENABLE_PROC_BIND
       #pragma omp parallel num_threads(pool_size) proc_bind(spread)
 #else
       #pragma omp parallel num_threads(pool_size)

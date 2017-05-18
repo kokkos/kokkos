@@ -109,15 +109,15 @@ public:
 
   /// \brief Initialize the default execution space
   ///
-  /// if ( thread_count < 0 && Kokkos::hwlow_available() )
+  /// if ( thread_count == -1 )
+  ///   then use the number of threads that openmp defaults to
+  /// if ( thread_count == 0 && Kokkos::hwlow_available() )
   ///   then use hwloc to choose the number of threads and change
   ///   the default number of threads
-  /// if ( thread_count == 0 )
-  ///   then use the number of threads that openmp defaults to
   /// if ( thread_count > 0 )
   ///   then force openmp to use the given number of threads and change
   ///   the default number of threads
-  static void initialize( int thread_count = 0 );
+  static void initialize( int thread_count = -1 );
 
   /// \brief Free any resources being consumed by the default execution space
   static void finalize();
