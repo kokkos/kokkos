@@ -58,7 +58,6 @@
 #include <TestVector.hpp>
 #include <TestDualView.hpp>
 #include <TestDynamicView.hpp>
-#include <TestComplex.hpp>
 
 #include <iomanip>
 
@@ -102,11 +101,6 @@ TEST_F( serial , staticcrsgraph )
   TestStaticCrsGraph::run_test_graph3< Kokkos::Serial >(75, 1000);
   TestStaticCrsGraph::run_test_graph3< Kokkos::Serial >(75, 10000);
   TestStaticCrsGraph::run_test_graph3< Kokkos::Serial >(75, 100000);
-}
-
-TEST_F( serial, complex )
-{
-  testComplex<Kokkos::Serial> ();
 }
 
 TEST_F( serial, bitset )

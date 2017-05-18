@@ -603,7 +603,7 @@ public:
 #ifdef GENERIC_REDUCER
           *((value_type*) m_data.team_reduce_local()) = reducer.reference();
 #else
-          *((value_type*) m_data.team_reduce()) = reducer.reference();
+          *((value_type*) m_data.team_reduce_local()) = reducer.reference();
 #endif
         }
 
@@ -642,7 +642,7 @@ public:
         else {
           // Copy from root member's buffer:
 #ifdef GENERIC_REDUCER
-          reducer.reference() = *((value_type*) m_data.team_reduce_local());
+          reducer.reference() = *((value_type*) m_data.team_reduce());
 #else
           reducer.reference() = *((value_type*) m_data.team_reduce());
 #endif
@@ -655,7 +655,7 @@ public:
 
   //--------------------------------------------------------------------------
 
-  template< typename ValueType , class JoinOp >
+  /*template< typename ValueType , class JoinOp >
   KOKKOS_INLINE_FUNCTION
   ValueType
   team_reduce( ValueType const & value
@@ -699,7 +699,7 @@ public:
     }
 #else
     { Kokkos::abort("HostThreadTeamMember team_reduce\n"); return ValueType(); }
-#endif
+#endif*/
 
 
   template< typename T >
@@ -886,9 +886,9 @@ parallel_reduce
   , ValueType      & result
   )
 {
-  Impl::Reducer< ValueType , Impl::ReduceSum< ValueType > > reducer( & result );
+  Kokkos::Experimental::Sum<ValueType> reducer( result );
 
-  reducer.init( reducer.data() );
+  reducer.init( result );
 
   for( iType i = loop_boundaries.start
      ; i <  loop_boundaries.end
@@ -899,7 +899,7 @@ parallel_reduce
   loop_boundaries.thread.team_reduce( reducer );
 }
 
-template< typename iType, class Space
+/*template< typename iType, class Space
          , class Closure, class Joiner , typename ValueType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
@@ -921,7 +921,7 @@ void parallel_reduce
   }
 
   loop_boundaries.thread.team_reduce( reducer );
-}
+}*/
 
 //----------------------------------------------------------------------------
 /** \brief  Inter-thread vector parallel_reduce.

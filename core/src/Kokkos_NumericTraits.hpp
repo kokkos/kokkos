@@ -50,14 +50,23 @@
 namespace Kokkos {
 
 template<class T>
-struct reduction_identity {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static T sum();  // 0
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static T prod(); // 1
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static T max();  // minimum value
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static T min();  // maximum value
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static T bor();  // 0, only for integer type
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static T band(); // !0, only for integer type
-};
+struct reduction_identity; /*{
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static T sum() { return T(); }  // 0
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static T prod()  // 1
+    { static_assert( false, "Missing specialization of Kokkos::reduction_identity for custom prod reduction type"); return T(); }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static T max()   // minimum value
+    { static_assert( false, "Missing specialization of Kokkos::reduction_identity for custom max reduction type"); return T(); }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static T min()   // maximum value
+    { static_assert( false, "Missing specialization of Kokkos::reduction_identity for custom min reduction type"); return T(); }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static T bor()   // 0, only for integer type
+    { static_assert( false, "Missing specialization of Kokkos::reduction_identity for custom bor reduction type"); return T(); }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static T band()  // !0, only for integer type
+    { static_assert( false, "Missing specialization of Kokkos::reduction_identity for custom band reduction type"); return T(); }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static T lor()   // 0, only for integer type
+    { static_assert( false, "Missing specialization of Kokkos::reduction_identity for custom lor reduction type"); return T(); }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static T land()  // !0, only for integer type
+    { static_assert( false, "Missing specialization of Kokkos::reduction_identity for custom land reduction type"); return T(); }
+};*/
 
 template<>
 struct reduction_identity<signed char> {

@@ -65,7 +65,7 @@ struct is_reducer_type<T,typename std::enable_if<
 namespace Experimental {
 
 
-template<class Scalar,class Space = HostSpace>
+template<class Scalar, class Space>
 struct Sum {
 public:
   //Required
@@ -112,7 +112,7 @@ public:
   }
 };
 
-template<class Scalar,class Space = HostSpace>
+template<class Scalar, class Space>
 struct Prod {
 public:
   //Required
@@ -159,7 +159,7 @@ public:
   }
 };
 
-template<class Scalar, class Space = HostSpace>
+template<class Scalar, class Space>
 struct Min {
 public:
   //Required
@@ -208,7 +208,7 @@ public:
   }
 };
 
-template<class Scalar, class Space = HostSpace>
+template<class Scalar, class Space>
 struct Max {
 public:
   //Required
@@ -258,7 +258,7 @@ public:
   }
 };
 
-template<class Scalar, class Space = HostSpace>
+template<class Scalar, class Space>
 struct LAnd {
 public:
   //Required
@@ -304,7 +304,7 @@ public:
   }
 };
 
-template<class Scalar, class Space = HostSpace>
+template<class Scalar, class Space>
 struct LOr {
 public:
   //Required
@@ -351,7 +351,7 @@ public:
   }
 };
 
-template<class Scalar, class Space = HostSpace>
+template<class Scalar, class Space>
 struct BAnd {
 public:
   //Required
@@ -398,7 +398,7 @@ public:
   }
 };
 
-template<class Scalar, class Space = HostSpace>
+template<class Scalar, class Space>
 struct BOr {
 public:
   //Required
@@ -463,7 +463,7 @@ struct ValLocScalar {
   }
 };
 
-template<class Scalar, class Index, class Space = HostSpace>
+template<class Scalar, class Index, class Space>
 struct MinLoc {
 private:
   typedef typename std::remove_cv<Scalar>::type scalar_type;
@@ -503,8 +503,8 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void init( value_type& val)  const {
-    value->val = reduction_identity<scalar_type>::min();
-    value->loc = reduction_identity<index_type>::min();
+    val.val = reduction_identity<scalar_type>::min();
+    val.loc = reduction_identity<index_type>::min();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -518,7 +518,7 @@ public:
   }
 };
 
-template<class Scalar, class Index, class Space = HostSpace>
+template<class Scalar, class Index, class Space>
 struct MaxLoc {
 private:
   typedef typename std::remove_cv<Scalar>::type scalar_type;
@@ -557,8 +557,8 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void init( value_type& val)  const {
-    value->val = reduction_identity<scalar_type>::max();;
-    value->loc = reduction_identity<index_type>::min();
+    val.val = reduction_identity<scalar_type>::max();;
+    val.loc = reduction_identity<index_type>::min();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -589,7 +589,7 @@ struct MinMaxScalar {
   }
 };
 
-template<class Scalar, class Space = HostSpace>
+template<class Scalar, class Space>
 struct MinMax {
 private:
   typedef typename std::remove_cv<Scalar>::type scalar_type;
@@ -635,8 +635,8 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void init( value_type& val)  const {
-    value->max = reduction_identity<scalar_type>::max();;
-    value->min = reduction_identity<scalar_type>::min();
+    val.max_val = reduction_identity<scalar_type>::max();;
+    val.min_val = reduction_identity<scalar_type>::min();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -672,7 +672,7 @@ struct MinMaxLocScalar {
   }
 };
 
-template<class Scalar, class Index, class Space = HostSpace>
+template<class Scalar, class Index, class Space>
 struct MinMaxLoc {
 private:
   typedef typename std::remove_cv<Scalar>::type scalar_type;
@@ -723,10 +723,10 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void init( value_type& val)  const {
-    value->max_val = reduction_identity<scalar_type>::max();;
-    value->min_val = reduction_identity<scalar_type>::min();
-    value->max_loc = reduction_identity<index_type>::min();
-    value->min_loc = reduction_identity<index_type>::min();
+    val.max_val = reduction_identity<scalar_type>::max();;
+    val.min_val = reduction_identity<scalar_type>::min();
+    val.max_loc = reduction_identity<index_type>::min();
+    val.min_loc = reduction_identity<index_type>::min();
   }
 
   KOKKOS_INLINE_FUNCTION
