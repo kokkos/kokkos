@@ -518,7 +518,7 @@ public:
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
     , m_reducer( reducer )
-    , m_result_ptr(  reducer.result_view().data() )
+    , m_result_ptr(  reducer.view().data() )
     {
       /*static_assert( std::is_same< typename ViewType::memory_space
                                       , Kokkos::HostSpace >::value

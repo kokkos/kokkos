@@ -776,7 +776,6 @@ struct TestReducers {
 
     MinLocFunctor f;
     f.values = values;
-    Scalar init = std::numeric_limits< Scalar >::max();
 
     {
       value_type min_scalar;
@@ -830,7 +829,6 @@ struct TestReducers {
 
     MaxLocFunctor f;
     f.values = values;
-    Scalar init = std::numeric_limits< Scalar >::min();
 
     {
       value_type max_scalar;
@@ -900,8 +898,6 @@ struct TestReducers {
 
      MinMaxLocFunctor f;
      f.values = values;
-     Scalar init_min = std::numeric_limits< Scalar >::max();
-     Scalar init_max = std::numeric_limits< Scalar >::min();
 
      {
        value_type minmax_scalar;

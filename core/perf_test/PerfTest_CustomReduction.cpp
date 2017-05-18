@@ -57,11 +57,11 @@ void custom_reduction_test(int N, int R, int num_trials) {
 
   // Warm up
   Kokkos::parallel_reduce(Kokkos::TeamPolicy<>(N/1024,32), KOKKOS_LAMBDA( const Kokkos::TeamPolicy<>::member_type& team, Scalar& lmax) {
-    Scalar team_max;
+    Scalar team_max = Scalar(0);
     for(int rr = 0; rr<R; rr++) {
     int i = team.league_rank();
     Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,32), [&] (const int& j, Scalar& thread_max) {
-      Scalar t_max;
+      Scalar t_max = Scalar(0);
       Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(team,32), [&] (const int& k, Scalar& max_) {
         const Scalar val =  a((i*32 + j)*32 + k);
         if(val>lmax) lmax = val;
@@ -85,11 +85,11 @@ void custom_reduction_test(int N, int R, int num_trials) {
   Kokkos::Timer timer;
   for(int r = 0; r<num_trials; r++) {
     Kokkos::parallel_reduce(Kokkos::TeamPolicy<>(N/1024,32), KOKKOS_LAMBDA( const Kokkos::TeamPolicy<>::member_type& team, Scalar& lmax) {
-      Scalar team_max;
+      Scalar team_max = Scalar(0);
       for(int rr = 0; rr<R; rr++) {
       int i = team.league_rank();
       Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,32), [&] (const int& j, Scalar& thread_max) {
-        Scalar t_max;
+        Scalar t_max = Scalar(0);
         Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(team,32), [&] (const int& k, Scalar& max_) {
           const Scalar val =  a((i*32 + j)*32 + k);
           if(val>lmax) lmax = val;
