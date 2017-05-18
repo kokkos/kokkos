@@ -289,6 +289,7 @@ public:
       #endif /* #ifdef __CUDA_ARCH__ */
     }
 
+  /*
   template< class ValueType, class JoinOp >
   KOKKOS_INLINE_FUNCTION
   ValueType
@@ -299,6 +300,7 @@ public:
       team_reduce( Reducer< ValueType , JoinOp >( op_in , & tmp ) );
       return tmp ;
     }
+    */
 
   //--------------------------------------------------------------------------
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering
@@ -790,10 +792,9 @@ parallel_reduce
 {
 #ifdef __CUDA_ARCH__
 
-  Impl::Reducer< ValueType , Impl::ReduceSum< ValueType > >
-    reducer( & result );
+  Kokkos::Experimental::Sum<ValueType> reducer(result);
 
-  reducer.init( reducer.data() );
+  reducer.init( reducer.reference() );
 
   for( iType i = loop_boundaries.start + threadIdx.y
      ; i < loop_boundaries.end
@@ -934,7 +935,7 @@ parallel_reduce
   }
 
   Impl::CudaTeamMember::vector_reduce(
-    Impl::Reducer< ValueType , Impl::ReduceSum< ValueType > >( & result ) );
+    Kokkos::Experimental::Sum<ValueType>(result ) );
 
 #endif
 }
