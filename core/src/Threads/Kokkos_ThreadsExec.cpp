@@ -819,6 +819,7 @@ int Threads::thread_pool_rank()
 }
 #endif
 
+const char* Threads::name() { return "Threads"; }
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------

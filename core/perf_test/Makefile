@@ -9,11 +9,13 @@ default: build_all
 
 ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
   CXX = $(KOKKOS_PATH)/bin/nvcc_wrapper
+  KOKKOS_CUDA_OPTIONS=enable_lambda
 else
   CXX = g++
 endif
 
-CXXFLAGS = -O3
+CXXFLAGS = -O3 
+#CXXFLAGS += -DGENERIC_REDUCER
 LINK ?= $(CXX)
 LDFLAGS ?= -lpthread
 
@@ -26,7 +28,10 @@ TARGETS =
 
 #
 
-OBJ_PERF = PerfTestHost.o PerfTestCuda.o PerfTestMain.o gtest-all.o
+OBJ_PERF = PerfTestMain.o gtest-all.o
+OBJ_PERF += PerfTestGramSchmidt.o
+OBJ_PERF += PerfTestHexGrad.o
+OBJ_PERF += PerfTest_CustomReduction.o
 TARGETS += KokkosCore_PerformanceTest
 TEST_TARGETS += test-performance
 

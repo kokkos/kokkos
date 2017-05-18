@@ -177,6 +177,8 @@ void Serial::finalize()
   #endif
 }
 
+const char* Serial::name() { return "Serial"; }
+
 } // namespace Kokkos
 
 #else

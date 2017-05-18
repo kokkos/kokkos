@@ -41,36 +41,28 @@
 //@HEADER
 */
 
-#include <cstdio>
-#include <stdexcept>
-#include <sstream>
-#include <iostream>
+#ifndef KOKKOS_TEST_THREADS_HPP
+#define KOKKOS_TEST_THREADS_HPP
 
-#include <Kokkos_Core.hpp>
+#include <gtest/gtest.h>
 
 namespace Test {
-TEST_F( TEST_CATEGORY, init )
-{
-   ;
-}
 
-#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
+extern int command_line_num_args(int n = 0);
+extern const char* command_line_arg(int k, char** input_args = NULL);
 
-template<class ExecSpace>
-void test_dispatch () {
-  const int repeat = 100;
-  for ( int i = 0; i < repeat; ++i ) {
-    for ( int j = 0; j < repeat; ++j ) {
-      Kokkos::parallel_for( Kokkos::RangePolicy< TEST_EXECSPACE >( 0, j )
-                          , KOKKOS_LAMBDA( int ) {} );
-    }
+class default_exec : public ::testing::Test {
+protected:
+  static void SetUpTestCase() {
   }
-}
 
-TEST_F( TEST_CATEGORY, dispatch )
-{
-  test_dispatch<TEST_EXECSPACE>();
-}
+  static void TearDownTestCase() {
+  }
+};
+
+} // namespace Test
+
+#define TEST_CATEGORY default_exec
+#define TEST_EXECSPACE Kokkos::DefaultExecutionSpace
+
 #endif
-
-}

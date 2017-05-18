@@ -572,15 +572,6 @@ struct TestReducers {
     }
   };
 
-  struct BXorFunctor {
-    Kokkos::View< const Scalar*, ExecSpace > values;
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()( const int & i, Scalar & value ) const {
-      value = value ^ values( i );
-    }
-  };
-
   struct LAndFunctor {
     Kokkos::View< const Scalar*, ExecSpace > values;
 
@@ -596,15 +587,6 @@ struct TestReducers {
     KOKKOS_INLINE_FUNCTION
     void operator()( const int & i, Scalar & value ) const {
       value = value || values( i );
-    }
-  };
-
-  struct LXorFunctor {
-    Kokkos::View< const Scalar*, ExecSpace > values;
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()( const int & i, Scalar & value ) const {
-      value = value ? ( !values( i ) ) : values( i );
     }
   };
 
@@ -630,19 +612,8 @@ struct TestReducers {
 
       ASSERT_EQ( sum_scalar, reference_sum );
 
-      Scalar sum_scalar_view = reducer_scalar.result_view()();
+      Scalar sum_scalar_view = reducer_scalar.reference();
       ASSERT_EQ( sum_scalar_view, reference_sum );
-    }
-
-    {
-      Scalar sum_scalar_init = init;
-      Kokkos::Experimental::Sum< Scalar > reducer_scalar_init( sum_scalar_init, init );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar_init );
-
-      ASSERT_EQ( sum_scalar_init, reference_sum );
-
-      Scalar sum_scalar_init_view = reducer_scalar_init.result_view()();
-      ASSERT_EQ( sum_scalar_init_view, reference_sum );
     }
 
     {
@@ -654,21 +625,8 @@ struct TestReducers {
       Scalar sum_view_scalar = sum_view();
       ASSERT_EQ( sum_view_scalar, reference_sum );
 
-      Scalar sum_view_view = reducer_view.result_view()();
+      Scalar sum_view_view = reducer_view.reference();
       ASSERT_EQ( sum_view_view, reference_sum );
-    }
-
-    {
-      Kokkos::View< Scalar, Kokkos::HostSpace > sum_view_init( "View" );
-      sum_view_init() = init;
-      Kokkos::Experimental::Sum< Scalar > reducer_view_init( sum_view_init, init );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_view_init );
-
-      Scalar sum_view_init_scalar = sum_view_init();
-      ASSERT_EQ( sum_view_init_scalar, reference_sum );
-
-      Scalar sum_view_init_view = reducer_view_init.result_view()();
-      ASSERT_EQ( sum_view_init_view, reference_sum );
     }
   }
 
@@ -687,7 +645,6 @@ struct TestReducers {
     f.values = values;
     Scalar init = 1;
 
-    if ( std::is_arithmetic< Scalar >::value )
     {
       Scalar prod_scalar = init;
       Kokkos::Experimental::Prod< Scalar > reducer_scalar( prod_scalar );
@@ -695,22 +652,10 @@ struct TestReducers {
 
       ASSERT_EQ( prod_scalar, reference_prod );
 
-      Scalar prod_scalar_view = reducer_scalar.result_view()();
+      Scalar prod_scalar_view = reducer_scalar.reference();
       ASSERT_EQ( prod_scalar_view, reference_prod );
     }
 
-    {
-      Scalar prod_scalar_init = init;
-      Kokkos::Experimental::Prod< Scalar > reducer_scalar_init( prod_scalar_init, init );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar_init );
-
-      ASSERT_EQ( prod_scalar_init, reference_prod );
-
-      Scalar prod_scalar_init_view = reducer_scalar_init.result_view()();
-      ASSERT_EQ( prod_scalar_init_view, reference_prod );
-    }
-
-    if ( std::is_arithmetic< Scalar >::value )
     {
       Kokkos::View< Scalar, Kokkos::HostSpace > prod_view( "View" );
       prod_view() = init;
@@ -720,21 +665,8 @@ struct TestReducers {
       Scalar prod_view_scalar = prod_view();
       ASSERT_EQ( prod_view_scalar, reference_prod );
 
-      Scalar prod_view_view = reducer_view.result_view()();
+      Scalar prod_view_view = reducer_view.reference();
       ASSERT_EQ( prod_view_view, reference_prod );
-    }
-
-    {
-      Kokkos::View< Scalar, Kokkos::HostSpace > prod_view_init( "View" );
-      prod_view_init() = init;
-      Kokkos::Experimental::Prod< Scalar > reducer_view_init( prod_view_init, init );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_view_init );
-
-      Scalar prod_view_init_scalar = prod_view_init();
-      ASSERT_EQ( prod_view_init_scalar, reference_prod );
-
-      Scalar prod_view_init_view = reducer_view_init.result_view()();
-      ASSERT_EQ( prod_view_init_view, reference_prod );
     }
   }
 
@@ -761,19 +693,8 @@ struct TestReducers {
 
       ASSERT_EQ( min_scalar, reference_min );
 
-      Scalar min_scalar_view = reducer_scalar.result_view()();
+      Scalar min_scalar_view = reducer_scalar.reference();
       ASSERT_EQ( min_scalar_view, reference_min );
-    }
-
-    {
-      Scalar min_scalar_init = init;
-      Kokkos::Experimental::Min< Scalar > reducer_scalar_init( min_scalar_init, init );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar_init );
-
-      ASSERT_EQ( min_scalar_init, reference_min );
-
-      Scalar min_scalar_init_view = reducer_scalar_init.result_view()();
-      ASSERT_EQ( min_scalar_init_view, reference_min );
     }
 
     {
@@ -785,21 +706,8 @@ struct TestReducers {
       Scalar min_view_scalar = min_view();
       ASSERT_EQ( min_view_scalar, reference_min );
 
-      Scalar min_view_view = reducer_view.result_view()();
+      Scalar min_view_view = reducer_view.reference();
       ASSERT_EQ( min_view_view, reference_min );
-    }
-
-    {
-      Kokkos::View< Scalar, Kokkos::HostSpace > min_view_init( "View" );
-      min_view_init() = init;
-      Kokkos::Experimental::Min< Scalar > reducer_view_init( min_view_init, init );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_view_init );
-
-      Scalar min_view_init_scalar = min_view_init();
-      ASSERT_EQ( min_view_init_scalar, reference_min );
-
-      Scalar min_view_init_view = reducer_view_init.result_view()();
-      ASSERT_EQ( min_view_init_view, reference_min );
     }
   }
 
@@ -826,19 +734,8 @@ struct TestReducers {
 
       ASSERT_EQ( max_scalar, reference_max );
 
-      Scalar max_scalar_view = reducer_scalar.result_view()();
+      Scalar max_scalar_view = reducer_scalar.reference();
       ASSERT_EQ( max_scalar_view, reference_max );
-    }
-
-    {
-      Scalar max_scalar_init = init;
-      Kokkos::Experimental::Max< Scalar > reducer_scalar_init( max_scalar_init, init );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar_init );
-
-      ASSERT_EQ( max_scalar_init, reference_max );
-
-      Scalar max_scalar_init_view = reducer_scalar_init.result_view()();
-      ASSERT_EQ( max_scalar_init_view, reference_max );
     }
 
     {
@@ -850,21 +747,8 @@ struct TestReducers {
       Scalar max_view_scalar = max_view();
       ASSERT_EQ( max_view_scalar, reference_max );
 
-      Scalar max_view_view = reducer_view.result_view()();
+      Scalar max_view_view = reducer_view.reference();
       ASSERT_EQ( max_view_view, reference_max );
-    }
-
-    {
-      Kokkos::View< Scalar, Kokkos::HostSpace > max_view_init( "View" );
-      max_view_init() = init;
-      Kokkos::Experimental::Max< Scalar > reducer_view_init( max_view_init, init );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_view_init );
-
-      Scalar max_view_init_scalar = max_view_init();
-      ASSERT_EQ( max_view_init_scalar, reference_max );
-
-      Scalar max_view_init_view = reducer_view_init.result_view()();
-      ASSERT_EQ( max_view_init_view, reference_max );
     }
   }
 
@@ -892,7 +776,6 @@ struct TestReducers {
 
     MinLocFunctor f;
     f.values = values;
-    Scalar init = std::numeric_limits< Scalar >::max();
 
     {
       value_type min_scalar;
@@ -902,22 +785,9 @@ struct TestReducers {
       ASSERT_EQ( min_scalar.val, reference_min );
       ASSERT_EQ( min_scalar.loc, reference_loc );
 
-      value_type min_scalar_view = reducer_scalar.result_view()();
+      value_type min_scalar_view = reducer_scalar.reference();
       ASSERT_EQ( min_scalar_view.val, reference_min );
       ASSERT_EQ( min_scalar_view.loc, reference_loc );
-    }
-
-    {
-      value_type min_scalar_init;
-      Kokkos::Experimental::MinLoc< Scalar, int > reducer_scalar_init( min_scalar_init, init );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar_init );
-
-      ASSERT_EQ( min_scalar_init.val, reference_min );
-      ASSERT_EQ( min_scalar_init.loc, reference_loc );
-
-      value_type min_scalar_init_view = reducer_scalar_init.result_view()();
-      ASSERT_EQ( min_scalar_init_view.val, reference_min );
-      ASSERT_EQ( min_scalar_init_view.loc, reference_loc );
     }
 
     {
@@ -929,23 +799,9 @@ struct TestReducers {
       ASSERT_EQ( min_view_scalar.val, reference_min );
       ASSERT_EQ( min_view_scalar.loc, reference_loc );
 
-      value_type min_view_view = reducer_view.result_view()();
+      value_type min_view_view = reducer_view.reference();
       ASSERT_EQ( min_view_view.val, reference_min );
       ASSERT_EQ( min_view_view.loc, reference_loc );
-    }
-
-    {
-      Kokkos::View< value_type, Kokkos::HostSpace > min_view_init( "View" );
-      Kokkos::Experimental::MinLoc< Scalar, int > reducer_view_init( min_view_init, init );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_view_init );
-
-      value_type min_view_init_scalar = min_view_init();
-      ASSERT_EQ( min_view_init_scalar.val, reference_min );
-      ASSERT_EQ( min_view_init_scalar.loc, reference_loc );
-
-      value_type min_view_init_view = reducer_view_init.result_view()();
-      ASSERT_EQ( min_view_init_view.val, reference_min );
-      ASSERT_EQ( min_view_init_view.loc, reference_loc );
     }
   }
 
@@ -973,7 +829,6 @@ struct TestReducers {
 
     MaxLocFunctor f;
     f.values = values;
-    Scalar init = std::numeric_limits< Scalar >::min();
 
     {
       value_type max_scalar;
@@ -983,22 +838,9 @@ struct TestReducers {
       ASSERT_EQ( max_scalar.val, reference_max );
       ASSERT_EQ( max_scalar.loc, reference_loc );
 
-      value_type max_scalar_view = reducer_scalar.result_view()();
+      value_type max_scalar_view = reducer_scalar.reference();
       ASSERT_EQ( max_scalar_view.val, reference_max );
       ASSERT_EQ( max_scalar_view.loc, reference_loc );
-    }
-
-    {
-      value_type max_scalar_init;
-      Kokkos::Experimental::MaxLoc< Scalar, int > reducer_scalar_init( max_scalar_init, init );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar_init );
-
-      ASSERT_EQ( max_scalar_init.val, reference_max );
-      ASSERT_EQ( max_scalar_init.loc, reference_loc );
-
-      value_type max_scalar_init_view = reducer_scalar_init.result_view()();
-      ASSERT_EQ( max_scalar_init_view.val, reference_max );
-      ASSERT_EQ( max_scalar_init_view.loc, reference_loc );
     }
 
     {
@@ -1010,23 +852,9 @@ struct TestReducers {
       ASSERT_EQ( max_view_scalar.val, reference_max );
       ASSERT_EQ( max_view_scalar.loc, reference_loc );
 
-      value_type max_view_view = reducer_view.result_view()();
+      value_type max_view_view = reducer_view.reference();
       ASSERT_EQ( max_view_view.val, reference_max );
       ASSERT_EQ( max_view_view.loc, reference_loc );
-    }
-
-    {
-      Kokkos::View< value_type, Kokkos::HostSpace > max_view_init( "View" );
-      Kokkos::Experimental::MaxLoc< Scalar, int > reducer_view_init( max_view_init, init );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_view_init );
-
-      value_type max_view_init_scalar = max_view_init();
-      ASSERT_EQ( max_view_init_scalar.val, reference_max );
-      ASSERT_EQ( max_view_init_scalar.loc, reference_loc );
-
-      value_type max_view_init_view = reducer_view_init.result_view()();
-      ASSERT_EQ( max_view_init_view.val, reference_max );
-      ASSERT_EQ( max_view_init_view.loc, reference_loc );
     }
   }
 
@@ -1070,8 +898,6 @@ struct TestReducers {
 
      MinMaxLocFunctor f;
      f.values = values;
-     Scalar init_min = std::numeric_limits< Scalar >::max();
-     Scalar init_max = std::numeric_limits< Scalar >::min();
 
      {
        value_type minmax_scalar;
@@ -1097,28 +923,11 @@ struct TestReducers {
 
        ASSERT_EQ( minmax_scalar.max_loc, reference_maxloc );
 
-       value_type minmax_scalar_view = reducer_scalar.result_view()();
+       value_type minmax_scalar_view = reducer_scalar.reference();
        ASSERT_EQ( minmax_scalar_view.min_val, reference_min );
        ASSERT_EQ( minmax_scalar_view.min_loc, reference_minloc );
        ASSERT_EQ( minmax_scalar_view.max_val, reference_max );
        ASSERT_EQ( minmax_scalar_view.max_loc, reference_maxloc );
-     }
-
-     {
-       value_type minmax_scalar_init;
-       Kokkos::Experimental::MinMaxLoc< Scalar, int > reducer_scalar_init( minmax_scalar_init, init_min, init_max );
-       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar_init );
-
-       ASSERT_EQ( minmax_scalar_init.min_val, reference_min );
-       ASSERT_EQ( minmax_scalar_init.min_loc, reference_minloc );
-       ASSERT_EQ( minmax_scalar_init.max_val, reference_max );
-       ASSERT_EQ( minmax_scalar_init.max_loc, reference_maxloc );
-
-       value_type minmax_scalar_init_view = reducer_scalar_init.result_view()();
-       ASSERT_EQ( minmax_scalar_init_view.min_val, reference_min );
-       ASSERT_EQ( minmax_scalar_init_view.min_loc, reference_minloc );
-       ASSERT_EQ( minmax_scalar_init_view.max_val, reference_max );
-       ASSERT_EQ( minmax_scalar_init_view.max_loc, reference_maxloc );
      }
 
      {
@@ -1132,29 +941,11 @@ struct TestReducers {
        ASSERT_EQ( minmax_view_scalar.max_val, reference_max );
        ASSERT_EQ( minmax_view_scalar.max_loc, reference_maxloc );
 
-       value_type minmax_view_view = reducer_view.result_view()();
+       value_type minmax_view_view = reducer_view.reference();
        ASSERT_EQ( minmax_view_view.min_val, reference_min );
        ASSERT_EQ( minmax_view_view.min_loc, reference_minloc );
        ASSERT_EQ( minmax_view_view.max_val, reference_max );
        ASSERT_EQ( minmax_view_view.max_loc, reference_maxloc );
-     }
-
-     {
-       Kokkos::View< value_type, Kokkos::HostSpace > minmax_view_init( "View" );
-       Kokkos::Experimental::MinMaxLoc< Scalar, int > reducer_view_init( minmax_view_init, init_min, init_max );
-       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_view_init );
-
-       value_type minmax_view_init_scalar = minmax_view_init();
-       ASSERT_EQ( minmax_view_init_scalar.min_val, reference_min );
-       ASSERT_EQ( minmax_view_init_scalar.min_loc, reference_minloc );
-       ASSERT_EQ( minmax_view_init_scalar.max_val, reference_max );
-       ASSERT_EQ( minmax_view_init_scalar.max_loc, reference_maxloc );
-
-       value_type minmax_view_init_view = reducer_view_init.result_view()();
-       ASSERT_EQ( minmax_view_init_view.min_val, reference_min );
-       ASSERT_EQ( minmax_view_init_view.min_loc, reference_minloc );
-       ASSERT_EQ( minmax_view_init_view.max_val, reference_max );
-       ASSERT_EQ( minmax_view_init_view.max_loc, reference_maxloc );
      }
    }
 
@@ -1179,7 +970,7 @@ struct TestReducers {
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar );
 
       ASSERT_EQ( band_scalar, reference_band );
-      Scalar band_scalar_view = reducer_scalar.result_view()();
+      Scalar band_scalar_view = reducer_scalar.reference();
 
       ASSERT_EQ( band_scalar_view, reference_band );
     }
@@ -1193,7 +984,7 @@ struct TestReducers {
       Scalar band_view_scalar = band_view();
       ASSERT_EQ( band_view_scalar, reference_band );
 
-      Scalar band_view_view = reducer_view.result_view()();
+      Scalar band_view_view = reducer_view.reference();
       ASSERT_EQ( band_view_view, reference_band );
     }
   }
@@ -1220,7 +1011,7 @@ struct TestReducers {
 
       ASSERT_EQ( bor_scalar, reference_bor );
 
-      Scalar bor_scalar_view = reducer_scalar.result_view()();
+      Scalar bor_scalar_view = reducer_scalar.reference();
       ASSERT_EQ( bor_scalar_view, reference_bor );
     }
 
@@ -1233,48 +1024,8 @@ struct TestReducers {
       Scalar bor_view_scalar = bor_view();
       ASSERT_EQ( bor_view_scalar, reference_bor );
 
-      Scalar bor_view_view = reducer_view.result_view()();
+      Scalar bor_view_view = reducer_view.reference();
       ASSERT_EQ( bor_view_view, reference_bor );
-    }
-  }
-
-  static void test_BXor( int N ) {
-    Kokkos::View< Scalar*, ExecSpace > values( "Values", N );
-    auto h_values = Kokkos::create_mirror_view( values );
-    Scalar reference_bxor = Scalar() & ( ~Scalar() );
-
-    for ( int i = 0; i < N; i++ ) {
-      h_values( i ) = (Scalar) ( ( rand() % 100000 + 1 ) * 2 );
-      reference_bxor = reference_bxor ^ h_values( i );
-    }
-    Kokkos::deep_copy( values, h_values );
-
-    BXorFunctor f;
-    f.values = values;
-    Scalar init = Scalar() & ( ~Scalar() );
-
-    {
-      Scalar bxor_scalar = init;
-      Kokkos::Experimental::BXor< Scalar > reducer_scalar( bxor_scalar );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar );
-
-      ASSERT_EQ( bxor_scalar, reference_bxor );
-
-      Scalar bxor_scalar_view = reducer_scalar.result_view()();
-      ASSERT_EQ( bxor_scalar_view, reference_bxor );
-    }
-
-    {
-      Kokkos::View< Scalar, Kokkos::HostSpace > bxor_view( "View" );
-      bxor_view() = init;
-      Kokkos::Experimental::BXor< Scalar > reducer_view( bxor_view );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_view );
-
-      Scalar bxor_view_scalar = bxor_view();
-      ASSERT_EQ( bxor_view_scalar, reference_bxor );
-
-      Scalar bxor_view_view = reducer_view.result_view()();
-      ASSERT_EQ( bxor_view_view, reference_bxor );
     }
   }
 
@@ -1300,7 +1051,7 @@ struct TestReducers {
 
       ASSERT_EQ( land_scalar, reference_land );
 
-      Scalar land_scalar_view = reducer_scalar.result_view()();
+      Scalar land_scalar_view = reducer_scalar.reference();
       ASSERT_EQ( land_scalar_view, reference_land );
     }
 
@@ -1313,7 +1064,7 @@ struct TestReducers {
       Scalar land_view_scalar = land_view();
       ASSERT_EQ( land_view_scalar, reference_land );
 
-      Scalar land_view_view = reducer_view.result_view()();
+      Scalar land_view_view = reducer_view.reference();
       ASSERT_EQ( land_view_view, reference_land );
     }
   }
@@ -1340,7 +1091,7 @@ struct TestReducers {
 
       ASSERT_EQ( lor_scalar, reference_lor );
 
-      Scalar lor_scalar_view = reducer_scalar.result_view()();
+      Scalar lor_scalar_view = reducer_scalar.reference();
       ASSERT_EQ( lor_scalar_view, reference_lor );
     }
 
@@ -1353,48 +1104,8 @@ struct TestReducers {
       Scalar lor_view_scalar = lor_view();
       ASSERT_EQ( lor_view_scalar, reference_lor );
 
-      Scalar lor_view_view = reducer_view.result_view()();
+      Scalar lor_view_view = reducer_view.reference();
       ASSERT_EQ( lor_view_view, reference_lor );
-    }
-  }
-
-  static void test_LXor( int N ) {
-    Kokkos::View< Scalar*, ExecSpace > values( "Values", N );
-    auto h_values = Kokkos::create_mirror_view( values );
-    Scalar reference_lxor = 0;
-
-    for ( int i = 0; i < N; i++ ) {
-      h_values( i ) = (Scalar) ( rand() % 2 );
-      reference_lxor = reference_lxor ? ( !h_values( i ) ) : h_values( i );
-    }
-    Kokkos::deep_copy( values, h_values );
-
-    LXorFunctor f;
-    f.values = values;
-    Scalar init = 0;
-
-    {
-      Scalar lxor_scalar = init;
-      Kokkos::Experimental::LXor< Scalar > reducer_scalar( lxor_scalar );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar );
-
-      ASSERT_EQ( lxor_scalar, reference_lxor );
-
-      Scalar lxor_scalar_view = reducer_scalar.result_view()();
-      ASSERT_EQ( lxor_scalar_view, reference_lxor );
-    }
-
-    {
-      Kokkos::View< Scalar, Kokkos::HostSpace > lxor_view( "View" );
-      lxor_view() = init;
-      Kokkos::Experimental::LXor< Scalar > reducer_view( lxor_view );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_view );
-
-      Scalar lxor_view_scalar = lxor_view();
-      ASSERT_EQ( lxor_view_scalar, reference_lxor );
-
-      Scalar lxor_view_view = reducer_view.result_view()();
-      ASSERT_EQ( lxor_view_view, reference_lxor );
     }
   }
 
@@ -1418,10 +1129,8 @@ struct TestReducers {
     test_minmaxloc( 10007 );
     test_BAnd( 35 );
     test_BOr( 35 );
-    test_BXor( 35 );
     test_LAnd( 35 );
     test_LOr( 35 );
-    test_LXor( 35 );
   }
 
   static void execute_basic() {

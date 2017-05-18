@@ -216,7 +216,7 @@ public:
 
         // Root of each vector lane reduces:
         if ( 0 == threadIdx.x && wx < i ) {
-          reducer.join( & tmp , reducer.data() );
+          reducer.join( tmp , reducer.reference() );
         }
       }
 
@@ -257,7 +257,7 @@ public:
           if ( 0 == wx && i <= wy ) {
             const int k = wy - i ;
             if ( k < nsh ) {
-              reducer.join( ((value_type*) m_team_reduce) + k , & tmp );
+              reducer.join( *((value_type*) m_team_reduce + k) , tmp );
             }
           }
         }
@@ -273,8 +273,8 @@ public:
           for ( int i = 1 << ( 32 - __clz(nsh-1) ) ; ( i >>= 1 ) ; ) {
             const int k = wx + i ;
             if ( wx < i && k < nsh ) {
-              reducer.join( ((value_type*)m_team_reduce) + wx
-                          , ((value_type*)m_team_reduce) + k );
+              reducer.join( ((value_type*)m_team_reduce)[wx]
+                          , ((value_type*)m_team_reduce)[k] );
               __threadfence_block();
             }
           }
@@ -287,17 +287,6 @@ public:
       }
 
       #endif /* #ifdef __CUDA_ARCH__ */
-    }
-
-  template< class ValueType, class JoinOp >
-  KOKKOS_INLINE_FUNCTION
-  ValueType
-  team_reduce( const ValueType & value
-             , const JoinOp & op_in ) const
-    {
-      ValueType tmp( value );
-      team_reduce( Reducer< ValueType , JoinOp >( op_in , & tmp ) );
-      return tmp ;
     }
 
   //--------------------------------------------------------------------------
@@ -356,28 +345,24 @@ public:
   typename std::enable_if< is_reducer< ReducerType >::value >::type
   vector_reduce( ReducerType const & reducer )
     {
-      static_assert
-        ( std::is_reference< typename ReducerType::reference_type >::value
-        , "CudaTeamMember::vector_reduce limited to simple reduction type" );
 
       #ifdef __CUDA_ARCH__
-        if ( 1 < blockDim.x ) { // vector width is guaranteed power of two
+      if(blockDim.x == 1) return;
 
-          // Intra vector lane shuffle reduction:
-          typename ReducerType::value_type tmp( reducer.reference() );
+      // Intra vector lane shuffle reduction:
+      typename ReducerType::value_type tmp ( reducer.reference() );
 
-          for ( int i = blockDim.x ; ( i >>= 1 ) ; ) {
-            cuda_shfl_down( reducer.reference() , tmp , i , blockDim.x );
-            if ( threadIdx.x < i ) { reducer.join( & tmp , reducer.data() ); }
-          }
+      for ( int i = blockDim.x ; ( i >>= 1 ) ; ) {
+        cuda_shfl_down( reducer.reference() , tmp , i , blockDim.x );
+        if ( threadIdx.x < i ) { reducer.join( tmp , reducer.reference() ); }
+      }
 
-          // Broadcast from root lane to all other lanes.
-          // Cannot use "butterfly" algorithm to avoid the broadcast
-          // because floating point summation is not associative
-          // and thus different threads could have different results.
+      // Broadcast from root lane to all other lanes.
+      // Cannot use "butterfly" algorithm to avoid the broadcast
+      // because floating point summation is not associative
+      // and thus different threads could have different results.
 
-          cuda_shfl( reducer.reference() , tmp , 0 , blockDim.x );
-        }
+      cuda_shfl( reducer.reference() , tmp , 0 , blockDim.x );
       #endif
     }
 
@@ -720,7 +705,7 @@ parallel_reduce
 {
 #ifdef __CUDA_ARCH__
 
-  reducer.init( reducer.data() );
+  reducer.init( reducer.reference() );
 
   for( iType i = loop_boundaries.start + threadIdx.y
      ; i < loop_boundaries.end
@@ -733,42 +718,6 @@ parallel_reduce
 #endif
 }
 
-/** \brief  Inter-thread parallel_reduce given a join and result reference.
- *
- *  Executes closure(iType i, ValueType & val) for each i=[0..N)
- *
- *  The range [0..N) is mapped to all threads of the
- *  calling thread team and a summation of val is
- *  performed and put into result.
- */
-template< typename iType, class Closure, class JoinType , typename ValueType >
-KOKKOS_INLINE_FUNCTION
-void parallel_reduce
-  ( const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::CudaTeamMember> &
-      loop_boundaries
-  , const Closure & closure
-  , const JoinType & joiner
-  , ValueType & result
-  )
-{
-#ifdef __CUDA_ARCH__
-
-  // Every 'result' value must be properly initialized for the 'join' op
-
-  Impl::Reducer< ValueType , JoinType > reducer( joiner , & result );
-
-  reducer.init( reducer.data() );
-
-  for( iType i = loop_boundaries.start + threadIdx.y
-     ; i < loop_boundaries.end
-     ; i += blockDim.y ) {
-    closure(i,result);
-  }
-
-  loop_boundaries.member.team_reduce( reducer );
-
-#endif
-}
 
 /** \brief  Inter-thread parallel_reduce assuming summation.
  *
@@ -790,10 +739,9 @@ parallel_reduce
 {
 #ifdef __CUDA_ARCH__
 
-  Impl::Reducer< ValueType , Impl::ReduceSum< ValueType > >
-    reducer( & result );
+  Kokkos::Experimental::Sum<ValueType> reducer(result);
 
-  reducer.init( reducer.data() );
+  reducer.init( reducer.reference() );
 
   for( iType i = loop_boundaries.start + threadIdx.y
      ; i < loop_boundaries.end
@@ -855,7 +803,7 @@ parallel_reduce
 {
 #ifdef __CUDA_ARCH__
 
-  reducer.init( reducer.data() );
+  reducer.init( reducer.reference() );
 
   for ( iType i = loop_boundaries.start + threadIdx.x
       ; i < loop_boundaries.end
@@ -864,42 +812,6 @@ parallel_reduce
   }
 
   Impl::CudaTeamMember::vector_reduce( reducer );
-
-#endif
-}
-
-/** \brief  Intra-thread vector parallel_reduce.
- *
- *  Calls closure(iType i, ValueType & val) for each i=[0..N).
- *
- *  The range [0..N) is mapped to all vector lanes of
- *  the calling thread and a reduction of val is performed using +=
- *  and output into result.
- *
- *  The identity value for the += operator is assumed to be the default
- *  constructed value.
- */
-template< typename iType, class Closure, class JoinType , typename ValueType >
-KOKKOS_INLINE_FUNCTION
-void parallel_reduce
-  ( Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember>
-      const & loop_boundaries
-  , Closure const & closure
-  , JoinType const & joiner
-  , ValueType & result )
-{
-#ifdef __CUDA_ARCH__
-
-  // result is input with the identity value for the join operation
-
-  for ( iType i = loop_boundaries.start + threadIdx.x
-      ; i < loop_boundaries.end
-      ; i += blockDim.x ) {
-    closure(i,result);
-  }
-
-  Impl::CudaTeamMember::vector_reduce(
-    Impl::Reducer< ValueType , JoinType >( joiner , & result ) );
 
 #endif
 }
@@ -934,7 +846,7 @@ parallel_reduce
   }
 
   Impl::CudaTeamMember::vector_reduce(
-    Impl::Reducer< ValueType , Impl::ReduceSum< ValueType > >( & result ) );
+    Kokkos::Experimental::Sum<ValueType>(result ) );
 
 #endif
 }

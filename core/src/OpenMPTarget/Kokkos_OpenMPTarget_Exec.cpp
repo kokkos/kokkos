@@ -265,6 +265,8 @@ void OpenMPTarget::print_configuration( std::ostream & s , const bool detail )
 int OpenMPTarget::concurrency() {
   return thread_pool_size(0);
 }
+
+const char* OpenMPTarget::name() { return "OpenMPTarget"; }
 } // namespace Experimental
 } // namespace Kokkos
 
