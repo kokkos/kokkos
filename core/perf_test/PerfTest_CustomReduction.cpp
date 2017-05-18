@@ -110,7 +110,7 @@ void custom_reduction_test(int N, int R, int num_trials) {
     },Kokkos::Experimental::Max<Scalar>(max));
   }
   double time = timer.seconds();
-  printf("%lf %lf %lf\n",time,1.0*N*R*num_trials*sizeof(Scalar)/time/1024/1024/1024,max);
+  printf("%e %e %e\n",time,1.0*N*R*num_trials*sizeof(Scalar)/time/1024/1024/1024,max);
 }
 
 TEST_F( default_exec, custom_reduction ) {
