@@ -411,7 +411,7 @@ cuda_inter_block_reduction( const ReducerType& reducer,
       if(id == 0)
         *m_scratch_flags = 0;
       last_block = true;
-      value = neutral;
+      reducer.init(value);
 
       pointer_type const volatile global = (pointer_type) m_scratch_space ;
 

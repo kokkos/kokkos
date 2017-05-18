@@ -49,7 +49,6 @@
 #include <Kokkos_Atomic.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
-#include <impl/Kokkos_Reducer.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 
 //----------------------------------------------------------------------------
@@ -600,11 +599,7 @@ public:
           // Non-root copies to their local buffer:
           /*reducer.copy( (value_type*) m_data.team_reduce_local()
                       , reducer.data() );*/
-#ifdef GENERIC_REDUCER
           *((value_type*) m_data.team_reduce_local()) = reducer.reference();
-#else
-          *((value_type*) m_data.team_reduce_local()) = reducer.reference();
-#endif
         }
 
         // Root does not overwrite shared memory until all threads arrive
@@ -620,32 +615,19 @@ public:
             value_type * const src =
               (value_type*) m_data.team_member(i)->team_reduce_local();
 
-#ifdef GENERIC_REDUCER
-            reducer.join( reducer.data() , src );
-#else
             reducer.join( reducer.reference(), *src);
-#endif
-
           }
 
           // Copy result to root member's buffer:
           // reducer.copy( (value_type*) m_data.team_reduce() , reducer.data() );
-#ifdef GENERIC_REDUCER
           *((value_type*) m_data.team_reduce()) = reducer.reference();
-#else
-          *((value_type*) m_data.team_reduce()) = reducer.reference();
-#endif
           m_data.team_rendezvous_release();
           // This thread released all other threads from 'team_rendezvous'
           // with a return value of 'false'
         }
         else {
           // Copy from root member's buffer:
-#ifdef GENERIC_REDUCER
           reducer.reference() = *((value_type*) m_data.team_reduce());
-#else
-          reducer.reference() = *((value_type*) m_data.team_reduce());
-#endif
         }
       }
     }
@@ -857,20 +839,12 @@ parallel_reduce
   , Reducer  const & reducer
   )
 {
-#ifdef GENERIC_REDUCER
-  reducer.init( reducer.data() );
-#else
   reducer.init( reducer.reference() );
-#endif
 
   for( iType i = loop_boundaries.start
      ; i <  loop_boundaries.end
      ; i += loop_boundaries.increment ) {
-#ifdef GENERIC_REDUCER
     closure( i , reducer.reference() );
-#else
-    closure( i , reducer.reference() );
-#endif
   }
 
   loop_boundaries.thread.team_reduce( reducer );
@@ -956,19 +930,11 @@ parallel_reduce
    const Lambda & lambda,
    const ReducerType& reducer)
 {
-#ifdef GENERIC_REDUCER
-  reducer.init(reducer.data());
-#else
   reducer.init(reducer.reference());
-#endif
   for( iType i =  loop_boundaries.start ;
              i <  loop_boundaries.end ;
              i += loop_boundaries.increment) {
-#ifdef GENERIC_REDUCER
     lambda(i,reducer.reference());
-#else
-    lambda(i,reducer.reference());
-#endif
   }
 }
 

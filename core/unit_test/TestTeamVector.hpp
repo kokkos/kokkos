@@ -858,6 +858,7 @@ public:
 
 #endif
         
+#if !defined(KOKKOS_CUDA_CLANG_WORKAROUND)
 TEST_F( TEST_CATEGORY, team_vector )
 {
   ASSERT_TRUE( ( TestTeamVector::Test< TEST_EXECSPACE >( 0 ) ) );
@@ -872,12 +873,15 @@ TEST_F( TEST_CATEGORY, team_vector )
   ASSERT_TRUE( ( TestTeamVector::Test< TEST_EXECSPACE >( 9 ) ) );
   ASSERT_TRUE( ( TestTeamVector::Test< TEST_EXECSPACE >( 10 ) ) );
 }
+#endif
+
 #ifdef KOKKOS_COMPILER_GNU
 #if ( KOKKOS_COMPILER_GNU == 472 )
 #define SKIP_TEST
 #endif
 #endif
 
+#if !defined(KOKKOS_CUDA_CLANG_WORKAROUND)
 #ifndef SKIP_TEST
 TEST_F( TEST_CATEGORY, triple_nested_parallelism )
 {
@@ -886,5 +890,5 @@ TEST_F( TEST_CATEGORY, triple_nested_parallelism )
   TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 16, 16 );
 }
 #endif
-
+#endif
 }

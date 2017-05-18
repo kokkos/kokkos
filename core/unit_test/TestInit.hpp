@@ -55,8 +55,9 @@ TEST_F( TEST_CATEGORY, init )
 }
 
 #ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
-TEST_F( TEST_CATEGORY, dispatch )
-{
+
+template<class ExecSpace>
+void test_dispatch () {
   const int repeat = 100;
   for ( int i = 0; i < repeat; ++i ) {
     for ( int j = 0; j < repeat; ++j ) {
@@ -64,6 +65,11 @@ TEST_F( TEST_CATEGORY, dispatch )
                           , KOKKOS_LAMBDA( int ) {} );
     }
   }
+}
+
+TEST_F( TEST_CATEGORY, dispatch )
+{
+  test_dispatch<TEST_EXECSPACE>();
 }
 #endif
 
