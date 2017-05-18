@@ -458,6 +458,11 @@ public:
                                     , league_rank
                                     , m_league_size ) );
     }
+    if ( m_scratch_size[1]>0 ) {
+      __syncthreads();
+      if (threadIdx.x==0 && threadIdx.y==0 )
+        kokkos_impl_cuda_lock_arrays.atomic[threadid]=0;
+    }
   }
 
   inline
@@ -831,6 +836,11 @@ public:
     }
 
     run(Kokkos::Impl::if_c<UseShflReduction, DummyShflReductionType, DummySHMEMReductionType>::select(1,1.0), threadid );
+    if ( m_scratch_size[1]>0 ) {
+      __syncthreads();
+      if (threadIdx.x==0 && threadIdx.y==0 )
+        kokkos_impl_cuda_lock_arrays.atomic[threadid]=0;
+    }
   }
 
   __device__ inline
