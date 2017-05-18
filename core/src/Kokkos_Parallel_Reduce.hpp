@@ -72,7 +72,7 @@ public:
   typedef Sum reducer;
   typedef typename std::remove_cv<Scalar>::type value_type;
 
-  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > value_view_type;
+  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > result_view_type;
 
 private:
   value_type* value;
@@ -83,7 +83,7 @@ public:
   Sum(value_type& value_): value(&value_) {}
 
   KOKKOS_INLINE_FUNCTION
-  Sum(const value_view_type& value_): value(value_.data()) {}
+  Sum(const result_view_type& value_): value(value_.data()) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -98,7 +98,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void init( value_type& val)  const {
-    val = reducer_identity<value_type>::sum();
+    val = reduction_identity<value_type>::sum();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -119,7 +119,7 @@ public:
   typedef Prod reducer;
   typedef typename std::remove_cv<Scalar>::type value_type;
 
-  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > value_view_type;
+  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > result_view_type;
 
 private:
   value_type* value;
@@ -130,7 +130,7 @@ public:
   Prod(value_type& value_): value(&value_) {}
 
   KOKKOS_INLINE_FUNCTION
-  Prod(const value_view_type& value_): value(value_.data()) {}
+  Prod(const result_view_type& value_): value(value_.data()) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -145,7 +145,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void init( value_type& val)  const {
-    val = reducer_identity<value_type>::prod();
+    val = reduction_identity<value_type>::prod();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -166,7 +166,7 @@ public:
   typedef Min reducer;
   typedef typename std::remove_cv<Scalar>::type value_type;
 
-  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > value_view_type;
+  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > result_view_type;
 
 private:
   value_type* value;
@@ -177,7 +177,7 @@ public:
   Min(value_type& value_): value(&value_) {}
 
   KOKKOS_INLINE_FUNCTION
-  Min(const value_view_type& value_): value(value_.data()) {}
+  Min(const result_view_type& value_): value(value_.data()) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -194,7 +194,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void init( value_type& val)  const {
-    val = reducer_identity<value_type>:min();
+    val = reduction_identity<value_type>::min();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -215,7 +215,7 @@ public:
   typedef Max reducer;
   typedef typename std::remove_cv<Scalar>::type value_type;
 
-  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > value_view_type;
+  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > result_view_type;
 
 private:
   value_type* value;
@@ -226,7 +226,7 @@ public:
   Max(value_type& value_): value(&value_) {}
 
   KOKKOS_INLINE_FUNCTION
-  Max(const value_view_type& value_): value(value_.data()) {}
+  Max(const result_view_type& value_): value(value_.data()) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -253,8 +253,8 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
-  value_view_type view() const {
-    return value_view_type(value);
+  result_view_type view() const {
+    return result_view_type(value);
   }
 };
 
@@ -265,7 +265,7 @@ public:
   typedef LAnd reducer;
   typedef typename std::remove_cv<Scalar>::type value_type;
 
-  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > value_view_type;
+  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > result_view_type;
 
 private:
   value_type* value;
@@ -276,7 +276,7 @@ public:
   LAnd(value_type& value_): value(&value_) {}
 
   KOKKOS_INLINE_FUNCTION
-  LAnd(const value_view_type& value_): value(value_.data()) {}
+  LAnd(const result_view_type& value_): value(value_.data()) {}
 
   KOKKOS_INLINE_FUNCTION
   void join(value_type& dest, const value_type& src)  const {
@@ -290,7 +290,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void init( value_type& val)  const {
-    val = reducer_identity<value_type>:land();
+    val = reduction_identity<value_type>::land();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -311,7 +311,7 @@ public:
   typedef LOr reducer;
   typedef typename std::remove_cv<Scalar>::type value_type;
 
-  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > value_view_type;
+  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > result_view_type;
 
 private:
   value_type* value;
@@ -322,7 +322,7 @@ public:
   LOr(value_type& value_): value(&value_) {}
 
   KOKKOS_INLINE_FUNCTION
-  LOr(const value_view_type& value_): value(value_.data()) {}
+  LOr(const result_view_type& value_): value(value_.data()) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -337,7 +337,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void init( value_type& val)  const {
-    val = reducer_identity<value_type>:lor();
+    val = reduction_identity<value_type>::lor();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -355,10 +355,10 @@ template<class Scalar, class Space = HostSpace>
 struct BAnd {
 public:
   //Required
-  typedef Band reducer;
+  typedef BAnd reducer;
   typedef typename std::remove_cv<Scalar>::type value_type;
 
-  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > value_view_type;
+  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > result_view_type;
 
 private:
   value_type* value;
@@ -369,7 +369,7 @@ public:
   BAnd(value_type& value_): value(&value_) {}
 
   KOKKOS_INLINE_FUNCTION
-  BAnd(const value_view_type& value_): value(value_.data()) {}
+  BAnd(const result_view_type& value_): value(value_.data()) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -384,7 +384,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void init( value_type& val)  const {
-    val = reducer_identity<value_type>:band();
+    val = reduction_identity<value_type>::band();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -405,7 +405,7 @@ public:
   typedef BOr reducer;
   typedef typename std::remove_cv<Scalar>::type value_type;
 
-  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > value_view_type;
+  typedef Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > result_view_type;
 
 private:
   value_type* value;
@@ -416,7 +416,7 @@ public:
   BOr(value_type& value_): value(&value_) {}
 
   KOKKOS_INLINE_FUNCTION
-  BOr(const value_view_type& value_): value(value_.data()) {}
+  BOr(const result_view_type& value_): value(value_.data()) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -431,7 +431,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void init( value_type& val)  const {
-    val = reducer_identity<value_type>:bor();
+    val = reduction_identity<value_type>::bor();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -485,7 +485,7 @@ public:
   MinLoc(value_type& value_): value(&value_) {}
 
   KOKKOS_INLINE_FUNCTION
-  MinLoc(const value_view_type& value_): value(value_.data()) {}
+  MinLoc(const result_view_type& value_): value(value_.data()) {}
 
 
   //Required
@@ -503,8 +503,8 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void init( value_type& val)  const {
-    value->val = reducer_identity<scalar_type>:min();
-    value->loc = reducer_identity<index_type>:min();
+    value->val = reduction_identity<scalar_type>::min();
+    value->loc = reduction_identity<index_type>::min();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -540,7 +540,7 @@ public:
   MaxLoc(value_type& value_): value(&value_) {}
 
   KOKKOS_INLINE_FUNCTION
-  MaxLoc(const value_view_type& value_): value(value_.data()) {}
+  MaxLoc(const result_view_type& value_): value(value_.data()) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -557,8 +557,8 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void init( value_type& val)  const {
-    value->val = reducer_identity<scalar_type>:max();;
-    value->loc = reducer_identity<index_type>:min();
+    value->val = reduction_identity<scalar_type>::max();;
+    value->loc = reduction_identity<index_type>::min();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -610,7 +610,7 @@ public:
   MinMax(value_type& value_): value(&value_) {}
 
   KOKKOS_INLINE_FUNCTION
-  MinMax(const value_view_type& value_): value(value_.data()) {}
+  MinMax(const result_view_type& value_): value(value_.data()) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -635,8 +635,8 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void init( value_type& val)  const {
-    value->max = reducer_identity<scalar_type>:max();;
-    value->min = reducer_identity<scalar_type>:min();
+    value->max = reduction_identity<scalar_type>::max();;
+    value->min = reduction_identity<scalar_type>::min();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -694,7 +694,7 @@ public:
   MinMaxLoc(value_type& value_): value(&value_) {}
 
   KOKKOS_INLINE_FUNCTION
-  MinMaxLoc(const value_view_type& value_): value(value_.data()) {}
+  MinMaxLoc(const result_view_type& value_): value(value_.data()) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -723,10 +723,10 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void init( value_type& val)  const {
-    value->max_val = reducer_identity<scalar_type>:max();;
-    value->min_val = reducer_identity<scalar_type>:min();
-    value->max_loc = reducer_identity<index_type>:min();
-    value->min_loc = reducer_identity<index_type>:min();
+    value->max_val = reduction_identity<scalar_type>::max();;
+    value->min_val = reduction_identity<scalar_type>::min();
+    value->max_loc = reduction_identity<index_type>::min();
+    value->min_loc = reduction_identity<index_type>::min();
   }
 
   KOKKOS_INLINE_FUNCTION

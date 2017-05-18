@@ -572,15 +572,6 @@ struct TestReducers {
     }
   };
 
-  struct BXorFunctor {
-    Kokkos::View< const Scalar*, ExecSpace > values;
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()( const int & i, Scalar & value ) const {
-      value = value ^ values( i );
-    }
-  };
-
   struct LAndFunctor {
     Kokkos::View< const Scalar*, ExecSpace > values;
 
@@ -596,15 +587,6 @@ struct TestReducers {
     KOKKOS_INLINE_FUNCTION
     void operator()( const int & i, Scalar & value ) const {
       value = value || values( i );
-    }
-  };
-
-  struct LXorFunctor {
-    Kokkos::View< const Scalar*, ExecSpace > values;
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()( const int & i, Scalar & value ) const {
-      value = value ? ( !values( i ) ) : values( i );
     }
   };
 
@@ -1238,46 +1220,6 @@ struct TestReducers {
     }
   }
 
-  static void test_BXor( int N ) {
-    Kokkos::View< Scalar*, ExecSpace > values( "Values", N );
-    auto h_values = Kokkos::create_mirror_view( values );
-    Scalar reference_bxor = Scalar() & ( ~Scalar() );
-
-    for ( int i = 0; i < N; i++ ) {
-      h_values( i ) = (Scalar) ( ( rand() % 100000 + 1 ) * 2 );
-      reference_bxor = reference_bxor ^ h_values( i );
-    }
-    Kokkos::deep_copy( values, h_values );
-
-    BXorFunctor f;
-    f.values = values;
-    Scalar init = Scalar() & ( ~Scalar() );
-
-    {
-      Scalar bxor_scalar = init;
-      Kokkos::Experimental::BXor< Scalar > reducer_scalar( bxor_scalar );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar );
-
-      ASSERT_EQ( bxor_scalar, reference_bxor );
-
-      Scalar bxor_scalar_view = reducer_scalar.result_view()();
-      ASSERT_EQ( bxor_scalar_view, reference_bxor );
-    }
-
-    {
-      Kokkos::View< Scalar, Kokkos::HostSpace > bxor_view( "View" );
-      bxor_view() = init;
-      Kokkos::Experimental::BXor< Scalar > reducer_view( bxor_view );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_view );
-
-      Scalar bxor_view_scalar = bxor_view();
-      ASSERT_EQ( bxor_view_scalar, reference_bxor );
-
-      Scalar bxor_view_view = reducer_view.result_view()();
-      ASSERT_EQ( bxor_view_view, reference_bxor );
-    }
-  }
-
   static void test_LAnd( int N ) {
     Kokkos::View< Scalar*, ExecSpace > values( "Values", N );
     auto h_values = Kokkos::create_mirror_view( values );
@@ -1358,46 +1300,6 @@ struct TestReducers {
     }
   }
 
-  static void test_LXor( int N ) {
-    Kokkos::View< Scalar*, ExecSpace > values( "Values", N );
-    auto h_values = Kokkos::create_mirror_view( values );
-    Scalar reference_lxor = 0;
-
-    for ( int i = 0; i < N; i++ ) {
-      h_values( i ) = (Scalar) ( rand() % 2 );
-      reference_lxor = reference_lxor ? ( !h_values( i ) ) : h_values( i );
-    }
-    Kokkos::deep_copy( values, h_values );
-
-    LXorFunctor f;
-    f.values = values;
-    Scalar init = 0;
-
-    {
-      Scalar lxor_scalar = init;
-      Kokkos::Experimental::LXor< Scalar > reducer_scalar( lxor_scalar );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar );
-
-      ASSERT_EQ( lxor_scalar, reference_lxor );
-
-      Scalar lxor_scalar_view = reducer_scalar.result_view()();
-      ASSERT_EQ( lxor_scalar_view, reference_lxor );
-    }
-
-    {
-      Kokkos::View< Scalar, Kokkos::HostSpace > lxor_view( "View" );
-      lxor_view() = init;
-      Kokkos::Experimental::LXor< Scalar > reducer_view( lxor_view );
-      Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_view );
-
-      Scalar lxor_view_scalar = lxor_view();
-      ASSERT_EQ( lxor_view_scalar, reference_lxor );
-
-      Scalar lxor_view_view = reducer_view.result_view()();
-      ASSERT_EQ( lxor_view_view, reference_lxor );
-    }
-  }
-
   static void execute_float() {
     test_sum( 10001 );
     test_prod( 35 );
@@ -1418,10 +1320,8 @@ struct TestReducers {
     test_minmaxloc( 10007 );
     test_BAnd( 35 );
     test_BOr( 35 );
-    test_BXor( 35 );
     test_LAnd( 35 );
     test_LOr( 35 );
-    test_LXor( 35 );
   }
 
   static void execute_basic() {
