@@ -216,6 +216,8 @@ void Qthreads::fence()
 int Qthreads::shepherd_size() const { return Impl::s_number_shepherds; }
 int Qthreads::shepherd_worker_size() const { return Impl::s_number_workers_per_shepherd; }
 
+const char* Qthreads::name() { return "Qthreads"; }
+
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------

@@ -66,6 +66,7 @@
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
+#include <Kokkos_UniqueToken.hpp>
 
 namespace Kokkos {
 
@@ -165,6 +166,7 @@ public:
   KOKKOS_INLINE_FUNCTION static unsigned hardware_thread_id() { return thread_pool_rank(); }
   inline static unsigned max_hardware_threads() { return thread_pool_size(0); }
 
+  static const char* name();
   //--------------------------------------------------------------------------
 };
 
@@ -517,7 +519,7 @@ public:
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
     , m_reducer( reducer )
-    , m_result_ptr(  reducer.result_view().data() )
+    , m_result_ptr(  reducer.view().data() )
     {
       /*static_assert( std::is_same< typename ViewType::memory_space
                                       , Kokkos::HostSpace >::value
@@ -800,7 +802,7 @@ public:
     : m_functor( arg_functor )
     , m_league(  arg_policy.league_size() )
     , m_reducer( reducer )
-    , m_result_ptr(  reducer.result_view().data() )
+    , m_result_ptr(  reducer.view().data() )
     , m_shared( arg_policy.scratch_size(0) +
                 arg_policy.scratch_size(1) +
                 FunctorTeamShmemSize< FunctorType >::value( arg_functor , 1 ) )
@@ -817,6 +819,60 @@ public:
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
+
+namespace Kokkos { namespace Experimental {
+
+template<>
+class UniqueToken< Serial, UniqueTokenScope::Instance>
+{
+public:
+  using execution_space = Serial;
+  using size_type       = int;
+
+  /// \brief create object size for concurrency on the given instance
+  ///
+  /// This object should not be shared between instances
+  UniqueToken( execution_space const& = execution_space() ) noexcept {}
+
+  /// \brief upper bound for acquired values, i.e. 0 <= value < size()
+  inline
+  int size() const noexcept { return 1; }
+
+  /// \brief acquire value such that 0 <= value < size()
+  inline
+  int acquire() const  noexcept { return 0; }
+
+  /// \brief release a value acquired by generate
+  inline
+  void release( int ) const noexcept {}
+};
+
+template<>
+class UniqueToken< Serial, UniqueTokenScope::Global>
+{
+public:
+  using execution_space = Serial;
+  using size_type       = int;
+
+  /// \brief create object size for concurrency on the given instance
+  ///
+  /// This object should not be shared between instances
+  UniqueToken( execution_space const& = execution_space() ) noexcept {}
+
+  /// \brief upper bound for acquired values, i.e. 0 <= value < size()
+  inline
+  int size() const noexcept { return 1; }
+
+  /// \brief acquire value such that 0 <= value < size()
+  inline
+  int acquire() const  noexcept { return 0; }
+
+  /// \brief release a value acquired by generate
+  inline
+  void release( int ) const noexcept {}
+};
+
+}} // namespace Kokkos::Experimental
 
 #include <impl/Kokkos_Serial_Task.hpp>
 

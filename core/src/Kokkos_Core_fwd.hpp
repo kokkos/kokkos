@@ -267,6 +267,20 @@ template< class FunctorType, class ExecPolicy, class ExecutionSapce =
 
 } // namespace Impl
 
+namespace Experimental {
+template<class ScalarType , class Space = HostSpace> struct Sum;
+template<class ScalarType , class Space = HostSpace> struct Prod;
+template<class ScalarType , class Space = HostSpace> struct Min;
+template<class ScalarType , class Space = HostSpace> struct Max;
+template<class ScalarType , class Space = HostSpace> struct MinMax;
+template<class ScalarType , class Index, class Space = HostSpace> struct MinLoc;
+template<class ScalarType , class Index, class Space = HostSpace> struct MaxLoc;
+template<class ScalarType , class Index, class Space = HostSpace> struct MinMaxLoc;
+template<class ScalarType , class Space = HostSpace> struct BAnd;
+template<class ScalarType , class Space = HostSpace> struct BOr;
+template<class ScalarType , class Space = HostSpace> struct LAnd;
+template<class ScalarType , class Space = HostSpace> struct LOr;
+}
 } // namespace Kokkos
 
 #endif /* #ifndef KOKKOS_CORE_FWD_HPP */

@@ -889,9 +889,9 @@ void init_lock_arrays_cuda_space() {
   }
 }
 
-void* cuda_resize_scratch_space(size_t bytes, bool force_shrink) {
+void* cuda_resize_scratch_space(std::int64_t bytes, bool force_shrink) {
   static void* ptr = NULL;
-  static size_t current_size = 0;
+  static std::int64_t current_size = 0;
   if(current_size == 0) {
     current_size = bytes;
     ptr = Kokkos::kokkos_malloc<Kokkos::CudaSpace>("CudaSpace::ScratchMemory",current_size);

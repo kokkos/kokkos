@@ -48,6 +48,7 @@
 #ifdef KOKKOS_ENABLE_CUDA
 
 #include <string>
+#include <cstdint>
 #include <Kokkos_Parallel.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <Cuda/Kokkos_Cuda_abort.hpp>
@@ -146,7 +147,7 @@ Kokkos::Impl::CudaLockArraysStruct kokkos_impl_cuda_lock_arrays ;
 
 namespace Kokkos {
 namespace Impl {
-  void* cuda_resize_scratch_space(size_t bytes, bool force_shrink = false);
+  void* cuda_resize_scratch_space(std::int64_t bytes, bool force_shrink = false);
 }
 }
 

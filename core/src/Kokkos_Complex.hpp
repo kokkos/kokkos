@@ -44,6 +44,7 @@
 #define KOKKOS_COMPLEX_HPP
 
 #include <Kokkos_Atomic.hpp>
+#include <Kokkos_NumericTraits.hpp>
 #include <complex>
 #include <iostream>
 
@@ -324,6 +325,27 @@ public:
     im_ /= src;
     return *this;
   }
+
+  KOKKOS_INLINE_FUNCTION
+  bool operator == (const complex<RealType>& src) {
+    return (re_ == src.re_) && (im_ == src.im_);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  bool operator == (const RealType src) {
+    return (re_ == src) && (im_ == RealType(0));
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  bool operator != (const complex<RealType>& src) {
+    return (re_ != src.re_) || (im_ != src.im_);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  bool operator != (const RealType src) {
+    return (re_ != src) || (im_ != RealType(0));
+  }
+
 };
 
 //! Binary + operator for complex complex.
@@ -618,6 +640,14 @@ std::ostream& operator >> (std::ostream& os, complex<RealType>& x) {
 }
 
 
+template<class T>
+struct reduction_identity<Kokkos::complex<T> > {
+  typedef reduction_identity<T> t_red_ident;
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static Kokkos::complex<T> sum()
+      {return Kokkos::complex<T>(t_red_ident::sum(),t_red_ident::sum());}
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static Kokkos::complex<T> prod()
+      {return Kokkos::complex<T>(t_red_ident::prod(),t_red_ident::sum());}
+};
 
 } // namespace Kokkos
 

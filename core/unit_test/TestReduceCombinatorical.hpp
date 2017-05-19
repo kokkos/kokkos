@@ -56,7 +56,7 @@ template< class Scalar, class Space = Kokkos::HostSpace >
 struct AddPlus {
 public:
   // Required.
-  typedef AddPlus reducer_type;
+  typedef AddPlus reducer;
   typedef Scalar value_type;
 
   typedef Kokkos::View< value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> > result_view_type;
@@ -84,7 +84,13 @@ public:
     val = value_type();
   }
 
-  result_view_type result_view() const {
+  KOKKOS_INLINE_FUNCTION
+  value_type& reference() const {
+    return result();
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  result_view_type view() const {
     return result;
   }
 };

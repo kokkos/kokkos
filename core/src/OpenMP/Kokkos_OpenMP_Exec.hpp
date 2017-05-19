@@ -58,6 +58,8 @@
 
 #include <Kokkos_Atomic.hpp>
 
+#include <Kokkos_UniqueToken.hpp>
+
 #include <iostream>
 #include <sstream>
 #include <fstream>

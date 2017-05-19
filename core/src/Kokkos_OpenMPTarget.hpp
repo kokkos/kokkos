@@ -143,6 +143,8 @@ public:
 
   KOKKOS_INLINE_FUNCTION static
   unsigned hardware_thread_id() { return thread_pool_rank(); }
+
+  static const char* name();
 private:
   static bool m_is_initialized;
 };

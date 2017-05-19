@@ -213,6 +213,8 @@ public:
   //@}
   //--------------------------------------------------------------------------
 
+  static const char* name();
+
 private:
 
   cudaStream_t m_stream ;

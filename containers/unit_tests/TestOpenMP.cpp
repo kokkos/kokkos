@@ -59,7 +59,6 @@
 #include <TestVector.hpp>
 #include <TestDualView.hpp>
 #include <TestDynamicView.hpp>
-#include <TestComplex.hpp>
 
 #include <Kokkos_DynRankView.hpp>
 #include <TestDynViewAPI.hpp>
@@ -85,11 +84,6 @@ protected:
     Kokkos::OpenMP::finalize();
   }
 };
-
-TEST_F( openmp, complex )
-{
-  testComplex<Kokkos::OpenMP> ();
-}
 
 TEST_F( openmp, dyn_view_api) {
   TestDynViewAPI< double , Kokkos::OpenMP >();
