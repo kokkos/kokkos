@@ -181,6 +181,9 @@ struct FunctorValueTraits< FunctorType , ArgTag , true /* == exists FunctorType:
   typedef typename Impl::if_c< ! StaticValueSize , value_type *
                                                  , value_type & >::type  reference_type ;
 
+  static_assert(StaticValueSize == 0 || StaticValueSize >= sizeof(int),
+      "Functor declared value_type must be at least word-sized");
+
   // Number of values if single value
   template< class F >
   KOKKOS_FORCEINLINE_FUNCTION static
@@ -408,6 +411,9 @@ public:
     "Reduction functor's value_type deduced from functor::operator() requires: 0 == sizeof(value_type) % sizeof(int)" );
 
   enum { StaticValueSize = IS_VOID || IS_REJECT ? 0 : sizeof(ValueType) };
+
+  static_assert(StaticValueSize == 0 || StaticValueSize >= sizeof(int),
+      "Functor deduced value_type must be at least word-sized");
 
   KOKKOS_FORCEINLINE_FUNCTION static
   unsigned value_size( const FunctorType & ) { return StaticValueSize ; }
