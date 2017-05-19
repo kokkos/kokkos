@@ -46,6 +46,7 @@
 #include <PerfTest_Category.hpp>
 #include <Kokkos_Random.hpp>
 
+#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
 namespace Test {
 template<class Scalar>
 void custom_reduction_test(int N, int R, int num_trials) {
@@ -111,3 +112,4 @@ TEST_F( default_exec, custom_reduction ) {
   custom_reduction_test<double>(N,R,num_trials);
 }
 }
+#endif
