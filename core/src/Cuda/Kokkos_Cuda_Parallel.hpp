@@ -50,6 +50,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cstdio>
+#include <cstdint>
 
 #include <utility>
 #include <Kokkos_Parallel.hpp>
@@ -87,8 +88,8 @@ private:
   int m_league_size ;
   int m_team_size ;
   int m_vector_length ;
-  int m_team_scratch_size[2] ;
-  int m_thread_scratch_size[2] ;
+  std::int64_t m_team_scratch_size[2] ;
+  std::int64_t m_thread_scratch_size[2] ;
   int m_chunk_size;
 
 public:
@@ -149,14 +150,14 @@ public:
   inline int vector_length()   const { return m_vector_length ; }
   inline int team_size()   const { return m_team_size ; }
   inline int league_size() const { return m_league_size ; }
-  inline int scratch_size(int level, int team_size_ = -1) const {
+  inline std::int64_t scratch_size(int level, int team_size_ = -1) const {
     if(team_size_<0) team_size_ = m_team_size;
     return m_team_scratch_size[level] + team_size_*m_thread_scratch_size[level];
   }
-  inline size_t team_scratch_size(int level) const {
+  inline std::int64_t team_scratch_size(int level) const {
     return m_team_scratch_size[level];
   }
-  inline size_t thread_scratch_size(int level) const {
+  inline std::int64_t thread_scratch_size(int level) const {
     return m_thread_scratch_size[level];
   }
 
@@ -398,14 +399,14 @@ private:
   //  [ team   shared space ]
   //
 
-  const FunctorType m_functor ;
-  const size_type   m_league_size ;
-  const size_type   m_team_size ;
-  const size_type   m_vector_size ;
-  const size_type   m_shmem_begin ;
-  const size_type   m_shmem_size ;
-  void*             m_scratch_ptr[2] ;
-  const int         m_scratch_size[2] ;
+  const FunctorType  m_functor ;
+  const size_type    m_league_size ;
+  const size_type    m_team_size ;
+  const size_type    m_vector_size ;
+  const std::int64_t m_shmem_begin ;
+  const std::int64_t m_shmem_size ;
+  void*              m_scratch_ptr[2] ;
+  const std::int64_t m_scratch_size[2] ;
 
   template< class TagType >
   __device__ inline
@@ -492,7 +493,7 @@ public:
       // Functor's reduce memory, team scan memory, and team shared memory depend upon team size.
       m_scratch_ptr[1] = cuda_resize_scratch_space(m_scratch_size[1]*(Cuda::concurrency()/(m_team_size*m_vector_size)));
 
-      const int shmem_size_total = m_shmem_begin + m_shmem_size ;
+      const std::int64_t shmem_size_total = m_shmem_begin + m_shmem_size ;
       if ( CudaTraits::SharedMemoryCapacity < shmem_size_total ) {
         Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelFor< Cuda > insufficient shared memory"));
       }
