@@ -981,10 +981,10 @@ ENDFOREACH()
 
 # set up include-directories
 SET (Kokkos_INCLUDE_DIRS
-    ${CMAKE_SOURCE_DIR}/core/src
-    ${CMAKE_SOURCE_DIR}/containers/src
-    ${CMAKE_SOURCE_DIR}/algorithms/src
-    ${CMAKE_BINARY_DIR}  # to find KokkosCore_config.h
+    ${Kokkos_SOURCE_DIR}/core/src
+    ${Kokkos_SOURCE_DIR}/containers/src
+    ${Kokkos_SOURCE_DIR}/algorithms/src
+    ${Kokkos_BINARY_DIR}  # to find KokkosCore_config.h
 )
 
 INCLUDE_DIRECTORIES(${Kokkos_INCLUDE_DIRS})
@@ -1144,6 +1144,12 @@ ELSE()
            DESTINATION include
   )
 
+  include_directories(${Kokkos_BINARY_DIR})
+  include_directories(${Kokkos_SOURCE_DIR}/core/src)
+  include_directories(${Kokkos_SOURCE_DIR}/containers/src)
+  include_directories(${Kokkos_SOURCE_DIR}/algorithms/src)
+
+
   SET (Kokkos_LIBRARIES_NAMES kokkos)
 endif()
 
@@ -1160,11 +1166,11 @@ file(RELATIVE_PATH REL_INCLUDE_DIR "${INSTALL_CMAKE_DIR}"
    "${INSTALL_INCLUDE_DIR}")
 # ... for the build tree
 set(CONF_INCLUDE_DIRS "${Kokkos_SOURCE_DIR}" "${Kokkos_BINARY_DIR}")
-configure_file(${CMAKE_SOURCE_DIR}/cmake/KokkosConfig.cmake.in
+configure_file(${Kokkos_SOURCE_DIR}/cmake/KokkosConfig.cmake.in
   "${Kokkos_BINARY_DIR}/KokkosConfig.cmake" @ONLY)
 # ... for the install tree
 set(CONF_INCLUDE_DIRS "\${Kokkos_CMAKE_DIR}/${REL_INCLUDE_DIR}")
-configure_file(${CMAKE_SOURCE_DIR}/cmake/KokkosConfig.cmake.in
+configure_file(${Kokkos_SOURCE_DIR}/cmake/KokkosConfig.cmake.in
   "${Kokkos_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/KokkosConfig.cmake" @ONLY)
 
 # Install the KokkosConfig.cmake and KokkosConfigVersion.cmake
