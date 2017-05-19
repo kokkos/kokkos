@@ -54,6 +54,8 @@
 
 #include <Kokkos_Atomic.hpp>
 
+#include <Kokkos_UniqueToken.hpp>
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -348,6 +350,63 @@ int OpenMP::thread_pool_rank()
 }
 
 } // namespace Kokkos
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos { namespace Experimental {
+
+template<>
+class UniqueToken< OpenMP, UniqueTokenScope::Instance>
+{
+public:
+  using execution_space = OpenMP;
+  using size_type       = int;
+
+  /// \brief create object size for concurrency on the given instance
+  ///
+  /// This object should not be shared between instances
+  UniqueToken( execution_space const& = execution_space() ) noexcept {}
+
+  /// \brief upper bound for acquired values, i.e. 0 <= value < size()
+  inline
+  int size() const noexcept { return omp_get_max_threads(); }
+
+  /// \brief acquire value such that 0 <= value < size()
+  inline
+  int acquire() const  noexcept { return omp_get_thread_num(); }
+
+  /// \brief release a value acquired by generate
+  inline
+  void release( int ) const noexcept {}
+};
+
+template<>
+class UniqueToken< OpenMP, UniqueTokenScope::Global>
+{
+public:
+  using execution_space = OpenMP;
+  using size_type       = int;
+
+  /// \brief create object size for concurrency on the given instance
+  ///
+  /// This object should not be shared between instances
+  UniqueToken( execution_space const& = execution_space() ) noexcept {}
+
+  /// \brief upper bound for acquired values, i.e. 0 <= value < size()
+  inline
+  int size() const noexcept { return omp_get_max_threads(); }
+
+  /// \brief acquire value such that 0 <= value < size()
+  inline
+  int acquire() const noexcept { return omp_get_thread_num(); }
+
+  /// \brief release a value acquired by generate
+  inline
+  void release( int ) const noexcept {}
+};
+
+}} // namespace Kokkos::Experimental
 
 #endif
 #endif /* #ifndef KOKKOS_OPENMPEXEC_HPP */
