@@ -974,7 +974,7 @@ configure_file(
 
 SET(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries")
 SET(INSTALL_BIN_DIR bin CACHE PATH "Installation directory for executables")
-SET(INSTALL_INCLUDE_DIR include CACHE PATH
+SET(INSTALL_INCLUDE_DIR ${KOKKOS_HEADER_DIR} CACHE PATH
   "Installation directory for header files")
 IF(WIN32 AND NOT CYGWIN)
   SET(DEF_INSTALL_CMAKE_DIR CMake)
