@@ -5,9 +5,9 @@ module load devpack/openmpi/1.10.0/intel/16.1.056/cuda/none
 export OMP_NUM_THREADS=8
 export JENKINS_DO_CUDA=OFF
 export JENKINS_DO_OPENMP=OFF
-export JENKINS_DO_PTHREAD=OFF
-export JENKINS_DO_SERIAL=ON
-export JENKINS_DO_COMPLEX=ON
+export JENKINS_DO_PTHREAD=ON
+export JENKINS_DO_SERIAL=OFF
+export JENKINS_DO_COMPLEX=OFF
 
 export ARCH_CXX_FLAG="-xCORE-AVX2 -mkl"
 export ARCH_C_FLAG="-xCORE-AVX2 -mkl"
