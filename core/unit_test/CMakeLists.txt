@@ -72,7 +72,6 @@ IF(Kokkos_ENABLE_Pthread)
       threads/TestThreads_AtomicOperations.cpp
       threads/TestThreads_AtomicViews.cpp
       threads/TestThreads_Atomics.cpp
-      threads/TestThreads_Category.cpp
       threads/TestThreads_Complex.cpp
       threads/TestThreads_Init.cpp
       threads/TestThreads_MDRange.cpp
@@ -197,7 +196,6 @@ IF(Kokkos_ENABLE_Cuda)
       cuda/TestCudaHostPinned_ViewMapping_a.cpp
       cuda/TestCudaHostPinned_ViewMapping_b.cpp
       cuda/TestCudaHostPinned_ViewMapping_subview.cpp
-      cuda/TestCudaUVM_Category.cpp
       cuda/TestCudaUVM_SharedAlloc.cpp
       cuda/TestCudaUVM_ViewAPI.cpp
       cuda/TestCudaUVM_ViewMapping_a.cpp
@@ -206,7 +204,6 @@ IF(Kokkos_ENABLE_Cuda)
       cuda/TestCuda_AtomicOperations.cpp
       cuda/TestCuda_AtomicViews.cpp
       cuda/TestCuda_Atomics.cpp
-      cuda/TestCuda_Category.cpp
       cuda/TestCuda_Complex.cpp
       cuda/TestCuda_Init.cpp
       cuda/TestCuda_MDRange.cpp
@@ -248,7 +245,13 @@ ENDIF()
 
 TRIBITS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_Default
-  SOURCES UnitTestMain.cpp default/TestDefaultDeviceType.cpp default/TestDefaultDeviceType_a.cpp
+  SOURCES
+    UnitTestMain.cpp
+    default/TestDefaultDeviceType.cpp
+    default/TestDefaultDeviceType_a.cpp
+    default/TestDefaultDeviceType_b.cpp
+    default/TestDefaultDeviceType_c.cpp
+    default/TestDefaultDeviceType_d.cpp
   COMM serial mpi
   NUM_MPI_PROCS 1
   FAIL_REGULAR_EXPRESSION "  FAILED  "
