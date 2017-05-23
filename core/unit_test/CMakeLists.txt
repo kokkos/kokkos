@@ -101,9 +101,17 @@ IF(Kokkos_ENABLE_OpenMP)
     UnitTest_OpenMP
     SOURCES
       UnitTestMain.cpp
+      openmp/TestOpenMP_AtomicOperations.cpp
+      openmp/TestOpenMP_AtomicViews.cpp
       openmp/TestOpenMP_Atomics.cpp
+      openmp/TestOpenMP_Complex.cpp
+      openmp/TestOpenMP_Init.cpp
+      openmp/TestOpenMP_MDRange.cpp
       openmp/TestOpenMP_Other.cpp
+      openmp/TestOpenMP_RangePolicy.cpp
       openmp/TestOpenMP_Reductions.cpp
+      openmp/TestOpenMP_Scan.cpp
+      openmp/TestOpenMP_SharedAlloc.cpp
       openmp/TestOpenMP_SubView_a.cpp
       openmp/TestOpenMP_SubView_b.cpp
       openmp/TestOpenMP_SubView_c01.cpp
@@ -118,9 +126,14 @@ IF(Kokkos_ENABLE_OpenMP)
       openmp/TestOpenMP_SubView_c10.cpp
       openmp/TestOpenMP_SubView_c11.cpp
       openmp/TestOpenMP_SubView_c12.cpp
+      openmp/TestOpenMP_Task.cpp
       openmp/TestOpenMP_Team.cpp
-      openmp/TestOpenMP_ViewAPI_a.cpp
+      openmp/TestOpenMP_TeamReductionScan.cpp
       openmp/TestOpenMP_ViewAPI_b.cpp
+      openmp/TestOpenMP_ViewMapping_a.cpp
+      openmp/TestOpenMP_ViewMapping_b.cpp
+      openmp/TestOpenMP_ViewMapping_subview.cpp
+      openmp/TestOpenMP_ViewOfClass.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "
