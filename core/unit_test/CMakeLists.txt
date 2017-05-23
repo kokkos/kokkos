@@ -69,9 +69,18 @@ IF(Kokkos_ENABLE_Pthread)
     UnitTest_Threads
     SOURCES
       UnitTestMain.cpp
+      threads/TestThreads_AtomicOperations.cpp
+      threads/TestThreads_AtomicViews.cpp
       threads/TestThreads_Atomics.cpp
+      threads/TestThreads_Category.cpp
+      threads/TestThreads_Complex.cpp
+      threads/TestThreads_Init.cpp
+      threads/TestThreads_MDRange.cpp
       threads/TestThreads_Other.cpp
+      threads/TestThreads_RangePolicy.cpp
       threads/TestThreads_Reductions.cpp
+      threads/TestThreads_Scan.cpp
+      threads/TestThreads_ViewAPI_SharedAlloc.cpp
       threads/TestThreads_SubView_a.cpp
       threads/TestThreads_SubView_b.cpp
       threads/TestThreads_SubView_c01.cpp
@@ -87,8 +96,13 @@ IF(Kokkos_ENABLE_Pthread)
       threads/TestThreads_SubView_c11.cpp
       threads/TestThreads_SubView_c12.cpp
       threads/TestThreads_Team.cpp
-      threads/TestThreads_ViewAPI_a.cpp
+      threads/TestThreads_TeamReductionScan.cpp
+      threads/TestThreads_TeamScratch.cpp
       threads/TestThreads_ViewAPI_b.cpp
+      threads/TestThreads_ViewMapping_a.cpp
+      threads/TestThreads_ViewMapping_b.cpp
+      threads/TestThreads_ViewMapping_subview.cpp
+      threads/TestThreads_ViewOfClass.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "
