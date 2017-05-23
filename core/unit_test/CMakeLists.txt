@@ -189,7 +189,7 @@ ENDIF()
 
 TRIBITS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_Default
-  SOURCES UnitTestMain.cpp TestDefaultDeviceType.cpp TestDefaultDeviceType_a.cpp
+  SOURCES UnitTestMain.cpp default/TestDefaultDeviceType.cpp default/TestDefaultDeviceType_a.cpp
   COMM serial mpi
   NUM_MPI_PROCS 1
   FAIL_REGULAR_EXPRESSION "  FAILED  "
@@ -199,7 +199,7 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
 foreach(INITTESTS_NUM RANGE 1 16)
 TRIBITS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_DefaultInit_${INITTESTS_NUM}
-  SOURCES UnitTestMain.cpp TestDefaultDeviceTypeInit_${INITTESTS_NUM}.cpp
+  SOURCES UnitTestMain.cpp default/TestDefaultDeviceTypeInit_${INITTESTS_NUM}.cpp
   COMM serial mpi
   NUM_MPI_PROCS 1
   FAIL_REGULAR_EXPRESSION "  FAILED  "
