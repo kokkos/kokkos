@@ -247,7 +247,7 @@ ENDIF()
 TRIBITS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_Default
   SOURCES
-    UnitTestMain.cpp
+    UnitTestMainInit.cpp
     default/TestDefaultDeviceType.cpp
     default/TestDefaultDeviceType_a.cpp
     default/TestDefaultDeviceType_b.cpp
