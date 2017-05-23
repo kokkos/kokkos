@@ -23,7 +23,7 @@ IF(Kokkos_ENABLE_Serial)
   TRIBITS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Serial
     SOURCES
-      UnitTestMain.cpp
+      UnitTestMainInit.cpp
       serial/TestSerial_AtomicOperations.cpp
       serial/TestSerial_AtomicViews.cpp
       serial/TestSerial_Atomics.cpp
@@ -68,7 +68,7 @@ IF(Kokkos_ENABLE_Pthread)
   TRIBITS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Threads
     SOURCES
-      UnitTestMain.cpp
+      UnitTestMainInit.cpp
       threads/TestThreads_AtomicOperations.cpp
       threads/TestThreads_AtomicViews.cpp
       threads/TestThreads_Atomics.cpp
@@ -113,7 +113,7 @@ IF(Kokkos_ENABLE_OpenMP)
   TRIBITS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_OpenMP
     SOURCES
-      UnitTestMain.cpp
+      UnitTestMainInit.cpp
       openmp/TestOpenMP_AtomicOperations.cpp
       openmp/TestOpenMP_AtomicViews.cpp
       openmp/TestOpenMP_Atomics.cpp
@@ -158,7 +158,7 @@ IF(Kokkos_ENABLE_Qthreads)
   TRIBITS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Qthreads
     SOURCES
-      UnitTestMain.cpp
+      UnitTestMainInit.cpp
       qthreads/TestQthreads_Atomics.cpp
       qthreads/TestQthreads_Complex.cpp
       qthreads/TestQthreads_Other.cpp
@@ -191,7 +191,7 @@ IF(Kokkos_ENABLE_Cuda)
   TRIBITS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Cuda
     SOURCES
-      UnitTestMain.cpp
+      UnitTestMainInit.cpp
       cuda/TestCudaHostPinned_SharedAlloc.cpp
       cuda/TestCudaHostPinned_ViewAPI.cpp
       cuda/TestCudaHostPinned_ViewMapping_a.cpp
