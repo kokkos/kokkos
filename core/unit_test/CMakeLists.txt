@@ -160,6 +160,7 @@ IF(Kokkos_ENABLE_Qthreads)
     SOURCES
       UnitTestMain.cpp
       qthreads/TestQthreads_Atomics.cpp
+      qthreads/TestQthreads_Complex.cpp
       qthreads/TestQthreads_Other.cpp
       qthreads/TestQthreads_Reductions.cpp
       qthreads/TestQthreads_SubView_a.cpp
