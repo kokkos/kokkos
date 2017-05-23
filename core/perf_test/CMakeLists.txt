@@ -4,8 +4,9 @@ INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_
 
 SET(SOURCES
   PerfTestMain.cpp
-  PerfTestHost.cpp
-  PerfTestCuda.cpp
+  PerfTestGramSchmidt.cpp
+  PerfTestHexGrad.cpp
+  PerfTest_CustomReduction.cpp
   )
 
 # Per #374, we always want to build this test, but we only want to run
