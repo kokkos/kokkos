@@ -192,10 +192,29 @@ IF(Kokkos_ENABLE_Cuda)
     UnitTest_Cuda
     SOURCES
       UnitTestMain.cpp
+      cuda/TestCudaHostPinned_SharedAlloc.cpp
+      cuda/TestCudaHostPinned_ViewAPI.cpp
+      cuda/TestCudaHostPinned_ViewMapping_a.cpp
+      cuda/TestCudaHostPinned_ViewMapping_b.cpp
+      cuda/TestCudaHostPinned_ViewMapping_subview.cpp
+      cuda/TestCudaUVM_Category.cpp
+      cuda/TestCudaUVM_SharedAlloc.cpp
+      cuda/TestCudaUVM_ViewAPI.cpp
+      cuda/TestCudaUVM_ViewMapping_a.cpp
+      cuda/TestCudaUVM_ViewMapping_b.cpp
+      cuda/TestCudaUVM_ViewMapping_subview.cpp
+      cuda/TestCuda_AtomicOperations.cpp
+      cuda/TestCuda_AtomicViews.cpp
       cuda/TestCuda_Atomics.cpp
+      cuda/TestCuda_Category.cpp
+      cuda/TestCuda_Complex.cpp
+      cuda/TestCuda_Init.cpp
+      cuda/TestCuda_MDRange.cpp
       cuda/TestCuda_Other.cpp
-      cuda/TestCuda_Reductions_a.cpp
-      cuda/TestCuda_Reductions_b.cpp
+      cuda/TestCuda_RangePolicy.cpp
+      cuda/TestCuda_Reductions.cpp
+      cuda/TestCuda_Scan.cpp
+      cuda/TestCuda_SharedAlloc.cpp
       cuda/TestCuda_Spaces.cpp
       cuda/TestCuda_SubView_a.cpp
       cuda/TestCuda_SubView_b.cpp
@@ -211,15 +230,15 @@ IF(Kokkos_ENABLE_Cuda)
       cuda/TestCuda_SubView_c10.cpp
       cuda/TestCuda_SubView_c11.cpp
       cuda/TestCuda_SubView_c12.cpp
+      cuda/TestCuda_Task.cpp
       cuda/TestCuda_Team.cpp
-      cuda/TestCuda_ViewAPI_a.cpp
+      cuda/TestCuda_TeamReductionScan.cpp
+      cuda/TestCuda_TeamScratch.cpp
       cuda/TestCuda_ViewAPI_b.cpp
-      cuda/TestCuda_ViewAPI_c.cpp
-      cuda/TestCuda_ViewAPI_d.cpp
-      cuda/TestCuda_ViewAPI_e.cpp
-      cuda/TestCuda_ViewAPI_f.cpp
-      cuda/TestCuda_ViewAPI_g.cpp
-      cuda/TestCuda_ViewAPI_h.cpp
+      cuda/TestCuda_ViewMapping_a.cpp
+      cuda/TestCuda_ViewMapping_b.cpp
+      cuda/TestCuda_ViewMapping_subview.cpp
+      cuda/TestCuda_ViewOfClass.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "
