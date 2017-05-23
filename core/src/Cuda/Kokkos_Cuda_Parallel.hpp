@@ -478,6 +478,7 @@ private:
   typedef Kokkos::RangePolicy< Traits ... > Policy;
   typedef typename Policy::member_type  Member ;
   typedef typename Policy::work_tag     WorkTag ;
+  typedef typename Policy::launch_bounds LaunchBounds ;
 
   const FunctorType  m_functor ;
   const Policy       m_policy ;
@@ -523,7 +524,7 @@ public:
       const dim3 block(  1 , CudaTraits::WarpSize * cuda_internal_maximum_warp_count(), 1);
       const dim3 grid( std::min( ( nwork + block.y - 1 ) / block.y , cuda_internal_maximum_grid_count() ) , 1 , 1);
 
-      CudaParallelLaunch< ParallelFor >( *this , grid , block , 0 );
+      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
     }
 
   ParallelFor( const FunctorType  & arg_functor ,
@@ -544,6 +545,7 @@ private:
   typedef TeamPolicyInternal< Kokkos::Cuda , Properties ... >   Policy ;
   typedef typename Policy::member_type  Member ;
   typedef typename Policy::work_tag     WorkTag ;
+  typedef typename Policy::launch_bounds  LaunchBounds ;
 
 public:
 
@@ -606,7 +608,7 @@ public:
       const dim3 grid( int(m_league_size) , 1 , 1 );
       const dim3 block( int(m_vector_size) , int(m_team_size) , 1 );
 
-      CudaParallelLaunch< ParallelFor >( *this, grid, block, shmem_size_total ); // copy to device and execute
+      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this, grid, block, shmem_size_total ); // copy to device and execute
 
     }
 
@@ -662,6 +664,7 @@ private:
   typedef typename Policy::WorkRange    WorkRange ;
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::member_type  Member ;
+  typedef typename Policy::launch_bounds LaunchBounds ;
 
   typedef Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
   typedef typename ReducerConditional::type ReducerTypeFwd;
@@ -819,7 +822,7 @@ public:
 
       const int shmem = UseShflReduction?0:cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( m_functor , block.y );
 
-      CudaParallelLaunch< ParallelReduce >( *this, grid, block, shmem ); // copy to device and execute
+      CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
 
       Cuda::fence();
 
@@ -884,6 +887,7 @@ private:
   typedef TeamPolicyInternal< Kokkos::Cuda, Properties ... >  Policy ;
   typedef typename Policy::member_type  Member ;
   typedef typename Policy::work_tag     WorkTag ;
+  typedef typename Policy::launch_bounds  LaunchBounds ;
 
   typedef Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
   typedef typename ReducerConditional::type ReducerTypeFwd;
@@ -1040,7 +1044,7 @@ public:
         const dim3 grid( block_count , 1 , 1 );
         const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size ;
 
-        CudaParallelLaunch< ParallelReduce >( *this, grid, block, shmem_size_total ); // copy to device and execute
+        CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem_size_total ); // copy to device and execute
 
         Cuda::fence();
 
@@ -1215,6 +1219,7 @@ private:
   typedef typename Policy::member_type  Member ;
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::WorkRange    WorkRange ;
+  typedef typename Policy::launch_bounds  LaunchBounds ;
 
   typedef Kokkos::Impl::FunctorValueTraits< FunctorType, WorkTag > ValueTraits ;
   typedef Kokkos::Impl::FunctorValueInit<   FunctorType, WorkTag > ValueInit ;
@@ -1401,10 +1406,10 @@ public:
         const int shmem = ValueTraits::value_size( m_functor ) * ( block_size + 2 );
 
         m_final = false ;
-        CudaParallelLaunch< ParallelScan >( *this, grid, block, shmem ); // copy to device and execute
+        CudaParallelLaunch< ParallelScan, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
 
         m_final = true ;
-        CudaParallelLaunch< ParallelScan >( *this, grid, block, shmem ); // copy to device and execute
+        CudaParallelLaunch< ParallelScan, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
       }
     }
 
