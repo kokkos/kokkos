@@ -647,7 +647,7 @@ TEST_F( TEST_CATEGORY, task_fib )
   }
 }
 
-#if defined( __CUDA_ARCH__ ) && ( 600 <= __CUDA_ARCH__ )
+#if defined(KOKKOS_ARCH_MAXWELL) || defined(KOKKOS_ARCH_PASCAL)
   // TODO: Resolve bug in task DAG for Pascal
   #define KOKKOS_IMPL_DISABLE_UNIT_TEST_TASK_DAG_PASCAL
 #endif
