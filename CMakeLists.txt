@@ -170,6 +170,13 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
   "${TPL_ENABLE_DLlib}"
   )
 
+TRIBITS_ADD_OPTION_AND_DEFINE(
+  Kokkos_ENABLE_Profiling_Load_Print
+  KOKKOS_ENABLE_PROFILING_LOAD_PRINT
+  "Print to standard output which profiling library was loaded."
+  OFF
+  )
+
 # placeholder for future device...
 TRIBITS_ADD_OPTION_AND_DEFINE(
   Kokkos_ENABLE_Winthread
