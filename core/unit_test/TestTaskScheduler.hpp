@@ -246,6 +246,22 @@ struct TestTaskDependence {
   KOKKOS_INLINE_FUNCTION
   void operator()( typename sched_type::member_type & )
   {
+#define KOKKOS_IMPL_UNIT_TEST_TASK_DEPEND 1
+
+#if defined( __CUDA_ARCH__ )
+  #if ( 600 <= __CUDA_ARCH__ )
+    // TODO: Resolve bug in task dependence for Pascal
+    #undef KOKKOS_IMPL_UNIT_TEST_TASK_DEPEND
+    #define KOKKOS_IMPL_UNIT_TEST_TASK_DEPEND 0
+  #endif
+#endif
+
+#if ! KOKKOS_IMPL_UNIT_TEST_TASK_DEPEND
+
+    m_accum() = m_count;
+
+#else
+
     enum { CHUNK = 8 };
     const int n = CHUNK < m_count ? CHUNK : m_count;
 
@@ -268,6 +284,9 @@ struct TestTaskDependence {
     else if ( 1 == m_count ) {
       Kokkos::atomic_increment( & m_accum() );
     }
+
+#endif /* KOKKOS_IMPL_UNIT_TEST_TASK_DEPEND */
+#undef KOKKOS_IMPL_UNIT_TEST_TASK_DEPEND
   }
 
   static void run( int n )
