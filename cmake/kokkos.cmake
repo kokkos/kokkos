@@ -1,4 +1,4 @@
-############################# USER SETTABLE OPTIONS ############################
+
 
 # Set which Kokkos backend to use.
 set(KOKKOS_ENABLE_CUDA OFF CACHE BOOL "Use Kokkos CUDA backend")
@@ -855,6 +855,20 @@ if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND NOT APPLE)
   list(APPEND KOKKOS_LD_FLAGS --gcc-toolchain=${KOKKOS_GCC_PATH})
 endif()
 
+############################ Detect if submodule ###############################
+#
+# With thanks to StackOverflow:  
+#      http://stackoverflow.com/questions/25199677/how-to-detect-if-current-scope-has-a-parent-in-cmake
+#
+get_directory_property(HAS_PARENT PARENT_DIRECTORY)
+if(HAS_PARENT)
+  message(STATUS "Submodule build")
+  SET(KOKKOS_HEADER_DIR "include/kokkos")
+else()
+  message(STATUS "Standalone build")
+  SET(KOKKOS_HEADER_DIR "include")
+endif()
+
 ############################ PRINT CONFIGURE STATUS ############################
 
 message(STATUS "")
@@ -961,7 +975,7 @@ configure_file(
 
 SET(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries")
 SET(INSTALL_BIN_DIR bin CACHE PATH "Installation directory for executables")
-SET(INSTALL_INCLUDE_DIR include CACHE PATH
+SET(INSTALL_INCLUDE_DIR ${KOKKOS_HEADER_DIR} CACHE PATH
   "Installation directory for header files")
 IF(WIN32 AND NOT CYGWIN)
   SET(DEF_INSTALL_CMAKE_DIR CMake)
@@ -982,10 +996,10 @@ ENDFOREACH()
 
 # set up include-directories
 SET (Kokkos_INCLUDE_DIRS
-    ${CMAKE_SOURCE_DIR}/core/src
-    ${CMAKE_SOURCE_DIR}/containers/src
-    ${CMAKE_SOURCE_DIR}/algorithms/src
-    ${CMAKE_BINARY_DIR}  # to find KokkosCore_config.h
+    ${Kokkos_SOURCE_DIR}/core/src
+    ${Kokkos_SOURCE_DIR}/containers/src
+    ${Kokkos_SOURCE_DIR}/algorithms/src
+    ${Kokkos_BINARY_DIR}  # to find KokkosCore_config.h
 )
 
 INCLUDE_DIRECTORIES(${Kokkos_INCLUDE_DIRS})
@@ -1017,14 +1031,14 @@ IF(KOKKOS_SEPARATE_LIBS)
   # Install the kokkoscore headers
   INSTALL (DIRECTORY
            ${Kokkos_SOURCE_DIR}/core/src/
-           DESTINATION include
+           DESTINATION ${KOKKOS_HEADER_DIR} 
            FILES_MATCHING PATTERN "*.hpp"
   )
 
   # Install KokkosCore_config.h header
   INSTALL (FILES
            ${Kokkos_BINARY_DIR}/KokkosCore_config.h
-           DESTINATION include
+           DESTINATION ${KOKKOS_HEADER_DIR}
   )
 
   TARGET_LINK_LIBRARIES(
@@ -1053,7 +1067,7 @@ IF(KOKKOS_SEPARATE_LIBS)
   # Install the kokkoscontainers headers
   INSTALL (DIRECTORY
            ${Kokkos_SOURCE_DIR}/containers/src/
-           DESTINATION include
+           DESTINATION ${KOKKOS_HEADER_DIR} 
            FILES_MATCHING PATTERN "*.hpp"
   )
 
@@ -1082,7 +1096,7 @@ IF(KOKKOS_SEPARATE_LIBS)
   # Install the kokkosalgorithms headers
   INSTALL (DIRECTORY
            ${Kokkos_SOURCE_DIR}/algorithms/src/
-           DESTINATION include
+           DESTINATION ${KOKKOS_INSTALL_INDLUDE_DIR}
            FILES_MATCHING PATTERN "*.hpp"
   )
 
@@ -1124,28 +1138,35 @@ ELSE()
   INSTALL (DIRECTORY
            EXPORT KokkosTargets
            ${Kokkos_SOURCE_DIR}/core/src/
-           DESTINATION include
+           DESTINATION ${KOKKOS_HEADER_DIR}
            FILES_MATCHING PATTERN "*.hpp"
   )
   INSTALL (DIRECTORY
            EXPORT KokkosTargets
            ${Kokkos_SOURCE_DIR}/containers/src/
-           DESTINATION include
+           DESTINATION ${KOKKOS_HEADER_DIR}
            FILES_MATCHING PATTERN "*.hpp"
   )
   INSTALL (DIRECTORY
            EXPORT KokkosTargets
            ${Kokkos_SOURCE_DIR}/algorithms/src/
-           DESTINATION include
+           DESTINATION ${KOKKOS_HEADER_DIR}
            FILES_MATCHING PATTERN "*.hpp"
   )
 
   INSTALL (FILES
            ${Kokkos_BINARY_DIR}/KokkosCore_config.h
-           DESTINATION include
+           DESTINATION ${KOKKOS_HEADER_DIR}
   )
 
+  include_directories(${Kokkos_BINARY_DIR})
+  include_directories(${Kokkos_SOURCE_DIR}/core/src)
+  include_directories(${Kokkos_SOURCE_DIR}/containers/src)
+  include_directories(${Kokkos_SOURCE_DIR}/algorithms/src)
+
+
   SET (Kokkos_LIBRARIES_NAMES kokkos)
+
 endif()
 
 # Add all targets to the build-tree export set
@@ -1161,11 +1182,11 @@ file(RELATIVE_PATH REL_INCLUDE_DIR "${INSTALL_CMAKE_DIR}"
    "${INSTALL_INCLUDE_DIR}")
 # ... for the build tree
 set(CONF_INCLUDE_DIRS "${Kokkos_SOURCE_DIR}" "${Kokkos_BINARY_DIR}")
-configure_file(${CMAKE_SOURCE_DIR}/cmake/KokkosConfig.cmake.in
+configure_file(${Kokkos_SOURCE_DIR}/cmake/KokkosConfig.cmake.in
   "${Kokkos_BINARY_DIR}/KokkosConfig.cmake" @ONLY)
 # ... for the install tree
 set(CONF_INCLUDE_DIRS "\${Kokkos_CMAKE_DIR}/${REL_INCLUDE_DIR}")
-configure_file(${CMAKE_SOURCE_DIR}/cmake/KokkosConfig.cmake.in
+configure_file(${Kokkos_SOURCE_DIR}/cmake/KokkosConfig.cmake.in
   "${Kokkos_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/KokkosConfig.cmake" @ONLY)
 
 # Install the KokkosConfig.cmake and KokkosConfigVersion.cmake

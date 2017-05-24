@@ -33,6 +33,7 @@ KOKKOS_INTERNAL_OPT_RANGE_AGGRESSIVE_VECTORIZATION := $(strip $(shell echo $(KOK
 KOKKOS_INTERNAL_DISABLE_PROFILING := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "disable_profiling" | wc -l))
 KOKKOS_INTERNAL_DISABLE_PROC_BIND := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "disable_proc_bind" | wc -l))
 KOKKOS_INTERNAL_DISABLE_DUALVIEW_MODIFY_CHECK := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "disable_dualview_modify_check" | wc -l))
+KOKKOS_INTERNAL_ENABLE_PROFILING_LOAD_PRINT := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "enable_profile_load_print" | wc -l))
 KOKKOS_INTERNAL_CUDA_USE_LDG := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) | grep "use_ldg" | wc -l))
 KOKKOS_INTERNAL_CUDA_USE_UVM := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) | grep "force_uvm" | wc -l))
 KOKKOS_INTERNAL_CUDA_USE_RELOC := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) | grep "rdc" | wc -l))
@@ -346,6 +347,10 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_DEBUG), 1)
   ifeq ($(KOKKOS_INTERNAL_DISABLE_DUALVIEW_MODIFY_CHECK), 0)
     tmp := $(shell echo "\#define KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK 1" >> KokkosCore_config.tmp )
   endif
+endif
+
+ifeq ($(KOKKOS_INTERNAL_ENABLE_PROFILING_LOAD_PRINT), 1)
+  tmp := $(shell echo "\#define KOKKOS_ENABLE_PROFILING_LOAD_PRINT 1" >> KokkosCore_config.tmp )
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HWLOC), 1)

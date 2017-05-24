@@ -200,7 +200,7 @@ public:
   static int hardware_thread_id() noexcept;
 #endif
 
-  static constexpr const char* const name() noexcept { return "OpenMP"; }
+  static constexpr const char* name() noexcept { return "OpenMP"; }
 };
 
 } // namespace Kokkos

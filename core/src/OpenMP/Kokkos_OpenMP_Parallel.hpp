@@ -243,7 +243,7 @@ public:
       enum { is_dynamic = std::is_same< typename Policy::schedule_type::type
                                       , Kokkos::Dynamic >::value };
 
-      OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
+      OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_reduce");
 
       const size_t pool_reduce_bytes =
         Analysis::value_size( ReducerConditional::select(m_functor, m_reducer));

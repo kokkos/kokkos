@@ -156,7 +156,9 @@ void initialize() {
       std::cerr << "Error: Unable to load KokkosP library: " <<
         profileLibraryName << std::endl;
     } else {
+#ifdef KOKKOS_ENABLE_PROFILING_LOAD_PRINT
       std::cout << "KokkosP: Library Loaded: " << profileLibraryName << std::endl;
+#endif
 
       // dlsym returns a pointer to an object, while we want to assign to pointer to function
       // A direct cast will give warnings hence, we have to workaround the issue by casting pointer to pointers.
