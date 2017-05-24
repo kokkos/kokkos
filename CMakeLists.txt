@@ -119,13 +119,6 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
   "${TPL_ENABLE_HWLOC}"
   )
 
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_DISABLE_PROC_BIND
-  KOKKOS_DISABLE_PROC_BIND
-  "Disable Kokkos binding threads"
-  OFF
-  )
-
 # TODO: This is currently not used in Kokkos.  Should it be removed?
 TRIBITS_ADD_OPTION_AND_DEFINE(
   Kokkos_ENABLE_MPI

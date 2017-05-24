@@ -31,7 +31,6 @@ KOKKOS_INTERNAL_USE_MEMKIND := $(strip $(shell echo $(KOKKOS_USE_TPLS) | grep "e
 # Check for advanced settings.
 KOKKOS_INTERNAL_OPT_RANGE_AGGRESSIVE_VECTORIZATION := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "aggressive_vectorization" | wc -l))
 KOKKOS_INTERNAL_DISABLE_PROFILING := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "disable_profiling" | wc -l))
-KOKKOS_INTERNAL_DISABLE_PROC_BIND := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "disable_proc_bind" | wc -l))
 KOKKOS_INTERNAL_DISABLE_DUALVIEW_MODIFY_CHECK := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "disable_dualview_modify_check" | wc -l))
 KOKKOS_INTERNAL_ENABLE_PROFILING_LOAD_PRINT := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "enable_profile_load_print" | wc -l))
 KOKKOS_INTERNAL_CUDA_USE_LDG := $(strip $(shell echo $(KOKKOS_CUDA_OPTIONS) | grep "use_ldg" | wc -l))
@@ -374,10 +373,6 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_DISABLE_PROFILING), 0)
   tmp := $(shell echo "\#define KOKKOS_ENABLE_PROFILING" >> KokkosCore_config.tmp )
-endif
-
-ifeq ($(KOKKOS_INTERNAL_DISABLE_PROC_BIND), 1)
-  tmp := $(shell echo "\#define KOKKOS_DISABLE_PROC_BIND" >> KokkosCore_config.tmp )
 endif
 
 tmp := $(shell echo "/* Optimization Settings */" >> KokkosCore_config.tmp)
