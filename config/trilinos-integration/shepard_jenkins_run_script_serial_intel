@@ -2,6 +2,19 @@
 ulimit -c 0
 module load devpack/openmpi/1.10.0/intel/16.1.056/cuda/none 
 
+KOKKOS_BRANCH=$1
+TRILINOS_BRANCH=$2
+
+if [ -z $KOKKOS_BRANCH ]
+then
+  KOKKOS_BRANCH=develop
+fi
+
+if [ -z $TRILINOS_BRANCH ]
+then
+  TRILINOS_BRANCH=develop
+fi
+
 export OMP_NUM_THREADS=8
 export JENKINS_DO_CUDA=OFF
 export JENKINS_DO_OPENMP=OFF
@@ -31,10 +44,10 @@ if [ ! -d "${KOKKOS_PATH}" ]; then
 fi
 
 cd ${KOKKOS_PATH}
-git checkout develop
+git checkout $KOKKOS_BRANCH
 git pull
 cd ..
 
-source ${KOKKOS_PATH}/config/trilinos-integration/prepare_trilinos_repos.sh
+source ${KOKKOS_PATH}/config/trilinos-integration/prepare_trilinos_repos.sh $TRILINOS_BRANCH
 
 ${TRILINOS_UPDATED_PATH}/sampleScripts/Sandia-SEMS/run_repo_comparison_slurm ${TRILINOS_UPDATED_PATH} ${TRILINOS_PRISTINE_PATH} ${TRILINOS_UPDATED_PATH}/sampleScripts/Sandia-SEMS/configure-testbeds-jenkins-all TestCompare ${QUEUE}
