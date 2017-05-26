@@ -1,10 +1,16 @@
 #!/bin/bash -le
 
-TRILINOS_BRANCH=$1
+TRILINOS_UPDATE_BRANCH=$1
+TRILINOS_PRISTINE_BRANCH=$2
 
-if [ -z $TRILINOS_BRANCH ]
+if [ -z $TRILINOS_UPDATE_BRANCH ]
 then
-  TRILINOS_BRANCH=develop
+  TRILINOS_UPDATE_BRANCH=develop
+fi
+
+if [ -z $TRILINOS_PRISTINE_BRANCH ]
+then
+  TRILINOS_PRISTINE_BRANCH=develop
 fi
 
 export TRILINOS_UPDATED_PATH=${PWD}/trilinos-update
@@ -23,8 +29,8 @@ if [ ! -d "${TRILINOS_PRISTINE_PATH}" ]; then
 fi
 
 cd ${TRILINOS_UPDATED_PATH}
-git checkout $TRILINOS_BRANCH
-git reset --hard origin/$TRILINOS_BRANCH
+git checkout $TRILINOS_UPDATE_BRANCH
+git reset --hard origin/$TRILINOS_UPDATE_BRANCH
 git pull
 cd ..
 
@@ -35,18 +41,14 @@ echo ""
 echo ""
 echo "Trilinos State:"
 git log --pretty=oneline --since=7.days
-SHA=`git log --pretty=oneline --since=7.days | head -n 2 | tail -n 1 | awk '{print $1}'`
 cd ..
 
 cd ${TRILINOS_PRISTINE_PATH}
 git status
-git log --pretty=oneline --since=7.days
-echo "Checkout $TRILINOS_BRANCH"
-git checkout $TRILINOS_BRANCH
+echo "Checkout $TRILINOS_PRISTINE_BRANCH"
+git checkout $TRILINOS_PRISTINE_BRANCH
 echo "Pull"
 git pull
-echo "Checkout SHA"
-git checkout ${SHA}
 cd ..
 
 cd ${TRILINOS_PRISTINE_PATH}
