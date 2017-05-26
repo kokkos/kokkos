@@ -872,10 +872,11 @@ namespace Impl {
         const FunctorType& functor,
         ReturnType& return_value) {
           #if defined(KOKKOS_ENABLE_PROFILING)
-            uint64_t kpID = 0;
-            if(Kokkos::Profiling::profileLibraryLoaded()) {
-              Kokkos::Profiling::beginParallelReduce("" == label ? typeid(FunctorType).name() : label, 0, &kpID);
-            }
+          uint64_t kpID = 0;
+          if(Kokkos::Profiling::profileLibraryLoaded()) {
+            Kokkos::Impl::ParallelConstructName<FunctorType, typename PolicyType::work_tag> name(label);
+            Kokkos::Profiling::beginParallelReduce(name.get(), 0, &kpID);
+          }
           #endif
 
           Kokkos::Impl::shared_allocation_tracking_claim_and_disable();
@@ -894,9 +895,9 @@ namespace Impl {
           closure.execute();
 
           #if defined(KOKKOS_ENABLE_PROFILING)
-            if(Kokkos::Profiling::profileLibraryLoaded()) {
-              Kokkos::Profiling::endParallelReduce(kpID);
-            }
+          if(Kokkos::Profiling::profileLibraryLoaded()) {
+            Kokkos::Profiling::endParallelReduce(kpID);
+          }
           #endif
         }
 
