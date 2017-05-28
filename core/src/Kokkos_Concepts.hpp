@@ -79,6 +79,17 @@ struct IndexType
   using type = T;
 };
 
+//Specify Launch Bounds for CUDA execution
+template<unsigned int maxT, unsigned int minB>
+struct LaunchBounds
+{
+  //static_assert(std::is_integral<T>::value,"Kokkos: Invalid IndexType<>.");
+  using launch_bounds = LaunchBounds;
+  using type = LaunchBounds<maxT,minB>;
+  static unsigned int constexpr maxTperB {maxT};
+  static unsigned int constexpr minBperSM {minB};
+};
+
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
@@ -119,6 +130,7 @@ using Kokkos::is_array_layout ;
 KOKKOS_IMPL_IS_CONCEPT( iteration_pattern )
 KOKKOS_IMPL_IS_CONCEPT( schedule_type )
 KOKKOS_IMPL_IS_CONCEPT( index_type )
+KOKKOS_IMPL_IS_CONCEPT( launch_bounds )
 
 }
 

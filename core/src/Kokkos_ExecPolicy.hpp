@@ -384,6 +384,7 @@ Impl::PerThreadValue PerThread(const int& arg);
  *    WorkTag (none): Tag which is used as the first argument for the functor operator.
  *    Schedule<Type> (Schedule<Static>): Scheduling Policy (Dynamic, or Static).
  *    IndexType<Type> (IndexType<ExecutionSpace::size_type>: Integer Index type used to iterate over the Index space.
+ *    LaunchBounds<int,int> (LaunchBounds<1024,1>: Launch Bounds for CUDA compilation.
  */
 template< class ... Properties>
 class TeamPolicy: public
