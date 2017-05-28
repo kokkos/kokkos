@@ -1,0 +1,14 @@
+language: cpp
+
+env:
+  - GCC_VERSION=4.7
+  - GCC_VERSION=4.8
+  - GCC_VERSION=5
+
+before_install:
+ - sudo add-apt-repository -y 'deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu precise main'
+ - sudo apt-get update
+ - sudo apt-get install g++-${GCC_VERSION} bc
+
+script:
+        - ./generate_makefile.bash && make -j2 lib CXX=g++-${GCC_VERSION} CXXFLAGS="-Wall -Wshadow -pedantic -Werror -Wsign-compare -Wtype-limits -Wignored-qualifiers -Wempty-body -Wclobbered -Wuninitialized"
