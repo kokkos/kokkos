@@ -63,6 +63,7 @@ endif
 	OBJ_CUDA += TestCuda_Other.o
 	OBJ_CUDA += TestCuda_MDRange.o
 	OBJ_CUDA += TestCuda_Task.o
+	OBJ_CUDA += TestCuda_Spaces.o
 	
 	TARGETS += KokkosCore_UnitTest_Cuda
 

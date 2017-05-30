@@ -79,7 +79,7 @@ IF(Kokkos_ENABLE_Pthread)
       threads/TestThreads_RangePolicy.cpp
       threads/TestThreads_Reductions.cpp
       threads/TestThreads_Scan.cpp
-      threads/TestThreads_ViewAPI_SharedAlloc.cpp
+      threads/TestThreads_SharedAlloc.cpp
       threads/TestThreads_SubView_a.cpp
       threads/TestThreads_SubView_b.cpp
       threads/TestThreads_SubView_c01.cpp

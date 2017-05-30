@@ -624,7 +624,8 @@ public:
   typename std::enable_if< std::is_same<typename drvtraits::value_type, typename drvtraits::scalar_array_type>::value && std::is_integral<iType>::value, reference_type>::type
   operator[](const iType & i0) const
     {
-      KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (1 , this->rank(), m_track, m_map) )
+      //Phalanx is violating this, since they use the operator to access ALL elements in the allocation
+      //KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (1 , this->rank(), m_track, m_map) )
       return data()[i0];
     }
 
