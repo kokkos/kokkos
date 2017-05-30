@@ -144,7 +144,6 @@ do
       echo "--with-options=[OPT]:         Additional options to Kokkos:"
       echo "                                aggressive_vectorization = add ivdep on loops"
       echo "                                disable_profiling = do not compile with profiling hooks"
-      echo "                                disable_proc_bind = do not bind threads"
       echo "                                "
       echo "--with-cuda-options=[OPT]:    Additional options to CUDA:"
       echo "                                force_uvm, use_ldg, enable_lambda, rdc"

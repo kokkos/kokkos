@@ -45,6 +45,8 @@
 #if defined( KOKKOS_ENABLE_OPENMP )
 
 #include <cstdio>
+#include <cstdlib>
+
 #include <limits>
 #include <iostream>
 #include <vector>
@@ -158,11 +160,7 @@ void OpenMPExec::clear_thread_data()
 
   OpenMP::memory_space space ;
 
-#ifdef KOKKOS_IMPL_ENABLE_PROC_BIND
-  #pragma omp parallel num_threads( m_pool_size ) proc_bind(spread)
-#else
   #pragma omp parallel num_threads( m_pool_size )
-#endif
   {
     const int rank = omp_get_thread_num();
 
@@ -220,11 +218,7 @@ void OpenMPExec::resize_thread_data( size_t pool_reduce_bytes
 
     memory_fence();
 
-#ifdef KOKKOS_IMPL_ENABLE_PROC_BIND
-    #pragma omp parallel num_threads(m_pool_size) proc_bind(spread)
-#else
     #pragma omp parallel num_threads(m_pool_size)
-#endif
     {
       const int rank = omp_get_thread_num();
 
@@ -278,11 +272,7 @@ int OpenMP::get_current_max_threads() noexcept
   // static int omp_max_threads = omp_get_max_threads();
 
   int count = 0;
-#ifdef KOKKOS_IMPL_ENABLE_PROC_BIND
-  #pragma omp parallel proc_bind(spread)
-#else
   #pragma omp parallel
-#endif
   {
     #pragma omp atomic
      ++count;
@@ -304,6 +294,13 @@ void OpenMP::initialize( int thread_count )
   }
 
   {
+    if (nullptr == std::getenv("OMP_PROC_BIND") ) {
+      printf("Kokkos::OpenMP::initialize WARNING: OMP_PROC_BIND environment variable not set\n");
+      printf("  In general, for best performance with OpenMP 4.0 or better set OMP_PROC_BIND=spread,close\n");
+      printf("  For best performance with OpenMP 3.1 set OMP_PROC_BIND=true\n");
+      printf("  For unit testing set OMP_PROC_BIND=false\n");
+    }
+
     OpenMP::memory_space space ;
 
     // Before any other call to OMP query the maximum number of threads
@@ -339,11 +336,7 @@ void OpenMP::initialize( int thread_count )
     }
 
     // setup thread local
-#ifdef KOKKOS_IMPL_ENABLE_PROC_BIND
-    #pragma omp parallel num_threads(Impl::g_openmp_hardware_max_threads) proc_bind(spread)
-#else
     #pragma omp parallel num_threads(Impl::g_openmp_hardware_max_threads)
-#endif
     {
       Impl::t_openmp_instance = nullptr;
       Impl::t_openmp_hardware_id = omp_get_thread_num();
@@ -410,11 +403,7 @@ void OpenMP::finalize()
     OpenMP::memory_space space;
     space.deallocate( instance, sizeof(Exec) );
 
-#ifdef KOKKOS_IMPL_ENABLE_PROC_BIND
-    #pragma omp parallel num_threads(nthreads) proc_bind(spread)
-#else
     #pragma omp parallel num_threads(nthreads)
-#endif
     {
       Impl::t_openmp_hardware_id = 0;
       Impl::t_openmp_instance    = nullptr;

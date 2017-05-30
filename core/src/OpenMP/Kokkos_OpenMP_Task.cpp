@@ -125,11 +125,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
                               , 0 /* thread local buffer */
                               );
 
-#ifdef KOKKOS_IMPL_ENABLE_PROC_BIND
-  #pragma omp parallel num_threads(pool_size) proc_bind(spread)
-#else
   #pragma omp parallel num_threads(pool_size)
-#endif
   {
     Impl::HostThreadTeamData & self = *(instance->get_thread_data());
 

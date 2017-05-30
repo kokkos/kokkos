@@ -2,6 +2,25 @@
 ulimit -c 0
 module load devpack/openmpi/1.10.0/intel/16.1.056/cuda/none 
 
+KOKKOS_BRANCH=$1
+TRILINOS_UPDATE_BRANCH=$2
+TRILINOS_PRISTINE_BRANCH=$3
+
+if [ -z $KOKKOS_BRANCH ]
+then
+  KOKKOS_BRANCH=develop
+fi
+
+if [ -z $TRILINOS_UPDATE_BRANCH ]
+then
+  TRILINOS_UPDATE_BRANCH=develop
+fi
+
+if [ -z $TRILINOS_PRISTINE_BRANCH ]
+then
+  TRILINOS_PRISTINE_BRANCH=develop
+fi
+
 export OMP_NUM_THREADS=8
 export JENKINS_DO_CUDA=OFF
 export JENKINS_DO_OPENMP=OFF
@@ -16,6 +35,7 @@ export LAPACK_LIBRARIES=${BLAS_LIBRARIES}
 
 export JENKINS_DO_TESTS=ON
 export JENKINS_DO_EXAMPLES=ON
+export JENKINS_DO_SHARED=OFF
 
 export QUEUE=haswell
 
@@ -31,10 +51,10 @@ if [ ! -d "${KOKKOS_PATH}" ]; then
 fi
 
 cd ${KOKKOS_PATH}
-git checkout develop
+git checkout $KOKKOS_BRANCH
 git pull
 cd ..
 
-source ${KOKKOS_PATH}/config/trilinos-integration/prepare_trilinos_repos.sh
+source ${KOKKOS_PATH}/config/trilinos-integration/prepare_trilinos_repos.sh $TRILINOS_UPDATE_BRANCH $TRILINOS_PRISTINE_BRANCH
 
 ${TRILINOS_UPDATED_PATH}/sampleScripts/Sandia-SEMS/run_repo_comparison_slurm ${TRILINOS_UPDATED_PATH} ${TRILINOS_PRISTINE_PATH} ${TRILINOS_UPDATED_PATH}/sampleScripts/Sandia-SEMS/configure-testbeds-jenkins-all TestCompare ${QUEUE}

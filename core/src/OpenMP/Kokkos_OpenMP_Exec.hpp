@@ -194,11 +194,7 @@ void OpenMP::partition_master( F const& f
 
     OpenMP::memory_space space;
 
-#ifdef KOKKOS_IMPL_ENABLE_PROC_BIND
-#pragma omp parallel num_threads(num_partitions) proc_bind(spread)
-#else
-#pragma omp parallel num_threads(num_partitions)
-#endif
+    #pragma omp parallel num_threads(num_partitions)
     {
       void * const ptr = space.allocate( sizeof(Exec) );
 
