@@ -41,70 +41,48 @@
 //@HEADER
 */
 
-#include <iostream>
-#include <sstream>
+#ifndef KOKKOS_UNIQUE_TOKEN_HPP
+#define KOKKOS_UNIQUE_TOKEN_HPP
 
-#include <Kokkos_Core.hpp>
+#include <Kokkos_Macros.hpp>
 
-#include <grow_array.hpp>
+namespace Kokkos { namespace Experimental {
 
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-int main( int argc , char ** argv )
+enum class UniqueTokenScope : int
 {
-  int num_threads = 4 ;
-  int use_numa = 1 ;
-  int use_core = 1 ;
-  int length_array  = 1000000 ;
-  int span_values = 100000000 ;
+  Instance,
+  Global
+};
 
+/// \brief class to generate unique ids base on the required amount of concurrency
+///
+/// This object should behave like a ref-counted object, so that when the last
+/// instance is destroy resources are free if needed
+template <typename ExecutionSpace, UniqueTokenScope = UniqueTokenScope::Instance >
+class UniqueToken
+{
+public:
+  using execution_space = ExecutionSpace;
+  using size_type       = typename execution_space::size_type;
 
-  if ( Kokkos::hwloc::available() ) {
-    use_numa = Kokkos::hwloc::get_available_numa_count();
-    use_core = Kokkos::hwloc::get_available_cores_per_numa() - 1 ;
-    num_threads = use_numa * use_core * Kokkos::hwloc::get_available_threads_per_core();
-  }
+  /// \brief create object size for concurrency on the given instance
+  ///
+  /// This object should not be shared between instances
+  UniqueToken( execution_space const& = execution_space() );
 
-#if defined( KOKKOS_ENABLE_SERIAL )
-  {
-    std::cout << "Kokkos::Serial" << std::endl ;
-    // The Serial device accepts these arguments, though it may ignore them.
-    Kokkos::Serial::initialize( num_threads , use_numa , use_core );
-    Example::grow_array< Kokkos::Serial >( length_array , span_values );
-    Kokkos::Serial::finalize ();
-  }
-#endif // defined( KOKKOS_ENABLE_SERIAL )
+  /// \brief upper bound for acquired values, i.e. 0 <= value < size()
+  KOKKOS_INLINE_FUNCTION
+  size_type size();
 
-#if defined( KOKKOS_ENABLE_THREADS )
-  {
-    std::cout << "Kokkos::Threads" << std::endl ;
-    Kokkos::Threads::initialize( num_threads , use_numa , use_core );
-    Example::grow_array< Kokkos::Threads >( length_array , span_values );
-    Kokkos::Threads::finalize();
-  }
-#endif
+  /// \brief acquire value such that 0 <= value < size()
+  KOKKOS_INLINE_FUNCTION
+  size_type acquire();
 
-#if defined( KOKKOS_ENABLE_OPENMP )
-  {
-    std::cout << "Kokkos::OpenMP" << std::endl ;
-    Kokkos::OpenMP::initialize();
-    Example::grow_array< Kokkos::OpenMP >( length_array , span_values );
-    Kokkos::OpenMP::finalize();
-  }
-#endif
+  /// \brief release a value acquired by generate
+  KOKKOS_INLINE_FUNCTION
+  void release( size_type );
+};
 
-#if defined( KOKKOS_ENABLE_CUDA )
-  {
-    std::cout << "Kokkos::Cuda" << std::endl ;
-    Kokkos::HostSpace::execution_space::initialize(1);
-    Kokkos::Cuda::initialize();
-    Example::grow_array< Kokkos::Cuda >( length_array , span_values );
-    Kokkos::Cuda::finalize();
-    Kokkos::HostSpace::execution_space::finalize();
-  }
-#endif
+}} // namespace Kokkos::Experimental
 
-  return 0 ;
-}
-
+#endif //KOKKOS_UNIQUE_TOKEN_HPP

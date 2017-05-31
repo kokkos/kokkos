@@ -55,6 +55,7 @@
 
 #include <Kokkos_Atomic.hpp>
 
+#include <Kokkos_UniqueToken.hpp>
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
@@ -627,6 +628,62 @@ inline void Threads::fence()
 
 } /* namespace Kokkos */
 
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos { namespace Experimental {
+
+template<>
+class UniqueToken< Threads, UniqueTokenScope::Instance>
+{
+public:
+  using execution_space = Threads;
+  using size_type       = int;
+
+  /// \brief create object size for concurrency on the given instance
+  ///
+  /// This object should not be shared between instances
+  UniqueToken( execution_space const& = execution_space() ) noexcept {}
+
+  /// \brief upper bound for acquired values, i.e. 0 <= value < size()
+  inline
+  int size() const noexcept { return Threads::thread_pool_size(); }
+
+  /// \brief acquire value such that 0 <= value < size()
+  inline
+  int acquire() const  noexcept { return Threads::thread_pool_rank(); }
+
+  /// \brief release a value acquired by generate
+  inline
+  void release( int ) const noexcept {}
+};
+
+template<>
+class UniqueToken< Threads, UniqueTokenScope::Global>
+{
+public:
+  using execution_space = Threads;
+  using size_type       = int;
+
+  /// \brief create object size for concurrency on the given instance
+  ///
+  /// This object should not be shared between instances
+  UniqueToken( execution_space const& = execution_space() ) noexcept {}
+
+  /// \brief upper bound for acquired values, i.e. 0 <= value < size()
+  inline
+  int size() const noexcept { return Threads::thread_pool_size(); }
+
+  /// \brief acquire value such that 0 <= value < size()
+  inline
+  int acquire() const  noexcept { return Threads::thread_pool_rank(); }
+
+  /// \brief release a value acquired by generate
+  inline
+  void release( int ) const noexcept {}
+};
+
+}} // namespace Kokkos::Experimental
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 #endif

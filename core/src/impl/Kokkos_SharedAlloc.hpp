@@ -83,8 +83,6 @@ protected:
 
   typedef void (* function_type )( SharedAllocationRecord<void,void> * );
 
-  static int s_tracking_enabled ;
-
   SharedAllocationHeader * const m_alloc_ptr ;
   size_t                   const m_alloc_size ;
   function_type            const m_dealloc ;
@@ -110,17 +108,17 @@ protected:
 public:
   inline std::string get_label() const { return std::string("Unmanaged"); }
 
-  static int tracking_enabled() { return s_tracking_enabled ; }
+  static int tracking_enabled();
 
   /**\brief A host process thread claims and disables the
    *        shared allocation tracking flag.
    */
-  static void tracking_claim_and_disable();
+  static void tracking_disable();
 
   /**\brief A host process thread releases and enables the
    *        shared allocation tracking flag.
    */
-  static void tracking_release_and_enable();
+  static void tracking_enable();
 
   ~SharedAllocationRecord() = default ;
 

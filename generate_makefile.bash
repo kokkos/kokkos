@@ -143,6 +143,8 @@ do
       echo "--with-hwloc=/Path/To/Hwloc:  Set path to hwloc."
       echo "--with-options=[OPT]:         Additional options to Kokkos:"
       echo "                                aggressive_vectorization = add ivdep on loops"
+      echo "                                disable_profiling = do not compile with profiling hooks"
+      echo "                                "
       echo "--with-cuda-options=[OPT]:    Additional options to CUDA:"
       echo "                                force_uvm, use_ldg, enable_lambda, rdc"
       echo "--make-j=[NUM]:               Set -j flag used during build."

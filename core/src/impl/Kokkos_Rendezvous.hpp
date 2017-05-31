@@ -41,70 +41,37 @@
 //@HEADER
 */
 
-#include <iostream>
-#include <sstream>
+#ifndef KOKKOS_IMPL_RENDEZVOUS_HPP
+#define KOKKOS_IMPL_RENDEZVOUS_HPP
 
-#include <Kokkos_Core.hpp>
+#include <cstdint>
 
-#include <grow_array.hpp>
+namespace Kokkos { namespace Impl {
 
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-int main( int argc , char ** argv )
+inline
+constexpr int rendezvous_buffer_size( int max_members ) noexcept
 {
-  int num_threads = 4 ;
-  int use_numa = 1 ;
-  int use_core = 1 ;
-  int length_array  = 1000000 ;
-  int span_values = 100000000 ;
-
-
-  if ( Kokkos::hwloc::available() ) {
-    use_numa = Kokkos::hwloc::get_available_numa_count();
-    use_core = Kokkos::hwloc::get_available_cores_per_numa() - 1 ;
-    num_threads = use_numa * use_core * Kokkos::hwloc::get_available_threads_per_core();
-  }
-
-#if defined( KOKKOS_ENABLE_SERIAL )
-  {
-    std::cout << "Kokkos::Serial" << std::endl ;
-    // The Serial device accepts these arguments, though it may ignore them.
-    Kokkos::Serial::initialize( num_threads , use_numa , use_core );
-    Example::grow_array< Kokkos::Serial >( length_array , span_values );
-    Kokkos::Serial::finalize ();
-  }
-#endif // defined( KOKKOS_ENABLE_SERIAL )
-
-#if defined( KOKKOS_ENABLE_THREADS )
-  {
-    std::cout << "Kokkos::Threads" << std::endl ;
-    Kokkos::Threads::initialize( num_threads , use_numa , use_core );
-    Example::grow_array< Kokkos::Threads >( length_array , span_values );
-    Kokkos::Threads::finalize();
-  }
-#endif
-
-#if defined( KOKKOS_ENABLE_OPENMP )
-  {
-    std::cout << "Kokkos::OpenMP" << std::endl ;
-    Kokkos::OpenMP::initialize();
-    Example::grow_array< Kokkos::OpenMP >( length_array , span_values );
-    Kokkos::OpenMP::finalize();
-  }
-#endif
-
-#if defined( KOKKOS_ENABLE_CUDA )
-  {
-    std::cout << "Kokkos::Cuda" << std::endl ;
-    Kokkos::HostSpace::execution_space::initialize(1);
-    Kokkos::Cuda::initialize();
-    Example::grow_array< Kokkos::Cuda >( length_array , span_values );
-    Kokkos::Cuda::finalize();
-    Kokkos::HostSpace::execution_space::finalize();
-  }
-#endif
-
-  return 0 ;
+  return (((max_members + 7) / 8) * 4) + 4 + 4;
 }
+
+// Rendezvous pattern:
+//   if ( rendezvous(root) ) {
+//     ... only root thread here while all others wait ...
+//     rendezvous_release();
+//   }
+//   else {
+//     ... all other threads release here ...
+//   }
+//
+// Requires: buffer[ rendezvous_buffer_size( max_threads ) ];
+int rendezvous( volatile int64_t * const buffer
+              , int const size
+              , int const rank ) noexcept ;
+
+void rendezvous_release( volatile int64_t * const buffer ) noexcept ;
+
+
+}} // namespace Kokkos::Impl
+
+#endif // KOKKOS_IMPL_RENDEZVOUS_HPP
 

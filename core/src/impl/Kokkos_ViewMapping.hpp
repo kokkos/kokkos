@@ -2451,8 +2451,9 @@ template< class ExecSpace , class ValueType >
 struct ViewValueFunctor< ExecSpace , ValueType , false /* is_scalar */ >
 {
   typedef Kokkos::RangePolicy< ExecSpace > PolicyType ;
+  typedef typename ExecSpace::execution_space Exec;
 
-  ExecSpace   space ;
+  Exec        space ;
   ValueType * ptr ;
   size_t      n ;
   bool        destroy ;
