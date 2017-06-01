@@ -76,7 +76,7 @@ TEST_F( openmp, partition_master )
 
     {
       int local_errors = 0;
-      Kokkos::parallel_reduce( 1000
+      Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::OpenMP>(0,1000)
                            , [pool_size]( const int , int & errs ) {
           if ( Kokkos::OpenMP::thread_pool_size() != pool_size ) {
             ++errs;
@@ -89,16 +89,18 @@ TEST_F( openmp, partition_master )
 
     Kokkos::Experimental::UniqueToken< Kokkos::OpenMP > token;
 
-    Kokkos::View<int*> count( "",  token.size() );
+    Kokkos::View<int*, Kokkos::OpenMP> count( "",  token.size() );
 
-    Kokkos::parallel_for( 1000, KOKKOS_LAMBDA ( const int ) {
+    Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP>(0,1000),
+        KOKKOS_LAMBDA ( const int ) {
       int i = token.acquire();
       ++count[i];
       token.release(i);
     });
 
-    Kokkos::View<int> sum ("");
-    Kokkos::parallel_for( token.size(), KOKKOS_LAMBDA ( const int i ) {
+    Kokkos::View<int,Kokkos::OpenMP> sum ("");
+    Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP>(0,token.size()),
+        KOKKOS_LAMBDA ( const int i ) {
       Kokkos::atomic_add( sum.data(), count[i] );
     });
 
