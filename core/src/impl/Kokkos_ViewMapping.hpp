@@ -1228,7 +1228,7 @@ private:
 
     // If memory alignment is a multiple of the trivial scalar size then attempt to align.
     enum { align = 0 != TrivialScalarSize && 0 == mod ? div : 0 };
-    enum { div_ok = div ? div : 1 }; // To valid modulo zero in constexpr
+    enum { div_ok = (div != 0) ? div : 1 }; // To valid modulo zero in constexpr
 
     KOKKOS_INLINE_FUNCTION
     static constexpr size_t stride( size_t const N )
