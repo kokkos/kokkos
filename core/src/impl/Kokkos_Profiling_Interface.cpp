@@ -50,6 +50,24 @@
 namespace Kokkos {
 namespace Profiling {
 
+static initFunction initProfileLibrary = NULL;
+static finalizeFunction finalizeProfileLibrary = NULL;
+
+static beginFunction beginForCallee = NULL;
+static beginFunction beginScanCallee = NULL;
+static beginFunction beginReduceCallee = NULL;
+static endFunction endForCallee = NULL;
+static endFunction endScanCallee = NULL;
+static endFunction endReduceCallee = NULL;
+
+static pushFunction pushRegionCallee = NULL;
+static popFunction popRegionCallee = NULL;
+
+static allocateDataFunction allocateDataCallee = NULL;
+static deallocateDataFunction deallocateDataCallee = NULL;
+
+static deepCopyFunction deepCopyCallee = NULL;
+
 SpaceHandle::SpaceHandle(const char* space_name) {
   strncpy(name,space_name,64);
 }

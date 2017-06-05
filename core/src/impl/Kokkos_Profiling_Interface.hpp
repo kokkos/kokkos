@@ -86,24 +86,6 @@ typedef void (*deepCopyFunction)(
     const SpaceHandle, const char*, const void*,
     const uint64_t);
 
-static initFunction initProfileLibrary = NULL;
-static finalizeFunction finalizeProfileLibrary = NULL;
-
-static beginFunction beginForCallee = NULL;
-static beginFunction beginScanCallee = NULL;
-static beginFunction beginReduceCallee = NULL;
-static endFunction endForCallee = NULL;
-static endFunction endScanCallee = NULL;
-static endFunction endReduceCallee = NULL;
-
-static pushFunction pushRegionCallee = NULL;
-static popFunction popRegionCallee = NULL;
-
-static allocateDataFunction allocateDataCallee = NULL;
-static deallocateDataFunction deallocateDataCallee = NULL;
-
-static deepCopyFunction deepCopyCallee = NULL;
-
 bool profileLibraryLoaded();
 
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID);
@@ -125,34 +107,6 @@ void deepCopy(const SpaceHandle dst_space, const std::string dst_label, const vo
 
 void initialize();
 void finalize();
-
-//Define finalize_fake inline to get rid of warnings for unused static variables
-inline void finalize_fake() {
-  if(NULL != finalizeProfileLibrary) {
-    (*finalizeProfileLibrary)();
-
-    // Set all profile hooks to NULL to prevent
-    // any additional calls. Once we are told to
-    // finalize, we mean it
-    beginForCallee = NULL;
-    beginScanCallee = NULL;
-    beginReduceCallee = NULL;
-    endScanCallee = NULL;
-    endForCallee = NULL;
-    endReduceCallee = NULL;
-
-    allocateDataCallee = NULL;
-    deallocateDataCallee = NULL;
-
-    deepCopyCallee = NULL;
-
-    initProfileLibrary = NULL;
-    finalizeProfileLibrary = NULL;
-    pushRegionCallee = NULL;
-    popRegionCallee = NULL;
-  }
-}
-
 
 }
 }
