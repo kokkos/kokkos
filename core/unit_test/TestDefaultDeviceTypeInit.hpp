@@ -189,7 +189,7 @@ void check_correct_initialization( const Kokkos::InitArguments & argstruct ) {
 #ifdef KOKKOS_ENABLE_OPENMP
   if ( std::is_same< Kokkos::HostSpace::execution_space, Kokkos::OpenMP >::value ) {
     // use openmp default num threads
-    if (expected_nthreads < 0 || !Kokkos::hwloc::available() ) {
+    if ( expected_nthreads < 0 || ( expected_nthreads == 0 && !Kokkos::hwloc::available() ) ) {
       expected_nthreads = omp_get_max_threads();
     }
     // use hwloc if available
