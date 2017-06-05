@@ -202,7 +202,7 @@ void initialize() {
       deallocateDataCallee = *((deallocateDataFunction*) &p12);
 
       auto p13 = dlsym(firstProfileLibrary, "kokkosp_deep_copy");
-      deepCopyCallee = *((deepCopyFunction*) &p11);
+      deepCopyCallee = *((deepCopyFunction*) &p13);
 
     }
   }
@@ -245,6 +245,7 @@ void finalize() {
     allocateDataCallee = NULL;
     deallocateDataCallee = NULL;
 
+    deepCopyCallee = NULL;
   }
 }
 }

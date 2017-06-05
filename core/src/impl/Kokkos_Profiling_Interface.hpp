@@ -102,6 +102,7 @@ static popFunction popRegionCallee = NULL;
 static allocateDataFunction allocateDataCallee = NULL;
 static deallocateDataFunction deallocateDataCallee = NULL;
 
+static deepCopyFunction deepCopyCallee = NULL;
 
 bool profileLibraryLoaded();
 
@@ -142,6 +143,8 @@ inline void finalize_fake() {
 
     allocateDataCallee = NULL;
     deallocateDataCallee = NULL;
+
+    deepCopyCallee = NULL;
 
     initProfileLibrary = NULL;
     finalizeProfileLibrary = NULL;
