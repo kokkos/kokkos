@@ -50,69 +50,69 @@
 namespace Kokkos {
 namespace Profiling {
 
-static initFunction initProfileLibrary = NULL;
-static finalizeFunction finalizeProfileLibrary = NULL;
+static initFunction initProfileLibrary = nullptr;
+static finalizeFunction finalizeProfileLibrary = nullptr;
 
-static beginFunction beginForCallee = NULL;
-static beginFunction beginScanCallee = NULL;
-static beginFunction beginReduceCallee = NULL;
-static endFunction endForCallee = NULL;
-static endFunction endScanCallee = NULL;
-static endFunction endReduceCallee = NULL;
+static beginFunction beginForCallee = nullptr;
+static beginFunction beginScanCallee = nullptr;
+static beginFunction beginReduceCallee = nullptr;
+static endFunction endForCallee = nullptr;
+static endFunction endScanCallee = nullptr;
+static endFunction endReduceCallee = nullptr;
 
-static pushFunction pushRegionCallee = NULL;
-static popFunction popRegionCallee = NULL;
+static pushFunction pushRegionCallee = nullptr;
+static popFunction popRegionCallee = nullptr;
 
-static allocateDataFunction allocateDataCallee = NULL;
-static deallocateDataFunction deallocateDataCallee = NULL;
+static allocateDataFunction allocateDataCallee = nullptr;
+static deallocateDataFunction deallocateDataCallee = nullptr;
 
-static deepCopyFunction deepCopyCallee = NULL;
+static deepCopyFunction deepCopyCallee = nullptr;
 
 SpaceHandle::SpaceHandle(const char* space_name) {
   strncpy(name,space_name,64);
 }
 
 bool profileLibraryLoaded() {
-  return (NULL != initProfileLibrary);
+  return (nullptr != initProfileLibrary);
 }
 
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID) {
-  if(NULL != beginForCallee) {
+  if(nullptr != beginForCallee) {
     Kokkos::fence();
     (*beginForCallee)(kernelPrefix.c_str(), devID, kernelID);
   }
 }
 
 void endParallelFor(const uint64_t kernelID) {
-  if(NULL != endForCallee) {
+  if(nullptr != endForCallee) {
     Kokkos::fence();
     (*endForCallee)(kernelID);
   }
 }
 
 void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID) {
-  if(NULL != beginScanCallee) {
+  if(nullptr != beginScanCallee) {
     Kokkos::fence();
     (*beginScanCallee)(kernelPrefix.c_str(), devID, kernelID);
   }
 }
 
 void endParallelScan(const uint64_t kernelID) {
-  if(NULL != endScanCallee) {
+  if(nullptr != endScanCallee) {
     Kokkos::fence();
     (*endScanCallee)(kernelID);
   }
 }
 
 void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID) {
-  if(NULL != beginReduceCallee) {
+  if(nullptr != beginReduceCallee) {
     Kokkos::fence();
     (*beginReduceCallee)(kernelPrefix.c_str(), devID, kernelID);
   }
 }
 
 void endParallelReduce(const uint64_t kernelID) {
-  if(NULL != endReduceCallee) {
+  if(nullptr != endReduceCallee) {
     Kokkos::fence();
     (*endReduceCallee)(kernelID);
   }
@@ -120,27 +120,27 @@ void endParallelReduce(const uint64_t kernelID) {
 
 
 void pushRegion(const std::string& kName) {
-  if( NULL != pushRegionCallee ) {
+  if( nullptr != pushRegionCallee ) {
     Kokkos::fence();
     (*pushRegionCallee)(kName.c_str());
   }
 }
 
 void popRegion() {
-  if( NULL != popRegionCallee ) {
+  if( nullptr != popRegionCallee ) {
     Kokkos::fence();
     (*popRegionCallee)();
   }
 }
 
 void allocateData(const SpaceHandle space, const std::string label, const void* ptr, const uint64_t size) {
-  if(NULL != allocateDataCallee) {
+  if(nullptr != allocateDataCallee) {
     (*allocateDataCallee)(space,label.c_str(),ptr,size);
   }
 }
 
 void deallocateData(const SpaceHandle space, const std::string label, const void* ptr, const uint64_t size) {
-  if(NULL != deallocateDataCallee) {
+  if(nullptr != deallocateDataCallee) {
     (*deallocateDataCallee)(space,label.c_str(),ptr,size);
   }
 }
@@ -148,7 +148,7 @@ void deallocateData(const SpaceHandle space, const std::string label, const void
 void deepCopy(const SpaceHandle dst_space, const std::string dst_label, const void* dst_ptr,
     const SpaceHandle src_space, const std::string src_label, const void* src_ptr,
     const uint64_t size) {
-  if(NULL != deepCopyCallee) {
+  if(nullptr != deepCopyCallee) {
     (*deepCopyCallee)(dst_space, dst_label.c_str(), dst_ptr,
                       src_space, src_label.c_str(), src_ptr,
                       size);
@@ -168,7 +168,7 @@ void initialize() {
 
   // If we do not find a profiling library in the environment then exit
   // early.
-  if( NULL == envProfileLibrary ) {
+  if( nullptr == envProfileLibrary ) {
     return ;
   }
 
@@ -177,10 +177,10 @@ void initialize() {
 
   char* profileLibraryName = strtok(envProfileCopy, ";");
 
-  if( (NULL != profileLibraryName) && (strcmp(profileLibraryName, "") != 0) ) {
+  if( (nullptr != profileLibraryName) && (strcmp(profileLibraryName, "") != 0) ) {
     firstProfileLibrary = dlopen(profileLibraryName, RTLD_NOW | RTLD_GLOBAL);
 
-    if(NULL == firstProfileLibrary) {
+    if(nullptr == firstProfileLibrary) {
       std::cerr << "Error: Unable to load KokkosP library: " <<
         profileLibraryName << std::endl;
     } else {
@@ -225,11 +225,11 @@ void initialize() {
     }
   }
 
-  if(NULL != initProfileLibrary) {
+  if(nullptr != initProfileLibrary) {
     (*initProfileLibrary)(0,
         (uint64_t) KOKKOSP_INTERFACE_VERSION,
         (uint32_t) 0,
-        NULL);
+        nullptr);
   }
 
   free(envProfileCopy);
@@ -241,29 +241,29 @@ void finalize() {
   if(is_finalized) return;
   is_finalized = 1;
 
-  if(NULL != finalizeProfileLibrary) {
+  if(nullptr != finalizeProfileLibrary) {
     (*finalizeProfileLibrary)();
 
-    // Set all profile hooks to NULL to prevent
+    // Set all profile hooks to nullptr to prevent
     // any additional calls. Once we are told to
     // finalize, we mean it
-    initProfileLibrary = NULL;
-    finalizeProfileLibrary = NULL;
+    initProfileLibrary = nullptr;
+    finalizeProfileLibrary = nullptr;
 
-    beginForCallee = NULL;
-    beginScanCallee = NULL;
-    beginReduceCallee = NULL;
-    endScanCallee = NULL;
-    endForCallee = NULL;
-    endReduceCallee = NULL;
+    beginForCallee = nullptr;
+    beginScanCallee = nullptr;
+    beginReduceCallee = nullptr;
+    endScanCallee = nullptr;
+    endForCallee = nullptr;
+    endReduceCallee = nullptr;
 
-    pushRegionCallee = NULL;
-    popRegionCallee = NULL;
+    pushRegionCallee = nullptr;
+    popRegionCallee = nullptr;
 
-    allocateDataCallee = NULL;
-    deallocateDataCallee = NULL;
+    allocateDataCallee = nullptr;
+    deallocateDataCallee = nullptr;
 
-    deepCopyCallee = NULL;
+    deepCopyCallee = nullptr;
   }
 }
 }
