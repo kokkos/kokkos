@@ -122,7 +122,7 @@ void allocateData(const SpaceHandle space, const std::string label, const void* 
 }
 
 void deallocateData(const SpaceHandle space, const std::string label, const void* ptr, const uint64_t size) {
-  if(NULL != allocateDataCallee) {
+  if(NULL != deallocateDataCallee) {
     (*deallocateDataCallee)(space,label.c_str(),ptr,size);
   }
 }
