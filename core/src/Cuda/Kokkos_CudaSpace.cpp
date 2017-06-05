@@ -230,18 +230,6 @@ void CudaHostPinnedSpace::deallocate( void * const arg_alloc_ptr , const size_t 
   } catch(...) {}
 }
 
-constexpr const char* CudaSpace::name() {
-  return m_name;
-}
-
-constexpr const char* CudaUVMSpace::name() {
-  return m_name;
-}
-
-constexpr const char* CudaHostPinnedSpace::name() {
-  return m_name;
-}
-
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
