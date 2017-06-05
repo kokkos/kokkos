@@ -284,9 +284,6 @@ void HostSpace::deallocate( void * const arg_alloc_ptr , const size_t arg_alloc_
   }
 }
 
-constexpr const char* HostSpace::name() {
-  return m_name;
-}
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
