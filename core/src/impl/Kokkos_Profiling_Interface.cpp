@@ -127,6 +127,16 @@ void deallocateData(const SpaceHandle space, const std::string label, const void
   }
 }
 
+void deepCopy(const SpaceHandle dst_space, const std::string dst_label, const void* dst_ptr,
+    const SpaceHandle src_space, const std::string src_label, const void* src_ptr,
+    const uint64_t size) {
+  if(NULL != deepCopyCallee) {
+    (*deepCopyCallee)(dst_space, dst_label.c_str(), dst_ptr,
+                      src_space, src_label.c_str(), src_ptr,
+                      size);
+  }
+}
+
 void initialize() {
 
   // Make sure initialize calls happens only once
@@ -190,6 +200,9 @@ void initialize() {
       allocateDataCallee = *((allocateDataFunction*) &p11);
       auto p12 = dlsym(firstProfileLibrary, "kokkosp_deallocate_data");
       deallocateDataCallee = *((deallocateDataFunction*) &p12);
+
+      auto p13 = dlsym(firstProfileLibrary, "kokkosp_deep_copy");
+      deepCopyCallee = *((deepCopyFunction*) &p11);
 
     }
   }
