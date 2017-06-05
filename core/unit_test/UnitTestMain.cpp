@@ -42,8 +42,13 @@
 */
 
 #include <gtest/gtest.h>
+#include <cstdlib>
 
 int main( int argc, char *argv[] ) {
+
+  // if OMP_PROC_BIND not set, disable proc bind
+  setenv("OMP_PROC_BIND", "false", 0);
+
   ::testing::InitGoogleTest( &argc, argv );
   return RUN_ALL_TESTS();
 }

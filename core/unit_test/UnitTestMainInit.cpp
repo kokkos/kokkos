@@ -42,9 +42,15 @@
 */
 
 #include <gtest/gtest.h>
+#include <cstdlib>
+
 #include <Kokkos_Core.hpp>
 
 int main( int argc, char *argv[] ) {
+
+  // if OMP_PROC_BIND not set, disable proc bind
+  setenv("OMP_PROC_BIND", "false", 0);
+
   Kokkos::initialize(argc,argv);
   ::testing::InitGoogleTest( &argc, argv );
 
