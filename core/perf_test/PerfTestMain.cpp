@@ -42,6 +42,8 @@
 */
 
 #include <gtest/gtest.h>
+#include <cstdlib>
+
 #include <Kokkos_Core.hpp>
 
 namespace Test {
@@ -65,10 +67,6 @@ const char* command_line_arg(int k, char** input_args = NULL) {
 }
 
 int main(int argc, char *argv[]) {
-
-  // if OMP_PROC_BIND not set, disable proc bind for unit testing
-  setenv("OMP_PROC_BIND", "false", 0);
-
   ::testing::InitGoogleTest(&argc,argv);
   Kokkos::initialize(argc,argv);
 
