@@ -60,15 +60,18 @@ KokkosContainers_UnitTest_OpenMP: $(OBJ_OPENMP) $(KOKKOS_LINK_DEPENDS)
 KokkosContainers_UnitTest_Serial: $(OBJ_SERIAL) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_SERIAL) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosContainers_UnitTest_Serial
 
+test-cuda: export OMP_PROC_BIND=false
 test-cuda: KokkosContainers_UnitTest_Cuda
 	./KokkosContainers_UnitTest_Cuda
 
 test-threads: KokkosContainers_UnitTest_Threads
 	./KokkosContainers_UnitTest_Threads
 
+test-openmp: export OMP_PROC_BIND=false
 test-openmp: KokkosContainers_UnitTest_OpenMP
 	./KokkosContainers_UnitTest_OpenMP
 
+test-serial: export OMP_PROC_BIND=false
 test-serial: KokkosContainers_UnitTest_Serial
 	./KokkosContainers_UnitTest_Serial
 
