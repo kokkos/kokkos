@@ -170,7 +170,8 @@ struct FunctorValueTraits< FunctorType , ArgTag , true /* == exists FunctorType:
   static_assert( 0 == ( sizeof(value_type) % sizeof(int) ) ,
     "Reduction functor's declared value_type requires: 0 == sizeof(value_type) % sizeof(int)" );
 
-  enum : bool { IsArray = Impl::is_array< typename FunctorType::value_type >::value };
+  /* this cast to bool is needed for correctness by NVCC */
+  enum : bool { IsArray = static_cast<bool>(Impl::is_array< typename FunctorType::value_type >::value) };
 
   // If not an array then what is the sizeof(value_type)
   enum { StaticValueSize = IsArray ? 0 : sizeof(value_type) };
