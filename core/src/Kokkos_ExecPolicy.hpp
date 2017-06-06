@@ -561,6 +561,7 @@ KOKKOS_INLINE_FUNCTION
 Impl::ThreadVectorRangeBoundariesStruct<iType,TeamMemberType>
 ThreadVectorRange( const TeamMemberType&, const iType& count );
 
+#if defined(KOKKOS_ENABLE_PROFILING)
 namespace Impl {
 
 template<typename FunctorType, typename TagType,
@@ -597,6 +598,7 @@ struct ParallelConstructName<FunctorType, TagType, false> {
 };
 
 } // namespace Impl
+#endif /* defined KOKKOS_ENABLE_PROFILING */
 
 } // namespace Kokkos
 
