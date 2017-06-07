@@ -50,7 +50,7 @@
 
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
 __device__ __constant__
-Kokkos::Impl::CudaLockArrays kokkos_impl_cuda_lock_arrays ;
+Kokkos::Impl::CudaLockArrays kokkos_impl_cuda_lock_arrays = { nullptr, nullptr, 0 };
 #endif
 
 namespace Kokkos {
@@ -74,7 +74,7 @@ __global__ void init_lock_array_kernel_threadid(int N) {
 
 namespace Impl {
 
-Kokkos::Impl::CudaLockArrays host_cuda_lock_arrays ;
+Kokkos::Impl::CudaLockArrays host_cuda_lock_arrays = { nullptr, nullptr, 0 };
 
 void initialize_host_cuda_lock_arrays() {
   CUDA_SAFE_CALL(cudaMalloc(&host_cuda_lock_arrays.atomic,
@@ -90,6 +90,9 @@ void initialize_host_cuda_lock_arrays() {
 void finalize_host_cuda_lock_arrays() {
   cudaFree(host_cuda_lock_arrays.atomic);
   host_cuda_lock_arrays.atomic = nullptr;
+  cudaFree(host_cuda_lock_arrays.threadid);
+  host_cuda_lock_arrays.threadid = nullptr;
+  host_cuda_lock_arrays.n = 0;
 }
 
 } // namespace Impl

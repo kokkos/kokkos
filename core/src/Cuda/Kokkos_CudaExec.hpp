@@ -53,6 +53,7 @@
 #include <impl/Kokkos_Error.hpp>
 #include <Cuda/Kokkos_Cuda_abort.hpp>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
+#include <Cuda/Kokkos_Cuda_Locks.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -125,50 +126,9 @@ unsigned long kokkos_impl_cuda_constant_memory_buffer[ Kokkos::Impl::CudaTraits:
 
 #endif
 
-
-namespace Kokkos {
-namespace Impl {
-  struct CudaLockArraysStruct {
-    int* atomic;
-    int* scratch;
-    int* threadid;
-    int n;
-  };
-}
-}
-__device__ __constant__
-#ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
-extern
-#endif
-Kokkos::Impl::CudaLockArraysStruct kokkos_impl_cuda_lock_arrays ;
-
-#define CUDA_SPACE_ATOMIC_MASK 0x1FFFF
-#define CUDA_SPACE_ATOMIC_XOR_MASK 0x15A39
-
 namespace Kokkos {
 namespace Impl {
   void* cuda_resize_scratch_space(std::int64_t bytes, bool force_shrink = false);
-}
-}
-
-namespace Kokkos {
-namespace Impl {
-__device__ inline
-bool lock_address_cuda_space(void* ptr) {
-  size_t offset = size_t(ptr);
-  offset = offset >> 2;
-  offset = offset & CUDA_SPACE_ATOMIC_MASK;
-  return (0 == atomicCAS(&kokkos_impl_cuda_lock_arrays.atomic[offset],0,1));
-}
-
-__device__ inline
-void unlock_address_cuda_space(void* ptr) {
-  size_t offset = size_t(ptr);
-  offset = offset >> 2;
-  offset = offset & CUDA_SPACE_ATOMIC_MASK;
-  atomicExch( &kokkos_impl_cuda_lock_arrays.atomic[ offset ], 0);
-}
-
 }
 }
 
@@ -290,14 +250,7 @@ struct CudaParallelLaunch< DriverType , false > {
       }
       #endif
 
-      #ifndef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
-      Kokkos::Impl::CudaLockArraysStruct locks;
-      locks.atomic = atomic_lock_array_cuda_space_ptr(false);
-      locks.scratch = scratch_lock_array_cuda_space_ptr(false);
-      locks.threadid = threadid_lock_array_cuda_space_ptr(false);
-      locks.n = Kokkos::Cuda::concurrency();
-      cudaMemcpyToSymbol( kokkos_impl_cuda_lock_arrays , & locks , sizeof(CudaLockArraysStruct) );
-      #endif
+      Kokkos::Impl::ensure_cuda_lock_arrays_on_device();
 
       cuda_parallel_launch_local_memory< DriverType ><<< grid , block , shmem , stream >>>( driver );
 
