@@ -49,14 +49,19 @@
 #ifdef KOKKOS_ENABLE_CUDA
 
 #include <cstdint>
+#include <iostream>
+#include <cassert>
+#include <stdio.h>
+
+#include <Cuda/Kokkos_Cuda_Error.hpp>
 
 namespace Kokkos {
 namespace Impl {
 
 struct CudaLockArrays {
-  int* atomic;
-  int* threadid;
-  int n;
+  std::int32_t* atomic;
+  std::int32_t* threadid;
+  std::int32_t n;
 };
 
 extern Kokkos::Impl::CudaLockArrays host_cuda_lock_arrays ;
@@ -72,11 +77,12 @@ void finalize_host_cuda_lock_arrays();
 __device__ __constant__
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
 extern
+#else
+static
 #endif
 Kokkos::Impl::CudaLockArrays kokkos_impl_cuda_lock_arrays ;
 
 #define CUDA_SPACE_ATOMIC_MASK 0x1FFFF
-#define CUDA_SPACE_ATOMIC_XOR_MASK 0x15A39
 
 namespace Kokkos {
 namespace Impl {
@@ -97,22 +103,25 @@ void unlock_address_cuda_space(void* ptr) {
   atomicExch( &kokkos_impl_cuda_lock_arrays.atomic[ offset ], 0);
 }
 
-inline
-void copy_cuda_lock_arrays_to_device() {
-  cudaMemcpyToSymbol( kokkos_impl_cuda_lock_arrays ,
-                      & Kokkos::Impl::host_cuda_lock_arrays ,
-                      sizeof(CudaLockArrays) );
-}
-
-inline
-void ensure_cuda_lock_arrays_on_device() {
-#ifndef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
-  copy_cuda_lock_arrays_to_device();
-#endif
-}
-
 } // namespace Impl
 } // namespace Kokkos
+
+/* Dan Ibanez: it is critical that this code be a macro, so that it will
+   captures the right address for kokkos_impl_cuda_lock_arrays!
+   putting this in an inline function will NOT do the right thing! */
+#define KOKKOS_COPY_CUDA_LOCK_ARRAYS_TO_DEVICE() \
+do { \
+  CUDA_SAFE_CALL(cudaMemcpyToSymbol( \
+        kokkos_impl_cuda_lock_arrays , \
+        & Kokkos::Impl::host_cuda_lock_arrays , \
+        sizeof(Kokkos::Impl::CudaLockArrays) ) ); \
+} while (0)
+
+#ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
+#define KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE()
+#else
+#define KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE() KOKKOS_COPY_CUDA_LOCK_ARRAYS_TO_DEVICE()
+#endif
 
 #endif /* defined( __CUDACC__ ) */
 

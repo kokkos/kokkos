@@ -207,14 +207,7 @@ struct CudaParallelLaunch< DriverType , true > {
       // Copy functor to constant memory on the device
       cudaMemcpyToSymbol( kokkos_impl_cuda_constant_memory_buffer , & driver , sizeof(DriverType) );
 
-      #ifndef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
-      Kokkos::Impl::CudaLockArraysStruct locks;
-      locks.atomic = atomic_lock_array_cuda_space_ptr(false);
-      locks.scratch = scratch_lock_array_cuda_space_ptr(false);
-      locks.threadid = threadid_lock_array_cuda_space_ptr(false);
-      locks.n = Kokkos::Cuda::concurrency();
-      cudaMemcpyToSymbol( kokkos_impl_cuda_lock_arrays , & locks , sizeof(CudaLockArraysStruct) );
-      #endif
+      KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
 
       // Invoke the driver function on the device
       cuda_parallel_launch_constant_memory< DriverType ><<< grid , block , shmem , stream >>>();
@@ -250,7 +243,7 @@ struct CudaParallelLaunch< DriverType , false > {
       }
       #endif
 
-      Kokkos::Impl::ensure_cuda_lock_arrays_on_device();
+      KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
 
       cuda_parallel_launch_local_memory< DriverType ><<< grid , block , shmem , stream >>>( driver );
 

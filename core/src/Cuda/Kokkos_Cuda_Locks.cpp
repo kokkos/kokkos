@@ -47,6 +47,7 @@
 
 #include <Cuda/Kokkos_Cuda_Locks.hpp>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
+#include <Kokkos_Cuda.hpp>
 
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
 __device__ __constant__
@@ -59,8 +60,9 @@ namespace {
 
 __global__ void init_lock_array_kernel_atomic() {
   unsigned i = blockIdx.x*blockDim.x + threadIdx.x;
-  if(i<CUDA_SPACE_ATOMIC_MASK+1)
+  if(i<CUDA_SPACE_ATOMIC_MASK+1) {
     kokkos_impl_cuda_lock_arrays.atomic[i] = 0;
+  }
 }
 
 __global__ void init_lock_array_kernel_threadid(int N) {
@@ -74,17 +76,19 @@ __global__ void init_lock_array_kernel_threadid(int N) {
 
 namespace Impl {
 
-Kokkos::Impl::CudaLockArrays host_cuda_lock_arrays = { nullptr, nullptr, 0 };
+CudaLockArrays host_cuda_lock_arrays;
 
 void initialize_host_cuda_lock_arrays() {
   CUDA_SAFE_CALL(cudaMalloc(&host_cuda_lock_arrays.atomic,
                  sizeof(int)*(CUDA_SPACE_ATOMIC_MASK+1)));
   CUDA_SAFE_CALL(cudaMalloc(&host_cuda_lock_arrays.threadid,
                  sizeof(int)*(Cuda::concurrency())));
-  host_cuda_lock_arrays.n = Kokkos::Cuda::concurrency();
-  copy_cuda_lock_arrays_to_device();
-  init_lock_array_kernel_atomic<<<(CUDA_SPACE_ATOMIC_MASK+255)/256,256>>>();
+  CUDA_SAFE_CALL(cudaDeviceSynchronize());
+  host_cuda_lock_arrays.n = Cuda::concurrency();
+  KOKKOS_COPY_CUDA_LOCK_ARRAYS_TO_DEVICE();
+  init_lock_array_kernel_atomic<<<(CUDA_SPACE_ATOMIC_MASK+1+255)/256,256>>>();
   init_lock_array_kernel_threadid<<<(Kokkos::Cuda::concurrency()+255)/256,256>>>(Kokkos::Cuda::concurrency());
+  CUDA_SAFE_CALL(cudaDeviceSynchronize());
 }
 
 void finalize_host_cuda_lock_arrays() {
