@@ -3155,6 +3155,8 @@ void view_error_operator_bounds
   view_error_operator_bounds<R+1>(buf+n,len-n,map,args...);
 }
 
+#if ! defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+
 template< class T, class Enable = void >
 struct has_printable_label_typedef : public std::false_type {};
 
@@ -3167,20 +3169,57 @@ struct has_printable_label_typedef<
 template< class MapType >
 KOKKOS_INLINE_FUNCTION
 void operator_bounds_error_on_device(
+    MapType const&,
     std::false_type) {
   Kokkos::abort("View bounds error");
 }
 
+template< class MapType,
+  bool is_managed = (MapType::is_managed != 0) >
+struct OperatorBoundsErrorOnDevice;
+
+template< class MapType >
+struct OperatorBoundsErrorOnDevice< MapType, false > {
+KOKKOS_INLINE_FUNCTION
+static void run(MapType const&) {
+  Kokkos::abort("View bounds error");
+}
+};
+
+template< class MapType >
+struct OperatorBoundsErrorOnDevice< MapType, true > {
+KOKKOS_INLINE_FUNCTION
+static void run(MapType const& map) {
+  char const* const user_alloc_start = reinterpret_cast<char const*>(map.data());
+  char const* const header_start = user_alloc_start - sizeof(SharedAllocationHeader);
+  SharedAllocationHeader const* const header =
+    reinterpret_cast<SharedAllocationHeader const*>(header_start);
+  char const* const label = header->implementation_get_private_label();
+  enum { LEN = 128 };
+  char msg[LEN];
+  char const* const first_part = "View bounds error of view ";
+  char* p = msg;
+  char* const end = msg + LEN - 1;
+  for (char const* p2 = first_part; (*p2 != '\0') && (p < end); ++p, ++p2) {
+    *p = *p2;
+  }
+  for (char const* p2 = label; (*p2 != '\0') && (p < end); ++p, ++p2) {
+    *p = *p2;
+  }
+  *p = '\0';
+  Kokkos::abort(msg);
+}
+};
+
 template< class MapType >
 KOKKOS_INLINE_FUNCTION
 void operator_bounds_error_on_device(
+    MapType const& map,
     std::true_type) {
-  if (!MapType::is_managed) {
-    operator_bounds_error_on_device<MapType>(std::false_type());
-    return;
-  }
-  enum { LEN = 128 };
+  OperatorBoundsErrorOnDevice< MapType >::run(map);
 }
+
+#endif // ! defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
 
 template< class MemorySpace , class MapType , class ... Args >
 KOKKOS_INLINE_FUNCTION
@@ -3198,7 +3237,7 @@ void view_verify_operator_bounds
     Kokkos::Impl::throw_runtime_exception(std::string(buffer));
 #else
     operator_bounds_error_on_device<MapType>(
-        has_printable_label_typedef<MapType>::value);
+        map, has_printable_label_typedef<MapType>());
 #endif
   }
 }

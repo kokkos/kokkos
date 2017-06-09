@@ -213,9 +213,6 @@ struct enable_if< true , T > { typedef T type ; };
 
 //----------------------------------------------------------------------------
 
-template< class T , class R = void >
-struct enable_if_type { typedef R type; };
-
 } // namespace Impl
 } // namespace Kokkos
 
