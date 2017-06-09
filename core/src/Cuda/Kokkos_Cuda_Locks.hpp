@@ -84,6 +84,11 @@ Kokkos::Impl::CudaLockArrays kokkos_impl_cuda_lock_arrays ;
 namespace Kokkos {
 namespace Impl {
 
+/// \brief Aquire a lock for the address
+///
+/// This function tries to aquire the lock for the hash value derived
+/// from the provided ptr. If the lock is successfully aquired the
+/// function returns true. Otherwise it returns false.
 __device__ inline
 bool lock_address_cuda_space(void* ptr) {
   size_t offset = size_t(ptr);
@@ -92,6 +97,12 @@ bool lock_address_cuda_space(void* ptr) {
   return (0 == atomicCAS(&kokkos_impl_cuda_lock_arrays.atomic[offset],0,1));
 }
 
+/// \brief Release lock for the address
+///
+/// This function releases the lock for the hash value derived
+/// from the provided ptr. This function should only be called
+/// after previously successfully aquiring a lock with
+/// lock_address.
 __device__ inline
 void unlock_address_cuda_space(void* ptr) {
   size_t offset = size_t(ptr);
