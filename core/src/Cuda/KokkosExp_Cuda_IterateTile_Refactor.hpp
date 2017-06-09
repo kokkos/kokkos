@@ -1191,10 +1191,6 @@ struct DeviceIterateTile;
 // extract n-d tile offsets from tileid = blockid and tile_dims
 // local indices within a tile come from threadIdx.x and tile_dims, constrained by blocksize
 // combine tile + local id info for multi-dim global ids
-//
-// TODO First step: implement obvious way and correctness check
-// Optimization step 1: swap with bitops? at least for local indices (blocksize should always be power of 2)
-
 
 // Pattern:
 // Each block+thread is responsible for ONE tile+local_id combo (unless striding by num_blocks)
@@ -1271,9 +1267,8 @@ struct DeviceIterateTile<2,RP,Functor,void,ValueType, typename std::enable_if< !
           if ( in_bounds )
           { m_func( m_offset[0], m_offset[1], m_v ); }
         }
-      } //end for loop over num_tiles - product of tiles in each direction
-
-    } // if blockIdx.x < num_tiles
+      }
+    }
 
   } //end exec_range
 
@@ -1348,8 +1343,7 @@ struct DeviceIterateTile<2,RP,Functor,Tag, ValueType, typename std::enable_if< !
           if ( in_bounds )
           { m_func( Tag(), m_offset[0], m_offset[1], m_v ); }
         }
-      } //end for loop over num_tiles - product of tiles in each direction
-
+      }
     }
 
   } //end exec_range
@@ -1424,7 +1418,6 @@ struct DeviceIterateTile<3,RP,Functor,void,ValueType , typename std::enable_if< 
           { m_func( m_offset[0], m_offset[1], m_offset[2], m_v ); }
         }
       }
-
     }
 
   } //end exec_range
@@ -1498,7 +1491,6 @@ struct DeviceIterateTile<3,RP,Functor,Tag, ValueType, typename std::enable_if< !
           { m_func( Tag(), m_offset[0], m_offset[1], m_offset[2], m_v ); }
         }
       }
-
     }
 
   } //end exec_range
@@ -1579,7 +1571,6 @@ struct DeviceIterateTile<4,RP,Functor,void,ValueType , typename std::enable_if< 
           { m_func( m_offset[0], m_offset[1], m_offset[2], m_offset[3], m_v ); }
         }
       }
-
     }
 
   } //end exec_range
@@ -1657,7 +1648,6 @@ struct DeviceIterateTile<4,RP,Functor,Tag,ValueType, typename std::enable_if< !i
           { m_func( Tag(), m_offset[0], m_offset[1], m_offset[2], m_offset[3], m_v ); }
         }
       }
-
     }
 
   } //end exec_range
@@ -1737,7 +1727,6 @@ struct DeviceIterateTile<5,RP,Functor,void,ValueType , typename std::enable_if< 
           { m_func( m_offset[0], m_offset[1], m_offset[2], m_offset[3], m_offset[4], m_v ); }
         }
       }
-
     }
 
   } //end exec_range
@@ -1815,7 +1804,6 @@ struct DeviceIterateTile<5,RP,Functor,Tag,ValueType, typename std::enable_if< !i
           { m_func( Tag(), m_offset[0], m_offset[1], m_offset[2], m_offset[3], m_offset[4], m_v ); }
         }
       }
-
     }
 
   } //end exec_range
@@ -1895,7 +1883,6 @@ struct DeviceIterateTile<6,RP,Functor,void,ValueType , typename std::enable_if< 
           { m_func( m_offset[0], m_offset[1], m_offset[2], m_offset[3], m_offset[4], m_offset[5], m_v ); }
         }
       }
-
     }
 
   } //end exec_range
@@ -1973,7 +1960,6 @@ struct DeviceIterateTile<6,RP,Functor,Tag,ValueType, typename std::enable_if< !i
           { m_func( Tag(), m_offset[0], m_offset[1], m_offset[2], m_offset[3], m_offset[4], m_offset[5], m_v ); }
         }
       }
-
     }
 
   } //end exec_range
@@ -2051,8 +2037,7 @@ struct DeviceIterateTile<2,RP,Functor,void,ValueType, typename std::enable_if< i
           { m_func( m_offset[0], m_offset[1], m_v ); }
         }
       } //end for loop over num_tiles - product of tiles in each direction
-
-    } // if blockIdx.x < num_tiles
+    }
 
   } //end exec_range
 
@@ -2129,7 +2114,6 @@ struct DeviceIterateTile<2,RP,Functor,Tag, ValueType, typename std::enable_if< i
           { m_func( Tag(), m_offset[0], m_offset[1], m_v ); }
         }
       } //end for loop over num_tiles - product of tiles in each direction
-
     }
 
   } //end exec_range
@@ -2205,7 +2189,6 @@ struct DeviceIterateTile<3,RP,Functor,void,ValueType , typename std::enable_if< 
           { m_func( m_offset[0], m_offset[1], m_offset[2], m_v ); }
         }
       }
-
     }
 
   } //end exec_range
@@ -2280,7 +2263,6 @@ struct DeviceIterateTile<3,RP,Functor,Tag, ValueType, typename std::enable_if< i
           { m_func( Tag(), m_offset[0], m_offset[1], m_offset[2], m_v ); }
         }
       }
-
     }
 
   } //end exec_range
@@ -2361,7 +2343,6 @@ struct DeviceIterateTile<4,RP,Functor,void,ValueType , typename std::enable_if< 
           { m_func( m_offset[0], m_offset[1], m_offset[2], m_offset[3], m_v ); }
         }
       }
-
     }
 
   } //end exec_range
@@ -2440,7 +2421,6 @@ struct DeviceIterateTile<4,RP,Functor,Tag,ValueType, typename std::enable_if< is
           { m_func( Tag(), m_offset[0], m_offset[1], m_offset[2], m_offset[3], m_v ); }
         }
       }
-
     }
 
   } //end exec_range
@@ -2521,7 +2501,6 @@ struct DeviceIterateTile<5,RP,Functor,void,ValueType , typename std::enable_if< 
           { m_func( m_offset[0], m_offset[1], m_offset[2], m_offset[3], m_offset[4], m_v ); }
         }
       }
-
     }
 
   } //end exec_range
@@ -2600,7 +2579,6 @@ struct DeviceIterateTile<5,RP,Functor,Tag,ValueType, typename std::enable_if< is
           { m_func( Tag(), m_offset[0], m_offset[1], m_offset[2], m_offset[3], m_offset[4], m_v ); }
         }
       }
-
     }
 
   } //end exec_range
@@ -2681,7 +2659,6 @@ struct DeviceIterateTile<6,RP,Functor,void,ValueType , typename std::enable_if< 
           { m_func( m_offset[0], m_offset[1], m_offset[2], m_offset[3], m_offset[4], m_offset[5], m_v ); }
         }
       }
-
     }
 
   } //end exec_range
@@ -2760,7 +2737,6 @@ struct DeviceIterateTile<6,RP,Functor,Tag,ValueType, typename std::enable_if< is
           { m_func( Tag(), m_offset[0], m_offset[1], m_offset[2], m_offset[3], m_offset[4], m_offset[5], m_v ); }
         }
       }
-
     }
 
   } //end exec_range
@@ -2770,7 +2746,6 @@ private:
   const Functor & m_func;
   value_type* m_v;
 };
-
 
 } // Reduce
 

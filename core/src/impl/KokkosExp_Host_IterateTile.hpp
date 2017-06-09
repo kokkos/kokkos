@@ -2742,8 +2742,7 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 
   RP         const& m_rp;
   Functor    const& m_func;
-  value_type * m_v;  // FIXME make this a pointer? Or, define differently, but need to know the size of the array
-  //value_type *(& m_v ); // FIXME try this if value_type is an array
+  value_type * m_v;
   typename std::conditional< std::is_same<Tag,void>::value,int,Tag>::type m_tag;
 
 };

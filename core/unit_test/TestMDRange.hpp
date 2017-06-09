@@ -51,14 +51,10 @@ namespace Test {
 
 namespace {
 
-#define md_parallel_reduce parallel_reduce
-#define md_parallel_for parallel_for
-
-
 template <typename ExecSpace >
 struct TestMDRange_ReduceArray {
 
-  using DataType     = int;
+  using DataType       = int;
   using ViewType_2     = typename Kokkos::View< DataType**, ExecSpace >;
   using HostViewType_2 = typename ViewType_2::HostMirror;
 
@@ -68,7 +64,7 @@ struct TestMDRange_ReduceArray {
   using value_type = scalar_type[];
   const unsigned value_count;
 
-  TestMDRange_ReduceArray( const DataType N0, const DataType N1, const unsigned array_size ) 
+  TestMDRange_ReduceArray( const int N0, const int N1, const unsigned array_size ) 
     : input_view( "input_view", N0, N1 ) 
     , value_count( array_size )
   {}
@@ -196,7 +192,7 @@ struct TestMDRange_2D {
 
       TestMDRange_2D functor( N0, N1 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
 
@@ -249,7 +245,7 @@ struct TestMDRange_2D {
 
       TestMDRange_2D functor( N0, N1 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       // check parallel_for results correct with InitTag
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
@@ -270,7 +266,7 @@ struct TestMDRange_2D {
 
 
       double sum = 0.0;
-      md_parallel_reduce( range, functor, sum );
+      parallel_reduce( range, functor, sum );
 
       ASSERT_EQ( sum, 9 * N0 * N1 );
     }
@@ -284,9 +280,9 @@ struct TestMDRange_2D {
 
       TestMDRange_2D functor( N0, N1 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
       double sum = 0.0;
-      md_parallel_reduce( range, functor, sum );
+      parallel_reduce( range, functor, sum );
 
       ASSERT_EQ( sum, 2 * N0 * N1 );
     }
@@ -300,9 +296,9 @@ struct TestMDRange_2D {
 
       TestMDRange_2D functor( N0, N1 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
       double sum = 0.0;
-      md_parallel_reduce( range, functor, sum );
+      parallel_reduce( range, functor, sum );
 
       ASSERT_EQ( sum, 2 * N0 * N1 );
     }
@@ -316,9 +312,9 @@ struct TestMDRange_2D {
 
       TestMDRange_2D functor( N0, N1 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
       double sum = 0.0;
-      md_parallel_reduce( range, functor, sum );
+      parallel_reduce( range, functor, sum );
 
       ASSERT_EQ( sum, 2 * N0 * N1 );
     }
@@ -332,9 +328,9 @@ struct TestMDRange_2D {
 
       TestMDRange_2D functor( N0, N1 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
       double sum = 0.0;
-      md_parallel_reduce( range, functor, sum );
+      parallel_reduce( range, functor, sum );
 
       ASSERT_EQ( sum, 2 * N0 * N1 );
     }
@@ -348,9 +344,9 @@ struct TestMDRange_2D {
 
       TestMDRange_2D functor( N0, N1 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
       double sum = 0.0;
-      md_parallel_reduce( range, functor, sum );
+      parallel_reduce( range, functor, sum );
 
       ASSERT_EQ( sum, 2 * N0 * N1 );
     }
@@ -397,7 +393,7 @@ struct TestMDRange_2D {
       range_type range( point_type{ { 0, 0 } }, point_type{ { N0, N1 } }, tile_type{ { 3, 3 } } );
       TestMDRange_2D functor( N0, N1 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -425,7 +421,7 @@ struct TestMDRange_2D {
       range_type range( point_type{ { 0, 0 } }, point_type{ { N0, N1 } } );
       TestMDRange_2D functor( N0, N1 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -454,7 +450,7 @@ struct TestMDRange_2D {
       range_type range( point_type{ { 0, 0 } }, point_type{ { N0, N1 } }, tile_type{ { 3, 3 } } );
       TestMDRange_2D functor( N0, N1 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -483,7 +479,7 @@ struct TestMDRange_2D {
       range_type range( point_type{ { 0, 0 } }, point_type{ { N0, N1 } }, tile_type{ { 4, 4 } } );
       TestMDRange_2D functor( N0, N1 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -512,7 +508,7 @@ struct TestMDRange_2D {
       range_type range( point_type{ { 0, 0 } }, point_type{ { N0, N1 } }, tile_type{ { 3, 3 } } );
       TestMDRange_2D functor( N0, N1 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -541,7 +537,7 @@ struct TestMDRange_2D {
       range_type range( point_type{ { 0, 0 } }, point_type{ { N0, N1 } }, tile_type{ { 7, 7 } } );
       TestMDRange_2D functor( N0, N1 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -570,7 +566,7 @@ struct TestMDRange_2D {
       range_type range( point_type{ { 0, 0 } }, point_type{ { N0, N1 } }, tile_type{ { 16, 16 } } );
       TestMDRange_2D functor( N0, N1 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -599,7 +595,7 @@ struct TestMDRange_2D {
       range_type range( point_type{ { 0, 0 } }, point_type{ { N0, N1 } }, tile_type{ { 5, 16 } } );
       TestMDRange_2D functor( N0, N1 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -673,9 +669,9 @@ struct TestMDRange_3D {
 
       TestMDRange_3D functor( N0, N1, N2 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
       double sum = 0.0;
-      md_parallel_reduce( range, functor, sum );
+      parallel_reduce( range, functor, sum );
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 );
     }
@@ -726,7 +722,7 @@ struct TestMDRange_3D {
 
       TestMDRange_3D functor( N0, N1, N2 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       // check parallel_for results correct with InitTag
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
@@ -748,7 +744,7 @@ struct TestMDRange_3D {
 
 
       double sum = 0.0;
-      md_parallel_reduce( range, functor, sum );
+      parallel_reduce( range, functor, sum );
 
       ASSERT_EQ( sum, 9 * N0 * N1 * N2 );
     }
@@ -762,9 +758,9 @@ struct TestMDRange_3D {
 
       TestMDRange_3D functor( N0, N1, N2 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
       double sum = 0.0;
-      md_parallel_reduce( range, functor, sum );
+      parallel_reduce( range, functor, sum );
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 );
     }
@@ -778,9 +774,9 @@ struct TestMDRange_3D {
 
       TestMDRange_3D functor( N0, N1, N2 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
       double sum = 0.0;
-      md_parallel_reduce( range, functor, sum );
+      parallel_reduce( range, functor, sum );
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 );
     }
@@ -794,9 +790,9 @@ struct TestMDRange_3D {
 
       TestMDRange_3D functor( N0, N1, N2 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
       double sum = 0.0;
-      md_parallel_reduce( range, functor, sum );
+      parallel_reduce( range, functor, sum );
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 );
     }
@@ -810,9 +806,9 @@ struct TestMDRange_3D {
 
       TestMDRange_3D functor( N0, N1, N2 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
       double sum = 0.0;
-      md_parallel_reduce( range, functor, sum );
+      parallel_reduce( range, functor, sum );
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 );
     }
@@ -826,9 +822,9 @@ struct TestMDRange_3D {
 
       TestMDRange_3D functor( N0, N1, N2 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
       double sum = 0.0;
-      md_parallel_reduce( range, functor, sum );
+      parallel_reduce( range, functor, sum );
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 );
     }
@@ -875,7 +871,7 @@ struct TestMDRange_3D {
       range_type range( point_type{ { 0, 0, 0 } }, point_type{ { N0, N1, N2 } }, tile_type{ { 3, 3, 3 } } );
       TestMDRange_3D functor( N0, N1, N2 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -906,7 +902,7 @@ struct TestMDRange_3D {
 
       TestMDRange_3D functor( N0, N1, N2 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -936,7 +932,7 @@ struct TestMDRange_3D {
       range_type range( point_type{ { 0, 0, 0 } }, point_type{ { N0, N1, N2 } }, tile_type{ { 3, 3, 3 } } );
       TestMDRange_3D functor( N0, N1, N2 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -966,7 +962,7 @@ struct TestMDRange_3D {
       range_type range( point_type{ { 0, 0, 0 } }, point_type{ { N0, N1, N2 } }, tile_type{ { 2, 4, 2 } } );
       TestMDRange_3D functor( N0, N1, N2 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -996,7 +992,7 @@ struct TestMDRange_3D {
       range_type range( point_type{ { 0, 0, 0 } }, point_type{ { N0, N1, N2 } }, tile_type{ { 3, 5, 7 } } );
       TestMDRange_3D functor( N0, N1, N2 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1026,7 +1022,7 @@ struct TestMDRange_3D {
       range_type range( point_type{ { 0, 0, 0 } }, point_type{ { N0, N1, N2 } }, tile_type{ { 8, 8, 8 } } );
       TestMDRange_3D functor( N0, N1, N2 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1056,7 +1052,7 @@ struct TestMDRange_3D {
       range_type range( point_type{ { 0, 0, 0 } }, point_type{ { N0, N1, N2 } }, tile_type{ { 2, 4, 2 } } );
       TestMDRange_3D functor( N0, N1, N2 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1153,7 +1149,7 @@ struct TestMDRange_4D {
       range_type range( point_type{ { 0, 0, 0, 0 } }, point_type{ { N0, N1, N2, N3 } }, tile_type{ { 3, 11, 3, 3 } } );
       TestMDRange_4D functor( N0, N1, N2, N3 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1185,7 +1181,7 @@ struct TestMDRange_4D {
 
       TestMDRange_4D functor( N0, N1, N2, N3 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1217,7 +1213,7 @@ struct TestMDRange_4D {
 
       TestMDRange_4D functor( N0, N1, N2, N3 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1249,7 +1245,7 @@ struct TestMDRange_4D {
 
       TestMDRange_4D functor( N0, N1, N2, N3 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1281,7 +1277,7 @@ struct TestMDRange_4D {
 
       TestMDRange_4D functor( N0, N1, N2, N3 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1313,7 +1309,7 @@ struct TestMDRange_4D {
 
       TestMDRange_4D functor( N0, N1, N2, N3 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1345,7 +1341,7 @@ struct TestMDRange_4D {
 
       TestMDRange_4D functor( N0, N1, N2, N3 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1444,7 +1440,7 @@ struct TestMDRange_5D {
       range_type range( point_type{ { 0, 0, 0, 0, 0 } }, point_type{ { N0, N1, N2, N3, N4 } }, tile_type{ { 3, 3, 3, 3, 5 } } );
       TestMDRange_5D functor( N0, N1, N2, N3, N4 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1477,7 +1473,7 @@ struct TestMDRange_5D {
 
       TestMDRange_5D functor( N0, N1, N2, N3, N4 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1510,7 +1506,7 @@ struct TestMDRange_5D {
 
       TestMDRange_5D functor( N0, N1, N2, N3, N4 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1543,7 +1539,7 @@ struct TestMDRange_5D {
 
       TestMDRange_5D functor( N0, N1, N2, N3, N4 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1576,7 +1572,7 @@ struct TestMDRange_5D {
 
       TestMDRange_5D functor( N0, N1, N2, N3, N4 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1609,7 +1605,7 @@ struct TestMDRange_5D {
 
       TestMDRange_5D functor( N0, N1, N2, N3, N4 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1642,7 +1638,7 @@ struct TestMDRange_5D {
 
       TestMDRange_5D functor( N0, N1, N2, N3, N4 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1743,7 +1739,7 @@ struct TestMDRange_6D {
       range_type range( point_type{ { 0, 0, 0, 0, 0, 0 } }, point_type{ { N0, N1, N2, N3, N4, N5 } }, tile_type{ { 3, 3, 3, 3, 2, 3 } } ); //tile dims 3,3,3,3,3,3 more than cuda can handle with debugging
       TestMDRange_6D functor( N0, N1, N2, N3, N4, N5 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1777,7 +1773,7 @@ struct TestMDRange_6D {
 
       TestMDRange_6D functor( N0, N1, N2, N3, N4, N5 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1811,7 +1807,7 @@ struct TestMDRange_6D {
 
       TestMDRange_6D functor( N0, N1, N2, N3, N4, N5 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1845,7 +1841,7 @@ struct TestMDRange_6D {
 
       TestMDRange_6D functor( N0, N1, N2, N3, N4, N5 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1879,7 +1875,7 @@ struct TestMDRange_6D {
 
       TestMDRange_6D functor( N0, N1, N2, N3, N4, N5 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1913,7 +1909,7 @@ struct TestMDRange_6D {
 
       TestMDRange_6D functor( N0, N1, N2, N3, N4, N5 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1947,7 +1943,7 @@ struct TestMDRange_6D {
 
       TestMDRange_6D functor( N0, N1, N2, N3, N4, N5 );
 
-      md_parallel_for( range, functor );
+      parallel_for( range, functor );
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
@@ -1973,9 +1969,6 @@ struct TestMDRange_6D {
     }
   }
 };
-
-#undef md_parallel_for
-#undef md_parallel_reduce
 
 } // namespace
 

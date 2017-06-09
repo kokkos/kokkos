@@ -466,7 +466,7 @@ void md_parallel_reduce( const std::string& str
   Kokkos::parallel_reduce( str, range_policy(0, range.m_num_tiles).set_chunk_size(1), g, v );
 }
 
-// Cuda - parallel_reduce not implemented yet
+// Cuda - md_parallel_reduce not implemented yet
 /*
 template <typename MDRange, typename Functor, typename ValueType>
 void md_parallel_reduce( MDRange const& range

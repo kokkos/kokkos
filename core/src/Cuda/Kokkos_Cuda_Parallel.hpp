@@ -376,40 +376,6 @@ public:
     { }
 };
 
-#if 0
-// MDRangePolicy
-template< class FunctorType , class ... Traits >
-class ParallelFor< FunctorType
-                 , Kokkos::Experimental::MDRangePolicy< Traits ... >
-                 , Kokkos::Cuda
-                 >
-{
-private:
-  typedef Kokkos::Experimental::MDRangePolicy< Traits ...  > Policy ;
-  typedef Kokkos::Experimental::Impl::DeviceIterateTile<Policy, FunctorType, typename Policy::work_tag> DeviceIterateType;
-
-
-  const FunctorType m_functor ;
-  const Policy      m_policy ;
-
-public:
-
-//  inline 
-    void execute() const
-    {
-      DeviceIterateType inner_closure(m_policy, m_functor);
-      inner_closure.execute();
-    }
-
-//  inline
-  ParallelFor( const FunctorType & arg_functor
-             , Policy arg_policy )
-    : m_functor( arg_functor )
-    , m_policy(  arg_policy )
-    {}
-};
-
-#else
 // MDRangePolicy Refactor 
 template< class FunctorType , class ... Traits >
 class ParallelFor< FunctorType
@@ -524,11 +490,6 @@ public:
     , m_rp(  arg_policy )
     {}
 };
-#endif
-
-
-
-
 
 
 template< class FunctorType , class ... Properties >
@@ -907,9 +868,9 @@ class ParallelReduce< FunctorType
 {
 private:
 
-  typedef Kokkos::Experimental::MDRangePolicy< Traits ... >         Policy ;
-  typedef typename Policy::array_index_type array_index_type;
-  typedef typename Policy::index_type index_type;
+  typedef Kokkos::Experimental::MDRangePolicy< Traits ... > Policy ;
+  typedef typename Policy::array_index_type                 array_index_type;
+  typedef typename Policy::index_type                       index_type;
 
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::member_type  Member ; // used for declaring iterate index in for loops; needed?
@@ -939,7 +900,6 @@ public:
   size_type *         m_scratch_flags ;
   size_type *         m_unified_space ;
 
-//  typedef typename Kokkos::Experimental::Impl::Reduce::DeviceIterateTile<Policy::rank,Policy,FunctorType,typename Policy::work_tag, value_type> DeviceIteratePattern;
   typedef typename Kokkos::Experimental::Impl::Reduce::DeviceIterateTile<Policy::rank,Policy,FunctorType,typename Policy::work_tag, reference_type> DeviceIteratePattern;
 
   // Shall we use the shfl based reduction or not (only use it for static sized types of more than 128bit
@@ -1051,7 +1011,6 @@ public:
     {
       const int nwork = m_policy.m_num_tiles;
       if ( nwork ) {
-      //  TODO: block_size must equal product of tile dims by tiling algorithm design; will skipping call to local_block_size break this ParallelReduce algorithm?
         int block_size = m_policy.m_prod_tile_dims; 
         // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
         // Nearest power of two
