@@ -148,7 +148,7 @@ private:
     typename std::conditional< Arg2_is_space , Arg2 , void
     >::type >::type ;
 
-  using task_base  = Impl::TaskBase< Space , ValueType , void > ;
+  using task_base  = Impl::TaskBase< void , void , void > ;
   using queue_type = Impl::TaskQueue< Space > ;
 
   task_base * m_task ;
@@ -292,14 +292,38 @@ public:
 
   //----------------------------------------
 
+private:
+
+  template< typename T , bool is_void = std::is_same<T,void>::value >
+  struct Result ;
+
+  template < typename T >
+  struct Result< T , /* is_void = */ true > {
+    using reference_type = void ;
+
+    KOKKOS_INLINE_FUNCTION static
+    reference_type get( task_base * ) {}
+  };
+
+  template < typename T >
+  struct Result< T , /* is_void = */ false > {
+    using reference_type = const volatile T & ;
+
+    KOKKOS_INLINE_FUNCTION static
+    reference_type get( task_base * t )
+      { return *( t->template result_ptr< T >() ); }
+  };
+
+public:
+
   KOKKOS_INLINE_FUNCTION
-  typename task_base::get_return_type
+  typename Result< ValueType >::reference_type
   get() const
     {
       if ( 0 == m_task ) {
         Kokkos::abort( "Kokkos:::Future::get ERROR: is_null()");
       }
-      return m_task->get();
+      return Result< ValueType >::get( m_task );
     }
 };
 
@@ -396,7 +420,7 @@ private:
 
   using track_type = Kokkos::Impl::SharedAllocationTracker ;
   using queue_type = Kokkos::Impl::TaskQueue< ExecSpace > ;
-  using task_base  = Impl::TaskBase< ExecSpace , void , void > ;
+  using task_base  = Impl::TaskBase< void , void , void > ;
 
   track_type   m_track ;
   queue_type * m_queue ;
@@ -467,26 +491,46 @@ public:
     { return m_queue ? m_queue->m_memory : (memory_pool*) 0 ; }
 
   //----------------------------------------
+
+private:
+
+  enum : unsigned { align = ( 1u << 4 ), align_mask = align - 1 };
+
+  template< typename FunctorType >
+  KOKKOS_INLINE_FUNCTION static
+  unsigned task_alloc_size( queue_type * const queue )
+    {
+      using value_type  = typename FunctorType::value_type ;
+      using task_type   = Impl::TaskBase< execution_space
+                                        , value_type
+                                        , FunctorType > ;
+
+      const unsigned task_size =
+        ( sizeof(task_type) + TaskScheduler::align_mask ) & ~TaskScheduler::align_mask ;
+
+      const unsigned result_size = Impl::Sizeof< value_type , align >::value();
+
+      return queue->m_memory.allocate_block_size( task_size + result_size );
+    }
+
+  KOKKOS_INLINE_FUNCTION static
+  unsigned when_all_alloc_size( queue_type * const queue , int narg )
+    {
+      return queue->m_memory.allocate_block_size( sizeof(task_base) + narg * sizeof(task_base*) );
+    }
+
+public:
+
   /**\brief  Allocation size for a spawned task */
   template< typename FunctorType >
   KOKKOS_FUNCTION
   size_t spawn_allocation_size() const
-    {
-      using task_type  = Impl::TaskBase< execution_space
-                                       , typename FunctorType::value_type
-                                       , FunctorType > ;
-
-      return m_queue->allocate_block_size( sizeof(task_type) );
-    }
+    { return TaskScheduler::template task_alloc_size( m_queue ); }
 
   /**\brief  Allocation size for a when_all aggregate */
   KOKKOS_FUNCTION
   size_t when_all_allocation_size( int narg ) const
-    {
-      using task_base  = Kokkos::Impl::TaskBase< ExecSpace , void , void > ;
-
-      return m_queue->allocate_block_size( sizeof(task_base) + narg * sizeof(task_base*) );
-    }
+    { return TaskScheduler::template when_all_alloc_size( m_queue , narg ); }
 
   //----------------------------------------
 
@@ -507,7 +551,7 @@ public:
       queue_type * const queue =
         arg_policy.m_scheduler ? arg_policy.m_scheduler->m_queue : (
         arg_policy.m_dependence.m_task
-          ? arg_policy.m_dependence.m_task->m_queue
+          ? static_cast<queue_type*>(arg_policy.m_dependence.m_task->m_queue)
           : (queue_type*) 0 );
 
       if ( 0 == queue ) {
@@ -530,8 +574,12 @@ public:
       future_type f ;
 
       // Allocate task from memory pool
+
+      const int32_t alloc_size =
+        TaskScheduler::template task_alloc_size< FunctorType >( queue );
+
       f.m_task =
-        reinterpret_cast< task_type * >(queue->allocate(sizeof(task_type)));
+        reinterpret_cast< task_type * >(queue->allocate(alloc_size) );
 
       if ( f.m_task ) {
 
@@ -539,22 +587,25 @@ public:
         // Reference count starts at two:
         //   +1 for the matching decrement when task is complete
         //   +1 for the future
-        new ( f.m_task )
-          task_type( arg_function
-                   , queue
-                   , arg_policy.m_dependence.m_task /* dependence */
-                   , 2                              /* reference count */
-                   , int(sizeof(task_type))         /* allocation size */
-                   , int(arg_policy.m_task_type)
-                   , int(arg_policy.m_priority)
-                   , std::move(arg_functor) );
+        new ( f.m_task ) task_type( std::move(arg_functor) );
+
+        f.m_task->m_apply      = arg_function ;
+        f.m_task->m_queue      = queue ;
+        f.m_task->m_wait       = (task_base*) task_base::EndTag ;
+        f.m_task->m_ref_count  = 2 ;
+        f.m_task->m_alloc_size = alloc_size ;
+        f.m_task->m_count      = Impl::Sizeof< value_type , align >::value();
+        f.m_task->m_task_type  = arg_policy.m_task_type ;
+        f.m_task->m_priority   = arg_policy.m_priority ;
+
+        Kokkos::memory_fence();
 
         // The dependence (if any) is processed immediately
         // within the schedule function, as such the dependence's
         // reference count does not need to be incremented for
         // the assignment.
 
-        queue->schedule_runnable( f.m_task );
+        queue->schedule_runnable( f.m_task , arg_policy.m_dependence.m_task );
         // This task may be updated or executed at any moment,
         // even during the call to 'schedule'.
       }
@@ -579,9 +630,7 @@ public:
 
       task_type * const task = static_cast< task_type * >( arg_self );
 
-      task->m_priority = static_cast<int>(arg_priority);
-
-      task->add_dependence( arg_dependence.m_task );
+      task->request_respawn( arg_dependence.m_task , int(arg_priority) );
 
       // Postcondition: task is in Executing-Respawn state
     }
@@ -596,7 +645,7 @@ public:
   when_all( Future< A1 , A2 > const arg[] , int narg )
     {
       using future_type = Future< execution_space > ;
-      using task_base   = Kokkos::Impl::TaskBase< execution_space , void , void > ;
+      using task_base   = Kokkos::Impl::TaskBase< void , void , void > ;
 
       future_type f ;
 
@@ -605,42 +654,52 @@ public:
         queue_type * queue = 0 ;
 
         for ( int i = 0 ; i < narg ; ++i ) {
-          task_base * const t = arg[i].m_task ;
+          task_base volatile * const t = arg[i].m_task ;
           if ( 0 != t ) {
             // Increment reference count to track subsequent assignment.
             Kokkos::atomic_increment( &(t->m_ref_count) );
             if ( queue == 0 ) {
-              queue = t->m_queue ;
+              queue = static_cast< queue_type * >( t->m_queue );
             }
-            else if ( queue != t->m_queue ) {
-              Kokkos::abort("Kokkos when_all Futures must be in the same scheduler" );
+
+            if ( queue != static_cast< queue_type * >( t->m_queue ) ||
+                 ( t->m_task_type != task_base::TaskTeam &&
+                   t->m_task_type != task_base::TaskSingle ) ) {
+              Kokkos::abort("Kokkos when_all Futures must be in the same scheduler and reference an executable task" );
             }
           }
         }
 
         if ( queue != 0 ) {
 
-          size_t const size  = sizeof(task_base) + narg * sizeof(task_base*);
+          size_t const alloc_size = TaskScheduler::when_all_alloc_size( queue , narg );
 
           f.m_task =
-            reinterpret_cast< task_base * >( queue->allocate( size ) );
+            reinterpret_cast< task_base * >( queue->allocate( alloc_size ) );
 
           if ( f.m_task ) {
 
             // Reference count starts at two:
             // +1 to match decrement when task completes
             // +1 for the future
-            new( f.m_task ) task_base( queue
-                                     , 2     /* reference count */
-                                     , size  /* allocation size */
-                                     , narg  /* dependence count */
-                                     );
+
+            new( f.m_task ) task_base();
+
+            f.m_task->m_queue      = queue ;
+            f.m_task->m_wait       = (task_base*) task_base::EndTag ;
+            f.m_task->m_ref_count  = 2 ;
+            f.m_task->m_alloc_size = alloc_size ;
+            f.m_task->m_count      = narg ;
+            f.m_task->m_task_type  = task_base::Aggregate ;
 
             // Assign dependences, reference counts were already incremented
 
-            task_base ** const dep = f.m_task->aggregate_dependences();
+            task_base * volatile * const dep =
+              f.m_task->aggregate_dependences();
 
             for ( int i = 0 ; i < narg ; ++i ) { dep[i] = arg[i].m_task ; }
+
+            Kokkos::memory_fence();
 
             queue->schedule_aggregate( f.m_task );
             // this when_all may be processed at any moment

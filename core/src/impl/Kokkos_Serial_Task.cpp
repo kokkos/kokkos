@@ -62,7 +62,7 @@ void TaskQueueSpecialization< Kokkos::Serial >::execute
 {
   using execution_space = Kokkos::Serial ;
   using queue_type      = TaskQueue< execution_space > ;
-  using task_root_type  = TaskBase< execution_space , void , void > ;
+  using task_root_type  = TaskBase< void , void , void > ;
   using Member          = Impl::HostThreadTeamMember< execution_space > ;
 
   task_root_type * const end = (task_root_type *) task_root_type::EndTag ;
@@ -108,7 +108,7 @@ void TaskQueueSpecialization< Kokkos::Serial >::execute
 
       // If a respawn then re-enqueue otherwise the task is complete
       // and all tasks waiting on this task are updated.
-      queue->complete( task );
+      queue->complete_runnable( task );
     }
     else if ( 0 != queue->m_ready_count ) {
       Kokkos::abort("TaskQueue<Serial>::execute ERROR: ready_count");
@@ -122,7 +122,7 @@ void TaskQueueSpecialization< Kokkos::Serial > ::
 {
   using execution_space = Kokkos::Serial ;
   using queue_type      = TaskQueue< execution_space > ;
-  using task_root_type  = TaskBase< execution_space , void , void > ;
+  using task_root_type  = TaskBase< void , void , void > ;
   using Member          = Impl::HostThreadTeamMember< execution_space > ;
 
   task_root_type * const end = (task_root_type *) task_root_type::EndTag ;
@@ -149,7 +149,7 @@ void TaskQueueSpecialization< Kokkos::Serial > ::
 
     (*task->m_apply)( task , & exec );
 
-    queue->complete( task );
+    queue->complete_runnable( task );
 
   } while(1);
 }

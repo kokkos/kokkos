@@ -59,187 +59,15 @@
 namespace Kokkos {
 namespace Impl {
 
-/*\brief  Implementation data for task data management, access, and execution.
- *
- *  Curiously recurring template pattern (CRTP)
- *  to allow static_cast from the
- *  task root type and a task's FunctorType.
- *
- *    TaskBase< Space , ResultType , FunctorType >
- *      : TaskBase< Space , ResultType , void >
- *      , FunctorType
- *      { ... };
- *
- *    TaskBase< Space , ResultType , void >
- *      : TaskBase< Space , void , void >
- *      { ... };
- */
 template< typename Space , typename ResultType , typename FunctorType >
 class TaskBase ;
 
-} /* namespace Impl */
-} /* namespace Kokkos */
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Impl {
+template< typename Space >
+class TaskQueue ;
 
 template< typename Space >
 class TaskQueueSpecialization ;
 
-/** \brief  Manage task allocation, deallocation, and scheduling.
- *
- *  Task execution is deferred to the TaskQueueSpecialization.
- *  All other aspects of task management have shared implementation.
- */
-template< typename ExecSpace >
-class TaskQueue {
-private:
-
-  friend class TaskQueueSpecialization< ExecSpace > ;
-  friend class Kokkos::TaskScheduler< ExecSpace > ;
-
-  using execution_space = ExecSpace ;
-  using specialization  = TaskQueueSpecialization< execution_space > ;
-  using memory_space    = typename specialization::memory_space ;
-  using device_type     = Kokkos::Device< execution_space , memory_space > ;
-  using memory_pool     = Kokkos::MemoryPool< device_type > ;
-  using task_root_type  = Kokkos::Impl::TaskBase<execution_space,void,void> ;
-
-  struct Destroy {
-    TaskQueue * m_queue ;
-    void destroy_shared_allocation();
-  };
-
-  //----------------------------------------
-
-  enum : int { NumQueue = 3 };
-
-  // Queue is organized as [ priority ][ type ]
-
-  memory_pool               m_memory ;
-  task_root_type * volatile m_ready[ NumQueue ][ 2 ];
-  long                      m_accum_alloc ; // Accumulated number of allocations
-  int                       m_count_alloc ; // Current number of allocations
-  int                       m_max_alloc ;   // Maximum number of allocations
-  int                       m_ready_count ; // Number of ready or executing
-
-  //----------------------------------------
-
-  ~TaskQueue();
-  TaskQueue() = delete ;
-  TaskQueue( TaskQueue && ) = delete ;
-  TaskQueue( TaskQueue const & ) = delete ;
-  TaskQueue & operator = ( TaskQueue && ) = delete ;
-  TaskQueue & operator = ( TaskQueue const & ) = delete ;
-
-  TaskQueue( const memory_pool & arg_memory_pool );
-
-  // Schedule a task
-  //   Precondition:
-  //     task is not executing
-  //     task->m_next is the dependence or zero
-  //   Postcondition:
-  //     task->m_next is linked list membership
-  KOKKOS_FUNCTION void schedule_runnable(  task_root_type * const );
-  KOKKOS_FUNCTION void schedule_aggregate( task_root_type * const );
-
-  // Reschedule a task
-  //   Precondition:
-  //     task is in Executing state
-  //     task->m_next == LockTag
-  //   Postcondition:
-  //     task is in Executing-Respawn state
-  //     task->m_next == 0 (no dependence)
-  KOKKOS_FUNCTION
-  void reschedule( task_root_type * );
-
-  // Complete a task
-  //   Precondition:
-  //     task is not executing
-  //     task->m_next == LockTag  =>  task is complete
-  //     task->m_next != LockTag  =>  task is respawn
-  //   Postcondition:
-  //     task->m_wait == LockTag  =>  task is complete
-  //     task->m_wait != LockTag  =>  task is waiting
-  KOKKOS_FUNCTION
-  void complete( task_root_type * );
-
-  KOKKOS_FUNCTION
-  static bool push_task( task_root_type * volatile * const
-                       , task_root_type * const );
-
-  KOKKOS_FUNCTION
-  static task_root_type * pop_ready_task( task_root_type * volatile * const );
-
-  KOKKOS_FUNCTION static
-  void decrement( task_root_type * task );
-
-public:
-
-  // If and only if the execution space is a single thread
-  // then execute ready tasks.
-  KOKKOS_INLINE_FUNCTION
-  void iff_single_thread_recursive_execute()
-    {
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-      specialization::iff_single_thread_recursive_execute( this );
-#endif
-    }
-
-  void execute() { specialization::execute( this ); }
-
-  template< typename FunctorType >
-  void proc_set_apply( typename task_root_type::function_type * ptr )
-    {
-      specialization::template proc_set_apply< FunctorType >( ptr );
-    }
-
-  // Assign task pointer with reference counting of assigned tasks
-  template< typename LV , typename RV >
-  KOKKOS_FUNCTION static
-  void assign( TaskBase< execution_space,LV,void> ** const lhs
-             , TaskBase< execution_space,RV,void> *  const rhs )
-    {
-      using task_lhs = TaskBase< execution_space,LV,void> ;
-#if 0
-  {
-    printf( "assign( 0x%lx { 0x%lx %d %d } , 0x%lx { 0x%lx %d %d } )\n"
-          , uintptr_t( lhs ? *lhs : 0 )
-          , uintptr_t( lhs && *lhs ? (*lhs)->m_next : 0 )
-          , int( lhs && *lhs ? (*lhs)->m_task_type : 0 )
-          , int( lhs && *lhs ? (*lhs)->m_ref_count : 0 )
-          , uintptr_t(rhs)
-          , uintptr_t( rhs ? rhs->m_next : 0 )
-          , int( rhs ? rhs->m_task_type : 0 )
-          , int( rhs ? rhs->m_ref_count : 0 )
-          );
-    fflush( stdout );
-  }
-#endif
-
-      if ( *lhs ) decrement( *lhs );
-      if ( rhs ) { Kokkos::atomic_increment( &(rhs->m_ref_count) ); }
-
-      // Force write of *lhs
-
-      *static_cast< task_lhs * volatile * >(lhs) = rhs ;
-
-      Kokkos::memory_fence();
-    }
-
-  KOKKOS_FUNCTION
-  size_t allocate_block_size( size_t n ); ///< Actual block size allocated
-
-  KOKKOS_FUNCTION
-  void * allocate( size_t n ); ///< Allocate from the memory pool
-
-  KOKKOS_FUNCTION
-  void deallocate( void * p , size_t n ); ///< Deallocate to the memory pool
-};
-
 } /* namespace Impl */
 } /* namespace Kokkos */
 
@@ -248,29 +76,19 @@ public:
 
 namespace Kokkos {
 namespace Impl {
-
-template<>
-class TaskBase< void , void , void > {
-public:
-  enum : int16_t   { TaskTeam = 0 , TaskSingle = 1 , Aggregate = 2 };
-  enum : uintptr_t { LockTag = ~uintptr_t(0) , EndTag = ~uintptr_t(1) };
-};
 
 /** \brief  Base class for task management, access, and execution.
  *
  *  Inheritance structure to allow static_cast from the task root type
  *  and a task's FunctorType.
  *
- *    // Enable a Future to access result data
- *    TaskBase< Space , ResultType , void >
- *      : TaskBase< void , void , void >
- *      { ... };
- *
  *    // Enable a functor to access the base class
+ *    // and provide memory for result value.
  *    TaskBase< Space , ResultType , FunctorType >
- *      : TaskBase< Space , ResultType , void >
+ *      : TaskBase< void , void , void >
  *      , FunctorType
  *      { ... };
+ *    Followed by memory allocated for result value.
  *
  *
  *  States of a task:
@@ -331,38 +149,32 @@ public:
  *      m_next == LockTag: not a member of a wait queue
  *
  */
-template< typename ExecSpace >
-class TaskBase< ExecSpace , void , void >
+template<>
+class TaskBase< void , void , void >
 {
 public:
 
-  enum : int16_t   { TaskTeam   = TaskBase<void,void,void>::TaskTeam
-                   , TaskSingle = TaskBase<void,void,void>::TaskSingle
-                   , Aggregate  = TaskBase<void,void,void>::Aggregate };
-
-  enum : uintptr_t { LockTag = TaskBase<void,void,void>::LockTag
-                   , EndTag  = TaskBase<void,void,void>::EndTag };
-
-  using execution_space = ExecSpace ;
-  using queue_type      = TaskQueue< execution_space > ;
+  enum : int16_t   { TaskTeam = 0 , TaskSingle = 1 , Aggregate = 2 };
+  enum : uintptr_t { LockTag = ~uintptr_t(0) , EndTag = ~uintptr_t(1) };
 
   template< typename > friend class Kokkos::TaskScheduler ;
+
+  typedef TaskQueue< void > queue_type ;
 
   typedef void (* function_type) ( TaskBase * , void * );
 
   // sizeof(TaskBase) == 48
 
   function_type  m_apply ;       ///< Apply function pointer
-  queue_type   * m_queue ;       ///< Queue in which this task resides
+  queue_type   * m_queue ;       ///< Pointer to queue
   TaskBase     * m_wait ;        ///< Linked list of tasks waiting on this
   TaskBase     * m_next ;        ///< Waiting linked-list next
   int32_t        m_ref_count ;   ///< Reference count
   int32_t        m_alloc_size ;  ///< Allocation size
-  int32_t        m_dep_count ;   ///< Aggregate's number of dependences
+  int32_t        m_count ;       ///< Result count OR number of dependences
   int16_t        m_task_type ;   ///< Type of task
   int16_t        m_priority ;    ///< Priority of runnable task
 
-  TaskBase() = delete ;
   TaskBase( TaskBase && ) = delete ;
   TaskBase( const TaskBase & ) = delete ;
   TaskBase & operator = ( TaskBase && ) = delete ;
@@ -370,50 +182,24 @@ public:
 
   KOKKOS_INLINE_FUNCTION ~TaskBase() = default ;
 
-  // Constructor for a runnable task
-  KOKKOS_INLINE_FUNCTION
-  constexpr TaskBase( function_type arg_apply
-                    , queue_type  * arg_queue
-                    , TaskBase    * arg_dependence
-                    , int           arg_ref_count
-                    , int           arg_alloc_size
-                    , int           arg_task_type
-                    , int           arg_priority
-                    ) noexcept
-    : m_apply(      arg_apply )
-    , m_queue(      arg_queue )
-    , m_wait( 0 )
-    , m_next(       arg_dependence )
-    , m_ref_count(  arg_ref_count )
-    , m_alloc_size( arg_alloc_size )
-    , m_dep_count( 0 )
-    , m_task_type(  arg_task_type )
-    , m_priority(   arg_priority )
-    {}
-
-  // Constructor for an aggregate task
-  KOKKOS_INLINE_FUNCTION
-  constexpr TaskBase( queue_type  * arg_queue
-                    , int           arg_ref_count
-                    , int           arg_alloc_size
-                    , int           arg_dep_count
-                    ) noexcept
-    : m_apply( 0 )
-    , m_queue( arg_queue )
-    , m_wait( 0 )
-    , m_next( 0 )
-    , m_ref_count(  arg_ref_count )
-    , m_alloc_size( arg_alloc_size )
-    , m_dep_count(  arg_dep_count )
-    , m_task_type(  Aggregate )
-    , m_priority( 0 )
+  KOKKOS_INLINE_FUNCTION constexpr
+  TaskBase()
+    : m_apply(      0 )
+    , m_queue(      0 )
+    , m_wait(       0 )
+    , m_next(       0 )
+    , m_ref_count(  0 )
+    , m_alloc_size( 0 )
+    , m_count(      0 )
+    , m_task_type(  0 )
+    , m_priority(   0 )
     {}
 
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
-  TaskBase ** aggregate_dependences()
-    { return reinterpret_cast<TaskBase**>( this + 1 ); }
+  TaskBase * volatile * aggregate_dependences() volatile
+    { return reinterpret_cast<TaskBase*volatile*>( this + 1 ); }
 
   KOKKOS_INLINE_FUNCTION
   bool requested_respawn()
@@ -425,7 +211,7 @@ public:
     }
 
   KOKKOS_INLINE_FUNCTION
-  void add_dependence( TaskBase* dep )
+  void request_respawn( TaskBase * arg_dep , int arg_priority )
     {
       // Precondition: lock == m_next
 
@@ -433,77 +219,208 @@ public:
 
       // Assign dependence to m_next.  It will be processed in the subsequent
       // call to schedule.  Error if the dependence is reset.
-      if ( lock != Kokkos::atomic_exchange( & m_next, dep ) ) {
+      if ( lock != Kokkos::atomic_exchange( & m_next, arg_dep ) ) {
         Kokkos::abort("TaskScheduler ERROR: resetting task dependence");
       }
 
-      if ( 0 != dep ) {
+      m_priority = int16_t(arg_priority);
+
+      if ( 0 != arg_dep ) {
         // The future may be destroyed upon returning from this call
         // so increment reference count to track this assignment.
-        Kokkos::atomic_increment( &(dep->m_ref_count) );
+        Kokkos::atomic_increment( &(arg_dep->m_ref_count) );
       }
     }
 
-  using get_return_type = void ;
+  //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
-  get_return_type get() const {}
+  int32_t reference_count() const
+    { return *((int32_t volatile *)( & m_ref_count )); }
+
+  template< typename ResultType >
+  KOKKOS_FUNCTION
+  ResultType * result_ptr()
+    {
+      return reinterpret_cast< ResultType * >
+        ( reinterpret_cast<char*>(this) +
+          *((const volatile int32_t *) & m_alloc_size) -
+          *((const volatile int32_t *) & m_count) );
+    }
 };
 
-template < typename ExecSpace , typename ResultType >
-class TaskBase< ExecSpace , ResultType , void >
-  : public TaskBase< ExecSpace , void , void >
-{
+static_assert( sizeof(TaskBase<void,void,void>) == 48
+             , "Verifying expected sizeof(TaskBase<void,void,void>)" );
+
+} /* namespace Impl */
+} /* namespace Kokkos */
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+namespace Impl {
+
+template<>
+class TaskQueue< void > {};
+
+/** \brief  Manage task allocation, deallocation, and scheduling.
+ *
+ *  Task execution is deferred to the TaskQueueSpecialization.
+ *  All other aspects of task management have shared implementation.
+ */
+template< typename ExecSpace >
+class TaskQueue : public TaskQueue<void> {
 private:
 
-  using root_type     = TaskBase<ExecSpace,void,void> ;
-  using function_type = typename root_type::function_type ;
-  using queue_type    = typename root_type::queue_type ;
+  friend class TaskQueueSpecialization< ExecSpace > ;
+  friend class Kokkos::TaskScheduler< ExecSpace > ;
 
-  static_assert( sizeof(root_type) == 48 , "" );
+  using execution_space = ExecSpace ;
+  using specialization  = TaskQueueSpecialization< execution_space > ;
+  using memory_space    = typename specialization::memory_space ;
+  using device_type     = Kokkos::Device< execution_space , memory_space > ;
+  using memory_pool     = Kokkos::MemoryPool< device_type > ;
+  using task_root_type  = Kokkos::Impl::TaskBase<void,void,void> ;
 
-  TaskBase() = delete ;
-  TaskBase( TaskBase && ) = delete ;
-  TaskBase( const TaskBase & ) = delete ;
-  TaskBase & operator = ( TaskBase && ) = delete ;
-  TaskBase & operator = ( const TaskBase & ) = delete ;
+  struct Destroy {
+    TaskQueue * m_queue ;
+    void destroy_shared_allocation();
+  };
+
+  //----------------------------------------
+
+  enum : int { NumQueue = 3 };
+
+  // Queue is organized as [ priority ][ type ]
+
+  memory_pool               m_memory ;
+  task_root_type * volatile m_ready[ NumQueue ][ 2 ];
+  long                      m_accum_alloc ; // Accumulated number of allocations
+  int                       m_count_alloc ; // Current number of allocations
+  int                       m_max_alloc ;   // Maximum number of allocations
+  int                       m_ready_count ; // Number of ready or executing
+
+  //----------------------------------------
+
+  ~TaskQueue();
+  TaskQueue() = delete ;
+  TaskQueue( TaskQueue && ) = delete ;
+  TaskQueue( TaskQueue const & ) = delete ;
+  TaskQueue & operator = ( TaskQueue && ) = delete ;
+  TaskQueue & operator = ( TaskQueue const & ) = delete ;
+
+  TaskQueue( const memory_pool & arg_memory_pool );
+
+  // Schedule a task
+  //   Precondition:
+  //     task is not executing
+  //     task->m_wait == head of queue (linked list)
+  //     task->m_next == 0
+  //   Postcondition:
+  //     task->m_wait == head of queue (linked list)
+  //     task->m_next is linked list membership
+  KOKKOS_FUNCTION void schedule_runnable(  task_root_type * const task
+                                        ,  task_root_type * const dep );
+  KOKKOS_FUNCTION void schedule_aggregate( task_root_type * );
+
+  // Complete a task
+  //   Precondition:
+  //     task is not executing
+  //     task->m_next == LockTag  =>  task is complete
+  //     task->m_next != LockTag  =>  task is respawn
+  //   Postcondition:
+  //     task->m_wait == LockTag  =>  task is complete
+  //     task->m_wait != LockTag  =>  task is waiting
+  KOKKOS_FUNCTION
+  void complete_runnable( task_root_type * );
+
+  KOKKOS_FUNCTION
+  static bool push_task( task_root_type * volatile * const
+                       , task_root_type * const );
+
+  // Pop a task from a ready queue for immediate execution
+  // If    task == end then ready queue is empty
+  // Else  task->m_next == LockTag; task cannot be a member of a queue
+  KOKKOS_FUNCTION
+  static task_root_type * pop_ready_task( task_root_type * volatile * const );
+
+  KOKKOS_FUNCTION static
+  void decrement( task_root_type * task );
 
 public:
 
-  ResultType   m_result ;
-
-  KOKKOS_INLINE_FUNCTION ~TaskBase() = default ;
-
-  // Constructor for runnable task
+  // If and only if the execution space is a single thread
+  // then execute ready tasks.
   KOKKOS_INLINE_FUNCTION
-  constexpr TaskBase( function_type arg_apply
-                    , queue_type  * arg_queue
-                    , root_type   * arg_dependence
-                    , int           arg_ref_count
-                    , int           arg_alloc_size
-                    , int           arg_task_type
-                    , int           arg_priority
-                    )
-    : root_type( arg_apply
-               , arg_queue
-               , arg_dependence
-               , arg_ref_count
-               , arg_alloc_size
-               , arg_task_type
-               , arg_priority
-               )
-    , m_result()
-    {}
+  void iff_single_thread_recursive_execute()
+    {
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+      specialization::iff_single_thread_recursive_execute( this );
+#endif
+    }
 
-  using get_return_type = ResultType const & ;
+  void execute() { specialization::execute( this ); }
 
-  KOKKOS_INLINE_FUNCTION
-  get_return_type get() const { return m_result ; }
+  template< typename FunctorType >
+  void proc_set_apply( typename task_root_type::function_type * ptr )
+    {
+      specialization::template proc_set_apply< FunctorType >( ptr );
+    }
+
+  // Assign task pointer with reference counting of assigned tasks
+  KOKKOS_FUNCTION static
+  void assign( task_root_type ** const lhs
+             , task_root_type *  const rhs )
+    {
+#if 0
+  {
+    printf( "assign( 0x%lx { 0x%lx %d %d } , 0x%lx { 0x%lx %d %d } )\n"
+          , uintptr_t( lhs ? *lhs : 0 )
+          , uintptr_t( lhs && *lhs ? (*lhs)->m_next : 0 )
+          , int( lhs && *lhs ? (*lhs)->m_task_type : 0 )
+          , int( lhs && *lhs ? (*lhs)->m_ref_count : 0 )
+          , uintptr_t(rhs)
+          , uintptr_t( rhs ? rhs->m_next : 0 )
+          , int( rhs ? rhs->m_task_type : 0 )
+          , int( rhs ? rhs->m_ref_count : 0 )
+          );
+    fflush( stdout );
+  }
+#endif
+
+      if ( *lhs ) decrement( *lhs );
+      if ( rhs ) { Kokkos::atomic_increment( &(rhs->m_ref_count) ); }
+
+      // Force write of *lhs
+
+      *static_cast< task_root_type * volatile * >(lhs) = rhs ;
+
+      Kokkos::memory_fence();
+    }
+
+  KOKKOS_FUNCTION
+  size_t allocate_block_size( size_t n ); ///< Actual block size allocated
+
+  KOKKOS_FUNCTION
+  void * allocate( size_t n ); ///< Allocate from the memory pool
+
+  KOKKOS_FUNCTION
+  void deallocate( void * p , size_t n ); ///< Deallocate to the memory pool
 };
+
+} /* namespace Impl */
+} /* namespace Kokkos */
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+namespace Impl {
 
 template< typename ExecSpace , typename ResultType , typename FunctorType >
 class TaskBase
-  : public TaskBase< ExecSpace , ResultType , void >
+  : public TaskBase< void , void , void >
   , public FunctorType
 {
 private:
@@ -516,50 +433,31 @@ private:
 
 public:
 
-  using root_type       = TaskBase< ExecSpace , void , void > ;
-  using base_type       = TaskBase< ExecSpace , ResultType , void > ;
-  using specialization  = TaskQueueSpecialization< ExecSpace > ;
-  using function_type   = typename root_type::function_type ;
-  using queue_type      = typename root_type::queue_type ;
-  using member_type     = typename specialization::member_type ;
+  using root_type       = TaskBase< void , void , void > ;
   using functor_type    = FunctorType ;
   using result_type     = ResultType ;
 
-  template< typename Type >
-  KOKKOS_INLINE_FUNCTION static
-  void apply_functor
-    ( Type * const task
-    , typename std::enable_if
-        < std::is_same< typename Type::result_type , void >::value
-        , member_type * const
-        >::type member
-    )
-    {
-      using fType = typename Type::functor_type ;
-      static_cast<fType*>(task)->operator()( *member );
-    }
+  using specialization  = TaskQueueSpecialization< ExecSpace > ;
+  using member_type     = typename specialization::member_type ;
 
-  template< typename Type >
-  KOKKOS_INLINE_FUNCTION static
-  void apply_functor
-    ( Type * const task
-    , typename std::enable_if
-        < ! std::is_same< typename Type::result_type , void >::value
-        , member_type * const
-        >::type member
-    )
-    {
-      using fType = typename Type::functor_type ;
-      static_cast<fType*>(task)->operator()( *member , task->m_result );
-    }
+  KOKKOS_INLINE_FUNCTION
+  void apply_functor( member_type * const member , void * )
+    { functor_type::operator()( *member ); }
+
+  template< typename T >
+  KOKKOS_INLINE_FUNCTION
+  void apply_functor( member_type * const member
+                    , T           * const result )
+    { functor_type::operator()( *member , *result ); }
 
   KOKKOS_FUNCTION static
   void apply( root_type * root , void * exec )
     {
       TaskBase    * const task   = static_cast< TaskBase * >( root );
       member_type * const member = reinterpret_cast< member_type * >( exec );
+      result_type * const result = root->template result_ptr< result_type >();
 
-      TaskBase::template apply_functor( task , member );
+      task->apply_functor( member , result );
 
       // Task may be serial or team.
       // If team then must synchronize before querying if respawn was requested.
@@ -576,26 +474,9 @@ public:
     }
 
   // Constructor for runnable task
-  KOKKOS_INLINE_FUNCTION
-  constexpr TaskBase( function_type arg_apply
-                    , queue_type  * arg_queue
-                    , root_type   * arg_dependence
-                    , int           arg_ref_count
-                    , int           arg_alloc_size
-                    , int           arg_task_type
-                    , int           arg_priority
-                    , FunctorType && arg_functor
-                    )
-    : base_type( arg_apply
-               , arg_queue
-               , arg_dependence
-               , arg_ref_count
-               , arg_alloc_size
-               , arg_task_type
-               , arg_priority
-               )
-    , functor_type( arg_functor )
-    {}
+  KOKKOS_INLINE_FUNCTION constexpr
+  TaskBase( FunctorType && arg_functor )
+    : root_type() , functor_type( std::move(arg_functor) ) {}
 
   KOKKOS_INLINE_FUNCTION
   ~TaskBase() {}

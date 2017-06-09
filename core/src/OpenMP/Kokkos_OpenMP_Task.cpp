@@ -105,7 +105,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
 {
   using execution_space = Kokkos::OpenMP ;
   using queue_type      = TaskQueue< execution_space > ;
-  using task_root_type  = TaskBase< execution_space , void , void > ;
+  using task_root_type  = TaskBase< void , void , void > ;
   using Member          = Impl::HostThreadTeamMember< execution_space > ;
 
   static task_root_type * const end =
@@ -155,7 +155,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
             if ( 0 != task && end != task ) {
               // team member #0 completes the previously executed task,
               // completion may delete the task
-              queue->complete( task );
+              queue->complete_runnable( task );
             }
 
             // If 0 == m_ready_count then set task = 0
@@ -211,7 +211,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::
 {
   using execution_space = Kokkos::OpenMP ;
   using queue_type      = TaskQueue< execution_space > ;
-  using task_root_type  = TaskBase< execution_space , void , void > ;
+  using task_root_type  = TaskBase< void , void , void > ;
   using Member          = Impl::HostThreadTeamMember< execution_space > ;
 
   if ( 1 == OpenMP::thread_pool_size() ) {
@@ -240,7 +240,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::
 
       (*task->m_apply)( task , & single_exec );
 
-      queue->complete( task );
+      queue->complete_runnable( task );
 
     } while(1);
   }

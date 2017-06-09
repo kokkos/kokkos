@@ -641,18 +641,11 @@ namespace Test {
 
 TEST_F( TEST_CATEGORY, task_fib )
 {
-  const int N = 24 ; // 25 triggers tbd bug on Cuda/Pascal
+  const int N = 27 ;
   for ( int i = 0; i < N; ++i ) {
     TestTaskScheduler::TestFib< TEST_EXECSPACE >::run( i , ( i + 1 ) * ( i + 1 ) * 10000 );
   }
 }
-
-#if defined(KOKKOS_ARCH_MAXWELL) || defined(KOKKOS_ARCH_PASCAL)
-  // TODO: Resolve bug in task DAG for Pascal
-  #define KOKKOS_IMPL_DISABLE_UNIT_TEST_TASK_DAG_PASCAL
-#endif
-
-#ifndef KOKKOS_IMPL_DISABLE_UNIT_TEST_TASK_DAG_PASCAL
 
 TEST_F( TEST_CATEGORY, task_depend )
 {
@@ -666,10 +659,6 @@ TEST_F( TEST_CATEGORY, task_team )
   TestTaskScheduler::TestTaskTeam< TEST_EXECSPACE >::run( 1000 );
   //TestTaskScheduler::TestTaskTeamValue< TEST_EXECSPACE >::run( 1000 ); // Put back after testing.
 }
-
-#else //ndef KOKKOS_IMPL_DISABLE_UNIT_TEST_TASK_DAG_PASCAL
-#undef KOKKOS_IMPL_DISABLE_UNIT_TEST_TASK_DAG_PASCAL
-#endif //ndef KOKKOS_IMPL_DISABLE_UNIT_TEST_TASK_DAG_PASCAL
 
 }
 #endif // #if defined( KOKKOS_ENABLE_TASKDAG )
