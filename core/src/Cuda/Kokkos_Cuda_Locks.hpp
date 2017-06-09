@@ -49,9 +49,6 @@
 #ifdef KOKKOS_ENABLE_CUDA
 
 #include <cstdint>
-#include <iostream>
-#include <cassert>
-#include <stdio.h>
 
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 
