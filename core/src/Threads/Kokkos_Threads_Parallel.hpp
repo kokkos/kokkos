@@ -197,7 +197,7 @@ private:
 
   const FunctorType   m_functor ;
   const MDRangePolicy m_mdr_policy ;
-  const Policy        m_policy ;
+  const Policy        m_policy ;  // construct as RangePolicy( 0, num_tiles ).set_chunk_size(1) in ctor
 
   inline static
   void
@@ -545,7 +545,7 @@ public:
 };
 
 
-// MDRangePolicy implementation
+// MDRangePolicy impl
 template< class FunctorType , class ReducerType, class ... Traits >
 class ParallelReduce< FunctorType
                     , Kokkos::Experimental::MDRangePolicy< Traits ... >
@@ -580,8 +580,8 @@ private:
                                                                            >;
 
   const FunctorType   m_functor ;
-  const MDRangePolicy m_mdr_policy ; // input MDRangePolicy
-  const Policy        m_policy ;
+  const MDRangePolicy m_mdr_policy ;
+  const Policy        m_policy ;  // construct as RangePolicy( 0, num_tiles ).set_chunk_size(1) in ctor
   const ReducerType   m_reducer ;
   const pointer_type  m_result_ptr ;
 

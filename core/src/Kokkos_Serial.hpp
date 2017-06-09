@@ -659,7 +659,6 @@ public:
 };
 
 
-// MDRangePolicy implementation
 template< class FunctorType , class ReducerType , class ... Traits >
 class ParallelReduce< FunctorType
                     , Kokkos::Experimental::MDRangePolicy< Traits ... >
@@ -695,7 +694,7 @@ private:
 
 
   const FunctorType   m_functor ;
-  const MDRangePolicy m_mdr_policy ; // input MDRangePolicy
+  const MDRangePolicy m_mdr_policy ;
   const Policy        m_policy ;
   const ReducerType   m_reducer ;
   const pointer_type  m_result_ptr ;

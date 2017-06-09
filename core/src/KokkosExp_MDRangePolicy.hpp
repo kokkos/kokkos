@@ -151,8 +151,8 @@ struct MDRangePolicy
   index_type m_num_tiles;
   index_type m_prod_tile_dims;
 
-#if 0
-  // enum impl definition - causes warning when comparing in if statement without casting
+/*
+  // NDE enum impl definition alternative - replace static constexpr int ? 
   enum { outer_direction = static_cast<int> (
       (iteration_pattern::outer_direction != Iterate::Default)
     ? iteration_pattern::outer_direction
@@ -165,7 +165,7 @@ struct MDRangePolicy
 
   enum { Right = static_cast<int>( Iterate::Right ) };
   enum { Left  = static_cast<int>( Iterate::Left ) };
-#else
+*/
   //static constexpr int rank = iteration_pattern::rank;
 
   static constexpr int outer_direction = static_cast<int> (
@@ -181,7 +181,6 @@ struct MDRangePolicy
   // Ugly ugly workaround intel 14 not handling scoped enum correctly
   static constexpr int Right = static_cast<int>( Iterate::Right );
   static constexpr int Left  = static_cast<int>( Iterate::Left );
-#endif
 
   MDRangePolicy( point_type const& lower, point_type const& upper, tile_type const& tile = tile_type{} )
     : m_lower(lower)
@@ -241,7 +240,7 @@ struct MDRangePolicy
         m_num_tiles *= m_tile_end[i];
         m_prod_tile_dims *= m_tile[i];
       }
-      if ( m_prod_tile_dims > 512 ) { // improve this check - 1024,1024,64 max per dim (Kepler), but product num_threads < 1024; more restrictions pending register limit
+      if ( m_prod_tile_dims > 512 ) { // Match Cuda restriction for ParallelReduce; 1024,1024,64 max per dim (Kepler), but product num_threads < 1024
         printf(" Tile dimensions exceed Cuda limits\n");
         Kokkos::abort(" Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
         //Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
@@ -254,19 +253,7 @@ struct MDRangePolicy
   template < typename LT , typename UT , typename TT = array_index_type >
   MDRangePolicy( std::initializer_list<LT> const& lower, std::initializer_list<UT> const& upper, std::initializer_list<TT> const& tile = {} )
   {
-#if 0
-    // This should work, less duplicated code but not yet extensively tested
-    point_type lower_tmp, upper_tmp;
-    tile_type tile_tmp;
-    for ( auto i = 0; i < rank; ++i ) {
-      lower_tmp[i] = static_cast<array_index_type>(lower.begin()[i]);
-      upper_tmp[i] = static_cast<array_index_type>(upper.begin()[i]);
-      tile_tmp[i]  = static_cast<array_index_type>(tile.begin()[i]);
-    }
 
-    MDRangePolicy( lower_tmp, upper_tmp, tile_tmp );
-
-#else
     if(static_cast<int>(m_lower.size()) != rank || static_cast<int>(m_upper.size()) != rank)
       Kokkos::abort("MDRangePolicy: Constructor initializer lists have wrong size");
 
@@ -281,7 +268,6 @@ struct MDRangePolicy
 
     m_num_tiles = 1;
     m_prod_tile_dims = 1;
-
 
     // Host
     if ( true
@@ -334,21 +320,20 @@ struct MDRangePolicy
         m_num_tiles *= m_tile_end[i];
         m_prod_tile_dims *= m_tile[i];
       }
-      if ( m_prod_tile_dims > 512 ) { // improve this check - 1024,1024,64 max per dim (Kepler), but product num_threads < 1024; more restrictions pending register limit
+      if ( m_prod_tile_dims > 512 ) { // Match Cuda restriction for ParallelReduce; 1024,1024,64 max per dim (Kepler), but product num_threads < 1024
         printf(" Tile dimensions exceed Cuda limits\n");
         Kokkos::abort(" Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
         //Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
       }
     }
     #endif
-#endif
   }
 
 };
 // ------------------------------------------------------------------ //
 
 // ------------------------------------------------------------------ //
-//md_parallel_for
+//md_parallel_for - deprecated use parallel_for
 // ------------------------------------------------------------------ //
 template <typename MDRange, typename Functor, typename Enable = void>
 void md_parallel_for( MDRange const& range
@@ -363,7 +348,6 @@ void md_parallel_for( MDRange const& range
 {
   Impl::MDFunctor<MDRange, Functor, void> g(range, f);
 
-  //using range_policy = typename MDRange::range_policy;
   using range_policy = typename MDRange::impl_range_policy;
 
   Kokkos::parallel_for( range_policy(0, range.m_num_tiles).set_chunk_size(1), g, str );
@@ -382,7 +366,6 @@ void md_parallel_for( const std::string& str
 {
   Impl::MDFunctor<MDRange, Functor, void> g(range, f);
 
-  //using range_policy = typename MDRange::range_policy;
   using range_policy = typename MDRange::impl_range_policy;
 
   Kokkos::parallel_for( range_policy(0, range.m_num_tiles).set_chunk_size(1), g, str );
@@ -423,7 +406,7 @@ void md_parallel_for( MDRange const& range
 // ------------------------------------------------------------------ //
 
 // ------------------------------------------------------------------ //
-//md_parallel_reduce
+//md_parallel_reduce - deprecated use parallel_reduce
 // ------------------------------------------------------------------ //
 template <typename MDRange, typename Functor, typename ValueType>
 void md_parallel_reduce( MDRange const& range
@@ -437,10 +420,8 @@ void md_parallel_reduce( MDRange const& range
                       ) >::type* = 0
                     )
 {
-  //Impl::MDFunctor<MDRange, Functor, ValueType> g(range, f, v);
   Impl::MDFunctor<MDRange, Functor, ValueType> g(range, f);
 
-  //using range_policy = typename MDRange::range_policy;
   using range_policy = typename MDRange::impl_range_policy;
   Kokkos::parallel_reduce( str, range_policy(0, range.m_num_tiles).set_chunk_size(1), g, v );
 }
@@ -457,49 +438,14 @@ void md_parallel_reduce( const std::string& str
                       ) >::type* = 0
                     )
 {
-  //Impl::MDFunctor<MDRange, Functor, ValueType> g(range, f, v);
   Impl::MDFunctor<MDRange, Functor, ValueType> g(range, f);
 
-  //using range_policy = typename MDRange::range_policy;
   using range_policy = typename MDRange::impl_range_policy;
 
   Kokkos::parallel_reduce( str, range_policy(0, range.m_num_tiles).set_chunk_size(1), g, v );
 }
 
-// Cuda - md_parallel_reduce not implemented yet
-/*
-template <typename MDRange, typename Functor, typename ValueType>
-void md_parallel_reduce( MDRange const& range
-                    , Functor const& f
-                    , ValueType & v
-                    , const std::string& str = ""
-                    , typename std::enable_if<( true
-                      #if defined( KOKKOS_ENABLE_CUDA)
-                      && std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Cuda>::value
-                      #endif
-                      ) >::type* = 0
-                    )
-{
-  Impl::DeviceIterateTile<MDRange, Functor, typename MDRange::work_tag> closure(range, f, v);
-  closure.execute();
-}
-
-template <typename MDRange, typename Functor, typename ValueType>
-void md_parallel_reduce( const std::string& str
-                    , MDRange const& range
-                    , Functor const& f
-                    , ValueType & v
-                    , typename std::enable_if<( true
-                      #if defined( KOKKOS_ENABLE_CUDA)
-                      && std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Cuda>::value
-                      #endif
-                      ) >::type* = 0
-                    )
-{
-  Impl::DeviceIterateTile<MDRange, Functor, typename MDRange::work_tag> closure(range, f, v);
-  closure.execute();
-}
-*/
+// Cuda - md_parallel_reduce not implemented - use parallel_reduce
 
 }} // namespace Kokkos::Experimental
 

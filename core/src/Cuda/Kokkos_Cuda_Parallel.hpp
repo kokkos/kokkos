@@ -376,7 +376,8 @@ public:
     { }
 };
 
-// MDRangePolicy Refactor 
+
+// MDRangePolicy impl
 template< class FunctorType , class ... Traits >
 class ParallelFor< FunctorType
                  , Kokkos::Experimental::MDRangePolicy< Traits ... >
@@ -393,28 +394,20 @@ private:
   const FunctorType m_functor ;
   const Policy      m_rp ;
 
-  inline __device__
-  void apply() const
-  {
-    // TODO Move this into operator()()
-    Kokkos::Experimental::Impl::Refactor::DeviceIterateTile<Policy::rank,Policy,FunctorType,typename Policy::work_tag>(m_rp,m_functor).exec_range();
-  }
-
 public:
 
   inline
   __device__
   void operator()(void) const
     {
-      this->apply();
+      Kokkos::Experimental::Impl::Refactor::DeviceIterateTile<Policy::rank,Policy,FunctorType,typename Policy::work_tag>(m_rp,m_functor).exec_range();
     }
 
 
   inline
   void execute() const
   {
-    // TODO Should now be able to use Kokkos existing functionality to get maxblocks
-    const array_index_type maxblocks = 65535; //not true for blockIdx.x for newer archs
+    const array_index_type maxblocks = static_cast<array_index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount);
     if ( RP::rank == 2 )
     {
       const dim3 block( m_rp.m_tile[0] , m_rp.m_tile[1] , 1);
@@ -481,7 +474,6 @@ public:
     }
 
   } //end execute
-
 
 //  inline
   ParallelFor( const FunctorType & arg_functor
@@ -858,7 +850,7 @@ public:
 };
 
 
-// MDRangePolicy implementation
+// MDRangePolicy impl 
 template< class FunctorType , class ReducerType, class ... Traits >
 class ParallelReduce< FunctorType
                     , Kokkos::Experimental::MDRangePolicy< Traits ... >
@@ -873,7 +865,7 @@ private:
   typedef typename Policy::index_type                       index_type;
 
   typedef typename Policy::work_tag     WorkTag ;
-  typedef typename Policy::member_type  Member ; // used for declaring iterate index in for loops; needed?
+  typedef typename Policy::member_type  Member ;
 
   typedef Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
   typedef typename ReducerConditional::type ReducerTypeFwd;
@@ -900,7 +892,7 @@ public:
   size_type *         m_scratch_flags ;
   size_type *         m_unified_space ;
 
-  typedef typename Kokkos::Experimental::Impl::Reduce::DeviceIterateTile<Policy::rank,Policy,FunctorType,typename Policy::work_tag, reference_type> DeviceIteratePattern;
+  typedef typename Kokkos::Experimental::Impl::Reduce::DeviceIterateTile<Policy::rank, Policy, FunctorType, typename Policy::work_tag, reference_type> DeviceIteratePattern;
 
   // Shall we use the shfl based reduction or not (only use it for static sized types of more than 128bit
   enum { UseShflReduction = ((sizeof(value_type)>2*sizeof(double)) && ValueTraits::StaticValueSize) };
@@ -910,13 +902,11 @@ private:
   typedef int DummySHMEMReductionType;
 
 public:
-  // Make the exec_range calls call to Reduce::DeviceIterateTile
   inline
   __device__ 
   void 
   exec_range( reference_type update ) const
   {
-    // Construct this as a member during ParallelReduce, rather than constructing on device?
     Kokkos::Experimental::Impl::Reduce::DeviceIterateTile<Policy::rank,Policy,FunctorType,typename Policy::work_tag, reference_type>(m_policy, m_functor, update).exec_range();
   }
 
@@ -1018,7 +1008,7 @@ public:
         block_size = std::pow(2, exponent_pow_two);
         int suggested_blocksize = local_block_size( m_functor );
 
-        block_size = block_size > suggested_blocksize ? block_size : suggested_blocksize ; //Note: block_size must be less than or equal to 512 
+        block_size = (block_size > suggested_blocksize) ? block_size : suggested_blocksize ; //Note: block_size must be less than or equal to 512 
         
 
         m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_size /* block_size == max block_count */ );

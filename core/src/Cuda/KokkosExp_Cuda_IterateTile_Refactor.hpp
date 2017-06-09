@@ -49,14 +49,14 @@
 
 #include <iostream>
 #include <algorithm>
-//#include <stdio.h>
 #include <cstdio>
 
 #include <utility>
 
 // #include<Cuda/Kokkos_CudaExec.hpp>
-// Including the file above, leads to following type of errors:
+// Including the file above leads to following type of errors:
 // /home/ndellin/kokkos/core/src/Cuda/Kokkos_CudaExec.hpp(84): error: incomplete type is not allowed
+// use existing Kokkos functionality, e.g. max blocks, once resolved
 
 #if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Profiling_Interface.hpp>
@@ -88,43 +88,41 @@ struct DeviceIterateTile<2,RP,Functor,void >
   inline __device__
   void exec_range() const
   {
-// LL
-  if (RP::inner_direction == RP::Left) {
-    for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
-      const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
-      if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+    // LL
+    if (RP::inner_direction == RP::Left) {
+      for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
+        const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
+        if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
 
-        for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
-          const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
-          if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
-            m_func(offset_0 , offset_1);
+          for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
+            const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+            if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+              m_func(offset_0 , offset_1);
+            }
           }
         }
       }
     }
-  }
-// LR
-  else {
-    for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
-      const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
-      if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+    // LR
+    else {
+      for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
+        const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+        if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
 
-        for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
-          const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
-          if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
-            m_func(offset_0 , offset_1);
+          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
+            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
+            if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+              m_func(offset_0 , offset_1);
+            }
           }
         }
       }
     }
-  }
-
   } //end exec_range
 
 private:
   const RP & m_rp;
   const Functor & m_func;
-
 };
 
 // Specializations for tag type
@@ -142,36 +140,35 @@ struct DeviceIterateTile<2,RP,Functor,Tag>
   inline __device__
   void exec_range() const
   {
-  if (RP::inner_direction == RP::Left) {
-    // Loop over size maxnumblocks until full range covered
-    for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
-      const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
-      if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+    if (RP::inner_direction == RP::Left) {
+      // Loop over size maxnumblocks until full range covered
+      for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
+        const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
+        if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
 
-        for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
-          const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
-          if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
-            m_func(Tag(), offset_0 , offset_1);
+          for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
+            const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+            if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+              m_func(Tag(), offset_0 , offset_1);
+            }
           }
         }
       }
     }
-  }
-  else {
-    for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
-      const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
-      if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+    else {
+      for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
+        const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+        if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
 
-        for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
-          const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
-          if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
-            m_func(Tag(), offset_0 , offset_1);
+          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
+            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
+            if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+              m_func(Tag(), offset_0 , offset_1);
+            }
           }
         }
       }
     }
-  }
-
   } //end exec_range
 
 private:
@@ -196,7 +193,7 @@ struct DeviceIterateTile<3,RP,Functor,void >
   inline __device__
   void exec_range() const
   {
-// LL
+    // LL
     if (RP::inner_direction == RP::Left) {
       for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) {
         const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
@@ -217,28 +214,27 @@ struct DeviceIterateTile<3,RP,Functor,void >
         }
       }
     }
-// LR
-  else {
-    for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
-      const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
-      if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+    // LR
+    else {
+      for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
+        const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
+        if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
 
-        for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
-          const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
-          if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
+            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
+            if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
 
-            for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) {
-              const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
-              if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
-                m_func(offset_0 , offset_1 , offset_2);
+              for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) {
+                const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
+                if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
+                  m_func(offset_0 , offset_1 , offset_2);
+                }
               }
             }
           }
         }
       }
     }
-  }
-
   } //end exec_range
 
 private:
@@ -301,7 +297,6 @@ struct DeviceIterateTile<3,RP,Functor,Tag>
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -329,15 +324,15 @@ struct DeviceIterateTile<4,RP,Functor,void >
   inline __device__
   void exec_range() const
   {
-  //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
-  //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
-// LL
+    //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
+    //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
+    // LL
     if (RP::inner_direction == RP::Left) {
       const index_type temp0  =  m_rp.m_tile_end[0];
       const index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
       const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
-      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
+          (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x % numbl0;
       const index_type tile_id1 = blockIdx.x / numbl0;
@@ -369,13 +364,13 @@ struct DeviceIterateTile<4,RP,Functor,void >
         }
       }
     }
-// LR
+    // LR
     else {
       const index_type temp0  =  m_rp.m_tile_end[0];
       const index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
       const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
-      ( temp0 <= max_blocks ? temp0 : max_blocks ) );
+          ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x / numbl1;
       const index_type tile_id1 = blockIdx.x % numbl1;
@@ -407,7 +402,6 @@ struct DeviceIterateTile<4,RP,Functor,void >
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -433,14 +427,14 @@ struct DeviceIterateTile<4,RP,Functor,Tag>
   inline __device__
   void exec_range() const
   {
-  //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
-  //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
+    //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
+    //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
     if (RP::inner_direction == RP::Left) {
       const index_type temp0  =  m_rp.m_tile_end[0];
       const index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
       const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
-      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
+          (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x % numbl0;
       const index_type tile_id1 = blockIdx.x / numbl0;
@@ -477,7 +471,7 @@ struct DeviceIterateTile<4,RP,Functor,Tag>
       const index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
       const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
-      ( temp0 <= max_blocks ? temp0 : max_blocks ) );
+          ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x / numbl1;
       const index_type tile_id1 = blockIdx.x % numbl1;
@@ -509,7 +503,6 @@ struct DeviceIterateTile<4,RP,Functor,Tag>
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -537,16 +530,16 @@ struct DeviceIterateTile<5,RP,Functor,void >
   inline __device__
   void exec_range() const
   {
-  //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
-  //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
-// LL
+    //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
+    //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
+    // LL
     if (RP::inner_direction == RP::Left) {
 
       index_type temp0  =  m_rp.m_tile_end[0];
       index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
       const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
-      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
+          (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x % numbl0;
       const index_type tile_id1 = blockIdx.x / numbl0;
@@ -557,7 +550,7 @@ struct DeviceIterateTile<5,RP,Functor,void >
       temp1  =  m_rp.m_tile_end[3];
       const index_type numbl2 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
       const index_type numbl3 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl2 ) :
-      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
+          (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id2 = blockIdx.y % numbl2;
       const index_type tile_id3 = blockIdx.y / numbl2;
@@ -595,13 +588,13 @@ struct DeviceIterateTile<5,RP,Functor,void >
         }
       }
     }
-// LR
+    // LR
     else {
       index_type temp0  =  m_rp.m_tile_end[0];
       index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
       const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
-      ( temp0 <= max_blocks ? temp0 : max_blocks ) );
+          ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x / numbl1;
       const index_type tile_id1 = blockIdx.x % numbl1;
@@ -612,7 +605,7 @@ struct DeviceIterateTile<5,RP,Functor,void >
       temp1  =  m_rp.m_tile_end[3];
       const index_type numbl3 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
       const index_type numbl2 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl3 ) :
-      (  temp0 <= max_blocks ? temp0 : max_blocks ) );
+          (  temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id2 = blockIdx.y / numbl3;
       const index_type tile_id3 = blockIdx.y % numbl3;
@@ -650,7 +643,6 @@ struct DeviceIterateTile<5,RP,Functor,void >
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -676,15 +668,15 @@ struct DeviceIterateTile<5,RP,Functor,Tag>
   inline __device__
   void exec_range() const
   {
-  //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
-  //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
-// LL
+    //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
+    //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
+    // LL
     if (RP::inner_direction == RP::Left) {
       index_type temp0  =  m_rp.m_tile_end[0];
       index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
       const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
-      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
+          (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x % numbl0;
       const index_type tile_id1 = blockIdx.x / numbl0;
@@ -695,7 +687,7 @@ struct DeviceIterateTile<5,RP,Functor,Tag>
       temp1  =  m_rp.m_tile_end[3];
       const index_type numbl2 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
       const index_type numbl3 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl2 ) :
-      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
+          (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id2 = blockIdx.y % numbl2;
       const index_type tile_id3 = blockIdx.y / numbl2;
@@ -733,13 +725,13 @@ struct DeviceIterateTile<5,RP,Functor,Tag>
         }
       }
     }
-// LR
+    // LR
     else {
       index_type temp0  =  m_rp.m_tile_end[0];
       index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
       const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
-      ( temp0 <= max_blocks ? temp0 : max_blocks ) );
+          ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x / numbl1;
       const index_type tile_id1 = blockIdx.x % numbl1;
@@ -750,7 +742,7 @@ struct DeviceIterateTile<5,RP,Functor,Tag>
       temp1  =  m_rp.m_tile_end[3];
       const index_type numbl3 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
       const index_type numbl2 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl3 ) :
-      (  temp0 <= max_blocks ? temp0 : max_blocks ) );
+          (  temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id2 = blockIdx.y / numbl3;
       const index_type tile_id3 = blockIdx.y % numbl3;
@@ -788,7 +780,6 @@ struct DeviceIterateTile<5,RP,Functor,Tag>
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -816,15 +807,15 @@ struct DeviceIterateTile<6,RP,Functor,void >
   inline __device__
   void exec_range() const
   {
-  //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
-  //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
-// LL
+    //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
+    //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
+    // LL
     if (RP::inner_direction == RP::Left) {
       index_type temp0  =  m_rp.m_tile_end[0];
       index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
       const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
-      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
+          (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x % numbl0;
       const index_type tile_id1 = blockIdx.x / numbl0;
@@ -835,7 +826,7 @@ struct DeviceIterateTile<6,RP,Functor,void >
       temp1  =  m_rp.m_tile_end[3];
       const index_type numbl2 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
       const index_type numbl3 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl2 ) :
-      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
+          (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id2 = blockIdx.y % numbl2;
       const index_type tile_id3 = blockIdx.y / numbl2;
@@ -846,7 +837,7 @@ struct DeviceIterateTile<6,RP,Functor,void >
       temp1  =  m_rp.m_tile_end[5];
       const index_type numbl4 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
       const index_type numbl5 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl4 ) :
-      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
+          (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id4 = blockIdx.z % numbl4;
       const index_type tile_id5 = blockIdx.z / numbl4;
@@ -890,13 +881,13 @@ struct DeviceIterateTile<6,RP,Functor,void >
         }
       }
     }
-// LR
+    // LR
     else {
       index_type temp0  =  m_rp.m_tile_end[0];
       index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
       const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
-      ( temp0 <= max_blocks ? temp0 : max_blocks ) );
+          ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x / numbl1;
       const index_type tile_id1 = blockIdx.x % numbl1;
@@ -907,7 +898,7 @@ struct DeviceIterateTile<6,RP,Functor,void >
       temp1  =  m_rp.m_tile_end[3];
       const index_type numbl3 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
       const index_type numbl2 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl3 ) :
-      (  temp0 <= max_blocks ? temp0 : max_blocks ) );
+          (  temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id2 = blockIdx.y / numbl3;
       const index_type tile_id3 = blockIdx.y % numbl3;
@@ -918,7 +909,7 @@ struct DeviceIterateTile<6,RP,Functor,void >
       temp1  =  m_rp.m_tile_end[5];
       const index_type numbl5 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
       const index_type numbl4 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl5 ) :
-      (  temp0 <= max_blocks ? temp0 : max_blocks ) );
+          (  temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id4 = blockIdx.z / numbl5;
       const index_type tile_id5 = blockIdx.z % numbl5;
@@ -962,7 +953,6 @@ struct DeviceIterateTile<6,RP,Functor,void >
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -988,15 +978,15 @@ struct DeviceIterateTile<6,RP,Functor,Tag>
   inline __device__
   void exec_range() const
   {
-  //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
-  //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
-// LL
+    //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
+    //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
+    // LL
     if (RP::inner_direction == RP::Left) {
       index_type temp0  =  m_rp.m_tile_end[0];
       index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl0 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
       const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
-      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
+          (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x % numbl0;
       const index_type tile_id1 = blockIdx.x / numbl0;
@@ -1007,7 +997,7 @@ struct DeviceIterateTile<6,RP,Functor,Tag>
       temp1  =  m_rp.m_tile_end[3];
       const index_type numbl2 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
       const index_type numbl3 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl2 ) :
-      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
+          (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id2 = blockIdx.y % numbl2;
       const index_type tile_id3 = blockIdx.y / numbl2;
@@ -1018,7 +1008,7 @@ struct DeviceIterateTile<6,RP,Functor,Tag>
       temp1  =  m_rp.m_tile_end[5];
       const index_type numbl4 = ( temp0 <= max_blocks ? temp0 : max_blocks ) ;
       const index_type numbl5 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl4 ) :
-      (  temp1 <= max_blocks ? temp1 : max_blocks ) );
+          (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
       const index_type tile_id4 = blockIdx.z % numbl4;
       const index_type tile_id5 = blockIdx.z / numbl4;
@@ -1062,13 +1052,13 @@ struct DeviceIterateTile<6,RP,Functor,Tag>
         }
       }
     }
-// LR
+    // LR
     else {
       index_type temp0  =  m_rp.m_tile_end[0];
       index_type temp1  =  m_rp.m_tile_end[1];
       const index_type numbl1 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
       const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
-      ( temp0 <= max_blocks ? temp0 : max_blocks ) );
+          ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id0 = blockIdx.x / numbl1;
       const index_type tile_id1 = blockIdx.x % numbl1;
@@ -1079,7 +1069,7 @@ struct DeviceIterateTile<6,RP,Functor,Tag>
       temp1  =  m_rp.m_tile_end[3];
       const index_type numbl3 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
       const index_type numbl2 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl3 ) :
-      (  temp0 <= max_blocks ? temp0 : max_blocks ) );
+          (  temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id2 = blockIdx.y / numbl3;
       const index_type tile_id3 = blockIdx.y % numbl3;
@@ -1090,7 +1080,7 @@ struct DeviceIterateTile<6,RP,Functor,Tag>
       temp1  =  m_rp.m_tile_end[5];
       const index_type numbl5 = ( temp1 <= max_blocks ? temp1 : max_blocks ) ;
       const index_type numbl4 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl5 ) :
-      (  temp0 <= max_blocks ? temp0 : max_blocks ) );
+          (  temp0 <= max_blocks ? temp0 : max_blocks ) );
 
       const index_type tile_id4 = blockIdx.z / numbl5;
       const index_type tile_id5 = blockIdx.z % numbl5;
@@ -1134,7 +1124,6 @@ struct DeviceIterateTile<6,RP,Functor,Tag>
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -1144,6 +1133,7 @@ private:
 
 } // Refactor
 
+// ----------------------------------------------------------------------------------
 
 namespace Reduce {
 
@@ -1161,19 +1151,7 @@ struct is_array_type< T* > : std::true_type
 {
   using value_type = T;
 };
-/*
-template < typename T >
-struct is_array_type< T const * > : std::true_type
-{
-  using value_type = T;
-};
 
-template < typename T >
-struct is_array_type< T * const > : std::true_type
-{
-  using value_type = T;
-};
-*/
 template < typename T >
 struct is_array_type< T[] > : std::true_type
 {
@@ -1188,20 +1166,20 @@ struct DeviceIterateTile;
 // Scalar reductions
 
 // num_blocks = min( num_tiles, max_num_blocks ); //i.e. determined by number of tiles and reduction algorithm constraints
-// extract n-d tile offsets from tileid = blockid and tile_dims
-// local indices within a tile come from threadIdx.x and tile_dims, constrained by blocksize
-// combine tile + local id info for multi-dim global ids
+// extract n-dim tile offsets (i.e. tile's global starting mulit-index) from the tileid = blockid using tile dimensions
+// local indices within a tile extracted from threadIdx.x using tile dims, constrained by blocksize
+// combine tile and local id info for multi-dim global ids
 
 // Pattern:
-// Each block+thread is responsible for ONE tile+local_id combo (unless striding by num_blocks)
+// Each block+thread is responsible for a tile+local_id combo (additional when striding by num_blocks)
 // 1. create offset arrays
 // 2. loop over number of tiles, striding by griddim (equal to num tiles, or max num blocks)
-// 3. temps for tile_idx and thrd_idx, which will be modified
+// 3. temps set for tile_idx and thrd_idx, which will be modified
 // 4. if LL vs LR: 
 //      determine tile starting point offsets (multidim)
 //      determine local index offsets (multidim)
-//      concatentate tile offset + local offset
-//    if offset in range bounds and local offset in tile bounds, call functor
+//      concatentate tile offset + local offset for global multi-dim index
+//    if offset withinin range bounds AND local offset within tile bounds, call functor
 
 // ValueType = T
 //Rank 2
@@ -1280,9 +1258,6 @@ private:
 
 
 // Specializations for tag type
-//C++ exception with description "cudaDeviceSynchronize() error( cudaErrorIllegalAddress): an illegal memory access was encountered /home/ndellin/kokkos/core/src/Cuda/Kokkos_Cuda_Impl.cpp:122
-//Traceback functionality not available
-//" thrown in the test body.
 template< typename RP , typename Functor , typename Tag, typename ValueType >
 struct DeviceIterateTile<2,RP,Functor,Tag, ValueType, typename std::enable_if< !is_array_type<ValueType>::value && !is_void< Tag >::value >::type >
 {
@@ -1314,7 +1289,7 @@ struct DeviceIterateTile<2,RP,Functor,Tag, ValueType, typename std::enable_if< !
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -1345,7 +1320,6 @@ struct DeviceIterateTile<2,RP,Functor,Tag, ValueType, typename std::enable_if< !
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -1388,7 +1362,7 @@ struct DeviceIterateTile<3,RP,Functor,void,ValueType , typename std::enable_if< 
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -1419,7 +1393,6 @@ struct DeviceIterateTile<3,RP,Functor,void,ValueType , typename std::enable_if< 
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -1461,7 +1434,7 @@ struct DeviceIterateTile<3,RP,Functor,Tag, ValueType, typename std::enable_if< !
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -1492,7 +1465,6 @@ struct DeviceIterateTile<3,RP,Functor,Tag, ValueType, typename std::enable_if< !
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -1528,7 +1500,6 @@ struct DeviceIterateTile<4,RP,Functor,void,ValueType , typename std::enable_if< 
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-
       for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
         index_type thrd_idx = threadIdx.y;
@@ -1541,7 +1512,7 @@ struct DeviceIterateTile<4,RP,Functor,void,ValueType , typename std::enable_if< 
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -1559,7 +1530,7 @@ struct DeviceIterateTile<4,RP,Functor,void,ValueType , typename std::enable_if< 
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -1572,7 +1543,6 @@ struct DeviceIterateTile<4,RP,Functor,void,ValueType , typename std::enable_if< 
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -1580,6 +1550,7 @@ private:
   const Functor & m_func;
   ValueType & m_v;
 };
+
 
 // Specializations for void tag type
 template< typename RP , typename Functor , typename Tag, typename ValueType >
@@ -1618,7 +1589,7 @@ struct DeviceIterateTile<4,RP,Functor,Tag,ValueType, typename std::enable_if< !i
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -1636,7 +1607,7 @@ struct DeviceIterateTile<4,RP,Functor,Tag,ValueType, typename std::enable_if< !i
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -1649,7 +1620,6 @@ struct DeviceIterateTile<4,RP,Functor,Tag,ValueType, typename std::enable_if< !i
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -1697,7 +1667,7 @@ struct DeviceIterateTile<5,RP,Functor,void,ValueType , typename std::enable_if< 
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -1715,7 +1685,7 @@ struct DeviceIterateTile<5,RP,Functor,void,ValueType , typename std::enable_if< 
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -1728,7 +1698,6 @@ struct DeviceIterateTile<5,RP,Functor,void,ValueType , typename std::enable_if< 
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -1736,6 +1705,7 @@ private:
   const Functor & m_func;
   ValueType & m_v;
 };
+
 
 // Specializations for tag type
 template< typename RP , typename Functor , typename Tag, typename ValueType >
@@ -1774,7 +1744,7 @@ struct DeviceIterateTile<5,RP,Functor,Tag,ValueType, typename std::enable_if< !i
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -1792,7 +1762,7 @@ struct DeviceIterateTile<5,RP,Functor,Tag,ValueType, typename std::enable_if< !i
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -1805,7 +1775,6 @@ struct DeviceIterateTile<5,RP,Functor,Tag,ValueType, typename std::enable_if< !i
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -1853,7 +1822,7 @@ struct DeviceIterateTile<6,RP,Functor,void,ValueType , typename std::enable_if< 
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -1871,7 +1840,7 @@ struct DeviceIterateTile<6,RP,Functor,void,ValueType , typename std::enable_if< 
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -1884,7 +1853,6 @@ struct DeviceIterateTile<6,RP,Functor,void,ValueType , typename std::enable_if< 
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -1892,6 +1860,7 @@ private:
   const Functor & m_func;
   ValueType & m_v;
 };
+
 
 // Specializations for tag type
 template< typename RP , typename Functor , typename Tag, typename ValueType >
@@ -1930,7 +1899,7 @@ struct DeviceIterateTile<6,RP,Functor,Tag,ValueType, typename std::enable_if< !i
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -1948,7 +1917,7 @@ struct DeviceIterateTile<6,RP,Functor,Tag,ValueType, typename std::enable_if< !i
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -1961,11 +1930,10 @@ struct DeviceIterateTile<6,RP,Functor,Tag,ValueType, typename std::enable_if< !i
         }
       }
     }
-
   } //end exec_range
 
 private:
-  const RP & m_rp; // TODO store a reference to this on GPU???
+  const RP & m_rp;
   const Functor & m_func;
   ValueType & m_v;
 };
@@ -2036,9 +2004,8 @@ struct DeviceIterateTile<2,RP,Functor,void,ValueType, typename std::enable_if< i
           if ( in_bounds )
           { m_func( m_offset[0], m_offset[1], m_v ); }
         }
-      } //end for loop over num_tiles - product of tiles in each direction
+      }
     }
-
   } //end exec_range
 
 private:
@@ -2049,9 +2016,6 @@ private:
 
 
 // Specializations for tag type
-//C++ exception with description "cudaDeviceSynchronize() error( cudaErrorIllegalAddress): an illegal memory access was encountered /home/ndellin/kokkos/core/src/Cuda/Kokkos_Cuda_Impl.cpp:122
-//Traceback functionality not available
-//" thrown in the test body.
 template< typename RP , typename Functor , typename Tag, typename ValueType >
 struct DeviceIterateTile<2,RP,Functor,Tag, ValueType, typename std::enable_if< is_array_type<ValueType>::value && !is_void< Tag >::value >::type >
 {
@@ -2115,7 +2079,6 @@ struct DeviceIterateTile<2,RP,Functor,Tag, ValueType, typename std::enable_if< i
         }
       } //end for loop over num_tiles - product of tiles in each direction
     }
-
   } //end exec_range
 
 private:
@@ -2190,7 +2153,6 @@ struct DeviceIterateTile<3,RP,Functor,void,ValueType , typename std::enable_if< 
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -2233,7 +2195,7 @@ struct DeviceIterateTile<3,RP,Functor,Tag, ValueType, typename std::enable_if< i
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -2251,7 +2213,7 @@ struct DeviceIterateTile<3,RP,Functor,Tag, ValueType, typename std::enable_if< i
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -2264,7 +2226,6 @@ struct DeviceIterateTile<3,RP,Functor,Tag, ValueType, typename std::enable_if< i
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -2313,7 +2274,7 @@ struct DeviceIterateTile<4,RP,Functor,void,ValueType , typename std::enable_if< 
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -2331,7 +2292,7 @@ struct DeviceIterateTile<4,RP,Functor,void,ValueType , typename std::enable_if< 
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -2344,7 +2305,6 @@ struct DeviceIterateTile<4,RP,Functor,void,ValueType , typename std::enable_if< 
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -2352,6 +2312,7 @@ private:
   const Functor & m_func;
   value_type* m_v;
 };
+
 
 // Specializations for void tag type
 template< typename RP , typename Functor , typename Tag, typename ValueType >
@@ -2391,7 +2352,7 @@ struct DeviceIterateTile<4,RP,Functor,Tag,ValueType, typename std::enable_if< is
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -2409,7 +2370,7 @@ struct DeviceIterateTile<4,RP,Functor,Tag,ValueType, typename std::enable_if< is
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -2422,7 +2383,6 @@ struct DeviceIterateTile<4,RP,Functor,Tag,ValueType, typename std::enable_if< is
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -2471,7 +2431,7 @@ struct DeviceIterateTile<5,RP,Functor,void,ValueType , typename std::enable_if< 
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -2489,7 +2449,7 @@ struct DeviceIterateTile<5,RP,Functor,void,ValueType , typename std::enable_if< 
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -2502,7 +2462,6 @@ struct DeviceIterateTile<5,RP,Functor,void,ValueType , typename std::enable_if< 
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -2510,6 +2469,7 @@ private:
   const Functor & m_func;
   value_type* m_v;
 };
+
 
 // Specializations for tag type
 template< typename RP , typename Functor , typename Tag, typename ValueType >
@@ -2549,7 +2509,7 @@ struct DeviceIterateTile<5,RP,Functor,Tag,ValueType, typename std::enable_if< is
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -2567,7 +2527,7 @@ struct DeviceIterateTile<5,RP,Functor,Tag,ValueType, typename std::enable_if< is
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -2580,7 +2540,6 @@ struct DeviceIterateTile<5,RP,Functor,Tag,ValueType, typename std::enable_if< is
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -2629,7 +2588,7 @@ struct DeviceIterateTile<6,RP,Functor,void,ValueType , typename std::enable_if< 
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -2647,7 +2606,7 @@ struct DeviceIterateTile<6,RP,Functor,void,ValueType , typename std::enable_if< 
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -2660,7 +2619,6 @@ struct DeviceIterateTile<6,RP,Functor,void,ValueType , typename std::enable_if< 
         }
       }
     }
-
   } //end exec_range
 
 private:
@@ -2668,6 +2626,7 @@ private:
   const Functor & m_func;
   value_type* m_v;
 };
+
 
 // Specializations for tag type
 template< typename RP , typename Functor , typename Tag, typename ValueType >
@@ -2707,7 +2666,7 @@ struct DeviceIterateTile<6,RP,Functor,Tag,ValueType, typename std::enable_if< is
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -2725,7 +2684,7 @@ struct DeviceIterateTile<6,RP,Functor,Tag,ValueType, typename std::enable_if< is
             tile_idx /= m_rp.m_tile_end[i];
 
             // tile-local indices identified with threadIdx.y
-            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
+            m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
@@ -2738,23 +2697,19 @@ struct DeviceIterateTile<6,RP,Functor,Tag,ValueType, typename std::enable_if< is
         }
       }
     }
-
   } //end exec_range
 
 private:
-  const RP & m_rp; // TODO store a reference to this on GPU???
+  const RP & m_rp;
   const Functor & m_func;
   value_type* m_v;
 };
 
 } // Reduce
 
-
 // ----------------------------------------------------------------------------------
-
 
 } } } //end namespace Kokkos::Experimental::Impl
 
 #endif
 #endif
-

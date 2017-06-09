@@ -141,7 +141,6 @@ namespace Kokkos { namespace Experimental { namespace Impl {
 #define LOOP_ARGS_8 LOOP_ARGS_7, i7 + m_offset[7]
 
 
-
 // New Loop Macros...
 // parallel_for, non-tagged
 #define APPLY( func, ... ) \
@@ -1010,8 +1009,6 @@ namespace Kokkos { namespace Experimental { namespace Impl {
 // end tagged macros
 
 
-
-
 // Structs for calling loops
 template < int Rank, bool IsLeft, typename IType, typename Tagged, typename Enable = void >
 struct Tile_Loop_Type;
@@ -1774,18 +1771,16 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
   RP         const& m_rp;
   Functor    const& m_func;
   typename std::conditional< std::is_same<Tag,void>::value,int,Tag>::type m_tag;
-//  value_type  & m_v;
-
 };
 
 
+// For ParallelReduce
 // ValueType - scalar: For reductions
 template < typename RP
          , typename Functor
          , typename Tag
          , typename ValueType
          >
-//struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_if< !is_void<ValueType >::value >::type >
 struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_if< !is_void<ValueType >::value && !is_type_array<ValueType>::value >::type >
 {
   using index_type = typename RP::index_type;
@@ -2265,6 +2260,7 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 };
 
 
+// For ParallelReduce
 // Extra specialization for array reductions
 // ValueType[]: For array reductions
 template < typename RP
@@ -2277,7 +2273,6 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
   using index_type = typename RP::index_type;
   using point_type = typename RP::point_type;
 
-//  using value_type = ValueType;
   using value_type = typename is_type_array<ValueType>::value_type; // strip away the 'array-ness' [], only underlying type remains
 
   inline
@@ -2748,12 +2743,13 @@ struct HostIterateTile < RP , Functor , Tag , ValueType , typename std::enable_i
 };
 
 
-
 // ------------------------------------------------------------------ //
 
 // MDFunctor - wraps the range_policy and functor to pass to IterateTile
-// Serial, Threads, OpenMP
+// Used for md_parallel_{for,reduce} with Serial, Threads, OpenMP
 // Cuda uses DeviceIterateTile directly within md_parallel_for
+// TODO Once md_parallel_{for,reduce} removed, this can be removed
+
 // ParallelReduce - scalar reductions
 template < typename MDRange, typename Functor, typename ValueType = void >
 struct MDFunctor
@@ -2848,7 +2844,6 @@ struct MDFunctor< MDRange, Functor, ValueType[] >
 };
 
 
-
 // ParallelFor
 template < typename MDRange, typename Functor >
 struct MDFunctor< MDRange, Functor, void >
@@ -2897,4 +2892,3 @@ struct MDFunctor< MDRange, Functor, void >
 } } } //end namespace Kokkos::Experimental::Impl
 
 #endif
-
