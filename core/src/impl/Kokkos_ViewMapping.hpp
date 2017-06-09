@@ -2598,6 +2598,9 @@ private:
 
 public:
 
+  typedef void printable_label_typedef;
+  enum { is_managed = Traits::is_managed };
+
   //----------------------------------------
   // Domain dimensions
 
@@ -3152,6 +3155,33 @@ void view_error_operator_bounds
   view_error_operator_bounds<R+1>(buf+n,len-n,map,args...);
 }
 
+template< class T, class Enable = void >
+struct has_printable_label_typedef : public std::false_type {};
+
+template<class T>
+struct has_printable_label_typedef<
+  T, typename enable_if_type<typename T::printable_label_typedef>::type>
+  : public std::true_type
+{};
+
+template< class MapType >
+KOKKOS_INLINE_FUNCTION
+void operator_bounds_error_on_device(
+    std::false_type) {
+  Kokkos::abort("View bounds error");
+}
+
+template< class MapType >
+KOKKOS_INLINE_FUNCTION
+void operator_bounds_error_on_device(
+    std::true_type) {
+  if (!MapType::is_managed) {
+    operator_bounds_error_on_device<MapType>(std::false_type());
+    return;
+  }
+  enum { LEN = 128 };
+}
+
 template< class MemorySpace , class MapType , class ... Args >
 KOKKOS_INLINE_FUNCTION
 void view_verify_operator_bounds
@@ -3167,7 +3197,8 @@ void view_verify_operator_bounds
     view_error_operator_bounds<0>( buffer + n , LEN - n , map , args ... );
     Kokkos::Impl::throw_runtime_exception(std::string(buffer));
 #else
-    Kokkos::abort("View bounds error");
+    operator_bounds_error_on_device<MapType>(
+        has_printable_label_typedef<MapType>::value);
 #endif
   }
 }

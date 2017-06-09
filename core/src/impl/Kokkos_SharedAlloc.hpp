@@ -315,6 +315,11 @@ public:
 #endif
     }
 
+  KOKKOS_INLINE_FUNCTION
+  bool has_record() const {
+    return (m_record_bits & (~DO_NOT_DEREF_FLAG)) != 0;
+  }
+
   KOKKOS_FORCEINLINE_FUNCTION
   ~SharedAllocationTracker()
     { KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT }
