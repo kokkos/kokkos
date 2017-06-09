@@ -115,7 +115,7 @@ void unlock_address_cuda_space(void* ptr) {
 } // namespace Kokkos
 
 /* Dan Ibanez: it is critical that this code be a macro, so that it will
-   captures the right address for kokkos_impl_cuda_lock_arrays!
+   capture the right address for kokkos_impl_cuda_lock_arrays!
    putting this in an inline function will NOT do the right thing! */
 #define KOKKOS_COPY_CUDA_LOCK_ARRAYS_TO_DEVICE() \
 do { \
