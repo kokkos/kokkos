@@ -3157,23 +3157,7 @@ void view_error_operator_bounds
 
 #if ! defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
 
-template< class T, class Enable = void >
-struct has_printable_label_typedef : public std::false_type {};
-
-template<class T>
-struct has_printable_label_typedef<
-  T, typename enable_if_type<typename T::printable_label_typedef>::type>
-  : public std::true_type
-{};
-
-template< class MapType >
-KOKKOS_INLINE_FUNCTION
-void operator_bounds_error_on_device(
-    MapType const&,
-    std::false_type) {
-  Kokkos::abort("View bounds error");
-}
-
+/* Check #3: is the View managed as determined by the MemoryTraits? */
 template< class MapType,
   bool is_managed = (MapType::is_managed != 0) >
 struct OperatorBoundsErrorOnDevice;
@@ -3211,6 +3195,27 @@ static void run(MapType const& map) {
 }
 };
 
+/* Check #2: does the ViewMapping have the printable_label_typedef defined?
+   See above that only the non-specialized standard-layout ViewMapping has
+   this defined by default.
+   The existence of this typedef indicates the existence of MapType::is_managed */
+template< class T, class Enable = void >
+struct has_printable_label_typedef : public std::false_type {};
+
+template<class T>
+struct has_printable_label_typedef<
+  T, typename enable_if_type<typename T::printable_label_typedef>::type>
+  : public std::true_type
+{};
+
+template< class MapType >
+KOKKOS_INLINE_FUNCTION
+void operator_bounds_error_on_device(
+    MapType const&,
+    std::false_type) {
+  Kokkos::abort("View bounds error");
+}
+
 template< class MapType >
 KOKKOS_INLINE_FUNCTION
 void operator_bounds_error_on_device(
@@ -3236,8 +3241,17 @@ void view_verify_operator_bounds
     view_error_operator_bounds<0>( buffer + n , LEN - n , map , args ... );
     Kokkos::Impl::throw_runtime_exception(std::string(buffer));
 #else
-    operator_bounds_error_on_device<MapType>(
-        map, has_printable_label_typedef<MapType>());
+    /* Check #1: is there a SharedAllocationRecord?
+       (we won't use it, but if its not there then there isn't
+        a corresponding SharedAllocationHeader containing a label).
+       This check should cover the case of Views that don't
+       have the Unmanaged trait but were initialized by pointer. */
+    if (tracker.has_record()) {
+      operator_bounds_error_on_device<MapType>(
+          map, has_printable_label_typedef<MapType>());
+    } else {
+      Kokkos::abort("View bounds error");
+    }
 #endif
   }
 }
