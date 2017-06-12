@@ -64,6 +64,7 @@ endif
 	OBJ_CUDA += TestCuda_MDRange.o
 	OBJ_CUDA += TestCuda_Task.o
 	OBJ_CUDA += TestCuda_Spaces.o
+	OBJ_CUDA += TestCuda_StaticCrsGraph.o
 	
 	TARGETS += KokkosCore_UnitTest_Cuda
 
@@ -91,6 +92,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 	OBJ_THREADS += TestThreads_TeamReductionScan.o
 	OBJ_THREADS += TestThreads_Other.o
 	OBJ_THREADS += TestThreads_MDRange.o
+	OBJ_THREADS += TestThreads_StaticCrsGraph.o
 
 	TARGETS += KokkosCore_UnitTest_Threads
 
@@ -122,7 +124,8 @@ endif
 	OBJ_OPENMP += TestOpenMP_Other.o
 	OBJ_OPENMP += TestOpenMP_MDRange.o
 	OBJ_OPENMP += TestOpenMP_Task.o
-	
+	OBJ_OPENMP += TestOpenMP_StaticCrsGraph.o
+
 	TARGETS += KokkosCore_UnitTest_OpenMP
 
 	TEST_TARGETS += test-openmp
@@ -209,7 +212,8 @@ endif
         OBJ_SERIAL += TestSerial_Other.o
         OBJ_SERIAL += TestSerial_MDRange.o
         OBJ_SERIAL += TestSerial_Task.o
-	
+        OBJ_SERIAL += TestSerial_StaticCrsGraph.o
+
 	TARGETS += KokkosCore_UnitTest_Serial
 
 	TEST_TARGETS += test-serial

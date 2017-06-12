@@ -54,7 +54,6 @@
 
 #include <TestBitset.hpp>
 #include <TestUnorderedMap.hpp>
-#include <TestStaticCrsGraph.hpp>
 #include <TestVector.hpp>
 #include <TestDualView.hpp>
 #include <TestDynamicView.hpp>
@@ -83,24 +82,6 @@ protected:
 
 TEST_F( serial, dyn_view_api) {
   TestDynViewAPI< double , Kokkos::Serial >();
-}
-
-TEST_F( serial , staticcrsgraph )
-{
-  TestStaticCrsGraph::run_test_graph< Kokkos::Serial >();
-  TestStaticCrsGraph::run_test_graph2< Kokkos::Serial >();
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Serial >(1, 0);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Serial >(1, 1000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Serial >(1, 10000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Serial >(1, 100000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Serial >(3, 0);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Serial >(3, 1000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Serial >(3, 10000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Serial >(3, 100000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Serial >(75, 0);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Serial >(75, 1000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Serial >(75, 10000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Serial >(75, 100000);
 }
 
 TEST_F( serial, bitset )

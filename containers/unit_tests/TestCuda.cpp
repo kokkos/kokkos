@@ -58,7 +58,6 @@
 
 #include <TestBitset.hpp>
 #include <TestUnorderedMap.hpp>
-#include <TestStaticCrsGraph.hpp>
 #include <TestVector.hpp>
 #include <TestDualView.hpp>
 #include <TestDynamicView.hpp>
@@ -93,25 +92,6 @@ protected:
 TEST_F( cuda , dyn_view_api) {
   TestDynViewAPI< double , Kokkos::Cuda >();
 }
-
-TEST_F( cuda , staticcrsgraph )
-{
-  TestStaticCrsGraph::run_test_graph< Kokkos::Cuda >();
-  TestStaticCrsGraph::run_test_graph2< Kokkos::Cuda >();
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(1, 0);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(1, 1000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(1, 10000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(1, 100000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(3, 0);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(3, 1000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(3, 10000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(3, 100000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(75, 0);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(75, 1000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(75, 10000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(75, 100000);
-}
-
 
 void cuda_test_insert_close(  uint32_t num_nodes
                             , uint32_t num_inserts
