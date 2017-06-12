@@ -94,24 +94,6 @@ TEST_F( openmp, bitset )
   test_bitset<Kokkos::OpenMP>();
 }
 
-TEST_F( openmp , staticcrsgraph )
-{
-  TestStaticCrsGraph::run_test_graph< Kokkos::OpenMP >();
-  TestStaticCrsGraph::run_test_graph2< Kokkos::OpenMP >();
-  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(1, 0);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(1, 1000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(1, 10000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(1, 100000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(3, 0);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(3, 1000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(3, 10000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(3, 100000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(75, 0);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(75, 1000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(75, 10000);
-  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(75, 100000);
-}
-
 #define OPENMP_INSERT_TEST( name, num_nodes, num_inserts, num_duplicates, repeat, near )                                \
   TEST_F( openmp, UnorderedMap_insert_##name##_##num_nodes##_##num_inserts##_##num_duplicates##_##repeat##x) {   \
     for (int i=0; i<repeat; ++i)                                                                                \

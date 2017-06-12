@@ -182,5 +182,27 @@ void run_test_graph3(size_t B, size_t N)
     ASSERT_FALSE((ne>2*((hx.row_map(hx.numRows())+C*hx.numRows())/B))&&(hx.row_block_offsets(i+1)>hx.row_block_offsets(i)+1));
   }
 }
+
 } /* namespace TestStaticCrsGraph */
 
+namespace Test {
+
+TEST_F( TEST_CATEGORY , staticcrsgraph )
+{
+  TestStaticCrsGraph::run_test_graph<  TEST_EXECSPACE >();
+  TestStaticCrsGraph::run_test_graph2< TEST_EXECSPACE >();
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(1, 0);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(1, 1000);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(1, 10000);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(1, 100000);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(3, 0);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(3, 1000);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(3, 10000);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(3, 100000);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(75, 0);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(75, 1000);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(75, 10000);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(75, 100000);
+}
+
+}
