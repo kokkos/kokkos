@@ -58,7 +58,6 @@
 //----------------------------------------------------------------------------
 #include <TestBitset.hpp>
 #include <TestUnorderedMap.hpp>
-#include <TestStaticCrsGraph.hpp>
 
 #include <TestVector.hpp>
 #include <TestDualView.hpp>
