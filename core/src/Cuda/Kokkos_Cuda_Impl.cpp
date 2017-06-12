@@ -103,6 +103,7 @@ int cuda_kernel_arch()
   return arch ;
 }
 
+#ifdef KOKKOS_ENABLE_CUDA_UVM
 bool cuda_launch_blocking()
 {
   const char * env = getenv("CUDA_LAUNCH_BLOCKING");
@@ -111,16 +112,13 @@ bool cuda_launch_blocking()
 
   return atoi(env);
 }
+#endif
 
 }
 
 void cuda_device_synchronize()
 {
-//  static const bool launch_blocking = cuda_launch_blocking();
-
-//  if (!launch_blocking) {
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
-//  }
+  CUDA_SAFE_CALL( cudaDeviceSynchronize() );
 }
 
 void cuda_internal_error_throw( cudaError e , const char * name, const char * file, const int line )
