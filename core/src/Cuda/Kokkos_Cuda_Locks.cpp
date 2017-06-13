@@ -103,6 +103,9 @@ void finalize_host_cuda_lock_arrays() {
   cudaFree(g_host_cuda_lock_arrays.threadid);
   g_host_cuda_lock_arrays.threadid = nullptr;
   g_host_cuda_lock_arrays.n = 0;
+#ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
+  KOKKOS_COPY_CUDA_LOCK_ARRAYS_TO_DEVICE();
+#endif
 }
 
 } // namespace Impl

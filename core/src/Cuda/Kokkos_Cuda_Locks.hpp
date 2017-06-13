@@ -61,9 +61,20 @@ struct CudaLockArrays {
   std::int32_t n;
 };
 
+/// \brief This global variable in Host space is the central definition
+///        of these arrays.
 extern Kokkos::Impl::CudaLockArrays g_host_cuda_lock_arrays ;
 
+/// \brief After this call, the g_host_cuda_lock_arrays variable has
+///        valid, initialized arrays.
+///
+/// This call is idempotent.
 void initialize_host_cuda_lock_arrays();
+
+/// \brief After this call, the g_host_cuda_lock_arrays variable has
+///        all null pointers, and all array memory has been freed.
+///
+/// This call is idempotent.
 void finalize_host_cuda_lock_arrays();
 
 } // namespace Impl
@@ -74,6 +85,25 @@ void finalize_host_cuda_lock_arrays();
 namespace Kokkos {
 namespace Impl {
 
+/// \brief This global variable in CUDA space is what kernels use
+///        to get access to the lock arrays.
+///
+/// When relocatable device code is enabled, there can be one single
+/// instance of this global variable for the entire executable,
+/// whose definition will be in Kokkos_Cuda_Locks.cpp (and whose declaration
+/// here must then be extern.
+/// This one instance will be initialized by initialize_host_cuda_lock_arrays
+/// and need not be modified afterwards.
+///
+/// When relocatable device code is disabled, an instance of this variable
+/// will be created in every translation unit that sees this header file
+/// (we make this clear by marking it static, meaning no other translation
+///  unit can link to it).
+/// Since the Kokkos_Cuda_Locks.cpp translation unit cannot initialize the
+/// instances in other translation units, we must update this CUDA global
+/// variable based on the Host global variable prior to running any kernels
+/// that will use it.
+/// That is the purpose of the KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE macro.
 __device__ __constant__
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
 extern
@@ -118,12 +148,12 @@ void unlock_address_cuda_space(void* ptr) {
    capture the right address for Kokkos::Impl::g_device_cuda_lock_arrays!
    putting this in an inline function will NOT do the right thing! */
 #define KOKKOS_COPY_CUDA_LOCK_ARRAYS_TO_DEVICE() \
-do { \
+{ \
   CUDA_SAFE_CALL(cudaMemcpyToSymbol( \
         Kokkos::Impl::g_device_cuda_lock_arrays , \
         & Kokkos::Impl::g_host_cuda_lock_arrays , \
         sizeof(Kokkos::Impl::CudaLockArrays) ) ); \
-} while (0)
+}
 
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
 #define KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE()
