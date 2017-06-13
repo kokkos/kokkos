@@ -71,18 +71,18 @@ void finalize_host_cuda_lock_arrays();
 
 #if defined( __CUDACC__ )
 
+namespace Kokkos {
+namespace Impl {
+
 __device__ __constant__
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
 extern
 #else
 static
 #endif
-Kokkos::Impl::CudaLockArrays kokkos_impl_cuda_lock_arrays ;
+Kokkos::Impl::CudaLockArrays device_cuda_lock_arrays ;
 
 #define CUDA_SPACE_ATOMIC_MASK 0x1FFFF
-
-namespace Kokkos {
-namespace Impl {
 
 /// \brief Aquire a lock for the address
 ///
@@ -94,7 +94,7 @@ bool lock_address_cuda_space(void* ptr) {
   size_t offset = size_t(ptr);
   offset = offset >> 2;
   offset = offset & CUDA_SPACE_ATOMIC_MASK;
-  return (0 == atomicCAS(&kokkos_impl_cuda_lock_arrays.atomic[offset],0,1));
+  return (0 == atomicCAS(&Kokkos::Impl::device_cuda_lock_arrays.atomic[offset],0,1));
 }
 
 /// \brief Release lock for the address
@@ -108,19 +108,19 @@ void unlock_address_cuda_space(void* ptr) {
   size_t offset = size_t(ptr);
   offset = offset >> 2;
   offset = offset & CUDA_SPACE_ATOMIC_MASK;
-  atomicExch( &kokkos_impl_cuda_lock_arrays.atomic[ offset ], 0);
+  atomicExch( &Kokkos::Impl::device_cuda_lock_arrays.atomic[ offset ], 0);
 }
 
 } // namespace Impl
 } // namespace Kokkos
 
 /* Dan Ibanez: it is critical that this code be a macro, so that it will
-   capture the right address for kokkos_impl_cuda_lock_arrays!
+   capture the right address for Kokkos::Impl::device_cuda_lock_arrays!
    putting this in an inline function will NOT do the right thing! */
 #define KOKKOS_COPY_CUDA_LOCK_ARRAYS_TO_DEVICE() \
 do { \
   CUDA_SAFE_CALL(cudaMemcpyToSymbol( \
-        kokkos_impl_cuda_lock_arrays , \
+        Kokkos::Impl::device_cuda_lock_arrays , \
         & Kokkos::Impl::host_cuda_lock_arrays , \
         sizeof(Kokkos::Impl::CudaLockArrays) ) ); \
 } while (0)
