@@ -58,6 +58,7 @@
 #include <Cuda/Kokkos_CudaExec.hpp>
 #include <Cuda/Kokkos_Cuda_ReduceScan.hpp>
 #include <Cuda/Kokkos_Cuda_Internal.hpp>
+#include <Cuda/Kokkos_Cuda_Locks.hpp>
 #include <Kokkos_Vectorization.hpp>
 
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -430,15 +431,15 @@ public:
     if ( m_scratch_size[1]>0 ) {
       __shared__ int base_thread_id;
       if (threadIdx.x==0 && threadIdx.y==0 ) {
-        threadid = ((blockIdx.x*blockDim.z + threadIdx.z) * blockDim.x * blockDim.y) % kokkos_impl_cuda_lock_arrays.n;
+        threadid = ((blockIdx.x*blockDim.z + threadIdx.z) * blockDim.x * blockDim.y) % Kokkos::Impl::g_device_cuda_lock_arrays.n;
         threadid = ((threadid + blockDim.x * blockDim.y-1)/(blockDim.x * blockDim.y)) * blockDim.x * blockDim.y;
-        if(threadid > kokkos_impl_cuda_lock_arrays.n) threadid-=blockDim.x * blockDim.y;
+        if(threadid > Kokkos::Impl::g_device_cuda_lock_arrays.n) threadid-=blockDim.x * blockDim.y;
         int done = 0;
         while (!done) {
-          done = (0 == atomicCAS(&kokkos_impl_cuda_lock_arrays.atomic[threadid],0,1));
+          done = (0 == atomicCAS(&Kokkos::Impl::g_device_cuda_lock_arrays.scratch[threadid],0,1));
           if(!done) {
             threadid += blockDim.x * blockDim.y;
-            if(threadid > kokkos_impl_cuda_lock_arrays.n) threadid = 0;
+            if(threadid > Kokkos::Impl::g_device_cuda_lock_arrays.n) threadid = 0;
           }
         }
         base_thread_id = threadid;
@@ -462,7 +463,7 @@ public:
     if ( m_scratch_size[1]>0 ) {
       __syncthreads();
       if (threadIdx.x==0 && threadIdx.y==0 )
-        kokkos_impl_cuda_lock_arrays.atomic[threadid]=0;
+        Kokkos::Impl::g_device_cuda_lock_arrays.scratch[threadid]=0;
     }
   }
 
@@ -819,15 +820,15 @@ public:
     if ( m_scratch_size[1]>0 ) {
       __shared__ int base_thread_id;
       if (threadIdx.x==0 && threadIdx.y==0 ) {
-        threadid = ((blockIdx.x*blockDim.z + threadIdx.z) * blockDim.x * blockDim.y) % kokkos_impl_cuda_lock_arrays.n;
+        threadid = ((blockIdx.x*blockDim.z + threadIdx.z) * blockDim.x * blockDim.y) % Kokkos::Impl::g_device_cuda_lock_arrays.n;
         threadid = ((threadid + blockDim.x * blockDim.y-1)/(blockDim.x * blockDim.y)) * blockDim.x * blockDim.y;
-        if(threadid > kokkos_impl_cuda_lock_arrays.n) threadid-=blockDim.x * blockDim.y;
+        if(threadid > Kokkos::Impl::g_device_cuda_lock_arrays.n) threadid-=blockDim.x * blockDim.y;
         int done = 0;
         while (!done) {
-          done = (0 == atomicCAS(&kokkos_impl_cuda_lock_arrays.atomic[threadid],0,1));
+          done = (0 == atomicCAS(&Kokkos::Impl::g_device_cuda_lock_arrays.scratch[threadid],0,1));
           if(!done) {
             threadid += blockDim.x * blockDim.y;
-            if(threadid > kokkos_impl_cuda_lock_arrays.n) threadid = 0;
+            if(threadid > Kokkos::Impl::g_device_cuda_lock_arrays.n) threadid = 0;
           }
         }
         base_thread_id = threadid;
@@ -840,7 +841,7 @@ public:
     if ( m_scratch_size[1]>0 ) {
       __syncthreads();
       if (threadIdx.x==0 && threadIdx.y==0 )
-        kokkos_impl_cuda_lock_arrays.atomic[threadid]=0;
+        Kokkos::Impl::g_device_cuda_lock_arrays.scratch[threadid]=0;
     }
   }
 
