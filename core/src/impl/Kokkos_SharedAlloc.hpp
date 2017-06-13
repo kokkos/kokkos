@@ -71,6 +71,9 @@ public:
   KOKKOS_INLINE_FUNCTION static
   const SharedAllocationHeader * get_header( void * alloc_ptr )
     { return reinterpret_cast<SharedAllocationHeader*>( reinterpret_cast<char*>(alloc_ptr) - sizeof(SharedAllocationHeader) ); }
+
+  KOKKOS_INLINE_FUNCTION
+  const char* label() const { return m_label; }
 };
 
 template<>
@@ -314,6 +317,11 @@ public:
       return 0 ;
 #endif
     }
+
+  KOKKOS_INLINE_FUNCTION
+  bool has_record() const {
+    return (m_record_bits & (~DO_NOT_DEREF_FLAG)) != 0;
+  }
 
   KOKKOS_FORCEINLINE_FUNCTION
   ~SharedAllocationTracker()
