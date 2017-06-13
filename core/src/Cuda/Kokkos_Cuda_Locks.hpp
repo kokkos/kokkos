@@ -57,7 +57,7 @@ namespace Impl {
 
 struct CudaLockArrays {
   std::int32_t* atomic;
-  std::int32_t* threadid;
+  std::int32_t* scratch;
   std::int32_t n;
 };
 

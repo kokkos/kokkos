@@ -72,7 +72,7 @@ __global__ void init_lock_array_kernel_atomic() {
 __global__ void init_lock_array_kernel_threadid(int N) {
   unsigned i = blockIdx.x*blockDim.x + threadIdx.x;
   if(i<N) {
-    Kokkos::Impl::g_device_cuda_lock_arrays.threadid[i] = 0;
+    Kokkos::Impl::g_device_cuda_lock_arrays.scratch[i] = 0;
   }
 }
 
@@ -86,7 +86,7 @@ void initialize_host_cuda_lock_arrays() {
   if (g_host_cuda_lock_arrays.atomic != nullptr) return;
   CUDA_SAFE_CALL(cudaMalloc(&g_host_cuda_lock_arrays.atomic,
                  sizeof(int)*(CUDA_SPACE_ATOMIC_MASK+1)));
-  CUDA_SAFE_CALL(cudaMalloc(&g_host_cuda_lock_arrays.threadid,
+  CUDA_SAFE_CALL(cudaMalloc(&g_host_cuda_lock_arrays.scratch,
                  sizeof(int)*(Cuda::concurrency())));
   CUDA_SAFE_CALL(cudaDeviceSynchronize());
   g_host_cuda_lock_arrays.n = Cuda::concurrency();
@@ -100,8 +100,8 @@ void finalize_host_cuda_lock_arrays() {
   if (g_host_cuda_lock_arrays.atomic == nullptr) return;
   cudaFree(g_host_cuda_lock_arrays.atomic);
   g_host_cuda_lock_arrays.atomic = nullptr;
-  cudaFree(g_host_cuda_lock_arrays.threadid);
-  g_host_cuda_lock_arrays.threadid = nullptr;
+  cudaFree(g_host_cuda_lock_arrays.scratch);
+  g_host_cuda_lock_arrays.scratch = nullptr;
   g_host_cuda_lock_arrays.n = 0;
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
   KOKKOS_COPY_CUDA_LOCK_ARRAYS_TO_DEVICE();
