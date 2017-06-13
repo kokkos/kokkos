@@ -80,9 +80,10 @@ __global__ void init_lock_array_kernel_threadid(int N) {
 
 namespace Impl {
 
-CudaLockArrays g_host_cuda_lock_arrays;
+CudaLockArrays g_host_cuda_lock_arrays = { nullptr, nullptr, 0 };
 
 void initialize_host_cuda_lock_arrays() {
+  if (g_host_cuda_lock_arrays.atomic != nullptr) return;
   CUDA_SAFE_CALL(cudaMalloc(&g_host_cuda_lock_arrays.atomic,
                  sizeof(int)*(CUDA_SPACE_ATOMIC_MASK+1)));
   CUDA_SAFE_CALL(cudaMalloc(&g_host_cuda_lock_arrays.threadid,
@@ -96,6 +97,7 @@ void initialize_host_cuda_lock_arrays() {
 }
 
 void finalize_host_cuda_lock_arrays() {
+  if (g_host_cuda_lock_arrays.atomic == nullptr) return;
   cudaFree(g_host_cuda_lock_arrays.atomic);
   g_host_cuda_lock_arrays.atomic = nullptr;
   cudaFree(g_host_cuda_lock_arrays.threadid);
