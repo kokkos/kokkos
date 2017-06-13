@@ -53,7 +53,7 @@
 namespace Kokkos {
 namespace Impl {
 __device__ __constant__
-CudaLockArrays device_cuda_lock_arrays = { nullptr, nullptr, 0 };
+CudaLockArrays g_device_cuda_lock_arrays = { nullptr, nullptr, 0 };
 }
 }
 #endif
@@ -65,14 +65,14 @@ namespace {
 __global__ void init_lock_array_kernel_atomic() {
   unsigned i = blockIdx.x*blockDim.x + threadIdx.x;
   if(i<CUDA_SPACE_ATOMIC_MASK+1) {
-    Kokkos::Impl::device_cuda_lock_arrays.atomic[i] = 0;
+    Kokkos::Impl::g_device_cuda_lock_arrays.atomic[i] = 0;
   }
 }
 
 __global__ void init_lock_array_kernel_threadid(int N) {
   unsigned i = blockIdx.x*blockDim.x + threadIdx.x;
   if(i<N) {
-    Kokkos::Impl::device_cuda_lock_arrays.threadid[i] = 0;
+    Kokkos::Impl::g_device_cuda_lock_arrays.threadid[i] = 0;
   }
 }
 
@@ -80,15 +80,15 @@ __global__ void init_lock_array_kernel_threadid(int N) {
 
 namespace Impl {
 
-CudaLockArrays host_cuda_lock_arrays;
+CudaLockArrays g_host_cuda_lock_arrays;
 
 void initialize_host_cuda_lock_arrays() {
-  CUDA_SAFE_CALL(cudaMalloc(&host_cuda_lock_arrays.atomic,
+  CUDA_SAFE_CALL(cudaMalloc(&g_host_cuda_lock_arrays.atomic,
                  sizeof(int)*(CUDA_SPACE_ATOMIC_MASK+1)));
-  CUDA_SAFE_CALL(cudaMalloc(&host_cuda_lock_arrays.threadid,
+  CUDA_SAFE_CALL(cudaMalloc(&g_host_cuda_lock_arrays.threadid,
                  sizeof(int)*(Cuda::concurrency())));
   CUDA_SAFE_CALL(cudaDeviceSynchronize());
-  host_cuda_lock_arrays.n = Cuda::concurrency();
+  g_host_cuda_lock_arrays.n = Cuda::concurrency();
   KOKKOS_COPY_CUDA_LOCK_ARRAYS_TO_DEVICE();
   init_lock_array_kernel_atomic<<<(CUDA_SPACE_ATOMIC_MASK+1+255)/256,256>>>();
   init_lock_array_kernel_threadid<<<(Kokkos::Cuda::concurrency()+255)/256,256>>>(Kokkos::Cuda::concurrency());
@@ -96,11 +96,11 @@ void initialize_host_cuda_lock_arrays() {
 }
 
 void finalize_host_cuda_lock_arrays() {
-  cudaFree(host_cuda_lock_arrays.atomic);
-  host_cuda_lock_arrays.atomic = nullptr;
-  cudaFree(host_cuda_lock_arrays.threadid);
-  host_cuda_lock_arrays.threadid = nullptr;
-  host_cuda_lock_arrays.n = 0;
+  cudaFree(g_host_cuda_lock_arrays.atomic);
+  g_host_cuda_lock_arrays.atomic = nullptr;
+  cudaFree(g_host_cuda_lock_arrays.threadid);
+  g_host_cuda_lock_arrays.threadid = nullptr;
+  g_host_cuda_lock_arrays.n = 0;
 }
 
 } // namespace Impl

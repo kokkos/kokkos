@@ -61,7 +61,7 @@ struct CudaLockArrays {
   std::int32_t n;
 };
 
-extern Kokkos::Impl::CudaLockArrays host_cuda_lock_arrays ;
+extern Kokkos::Impl::CudaLockArrays g_host_cuda_lock_arrays ;
 
 void initialize_host_cuda_lock_arrays();
 void finalize_host_cuda_lock_arrays();
@@ -80,7 +80,7 @@ extern
 #else
 static
 #endif
-Kokkos::Impl::CudaLockArrays device_cuda_lock_arrays ;
+Kokkos::Impl::CudaLockArrays g_device_cuda_lock_arrays ;
 
 #define CUDA_SPACE_ATOMIC_MASK 0x1FFFF
 
@@ -94,7 +94,7 @@ bool lock_address_cuda_space(void* ptr) {
   size_t offset = size_t(ptr);
   offset = offset >> 2;
   offset = offset & CUDA_SPACE_ATOMIC_MASK;
-  return (0 == atomicCAS(&Kokkos::Impl::device_cuda_lock_arrays.atomic[offset],0,1));
+  return (0 == atomicCAS(&Kokkos::Impl::g_device_cuda_lock_arrays.atomic[offset],0,1));
 }
 
 /// \brief Release lock for the address
@@ -108,20 +108,20 @@ void unlock_address_cuda_space(void* ptr) {
   size_t offset = size_t(ptr);
   offset = offset >> 2;
   offset = offset & CUDA_SPACE_ATOMIC_MASK;
-  atomicExch( &Kokkos::Impl::device_cuda_lock_arrays.atomic[ offset ], 0);
+  atomicExch( &Kokkos::Impl::g_device_cuda_lock_arrays.atomic[ offset ], 0);
 }
 
 } // namespace Impl
 } // namespace Kokkos
 
 /* Dan Ibanez: it is critical that this code be a macro, so that it will
-   capture the right address for Kokkos::Impl::device_cuda_lock_arrays!
+   capture the right address for Kokkos::Impl::g_device_cuda_lock_arrays!
    putting this in an inline function will NOT do the right thing! */
 #define KOKKOS_COPY_CUDA_LOCK_ARRAYS_TO_DEVICE() \
 do { \
   CUDA_SAFE_CALL(cudaMemcpyToSymbol( \
-        Kokkos::Impl::device_cuda_lock_arrays , \
-        & Kokkos::Impl::host_cuda_lock_arrays , \
+        Kokkos::Impl::g_device_cuda_lock_arrays , \
+        & Kokkos::Impl::g_host_cuda_lock_arrays , \
         sizeof(Kokkos::Impl::CudaLockArrays) ) ); \
 } while (0)
 
