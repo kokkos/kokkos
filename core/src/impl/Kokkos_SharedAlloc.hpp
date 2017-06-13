@@ -73,7 +73,7 @@ public:
     { return reinterpret_cast<SharedAllocationHeader*>( reinterpret_cast<char*>(alloc_ptr) - sizeof(SharedAllocationHeader) ); }
 
   KOKKOS_INLINE_FUNCTION
-  const char* implementation_get_private_label() const { return m_label; }
+  const char* label() const { return m_label; }
 };
 
 template<>

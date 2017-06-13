@@ -3178,7 +3178,7 @@ static void run(MapType const& map) {
   char const* const header_start = user_alloc_start - sizeof(SharedAllocationHeader);
   SharedAllocationHeader const* const header =
     reinterpret_cast<SharedAllocationHeader const*>(header_start);
-  char const* const label = header->implementation_get_private_label();
+  char const* const label = header->label();
   enum { LEN = 128 };
   char msg[LEN];
   char const* const first_part = "View bounds error of view ";
