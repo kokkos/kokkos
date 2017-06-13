@@ -56,24 +56,24 @@ void test_view_mapping()
 {
   typedef typename Space::execution_space ExecSpace;
 
-  typedef Kokkos::Experimental::Impl::ViewDimension<>  dim_0;
-  typedef Kokkos::Experimental::Impl::ViewDimension< 2 > dim_s2;
-  typedef Kokkos::Experimental::Impl::ViewDimension< 2, 3 > dim_s2_s3;
-  typedef Kokkos::Experimental::Impl::ViewDimension< 2, 3, 4 > dim_s2_s3_s4;
+  typedef Kokkos::Impl::ViewDimension<>  dim_0;
+  typedef Kokkos::Impl::ViewDimension< 2 > dim_s2;
+  typedef Kokkos::Impl::ViewDimension< 2, 3 > dim_s2_s3;
+  typedef Kokkos::Impl::ViewDimension< 2, 3, 4 > dim_s2_s3_s4;
 
-  typedef Kokkos::Experimental::Impl::ViewDimension< 0 > dim_s0;
-  typedef Kokkos::Experimental::Impl::ViewDimension< 0, 3 > dim_s0_s3;
-  typedef Kokkos::Experimental::Impl::ViewDimension< 0, 3, 4 > dim_s0_s3_s4;
+  typedef Kokkos::Impl::ViewDimension< 0 > dim_s0;
+  typedef Kokkos::Impl::ViewDimension< 0, 3 > dim_s0_s3;
+  typedef Kokkos::Impl::ViewDimension< 0, 3, 4 > dim_s0_s3_s4;
 
-  typedef Kokkos::Experimental::Impl::ViewDimension< 0, 0 > dim_s0_s0;
-  typedef Kokkos::Experimental::Impl::ViewDimension< 0, 0, 4 > dim_s0_s0_s4;
+  typedef Kokkos::Impl::ViewDimension< 0, 0 > dim_s0_s0;
+  typedef Kokkos::Impl::ViewDimension< 0, 0, 4 > dim_s0_s0_s4;
 
-  typedef Kokkos::Experimental::Impl::ViewDimension< 0, 0, 0 > dim_s0_s0_s0;
-  typedef Kokkos::Experimental::Impl::ViewDimension< 0, 0, 0, 0 > dim_s0_s0_s0_s0;
-  typedef Kokkos::Experimental::Impl::ViewDimension< 0, 0, 0, 0, 0 > dim_s0_s0_s0_s0_s0;
-  typedef Kokkos::Experimental::Impl::ViewDimension< 0, 0, 0, 0, 0, 0 > dim_s0_s0_s0_s0_s0_s0;
-  typedef Kokkos::Experimental::Impl::ViewDimension< 0, 0, 0, 0, 0, 0, 0 > dim_s0_s0_s0_s0_s0_s0_s0;
-  typedef Kokkos::Experimental::Impl::ViewDimension< 0, 0, 0, 0, 0, 0, 0, 0 > dim_s0_s0_s0_s0_s0_s0_s0_s0;
+  typedef Kokkos::Impl::ViewDimension< 0, 0, 0 > dim_s0_s0_s0;
+  typedef Kokkos::Impl::ViewDimension< 0, 0, 0, 0 > dim_s0_s0_s0_s0;
+  typedef Kokkos::Impl::ViewDimension< 0, 0, 0, 0, 0 > dim_s0_s0_s0_s0_s0;
+  typedef Kokkos::Impl::ViewDimension< 0, 0, 0, 0, 0, 0 > dim_s0_s0_s0_s0_s0_s0;
+  typedef Kokkos::Impl::ViewDimension< 0, 0, 0, 0, 0, 0, 0 > dim_s0_s0_s0_s0_s0_s0_s0;
+  typedef Kokkos::Impl::ViewDimension< 0, 0, 0, 0, 0, 0, 0, 0 > dim_s0_s0_s0_s0_s0_s0_s0_s0;
 
   // Fully static dimensions should not be larger than an int.
   ASSERT_LE( sizeof( dim_0 ), sizeof( int ) );
@@ -186,12 +186,12 @@ void test_view_mapping()
 
   //----------------------------------------
 
-  typedef Kokkos::Experimental::Impl::ViewOffset< dim_s0_s0_s0, Kokkos::LayoutStride > stride_s0_s0_s0;
+  typedef Kokkos::Impl::ViewOffset< dim_s0_s0_s0, Kokkos::LayoutStride > stride_s0_s0_s0;
 
   //----------------------------------------
   // Static dimension.
   {
-    typedef Kokkos::Experimental::Impl::ViewOffset< dim_s2_s3_s4, Kokkos::LayoutLeft > left_s2_s3_s4;
+    typedef Kokkos::Impl::ViewOffset< dim_s2_s3_s4, Kokkos::LayoutLeft > left_s2_s3_s4;
 
     ASSERT_EQ( sizeof( left_s2_s3_s4 ), sizeof( dim_s2_s3_s4 ) );
 
@@ -223,7 +223,7 @@ void test_view_mapping()
   //----------------------------------------
   // Small dimension is unpadded.
   {
-    typedef Kokkos::Experimental::Impl::ViewOffset< dim_s0_s0_s4, Kokkos::LayoutLeft > left_s0_s0_s4;
+    typedef Kokkos::Impl::ViewOffset< dim_s0_s0_s4, Kokkos::LayoutLeft > left_s0_s0_s4;
 
     left_s0_s0_s4 dyn_off3( std::integral_constant< unsigned, sizeof( int ) >()
                           , Kokkos::LayoutLeft( 2, 3, 0, 0, 0, 0, 0, 0 ) );
@@ -275,7 +275,7 @@ void test_view_mapping()
     constexpr int N0 = 2000;
     constexpr int N1 = 300;
 
-    typedef Kokkos::Experimental::Impl::ViewOffset< dim_s0_s0_s4, Kokkos::LayoutLeft > left_s0_s0_s4;
+    typedef Kokkos::Impl::ViewOffset< dim_s0_s0_s4, Kokkos::LayoutLeft > left_s0_s0_s4;
 
     left_s0_s0_s4 dyn_off3( std::integral_constant< unsigned, sizeof( int ) >()
                           , Kokkos::LayoutLeft( N0, N1, 0, 0, 0, 0, 0, 0 ) );
@@ -314,7 +314,7 @@ void test_view_mapping()
   //----------------------------------------
   // Static dimension.
   {
-    typedef Kokkos::Experimental::Impl::ViewOffset< dim_s2_s3_s4, Kokkos::LayoutRight > right_s2_s3_s4;
+    typedef Kokkos::Impl::ViewOffset< dim_s2_s3_s4, Kokkos::LayoutRight > right_s2_s3_s4;
 
     ASSERT_EQ( sizeof( right_s2_s3_s4 ), sizeof( dim_s2_s3_s4 ) );
 
@@ -350,7 +350,7 @@ void test_view_mapping()
   //----------------------------------------
   // Small dimension is unpadded.
   {
-    typedef Kokkos::Experimental::Impl::ViewOffset< dim_s0_s0_s4, Kokkos::LayoutRight > right_s0_s0_s4;
+    typedef Kokkos::Impl::ViewOffset< dim_s0_s0_s4, Kokkos::LayoutRight > right_s0_s0_s4;
 
     right_s0_s0_s4 dyn_off3( std::integral_constant< unsigned, sizeof( int ) >()
                            , Kokkos::LayoutRight( 2, 3, 0, 0, 0, 0, 0, 0 ) );
@@ -391,7 +391,7 @@ void test_view_mapping()
     constexpr int N0 = 2000;
     constexpr int N1 = 300;
 
-    typedef Kokkos::Experimental::Impl::ViewOffset< dim_s0_s0_s4, Kokkos::LayoutRight > right_s0_s0_s4;
+    typedef Kokkos::Impl::ViewOffset< dim_s0_s0_s4, Kokkos::LayoutRight > right_s0_s0_s4;
 
     right_s0_s0_s4 dyn_off3( std::integral_constant< unsigned, sizeof( int ) >()
                            , Kokkos::LayoutRight( N0, N1, 0, 0, 0, 0, 0, 0 ) );
@@ -438,7 +438,7 @@ void test_view_mapping()
     constexpr int N2 = 3000;
     constexpr int N3 = 4000;
 
-    Kokkos::Experimental::Impl::ViewDimension< N0, N1, N2, N3 > dim;
+    Kokkos::Impl::ViewDimension< N0, N1, N2, N3 > dim;
 
     SubviewExtents tmp( dim
                       , N0 / 2
@@ -469,7 +469,7 @@ void test_view_mapping()
     constexpr int sub_N1 = 200;
     constexpr int sub_N2 = 4;
 
-    typedef Kokkos::Experimental::Impl::ViewOffset< dim_s0_s0_s4, Kokkos::LayoutLeft > left_s0_s0_s4;
+    typedef Kokkos::Impl::ViewOffset< dim_s0_s0_s4, Kokkos::LayoutLeft > left_s0_s0_s4;
 
     left_s0_s0_s4 dyn_off3( std::integral_constant< unsigned, sizeof( int ) >()
                           , Kokkos::LayoutLeft( N0, N1, 0, 0, 0, 0, 0, 0 ) );
@@ -509,7 +509,7 @@ void test_view_mapping()
     constexpr int sub_N1 = 200;
     constexpr int sub_N2 = 4;
 
-    typedef Kokkos::Experimental::Impl::ViewOffset< dim_s0_s0_s4, Kokkos::LayoutRight > right_s0_s0_s4;
+    typedef Kokkos::Impl::ViewOffset< dim_s0_s0_s4, Kokkos::LayoutRight > right_s0_s0_s4;
 
     right_s0_s0_s4 dyn_off3( std::integral_constant< unsigned, sizeof( int ) >()
                            , Kokkos::LayoutRight( N0, N1, 0, 0, 0, 0, 0, 0 ) );
@@ -621,7 +621,7 @@ void test_view_mapping()
     typedef ViewDataAnalysis< const int[], void >  a_const_int_r1;
 
     static_assert( std::is_same< typename a_const_int_r1::specialize, void >::value, "" );
-    static_assert( std::is_same< typename a_const_int_r1::dimension, Kokkos::Experimental::Impl::ViewDimension<0> >::value, "" );
+    static_assert( std::is_same< typename a_const_int_r1::dimension, Kokkos::Impl::ViewDimension<0> >::value, "" );
 
     static_assert( std::is_same< typename a_const_int_r1::type, const int * >::value, "" );
     static_assert( std::is_same< typename a_const_int_r1::value_type, const int >::value, "" );
@@ -637,7 +637,7 @@ void test_view_mapping()
 
     static_assert( std::is_same< typename a_const_int_r3::specialize, void >::value, "" );
 
-    static_assert( std::is_same< typename a_const_int_r3::dimension, Kokkos::Experimental::Impl::ViewDimension<0, 0, 4> >::value, "" );
+    static_assert( std::is_same< typename a_const_int_r3::dimension, Kokkos::Impl::ViewDimension<0, 0, 4> >::value, "" );
 
     static_assert( std::is_same< typename a_const_int_r3::type, const int**[4] >::value, "" );
     static_assert( std::is_same< typename a_const_int_r3::value_type, const int >::value, "" );
@@ -811,8 +811,8 @@ void test_view_mapping()
 
   {
     typedef Kokkos::ViewTraits< int***, Kokkos::LayoutStride, ExecSpace >           traits_t;
-    typedef Kokkos::Experimental::Impl::ViewDimension< 0, 0, 0 >                    dims_t;
-    typedef Kokkos::Experimental::Impl::ViewOffset< dims_t, Kokkos::LayoutStride >  offset_t;
+    typedef Kokkos::Impl::ViewDimension< 0, 0, 0 >                    dims_t;
+    typedef Kokkos::Impl::ViewOffset< dims_t, Kokkos::LayoutStride >  offset_t;
 
     Kokkos::LayoutStride stride;
 
@@ -836,8 +836,8 @@ void test_view_mapping()
     ASSERT_EQ( offset.span(), 60 );
     ASSERT_TRUE( offset.span_is_contiguous() );
 
-    Kokkos::Experimental::Impl::ViewMapping< traits_t, void >
-      v( Kokkos::Experimental::Impl::ViewCtorProp< int* >( (int*) 0 ), stride );
+    Kokkos::Impl::ViewMapping< traits_t, void >
+      v( Kokkos::Impl::ViewCtorProp< int* >( (int*) 0 ), stride );
   }
 
   {
