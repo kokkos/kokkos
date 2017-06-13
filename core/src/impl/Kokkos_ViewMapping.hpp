@@ -2948,7 +2948,7 @@ public:
           Kokkos::abort("View Assignment: trying to assign runtime dimension to non matching compile time dimension.");
       }
       dst.m_offset = dst_offset_type( src.m_offset );
-      dst.m_handle = Kokkos::Experimental::Impl::ViewDataHandle< DstTraits >::assign( src.m_handle , src_track );
+      dst.m_handle = Kokkos::Impl::ViewDataHandle< DstTraits >::assign( src.m_handle , src_track );
     }
 };
 
