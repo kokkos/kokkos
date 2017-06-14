@@ -66,7 +66,8 @@ static popFunction popRegionCallee = nullptr;
 static allocateDataFunction allocateDataCallee = nullptr;
 static deallocateDataFunction deallocateDataCallee = nullptr;
 
-static deepCopyFunction deepCopyCallee = nullptr;
+static beginDeepCopyFunction beginDeepCopyCallee = nullptr;
+static endDeepCopyFunction endDeepCopyCallee = nullptr;
 
 SpaceHandle::SpaceHandle(const char* space_name) {
   strncpy(name,space_name,64);
@@ -145,13 +146,19 @@ void deallocateData(const SpaceHandle space, const std::string label, const void
   }
 }
 
-void deepCopy(const SpaceHandle dst_space, const std::string dst_label, const void* dst_ptr,
+void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label, const void* dst_ptr,
     const SpaceHandle src_space, const std::string src_label, const void* src_ptr,
     const uint64_t size) {
-  if(nullptr != deepCopyCallee) {
-    (*deepCopyCallee)(dst_space, dst_label.c_str(), dst_ptr,
+  if(nullptr != beginDeepCopyCallee) {
+    (*beginDeepCopyCallee)(dst_space, dst_label.c_str(), dst_ptr,
                       src_space, src_label.c_str(), src_ptr,
                       size);
+  }
+}
+
+void endDeepCopy() {
+  if(nullptr != endDeepCopyCallee) {
+    (*endDeepCopyCallee)();
   }
 }
 
@@ -219,8 +226,10 @@ void initialize() {
       auto p12 = dlsym(firstProfileLibrary, "kokkosp_deallocate_data");
       deallocateDataCallee = *((deallocateDataFunction*) &p12);
 
-      auto p13 = dlsym(firstProfileLibrary, "kokkosp_deep_copy");
-      deepCopyCallee = *((deepCopyFunction*) &p13);
+      auto p13 = dlsym(firstProfileLibrary, "kokkosp_begin_deep_copy");
+      beginDeepCopyCallee = *((beginDeepCopyFunction*) &p13);
+      auto p14 = dlsym(firstProfileLibrary, "kokkosp_end_deep_copy");
+      endDeepCopyCallee = *((endDeepCopyFunction*) &p14);
 
     }
   }
@@ -263,7 +272,8 @@ void finalize() {
     allocateDataCallee = nullptr;
     deallocateDataCallee = nullptr;
 
-    deepCopyCallee = nullptr;
+    beginDeepCopyCallee = nullptr;
+    endDeepCopyCallee = nullptr;
   }
 }
 }

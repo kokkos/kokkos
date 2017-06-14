@@ -81,10 +81,11 @@ typedef void (*popFunction)();
 typedef void (*allocateDataFunction)(const SpaceHandle, const char*, const void*, const uint64_t);
 typedef void (*deallocateDataFunction)(const SpaceHandle, const char*, const void*, const uint64_t);
 
-typedef void (*deepCopyFunction)(
-    const SpaceHandle, const char*, const void*,
-    const SpaceHandle, const char*, const void*,
-    const uint64_t);
+typedef void (*beginDeepCopyFunction)(
+    SpaceHandle, const char*, const void*,
+    SpaceHandle, const char*, const void*,
+    uint64_t);
+typedef void (*endDeepCopyFunction)();
 
 bool profileLibraryLoaded();
 
@@ -101,9 +102,10 @@ void popRegion();
 void allocateData(const SpaceHandle space, const std::string label, const void* ptr, const uint64_t size);
 void deallocateData(const SpaceHandle space, const std::string label, const void* ptr, const uint64_t size);
 
-void deepCopy(const SpaceHandle dst_space, const std::string dst_label, const void* dst_ptr,
+void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label, const void* dst_ptr,
     const SpaceHandle src_space, const std::string src_label, const void* src_ptr,
     const uint64_t size);
+void endDeepCopy();
 
 void initialize();
 void finalize();

@@ -1799,6 +1799,20 @@ void deep_copy
 
   if ( (void *) dst.data() != (void*) src.data() ) {
 
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
+      Kokkos::Profiling::beginDeepCopy(
+          Kokkos::Profiling::SpaceHandle(dst_memory_space::name()),
+          dst.label(),
+          dst.data(),
+          Kokkos::Profiling::SpaceHandle(src_memory_space::name()),
+          src.label(),
+          src.data(),
+          nbytes);
+    }
+#endif
+
     // Concern: If overlapping views then a parallel copy will be erroneous.
     // ...
 
@@ -1886,20 +1900,14 @@ void deep_copy
     else {
       Kokkos::Impl::throw_runtime_exception("deep_copy given views that would require a temporary allocation");
     }
+
 #if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
-      const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
-      Kokkos::Profiling::deepCopy(
-          Kokkos::Profiling::SpaceHandle(dst_memory_space::name()),
-          dst.label(),
-          dst.data(),
-          Kokkos::Profiling::SpaceHandle(src_memory_space::name()),
-          src.label(),
-          src.data(),
-          nbytes);
+      Kokkos::Profiling::endDeepCopy();
     }
 #endif
-  }
+
+  } // ( (void *) dst.data() != (void*) src.data() )
 }
 
 } /* namespace Kokkos */
