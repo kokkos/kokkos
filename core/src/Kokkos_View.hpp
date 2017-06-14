@@ -62,7 +62,6 @@
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 template< class DataType >
@@ -76,16 +75,6 @@ struct ViewDataAnalysis ;
 
 template< class , class ... >
 class ViewMapping { public: enum { is_assignable = false }; };
-
-} /* namespace Impl */
-} /* namespace Experimental */
-} /* namespace Kokkos */
-
-namespace Kokkos {
-namespace Impl {
-
-using Kokkos::Experimental::Impl::ViewMapping ;
-using Kokkos::Experimental::Impl::ViewDataAnalysis ;
 
 } /* namespace Impl */
 } /* namespace Kokkos */
@@ -2367,6 +2356,9 @@ using Kokkos::Impl::WithoutInitializing_t ;
 using Kokkos::Impl::AllowPadding_t ;
 using Kokkos::Impl::SharedAllocationRecord ;
 using Kokkos::Impl::SharedAllocationTracker ;
+using Kokkos::Impl::ViewMapping ;
+using Kokkos::Impl::ViewDataAnalysis ;
+
 
 } /* namespace Impl */
 } /* namespace Experimental */
