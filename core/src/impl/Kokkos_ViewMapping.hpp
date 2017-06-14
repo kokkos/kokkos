@@ -62,7 +62,6 @@
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 template< unsigned I , size_t ... Args >
@@ -250,7 +249,7 @@ struct ViewDimensionAssignable< ViewDimension< DstArgs ... >
 
 };
 
-}}} // namespace Kokkos::Experimental::Impl
+}} // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -266,14 +265,11 @@ struct ALL_t {
 }} // namespace Kokkos::Impl
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
-
-using Kokkos::Impl::ALL_t ;
 
 template< class T >
 struct is_integral_extent_type
-{ enum { value = std::is_same<T,Kokkos::Experimental::Impl::ALL_t>::value ? 1 : 0 }; };
+{ enum { value = std::is_same<T,Kokkos::Impl::ALL_t>::value ? 1 : 0 }; };
 
 template< class iType >
 struct is_integral_extent_type< std::pair<iType,iType> >
@@ -314,10 +310,10 @@ struct SubviewLegalArgsCompileTime;
 
 template<int RankDest, int RankSrc, int CurrentArg, class Arg, class ... SubViewArgs>
 struct SubviewLegalArgsCompileTime<Kokkos::LayoutLeft, Kokkos::LayoutLeft, RankDest, RankSrc, CurrentArg, Arg, SubViewArgs...> {
-  enum { value      =(((CurrentArg==RankDest-1) && (Kokkos::Experimental::Impl::is_integral_extent_type<Arg>::value)) ||
+  enum { value      =(((CurrentArg==RankDest-1) && (Kokkos::Impl::is_integral_extent_type<Arg>::value)) ||
                       ((CurrentArg>=RankDest) && (std::is_integral<Arg>::value)) ||
                       ((CurrentArg<RankDest) && (std::is_same<Arg,Kokkos::Impl::ALL_t>::value)) ||
-                      ((CurrentArg==0) && (Kokkos::Experimental::Impl::is_integral_extent_type<Arg>::value))
+                      ((CurrentArg==0) && (Kokkos::Impl::is_integral_extent_type<Arg>::value))
                      ) && (SubviewLegalArgsCompileTime<Kokkos::LayoutLeft, Kokkos::LayoutLeft, RankDest, RankSrc, CurrentArg+1, SubViewArgs...>::value)};
 };
 
@@ -331,7 +327,7 @@ struct SubviewLegalArgsCompileTime<Kokkos::LayoutLeft, Kokkos::LayoutLeft, RankD
 
 template<int RankDest, int RankSrc, int CurrentArg, class Arg, class ... SubViewArgs>
 struct SubviewLegalArgsCompileTime<Kokkos::LayoutRight, Kokkos::LayoutRight, RankDest, RankSrc, CurrentArg, Arg, SubViewArgs...> {
-  enum { value      =(((CurrentArg==RankSrc-RankDest) && (Kokkos::Experimental::Impl::is_integral_extent_type<Arg>::value)) ||
+  enum { value      =(((CurrentArg==RankSrc-RankDest) && (Kokkos::Impl::is_integral_extent_type<Arg>::value)) ||
                       ((CurrentArg<RankSrc-RankDest) && (std::is_integral<Arg>::value)) ||
                       ((CurrentArg>=RankSrc-RankDest) && (std::is_same<Arg,Kokkos::Impl::ALL_t>::value))
                      ) && (SubviewLegalArgsCompileTime<Kokkos::LayoutRight, Kokkos::LayoutRight, RankDest, RankSrc, CurrentArg+1, SubViewArgs...>::value)};
@@ -403,7 +399,7 @@ private:
   bool set( unsigned domain_rank
           , unsigned range_rank
           , const ViewDimension< DimArgs ... > & dim
-          , const Kokkos::Experimental::Impl::ALL_t
+          , const Kokkos::Impl::ALL_t
           , Args ... args )
     {
       m_begin[  domain_rank ] = 0 ;
@@ -519,7 +515,7 @@ private:
             , unsigned domain_rank
             , unsigned range_rank
             , const ViewDimension< DimArgs ... > & dim
-            , const Kokkos::Experimental::Impl::ALL_t
+            , const Kokkos::Impl::ALL_t
             , Args ... args ) const
     {
       const int n = std::min( buf_len ,
@@ -670,13 +666,12 @@ public:
     { return unsigned(i) < InternalRangeRank ? m_index[i] : ~0u ; }
 };
 
-}}} // namespace Kokkos::Experimental::Impl
+}} // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 /** \brief  Given a value type and dimension generate the View data type */
@@ -814,13 +809,12 @@ public:
   typedef non_const_type  non_const_scalar_array_type ;
 };
 
-}}} // namespace Kokkos::Experimental::Impl
+}} // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 template < class Dimension , class Layout , typename Enable = void >
@@ -2225,13 +2219,12 @@ public:
     {}
 };
 
-}}} // namespace Kokkos::Experimental::Impl
+}} // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 /** \brief  ViewDataHandle provides the type of the 'data handle' which the view
@@ -2422,13 +2415,12 @@ struct ViewDataHandle< Traits ,
     return handle_type( arg_data_ptr + offset );
   }
 };
-}}} // namespace Kokkos::Experimental::Impl
+}} // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 //----------------------------------------------------------------------------
@@ -2948,7 +2940,7 @@ public:
           Kokkos::abort("View Assignment: trying to assign runtime dimension to non matching compile time dimension.");
       }
       dst.m_offset = dst_offset_type( src.m_offset );
-      dst.m_handle = Kokkos::Experimental::Impl::ViewDataHandle< DstTraits >::assign( src.m_handle , src_track );
+      dst.m_handle = Kokkos::Impl::ViewDataHandle< DstTraits >::assign( src.m_handle , src_track );
     }
 };
 
@@ -3106,7 +3098,7 @@ public:
 
 //----------------------------------------------------------------------------
 
-}}} // namespace Kokkos::Experimental::Impl
+}} // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
