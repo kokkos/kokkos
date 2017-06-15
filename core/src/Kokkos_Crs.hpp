@@ -45,6 +45,7 @@
 #define KOKKOS_CRS_HPP
 
 namespace Kokkos {
+namespace Experimental {
 
 /// \class Crs
 /// \brief Compressed row storage array.
@@ -135,6 +136,7 @@ public:
   }
 };
 
+} // namespace Experimental
 } // namespace Kokkos
 
-#endif
+#endif /* #define KOKKOS_CRS_HPP */
