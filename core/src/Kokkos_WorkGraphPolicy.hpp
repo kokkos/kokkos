@@ -25,7 +25,7 @@ private:
 template< class functor_type , class execution_space, class ... policy_args >
 class WorkGraphExec
 {
-private:
+ private:
 
   using self_type = WorkGraphExec< functor_type, execution_space, policy_args ... >;
   using policy_type = Kokkos::WorkGraphPolicy< policy_args ... >;
@@ -80,35 +80,89 @@ private:
     execution_space::fence();
   }
 
-  struct TagInitRanges {};
+  struct TagZeroRanges {};
   KOKKOS_INLINE_FUNCTION
-  void operator()(TagInitRanges, std::int32_t i) const {
+  void operator()(TagZeroRanges, std::int32_t i) const {
     m_ranges[i] = range_type(0, 0);
   }
-  void init_ranges() {
-    using policy_type = RangePolicy<std::int32_t, execution_space, TagInitRanges>;
+  void zero_ranges() {
+    using policy_type = RangePolicy<std::int32_t, execution_space, TagZeroRanges>;
     using closure_type = Impl::ParallelFor<self_type, policy_type>;
     const closure_type closure(*this, policy_type(0, 1));
     closure.execute();
     execution_space::fence();
   }
 
+  struct TagFillQueue {};
+  KOKKOS_INLINE_FUNCTION
+  void operator()(TagFillQueue, std::int32_t i) const {
+    if (m_counts[i] == 0) push_work(i);
+  }
+  void fill_queue() {
+    using policy_type = RangePolicy<std::int32_t, execution_space, TagFillQueue>;
+    using closure_type = Impl::ParallelFor<self_type, policy_type>;
+    const closure_type closure(*this, policy_type(0, m_total_work));
+    closure.execute();
+    execution_space::fence();
+  }
+
   KOKKOS_INLINE_FUNCTION
   std::int32_t pop_work() const {
+    range_type w(-1,-1);
+    while (true) {
+      const range_type w_new( w.first + 1 , w.second );
+      w = atomic_compare_exchange( m_ranges , w , w_new );
+      if ( w.first < w.second ) { // there was work in the queue
+        if ( w_new.first == w.first + 1 && w_new.second == w.second ) {
+          // we got a work item
+          std::int32_t i;
+          // the push_work function may have incremented the end counter
+          // but not yet written the work index into the queue.
+          // wait until the entry is valid.
+          while ( -1 == ( i = queue[ w.first ] ) );
+          return i;
+        } // we got a work item
+      } else { // there was no work in the queue
+        if (w.first == m_total_work) { // all work is done
+          return -1;
+        } // all work is done
+      } // there was no work in the queue
+    } // while (true)
   }
 
   KOKKOS_INLINE_FUNCTION
-  void after_work(std::int32_t i) const {
+  void push_work(std::int32_t i) const {
+    range_type w(-1,-1);
+    while (true) {
+      const range_type w_new( w.first , w.second + 1 );
+      // try to increment the end counter
+      w = atomic_compare_exchange( m_ranges , w , w_new );
+      // stop trying if the increment was successful
+      if ( w.first == w_new.first && w.second + 1 == w_new.second ) break;
+    }
+    // write the work index into the claimed spot in the queue
+    queue[ w.second ] = i;
+    // push this write out into the memory system
+    memory_fence();
   }
 
-public:
+ public:
 
   KOKKOS_INLINE_FUNCTION
   std::int32_t before_work() const {
+    return pop_work();
   }
 
   KOKKOS_INLINE_FUNCTION
   void after_work(std::int32_t i) const {
+    const std::int32_t begin = m_policy.graph.row_map( i );
+    const std::int32_t end = m_policy.graph.row_map( i + 1 );
+    for (std::int32_t j = begin; j < end; ++j) {
+      const std::int32_t next = m_policy.graph.entries( j );
+      const std::int32_t old_count =
+        atomic_fetch_sub( &m_counts[ next ], std::int32_t( 1 ) );
+      if ( old_count == 1 )  push_work( next );
+    }
   }
 
   inline
@@ -122,11 +176,16 @@ public:
     , m_queue( static_cast<decltype(m_queue)>(
           memory_space::allocate( m_total_work * sizeof( std::int32_t ) )))
     , m_ranges( static_cast<decltype(m_ranges)>(
-          memory_space::allocate( sizeof( range_type ) ))) {
+          memory_space::allocate( sizeof( range_type ) )))
+  {
+    if (arg_policy.graph.numRows() > std::numeric_limits<std::int32_t>::max()) {
+      Kokkos::abort("WorkGraphPolicy work must be indexable using int32_t");
+    }
     zero_counts();
     fill_counts();
     init_queue();
-    init_ranges();
+    zero_ranges();
+    fill_queue();
   }
 
   inline
