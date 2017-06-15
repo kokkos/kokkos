@@ -49,6 +49,8 @@
 #include<TestCXX11.hpp>
 #include<TestTile.hpp>
 
+#include<TestViewCtorPropEmbeddedDim.hpp>
+
 #include <mutex>
 
 namespace Test {
