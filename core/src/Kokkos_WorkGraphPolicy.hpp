@@ -18,6 +18,7 @@ public:
 
   graph_type graph;
 
+  WorkGraphPolicy(graph_type arg_graph):graph(arg_graph);
 };
 
 namespace Impl {
@@ -160,6 +161,9 @@ class WorkGraphExec
 
   KOKKOS_INLINE_FUNCTION
   void after_work(std::int32_t i) const {
+    /* fence any writes that were done by the work item itself
+       (usually writing its result to global memory) */
+    memory_fence();
     const std::int32_t begin = m_policy.graph.row_map( i );
     const std::int32_t end = m_policy.graph.row_map( i + 1 );
     for (std::int32_t j = begin; j < end; ++j) {
