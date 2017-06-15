@@ -9,18 +9,18 @@ class WorkGraphPolicy
 {
 public:
   using self_type = WorkGraphPolicy<Properties ... >;
-  using traits = Impl::PolicyTraits<Properties ... >;
+  using traits = Kokkos::Impl::PolicyTraits<Properties ... >;
   using index_type = typename traits::index_type;
   using execution_space = typename traits::execution_space;
   using memory_space = typename execution_space::memory_space;
-  using graph_type = Kokkos::Crs<index_type, execution_space, void, index_type>;
+  using graph_type = Kokkos::Experimental::Crs<index_type, execution_space, void, index_type>;
   using member_type = index_type;
 
   graph_type graph;
 
-private:
-
 };
+
+namespace Impl {
 
 template< class functor_type , class execution_space, class ... policy_args >
 class WorkGraphExec
@@ -28,7 +28,7 @@ class WorkGraphExec
  private:
 
   using self_type = WorkGraphExec< functor_type, execution_space, policy_args ... >;
-  using policy_type = Kokkos::WorkGraphPolicy< policy_args ... >;
+  using policy_type = Kokkos::Experimental::WorkGraphPolicy< policy_args ... >;
   using member_type = typename policy_type::member_type;
   using memory_space = typename execution_space::memory_space;
 
@@ -47,7 +47,7 @@ class WorkGraphExec
   }
   void zero_counts() {
     using policy_type = RangePolicy<std::int32_t, execution_space, TagZeroCounts>;
-    using closure_type = Impl::ParallelFor<self_type, policy_type>;
+    using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
     const closure_type closure(*this, policy_type(0, m_total_work));
     closure.execute();
     execution_space::fence();
@@ -60,8 +60,8 @@ class WorkGraphExec
   }
   void fill_counts() {
     using policy_type = RangePolicy<std::int32_t, execution_space, TagFillCounts>;
-    using closure_type = Impl::ParallelFor<self_type, policy_type>;
-    const std::int32_t num_deps = graph.entries.dimension_0();
+    using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
+    const std::int32_t num_deps = m_policy.graph.entries.dimension_0();
     const closure_type closure(*this, policy_type(0, num_deps));
     closure.execute();
     execution_space::fence();
@@ -74,7 +74,7 @@ class WorkGraphExec
   }
   void init_queue() {
     using policy_type = RangePolicy<std::int32_t, execution_space, TagInitQueue>;
-    using closure_type = Impl::ParallelFor<self_type, policy_type>;
+    using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
     const closure_type closure(*this, policy_type(0, m_total_work));
     closure.execute();
     execution_space::fence();
@@ -87,7 +87,7 @@ class WorkGraphExec
   }
   void zero_ranges() {
     using policy_type = RangePolicy<std::int32_t, execution_space, TagZeroRanges>;
-    using closure_type = Impl::ParallelFor<self_type, policy_type>;
+    using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
     const closure_type closure(*this, policy_type(0, 1));
     closure.execute();
     execution_space::fence();
@@ -100,7 +100,7 @@ class WorkGraphExec
   }
   void fill_queue() {
     using policy_type = RangePolicy<std::int32_t, execution_space, TagFillQueue>;
-    using closure_type = Impl::ParallelFor<self_type, policy_type>;
+    using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
     const closure_type closure(*this, policy_type(0, m_total_work));
     closure.execute();
     execution_space::fence();
@@ -119,7 +119,7 @@ class WorkGraphExec
           // the push_work function may have incremented the end counter
           // but not yet written the work index into the queue.
           // wait until the entry is valid.
-          while ( -1 == ( i = queue[ w.first ] ) );
+          while ( -1 == ( i = m_queue[ w.first ] ) );
           return i;
         } // we got a work item
       } else { // there was no work in the queue
@@ -141,7 +141,7 @@ class WorkGraphExec
       if ( w.first == w_new.first && w.second + 1 == w_new.second ) break;
     }
     // write the work index into the claimed spot in the queue
-    queue[ w.second ] = i;
+    m_queue[ w.second ] = i;
     // push this write out into the memory system
     memory_fence();
   }
@@ -166,8 +166,8 @@ class WorkGraphExec
   }
 
   inline
-  WorkGraphExec( const FunctorType & arg_functor
-               , const Policy      & arg_policy )
+  WorkGraphExec( const functor_type & arg_functor
+               , const policy_type  & arg_policy )
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
     , m_total_work( arg_policy.graph.numRows() )
@@ -196,6 +196,7 @@ class WorkGraphExec
   }
 };
 
+} // namespace Impl
 } // namespace Experimental
 } // namespace Kokkos
 
