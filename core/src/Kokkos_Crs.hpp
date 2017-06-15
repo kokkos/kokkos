@@ -117,7 +117,6 @@ public:
   Crs& operator= (const Crs& rhs) {
     entries = rhs.entries;
     row_map = rhs.row_map;
-    row_block_offsets = rhs.row_block_offsets;
     return *this;
   }
 

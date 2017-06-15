@@ -85,6 +85,9 @@
 
 #include <Kokkos_Complex.hpp>
 
+#include <Kokkos_Crs.hpp>
+#include <Kokkos_WorkGraphPolicy.hpp>
+
 #include <iosfwd>
 
 //----------------------------------------------------------------------------
