@@ -25,15 +25,20 @@ namespace Impl {
 template< class functor_type , class execution_space, class ... policy_args >
 class WorkGraphExec
 {
- private:
+ public:
 
   using self_type = WorkGraphExec< functor_type, execution_space, policy_args ... >;
   using policy_type = Kokkos::Experimental::WorkGraphPolicy< policy_args ... >;
   using member_type = typename policy_type::member_type;
   using memory_space = typename execution_space::memory_space;
 
+ protected:
+
   const functor_type m_functor;
   const policy_type  m_policy;
+
+ private:
+
   const std::int32_t m_total_work;
   volatile std::int32_t * const m_counts;
   volatile std::int32_t * const m_queue;
@@ -199,5 +204,7 @@ class WorkGraphExec
 } // namespace Impl
 } // namespace Experimental
 } // namespace Kokkos
+
+#include "impl/Kokkos_Serial_WorkGraphPolicy.hpp"
 
 #endif /* #define KOKKOS_WORKGRAPHPOLICY_HPP */
