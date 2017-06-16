@@ -216,7 +216,7 @@ class FillCrsTransposeEntries {
   void operator()(index_type a) const {
     auto b = in.entries(a);
     auto first = out.row_map(b);
-    auto j = atomic_fetch_add( &counters_type(b), 1 );
+    auto j = atomic_fetch_add( &counters(b), 1 );
     out.entries( first + j ) = a;
   }
   using self_type = FillCrsTransposeEntries<In, Out>;

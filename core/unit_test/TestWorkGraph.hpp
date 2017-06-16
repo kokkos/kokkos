@@ -117,7 +117,7 @@ struct TestWorkGraph {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(std::int32_t i) {
+  void operator()(std::int32_t i) const {
     auto begin = m_tranpose.row_map(i);
     auto end = m_tranpose.row_map(i + 1);
     for (auto j = begin; j < end; ++j) {

@@ -45,14 +45,15 @@ class WorkGraphExec
   using atomic_ints_type = View<std::int32_t*, memory_space, MemoryTraits<Atomic>>;
   using range_type = Kokkos::pair<std::int32_t, std::int32_t>;
   using ranges_type = View<range_type*, memory_space>;
-  using atomic_ranges_type = View<range_type*, memory_space, MemoryTraits<Atomic>>;
   const std::int32_t m_total_work;
   atomic_ints_type m_counts;
   atomic_ints_type m_queue;
-  atomic_ranges_type m_ranges;
+  ranges_type m_ranges;
 
   void init_queue() {
   }
+
+ public:
 
   struct TagZeroRanges {};
   KOKKOS_INLINE_FUNCTION
@@ -80,12 +81,14 @@ class WorkGraphExec
     execution_space::fence();
   }
 
+ private:
+
   KOKKOS_INLINE_FUNCTION
   std::int32_t pop_work() const {
     range_type w(-1,-1);
     while (true) {
       const range_type w_new( w.first + 1 , w.second );
-      w = atomic_compare_exchange( m_ranges , w , w_new );
+      w = atomic_compare_exchange( &m_ranges(0) , w , w_new );
       if ( w.first < w.second ) { // there was work in the queue
         if ( w_new.first == w.first + 1 && w_new.second == w.second ) {
           // we got a work item
@@ -110,7 +113,7 @@ class WorkGraphExec
     while (true) {
       const range_type w_new( w.first , w.second + 1 );
       // try to increment the end counter
-      w = atomic_compare_exchange( m_ranges , w , w_new );
+      w = atomic_compare_exchange( &m_ranges(0) , w , w_new );
       // stop trying if the increment was successful
       if ( w.first == w_new.first && w.second + 1 == w_new.second ) break;
     }
@@ -136,9 +139,9 @@ class WorkGraphExec
     const std::int32_t end = m_policy.graph.row_map( i + 1 );
     for (std::int32_t j = begin; j < end; ++j) {
       const std::int32_t next = m_policy.graph.entries( j );
-      const std::int32_t old_count =
-        atomic_fetch_sub( &m_counts[ next ], std::int32_t( 1 ) );
-      if ( old_count == 1 )  push_work( next );
+      /* View is atomic, this is atomic_fetch_add(-1) */
+      const std::int32_t new_count = (m_counts(next) -= 1);
+      if ( new_count == 0 )  push_work( next );
     }
   }
 
@@ -148,17 +151,13 @@ class WorkGraphExec
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
     , m_total_work( arg_policy.graph.numRows() )
-    , m_queue( static_cast<decltype(m_queue)>(
-          memory_space::allocate( m_total_work * sizeof( std::int32_t ) )))
-    , m_ranges( static_cast<decltype(m_ranges)>(
-          memory_space::allocate( sizeof( range_type ) )))
   {
     if (arg_policy.graph.numRows() > std::numeric_limits<std::int32_t>::max()) {
       Kokkos::abort("WorkGraphPolicy work must be indexable using int32_t");
     }
     {
       ints_type counts;
-      get_transpose_counts(counts, arg_policy.graph);
+      get_crs_transpose_counts(counts, arg_policy.graph);
       m_counts = counts;
     }
     m_queue = ints_type(ViewAllocateWithoutInitializing("queue"), m_total_work);
@@ -166,6 +165,7 @@ class WorkGraphExec
     m_ranges = ranges_type("ranges", 1);
     fill_queue();
   }
+
 };
 
 } // namespace Impl
