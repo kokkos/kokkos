@@ -265,7 +265,7 @@ template< class DataType,
           class Arg1Type,
           class Arg2Type,
           class SizeType>
-void transpose(
+void transpose_crs(
     Crs<DataType, Arg1Type, Arg2Type, SizeType>& out,
     Crs<DataType, Arg1Type, Arg2Type, SizeType> const& in) {
   using crs_type = Crs<DataType, Arg1Type, Arg2Type, SizeType>;
@@ -273,8 +273,8 @@ void transpose(
   using counts_type = View<SizeType*, memory_space>;
   {
   counts_type counts("transpose_counts", in.numRows());
-  get_transpose_counts(counts, in);
-  get_crs_row_map_from_counts(out.row_map, counts);
+  Kokkos::Experimental::get_crs_transpose_counts(counts, in);
+  Kokkos::Experimental::get_crs_row_map_from_counts(out.row_map, counts);
   }
   out.entries = decltype(out.entries)("transpose_row_map", in.numRows() + 1);
   Impl::FillCrsTransposeEntries<crs_type, crs_type> entries_functor(out, in);

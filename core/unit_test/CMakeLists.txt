@@ -57,6 +57,7 @@ IF(Kokkos_ENABLE_Serial)
       serial/TestSerial_ViewMapping_b.cpp
       serial/TestSerial_ViewMapping_subview.cpp
       serial/TestSerial_ViewOfClass.cpp
+      serial/TestSerial_WorkGraph.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "

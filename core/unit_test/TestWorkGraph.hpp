@@ -52,21 +52,23 @@ namespace {
 template< class ExecSpace >
 struct TestWorkGraph {
 
-  struct TagCompute {};
-  
   using MemorySpace = typename ExecSpace::memory_space;
-  using Policy = WorkGraphPolicy<std::int32_t, TagCompute, ExecSpace>;
+  using Policy = Kokkos::Experimental::WorkGraphPolicy<std::int32_t, ExecSpace>;
   using Graph = typename Policy::graph_type;
   using RowMap = typename Graph::row_map_type;
   using Entries = typename Graph::entries_type;
   using Values = Kokkos::View<long*, MemorySpace>;
 
   long m_input;
-  RowMap m_row_map;
-  Entries m_entries;
+  Graph m_graph;
+  Graph m_tranpose;
   Values m_values;
 
-  TestWorkGraph(std::int32_t arg_size):size(arg_size) {}
+  TestWorkGraph(long arg_input):m_input(arg_input) {
+    m_values = Values("values", m_graph.numRows());
+    form_graph();
+    transpose_crs(m_tranpose, m_graph);
+  }
 
   inline
   long full_fibonacci( long n ) {
@@ -95,34 +97,47 @@ struct TestWorkGraph {
   }
 
   void form_graph() {
-    auto hg = form_host_inverse_graph();
-    m_row_map = RowMap("row_map", hg.size() + 1);
-    m_entries = Entries("entries", hg.size() - 1); // all but the first have a parent
-    auto h_row_map = Kokkos::create_mirror_view(m_row_map);
-    auto h_entries = Kokkos::create_mirror_view(m_entries);
+    auto hg = form_host_graph();
+    m_graph.row_map = RowMap("row_map", hg.size() + 1);
+    m_graph.entries = Entries("entries", hg.size() - 1); // all but the first have a parent
+    auto h_row_map = Kokkos::create_mirror_view(m_graph.row_map);
+    auto h_entries = Kokkos::create_mirror_view(m_graph.entries);
+    auto h_values = Kokkos::create_mirror_view(m_values);
     h_row_map(0) = 0;
     for (std::int32_t i = 0; i < std::int32_t(hg.size()); ++i) {
       auto& e = hg.at(std::size_t(i));
       h_row_map(i + 1) = i;
+      if (e.input < 2) h_values(i) = e.input;
       if (e.parent == -1) continue;
       h_entries(i - 1) = e.parent;
     }
-    Kokkos::deep_copy(m_row_map, h_row_map);
-    Kokkos::deep_copy(m_entries, h_entries);
+    Kokkos::deep_copy(m_graph.row_map, h_row_map);
+    Kokkos::deep_copy(m_graph.entries, h_entries);
+    Kokkos::deep_copy(m_values, h_values);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(std::int32_t i) {
+    auto begin = m_tranpose.row_map(i);
+    auto end = m_tranpose.row_map(i + 1);
+    for (auto j = begin; j < end; ++j) {
+      m_values(i) += m_values( m_tranpose.entries(j) );
+    }
   }
 
   void test_for() {
+    Kokkos::parallel_for(Policy(m_graph), *this);
   }
+
 };
 
 } // anonymous namespace
 
 TEST_F( TEST_CATEGORY, workgraph_for )
 {
-  { TestRange< TEST_EXECSPACE > f(0); f.test_for(); }
-  { TestRange< TEST_EXECSPACE > f(1); f.test_for(); }
-  { TestRange< TEST_EXECSPACE > f(3); f.test_for(); }
+  { TestWorkGraph< TEST_EXECSPACE > f(0); f.test_for(); }
+  { TestWorkGraph< TEST_EXECSPACE > f(1); f.test_for(); }
+  { TestWorkGraph< TEST_EXECSPACE > f(3); f.test_for(); }
 }
 
 } // namespace Test
-
