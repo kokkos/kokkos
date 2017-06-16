@@ -12,6 +12,7 @@ public:
   using traits = Kokkos::Impl::PolicyTraits<Properties ... >;
   using index_type = typename traits::index_type;
   using execution_space = typename traits::execution_space;
+  using work_tag = typename traits::work_tag;
   using memory_space = typename execution_space::memory_space;
   using graph_type = Kokkos::Experimental::Crs<index_type, execution_space, void, index_type>;
   using member_type = index_type;

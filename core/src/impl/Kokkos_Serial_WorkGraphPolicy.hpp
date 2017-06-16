@@ -20,22 +20,20 @@ class ParallelFor< FunctorType ,
 private:
 
   typedef Kokkos::Experimental::WorkGraphPolicy< Traits ... > Policy ;
-  typedef Kokkos::Experimental::Impl::WorkGraphExec<FunctorType, Kokkos::Serial, Traits ... > Base ;
-
-  const FunctorType m_functor ;
-  const Policy      m_policy ;
+  typedef Kokkos::Experimental::Impl::
+          WorkGraphExec<FunctorType, Kokkos::Serial, Traits ... > Base ;
 
   template< class TagType >
   typename std::enable_if< std::is_same< TagType , void >::value >::type
   exec_one(const typename Policy::member_type& i) const {
-    m_functor( i );
+    Base::m_functor( i );
   }
 
   template< class TagType >
   typename std::enable_if< ! std::is_same< TagType , void >::value >::type
   exec_one(const typename Policy::member_type& i) const {
     const TagType t{} ;
-    m_functor( t , i );
+    Base::m_functor( t , i );
   }
 
 public:
@@ -47,7 +45,6 @@ public:
       exec_one< typename Policy::work_tag >( i );
       Base::after_work(i);
     }
-    Base::destroy();
   }
 
   inline

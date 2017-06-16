@@ -95,8 +95,8 @@ public:
 
   typedef Crs< DataType , Arg1Type , Arg2Type , SizeType > staticcrsgraph_type;
   typedef Crs< DataType , array_layout , typename traits::host_mirror_space , SizeType > HostMirror;
-  typedef View< const size_type* , array_layout, device_type >  row_map_type;
-  typedef View<       DataType*  , array_layout, device_type >  entries_type;
+  typedef View<size_type* , array_layout, device_type> row_map_type;
+  typedef View<DataType*  , array_layout, device_type> entries_type;
 
   entries_type entries;
   row_map_type row_map;
@@ -144,7 +144,7 @@ class GetCrsTransposeCounts {
  public:
   using execution_space = typename In::execution_space;
   using self_type = GetCrsTransposeCounts<In, Out>;
-  using index_type = typename In::index_type;
+  using index_type = typename In::size_type;
  private:
   In in;
   Out out;
@@ -219,7 +219,7 @@ class FillCrsTransposeEntries {
     auto j = atomic_fetch_add( &counters_type(b), 1 );
     out.entries( first + j ) = a;
   }
-  using self_type = GetCrsTransposeCounts<In, Out>;
+  using self_type = FillCrsTransposeEntries<In, Out>;
   FillCrsTransposeEntries(In const& arg_in, Out const& arg_out):
     in(arg_in),out(arg_out),
     counters("counters", arg_out.numRows()) {
@@ -257,7 +257,7 @@ void get_crs_row_map_from_counts(
     In const& in,
     std::string const& name = "counts") {
   out = Out(ViewAllocateWithoutInitializing(name), in.size() + 1);
-  Impl::GetCrsTransposeCounts<In, Out> functor(in, out);
+  Impl::CrsRowMapFromCounts<In, Out> functor(in, out);
   functor.run();
 }
 
