@@ -178,7 +178,10 @@ class CrsRowMapFromCounts {
   KOKKOS_INLINE_FUNCTION
   void operator()(index_type i, value_type& update, bool final_pass) const {
     update += in(i);
-    if (final_pass) out(i + 1) = update;
+    if (final_pass) {
+      out(i + 1) = update;
+      if (i == 0) out(0) = 0;
+    }
   }
   KOKKOS_INLINE_FUNCTION
   void init(value_type& update) const { update = 0; }
@@ -193,7 +196,7 @@ class CrsRowMapFromCounts {
   void run() {
     using policy_type = RangePolicy<index_type, execution_space>;
     using closure_type = Kokkos::Impl::ParallelScan<self_type, policy_type>;
-    const closure_type closure(*this, policy_type(0, in.size() + 1));
+    const closure_type closure(*this, policy_type(0, in.size()));
     closure.execute();
     execution_space::fence();
   }
@@ -255,7 +258,7 @@ template< class Out,
 void get_crs_row_map_from_counts(
     Out& out,
     In const& in,
-    std::string const& name = "counts") {
+    std::string const& name = "row_map") {
   out = Out(ViewAllocateWithoutInitializing(name), in.size() + 1);
   Impl::CrsRowMapFromCounts<In, Out> functor(in, out);
   functor.run();
@@ -274,9 +277,10 @@ void transpose_crs(
   {
   counts_type counts("transpose_counts", in.numRows());
   Kokkos::Experimental::get_crs_transpose_counts(counts, in);
-  Kokkos::Experimental::get_crs_row_map_from_counts(out.row_map, counts);
+  Kokkos::Experimental::get_crs_row_map_from_counts(out.row_map, counts,
+      "tranpose_row_map");
   }
-  out.entries = decltype(out.entries)("transpose_row_map", in.numRows() + 1);
+  out.entries = decltype(out.entries)("transpose_entries", in.entries.size());
   Impl::FillCrsTransposeEntries<crs_type, crs_type> entries_functor(out, in);
   entries_functor.run();
 }

@@ -41,13 +41,13 @@ class WorkGraphExec
 
  private:
 
-  using ints_type = View<std::int32_t*, memory_space>;
-  using atomic_ints_type = View<std::int32_t*, memory_space, MemoryTraits<Atomic>>;
+  using ints_type = View<std::int32_t*, execution_space>;
+  using atomic_ints_type = View<std::int32_t*, execution_space, MemoryTraits<Atomic>>;
   using range_type = Kokkos::pair<std::int32_t, std::int32_t>;
   using ranges_type = View<range_type*, memory_space>;
   const std::int32_t m_total_work;
-  atomic_ints_type m_counts;
-  atomic_ints_type m_queue;
+  ints_type m_counts;
+  ints_type m_queue;
   ranges_type m_ranges;
 
   void init_queue() {
@@ -85,10 +85,12 @@ class WorkGraphExec
 
   KOKKOS_INLINE_FUNCTION
   std::int32_t pop_work() const {
+    std::cerr << "beginning of pop_work, m_queue[0] = " << m_queue[0] << '\n';
     range_type w(-1,-1);
     while (true) {
       const range_type w_new( w.first + 1 , w.second );
       w = atomic_compare_exchange( &m_ranges(0) , w , w_new );
+      std::cerr << "after CAS, m_queue[0] = " << m_queue[0] << '\n';
       if ( w.first < w.second ) { // there was work in the queue
         if ( w_new.first == w.first + 1 && w_new.second == w.second ) {
           // we got a work item
@@ -96,7 +98,11 @@ class WorkGraphExec
           // the push_work function may have incremented the end counter
           // but not yet written the work index into the queue.
           // wait until the entry is valid.
+          std::cerr << "before -1 spin, m_queue[0] = " << m_queue[0] << '\n';
           while ( -1 == ( i = m_queue[ w.first ] ) );
+          std::cerr << "after -1 spin, m_queue[0] = " << m_queue[0] << '\n';
+          std::cerr << "w.first was " << w.first << '\n';
+          std::cerr << "popping work item " << i << '\n';
           return i;
         } // we got a work item
       } else { // there was no work in the queue
@@ -109,6 +115,7 @@ class WorkGraphExec
 
   KOKKOS_INLINE_FUNCTION
   void push_work(std::int32_t i) const {
+    std::cerr << "pushing work item " << i << '\n';
     range_type w(-1,-1);
     while (true) {
       const range_type w_new( w.first , w.second + 1 );
@@ -118,9 +125,11 @@ class WorkGraphExec
       if ( w.first == w_new.first && w.second + 1 == w_new.second ) break;
     }
     // write the work index into the claimed spot in the queue
+    std::cerr << "m_queue[ w.second = " << w.second << " ] = i = " << i << '\n';
     m_queue[ w.second ] = i;
     // push this write out into the memory system
     memory_fence();
+    std::cerr << "double check: m_queue[ " << w.second << " ] = " << m_queue[w.second] << '\n';
   }
 
  public:
@@ -151,16 +160,19 @@ class WorkGraphExec
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
     , m_total_work( arg_policy.graph.numRows() )
+    , m_queue(ViewAllocateWithoutInitializing("queue"), m_total_work)
   {
+    std::cerr << "calling main WorkGraphExec constructor\n";
     if (arg_policy.graph.numRows() > std::numeric_limits<std::int32_t>::max()) {
       Kokkos::abort("WorkGraphPolicy work must be indexable using int32_t");
     }
     {
-      ints_type counts;
-      get_crs_transpose_counts(counts, arg_policy.graph);
-      m_counts = counts;
+    //ints_type counts;
+      get_crs_transpose_counts(m_counts, arg_policy.graph);
+    //m_counts = counts;
     }
-    m_queue = ints_type(ViewAllocateWithoutInitializing("queue"), m_total_work);
+  //m_queue = ints_type("queue", m_total_work);
+    std::cerr << "post-ctor, m_queue.size() " << m_queue.size() << " m_queue.use_count() " << m_queue.use_count() << '\n';
     deep_copy(m_queue, std::int32_t(-1));
     m_ranges = ranges_type("ranges", 1);
     fill_queue();

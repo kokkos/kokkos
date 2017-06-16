@@ -65,7 +65,6 @@ struct TestWorkGraph {
   Values m_values;
 
   TestWorkGraph(long arg_input):m_input(arg_input) {
-    m_values = Values("values", m_graph.numRows());
     form_graph();
     transpose_crs(m_tranpose, m_graph);
   }
@@ -98,8 +97,9 @@ struct TestWorkGraph {
 
   void form_graph() {
     auto hg = form_host_graph();
-    m_graph.row_map = RowMap("row_map", hg.size() + 1);
+    m_graph.row_map = RowMap("row_map", hg.size() + 1); // row map always has one more
     m_graph.entries = Entries("entries", hg.size() - 1); // all but the first have a parent
+    m_values = Values("values", hg.size());
     auto h_row_map = Kokkos::create_mirror_view(m_graph.row_map);
     auto h_entries = Kokkos::create_mirror_view(m_graph.entries);
     auto h_values = Kokkos::create_mirror_view(m_values);
@@ -135,9 +135,15 @@ struct TestWorkGraph {
 
 TEST_F( TEST_CATEGORY, workgraph_for )
 {
+  std::cerr << "START 0 TEST\n";
   { TestWorkGraph< TEST_EXECSPACE > f(0); f.test_for(); }
+  std::cerr << "END 0 TEST\n";
+  std::cerr << "START 1 TEST\n";
   { TestWorkGraph< TEST_EXECSPACE > f(1); f.test_for(); }
+  std::cerr << "END 1 TEST\n";
+  std::cerr << "START 3 TEST\n";
   { TestWorkGraph< TEST_EXECSPACE > f(3); f.test_for(); }
+  std::cerr << "END 3 TEST\n";
 }
 
 } // namespace Test
