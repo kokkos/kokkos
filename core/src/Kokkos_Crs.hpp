@@ -89,6 +89,7 @@ public:
   typedef DataType                                            data_type;
   typedef typename traits::array_layout                       array_layout;
   typedef typename traits::execution_space                    execution_space;
+  typedef typename traits::memory_space                       memory_space;
   typedef typename traits::device_type                        device_type;
   typedef SizeType                                            size_type;
 
@@ -135,6 +136,150 @@ public:
       static_cast<size_type> (0);
   }
 };
+
+namespace Impl {
+
+template <class In, class Out>
+class GetCrsTransposeCounts {
+ public:
+  using execution_space = typename In::execution_space;
+  using self_type = GetCrsTransposeCounts<In, Out>;
+  using index_type = typename In::index_type;
+ private:
+  In in;
+  Out out;
+ public:
+  KOKKOS_INLINE_FUNCTION
+  void operator()(index_type i) const {
+    atomic_increment( &out[in.entries(i)] );
+  }
+  GetCrsTransposeCounts(In const& arg_in, Out const& arg_out):
+    in(arg_in),out(arg_out) {
+  }
+  void run() {
+    using policy_type = RangePolicy<index_type, execution_space>;
+    using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
+    const closure_type closure(*this, policy_type(0, index_type(in.entries.size())));
+    closure.execute();
+    execution_space::fence();
+  }
+};
+
+template <class In, class Out>
+class CrsRowMapFromCounts {
+ public:
+  using execution_space = typename In::execution_space;
+  using value_type = typename Out::value_type;
+  using index_type = typename In::size_type;
+ private:
+  In in;
+  Out out;
+ public:
+  KOKKOS_INLINE_FUNCTION
+  void operator()(index_type i, value_type& update, bool final_pass) const {
+    update += in(i);
+    if (final_pass) out(i + 1) = update;
+  }
+  KOKKOS_INLINE_FUNCTION
+  void init(value_type& update) const { update = 0; }
+  KOKKOS_INLINE_FUNCTION
+  void join(volatile value_type& update, const volatile value_type& input) const {
+    update += input;
+  }
+  using self_type = CrsRowMapFromCounts<In, Out>;
+  CrsRowMapFromCounts(In const& arg_in, Out const& arg_out):
+    in(arg_in),out(arg_out) {
+  }
+  void run() {
+    using policy_type = RangePolicy<index_type, execution_space>;
+    using closure_type = Kokkos::Impl::ParallelScan<self_type, policy_type>;
+    const closure_type closure(*this, policy_type(0, in.size() + 1));
+    closure.execute();
+    execution_space::fence();
+  }
+};
+
+template <class In, class Out>
+class FillCrsTransposeEntries {
+ public:
+  using execution_space = typename In::execution_space;
+  using memory_space = typename In::memory_space;
+  using value_type = typename Out::entries_type::value_type;
+  using index_type = typename In::size_type;
+ private:
+  using counters_type = View<index_type*, memory_space>;
+  In in;
+  Out out;
+  counters_type counters;
+ public:
+  KOKKOS_INLINE_FUNCTION
+  void operator()(index_type a) const {
+    auto b = in.entries(a);
+    auto first = out.row_map(b);
+    auto j = atomic_fetch_add( &counters_type(b), 1 );
+    out.entries( first + j ) = a;
+  }
+  using self_type = GetCrsTransposeCounts<In, Out>;
+  FillCrsTransposeEntries(In const& arg_in, Out const& arg_out):
+    in(arg_in),out(arg_out),
+    counters("counters", arg_out.numRows()) {
+  }
+  void run() {
+    using policy_type = RangePolicy<index_type, execution_space>;
+    using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
+    const closure_type closure(*this, policy_type(0, index_type(in.entries.size())));
+    closure.execute();
+    execution_space::fence();
+  }
+};
+
+} // anonymous namespace
+
+template< class Out,
+          class DataType,
+          class Arg1Type,
+          class Arg2Type,
+          class SizeType>
+void get_crs_transpose_counts(
+    Out& out,
+    Crs<DataType, Arg1Type, Arg2Type, SizeType> const& in,
+    std::string const& name = "counts") {
+  using In = Crs<DataType, Arg1Type, Arg2Type, SizeType>;
+  out = Out(name, in.numRows());
+  Impl::GetCrsTransposeCounts<In, Out> functor(in, out);
+  functor.run();
+}
+
+template< class Out,
+          class In>
+void get_crs_row_map_from_counts(
+    Out& out,
+    In const& in,
+    std::string const& name = "counts") {
+  out = Out(ViewAllocateWithoutInitializing(name), in.size() + 1);
+  Impl::GetCrsTransposeCounts<In, Out> functor(in, out);
+  functor.run();
+}
+
+template< class DataType,
+          class Arg1Type,
+          class Arg2Type,
+          class SizeType>
+void transpose(
+    Crs<DataType, Arg1Type, Arg2Type, SizeType>& out,
+    Crs<DataType, Arg1Type, Arg2Type, SizeType> const& in) {
+  using crs_type = Crs<DataType, Arg1Type, Arg2Type, SizeType>;
+  using memory_space = typename crs_type::memory_space;
+  using counts_type = View<SizeType*, memory_space>;
+  {
+  counts_type counts("transpose_counts", in.numRows());
+  get_transpose_counts(counts, in);
+  get_crs_row_map_from_counts(out.row_map, counts);
+  }
+  out.entries = decltype(out.entries)("transpose_row_map", in.numRows() + 1);
+  Impl::FillCrsTransposeEntries<crs_type, crs_type> entries_functor(out, in);
+  entries_functor.run();
+}
 
 } // namespace Experimental
 } // namespace Kokkos

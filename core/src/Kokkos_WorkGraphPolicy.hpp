@@ -18,7 +18,7 @@ public:
 
   graph_type graph;
 
-  WorkGraphPolicy(graph_type arg_graph):graph(arg_graph);
+  WorkGraphPolicy(graph_type arg_graph):graph(arg_graph) {}
 };
 
 namespace Impl {
@@ -40,50 +40,17 @@ class WorkGraphExec
 
  private:
 
-  const std::int32_t m_total_work;
-  volatile std::int32_t * const m_counts;
-  volatile std::int32_t * const m_queue;
+  using ints_type = View<std::int32_t*, memory_space>;
+  using atomic_ints_type = View<std::int32_t*, memory_space, MemoryTraits<Atomic>>;
   using range_type = Kokkos::pair<std::int32_t, std::int32_t>;
-  volatile range_type * const m_ranges;
+  using ranges_type = View<range_type*, memory_space>;
+  using atomic_ranges_type = View<range_type*, memory_space, MemoryTraits<Atomic>>;
+  const std::int32_t m_total_work;
+  atomic_ints_type m_counts;
+  atomic_ints_type m_queue;
+  atomic_ranges_type m_ranges;
 
-  struct TagZeroCounts {};
-  KOKKOS_INLINE_FUNCTION
-  void operator()(TagZeroCounts, std::int32_t i) const {
-    m_counts[i] = 0;
-  }
-  void zero_counts() {
-    using policy_type = RangePolicy<std::int32_t, execution_space, TagZeroCounts>;
-    using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
-    const closure_type closure(*this, policy_type(0, m_total_work));
-    closure.execute();
-    execution_space::fence();
-  }
-
-  struct TagFillCounts {};
-  KOKKOS_INLINE_FUNCTION
-  void operator()(TagFillCounts, std::int32_t i) const {
-    atomic_increment( &m_counts[ m_policy.graph.entries(i) ] );
-  }
-  void fill_counts() {
-    using policy_type = RangePolicy<std::int32_t, execution_space, TagFillCounts>;
-    using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
-    const std::int32_t num_deps = m_policy.graph.entries.dimension_0();
-    const closure_type closure(*this, policy_type(0, num_deps));
-    closure.execute();
-    execution_space::fence();
-  }
-
-  struct TagInitQueue {};
-  KOKKOS_INLINE_FUNCTION
-  void operator()(TagInitQueue, std::int32_t i) const {
-    m_queue[i] = -1;
-  }
   void init_queue() {
-    using policy_type = RangePolicy<std::int32_t, execution_space, TagInitQueue>;
-    using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
-    const closure_type closure(*this, policy_type(0, m_total_work));
-    closure.execute();
-    execution_space::fence();
   }
 
   struct TagZeroRanges {};
@@ -180,8 +147,6 @@ class WorkGraphExec
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
     , m_total_work( arg_policy.graph.numRows() )
-    , m_counts( static_cast<decltype(m_counts)>(
-          memory_space::allocate( m_total_work * sizeof( std::int32_t ) )))
     , m_queue( static_cast<decltype(m_queue)>(
           memory_space::allocate( m_total_work * sizeof( std::int32_t ) )))
     , m_ranges( static_cast<decltype(m_ranges)>(
@@ -190,18 +155,15 @@ class WorkGraphExec
     if (arg_policy.graph.numRows() > std::numeric_limits<std::int32_t>::max()) {
       Kokkos::abort("WorkGraphPolicy work must be indexable using int32_t");
     }
-    zero_counts();
-    fill_counts();
-    init_queue();
-    zero_ranges();
+    {
+      ints_type counts;
+      get_transpose_counts(counts, arg_policy.graph);
+      m_counts = counts;
+    }
+    m_queue = ints_type(ViewAllocateWithoutInitializing("queue"), m_total_work);
+    deep_copy(m_queue, std::int32_t(-1));
+    m_ranges = ranges_type("ranges", 1);
     fill_queue();
-  }
-
-  inline
-  void destroy() {
-    memory_space::deallocate( m_counts, m_total_work * sizeof( std::int32_t ) );
-    memory_space::deallocate( m_queue, m_total_work * sizeof( std::int32_t ) );
-    memory_space::deallocate( m_ranges, sizeof( range_type ) );
   }
 };
 
