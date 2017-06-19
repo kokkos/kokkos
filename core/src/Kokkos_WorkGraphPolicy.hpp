@@ -182,5 +182,6 @@ class WorkGraphExec
 
 #include "impl/Kokkos_Serial_WorkGraphPolicy.hpp"
 #include "OpenMP/Kokkos_OpenMP_WorkGraphPolicy.hpp"
+#include "Cuda/Kokkos_Cuda_WorkGraphPolicy.hpp"
 
 #endif /* #define KOKKOS_WORKGRAPHPOLICY_HPP */
