@@ -27,6 +27,12 @@ namespace Impl {
 template< class functor_type , class execution_space, class ... policy_args >
 class WorkGraphExec
 {
+ private:
+  struct TrackingReenabler {
+    TrackingReenabler() {
+      Kokkos::Impl::shared_allocation_tracking_enable();
+    }
+  } m_tracking_reenabler;
  public:
 
   using self_type = WorkGraphExec< functor_type, execution_space, policy_args ... >;
@@ -41,17 +47,14 @@ class WorkGraphExec
 
  private:
 
-  using ints_type = View<std::int32_t*, execution_space>;
-  using atomic_ints_type = View<std::int32_t*, execution_space, MemoryTraits<Atomic>>;
+  using ints_type = Kokkos::View<std::int32_t*, memory_space>;
+  using atomic_ints_type = Kokkos::View<std::int32_t*, memory_space, MemoryTraits<Atomic>>;
   using range_type = Kokkos::pair<std::int32_t, std::int32_t>;
-  using ranges_type = View<range_type*, memory_space>;
+  using ranges_type = Kokkos::View<range_type*, memory_space>;
   const std::int32_t m_total_work;
   ints_type m_counts;
   ints_type m_queue;
   ranges_type m_ranges;
-
-  void init_queue() {
-  }
 
  public:
 
@@ -157,7 +160,8 @@ class WorkGraphExec
   inline
   WorkGraphExec( const functor_type & arg_functor
                , const policy_type  & arg_policy )
-    : m_functor( arg_functor )
+    : m_tracking_reenabler()
+    , m_functor( arg_functor )
     , m_policy(  arg_policy )
     , m_total_work( arg_policy.graph.numRows() )
     , m_queue(ViewAllocateWithoutInitializing("queue"), m_total_work)
@@ -176,6 +180,7 @@ class WorkGraphExec
     deep_copy(m_queue, std::int32_t(-1));
     m_ranges = ranges_type("ranges", 1);
     fill_queue();
+    Kokkos::Impl::shared_allocation_tracking_disable();
   }
 
 };

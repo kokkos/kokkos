@@ -66,7 +66,7 @@ struct TestWorkGraph {
 
   TestWorkGraph(long arg_input):m_input(arg_input) {
     form_graph();
-    transpose_crs(m_tranpose, m_graph);
+  //transpose_crs(m_tranpose, m_graph);
   }
 
   inline
@@ -118,11 +118,11 @@ struct TestWorkGraph {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(std::int32_t i) const {
-    auto begin = m_tranpose.row_map(i);
-    auto end = m_tranpose.row_map(i + 1);
-    for (auto j = begin; j < end; ++j) {
-      m_values(i) += m_values( m_tranpose.entries(j) );
-    }
+//  auto begin = m_tranpose.row_map(i);
+//  auto end = m_tranpose.row_map(i + 1);
+//  for (auto j = begin; j < end; ++j) {
+//    m_values(i) += m_values( m_tranpose.entries(j) );
+//  }
   }
 
   void test_for() {
@@ -135,15 +135,20 @@ struct TestWorkGraph {
 
 TEST_F( TEST_CATEGORY, workgraph_for )
 {
+  Kokkos::View<double*> test_view{};
+  test_view = Kokkos::View<double*>("test_view", 16);
+  test_view(15) = 99.9;
   std::cerr << "START 0 TEST\n";
   { TestWorkGraph< TEST_EXECSPACE > f(0); f.test_for(); }
   std::cerr << "END 0 TEST\n";
+  if ((0)) {
   std::cerr << "START 1 TEST\n";
   { TestWorkGraph< TEST_EXECSPACE > f(1); f.test_for(); }
   std::cerr << "END 1 TEST\n";
   std::cerr << "START 3 TEST\n";
   { TestWorkGraph< TEST_EXECSPACE > f(3); f.test_for(); }
   std::cerr << "END 3 TEST\n";
+  }
 }
 
 } // namespace Test

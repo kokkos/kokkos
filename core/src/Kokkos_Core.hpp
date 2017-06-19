@@ -85,9 +85,6 @@
 
 #include <Kokkos_Complex.hpp>
 
-#include <Kokkos_Crs.hpp>
-#include <Kokkos_WorkGraphPolicy.hpp>
-
 #include <iosfwd>
 
 //----------------------------------------------------------------------------
@@ -172,6 +169,9 @@ void * kokkos_realloc( void * arg_alloc , const size_t arg_alloc_size )
 }
 
 } // namespace Kokkos
+
+#include <Kokkos_Crs.hpp>
+#include <Kokkos_WorkGraphPolicy.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

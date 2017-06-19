@@ -49,6 +49,8 @@
 #include <algorithm>
 #include <initializer_list>
 
+#include <iostream>
+
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_MemoryTraits.hpp>
@@ -1070,7 +1072,9 @@ public:
   ~View() {}
 
   KOKKOS_INLINE_FUNCTION
-  View() : m_track(), m_map() {}
+  View() : m_track(), m_map() {
+    std::cerr << "called View default ctor, this " << this << '\n';
+  }
 
   KOKKOS_INLINE_FUNCTION
   View( const View & rhs ) : m_track( rhs.m_track ), m_map( rhs.m_map ) {}
@@ -1079,10 +1083,22 @@ public:
   View( View && rhs ) : m_track( rhs.m_track ), m_map( rhs.m_map ) {}
 
   KOKKOS_INLINE_FUNCTION
-  View & operator = ( const View & rhs ) { m_track = rhs.m_track ; m_map = rhs.m_map ; return *this ; }
+  View & operator= ( const View & rhs ) {
+    std::cerr << "calling View assign, this " << this
+      << ", rhs " << &rhs << '\n';
+    m_track = rhs.m_track ;
+    m_map = rhs.m_map ;
+    return *this ;
+  }
 
   KOKKOS_INLINE_FUNCTION
-  View & operator = ( View && rhs ) { m_track = rhs.m_track ; m_map = rhs.m_map ; return *this ; }
+  View & operator= ( View && rhs ) {
+    std::cerr << "calling View move assign, this " << this
+      << ", rhs " << &rhs << '\n';
+    m_track = rhs.m_track ;
+    m_map = rhs.m_map ;
+    return *this ;
+  }
 
   //----------------------------------------
   // Compatible view copy constructor and assignment
@@ -1319,7 +1335,12 @@ public:
               ( arg_N0 , arg_N1 , arg_N2 , arg_N3
               , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
           )
-    {}
+    {
+      std::cerr << "called label ctor with label " << arg_label
+        << ", arg_N0 " << arg_N0
+        << ", this " << this
+        << '\n';
+    }
 
   // For backward compatibility
   explicit inline

@@ -246,7 +246,7 @@ template< class Out,
 void get_crs_transpose_counts(
     Out& out,
     Crs<DataType, Arg1Type, Arg2Type, SizeType> const& in,
-    std::string const& name = "counts") {
+    std::string const& name = "transpose_counts") {
   using In = Crs<DataType, Arg1Type, Arg2Type, SizeType>;
   out = Out(name, in.numRows());
   Impl::GetCrsTransposeCounts<In, Out> functor(in, out);
@@ -275,7 +275,7 @@ void transpose_crs(
   using memory_space = typename crs_type::memory_space;
   using counts_type = View<SizeType*, memory_space>;
   {
-  counts_type counts("transpose_counts", in.numRows());
+  counts_type counts;
   Kokkos::Experimental::get_crs_transpose_counts(counts, in);
   Kokkos::Experimental::get_crs_row_map_from_counts(out.row_map, counts,
       "tranpose_row_map");

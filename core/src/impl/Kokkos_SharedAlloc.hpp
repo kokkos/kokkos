@@ -47,6 +47,8 @@
 #include <cstdint>
 #include <string>
 
+#include <iostream>
+
 namespace Kokkos {
 namespace Impl {
 
@@ -229,7 +231,10 @@ public:
                                    )
     {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-      return new SharedAllocationRecord( arg_space , arg_label , arg_alloc );
+      std::cerr << "SAR<void,void>::allocate(..., " << arg_label << ", ...)\n";
+      auto out = new SharedAllocationRecord( arg_space , arg_label , arg_alloc );
+      std::cerr << "new ptr " << out << '\n';
+      return out;
 #else
       return (SharedAllocationRecord *) 0 ;
 #endif
@@ -268,6 +273,7 @@ public:
   if ( ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) Record::decrement( m_record );
 
 #else
+#error "not the case unless CUDA"
 
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED  0
 
@@ -282,7 +288,9 @@ public:
   void assign_allocated_record_to_uninitialized( Record * arg_record )
     {
       if ( arg_record ) {
+        std::cerr << "assign_allocated_record_to_uninitialized(" << arg_record->get_label() << ")\n";
         Record::increment( m_record = arg_record );
+        std::cerr << "use_count() = " << arg_record->use_count() << '\n';
       }
       else {
         m_record_bits = DO_NOT_DEREF_FLAG ;
@@ -328,11 +336,15 @@ public:
   KOKKOS_FORCEINLINE_FUNCTION
   SharedAllocationTracker( SharedAllocationTracker && rhs )
     : m_record_bits( rhs.m_record_bits )
-    { rhs.m_record_bits = DO_NOT_DEREF_FLAG ; }
+    {
+      std::cerr << "Tracker move ctor, no effect\n";
+      rhs.m_record_bits = DO_NOT_DEREF_FLAG ;
+    }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  SharedAllocationTracker & operator = ( SharedAllocationTracker && rhs )
+  SharedAllocationTracker & operator= ( SharedAllocationTracker && rhs )
     {
+      std::cerr << "Tracker move assign, decrement old self\n";
       // If this is tracking then must decrement
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
       // Move and reset RHS to default constructed value.
@@ -349,6 +361,7 @@ public:
                    ? rhs.m_record_bits
                    : rhs.m_record_bits | DO_NOT_DEREF_FLAG )
     {
+      std::cerr << "Tracker copy ctor, increment RHS\n";
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
     }
 
@@ -360,17 +373,29 @@ public:
                      && enable_tracking
                    ? rhs.m_record_bits
                    : rhs.m_record_bits | DO_NOT_DEREF_FLAG )
-    { KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT }
+    {
+      std::cerr << "Tracker copy ctor, increment RHS\n";
+      KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
+    }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  SharedAllocationTracker & operator = ( const SharedAllocationTracker & rhs )
+  SharedAllocationTracker & operator= ( const SharedAllocationTracker & rhs )
     {
+      std::cerr << "Tracker copy assign, decrement self and increment RHS\n";
       // If this is tracking then must decrement
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
+      std::cerr << "done trying to decrement self\n";
+      if (rhs.m_record_bits & DO_NOT_DEREF_FLAG) {
+        std::cerr << "RHS tracking already disabled\n";
+      }
+      if (!(KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED)) {
+        std::cerr << "tracking disabled during copy assign\n";
+      }
       m_record_bits = KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED
                     ? rhs.m_record_bits
                     : rhs.m_record_bits | DO_NOT_DEREF_FLAG ;
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
+      std::cerr << "done trying to increment RHS\n";
       return *this ;
     }
 
@@ -379,6 +404,7 @@ public:
   void assign( const SharedAllocationTracker & rhs
              , const bool enable_tracking )
     {
+      std::cerr << "Tracker assign method, decrement self and increment RHS\n";
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
       m_record_bits = KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED
                       && enable_tracking
