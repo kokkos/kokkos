@@ -2781,9 +2781,6 @@ public:
     typedef ViewValueFunctor< execution_space , value_type > functor_type ;
     typedef Kokkos::Impl::SharedAllocationRecord< memory_space , functor_type > record_type ;
 
-    std::cerr << "memory_space " << typeid(memory_space).name() << '\n';
-    std::cerr << "functor_type " << typeid(functor_type).name() << '\n';
-
     // Query the mapping for byte-size of allocation.
     // If padding is allowed then pass in sizeof value type
     // for padding computation.

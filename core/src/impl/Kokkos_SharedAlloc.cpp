@@ -57,13 +57,11 @@ int SharedAllocationRecord< void , void >::tracking_enabled()
 
 void SharedAllocationRecord< void , void >::tracking_disable()
 {
-  std::cerr << "disable tracking\n";
   t_tracking_enabled = 0;
 }
 
 void SharedAllocationRecord< void , void >::tracking_enable()
 {
-  std::cerr << "enable tracking\n";
   t_tracking_enabled = 1;
 }
 
@@ -204,9 +202,6 @@ SharedAllocationRecord< void , void >::
 increment( SharedAllocationRecord< void , void > * arg_record )
 {
   const int old_count = Kokkos::atomic_fetch_add( & arg_record->m_count , 1 );
-  std::cerr << "SAR::increment, old_count = " << old_count
-    << ", ptr = " << arg_record
-    << ", label = " << arg_record->get_label() << '\n';
 
   if ( old_count < 0 ) { // Error
     Kokkos::Impl::throw_runtime_exception("Kokkos::Impl::SharedAllocationRecord failed increment");
@@ -220,9 +215,6 @@ decrement( SharedAllocationRecord< void , void > * arg_record )
   constexpr static SharedAllocationRecord * zero = 0 ;
 
   const int old_count = Kokkos::atomic_fetch_add( & arg_record->m_count , -1 );
-  std::cerr << "SAR::decrement, old_count = " << old_count
-    << ", ptr = " << arg_record
-    << ", label = " << arg_record->get_label() << '\n';
 
 #if 0
   if ( old_count <= 1 ) {
