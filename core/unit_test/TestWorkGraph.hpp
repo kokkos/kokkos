@@ -42,6 +42,7 @@
 */
 
 #include <vector>
+#include <iostream>
 
 #include <Kokkos_Core.hpp>
 
@@ -139,11 +140,12 @@ struct TestWorkGraph {
 
 } // anonymous namespace
 
-TEST_F( TEST_CATEGORY, workgraph_for )
+TEST_F( TEST_CATEGORY, workgraph_fib )
 {
-  { TestWorkGraph< TEST_EXECSPACE > f(0); f.test_for(); }
-  { TestWorkGraph< TEST_EXECSPACE > f(1); f.test_for(); }
-  { TestWorkGraph< TEST_EXECSPACE > f(2); f.test_for(); }
+  for ( int i = 0; i < 24; ++i) {
+    TestWorkGraph< TEST_EXECSPACE > f(i);
+    f.test_for();
+  }
 }
 
 } // namespace Test
