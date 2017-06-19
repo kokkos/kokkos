@@ -252,10 +252,7 @@ public:
                                    )
   {
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-    std::cerr << "SAR<HostSpace,void>::allocate(..., " << arg_label << ", ...)\n";
-    auto out = new SharedAllocationRecord( arg_space, arg_label, arg_alloc_size );
-    std::cerr << "new ptr " << out << '\n';
-    return out;
+    return new SharedAllocationRecord( arg_space, arg_label, arg_alloc_size );
 #else
     return (SharedAllocationRecord *) 0;
 #endif
