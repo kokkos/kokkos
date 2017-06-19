@@ -66,7 +66,7 @@ struct TestWorkGraph {
 
   TestWorkGraph(long arg_input):m_input(arg_input) {
     form_graph();
-  //transpose_crs(m_tranpose, m_graph);
+    transpose_crs(m_tranpose, m_graph);
   }
 
   inline
@@ -87,7 +87,7 @@ struct TestWorkGraph {
     std::vector<HostEntry> g;
     g.push_back({ m_input , -1 });
     for (std::int32_t i = 0; i < std::int32_t(g.size()); ++i) {
-      auto& e = g.at(std::size_t(i));
+      auto e = g.at(std::size_t(i));
       if (e.input < 2) continue;
       g.push_back({ e.input - 1, i });
       g.push_back({ e.input - 2, i });
@@ -107,7 +107,9 @@ struct TestWorkGraph {
     for (std::int32_t i = 0; i < std::int32_t(hg.size()); ++i) {
       auto& e = hg.at(std::size_t(i));
       h_row_map(i + 1) = i;
-      if (e.input < 2) h_values(i) = e.input;
+      if (e.input < 2) {
+        h_values(i) = e.input;
+      }
       if (e.parent == -1) continue;
       h_entries(i - 1) = e.parent;
     }
@@ -118,15 +120,19 @@ struct TestWorkGraph {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(std::int32_t i) const {
-//  auto begin = m_tranpose.row_map(i);
-//  auto end = m_tranpose.row_map(i + 1);
-//  for (auto j = begin; j < end; ++j) {
-//    m_values(i) += m_values( m_tranpose.entries(j) );
-//  }
+    auto begin = m_tranpose.row_map(i);
+    auto end = m_tranpose.row_map(i + 1);
+    for (auto j = begin; j < end; ++j) {
+      auto k = m_tranpose.entries(j);
+      m_values(i) += m_values( k );
+    }
   }
 
   void test_for() {
     Kokkos::parallel_for(Policy(m_graph), *this);
+    auto h_values = Kokkos::create_mirror_view(m_values);
+    Kokkos::deep_copy(h_values, m_values);
+    ASSERT_EQ( h_values(0), full_fibonacci(m_input) );
   }
 
 };
@@ -135,20 +141,9 @@ struct TestWorkGraph {
 
 TEST_F( TEST_CATEGORY, workgraph_for )
 {
-  Kokkos::View<double*> test_view{};
-  test_view = Kokkos::View<double*>("test_view", 16);
-  test_view(15) = 99.9;
-  std::cerr << "START 0 TEST\n";
   { TestWorkGraph< TEST_EXECSPACE > f(0); f.test_for(); }
-  std::cerr << "END 0 TEST\n";
-  if ((0)) {
-  std::cerr << "START 1 TEST\n";
   { TestWorkGraph< TEST_EXECSPACE > f(1); f.test_for(); }
-  std::cerr << "END 1 TEST\n";
-  std::cerr << "START 3 TEST\n";
-  { TestWorkGraph< TEST_EXECSPACE > f(3); f.test_for(); }
-  std::cerr << "END 3 TEST\n";
-  }
+  { TestWorkGraph< TEST_EXECSPACE > f(2); f.test_for(); }
 }
 
 } // namespace Test

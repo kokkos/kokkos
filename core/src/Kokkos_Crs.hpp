@@ -216,11 +216,15 @@ class FillCrsTransposeEntries {
   counters_type counters;
  public:
   KOKKOS_INLINE_FUNCTION
-  void operator()(index_type a) const {
-    auto b = in.entries(a);
-    auto first = out.row_map(b);
-    auto j = atomic_fetch_add( &counters(b), 1 );
-    out.entries( first + j ) = a;
+  void operator()(index_type i) const {
+    auto begin = in.row_map(i);
+    auto end = in.row_map(i + 1);
+    for (auto j = begin; j < end; ++j) {
+      auto ti = in.entries(j);
+      auto tbegin = out.row_map(ti);
+      auto tj = atomic_fetch_add( &counters(ti), 1 );
+      out.entries( tbegin + tj ) = i;
+    }
   }
   using self_type = FillCrsTransposeEntries<In, Out>;
   FillCrsTransposeEntries(In const& arg_in, Out const& arg_out):
@@ -230,7 +234,7 @@ class FillCrsTransposeEntries {
   void run() {
     using policy_type = RangePolicy<index_type, execution_space>;
     using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
-    const closure_type closure(*this, policy_type(0, index_type(in.entries.size())));
+    const closure_type closure(*this, policy_type(0, index_type(in.numRows())));
     closure.execute();
     execution_space::fence();
   }
@@ -281,7 +285,7 @@ void transpose_crs(
       "tranpose_row_map");
   }
   out.entries = decltype(out.entries)("transpose_entries", in.entries.size());
-  Impl::FillCrsTransposeEntries<crs_type, crs_type> entries_functor(out, in);
+  Impl::FillCrsTransposeEntries<crs_type, crs_type> entries_functor(in, out);
   entries_functor.run();
 }
 
