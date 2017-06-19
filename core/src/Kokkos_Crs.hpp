@@ -196,7 +196,7 @@ class CrsRowMapFromCounts {
   void run() {
     using policy_type = RangePolicy<index_type, execution_space>;
     using closure_type = Kokkos::Impl::ParallelScan<self_type, policy_type>;
-    const closure_type closure(*this, policy_type(0, in.size()));
+    closure_type closure(*this, policy_type(0, in.size()));
     closure.execute();
     execution_space::fence();
   }
