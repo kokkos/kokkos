@@ -24,39 +24,39 @@ IF(Kokkos_ENABLE_Serial)
     UnitTest_Serial
     SOURCES
       UnitTestMainInit.cpp
-#     serial/TestSerial_AtomicOperations.cpp
-#     serial/TestSerial_AtomicViews.cpp
-#     serial/TestSerial_Atomics.cpp
-#     serial/TestSerial_Complex.cpp
-#     serial/TestSerial_Init.cpp
-#     serial/TestSerial_MDRange.cpp
-#     serial/TestSerial_Other.cpp
-#     serial/TestSerial_RangePolicy.cpp
-#     serial/TestSerial_Reductions.cpp
-#     serial/TestSerial_Scan.cpp
-#     serial/TestSerial_SharedAlloc.cpp
-#     serial/TestSerial_SubView_a.cpp
-#     serial/TestSerial_SubView_b.cpp
-#     serial/TestSerial_SubView_c01.cpp
-#     serial/TestSerial_SubView_c02.cpp
-#     serial/TestSerial_SubView_c03.cpp
-#     serial/TestSerial_SubView_c04.cpp
-#     serial/TestSerial_SubView_c05.cpp
-#     serial/TestSerial_SubView_c06.cpp
-#     serial/TestSerial_SubView_c07.cpp
-#     serial/TestSerial_SubView_c08.cpp
-#     serial/TestSerial_SubView_c09.cpp
-#     serial/TestSerial_SubView_c10.cpp
-#     serial/TestSerial_SubView_c11.cpp
-#     serial/TestSerial_SubView_c12.cpp
-#     serial/TestSerial_Team.cpp
-#     serial/TestSerial_TeamReductionScan.cpp
-#     serial/TestSerial_TeamScratch.cpp
-#     serial/TestSerial_ViewAPI_b.cpp
-#     serial/TestSerial_ViewMapping_a.cpp
-#     serial/TestSerial_ViewMapping_b.cpp
-#     serial/TestSerial_ViewMapping_subview.cpp
-#     serial/TestSerial_ViewOfClass.cpp
+      serial/TestSerial_AtomicOperations.cpp
+      serial/TestSerial_AtomicViews.cpp
+      serial/TestSerial_Atomics.cpp
+      serial/TestSerial_Complex.cpp
+      serial/TestSerial_Init.cpp
+      serial/TestSerial_MDRange.cpp
+      serial/TestSerial_Other.cpp
+      serial/TestSerial_RangePolicy.cpp
+      serial/TestSerial_Reductions.cpp
+      serial/TestSerial_Scan.cpp
+      serial/TestSerial_SharedAlloc.cpp
+      serial/TestSerial_SubView_a.cpp
+      serial/TestSerial_SubView_b.cpp
+      serial/TestSerial_SubView_c01.cpp
+      serial/TestSerial_SubView_c02.cpp
+      serial/TestSerial_SubView_c03.cpp
+      serial/TestSerial_SubView_c04.cpp
+      serial/TestSerial_SubView_c05.cpp
+      serial/TestSerial_SubView_c06.cpp
+      serial/TestSerial_SubView_c07.cpp
+      serial/TestSerial_SubView_c08.cpp
+      serial/TestSerial_SubView_c09.cpp
+      serial/TestSerial_SubView_c10.cpp
+      serial/TestSerial_SubView_c11.cpp
+      serial/TestSerial_SubView_c12.cpp
+      serial/TestSerial_Team.cpp
+      serial/TestSerial_TeamReductionScan.cpp
+      serial/TestSerial_TeamScratch.cpp
+      serial/TestSerial_ViewAPI_b.cpp
+      serial/TestSerial_ViewMapping_a.cpp
+      serial/TestSerial_ViewMapping_b.cpp
+      serial/TestSerial_ViewMapping_subview.cpp
+      serial/TestSerial_ViewOfClass.cpp
       serial/TestSerial_WorkGraph.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
@@ -148,6 +148,7 @@ IF(Kokkos_ENABLE_OpenMP)
       openmp/TestOpenMP_ViewMapping_b.cpp
       openmp/TestOpenMP_ViewMapping_subview.cpp
       openmp/TestOpenMP_ViewOfClass.cpp
+      openmp/TestOpenMP_WorkGraph.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "

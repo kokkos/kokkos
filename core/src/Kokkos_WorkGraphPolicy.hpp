@@ -181,5 +181,6 @@ class WorkGraphExec
 } // namespace Kokkos
 
 #include "impl/Kokkos_Serial_WorkGraphPolicy.hpp"
+#include "OpenMP/Kokkos_OpenMP_WorkGraphPolicy.hpp"
 
 #endif /* #define KOKKOS_WORKGRAPHPOLICY_HPP */
