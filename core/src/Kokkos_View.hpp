@@ -62,7 +62,6 @@
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 template< class DataType >
@@ -76,16 +75,6 @@ struct ViewDataAnalysis ;
 
 template< class , class ... >
 class ViewMapping { public: enum { is_assignable = false }; };
-
-} /* namespace Impl */
-} /* namespace Experimental */
-} /* namespace Kokkos */
-
-namespace Kokkos {
-namespace Impl {
-
-using Kokkos::Experimental::Impl::ViewMapping ;
-using Kokkos::Experimental::Impl::ViewDataAnalysis ;
 
 } /* namespace Impl */
 } /* namespace Kokkos */
@@ -1799,6 +1788,20 @@ void deep_copy
 
   if ( (void *) dst.data() != (void*) src.data() ) {
 
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
+      Kokkos::Profiling::beginDeepCopy(
+          Kokkos::Profiling::SpaceHandle(dst_memory_space::name()),
+          dst.label(),
+          dst.data(),
+          Kokkos::Profiling::SpaceHandle(src_memory_space::name()),
+          src.label(),
+          src.data(),
+          nbytes);
+    }
+#endif
+
     // Concern: If overlapping views then a parallel copy will be erroneous.
     // ...
 
@@ -1886,20 +1889,14 @@ void deep_copy
     else {
       Kokkos::Impl::throw_runtime_exception("deep_copy given views that would require a temporary allocation");
     }
+
 #if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
-      const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
-      Kokkos::Profiling::deepCopy(
-          Kokkos::Profiling::SpaceHandle(dst_memory_space::name()),
-          dst.label(),
-          dst.data(),
-          Kokkos::Profiling::SpaceHandle(src_memory_space::name()),
-          src.label(),
-          src.data(),
-          nbytes);
+      Kokkos::Profiling::endDeepCopy();
     }
 #endif
-  }
+
+  } // ( (void *) dst.data() != (void*) src.data() )
 }
 
 } /* namespace Kokkos */
@@ -2367,6 +2364,9 @@ using Kokkos::Impl::WithoutInitializing_t ;
 using Kokkos::Impl::AllowPadding_t ;
 using Kokkos::Impl::SharedAllocationRecord ;
 using Kokkos::Impl::SharedAllocationTracker ;
+using Kokkos::Impl::ViewMapping ;
+using Kokkos::Impl::ViewDataAnalysis ;
+
 
 } /* namespace Impl */
 } /* namespace Experimental */

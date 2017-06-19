@@ -51,6 +51,7 @@
 
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 #include <Cuda/Kokkos_Cuda_Internal.hpp>
+#include <Cuda/Kokkos_Cuda_Locks.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 
@@ -68,9 +69,6 @@
 
 __device__ __constant__
 unsigned long kokkos_impl_cuda_constant_memory_buffer[ Kokkos::Impl::CudaTraits::ConstantMemoryUsage / sizeof(unsigned long) ] ;
-
-__device__ __constant__
-Kokkos::Impl::CudaLockArraysStruct kokkos_impl_cuda_lock_arrays ;
 
 #endif
 
@@ -103,6 +101,7 @@ int cuda_kernel_arch()
   return arch ;
 }
 
+#ifdef KOKKOS_ENABLE_CUDA_UVM
 bool cuda_launch_blocking()
 {
   const char * env = getenv("CUDA_LAUNCH_BLOCKING");
@@ -111,16 +110,13 @@ bool cuda_launch_blocking()
 
   return atoi(env);
 }
+#endif
 
 }
 
 void cuda_device_synchronize()
 {
-//  static const bool launch_blocking = cuda_launch_blocking();
-
-//  if (!launch_blocking) {
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
-//  }
+  CUDA_SAFE_CALL( cudaDeviceSynchronize() );
 }
 
 void cuda_internal_error_throw( cudaError e , const char * name, const char * file, const int line )
@@ -543,16 +539,7 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
   cudaThreadSetCacheConfig(cudaFuncCachePreferShared);
 
   // Init the array for used for arbitrarily sized atomics
-  Impl::init_lock_arrays_cuda_space();
-
-  #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
-  Kokkos::Impl::CudaLockArraysStruct locks;
-  locks.atomic = atomic_lock_array_cuda_space_ptr(false);
-  locks.scratch = scratch_lock_array_cuda_space_ptr(false);
-  locks.threadid = threadid_lock_array_cuda_space_ptr(false);
-  locks.n = Kokkos::Cuda::concurrency();
-  cudaMemcpyToSymbol( kokkos_impl_cuda_lock_arrays , & locks , sizeof(CudaLockArraysStruct) );
-  #endif
+  Impl::initialize_host_cuda_lock_arrays();
 }
 
 //----------------------------------------------------------------------------
@@ -635,9 +622,7 @@ void CudaInternal::finalize()
   was_finalized = 1;
   if ( 0 != m_scratchSpace || 0 != m_scratchFlags ) {
 
-    atomic_lock_array_cuda_space_ptr(true);
-    scratch_lock_array_cuda_space_ptr(true);
-    threadid_lock_array_cuda_space_ptr(true);
+    Impl::finalize_host_cuda_lock_arrays();
 
     if ( m_stream ) {
       for ( size_type i = 1 ; i < m_streamCount ; ++i ) {
