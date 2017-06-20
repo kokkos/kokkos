@@ -105,7 +105,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
 {
   using execution_space = Kokkos::OpenMP ;
   using queue_type      = TaskQueue< execution_space > ;
-  using task_root_type  = TaskBase< execution_space , void , void > ;
+  using task_root_type  = TaskBase< void , void , void > ;
   using Member          = Impl::HostThreadTeamMember< execution_space > ;
 
   static task_root_type * const end =
@@ -211,7 +211,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::
 {
   using execution_space = Kokkos::OpenMP ;
   using queue_type      = TaskQueue< execution_space > ;
-  using task_root_type  = TaskBase< execution_space , void , void > ;
+  using task_root_type  = TaskBase< void , void , void > ;
   using Member          = Impl::HostThreadTeamMember< execution_space > ;
 
   if ( 1 == OpenMP::thread_pool_size() ) {
