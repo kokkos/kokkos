@@ -58,6 +58,8 @@ template class TaskQueue< Kokkos::Cuda > ;
 
 //----------------------------------------------------------------------------
 
+#if defined( KOKKOS_DEBUG )
+
 __device__
 void verify_warp_convergence( const char * const where )
 {
@@ -77,6 +79,8 @@ printf(" verify_warp_convergence( %s ) (%d,%d,%d) (%d,%d,%d) failed %x\n"
 
   }
 }
+
+#endif // #if defined( KOKKOS_DEBUG )
 
 //----------------------------------------------------------------------------
 
@@ -135,26 +139,33 @@ printf("TaskQueue<Cuda>::driver(%d,%d) task(%lx)\n",threadIdx.z,blockIdx.x
     ((int*) & task_ptr )[0] = __shfl( ((int*) & task_ptr )[0] , 0 );
     ((int*) & task_ptr )[1] = __shfl( ((int*) & task_ptr )[1] , 0 );
 
-    // verify_warp_convergence("task_ptr");
+#if defined( KOKKOS_DEBUG )
+    verify_warp_convergence("task_ptr");
+#endif
 
     if ( 0 == task_ptr ) break ; // 0 == queue->m_ready_count
 
     if ( end != task_ptr ) {
 
-      // Copy task's closure memory to shared memory:
+      // Whole warp copy task's closure to/from shared memory.
+      // Use all threads of warp for coalesced read/write.
 
       int32_t const b = sizeof(task_root_type) / sizeof(int32_t);
       int32_t const e = *((int32_t volatile *)( & task_ptr->m_alloc_size )) / sizeof(int32_t);
 
       int32_t volatile * const task_mem = (int32_t volatile *) task_ptr ;
 
-      // Copy entire task data structure to shared memory:
+      // copy global to shared memory:
 
       for ( int32_t i = warp_lane ; i < e ; i += CudaTraits::WarpSize ) {
         warp_shmem[i] = task_mem[i] ;
       }
 
       Kokkos::memory_fence();
+
+      // Copy done - use memory fence so that memory writes are visible.
+      // For reliable warp convergence on Pascal and Volta an explicit
+      // warp level synchronization will also be required.
 
       if ( task_root_type::TaskTeam == task_shmem->m_task_type ) {
         // Thread Team Task
@@ -165,7 +176,7 @@ printf("TaskQueue<Cuda>::driver(%d,%d) task(%lx)\n",threadIdx.z,blockIdx.x
         (*task_shmem->m_apply)( task_shmem , & single_exec );
       }
 
-      // Copy closure back to main memory:
+      // copy shared to global memory:
 
       for ( int32_t i = b + warp_lane ; i < e ; i += CudaTraits::WarpSize ) {
         task_mem[i] = warp_shmem[i] ;
@@ -173,7 +184,9 @@ printf("TaskQueue<Cuda>::driver(%d,%d) task(%lx)\n",threadIdx.z,blockIdx.x
 
       Kokkos::memory_fence();
 
-      // verify_warp_convergence("apply");
+#if defined( KOKKOS_DEBUG )
+    verify_warp_convergence("apply");
+#endif
 
       // If respawn requested copy respawn data back to main memory
 

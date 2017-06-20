@@ -44,6 +44,8 @@
 #include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_TASKDAG )
 
+#define KOKKOS_IMPL_DEBUG_TASKDAG_SCHEDULING 0
+
 namespace Kokkos {
 namespace Impl {
 
@@ -104,13 +106,13 @@ void TaskQueue< ExecSpace >::decrement
 
   const int count = Kokkos::atomic_fetch_add(&(t.m_ref_count),-1);
 
-#if 0
+#if KOKKOS_IMPL_DEBUG_TASKDAG_SCHEDULING
   if ( 1 == count ) {
     printf( "decrement-destroy( 0x%lx { 0x%lx %d %d } )\n"
           , uintptr_t( task )
-          , uintptr_t( task.m_next )
-          , int( task.m_task_type )
-          , int( task.m_ref_count )
+          , uintptr_t( task->m_next )
+          , int( task->m_task_type )
+          , int( task->m_ref_count )
           );
   }
 #endif
@@ -177,7 +179,7 @@ bool TaskQueue< ExecSpace >::push_task
   // Fail the push attempt if the queue is locked;
   // otherwise retry until the push succeeds.
 
-#if 0
+#if KOKKOS_IMPL_DEBUG_TASKDAG_SCHEDULING
   printf( "push_task( 0x%lx { 0x%lx } 0x%lx { 0x%lx 0x%lx %d %d %d } )\n"
         , uintptr_t(queue)
         , uintptr_t(*queue)
@@ -282,7 +284,7 @@ TaskQueue< ExecSpace >::pop_ready_task
 
       Kokkos::memory_fence();
 
-#if 0
+#if KOKKOS_IMPL_DEBUG_TASKDAG_SCHEDULING
       printf( "pop_ready_task( 0x%lx 0x%lx { 0x%lx 0x%lx %d %d %d } )\n"
             , uintptr_t(queue)
             , uintptr_t(task)
@@ -331,7 +333,7 @@ void TaskQueue< ExecSpace >::schedule_runnable
   //     task->m_wait == head of linked list (queue)
   //     task->m_next == member of linked list (queue)
 
-#if 0
+#if KOKKOS_IMPL_DEBUG_TASKDAG_SCHEDULING
   printf( "schedule_runnable( 0x%lx { 0x%lx 0x%lx %d %d %d }\n"
         , uintptr_t(task)
         , uintptr_t(task->m_wait)
@@ -453,7 +455,7 @@ void TaskQueue< ExecSpace >::schedule_aggregate
   //     task->m_wait == head of linked list (queue)
   //     task->m_next == member of linked list (queue)
 
-#if 0
+#if KOKKOS_IMPL_DEBUG_TASKDAG_SCHEDULING
   printf( "schedule_aggregate( 0x%lx { 0x%lx 0x%lx %d %d %d }\n"
         , uintptr_t(task)
         , uintptr_t(task->m_wait)
@@ -587,7 +589,7 @@ void TaskQueue< ExecSpace >::complete
   task_root_type * const lock = (task_root_type *) task_root_type::LockTag ;
   task_root_type * const end  = (task_root_type *) task_root_type::EndTag ;
 
-#if 0
+#if KOKKOS_IMPL_DEBUG_TASKDAG_SCHEDULING
   printf( "complete( 0x%lx { 0x%lx 0x%lx %d %d %d }\n"
         , uintptr_t(task)
         , uintptr_t(task->m_wait)
