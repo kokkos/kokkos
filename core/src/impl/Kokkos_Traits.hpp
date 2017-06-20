@@ -491,28 +491,6 @@ struct is_integral_constant< integral_constant<T,v> > : public true_
   enum { integral_value = v };
 };
 
-//----------------------------------------------------------------------------
-
-template< typename T , unsigned align >
-struct Sizeof {
-  static_assert( is_power_of_two< align >::value
-               , "alignment must be power of two" );
-  
-  KOKKOS_INLINE_FUNCTION static
-  unsigned value()
-    {
-      enum : unsigned { mask = align - 1 };
-      return ( sizeof(T) + mask ) & ~mask ;
-    }
-};
-
-template< unsigned align >
-struct Sizeof< void , align >
-{
-  KOKKOS_INLINE_FUNCTION static
-  unsigned value() { return 0 ; }
-};
-
 } // namespace Impl
 } // namespace Kokkos
 

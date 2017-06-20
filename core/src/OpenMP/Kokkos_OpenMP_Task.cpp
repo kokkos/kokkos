@@ -155,7 +155,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
             if ( 0 != task && end != task ) {
               // team member #0 completes the previously executed task,
               // completion may delete the task
-              queue->complete_runnable( task );
+              queue->complete( task );
             }
 
             // If 0 == m_ready_count then set task = 0
@@ -240,7 +240,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::
 
       (*task->m_apply)( task , & single_exec );
 
-      queue->complete_runnable( task );
+      queue->complete( task );
 
     } while(1);
   }

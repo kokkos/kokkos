@@ -117,7 +117,6 @@ void TaskQueue< ExecSpace >::decrement
 
   if ( ( 1 == count ) &&
        ( t.m_next == (task_root_type *) task_root_type::LockTag ) ) {
-
     // Reference count is zero and task is complete, deallocate.
 
     TaskQueue< ExecSpace > * const queue =
@@ -126,8 +125,6 @@ void TaskQueue< ExecSpace >::decrement
     queue->deallocate( task , t.m_alloc_size );
   }
   else if ( count <= 1 ) {
-    // Reference count is negative or 
-    // Reference count is zero and task is incomplete
     Kokkos::abort("TaskScheduler task has negative reference count or is incomplete" );
   }
 }
@@ -308,46 +305,70 @@ TaskQueue< ExecSpace >::pop_ready_task
 template< typename ExecSpace >
 KOKKOS_FUNCTION
 void TaskQueue< ExecSpace >::schedule_runnable
-  ( TaskQueue< ExecSpace >::task_root_type * const task
-  , TaskQueue< ExecSpace >::task_root_type * const dep )
+  ( TaskQueue< ExecSpace >::task_root_type * const task )
 {
   // Schedule a runnable task upon construction / spawn
   // and upon completion of other tasks that 'task' is waiting on.
   //
   // Precondition:
-  //   - called by a single thread for the input task
-  //   - calling thread has exclusive access to the task
+  // - called by a single thread for the input task
+  // - calling thread has exclusive access to the task
+  // - task is not a member of a queue
+  // - if runnable then task is either constructing or respawning
   //
-  //   task->m_wait == head of queue (linked list)
-  //   task->m_next == 0 ; not a member of a queue (linked list)
+  //   Constructing state:
+  //     task->m_wait == 0
+  //     task->m_next == dependence or 0
+  //   Respawn state:
+  //     task->m_wait == head of linked list: 'end' or valid task
+  //     task->m_next == dependence or 0
   //
   //  Task state transition:
   //     Constructing ->  Waiting
   //     Respawn      ->  Waiting
   //
   //  Postcondition on task state:
-  //     task->m_wait == head of queue (linked list)
-  //     task->m_next == member of queue (linked list)
+  //     task->m_wait == head of linked list (queue)
+  //     task->m_next == member of linked list (queue)
 
 #if 0
-  printf( "schedule_runnable( 0x%lx { 0x%lx 0x%lx %d %d %d } 0x%lx\n"
+  printf( "schedule_runnable( 0x%lx { 0x%lx 0x%lx %d %d %d }\n"
         , uintptr_t(task)
         , uintptr_t(task->m_wait)
         , uintptr_t(task->m_next)
         , task->m_task_type
         , task->m_priority
-        , task->m_ref_count
-        , uintptr_t(dep) );
+        , task->m_ref_count );
 #endif
+
+  task_root_type * const zero = (task_root_type *) 0 ;
+  task_root_type * const lock = (task_root_type *) task_root_type::LockTag ;
+  task_root_type * const end  = (task_root_type *) task_root_type::EndTag ;
 
   task_root_type volatile & t = *task ;
 
+  bool respawn = false ;
+
   //----------------------------------------
 
-  if ( ((task_root_type *) task_root_type::LockTag) == t.m_wait ||
-       ((task_root_type *) 0)                       == t.m_wait ||
-       ((task_root_type *) 0)                       != t.m_next ) {
-    Kokkos::abort("TaskQueue::schedule_runnable ERROR: task is not constructing or respawning");
+  if ( zero == t.m_wait ) {
+    // Task in Constructing state
+    // - Transition to Waiting state
+    // Preconditions:
+    // - call occurs exclusively within a single thread
+
+    t.m_wait = end ;
+    // Task in Waiting state
+  }
+  else if ( lock != t.m_wait ) {
+    // Task in Executing state with Respawn request
+    // - Update dependence
+    // - Transition to Waiting state
+    respawn = true ;
+  }
+  else {
+    // Task in Complete state
+    Kokkos::abort("TaskQueue::schedule_runnable ERROR: task is complete");
   }
 
   //----------------------------------------
@@ -360,7 +381,26 @@ void TaskQueue< ExecSpace >::schedule_runnable
   // If the push fails then 'dep' is complete and 'task'
   // is ready to execute.
 
-  if ( ( 0 == dep ) || ( ! push_task( & dep->m_wait , task ) ) ) {
+  // Exclusive access so don't need an atomic exchange
+  // task_root_type * dep = Kokkos::atomic_exchange( & task->m_next , zero );
+  task_root_type * dep = t.m_next ; t.m_next = zero ;
+
+  Kokkos::memory_fence();
+
+  const bool is_ready =
+    ( 0 == dep ) || ( ! push_task( & dep->m_wait , task ) );
+
+  if ( ( 0 != dep ) && respawn ) {
+    // Reference count for dep was incremented when
+    // respawn assigned dependency to task->m_next
+    // so that if dep completed prior to the
+    // above push_task dep would not be destroyed.
+    // dep reference count can now be decremented,
+    // which may deallocate the task.
+    TaskQueue::assign( & dep , (task_root_type *)0 );
+  }
+
+  if ( is_ready ) {
 
     // No dependence or 'dep' is complete so push task into ready queue.
     // Increment the ready count before pushing into ready queue
@@ -392,14 +432,26 @@ void TaskQueue< ExecSpace >::schedule_runnable
 template< typename ExecSpace >
 KOKKOS_FUNCTION
 void TaskQueue< ExecSpace >::schedule_aggregate
-  ( TaskQueue< ExecSpace >::task_root_type * task )
+  ( TaskQueue< ExecSpace >::task_root_type * const task )
 {
   // Schedule an aggregate task upon construction
   // and upon completion of other tasks that 'task' is waiting on.
   //
   // Precondition:
-  //   - called by a single thread for the input task
-  //   - calling thread has exclusive access to the task
+  // - called by a single thread for the input task
+  // - calling thread has exclusive access to the task
+  // - task is not a member of a queue
+  //
+  //   Constructing state:
+  //     task->m_wait == 0
+  //     task->m_next == dependence or 0
+  //
+  //  Task state transition:
+  //     Constructing ->  Waiting
+  //
+  //  Postcondition on task state:
+  //     task->m_wait == head of linked list (queue)
+  //     task->m_next == member of linked list (queue)
 
 #if 0
   printf( "schedule_aggregate( 0x%lx { 0x%lx 0x%lx %d %d %d }\n"
@@ -412,68 +464,70 @@ void TaskQueue< ExecSpace >::schedule_aggregate
 #endif
 
   task_root_type * const zero = (task_root_type *) 0 ;
-  task_root_type * const end  = (task_root_type *) task_root_type::EndTag ;
   task_root_type * const lock = (task_root_type *) task_root_type::LockTag ;
+  task_root_type * const end  = (task_root_type *) task_root_type::EndTag ;
+
+  task_root_type volatile & t = *task ;
+
+  //----------------------------------------
+
+  if ( zero == t.m_wait ) {
+    // Task in Constructing state
+    // - Transition to Waiting state
+    // Preconditions:
+    // - call occurs exclusively within a single thread
+
+    t.m_wait = end ;
+    // Task in Waiting state
+  }
+  else if ( lock == t.m_wait ) {
+    // Task in Complete state
+    Kokkos::abort("TaskQueue::schedule_aggregate ERROR: task is complete");
+  }
+
+  //----------------------------------------
+  // Scheduling a 'when_all' task with multiple dependences.
+  // This scheduling may be called when the 'when_all' is
+  // (1) created or
+  // (2) being removed from a completed task's wait list.
+
+  task_root_type * volatile * const aggr = t.aggregate_dependences();
 
   // Assume the 'when_all' is complete until a dependence is
   // found that is not complete.
 
   bool is_complete = true ;
 
-  {
-    task_root_type volatile & t = *task ;
+  for ( int i = t.m_dep_count ; 0 < i && is_complete ; ) {
 
-    //----------------------------------------
+    --i ;
 
-    if ( lock == t.m_wait || zero == t.m_wait || zero != t.m_next ) {
-      Kokkos::abort("TaskQueue::schedule_aggregate ERROR: task is complete");
-    }
+    // Loop dependences looking for an incomplete task.
+    // Add this task to the incomplete task's wait queue.
 
-    //----------------------------------------
-    // Scheduling a 'when_all' task with multiple dependences.
-    // This scheduling may be called when the 'when_all' is
-    // (1) created or
-    // (2) being removed from a completed task's wait list.
+    // Remove a task 'x' from the dependence list.
+    // The reference count of 'x' was incremented when
+    // it was assigned into the dependence list.
 
-    task_root_type * volatile * const aggr = t.aggregate_dependences();
+    // Exclusive access so don't need an atomic exchange
+    // task_root_type * x = Kokkos::atomic_exchange( aggr + i , zero );
+    task_root_type * x = aggr[i] ; aggr[i] = zero ;
 
-    for ( int i = t.m_count ; 0 < i && is_complete ; ) {
+    if ( x ) {
 
-      --i ;
+      // If x->m_wait is not locked then push succeeds
+      // and the aggregate is not complete.
+      // If the push succeeds then this when_all 'task' may be
+      // processed by another thread at any time.
+      // For example, 'x' may be completeed by another
+      // thread and then re-schedule this when_all 'task'.
 
-      // Loop dependences looking for an incomplete task.
-      // Add this task to the incomplete task's wait queue.
+      is_complete = ! push_task( & x->m_wait , task );
 
-      // Remove a task 'x' from the dependence list.
-      // The reference count of 'x' was incremented when
-      // it was assigned into the dependence list.
+      // Decrement reference count which had been incremented
+      // when 'x' was added to the dependence list.
 
-      // Exclusive access so don't need an atomic exchange
-
-      task_root_type * x = aggr[i] ;
-
-      if ( zero != x ) {
-
-        aggr[i] = 0 ;
-
-        Kokkos::memory_fence();
-
-        // If x->m_wait is not locked then push succeeds
-        // and the aggregate is not complete.
-        // If the push succeeds then this when_all 'task' may be
-        // processed by another thread at any time.
-        // For example, 'x' may be completeed by another
-        // thread and then re-schedule this when_all 'task'.
-
-        is_complete = ! push_task( & x->m_wait , task );
-
-        // task 'x' is in a queue and could be updated at any time..
-
-        // Decrement reference count which had been incremented
-        // when 'x' was added to the dependence list.
-
-        TaskQueue::assign( & x , zero );
-      }
+      TaskQueue::assign( & x , zero );
     }
   }
 
@@ -483,49 +537,10 @@ void TaskQueue< ExecSpace >::schedule_aggregate
     // Complete the when_all 'task' to schedule other tasks
     // that are waiting for the when_all 'task' to complete.
 
+    t.m_next = lock ;
 
-    // Any of the runnable tasks that this aggregate depends upon
-    // may be attempting to complete this aggregate.
-    // Must only transition a task once to complete status.
-    // This is controled by atomically locking the wait queue.
+    complete( task );
 
-    // Stop other tasks from adding themselves to this task's wait queue
-    // by locking the head of this task's wait queue.
-
-    task_root_type * x = Kokkos::atomic_exchange( & task->m_wait , lock );
-
-    if ( lock != x ) {
-
-      // This thread has transitioned this aggregate to complete.
-
-      task->m_next = lock ;
-
-      Kokkos::memory_fence();
-
-      TaskQueue::assign( & task , zero );
-
-      // task may have just been deallocated
-
-      // This thread has exclusive access to the wait list so
-      // the concurrency-safe pop_ready_task function is not needed.
-      // Schedule the tasks that have been waiting on the input 'task',
-      // which may have been deleted.
-
-      while ( x != end ) {
-        // Have exclusive access to 'x' until it is scheduled
-        // Set x->m_next = zero  <=  not in a queue
-
-        task_root_type volatile & vx = *x ;
-
-        task_root_type * const next = vx.m_next ; vx.m_next = 0 ;
-
-        Kokkos::memory_fence();
-
-        schedule_runnable( x , zero );
-
-        x = next ;
-      }
-    }
     // '*task' may have been deleted upon completion
   }
 
@@ -540,7 +555,29 @@ void TaskQueue< ExecSpace >::schedule_aggregate
 
 template< typename ExecSpace >
 KOKKOS_FUNCTION
-void TaskQueue< ExecSpace >::complete_runnable
+void TaskQueue< ExecSpace >::reschedule( task_root_type * task )
+{
+  // Precondition:
+  //   task is in Executing state
+  //   task->m_next == LockTag
+  //
+  // Postcondition:
+  //   task is in Executing-Respawn state
+  //   task->m_next == 0 (no dependence)
+
+  task_root_type * const zero = (task_root_type *) 0 ;
+  task_root_type * const lock = (task_root_type *) task_root_type::LockTag ;
+
+  if ( lock != Kokkos::atomic_exchange( & task->m_next, zero ) ) {
+    Kokkos::abort("TaskScheduler::respawn ERROR: already respawned");
+  }
+}
+
+//----------------------------------------------------------------------------
+
+template< typename ExecSpace >
+KOKKOS_FUNCTION
+void TaskQueue< ExecSpace >::complete
   ( TaskQueue< ExecSpace >::task_root_type * task )
 {
   // Complete a runnable task that has finished executing
@@ -563,41 +600,23 @@ void TaskQueue< ExecSpace >::complete_runnable
 
   task_root_type volatile & t = *task ;
 
+  const bool runnable = task_root_type::Aggregate != t.m_task_type ;
+
   //----------------------------------------
 
-  task_root_type * dep = t.m_next ;
+  if ( runnable && lock != t.m_next ) {
+    // Is a runnable task has finished executing and requested respawn.
+    // Schedule the task for subsequent execution.
 
-  if ( lock != dep ) {
-
-    // Requested respawn.  Schedule the task for subsequent execution.
-
-    // Exclusive access so don't need an atomic exchange
-    // task_root_type * dep = Kokkos::atomic_exchange( & task->m_next , zero );
-
-    if ( zero != dep ) {
-
-      t.m_next = zero ;
-
-      Kokkos::memory_fence();
-    }
-
-    schedule_runnable( task , dep );
-
-    if ( zero != dep ) {
-      // Reference count for dep was incremented when
-      // respawn assigned dependency to task->m_next
-      // so that if dep completed prior to the
-      // above push_task dep would not be destroyed.
-      // dep reference count can now be decremented,
-      // which may deallocate the task.
-
-      TaskQueue::assign( & dep , zero );
-    }
+    schedule_runnable( task );
   }
   //----------------------------------------
   else {
-    // Did not request respawn.  Transition this task to complete.
+    // Is either an aggregate or a runnable task that executed
+    // and did not respawn.  Transition this task to complete.
 
+    // If 'task' is an aggregate then any of the runnable tasks that
+    // it depends upon may be attempting to complete this 'task'.
     // Must only transition a task once to complete status.
     // This is controled by atomically locking the wait queue.
 
@@ -606,7 +625,7 @@ void TaskQueue< ExecSpace >::complete_runnable
 
     task_root_type * x = Kokkos::atomic_exchange( & t.m_wait , lock );
 
-    if ( lock != x ) {
+    if ( x != (task_root_type *) lock ) {
 
       // This thread has transitioned this 'task' to complete.
       // 'task' is no longer in a queue and is not executing
@@ -631,7 +650,7 @@ void TaskQueue< ExecSpace >::complete_runnable
         Kokkos::memory_fence();
 
         if ( task_root_type::Aggregate != vx.m_task_type ) {
-          schedule_runnable( x , zero );
+          schedule_runnable( x );
         }
         else {
           schedule_aggregate( x );
@@ -642,10 +661,12 @@ void TaskQueue< ExecSpace >::complete_runnable
     }
   }
 
-  // A runnable task was popped from a ready queue and executed.
-  // If respawned into a ready queue then the ready count was incremented
-  // so decrement whether respawned or not.
-  Kokkos::atomic_decrement( & m_ready_count );
+  if ( runnable ) {
+    // A runnable task was popped from a ready queue and executed.
+    // If respawned into a ready queue then the ready count was incremented
+    // so decrement whether respawned or not.
+    Kokkos::atomic_decrement( & m_ready_count );
+  }
 }
 
 //----------------------------------------------------------------------------

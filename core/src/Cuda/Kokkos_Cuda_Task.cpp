@@ -59,6 +59,28 @@ template class TaskQueue< Kokkos::Cuda > ;
 //----------------------------------------------------------------------------
 
 __device__
+void verify_warp_convergence( const char * const where )
+{
+  const unsigned b = __ballot(1);
+
+  if ( b != ~0u ) {
+
+printf(" verify_warp_convergence( %s ) (%d,%d,%d) (%d,%d,%d) failed %x\n"
+      , where
+      , blockIdx.x
+      , blockIdx.y
+      , blockIdx.z
+      , threadIdx.x
+      , threadIdx.y
+      , threadIdx.z
+      , b );
+
+  }
+}
+
+//----------------------------------------------------------------------------
+
+__device__
 void TaskQueueSpecialization< Kokkos::Cuda >::driver
   ( TaskQueueSpecialization< Kokkos::Cuda >::queue_type * const queue 
   , int32_t shmem_per_warp )
@@ -73,6 +95,8 @@ void TaskQueueSpecialization< Kokkos::Cuda >::driver
 
   int32_t * const warp_shmem =
     shmem_all + ( threadIdx.z * shmem_per_warp ) / sizeof(int32_t);
+
+  task_root_type * const task_shmem = (task_root_type *) warp_shmem ;
 
   const int warp_lane = threadIdx.x + threadIdx.y * blockDim.x ;
 
@@ -104,23 +128,22 @@ printf("TaskQueue<Cuda>::driver(%d,%d) task(%lx)\n",threadIdx.z,blockIdx.x
       , uintptr_t(task_ptr));
 #endif
 
-      *( (task_root_type **) warp_shmem ) = task_ptr ;
-
-      Kokkos::memory_fence();
     }
 
-    // warp synchronization...
+    // shuffle broadcast
 
-    task_ptr = *( (task_root_type **) warp_shmem );
+    ((int*) & task_ptr )[0] = __shfl( ((int*) & task_ptr )[0] , 0 );
+    ((int*) & task_ptr )[1] = __shfl( ((int*) & task_ptr )[1] , 0 );
+
+    // verify_warp_convergence("task_ptr");
 
     if ( 0 == task_ptr ) break ; // 0 == queue->m_ready_count
 
     if ( end != task_ptr ) {
 
-      // Copy task's closure memory to shared memory to
-      // 1) avoid L1 cache non-coherency and
-      // 2) allow user's task code to be non-volatile.
+      // Copy task's closure memory to shared memory:
 
+      int32_t const b = sizeof(task_root_type) / sizeof(int32_t);
       int32_t const e = *((int32_t volatile *)( & task_ptr->m_alloc_size )) / sizeof(int32_t);
 
       int32_t volatile * const task_mem = (int32_t volatile *) task_ptr ;
@@ -133,8 +156,6 @@ printf("TaskQueue<Cuda>::driver(%d,%d) task(%lx)\n",threadIdx.z,blockIdx.x
 
       Kokkos::memory_fence();
 
-      task_root_type * const task_shmem = (task_root_type *) warp_shmem ;
-
       if ( task_root_type::TaskTeam == task_shmem->m_task_type ) {
         // Thread Team Task
         (*task_shmem->m_apply)( task_shmem , & team_exec );
@@ -144,41 +165,26 @@ printf("TaskQueue<Cuda>::driver(%d,%d) task(%lx)\n",threadIdx.z,blockIdx.x
         (*task_shmem->m_apply)( task_shmem , & single_exec );
       }
 
-      // warp synchronization...
+      // Copy closure back to main memory:
+
+      for ( int32_t i = b + warp_lane ; i < e ; i += CudaTraits::WarpSize ) {
+        task_mem[i] = warp_shmem[i] ;
+      }
 
       Kokkos::memory_fence();
 
-      if ( task_shmem->requested_respawn() ) {
+      // verify_warp_convergence("apply");
 
-        // If a respawn request then copy the entire closure
-        // and the respawn request data back to main memory.
-        // Do not copy other task scheduling data
-        // as this may have changed during execution of the task.
-
-        for ( int32_t i = warp_lane + sizeof(task_root_type) / sizeof(int32_t)
-            ; i < e ; i += CudaTraits::WarpSize ) {
-          task_mem[i] = warp_shmem[i] ;
-        }
-
-        if ( 0 == warp_lane ) {
-          ((volatile task_root_type *) task_ptr)->m_next = task_shmem->m_next ;
-          ((volatile task_root_type *) task_ptr)->m_priority = task_shmem->m_priority ;
-        }
-      }
-      else {
-        // Else copy just the result value back to main memory.
-        for ( int32_t i = warp_lane + e - ( task_shmem->m_count / sizeof(int32_t) )
-            ; i < e ; i += CudaTraits::WarpSize ) {
-          task_mem[i] = warp_shmem[i] ;
-        }
-      }
-
-      // warp synchronization...
-
-      Kokkos::memory_fence();
+      // If respawn requested copy respawn data back to main memory
 
       if ( 0 == warp_lane ) {
-        queue->complete_runnable( task_ptr );
+
+        if ( ((task_root_type *) task_root_type::LockTag) != task_shmem->m_next ) {
+          ( (volatile task_root_type *) task_ptr )->m_next = task_shmem->m_next ;
+          ( (volatile task_root_type *) task_ptr )->m_priority = task_shmem->m_priority ;
+        }
+
+        queue->complete( task_ptr );
       }
     }
   } while(1);

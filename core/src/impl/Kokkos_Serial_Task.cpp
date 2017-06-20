@@ -108,7 +108,7 @@ void TaskQueueSpecialization< Kokkos::Serial >::execute
 
       // If a respawn then re-enqueue otherwise the task is complete
       // and all tasks waiting on this task are updated.
-      queue->complete_runnable( task );
+      queue->complete( task );
     }
     else if ( 0 != queue->m_ready_count ) {
       Kokkos::abort("TaskQueue<Serial>::execute ERROR: ready_count");
@@ -149,7 +149,7 @@ void TaskQueueSpecialization< Kokkos::Serial > ::
 
     (*task->m_apply)( task , & exec );
 
-    queue->complete_runnable( task );
+    queue->complete( task );
 
   } while(1);
 }

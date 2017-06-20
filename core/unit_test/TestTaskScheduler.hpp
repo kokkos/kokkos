@@ -643,7 +643,7 @@ TEST_F( TEST_CATEGORY, task_fib )
 {
   const int N = 27 ;
   for ( int i = 0; i < N; ++i ) {
-    TestTaskScheduler::TestFib< TEST_EXECSPACE >::run( i , ( i + 1 ) * ( i + 1 ) * 10000 );
+    TestTaskScheduler::TestFib< TEST_EXECSPACE >::run( i , ( i + 1 ) * ( i + 1 ) * 2000 );
   }
 }
 
@@ -661,6 +661,7 @@ TEST_F( TEST_CATEGORY, task_team )
 }
 
 }
+
 #endif // #if defined( KOKKOS_ENABLE_TASKDAG )
 #endif // #ifndef KOKKOS_UNITTEST_TASKSCHEDULER_HPP
 
