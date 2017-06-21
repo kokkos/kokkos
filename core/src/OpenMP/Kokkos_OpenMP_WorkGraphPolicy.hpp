@@ -1,8 +1,6 @@
 #ifndef KOKKOS_OPENMP_WORKGRAPHPOLICY_HPP
 #define KOKKOS_OPENMP_WORKGRAPHPOLICY_HPP
 
-#if defined( KOKKOS_ENABLE_OPENMP )
-
 namespace Kokkos {
 namespace Impl {
 
@@ -63,5 +61,4 @@ public:
 } // namespace Impl
 } // namespace Kokkos
 
-#endif // defined( KOKKOS_ENABLE_OPENMP )
 #endif /* #define KOKKOS_OPENMP_WORKGRAPHPOLICY_HPP */

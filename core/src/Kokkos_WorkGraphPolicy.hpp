@@ -191,9 +191,20 @@ class WorkGraphExec
 } // namespace Experimental
 } // namespace Kokkos
 
+#ifdef KOKKOS_ENABLE_SERIAL
 #include "impl/Kokkos_Serial_WorkGraphPolicy.hpp"
+#endif
+
+#ifdef KOKKOS_ENABLE_OPENMP
 #include "OpenMP/Kokkos_OpenMP_WorkGraphPolicy.hpp"
+#endif
+
+#ifdef KOKKOS_ENABLE_CUDA
 #include "Cuda/Kokkos_Cuda_WorkGraphPolicy.hpp"
+#endif
+
+#ifdef KOKKOS_ENABLE_THREADS
 #include "Threads/Kokkos_Threads_WorkGraphPolicy.hpp"
+#endif
 
 #endif /* #define KOKKOS_WORKGRAPHPOLICY_HPP */

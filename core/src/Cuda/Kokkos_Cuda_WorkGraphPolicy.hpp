@@ -1,8 +1,6 @@
 #ifndef KOKKOS_CUDA_WORKGRAPHPOLICY_HPP
 #define KOKKOS_CUDA_WORKGRAPHPOLICY_HPP
 
-#if defined( KOKKOS_ENABLE_CUDA )
-
 namespace Kokkos {
 namespace Impl {
 
@@ -73,5 +71,4 @@ public:
 } // namespace Impl
 } // namespace Kokkos
 
-#endif // defined( KOKKOS_ENABLE_CUDA )
 #endif /* #define KOKKOS_CUDA_WORKGRAPHPOLICY_HPP */

@@ -1,8 +1,6 @@
 #ifndef KOKKOS_SERIAL_WORKGRAPHPOLICY_HPP
 #define KOKKOS_SERIAL_WORKGRAPHPOLICY_HPP
 
-#if defined( KOKKOS_ENABLE_SERIAL )
-
 namespace Kokkos {
 namespace Impl {
 
@@ -58,5 +56,4 @@ public:
 } // namespace Impl
 } // namespace Kokkos
 
-#endif // defined( KOKKOS_ENABLE_SERIAL )
 #endif /* #define KOKKOS_SERIAL_WORKGRAPHPOLICY_HPP */

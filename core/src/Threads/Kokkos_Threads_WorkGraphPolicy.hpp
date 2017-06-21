@@ -1,8 +1,6 @@
 #ifndef KOKKOS_THREADS_WORKGRAPHPOLICY_HPP
 #define KOKKOS_THREADS_WORKGRAPHPOLICY_HPP
 
-#if defined( KOKKOS_ENABLE_THREADS )
-
 namespace Kokkos {
 namespace Impl {
 
@@ -71,5 +69,4 @@ public:
 } // namespace Impl
 } // namespace Kokkos
 
-#endif // defined( KOKKOS_ENABLE_THREADS )
 #endif /* #define KOKKOS_THREADS_WORKGRAPHPOLICY_HPP */
