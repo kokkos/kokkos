@@ -47,7 +47,7 @@
 #include <string>
 #include <iosfwd>
 #include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_HAVE_CUDA
+#ifdef KOKKOS_ENABLE_CUDA
 #include <Cuda/Kokkos_Cuda_abort.hpp>
 #endif
 
@@ -75,7 +75,9 @@ void abort( const char * const message ) {
 #ifdef __CUDA_ARCH__
   Kokkos::Impl::cuda_abort(message);
 #else
-  Kokkos::Impl::host_abort(message);
+  #ifndef KOKKOS_ENABLE_OPENMPTARGET
+    Kokkos::Impl::host_abort(message);
+  #endif
 #endif
 }
 

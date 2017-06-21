@@ -1,5 +1,98 @@
 # Change Log
 
+
+## [2.03.05](https://github.com/kokkos/kokkos/tree/2.03.05) (2017-05-27)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/2.03.00...2.03.05)
+
+**Implemented enhancements:**
+
+- Harmonize Custom Reductions over nesting levels [\#802](https://github.com/kokkos/kokkos/issues/802)
+- Prevent users directly including KokkosCore\_config.h [\#815](https://github.com/kokkos/kokkos/issues/815)
+- DualView aborts on concurrent host/device modify \(in debug mode\) [\#814](https://github.com/kokkos/kokkos/issues/814)
+- Abort when running on a NVIDIA CC5.0 or higher architecture with code compiled for CC \< 5.0 [\#813](https://github.com/kokkos/kokkos/issues/813)
+- Add "name" function to ExecSpaces [\#806](https://github.com/kokkos/kokkos/issues/806)
+- Allow null Future in task spawn dependences [\#795](https://github.com/kokkos/kokkos/issues/795)
+- Add Unit Tests for Kokkos::complex [\#785](https://github.com/kokkos/kokkos/issues/785)
+- Add pow function for Kokkos::complex [\#784](https://github.com/kokkos/kokkos/issues/784)
+- Square root of a complex [\#729](https://github.com/kokkos/kokkos/issues/729)
+- Command line processing of --threads argument prevents users from having any commandline arguments starting with --threads [\#760](https://github.com/kokkos/kokkos/issues/760)
+- Protected deprecated API with appropriate macro [\#756](https://github.com/kokkos/kokkos/issues/756)
+- Allow task scheduler memory pool to be used by tasks [\#747](https://github.com/kokkos/kokkos/issues/747)
+- View bounds checking on host-side performance: constructing a std::string [\#723](https://github.com/kokkos/kokkos/issues/723)
+- Add check for AppleClang as compiler distinct from check for Clang. [\#705](https://github.com/kokkos/kokkos/issues/705)
+- Uninclude source files for specific configurations to prevent link warning. [\#701](https://github.com/kokkos/kokkos/issues/701)
+- Add --small option to snapshot script [\#697](https://github.com/kokkos/kokkos/issues/697)
+- CMake Standalone Support [\#674](https://github.com/kokkos/kokkos/issues/674)
+- CMake build unit test and install [\#808](https://github.com/kokkos/kokkos/issues/808)
+- CMake: Fix having kokkos as a subdirectory in a pure cmake project [\#629](https://github.com/kokkos/kokkos/issues/629)
+- Tribits macro assumes build directory is in top level source directory [\#654](https://github.com/kokkos/kokkos/issues/654)
+- Use bin/nvcc\_wrapper, not config/nvcc\_wrapper [\#562](https://github.com/kokkos/kokkos/issues/562)
+- Allow MemoryPool::allocate\(\) to be called from multiple threads per warp. [\#487](https://github.com/kokkos/kokkos/issues/487)
+- Allow MemoryPool::allocate\\(\\) to be called from multiple threads per warp. [\#487](https://github.com/kokkos/kokkos/issues/487)
+- Move OpenMP 4.5 OpenMPTarget backend into Develop [\#456](https://github.com/kokkos/kokkos/issues/456)
+- Testing on ARM testbed [\#288](https://github.com/kokkos/kokkos/issues/288)
+
+**Fixed bugs:**
+
+- Fix label in OpenMP parallel\_reduce verify\_initialized [\#834](https://github.com/kokkos/kokkos/issues/834)
+- TeamScratch Level 1 on Cuda hangs [\#820](https://github.com/kokkos/kokkos/issues/820)
+- \[bug\] memory pool. [\#786](https://github.com/kokkos/kokkos/issues/786)
+- Some Reduction Tests fail on Intel 18 with aggressive vectorization on [\#774](https://github.com/kokkos/kokkos/issues/774)
+- Error copying dynamic view on copy of memory pool [\#773](https://github.com/kokkos/kokkos/issues/773)
+- CUDA stack overflow with TaskDAG test [\#758](https://github.com/kokkos/kokkos/issues/758)
+- ThreadVectorRange Customized Reduction Bug [\#739](https://github.com/kokkos/kokkos/issues/739)
+- set\_scratch\_size overflows  [\#726](https://github.com/kokkos/kokkos/issues/726)
+- Get wrong results for compiler checks in Makefile on OS X. [\#706](https://github.com/kokkos/kokkos/issues/706)
+- Fix check if multiple host architectures enabled. [\#702](https://github.com/kokkos/kokkos/issues/702)
+- Threads Backend Does not Pass on Cray Compilers [\#609](https://github.com/kokkos/kokkos/issues/609)
+- Rare bug in memory pool where allocation can finish on superblock in empty state [\#452](https://github.com/kokkos/kokkos/issues/452)
+- LDFLAGS in core/unit\_test/Makefile: potential "undefined reference" to pthread lib [\#148](https://github.com/kokkos/kokkos/issues/148)
+
+## [2.03.00](https://github.com/kokkos/kokkos/tree/2.03.00) (2017-04-25)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/2.02.15...2.03.00)
+
+**Implemented enhancements:**
+
+- UnorderedMap: make it accept Devices or MemorySpaces [\#711](https://github.com/kokkos/kokkos/issues/711)
+- sort to accept DynamicView and \[begin,end\) indices [\#691](https://github.com/kokkos/kokkos/issues/691)
+- ENABLE Macros should only be used via \#ifdef or \#if defined [\#675](https://github.com/kokkos/kokkos/issues/675)
+- Remove impl/Kokkos\_Synchronic\_\* [\#666](https://github.com/kokkos/kokkos/issues/666)
+- Turning off IVDEP for Intel 14.  [\#638](https://github.com/kokkos/kokkos/issues/638)
+- Using an installed Kokkos in a target application using CMake [\#633](https://github.com/kokkos/kokkos/issues/633)
+- Create Kokkos Bill of Materials [\#632](https://github.com/kokkos/kokkos/issues/632)
+- MDRangePolicy and tagged evaluators [\#547](https://github.com/kokkos/kokkos/issues/547)
+- Add PGI support [\#289](https://github.com/kokkos/kokkos/issues/289)
+
+**Fixed bugs:**
+
+- Output from PerTeam fails [\#733](https://github.com/kokkos/kokkos/issues/733)
+- Cuda: architecture flag not added to link line [\#688](https://github.com/kokkos/kokkos/issues/688)
+- Getting large chunks of memory for a thread team in a universal way [\#664](https://github.com/kokkos/kokkos/issues/664)
+- Kokkos RNG normal\(\) function hangs for small seed value [\#655](https://github.com/kokkos/kokkos/issues/655)
+- Kokkos Tests Errors on Shepard/HSW Builds [\#644](https://github.com/kokkos/kokkos/issues/644)
+
+## [2.02.15](https://github.com/kokkos/kokkos/tree/2.02.15) (2017-02-10)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/2.02.07...2.02.15)
+
+**Implemented enhancements:**
+
+- Containers: Adding block partitioning to StaticCrsGraph [\#625](https://github.com/kokkos/kokkos/issues/625)
+- Kokkos Make System can induce Errors on Cray Volta System [\#610](https://github.com/kokkos/kokkos/issues/610)
+- OpenMP: error out if KOKKOS\_HAVE\_OPENMP is defined but not \_OPENMP [\#605](https://github.com/kokkos/kokkos/issues/605)
+- CMake: fix standalone build with tests [\#604](https://github.com/kokkos/kokkos/issues/604)
+- Change README \(that GitHub shows when opening Kokkos project page\) to tell users how to submit PRs [\#597](https://github.com/kokkos/kokkos/issues/597)
+- Add correctness testing for all operators of Atomic View [\#420](https://github.com/kokkos/kokkos/issues/420)
+- Allow assignment of Views with compatible memory spaces [\#290](https://github.com/kokkos/kokkos/issues/290)
+- Build only one version of Kokkos library for tests [\#213](https://github.com/kokkos/kokkos/issues/213)
+- Clean out old KOKKOS\_HAVE\_CXX11 macros clauses [\#156](https://github.com/kokkos/kokkos/issues/156)
+- Harmonize Macro names [\#150](https://github.com/kokkos/kokkos/issues/150)
+
+**Fixed bugs:**
+
+- Cray and PGI: Kokkos\_Parallel\_Reduce [\#634](https://github.com/kokkos/kokkos/issues/634)
+- Kokkos Make System can induce Errors on Cray Volta System [\#610](https://github.com/kokkos/kokkos/issues/610)
+- Normal\(\) function random number generator doesn't give the expected distribution [\#592](https://github.com/kokkos/kokkos/issues/592)
+
 ## [2.02.07](https://github.com/kokkos/kokkos/tree/2.02.07) (2016-12-16)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/2.02.01...2.02.07)
 

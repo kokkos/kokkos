@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,14 +36,17 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_CUDA
+
 #include <iostream>
 #include <iomanip>
-#include <stdint.h>
+#include <cstdint>
 
 #include <gtest/gtest.h>
 
@@ -69,7 +72,6 @@
 //----------------------------------------------------------------------------
 
 
-#ifdef KOKKOS_HAVE_CUDA
 
 namespace Test {
 
@@ -96,6 +98,18 @@ TEST_F( cuda , staticcrsgraph )
 {
   TestStaticCrsGraph::run_test_graph< Kokkos::Cuda >();
   TestStaticCrsGraph::run_test_graph2< Kokkos::Cuda >();
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(1, 0);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(1, 1000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(1, 10000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(1, 100000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(3, 0);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(3, 1000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(3, 10000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(3, 100000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(75, 0);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(75, 1000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(75, 10000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::Cuda >(75, 100000);
 }
 
 
@@ -225,5 +239,7 @@ TEST_F(cuda, ErrorReporter)
 
 }
 
-#endif  /* #ifdef KOKKOS_HAVE_CUDA */
+#else
+void KOKKOS_CONTAINERS_UNIT_TESTS_TESTCUDA_PREVENT_EMPTY_LINK_ERROR() {}
+#endif  /* #ifdef KOKKOS_ENABLE_CUDA */
 

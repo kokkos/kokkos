@@ -226,3 +226,4 @@ struct PolicyTraits
 
 
 #endif //KOKKOS_IMPL_ANALYZE_POLICY_HPP
+

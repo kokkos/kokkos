@@ -41,6 +41,11 @@
 //@HEADER
 */
 
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+#include <xmmintrin.h>
+#endif
+
+#include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ATOMIC_HPP ) && ! defined( KOKKOS_ATOMIC_EXCHANGE_HPP )
 #define KOKKOS_ATOMIC_EXCHANGE_HPP
 
@@ -48,8 +53,8 @@ namespace Kokkos {
 
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_HAVE_CUDA )
-#if defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
+#if defined( KOKKOS_ENABLE_CUDA )
+#if defined(__CUDA_ARCH__) || defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 
 __inline__ __device__
 int atomic_exchange( volatile int * const dest , const int val )
@@ -80,6 +85,10 @@ T atomic_exchange(
   typename Kokkos::Impl::enable_if< sizeof(T) == sizeof(int) , const T & >::type val )
 {
   // int tmp = __ullAtomicExch( (int*) dest , *((int*)&val) );
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+#endif
+
   int tmp = atomicExch( ((int*)dest) , *((int*)&val) );
   return *((T*)&tmp);
 }
@@ -92,6 +101,11 @@ T atomic_exchange(
                                     sizeof(T) == sizeof(unsigned long long int) , const T & >::type val )
 {
   typedef unsigned long long int type ;
+
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+#endif
+
   // type tmp = __ullAtomicExch( (type*) dest , *((type*)&val) );
   type tmp = atomicExch( ((type*)dest) , *((type*)&val) );
   return *((T*)&tmp);
@@ -107,6 +121,10 @@ T atomic_exchange( volatile T * const dest ,
 {
   T return_val;
   // This is a way to (hopefully) avoid dead lock in a warp
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+#endif
+
   int done = 0;
   unsigned int active = __ballot(1);
   unsigned int done_active = 0;
@@ -162,8 +180,8 @@ void atomic_assign(
 
 //----------------------------------------------------------------------------
 
-#if !defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
-#if defined(KOKKOS_ATOMICS_USE_GCC) || defined(KOKKOS_ATOMICS_USE_INTEL)
+#if !defined(__CUDA_ARCH__) || defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
+#if defined(KOKKOS_ENABLE_GNU_ATOMICS) || defined(KOKKOS_ENABLE_INTEL_ATOMICS)
 
 template< typename T >
 inline
@@ -172,20 +190,19 @@ T atomic_exchange( volatile T * const dest ,
                                   , const T & >::type val )
 {
   typedef typename Kokkos::Impl::if_c< sizeof(T) == sizeof(int) , int , long >::type type ;
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+#endif
 
   const type v = *((type*)&val); // Extract to be sure the value doesn't change
 
   type assumed ;
 
-#ifdef KOKKOS_HAVE_CXX11
   union U {
     T val_T ;
     type val_type ;
     inline U() {};
   } old ;
-#else
-  union { T val_T ; type val_type ; } old ;
-#endif
 
   old.val_T = *dest ;
 
@@ -197,13 +214,17 @@ T atomic_exchange( volatile T * const dest ,
   return old.val_T ;
 }
 
-#if defined(KOKKOS_ENABLE_ASM) && defined ( KOKKOS_USE_ISA_X86_64 )
+#if defined(KOKKOS_ENABLE_ASM) && defined ( KOKKOS_ENABLE_ISA_X86_64 )
 template< typename T >
 inline
 T atomic_exchange( volatile T * const dest ,
   typename Kokkos::Impl::enable_if< sizeof(T) == sizeof(Impl::cas128_t)
                                   , const T & >::type val )
 {
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+#endif
+
   union U {
     Impl::cas128_t i ;
     T t ;
@@ -230,7 +251,7 @@ T atomic_exchange( volatile T * const dest ,
     typename Kokkos::Impl::enable_if<
                   ( sizeof(T) != 4 )
                && ( sizeof(T) != 8 )
-              #if defined(KOKKOS_ENABLE_ASM) && defined ( KOKKOS_USE_ISA_X86_64 )
+              #if defined(KOKKOS_ENABLE_ASM) && defined ( KOKKOS_ENABLE_ISA_X86_64 )
                && ( sizeof(T) != 16 )
               #endif
                  , const T >::type& val )
@@ -263,19 +284,19 @@ void atomic_assign( volatile T * const dest ,
 {
   typedef typename Kokkos::Impl::if_c< sizeof(T) == sizeof(int) , int , long >::type type ;
 
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+#endif
+
   const type v = *((type*)&val); // Extract to be sure the value doesn't change
 
   type assumed ;
 
-#ifdef KOKKOS_HAVE_CXX11
   union U {
     T val_T ;
     type val_type ;
     inline U() {};
   } old ;
-#else
-  union { T val_T ; type val_type ; } old ;
-#endif
 
   old.val_T = *dest ;
 
@@ -285,13 +306,17 @@ void atomic_assign( volatile T * const dest ,
   } while ( assumed != old.val_type );
 }
 
-#if defined( KOKKOS_ENABLE_ASM ) && defined ( KOKKOS_USE_ISA_X86_64 )
+#if defined( KOKKOS_ENABLE_ASM ) && defined ( KOKKOS_ENABLE_ISA_X86_64 )
 template< typename T >
 inline
 void atomic_assign( volatile T * const dest ,
   typename Kokkos::Impl::enable_if< sizeof(T) == sizeof(Impl::cas128_t)
                                   , const T & >::type val )
 {
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+#endif
+
   union U {
     Impl::cas128_t i ;
     T t ;
@@ -313,7 +338,7 @@ void atomic_assign( volatile T * const dest ,
     typename Kokkos::Impl::enable_if<
                   ( sizeof(T) != 4 )
                && ( sizeof(T) != 8 )
-              #if defined(KOKKOS_ENABLE_ASM) && defined ( KOKKOS_USE_ISA_X86_64 )
+              #if defined(KOKKOS_ENABLE_ASM) && defined ( KOKKOS_ENABLE_ISA_X86_64 )
                && ( sizeof(T) != 16 )
               #endif
                  , const T >::type& val )
@@ -331,7 +356,7 @@ void atomic_assign( volatile T * const dest ,
 }
 //----------------------------------------------------------------------------
 
-#elif defined( KOKKOS_ATOMICS_USE_OMP31 )
+#elif defined( KOKKOS_ENABLE_OPENMP_ATOMICS )
 
 template < typename T >
 inline
@@ -363,6 +388,4 @@ void atomic_assign( volatile T * const dest , const T val )
 } // namespace Kokkos
 
 #endif
-
-//----------------------------------------------------------------------------
 

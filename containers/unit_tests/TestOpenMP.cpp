@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,10 +36,13 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
+
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_OPENMP
 
 #include <gtest/gtest.h>
 
@@ -56,7 +59,6 @@
 #include <TestVector.hpp>
 #include <TestDualView.hpp>
 #include <TestDynamicView.hpp>
-#include <TestComplex.hpp>
 
 #include <Kokkos_DynRankView.hpp>
 #include <TestDynViewAPI.hpp>
@@ -68,21 +70,13 @@
 
 namespace Test {
 
-#ifdef KOKKOS_HAVE_OPENMP
 class openmp : public ::testing::Test {
 protected:
   static void SetUpTestCase()
   {
     std::cout << std::setprecision(5) << std::scientific;
 
-    unsigned threads_count = 4 ;
-
-    if ( Kokkos::hwloc::available() ) {
-      threads_count = Kokkos::hwloc::get_available_numa_count() *
-                      Kokkos::hwloc::get_available_cores_per_numa();
-    }
-
-    Kokkos::OpenMP::initialize( threads_count );
+    Kokkos::OpenMP::initialize();
   }
 
   static void TearDownTestCase()
@@ -90,11 +84,6 @@ protected:
     Kokkos::OpenMP::finalize();
   }
 };
-
-TEST_F( openmp, complex )
-{
-  testComplex<Kokkos::OpenMP> ();
-}
 
 TEST_F( openmp, dyn_view_api) {
   TestDynViewAPI< double , Kokkos::OpenMP >();
@@ -109,6 +98,18 @@ TEST_F( openmp , staticcrsgraph )
 {
   TestStaticCrsGraph::run_test_graph< Kokkos::OpenMP >();
   TestStaticCrsGraph::run_test_graph2< Kokkos::OpenMP >();
+  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(1, 0);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(1, 1000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(1, 10000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(1, 100000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(3, 0);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(3, 1000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(3, 10000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(3, 100000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(75, 0);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(75, 1000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(75, 10000);
+  TestStaticCrsGraph::run_test_graph3< Kokkos::OpenMP >(75, 100000);
 }
 
 #define OPENMP_INSERT_TEST( name, num_nodes, num_inserts, num_duplicates, repeat, near )                                \
@@ -160,7 +161,6 @@ OPENMP_DUALVIEW_COMBINE_TEST( 10 )
 #undef OPENMP_DEEP_COPY
 #undef OPENMP_VECTOR_COMBINE_TEST
 #undef OPENMP_DUALVIEW_COMBINE_TEST
-#endif
 
 
 TEST_F( openmp , dynamic_view )
@@ -191,4 +191,8 @@ TEST_F(openmp, ErrorReporterNativeOpenMP)
 }
 
 } // namespace test
+
+#else
+void KOKKOS_CONTAINERS_UNIT_TESTS_TESTOPENMP_PREVENT_EMPTY_LINK_ERROR() {}
+#endif
 

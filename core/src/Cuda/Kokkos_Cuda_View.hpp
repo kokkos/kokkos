@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -44,8 +44,8 @@
 #ifndef KOKKOS_EXPERIMENTAL_CUDA_VIEW_HPP
 #define KOKKOS_EXPERIMENTAL_CUDA_VIEW_HPP
 
-/* only compile this file if CUDA is enabled for Kokkos */
-#if defined( KOKKOS_HAVE_CUDA )
+#include <Kokkos_Macros.hpp>
+#if defined( KOKKOS_ENABLE_CUDA )
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -144,7 +144,7 @@ struct CudaTextureFetch {
     {}
 };
 
-#if defined( KOKKOS_CUDA_USE_LDG_INTRINSIC )
+#if defined( KOKKOS_ENABLE_CUDA_LDG_INTRINSIC )
 
 template< typename ValueType , typename AliasType >
 struct CudaLDGFetch {
@@ -221,7 +221,6 @@ struct CudaLDGFetch {
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 /** \brief  Replace Default ViewDataHandle with Cuda texture fetch specialization
@@ -261,7 +260,7 @@ public:
                      >::type
                      >::type ;
 
-#if defined( KOKKOS_CUDA_USE_LDG_INTRINSIC )
+#if defined( KOKKOS_ENABLE_CUDA_LDG_INTRINSIC )
   using handle_type = Kokkos::Experimental::Impl::CudaLDGFetch< value_type , alias_type > ;
 #else
   using handle_type = Kokkos::Experimental::Impl::CudaTextureFetch< value_type , alias_type > ;
@@ -294,13 +293,12 @@ public:
     }
 };
 
-}
-}
-}
+} // namespace Impl
+} // namespace Kokkos
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#endif /* #if defined( KOKKOS_HAVE_CUDA ) */
+#endif /* #if defined( KOKKOS_ENABLE_CUDA ) */
 #endif /* #ifndef KOKKOS_CUDA_VIEW_HPP */
 

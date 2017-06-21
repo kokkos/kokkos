@@ -113,6 +113,7 @@ KOKKOS_IMPL_IS_CONCEPT( memory_traits )
 KOKKOS_IMPL_IS_CONCEPT( execution_space )
 KOKKOS_IMPL_IS_CONCEPT( execution_policy )
 KOKKOS_IMPL_IS_CONCEPT( array_layout )
+KOKKOS_IMPL_IS_CONCEPT( reducer )
 
 namespace Impl {
 
@@ -197,21 +198,28 @@ public:
 
   typedef typename std::conditional
     < std::is_same< memory_space , Kokkos::HostSpace >::value
-#if defined( KOKKOS_HAVE_CUDA )
+#if defined( KOKKOS_ENABLE_CUDA )
       || std::is_same< memory_space , Kokkos::CudaUVMSpace >::value
       || std::is_same< memory_space , Kokkos::CudaHostPinnedSpace >::value
-#endif /* #if defined( KOKKOS_HAVE_CUDA ) */
+#endif /* #if defined( KOKKOS_ENABLE_CUDA ) */
     , memory_space
     , Kokkos::HostSpace
     >::type  host_memory_space ;
 
-#if defined( KOKKOS_HAVE_CUDA )
+#if defined( KOKKOS_ENABLE_CUDA )
   typedef typename std::conditional
     < std::is_same< execution_space , Kokkos::Cuda >::value
     , Kokkos::DefaultHostExecutionSpace , execution_space
     >::type  host_execution_space ;
 #else
-  typedef execution_space  host_execution_space ;
+  #if defined( KOKKOS_ENABLE_OPENMPTARGET )
+    typedef typename std::conditional
+      < std::is_same< execution_space , Kokkos::Experimental::OpenMPTarget >::value
+      , Kokkos::DefaultHostExecutionSpace , execution_space
+      >::type  host_execution_space ;
+  #else
+    typedef execution_space  host_execution_space ;
+  #endif
 #endif
 
   typedef typename std::conditional

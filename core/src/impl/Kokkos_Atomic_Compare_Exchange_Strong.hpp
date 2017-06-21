@@ -41,6 +41,11 @@
 //@HEADER
 */
 
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+#include <xmmintrin.h>
+#endif
+
+#include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ATOMIC_HPP ) && ! defined( KOKKOS_ATOMIC_COMPARE_EXCHANGE_STRONG_HPP )
 #define KOKKOS_ATOMIC_COMPARE_EXCHANGE_STRONG_HPP
 
@@ -50,9 +55,9 @@ namespace Kokkos {
 // Cuda native CAS supports int, unsigned int, and unsigned long long int (non-standard type).
 // Must cast-away 'volatile' for the CAS call.
 
-#if defined( KOKKOS_HAVE_CUDA )
+#if defined( KOKKOS_ENABLE_CUDA )
 
-#if defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
+#if defined(__CUDA_ARCH__) || defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 __inline__ __device__
 int atomic_compare_exchange( volatile int * const dest, const int compare, const int val)
 { return atomicCAS((int*)dest,compare,val); }
@@ -120,18 +125,28 @@ T atomic_compare_exchange( volatile T * const dest , const T & compare ,
 //----------------------------------------------------------------------------
 // GCC native CAS supports int, long, unsigned int, unsigned long.
 // Intel native CAS support int and long with the same interface as GCC.
-#if !defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
-#if defined(KOKKOS_ATOMICS_USE_GCC) || defined(KOKKOS_ATOMICS_USE_INTEL)
+#if !defined(__CUDA_ARCH__) || defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
+#if defined(KOKKOS_ENABLE_GNU_ATOMICS) || defined(KOKKOS_ENABLE_INTEL_ATOMICS)
 
 inline
 int atomic_compare_exchange( volatile int * const dest, const int compare, const int val)
-{ return __sync_val_compare_and_swap(dest,compare,val); }
+{
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+#endif
+  return __sync_val_compare_and_swap(dest,compare,val);
+}
 
 inline
 long atomic_compare_exchange( volatile long * const dest, const long compare, const long val )
-{ return __sync_val_compare_and_swap(dest,compare,val); }
+{ 
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+#endif
+  return __sync_val_compare_and_swap(dest,compare,val);
+}
 
-#if defined( KOKKOS_ATOMICS_USE_GCC )
+#if defined( KOKKOS_ENABLE_GNU_ATOMICS )
 
 // GCC supports unsigned
 
@@ -152,17 +167,14 @@ inline
 T atomic_compare_exchange( volatile T * const dest, const T & compare,
   typename Kokkos::Impl::enable_if< sizeof(T) == sizeof(int) , const T & >::type val )
 {
-#ifdef KOKKOS_HAVE_CXX11
   union U {
     int i ;
     T t ;
     KOKKOS_INLINE_FUNCTION U() {};
   } tmp ;
-#else
-  union U {
-    int i ;
-    T t ;
-  } tmp ;
+
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
 #endif
 
   tmp.i = __sync_val_compare_and_swap( (int*) dest , *((int*)&compare) , *((int*)&val) );
@@ -175,24 +187,21 @@ T atomic_compare_exchange( volatile T * const dest, const T & compare,
   typename Kokkos::Impl::enable_if< sizeof(T) != sizeof(int) &&
                                     sizeof(T) == sizeof(long) , const T & >::type val )
 {
-#ifdef KOKKOS_HAVE_CXX11
   union U {
     long i ;
     T t ;
     KOKKOS_INLINE_FUNCTION U() {};
   } tmp ;
-#else
-  union U {
-    long i ;
-    T t ;
-  } tmp ;
+
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
 #endif
 
   tmp.i = __sync_val_compare_and_swap( (long*) dest , *((long*)&compare) , *((long*)&val) );
   return tmp.t ;
 }
 
-#if defined( KOKKOS_ENABLE_ASM) && defined ( KOKKOS_USE_ISA_X86_64 )
+#if defined( KOKKOS_ENABLE_ASM) && defined ( KOKKOS_ENABLE_ISA_X86_64 )
 template < typename T >
 inline
 T atomic_compare_exchange( volatile T * const dest, const T & compare,
@@ -206,6 +215,10 @@ T atomic_compare_exchange( volatile T * const dest, const T & compare,
     KOKKOS_INLINE_FUNCTION U() {};
   } tmp ;
 
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+#endif
+
   tmp.i = Impl::cas128( (Impl::cas128_t*) dest , *((Impl::cas128_t*)&compare) , *((Impl::cas128_t*)&val) );
   return tmp.t ;
 }
@@ -217,11 +230,15 @@ T atomic_compare_exchange( volatile T * const dest , const T compare ,
     typename Kokkos::Impl::enable_if<
                   ( sizeof(T) != 4 )
                && ( sizeof(T) != 8 )
-            #if defined(KOKKOS_ENABLE_ASM) && defined ( KOKKOS_USE_ISA_X86_64 )
+            #if defined(KOKKOS_ENABLE_ASM) && defined ( KOKKOS_ENABLE_ISA_X86_64 )
                && ( sizeof(T) != 16 )
             #endif
              , const T >::type& val )
 {
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+#endif
+
   while( !Impl::lock_address_host_space( (void*) dest ) );
   T return_val = *dest;
   if( return_val == compare ) {
@@ -245,7 +262,7 @@ T atomic_compare_exchange( volatile T * const dest , const T compare ,
 }
 //----------------------------------------------------------------------------
 
-#elif defined( KOKKOS_ATOMICS_USE_OMP31 )
+#elif defined( KOKKOS_ENABLE_OPENMP_ATOMICS )
 
 template< typename T >
 KOKKOS_INLINE_FUNCTION

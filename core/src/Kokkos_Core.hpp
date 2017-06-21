@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -49,24 +49,33 @@
 
 #include <Kokkos_Core_fwd.hpp>
 
-#if defined( KOKKOS_HAVE_SERIAL )
+#if defined( KOKKOS_ENABLE_SERIAL )
 #include <Kokkos_Serial.hpp>
 #endif
 
-#if defined( KOKKOS_HAVE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP )
 #include <Kokkos_OpenMP.hpp>
 #endif
 
-#if defined( KOKKOS_HAVE_PTHREAD )
+//#if defined( KOKKOS_ENABLE_OPENMPTARGET )
+#include <Kokkos_OpenMPTarget.hpp>
+#include <Kokkos_OpenMPTargetSpace.hpp>
+//#endif
+
+#if defined( KOKKOS_ENABLE_QTHREADS )
+#include <Kokkos_Qthreads.hpp>
+#endif
+
+#if defined( KOKKOS_ENABLE_THREADS )
 #include <Kokkos_Threads.hpp>
 #endif
 
-#if defined( KOKKOS_HAVE_CUDA )
+#if defined( KOKKOS_ENABLE_CUDA )
 #include <Kokkos_Cuda.hpp>
 #endif
 
-#include <Kokkos_MemoryPool.hpp>
 #include <Kokkos_Pair.hpp>
+#include <Kokkos_MemoryPool.hpp>
 #include <Kokkos_Array.hpp>
 #include <Kokkos_View.hpp>
 #include <Kokkos_Vectorization.hpp>
@@ -74,10 +83,9 @@
 #include <Kokkos_hwloc.hpp>
 #include <Kokkos_Timer.hpp>
 
-#ifdef KOKKOS_HAVE_CXX11
 #include <Kokkos_Complex.hpp>
-#endif
 
+#include <iosfwd>
 
 //----------------------------------------------------------------------------
 
@@ -88,11 +96,13 @@ struct InitArguments {
   int num_numa;
   int device_id;
 
-  InitArguments() {
-    num_threads = -1;
-    num_numa = -1;
-    device_id = -1;
-  }
+  InitArguments( int nt = -1
+               , int nn = -1
+               , int dv = -1)
+    : num_threads( nt )
+    , num_numa( nn )
+    , device_id( dv )
+  {}
 };
 
 void initialize(int& narg, char* arg[]);
@@ -106,6 +116,9 @@ void finalize();
 void finalize_all();
 
 void fence();
+
+/** \brief Print "Bill of Materials" */
+void print_configuration( std::ostream & , const bool detail = false );
 
 } // namespace Kokkos
 

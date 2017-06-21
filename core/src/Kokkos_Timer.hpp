@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -44,13 +44,13 @@
 #ifndef KOKKOS_TIMER_HPP
 #define KOKKOS_TIMER_HPP
 
-#include <stddef.h>
+#include <cstddef>
 
 #ifdef _MSC_VER
-#undef KOKKOS_USE_LIBRT
+#undef KOKKOS_ENABLE_LIBRT
 #include <gettimeofday.c>
 #else
-#ifdef KOKKOS_USE_LIBRT
+#ifdef KOKKOS_ENABLE_LIBRT
 #include <ctime>
 #else
 #include <sys/time.h>
@@ -63,7 +63,7 @@ namespace Kokkos {
 
 class Timer {
 private:
-  #ifdef KOKKOS_USE_LIBRT
+  #ifdef KOKKOS_ENABLE_LIBRT
 	struct timespec m_old;
   #else
 	struct timeval m_old ;
@@ -74,7 +74,7 @@ public:
 
   inline
   void reset() {
-    #ifdef KOKKOS_USE_LIBRT
+    #ifdef KOKKOS_ENABLE_LIBRT
 	  clock_gettime(CLOCK_REALTIME, &m_old);
     #else
 	  gettimeofday( & m_old , ((struct timezone *) NULL ) );
@@ -90,7 +90,7 @@ public:
   inline
   double seconds() const
   {
-    #ifdef KOKKOS_USE_LIBRT
+    #ifdef KOKKOS_ENABLE_LIBRT
       struct timespec m_new;
       clock_gettime(CLOCK_REALTIME, &m_new);
 
@@ -110,3 +110,4 @@ public:
 } // namespace Kokkos
 
 #endif /* #ifndef KOKKOS_TIMER_HPP */
+

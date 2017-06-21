@@ -41,6 +41,11 @@
 //@HEADER
 */
 
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+#include <xmmintrin.h>
+#endif
+
+#include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ATOMIC_HPP ) && ! defined( KOKKOS_ATOMIC_FETCH_ADD_HPP )
 #define KOKKOS_ATOMIC_FETCH_ADD_HPP
 
@@ -48,8 +53,8 @@ namespace Kokkos {
 
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_HAVE_CUDA )
-#if defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
+#if defined( KOKKOS_ENABLE_CUDA )
+#if defined(__CUDA_ARCH__) || defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 
 // Support for int, unsigned int, unsigned long long int, and float
 
@@ -81,18 +86,11 @@ __inline__ __device__
 T atomic_fetch_add( volatile T * const dest ,
   typename Kokkos::Impl::enable_if< sizeof(T) == sizeof(int) , const T >::type val )
 {
-#ifdef KOKKOS_HAVE_CXX11
   union U {
     int i ;
     T t ;
     KOKKOS_INLINE_FUNCTION U() {};
   } assume , oldval , newval ;
-#else
-  union U {
-    int i ;
-    T t ;
-  } assume , oldval , newval ;
-#endif
 
   oldval.t = *dest ;
 
@@ -111,18 +109,11 @@ T atomic_fetch_add( volatile T * const dest ,
   typename Kokkos::Impl::enable_if< sizeof(T) != sizeof(int) &&
                                     sizeof(T) == sizeof(unsigned long long int) , const T >::type val )
 {
-#ifdef KOKKOS_HAVE_CXX11
   union U {
     unsigned long long int i ;
     T t ;
     KOKKOS_INLINE_FUNCTION U() {};
   } assume , oldval , newval ;
-#else
-  union U {
-    unsigned long long int i ;
-    T t ;
-  } assume , oldval , newval ;
-#endif
 
   oldval.t = *dest ;
 
@@ -167,43 +158,67 @@ T atomic_fetch_add( volatile T * const dest ,
 #endif
 #endif
 //----------------------------------------------------------------------------
-#if !defined(__CUDA_ARCH__) || defined(KOKKOS_CUDA_CLANG_WORKAROUND)
-#if defined(KOKKOS_ATOMICS_USE_GCC) || defined(KOKKOS_ATOMICS_USE_INTEL)
+#if !defined(__CUDA_ARCH__) || defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
+#if defined(KOKKOS_ENABLE_GNU_ATOMICS) || defined(KOKKOS_ENABLE_INTEL_ATOMICS)
 
-#if defined( KOKKOS_ENABLE_ASM ) && defined ( KOKKOS_USE_ISA_X86_64 )
+#if defined( KOKKOS_ENABLE_ASM ) && defined ( KOKKOS_ENABLE_ISA_X86_64 )
 inline
 int atomic_fetch_add( volatile int * dest , const int val )
 {
-        int original = val;
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH ) 
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+#endif
 
-        __asm__ __volatile__(
-                "lock xadd %1, %0"
-                : "+m" (*dest), "+r" (original)
-                : "m" (*dest), "r" (original)
-                : "memory"
+  int original = val;
+
+  __asm__ __volatile__(
+  	"lock xadd %1, %0"
+        : "+m" (*dest), "+r" (original)
+        : "m" (*dest), "r" (original)
+        : "memory"
         );
 
-        return original;
+  return original;
 }
 #else
 inline
 int atomic_fetch_add( volatile int * const dest , const int val )
-{ return __sync_fetch_and_add(dest, val); }
+{
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+#endif
+  return __sync_fetch_and_add(dest, val);
+}
 #endif
 
 inline
 long int atomic_fetch_add( volatile long int * const dest , const long int val )
-{ return __sync_fetch_and_add(dest,val); }
+{ 
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+#endif
+  return __sync_fetch_and_add(dest,val);
+}
 
-#if defined( KOKKOS_ATOMICS_USE_GCC )
+#if defined( KOKKOS_ENABLE_GNU_ATOMICS )
 
 inline
 unsigned int atomic_fetch_add( volatile unsigned int * const dest , const unsigned int val )
-{ return __sync_fetch_and_add(dest,val); }
+{
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+#endif
+  return __sync_fetch_and_add(dest,val);
+}
 
 inline
 unsigned long int atomic_fetch_add( volatile unsigned long int * const dest , const unsigned long int val )
-{ return __sync_fetch_and_add(dest,val); }
+{ 
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+#endif
+  return __sync_fetch_and_add(dest,val);
+}
 
 #endif
 
@@ -212,17 +227,14 @@ inline
 T atomic_fetch_add( volatile T * const dest ,
   typename Kokkos::Impl::enable_if< sizeof(T) == sizeof(int) , const T >::type val )
 {
-#ifdef KOKKOS_HAVE_CXX11
   union U {
     int i ;
     T t ;
     inline U() {};
   } assume , oldval , newval ;
-#else
-  union U {
-    int i ;
-    T t ;
-  } assume , oldval , newval ;
+
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
 #endif
 
   oldval.t = *dest ;
@@ -242,17 +254,14 @@ T atomic_fetch_add( volatile T * const dest ,
   typename Kokkos::Impl::enable_if< sizeof(T) != sizeof(int) &&
                                     sizeof(T) == sizeof(long) , const T >::type val )
 {
-#ifdef KOKKOS_HAVE_CXX11
   union U {
     long i ;
     T t ;
     inline U() {};
   } assume , oldval , newval ;
-#else
-  union U {
-    long i ;
-    T t ;
-  } assume , oldval , newval ;
+
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
 #endif
 
   oldval.t = *dest ;
@@ -266,7 +275,7 @@ T atomic_fetch_add( volatile T * const dest ,
   return oldval.t ;
 }
 
-#if defined( KOKKOS_ENABLE_ASM ) && defined ( KOKKOS_USE_ISA_X86_64 )
+#if defined( KOKKOS_ENABLE_ASM ) && defined ( KOKKOS_ENABLE_ISA_X86_64 )
 template < typename T >
 inline
 T atomic_fetch_add( volatile T * const dest ,
@@ -279,6 +288,10 @@ T atomic_fetch_add( volatile T * const dest ,
     T t ;
     inline U() {};
   } assume , oldval , newval ;
+
+#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+#endif
 
   oldval.t = *dest ;
 
@@ -300,13 +313,14 @@ T atomic_fetch_add( volatile T * const dest ,
     typename Kokkos::Impl::enable_if<
                   ( sizeof(T) != 4 )
                && ( sizeof(T) != 8 )
-              #if defined(KOKKOS_ENABLE_ASM) && defined ( KOKKOS_USE_ISA_X86_64 )
+              #if defined(KOKKOS_ENABLE_ASM) && defined ( KOKKOS_ENABLE_ISA_X86_64 )
                && ( sizeof(T) != 16 )
               #endif
                  , const T >::type& val )
 {
   while( !Impl::lock_address_host_space( (void*) dest ) );
   T return_val = *dest;
+
   // Don't use the following line of code here:
   //
   //const T tmp = *dest = return_val + val;
@@ -320,11 +334,12 @@ T atomic_fetch_add( volatile T * const dest ,
   const T tmp = *dest;
   (void) tmp;
   Impl::unlock_address_host_space( (void*) dest );
+
   return return_val;
 }
 //----------------------------------------------------------------------------
 
-#elif defined( KOKKOS_ATOMICS_USE_OMP31 )
+#elif defined( KOKKOS_ENABLE_OPENMP_ATOMICS )
 
 template< typename T >
 T atomic_fetch_add( volatile T * const dest , const T val )
