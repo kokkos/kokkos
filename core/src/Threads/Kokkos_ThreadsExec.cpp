@@ -41,16 +41,18 @@
 //@HEADER
 */
 
-#include <Kokkos_Core_fwd.hpp>
 
-#if defined( KOKKOS_ENABLE_PTHREAD ) || defined( KOKKOS_ENABLE_WINTHREAD )
+#include <Kokkos_Macros.hpp>
+#if defined( KOKKOS_ENABLE_THREADS )
 
-#include <stdint.h>
+#include <cstdint>
 #include <limits>
 #include <utility>
 #include <iostream>
 #include <sstream>
+
 #include <Kokkos_Core.hpp>
+
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_CPUDiscovery.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
@@ -78,9 +80,7 @@ const void * volatile s_current_function_arg = 0 ;
 
 struct Sentinel {
   Sentinel()
-  {
-    HostSpace::register_in_parallel( ThreadsExec::in_parallel );
-  }
+  {}
 
   ~Sentinel()
   {
@@ -120,6 +120,8 @@ void execute_function_noop( ThreadsExec & , const void * ) {}
 
 void ThreadsExec::driver(void)
 {
+  SharedAllocationRecord< void, void >::tracking_enable();
+
   ThreadsExec this_thread ;
 
   while ( ThreadsExec::Active == this_thread.m_pool_state ) {
@@ -512,8 +514,8 @@ void ThreadsExec::print_configuration( std::ostream & s , const bool detail )
 
   s << "Kokkos::Threads" ;
 
-#if defined( KOKKOS_ENABLE_PTHREAD )
-  s << " KOKKOS_ENABLE_PTHREAD" ;
+#if defined( KOKKOS_ENABLE_THREADS )
+  s << " KOKKOS_ENABLE_THREADS" ;
 #endif
 #if defined( KOKKOS_ENABLE_HWLOC )
   s << " hwloc[" << numa_count << "x" << cores_per_numa << "x" << threads_per_core << "]" ;
@@ -724,6 +726,8 @@ void ThreadsExec::initialize( unsigned thread_count ,
   // Init the array for used for arbitrarily sized atomics
   Impl::init_lock_array_host_space();
 
+  Impl::SharedAllocationRecord< void, void >::tracking_enable();
+
   #if defined(KOKKOS_ENABLE_PROFILING)
     Kokkos::Profiling::initialize();
   #endif
@@ -817,10 +821,12 @@ int Threads::thread_pool_rank()
 }
 #endif
 
+const char* Threads::name() { return "Threads"; }
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-
-#endif /* #if defined( KOKKOS_ENABLE_PTHREAD ) || defined( KOKKOS_ENABLE_WINTHREAD ) */
+#else
+void KOKKOS_CORE_SRC_THREADS_EXEC_PREVENT_LINK_ERROR() {}
+#endif /* #if defined( KOKKOS_ENABLE_THREADS ) */
 

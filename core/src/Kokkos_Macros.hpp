@@ -48,9 +48,10 @@
 /** Pick up configure / build options via #define macros:
  *
  *  KOKKOS_ENABLE_CUDA                Kokkos::Cuda execution and memory spaces
- *  KOKKOS_ENABLE_PTHREAD             Kokkos::Threads execution space
+ *  KOKKOS_ENABLE_THREADS             Kokkos::Threads execution space
  *  KOKKOS_ENABLE_QTHREADS            Kokkos::Qthreads execution space
  *  KOKKOS_ENABLE_OPENMP              Kokkos::OpenMP execution space
+ *  KOKKOS_ENABLE_OPENMPTARGET        Kokkos::Experimental::OpenMPTarget execution space
  *  KOKKOS_ENABLE_HWLOC               HWLOC library is available.
  *  KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK  Insert array bounds checks, is expensive!
  *  KOKKOS_ENABLE_MPI                 Negotiate MPI/execution space interactions.
@@ -296,6 +297,10 @@
     #endif
   #endif
 
+  #if defined( KOKKOS_ARCH_AVX512MIC )
+      #define KOKKOS_ENABLE_RFO_PREFETCH 1
+  #endif 
+
   #if defined( __MIC__ )
     // Compiling for Xeon Phi
   #endif
@@ -342,6 +347,10 @@
   //#define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
   //#define KOKKOS_ENABLE_PRAGMA_VECTOR 1
   //#define KOKKOS_ENABLE_PRAGMA_SIMD 1
+
+  #if defined( KOKKOS_ARCH_AVX512MIC )
+      #define KOKKOS_ENABLE_RFO_PREFETCH 1
+  #endif 
 
   #if !defined( KOKKOS_FORCEINLINE_FUNCTION )
     #define KOKKOS_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
@@ -414,6 +423,7 @@
 // There is zero or one default execution space specified.
 
 #if 1 < ( ( defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA ) ? 1 : 0 ) + \
+          ( defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET ) ? 1 : 0 ) + \
           ( defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP ) ? 1 : 0 ) + \
           ( defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS ) ? 1 : 0 ) + \
           ( defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS ) ? 1 : 0 ) + \
@@ -424,15 +434,18 @@
 // If default is not specified then chose from enabled execution spaces.
 // Priority: CUDA, OPENMP, THREADS, QTHREADS, SERIAL
 #if   defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA )
+#elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET )
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP )
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS )
 //#elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS )
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL )
 #elif defined( KOKKOS_ENABLE_CUDA )
   #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA
+#elif defined( KOKKOS_ENABLE_OPENMPTARGET )
+  #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET
 #elif defined( KOKKOS_ENABLE_OPENMP )
   #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP
-#elif defined( KOKKOS_ENABLE_PTHREAD )
+#elif defined( KOKKOS_ENABLE_THREADS )
   #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS
 //#elif defined( KOKKOS_ENABLE_QTHREADS )
 //  #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS
@@ -459,10 +472,17 @@
 #endif
 
 //----------------------------------------------------------------------------
-// Enable Profiling by default
+// If compiling with CUDA then must be using CUDA 8 or better
+// and use relocateable device code to enable the task policy.
+// nvcc relocatable device code option: --relocatable-device-code=true
 
-#ifndef KOKKOS_ENABLE_PROFILING
-  #define KOKKOS_ENABLE_PROFILING 1
+#if ( defined( KOKKOS_ENABLE_CUDA ) )
+  #if ( 8000 <= CUDA_VERSION ) && defined( KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE )
+  #define KOKKOS_ENABLE_TASKDAG
+  #endif
+#else
+  #define KOKKOS_ENABLE_TASKDAG
 #endif
 
 #endif // #ifndef KOKKOS_MACROS_HPP
+

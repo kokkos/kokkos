@@ -3,6 +3,8 @@
 KOKKOS_DEVICES=""
 MAKE_J_OPTION="32"
 
+KOKKOS_DO_EXAMPLES="1"
+
 while [[ $# > 0 ]]
 do
   key="$1"
@@ -70,6 +72,9 @@ do
     --make-j*)
       MAKE_J_OPTION="${key#*=}"
       ;;
+    --no-examples)
+      KOKKOS_DO_EXAMPLES="0"
+      ;;
     --compiler*)
       COMPILER="${key#*=}"
       CNUM=`which ${COMPILER} 2>&1 >/dev/null | grep "no ${COMPILER}" | wc -l`
@@ -85,9 +90,9 @@ do
       if [ ${CNUM} -eq 0 ]; then
         echo "Invalid compiler by --compiler command: '${COMPILER}'"
         exit
-      fi 
+      fi
       ;;
-      --with-options*)
+    --with-options*)
       KOKKOS_OPT="${key#*=}"
       ;;
     --help)
@@ -138,6 +143,8 @@ do
       echo "--with-hwloc=/Path/To/Hwloc:  Set path to hwloc."
       echo "--with-options=[OPT]:         Additional options to Kokkos:"
       echo "                                aggressive_vectorization = add ivdep on loops"
+      echo "                                disable_profiling = do not compile with profiling hooks"
+      echo "                                "
       echo "--with-cuda-options=[OPT]:    Additional options to CUDA:"
       echo "                                force_uvm, use_ldg, enable_lambda, rdc"
       echo "--make-j=[NUM]:               Set -j flag used during build."
@@ -164,7 +171,7 @@ fi
 
 if [ "${KOKKOS_PATH}"  = "${PWD}" ] || [ "${KOKKOS_PATH}"  = "${PWD}/" ]; then
   echo "Running generate_makefile.sh in the Kokkos root directory is not allowed"
-  exit 
+  exit
 fi
 
 KOKKOS_SRC_PATH=${KOKKOS_PATH}
@@ -231,7 +238,6 @@ if [ ${#PREFIX} -gt 0 ]; then
 else
   KOKKOS_INSTALL_PATH=${KOKKOS_TEST_INSTALL_PATH}
 fi
-
 
 mkdir install
 echo "#Makefile to satisfy existens of target kokkos-clean before installing the library" > install/Makefile.kokkos
@@ -360,7 +366,6 @@ echo "" >> example/tutorial/Makefile
 echo "clean:" >> example/tutorial/Makefile
 echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_SETTINGS='${KOKKOS_SETTINGS}' KOKKOS_PATH=${KOKKOS_PATH} clean" >> example/tutorial/Makefile
 
-
 if [ ${#KOKKOS_ENABLE_EXAMPLE_ICHOL} -gt 0 ]; then
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > example/ichol/Makefile
 echo "" >> example/ichol/Makefile
@@ -402,10 +407,12 @@ echo -e "\tmake -C core/perf_test" >> Makefile
 echo -e "\tmake -C containers/unit_tests" >> Makefile
 echo -e "\tmake -C containers/performance_tests" >> Makefile
 echo -e "\tmake -C algorithms/unit_tests" >> Makefile
+if [ ${KOKKOS_DO_EXAMPLES} -gt 0 ]; then
 echo -e "\tmake -C example/fixture" >> Makefile
 echo -e "\tmake -C example/feint" >> Makefile
 echo -e "\tmake -C example/fenl" >> Makefile
 echo -e "\tmake -C example/tutorial build" >> Makefile
+fi
 echo "" >> Makefile
 echo "test: build-test" >> Makefile
 echo -e "\tmake -C core/unit_test test" >> Makefile
@@ -413,10 +420,12 @@ echo -e "\tmake -C core/perf_test test" >> Makefile
 echo -e "\tmake -C containers/unit_tests test" >> Makefile
 echo -e "\tmake -C containers/performance_tests test" >> Makefile
 echo -e "\tmake -C algorithms/unit_tests test" >> Makefile
+if [ ${KOKKOS_DO_EXAMPLES} -gt 0 ]; then
 echo -e "\tmake -C example/fixture test" >> Makefile
 echo -e "\tmake -C example/feint test" >> Makefile
 echo -e "\tmake -C example/fenl test" >> Makefile
 echo -e "\tmake -C example/tutorial test" >> Makefile
+fi
 echo "" >> Makefile
 echo "unit-tests-only:" >> Makefile
 echo -e "\tmake -C core/unit_test test" >> Makefile
@@ -429,9 +438,11 @@ echo -e "\tmake -C core/perf_test clean" >> Makefile
 echo -e "\tmake -C containers/unit_tests clean" >> Makefile
 echo -e "\tmake -C containers/performance_tests clean" >> Makefile
 echo -e "\tmake -C algorithms/unit_tests clean" >> Makefile
+if [ ${KOKKOS_DO_EXAMPLES} -gt 0 ]; then
 echo -e "\tmake -C example/fixture clean" >> Makefile
 echo -e "\tmake -C example/feint clean" >> Makefile
 echo -e "\tmake -C example/fenl clean" >> Makefile
 echo -e "\tmake -C example/tutorial clean" >> Makefile
+fi
 echo -e "\tcd core; \\" >> Makefile
 echo -e "\tmake -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} clean" >> Makefile

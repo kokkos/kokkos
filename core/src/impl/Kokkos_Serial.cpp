@@ -41,13 +41,16 @@
 //@HEADER
 */
 
-#include <stdlib.h>
+#include <Kokkos_Macros.hpp>
+#if defined( KOKKOS_ENABLE_SERIAL )
+
+#include <cstdlib>
 #include <sstream>
 #include <Kokkos_Serial.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_Error.hpp>
 
-#if defined( KOKKOS_ENABLE_SERIAL )
+#include <impl/Kokkos_SharedAlloc.hpp>
 
 /*--------------------------------------------------------------------------*/
 
@@ -121,7 +124,6 @@ void serial_resize_thread_team_data( size_t pool_reduce_bytes
   }
 }
 
-// Get thread team data structure for omp_get_thread_num()
 HostThreadTeamData * serial_get_thread_team_data()
 {
   return & g_serial_thread_team_data ;
@@ -149,6 +151,8 @@ void Serial::initialize( unsigned threads_count
   (void) use_cores_per_numa;
   (void) allow_asynchronous_threadpool;
 
+  Impl::SharedAllocationRecord< void, void >::tracking_enable();
+
   // Init the array of locks used for arbitrarily sized atomics
   Impl::init_lock_array_host_space();
   #if defined(KOKKOS_ENABLE_PROFILING)
@@ -175,8 +179,11 @@ void Serial::finalize()
   #endif
 }
 
+const char* Serial::name() { return "Serial"; }
+
 } // namespace Kokkos
 
+#else
+void KOKKOS_CORE_SRC_IMPL_SERIAL_PREVENT_LINK_ERROR() {}
 #endif // defined( KOKKOS_ENABLE_SERIAL )
-
 

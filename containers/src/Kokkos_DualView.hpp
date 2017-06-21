@@ -442,6 +442,17 @@ public:
       modified_host () = (modified_device () > modified_host () ?
                           modified_device () : modified_host ())  + 1;
     }
+
+#ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
+    if (modified_host() && modified_device()) {
+      std::string msg = "Kokkos::DualView::modify ERROR: ";
+      msg += "Concurrent modification of host and device views ";
+      msg += "in DualView \"";
+      msg += d_view.label();
+      msg += "\"\n";
+      Kokkos::abort(msg.c_str());
+    }
+#endif
   }
 
   //@}
@@ -553,7 +564,7 @@ namespace Impl {
 template< class D, class A1, class A2, class A3, class ... Args >
 struct DualViewSubview {
 
-  typedef typename Kokkos::Experimental::Impl::ViewMapping
+  typedef typename Kokkos::Impl::ViewMapping
     < void
     , Kokkos::ViewTraits< D, A1, A2, A3 >
     , Args ...
@@ -624,3 +635,4 @@ deep_copy (const ExecutionSpace& exec ,
 } // namespace Kokkos
 
 #endif
+

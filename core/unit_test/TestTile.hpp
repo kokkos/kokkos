@@ -94,7 +94,7 @@ struct ReduceTileErrors
     const size_t jtile = iwork / tile_dim0;
 
     if ( jtile < tile_dim1 ) {
-      tile_type tile = Kokkos::Experimental::tile_subview( m_array, itile, jtile );
+      tile_type tile = Kokkos::tile_subview( m_array, itile, jtile );
 
       if ( tile( 0, 0 ) != ptrdiff_t( ( itile + jtile * tile_dim0 ) * TileLayout::N0 * TileLayout::N1 ) ) {
         ++errors;
@@ -139,4 +139,31 @@ void test( const size_t dim0, const size_t dim1 )
 
 } // namespace TestTile
 
+namespace Test {
+TEST_F( TEST_CATEGORY, tile_layout )
+{
+  TestTile::test< TEST_EXECSPACE, 1, 1 >( 1, 1 );
+  TestTile::test< TEST_EXECSPACE, 1, 1 >( 2, 3 );
+  TestTile::test< TEST_EXECSPACE, 1, 1 >( 9, 10 );
+
+  TestTile::test< TEST_EXECSPACE, 2, 2 >( 1, 1 );
+  TestTile::test< TEST_EXECSPACE, 2, 2 >( 2, 3 );
+  TestTile::test< TEST_EXECSPACE, 2, 2 >( 4, 4 );
+  TestTile::test< TEST_EXECSPACE, 2, 2 >( 9, 9 );
+
+  TestTile::test< TEST_EXECSPACE, 2, 4 >( 9, 9 );
+  TestTile::test< TEST_EXECSPACE, 4, 2 >( 9, 9 );
+
+  TestTile::test< TEST_EXECSPACE, 4, 4 >( 1, 1 );
+  TestTile::test< TEST_EXECSPACE, 4, 4 >( 4, 4 );
+  TestTile::test< TEST_EXECSPACE, 4, 4 >( 9, 9 );
+  TestTile::test< TEST_EXECSPACE, 4, 4 >( 9, 11 );
+
+  TestTile::test< TEST_EXECSPACE, 8, 8 >( 1, 1 );
+  TestTile::test< TEST_EXECSPACE, 8, 8 >( 4, 4 );
+  TestTile::test< TEST_EXECSPACE, 8, 8 >( 9, 9 );
+  TestTile::test< TEST_EXECSPACE, 8, 8 >( 9, 11 );
+}
+
+}
 #endif //TEST_TILE_HPP

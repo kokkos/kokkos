@@ -44,11 +44,10 @@
 #ifndef KOKKOS_HBWSPACE_HPP
 #define KOKKOS_HBWSPACE_HPP
 
-#include <Kokkos_HostSpace.hpp>
-
-/*--------------------------------------------------------------------------*/
-
+#include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_HBWSPACE
+
+#include <Kokkos_HostSpace.hpp>
 
 namespace Kokkos {
 
@@ -114,7 +113,7 @@ public:
 //  typedef Kokkos::Qthreads  execution_space;
 #elif defined( KOKKOS_ENABLE_OPENMP )
   typedef Kokkos::OpenMP    execution_space;
-#elif defined( KOKKOS_ENABLE_PTHREAD )
+#elif defined( KOKKOS_ENABLE_THREADS )
   typedef Kokkos::Threads   execution_space;
 //#elif defined( KOKKOS_ENABLE_QTHREADS )
 //  typedef Kokkos::Qthreads  execution_space;
@@ -126,14 +125,6 @@ public:
 
   //! This memory space preferred device_type
   typedef Kokkos::Device< execution_space, memory_space > device_type;
-
-  /*--------------------------------*/
-  /* Functions unique to the HBWSpace */
-  static int in_parallel();
-
-  static void register_in_parallel( int (*)() );
-
-  /*--------------------------------*/
 
   /**\brief  Default memory space instance */
   HBWSpace();
@@ -348,5 +339,5 @@ struct VerifyExecutionCanAccessMemorySpace< Kokkos::Experimental::HBWSpace, Kokk
 } // namespace Kokkos
 
 #endif
-
 #endif // #define KOKKOS_HBWSPACE_HPP
+
