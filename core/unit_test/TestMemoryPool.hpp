@@ -55,6 +55,96 @@
 namespace TestMemoryPool {
 
 template< typename MemSpace = Kokkos::HostSpace >
+void test_host_memory_pool_defaults()
+{
+  typedef typename MemSpace::execution_space   Space ;
+  typedef typename Kokkos::MemoryPool< Space > MemPool ;
+
+  {
+    const size_t MemoryCapacity = 32000 ;
+    const size_t MinBlockSize   =    64 ;
+    const size_t MaxBlockSize   =  1024 ;
+    const size_t SuperBlockSize =  4096 ;
+
+    MemPool pool( MemSpace()
+                , MemoryCapacity
+                , MinBlockSize
+                , MaxBlockSize
+                , SuperBlockSize
+                );
+
+    typename MemPool::usage_statistics stats ;
+
+    pool.get_usage_statistics( stats );
+
+    ASSERT_LE( MemoryCapacity , stats.capacity_bytes );
+    ASSERT_LE( MinBlockSize , stats.min_block_bytes );
+    ASSERT_LE( MaxBlockSize , stats.max_block_bytes );
+    ASSERT_LE( SuperBlockSize , stats.superblock_bytes );
+  }
+
+  {
+    const size_t MemoryCapacity = 10000 ;
+
+    MemPool pool( MemSpace()
+                , MemoryCapacity
+                );
+
+    typename MemPool::usage_statistics stats ;
+
+    pool.get_usage_statistics( stats );
+
+    ASSERT_LE( MemoryCapacity , stats.capacity_bytes );
+    ASSERT_LE( 64u /* default */ , stats.min_block_bytes );
+    ASSERT_LE( stats.min_block_bytes , stats.max_block_bytes );
+    ASSERT_LE( stats.max_block_bytes , stats.superblock_bytes );
+    ASSERT_LE( stats.superblock_bytes , stats.capacity_bytes );
+  }
+
+  {
+    const size_t MemoryCapacity = 10000 ;
+    const size_t MinBlockSize   =    32 ; // power of two is exact
+
+    MemPool pool( MemSpace()
+                , MemoryCapacity
+                , MinBlockSize
+                );
+
+    typename MemPool::usage_statistics stats ;
+
+    pool.get_usage_statistics( stats );
+
+    ASSERT_LE( MemoryCapacity , stats.capacity_bytes );
+    ASSERT_EQ( MinBlockSize , stats.min_block_bytes );
+    ASSERT_LE( stats.min_block_bytes , stats.max_block_bytes );
+    ASSERT_LE( stats.max_block_bytes , stats.superblock_bytes );
+    ASSERT_LE( stats.superblock_bytes , stats.capacity_bytes );
+  }
+
+  {
+    const size_t MemoryCapacity = 32000 ;
+    const size_t MinBlockSize   =    32 ; // power of two is exact
+    const size_t MaxBlockSize   =  1024 ; // power of two is exact
+
+    MemPool pool( MemSpace()
+                , MemoryCapacity
+                , MinBlockSize
+                , MaxBlockSize
+                );
+
+    typename MemPool::usage_statistics stats ;
+
+    pool.get_usage_statistics( stats );
+
+    ASSERT_LE( MemoryCapacity , stats.capacity_bytes );
+    ASSERT_EQ( MinBlockSize , stats.min_block_bytes );
+    ASSERT_EQ( MaxBlockSize , stats.max_block_bytes );
+    ASSERT_LE( stats.max_block_bytes , stats.superblock_bytes );
+    ASSERT_LE( stats.superblock_bytes , stats.capacity_bytes );
+  }
+}
+
+template< typename MemSpace = Kokkos::HostSpace >
 void test_host_memory_pool_stats()
 {
   typedef typename MemSpace::execution_space   Space ;
@@ -302,12 +392,13 @@ void test_memory_pool_v2( const bool print_statistics
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-} // namespace TestMemoryPool {
+} // namespace TestMemoryPool
 
 namespace Test {
 
 TEST_F( TEST_CATEGORY, memory_pool )
 {
+  TestMemoryPool::test_host_memory_pool_defaults<>();
   TestMemoryPool::test_host_memory_pool_stats<>();
   TestMemoryPool::test_memory_pool_v2< TEST_EXECSPACE >(false,false);
 }
