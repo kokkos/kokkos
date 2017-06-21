@@ -62,12 +62,12 @@ struct TestWorkGraph {
 
   long m_input;
   Graph m_graph;
-  Graph m_tranpose;
+  Graph m_transpose;
   Values m_values;
 
   TestWorkGraph(long arg_input):m_input(arg_input) {
     form_graph();
-    transpose_crs(m_tranpose, m_graph);
+    transpose_crs(m_transpose, m_graph);
   }
 
   inline
@@ -121,10 +121,10 @@ struct TestWorkGraph {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(std::int32_t i) const {
-    auto begin = m_tranpose.row_map(i);
-    auto end = m_tranpose.row_map(i + 1);
+    auto begin = m_transpose.row_map(i);
+    auto end = m_transpose.row_map(i + 1);
     for (auto j = begin; j < end; ++j) {
-      auto k = m_tranpose.entries(j);
+      auto k = m_transpose.entries(j);
       m_values(i) += m_values( k );
     }
   }
@@ -142,7 +142,7 @@ struct TestWorkGraph {
 
 TEST_F( TEST_CATEGORY, workgraph_fib )
 {
-  for ( int i = 0; i < 24; ++i) {
+  for ( int i = 0; i < 27; ++i) {
     TestWorkGraph< TEST_EXECSPACE > f(i);
     f.test_for();
   }

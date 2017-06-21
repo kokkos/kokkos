@@ -180,7 +180,9 @@ class CrsRowMapFromCounts {
     update += in(i);
     if (final_pass) {
       out(i + 1) = update;
-      if (i == 0) out(0) = 0;
+      if (i == 0) {
+        out(0) = 0;
+      }
     }
   }
   KOKKOS_INLINE_FUNCTION

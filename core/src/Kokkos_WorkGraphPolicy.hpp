@@ -103,9 +103,20 @@ class WorkGraphExec
           return i;
         } // we got a work item
       } else { // there was no work in the queue
+#ifdef KOKKOS_DEBUG
+        if ( w_new.first == w.first + 1 && w_new.second == w.second ) {
+          Kokkos::abort("bug in pop_work");
+        }
+#endif
         if (w.first == m_total_work) { // all work is done
           return -1;
-        } // all work is done
+        } else { // need to wait for more work to be pushed
+          // take a guess that one work item will be pushed
+          // the key thing is we can't leave (w) alone, because
+          // otherwise the next compare_exchange may succeed in
+          // popping work from an empty queue
+          w.second++;
+        }
       } // there was no work in the queue
     } // while (true)
   }
