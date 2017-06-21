@@ -46,7 +46,7 @@ private:
     }
   }
 
-  static inline void thread_main(const void* arg) {
+  static inline void thread_main( ThreadsExec&, const void* arg ) {
     const Self& self = *(static_cast<const Self*>(arg));
     self.exec_one_thread();
   }

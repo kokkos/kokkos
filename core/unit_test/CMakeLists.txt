@@ -103,6 +103,7 @@ IF(Kokkos_ENABLE_Pthread)
       threads/TestThreads_ViewMapping_b.cpp
       threads/TestThreads_ViewMapping_subview.cpp
       threads/TestThreads_ViewOfClass.cpp
+      threads/TestThreads_WorkGraph.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "
