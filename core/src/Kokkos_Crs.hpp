@@ -137,6 +137,42 @@ public:
   }
 };
 
+/*--------------------------------------------------------------------------*/
+
+template< class Out,
+          class DataType,
+          class Arg1Type,
+          class Arg2Type,
+          class SizeType>
+void get_crs_transpose_counts(
+    Out& out,
+    Crs<DataType, Arg1Type, Arg2Type, SizeType> const& in,
+    std::string const& name = "transpose_counts");
+
+template< class Out,
+          class In>
+void get_crs_row_map_from_counts(
+    Out& out,
+    In const& in,
+    std::string const& name = "row_map");
+
+template< class DataType,
+          class Arg1Type,
+          class Arg2Type,
+          class SizeType>
+void transpose_crs(
+    Crs<DataType, Arg1Type, Arg2Type, SizeType>& out,
+    Crs<DataType, Arg1Type, Arg2Type, SizeType> const& in);
+
+} // namespace Experimental
+} // namespace Kokkos
+
+/*--------------------------------------------------------------------------*/
+
+/*--------------------------------------------------------------------------*/
+
+namespace Kokkos {
+namespace Experimental {
 namespace Impl {
 
 template <class In, class Out>
@@ -252,7 +288,7 @@ template< class Out,
 void get_crs_transpose_counts(
     Out& out,
     Crs<DataType, Arg1Type, Arg2Type, SizeType> const& in,
-    std::string const& name = "transpose_counts") {
+    std::string const& name) {
   using In = Crs<DataType, Arg1Type, Arg2Type, SizeType>;
   out = Out(name, in.numRows());
   Impl::GetCrsTransposeCounts<In, Out> functor(in, out);
@@ -264,7 +300,7 @@ template< class Out,
 void get_crs_row_map_from_counts(
     Out& out,
     In const& in,
-    std::string const& name = "row_map") {
+    std::string const& name) {
   out = Out(ViewAllocateWithoutInitializing(name), in.size() + 1);
   Impl::CrsRowMapFromCounts<In, Out> functor(in, out);
   functor.run();
