@@ -50,6 +50,19 @@ namespace Test {
 
 namespace {
 
+/* This test is meant to be the WorkGraph equivalent of the Task DAG Scheduler test,
+   please see TestTaskScheduler.hpp for that test.
+   The algorithm computes the N-th fibonacci number as follows:
+    - Each "task" or "work item" computes the i-th fibonacci number
+    - If a task as (i < 2), it will record the known answer ahead of time.
+    - If a taks has (i >= 2), it will "spawn" two more tasks to compute
+      the (i - 1) and (i - 2) fibonacci numbers.
+      We do NOT do any de-duplication of these tasks.
+      De-duplication would result in only (N - 2) tasks which must be run in serial.
+      We allow duplicates both to increase the number of tasks and to increase the
+      amount of available parallelism.
+ */
+
 template< class ExecSpace >
 struct TestWorkGraph {
 
@@ -90,6 +103,9 @@ struct TestWorkGraph {
     for (std::int32_t i = 0; i < std::int32_t(g.size()); ++i) {
       auto e = g.at(std::size_t(i));
       if (e.input < 2) continue;
+      /* This part of the host graph formation is the equivalent of task spawning
+         in the Task DAG system. Notice how each task which is not a base case
+         spawns two more tasks, without any de-duplication */
       g.push_back({ e.input - 1, i });
       g.push_back({ e.input - 2, i });
     }
