@@ -95,8 +95,9 @@ private:
 public:
 
   inline
-  void execute() const
+  void execute()
   {
+    Base::setup();
     ThreadsExec::start( & Self::thread_main, this );
     ThreadsExec::fence();
   }

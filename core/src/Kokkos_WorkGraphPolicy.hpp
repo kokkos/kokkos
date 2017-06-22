@@ -78,12 +78,6 @@ namespace Experimental {
 template< class functor_type , class execution_space, class ... policy_args >
 class WorkGraphExec
 {
- private:
-  struct TrackingReenabler {
-    TrackingReenabler() {
-      Kokkos::Impl::shared_allocation_tracking_enable();
-    }
-  } m_tracking_reenabler;
  public:
 
   using self_type = WorkGraphExec< functor_type, execution_space, policy_args ... >;
@@ -211,22 +205,23 @@ class WorkGraphExec
   inline
   WorkGraphExec( const functor_type & arg_functor
                , const policy_type  & arg_policy )
-    : m_tracking_reenabler()
-    , m_functor( arg_functor )
+    : m_functor( arg_functor )
     , m_policy(  arg_policy )
     , m_total_work( arg_policy.graph.numRows() )
   {
-    if (arg_policy.graph.numRows() > std::numeric_limits<std::int32_t>::max()) {
+  }
+
+  inline
+  void setup() {
+    if (m_policy.graph.numRows() > std::numeric_limits<std::int32_t>::max()) {
       Kokkos::abort("WorkGraphPolicy work must be indexable using int32_t");
     }
-    get_crs_transpose_counts(m_counts, arg_policy.graph);
+    get_crs_transpose_counts(m_counts, m_policy.graph);
     m_queue = ints_type(ViewAllocateWithoutInitializing("queue"), m_total_work);
     deep_copy(m_queue, std::int32_t(-1));
     m_ranges = ranges_type("ranges", 1);
     fill_queue();
-    Kokkos::Impl::shared_allocation_tracking_disable();
   }
-
 };
 
 }}} // namespace Kokkos::Impl::Experimental

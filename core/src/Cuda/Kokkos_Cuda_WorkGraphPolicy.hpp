@@ -92,8 +92,9 @@ public:
   }
 
   inline
-  void execute() const
+  void execute()
   {
+    Base::setup();
     const int warps_per_block = 4 ;
     const dim3 grid( Kokkos::Impl::cuda_internal_multiprocessor_count() , 1 , 1 );
     const dim3 block( 1 , Kokkos::Impl::CudaTraits::WarpSize , warps_per_block );

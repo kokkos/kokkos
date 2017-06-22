@@ -80,8 +80,9 @@ private:
 public:
 
   inline
-  void execute() const
+  void execute()
   {
+    Base::setup();
     for (std::int32_t i; (-1 != (i = Base::before_work())); ) {
       exec_one< typename Policy::work_tag >( i );
       Base::after_work(i);
