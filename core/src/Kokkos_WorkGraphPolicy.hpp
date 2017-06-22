@@ -91,12 +91,11 @@ class WorkGraphExec
  private:
 
   using ints_type = Kokkos::View<std::int32_t*, memory_space>;
-  using atomic_ints_type = Kokkos::View<std::int32_t*, memory_space, MemoryTraits<Atomic>>;
   using range_type = Kokkos::pair<std::int32_t, std::int32_t>;
   using ranges_type = Kokkos::View<range_type*, memory_space>;
   const std::int32_t m_total_work;
-  atomic_ints_type m_counts;
-  atomic_ints_type m_queue;
+  ints_type m_counts;
+  ints_type m_queue;
   ranges_type m_ranges;
 
  public:
@@ -117,7 +116,7 @@ class WorkGraphExec
   struct TagFillQueue {};
   KOKKOS_INLINE_FUNCTION
   void operator()(TagFillQueue, std::int32_t i) const {
-    if (m_counts[i] == 0) push_work(i);
+    if (*((volatile std::int32_t*)(&m_counts(i))) == 0) push_work(i);
   }
   void fill_queue() {
     using policy_type = RangePolicy<std::int32_t, execution_space, TagFillQueue>;
@@ -142,7 +141,7 @@ class WorkGraphExec
           // the push_work function may have incremented the end counter
           // but not yet written the work index into the queue.
           // wait until the entry is valid.
-          while ( -1 == ( i = m_queue[ w.first ] ) );
+          while ( -1 == ( i = *((volatile std::int32_t*)(&m_queue( w.first ))) ) );
           return i;
         } // we got a work item
       } else { // there was no work in the queue
@@ -175,7 +174,7 @@ class WorkGraphExec
       if ( w.first == w_new.first && w.second + 1 == w_new.second ) break;
     }
     // write the work index into the claimed spot in the queue
-    m_queue[ w.second ] = i;
+    *((volatile std::int32_t*)(&m_queue( w.second ))) = i;
     // push this write out into the memory system
     memory_fence();
   }
@@ -196,9 +195,8 @@ class WorkGraphExec
     const std::int32_t end = m_policy.graph.row_map( i + 1 );
     for (std::int32_t j = begin; j < end; ++j) {
       const std::int32_t next = m_policy.graph.entries( j );
-      /* View is atomic, this is atomic_fetch_add(-1) */
-      const std::int32_t new_count = (m_counts(next) -= 1);
-      if ( new_count == 0 )  push_work( next );
+      const std::int32_t old_count = atomic_fetch_add( &m_counts(next), -1 );
+      if ( old_count == 1 )  push_work( next );
     }
   }
 
@@ -213,16 +211,9 @@ class WorkGraphExec
     if (arg_policy.graph.numRows() > std::numeric_limits<std::int32_t>::max()) {
       Kokkos::abort("WorkGraphPolicy work must be indexable using int32_t");
     }
-    {
-      ints_type counts;
-      get_crs_transpose_counts(counts, arg_policy.graph);
-      m_counts = counts;
-    }
-    {
-    auto queue = ints_type(ViewAllocateWithoutInitializing("queue"), m_total_work);
-    deep_copy(queue, std::int32_t(-1));
-    m_queue = queue;
-    }
+    get_crs_transpose_counts(m_counts, arg_policy.graph);
+    m_queue = ints_type(ViewAllocateWithoutInitializing("queue"), m_total_work);
+    deep_copy(m_queue, std::int32_t(-1));
     m_ranges = ranges_type("ranges", 1);
     fill_queue();
     Kokkos::Impl::shared_allocation_tracking_disable();
