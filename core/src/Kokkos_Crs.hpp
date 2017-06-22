@@ -191,8 +191,6 @@ class GetCrsTransposeCounts {
   }
   GetCrsTransposeCounts(InCrs const& arg_in, OutCounts const& arg_out):
     in(arg_in),out(arg_out) {
-  }
-  void run() {
     using policy_type = RangePolicy<index_type, execution_space>;
     using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
     const closure_type closure(*this, policy_type(0, index_type(in.entries.size())));
@@ -230,8 +228,6 @@ class CrsRowMapFromCounts {
   using self_type = CrsRowMapFromCounts<InCounts, OutRowMap>;
   CrsRowMapFromCounts(InCounts const& arg_in, OutRowMap const& arg_out):
     in(arg_in),out(arg_out) {
-  }
-  void run() {
     using policy_type = RangePolicy<index_type, execution_space>;
     using closure_type = Kokkos::Impl::ParallelScan<self_type, policy_type>;
     closure_type closure(*this, policy_type(0, in.size()));
@@ -268,8 +264,6 @@ class FillCrsTransposeEntries {
   FillCrsTransposeEntries(InCrs const& arg_in, OutCrs const& arg_out):
     in(arg_in),out(arg_out),
     counters("counters", arg_out.numRows()) {
-  }
-  void run() {
     using policy_type = RangePolicy<index_type, execution_space>;
     using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
     const closure_type closure(*this, policy_type(0, index_type(in.numRows())));
@@ -292,7 +286,6 @@ void get_crs_transpose_counts(
   using InCrs = Crs<DataType, Arg1Type, Arg2Type, SizeType>;
   out = OutCounts(name, in.numRows());
   Impl::GetCrsTransposeCounts<InCrs, OutCounts> functor(in, out);
-  functor.run();
 }
 
 template< class OutRowMap,
@@ -303,7 +296,6 @@ void get_crs_row_map_from_counts(
     std::string const& name) {
   out = OutRowMap(ViewAllocateWithoutInitializing(name), in.size() + 1);
   Impl::CrsRowMapFromCounts<InCounts, OutRowMap> functor(in, out);
-  functor.run();
 }
 
 template< class DataType,
@@ -324,7 +316,6 @@ void transpose_crs(
   }
   out.entries = decltype(out.entries)("transpose_entries", in.entries.size());
   Impl::FillCrsTransposeEntries<crs_type, crs_type> entries_functor(in, out);
-  entries_functor.run();
 }
 
 } // namespace Experimental
