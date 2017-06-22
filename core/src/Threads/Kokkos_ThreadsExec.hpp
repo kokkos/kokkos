@@ -276,6 +276,17 @@ public:
       if ( ! rev_rank ) {
         Final::final( f , reduce_memory() );
       }
+
+      //  This thread has updated 'reduce_memory()' and upon returning
+      //  from this function will set 'm_pool_state' to inactive.
+      //  If this is a non-root thread then setting 'm_pool_state'
+      //  to inactive triggers another thread to exit a spinwait
+      //  and read the 'reduce_memory'.
+      //  Must 'memory_fence()' to guarantee that storing the update to
+      //  'reduce_memory()' will complete before storing the the update to
+      //  'm_pool_state'.
+
+      memory_fence();
     }
 
   inline
