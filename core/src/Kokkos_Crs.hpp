@@ -139,21 +139,21 @@ public:
 
 /*--------------------------------------------------------------------------*/
 
-template< class Out,
+template< class OutCounts,
           class DataType,
           class Arg1Type,
           class Arg2Type,
           class SizeType>
 void get_crs_transpose_counts(
-    Out& out,
+    OutCounts& out,
     Crs<DataType, Arg1Type, Arg2Type, SizeType> const& in,
     std::string const& name = "transpose_counts");
 
-template< class Out,
-          class In>
+template< class OutCounts,
+          class InCrs>
 void get_crs_row_map_from_counts(
-    Out& out,
-    In const& in,
+    OutCounts& out,
+    InCrs const& in,
     std::string const& name = "row_map");
 
 template< class DataType,
@@ -175,21 +175,21 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template <class In, class Out>
+template <class InCrs, class OutCounts>
 class GetCrsTransposeCounts {
  public:
-  using execution_space = typename In::execution_space;
-  using self_type = GetCrsTransposeCounts<In, Out>;
-  using index_type = typename In::size_type;
+  using execution_space = typename InCrs::execution_space;
+  using self_type = GetCrsTransposeCounts<InCrs, OutCounts>;
+  using index_type = typename InCrs::size_type;
  private:
-  In in;
-  Out out;
+  InCrs in;
+  OutCounts out;
  public:
   KOKKOS_INLINE_FUNCTION
   void operator()(index_type i) const {
     atomic_increment( &out[in.entries(i)] );
   }
-  GetCrsTransposeCounts(In const& arg_in, Out const& arg_out):
+  GetCrsTransposeCounts(InCrs const& arg_in, OutCounts const& arg_out):
     in(arg_in),out(arg_out) {
   }
   void run() {
@@ -201,15 +201,15 @@ class GetCrsTransposeCounts {
   }
 };
 
-template <class In, class Out>
+template <class InCounts, class OutRowMap>
 class CrsRowMapFromCounts {
  public:
-  using execution_space = typename In::execution_space;
-  using value_type = typename Out::value_type;
-  using index_type = typename In::size_type;
+  using execution_space = typename InCounts::execution_space;
+  using value_type = typename OutRowMap::value_type;
+  using index_type = typename InCounts::size_type;
  private:
-  In in;
-  Out out;
+  InCounts in;
+  OutRowMap out;
  public:
   KOKKOS_INLINE_FUNCTION
   void operator()(index_type i, value_type& update, bool final_pass) const {
@@ -227,8 +227,8 @@ class CrsRowMapFromCounts {
   void join(volatile value_type& update, const volatile value_type& input) const {
     update += input;
   }
-  using self_type = CrsRowMapFromCounts<In, Out>;
-  CrsRowMapFromCounts(In const& arg_in, Out const& arg_out):
+  using self_type = CrsRowMapFromCounts<InCounts, OutRowMap>;
+  CrsRowMapFromCounts(InCounts const& arg_in, OutRowMap const& arg_out):
     in(arg_in),out(arg_out) {
   }
   void run() {
@@ -240,17 +240,17 @@ class CrsRowMapFromCounts {
   }
 };
 
-template <class In, class Out>
+template <class InCrs, class OutCrs>
 class FillCrsTransposeEntries {
  public:
-  using execution_space = typename In::execution_space;
-  using memory_space = typename In::memory_space;
-  using value_type = typename Out::entries_type::value_type;
-  using index_type = typename In::size_type;
+  using execution_space = typename InCrs::execution_space;
+  using memory_space = typename InCrs::memory_space;
+  using value_type = typename OutCrs::entries_type::value_type;
+  using index_type = typename InCrs::size_type;
  private:
   using counters_type = View<index_type*, memory_space>;
-  In in;
-  Out out;
+  InCrs in;
+  OutCrs out;
   counters_type counters;
  public:
   KOKKOS_INLINE_FUNCTION
@@ -264,8 +264,8 @@ class FillCrsTransposeEntries {
       out.entries( tbegin + tj ) = i;
     }
   }
-  using self_type = FillCrsTransposeEntries<In, Out>;
-  FillCrsTransposeEntries(In const& arg_in, Out const& arg_out):
+  using self_type = FillCrsTransposeEntries<InCrs, OutCrs>;
+  FillCrsTransposeEntries(InCrs const& arg_in, OutCrs const& arg_out):
     in(arg_in),out(arg_out),
     counters("counters", arg_out.numRows()) {
   }
@@ -280,29 +280,29 @@ class FillCrsTransposeEntries {
 
 } // anonymous namespace
 
-template< class Out,
+template< class OutCounts,
           class DataType,
           class Arg1Type,
           class Arg2Type,
           class SizeType>
 void get_crs_transpose_counts(
-    Out& out,
+    OutCounts& out,
     Crs<DataType, Arg1Type, Arg2Type, SizeType> const& in,
     std::string const& name) {
-  using In = Crs<DataType, Arg1Type, Arg2Type, SizeType>;
-  out = Out(name, in.numRows());
-  Impl::GetCrsTransposeCounts<In, Out> functor(in, out);
+  using InCrs = Crs<DataType, Arg1Type, Arg2Type, SizeType>;
+  out = OutCounts(name, in.numRows());
+  Impl::GetCrsTransposeCounts<InCrs, OutCounts> functor(in, out);
   functor.run();
 }
 
-template< class Out,
-          class In>
+template< class OutRowMap,
+          class InCounts>
 void get_crs_row_map_from_counts(
-    Out& out,
-    In const& in,
+    OutRowMap& out,
+    InCounts const& in,
     std::string const& name) {
-  out = Out(ViewAllocateWithoutInitializing(name), in.size() + 1);
-  Impl::CrsRowMapFromCounts<In, Out> functor(in, out);
+  out = OutRowMap(ViewAllocateWithoutInitializing(name), in.size() + 1);
+  Impl::CrsRowMapFromCounts<InCounts, OutRowMap> functor(in, out);
   functor.run();
 }
 
