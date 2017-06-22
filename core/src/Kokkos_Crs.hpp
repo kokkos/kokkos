@@ -164,16 +164,15 @@ void transpose_crs(
     Crs<DataType, Arg1Type, Arg2Type, SizeType>& out,
     Crs<DataType, Arg1Type, Arg2Type, SizeType> const& in);
 
-} // namespace Experimental
-} // namespace Kokkos
+}} // namespace Kokkos::Experimental
 
 /*--------------------------------------------------------------------------*/
 
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
+namespace Experimental {
 
 template <class InCrs, class OutCounts>
 class GetCrsTransposeCounts {
@@ -272,7 +271,14 @@ class FillCrsTransposeEntries {
   }
 };
 
-} // anonymous namespace
+}}} // namespace Kokkos::Impl::Experimental
+
+/*--------------------------------------------------------------------------*/
+
+/*--------------------------------------------------------------------------*/
+
+namespace Kokkos {
+namespace Experimental {
 
 template< class OutCounts,
           class DataType,
@@ -285,7 +291,8 @@ void get_crs_transpose_counts(
     std::string const& name) {
   using InCrs = Crs<DataType, Arg1Type, Arg2Type, SizeType>;
   out = OutCounts(name, in.numRows());
-  Impl::GetCrsTransposeCounts<InCrs, OutCounts> functor(in, out);
+  Kokkos::Impl::Experimental::
+    GetCrsTransposeCounts<InCrs, OutCounts> functor(in, out);
 }
 
 template< class OutRowMap,
@@ -295,7 +302,8 @@ void get_crs_row_map_from_counts(
     InCounts const& in,
     std::string const& name) {
   out = OutRowMap(ViewAllocateWithoutInitializing(name), in.size() + 1);
-  Impl::CrsRowMapFromCounts<InCounts, OutRowMap> functor(in, out);
+  Kokkos::Impl::Experimental::
+    CrsRowMapFromCounts<InCounts, OutRowMap> functor(in, out);
 }
 
 template< class DataType,
@@ -315,10 +323,10 @@ void transpose_crs(
       "tranpose_row_map");
   }
   out.entries = decltype(out.entries)("transpose_entries", in.entries.size());
-  Impl::FillCrsTransposeEntries<crs_type, crs_type> entries_functor(in, out);
+  Kokkos::Impl::Experimental::
+    FillCrsTransposeEntries<crs_type, crs_type> entries_functor(in, out);
 }
 
-} // namespace Experimental
-} // namespace Kokkos
+}} // namespace Kokkos::Experimental
 
 #endif /* #define KOKKOS_CRS_HPP */

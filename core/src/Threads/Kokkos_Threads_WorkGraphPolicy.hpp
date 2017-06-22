@@ -52,7 +52,7 @@ class ParallelFor< FunctorType ,
                    Kokkos::Experimental::WorkGraphPolicy< Traits ... > ,
                    Kokkos::Threads
                  >
-  : public Kokkos::Experimental::Impl::
+  : public Kokkos::Impl::Experimental::
            WorkGraphExec< FunctorType,
                           Kokkos::Threads,
                           Traits ...
@@ -61,7 +61,7 @@ class ParallelFor< FunctorType ,
 private:
 
   typedef Kokkos::Experimental::WorkGraphPolicy< Traits ... > Policy ;
-  typedef Kokkos::Experimental::Impl::
+  typedef Kokkos::Impl::Experimental::
           WorkGraphExec<FunctorType, Kokkos::Threads, Traits ... > Base ;
   typedef ParallelFor<FunctorType,
                       Kokkos::Experimental::WorkGraphPolicy<Traits ...>,

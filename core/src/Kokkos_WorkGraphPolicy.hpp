@@ -65,7 +65,15 @@ public:
   WorkGraphPolicy(graph_type arg_graph):graph(arg_graph) {}
 };
 
+}} // namespace Kokkos::Experimental
+
+/*--------------------------------------------------------------------------*/
+
+/*--------------------------------------------------------------------------*/
+
+namespace Kokkos {
 namespace Impl {
+namespace Experimental {
 
 template< class functor_type , class execution_space, class ... policy_args >
 class WorkGraphExec
@@ -221,9 +229,7 @@ class WorkGraphExec
 
 };
 
-} // namespace Impl
-} // namespace Experimental
-} // namespace Kokkos
+}}} // namespace Kokkos::Impl::Experimental
 
 #ifdef KOKKOS_ENABLE_SERIAL
 #include "impl/Kokkos_Serial_WorkGraphPolicy.hpp"
