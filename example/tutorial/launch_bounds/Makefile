@@ -24,12 +24,20 @@ KOKKOS_DEVICES = "OpenMP"
 KOKKOS_ARCH = "SNB"
 endif
 
+# WAR for "undefined memcpy" w/ Ubuntu + CUDA 7.5
+CXXFLAGS += -D_FORCE_INLINES
+# Additional compile-time information
+CXXFLAGS += -Xptxas=-v
+
 DEPFLAGS = -M
 
 OBJ = $(notdir $(SRC:.cpp=.o))
 LIB =
 
 include $(KOKKOS_PATH)/Makefile.kokkos
+
+temp:
+	echo $(KOKKOS_INTERNAL_USE_CUDA) $(CUDA_PATH)
 
 build: $(EXE)
 
