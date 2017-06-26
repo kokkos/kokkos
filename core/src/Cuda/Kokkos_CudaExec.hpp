@@ -152,7 +152,7 @@ namespace Impl {
 // For 2.0 capability: 48 KB L1 and 16 KB shared
 //----------------------------------------------------------------------------
 
-template< class DriverType >
+template< class DriverType>
 __global__
 static void cuda_parallel_launch_constant_memory()
 {
@@ -162,19 +162,39 @@ static void cuda_parallel_launch_constant_memory()
   driver();
 }
 
-template< class DriverType >
+template< class DriverType, unsigned int maxTperB, unsigned int minBperSM >
+__global__
+__launch_bounds__(maxTperB, minBperSM)
+static void cuda_parallel_launch_constant_memory()
+{
+  const DriverType & driver =
+    *((const DriverType *) kokkos_impl_cuda_constant_memory_buffer );
+
+  driver();
+}
+
+template< class DriverType>
 __global__
 static void cuda_parallel_launch_local_memory( const DriverType driver )
 {
   driver();
 }
 
+template< class DriverType, unsigned int maxTperB, unsigned int minBperSM >
+__global__
+__launch_bounds__(maxTperB, minBperSM)
+static void cuda_parallel_launch_local_memory( const DriverType driver )
+{
+  driver();
+}
+
 template < class DriverType ,
+           class LaunchBounds ,
            bool Large = ( CudaTraits::ConstantMemoryUseThreshold < sizeof(DriverType) ) >
 struct CudaParallelLaunch ;
 
-template < class DriverType >
-struct CudaParallelLaunch< DriverType , true > {
+template < class DriverType, class LaunchBounds >
+struct CudaParallelLaunch< DriverType, LaunchBounds, true > {
 
   inline
   CudaParallelLaunch( const DriverType & driver
@@ -198,9 +218,9 @@ struct CudaParallelLaunch< DriverType , true > {
       }
       #ifndef KOKKOS_ARCH_KEPLER //On Kepler the L1 has no benefit since it doesn't cache reads
       else if ( shmem ) {
-        CUDA_SAFE_CALL( cudaFuncSetCacheConfig( cuda_parallel_launch_constant_memory< DriverType > , cudaFuncCachePreferShared ) );
+        CUDA_SAFE_CALL( cudaFuncSetCacheConfig( cuda_parallel_launch_constant_memory< DriverType, LaunchBounds::maxTperB, LaunchBounds::minBperSM > , cudaFuncCachePreferShared ) );
       } else {
-        CUDA_SAFE_CALL( cudaFuncSetCacheConfig( cuda_parallel_launch_constant_memory< DriverType > , cudaFuncCachePreferL1 ) );
+        CUDA_SAFE_CALL( cudaFuncSetCacheConfig( cuda_parallel_launch_constant_memory< DriverType, LaunchBounds::maxTperB, LaunchBounds::minBperSM > , cudaFuncCachePreferL1 ) );
       }
       #endif
 
@@ -210,7 +230,7 @@ struct CudaParallelLaunch< DriverType , true > {
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
 
       // Invoke the driver function on the device
-      cuda_parallel_launch_constant_memory< DriverType ><<< grid , block , shmem , stream >>>();
+      cuda_parallel_launch_constant_memory< DriverType, LaunchBounds::maxTperB, LaunchBounds::minBperSM ><<< grid , block , shmem , stream >>>();
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       CUDA_SAFE_CALL( cudaGetLastError() );
@@ -220,8 +240,8 @@ struct CudaParallelLaunch< DriverType , true > {
   }
 };
 
-template < class DriverType >
-struct CudaParallelLaunch< DriverType , false > {
+template < class DriverType, class LaunchBounds >
+struct CudaParallelLaunch< DriverType, LaunchBounds, false > {
 
   inline
   CudaParallelLaunch( const DriverType & driver
@@ -237,15 +257,15 @@ struct CudaParallelLaunch< DriverType , false > {
       }
       #ifndef KOKKOS_ARCH_KEPLER //On Kepler the L1 has no benefit since it doesn't cache reads
       else if ( shmem ) {
-        CUDA_SAFE_CALL( cudaFuncSetCacheConfig( cuda_parallel_launch_local_memory< DriverType > , cudaFuncCachePreferShared ) );
+        CUDA_SAFE_CALL( cudaFuncSetCacheConfig( cuda_parallel_launch_local_memory< DriverType, LaunchBounds::maxTperB, LaunchBounds::minBperSM > , cudaFuncCachePreferShared ) );
       } else {
-        CUDA_SAFE_CALL( cudaFuncSetCacheConfig( cuda_parallel_launch_local_memory< DriverType > , cudaFuncCachePreferL1 ) );
+        CUDA_SAFE_CALL( cudaFuncSetCacheConfig( cuda_parallel_launch_local_memory< DriverType, LaunchBounds::maxTperB, LaunchBounds::minBperSM > , cudaFuncCachePreferL1 ) );
       }
       #endif
 
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
 
-      cuda_parallel_launch_local_memory< DriverType ><<< grid , block , shmem , stream >>>( driver );
+      cuda_parallel_launch_local_memory< DriverType, LaunchBounds::maxTperB, LaunchBounds::minBperSM ><<< grid , block , shmem , stream >>>( driver );
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       CUDA_SAFE_CALL( cudaGetLastError() );

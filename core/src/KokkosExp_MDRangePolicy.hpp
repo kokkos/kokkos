@@ -128,6 +128,7 @@ struct MDRangePolicy
 
   using iteration_pattern   = typename traits::iteration_pattern;
   using work_tag            = typename traits::work_tag;
+  using launch_bounds       = typename traits::launch_bounds;
   using member_type = typename range_policy::member_type;
 
   enum { rank = static_cast<int>(iteration_pattern::rank) };
