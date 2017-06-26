@@ -155,16 +155,18 @@ inline void kokkos_impl_yield( int64_t duration )
     KOKKOS_IMPL_NOP16;
     break;
   case 8:
-    KOKKOS_IMPL_YIELD;
     KOKKOS_IMPL_NOP32;
     break;
   case 9:
+    KOKKOS_IMPL_NOP64;
+    break;
+  case 10:
     KOKKOS_IMPL_YIELD;
     KOKKOS_IMPL_NOP64;
     break;
   default:
-    // sleep for approximatly 1/2 as long as the current duration
-    //KOKKOS_IMPL_SLEEP( (duration >> 1) );
+    // sleep for approximatly 1/8 as long as the current duration
+    KOKKOS_IMPL_SLEEP( (duration >> 3) );
     break;
   }
   KOKKOS_IMPL_PAUSE;
