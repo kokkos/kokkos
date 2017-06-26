@@ -124,6 +124,34 @@ int bit_scan_reverse( unsigned i )
 #endif
 }
 
+KOKKOS_FORCEINLINE_FUNCTION
+int bit_scan_reverse( int64_t i )
+{
+  enum :  int64_t { MAX32 = 1LL << 32 };
+#if defined( KOKKOS_COMPILER_INTEL )
+  return   i < MAX32
+         ? _bit_scan_reverse( (int)i )
+         : 32 + _bit_scan_reverse( (int)(i >> 32) ) ;
+#elif defined( KOKKOS_COMPILER_IBM )
+  return   i < MAX32
+         ? 31 - _cntlz4( (int)i )
+         : 63 - _cntlz4( (int)(i >> 32) ) ;
+#elif defined( KOKKOS_COMPILER_GNU ) || defined( KOKKOS_COMPILER_CLANG )
+  return   i < MAX32
+         ? 31 - __builtin_clz( (int)i )
+         : 63 - __builtin_clz( (int)(i >> 32) ) ;
+#else
+  int64_t t = 1LL << 63;
+  int r = 0;
+  while ( i && ( i & t == 0 ) )
+  {
+    t = t >> 1;
+    ++r;
+  }
+  return r;
+#endif
+}
+
 /// Count the number of bits set.
 KOKKOS_FORCEINLINE_FUNCTION
 int bit_count( unsigned i )
