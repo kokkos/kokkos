@@ -49,8 +49,6 @@
 
 #include <Kokkos_Atomic.hpp>
 
-#include <chrono>
-
 #if defined( KOKKOS_ENABLE_STDTHREAD )
   #include <thread>
 #elif !defined( _WIN32 )
@@ -123,16 +121,11 @@
 
 namespace {
 
-inline void kokkos_impl_yield( int64_t duration )
+inline void kokkos_impl_yield( const uint32_t i )
 {
-  // clock might not be monotonic
-  duration = duration > 0 ? duration : 0;
-
-  // find most significant bit
-  // log2 of duration
-  const int i = Kokkos::Impl::bit_scan_reverse(duration);
-
-  switch( i ) {
+  // switch on log2 of i
+  const int c = Kokkos::Impl::bit_scan_reverse(i);
+  switch( c ) {
   case 0:
     break;
   case 1:
@@ -140,33 +133,31 @@ inline void kokkos_impl_yield( int64_t duration )
   case 2:
     break;
   case 3:
-    KOKKOS_IMPL_NOP;
     break;
   case 4:
-    KOKKOS_IMPL_NOP2;
+    KOKKOS_IMPL_NOP;
     break;
   case 5:
-    KOKKOS_IMPL_NOP4;
+    KOKKOS_IMPL_NOP2;
     break;
   case 6:
-    KOKKOS_IMPL_NOP8;
+    KOKKOS_IMPL_NOP4;
     break;
   case 7:
-    KOKKOS_IMPL_NOP16;
+    KOKKOS_IMPL_NOP8;
     break;
   case 8:
-    KOKKOS_IMPL_NOP32;
+    KOKKOS_IMPL_NOP16;
     break;
   case 9:
-    KOKKOS_IMPL_NOP64;
+    KOKKOS_IMPL_NOP32;
     break;
   case 10:
     KOKKOS_IMPL_YIELD;
-    KOKKOS_IMPL_NOP64;
+    KOKKOS_IMPL_NOP32;
     break;
   default:
-    // sleep for approximatly 1/8 as long as the current duration
-    KOKKOS_IMPL_SLEEP( (duration >> 3) );
+    KOKKOS_IMPL_SLEEP( c*500 );
     break;
   }
   KOKKOS_IMPL_PAUSE;
@@ -182,56 +173,40 @@ namespace Impl {
 
 void spinwait_while_equal( volatile int32_t & flag , const int32_t value )
 {
-  using ns        = std::chrono::nanoseconds;
-  using clock     = std::chrono::high_resolution_clock;
-  using timepoint = clock::time_point;
-
   Kokkos::store_fence();
-  const timepoint start = clock::now();
+  uint32_t i=0;
   while ( value == flag ) {
-    kokkos_impl_yield( std::chrono::duration_cast<ns>( clock::now() - start).count() );
+    kokkos_impl_yield( ++i );
   }
   Kokkos::load_fence();
 }
 
 void spinwait_until_equal( volatile int32_t & flag , const int32_t value )
 {
-  using ns        = std::chrono::nanoseconds;
-  using clock     = std::chrono::high_resolution_clock;
-  using timepoint = clock::time_point;
-
   Kokkos::store_fence();
-  const timepoint start = clock::now();
+  uint32_t i=0;
   while ( value != flag ) {
-    kokkos_impl_yield( std::chrono::duration_cast<ns>( clock::now() - start).count() );
+    kokkos_impl_yield( ++i );
   }
   Kokkos::load_fence();
 }
 
 void spinwait_while_equal( volatile int64_t & flag , const int64_t value )
 {
-  using ns        = std::chrono::nanoseconds;
-  using clock     = std::chrono::high_resolution_clock;
-  using timepoint = clock::time_point;
-
   Kokkos::store_fence();
-  const timepoint start = clock::now();
+  uint32_t i=0;
   while ( value == flag ) {
-    kokkos_impl_yield( std::chrono::duration_cast<ns>( clock::now() - start).count() );
+    kokkos_impl_yield( ++i );
   }
   Kokkos::load_fence();
 }
 
 void spinwait_until_equal( volatile int64_t & flag , const int64_t value )
 {
-  using ns        = std::chrono::nanoseconds;
-  using clock     = std::chrono::high_resolution_clock;
-  using timepoint = clock::time_point;
-
   Kokkos::store_fence();
-  const timepoint start = clock::now();
+  uint32_t i=0;
   while ( value != flag ) {
-    kokkos_impl_yield( std::chrono::duration_cast<ns>( clock::now() - start).count() );
+    kokkos_impl_yield( ++i );
   }
   Kokkos::load_fence();
 }
