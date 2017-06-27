@@ -59,6 +59,7 @@ void spinwait_until_equal( volatile int32_t & flag , const int32_t value );
 
 void spinwait_while_equal( volatile int64_t & flag , const int64_t value );
 void spinwait_until_equal( volatile int64_t & flag , const int64_t value );
+
 #else
 
 KOKKOS_INLINE_FUNCTION

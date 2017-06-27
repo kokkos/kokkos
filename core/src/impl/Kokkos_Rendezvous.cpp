@@ -44,7 +44,7 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Atomic.hpp>
 #include <impl/Kokkos_Rendezvous.hpp>
-#include <impl/Kokkos_spinwait.hpp>
+#include <impl/Kokkos_Spinwait.hpp>
 
 namespace Kokkos { namespace Impl {
 
