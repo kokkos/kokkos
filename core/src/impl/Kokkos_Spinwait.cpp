@@ -49,6 +49,8 @@
 
 #include <Kokkos_Atomic.hpp>
 
+#include <algorithm>
+
 #if defined( KOKKOS_ENABLE_STDTHREAD )
   #include <thread>
 #elif !defined( _WIN32 )
@@ -157,7 +159,8 @@ inline void kokkos_impl_yield( const uint32_t i )
     KOKKOS_IMPL_NOP32;
     break;
   default:
-    KOKKOS_IMPL_SLEEP( c*500 );
+    // upper bound of a millisecond sleep
+    KOKKOS_IMPL_SLEEP( std::min(c*500, 1000000) );
     break;
   }
   KOKKOS_IMPL_PAUSE;
