@@ -257,6 +257,7 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
     default/TestDefaultDeviceType_b.cpp
     default/TestDefaultDeviceType_c.cpp
     default/TestDefaultDeviceType_d.cpp
+    default/TestDefaultDeviceTypeResize.cpp
   COMM serial mpi
   NUM_MPI_PROCS 1
   FAIL_REGULAR_EXPRESSION "  FAILED  "
