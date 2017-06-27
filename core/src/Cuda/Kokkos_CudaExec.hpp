@@ -188,9 +188,9 @@ static void cuda_parallel_launch_local_memory( const DriverType driver )
   driver();
 }
 
-template < class DriverType ,
-           class LaunchBounds ,
-           bool Large = ( CudaTraits::ConstantMemoryUseThreshold < sizeof(DriverType) ) >
+template < class DriverType
+         , class LaunchBounds = Kokkos::LaunchBounds<>
+         , bool Large = ( CudaTraits::ConstantMemoryUseThreshold < sizeof(DriverType) ) >
 struct CudaParallelLaunch ;
 
 template < class DriverType, class LaunchBounds >
