@@ -79,11 +79,15 @@ struct IndexType
   using type = T;
 };
 
-//Specify Launch Bounds for CUDA execution
-template<unsigned int maxT, unsigned int minB>
+/**\brief Specify Launch Bounds for CUDA execution.
+ *
+ *  The "best" defaults may be architecture specific.
+ */
+template< unsigned int maxT = 1024 /* Max threads per block */
+        , unsigned int minB = 1    /* Min blocks per SM */
+        >
 struct LaunchBounds
 {
-  //static_assert(std::is_integral<T>::value,"Kokkos: Invalid IndexType<>.");
   using launch_bounds = LaunchBounds;
   using type = LaunchBounds<maxT,minB>;
   static unsigned int constexpr maxTperB {maxT};
