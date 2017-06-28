@@ -464,7 +464,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   memory_pool * memory() const noexcept
-    { return m_queue ? m_queue->m_memory : (memory_pool*) 0 ; }
+    { return m_queue ? &( m_queue->m_memory ) : (memory_pool*) 0 ; }
 
   //----------------------------------------
   /**\brief  Allocation size for a spawned task */
