@@ -3,7 +3,7 @@
 # Options: Cuda,OpenMP,Pthreads,Qthreads,Serial
 #KOKKOS_DEVICES ?= "OpenMP"
 KOKKOS_DEVICES ?= "Pthreads"
-# Options: KNC,SNB,HSW,Kepler,Kepler30,Kepler32,Kepler35,Kepler37,Maxwell,Maxwell50,Maxwell52,Maxwell53,ARMv80,ARMv81,ARMv8-ThunderX,BGQ,Power7,Power8,Power9,KNL,BDW,SKX
+# Options: KNC,SNB,HSW,Kepler,Kepler30,Kepler32,Kepler35,Kepler37,Maxwell,Maxwell50,Maxwell52,Maxwell53,Pascal60,Pascal61,ARMv80,ARMv81,ARMv8-ThunderX,BGQ,Power7,Power8,Power9,KNL,BDW,SKX
 KOKKOS_ARCH ?= ""
 # Options: yes,no
 KOKKOS_DEBUG ?= "no"
@@ -74,6 +74,12 @@ KOKKOS_INTERNAL_COMPILER_PGI         := $(strip $(shell $(CXX) --version       2
 KOKKOS_INTERNAL_COMPILER_XL          := $(strip $(shell $(CXX) -qversion       2>&1 | grep XL                  | wc -l))
 KOKKOS_INTERNAL_COMPILER_CRAY        := $(strip $(shell $(CXX) -craype-verbose 2>&1 | grep "CC-"               | wc -l))
 KOKKOS_INTERNAL_COMPILER_NVCC        := $(strip $(shell $(CXX) --version       2>&1 | grep nvcc                | wc -l))
+ifneq ($(OMPI_CXX),)
+  KOKKOS_INTERNAL_COMPILER_NVCC      := $(strip $(shell $(OMPI_CXX) --version       2>&1 | grep nvcc                | wc -l))
+endif
+ifneq ($(MPICH_CXX),)
+  KOKKOS_INTERNAL_COMPILER_NVCC      := $(strip $(shell $(MPICH_CXX) --version       2>&1 | grep nvcc                | wc -l))
+endif
 KOKKOS_INTERNAL_COMPILER_CLANG       := $(strip $(shell $(CXX) --version       2>&1 | grep clang               | wc -l))
 KOKKOS_INTERNAL_COMPILER_APPLE_CLANG := $(strip $(shell $(CXX) --version       2>&1 | grep "apple-darwin"      | wc -l))
 
