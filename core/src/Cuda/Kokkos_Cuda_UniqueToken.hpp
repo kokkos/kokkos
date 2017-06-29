@@ -55,39 +55,23 @@
 namespace Kokkos { namespace Experimental {
 
 // both global and instance Unique Tokens are implemented in the same way
-template< UniqueTokenScope Scope>
-class UniqueToken< Cuda, Scope >
+template<>
+class UniqueToken< Cuda, UniqueTokenScope::Global >
 {
-  using Record = SharedAllocationRecord< CudaSpace >;
+private:
 
-  using Tracker = SharedAllocationTracker;
-
-  enum : int32_t { concurrency = 131072 };
-
-  // make this a SharedAllocationRecord
-  Tracker  m_track;
-  uint32_t volatile * m_buffer;
+  uint32_t volatile * m_buffer ;
+  uint32_t            m_count ;
 
 public:
 
   using execution_space = Cuda;
-  using size_type       = int;
 
-  /// \brief create object size for concurrency on the given instance
-  UniqueToken( execution_space const& = execution_space() ) noexcept
-  {
-    size_t alloc_size = concurrent_bitset::buffer_bound( concurrency );
+  explicit
+  UniqueToken( execution_space const& );
 
-    Record * record = Record::allocate( CudaSpace(), "UniqueToken", alloc_size );
-    m_track.assign_allocated_record_to_uninitialized( record );
-    m_buffer = (uint32_t*) record->data();
-
-    uint32_t * tmp = new uint32_t[alloc_size/sizeof(uint32_t)]{};
-
-    cudaMemcpy( m_buffer, tmp, alloc_size, cudaMemcpyDefault );
-
-    delete [] tmp;
-  }
+  KOKKOS_INLINE_FUNCTION
+  UniqueToken() : m_buffer(0), m_count(0) {}
 
   KOKKOS_INLINE_FUNCTION
   UniqueToken( const UniqueToken & ) = default;
@@ -96,38 +80,50 @@ public:
   UniqueToken( UniqueToken && )      = default;
 
   KOKKOS_INLINE_FUNCTION
-  UniqueToken & operator=( const UniqueToken & ) = default;
+  UniqueToken & operator=( const UniqueToken & ) = default ;
 
   KOKKOS_INLINE_FUNCTION
-  UniqueToken & operator=( UniqueToken && )      = default;
+  UniqueToken & operator=( UniqueToken && ) = default ;
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
-  int32_t size() const { return concurrency; }
+  int32_t size() const noexcept { return m_count ; }
 
   /// \brief acquire value such that 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
   int32_t acquire() const
   {
-    // while loop to aquire
-    Kokkos::pair<int,int> result;
-    do {
-      result = concurrent_bitset::acquire_bounded( buffer
-                              , concurrency
-                              , Kokkos::Impl::clock_tic() % concurrency
-                            //, state
-                             );
-    } while ( result.second < 0 );
+    const Kokkos::pair<int,int> result =
+      Kokkos::Impl::concurrent_bitset::
+        acquire_bounded( m_buffer
+                       , m_count
+                       , Kokkos::Impl::clock_tic() % m_count
+                       );
+
+   if ( result.first < 0 ) {
+     Kokkos::abort("UniqueToken<Cuda> failure to release tokens, no tokens available" );
+   }
 
     return result.first;
   }
 
-  /// \brief release a value acquired by generate
+  /// \brief release an acquired value
   KOKKOS_INLINE_FUNCTION
-  void release( int32_t i ) const
+  void release( int32_t i ) const noexcept
   {
-    concurrent_bitset::release( buffer, i );
+    Kokkos::Impl::concurrent_bitset::release( m_buffer, i );
   }
+};
+
+template<>
+class UniqueToken< Cuda, UniqueTokenScope::Instance >
+  : public UniqueToken< Cuda, UniqueTokenScope::Global >
+{
+public:
+
+  explicit
+  UniqueToken( execution_space const& arg )
+    : UniqueToken< Cuda, UniqueTokenScope::Global >( arg ) {}
 };
 
 }} // namespace Kokkos::Experimental
