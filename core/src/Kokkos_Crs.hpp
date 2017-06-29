@@ -312,10 +312,11 @@ template< class DataType,
           class SizeType>
 void transpose_crs(
     Crs<DataType, Arg1Type, Arg2Type, SizeType>& out,
-    Crs<DataType, Arg1Type, Arg2Type, SizeType> const& in) {
-  using crs_type = Crs<DataType, Arg1Type, Arg2Type, SizeType>;
-  using memory_space = typename crs_type::memory_space;
-  using counts_type = View<SizeType*, memory_space>;
+    Crs<DataType, Arg1Type, Arg2Type, SizeType> const& in)
+{
+  typedef Crs<DataType, Arg1Type, Arg2Type, SizeType> crs_type ;
+  typedef typename crs_type::memory_space             memory_space ;
+  typedef View<SizeType*, memory_space>               counts_type ;
   {
   counts_type counts;
   Kokkos::Experimental::get_crs_transpose_counts(counts, in);
