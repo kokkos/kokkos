@@ -296,7 +296,7 @@ void OpenMP::initialize( int thread_count )
   {
     if (nullptr == std::getenv("OMP_PROC_BIND") ) {
       printf("Kokkos::OpenMP::initialize WARNING: OMP_PROC_BIND environment variable not set\n");
-      printf("  In general, for best performance with OpenMP 4.0 or better set OMP_PROC_BIND=spread,close\n");
+      printf("  In general, for best performance with OpenMP 4.0 or better set OMP_PROC_BIND=spread and OMP_PLACES=threads\n");
       printf("  For best performance with OpenMP 3.1 set OMP_PROC_BIND=true\n");
       printf("  For unit testing set OMP_PROC_BIND=false\n");
     }
