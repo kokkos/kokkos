@@ -64,6 +64,22 @@ struct TestViewCtorProp_EmbeddedDim {
   using DynRankViewIntType     = typename Kokkos::DynRankView< int, ExecSpace >;
   using DynRankViewDoubleType     = typename Kokkos::DynRankView< double, ExecSpace >;
 
+  // Cuda 7.0 has issues with using a lamda in parallel_for to initialize the view - replace with this functor
+  template < class ViewType >
+  struct Functor {
+
+    ViewType v;
+
+    Functor( const ViewType & v_ ) : v(v_) {}
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()( const int i ) const {
+      v(i) = i;
+    }
+
+  };
+
+
   static void test_vcpt( const int N0, const int N1 )
   {
 
@@ -91,15 +107,29 @@ struct TestViewCtorProp_EmbeddedDim {
         CVT cv1( Kokkos::view_alloc( "cv1", view_alloc_arg ), N0*N1 );
 
         Kokkos::parallel_for( Kokkos::RangePolicy< ExecSpace >(0, N0*N1), 
-            KOKKOS_LAMBDA ( const int i ) {
-            cv1( i ) = (CommonViewValueType)(i); // cast as common value_type
-            }
-            );
+          Functor<CVT>(cv1)
+        );
 
         HostCVT hcv1 = Kokkos::create_mirror_view( cv1 );
         Kokkos::deep_copy( hcv1, cv1 );
 
         ASSERT_EQ( (std::is_same< CommonViewValueType, double >::value) , true ) ;
+      #if 0
+      // debug output
+      for ( int i = 0; i < N0*N1; ++i ) {
+        printf(" Output check: hcv1(%d) = %lf\n ", i, hcv1(i) );
+      }
+
+      printf( " Common value type view: %s \n", typeid( CVT() ).name() );
+      printf( " Common value type: %s \n", typeid( CommonViewValueType() ).name() );
+      if ( std::is_same< CommonViewValueType, double >::value == true ) {
+        printf("Proper common value_type\n");
+      }
+      else {
+        printf("WRONG common value_type\n");
+      }
+      // end debug output
+      #endif
       }
 
       {
@@ -116,10 +146,8 @@ struct TestViewCtorProp_EmbeddedDim {
         CVT cv1( Kokkos::view_alloc( "cv1", view_alloc_arg ), N0*N1 );
 
         Kokkos::parallel_for( Kokkos::RangePolicy< ExecSpace >(0, N0*N1), 
-            KOKKOS_LAMBDA ( const int i ) {
-            cv1( i ) = (CommonViewValueType)(i); // cast as common value_type
-            }
-            );
+          Functor<CVT>(cv1)
+        );
 
         HostCVT hcv1 = Kokkos::create_mirror_view( cv1 );
         Kokkos::deep_copy( hcv1, cv1 );
@@ -127,22 +155,6 @@ struct TestViewCtorProp_EmbeddedDim {
         ASSERT_EQ( (std::is_same< CommonViewValueType, int>::value) , true ) ;
       }
 
-      // debug output
-#if 0
-      for ( int i = 0; i < N0*N1; ++i ) {
-        printf(" Output check: hcv1(%d) = %lf\n ", i, hcv1(i) );
-      }
-
-      printf( " Common value type view: %s \n", typeid( CVT() ).name() );
-      printf( " Common value type: %s \n", typeid( CommonViewValueType() ).name() );
-      if ( std::is_same< CommonViewValueType, double >::value == true ) {
-        printf("Proper common value_type\n");
-      }
-      else {
-        printf("WRONG common value_type\n");
-      }
-#endif
-      // end debug output
     }
 
     // Create two dynamic rank views to test
@@ -168,11 +180,10 @@ struct TestViewCtorProp_EmbeddedDim {
         // Construct View using the common type; for case of specialization, an 'embedded_dim' would be stored by view_alloc_arg
         CVT cv1( Kokkos::view_alloc( "cv1", view_alloc_arg ), N0*N1 );
 
+
         Kokkos::parallel_for( Kokkos::RangePolicy< ExecSpace >(0, N0*N1), 
-            KOKKOS_LAMBDA ( const int i ) {
-            cv1( i ) = (CommonViewValueType)(i); // cast as common value_type
-            }
-            );
+          Functor<CVT>(cv1)
+        );
 
         HostCVT hcv1 = Kokkos::create_mirror_view( cv1 );
         Kokkos::deep_copy( hcv1, cv1 );
@@ -194,10 +205,8 @@ struct TestViewCtorProp_EmbeddedDim {
         CVT cv1( Kokkos::view_alloc( "cv1", view_alloc_arg ), N0*N1 );
 
         Kokkos::parallel_for( Kokkos::RangePolicy< ExecSpace >(0, N0*N1), 
-            KOKKOS_LAMBDA ( const int i ) {
-            cv1( i ) = (CommonViewValueType)(i); // cast as common value_type
-            }
-            );
+          Functor<CVT>(cv1)
+        );
 
         HostCVT hcv1 = Kokkos::create_mirror_view( cv1 );
         Kokkos::deep_copy( hcv1, cv1 );
