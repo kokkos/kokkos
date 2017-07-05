@@ -46,19 +46,6 @@
 ///
 /// This header file declares and defines Kokkos::Experimental::DynRankView and its
 /// related nonmember functions.
-/*
- *   Changes from View
- *   1. The rank of the DynRankView is returned by the method rank()
- *   2. Max rank of a DynRankView is 7
- *   3. subview name is subdynrankview
- *   4. Every subdynrankview is returned with LayoutStride
- *
- *   NEW: Redesigned DynRankView
- *   5. subview function name now available
- *   6. Copy and Copy-Assign View to DynRankView
- *   7. deep_copy between Views and DynRankViews
- *   8. rank( view ); returns the rank of View or DynRankView
- */
 
 #ifndef KOKKOS_DYNRANKVIEW_HPP
 #define KOKKOS_DYNRANKVIEW_HPP
@@ -117,6 +104,14 @@ struct DynRankDimTraits {
                       , layout.dimension[7] );
   }
 
+  // Extra overload to match that for specialize types v2
+  template <typename Layout, typename ... P>
+  KOKKOS_INLINE_FUNCTION
+  static size_t computeRank( const Kokkos::Impl::ViewCtorProp<P...>& prop, const Layout& layout )
+  {
+    return computeRank(layout);
+  }
+
   // Create the layout for the rank-7 view.
   // Non-strided Layout
   template <typename Layout>
@@ -158,8 +153,17 @@ struct DynRankDimTraits {
                  );
   }
 
+  // Extra overload to match that for specialize types
+  template <typename Traits, typename ... P>
+  KOKKOS_INLINE_FUNCTION
+  static typename std::enable_if< (std::is_same<typename Traits::array_layout , Kokkos::LayoutRight>::value || std::is_same<typename Traits::array_layout , Kokkos::LayoutLeft>::value || std::is_same<typename Traits::array_layout , Kokkos::LayoutStride>::value) , typename Traits::array_layout >::type createLayout( const ViewCtorProp<P...>& prop, const typename Traits::array_layout& layout )
+  {
+    return createLayout( layout );
+  }
+
   // Create a view from the given dimension arguments.
   // This is only necessary because the shmem constructor doesn't take a layout.
+  //   NDE shmem View's are not compatible with the added view_alloc value_type / fad_dim deduction functionality
   template <typename ViewType, typename ViewArg>
   static ViewType createView( const ViewArg& arg
                             , const size_t N0
@@ -395,20 +399,16 @@ namespace Experimental {
 
 /* \class DynRankView
  * \brief Container that creates a Kokkos view with rank determined at runtime.
- *   Essentially this is a rank 7 view that wraps the access operators
- *   to yield the functionality of a view
+ *   Essentially this is a rank 7 view
  *
  *   Changes from View
  *   1. The rank of the DynRankView is returned by the method rank()
  *   2. Max rank of a DynRankView is 7
- *   3. subview name is subdynrankview
- *   4. Every subdynrankview is returned with LayoutStride
- *
- *   NEW: Redesigned DynRankView
- *   5. subview function name now available
- *   6. Copy and Copy-Assign View to DynRankView
- *   7. deep_copy between Views and DynRankViews
- *   8. rank( view ); returns the rank of View or DynRankView
+ *   3. subview called with 'subview(...)' or 'subdynrankview(...)' (backward compatibility) 
+ *   4. Every subview is returned with LayoutStride
+ *   5. Copy and Copy-Assign View to DynRankView
+ *   6. deep_copy between Views and DynRankViews
+ *   7. rank( view ); returns the rank of View or DynRankView
  *
  */
 
@@ -879,7 +879,7 @@ public:
       )
       : m_track()
       , m_map()
-      , m_rank( Kokkos::Experimental::Impl::DynRankDimTraits<typename traits::specialize>::computeRank(arg_layout) )
+      , m_rank( Impl::DynRankDimTraits<typename traits::specialize>::template computeRank< typename traits::array_layout, P...>(arg_prop, arg_layout) )
     {
       // Append layout and spaces if not input
       typedef Impl::ViewCtorProp< P ... > alloc_prop_input ;
@@ -932,7 +932,7 @@ public:
 //------------------------------------------------------------
 
       Kokkos::Experimental::Impl::SharedAllocationRecord<> *
-        record = m_map.allocate_shared( prop , Kokkos::Experimental::Impl::DynRankDimTraits<typename traits::specialize>::createLayout(arg_layout) );
+        record = m_map.allocate_shared( prop , Impl::DynRankDimTraits<typename traits::specialize>::template createLayout<traits, P...>(arg_prop, arg_layout) );
 
 //------------------------------------------------------------
 #if defined( KOKKOS_ENABLE_CUDA )
@@ -956,8 +956,8 @@ public:
                                >::type const & arg_layout
       )
       : m_track() // No memory tracking
-      , m_map( arg_prop , Kokkos::Experimental::Impl::DynRankDimTraits<typename traits::specialize>::createLayout(arg_layout) )
-      , m_rank( Kokkos::Experimental::Impl::DynRankDimTraits<typename traits::specialize>::computeRank(arg_layout) )
+      , m_map( arg_prop , Impl::DynRankDimTraits<typename traits::specialize>::template createLayout<traits, P...>(arg_prop, arg_layout) )
+      , m_rank( Impl::DynRankDimTraits<typename traits::specialize>::template computeRank< typename traits::array_layout, P...>(arg_prop, arg_layout) )
     {
       static_assert(
         std::is_same< pointer_type
@@ -1043,6 +1043,7 @@ public:
     {}
 
   // For backward compatibility
+  // NDE This ctor does not take ViewCtorProp argument - should not use alternative createLayout call
   explicit inline
   DynRankView( const ViewAllocateWithoutInitializing & arg_prop
       , const typename traits::array_layout & arg_layout

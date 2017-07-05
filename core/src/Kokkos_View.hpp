@@ -2409,6 +2409,106 @@ void realloc(      Kokkos::View<T,P...> & v ,
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+namespace Kokkos { namespace Impl {
+
+template < class Specialize, typename A, typename B >
+struct CommonViewValueType;
+
+template < typename A, typename B >
+struct CommonViewValueType< void, A, B >
+{
+  using value_type = typename std::common_type< A , B >::type;
+};
+
+
+template < class Specialize, class ValueType >
+struct CommonViewAllocProp;
+
+template < class ValueType >
+struct CommonViewAllocProp< void, ValueType >
+{
+  using value_type = ValueType;
+
+  template < class ... Views >
+  CommonViewAllocProp( const Views & ... ) {}
+};
+
+
+template < class ... Views >
+struct DeduceCommonViewAllocProp;
+
+// Base case must provide types for:
+// 1. specialize  2. value_type  3. is_view  4. prop_type
+template < class FirstView >
+struct DeduceCommonViewAllocProp< FirstView >
+{
+  using specialize = typename FirstView::traits::specialize;
+
+  using value_type = typename FirstView::traits::value_type;
+
+  enum : bool { is_view = is_view< FirstView >::value };
+
+  using prop_type = CommonViewAllocProp< specialize, value_type >;
+};
+
+
+template < class FirstView, class ... NextViews >
+struct DeduceCommonViewAllocProp< FirstView, NextViews... >
+{
+  using NextTraits = DeduceCommonViewAllocProp< NextViews... >;
+
+  using first_specialize = typename FirstView::traits::specialize;
+  using first_value_type = typename FirstView::traits::value_type;
+
+  enum : bool { first_is_view = is_view< FirstView >::value };
+
+  using next_specialize = typename NextTraits::specialize;
+  using next_value_type = typename NextTraits::value_type;
+
+  enum : bool { next_is_view = NextTraits::is_view };
+
+  // common types
+
+  // determine specialize type
+  // if first and next specialize differ, but are not the same specialize, error out
+  static_assert( !(!std::is_same< first_specialize, next_specialize >::value && !std::is_same< first_specialize, void>::value && !std::is_same< void, next_specialize >::value)  , "Kokkos DeduceCommonViewAllocProp ERROR: Only one non-void specialize trait allowed" );
+
+  // otherwise choose non-void specialize if either/both are non-void
+  using specialize = typename std::conditional< std::is_same< first_specialize, next_specialize >::value
+                                              , first_specialize
+                                              , typename std::conditional< ( std::is_same< first_specialize, void >::value
+                                                                             && !std::is_same< next_specialize, void >::value)
+                                                                           , next_specialize
+                                                                           , first_specialize
+                                                                         >::type
+                                               >::type;
+
+  using value_type = typename CommonViewValueType< specialize, first_value_type, next_value_type >::value_type;
+
+  enum : bool { is_view = (first_is_view && next_is_view) };
+
+  using prop_type = CommonViewAllocProp< specialize, value_type >;
+};
+
+} // end namespace Impl
+
+template < class ... Views >
+using DeducedCommonPropsType = typename Impl::DeduceCommonViewAllocProp<Views...>::prop_type ;
+
+// User function
+template < class ... Views >
+DeducedCommonPropsType<Views...> 
+common_view_alloc_prop( Views const & ... views )
+{
+  return DeducedCommonPropsType<Views...>( views... );
+}
+
+} // namespace Kokkos
+
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // For backward compatibility:
 
 namespace Kokkos {
