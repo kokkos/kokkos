@@ -96,12 +96,9 @@ struct TestViewCtorProp_EmbeddedDim {
       {
         // Two views
         auto view_alloc_arg = Kokkos::common_view_alloc_prop(vi1, vd1);
-        //using CommonViewValueType = typename decltype( Kokkos::common_view_alloc_prop(vi1, vd1))::value_type;
-        using CommonViewValueType = typename decltype( view_alloc_arg )::value_type;
-
-        // View Type and HostMirror
-        using CVT = typename Kokkos::View< CommonViewValueType*, ExecSpace > ;
-        using HostCVT = typename CVT::HostMirror ;
+        typedef typename decltype( view_alloc_arg )::value_type                    CommonViewValueType;
+        typedef typename Kokkos::View< CommonViewValueType*, ExecSpace >  CVT;
+        typedef typename CVT::HostMirror                                           HostCVT;
 
         // Construct View using the common type; for case of specialization, an 'embedded_dim' would be stored by view_alloc_arg
         CVT cv1( Kokkos::view_alloc( "cv1", view_alloc_arg ), N0*N1 );
@@ -135,12 +132,9 @@ struct TestViewCtorProp_EmbeddedDim {
       {
         // Single view
         auto view_alloc_arg = Kokkos::common_view_alloc_prop(vi1);
-        //using CommonViewValueType = typename decltype( Kokkos::common_view_alloc_prop(vi1, vd1))::value_type;
-        using CommonViewValueType = typename decltype( view_alloc_arg )::value_type;
-
-        // View Type and HostMirror
-        using CVT = typename Kokkos::View< CommonViewValueType*, ExecSpace > ;
-        using HostCVT = typename CVT::HostMirror ;
+        typedef typename decltype( view_alloc_arg )::value_type                    CommonViewValueType;
+        typedef typename Kokkos::View< CommonViewValueType*, ExecSpace >  CVT;
+        typedef typename CVT::HostMirror                                           HostCVT;
 
         // Construct View using the common type; for case of specialization, an 'embedded_dim' would be stored by view_alloc_arg
         CVT cv1( Kokkos::view_alloc( "cv1", view_alloc_arg ), N0*N1 );
@@ -170,12 +164,9 @@ struct TestViewCtorProp_EmbeddedDim {
       {
         // Two views
         auto view_alloc_arg = Kokkos::common_view_alloc_prop( vi1, vd1 );
-        using CommonViewValueType = typename decltype( view_alloc_arg )::value_type;
-        //using CommonViewValueType = typename decltype( Kokkos::common_view_alloc_prop(vi1, vd1))::value_type;
-
-        // View Type and HostMirror
-        using CVT = typename Kokkos::View< CommonViewValueType*, ExecSpace > ;
-        using HostCVT = typename CVT::HostMirror ;
+        typedef typename decltype( view_alloc_arg )::value_type                    CommonViewValueType;
+        typedef typename Kokkos::View< CommonViewValueType*, ExecSpace >  CVT;
+        typedef typename CVT::HostMirror                                           HostCVT;
 
         // Construct View using the common type; for case of specialization, an 'embedded_dim' would be stored by view_alloc_arg
         CVT cv1( Kokkos::view_alloc( "cv1", view_alloc_arg ), N0*N1 );
@@ -194,12 +185,9 @@ struct TestViewCtorProp_EmbeddedDim {
       {
         // Single views
         auto view_alloc_arg = Kokkos::common_view_alloc_prop( vi1 );
-        using CommonViewValueType = typename decltype( view_alloc_arg )::value_type;
-        //using CommonViewValueType = typename decltype( Kokkos::common_view_alloc_prop(vi1, vd1))::value_type;
-
-        // View Type and HostMirror
-        using CVT = typename Kokkos::View< CommonViewValueType*, ExecSpace > ;
-        using HostCVT = typename CVT::HostMirror ;
+        typedef typename decltype( view_alloc_arg )::value_type                    CommonViewValueType;
+        typedef typename Kokkos::View< CommonViewValueType*, ExecSpace >  CVT;
+        typedef typename CVT::HostMirror                                           HostCVT;
 
         // Construct View using the common type; for case of specialization, an 'embedded_dim' would be stored by view_alloc_arg
         CVT cv1( Kokkos::view_alloc( "cv1", view_alloc_arg ), N0*N1 );
