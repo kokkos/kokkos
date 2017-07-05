@@ -295,6 +295,7 @@ struct VerifyExecutionCanAccessMemorySpace
 #include <Cuda/Kokkos_Cuda_Team.hpp>
 #include <Cuda/Kokkos_Cuda_Parallel.hpp>
 #include <Cuda/Kokkos_Cuda_Task.hpp>
+#include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
 //----------------------------------------------------------------------------

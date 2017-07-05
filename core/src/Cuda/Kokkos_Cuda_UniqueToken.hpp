@@ -41,48 +41,93 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_UNIQUE_TOKEN_HPP
-#define KOKKOS_UNIQUE_TOKEN_HPP
+#ifndef KOKKOS_CUDA_UNIQUE_TOKEN_HPP
+#define KOKKOS_CUDA_UNIQUE_TOKEN_HPP
 
 #include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_CUDA
+
+#include <Kokkos_CudaSpace.hpp>
+#include <Kokkos_UniqueToken.hpp>
+#include <impl/Kokkos_SharedAlloc.hpp>
+#include <impl/Kokkos_ConcurrentBitset.hpp>
 
 namespace Kokkos { namespace Experimental {
 
-enum class UniqueTokenScope : int
+// both global and instance Unique Tokens are implemented in the same way
+template<>
+class UniqueToken< Cuda, UniqueTokenScope::Global >
 {
-  Instance,
-  Global
-};
+private:
 
-/// \brief class to generate unique ids base on the required amount of concurrency
-///
-/// This object should behave like a ref-counted object, so that when the last
-/// instance is destroy resources are free if needed
-template <typename ExecutionSpace, UniqueTokenScope = UniqueTokenScope::Instance >
-class UniqueToken
-{
+  uint32_t volatile * m_buffer ;
+  uint32_t            m_count ;
+
 public:
-  using execution_space = ExecutionSpace;
-  using size_type       = typename execution_space::size_type;
 
-  /// \brief create object size for concurrency on the given instance
-  ///
-  /// This object should not be shared between instances
-  UniqueToken( execution_space const& = execution_space() );
+  using execution_space = Cuda;
+
+  explicit
+  UniqueToken( execution_space const& );
+
+  KOKKOS_INLINE_FUNCTION
+  UniqueToken() : m_buffer(0), m_count(0) {}
+
+  KOKKOS_INLINE_FUNCTION
+  UniqueToken( const UniqueToken & ) = default;
+
+  KOKKOS_INLINE_FUNCTION
+  UniqueToken( UniqueToken && )      = default;
+
+  KOKKOS_INLINE_FUNCTION
+  UniqueToken & operator=( const UniqueToken & ) = default ;
+
+  KOKKOS_INLINE_FUNCTION
+  UniqueToken & operator=( UniqueToken && ) = default ;
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
-  size_type size() const ;
+  int32_t size() const noexcept { return m_count ; }
 
   /// \brief acquire value such that 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
-  size_type acquire() const ;
+  int32_t acquire() const
+  {
+    const Kokkos::pair<int,int> result =
+      Kokkos::Impl::concurrent_bitset::
+        acquire_bounded( m_buffer
+                       , m_count
+                       , Kokkos::Impl::clock_tic() % m_count
+                       );
 
-  /// \brief release a value acquired by generate
+   if ( result.first < 0 ) {
+     Kokkos::abort("UniqueToken<Cuda> failure to release tokens, no tokens available" );
+   }
+
+    return result.first;
+  }
+
+  /// \brief release an acquired value
   KOKKOS_INLINE_FUNCTION
-  void release( size_type ) const ;
+  void release( int32_t i ) const noexcept
+  {
+    Kokkos::Impl::concurrent_bitset::release( m_buffer, i );
+  }
+};
+
+template<>
+class UniqueToken< Cuda, UniqueTokenScope::Instance >
+  : public UniqueToken< Cuda, UniqueTokenScope::Global >
+{
+public:
+
+  explicit
+  UniqueToken( execution_space const& arg )
+    : UniqueToken< Cuda, UniqueTokenScope::Global >( arg ) {}
 };
 
 }} // namespace Kokkos::Experimental
 
-#endif //KOKKOS_UNIQUE_TOKEN_HPP
+#endif // KOKKOS_ENABLE_CUDA
+#endif // KOKKOS_CUDA_UNIQUE_TOKEN_HPP
+

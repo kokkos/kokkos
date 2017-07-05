@@ -150,6 +150,7 @@ IF(Kokkos_ENABLE_OpenMP)
       openmp/TestOpenMP_ViewMapping_subview.cpp
       openmp/TestOpenMP_ViewOfClass.cpp
       openmp/TestOpenMP_WorkGraph.cpp
+      openmp/TestOpenMP_UniqueToken.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "

@@ -263,15 +263,29 @@ public:
   UniqueToken( execution_space const& = execution_space() ) noexcept {}
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
-  inline
-  int size() const noexcept { return Kokkos::OpenMP::thread_pool_size(); }
+  KOKKOS_INLINE_FUNCTION
+  int size() const noexcept
+    {
+      #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+      return Kokkos::OpenMP::thread_pool_size();
+      #else
+      return 0 ;
+      #endif
+    }
 
   /// \brief acquire value such that 0 <= value < size()
-  inline
-  int acquire() const  noexcept { return Kokkos::OpenMP::thread_pool_rank(); }
+  KOKKOS_INLINE_FUNCTION
+  int acquire() const  noexcept
+    {
+      #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+      return Kokkos::OpenMP::thread_pool_rank();
+      #else
+      return 0 ;
+      #endif
+    }
 
   /// \brief release a value acquired by generate
-  inline
+  KOKKOS_INLINE_FUNCTION
   void release( int ) const noexcept {}
 };
 
@@ -288,15 +302,29 @@ public:
   UniqueToken( execution_space const& = execution_space() ) noexcept {}
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
-  inline
-  int size() const noexcept { return Kokkos::Impl::g_openmp_hardware_max_threads; }
+  KOKKOS_INLINE_FUNCTION
+  int size() const noexcept
+    {
+      #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+      return Kokkos::Impl::g_openmp_hardware_max_threads ;
+      #else
+      return 0 ;
+      #endif
+    }
 
   /// \brief acquire value such that 0 <= value < size()
-  inline
-  int acquire() const noexcept { return Kokkos::Impl::t_openmp_hardware_id; }
+  KOKKOS_INLINE_FUNCTION
+  int acquire() const noexcept
+    {
+      #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+      return Kokkos::Impl::t_openmp_hardware_id ;
+      #else
+      return 0 ;
+      #endif
+    }
 
   /// \brief release a value acquired by generate
-  inline
+  KOKKOS_INLINE_FUNCTION
   void release( int ) const noexcept {}
 };
 
