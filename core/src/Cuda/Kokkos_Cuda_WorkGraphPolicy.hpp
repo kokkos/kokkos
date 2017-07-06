@@ -58,12 +58,14 @@ class ParallelFor< FunctorType ,
                           Traits ...
                         >
 {
-private:
+public:
 
   typedef Kokkos::Experimental::WorkGraphPolicy< Traits ... >   Policy ;
   typedef Kokkos::Impl::Experimental::
           WorkGraphExec<FunctorType, Kokkos::Cuda, Traits ... > Base ;
   typedef ParallelFor<FunctorType, Policy, Kokkos::Cuda>        Self ;
+
+private:
 
   template< class TagType >
   __device__
