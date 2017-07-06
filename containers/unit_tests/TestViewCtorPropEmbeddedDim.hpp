@@ -46,6 +46,7 @@
 #include <gtest/gtest.h>
 
 #include <Kokkos_Core.hpp>
+#include <Kokkos_DynRankView.hpp>
 
 #include <type_traits>
 #include <typeinfo>
@@ -59,6 +60,9 @@ struct TestViewCtorProp_EmbeddedDim {
 
   using ViewIntType     = typename Kokkos::View< int**, ExecSpace >;
   using ViewDoubleType     = typename Kokkos::View< double*, ExecSpace >;
+
+  using DynRankViewIntType     = typename Kokkos::DynRankView< int, ExecSpace >;
+  using DynRankViewDoubleType     = typename Kokkos::DynRankView< double, ExecSpace >;
 
   // Cuda 7.0 has issues with using a lamda in parallel_for to initialize the view - replace with this functor
   template < class ViewType >
@@ -79,7 +83,7 @@ struct TestViewCtorProp_EmbeddedDim {
   static void test_vcpt( const int N0, const int N1 )
   {
 
-    // Create views to test
+    // Create two views to test
     {
       using VIT = typename TestViewCtorProp_EmbeddedDim::ViewIntType ;
       using VDT = typename TestViewCtorProp_EmbeddedDim::ViewDoubleType ;
@@ -147,14 +151,63 @@ struct TestViewCtorProp_EmbeddedDim {
 
     }
 
+    // Create two dynamic rank views to test
+    {
+      using VIT = typename TestViewCtorProp_EmbeddedDim::DynRankViewIntType ;
+      using VDT = typename TestViewCtorProp_EmbeddedDim::DynRankViewDoubleType ;
+
+      VIT vi1("vi1", N0, N1);
+      VDT vd1("vd1", N0);
+
+      // TEST: Test for common type between two views, one with type double, other with type int
+      // Deduce common value_type and construct a view with that type
+      {
+        // Two views
+        auto view_alloc_arg = Kokkos::common_view_alloc_prop( vi1, vd1 );
+        typedef typename decltype( view_alloc_arg )::value_type                    CommonViewValueType;
+        typedef typename Kokkos::View< CommonViewValueType*, ExecSpace >  CVT;
+        typedef typename CVT::HostMirror                                           HostCVT;
+
+        // Construct View using the common type; for case of specialization, an 'embedded_dim' would be stored by view_alloc_arg
+        CVT cv1( Kokkos::view_alloc( "cv1", view_alloc_arg ), N0*N1 );
+
+
+        Kokkos::parallel_for( Kokkos::RangePolicy< ExecSpace >(0, N0*N1), 
+          Functor<CVT>(cv1)
+        );
+
+        HostCVT hcv1 = Kokkos::create_mirror_view( cv1 );
+        Kokkos::deep_copy( hcv1, cv1 );
+
+        ASSERT_EQ( (std::is_same< CommonViewValueType, double >::value) , true ) ;
+      }
+
+      {
+        // Single views
+        auto view_alloc_arg = Kokkos::common_view_alloc_prop( vi1 );
+        typedef typename decltype( view_alloc_arg )::value_type                    CommonViewValueType;
+        typedef typename Kokkos::View< CommonViewValueType*, ExecSpace >  CVT;
+        typedef typename CVT::HostMirror                                           HostCVT;
+
+        // Construct View using the common type; for case of specialization, an 'embedded_dim' would be stored by view_alloc_arg
+        CVT cv1( Kokkos::view_alloc( "cv1", view_alloc_arg ), N0*N1 );
+
+        Kokkos::parallel_for( Kokkos::RangePolicy< ExecSpace >(0, N0*N1), 
+          Functor<CVT>(cv1)
+        );
+
+        HostCVT hcv1 = Kokkos::create_mirror_view( cv1 );
+        Kokkos::deep_copy( hcv1, cv1 );
+
+        ASSERT_EQ( (std::is_same< CommonViewValueType, int>::value) , true ) ;
+      }
+    }
+
+
   } // end test_vcpt
 
 }; // end struct
 
 } // namespace
-
-TEST_F( TEST_CATEGORY , viewctorprop_embedded_dim ) {
-  TestViewCtorProp_EmbeddedDim< TEST_EXECSPACE >::test_vcpt( 2, 3 );
-}
 
 } // namespace Test
