@@ -109,7 +109,11 @@ enum { MEMORY_ALIGNMENT =
 #else
     ( 1 << Kokkos::Impl::integral_power_of_two( 128 ) )
 #endif
-  , MEMORY_ALIGNMENT_THRESHOLD = 4 
+#if defined( KOKKOS_MEMORY_ALIGNMENT_THRESHOLD )
+  , MEMORY_ALIGNMENT_THRESHOLD = KOKKOS_MEMORY_ALIGNMENT_THRESHOLD
+#else
+  , MEMORY_ALIGNMENT_THRESHOLD = 4
+#endif
   };
 
 
