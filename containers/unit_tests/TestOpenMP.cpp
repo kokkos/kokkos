@@ -66,6 +66,8 @@
 #include <Kokkos_ErrorReporter.hpp>
 #include <TestErrorReporter.hpp>
 
+#include <TestViewCtorPropEmbeddedDim.hpp>
+
 #include <iomanip>
 
 namespace Test {
@@ -87,6 +89,10 @@ protected:
 
 TEST_F( openmp, dyn_view_api) {
   TestDynViewAPI< double , Kokkos::OpenMP >();
+}
+
+TEST_F( openmp, viewctorprop_embedded_dim ) {
+  TestViewCtorProp_EmbeddedDim< Kokkos::OpenMP >::test_vcpt( 2, 3 );
 }
 
 TEST_F( openmp, bitset )
