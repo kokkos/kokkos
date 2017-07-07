@@ -45,7 +45,6 @@
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
 
 #include <impl/Kokkos_Spinwait.hpp>
-#include <impl/Kokkos_BitOps.hpp>
 
 #include <Kokkos_Atomic.hpp>
 
@@ -80,31 +79,6 @@
 #endif
 
 /*--------------------------------------------------------------------------*/
-/* KOKKOS_IMPL_NOP                                                          */
-/*--------------------------------------------------------------------------*/
-#if defined( KOKKOS_ENABLE_ASM )
-  #if !defined( _WIN32 )
-    #define KOKKOS_IMPL_NOP asm volatile("nop\n")
-  #else
-    #define KOKKOS_IMPL_NOP __asm__ __volatile__("nop\n")
-  #endif
-  #define KOKKOS_IMPL_NOP2  KOKKOS_IMPL_NOP  ; KOKKOS_IMPL_NOP
-  #define KOKKOS_IMPL_NOP4  KOKKOS_IMPL_NOP2 ; KOKKOS_IMPL_NOP2
-  #define KOKKOS_IMPL_NOP8  KOKKOS_IMPL_NOP4 ; KOKKOS_IMPL_NOP4
-  #define KOKKOS_IMPL_NOP16 KOKKOS_IMPL_NOP8 ; KOKKOS_IMPL_NOP8
-  #define KOKKOS_IMPL_NOP32 KOKKOS_IMPL_NOP16; KOKKOS_IMPL_NOP16
-  #define KOKKOS_IMPL_NOP64 KOKKOS_IMPL_NOP32; KOKKOS_IMPL_NOP32
-#else
-  #define KOKKOS_IMPL_NOP   KOKKOS_IMPL_YIELD
-  #define KOKKOS_IMPL_NOP2  KOKKOS_IMPL_YIELD
-  #define KOKKOS_IMPL_NOP4  KOKKOS_IMPL_YIELD
-  #define KOKKOS_IMPL_NOP8  KOKKOS_IMPL_YIELD
-  #define KOKKOS_IMPL_NOP16 KOKKOS_IMPL_YIELD
-  #define KOKKOS_IMPL_NOP32 KOKKOS_IMPL_YIELD
-  #define KOKKOS_IMPL_NOP64 KOKKOS_IMPL_YIELD
-#endif
-
-/*--------------------------------------------------------------------------*/
 /* KOKKOS_IMPL_SLEEP                                                        */
 /*--------------------------------------------------------------------------*/
 #if defined( KOKKOS_ENABLE_STDTHREAD )
@@ -118,50 +92,18 @@
     nanosleep( &req, nullptr );                                  \
   }
 #else
-  #define KOKKOS_IMPL_SLEEP( ns ) KOKKOS_IMPL_YIELD; KOKKOS_IMPL_NOP64
+  #define KOKKOS_IMPL_SLEEP( ns ) KOKKOS_IMPL_YIELD;
 #endif
 
 namespace {
 
 inline void kokkos_impl_yield( const uint32_t i )
 {
-  // switch on log2 of i
-  const int c = Kokkos::Impl::bit_scan_reverse(i);
-  switch( c ) {
-  case 0:
-    break;
-  case 1:
-    break;
-  case 2:
-    break;
-  case 3:
-    break;
-  case 4:
-    KOKKOS_IMPL_NOP;
-    break;
-  case 5:
-    KOKKOS_IMPL_NOP2;
-    break;
-  case 6:
-    KOKKOS_IMPL_NOP4;
-    break;
-  case 7:
-    KOKKOS_IMPL_NOP8;
-    break;
-  case 8:
-    KOKKOS_IMPL_NOP16;
-    break;
-  case 9:
-    KOKKOS_IMPL_NOP32;
-    break;
-  case 10:
+  if ( i < 1024u ) {
     KOKKOS_IMPL_YIELD;
-    KOKKOS_IMPL_NOP32;
-    break;
-  default:
-    // upper bound of a millisecond sleep
-    KOKKOS_IMPL_SLEEP( std::min(c*500, 1000000) );
-    break;
+  }
+  else {
+    KOKKOS_IMPL_SLEEP( 1000 );
   }
   KOKKOS_IMPL_PAUSE;
 }
