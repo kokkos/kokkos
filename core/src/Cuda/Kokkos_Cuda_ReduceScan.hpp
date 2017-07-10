@@ -268,29 +268,33 @@ bool cuda_inter_block_reduction( typename FunctorValueTraits< FunctorType , ArgT
         if( id + 1 < int(gridDim.x) )
           join(value, tmp);
       }
+      int active = __ballot(1);
       if (int(blockDim.x*blockDim.y) > 2) {
         value_type tmp = Kokkos::shfl_down(value, 2,32);
         if( id + 2 < int(gridDim.x) )
           join(value, tmp);
       }
+      active += __ballot(1);
       if (int(blockDim.x*blockDim.y) > 4) {
         value_type tmp = Kokkos::shfl_down(value, 4,32);
         if( id + 4 < int(gridDim.x) )
           join(value, tmp);
       }
+      active += __ballot(1);
       if (int(blockDim.x*blockDim.y) > 8) {
         value_type tmp = Kokkos::shfl_down(value, 8,32);
         if( id + 8 < int(gridDim.x) )
           join(value, tmp);
       }
+      active += __ballot(1);
       if (int(blockDim.x*blockDim.y) > 16) {
         value_type tmp = Kokkos::shfl_down(value, 16,32);
         if( id + 16 < int(gridDim.x) )
           join(value, tmp);
       }
+      active += __ballot(1);
     }
   }
-
   //The last block has in its thread=0 the global reduction value through "value"
   return last_block;
 #else
@@ -428,26 +432,31 @@ cuda_inter_block_reduction( const ReducerType& reducer,
         if( id + 1 < int(gridDim.x) )
           reducer.join(value, tmp);
       }
+      int active = __ballot(1);
       if (int(blockDim.x*blockDim.y) > 2) {
         value_type tmp = Kokkos::shfl_down(value, 2,32);
         if( id + 2 < int(gridDim.x) )
           reducer.join(value, tmp);
       }
+      active += __ballot(1);
       if (int(blockDim.x*blockDim.y) > 4) {
         value_type tmp = Kokkos::shfl_down(value, 4,32);
         if( id + 4 < int(gridDim.x) )
           reducer.join(value, tmp);
       }
+      active += __ballot(1);
       if (int(blockDim.x*blockDim.y) > 8) {
         value_type tmp = Kokkos::shfl_down(value, 8,32);
         if( id + 8 < int(gridDim.x) )
           reducer.join(value, tmp);
       }
+      active += __ballot(1);
       if (int(blockDim.x*blockDim.y) > 16) {
         value_type tmp = Kokkos::shfl_down(value, 16,32);
         if( id + 16 < int(gridDim.x) )
           reducer.join(value, tmp);
       }
+      active += __ballot(1);
     }
   }
 
