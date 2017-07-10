@@ -67,19 +67,15 @@ KokkosCore_PerformanceTest_Mempool: $(OBJ_MEMPOOL) $(KOKKOS_LINK_DEPENDS)
 KokkosCore_PerformanceTest_TaskDAG: $(OBJ_TASKDAG) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_TASKDAG) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_PerformanceTest_TaskDAG
 
-test-performance: export OMP_PROC_BIND=false
 test-performance: KokkosCore_PerformanceTest
 	./KokkosCore_PerformanceTest
 
-test-atomic: export OMP_PROC_BIND=false
 test-atomic: KokkosCore_PerformanceTest_Atomics
 	./KokkosCore_PerformanceTest_Atomics
 
-test-mempool: export OMP_PROC_BIND=false
 test-mempool: KokkosCore_PerformanceTest_Mempool
 	./KokkosCore_PerformanceTest_Mempool
 
-test_taskdag: export OMP_PROC_BIND=false
 test-taskdag: KokkosCore_PerformanceTest_TaskDAG
 	./KokkosCore_PerformanceTest_TaskDAG
 
