@@ -34,8 +34,6 @@ include $(KOKKOS_PATH)/Makefile.kokkos
 build: $(EXE)
 
 #for unit testing only, for best preformance with OpenMP 4.0 or better
-#export OMP_PROC_BIND=spread
-test: export OMP_PROC_BIND=false
 test: $(EXE)
 	./$(EXE)
 
