@@ -107,8 +107,6 @@ namespace Impl {
 __device__ __constant__
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
 extern
-#else
-static
 #endif
 Kokkos::Impl::CudaLockArrays g_device_cuda_lock_arrays ;
 

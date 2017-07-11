@@ -82,7 +82,6 @@ public:
   inline
   void execute()
   {
-    Base::setup();
     const int pool_size = OpenMP::thread_pool_size();
 
     #pragma omp parallel num_threads(pool_size)
