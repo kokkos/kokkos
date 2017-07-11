@@ -45,12 +45,22 @@
 #define KOKKOS_WORKGRAPHPOLICY_HPP
 
 namespace Kokkos {
+namespace Impl {
+namespace Experimental {
+
+template< class functor_type , class execution_space, class ... policy_args >
+class WorkGraphExec;
+
+}}} // namespace Kokkos::Impl::Experimental
+
+namespace Kokkos {
 namespace Experimental {
 
 template< class ... Properties >
 class WorkGraphPolicy
 {
 public:
+
   using self_type = WorkGraphPolicy<Properties ... >;
   using traits = Kokkos::Impl::PolicyTraits<Properties ... >;
   using index_type = typename traits::index_type;
@@ -60,37 +70,9 @@ public:
   using graph_type = Kokkos::Experimental::Crs<index_type, execution_space, void, index_type>;
   using member_type = index_type;
 
-  graph_type graph;
-
-  WorkGraphPolicy(graph_type arg_graph):graph(arg_graph) {}
-};
-
-}} // namespace Kokkos::Experimental
-
-/*--------------------------------------------------------------------------*/
-
-/*--------------------------------------------------------------------------*/
-
-namespace Kokkos {
-namespace Impl {
-namespace Experimental {
-
-template< class functor_type , class execution_space, class ... policy_args >
-class WorkGraphExec
-{
- public:
-
-  using self_type = WorkGraphExec< functor_type, execution_space, policy_args ... >;
-  using policy_type = Kokkos::Experimental::WorkGraphPolicy< policy_args ... >;
-  using member_type = typename policy_type::member_type;
-  using memory_space = typename execution_space::memory_space;
-
- protected:
-
-  const functor_type m_functor;
-  const policy_type  m_policy;
-
- private:
+private:
+   
+  graph_type m_graph;
 
   using ints_type = Kokkos::View<std::int32_t*, memory_space>;
   using range_type = Kokkos::pair<std::int32_t, std::int32_t>;
@@ -100,7 +82,7 @@ class WorkGraphExec
   ints_type m_queue;
   ranges_type m_ranges;
 
- public:
+public:
 
   struct TagZeroRanges {};
   KOKKOS_INLINE_FUNCTION
@@ -128,7 +110,19 @@ class WorkGraphExec
     execution_space::fence();
   }
 
- private:
+private:
+
+  inline
+  void setup() {
+    if (m_graph.numRows() > std::numeric_limits<std::int32_t>::max()) {
+      Kokkos::abort("WorkGraphPolicy work must be indexable using int32_t");
+    }
+    get_crs_transpose_counts(m_counts, m_graph);
+    m_queue = ints_type(ViewAllocateWithoutInitializing("queue"), m_total_work);
+    deep_copy(m_queue, std::int32_t(-1));
+    m_ranges = ranges_type("ranges", 1);
+    fill_queue();
+  }
 
   KOKKOS_INLINE_FUNCTION
   std::int32_t pop_work() const {
@@ -181,11 +175,50 @@ class WorkGraphExec
     memory_fence();
   }
 
+  template< class functor_type , class execution_space, class ... policy_args >
+  friend class Kokkos::Impl::Experimental::WorkGraphExec;
+
+public:
+
+  WorkGraphPolicy(graph_type arg_graph)
+    : m_graph(arg_graph)
+    , m_total_work( arg_graph.numRows() )
+  {
+    setup();
+  }
+
+};
+
+}} // namespace Kokkos::Experimental
+
+/*--------------------------------------------------------------------------*/
+
+/*--------------------------------------------------------------------------*/
+
+namespace Kokkos {
+namespace Impl {
+namespace Experimental {
+
+template< class functor_type , class execution_space, class ... policy_args >
+class WorkGraphExec
+{
  public:
+
+  using self_type = WorkGraphExec< functor_type, execution_space, policy_args ... >;
+  using policy_type = Kokkos::Experimental::WorkGraphPolicy< policy_args ... >;
+  using member_type = typename policy_type::member_type;
+  using memory_space = typename execution_space::memory_space;
+
+ protected:
+
+  const functor_type m_functor;
+  const policy_type  m_policy;
+
+ protected:
 
   KOKKOS_INLINE_FUNCTION
   std::int32_t before_work() const {
-    return pop_work();
+    return m_policy.pop_work();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -193,12 +226,12 @@ class WorkGraphExec
     /* fence any writes that were done by the work item itself
        (usually writing its result to global memory) */
     memory_fence();
-    const std::int32_t begin = m_policy.graph.row_map( i );
-    const std::int32_t end = m_policy.graph.row_map( i + 1 );
+    const std::int32_t begin = m_policy.m_graph.row_map( i );
+    const std::int32_t end = m_policy.m_graph.row_map( i + 1 );
     for (std::int32_t j = begin; j < end; ++j) {
-      const std::int32_t next = m_policy.graph.entries( j );
-      const std::int32_t old_count = atomic_fetch_add( &m_counts(next), -1 );
-      if ( old_count == 1 )  push_work( next );
+      const std::int32_t next = m_policy.m_graph.entries( j );
+      const std::int32_t old_count = atomic_fetch_add( &(m_policy.m_counts(next)), -1 );
+      if ( old_count == 1 )  m_policy.push_work( next );
     }
   }
 
@@ -207,20 +240,7 @@ class WorkGraphExec
                , const policy_type  & arg_policy )
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
-    , m_total_work( arg_policy.graph.numRows() )
   {
-  }
-
-  inline
-  void setup() {
-    if (m_policy.graph.numRows() > std::numeric_limits<std::int32_t>::max()) {
-      Kokkos::abort("WorkGraphPolicy work must be indexable using int32_t");
-    }
-    get_crs_transpose_counts(m_counts, m_policy.graph);
-    m_queue = ints_type(ViewAllocateWithoutInitializing("queue"), m_total_work);
-    deep_copy(m_queue, std::int32_t(-1));
-    m_ranges = ranges_type("ranges", 1);
-    fill_queue();
   }
 };
 

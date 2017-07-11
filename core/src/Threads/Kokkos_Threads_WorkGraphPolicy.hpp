@@ -97,7 +97,6 @@ public:
   inline
   void execute()
   {
-    Base::setup();
     ThreadsExec::start( & Self::thread_main, this );
     ThreadsExec::fence();
   }
