@@ -372,7 +372,9 @@ struct TestTaskTeam {
                                                  , begin - 1 )
                                    );
 
+        #ifndef __HCC_ACCELERATOR__
         assert( !future.is_null() );
+        #endif
 
         Kokkos::respawn( this, future );
       }
