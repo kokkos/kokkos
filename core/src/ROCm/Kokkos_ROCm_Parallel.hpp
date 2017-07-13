@@ -640,8 +640,8 @@ public:
       const auto total_size = policy.end() - policy.begin();
 
       if(total_size==0) {
-        if (result_view.ptr_on_device()) {
-           ValueInit::init( f , result_view.ptr_on_device() );
+        if (result_view.data()) {
+           ValueInit::init( f , result_view.data() );
         }
         return;
       }
@@ -651,8 +651,8 @@ public:
         , f
         , InvalidType{}
         , rocm_capture(invoke_fn{}, total_size)
-        , result_view.ptr_on_device()
-        , result_view.dimension_0()
+        , result_view.data()
+        , result_view.extent(0)
         );
     }
 
@@ -673,9 +673,9 @@ public:
       const auto total_size = policy.end() - policy.begin();
 
       if(total_size==0) {
-        if (reducer.result_view().ptr_on_device()) {
+        if (reducer.view().data()) {
            ValueInit::init( ReducerConditional::select(f,reducer), 
-                            reducer.result_view().ptr_on_device() );
+                            reducer.view().data() );
         }
         return;
       }
@@ -685,8 +685,8 @@ public:
         , f
         , reducer
         , rocm_capture(invoke_fn{}, total_size)
-        , reducer.result_view().ptr_on_device()
-        , reducer.result_view().dimension_0()
+        , reducer.view().data()
+        , reducer.view().extent(0)
         );
   }
 
@@ -803,8 +803,8 @@ public:
         , f
         , reducer
         , rocm_capture(invoke_fn{}, create_team_member)
-        , reducer.result_view().ptr_on_device()
-        , reducer.result_view().dimension_0(),team_size,vector_length
+        , reducer.view().data()
+        , reducer.view().extent(0),team_size,vector_length
         , shared_size
      );
 
