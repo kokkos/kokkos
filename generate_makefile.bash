@@ -32,6 +32,9 @@ do
       KOKKOS_DEVICES="${KOKKOS_DEVICES},Cuda"
       CUDA_PATH="${key#*=}"
       ;;
+    --with-rocm)
+      KOKKOS_DEVICES="${KOKKOS_DEVICES},ROCm"
+      ;;
     --with-openmp)
       KOKKOS_DEVICES="${KOKKOS_DEVICES},OpenMP"
       ;;
