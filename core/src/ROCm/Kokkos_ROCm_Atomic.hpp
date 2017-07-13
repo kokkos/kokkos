@@ -147,6 +147,12 @@ namespace Kokkos {
 
     return oldval.t ;    
   }
+ 
+  template<class T>
+  KOKKOS_INLINE_FUNCTION
+  T atomic_exchange(T* dest, typename std::enable_if<sizeof(T) != sizeof(int) && sizeof(T) != sizeof(int64_t), const T&>::type val) {
+    return val;
+  }
 
   KOKKOS_INLINE_FUNCTION
   int atomic_compare_exchange(int* dest, int compare, const int& val) {
@@ -229,6 +235,12 @@ namespace Kokkos {
     ival.f = val;
     idest.i = hc::atomic_compare_exchange_uint64((uint64_t*)(dest), icompare.i, ival.i);
     return idest.f;
+  }
+
+  template<class T>
+  KOKKOS_INLINE_FUNCTION
+  T atomic_compare_exchange(volatile T* dest, T compare, typename std::enable_if<(sizeof(T) != sizeof(int32_t)) && (sizeof(T) != sizeof(int64_t)), const T&>::type val) {
+    return val;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -374,6 +386,14 @@ namespace Kokkos {
     } while ( assume.i != oldval.i );
 
     return oldval.t ;    
+  }
+
+
+  //WORKAROUND
+  template<class T>
+  KOKKOS_INLINE_FUNCTION
+  T atomic_fetch_add(volatile T* dest, typename std::enable_if<sizeof(T) != sizeof(int) && sizeof(T) != sizeof(int64_t), const T&>::type val) {
+    return val ;
   }
 
   template<class T>
