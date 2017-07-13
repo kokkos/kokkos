@@ -299,7 +299,7 @@ public:
     // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
     // If the real part is +/-Inf and the imaginary part is -/+Inf,
     // this won't change the result.
-    const RealType s = ::fabs (y.real ()) + ::fabs (y.imag ());
+    const RealType s = std::fabs (y.real ()) + std::fabs (y.imag ());
 
     // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
     // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
@@ -537,7 +537,7 @@ operator / (const complex<RealType>& x, const complex<RealType>& y) {
   // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
   // If the real part is +/-Inf and the imaginary part is -/+Inf,
   // this won't change the result.
-  const RealType s = ::fabs (real (y)) + ::fabs (imag (y));
+  const RealType s = std::fabs (real (y)) + std::fabs (imag (y));
 
   // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
   // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
