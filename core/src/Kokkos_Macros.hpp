@@ -161,6 +161,9 @@
   #define KOKKOS_FORCEINLINE_FUNCTION  __device__  __host__  __forceinline__
   #define KOKKOS_INLINE_FUNCTION       __device__  __host__  inline
   #define KOKKOS_FUNCTION              __device__  __host__
+  #ifdef KOKKOS_COMPILER_CLANG
+  #define KOKKOS_FUNCTION_DEFAULTED KOKKOS_FUNCTION
+  #endif
 #endif // #if defined( __CUDA_ARCH__ )
 
 #if defined( KOKKOS_ENABLE_ROCM ) && defined( __HCC__ )
@@ -169,6 +172,7 @@
   #define KOKKOS_INLINE_FUNCTION       __attribute__((amp,cpu)) inline
   #define KOKKOS_FUNCTION              __attribute__((amp,cpu))
   #define KOKKOS_LAMBDA                [=] __attribute__((amp,cpu))
+  #define KOKKOS_FUNCTION_DEFAULTED    KOKKOS_FUNCTION
 #endif
 
 #if defined( _OPENMP )
@@ -402,6 +406,10 @@
 
 #if !defined( KOKKOS_FUNCTION )
   #define KOKKOS_FUNCTION /**/
+#endif
+
+#if !defined( KOKKOS_FUNCTION_DEFAULTED )
+  #define KOKKOS_FUNCTION_DEFAULTED /**/
 #endif
 
 //----------------------------------------------------------------------------

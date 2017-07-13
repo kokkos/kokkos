@@ -152,22 +152,10 @@ public:
   KOKKOS_INLINE_FUNCTION pointer       data()       { return pointer(0) ; }
   KOKKOS_INLINE_FUNCTION const_pointer data() const { return const_pointer(0); }
 
-  #if defined(KOKKOS_ENABLE_ROCM)
-  KOKKOS_INLINE_FUNCTION
-  #endif
-  ~Array() = default ;
-  #if defined(KOKKOS_ENABLE_ROCM)
-  KOKKOS_INLINE_FUNCTION
-  #endif
-  Array() = default ;
-  #if defined(KOKKOS_ENABLE_ROCM)
-  KOKKOS_INLINE_FUNCTION
-  #endif
-  Array( const Array & ) = default ;
-  #if defined(KOKKOS_ENABLE_ROCM)
-  KOKKOS_INLINE_FUNCTION
-  #endif
-  Array & operator = ( const Array & ) = default ;
+  KOKKOS_FUNCTION_DEFAULTED ~Array() = default ;
+  KOKKOS_FUNCTION_DEFAULTED Array() = default ;
+  KOKKOS_FUNCTION_DEFAULTED Array( const Array & ) = default ;
+  KOKKOS_FUNCTION_DEFAULTED Array & operator = ( const Array & ) = default ;
 
   // Some supported compilers are not sufficiently C++11 compliant
   // for default move constructor and move assignment operator.
@@ -221,10 +209,7 @@ public:
   KOKKOS_INLINE_FUNCTION pointer       data()       { return m_elem ; }
   KOKKOS_INLINE_FUNCTION const_pointer data() const { return m_elem ; }
 
-  #if defined(KOKKOS_ENABLE_ROCM)
-  KOKKOS_INLINE_FUNCTION
-  #endif
-  ~Array() = default ;
+  KOKKOS_FUNCTION_DEFAULTED ~Array() = default ;
   Array() = delete ;
   Array( const Array & rhs ) = delete ;
 
@@ -293,10 +278,7 @@ public:
   KOKKOS_INLINE_FUNCTION pointer       data()       { return m_elem ; }
   KOKKOS_INLINE_FUNCTION const_pointer data() const { return m_elem ; }
 
-  #if defined(KOKKOS_ENABLE_ROCM)
-  KOKKOS_INLINE_FUNCTION
-  #endif
-  ~Array() = default ;
+  KOKKOS_FUNCTION_DEFAULTED ~Array() = default ;
   Array()  = delete ;
   Array( const Array & ) = delete ;
 
