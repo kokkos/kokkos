@@ -162,7 +162,7 @@ else
       KOKKOS_INTERNAL_CXX11_FLAG := -hstd=c++11
     else
       ifeq ($(KOKKOS_INTERNAL_COMPILER_HCC), 1)
-        KOKKOS_INTERNAL_CXX11_FLAG := ""
+        KOKKOS_INTERNAL_CXX11_FLAG := 
       else
         KOKKOS_INTERNAL_CXX11_FLAG := --std=c++11
         KOKKOS_INTERNAL_CXX1Z_FLAG := --std=c++1z
@@ -728,7 +728,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_FIJI), 1)
     tmp := $(shell echo "\#define KOKKOS_ARCH_ROCM 803" >> KokkosCore_config.tmp )
     tmp := $(shell echo "\#define KOKKOS_ARCH_FIJI 1" >> KokkosCore_config.tmp )
-    KOKKOS_INTERNAL_ROCM_ARCH_FLAG := --amdgpu-target=gfx803
+    #KOKKOS_INTERNAL_ROCM_ARCH_FLAG := --amdgpu-target=gfx803
+    KOKKOS_INTERNAL_ROCM_ARCH_FLAG := -amdgpu-target=AMD:AMDGPU:8:0:3
   endif
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA), 1)
     tmp := $(shell echo "\#define KOKKOS_ARCH_ROCM 901" >> KokkosCore_config.tmp )

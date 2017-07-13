@@ -64,6 +64,7 @@ public:
   using execution_space = Kokkos::ROCm ;
   using queue_type      = Kokkos::Impl::TaskQueue< execution_space > ;
   using task_base_type  = Kokkos::Impl::TaskBase< execution_space , void , void > ;
+  using member_type     = TaskExec< execution_space > ;
 
   // Must specify memory space
   using memory_space = Kokkos::HostSpace ;
@@ -81,7 +82,10 @@ public:
   // execution space from the host process.
   template< typename FunctorType >
   static
-  void proc_set_apply( task_base_type::function_type * ptr )
+  void proc_set_apply( typename TaskBase< Kokkos::ROCm
+                               , typename FunctorType::value_type
+                               , FunctorType
+                               >::function_type * ptr )
     {
       using TaskType = TaskBase< Kokkos::ROCm
                                , typename FunctorType::value_type
@@ -97,6 +101,11 @@ public:
     }
 };
 
+/*template<>
+KOKKOS_FUNCTION 
+void TaskQueue<Kokkos::ROCm>::decrement( typename TaskQueue<Kokkos::ROCm>::task_root_type *
+) {}
+*/
 extern template class TaskQueue< Kokkos::ROCm > ;
 
 //----------------------------------------------------------------------------

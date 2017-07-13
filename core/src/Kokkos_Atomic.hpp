@@ -170,6 +170,7 @@ extern KOKKOS_INLINE_FUNCTION
 void unlock_address_rocm_space(void* ptr);
 }
 }
+#endif
 
 #ifdef _WIN32
 #include "impl/Kokkos_Atomic_Windows.hpp"

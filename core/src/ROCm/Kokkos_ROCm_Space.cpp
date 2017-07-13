@@ -59,7 +59,7 @@
 //#include <ROCm/Kokkos_ROCm_Internal.hpp>
 #include <impl/Kokkos_Error.hpp>
 
-#if (KOKKOS_ENABLE_PROFILING)
+#if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #endif
 
@@ -278,7 +278,7 @@ deallocate( SharedAllocationRecord< void , void > * arg_rec )
 SharedAllocationRecord< Kokkos::ROCmSpace , void >::
 ~SharedAllocationRecord()
 {
-  #if (KOKKOS_ENABLE_PROFILING)
+  #if defined(KOKKOS_ENABLE_PROFILING)
   if(Kokkos::Profiling::profileLibraryLoaded()) {
 
     SharedAllocationHeader header ;
@@ -329,7 +329,7 @@ SharedAllocationRecord( const Kokkos::ROCmSpace & arg_space
       )
   , m_space( arg_space )
 {
-  #if (KOKKOS_ENABLE_PROFILING)
+  #if defined(KOKKOS_ENABLE_PROFILING)
   if(Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(Kokkos::Profiling::SpaceHandle(arg_space.name()),arg_label,data(),arg_alloc_size);
   }

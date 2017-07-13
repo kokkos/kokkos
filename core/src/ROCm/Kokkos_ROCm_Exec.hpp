@@ -46,6 +46,10 @@
 #include <algorithm>
 #include <typeinfo>
 
+#if defined(__HCC_ACCELERATOR__)
+#define printf(...)
+#endif
+
 namespace Kokkos {
 namespace Impl {
 struct ROCmTraits {

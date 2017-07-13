@@ -676,7 +676,7 @@ void ROCm::initialize( const ROCm::SelectDevice config )
 {
   Impl::ROCmInternal::singleton().initialize( config.rocm_device_id );
 
-  #if (KOKKOS_ENABLE_PROFILING)
+  #if defined(KOKKOS_ENABLE_PROFILING)
     Kokkos::Profiling::initialize();
   #endif
 }
@@ -706,7 +706,7 @@ void ROCm::finalize()
 {
   Impl::ROCmInternal::singleton().finalize();
 
-  #if (KOKKOS_ENABLE_PROFILING)
+  #if defined(KOKKOS_ENABLE_PROFILING)
     Kokkos::Profiling::finalize();
   #endif
 }

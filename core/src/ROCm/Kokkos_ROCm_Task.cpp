@@ -45,7 +45,7 @@
 
 #if defined( KOKKOS_ENABLE_ROCM ) && defined( KOKKOS_ENABLE_TASKDAG )
 
-//#include <impl/Kokkos_TaskQueue_impl.hpp>
+#include <impl/Kokkos_TaskQueue_impl.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -55,6 +55,7 @@ namespace Impl {
 
 template class TaskQueue< Kokkos::ROCm > ;
 
+
 //----------------------------------------------------------------------------
 KOKKOS_INLINE_FUNCTION
 void TaskQueueSpecialization< Kokkos::ROCm >::driver
@@ -63,7 +64,7 @@ void TaskQueueSpecialization< Kokkos::ROCm >::driver
 {
   using Member = TaskExec< Kokkos::ROCm > ;
   using Queue  = TaskQueue< Kokkos::ROCm > ;
-  using task_root_type = TaskBase< Kokkos::ROCm , void , void > ;
+  using task_root_type = TaskBase< void , void , void > ;
 
   task_root_type * const end = (task_root_type *) task_root_type::EndTag ;
 
