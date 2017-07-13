@@ -107,6 +107,11 @@ public:
     re_ (val), im_ (0.0)
   {}
 
+  // BUG HCC WORKAROUND
+  KOKKOS_INLINE_FUNCTION complex( const RealType& re, const RealType& im):
+    re_ (re), im_ (im)
+  {}
+ 
   //! Constructor that takes the real and imaginary parts.
   template<class RealType1, class RealType2>
   KOKKOS_INLINE_FUNCTION complex (const RealType1& re, const RealType2& im) :
