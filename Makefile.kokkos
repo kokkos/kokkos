@@ -728,8 +728,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_FIJI), 1)
     tmp := $(shell echo "\#define KOKKOS_ARCH_ROCM 803" >> KokkosCore_config.tmp )
     tmp := $(shell echo "\#define KOKKOS_ARCH_FIJI 1" >> KokkosCore_config.tmp )
-    #KOKKOS_INTERNAL_ROCM_ARCH_FLAG := --amdgpu-target=gfx803
-    KOKKOS_INTERNAL_ROCM_ARCH_FLAG := -amdgpu-target=AMD:AMDGPU:8:0:3
+    KOKKOS_INTERNAL_ROCM_ARCH_FLAG := --amdgpu-target=gfx803
   endif
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA), 1)
     tmp := $(shell echo "\#define KOKKOS_ARCH_ROCM 901" >> KokkosCore_config.tmp )
@@ -742,8 +741,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
   ROCM_HCC_PATH ?= $(KOKKOS_INTERNAL_HCC_PATH:/bin/clang++=)
 
   KOKKOS_CXXFLAGS += $(shell $(ROCM_HCC_PATH)/bin/hcc-config --cxxflags) 
-  KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_ROCM_ARCH_FLAG)
   KOKKOS_LDFLAGS += $(shell $(ROCM_HCC_PATH)/bin/hcc-config --ldflags) -lhc_am -lm 
+  KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_ROCM_ARCH_FLAG)
 
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/ROCm/*.cpp)
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/ROCm/*.hpp)
