@@ -192,9 +192,11 @@ void ROCmHostPinnedSpace::deallocate( void * const arg_alloc_ptr , const size_t 
 }
 #endif
 
+/*
 constexpr const char* ROCmSpace::name() {
   return m_name;
 }
+*/
 
 #if 0
 constexpr const char* ROCmHostPinnedSpace::name() {
