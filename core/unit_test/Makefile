@@ -75,7 +75,6 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
         OBJ_ROCM = UnitTestMainInit.o gtest-all.o
-#        OBJ_ROCM += TestROCm_All.o
         OBJ_ROCM += TestROCm_Init.o
         OBJ_ROCM += TestROCm_Complex.o
 #        OBJ_ROCM += TestROCm_RangePolicy.o
@@ -111,14 +110,14 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
 #        OBJ_ROCM += TestROCm_TeamScratch.o
 # compile fails
         OBJ_ROCM += TestROCm_ViewAPI_b.o
-# deep copy with ExecSpace sync missing
+#  test fail in view_api
         OBJ_ROCM += TestROCm_ViewMapping_a.o
         OBJ_ROCM += TestROCm_ViewMapping_b.o
         OBJ_ROCM += TestROCm_ViewMapping_subview.o
         OBJ_ROCM += TestROCm_ViewOfClass.o
      
         TARGETS += KokkosCore_UnitTest_ROCm
-        TEST_TARGETS += test-cuda
+        TEST_TARGETS += test-rocm
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)

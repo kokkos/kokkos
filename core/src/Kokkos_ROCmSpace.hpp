@@ -302,7 +302,8 @@ template<class ExecutionSpace> struct DeepCopy< ROCmSpace , ROCmSpace , Executio
   DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
   {
     exec.fence();
-    DeepCopyAsyncROCm (dst,src,n);
+//    DeepCopyAsyncROCm (dst,src,n);
+    DeepCopy (dst,src,n);
   }
 };
 
@@ -316,7 +317,8 @@ template<class ExecutionSpace> struct DeepCopy< ROCmSpace , HostSpace , Executio
   DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
   {
     exec.fence();
-    DeepCopyAsyncROCm (dst,src,n);
+//    DeepCopyAsyncROCm (dst,src,n);
+    DeepCopy (dst,src,n);
   }
 };
 
@@ -331,7 +333,8 @@ struct DeepCopy< HostSpace , ROCmSpace , ExecutionSpace >
   DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
   {
     exec.fence();
-    DeepCopyAsyncROCm (dst,src,n);
+//    DeepCopyAsyncROCm (dst,src,n);
+    DeepCopy (dst,src,n);
   }
 };
 

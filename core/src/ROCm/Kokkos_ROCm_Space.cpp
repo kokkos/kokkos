@@ -107,18 +107,33 @@ DeepCopy<ROCmSpace,HostSpace,ROCm>::DeepCopy( void * dst , const void * src , si
    av.copy( src , dst , n);
 }
 
-#if 0
+#if 1
 DeepCopy<ROCmSpace,ROCmSpace,ROCm>::DeepCopy( const ROCm & instance , void * dst , const void * src , size_t n )
-{ ROCM_SAFE_CALL( am_copyAsync( dst , src , n )); }
+{
+   hc::accelerator acc;
+   hc::accelerator_view av = acc.get_default_view();
+   av.copy( src , dst , n);
+}
 
 DeepCopy<HostSpace,ROCmSpace,ROCm>::DeepCopy( const ROCm & instance , void * dst , const void * src , size_t n )
-{ ROCM_SAFE_CALL( am_copyAsync( dst , src , n )); }
+{
+   hc::accelerator acc;
+   hc::accelerator_view av = acc.get_default_view();
+   av.copy( src , dst , n);
+}
 
 DeepCopy<ROCmSpace,HostSpace,ROCm>::DeepCopy( const ROCm & instance , void * dst , const void * src , size_t n )
-{ ROCM_SAFE_CALL( am_copyAsync( dst , src , n  ) ); }
+{
+   hc::accelerator acc;
+   hc::accelerator_view av = acc.get_default_view();
+   av.copy( src , dst , n);
+}
 
 void DeepCopyAsyncROCm( void * dst , const void * src , size_t n) {
-  ROCM_SAFE_CALL( am_copyAsync( dst , src , n ) );
+   hc::accelerator acc;
+   hc::accelerator_view av = acc.get_default_view();
+   av.copy( src , dst , n);
+  
 }
 #endif
 
