@@ -123,8 +123,10 @@ class Cuda;                 ///< Execution space for Cuda GPU
 #endif
 
 #if defined( KOKKOS_ENABLE_ROCM )
+namespace Experimental {
 class ROCmSpace ;            ///< Memory space on ROCm GPU
 class ROCm ;                 ///< Execution space for ROCm GPU
+}
 #endif
 
 template<class ExecutionSpace, class MemorySpace>
@@ -146,7 +148,7 @@ namespace Kokkos {
 #elif defined ( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET )
   typedef Experimental::OpenMPTarget DefaultExecutionSpace ;
 #elif defined ( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM )
-  typedef ROCm DefaultExecutionSpace ;
+  typedef Experimental::ROCm DefaultExecutionSpace ;
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP )
   typedef OpenMP DefaultExecutionSpace;
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS )

@@ -57,11 +57,11 @@ namespace Impl {
 template< class > class TaskExec ; 
 
 template<>
-class TaskQueueSpecialization< Kokkos::ROCm >
+class TaskQueueSpecialization< Kokkos::Experimental::ROCm >
 {
 public:
 
-  using execution_space = Kokkos::ROCm ;
+  using execution_space = Kokkos::Experimental::ROCm ;
   using queue_type      = Kokkos::Impl::TaskQueue< execution_space > ;
   using task_base_type  = Kokkos::Impl::TaskBase< execution_space , void , void > ;
   using member_type     = TaskExec< execution_space > ;
@@ -82,12 +82,12 @@ public:
   // execution space from the host process.
   template< typename FunctorType >
   static
-  void proc_set_apply( typename TaskBase< Kokkos::ROCm
+  void proc_set_apply( typename TaskBase< Kokkos::Experimental::ROCm
                                , typename FunctorType::value_type
                                , FunctorType
                                >::function_type * ptr )
     {
-      using TaskType = TaskBase< Kokkos::ROCm
+      using TaskType = TaskBase< Kokkos::Experimental::ROCm
                                , typename FunctorType::value_type
                                , FunctorType
                                > ;
@@ -103,10 +103,10 @@ public:
 
 /*template<>
 KOKKOS_FUNCTION 
-void TaskQueue<Kokkos::ROCm>::decrement( typename TaskQueue<Kokkos::ROCm>::task_root_type *
+void TaskQueue<Kokkos::Experimental::ROCm>::decrement( typename TaskQueue<Kokkos::Experimental::ROCm>::task_root_type *
 ) {}
 */
-extern template class TaskQueue< Kokkos::ROCm > ;
+extern template class TaskQueue< Kokkos::Experimental::ROCm > ;
 
 //----------------------------------------------------------------------------
 /**\brief  Impl::TaskExec<ROCm> is the TaskScheduler<ROCm>::member_type
@@ -124,7 +124,7 @@ extern template class TaskQueue< Kokkos::ROCm > ;
  *  lanes of the warp are idle.
  */
 template<>
-class TaskExec< Kokkos::ROCm >
+class TaskExec< Kokkos::Experimental::ROCm >
 {
 private:
 
@@ -134,8 +134,8 @@ private:
   TaskExec & operator = ( TaskExec const & ) = delete ;
 
 
-  friend class Kokkos::Impl::TaskQueue< Kokkos::ROCm > ;
-  friend class Kokkos::Impl::TaskQueueSpecialization< Kokkos::ROCm > ;
+  friend class Kokkos::Impl::TaskQueue< Kokkos::Experimental::ROCm > ;
+  friend class Kokkos::Impl::TaskQueueSpecialization< Kokkos::Experimental::ROCm > ;
 
   int              m_team_size ;
   hc::tiled_index<3>      m_idx;
@@ -174,32 +174,32 @@ namespace Kokkos {
 
 template<typename iType>
 KOKKOS_INLINE_FUNCTION
-Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::ROCm > >
+Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Experimental::ROCm > >
 TeamThreadRange
-  ( Impl::TaskExec< Kokkos::ROCm > & thread, const iType & count )
+  ( Impl::TaskExec< Kokkos::Experimental::ROCm > & thread, const iType & count )
 {
-  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::ROCm > >(thread,count);
+  return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Experimental::ROCm > >(thread,count);
 }
 
 template<typename iType1, typename iType2>
 KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct< typename std::common_type< iType1, iType2 >::type,
-                                       Impl::TaskExec< Kokkos::ROCm > >
+                                       Impl::TaskExec< Kokkos::Experimental::ROCm > >
 TeamThreadRange
-  ( Impl:: TaskExec< Kokkos::ROCm > & thread, const iType1 & begin, const iType2 & end )
+  ( Impl:: TaskExec< Kokkos::Experimental::ROCm > & thread, const iType1 & begin, const iType2 & end )
 {
   typedef typename std::common_type<iType1, iType2>::type iType;
-  return Impl::TeamThreadRangeBoundariesStruct<iType, Impl::TaskExec< Kokkos::ROCm > >(thread, begin, end);
+  return Impl::TeamThreadRangeBoundariesStruct<iType, Impl::TaskExec< Kokkos::Experimental::ROCm > >(thread, begin, end);
 }
 
 template<typename iType>
 KOKKOS_INLINE_FUNCTION
-Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::ROCm > >
+Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Experimental::ROCm > >
 ThreadVectorRange
-  ( Impl::TaskExec< Kokkos::ROCm > & thread
+  ( Impl::TaskExec< Kokkos::Experimental::ROCm > & thread
   , const iType & count )
 {
-  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::ROCm > >(thread,count);
+  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Experimental::ROCm > >(thread,count);
 }
 
 /** \brief  Inter-thread parallel_for. Executes lambda(iType i) for each i=0..N-1.
@@ -210,7 +210,7 @@ ThreadVectorRange
 template<typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION
 void parallel_for
-  ( const Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::ROCm > >& loop_boundaries
+  ( const Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Experimental::ROCm > >& loop_boundaries
   , const Lambda& lambda
   )
 {
@@ -281,7 +281,7 @@ ValueType shfl_workgroup_broadcast
 template<typename iType, class Lambda, typename ValueType>
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
-  ( const Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::ROCm > >& loop_boundaries
+  ( const Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Experimental::ROCm > >& loop_boundaries
   , const Lambda& lambda
   , ValueType& initialized_result)
 {
@@ -306,7 +306,7 @@ void parallel_reduce
 template< typename iType, class Lambda, typename ValueType, class JoinType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
-  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::ROCm > >& loop_boundaries,
+  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Experimental::ROCm > >& loop_boundaries,
    const Lambda & lambda,
    const JoinType & join,
    ValueType& initialized_result)
@@ -331,7 +331,7 @@ void parallel_reduce
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
-  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::ROCm > >& loop_boundaries,
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Experimental::ROCm > >& loop_boundaries,
    const Lambda & lambda,
    ValueType& initialized_result)
 {
@@ -356,7 +356,7 @@ void parallel_reduce
 template< typename iType, class Lambda, typename ValueType, class JoinType >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
-  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::ROCm > >& loop_boundaries,
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Experimental::ROCm > >& loop_boundaries,
    const Lambda & lambda,
    const JoinType & join,
    ValueType& initialized_result)
@@ -375,7 +375,7 @@ void parallel_reduce
 template< typename ValueType, typename iType, class Lambda >
 KOKKOS_INLINE_FUNCTION
 void parallel_scan
-  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::ROCm > >& loop_boundaries,
+  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Experimental::ROCm > >& loop_boundaries,
    const Lambda & lambda)
 {
   hc::tiled_index<3> idx = loop_boundaries.thread.idx();
@@ -414,7 +414,7 @@ void parallel_scan
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
 void parallel_scan
-  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::ROCm > >& loop_boundaries,
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Experimental::ROCm > >& loop_boundaries,
    const Lambda & lambda)
 {
   hc::tiled_index<3> idx = loop_boundaries.thread.idx();

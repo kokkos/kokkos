@@ -53,17 +53,17 @@
 namespace Kokkos {
 namespace Impl {
 
-template class TaskQueue< Kokkos::ROCm > ;
+template class TaskQueue< Kokkos::Experimental::ROCm > ;
 
 
 //----------------------------------------------------------------------------
 KOKKOS_INLINE_FUNCTION
-void TaskQueueSpecialization< Kokkos::ROCm >::driver
-  ( TaskQueueSpecialization< Kokkos::ROCm >::queue_type * const queue,
+void TaskQueueSpecialization< Kokkos::Experimental::ROCm >::driver
+  ( TaskQueueSpecialization< Kokkos::Experimental::ROCm >::queue_type * const queue,
     hc::tiled_index<3> threadIdx )
 {
-  using Member = TaskExec< Kokkos::ROCm > ;
-  using Queue  = TaskQueue< Kokkos::ROCm > ;
+  using Member = TaskExec< Kokkos::Experimental::ROCm > ;
+  using Queue  = TaskQueue< Kokkos::Experimental::ROCm > ;
   using task_root_type = TaskBase< void , void , void > ;
 
   task_root_type * const end = (task_root_type *) task_root_type::EndTag ;
@@ -129,14 +129,14 @@ printf("TaskQueue<ROCm>::driver(%d,%d) task(%lx)\n",threadIdx.z,blockIdx.x
 #if 0
 namespace {
 KOKKOS_INLINE_FUNCTION
-void rocm_task_queue_execute( TaskQueue< Kokkos::ROCm > * queue, 
+void rocm_task_queue_execute( TaskQueue< Kokkos::Experimental::ROCm > * queue, 
                               hc::tiled_index<3> threadIdx )
-{ TaskQueueSpecialization< Kokkos::ROCm >::driver( queue, threadIdx ); }
+{ TaskQueueSpecialization< Kokkos::Experimental::ROCm >::driver( queue, threadIdx ); }
 
 }
 #endif
-void TaskQueueSpecialization< Kokkos::ROCm >::execute
-  ( TaskQueue< Kokkos::ROCm > * const queue )
+void TaskQueueSpecialization< Kokkos::Experimental::ROCm >::execute
+  ( TaskQueue< Kokkos::Experimental::ROCm > * const queue )
 {
   const int workgroups_per_wavefront = 4 ;
   const int wavefront_size = Kokkos::Impl::ROCmTraits::WavefrontSize ;
@@ -159,7 +159,7 @@ void TaskQueueSpecialization< Kokkos::ROCm >::execute
 
   hc::parallel_for_each( team_extent , [&](hc::tiled_index<3> idx) [[hc]]
   {
-    TaskQueueSpecialization< Kokkos::ROCm >::driver( queue,idx ); 
+    TaskQueueSpecialization< Kokkos::Experimental::ROCm >::driver( queue,idx ); 
   }).wait();
 #endif
 }

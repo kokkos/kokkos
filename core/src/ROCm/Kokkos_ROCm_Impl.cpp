@@ -112,7 +112,7 @@ bool rocm_launch_blocking()
 void * rocm_device_allocate(int size)
 {
   void * ptr;
-  if(ROCm().isAPU()) {
+  if(Kokkos::Experimental::ROCm().isAPU()) {
     ptr =  malloc(size);
   }
   else {
@@ -124,7 +124,7 @@ void * rocm_device_allocate(int size)
 
 void rocm_device_free(void * ptr)
 {
-  if(ROCm().isAPU()) {
+  if(Kokkos::Experimental::ROCm().isAPU()) {
     free(ptr);
   }
   else {
@@ -316,7 +316,7 @@ private:
 
 public:
 
-  typedef ROCm::size_type size_type ;
+  typedef Kokkos::Experimental::ROCm::size_type size_type ;
 
   int         m_rocmDev ;
   int         m_rocmArch ;
@@ -378,7 +378,7 @@ void ROCmInternal::print_configuration( std::ostream & s ) const
 #endif
 
   for ( int i = 0 ; i < dev_info.m_rocmDevCount ; ++i ) {
-    s << "Kokkos::ROCm[ " << i << " ] "
+    s << "Kokkos::Experimental::ROCm[ " << i << " ] "
       << dev_info.m_rocmProp[i].name
       << " version " << (dev_info.m_rocmProp[i].major) << "." << dev_info.m_rocmProp[i].minor
       << ", Total Global Memory: " << human_memory_size(dev_info.m_rocmProp[i].totalGlobalMem)
@@ -394,7 +394,7 @@ ROCmInternal::~ROCmInternal()
 {
   if ( m_scratchSpace ||
        m_scratchFlags ) {
-    std::cerr << "Kokkos::ROCm ERROR: Failed to call Kokkos::ROCm::finalize()"
+    std::cerr << "Kokkos::Experimental::ROCm ERROR: Failed to call Kokkos::Experimental::ROCm::finalize()"
               << std::endl ;
     std::cerr.flush();
   }
@@ -413,7 +413,7 @@ ROCmInternal::~ROCmInternal()
 int ROCmInternal::verify_is_initialized( const char * const label ) const
 {
   if ( m_rocmDev < 0 ) {
-    std::cerr << "Kokkos::ROCm::" << label << " : ERROR device not initialized" << std::endl ;
+    std::cerr << "Kokkos::Experimental::ROCm::" << label << " : ERROR device not initialized" << std::endl ;
   }
   return 0 <= m_rocmDev ;
 }
@@ -467,7 +467,7 @@ void ROCmInternal::initialize( int rocm_device_id  )
     // Query what compute capability architecture a kernel executes:
     m_rocmArch = rocm_kernel_arch();
     if ( m_rocmArch != rocmProp.major * 100 + rocmProp.minor * 10 ) {
-      std::cerr << "Kokkos::ROCm::initialize WARNING: running kernels compiled for compute capability "
+      std::cerr << "Kokkos::Experimental::ROCm::initialize WARNING: running kernels compiled for compute capability "
                 << ( m_rocmArch / 100 ) << "." << ( ( m_rocmArch % 100 ) / 10 )
                 << " on device with compute capability "
                 << rocmProp.major << "." << rocmProp.minor
@@ -508,7 +508,7 @@ void ROCmInternal::initialize( int rocm_device_id  )
   else {
 
     std::ostringstream msg ;
-    msg << "Kokkos::ROCm::initialize(" << rocm_device_id << ") FAILED" ;
+    msg << "Kokkos::Experimental::ROCm::initialize(" << rocm_device_id << ") FAILED" ;
 
     if ( ! ok_init ) {
       msg << " : Already initialized" ;
@@ -541,10 +541,10 @@ void ROCmInternal::initialize( int rocm_device_id  )
 
 //----------------------------------------------------------------------------
 
-typedef ROCm::size_type ScratchGrain[ Impl::ROCmTraits::WorkgroupSize ] ;
+typedef Kokkos::Experimental::ROCm::size_type ScratchGrain[ Impl::ROCmTraits::WorkgroupSize ] ;
 enum { sizeScratchGrain = sizeof(ScratchGrain) };
 
-void rocmMemset(  ROCm::size_type * ptr ,  ROCm::size_type value , ROCm::size_type size)
+void rocmMemset(  Kokkos::Experimental::ROCm::size_type * ptr ,  Kokkos::Experimental::ROCm::size_type value , Kokkos::Experimental::ROCm::size_type size)
 {
 char * mptr = (char * ) ptr;
 #if 0
@@ -563,8 +563,8 @@ char * mptr = (char * ) ptr;
 #endif
 }
 
-ROCm::size_type *
-ROCmInternal::scratch_flags( const ROCm::size_type size )
+Kokkos::Experimental::ROCm::size_type *
+ROCmInternal::scratch_flags( const Kokkos::Experimental::ROCm::size_type size )
 {
   if ( verify_is_initialized("scratch_flags") && m_scratchFlagsCount * sizeScratchGrain < size ) {
 
@@ -587,8 +587,8 @@ ROCmInternal::scratch_flags( const ROCm::size_type size )
   return m_scratchFlags ;
 }
 
-ROCm::size_type *
-ROCmInternal::scratch_space( const ROCm::size_type size )
+Kokkos::Experimental::ROCm::size_type *
+ROCmInternal::scratch_space( const Kokkos::Experimental::ROCm::size_type size )
 {
   if ( verify_is_initialized("scratch_space") && m_scratchSpaceCount * sizeScratchGrain < size ) {
 
@@ -638,19 +638,19 @@ void ROCmInternal::finalize()
 
 //----------------------------------------------------------------------------
 
-ROCm::size_type rocm_internal_cu_count()
+Kokkos::Experimental::ROCm::size_type rocm_internal_cu_count()
 { return ROCmInternal::singleton().m_multiProcCount ; }
 
-ROCm::size_type rocm_internal_maximum_extent_size()
+Kokkos::Experimental::ROCm::size_type rocm_internal_maximum_extent_size()
 { return ROCmInternal::singleton().m_maxWorkgroup ; }
 
-ROCm::size_type rocm_internal_maximum_shared_words()
+Kokkos::Experimental::ROCm::size_type rocm_internal_maximum_shared_words()
 { return ROCmInternal::singleton().m_maxSharedWords ; }
 
-ROCm::size_type * rocm_internal_scratch_space( const ROCm::size_type size )
+Kokkos::Experimental::ROCm::size_type * rocm_internal_scratch_space( const Kokkos::Experimental::ROCm::size_type size )
 { return ROCmInternal::singleton().scratch_space( size ); }
 
-ROCm::size_type * rocm_internal_scratch_flags( const ROCm::size_type size )
+Kokkos::Experimental::ROCm::size_type * rocm_internal_scratch_flags( const Kokkos::Experimental::ROCm::size_type size )
 { return ROCmInternal::singleton().scratch_flags( size ); }
 
 
@@ -661,20 +661,24 @@ ROCm::size_type * rocm_internal_scratch_flags( const ROCm::size_type size )
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+namespace Experimental {
 
 //ROCm::size_type ROCm::detect_device_count()
 //{ return Impl::ROCmInternalDevices::singleton().m_rocmDevCount ; }
 
 int ROCm::concurrency() {
+#if defined(KOKKOS_ARCH_KAVERI) 
   return 8*64*40;  // 20480 kaveri
-//  return 32*8*40;  // 81920 fiji and hawaii
+#else
+  return 32*8*40;  // 81920 fiji and hawaii
+#endif
 }
 int ROCm::is_initialized()
-{ return Impl::ROCmInternal::singleton().is_initialized(); }
+{ return Kokkos::Impl::ROCmInternal::singleton().is_initialized(); }
 
 void ROCm::initialize( const ROCm::SelectDevice config )
 {
-  Impl::ROCmInternal::singleton().initialize( config.rocm_device_id );
+  Kokkos::Impl::ROCmInternal::singleton().initialize( config.rocm_device_id );
 
   #if defined(KOKKOS_ENABLE_PROFILING)
     Kokkos::Profiling::initialize();
@@ -704,7 +708,7 @@ ROCm::size_type ROCm::device_arch()
 
 void ROCm::finalize()
 {
-  Impl::ROCmInternal::singleton().finalize();
+  Kokkos::Impl::ROCmInternal::singleton().finalize();
 
   #if defined(KOKKOS_ENABLE_PROFILING)
     Kokkos::Profiling::finalize();
@@ -712,14 +716,14 @@ void ROCm::finalize()
 }
 
 ROCm::ROCm()
-  : m_device( Impl::ROCmInternal::singleton().m_rocmDev )
+  : m_device( Kokkos::Impl::ROCmInternal::singleton().m_rocmDev )
 {
-  Impl::ROCmInternal::singleton().verify_is_initialized( "ROCm instance constructor" );
+  Kokkos::Impl::ROCmInternal::singleton().verify_is_initialized( "ROCm instance constructor" );
 }
 
 bool ROCm::isAPU(int device) {
-  const Impl::ROCmInternalDevices & dev_info = 
-              Impl::ROCmInternalDevices::singleton();
+  const Kokkos::Impl::ROCmInternalDevices & dev_info = 
+              Kokkos::Impl::ROCmInternalDevices::singleton();
   return (dev_info.m_rocmProp[device].APU);  
 }
 
@@ -732,7 +736,7 @@ bool ROCm::isAPU() {
 //{}
 
 void ROCm::print_configuration( std::ostream & s , const bool )
-{ Impl::ROCmInternal::singleton().print_configuration( s ); }
+{ Kokkos::Impl::ROCmInternal::singleton().print_configuration( s ); }
 
 bool ROCm::sleep() { return false ; }
 
@@ -743,6 +747,7 @@ void ROCm::fence()
   Kokkos::Impl::rocm_device_synchronize();
 }
 
+} // namespace Experimental
 } // namespace Kokkos
 
 #endif // KOKKOS_ENABLE_ROCM

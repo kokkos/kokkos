@@ -58,7 +58,7 @@
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
-
+namespace Experimental {
 /** \brief  ROCm on-device memory management */
 
 class ROCmSpace {
@@ -66,7 +66,7 @@ public:
 
   //! Tag this class as a kokkos memory space
   typedef ROCmSpace             memory_space ;
-  typedef Kokkos::ROCm          execution_space ;
+  typedef Kokkos::Experimental::ROCm          execution_space ;
   typedef Kokkos::Device<execution_space,memory_space> device_type;
 
   typedef unsigned int          size_type ;
@@ -100,8 +100,10 @@ private:
   int  m_device ; ///< Which ROCm device
 
   static constexpr const char* m_name = "ROCm";
-  friend class Kokkos::Impl::SharedAllocationRecord< Kokkos::ROCmSpace , void > ;
+  friend class Kokkos::Impl::SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void > ;
 };
+
+} // namespace Experimental
 
 namespace Impl {
 
@@ -202,12 +204,12 @@ private:
 namespace Kokkos {
 namespace Impl {
 
-static_assert( Kokkos::Impl::MemorySpaceAccess< Kokkos::ROCmSpace , Kokkos::ROCmSpace >::assignable , "" );
+static_assert( Kokkos::Impl::MemorySpaceAccess< Kokkos::Experimental::ROCmSpace , Kokkos::Experimental::ROCmSpace >::assignable , "" );
 
 //----------------------------------------
 
 template<>
-struct MemorySpaceAccess< Kokkos::HostSpace , Kokkos::ROCmSpace > {
+struct MemorySpaceAccess< Kokkos::HostSpace , Kokkos::Experimental::ROCmSpace > {
   enum { assignable = false };
   enum { accessible = false };
   enum { deepcopy   = true };
@@ -215,7 +217,7 @@ struct MemorySpaceAccess< Kokkos::HostSpace , Kokkos::ROCmSpace > {
 
 #if 0
 template<>
-struct MemorySpaceAccess< Kokkos::HostSpace , Kokkos::ROCmHostPinnedSpace > {
+struct MemorySpaceAccess< Kokkos::HostSpace , Kokkos::Experimental::ROCmHostPinnedSpace > {
   // HostSpace::execution_space == ROCmHostPinnedSpace::execution_space
   enum { assignable = true };
   enum { accessible = true };
@@ -226,7 +228,7 @@ struct MemorySpaceAccess< Kokkos::HostSpace , Kokkos::ROCmHostPinnedSpace > {
 //----------------------------------------
 
 template<>
-struct MemorySpaceAccess< Kokkos::ROCmSpace , Kokkos::HostSpace > {
+struct MemorySpaceAccess< Kokkos::Experimental::ROCmSpace , Kokkos::HostSpace > {
   enum { assignable = false };
   enum { accessible = false };
   enum { deepcopy   = true };
@@ -234,7 +236,7 @@ struct MemorySpaceAccess< Kokkos::ROCmSpace , Kokkos::HostSpace > {
 
 #if 0
 template<>
-struct MemorySpaceAccess< Kokkos::ROCmSpace , Kokkos::ROCmHostPinnedSpace > {
+struct MemorySpaceAccess< Kokkos::Experimental::ROCmSpace , Kokkos::Experimental::ROCmHostPinnedSpace > {
   // ROCmSpace::execution_space != ROCmHostPinnedSpace::execution_space
   enum { assignable = false };
   enum { accessible = true }; // ROCmSpace::execution_space
@@ -247,14 +249,14 @@ struct MemorySpaceAccess< Kokkos::ROCmSpace , Kokkos::ROCmHostPinnedSpace > {
 // ROCmHostPinnedSpace accessible to both ROCm and Host
 
 template<>
-struct MemorySpaceAccess< Kokkos::ROCmHostPinnedSpace , Kokkos::HostSpace > {
+struct MemorySpaceAccess< Kokkos::Experimental::ROCmHostPinnedSpace , Kokkos::HostSpace > {
   enum { assignable = false }; // Cannot access from ROCm
   enum { accessible = true };  // ROCmHostPinnedSpace::execution_space
   enum { deepcopy   = true };
 };
 
 template<>
-struct MemorySpaceAccess< Kokkos::ROCmHostPinnedSpace , Kokkos::ROCmSpace > {
+struct MemorySpaceAccess< Kokkos::Experimental::ROCmHostPinnedSpace , Kokkos::Experimental::ROCmSpace > {
   enum { assignable = false }; // Cannot access from Host
   enum { accessible = false };
   enum { deepcopy   = true };
@@ -274,29 +276,29 @@ namespace Impl {
 
 void DeepCopyAsyncROCm( void * dst , const void * src , size_t n);
 
-template<> struct DeepCopy< ROCmSpace , ROCmSpace , ROCm>
+template<> struct DeepCopy< Kokkos::Experimental::ROCmSpace , Kokkos::Experimental::ROCmSpace , Kokkos::Experimental::ROCm>
 {
   DeepCopy( void * dst , const void * src , size_t );
-  DeepCopy( const ROCm & , void * dst , const void * src , size_t );
+  DeepCopy( const Kokkos::Experimental::ROCm & , void * dst , const void * src , size_t );
 };
 
-template<> struct DeepCopy< ROCmSpace , HostSpace , ROCm >
+template<> struct DeepCopy< Kokkos::Experimental::ROCmSpace , HostSpace , Kokkos::Experimental::ROCm >
 {
   DeepCopy( void * dst , const void * src , size_t );
-  DeepCopy( const ROCm & , void * dst , const void * src , size_t );
+  DeepCopy( const Kokkos::Experimental::ROCm & , void * dst , const void * src , size_t );
 };
 
-template<> struct DeepCopy< HostSpace , ROCmSpace , ROCm >
+template<> struct DeepCopy< HostSpace , Kokkos::Experimental::ROCmSpace , Kokkos::Experimental::ROCm >
 {
   DeepCopy( void * dst , const void * src , size_t );
-  DeepCopy( const ROCm & , void * dst , const void * src , size_t );
+  DeepCopy( const Kokkos::Experimental::ROCm & , void * dst , const void * src , size_t );
 };
 
-template<class ExecutionSpace> struct DeepCopy< ROCmSpace , ROCmSpace , ExecutionSpace >
+template<class ExecutionSpace> struct DeepCopy< Kokkos::Experimental::ROCmSpace , Kokkos::Experimental::ROCmSpace , ExecutionSpace >
 {
   inline
   DeepCopy( void * dst , const void * src , size_t n )
-  { (void) DeepCopy< ROCmSpace , ROCmSpace , ROCm >( dst , src , n ); }
+  { (void) DeepCopy< Kokkos::Experimental::ROCmSpace , Kokkos::Experimental::ROCmSpace , Kokkos::Experimental::ROCm >( dst , src , n ); }
 
   inline
   DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
@@ -307,11 +309,11 @@ template<class ExecutionSpace> struct DeepCopy< ROCmSpace , ROCmSpace , Executio
   }
 };
 
-template<class ExecutionSpace> struct DeepCopy< ROCmSpace , HostSpace , ExecutionSpace >
+template<class ExecutionSpace> struct DeepCopy< Kokkos::Experimental::ROCmSpace , HostSpace , ExecutionSpace >
 {
   inline
   DeepCopy( void * dst , const void * src , size_t n )
-  { (void) DeepCopy< ROCmSpace , HostSpace , ROCm>( dst , src , n ); }
+  { (void) DeepCopy< Kokkos::Experimental::ROCmSpace , HostSpace , Kokkos::Experimental::ROCm>( dst , src , n ); }
 
   inline
   DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
@@ -323,11 +325,11 @@ template<class ExecutionSpace> struct DeepCopy< ROCmSpace , HostSpace , Executio
 };
 
 template<class ExecutionSpace>
-struct DeepCopy< HostSpace , ROCmSpace , ExecutionSpace >
+struct DeepCopy< HostSpace , Kokkos::Experimental::ROCmSpace , ExecutionSpace >
 {
   inline
   DeepCopy( void * dst , const void * src , size_t n )
-  { (void) DeepCopy< HostSpace , ROCmSpace , ROCm >( dst , src , n ); }
+  { (void) DeepCopy< HostSpace , Kokkos::Experimental::ROCmSpace , Kokkos::Experimental::ROCm >( dst , src , n ); }
 
   inline
   DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
@@ -422,7 +424,7 @@ namespace Impl {
 
 /** Running in ROCmSpace attempting to access HostSpace: error */
 template<>
-struct VerifyExecutionCanAccessMemorySpace< Kokkos::ROCmSpace , Kokkos::HostSpace >
+struct VerifyExecutionCanAccessMemorySpace< Kokkos::Experimental::ROCmSpace , Kokkos::HostSpace >
 {
   enum { value = false };
   KOKKOS_INLINE_FUNCTION static void verify( void )
@@ -435,7 +437,7 @@ struct VerifyExecutionCanAccessMemorySpace< Kokkos::ROCmSpace , Kokkos::HostSpac
 #if 0
 /** Running in ROCmSpace accessing ROCmHostPinnedSpace: ok */
 template<>
-struct VerifyExecutionCanAccessMemorySpace< Kokkos::ROCmSpace , Kokkos::ROCmHostPinnedSpace >
+struct VerifyExecutionCanAccessMemorySpace< Kokkos::Experimental::ROCmSpace , Kokkos::Experimental::ROCmHostPinnedSpace >
 {
   enum { value = true };
   KOKKOS_INLINE_FUNCTION static void verify( void ) { }
@@ -446,7 +448,7 @@ struct VerifyExecutionCanAccessMemorySpace< Kokkos::ROCmSpace , Kokkos::ROCmHost
 /** Running in ROCmSpace attempting to access an unknown space: error */
 template< class OtherSpace >
 struct VerifyExecutionCanAccessMemorySpace<
-  typename enable_if< ! is_same<Kokkos::ROCmSpace,OtherSpace>::value , Kokkos::ROCmSpace >::type ,
+  typename enable_if< ! is_same<Kokkos::Experimental::ROCmSpace,OtherSpace>::value , Kokkos::Experimental::ROCmSpace >::type ,
   OtherSpace >
 {
   enum { value = false };
@@ -460,17 +462,17 @@ struct VerifyExecutionCanAccessMemorySpace<
 //----------------------------------------------------------------------------
 /** Running in HostSpace attempting to access ROCmSpace */
 template<>
-struct VerifyExecutionCanAccessMemorySpace< Kokkos::HostSpace , Kokkos::ROCmSpace >
+struct VerifyExecutionCanAccessMemorySpace< Kokkos::HostSpace , Kokkos::Experimental::ROCmSpace >
 {
   enum { value = false };
-  inline static void verify( void ) { ROCmSpace::access_error(); }
-  inline static void verify( const void * p ) { ROCmSpace::access_error(p); }
+  inline static void verify( void ) { Kokkos::Experimental::ROCmSpace::access_error(); }
+  inline static void verify( const void * p ) { Kokkos::Experimental::ROCmSpace::access_error(p); }
 };
 
 #if 0
 /** Running in HostSpace accessing ROCmHostPinnedSpace is OK */
 template<>
-struct VerifyExecutionCanAccessMemorySpace< Kokkos::HostSpace , Kokkos::ROCmHostPinnedSpace >
+struct VerifyExecutionCanAccessMemorySpace< Kokkos::HostSpace , Kokkos::Experimental::ROCmHostPinnedSpace >
 {
   enum { value = true };
   KOKKOS_INLINE_FUNCTION static void verify( void ) {}
@@ -487,7 +489,7 @@ namespace Kokkos {
 namespace Impl {
 
 template<>
-class SharedAllocationRecord< Kokkos::ROCmSpace , void >
+class SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >
   : public SharedAllocationRecord< void , void >
 {
 private:
@@ -502,13 +504,13 @@ private:
 
   static RecordBase s_root_record ;
 
-  const Kokkos::ROCmSpace m_space ;
+  const Kokkos::Experimental::ROCmSpace m_space ;
 
 protected:
 
   ~SharedAllocationRecord();
 
-  SharedAllocationRecord( const Kokkos::ROCmSpace        & arg_space
+  SharedAllocationRecord( const Kokkos::Experimental::ROCmSpace        & arg_space
                         , const std::string              & arg_label
                         , const size_t                     arg_alloc_size
                         , const RecordBase::function_type  arg_dealloc = & deallocate
@@ -518,13 +520,13 @@ public:
 
   std::string get_label() const ;
 
-  static SharedAllocationRecord * allocate( const Kokkos::ROCmSpace &  arg_space
+  static SharedAllocationRecord * allocate( const Kokkos::Experimental::ROCmSpace &  arg_space
                                           , const std::string       &  arg_label
                                           , const size_t               arg_alloc_size );
 
   /**\brief  Allocate tracked memory in the space */
   static
-  void * allocate_tracked( const Kokkos::ROCmSpace & arg_space
+  void * allocate_tracked( const Kokkos::Experimental::ROCmSpace & arg_space
                          , const std::string & arg_label
                          , const size_t arg_alloc_size );
 
@@ -539,11 +541,11 @@ public:
 
   static SharedAllocationRecord * get_record( void * arg_alloc_ptr );
 
-  static void print_records( std::ostream & , const Kokkos::ROCmSpace & , bool detail = false );
+  static void print_records( std::ostream & , const Kokkos::Experimental::ROCmSpace & , bool detail = false );
 };
 #if 0
 template<>
-class SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void >
+class SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >
   : public SharedAllocationRecord< void , void >
 {
 private:
@@ -557,14 +559,14 @@ private:
 
   static RecordBase s_root_record ;
 
-  const Kokkos::ROCmHostPinnedSpace m_space ;
+  const Kokkos::Experimental::ROCmHostPinnedSpace m_space ;
 
 protected:
 
   ~SharedAllocationRecord();
   SharedAllocationRecord() : RecordBase(), m_space() {}
 
-  SharedAllocationRecord( const Kokkos::ROCmHostPinnedSpace     & arg_space
+  SharedAllocationRecord( const Kokkos::Experimental::ROCmHostPinnedSpace     & arg_space
                         , const std::string              & arg_label
                         , const size_t                     arg_alloc_size
                         , const RecordBase::function_type  arg_dealloc = & deallocate
@@ -574,13 +576,13 @@ public:
 
   std::string get_label() const ;
 
-  static SharedAllocationRecord * allocate( const Kokkos::ROCmHostPinnedSpace &  arg_space
+  static SharedAllocationRecord * allocate( const Kokkos::Experimental::ROCmHostPinnedSpace &  arg_space
                                           , const std::string          &  arg_label
                                           , const size_t                  arg_alloc_size
                                           );
   /**\brief  Allocate tracked memory in the space */
   static
-  void * allocate_tracked( const Kokkos::ROCmHostPinnedSpace & arg_space
+  void * allocate_tracked( const Kokkos::Experimental::ROCmHostPinnedSpace & arg_space
                          , const std::string & arg_label
                          , const size_t arg_alloc_size );
 
@@ -596,7 +598,7 @@ public:
 
   static SharedAllocationRecord * get_record( void * arg_alloc_ptr );
 
-  static void print_records( std::ostream & , const Kokkos::ROCmHostPinnedSpace & , bool detail = false );
+  static void print_records( std::ostream & , const Kokkos::Experimental::ROCmHostPinnedSpace & , bool detail = false );
 };
 #endif
 } // namespace Impl

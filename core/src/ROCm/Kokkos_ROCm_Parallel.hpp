@@ -54,7 +54,7 @@ namespace Impl {
 struct ROCmTeamMember ;
 
 template< class ... Properties >
-class TeamPolicyInternal< Kokkos::ROCm, Properties ... >: public PolicyTraits<Properties ...> {
+class TeamPolicyInternal< Kokkos::Experimental::ROCm, Properties ... >: public PolicyTraits<Properties ...> {
 private:
   int m_league_size ;
   int m_team_size ;
@@ -67,7 +67,7 @@ private:
 public:
 
   using execution_policy = TeamPolicyInternal ;
-  using execution_space  = Kokkos::ROCm ;
+  using execution_space  = Kokkos::Experimental::ROCm ;
   typedef PolicyTraits<Properties ... > traits;
 
   TeamPolicyInternal& operator = (const TeamPolicyInternal& p) {
@@ -205,8 +205,8 @@ public:
 };
 
   struct ROCmTeamMember {
-    typedef Kokkos::ROCm                             execution_space ;
-    typedef Kokkos::ScratchMemorySpace<Kokkos::ROCm> scratch_memory_space ;
+    typedef Kokkos::Experimental::ROCm                             execution_space ;
+    typedef Kokkos::ScratchMemorySpace<Kokkos::Experimental::ROCm> scratch_memory_space ;
 
     KOKKOS_INLINE_FUNCTION
     const scratch_memory_space & team_shmem() const 
@@ -513,7 +513,7 @@ namespace Impl {
 
 template< class FunctorType , class... Traits >
 class ParallelFor< FunctorType
-                 , Kokkos::RangePolicy< Traits... >, Kokkos::ROCm >
+                 , Kokkos::RangePolicy< Traits... >, Kokkos::Experimental::ROCm >
 {
 private:
 
@@ -556,9 +556,9 @@ auto foo = [=](size_t i){rocm_invoke<typename Policy::work_tag>(f, i);};
 template< class F , class... Traits >
 class ParallelFor< F
                  , Kokkos::TeamPolicy< Traits... >
-                 , Kokkos::ROCm >
+                 , Kokkos::Experimental::ROCm >
 {
-  using Policy = Kokkos::Impl::TeamPolicyInternal< Kokkos::ROCm, Traits... >;
+  using Policy = Kokkos::Impl::TeamPolicyInternal< Kokkos::Experimental::ROCm, Traits... >;
   typedef Kokkos::Impl::FunctorValueTraits<F, typename Policy::work_tag> ValueTraits;
 
 public:
@@ -605,7 +605,7 @@ public:
 
 template< class FunctorType , class ReducerType, class... Traits >
 class ParallelReduce<
-  FunctorType , Kokkos::RangePolicy< Traits... >, ReducerType, Kokkos::ROCm >
+  FunctorType , Kokkos::RangePolicy< Traits... >, ReducerType, Kokkos::Experimental::ROCm >
 {
 public:
 
@@ -697,9 +697,9 @@ public:
 
 template< class FunctorType, class ReducerType, class... Traits >
 class ParallelReduce<
-   FunctorType , Kokkos::TeamPolicy< Traits... >, ReducerType, Kokkos::ROCm >
+   FunctorType , Kokkos::TeamPolicy< Traits... >, ReducerType, Kokkos::Experimental::ROCm >
 {
-  using Policy = Kokkos::Impl::TeamPolicyInternal< Kokkos::ROCm, Traits... >;
+  using Policy = Kokkos::Impl::TeamPolicyInternal< Kokkos::Experimental::ROCm, Traits... >;
   typedef Kokkos::Impl::FunctorValueTraits<FunctorType, typename Policy::work_tag> ValueTraits;
 
 public:
@@ -820,7 +820,7 @@ public:
 
 
 template< class FunctorType , class... Traits >
-class ParallelScan< FunctorType , Kokkos::RangePolicy< Traits... >, Kokkos::ROCm >
+class ParallelScan< FunctorType , Kokkos::RangePolicy< Traits... >, Kokkos::Experimental::ROCm >
 {
 private:
 
@@ -851,11 +851,11 @@ public:
 };
 
 template< class FunctorType , class... Traits>
-class ParallelScan< FunctorType , Kokkos::TeamPolicy< Traits... >, Kokkos::ROCm >
+class ParallelScan< FunctorType , Kokkos::TeamPolicy< Traits... >, Kokkos::Experimental::ROCm >
 {
 private:
 
-  using Policy = Kokkos::Impl::TeamPolicyInternal< Kokkos::ROCm, Traits... >;
+  using Policy = Kokkos::Impl::TeamPolicyInternal< Kokkos::Experimental::ROCm, Traits... >;
   typedef typename Policy::work_tag Tag;
   typedef Kokkos::Impl::FunctorValueTraits< FunctorType, Tag>  ValueTraits;
 
@@ -1024,7 +1024,7 @@ void single(const Impl::VectorSingleStruct<Impl::ROCmTeamMember>& single_struct,
   if( single_struct.team_member.vector_rank()==0) lambda(val);
   val = shfl(val,0,single_struct.team_member.vector_length());
 #else
-  // but older compilers are fine with this (TestTeamVector::Test< Kokkos::ROCm >(4))
+  // but older compilers are fine with this (TestTeamVector::Test< Kokkos::Experimental::ROCm >(4))
   lambda(val);
 #endif
 }

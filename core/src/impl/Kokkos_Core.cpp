@@ -163,12 +163,12 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
 #endif
 
 #if defined( KOKKOS_ENABLE_ROCM )
-  if( std::is_same< Kokkos::ROCm , Kokkos::DefaultExecutionSpace >::value || 0 < use_gpu ) {
+  if( std::is_same< Kokkos::Experimental::ROCm , Kokkos::DefaultExecutionSpace >::value || 0 < use_gpu ) {
     if (use_gpu > -1) {
-      Kokkos::ROCm::initialize( Kokkos::ROCm::SelectDevice( use_gpu ) );
+      Kokkos::Experimental::ROCm::initialize( Kokkos::Experimental::ROCm::SelectDevice( use_gpu ) );
     }
     else {
-      Kokkos::ROCm::initialize();
+      Kokkos::Experimental::ROCm::initialize();
     }
     std::cout << "Kokkos::initialize() fyi: ROCm enabled and initialized" << std::endl ;
   }
@@ -194,9 +194,9 @@ void finalize_internal( const bool all_spaces = false )
 #endif
 
 #if defined( KOKKOS_ENABLE_ROCM )
-  if( std::is_same< Kokkos::ROCm , Kokkos::DefaultExecutionSpace >::value || all_spaces ) {
-    if(Kokkos::ROCm::is_initialized())
-      Kokkos::ROCm::finalize();
+  if( std::is_same< Kokkos::Experimental::ROCm , Kokkos::DefaultExecutionSpace >::value || all_spaces ) {
+    if(Kokkos::Experimental::ROCm::is_initialized())
+      Kokkos::Experimental::ROCm::finalize();
   }
 #endif
 
@@ -245,8 +245,8 @@ void fence_internal()
 #endif
 
 #if defined( KOKKOS_ENABLE_ROCM )
-  if( std::is_same< Kokkos::ROCm , Kokkos::DefaultExecutionSpace >::value ) {
-    Kokkos::ROCm::fence();
+  if( std::is_same< Kokkos::Experimental::ROCm , Kokkos::DefaultExecutionSpace >::value ) {
+    Kokkos::Experimental::ROCm::fence();
   }
 #endif
 

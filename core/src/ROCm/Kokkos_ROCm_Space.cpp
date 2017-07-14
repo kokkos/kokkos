@@ -56,7 +56,7 @@
 #include <Kokkos_ROCm.hpp>
 #include <Kokkos_ROCmSpace.hpp>
 
-//#include <ROCm/Kokkos_ROCm_Internal.hpp>
+//#include <Experimental::ROCm/Kokkos_ROCm_Internal.hpp>
 #include <impl/Kokkos_Error.hpp>
 
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -85,7 +85,7 @@ namespace {
 }
 #endif
 
-DeepCopy<ROCmSpace,ROCmSpace,ROCm>::DeepCopy( void * dst , const void * src , size_t n )
+DeepCopy<Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCm>::DeepCopy( void * dst , const void * src , size_t n )
 {
    hc::accelerator acc;
    hc::accelerator_view av = acc.get_default_view();
@@ -93,14 +93,14 @@ DeepCopy<ROCmSpace,ROCmSpace,ROCm>::DeepCopy( void * dst , const void * src , si
 }
 
 
-DeepCopy<HostSpace,ROCmSpace,ROCm>::DeepCopy( void * dst , const void * src , size_t n )
+DeepCopy<HostSpace,Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCm>::DeepCopy( void * dst , const void * src , size_t n )
 {
    hc::accelerator acc;
    hc::accelerator_view av = acc.get_default_view();
    av.copy( src , dst , n);
 }
 
-DeepCopy<ROCmSpace,HostSpace,ROCm>::DeepCopy( void * dst , const void * src , size_t n )
+DeepCopy<Kokkos::Experimental::ROCmSpace,HostSpace,Kokkos::Experimental::ROCm>::DeepCopy( void * dst , const void * src , size_t n )
 {
    hc::accelerator acc;
    hc::accelerator_view av = acc.get_default_view();
@@ -108,21 +108,21 @@ DeepCopy<ROCmSpace,HostSpace,ROCm>::DeepCopy( void * dst , const void * src , si
 }
 
 #if 1
-DeepCopy<ROCmSpace,ROCmSpace,ROCm>::DeepCopy( const ROCm & instance , void * dst , const void * src , size_t n )
+DeepCopy<Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCm>::DeepCopy( const Kokkos::Experimental::ROCm & instance , void * dst , const void * src , size_t n )
 {
    hc::accelerator acc;
    hc::accelerator_view av = acc.get_default_view();
    av.copy( src , dst , n);
 }
 
-DeepCopy<HostSpace,ROCmSpace,ROCm>::DeepCopy( const ROCm & instance , void * dst , const void * src , size_t n )
+DeepCopy<HostSpace,Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCm>::DeepCopy( const Kokkos::Experimental::ROCm & instance , void * dst , const void * src , size_t n )
 {
    hc::accelerator acc;
    hc::accelerator_view av = acc.get_default_view();
    av.copy( src , dst , n);
 }
 
-DeepCopy<ROCmSpace,HostSpace,ROCm>::DeepCopy( const ROCm & instance , void * dst , const void * src , size_t n )
+DeepCopy<Kokkos::Experimental::ROCmSpace,HostSpace,Kokkos::Experimental::ROCm>::DeepCopy( const Kokkos::Experimental::ROCm & instance , void * dst , const void * src , size_t n )
 {
    hc::accelerator acc;
    hc::accelerator_view av = acc.get_default_view();
@@ -146,15 +146,15 @@ void DeepCopyAsyncROCm( void * dst , const void * src , size_t n) {
 
 namespace Kokkos {
 
-void ROCmSpace::access_error()
+void Experimental::ROCmSpace::access_error()
 {
-  const std::string msg("Kokkos::ROCmSpace::access_error attempt to execute ROCm function from non-ROCm space" );
+  const std::string msg("Kokkos::Experimental::ROCmSpace::access_error attempt to execute Experimental::ROCm function from non-ROCm space" );
   Kokkos::Impl::throw_runtime_exception( msg );
 }
 
-void ROCmSpace::access_error( const void * const )
+void Experimental::ROCmSpace::access_error( const void * const )
 {
-  const std::string msg("Kokkos::ROCmSpace::access_error attempt to execute ROCm function from non-ROCm space" );
+  const std::string msg("Kokkos::Experimental::ROCmSpace::access_error attempt to execute Experimental::ROCm function from non-ROCm space" );
   Kokkos::Impl::throw_runtime_exception( msg );
 }
 
@@ -164,9 +164,10 @@ void ROCmSpace::access_error( const void * const )
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
+namespace Experimental {
 
 ROCmSpace::ROCmSpace()
-  : m_device( Kokkos::ROCm().rocm_device() )
+  : m_device( ROCm().rocm_device() )
 {
 }
 
@@ -178,12 +179,12 @@ ROCmHostPinnedSpace::ROCmHostPinnedSpace()
 
 void * ROCmSpace::allocate( const size_t arg_alloc_size ) const
 {
-  void * ptr =  Impl::rocm_device_allocate( arg_alloc_size );
+  void * ptr =  Kokkos::Impl::rocm_device_allocate( arg_alloc_size );
   return ptr ;
 }
 
 #if 0
-void * ROCmHostPinnedSpace::allocate( const size_t arg_alloc_size ) const
+void * Experimental::ROCmHostPinnedSpace::allocate( const size_t arg_alloc_size ) const
 {
   void * ptr = NULL;
 
@@ -195,11 +196,11 @@ void * ROCmHostPinnedSpace::allocate( const size_t arg_alloc_size ) const
 
 void ROCmSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_alloc_size */ ) const
 {
-  Impl::rocm_device_free(arg_alloc_ptr);
+  Kokkos::Impl::rocm_device_free(arg_alloc_ptr);
 }
 
 #if 0
-void ROCmHostPinnedSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_alloc_size */ ) const
+void Experimental::ROCmHostPinnedSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_alloc_size */ ) const
 {
   try {
     ROCM_SAFE_CALL( rocmFreeHost( arg_alloc_ptr ) );
@@ -208,17 +209,18 @@ void ROCmHostPinnedSpace::deallocate( void * const arg_alloc_ptr , const size_t 
 #endif
 
 /*
-constexpr const char* ROCmSpace::name() {
+constexpr const char* Experimental::ROCmSpace::name() {
   return m_name;
 }
 */
 
 #if 0
-constexpr const char* ROCmHostPinnedSpace::name() {
+constexpr const char* Experimental::ROCmHostPinnedSpace::name() {
   return m_name;
 }
 #endif
 
+} // namespace Experimental
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
@@ -228,35 +230,35 @@ namespace Kokkos {
 namespace Impl {
 
 SharedAllocationRecord< void , void >
-SharedAllocationRecord< Kokkos::ROCmSpace , void >::s_root_record ;
+SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::s_root_record ;
 
 #if 0
 SharedAllocationRecord< void , void >
-SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void >::s_root_record ;
+SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::s_root_record ;
 #endif
 
 
 std::string
-SharedAllocationRecord< Kokkos::ROCmSpace , void >::get_label() const
+SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::get_label() const
 {
   SharedAllocationHeader header ;
 
-  Kokkos::Impl::DeepCopy< Kokkos::HostSpace , Kokkos::ROCmSpace >( & header , RecordBase::head() , sizeof(SharedAllocationHeader) );
+  Kokkos::Impl::DeepCopy< Kokkos::HostSpace , Kokkos::Experimental::ROCmSpace >( & header , RecordBase::head() , sizeof(SharedAllocationHeader) );
 
   return std::string( header.m_label );
 }
 
 #if 0
 std::string
-SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void >::get_label() const
+SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::get_label() const
 {
   return std::string( RecordBase::head()->m_label );
 }
 #endif
 
-SharedAllocationRecord< Kokkos::ROCmSpace , void > *
-SharedAllocationRecord< Kokkos::ROCmSpace , void >::
-allocate( const Kokkos::ROCmSpace &  arg_space
+SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void > *
+SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::
+allocate( const Kokkos::Experimental::ROCmSpace &  arg_space
         , const std::string       &  arg_label
         , const size_t               arg_alloc_size
         )
@@ -265,9 +267,9 @@ allocate( const Kokkos::ROCmSpace &  arg_space
 }
 
 #if 0
-SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void > *
-SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void >::
-allocate( const Kokkos::ROCmHostPinnedSpace &  arg_space
+SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void > *
+SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::
+allocate( const Kokkos::Experimental::ROCmHostPinnedSpace &  arg_space
         , const std::string                 &  arg_label
         , const size_t                         arg_alloc_size
         )
@@ -277,7 +279,7 @@ allocate( const Kokkos::ROCmHostPinnedSpace &  arg_space
 #endif
 
 void
-SharedAllocationRecord< Kokkos::ROCmSpace , void >::
+SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::
 deallocate( SharedAllocationRecord< void , void > * arg_rec )
 {
   delete static_cast<SharedAllocationRecord*>(arg_rec);
@@ -285,24 +287,24 @@ deallocate( SharedAllocationRecord< void , void > * arg_rec )
 
 #if 0
 void
-SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void >::
+SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::
 deallocate( SharedAllocationRecord< void , void > * arg_rec )
 {
   delete static_cast<SharedAllocationRecord*>(arg_rec);
 }
 #endif
 
-SharedAllocationRecord< Kokkos::ROCmSpace , void >::
+SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::
 ~SharedAllocationRecord()
 {
   #if defined(KOKKOS_ENABLE_PROFILING)
   if(Kokkos::Profiling::profileLibraryLoaded()) {
 
     SharedAllocationHeader header ;
-    Kokkos::Impl::DeepCopy<ROCmSpace,HostSpace>( & header , RecordBase::m_alloc_ptr , sizeof(SharedAllocationHeader) );
+    Kokkos::Impl::DeepCopy<Kokkos::Experimental::ROCmSpace,HostSpace>( & header , RecordBase::m_alloc_ptr , sizeof(SharedAllocationHeader) );
 
     Kokkos::Profiling::deallocateData(
-      Kokkos::Profiling::SpaceHandle(Kokkos::ROCmSpace::name()),header.m_label,
+      Kokkos::Profiling::SpaceHandle(Kokkos::Experimental::ROCmSpace::name()),header.m_label,
       data(),size());
   }
   #endif
@@ -313,13 +315,13 @@ SharedAllocationRecord< Kokkos::ROCmSpace , void >::
 }
 
 #if 0
-SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void >::
+SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::
 ~SharedAllocationRecord()
 {
   #if (KOKKOS_ENABLE_PROFILING)
   if(Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::deallocateData(
-      Kokkos::Profiling::SpaceHandle(Kokkos::ROCmHostPinnedSpace::name()),RecordBase::m_alloc_ptr->m_label,
+      Kokkos::Profiling::SpaceHandle(Kokkos::Experimental::ROCmHostPinnedSpace::name()),RecordBase::m_alloc_ptr->m_label,
       data(),size());
   }
   #endif
@@ -330,8 +332,8 @@ SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void >::
 }
 #endif
 
-SharedAllocationRecord< Kokkos::ROCmSpace , void >::
-SharedAllocationRecord( const Kokkos::ROCmSpace & arg_space
+SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::
+SharedAllocationRecord( const Kokkos::Experimental::ROCmSpace & arg_space
                       , const std::string       & arg_label
                       , const size_t              arg_alloc_size
                       , const SharedAllocationRecord< void , void >::function_type arg_dealloc
@@ -339,7 +341,7 @@ SharedAllocationRecord( const Kokkos::ROCmSpace & arg_space
   // Pass through allocated [ SharedAllocationHeader , user_memory ]
   // Pass through deallocation function
   : SharedAllocationRecord< void , void >
-      ( & SharedAllocationRecord< Kokkos::ROCmSpace , void >::s_root_record
+      ( & SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::s_root_record
       , reinterpret_cast<SharedAllocationHeader*>( arg_space.allocate( sizeof(SharedAllocationHeader) + arg_alloc_size ) )
       , sizeof(SharedAllocationHeader) + arg_alloc_size
       , arg_dealloc
@@ -363,12 +365,12 @@ SharedAllocationRecord( const Kokkos::ROCmSpace & arg_space
           );
 
   // Copy to device memory
-  Kokkos::Impl::DeepCopy<ROCmSpace,HostSpace>( RecordBase::m_alloc_ptr , & header , sizeof(SharedAllocationHeader) );
+  Kokkos::Impl::DeepCopy<Kokkos::Experimental::ROCmSpace,HostSpace>( RecordBase::m_alloc_ptr , & header , sizeof(SharedAllocationHeader) );
 }
 
 #if 0
-SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void >::
-SharedAllocationRecord( const Kokkos::ROCmHostPinnedSpace & arg_space
+SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::
+SharedAllocationRecord( const Kokkos::Experimental::ROCmHostPinnedSpace & arg_space
                       , const std::string                 & arg_label
                       , const size_t                        arg_alloc_size
                       , const SharedAllocationRecord< void , void >::function_type arg_dealloc
@@ -376,7 +378,7 @@ SharedAllocationRecord( const Kokkos::ROCmHostPinnedSpace & arg_space
   // Pass through allocated [ SharedAllocationHeader , user_memory ]
   // Pass through deallocation function
   : SharedAllocationRecord< void , void >
-      ( & SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void >::s_root_record
+      ( & SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::s_root_record
       , reinterpret_cast<SharedAllocationHeader*>( arg_space.allocate( sizeof(SharedAllocationHeader) + arg_alloc_size ) )
       , sizeof(SharedAllocationHeader) + arg_alloc_size
       , arg_dealloc
@@ -401,8 +403,8 @@ SharedAllocationRecord( const Kokkos::ROCmHostPinnedSpace & arg_space
 
 //----------------------------------------------------------------------------
 
-void * SharedAllocationRecord< Kokkos::ROCmSpace , void >::
-allocate_tracked( const Kokkos::ROCmSpace & arg_space
+void * SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::
+allocate_tracked( const Kokkos::Experimental::ROCmSpace & arg_space
                 , const std::string & arg_alloc_label
                 , const size_t arg_alloc_size )
 {
@@ -416,7 +418,7 @@ allocate_tracked( const Kokkos::ROCmSpace & arg_space
   return r->data();
 }
 
-void SharedAllocationRecord< Kokkos::ROCmSpace , void >::
+void SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::
 deallocate_tracked( void * const arg_alloc_ptr )
 {
   if ( arg_alloc_ptr != 0 ) {
@@ -426,14 +428,14 @@ deallocate_tracked( void * const arg_alloc_ptr )
   }
 }
 
-void * SharedAllocationRecord< Kokkos::ROCmSpace , void >::
+void * SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::
 reallocate_tracked( void * const arg_alloc_ptr
                   , const size_t arg_alloc_size )
 {
   SharedAllocationRecord * const r_old = get_record( arg_alloc_ptr );
   SharedAllocationRecord * const r_new = allocate( r_old->m_space , r_old->get_label() , arg_alloc_size );
 
-  Kokkos::Impl::DeepCopy<ROCmSpace,ROCmSpace>( r_new->data() , r_old->data()
+  Kokkos::Impl::DeepCopy<Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCmSpace>( r_new->data() , r_old->data()
                                              , std::min( r_old->size() , r_new->size() ) );
 
   RecordBase::increment( r_new );
@@ -443,8 +445,8 @@ reallocate_tracked( void * const arg_alloc_ptr
 }
 
 #if 0
-void * SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void >::
-allocate_tracked( const Kokkos::ROCmHostPinnedSpace & arg_space
+void * SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::
+allocate_tracked( const Kokkos::Experimental::ROCmHostPinnedSpace & arg_space
                 , const std::string & arg_alloc_label
                 , const size_t arg_alloc_size )
 {
@@ -458,7 +460,7 @@ allocate_tracked( const Kokkos::ROCmHostPinnedSpace & arg_space
   return r->data();
 }
 
-void SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void >::
+void SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::
 deallocate_tracked( void * const arg_alloc_ptr )
 {
   if ( arg_alloc_ptr != 0 ) {
@@ -468,14 +470,14 @@ deallocate_tracked( void * const arg_alloc_ptr )
   }
 }
 
-void * SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void >::
+void * SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::
 reallocate_tracked( void * const arg_alloc_ptr
                   , const size_t arg_alloc_size )
 {
   SharedAllocationRecord * const r_old = get_record( arg_alloc_ptr );
   SharedAllocationRecord * const r_new = allocate( r_old->m_space , r_old->get_label() , arg_alloc_size );
 
-  Kokkos::Impl::DeepCopy<ROCmHostPinnedSpace,ROCmHostPinnedSpace>( r_new->data() , r_old->data()
+  Kokkos::Impl::DeepCopy<Experimental::ROCmHostPinnedSpace,Experimental::ROCmHostPinnedSpace>( r_new->data() , r_old->data()
                                              , std::min( r_old->size() , r_new->size() ) );
 
   RecordBase::increment( r_new );
@@ -487,12 +489,12 @@ reallocate_tracked( void * const arg_alloc_ptr
 
 //----------------------------------------------------------------------------
 
-SharedAllocationRecord< Kokkos::ROCmSpace , void > *
-SharedAllocationRecord< Kokkos::ROCmSpace , void >::get_record( void * alloc_ptr )
+SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void > *
+SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::get_record( void * alloc_ptr )
 {
   using Header     = SharedAllocationHeader ;
   using RecordBase = SharedAllocationRecord< void , void > ;
-  using RecordROCm = SharedAllocationRecord< Kokkos::ROCmSpace , void > ;
+  using RecordROCm = SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void > ;
 
 #if 0
   // Copy the header from the allocation
@@ -501,13 +503,13 @@ SharedAllocationRecord< Kokkos::ROCmSpace , void >::get_record( void * alloc_ptr
   Header const * const head_rocm = alloc_ptr ? Header::get_header( alloc_ptr ) : (Header*) 0 ;
 
   if ( alloc_ptr ) {
-    Kokkos::Impl::DeepCopy<HostSpace,ROCmSpace>( & head , head_rocm , sizeof(SharedAllocationHeader) );
+    Kokkos::Impl::DeepCopy<HostSpace,Experimental::ROCmSpace>( & head , head_rocm , sizeof(SharedAllocationHeader) );
   }
 
   RecordROCm * const record = alloc_ptr ? static_cast< RecordROCm * >( head.m_record ) : (RecordROCm *) 0 ;
 
   if ( ! alloc_ptr || record->m_alloc_ptr != head_rocm ) {
-    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Impl::SharedAllocationRecord< Kokkos::ROCmSpace , void >::get_record ERROR" ) );
+    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Impl::SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::get_record ERROR" ) );
   }
 
 #else
@@ -518,7 +520,7 @@ SharedAllocationRecord< Kokkos::ROCmSpace , void >::get_record( void * alloc_ptr
   RecordROCm * const record = static_cast< RecordROCm * >( RecordBase::find( & s_root_record , alloc_ptr ) );
 
   if ( record == 0 ) {
-    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Impl::SharedAllocationRecord< Kokkos::ROCmSpace , void >::get_record ERROR" ) );
+    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Impl::SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::get_record ERROR" ) );
   }
 
 #endif
@@ -527,16 +529,16 @@ SharedAllocationRecord< Kokkos::ROCmSpace , void >::get_record( void * alloc_ptr
 }
 
 #if  0
-SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void > *
-SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void >::get_record( void * alloc_ptr )
+SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void > *
+SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::get_record( void * alloc_ptr )
 {
   using Header     = SharedAllocationHeader ;
-  using RecordROCm = SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void > ;
+  using RecordROCm = SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void > ;
 
   Header * const h = alloc_ptr ? reinterpret_cast< Header * >( alloc_ptr ) - 1 : (Header *) 0 ;
 
   if ( ! alloc_ptr || h->m_record->m_alloc_ptr != h ) {
-    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Impl::SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void >::get_record ERROR" ) );
+    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Impl::SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::get_record ERROR" ) );
   }
 
   return static_cast< RecordROCm * >( h->m_record );
@@ -545,8 +547,8 @@ SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void >::get_record( void *
 
 // Iterate records to print orphaned memory ...
 void
-SharedAllocationRecord< Kokkos::ROCmSpace , void >::
-print_records( std::ostream & s , const Kokkos::ROCmSpace & space , bool detail )
+SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::
+print_records( std::ostream & s , const Kokkos::Experimental::ROCmSpace & space , bool detail )
 {
   SharedAllocationRecord< void , void > * r = & s_root_record ;
 
@@ -557,7 +559,7 @@ print_records( std::ostream & s , const Kokkos::ROCmSpace & space , bool detail 
   if ( detail ) {
     do {
       if ( r->m_alloc_ptr ) {
-        Kokkos::Impl::DeepCopy<HostSpace,ROCmSpace>( & head , r->m_alloc_ptr , sizeof(SharedAllocationHeader) );
+        Kokkos::Impl::DeepCopy<HostSpace,Kokkos::Experimental::ROCmSpace>( & head , r->m_alloc_ptr , sizeof(SharedAllocationHeader) );
       }
       else {
         head.m_label[0] = 0 ;
@@ -592,7 +594,7 @@ print_records( std::ostream & s , const Kokkos::ROCmSpace & space , bool detail 
     do {
       if ( r->m_alloc_ptr ) {
 
-        Kokkos::Impl::DeepCopy<HostSpace,ROCmSpace>( & head , r->m_alloc_ptr , sizeof(SharedAllocationHeader) );
+        Kokkos::Impl::DeepCopy<HostSpace,Kokkos::Experimental::ROCmSpace>( & head , r->m_alloc_ptr , sizeof(SharedAllocationHeader) );
 
         //Formatting dependent on sizeof(uintptr_t)
         const char * format_string;
@@ -621,8 +623,8 @@ print_records( std::ostream & s , const Kokkos::ROCmSpace & space , bool detail 
 }
 #if 0
 void
-SharedAllocationRecord< Kokkos::ROCmHostPinnedSpace , void >::
-print_records( std::ostream & s , const Kokkos::ROCmHostPinnedSpace & space , bool detail )
+SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::
+print_records( std::ostream & s , const Kokkos::Experimental::ROCmHostPinnedSpace & space , bool detail )
 {
   SharedAllocationRecord< void , void >::print_host_accessible_records( s , "ROCmHostPinned" , & s_root_record , detail );
 }
@@ -700,7 +702,7 @@ void init_lock_arrays_rocm_space() {
     locks.threadid = threadid_lock_array_rocm_space_ptr(false);
     am_copyToSymbol( kokkos_impl_rocm_lock_arrays , & locks , sizeof(ROCmLockArraysStruct) );
     init_lock_array_kernel_atomic<<<(ROCM_SPACE_ATOMIC_MASK+255)/256,256>>>();
-    init_lock_array_kernel_scratch_threadid<<<(Kokkos::ROCm::concurrency()+255)/256,256>>>(Kokkos::ROCm::concurrency());
+    init_lock_array_kernel_scratch_threadid<<<(Kokkos::Experimental::ROCm::concurrency()+255)/256,256>>>(Kokkos::Experimental::ROCm::concurrency());
   }
 }
 #endif 
@@ -710,16 +712,16 @@ void* rocm_resize_scratch_space(size_t bytes, bool force_shrink) {
   static size_t current_size = 0;
   if(current_size == 0) {
     current_size = bytes;
-    ptr = Kokkos::kokkos_malloc<Kokkos::ROCmSpace>("ROCmSpace::ScratchMemory",current_size);
+    ptr = Kokkos::kokkos_malloc<Kokkos::Experimental::ROCmSpace>("ROCmSpace::ScratchMemory",current_size);
   }
   if(bytes > current_size) {
     current_size = bytes;
-    ptr = Kokkos::kokkos_realloc<Kokkos::ROCmSpace>(ptr,current_size);
+    ptr = Kokkos::kokkos_realloc<Kokkos::Experimental::ROCmSpace>(ptr,current_size);
   }
   if((bytes < current_size) && (force_shrink)) {
     current_size = bytes;
-    Kokkos::kokkos_free<Kokkos::ROCmSpace>(ptr);
-    ptr = Kokkos::kokkos_malloc<Kokkos::ROCmSpace>("ROCmSpace::ScratchMemory",current_size);
+    Kokkos::kokkos_free<Kokkos::Experimental::ROCmSpace>(ptr);
+    ptr = Kokkos::kokkos_malloc<Kokkos::Experimental::ROCmSpace>("ROCmSpace::ScratchMemory",current_size);
   }
   return ptr;
 }

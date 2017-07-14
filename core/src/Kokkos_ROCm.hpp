@@ -84,7 +84,7 @@ class ROCmExec ;
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
-
+namespace Experimental {
 /// \class ROCm
 /// \brief Kokkos device for multicore processors in the host memory space.
 class ROCm {
@@ -168,6 +168,7 @@ private:
   int          m_device ;
 
 };
+}
 } // namespace Kokkos
 
 namespace Kokkos {
@@ -175,8 +176,8 @@ namespace Impl {
 
 template<>
 struct MemorySpaceAccess
-  < Kokkos::ROCmSpace
-  , Kokkos::ROCm::scratch_memory_space
+  < Kokkos::Experimental::ROCmSpace
+  , Kokkos::Experimental::ROCm::scratch_memory_space
   >
 {
   enum { assignable = false };
@@ -186,8 +187,8 @@ struct MemorySpaceAccess
 
 template<>
 struct VerifyExecutionCanAccessMemorySpace
-  < Kokkos::ROCm::memory_space
-  , Kokkos::ROCm::scratch_memory_space
+  < Kokkos::Experimental::ROCm::memory_space
+  , Kokkos::Experimental::ROCm::scratch_memory_space
   >
 {
   enum { value = true };
@@ -198,14 +199,14 @@ struct VerifyExecutionCanAccessMemorySpace
 template<>
 struct VerifyExecutionCanAccessMemorySpace
   < Kokkos::HostSpace
-  , Kokkos::ROCm::scratch_memory_space
+  , Kokkos::Experimental::ROCm::scratch_memory_space
   >
 {
   enum { value = false };
-  inline static void verify( void ) { ROCmSpace::access_error(); }
-  inline static void verify( const void * p ) { ROCmSpace::access_error(p); }
+  inline static void verify( void ) { Experimental::ROCmSpace::access_error(); }
+  inline static void verify( const void * p ) { Experimental::ROCmSpace::access_error(p); }
 };
-}
+} // namespace Experimental
 } // namespace Kokkos
 
 

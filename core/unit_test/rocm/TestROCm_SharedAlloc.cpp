@@ -49,7 +49,7 @@ namespace Test {
 
 TEST_F( TEST_CATEGORY, impl_shared_alloc )
 {
-  test_shared_alloc< Kokkos::ROCmSpace, Kokkos::DefaultHostExecutionSpace >();
+  test_shared_alloc< Kokkos::Experimental::ROCmSpace, Kokkos::DefaultHostExecutionSpace >();
 }
 
 } // namespace Test
