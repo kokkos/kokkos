@@ -113,6 +113,7 @@ do
       echo "                 ARMv80         = ARMv8.0 Compatible CPU"
       echo "                 ARMv81         = ARMv8.1 Compatible CPU"
       echo "                 ARMv8-ThunderX = ARMv8 Cavium ThunderX CPU"
+      echo "                 WSM            = Intel Westmere CPUs"
       echo "                 SNB            = Intel Sandy/Ivy Bridge CPUs"
       echo "                 HSW            = Intel Haswell CPUs"
       echo "                 BDW            = Intel Broadwell Xeon E-class CPUs"
