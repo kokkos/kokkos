@@ -240,27 +240,27 @@ else
   KOKKOS_INSTALL_PATH=${KOKKOS_TEST_INSTALL_PATH}
 fi
 
-mkdir install
+mkdir -p install
 echo "#Makefile to satisfy existens of target kokkos-clean before installing the library" > install/Makefile.kokkos
 echo "kokkos-clean:" >> install/Makefile.kokkos
 echo "" >> install/Makefile.kokkos
-mkdir core
-mkdir core/unit_test
-mkdir core/perf_test
-mkdir containers
-mkdir containers/unit_tests
-mkdir containers/performance_tests
-mkdir algorithms
-mkdir algorithms/unit_tests
-mkdir algorithms/performance_tests
-mkdir example
-mkdir example/fixture
-mkdir example/feint
-mkdir example/fenl
-mkdir example/tutorial
+mkdir -p core
+mkdir -p core/unit_test
+mkdir -p core/perf_test
+mkdir -p containers
+mkdir -p containers/unit_tests
+mkdir -p containers/performance_tests
+mkdir -p algorithms
+mkdir -p algorithms/unit_tests
+mkdir -p algorithms/performance_tests
+mkdir -p example
+mkdir -p example/fixture
+mkdir -p example/feint
+mkdir -p example/fenl
+mkdir -p example/tutorial
 
 if [ ${#KOKKOS_ENABLE_EXAMPLE_ICHOL} -gt 0 ]; then
-  mkdir example/ichol
+  mkdir -p example/ichol
 fi
 
 KOKKOS_SETTINGS="${KOKKOS_SETTINGS_NO_KOKKOS_PATH} KOKKOS_PATH=${KOKKOS_PATH}"
