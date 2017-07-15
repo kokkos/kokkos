@@ -142,6 +142,7 @@ do
       echo "                                tests.)"
       echo "--with-hwloc=/Path/To/Hwloc:  Set path to hwloc."
       echo "--with-options=[OPT]:         Additional options to Kokkos:"
+      echo "                                compiler_warnings"
       echo "                                aggressive_vectorization = add ivdep on loops"
       echo "                                disable_profiling = do not compile with profiling hooks"
       echo "                                "
