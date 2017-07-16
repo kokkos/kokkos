@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+
+function get_path() {
+  cd "$(dirname "$0")"
+  cd ..
+  echo "$(pwd -P)"
+}
+
+KOKKOS_PATH="$(get_path "$0")"
+
+function show_help() {
+  local cmd=$(basename "$0")
+  echo "Usage: ${cmd} <options> "
+  echo "  Build and run the tests"
+  echo ""
+  echo "Options:"
+  echo "  -j=N|--make-j=N       Build the tests in parallel"
+  echo "  --build-only          Only build the tests"
+  echo "  -v|--verbose          Tee STDOUT and STDERR to screen and files"
+  echo "  -h|--help             Show this message"
+  echo ""
+  ${KOKKOS_PATH}/generate_makefile.bash --help
+  return 0
+}
+
+
+declare -a GENERATE_ARGS=()
+declare -i VERBOSE=0
+declare -i CLEAN=0
+declare -i BUILD_ONLY=0
+
+declare -i MAKE_J=${HPCBIND_NUM_PUS:-1}
+
+for i in $@; do
+  case $i in
+    -j=*|--make-j=*)
+      MAKE_J=${i#*=}
+      shift
+      ;;
+    --build-only)
+      BUILD_ONLY=1
+      shift
+      ;;
+    -v|--verbose)
+      VERBOSE=1
+      shift
+      ;;
+    -c|--clean)
+      CLEAN=1
+      shift
+      ;;
+    -h|--help)
+      show_help
+      exit 0
+      ;;
+    *)
+      GENERATE_ARGS+=("$i")
+      shift
+      ;;
+  esac
+done
+
+
+declare -i START=${SECONDS}
+echo "Generating Makefile"
+echo "    ${KOKKOS_PATH}/generate_makefile.bash --kokkos-path=${KOKKOS_PATH} ${GENERATE_ARGS[@]}"
+
+if [[ ${VERBOSE} -eq 0 ]]; then
+  "${KOKKOS_PATH}"/generate_makefile.bash --kokkos-path="${KOKKOS_PATH}" "${GENERATE_ARGS[@]}" > runtest_generate.log 2> >(tee -a runtest_generate.err >&2)
+else
+  "${KOKKOS_PATH}"/generate_makefile.bash --kokkos-path="${KOKKOS_PATH}" "${GENERATE_ARGS[@]}" > >(tee -a runtest_generate.log) 2> >(tee -a runtest_generate.err >&2)
+fi
+declare -i RESULT=$?
+declare -i END=${SECONDS}
+if [[ ${RESULT} -eq 0 ]]; then
+  echo "    PASS:  $((END-START)) seconds"
+  if [[ ${VERBOSE} -eq 1 ]]; then
+    echo ""
+    echo ""
+  fi
+else
+  cat runtest_generate.log | grep "FAIL"
+  cat runtest_generate.err | grep "FAIL"
+  echo "    FAIL:  $((END-START)) seconds"
+  exit 1
+fi
+
+if [[ ${CLEAN} -eq 1 ]]; then
+  START=${SECONDS}
+  echo "Cleaning"
+  if [[ ${VERBOSE} -eq 0 ]]; then
+    make --keep-going -j ${MAKE_J} clean > runtest_clean.log 2> >(tee -a runtest_clean.err >&2)
+  else
+    make --keep-going -j ${MAKE_J} clean > >(tee -a runtest_clean.log) 2> >(tee -a runtest_clean.err >&2)
+  fi
+  END=${SECONDS}
+  echo "    $((END-START)) seconds"
+  if [[ ${VERBOSE} -eq 1 ]]; then
+    echo ""
+    echo ""
+  fi
+fi
+
+START=${SECONDS}
+echo "Building"
+if [[ ${VERBOSE} -eq 0 ]]; then
+  make --keep-going -j ${MAKE_J} build-test > runtest_build.log 2> >(tee -a runtest_build.err >&2)
+else
+  make --keep-going -j ${MAKE_J} build-test > >(tee -a runtest_build.log) 2> >(tee -a runtest_build.err >&2)
+fi
+RESULT=$?
+END=${SECONDS}
+if [[ ${RESULT} -eq 0 ]]; then
+  echo "    PASS:  $((END-START)) seconds"
+  if [[ ${VERBOSE} -eq 1 ]]; then
+    echo ""
+    echo ""
+  fi
+else
+  cat runtest_build.log | grep -E "[[:space:]]error:[[:space:]]"
+  cat runtest_build.err | grep -E "[[:space:]]error:[[:space:]]"
+  echo "    FAIL:  $((END-START)) seconds"
+  exit 1
+fi
+
+if [[ ${BUILD_ONLY} -eq 0 ]]; then
+  START=${SECONDS}
+  echo "Testing"
+  if [[ ${VERBOSE} -eq 0 ]]; then
+    make --keep-going test > runtest_test.log 2> >(tee -a runtest_test.err >&2)
+  else
+    make --keep-going test > >(tee -a runtest_test.log) 2> >(tee -a runtest_test.err >&2)
+  fi
+  RESULT=$?
+  END=${SECONDS}
+  if [[ ${RESULT} -eq 0 ]]; then
+    echo "    PASS:  $((END-START)) seconds"
+  else
+    cat runtest_test.log | grep "FAIL"
+    cat runtest_test.err | grep "FAIL"
+    echo "    FAIL:  $((END-START)) seconds"
+    exit 1
+  fi
+fi
