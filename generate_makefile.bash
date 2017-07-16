@@ -1,7 +1,6 @@
 #!/bin/bash
 
 KOKKOS_DEVICES=""
-MAKE_J_OPTION="32"
 
 KOKKOS_DO_EXAMPLES="1"
 
@@ -70,7 +69,8 @@ do
       KOKKOS_DEBUG=yes
       ;;
     --make-j*)
-      MAKE_J_OPTION="${key#*=}"
+      echo "Warning: ${key} is deprecated"
+      echo "Call make with appropriate -j flag"
       ;;
     --no-examples)
       KOKKOS_DO_EXAMPLES="0"
@@ -148,7 +148,8 @@ do
       echo "                                "
       echo "--with-cuda-options=[OPT]:    Additional options to CUDA:"
       echo "                                force_uvm, use_ldg, enable_lambda, rdc"
-      echo "--make-j=[NUM]:               Set -j flag used during build."
+      echo "--make-j=[NUM]:               DEPRECATED: call make with appropriate"
+      echo "                                -j flag"
       exit 0
       ;;
     *)
@@ -269,115 +270,115 @@ KOKKOS_SETTINGS="${KOKKOS_SETTINGS_NO_KOKKOS_PATH} KOKKOS_PATH=${KOKKOS_PATH}"
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > core/unit_test/Makefile
 echo "" >> core/unit_test/Makefile
 echo "all:" >> core/unit_test/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/core/unit_test/Makefile ${KOKKOS_SETTINGS}" >> core/unit_test/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/core/unit_test/Makefile ${KOKKOS_SETTINGS}" >> core/unit_test/Makefile
 echo "" >> core/unit_test/Makefile
 echo "test: all" >> core/unit_test/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/core/unit_test/Makefile ${KOKKOS_SETTINGS} test" >> core/unit_test/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/core/unit_test/Makefile ${KOKKOS_SETTINGS} test" >> core/unit_test/Makefile
 echo "" >> core/unit_test/Makefile
 echo "clean:" >> core/unit_test/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/core/unit_test/Makefile ${KOKKOS_SETTINGS} clean" >> core/unit_test/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/core/unit_test/Makefile ${KOKKOS_SETTINGS} clean" >> core/unit_test/Makefile
 
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > core/perf_test/Makefile
 echo "" >> core/perf_test/Makefile
 echo "all:" >> core/perf_test/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/core/perf_test/Makefile ${KOKKOS_SETTINGS}" >> core/perf_test/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/core/perf_test/Makefile ${KOKKOS_SETTINGS}" >> core/perf_test/Makefile
 echo "" >> core/perf_test/Makefile
 echo "test: all" >> core/perf_test/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/core/perf_test/Makefile ${KOKKOS_SETTINGS} test" >> core/perf_test/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/core/perf_test/Makefile ${KOKKOS_SETTINGS} test" >> core/perf_test/Makefile
 echo "" >> core/perf_test/Makefile
 echo "clean:" >> core/perf_test/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/core/perf_test/Makefile ${KOKKOS_SETTINGS} clean" >> core/perf_test/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/core/perf_test/Makefile ${KOKKOS_SETTINGS} clean" >> core/perf_test/Makefile
 
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > containers/unit_tests/Makefile
 echo "" >> containers/unit_tests/Makefile
 echo "all:" >> containers/unit_tests/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/containers/unit_tests/Makefile ${KOKKOS_SETTINGS}" >> containers/unit_tests/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/containers/unit_tests/Makefile ${KOKKOS_SETTINGS}" >> containers/unit_tests/Makefile
 echo "" >> containers/unit_tests/Makefile
 echo "test: all" >> containers/unit_tests/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/containers/unit_tests/Makefile ${KOKKOS_SETTINGS} test" >> containers/unit_tests/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/containers/unit_tests/Makefile ${KOKKOS_SETTINGS} test" >> containers/unit_tests/Makefile
 echo "" >> containers/unit_tests/Makefile
 echo "clean:" >> containers/unit_tests/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/containers/unit_tests/Makefile ${KOKKOS_SETTINGS} clean" >> containers/unit_tests/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/containers/unit_tests/Makefile ${KOKKOS_SETTINGS} clean" >> containers/unit_tests/Makefile
 
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > containers/performance_tests/Makefile
 echo "" >> containers/performance_tests/Makefile
 echo "all:" >> containers/performance_tests/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/containers/performance_tests/Makefile ${KOKKOS_SETTINGS}" >> containers/performance_tests/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/containers/performance_tests/Makefile ${KOKKOS_SETTINGS}" >> containers/performance_tests/Makefile
 echo "" >> containers/performance_tests/Makefile
 echo "test: all" >> containers/performance_tests/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/containers/performance_tests/Makefile ${KOKKOS_SETTINGS} test" >> containers/performance_tests/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/containers/performance_tests/Makefile ${KOKKOS_SETTINGS} test" >> containers/performance_tests/Makefile
 echo "" >> containers/performance_tests/Makefile
 echo "clean:" >> containers/performance_tests/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/containers/performance_tests/Makefile ${KOKKOS_SETTINGS} clean" >> containers/performance_tests/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/containers/performance_tests/Makefile ${KOKKOS_SETTINGS} clean" >> containers/performance_tests/Makefile
 
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > algorithms/unit_tests/Makefile
 echo "" >> algorithms/unit_tests/Makefile
 echo "all:" >> algorithms/unit_tests/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_SETTINGS}" >> algorithms/unit_tests/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_SETTINGS}" >> algorithms/unit_tests/Makefile
 echo "" >> algorithms/unit_tests/Makefile
 echo "test: all" >> algorithms/unit_tests/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_SETTINGS} test" >> algorithms/unit_tests/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_SETTINGS} test" >> algorithms/unit_tests/Makefile
 echo "" >> algorithms/unit_tests/Makefile
 echo "clean:" >> algorithms/unit_tests/Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_SETTINGS} clean" >> algorithms/unit_tests/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_SETTINGS} clean" >> algorithms/unit_tests/Makefile
 
 KOKKOS_SETTINGS="${KOKKOS_SETTINGS_NO_KOKKOS_PATH} KOKKOS_PATH=${KOKKOS_TEST_INSTALL_PATH}"
 
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > example/fixture/Makefile
 echo "" >> example/fixture/Makefile
 echo "all:" >> example/fixture/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_SETTINGS}" >> example/fixture/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_SETTINGS}" >> example/fixture/Makefile
 echo "" >> example/fixture/Makefile
 echo "test: all" >> example/fixture/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_SETTINGS} test" >> example/fixture/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_SETTINGS} test" >> example/fixture/Makefile
 echo "" >> example/fixture/Makefile
 echo "clean:" >> example/fixture/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_SETTINGS} clean" >> example/fixture/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/fixture/Makefile ${KOKKOS_SETTINGS} clean" >> example/fixture/Makefile
 
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > example/feint/Makefile
 echo "" >> example/feint/Makefile
 echo "all:" >> example/feint/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_SETTINGS}" >> example/feint/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_SETTINGS}" >> example/feint/Makefile
 echo "" >> example/feint/Makefile
 echo "test: all" >> example/feint/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_SETTINGS} test" >> example/feint/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_SETTINGS} test" >> example/feint/Makefile
 echo "" >> example/feint/Makefile
 echo "clean:" >> example/feint/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_SETTINGS} clean" >> example/feint/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/feint/Makefile ${KOKKOS_SETTINGS} clean" >> example/feint/Makefile
 
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > example/fenl/Makefile
 echo "" >> example/fenl/Makefile
 echo "all:" >> example/fenl/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_SETTINGS}" >> example/fenl/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_SETTINGS}" >> example/fenl/Makefile
 echo "" >> example/fenl/Makefile
 echo "test: all" >> example/fenl/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_SETTINGS} test" >> example/fenl/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_SETTINGS} test" >> example/fenl/Makefile
 echo "" >> example/fenl/Makefile
 echo "clean:" >> example/fenl/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_SETTINGS} clean" >> example/fenl/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/fenl/Makefile ${KOKKOS_SETTINGS} clean" >> example/fenl/Makefile
 
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > example/tutorial/Makefile
 echo "" >> example/tutorial/Makefile
 echo "build:" >> example/tutorial/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_SETTINGS='${KOKKOS_SETTINGS}' KOKKOS_PATH=${KOKKOS_PATH} build">> example/tutorial/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_SETTINGS='${KOKKOS_SETTINGS}' KOKKOS_PATH=${KOKKOS_PATH} build">> example/tutorial/Makefile
 echo "" >> example/tutorial/Makefile
 echo "test: build" >> example/tutorial/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_SETTINGS='${KOKKOS_SETTINGS}' KOKKOS_PATH=${KOKKOS_PATH} test" >> example/tutorial/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_SETTINGS='${KOKKOS_SETTINGS}' KOKKOS_PATH=${KOKKOS_PATH} test" >> example/tutorial/Makefile
 echo "" >> example/tutorial/Makefile
 echo "clean:" >> example/tutorial/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_SETTINGS='${KOKKOS_SETTINGS}' KOKKOS_PATH=${KOKKOS_PATH} clean" >> example/tutorial/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_SETTINGS='${KOKKOS_SETTINGS}' KOKKOS_PATH=${KOKKOS_PATH} clean" >> example/tutorial/Makefile
 
 if [ ${#KOKKOS_ENABLE_EXAMPLE_ICHOL} -gt 0 ]; then
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > example/ichol/Makefile
 echo "" >> example/ichol/Makefile
 echo "all:" >> example/ichol/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_SETTINGS}" >> example/ichol/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_SETTINGS}" >> example/ichol/Makefile
 echo "" >> example/ichol/Makefile
 echo "test: all" >> example/ichol/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_SETTINGS} test" >> example/ichol/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_SETTINGS} test" >> example/ichol/Makefile
 echo "" >> example/ichol/Makefile
 echo "clean:" >> example/ichol/Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_SETTINGS} clean" >> example/ichol/Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_SETTINGS} clean" >> example/ichol/Makefile
 fi
 
 KOKKOS_SETTINGS="${KOKKOS_SETTINGS_NO_KOKKOS_PATH} KOKKOS_PATH=${KOKKOS_PATH}"
@@ -388,62 +389,64 @@ echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > Makefile
 echo "" >> Makefile
 echo "kokkoslib:" >> Makefile
 echo -e "\tcd core; \\" >> Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_INSTALL_PATH} build-lib" >> Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_INSTALL_PATH} build-lib" >> Makefile
 echo "" >> Makefile
 echo "install: kokkoslib" >> Makefile
 echo -e "\tcd core; \\" >> Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_INSTALL_PATH} install" >> Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_INSTALL_PATH} install" >> Makefile
 echo "" >> Makefile
 echo "kokkoslib-test:" >> Makefile
 echo -e "\tcd core; \\" >> Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_TEST_INSTALL_PATH} build-lib" >> Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_TEST_INSTALL_PATH} build-lib" >> Makefile
 echo "" >> Makefile
 echo "install-test: kokkoslib-test" >> Makefile
 echo -e "\tcd core; \\" >> Makefile
-echo -e "\tmake -j ${MAKE_J_OPTION} -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_TEST_INSTALL_PATH} install" >> Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_TEST_INSTALL_PATH} install" >> Makefile
 echo "" >> Makefile
 echo "build-test: install-test" >> Makefile
-echo -e "\tmake -C core/unit_test" >> Makefile
-echo -e "\tmake -C core/perf_test" >> Makefile
-echo -e "\tmake -C containers/unit_tests" >> Makefile
-echo -e "\tmake -C containers/performance_tests" >> Makefile
-echo -e "\tmake -C algorithms/unit_tests" >> Makefile
+echo -e "\t\$(MAKE) -C core/unit_test" >> Makefile
+echo -e "\t\$(MAKE) -C core/perf_test" >> Makefile
+echo -e "\t\$(MAKE) -C containers/unit_tests" >> Makefile
+echo -e "\t\$(MAKE) -C containers/performance_tests" >> Makefile
+echo -e "\t\$(MAKE) -C algorithms/unit_tests" >> Makefile
 if [ ${KOKKOS_DO_EXAMPLES} -gt 0 ]; then
-echo -e "\tmake -C example/fixture" >> Makefile
-echo -e "\tmake -C example/feint" >> Makefile
-echo -e "\tmake -C example/fenl" >> Makefile
-echo -e "\tmake -C example/tutorial build" >> Makefile
+echo -e "\t\$(MAKE) -C example/fixture" >> Makefile
+echo -e "\t\$(MAKE) -C example/feint" >> Makefile
+echo -e "\t\$(MAKE) -C example/fenl" >> Makefile
+echo -e "\t\$(MAKE) -C example/tutorial build" >> Makefile
 fi
 echo "" >> Makefile
 echo "test: build-test" >> Makefile
-echo -e "\tmake -C core/unit_test test" >> Makefile
-echo -e "\tmake -C core/perf_test test" >> Makefile
-echo -e "\tmake -C containers/unit_tests test" >> Makefile
-echo -e "\tmake -C containers/performance_tests test" >> Makefile
-echo -e "\tmake -C algorithms/unit_tests test" >> Makefile
+echo -e "\t\$(MAKE) -C core/unit_test test" >> Makefile
+echo -e "\t\$(MAKE) -C core/perf_test test" >> Makefile
+echo -e "\t\$(MAKE) -C containers/unit_tests test" >> Makefile
+echo -e "\t\$(MAKE) -C containers/performance_tests test" >> Makefile
+echo -e "\t\$(MAKE) -C algorithms/unit_tests test" >> Makefile
 if [ ${KOKKOS_DO_EXAMPLES} -gt 0 ]; then
-echo -e "\tmake -C example/fixture test" >> Makefile
-echo -e "\tmake -C example/feint test" >> Makefile
-echo -e "\tmake -C example/fenl test" >> Makefile
-echo -e "\tmake -C example/tutorial test" >> Makefile
+echo -e "\t\$(MAKE) -C example/fixture test" >> Makefile
+echo -e "\t\$(MAKE) -C example/feint test" >> Makefile
+echo -e "\t\$(MAKE) -C example/fenl test" >> Makefile
+echo -e "\t\$(MAKE) -C example/tutorial test" >> Makefile
 fi
 echo "" >> Makefile
 echo "unit-tests-only:" >> Makefile
-echo -e "\tmake -C core/unit_test test" >> Makefile
-echo -e "\tmake -C containers/unit_tests test" >> Makefile
-echo -e "\tmake -C algorithms/unit_tests test" >> Makefile
+echo -e "\t\$(MAKE) -C core/unit_test test" >> Makefile
+echo -e "\t\$(MAKE) -C containers/unit_tests test" >> Makefile
+echo -e "\t\$(MAKE) -C algorithms/unit_tests test" >> Makefile
 echo "" >> Makefile
+
 echo "clean:" >> Makefile
-echo -e "\tmake -C core/unit_test clean" >> Makefile
-echo -e "\tmake -C core/perf_test clean" >> Makefile
-echo -e "\tmake -C containers/unit_tests clean" >> Makefile
-echo -e "\tmake -C containers/performance_tests clean" >> Makefile
-echo -e "\tmake -C algorithms/unit_tests clean" >> Makefile
+echo -e "\t\$(MAKE) -C core/unit_test clean" >> Makefile
+echo -e "\t\$(MAKE) -C core/perf_test clean" >> Makefile
+echo -e "\t\$(MAKE) -C containers/unit_tests clean" >> Makefile
+echo -e "\t\$(MAKE) -C containers/performance_tests clean" >> Makefile
+echo -e "\t\$(MAKE) -C algorithms/unit_tests clean" >> Makefile
 if [ ${KOKKOS_DO_EXAMPLES} -gt 0 ]; then
-echo -e "\tmake -C example/fixture clean" >> Makefile
-echo -e "\tmake -C example/feint clean" >> Makefile
-echo -e "\tmake -C example/fenl clean" >> Makefile
-echo -e "\tmake -C example/tutorial clean" >> Makefile
+echo -e "\t\$(MAKE) -C example/fixture clean" >> Makefile
+echo -e "\t\$(MAKE) -C example/feint clean" >> Makefile
+echo -e "\t\$(MAKE) -C example/fenl clean" >> Makefile
+echo -e "\t\$(MAKE) -C example/tutorial clean" >> Makefile
 fi
 echo -e "\tcd core; \\" >> Makefile
-echo -e "\tmake -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} clean" >> Makefile
+echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} clean" >> Makefile
+
