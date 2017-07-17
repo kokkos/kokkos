@@ -71,7 +71,7 @@ __global__ void init_lock_array_kernel_atomic() {
 
 __global__ void init_lock_array_kernel_threadid(int N) {
   unsigned i = blockIdx.x*blockDim.x + threadIdx.x;
-  if(i<N) {
+  if(i<(unsigned)N) {
     Kokkos::Impl::g_device_cuda_lock_arrays.scratch[i] = 0;
   }
 }
