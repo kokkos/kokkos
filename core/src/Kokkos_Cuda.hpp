@@ -217,8 +217,8 @@ public:
 
 private:
 
-  cudaStream_t m_stream ;
   int          m_device ;
+  cudaStream_t m_stream ;
 };
 
 } // namespace Kokkos

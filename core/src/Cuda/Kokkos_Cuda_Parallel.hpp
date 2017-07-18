@@ -562,7 +562,8 @@ public:
     }
 
 
-    for ( int league_rank = blockIdx.x ; league_rank < m_league_size ; league_rank += gridDim.x ) {
+    const int int_league_size = (int)m_league_size;
+    for ( int league_rank = blockIdx.x ; league_rank < int_league_size ; league_rank += gridDim.x ) {
 
       this-> template exec_team< WorkTag >(
         typename Policy::member_type( kokkos_impl_cuda_shared_memory<void>()
@@ -854,7 +855,7 @@ public:
 };
 
 
-// MDRangePolicy impl 
+// MDRangePolicy impl
 template< class FunctorType , class ReducerType, class ... Traits >
 class ParallelReduce< FunctorType
                     , Kokkos::Experimental::MDRangePolicy< Traits ... >
@@ -908,15 +909,15 @@ private:
 
 public:
   inline
-  __device__ 
-  void 
+  __device__
+  void
   exec_range( reference_type update ) const
   {
     Kokkos::Experimental::Impl::Reduce::DeviceIterateTile<Policy::rank,Policy,FunctorType,typename Policy::work_tag, reference_type>(m_policy, m_functor, update).exec_range();
   }
 
   inline
-  __device__ 
+  __device__
   void operator() (void) const {
     run(Kokkos::Impl::if_c<UseShflReduction, DummyShflReductionType, DummySHMEMReductionType>::select(1,1.0) );
   }
@@ -1006,15 +1007,15 @@ public:
     {
       const int nwork = m_policy.m_num_tiles;
       if ( nwork ) {
-        int block_size = m_policy.m_prod_tile_dims; 
+        int block_size = m_policy.m_prod_tile_dims;
         // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
         // Nearest power of two
         int exponent_pow_two = std::ceil( std::log2(block_size) );
         block_size = std::pow(2, exponent_pow_two);
         int suggested_blocksize = local_block_size( m_functor );
 
-        block_size = (block_size > suggested_blocksize) ? block_size : suggested_blocksize ; //Note: block_size must be less than or equal to 512 
-        
+        block_size = (block_size > suggested_blocksize) ? block_size : suggested_blocksize ; //Note: block_size must be less than or equal to 512
+
 
         m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_size /* block_size == max block_count */ );
         m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
@@ -1197,7 +1198,8 @@ public:
       ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , kokkos_impl_cuda_shared_memory<size_type>() + threadIdx.y * word_count.value );
 
     // Iterate this block through the league
-    for ( int league_rank = blockIdx.x ; league_rank < m_league_size ; league_rank += gridDim.x ) {
+    const int int_league_size = (int)m_league_size;
+    for ( int league_rank = blockIdx.x ; league_rank < int_league_size ; league_rank += gridDim.x ) {
       this-> template exec_team< WorkTag >
         ( Member( kokkos_impl_cuda_shared_memory<char>() + m_team_begin
                                         , m_shmem_begin
@@ -1237,7 +1239,8 @@ public:
     ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , &value);
 
     // Iterate this block through the league
-    for ( int league_rank = blockIdx.x ; league_rank < m_league_size ; league_rank += gridDim.x ) {
+    const int int_league_size = (int)m_league_size;
+    for ( int league_rank = blockIdx.x ; league_rank < int_league_size ; league_rank += gridDim.x ) {
       this-> template exec_team< WorkTag >
         ( Member( kokkos_impl_cuda_shared_memory<char>() + m_team_begin
                                         , m_shmem_begin
@@ -1318,12 +1321,6 @@ public:
   , m_shmem_begin( 0 )
   , m_shmem_size( 0 )
   , m_scratch_ptr{NULL,NULL}
-  , m_league_size( arg_policy.league_size() )
-  , m_team_size( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
-      Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( arg_functor , arg_policy.vector_length(),
-                                                               arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) /
-                                                               arg_policy.vector_length() )
-  , m_vector_size( arg_policy.vector_length() )
   , m_scratch_size{
     arg_policy.scratch_size(0,( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
         Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( arg_functor , arg_policy.vector_length(),
@@ -1334,6 +1331,12 @@ public:
                                                                  arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) /
                                                                  arg_policy.vector_length() )
         )}
+  , m_league_size( arg_policy.league_size() )
+  , m_team_size( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
+      Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( arg_functor , arg_policy.vector_length(),
+                                                               arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) /
+                                                               arg_policy.vector_length() )
+  , m_vector_size( arg_policy.vector_length() )
   {
     // Return Init value if the number of worksets is zero
     if( arg_policy.league_size() == 0) {
@@ -1717,7 +1720,7 @@ public:
 
     if ( CudaTraits::WarpSize < team_threads ) {
       // Need inter-warp team reduction (collectives) shared memory
-      // Speculate an upper bound for the value size 
+      // Speculate an upper bound for the value size
 
       m_shmem_team_begin =
         align_scratch( CudaTraits::warp_count(team_threads) * sizeof(double) );
@@ -1770,7 +1773,7 @@ public:
 
     // Reduce space has claim flag followed by vaue buffer
     const int global_reduce_value_size =
-      max_concurrent_block * 
+      max_concurrent_block *
       ( aligned_flag_size + align_scratch( value_size ) );
 
     // Scratch space has claim flag followed by scratch buffer

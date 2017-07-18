@@ -643,11 +643,12 @@ reallocate_tracked( void * const arg_alloc_ptr
 SharedAllocationRecord< Kokkos::CudaSpace , void > *
 SharedAllocationRecord< Kokkos::CudaSpace , void >::get_record( void * alloc_ptr )
 {
-  using Header     = SharedAllocationHeader ;
   using RecordBase = SharedAllocationRecord< void , void > ;
   using RecordCuda = SharedAllocationRecord< Kokkos::CudaSpace , void > ;
 
 #if 0
+  using Header     = SharedAllocationHeader ;
+
   // Copy the header from the allocation
   Header head ;
 
