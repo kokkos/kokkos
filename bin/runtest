@@ -161,4 +161,5 @@ if [[ ${BUILD_ONLY} -eq 0 ]]; then
   fi
 fi
 
-return ${RESULT}
+exit ${RESULT}
+

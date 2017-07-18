@@ -72,7 +72,7 @@ void host_thread_yield( const uint32_t i )
   switch( c ) {
   default:
 
-#if ! defined(__MIC__)
+#if !defined(__MIC__) && !defined(KOKKOS_INTERNAL_USE_ARCH_AVX512MIC)
 
     // IS NOT INTEL XEON MIC (KNL) architecture,
     // thus it is ok to sleep or yield the thread.
@@ -91,6 +91,7 @@ void host_thread_yield( const uint32_t i )
         Sleep(c);
       #endif
     }
+    // [[fallthrough]]; // suppress fallthrough warning
 
   case 12:
     // Attempt to yield thread resources to runtime
@@ -102,17 +103,18 @@ void host_thread_yield( const uint32_t i )
     #else /* defined( _WIN32 ) IS Microsoft Windows */
       YieldProcessor();
     #endif
+    // [[fallthrough]]; // suppress fallthrough warning
 
-  case 11:
-  case 10:
-  case 9 :
-  case 8 :
-  case 7 :
-  case 6 :
-  case 5 :
-  case 4 :
+  case 11: // [[fallthrough]]; // suppress fallthrough warning
+  case 10: // [[fallthrough]]; // suppress fallthrough warning
+  case 9 : // [[fallthrough]]; // suppress fallthrough warning
+  case 8 : // [[fallthrough]]; // suppress fallthrough warning
+  case 7 : // [[fallthrough]]; // suppress fallthrough warning
+  case 6 : // [[fallthrough]]; // suppress fallthrough warning
+  case 5 : // [[fallthrough]]; // suppress fallthrough warning
+  case 4 : // [[fallthrough]]; // suppress fallthrough warning
 
-#endif /* ! defined(__MIC__) */
+#endif /* !defined(__MIC__) && !defined(KOKKOS_INTERNAL_USE_ARCH_AVX512MIC) */
 
     // Insert a few no-ops to quiet the thread:
 
@@ -127,11 +129,11 @@ void host_thread_yield( const uint32_t i )
         ;
       #endif
     }
-
-  case 3 :
-  case 2 :
-  case 1 :
-  case 0 :
+    // [[fallthrough]]; // suppress fallthrough warning
+  case 3 : // [[fallthrough]]; // suppress fallthrough warning
+  case 2 : // [[fallthrough]]; // suppress fallthrough warning
+  case 1 : // [[fallthrough]]; // suppress fallthrough warning
+  case 0 : // [[fallthrough]]; // suppress fallthrough warning
 
     // Insert memory pause
 
@@ -143,6 +145,8 @@ void host_thread_yield( const uint32_t i )
       #else /* IS Microsoft Windows */
         __asm__ __volatile__("pause\n":::"memory");
       #endif
+    #else /* #if defined( KOKKOS_ENABLE_ASM ) */
+      ;
     #endif
   }
 }
@@ -157,28 +161,28 @@ namespace Impl {
 void spinwait_while_equal( volatile int32_t & flag , const int32_t value )
 {
   Kokkos::store_fence();
-  for ( uint32_t i = 0 ; value == flag ; host_thread_yield(++i) );
+  uint32_t i = 0 ; while( value == flag ) host_thread_yield(++i);
   Kokkos::load_fence();
 }
 
 void spinwait_until_equal( volatile int32_t & flag , const int32_t value )
 {
   Kokkos::store_fence();
-  for ( uint32_t i = 0 ; value != flag ; host_thread_yield(++i) );
+  uint32_t i = 0 ; while( value != flag ) host_thread_yield(++i);
   Kokkos::load_fence();
 }
 
 void spinwait_while_equal( volatile int64_t & flag , const int64_t value )
 {
   Kokkos::store_fence();
-  for ( uint32_t i = 0 ; value == flag ; host_thread_yield(++i) );
+  uint32_t i = 0 ; while( value == flag ) host_thread_yield(++i);
   Kokkos::load_fence();
 }
 
 void spinwait_until_equal( volatile int64_t & flag , const int64_t value )
 {
   Kokkos::store_fence();
-  for ( uint32_t i = 0 ; value != flag ; host_thread_yield(++i) );
+  uint32_t i = 0 ; while( value != flag ) host_thread_yield(++i);
   Kokkos::load_fence();
 }
 
