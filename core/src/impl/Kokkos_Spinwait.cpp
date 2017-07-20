@@ -88,10 +88,12 @@ void host_thread_yield( const uint32_t i )
     }
     // [[fallthrough]]; // suppress fallthrough warning
 
-  case 12:
+  case 14: /* 16k attempts before yielding */
 
 #if ! defined( KOKKOS_ENABLE_ASM )
 
+  case 13: // [[fallthrough]]; // suppress fallthrough warning
+  case 12: // [[fallthrough]]; // suppress fallthrough warning
   case 11: // [[fallthrough]]; // suppress fallthrough warning
   case 10: // [[fallthrough]]; // suppress fallthrough warning
   case 9 : // [[fallthrough]]; // suppress fallthrough warning
@@ -120,6 +122,8 @@ void host_thread_yield( const uint32_t i )
 
 #if defined( KOKKOS_ENABLE_ASM )
 
+  case 13: // [[fallthrough]]; // suppress fallthrough warning
+  case 12: // [[fallthrough]]; // suppress fallthrough warning
   case 11: // [[fallthrough]]; // suppress fallthrough warning
   case 10: // [[fallthrough]]; // suppress fallthrough warning
   case 9 : // [[fallthrough]]; // suppress fallthrough warning
