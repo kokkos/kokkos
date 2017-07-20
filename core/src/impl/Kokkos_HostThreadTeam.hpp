@@ -176,11 +176,22 @@ public:
   inline
   int pool_rendezvous() const noexcept
     {
+      static constexpr int yield_wait =
+        #if defined( KOKKOS_COMPILER_IBM )
+            // If running on IBM POWER architecture the global
+            // level rendzvous should immediately yield when
+            // waiting for other threads in the pool to arrive.
+          1
+        #else
+          0
+        #endif
+          ;
       return 1 == m_pool_size ? 1 :
              Kokkos::Impl::
              rendezvous( m_pool_scratch + m_pool_rendezvous
                        , m_pool_size
-                       , m_pool_rank );
+                       , m_pool_rank
+                       , yield_wait );
     }
 
   inline

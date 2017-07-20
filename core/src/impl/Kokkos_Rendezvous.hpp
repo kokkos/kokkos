@@ -54,19 +54,29 @@ constexpr int rendezvous_buffer_size( int max_members ) noexcept
   return (((max_members + 7) / 8) * 4) + 4 + 4;
 }
 
-// Rendezvous pattern:
-//   if ( rendezvous(root) ) {
-//     ... only root thread here while all others wait ...
-//     rendezvous_release();
-//   }
-//   else {
-//     ... all other threads release here ...
-//   }
-//
-// Requires: buffer[ rendezvous_buffer_size( max_threads ) ];
+/** \brief  Thread pool rendezvous
+ *
+ *  Rendezvous pattern:
+ *   if ( rendezvous(root) ) {
+ *     ... only root thread here while all others wait ...
+ *     rendezvous_release();
+ *   }
+ *   else {
+ *     ... all other threads release here ...
+ *   }
+ *
+ *  Requires: buffer[ rendezvous_buffer_size( max_threads ) ];
+ *
+ *  When slow != 0 the expectation is thread arrival will be 
+ *  slow so the threads that arrive early should quickly yield
+ *  their core to the runtime thus possibly allowing the late
+ *  arriving threads to have more resources
+ *  (e.g., power and clock frequency).
+ */
 int rendezvous( volatile int64_t * const buffer
               , int const size
-              , int const rank ) noexcept ;
+              , int const rank
+              , int const slow = 0 ) noexcept ;
 
 void rendezvous_release( volatile int64_t * const buffer ) noexcept ;
 
