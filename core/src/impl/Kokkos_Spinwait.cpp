@@ -72,11 +72,6 @@ void host_thread_yield( const uint32_t i )
   switch( c ) {
   default:
 
-#if !defined(__MIC__) && !defined(KOKKOS_INTERNAL_USE_ARCH_AVX512MIC)
-
-    // IS NOT INTEL XEON MIC (KNL) architecture,
-    // thus it is ok to sleep or yield the thread.
-
     // Attempt to put the thread to sleep for 'c' milliseconds
 
     {
@@ -93,7 +88,27 @@ void host_thread_yield( const uint32_t i )
     }
     // [[fallthrough]]; // suppress fallthrough warning
 
-  case 12:
+  case 14: /* 16k attempts before yielding */
+
+#if ! defined( KOKKOS_ENABLE_ASM )
+
+  case 13: // [[fallthrough]]; // suppress fallthrough warning
+  case 12: // [[fallthrough]]; // suppress fallthrough warning
+  case 11: // [[fallthrough]]; // suppress fallthrough warning
+  case 10: // [[fallthrough]]; // suppress fallthrough warning
+  case 9 : // [[fallthrough]]; // suppress fallthrough warning
+  case 8 : // [[fallthrough]]; // suppress fallthrough warning
+  case 7 : // [[fallthrough]]; // suppress fallthrough warning
+  case 6 : // [[fallthrough]]; // suppress fallthrough warning
+  case 5 : // [[fallthrough]]; // suppress fallthrough warning
+  case 4 : // [[fallthrough]]; // suppress fallthrough warning
+  case 3 : // [[fallthrough]]; // suppress fallthrough warning
+  case 2 : // [[fallthrough]]; // suppress fallthrough warning
+  case 1 : // [[fallthrough]]; // suppress fallthrough warning
+  case 0 : // [[fallthrough]]; // suppress fallthrough warning
+
+#endif /* #if defined( KOKKOS_ENABLE_ASM ) */
+
     // Attempt to yield thread resources to runtime
 
     #if defined( KOKKOS_ENABLE_STDTHREAD )
@@ -105,6 +120,10 @@ void host_thread_yield( const uint32_t i )
     #endif
     // [[fallthrough]]; // suppress fallthrough warning
 
+#if defined( KOKKOS_ENABLE_ASM )
+
+  case 13: // [[fallthrough]]; // suppress fallthrough warning
+  case 12: // [[fallthrough]]; // suppress fallthrough warning
   case 11: // [[fallthrough]]; // suppress fallthrough warning
   case 10: // [[fallthrough]]; // suppress fallthrough warning
   case 9 : // [[fallthrough]]; // suppress fallthrough warning
@@ -114,19 +133,13 @@ void host_thread_yield( const uint32_t i )
   case 5 : // [[fallthrough]]; // suppress fallthrough warning
   case 4 : // [[fallthrough]]; // suppress fallthrough warning
 
-#endif /* !defined(__MIC__) && !defined(KOKKOS_INTERNAL_USE_ARCH_AVX512MIC) */
-
     // Insert a few no-ops to quiet the thread:
 
     for ( int k = 0 ; k < c ; ++k ) {
-      #if defined( KOKKOS_ENABLE_ASM )
-        #if !defined( _WIN32 ) /* IS NOT Microsoft Windows */
-          asm volatile("nop\n");
-        #else /* IS Microsoft Windows */
-          __asm__ __volatile__("nop\n");
-        #endif
-      #else /* !defined( KOKKOS_ENABLE_ASM ) */
-        ;
+      #if !defined( _WIN32 ) /* IS NOT Microsoft Windows */
+        asm volatile("nop\n");
+      #else /* IS Microsoft Windows */
+        __asm__ __volatile__("nop\n");
       #endif
     }
     // [[fallthrough]]; // suppress fallthrough warning
@@ -137,17 +150,16 @@ void host_thread_yield( const uint32_t i )
 
     // Insert memory pause
 
-    #if defined( KOKKOS_ENABLE_ASM )
-      #if !defined( _WIN32 ) /* IS NOT Microsoft Windows */
-        #if !defined( __arm__ ) && !defined( __aarch64__ )
-          asm volatile("pause\n":::"memory");
-        #endif
-      #else /* IS Microsoft Windows */
-        __asm__ __volatile__("pause\n":::"memory");
+    #if !defined( _WIN32 ) /* IS NOT Microsoft Windows */
+      #if !defined( __arm__ ) && !defined( __aarch64__ )
+        asm volatile("pause\n":::"memory");
       #endif
-    #else /* #if defined( KOKKOS_ENABLE_ASM ) */
-      ;
+    #else /* IS Microsoft Windows */
+      __asm__ __volatile__("pause\n":::"memory");
     #endif
+
+#endif /* #if defined( KOKKOS_ENABLE_ASM ) */
+
   }
 }
 
