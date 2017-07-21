@@ -65,35 +65,31 @@ namespace Kokkos {
 namespace Impl {
 namespace {
 
-void host_thread_yield( const uint32_t i )
+void host_thread_yield( const uint32_t i , const int force_yield )
 {
-  const int c = Kokkos::Impl::bit_scan_reverse( i );
+  static constexpr uint32_t sleep_limit = 1 << 13 ;
+  static constexpr uint32_t yield_limit = 1 << 12 ;
 
-  switch( c ) {
-  default:
+  const int c = Kokkos::Impl::bit_scan_reverse(i);
 
-#if !defined(__MIC__) && !defined(KOKKOS_INTERNAL_USE_ARCH_AVX512MIC)
-
-    // IS NOT INTEL XEON MIC (KNL) architecture,
-    // thus it is ok to sleep or yield the thread.
+  if ( sleep_limit < i ) {
 
     // Attempt to put the thread to sleep for 'c' milliseconds
 
-    {
-      #if defined( KOKKOS_ENABLE_STDTHREAD )
-        std::this_thread::sleep_for( std::chrono::nanoseconds( c * 1000 ) )
-      #elif !defined( _WIN32 )
-        timespec req ;
-        req.tv_sec  = 0 ;
-        req.tv_nsec = 1000 * c ;
-        nanosleep( &req, nullptr );
-      #else /* defined( _WIN32 ) IS Microsoft Windows */
-        Sleep(c);
-      #endif
-    }
-    // [[fallthrough]]; // suppress fallthrough warning
+    #if defined( KOKKOS_ENABLE_STDTHREAD )
+      std::this_thread::sleep_for( std::chrono::nanoseconds( c * 1000 ) )
+    #elif !defined( _WIN32 )
+      timespec req ;
+      req.tv_sec  = 0 ;
+      req.tv_nsec = 1000 * c ;
+      nanosleep( &req, nullptr );
+    #else /* defined( _WIN32 ) IS Microsoft Windows */
+      Sleep(c);
+    #endif
+  }
 
-  case 12:
+  else if ( force_yield || yield_limit < i ) {
+
     // Attempt to yield thread resources to runtime
 
     #if defined( KOKKOS_ENABLE_STDTHREAD )
@@ -103,41 +99,26 @@ void host_thread_yield( const uint32_t i )
     #else /* defined( _WIN32 ) IS Microsoft Windows */
       YieldProcessor();
     #endif
-    // [[fallthrough]]; // suppress fallthrough warning
+  }
 
-  case 11: // [[fallthrough]]; // suppress fallthrough warning
-  case 10: // [[fallthrough]]; // suppress fallthrough warning
-  case 9 : // [[fallthrough]]; // suppress fallthrough warning
-  case 8 : // [[fallthrough]]; // suppress fallthrough warning
-  case 7 : // [[fallthrough]]; // suppress fallthrough warning
-  case 6 : // [[fallthrough]]; // suppress fallthrough warning
-  case 5 : // [[fallthrough]]; // suppress fallthrough warning
-  case 4 : // [[fallthrough]]; // suppress fallthrough warning
+  #if defined( KOKKOS_ENABLE_ASM )
 
-#endif /* !defined(__MIC__) && !defined(KOKKOS_INTERNAL_USE_ARCH_AVX512MIC) */
+  else if ( (1u<<4) < i ) {
 
     // Insert a few no-ops to quiet the thread:
 
     for ( int k = 0 ; k < c ; ++k ) {
-      #if defined( KOKKOS_ENABLE_ASM )
-        #if !defined( _WIN32 ) /* IS NOT Microsoft Windows */
-          asm volatile("nop\n");
-        #else /* IS Microsoft Windows */
-          __asm__ __volatile__("nop\n");
-        #endif
-      #else /* !defined( KOKKOS_ENABLE_ASM ) */
-        ;
+      #if !defined( _WIN32 ) /* IS NOT Microsoft Windows */
+        asm volatile("nop\n");
+      #else /* IS Microsoft Windows */
+        __asm__ __volatile__("nop\n");
       #endif
     }
-    // [[fallthrough]]; // suppress fallthrough warning
-  case 3 : // [[fallthrough]]; // suppress fallthrough warning
-  case 2 : // [[fallthrough]]; // suppress fallthrough warning
-  case 1 : // [[fallthrough]]; // suppress fallthrough warning
-  case 0 : // [[fallthrough]]; // suppress fallthrough warning
+  }
 
+  {
     // Insert memory pause
 
-    #if defined( KOKKOS_ENABLE_ASM )
       #if !defined( _WIN32 ) /* IS NOT Microsoft Windows */
         #if !defined( __arm__ ) && !defined( __aarch64__ )
           asm volatile("pause\n":::"memory");
@@ -145,10 +126,9 @@ void host_thread_yield( const uint32_t i )
       #else /* IS Microsoft Windows */
         __asm__ __volatile__("pause\n":::"memory");
       #endif
-    #else /* #if defined( KOKKOS_ENABLE_ASM ) */
-      ;
-    #endif
   }
+
+  #endif /* defined( KOKKOS_ENABLE_ASM ) */
 }
 
 }}} // namespace Kokkos::Impl::{anonymous}
@@ -161,28 +141,56 @@ namespace Impl {
 void spinwait_while_equal( volatile int32_t & flag , const int32_t value )
 {
   Kokkos::store_fence();
-  uint32_t i = 0 ; while( value == flag ) host_thread_yield(++i);
+  uint32_t i = 0 ; while( value == flag ) host_thread_yield(++i,0);
   Kokkos::load_fence();
 }
 
 void spinwait_until_equal( volatile int32_t & flag , const int32_t value )
 {
   Kokkos::store_fence();
-  uint32_t i = 0 ; while( value != flag ) host_thread_yield(++i);
+  uint32_t i = 0 ; while( value != flag ) host_thread_yield(++i,0);
   Kokkos::load_fence();
 }
 
 void spinwait_while_equal( volatile int64_t & flag , const int64_t value )
 {
   Kokkos::store_fence();
-  uint32_t i = 0 ; while( value == flag ) host_thread_yield(++i);
+  uint32_t i = 0 ; while( value == flag ) host_thread_yield(++i,0);
   Kokkos::load_fence();
 }
 
 void spinwait_until_equal( volatile int64_t & flag , const int64_t value )
 {
   Kokkos::store_fence();
-  uint32_t i = 0 ; while( value != flag ) host_thread_yield(++i);
+  uint32_t i = 0 ; while( value != flag ) host_thread_yield(++i,0);
+  Kokkos::load_fence();
+}
+
+void yield_while_equal( volatile int32_t & flag , const int32_t value )
+{
+  Kokkos::store_fence();
+  uint32_t i = 0 ; while( value == flag ) host_thread_yield(++i,1);
+  Kokkos::load_fence();
+}
+
+void yield_until_equal( volatile int32_t & flag , const int32_t value )
+{
+  Kokkos::store_fence();
+  uint32_t i = 0 ; while( value != flag ) host_thread_yield(++i,1);
+  Kokkos::load_fence();
+}
+
+void yield_while_equal( volatile int64_t & flag , const int64_t value )
+{
+  Kokkos::store_fence();
+  uint32_t i = 0 ; while( value == flag ) host_thread_yield(++i,1);
+  Kokkos::load_fence();
+}
+
+void yield_until_equal( volatile int64_t & flag , const int64_t value )
+{
+  Kokkos::store_fence();
+  uint32_t i = 0 ; while( value != flag ) host_thread_yield(++i,1);
   Kokkos::load_fence();
 }
 
