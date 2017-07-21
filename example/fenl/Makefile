@@ -39,7 +39,6 @@ $(EXE_EXAMPLE_FENL) : $(OBJ_EXAMPLE_FENL) $(KOKKOS_LINK_DEPENDS)
 
 build_all : $(TARGETS)
 
-test: export OMP_PROC_BIND=false
 test : build_all
 
 clean: kokkos-clean

@@ -204,7 +204,7 @@ struct AnalyzePolicy<Base>
                                                      >::type;
 
   using launch_bounds = typename std::conditional< is_void< typename Base::launch_bounds >::value
-                                                     , LaunchBounds<1024,1> // TODO set correct bounds for each device
+                                                     , LaunchBounds<>
                                                      , typename Base::launch_bounds
                                                      >::type;
 

@@ -113,9 +113,31 @@ private:
   int         m_league_size ;
   int         m_work_chunk ;
   int         m_steal_rank ; // work stealing rank
+  int mutable m_team_rendezvous_step ;
 
   HostThreadTeamData * team_member( int r ) const noexcept
     { return ((HostThreadTeamData**)(m_pool_scratch+m_pool_members))[m_team_base+r]; }
+
+  // Rendezvous pattern:
+  //   if ( rendezvous(root) ) {
+  //     ... only root thread here while all others wait ...
+  //     rendezvous_release();
+  //   }
+  //   else {
+  //     ... all other threads release here ...
+  //   }
+  //
+  // Requires: buffer[ ( max_threads / 8 ) * 4 + 4 ]; 0 == max_threads % 8
+  //
+  static
+  int rendezvous( int64_t * const buffer
+                , int & rendezvous_step
+                , int const size
+                , int const rank ) noexcept ;
+
+  static
+  void rendezvous_release( int64_t * const buffer
+                         , int const rendezvous_step ) noexcept ;
 
 public:
 
@@ -123,7 +145,9 @@ public:
   int team_rendezvous( int const root ) const noexcept
     {
       return 1 == m_team_size ? 1 :
+             HostThreadTeamData::
              rendezvous( m_team_scratch + m_team_rendezvous
+                       , m_team_rendezvous_step
                        , m_team_size
                        , ( m_team_rank + m_team_size - root ) % m_team_size );
     }
@@ -132,7 +156,9 @@ public:
   int team_rendezvous() const noexcept
     {
       return 1 == m_team_size ? 1 :
+             HostThreadTeamData::
              rendezvous( m_team_scratch + m_team_rendezvous
+                       , m_team_rendezvous_step
                        , m_team_size
                        , m_team_rank );
     }
@@ -141,23 +167,38 @@ public:
   void team_rendezvous_release() const noexcept
     {
       if ( 1 < m_team_size ) {
-        rendezvous_release( m_team_scratch + m_team_rendezvous );
+        HostThreadTeamData::
+        rendezvous_release( m_team_scratch + m_team_rendezvous
+                          , m_team_rendezvous_step );
       }
     }
 
   inline
   int pool_rendezvous() const noexcept
     {
+      static constexpr int yield_wait =
+        #if defined( KOKKOS_COMPILER_IBM )
+            // If running on IBM POWER architecture the global
+            // level rendzvous should immediately yield when
+            // waiting for other threads in the pool to arrive.
+          1
+        #else
+          0
+        #endif
+          ;
       return 1 == m_pool_size ? 1 :
+             Kokkos::Impl::
              rendezvous( m_pool_scratch + m_pool_rendezvous
                        , m_pool_size
-                       , m_pool_rank );
+                       , m_pool_rank
+                       , yield_wait );
     }
 
   inline
   void pool_rendezvous_release() const noexcept
     {
       if ( 1 < m_pool_size ) {
+        Kokkos::Impl::
         rendezvous_release( m_pool_scratch + m_pool_rendezvous );
       }
     }
@@ -184,6 +225,7 @@ public:
     , m_league_size(1)
     , m_work_chunk(0)
     , m_steal_rank(0)
+    , m_team_rendezvous_step(0)
     {}
 
   //----------------------------------------

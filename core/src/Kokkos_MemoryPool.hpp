@@ -66,11 +66,6 @@ private:
   enum : uint32_t { max_bit_count_lg2 = CB::max_bit_count_lg2 };
   enum : uint32_t { max_bit_count     = CB::max_bit_count };
 
-  /*  Defaults for min block, max block, and superblock sizes */
-  enum : uint32_t { MIN_BLOCK_SIZE_LG2  =  6  /*   64 bytes */ };
-  enum : uint32_t { MAX_BLOCK_SIZE_LG2  = 12  /*   4k bytes */ };
-  enum : uint32_t { SUPERBLOCK_SIZE_LG2 = 16  /*  64k bytes */ };
-
   enum : uint32_t { HINT_PER_BLOCK_SIZE = 2 };
 
   /*  Each superblock has a concurrent bitset state
@@ -251,10 +246,10 @@ public:
    *  significant runtime performance improvements.
    */
   MemoryPool( const base_memory_space & memspace
-            , const size_t   min_total_alloc_size
-            , const uint32_t min_block_alloc_size // = 1 << MIN_BLOCK_SIZE_LG2
-            , const uint32_t max_block_alloc_size // = 1 << MAX_BLOCK_SIZE_LG2
-            , const uint32_t min_superblock_size  // = 1 << SUPERBLOCK_SIZE_LG2
+            , const size_t min_total_alloc_size
+            , size_t min_block_alloc_size = 0
+            , size_t max_block_alloc_size = 0
+            , size_t min_superblock_size  = 0
             )
     : m_tracker()
     , m_sb_state_array(0)
@@ -267,8 +262,43 @@ public:
     , m_data_offset(0)
     , m_unused_padding(0)
     {
-      const uint32_t int_align_lg2  = 3 ; /* align as int[8] */
-      const uint32_t int_align_mask = ( 1u << int_align_lg2 ) - 1 ;
+      const uint32_t int_align_lg2   = 3 ; /* align as int[8] */
+      const uint32_t int_align_mask  = ( 1u << int_align_lg2 ) - 1 ;
+
+      // Constraints and defaults:
+      //   min_block_alloc_size <= max_block_alloc_size
+      //   max_block_alloc_size <= min_superblock_size 
+      //   min_superblock_size  <= min_total_alloc_size
+
+      const uint32_t MIN_BLOCK_SIZE  = 1u << 6   /*   64 bytes */ ;
+      const uint32_t MAX_BLOCK_SIZE  = 1u << 12  /*   4k bytes */ ;
+
+      if ( 0 == min_block_alloc_size ) min_block_alloc_size = MIN_BLOCK_SIZE ;
+
+      if ( 0 == max_block_alloc_size ) {
+
+        max_block_alloc_size = MAX_BLOCK_SIZE ;
+
+        // Upper bound of total allocation size
+        max_block_alloc_size = std::min( size_t(max_block_alloc_size)
+                                       , min_total_alloc_size );
+
+        // Lower bound of minimum block size
+        max_block_alloc_size = std::max( max_block_alloc_size
+                                       , min_block_alloc_size );
+      }
+
+      if ( 0 == min_superblock_size ) {
+        min_superblock_size = max_block_alloc_size ;
+
+        // Upper bound of total allocation size
+        min_superblock_size = std::min( size_t(min_superblock_size)
+                                      , min_total_alloc_size );
+
+        // Lower bound of maximum block size
+        min_superblock_size = std::max( min_superblock_size
+                                      , max_block_alloc_size );
+      }
 
       // Block and superblock size is power of two:
 

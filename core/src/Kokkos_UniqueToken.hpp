@@ -72,15 +72,15 @@ public:
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
-  size_type size();
+  size_type size() const ;
 
   /// \brief acquire value such that 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
-  size_type acquire();
+  size_type acquire() const ;
 
   /// \brief release a value acquired by generate
   KOKKOS_INLINE_FUNCTION
-  void release( size_type );
+  void release( size_type ) const ;
 };
 
 }} // namespace Kokkos::Experimental

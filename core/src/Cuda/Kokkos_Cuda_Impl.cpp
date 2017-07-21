@@ -236,6 +236,7 @@ public:
   unsigned    m_maxWarpCount ;
   unsigned    m_maxBlock ;
   unsigned    m_maxSharedWords ;
+  uint32_t    m_maxConcurrency ;
   size_type   m_scratchSpaceCount ;
   size_type   m_scratchFlagsCount ;
   size_type   m_scratchUnifiedCount ;
@@ -244,6 +245,7 @@ public:
   size_type * m_scratchSpace ;
   size_type * m_scratchFlags ;
   size_type * m_scratchUnified ;
+  uint32_t  * m_scratchConcurrentBitset ;
   cudaStream_t * m_stream ;
 
   static int was_initialized;
@@ -270,6 +272,7 @@ public:
     , m_maxWarpCount( 0 )
     , m_maxBlock( 0 )
     , m_maxSharedWords( 0 )
+    , m_maxConcurrency( 0 )
     , m_scratchSpaceCount( 0 )
     , m_scratchFlagsCount( 0 )
     , m_scratchUnifiedCount( 0 )
@@ -278,6 +281,7 @@ public:
     , m_scratchSpace( 0 )
     , m_scratchFlags( 0 )
     , m_scratchUnified( 0 )
+    , m_scratchConcurrentBitset( 0 )
     , m_stream( 0 )
     {}
 
@@ -323,7 +327,8 @@ CudaInternal::~CudaInternal()
   if ( m_stream ||
        m_scratchSpace ||
        m_scratchFlags ||
-       m_scratchUnified ) {
+       m_scratchUnified ||
+       m_scratchConcurrentBitset ) {
     std::cerr << "Kokkos::Cuda ERROR: Failed to call Kokkos::Cuda::finalize()"
               << std::endl ;
     std::cerr.flush();
@@ -335,6 +340,7 @@ CudaInternal::~CudaInternal()
   m_maxWarpCount            = 0 ;
   m_maxBlock                = 0 ;
   m_maxSharedWords          = 0 ;
+  m_maxConcurrency          = 0 ;
   m_scratchSpaceCount       = 0 ;
   m_scratchFlagsCount       = 0 ;
   m_scratchUnifiedCount     = 0 ;
@@ -343,6 +349,7 @@ CudaInternal::~CudaInternal()
   m_scratchSpace            = 0 ;
   m_scratchFlags            = 0 ;
   m_scratchUnified          = 0 ;
+  m_scratchConcurrentBitset = 0 ;
   m_stream                  = 0 ;
 }
 
@@ -479,6 +486,33 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
       (void) scratch_unified( 16 * sizeof(size_type) );
       (void) scratch_flags( reduce_block_count * 2  * sizeof(size_type) );
       (void) scratch_space( reduce_block_count * 16 * sizeof(size_type) );
+    }
+    //----------------------------------
+    // Concurrent bitset for obtaining unique tokens from within
+    // an executing kernel.
+    {
+      const unsigned max_threads_per_sm = 2048 ; // up to capability 7.0
+
+      m_maxConcurrency =
+        max_threads_per_sm * cudaProp.multiProcessorCount ;
+
+      const int32_t buffer_bound =
+         Kokkos::Impl::concurrent_bitset::buffer_bound( m_maxConcurrency );
+
+      // Allocate and initialize uint32_t[ buffer_bound ]
+
+      typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > Record ;
+
+      Record * const r = Record::allocate( Kokkos::CudaSpace()
+                                         , "InternalScratchBitset"
+                                         , sizeof(uint32_t) * buffer_bound );
+
+      Record::increment( r );
+
+      m_scratchConcurrentBitset = reinterpret_cast<uint32_t *>( r->data() );
+
+      CUDA_SAFE_CALL( cudaMemset( m_scratchConcurrentBitset , 0 , sizeof(uint32_t) * buffer_bound ) );
+
     }
     //----------------------------------
 
@@ -638,6 +672,7 @@ void CudaInternal::finalize()
     RecordCuda::decrement( RecordCuda::get_record( m_scratchFlags ) );
     RecordCuda::decrement( RecordCuda::get_record( m_scratchSpace ) );
     RecordHost::decrement( RecordHost::get_record( m_scratchUnified ) );
+    RecordCuda::decrement( RecordCuda::get_record( m_scratchConcurrentBitset ) );
 
     m_cudaDev             = -1 ;
     m_multiProcCount      = 0 ;
@@ -651,6 +686,7 @@ void CudaInternal::finalize()
     m_scratchSpace        = 0 ;
     m_scratchFlags        = 0 ;
     m_scratchUnified      = 0 ;
+    m_scratchConcurrentBitset = 0 ;
     m_stream              = 0 ;
   }
 }
@@ -698,9 +734,8 @@ namespace Kokkos {
 Cuda::size_type Cuda::detect_device_count()
 { return Impl::CudaInternalDevices::singleton().m_cudaDevCount ; }
 
-int Cuda::concurrency() {
-  return 131072;
-}
+int Cuda::concurrency()
+{ return Impl::CudaInternal::singleton().m_maxConcurrency ; }
 
 int Cuda::is_initialized()
 { return Impl::CudaInternal::singleton().is_initialized(); }
@@ -783,7 +818,22 @@ void Cuda::fence()
 const char* Cuda::name() { return "Cuda"; }
 
 } // namespace Kokkos
+
+namespace Kokkos {
+namespace Experimental {
+
+UniqueToken< Kokkos::Cuda , Kokkos::Experimental::UniqueTokenScope::Global >::
+UniqueToken( Kokkos::Cuda const & )
+  : m_buffer( Kokkos::Impl::CudaInternal::singleton().m_scratchConcurrentBitset )
+  , m_count(  Kokkos::Impl::CudaInternal::singleton().m_maxConcurrency )
+  {}
+
+} // namespace Experimental
+} // namespace Kokkos
+
 #else
+
 void KOKKOS_CORE_SRC_CUDA_IMPL_PREVENT_LINK_ERROR() {}
+
 #endif // KOKKOS_ENABLE_CUDA
 

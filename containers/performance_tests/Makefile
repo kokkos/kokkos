@@ -51,17 +51,14 @@ KokkosContainers_PerformanceTest_Threads: $(OBJ_THREADS) $(KOKKOS_LINK_DEPENDS)
 KokkosContainers_PerformanceTest_OpenMP: $(OBJ_OPENMP) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_OPENMP) $(KOKKOS_LIBS) $(LIB) -o KokkosContainers_PerformanceTest_OpenMP
 
-test-cuda: export OMP_PROC_BIND=false
 test-cuda: KokkosContainers_PerformanceTest_Cuda
 	./KokkosContainers_PerformanceTest_Cuda
 
 test-threads: KokkosContainers_PerformanceTest_Threads
 	./KokkosContainers_PerformanceTest_Threads
 
-test-openmp: export OMP_PROC_BIND=false
 test-openmp: KokkosContainers_PerformanceTest_OpenMP
 	./KokkosContainers_PerformanceTest_OpenMP
-
 
 build_all: $(TARGETS)
 

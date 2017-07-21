@@ -90,13 +90,13 @@ struct DeviceIterateTile<2,RP,Functor,void >
   {
     // LL
     if (RP::inner_direction == RP::Left) {
-      for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
-        const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
-        if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+      for ( index_type tile_id1 = (index_type)blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
+        const index_type offset_1 = tile_id1*m_rp.m_tile[1] + (index_type)threadIdx.y;
+        if ( offset_1 < m_rp.m_upper[1] && (index_type)threadIdx.y < m_rp.m_tile[1] ) {
 
-          for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
-            const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
-            if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+          for ( index_type tile_id0 = (index_type)blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
+            const index_type offset_0 = tile_id0*m_rp.m_tile[0] + (index_type)threadIdx.x;
+            if ( offset_0 < m_rp.m_upper[0] && (index_type)threadIdx.x < m_rp.m_tile[0] ) {
               m_func(offset_0 , offset_1);
             }
           }
@@ -105,13 +105,13 @@ struct DeviceIterateTile<2,RP,Functor,void >
     }
     // LR
     else {
-      for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
-        const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
-        if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+      for ( index_type tile_id0 = (index_type)blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
+        const index_type offset_0 = tile_id0*m_rp.m_tile[0] + (index_type)threadIdx.x;
+        if ( offset_0 < m_rp.m_upper[0] && (index_type)threadIdx.x < m_rp.m_tile[0] ) {
 
-          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
-            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
-            if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+          for ( index_type tile_id1 = (index_type)blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
+            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + (index_type)threadIdx.y;
+            if ( offset_1 < m_rp.m_upper[1] && (index_type)threadIdx.y < m_rp.m_tile[1] ) {
               m_func(offset_0 , offset_1);
             }
           }
@@ -142,13 +142,13 @@ struct DeviceIterateTile<2,RP,Functor,Tag>
   {
     if (RP::inner_direction == RP::Left) {
       // Loop over size maxnumblocks until full range covered
-      for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
-        const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
-        if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+      for ( index_type tile_id1 = (index_type)blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
+        const index_type offset_1 = tile_id1*m_rp.m_tile[1] + (index_type)threadIdx.y;
+        if ( offset_1 < m_rp.m_upper[1] && (index_type)threadIdx.y < m_rp.m_tile[1] ) {
 
-          for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
-            const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
-            if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+          for ( index_type tile_id0 = (index_type)blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
+            const index_type offset_0 = tile_id0*m_rp.m_tile[0] + (index_type)threadIdx.x;
+            if ( offset_0 < m_rp.m_upper[0] && (index_type)threadIdx.x < m_rp.m_tile[0] ) {
               m_func(Tag(), offset_0 , offset_1);
             }
           }
@@ -156,13 +156,13 @@ struct DeviceIterateTile<2,RP,Functor,Tag>
       }
     }
     else {
-      for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
-        const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
-        if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+      for ( index_type tile_id0 = (index_type)blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
+        const index_type offset_0 = tile_id0*m_rp.m_tile[0] + (index_type)threadIdx.x;
+        if ( offset_0 < m_rp.m_upper[0] && (index_type)threadIdx.x < m_rp.m_tile[0] ) {
 
-          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
-            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
-            if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+          for ( index_type tile_id1 = (index_type)blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
+            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + (index_type)threadIdx.y;
+            if ( offset_1 < m_rp.m_upper[1] && (index_type)threadIdx.y < m_rp.m_tile[1] ) {
               m_func(Tag(), offset_0 , offset_1);
             }
           }
@@ -195,17 +195,17 @@ struct DeviceIterateTile<3,RP,Functor,void >
   {
     // LL
     if (RP::inner_direction == RP::Left) {
-      for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) {
-        const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
-        if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
+      for ( index_type tile_id2 = (index_type)blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) {
+        const index_type offset_2 = tile_id2*m_rp.m_tile[2] + (index_type)threadIdx.z;
+        if ( offset_2 < m_rp.m_upper[2] && (index_type)threadIdx.z < m_rp.m_tile[2] ) {
 
-          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
-            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
-            if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+          for ( index_type tile_id1 = (index_type)blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
+            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + (index_type)threadIdx.y;
+            if ( offset_1 < m_rp.m_upper[1] && (index_type)threadIdx.y < m_rp.m_tile[1] ) {
 
-              for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
-                const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
-                if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+              for ( index_type tile_id0 = (index_type)blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
+                const index_type offset_0 = tile_id0*m_rp.m_tile[0] + (index_type)threadIdx.x;
+                if ( offset_0 < m_rp.m_upper[0] && (index_type)threadIdx.x < m_rp.m_tile[0] ) {
                   m_func(offset_0 , offset_1 , offset_2);
                 }
               }
@@ -216,17 +216,17 @@ struct DeviceIterateTile<3,RP,Functor,void >
     }
     // LR
     else {
-      for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
-        const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
-        if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+      for ( index_type tile_id0 = (index_type)blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
+        const index_type offset_0 = tile_id0*m_rp.m_tile[0] + (index_type)threadIdx.x;
+        if ( offset_0 < m_rp.m_upper[0] && (index_type)threadIdx.x < m_rp.m_tile[0] ) {
 
-          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
-            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
-            if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+          for ( index_type tile_id1 = (index_type)blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
+            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + (index_type)threadIdx.y;
+            if ( offset_1 < m_rp.m_upper[1] && (index_type)threadIdx.y < m_rp.m_tile[1] ) {
 
-              for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) {
-                const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
-                if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
+              for ( index_type tile_id2 = (index_type)blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) {
+                const index_type offset_2 = tile_id2*m_rp.m_tile[2] + (index_type)threadIdx.z;
+                if ( offset_2 < m_rp.m_upper[2] && (index_type)threadIdx.z < m_rp.m_tile[2] ) {
                   m_func(offset_0 , offset_1 , offset_2);
                 }
               }
@@ -258,17 +258,17 @@ struct DeviceIterateTile<3,RP,Functor,Tag>
   void exec_range() const
   {
     if (RP::inner_direction == RP::Left) {
-      for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) {
-        const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
-        if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
+      for ( index_type tile_id2 = (index_type)blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) {
+        const index_type offset_2 = tile_id2*m_rp.m_tile[2] + (index_type)threadIdx.z;
+        if ( offset_2 < m_rp.m_upper[2] && (index_type)threadIdx.z < m_rp.m_tile[2] ) {
 
-          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
-            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
-            if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+          for ( index_type tile_id1 = (index_type)blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
+            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + (index_type)threadIdx.y;
+            if ( offset_1 < m_rp.m_upper[1] && (index_type)threadIdx.y < m_rp.m_tile[1] ) {
 
-              for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
-                const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
-                if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+              for ( index_type tile_id0 = (index_type)blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
+                const index_type offset_0 = tile_id0*m_rp.m_tile[0] + (index_type)threadIdx.x;
+                if ( offset_0 < m_rp.m_upper[0] && (index_type)threadIdx.x < m_rp.m_tile[0] ) {
                   m_func(Tag(), offset_0 , offset_1 , offset_2);
                 }
               }
@@ -278,17 +278,17 @@ struct DeviceIterateTile<3,RP,Functor,Tag>
       }
     }
     else {
-      for ( index_type tile_id0 = blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
-        const index_type offset_0 = tile_id0*m_rp.m_tile[0] + threadIdx.x;
-        if ( offset_0 < m_rp.m_upper[0] && threadIdx.x < m_rp.m_tile[0] ) {
+      for ( index_type tile_id0 = (index_type)blockIdx.x; tile_id0 < m_rp.m_tile_end[0]; tile_id0 += gridDim.x ) {
+        const index_type offset_0 = tile_id0*m_rp.m_tile[0] + (index_type)threadIdx.x;
+        if ( offset_0 < m_rp.m_upper[0] && (index_type)threadIdx.x < m_rp.m_tile[0] ) {
 
-          for ( index_type tile_id1 = blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
-            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + threadIdx.y;
-            if ( offset_1 < m_rp.m_upper[1] && threadIdx.y < m_rp.m_tile[1] ) {
+          for ( index_type tile_id1 = (index_type)blockIdx.y; tile_id1 < m_rp.m_tile_end[1]; tile_id1 += gridDim.y ) {
+            const index_type offset_1 = tile_id1*m_rp.m_tile[1] + (index_type)threadIdx.y;
+            if ( offset_1 < m_rp.m_upper[1] && (index_type)threadIdx.y < m_rp.m_tile[1] ) {
 
-              for ( index_type tile_id2 = blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) {
-                const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.z;
-                if ( offset_2 < m_rp.m_upper[2] && threadIdx.z < m_rp.m_tile[2] ) {
+              for ( index_type tile_id2 = (index_type)blockIdx.z; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.z ) {
+                const index_type offset_2 = tile_id2*m_rp.m_tile[2] + (index_type)threadIdx.z;
+                if ( offset_2 < m_rp.m_upper[2] && (index_type)threadIdx.z < m_rp.m_tile[2] ) {
                   m_func(Tag(), offset_0 , offset_1 , offset_2);
                 }
               }
@@ -334,18 +334,18 @@ struct DeviceIterateTile<4,RP,Functor,void >
       const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
           (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
-      const index_type tile_id0 = blockIdx.x % numbl0;
-      const index_type tile_id1 = blockIdx.x / numbl0;
-      const index_type thr_id0 = threadIdx.x % m_rp.m_tile[0];
-      const index_type thr_id1 = threadIdx.x / m_rp.m_tile[0];
+      const index_type tile_id0 = (index_type)blockIdx.x % numbl0;
+      const index_type tile_id1 = (index_type)blockIdx.x / numbl0;
+      const index_type thr_id0 = (index_type)threadIdx.x % m_rp.m_tile[0];
+      const index_type thr_id1 = (index_type)threadIdx.x / m_rp.m_tile[0];
 
-      for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) {
-        const index_type offset_3 = tile_id3*m_rp.m_tile[3] + threadIdx.z;
-        if ( offset_3 < m_rp.m_upper[3] && threadIdx.z < m_rp.m_tile[3] ) {
+      for ( index_type tile_id3 = (index_type)blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) {
+        const index_type offset_3 = tile_id3*m_rp.m_tile[3] + (index_type)threadIdx.z;
+        if ( offset_3 < m_rp.m_upper[3] && (index_type)threadIdx.z < m_rp.m_tile[3] ) {
 
-          for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) {
-            const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.y;
-            if ( offset_2 < m_rp.m_upper[2] && threadIdx.y < m_rp.m_tile[2] ) {
+          for ( index_type tile_id2 = (index_type)blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) {
+            const index_type offset_2 = tile_id2*m_rp.m_tile[2] + (index_type)threadIdx.y;
+            if ( offset_2 < m_rp.m_upper[2] && (index_type)threadIdx.y < m_rp.m_tile[2] ) {
 
               for ( index_type j = tile_id1 ; j < m_rp.m_tile_end[1]; j += numbl1 ) {
                 const index_type offset_1 = j*m_rp.m_tile[1] + thr_id1;
@@ -372,10 +372,10 @@ struct DeviceIterateTile<4,RP,Functor,void >
       const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
           ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
-      const index_type tile_id0 = blockIdx.x / numbl1;
-      const index_type tile_id1 = blockIdx.x % numbl1;
-      const index_type thr_id0 = threadIdx.x / m_rp.m_tile[1];
-      const index_type thr_id1 = threadIdx.x % m_rp.m_tile[1];
+      const index_type tile_id0 = (index_type)blockIdx.x / numbl1;
+      const index_type tile_id1 = (index_type)blockIdx.x % numbl1;
+      const index_type thr_id0 = (index_type)threadIdx.x / m_rp.m_tile[1];
+      const index_type thr_id1 = (index_type)threadIdx.x % m_rp.m_tile[1];
 
       for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) {
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
@@ -385,13 +385,13 @@ struct DeviceIterateTile<4,RP,Functor,void >
             const index_type offset_1 = j*m_rp.m_tile[1] + thr_id1;
             if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
 
-              for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) {
-                const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.y;
-                if ( offset_2 < m_rp.m_upper[2] && threadIdx.y < m_rp.m_tile[2] ) {
+              for ( index_type tile_id2 = (index_type)blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) {
+                const index_type offset_2 = tile_id2*m_rp.m_tile[2] + (index_type)threadIdx.y;
+                if ( offset_2 < m_rp.m_upper[2] && (index_type)threadIdx.y < m_rp.m_tile[2] ) {
 
-                  for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) {
-                    const index_type offset_3 = tile_id3*m_rp.m_tile[3] + threadIdx.z;
-                    if ( offset_3 < m_rp.m_upper[3] && threadIdx.z < m_rp.m_tile[3] ) {
+                  for ( index_type tile_id3 = (index_type)blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) {
+                    const index_type offset_3 = tile_id3*m_rp.m_tile[3] + (index_type)threadIdx.z;
+                    if ( offset_3 < m_rp.m_upper[3] && (index_type)threadIdx.z < m_rp.m_tile[3] ) {
                       m_func(offset_0 , offset_1 , offset_2 , offset_3);
                     }
                   }
@@ -436,18 +436,18 @@ struct DeviceIterateTile<4,RP,Functor,Tag>
       const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
           (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
-      const index_type tile_id0 = blockIdx.x % numbl0;
-      const index_type tile_id1 = blockIdx.x / numbl0;
-      const index_type thr_id0 = threadIdx.x % m_rp.m_tile[0];
-      const index_type thr_id1 = threadIdx.x / m_rp.m_tile[0];
+      const index_type tile_id0 = (index_type)blockIdx.x % numbl0;
+      const index_type tile_id1 = (index_type)blockIdx.x / numbl0;
+      const index_type thr_id0 = (index_type)threadIdx.x % m_rp.m_tile[0];
+      const index_type thr_id1 = (index_type)threadIdx.x / m_rp.m_tile[0];
 
-      for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) {
-        const index_type offset_3 = tile_id3*m_rp.m_tile[3] + threadIdx.z;
-        if ( offset_3 < m_rp.m_upper[3] && threadIdx.z < m_rp.m_tile[3] ) {
+      for ( index_type tile_id3 = (index_type)blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) {
+        const index_type offset_3 = tile_id3*m_rp.m_tile[3] + (index_type)threadIdx.z;
+        if ( offset_3 < m_rp.m_upper[3] && (index_type)threadIdx.z < m_rp.m_tile[3] ) {
 
-          for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) {
-            const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.y;
-            if ( offset_2 < m_rp.m_upper[2] && threadIdx.y < m_rp.m_tile[2] ) {
+          for ( index_type tile_id2 = (index_type)blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) {
+            const index_type offset_2 = tile_id2*m_rp.m_tile[2] + (index_type)threadIdx.y;
+            if ( offset_2 < m_rp.m_upper[2] && (index_type)threadIdx.y < m_rp.m_tile[2] ) {
 
               for ( index_type j = tile_id1; j < m_rp.m_tile_end[1]; j += numbl1 ) {
                 const index_type offset_1 = j*m_rp.m_tile[1] + thr_id1;
@@ -473,10 +473,10 @@ struct DeviceIterateTile<4,RP,Functor,Tag>
       const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
           ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
-      const index_type tile_id0 = blockIdx.x / numbl1;
-      const index_type tile_id1 = blockIdx.x % numbl1;
-      const index_type thr_id0 = threadIdx.x / m_rp.m_tile[1];
-      const index_type thr_id1 = threadIdx.x % m_rp.m_tile[1];
+      const index_type tile_id0 = (index_type)blockIdx.x / numbl1;
+      const index_type tile_id1 = (index_type)blockIdx.x % numbl1;
+      const index_type thr_id0 = (index_type)threadIdx.x / m_rp.m_tile[1];
+      const index_type thr_id1 = (index_type)threadIdx.x % m_rp.m_tile[1];
 
       for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) {
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
@@ -486,13 +486,13 @@ struct DeviceIterateTile<4,RP,Functor,Tag>
             const index_type offset_1 = tile_id1*m_rp.m_tile[1] + thr_id1;
             if ( offset_1 < m_rp.m_upper[1] && thr_id1 < m_rp.m_tile[1] ) {
 
-              for ( index_type tile_id2 = blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) {
-                const index_type offset_2 = tile_id2*m_rp.m_tile[2] + threadIdx.y;
-                if ( offset_2 < m_rp.m_upper[2] && threadIdx.y < m_rp.m_tile[2] ) {
+              for ( index_type tile_id2 = (index_type)blockIdx.y; tile_id2 < m_rp.m_tile_end[2]; tile_id2 += gridDim.y ) {
+                const index_type offset_2 = tile_id2*m_rp.m_tile[2] + (index_type)threadIdx.y;
+                if ( offset_2 < m_rp.m_upper[2] && (index_type)threadIdx.y < m_rp.m_tile[2] ) {
 
-                  for ( index_type tile_id3 = blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) {
-                    const index_type offset_3 = tile_id3*m_rp.m_tile[3] + threadIdx.z;
-                    if ( offset_3 < m_rp.m_upper[3] && threadIdx.z < m_rp.m_tile[3] ) {
+                  for ( index_type tile_id3 = (index_type)blockIdx.z; tile_id3 < m_rp.m_tile_end[3]; tile_id3 += gridDim.z ) {
+                    const index_type offset_3 = tile_id3*m_rp.m_tile[3] + (index_type)threadIdx.z;
+                    if ( offset_3 < m_rp.m_upper[3] && (index_type)threadIdx.z < m_rp.m_tile[3] ) {
                       m_func(Tag() , offset_0 , offset_1 , offset_2 , offset_3);
                     }
                   }
@@ -541,10 +541,10 @@ struct DeviceIterateTile<5,RP,Functor,void >
       const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
           (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
-      const index_type tile_id0 = blockIdx.x % numbl0;
-      const index_type tile_id1 = blockIdx.x / numbl0;
-      const index_type thr_id0 = threadIdx.x % m_rp.m_tile[0];
-      const index_type thr_id1 = threadIdx.x / m_rp.m_tile[0];
+      const index_type tile_id0 = (index_type)blockIdx.x % numbl0;
+      const index_type tile_id1 = (index_type)blockIdx.x / numbl0;
+      const index_type thr_id0 = (index_type)threadIdx.x % m_rp.m_tile[0];
+      const index_type thr_id1 = (index_type)threadIdx.x / m_rp.m_tile[0];
 
       temp0  =  m_rp.m_tile_end[2];
       temp1  =  m_rp.m_tile_end[3];
@@ -552,14 +552,14 @@ struct DeviceIterateTile<5,RP,Functor,void >
       const index_type numbl3 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl2 ) :
           (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
-      const index_type tile_id2 = blockIdx.y % numbl2;
-      const index_type tile_id3 = blockIdx.y / numbl2;
-      const index_type thr_id2 = threadIdx.y % m_rp.m_tile[2];
-      const index_type thr_id3 = threadIdx.y / m_rp.m_tile[2];
+      const index_type tile_id2 = (index_type)blockIdx.y % numbl2;
+      const index_type tile_id3 = (index_type)blockIdx.y / numbl2;
+      const index_type thr_id2 = (index_type)threadIdx.y % m_rp.m_tile[2];
+      const index_type thr_id3 = (index_type)threadIdx.y / m_rp.m_tile[2];
 
-      for ( index_type tile_id4 = blockIdx.z; tile_id4 < m_rp.m_tile_end[4]; tile_id4 += gridDim.z ) {
-        const index_type offset_4 = tile_id4*m_rp.m_tile[4] + threadIdx.z;
-        if ( offset_4 < m_rp.m_upper[4] && threadIdx.z < m_rp.m_tile[4] ) {
+      for ( index_type tile_id4 = (index_type)blockIdx.z; tile_id4 < m_rp.m_tile_end[4]; tile_id4 += gridDim.z ) {
+        const index_type offset_4 = tile_id4*m_rp.m_tile[4] + (index_type)threadIdx.z;
+        if ( offset_4 < m_rp.m_upper[4] && (index_type)threadIdx.z < m_rp.m_tile[4] ) {
 
           for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) {
             const index_type offset_3 = l*m_rp.m_tile[3] + thr_id3;
@@ -596,10 +596,10 @@ struct DeviceIterateTile<5,RP,Functor,void >
       const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
           ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
-      const index_type tile_id0 = blockIdx.x / numbl1;
-      const index_type tile_id1 = blockIdx.x % numbl1;
-      const index_type thr_id0 = threadIdx.x / m_rp.m_tile[1];
-      const index_type thr_id1 = threadIdx.x % m_rp.m_tile[1];
+      const index_type tile_id0 = (index_type)blockIdx.x / numbl1;
+      const index_type tile_id1 = (index_type)blockIdx.x % numbl1;
+      const index_type thr_id0 = (index_type)threadIdx.x / m_rp.m_tile[1];
+      const index_type thr_id1 = (index_type)threadIdx.x % m_rp.m_tile[1];
 
       temp0  =  m_rp.m_tile_end[2];
       temp1  =  m_rp.m_tile_end[3];
@@ -607,10 +607,10 @@ struct DeviceIterateTile<5,RP,Functor,void >
       const index_type numbl2 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl3 ) :
           (  temp0 <= max_blocks ? temp0 : max_blocks ) );
 
-      const index_type tile_id2 = blockIdx.y / numbl3;
-      const index_type tile_id3 = blockIdx.y % numbl3;
-      const index_type thr_id2 = threadIdx.y / m_rp.m_tile[3];
-      const index_type thr_id3 = threadIdx.y % m_rp.m_tile[3];
+      const index_type tile_id2 = (index_type)blockIdx.y / numbl3;
+      const index_type tile_id3 = (index_type)blockIdx.y % numbl3;
+      const index_type thr_id2 = (index_type)threadIdx.y / m_rp.m_tile[3];
+      const index_type thr_id3 = (index_type)threadIdx.y % m_rp.m_tile[3];
 
       for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) {
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
@@ -628,9 +628,9 @@ struct DeviceIterateTile<5,RP,Functor,void >
                     const index_type offset_3 = l*m_rp.m_tile[3] + thr_id3;
                     if ( offset_3 < m_rp.m_upper[3] && thr_id3 < m_rp.m_tile[3] ) {
 
-                      for ( index_type tile_id4 = blockIdx.z; tile_id4 < m_rp.m_tile_end[4]; tile_id4 += gridDim.z ) {
-                        const index_type offset_4 = tile_id4*m_rp.m_tile[4] + threadIdx.z;
-                        if ( offset_4 < m_rp.m_upper[4] && threadIdx.z < m_rp.m_tile[4] ) {
+                      for ( index_type tile_id4 = (index_type)blockIdx.z; tile_id4 < m_rp.m_tile_end[4]; tile_id4 += gridDim.z ) {
+                        const index_type offset_4 = tile_id4*m_rp.m_tile[4] + (index_type)threadIdx.z;
+                        if ( offset_4 < m_rp.m_upper[4] && (index_type)threadIdx.z < m_rp.m_tile[4] ) {
                           m_func(offset_0 , offset_1 , offset_2 , offset_3 , offset_4);
                         }
                       }
@@ -678,10 +678,10 @@ struct DeviceIterateTile<5,RP,Functor,Tag>
       const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
           (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
-      const index_type tile_id0 = blockIdx.x % numbl0;
-      const index_type tile_id1 = blockIdx.x / numbl0;
-      const index_type thr_id0 = threadIdx.x % m_rp.m_tile[0];
-      const index_type thr_id1 = threadIdx.x / m_rp.m_tile[0];
+      const index_type tile_id0 = (index_type)blockIdx.x % numbl0;
+      const index_type tile_id1 = (index_type)blockIdx.x / numbl0;
+      const index_type thr_id0 = (index_type)threadIdx.x % m_rp.m_tile[0];
+      const index_type thr_id1 = (index_type)threadIdx.x / m_rp.m_tile[0];
 
       temp0  =  m_rp.m_tile_end[2];
       temp1  =  m_rp.m_tile_end[3];
@@ -689,14 +689,14 @@ struct DeviceIterateTile<5,RP,Functor,Tag>
       const index_type numbl3 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl2 ) :
           (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
-      const index_type tile_id2 = blockIdx.y % numbl2;
-      const index_type tile_id3 = blockIdx.y / numbl2;
-      const index_type thr_id2 = threadIdx.y % m_rp.m_tile[2];
-      const index_type thr_id3 = threadIdx.y / m_rp.m_tile[2];
+      const index_type tile_id2 = (index_type)blockIdx.y % numbl2;
+      const index_type tile_id3 = (index_type)blockIdx.y / numbl2;
+      const index_type thr_id2 = (index_type)threadIdx.y % m_rp.m_tile[2];
+      const index_type thr_id3 = (index_type)threadIdx.y / m_rp.m_tile[2];
 
-      for ( index_type tile_id4 = blockIdx.z; tile_id4 < m_rp.m_tile_end[4]; tile_id4 += gridDim.z ) {
-        const index_type offset_4 = tile_id4*m_rp.m_tile[4] + threadIdx.z;
-        if ( offset_4 < m_rp.m_upper[4] && threadIdx.z < m_rp.m_tile[4] ) {
+      for ( index_type tile_id4 = (index_type)blockIdx.z; tile_id4 < m_rp.m_tile_end[4]; tile_id4 += gridDim.z ) {
+        const index_type offset_4 = tile_id4*m_rp.m_tile[4] + (index_type)threadIdx.z;
+        if ( offset_4 < m_rp.m_upper[4] && (index_type)threadIdx.z < m_rp.m_tile[4] ) {
 
           for ( index_type l = tile_id3; l < m_rp.m_tile_end[3]; l += numbl3 ) {
             const index_type offset_3 = l*m_rp.m_tile[3] + thr_id3;
@@ -733,10 +733,10 @@ struct DeviceIterateTile<5,RP,Functor,Tag>
       const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
           ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
-      const index_type tile_id0 = blockIdx.x / numbl1;
-      const index_type tile_id1 = blockIdx.x % numbl1;
-      const index_type thr_id0 = threadIdx.x / m_rp.m_tile[1];
-      const index_type thr_id1 = threadIdx.x % m_rp.m_tile[1];
+      const index_type tile_id0 = (index_type)blockIdx.x / numbl1;
+      const index_type tile_id1 = (index_type)blockIdx.x % numbl1;
+      const index_type thr_id0 = (index_type)threadIdx.x / m_rp.m_tile[1];
+      const index_type thr_id1 = (index_type)threadIdx.x % m_rp.m_tile[1];
 
       temp0  =  m_rp.m_tile_end[2];
       temp1  =  m_rp.m_tile_end[3];
@@ -744,10 +744,10 @@ struct DeviceIterateTile<5,RP,Functor,Tag>
       const index_type numbl2 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl3 ) :
           (  temp0 <= max_blocks ? temp0 : max_blocks ) );
 
-      const index_type tile_id2 = blockIdx.y / numbl3;
-      const index_type tile_id3 = blockIdx.y % numbl3;
-      const index_type thr_id2 = threadIdx.y / m_rp.m_tile[3];
-      const index_type thr_id3 = threadIdx.y % m_rp.m_tile[3];
+      const index_type tile_id2 = (index_type)blockIdx.y / numbl3;
+      const index_type tile_id3 = (index_type)blockIdx.y % numbl3;
+      const index_type thr_id2 = (index_type)threadIdx.y / m_rp.m_tile[3];
+      const index_type thr_id3 = (index_type)threadIdx.y % m_rp.m_tile[3];
 
       for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) {
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
@@ -765,9 +765,9 @@ struct DeviceIterateTile<5,RP,Functor,Tag>
                     const index_type offset_3 = l*m_rp.m_tile[3] + thr_id3;
                     if ( offset_3 < m_rp.m_upper[3] && thr_id3 < m_rp.m_tile[3] ) {
 
-                      for ( index_type tile_id4 = blockIdx.z; tile_id4 < m_rp.m_tile_end[4]; tile_id4 += gridDim.z ) {
-                        const index_type offset_4 = tile_id4*m_rp.m_tile[4] + threadIdx.z;
-                        if ( offset_4 < m_rp.m_upper[4] && threadIdx.z < m_rp.m_tile[4] ) {
+                      for ( index_type tile_id4 = (index_type)blockIdx.z; tile_id4 < m_rp.m_tile_end[4]; tile_id4 += gridDim.z ) {
+                        const index_type offset_4 = tile_id4*m_rp.m_tile[4] + (index_type)threadIdx.z;
+                        if ( offset_4 < m_rp.m_upper[4] && (index_type)threadIdx.z < m_rp.m_tile[4] ) {
                           m_func(Tag() , offset_0 , offset_1 , offset_2 , offset_3 , offset_4);
                         }
                       }
@@ -817,10 +817,10 @@ struct DeviceIterateTile<6,RP,Functor,void >
       const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
           (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
-      const index_type tile_id0 = blockIdx.x % numbl0;
-      const index_type tile_id1 = blockIdx.x / numbl0;
-      const index_type thr_id0 = threadIdx.x % m_rp.m_tile[0];
-      const index_type thr_id1 = threadIdx.x / m_rp.m_tile[0];
+      const index_type tile_id0 = (index_type)blockIdx.x % numbl0;
+      const index_type tile_id1 = (index_type)blockIdx.x / numbl0;
+      const index_type thr_id0 = (index_type)threadIdx.x % m_rp.m_tile[0];
+      const index_type thr_id1 = (index_type)threadIdx.x / m_rp.m_tile[0];
 
       temp0  =  m_rp.m_tile_end[2];
       temp1  =  m_rp.m_tile_end[3];
@@ -828,10 +828,10 @@ struct DeviceIterateTile<6,RP,Functor,void >
       const index_type numbl3 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl2 ) :
           (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
-      const index_type tile_id2 = blockIdx.y % numbl2;
-      const index_type tile_id3 = blockIdx.y / numbl2;
-      const index_type thr_id2 = threadIdx.y % m_rp.m_tile[2];
-      const index_type thr_id3 = threadIdx.y / m_rp.m_tile[2];
+      const index_type tile_id2 = (index_type)blockIdx.y % numbl2;
+      const index_type tile_id3 = (index_type)blockIdx.y / numbl2;
+      const index_type thr_id2 = (index_type)threadIdx.y % m_rp.m_tile[2];
+      const index_type thr_id3 = (index_type)threadIdx.y / m_rp.m_tile[2];
 
       temp0  =  m_rp.m_tile_end[4];
       temp1  =  m_rp.m_tile_end[5];
@@ -839,10 +839,10 @@ struct DeviceIterateTile<6,RP,Functor,void >
       const index_type numbl5 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl4 ) :
           (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
-      const index_type tile_id4 = blockIdx.z % numbl4;
-      const index_type tile_id5 = blockIdx.z / numbl4;
-      const index_type thr_id4 = threadIdx.z % m_rp.m_tile[4];
-      const index_type thr_id5 = threadIdx.z / m_rp.m_tile[4];
+      const index_type tile_id4 = (index_type)blockIdx.z % numbl4;
+      const index_type tile_id5 = (index_type)blockIdx.z / numbl4;
+      const index_type thr_id4 = (index_type)threadIdx.z % m_rp.m_tile[4];
+      const index_type thr_id5 = (index_type)threadIdx.z / m_rp.m_tile[4];
 
       for ( index_type n = tile_id5; n < m_rp.m_tile_end[5]; n += numbl5 ) {
         const index_type offset_5 = n*m_rp.m_tile[5] + thr_id5;
@@ -889,10 +889,10 @@ struct DeviceIterateTile<6,RP,Functor,void >
       const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
           ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
-      const index_type tile_id0 = blockIdx.x / numbl1;
-      const index_type tile_id1 = blockIdx.x % numbl1;
-      const index_type thr_id0 = threadIdx.x / m_rp.m_tile[1];
-      const index_type thr_id1 = threadIdx.x % m_rp.m_tile[1];
+      const index_type tile_id0 = (index_type)blockIdx.x / numbl1;
+      const index_type tile_id1 = (index_type)blockIdx.x % numbl1;
+      const index_type thr_id0 = (index_type)threadIdx.x / m_rp.m_tile[1];
+      const index_type thr_id1 = (index_type)threadIdx.x % m_rp.m_tile[1];
 
       temp0  =  m_rp.m_tile_end[2];
       temp1  =  m_rp.m_tile_end[3];
@@ -900,10 +900,10 @@ struct DeviceIterateTile<6,RP,Functor,void >
       const index_type numbl2 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl3 ) :
           (  temp0 <= max_blocks ? temp0 : max_blocks ) );
 
-      const index_type tile_id2 = blockIdx.y / numbl3;
-      const index_type tile_id3 = blockIdx.y % numbl3;
-      const index_type thr_id2 = threadIdx.y / m_rp.m_tile[3];
-      const index_type thr_id3 = threadIdx.y % m_rp.m_tile[3];
+      const index_type tile_id2 = (index_type)blockIdx.y / numbl3;
+      const index_type tile_id3 = (index_type)blockIdx.y % numbl3;
+      const index_type thr_id2 = (index_type)threadIdx.y / m_rp.m_tile[3];
+      const index_type thr_id3 = (index_type)threadIdx.y % m_rp.m_tile[3];
 
       temp0  =  m_rp.m_tile_end[4];
       temp1  =  m_rp.m_tile_end[5];
@@ -911,10 +911,10 @@ struct DeviceIterateTile<6,RP,Functor,void >
       const index_type numbl4 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl5 ) :
           (  temp0 <= max_blocks ? temp0 : max_blocks ) );
 
-      const index_type tile_id4 = blockIdx.z / numbl5;
-      const index_type tile_id5 = blockIdx.z % numbl5;
-      const index_type thr_id4 = threadIdx.z / m_rp.m_tile[5];
-      const index_type thr_id5 = threadIdx.z % m_rp.m_tile[5];
+      const index_type tile_id4 = (index_type)blockIdx.z / numbl5;
+      const index_type tile_id5 = (index_type)blockIdx.z % numbl5;
+      const index_type thr_id4 = (index_type)threadIdx.z / m_rp.m_tile[5];
+      const index_type thr_id5 = (index_type)threadIdx.z % m_rp.m_tile[5];
 
       for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) {
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
@@ -988,10 +988,10 @@ struct DeviceIterateTile<6,RP,Functor,Tag>
       const index_type numbl1 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl0 ) :
           (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
-      const index_type tile_id0 = blockIdx.x % numbl0;
-      const index_type tile_id1 = blockIdx.x / numbl0;
-      const index_type thr_id0 = threadIdx.x % m_rp.m_tile[0];
-      const index_type thr_id1 = threadIdx.x / m_rp.m_tile[0];
+      const index_type tile_id0 = (index_type)blockIdx.x % numbl0;
+      const index_type tile_id1 = (index_type)blockIdx.x / numbl0;
+      const index_type thr_id0 = (index_type)threadIdx.x % m_rp.m_tile[0];
+      const index_type thr_id1 = (index_type)threadIdx.x / m_rp.m_tile[0];
 
       temp0  =  m_rp.m_tile_end[2];
       temp1  =  m_rp.m_tile_end[3];
@@ -999,10 +999,10 @@ struct DeviceIterateTile<6,RP,Functor,Tag>
       const index_type numbl3 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl2 ) :
           (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
-      const index_type tile_id2 = blockIdx.y % numbl2;
-      const index_type tile_id3 = blockIdx.y / numbl2;
-      const index_type thr_id2 = threadIdx.y % m_rp.m_tile[2];
-      const index_type thr_id3 = threadIdx.y / m_rp.m_tile[2];
+      const index_type tile_id2 = (index_type)blockIdx.y % numbl2;
+      const index_type tile_id3 = (index_type)blockIdx.y / numbl2;
+      const index_type thr_id2 = (index_type)threadIdx.y % m_rp.m_tile[2];
+      const index_type thr_id3 = (index_type)threadIdx.y / m_rp.m_tile[2];
 
       temp0  =  m_rp.m_tile_end[4];
       temp1  =  m_rp.m_tile_end[5];
@@ -1010,10 +1010,10 @@ struct DeviceIterateTile<6,RP,Functor,Tag>
       const index_type numbl5 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl4 ) :
           (  temp1 <= max_blocks ? temp1 : max_blocks ) );
 
-      const index_type tile_id4 = blockIdx.z % numbl4;
-      const index_type tile_id5 = blockIdx.z / numbl4;
-      const index_type thr_id4 = threadIdx.z % m_rp.m_tile[4];
-      const index_type thr_id5 = threadIdx.z / m_rp.m_tile[4];
+      const index_type tile_id4 = (index_type)blockIdx.z % numbl4;
+      const index_type tile_id5 = (index_type)blockIdx.z / numbl4;
+      const index_type thr_id4 = (index_type)threadIdx.z % m_rp.m_tile[4];
+      const index_type thr_id5 = (index_type)threadIdx.z / m_rp.m_tile[4];
 
       for ( index_type n = tile_id5; n < m_rp.m_tile_end[5]; n += numbl5 ) {
         const index_type offset_5 = n*m_rp.m_tile[5] + thr_id5;
@@ -1060,10 +1060,10 @@ struct DeviceIterateTile<6,RP,Functor,Tag>
       const index_type numbl0 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl1 ) :
           ( temp0 <= max_blocks ? temp0 : max_blocks ) );
 
-      const index_type tile_id0 = blockIdx.x / numbl1;
-      const index_type tile_id1 = blockIdx.x % numbl1;
-      const index_type thr_id0 = threadIdx.x / m_rp.m_tile[1];
-      const index_type thr_id1 = threadIdx.x % m_rp.m_tile[1];
+      const index_type tile_id0 = (index_type)blockIdx.x / numbl1;
+      const index_type tile_id1 = (index_type)blockIdx.x % numbl1;
+      const index_type thr_id0 = (index_type)threadIdx.x / m_rp.m_tile[1];
+      const index_type thr_id1 = (index_type)threadIdx.x % m_rp.m_tile[1];
 
       temp0  =  m_rp.m_tile_end[2];
       temp1  =  m_rp.m_tile_end[3];
@@ -1071,10 +1071,10 @@ struct DeviceIterateTile<6,RP,Functor,Tag>
       const index_type numbl2 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl3 ) :
           (  temp0 <= max_blocks ? temp0 : max_blocks ) );
 
-      const index_type tile_id2 = blockIdx.y / numbl3;
-      const index_type tile_id3 = blockIdx.y % numbl3;
-      const index_type thr_id2 = threadIdx.y / m_rp.m_tile[3];
-      const index_type thr_id3 = threadIdx.y % m_rp.m_tile[3];
+      const index_type tile_id2 = (index_type)blockIdx.y / numbl3;
+      const index_type tile_id3 = (index_type)blockIdx.y % numbl3;
+      const index_type thr_id2 = (index_type)threadIdx.y / m_rp.m_tile[3];
+      const index_type thr_id3 = (index_type)threadIdx.y % m_rp.m_tile[3];
 
       temp0  =  m_rp.m_tile_end[4];
       temp1  =  m_rp.m_tile_end[5];
@@ -1082,10 +1082,10 @@ struct DeviceIterateTile<6,RP,Functor,Tag>
       const index_type numbl4 = ( temp0*temp1 > max_blocks ? index_type( max_blocks / numbl5 ) :
           (  temp0 <= max_blocks ? temp0 : max_blocks ) );
 
-      const index_type tile_id4 = blockIdx.z / numbl5;
-      const index_type tile_id5 = blockIdx.z % numbl5;
-      const index_type thr_id4 = threadIdx.z / m_rp.m_tile[5];
-      const index_type thr_id5 = threadIdx.z % m_rp.m_tile[5];
+      const index_type tile_id4 = (index_type)blockIdx.z / numbl5;
+      const index_type tile_id5 = (index_type)blockIdx.z % numbl5;
+      const index_type thr_id4 = (index_type)threadIdx.z / m_rp.m_tile[5];
+      const index_type thr_id5 = (index_type)threadIdx.z % m_rp.m_tile[5];
 
       for ( index_type i = tile_id0; i < m_rp.m_tile_end[0]; i += numbl0 ) {
         const index_type offset_0 = i*m_rp.m_tile[0] + thr_id0;
@@ -1167,7 +1167,7 @@ struct DeviceIterateTile;
 
 // num_blocks = min( num_tiles, max_num_blocks ); //i.e. determined by number of tiles and reduction algorithm constraints
 // extract n-dim tile offsets (i.e. tile's global starting mulit-index) from the tileid = blockid using tile dimensions
-// local indices within a tile extracted from threadIdx.x using tile dims, constrained by blocksize
+// local indices within a tile extracted from (index_type)threadIdx.x using tile dims, constrained by blocksize
 // combine tile and local id info for multi-dim global ids
 
 // Pattern:
@@ -1175,7 +1175,7 @@ struct DeviceIterateTile;
 // 1. create offset arrays
 // 2. loop over number of tiles, striding by griddim (equal to num tiles, or max num blocks)
 // 3. temps set for tile_idx and thrd_idx, which will be modified
-// 4. if LL vs LR: 
+// 4. if LL vs LR:
 //      determine tile starting point offsets (multidim)
 //      determine local index offsets (multidim)
 //      concatentate tile offset + local offset for global multi-dim index
@@ -1199,13 +1199,13 @@ struct DeviceIterateTile<2,RP,Functor,void,ValueType, typename std::enable_if< !
   inline __device__
   void exec_range() const
   {
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -1225,7 +1225,7 @@ struct DeviceIterateTile<2,RP,Functor,void,ValueType, typename std::enable_if< !
           }
           if ( in_bounds )
           {
-            m_func( m_offset[0], m_offset[1], m_v ); 
+            m_func( m_offset[0], m_offset[1], m_v );
           }
         }
         // LR
@@ -1273,13 +1273,13 @@ struct DeviceIterateTile<2,RP,Functor,Tag, ValueType, typename std::enable_if< !
   inline __device__
   void exec_range() const
   {
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -1288,7 +1288,7 @@ struct DeviceIterateTile<2,RP,Functor,Tag, ValueType, typename std::enable_if< !
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1306,7 +1306,7 @@ struct DeviceIterateTile<2,RP,Functor,Tag, ValueType, typename std::enable_if< !
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1346,13 +1346,13 @@ struct DeviceIterateTile<3,RP,Functor,void,ValueType , typename std::enable_if< 
   inline __device__
   void exec_range() const
   {
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -1361,7 +1361,7 @@ struct DeviceIterateTile<3,RP,Functor,void,ValueType , typename std::enable_if< 
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1379,7 +1379,7 @@ struct DeviceIterateTile<3,RP,Functor,void,ValueType , typename std::enable_if< 
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1418,13 +1418,13 @@ struct DeviceIterateTile<3,RP,Functor,Tag, ValueType, typename std::enable_if< !
   inline __device__
   void exec_range() const
   {
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -1433,7 +1433,7 @@ struct DeviceIterateTile<3,RP,Functor,Tag, ValueType, typename std::enable_if< !
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1451,7 +1451,7 @@ struct DeviceIterateTile<3,RP,Functor,Tag, ValueType, typename std::enable_if< !
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1496,13 +1496,13 @@ struct DeviceIterateTile<4,RP,Functor,void,ValueType , typename std::enable_if< 
   {
     //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
     //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -1511,7 +1511,7 @@ struct DeviceIterateTile<4,RP,Functor,void,ValueType , typename std::enable_if< 
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1529,7 +1529,7 @@ struct DeviceIterateTile<4,RP,Functor,void,ValueType , typename std::enable_if< 
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1573,13 +1573,13 @@ struct DeviceIterateTile<4,RP,Functor,Tag,ValueType, typename std::enable_if< !i
   {
     //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
     //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -1588,7 +1588,7 @@ struct DeviceIterateTile<4,RP,Functor,Tag,ValueType, typename std::enable_if< !i
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1606,7 +1606,7 @@ struct DeviceIterateTile<4,RP,Functor,Tag,ValueType, typename std::enable_if< !i
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1651,13 +1651,13 @@ struct DeviceIterateTile<5,RP,Functor,void,ValueType , typename std::enable_if< 
   {
     //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
     //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -1666,7 +1666,7 @@ struct DeviceIterateTile<5,RP,Functor,void,ValueType , typename std::enable_if< 
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1684,7 +1684,7 @@ struct DeviceIterateTile<5,RP,Functor,void,ValueType , typename std::enable_if< 
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1728,13 +1728,13 @@ struct DeviceIterateTile<5,RP,Functor,Tag,ValueType, typename std::enable_if< !i
   {
     //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
     //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -1743,7 +1743,7 @@ struct DeviceIterateTile<5,RP,Functor,Tag,ValueType, typename std::enable_if< !i
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1761,7 +1761,7 @@ struct DeviceIterateTile<5,RP,Functor,Tag,ValueType, typename std::enable_if< !i
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1806,13 +1806,13 @@ struct DeviceIterateTile<6,RP,Functor,void,ValueType , typename std::enable_if< 
   {
     //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
     //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -1821,7 +1821,7 @@ struct DeviceIterateTile<6,RP,Functor,void,ValueType , typename std::enable_if< 
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1839,7 +1839,7 @@ struct DeviceIterateTile<6,RP,Functor,void,ValueType , typename std::enable_if< 
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1883,13 +1883,13 @@ struct DeviceIterateTile<6,RP,Functor,Tag,ValueType, typename std::enable_if< !i
   {
     //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
     //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -1898,7 +1898,7 @@ struct DeviceIterateTile<6,RP,Functor,Tag,ValueType, typename std::enable_if< !i
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1916,7 +1916,7 @@ struct DeviceIterateTile<6,RP,Functor,Tag,ValueType, typename std::enable_if< !i
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -1958,13 +1958,13 @@ struct DeviceIterateTile<2,RP,Functor,void,ValueType, typename std::enable_if< i
   inline __device__
   void exec_range() const
   {
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -1983,7 +1983,7 @@ struct DeviceIterateTile<2,RP,Functor,void,ValueType, typename std::enable_if< i
           }
           if ( in_bounds )
           {
-            m_func( m_offset[0], m_offset[1], m_v ); 
+            m_func( m_offset[0], m_offset[1], m_v );
           }
         }
         // LR
@@ -1992,7 +1992,7 @@ struct DeviceIterateTile<2,RP,Functor,void,ValueType, typename std::enable_if< i
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2032,13 +2032,13 @@ struct DeviceIterateTile<2,RP,Functor,Tag, ValueType, typename std::enable_if< i
   inline __device__
   void exec_range() const
   {
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -2047,7 +2047,7 @@ struct DeviceIterateTile<2,RP,Functor,Tag, ValueType, typename std::enable_if< i
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2065,7 +2065,7 @@ struct DeviceIterateTile<2,RP,Functor,Tag, ValueType, typename std::enable_if< i
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2106,13 +2106,13 @@ struct DeviceIterateTile<3,RP,Functor,void,ValueType , typename std::enable_if< 
   inline __device__
   void exec_range() const
   {
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -2121,7 +2121,7 @@ struct DeviceIterateTile<3,RP,Functor,void,ValueType , typename std::enable_if< 
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2139,7 +2139,7 @@ struct DeviceIterateTile<3,RP,Functor,void,ValueType , typename std::enable_if< 
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]); // Move this to first computation, add to m_offset right away
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2179,13 +2179,13 @@ struct DeviceIterateTile<3,RP,Functor,Tag, ValueType, typename std::enable_if< i
   inline __device__
   void exec_range() const
   {
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -2194,7 +2194,7 @@ struct DeviceIterateTile<3,RP,Functor,Tag, ValueType, typename std::enable_if< i
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2212,7 +2212,7 @@ struct DeviceIterateTile<3,RP,Functor,Tag, ValueType, typename std::enable_if< i
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2258,13 +2258,13 @@ struct DeviceIterateTile<4,RP,Functor,void,ValueType , typename std::enable_if< 
   {
     //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
     //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -2273,7 +2273,7 @@ struct DeviceIterateTile<4,RP,Functor,void,ValueType , typename std::enable_if< 
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2291,7 +2291,7 @@ struct DeviceIterateTile<4,RP,Functor,void,ValueType , typename std::enable_if< 
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2336,13 +2336,13 @@ struct DeviceIterateTile<4,RP,Functor,Tag,ValueType, typename std::enable_if< is
   {
     //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
     //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -2351,7 +2351,7 @@ struct DeviceIterateTile<4,RP,Functor,Tag,ValueType, typename std::enable_if< is
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2369,7 +2369,7 @@ struct DeviceIterateTile<4,RP,Functor,Tag,ValueType, typename std::enable_if< is
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2415,13 +2415,13 @@ struct DeviceIterateTile<5,RP,Functor,void,ValueType , typename std::enable_if< 
   {
     //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
     //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -2430,7 +2430,7 @@ struct DeviceIterateTile<5,RP,Functor,void,ValueType , typename std::enable_if< 
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2448,7 +2448,7 @@ struct DeviceIterateTile<5,RP,Functor,void,ValueType , typename std::enable_if< 
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2493,13 +2493,13 @@ struct DeviceIterateTile<5,RP,Functor,Tag,ValueType, typename std::enable_if< is
   {
     //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
     //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -2508,7 +2508,7 @@ struct DeviceIterateTile<5,RP,Functor,Tag,ValueType, typename std::enable_if< is
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2526,7 +2526,7 @@ struct DeviceIterateTile<5,RP,Functor,Tag,ValueType, typename std::enable_if< is
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2572,13 +2572,13 @@ struct DeviceIterateTile<6,RP,Functor,void,ValueType , typename std::enable_if< 
   {
     //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
     //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -2587,7 +2587,7 @@ struct DeviceIterateTile<6,RP,Functor,void,ValueType , typename std::enable_if< 
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2605,7 +2605,7 @@ struct DeviceIterateTile<6,RP,Functor,void,ValueType , typename std::enable_if< 
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2650,13 +2650,13 @@ struct DeviceIterateTile<6,RP,Functor,Tag,ValueType, typename std::enable_if< is
   {
     //enum { max_blocks = static_cast<index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount) };
     //const index_type max_blocks = static_cast<index_type>( Kokkos::Impl::cuda_internal_maximum_grid_count() );
-    if ( blockIdx.x < m_rp.m_num_tiles && threadIdx.y < m_rp.m_prod_tile_dims ) {
+    if ( (index_type)blockIdx.x < m_rp.m_num_tiles && (index_type)threadIdx.y < m_rp.m_prod_tile_dims ) {
       index_type m_offset[RP::rank]; // tile starting global id offset
       index_type m_local_offset[RP::rank]; // tile starting global id offset
 
-      for ( index_type tileidx = blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
+      for ( index_type tileidx = (index_type)blockIdx.x; tileidx < m_rp.m_num_tiles; tileidx += gridDim.x ) {
         index_type tile_idx = tileidx; // temp because tile_idx will be modified while determining tile starting point offsets
-        index_type thrd_idx = threadIdx.y;
+        index_type thrd_idx = (index_type)threadIdx.y;
         bool in_bounds = true;
 
         // LL
@@ -2665,7 +2665,7 @@ struct DeviceIterateTile<6,RP,Functor,Tag,ValueType, typename std::enable_if< is
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 
@@ -2683,7 +2683,7 @@ struct DeviceIterateTile<6,RP,Functor,Tag,ValueType, typename std::enable_if< is
             m_offset[i] = (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i] ;
             tile_idx /= m_rp.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with (index_type)threadIdx.y
             m_local_offset[i] = (thrd_idx % m_rp.m_tile[i]);
             thrd_idx /= m_rp.m_tile[i];
 

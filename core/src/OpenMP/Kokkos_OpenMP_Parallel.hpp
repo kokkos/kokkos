@@ -1045,6 +1045,16 @@ public:
         }
 
         data.disband_team();
+
+        //  This thread has updated 'pool_reduce_local()' with its
+        //  contributions to the reduction.  The parallel region is
+        //  about to terminate and the master thread will load and
+        //  reduce each 'pool_reduce_local()' contribution.
+        //  Must 'memory_fence()' to guarantee that storing the update to
+        //  'pool_reduce_local()' will complete before this thread
+        //  exits the parallel region.
+
+        memory_fence();
       }
 
       // Reduction:

@@ -62,8 +62,9 @@ endif
 	OBJ_CUDA += TestCuda_TeamReductionScan.o
 	OBJ_CUDA += TestCuda_Other.o
 	OBJ_CUDA += TestCuda_MDRange.o
-	OBJ_CUDA += TestCuda_Task.o
+	OBJ_CUDA += TestCuda_Task.o TestCuda_WorkGraph.o
 	OBJ_CUDA += TestCuda_Spaces.o
+	OBJ_CUDA += TestCuda_UniqueToken.o
 	
 	TARGETS += KokkosCore_UnitTest_Cuda
 
@@ -121,7 +122,8 @@ endif
 	OBJ_OPENMP += TestOpenMP_TeamReductionScan.o
 	OBJ_OPENMP += TestOpenMP_Other.o
 	OBJ_OPENMP += TestOpenMP_MDRange.o
-	OBJ_OPENMP += TestOpenMP_Task.o
+	OBJ_OPENMP += TestOpenMP_Task.o TestOpenMP_WorkGraph.o
+	OBJ_OPENMP += TestOpenMP_UniqueToken.o
 	
 	TARGETS += KokkosCore_UnitTest_OpenMP
 
@@ -208,7 +210,7 @@ endif
         OBJ_SERIAL += TestSerial_TeamReductionScan.o
         OBJ_SERIAL += TestSerial_Other.o
         OBJ_SERIAL += TestSerial_MDRange.o
-        OBJ_SERIAL += TestSerial_Task.o
+        OBJ_SERIAL += TestSerial_Task.o TestSerial_WorkGraph.o
 	
 	TARGETS += KokkosCore_UnitTest_Serial
 
@@ -267,22 +269,18 @@ KokkosCore_UnitTest_Default: $(OBJ_DEFAULT) $(KOKKOS_LINK_DEPENDS)
 ${INITTESTS_TARGETS}: KokkosCore_UnitTest_DefaultDeviceTypeInit_%: TestDefaultDeviceTypeInit_%.o UnitTestMain.o gtest-all.o $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) TestDefaultDeviceTypeInit_$*.o UnitTestMain.o gtest-all.o $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_DefaultDeviceTypeInit_$*
 
-test-cuda: export OMP_PROC_BIND=false
 test-cuda: KokkosCore_UnitTest_Cuda
 	./KokkosCore_UnitTest_Cuda
 
 test-threads: KokkosCore_UnitTest_Threads
 	./KokkosCore_UnitTest_Threads
 
-test-openmp: export OMP_PROC_BIND=false
 test-openmp: KokkosCore_UnitTest_OpenMP
 	./KokkosCore_UnitTest_OpenMP
 
-test-openmptarget: export OMP_PROC_BIND=false
 test-openmptarget: KokkosCore_UnitTest_OpenMPTarget
 	./KokkosCore_UnitTest_OpenMPTarget
 
-test-serial: export OMP_PROC_BIND=false
 test-serial: KokkosCore_UnitTest_Serial
 	./KokkosCore_UnitTest_Serial
 
@@ -290,19 +288,15 @@ test-qthreads: KokkosCore_UnitTest_Qthreads KokkosCore_UnitTest_Qthreads2
 	./KokkosCore_UnitTest_Qthreads
 	./KokkosCore_UnitTest_Qthreads2
 
-test-hwloc: export OMP_PROC_BIND=false
 test-hwloc: KokkosCore_UnitTest_HWLOC
 	./KokkosCore_UnitTest_HWLOC
 
-test-allocationtracker: export OMP_PROC_BIND=false
 test-allocationtracker: KokkosCore_UnitTest_AllocationTracker
 	./KokkosCore_UnitTest_AllocationTracker
 
-test-default: export OMP_PROC_BIND=false
 test-default: KokkosCore_UnitTest_Default
 	./KokkosCore_UnitTest_Default
 
-${INITTESTS_TEST_TARGETS}: export OMP_PROC_BIND=false
 ${INITTESTS_TEST_TARGETS}: test-default-init-%: KokkosCore_UnitTest_DefaultDeviceTypeInit_%
 	./KokkosCore_UnitTest_DefaultDeviceTypeInit_$*
 

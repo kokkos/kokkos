@@ -49,6 +49,8 @@
 #include<TestCXX11.hpp>
 #include<TestTile.hpp>
 
+#include<TestViewCtorPropEmbeddedDim.hpp>
+
 #include <mutex>
 
 namespace Test {
@@ -92,7 +94,7 @@ TEST_F( openmp, partition_master )
     Kokkos::View<int*, Kokkos::OpenMP> count( "",  token.size() );
 
     Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP>(0,1000),
-        KOKKOS_LAMBDA ( const int ) {
+        [=] ( const int ) {
       int i = token.acquire();
       ++count[i];
       token.release(i);
@@ -100,7 +102,7 @@ TEST_F( openmp, partition_master )
 
     Kokkos::View<int,Kokkos::OpenMP> sum ("");
     Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP>(0,token.size()),
-        KOKKOS_LAMBDA ( const int i ) {
+        [=] ( const int i ) {
       Kokkos::atomic_add( sum.data(), count[i] );
     });
 
