@@ -1,4 +1,4 @@
-KOKKOS_PATH = ../../
+KOKKOS_PATH = ../..
 SRC = $(wildcard *.cpp)
 
 default: build
