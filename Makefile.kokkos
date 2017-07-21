@@ -29,6 +29,7 @@ KOKKOS_INTERNAL_USE_LIBRT := $(strip $(shell echo $(KOKKOS_USE_TPLS) | grep "lib
 KOKKOS_INTERNAL_USE_MEMKIND := $(strip $(shell echo $(KOKKOS_USE_TPLS) | grep "experimental_memkind" | wc -l))
 
 # Check for advanced settings.
+KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "compiler_warnings" | wc -l))
 KOKKOS_INTERNAL_OPT_RANGE_AGGRESSIVE_VECTORIZATION := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "aggressive_vectorization" | wc -l))
 KOKKOS_INTERNAL_DISABLE_PROFILING := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "disable_profiling" | wc -l))
 KOKKOS_INTERNAL_DISABLE_DUALVIEW_MODIFY_CHECK := $(strip $(shell echo $(KOKKOS_OPTIONS) | grep "disable_dualview_modify_check" | wc -l))
@@ -105,6 +106,36 @@ ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
 
     KOKKOS_INTERNAL_CUDA_USE_LAMBDA := 1
   endif
+endif
+
+# Set compiler warnings flags.
+ifeq ($(KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS), 1)
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
+    # TODO check if PGI accepts GNU style warnings
+    KOKKOS_INTERNAL_COMPILER_WARNINGS =
+  else
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+      KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
+    else
+      ifeq ($(KOKKOS_INTERNAL_COMPILER_APPLE_CLANG), 1)
+        KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
+      else
+        ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
+          KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
+        else
+          ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+            # TODO check if cray accepts GNU style warnings
+            KOKKOS_INTERNAL_COMPILER_WARNINGS =
+          else
+            #gcc
+            KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wignored-qualifiers -Wempty-body -Wclobbered -Wuninitialized
+          endif
+        endif
+      endif
+    endif
+  endif
+else
+  KOKKOS_INTERNAL_COMPILER_WARNINGS =
 endif
 
 # Set OpenMP flags.
@@ -255,12 +286,10 @@ endif
 
 KOKKOS_CPPFLAGS = -I./ -I$(KOKKOS_PATH)/core/src -I$(KOKKOS_PATH)/containers/src -I$(KOKKOS_PATH)/algorithms/src
 
-# No warnings:
 KOKKOS_CXXFLAGS =
-# INTEL and CLANG warnings:
-#KOKKOS_CXXFLAGS = -Wall -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
-# GCC warnings:
-#KOKKOS_CXXFLAGS = -Wall -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized -Wignored-qualifiers -Wempty-body -Wclobbered
+ifeq ($(KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS), 1)
+  KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_WARNINGS)
+endif
 
 KOKKOS_LIBS = -lkokkos -ldl
 KOKKOS_LDFLAGS = -L$(shell pwd)
@@ -709,7 +738,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   endif
 endif
 
-KOKKOS_INTERNAL_LS_CONFIG := $(shell ls KokkosCore_config.h)
+KOKKOS_INTERNAL_LS_CONFIG := $(shell ls KokkosCore_config.h 2>&1)
 ifeq ($(KOKKOS_INTERNAL_LS_CONFIG), KokkosCore_config.h)
   KOKKOS_INTERNAL_NEW_CONFIG := $(strip $(shell diff KokkosCore_config.h KokkosCore_config.tmp | grep define | wc -l))
 else

@@ -151,7 +151,7 @@ template< class ValueType , class JoinOp>
 __device__
 inline void cuda_intra_warp_reduction( ValueType& result,
                                        const JoinOp& join,
-                                       const int max_active_thread = blockDim.y) {
+                                       const uint32_t max_active_thread = blockDim.y) {
 
   unsigned int shift = 1;
 
@@ -306,7 +306,7 @@ template< class ReducerType >
 __device__ inline
 typename std::enable_if< Kokkos::is_reducer<ReducerType>::value >::type
 cuda_intra_warp_reduction( const ReducerType& reducer,
-                           const int max_active_thread = blockDim.y) {
+                           const uint32_t max_active_thread = blockDim.y) {
 
   typedef typename ReducerType::value_type ValueType;
 
@@ -603,7 +603,7 @@ bool cuda_single_inter_block_reduce_scan( const FunctorType     & functor ,
   typedef FunctorValueOps<    FunctorType , ArgTag >  ValueOps ;
 
   typedef typename ValueTraits::pointer_type    pointer_type ;
-  typedef typename ValueTraits::reference_type  reference_type ;
+  //typedef typename ValueTraits::reference_type  reference_type ;
 
   // '__ffs' = position of the least significant bit set to 1.
   // 'blockDim.y' is guaranteed to be a power of two so this
@@ -646,7 +646,7 @@ bool cuda_single_inter_block_reduce_scan( const FunctorType     & functor ,
 
     {
       void * const shared_ptr = shared_data + word_count.value * threadIdx.y ;
-      reference_type shared_value = ValueInit::init( functor , shared_ptr );
+      /* reference_type shared_value = */ ValueInit::init( functor , shared_ptr );
 
       for ( size_type i = b ; i < e ; ++i ) {
         ValueJoin::join( functor , shared_ptr , global_data + word_count.value * i );

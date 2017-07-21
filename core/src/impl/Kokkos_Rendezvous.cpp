@@ -61,6 +61,7 @@ namespace Kokkos { namespace Impl {
 int rendezvous( volatile int64_t * const buffer
               , int const size
               , int const rank
+              , int const slow
               ) noexcept
 {
   enum : int { shift_byte = 3 };
@@ -117,8 +118,14 @@ int rendezvous( volatile int64_t * const buffer
 
       store_fence(); // This should not be needed but fixes #742
 
-      spinwait_until_equal( buffer[ (rank << shift_mem_cycle) + sync_offset ]
+      if ( slow ) {
+        yield_until_equal( buffer[ (rank << shift_mem_cycle) + sync_offset ]
                           , value );
+      }
+      else {
+        spinwait_until_equal( buffer[ (rank << shift_mem_cycle) + sync_offset ]
+                            , value );
+      }
     }
 
     {
@@ -144,8 +151,12 @@ int rendezvous( volatile int64_t * const buffer
 
     // Wait for thread 0 to release all other threads
 
-    spinwait_until_equal( buffer[ (step & mask_mem_cycle) + size_mem_cycle ] , int64_t(step) );
-
+    if ( slow ) {
+      yield_until_equal( buffer[ (step & mask_mem_cycle) + size_mem_cycle ] , int64_t(step) );
+    }
+    else {
+      spinwait_until_equal( buffer[ (step & mask_mem_cycle) + size_mem_cycle ] , int64_t(step) );
+    }
   }
   else {
     // Thread 0 waits for threads [1..7]
@@ -158,7 +169,12 @@ int rendezvous( volatile int64_t * const buffer
       value |= step << (i * size_byte );
     }
 
-    spinwait_until_equal( buffer[ sync_offset ], value );
+    if ( slow ) {
+      yield_until_equal( buffer[ sync_offset ], value );
+    }
+    else {
+      spinwait_until_equal( buffer[ sync_offset ], value );
+    }
   }
 
   return rank ? 0 : 1 ;
