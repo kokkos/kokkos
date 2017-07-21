@@ -120,6 +120,7 @@ do
       echo "                 Power8         = IBM POWER8 CPUs"
       echo "                 Power9         = IBM POWER9 CPUs"
       echo "               [Intel]"
+      echo "                 WSM            = Intel Westmere CPUs"
       echo "                 SNB            = Intel Sandy/Ivy Bridge CPUs"
       echo "                 HSW            = Intel Haswell CPUs"
       echo "                 BDW            = Intel Broadwell Xeon E-class CPUs"
