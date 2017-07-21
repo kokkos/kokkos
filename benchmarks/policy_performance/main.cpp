@@ -88,6 +88,11 @@ int main(int argc, char* argv[] ) {
   int schedule = atoi(argv[9]);
   int test_type = atoi(argv[10]);
 
+  int disable_verbose_output = 0; 
+  if ( argc > 11 ) {
+    disable_verbose_output = atoi(argv[11]);
+  }
+
   if ( schedule != 1 && schedule != 2 ) {
     printf("schedule: %d\n", schedule);
     printf("Options for schedule are: 1 == Static  2 == Dynamic\n");
@@ -152,7 +157,12 @@ int main(int argc, char* argv[] ) {
     }
   }
 
-  printf("%7i %4i %2i %4i %4i %4i %4i %2i %1i %3i %e %e %lf\n",team_range,thread_range,vector_range,outer_repeat,thread_repeat,vector_repeat,team_size,vector_size,schedule,test_type,result_computed,result_expect,time);
+  if ( disable_verbose_output == 0 ) {
+    printf("%7i %4i %2i %9i %4i %4i %4i %2i %1i %3i %e %e %lf\n",team_range,thread_range,vector_range,outer_repeat,thread_repeat,vector_repeat,team_size,vector_size,schedule,test_type,result_computed,result_expect,time);
+  }
+  else {
+    printf("%lf\n",time);
+  }
 
   Kokkos::finalize();
 
