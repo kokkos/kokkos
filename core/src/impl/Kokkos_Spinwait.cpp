@@ -108,23 +108,30 @@ void host_thread_yield( const uint32_t i , const int force_yield )
     // Insert a few no-ops to quiet the thread:
 
     for ( int k = 0 ; k < c ; ++k ) {
-      #if !defined( _WIN32 ) /* IS NOT Microsoft Windows */
-        asm volatile("nop\n");
-      #else /* IS Microsoft Windows */
-        __asm__ __volatile__("nop\n");
+      #if defined( __amd64 ) || defined( __amd64__ ) || \
+       	    defined( __x86_64 ) || defined( __x86_64__ )
+    	#if !defined( _WIN32 ) /* IS NOT Microsoft Windows */
+          asm volatile( "nop\n" );
+	#else
+          __asm__ __volatile__( "nop\n" );
+        #endif
+      #elif defined(__PPC64__)
+          asm volatile( "nop\n" );
       #endif
     }
   }
 
   {
     // Insert memory pause
-
-      #if !defined( _WIN32 ) /* IS NOT Microsoft Windows */
-        #if !defined( __arm__ ) && !defined( __aarch64__ )
-          asm volatile("pause\n":::"memory");
+      #if defined( __amd64 ) || defined( __amd64__ ) || \
+       	    defined( __x86_64 ) || defined( __x86_64__ )
+    	#if !defined( _WIN32 ) /* IS NOT Microsoft Windows */
+          asm volatile( "pause\n":::"memory" );
+	#else
+          __asm__ __volatile__( "pause\n":::"memory" );
         #endif
-      #else /* IS Microsoft Windows */
-        __asm__ __volatile__("pause\n":::"memory");
+      #elif defined(__PPC64__)
+	asm volatile( "or 27, 27, 27" ::: "memory" );
       #endif
   }
 
