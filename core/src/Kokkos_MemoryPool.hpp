@@ -560,8 +560,7 @@ public:
 
             if ( 0 <= result.first ) { // acquired a bit
 
-              const uint32_t count_lg2 = sb_state >> state_shift ;
-              const uint32_t size_lg2  = m_sb_size_lg2 - count_lg2 ;
+              const uint32_t size_lg2 = m_sb_size_lg2 - count_lg2 ;
 
               // Set the allocated block pointer
 

@@ -293,6 +293,10 @@ public:
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
+  int is_ready() const noexcept
+    { return ( 0 == m_task ) || ( ((task_base*) task_base::LockTag) == m_task->m_wait ); }
+
+  KOKKOS_INLINE_FUNCTION
   const typename Impl::TaskResult< ValueType >::reference_type
   get() const
     {
