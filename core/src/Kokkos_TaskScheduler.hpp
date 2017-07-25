@@ -293,6 +293,10 @@ public:
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
+  int is_ready() const noexcept
+    { return ( 0 == m_task ) || ( ((task_base*) task_base::LockTag) == m_task->m_wait ); }
+
+  KOKKOS_INLINE_FUNCTION
   const typename Impl::TaskResult< ValueType >::reference_type
   get() const
     {
@@ -578,6 +582,30 @@ public:
       task->m_priority = static_cast<int>(arg_priority);
 
       task->add_dependence( arg_dependence.m_task );
+
+      // Postcondition: task is in Executing-Respawn state
+    }
+
+  template< typename FunctorType >
+  KOKKOS_FUNCTION static
+  void
+  respawn( FunctorType         * arg_self
+         , TaskScheduler const &
+         , TaskPriority  const & arg_priority
+         )
+    {
+      // Precondition: task is in Executing state
+
+      using value_type  = typename FunctorType::value_type ;
+      using task_type   = Impl::TaskBase< execution_space
+                                        , value_type
+                                        , FunctorType > ;
+
+      task_type * const task = static_cast< task_type * >( arg_self );
+
+      task->m_priority = static_cast<int>(arg_priority);
+
+      task->add_dependence( (task_base*) 0 );
 
       // Postcondition: task is in Executing-Respawn state
     }
