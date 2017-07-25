@@ -747,6 +747,8 @@ void ROCm::fence()
   Kokkos::Impl::rocm_device_synchronize();
 }
 
+const char* ROCm::name() { return "ROCm"; }
+
 } // namespace Experimental
 } // namespace Kokkos
 

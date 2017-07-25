@@ -164,6 +164,7 @@ public:
 
 
   static int concurrency() ;
+  static const char* name();
 private:
   int          m_device ;
 
