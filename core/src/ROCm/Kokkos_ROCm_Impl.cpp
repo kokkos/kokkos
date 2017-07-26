@@ -112,24 +112,14 @@ bool rocm_launch_blocking()
 void * rocm_device_allocate(int size)
 {
   void * ptr;
-  if(Kokkos::Experimental::ROCm().isAPU()) {
-    ptr =  malloc(size);
-  }
-  else {
-    hc::accelerator acc;
-    ptr = hc::am_alloc(size,acc,0);
-  }
+  hc::accelerator acc;
+  ptr = hc::am_alloc(size,acc,1);
   return ptr;
 }
 
 void rocm_device_free(void * ptr)
 {
-  if(Kokkos::Experimental::ROCm().isAPU()) {
-    free(ptr);
-  }
-  else {
-    hc::am_free(ptr);
-  }
+  hc::am_free(ptr);
 }
 
 
