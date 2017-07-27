@@ -145,7 +145,7 @@ namespace Impl {
  *        m_wait == LockTag
  *
  *    Complete State, NOT IN a linked list
- *      m_wait == LockTag: cannot add dependence
+ *      m_wait == LockTag: cannot add dependence (<=> complete)
  *      m_next == LockTag: not a member of a wait queue
  *
  */

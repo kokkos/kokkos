@@ -156,7 +156,7 @@ struct TestWorkGraph {
 
 } // anonymous namespace
 
-TEST_F( TEST_CATEGORY, workgraph_fib )
+TEST_F( TEST_CATEGORY, DISABLED_workgraph_fib )
 {
   #ifdef KOKKOS_IMPL_CUDA_CLANG_WORKAROUND
   int limit = 15;
