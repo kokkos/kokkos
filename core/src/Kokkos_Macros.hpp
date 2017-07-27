@@ -321,6 +321,10 @@
   //#define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
   //#define KOKKOS_ENABLE_PRAGMA_VECTOR 1
   //#define KOKKOS_ENABLE_PRAGMA_SIMD 1
+
+  #if ! defined( KOKKOS_ENABLE_ASM )
+    #define KOKKOS_ENABLE_ASM 1
+  #endif
 #endif
 
 //----------------------------------------------------------------------------
