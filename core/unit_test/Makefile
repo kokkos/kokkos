@@ -259,7 +259,7 @@ endif
         OBJ_SERIAL += TestSerial_TeamReductionScan.o
         OBJ_SERIAL += TestSerial_Other.o
         #HCC_WORKAROUND
-        #OBJ_SERIAL += TestSerial_MDRange.o
+        OBJ_SERIAL += TestSerial_MDRange.o
         OBJ_SERIAL += TestSerial_Task.o TestSerial_WorkGraph.o
 	
 	TARGETS += KokkosCore_UnitTest_Serial
@@ -276,8 +276,8 @@ ifneq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
   OBJ_DEFAULT += TestDefaultDeviceType.o TestDefaultDeviceType_a.o TestDefaultDeviceType_b.o TestDefaultDeviceType_c.o TestDefaultDeviceType_d.o
 endif
 
-#TARGETS += KokkosCore_UnitTest_Default
-#TEST_TARGETS += test-default
+TARGETS += KokkosCore_UnitTest_Default
+TEST_TARGETS += test-default
 
 NUM_INITTESTS = 16
 INITTESTS_NUMBERS := $(shell seq 1 ${NUM_INITTESTS})
