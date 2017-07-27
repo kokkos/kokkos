@@ -98,18 +98,18 @@ public:
   typedef View<size_type* , array_layout, device_type> row_map_type;
   typedef View<DataType*  , array_layout, device_type> entries_type;
 
-  entries_type entries;
   row_map_type row_map;
+  entries_type entries;
 
   //! Construct an empty view.
-  Crs () : entries(), row_map() {}
+  Crs() : row_map(), entries() {}
 
   //! Copy constructor (shallow copy).
-  Crs (const Crs& rhs) : entries (rhs.entries), row_map (rhs.row_map)
+  Crs(const Crs& rhs) : row_map(rhs.row_map), entries(rhs.entries)
   {}
 
   template<class EntriesType, class RowMapType>
-  Crs (const EntriesType& entries_,const RowMapType& row_map_) : entries (entries_), row_map (row_map_)
+  Crs(const RowMapType& row_map_, const EntriesType& entries_) : row_map(row_map_), entries(entries_)
   {}
 
   /** \brief  Assign to a view of the rhs array.
@@ -117,8 +117,8 @@ public:
    *          then allocated memory is deallocated.
    */
   Crs& operator= (const Crs& rhs) {
-    entries = rhs.entries;
     row_map = rhs.row_map;
+    entries = rhs.entries;
     return *this;
   }
 
