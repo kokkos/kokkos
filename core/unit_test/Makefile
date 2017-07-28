@@ -259,7 +259,9 @@ endif
         OBJ_SERIAL += TestSerial_TeamReductionScan.o
         OBJ_SERIAL += TestSerial_Other.o
         #HCC_WORKAROUND
+        ifneq ($(KOKKOS_INTERNAL_COMPILER_HCC), 1)
         OBJ_SERIAL += TestSerial_MDRange.o
+        endif
         OBJ_SERIAL += TestSerial_Task.o TestSerial_WorkGraph.o
 	
 	TARGETS += KokkosCore_UnitTest_Serial
@@ -273,7 +275,9 @@ TEST_TARGETS += test-hwloc
 
 OBJ_DEFAULT = UnitTestMainInit.o gtest-all.o
 ifneq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
+ifneq ($(KOKKOS_INTERNAL_COMPILER_HCC), 1)
   OBJ_DEFAULT += TestDefaultDeviceType.o TestDefaultDeviceType_a.o TestDefaultDeviceType_b.o TestDefaultDeviceType_c.o TestDefaultDeviceType_d.o
+endif
 endif
 
 TARGETS += KokkosCore_UnitTest_Default
