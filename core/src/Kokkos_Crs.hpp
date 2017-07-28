@@ -44,10 +44,6 @@
 #ifndef KOKKOS_CRS_HPP
 #define KOKKOS_CRS_HPP
 
-#ifdef DAN
-#include <iostream>
-#endif
-
 namespace Kokkos {
 namespace Experimental {
 
@@ -374,19 +370,8 @@ struct CountAndFill {
     const count_closure_type closure(*this, count_policy_type(0, nrows));
     closure.execute();
     }
-#ifdef DAN
-    for (int i = 0; i < m_counts.size(); ++i) {
-      std::cout << "counts(" << i << ") = " << m_counts(i) << '\n';
-    }
-#endif
     auto nentries = Kokkos::Experimental::
       get_crs_row_map_from_counts(m_crs.row_map, m_counts);
-#ifdef DAN
-    for (int i = 0; i < m_crs.row_map.size(); ++i) {
-      std::cout << "row_map(" << i << ") = " << m_crs.row_map(i) << '\n';
-    }
-    std::cout << "nentries " << nentries << '\n';
-#endif
     m_counts = counts_type();
     m_crs.entries = entries_type("entries", nentries);
     {
@@ -396,11 +381,6 @@ struct CountAndFill {
     const fill_closure_type closure(*this, fill_policy_type(0, nrows));
     closure.execute();
     }
-#ifdef DAN
-    for (int i = 0; i < m_crs.entries.size(); ++i) {
-      std::cout << "entries(" << i << ") = " << m_crs.entries(i) << '\n';
-    }
-#endif
     crs = m_crs;
   }
 };
