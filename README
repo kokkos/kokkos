@@ -80,6 +80,9 @@ Other compilers working:
   X86:
    Cygwin 2.1.0 64bit with gcc 4.9.3
 
+Limited testing of the following compilers on POWER7+ systems:
+  GCC 4.8.5 (on RHEL7.1 POWER7+)
+
 Known non-working combinations:
   Power8:
    Pthreads backend
