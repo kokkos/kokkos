@@ -384,7 +384,7 @@ template<class ExecutionSpace> struct DeepCopy< Kokkos::Experimental::ROCmHostPi
 {
   inline
   DeepCopy( void * dst , const void * src , size_t n )
-  { (void) DeepCopy< Kokkos::Experimental::ROCmHostPinnedSpace , Kokkos::Experimental::ROCmHostPinnedSpace , ExecutionSpace >( dst , src , n ); }
+  { (void) DeepCopy< Kokkos::Experimental::ROCmHostPinnedSpace , Kokkos::Experimental::ROCmHostPinnedSpace , Kokkos::Experimental::ROCm >( dst , src , n ); }
 
   inline
   DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
