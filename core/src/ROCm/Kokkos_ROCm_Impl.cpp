@@ -109,14 +109,26 @@ bool rocm_launch_blocking()
 }
 #endif
 
+// true device memory allocation, not visible from host
 void * rocm_device_allocate(int size)
 {
   void * ptr;
   hc::accelerator acc;
-  ptr = hc::am_alloc(size,acc,1);
+  ptr = hc::am_alloc(size,acc,0);
   return ptr;
 }
 
+// host pinned allocation
+// flag = 1, non-coherent, host resident, but with gpu address space pointer
+// flag = 2, coherent, host resident, but with host address space pointer
+void * rocm_hostpinned_allocate(int size)
+{
+  void * ptr;
+  hc::accelerator acc;
+  ptr = hc::am_alloc(size,acc,2);
+  return ptr;
+}
+// same free used by all rocm memory allocations
 void rocm_device_free(void * ptr)
 {
   hc::am_free(ptr);
@@ -126,17 +138,11 @@ void rocm_device_free(void * ptr)
 KOKKOS_INLINE_FUNCTION
 void rocm_device_synchronize()
 {
-//  static const bool launch_blocking = rocm_launch_blocking();
-
-//  if (!launch_blocking) {
-//    amp_barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
-//  }
    hc::accelerator_view av = hc::accelerator().get_default_view();
    hc::completion_future fut = av.create_marker();
    fut.wait();
 }
 
-//void rocm_internal_error_throw( rocmError e , const char * name, const char * file, const int line )
 void rocm_internal_error_throw( const char * name, const char * file, const int line )
 {
 #if 0
@@ -610,7 +616,7 @@ void ROCmInternal::finalize()
 //    threadid_lock_array_rocm_space_ptr(false);
 
     typedef Kokkos::Experimental::Impl::SharedAllocationRecord< HostSpace > RecordROCm ;
-//    typedef Kokkos::Experimental::Impl::SharedAllocationRecord< ROCmHostPinnedSpace > RecordHost ;
+    typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace > RecordHost ;
 
     RecordROCm::decrement( RecordROCm::get_record( m_scratchFlags ) );
     RecordROCm::decrement( RecordROCm::get_record( m_scratchSpace ) );
