@@ -56,7 +56,6 @@
 #include <Kokkos_ROCm.hpp>
 #include <Kokkos_ROCmSpace.hpp>
 
-//#include <Experimental::ROCm/Kokkos_ROCm_Internal.hpp>
 #include <impl/Kokkos_Error.hpp>
 
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -160,10 +159,10 @@ DeepCopy<Kokkos::Experimental::ROCmHostPinnedSpace,HostSpace,Kokkos::Experimenta
 }
 
 
-void DeepCopyAsyncROCm( void * dst , const void * src , size_t n) {
+hc::completion_future DeepCopyAsyncROCm( void * dst , const void * src , size_t n) {
    hc::accelerator acc;
    hc::accelerator_view av = acc.get_default_view();
-   av.copy( src , dst , n);
+   return(av.copy_async( src , dst , n));
 }
 
 } // namespace Impl
