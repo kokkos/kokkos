@@ -1324,10 +1324,14 @@ TEST_F( TEST_CATEGORY, view_remap )
   #ifdef KOKKOS_ENABLE_CUDA
     #define EXECSPACE std::conditional<std::is_same<TEST_EXECSPACE,Kokkos::Cuda>::value,Kokkos::CudaHostPinnedSpace,TEST_EXECSPACE>::type
   #else
-    #if defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_ROCM)
-      #define EXECSPACE Kokkos::HostSpace
+    #ifdef KOKKOS_ENABLE_ROCM
+      #define EXECSPACE std::conditional<std::is_same<TEST_EXECSPACE,Kokkos::Experimental::ROCm>::value,Kokkos::Experimental::ROCmHostPinnedSpace,TEST_EXECSPACE>::type
     #else
-      #define EXECSPACE TEST_EXECSPACE
+      #if defined(KOKKOS_ENABLE_OPENMPTARGET)
+        #define EXECSPACE Kokkos::HostSpace
+      #else
+        #define EXECSPACE TEST_EXECSPACE
+      #endif
     #endif
   #endif
 

@@ -70,20 +70,6 @@
 namespace Kokkos {
 namespace Impl {
 using namespace hc;
-#if 0
-namespace {
-
-  static std::atomic<int> num_uvm_allocations(0) ;
-
-   rocmStream_t get_deep_copy_stream() {
-     static rocmStream_t s = 0;
-     if( s == 0) {
-       rocmStreamCreate ( &s );
-     }
-     return s;
-   }
-}
-#endif
 
 DeepCopy<Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCm>::DeepCopy( void * dst , const void * src , size_t n )
 {
@@ -107,7 +93,6 @@ DeepCopy<Kokkos::Experimental::ROCmSpace,HostSpace,Kokkos::Experimental::ROCm>::
    av.copy( src , dst , n);
 }
 
-#if 1
 DeepCopy<Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCm>::DeepCopy( const Kokkos::Experimental::ROCm & instance , void * dst , const void * src , size_t n )
 {
    hc::accelerator acc;
@@ -129,13 +114,57 @@ DeepCopy<Kokkos::Experimental::ROCmSpace,HostSpace,Kokkos::Experimental::ROCm>::
    av.copy( src , dst , n);
 }
 
+
+
+DeepCopy<Kokkos::Experimental::ROCmHostPinnedSpace,Kokkos::Experimental::ROCmHostPinnedSpace,Kokkos::Experimental::ROCm>::DeepCopy( void * dst , const void * src , size_t n )
+{
+   hc::accelerator acc;
+   hc::accelerator_view av = acc.get_default_view();
+   av.copy( src , dst , n);
+}
+
+
+DeepCopy<HostSpace,Kokkos::Experimental::ROCmHostPinnedSpace,Kokkos::Experimental::ROCm>::DeepCopy( void * dst , const void * src , size_t n )
+{
+   hc::accelerator acc;
+   hc::accelerator_view av = acc.get_default_view();
+   av.copy( src , dst , n);
+}
+
+DeepCopy<Kokkos::Experimental::ROCmHostPinnedSpace,HostSpace,Kokkos::Experimental::ROCm>::DeepCopy( void * dst , const void * src , size_t n )
+{
+   hc::accelerator acc;
+   hc::accelerator_view av = acc.get_default_view();
+   av.copy( src , dst , n);
+}
+
+DeepCopy<Kokkos::Experimental::ROCmHostPinnedSpace,Kokkos::Experimental::ROCmHostPinnedSpace,Kokkos::Experimental::ROCm>::DeepCopy( const Kokkos::Experimental::ROCm & instance , void * dst , const void * src , size_t n )
+{
+   hc::accelerator acc;
+   hc::accelerator_view av = acc.get_default_view();
+   av.copy( src , dst , n);
+}
+
+DeepCopy<HostSpace,Kokkos::Experimental::ROCmHostPinnedSpace,Kokkos::Experimental::ROCm>::DeepCopy( const Kokkos::Experimental::ROCm & instance , void * dst , const void * src , size_t n )
+{
+   hc::accelerator acc;
+   hc::accelerator_view av = acc.get_default_view();
+   av.copy( src , dst , n);
+}
+
+DeepCopy<Kokkos::Experimental::ROCmHostPinnedSpace,HostSpace,Kokkos::Experimental::ROCm>::DeepCopy( const Kokkos::Experimental::ROCm & instance , void * dst , const void * src , size_t n )
+{
+   hc::accelerator acc;
+   hc::accelerator_view av = acc.get_default_view();
+   av.copy( src , dst , n);
+}
+
+
 void DeepCopyAsyncROCm( void * dst , const void * src , size_t n) {
    hc::accelerator acc;
    hc::accelerator_view av = acc.get_default_view();
    av.copy( src , dst , n);
-  
 }
-#endif
 
 } // namespace Impl
 } // namespace Kokkos
@@ -171,11 +200,9 @@ ROCmSpace::ROCmSpace()
 {
 }
 
-#if 0
 ROCmHostPinnedSpace::ROCmHostPinnedSpace()
 {
 }
-#endif
 
 void * ROCmSpace::allocate( const size_t arg_alloc_size ) const
 {
@@ -183,42 +210,21 @@ void * ROCmSpace::allocate( const size_t arg_alloc_size ) const
   return ptr ;
 }
 
-#if 0
 void * Experimental::ROCmHostPinnedSpace::allocate( const size_t arg_alloc_size ) const
 {
-  void * ptr = NULL;
-
-  ROCM_SAFE_CALL( rocmHostAlloc( &ptr, arg_alloc_size , rocmHostAllocDefault ) );
-
+  void * ptr =  Kokkos::Impl::rocm_hostpinned_allocate( arg_alloc_size );
   return ptr ;
 }
-#endif
 
 void ROCmSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_alloc_size */ ) const
 {
   Kokkos::Impl::rocm_device_free(arg_alloc_ptr);
 }
 
-#if 0
 void Experimental::ROCmHostPinnedSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_alloc_size */ ) const
 {
-  try {
-    ROCM_SAFE_CALL( rocmFreeHost( arg_alloc_ptr ) );
-  } catch(...) {}
+  Kokkos::Impl::rocm_device_free(arg_alloc_ptr);
 }
-#endif
-
-/*
-constexpr const char* Experimental::ROCmSpace::name() {
-  return m_name;
-}
-*/
-
-#if 0
-constexpr const char* Experimental::ROCmHostPinnedSpace::name() {
-  return m_name;
-}
-#endif
 
 } // namespace Experimental
 } // namespace Kokkos
@@ -232,10 +238,8 @@ namespace Impl {
 SharedAllocationRecord< void , void >
 SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::s_root_record ;
 
-#if 0
 SharedAllocationRecord< void , void >
 SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::s_root_record ;
-#endif
 
 
 std::string
@@ -248,13 +252,11 @@ SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::get_label() co
   return std::string( header.m_label );
 }
 
-#if 0
 std::string
 SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::get_label() const
 {
   return std::string( RecordBase::head()->m_label );
 }
-#endif
 
 SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void > *
 SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::
@@ -266,7 +268,6 @@ allocate( const Kokkos::Experimental::ROCmSpace &  arg_space
   return new SharedAllocationRecord( arg_space , arg_label , arg_alloc_size );
 }
 
-#if 0
 SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void > *
 SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::
 allocate( const Kokkos::Experimental::ROCmHostPinnedSpace &  arg_space
@@ -276,7 +277,6 @@ allocate( const Kokkos::Experimental::ROCmHostPinnedSpace &  arg_space
 {
   return new SharedAllocationRecord( arg_space , arg_label , arg_alloc_size );
 }
-#endif
 
 void
 SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::
@@ -285,14 +285,12 @@ deallocate( SharedAllocationRecord< void , void > * arg_rec )
   delete static_cast<SharedAllocationRecord*>(arg_rec);
 }
 
-#if 0
 void
 SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::
 deallocate( SharedAllocationRecord< void , void > * arg_rec )
 {
   delete static_cast<SharedAllocationRecord*>(arg_rec);
 }
-#endif
 
 SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::
 ~SharedAllocationRecord()
@@ -314,11 +312,10 @@ SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::
                     );
 }
 
-#if 0
 SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::
 ~SharedAllocationRecord()
 {
-  #if (KOKKOS_ENABLE_PROFILING)
+  #if defined(KOKKOS_ENABLE_PROFILING)
   if(Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::deallocateData(
       Kokkos::Profiling::SpaceHandle(Kokkos::Experimental::ROCmHostPinnedSpace::name()),RecordBase::m_alloc_ptr->m_label,
@@ -330,7 +327,6 @@ SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::
                     , SharedAllocationRecord< void , void >::m_alloc_size
                     );
 }
-#endif
 
 SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::
 SharedAllocationRecord( const Kokkos::Experimental::ROCmSpace & arg_space
@@ -368,7 +364,6 @@ SharedAllocationRecord( const Kokkos::Experimental::ROCmSpace & arg_space
   Kokkos::Impl::DeepCopy<Kokkos::Experimental::ROCmSpace,HostSpace>( RecordBase::m_alloc_ptr , & header , sizeof(SharedAllocationHeader) );
 }
 
-#if 0
 SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::
 SharedAllocationRecord( const Kokkos::Experimental::ROCmHostPinnedSpace & arg_space
                       , const std::string                 & arg_label
@@ -385,7 +380,7 @@ SharedAllocationRecord( const Kokkos::Experimental::ROCmHostPinnedSpace & arg_sp
       )
   , m_space( arg_space )
 {
-  #if (KOKKOS_ENABLE_PROFILING)
+  #if defined(KOKKOS_ENABLE_PROFILING)
   if(Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(Kokkos::Profiling::SpaceHandle(arg_space.name()),arg_label,data(),arg_alloc_size);
   }
@@ -399,7 +394,6 @@ SharedAllocationRecord( const Kokkos::Experimental::ROCmHostPinnedSpace & arg_sp
           , SharedAllocationHeader::maximum_label_length
           );
 }
-#endif
 
 //----------------------------------------------------------------------------
 

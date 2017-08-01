@@ -41,24 +41,15 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
-
-#include <Kokkos_Core.hpp>
-
-#if !defined( KOKKOS_ENABLE_CUDA ) || defined( __CUDACC__ )
-#if !defined( KOKKOS_ENABLE_ROCM ) 
-
-#include <default/TestDefaultDeviceType_Category.hpp>
-#include <TestReduceCombinatorical.hpp>
+#include <rocm/TestROCmHostPinned_Category.hpp>
+#include <TestSharedAlloc.hpp>
 
 namespace Test {
 
-TEST_F( defaultdevicetype, reduce_instantiation_c )
+
+TEST_F( TEST_CATEGORY, impl_shared_alloc )
 {
-  TestReduceCombinatoricalInstantiation<>::execute_c();
+  test_shared_alloc< TEST_EXECSPACE, Kokkos::DefaultHostExecutionSpace >();
 }
 
 } // namespace Test
-
-#endif
-#endif

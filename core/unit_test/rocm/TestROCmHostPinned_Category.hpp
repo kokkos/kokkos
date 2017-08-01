@@ -41,24 +41,25 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_TEST_THREADS_HPP
+#define KOKKOS_TEST_THREADS_HPP
+
 #include <gtest/gtest.h>
-
-#include <Kokkos_Core.hpp>
-
-#if !defined( KOKKOS_ENABLE_CUDA ) || defined( __CUDACC__ )
-#if !defined( KOKKOS_ENABLE_ROCM ) 
-
-#include <default/TestDefaultDeviceType_Category.hpp>
-#include <TestReduceCombinatorical.hpp>
 
 namespace Test {
 
-TEST_F( defaultdevicetype, reduce_instantiation_c )
-{
-  TestReduceCombinatoricalInstantiation<>::execute_c();
-}
+class rocm_hostpinned : public ::testing::Test {
+protected:
+  static void SetUpTestCase() {
+  }
+
+  static void TearDownTestCase() {
+  }
+};
 
 } // namespace Test
 
-#endif
+#define TEST_CATEGORY rocm_hostpinned
+#define TEST_EXECSPACE Kokkos::Experimental::ROCmHostPinnedSpace
+
 #endif

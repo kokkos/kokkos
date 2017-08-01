@@ -795,7 +795,7 @@ public:
 
       auto create_team_member = [=](hc::tiled_index<1> idx, tile_desc td) 
       { 
-        return typename Policy::member_type(idx, league_size, td.tile_size, shared, shared_size, scratch_size0, scratch, scratch_size1); 
+        return typename Policy::member_type(idx, league_size, td.tile_size, shared, shared_size, scratch_size0, scratch, scratch_size1, vector_length); 
       };
 
       Kokkos::Impl::reduce_enqueue< typename Policy::work_tag >

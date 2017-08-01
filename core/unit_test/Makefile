@@ -114,7 +114,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
         OBJ_ROCM += TestROCm_ViewMapping_a.o
         OBJ_ROCM += TestROCm_ViewMapping_b.o
         OBJ_ROCM += TestROCm_ViewMapping_subview.o
+	OBJ_ROCM += TestROCmHostPinned_ViewAPI.o
+	OBJ_ROCM += TestROCmHostPinned_ViewMapping_a.o 
+	OBJ_ROCM += TestROCmHostPinned_ViewMapping_b.o 
+	OBJ_ROCM += TestROCmHostPinned_ViewMapping_subview.o
         OBJ_ROCM += TestROCm_ViewOfClass.o
+	OBJ_ROCM += TestROCm_Spaces.o
      
         TARGETS += KokkosCore_UnitTest_ROCm
         TEST_TARGETS += test-rocm
