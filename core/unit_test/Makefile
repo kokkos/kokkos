@@ -62,6 +62,7 @@ endif
 	OBJ_CUDA += TestCuda_TeamReductionScan.o
 	OBJ_CUDA += TestCuda_Other.o
 	OBJ_CUDA += TestCuda_MDRange.o
+	OBJ_CUDA += TestCuda_Crs.o
 	OBJ_CUDA += TestCuda_Task.o TestCuda_WorkGraph.o
 	OBJ_CUDA += TestCuda_Spaces.o
 	OBJ_CUDA += TestCuda_UniqueToken.o
@@ -122,6 +123,7 @@ endif
 	OBJ_OPENMP += TestOpenMP_TeamReductionScan.o
 	OBJ_OPENMP += TestOpenMP_Other.o
 	OBJ_OPENMP += TestOpenMP_MDRange.o
+	OBJ_OPENMP += TestOpenMP_Crs.o
 	OBJ_OPENMP += TestOpenMP_Task.o TestOpenMP_WorkGraph.o
 	OBJ_OPENMP += TestOpenMP_UniqueToken.o
 	
@@ -210,6 +212,7 @@ endif
         OBJ_SERIAL += TestSerial_TeamReductionScan.o
         OBJ_SERIAL += TestSerial_Other.o
         OBJ_SERIAL += TestSerial_MDRange.o
+        OBJ_SERIAL += TestSerial_Crs.o
         OBJ_SERIAL += TestSerial_Task.o TestSerial_WorkGraph.o
 	
 	TARGETS += KokkosCore_UnitTest_Serial
