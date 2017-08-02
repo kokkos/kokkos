@@ -232,6 +232,16 @@ public:
     return re_;
   }
 
+  //! Set the imaginary part of this complex number.
+  KOKKOS_INLINE_FUNCTION void imag (RealType v) {
+    im_ = v;
+  }
+
+  //! Set the real part of this complex number.
+  KOKKOS_INLINE_FUNCTION void real (RealType v) {
+    re_ = v;
+  }
+
   KOKKOS_INLINE_FUNCTION
   complex<RealType>& operator += (const complex<RealType>& src) {
     re_ += src.re_;
