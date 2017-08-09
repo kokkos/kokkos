@@ -96,6 +96,14 @@
 
 //----------------------------------------------------------------------------
 
+#if defined(KOKKOS_ENABLE_SERIAL) || defined(KOKKOS_ENABLE_THREADS) || \
+    defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_QTHREADS) || \
+    defined(KOKKOS_ENABLE_ROCM) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+  #define KOKKOS_INTERNAL_ENABLE_NON_CUDA_BACKEND
+#endif
+
+#define KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
+
 #if defined( KOKKOS_ENABLE_CUDA ) && defined( __CUDACC__ )
   // Compiling with a CUDA compiler.
   //
@@ -133,6 +141,9 @@
 
     #if ( CUDA_VERSION < 8000 ) && defined( __NVCC__ )
       #define KOKKOS_LAMBDA [=]__device__
+      #if defined( KOKKOS_INTERNAL_ENABLE_NON_CUDA_BACKEND )
+        #undef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
+      #endif
     #else
       #define KOKKOS_LAMBDA [=]__host__ __device__
 
@@ -141,16 +152,13 @@
       #endif
     #endif
 
-    #define KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA 1
-  #endif
-#endif // #if defined( KOKKOS_ENABLE_CUDA ) && defined( __CUDACC__ )
-
-#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
-   // Cuda version 8.0 still needs the functor wrapper
-   #if /* ( CUDA_VERSION < 8000 ) && */  defined( __NVCC__ )
+    #if defined( __NVCC__ )
       #define KOKKOS_IMPL_NEED_FUNCTOR_WRAPPER
-   #endif
-#endif
+    #endif
+  #else // !defined(KOKKOS_ENABLE_CUDA_LAMBDA)
+    #undef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
+  #endif // !defined(KOKKOS_ENABLE_CUDA_LAMBDA)
+#endif // #if defined( KOKKOS_ENABLE_CUDA ) && defined( __CUDACC__ )
 
 //----------------------------------------------------------------------------
 // Language info: C++, CUDA, OPENMP
@@ -191,15 +199,6 @@
   // Host code is compiled again with another compiler.
   // Device code is compile to 'ptx'.
   #define KOKKOS_COMPILER_NVCC __NVCC__
-#else
-  #if !defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
-    #if !defined( KOKKOS_ENABLE_CUDA ) // Compiling with clang for Cuda does not work with LAMBDAs either
-      // CUDA (including version 6.5) does not support giving lambdas as
-      // arguments to global functions. Thus its not currently possible
-      // to dispatch lambdas from the host.
-      #define KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA 1
-    #endif
-  #endif
 #endif // #if defined( __NVCC__ )
 
 #if !defined( KOKKOS_LAMBDA )
