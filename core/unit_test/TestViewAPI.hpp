@@ -1379,4 +1379,14 @@ TEST_F( TEST_CATEGORY, view_remap )
   }
 }
 
+TEST_F( TEST_CATEGORY, view_mirror_nonconst )
+{
+  Kokkos::View<int*, TEST_EXECSPACE> d_view("d_view", 10);
+  Kokkos::View<const int*, TEST_EXECSPACE> d_view_const = d_view;
+  auto h_view = Kokkos::create_mirror(d_view_const);
+  Kokkos::deep_copy(h_view, d_view_const);
+  auto h_view2 = Kokkos::create_mirror(Kokkos::HostSpace(), d_view_const);
+  Kokkos::deep_copy(h_view2, d_view_const);
+}
+
 } // namespace Test
