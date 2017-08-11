@@ -278,6 +278,7 @@ KOKKOS_INTERNAL_USE_ARCH_KAVERI := $(strip $(shell echo $(KOKKOS_ARCH) | grep Ka
 KOKKOS_INTERNAL_USE_ARCH_CARRIZO := $(strip $(shell echo $(KOKKOS_ARCH) | grep Carrizo | wc -l))
 KOKKOS_INTERNAL_USE_ARCH_FIJI := $(strip $(shell echo $(KOKKOS_ARCH) | grep Fiji | wc -l))
 KOKKOS_INTERNAL_USE_ARCH_VEGA := $(strip $(shell echo $(KOKKOS_ARCH) | grep Vega | wc -l))
+KOKKOS_INTERNAL_USE_ARCH_GFX901 := $(strip $(shell echo $(KOKKOS_ARCH) | grep gfx901 | wc -l))
 
 # Any AVX?
 KOKKOS_INTERNAL_USE_ARCH_SSE42      := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_WSM) | bc ))
@@ -803,8 +804,13 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
     KOKKOS_INTERNAL_ROCM_ARCH_FLAG := --amdgpu-target=gfx803
   endif
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA), 1)
-    tmp := $(shell echo "\#define KOKKOS_ARCH_ROCM 901" >> KokkosCore_config.tmp )
+    tmp := $(shell echo "\#define KOKKOS_ARCH_ROCM 900" >> KokkosCore_config.tmp )
     tmp := $(shell echo "\#define KOKKOS_ARCH_VEGA 1" >> KokkosCore_config.tmp )
+    KOKKOS_INTERNAL_ROCM_ARCH_FLAG := --amdgpu-target=gfx900 
+  endif
+  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_GFX901), 1)
+    tmp := $(shell echo "\#define KOKKOS_ARCH_ROCM 901" >> KokkosCore_config.tmp )
+    tmp := $(shell echo "\#define KOKKOS_ARCH_GFX901 1" >> KokkosCore_config.tmp )
     KOKKOS_INTERNAL_ROCM_ARCH_FLAG := --amdgpu-target=gfx901 
   endif
  
