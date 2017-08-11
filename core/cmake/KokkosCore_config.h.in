@@ -93,12 +93,6 @@
 #cmakedefine KOKKOS_ARCH_PASCAL60 1
 #cmakedefine KOKKOS_ARCH_PASCAL61 1
 
-// Don't forbid users from defining this macro on the command line,
-// but still make sure that CMake logic can control its definition.
-#ifndef KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA
-#cmakedefine KOKKOS_HAVE_CXX11_DISPATCH_LAMBDA 1
-#endif
-
 // TODO: These are currently not used in Kokkos.  Should they be removed?
 #cmakedefine KOKKOS_HAVE_MPI
 #cmakedefine KOKKOS_HAVE_CUSPARSE
