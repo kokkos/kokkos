@@ -97,14 +97,11 @@ int bit_scan_forward( unsigned i )
 #elif defined( KOKKOS_COMPILER_GNU ) || defined( __GNUC__ ) || defined( __GNUG__ )
   return __builtin_ffs(i) - 1;
 #else
-  unsigned t = 1u;
-  int r = 0;
-  while ( i && ( i & t == 0 ) )
-  {
-    t = t << 1;
-    ++r;
+  int offset = -1;
+  if ( i ) {
+    for ( offset = 0 ; (i & ( 1 << offset ) ) == 0 ; ++offset );
   }
-  return r;
+  return offset;
 #endif
 }
 
@@ -125,14 +122,11 @@ int bit_scan_reverse( unsigned i )
 #elif defined( __GNUC__ ) || defined( __GNUG__ )
   return shift - __builtin_clz(i);
 #else
-  unsigned t = 1u << shift;
-  int r = 0;
-  while ( i && ( i & t == 0 ) )
-  {
-    t = t >> 1;
-    ++r;
+  int offset = 0;
+  if ( i ) {
+    for ( offset = shift ; (i & ( 1 << offset ) ) == 0 ; --offset );
   }
-  return r;
+  return offset;
 #endif
 }
 
