@@ -50,21 +50,6 @@
 
 namespace Kokkos {
 
-template<typename From, typename To, typename dummy = To>
-struct is_convertible {
-  static const bool value = true;
-};
-  
-template<typename From, typename To>
-struct is_convertible<From,To,typename std::enable_if<std::is_integral<To>::value>::type> {
-  static const bool value = std::is_integral<From>::value;
-};
-  
-template<typename From, typename To>
-struct is_convertible<From,To,typename std::enable_if<std::is_floating_point<To>::value>::type> {
-  static const bool value = std::is_arithmetic<From>::value;
-};
-  
 /// \class complex
 /// \brief Partial reimplementation of std::complex that works as the
 ///   result of a Kokkos::parallel_reduce.
@@ -259,7 +244,7 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<is_convertible<InputRealType,RealType>::value,
+  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
                           complex<RealType>&>::type 
   operator += (const complex<InputRealType>& src) {
     re_ += src.re_;
@@ -269,7 +254,7 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<is_convertible<InputRealType,RealType>::value,
+  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
                           void>::type
   operator += (const volatile complex<InputRealType>& src) volatile {
     re_ += src.re_;
@@ -278,7 +263,7 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<is_convertible<InputRealType,RealType>::value,
+  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
                           complex<RealType>&>::type
   operator += (const InputRealType& src) {
     re_ += src;
@@ -287,7 +272,7 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<is_convertible<InputRealType,RealType>::value,
+  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
                           void>::type
   operator += (const volatile InputRealType& src) volatile {
     re_ += src;
@@ -295,7 +280,7 @@ public:
   
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<is_convertible<InputRealType,RealType>::value,
+  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
                           complex<RealType>&>::type
   operator -= (const complex<InputRealType>& src) {
     re_ -= src.re_;
@@ -305,7 +290,7 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<is_convertible<InputRealType,RealType>::value,
+  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
                           complex<RealType>&>::type
   operator -= (const InputRealType& src) {
     re_ -= src;
@@ -314,7 +299,7 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<is_convertible<InputRealType,RealType>::value,
+  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
                           complex<RealType>&>::type
   operator *= (const complex<InputRealType>& src) {
     const RealType realPart = re_ * src.re_ - im_ * src.im_;
@@ -326,7 +311,7 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<is_convertible<InputRealType,RealType>::value,
+  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
                           void>::type
   operator *= (const volatile complex<InputRealType>& src) volatile {
     const RealType realPart = re_ * src.re_ - im_ * src.im_;
@@ -337,7 +322,7 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<is_convertible<InputRealType,RealType>::value,
+  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
                           complex<RealType>&>::type
   operator *= (const InputRealType& src) {
     re_ *= src;
@@ -347,7 +332,7 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<is_convertible<InputRealType,RealType>::value,
+  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
                           void>::type
   operator *= (const volatile InputRealType& src) volatile {
     re_ *= src;
@@ -356,7 +341,7 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<is_convertible<InputRealType,RealType>::value,
+  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
                           complex<RealType>&>::type
   operator /= (const complex<InputRealType>& y) {
     // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
@@ -384,7 +369,7 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<is_convertible<InputRealType,RealType>::value,
+  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
                           complex<RealType>&>::type
   operator /= (const InputRealType& src) {
     re_ /= src;
@@ -394,7 +379,7 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<is_convertible<InputRealType,RealType>::value,
+  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
                           bool>::type
   operator == (const complex<InputRealType>& src) {
     return (re_ == static_cast<RealType>(src.re_)) && (im_ == static_cast<RealType>(src.im_));
@@ -402,7 +387,7 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<is_convertible<InputRealType,RealType>::value,
+  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
                           bool>::type
   operator == (const InputRealType src) {
     return (re_ == static_cast<RealType>(src)) && (im_ == RealType(0));
@@ -410,7 +395,7 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<is_convertible<InputRealType,RealType>::value,
+  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
                           bool>::type
   operator != (const complex<InputRealType>& src) {
     return (re_ != static_cast<RealType>(src.re_)) || (im_ != static_cast<RealType>(src.im_));
@@ -418,7 +403,7 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<is_convertible<InputRealType,RealType>::value,
+  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
                           bool>::type
     operator != (const InputRealType src) {
     return (re_ != static_cast<RealType>(src)) || (im_ != RealType(0));
@@ -429,28 +414,31 @@ public:
 //! Binary + operator for complex complex.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
-                        complex<RealType1> >::type
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
+                        complex<typename std::common_type<RealType1,RealType2>::type> >::type
 operator + (const complex<RealType1>& x, const complex<RealType2>& y) {
-  return complex<RealType1> (x.real () + y.real (), x.imag () + y.imag ());
+  return complex<typename std::common_type<RealType1,RealType2>::type > (x.real () + y.real (), x.imag () + y.imag ());
 }
 
 //! Binary + operator for complex scalar.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
-                        complex<RealType1> >::type
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
+                        complex<typename std::common_type<RealType1,RealType2>::type> >::type
 operator + (const complex<RealType1>& x, const RealType2& y) {
-  return complex<RealType1> (x.real () + y , x.imag ());
+  return complex<typename std::common_type<RealType1,RealType2>::type> (x.real () + y , x.imag ());
 }
 
 //! Binary + operator for scalar complex.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
-                        complex<RealType1> >::type
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
+                        complex<typename std::common_type<RealType1,RealType2>::type> >::type
 operator + (const RealType1& x, const complex<RealType2>& y) {
-  return complex<RealType1> (x + y.real (), y.imag ());
+  return complex<typename std::common_type<RealType1,RealType2>::type> (x + y.real (), y.imag ());
 }
 
 //! Unary + operator for complex.
@@ -464,28 +452,31 @@ operator + (const complex<RealType>& x) {
 //! Binary - operator for complex.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
-                        complex<RealType1> >::type
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
+                        complex<typename std::common_type<RealType1,RealType2>::type> >::type
 operator - (const complex<RealType1>& x, const complex<RealType2>& y) {
-  return complex<RealType1> (x.real () - y.real (), x.imag () - y.imag ());
+  return complex<typename std::common_type<RealType1,RealType2>::type> (x.real () - y.real (), x.imag () - y.imag ());
 }
 
 //! Binary - operator for complex scalar.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
-                        complex<RealType1> >::type
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
+                        complex<typename std::common_type<RealType1,RealType2>::type> >::type
 operator - (const complex<RealType1>& x, const RealType2& y) {
-  return complex<RealType1> (x.real () - y , x.imag ());
+  return complex<typename std::common_type<RealType1,RealType2>::type> (x.real () - y , x.imag ());
 }
 
 //! Binary - operator for scalar complex.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
-                        complex<RealType1> >::type
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
+                        complex<typename std::common_type<RealType1,RealType2>::type> >::type
 operator - (const RealType1& x, const complex<RealType2>& y) {
-  return complex<RealType1> (x - y.real (), - y.imag ());
+  return complex<typename std::common_type<RealType1,RealType2>::type> (x - y.real (), - y.imag ());
 }
 
 //! Unary - operator for complex.
@@ -499,11 +490,12 @@ operator - (const complex<RealType>& x) {
 //! Binary * operator for complex.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
-                        complex<RealType1> >::type
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
+                        complex<typename std::common_type<RealType1,RealType2>::type> >::type
 operator * (const complex<RealType1>& x, const complex<RealType2>& y) {
-  return complex<RealType1> (x.real () * y.real () - x.imag () * y.imag (),
-                            x.real () * y.imag () + x.imag () * y.real ());
+  return complex<typename std::common_type<RealType1,RealType2>::type> (x.real () * y.real () - x.imag () * y.imag (),
+                                                                        x.real () * y.imag () + x.imag () * y.real ());
 }
 
 /// \brief Binary * operator for std::complex and complex.
@@ -518,11 +510,12 @@ operator * (const complex<RealType1>& x, const complex<RealType2>& y) {
 /// CUDA device functions.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
-                        complex<RealType1> >::type
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
+                        complex<typename std::common_type<RealType1,RealType2>::type> >::type
 operator * (const std::complex<RealType1>& x, const complex<RealType2>& y) {
-  return complex<RealType1> (x.real () * y.real () - x.imag () * y.imag (),
-                             x.real () * y.imag () + x.imag () * y.real ());
+  return complex<typename std::common_type<RealType1,RealType2>::type> (x.real () * y.real () - x.imag () * y.imag (),
+                                                                        x.real () * y.imag () + x.imag () * y.real ());
 }
 
 /// \brief Binary * operator for RealType times complex.
@@ -531,10 +524,11 @@ operator * (const std::complex<RealType1>& x, const complex<RealType2>& y) {
 /// RealType and complex<RealType> commute with respect to operator*.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
-                        complex<RealType1> >::type
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
+                        complex<typename std::common_type<RealType1,RealType2>::type> >::type
 operator * (const RealType1& x, const complex<RealType2>& y) {
-  return complex<RealType1> (x * y.real (), x * y.imag ());
+  return complex<typename std::common_type<RealType1,RealType2>::type> (x * y.real (), x * y.imag ());
 }
 
 /// \brief Binary * operator for RealType times complex.
@@ -543,10 +537,11 @@ operator * (const RealType1& x, const complex<RealType2>& y) {
 /// RealType and complex<RealType> commute with respect to operator*.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
-                        complex<RealType1> >::type
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
+                        complex<typename std::common_type<RealType1,RealType2>::type> >::type
 operator * (const complex<RealType1>& y, const RealType2& x) {
-  return complex<RealType1> (x * y.real (), x * y.imag ());
+  return complex<typename std::common_type<RealType1,RealType2>::type> (x * y.real (), x * y.imag ());
 }
 
 //! Imaginary part of a complex number.
@@ -613,35 +608,38 @@ complex<RealType> pow (const complex<RealType>& x) {
 //! Binary operator / for complex and real numbers
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
-                        complex<RealType1> >::type
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
+                        complex<typename std::common_type<RealType1,RealType2>::type> >::type
 operator / (const complex<RealType1>& x, const RealType2& y) {
-  return complex<RealType1> (real (x) / y, imag (x) / y);
+  return complex<typename std::common_type<RealType1,RealType2>::type> (real (x) / y, imag (x) / y);
 }
 
 //! Binary operator / for complex.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
-                        complex<RealType1> >::type
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
+                        complex<typename std::common_type<RealType1,RealType2>::type> >::type
 operator / (const complex<RealType1>& x, const complex<RealType2>& y) {
   // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
   // If the real part is +/-Inf and the imaginary part is -/+Inf,
   // this won't change the result.
-  const RealType1 s = std::fabs (real (y)) + std::fabs (imag (y));
+  typedef typename std::common_type<RealType1,RealType2>::type common_real_type;
+  const common_real_type s = std::fabs (real (y)) + std::fabs (imag (y));
 
   // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
   // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
   // because y/s is NaN.
   if (s == 0.0) {
-    return complex<RealType1> (real (x) / s, imag (x) / s);
+    return complex<common_real_type> (real (x) / s, imag (x) / s);
   }
   else {
-    const complex<RealType1> x_scaled (real (x) / s, imag (x) / s);
-    const complex<RealType1> y_conj_scaled (real (y) / s, -imag (y) / s);
+    const complex<common_real_type> x_scaled (real (x) / s, imag (x) / s);
+    const complex<common_real_type> y_conj_scaled (real (y) / s, -imag (y) / s);
     const RealType1 y_scaled_abs = real (y_conj_scaled) * real (y_conj_scaled) +
       imag (y_conj_scaled) * imag (y_conj_scaled); // abs(y) == abs(conj(y))
-    complex<RealType1> result = x_scaled * y_conj_scaled;
+    complex<common_real_type> result = x_scaled * y_conj_scaled;
     result /= y_scaled_abs;
     return result;
   }
@@ -650,19 +648,23 @@ operator / (const complex<RealType1>& x, const complex<RealType2>& y) {
 //! Binary operator / for complex and real numbers
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
-                        complex<RealType1> >::type
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
+                        complex<typename std::common_type<RealType1,RealType2>::type> >::type
 operator / (const RealType1& x, const complex<RealType2>& y) {
-  return complex<RealType1> (x)/y;
+  return complex<typename std::common_type<RealType1,RealType2>::type> (x)/y;
 }
 
 //! Equality operator for two complex numbers.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
                         bool>::type
 operator == (const complex<RealType1>& x, const complex<RealType2>& y) {
-  return real (x) == static_cast<RealType1>(real (y)) && imag (x) == static_cast<RealType1>(imag (y));
+  typedef typename std::common_type<RealType1,RealType2>::type common_real_type;
+  return ( static_cast<common_real_type>(real (x)) == static_cast<common_real_type>(real (y)) && 
+           static_cast<common_real_type>(imag (x)) == static_cast<common_real_type>(imag (y)) );
 }
 
 /// \brief Equality operator for std::complex and Kokkos::complex.
@@ -673,25 +675,32 @@ operator == (const complex<RealType1>& x, const complex<RealType2>& y) {
 /// __device__ function("operator==") is not allowed").
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
                         bool>::type
 operator == (const std::complex<RealType1>& x, const complex<RealType2>& y) {
-  return std::real (x) == static_cast<RealType1>(real (y)) && std::imag (x) == static_cast<RealType1>(imag (y));
+  typedef typename std::common_type<RealType1,RealType2>::type common_real_type;
+  return ( static_cast<common_real_type>(std::real (x)) == static_cast<common_real_type>(real (y)) && 
+           static_cast<common_real_type>(std::imag (x)) == static_cast<common_real_type>(imag (y)) );
 }
-
+  
 //! Equality operator for complex and real number.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
                         bool>::type
 operator == (const complex<RealType1>& x, const RealType2& y) {
-  return real (x) == static_cast<RealType1>(y) && imag (x) == static_cast<RealType1> (0.0);
+  typedef typename std::common_type<RealType1,RealType2>::type common_real_type;
+  return ( static_cast<common_real_type>(real (x)) == static_cast<common_real_type>(y) && 
+           static_cast<common_real_type>(imag (x)) == static_cast<common_real_type>(0.0) );
 }
 
 //! Equality operator for real and complex number.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
                         bool>::type
 operator == (const RealType1& x, const complex<RealType2>& y) {
   return y == x;
@@ -700,34 +709,44 @@ operator == (const RealType1& x, const complex<RealType2>& y) {
 //! Inequality operator for two complex numbers.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
                         bool>::type
 operator != (const complex<RealType1>& x, const complex<RealType2>& y) {
-  return real (x) != static_cast<RealType1>(real (y)) || imag (x) != static_cast<RealType1>(imag (y));
+  typedef typename std::common_type<RealType1,RealType2>::type common_real_type;
+  return ( static_cast<common_real_type>(real (x)) != static_cast<common_real_type>(real (y)) || 
+           static_cast<common_real_type>(imag (x)) != static_cast<common_real_type>(imag (y)) );
 }
 
 //! Inequality operator for std::complex and Kokkos::complex.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
                         bool>::type
 operator != (const std::complex<RealType1>& x, const complex<RealType2>& y) {
-  return std::real (x) != static_cast<RealType1>(real (y)) || std::imag (x) != static_cast<RealType1>(imag (y));
+  typedef typename std::common_type<RealType1,RealType2>::type common_real_type;
+  return ( static_cast<common_real_type>(std::real (x)) != static_cast<common_real_type>(real (y)) || 
+           static_cast<common_real_type>(std::imag (x)) != static_cast<common_real_type>(imag (y)) );
 }
 
 //! Inequality operator for complex and real number.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
                         bool>::type
 operator != (const complex<RealType1>& x, const RealType2& y) {
-  return real (x) != static_cast<RealType1>(y) || imag (x) != static_cast<RealType1> (0.0);
+  typedef typename std::common_type<RealType1,RealType2>::type common_real_type;
+  return ( static_cast<common_real_type>(real (x)) != static_cast<common_real_type>(y) || 
+           static_cast<common_real_type>(imag (x)) != static_cast<common_real_type>(0.0) );
 }
 
 //! Inequality operator for real and complex number.
 template<class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if<is_convertible<RealType2,RealType1>::value,
+typename std::enable_if<std::is_arithmetic<RealType1>::value &&
+                        std::is_arithmetic<RealType2>::value,
                         bool>::type
 operator != (const RealType1& x, const complex<RealType2>& y) {
   return y != x;
