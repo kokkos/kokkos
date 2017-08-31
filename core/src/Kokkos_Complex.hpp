@@ -244,9 +244,10 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
-                          complex<RealType>&>::type 
+  complex<RealType>&
   operator += (const complex<InputRealType>& src) {
+    static_assert(std::is_convertible<InputRealType,RealType>::value, 
+                  "InputRealType must be convertible to RealType");
     re_ += src.re_;
     im_ += src.im_;
     return *this;
@@ -254,35 +255,39 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
-                          void>::type
+  void
   operator += (const volatile complex<InputRealType>& src) volatile {
+    static_assert(std::is_convertible<InputRealType,RealType>::value, 
+                  "InputRealType must be convertible to RealType");
     re_ += src.re_;
     im_ += src.im_;
   }
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
-                          complex<RealType>&>::type
+  complex<RealType>&
   operator += (const InputRealType& src) {
+    static_assert(std::is_convertible<InputRealType,RealType>::value, 
+                  "InputRealType must be convertible to RealType");
     re_ += src;
     return *this;
   }
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
-                          void>::type
+  void
   operator += (const volatile InputRealType& src) volatile {
+    static_assert(std::is_convertible<InputRealType,RealType>::value, 
+                  "InputRealType must be convertible to RealType");
     re_ += src;
   }
   
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
-                          complex<RealType>&>::type
+  complex<RealType>&
   operator -= (const complex<InputRealType>& src) {
+    static_assert(std::is_convertible<InputRealType,RealType>::value, 
+                  "InputRealType must be convertible to RealType");
     re_ -= src.re_;
     im_ -= src.im_;
     return *this;
@@ -290,18 +295,20 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
-                          complex<RealType>&>::type
+  complex<RealType>&
   operator -= (const InputRealType& src) {
+    static_assert(std::is_convertible<InputRealType,RealType>::value, 
+                  "InputRealType must be convertible to RealType");
     re_ -= src;
     return *this;
   }
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
-                          complex<RealType>&>::type
+  complex<RealType>&
   operator *= (const complex<InputRealType>& src) {
+    static_assert(std::is_convertible<InputRealType,RealType>::value, 
+                  "InputRealType must be convertible to RealType");
     const RealType realPart = re_ * src.re_ - im_ * src.im_;
     const RealType imagPart = re_ * src.im_ + im_ * src.re_;
     re_ = realPart;
@@ -311,9 +318,10 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
-                          void>::type
+  void
   operator *= (const volatile complex<InputRealType>& src) volatile {
+    static_assert(std::is_convertible<InputRealType,RealType>::value, 
+                  "InputRealType must be convertible to RealType");
     const RealType realPart = re_ * src.re_ - im_ * src.im_;
     const RealType imagPart = re_ * src.im_ + im_ * src.re_;
     re_ = realPart;
@@ -322,9 +330,10 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
-                          complex<RealType>&>::type
+  complex<RealType>&
   operator *= (const InputRealType& src) {
+    static_assert(std::is_convertible<InputRealType,RealType>::value, 
+                  "InputRealType must be convertible to RealType");
     re_ *= src;
     im_ *= src;
     return *this;
@@ -332,18 +341,21 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
-                          void>::type
+  void
   operator *= (const volatile InputRealType& src) volatile {
+    static_assert(std::is_convertible<InputRealType,RealType>::value, 
+                  "InputRealType must be convertible to RealType");
     re_ *= src;
     im_ *= src;
   }
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
-                          complex<RealType>&>::type
+  complex<RealType>&
   operator /= (const complex<InputRealType>& y) {
+    static_assert(std::is_convertible<InputRealType,RealType>::value, 
+                  "InputRealType must be convertible to RealType");
+
     // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
     // If the real part is +/-Inf and the imaginary part is -/+Inf,
     // this won't change the result.
@@ -369,9 +381,11 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
-                          complex<RealType>&>::type
+  complex<RealType>&
   operator /= (const InputRealType& src) {
+    static_assert(std::is_convertible<InputRealType,RealType>::value, 
+                  "InputRealType must be convertible to RealType");
+
     re_ /= src;
     im_ /= src;
     return *this;
@@ -379,33 +393,41 @@ public:
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
-                          bool>::type
+  bool
   operator == (const complex<InputRealType>& src) {
+    static_assert(std::is_convertible<InputRealType,RealType>::value, 
+                  "InputRealType must be convertible to RealType");
+
     return (re_ == static_cast<RealType>(src.re_)) && (im_ == static_cast<RealType>(src.im_));
   }
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
-                          bool>::type
+  bool
   operator == (const InputRealType src) {
+    static_assert(std::is_convertible<InputRealType,RealType>::value, 
+                  "InputRealType must be convertible to RealType");
+
     return (re_ == static_cast<RealType>(src)) && (im_ == RealType(0));
   }
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
-                          bool>::type
+  bool
   operator != (const complex<InputRealType>& src) {
+    static_assert(std::is_convertible<InputRealType,RealType>::value, 
+                  "InputRealType must be convertible to RealType");
+
     return (re_ != static_cast<RealType>(src.re_)) || (im_ != static_cast<RealType>(src.im_));
   }
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<std::is_convertible<InputRealType,RealType>::value,
-                          bool>::type
-    operator != (const InputRealType src) {
+  bool
+  operator != (const InputRealType src) {
+    static_assert(std::is_convertible<InputRealType,RealType>::value, 
+                  "InputRealType must be convertible to RealType");
+
     return (re_ != static_cast<RealType>(src)) || (im_ != RealType(0));
   }
   
