@@ -26,11 +26,11 @@ include $(KOKKOS_PATH)/Makefile.kokkos
 
 PWD = $(shell pwd)
 
-KOKKOS_HEADERS_INCLUDE = $(wildcard $(KOKKOS_PATH)/core/src/*.hpp)
-KOKKOS_HEADERS_INCLUDE_IMPL = $(wildcard $(KOKKOS_PATH)/core/src/impl/*.hpp)
-KOKKOS_HEADERS_INCLUDE += $(wildcard $(KOKKOS_PATH)/containers/src/*.hpp)
+KOKKOS_HEADERS_INCLUDE       = $(wildcard $(KOKKOS_PATH)/core/src/*.hpp)
+KOKKOS_HEADERS_INCLUDE_IMPL  = $(wildcard $(KOKKOS_PATH)/core/src/impl/*.hpp)
+KOKKOS_HEADERS_INCLUDE      += $(wildcard $(KOKKOS_PATH)/containers/src/*.hpp)
 KOKKOS_HEADERS_INCLUDE_IMPL += $(wildcard $(KOKKOS_PATH)/containers/src/impl/*.hpp)
-KOKKOS_HEADERS_INCLUDE += $(wildcard $(KOKKOS_PATH)/algorithms/src/*.hpp)
+KOKKOS_HEADERS_INCLUDE      += $(wildcard $(KOKKOS_PATH)/algorithms/src/*.hpp)
 
 CONDITIONAL_COPIES =
 
@@ -91,7 +91,7 @@ wrtvr2 = $(call wrtmk2,$1); $(call wrtcmk,$1,$2)
 wrtvarval = $(call wrtmakval,$1,$2); $(call wrtcmkval,$1,$2,$3)
 
 
-build-makefile-cmake-kokkos:
+build-makefile-cmake-kokkos: KokkosCore_config.h
 	@rm -f $(gen_makefile)
 	@rm -f $(gen_cmakefile)
 	@$(call wrtstr, "#Global Settings used to generate this library")
