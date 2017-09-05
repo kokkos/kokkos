@@ -517,7 +517,7 @@ operator * (const complex<RealType1>& x, const complex<RealType2>& y) {
 /// std::complex's methods and nonmember functions are not marked as
 /// CUDA device functions.
 template<class RealType1, class RealType2>
-KOKKOS_INLINE_FUNCTION
+inline
 complex<typename std::common_type<RealType1,RealType2>::type>
 operator * (const std::complex<RealType1>& x, const complex<RealType2>& y) {
   return complex<typename std::common_type<RealType1,RealType2>::type> (x.real () * y.real () - x.imag () * y.imag (),
@@ -668,7 +668,7 @@ operator == (const complex<RealType1>& x, const complex<RealType2>& y) {
 /// calling a constexpr __host__ function("real") from a __host__
 /// __device__ function("operator==") is not allowed").
 template<class RealType1, class RealType2>
-KOKKOS_INLINE_FUNCTION
+inline
 bool
 operator == (const std::complex<RealType1>& x, const complex<RealType2>& y) {
   typedef typename std::common_type<RealType1,RealType2>::type common_real_type;
@@ -706,7 +706,7 @@ operator != (const complex<RealType1>& x, const complex<RealType2>& y) {
 
 //! Inequality operator for std::complex and Kokkos::complex.
 template<class RealType1, class RealType2>
-KOKKOS_INLINE_FUNCTION
+inline
 bool
 operator != (const std::complex<RealType1>& x, const complex<RealType2>& y) {
   typedef typename std::common_type<RealType1,RealType2>::type common_real_type;
