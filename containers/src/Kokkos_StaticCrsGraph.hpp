@@ -184,10 +184,10 @@ public:
   ///   each of the above arrays.
   /// \param count [in] Number of entries in the row.
   KOKKOS_INLINE_FUNCTION
-  GraphRowViewConst ( ordinal_type* const colidx,
+  GraphRowViewConst ( ordinal_type* const colidx_in,
                       const ordinal_type& stride,
                       const ordinal_type& count) :
-    colidx_ (colidx), stride_ (stride), length (count)
+    colidx_ (colidx_in), stride_ (stride), length (count)
   {}
 
   /// \brief Constructor with offset into \c colidx array
@@ -204,12 +204,12 @@ public:
   ///   but a number of entries that does not fit in int.
   template<class OffsetType>
   KOKKOS_INLINE_FUNCTION
-  GraphRowViewConst ( const typename GraphType::entries_type& colidx,
+  GraphRowViewConst ( const typename GraphType::entries_type& colidx_in,
                       const ordinal_type& stride,
                       const ordinal_type& count,
                       const OffsetType& idx,
                       const typename std::enable_if<std::is_integral<OffsetType>::value, int>::type& = 0) :
-    colidx_ (&colidx(idx)), stride_ (stride), length (count)
+    colidx_ (&colidx_in(idx)), stride_ (stride), length (count)
   {}
 
   /// \brief Number of entries in the row.
