@@ -895,7 +895,7 @@ $(gen_config): build-config-kokkos
 
 $(gen_header): $(gen_config)
 	@if test -e $(gen_header); then \
-	    if ! diff $(gen_header) $(gen_config) 2>&1 > /dev/null; then \
+	    if ! diff $(gen_header) $(gen_config) | grep define 2>&1 > /dev/null; then \
 	      echo "Generating $(gen_config)"; \
           cp $(gen_config) $(gen_header); \
 	    fi; \
@@ -997,9 +997,7 @@ endif
 
 # Setting up dependencies.
 
-KokkosCore_config.h:
-
-KOKKOS_CPP_DEPENDS := KokkosCore_config.h $(KOKKOS_HEADERS)
+KOKKOS_CPP_DEPENDS := $(gen_header) $(KOKKOS_HEADERS)
 
 KOKKOS_OBJ = $(KOKKOS_SRC:.cpp=.o)
 KOKKOS_OBJ_LINK = $(notdir $(KOKKOS_OBJ))
@@ -1007,7 +1005,7 @@ KOKKOS_OBJ_LINK = $(notdir $(KOKKOS_OBJ))
 include $(KOKKOS_PATH)/Makefile.targets
 
 kokkos-clean:
-	rm -f $(KOKKOS_OBJ_LINK) KokkosCore_config.h KokkosCore_config.tmp libkokkos.a
+	rm -f $(KOKKOS_OBJ_LINK) $(gen_header) $(gen_config) libkokkos.a
 
 libkokkos.a: $(KOKKOS_OBJ_LINK) $(KOKKOS_SRC) $(KOKKOS_HEADERS)
 	ar cr libkokkos.a $(KOKKOS_OBJ_LINK)
