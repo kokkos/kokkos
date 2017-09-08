@@ -13,12 +13,12 @@ default: messages build-lib
 	echo "End Build"
 
 ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
-  CXX = $(KOKKOS_PATH)/bin/nvcc_wrapper
+  CXX ?= $(KOKKOS_PATH)/bin/nvcc_wrapper
 else
-  CXX = g++
+  CXX ?= g++
 endif
 
-CXXFLAGS = -O3
+CXXFLAGS ?= -O3
 LINK ?= $(CXX)
 LDFLAGS ?=
 
@@ -91,7 +91,7 @@ wrtvr2 = $(call wrtmk2,$1); $(call wrtcmk,$1,$2)
 wrtvarval = $(call wrtmakval,$1,$2); $(call wrtcmkval,$1,$2,$3)
 
 
-build-makefile-cmake-kokkos: KokkosCore_config.h
+build-makefile-cmake-kokkos: $(gen_header)
 	@rm -f $(gen_makefile)
 	@rm -f $(gen_cmakefile)
 	@$(call wrtstr, "#Global Settings used to generate this library")
