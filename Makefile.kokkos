@@ -439,7 +439,7 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_MEMKIND), 1)
   KOKKOS_CPPFLAGS += -I$(MEMKIND_PATH)/include
   KOKKOS_LDFLAGS += -L$(MEMKIND_PATH)/lib
-  KOKKOS_LIBS += -lmemkind
+  KOKKOS_LIBS += -lmemkind -lnuma
   tmp := $(shell echo "\#define KOKKOS_HAVE_HBWSPACE 1" >> KokkosCore_config.tmp )
 endif
 
