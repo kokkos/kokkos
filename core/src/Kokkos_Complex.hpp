@@ -263,6 +263,14 @@ public:
     im_ += src.im_;
   }
 
+  KOKKOS_INLINE_FUNCTION
+  complex<RealType>&
+  operator += (const std::complex<RealType>& src) {
+    re_ += src.re_;
+    im_ += src.im_;
+    return *this;
+  }
+
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
   complex<RealType>&
@@ -288,6 +296,14 @@ public:
   operator -= (const complex<InputRealType>& src) {
     static_assert(std::is_convertible<InputRealType,RealType>::value, 
                   "InputRealType must be convertible to RealType");
+    re_ -= src.re_;
+    im_ -= src.im_;
+    return *this;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  complex<RealType>&
+  operator -= (const std::complex<RealType>& src) {
     re_ -= src.re_;
     im_ -= src.im_;
     return *this;
@@ -326,6 +342,16 @@ public:
     const RealType imagPart = re_ * src.im_ + im_ * src.re_;
     re_ = realPart;
     im_ = imagPart;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  complex<RealType>&
+  operator *= (const std::complex<RealType>& src) {
+    const RealType realPart = re_ * src.re_ - im_ * src.im_;
+    const RealType imagPart = re_ * src.im_ + im_ * src.re_;
+    re_ = realPart;
+    im_ = imagPart;
+    return *this;
   }
 
   template<typename InputRealType>
@@ -378,6 +404,34 @@ public:
     }
     return *this;
   }
+  
+  KOKKOS_INLINE_FUNCTION
+  complex<RealType>&
+  operator /= (const std::complex<RealType>& y) {
+
+    // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
+    // If the real part is +/-Inf and the imaginary part is -/+Inf,
+    // this won't change the result.
+    const RealType s = std::fabs (y.real ()) + std::fabs (y.imag ());
+
+    // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
+    // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
+    // because y/s is NaN.
+    if (s == 0.0) {
+      this->re_ /= s;
+      this->im_ /= s;
+    }
+    else {
+      const complex<RealType> x_scaled (this->re_ / s, this->im_ / s);
+      const complex<RealType> y_conj_scaled (y.re_ / s, -(y.im_) / s);
+      const RealType y_scaled_abs = y_conj_scaled.re_ * y_conj_scaled.re_ +
+        y_conj_scaled.im_ * y_conj_scaled.im_; // abs(y) == abs(conj(y))
+      *this = x_scaled * y_conj_scaled;
+      *this /= y_scaled_abs;
+    }
+    return *this;
+  }
+
 
   template<typename InputRealType>
   KOKKOS_INLINE_FUNCTION
@@ -399,6 +453,12 @@ public:
                   "InputRealType must be convertible to RealType");
 
     return (re_ == static_cast<RealType>(src.re_)) && (im_ == static_cast<RealType>(src.im_));
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  bool
+  operator == (const std::complex<RealType>& src) {
+    return (re_ == src.re_) && (im_ == src.im_);
   }
 
   template<typename InputRealType>
