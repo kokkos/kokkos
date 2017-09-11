@@ -266,8 +266,8 @@ public:
   KOKKOS_INLINE_FUNCTION
   complex<RealType>&
   operator += (const std::complex<RealType>& src) {
-    re_ += src.re_;
-    im_ += src.im_;
+    re_ += src.real();
+    im_ += src.imag();
     return *this;
   }
 
@@ -304,8 +304,8 @@ public:
   KOKKOS_INLINE_FUNCTION
   complex<RealType>&
   operator -= (const std::complex<RealType>& src) {
-    re_ -= src.re_;
-    im_ -= src.im_;
+    re_ -= src.real();
+    im_ -= src.imag();
     return *this;
   }
 
@@ -347,8 +347,8 @@ public:
   KOKKOS_INLINE_FUNCTION
   complex<RealType>&
   operator *= (const std::complex<RealType>& src) {
-    const RealType realPart = re_ * src.re_ - im_ * src.im_;
-    const RealType imagPart = re_ * src.im_ + im_ * src.re_;
+    const RealType realPart = re_ * src.real() - im_ * src.imag();
+    const RealType imagPart = re_ * src.imag() + im_ * src.real();
     re_ = realPart;
     im_ = imagPart;
     return *this;
@@ -458,7 +458,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   bool
   operator == (const std::complex<RealType>& src) {
-    return (re_ == src.re_) && (im_ == src.im_);
+    return (re_ == src.real()) && (im_ == src.imag());
   }
 
   template<typename InputRealType>
@@ -479,6 +479,12 @@ public:
                   "InputRealType must be convertible to RealType");
 
     return (re_ != static_cast<RealType>(src.re_)) || (im_ != static_cast<RealType>(src.im_));
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  bool
+  operator != (const std::complex<RealType>& src) {
+    return (re_ != src.real()) || (im_ != src.imag());
   }
 
   template<typename InputRealType>
