@@ -31,7 +31,7 @@ include $(KOKKOS_PATH)/Makefile.kokkos
 
 build: $(EXE)
 
-$(EXE): $(OBJ) $(KOKKOS_LINK_DEPENDS)
+$(EXE): $(OBJ) $(KOKKOS_LINK_DEPENDS) $(gen_header)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ) $(KOKKOS_LIBS) $(LIB) -o $(EXE)
 
 clean: kokkos-clean

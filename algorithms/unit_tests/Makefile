@@ -84,7 +84,7 @@ test-openmp: KokkosAlgorithms_UnitTest_OpenMP
 test-serial: KokkosAlgorithms_UnitTest_Serial
 	./KokkosAlgorithms_UnitTest_Serial
 
-build_all: $(TARGETS)
+build_all: $(gen_header) $(TARGETS)
 
 test: $(TEST_TARGETS)
 

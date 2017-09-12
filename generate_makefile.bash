@@ -271,9 +271,10 @@ else
 fi
 
 mkdir -p install
-echo "#Makefile to satisfy existens of target kokkos-clean before installing the library" > install/Makefile.kokkos
-echo "kokkos-clean:" >> install/Makefile.kokkos
-echo "" >> install/Makefile.kokkos
+gen_makefile=Makefile.kokkos
+echo "#Makefile to satisfy existens of target kokkos-clean before installing the library" > install/${gen_makefile}
+echo "kokkos-clean:" >> install/${gen_makefile}
+echo "" >> install/${gen_makefile}
 mkdir -p core
 mkdir -p core/unit_test
 mkdir -p core/perf_test
