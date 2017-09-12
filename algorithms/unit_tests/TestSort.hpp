@@ -271,8 +271,10 @@ void test_sort(unsigned int N)
 {
   test_1D_sort<ExecutionSpace,KeyType>(N*N*N, true);
   test_1D_sort<ExecutionSpace,KeyType>(N*N*N, false);
+#if !defined(KOKKOS_ENABLE_ROCM)
   test_3D_sort<ExecutionSpace,KeyType>(N);
   test_dynamic_view_sort<ExecutionSpace,KeyType>(N*N);
+#endif
 }
 
 }

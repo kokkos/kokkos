@@ -1312,10 +1312,12 @@ return;
   }
 };
 
+#if !defined(KOKKOS_ENABLE_ROCM)
 TEST_F( TEST_CATEGORY, view_api )
 {
   TestViewAPI< double, TEST_EXECSPACE >();
 }
+#endif
 
 TEST_F( TEST_CATEGORY, view_remap )
 {
