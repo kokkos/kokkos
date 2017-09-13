@@ -336,22 +336,27 @@ void transpose_crs(
 }
 
 template< class CrsType,
-          class Functor>
-struct CountAndFill {
+          class Functor,
+          class ExecutionSpace = typename CrsType::execution_space>
+struct CountAndFillBase;
+
+template< class CrsType,
+          class Functor,
+          class ExecutionSpace>
+struct CountAndFillBase {
   using data_type = typename CrsType::size_type;
   using size_type = typename CrsType::size_type;
   using row_map_type = typename CrsType::row_map_type;
-  using entries_type = typename CrsType::entries_type;
   using counts_type = row_map_type;
   CrsType m_crs;
   Functor m_functor;
   counts_type m_counts;
   struct Count {};
-  KOKKOS_INLINE_FUNCTION void operator()(Count, size_type i) const {
+  inline void operator()(Count, size_type i) const {
     m_counts(i) = m_functor(i, nullptr);
   }
   struct Fill {};
-  KOKKOS_INLINE_FUNCTION void operator()(Fill, size_type i) const {
+  inline void operator()(Fill, size_type i) const {
     auto j = m_crs.row_map(i);
     /* we don't want to access entries(entries.size()), even if its just to get its
        address and never use it.
@@ -363,13 +368,63 @@ struct CountAndFill {
       nullptr : (&(m_crs.entries(j)));
     m_functor(i, fill);
   }
-  using self_type = CountAndFill<CrsType, Functor>;
-  CountAndFill(CrsType& crs, size_type nrows, Functor const& f):
+  CountAndFillBase(CrsType& crs, Functor const& f):
     m_crs(crs),
     m_functor(f)
+  {}
+};
+
+#if defined( KOKKOS_ENABLE_CUDA )
+template< class CrsType,
+          class Functor>
+struct CountAndFillBase<CrsType, Functor, Kokkos::Cuda> {
+  using data_type = typename CrsType::size_type;
+  using size_type = typename CrsType::size_type;
+  using row_map_type = typename CrsType::row_map_type;
+  using counts_type = row_map_type;
+  CrsType m_crs;
+  Functor m_functor;
+  counts_type m_counts;
+  struct Count {};
+  __device__ inline void operator()(Count, size_type i) const {
+    m_counts(i) = m_functor(i, nullptr);
+  }
+  struct Fill {};
+  __device__ inline void operator()(Fill, size_type i) const {
+    auto j = m_crs.row_map(i);
+    /* we don't want to access entries(entries.size()), even if its just to get its
+       address and never use it.
+       this can happen when row (i) is empty and all rows after it are also empty.
+       we could compare to row_map(i + 1), but that is a read from global memory,
+       whereas dimension_0() should be part of the View in registers (or constant memory) */
+    data_type* fill =
+      (j == static_cast<decltype(j)>(m_crs.entries.dimension_0())) ?
+      nullptr : (&(m_crs.entries(j)));
+    m_functor(i, fill);
+  }
+  CountAndFillBase(CrsType& crs, Functor const& f):
+    m_crs(crs),
+    m_functor(f)
+  {}
+};
+#endif
+
+template< class CrsType,
+          class Functor>
+struct CountAndFill : public CountAndFillBase<CrsType, Functor> {
+  using base_type = CountAndFillBase<CrsType, Functor>;
+  using typename base_type::data_type;
+  using typename base_type::size_type;
+  using typename base_type::counts_type;
+  using typename base_type::Count;
+  using typename base_type::Fill;
+  using entries_type = typename CrsType::entries_type;
+  using self_type = CountAndFill<CrsType, Functor>;
+  CountAndFill(CrsType& crs, size_type nrows, Functor const& f):
+    base_type(crs, f)
   {
     using execution_space = typename CrsType::execution_space;
-    m_counts = counts_type("counts", nrows);
+    this->m_counts = counts_type("counts", nrows);
     {
     using count_policy_type = RangePolicy<size_type, execution_space, Count>;
     using count_closure_type =
@@ -378,9 +433,9 @@ struct CountAndFill {
     closure.execute();
     }
     auto nentries = Kokkos::Experimental::
-      get_crs_row_map_from_counts(m_crs.row_map, m_counts);
-    m_counts = counts_type();
-    m_crs.entries = entries_type("entries", nentries);
+      get_crs_row_map_from_counts(this->m_crs.row_map, this->m_counts);
+    this->m_counts = counts_type();
+    this->m_crs.entries = entries_type("entries", nentries);
     {
     using fill_policy_type = RangePolicy<size_type, execution_space, Fill>;
     using fill_closure_type =
@@ -388,7 +443,7 @@ struct CountAndFill {
     const fill_closure_type closure(*this, fill_policy_type(0, nrows));
     closure.execute();
     }
-    crs = m_crs;
+    crs = this->m_crs;
   }
 };
 
