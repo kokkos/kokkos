@@ -369,9 +369,9 @@ private:
 
   template< size_t ... DimArgs >
   KOKKOS_FORCEINLINE_FUNCTION
-  bool set( unsigned domain_rank
-          , unsigned range_rank
-          , const ViewDimension< DimArgs ... > & dim )
+  bool set( unsigned
+          , unsigned
+          , const ViewDimension< DimArgs ... > & )
     { return true ; }
 
   template< class T , size_t ... DimArgs , class ... Args >
@@ -1047,7 +1047,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
   template< class DimRHS >
   KOKKOS_INLINE_FUNCTION
   constexpr ViewOffset(
-    const ViewOffset< DimRHS , Kokkos::LayoutLeft , void > & rhs ,
+    const ViewOffset< DimRHS , Kokkos::LayoutLeft , void > & ,
     const SubviewExtents< DimRHS::rank , dimension_type::rank > & sub )
     : m_dim( sub.range_extent(0), 0, 0, 0, 0, 0, 0, 0 )
     {
@@ -1252,7 +1252,7 @@ public:
   template< unsigned TrivialScalarSize >
   KOKKOS_INLINE_FUNCTION
   constexpr ViewOffset
-    ( std::integral_constant<unsigned,TrivialScalarSize> const & padding_type_size
+    ( std::integral_constant<unsigned,TrivialScalarSize> const &
     , Kokkos::LayoutLeft const & arg_layout
     )
     : m_dim( arg_layout.dimension[0] , arg_layout.dimension[1]
@@ -1741,7 +1741,7 @@ public:
   template< unsigned TrivialScalarSize >
   KOKKOS_INLINE_FUNCTION
   constexpr ViewOffset
-    ( std::integral_constant<unsigned,TrivialScalarSize> const & padding_type_size
+    ( std::integral_constant<unsigned,TrivialScalarSize> const &
     , Kokkos::LayoutRight const & arg_layout
     )
     : m_dim( arg_layout.dimension[0] , arg_layout.dimension[1]
