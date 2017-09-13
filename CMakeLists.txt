@@ -4,11 +4,27 @@ ELSE()
   SET(KOKKOS_HAS_TRILINOS OFF CACHE BOOL "")
 ENDIF()
 
+set(Kokkos_SOURCE_DIR ${CMAKE_SOURCE_DIR})
+
 IF(NOT KOKKOS_HAS_TRILINOS)
   cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
   project(Kokkos CXX)
 
-  INCLUDE(cmake/kokkos.cmake)
+  # Handle the options
+  include(${CMAKE_SOURCE_DIR}/cmake/kokkos_options.cmake)
+
+  #---------------------------------------------------------------------
+  # File names must be consistent with core/src/Makefile
+  # This generates the ${CMAKE_BINARY_DIR}/gen_kokkos.cmake command
+  execute_process(
+    COMMAND make -f ${CMAKE_SOURCE_DIR}/core/src/Makefile ${KOKKOS_SETTINGS} build-makefile-cmake-kokkos
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+    OUTPUT_FILE ${CMAKE_BINARY_DIR}/core_src_make.out
+    RESULT_VARIABLE res
+  )
+  include(${CMAKE_BINARY_DIR}/gen_kokkos.cmake)
+  include(${CMAKE_SOURCE_DIR}/cmake/kokkos_build.cmake)
+
 ELSE()
 #------------------------------------------------------------------------------
 #

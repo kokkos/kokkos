@@ -104,15 +104,15 @@ build-makefile-cmake-kokkos: $(gen_header)
 	@$(call wrtvar,KOKKOS_CXX_STANDARD,'STRING "Kokkos C++ standard"')
 	@$(call wrtvar,KOKKOS_OPTIONS,'STRING "Kokkos options"')
 	@$(call wrtvar,KOKKOS_CUDA_OPTIONS,'STRING "Kokkos Cuda options"')
-	@$(call wrtstrcmk,"if(NOT \$ENV{CXX})")
-	@$(call wrtstrcmk,'  message\(WARNING "You are currently using compiler $${CMAKE_CXX_COMPILER} while Kokkos was built with $(CXX) ; make sure this is the behavior you intended to be."\)')
-	@$(call wrtstrcmk,"endif\(\)")
-	@$(call wrtvr2,CXX)  #TODO: Check this
+	@$(call wrtstrcmk,'if(NOT $$ENV{CXX})')
+	@$(call wrtstrcmk,'  message(WARNING "You are currently using compiler $${CMAKE_CXX_COMPILER} while Kokkos was built with $(CXX) ; make sure this is the behavior you intended to be.")')
+	@$(call wrtstrcmk,'endif()')
+	@$(call wrtmak,CXX)  #TODO: Check this
 	@$(call wrtstrcmk,"if(NOT DEFINED ENV{NVCC_WRAPPER})")
 	@$(call wrtvr2,NVCC_WRAPPER,'FILEPATH "Path to command nvcc_wrapper"')
 	@$(call wrtstrcmk,"else()")
 	@$(call wrtstrcmk,'  set(NVCC_WRAPPER $$ENV{NVCC_WRAPPER} CACHE FILEPATH "Path to command nvcc_wrapper")')
-	@$(call wrtstrcmk,"endif\(\)")
+	@$(call wrtstrcmk,"endif()")
 	@$(call wrtstr,"")
 	@$(call wrtstr,"#Source and Header files of Kokkos relative to KOKKOS_PATH")
 	@$(call wrtvar,KOKKOS_HEADERS,'STRING "Kokkos headers list"')
@@ -146,14 +146,15 @@ build-makefile-cmake-kokkos: $(gen_header)
 		-e 's|= KokkosCore_config.h|= $(PREFIX)/include/KokkosCore_config.h|g' $(gen_makefile) \
 		> $(gen_makefile).tmp
 	@mv -f $(gen_makefile).tmp $(gen_makefile)
-	@sed \
-		-e 's|$(KOKKOS_PATH)/core/src|$(PREFIX)/include|g' \
-	 	-e 's|$(KOKKOS_PATH)/containers/src|$(PREFIX)/include|g' \
-	 	-e 's|$(KOKKOS_PATH)/algorithms/src|$(PREFIX)/include|g' \
-	 	-e 's|-L$(PWD)|-L$(PREFIX)/lib|g' \
-	 	-e 's|= libkokkos.a|= $(PREFIX)/lib/libkokkos.a|g' \
-	 	-e 's|= KokkosCore_config.h|= $(PREFIX)/include/KokkosCore_config.h|g' $(gen_cmakefile)	 	> $(gen_cmakefile).tmp
-	@mv -f $(gen_cmakefile).tmp $(gen_cmakefile)
+# Don't do this
+#	@sed \
+#		-e 's|$(KOKKOS_PATH)/core/src|$(PREFIX)/include|g' \
+#	 	-e 's|$(KOKKOS_PATH)/containers/src|$(PREFIX)/include|g' \
+#	 	-e 's|$(KOKKOS_PATH)/algorithms/src|$(PREFIX)/include|g' \
+#	 	-e 's|-L$(PWD)|-L$(PREFIX)/lib|g' \
+#	 	-e 's|= libkokkos.a|= $(PREFIX)/lib/libkokkos.a|g' \
+#	 	-e 's|= KokkosCore_config.h|= $(PREFIX)/include/KokkosCore_config.h|g' $(gen_cmakefile)	 	> $(gen_cmakefile).tmp
+#	@mv -f $(gen_cmakefile).tmp $(gen_cmakefile)
 
 build-lib: build-makefile-cmake-kokkos $(KOKKOS_LINK_DEPENDS)
 
