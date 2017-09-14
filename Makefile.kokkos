@@ -884,7 +884,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
 endif
 
 build-config-kokkos-arch:
-	@echo "KKKKK> "$(KOKKOS_SRC)
 	@$(call wrtkks,$(defarchs))
 	@for d in $(defarch1); do $(call wrtkks,"#define $$d 1"); done
 	@$(if $(strip $(rocmdefval)),$(call wrtkks,"#define KOKKOS_ARCH_ROCM $(rocmdefval)"))

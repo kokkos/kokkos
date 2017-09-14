@@ -107,7 +107,7 @@ build-makefile-cmake-kokkos: $(gen_header)
 	@$(call wrtstrcmk,'if(NOT $$ENV{CXX})')
 	@$(call wrtstrcmk,'  message(WARNING "You are currently using compiler $${CMAKE_CXX_COMPILER} while Kokkos was built with $(CXX) ; make sure this is the behavior you intended to be.")')
 	@$(call wrtstrcmk,'endif()')
-	@$(call wrtmak,CXX)  #TODO: Check this
+	@$(call wrtmk2,CXX)
 	@$(call wrtstrcmk,"if(NOT DEFINED ENV{NVCC_WRAPPER})")
 	@$(call wrtvr2,NVCC_WRAPPER,'FILEPATH "Path to command nvcc_wrapper"')
 	@$(call wrtstrcmk,"else()")

@@ -15,7 +15,7 @@ IF(NOT KOKKOS_HAS_TRILINOS)
 
   #---------------------------------------------------------------------
   # File names must be consistent with core/src/Makefile
-  # This generates the ${CMAKE_BINARY_DIR}/gen_kokkos.cmake command
+  # This generates the ${CMAKE_BINARY_DIR}/gen_kokkos.cmake file
   execute_process(
     COMMAND make -f ${CMAKE_SOURCE_DIR}/core/src/Makefile ${KOKKOS_SETTINGS} build-makefile-cmake-kokkos
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
