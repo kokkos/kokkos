@@ -80,22 +80,16 @@ private:
   const std::int32_t m_total_work;
   ints_type m_counts;
   ints_type m_queue;
-  ranges_type m_ranges;
+  ranges_type m_hint_ranges;
 
 public:
 
-  struct TagZeroRanges {};
-  KOKKOS_INLINE_FUNCTION
-  void operator()(TagZeroRanges, std::int32_t i) const {
-    m_ranges[i] = range_type(0, 0);
-  }
-  void zero_ranges() {
-    using policy_type = RangePolicy<std::int32_t, execution_space, TagZeroRanges>;
-    using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
-    const closure_type closure(*this, policy_type(0, 1));
-    closure.execute();
-    execution_space::fence();
-  }
+  enum : std::int32_t {
+    NOT_PUSHED = -1,
+    WORK_DONE  = -1,
+    POPPED     = -2,
+    INVALID    = -3
+  };
 
   struct TagFillQueue {};
   KOKKOS_INLINE_FUNCTION
@@ -119,73 +113,43 @@ private:
     }
     get_crs_transpose_counts(m_counts, m_graph);
     m_queue = ints_type(ViewAllocateWithoutInitializing("queue"), m_total_work);
-    deep_copy(m_queue, std::int32_t(-1));
-    m_ranges = ranges_type("ranges", 1);
+    deep_copy(m_queue, std::int32_t(NOT_PUSHED));
+    m_hint_ranges = ranges_type("hint_ranges", 1);
     fill_queue();
   }
 
   KOKKOS_INLINE_FUNCTION
   std::int32_t pop_work() const {
-    range_type w(-1,-1);
+    std::int32_t j = *((volatile std::int32_t*) &m_hint_ranges(0).second);
+    std::int32_t k = INVALID;
     while (true) {
-      const range_type w_new( w.first + 1 , w.second );
-      w = atomic_compare_exchange( &m_ranges(0) , w , w_new );
-      // this memory fence was an earlier attempt at solving THE GOTCHA below.
-      // the unit test will still hang sometimes with just this memory fence.
-      // memory_fence();
-      if ( w.first < w.second ) { // there was work in the queue
-        if ( w_new.first == w.first + 1 && w_new.second == w.second ) {
-          // we got a work item
-          std::int32_t i;
-          // THE GOTCHA:
-          // This is the trickiest part of this algorithm:
-          // 1. the push_work function may have incremented the end counter (w.second)
-          //    but not yet written the work index into the queue (m_queue).
-          //    thus, we need a while loop here to wait for that work index value
-          //    to show up in the queue
-          // 2. using the volatile read as shown here:
-          //    while ( -1 == ( i = *((volatile std::int32_t*)(&m_queue( w.first ))) ) );
-          //    causes the unit test to hang with 10 OpenMP threads when
-          //    compiled with GCC 6.1.0.
-          //    using an atomic_exchange instead doesn't hang.
-          while ( -1 == ( i = atomic_exchange( &m_queue( w.first ), -1 ) ) );
-          return i;
-        } // we got a work item
-      } else { // there was no work in the queue
-#ifdef KOKKOS_DEBUG
-        if ( w_new.first == w.first + 1 && w_new.second == w.second ) {
-          Kokkos::abort("bug in pop_work");
-        }
-#endif
-        if (w.first == m_total_work) { // all work is done
-          return -1;
-        } else { // need to wait for more work to be pushed
-          // take a guess that one work item will be pushed
-          // the key thing is we can't leave (w) alone, because
-          // otherwise the next compare_exchange may succeed in
-          // popping work from an empty queue
-          w.second++;
-        }
-      } // there was no work in the queue
+      if (j >= m_total_work) return WORK_DONE;
+      const std::int32_t k_old = atomic_compare_exchange( &m_queue(j), k, POPPED );
+      if (k_old == POPPED) { // this location has already been popped
+        ++j; // move to the next location
+        k = INVALID; // don't bother trying to guess what will be there
+      } else { // k_old != POPPED
+        if (k_old != NOT_PUSHED) { // something was pushed
+          if (k == k_old) { // we popped it
+            atomic_increment( &m_hint_ranges(0).second ); // increment the end hint
+          //memory_fence();
+            return k;
+          } else { // k != k_old (something was pushed but we didn't pop it)
+            k = k_old; // keep trying to pop it while its there
+          }
+        } else { // k_old == NOT_PUSHED (nothing was pushed yet)
+          k = INVALID; // keep reading that location without writing till something is pushed
+        } // k_old == NOT_PUSHED
+      } // k_old != POPPED
     } // while (true)
   }
 
   KOKKOS_INLINE_FUNCTION
   void push_work(std::int32_t i) const {
-    range_type w(-1,-1);
-    while (true) {
-      const range_type w_new( w.first , w.second + 1 );
-      // try to increment the end counter
-      w = atomic_compare_exchange( &m_ranges(0) , w , w_new );
-      // stop trying if the increment was successful
-      if ( w.first == w_new.first && w.second + 1 == w_new.second ) break;
-    }
-    // write the work index into the claimed spot in the queue
-    // please see THE GOTCHA above for why this uses atomic_exchange instead of:
-    // *((volatile std::int32_t*)(&m_queue( w.second ))) = i;
-    atomic_exchange( &m_queue( w.second ), i );
-    // push this write out into the memory system
-    memory_fence();
+    std::int32_t j = *((volatile std::int32_t*) &m_hint_ranges(0).first);
+    while (NOT_PUSHED != atomic_compare_exchange( &m_queue(j), NOT_PUSHED, i )) ++j;
+    atomic_increment( &m_hint_ranges(0).first );
+    //memory_fence();
   }
 
   template< class functor_type , class execution_space, class ... policy_args >

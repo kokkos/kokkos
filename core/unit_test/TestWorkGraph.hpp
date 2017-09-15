@@ -158,11 +158,7 @@ struct TestWorkGraph {
 
 TEST_F( TEST_CATEGORY, workgraph_fib )
 {
-//#ifdef KOKKOS_IMPL_CUDA_CLANG_WORKAROUND
-//int limit = 15;
-//#else
   int limit = 27;
-//#endif
   for ( int i = 0; i < limit; ++i) {
     TestWorkGraph< TEST_EXECSPACE > f(i);
     f.test_for();
