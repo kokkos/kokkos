@@ -43,6 +43,7 @@
 
 #include <vector>
 #include <iostream>
+#include <unistd.h>
 
 #include <Kokkos_Core.hpp>
 
@@ -117,6 +118,7 @@ struct TestWorkGraph {
     m_graph.row_map = RowMap("row_map", hg.size() + 1); // row map always has one more
     m_graph.entries = Entries("entries", hg.size() - 1); // all but the first have a parent
     m_values = Values("values", hg.size());
+    //printf("%zu work items\n", hg.size());
     auto h_row_map = Kokkos::create_mirror_view(m_graph.row_map);
     auto h_entries = Kokkos::create_mirror_view(m_graph.entries);
     auto h_values = Kokkos::create_mirror_view(m_values);
@@ -163,6 +165,8 @@ TEST_F( TEST_CATEGORY, workgraph_fib )
     TestWorkGraph< TEST_EXECSPACE > f(i);
     f.test_for();
   }
+  //TestWorkGraph< TEST_EXECSPACE > f(2);
+  //f.test_for();
 }
 
 } // namespace Test

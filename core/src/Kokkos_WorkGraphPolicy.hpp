@@ -44,6 +44,8 @@
 #ifndef KOKKOS_WORKGRAPHPOLICY_HPP
 #define KOKKOS_WORKGRAPHPOLICY_HPP
 
+#include <cassert>
+
 namespace Kokkos {
 namespace Impl {
 namespace Experimental {
@@ -120,10 +122,26 @@ private:
 
   KOKKOS_INLINE_FUNCTION
   std::int32_t pop_work() const {
+#ifdef __CUDA_ARCH__
+    int tid = blockIdx.x * blockDim.x * blockDim.y * blockDim.z
+      + threadIdx.z * blockDim.y * blockDim.x
+      + threadIdx.y * blockDim.x + threadIdx.x;
+#else
+    int tid = 0;
+#endif
+    //printf("%d begin pop_work\n", tid);
     std::int32_t j = *((volatile std::int32_t*) &m_hint_ranges(0).second);
     std::int32_t k = INVALID;
-    while (true) {
-      if (j >= m_total_work) return WORK_DONE;
+    for (long ntries = 0; true; ++ntries) {
+      if (j >= m_total_work) {
+        //printf("%d done\n", tid);
+        return WORK_DONE;
+      }
+    //if (ntries && (ntries % (10 * 1000 * 1000) == 0)) {
+    //  printf("%d looped %ldM times in pop_work: k %d j %d\n", tid, ntries / (10 * 1000 * 1000), k, j);
+    ////assert(0);
+    //  return WORK_DONE;
+    //}
       const std::int32_t k_old = atomic_compare_exchange( &m_queue(j), k, POPPED );
       if (k_old == POPPED) { // this location has already been popped
         ++j; // move to the next location
@@ -132,7 +150,8 @@ private:
         if (k_old != NOT_PUSHED) { // something was pushed
           if (k == k_old) { // we popped it
             atomic_increment( &m_hint_ranges(0).second ); // increment the end hint
-          //memory_fence();
+            memory_fence();
+            //printf("%d popped %d\n", tid, k);
             return k;
           } else { // k != k_old (something was pushed but we didn't pop it)
             k = k_old; // keep trying to pop it while its there
@@ -146,10 +165,19 @@ private:
 
   KOKKOS_INLINE_FUNCTION
   void push_work(std::int32_t i) const {
+#ifdef __CUDA_ARCH__
+    int tid = blockIdx.x * blockDim.x * blockDim.y * blockDim.z
+      + threadIdx.z * blockDim.y * blockDim.x
+      + threadIdx.y * blockDim.x + threadIdx.x;
+#else
+    int tid = 0;
+#endif
+    //printf("%d begin push_work(%d)\n", tid, i);
     std::int32_t j = *((volatile std::int32_t*) &m_hint_ranges(0).first);
     while (NOT_PUSHED != atomic_compare_exchange( &m_queue(j), NOT_PUSHED, i )) ++j;
     atomic_increment( &m_hint_ranges(0).first );
-    //memory_fence();
+    memory_fence();
+    //printf("%d pushed %d at %d\n", tid, i, j);
   }
 
   template< class functor_type , class execution_space, class ... policy_args >
@@ -200,6 +228,14 @@ class WorkGraphExec
 
   KOKKOS_INLINE_FUNCTION
   void after_work(std::int32_t i) const {
+#ifdef __CUDA_ARCH__
+    int tid = blockIdx.x * blockDim.x * blockDim.y * blockDim.z
+      + threadIdx.z * blockDim.y * blockDim.x
+      + threadIdx.y * blockDim.x + threadIdx.x;
+#else
+    int tid = 0;
+#endif
+    //printf("%d begin after_work(%d)\n", tid, i);
     /* fence any writes that were done by the work item itself
        (usually writing its result to global memory) */
     memory_fence();
@@ -208,7 +244,10 @@ class WorkGraphExec
     for (std::int32_t j = begin; j < end; ++j) {
       const std::int32_t next = m_policy.m_graph.entries( j );
       const std::int32_t old_count = atomic_fetch_add( &(m_policy.m_counts(next)), -1 );
-      if ( old_count == 1 )  m_policy.push_work( next );
+      //printf("%d decremented m_counts(%d) to %d\n", tid, next, old_count - 1);
+      if ( old_count == 1 ) {
+        m_policy.push_work( next );
+      }
     }
   }
 

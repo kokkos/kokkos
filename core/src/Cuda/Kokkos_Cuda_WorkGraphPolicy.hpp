@@ -87,9 +87,20 @@ public:
   __device__
   inline
   void operator()() const {
-    for (std::int32_t i; (-1 != (i = Base::before_work())); ) {
-      exec_one< typename Policy::work_tag >( i );
-      Base::after_work(i);
+#ifdef __CUDA_ARCH__
+    int tid = blockIdx.x * blockDim.x * blockDim.y * blockDim.z
+      + threadIdx.z * blockDim.y * blockDim.x
+      + threadIdx.y * blockDim.x + threadIdx.x;
+#else
+    int tid = 0;
+#endif
+    if (tid % 32 == 0) {
+      for (std::int32_t i; (-1 != (i = Base::before_work())); ) {
+      //printf("%d before functor %d\n", tid, i);
+        exec_one< typename Policy::work_tag >( i );
+      //printf("%d after functor %d\n", tid, i);
+        Base::after_work(i);
+      }
     }
   }
 
