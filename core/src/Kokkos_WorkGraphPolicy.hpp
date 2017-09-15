@@ -130,14 +130,25 @@ private:
     while (true) {
       const range_type w_new( w.first + 1 , w.second );
       w = atomic_compare_exchange( &m_ranges(0) , w , w_new );
+      // this memory fence was an earlier attempt at solving THE GOTCHA below.
+      // the unit test will still hang sometimes with just this memory fence.
+      // memory_fence();
       if ( w.first < w.second ) { // there was work in the queue
         if ( w_new.first == w.first + 1 && w_new.second == w.second ) {
           // we got a work item
           std::int32_t i;
-          // the push_work function may have incremented the end counter
-          // but not yet written the work index into the queue.
-          // wait until the entry is valid.
-          while ( -1 == ( i = *((volatile std::int32_t*)(&m_queue( w.first ))) ) );
+          // THE GOTCHA:
+          // This is the trickiest part of this algorithm:
+          // 1. the push_work function may have incremented the end counter (w.second)
+          //    but not yet written the work index into the queue (m_queue).
+          //    thus, we need a while loop here to wait for that work index value
+          //    to show up in the queue
+          // 2. using the volatile read as shown here:
+          //    while ( -1 == ( i = *((volatile std::int32_t*)(&m_queue( w.first ))) ) );
+          //    causes the unit test to hang with 10 OpenMP threads when
+          //    compiled with GCC 6.1.0.
+          //    using an atomic_exchange instead doesn't hang.
+          while ( -1 == ( i = atomic_exchange( &m_queue( w.first ), -1 ) ) );
           return i;
         } // we got a work item
       } else { // there was no work in the queue
@@ -170,7 +181,9 @@ private:
       if ( w.first == w_new.first && w.second + 1 == w_new.second ) break;
     }
     // write the work index into the claimed spot in the queue
-    *((volatile std::int32_t*)(&m_queue( w.second ))) = i;
+    // please see THE GOTCHA above for why this uses atomic_exchange instead of:
+    // *((volatile std::int32_t*)(&m_queue( w.second ))) = i;
+    atomic_exchange( &m_queue( w.second ), i );
     // push this write out into the memory system
     memory_fence();
   }
