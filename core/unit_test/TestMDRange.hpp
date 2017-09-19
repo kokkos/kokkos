@@ -2530,11 +2530,11 @@ struct TestMDRange_2D_NegIdx {
       typedef typename range_type::tile_type tile_type;
       typedef typename range_type::point_type point_type;
 
-      const point_type lower{-1, -1};
-      const point_type upper{N0, N1};
-      const tile_type  tile{8,8};
+      const point_type lower{{-1, -1}};
+      const point_type upper{{N0, N1}};
+      const tile_type  tile{{8,8}};
 
-      range_type range( point_type{ lower[0], lower[1] }, point_type{ upper[0], upper[1] }, tile_type{ tile[0], tile[1] } );
+      range_type range( point_type{{ lower[0], lower[1] }}, point_type{{ upper[0], upper[1] }}, tile_type{{ tile[0], tile[1] }} );
 
       TestMDRange_2D_NegIdx functor( lower[0], lower[1], upper[0], upper[1] );
 
@@ -2588,11 +2588,11 @@ struct TestMDRange_3D_NegIdx {
       typedef typename range_type::tile_type tile_type;
       typedef typename range_type::point_type point_type;
 
-      const point_type lower{-1, -1, -1};
-      const point_type upper{N0, N1, N2};
-      const tile_type  tile{8,8,2};
+      const point_type lower{{-1, -1, -1}};
+      const point_type upper{{N0, N1, N2}};
+      const tile_type  tile{{8,8,2}};
 
-      range_type range( point_type{ lower[0], lower[1], lower[2] }, point_type{ upper[0], upper[1], upper[2] }, tile_type{ tile[0], tile[1], tile[2] } );
+      range_type range( point_type{{ lower[0], lower[1], lower[2] }}, point_type{{ upper[0], upper[1], upper[2] }}, tile_type{{ tile[0], tile[1], tile[2] }} );
 
       TestMDRange_3D_NegIdx functor( lower[0], lower[1], lower[2], upper[0], upper[1], upper[2] );
 
@@ -2647,11 +2647,11 @@ struct TestMDRange_4D_NegIdx {
       typedef typename range_type::tile_type tile_type;
       typedef typename range_type::point_type point_type;
 
-      const point_type lower{-1, -1, -1, -1};
-      const point_type upper{N0, N1, N2, N3};
-      const tile_type  tile{8,8,2,2};
+      const point_type lower{{-1, -1, -1, -1}};
+      const point_type upper{{N0, N1, N2, N3}};
+      const tile_type  tile{{8,8,2,2}};
 
-      range_type range( point_type{ lower[0], lower[1], lower[2], lower[3] }, point_type{ upper[0], upper[1], upper[2], upper[3] }, tile_type{ tile[0], tile[1], tile[2], tile[3] } );
+      range_type range( point_type{{ lower[0], lower[1], lower[2], lower[3] }}, point_type{{ upper[0], upper[1], upper[2], upper[3] }}, tile_type{{ tile[0], tile[1], tile[2], tile[3] }} );
 
       TestMDRange_4D_NegIdx functor( lower[0], lower[1], lower[2], lower[3], upper[0], upper[1], upper[2], upper[3] );
 
@@ -2707,11 +2707,11 @@ struct TestMDRange_5D_NegIdx {
       typedef typename range_type::tile_type tile_type;
       typedef typename range_type::point_type point_type;
 
-      const point_type lower{-1, -1, -1, -1, -1};
-      const point_type upper{N0, N1, N2, N3, N4};
-      const tile_type  tile{8,4,2,2,2};
+      const point_type lower{{-1, -1, -1, -1, -1}};
+      const point_type upper{{N0, N1, N2, N3, N4}};
+      const tile_type  tile{{8,4,2,2,2}};
 
-      range_type range( point_type{ lower[0], lower[1], lower[2], lower[3], lower[4] }, point_type{ upper[0], upper[1], upper[2], upper[3], upper[4] }, tile_type{ tile[0], tile[1], tile[2], tile[3], tile[4] } );
+      range_type range( point_type{{ lower[0], lower[1], lower[2], lower[3], lower[4] }}, point_type{{ upper[0], upper[1], upper[2], upper[3], upper[4] }}, tile_type{{ tile[0], tile[1], tile[2], tile[3], tile[4] }} );
 
       TestMDRange_5D_NegIdx functor( lower[0], lower[1], lower[2], lower[3], lower[4], upper[0], upper[1], upper[2], upper[3], upper[4] );
 
@@ -2768,11 +2768,11 @@ struct TestMDRange_6D_NegIdx {
       typedef typename range_type::tile_type tile_type;
       typedef typename range_type::point_type point_type;
 
-      const point_type lower{-1, -1, -1, -1, -1, -1};
-      const point_type upper{N0, N1, N2, N3, N4, N5};
-      const tile_type  tile{8,4,2,2,2,1};
+      const point_type lower{{-1, -1, -1, -1, -1, -1}};
+      const point_type upper{{N0, N1, N2, N3, N4, N5}};
+      const tile_type  tile{{8,4,2,2,2,1}};
 
-      range_type range( point_type{ lower[0], lower[1], lower[2], lower[3], lower[4], lower[5] }, point_type{ upper[0], upper[1], upper[2], upper[3], upper[4], upper[5] }, tile_type{ tile[0], tile[1], tile[2], tile[3], tile[4], tile[5] } );
+      range_type range( point_type{{ lower[0], lower[1], lower[2], lower[3], lower[4], lower[5] }}, point_type{{ upper[0], upper[1], upper[2], upper[3], upper[4], upper[5] }}, tile_type{{ tile[0], tile[1], tile[2], tile[3], tile[4], tile[5] }} );
 
       TestMDRange_6D_NegIdx functor( lower[0], lower[1], lower[2], lower[3], lower[4], lower[5], upper[0], upper[1], upper[2], upper[3], upper[4], upper[5] );
 
