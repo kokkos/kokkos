@@ -63,204 +63,182 @@ class WorkGraphPolicy
 {
 public:
 
-  using self_type = WorkGraphPolicy<Properties ... >;
-  using traits = Kokkos::Impl::PolicyTraits<Properties ... >;
-  using index_type = typename traits::index_type;
+  using self_type       = WorkGraphPolicy<Properties ... >;
+  using traits          = Kokkos::Impl::PolicyTraits<Properties ... >;
+  using index_type      = typename traits::index_type;
+  using member_type     = index_type;
+  using work_tag        = typename traits::work_tag;
   using execution_space = typename traits::execution_space;
-  using work_tag = typename traits::work_tag;
-  using memory_space = typename execution_space::memory_space;
-  using graph_type = Kokkos::Experimental::Crs<index_type, execution_space, void, index_type>;
-  using member_type = index_type;
-
-private:
-   
-  graph_type m_graph;
-
-  using ints_type = Kokkos::View<std::int32_t*, memory_space>;
-  using range_type = Kokkos::pair<std::int32_t, std::int32_t>;
-  using ranges_type = Kokkos::View<range_type*, memory_space>;
-  const std::int32_t m_total_work;
-  ints_type m_counts;
-  ints_type m_queue;
-  ranges_type m_hint_ranges;
-
-public:
+  using memory_space    = typename execution_space::memory_space;
+  using graph_type      = Kokkos::Experimental::
+                            Crs<index_type,execution_space,void,index_type>;
 
   enum : std::int32_t {
-    NOT_PUSHED = -1,
-    WORK_DONE  = -1,
-    POPPED     = -2,
-    INVALID    = -3
-  };
-
-  struct TagFillQueue {};
-  KOKKOS_INLINE_FUNCTION
-  void operator()(TagFillQueue, std::int32_t i) const {
-    if (*((volatile std::int32_t*)(&m_counts(i))) == 0) push_work(i);
-  }
-  void fill_queue() {
-    using policy_type = RangePolicy<std::int32_t, execution_space, TagFillQueue>;
-    using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
-    const closure_type closure(*this, policy_type(0, m_total_work));
-    closure.execute();
-    execution_space::fence();
-  }
+    END_TOKEN       = -1 ,
+    BEGIN_TOKEN     = -2 ,
+    COMPLETED_TOKEN = -3 };
 
 private:
 
-  inline
-  void setup() {
-    if (m_graph.numRows() > std::numeric_limits<std::int32_t>::max()) {
-      Kokkos::abort("WorkGraphPolicy work must be indexable using int32_t");
-    }
-    get_crs_transpose_counts(m_counts, m_graph);
-    m_queue = ints_type(ViewAllocateWithoutInitializing("queue"), m_total_work);
-    deep_copy(m_queue, std::int32_t(NOT_PUSHED));
-    m_hint_ranges = ranges_type("hint_ranges", 1);
-    fill_queue();
-  }
+  using ints_type = Kokkos::View<std::int32_t*, memory_space>;
+
+  // Let N = m_graph.numRows(), the total work
+  // m_queue[  0 ..   N-1] = the ready queue
+  // m_queue[  N .. 2*N-1] = the waiting queue counts
+  // m_queue[2*N .. 2*N+2] = the ready queue hints
+
+  graph_type const m_graph;
+  ints_type        m_queue ;
 
   KOKKOS_INLINE_FUNCTION
-  std::int32_t pop_work() const {
-#ifdef __CUDA_ARCH__
-    int tid = blockIdx.x * blockDim.x * blockDim.y * blockDim.z
-      + threadIdx.z * blockDim.y * blockDim.x
-      + threadIdx.y * blockDim.x + threadIdx.x;
-#else
-    int tid = 0;
-#endif
-    //printf("%d begin pop_work\n", tid);
-    std::int32_t j = *((volatile std::int32_t*) &m_hint_ranges(0).second);
-    std::int32_t k = INVALID;
-    for (long ntries = 0; true; ++ntries) {
-      if (j >= m_total_work) {
-        //printf("%d done\n", tid);
-        return WORK_DONE;
+  void push_work( const std::int32_t w ) const noexcept
+    {
+      const std::int32_t N = m_graph.numRows();
+
+      std::int32_t volatile * const ready_queue = & m_queue[0] ;
+      std::int32_t volatile * const end_hint    = & m_queue[2*N+1] ;
+
+      // Push work to end of queue
+      const std::int32_t j = atomic_fetch_add( end_hint , 1 );
+
+      if ( ( N <= j ) ||
+           ( END_TOKEN != atomic_exchange(ready_queue+j,w) ) ) {
+        // ERROR: past the end of queue or did not replace END_TOKEN
+        Kokkos::abort("WorkGraphPolicy push_work error");
       }
-    //if (ntries && (ntries % (10 * 1000 * 1000) == 0)) {
-    //  printf("%d looped %ldM times in pop_work: k %d j %d\n", tid, ntries / (10 * 1000 * 1000), k, j);
-    ////assert(0);
-    //  return WORK_DONE;
-    //}
-      const std::int32_t k_old = atomic_compare_exchange( &m_queue(j), k, POPPED );
-      if (k_old == POPPED) { // this location has already been popped
-        ++j; // move to the next location
-        k = INVALID; // don't bother trying to guess what will be there
-      } else { // k_old != POPPED
-        if (k_old != NOT_PUSHED) { // something was pushed
-          if (k == k_old) { // we popped it
-            atomic_increment( &m_hint_ranges(0).second ); // increment the end hint
-            memory_fence();
-            //printf("%d popped %d\n", tid, k);
-            return k;
-          } else { // k != k_old (something was pushed but we didn't pop it)
-            k = k_old; // keep trying to pop it while its there
-          }
-        } else { // k_old == NOT_PUSHED (nothing was pushed yet)
-          k = INVALID; // keep reading that location without writing till something is pushed
-        } // k_old == NOT_PUSHED
-      } // k_old != POPPED
-    } // while (true)
-  }
 
-  KOKKOS_INLINE_FUNCTION
-  void push_work(std::int32_t i) const {
-#ifdef __CUDA_ARCH__
-    int tid = blockIdx.x * blockDim.x * blockDim.y * blockDim.z
-      + threadIdx.z * blockDim.y * blockDim.x
-      + threadIdx.y * blockDim.x + threadIdx.x;
-#else
-    int tid = 0;
-#endif
-    //printf("%d begin push_work(%d)\n", tid, i);
-    std::int32_t j = *((volatile std::int32_t*) &m_hint_ranges(0).first);
-    while (NOT_PUSHED != atomic_compare_exchange( &m_queue(j), NOT_PUSHED, i )) ++j;
-    atomic_increment( &m_hint_ranges(0).first );
-    memory_fence();
-    //printf("%d pushed %d at %d\n", tid, i, j);
-  }
-
-  template< class functor_type , class execution_space, class ... policy_args >
-  friend class Kokkos::Impl::Experimental::WorkGraphExec;
+      memory_fence();
+    }
 
 public:
 
-  WorkGraphPolicy(graph_type arg_graph)
-    : m_graph(arg_graph)
-    , m_total_work( arg_graph.numRows() )
-  {
-    setup();
-  }
+  /**\brief  Attempt to pop the work item at the head of the queue.
+   *
+   *  Find entry 'i' such that
+   *    ( m_queue[i] != BEGIN_TOKEN ) AND
+   *    ( i == 0 OR m_queue[i-1] == BEGIN_TOKEN )
+   *  if found then
+   *    increment begin hint
+   *    return atomic_exchange( m_queue[i] , BEGIN_TOKEN )
+   *  else if i < total work
+   *    return END_TOKEN
+   *  else
+   *    return COMPLETED_TOKEN
+   *  
+   */
+  KOKKOS_INLINE_FUNCTION
+  std::int32_t pop_work() const noexcept
+    {
+      const std::int32_t N = m_graph.numRows();
 
+      std::int32_t volatile * const ready_queue = & m_queue[0] ;
+      std::int32_t volatile * const begin_hint  = & m_queue[2*N] ;
+
+      // begin hint is guaranteed to be less than or equal to
+      // actual begin location in the queue.
+
+      for ( std::int32_t i = *begin_hint ; i < N ; ++i ) {
+
+        const std::int32_t w = ready_queue[i] ;
+
+        if ( w == END_TOKEN ) { return END_TOKEN ; }
+
+        if ( ( w != BEGIN_TOKEN ) &&
+             ( w == atomic_compare_exchange(ready_queue+i,w,BEGIN_TOKEN) ) ) {
+          // Attempt to claim ready work index succeeded,
+          // update the hint and return work index
+          atomic_increment( begin_hint );
+          return w ;
+        }
+        // arrive here when ready_queue[i] == BEGIN_TOKEN
+      }
+
+      return COMPLETED_TOKEN ;
+    }
+
+
+  KOKKOS_INLINE_FUNCTION
+  void completed_work( std::int32_t w ) const noexcept
+    {
+      const std::int32_t N = m_graph.numRows();
+
+      std::int32_t volatile * const count_queue = & m_queue[N] ;
+
+      const std::int32_t B = m_graph.row_map(w);
+      const std::int32_t E = m_graph.row_map(w+1);
+
+      for ( std::int32_t i = B ; i < E ; ++i ) {
+        const std::int32_t j = m_graph.entries(i);
+        if ( 1 == atomic_fetch_add(count_queue+j,-1) ) {
+          push_work(j);
+        }
+      }
+    }
+
+  struct TagInit {};
+  struct TagCount {};
+  struct TagReady {};
+
+  /**\brief  Initialize queue
+   *
+   *  m_queue[0..N-1] = END_TOKEN, the ready queue
+   *  m_queue[N..2*N-1] = 0, the waiting count queue
+   *  m_queue[2*N..2*N+1] = 0, begin/end hints for ready queue
+   */
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const TagInit , int i ) const noexcept
+    { m_queue[i] = i < m_graph.numRows() ? END_TOKEN : 0 ; }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const TagCount , int i ) const noexcept
+    {
+      std::int32_t volatile * const count_queue =
+        & m_queue[ m_graph.numRows() ] ;
+
+      atomic_increment( count_queue + m_graph.entries[i] );
+    }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const TagReady , int w ) const noexcept
+    {
+      std::int32_t const * const count_queue =
+        & m_queue[ m_graph.numRows() ] ;
+
+      if ( 0 == count_queue[w] ) push_work(w);
+    }
+
+  WorkGraphPolicy( const graph_type & arg_graph )
+    : m_graph(arg_graph)
+    , m_queue( view_alloc( "queue" , WithoutInitializing )
+             , arg_graph.numRows() * 2 + 2 )
+  {
+    { // Initialize
+      using policy_type = RangePolicy<std::int32_t, execution_space, TagInit>;
+      using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
+      const closure_type closure(*this, policy_type(0, m_queue.size()));
+      closure.execute();
+      execution_space::fence();
+    }
+
+    { // execute-after counts
+      using policy_type = RangePolicy<std::int32_t, execution_space, TagCount>;
+      using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
+      const closure_type closure(*this,policy_type(0,m_graph.entries.size()));
+      closure.execute();
+      execution_space::fence();
+    }
+
+    { // Scheduling ready tasks
+      using policy_type = RangePolicy<std::int32_t, execution_space, TagReady>;
+      using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
+      const closure_type closure(*this,policy_type(0,m_graph.numRows()));
+      closure.execute();
+      execution_space::fence();
+    }
+  }
 };
 
 }} // namespace Kokkos::Experimental
-
-/*--------------------------------------------------------------------------*/
-
-/*--------------------------------------------------------------------------*/
-
-namespace Kokkos {
-namespace Impl {
-namespace Experimental {
-
-template< class functor_type , class execution_space, class ... policy_args >
-class WorkGraphExec
-{
- public:
-
-  using self_type = WorkGraphExec< functor_type, execution_space, policy_args ... >;
-  using policy_type = Kokkos::Experimental::WorkGraphPolicy< policy_args ... >;
-  using member_type = typename policy_type::member_type;
-  using memory_space = typename execution_space::memory_space;
-
- protected:
-
-  const functor_type m_functor;
-  const policy_type  m_policy;
-
- protected:
-
-  KOKKOS_INLINE_FUNCTION
-  std::int32_t before_work() const {
-    return m_policy.pop_work();
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void after_work(std::int32_t i) const {
-#ifdef __CUDA_ARCH__
-    int tid = blockIdx.x * blockDim.x * blockDim.y * blockDim.z
-      + threadIdx.z * blockDim.y * blockDim.x
-      + threadIdx.y * blockDim.x + threadIdx.x;
-#else
-    int tid = 0;
-#endif
-    //printf("%d begin after_work(%d)\n", tid, i);
-    /* fence any writes that were done by the work item itself
-       (usually writing its result to global memory) */
-    memory_fence();
-    const std::int32_t begin = m_policy.m_graph.row_map( i );
-    const std::int32_t end = m_policy.m_graph.row_map( i + 1 );
-    for (std::int32_t j = begin; j < end; ++j) {
-      const std::int32_t next = m_policy.m_graph.entries( j );
-      const std::int32_t old_count = atomic_fetch_add( &(m_policy.m_counts(next)), -1 );
-      //printf("%d decremented m_counts(%d) to %d\n", tid, next, old_count - 1);
-      if ( old_count == 1 ) {
-        m_policy.push_work( next );
-      }
-    }
-  }
-
-  inline
-  WorkGraphExec( const functor_type & arg_functor
-               , const policy_type  & arg_policy )
-    : m_functor( arg_functor )
-    , m_policy(  arg_policy )
-  {
-  }
-};
-
-}}} // namespace Kokkos::Impl::Experimental
 
 #ifdef KOKKOS_ENABLE_SERIAL
 #include "impl/Kokkos_Serial_WorkGraphPolicy.hpp"
