@@ -160,6 +160,10 @@ public:
   KOKKOS_INLINE_FUNCTION
   void completed_work( std::int32_t w ) const noexcept
     {
+      Kokkos::memory_fence();
+
+      // Make sure the completed work function's memory accesses are flushed.
+
       const std::int32_t N = m_graph.numRows();
 
       std::int32_t volatile * const count_queue = & m_queue[N] ;

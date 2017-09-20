@@ -655,7 +655,6 @@ TEST_F( TEST_CATEGORY, task_fib )
 TEST_F( TEST_CATEGORY, task_depend )
 {
   for ( int i = 0; i < 25; ++i ) {
-printf("\nTest::task_depend %d\n",i);
     TestTaskScheduler::TestTaskDependence< TEST_EXECSPACE >::run( i );
   }
 }
