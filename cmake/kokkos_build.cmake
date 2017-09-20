@@ -1,15 +1,9 @@
-# Previous cmake/kokkos.cmake had this glob + add/remove based on options
-# Now we just use the makefile-generated gen_kokkos.cmake
-# Worry about separating out into container sources later
-
-# Get source files.
-#file(GLOB KOKKOS_CORE_SRCS core/src/impl/*.cpp)
-#file(GLOB KOKKOS_CONTAINERS_SRCS containers/src/impl/*.cpp)
+# Sources come from makefile-generated gen_kokkos.cmake file
+#TODO: Need to separate sources out into container sources later
 
 set(KOKKOS_CORE_SRCS ${KOKKOS_SRC})
 #string(REPLACE "${KOKKOS_PATH}" "${CMAKE_SOURCE_DIR}" KOKKOS_CORE_SRCS "${KOKKOS_SRC}")
 set(KOKKOS_CONTAINERS_SRCS)
-
 
 ############################ Detect if submodule ###############################
 #
@@ -25,105 +19,7 @@ else()
   SET(KOKKOS_HEADER_DIR "include")
 endif()
 
-############################ PRINT CONFIGURE STATUS ############################
-
-message(STATUS "")
-message(STATUS "****************** Kokkos Settings ******************")
-message(STATUS "Execution Spaces")
-
-if(KOKKOS_ENABLE_CUDA)
-  message(STATUS "  Device Parallel: Cuda")
-else()
-  message(STATUS "  Device Parallel: None")
-endif()
-
-if(KOKKOS_ENABLE_OPENMP)
-  message(STATUS "    Host Parallel: OpenMP")
-elseif(KOKKOS_ENABLE_PTHREAD)
-  message(STATUS "    Host Parallel: Pthread")
-elseif(KOKKOS_ENABLE_QTHREADS)
-  message(STATUS "    Host Parallel: Qthreads")
-else()
-  message(STATUS "    Host Parallel: None")
-endif()
-
-if(KOKKOS_ENABLE_SERIAL)
-  message(STATUS "      Host Serial: Serial")
-else()
-  message(STATUS "      Host Serial: None")
-endif()
-
-message(STATUS "")
-message(STATUS "Architectures")
-message(STATUS "    Host Architecture: ${KOKKOS_HOST_ARCH}")
-message(STATUS "  Device Architecture: ${KOKKOS_GPU_ARCH}")
-
-message(STATUS "")
-message(STATUS "Enabled options")
-
-if(KOKKOS_SEPARATE_LIBS)
-  message(STATUS "  KOKKOS_SEPARATE_LIBS")
-endif()
-
-if(KOKKOS_ENABLE_HWLOC)
-  message(STATUS "  KOKKOS_ENABLE_HWLOC")
-endif()
-
-if(KOKKOS_ENABLE_MEMKIND)
-  message(STATUS "  KOKKOS_ENABLE_MEMKIND")
-endif()
-
-if(KOKKOS_DEBUG)
-  message(STATUS "  KOKKOS_DEBUG")
-endif()
-
-if(KOKKOS_ENABLE_PROFILING)
-  message(STATUS "  KOKKOS_ENABLE_PROFILING")
-endif()
-
-if(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION)
-  message(STATUS "  KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION")
-endif()
-
-if(KOKKOS_ENABLE_CUDA)
-  if(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC)
-    message(STATUS "  KOKKOS_ENABLE_CUDA_LDG_INTRINSIC")
-  endif()
-
-  if(KOKKOS_ENABLE_CUDA_UVM)
-    message(STATUS "  KOKKOS_ENABLE_CUDA_UVM")
-  endif()
-
-  if(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
-    message(STATUS "  KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE")
-  endif()
-
-  if(KOKKOS_ENABLE_CUDA_LAMBDA)
-    message(STATUS "  KOKKOS_ENABLE_CUDA_LAMBDA")
-  endif()
-
-  if(KOKKOS_CUDA_DIR)
-    message(STATUS "  KOKKOS_CUDA_DIR: ${KOKKOS_CUDA_DIR}")
-  endif()
-endif()
-
-if(KOKKOS_QTHREADS_DIR)
-  message(STATUS "  KOKKOS_QTHREADS_DIR: ${KOKKOS_QTHREADS_DIR}")
-endif()
-
-if(KOKKOS_HWLOC_DIR)
-  message(STATUS "  KOKKOS_HWLOC_DIR: ${KOKKOS_HWLOC_DIR}")
-endif()
-
-if(KOKKOS_MEMKIND_DIR)
-  message(STATUS "  KOKKOS_MEMKIND_DIR: ${KOKKOS_MEMKIND_DIR}")
-endif()
-
-message(STATUS "*****************************************************")
-message(STATUS "")
-
 ################################ Handle the actual build #######################
-
 
 SET(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries")
 SET(INSTALL_BIN_DIR bin CACHE PATH "Installation directory for executables")
