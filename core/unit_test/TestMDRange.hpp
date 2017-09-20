@@ -2611,7 +2611,7 @@ struct TestMDRange_4D_NegIdx {
   using value_type = double;
 
   using DataType     = int;
-  using ViewType     = typename Kokkos::View< DataType***, ExecSpace >;
+  using ViewType     = typename Kokkos::View< DataType****, ExecSpace >;
   using HostViewType = typename ViewType::HostMirror;
 
   ViewType input_view;
@@ -2670,7 +2670,7 @@ struct TestMDRange_5D_NegIdx {
   using value_type = double;
 
   using DataType     = int;
-  using ViewType     = typename Kokkos::View< DataType***, ExecSpace >;
+  using ViewType     = typename Kokkos::View< DataType*****, ExecSpace >;
   using HostViewType = typename ViewType::HostMirror;
 
   ViewType input_view;
@@ -2730,7 +2730,7 @@ struct TestMDRange_6D_NegIdx {
   using value_type = double;
 
   using DataType     = int;
-  using ViewType     = typename Kokkos::View< DataType***, ExecSpace >;
+  using ViewType     = typename Kokkos::View< DataType******, ExecSpace >;
   using HostViewType = typename ViewType::HostMirror;
 
   ViewType input_view;
