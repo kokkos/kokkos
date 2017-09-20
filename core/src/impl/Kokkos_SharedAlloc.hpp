@@ -324,6 +324,16 @@ public:
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
+  void clear()
+    {
+      // If this is tracking then must decrement
+      KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
+      // Reset to default constructed value.
+      m_record_bits = DO_NOT_DEREF_FLAG ;
+    }
+
+  // Copy:
+  KOKKOS_FORCEINLINE_FUNCTION
   ~SharedAllocationTracker()
     { KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT }
 

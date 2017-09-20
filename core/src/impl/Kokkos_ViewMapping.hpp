@@ -2783,6 +2783,10 @@ public:
     , m_offset( std::integral_constant< unsigned , 0 >() , arg_layout )
     {}
 
+  /**\brief  Assign data */
+  void assign_data( pointer_type arg_ptr )
+    { m_handle = handle_type( arg_ptr ); }
+
   //----------------------------------------
   /*  Allocate and construct mapped array.
    *  Allocate via shared allocation record and
