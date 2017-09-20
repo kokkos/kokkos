@@ -1306,7 +1306,7 @@ struct TestUnmanagedSubviewReset
     {
       auto sub_a = Kokkos::subview(a,0,Kokkos::ALL,Kokkos::ALL,Kokkos::ALL);
 
-      for ( int i = 0 ; i < a.dimension(0) ; ++i ) {
+      for ( int i = 0 ; i < int(a.dimension(0)) ; ++i ) {
         sub_a.assign_data( & a(i,0,0,0) );
         if ( & sub_a(1,1,1) != & a(i,1,1,1) ) {
           Kokkos::abort("TestUnmanagedSubviewReset");
