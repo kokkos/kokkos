@@ -43,7 +43,6 @@
 
 #include <vector>
 #include <iostream>
-#include <unistd.h>
 
 #include <Kokkos_Core.hpp>
 

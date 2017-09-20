@@ -199,52 +199,52 @@ IF(Kokkos_ENABLE_Cuda)
     UnitTest_Cuda
     SOURCES
       UnitTestMainInit.cpp
-    # cuda/TestCudaHostPinned_SharedAlloc.cpp
-    # cuda/TestCudaHostPinned_ViewAPI.cpp
-    # cuda/TestCudaHostPinned_ViewMapping_a.cpp
-    # cuda/TestCudaHostPinned_ViewMapping_b.cpp
-    # cuda/TestCudaHostPinned_ViewMapping_subview.cpp
-    # cuda/TestCudaUVM_SharedAlloc.cpp
-    # cuda/TestCudaUVM_ViewAPI.cpp
-    # cuda/TestCudaUVM_ViewMapping_a.cpp
-    # cuda/TestCudaUVM_ViewMapping_b.cpp
-    # cuda/TestCudaUVM_ViewMapping_subview.cpp
-    # cuda/TestCuda_AtomicOperations.cpp
-    # cuda/TestCuda_AtomicViews.cpp
-    # cuda/TestCuda_Atomics.cpp
-    # cuda/TestCuda_Complex.cpp
-    # cuda/TestCuda_Init.cpp
-    # cuda/TestCuda_MDRange.cpp
-    # cuda/TestCuda_Other.cpp
-    # cuda/TestCuda_RangePolicy.cpp
-    # cuda/TestCuda_Reductions.cpp
-    # cuda/TestCuda_Scan.cpp
-    # cuda/TestCuda_SharedAlloc.cpp
-    # cuda/TestCuda_Spaces.cpp
-    # cuda/TestCuda_SubView_a.cpp
-    # cuda/TestCuda_SubView_b.cpp
-    # cuda/TestCuda_SubView_c01.cpp
-    # cuda/TestCuda_SubView_c02.cpp
-    # cuda/TestCuda_SubView_c03.cpp
-    # cuda/TestCuda_SubView_c04.cpp
-    # cuda/TestCuda_SubView_c05.cpp
-    # cuda/TestCuda_SubView_c06.cpp
-    # cuda/TestCuda_SubView_c07.cpp
-    # cuda/TestCuda_SubView_c08.cpp
-    # cuda/TestCuda_SubView_c09.cpp
-    # cuda/TestCuda_SubView_c10.cpp
-    # cuda/TestCuda_SubView_c11.cpp
-    # cuda/TestCuda_SubView_c12.cpp
-    # cuda/TestCuda_Task.cpp
-    # cuda/TestCuda_Team.cpp
-    # cuda/TestCuda_TeamReductionScan.cpp
-    # cuda/TestCuda_TeamScratch.cpp
-    # cuda/TestCuda_ViewAPI_b.cpp
-    # cuda/TestCuda_ViewMapping_a.cpp
-    # cuda/TestCuda_ViewMapping_b.cpp
-    # cuda/TestCuda_ViewMapping_subview.cpp
-    # cuda/TestCuda_ViewOfClass.cpp
-    # cuda/TestCuda_Crs.cpp
+      cuda/TestCudaHostPinned_SharedAlloc.cpp
+      cuda/TestCudaHostPinned_ViewAPI.cpp
+      cuda/TestCudaHostPinned_ViewMapping_a.cpp
+      cuda/TestCudaHostPinned_ViewMapping_b.cpp
+      cuda/TestCudaHostPinned_ViewMapping_subview.cpp
+      cuda/TestCudaUVM_SharedAlloc.cpp
+      cuda/TestCudaUVM_ViewAPI.cpp
+      cuda/TestCudaUVM_ViewMapping_a.cpp
+      cuda/TestCudaUVM_ViewMapping_b.cpp
+      cuda/TestCudaUVM_ViewMapping_subview.cpp
+      cuda/TestCuda_AtomicOperations.cpp
+      cuda/TestCuda_AtomicViews.cpp
+      cuda/TestCuda_Atomics.cpp
+      cuda/TestCuda_Complex.cpp
+      cuda/TestCuda_Init.cpp
+      cuda/TestCuda_MDRange.cpp
+      cuda/TestCuda_Other.cpp
+      cuda/TestCuda_RangePolicy.cpp
+      cuda/TestCuda_Reductions.cpp
+      cuda/TestCuda_Scan.cpp
+      cuda/TestCuda_SharedAlloc.cpp
+      cuda/TestCuda_Spaces.cpp
+      cuda/TestCuda_SubView_a.cpp
+      cuda/TestCuda_SubView_b.cpp
+      cuda/TestCuda_SubView_c01.cpp
+      cuda/TestCuda_SubView_c02.cpp
+      cuda/TestCuda_SubView_c03.cpp
+      cuda/TestCuda_SubView_c04.cpp
+      cuda/TestCuda_SubView_c05.cpp
+      cuda/TestCuda_SubView_c06.cpp
+      cuda/TestCuda_SubView_c07.cpp
+      cuda/TestCuda_SubView_c08.cpp
+      cuda/TestCuda_SubView_c09.cpp
+      cuda/TestCuda_SubView_c10.cpp
+      cuda/TestCuda_SubView_c11.cpp
+      cuda/TestCuda_SubView_c12.cpp
+      cuda/TestCuda_Task.cpp
+      cuda/TestCuda_Team.cpp
+      cuda/TestCuda_TeamReductionScan.cpp
+      cuda/TestCuda_TeamScratch.cpp
+      cuda/TestCuda_ViewAPI_b.cpp
+      cuda/TestCuda_ViewMapping_a.cpp
+      cuda/TestCuda_ViewMapping_b.cpp
+      cuda/TestCuda_ViewMapping_subview.cpp
+      cuda/TestCuda_ViewOfClass.cpp
+      cuda/TestCuda_Crs.cpp
       cuda/TestCuda_WorkGraph.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
