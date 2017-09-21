@@ -1216,6 +1216,13 @@ public:
       m_track.assign_allocated_record_to_uninitialized( record );
     }
 
+  KOKKOS_INLINE_FUNCTION
+  void assign_data( pointer_type arg_data )
+    {
+      m_track.clear();
+      m_map.assign_data( arg_data );
+    }
+
   // Wrap memory according to properties and array layout
   template< class ... P >
   explicit KOKKOS_INLINE_FUNCTION
