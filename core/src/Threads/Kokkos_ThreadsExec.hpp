@@ -50,6 +50,7 @@
 #include <cstdio>
 
 #include <utility>
+#include <cstdalign>
 #include <impl/Kokkos_Spinwait.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
 
@@ -107,7 +108,7 @@ private:
   // Which thread am I stealing from currently
   int m_current_steal_target;
   // This thread's owned work_range
-  Kokkos::pair<long,long> m_work_range KOKKOS_ALIGN(16);
+  Kokkos::pair<long,long> m_work_range __attribute__((aligned(16))) ;
   // Team Offset if one thread determines work_range for others
   long m_team_work_index;
 
