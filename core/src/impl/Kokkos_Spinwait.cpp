@@ -87,7 +87,7 @@ void host_thread_yield( const uint32_t i , const WaitMode mode )
     #endif
   }
 
-  else if ( mode == WaitMode::ACTIVE || yield_limit < i ) {
+  else if ( mode == WaitMode::PASSIVE || yield_limit < i ) {
 
     // Attempt to yield thread resources to runtime
 
