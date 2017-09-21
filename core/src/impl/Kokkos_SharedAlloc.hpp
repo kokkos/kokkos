@@ -294,9 +294,13 @@ public:
 
   template< class MemorySpace >
   constexpr
-  SharedAllocationRecord< MemorySpace , void > &
-  get_record() const
-    { return * static_cast< SharedAllocationRecord< MemorySpace , void > * >( m_record ); }
+  SharedAllocationRecord< MemorySpace , void > *
+  get_record() const noexcept
+    {
+      return ( m_record_bits & DO_NOT_DEREF_FLAG )
+             ? (SharedAllocationRecord< MemorySpace,void>*) 0
+             : static_cast<SharedAllocationRecord<MemorySpace,void>*>(m_record);
+    }
 
   template< class MemorySpace >
   std::string get_label() const
