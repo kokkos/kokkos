@@ -13,12 +13,12 @@ CXX="./config/cxx"
 ipath="env CXX=$(CXX) env PATH=./config:$$PATH env ROCM_HCC_PATH=$(ROCM_HCC_PATH)"
 
 # Defined in core/src/Makefile -- this should be consistent
-gen_makefile=Makefile.kokkos
-gen_cmakefile=kokkos.cmake
+KOKKOS_MAKEFILE=Makefile.kokkos
+KOKKOS_CMAKEFILE=gen_kokkos.cmake
 
 # Defined in Makefile.kokkos -- this should be consistent
-gen_config=KokkosCore_config.tmp
-gen_header=KokkosCore_config.h
+KOKKOS_INTERNAL_CONFIG_TMP=KokkosCore_config.tmp
+KOKKOS_CONFIG_HEADER=KokkosCore_config.h
 
 # diff => 0 is no difference.  if => 0 is false
 testbuild=if diff config/tmpstore/$1 config/results/$1; then echo OK $1; else echo not OK $1; fi
@@ -32,10 +32,10 @@ test:
          kkenv="env KOKKOS_ARCH=$$karch env KOKKOS_DEVICES=$$device"; \
 	     "$(ipath)" "$$kkenv" make -e -f ../src/Makefile build-makefile-cmake-kokkos; \
 		 prfx="$$karch"_"$$device"_; \
-		 mv $(gen_makefile)  config/tmpstore/"$$prfx"$(gen_makefile);  \
-		 mv $(gen_header) config/tmpstore/"$$prfx"$(gen_header); \
-		 rm -f $(gen_config) $(gen_cmakefile); \
-		 $(call testbuild,"$$prfx"$(gen_makefile)); \
-		 $(call testheadr,"$$prfx"$(gen_header)); \
+		 mv $(KOKKOS_MAKEFILE)  config/tmpstore/"$$prfx"$(KOKKOS_MAKEFILE);  \
+		 mv $(KOKKOS_CONFIG_HEADER) config/tmpstore/"$$prfx"$(KOKKOS_CONFIG_HEADER); \
+		 rm -f $(KOKKOS_INTERNAL_CONFIG_TMP) $(KOKKOS_CMAKEFILE); \
+		 $(call testbuild,"$$prfx"$(KOKKOS_MAKEFILE)); \
+		 $(call testheadr,"$$prfx"$(KOKKOS_CONFIG_HEADER)); \
 	  done; \
 	done

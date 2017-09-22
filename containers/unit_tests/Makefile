@@ -84,7 +84,7 @@ test-openmp: KokkosContainers_UnitTest_OpenMP
 test-serial: KokkosContainers_UnitTest_Serial
 	./KokkosContainers_UnitTest_Serial
 
-build_all: $(gen_header) $(TARGETS)
+build_all: $(TARGETS)
 
 test: $(TEST_TARGETS)
 

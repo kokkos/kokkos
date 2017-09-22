@@ -368,7 +368,7 @@ test-default: KokkosCore_UnitTest_Default
 ${INITTESTS_TEST_TARGETS}: test-default-init-%: KokkosCore_UnitTest_DefaultDeviceTypeInit_%
 	./KokkosCore_UnitTest_DefaultDeviceTypeInit_$*
 
-build_all: $(gen_header) $(TARGETS)
+build_all: $(TARGETS)
 
 test: $(TEST_TARGETS)
 
