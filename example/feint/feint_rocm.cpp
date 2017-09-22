@@ -42,21 +42,26 @@
 */
 
 #include <Kokkos_Core.hpp>
-#include <TestFixture.hpp>
+
+#if defined( KOKKOS_ENABLE_ROCM )
+
+#include <feint.hpp>
 
 namespace Kokkos {
 namespace Example {
 
-template void test_fixture< Kokkos::HostSpace::execution_space >();
+template void feint<Kokkos::Experimental::ROCm,false>(
+  const unsigned global_elem_nx ,
+  const unsigned global_elem_ny ,
+  const unsigned global_elem_nz );
 
-#if defined( KOKKOS_ENABLE_CUDA )
-template void test_fixture<Kokkos::Cuda>();
-#endif
-
-#if defined( KOKKOS_ENABLE_ROCM )
-template void test_fixture<Kokkos::Experimental::ROCm>();
-#endif
+template void feint<Kokkos::Experimental::ROCm,true>(
+  const unsigned global_elem_nx ,
+  const unsigned global_elem_ny ,
+  const unsigned global_elem_nz );
 
 } /* namespace Example */
 } /* namespace Kokkos */
+
+#endif
 
