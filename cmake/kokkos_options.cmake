@@ -6,17 +6,14 @@
 # Which generates KokkosCore_config.h and gen_kokkos.cmake
 # To understand how to form KOKKOS_SETTINGS, see
 #  <KOKKOS_PATH>/Makefile.kokkos
-#
 
-########################## COMPILER AND FEATURE CHECKS #########################
-
-include(${CMAKE_SOURCE_DIR}/cmake/kokkos_functions.cmake)
-set_kokkos_cxx_compiler()
-
-set_kokkos_compiler_standard()
 
 ########################## AVAIALBLE OPTIONS ###################################
 # List of possible host architectures.
+set(KOKKOS_HOST_ARCH_LIST)
+KOKKOS_ARCH_OPTIONS="AMDAVX ARMv80 ARMv81 ARMv8-ThunderX Power7 Power8 Power9 \
+	 WSM SNB HSW BDW SKX KNC KNL Kepler30 Kepler32 Kepler35 Kepler37 Maxwell50 \
+	 Maxwell52 Maxwell53 Pascal60 Pascal61"
 list(APPEND KOKKOS_HOST_ARCH_LIST
      None            # No architecture optimization
      AMDAVX          # AMD chip
@@ -50,16 +47,21 @@ list(APPEND KOKKOS_HOST_ARCH_LIST
 #set_property(CACHE KOKKOS_HOST_ARCH PROPERTY STRINGS ${KOKKOS_HOST_ARCH_LIST})
 
 # List of possible device architectures.
+# The case and spelling here needs to match Makefile.kokkos
+set(KOKKOS_DEVICES_LIST)
+# Options: Cuda,ROCm,OpenMP,Pthread,Qthreads,Serial
 list(APPEND KOKKOS_DEVICES_LIST
-    CUDA          # NVIDIA GPU -- see below
-    OPENMP        # OpenMP
-    PTHREAD       # pthread
-    QTHREADS      # qthreads
-    SERIAL        # serial
+    Cuda          # NVIDIA GPU -- see below
+    OpenMP        # OpenMP
+    Pthread       # pthread
+    Qthreads      # qthreads
+    Serial        # serial
+    ROCm          # Relocatable device code
     )
 
 # List of possible TPLs for Kokkos
 # From Makefile.kokkos: Options: hwloc,librt,experimental_memkind
+set(KOKKOS_USE_TPLS_LIST)
 list(APPEND KOKKOS_USE_TPLS_LIST
     HWLOC          # hwloc
     LIBRT          # librt
@@ -72,6 +74,7 @@ set(KOKKOS_INTERNAL_MEMKIND experimental_memkind)
 
 # List of possible Options for CUDA
 # From Makefile.kokkos: Options: use_ldg,force_uvm,rdc
+set(KOKKOS_CUDA_OPTIONS_LIST)
 list(APPEND KOKKOS_CUDA_OPTIONS_LIST
     LDG_INTRINSIC              # use_ldg
     UVM                        # force_uvm
@@ -122,14 +125,15 @@ set(KOKKOS_QTHREADS_DIR "" CACHE PATH "Location of Qthreads library.")
 # These are the actual options that define the settings.
 set(KOKKOS_ENABLE_CUDA OFF CACHE BOOL "Use Kokkos CUDA backend")
 set(KOKKOS_ENABLE_OPENMP ON CACHE BOOL "Use Kokkos OpenMP backend")
-set(KOKKOS_ENABLE_PTHREAD OFF CACHE BOOL "Use Kokkos Pthreads backend")
+set(KOKKOS_ENABLE_PTHREAD OFF CACHE BOOL "Use Kokkos Pthread backend")
 set(KOKKOS_ENABLE_QTHREADS OFF CACHE BOOL "Use Kokkos Qthreads backend")
 set(KOKKOS_ENABLE_SERIAL ON CACHE BOOL "Use Kokkos Serial backend")
 
 # Can have multiple devices 
 set(KOKKOS_DEVICESl)
 foreach(devopt ${KOKKOS_DEVICES_LIST})
-  if (${KOKKOS_ENABLE_${devopt}}) 
+  string(TOUPPER ${devopt} devoptuc)
+  if (${KOKKOS_ENABLE_${devoptuc}}) 
     list(APPEND KOKKOS_DEVICESl ${devopt})
   endif ()
 endforeach()
@@ -222,15 +226,15 @@ string(REPLACE ";" ":" KOKKOS_INTERNAL_ADDTOPATH "${addpathl}")
 # Set the KOKKOS_SETTINGS String -- this is the primary communication with the
 # makefile configuration.  See Makefile.kokkos
 
-set(KOKKOS_SETTINGS "KOKKOS_SRC_PATH=${CMAKE_SOURCE_DIR}")
-set(KOKKOS_SETTINGS "${KOKKOS_SETTINGS} KOKKOS_PATH=${CMAKE_SOURCE_DIR}")
+set(KOKKOS_SETTINGS KOKKOS_SRC_PATH=${KOKKOS_SRC_PATH})
+set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} KOKKOS_PATH=${KOKKOS_PATH})
 
 # Form of KOKKOS_foo=$KOKKOS_foo
 foreach(kvar ARCH;DEVICES;DEBUG;OPTIONS;CUDA_OPTIONS;USE_TPLS)
   set(KOKKOS_VAR KOKKOS_${kvar})
   if(DEFINED KOKKOS_${kvar})
     if (NOT "${${KOKKOS_VAR}}" STREQUAL "")
-      set(KOKKOS_SETTINGS "${KOKKOS_SETTINGS} ${KOKKOS_VAR}=${${KOKKOS_VAR}}")
+      set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} ${KOKKOS_VAR}=${${KOKKOS_VAR}})
     endif()
   endif()
 endforeach()
@@ -240,119 +244,121 @@ endforeach()
 foreach(ovar CXX;CXXFLAGS;LDFLAGS)
   if(DEFINED ${ovar})
     if (NOT "${${ovar}}" STREQUAL "")
-      set(KOKKOS_SETTINGS "${KOKKOS_SETTINGS} ${ovar}=${${ovar}}")
+      set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} ${ovar}=${${ovar}})
     endif()
   endif()
 endforeach()
 
 # Finally, do the paths
 if (NOT "${KOKKOS_INTERNAL_PATHS}" STREQUAL "")
-  set(KOKKOS_SETTINGS "${KOKKOS_SETTINGS} ${KOKKOS_INTERNAL_PATHS}")
+  set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} ${KOKKOS_INTERNAL_PATHS})
 endif()
 if (NOT "${KOKKOS_INTERNAL_ADDTOPATH}" STREQUAL "")
-  set(KOKKOS_SETTINGS "${KOKKOS_SETTINGS} PATH=${KOKKOS_INTERNAL_ADDTOPATH}:\${PATH}")
+  set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} PATH=${KOKKOS_INTERNAL_ADDTOPATH}:\${PATH})
 endif()
 
 # Final form that gets passed to make
-set(KOKKOS_SETTINGS "KOKKOS_SETTINGS=\"${KOKKOS_SETTINGS}\"")
+set(KOKKOS_SETTINGS env ${KOKKOS_SETTINGS})
 
 ############################ PRINT CONFIGURE STATUS ############################
 
-message(STATUS "")
-message(STATUS "****************** Kokkos Settings ******************")
-message(STATUS "Execution Spaces")
+if(KOKKOS_CMAKE_VERBOSE)
+  message(STATUS "")
+  message(STATUS "****************** Kokkos Settings ******************")
+  message(STATUS "Execution Spaces")
 
-if(KOKKOS_ENABLE_CUDA)
-  message(STATUS "  Device Parallel: Cuda")
-else()
-  message(STATUS "  Device Parallel: None")
-endif()
-
-if(KOKKOS_ENABLE_OPENMP)
-  message(STATUS "    Host Parallel: OpenMP")
-elseif(KOKKOS_ENABLE_PTHREAD)
-  message(STATUS "    Host Parallel: Pthread")
-elseif(KOKKOS_ENABLE_QTHREADS)
-  message(STATUS "    Host Parallel: Qthreads")
-else()
-  message(STATUS "    Host Parallel: None")
-endif()
-
-if(KOKKOS_ENABLE_SERIAL)
-  message(STATUS "      Host Serial: Serial")
-else()
-  message(STATUS "      Host Serial: None")
-endif()
-
-message(STATUS "")
-message(STATUS "Architectures")
-message(STATUS "    Host Architecture: ${KOKKOS_HOST_ARCH}")
-message(STATUS "  Device Architecture: ${KOKKOS_GPU_ARCH}")
-
-message(STATUS "")
-message(STATUS "Enabled options")
-
-if(KOKKOS_SEPARATE_LIBS)
-  message(STATUS "  KOKKOS_SEPARATE_LIBS")
-endif()
-
-if(KOKKOS_ENABLE_HWLOC)
-  message(STATUS "  KOKKOS_ENABLE_HWLOC")
-endif()
-
-if(KOKKOS_ENABLE_MEMKIND)
-  message(STATUS "  KOKKOS_ENABLE_MEMKIND")
-endif()
-
-if(KOKKOS_DEBUG)
-  message(STATUS "  KOKKOS_DEBUG")
-endif()
-
-if(KOKKOS_ENABLE_PROFILING)
-  message(STATUS "  KOKKOS_ENABLE_PROFILING")
-endif()
-
-if(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION)
-  message(STATUS "  KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION")
-endif()
-
-if(KOKKOS_ENABLE_CUDA)
-  if(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC)
-    message(STATUS "  KOKKOS_ENABLE_CUDA_LDG_INTRINSIC")
+  if(KOKKOS_ENABLE_CUDA)
+    message(STATUS "  Device Parallel: Cuda")
+  else()
+    message(STATUS "  Device Parallel: None")
   endif()
 
-  if(KOKKOS_ENABLE_CUDA_UVM)
-    message(STATUS "  KOKKOS_ENABLE_CUDA_UVM")
+  if(KOKKOS_ENABLE_OPENMP)
+    message(STATUS "    Host Parallel: OpenMP")
+  elseif(KOKKOS_ENABLE_PTHREAD)
+    message(STATUS "    Host Parallel: Pthread")
+  elseif(KOKKOS_ENABLE_QTHREADS)
+    message(STATUS "    Host Parallel: Qthreads")
+  else()
+    message(STATUS "    Host Parallel: None")
   endif()
 
-  if(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
-    message(STATUS "  KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE")
+  if(KOKKOS_ENABLE_SERIAL)
+    message(STATUS "      Host Serial: Serial")
+  else()
+    message(STATUS "      Host Serial: None")
   endif()
 
-  if(KOKKOS_ENABLE_CUDA_LAMBDA)
-    message(STATUS "  KOKKOS_ENABLE_CUDA_LAMBDA")
+  message(STATUS "")
+  message(STATUS "Architectures")
+  message(STATUS "    Host Architecture: ${KOKKOS_HOST_ARCH}")
+  message(STATUS "  Device Architecture: ${KOKKOS_GPU_ARCH}")
+
+  message(STATUS "")
+  message(STATUS "Enabled options")
+
+  if(KOKKOS_SEPARATE_LIBS)
+    message(STATUS "  KOKKOS_SEPARATE_LIBS")
   endif()
 
-  if(KOKKOS_CUDA_DIR)
-    message(STATUS "  KOKKOS_CUDA_DIR: ${KOKKOS_CUDA_DIR}")
+  if(KOKKOS_ENABLE_HWLOC)
+    message(STATUS "  KOKKOS_ENABLE_HWLOC")
   endif()
+
+  if(KOKKOS_ENABLE_MEMKIND)
+    message(STATUS "  KOKKOS_ENABLE_MEMKIND")
+  endif()
+
+  if(KOKKOS_DEBUG)
+    message(STATUS "  KOKKOS_DEBUG")
+  endif()
+
+  if(KOKKOS_ENABLE_PROFILING)
+    message(STATUS "  KOKKOS_ENABLE_PROFILING")
+  endif()
+
+  if(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION)
+    message(STATUS "  KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION")
+  endif()
+
+  if(KOKKOS_ENABLE_CUDA)
+    if(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC)
+      message(STATUS "  KOKKOS_ENABLE_CUDA_LDG_INTRINSIC")
+    endif()
+
+    if(KOKKOS_ENABLE_CUDA_UVM)
+      message(STATUS "  KOKKOS_ENABLE_CUDA_UVM")
+    endif()
+
+    if(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
+      message(STATUS "  KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE")
+    endif()
+
+    if(KOKKOS_ENABLE_CUDA_LAMBDA)
+      message(STATUS "  KOKKOS_ENABLE_CUDA_LAMBDA")
+    endif()
+
+    if(KOKKOS_CUDA_DIR)
+      message(STATUS "  KOKKOS_CUDA_DIR: ${KOKKOS_CUDA_DIR}")
+    endif()
+  endif()
+
+  if(KOKKOS_QTHREADS_DIR)
+    message(STATUS "  KOKKOS_QTHREADS_DIR: ${KOKKOS_QTHREADS_DIR}")
+  endif()
+
+  if(KOKKOS_HWLOC_DIR)
+    message(STATUS "  KOKKOS_HWLOC_DIR: ${KOKKOS_HWLOC_DIR}")
+  endif()
+
+  if(KOKKOS_MEMKIND_DIR)
+    message(STATUS "  KOKKOS_MEMKIND_DIR: ${KOKKOS_MEMKIND_DIR}")
+  endif()
+
+  message(STATUS "")
+  message(STATUS "Final kokkos settings variable:")
+  message(STATUS "  ${KOKKOS_SETTINGS}")
+
+  message(STATUS "*****************************************************")
+  message(STATUS "")
 endif()
-
-if(KOKKOS_QTHREADS_DIR)
-  message(STATUS "  KOKKOS_QTHREADS_DIR: ${KOKKOS_QTHREADS_DIR}")
-endif()
-
-if(KOKKOS_HWLOC_DIR)
-  message(STATUS "  KOKKOS_HWLOC_DIR: ${KOKKOS_HWLOC_DIR}")
-endif()
-
-if(KOKKOS_MEMKIND_DIR)
-  message(STATUS "  KOKKOS_MEMKIND_DIR: ${KOKKOS_MEMKIND_DIR}")
-endif()
-
-message(STATUS "")
-message(STATUS "Final kokkos settings variable:")
-message(STATUS "  ${KOKKOS_SETTINGS}")
-
-message(STATUS "*****************************************************")
-message(STATUS "")

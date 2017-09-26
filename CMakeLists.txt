@@ -10,19 +10,29 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
   project(Kokkos CXX)
 
-  # Handle the options
+  # Basic initialization
+  set(KOKKOS_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+  set(KOKKOS_PATH ${KOKKOS_SRC_PATH})
+
+  #------------ COMPILER AND FEATURE CHECKS ------------------------------------
+  include(${CMAKE_SOURCE_DIR}/cmake/kokkos_functions.cmake)
+  set_kokkos_cxx_compiler()
+  set_kokkos_compiler_standard()
+  
+  #------------ GET OPTIONS AND KOKKOS_SETTINGS --------------------------------
+  set(KOKKOS_CMAKE_VERBOSE True)
   include(${CMAKE_SOURCE_DIR}/cmake/kokkos_options.cmake)
 
-  #---------------------------------------------------------------------
-  # File names must be consistent with core/src/Makefile
-  # This generates the ${CMAKE_BINARY_DIR}/gen_kokkos.cmake file
+  #------------ GENERATE HEADER AND SOURCE FILES -------------------------------
   execute_process(
-    COMMAND make -f ${CMAKE_SOURCE_DIR}/core/src/Makefile ${KOKKOS_SETTINGS} build-makefile-cmake-kokkos
+    COMMAND ${KOKKOS_SETTINGS} make -f ${KOKKOS_SRCDIR}/core/src/Makefile build-makefile-cmake-kokkos
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     OUTPUT_FILE ${CMAKE_BINARY_DIR}/core_src_make.out
     RESULT_VARIABLE res
   )
   include(${CMAKE_BINARY_DIR}/gen_kokkos.cmake)
+
+  #------------ NOW BUILD ------------------------------------------------------
   include(${CMAKE_SOURCE_DIR}/cmake/kokkos_build.cmake)
 
 ELSE()
