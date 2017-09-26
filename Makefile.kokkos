@@ -1,8 +1,8 @@
 # Default settings common options.
 
-# Options: Cuda,ROCm,OpenMP,Pthreads,Qthreads,Serial
+# Options: Cuda,ROCm,OpenMP,Pthread,Qthreads,Serial
 #KOKKOS_DEVICES ?= "OpenMP"
-KOKKOS_DEVICES ?= "Pthreads"
+KOKKOS_DEVICES ?= "Pthread"
 # Options: 
 # Intel:    KNC,KNL,SNB,HSW,BDW,SKX
 # NVIDIA:   Kepler,Kepler30,Kepler32,Kepler35,Kepler37,Maxwell,Maxwell50,Maxwell52,Maxwell53,Pascal60,Pascal61
@@ -335,7 +335,8 @@ KOKKOS_CONFIG_HEADER=KokkosCore_config.h
 # Functions for generating config header file
 kokkos_append_header = $(shell echo $1 >> $(KOKKOS_INTERNAL_CONFIG_TMP))
 
-tmp := $(call kokkos_append_header,"/* ---------------------------------------------")
+# Do not append first line
+tmp := $(shell echo "/* ---------------------------------------------" > KokkosCore_config.tmp)
 tmp := $(call kokkos_append_header,"Makefile constructed configuration:")
 tmp := $(call kokkos_append_header,$(shell date))
 tmp := $(call kokkos_append_header,"----------------------------------------------*/")
