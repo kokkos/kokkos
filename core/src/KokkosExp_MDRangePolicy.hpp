@@ -397,7 +397,7 @@ void md_parallel_for( const std::string& str
                       ) >::type* = 0
                     )
 {
-  Impl::DeviceIterateTile<MDRange, Functor, typename MDRange::work_tag> closure(range, f);
+  Kokkos::Impl::DeviceIterateTile<MDRange, Functor, typename MDRange::work_tag> closure(range, f);
   closure.execute();
 }
 
@@ -412,7 +412,7 @@ void md_parallel_for( MDRange const& range
                       ) >::type* = 0
                     )
 {
-  Impl::DeviceIterateTile<MDRange, Functor, typename MDRange::work_tag> closure(range, f);
+  Kokkos::Impl::DeviceIterateTile<MDRange, Functor, typename MDRange::work_tag> closure(range, f);
   closure.execute();
 }
 #endif
