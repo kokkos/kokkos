@@ -44,19 +44,15 @@
 #ifndef KOKKOS_WORKGRAPHPOLICY_HPP
 #define KOKKOS_WORKGRAPHPOLICY_HPP
 
-#include <cassert>
-
 namespace Kokkos {
 namespace Impl {
-namespace Experimental {
 
 template< class functor_type , class execution_space, class ... policy_args >
 class WorkGraphExec;
 
-}}} // namespace Kokkos::Impl::Experimental
+}} // namespace Kokkos::Impl
 
 namespace Kokkos {
-namespace Experimental {
 
 template< class ... Properties >
 class WorkGraphPolicy
@@ -70,8 +66,7 @@ public:
   using work_tag        = typename traits::work_tag;
   using execution_space = typename traits::execution_space;
   using memory_space    = typename execution_space::memory_space;
-  using graph_type      = Kokkos::Experimental::
-                            Crs<index_type,execution_space,void,index_type>;
+  using graph_type      = Kokkos::Crs<index_type,execution_space,void,index_type>;
 
   enum : std::int32_t {
     END_TOKEN       = -1 ,
@@ -242,7 +237,7 @@ public:
   }
 };
 
-}} // namespace Kokkos::Experimental
+} // namespace Kokkos
 
 #ifdef KOKKOS_ENABLE_SERIAL
 #include "impl/Kokkos_Serial_WorkGraphPolicy.hpp"

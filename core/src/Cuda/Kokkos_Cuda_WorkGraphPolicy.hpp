@@ -49,13 +49,13 @@ namespace Impl {
 
 template< class FunctorType , class ... Traits >
 class ParallelFor< FunctorType
-                 , Kokkos::Experimental::WorkGraphPolicy< Traits ... >
+                 , Kokkos::WorkGraphPolicy< Traits ... >
                  , Kokkos::Cuda
                  >
 {
 public:
 
-  typedef Kokkos::Experimental::WorkGraphPolicy< Traits ... >   Policy ;
+  typedef Kokkos::WorkGraphPolicy< Traits ... >   Policy ;
   typedef ParallelFor<FunctorType, Policy, Kokkos::Cuda>        Self ;
 
 private:

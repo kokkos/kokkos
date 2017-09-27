@@ -67,7 +67,7 @@ template< class ExecSpace >
 struct TestWorkGraph {
 
   using MemorySpace = typename ExecSpace::memory_space;
-  using Policy = Kokkos::Experimental::WorkGraphPolicy<std::int32_t, ExecSpace>;
+  using Policy = Kokkos::WorkGraphPolicy<std::int32_t, ExecSpace>;
   using Graph = typename Policy::graph_type;
   using RowMap = typename Graph::row_map_type;
   using Entries = typename Graph::entries_type;

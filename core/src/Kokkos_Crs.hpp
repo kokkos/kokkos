@@ -45,7 +45,6 @@
 #define KOKKOS_CRS_HPP
 
 namespace Kokkos {
-namespace Experimental {
 
 /// \class Crs
 /// \brief Compressed row storage array.
@@ -164,7 +163,7 @@ void transpose_crs(
     Crs<DataType, Arg1Type, Arg2Type, SizeType>& out,
     Crs<DataType, Arg1Type, Arg2Type, SizeType> const& in);
 
-}} // namespace Kokkos::Experimental
+} // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
 
@@ -172,7 +171,6 @@ void transpose_crs(
 
 namespace Kokkos {
 namespace Impl {
-namespace Experimental {
 
 template <class InCrs, class OutCounts>
 class GetCrsTransposeCounts {
@@ -277,14 +275,13 @@ class FillCrsTransposeEntries {
   }
 };
 
-}}} // namespace Kokkos::Impl::Experimental
+}} // namespace Kokkos::Impl
 
 /*--------------------------------------------------------------------------*/
 
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
-namespace Experimental {
 
 template< class OutCounts,
           class DataType,
@@ -297,8 +294,7 @@ void get_crs_transpose_counts(
     std::string const& name) {
   using InCrs = Crs<DataType, Arg1Type, Arg2Type, SizeType>;
   out = OutCounts(name, in.numRows());
-  Kokkos::Impl::Experimental::
-    GetCrsTransposeCounts<InCrs, OutCounts> functor(in, out);
+  Kokkos::Impl::GetCrsTransposeCounts<InCrs, OutCounts> functor(in, out);
 }
 
 template< class OutRowMap,
@@ -308,8 +304,7 @@ typename OutRowMap::value_type get_crs_row_map_from_counts(
     InCounts const& in,
     std::string const& name) {
   out = OutRowMap(ViewAllocateWithoutInitializing(name), in.size() + 1);
-  Kokkos::Impl::Experimental::
-    CrsRowMapFromCounts<InCounts, OutRowMap> functor(in, out);
+  Kokkos::Impl::CrsRowMapFromCounts<InCounts, OutRowMap> functor(in, out);
   return functor.execute();
 }
 
@@ -326,12 +321,12 @@ void transpose_crs(
   typedef View<SizeType*, memory_space>               counts_type ;
   {
   counts_type counts;
-  Kokkos::Experimental::get_crs_transpose_counts(counts, in);
-  Kokkos::Experimental::get_crs_row_map_from_counts(out.row_map, counts,
+  Kokkos::get_crs_transpose_counts(counts, in);
+  Kokkos::get_crs_row_map_from_counts(out.row_map, counts,
       "tranpose_row_map");
   }
   out.entries = decltype(out.entries)("transpose_entries", in.entries.size());
-  Kokkos::Impl::Experimental::
+  Kokkos::Impl::
     FillCrsTransposeEntries<crs_type, crs_type> entries_functor(in, out);
 }
 
@@ -432,7 +427,7 @@ struct CountAndFill : public CountAndFillBase<CrsType, Functor> {
     const count_closure_type closure(*this, count_policy_type(0, nrows));
     closure.execute();
     }
-    auto nentries = Kokkos::Experimental::
+    auto nentries = Kokkos::
       get_crs_row_map_from_counts(this->m_crs.row_map, this->m_counts);
     this->m_counts = counts_type();
     this->m_crs.entries = entries_type("entries", nentries);
@@ -453,9 +448,9 @@ void count_and_fill_crs(
     CrsType& crs,
     typename CrsType::size_type nrows,
     Functor const& f) {
-  Kokkos::Experimental::CountAndFill<CrsType, Functor>(crs, nrows, f);
+  Kokkos::CountAndFill<CrsType, Functor>(crs, nrows, f);
 }
 
-}} // namespace Kokkos::Experimental
+} // namespace Kokkos
 
 #endif /* #define KOKKOS_CRS_HPP */
