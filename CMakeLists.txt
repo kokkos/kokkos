@@ -4,36 +4,34 @@ ELSE()
   SET(KOKKOS_HAS_TRILINOS OFF CACHE BOOL "")
 ENDIF()
 
-set(Kokkos_SOURCE_DIR ${CMAKE_SOURCE_DIR})
-
 IF(NOT KOKKOS_HAS_TRILINOS)
   cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
   project(Kokkos CXX)
 
-  # Basic initialization
-  set(KOKKOS_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+  # Basic initialization (Used in KOKKOS_SETTINGS)
+  set(KOKKOS_SRC_PATH ${Kokkos_SOURCE_DIR})
   set(KOKKOS_PATH ${KOKKOS_SRC_PATH})
 
   #------------ COMPILER AND FEATURE CHECKS ------------------------------------
-  include(${CMAKE_SOURCE_DIR}/cmake/kokkos_functions.cmake)
+  include(${KOKKOS_SRC_PATH}/cmake/kokkos_functions.cmake)
   set_kokkos_cxx_compiler()
   set_kokkos_compiler_standard()
   
   #------------ GET OPTIONS AND KOKKOS_SETTINGS --------------------------------
   set(KOKKOS_CMAKE_VERBOSE True)
-  include(${CMAKE_SOURCE_DIR}/cmake/kokkos_options.cmake)
+  include(${KOKKOS_SRC_PATH}/cmake/kokkos_options.cmake)
 
   #------------ GENERATE HEADER AND SOURCE FILES -------------------------------
   execute_process(
-    COMMAND ${KOKKOS_SETTINGS} make -f ${KOKKOS_SRCDIR}/core/src/Makefile build-makefile-cmake-kokkos
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-    OUTPUT_FILE ${CMAKE_BINARY_DIR}/core_src_make.out
+    COMMAND ${KOKKOS_SETTINGS} make -f ${KOKKOS_SRC_PATH}/core/src/Makefile build-makefile-cmake-kokkos
+    WORKING_DIRECTORY "${Kokkos_BINARY_DIR}"
+    OUTPUT_FILE ${Kokkos_BINARY_DIR}/core_src_make.out
     RESULT_VARIABLE res
   )
-  include(${CMAKE_BINARY_DIR}/gen_kokkos.cmake)
+  include(${Kokkos_BINARY_DIR}/gen_kokkos.cmake)
 
   #------------ NOW BUILD ------------------------------------------------------
-  include(${CMAKE_SOURCE_DIR}/cmake/kokkos_build.cmake)
+  include(${KOKKOS_SRC_PATH}/cmake/kokkos_build.cmake)
 
 ELSE()
 #------------------------------------------------------------------------------

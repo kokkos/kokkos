@@ -30,7 +30,7 @@ d='\#'
 testmake=if test "`testmake.sh $1 $2 $3`" = 'Passed'; then echo OK $d $1; else echo not OK $d $1; fi
 testconf=if test "`diffconfig.sh $1`" = 'Passed'; then echo OK $d $1; else echo not OK $d $1; fi
 
-# testing tmp and cmakefile files is unnecessary
+# testing tmp and cmakefile files is unnecessary here
 test:
 	@for karch in "$(KOKKOS_ARCH_OPTIONS)"; do \
 	  for device in "$(KOKKOS_DEVICE_OPTIONS)"; do \
@@ -45,3 +45,8 @@ test:
 		 $(call testconf,$$newconf); \
 	  done; \
 	done
+
+test-cmake:
+	@cd config/cmaketest; \
+     cmake .             ; \
+     make test

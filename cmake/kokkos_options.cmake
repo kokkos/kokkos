@@ -11,9 +11,6 @@
 ########################## AVAIALBLE OPTIONS ###################################
 # List of possible host architectures.
 set(KOKKOS_HOST_ARCH_LIST)
-KOKKOS_ARCH_OPTIONS="AMDAVX ARMv80 ARMv81 ARMv8-ThunderX Power7 Power8 Power9 \
-	 WSM SNB HSW BDW SKX KNC KNL Kepler30 Kepler32 Kepler35 Kepler37 Maxwell50 \
-	 Maxwell52 Maxwell53 Pascal60 Pascal61"
 list(APPEND KOKKOS_HOST_ARCH_LIST
      None            # No architecture optimization
      AMDAVX          # AMD chip

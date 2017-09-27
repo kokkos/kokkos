@@ -5,6 +5,10 @@ set(KOKKOS_CORE_SRCS ${KOKKOS_SRC})
 #string(REPLACE "${KOKKOS_PATH}" "${CMAKE_SOURCE_DIR}" KOKKOS_CORE_SRCS "${KOKKOS_SRC}")
 set(KOKKOS_CONTAINERS_SRCS)
 
+# gen_kokkos.cmake includes the kokkos library itself in KOKKOS_LIBS
+# which we do not want to use for the cmake builds so clean this up
+string(REGEX REPLACE "-lkokkos" "" KOKKOS_LIBS ${KOKKOS_LIBS})
+
 ############################ Detect if submodule ###############################
 #
 # With thanks to StackOverflow:  
@@ -50,6 +54,13 @@ SET (Kokkos_INCLUDE_DIRS
     ${Kokkos_BINARY_DIR}  # to find KokkosCore_config.h
     ${KOKKOS_INCLUDE_DIRS}
 )
+
+# pass include dirs back to parent scope
+if(HAS_PARENT)
+SET(Kokkos_INCLUDE_DIRS_RET ${Kokkos_INCLUDE_DIRS} PARENT_SCOPE)
+else()
+SET(Kokkos_INCLUDE_DIRS_RET ${Kokkos_INCLUDE_DIRS})
+endif()
 
 INCLUDE_DIRECTORIES(${Kokkos_INCLUDE_DIRS})
 

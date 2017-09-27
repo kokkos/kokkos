@@ -25,7 +25,6 @@ foreach(KOKKOS_DEV ${KOKKOS_DEVICES_LIST})
 # Do some initialization: Want to turn everything off for testing
   string(TOUPPER ${KOKKOS_DEV} KOKKOS_DEVUC)
   set(KOKKOS_ENABLE_${KOKKOS_DEVUC} OFF)
-  message(STATUS "KOKKOS_ENABLE_${KOKKOS_DEVUC} ${KOKKOS_ENABLE_${KOKKOS_DEVUC}}")
 endforeach()
 
 
@@ -43,14 +42,14 @@ foreach(KOKKOS_HOST_ARCH ${KOKKOS_HOST_ARCH_LIST})
     include(${KOKKOS_SRCDIR}/cmake/kokkos_options.cmake)
     set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} ROCM_HCC_PATH=${KOKKOS_TESTDIR}/config)
 
-    message(STATUS "${KOKKOS_SETTINGS} make -f ${KOKKOS_SRCDIR}/core/src/Makefile build-makefile-cmake-kokkos")
+    #message(STATUS "${KOKKOS_SETTINGS} make -f ${KOKKOS_SRCDIR}/core/src/Makefile build-makefile-cmake-kokkos")
     execute_process(
           COMMAND ${KOKKOS_SETTINGS} make -f ${KOKKOS_SRCDIR}/core/src/Makefile build-makefile-cmake-kokkos
           WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
           OUTPUT_FILE ${CMAKE_BINARY_DIR}/core_src_make.out
           RESULT_VARIABLE res
         )
-    message(STATUS "RESULT ${res}")
+    #message(STATUS "RESULT ${res}")
 
     file(REMOVE ${KOKKOS_INTERNAL_CONFIG_TMP} ${KOKKOS_MAKEFILE})
     set(PREFIX "${KOKKOS_HOST_ARCH}_${KOKKOS_DEV}_")
