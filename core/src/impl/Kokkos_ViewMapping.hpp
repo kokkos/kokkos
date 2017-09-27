@@ -2784,6 +2784,7 @@ public:
     {}
 
   /**\brief  Assign data */
+  KOKKOS_INLINE_FUNCTION
   void assign_data( pointer_type arg_ptr )
     { m_handle = handle_type( arg_ptr ); }
 
