@@ -63,7 +63,7 @@
 #include <typeinfo>
 #endif
 
-namespace Kokkos { namespace Experimental { namespace Impl {
+namespace Kokkos { namespace Impl {
 
 // ------------------------------------------------------------------ //
 
@@ -1256,7 +1256,7 @@ protected:
   const Functor    m_func;
 };
 
-} } } //end namespace Kokkos::Experimental::Impl
+} } //end namespace Kokkos::Impl
 
 #endif
 #endif
