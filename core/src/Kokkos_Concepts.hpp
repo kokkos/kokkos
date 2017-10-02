@@ -280,6 +280,9 @@ struct MemorySpaceAccess {
   enum { deepcopy = assignable };
 };
 
+}} // namespace Kokkos::Impl
+
+namespace Kokkos {
 
 /**\brief  Can AccessSpace access MemorySpace ?
  *
@@ -357,6 +360,13 @@ public:
     , Kokkos::Device< typename AccessSpace::execution_space , MemorySpace >
     >::type  space ;
 };
+
+} // namespace Kokkos
+
+namespace Kokkos {
+namespace Impl {
+
+using Kokkos::SpaceAccessibility ; // For backward compatibility
 
 }} // namespace Kokkos::Impl
 
