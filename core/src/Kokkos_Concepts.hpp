@@ -83,8 +83,8 @@ struct IndexType
  *
  *  The "best" defaults may be architecture specific.
  */
-template< unsigned int maxT = 1024 /* Max threads per block */
-        , unsigned int minB = 1    /* Min blocks per SM */
+template< unsigned int maxT = 0/* Max threads per block */
+        , unsigned int minB = 0    /* Min blocks per SM */
         >
 struct LaunchBounds
 {
