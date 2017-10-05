@@ -81,10 +81,10 @@ struct IndexType
 
 /**\brief Specify Launch Bounds for CUDA execution.
  *
- *  The "best" defaults may be architecture specific.
+ *  If no launch bounds specified then do not set launch bounds.
  */
-template< unsigned int maxT = 1024 /* Max threads per block */
-        , unsigned int minB = 1    /* Min blocks per SM */
+template< unsigned int maxT = 0 /* Max threads per block */
+        , unsigned int minB = 0 /* Min blocks per SM */
         >
 struct LaunchBounds
 {
