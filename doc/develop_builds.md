@@ -1,5 +1,5 @@
 
-# Places to add architecture or device
+# Places to build options: architecture, device, advanced options, cuda options
 
 These are the files that need to be updated when a new architecture or device is
 added:
@@ -31,7 +31,7 @@ device or architecture; however, you should add it to the help menu.  For the
 archictectures, please group by one of the platforms listed above.
 
 
-### cmake/kokkos_options.cmake
+### cmake/kokkos_options.cmake and cmake/kokkos_settings.cmake
 
 The options for the CMake build system are: `-DKOKKOS_HOST_ARCH:STRING=` and
 `-DKOKKOS_ENABLE_<device>:BOOL=`.  Although any string can be passed into
@@ -42,6 +42,11 @@ list. Thus:
   + A new device should be added to the KOKKOS_DEVICES_LIST variable **AND** a
     KOKKOS_ENABLE_<newdevice> option specified (see KOKKOS_ENABLE_CUDA for
     example).
+  + A new device should be added to the KOKKOS_DEVICES_LIST variable **AND** a
+
+The translation from option to the `KOKKOS_SETTINGS` is done in
+`kokkos_settings.cmake`.  This translation is automated for some types if you ad
+to the list, but for others, it may need to be hand coded. 
 
 
 ### Makefile.kokkos

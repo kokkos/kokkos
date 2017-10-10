@@ -18,8 +18,13 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   set_kokkos_compiler_standard()
   
   #------------ GET OPTIONS AND KOKKOS_SETTINGS --------------------------------
+  # Add Kokkos' modules to CMake's module path.
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${Kokkos_SOURCE_DIR}/cmake/Modules/")
+
   set(KOKKOS_CMAKE_VERBOSE True)
   include(${KOKKOS_SRC_PATH}/cmake/kokkos_options.cmake)
+
+  include(${KOKKOS_SRC_PATH}/cmake/kokkos_settings.cmake)
 
   #------------ GENERATE HEADER AND SOURCE FILES -------------------------------
   execute_process(
@@ -45,179 +50,23 @@ TRIBITS_PACKAGE_DECL(Kokkos) # ENABLE_SHADOWING_WARNINGS)
 
 #------------------------------------------------------------------------------
 #
-# B) Define the common options for Kokkos first so they can be used by
-# subpackages as well.
+# B) Install Kokkos' build files
 #
 
-# mfh 01 Aug 2016: See Issue #61:
-#
-# https://github.com/kokkos/kokkos/issues/61
-#
-# Don't use TRIBITS_ADD_DEBUG_OPTION() here, because that defines
-# HAVE_KOKKOS_DEBUG.  We define KOKKOS_HAVE_DEBUG here instead,
-# for compatibility with Kokkos' Makefile build system.
+# Assume that TriBITS has been run from ProjectCompilerPostConfig.cmake
+# and already generated KokkosCore_config.h and gen_cmake.kokkos
+# in the previously define Kokkos_GEN_DIR
+# We need to copy them over to the correct place and source the cmake file
 
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_DEBUG
-  KOKKOS_HAVE_DEBUG
-  "Enable run-time debug checks.  These checks may be expensive, so they are disabled by default in a release build."
-  ${${PROJECT_NAME}_ENABLE_DEBUG}
-)
+file(COPY "${Kokkos_GEN_DIR}/KokkosCore_config.h"
+  DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" USE_SOURCE_PERMISSIONS)
+file(COPY "${Kokkos_GEN_DIR}/gen_kokkos.cmake"
+  DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" USE_SOURCE_PERMISSIONS)
 
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_SIERRA_BUILD
-  KOKKOS_FOR_SIERRA
-  "Configure Kokkos for building within the Sierra build system."
-  OFF
-  )
+include(${CMAKE_CURRENT_BINARY_DIR}/gen_kokkos.cmake)
 
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_Cuda
-  KOKKOS_HAVE_CUDA
-  "Enable CUDA support in Kokkos."
-  "${TPL_ENABLE_CUDA}"
-  )
-
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_Cuda_UVM
-  KOKKOS_USE_CUDA_UVM
-  "Enable CUDA Unified Virtual Memory as the default in Kokkos."
-  OFF
-  )
-
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_Cuda_RDC
-  KOKKOS_HAVE_CUDA_RDC
-  "Enable CUDA Relocatable Device Code support in Kokkos."
-  OFF
-  )
-
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_Cuda_Lambda
-  KOKKOS_HAVE_CUDA_LAMBDA
-  "Enable CUDA LAMBDA support in Kokkos."
-  OFF
-  )
-
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_Pthread
-  KOKKOS_HAVE_PTHREAD
-  "Enable Pthread support in Kokkos."
-  OFF
-  )
-
-ASSERT_DEFINED(TPL_ENABLE_Pthread)
-IF(Kokkos_ENABLE_Pthread AND NOT TPL_ENABLE_Pthread)
-  MESSAGE(FATAL_ERROR "You set Kokkos_ENABLE_Pthread=ON, but Trilinos' support for Pthread(s) is not enabled (TPL_ENABLE_Pthread=OFF).  This is not allowed.  Please enable Pthreads in Trilinos before attempting to enable Kokkos' support for Pthreads.")
-ENDIF()
-IF(NOT TPL_ENABLE_Pthread)
-  ADD_DEFINITIONS(-DGTEST_HAS_PTHREAD=0)
-ENDIF()
-
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_OpenMP
-  KOKKOS_HAVE_OPENMP
-  "Enable OpenMP support in Kokkos."
-  "${${PROJECT_NAME}_ENABLE_OpenMP}"
-  )
-
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_QTHREAD
-  KOKKOS_HAVE_QTHREADS
-  "Enable Qthreads support in Kokkos."
-  "${TPL_ENABLE_QTHREAD}"
-  )
-
-# TODO: No longer an option in Kokkos.  Needs to be removed.
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_CXX11
-  KOKKOS_HAVE_CXX11
-  "Enable C++11 support in Kokkos."
-  "${${PROJECT_NAME}_ENABLE_CXX11}"
-  )
-
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_HWLOC
-  KOKKOS_HAVE_HWLOC
-  "Enable HWLOC support in Kokkos."
-  "${TPL_ENABLE_HWLOC}"
-  )
-
-# TODO: This is currently not used in Kokkos.  Should it be removed?
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_MPI
-  KOKKOS_HAVE_MPI
-  "Enable MPI support in Kokkos."
-  "${TPL_ENABLE_MPI}"
-  )
-
-# Set default value of Kokkos_ENABLE_Debug_Bounds_Check option
-#
-# CMake is case sensitive.  The Kokkos_ENABLE_Debug_Bounds_Check
-# option (defined below) is annoyingly not all caps, but we need to
-# keep it that way for backwards compatibility.  If users forget and
-# try using an all-caps variable, then make it count by using the
-# all-caps version as the default value of the original, not-all-caps
-# option.  Otherwise, the default value of this option comes from
-# Kokkos_ENABLE_DEBUG (see Issue #367).
-
-ASSERT_DEFINED(${PACKAGE_NAME}_ENABLE_DEBUG)
-IF(DEFINED Kokkos_ENABLE_DEBUG_BOUNDS_CHECK)
-  IF(Kokkos_ENABLE_DEBUG_BOUNDS_CHECK)
-    SET(Kokkos_ENABLE_Debug_Bounds_Check_DEFAULT ON)
-  ELSE()
-    SET(Kokkos_ENABLE_Debug_Bounds_Check_DEFAULT "${${PACKAGE_NAME}_ENABLE_DEBUG}")
-  ENDIF()
-ELSE()
-  SET(Kokkos_ENABLE_Debug_Bounds_Check_DEFAULT "${${PACKAGE_NAME}_ENABLE_DEBUG}")
-ENDIF()
-ASSERT_DEFINED(Kokkos_ENABLE_Debug_Bounds_Check_DEFAULT)
-
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_Debug_Bounds_Check
-  KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
-  "Enable Kokkos::View run-time bounds checking."
-  "${Kokkos_ENABLE_Debug_Bounds_Check_DEFAULT}"
-  )
-
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_Debug_DualView_Modify_Check
-  KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
-  "Enable abort when Kokkos::DualView modified on host and device without sync."
-  "${Kokkos_ENABLE_DEBUG}"
-  )
-
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_Profiling
-  KOKKOS_ENABLE_PROFILING
-  "Enable KokkosP profiling support for kernel data collections."
-  "${TPL_ENABLE_DLlib}"
-  )
-
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_Profiling_Load_Print
-  KOKKOS_ENABLE_PROFILING_LOAD_PRINT
-  "Print to standard output which profiling library was loaded."
-  OFF
-  )
-
-# placeholder for future device...
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_ENABLE_Winthread
-  KOKKOS_HAVE_WINTHREAD
-  "Enable Winthread support in Kokkos."
-  "${TPL_ENABLE_Winthread}"
-  )
-
-# TODO: No longer an option in Kokkos.  Needs to be removed.
-# use new/old View
-TRIBITS_ADD_OPTION_AND_DEFINE(
-  Kokkos_USING_DEPRECATED_VIEW
-  KOKKOS_USING_DEPRECATED_VIEW
-  "Choose whether to use the old, deprecated Kokkos::View"
-  OFF
-  )
-
+# Needed?
+#include(${KOKKOS_SRC_PATH}/cmake/kokkos_build.cmake)
 
 #------------------------------------------------------------------------------
 #
@@ -232,14 +81,12 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
 
 INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/nvcc_wrapper DESTINATION bin)
 
-
 #------------------------------------------------------------------------------
 #
 # D) Process the subpackages for Kokkos
 #
 
 TRIBITS_PROCESS_SUBPACKAGES()
-
 
 #------------------------------------------------------------------------------
 #
