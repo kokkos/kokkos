@@ -581,7 +581,6 @@ struct TestMemoryPoolHuge< DeviceType
               , max_block_size
               , ptrs(i) );
 #endif
-
         if ( ! ptrs(i) ) {
           Kokkos::abort("TestMemoryPoolHuge");
           ++err ;
@@ -591,7 +590,7 @@ struct TestMemoryPoolHuge< DeviceType
 
   void operator()( int i ) const noexcept
     {
-      if ( i < (num_superblock) ) {
+      if ( i < int(num_superblock) ) {
         pool.deallocate( (void*) ptrs(i) , max_block_size );
         ptrs(i) = 0 ;
       }
@@ -612,7 +611,7 @@ void test_memory_pool_huge()
 
   Kokkos::parallel_reduce( policy , f , err );
   Kokkos::parallel_for( policy , f );
-};
+}
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
