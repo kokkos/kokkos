@@ -292,6 +292,9 @@ public:
       const uint32_t default_max_block_size       = 1u << 12 ;/* 4k bytes */
       const uint32_t default_min_superblock_size  = 1u << 20 ;/* 1M bytes */
 
+      //--------------------------------------------------
+      // Default block and superblock sizes:
+
       if ( 0 == min_block_alloc_size ) {
         // Default all sizes:
 
@@ -327,6 +330,8 @@ public:
         max_block_alloc_size = min_superblock_size ;
       }
 
+      //--------------------------------------------------
+
       {
         /* Enforce size constraints:
          *   min_block_alloc_size <= max_block_alloc_size
@@ -361,6 +366,7 @@ public:
         }
       }
 
+      //--------------------------------------------------
       // Block and superblock size is power of two:
       // Maximum value is 'max_superblock_size'
 
@@ -838,6 +844,36 @@ public:
     }
   // end deallocate
   //--------------------------------------------------------------------------
+
+  KOKKOS_INLINE_FUNCTION
+  int number_of_superblocks() const noexcept { return m_sb_count ; }
+
+  KOKKOS_INLINE_FUNCTION
+  void superblock_state( int sb_id
+                       , int & block_size
+                       , int & block_count_capacity
+                       , int & block_count_used ) const noexcept
+    {
+      block_size           = 0 ;
+      block_count_capacity = 0 ;
+      block_count_used     = 0 ;
+
+      if ( Kokkos::Impl::MemorySpaceAccess
+             < Kokkos::Impl::ActiveExecutionMemorySpace
+             , base_memory_space >::accessible ) {
+       // Can access the state array
+       
+        const uint32_t state =
+          ((uint32_t volatile *)m_sb_state_array)[sb_id*m_sb_state_size];
+
+        const uint32_t block_count_lg2 = state >> state_shift ;
+        const uint32_t block_used      = state & state_used_mask ;
+
+        block_size           = 1LU << ( m_sb_size_lg2 - block_count_lg2 );
+        block_count_capacity = 1LU << block_count_lg2 ;
+        block_count_used     = block_used ;
+      }
+    }
 };
 
 } // namespace Kokkos 
