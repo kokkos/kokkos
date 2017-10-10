@@ -574,7 +574,7 @@ struct TestMemoryPoolHuge< DeviceType
 
   void operator()( int i , long & err ) const noexcept
     {
-      if ( i < num_superblock ) {
+      if ( i < int(num_superblock) ) {
         ptrs(i) = (uintptr_t) pool.allocate( max_block_size );
 #if 0
         printf("TestMemoryPoolHuge size(0x%lx) ptr(0x%lx)\n"
@@ -591,7 +591,7 @@ struct TestMemoryPoolHuge< DeviceType
 
   void operator()( int i ) const noexcept
     {
-      if ( i < num_superblock ) {
+      if ( i < (num_superblock) ) {
         pool.deallocate( (void*) ptrs(i) , max_block_size );
         ptrs(i) = 0 ;
       }
