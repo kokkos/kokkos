@@ -809,7 +809,7 @@ struct TestViewMirror
     ASSERT_EQ( a_h.dimension_0(), a_h3.dimension_0() );
     ASSERT_EQ( a_h.dimension_0(), a_h2.dimension_0() );
     ASSERT_EQ( a_h.dimension_0(), a_d .dimension_0() );
-    ASSERT_EQ( a_org(5) == a_h3(5) );
+    ASSERT_EQ( a_org(5), a_h3(5) );
   }
 
 

@@ -2246,7 +2246,9 @@ create_mirror_view(const Space& , const Kokkos::View<T,P...> & src
 template<class Space, class T, class ... P>
 typename Impl::MirrorViewType<Space,T,P ...>::view_type
 create_mirror_copy(const Space& , const Kokkos::View<T,P...> & src
+  , std::string const& name = ""
   , typename std::enable_if<Impl::MirrorViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
+  (void)name;
   return src;
 }
 
@@ -2254,9 +2256,11 @@ create_mirror_copy(const Space& , const Kokkos::View<T,P...> & src
 template<class Space, class T, class ... P>
 typename Impl::MirrorViewType<Space,T,P ...>::view_type
 create_mirror_copy(const Space& , const Kokkos::View<T,P...> & src
+  , std::string const& name = ""
   , typename std::enable_if<!Impl::MirrorViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
   using Mirror = typename Impl::MirrorViewType<Space,T,P ...>::view_type;
-  auto mirror = Mirror(ViewAllocateWithoutInitializing(src.label()), src.layout());
+  std::string label = name.empty() ? src.label() : name;
+  auto mirror = Mirror(ViewAllocateWithoutInitializing(label), src.layout());
   deep_copy(mirror, src);
   return mirror;
 }
