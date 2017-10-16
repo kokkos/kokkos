@@ -791,9 +791,9 @@ struct TestViewMirror
     Kokkos::View< double*, Layout, Kokkos::HostSpace > a_org( "A", 10 );
     a_org(5) = 42.0;
     Kokkos::View< double*, Layout, Kokkos::HostSpace, MemoryTraits > a_h = a_org;
-    auto a_h2 = Kokkos::create_mirror_copy( Kokkos::HostSpace(), a_h );
-    auto a_d = Kokkos::create_mirror_copy( DeviceType(), a_h );
-    auto a_h3 = Kokkos::create_mirror_copy( Kokkos::HostSpace(), a_d );
+    auto a_h2 = Kokkos::create_mirror_view_and_copy( Kokkos::HostSpace(), a_h );
+    auto a_d = Kokkos::create_mirror_view_and_copy( DeviceType(), a_h );
+    auto a_h3 = Kokkos::create_mirror_view_and_copy( Kokkos::HostSpace(), a_d );
 
     int equal_ptr_h_h2 = a_h.data()  == a_h2.data() ? 1 : 0;
     int equal_ptr_h_d  = a_h.data()  ==  a_d.data() ? 1 : 0;
