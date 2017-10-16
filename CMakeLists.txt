@@ -44,20 +44,6 @@ if (TPL_ENABLE_CUDA)
   endif()
 endif()
 
-set(Kokkos_ENABLE_Cuda_Lambda_DEFAULT OFF)
-if (KOKKOS_HAVE_CUDA_GEQ_75)
-  if (CMAKE_CXX_FLAGS MATCHES "-expt-extended-lambda")
-    set(Kokkos_ENABLE_Cuda_Lambda_DEFAULT ON)
-    message("-- CUDA version is >= 7.5 and CMAKE_CXX_FLAGS contains -expt-extended-lambda,")
-    message("--   Kokkos_ENABLE_Cuda_Lambda defaults to ON")
-  else()
-    message("-- CMAKE_CXX_FLAGS doesn't contain -expt-extended-lambda,")
-    message("--   Kokkos_ENABLE_Cuda_Lambda defaults to OFF")
-  endif()
-else()
-  message("-- CUDA version is < 7.5, Kokkos_ENABLE_Cuda_Lambda defaults to OFF")
-endif()
-
 TRIBITS_ADD_OPTION_AND_DEFINE(
   Kokkos_ENABLE_DEBUG
   KOKKOS_HAVE_DEBUG
@@ -92,6 +78,22 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
   "Enable CUDA Relocatable Device Code support in Kokkos."
   OFF
   )
+
+set(Kokkos_ENABLE_Cuda_Lambda_DEFAULT OFF)
+if (Kokkos_ENABLE_Cuda)
+  if (KOKKOS_HAVE_CUDA_GEQ_75)
+    if (CMAKE_CXX_FLAGS MATCHES "-expt-extended-lambda")
+      set(Kokkos_ENABLE_Cuda_Lambda_DEFAULT ON)
+      message("-- CUDA version is >= 7.5 and CMAKE_CXX_FLAGS contains -expt-extended-lambda,")
+      message("--   Kokkos_ENABLE_Cuda_Lambda defaults to ON")
+    else()
+      message("-- CMAKE_CXX_FLAGS doesn't contain -expt-extended-lambda,")
+      message("--   Kokkos_ENABLE_Cuda_Lambda defaults to OFF")
+    endif()
+  else()
+    message("-- CUDA version is < 7.5, Kokkos_ENABLE_Cuda_Lambda defaults to OFF")
+  endif()
+endif()
 
 TRIBITS_ADD_OPTION_AND_DEFINE(
   Kokkos_ENABLE_Cuda_Lambda
