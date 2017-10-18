@@ -1,10 +1,3 @@
-# Sources come from makefile-generated gen_kokkos.cmake file
-#TODO: Need to separate sources out into container sources later
-
-set(KOKKOS_CORE_SRCS ${KOKKOS_SRC})
-#string(REPLACE "${KOKKOS_PATH}" "${CMAKE_SOURCE_DIR}" KOKKOS_CORE_SRCS "${KOKKOS_SRC}")
-set(KOKKOS_CONTAINERS_SRCS)
-
 # gen_kokkos.cmake includes the kokkos library itself in KOKKOS_LIBS
 # which we do not want to use for the cmake builds so clean this up
 string(REGEX REPLACE "-lkokkos" "" KOKKOS_LIBS ${KOKKOS_LIBS})
@@ -65,6 +58,10 @@ endif()
 INCLUDE_DIRECTORIES(${Kokkos_INCLUDE_DIRS})
 
 IF(KOKKOS_SEPARATE_LIBS)
+  # Sources come from makefile-generated gen_kokkos.cmake file
+  # Separate libs need to separate the sources
+  set_kokkos_srcs(KOKKOS_SRC ${KOKKOS_SRC})
+
   # kokkoscore
   ADD_LIBRARY(
     kokkoscore
@@ -83,22 +80,10 @@ IF(KOKKOS_SEPARATE_LIBS)
 
   # Install the kokkoscore library
   INSTALL (TARGETS kokkoscore
+           EXPORT KokkosTargets
            ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
            LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
            RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-  )
-
-  # Install the kokkoscore headers
-  INSTALL (DIRECTORY
-           ${Kokkos_SOURCE_DIR}/core/src/
-           DESTINATION ${KOKKOS_HEADER_DIR} 
-           FILES_MATCHING PATTERN "*.hpp"
-  )
-
-  # Install KokkosCore_config.h header
-  INSTALL (FILES
-           ${Kokkos_BINARY_DIR}/KokkosCore_config.h
-           DESTINATION ${KOKKOS_HEADER_DIR}
   )
 
   TARGET_LINK_LIBRARIES(
@@ -122,16 +107,10 @@ IF(KOKKOS_SEPARATE_LIBS)
 
   # Install the kokkocontainers library
   INSTALL (TARGETS kokkoscontainers
+           EXPORT KokkosTargets
            ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
            LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
            RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-
-  # Install the kokkoscontainers headers
-  INSTALL (DIRECTORY
-           ${Kokkos_SOURCE_DIR}/containers/src/
-           DESTINATION ${KOKKOS_HEADER_DIR} 
-           FILES_MATCHING PATTERN "*.hpp"
-  )
 
   # kokkosalgorithms - Build as interface library since no source files.
   ADD_LIBRARY(
@@ -154,13 +133,6 @@ IF(KOKKOS_SEPARATE_LIBS)
            ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
            LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
            RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-
-  # Install the kokkosalgorithms headers
-  INSTALL (DIRECTORY
-           ${Kokkos_SOURCE_DIR}/algorithms/src/
-           DESTINATION ${KOKKOS_INSTALL_INDLUDE_DIR}
-           FILES_MATCHING PATTERN "*.hpp"
-  )
 
   SET (Kokkos_LIBRARIES_NAMES kokkoscore kokkoscontainers kokkosalgorithms)
 
@@ -196,39 +168,35 @@ ELSE()
            RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
 
-  # Install the kokkos headers
-  INSTALL (DIRECTORY
-           EXPORT KokkosTargets
-           ${Kokkos_SOURCE_DIR}/core/src/
-           DESTINATION ${KOKKOS_HEADER_DIR}
-           FILES_MATCHING PATTERN "*.hpp"
-  )
-  INSTALL (DIRECTORY
-           EXPORT KokkosTargets
-           ${Kokkos_SOURCE_DIR}/containers/src/
-           DESTINATION ${KOKKOS_HEADER_DIR}
-           FILES_MATCHING PATTERN "*.hpp"
-  )
-  INSTALL (DIRECTORY
-           EXPORT KokkosTargets
-           ${Kokkos_SOURCE_DIR}/algorithms/src/
-           DESTINATION ${KOKKOS_HEADER_DIR}
-           FILES_MATCHING PATTERN "*.hpp"
-  )
-
-  INSTALL (FILES
-           ${Kokkos_BINARY_DIR}/KokkosCore_config.h
-           DESTINATION ${KOKKOS_HEADER_DIR}
-  )
-
-  include_directories(${Kokkos_BINARY_DIR})
-  include_directories(${Kokkos_SOURCE_DIR}/core/src)
-  include_directories(${Kokkos_SOURCE_DIR}/containers/src)
-  include_directories(${Kokkos_SOURCE_DIR}/algorithms/src)
-
   SET (Kokkos_LIBRARIES_NAMES kokkos)
 
-endif()
+endif()  # KOKKOS_SEPARATE_LIBS
+
+# Install the kokkos headers
+INSTALL (DIRECTORY
+         EXPORT KokkosTargets
+         ${Kokkos_SOURCE_DIR}/core/src/
+         DESTINATION ${KOKKOS_HEADER_DIR}
+         FILES_MATCHING PATTERN "*.hpp"
+)
+INSTALL (DIRECTORY
+         EXPORT KokkosTargets
+         ${Kokkos_SOURCE_DIR}/containers/src/
+         DESTINATION ${KOKKOS_HEADER_DIR}
+         FILES_MATCHING PATTERN "*.hpp"
+)
+INSTALL (DIRECTORY
+         EXPORT KokkosTargets
+         ${Kokkos_SOURCE_DIR}/algorithms/src/
+         DESTINATION ${KOKKOS_HEADER_DIR}
+         FILES_MATCHING PATTERN "*.hpp"
+)
+
+INSTALL (FILES
+         EXPORT KokkosTargets
+         ${Kokkos_BINARY_DIR}/KokkosCore_config.h
+         DESTINATION ${KOKKOS_HEADER_DIR}
+)
 
 # Add all targets to the build-tree export set
 export(TARGETS ${Kokkos_LIBRARIES_NAMES}

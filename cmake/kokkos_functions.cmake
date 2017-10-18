@@ -2,6 +2,7 @@
 # List of functions
 #   set_kokkos_cxx_compiler
 #   set_kokkos_compiler_standard
+#   set_kokkos_srcs
 
 #-------------------------------------------------------------------------------
 # function(set_kokkos_cxx_compiler)
@@ -290,4 +291,40 @@ function(set_kokkos_compiler_standard)
 
     set(KOKKOS_CXX_FLAGS ${INTERNAL_CXX_FLAGS} PARENT_SCOPE)
   endif()
+endfunction()
+
+
+#-------------------------------------------------------------------------------
+# function(set_kokkos_sources)
+# Takes a list of sources for kokkos (e.g., KOKKOS_SRC from Makefile.kokkos and
+# put it into gen_kokkos.cmake) and sorts the files into the subpackages or
+# separate_libraries.  This is core and containers (algorithms is pure header
+# files).
+#
+# Inputs:
+#   KOKKOS_SRC
+# 
+# Outputs:
+#   KOKKOS_CORE_SRCS
+#   KOKKOS_CONTAINERS_SRCS
+#
+function(set_kokkos_srcs)
+  set(opts ) # no-value args
+  set(oneValArgs )
+  set(multValArgs KOKKOS_SRC) # e.g., lists
+  cmake_parse_arguments(IN "${opts}" "${oneValArgs}" "${multValArgs}" ${ARGN})
+
+  foreach(sfile ${IN_KOKKOS_SRC})
+     string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" stripfile "${sfile}")
+     string(REPLACE "/" ";" striplist "${stripfile}")
+     list(GET striplist 0 firstdir)
+     if(${firstdir} STREQUAL "core")
+       list(APPEND KOKKOS_CORE_SRCS ${sfile})
+     else()
+       list(APPEND KOKKOS_CONTAINERS_SRCS ${sfile})
+     endif()
+  endforeach()
+  set(KOKKOS_CORE_SRCS ${KOKKOS_CORE_SRCS} PARENT_SCOPE)
+  set(KOKKOS_CONTAINERS_SRCS ${KOKKOS_CONTAINERS_SRCS} PARENT_SCOPE)
+  return()
 endfunction()

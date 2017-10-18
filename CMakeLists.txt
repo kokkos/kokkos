@@ -52,21 +52,25 @@ TRIBITS_PACKAGE_DECL(Kokkos) # ENABLE_SHADOWING_WARNINGS)
 #
 # B) Install Kokkos' build files
 #
-
-# Assume that TriBITS has been run from ProjectCompilerPostConfig.cmake
+# If using the Makefile-generated files, then need to set things up.
+# Here, assume that TriBITS has been run from ProjectCompilerPostConfig.cmake
 # and already generated KokkosCore_config.h and gen_cmake.kokkos
 # in the previously define Kokkos_GEN_DIR
 # We need to copy them over to the correct place and source the cmake file
 
-file(COPY "${Kokkos_GEN_DIR}/KokkosCore_config.h"
-  DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" USE_SOURCE_PERMISSIONS)
-file(COPY "${Kokkos_GEN_DIR}/gen_kokkos.cmake"
-  DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" USE_SOURCE_PERMISSIONS)
+if(NOT KOKKOS_LEGACY_TRIBITS)
+  set(Kokkos_GEN_DIR ${CMAKE_BINARY_DIR})
+  file(COPY "${Kokkos_GEN_DIR}/KokkosCore_config.h"
+    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" USE_SOURCE_PERMISSIONS)
+  file(COPY "${Kokkos_GEN_DIR}/gen_kokkos.cmake"
+    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" USE_SOURCE_PERMISSIONS)
 
-include(${CMAKE_CURRENT_BINARY_DIR}/gen_kokkos.cmake)
+  include(${CMAKE_CURRENT_BINARY_DIR}/gen_kokkos.cmake)
+  # Sources come from makefile-generated gen_kokkos.cmake file
+  # Enable using the individual sources if needed
+  set_kokkos_srcs(KOKKOS_SRC ${KOKKOS_SRC})
+endif ()
 
-# Needed?
-#include(${KOKKOS_SRC_PATH}/cmake/kokkos_build.cmake)
 
 #------------------------------------------------------------------------------
 #
@@ -81,12 +85,14 @@ include(${CMAKE_CURRENT_BINARY_DIR}/gen_kokkos.cmake)
 
 INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/nvcc_wrapper DESTINATION bin)
 
+
 #------------------------------------------------------------------------------
 #
 # D) Process the subpackages for Kokkos
 #
 
 TRIBITS_PROCESS_SUBPACKAGES()
+
 
 #------------------------------------------------------------------------------
 #
@@ -103,4 +109,5 @@ TRIBITS_EXCLUDE_FILES(
   )
 
 TRIBITS_PACKAGE_POSTPROCESS()
+
 ENDIF()

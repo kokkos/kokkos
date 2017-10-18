@@ -108,8 +108,9 @@ string(REPLACE ";" ${tmpr} KOKKOS_INTERNAL_ARCH_DOCSTR "${KOKKOS_HOST_ARCH_LIST}
 
 # Setting this variable to a value other than "None" can improve host
 # performance by turning on architecture specific code.
-# TODO:  Documentation should show the entire options
-set(KOKKOS_HOST_ARCH "None" CACHE STRING 
+# NOT SET is used to determine if the option is passed in.  It is reset to
+# default "None" down below.
+set(KOKKOS_HOST_ARCH "NOT_SET" CACHE STRING 
       "Optimize for specific host architecture. Options are: ${KOKKOS_INTERNAL_ARCH_DOCSTR}")
 
 # Whether to build separate libraries or now
@@ -125,12 +126,11 @@ set(KOKKOS_QTHREADS_DIR "" CACHE PATH "Location of Qthreads library.")
 #------------------------------- KOKKOS_DEVICES --------------------------------
 # Set which Kokkos backend to use.
 # These are the actual options that define the settings.
-set(KOKKOS_ENABLE_CUDA OFF CACHE BOOL "Use Kokkos CUDA backend")
-set(KOKKOS_ENABLE_OPENMP ON CACHE BOOL "Use Kokkos OpenMP backend")
-set(KOKKOS_ENABLE_PTHREAD OFF CACHE BOOL "Use Kokkos Pthread backend")
-set(KOKKOS_ENABLE_QTHREADS OFF CACHE BOOL "Use Kokkos Qthreads backend")
-set(KOKKOS_ENABLE_SERIAL ON CACHE BOOL "Use Kokkos Serial backend")
-
+set(KOKKOS_ENABLE_CUDA OFF CACHE BOOL "Enable CUDA support in Kokkos.")
+set(KOKKOS_ENABLE_OPENMP ON CACHE BOOL "Enable OpenMP support in Kokkos.")
+set(KOKKOS_ENABLE_PTHREAD OFF CACHE BOOL "Enable Pthread support in Kokkos.")
+set(KOKKOS_ENABLE_QTHREADS OFF CACHE BOOL "Enable Qthreads support in Kokkos.")
+set(KOKKOS_ENABLE_SERIAL ON CACHE BOOL "Whether to enable the Kokkos::Serial device.  This device executes \"parallel\" kernels sequentially on a single CPU thread.  It is enabled by default.  If you disable this device, please enable at least one other CPU device, such as Kokkos::OpenMP or Kokkos::Threads.")
 
 #------------------------------- KOKKOS_OPTIONS --------------------------------
 # From Makefile.kokkos: Advanced Options: 
@@ -176,9 +176,126 @@ set(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE OFF CACHE BOOL "Enable relocatabl
 set(KOKKOS_ENABLE_CUDA_LAMBDA ON CACHE BOOL "Enable lambdas for CUDA. (cuda option)")
 
 
+#----------------------- HOST ARCH AND LEGACY TRIBITS --------------------------
+# This defines the previous legacy TriBITS builds. 
+set(KOKKOS_LEGACY_TRIBITS False)
+IF ("${KOKKOS_HOST_ARCH}" STREQUAL "NOT_SET")
+  set(KOKKOS_HOST_ARCH "None")
+  IF(KOKKOS_HAS_TRILINOS)
+    set(KOKKOS_LEGACY_TRIBITS True)
+  ENDIF()
+ENDIF()
+IF (KOKKOS_HAS_TRILINOS)
+  IF (KOKKOS_LEGACY_TRIBITS)
+    message(STATUS "Using the legacy tribits build because KOKKOS_HOST_ARCH not set")
+  ELSE()
+    message(STATUS "NOT using the legacy tribits build because KOKKOS_HOST_ARCH *is* set")
+  ENDIF()
+ENDIF()
+
+
 #------------------------------- DEPRECATED OPTIONS  ---------------------------
-set(Kokkos_ENABLE_Debug_Bounds_Check OFF CACHE BOOL "Deprecated -- has no effect")
-set(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK OFF CACHE BOOL "Deprecated -- has no effect")
-set(KOKKOS_ENABLE_DEBUG OFF CACHE BOOL "Deprecated -- has no effect")
-set(Kokkos_ENABLE_Winthread OFF CACHE BOOL "Deprecated -- has no effect")
-set(Kokkos_USING_DEPRECATED_VIEW OFF CACHE BOOL "Deprecated -- has no effect")
+# Previous TriBITS builds used TRIBITS_ADD_OPTION_AND_DEFINE extensively
+# Because the options have moved to this file, we need to add the defines
+# Also TriBITS used a different capitalization so handle that.
+if(KOKKOS_LEGACY_TRIBITS)
+  set(Kokkos_ENABLE_DEBUG OFF CACHE BOOL "Deprecated -- Please use KOKKOS_DEBUG")
+  IF (Kokkos_ENABLE_DEBUG)
+    set(KOKKOS_DEBUG True)                  # New Option
+    set(KOKKOS_HAVE_DEBUG True)             # Define
+  ENDIF ()
+
+  set(Kokkos_ENABLE_Serial OFF CACHE BOOL "Deprecated -- Please use KOKKOS_ENABLE_SERIAL")
+  IF (Kokkos_ENABLE_Serial)
+    set(KOKKOS_ENABLE_SERIAL True)          # New Option
+    set(KOKKOS_HAVE_SERIAL True)            # Define
+  ENDIF ()
+
+  set(Kokkos_ENABLE_Pthread OFF CACHE BOOL "Deprecated -- Please use KOKKOS_ENABLE_PTHREAD")
+  IF (Kokkos_ENABLE_Pthread)
+    set(KOKKOS_ENABLE_PTHREAD True)          # New Option
+    set(KOKKOS_HAVE_PTHREAD True)            # Define
+    ADD_DEFINITIONS(-DGTEST_HAS_PTHREAD=0)
+  ENDIF ()
+
+  set(Kokkos_ENABLE_OpenMP OFF CACHE BOOL "Deprecated -- Please use KOKKOS_ENABLE_OPENMP")
+  IF (Kokkos_ENABLE_OpenMP)
+    set(KOKKOS_ENABLE_OPENMP True)          # New Option
+    set(KOKKOS_HAVE_OPENMP True)            # Define
+  ENDIF ()
+
+  set(Kokkos_ENABLE_QTHREAD OFF CACHE BOOL "Deprecated -- Please use KOKKOS_ENABLE_QTHREADS")
+  IF (Kokkos_ENABLE_QTHREAD)
+    set(KOKKOS_ENABLE_QTHREADS True)          # New Option
+    set(KOKKOS_HAVE_QTHREAD True)             # Define
+  ENDIF ()
+
+  set(Kokkos_ENABLE_Cuda OFF CACHE BOOL "Deprecated -- Please use KOKKOS_ENABLE_CUDA")
+  IF (Kokkos_ENABLE_Cuda)
+    set(KOKKOS_ENABLE_CUDA True)           # New Option
+    set(KOKKOS_HAVE_CUDA True)             # Define
+  ENDIF ()
+
+  set(Kokkos_ENABLE_Cuda_UVM OFF CACHE BOOL "Deprecated -- Please use KOKKOS_ENABLE_CUDA_UVM")
+  IF (Kokkos_ENABLE_Cuda_UVM)
+    set(KOKKOS_ENABLE_CUDA_UVM True)       # New Option
+    set(KOKKOS_USE_CUDA_UVM True)          # Define
+  ENDIF ()
+
+  set(Kokkos_ENABLE_Cuda_RDC OFF CACHE BOOL "Deprecated -- Please use KOKKOS_ENABLE_CUDA_RDC")
+  IF (Kokkos_ENABLE_Cuda_RDC)
+    set(KOKKOS_ENABLE_CUDA_RDC True)       # New Option
+    set(KOKKOS_HAVE_CUDA_RDC True)         # Define
+  ENDIF ()
+
+  set(Kokkos_ENABLE_Cuda_Lambda OFF CACHE BOOL "Deprecated -- Please use KOKKOS_ENABLE_CUDA_LAMBDA")
+  IF (Kokkos_ENABLE_Cuda_Lambda)
+    set(KOKKOS_ENABLE_CUDA_LAMBDA True)       # New Option
+    set(KOKKOS_HAVE_CUDA_LAMBDA True)         # Define
+  ENDIF ()
+
+
+  set(Kokkos_ENABLE_HWLOC OFF CACHE BOOL "Deprecated -- Please use KOKKOS_ENABLE_HWLOC")
+  IF (Kokkos_ENABLE_HWLOC)
+    set(KOKKOS_ENABLE_HWLOC True)       # New Option
+    set(KOKKOS_HAVE_HWLOC True)         # Define
+  ENDIF ()
+
+  set(Kokkos_ENABLE_Debug_Bounds_Check OFF CACHE BOOL "Deprecated -- has no effect")
+  set(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK OFF CACHE BOOL "Deprecated -- has no effect")
+
+  set(Kokkos_ENABLE_Winthread OFF CACHE BOOL "Deprecated -- has no effect")
+  set(Kokkos_USING_DEPRECATED_VIEW OFF CACHE BOOL "Deprecated -- has no effect")
+  set(Kokkos_ENABLE_CXX11 OFF CACHE BOOL "Deprecated -- has no effect")
+
+ENDIF()
+
+
+#------------------------------- Mapping of Trilinos options -------------------
+# Map tribits settings onto kokkos settings 
+IF(Trilinos_ENABLE_Kokkos)
+  set(KOKKOS_ENABLE_PTHREAD ${TPL_ENABLE_Pthread})
+  set(KOKKOS_ENABLE_QTHREADS ${TPL_ENABLE_QTHREAD})
+  set(KOKKOS_ENABLE_OPENMP ${Trilinos_ENABLE_OpenMP})
+  # No tribits equivalent
+  #set(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION ${TPL_ENABLE_})
+  if (${TPL_ENABLE_MPI})
+    set(KOKKOS_ENABLE_SERIAL OFF)
+  else()
+    set(KOKKOS_ENABLE_SERIAL ON)
+  endif()
+
+  # Handle Kokkos TPLs
+  set(KOKKOS_ENABLE_HWLOC ${TPL_ENABLE_HWLOC})
+  # Worry about later
+  #set(KOKKOS_HWLOC_DIR ${TPL_ENABLE_HWLOC})
+
+  #TODO
+  # Enable memkind library.
+  #set(KOKKOS_ENABLE_MEMKIND ${TPL_ENABLE_MEMKIND})
+  # Worry about later
+  #set(KOKKOS_MEMKIND_DIR 
+
+  # Not done in TriBITS
+  #set(KOKKOS_ENABLE_LIBRT ${TPL_ENABLE_LIBRT})
+ENDIF ()
