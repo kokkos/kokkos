@@ -408,7 +408,7 @@ view_alloc( Args const & ... args )
 }
 
 template< class ... Args >
-inline
+KOKKOS_INLINE_FUNCTION
 Impl::ViewCtorProp< typename Impl::ViewCtorProp< void , Args >::type ... >
 view_wrap( Args const & ... args )
 {
@@ -2462,6 +2462,7 @@ struct CommonViewAllocProp< void, ValueType >
   using scalar_array_type = ValueType;
 
   template < class ... Views >
+  KOKKOS_INLINE_FUNCTION
   CommonViewAllocProp( const Views & ... ) {}
 };
 
@@ -2529,6 +2530,7 @@ using DeducedCommonPropsType = typename Impl::DeduceCommonViewAllocProp<Views...
 
 // User function
 template < class ... Views >
+KOKKOS_INLINE_FUNCTION
 DeducedCommonPropsType<Views...> 
 common_view_alloc_prop( Views const & ... views )
 {
