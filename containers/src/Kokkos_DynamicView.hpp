@@ -73,8 +73,8 @@ private:
 
   static_assert( std::is_trivial< typename traits::value_type >::value &&
                  std::is_same< typename traits::specialize , void >::value &&
-                 Kokkos::Impl::is_integral_power_of_two(
-                   sizeof(typename traits::value_type) )
+                 Kokkos::Impl::is_power_of_two
+                   <sizeof(typename traits::value_type)>::value
                , "DynamicView must have trivial value_type and sizeof(value_type) is a power-of-two");
 
 
