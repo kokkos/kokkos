@@ -511,5 +511,11 @@
   #define KOKKOS_ENABLE_TASKDAG
 #endif
 
+
+#if defined ( KOKKOS_ENABLE_CUDA )
+  #if ( 9000 <= CUDA_VERSION )
+  #define KOKKOS_IMPL_CUDA_VERSION_9_WORKAROUND
+  #endif
+#endif
 #endif // #ifndef KOKKOS_MACROS_HPP
 
