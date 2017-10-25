@@ -60,6 +60,8 @@ namespace {
 
 HostThreadTeamData g_serial_thread_team_data ;
 
+bool g_serial_is_initialized = false;
+
 }
 
 // Resize thread team data scratch memory
@@ -136,9 +138,9 @@ HostThreadTeamData * serial_get_thread_team_data()
 
 namespace Kokkos {
 
-int Serial::is_initialized()
+bool Serial::is_initialized()
 {
-  return 1 ;
+  return Impl::g_serial_is_initialized ;
 }
 
 void Serial::initialize( unsigned threads_count
@@ -155,9 +157,8 @@ void Serial::initialize( unsigned threads_count
 
   // Init the array of locks used for arbitrarily sized atomics
   Impl::init_lock_array_host_space();
-  #if defined(KOKKOS_ENABLE_PROFILING)
-    Kokkos::Profiling::initialize();
-  #endif
+
+  Impl::g_serial_is_initialized = true;
 }
 
 void Serial::finalize()
@@ -174,9 +175,7 @@ void Serial::finalize()
     Impl::g_serial_thread_team_data.scratch_assign( (void*) 0, 0, 0, 0, 0, 0 );
   }
 
-  #if defined(KOKKOS_ENABLE_PROFILING)
-    Kokkos::Profiling::finalize();
-  #endif
+  Impl::g_serial_is_initialized = false;
 }
 
 const char* Serial::name() { return "Serial"; }
