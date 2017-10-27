@@ -157,6 +157,9 @@ void Serial::initialize( unsigned threads_count
 
   // Init the array of locks used for arbitrarily sized atomics
   Impl::init_lock_array_host_space();
+  #if defined(KOKKOS_ENABLE_PROFILING)
+    Kokkos::Profiling::initialize();
+  #endif
 
   Impl::g_serial_is_initialized = true;
 }
@@ -174,6 +177,10 @@ void Serial::finalize()
 
     Impl::g_serial_thread_team_data.scratch_assign( (void*) 0, 0, 0, 0, 0, 0 );
   }
+
+  #if defined(KOKKOS_ENABLE_PROFILING)
+    Kokkos::Profiling::finalize();
+  #endif
 
   Impl::g_serial_is_initialized = false;
 }
