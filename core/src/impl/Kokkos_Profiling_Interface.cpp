@@ -169,11 +169,10 @@ void endDeepCopy() {
   }
 }
 
-void createProfileSection(const std::string& sectionName, const uint32_t devID,
-	uint32_t* secID) {
+void createProfileSection(const std::string& sectionName, uint32_t* secID) {
 
 	if(nullptr != createSectionCallee) {
-		(*createSectionCallee)(sectionName.c_str(), devID, secID);
+		(*createSectionCallee)(sectionName.c_str(), secID);
 	}
 }
 

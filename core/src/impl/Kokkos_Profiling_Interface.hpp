@@ -106,7 +106,7 @@ void endParallelReduce(const uint64_t kernelID);
 void pushRegion(const std::string& kName);
 void popRegion();
 
-void createProfileSection(const std::string& sectionName, const uint32_t devID, uint32_t* secID);
+void createProfileSection(const std::string& sectionName, uint32_t* secID);
 void startSection(const uint32_t secID);
 void stopSection(const uint32_t secID);
 void destroyProfileSection(const uint32_t secID);
