@@ -383,6 +383,7 @@ void initialize(int& narg, char* arg[])
         }
         if((strncmp(arg[iarg],"--kokkos-ndevices",17) == 0) || !kokkos_ndevices_found)
           ndevices = atoi(num1_only);
+        delete [] num1_only;
 
         if( num2 != NULL ) {
           if(( !Impl::is_unsigned_int(num2+1) ) || (strlen(num2)==1) )
