@@ -57,7 +57,7 @@
 #include <iostream>
 #include <cstdlib>
 
-#define KOKKOSP_INTERFACE_VERSION 20150628
+#define KOKKOSP_INTERFACE_VERSION 20171029
 
 namespace Kokkos {
 namespace Profiling {
@@ -81,6 +81,13 @@ typedef void (*popFunction)();
 typedef void (*allocateDataFunction)(const SpaceHandle, const char*, const void*, const uint64_t);
 typedef void (*deallocateDataFunction)(const SpaceHandle, const char*, const void*, const uint64_t);
 
+typedef void (*createProfileSection)(const char*, uint32_t*);
+typedef void (*startProfileSection)(const uint32_t);
+typedef void (*stopProfileSection)(const uint32_t);
+typedef void (*destroyProfileSection)(const uint32_t);
+
+typedef void (*profileEvent)(const char*);
+
 typedef void (*beginDeepCopyFunction)(
     SpaceHandle, const char*, const void*,
     SpaceHandle, const char*, const void*,
@@ -98,6 +105,13 @@ void endParallelReduce(const uint64_t kernelID);
 
 void pushRegion(const std::string& kName);
 void popRegion();
+
+void createProfileSection(const std::string* sectionName, const uint32_t devID, uint32_t* secID);
+void startSection(const uint32_t secID);
+void stopSection(const uint32_t secID);
+void destroyProfileSection(const uint32_t secID);
+
+void markEvent(const std::string* evName);
 
 void allocateData(const SpaceHandle space, const std::string label, const void* ptr, const uint64_t size);
 void deallocateData(const SpaceHandle space, const std::string label, const void* ptr, const uint64_t size);

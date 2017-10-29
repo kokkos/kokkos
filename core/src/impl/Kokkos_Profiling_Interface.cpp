@@ -69,6 +69,13 @@ static deallocateDataFunction deallocateDataCallee = nullptr;
 static beginDeepCopyFunction beginDeepCopyCallee = nullptr;
 static endDeepCopyFunction endDeepCopyCallee = nullptr;
 
+static createProfileSection createSectionCallee = nullptr;
+static startProfileSection startSectionCallee = nullptr;
+static stopProfileSection stopSectionCallee = nullptr;
+static destroyProfileSection destroySectionCallee = nullptr;
+
+static profileEvent profileEventCallee = nullptr;
+
 SpaceHandle::SpaceHandle(const char* space_name) {
   strncpy(name,space_name,64);
 }
@@ -162,6 +169,38 @@ void endDeepCopy() {
   }
 }
 
+void createProfileSection(const std::string* sectionName, const uint32_t devID,
+	uint32_t* secID) {
+
+	if(nullptr != createSectionCallee) {
+		(*createSectionCallee)(sectionName.c_str(), devID, secID);
+	}
+}
+
+void startSection(const uint32_t secID) {
+	if(nullptr != startSectionCallee) {
+		(*startSectionCallee)(secID);
+	}
+}
+
+void stopSection(const uint32_t secID) {
+	if(nullptr != stopSectionCallee) {
+		(*stopSectionCallee)(secID);
+	}
+}
+
+void destroyProfileSection(const uint32_t secID) {
+	if(nullptr != destroySectionCallee) {
+		(*destroySectionCallee)(secID);
+	}
+}
+
+void markEvent(const std::string& eventName) {
+	if(nullptr != profileEventCallee) {
+		(*profileEventCallee)(eventName.c_str());
+	}
+}
+
 void initialize() {
 
   // Make sure initialize calls happens only once
@@ -230,7 +269,18 @@ void initialize() {
       beginDeepCopyCallee = *((beginDeepCopyFunction*) &p13);
       auto p14 = dlsym(firstProfileLibrary, "kokkosp_end_deep_copy");
       endDeepCopyCallee = *((endDeepCopyFunction*) &p14);
-
+      
+      auto p15 = dlsym(firstProfileLibrary, "kokkosp_create_profile_section");
+      createSectionCallee = *((createProfileSection*), &p15);
+      auto p16 = dlsym(firstProfileLibrary, "kokkosp_start_profile_section");
+      startSectionCallee = *((startProfileSection*), &p16);
+      auto p17 = dlsym(firstProfileLibrary, "kokkosp_stop_profile_section");
+      stopSectionCallee = *((stopProfileSection*), &p17);      
+      auto p18 = dlsym(firstProfileLibrary, "kokkosp_destory_profile_section");
+      destroySectionCallee = *((destroyProfileSection*), &p18);
+      
+      auto p19 = dlsym(firstProfileLibrary, "kokkosp_profile_event");
+      profileEventCallee = *((profileEvent*), &p18);
     }
   }
 
@@ -274,6 +324,13 @@ void finalize() {
 
     beginDeepCopyCallee = nullptr;
     endDeepCopyCallee = nullptr;
+    
+    createProfileSection createSectionCallee = nullptr;
+	startProfileSection startSectionCallee = nullptr;
+	stopProfileSection stopSectionCallee = nullptr;
+	destroyProfileSection destroySectionCallee = nullptr;
+
+	profileEvent profileEventCallee = nullptr;
   }
 }
 }
