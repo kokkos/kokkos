@@ -251,7 +251,7 @@
   #endif
 #endif
 
-#if defined( __PGIC__ ) && !defined( __GNUC__ )
+#if defined( __PGIC__ ) 
   #define KOKKOS_COMPILER_PGI __PGIC__*100+__PGIC_MINOR__*10+__PGIC_PATCHLEVEL__
 
   #if ( 1540 > KOKKOS_COMPILER_PGI )
@@ -511,5 +511,11 @@
   #define KOKKOS_ENABLE_TASKDAG
 #endif
 
+
+#if defined ( KOKKOS_ENABLE_CUDA )
+  #if ( 9000 <= CUDA_VERSION )
+  #define KOKKOS_IMPL_CUDA_VERSION_9_WORKAROUND
+  #endif
+#endif
 #endif // #ifndef KOKKOS_MACROS_HPP
 
