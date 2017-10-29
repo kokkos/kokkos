@@ -74,7 +74,7 @@ static startProfileSectionFunction startSectionCallee = nullptr;
 static stopProfileSectionFunction stopSectionCallee = nullptr;
 static destroyProfileSectionFunction destroySectionCallee = nullptr;
 
-static profileEvent profileEventCalleeFunction = nullptr;
+static profileEventFunction profileEventCallee = nullptr;
 
 SpaceHandle::SpaceHandle(const char* space_name) {
   strncpy(name,space_name,64);
@@ -325,12 +325,12 @@ void finalize() {
     beginDeepCopyCallee = nullptr;
     endDeepCopyCallee = nullptr;
     
-    createProfileSection createSectionCallee = nullptr;
-	startProfileSection startSectionCallee = nullptr;
-	stopProfileSection stopSectionCallee = nullptr;
-	destroyProfileSection destroySectionCallee = nullptr;
+    createSectionCallee = nullptr;
+	startSectionCallee = nullptr;
+	stopSectionCallee = nullptr;
+	destroySectionCallee = nullptr;
 
-	profileEvent profileEventCallee = nullptr;
+	profileEventCallee = nullptr;
   }
 }
 }
