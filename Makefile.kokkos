@@ -82,7 +82,7 @@ KOKKOS_INTERNAL_COMPILER_INTEL       := $(strip $(shell $(CXX) --version       2
 KOKKOS_INTERNAL_COMPILER_PGI         := $(strip $(shell $(CXX) --version       2>&1 | grep PGI                 | wc -l))
 KOKKOS_INTERNAL_COMPILER_XL          := $(strip $(shell $(CXX) -qversion       2>&1 | grep XL                  | wc -l))
 KOKKOS_INTERNAL_COMPILER_CRAY        := $(strip $(shell $(CXX) -craype-verbose 2>&1 | grep "CC-"               | wc -l))
-KOKKOS_INTERNAL_COMPILER_NVCC        := $(strip $(shell OMPI_CXX=$(OMPI_CXX); MPICH_CXX=$(MPICH_CXX); $(CXX) --version       2>&1 | grep nvcc                | wc -l))
+KOKKOS_INTERNAL_COMPILER_NVCC        := $(strip $(shell export OMPI_CXX=$(OMPI_CXX); export MPICH_CXX=$(MPICH_CXX); $(CXX) --version       2>&1 | grep nvcc                | wc -l))
 KOKKOS_INTERNAL_COMPILER_CLANG       := $(strip $(shell $(CXX) --version       2>&1 | grep clang               | wc -l))
 KOKKOS_INTERNAL_COMPILER_APPLE_CLANG := $(strip $(shell $(CXX) --version       2>&1 | grep "apple-darwin"      | wc -l))
 KOKKOS_INTERNAL_COMPILER_HCC         := $(strip $(shell $(CXX) --version       2>&1 | grep HCC                 | wc -l))
