@@ -69,12 +69,12 @@ static deallocateDataFunction deallocateDataCallee = nullptr;
 static beginDeepCopyFunction beginDeepCopyCallee = nullptr;
 static endDeepCopyFunction endDeepCopyCallee = nullptr;
 
-static createProfileSection createSectionCallee = nullptr;
-static startProfileSection startSectionCallee = nullptr;
-static stopProfileSection stopSectionCallee = nullptr;
-static destroyProfileSection destroySectionCallee = nullptr;
+static createProfileSectionFunction createSectionCallee = nullptr;
+static startProfileSectionFunction startSectionCallee = nullptr;
+static stopProfileSectionFunction stopSectionCallee = nullptr;
+static destroyProfileSectionFunction destroySectionCallee = nullptr;
 
-static profileEvent profileEventCallee = nullptr;
+static profileEvent profileEventCalleeFunction = nullptr;
 
 SpaceHandle::SpaceHandle(const char* space_name) {
   strncpy(name,space_name,64);
@@ -271,16 +271,16 @@ void initialize() {
       endDeepCopyCallee = *((endDeepCopyFunction*) &p14);
       
       auto p15 = dlsym(firstProfileLibrary, "kokkosp_create_profile_section");
-      createSectionCallee = *((createProfileSection*), &p15);
+      createSectionCallee = *((createProfileSectionFunction*), &p15);
       auto p16 = dlsym(firstProfileLibrary, "kokkosp_start_profile_section");
-      startSectionCallee = *((startProfileSection*), &p16);
+      startSectionCallee = *((startProfileSectionFunction*), &p16);
       auto p17 = dlsym(firstProfileLibrary, "kokkosp_stop_profile_section");
-      stopSectionCallee = *((stopProfileSection*), &p17);      
+      stopSectionCallee = *((stopProfileSectionFunction*), &p17);      
       auto p18 = dlsym(firstProfileLibrary, "kokkosp_destory_profile_section");
-      destroySectionCallee = *((destroyProfileSection*), &p18);
+      destroySectionCallee = *((destroyProfileSectionFunction*), &p18);
       
       auto p19 = dlsym(firstProfileLibrary, "kokkosp_profile_event");
-      profileEventCallee = *((profileEvent*), &p18);
+      profileEventCallee = *((profileEventFunction*), &p18);
     }
   }
 

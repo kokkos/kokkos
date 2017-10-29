@@ -81,12 +81,12 @@ typedef void (*popFunction)();
 typedef void (*allocateDataFunction)(const SpaceHandle, const char*, const void*, const uint64_t);
 typedef void (*deallocateDataFunction)(const SpaceHandle, const char*, const void*, const uint64_t);
 
-typedef void (*createProfileSection)(const char*, uint32_t*);
-typedef void (*startProfileSection)(const uint32_t);
-typedef void (*stopProfileSection)(const uint32_t);
-typedef void (*destroyProfileSection)(const uint32_t);
+typedef void (*createProfileSectionFunction)(const char*, uint32_t*);
+typedef void (*startProfileSectionFunction)(const uint32_t);
+typedef void (*stopProfileSectionFunction)(const uint32_t);
+typedef void (*destroyProfileSectionFunction)(const uint32_t);
 
-typedef void (*profileEvent)(const char*);
+typedef void (*profileEventFunction)(const char*);
 
 typedef void (*beginDeepCopyFunction)(
     SpaceHandle, const char*, const void*,
