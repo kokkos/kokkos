@@ -59,7 +59,9 @@ public:
 		secName(sectionName) {
 
 		#if defined( KOKKOS_ENABLE_PROFILING )
-			Kokkos::Profiling::createProfileSection(secName, &secID);
+			if(Kokkos::Profiling::profileLibraryLoaded()) {
+				Kokkos::Profiling::createProfileSection(secName, &secID);
+			}
 		#else
 			secID = 0;
 		#endif
@@ -67,19 +69,25 @@ public:
 	
 	void start() {
 		#if defined( KOKKOS_ENABLE_PROFILING )
-			Kokkos::Profiling::startSection(secID);
+			if(Kokkos::Profiling::profileLibraryLoaded()) {
+				Kokkos::Profiling::startSection(secID);
+			}
 		#endif
 	}
 	
 	void stop() {
 		#if defined( KOKKOS_ENABLE_PROFILING )
-			Kokkos::Profiling::stopSection(secID);
+			if(Kokkos::Profiling::profileLibraryLoaded()) {
+				Kokkos::Profiling::stopSection(secID);
+			}
 		#endif
 	}
 	
 	~ProfilingSection() {
 		#if defined( KOKKOS_ENABLE_PROFILING )
-			Kokkos::Profiling::destroyProfileSection(secID);
+			if(Kokkos::Profiling::profileLibraryLoaded()) {
+				Kokkos::Profiling::destroyProfileSection(secID);
+			}
 		#endif
 	}
 	
