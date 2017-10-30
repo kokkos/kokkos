@@ -45,7 +45,7 @@
 #define KOKKOSP_PROFILE_SECTION_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <Kokkos_Profiling_Interface.hpp>
+#include <impl/Kokkos_Profiling_Interface.hpp>
 
 #include <string>
 
