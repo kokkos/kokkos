@@ -45,7 +45,6 @@
 #define KOKKOSP_INTERFACE_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <Kokkos_Profiling_ProfileSection.hpp>
 
 #if defined(KOKKOS_ENABLE_PROFILING)
 
