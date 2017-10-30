@@ -132,10 +132,8 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
   // struct, you may remove this line of code.
   (void) args;
 
-  if( std::is_same< Kokkos::Serial , Kokkos::DefaultExecutionSpace >::value ||
-      std::is_same< Kokkos::Serial , Kokkos::HostSpace::execution_space >::value ) {
-    Kokkos::Serial::initialize();
-  }
+  // Always initialize Serial if it is configure time enabled
+  Kokkos::Serial::initialize();
 #endif
 
 #if defined( KOKKOS_ENABLE_OPENMPTARGET )
@@ -234,12 +232,8 @@ void finalize_internal( const bool all_spaces = false )
 #endif
 
 #if defined( KOKKOS_ENABLE_SERIAL )
-  if( std::is_same< Kokkos::Serial , Kokkos::DefaultExecutionSpace >::value ||
-      std::is_same< Kokkos::Serial , Kokkos::HostSpace::execution_space >::value ||
-      all_spaces ) {
-    if(Kokkos::Serial::is_initialized())
-      Kokkos::Serial::finalize();
-  }
+  if(Kokkos::Serial::is_initialized())
+    Kokkos::Serial::finalize();
 #endif
 
   g_is_initialized = false;
