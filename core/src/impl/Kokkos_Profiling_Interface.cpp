@@ -275,7 +275,7 @@ void initialize() {
       startSectionCallee = *((startProfileSectionFunction*) &p16);
       auto p17 = dlsym(firstProfileLibrary, "kokkosp_stop_profile_section");
       stopSectionCallee = *((stopProfileSectionFunction*) &p17);      
-      auto p18 = dlsym(firstProfileLibrary, "kokkosp_destory_profile_section");
+      auto p18 = dlsym(firstProfileLibrary, "kokkosp_destroy_profile_section");
       destroySectionCallee = *((destroyProfileSectionFunction*) &p18);
       
       auto p19 = dlsym(firstProfileLibrary, "kokkosp_profile_event");
