@@ -279,7 +279,7 @@ void initialize() {
       destroySectionCallee = *((destroyProfileSectionFunction*) &p18);
       
       auto p19 = dlsym(firstProfileLibrary, "kokkosp_profile_event");
-      profileEventCallee = *((profileEventFunction*) &p18);
+      profileEventCallee = *((profileEventFunction*) &p19);
     }
   }
 
