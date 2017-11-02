@@ -58,6 +58,7 @@
 #include <TestVector.hpp>
 #include <TestDualView.hpp>
 #include <TestDynamicView.hpp>
+#include <TestReductionView.hpp>
 
 #include <iomanip>
 
@@ -148,6 +149,11 @@ TEST_F( serial, bitset )
     test_dualview_combinations<int,Kokkos::Serial>(size);               \
   }
 
+#define SERIAL_REDUCTIONVIEW_TEST( size )             \
+  TEST_F( serial, reductionview_##size##x) {                      \
+    test_reduction_view<Kokkos::Serial>(size);               \
+  }
+
 SERIAL_INSERT_TEST(close, 100000, 90000, 100, 500, true)
 SERIAL_INSERT_TEST(far, 100000, 90000, 100, 500, false)
 SERIAL_FAILED_INSERT_TEST( 10000, 1000 )
@@ -156,6 +162,8 @@ SERIAL_DEEP_COPY( 10000, 1 )
 SERIAL_VECTOR_COMBINE_TEST( 10 )
 SERIAL_VECTOR_COMBINE_TEST( 3057 )
 SERIAL_DUALVIEW_COMBINE_TEST( 10 )
+
+SERIAL_REDUCTIONVIEW_TEST( 10 )
 
 #undef SERIAL_INSERT_TEST
 #undef SERIAL_FAILED_INSERT_TEST
