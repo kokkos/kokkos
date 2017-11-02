@@ -52,6 +52,7 @@
 #define KOKKOS_REDUCTIONVIEW_HPP
 
 #include <Kokkos_Core.hpp>
+#include <utility>
 
 namespace Kokkos {
 namespace Experimental {
@@ -159,6 +160,26 @@ struct DuplicatedDataType<T*, Kokkos::LayoutRight> {
   typedef typename DuplicatedDataType<T, Kokkos::LayoutRight>::value_type* value_type;
 };
 
+template <typename T>
+struct DuplicatedDataType<T, Kokkos::LayoutLeft> {
+  typedef T* value_type;
+};
+
+template <typename T, size_t N>
+struct DuplicatedDataType<T[N], Kokkos::LayoutLeft> {
+  typedef typename DuplicatedDataType<T, Kokkos::LayoutLeft>::value_type* value_type;
+};
+
+template <typename T>
+struct DuplicatedDataType<T[], Kokkos::LayoutLeft> {
+  typedef typename DuplicatedDataType<T, Kokkos::LayoutLeft>::value_type* value_type;
+};
+
+template <typename T>
+struct DuplicatedDataType<T*, Kokkos::LayoutLeft> {
+  typedef typename DuplicatedDataType<T, Kokkos::LayoutLeft>::value_type* value_type;
+};
+
 }}} // Kokkos::Impl::Experimental
 
 namespace Kokkos {
@@ -187,9 +208,17 @@ class ReductionView<DataType
                    ,contribution
                    ,ReductionNonDuplicated>
 {
- public:
+public:
   typedef Kokkos::View<DataType, Layout, ExecSpace> original_view_type;
- private:
+  typedef typename original_view_type::value_type original_value_type;
+  typedef Kokkos::Impl::Experimental::ReductionValue<
+      original_value_type, Op, contribution> value_type;
+  template <typename ... Args>
+  KOKKOS_FORCEINLINE_FUNCTION
+  value_type operator()(Args ... args) const {
+    return internal_view(args...);
+  }
+private:
   typedef original_view_type internal_view_type;
   internal_view_type internal_view;
 };
@@ -208,15 +237,91 @@ class ReductionView<DataType
                    ,contribution
                    ,ReductionDuplicated>
 {
-  public:
-    static_assert(std::is_same<Layout, Kokkos::LayoutLeft>::value ||
-                  std::is_same<Layout, Kokkos::LayoutRight>::value,
-                  "ReductionView only supports LayoutLeft and LayoutRight");
-    typedef Kokkos::View<DataType, Layout, ExecSpace> original_view_type;
-    typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<DataType, Layout>::value_type internal_data_type;
-    typedef Kokkos::View<internal_data_type, Layout, ExecSpace> internal_view_type;
-  private:
-    internal_view_type internal_view;
+public:
+  static_assert(std::is_same<Layout, Kokkos::LayoutRight>::value,
+                "duplicated ReductionView only supports LayoutRight");
+  typedef Kokkos::View<DataType, Layout, ExecSpace> original_view_type;
+  typedef typename original_view_type::value_type original_value_type;
+  typedef Kokkos::Impl::Experimental::ReductionValue<
+      original_value_type, Op, contribution> value_type;
+
+  ReductionView()
+  {
+  }
+
+  template <typename ... Args>
+  ReductionView(
+      typename std::enable_if<std::is_same<Layout, LayoutRight>::value,
+                              std::string const&>::value_type name,
+      Args ... args)
+    : internal_view(name, args..., unique_token.size())
+  {
+  }
+
+  template <typename ... Args>
+  ReductionView(
+      typename std::enable_if<std::is_same<Layout, LayoutLeft>::value,
+                              std::string const&>::value_type name,
+      Args ... args)
+    : internal_view(name, unique_token.size(), args...)
+  {
+  }
+
+  ReductionView(ReductionView const& other)
+    : internal_view(other)
+    , rank(unique_token.acquire())
+  {
+  }
+
+  ReductionView(ReductionView&& other)
+    : internal_view(std::move(other.internal_view))
+    , rank(unique_token.acquire())
+  {
+  }
+
+  ~ReductionView() {
+    unique_token.release(rank);
+  }
+
+  ReductionView& operator=(ReductionView&& other) {
+    internal_view = std::move(other.internal_view);
+    return *this;
+  }
+
+  ReductionView& operator=(ReductionView const& other) {
+    internal_view = other.internal_view;
+    return *this;
+  }
+
+  template <typename ... Args>
+  KOKKOS_FORCEINLINE_FUNCTION
+  typename std::enable_if<
+      std::is_same<Layout, Kokkos::LayoutRight>::value,
+      value_type>::value_type
+  operator()(Args ... args) const {
+    return internal_view(rank, args...);
+  }
+
+  template <typename ... Args>
+  KOKKOS_FORCEINLINE_FUNCTION
+  typename std::enable_if<
+      std::is_same<Layout, Kokkos::LayoutLeft>::value,
+      value_type>::value_type
+  operator()(Args ... args) const {
+    return internal_view(args..., rank);
+  }
+
+private:
+  typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<DataType, Layout> data_type_info;
+  typedef typename data_type_info::value_type internal_data_type;
+  typedef Kokkos::View<internal_data_type, Layout, ExecSpace> internal_view_type;
+  typedef Kokkos::Experimental::UniqueToken<
+      ExecSpace, Kokkos::Experimental::UniqueTokenScope::Instance> unique_token_type;
+  typedef typename unique_token_type::size_type rank_type;
+
+  unique_token_type unique_token;
+  internal_view_type internal_view;
+  rank_type rank;
 };
 
 }} // namespace Kokkos::Experimental
