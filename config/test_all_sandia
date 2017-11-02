@@ -246,8 +246,8 @@ elif [ "$MACHINE" = "shepard" ]; then
   OLD_INTEL_BUILD_LIST="Pthread,Serial,Pthread_Serial"
 
   # Format: (compiler module-list build-list exe-name warning-flag)
-  COMPILERS=("intel/16.2.181 $BASE_MODULE_LIST $OLD_INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-             "intel/17.0.098 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+  COMPILERS=("intel/17.4.196 $BASE_MODULE_LIST $OLD_INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+             "intel/18.0.128 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
   )
 
   if [ -z "$ARCH_FLAG" ]; then
