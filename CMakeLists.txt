@@ -34,6 +34,7 @@ IF(NOT KOKKOS_HAS_TRILINOS)
     RESULT_VARIABLE res
   )
   include(${Kokkos_BINARY_DIR}/gen_kokkos.cmake)
+  set_kokkos_srcs(KOKKOS_SRC ${KOKKOS_SRC})
 
   #------------ NOW BUILD ------------------------------------------------------
   include(${KOKKOS_SRC_PATH}/cmake/kokkos_build.cmake)
