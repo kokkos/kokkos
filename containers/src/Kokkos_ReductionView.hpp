@@ -118,8 +118,8 @@ struct ReductionValue;
 template <typename ValueType>
 struct ReductionValue<ValueType, Kokkos::Experimental::ReductionSum, Kokkos::Experimental::ReductionNonAtomic> {
   public:
-    ReductionValue(ValueType& value_in) : value( value_in ) {}
-    void operator+=(ValueType const& rhs) {
+    KOKKOS_FORCEINLINE_FUNCTION ReductionValue(ValueType& value_in) : value( value_in ) {}
+    KOKKOS_FORCEINLINE_FUNCTION void operator+=(ValueType const& rhs) {
       value += rhs;
     }
   private:
@@ -129,8 +129,8 @@ struct ReductionValue<ValueType, Kokkos::Experimental::ReductionSum, Kokkos::Exp
 template <typename ValueType>
 struct ReductionValue<ValueType, Kokkos::Experimental::ReductionSum, Kokkos::Experimental::ReductionAtomic> {
   public:
-    ReductionValue(ValueType& value_in) : value( value_in ) {}
-    void operator+=(ValueType const& rhs) {
+    KOKKOS_FORCEINLINE_FUNCTION ReductionValue(ValueType& value_in) : value( value_in ) {}
+    KOKKOS_FORCEINLINE_FUNCTION void operator+=(ValueType const& rhs) {
       Kokkos::atomic_add(&value, rhs);
     }
   private:
@@ -194,6 +194,15 @@ template <typename DataType
          >
 class ReductionView;
 
+template <typename DataType
+         ,int Op
+         ,typename ExecSpace
+         ,typename Layout
+         ,int contribution
+         ,int duplication
+         >
+class ReductionAccess;
+
 // non-duplicated implementation
 template <typename DataType
          ,int Op
@@ -213,9 +222,26 @@ public:
   typedef typename original_view_type::value_type original_value_type;
   typedef Kokkos::Impl::Experimental::ReductionValue<
       original_value_type, Op, contribution> value_type;
+  typedef ReductionAccess<DataType, Op, ExecSpace, Layout, contribution, ReductionNonDuplicated> access_type;
+
+  ReductionView()
+  {
+  }
+
+  template <typename RT, typename ... RP >
+  ReductionView(View<RT, RP...> const& original_view)
+  : internal_view(original_view)
+  {
+  }
+
+  access_type access() const {
+    return access_type(*this);
+  }
+
+protected:
   template <typename ... Args>
   KOKKOS_FORCEINLINE_FUNCTION
-  value_type operator()(Args ... args) const {
+  value_type at(Args ... args) const {
     return internal_view(args...);
   }
 private:
@@ -223,104 +249,219 @@ private:
   internal_view_type internal_view;
 };
 
-// duplicated implementation
 template <typename DataType
          ,int Op
          ,typename ExecSpace
          ,typename Layout
          ,int contribution
          >
-class ReductionView<DataType
+class ReductionAccess<DataType
                    ,Op
                    ,ExecSpace
                    ,Layout
                    ,contribution
+                   ,ReductionNonDuplicated>
+      : public ReductionView<DataType, Op, ExecSpace, Layout, contribution, ReductionNonDuplicated>
+{
+public:
+  typedef ReductionView<DataType, Op, ExecSpace, Layout, contribution> Base;
+  using typename Base::value_type;
+  template <typename ... Args>
+  KOKKOS_FORCEINLINE_FUNCTION
+  value_type operator()(Args ... args) const {
+    return Base::at(args...);
+  }
+};
+
+// duplicated implementation
+// LayoutLeft and LayoutRight are different enough that we'll just specialize each
+
+template <typename DataType
+         ,int Op
+         ,typename ExecSpace
+         ,int contribution
+         >
+class ReductionView<DataType
+                   ,Op
+                   ,ExecSpace
+                   ,Kokkos::LayoutRight
+                   ,contribution
                    ,ReductionDuplicated>
 {
 public:
-  static_assert(std::is_same<Layout, Kokkos::LayoutRight>::value,
-                "duplicated ReductionView only supports LayoutRight");
-  typedef Kokkos::View<DataType, Layout, ExecSpace> original_view_type;
+  typedef Kokkos::View<DataType, Kokkos::LayoutRight, ExecSpace> original_view_type;
   typedef typename original_view_type::value_type original_value_type;
   typedef Kokkos::Impl::Experimental::ReductionValue<
       original_value_type, Op, contribution> value_type;
+  typedef ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, contribution, ReductionDuplicated> access_type;
 
   ReductionView()
   {
   }
 
-  template <typename ... Args>
-  ReductionView(
-      typename std::enable_if<std::is_same<Layout, LayoutRight>::value,
-                              std::string const&>::value_type name,
-      Args ... args)
-    : internal_view(name, args..., unique_token.size())
+  template <typename RT, typename ... RP >
+  ReductionView(View<RT, RP...> const& original_view)
+  : unique_token()
+  , internal_view(original_view.labe(),
+                  unique_token.size(),
+                  original_view.dimensions_0(),
+                  original_view.dimensions_1(),
+                  original_view.dimensions_2(),
+                  original_view.dimensions_3(),
+                  original_view.dimensions_4(),
+                  original_view.dimensions_5(),
+                  original_view.dimensions_6())
   {
   }
 
-  template <typename ... Args>
-  ReductionView(
-      typename std::enable_if<std::is_same<Layout, LayoutLeft>::value,
-                              std::string const&>::value_type name,
-      Args ... args)
-    : internal_view(name, unique_token.size(), args...)
-  {
+  KOKKOS_INLINE_FUNCTION
+  access_type access() const {
+    return access_type(*this);
   }
 
-  ReductionView(ReductionView const& other)
-    : internal_view(other)
-    , rank(unique_token.acquire())
-  {
-  }
-
-  ReductionView(ReductionView&& other)
-    : internal_view(std::move(other.internal_view))
-    , rank(unique_token.acquire())
-  {
-  }
-
-  ~ReductionView() {
-    unique_token.release(rank);
-  }
-
-  ReductionView& operator=(ReductionView&& other) {
-    internal_view = std::move(other.internal_view);
-    return *this;
-  }
-
-  ReductionView& operator=(ReductionView const& other) {
-    internal_view = other.internal_view;
-    return *this;
-  }
-
+protected:
   template <typename ... Args>
   KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if<
-      std::is_same<Layout, Kokkos::LayoutRight>::value,
-      value_type>::value_type
-  operator()(Args ... args) const {
+  value_type at(int rank, Args ... args) const {
     return internal_view(rank, args...);
   }
 
+private:
+  typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<DataType, Kokkos::LayoutRight> data_type_info;
+  typedef typename data_type_info::value_type internal_data_type;
+  typedef Kokkos::View<internal_data_type, Kokkos::LayoutRight, ExecSpace> internal_view_type;
+  typedef Kokkos::Experimental::UniqueToken<
+      ExecSpace, Kokkos::Experimental::UniqueTokenScope::Instance> unique_token_type;
+
+  unique_token_type unique_token;
+  internal_view_type internal_view;
+};
+
+template <typename DataType
+         ,int Op
+         ,typename ExecSpace
+         ,int contribution
+         >
+class ReductionView<DataType
+                   ,Op
+                   ,ExecSpace
+                   ,Kokkos::LayoutLeft
+                   ,contribution
+                   ,ReductionDuplicated>
+{
+public:
+  typedef Kokkos::View<DataType, Kokkos::LayoutLeft, ExecSpace> original_view_type;
+  typedef typename original_view_type::value_type original_value_type;
+  typedef Kokkos::Impl::Experimental::ReductionValue<
+      original_value_type, Op, contribution> value_type;
+  typedef ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, contribution, ReductionDuplicated> access_type;
+
+  ReductionView()
+  {
+  }
+
+  template <typename RT, typename ... RP >
+  ReductionView(View<RT, RP...> const& original_view)
+  : unique_token()
+  {
+    size_t arg_N[8] = {
+      original_view.dimension_0(),
+      original_view.dimension_1(),
+      original_view.dimension_2(),
+      original_view.dimension_3(),
+      original_view.dimension_4(),
+      original_view.dimension_5(),
+      original_view.dimension_6(),
+      0
+    };
+    for (int i = 0; i < 8; ++i) {
+      if (arg_N[i] == 0) {
+        arg_N[i] = unique_token.size();
+        break;
+      }
+    }
+    internal_view = internal_view_type(
+        original_view.name(),
+        arg_N[0], arg_N[1], arg_N[2], arg_N[3],
+        arg_N[4], arg_N[5], arg_N[6], arg_N[7]);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  access_type access() const {
+    return access_type(*this);
+  }
+
+protected:
   template <typename ... Args>
   KOKKOS_FORCEINLINE_FUNCTION
-  typename std::enable_if<
-      std::is_same<Layout, Kokkos::LayoutLeft>::value,
-      value_type>::value_type
-  operator()(Args ... args) const {
+  value_type at(int rank, Args ... args) const {
     return internal_view(args..., rank);
   }
 
 private:
-  typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<DataType, Layout> data_type_info;
+  typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<DataType, Kokkos::LayoutLeft> data_type_info;
   typedef typename data_type_info::value_type internal_data_type;
-  typedef Kokkos::View<internal_data_type, Layout, ExecSpace> internal_view_type;
+  typedef Kokkos::View<internal_data_type, Kokkos::LayoutLeft, ExecSpace> internal_view_type;
   typedef Kokkos::Experimental::UniqueToken<
       ExecSpace, Kokkos::Experimental::UniqueTokenScope::Instance> unique_token_type;
-  typedef typename unique_token_type::size_type rank_type;
 
   unique_token_type unique_token;
   internal_view_type internal_view;
+};
+
+
+/* This object has to be separate in order to store the thread rank, which cannot
+   be obtained until one is inside a parallel construct, and may be relatively
+   expensive to obtain at every contribution
+   (calls a non-inlined function, looks up a thread-local variable).
+   Due to the expense, it is sensible to query it at most once per parallel iterate
+   (ideally once per thread, but parallel_for doesn't expose that)
+   and then store it in a stack variable.
+   ReductionAccess serves as a non-const object on the stack which can store the thread rank */
+
+template <typename DataType
+         ,int Op
+         ,typename ExecSpace
+         ,typename Layout
+         ,int contribution
+         >
+class ReductionAccess<DataType
+                   ,Op
+                   ,ExecSpace
+                   ,Layout
+                   ,contribution
+                   ,ReductionDuplicated>
+      : public ReductionView<DataType, Op, ExecSpace, Layout, contribution, ReductionDuplicated>
+{
+public:
+  typedef ReductionView<DataType, Op, ExecSpace, Layout, contribution, ReductionDuplicated> Base;
+  using typename Base::value_type;
+
+  ReductionAccess(Base const& base)
+    : Base(base)
+    , rank(Base::unique_token.acquire()) {
+  }
+
+  ~ReductionAccess() {
+    Base::unique_token.release(rank);
+  }
+
+  template <typename ... Args>
+  KOKKOS_FORCEINLINE_FUNCTION
+  value_type operator()(Args ... args) const {
+    return Base::at(rank, args...);
+  }
+
+private:
+
+  // simplify RAII by disallowing copies
+  ReductionAccess(ReductionAccess const& other) = delete;
+  ReductionAccess(ReductionAccess&& other) = delete;
+  ReductionAccess& operator=(ReductionAccess const& other) = delete;
+  ReductionAccess& operator=(ReductionAccess&& other) = delete;
+
+  using typename Base::unique_token_type;
+  typedef typename unique_token_type::size_type rank_type;
   rank_type rank;
 };
 
