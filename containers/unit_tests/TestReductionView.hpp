@@ -49,12 +49,13 @@
 
 namespace Test {
 
-template <typename Device>
+template <typename ExecSpace>
 void test_reduction_view(int n)
 {
-  Kokkos::View<double *[3]> original_view("original_view", n);
+  Kokkos::View<double *[3], ExecSpace> original_view("original_view", n);
   {
     auto reduction_view = Kokkos::Experimental::create_reduction_view(original_view);
+    auto policy = Kokkos::RangePolicy<ExecSpace, int>(0, n);
 #if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
     auto f = KOKKOS_LAMBDA(int i) {
       auto reduction_access = reduction_view.access();
@@ -65,7 +66,7 @@ void test_reduction_view(int n)
         reduction_access(k, 2) += 1.0;
       }
     };
-    Kokkos::parallel_for(n, f, "reduction_view_test");
+    Kokkos::parallel_for(policy, f, "reduction_view_test");
 #endif
   }
 }
