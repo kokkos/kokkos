@@ -31,9 +31,7 @@ TARGETS =
 OBJ_PERF = PerfTestMain.o gtest-all.o
 OBJ_PERF += PerfTestGramSchmidt.o
 OBJ_PERF += PerfTestHexGrad.o
-ifneq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
 OBJ_PERF += PerfTest_CustomReduction.o
-endif
 TARGETS += KokkosCore_PerformanceTest
 TEST_TARGETS += test-performance
 
