@@ -62,13 +62,13 @@ enum : int {
 };
 
 enum : int {
-  ReductionDuplicated,
-  ReductionNonDuplicated
+  ReductionNonDuplicated = 0,
+  ReductionDuplicated    = 1
 };
 
 enum : int {
-  ReductionAtomic,
-  ReductionNonAtomic
+  ReductionNonAtomic = 0,
+  ReductionAtomic    = 1
 };
 
 }} // Kokkos::Experimental
@@ -78,40 +78,74 @@ namespace Impl {
 namespace Experimental {
 
 template <typename ExecSpace>
-struct DefaultReductionImpl;
+struct DefaultDuplication;
+
+template <typename ExecSpace, int duplication>
+struct DefaultContribution;
 
 #ifdef KOKKOS_ENABLE_SERIAL
 template <>
-struct DefaultReductionImpl<Kokkos::Serial> {
-  enum : int { duplication = Kokkos::Experimental::ReductionNonDuplicated };
-  enum : int { contribution = Kokkos::Experimental::ReductionNonAtomic };
+struct DefaultDuplication<Kokkos::Serial> {
+  enum : int { value = Kokkos::Experimental::ReductionNonDuplicated };
+};
+template <>
+struct DefaultContribution<Kokkos::Serial, Kokkos::Experimental::ReductionNonDuplicated> {
+  enum : int { value = Kokkos::Experimental::ReductionNonAtomic };
+};
+template <>
+struct DefaultContribution<Kokkos::Serial, Kokkos::Experimental::ReductionDuplicated> {
+  enum : int { value = Kokkos::Experimental::ReductionNonAtomic };
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_OPENMP
 template <>
-struct DefaultReductionImpl<Kokkos::OpenMP> {
-  enum : int { duplication = Kokkos::Experimental::ReductionDuplicated };
-  enum : int { contribution = Kokkos::Experimental::ReductionNonAtomic };
+struct DefaultDuplication<Kokkos::OpenMP> {
+  enum : int { value = Kokkos::Experimental::ReductionDuplicated };
+};
+template <>
+struct DefaultContribution<Kokkos::OpenMP, Kokkos::Experimental::ReductionNonDuplicated> {
+  enum : int { value = Kokkos::Experimental::ReductionNonAtomic };
+};
+template <>
+struct DefaultContribution<Kokkos::OpenMP, Kokkos::Experimental::ReductionDuplicated> {
+  enum : int { value = Kokkos::Experimental::ReductionAtomic };
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_THREADS
 template <>
-struct DefaultReductionImpl<Kokkos::Threads> {
-  enum : int { duplication = Kokkos::Experimental::ReductionDuplicated };
-  enum : int { contribution = Kokkos::Experimental::ReductionNonAtomic };
+struct DefaultDuplication<Kokkos::Threads> {
+  enum : int { value = Kokkos::Experimental::ReductionDuplicated };
+};
+template <>
+struct DefaultContribution<Kokkos::Threads, Kokkos::Experimental::ReductionNonDuplicated> {
+  enum : int { value = Kokkos::Experimental::ReductionNonAtomic };
+};
+template <>
+struct DefaultContribution<Kokkos::Threads, Kokkos::Experimental::ReductionDuplicated> {
+  enum : int { value = Kokkos::Experimental::ReductionAtomic };
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA
 template <>
-struct DefaultReductionImpl<Kokkos::Cuda> {
-  enum : int { duplication = Kokkos::Experimental::ReductionNonDuplicated };
-  enum : int { contribution = Kokkos::Experimental::ReductionAtomic };
+struct DefaultDuplication<Kokkos::Cuda> {
+  enum : int { value = Kokkos::Experimental::ReductionNonDuplicated };
+};
+template <>
+struct DefaultContribution<Kokkos::Cuda, Kokkos::Experimental::ReductionNonDuplicated> {
+  enum : int { value = Kokkos::Experimental::ReductionAtomic };
+};
+template <>
+struct DefaultContribution<Kokkos::Cuda, Kokkos::Experimental::ReductionDuplicated> {
+  enum : int { value = Kokkos::Experimental::ReductionAtomic };
 };
 #endif
 
+/* ReductionValue is the object returned by the access operator() of ReductionAccess,
+   similar to that returned by an Atomic View, it wraps Kokkos::atomic_add with convenient
+   operator+=, etc. */
 template <typename ValueType, int Op, int contribution>
 struct ReductionValue;
 
@@ -121,6 +155,9 @@ struct ReductionValue<ValueType, Kokkos::Experimental::ReductionSum, Kokkos::Exp
     KOKKOS_FORCEINLINE_FUNCTION ReductionValue(ValueType& value_in) : value( value_in ) {}
     KOKKOS_FORCEINLINE_FUNCTION void operator+=(ValueType const& rhs) {
       value += rhs;
+    }
+    KOKKOS_FORCEINLINE_FUNCTION void operator-=(ValueType const& rhs) {
+      value -= rhs;
     }
   private:
     ValueType& value;
@@ -133,10 +170,17 @@ struct ReductionValue<ValueType, Kokkos::Experimental::ReductionSum, Kokkos::Exp
     KOKKOS_FORCEINLINE_FUNCTION void operator+=(ValueType const& rhs) {
       Kokkos::atomic_add(&value, rhs);
     }
+    KOKKOS_FORCEINLINE_FUNCTION void operator-=(ValueType const& rhs) {
+      Kokkos::atomic_add(&value, -rhs);
+    }
   private:
     ValueType& value;
 };
 
+/* DuplicatedDataType, given a View DataType, will create a new DataType
+   that has a new runtime dimension which becomes the largest-stride dimension.
+   In the case of LayoutLeft, due to the limitation induced by the design of DataType
+   itself, it must convert any existing compile-time dimensions into runtime dimensions. */
 template <typename T, typename Layout>
 struct DuplicatedDataType;
 
@@ -180,6 +224,48 @@ struct DuplicatedDataType<T*, Kokkos::LayoutLeft> {
   typedef typename DuplicatedDataType<T, Kokkos::LayoutLeft>::value_type* value_type;
 };
 
+/* Slice is just responsible for stuffing the correct number of Kokkos::ALL
+   arguments on the correct side of the index in a call to subview() to get a
+   subview where the index specified is the largest-stride one. */
+template <typename Layout, int rank, typename V, typename ... Args>
+struct Slice {
+  typedef Slice<Layout, rank - 1, V, Kokkos::Impl::ALL_t, Args...> next;
+  typedef typename next::value_type value_type;
+
+  static
+  value_type get(V const& src, const size_t i, Args ... args) {
+    return next::get(src, i, Kokkos::ALL, args...);
+  }
+};
+
+template <typename V, typename ... Args>
+struct Slice<Kokkos::LayoutRight, 1, V, Args...> {
+  typedef typename Kokkos::Impl::ViewMapping
+                          < void
+                          , V
+                          , const size_t
+                          , Args ...
+                          >::type value_type;
+  static
+  value_type get(V const& src, const size_t i, Args ... args) {
+    return Kokkos::subview(src, i, args...);
+  }
+};
+
+template <typename V, typename ... Args>
+struct Slice<Kokkos::LayoutLeft, 1, V, Args...> {
+  typedef typename Kokkos::Impl::ViewMapping
+                          < void
+                          , V
+                          , Args ...
+                          , const size_t
+                          >::type value_type;
+  static
+  value_type get(V const& src, const size_t i, Args ... args) {
+    return Kokkos::subview(src, args..., i);
+  }
+};
+
 }}} // Kokkos::Impl::Experimental
 
 namespace Kokkos {
@@ -189,8 +275,8 @@ template <typename DataType
          ,int Op = ReductionSum
          ,typename ExecSpace = Kokkos::DefaultExecutionSpace
          ,typename Layout = Kokkos::DefaultExecutionSpace::array_layout
-         ,int contribution = Kokkos::Impl::Experimental::DefaultReductionImpl<ExecSpace>::contribution
-         ,int duplication = Kokkos::Impl::Experimental::DefaultReductionImpl<ExecSpace>::duplication
+         ,int duplication = Kokkos::Impl::Experimental::DefaultDuplication<ExecSpace>::value
+         ,int contribution = Kokkos::Impl::Experimental::DefaultContribution<ExecSpace, duplication>::value
          >
 class ReductionView;
 
@@ -198,8 +284,8 @@ template <typename DataType
          ,int Op
          ,typename ExecSpace
          ,typename Layout
-         ,int contribution
          ,int duplication
+         ,int contribution
          >
 class ReductionAccess;
 
@@ -214,21 +300,21 @@ class ReductionView<DataType
                    ,Op
                    ,ExecSpace
                    ,Layout
-                   ,contribution
-                   ,ReductionNonDuplicated>
+                   ,ReductionNonDuplicated
+                   ,contribution>
 {
 public:
   typedef Kokkos::View<DataType, Layout, ExecSpace> original_view_type;
   typedef typename original_view_type::value_type original_value_type;
   typedef Kokkos::Impl::Experimental::ReductionValue<
       original_value_type, Op, contribution> value_type;
-  typedef ReductionAccess<DataType, Op, ExecSpace, Layout, contribution, ReductionNonDuplicated> access_type;
+  typedef ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, contribution> access_type;
 
   ReductionView()
   {
   }
 
-  template <typename RT, typename ... RP >
+  template <typename RT, typename ... RP>
   ReductionView(View<RT, RP...> const& original_view)
   : internal_view(original_view)
   {
@@ -236,6 +322,18 @@ public:
 
   access_type access() const {
     return access_type(*this);
+  }
+
+  template <typename ... RP>
+  void deep_copy_from(View<DataType, RP...> const& src)
+  {
+    Kokkos::deep_copy(internal_view, src);
+  }
+
+  template <typename ... RP>
+  void deep_copy_into(View<DataType, RP...> const& dest) const
+  {
+    Kokkos::deep_copy(dest, internal_view);
   }
 
 protected:
@@ -259,12 +357,12 @@ class ReductionAccess<DataType
                    ,Op
                    ,ExecSpace
                    ,Layout
-                   ,contribution
-                   ,ReductionNonDuplicated>
-      : public ReductionView<DataType, Op, ExecSpace, Layout, contribution, ReductionNonDuplicated>
+                   ,ReductionNonDuplicated
+                   ,contribution>
+      : public ReductionView<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, contribution>
 {
 public:
-  typedef ReductionView<DataType, Op, ExecSpace, Layout, contribution> Base;
+  typedef ReductionView<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, contribution> Base;
   using typename Base::value_type;
 
   KOKKOS_INLINE_FUNCTION
@@ -292,15 +390,18 @@ class ReductionView<DataType
                    ,Op
                    ,ExecSpace
                    ,Kokkos::LayoutRight
-                   ,contribution
-                   ,ReductionDuplicated>
+                   ,ReductionDuplicated
+                   ,contribution>
 {
 public:
   typedef Kokkos::View<DataType, Kokkos::LayoutRight, ExecSpace> original_view_type;
   typedef typename original_view_type::value_type original_value_type;
   typedef Kokkos::Impl::Experimental::ReductionValue<
       original_value_type, Op, contribution> value_type;
-  typedef ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, contribution, ReductionDuplicated> access_type;
+  typedef ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, contribution> access_type;
+  typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<DataType, Kokkos::LayoutRight> data_type_info;
+  typedef typename data_type_info::value_type internal_data_type;
+  typedef Kokkos::View<internal_data_type, Kokkos::LayoutRight, ExecSpace> internal_view_type;
 
   ReductionView()
   {
@@ -309,7 +410,7 @@ public:
   template <typename RT, typename ... RP >
   ReductionView(View<RT, RP...> const& original_view)
   : unique_token()
-  , internal_view(original_view.labe(),
+  , internal_view(original_view.label(),
                   unique_token.size(),
                   original_view.dimensions_0(),
                   original_view.dimensions_1(),
@@ -326,6 +427,26 @@ public:
     return access_type(*this);
   }
 
+  typename Kokkos::Impl::Experimental::Slice<
+    Kokkos::LayoutRight, internal_view_type::rank, internal_view_type>::value_type
+  subview() const
+  {
+    return Kokkos::Impl::Experimental::Slice<
+      Kokkos::LayoutRight, internal_view_type::Rank, internal_view_type>::get(internal_view, 0);
+  }
+
+  template <typename ... RP>
+  void deep_copy_from(View<DataType, RP...> const& src)
+  {
+    Kokkos::deep_copy(this->subview(), src);
+  }
+
+  template <typename ... RP>
+  void deep_copy_into(View<DataType, RP...> const& dest) const
+  {
+    Kokkos::deep_copy(dest, this->subview());
+  }
+
 protected:
   template <typename ... Args>
   KOKKOS_FORCEINLINE_FUNCTION
@@ -334,9 +455,6 @@ protected:
   }
 
 private:
-  typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<DataType, Kokkos::LayoutRight> data_type_info;
-  typedef typename data_type_info::value_type internal_data_type;
-  typedef Kokkos::View<internal_data_type, Kokkos::LayoutRight, ExecSpace> internal_view_type;
   typedef Kokkos::Experimental::UniqueToken<
       ExecSpace, Kokkos::Experimental::UniqueTokenScope::Instance> unique_token_type;
 
@@ -353,15 +471,18 @@ class ReductionView<DataType
                    ,Op
                    ,ExecSpace
                    ,Kokkos::LayoutLeft
-                   ,contribution
-                   ,ReductionDuplicated>
+                   ,ReductionDuplicated
+                   ,contribution>
 {
 public:
   typedef Kokkos::View<DataType, Kokkos::LayoutLeft, ExecSpace> original_view_type;
   typedef typename original_view_type::value_type original_value_type;
   typedef Kokkos::Impl::Experimental::ReductionValue<
       original_value_type, Op, contribution> value_type;
-  typedef ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, contribution, ReductionDuplicated> access_type;
+  typedef ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ReductionDuplicated, contribution> access_type;
+  typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<DataType, Kokkos::LayoutLeft> data_type_info;
+  typedef typename data_type_info::value_type internal_data_type;
+  typedef Kokkos::View<internal_data_type, Kokkos::LayoutLeft, ExecSpace> internal_view_type;
 
   ReductionView()
   {
@@ -398,6 +519,26 @@ public:
     return access_type(*this);
   }
 
+  typename Kokkos::Impl::Experimental::Slice<
+    Kokkos::LayoutLeft, internal_view_type::rank, internal_view_type>::value_type
+  subview() const
+  {
+    return Kokkos::Impl::Experimental::Slice<
+      Kokkos::LayoutLeft, internal_view_type::rank, internal_view_type>::get(internal_view, 0);
+  }
+
+  template <typename ... RP>
+  void deep_copy_from(View<DataType, RP...> const& src)
+  {
+    Kokkos::deep_copy(this->subview(), src);
+  }
+
+  template <typename ... RP>
+  void deep_copy_into(View<DataType, RP...> const& dest) const
+  {
+    Kokkos::deep_copy(dest, this->subview());
+  }
+
 protected:
   template <typename ... Args>
   KOKKOS_FORCEINLINE_FUNCTION
@@ -406,9 +547,6 @@ protected:
   }
 
 private:
-  typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<DataType, Kokkos::LayoutLeft> data_type_info;
-  typedef typename data_type_info::value_type internal_data_type;
-  typedef Kokkos::View<internal_data_type, Kokkos::LayoutLeft, ExecSpace> internal_view_type;
   typedef Kokkos::Experimental::UniqueToken<
       ExecSpace, Kokkos::Experimental::UniqueTokenScope::Instance> unique_token_type;
 
@@ -474,16 +612,50 @@ private:
   rank_type rank;
 };
 
-template <int Op = Kokkos::Experimental::ReductionSum, typename RT, typename ... RP>
-ReductionView<
-  RT,
-  Op,
-  typename ViewTraits<RT, RP...>::execution_space,
-  typename ViewTraits<RT, RP...>::array_layout>
+template <int Op = Kokkos::Experimental::ReductionSum,
+          int duplication = -1,
+          int contribution = -1,
+          typename RT, typename ... RP>
+ReductionView
+  < RT
+  , Op
+  , typename ViewTraits<RT, RP...>::execution_space
+  , typename ViewTraits<RT, RP...>::array_layout
+  , duplication == -1 ? Kokkos::Impl::Experimental::DefaultDuplication<typename ViewTraits<RT, RP...>::execution_space>::value : duplication
+  , contribution == -1 ?
+      Kokkos::Impl::Experimental::DefaultContribution<
+                        typename ViewTraits<RT, RP...>::execution_space,
+                        (duplication == -1 ?
+                           Kokkos::Impl::Experimental::DefaultDuplication<
+                             typename ViewTraits<RT, RP...>::execution_space
+                             >::value
+                                           : duplication
+                        )
+                        >::value
+                       : contribution
+  >
 create_reduction_view(View<RT, RP...> const& original_view) {
-  return original_view;
+  return original_view; // implicit ReductionView constructor call
 }
 
 }} // namespace Kokkos::Experimental
+
+namespace Kokkos {
+
+template <typename DT, int OP, typename ES, typename LY, int CT, int DP, typename ... VP>
+void
+deep_copy(View<DT, VP...>& dest, Kokkos::Experimental::ReductionView<DT, OP, ES, LY, CT, DP> const& src)
+{
+  src.deep_copy_into(dest);
+}
+
+template <typename DT, int OP, typename ES, typename LY, int CT, int DP, typename ... VP>
+void
+deep_copy(Kokkos::Experimental::ReductionView<DT, OP, ES, LY, CT, DP>& dest, View<DT, VP...> const& src)
+{
+  src.deep_copy_from(src);
+}
+
+} // namespace Kokkos
 
 #endif
