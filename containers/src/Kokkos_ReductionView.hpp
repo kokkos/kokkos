@@ -159,6 +159,11 @@ struct ReductionValue<ValueType, Kokkos::Experimental::ReductionSum, Kokkos::Exp
     KOKKOS_FORCEINLINE_FUNCTION void operator-=(ValueType const& rhs) {
       value -= rhs;
     }
+    /* This is mostly for re-use in the reduction across duplicate values in the internal implementation
+       of ReductionView */
+    KOKKOS_FORCEINLINE_FUNCTION void contribute(ValueType const& rhs) {
+      value += rhs;
+    }
   private:
     ValueType& value;
 };
@@ -621,6 +626,9 @@ ReductionView
   , Op
   , typename ViewTraits<RT, RP...>::execution_space
   , typename ViewTraits<RT, RP...>::array_layout
+  /* just setting defaults if not specified... things got messy because the view type
+     does not come before the duplication/contribution settings in the
+     template parameter list */
   , duplication == -1 ? Kokkos::Impl::Experimental::DefaultDuplication<typename ViewTraits<RT, RP...>::execution_space>::value : duplication
   , contribution == -1 ?
       Kokkos::Impl::Experimental::DefaultContribution<
@@ -653,7 +661,7 @@ template <typename DT, int OP, typename ES, typename LY, int CT, int DP, typenam
 void
 deep_copy(Kokkos::Experimental::ReductionView<DT, OP, ES, LY, CT, DP>& dest, View<DT, VP...> const& src)
 {
-  src.deep_copy_from(src);
+  dest.deep_copy_from(src);
 }
 
 } // namespace Kokkos
