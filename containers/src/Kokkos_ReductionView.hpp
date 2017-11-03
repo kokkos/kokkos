@@ -453,13 +453,13 @@ public:
   : unique_token()
   , internal_view(original_view.label(),
                   unique_token.size(),
-                  original_view.dimensions_0(),
-                  original_view.dimensions_1(),
-                  original_view.dimensions_2(),
-                  original_view.dimensions_3(),
-                  original_view.dimensions_4(),
-                  original_view.dimensions_5(),
-                  original_view.dimensions_6())
+                  original_view.dimension_0(),
+                  original_view.dimension_1(),
+                  original_view.dimension_2(),
+                  original_view.dimension_3(),
+                  original_view.dimension_4(),
+                  original_view.dimension_5(),
+                  original_view.dimension_6())
   {
   }
 
@@ -486,9 +486,11 @@ public:
   void deep_copy_into(View<DataType, RP...> const& dest) const
   {
     {
+      size_t strides[8];
+      internal_view.stride(strides);
       Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
           internal_view.data(),
-          internal_view.stride(0),
+          strides[0],
           internal_view.dimension(0),
           internal_view.label());
     }
@@ -502,7 +504,7 @@ protected:
     return internal_view(rank, args...);
   }
 
-private:
+protected:
   typedef Kokkos::Experimental::UniqueToken<
       ExecSpace, Kokkos::Experimental::UniqueTokenScope::Instance> unique_token_type;
 
@@ -585,9 +587,11 @@ public:
   void deep_copy_into(View<DataType, RP...> const& dest) const
   {
     {
+      size_t strides[8];
+      internal_view.stride(strides);
       Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
           internal_view.data(),
-          internal_view.stride(internal_view_type::rank - 1),
+          strides[internal_view_type::rank - 1],
           internal_view.dimension(internal_view_type::rank - 1),
           internal_view.label());
     }
@@ -601,7 +605,7 @@ protected:
     return internal_view(args..., rank);
   }
 
-private:
+protected:
   typedef Kokkos::Experimental::UniqueToken<
       ExecSpace, Kokkos::Experimental::UniqueTokenScope::Instance> unique_token_type;
 
@@ -629,12 +633,12 @@ class ReductionAccess<DataType
                    ,Op
                    ,ExecSpace
                    ,Layout
-                   ,contribution
-                   ,ReductionDuplicated>
-      : public ReductionView<DataType, Op, ExecSpace, Layout, contribution, ReductionDuplicated>
+                   ,ReductionDuplicated
+                   ,contribution>
+      : public ReductionView<DataType, Op, ExecSpace, Layout, ReductionDuplicated, contribution>
 {
 public:
-  typedef ReductionView<DataType, Op, ExecSpace, Layout, contribution, ReductionDuplicated> Base;
+  typedef ReductionView<DataType, Op, ExecSpace, Layout, ReductionDuplicated, contribution> Base;
   using typename Base::value_type;
 
   KOKKOS_INLINE_FUNCTION
@@ -645,7 +649,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   ~ReductionAccess() {
-    Base::unique_token.release(rank);
+    if (rank != ~rank_type(0)) Base::unique_token.release(rank);
   }
 
   template <typename ... Args>
@@ -658,9 +662,24 @@ private:
 
   // simplify RAII by disallowing copies
   ReductionAccess(ReductionAccess const& other) = delete;
-  ReductionAccess(ReductionAccess&& other) = delete;
   ReductionAccess& operator=(ReductionAccess const& other) = delete;
-  ReductionAccess& operator=(ReductionAccess&& other) = delete;
+
+public:
+  // do need to allow moves though, for the common
+  // auto b = a.access();
+  // that assignments turns into a move constructor call 
+  ReductionAccess(ReductionAccess&& other)
+    : Base(std::move(other))
+    , rank(other.rank)
+  {
+    other.rank = ~rank_type(0);
+  }
+  ReductionAccess& operator=(ReductionAccess&& other) {
+    Base::operator=(std::move(other));
+    other.rank = ~rank_type(0);
+  }
+
+private:
 
   using typename Base::unique_token_type;
   typedef typename unique_token_type::size_type rank_type;

@@ -49,12 +49,16 @@
 
 namespace Test {
 
-template <typename ExecSpace>
-void test_reduction_view(int n)
+template <typename ExecSpace, typename Layout, int duplication, int contribution>
+void test_reduction_view_config(int n)
 {
-  Kokkos::View<double *[3], ExecSpace> original_view("original_view", n);
+  Kokkos::View<double *[3], Layout, ExecSpace> original_view("original_view", n);
   {
-    auto reduction_view = Kokkos::Experimental::create_reduction_view(original_view);
+    auto reduction_view = Kokkos::Experimental::create_reduction_view
+      < Kokkos::Experimental::ReductionSum
+      , duplication
+      , contribution
+      > (original_view);
     Kokkos::deep_copy(reduction_view, original_view);
     auto policy = Kokkos::RangePolicy<ExecSpace, int>(0, n);
 #if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
@@ -79,6 +83,38 @@ void test_reduction_view(int n)
     EXPECT_TRUE(((val1 - 20.0) / 20.0) < 1e-15);
     auto val2 = host_view(i, 2);
     EXPECT_TRUE(((val2 - 10.0) / 10.0) < 1e-15);
+  }
+}
+
+template <typename ExecSpace>
+void test_reduction_view(int n)
+{
+  // all of these configurations should compile okay, but only some of them are
+  // correct and/or sensible in terms of memory use
+  Kokkos::Experimental::UniqueToken<ExecSpace> unique_token;
+
+  // no atomics or duplication is only sensible if the execution space
+  // is running essentially in serial (doesn't have to be Serial though,
+  // we also test OpenMP with one thread: LAMMPS cares about that)
+  if (unique_token.size() == 1) {
+    test_reduction_view_config<ExecSpace, Kokkos::LayoutRight,
+      Kokkos::Experimental::ReductionNonDuplicated,
+      Kokkos::Experimental::ReductionNonAtomic>(n);
+  }
+  test_reduction_view_config<ExecSpace, Kokkos::LayoutRight,
+    Kokkos::Experimental::ReductionNonDuplicated,
+    Kokkos::Experimental::ReductionAtomic>(n);
+  // data duplication is proportional to the number of threads, so
+  // this number 200 is a heuristic to exclude things like GPUs
+  // which would consume too much memory if they used full data
+  // duplication
+  if (unique_token.size() < 200) {
+    test_reduction_view_config<ExecSpace, Kokkos::LayoutRight,
+      Kokkos::Experimental::ReductionDuplicated,
+      Kokkos::Experimental::ReductionNonAtomic>(n);
+    test_reduction_view_config<ExecSpace, Kokkos::LayoutRight,
+      Kokkos::Experimental::ReductionDuplicated,
+      Kokkos::Experimental::ReductionAtomic>(n);
   }
 }
 
