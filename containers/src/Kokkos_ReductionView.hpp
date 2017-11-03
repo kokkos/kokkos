@@ -465,6 +465,16 @@ private:
   rank_type rank;
 };
 
+template <int Op = Kokkos::Experimental::ReductionSum, typename RT, typename ... RP>
+ReductionView<
+  RT,
+  Op,
+  typename ViewTraits<RT, RP...>::execution_space,
+  typename ViewTraits<RT, RP...>::array_layout>
+create_reduction_view(View<RT, RP...> const& original_view) {
+  return original_view;
+}
+
 }} // namespace Kokkos::Experimental
 
 #endif

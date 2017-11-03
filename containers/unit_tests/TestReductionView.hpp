@@ -52,8 +52,10 @@ namespace Test {
 template <typename Device>
 void test_reduction_view(int n)
 {
-  (void)n;
-  Kokkos::Experimental::ReductionView<double *[3]> reduction_view;
+  Kokkos::View<double *[3]> original_view("original_view", n);
+  {
+    auto reduction_view = Kokkos::Experimental::create_reduction_view(original_view);
+  }
 }
 
 } // namespace Test
