@@ -55,6 +55,18 @@ void test_reduction_view(int n)
   Kokkos::View<double *[3]> original_view("original_view", n);
   {
     auto reduction_view = Kokkos::Experimental::create_reduction_view(original_view);
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
+    auto f = KOKKOS_LAMBDA(int i) {
+      auto reduction_access = reduction_view.access();
+      for (int j = 0; j < 10; ++j) {
+        auto k = (i + j % n);
+        reduction_access(k, 0) += 4.2;
+        reduction_access(k, 1) += 2.0;
+        reduction_access(k, 2) += 1.0;
+      }
+    };
+    Kokkos::parallel_for(n, f, "reduction_view_test");
+#endif
   }
 }
 

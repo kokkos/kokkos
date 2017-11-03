@@ -266,6 +266,13 @@ class ReductionAccess<DataType
 public:
   typedef ReductionView<DataType, Op, ExecSpace, Layout, contribution> Base;
   using typename Base::value_type;
+
+  KOKKOS_INLINE_FUNCTION
+  ReductionAccess(Base const& base)
+    : Base(base)
+  {
+  }
+
   template <typename ... Args>
   KOKKOS_FORCEINLINE_FUNCTION
   value_type operator()(Args ... args) const {
@@ -437,11 +444,13 @@ public:
   typedef ReductionView<DataType, Op, ExecSpace, Layout, contribution, ReductionDuplicated> Base;
   using typename Base::value_type;
 
+  KOKKOS_INLINE_FUNCTION
   ReductionAccess(Base const& base)
     : Base(base)
     , rank(Base::unique_token.acquire()) {
   }
 
+  KOKKOS_INLINE_FUNCTION
   ~ReductionAccess() {
     Base::unique_token.release(rank);
   }
