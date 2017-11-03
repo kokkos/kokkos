@@ -271,6 +271,42 @@ struct Slice<Kokkos::LayoutLeft, 1, V, Args...> {
   }
 };
 
+template <typename ExecSpace, typename ValueType, int Op>
+struct ReduceDuplicates {
+  ValueType* ptr;
+  size_t stride;
+  size_t n;
+  ReduceDuplicates(ValueType* ptr_in, size_t stride_in, size_t n_in, std::string const& name)
+    : ptr(ptr_in)
+    , stride(stride_in)
+    , n(n_in)
+  {
+#if defined(KOKKOS_ENABLE_PROFILING)
+    uint64_t kpID = 0;
+    if(Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::beginParallelFor(std::string("reduce_") + name, 0, &kpID);
+    }
+#endif
+    typedef ReduceDuplicates<ExecSpace, ValueType, Op> self_type;
+    typedef RangePolicy<ExecSpace, size_t> policy_type;
+    typedef Kokkos::Impl::ParallelFor<self_type, policy_type> closure_type;
+    const closure_type closure(*this, policy_type(0, stride));
+    closure.execute();
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if(Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endParallelFor(kpID);
+    }
+#endif
+  }
+  KOKKOS_INLINE_FUNCTION
+  void operator()(size_t i) const {
+    ReductionValue<ValueType, Op, Kokkos::Experimental::ReductionNonAtomic> val(ptr[i]);
+    for (size_t j = 1; j < n; ++j) {
+      val.contribute(ptr[i + stride * j]);
+    }
+  }
+};
+
 }}} // Kokkos::Impl::Experimental
 
 namespace Kokkos {
@@ -449,6 +485,13 @@ public:
   template <typename ... RP>
   void deep_copy_into(View<DataType, RP...> const& dest) const
   {
+    {
+      Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
+          internal_view.data(),
+          internal_view.stride(0),
+          internal_view.dimension(0),
+          internal_view.label());
+    }
     Kokkos::deep_copy(dest, this->subview());
   }
 
@@ -541,6 +584,13 @@ public:
   template <typename ... RP>
   void deep_copy_into(View<DataType, RP...> const& dest) const
   {
+    {
+      Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
+          internal_view.data(),
+          internal_view.stride(internal_view_type::rank - 1),
+          internal_view.dimension(internal_view_type::rank - 1),
+          internal_view.label());
+    }
     Kokkos::deep_copy(dest, this->subview());
   }
 
