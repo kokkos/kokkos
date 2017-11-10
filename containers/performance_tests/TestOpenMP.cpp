@@ -54,6 +54,7 @@
 #include <TestUnorderedMapPerformance.hpp>
 
 #include <TestDynRankView.hpp>
+#include <TestReductionView.hpp>
 
 #include <iomanip>
 #include <sstream>
@@ -120,6 +121,18 @@ TEST_F( openmp, unordered_map_performance_far)
   std::ostringstream base_file_name;
   base_file_name << "openmp-" << num_openmp << "-far";
   Perf::run_performance_tests<Kokkos::OpenMP,false>(base_file_name.str());
+}
+
+TEST_F( openmp, reduction_view)
+{
+  std::cout << "ReductionView data-duplicated test:\n";
+  Perf::test_reduction_view<Kokkos::OpenMP, Kokkos::LayoutRight,
+    Kokkos::Experimental::ReductionDuplicated,
+    Kokkos::Experimental::ReductionNonAtomic>(10, 1000 * 1000);
+  std::cout << "ReductionView atomics test:\n";
+  Perf::test_reduction_view<Kokkos::OpenMP, Kokkos::LayoutRight,
+    Kokkos::Experimental::ReductionNonDuplicated,
+    Kokkos::Experimental::ReductionAtomic>(10, 1000 * 1000);
 }
 
 } // namespace test

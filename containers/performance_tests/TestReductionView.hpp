@@ -46,10 +46,10 @@
 
 #include <Kokkos_ReductionView.hpp>
 
-namespace Test {
+namespace Perf {
 
 template <typename ExecSpace, typename Layout, int duplication, int contribution>
-void test_reduction_view_config(int n)
+void test_reduction_view(int m, int n)
 {
   Kokkos::View<double *[3], Layout, ExecSpace> original_view("original_view", n);
   {
@@ -70,69 +70,19 @@ void test_reduction_view_config(int n)
         reduction_access(k, 2) += 1.0;
       }
     };
-    Kokkos::parallel_for(policy, f, "reduction_view_test");
-#endif
-    Kokkos::deep_copy(original_view, reduction_view);
-  }
-  auto host_view = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), original_view);
-  for (typename decltype(host_view)::size_type i = 0; i < host_view.dimension_0(); ++i) {
-    auto val0 = host_view(i, 0);
-    auto val1 = host_view(i, 1);
-    auto val2 = host_view(i, 2);
-#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
-    EXPECT_TRUE(((val0 - 42.0) / 42.0) < 1e-15);
-    EXPECT_TRUE(((val1 - 20.0) / 20.0) < 1e-15);
-    EXPECT_TRUE(((val2 - 10.0) / 10.0) < 1e-15);
+    Kokkos::Timer timer;
+    timer.reset();
+    for (int k = 0; k < m; ++k) {
+      Kokkos::parallel_for(policy, f, "reduction_view_test");
+    }
+    auto time = timer.seconds();
+    std::cout << "test took " << time << " seconds\n";
+#else
+    std::cout << "test not run for lack of lambdas\n";
 #endif
   }
 }
 
-template <typename ExecSpace>
-struct TestDuplicatedReductionView {
-  TestDuplicatedReductionView(int n) {
-    test_reduction_view_config<ExecSpace, Kokkos::LayoutRight,
-      Kokkos::Experimental::ReductionDuplicated,
-      Kokkos::Experimental::ReductionNonAtomic>(n);
-    test_reduction_view_config<ExecSpace, Kokkos::LayoutRight,
-      Kokkos::Experimental::ReductionDuplicated,
-      Kokkos::Experimental::ReductionAtomic>(n);
-  }
-};
-
-#ifdef KOKKOS_ENABLE_CUDA
-// disable duplicated instantiation with CUDA until
-// UniqueToken can support it
-template <>
-struct TestDuplicatedReductionView<Kokkos::Cuda> {
-  TestDuplicatedReductionView(int) {
-  }
-};
-#endif
-
-template <typename ExecSpace>
-void test_reduction_view(int n)
-{
-  // all of these configurations should compile okay, but only some of them are
-  // correct and/or sensible in terms of memory use
-  Kokkos::Experimental::UniqueToken<ExecSpace> unique_token{ExecSpace()};
-
-  // no atomics or duplication is only sensible if the execution space
-  // is running essentially in serial (doesn't have to be Serial though,
-  // we also test OpenMP with one thread: LAMMPS cares about that)
-  if (unique_token.size() == 1) {
-    test_reduction_view_config<ExecSpace, Kokkos::LayoutRight,
-      Kokkos::Experimental::ReductionNonDuplicated,
-      Kokkos::Experimental::ReductionNonAtomic>(n);
-  }
-  test_reduction_view_config<ExecSpace, Kokkos::LayoutRight,
-    Kokkos::Experimental::ReductionNonDuplicated,
-    Kokkos::Experimental::ReductionAtomic>(n);
-
-  TestDuplicatedReductionView<ExecSpace> duptest(n);
 }
 
-} // namespace Test
-
-#endif //KOKKOS_TEST_UNORDERED_MAP_HPP
-
-
+#endif
