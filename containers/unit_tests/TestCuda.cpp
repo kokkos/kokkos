@@ -62,6 +62,7 @@
 #include <TestVector.hpp>
 #include <TestDualView.hpp>
 #include <TestDynamicView.hpp>
+#include <TestReductionView.hpp>
 
 #include <Kokkos_DynRankView.hpp>
 #include <TestDynViewAPI.hpp>
@@ -201,10 +202,18 @@ void cuda_test_bitset()
       cuda_test_dualview_combinations(size);                     \
   }
 
+#define CUDA_REDUCTIONVIEW_TEST( size )             \
+  TEST_F( cuda, reductionview_##size##x) {                      \
+    test_reduction_view<Kokkos::Cuda>(size);               \
+  }
+
 CUDA_DUALVIEW_COMBINE_TEST( 10 )
 CUDA_VECTOR_COMBINE_TEST( 10 )
 CUDA_VECTOR_COMBINE_TEST( 3057 )
 
+CUDA_REDUCTIONVIEW_TEST( 10 )
+
+CUDA_REDUCTIONVIEW_TEST( 1000000 )
 
 CUDA_INSERT_TEST(close,               100000, 90000, 100, 500)
 CUDA_INSERT_TEST(far,                 100000, 90000, 100, 500)

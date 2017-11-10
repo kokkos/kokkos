@@ -87,11 +87,33 @@ void test_reduction_view_config(int n)
 }
 
 template <typename ExecSpace>
+struct TestDuplicatedReductionView {
+  TestDuplicatedReductionView(int n) {
+    test_reduction_view_config<ExecSpace, Kokkos::LayoutRight,
+      Kokkos::Experimental::ReductionDuplicated,
+      Kokkos::Experimental::ReductionNonAtomic>(n);
+    test_reduction_view_config<ExecSpace, Kokkos::LayoutRight,
+      Kokkos::Experimental::ReductionDuplicated,
+      Kokkos::Experimental::ReductionAtomic>(n);
+  }
+};
+
+#ifdef KOKKOS_ENABLE_CUDA
+// disable duplicated instantiation with CUDA until
+// UniqueToken can support it
+template <>
+struct TestDuplicatedReductionView<Kokkos::Cuda> {
+  TestDuplicatedReductionView(int) {
+  }
+};
+#endif
+
+template <typename ExecSpace>
 void test_reduction_view(int n)
 {
   // all of these configurations should compile okay, but only some of them are
   // correct and/or sensible in terms of memory use
-  Kokkos::Experimental::UniqueToken<ExecSpace> unique_token;
+  Kokkos::Experimental::UniqueToken<ExecSpace> unique_token{ExecSpace()};
 
   // no atomics or duplication is only sensible if the execution space
   // is running essentially in serial (doesn't have to be Serial though,
@@ -104,18 +126,8 @@ void test_reduction_view(int n)
   test_reduction_view_config<ExecSpace, Kokkos::LayoutRight,
     Kokkos::Experimental::ReductionNonDuplicated,
     Kokkos::Experimental::ReductionAtomic>(n);
-  // data duplication is proportional to the number of threads, so
-  // this number 200 is a heuristic to exclude things like GPUs
-  // which would consume too much memory if they used full data
-  // duplication
-  if (unique_token.size() < 200) {
-    test_reduction_view_config<ExecSpace, Kokkos::LayoutRight,
-      Kokkos::Experimental::ReductionDuplicated,
-      Kokkos::Experimental::ReductionNonAtomic>(n);
-    test_reduction_view_config<ExecSpace, Kokkos::LayoutRight,
-      Kokkos::Experimental::ReductionDuplicated,
-      Kokkos::Experimental::ReductionAtomic>(n);
-  }
+
+  TestDuplicatedReductionView<ExecSpace> duptest(n);
 }
 
 } // namespace Test

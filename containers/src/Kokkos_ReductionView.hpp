@@ -298,8 +298,8 @@ struct ReduceDuplicates {
     }
 #endif
   }
-  KOKKOS_INLINE_FUNCTION
-  void operator()(size_t i) const {
+
+  inline void operator()(size_t i) const {
     ReductionValue<ValueType, Op, Kokkos::Experimental::ReductionNonAtomic> val(ptr[i]);
     for (size_t j = 1; j < n; ++j) {
       val.contribute(ptr[i + stride * j]);
@@ -463,8 +463,7 @@ public:
   {
   }
 
-  KOKKOS_INLINE_FUNCTION
-  access_type access() const {
+  inline access_type access() const {
     return access_type(*this);
   }
 
@@ -564,8 +563,7 @@ public:
         arg_N[4], arg_N[5], arg_N[6], arg_N[7]);
   }
 
-  KOKKOS_INLINE_FUNCTION
-  access_type access() const {
+  inline access_type access() const {
     return access_type(*this);
   }
 
@@ -600,8 +598,7 @@ public:
 
 protected:
   template <typename ... Args>
-  KOKKOS_FORCEINLINE_FUNCTION
-  value_type at(int rank, Args ... args) const {
+  inline value_type at(int rank, Args ... args) const {
     return internal_view(args..., rank);
   }
 
@@ -641,13 +638,11 @@ public:
   typedef ReductionView<DataType, Op, ExecSpace, Layout, ReductionDuplicated, contribution> Base;
   using typename Base::value_type;
 
-  KOKKOS_INLINE_FUNCTION
   ReductionAccess(Base const& base)
     : Base(base)
     , rank(Base::unique_token.acquire()) {
   }
 
-  KOKKOS_INLINE_FUNCTION
   ~ReductionAccess() {
     if (rank != ~rank_type(0)) Base::unique_token.release(rank);
   }
