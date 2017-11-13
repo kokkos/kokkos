@@ -153,6 +153,7 @@ template <typename ValueType>
 struct ReductionValue<ValueType, Kokkos::Experimental::ReductionSum, Kokkos::Experimental::ReductionNonAtomic> {
   public:
     KOKKOS_FORCEINLINE_FUNCTION ReductionValue(ValueType& value_in) : value( value_in ) {}
+    KOKKOS_FORCEINLINE_FUNCTION ReductionValue(ReductionValue&& other) : value( other.value ) {}
     KOKKOS_FORCEINLINE_FUNCTION void operator+=(ValueType const& rhs) {
       value += rhs;
     }
@@ -361,6 +362,7 @@ public:
   {
   }
 
+  KOKKOS_FORCEINLINE_FUNCTION
   access_type access() const {
     return access_type(*this);
   }
@@ -638,12 +640,12 @@ public:
   typedef ReductionView<DataType, Op, ExecSpace, Layout, ReductionDuplicated, contribution> Base;
   using typename Base::value_type;
 
-  ReductionAccess(Base const& base)
+  inline ReductionAccess(Base const& base)
     : Base(base)
     , rank(Base::unique_token.acquire()) {
   }
 
-  ~ReductionAccess() {
+  inline ~ReductionAccess() {
     if (rank != ~rank_type(0)) Base::unique_token.release(rank);
   }
 
@@ -663,13 +665,13 @@ public:
   // do need to allow moves though, for the common
   // auto b = a.access();
   // that assignments turns into a move constructor call 
-  ReductionAccess(ReductionAccess&& other)
+  inline ReductionAccess(ReductionAccess&& other)
     : Base(std::move(other))
     , rank(other.rank)
   {
     other.rank = ~rank_type(0);
   }
-  ReductionAccess& operator=(ReductionAccess&& other) {
+  inline ReductionAccess& operator=(ReductionAccess&& other) {
     Base::operator=(std::move(other));
     other.rank = ~rank_type(0);
   }

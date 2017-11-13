@@ -46,7 +46,26 @@
 
 #include <Kokkos_ReductionView.hpp>
 
+#include <chrono>
+
 namespace Perf {
+
+struct Now {
+  typedef std::chrono::time_point<std::chrono::high_resolution_clock> Impl;
+  Impl impl;
+};
+
+Now now() {
+  Now t;
+  t.impl = std::chrono::high_resolution_clock::now();
+  return t;
+}
+
+double operator-(Now b, Now a) {
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(b.impl - a.impl)
+             .count() *
+         1e-9;
+}
 
 template <typename ExecSpace, typename Layout, int duplication, int contribution>
 void test_reduction_view(int m, int n)
@@ -58,28 +77,49 @@ void test_reduction_view(int m, int n)
       , duplication
       , contribution
       > (original_view);
+    Kokkos::Experimental::UniqueToken<ExecSpace> unique_token{ExecSpace()};
     Kokkos::deep_copy(reduction_view, original_view);
+  //auto internal_view = reduction_view.internal_view;
     auto policy = Kokkos::RangePolicy<ExecSpace, int>(0, n);
-#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
-    auto f = KOKKOS_LAMBDA(int i) {
-      auto reduction_access = reduction_view.access();
-      for (int j = 0; j < 10; ++j) {
-        auto k = (i + j) % n;
-        reduction_access(k, 0) += 4.2;
-        reduction_access(k, 1) += 2.0;
-        reduction_access(k, 2) += 1.0;
+    for (int foo = 0; foo < 3; ++foo) {
+    {
+      auto num_threads = unique_token.size();
+      std::cout << "num_threads " << num_threads << '\n';
+      Kokkos::View<double **[3], Layout, ExecSpace> hand_coded_duplicate_view("hand_coded_duplicate", num_threads, n);
+      auto f2 = KOKKOS_LAMBDA(int i) {
+        auto thread_id = unique_token.acquire();
+        for (int j = 0; j < 10; ++j) {
+          auto k = (i + j) % n;
+          hand_coded_duplicate_view(thread_id, k, 0) += 4.2;
+          hand_coded_duplicate_view(thread_id, k, 1) += 2.0;
+          hand_coded_duplicate_view(thread_id, k, 2) += 1.0;
+        }
+      };
+      auto t0 = now();
+      for (int k = 0; k < m; ++k) {
+        Kokkos::parallel_for(policy, f2, "hand_coded_duplicate_reduction_view_test");
       }
-    };
-    Kokkos::Timer timer;
-    timer.reset();
-    for (int k = 0; k < m; ++k) {
-      Kokkos::parallel_for(policy, f, "reduction_view_test");
+      auto t1 = now();
+      std::cout << "hand-coded test took " << (t1 - t0) << " seconds\n";
     }
-    auto time = timer.seconds();
-    std::cout << "test took " << time << " seconds\n";
-#else
-    std::cout << "test not run for lack of lambdas\n";
-#endif
+    {
+      auto f = KOKKOS_LAMBDA(int i) {
+        auto reduction_access = reduction_view.access();
+        for (int j = 0; j < 10; ++j) {
+          auto k = (i + j) % n;
+          reduction_access(k, 0) += 4.2;
+          reduction_access(k, 1) += 2.0;
+          reduction_access(k, 2) += 1.0;
+        }
+      };
+      auto t0 = now();
+      for (int k = 0; k < m; ++k) {
+        Kokkos::parallel_for(policy, f, "reduction_view_test");
+      }
+      auto t1 = now();
+      std::cout << "test took " << (t1 - t0) << " seconds\n";
+    }
+  }
   }
 }
 

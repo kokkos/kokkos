@@ -129,10 +129,10 @@ TEST_F( openmp, reduction_view)
   Perf::test_reduction_view<Kokkos::OpenMP, Kokkos::LayoutRight,
     Kokkos::Experimental::ReductionDuplicated,
     Kokkos::Experimental::ReductionNonAtomic>(10, 1000 * 1000);
-  std::cout << "ReductionView atomics test:\n";
-  Perf::test_reduction_view<Kokkos::OpenMP, Kokkos::LayoutRight,
-    Kokkos::Experimental::ReductionNonDuplicated,
-    Kokkos::Experimental::ReductionAtomic>(10, 1000 * 1000);
+//std::cout << "ReductionView atomics test:\n";
+//Perf::test_reduction_view<Kokkos::OpenMP, Kokkos::LayoutRight,
+//  Kokkos::Experimental::ReductionNonDuplicated,
+//  Kokkos::Experimental::ReductionAtomic>(10, 1000 * 1000);
 }
 
 } // namespace test
