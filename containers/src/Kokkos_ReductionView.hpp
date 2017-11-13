@@ -105,11 +105,11 @@ struct DefaultDuplication<Kokkos::OpenMP> {
 };
 template <>
 struct DefaultContribution<Kokkos::OpenMP, Kokkos::Experimental::ReductionNonDuplicated> {
-  enum : int { value = Kokkos::Experimental::ReductionNonAtomic };
+  enum : int { value = Kokkos::Experimental::ReductionAtomic };
 };
 template <>
 struct DefaultContribution<Kokkos::OpenMP, Kokkos::Experimental::ReductionDuplicated> {
-  enum : int { value = Kokkos::Experimental::ReductionAtomic };
+  enum : int { value = Kokkos::Experimental::ReductionNonAtomic };
 };
 #endif
 
@@ -120,11 +120,11 @@ struct DefaultDuplication<Kokkos::Threads> {
 };
 template <>
 struct DefaultContribution<Kokkos::Threads, Kokkos::Experimental::ReductionNonDuplicated> {
-  enum : int { value = Kokkos::Experimental::ReductionNonAtomic };
+  enum : int { value = Kokkos::Experimental::ReductionAtomic };
 };
 template <>
 struct DefaultContribution<Kokkos::Threads, Kokkos::Experimental::ReductionDuplicated> {
-  enum : int { value = Kokkos::Experimental::ReductionAtomic };
+  enum : int { value = Kokkos::Experimental::ReductionNonAtomic };
 };
 #endif
 
