@@ -81,7 +81,7 @@ void test_reduction_view(int m, int n)
     Kokkos::deep_copy(reduction_view, original_view);
   //auto internal_view = reduction_view.internal_view;
     auto policy = Kokkos::RangePolicy<ExecSpace, int>(0, n);
-    for (int foo = 0; foo < 3; ++foo) {
+    for (int foo = 0; foo < 5; ++foo) {
     {
       auto num_threads = unique_token.size();
       std::cout << "num_threads " << num_threads << '\n';

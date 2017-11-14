@@ -353,6 +353,7 @@ public:
   typedef Kokkos::Impl::Experimental::ReductionValue<
       original_value_type, Op, contribution> value_type;
   typedef ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, contribution> access_type;
+  friend class ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, contribution>;
 
   ReductionView()
   {
@@ -404,23 +405,24 @@ class ReductionAccess<DataType
                    ,Layout
                    ,ReductionNonDuplicated
                    ,contribution>
-      : public ReductionView<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, contribution>
 {
 public:
-  typedef ReductionView<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, contribution> Base;
-  using typename Base::value_type;
+  typedef ReductionView<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, contribution> view_type;
+  typedef typename view_type::value_type value_type;
 
   KOKKOS_INLINE_FUNCTION
-  ReductionAccess(Base const& base)
-    : Base(base)
+  ReductionAccess(view_type const& view_in)
+    : view(view_in)
   {
   }
 
   template <typename ... Args>
   KOKKOS_FORCEINLINE_FUNCTION
   value_type operator()(Args ... args) const {
-    return Base::at(args...);
+    return view.at(args...);
   }
+private:
+  view_type const& view;
 };
 
 // duplicated implementation
@@ -444,6 +446,7 @@ public:
   typedef Kokkos::Impl::Experimental::ReductionValue<
       original_value_type, Op, contribution> value_type;
   typedef ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, contribution> access_type;
+  friend class ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, contribution>;
   typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<DataType, Kokkos::LayoutRight> data_type_info;
   typedef typename data_type_info::value_type internal_data_type;
   typedef Kokkos::View<internal_data_type, Kokkos::LayoutRight, ExecSpace> internal_view_type;
@@ -540,6 +543,7 @@ public:
   typedef Kokkos::Impl::Experimental::ReductionValue<
       original_value_type, Op, contribution> value_type;
   typedef ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ReductionDuplicated, contribution> access_type;
+  friend class ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ReductionDuplicated, contribution>;
   typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<DataType, Kokkos::LayoutLeft> data_type_info;
   typedef typename data_type_info::value_type internal_data_type;
   typedef Kokkos::View<internal_data_type, Kokkos::LayoutLeft, ExecSpace> internal_view_type;
@@ -650,51 +654,49 @@ class ReductionAccess<DataType
                    ,Layout
                    ,ReductionDuplicated
                    ,contribution>
-      : public ReductionView<DataType, Op, ExecSpace, Layout, ReductionDuplicated, contribution>
 {
 public:
-  typedef ReductionView<DataType, Op, ExecSpace, Layout, ReductionDuplicated, contribution> Base;
-  using typename Base::value_type;
+  typedef ReductionView<DataType, Op, ExecSpace, Layout, ReductionDuplicated, contribution> view_type;
+  typedef typename view_type::value_type value_type;
 
-  inline ReductionAccess(Base const& base)
-    : Base(base)
-    , rank(Base::unique_token.acquire()) {
+  inline ReductionAccess(view_type const& view_in)
+    : view(view_in)
+    , rank(view_in.unique_token.acquire()) {
   }
 
   inline ~ReductionAccess() {
-    if (rank != ~rank_type(0)) Base::unique_token.release(rank);
+    if (rank != ~rank_type(0)) view.unique_token.release(rank);
   }
 
   template <typename ... Args>
   KOKKOS_FORCEINLINE_FUNCTION
   value_type operator()(Args ... args) const {
-    return Base::at(rank, args...);
+    return view.at(rank, args...);
   }
 
 private:
 
+  view_type const& view;
+
   // simplify RAII by disallowing copies
   ReductionAccess(ReductionAccess const& other) = delete;
   ReductionAccess& operator=(ReductionAccess const& other) = delete;
+  ReductionAccess& operator=(ReductionAccess&& other) = delete;
 
 public:
   // do need to allow moves though, for the common
   // auto b = a.access();
   // that assignments turns into a move constructor call 
   inline ReductionAccess(ReductionAccess&& other)
-    : Base(std::move(other))
+    : view(other.view)
     , rank(other.rank)
   {
-    other.rank = ~rank_type(0);
-  }
-  inline ReductionAccess& operator=(ReductionAccess&& other) {
-    Base::operator=(std::move(other));
     other.rank = ~rank_type(0);
   }
 
 private:
 
-  using typename Base::unique_token_type;
+  typedef typename view_type::unique_token_type unique_token_type;
   typedef typename unique_token_type::size_type rank_type;
   rank_type rank;
 };
