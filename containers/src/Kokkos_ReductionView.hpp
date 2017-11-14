@@ -302,7 +302,7 @@ struct ReduceDuplicates {
 #endif
   }
 
-  inline void operator()(size_t i) const {
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
     ReductionValue<ValueType, Op, Kokkos::Experimental::ReductionNonAtomic> val(ptr_out[i]);
     for (size_t j = 0; j < n; ++j) {
       val.contribute(ptr_in[i + stride * j]);
@@ -488,16 +488,23 @@ public:
   template <typename ... RP>
   void deep_copy_into(View<DataType, RP...> const& dest) const
   {
-    {
-      size_t strides[8];
-      internal_view.stride(strides);
-      Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
-          internal_view.data(),
-          dest.data(),
-          strides[0],
-          internal_view.dimension(0),
-          internal_view.label());
-    }
+    typedef View<DataType, RP...> dest_type;
+    static_assert(std::is_same<
+        typename dest_type::array_layout,
+        Kokkos::LayoutRight>::value,
+        "ReductionView deep_copy destination has different layout");
+    static_assert(Kokkos::Impl::VerifyExecutionCanAccessMemorySpace<
+        typename ExecSpace::memory_space,
+        typename dest_type::memory_space>::value,
+        "ReductionView deep_copy destination memory space not accessible");
+    size_t strides[8];
+    internal_view.stride(strides);
+    Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
+        internal_view.data(),
+        dest.data(),
+        strides[0],
+        internal_view.dimension(0),
+        internal_view.label());
   }
 
 protected:
@@ -588,16 +595,23 @@ public:
   template <typename ... RP>
   void deep_copy_into(View<DataType, RP...> const& dest) const
   {
-    {
-      size_t strides[8];
-      internal_view.stride(strides);
-      Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
-          internal_view.data(),
-          dest.data(),
-          strides[internal_view_type::rank - 1],
-          internal_view.dimension(internal_view_type::rank - 1),
-          internal_view.label());
-    }
+    typedef View<DataType, RP...> dest_type;
+    static_assert(std::is_same<
+        typename dest_type::array_layout,
+        Kokkos::LayoutLeft>::value,
+        "ReductionView deep_copy destination has different layout");
+    static_assert(Kokkos::Impl::VerifyExecutionCanAccessMemorySpace<
+        typename ExecSpace::memory_space,
+        typename dest_type::memory_space>::value,
+        "ReductionView deep_copy destination memory space not accessible");
+    size_t strides[8];
+    internal_view.stride(strides);
+    Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
+        internal_view.data(),
+        dest.data(),
+        strides[internal_view_type::rank - 1],
+        internal_view.dimension(internal_view_type::rank - 1),
+        internal_view.label());
   }
 
 protected:
