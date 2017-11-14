@@ -274,11 +274,13 @@ struct Slice<Kokkos::LayoutLeft, 1, V, Args...> {
 
 template <typename ExecSpace, typename ValueType, int Op>
 struct ReduceDuplicates {
-  ValueType* ptr;
+  ValueType* ptr_in;
+  ValueType* ptr_out;
   size_t stride;
   size_t n;
-  ReduceDuplicates(ValueType* ptr_in, size_t stride_in, size_t n_in, std::string const& name)
-    : ptr(ptr_in)
+  ReduceDuplicates(ValueType* ptr_in, ValueType* ptr_out, size_t stride_in, size_t n_in, std::string const& name)
+    : ptr_in(ptr_in)
+    , ptr_out(ptr_out)
     , stride(stride_in)
     , n(n_in)
   {
@@ -301,9 +303,9 @@ struct ReduceDuplicates {
   }
 
   inline void operator()(size_t i) const {
-    ReductionValue<ValueType, Op, Kokkos::Experimental::ReductionNonAtomic> val(ptr[i]);
-    for (size_t j = 1; j < n; ++j) {
-      val.contribute(ptr[i + stride * j]);
+    ReductionValue<ValueType, Op, Kokkos::Experimental::ReductionNonAtomic> val(ptr_out[i]);
+    for (size_t j = 0; j < n; ++j) {
+      val.contribute(ptr_in[i + stride * j]);
     }
   }
 };
@@ -491,11 +493,11 @@ public:
       internal_view.stride(strides);
       Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
           internal_view.data(),
+          dest.data(),
           strides[0],
           internal_view.dimension(0),
           internal_view.label());
     }
-    Kokkos::deep_copy(dest, this->subview());
   }
 
 protected:
@@ -591,11 +593,11 @@ public:
       internal_view.stride(strides);
       Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
           internal_view.data(),
+          dest.data(),
           strides[internal_view_type::rank - 1],
           internal_view.dimension(internal_view_type::rank - 1),
           internal_view.label());
     }
-    Kokkos::deep_copy(dest, this->subview());
   }
 
 protected:
