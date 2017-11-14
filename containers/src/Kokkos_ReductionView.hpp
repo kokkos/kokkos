@@ -274,6 +274,7 @@ struct Slice<Kokkos::LayoutLeft, 1, V, Args...> {
 
 template <typename ExecSpace, typename ValueType, int Op>
 struct ReduceDuplicates {
+  struct TagReductionSum{};
   ValueType* ptr_in;
   ValueType* ptr_out;
   size_t stride;
@@ -291,7 +292,9 @@ struct ReduceDuplicates {
     }
 #endif
     typedef ReduceDuplicates<ExecSpace, ValueType, Op> self_type;
-    typedef RangePolicy<ExecSpace, size_t> policy_type;
+    typedef typename std::conditional<Op == Kokkos::Experimental::ReductionSum,
+                                      RangePolicy<ExecSpace, TagReductionSum>,
+                                      RangePolicy<ExecSpace, size_t> >::type policy_type;
     typedef Kokkos::Impl::ParallelFor<self_type, policy_type> closure_type;
     const closure_type closure(*this, policy_type(0, stride));
     closure.execute();
@@ -300,6 +303,12 @@ struct ReduceDuplicates {
       Kokkos::Profiling::endParallelFor(kpID);
     }
 #endif
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(const TagReductionSum &, size_t i) const {
+    for (size_t j = 0; j < n; ++j) {
+      ptr_out[i] += ptr_in[i + stride * j];
+    }
   }
 
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
@@ -519,7 +528,7 @@ protected:
 
 protected:
   typedef Kokkos::Experimental::UniqueToken<
-      ExecSpace, Kokkos::Experimental::UniqueTokenScope::Instance> unique_token_type;
+      ExecSpace, Kokkos::Experimental::UniqueTokenScope::Global> unique_token_type;
 
   unique_token_type unique_token;
   internal_view_type internal_view;
@@ -626,7 +635,7 @@ protected:
 
 protected:
   typedef Kokkos::Experimental::UniqueToken<
-      ExecSpace, Kokkos::Experimental::UniqueTokenScope::Instance> unique_token_type;
+      ExecSpace, Kokkos::Experimental::UniqueTokenScope::Global> unique_token_type;
 
   unique_token_type unique_token;
   internal_view_type internal_view;
