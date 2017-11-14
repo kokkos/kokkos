@@ -160,11 +160,6 @@ struct ReductionValue<ValueType, Kokkos::Experimental::ReductionSum, Kokkos::Exp
     KOKKOS_FORCEINLINE_FUNCTION void operator-=(ValueType const& rhs) {
       value -= rhs;
     }
-    /* This is mostly for re-use in the reduction across duplicate values in the internal implementation
-       of ReductionView */
-    KOKKOS_FORCEINLINE_FUNCTION void contribute(ValueType const& rhs) {
-      value += rhs;
-    }
   private:
     ValueType& value;
 };
@@ -273,13 +268,16 @@ struct Slice<Kokkos::LayoutLeft, 1, V, Args...> {
 };
 
 template <typename ExecSpace, typename ValueType, int Op>
-struct ReduceDuplicates {
-  struct TagReductionSum{};
+struct ReduceDuplicates;
+
+template <typename ExecSpace, typename ValueType, int Op>
+struct ReduceDuplicatesBase {
+  typedef ReduceDuplicates<ExecSpace, ValueType, Op> Derived;
   ValueType* ptr_in;
   ValueType* ptr_out;
   size_t stride;
   size_t n;
-  ReduceDuplicates(ValueType* ptr_in, ValueType* ptr_out, size_t stride_in, size_t n_in, std::string const& name)
+  ReduceDuplicatesBase(ValueType* ptr_in, ValueType* ptr_out, size_t stride_in, size_t n_in, std::string const& name)
     : ptr_in(ptr_in)
     , ptr_out(ptr_out)
     , stride(stride_in)
@@ -291,12 +289,9 @@ struct ReduceDuplicates {
       Kokkos::Profiling::beginParallelFor(std::string("reduce_") + name, 0, &kpID);
     }
 #endif
-    typedef ReduceDuplicates<ExecSpace, ValueType, Op> self_type;
-    typedef typename std::conditional<Op == Kokkos::Experimental::ReductionSum,
-                                      RangePolicy<ExecSpace, TagReductionSum>,
-                                      RangePolicy<ExecSpace, size_t> >::type policy_type;
-    typedef Kokkos::Impl::ParallelFor<self_type, policy_type> closure_type;
-    const closure_type closure(*this, policy_type(0, stride));
+    typedef RangePolicy<ExecSpace, size_t> policy_type;
+    typedef Kokkos::Impl::ParallelFor<Derived, policy_type> closure_type;
+    const closure_type closure(*(static_cast<Derived*>(this)), policy_type(0, stride));
     closure.execute();
 #if defined(KOKKOS_ENABLE_PROFILING)
     if(Kokkos::Profiling::profileLibraryLoaded()) {
@@ -304,17 +299,19 @@ struct ReduceDuplicates {
     }
 #endif
   }
+};
 
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(const TagReductionSum &, size_t i) const {
-    for (size_t j = 0; j < n; ++j) {
-      ptr_out[i] += ptr_in[i + stride * j];
-    }
-  }
-
+template <typename ExecSpace, typename ValueType>
+struct ReduceDuplicates<ExecSpace, ValueType, Kokkos::Experimental::ReductionSum> :
+  public ReduceDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ReductionSum>
+{
+  typedef ReduceDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ReductionSum> Base;
+  ReduceDuplicates(ValueType* ptr_in, ValueType* ptr_out, size_t stride_in, size_t n_in, std::string const& name):
+    Base(ptr_in, ptr_out, stride_in, n_in, name)
+  {}
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
-    ReductionValue<ValueType, Op, Kokkos::Experimental::ReductionNonAtomic> val(ptr_out[i]);
-    for (size_t j = 0; j < n; ++j) {
-      val.contribute(ptr_in[i + stride * j]);
+    for (size_t j = 0; j < Base::n; ++j) {
+      Base::ptr_out[i] += Base::ptr_in[i + Base::stride * j];
     }
   }
 };
