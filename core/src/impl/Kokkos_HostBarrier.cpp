@@ -146,12 +146,16 @@ bool rendezvous( volatile void * buffer
 
     const int rem  = (size-1) % sizeof(uint64_t);
 
-    uint8_t tmp[sizeof(uint64_t)] = {};
+    union {
+      volatile uint64_t value;
+      volatile uint8_t  array[sizeof(uint64_t)];
+    } tmp{};
+
     for (int i=0; i<rem; ++i) {
-      tmp[i] = byte_value;
+      tmp.array[i] = byte_value;
     }
 
-    const uint64_t tail = rem ? *reinterpret_cast<uint64_t*>(tmp) : comp;
+    const uint64_t tail = rem ? tmp.value : comp;
 
     for (int i=0; i<n-1; ++i) {
       spinwait_until_equal( buff[i], comp );
