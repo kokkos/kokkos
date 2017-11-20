@@ -79,6 +79,8 @@ messages:
 kokkos_append_makefile = echo $1 >> $(KOKKOS_MAKEFILE)
 kokkos_append_cmakefile = echo $1 >> $(KOKKOS_CMAKEFILE)
 
+kokkos_setvar_cmakefile = echo set\($1 $2\) >> $(KOKKOS_CMAKEFILE)
+
 kokkos_appendvar_makefile = echo $1 = $($(1)) >> $(KOKKOS_MAKEFILE)
 kokkos_appendvar2_makefile = echo $1 ?= $($(1)) >> $(KOKKOS_MAKEFILE)
 kokkos_appendvar_cmakefile = echo set\($1 $($(1)) CACHE $2\) >> $(KOKKOS_CMAKEFILE)
@@ -143,6 +145,9 @@ build-makefile-cmake-kokkos: $(KOKKOS_CONFIG_HEADER)
 		-e 's|= $(KOKKOS_CONFIG_HEADER)|= $(PREFIX)/include/$(KOKKOS_CONFIG_HEADER)|g' $(KOKKOS_MAKEFILE) \
 		> $(KOKKOS_MAKEFILE).tmp
 	@mv -f $(KOKKOS_MAKEFILE).tmp $(KOKKOS_MAKEFILE)
+	@$(call kokkos_setvar_cmakefile,KOKKOS_CXX_FLAGS,$(KOKKOS_CXXFLAGS))
+	@$(call kokkos_setvar_cmakefile,KOKKOS_CPP_FLAGS,$(KOKKOS_CPPFLAGS))
+	@$(call kokkos_setvar_cmakefile,KOKKOS_LD_FLAGS,$(KOKKOS_LDFLAGS))
 
 build-lib: build-makefile-cmake-kokkos $(KOKKOS_LINK_DEPENDS)
 
@@ -173,7 +178,7 @@ install: mkdir $(CONDITIONAL_COPIES) build-lib
 	cp $(COPY_FLAG) $(NVCC_WRAPPER) $(PREFIX)/bin
 	cp $(COPY_FLAG) $(KOKKOS_HEADERS_INCLUDE) $(PREFIX)/include
 	cp $(COPY_FLAG) $(KOKKOS_HEADERS_INCLUDE_IMPL) $(PREFIX)/include/impl
-	cp $(COPY_FLAG) $(KOKKOS_MAKEFILE)  $(PREFIX)
+	cp $(COPY_FLAG) $(gen_makefile)  $(PREFIX)
 	cp $(COPY_FLAG) $(KOKKOS_CMAKEFILE) $(PREFIX)
 	cp $(COPY_FLAG) libkokkos.a $(PREFIX)/lib
 	cp $(COPY_FLAG) $(KOKKOS_CONFIG_HEADER) $(PREFIX)/include
