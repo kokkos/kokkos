@@ -145,7 +145,7 @@ public:
                           unsigned use_cores_per_numa = 0 ,
                           bool allow_asynchronous_threadpool = false);
 
-  static int is_initialized();
+  static bool is_initialized();
 
   /** \brief  Return the maximum amount of concurrency.  */
   static int concurrency() {return 1;};
