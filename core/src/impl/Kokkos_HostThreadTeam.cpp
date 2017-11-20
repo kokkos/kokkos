@@ -287,9 +287,21 @@ int HostThreadTeamData::rendezvous( int64_t * const buffer
       //   ( rank % size_byte ) +
       //   ( ( rank / size_byte ) * size_byte * size_mem_cycle ) +
       //   ( sync_offset * size_byte )
-      const int offset = ( rank & mask_byte )
-                       + ( ( rank & ~mask_byte ) << shift_mem_cycle )
-                       + ( sync_offset << shift_byte );
+      int offset = ( rank & mask_byte )
+                 + ( ( rank & ~mask_byte ) << shift_mem_cycle )
+                 + ( sync_offset << shift_byte );
+
+
+      // Switch designated byte if running on big endian machine
+      volatile uint16_t value = 1;
+      volatile uint8_t* byte = (uint8_t*) &value;
+      volatile bool is_big_endian = (!(byte[0] == 1));
+      if (is_big_endian) {
+        int remainder = ((offset) % 8);
+        int base = offset - remainder;
+        int shift = 7 - remainder;
+        offset = base + shift;
+      }
 
       // All of this thread's previous memory stores must be complete before
       // this thread stores the step value at this thread's designated byte
