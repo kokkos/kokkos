@@ -173,7 +173,7 @@ install: mkdir $(CONDITIONAL_COPIES) build-lib
 	cp $(COPY_FLAG) $(NVCC_WRAPPER) $(PREFIX)/bin
 	cp $(COPY_FLAG) $(KOKKOS_HEADERS_INCLUDE) $(PREFIX)/include
 	cp $(COPY_FLAG) $(KOKKOS_HEADERS_INCLUDE_IMPL) $(PREFIX)/include/impl
-	cp $(COPY_FLAG) $(gen_makefile)  $(PREFIX)
+	cp $(COPY_FLAG) $(KOKKOS_MAKEFILE)  $(PREFIX)
 	cp $(COPY_FLAG) $(KOKKOS_CMAKEFILE) $(PREFIX)
 	cp $(COPY_FLAG) libkokkos.a $(PREFIX)/lib
 	cp $(COPY_FLAG) $(KOKKOS_CONFIG_HEADER) $(PREFIX)/include
