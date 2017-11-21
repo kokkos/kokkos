@@ -45,27 +45,9 @@
 #define KOKKOS_TEST_REDUCTIONVIEW_HPP
 
 #include <Kokkos_ReductionView.hpp>
-
-#include <chrono>
+#include <impl/Kokkos_Timer.hpp>
 
 namespace Perf {
-
-struct Now {
-  typedef std::chrono::time_point<std::chrono::high_resolution_clock> Impl;
-  Impl impl;
-};
-
-Now now() {
-  Now t;
-  t.impl = std::chrono::high_resolution_clock::now();
-  return t;
-}
-
-double operator-(Now b, Now a) {
-  return std::chrono::duration_cast<std::chrono::nanoseconds>(b.impl - a.impl)
-             .count() *
-         1e-9;
-}
 
 template <typename ExecSpace, typename Layout, int duplication, int contribution>
 void test_reduction_view(int m, int n)
@@ -96,12 +78,13 @@ void test_reduction_view(int m, int n)
           hand_coded_duplicate_view(thread_id, k, 2) += 1.0;
         }
       };
-      auto t0 = now();
+      Kokkos::Timer timer;
+      timer.reset();
       for (int k = 0; k < m; ++k) {
         Kokkos::parallel_for(policy, f2, "hand_coded_duplicate_reduction_view_test");
       }
-      auto t1 = now();
-      std::cout << "hand-coded test took " << (t1 - t0) << " seconds\n";
+      auto t = timer.seconds();
+      std::cout << "hand-coded test took " << t << " seconds\n";
     }
     {
       auto f = KOKKOS_LAMBDA(int i) {
@@ -113,12 +96,13 @@ void test_reduction_view(int m, int n)
           reduction_access(k, 2) += 1.0;
         }
       };
-      auto t0 = now();
+      Kokkos::Timer timer;
+      timer.reset();
       for (int k = 0; k < m; ++k) {
         Kokkos::parallel_for(policy, f, "reduction_view_test");
       }
-      auto t1 = now();
-      std::cout << "test took " << (t1 - t0) << " seconds\n";
+      auto t = timer.seconds();
+      std::cout << "test took " << t << " seconds\n";
     }
   }
   }
