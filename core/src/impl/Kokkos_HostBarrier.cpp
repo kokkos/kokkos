@@ -65,6 +65,8 @@ void rendezvous_initialize( volatile void * buffer
                           , const int rank
                           ) noexcept
 {
+  Kokkos::store_fence();
+
   // ensure that the buffer has been zero'd out
   constexpr uint8_t  zero8  = static_cast<uint8_t>(0);
   constexpr uint64_t zero64 = static_cast<uint64_t>(0);
@@ -101,6 +103,7 @@ void rendezvous_initialize( volatile void * buffer
     *header = zero64;
     Kokkos::store_fence();
   }
+  Kokkos::load_fence();
 }
 
 bool rendezvous( volatile void * buffer
@@ -110,7 +113,10 @@ bool rendezvous( volatile void * buffer
                , bool            active_wait
                ) noexcept
 {
-  // guarrentees that will never spinwait on a spin_value of 0
+  // Force all outstanding stores from this thread to retire before continuing
+  Kokkos::store_fence();
+
+  // guarantees that will never spinwait on a spin_value of 0
   step = static_cast<uint8_t>(step + 1u)
          ? step + 1u
          : step + 2u
@@ -161,7 +167,13 @@ bool rendezvous( volatile void * buffer
       spinwait_until_equal( buff[i], comp );
     }
     spinwait_until_equal( buff[n-1], tail );
+
   }
+
+  // Force all outstanding stores from other threads to retire before allowing
+  // this thread to continue.  This forces correctness on systems with out-of-order
+  // memory (Power and ARM)
+  Kokkos::load_fence();
 
   return rank == 0;
 }
@@ -181,9 +193,7 @@ void rendezvous_release( volatile void * buffer
 
   *header = spin_value;
 
-  // This will release all the threads that are spinning until
-  // *header == spin_value
-  Kokkos::store_fence();
+  Kokkos::memory_fence();
 }
 
 }} // namespace Kokkos::Impl
