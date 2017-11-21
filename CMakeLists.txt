@@ -30,7 +30,7 @@ IF(NOT KOKKOS_HAS_TRILINOS)
 
   #------------ GENERATE HEADER AND SOURCE FILES -------------------------------
   execute_process(
-    COMMAND ${KOKKOS_SETTINGS} make -f ${KOKKOS_SRC_PATH}/cmake/Makefile.generate_cmake_settings generate_cmake_settings
+    COMMAND ${KOKKOS_SETTINGS} make -f ${KOKKOS_SRC_PATH}/cmake/Makefile.generate_cmake_settings CXX=${CMAKE_CXX_COMPILER} generate_cmake_settings
     WORKING_DIRECTORY "${Kokkos_BINARY_DIR}"
     OUTPUT_FILE ${Kokkos_BINARY_DIR}/core_src_make.out
     RESULT_VARIABLE res
@@ -40,6 +40,14 @@ IF(NOT KOKKOS_HAS_TRILINOS)
 
   #------------ NOW BUILD ------------------------------------------------------
   include(${KOKKOS_SRC_PATH}/cmake/kokkos_build.cmake)
+
+  #------------ Add in Fake Tribits Handling to allow unit test builds- --------
+
+  include(${KOKKOS_SRC_PATH}/cmake/tribits.cmake)
+
+  TRIBITS_PACKAGE_DECL(Kokkos)
+
+  ADD_SUBDIRECTORY(core)
 
 ELSE()
 #------------------------------------------------------------------------------
@@ -105,11 +113,6 @@ TRIBITS_PROCESS_SUBPACKAGES()
 TRIBITS_PACKAGE_DEF()
 
 TRIBITS_EXCLUDE_AUTOTOOLS_FILES()
-
-TRIBITS_EXCLUDE_FILES(
-  classic/doc
-  classic/LinAlg/doc/CrsRefactorNotesMay2012
-  )
 
 TRIBITS_PACKAGE_POSTPROCESS()
 

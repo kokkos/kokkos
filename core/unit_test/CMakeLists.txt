@@ -2,6 +2,14 @@
 # Add test-only library for gtest to be reused by all the subpackages
 #
 
+IF(NOT KOKKOS_HAS_TRILINOS)
+  IF(KOKKOS_SEPARATE_LIBS)
+    set(UNITTEST_LINK_TARGETS kokkoscore)
+  ELSE()
+    set(UNITTEST_LINK_TARGETS kokkos)
+  ENDIF()
+ENDIF()
+
 SET(GTEST_SOURCE_DIR ${${PARENT_PACKAGE_NAME}_SOURCE_DIR}/tpls/gtest)
 
 INCLUDE_DIRECTORIES(${GTEST_SOURCE_DIR})
@@ -63,7 +71,7 @@ IF(Kokkos_ENABLE_Serial)
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "
-    TESTONLYLIBS kokkos_gtest
+    TESTONLYLIBS kokkos_gtest ${UNITTEST_LINK_TARGETS}
   )
 ENDIF()
 
@@ -111,7 +119,7 @@ IF(Kokkos_ENABLE_Pthread)
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "
-    TESTONLYLIBS kokkos_gtest
+    TESTONLYLIBS kokkos_gtest ${UNITTEST_LINK_TARGETS}
   )
 ENDIF()
 
@@ -160,7 +168,7 @@ IF(Kokkos_ENABLE_OpenMP)
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "
-    TESTONLYLIBS kokkos_gtest
+    TESTONLYLIBS kokkos_gtest ${UNITTEST_LINK_TARGETS}
   )
 ENDIF()
 
@@ -194,7 +202,7 @@ IF(Kokkos_ENABLE_Qthreads)
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "
-    TESTONLYLIBS kokkos_gtest
+    TESTONLYLIBS kokkos_gtest ${UNITTEST_LINK_TARGETS}
   )
 ENDIF()
 
@@ -254,7 +262,7 @@ IF(Kokkos_ENABLE_Cuda)
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "
-    TESTONLYLIBS kokkos_gtest
+    TESTONLYLIBS kokkos_gtest ${UNITTEST_LINK_TARGETS}
   )
 ENDIF()
 
@@ -271,7 +279,7 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
   COMM serial mpi
   NUM_MPI_PROCS 1
   FAIL_REGULAR_EXPRESSION "  FAILED  "
-    TESTONLYLIBS kokkos_gtest
+    TESTONLYLIBS kokkos_gtest ${UNITTEST_LINK_TARGETS}
 )
 
 foreach(INITTESTS_NUM RANGE 1 16)
@@ -281,7 +289,7 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
   COMM serial mpi
   NUM_MPI_PROCS 1
   FAIL_REGULAR_EXPRESSION "  FAILED  "
-    TESTONLYLIBS kokkos_gtest
+    TESTONLYLIBS kokkos_gtest ${UNITTEST_LINK_TARGETS}
 )
 endforeach(INITTESTS_NUM)
 
@@ -291,5 +299,5 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
   COMM serial mpi
   NUM_MPI_PROCS 1
   FAIL_REGULAR_EXPRESSION "  FAILED  "
-    TESTONLYLIBS kokkos_gtest
+    TESTONLYLIBS kokkos_gtest ${UNITTEST_LINK_TARGETS}
 )

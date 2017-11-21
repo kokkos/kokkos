@@ -10,14 +10,17 @@
 #     <KOKKOS_PATH>/Makefile.kokkos
 
 #------------------------------- GENERAL OPTIONS -------------------------------
-# Ensure that KOKKOS_HOST_ARCH is in the ARCH_LIST
-list(FIND KOKKOS_HOST_ARCH_LIST ${KOKKOS_HOST_ARCH} indx)
-if (indx EQUAL -1)
-  message(FATAL_ERROR "${KOKKOS_HOST_ARCH} is not an accepted host.  Please pick from these choices: ${KOKKOS_INTERNAL_ARCH_DOCSTR}")
-endif ()
+# Ensure that KOKKOS_ARCH is in the ARCH_LIST
+foreach(arch ${KOKKOS_ARCH})
+  list(FIND KOKKOS_ARCH_LIST ${arch} indx)
+  if (indx EQUAL -1)
+    message(FATAL_ERROR "${arch} is not an accepted architecture.  Please pick from these choices: ${KOKKOS_INTERNAL_ARCH_DOCSTR}")
+  endif ()
+endforeach()
 
 # KOKKOS_SETTINGS uses KOKKOS_ARCH
-set(KOKKOS_ARCH ${KOKKOS_HOST_ARCH})
+string(REPLACE ";" "," KOKKOS_ARCH "${KOKKOS_ARCH}")
+set(KOKKOS_ARCH ${KOKKOS_ARCH})
 
 # From Makefile.kokkos: Options: yes,no
 if(${KOKKOS_DEBUG})
@@ -178,9 +181,8 @@ if(KOKKOS_CMAKE_VERBOSE)
   endif()
 
   message(STATUS "")
-  message(STATUS "Architectures")
-  message(STATUS "    Host Architecture: ${KOKKOS_HOST_ARCH}")
-  message(STATUS "  Device Architecture: ${KOKKOS_GPU_ARCH}")
+  message(STATUS "Architectures:")
+  message(STATUS "    ${KOKKOS_ARCH}")
 
   message(STATUS "")
   message(STATUS "Enabled options")

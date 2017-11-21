@@ -8,34 +8,34 @@
 # Use lists for documentation, verification, and programming convenience
 
 # List of possible host architectures.
-set(KOKKOS_HOST_ARCH_LIST)
-list(APPEND KOKKOS_HOST_ARCH_LIST
+set(KOKKOS_ARCH_LIST)
+list(APPEND KOKKOS_ARCH_LIST
      None            # No architecture optimization
-     AMDAVX          # AMD chip
-     ARMv80          # ARMv8.0 Compatible CPU
-     ARMv81          # ARMv8.1 Compatible CPU
-     ARMv8-ThunderX  # ARMv8 Cavium ThunderX CPU
-     SNB             # Intel Sandy/Ivy Bridge CPUs
-     HSW             # Intel Haswell CPUs
-     BDW             # Intel Broadwell Xeon E-class CPUs
-     SKX             # Intel Sky Lake Xeon E-class HPC CPUs (AVX512)
-     KNC             # Intel Knights Corner Xeon Phi
-     KNL             # Intel Knights Landing Xeon Phi
-     BGQ             # IBM Blue Gene Q
-     Power7          # IBM POWER7 CPUs
-     Power8          # IBM POWER8 CPUs
-     Power9          # IBM POWER9 CPUs
-     Kepler          # NVIDIA Kepler default (generation CC 3.5)
-     Kepler30        # NVIDIA Kepler generation CC 3.0
-     Kepler32        # NVIDIA Kepler generation CC 3.2
-     Kepler35        # NVIDIA Kepler generation CC 3.5
-     Kepler37        # NVIDIA Kepler generation CC 3.7
-     Maxwell         # NVIDIA Maxwell default (generation CC 5.0)
-     Maxwell50       # NVIDIA Maxwell generation CC 5.0
-     Maxwell52       # NVIDIA Maxwell generation CC 5.2
-     Maxwell53       # NVIDIA Maxwell generation CC 5.3
-     Pascal60        # NVIDIA Pascal generation CC 6.0
-     Pascal61        # NVIDIA Pascal generation CC 6.1
+     AMDAVX          # (HOST) AMD chip
+     ARMv80          # (HOST) ARMv8.0 Compatible CPU
+     ARMv81          # (HOST) ARMv8.1 Compatible CPU
+     ARMv8-ThunderX  # (HOST) ARMv8 Cavium ThunderX CPU
+     SNB             # (HOST) Intel Sandy/Ivy Bridge CPUs
+     HSW             # (HOST) Intel Haswell CPUs
+     BDW             # (HOST) Intel Broadwell Xeon E-class CPUs
+     SKX             # (HOST) Intel Sky Lake Xeon E-class HPC CPUs (AVX512)
+     KNC             # (HOST) Intel Knights Corner Xeon Phi
+     KNL             # (HOST) Intel Knights Landing Xeon Phi
+     BGQ             # (HOST) IBM Blue Gene Q
+     Power7          # (HOST) IBM POWER7 CPUs
+     Power8          # (HOST) IBM POWER8 CPUs
+     Power9          # (HOST) IBM POWER9 CPUs
+     Kepler          # (GPU) NVIDIA Kepler default (generation CC 3.5)
+     Kepler30        # (GPU) NVIDIA Kepler generation CC 3.0
+     Kepler32        # (GPU) NVIDIA Kepler generation CC 3.2
+     Kepler35        # (GPU) NVIDIA Kepler generation CC 3.5
+     Kepler37        # (GPU) NVIDIA Kepler generation CC 3.7
+     Maxwell         # (GPU) NVIDIA Maxwell default (generation CC 5.0)
+     Maxwell50       # (GPU) NVIDIA Maxwell generation CC 5.0
+     Maxwell52       # (GPU) NVIDIA Maxwell generation CC 5.2
+     Maxwell53       # (GPU) NVIDIA Maxwell generation CC 5.3
+     Pascal60        # (GPU) NVIDIA Pascal generation CC 6.0
+     Pascal61        # (GPU) NVIDIA Pascal generation CC 6.1
     )
 
 # List of possible device architectures.
@@ -96,21 +96,21 @@ set(KOKKOS_INTERNAL_LAMBDA lambda)
 
 #------------------------------- Create doc strings ----------------------------
 set(tmpr "\n       ")
-string(REPLACE ";" ${tmpr} KOKKOS_INTERNAL_ARCH_DOCSTR "${KOKKOS_HOST_ARCH_LIST}")
+string(REPLACE ";" ${tmpr} KOKKOS_INTERNAL_ARCH_DOCSTR "${KOKKOS_ARCH_LIST}")
 # This would be useful, but we use Foo_ENABLE mechanisms
 #string(REPLACE ";" ${tmpr} KOKKOS_INTERNAL_DEVICES_DOCSTR "${KOKKOS_DEVICES_LIST}")
 #string(REPLACE ";" ${tmpr} KOKKOS_INTERNAL_USE_TPLS_DOCSTR "${KOKKOS_USE_TPLS_LIST}")
 #string(REPLACE ";" ${tmpr} KOKKOS_INTERNAL_CUDA_OPTIONS_DOCSTR "${KOKKOS_CUDA_OPTIONS_LIST}")
 
 #------------------------------- GENERAL OPTIONS -------------------------------
-# KOKKOS_HOST_ARCH must be defined previoiusly
-#set_property(CACHE KOKKOS_HOST_ARCH PROPERTY STRINGS ${KOKKOS_HOST_ARCH_LIST})
+# KOKKOS_ARCH must be defined previoiusly
+#set_property(CACHE KOKKOS_ARCH PROPERTY STRINGS ${KOKKOS_ARCH_LIST})
 
 # Setting this variable to a value other than "None" can improve host
 # performance by turning on architecture specific code.
 # NOT SET is used to determine if the option is passed in.  It is reset to
 # default "None" down below.
-set(KOKKOS_HOST_ARCH "NOT_SET" CACHE STRING 
+set(KOKKOS_ARCH "NOT_SET" CACHE STRING 
       "Optimize for specific host architecture. Options are: ${KOKKOS_INTERNAL_ARCH_DOCSTR}")
 
 # Whether to build separate libraries or now
@@ -179,17 +179,17 @@ set(KOKKOS_ENABLE_CUDA_LAMBDA ON CACHE BOOL "Enable lambdas for CUDA. (cuda opti
 #----------------------- HOST ARCH AND LEGACY TRIBITS --------------------------
 # This defines the previous legacy TriBITS builds. 
 set(KOKKOS_LEGACY_TRIBITS False)
-IF ("${KOKKOS_HOST_ARCH}" STREQUAL "NOT_SET")
-  set(KOKKOS_HOST_ARCH "None")
+IF ("${KOKKOS_ARCH}" STREQUAL "NOT_SET")
+  set(KOKKOS_ARCH "None")
   IF(KOKKOS_HAS_TRILINOS)
     set(KOKKOS_LEGACY_TRIBITS True)
   ENDIF()
 ENDIF()
 IF (KOKKOS_HAS_TRILINOS)
   IF (KOKKOS_LEGACY_TRIBITS)
-    message(STATUS "Using the legacy tribits build because KOKKOS_HOST_ARCH not set")
+    message(STATUS "Using the legacy tribits build because KOKKOS_ARCH not set")
   ELSE()
-    message(STATUS "NOT using the legacy tribits build because KOKKOS_HOST_ARCH *is* set")
+    message(STATUS "NOT using the legacy tribits build because KOKKOS_ARCH *is* set")
   ENDIF()
 ENDIF()
 
@@ -267,7 +267,19 @@ if(KOKKOS_LEGACY_TRIBITS)
   set(Kokkos_ENABLE_Winthread OFF CACHE BOOL "Deprecated -- has no effect")
   set(Kokkos_USING_DEPRECATED_VIEW OFF CACHE BOOL "Deprecated -- has no effect")
   set(Kokkos_ENABLE_CXX11 OFF CACHE BOOL "Deprecated -- has no effect")
-
+ELSE()
+  IF (KOKKOS_ENABLE_SERIAL)
+    set(Kokkos_ENABLE_Serial True)
+  endif()
+  IF (KOKKOS_ENABLE_OPENMP)
+    set(Kokkos_ENABLE_OpenMP True)
+  endif()
+  IF (KOKKOS_ENABLE_PTHREAD)
+    set(Kokkos_ENABLE_Pthread True)
+  endif()
+  IF (KOKKOS_ENABLE_CUDA)
+    set(Kokkos_ENABLE_Cuda True)
+  endif()
 ENDIF()
 
 
