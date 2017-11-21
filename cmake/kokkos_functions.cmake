@@ -297,7 +297,7 @@ endfunction()
 #-------------------------------------------------------------------------------
 # function(set_kokkos_sources)
 # Takes a list of sources for kokkos (e.g., KOKKOS_SRC from Makefile.kokkos and
-# put it into gen_kokkos.cmake) and sorts the files into the subpackages or
+# put it into kokkos_generated_settings.cmake) and sorts the files into the subpackages or
 # separate_libraries.  This is core and containers (algorithms is pure header
 # files).
 #

@@ -5,7 +5,7 @@
 # using CMake idioms and map them onto the KOKKOS_SETTINGS variables that gets 
 # passed to the kokkos makefile configuration:
 #  make -f ${CMAKE_SOURCE_DIR}/core/src/Makefile ${KOKKOS_SETTINGS} build-makefile-cmake-kokkos
-# that generates KokkosCore_config.h and gen_kokkos.cmake
+# that generates KokkosCore_config.h and kokkos_generated_settings.cmake
 # To understand how to form KOKKOS_SETTINGS, see
 #     <KOKKOS_PATH>/Makefile.kokkos
 
@@ -114,6 +114,7 @@ string(REPLACE ";" ":" KOKKOS_INTERNAL_ADDTOPATH "${addpathl}")
 
 set(KOKKOS_SETTINGS KOKKOS_SRC_PATH=${KOKKOS_SRC_PATH})
 set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} KOKKOS_PATH=${KOKKOS_PATH})
+set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} KOKKOS_INSTALL_PATH=${CMAKE_INSTALL_PREFIX})
 
 # Form of KOKKOS_foo=$KOKKOS_foo
 foreach(kvar ARCH;DEVICES;DEBUG;OPTIONS;CUDA_OPTIONS;USE_TPLS)

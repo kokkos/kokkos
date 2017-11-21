@@ -28,12 +28,12 @@ IF(NOT KOKKOS_HAS_TRILINOS)
 
   #------------ GENERATE HEADER AND SOURCE FILES -------------------------------
   execute_process(
-    COMMAND ${KOKKOS_SETTINGS} make -f ${KOKKOS_SRC_PATH}/core/src/Makefile build-makefile-cmake-kokkos
+    COMMAND ${KOKKOS_SETTINGS} make -f ${KOKKOS_SRC_PATH}/cmake/Makefile.generate_cmake_settings generate_cmake_settings
     WORKING_DIRECTORY "${Kokkos_BINARY_DIR}"
     OUTPUT_FILE ${Kokkos_BINARY_DIR}/core_src_make.out
     RESULT_VARIABLE res
   )
-  include(${Kokkos_BINARY_DIR}/gen_kokkos.cmake)
+  include(${Kokkos_BINARY_DIR}/kokkos_generated_settings.cmake)
   set_kokkos_srcs(KOKKOS_SRC ${KOKKOS_SRC})
 
   #------------ NOW BUILD ------------------------------------------------------
@@ -55,7 +55,7 @@ TRIBITS_PACKAGE_DECL(Kokkos) # ENABLE_SHADOWING_WARNINGS)
 #
 # If using the Makefile-generated files, then need to set things up.
 # Here, assume that TriBITS has been run from ProjectCompilerPostConfig.cmake
-# and already generated KokkosCore_config.h and gen_cmake.kokkos
+# and already generated KokkosCore_config.h and kokkos_generated_settings.cmake
 # in the previously define Kokkos_GEN_DIR
 # We need to copy them over to the correct place and source the cmake file
 
@@ -63,11 +63,11 @@ if(NOT KOKKOS_LEGACY_TRIBITS)
   set(Kokkos_GEN_DIR ${CMAKE_BINARY_DIR})
   file(COPY "${Kokkos_GEN_DIR}/KokkosCore_config.h"
     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" USE_SOURCE_PERMISSIONS)
-  file(COPY "${Kokkos_GEN_DIR}/gen_kokkos.cmake"
+  file(COPY "${Kokkos_GEN_DIR}/kokkos_generated_settings.cmake"
     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" USE_SOURCE_PERMISSIONS)
 
-  include(${CMAKE_CURRENT_BINARY_DIR}/gen_kokkos.cmake)
-  # Sources come from makefile-generated gen_kokkos.cmake file
+  include(${CMAKE_CURRENT_BINARY_DIR}/kokkos_generated_settings.cmake)
+  # Sources come from makefile-generated kokkos_generated_settings.cmake file
   # Enable using the individual sources if needed
   set_kokkos_srcs(KOKKOS_SRC ${KOKKOS_SRC})
 endif ()

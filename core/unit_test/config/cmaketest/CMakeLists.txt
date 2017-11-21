@@ -13,7 +13,7 @@ set(CXX ${KOKKOS_TESTDIR}/config/cxx)
 
 # Defined in core/src/Makefile -- this should be consistent
 set(KOKKOS_MAKEFILE Makefile.kokkos)
-set(KOKKOS_CMAKEFILE gen_kokkos.cmake)
+set(KOKKOS_CMAKEFILE kokkos_generated_settings.cmake)
 
 # Defined in Makefile.kokkos -- this should be consistent
 set(KOKKOS_INTERNAL_CONFIG_TMP KokkosCore_config.tmp)

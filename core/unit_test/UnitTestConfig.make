@@ -18,7 +18,7 @@ ipath=env CXX=$(CXX) env PATH=./config:$$PATH env ROCM_HCC_PATH=$(ROCM_HCC_PATH)
 
 # Defined in core/src/Makefile -- this should be consistent
 KOKKOS_MAKEFILE=Makefile.kokkos
-KOKKOS_CMAKEFILE=gen_kokkos.cmake
+KOKKOS_CMAKEFILE=kokkos_generated_settings.cmake
 
 # Defined in Makefile.kokkos -- this should be consistent
 KOKKOS_INTERNAL_CONFIG_TMP=KokkosCore_config.tmp

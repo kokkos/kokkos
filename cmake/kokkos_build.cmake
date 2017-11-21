@@ -1,4 +1,4 @@
-# gen_kokkos.cmake includes the kokkos library itself in KOKKOS_LIBS
+# kokkos_generated_settings.cmake includes the kokkos library itself in KOKKOS_LIBS
 # which we do not want to use for the cmake builds so clean this up
 string(REGEX REPLACE "-lkokkos" "" KOKKOS_LIBS ${KOKKOS_LIBS})
 
@@ -58,7 +58,7 @@ endif()
 INCLUDE_DIRECTORIES(${Kokkos_INCLUDE_DIRS})
 
 IF(KOKKOS_SEPARATE_LIBS)
-  # Sources come from makefile-generated gen_kokkos.cmake file
+  # Sources come from makefile-generated kokkos_generated_settings.cmake file
   # Separate libs need to separate the sources
   set_kokkos_srcs(KOKKOS_SRC ${KOKKOS_SRC})
 
@@ -193,7 +193,6 @@ INSTALL (DIRECTORY
 )
 
 INSTALL (FILES
-         EXPORT KokkosTargets
          ${Kokkos_BINARY_DIR}/KokkosCore_config.h
          DESTINATION ${KOKKOS_HEADER_DIR}
 )
@@ -223,6 +222,8 @@ install(FILES
   "${Kokkos_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/KokkosConfig.cmake"
   DESTINATION "${INSTALL_CMAKE_DIR}")
 
+#This seems not to do anything?
+#message(STATUS "KokkosTargets: " ${KokkosTargets})
 # Install the export set for use with the install-tree
 INSTALL(EXPORT KokkosTargets DESTINATION
        "${INSTALL_CMAKE_DIR}")
