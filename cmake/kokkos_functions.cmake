@@ -1,7 +1,7 @@
 ################################### FUNCTIONS ##################################
 # List of functions
 #   set_kokkos_cxx_compiler
-#   set_kokkos_compiler_standard
+#   set_kokkos_cxx_standard
 #   set_kokkos_srcs
 
 #-------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ function(set_kokkos_cxx_compiler)
 endfunction()
 
 #-------------------------------------------------------------------------------
-# function(set_kokkos_compiler_standard)
+# function(set_kokkos_cxx_standard)
 #  Transitively enforces that the appropriate CXX standard compile flags (C++11
 #  or above) are added to targets that use the Kokkos library.  Compile features
 #  are used if possible.  Otherwise, the appropriate flags are added to
@@ -121,7 +121,7 @@ endfunction()
 #  KOKKOS_CXX_COMPILER_ID
 #  KOKKOS_CXX_COMPILER_VERSION
 #
-function(set_kokkos_compiler_standard)
+function(set_kokkos_cxx_standard)
   # The following table lists the versions of CMake that supports CXX_STANDARD
   # and the CXX compile features for different compilers.  The versions are
   # based on CMake documentation, looking at CMake code, and verifying by

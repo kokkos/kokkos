@@ -1,3 +1,5 @@
+# Is this a build as part of Trilinos?
+
 IF(COMMAND TRIBITS_PACKAGE_DECL)
   SET(KOKKOS_HAS_TRILINOS ON CACHE BOOL "")
 ELSE()
@@ -15,7 +17,7 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   #------------ COMPILER AND FEATURE CHECKS ------------------------------------
   include(${KOKKOS_SRC_PATH}/cmake/kokkos_functions.cmake)
   set_kokkos_cxx_compiler()
-  set_kokkos_compiler_standard()
+  set_kokkos_cxx_standard()
   
   #------------ GET OPTIONS AND KOKKOS_SETTINGS --------------------------------
   # Add Kokkos' modules to CMake's module path.
@@ -42,7 +44,7 @@ IF(NOT KOKKOS_HAS_TRILINOS)
 ELSE()
 #------------------------------------------------------------------------------
 #
-# A) Forward delcare the package so that certain options are also defined for
+# A) Forward declare the package so that certain options are also defined for
 # subpackages
 #
 
