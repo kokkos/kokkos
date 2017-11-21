@@ -58,7 +58,6 @@ void test_reduction_view_config(int n)
       , duplication
       , contribution
       > (original_view);
-    Kokkos::deep_copy(reduction_view, original_view);
     auto policy = Kokkos::RangePolicy<ExecSpace, int>(0, n);
 #if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
     auto f = KOKKOS_LAMBDA(int i) {
@@ -72,7 +71,7 @@ void test_reduction_view_config(int n)
     };
     Kokkos::parallel_for(policy, f, "reduction_view_test");
 #endif
-    Kokkos::deep_copy(original_view, reduction_view);
+    Kokkos::Experimental::contribute(original_view, reduction_view);
   }
   auto host_view = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), original_view);
   for (typename decltype(host_view)::size_type i = 0; i < host_view.dimension_0(); ++i) {

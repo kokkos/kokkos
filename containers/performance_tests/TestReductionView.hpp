@@ -77,8 +77,9 @@ void test_reduction_view(int m, int n)
       , duplication
       , contribution
       > (original_view);
-    Kokkos::Experimental::UniqueToken<ExecSpace> unique_token{ExecSpace()};
-    Kokkos::deep_copy(reduction_view, original_view);
+    Kokkos::Experimental::UniqueToken<
+      ExecSpace, Kokkos::Experimental::UniqueTokenScope::Global>
+      unique_token{ExecSpace()};
   //auto internal_view = reduction_view.internal_view;
     auto policy = Kokkos::RangePolicy<ExecSpace, int>(0, n);
     for (int foo = 0; foo < 5; ++foo) {

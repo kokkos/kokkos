@@ -316,6 +316,47 @@ struct ReduceDuplicates<ExecSpace, ValueType, Kokkos::Experimental::ReductionSum
   }
 };
 
+template <typename ExecSpace, typename ValueType, int Op>
+struct ResetDuplicates;
+
+template <typename ExecSpace, typename ValueType, int Op>
+struct ResetDuplicatesBase {
+  typedef ResetDuplicates<ExecSpace, ValueType, Op> Derived;
+  ValueType* ptr_in;
+  ResetDuplicatesBase(ValueType* ptr_in, size_t size_in, std::string const& name)
+    : ptr_in(ptr_in)
+  {
+#if defined(KOKKOS_ENABLE_PROFILING)
+    uint64_t kpID = 0;
+    if(Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::beginParallelFor(std::string("reduce_") + name, 0, &kpID);
+    }
+#endif
+    typedef RangePolicy<ExecSpace, size_t> policy_type;
+    typedef Kokkos::Impl::ParallelFor<Derived, policy_type> closure_type;
+    const closure_type closure(*(static_cast<Derived*>(this)), policy_type(0, size_in));
+    closure.execute();
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if(Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endParallelFor(kpID);
+    }
+#endif
+  }
+};
+
+template <typename ExecSpace, typename ValueType>
+struct ResetDuplicates<ExecSpace, ValueType, Kokkos::Experimental::ReductionSum> :
+  public ResetDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ReductionSum>
+{
+  typedef ResetDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ReductionSum> Base;
+  ResetDuplicates(ValueType* ptr_in, size_t size_in, std::string const& name):
+    Base(ptr_in, size_in, name)
+  {}
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
+    Base::ptr_in[i] = Kokkos::reduction_identity<ValueType>::sum();
+  }
+};
+
 }}} // Kokkos::Impl::Experimental
 
 namespace Kokkos {
@@ -377,16 +418,33 @@ public:
   }
 
   template <typename ... RP>
-  void deep_copy_from(View<DataType, RP...> const& src)
+  void contribute_into(View<DataType, RP...> const& dest) const
   {
-    Kokkos::deep_copy(internal_view, src);
+    typedef View<DataType, RP...> dest_type;
+    static_assert(std::is_same<
+        typename dest_type::array_layout,
+        Layout>::value,
+        "ReductionView contribute destination has different layout");
+    static_assert(Kokkos::Impl::VerifyExecutionCanAccessMemorySpace<
+        typename ExecSpace::memory_space,
+        typename dest_type::memory_space>::value,
+        "ReductionView contribute destination memory space not accessible");
+    if (dest.data() == internal_view.data()) return;
+    Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
+        internal_view.data(),
+        dest.data(),
+        0,
+        1,
+        internal_view.label());
   }
 
-  template <typename ... RP>
-  void deep_copy_into(View<DataType, RP...> const& dest) const
-  {
-    Kokkos::deep_copy(dest, internal_view);
+  void reset() {
+    Kokkos::Impl::Experimental::ResetDuplicates<ExecSpace, original_value_type, Op>(
+        internal_view.data(),
+        internal_view.size(),
+        internal_view.label());
   }
+  void reset_duplicates() {}
 
 protected:
   template <typename ... Args>
@@ -464,7 +522,8 @@ public:
   template <typename RT, typename ... RP >
   ReductionView(View<RT, RP...> const& original_view)
   : unique_token()
-  , internal_view(original_view.label(),
+  , internal_view(Kokkos::ViewAllocateWithoutInitializing(
+                    std::string("duplicated_") + original_view.label()),
                   unique_token.size(),
                   original_view.dimension_0(),
                   original_view.dimension_1(),
@@ -474,6 +533,7 @@ public:
                   original_view.dimension_5(),
                   original_view.dimension_6())
   {
+    reset();
   }
 
   inline access_type access() const {
@@ -491,11 +551,12 @@ public:
   template <typename ... RP>
   void deep_copy_from(View<DataType, RP...> const& src)
   {
-    Kokkos::deep_copy(this->subview(), src);
+    //
+  //Kokkos::deep_copy(this->subview(), src);
   }
 
   template <typename ... RP>
-  void deep_copy_into(View<DataType, RP...> const& dest) const
+  void contribute_into(View<DataType, RP...> const& dest) const
   {
     typedef View<DataType, RP...> dest_type;
     static_assert(std::is_same<
@@ -508,11 +569,35 @@ public:
         "ReductionView deep_copy destination memory space not accessible");
     size_t strides[8];
     internal_view.stride(strides);
-    Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
+    if (dest.data() == internal_view.data()) {
+      Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
+          internal_view.data() + strides[0],
+          dest.data(),
+          strides[0],
+          internal_view.dimension(0) - 1,
+          internal_view.label());
+    } else {
+      Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
+          internal_view.data(),
+          dest.data(),
+          strides[0],
+          internal_view.dimension(0),
+          internal_view.label());
+    }
+  }
+
+  void reset() {
+    Kokkos::Impl::Experimental::ResetDuplicates<ExecSpace, original_value_type, Op>(
         internal_view.data(),
-        dest.data(),
-        strides[0],
-        internal_view.dimension(0),
+        internal_view.size(),
+        internal_view.label());
+  }
+  void reset_duplicates() {
+    size_t strides[8];
+    internal_view.stride(strides);
+    Kokkos::Impl::Experimental::ResetDuplicates<ExecSpace, original_value_type, Op>(
+        internal_view.data() + strides[0],
+        internal_view.size() - strides[0],
         internal_view.label());
   }
 
@@ -579,9 +664,11 @@ public:
       }
     }
     internal_view = internal_view_type(
-        original_view.name(),
+        Kokkos::ViewAllocateWithoutInitializing(
+          std::string("duplicated_") + original_view.name()),
         arg_N[0], arg_N[1], arg_N[2], arg_N[3],
         arg_N[4], arg_N[5], arg_N[6], arg_N[7]);
+    reset();
   }
 
   inline access_type access() const {
@@ -597,13 +684,7 @@ public:
   }
 
   template <typename ... RP>
-  void deep_copy_from(View<DataType, RP...> const& src)
-  {
-    Kokkos::deep_copy(this->subview(), src);
-  }
-
-  template <typename ... RP>
-  void deep_copy_into(View<DataType, RP...> const& dest) const
+  void contribute_into(View<DataType, RP...> const& dest) const
   {
     typedef View<DataType, RP...> dest_type;
     static_assert(std::is_same<
@@ -616,11 +697,39 @@ public:
         "ReductionView deep_copy destination memory space not accessible");
     size_t strides[8];
     internal_view.stride(strides);
-    Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
+    size_t stride = strides[internal_view_type::rank - 1];
+    auto dimension = internal_view.dimension(
+        internal_view_type::rank - 1);
+    if (dest.data() == internal_view.data()) {
+      Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
+          internal_view.data() + stride,
+          dest.data(),
+          stride,
+          dimension - 1,
+          internal_view.label());
+    } else {
+      Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
+          internal_view.data(),
+          dest.data(),
+          stride,
+          dimension,
+          internal_view.label());
+    }
+  }
+
+  void reset() {
+    Kokkos::Impl::Experimental::ResetDuplicates<ExecSpace, original_value_type, Op>(
         internal_view.data(),
-        dest.data(),
-        strides[internal_view_type::rank - 1],
-        internal_view.dimension(internal_view_type::rank - 1),
+        internal_view.size(),
+        internal_view.label());
+  }
+  void reset_duplicates() {
+    size_t strides[8];
+    internal_view.stride(strides);
+    size_t stride = strides[internal_view_type::rank - 1];
+    Kokkos::Impl::Experimental::ResetDuplicates<ExecSpace, original_value_type, Op>(
+        internal_view.data() + stride,
+        internal_view.size() - stride,
         internal_view.label());
   }
 
@@ -739,21 +848,15 @@ create_reduction_view(View<RT, RP...> const& original_view) {
 }} // namespace Kokkos::Experimental
 
 namespace Kokkos {
+namespace Experimental {
 
 template <typename DT, int OP, typename ES, typename LY, int CT, int DP, typename ... VP>
 void
-deep_copy(View<DT, VP...>& dest, Kokkos::Experimental::ReductionView<DT, OP, ES, LY, CT, DP> const& src)
+contribute(View<DT, VP...>& dest, Kokkos::Experimental::ReductionView<DT, OP, ES, LY, CT, DP> const& src)
 {
-  src.deep_copy_into(dest);
+  src.contribute_into(dest);
 }
 
-template <typename DT, int OP, typename ES, typename LY, int CT, int DP, typename ... VP>
-void
-deep_copy(Kokkos::Experimental::ReductionView<DT, OP, ES, LY, CT, DP>& dest, View<DT, VP...> const& src)
-{
-  dest.deep_copy_from(src);
-}
-
-} // namespace Kokkos
+}} // namespace Kokkos::Experimental
 
 #endif
