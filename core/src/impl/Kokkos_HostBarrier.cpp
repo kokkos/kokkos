@@ -174,7 +174,15 @@ void rendezvous_release( volatile void * buffer
   const uint64_t      spin_value = static_cast<uint64_t>(byte_value) << (byte_value&7);
   volatile uint64_t * header     = reinterpret_cast<volatile uint64_t *>(buffer);
 
+  // Force all outstanding stores from this thread to retire before releasing
+  // the other threads.  This forces correctness on systems with out-of-order
+  // memory (Power and ARM)
+  Kokkos::store_fence();
+
   *header = spin_value;
+
+  // This will release all the threads that are spinning until
+  // *header == spin_value
   Kokkos::store_fence();
 }
 
