@@ -399,8 +399,8 @@ public:
   typedef typename original_view_type::value_type original_value_type;
   typedef Kokkos::Impl::Experimental::ReductionValue<
       original_value_type, Op, contribution> value_type;
-  typedef ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, contribution> access_type;
-  friend class ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, contribution>;
+  friend class ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, ReductionNonAtomic>;
+  friend class ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, ReductionAtomic>;
 
   ReductionView()
   {
@@ -412,9 +412,11 @@ public:
   {
   }
 
+  template <int access_contrib = contribution>
   KOKKOS_FORCEINLINE_FUNCTION
-  access_type access() const {
-    return access_type(*this);
+  ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, access_contrib>
+  access() const {
+    return ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, access_contrib>{*this};
   }
 
   template <typename ... RP>
@@ -509,8 +511,8 @@ public:
   typedef typename original_view_type::value_type original_value_type;
   typedef Kokkos::Impl::Experimental::ReductionValue<
       original_value_type, Op, contribution> value_type;
-  typedef ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, contribution> access_type;
-  friend class ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, contribution>;
+  friend class ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, ReductionNonAtomic>;
+  friend class ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, ReductionAtomic>;
   typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<DataType, Kokkos::LayoutRight> data_type_info;
   typedef typename data_type_info::value_type internal_data_type;
   typedef Kokkos::View<internal_data_type, Kokkos::LayoutRight, ExecSpace> internal_view_type;
@@ -536,8 +538,11 @@ public:
     reset();
   }
 
-  inline access_type access() const {
-    return access_type(*this);
+  template <int access_contrib = contribution>
+  inline
+  ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, access_contrib>
+  access() const {
+    return ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, access_contrib>{*this};
   }
 
   typename Kokkos::Impl::Experimental::Slice<
@@ -633,8 +638,8 @@ public:
   typedef typename original_view_type::value_type original_value_type;
   typedef Kokkos::Impl::Experimental::ReductionValue<
       original_value_type, Op, contribution> value_type;
-  typedef ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ReductionDuplicated, contribution> access_type;
-  friend class ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ReductionDuplicated, contribution>;
+  friend class ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ReductionDuplicated, ReductionNonAtomic>;
+  friend class ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ReductionDuplicated, ReductionAtomic>;
   typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<DataType, Kokkos::LayoutLeft> data_type_info;
   typedef typename data_type_info::value_type internal_data_type;
   typedef Kokkos::View<internal_data_type, Kokkos::LayoutLeft, ExecSpace> internal_view_type;
@@ -671,8 +676,11 @@ public:
     reset();
   }
 
-  inline access_type access() const {
-    return access_type(*this);
+  template <int access_contrib = contribution>
+  inline
+  ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ReductionDuplicated, access_contrib>
+  access() const {
+    return ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ReductionDuplicated, access_contrib>{*this};
   }
 
   typename Kokkos::Impl::Experimental::Slice<
