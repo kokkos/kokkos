@@ -8,7 +8,11 @@ ENDIF()
 
 IF(NOT KOKKOS_HAS_TRILINOS)
   cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
-  project(Kokkos CXX)
+
+  # Define Project Name if this is a standalone build
+  IF(NOT DEFINED ${PROJECT_NAME})
+    project(Kokkos CXX) 
+  ENDIF()
 
   # Basic initialization (Used in KOKKOS_SETTINGS)
   set(KOKKOS_SRC_PATH ${Kokkos_SOURCE_DIR})
@@ -48,6 +52,8 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   TRIBITS_PACKAGE_DECL(Kokkos)
 
   ADD_SUBDIRECTORY(core)
+  ADD_SUBDIRECTORY(containers)
+  ADD_SUBDIRECTORY(algorithms)
 
 ELSE()
 #------------------------------------------------------------------------------

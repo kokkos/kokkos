@@ -89,7 +89,7 @@ IF(KOKKOS_SEPARATE_LIBS)
   TARGET_LINK_LIBRARIES(
     kokkoscore
     ${KOKKOS_LD_FLAGS}
-    "${KOKKOS_LIBS_LIST}"
+    ${KOKKOS_LIBS_LIST}
   )
 
   # kokkoscontainers

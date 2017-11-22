@@ -127,7 +127,7 @@ set(KOKKOS_QTHREADS_DIR "" CACHE PATH "Location of Qthreads library.")
 # Set which Kokkos backend to use.
 # These are the actual options that define the settings.
 set(KOKKOS_ENABLE_CUDA OFF CACHE BOOL "Enable CUDA support in Kokkos.")
-set(KOKKOS_ENABLE_OPENMP ON CACHE BOOL "Enable OpenMP support in Kokkos.")
+set(KOKKOS_ENABLE_OPENMP OFF CACHE BOOL "Enable OpenMP support in Kokkos.")
 set(KOKKOS_ENABLE_PTHREAD OFF CACHE BOOL "Enable Pthread support in Kokkos.")
 set(KOKKOS_ENABLE_QTHREADS OFF CACHE BOOL "Enable Qthreads support in Kokkos.")
 set(KOKKOS_ENABLE_SERIAL ON CACHE BOOL "Whether to enable the Kokkos::Serial device.  This device executes \"parallel\" kernels sequentially on a single CPU thread.  It is enabled by default.  If you disable this device, please enable at least one other CPU device, such as Kokkos::OpenMP or Kokkos::Threads.")
