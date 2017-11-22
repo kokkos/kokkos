@@ -705,23 +705,15 @@ public:
     size_t stride = strides[internal_view_type::rank - 1];
     auto dimension = internal_view.dimension(
         internal_view_type::rank - 1);
-    if (dest.data() == internal_view.data()) {
-      Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
-          internal_view.data() + stride,
-          dest.data(),
-          stride,
-          0,
-          dimension - 1,
-          internal_view.label());
-    } else {
-      Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
-          internal_view.data(),
-          dest.data(),
-          stride,
-          0,
-          dimension,
-          internal_view.label());
-    }
+    bool is_equal = (dest.data() == internal_view.data());
+    size_t start = is_equal ? 1 : 0;
+    Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
+        internal_view.data(),
+        dest.data(),
+        stride,
+        start,
+        dimension,
+        internal_view.label());
   }
 
   void reset() {
