@@ -276,11 +276,13 @@ struct ReduceDuplicatesBase {
   ValueType* ptr_in;
   ValueType* ptr_out;
   size_t stride;
+  size_t start;
   size_t n;
-  ReduceDuplicatesBase(ValueType* ptr_in, ValueType* ptr_out, size_t stride_in, size_t n_in, std::string const& name)
+  ReduceDuplicatesBase(ValueType* ptr_in, ValueType* ptr_out, size_t stride_in, size_t start_in, size_t n_in, std::string const& name)
     : ptr_in(ptr_in)
     , ptr_out(ptr_out)
     , stride(stride_in)
+    , start(start_in)
     , n(n_in)
   {
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -306,11 +308,11 @@ struct ReduceDuplicates<ExecSpace, ValueType, Kokkos::Experimental::ReductionSum
   public ReduceDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ReductionSum>
 {
   typedef ReduceDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ReductionSum> Base;
-  ReduceDuplicates(ValueType* ptr_in, ValueType* ptr_out, size_t stride_in, size_t n_in, std::string const& name):
-    Base(ptr_in, ptr_out, stride_in, n_in, name)
+  ReduceDuplicates(ValueType* ptr_in, ValueType* ptr_out, size_t stride_in, size_t start_in, size_t n_in, std::string const& name):
+    Base(ptr_in, ptr_out, stride_in, start_in, n_in, name)
   {}
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
-    for (size_t j = 0; j < Base::n; ++j) {
+    for (size_t j = Base::start; j < Base::n; ++j) {
       Base::ptr_out[i] += Base::ptr_in[i + Base::stride * j];
     }
   }
@@ -435,6 +437,7 @@ public:
     Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
         internal_view.data(),
         dest.data(),
+        0,
         0,
         1,
         internal_view.label());
@@ -574,21 +577,15 @@ public:
         "ReductionView deep_copy destination memory space not accessible");
     size_t strides[8];
     internal_view.stride(strides);
-    if (dest.data() == internal_view.data()) {
-      Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
-          internal_view.data() + strides[0],
-          dest.data(),
-          strides[0],
-          internal_view.dimension(0) - 1,
-          internal_view.label());
-    } else {
-      Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
-          internal_view.data(),
-          dest.data(),
-          strides[0],
-          internal_view.dimension(0),
-          internal_view.label());
-    }
+    bool is_equal = (dest.data() == internal_view.data());
+    size_t start = is_equal?1:0;
+    Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
+        internal_view.data(),
+        dest.data(),
+        strides[0],
+        start,
+        internal_view.dimension(0),
+        internal_view.label());
   }
 
   void reset() {
@@ -713,6 +710,7 @@ public:
           internal_view.data() + stride,
           dest.data(),
           stride,
+          0,
           dimension - 1,
           internal_view.label());
     } else {
@@ -720,6 +718,7 @@ public:
           internal_view.data(),
           dest.data(),
           stride,
+          0,
           dimension,
           internal_view.label());
     }
