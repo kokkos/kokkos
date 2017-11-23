@@ -84,6 +84,19 @@ void test_reduction_view_config(int n)
     EXPECT_TRUE(((val2 - 10.0) / 10.0) < 1e-15);
 #endif
   }
+  {
+    Kokkos::Experimental::ReductionView
+      < double*[3]
+      , Kokkos::Experimental::ReductionSum
+      , ExecSpace
+      , Layout
+      , duplication
+      , contribution
+      >
+      persistent_view("persistent", n);
+    auto result_view = persistent_view.subview();
+    contribute(result_view, persistent_view);
+  }
 }
 
 template <typename ExecSpace>

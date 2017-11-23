@@ -414,6 +414,12 @@ public:
   {
   }
 
+  template <typename ... Dims>
+  ReductionView(std::string const& name, Dims ... dims)
+  : internal_view(name, dims ...)
+  {
+  }
+
   template <int access_contrib = contribution>
   KOKKOS_FORCEINLINE_FUNCTION
   ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, access_contrib>
@@ -421,10 +427,14 @@ public:
     return ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, access_contrib>{*this};
   }
 
-  template <typename ... RP>
-  void contribute_into(View<DataType, RP...> const& dest) const
+  original_view_type subview() const {
+    return internal_view;
+  }
+
+  template <typename DT, typename ... RP>
+  void contribute_into(View<DT, RP...> const& dest) const
   {
-    typedef View<DataType, RP...> dest_type;
+    typedef View<DT, RP...> dest_type;
     static_assert(std::is_same<
         typename dest_type::array_layout,
         Layout>::value,
@@ -541,6 +551,13 @@ public:
     reset();
   }
 
+  template <typename ... Dims>
+  ReductionView(std::string const& name, Dims ... dims)
+  : internal_view(Kokkos::ViewAllocateWithoutInitializing(name), unique_token.size(), dims ...)
+  {
+    reset();
+  }
+
   template <int access_contrib = contribution>
   inline
   ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, access_contrib>
@@ -556,17 +573,10 @@ public:
       Kokkos::LayoutRight, internal_view_type::Rank, internal_view_type>::get(internal_view, 0);
   }
 
-  template <typename ... RP>
-  void deep_copy_from(View<DataType, RP...> const& src)
+  template <typename DT, typename ... RP>
+  void contribute_into(View<DT, RP...> const& dest) const
   {
-    //
-  //Kokkos::deep_copy(this->subview(), src);
-  }
-
-  template <typename ... RP>
-  void contribute_into(View<DataType, RP...> const& dest) const
-  {
-    typedef View<DataType, RP...> dest_type;
+    typedef View<DT, RP...> dest_type;
     static_assert(std::is_same<
         typename dest_type::array_layout,
         Kokkos::LayoutRight>::value,
@@ -670,6 +680,13 @@ public:
           std::string("duplicated_") + original_view.name()),
         arg_N[0], arg_N[1], arg_N[2], arg_N[3],
         arg_N[4], arg_N[5], arg_N[6], arg_N[7]);
+    reset();
+  }
+
+  template <typename ... Dims>
+  ReductionView(std::string const& name, Dims ... dims)
+  : internal_view(Kokkos::ViewAllocateWithoutInitializing(name), dims ..., unique_token.size())
+  {
     reset();
   }
 
@@ -849,9 +866,9 @@ create_reduction_view(View<RT, RP...> const& original_view) {
 namespace Kokkos {
 namespace Experimental {
 
-template <typename DT, int OP, typename ES, typename LY, int CT, int DP, typename ... VP>
+template <typename DT1, typename DT2, int OP, typename ES, typename LY, int CT, int DP, typename ... VP>
 void
-contribute(View<DT, VP...>& dest, Kokkos::Experimental::ReductionView<DT, OP, ES, LY, CT, DP> const& src)
+contribute(View<DT1, VP...>& dest, Kokkos::Experimental::ReductionView<DT2, OP, ES, LY, CT, DP> const& src)
 {
   src.contribute_into(dest);
 }
