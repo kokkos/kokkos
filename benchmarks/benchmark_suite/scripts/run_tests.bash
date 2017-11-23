@@ -23,8 +23,8 @@ cd ../..
 # MiniMD
 cd build/miniMD
 cp ../../miniMD/kokkos/Cu_u6.eam ./
-MD_PERF_1=`./miniMD --half_neigh 0 -s 60 --ntypes 1 -i ../../miniMD/kokkos/in.eam.miniMD | grep PERF_SUMMARY | awk '{print $10/21163341}'`
-MD_PERF_2=`./miniMD --half_neigh 0 -s 20 --ntypes 1 -i ../../miniMD/kokkos/in.eam.miniMD | grep PERF_SUMMARY | awk '{print $10/13393417}'`
+MD_PERF_1=`./miniMD --half_neigh 0 -s 60 --ntypes 1 -t ${OMP_NUM_THREADS} -i ../../miniMD/kokkos/in.eam.miniMD | grep PERF_SUMMARY | awk '{print $10/21163341}'`
+MD_PERF_2=`./miniMD --half_neigh 0 -s 20 --ntypes 1 -t ${OMP_NUM_THREADS} -i ../../miniMD/kokkos/in.eam.miniMD | grep PERF_SUMMARY | awk '{print $10/13393417}'`
 
 echo "MiniMD: ${MD_PERF_1} ${MD_PERF_2}"
 cd ../..
