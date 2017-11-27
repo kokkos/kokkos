@@ -4,7 +4,7 @@
 #  kokkos_settings.cmake.  It is separate to allow other packages to override
 #  these variables (e.g., TriBITS).
 
-########################## AVAIALBLE OPTIONS ###################################
+########################## AVAILABLE OPTIONS ###################################
 # Use lists for documentation, verification, and programming convenience
 
 # List of possible host architectures.
@@ -103,7 +103,7 @@ string(REPLACE ";" ${tmpr} KOKKOS_INTERNAL_ARCH_DOCSTR "${KOKKOS_ARCH_LIST}")
 #string(REPLACE ";" ${tmpr} KOKKOS_INTERNAL_CUDA_OPTIONS_DOCSTR "${KOKKOS_CUDA_OPTIONS_LIST}")
 
 #------------------------------- GENERAL OPTIONS -------------------------------
-# KOKKOS_ARCH must be defined previoiusly
+# KOKKOS_ARCH must be defined previously
 #set_property(CACHE KOKKOS_ARCH PROPERTY STRINGS ${KOKKOS_ARCH_LIST})
 
 # Setting this variable to a value other than "None" can improve host

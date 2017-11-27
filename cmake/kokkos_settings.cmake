@@ -61,7 +61,7 @@ endif()
 if(${KOKKOS_ENABLE_PROFILE_LOAD_PRINT})
       list(APPEND KOKKOS_OPTIONSl enable_profile_load_print)
 endif()
-# List needs to be comma-delmitted
+# List needs to be comma-delimitted
 string(REPLACE ";" "," KOKKOS_OPTIONS "${KOKKOS_OPTIONSl}")
 
 
@@ -73,7 +73,7 @@ foreach(tplopt ${KOKKOS_USE_TPLS_LIST})
     list(APPEND KOKKOS_USE_TPLSl ${KOKKOS_INTERNAL_${tplopt}})
   endif ()
 endforeach()
-# List needs to be comma-delmitted
+# List needs to be comma-delimitted
 string(REPLACE ";" "," KOKKOS_USE_TPLS "${KOKKOS_USE_TPLSl}")
 
 
