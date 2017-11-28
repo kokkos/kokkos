@@ -453,8 +453,16 @@ public:
         internal_view.label());
   }
 
-  void reset() {}
-  void reset_duplicates() {}
+  void reset() {
+    Kokkos::Impl::Experimental::ResetDuplicates<ExecSpace, original_value_type, Op>(
+        internal_view.data(),
+        internal_view.size(),
+        internal_view.label());
+  }
+  template <typename DT, typename ... RP>
+  void reset_except(View<DT, RP...> const& view) {
+    if (view.data() != internal_view.data()) reset();
+  }
 
 protected:
   template <typename ... Args>
@@ -583,7 +591,7 @@ public:
     size_t strides[8];
     internal_view.stride(strides);
     bool is_equal = (dest.data() == internal_view.data());
-    size_t start = is_equal?1:0;
+    size_t start = is_equal ? 1 : 0;
     Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type, Op>(
         internal_view.data(),
         dest.data(),
@@ -599,12 +607,15 @@ public:
         internal_view.size(),
         internal_view.label());
   }
-  void reset_duplicates() {
-    size_t strides[8];
-    internal_view.stride(strides);
+  template <typename DT, typename ... RP>
+  void reset_except(View<DT, RP...> const& view) {
+    if (view.data() != internal_view.data()) {
+      reset();
+      return;
+    }
     Kokkos::Impl::Experimental::ResetDuplicates<ExecSpace, original_value_type, Op>(
-        internal_view.data() + strides[0],
-        internal_view.size() - strides[0],
+        internal_view.data() + view.size(),
+        internal_view.size() - view.size(),
         internal_view.label());
   }
 
@@ -734,13 +745,15 @@ public:
         internal_view.size(),
         internal_view.label());
   }
-  void reset_duplicates() {
-    size_t strides[8];
-    internal_view.stride(strides);
-    size_t stride = strides[internal_view_type::rank - 1];
+  template <typename DT, typename ... RP>
+  void reset_except(View<DT, RP...> const& view) {
+    if (view.data() != internal_view.data()) {
+      reset();
+      return;
+    }
     Kokkos::Impl::Experimental::ResetDuplicates<ExecSpace, original_value_type, Op>(
-        internal_view.data() + stride,
-        internal_view.size() - stride,
+        internal_view.data() + view.size(),
+        internal_view.size() - view.size(),
         internal_view.label());
   }
 

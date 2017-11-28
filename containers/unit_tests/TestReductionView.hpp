@@ -72,6 +72,11 @@ void test_reduction_view_config(int n)
     Kokkos::parallel_for(policy, f, "reduction_view_test");
 #endif
     Kokkos::Experimental::contribute(original_view, reduction_view);
+    reduction_view.reset_except(original_view);
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
+    Kokkos::parallel_for(policy, f, "reduction_view_test");
+#endif
+    Kokkos::Experimental::contribute(original_view, reduction_view);
   }
   auto host_view = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), original_view);
   for (typename decltype(host_view)::size_type i = 0; i < host_view.dimension_0(); ++i) {
@@ -79,17 +84,17 @@ void test_reduction_view_config(int n)
     auto val1 = host_view(i, 1);
     auto val2 = host_view(i, 2);
 #if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
-    EXPECT_TRUE(((val0 - 42.0) / 42.0) < 1e-15);
-    EXPECT_TRUE(((val1 - 20.0) / 20.0) < 1e-15);
-    EXPECT_TRUE(((val2 - 10.0) / 10.0) < 1e-15);
+    EXPECT_TRUE(std::fabs((val0 - 84.0) / 84.0) < 1e-15);
+    EXPECT_TRUE(std::fabs((val1 - 40.0) / 40.0) < 1e-15);
+    EXPECT_TRUE(std::fabs((val2 - 20.0) / 20.0) < 1e-15);
 #endif
   }
   {
     Kokkos::Experimental::ReductionView
       < double*[3]
-      , Kokkos::Experimental::ReductionSum
-      , ExecSpace
       , Layout
+      , ExecSpace
+      , Kokkos::Experimental::ReductionSum
       , duplication
       , contribution
       >
