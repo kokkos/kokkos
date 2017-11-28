@@ -503,6 +503,15 @@ public:
   value_type operator()(Args ... args) const {
     return view.at(args...);
   }
+
+  template <typename Arg>
+  KOKKOS_FORCEINLINE_FUNCTION
+  typename std::enable_if<view_type::original_view_type::rank == 1 &&
+  std::is_integral<Arg>::value, value_type>::type
+  operator[](Arg arg) const {
+    return view.at(arg);
+  }
+
 private:
   view_type const& view;
 };
@@ -811,6 +820,14 @@ public:
   KOKKOS_FORCEINLINE_FUNCTION
   value_type operator()(Args ... args) const {
     return view.at(rank, args...);
+  }
+
+  template <typename Arg>
+  KOKKOS_FORCEINLINE_FUNCTION
+  typename std::enable_if<view_type::original_view_type::rank == 1 &&
+  std::is_integral<Arg>::value, value_type>::type
+  operator[](Arg arg) const {
+    return view.at(rank, arg);
   }
 
 private:
