@@ -453,12 +453,7 @@ public:
         internal_view.label());
   }
 
-  void reset() {
-    Kokkos::Impl::Experimental::ResetDuplicates<ExecSpace, original_value_type, Op>(
-        internal_view.data(),
-        internal_view.size(),
-        internal_view.label());
-  }
+  void reset() {}
   void reset_duplicates() {}
 
 protected:
