@@ -365,9 +365,9 @@ namespace Kokkos {
 namespace Experimental {
 
 template <typename DataType
-         ,int Op = ReductionSum
-         ,typename ExecSpace = Kokkos::DefaultExecutionSpace
          ,typename Layout = Kokkos::DefaultExecutionSpace::array_layout
+         ,typename ExecSpace = Kokkos::DefaultExecutionSpace
+         ,int Op = ReductionSum
          ,int duplication = Kokkos::Impl::Experimental::DefaultDuplication<ExecSpace>::value
          ,int contribution = Kokkos::Impl::Experimental::DefaultContribution<ExecSpace, duplication>::value
          >
@@ -390,9 +390,9 @@ template <typename DataType
          ,int contribution
          >
 class ReductionView<DataType
-                   ,Op
-                   ,ExecSpace
                    ,Layout
+                   ,ExecSpace
+                   ,Op
                    ,ReductionNonDuplicated
                    ,contribution>
 {
@@ -453,12 +453,7 @@ public:
         internal_view.label());
   }
 
-  void reset() {
-    Kokkos::Impl::Experimental::ResetDuplicates<ExecSpace, original_value_type, Op>(
-        internal_view.data(),
-        internal_view.size(),
-        internal_view.label());
-  }
+  void reset() {}
   void reset_duplicates() {}
 
 protected:
@@ -486,7 +481,7 @@ class ReductionAccess<DataType
                    ,contribution>
 {
 public:
-  typedef ReductionView<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, contribution> view_type;
+  typedef ReductionView<DataType, Layout, ExecSpace, Op, ReductionNonDuplicated, contribution> view_type;
   typedef typename view_type::value_type value_type;
 
   KOKKOS_INLINE_FUNCTION
@@ -513,9 +508,9 @@ template <typename DataType
          ,int contribution
          >
 class ReductionView<DataType
-                   ,Op
-                   ,ExecSpace
                    ,Kokkos::LayoutRight
+                   ,ExecSpace
+                   ,Op
                    ,ReductionDuplicated
                    ,contribution>
 {
@@ -634,9 +629,9 @@ template <typename DataType
          ,int contribution
          >
 class ReductionView<DataType
-                   ,Op
-                   ,ExecSpace
                    ,Kokkos::LayoutLeft
+                   ,ExecSpace
+                   ,Op
                    ,ReductionDuplicated
                    ,contribution>
 {
@@ -787,7 +782,7 @@ class ReductionAccess<DataType
                    ,contribution>
 {
 public:
-  typedef ReductionView<DataType, Op, ExecSpace, Layout, ReductionDuplicated, contribution> view_type;
+  typedef ReductionView<DataType, Layout, ExecSpace, Op, ReductionDuplicated, contribution> view_type;
   typedef typename view_type::value_type value_type;
 
   inline ReductionAccess(view_type const& view_in)
@@ -838,9 +833,9 @@ template <int Op = Kokkos::Experimental::ReductionSum,
           typename RT, typename ... RP>
 ReductionView
   < RT
-  , Op
-  , typename ViewTraits<RT, RP...>::execution_space
   , typename ViewTraits<RT, RP...>::array_layout
+  , typename ViewTraits<RT, RP...>::execution_space
+  , Op
   /* just setting defaults if not specified... things got messy because the view type
      does not come before the duplication/contribution settings in the
      template parameter list */
@@ -866,9 +861,9 @@ create_reduction_view(View<RT, RP...> const& original_view) {
 namespace Kokkos {
 namespace Experimental {
 
-template <typename DT1, typename DT2, int OP, typename ES, typename LY, int CT, int DP, typename ... VP>
+template <typename DT1, typename DT2, typename LY, typename ES,  int OP, int CT, int DP, typename ... VP>
 void
-contribute(View<DT1, VP...>& dest, Kokkos::Experimental::ReductionView<DT2, OP, ES, LY, CT, DP> const& src)
+contribute(View<DT1, VP...>& dest, Kokkos::Experimental::ReductionView<DT2, LY, ES, OP, CT, DP> const& src)
 {
   src.contribute_into(dest);
 }
