@@ -25,30 +25,31 @@ KOKKOS_OPTIONS ?= ""
 KOKKOS_CUDA_OPTIONS ?= ""
 
 # Return a 1 if a string contains a substring and 0 if not
-# Example: $(call kokkos_has_string,"hwloc,librt","hwloc")
+# Note the search string should be without '"'
+# Example: $(call kokkos_has_string,"hwloc,librt",hwloc)
 #   Will return a 1
 kokkos_has_string=$(if $(findstring $2,$1),1,0)
 
 # Check for general settings.
-KOKKOS_INTERNAL_ENABLE_DEBUG := $(call kokkos_has_string,$(KOKKOS_DEBUG),"yes")
-KOKKOS_INTERNAL_ENABLE_CXX11 := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),"c++11")
-KOKKOS_INTERNAL_ENABLE_CXX1Z := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),"c++1z")
+KOKKOS_INTERNAL_ENABLE_DEBUG := $(call kokkos_has_string,$(KOKKOS_DEBUG),yes)
+KOKKOS_INTERNAL_ENABLE_CXX11 := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++11)
+KOKKOS_INTERNAL_ENABLE_CXX1Z := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++1z)
 
 # Check for external libraries.
-KOKKOS_INTERNAL_USE_HWLOC := $(call kokkos_has_string,$(KOKKOS_USE_TPLS),"hwloc")
-KOKKOS_INTERNAL_USE_LIBRT := $(call kokkos_has_string,$(KOKKOS_USE_TPLS),"librt")
-KOKKOS_INTERNAL_USE_MEMKIND := $(call kokkos_has_string,$(KOKKOS_USE_TPLS),"experimental_memkind")
+KOKKOS_INTERNAL_USE_HWLOC := $(call kokkos_has_string,$(KOKKOS_USE_TPLS),hwloc)
+KOKKOS_INTERNAL_USE_LIBRT := $(call kokkos_has_string,$(KOKKOS_USE_TPLS),librt)
+KOKKOS_INTERNAL_USE_MEMKIND := $(call kokkos_has_string,$(KOKKOS_USE_TPLS),experimental_memkind)
 
 # Check for advanced settings.
-KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),"compiler_warnings")
-KOKKOS_INTERNAL_OPT_RANGE_AGGRESSIVE_VECTORIZATION := $(call kokkos_has_string,$(KOKKOS_OPTIONS),"aggressive_vectorization")
-KOKKOS_INTERNAL_DISABLE_PROFILING := $(call kokkos_has_string,$(KOKKOS_OPTIONS),"disable_profiling")
-KOKKOS_INTERNAL_DISABLE_DUALVIEW_MODIFY_CHECK := $(call kokkos_has_string,$(KOKKOS_OPTIONS),"disable_dualview_modify_check")
-KOKKOS_INTERNAL_ENABLE_PROFILING_LOAD_PRINT := $(call kokkos_has_string,$(KOKKOS_OPTIONS),"enable_profile_load_print")
-KOKKOS_INTERNAL_CUDA_USE_LDG := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),"use_ldg")
-KOKKOS_INTERNAL_CUDA_USE_UVM := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),"force_uvm")
-KOKKOS_INTERNAL_CUDA_USE_RELOC := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),"rdc")
-KOKKOS_INTERNAL_CUDA_USE_LAMBDA := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),"enable_lambda")
+KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),compiler_warnings)
+KOKKOS_INTERNAL_OPT_RANGE_AGGRESSIVE_VECTORIZATION := $(call kokkos_has_string,$(KOKKOS_OPTIONS),aggressive_vectorization)
+KOKKOS_INTERNAL_DISABLE_PROFILING := $(call kokkos_has_string,$(KOKKOS_OPTIONS),disable_profiling)
+KOKKOS_INTERNAL_DISABLE_DUALVIEW_MODIFY_CHECK := $(call kokkos_has_string,$(KOKKOS_OPTIONS),disable_dualview_modify_check)
+KOKKOS_INTERNAL_ENABLE_PROFILING_LOAD_PRINT := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_profile_load_print)
+KOKKOS_INTERNAL_CUDA_USE_LDG := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),use_ldg)
+KOKKOS_INTERNAL_CUDA_USE_UVM := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),force_uvm)
+KOKKOS_INTERNAL_CUDA_USE_RELOC := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),rdc)
+KOKKOS_INTERNAL_CUDA_USE_LAMBDA := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),enable_lambda)
 
 
 # Check for Kokkos Host Execution Spaces one of which must be on.
@@ -84,13 +85,13 @@ KOKKOS_INTERNAL_OS_DARWIN      := $(call kokkos_has_string,$(KOKKOS_OS),Darwin)
 
 # Check compiler.
 KOKKOS_CXX_VERSION                   := $(strip $(shell $(CXX) --version       2>&1))
-KOKKOS_INTERNAL_COMPILER_INTEL       := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),"Intel Corporation")
+KOKKOS_INTERNAL_COMPILER_INTEL       := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),Intel Corporation)
 KOKKOS_INTERNAL_COMPILER_PGI         := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),PGI)
 KOKKOS_INTERNAL_COMPILER_XL          := $(strip $(shell $(CXX) -qversion       2>&1 | grep XL                  | wc -l))
 KOKKOS_INTERNAL_COMPILER_CRAY        := $(strip $(shell $(CXX) -craype-verbose 2>&1 | grep "CC-"               | wc -l))
 KOKKOS_INTERNAL_COMPILER_NVCC        := $(strip $(shell export OMPI_CXX=$(OMPI_CXX); export MPICH_CXX=$(MPICH_CXX); $(CXX) --version       2>&1 | grep nvcc                | wc -l))
 KOKKOS_INTERNAL_COMPILER_CLANG       := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),clang)
-KOKKOS_INTERNAL_COMPILER_APPLE_CLANG := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),"apple-darwin")
+KOKKOS_INTERNAL_COMPILER_APPLE_CLANG := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),apple-darwin)
 KOKKOS_INTERNAL_COMPILER_HCC         := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),HCC)
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 2)
