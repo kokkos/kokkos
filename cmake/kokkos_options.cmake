@@ -286,16 +286,12 @@ ENDIF()
 #------------------------------- Mapping of Trilinos options -------------------
 # Map tribits settings onto kokkos settings 
 IF(Trilinos_ENABLE_Kokkos)
+  set(KOKKOS_ENABLE_SERIAL ON)
   set(KOKKOS_ENABLE_PTHREAD ${TPL_ENABLE_Pthread})
   set(KOKKOS_ENABLE_QTHREADS ${TPL_ENABLE_QTHREAD})
   set(KOKKOS_ENABLE_OPENMP ${Trilinos_ENABLE_OpenMP})
   # No tribits equivalent
   #set(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION ${TPL_ENABLE_})
-  if (${TPL_ENABLE_MPI})
-    set(KOKKOS_ENABLE_SERIAL OFF)
-  else()
-    set(KOKKOS_ENABLE_SERIAL ON)
-  endif()
 
   # Handle Kokkos TPLs
   set(KOKKOS_ENABLE_HWLOC ${TPL_ENABLE_HWLOC})
