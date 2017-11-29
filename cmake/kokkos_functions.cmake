@@ -83,7 +83,7 @@ function(set_kokkos_cxx_compiler)
 
   # Enforce that extensions are turned off for nvcc_wrapper.
   if(INTERNAL_CXX_COMPILER_ID STREQUAL NVIDIA)
-    if(NOT DEFINED CMAKE_CXX_EXTENSIONS OR CMAKE_CXX_EXTENSIONS STREQUAL ON)
+    if(DEFINED CMAKE_CXX_EXTENSIONS AND CMAKE_CXX_EXTENSIONS STREQUAL ON)
       message(FATAL_ERROR "NVCC doesn't support C++ extensions.  Set CMAKE_CXX_EXTENSIONS to OFF in your CMakeLists.txt.")
     endif()
   endif()
