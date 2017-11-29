@@ -81,13 +81,12 @@ string(REPLACE ";" "," KOKKOS_USE_TPLS "${KOKKOS_USE_TPLSl}")
 # Construct the Makefile options
 set(KOKKOS_CUDA_OPTIONS)
 foreach(cudaopt ${KOKKOS_CUDA_OPTIONS_LIST})
-  if (${KOKKOS_ENABLE_${cudaopt}}) 
+  if (${KOKKOS_ENABLE_CUDA_${cudaopt}})
     list(APPEND KOKKOS_CUDA_OPTIONSl ${KOKKOS_INTERNAL_${cudaopt}})
   endif ()
 endforeach()
 # List needs to be comma-delmitted
 string(REPLACE ";" "," KOKKOS_CUDA_OPTIONS "${KOKKOS_CUDA_OPTIONSl}")
-
 
 #------------------------------- PATH VARIABLES --------------------------------
 #  Want makefile to use same executables specified which means modifying

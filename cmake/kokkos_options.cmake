@@ -85,13 +85,13 @@ list(APPEND KOKKOS_CUDA_OPTIONS_LIST
     LDG_INTRINSIC              # use_ldg
     UVM                        # force_uvm
     RELOCATABLE_DEVICE_CODE    # rdc
-    LAMBDA                     # lambda
+    LAMBDA                     # enable_lambda
     )
 # Map of cmake variables to Makefile variables
 set(KOKKOS_INTERNAL_LDG_INTRINSIC use_ldg)
 set(KOKKOS_INTERNAL_UVM force_uvm)
 set(KOKKOS_INTERNAL_RELOCATABLE_DEVICE_CODE rdc)
-set(KOKKOS_INTERNAL_LAMBDA lambda)
+set(KOKKOS_INTERNAL_LAMBDA enable_lambda)
 
 
 #------------------------------- Create doc strings ----------------------------
