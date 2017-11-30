@@ -22,6 +22,8 @@ INCLUDE_DIRECTORIES(${GTEST_SOURCE_DIR})
 # possible to build only (e.g.,) KokkosAlgorithms tests, without
 # building KokkosCore tests.
 
+SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -DGTEST_HAS_PTHREAD=0)
+
 TRIBITS_ADD_LIBRARY(
   kokkosalgorithms_gtest
   HEADERS ${GTEST_SOURCE_DIR}/gtest/gtest.h

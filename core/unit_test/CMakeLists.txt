@@ -11,6 +11,7 @@ IF(NOT KOKKOS_HAS_TRILINOS)
 ENDIF()
 
 SET(GTEST_SOURCE_DIR ${${PARENT_PACKAGE_NAME}_SOURCE_DIR}/tpls/gtest)
+SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -DGTEST_HAS_PTHREAD=0)
 
 INCLUDE_DIRECTORIES(${GTEST_SOURCE_DIR})
 TRIBITS_ADD_LIBRARY(
@@ -259,6 +260,7 @@ IF(Kokkos_ENABLE_Cuda)
       cuda/TestCuda_ViewOfClass.cpp
       cuda/TestCuda_Crs.cpp
       cuda/TestCuda_WorkGraph.cpp
+      cuda/TestCuda_UniqueToken.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "

@@ -34,7 +34,7 @@ IF(NOT KOKKOS_HAS_TRILINOS)
 
   #------------ GENERATE HEADER AND SOURCE FILES -------------------------------
   execute_process(
-    COMMAND ${KOKKOS_SETTINGS} make -f ${KOKKOS_SRC_PATH}/cmake/Makefile.generate_cmake_settings CXX=${CMAKE_CXX_COMPILER} generate_cmake_settings
+    COMMAND ${KOKKOS_SETTINGS} make -f ${KOKKOS_SRC_PATH}/cmake/Makefile.generate_cmake_settings CXX=${CMAKE_CXX_COMPILER} generate_build_settings
     WORKING_DIRECTORY "${Kokkos_BINARY_DIR}"
     OUTPUT_FILE ${Kokkos_BINARY_DIR}/core_src_make.out
     RESULT_VARIABLE res
