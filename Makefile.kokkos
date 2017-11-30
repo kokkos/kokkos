@@ -318,7 +318,7 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS), 1)
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_WARNINGS)
 endif
 
-KOKKOS_LIBS = -lkokkos -ldl
+KOKKOS_LIBS = -ldl
 KOKKOS_LDFLAGS = -L$(shell pwd)
 KOKKOS_SRC =
 KOKKOS_HEADERS =
@@ -955,6 +955,10 @@ endif
 ifeq ($(KOKKOS_INTERNAL_OS_CYGWIN), 1)
   KOKKOS_CXXFLAGS += -U__STRICT_ANSI__
 endif
+
+# Set KokkosExtraLibs and add -lkokkos to link line
+KOKKOS_EXTRA_LIBS := ${KOKKOS_LIBS}
+KOKKOS_LIBS := -lkokkos ${KOKKOS_LIBS}
 
 # Setting up dependencies.
 

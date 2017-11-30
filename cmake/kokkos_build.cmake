@@ -89,7 +89,7 @@ IF(KOKKOS_SEPARATE_LIBS)
   TARGET_LINK_LIBRARIES(
     kokkoscore
     ${KOKKOS_LD_FLAGS}
-    ${KOKKOS_LIBS_LIST}
+    ${KOKKOS_EXTRA_LIBS_LIST}
   )
 
   # kokkoscontainers
@@ -157,7 +157,7 @@ ELSE()
   TARGET_LINK_LIBRARIES(
     kokkos
     ${KOKKOS_LD_FLAGS}
-    ${KOKKOS_LIBS_LIST}
+    ${KOKKOS_EXTRA_LIBS_LIST}
   )
 
   # Install the kokkos library
