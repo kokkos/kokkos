@@ -70,12 +70,7 @@ IF(KOKKOS_SEPARATE_LIBS)
 
   target_compile_options(
     kokkoscore
-    PUBLIC ${KOKKOS_CXX_FLAGS}
-  )
-
-  target_compile_features(
-    kokkoscore
-    PUBLIC ${KOKKOS_CXX11_FEATURES}
+    PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${KOKKOS_CXX_FLAGS}>
   )
 
   # Install the kokkoscore library
@@ -146,12 +141,7 @@ ELSE()
 
   target_compile_options(
     kokkos
-    PUBLIC ${KOKKOS_CXX_FLAGS}
-  )
-
-  target_compile_features(
-    kokkos
-    PUBLIC ${KOKKOS_CXX11_FEATURES}
+    PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${KOKKOS_CXX_FLAGS}>
   )
 
   TARGET_LINK_LIBRARIES(
