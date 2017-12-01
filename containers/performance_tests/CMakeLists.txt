@@ -9,8 +9,6 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   ELSE()
     set(TEST_LINK_TARGETS kokkos)
   ENDIF()
-ELSE()
-  set(TEST_LINK_TARGETS kokkoscore)
 ENDIF()
 
 SET(SOURCES

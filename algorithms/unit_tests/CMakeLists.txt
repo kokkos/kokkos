@@ -9,8 +9,6 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   ELSE()
     set(TEST_LINK_TARGETS kokkos)
   ENDIF()
-ELSE()
-  set(TEST_LINK_TARGETS kokkoscore)
 ENDIF()
 
 SET(GTEST_SOURCE_DIR ${${PARENT_PACKAGE_NAME}_SOURCE_DIR}/tpls/gtest)
@@ -22,7 +20,7 @@ INCLUDE_DIRECTORIES(${GTEST_SOURCE_DIR})
 # possible to build only (e.g.,) KokkosAlgorithms tests, without
 # building KokkosCore tests.
 
-SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -DGTEST_HAS_PTHREAD=0)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_PTHREAD=0")
 
 TRIBITS_ADD_LIBRARY(
   kokkosalgorithms_gtest
