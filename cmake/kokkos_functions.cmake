@@ -329,3 +329,10 @@ function(set_kokkos_srcs)
   set(KOKKOS_CONTAINERS_SRCS ${KOKKOS_CONTAINERS_SRCS} PARENT_SCOPE)
   return()
 endfunction()
+
+# Setting a default value if it is not already set
+macro(set_kokkos_default_default VARIABLE DEFAULT)
+  IF( "${${VARIABLE}}" STREQUAL "" )
+    set(${VARIABLE} ${DEFAULT} CACHE BOOL INTERNAL)
+  ENDIF()
+endmacro()
