@@ -9,7 +9,10 @@
 # To understand how to form KOKKOS_SETTINGS, see
 #     <KOKKOS_PATH>/Makefile.kokkos
 
+#-------------------------------------------------------------------------------
 #------------------------------- GENERAL OPTIONS -------------------------------
+#-------------------------------------------------------------------------------
+
 # Ensure that KOKKOS_ARCH is in the ARCH_LIST
 foreach(arch ${KOKKOS_ARCH})
   list(FIND KOKKOS_ARCH_LIST ${arch} indx)
@@ -23,7 +26,7 @@ string(REPLACE ";" "," KOKKOS_ARCH "${KOKKOS_ARCH}")
 set(KOKKOS_ARCH ${KOKKOS_ARCH})
 
 # From Makefile.kokkos: Options: yes,no
-if(${KOKKOS_DEBUG})
+if(${KOKKOS_ENABLE_DEBUG})
   set(KOKKOS_DEBUG yes)
 else()
   set(KOKKOS_DEBUG no)
@@ -55,10 +58,10 @@ endif()
 if(NOT ${KOKKOS_ENABLE_PROFILING})
       list(APPEND KOKKOS_OPTIONSl disable_vectorization)
 endif()
-if(NOT ${KOKKOS_ENABLE_DUALVIEW_MODIFY_CHECK})
+if(NOT ${KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK})
       list(APPEND KOKKOS_OPTIONSl disable_dualview_modify_check)
 endif()
-if(${KOKKOS_ENABLE_PROFILE_LOAD_PRINT})
+if(${KOKKOS_ENABLE_PROFILING_LOAD_PRINT})
       list(APPEND KOKKOS_OPTIONSl enable_profile_load_print)
 endif()
 # List needs to be comma-delimitted
@@ -198,8 +201,8 @@ if(KOKKOS_CMAKE_VERBOSE)
     message(STATUS "  KOKKOS_ENABLE_MEMKIND")
   endif()
 
-  if(KOKKOS_DEBUG)
-    message(STATUS "  KOKKOS_DEBUG")
+  if(KOKKOS_ENABLE_DEBUG)
+    message(STATUS "  KOKKOS_ENABLE_DEBUG")
   endif()
 
   if(KOKKOS_ENABLE_PROFILING)

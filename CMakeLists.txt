@@ -86,19 +86,6 @@ if(NOT KOKKOS_LEGACY_TRIBITS)
   # Sources come from makefile-generated kokkos_generated_settings.cmake file
   # Enable using the individual sources if needed
   set_kokkos_srcs(KOKKOS_SRC ${KOKKOS_SRC})
-
-  # Convert CMakeList into string for CXX_FLAGS
-  set(CMAKE_CXX_FLAGSl "")
-  foreach(opt ${KOKKOS_CXX_FLAGS})
-    set(CMAKE_CXX_FLAGSl "${CMAKE_CXX_FLAGSl} ${opt}")
-  endforeach()
-
-  #Add flags for myself and then for parent scope
-  #Note it is important to add to parent scope first, because otherwise,
-  #the parent scope gets the flags twice since this appears to do the equivalent of
-  #set(CMAKE_CXX_FLAGS**parent "${CMAKE_CXX_FLAGS**current} ${CMAKE_CXX_FLAGSl}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGSl}" PARENT_SCOPE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGSl}")
 endif ()
 
 
