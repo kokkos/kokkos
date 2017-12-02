@@ -17,7 +17,8 @@
 foreach(arch ${KOKKOS_ARCH})
   list(FIND KOKKOS_ARCH_LIST ${arch} indx)
   if (indx EQUAL -1)
-    message(FATAL_ERROR "${arch} is not an accepted architecture.  Please pick from these choices: ${KOKKOS_INTERNAL_ARCH_DOCSTR}")
+    message(FATAL_ERROR "${arch} is not an accepted value for KOKKOS_ARCH."
+      "  Please pick from these choices: ${KOKKOS_INTERNAL_ARCH_DOCSTR}")
   endif ()
 endforeach()
 
