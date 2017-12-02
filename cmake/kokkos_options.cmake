@@ -289,14 +289,15 @@ set(KOKKOS_ENABLE_LIBRT ${KOKKOS_INTERNAL_ENABLE_LIBRT_DEFAULT} CACHE BOOL "Enab
 #------------------------------- KOKKOS_CUDA_OPTIONS ---------------------------
 #-------------------------------------------------------------------------------
 
-IF(KOKKOS_ENABLE_CUDA)
 # CUDA options.
 # Set Defaults
 set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_CUDA_LDG_INTRINSIC_DEFAULT OFF)
 set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_CUDA_UVM_DEFAULT OFF)
 set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE OFF)
 IF(Trilinos_ENABLE_Kokkos)
-  find_package(CUDA)
+  IF(KOKKOS_ENABLE_CUDA)
+    find_package(CUDA)
+  ENDIF()
   IF (DEFINED CUDA_VERSION)
     IF (CUDA_VERSION VERSION_GREATER "7.0")
       set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_CUDA_LAMBDA_DEFAULT ON)
@@ -315,7 +316,6 @@ set(KOKKOS_ENABLE_CUDA_UVM ${KOKKOS_INTERNAL_ENABLE_CUDA_UVM_DEFAULT} CACHE BOOL
 set(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE ${KOKKOS_INTERNAL_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE_DEFAULT} CACHE BOOL "Enable relocatable device code for CUDA. (cuda option)")
 set(KOKKOS_ENABLE_CUDA_LAMBDA ${KOKKOS_INTERNAL_ENABLE_CUDA_LAMBDA_DEFAULT} CACHE BOOL "Enable lambdas for CUDA. (cuda option)")
 
-ENDIF() # KOKKOS_ENABLE_CUDA
 
 #-------------------------------------------------------------------------------
 #----------------------- HOST ARCH AND LEGACY TRIBITS --------------------------
