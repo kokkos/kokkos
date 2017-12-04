@@ -37,11 +37,22 @@ list(APPEND KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST
 #-------------------------------------------------------------------------------
 
 foreach(opt ${KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST})
+  string(TOUPPER ${opt} OPT )
   IF(DEFINED Kokkos_ENABLE_${opt})
-    string(TOUPPER ${opt} OPT )
     IF(DEFINED KOKKOS_ENABLE_${OPT})
       IF(NOT ("${KOKKOS_ENABLE_${OPT}}" STREQUAL "${Kokkos_ENABLE_${opt}}"))
-        MESSAGE(FATAL_ERROR "Defined both Kokkos_ENABLE_${opt}=[${Kokkos_ENABLE_${opt}}] and KOKKOS_ENABLE_${OPT}=[${KOKKOS_ENABLE_${OPT}}] and they differ!")
+        IF(DEFINED KOKKOS_ENABLE_${OPT}_INTERNAL)
+          MESSAGE(WARNING  "Defined both Kokkos_ENABLE_${opt}=[${Kokkos_ENABLE_${opt}}] and KOKKOS_ENABLE_${OPT}=[${KOKKOS_ENABLE_${OPT}}] and they differ! Could be caused by old CMakeCache Variable. Run CMake again and warning should disappear. If not you are truly setting both variables.")
+          IF(NOT ("${Kokkos_ENABLE_${opt}}" STREQUAL "${KOKKOS_ENABLE_${OPT}_INTERNAL}"))
+            UNSET(KOKKOS_ENABLE_${OPT} CACHE)
+            SET(KOKKOS_ENABLE_${OPT} ${Kokkos_ENABLE_${opt}})
+            MESSAGE(WARNING "SET BOTH VARIABLES KOKKOS_ENABLE_${OPT}: ${KOKKOS_ENABLE_${OPT}}")
+          ELSE()
+            SET(Kokkos_ENABLE_${opt} ${KOKKOS_ENABLE_${OPT}})
+          ENDIF()
+        ELSE()
+          MESSAGE(FATAL_ERROR "Defined both Kokkos_ENABLE_${opt}=[${Kokkos_ENABLE_${opt}}] and KOKKOS_ENABLE_${OPT}=[${KOKKOS_ENABLE_${OPT}}] and they differ!")
+        ENDIF()
       ENDIF()
     ELSE()
       SET(KOKKOS_INTERNAL_ENABLE_${OPT}_DEFAULT ${Kokkos_ENABLE_${opt}})
@@ -185,37 +196,37 @@ set(KOKKOS_QTHREADS_DIR "" CACHE PATH "Location of Qthreads library.")
 #-------------------------------------------------------------------------------
 # Figure out default settings
 IF(Trilinos_ENABLE_Kokkos)             
-  set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_SERIAL_DEFAULT ON)
-  set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_PTHREAD_DEFAULT OFF)
+  set_kokkos_default_default(SERIAL ON)
+  set_kokkos_default_default(PTHREAD OFF)
   IF(TPL_ENABLE_QTHREAD)
-    set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_QTHREADS_DEFAULT ${TPL_ENABLE_QTHREAD})
+    set_kokkos_default_default(QTHREADS ${TPL_ENABLE_QTHREAD})
   ELSE()
-    set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_QTHREADS_DEFAULT OFF)
+    set_kokkos_default_default(QTHREADS OFF)
   ENDIF()
   IF(Trilinos_ENABLE_OpenMP)
-    set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_OPENMP_DEFAULT ${Trilinos_ENABLE_OpenMP})
+    set_kokkos_default_default(OPENMP ${Trilinos_ENABLE_OpenMP})
   ELSE()
-    set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_OPENMP_DEFAULT OFF)
+    set_kokkos_default_default(OPENMP OFF)
   ENDIF()
   IF(TPL_ENABLE_CUDA)
-    set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_CUDA_DEFAULT ${TPL_ENABLE_CUDA})
+    set_kokkos_default_default(CUDA ${TPL_ENABLE_CUDA})
   ELSE()
-    set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_CUDA_DEFAULT OFF)
+    set_kokkos_default_default(CUDA OFF)
   ENDIF()
-  set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_ROCM_DEFAULT OFF)
+  set_kokkos_default_default(ROCM OFF)
 ELSE()
-  set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_SERIAL_DEFAULT ON)
-  set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_OPENMP_DEFAULT OFF)
-  set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_PTHREAD_DEFAULT OFF)
-  set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_QTHREAD_DEFAULT OFF)
-  set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_CUDA_DEFAULT OFF)
-  set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_ROCM_DEFAULT OFF)
+  set_kokkos_default_default(SERIAL ON)
+  set_kokkos_default_default(OPENMP OFF)
+  set_kokkos_default_default(PTHREAD OFF)
+  set_kokkos_default_default(QTHREAD OFF)
+  set_kokkos_default_default(CUDA OFF)
+  set_kokkos_default_default(ROCM OFF)
 ENDIF()
 
 # Set which Kokkos backend to use.
 # These are the actual options that define the settings.
 set(KOKKOS_ENABLE_SERIAL ${KOKKOS_INTERNAL_ENABLE_SERIAL_DEFAULT} CACHE BOOL "Whether to enable the Kokkos::Serial device.  This device executes \"parallel\" kernels sequentially on a single CPU thread.  It is enabled by default.  If you disable this device, please enable at least one other CPU device, such as Kokkos::OpenMP or Kokkos::Threads.")
-set(KOKKOS_ENABLE_OPENMP ${KOKKOS_INTERNAL_ENABLE_OPENMP_DEFAULT} CACHE BOOL "Enable OpenMP support in Kokkos.")
+set(KOKKOS_ENABLE_OPENMP ${KOKKOS_INTERNAL_ENABLE_OPENMP_DEFAULT} CACHE BOOL "Enable OpenMP support in Kokkos." FORCE)
 set(KOKKOS_ENABLE_PTHREAD ${KOKKOS_INTERNAL_ENABLE_PTHREAD_DEFAULT} CACHE BOOL "Enable Pthread support in Kokkos.")
 set(KOKKOS_ENABLE_QTHREADS ${KOKKOS_INTERNAL_ENABLE_QTHREADS_DEFAULT} CACHE BOOL "Enable Qthreads support in Kokkos.")
 set(KOKKOS_ENABLE_CUDA ${KOKKOS_INTERNAL_ENABLE_CUDA_DEFAULT} CACHE BOOL "Enable CUDA support in Kokkos.")
@@ -229,26 +240,26 @@ set(KOKKOS_ENABLE_ROCM ${KOKKOS_INTERNAL_ENABLE_ROCM_DEFAULT} CACHE BOOL "Enable
 
 # Debug related options enable compiler warnings
 
-set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_DEBUG_DEFAULT OFF)
+set_kokkos_default_default(DEBUG OFF)
 set(KOKKOS_ENABLE_DEBUG ${KOKKOS_INTERNAL_ENABLE_DEBUG_DEFAULT} CACHE BOOL "Enable Kokkos Debug.")
 
 # From Makefile.kokkos: Advanced Options: 
 #compiler_warnings, aggressive_vectorization, disable_profiling, disable_dualview_modify_check, enable_profile_load_print
-set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS_DEFAULT OFF)
+set_kokkos_default_default(COMPILER_WARNINGS OFF)
 set(KOKKOS_ENABLE_COMPILER_WARNINGS ${KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS_DEFAULT} CACHE BOOL "Enable compiler warnings.")
 
-set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK_DEFAULT OFF)
+set_kokkos_default_default(DEBUG_DUALVIEW_MODIFY_CHECK OFF)
 set(KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK ${KOKKOS_INTERNAL_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK_DEFAULT} CACHE BOOL "Enable dualview modify check.")
 
 # Enable aggressive vectorization.
-set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_AGGRESSIVE_VECTORIZATION_DEFAULT OFF)
+set_kokkos_default_default(AGGRESSIVE_VECTORIZATION OFF)
 set(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION ${KOKKOS_INTERNAL_ENABLE_AGGRESSIVE_VECTORIZATION_DEFAULT} CACHE BOOL "Enable aggressive vectorization.")
 
 # Enable profiling.
-set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_PROFILING_DEFAULT ON)
+set_kokkos_default_default(PROFILING ON)
 set(KOKKOS_ENABLE_PROFILING ${KOKKOS_INTERNAL_ENABLE_PROFILING_DEFAULT} CACHE BOOL "Enable profiling.")
 
-set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_PROFILING_LOAD_PRINT_DEFAULT OFF)
+set_kokkos_default_default(PROFILING_LOAD_PRINT OFF)
 set(KOKKOS_ENABLE_PROFILING_LOAD_PRINT ${KOKKOS_INTERNAL_ENABLE_PROFILING_LOAD_PRINT_DEFAULT} CACHE BOOL "Enable profile load print.")
 
 
@@ -260,27 +271,27 @@ set(KOKKOS_ENABLE_PROFILING_LOAD_PRINT ${KOKKOS_INTERNAL_ENABLE_PROFILING_LOAD_P
 # Enable hwloc library.
 # Figure out default:
 IF(Trilinos_ENABLE_Kokkos AND TPL_ENABLE_HWLOC)
-  set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_HWLOC_DEFAULT ON)
+  set_kokkos_default_default(HWLOC ON)
 ELSE()
-  set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_HWLOC_DEFAULT OFF)
+  set_kokkos_default_default(HWLOC OFF)
 ENDIF()
 set(KOKKOS_ENABLE_HWLOC ${KOKKOS_INTERNAL_ENABLE_HWLOC_DEFAULT} CACHE BOOL "Enable hwloc for better process placement.")
 set(KOKKOS_HWLOC_DIR "" CACHE PATH "Location of hwloc library. (kokkos tpl)")
 
 # Enable memkind library.
-set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_MEMKIND_DEFAULT OFF)
+set_kokkos_default_default(MEMKIND OFF)
 set(KOKKOS_ENABLE_MEMKIND ${KOKKOS_INTERNAL_ENABLE_MEMKIND_DEFAULT} CACHE BOOL "Enable memkind. (kokkos tpl)")
 set(KOKKOS_MEMKIND_DIR "" CACHE PATH "Location of memkind library. (kokkos tpl)")
 
 # Enable rt library.
 IF(Trilinos_ENABLE_Kokkos)
   IF(DEFINED TPL_ENABLE_LIBRT)
-    set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_LIBRT_DEFAULT ${TPL_ENABLE_LIBRT})
+    set_kokkos_default_default(LIBRT ${TPL_ENABLE_LIBRT})
   ELSE()
-    set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_LIBRT_DEFAULT OFF)
+    set_kokkos_default_default(LIBRT OFF)
   ENDIF()
 ELSE()
-  set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_LIBRT_DEFAULT ON)
+  set_kokkos_default_default(LIBRT ON)
 ENDIF()
 set(KOKKOS_ENABLE_LIBRT ${KOKKOS_INTERNAL_ENABLE_LIBRT_DEFAULT} CACHE BOOL "Enable librt for more precise timer.  (kokkos tpl)")
 
@@ -291,22 +302,22 @@ set(KOKKOS_ENABLE_LIBRT ${KOKKOS_INTERNAL_ENABLE_LIBRT_DEFAULT} CACHE BOOL "Enab
 
 # CUDA options.
 # Set Defaults
-set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_CUDA_LDG_INTRINSIC_DEFAULT OFF)
-set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_CUDA_UVM_DEFAULT OFF)
-set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE OFF)
+set_kokkos_default_default(CUDA_LDG_INTRINSIC_DEFAULT OFF)
+set_kokkos_default_default(CUDA_UVM_DEFAULT OFF)
+set_kokkos_default_default(CUDA_RELOCATABLE_DEVICE_CODE OFF)
 IF(Trilinos_ENABLE_Kokkos)
   IF(KOKKOS_ENABLE_CUDA)
     find_package(CUDA)
   ENDIF()
   IF (DEFINED CUDA_VERSION)
     IF (CUDA_VERSION VERSION_GREATER "7.0")
-      set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_CUDA_LAMBDA_DEFAULT ON)
+      set_kokkos_default_default(CUDA_LAMBDA ON)
     ELSE()
-      set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_CUDA_LAMBDA_DEFAULT OFF)
+      set_kokkos_default_default(CUDA_LAMBDA OFF)
     ENDIF()
   ENDIF()
 ELSE()
-  set_kokkos_default_default(KOKKOS_INTERNAL_ENABLE_CUDA_LAMBDA_DEFAULT OFF)
+  set_kokkos_default_default(CUDA_LAMBDA OFF)
 ENDIF()
 
 # Set actual options
@@ -342,11 +353,12 @@ ENDIF()
 #-------------------------------------------------------------------------------
 
 foreach(opt ${KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST})
-  IF(NOT DEFINED Kokkos_ENABLE_${opt})
-    string(TOUPPER ${opt} OPT )
-    IF(DEFINED KOKKOS_ENABLE_${OPT})
-      SET(Kokkos_ENABLE_${opt} ${KOKKOS_ENABLE_${OPT}})
-    ENDIF()
+  string(TOUPPER ${opt} OPT )
+  UNSET(KOKKOS_ENABLE_${OPT}_INTERNAL CACHE)
+  SET(KOKKOS_ENABLE_${OPT}_INTERNAL ${KOKKOS_ENABLE_${OPT}} CACHE BOOL INTERNAL)
+  IF(DEFINED KOKKOS_ENABLE_${OPT})
+    UNSET(Kokkos_ENABLE_${opt} CACHE)
+    SET(Kokkos_ENABLE_${opt} ${KOKKOS_ENABLE_${OPT}} CACHE BOOL "CamelCase Compatibility setting for KOKKOS_ENABLE_${OPT}")
   ENDIF()
 endforeach()
 
