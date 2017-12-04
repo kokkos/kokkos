@@ -768,8 +768,8 @@ public:
 
 protected:
   template <typename ... Args>
-  inline value_type at(int rank, Args ... args) const {
-    return internal_view(args..., rank);
+  inline value_type at(int thread_id, Args ... args) const {
+    return internal_view(args..., thread_id);
   }
 
 protected:
@@ -781,14 +781,14 @@ protected:
 };
 
 
-/* This object has to be separate in order to store the thread rank, which cannot
+/* This object has to be separate in order to store the thread ID, which cannot
    be obtained until one is inside a parallel construct, and may be relatively
    expensive to obtain at every contribution
    (calls a non-inlined function, looks up a thread-local variable).
    Due to the expense, it is sensible to query it at most once per parallel iterate
    (ideally once per thread, but parallel_for doesn't expose that)
    and then store it in a stack variable.
-   ReductionAccess serves as a non-const object on the stack which can store the thread rank */
+   ReductionAccess serves as a non-const object on the stack which can store the thread ID */
 
 template <typename DataType
          ,int Op
@@ -809,17 +809,17 @@ public:
 
   inline ReductionAccess(view_type const& view_in)
     : view(view_in)
-    , rank(view_in.unique_token.acquire()) {
+    , thread_id(view_in.unique_token.acquire()) {
   }
 
   inline ~ReductionAccess() {
-    if (rank != ~rank_type(0)) view.unique_token.release(rank);
+    if (thread_id != ~thread_id_type(0)) view.unique_token.release(thread_id);
   }
 
   template <typename ... Args>
   KOKKOS_FORCEINLINE_FUNCTION
   value_type operator()(Args ... args) const {
-    return view.at(rank, args...);
+    return view.at(thread_id, args...);
   }
 
   template <typename Arg>
@@ -827,7 +827,7 @@ public:
   typename std::enable_if<view_type::original_view_type::rank == 1 &&
   std::is_integral<Arg>::value, value_type>::type
   operator[](Arg arg) const {
-    return view.at(rank, arg);
+    return view.at(thread_id, arg);
   }
 
 private:
@@ -845,16 +845,16 @@ public:
   // that assignments turns into a move constructor call 
   inline ReductionAccess(ReductionAccess&& other)
     : view(other.view)
-    , rank(other.rank)
+    , thread_id(other.thread_id)
   {
-    other.rank = ~rank_type(0);
+    other.thread_id = ~thread_id_type(0);
   }
 
 private:
 
   typedef typename view_type::unique_token_type unique_token_type;
-  typedef typename unique_token_type::size_type rank_type;
-  rank_type rank;
+  typedef typename unique_token_type::size_type thread_id_type;
+  thread_id_type thread_id;
 };
 
 template <int Op = Kokkos::Experimental::ReductionSum,
