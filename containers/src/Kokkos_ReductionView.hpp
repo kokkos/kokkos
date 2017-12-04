@@ -552,13 +552,13 @@ public:
   , internal_view(Kokkos::ViewAllocateWithoutInitializing(
                     std::string("duplicated_") + original_view.label()),
                   unique_token.size(),
-                  original_view.dimension_0(),
-                  original_view.dimension_1(),
-                  original_view.dimension_2(),
-                  original_view.dimension_3(),
-                  original_view.dimension_4(),
-                  original_view.dimension_5(),
-                  original_view.dimension_6())
+                  original_view.extent(0),
+                  original_view.extent(1),
+                  original_view.extent(2),
+                  original_view.extent(3),
+                  original_view.extent(4),
+                  original_view.extent(5),
+                  original_view.extent(6))
   {
     reset();
   }
@@ -606,7 +606,7 @@ public:
         dest.data(),
         strides[0],
         start,
-        internal_view.dimension(0),
+        internal_view.extent(0),
         internal_view.label());
   }
 
@@ -675,13 +675,13 @@ public:
   : unique_token()
   {
     size_t arg_N[8] = {
-      original_view.dimension_0(),
-      original_view.dimension_1(),
-      original_view.dimension_2(),
-      original_view.dimension_3(),
-      original_view.dimension_4(),
-      original_view.dimension_5(),
-      original_view.dimension_6(),
+      original_view.extent(0),
+      original_view.extent(1),
+      original_view.extent(2),
+      original_view.extent(3),
+      original_view.extent(4),
+      original_view.extent(5),
+      original_view.extent(6),
       0
     };
     for (int i = 0; i < 8; ++i) {
@@ -735,7 +735,7 @@ public:
     size_t strides[8];
     internal_view.stride(strides);
     size_t stride = strides[internal_view_type::rank - 1];
-    auto dimension = internal_view.dimension(
+    auto extent = internal_view.extent(
         internal_view_type::rank - 1);
     bool is_equal = (dest.data() == internal_view.data());
     size_t start = is_equal ? 1 : 0;
@@ -744,7 +744,7 @@ public:
         dest.data(),
         stride,
         start,
-        dimension,
+        extent,
         internal_view.label());
   }
 
