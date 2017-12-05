@@ -80,6 +80,7 @@ list(APPEND KOKKOS_ARCH_LIST
      ARMv80          # (HOST) ARMv8.0 Compatible CPU
      ARMv81          # (HOST) ARMv8.1 Compatible CPU
      ARMv8-ThunderX  # (HOST) ARMv8 Cavium ThunderX CPU
+     WSM             # (HOST) Intel Westmere CPU
      SNB             # (HOST) Intel Sandy/Ivy Bridge CPUs
      HSW             # (HOST) Intel Haswell CPUs
      BDW             # (HOST) Intel Broadwell Xeon E-class CPUs
