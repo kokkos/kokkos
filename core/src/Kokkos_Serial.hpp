@@ -424,11 +424,13 @@ private:
   typedef typename Policy::work_tag                                  WorkTag ;
 
   typedef Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
+
   typedef typename ReducerConditional::type ReducerTypeFwd;
+  typedef typename Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, WorkTag, void>::type WorkTagFwd;
 
   typedef FunctorAnalysis< FunctorPatternInterface::REDUCE , Policy , FunctorType > Analysis ;
 
-  typedef Kokkos::Impl::FunctorValueInit<   ReducerTypeFwd , WorkTag >  ValueInit ;
+  typedef Kokkos::Impl::FunctorValueInit<   ReducerTypeFwd , WorkTagFwd >  ValueInit ;
 
   typedef typename Analysis::pointer_type    pointer_type ;
   typedef typename Analysis::reference_type  reference_type ;
@@ -488,7 +490,7 @@ public:
 
       this-> template exec< WorkTag >( update );
 
-      Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTag >::
+      Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTagFwd >::
         final(  ReducerConditional::select(m_functor , m_reducer) , ptr );
     }
 
@@ -675,12 +677,13 @@ private:
 
   typedef Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
   typedef typename ReducerConditional::type ReducerTypeFwd;
+  typedef typename Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, WorkTag, void>::type WorkTagFwd;
 
   typedef typename ReducerTypeFwd::value_type ValueType; 
 
   typedef FunctorAnalysis< FunctorPatternInterface::REDUCE , Policy , FunctorType > Analysis ;
 
-  typedef Kokkos::Impl::FunctorValueInit<   ReducerTypeFwd , WorkTag >  ValueInit ;
+  typedef Kokkos::Impl::FunctorValueInit<   ReducerTypeFwd , WorkTagFwd >  ValueInit ;
 
   typedef typename Analysis::pointer_type    pointer_type ;
   typedef typename Analysis::reference_type  reference_type ;
@@ -735,7 +738,7 @@ public:
 
       this-> exec( update );
 
-      Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTag >::
+      Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTagFwd >::
         final(  ReducerConditional::select(m_functor , m_reducer) , ptr );
     }
 
@@ -878,8 +881,9 @@ private:
 
   typedef Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
   typedef typename ReducerConditional::type ReducerTypeFwd;
+  typedef typename Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, WorkTag, void>::type WorkTagFwd;
 
-  typedef Kokkos::Impl::FunctorValueInit<   ReducerTypeFwd , WorkTag >  ValueInit ;
+  typedef Kokkos::Impl::FunctorValueInit<   ReducerTypeFwd , WorkTagFwd >  ValueInit ;
 
   typedef typename Analysis::pointer_type    pointer_type ;
   typedef typename Analysis::reference_type  reference_type ;
@@ -940,7 +944,7 @@ public:
 
       this-> template exec< WorkTag >( data , update );
 
-      Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTag >::
+      Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTagFwd >::
         final(  ReducerConditional::select(m_functor , m_reducer) , ptr );
     }
 
