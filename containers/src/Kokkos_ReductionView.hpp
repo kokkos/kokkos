@@ -492,6 +492,7 @@ class ReductionAccess<DataType
 {
 public:
   typedef ReductionView<DataType, Layout, ExecSpace, Op, ReductionNonDuplicated, contribution> view_type;
+  typedef typename view_type::original_value_type original_value_type;
   typedef Kokkos::Impl::Experimental::ReductionValue<
       original_value_type, Op, override_contribution> value_type;
 
@@ -803,11 +804,12 @@ class ReductionAccess<DataType
                    ,ExecSpace
                    ,Layout
                    ,ReductionDuplicated
-                   ,contribution,
+                   ,contribution
                    ,override_contribution>
 {
 public:
   typedef ReductionView<DataType, Layout, ExecSpace, Op, ReductionDuplicated, contribution> view_type;
+  typedef typename view_type::original_value_type original_value_type;
   typedef Kokkos::Impl::Experimental::ReductionValue<
       original_value_type, Op, override_contribution> value_type;
 

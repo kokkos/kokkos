@@ -62,10 +62,11 @@ void test_reduction_view_config(int n)
 #if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
     auto f = KOKKOS_LAMBDA(int i) {
       auto reduction_access = reduction_view.access();
+      auto reduction_access_atomic = reduction_view.template access<Kokkos::Experimental::ReductionAtomic>();
       for (int j = 0; j < 10; ++j) {
         auto k = (i + j) % n;
         reduction_access(k, 0) += 4.2;
-        reduction_access(k, 1) += 2.0;
+        reduction_access_atomic(k, 1) += 2.0;
         reduction_access(k, 2) += 1.0;
       }
     };
