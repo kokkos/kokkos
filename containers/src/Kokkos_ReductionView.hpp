@@ -694,7 +694,7 @@ public:
     }
     internal_view = internal_view_type(
         Kokkos::ViewAllocateWithoutInitializing(
-          std::string("duplicated_") + original_view.name()),
+          std::string("duplicated_") + original_view.label()),
         arg_N[0], arg_N[1], arg_N[2], arg_N[3],
         arg_N[4], arg_N[5], arg_N[6], arg_N[7]);
     reset();
