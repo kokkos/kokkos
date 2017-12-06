@@ -379,6 +379,7 @@ template <typename DataType
          ,typename Layout
          ,int duplication
          ,int contribution
+         ,int override_contribution
          >
 class ReductionAccess;
 
@@ -399,10 +400,9 @@ class ReductionView<DataType
 public:
   typedef Kokkos::View<DataType, Layout, ExecSpace> original_view_type;
   typedef typename original_view_type::value_type original_value_type;
-  typedef Kokkos::Impl::Experimental::ReductionValue<
-      original_value_type, Op, contribution> value_type;
-  friend class ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, ReductionNonAtomic>;
-  friend class ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, ReductionAtomic>;
+  typedef typename original_view_type::reference_type original_reference_type;
+  friend class ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, contribution, ReductionNonAtomic>;
+  friend class ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, contribution, ReductionAtomic>;
 
   ReductionView()
   {
@@ -420,11 +420,11 @@ public:
   {
   }
 
-  template <int access_contrib = contribution>
+  template <int override_contrib = contribution>
   KOKKOS_FORCEINLINE_FUNCTION
-  ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, access_contrib>
+  ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, contribution, override_contrib>
   access() const {
-    return ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, access_contrib>{*this};
+    return ReductionAccess<DataType, Op, ExecSpace, Layout, ReductionNonDuplicated, contribution, override_contrib>{*this};
   }
 
   original_view_type subview() const {
@@ -467,7 +467,7 @@ public:
 protected:
   template <typename ... Args>
   KOKKOS_FORCEINLINE_FUNCTION
-  value_type at(Args ... args) const {
+  original_reference_type at(Args ... args) const {
     return internal_view(args...);
   }
 private:
@@ -480,17 +480,20 @@ template <typename DataType
          ,typename ExecSpace
          ,typename Layout
          ,int contribution
+         ,int override_contribution
          >
 class ReductionAccess<DataType
                    ,Op
                    ,ExecSpace
                    ,Layout
                    ,ReductionNonDuplicated
-                   ,contribution>
+                   ,contribution
+                   ,override_contribution>
 {
 public:
   typedef ReductionView<DataType, Layout, ExecSpace, Op, ReductionNonDuplicated, contribution> view_type;
-  typedef typename view_type::value_type value_type;
+  typedef Kokkos::Impl::Experimental::ReductionValue<
+      original_value_type, Op, override_contribution> value_type;
 
   KOKKOS_INLINE_FUNCTION
   ReductionAccess(view_type const& view_in)
@@ -534,10 +537,9 @@ class ReductionView<DataType
 public:
   typedef Kokkos::View<DataType, Kokkos::LayoutRight, ExecSpace> original_view_type;
   typedef typename original_view_type::value_type original_value_type;
-  typedef Kokkos::Impl::Experimental::ReductionValue<
-      original_value_type, Op, contribution> value_type;
-  friend class ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, ReductionNonAtomic>;
-  friend class ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, ReductionAtomic>;
+  typedef typename original_view_type::reference_type original_reference_type;
+  friend class ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, contribution, ReductionNonAtomic>;
+  friend class ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, contribution, ReductionAtomic>;
   typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<DataType, Kokkos::LayoutRight> data_type_info;
   typedef typename data_type_info::value_type internal_data_type;
   typedef Kokkos::View<internal_data_type, Kokkos::LayoutRight, ExecSpace> internal_view_type;
@@ -570,11 +572,11 @@ public:
     reset();
   }
 
-  template <int access_contrib = contribution>
+  template <int override_contribution = contribution>
   inline
-  ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, access_contrib>
+  ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, contribution, override_contribution>
   access() const {
-    return ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, access_contrib>{*this};
+    return ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ReductionDuplicated, contribution, override_contribution>{*this};
   }
 
   typename Kokkos::Impl::Experimental::Slice<
@@ -631,7 +633,7 @@ public:
 protected:
   template <typename ... Args>
   KOKKOS_FORCEINLINE_FUNCTION
-  value_type at(int rank, Args ... args) const {
+  original_reference_type at(int rank, Args ... args) const {
     return internal_view(rank, args...);
   }
 
@@ -658,10 +660,9 @@ class ReductionView<DataType
 public:
   typedef Kokkos::View<DataType, Kokkos::LayoutLeft, ExecSpace> original_view_type;
   typedef typename original_view_type::value_type original_value_type;
-  typedef Kokkos::Impl::Experimental::ReductionValue<
-      original_value_type, Op, contribution> value_type;
-  friend class ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ReductionDuplicated, ReductionNonAtomic>;
-  friend class ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ReductionDuplicated, ReductionAtomic>;
+  typedef typename original_view_type::reference_type original_reference_type;
+  friend class ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ReductionDuplicated, contribution, ReductionNonAtomic>;
+  friend class ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ReductionDuplicated, contribution, ReductionAtomic>;
   typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<DataType, Kokkos::LayoutLeft> data_type_info;
   typedef typename data_type_info::value_type internal_data_type;
   typedef Kokkos::View<internal_data_type, Kokkos::LayoutLeft, ExecSpace> internal_view_type;
@@ -705,11 +706,11 @@ public:
     reset();
   }
 
-  template <int access_contrib = contribution>
+  template <int override_contribution = contribution>
   inline
-  ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ReductionDuplicated, access_contrib>
+  ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ReductionDuplicated, contribution, override_contribution>
   access() const {
-    return ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ReductionDuplicated, access_contrib>{*this};
+    return ReductionAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ReductionDuplicated, contribution, override_contribution>{*this};
   }
 
   typename Kokkos::Impl::Experimental::Slice<
@@ -768,7 +769,7 @@ public:
 
 protected:
   template <typename ... Args>
-  inline value_type at(int thread_id, Args ... args) const {
+  inline original_reference_type at(int thread_id, Args ... args) const {
     return internal_view(args..., thread_id);
   }
 
@@ -795,17 +796,20 @@ template <typename DataType
          ,typename ExecSpace
          ,typename Layout
          ,int contribution
+         ,int override_contribution
          >
 class ReductionAccess<DataType
                    ,Op
                    ,ExecSpace
                    ,Layout
                    ,ReductionDuplicated
-                   ,contribution>
+                   ,contribution,
+                   ,override_contribution>
 {
 public:
   typedef ReductionView<DataType, Layout, ExecSpace, Op, ReductionDuplicated, contribution> view_type;
-  typedef typename view_type::value_type value_type;
+  typedef Kokkos::Impl::Experimental::ReductionValue<
+      original_value_type, Op, override_contribution> value_type;
 
   inline ReductionAccess(view_type const& view_in)
     : view(view_in)
