@@ -978,4 +978,22 @@ contribute(View<DT1, VP...>& dest, Kokkos::Experimental::ScatterView<DT2, LY, ES
 
 }} // namespace Kokkos::Experimental
 
+namespace Kokkos {
+
+template <typename DT, typename LY, typename ES,  int OP, int CT, int DP, typename ... IS>
+void
+realloc(Kokkos::Experimental::ScatterView<DT, LY, ES, OP, CT, DP> const& scatter_view, IS ... is)
+{
+  scatter_view.realloc(is ...);
+}
+
+template <typename DT, typename LY, typename ES,  int OP, int CT, int DP, typename ... IS>
+void
+resize(Kokkos::Experimental::ScatterView<DT, LY, ES, OP, CT, DP> const& scatter_view, IS ... is)
+{
+  scatter_view.resize(is ...);
+}
+
+} // namespace Kokkos
+
 #endif
