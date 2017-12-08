@@ -687,12 +687,7 @@ public:
       original_view.extent(6),
       0
     };
-    for (int i = 0; i < 8; ++i) {
-      if (arg_N[i] == 0) {
-        arg_N[i] = unique_token.size();
-        break;
-      }
-    }
+    arg_N[internal_view_type::rank - 1] = unique_token.size();
     internal_view = internal_view_type(
         Kokkos::ViewAllocateWithoutInitializing(
           std::string("duplicated_") + original_view.label()),
