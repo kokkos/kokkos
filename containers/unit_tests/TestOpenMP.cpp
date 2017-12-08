@@ -63,7 +63,7 @@
 #include <Kokkos_DynRankView.hpp>
 #include <TestDynViewAPI.hpp>
 
-#include <TestReductionView.hpp>
+#include <TestScatterView.hpp>
 
 #include <Kokkos_ErrorReporter.hpp>
 #include <TestErrorReporter.hpp>
@@ -154,9 +154,9 @@ TEST_F( openmp , staticcrsgraph )
       test_dualview_combinations<int,Kokkos::OpenMP>(size);                     \
   }
 
-#define OPENMP_REDUCTIONVIEW_TEST( size )             \
-  TEST_F( openmp, reductionview_##size##x) {                      \
-    test_reduction_view<Kokkos::OpenMP>(size);               \
+#define OPENMP_SCATTERVIEW_TEST( size )             \
+  TEST_F( openmp, scatterview_##size##x) {                      \
+    test_scatter_view<Kokkos::OpenMP>(size);               \
   }
 
 OPENMP_INSERT_TEST(close, 100000, 90000, 100, 500, true)
@@ -168,9 +168,9 @@ OPENMP_VECTOR_COMBINE_TEST( 10 )
 OPENMP_VECTOR_COMBINE_TEST( 3057 )
 OPENMP_DUALVIEW_COMBINE_TEST( 10 )
 
-OPENMP_REDUCTIONVIEW_TEST( 10 )
+OPENMP_SCATTERVIEW_TEST( 10 )
 
-OPENMP_REDUCTIONVIEW_TEST( 1000000 )
+OPENMP_SCATTERVIEW_TEST( 1000000 )
 
 #undef OPENMP_INSERT_TEST
 #undef OPENMP_FAILED_INSERT_TEST

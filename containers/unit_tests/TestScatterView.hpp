@@ -41,43 +41,43 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TEST_REDUCTIONVIEW_HPP
-#define KOKKOS_TEST_REDUCTIONVIEW_HPP
+#ifndef KOKKOS_TEST_SCATTER_VIEW_HPP
+#define KOKKOS_TEST_SCATTER_VIEW_HPP
 
-#include <Kokkos_ReductionView.hpp>
+#include <Kokkos_ScatterView.hpp>
 
 namespace Test {
 
 template <typename ExecSpace, typename Layout, int duplication, int contribution>
-void test_reduction_view_config(int n)
+void test_scatter_view_config(int n)
 {
   Kokkos::View<double *[3], Layout, ExecSpace> original_view("original_view", n);
   {
-    auto reduction_view = Kokkos::Experimental::create_reduction_view
-      < Kokkos::Experimental::ReductionSum
+    auto scatter_view = Kokkos::Experimental::create_scatter_view
+      < Kokkos::Experimental::ScatterSum
       , duplication
       , contribution
       > (original_view);
-    auto policy = Kokkos::RangePolicy<ExecSpace, int>(0, n);
 #if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
+    auto policy = Kokkos::RangePolicy<ExecSpace, int>(0, n);
     auto f = KOKKOS_LAMBDA(int i) {
-      auto reduction_access = reduction_view.access();
-      auto reduction_access_atomic = reduction_view.template access<Kokkos::Experimental::ReductionAtomic>();
+      auto scatter_access = scatter_view.access();
+      auto scatter_access_atomic = scatter_view.template access<Kokkos::Experimental::ScatterAtomic>();
       for (int j = 0; j < 10; ++j) {
         auto k = (i + j) % n;
-        reduction_access(k, 0) += 4.2;
-        reduction_access_atomic(k, 1) += 2.0;
-        reduction_access(k, 2) += 1.0;
+        scatter_access(k, 0) += 4.2;
+        scatter_access_atomic(k, 1) += 2.0;
+        scatter_access(k, 2) += 1.0;
       }
     };
-    Kokkos::parallel_for(policy, f, "reduction_view_test");
+    Kokkos::parallel_for(policy, f, "scatter_view_test");
 #endif
-    Kokkos::Experimental::contribute(original_view, reduction_view);
-    reduction_view.reset_except(original_view);
+    Kokkos::Experimental::contribute(original_view, scatter_view);
+    scatter_view.reset_except(original_view);
 #if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
-    Kokkos::parallel_for(policy, f, "reduction_view_test");
+    Kokkos::parallel_for(policy, f, "scatter_view_test");
 #endif
-    Kokkos::Experimental::contribute(original_view, reduction_view);
+    Kokkos::Experimental::contribute(original_view, scatter_view);
   }
   auto host_view = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), original_view);
   for (typename decltype(host_view)::size_type i = 0; i < host_view.dimension_0(); ++i) {
@@ -91,11 +91,11 @@ void test_reduction_view_config(int n)
 #endif
   }
   {
-    Kokkos::Experimental::ReductionView
+    Kokkos::Experimental::ScatterView
       < double*[3]
       , Layout
       , ExecSpace
-      , Kokkos::Experimental::ReductionSum
+      , Kokkos::Experimental::ScatterSum
       , duplication
       , contribution
       >
@@ -106,14 +106,14 @@ void test_reduction_view_config(int n)
 }
 
 template <typename ExecSpace>
-struct TestDuplicatedReductionView {
-  TestDuplicatedReductionView(int n) {
-    test_reduction_view_config<ExecSpace, Kokkos::LayoutRight,
-      Kokkos::Experimental::ReductionDuplicated,
-      Kokkos::Experimental::ReductionNonAtomic>(n);
-    test_reduction_view_config<ExecSpace, Kokkos::LayoutRight,
-      Kokkos::Experimental::ReductionDuplicated,
-      Kokkos::Experimental::ReductionAtomic>(n);
+struct TestDuplicatedScatterView {
+  TestDuplicatedScatterView(int n) {
+    test_scatter_view_config<ExecSpace, Kokkos::LayoutRight,
+      Kokkos::Experimental::ScatterDuplicated,
+      Kokkos::Experimental::ScatterNonAtomic>(n);
+    test_scatter_view_config<ExecSpace, Kokkos::LayoutRight,
+      Kokkos::Experimental::ScatterDuplicated,
+      Kokkos::Experimental::ScatterAtomic>(n);
   }
 };
 
@@ -121,14 +121,14 @@ struct TestDuplicatedReductionView {
 // disable duplicated instantiation with CUDA until
 // UniqueToken can support it
 template <>
-struct TestDuplicatedReductionView<Kokkos::Cuda> {
-  TestDuplicatedReductionView(int) {
+struct TestDuplicatedScatterView<Kokkos::Cuda> {
+  TestDuplicatedScatterView(int) {
   }
 };
 #endif
 
 template <typename ExecSpace>
-void test_reduction_view(int n)
+void test_scatter_view(int n)
 {
   // all of these configurations should compile okay, but only some of them are
   // correct and/or sensible in terms of memory use
@@ -138,15 +138,15 @@ void test_reduction_view(int n)
   // is running essentially in serial (doesn't have to be Serial though,
   // we also test OpenMP with one thread: LAMMPS cares about that)
   if (unique_token.size() == 1) {
-    test_reduction_view_config<ExecSpace, Kokkos::LayoutRight,
-      Kokkos::Experimental::ReductionNonDuplicated,
-      Kokkos::Experimental::ReductionNonAtomic>(n);
+    test_scatter_view_config<ExecSpace, Kokkos::LayoutRight,
+      Kokkos::Experimental::ScatterNonDuplicated,
+      Kokkos::Experimental::ScatterNonAtomic>(n);
   }
-  test_reduction_view_config<ExecSpace, Kokkos::LayoutRight,
-    Kokkos::Experimental::ReductionNonDuplicated,
-    Kokkos::Experimental::ReductionAtomic>(n);
+  test_scatter_view_config<ExecSpace, Kokkos::LayoutRight,
+    Kokkos::Experimental::ScatterNonDuplicated,
+    Kokkos::Experimental::ScatterAtomic>(n);
 
-  TestDuplicatedReductionView<ExecSpace> duptest(n);
+  TestDuplicatedScatterView<ExecSpace> duptest(n);
 }
 
 } // namespace Test

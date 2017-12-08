@@ -41,28 +41,28 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TEST_REDUCTIONVIEW_HPP
-#define KOKKOS_TEST_REDUCTIONVIEW_HPP
+#ifndef KOKKOS_TEST_SCATTER_VIEW_HPP
+#define KOKKOS_TEST_SCATTER_VIEW_HPP
 
-#include <Kokkos_ReductionView.hpp>
+#include <Kokkos_ScatterView.hpp>
 #include <impl/Kokkos_Timer.hpp>
 
 namespace Perf {
 
 template <typename ExecSpace, typename Layout, int duplication, int contribution>
-void test_reduction_view(int m, int n)
+void test_scatter_view(int m, int n)
 {
   Kokkos::View<double *[3], Layout, ExecSpace> original_view("original_view", n);
   {
-    auto reduction_view = Kokkos::Experimental::create_reduction_view
-      < Kokkos::Experimental::ReductionSum
+    auto scatter_view = Kokkos::Experimental::create_scatter_view
+      < Kokkos::Experimental::ScatterSum
       , duplication
       , contribution
       > (original_view);
     Kokkos::Experimental::UniqueToken<
       ExecSpace, Kokkos::Experimental::UniqueTokenScope::Global>
       unique_token{ExecSpace()};
-  //auto internal_view = reduction_view.internal_view;
+  //auto internal_view = scatter_view.internal_view;
     auto policy = Kokkos::RangePolicy<ExecSpace, int>(0, n);
     for (int foo = 0; foo < 5; ++foo) {
     {
@@ -81,25 +81,25 @@ void test_reduction_view(int m, int n)
       Kokkos::Timer timer;
       timer.reset();
       for (int k = 0; k < m; ++k) {
-        Kokkos::parallel_for(policy, f2, "hand_coded_duplicate_reduction_view_test");
+        Kokkos::parallel_for(policy, f2, "hand_coded_duplicate_scatter_view_test");
       }
       auto t = timer.seconds();
       std::cout << "hand-coded test took " << t << " seconds\n";
     }
     {
       auto f = KOKKOS_LAMBDA(int i) {
-        auto reduction_access = reduction_view.access();
+        auto scatter_access = scatter_view.access();
         for (int j = 0; j < 10; ++j) {
           auto k = (i + j) % n;
-          reduction_access(k, 0) += 4.2;
-          reduction_access(k, 1) += 2.0;
-          reduction_access(k, 2) += 1.0;
+          scatter_access(k, 0) += 4.2;
+          scatter_access(k, 1) += 2.0;
+          scatter_access(k, 2) += 1.0;
         }
       };
       Kokkos::Timer timer;
       timer.reset();
       for (int k = 0; k < m; ++k) {
-        Kokkos::parallel_for(policy, f, "reduction_view_test");
+        Kokkos::parallel_for(policy, f, "scatter_view_test");
       }
       auto t = timer.seconds();
       std::cout << "test took " << t << " seconds\n";
