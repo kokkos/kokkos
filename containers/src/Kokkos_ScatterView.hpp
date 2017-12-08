@@ -465,6 +465,28 @@ public:
     if (view.data() != internal_view.data()) reset();
   }
 
+  void resize(const size_t n0 = 0,
+           const size_t n1 = 0,
+           const size_t n2 = 0,
+           const size_t n3 = 0,
+           const size_t n4 = 0,
+           const size_t n5 = 0,
+           const size_t n6 = 0,
+           const size_t n7 = 0) {
+    ::Kokkos::resize(internal_view,n0,n1,n2,n3,n4,n5,n6,n7);
+  }
+
+  void realloc(const size_t n0 = 0,
+           const size_t n1 = 0,
+           const size_t n2 = 0,
+           const size_t n3 = 0,
+           const size_t n4 = 0,
+           const size_t n5 = 0,
+           const size_t n6 = 0,
+           const size_t n7 = 0) {
+    ::Kokkos::realloc(internal_view,n0,n1,n2,n3,n4,n5,n6,n7);
+  }
+
 protected:
   template <typename ... Args>
   KOKKOS_FORCEINLINE_FUNCTION
@@ -632,6 +654,26 @@ public:
         internal_view.label());
   }
 
+  void resize(const size_t n0 = 0,
+           const size_t n1 = 0,
+           const size_t n2 = 0,
+           const size_t n3 = 0,
+           const size_t n4 = 0,
+           const size_t n5 = 0,
+           const size_t n6 = 0) {
+    ::Kokkos::resize(internal_view,unique_token.size(),n0,n1,n2,n3,n4,n5,n6);
+  }
+
+  void realloc(const size_t n0 = 0,
+           const size_t n1 = 0,
+           const size_t n2 = 0,
+           const size_t n3 = 0,
+           const size_t n4 = 0,
+           const size_t n5 = 0,
+           const size_t n6 = 0) {
+    ::Kokkos::realloc(internal_view,unique_token.size(),n0,n1,n2,n3,n4,n5,n6);
+  }
+
 protected:
   template <typename ... Args>
   KOKKOS_FORCEINLINE_FUNCTION
@@ -762,6 +804,40 @@ public:
         internal_view.data() + view.size(),
         internal_view.size() - view.size(),
         internal_view.label());
+  }
+
+  void resize(const size_t n0 = 0,
+           const size_t n1 = 0,
+           const size_t n2 = 0,
+           const size_t n3 = 0,
+           const size_t n4 = 0,
+           const size_t n5 = 0,
+           const size_t n6 = 0) {
+
+    size_t arg_N[8] = {n0,n1,n2,n3,n4,n5,n6,0};
+    const int i = internal_view.rank-1;
+    arg_N[i] = unique_token.size();
+
+    ::Kokkos::resize(internal_view,
+        arg_N[0], arg_N[1], arg_N[2], arg_N[3],
+        arg_N[4], arg_N[5], arg_N[6], arg_N[7]);
+  }
+
+  void realloc(const size_t n0 = 0,
+           const size_t n1 = 0,
+           const size_t n2 = 0,
+           const size_t n3 = 0,
+           const size_t n4 = 0,
+           const size_t n5 = 0,
+           const size_t n6 = 0) {
+
+    size_t arg_N[8] = {n0,n1,n2,n3,n4,n5,n6,0};
+    const int i = internal_view.rank-1;
+    arg_N[i] = unique_token.size();
+
+    ::Kokkos::realloc(internal_view,
+        arg_N[0], arg_N[1], arg_N[2], arg_N[3],
+        arg_N[4], arg_N[5], arg_N[6], arg_N[7]);
   }
 
 protected:
