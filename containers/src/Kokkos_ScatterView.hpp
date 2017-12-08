@@ -982,14 +982,14 @@ namespace Kokkos {
 
 template <typename DT, typename LY, typename ES,  int OP, int CT, int DP, typename ... IS>
 void
-realloc(Kokkos::Experimental::ScatterView<DT, LY, ES, OP, CT, DP> const& scatter_view, IS ... is)
+realloc(Kokkos::Experimental::ScatterView<DT, LY, ES, OP, CT, DP>& scatter_view, IS ... is)
 {
   scatter_view.realloc(is ...);
 }
 
 template <typename DT, typename LY, typename ES,  int OP, int CT, int DP, typename ... IS>
 void
-resize(Kokkos::Experimental::ScatterView<DT, LY, ES, OP, CT, DP> const& scatter_view, IS ... is)
+resize(Kokkos::Experimental::ScatterView<DT, LY, ES, OP, CT, DP>& scatter_view, IS ... is)
 {
   scatter_view.resize(is ...);
 }
