@@ -729,7 +729,7 @@ public:
       original_view.extent(6),
       0
     };
-    arg_N[original_view.rank] = unique_token.size();
+    arg_N[internal_view_type::rank - 1] = unique_token.size();
     internal_view = internal_view_type(
         Kokkos::ViewAllocateWithoutInitializing(
           std::string("duplicated_") + original_view.label()),
