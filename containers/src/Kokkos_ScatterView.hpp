@@ -57,6 +57,7 @@
 namespace Kokkos {
 namespace Experimental {
 
+//TODO: replace this enum with the Kokkos::Sum, etc reducers for parallel_reduce
 enum : int {
   ScatterSum,
 };
