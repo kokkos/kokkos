@@ -465,6 +465,28 @@ public:
     if (view.data() != internal_view.data()) reset();
   }
 
+  void resize(const size_t n0 = 0,
+           const size_t n1 = 0,
+           const size_t n2 = 0,
+           const size_t n3 = 0,
+           const size_t n4 = 0,
+           const size_t n5 = 0,
+           const size_t n6 = 0,
+           const size_t n7 = 0) {
+    ::Kokkos::resize(internal_view,n0,n1,n2,n3,n4,n5,n6,n7);
+  }
+
+  void realloc(const size_t n0 = 0,
+           const size_t n1 = 0,
+           const size_t n2 = 0,
+           const size_t n3 = 0,
+           const size_t n4 = 0,
+           const size_t n5 = 0,
+           const size_t n6 = 0,
+           const size_t n7 = 0) {
+    ::Kokkos::realloc(internal_view,n0,n1,n2,n3,n4,n5,n6,n7);
+  }
+
 protected:
   template <typename ... Args>
   KOKKOS_FORCEINLINE_FUNCTION
@@ -632,6 +654,28 @@ public:
         internal_view.label());
   }
 
+  void resize(const size_t n0 = 0,
+           const size_t n1 = 0,
+           const size_t n2 = 0,
+           const size_t n3 = 0,
+           const size_t n4 = 0,
+           const size_t n5 = 0,
+           const size_t n6 = 0,
+           const size_t n7 = 0) {
+    ::Kokkos::resize(internal_view,n0,n1,n2,n3,n4,n5,n6,n7);
+  }
+
+  void realloc(const size_t n0 = 0,
+           const size_t n1 = 0,
+           const size_t n2 = 0,
+           const size_t n3 = 0,
+           const size_t n4 = 0,
+           const size_t n5 = 0,
+           const size_t n6 = 0,
+           const size_t n7 = 0) {
+    ::Kokkos::realloc(internal_view,n0,n1,n2,n3,n4,n5,n6,n7);
+  }
+
 protected:
   template <typename ... Args>
   KOKKOS_FORCEINLINE_FUNCTION
@@ -767,6 +811,28 @@ public:
         internal_view.data() + view.size(),
         internal_view.size() - view.size(),
         internal_view.label());
+  }
+
+  void resize(const size_t n0 = 0,
+           const size_t n1 = 0,
+           const size_t n2 = 0,
+           const size_t n3 = 0,
+           const size_t n4 = 0,
+           const size_t n5 = 0,
+           const size_t n6 = 0,
+           const size_t n7 = 0) {
+    ::Kokkos::resize(internal_view,n0,n1,n2,n3,n4,n5,n6,n7);
+  }
+
+  void realloc(const size_t n0 = 0,
+           const size_t n1 = 0,
+           const size_t n2 = 0,
+           const size_t n3 = 0,
+           const size_t n4 = 0,
+           const size_t n5 = 0,
+           const size_t n6 = 0,
+           const size_t n7 = 0) {
+    ::Kokkos::realloc(internal_view,n0,n1,n2,n3,n4,n5,n6,n7);
   }
 
 protected:
