@@ -23,9 +23,9 @@ kokkos_setlist_cmakefile = echo set\($1 \"$2\"\) >> $(KOKKOS_CMAKEFILE)
 
 kokkos_appendvar_makefile = echo $1 = $($(1)) >> $(KOKKOS_MAKEFILE)
 kokkos_appendvar2_makefile = echo $1 ?= $($(1)) >> $(KOKKOS_MAKEFILE)
-kokkos_appendvar_cmakefile = echo set\($1 $($(1)) CACHE $2\) >> $(KOKKOS_CMAKEFILE)
+kokkos_appendvar_cmakefile = echo set\($1 $($(1)) CACHE $2 FORCE\) >> $(KOKKOS_CMAKEFILE)
 kokkos_appendval_makefile = echo $1 = $2 >> $(KOKKOS_MAKEFILE)
-kokkos_appendval_cmakefile = echo set\($1 $2 CACHE $3\) >> $(KOKKOS_CMAKEFILE)
+kokkos_appendval_cmakefile = echo set\($1 $2 CACHE $3 FORCE\) >> $(KOKKOS_CMAKEFILE)
 
 kokkos_append_string = $(call kokkos_append_makefile,$1); $(call kokkos_append_cmakefile,$1)
 kokkos_append_var = $(call kokkos_appendvar_makefile,$1); $(call kokkos_appendvar_cmakefile,$1,$2)
