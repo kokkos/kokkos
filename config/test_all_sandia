@@ -61,6 +61,8 @@ SPOT_CHECK=False
 
 PRINT_HELP=False
 OPT_FLAG=""
+CXX_FLAGS_EXTRA=""
+LD_FLAGS_EXTRA=""
 KOKKOS_OPTIONS=""
 
 #
@@ -111,6 +113,12 @@ do
     --with-cuda-options*)
       KOKKOS_CUDA_OPTIONS="--with-cuda-options=${key#*=}"
       ;;
+    --cxxflags-extra*)
+      CXX_FLAGS_EXTRA="${key#*=}"
+      ;;
+    --ldflags-extra*)
+      LD_FLAGS_EXTRA="${key#*=}"
+      ;;
     --help*)
       PRINT_HELP=True
       ;;
@@ -150,7 +158,7 @@ if [ "$MACHINE" = "sems" ]; then
 
   if [ "$SPOT_CHECK" = "True" ]; then
     # Format: (compiler module-list build-list exe-name warning-flag)
-    COMPILERS=("gcc/5.3.0 $BASE_MODULE_LIST "Serial" g++ $GCC_WARNING_FLAGS"
+    COMPILERS=("gcc/5.3.0 $BASE_MODULE_LIST "OpenMP" g++ $GCC_WARNING_FLAGS"
                "gcc/6.1.0 $BASE_MODULE_LIST "Serial" g++ $GCC_WARNING_FLAGS"
                "intel/17.0.1 $BASE_MODULE_LIST "OpenMP" icpc $INTEL_WARNING_FLAGS"
                "clang/3.9.0 $BASE_MODULE_LIST "Pthread_Serial" clang++ $CLANG_WARNING_FLAGS"
@@ -182,7 +190,7 @@ elif [ "$MACHINE" = "white" ]; then
   BASE_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>"
   IBM_MODULE_LIST="<COMPILER_NAME>/xl/<COMPILER_VERSION>"
   CUDA_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>,gcc/5.4.0"
-  CUDA_MODULE_LIST2="<COMPILER_NAME>/<COMPILER_VERSION>,gcc/6.3.0"
+  CUDA_MODULE_LIST2="<COMPILER_NAME>/<COMPILER_VERSION>,gcc/6.3.0,ibm/xl/13.1.6-BETA"
 
   # Don't do pthread on white.
   GCC_BUILD_LIST="OpenMP,Serial,OpenMP_Serial"
@@ -336,6 +344,8 @@ if [ "$PRINT_HELP" = "True" ]; then
   echo "--dry-run: Just print what would be executed"
   echo "--build-only: Just do builds, don't run anything"
   echo "--opt-flag=FLAG: Optimization flag (default: -O3)"
+  echo "--cxxflags-extra=FLAGS: Extra flags to be added to CXX_FLAGS"
+  echo "--ldflags-extra=FLAGS: Extra flags to be added to LD_FLAGS"
   echo "--arch=ARCHITECTURE: overwrite architecture flags"
   echo "--with-cuda-options=OPT: set KOKKOS_CUDA_OPTIONS"
   echo "--build-list=BUILD,BUILD,BUILD..."
@@ -566,9 +576,14 @@ single_build_and_test() {
   if [[ "$build_type" = *debug* ]]; then
     local extra_args="$extra_args --debug"
     local cxxflags="-g $compiler_warning_flags"
+    local ldflags="-g"
   else
     local cxxflags="$OPT_FLAG $compiler_warning_flags"
+    local ldflags="${OPT_FLAG}"
   fi
+
+  local cxxflags="${cxxflags} ${CXX_FLAGS_EXTRA}"
+  local ldflags="${ldflags} ${LD_FLAGS_EXTRA}"
 
   if [[ "$KOKKOS_CUDA_OPTIONS" != "" ]]; then
     local extra_args="$extra_args $KOKKOS_CUDA_OPTIONS"
@@ -586,7 +601,7 @@ single_build_and_test() {
       run_cmd ls fake_problem >& ${desc}.configure.log || { report_and_log_test_result 1 $desc configure && return 0; }
     fi
   else
-    run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$build $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" $extra_args &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
+    run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$build $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --ldflags=\"$ldflags\" $extra_args &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
     local -i build_start_time=$(date +%s)
     run_cmd make -j 32 build-test >& ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
     local -i build_end_time=$(date +%s)

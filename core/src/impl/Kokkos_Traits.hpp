@@ -436,7 +436,7 @@ struct power_of_two<1,true>
 /** \brief  If power of two then return power,
  *          otherwise return ~0u.
  */
-static KOKKOS_FORCEINLINE_FUNCTION
+KOKKOS_FORCEINLINE_FUNCTION
 unsigned power_of_two_if_valid( const unsigned N )
 {
   unsigned p = ~0u ;
