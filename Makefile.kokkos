@@ -333,7 +333,7 @@ kokkos_append_header = $(shell echo $1 >> $(KOKKOS_INTERNAL_CONFIG_TMP))
 # Do not append first line
 tmp := $(shell echo "/* ---------------------------------------------" > KokkosCore_config.tmp)
 tmp := $(call kokkos_append_header,"Makefile constructed configuration:")
-tmp := $(call kokkos_append_header,$(shell date))
+tmp := $(call kokkos_append_header,"$(shell date)")
 tmp := $(call kokkos_append_header,"----------------------------------------------*/")
 
 tmp := $(call kokkos_append_header,'\#if !defined(KOKKOS_MACROS_HPP) || defined(KOKKOS_CORE_CONFIG_H)')
