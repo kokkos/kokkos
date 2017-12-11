@@ -274,14 +274,14 @@ struct ReduceDuplicates;
 template <typename ExecSpace, typename ValueType, int Op>
 struct ReduceDuplicatesBase {
   typedef ReduceDuplicates<ExecSpace, ValueType, Op> Derived;
-  ValueType* ptr_in;
-  ValueType* ptr_out;
+  ValueType const* src;
+  ValueType* dst;
   size_t stride;
   size_t start;
   size_t n;
-  ReduceDuplicatesBase(ValueType* ptr_in, ValueType* ptr_out, size_t stride_in, size_t start_in, size_t n_in, std::string const& name)
-    : ptr_in(ptr_in)
-    , ptr_out(ptr_out)
+  ReduceDuplicatesBase(ValueType const* src_in, ValueType* dest_in, size_t stride_in, size_t start_in, size_t n_in, std::string const& name)
+    : src(src_in)
+    , dst(dest_in)
     , stride(stride_in)
     , start(start_in)
     , n(n_in)
@@ -309,12 +309,12 @@ struct ReduceDuplicates<ExecSpace, ValueType, Kokkos::Experimental::ScatterSum> 
   public ReduceDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ScatterSum>
 {
   typedef ReduceDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ScatterSum> Base;
-  ReduceDuplicates(ValueType* ptr_in, ValueType* ptr_out, size_t stride_in, size_t start_in, size_t n_in, std::string const& name):
-    Base(ptr_in, ptr_out, stride_in, start_in, n_in, name)
+  ReduceDuplicates(ValueType const* src_in, ValueType* dst_in, size_t stride_in, size_t start_in, size_t n_in, std::string const& name):
+    Base(src_in, dst_in, stride_in, start_in, n_in, name)
   {}
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
     for (size_t j = Base::start; j < Base::n; ++j) {
-      Base::ptr_out[i] += Base::ptr_in[i + Base::stride * j];
+      Base::dst[i] += Base::src[i + Base::stride * j];
     }
   }
 };
@@ -325,9 +325,9 @@ struct ResetDuplicates;
 template <typename ExecSpace, typename ValueType, int Op>
 struct ResetDuplicatesBase {
   typedef ResetDuplicates<ExecSpace, ValueType, Op> Derived;
-  ValueType* ptr_in;
-  ResetDuplicatesBase(ValueType* ptr_in, size_t size_in, std::string const& name)
-    : ptr_in(ptr_in)
+  ValueType* data;
+  ResetDuplicatesBase(ValueType* data_in, size_t size_in, std::string const& name)
+    : data(data_in)
   {
 #if defined(KOKKOS_ENABLE_PROFILING)
     uint64_t kpID = 0;
@@ -352,11 +352,11 @@ struct ResetDuplicates<ExecSpace, ValueType, Kokkos::Experimental::ScatterSum> :
   public ResetDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ScatterSum>
 {
   typedef ResetDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ScatterSum> Base;
-  ResetDuplicates(ValueType* ptr_in, size_t size_in, std::string const& name):
-    Base(ptr_in, size_in, name)
+  ResetDuplicates(ValueType* data_in, size_t size_in, std::string const& name):
+    Base(data_in, size_in, name)
   {}
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
-    Base::ptr_in[i] = Kokkos::reduction_identity<ValueType>::sum();
+    Base::data[i] = Kokkos::reduction_identity<ValueType>::sum();
   }
 };
 
