@@ -79,6 +79,8 @@ if(NOT KOKKOS_LEGACY_TRIBITS)
   set(Kokkos_GEN_DIR ${CMAKE_BINARY_DIR})
   file(COPY "${Kokkos_GEN_DIR}/KokkosCore_config.h"
     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" USE_SOURCE_PERMISSIONS)
+  install(FILES "${Kokkos_GEN_DIR}/KokkosCore_config.h"
+    DESTINATION include)
   file(COPY "${Kokkos_GEN_DIR}/kokkos_generated_settings.cmake"
     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" USE_SOURCE_PERMISSIONS)
 
