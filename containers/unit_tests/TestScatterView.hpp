@@ -80,16 +80,16 @@ void test_scatter_view_config(int n)
     Kokkos::Experimental::contribute(original_view, scatter_view);
   }
   auto host_view = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), original_view);
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
   for (typename decltype(host_view)::size_type i = 0; i < host_view.dimension_0(); ++i) {
     auto val0 = host_view(i, 0);
     auto val1 = host_view(i, 1);
     auto val2 = host_view(i, 2);
-#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
     EXPECT_TRUE(std::fabs((val0 - 84.0) / 84.0) < 1e-15);
     EXPECT_TRUE(std::fabs((val1 - 40.0) / 40.0) < 1e-15);
     EXPECT_TRUE(std::fabs((val2 - 20.0) / 20.0) < 1e-15);
-#endif
   }
+#endif
   {
     Kokkos::Experimental::ScatterView
       < double*[3]
