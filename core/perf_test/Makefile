@@ -18,7 +18,7 @@ CXXFLAGS = -O3
 #CXXFLAGS += -DGENERIC_REDUCER
 LINK ?= $(CXX)
 LDFLAGS ?=
-LDFLAGS += -lpthread
+override LDFLAGS += -lpthread
 
 include $(KOKKOS_PATH)/Makefile.kokkos
 
