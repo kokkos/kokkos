@@ -104,7 +104,7 @@ public:
   ///   imaginary part to zero.
   template<class InputRealType>
   KOKKOS_INLINE_FUNCTION complex (const InputRealType& val) :
-    re_ (val), im_ (0.0)
+    re_ (val), im_ (static_cast<InputRealType>(0.0))
   {}
 
   // BUG HCC WORKAROUND
