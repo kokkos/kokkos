@@ -16,7 +16,7 @@ if [[ "$HOSTNAME" =~ (white|ride).* ]]; then
   MACHINE=white
 elif [[ "$HOSTNAME" =~ .*bowman.* ]]; then
   MACHINE=bowman
-elif [[ "$HOSTNAME" =~ node.* ]]; then # Warning: very generic name
+elif [[ "$HOSTNAME" =~ n.* ]]; then # Warning: very generic name
   if [[ "$PROCESSOR" = "aarch64" ]]; then
     MACHINE=sullivan
   else
