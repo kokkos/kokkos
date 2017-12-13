@@ -122,6 +122,10 @@ bool rendezvous( volatile void * buffer
          : step + 2u
          ;
 
+  // if size == 1, it is incorrect for rank 0 to check the tail value of the buffer
+  // this optimization prevents a potential read of uninitialized memory
+  if ( size == 1 ) { return true; }
+
   const uint8_t byte_value  = static_cast<uint8_t>(step);
 
   // byte that is set in the spin_value rotates every time
