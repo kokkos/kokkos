@@ -14,6 +14,24 @@ if(KOKKOS_LEGACY_TRIBITS)
   ASSERT_DEFINED(${PROJECT_NAME}_ENABLE_CXX11)
   ASSERT_DEFINED(${PACKAGE_NAME}_ENABLE_CUDA)
 
+  #These preprocessor variables start with KOKKOS_HAVE_ and are #cmakedefine'd
+  #but the new kokkos_options.cmake system only sets them as KOKKOS_ENABLE_
+  set(KOKKOS_INTERNAL_HAVE_CMAKEDEFINES
+      CUDA
+      OPENMP
+      PTHREAD
+      QTHREADS
+      SERIAL
+      HWLOC
+      DEBUG
+      CUDA_LAMBDA
+      )
+  foreach(opt IN LISTS KOKKOS_INTERNAL_HAVE_CMAKEDEFINES)
+    set(KOKKOS_HAVE_${opt} "${KOKKOS_ENABLE_${opt}}")
+  endforeach()
+  #to make things difficult, one of these was renamed to be super long
+  set(KOKKOS_HAVE_CUDA_RDC "${KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE}")
+
   TRIBITS_CONFIGURE_FILE(${PACKAGE_NAME}_config.h)
 
   SET(HEADERS_PUBLIC "")
