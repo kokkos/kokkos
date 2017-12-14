@@ -9,19 +9,17 @@ SET(TRILINOS_INCDIR ${CMAKE_INSTALL_PREFIX}/${${PROJECT_NAME}_INSTALL_INCLUDE_DI
 
 #-----------------------------------------------------------------------------
 
-if(KOKKOS_LEGACY_TRIBITS)
+IF(KOKKOS_LEGACY_TRIBITS)
 
   ASSERT_DEFINED(${PROJECT_NAME}_ENABLE_CXX11)
   ASSERT_DEFINED(${PACKAGE_NAME}_ENABLE_CUDA)
-
-  TRIBITS_CONFIGURE_FILE(${PACKAGE_NAME}_config.h)
 
   SET(HEADERS_PUBLIC "")
   SET(HEADERS_PRIVATE "")
   SET(SOURCES "")
 
   FILE(GLOB HEADERS_PUBLIC Kokkos*.hpp)
-  LIST( APPEND HEADERS_PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}_config.h )
+  LIST( APPEND HEADERS_PUBLIC ${CMAKE_BINARY_DIR}/${PACKAGE_NAME}_config.h )
 
   #-----------------------------------------------------------------------------
 
