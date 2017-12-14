@@ -60,11 +60,35 @@ namespace Impl {
 enum class WaitMode : int {
     ACTIVE   // Used for tight loops to keep threads active longest
   , PASSIVE  // Used to quickly yield the thread to quite down the system
+  , ROOT     // Never sleep or yield the root thread
 };
 
 
 void host_thread_yield( const uint32_t i , const WaitMode mode );
 
+template <typename T>
+typename std::enable_if< std::is_integral<T>::value, void>::type
+root_spinwait_while_equal( T const volatile & flag, const T value )
+{
+  Kokkos::store_fence();
+  uint32_t i = 0 ;
+  while( value == flag ) {
+    host_thread_yield(++i, WaitMode::ROOT);
+  }
+  Kokkos::load_fence();
+}
+
+template <typename T>
+typename std::enable_if< std::is_integral<T>::value, void>::type
+root_spinwait_until_equal( T const volatile & flag, const T value )
+{
+  Kokkos::store_fence();
+  uint32_t i = 0 ;
+  while( value != flag ) {
+    host_thread_yield(++i, WaitMode::ROOT);
+  }
+  Kokkos::load_fence();
+}
 
 template <typename T>
 typename std::enable_if< std::is_integral<T>::value, void>::type

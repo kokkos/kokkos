@@ -71,7 +71,7 @@ void host_thread_yield( const uint32_t i , const WaitMode mode )
 
   const int c = Kokkos::Impl::bit_scan_reverse(i);
 
-  if ( sleep_limit < i ) {
+  if ( mode != WaitMode::ROOT && (sleep_limit < i) ) {
 
     // Attempt to put the thread to sleep for 'c' milliseconds
 
@@ -87,7 +87,7 @@ void host_thread_yield( const uint32_t i , const WaitMode mode )
     #endif
   }
 
-  else if ( mode == WaitMode::PASSIVE || yield_limit < i ) {
+  else if ( mode != WaitMode::ROOT && (mode == WaitMode::PASSIVE || yield_limit < i) ) {
 
     // Attempt to yield thread resources to runtime
 
