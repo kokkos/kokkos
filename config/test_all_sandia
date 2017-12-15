@@ -19,9 +19,9 @@ elif [[ "$HOSTNAME" =~ .*bowman.* ]]; then
 elif [[ "$HOSTNAME" =~ n.* ]]; then # Warning: very generic name
   if [[ "$PROCESSOR" = "aarch64" ]]; then
     MACHINE=sullivan
-  else
-    MACHINE=shepard
   fi
+elif [[ "$HOSTNAME" =~ node.* ]]; then # Warning: very generic name
+    MACHINE=shepard
 elif [[ "$HOSTNAME" =~ apollo ]]; then
   MACHINE=apollo
 elif [[ "$HOSTNAME" =~ sullivan ]]; then
