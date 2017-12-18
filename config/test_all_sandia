@@ -14,24 +14,45 @@ PROCESSOR=`uname -p`
 
 if [[ "$HOSTNAME" =~ (white|ride).* ]]; then
   MACHINE=white
-elif [[ "$HOSTNAME" =~ .*bowman.* ]]; then
+fi
+
+if [[ "$HOSTNAME" =~ .*bowman.* ]]; then
   MACHINE=bowman
-elif [[ "$HOSTNAME" =~ n.* ]]; then # Warning: very generic name
+fi
+
+if [[ "$HOSTNAME" =~ n.* ]]; then # Warning: very generic name
   if [[ "$PROCESSOR" = "aarch64" ]]; then
     MACHINE=sullivan
   fi
-elif [[ "$HOSTNAME" =~ node.* ]]; then # Warning: very generic name
+fi
+
+if [[ "$HOSTNAME" =~ node.* ]]; then # Warning: very generic name
+  if [[ "$MACHINE" = "" ]]; then
     MACHINE=shepard
-elif [[ "$HOSTNAME" =~ apollo ]]; then
+  fi
+fi
+
+if [[ "$HOSTNAME" =~ apollo ]]; then
   MACHINE=apollo
-elif [[ "$HOSTNAME" =~ sullivan ]]; then
+fi
+
+if [[ "$HOSTNAME" =~ sullivan ]]; then
   MACHINE=sullivan
-elif [ ! -z "$SEMS_MODULEFILES_ROOT" ]; then
-  MACHINE=sems
-else
+fi
+
+if [ ! -z "$SEMS_MODULEFILES_ROOT" ]; then
+  if [[ "$MACHINE" = "" ]]; then
+    MACHINE=sems
+  fi  
+fi
+
+if [[ "$MACHINE" = "" ]]; then
   echo "Unrecognized machine" >&2
   exit 1
 fi
+
+echo "Running on machine: $MACHINE"
+
 
 GCC_BUILD_LIST="OpenMP,Pthread,Serial,OpenMP_Serial,Pthread_Serial"
 IBM_BUILD_LIST="OpenMP,Serial,OpenMP_Serial"
