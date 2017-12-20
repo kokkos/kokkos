@@ -89,6 +89,8 @@
 
 #include <Kokkos_Complex.hpp>
 
+#include <Kokkos_CopyViews.hpp>
+
 #include <iosfwd>
 
 //----------------------------------------------------------------------------

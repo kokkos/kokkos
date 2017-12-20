@@ -501,7 +501,7 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
 
       // Allocate and initialize uint32_t[ buffer_bound ]
 
-      typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > Record ;
+      typedef Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > Record ;
 
       Record * const r = Record::allocate( Kokkos::CudaSpace()
                                          , "InternalScratchBitset"
@@ -590,7 +590,7 @@ CudaInternal::scratch_flags( const Cuda::size_type size )
 
     m_scratchFlagsCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
 
-    typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > Record ;
+    typedef Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > Record ;
 
     Record * const r = Record::allocate( Kokkos::CudaSpace()
                                        , "InternalScratchFlags"
@@ -613,7 +613,7 @@ CudaInternal::scratch_space( const Cuda::size_type size )
 
     m_scratchSpaceCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
 
-     typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > Record ;
+     typedef Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > Record ;
 
      Record * const r = Record::allocate( Kokkos::CudaSpace()
                                         , "InternalScratchSpace"
@@ -635,7 +635,7 @@ CudaInternal::scratch_unified( const Cuda::size_type size )
 
     m_scratchUnifiedCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
 
-    typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::CudaHostPinnedSpace , void > Record ;
+    typedef Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaHostPinnedSpace , void > Record ;
 
     Record * const r = Record::allocate( Kokkos::CudaHostPinnedSpace()
                                        , "InternalScratchUnified"
@@ -666,8 +666,8 @@ void CudaInternal::finalize()
       ::free( m_stream );
     }
 
-    typedef Kokkos::Experimental::Impl::SharedAllocationRecord< CudaSpace > RecordCuda ;
-    typedef Kokkos::Experimental::Impl::SharedAllocationRecord< CudaHostPinnedSpace > RecordHost ;
+    typedef Kokkos::Impl::SharedAllocationRecord< CudaSpace > RecordCuda ;
+    typedef Kokkos::Impl::SharedAllocationRecord< CudaHostPinnedSpace > RecordHost ;
 
     RecordCuda::decrement( RecordCuda::get_record( m_scratchFlags ) );
     RecordCuda::decrement( RecordCuda::get_record( m_scratchSpace ) );

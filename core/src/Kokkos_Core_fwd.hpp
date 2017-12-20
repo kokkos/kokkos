@@ -239,6 +239,9 @@ namespace Kokkos {
 
 namespace Impl {
 
+template<class ViewType, class Layout = typename ViewType::array_layout, int Rank = ViewType::Rank, typename iType = int64_t>
+struct ViewFill;
+
 template< class Functor
         , class Policy
         , class EnableFunctor = void

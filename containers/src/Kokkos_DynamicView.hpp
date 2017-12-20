@@ -66,7 +66,7 @@ private:
 
   template< class , class ... > friend class DynamicView ;
 
-  typedef Kokkos::Experimental::Impl::SharedAllocationTracker   track_type ;
+  typedef Kokkos::Impl::SharedAllocationTracker   track_type ;
 
   static_assert( traits::rank == 1 && traits::rank_dynamic == 1
                , "DynamicView must be rank-one" );
@@ -508,7 +508,7 @@ public:
       // A functor to deallocate all of the chunks upon final destruction
 
       typedef typename traits::memory_space  memory_space ;
-      typedef Kokkos::Experimental::Impl::SharedAllocationRecord< memory_space , Destroy > record_type ;
+      typedef Kokkos::Impl::SharedAllocationRecord< memory_space , Destroy > record_type ;
 
       // Allocate chunk pointers and allocation counter
       record_type * const record =
@@ -532,7 +532,6 @@ public:
 } // namespace Kokkos
 
 namespace Kokkos {
-namespace Experimental {
 
 template< class T , class ... P >
 inline
@@ -545,11 +544,11 @@ create_mirror_view( const Kokkos::Experimental::DynamicView<T,P...> & src )
 template< class T , class ... DP , class ... SP >
 inline
 void deep_copy( const View<T,DP...> & dst
-              , const DynamicView<T,SP...> & src
+              , const Kokkos::Experimental::DynamicView<T,SP...> & src
               )
 {
   typedef View<T,DP...>        dst_type ;
-  typedef DynamicView<T,SP...> src_type ;
+  typedef Kokkos::Experimental::DynamicView<T,SP...> src_type ;
 
   typedef typename ViewTraits<T,DP...>::execution_space  dst_execution_space ;
   typedef typename ViewTraits<T,SP...>::memory_space     src_memory_space ;
@@ -568,11 +567,11 @@ void deep_copy( const View<T,DP...> & dst
 
 template< class T , class ... DP , class ... SP >
 inline
-void deep_copy( const DynamicView<T,DP...> & dst
+void deep_copy( const Kokkos::Experimental::DynamicView<T,DP...> & dst
               , const View<T,SP...> & src
               )
 {
-  typedef DynamicView<T,SP...> dst_type ;
+  typedef Kokkos::Experimental::DynamicView<T,SP...> dst_type ;
   typedef View<T,DP...>        src_type ;
 
   typedef typename ViewTraits<T,DP...>::execution_space  dst_execution_space ;
@@ -590,7 +589,6 @@ void deep_copy( const DynamicView<T,DP...> & dst
   }
 }
 
-} // namespace Experimental
 } // namespace Kokkos
 
 #endif /* #ifndef KOKKOS_DYNAMIC_VIEW_HPP */
