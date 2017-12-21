@@ -55,8 +55,6 @@
 namespace Kokkos {
 namespace Impl {
 
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-
 enum class WaitMode : int {
     ACTIVE   // Used for tight loops to keep threads active longest
   , PASSIVE  // Used to quickly yield the thread to quite down the system
@@ -138,8 +136,7 @@ yield_until_equal( T const volatile & flag, const T value )
   Kokkos::load_fence();
 }
 
-#else
-
+/*
 template <typename T>
 KOKKOS_INLINE_FUNCTION
 typename std::enable_if< std::is_integral<T>::value, void>::type
@@ -159,8 +156,7 @@ template <typename T>
 KOKKOS_INLINE_FUNCTION
 typename std::enable_if< std::is_integral<T>::value, void>::type
 yield_until_equal( T const volatile & flag, const T value ) {}
-
-#endif
+*/
 
 } /* namespace Impl */
 } /* namespace Kokkos */

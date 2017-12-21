@@ -53,7 +53,6 @@ fi
 
 echo "Running on machine: $MACHINE"
 
-
 GCC_BUILD_LIST="OpenMP,Pthread,Serial,OpenMP_Serial,Pthread_Serial"
 IBM_BUILD_LIST="OpenMP,Serial,OpenMP_Serial"
 ARM_GCC_BUILD_LIST="OpenMP,Serial,OpenMP_Serial"
@@ -162,6 +161,12 @@ else
   # Ensure KOKKOS_PATH is abs path.
   KOKKOS_PATH=$( cd $KOKKOS_PATH && pwd )
 fi
+
+
+GITSTATUS=`cd ${KOKKOS_PATH}; git log -n 1 --format=oneline`
+echo "Repository Status: " ${GITSTATUS}
+echo ""
+echo ""
 
 #
 # Machine specific config.
