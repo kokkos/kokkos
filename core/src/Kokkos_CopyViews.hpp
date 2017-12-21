@@ -205,7 +205,7 @@ struct ViewFill<ViewType,Layout,ExecSpace,7,iType> {
   KOKKOS_INLINE_FUNCTION
   void operator() (const iType& i0, const iType& i1, const iType& i3,
                    const iType& i4, const iType& i5, const iType& i6) const {
-    for(iType i2=0; i2<a.extent(2);i2++)
+    for(iType i2=0; i2<iType(a.extent(2));i2++)
       a(i0,i1,i2,i3,i4,i5,i6) = val;
   };
 };
@@ -227,8 +227,8 @@ struct ViewFill<ViewType,Layout,ExecSpace,8,iType> {
   KOKKOS_INLINE_FUNCTION
   void operator() (const iType& i0, const iType& i1, const iType& i3,
                    const iType& i5, const iType& i6, const iType& i7) const {
-    for(iType i2=0; i2<a.extent(2);i2++)
-    for(iType i4=0; i4<a.extent(4);i4++)
+    for(iType i2=0; i2<iType(a.extent(2));i2++)
+    for(iType i4=0; i4<iType(a.extent(4));i4++)
       a(i0,i1,i2,i3,i4,i5,i6,i7) = val;
   };
 };
@@ -370,7 +370,7 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,7,iType> {
   KOKKOS_INLINE_FUNCTION
   void operator() (const iType& i0, const iType& i1, const iType& i3,
                    const iType& i4, const iType& i5, const iType& i6) const {
-    for(iType i2=0; i2<a.extent(2);i2++)
+    for(iType i2=0; i2<iType(a.extent(2));i2++)
       a(i0,i1,i2,i3,i4,i5,i6) = b(i0,i1,i2,i3,i4,i5,i6);
   };
 };
@@ -392,8 +392,8 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,8,iType> {
   KOKKOS_INLINE_FUNCTION
   void operator() (const iType& i0, const iType& i1, const iType& i3,
                    const iType& i5, const iType& i6, const iType& i7) const {
-    for(iType i2=0; i2<a.extent(2);i2++)
-    for(iType i4=0; i4<a.extent(4);i4++)
+    for(iType i2=0; i2<iType(a.extent(2));i2++)
+    for(iType i4=0; i4<iType(a.extent(4));i4++)
       a(i0,i1,i2,i3,i4,i5,i6,i7) = b(i0,i1,i2,i3,i4,i5,i6,i7);
   };
 };
