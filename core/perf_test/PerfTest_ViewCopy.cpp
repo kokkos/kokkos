@@ -127,9 +127,9 @@ void run_fillview_tests(int N, int R) {
 
 TEST_F( default_exec, ViewFill ) {
   printf("ViewFill Performance for LayoutLeft:\n");
-  run_fillview_tests<Kokkos::LayoutLeft>(10,10);
+  run_fillview_tests<Kokkos::LayoutLeft>(10,1);
   printf("ViewFill Performance for LayoutRight:\n");
-  run_fillview_tests<Kokkos::LayoutRight>(10,10);
+  run_fillview_tests<Kokkos::LayoutRight>(10,1);
 }
 
 template<class Layout>
@@ -224,9 +224,9 @@ void run_allocateview_tests(int N, int R) {
 
 TEST_F( default_exec, ViewCreate ) {
   printf("Create View Performance for LayoutLeft:\n");
-  run_allocateview_tests<Kokkos::LayoutLeft>(10,10);
+  run_allocateview_tests<Kokkos::LayoutLeft>(10,1);
   printf("Create View Performance for LayoutRight:\n");
-  run_allocateview_tests<Kokkos::LayoutRight>(10,10);
+  run_allocateview_tests<Kokkos::LayoutRight>(10,1);
 }
 
 template<class ViewTypeA, class ViewTypeB>
@@ -318,13 +318,13 @@ void run_deepcopyview_tests(int N, int R) {
 
 TEST_F( default_exec, ViewDeepCopy ) {
   printf("DeepCopy Performance for LayoutLeft to LayoutLeft:\n");
-  run_deepcopyview_tests<Kokkos::LayoutLeft,Kokkos::LayoutLeft>(10,10);
+  run_deepcopyview_tests<Kokkos::LayoutLeft,Kokkos::LayoutLeft>(10,1);
   printf("DeepCopy Performance for LayoutRight to LayoutRight:\n");
-  run_deepcopyview_tests<Kokkos::LayoutRight,Kokkos::LayoutRight>(10,10);
+  run_deepcopyview_tests<Kokkos::LayoutRight,Kokkos::LayoutRight>(10,1);
   printf("DeepCopy Performance for LayoutLeft to LayoutRight:\n");
-  run_deepcopyview_tests<Kokkos::LayoutLeft,Kokkos::LayoutRight>(10,10);
+  run_deepcopyview_tests<Kokkos::LayoutLeft,Kokkos::LayoutRight>(10,1);
   printf("DeepCopy Performance for LayoutRight to LayoutLeft:\n");
-  run_deepcopyview_tests<Kokkos::LayoutRight,Kokkos::LayoutLeft>(10,10);
+  run_deepcopyview_tests<Kokkos::LayoutRight,Kokkos::LayoutLeft>(10,1);
 }
 
 template<class Layout>
@@ -437,9 +437,9 @@ void run_resizeview_tests(int N, int R) {
 
 TEST_F( default_exec, ViewResize ) {
   printf("Resize View Performance for LayoutLeft:\n");
-  run_resizeview_tests<Kokkos::LayoutLeft>(10,10);
+  run_resizeview_tests<Kokkos::LayoutLeft>(10,1);
   printf("Resize View Performance for LayoutRight:\n");
-  run_resizeview_tests<Kokkos::LayoutRight>(10,10);
+  run_resizeview_tests<Kokkos::LayoutRight>(10,1);
 }
 
 }
