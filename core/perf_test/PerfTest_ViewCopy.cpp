@@ -67,7 +67,7 @@ void run_fillview_tests(int N, int R) {
   const int N4 = N2*N2;
   const int N8 = N4*N4;
 
-  double time1,time2,time3,time4,time5,time6,time7,time8,time_raw;
+  double time1,time2,time3,time4,time5,time6,time7,time8,time_raw = 100000.0;
   {
     Kokkos::View<double*,Layout> a("A1",N8);
     time1 = fill_view(a,1.1,R)/R;
@@ -140,7 +140,7 @@ void run_allocateview_tests(int N, int R) {
   const int N4 = N2*N2;
   const int N8 = N4*N4;
 
-  double time1,time2,time3,time4,time5,time6,time7,time8,time_raw;
+  double time1,time2,time3,time4,time5,time6,time7,time8,time_raw = 100000.0;
   {
     Kokkos::Timer timer;
     for(int r=0; r<R; r++) {
@@ -248,7 +248,7 @@ void run_deepcopyview_tests(int N, int R) {
   const int N4 = N2*N2;
   const int N8 = N4*N4;
 
-  double time1,time2,time3,time4,time5,time6,time7,time8,time_raw;
+  double time1,time2,time3,time4,time5,time6,time7,time8,time_raw = 100000.0;
   {
     Kokkos::View<double*,LayoutA> a("A1",N8);
     Kokkos::View<double*,LayoutB> b("B1",N8);
@@ -335,7 +335,7 @@ void run_resizeview_tests(int N, int R) {
   const int N4 = N2*N2;
   const int N8 = N4*N4;
 
-  double time1,time2,time3,time4,time5,time6,time7,time8,time_raw;
+  double time1,time2,time3,time4,time5,time6,time7,time8,time_raw = 100000.0;
   {
     Kokkos::View<double*,Layout> a("A1",N8);
     Kokkos::Timer timer;
