@@ -1,3 +1,46 @@
+/*
+//@HEADER
+// ************************************************************************
+//
+//                        Kokkos v. 2.0
+//              Copyright (2014) Sandia Corporation
+//
+// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// the U.S. Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+// 1. Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution.
+//
+// 3. Neither the name of the Corporation nor the names of the
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
+//
+// ************************************************************************
+//@HEADER
+*/
+
 #ifndef KOKKOS_COPYVIEWS_HPP_
 #define KOKKOS_COPYVIEWS_HPP_
 #include <string>
@@ -15,16 +58,16 @@ struct ViewFillLayoutSelector {
 
 template<>
 struct ViewFillLayoutSelector<Kokkos::LayoutLeft> {
-  static const Kokkos::Experimental::Iterate iterate = Kokkos::Experimental::Iterate::Left;
+  static const Kokkos::Iterate iterate = Kokkos::Iterate::Left;
 };
 
 template<>
 struct ViewFillLayoutSelector<Kokkos::LayoutRight> {
-  static const Kokkos::Experimental::Iterate iterate = Kokkos::Experimental::Iterate::Right;
+  static const Kokkos::Iterate iterate = Kokkos::Iterate::Right;
 };
 
-template<class ViewType,class Layout, typename iType>
-struct ViewFill<ViewType,Layout,0,iType> {
+template<class ViewType,class Layout, class ExecSpace,typename iType>
+struct ViewFill<ViewType,Layout,ExecSpace,0,iType> {
 
   typedef typename ViewType::non_const_value_type ST;
 
@@ -34,13 +77,14 @@ struct ViewFill<ViewType,Layout,0,iType> {
 };
 
 
-template<class ViewType,class Layout, typename iType>
-struct ViewFill<ViewType,Layout,1,iType> {
+template<class ViewType,class Layout, class ExecSpace,typename iType>
+struct ViewFill<ViewType,Layout,ExecSpace,1,iType> {
   ViewType a;
   typename ViewType::const_value_type val;
+  typedef Kokkos::RangePolicy<ExecSpace,Kokkos::IndexType<iType>> policy_type;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_):a(a_),val(val_) {
-    Kokkos::parallel_for("Kokkos::ViewFill-1D",a.extent(0),*this);
+    Kokkos::parallel_for("Kokkos::ViewFill-1D",policy_type(0,a.extent(0)),*this);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -49,14 +93,13 @@ struct ViewFill<ViewType,Layout,1,iType> {
   };
 };
 
-template<class ViewType,class Layout, typename iType>
-struct ViewFill<ViewType,Layout,2,iType> {
+template<class ViewType,class Layout, class ExecSpace,typename iType>
+struct ViewFill<ViewType,Layout,ExecSpace,2,iType> {
   ViewType a;
   typename ViewType::const_value_type val;
 
-  typedef typename ViewType::execution_space execution_space;
-  typedef Kokkos::Experimental::Rank<2,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
-  typedef Kokkos::Experimental::MDRangePolicy<execution_space,iterate_type,Kokkos::IndexType<iType>> policy_type;
+  typedef Kokkos::Rank<2,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_):a(a_),val(val_) {
     Kokkos::parallel_for("Kokkos::ViewFill-2D",
@@ -69,14 +112,13 @@ struct ViewFill<ViewType,Layout,2,iType> {
   };
 };
 
-template<class ViewType,class Layout, typename iType>
-struct ViewFill<ViewType,Layout,3,iType> {
+template<class ViewType,class Layout, class ExecSpace,typename iType>
+struct ViewFill<ViewType,Layout,ExecSpace,3,iType> {
   ViewType a;
   typename ViewType::const_value_type val;
 
-  typedef typename ViewType::execution_space execution_space;
-  typedef Kokkos::Experimental::Rank<3,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
-  typedef Kokkos::Experimental::MDRangePolicy<execution_space,iterate_type,Kokkos::IndexType<iType>> policy_type;
+  typedef Kokkos::Rank<3,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_):a(a_),val(val_) {
     Kokkos::parallel_for("Kokkos::ViewFill-3D",
@@ -89,14 +131,13 @@ struct ViewFill<ViewType,Layout,3,iType> {
   };
 };
 
-template<class ViewType,class Layout, typename iType>
-struct ViewFill<ViewType,Layout,4,iType> {
+template<class ViewType,class Layout, class ExecSpace,typename iType>
+struct ViewFill<ViewType,Layout,ExecSpace,4,iType> {
   ViewType a;
   typename ViewType::const_value_type val;
 
-  typedef typename ViewType::execution_space execution_space;
-  typedef Kokkos::Experimental::Rank<4,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
-  typedef Kokkos::Experimental::MDRangePolicy<execution_space,iterate_type,Kokkos::IndexType<iType>> policy_type;
+  typedef Kokkos::Rank<4,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_):a(a_),val(val_) {
     Kokkos::parallel_for("Kokkos::ViewFill-4D",
@@ -109,14 +150,13 @@ struct ViewFill<ViewType,Layout,4,iType> {
   };
 };
 
-template<class ViewType,class Layout, typename iType>
-struct ViewFill<ViewType,Layout,5,iType> {
+template<class ViewType,class Layout, class ExecSpace,typename iType>
+struct ViewFill<ViewType,Layout,ExecSpace,5,iType> {
   ViewType a;
   typename ViewType::const_value_type val;
 
-  typedef typename ViewType::execution_space execution_space;
-  typedef Kokkos::Experimental::Rank<5,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
-  typedef Kokkos::Experimental::MDRangePolicy<execution_space,iterate_type,Kokkos::IndexType<iType>> policy_type;
+  typedef Kokkos::Rank<5,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_):a(a_),val(val_) {
     Kokkos::parallel_for("Kokkos::ViewFill-5D",
@@ -129,14 +169,13 @@ struct ViewFill<ViewType,Layout,5,iType> {
   };
 };
 
-template<class ViewType,class Layout, typename iType>
-struct ViewFill<ViewType,Layout,6,iType> {
+template<class ViewType,class Layout, class ExecSpace,typename iType>
+struct ViewFill<ViewType,Layout,ExecSpace,6,iType> {
   ViewType a;
   typename ViewType::const_value_type val;
 
-  typedef typename ViewType::execution_space execution_space;
-  typedef Kokkos::Experimental::Rank<6,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
-  typedef Kokkos::Experimental::MDRangePolicy<execution_space,iterate_type,Kokkos::IndexType<iType>> policy_type;
+  typedef Kokkos::Rank<6,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_):a(a_),val(val_) {
     Kokkos::parallel_for("Kokkos::ViewFill-6D",
@@ -149,14 +188,13 @@ struct ViewFill<ViewType,Layout,6,iType> {
   };
 };
 
-template<class ViewType,class Layout, typename iType>
-struct ViewFill<ViewType,Layout,7,iType> {
+template<class ViewType,class Layout, class ExecSpace,typename iType>
+struct ViewFill<ViewType,Layout,ExecSpace,7,iType> {
   ViewType a;
   typename ViewType::const_value_type val;
 
-  typedef typename ViewType::execution_space execution_space;
-  typedef Kokkos::Experimental::Rank<6,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
-  typedef Kokkos::Experimental::MDRangePolicy<execution_space,iterate_type,Kokkos::IndexType<iType>> policy_type;
+  typedef Kokkos::Rank<6,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_):a(a_),val(val_) {
     Kokkos::parallel_for("Kokkos::ViewFill-7D",
@@ -172,14 +210,13 @@ struct ViewFill<ViewType,Layout,7,iType> {
   };
 };
 
-template<class ViewType,class Layout, typename iType>
-struct ViewFill<ViewType,Layout,8,iType> {
+template<class ViewType,class Layout, class ExecSpace,typename iType>
+struct ViewFill<ViewType,Layout,ExecSpace,8,iType> {
   ViewType a;
   typename ViewType::const_value_type val;
 
-  typedef typename ViewType::execution_space execution_space;
-  typedef Kokkos::Experimental::Rank<6,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
-  typedef Kokkos::Experimental::MDRangePolicy<execution_space,iterate_type,Kokkos::IndexType<iType>> policy_type;
+  typedef Kokkos::Rank<6,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_):a(a_),val(val_) {
     Kokkos::parallel_for("Kokkos::ViewFill-8D",
@@ -194,6 +231,762 @@ struct ViewFill<ViewType,Layout,8,iType> {
     for(iType i4=0; i4<a.extent(4);i4++)
       a(i0,i1,i2,i3,i4,i5,i6,i7) = val;
   };
+};
+
+template<class ViewTypeA,class ViewTypeB, class Layout, class ExecSpace,typename iType>
+struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,1,iType> {
+  ViewTypeA a;
+  ViewTypeB b;
+
+  typedef Kokkos::RangePolicy<ExecSpace,Kokkos::IndexType<iType>> policy_type;
+
+  ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
+    Kokkos::parallel_for("Kokkos::ViewCopy-2D",
+       policy_type(0,a.extent(0)),*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator() (const iType& i0) const {
+      a(i0) = b(i0);
+  };
+};
+
+template<class ViewTypeA,class ViewTypeB, class Layout, class ExecSpace,typename iType>
+struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,2,iType> {
+  ViewTypeA a;
+  ViewTypeB b;
+
+  typedef Kokkos::Rank<2,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
+
+  ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
+    Kokkos::parallel_for("Kokkos::ViewCopy-2D",
+       policy_type({0,0},{a.extent(0),a.extent(1)}),*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator() (const iType& i0, const iType& i1) const {
+      a(i0,i1) = b(i0,i1);
+  };
+};
+
+template<class ViewTypeA,class ViewTypeB, class Layout, class ExecSpace,typename iType>
+struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,3,iType> {
+  ViewTypeA a;
+  ViewTypeB b;
+
+  typedef Kokkos::Rank<3,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
+
+  ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
+    Kokkos::parallel_for("Kokkos::ViewCopy-3D",
+       policy_type({0,0,0},{a.extent(0),a.extent(1),a.extent(2)}),*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator() (const iType& i0, const iType& i1, const iType& i2) const {
+      a(i0,i1,i2) = b(i0,i1,i2);
+  };
+};
+
+template<class ViewTypeA,class ViewTypeB, class Layout, class ExecSpace,typename iType>
+struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,4,iType> {
+  ViewTypeA a;
+  ViewTypeB b;
+
+  typedef Kokkos::Rank<4,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
+
+  ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
+    Kokkos::parallel_for("Kokkos::ViewCopy-4D",
+       policy_type({0,0,0,0},{a.extent(0),a.extent(1),a.extent(2),
+                              a.extent(3)}),*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator() (const iType& i0, const iType& i1, const iType& i2,
+                   const iType& i3) const {
+      a(i0,i1,i2,i3) = b(i0,i1,i2,i3);
+  };
+};
+
+template<class ViewTypeA,class ViewTypeB, class Layout, class ExecSpace,typename iType>
+struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,5,iType> {
+  ViewTypeA a;
+  ViewTypeB b;
+
+  typedef Kokkos::Rank<5,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
+
+  ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
+    Kokkos::parallel_for("Kokkos::ViewCopy-5D",
+       policy_type({0,0,0,0,0},{a.extent(0),a.extent(1),a.extent(2),
+                                a.extent(3),a.extent(4)}),*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator() (const iType& i0, const iType& i1, const iType& i2,
+                   const iType& i3, const iType& i4) const {
+      a(i0,i1,i2,i3,i4) = b(i0,i1,i2,i3,i4);
+  };
+};
+
+template<class ViewTypeA,class ViewTypeB, class Layout, class ExecSpace,typename iType>
+struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,6,iType> {
+  ViewTypeA a;
+  ViewTypeB b;
+
+  typedef Kokkos::Rank<6,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
+
+  ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
+    Kokkos::parallel_for("Kokkos::ViewCopy-6D",
+       policy_type({0,0,0,0,0,0},{a.extent(0),a.extent(1),a.extent(2),
+                                  a.extent(3),a.extent(4),a.extent(5)}),*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator() (const iType& i0, const iType& i1, const iType& i2,
+                   const iType& i3, const iType& i4, const iType& i5) const {
+      a(i0,i1,i2,i3,i4,i5) = b(i0,i1,i2,i3,i4,i5);
+  };
+};
+
+
+template<class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,typename iType>
+struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,7,iType> {
+  ViewTypeA a;
+  ViewTypeB b;
+
+  typedef Kokkos::Rank<6,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
+
+  ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
+    Kokkos::parallel_for("Kokkos::ViewCopy-7D",
+       policy_type({0,0,0,0,0,0},{a.extent(0),a.extent(1),a.extent(3),
+                                  a.extent(4),a.extent(5),a.extent(6)}),*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator() (const iType& i0, const iType& i1, const iType& i3,
+                   const iType& i4, const iType& i5, const iType& i6) const {
+    for(iType i2=0; i2<a.extent(2);i2++)
+      a(i0,i1,i2,i3,i4,i5,i6) = b(i0,i1,i2,i3,i4,i5,i6);
+  };
+};
+
+template<class ViewTypeA,class ViewTypeB, class Layout, class ExecSpace,typename iType>
+struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,8,iType> {
+  ViewTypeA a;
+  ViewTypeB b;
+
+  typedef Kokkos::Rank<6,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
+
+  ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
+    Kokkos::parallel_for("Kokkos::ViewCopy-8D",
+       policy_type({0,0,0,0,0,0},{a.extent(0),a.extent(1),a.extent(3),
+                                  a.extent(5),a.extent(6),a.extent(7)}),*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator() (const iType& i0, const iType& i1, const iType& i3,
+                   const iType& i5, const iType& i6, const iType& i7) const {
+    for(iType i2=0; i2<a.extent(2);i2++)
+    for(iType i4=0; i4<a.extent(4);i4++)
+      a(i0,i1,i2,i3,i4,i5,i6,i7) = b(i0,i1,i2,i3,i4,i5,i6,i7);
+  };
+};
+
+
+template<class DstType, class SrcType>
+void view_copy(const DstType& dst, const SrcType& src) {
+  typedef typename DstType::execution_space dst_execution_space;
+  typedef typename SrcType::execution_space src_execution_space;
+  typedef typename DstType::memory_space dst_memory_space;
+  typedef typename SrcType::memory_space src_memory_space;
+
+  enum { DstExecCanAccessSrc =
+   Kokkos::Impl::SpaceAccessibility< dst_execution_space , src_memory_space >::accessible };
+
+  enum { SrcExecCanAccessDst =
+   Kokkos::Impl::SpaceAccessibility< src_execution_space , dst_memory_space >::accessible };
+
+  if( ! DstExecCanAccessSrc && ! SrcExecCanAccessDst) {
+    std::string message("Error: Kokkos::deep_copy with no available copy mechanism: ");
+    message += src.label(); message += " to ";
+    message += dst.label();
+    Kokkos::Impl::throw_runtime_exception(message);
+  }
+
+  // Figure out iteration order in case we need it
+  int64_t strides[DstType::Rank+1];
+  dst.stride(strides);
+  Kokkos::Iterate iterate;
+  if        ( std::is_same<typename DstType::array_layout,Kokkos::LayoutRight>::value ) {
+    iterate = Kokkos::Iterate::Right;
+  } else if ( std::is_same<typename DstType::array_layout,Kokkos::LayoutLeft>::value ) {
+    iterate = Kokkos::Iterate::Left;
+  } else if ( std::is_same<typename DstType::array_layout,Kokkos::LayoutStride>::value ) {
+    if( strides[0] > strides[DstType::Rank-1] )
+      iterate = Kokkos::Iterate::Right;
+    else
+      iterate = Kokkos::Iterate::Left;
+  } else {
+    if( std::is_same<typename DstType::execution_space::array_layout, Kokkos::LayoutRight>::value )
+      iterate = Kokkos::Iterate::Right;
+    else
+      iterate = Kokkos::Iterate::Left;
+  }
+
+  if( (dst.span() >= std::numeric_limits<int>::max()) ||
+      (src.span() >= std::numeric_limits<int>::max()) ){
+    if(DstExecCanAccessSrc) {
+      if(iterate == Kokkos::Iterate::Right)
+        Kokkos::Impl::ViewCopy< DstType, SrcType, Kokkos::LayoutRight, dst_execution_space,
+                                DstType::Rank, int64_t >( dst , src );
+      else
+        Kokkos::Impl::ViewCopy< DstType, SrcType, Kokkos::LayoutLeft, dst_execution_space,
+                                DstType::Rank, int64_t >( dst , src );
+    } else {
+      if(iterate == Kokkos::Iterate::Right)
+        Kokkos::Impl::ViewCopy< DstType, SrcType, Kokkos::LayoutRight, src_execution_space,
+                                DstType::Rank, int64_t >( dst , src );
+      else
+        Kokkos::Impl::ViewCopy< DstType, SrcType, Kokkos::LayoutLeft, src_execution_space,
+                                DstType::Rank, int64_t >( dst , src );
+    }
+  } else {
+    if(DstExecCanAccessSrc) {
+      if(iterate == Kokkos::Iterate::Right)
+        Kokkos::Impl::ViewCopy< DstType, SrcType, Kokkos::LayoutRight, dst_execution_space,
+                                DstType::Rank, int >( dst , src );
+      else
+        Kokkos::Impl::ViewCopy< DstType, SrcType, Kokkos::LayoutLeft, dst_execution_space,
+                                DstType::Rank, int >( dst , src );
+    } else {
+      if(iterate == Kokkos::Iterate::Right)
+        Kokkos::Impl::ViewCopy< DstType, SrcType, Kokkos::LayoutRight, src_execution_space,
+                                DstType::Rank, int >( dst , src );
+      else
+        Kokkos::Impl::ViewCopy< DstType, SrcType, Kokkos::LayoutLeft, src_execution_space,
+                                DstType::Rank, int >( dst , src );
+    }
+
+  }
+}
+
+template<class DstType, class SrcType, int Rank, class ... Args>
+struct CommonSubview;
+
+template<class DstType, class SrcType, class Arg0, class ... Args>
+struct CommonSubview<DstType,SrcType,1,Arg0,Args...> {
+  typedef typename Kokkos::Subview<DstType,Arg0> dst_subview_type;
+  typedef typename Kokkos::Subview<SrcType,Arg0> src_subview_type;
+  dst_subview_type dst_sub;
+  src_subview_type src_sub;
+  CommonSubview(const DstType& dst, const SrcType& src, const Arg0& arg0, Args... ):
+    dst_sub(dst,arg0),src_sub(src,arg0) {}
+};
+
+template<class DstType, class SrcType, class Arg0, class Arg1, class ... Args>
+struct CommonSubview<DstType,SrcType,2,Arg0,Arg1,Args...> {
+  typedef typename Kokkos::Subview<DstType,Arg0,Arg1> dst_subview_type;
+  typedef typename Kokkos::Subview<SrcType,Arg0,Arg1> src_subview_type;
+  dst_subview_type dst_sub;
+  src_subview_type src_sub;
+  CommonSubview(const DstType& dst, const SrcType& src, const Arg0& arg0, const Arg1& arg1, Args... ):
+    dst_sub(dst,arg0,arg1),src_sub(src,arg0,arg1) {}
+};
+
+template<class DstType, class SrcType, class Arg0, class Arg1, class Arg2, class ... Args>
+struct CommonSubview<DstType,SrcType,3,Arg0,Arg1,Arg2,Args...> {
+  typedef typename Kokkos::Subview<DstType,Arg0,Arg1,Arg2> dst_subview_type;
+  typedef typename Kokkos::Subview<SrcType,Arg0,Arg1,Arg2> src_subview_type;
+  dst_subview_type dst_sub;
+  src_subview_type src_sub;
+  CommonSubview(const DstType& dst, const SrcType& src, const Arg0& arg0, const Arg1& arg1,
+                const Arg2& arg2, Args... ):
+    dst_sub(dst,arg0,arg1,arg2),src_sub(src,arg0,arg1,arg2) {}
+};
+
+template<class DstType, class SrcType, class Arg0, class Arg1, class Arg2, class Arg3,
+         class ... Args>
+struct CommonSubview<DstType,SrcType,4,Arg0,Arg1,Arg2,Arg3,Args...> {
+  typedef typename Kokkos::Subview<DstType,Arg0,Arg1,Arg2,Arg3> dst_subview_type;
+  typedef typename Kokkos::Subview<SrcType,Arg0,Arg1,Arg2,Arg3> src_subview_type;
+  dst_subview_type dst_sub;
+  src_subview_type src_sub;
+  CommonSubview(const DstType& dst, const SrcType& src, const Arg0& arg0, const Arg1& arg1,
+                const Arg2& arg2, const Arg3& arg3,
+                const Args ...):
+    dst_sub(dst,arg0,arg1,arg2,arg3),src_sub(src,arg0,arg1,arg2,arg3) {}
+};
+
+template<class DstType, class SrcType, class Arg0, class Arg1, class Arg2, class Arg3,
+         class Arg4, class ... Args>
+struct CommonSubview<DstType,SrcType,5,Arg0,Arg1,Arg2,Arg3,Arg4,Args...> {
+  typedef typename Kokkos::Subview<DstType,Arg0,Arg1,Arg2,Arg3,Arg4> dst_subview_type;
+  typedef typename Kokkos::Subview<SrcType,Arg0,Arg1,Arg2,Arg3,Arg4> src_subview_type;
+  dst_subview_type dst_sub;
+  src_subview_type src_sub;
+  CommonSubview(const DstType& dst, const SrcType& src, const Arg0& arg0, const Arg1& arg1,
+                const Arg2& arg2, const Arg3& arg3, const Arg4& arg4,
+                const Args ...):
+    dst_sub(dst,arg0,arg1,arg2,arg3,arg4),src_sub(src,arg0,arg1,arg2,arg3,arg4) {}
+};
+
+template<class DstType, class SrcType, class Arg0, class Arg1, class Arg2, class Arg3,
+         class Arg4, class Arg5, class ... Args>
+struct CommonSubview<DstType,SrcType,6,Arg0,Arg1,Arg2,Arg3,Arg4,Arg5,Args...> {
+  typedef typename Kokkos::Subview<DstType,Arg0,Arg1,Arg2,Arg3,Arg4,Arg5> dst_subview_type;
+  typedef typename Kokkos::Subview<SrcType,Arg0,Arg1,Arg2,Arg3,Arg4,Arg5> src_subview_type;
+  dst_subview_type dst_sub;
+  src_subview_type src_sub;
+  CommonSubview(const DstType& dst, const SrcType& src, const Arg0& arg0, const Arg1& arg1,
+                const Arg2& arg2, const Arg3& arg3, const Arg4& arg4, const Arg5& arg5,
+                const Args ...):
+    dst_sub(dst,arg0,arg1,arg2,arg3,arg4,arg5),src_sub(src,arg0,arg1,arg2,arg3,arg4,arg5) {}
+};
+
+template<class DstType, class SrcType, class Arg0, class Arg1, class Arg2, class Arg3,
+         class Arg4, class Arg5, class Arg6, class ...Args>
+struct CommonSubview<DstType,SrcType,7,Arg0,Arg1,Arg2,Arg3,Arg4,Arg5,Arg6,Args...> {
+  typedef typename Kokkos::Subview<DstType,Arg0,Arg1,Arg2,Arg3,Arg4,Arg5,Arg6> dst_subview_type;
+  typedef typename Kokkos::Subview<SrcType,Arg0,Arg1,Arg2,Arg3,Arg4,Arg5,Arg6> src_subview_type;
+  dst_subview_type dst_sub;
+  src_subview_type src_sub;
+  CommonSubview(const DstType& dst, const SrcType& src, const Arg0& arg0, const Arg1& arg1,
+                const Arg2& arg2, const Arg3& arg3, const Arg4& arg4, const Arg5& arg5,
+                const Arg6& arg6, Args...):
+    dst_sub(dst,arg0,arg1,arg2,arg3,arg4,arg5,arg6),src_sub(src,arg0,arg1,arg2,arg3,arg4,arg5,arg6) {}
+};
+
+template<class DstType, class SrcType, class Arg0, class Arg1, class Arg2, class Arg3,
+         class Arg4, class Arg5, class Arg6, class Arg7>
+struct CommonSubview<DstType,SrcType,8,Arg0,Arg1,Arg2,Arg3,Arg4,Arg5,Arg6,Arg7> {
+  typedef typename Kokkos::Subview<DstType,Arg0,Arg1,Arg2,Arg3,Arg4,Arg5,Arg6,Arg7> dst_subview_type;
+  typedef typename Kokkos::Subview<SrcType,Arg0,Arg1,Arg2,Arg3,Arg4,Arg5,Arg6,Arg7> src_subview_type;
+  dst_subview_type dst_sub;
+  src_subview_type src_sub;
+  CommonSubview(const DstType& dst, const SrcType& src, const Arg0& arg0, const Arg1& arg1,
+                const Arg2& arg2, const Arg3& arg3, const Arg4& arg4, const Arg5& arg5,
+                const Arg6& arg6, const Arg7& arg7):
+    dst_sub(dst,arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7),src_sub(src,arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7) {}
+};
+
+
+template<class DstType, class SrcType, class ExecSpace = typename DstType::execution_space, int Rank = DstType::Rank>
+struct ViewRemap;
+
+template<class DstType, class SrcType, class ExecSpace>
+struct ViewRemap<DstType,SrcType,ExecSpace,1> {
+  typedef Kokkos::pair<int64_t,int64_t> p_type;
+
+  ViewRemap(const DstType& dst, const SrcType& src) {
+    if(dst.extent(0) == src.extent(0)) {
+      view_copy(dst,src);
+    } else {
+      p_type ext0(0,std::min(dst.extent(0),src.extent(0)));
+      typedef CommonSubview<DstType,SrcType,1,p_type> sv_adapter_type;
+      sv_adapter_type common_subview(dst,src,ext0);
+      view_copy(common_subview.dst_sub,common_subview.src_sub);
+    }
+  }
+};
+
+template<class DstType, class SrcType, class ExecSpace>
+struct ViewRemap<DstType,SrcType,ExecSpace,2> {
+  typedef Kokkos::pair<int64_t,int64_t> p_type;
+
+  ViewRemap(const DstType& dst, const SrcType& src) {
+    if(dst.extent(0) == src.extent(0)) {
+      if(dst.extent(1) == src.extent(1)) {
+        view_copy(dst,src);
+      } else {
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        typedef CommonSubview<DstType,SrcType,2,Kokkos::Impl::ALL_t,p_type> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,Kokkos::ALL,ext1);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      }
+    } else {
+      if(dst.extent(1) == src.extent(1)) {
+        p_type ext0(0,std::min(dst.extent(0),src.extent(0)));
+        typedef CommonSubview<DstType,SrcType,2,p_type,Kokkos::Impl::ALL_t> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,ext0,Kokkos::ALL);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      } else {
+        p_type ext0(0,std::min(dst.extent(0),src.extent(0)));
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        typedef CommonSubview<DstType,SrcType,2,p_type,p_type> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,ext0,ext1);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      }
+    }
+  }
+};
+
+template<class DstType, class SrcType, class ExecSpace>
+struct ViewRemap<DstType,SrcType,ExecSpace,3> {
+  typedef Kokkos::pair<int64_t,int64_t> p_type;
+
+  ViewRemap(const DstType& dst, const SrcType& src) {
+    if(dst.extent(0) == src.extent(0)) {
+      if(dst.extent(2) == src.extent(2)) {
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        typedef CommonSubview<DstType,SrcType,3,Kokkos::Impl::ALL_t,p_type,Kokkos::Impl::ALL_t> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,Kokkos::ALL,ext1,Kokkos::ALL);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      } else {
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        typedef CommonSubview<DstType,SrcType,3,Kokkos::Impl::ALL_t,p_type,p_type> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,Kokkos::ALL,ext1,ext2);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      }
+    } else {
+      if(dst.extent(2) == src.extent(2)) {
+        p_type ext0(0,std::min(dst.extent(0),src.extent(0)));
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        typedef CommonSubview<DstType,SrcType,3,p_type,p_type,Kokkos::Impl::ALL_t> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,ext0,ext1,Kokkos::ALL);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      } else {
+        p_type ext0(0,std::min(dst.extent(0),src.extent(0)));
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        typedef CommonSubview<DstType,SrcType,3,p_type,p_type,p_type> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,ext0,ext1,ext2);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      }
+    }
+  }
+};
+
+template<class DstType, class SrcType, class ExecSpace>
+struct ViewRemap<DstType,SrcType,ExecSpace,4> {
+  typedef Kokkos::pair<int64_t,int64_t> p_type;
+
+  ViewRemap(const DstType& dst, const SrcType& src) {
+    if(dst.extent(0) == src.extent(0)) {
+      if(dst.extent(3) == src.extent(3)) {
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        typedef CommonSubview<DstType,SrcType,4,Kokkos::Impl::ALL_t,
+                              p_type,p_type,
+                              Kokkos::Impl::ALL_t> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,Kokkos::ALL,
+                                       ext1,ext2,
+                                       Kokkos::ALL);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      } else {
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        typedef CommonSubview<DstType,SrcType,4,Kokkos::Impl::ALL_t,
+                              p_type,p_type,
+                              p_type> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,Kokkos::ALL,
+                                       ext1,ext2,
+                                       ext3);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      }
+    } else {
+      if(dst.extent(7) == src.extent(7)) {
+        p_type ext0(0,std::min(dst.extent(0),src.extent(0)));
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        typedef CommonSubview<DstType,SrcType,4,p_type,
+                              p_type,p_type,
+                              Kokkos::Impl::ALL_t> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,ext0,
+                                       ext1,ext2,
+                                       Kokkos::ALL);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      } else {
+        p_type ext0(0,std::min(dst.extent(0),src.extent(0)));
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        typedef CommonSubview<DstType,SrcType,4,p_type,
+                              p_type,p_type,
+                              p_type> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,ext0,
+                                       ext1,ext2,
+                                       ext3);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      }
+    }
+  }
+};
+
+template<class DstType, class SrcType, class ExecSpace>
+struct ViewRemap<DstType,SrcType,ExecSpace,5> {
+  typedef Kokkos::pair<int64_t,int64_t> p_type;
+
+  ViewRemap(const DstType& dst, const SrcType& src) {
+    if(dst.extent(0) == src.extent(0)) {
+      if(dst.extent(4) == src.extent(4)) {
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        typedef CommonSubview<DstType,SrcType,5,Kokkos::Impl::ALL_t,
+                              p_type,p_type,p_type,
+                              Kokkos::Impl::ALL_t> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,Kokkos::ALL,
+                                       ext1,ext2,ext3,
+                                       Kokkos::ALL);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      } else {
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        p_type ext4(0,std::min(dst.extent(4),src.extent(4)));
+        typedef CommonSubview<DstType,SrcType,5,Kokkos::Impl::ALL_t,
+                              p_type,p_type,p_type,
+                              p_type> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,Kokkos::ALL,
+                                       ext1,ext2,ext3,
+                                       ext4);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      }
+    } else {
+      if(dst.extent(4) == src.extent(4)) {
+        p_type ext0(0,std::min(dst.extent(0),src.extent(0)));
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        typedef CommonSubview<DstType,SrcType,5,p_type,
+                              p_type,p_type,p_type,
+                              Kokkos::Impl::ALL_t> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,ext0,
+                                       ext1,ext2,ext3,
+                                       Kokkos::ALL);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      } else {
+        p_type ext0(0,std::min(dst.extent(0),src.extent(0)));
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        p_type ext4(0,std::min(dst.extent(4),src.extent(4)));
+        typedef CommonSubview<DstType,SrcType,5,p_type,
+                              p_type,p_type,p_type,
+                              p_type> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,ext0,
+                                       ext1,ext2,ext3,
+                                       ext4);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      }
+    }
+  }
+};
+template<class DstType, class SrcType, class ExecSpace>
+struct ViewRemap<DstType,SrcType,ExecSpace,6> {
+  typedef Kokkos::pair<int64_t,int64_t> p_type;
+
+  ViewRemap(const DstType& dst, const SrcType& src) {
+    if(dst.extent(0) == src.extent(0)) {
+      if(dst.extent(5) == src.extent(5)) {
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        p_type ext4(0,std::min(dst.extent(4),src.extent(4)));
+        typedef CommonSubview<DstType,SrcType,6,Kokkos::Impl::ALL_t,
+                              p_type,p_type,p_type,p_type,
+                              Kokkos::Impl::ALL_t> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,Kokkos::ALL,
+                                       ext1,ext2,ext3,ext4,
+                                       Kokkos::ALL);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      } else {
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        p_type ext4(0,std::min(dst.extent(4),src.extent(4)));
+        p_type ext5(0,std::min(dst.extent(5),src.extent(5)));
+        typedef CommonSubview<DstType,SrcType,6,Kokkos::Impl::ALL_t,
+                              p_type,p_type,p_type,p_type,
+                              p_type> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,Kokkos::ALL,
+                                       ext1,ext2,ext3,ext4,
+                                       ext5);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      }
+    } else {
+      if(dst.extent(5) == src.extent(5)) {
+        p_type ext0(0,std::min(dst.extent(0),src.extent(0)));
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        p_type ext4(0,std::min(dst.extent(4),src.extent(4)));
+
+        typedef CommonSubview<DstType,SrcType,6,p_type,
+                              p_type,p_type,p_type,p_type,
+                              Kokkos::Impl::ALL_t> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,ext0,
+                                       ext1,ext2,ext3,ext4,
+                                       Kokkos::ALL);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      } else {
+        p_type ext0(0,std::min(dst.extent(0),src.extent(0)));
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        p_type ext4(0,std::min(dst.extent(4),src.extent(4)));
+        p_type ext5(0,std::min(dst.extent(5),src.extent(5)));
+
+        typedef CommonSubview<DstType,SrcType,6,p_type,
+                              p_type,p_type,p_type,p_type,
+                              p_type> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,ext0,
+                                       ext1,ext2,ext3,ext4,
+                                       ext5);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      }
+    }
+  }
+};
+
+template<class DstType, class SrcType, class ExecSpace>
+struct ViewRemap<DstType,SrcType,ExecSpace,7> {
+  typedef Kokkos::pair<int64_t,int64_t> p_type;
+
+  ViewRemap(const DstType& dst, const SrcType& src) {
+    if(dst.extent(0) == src.extent(0)) {
+      if(dst.extent(6) == src.extent(6)) {
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        p_type ext4(0,std::min(dst.extent(4),src.extent(4)));
+        p_type ext5(0,std::min(dst.extent(5),src.extent(5)));
+        typedef CommonSubview<DstType,SrcType,7,Kokkos::Impl::ALL_t,
+                              p_type,p_type,p_type,p_type,p_type,
+                              Kokkos::Impl::ALL_t> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,Kokkos::ALL,
+                                       ext1,ext2,ext3,ext4,ext5,
+                                       Kokkos::ALL);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      } else {
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        p_type ext4(0,std::min(dst.extent(4),src.extent(4)));
+        p_type ext5(0,std::min(dst.extent(5),src.extent(5)));
+        p_type ext6(0,std::min(dst.extent(6),src.extent(6)));
+        typedef CommonSubview<DstType,SrcType,7,Kokkos::Impl::ALL_t,
+                              p_type,p_type,p_type,p_type,p_type,
+                              p_type> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,Kokkos::ALL,
+                                       ext1,ext2,ext3,ext4,ext5,
+                                       ext6);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      }
+    } else {
+      if(dst.extent(6) == src.extent(6)) {
+        p_type ext0(0,std::min(dst.extent(0),src.extent(0)));
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        p_type ext4(0,std::min(dst.extent(4),src.extent(4)));
+        p_type ext5(0,std::min(dst.extent(5),src.extent(5)));
+        typedef CommonSubview<DstType,SrcType,7,p_type,
+                              p_type,p_type,p_type,p_type,p_type,
+                              Kokkos::Impl::ALL_t> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,ext0,
+                                       ext1,ext2,ext3,ext4,ext5,
+                                       Kokkos::ALL);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      } else {
+        p_type ext0(0,std::min(dst.extent(0),src.extent(0)));
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        p_type ext4(0,std::min(dst.extent(4),src.extent(4)));
+        p_type ext5(0,std::min(dst.extent(5),src.extent(5)));
+        p_type ext6(0,std::min(dst.extent(6),src.extent(6)));
+        typedef CommonSubview<DstType,SrcType,7,p_type,
+                              p_type,p_type,p_type,p_type,p_type,
+                              p_type> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,ext0,
+                                       ext1,ext2,ext3,ext4,ext5,
+                                       ext6);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      }
+    }
+  }
+};
+
+template<class DstType, class SrcType, class ExecSpace>
+struct ViewRemap<DstType,SrcType,ExecSpace,8> {
+  typedef Kokkos::pair<int64_t,int64_t> p_type;
+
+  ViewRemap(const DstType& dst, const SrcType& src) {
+    if(dst.extent(0) == src.extent(0)) {
+      if(dst.extent(7) == src.extent(7)) {
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        p_type ext4(0,std::min(dst.extent(4),src.extent(4)));
+        p_type ext5(0,std::min(dst.extent(5),src.extent(5)));
+        p_type ext6(0,std::min(dst.extent(6),src.extent(6)));
+        typedef CommonSubview<DstType,SrcType,8,Kokkos::Impl::ALL_t,
+                              p_type,p_type,p_type,p_type,p_type,p_type,
+                              Kokkos::Impl::ALL_t> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,Kokkos::ALL,
+                                       ext1,ext2,ext3,ext4,ext5,ext6,
+                                       Kokkos::ALL);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      } else {
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        p_type ext4(0,std::min(dst.extent(4),src.extent(4)));
+        p_type ext5(0,std::min(dst.extent(5),src.extent(5)));
+        p_type ext6(0,std::min(dst.extent(6),src.extent(6)));
+        p_type ext7(0,std::min(dst.extent(7),src.extent(7)));
+        typedef CommonSubview<DstType,SrcType,8,Kokkos::Impl::ALL_t,
+                              p_type,p_type,p_type,p_type,p_type,p_type,
+                              p_type> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,Kokkos::ALL,
+                                       ext1,ext2,ext3,ext4,ext5,ext6,
+                                       ext7);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      }
+    } else {
+      if(dst.extent(7) == src.extent(7)) {
+        p_type ext0(0,std::min(dst.extent(0),src.extent(0)));
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        p_type ext4(0,std::min(dst.extent(4),src.extent(4)));
+        p_type ext5(0,std::min(dst.extent(5),src.extent(5)));
+        p_type ext6(0,std::min(dst.extent(6),src.extent(6)));
+        typedef CommonSubview<DstType,SrcType,8,p_type,
+                              p_type,p_type,p_type,p_type,p_type,p_type,
+                              Kokkos::Impl::ALL_t> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,ext0,
+                                       ext1,ext2,ext3,ext4,ext5,ext6,
+                                       Kokkos::ALL);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      } else {
+        p_type ext0(0,std::min(dst.extent(0),src.extent(0)));
+        p_type ext1(0,std::min(dst.extent(1),src.extent(1)));
+        p_type ext2(0,std::min(dst.extent(2),src.extent(2)));
+        p_type ext3(0,std::min(dst.extent(3),src.extent(3)));
+        p_type ext4(0,std::min(dst.extent(4),src.extent(4)));
+        p_type ext5(0,std::min(dst.extent(5),src.extent(5)));
+        p_type ext6(0,std::min(dst.extent(6),src.extent(6)));
+        p_type ext7(0,std::min(dst.extent(7),src.extent(7)));
+        typedef CommonSubview<DstType,SrcType,8,p_type,
+                              p_type,p_type,p_type,p_type,p_type,p_type,
+                              p_type> sv_adapter_type;
+        sv_adapter_type common_subview(dst,src,ext0,
+                                       ext1,ext2,ext3,ext4,ext5,ext6,
+                                       ext7);
+        view_copy(common_subview.dst_sub,common_subview.src_sub);
+      }
+    }
+  }
 };
 
 }
@@ -222,7 +1015,7 @@ void deep_copy
      ViewTypeFlat;
 
     ViewTypeFlat dst_flat(dst.data(),dst.size());
-    Kokkos::Impl::ViewFill< ViewTypeFlat , Kokkos::LayoutLeft, ViewTypeFlat::Rank, int >( dst_flat , value );
+    Kokkos::Impl::ViewFill< ViewTypeFlat , Kokkos::LayoutLeft, typename ViewType::execution_space, ViewTypeFlat::Rank, int >( dst_flat , value );
     return;
   }
 
@@ -232,10 +1025,10 @@ void deep_copy
   Kokkos::Iterate iterate;
   if        ( std::is_same<typename ViewType::array_layout,Kokkos::LayoutRight>::value ) {
     iterate = Kokkos::Iterate::Right;
-  } else if ( std::is_same<typename ViewType::array_layout,Kokkos::LayoutRight>::value ) {
+  } else if ( std::is_same<typename ViewType::array_layout,Kokkos::LayoutLeft>::value ) {
     iterate = Kokkos::Iterate::Left;
   } else if ( std::is_same<typename ViewType::array_layout,Kokkos::LayoutStride>::value ) {
-    if( strides[0] > strides[ViewType::Rank-1] )
+    if( strides[0] > strides[ViewType::Rank>0?ViewType::Rank-1:0] )
       iterate = Kokkos::Iterate::Right;
     else
       iterate = Kokkos::Iterate::Left;
@@ -249,14 +1042,14 @@ void deep_copy
   // Lets call the right ViewFill functor based on integer space needed and iteration type
   if(dst.span() > std::numeric_limits<int>::max()) {
     if(iterate == Kokkos::Iterate::Right)
-      Kokkos::Impl::ViewFill< ViewType, Kokkos::LayoutRight, ViewType::Rank, int64_t >( dst , value );
+      Kokkos::Impl::ViewFill< ViewType, Kokkos::LayoutRight, typename ViewType::execution_space, ViewType::Rank, int64_t >( dst , value );
     else
-      Kokkos::Impl::ViewFill< ViewType, Kokkos::LayoutLeft, ViewType::Rank, int64_t >( dst , value );
+      Kokkos::Impl::ViewFill< ViewType, Kokkos::LayoutLeft, typename ViewType::execution_space, ViewType::Rank, int64_t >( dst , value );
   } else {
     if(iterate == Kokkos::Iterate::Right)
-      Kokkos::Impl::ViewFill< ViewType, Kokkos::LayoutRight, ViewType::Rank, int >( dst , value );
+      Kokkos::Impl::ViewFill< ViewType, Kokkos::LayoutRight, typename ViewType::execution_space, ViewType::Rank, int >( dst , value );
     else
-      Kokkos::Impl::ViewFill< ViewType, Kokkos::LayoutLeft, ViewType::Rank, int >( dst , value );
+      Kokkos::Impl::ViewFill< ViewType, Kokkos::LayoutLeft, typename ViewType::execution_space, ViewType::Rank, int >( dst , value );
   }
 }
 
@@ -433,26 +1226,13 @@ void deep_copy
        dst.stride_6() == src.stride_6() &&
        dst.stride_7() == src.stride_7()
     ) {
-
     const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
-
     Kokkos::Impl::DeepCopy< dst_memory_space , src_memory_space >
       ( dst.data() , src.data() , nbytes );
-  }
-  else if ( DstExecCanAccessSrc ) {
-    // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
+  } else {
     Kokkos::fence();
-    Kokkos::Impl::ViewRemap< dst_type , src_type >( dst , src );
+    Impl::view_copy(dst,src);
     Kokkos::fence();
-  }
-  else if ( SrcExecCanAccessDst ) {
-    // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
-    Kokkos::fence();
-    Kokkos::Impl::ViewRemap< dst_type , src_type , src_execution_space >( dst , src );
-    Kokkos::fence();
-  }
-  else {
-    Kokkos::Impl::throw_runtime_exception("deep_copy given views that would require a temporary allocation");
   }
 }
 
@@ -673,26 +1453,10 @@ void deep_copy
 
     Kokkos::Impl::DeepCopy< dst_memory_space , src_memory_space , ExecSpace >
       ( exec_space , dst.data() , src.data() , nbytes );
-  }
-  else if ( ExecCanAccessSrcDst ) {
-    exec_space.fence();
-    Kokkos::Impl::ViewRemap< dst_type , src_type , ExecSpace >( dst , src );
-    exec_space.fence();
-  }
-  else if ( DstExecCanAccessSrc ) {
-    // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
-    exec_space.fence();
-    Kokkos::Impl::ViewRemap< dst_type , src_type >( dst , src );
-    exec_space.fence();
-  }
-  else if ( SrcExecCanAccessDst ) {
-    // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
-    exec_space.fence();
-    Kokkos::Impl::ViewRemap< dst_type , src_type , src_execution_space >( dst , src );
-    exec_space.fence();
-  }
-  else {
-    Kokkos::Impl::throw_runtime_exception("deep_copy given views that would require a temporary allocation");
+  } else {
+    Kokkos::fence();
+    Impl::view_copy(dst,src);
+    Kokkos::fence();
   }
 }
 

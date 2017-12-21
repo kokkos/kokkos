@@ -305,15 +305,15 @@ void run_deepcopyview_tests(int N, int R) {
   }
   #endif
   double size = 1.0*N8*8/1024/1024;
-  printf("   Raw:   %lf s   %lf MB   %lf GB/s\n",time_raw,size,size/1024/time_raw);
-  printf("   Rank1: %lf s   %lf MB   %lf GB/s\n",time1,size,size/1024/time1);
-  printf("   Rank2: %lf s   %lf MB   %lf GB/s\n",time2,size,size/1024/time2);
-  printf("   Rank3: %lf s   %lf MB   %lf GB/s\n",time3,size,size/1024/time3);
-  printf("   Rank4: %lf s   %lf MB   %lf GB/s\n",time4,size,size/1024/time4);
-  printf("   Rank5: %lf s   %lf MB   %lf GB/s\n",time5,size,size/1024/time5);
-  printf("   Rank6: %lf s   %lf MB   %lf GB/s\n",time6,size,size/1024/time6);
-  printf("   Rank7: %lf s   %lf MB   %lf GB/s\n",time7,size,size/1024/time7);
-  printf("   Rank8: %lf s   %lf MB   %lf GB/s\n",time8,size,size/1024/time8);
+  printf("   Raw:   %lf s   %lf MB   %lf GB/s\n",time_raw,size,2.0*size/1024/time_raw);
+  printf("   Rank1: %lf s   %lf MB   %lf GB/s\n",time1,size,2.0*size/1024/time1);
+  printf("   Rank2: %lf s   %lf MB   %lf GB/s\n",time2,size,2.0*size/1024/time2);
+  printf("   Rank3: %lf s   %lf MB   %lf GB/s\n",time3,size,2.0*size/1024/time3);
+  printf("   Rank4: %lf s   %lf MB   %lf GB/s\n",time4,size,2.0*size/1024/time4);
+  printf("   Rank5: %lf s   %lf MB   %lf GB/s\n",time5,size,2.0*size/1024/time5);
+  printf("   Rank6: %lf s   %lf MB   %lf GB/s\n",time6,size,2.0*size/1024/time6);
+  printf("   Rank7: %lf s   %lf MB   %lf GB/s\n",time7,size,2.0*size/1024/time7);
+  printf("   Rank8: %lf s   %lf MB   %lf GB/s\n",time8,size,2.0*size/1024/time8);
 }
 
 TEST_F( default_exec, ViewDeepCopy ) {
@@ -424,15 +424,15 @@ void run_resizeview_tests(int N, int R) {
   }
   #endif
   double size = 1.0*N8*8/1024/1024;
-  printf("   Raw:   %lf s   %lf MB   %lf GB/s\n",time_raw,size,size/1024/time_raw);
-  printf("   Rank1: %lf s   %lf MB   %lf GB/s\n",time1,size,size/1024/time1);
-  printf("   Rank2: %lf s   %lf MB   %lf GB/s\n",time2,size,size/1024/time2);
-  printf("   Rank3: %lf s   %lf MB   %lf GB/s\n",time3,size,size/1024/time3);
-  printf("   Rank4: %lf s   %lf MB   %lf GB/s\n",time4,size,size/1024/time4);
-  printf("   Rank5: %lf s   %lf MB   %lf GB/s\n",time5,size,size/1024/time5);
-  printf("   Rank6: %lf s   %lf MB   %lf GB/s\n",time6,size,size/1024/time6);
-  printf("   Rank7: %lf s   %lf MB   %lf GB/s\n",time7,size,size/1024/time7);
-  printf("   Rank8: %lf s   %lf MB   %lf GB/s\n",time8,size,size/1024/time8);
+  printf("   Raw:   %lf s   %lf MB   %lf GB/s\n",time_raw,size,2.0*size/1024/time_raw);
+  printf("   Rank1: %lf s   %lf MB   %lf GB/s\n",time1,size,2.0*size/1024/time1);
+  printf("   Rank2: %lf s   %lf MB   %lf GB/s\n",time2,size,2.0*size/1024/time2);
+  printf("   Rank3: %lf s   %lf MB   %lf GB/s\n",time3,size,2.0*size/1024/time3);
+  printf("   Rank4: %lf s   %lf MB   %lf GB/s\n",time4,size,2.0*size/1024/time4);
+  printf("   Rank5: %lf s   %lf MB   %lf GB/s\n",time5,size,2.0*size/1024/time5);
+  printf("   Rank6: %lf s   %lf MB   %lf GB/s\n",time6,size,2.0*size/1024/time6);
+  printf("   Rank7: %lf s   %lf MB   %lf GB/s\n",time7,size,2.0*size/1024/time7);
+  printf("   Rank8: %lf s   %lf MB   %lf GB/s\n",time8,size,2.0*size/1024/time8);
 }
 
 TEST_F( default_exec, ViewResize ) {

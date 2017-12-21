@@ -1576,113 +1576,6 @@ void shared_allocation_tracking_enable()
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
-
-/*
-template< class OutputView , typename Enable = void >
-struct ViewFill {
-
-  typedef typename OutputView::const_value_type  const_value_type ;
-
-  const OutputView output ;
-  const_value_type input ;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()( const size_t i0 ) const
-  {
-    const size_t n1 = output.dimension_1();
-    const size_t n2 = output.dimension_2();
-    const size_t n3 = output.dimension_3();
-    const size_t n4 = output.dimension_4();
-    const size_t n5 = output.dimension_5();
-    const size_t n6 = output.dimension_6();
-    const size_t n7 = output.dimension_7();
-
-    for ( size_t i1 = 0 ; i1 < n1 ; ++i1 ) {
-    for ( size_t i2 = 0 ; i2 < n2 ; ++i2 ) {
-    for ( size_t i3 = 0 ; i3 < n3 ; ++i3 ) {
-    for ( size_t i4 = 0 ; i4 < n4 ; ++i4 ) {
-    for ( size_t i5 = 0 ; i5 < n5 ; ++i5 ) {
-    for ( size_t i6 = 0 ; i6 < n6 ; ++i6 ) {
-    for ( size_t i7 = 0 ; i7 < n7 ; ++i7 ) {
-      output(i0,i1,i2,i3,i4,i5,i6,i7) = input ;
-    }}}}}}}
-  }
-
-  ViewFill( const OutputView & arg_out , const_value_type & arg_in )
-    : output( arg_out ), input( arg_in )
-    {
-      typedef typename OutputView::execution_space  execution_space ;
-      typedef Kokkos::RangePolicy< execution_space > Policy ;
-
-      const Kokkos::Impl::ParallelFor< ViewFill , Policy > closure( *this , Policy( 0 , output.dimension_0() ) );
-
-      closure.execute();
-
-      execution_space::fence();
-    }
-};
-
-template< class OutputView >
-struct ViewFill< OutputView , typename std::enable_if< OutputView::Rank == 0 >::type > {
-  ViewFill( const OutputView & dst , const typename OutputView::const_value_type & src )
-    {
-      Kokkos::Impl::DeepCopy< typename OutputView::memory_space , Kokkos::HostSpace >
-        ( dst.data() , & src , sizeof(typename OutputView::const_value_type) );
-    }
-};
-*/
-
-template< class OutputView , class InputView , class ExecSpace = typename OutputView::execution_space >
-struct ViewRemap {
-
-  const OutputView output ;
-  const InputView  input ;
-  const size_t n0 ;
-  const size_t n1 ;
-  const size_t n2 ;
-  const size_t n3 ;
-  const size_t n4 ;
-  const size_t n5 ;
-  const size_t n6 ;
-  const size_t n7 ;
-
-  ViewRemap( const OutputView & arg_out , const InputView & arg_in )
-    : output( arg_out ), input( arg_in )
-    , n0( std::min( (size_t)arg_out.dimension_0() , (size_t)arg_in.dimension_0() ) )
-    , n1( std::min( (size_t)arg_out.dimension_1() , (size_t)arg_in.dimension_1() ) )
-    , n2( std::min( (size_t)arg_out.dimension_2() , (size_t)arg_in.dimension_2() ) )
-    , n3( std::min( (size_t)arg_out.dimension_3() , (size_t)arg_in.dimension_3() ) )
-    , n4( std::min( (size_t)arg_out.dimension_4() , (size_t)arg_in.dimension_4() ) )
-    , n5( std::min( (size_t)arg_out.dimension_5() , (size_t)arg_in.dimension_5() ) )
-    , n6( std::min( (size_t)arg_out.dimension_6() , (size_t)arg_in.dimension_6() ) )
-    , n7( std::min( (size_t)arg_out.dimension_7() , (size_t)arg_in.dimension_7() ) )
-    {
-      typedef Kokkos::RangePolicy< ExecSpace > Policy ;
-      const Kokkos::Impl::ParallelFor< ViewRemap , Policy > closure( *this , Policy( 0 , n0 ) );
-      closure.execute();
-    }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()( const size_t i0 ) const
-  {
-    for ( size_t i1 = 0 ; i1 < n1 ; ++i1 ) {
-    for ( size_t i2 = 0 ; i2 < n2 ; ++i2 ) {
-    for ( size_t i3 = 0 ; i3 < n3 ; ++i3 ) {
-    for ( size_t i4 = 0 ; i4 < n4 ; ++i4 ) {
-    for ( size_t i5 = 0 ; i5 < n5 ; ++i5 ) {
-    for ( size_t i6 = 0 ; i6 < n6 ; ++i6 ) {
-    for ( size_t i7 = 0 ; i7 < n7 ; ++i7 ) {
-      output(i0,i1,i2,i3,i4,i5,i6,i7) = input(i0,i1,i2,i3,i4,i5,i6,i7);
-    }}}}}}}
-  }
-};
-
-} /* namespace Impl */
-} /* namespace Kokkos */
-
-
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -1979,18 +1872,6 @@ namespace Kokkos {
 namespace Impl {
 
 using Kokkos::is_view ;
-
-template< class SrcViewType
-        , class Arg0Type
-        , class Arg1Type
-        , class Arg2Type
-        , class Arg3Type
-        , class Arg4Type
-        , class Arg5Type
-        , class Arg6Type
-        , class Arg7Type
-        >
-struct ViewSubview /* { typedef ... type ; } */ ;
 
 } /* namespace Impl */
 } /* namespace Kokkos */
