@@ -14,35 +14,42 @@ PROCESSOR=`uname -p`
 
 if [[ "$HOSTNAME" =~ (white|ride).* ]]; then
   MACHINE=white
+  module load git
 fi
 
 if [[ "$HOSTNAME" =~ .*bowman.* ]]; then
   MACHINE=bowman
+  module load git
 fi
 
 if [[ "$HOSTNAME" =~ n.* ]]; then # Warning: very generic name
   if [[ "$PROCESSOR" = "aarch64" ]]; then
     MACHINE=sullivan
+    module load git
   fi
 fi
 
 if [[ "$HOSTNAME" =~ node.* ]]; then # Warning: very generic name
   if [[ "$MACHINE" = "" ]]; then
     MACHINE=shepard
+    module load git
   fi
 fi
 
 if [[ "$HOSTNAME" =~ apollo ]]; then
   MACHINE=apollo
+  module load git
 fi
 
 if [[ "$HOSTNAME" =~ sullivan ]]; then
   MACHINE=sullivan
+  module load git
 fi
 
 if [ ! -z "$SEMS_MODULEFILES_ROOT" ]; then
   if [[ "$MACHINE" = "" ]]; then
     MACHINE=sems
+    module load sems-git
   fi  
 fi
 
@@ -52,7 +59,6 @@ if [[ "$MACHINE" = "" ]]; then
 fi
 
 echo "Running on machine: $MACHINE"
-
 
 GCC_BUILD_LIST="OpenMP,Pthread,Serial,OpenMP_Serial,Pthread_Serial"
 IBM_BUILD_LIST="OpenMP,Serial,OpenMP_Serial"
@@ -162,6 +168,12 @@ else
   # Ensure KOKKOS_PATH is abs path.
   KOKKOS_PATH=$( cd $KOKKOS_PATH && pwd )
 fi
+
+
+GITSTATUS=`cd ${KOKKOS_PATH}; git log -n 1 --format=oneline`
+echo "Repository Status: " ${GITSTATUS}
+echo ""
+echo ""
 
 #
 # Machine specific config.

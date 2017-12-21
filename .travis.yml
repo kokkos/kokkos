@@ -36,6 +36,9 @@ matrix:
       compiler: gcc
 
 script:
+  - export OMP_NUM_THREADS=2
+  - export OMP_PLACES=threads
+  - export OMP_PROC_BIND=threads
   - mkdir build
   - cd build
   - ../generate_makefile.bash --compiler=$CXX --with-$THREADING --with-options=compiler_warnings
