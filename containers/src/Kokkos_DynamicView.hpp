@@ -180,6 +180,17 @@ public:
   template< typename iType >
   KOKKOS_INLINE_FUNCTION void stride( iType * const s ) const { *s = 0 ; }
 
+  //----------------------------------------
+  // Allocation tracking properties
+
+  KOKKOS_INLINE_FUNCTION
+  int use_count() const
+    { return m_track.use_count(); }
+
+  inline
+  const std::string label() const
+    { return m_track.template get_label< typename traits::memory_space >(); }
+
   //----------------------------------------------------------------------
   // Range span is the span which contains all members.
 
