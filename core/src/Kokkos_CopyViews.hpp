@@ -1132,8 +1132,8 @@ void deep_copy
   typedef typename dst_type::memory_space  dst_memory_space ;
   typedef typename src_type::memory_space  src_memory_space ;
 
+  Kokkos::fence();
   if ( dst.data() != src.data() ) {
-    Kokkos::fence();
     Kokkos::Impl::DeepCopy< dst_memory_space , src_memory_space >( dst.data() , src.data() , sizeof(value_type) );
     Kokkos::fence();
   }
