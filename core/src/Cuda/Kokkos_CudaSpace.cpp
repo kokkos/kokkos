@@ -183,6 +183,7 @@ void * CudaUVMSpace::allocate( const size_t arg_alloc_size ) const
 
   enum { max_uvm_allocations = 65536 };
 
+  Kokkos::fence();
   if ( arg_alloc_size > 0 )
   {
     Kokkos::Impl::num_uvm_allocations++;
@@ -193,6 +194,7 @@ void * CudaUVMSpace::allocate( const size_t arg_alloc_size ) const
 
     CUDA_SAFE_CALL( cudaMallocManaged( &ptr, arg_alloc_size , cudaMemAttachGlobal ) );
   }
+  Kokkos::fence();
 
   return ptr ;
 }
@@ -215,12 +217,14 @@ void CudaSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_all
 
 void CudaUVMSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_alloc_size */ ) const
 {
+  Kokkos::fence();
   try {
     if ( arg_alloc_ptr != nullptr ) {
       Kokkos::Impl::num_uvm_allocations--;
       CUDA_SAFE_CALL( cudaFree( arg_alloc_ptr ) );
     }
   } catch(...) {}
+  Kokkos::fence();
 }
 
 void CudaHostPinnedSpace::deallocate( void * const arg_alloc_ptr , const size_t /* arg_alloc_size */ ) const
