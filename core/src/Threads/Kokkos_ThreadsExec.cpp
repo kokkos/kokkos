@@ -197,7 +197,7 @@ ThreadsExec::~ThreadsExec()
 {
   const unsigned entry = m_pool_size - ( m_pool_rank + 1 );
 
-  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > Record ;
+  typedef Kokkos::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > Record ;
 
   if ( m_scratch ) {
     Record * const r = Record::get_record( m_scratch );
@@ -430,7 +430,7 @@ void * ThreadsExec::root_reduce_scratch()
 
 void ThreadsExec::execute_resize_scratch( ThreadsExec & exec , const void * )
 {
-  typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > Record ;
+  typedef Kokkos::Impl::SharedAllocationRecord< Kokkos::HostSpace , void > Record ;
 
   if ( exec.m_scratch ) {
     Record * const r = Record::get_record( exec.m_scratch );

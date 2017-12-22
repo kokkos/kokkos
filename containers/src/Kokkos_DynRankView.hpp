@@ -42,9 +42,9 @@
 */
 
 /// \file Kokkos_DynRankView.hpp
-/// \brief Declaration and definition of Kokkos::Experimental::DynRankView.
+/// \brief Declaration and definition of Kokkos::DynRankView.
 ///
-/// This header file declares and defines Kokkos::Experimental::DynRankView and its
+/// This header file declares and defines Kokkos::DynRankView and its
 /// related nonmember functions.
 
 #ifndef KOKKOS_DYNRANKVIEW_HPP
@@ -55,7 +55,6 @@
 #include <type_traits>
 
 namespace Kokkos {
-namespace Experimental {
 
 template< typename DataType , class ... Properties >
 class DynRankView;  //forward declare
@@ -156,7 +155,7 @@ struct DynRankDimTraits {
   // Extra overload to match that for specialize types
   template <typename Traits, typename ... P>
   KOKKOS_INLINE_FUNCTION
-  static typename std::enable_if< (std::is_same<typename Traits::array_layout , Kokkos::LayoutRight>::value || std::is_same<typename Traits::array_layout , Kokkos::LayoutLeft>::value || std::is_same<typename Traits::array_layout , Kokkos::LayoutStride>::value) , typename Traits::array_layout >::type createLayout( const ViewCtorProp<P...>& prop, const typename Traits::array_layout& layout )
+  static typename std::enable_if< (std::is_same<typename Traits::array_layout , Kokkos::LayoutRight>::value || std::is_same<typename Traits::array_layout , Kokkos::LayoutLeft>::value || std::is_same<typename Traits::array_layout , Kokkos::LayoutStride>::value) , typename Traits::array_layout >::type createLayout( const Kokkos::Impl::ViewCtorProp<P...>& prop, const typename Traits::array_layout& layout )
   {
     return createLayout( layout );
   }
@@ -318,7 +317,6 @@ void dyn_rank_view_verify_operator_bounds
 struct ViewToDynRankViewTag {};
 
 } // namespace Impl
-} // namespace Experimental
 
 namespace Impl {
 
@@ -348,7 +346,7 @@ class ViewMapping< DstTraits , SrcTraits ,
         )
       )
     )
-  ) , Kokkos::Experimental::Impl::ViewToDynRankViewTag >::type >
+  ) , Kokkos::Impl::ViewToDynRankViewTag >::type >
 {
 private:
 
@@ -375,7 +373,7 @@ public:
 
   template < typename DT , typename ... DP , typename ST , typename ... SP >
   KOKKOS_INLINE_FUNCTION
-  static void assign( Kokkos::Experimental::DynRankView< DT , DP...> & dst ,  const Kokkos::View< ST , SP... > & src )
+  static void assign( Kokkos::DynRankView< DT , DP...> & dst ,  const Kokkos::View< ST , SP... > & src )
     {
       static_assert( is_assignable_value_type
                    , "View assignment must have same value type or const = non-const" );
@@ -395,8 +393,6 @@ public:
 
 } //end Impl
 
-namespace Experimental {
-
 /* \class DynRankView
  * \brief Container that creates a Kokkos view with rank determined at runtime.
  *   Essentially this is a rank 7 view
@@ -415,7 +411,7 @@ namespace Experimental {
 template< class > struct is_dyn_rank_view : public std::false_type {};
 
 template< class D, class ... P >
-struct is_dyn_rank_view< Kokkos::Experimental::DynRankView<D,P...> > : public std::true_type {};
+struct is_dyn_rank_view< Kokkos::DynRankView<D,P...> > : public std::true_type {};
 
 
 template< typename DataType , class ... Properties >
@@ -425,7 +421,7 @@ class DynRankView : public ViewTraits< DataType , Properties ... >
 
 private:
   template < class , class ... > friend class DynRankView ;
-  template < class , class ... > friend class Impl::ViewMapping ;
+  template < class , class ... > friend class Kokkos::Impl::ViewMapping ;
 
 public:
   typedef ViewTraits< DataType , Properties ... > drvtraits ;
@@ -437,7 +433,7 @@ public:
 
 private:
   typedef Kokkos::Impl::ViewMapping< traits , void > map_type ;
-  typedef Kokkos::Experimental::Impl::SharedAllocationTracker      track_type ;
+  typedef Kokkos::Impl::SharedAllocationTracker      track_type ;
 
   track_type  m_track ;
   map_type    m_map ;
@@ -601,7 +597,7 @@ private:
 // rank of the calling operator - included as first argument in ARG
 #define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( ARG ) \
   DynRankView::template verify_space< Kokkos::Impl::ActiveExecutionMemorySpace >::check(); \
-  Kokkos::Experimental::Impl::dyn_rank_view_verify_operator_bounds< typename traits::memory_space > ARG ;
+  Kokkos::Impl::dyn_rank_view_verify_operator_bounds< typename traits::memory_space > ARG ;
 
 #else
 
@@ -830,7 +826,6 @@ public:
       return *this;
     }
 
-// Experimental
 // Copy/Assign View to DynRankView
   template< class RT , class ... RP >
   KOKKOS_INLINE_FUNCTION
@@ -840,7 +835,7 @@ public:
     , m_rank( rhs.Rank )
     {
       typedef typename View<RT,RP...>::traits  SrcTraits ;
-      typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , Kokkos::Experimental::Impl::ViewToDynRankViewTag >  Mapping ;
+      typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , Kokkos::Impl::ViewToDynRankViewTag >  Mapping ;
       static_assert( Mapping::is_assignable , "Incompatible DynRankView copy construction" );
       Mapping::assign( *this , rhs );
     }
@@ -850,7 +845,7 @@ public:
   DynRankView & operator = ( const View<RT,RP...> & rhs )
     {
       typedef typename View<RT,RP...>::traits  SrcTraits ;
-      typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , Kokkos::Experimental::Impl::ViewToDynRankViewTag >  Mapping ;
+      typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , Kokkos::Impl::ViewToDynRankViewTag >  Mapping ;
       static_assert( Mapping::is_assignable , "Incompatible View to DynRankView copy assignment" );
       Mapping::assign( *this , rhs );
       return *this ;
@@ -872,8 +867,8 @@ public:
   // unused arg_layout dimensions must be set to ~size_t(0) so that rank deduction can properly take place
   template< class ... P >
   explicit inline
-  DynRankView( const Impl::ViewCtorProp< P ... > & arg_prop
-      , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer
+  DynRankView( const Kokkos::Impl::ViewCtorProp< P ... > & arg_prop
+             , typename std::enable_if< ! Kokkos::Impl::ViewCtorProp< P... >::has_pointer
                                , typename traits::array_layout
                                >::type const & arg_layout
       )
@@ -882,11 +877,11 @@ public:
       , m_rank( Impl::DynRankDimTraits<typename traits::specialize>::template computeRank< typename traits::array_layout, P...>(arg_prop, arg_layout) )
     {
       // Append layout and spaces if not input
-      typedef Impl::ViewCtorProp< P ... > alloc_prop_input ;
+      typedef Kokkos::Impl::ViewCtorProp< P ... > alloc_prop_input ;
 
       // use 'std::integral_constant<unsigned,I>' for non-types
       // to avoid duplicate class error.
-      typedef Impl::ViewCtorProp
+      typedef Kokkos::Impl::ViewCtorProp
         < P ...
         , typename std::conditional
             < alloc_prop_input::has_label
@@ -931,7 +926,7 @@ public:
 #endif
 //------------------------------------------------------------
 
-      Kokkos::Experimental::Impl::SharedAllocationRecord<> *
+      Kokkos::Impl::SharedAllocationRecord<> *
         record = m_map.allocate_shared( prop , Impl::DynRankDimTraits<typename traits::specialize>::template createLayout<traits, P...>(arg_prop, arg_layout) );
 
 //------------------------------------------------------------
@@ -950,8 +945,8 @@ public:
   // Wrappers
   template< class ... P >
   explicit KOKKOS_INLINE_FUNCTION
-  DynRankView( const Impl::ViewCtorProp< P ... > & arg_prop
-      , typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer
+  DynRankView( const Kokkos::Impl::ViewCtorProp< P ... > & arg_prop
+      , typename std::enable_if< Kokkos::Impl::ViewCtorProp< P... >::has_pointer
                                , typename traits::array_layout
                                >::type const & arg_layout
       )
@@ -972,8 +967,8 @@ public:
   // Simple dimension-only layout
   template< class ... P >
   explicit inline
-  DynRankView( const Impl::ViewCtorProp< P ... > & arg_prop
-      , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer
+  DynRankView( const Kokkos::Impl::ViewCtorProp< P ... > & arg_prop
+      , typename std::enable_if< ! Kokkos::Impl::ViewCtorProp< P... >::has_pointer
                                , size_t
                                >::type const arg_N0 = ~size_t(0)
       , const size_t arg_N1 = ~size_t(0)
@@ -992,8 +987,8 @@ public:
 
   template< class ... P >
   explicit KOKKOS_INLINE_FUNCTION
-  DynRankView( const Impl::ViewCtorProp< P ... > & arg_prop
-      , typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer
+  DynRankView( const Kokkos::Impl::ViewCtorProp< P ... > & arg_prop
+      , typename std::enable_if< Kokkos::Impl::ViewCtorProp< P... >::has_pointer
                                , size_t
                                >::type const arg_N0 = ~size_t(0)
       , const size_t arg_N1 = ~size_t(0)
@@ -1015,10 +1010,10 @@ public:
   explicit inline
   DynRankView( const Label & arg_label
       , typename std::enable_if<
-          Kokkos::Experimental::Impl::is_view_label<Label>::value ,
+          Kokkos::Impl::is_view_label<Label>::value ,
           typename traits::array_layout >::type const & arg_layout
       )
-    : DynRankView( Impl::ViewCtorProp< std::string >( arg_label ) , arg_layout )
+    : DynRankView( Kokkos::Impl::ViewCtorProp< std::string >( arg_label ) , arg_layout )
     {}
 
   // Allocate label and layout, must disambiguate from subview constructor
@@ -1026,7 +1021,7 @@ public:
   explicit inline
   DynRankView( const Label & arg_label
       , typename std::enable_if<
-          Kokkos::Experimental::Impl::is_view_label<Label>::value ,
+          Kokkos::Impl::is_view_label<Label>::value ,
         const size_t >::type arg_N0 = ~size_t(0)
       , const size_t arg_N1 = ~size_t(0)
       , const size_t arg_N2 = ~size_t(0)
@@ -1036,7 +1031,7 @@ public:
       , const size_t arg_N6 = ~size_t(0)
       , const size_t arg_N7 = ~size_t(0)
       )
-    : DynRankView( Impl::ViewCtorProp< std::string >( arg_label )
+    : DynRankView( Kokkos::Impl::ViewCtorProp< std::string >( arg_label )
     , typename traits::array_layout
           ( arg_N0 , arg_N1 , arg_N2 , arg_N3 , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
           )
@@ -1048,7 +1043,8 @@ public:
   DynRankView( const ViewAllocateWithoutInitializing & arg_prop
       , const typename traits::array_layout & arg_layout
       )
-    : DynRankView( Impl::ViewCtorProp< std::string , Kokkos::Experimental::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::Experimental::WithoutInitializing )
+    : DynRankView( Kokkos::Impl::ViewCtorProp< std::string , Kokkos::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::WithoutInitializing )
+
           , Impl::DynRankDimTraits<typename traits::specialize>::createLayout(arg_layout)
       )
     {}
@@ -1064,7 +1060,7 @@ public:
       , const size_t arg_N6 = ~size_t(0)
       , const size_t arg_N7 = ~size_t(0)
       )
-    : DynRankView(Impl::ViewCtorProp< std::string , Kokkos::Experimental::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::Experimental::WithoutInitializing ), arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7 )
+    : DynRankView(Kokkos::Impl::ViewCtorProp< std::string , Kokkos::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::WithoutInitializing ), arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7 )
     {}
 
   //----------------------------------------
@@ -1097,14 +1093,14 @@ public:
       , const size_t arg_N6 = ~size_t(0)
       , const size_t arg_N7 = ~size_t(0)
       )
-    : DynRankView( Impl::ViewCtorProp<pointer_type>(arg_ptr) , arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7 )
+    : DynRankView( Kokkos::Impl::ViewCtorProp<pointer_type>(arg_ptr) , arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7 )
     {}
 
   explicit KOKKOS_INLINE_FUNCTION
   DynRankView( pointer_type arg_ptr
       , typename traits::array_layout & arg_layout
       )
-    : DynRankView( Impl::ViewCtorProp<pointer_type>(arg_ptr) , arg_layout )
+    : DynRankView( Kokkos::Impl::ViewCtorProp<pointer_type>(arg_ptr) , arg_layout )
     {}
 
 
@@ -1140,7 +1136,7 @@ public:
   explicit KOKKOS_INLINE_FUNCTION
   DynRankView( const typename traits::execution_space::scratch_memory_space & arg_space
       , const typename traits::array_layout & arg_layout )
-    : DynRankView( Impl::ViewCtorProp<pointer_type>(
+    : DynRankView( Kokkos::Impl::ViewCtorProp<pointer_type>(
               reinterpret_cast<pointer_type>(
                 arg_space.get_shmem( map_type::memory_span(
                   Impl::DynRankDimTraits<typename traits::specialize>::createLayout( arg_layout ) //is this correct?
@@ -1159,7 +1155,7 @@ public:
       , const size_t arg_N6 = ~size_t(0)
       , const size_t arg_N7 = ~size_t(0) )
 
-    : DynRankView( Impl::ViewCtorProp<pointer_type>(
+    : DynRankView( Kokkos::Impl::ViewCtorProp<pointer_type>(
                    reinterpret_cast<pointer_type>(
                      arg_space.get_shmem(
                        map_type::memory_span(
@@ -1190,7 +1186,6 @@ namespace Impl {
 struct DynRankSubviewTag {};
 
 } // namespace Impl
-} // namespace Experimental
 
 namespace Impl {
 
@@ -1207,7 +1202,7 @@ struct ViewMapping
         std::is_same< typename SrcTraits::array_layout
                     , Kokkos::LayoutStride >::value
       )
-    ), Kokkos::Experimental::Impl::DynRankSubviewTag >::type
+    ), Kokkos::Impl::DynRankSubviewTag >::type
   , SrcTraits
   , Args ... >
 {
@@ -1279,11 +1274,11 @@ public:
   };
 
 
-  typedef Kokkos::Experimental::DynRankView< value_type , array_layout , typename SrcTraits::device_type , typename SrcTraits::memory_traits >  ret_type;
+  typedef Kokkos::DynRankView< value_type , array_layout , typename SrcTraits::device_type , typename SrcTraits::memory_traits >  ret_type;
 
   template < typename T , class ... P >
   KOKKOS_INLINE_FUNCTION
-  static ret_type subview( const unsigned src_rank , Kokkos::Experimental::DynRankView< T , P...> const & src
+  static ret_type subview( const unsigned src_rank , Kokkos::DynRankView< T , P...> const & src
                     , Args ... args )
     {
 
@@ -1351,20 +1346,19 @@ public:
 
 } // end Impl
 
-namespace Experimental {
 
 template< class V , class ... Args >
-using Subdynrankview = typename Kokkos::Impl::ViewMapping< Kokkos::Experimental::Impl::DynRankSubviewTag , V , Args... >::ret_type ;
+using Subdynrankview = typename Kokkos::Impl::ViewMapping< Kokkos::Impl::DynRankSubviewTag , V , Args... >::ret_type ;
 
 template< class D , class ... P , class ...Args >
 KOKKOS_INLINE_FUNCTION
 Subdynrankview< ViewTraits<D******* , P...> , Args... >
-subdynrankview( const Kokkos::Experimental::DynRankView< D , P... > &src , Args...args)
+subdynrankview( const Kokkos::DynRankView< D , P... > &src , Args...args)
   {
     if ( src.rank() > sizeof...(Args) ) //allow sizeof...(Args) >= src.rank(), ignore the remaining args
       { Kokkos::abort("subdynrankview: num of args must be >= rank of the source DynRankView"); }
 
-    typedef Kokkos::Impl::ViewMapping< Kokkos::Experimental::Impl::DynRankSubviewTag , Kokkos::ViewTraits< D*******, P... > , Args... > metafcn ;
+    typedef Kokkos::Impl::ViewMapping< Kokkos::Impl::DynRankSubviewTag , Kokkos::ViewTraits< D*******, P... > , Args... > metafcn ;
 
     return metafcn::subview( src.rank() , src , args... );
   }
@@ -1373,16 +1367,14 @@ subdynrankview( const Kokkos::Experimental::DynRankView< D , P... > &src , Args.
 template< class D , class ... P , class ...Args >
 KOKKOS_INLINE_FUNCTION
 Subdynrankview< ViewTraits<D******* , P...> , Args... >
-subview( const Kokkos::Experimental::DynRankView< D , P... > &src , Args...args)
+subview( const Kokkos::DynRankView< D , P... > &src , Args...args)
   {
     return subdynrankview( src , args... );
   }
 
-} // namespace Experimental
 } // namespace Kokkos
 
 namespace Kokkos {
-namespace Experimental {
 
 // overload == and !=
 template< class LT , class ... LP , class RT , class ... RP >
@@ -1422,13 +1414,11 @@ bool operator != ( const DynRankView<LT,LP...> & lhs ,
   return ! ( operator==(lhs,rhs) );
 }
 
-} //end Experimental
 } //end Kokkos
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 template< class OutputView , typename Enable = void >
@@ -1527,12 +1517,10 @@ struct DynRankViewRemap {
 };
 
 } /* namespace Impl */
-} /* namespace Experimental */
 } /* namespace Kokkos */
 
 
 namespace Kokkos {
-namespace Experimental {
 
 /** \brief  Deep copy a value from Host memory into a view.  */
 template< class DT , class ... DP >
@@ -1549,7 +1537,7 @@ void deep_copy
                   typename ViewTraits<DT,DP...>::value_type >::value
     , "deep_copy requires non-const type" );
 
-  Kokkos::Experimental::Impl::DynRankViewFill< DynRankView<DT,DP...> >( dst , value );
+  Kokkos::Impl::DynRankViewFill< DynRankView<DT,DP...> >( dst , value );
 }
 
 /** \brief  Deep copy into a value in Host memory from a view.  */
@@ -1585,7 +1573,7 @@ void deep_copy
     std::is_same< typename DstType::traits::specialize , void >::value &&
     std::is_same< typename SrcType::traits::specialize , void >::value
     &&
-    ( Kokkos::Experimental::is_dyn_rank_view<DstType>::value || Kokkos::Experimental::is_dyn_rank_view<SrcType>::value)
+    ( Kokkos::is_dyn_rank_view<DstType>::value || Kokkos::is_dyn_rank_view<SrcType>::value)
   )>::type * = 0 )
 {
   static_assert(
@@ -1697,11 +1685,11 @@ void deep_copy
     }
     else if ( DstExecCanAccessSrc ) {
       // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
-      Kokkos::Experimental::Impl::DynRankViewRemap< dst_type , src_type >( dst , src );
+      Kokkos::Impl::DynRankViewRemap< dst_type , src_type >( dst , src );
     }
     else if ( SrcExecCanAccessDst ) {
       // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
-      Kokkos::Experimental::Impl::DynRankViewRemap< dst_type , src_type , src_execution_space >( dst , src );
+      Kokkos::Impl::DynRankViewRemap< dst_type , src_type , src_execution_space >( dst , src );
     }
     else {
       Kokkos::Impl::throw_runtime_exception("deep_copy given views that would require a temporary allocation");
@@ -1709,7 +1697,6 @@ void deep_copy
   }
 }
 
-} //end Experimental
 } //end Kokkos
 
 
@@ -1717,8 +1704,6 @@ void deep_copy
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
-
 namespace Impl {
 
 
@@ -1726,7 +1711,7 @@ namespace Impl {
 template<class Space, class T, class ... P>
 struct MirrorDRViewType {
   // The incoming view_type
-  typedef typename Kokkos::Experimental::DynRankView<T,P...> src_view_type;
+  typedef typename Kokkos::DynRankView<T,P...> src_view_type;
   // The memory space for the mirror view
   typedef typename Space::memory_space memory_space;
   // Check whether it is the same memory space
@@ -1736,7 +1721,7 @@ struct MirrorDRViewType {
   // The data type (we probably want it non-const since otherwise we can't even deep_copy to it.
   typedef typename src_view_type::non_const_data_type data_type;
   // The destination view type if it is not the same memory space
-  typedef Kokkos::Experimental::DynRankView<data_type,array_layout,Space> dest_view_type;
+  typedef Kokkos::DynRankView<data_type,array_layout,Space> dest_view_type;
   // If it is the same memory_space return the existsing view_type
   // This will also keep the unmanaged trait if necessary
   typedef typename std::conditional<is_same_memspace,src_view_type,dest_view_type>::type view_type;
@@ -1745,7 +1730,7 @@ struct MirrorDRViewType {
 template<class Space, class T, class ... P>
 struct MirrorDRVType {
   // The incoming view_type
-  typedef typename Kokkos::Experimental::DynRankView<T,P...> src_view_type;
+  typedef typename Kokkos::DynRankView<T,P...> src_view_type;
   // The memory space for the mirror view
   typedef typename Space::memory_space memory_space;
   // Check whether it is the same memory space
@@ -1755,11 +1740,10 @@ struct MirrorDRVType {
   // The data type (we probably want it non-const since otherwise we can't even deep_copy to it.
   typedef typename src_view_type::non_const_data_type data_type;
   // The destination view type if it is not the same memory space
-  typedef Kokkos::Experimental::DynRankView<data_type,array_layout,Space> view_type;
+  typedef Kokkos::DynRankView<data_type,array_layout,Space> view_type;
 };
 
 }
-
 
 template< class T , class ... P >
 inline
@@ -1799,7 +1783,7 @@ create_mirror( const DynRankView<T,P...> & src
 
 // Create a mirror in a new space (specialization for different space)
 template<class Space, class T, class ... P>
-typename Impl::MirrorDRVType<Space,T,P ...>::view_type create_mirror(const Space& , const Kokkos::Experimental::DynRankView<T,P...> & src) {
+typename Impl::MirrorDRVType<Space,T,P ...>::view_type create_mirror(const Space& , const Kokkos::DynRankView<T,P...> & src) {
   return typename Impl::MirrorDRVType<Space,T,P ...>::view_type(src.label(), Impl::reconstructLayout(src.layout(), src.rank()) );
 }
 
@@ -1836,13 +1820,13 @@ create_mirror_view( const DynRankView<T,P...> & src
                     )>::type * = 0
                   )
 {
-  return Kokkos::Experimental::create_mirror( src );
+  return Kokkos::create_mirror( src );
 }
 
 // Create a mirror view in a new space (specialization for same space)
 template<class Space, class T, class ... P>
 typename Impl::MirrorDRViewType<Space,T,P ...>::view_type
-create_mirror_view(const Space& , const Kokkos::Experimental::DynRankView<T,P...> & src
+create_mirror_view(const Space& , const Kokkos::DynRankView<T,P...> & src
   , typename std::enable_if<Impl::MirrorDRViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
   return src;
 }
@@ -1850,12 +1834,11 @@ create_mirror_view(const Space& , const Kokkos::Experimental::DynRankView<T,P...
 // Create a mirror view in a new space (specialization for different space)
 template<class Space, class T, class ... P>
 typename Impl::MirrorDRViewType<Space,T,P ...>::view_type
-create_mirror_view(const Space& , const Kokkos::Experimental::DynRankView<T,P...> & src
+create_mirror_view(const Space& , const Kokkos::DynRankView<T,P...> & src
   , typename std::enable_if<!Impl::MirrorDRViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
   return typename Impl::MirrorDRViewType<Space,T,P ...>::view_type(src.label(), Impl::reconstructLayout(src.layout(), src.rank()) );
 }
 
-} //end Experimental
 } //end Kokkos
 
 
@@ -1863,7 +1846,6 @@ create_mirror_view(const Space& , const Kokkos::Experimental::DynRankView<T,P...
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
 /** \brief  Resize a view with copying old data to new data at the corresponding indices. */
 template< class T , class ... P >
 inline
@@ -1877,13 +1859,13 @@ void resize( DynRankView<T,P...> & v ,
              const size_t n6 = ~size_t(0) ,
              const size_t n7 = ~size_t(0) )
 {
-  typedef DynRankView<T,P...>  drview_type ;
+  typedef DynRankView<T,P...> drview_type ;
 
   static_assert( Kokkos::ViewTraits<T,P...>::is_managed , "Can only resize managed views" );
 
   drview_type v_resized( v.label(), n0, n1, n2, n3, n4, n5, n6 );
 
-  Kokkos::Experimental::Impl::DynRankViewRemap< drview_type , drview_type >( v_resized, v );
+  Kokkos::Impl::DynRankViewRemap< drview_type , drview_type >( v_resized, v );
 
   v = v_resized ;
 }
@@ -1911,25 +1893,7 @@ void realloc( DynRankView<T,P...> & v ,
   v = drview_type( label, n0, n1, n2, n3, n4, n5, n6 );
 }
 
-} //end Experimental
-
 } //end Kokkos
 
-using Kokkos::Experimental::is_dyn_rank_view ;
-
-namespace Kokkos {
-
-template< typename D , class ... P >
-using DynRankView = Kokkos::Experimental::DynRankView< D , P... > ;
-
-using Kokkos::Experimental::deep_copy ;
-using Kokkos::Experimental::create_mirror ;
-using Kokkos::Experimental::create_mirror_view ;
-using Kokkos::Experimental::subdynrankview ;
-using Kokkos::Experimental::subview ;
-using Kokkos::Experimental::resize ;
-using Kokkos::Experimental::realloc ;
-
-} //end Kokkos
 #endif
 

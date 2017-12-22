@@ -136,28 +136,6 @@ yield_until_equal( T const volatile & flag, const T value )
   Kokkos::load_fence();
 }
 
-/*
-template <typename T>
-KOKKOS_INLINE_FUNCTION
-typename std::enable_if< std::is_integral<T>::value, void>::type
-spinwait_while_equal( T const volatile & flag, const T value ) {}
-
-template <typename T>
-KOKKOS_INLINE_FUNCTION
-typename std::enable_if< std::is_integral<T>::value, void>::type
-yield_while_equal( T const volatile & flag, const T value ) {}
-
-template <typename T>
-KOKKOS_INLINE_FUNCTION
-typename std::enable_if< std::is_integral<T>::value, void>::type
-spinwait_until_equal( T const volatile & flag, const T value ) {}
-
-template <typename T>
-KOKKOS_INLINE_FUNCTION
-typename std::enable_if< std::is_integral<T>::value, void>::type
-yield_until_equal( T const volatile & flag, const T value ) {}
-*/
-
 } /* namespace Impl */
 } /* namespace Kokkos */
 
