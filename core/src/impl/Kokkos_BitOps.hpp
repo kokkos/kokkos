@@ -48,6 +48,10 @@
 #include <cstdint>
 #include <climits>
 
+#ifdef KOKKOS_COMPILER_INTEL
+#include<immintrin.h>
+#endif
+
 #if defined( __HCC_ACCELERATOR__ )
 #include <hc.hpp>
 #endif
