@@ -646,10 +646,11 @@ struct TestScratchTeam {
   {
     typedef Test::ScratchTeamFunctor<ExecSpace, ScheduleType> Functor;
     typedef Kokkos::View< typename Functor::value_type, Kokkos::HostSpace, Kokkos::MemoryUnmanaged >  result_type;
+    typedef Kokkos::TeamPolicy< ScheduleType,  ExecSpace > p_type;
 
-    const size_t team_size = Kokkos::TeamPolicy< ScheduleType,  ExecSpace >::team_size_max( Functor() );
+    const size_t team_size = p_type::team_size_max( Functor() );
 
-    Kokkos::TeamPolicy< ScheduleType,  ExecSpace > team_exec( 8192 / team_size, team_size );
+    p_type team_exec( 8192 / team_size, team_size );
 
     typename Functor::value_type error_count = 0;
 
@@ -661,8 +662,15 @@ struct TestScratchTeam {
     Kokkos::parallel_reduce( team_exec.set_scratch_size( 1, Kokkos::PerTeam( team_scratch_size ),
                                                          Kokkos::PerThread( thread_scratch_size ) ),
                              Functor(), result_type( & error_count ) );
-
     ASSERT_EQ( error_count, 0 );
+
+    Kokkos::parallel_reduce( p_type( 8192 / team_size, team_size ,
+                                     Kokkos::ScratchRequest( 1, Kokkos::PerTeam( team_scratch_size ),
+                                                                Kokkos::PerThread( thread_scratch_size ))
+                                   ),
+                             Functor(), result_type( & error_count ) );
+    ASSERT_EQ( error_count, 0 );
+
   }
 };
 

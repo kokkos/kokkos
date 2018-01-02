@@ -348,6 +348,7 @@ public:
   };
 };
 
+
   struct PerTeamValue {
     int value;
     PerTeamValue(int arg);
@@ -362,6 +363,43 @@ public:
 
 Impl::PerTeamValue PerTeam(const int& arg);
 Impl::PerThreadValue PerThread(const int& arg);
+
+struct ScratchRequest {
+  int level;
+
+  int per_team;
+  int per_thread;
+
+  inline
+  ScratchRequest(const int& level_, const Impl::PerTeamValue& team_value) {
+    level = level_;
+    per_team = team_value.value;
+    per_thread = 0;
+  }
+
+  inline
+  ScratchRequest(const int& level_, const Impl::PerThreadValue& thread_value) {
+    level = level_;
+    per_team = 0;
+    per_thread = thread_value.value;;
+  }
+
+  inline
+  ScratchRequest(const int& level_, const Impl::PerTeamValue& team_value, const Impl::PerThreadValue& thread_value) {
+    level = level_;
+    per_team = team_value.value;
+    per_thread = thread_value.value;;
+  }
+
+  inline
+  ScratchRequest(const int& level_, const Impl::PerThreadValue& thread_value, const Impl::PerTeamValue& team_value) {
+    level = level_;
+    per_team = team_value.value;
+    per_thread = thread_value.value;;
+  }
+
+};
+
 
 /** \brief  Execution policy for parallel work over a league of teams of threads.
  *
@@ -417,11 +455,33 @@ public:
   TeamPolicy( int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 )
     : internal_policy(league_size_request,Kokkos::AUTO(), vector_length_request) {}
 
-/*  TeamPolicy( int league_size_request , int team_size_request  )
-    : internal_policy(league_size_request,team_size_request) {}
+  TeamPolicy( int league_size_request , int team_size_request , int vector_length_request,
+              const ScratchRequest& scr_size )
+    : internal_policy(league_size_request,team_size_request, vector_length_request) {
+    internal_policy::internal_set_scratch_size(scr_size.level,Impl::PerTeamValue(scr_size.per_team),
+                                      Impl::PerThreadValue(scr_size.per_thread));
+  }
 
-  TeamPolicy( int league_size_request , const Kokkos::AUTO_t &  )
-    : internal_policy(league_size_request,Kokkos::AUTO()) {}*/
+  TeamPolicy( int league_size_request , int team_size_request ,
+              const ScratchRequest& scr_size )
+    : internal_policy(league_size_request,team_size_request, 1) {
+    internal_policy::internal_set_scratch_size(scr_size.level,Impl::PerTeamValue(scr_size.per_team),
+                                      Impl::PerThreadValue(scr_size.per_thread));
+  }
+
+  TeamPolicy( int league_size_request , const Kokkos::AUTO_t & , int vector_length_request,
+              const ScratchRequest& scr_size )
+    : internal_policy(league_size_request,Kokkos::AUTO(), vector_length_request) {
+    internal_policy::internal_set_scratch_size(scr_size.level,Impl::PerTeamValue(scr_size.per_team),
+                                      Impl::PerThreadValue(scr_size.per_thread));
+  }
+
+  TeamPolicy( int league_size_request , const Kokkos::AUTO_t & ,
+              const ScratchRequest& scr_size )
+    : internal_policy(league_size_request,Kokkos::AUTO(), 1) {
+    internal_policy::internal_set_scratch_size(scr_size.level,Impl::PerTeamValue(scr_size.per_team),
+                                      Impl::PerThreadValue(scr_size.per_thread));
+  }
 
 private:
   TeamPolicy(const internal_policy& p):internal_policy(p) {}
