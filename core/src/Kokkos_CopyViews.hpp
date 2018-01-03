@@ -471,8 +471,8 @@ void view_copy(const DstType& dst, const SrcType& src) {
       iterate = Kokkos::Iterate::Left;
   }
 
-  if( (dst.span() >= std::numeric_limits<int>::max()) ||
-      (src.span() >= std::numeric_limits<int>::max()) ){
+  if( (dst.span() >= size_t(std::numeric_limits<int>::max())) ||
+      (src.span() >= size_t(std::numeric_limits<int>::max())) ){
     if(DstExecCanAccessSrc) {
       if(iterate == Kokkos::Iterate::Right)
         Kokkos::Impl::ViewCopy< DstType, SrcType, Kokkos::LayoutRight, dst_execution_space,
