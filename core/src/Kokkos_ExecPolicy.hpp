@@ -359,10 +359,35 @@ public:
     PerThreadValue(int arg);
   };
 
+  template<class iType, class ... Args>
+  struct ExtractVectorLength {
+    static inline iType value(typename std::enable_if<std::is_integral<iType>::value,iType>::type val, Args...) {
+      return val;
+    }
+    static inline typename std::enable_if<!std::is_integral<iType>::value,int>::type value(typename std::enable_if<!std::is_integral<iType>::value,iType>::type, Args...) {
+      return 1;
+    }
+  };
+
+  template<class iType, class ... Args>
+  inline typename std::enable_if<std::is_integral<iType>::value,iType>::type extract_vector_length(iType val, Args...) {
+    return val;
+  }
+
+  template<class iType, class ... Args>
+  inline typename std::enable_if<!std::is_integral<iType>::value,int>::type extract_vector_length(iType, Args...) {
+    return 1;
+  }
+
 }
 
 Impl::PerTeamValue PerTeam(const int& arg);
 Impl::PerThreadValue PerThread(const int& arg);
+
+struct ChunkSize {
+  int value;
+  ChunkSize(int value_):value(value_) {}
+};
 
 struct ScratchRequest {
   int level;
@@ -443,49 +468,127 @@ public:
 
   /** \brief  Construct policy with the given instance of the execution space */
   TeamPolicy( const typename traits::execution_space & , int league_size_request , int team_size_request , int vector_length_request = 1 )
-    : internal_policy(typename traits::execution_space(),league_size_request,team_size_request, vector_length_request) {}
+    : internal_policy(typename traits::execution_space(),league_size_request,team_size_request, vector_length_request) {first_arg = false;}
 
   TeamPolicy( const typename traits::execution_space & , int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 )
-    : internal_policy(typename traits::execution_space(),league_size_request,Kokkos::AUTO(), vector_length_request) {}
+    : internal_policy(typename traits::execution_space(),league_size_request,Kokkos::AUTO(), vector_length_request) {first_arg = false;}
 
   /** \brief  Construct policy with the default instance of the execution space */
   TeamPolicy( int league_size_request , int team_size_request , int vector_length_request = 1 )
-    : internal_policy(league_size_request,team_size_request, vector_length_request) {}
+    : internal_policy(league_size_request,team_size_request, vector_length_request) {first_arg = false;}
 
   TeamPolicy( int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 )
-    : internal_policy(league_size_request,Kokkos::AUTO(), vector_length_request) {}
+    : internal_policy(league_size_request,Kokkos::AUTO(), vector_length_request) {first_arg = false;}
 
-  TeamPolicy( int league_size_request , int team_size_request , int vector_length_request,
-              const ScratchRequest& scr_size )
+  /** \brief  Construct policy with the given instance of the execution space */
+  template<class ... Args>
+  TeamPolicy( const typename traits::execution_space & , int league_size_request , int team_size_request , int vector_length_request,
+              Args ... args)
+    : internal_policy(typename traits::execution_space(),league_size_request,team_size_request, vector_length_request) {
+    first_arg = false;
+    set(args...);
+  }
+
+  template<class ... Args>
+  TeamPolicy( const typename traits::execution_space & , int league_size_request , const Kokkos::AUTO_t & , int vector_length_request ,
+              Args ... args)
+    : internal_policy(typename traits::execution_space(),league_size_request,Kokkos::AUTO(), vector_length_request) {
+    first_arg = false;
+    set(args...);
+  }
+
+  /** \brief  Construct policy with the default instance of the execution space */
+  template<class ... Args>
+  TeamPolicy( int league_size_request , int team_size_request , int vector_length_request ,
+              Args ... args)
     : internal_policy(league_size_request,team_size_request, vector_length_request) {
-    internal_policy::internal_set_scratch_size(scr_size.level,Impl::PerTeamValue(scr_size.per_team),
-                                      Impl::PerThreadValue(scr_size.per_thread));
+    first_arg = false;
+    set(args...);
   }
 
-  TeamPolicy( int league_size_request , int team_size_request ,
-              const ScratchRequest& scr_size )
-    : internal_policy(league_size_request,team_size_request, 1) {
-    internal_policy::internal_set_scratch_size(scr_size.level,Impl::PerTeamValue(scr_size.per_team),
-                                      Impl::PerThreadValue(scr_size.per_thread));
-  }
-
-  TeamPolicy( int league_size_request , const Kokkos::AUTO_t & , int vector_length_request,
-              const ScratchRequest& scr_size )
+  template<class ... Args>
+  TeamPolicy( int league_size_request , const Kokkos::AUTO_t & , int vector_length_request ,
+              Args ... args)
     : internal_policy(league_size_request,Kokkos::AUTO(), vector_length_request) {
-    internal_policy::internal_set_scratch_size(scr_size.level,Impl::PerTeamValue(scr_size.per_team),
-                                      Impl::PerThreadValue(scr_size.per_thread));
+    first_arg = false;
+    set(args...);
   }
 
+  /** \brief  Construct policy with the given instance of the execution space */
+  template<class ... Args>
+  TeamPolicy( const typename traits::execution_space & , int league_size_request , int team_size_request ,
+              Args ... args)
+    : internal_policy(typename traits::execution_space(),league_size_request,team_size_request,
+                      Kokkos::Impl::extract_vector_length<Args...>(args...)) {
+    first_arg = true;
+    set(args...);
+  }
+
+  template<class ... Args>
+  TeamPolicy( const typename traits::execution_space & , int league_size_request , const Kokkos::AUTO_t & ,
+              Args ... args)
+    : internal_policy(typename traits::execution_space(),league_size_request,Kokkos::AUTO(),
+                      Kokkos::Impl::extract_vector_length<Args...>(args...)) {
+    first_arg = true;
+    set(args...);
+  }
+
+  /** \brief  Construct policy with the default instance of the execution space */
+  template<class ... Args>
+  TeamPolicy( int league_size_request , int team_size_request ,
+              Args ... args)
+    : internal_policy(league_size_request,team_size_request,
+                      Kokkos::Impl::extract_vector_length<Args...>(args...)) {
+    first_arg = true;
+    set(args...);
+  }
+
+  template<class ... Args>
   TeamPolicy( int league_size_request , const Kokkos::AUTO_t & ,
-              const ScratchRequest& scr_size )
-    : internal_policy(league_size_request,Kokkos::AUTO(), 1) {
-    internal_policy::internal_set_scratch_size(scr_size.level,Impl::PerTeamValue(scr_size.per_team),
-                                      Impl::PerThreadValue(scr_size.per_thread));
+              Args ... args)
+    : internal_policy(league_size_request,Kokkos::AUTO(),
+                      Kokkos::Impl::extract_vector_length<Args...>(args...)) {
+    first_arg = true;
+    set(args...);
   }
 
 private:
-  TeamPolicy(const internal_policy& p):internal_policy(p) {}
+  bool first_arg;
+  TeamPolicy(const internal_policy& p):internal_policy(p) {first_arg = false;}
+
+  inline void set() {}
+
 public:
+  template<class ... Args>
+  inline void set(Args ...) {
+    static_assert( 0 == sizeof...(Args), "Kokkos::TeamPolicy: unhandled constructor arguments encountered.");
+  }
+
+  template<class iType, class ... Args>
+  inline typename std::enable_if<std::is_integral<iType>::value>::type set(iType, Args ... args) {
+    if(first_arg) {
+      first_arg = false;
+      set(args...);
+    } else {
+      first_arg = false;
+      Kokkos::Impl::throw_runtime_exception("Kokkos::TeamPolicy: integer argument to constructor in illegal place.");
+    }
+  }
+
+  template<class ... Args>
+  inline void set(const ChunkSize& chunksize, Args ... args) {
+    first_arg = false;
+    internal_policy::internal_set_chunk_size(chunksize.value);
+    set(args...);
+  }
+
+  template<class ... Args>
+  inline void set(const ScratchRequest& scr_request, Args ... args) {
+    first_arg = false;
+    internal_policy::internal_set_scratch_size(scr_request.level,Impl::PerTeamValue(scr_request.per_team),
+        Impl::PerThreadValue(scr_request.per_thread));
+    set(args...);
+  }
 
   inline TeamPolicy set_chunk_size(int chunk) const {
     return TeamPolicy(internal_policy::set_chunk_size(chunk));
