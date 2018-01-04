@@ -1420,4 +1420,50 @@ TEST_F( TEST_CATEGORY, view_mirror_nonconst )
   Kokkos::deep_copy(h_view2, d_view_const);
 }
 
+template <typename DataType, typename ... Extents>
+void test_left_stride(Extents ... extents) {
+  using view_type = Kokkos::View<DataType, Kokkos::LayoutLeft, Kokkos::HostSpace>;
+  view_type view("view", extents...);
+  size_t expected_stride = 1;
+  size_t all_strides[view_type::rank];
+  view.stride(all_strides);
+  for (int i = 0; i < view_type::rank; ++i) {
+    ASSERT_EQ(view.stride(i), expected_stride);
+    ASSERT_EQ(all_strides[i], expected_stride);
+    expected_stride *= view.extent(i);
+  }
+}
+
+template <typename DataType, typename ... Extents>
+void test_right_stride(Extents ... extents) {
+  using view_type = Kokkos::View<DataType, Kokkos::LayoutRight, Kokkos::HostSpace>;
+  view_type view("view", extents...);
+  size_t expected_stride = 1;
+  size_t all_strides[view_type::rank];
+  view.stride(all_strides);
+  for (int ri = 0; ri < view_type::rank; ++ri) {
+    auto i = view_type::rank - 1 - ri;
+    ASSERT_EQ(view.stride(i), expected_stride);
+    ASSERT_EQ(all_strides[i], expected_stride);
+    expected_stride *= view.extent(i);
+  }
+}
+
+template <typename DataType, typename ... Extents>
+void test_stride(Extents ... extents) {
+  test_right_stride<DataType>(extents...);
+  test_left_stride<DataType>(extents...);
+}
+
+TEST_F( TEST_CATEGORY, view_stride_method )
+{
+  test_stride<double[3]>();
+  test_stride<double*>(3);
+  test_stride<double[3][7][13]>();
+  test_stride<double***>(3, 7, 13);
+  // factorial(8) = 40320
+  test_stride<double[1][2][3][4][5][6][7][8]>();
+  test_stride<double********>(1, 2, 3, 4, 5, 6, 7, 8);
+}
+
 } // namespace Test
