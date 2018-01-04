@@ -207,6 +207,13 @@ struct VerifyExecutionCanAccessMemorySpace
   inline static void verify( void ) { Kokkos::Experimental::ROCmSpace::access_error(); }
   inline static void verify( const void * p ) { Kokkos::Experimental::ROCmSpace::access_error(p); }
 };
+
+class dim3 {
+public:
+int x,y,z;
+dim3(int _x, int _y, int _z):x(_x),y(_y),z(_z) {};
+};
+
 } // namespace Experimental
 } // namespace Kokkos
 

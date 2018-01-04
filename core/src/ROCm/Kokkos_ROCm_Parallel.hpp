@@ -46,6 +46,7 @@
 #include <ROCm/Kokkos_ROCm_Reduce.hpp>
 #include <ROCm/Kokkos_ROCm_Scan.hpp>
 #include <ROCm/Kokkos_ROCm_Vectorization.hpp>
+#include <ROCm/KokkosExp_ROC_IterateTile_Refactor.hpp>
 
 
 namespace Kokkos {
@@ -650,6 +651,126 @@ auto foo = [=](size_t i){rocm_invoke<typename Policy::work_tag>(f, i);};
   KOKKOS_INLINE_FUNCTION
   void execute() const {}
 
+};
+
+// MDRangePolicy impl
+template< class FunctorType , class ... Traits >
+class ParallelFor< FunctorType
+                 , Kokkos::MDRangePolicy< Traits ... >
+                 , Kokkos::Experimental::ROCm
+                 >
+{
+private:
+  typedef Kokkos::MDRangePolicy< Traits ...  > Policy ;
+  using RP = Policy;
+  typedef typename Policy::array_index_type array_index_type;
+  typedef typename Policy::index_type index_type;
+  typedef typename Policy::launch_bounds LaunchBounds;
+
+
+  const FunctorType m_functor ;
+  const Policy      m_rp ;
+
+public:
+
+  KOKKOS_INLINE_FUNCTION 
+  void operator()(void) const
+    {
+       Kokkos::Impl::Refactor::DeviceIterateTile<Policy::rank,Policy,FunctorType,typename Policy::work_tag>(m_rp,m_functor).exec_range();
+    }
+
+
+  inline
+  void execute() const
+  {
+    const array_index_type maxblocks = static_cast<array_index_type>(Kokkos::Impl::ROCmTraits::UpperBoundExtentCount);
+    if ( RP::rank == 2 )
+    {
+      const dim3 block( m_rp.m_tile[0] , m_rp.m_tile[1] , 1);
+      auto grid = extent<2>(
+            std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks )
+          , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks )
+          ).tile(block.x,block.y);
+//      //CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
+      hc::parallel_for_each(grid.tile(block.x,block.y), [=](const hc::index<2> & idx) [[hc]]  
+      { this->operator()();
+      }).wait();
+    }
+    else if ( RP::rank == 3 )
+    {
+      const dim3 block( m_rp.m_tile[0] , m_rp.m_tile[1] , m_rp.m_tile[2] );
+      auto grid = extent<3>(
+          std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks )
+        , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks )
+        , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.z - 1 ) / block.z , maxblocks )
+        );
+      //CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
+      hc::parallel_for_each(grid.tile(block.x,block.y,block.x), [=](const hc::index<3> & idx) [[hc]]  
+      { this->operator()();
+      }).wait();
+    }
+    else if ( RP::rank == 4 )
+    {
+      // id0,id1 encoded within threadIdx.x; id2 to threadIdx.y; id3 to threadIdx.z
+      const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2] , m_rp.m_tile[3] );
+      auto grid = extent<3>(
+          std::min( static_cast<index_type>( m_rp.m_tile_end[0] * m_rp.m_tile_end[1] )
+                  , static_cast<index_type>(maxblocks) )
+        , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.y - 1 ) / block.y , maxblocks )
+        , std::min( ( m_rp.m_upper[3] - m_rp.m_lower[3] + block.z - 1 ) / block.z , maxblocks )
+        );
+      //CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
+      hc::parallel_for_each(grid.tile(block.x,block.y,block.x), [=](const hc::index<3> & idx) [[hc]]  
+      { this->operator()();
+      }).wait();
+    }
+    else if ( RP::rank == 5 )
+    {
+      // id0,id1 encoded within threadIdx.x; id2,id3 to threadIdx.y; id4 to threadIdx.z
+      const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2]*m_rp.m_tile[3] , m_rp.m_tile[4] );
+      auto grid = extent<3>(
+          std::min( static_cast<index_type>( m_rp.m_tile_end[0] * m_rp.m_tile_end[1] )
+                  , static_cast<index_type>(maxblocks) )
+        , std::min( static_cast<index_type>( m_rp.m_tile_end[2] * m_rp.m_tile_end[3] )
+                  , static_cast<index_type>(maxblocks) )
+        , std::min( ( m_rp.m_upper[4] - m_rp.m_lower[4] + block.z - 1 ) / block.z , maxblocks )
+        );
+      //CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
+      hc::parallel_for_each(grid.tile(block.x,block.y,block.x), [=](const hc::index<3> & idx) [[hc]]  
+      { this->operator()();
+      }).wait();
+    }
+    else if ( RP::rank == 6 )
+    {
+      // id0,id1 encoded within threadIdx.x; id2,id3 to threadIdx.y; id4,id5 to threadIdx.z
+      const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2]*m_rp.m_tile[3] , m_rp.m_tile[4]*m_rp.m_tile[5] );
+      auto grid = extent<3>(
+          std::min( static_cast<index_type>( m_rp.m_tile_end[0] * m_rp.m_tile_end[1] )
+                  , static_cast<index_type>(maxblocks) )
+        ,  std::min( static_cast<index_type>( m_rp.m_tile_end[2] * m_rp.m_tile_end[3] )
+                  , static_cast<index_type>(maxblocks) )
+        , std::min( static_cast<index_type>( m_rp.m_tile_end[4] * m_rp.m_tile_end[5] )
+                  , static_cast<index_type>(maxblocks) )
+        );
+      //CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
+      hc::parallel_for_each(grid.tile(block.x,block.y,block.x), [=](const hc::index<3> & idx) [[hc]]  
+      { this->operator()();
+      }).wait();
+    }
+    else
+    {
+      printf("Kokkos::MDRange Error: Exceeded rank bounds with ROCm\n");
+      Kokkos::abort("Aborting");
+    }
+
+  } //end execute
+
+//  inline
+  ParallelFor( const FunctorType & arg_functor
+             , Policy arg_policy )
+    : m_functor( arg_functor )
+    , m_rp(  arg_policy )
+    {}
 };
 
 //----------------------------------------------------------------------------
