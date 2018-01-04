@@ -56,7 +56,7 @@ class AnonymousSpace {
 public:
   //! Tag this class as a kokkos memory space
   typedef AnonymousSpace  memory_space;
-  typedef Kokkos::Serial  execution_space;
+  typedef Kokkos::DefaultExecutionSpace execution_space;
   typedef size_t     size_type;
 
   //! This memory space preferred device_type

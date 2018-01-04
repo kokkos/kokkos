@@ -57,7 +57,6 @@
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_ScratchSpace.hpp>
-#include <Kokkos_AnonymousSpace.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_HostThreadTeam.hpp>
