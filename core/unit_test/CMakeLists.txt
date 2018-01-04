@@ -284,6 +284,26 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
     TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
 )
 
+TRIBITS_ADD_EXECUTABLE_AND_TEST(
+  UnitTest_PushFinalizeHook
+  SOURCES
+    UnitTest_PushFinalizeHook.cpp
+  COMM serial mpi
+  NUM_MPI_PROCS 1
+  FAIL_REGULAR_EXPRESSION "FAILED"
+    TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+)
+
+TRIBITS_ADD_EXECUTABLE_AND_TEST(
+  UnitTest_PushFinalizeHook_terminate
+  SOURCES
+    UnitTest_PushFinalizeHook_terminate.cpp
+  COMM serial mpi
+  NUM_MPI_PROCS 1
+  PASS_REGULAR_EXPRESSION "PASSED: I am the custom std::terminate handler."
+    TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+)
+
 foreach(INITTESTS_NUM RANGE 1 16)
 TRIBITS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_DefaultInit_${INITTESTS_NUM}

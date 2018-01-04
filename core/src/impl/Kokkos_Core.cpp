@@ -48,12 +48,14 @@
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
+#include <stack>
 
 //----------------------------------------------------------------------------
 
 namespace {
 bool g_is_initialized = false;
 bool g_show_warnings = true;
+std::stack<std::function<void()> > finalize_hooks;
 }
 
 namespace Kokkos { namespace Impl { namespace {
@@ -477,8 +479,28 @@ void initialize(const InitArguments& arguments) {
   Impl::initialize_internal(arguments);
 }
 
+void push_finalize_hook(std::function<void()> f)
+{
+  finalize_hooks.push(f);
+}
+
 void finalize()
 {
+  while (! finalize_hooks.empty()) {
+    auto f = finalize_hooks.top();
+    try {
+      f();
+    }
+    catch(...) {
+      std::cerr << "Kokkos::finalize: A finalize hook (added via "
+        "Kokkos::push_finalize_hook) threw an exception that it did not "
+        "handle.  Per std::atexit rules, this results in std::terminate."
+        << std::endl;
+      std::terminate();
+    }
+    finalize_hooks.pop();
+  }
+
   Impl::finalize_internal();
 }
 
