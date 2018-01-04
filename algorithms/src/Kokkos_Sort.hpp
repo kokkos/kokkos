@@ -271,7 +271,7 @@ public:
 
   // Sort a view with respect ot the first dimension using the permutation array
   template<class ValuesViewType>
-  void sort( ValuesViewType const & values)
+  void sort( ValuesViewType const & values) const
   {
     typedef
       Kokkos::View< typename ValuesViewType::data_type,
