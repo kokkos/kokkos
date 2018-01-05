@@ -1420,4 +1420,36 @@ TEST_F( TEST_CATEGORY, view_mirror_nonconst )
   Kokkos::deep_copy(h_view2, d_view_const);
 }
 
+inline void test_anonymous_space() {
+  int host_array[10];
+  Kokkos::View<int[10], Kokkos::AnonymousSpace> host_anon_stat_view(host_array);
+  Kokkos::View<int*, Kokkos::AnonymousSpace> host_anon_dyn_view(host_array, 10);
+  Kokkos::View<int*, Kokkos::HostSpace> host_view("host_view", 10);
+  Kokkos::View<int*, Kokkos::AnonymousSpace> host_anon_assign_view = host_view;
+  for (int i = 0; i < 10; ++i) {
+    host_anon_stat_view(i) = host_anon_dyn_view(i) = 142;
+    host_anon_assign_view(i) = 142;
+  }
+  Kokkos::View<int**, Kokkos::LayoutRight, TEST_EXECSPACE> d_view("d_view", 100, 10);
+#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
+  Kokkos::parallel_for(100, KOKKOS_LAMBDA(int i) {
+    int* ptr = &(d_view(i, 0));
+    Kokkos::View<int[10], Kokkos::AnonymousSpace> d_anon_stat_view(ptr);
+    Kokkos::View<int*, Kokkos::AnonymousSpace> d_anon_dyn_view(ptr, 10);
+    auto sub = Kokkos::subview(d_view, i, Kokkos::ALL());
+    Kokkos::View<int*, Kokkos::AnonymousSpace> d_anon_assign_view = sub;
+    for (int j = 0; j < 10; ++j) {
+      d_anon_stat_view(i) = 50;
+      d_anon_assign_view(i) += 50;
+      d_anon_dyn_view(i) += 42;
+    }
+  });
+#endif
+}
+
+TEST_F( TEST_CATEGORY, anonymous_space )
+{
+  test_anonymous_space();
+}
+
 } // namespace Test

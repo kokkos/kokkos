@@ -78,6 +78,7 @@
 #include <Kokkos_ROCm.hpp>
 #endif
 
+#include <Kokkos_AnonymousSpace.hpp>
 #include <Kokkos_Pair.hpp>
 #include <Kokkos_MemoryPool.hpp>
 #include <Kokkos_Array.hpp>
