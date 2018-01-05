@@ -84,14 +84,14 @@ namespace Impl {
 
 template<typename OtherSpace>
 struct MemorySpaceAccess< Kokkos::AnonymousSpace , OtherSpace > {
-  enum { assignable = false };
+  enum { assignable = true };
   enum { accessible = true };
   enum { deepcopy   = true };
 };
 
 template<typename OtherSpace>
 struct MemorySpaceAccess<  OtherSpace, Kokkos::AnonymousSpace > {
-  enum { assignable = false };
+  enum { assignable = true };
   enum { accessible = true };
   enum { deepcopy   = true };
 };
