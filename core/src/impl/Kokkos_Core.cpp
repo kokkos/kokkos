@@ -486,19 +486,24 @@ void push_finalize_hook(std::function<void()> f)
 
 void finalize()
 {
-  while (! finalize_hooks.empty()) {
+  typename decltype(finalize_hooks)::size_type  numSuccessfulCalls = 0;
+  while(! finalize_hooks.empty()) {
     auto f = finalize_hooks.top();
     try {
       f();
     }
     catch(...) {
-      std::cerr << "Kokkos::finalize: A finalize hook (added via "
-        "Kokkos::push_finalize_hook) threw an exception that it did not "
-        "handle.  Per std::atexit rules, this results in std::terminate."
-        << std::endl;
+      std::cerr << "Kokkos::finalize: A finalize hook (set via "
+        "Kokkos::push_finalize_hook) threw an exception that it did not catch."
+        "  Per std::atexit rules, this results in std::terminate.  This is "
+        "finalize hook number " << numSuccessfulCalls << " (1-based indexing) "
+        "out of " << finalize_hooks.size() << " to call.  Remember that "
+        "Kokkos::finalize calls finalize hooks in reverse order from how they "
+        "were pushed." << std::endl;
       std::terminate();
     }
     finalize_hooks.pop();
+    ++numSuccessfulCalls;
   }
 
   Impl::finalize_internal();
