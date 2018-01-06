@@ -133,7 +133,7 @@ int main( int argc, char *argv[] ) {
          << "  Expected output:" << endl
          << expectedOutput << endl
          << "  Actual output:" << endl
-         << hookOutput << endl;
+         << hookOutput.str() << endl;
   }
   return success ? EXIT_SUCCESS : EXIT_FAILURE;
 }
