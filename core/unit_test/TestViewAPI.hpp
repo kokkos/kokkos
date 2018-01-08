@@ -1439,9 +1439,9 @@ inline void test_anonymous_space() {
     auto sub = Kokkos::subview(d_view, i, Kokkos::ALL());
     Kokkos::View<int*, Kokkos::AnonymousSpace> d_anon_assign_view = sub;
     for (int j = 0; j < 10; ++j) {
-      d_anon_stat_view(i) = 50;
-      d_anon_assign_view(i) += 50;
-      d_anon_dyn_view(i) += 42;
+      d_anon_stat_view(j) = 50;
+      d_anon_assign_view(j) += 50;
+      d_anon_dyn_view(j) += 42;
     }
   });
 #endif
