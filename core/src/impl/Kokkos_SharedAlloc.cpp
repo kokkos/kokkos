@@ -46,24 +46,7 @@
 namespace Kokkos {
 namespace Impl {
 
-namespace {
-
-__thread int t_tracking_enabled = 1;
-
-}
-
-int SharedAllocationRecord< void , void >::tracking_enabled()
-{ return t_tracking_enabled; }
-
-void SharedAllocationRecord< void , void >::tracking_disable()
-{
-  t_tracking_enabled = 0;
-}
-
-void SharedAllocationRecord< void , void >::tracking_enable()
-{
-  t_tracking_enabled = 1;
-}
+__thread int SharedAllocationRecord<void, void>::t_tracking_enabled = 1;
 
 //----------------------------------------------------------------------------
 

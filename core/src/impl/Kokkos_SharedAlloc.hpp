@@ -107,21 +107,24 @@ protected:
                         , size_t                   arg_alloc_size
                         , function_type            arg_dealloc
                         );
+private:
+  
+  static __thread int t_tracking_enabled;
 
 public:
   inline std::string get_label() const { return std::string("Unmanaged"); }
 
-  static int tracking_enabled();
+  static int tracking_enabled() { return t_tracking_enabled; }
 
   /**\brief A host process thread claims and disables the
    *        shared allocation tracking flag.
    */
-  static void tracking_disable();
+  static void tracking_disable() { t_tracking_enabled = 0; }
 
   /**\brief A host process thread releases and enables the
    *        shared allocation tracking flag.
    */
-  static void tracking_enable();
+  static void tracking_enable() { t_tracking_enabled = 1; }
 
   ~SharedAllocationRecord() = default ;
 
