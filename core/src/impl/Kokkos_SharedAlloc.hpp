@@ -381,8 +381,8 @@ public:
   KOKKOS_FORCEINLINE_FUNCTION
   SharedAllocationTracker( const SharedAllocationTracker & rhs
                          , const bool enable_tracking )
-    : m_record_bits( KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED
-                     && enable_tracking
+    : m_record_bits( enable_tracking
+                     && KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED
                    ? rhs.m_record_bits
                    : rhs.m_record_bits | DO_NOT_DEREF_FLAG )
     { KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT }

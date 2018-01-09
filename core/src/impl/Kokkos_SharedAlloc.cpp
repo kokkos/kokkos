@@ -48,8 +48,6 @@ namespace Impl {
 
 __thread int SharedAllocationRecord<void, void>::t_tracking_enabled = 1;
 
-//----------------------------------------------------------------------------
-
 bool
 SharedAllocationRecord< void , void >::
 is_sane( SharedAllocationRecord< void , void > * arg_record )
