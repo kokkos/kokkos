@@ -146,6 +146,8 @@ do
       echo "                 Maxwell53      = NVIDIA Maxwell generation CC 5.3"
       echo "                 Pascal60       = NVIDIA Pascal generation CC 6.0"
       echo "                 Pascal61       = NVIDIA Pascal generation CC 6.1"
+      echo "                 Volta70        = NVIDIA Volta generation CC 7.0"
+      echo "                 Volta72        = NVIDIA Volta generation CC 7.2"
       echo ""
       echo "--compiler=/Path/To/Compiler  Set the compiler."
       echo "--debug,-dbg:                 Enable Debugging."
