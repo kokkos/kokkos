@@ -304,7 +304,7 @@ public:
                           , offset_type       /* PermuteViewType */
                           , ValuesViewType    /* SrcViewType */
                           >
-        functor( sorted_values , sort_order , values, values_range_begin );
+        functor( sorted_values , sort_order , values, values_range_begin - range_begin );
 
       parallel_for( Kokkos::RangePolicy<execution_space>(0,len),functor);
     }
@@ -340,7 +340,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   void operator() (const bin_count_tag& tag, const int& i) const {
     const int j = range_begin + i ;
-    bin_count_atomic(bin_op.bin(keys,j))++;
+    bin_count_atomic(bin_op.bin(keys, j))++;
   }
 
   KOKKOS_INLINE_FUNCTION

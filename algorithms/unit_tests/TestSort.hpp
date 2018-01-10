@@ -280,17 +280,16 @@ void test_issue_1160()
   auto h_x = Kokkos::create_mirror_view(x_);
   auto h_v = Kokkos::create_mirror_view(v_);
 
-  h_element(0) = 142;
-  h_element(1) = 141;
-  h_element(2) = 140;
-  h_element(3) = 5;
-  h_element(4) = 4;
-  h_element(5) = 3;
-  h_element(6) = 2;
-  h_element(7) = 1;
-  h_element(8) = 0;
-  h_element(9) = -1;
-  h_element(10) = -2;
+  h_element(0) = 9;
+  h_element(1) = 8;
+  h_element(2) = 7;
+  h_element(3) = 6;
+  h_element(4) = 5;
+  h_element(5) = 4;
+  h_element(6) = 3;
+  h_element(7) = 2;
+  h_element(8) = 1;
+  h_element(9) = 0;
 
   for (int i = 0; i < 10; ++i) {
     h_v(i, 0) = h_x(i, 0) = double(h_element(i));
@@ -299,14 +298,16 @@ void test_issue_1160()
   Kokkos::deep_copy(x_, h_x);
   Kokkos::deep_copy(v_, h_v);
 
-  typedef Kokkos::View<LocalOrdinal*, ExecutionSpace> KeyViewType;
+  typedef decltype(element_) KeyViewType;
   typedef Kokkos::BinOp1D< KeyViewType > BinOp;
 
   int begin = 3;
   int end = 8;
-  BinOp1D binner(end - begin, begin, end - 1);
+  auto max = h_element(begin);
+  auto min = h_element(end - 1);
+  BinOp binner(end - begin, min, max);
 
-  Kokkos::BinSort<decltype(element_) , BinOp > Sorter(element_,begin,end,binner,false);
+  Kokkos::BinSort<KeyViewType , BinOp > Sorter(element_,begin,end,binner,false);
   Sorter.create_permute_vector();
   Sorter.sort(element_,begin,end);
 
@@ -317,17 +318,16 @@ void test_issue_1160()
   Kokkos::deep_copy(h_x, x_);
   Kokkos::deep_copy(h_v, v_);
 
-  ASSERT_EQ(h_element(0), 142);
-  ASSERT_EQ(h_element(1), 141);
-  ASSERT_EQ(h_element(2), 140);
-  ASSERT_EQ(h_element(3), 1);
-  ASSERT_EQ(h_element(4), 2);
-  ASSERT_EQ(h_element(5), 3);
-  ASSERT_EQ(h_element(6), 4);
-  ASSERT_EQ(h_element(7), 5);
-  ASSERT_EQ(h_element(8), 0);
-  ASSERT_EQ(h_element(9), -1);
-  ASSERT_EQ(h_element(10), -2);
+  ASSERT_EQ(h_element(0), 9);
+  ASSERT_EQ(h_element(1), 8);
+  ASSERT_EQ(h_element(2), 7);
+  ASSERT_EQ(h_element(3), 2);
+  ASSERT_EQ(h_element(4), 3);
+  ASSERT_EQ(h_element(5), 4);
+  ASSERT_EQ(h_element(6), 5);
+  ASSERT_EQ(h_element(7), 6);
+  ASSERT_EQ(h_element(8), 1);
+  ASSERT_EQ(h_element(9), 0);
 
   for (int i = 0; i < 10; ++i) {
     ASSERT_EQ(h_element(i), int(h_x(i, 0)));
