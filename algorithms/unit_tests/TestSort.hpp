@@ -269,6 +269,74 @@ void test_dynamic_view_sort(unsigned int n )
 
 //----------------------------------------------------------------------------
 
+template<class ExecutionSpace>
+void test_issue_1160()
+{
+  Kokkos::View<int*, ExecutionSpace> element_("element", 10);
+  Kokkos::View<double*, ExecutionSpace> x_("x", 10);
+  Kokkos::View<double*, ExecutionSpace> v_("y", 10);
+
+  auto h_element = Kokkos::create_mirror_view(element_);
+  auto h_x = Kokkos::create_mirror_view(x_);
+  auto h_v = Kokkos::create_mirror_view(v_);
+
+  h_element(0) = 142;
+  h_element(1) = 141;
+  h_element(2) = 140;
+  h_element(3) = 5;
+  h_element(4) = 4;
+  h_element(5) = 3;
+  h_element(6) = 2;
+  h_element(7) = 1;
+  h_element(8) = 0;
+  h_element(9) = -1;
+  h_element(10) = -2;
+
+  for (int i = 0; i < 10; ++i) {
+    h_v(i, 0) = h_x(i, 0) = double(h_element(i));
+  }
+  Kokkos::deep_copy(element_, h_element);
+  Kokkos::deep_copy(x_, h_x);
+  Kokkos::deep_copy(v_, h_v);
+
+  typedef Kokkos::View<LocalOrdinal*, ExecutionSpace> KeyViewType;
+  typedef Kokkos::BinOp1D< KeyViewType > BinOp;
+
+  int begin = 3;
+  int end = 8;
+  BinOp1D binner(end - begin, begin, end - 1);
+
+  Kokkos::BinSort<decltype(element_) , BinOp > Sorter(element_,begin,end,binner,false);
+  Sorter.create_permute_vector();
+  Sorter.sort(element_,begin,end);
+
+  Sorter.sort(x_,begin,end);
+  Sorter.sort(v_,begin,end);
+
+  Kokkos::deep_copy(h_element, element_);
+  Kokkos::deep_copy(h_x, x_);
+  Kokkos::deep_copy(h_v, v_);
+
+  ASSERT_EQ(h_element(0), 142);
+  ASSERT_EQ(h_element(1), 141);
+  ASSERT_EQ(h_element(2), 140);
+  ASSERT_EQ(h_element(3), 1);
+  ASSERT_EQ(h_element(4), 2);
+  ASSERT_EQ(h_element(5), 3);
+  ASSERT_EQ(h_element(6), 4);
+  ASSERT_EQ(h_element(7), 5);
+  ASSERT_EQ(h_element(8), 0);
+  ASSERT_EQ(h_element(9), -1);
+  ASSERT_EQ(h_element(10), -2);
+
+  for (int i = 0; i < 10; ++i) {
+    ASSERT_EQ(h_element(i), int(h_x(i, 0)));
+    ASSERT_EQ(h_element(i), int(h_v(i, 0)));
+  }
+}
+
+//----------------------------------------------------------------------------
+
 template<class ExecutionSpace, typename KeyType>
 void test_sort(unsigned int N)
 {
@@ -278,6 +346,7 @@ void test_sort(unsigned int N)
   test_3D_sort<ExecutionSpace,KeyType>(N);
   test_dynamic_view_sort<ExecutionSpace,KeyType>(N*N);
 #endif
+  test_issue_1160<ExecutionSpace>();
 }
 
 }
