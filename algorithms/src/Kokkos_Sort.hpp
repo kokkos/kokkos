@@ -320,7 +320,7 @@ public:
   template<class ValuesViewType>
   void sort( ValuesViewType const & values ) const
   {
-    this->sort( values, 0, values.extent(0) );
+    this->sort( values, 0, /*values.extent(0)*/ range_end - range_begin );
   }
 
   // Get the permutation vector
@@ -554,7 +554,7 @@ void sort( ViewType view
     bin_sort(view,begin,end,CompType((end-begin)/2,result.min_val,result.max_val),true);
 
   bin_sort.create_permute_vector();
-  bin_sort.sort(view);
+  bin_sort.sort(view,begin,end);
 }
 
 }
