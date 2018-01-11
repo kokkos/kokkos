@@ -402,10 +402,13 @@ fflush(stdout);
 
   std::pair<int64_t,int64_t> get_work_partition() noexcept
     {
+      int64_t first = m_work_range.first;
+      int64_t second = m_work_range.second;
+      first *= m_work_chunk;
+      second *= m_work_chunk;
       return std::pair<int64_t,int64_t>
-        ( m_work_range.first * m_work_chunk
-        , m_work_range.second * m_work_chunk < m_work_end
-        ? m_work_range.second * m_work_chunk : m_work_end );
+        ( first
+        , second < m_work_end ? second : m_work_end );
     }
 
   std::pair<int64_t,int64_t> get_work_stealing_chunk() noexcept

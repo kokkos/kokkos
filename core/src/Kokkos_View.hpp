@@ -586,7 +586,7 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t span() const { return m_map.span(); }
   // Deprecated, use 'span()' instead
   KOKKOS_INLINE_FUNCTION constexpr size_t capacity() const { return m_map.span(); }
-  KOKKOS_INLINE_FUNCTION constexpr bool   span_is_contiguous() const { return m_map.span_is_contiguous(); }
+  KOKKOS_INLINE_FUNCTION bool span_is_contiguous() const { return m_map.span_is_contiguous(); }
   KOKKOS_INLINE_FUNCTION constexpr pointer_type data() const { return m_map.data(); }
 
   // Deprecated, use 'span_is_contigous()' instead
