@@ -169,6 +169,12 @@ else
   KOKKOS_PATH=$( cd $KOKKOS_PATH && pwd )
 fi
 
+UNCOMMITTED=`cd ${KOKKOS_PATH}; git status --porcelain 2>/dev/null`
+if ! [ -z "$UNCOMMITTED" ]; then
+  echo "WARNING!! THE FOLLOWING CHANGES ARE UNCOMMITTED!! :"
+  echo "$UNCOMMITTED"
+  echo ""
+fi
 
 GITSTATUS=`cd ${KOKKOS_PATH}; git log -n 1 --format=oneline`
 echo "Repository Status: " ${GITSTATUS}
