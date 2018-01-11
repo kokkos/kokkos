@@ -56,7 +56,8 @@ namespace { // (anonymous)
 // I verified that changing this string makes the test fail.
 const char my_terminate_str[] = "PASSED: I am the custom std::terminate handler.";
 
-void my_terminate_handler ()
+// Tell compilers not to complain that this function doesn't return.
+[[ noreturn ]] void my_terminate_handler ()
 {
   std::cerr << my_terminate_str << std::endl;
   std::abort(); // terminate handlers normally would end by calling this
@@ -64,11 +65,10 @@ void my_terminate_handler ()
 
 } // namespace (anonymous)
 
-
 int main(int argc, char *argv[])
 {
+  // If std::terminate is called, it will call my_terminate_handler.
   std::set_terminate (my_terminate_handler);
-
 
   Kokkos::initialize(argc, argv);
   Kokkos::push_finalize_hook([] {
