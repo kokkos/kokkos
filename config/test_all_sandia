@@ -739,13 +739,13 @@ wait_summarize_and_exit() {
     echo $passed_test $(cat $PASSED_DIR/$passed_test)
   done
 
+  local -i rv=0
   if [ "$(ls -A $FAILED_DIR)" ]; then
     echo "#######################################################"
     echo "FAILED TESTS"
     echo "#######################################################"
 
     local failed_test
-    local -i rv=0
     for failed_test in $(\ls -1 $FAILED_DIR | sort)
     do
       echo $failed_test "("$(cat $FAILED_DIR/$failed_test)" failed)"
