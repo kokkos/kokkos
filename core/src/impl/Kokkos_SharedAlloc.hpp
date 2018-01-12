@@ -283,6 +283,12 @@ public:
 
 #endif
 
+#define KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, override_tracking) \
+  (((!override_tracking) || (rhs.m_record_bits & DO_NOT_DEREF_FLAG) \
+    || (!KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED)) \
+  ? rhs.m_record_bits | DO_NOT_DEREF_FLAG \
+  : rhs.m_record_bits)
+
   /** \brief  Assign a specialized record */
   inline
   void assign_allocated_record_to_uninitialized( Record * arg_record )
@@ -358,11 +364,9 @@ public:
   KOKKOS_FORCEINLINE_FUNCTION
   SharedAllocationTracker & operator = ( SharedAllocationTracker && rhs )
     {
-      // If this is tracking then must decrement
-      KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
-      // Move and reset RHS to default constructed value.
-      m_record_bits = rhs.m_record_bits ;
-      rhs.m_record_bits = DO_NOT_DEREF_FLAG ;
+      auto swap_tmp = m_record_bits;
+      m_record_bits = rhs.m_record_bits;
+      rhs.m_record_bits = swap_tmp;
       return *this ;
     }
 
@@ -370,9 +374,7 @@ public:
 
   KOKKOS_FORCEINLINE_FUNCTION
   SharedAllocationTracker( const SharedAllocationTracker & rhs )
-    : m_record_bits( KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED
-                   ? rhs.m_record_bits
-                   : rhs.m_record_bits | DO_NOT_DEREF_FLAG )
+    : m_record_bits( KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, true) )
     {
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
     }
@@ -381,10 +383,7 @@ public:
   KOKKOS_FORCEINLINE_FUNCTION
   SharedAllocationTracker( const SharedAllocationTracker & rhs
                          , const bool enable_tracking )
-    : m_record_bits( enable_tracking
-                     && KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED
-                   ? rhs.m_record_bits
-                   : rhs.m_record_bits | DO_NOT_DEREF_FLAG )
+    : m_record_bits( KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, enable_tracking) )
     { KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT }
 
   KOKKOS_FORCEINLINE_FUNCTION
@@ -392,9 +391,7 @@ public:
     {
       // If this is tracking then must decrement
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
-      m_record_bits = KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED
-                    ? rhs.m_record_bits
-                    : rhs.m_record_bits | DO_NOT_DEREF_FLAG ;
+      m_record_bits = KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, true);
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
       return *this ;
     }
@@ -405,10 +402,7 @@ public:
              , const bool enable_tracking )
     {
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
-      m_record_bits = KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED
-                      && enable_tracking
-                    ? rhs.m_record_bits
-                    : rhs.m_record_bits | DO_NOT_DEREF_FLAG ;
+      m_record_bits = KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, enable_tracking);
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
     }
 
