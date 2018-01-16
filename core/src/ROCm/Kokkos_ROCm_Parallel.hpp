@@ -46,7 +46,9 @@
 #include <ROCm/Kokkos_ROCm_Reduce.hpp>
 #include <ROCm/Kokkos_ROCm_Scan.hpp>
 #include <ROCm/Kokkos_ROCm_Vectorization.hpp>
-#include <ROCm/KokkosExp_ROC_IterateTile_Refactor.hpp>
+#include <ROCm/KokkosExp_ROCm_IterateTile_Refactor.hpp>
+
+#include <KokkosExp_MDRangePolicy.hpp>
 
 
 namespace Kokkos {
@@ -687,12 +689,13 @@ public:
     if ( RP::rank == 2 )
     {
       const dim3 block( m_rp.m_tile[0] , m_rp.m_tile[1] , 1);
-      auto grid = extent<2>(
+      auto grid = extent<3>(
             std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks )
           , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks )
-          ).tile(block.x,block.y);
+          , 1
+          ).tile(block.x,block.y,1);
 //      //CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
-      hc::parallel_for_each(grid.tile(block.x,block.y), [=](const hc::index<2> & idx) [[hc]]  
+      hc::parallel_for_each(grid.tile(block.x,block.y,1), [=](const hc::index<3> & idx) [[hc]]  
       { this->operator()();
       }).wait();
     }
@@ -705,7 +708,7 @@ public:
         , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.z - 1 ) / block.z , maxblocks )
         );
       //CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
-      hc::parallel_for_each(grid.tile(block.x,block.y,block.x), [=](const hc::index<3> & idx) [[hc]]  
+      hc::parallel_for_each(grid.tile(block.x,block.y,block.z), [=](const hc::index<3> & idx) [[hc]]  
       { this->operator()();
       }).wait();
     }
@@ -720,7 +723,7 @@ public:
         , std::min( ( m_rp.m_upper[3] - m_rp.m_lower[3] + block.z - 1 ) / block.z , maxblocks )
         );
       //CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
-      hc::parallel_for_each(grid.tile(block.x,block.y,block.x), [=](const hc::index<3> & idx) [[hc]]  
+      hc::parallel_for_each(grid.tile(block.x,block.y,block.z), [=](const hc::index<3> & idx) [[hc]]  
       { this->operator()();
       }).wait();
     }
@@ -736,7 +739,7 @@ public:
         , std::min( ( m_rp.m_upper[4] - m_rp.m_lower[4] + block.z - 1 ) / block.z , maxblocks )
         );
       //CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
-      hc::parallel_for_each(grid.tile(block.x,block.y,block.x), [=](const hc::index<3> & idx) [[hc]]  
+      hc::parallel_for_each(grid.tile(block.x,block.y,block.z), [=](const hc::index<3> & idx) [[hc]]  
       { this->operator()();
       }).wait();
     }
@@ -753,7 +756,7 @@ public:
                   , static_cast<index_type>(maxblocks) )
         );
       //CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
-      hc::parallel_for_each(grid.tile(block.x,block.y,block.x), [=](const hc::index<3> & idx) [[hc]]  
+      hc::parallel_for_each(grid.tile(block.x,block.y,block.z), [=](const hc::index<3> & idx) [[hc]]  
       { this->operator()();
       }).wait();
     }
@@ -770,7 +773,8 @@ public:
              , Policy arg_policy )
     : m_functor( arg_functor )
     , m_rp(  arg_policy )
-    {}
+    {
+}
 };
 
 //----------------------------------------------------------------------------
