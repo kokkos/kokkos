@@ -228,6 +228,8 @@ void initialize() {
     if(nullptr == firstProfileLibrary) {
       std::cerr << "Error: Unable to load KokkosP library: " <<
         profileLibraryName << std::endl;
+      std::cerr << "dlopen(" << profileLibraryName << ", RTLD_NOW | RTLD_GLOBAL) failed with "
+        << dlerror() << '\n';
     } else {
 #ifdef KOKKOS_ENABLE_PROFILING_LOAD_PRINT
       std::cout << "KokkosP: Library Loaded: " << profileLibraryName << std::endl;
