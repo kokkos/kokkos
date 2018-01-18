@@ -169,6 +169,12 @@ else
   KOKKOS_PATH=$( cd $KOKKOS_PATH && pwd )
 fi
 
+UNCOMMITTED=`cd ${KOKKOS_PATH}; git status --porcelain 2>/dev/null`
+if ! [ -z "$UNCOMMITTED" ]; then
+  echo "WARNING!! THE FOLLOWING CHANGES ARE UNCOMMITTED!! :"
+  echo "$UNCOMMITTED"
+  echo ""
+fi
 
 GITSTATUS=`cd ${KOKKOS_PATH}; git log -n 1 --format=oneline`
 echo "Repository Status: " ${GITSTATUS}
@@ -733,17 +739,19 @@ wait_summarize_and_exit() {
     echo $passed_test $(cat $PASSED_DIR/$passed_test)
   done
 
-  echo "#######################################################"
-  echo "FAILED TESTS"
-  echo "#######################################################"
-
-  local failed_test
   local -i rv=0
-  for failed_test in $(\ls -1 $FAILED_DIR | sort)
-  do
-    echo $failed_test "("$(cat $FAILED_DIR/$failed_test)" failed)"
-    rv=$rv+1
-  done
+  if [ "$(ls -A $FAILED_DIR)" ]; then
+    echo "#######################################################"
+    echo "FAILED TESTS"
+    echo "#######################################################"
+
+    local failed_test
+    for failed_test in $(\ls -1 $FAILED_DIR | sort)
+    do
+      echo $failed_test "("$(cat $FAILED_DIR/$failed_test)" failed)"
+      rv=$rv+1
+    done
+  fi
 
   exit $rv
 }
