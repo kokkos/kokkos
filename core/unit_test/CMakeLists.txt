@@ -294,14 +294,23 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
     TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
 )
 
-TRIBITS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_PushFinalizeHook_terminate
-  SOURCES
-    UnitTest_PushFinalizeHook_terminate.cpp
-  COMM serial mpi
-  NUM_MPI_PROCS 1
-  PASS_REGULAR_EXPRESSION "PASSED: I am the custom std::terminate handler."
-    TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+# This test is special, because it passes exactly when it prints the
+# message "PASSED: I am the custom std::terminate handler.", AND calls
+# std::terminate.  This means that we can't use
+# TRIBITS_ADD_EXECUTABLE_AND_TEST.  See GitHub issue #2147.
+
+TRIBITS_ADD_EXECUTABLE( push_finalize_hook_terminate
+  SOURCES UnitTest_PushFinalizeHook_terminate.cpp
+  TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+)
+
+TRIBITS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
+  TEST_0
+    EXEC push_finalize_hook_terminate
+    NUM_MPI_PROCS 1
+    PASS_REGULAR_EXPRESSION
+      "PASSED: I am the custom std::terminate handler."
+    ALWAYS_FAIL_ON_ZERO_RETURN
 )
 
 foreach(INITTESTS_NUM RANGE 1 16)
