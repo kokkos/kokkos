@@ -104,16 +104,16 @@ struct TestViewMappingSubview
 
   TestViewMappingSubview()
     : Aa( "Aa", AN )
-    , Ab( Kokkos::Experimental::subview( Aa, std::pair< int, int >( 1, AN - 1 ) ) )
+    , Ab( Kokkos::subview( Aa, std::pair< int, int >( 1, AN - 1 ) ) )
     , Ac( Aa, std::pair< int, int >( 1, AN - 1 ) )
     , Ba( "Ba", BN0, BN1, BN2 )
-    , Bb( Kokkos::Experimental::subview( Ba
+    , Bb( Kokkos::subview( Ba
                                         , std::pair< int, int >( 1, BN0 - 1 )
                                         , std::pair< int, int >( 1, BN1 - 1 )
                                         , std::pair< int, int >( 1, BN2 - 1 )
                                         ) )
     , Ca( "Ca", CN0, CN1, CN2 )
-    , Cb( Kokkos::Experimental::subview( Ca
+    , Cb( Kokkos::subview( Ca
                                         , std::pair< int, int >( 1, CN0 - 1 )
                                         , std::pair< int, int >( 1, CN1 - 1 )
                                         , std::pair< int, int >( 1, CN2 - 1 )
@@ -121,7 +121,7 @@ struct TestViewMappingSubview
                                         , 2
                                         ) )
     , Da( "Da", DN0, DN1, DN2 )
-    , Db( Kokkos::Experimental::subview( Da
+    , Db( Kokkos::subview( Da
                                         , 1
                                         , std::pair< int, int >( 1, DN1 - 1 )
                                         , std::pair< int, int >( 1, DN2 - 1 )
@@ -133,7 +133,7 @@ struct TestViewMappingSubview
   KOKKOS_INLINE_FUNCTION
   void operator()( const int, long & error_count ) const
   {
-    auto Ad = Kokkos::Experimental::subview< Kokkos::MemoryUnmanaged >( Aa, Kokkos::pair< int, int >( 1, AN - 1 ) );
+    auto Ad = Kokkos::subview< Kokkos::MemoryUnmanaged >( Aa, Kokkos::pair< int, int >( 1, AN - 1 ) );
 
     for ( int i = 1; i < AN - 1; ++i ) if( & Aa[i] != & Ab[i - 1] ) ++error_count;
     for ( int i = 1; i < AN - 1; ++i ) if( & Aa[i] != & Ac[i - 1] ) ++error_count;

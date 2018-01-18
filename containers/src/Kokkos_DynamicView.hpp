@@ -66,7 +66,7 @@ private:
 
   template< class , class ... > friend class DynamicView ;
 
-  typedef Kokkos::Experimental::Impl::SharedAllocationTracker   track_type ;
+  typedef Kokkos::Impl::SharedAllocationTracker   track_type ;
 
   static_assert( traits::rank == 1 && traits::rank_dynamic == 1
                , "DynamicView must be rank-one" );
@@ -179,6 +179,17 @@ public:
 
   template< typename iType >
   KOKKOS_INLINE_FUNCTION void stride( iType * const s ) const { *s = 0 ; }
+
+  //----------------------------------------
+  // Allocation tracking properties
+
+  KOKKOS_INLINE_FUNCTION
+  int use_count() const
+    { return m_track.use_count(); }
+
+  inline
+  const std::string label() const
+    { return m_track.template get_label< typename traits::memory_space >(); }
 
   //----------------------------------------------------------------------
   // Range span is the span which contains all members.
@@ -508,7 +519,7 @@ public:
       // A functor to deallocate all of the chunks upon final destruction
 
       typedef typename traits::memory_space  memory_space ;
-      typedef Kokkos::Experimental::Impl::SharedAllocationRecord< memory_space , Destroy > record_type ;
+      typedef Kokkos::Impl::SharedAllocationRecord< memory_space , Destroy > record_type ;
 
       // Allocate chunk pointers and allocation counter
       record_type * const record =
@@ -532,7 +543,6 @@ public:
 } // namespace Kokkos
 
 namespace Kokkos {
-namespace Experimental {
 
 template< class T , class ... P >
 inline
@@ -545,11 +555,11 @@ create_mirror_view( const Kokkos::Experimental::DynamicView<T,P...> & src )
 template< class T , class ... DP , class ... SP >
 inline
 void deep_copy( const View<T,DP...> & dst
-              , const DynamicView<T,SP...> & src
+              , const Kokkos::Experimental::DynamicView<T,SP...> & src
               )
 {
   typedef View<T,DP...>        dst_type ;
-  typedef DynamicView<T,SP...> src_type ;
+  typedef Kokkos::Experimental::DynamicView<T,SP...> src_type ;
 
   typedef typename ViewTraits<T,DP...>::execution_space  dst_execution_space ;
   typedef typename ViewTraits<T,SP...>::memory_space     src_memory_space ;
@@ -568,11 +578,11 @@ void deep_copy( const View<T,DP...> & dst
 
 template< class T , class ... DP , class ... SP >
 inline
-void deep_copy( const DynamicView<T,DP...> & dst
+void deep_copy( const Kokkos::Experimental::DynamicView<T,DP...> & dst
               , const View<T,SP...> & src
               )
 {
-  typedef DynamicView<T,SP...> dst_type ;
+  typedef Kokkos::Experimental::DynamicView<T,SP...> dst_type ;
   typedef View<T,DP...>        src_type ;
 
   typedef typename ViewTraits<T,DP...>::execution_space  dst_execution_space ;
@@ -590,7 +600,81 @@ void deep_copy( const DynamicView<T,DP...> & dst
   }
 }
 
-} // namespace Experimental
+namespace Impl {
+template<class Arg0, class ... DP , class ... SP>
+struct CommonSubview<Kokkos::Experimental::DynamicView<DP...>,Kokkos::Experimental::DynamicView<SP...>,1,Arg0> {
+  typedef Kokkos::Experimental::DynamicView<DP...> DstType;
+  typedef Kokkos::Experimental::DynamicView<SP...> SrcType;
+  typedef DstType dst_subview_type;
+  typedef SrcType src_subview_type;
+  dst_subview_type dst_sub;
+  src_subview_type src_sub;
+  CommonSubview(const DstType& dst, const SrcType& src, const Arg0& arg0):
+    dst_sub(dst),src_sub(src) {}
+};
+
+template<class ...DP, class SrcType, class Arg0>
+struct CommonSubview<Kokkos::Experimental::DynamicView<DP...>,SrcType,1,Arg0> {
+  typedef Kokkos::Experimental::DynamicView<DP...> DstType;
+  typedef DstType dst_subview_type;
+  typedef typename Kokkos::Subview<SrcType,Arg0> src_subview_type;
+  dst_subview_type dst_sub;
+  src_subview_type src_sub;
+  CommonSubview(const DstType& dst, const SrcType& src, const Arg0& arg0):
+    dst_sub(dst),src_sub(src,arg0) {}
+};
+
+template<class DstType, class ...SP, class Arg0>
+struct CommonSubview<DstType,Kokkos::Experimental::DynamicView<SP...>,1,Arg0> {
+  typedef Kokkos::Experimental::DynamicView<SP...> SrcType;
+  typedef typename Kokkos::Subview<DstType,Arg0> dst_subview_type;
+  typedef SrcType src_subview_type;
+  dst_subview_type dst_sub;
+  src_subview_type src_sub;
+  CommonSubview(const DstType& dst, const SrcType& src, const Arg0& arg0):
+    dst_sub(dst,arg0),src_sub(src) {}
+};
+
+template<class ...DP,class ViewTypeB, class Layout, class ExecSpace,typename iType>
+struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>,ViewTypeB,Layout,ExecSpace,1,iType> {
+  Kokkos::Experimental::DynamicView<DP...> a;
+  ViewTypeB b;
+
+  typedef Kokkos::RangePolicy<ExecSpace,Kokkos::IndexType<iType>> policy_type;
+
+  ViewCopy(const Kokkos::Experimental::DynamicView<DP...>& a_, const ViewTypeB& b_):a(a_),b(b_) {
+    Kokkos::parallel_for("Kokkos::ViewCopy-2D",
+       policy_type(0,b.extent(0)),*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator() (const iType& i0) const {
+      a(i0) = b(i0);
+  };
+};
+
+template<class ...DP,class ...SP, class Layout, class ExecSpace,typename iType>
+struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>,
+                Kokkos::Experimental::DynamicView<SP...>,Layout,ExecSpace,1,iType> {
+  Kokkos::Experimental::DynamicView<DP...> a;
+  Kokkos::Experimental::DynamicView<SP...> b;
+
+  typedef Kokkos::RangePolicy<ExecSpace,Kokkos::IndexType<iType>> policy_type;
+
+  ViewCopy(const Kokkos::Experimental::DynamicView<DP...>& a_,
+           const Kokkos::Experimental::DynamicView<SP...>& b_):a(a_),b(b_) {
+    const iType n = std::min(a.extent(0),b.extent(0));
+    Kokkos::parallel_for("Kokkos::ViewCopy-2D",
+       policy_type(0,n),*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator() (const iType& i0) const {
+      a(i0) = b(i0);
+  };
+};
+
+}
 } // namespace Kokkos
 
 #endif /* #ifndef KOKKOS_DYNAMIC_VIEW_HPP */

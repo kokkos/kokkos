@@ -41,32 +41,46 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_PHYSICAL_LAYOUT_HPP
-#define KOKKOS_PHYSICAL_LAYOUT_HPP
+#include <cstdlib>
+#include <iostream>
+#include <exception>
+#include <Kokkos_Core.hpp>
 
-#include <Kokkos_View.hpp>
+// If any of the finalize hooks given to Kokkos::push_finalize_hook
+// throws but does not catch an exception, make sure that
+// Kokkos::finalize calls std::terminate.
 
-namespace Kokkos {
-namespace Impl {
+namespace { // (anonymous)
 
-struct PhysicalLayout {
-  enum LayoutType {Left,Right,Scalar,Error};
-  LayoutType layout_type;
-  int rank;
-  long long int stride[9]; //distance between two neighboring elements in a given dimension
+// If you change this, change CMakeLists.txt in this directory too!
+// I verified that changing this string makes the test fail.
+const char my_terminate_str[] = "PASSED: I am the custom std::terminate handler.";
 
-  template< class T , class L , class D , class M >
-  PhysicalLayout( const View<T,L,D,M> & view )
-    : layout_type( is_same< typename View<T,L,D,M>::array_layout , LayoutLeft  >::value ? Left : (
-                   is_same< typename View<T,L,D,M>::array_layout , LayoutRight >::value ? Right : Error ))
-    , rank( view.Rank )
-    {
-      for(int i=0;i<9;i++) stride[i] = 0;
-      view.stride( stride );
-    }
-};
-
+// Tell compilers not to complain that this function doesn't return.
+[[ noreturn ]] void my_terminate_handler ()
+{
+  std::cerr << my_terminate_str << std::endl;
+  std::abort(); // terminate handlers normally would end by calling this
 }
-}
-#endif
 
+} // namespace (anonymous)
+
+int main(int argc, char *argv[])
+{
+  // If std::terminate is called, it will call my_terminate_handler.
+  std::set_terminate (my_terminate_handler);
+
+  Kokkos::initialize(argc, argv);
+  Kokkos::push_finalize_hook([] {
+      throw std::runtime_error ("I am an uncaught exception!");
+    });
+
+  // This should call std::terminate, which in turn will call
+  // my_terminate_handler above.  That will print the message that
+  // makes this test count as passed.
+  Kokkos::finalize();
+
+  // The test actually failed if we got to this point.
+  std::cerr << "FAILED to call std::terminate!" << std::endl;
+  return EXIT_FAILURE;
+}

@@ -25,7 +25,7 @@ list(APPEND KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST
      Cuda_LDG_Intrinsic
      Debug
      Debug_DualView_Modify_Check
-     Debug_Bounds_Checkt
+     Debug_Bounds_Check
      Compiler_Warnings
      Profiling
      Profiling_Load_Print

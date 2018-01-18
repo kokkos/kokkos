@@ -14,24 +14,51 @@ PROCESSOR=`uname -p`
 
 if [[ "$HOSTNAME" =~ (white|ride).* ]]; then
   MACHINE=white
-elif [[ "$HOSTNAME" =~ .*bowman.* ]]; then
+  module load git
+fi
+
+if [[ "$HOSTNAME" =~ .*bowman.* ]]; then
   MACHINE=bowman
-elif [[ "$HOSTNAME" =~ n.* ]]; then # Warning: very generic name
+  module load git
+fi
+
+if [[ "$HOSTNAME" =~ n.* ]]; then # Warning: very generic name
   if [[ "$PROCESSOR" = "aarch64" ]]; then
     MACHINE=sullivan
+    module load git
   fi
-elif [[ "$HOSTNAME" =~ node.* ]]; then # Warning: very generic name
+fi
+
+if [[ "$HOSTNAME" =~ node.* ]]; then # Warning: very generic name
+  if [[ "$MACHINE" = "" ]]; then
     MACHINE=shepard
-elif [[ "$HOSTNAME" =~ apollo ]]; then
+    module load git
+  fi
+fi
+
+if [[ "$HOSTNAME" =~ apollo ]]; then
   MACHINE=apollo
-elif [[ "$HOSTNAME" =~ sullivan ]]; then
+  module load git
+fi
+
+if [[ "$HOSTNAME" =~ sullivan ]]; then
   MACHINE=sullivan
-elif [ ! -z "$SEMS_MODULEFILES_ROOT" ]; then
-  MACHINE=sems
-else
+  module load git
+fi
+
+if [ ! -z "$SEMS_MODULEFILES_ROOT" ]; then
+  if [[ "$MACHINE" = "" ]]; then
+    MACHINE=sems
+    module load sems-git
+  fi  
+fi
+
+if [[ "$MACHINE" = "" ]]; then
   echo "Unrecognized machine" >&2
   exit 1
 fi
+
+echo "Running on machine: $MACHINE"
 
 GCC_BUILD_LIST="OpenMP,Pthread,Serial,OpenMP_Serial,Pthread_Serial"
 IBM_BUILD_LIST="OpenMP,Serial,OpenMP_Serial"
@@ -142,6 +169,18 @@ else
   KOKKOS_PATH=$( cd $KOKKOS_PATH && pwd )
 fi
 
+UNCOMMITTED=`cd ${KOKKOS_PATH}; git status --porcelain 2>/dev/null`
+if ! [ -z "$UNCOMMITTED" ]; then
+  echo "WARNING!! THE FOLLOWING CHANGES ARE UNCOMMITTED!! :"
+  echo "$UNCOMMITTED"
+  echo ""
+fi
+
+GITSTATUS=`cd ${KOKKOS_PATH}; git log -n 1 --format=oneline`
+echo "Repository Status: " ${GITSTATUS}
+echo ""
+echo ""
+
 #
 # Machine specific config.
 #
@@ -149,7 +188,7 @@ fi
 if [ "$MACHINE" = "sems" ]; then
   source /projects/sems/modulefiles/utils/sems-modules-init.sh
 
-  BASE_MODULE_LIST="sems-env,kokkos-env,sems-<COMPILER_NAME>/<COMPILER_VERSION>,kokkos-hwloc/1.10.1/base"
+  BASE_MODULE_LIST="sems-env,kokkos-env,kokkos-hwloc/1.10.1/base,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
   CUDA_MODULE_LIST="sems-env,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/4.8.4,kokkos-hwloc/1.10.1/base"
   CUDA8_MODULE_LIST="sems-env,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0,kokkos-hwloc/1.10.1/base"
 
@@ -178,9 +217,9 @@ if [ "$MACHINE" = "sems" ]; then
                "clang/3.7.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/3.8.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/3.9.0 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-               "cuda/7.0.28 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/7.5.18 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/8.0.44 $CUDA8_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/config/nvcc_wrapper $CUDA_WARNING_FLAGS"
+               "cuda/7.0.28 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+               "cuda/7.5.18 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+               "cuda/8.0.44 $CUDA8_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
     )
   fi
 elif [ "$MACHINE" = "white" ]; then
@@ -700,17 +739,19 @@ wait_summarize_and_exit() {
     echo $passed_test $(cat $PASSED_DIR/$passed_test)
   done
 
-  echo "#######################################################"
-  echo "FAILED TESTS"
-  echo "#######################################################"
-
-  local failed_test
   local -i rv=0
-  for failed_test in $(\ls -1 $FAILED_DIR | sort)
-  do
-    echo $failed_test "("$(cat $FAILED_DIR/$failed_test)" failed)"
-    rv=$rv+1
-  done
+  if [ "$(ls -A $FAILED_DIR)" ]; then
+    echo "#######################################################"
+    echo "FAILED TESTS"
+    echo "#######################################################"
+
+    local failed_test
+    for failed_test in $(\ls -1 $FAILED_DIR | sort)
+    do
+      echo $failed_test "("$(cat $FAILED_DIR/$failed_test)" failed)"
+      rv=$rv+1
+    done
+  fi
 
   exit $rv
 }
