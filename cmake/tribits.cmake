@@ -3,7 +3,7 @@ INCLUDE(CTest)
 
 cmake_policy(SET CMP0054 NEW)
 
-MESSAGE(WARNING "The project name is: ${PROJECT_NAME}")
+MESSAGE(STATUS "The project name is: ${PROJECT_NAME}")
 
 IF(NOT DEFINED ${PROJECT_NAME}_ENABLE_OpenMP)
   SET(${PROJECT_NAME}_ENABLE_OpenMP OFF)
