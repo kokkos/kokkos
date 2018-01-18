@@ -559,6 +559,20 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_7() const { return m_map.stride_7(); }
 
   template< typename iType >
+  KOKKOS_INLINE_FUNCTION constexpr
+  typename std::enable_if< std::is_integral<iType>::value , size_t >::type
+  stride(iType r) const {
+    return (r == 0 ? m_map.stride_0() :
+           (r == 1 ? m_map.stride_1() :
+           (r == 2 ? m_map.stride_2() :
+           (r == 3 ? m_map.stride_3() :
+           (r == 4 ? m_map.stride_4() :
+           (r == 5 ? m_map.stride_5() :
+           (r == 6 ? m_map.stride_6() :
+                     m_map.stride_7())))))));
+  }
+
+  template< typename iType >
   KOKKOS_INLINE_FUNCTION void stride( iType * const s ) const { m_map.stride(s); }
 
   //----------------------------------------
