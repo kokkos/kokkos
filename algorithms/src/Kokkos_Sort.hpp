@@ -120,7 +120,6 @@ public:
 
     KOKKOS_INLINE_FUNCTION
     void operator() (const int& i) const {
-      // printf("copy: dst(%i) src(%i)\n",i+dst_offset,i);
       copy_op::copy(dst_values,i+dst_offset,src_values,i);
     }
   };
@@ -151,20 +150,22 @@ public:
     DstViewType     dst_values ;
     perm_view_type  sort_order ;
     src_view_type   src_values ;
+    int             src_offset ;
 
     copy_permute_functor( DstViewType     const & dst_values_
                         , PermuteViewType const & sort_order_
                         , SrcViewType     const & src_values_
+                        , int             const & src_offset_
                         )
       : dst_values( dst_values_ )
       , sort_order( sort_order_ )
       , src_values( src_values_ )
+      , src_offset( src_offset_ )
       {}
 
     KOKKOS_INLINE_FUNCTION
     void operator() (const int& i)  const {
-      // printf("copy_permute: dst(%i) src(%i)\n",i,sort_order(i));
-      copy_op::copy(dst_values,i,src_values,sort_order(i));
+      copy_op::copy(dst_values,i,src_values,src_offset+sort_order(i));
     }
   };
 
@@ -269,9 +270,11 @@ public:
       Kokkos::parallel_for (Kokkos::RangePolicy<execution_space,bin_sort_bins_tag>(0,bin_op.max_bins()) ,*this);
   }
 
-  // Sort a view with respect ot the first dimension using the permutation array
+  // Sort a subset of a view with respect to the first dimension using the permutation array
   template<class ValuesViewType>
-  void sort( ValuesViewType const & values) const
+  void sort( ValuesViewType const & values
+           , int values_range_begin
+           , int values_range_end) const
   {
     typedef
       Kokkos::View< typename ValuesViewType::data_type,
@@ -280,6 +283,10 @@ public:
         scratch_view_type ;
 
     const size_t len = range_end - range_begin ;
+    const size_t values_len = values_range_end - values_range_begin ;
+    if (len != values_len) {
+      Kokkos::abort("BinSort::sort: values range length != permutation vector length");
+    }
 
     scratch_view_type
       sorted_values("Scratch",
@@ -297,7 +304,7 @@ public:
                           , offset_type       /* PermuteViewType */
                           , ValuesViewType    /* SrcViewType */
                           >
-        functor( sorted_values , sort_order , values );
+        functor( sorted_values , sort_order , values, values_range_begin - range_begin );
 
       parallel_for( Kokkos::RangePolicy<execution_space>(0,len),functor);
     }
@@ -308,6 +315,12 @@ public:
 
       parallel_for( Kokkos::RangePolicy<execution_space>(0,len),functor);
     }
+  }
+
+  template<class ValuesViewType>
+  void sort( ValuesViewType const & values ) const
+  {
+    this->sort( values, 0, /*values.extent(0)*/ range_end - range_begin );
   }
 
   // Get the permutation vector
@@ -327,7 +340,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   void operator() (const bin_count_tag& tag, const int& i) const {
     const int j = range_begin + i ;
-    bin_count_atomic(bin_op.bin(keys,j))++;
+    bin_count_atomic(bin_op.bin(keys, j))++;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -541,8 +554,9 @@ void sort( ViewType view
     bin_sort(view,begin,end,CompType((end-begin)/2,result.min_val,result.max_val),true);
 
   bin_sort.create_permute_vector();
-  bin_sort.sort(view);
+  bin_sort.sort(view,begin,end);
 }
+
 }
 
 #endif
