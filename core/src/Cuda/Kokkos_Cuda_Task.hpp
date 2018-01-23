@@ -285,6 +285,20 @@ ThreadVectorRange( const Impl::TaskExec< Kokkos::Cuda > & thread
   return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >(thread,count);
 }
 
+KOKKOS_INLINE_FUNCTION
+Impl::ThreadSingleStruct<Impl::TaskExec< Kokkos::Cuda > >
+PerTeam(const Impl::TaskExec< Kokkos::Cuda >& thread)
+{
+  return Impl::ThreadSingleStruct<Impl::TaskExec< Kokkos::Cuda > >(thread);
+}
+
+KOKKOS_INLINE_FUNCTION
+Impl::VectorSingleStruct<Impl::TaskExec< Kokkos::Cuda > >
+PerThread(const Impl::TaskExec< Kokkos::Cuda >& thread)
+{
+  return Impl::VectorSingleStruct<Impl::TaskExec< Kokkos::Cuda > >(thread);
+}
+
 /** \brief  Inter-thread parallel_for. Executes lambda(iType i) for each i=0..N-1.
  *
  * The range i=0..N-1 is mapped to all threads of the the calling thread team.
@@ -297,6 +311,16 @@ void parallel_for
   , const Lambda& lambda
   )
 {
+  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+    lambda(i);
+  }
+}
+
+template< typename iType, class Lambda >
+KOKKOS_INLINE_FUNCTION
+void parallel_for
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
+   const Lambda & lambda) {
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i);
   }
@@ -598,6 +622,46 @@ void parallel_scan
 }
 
 } /* namespace Kokkos */
+
+namespace Kokkos {
+
+  template<class FunctorType>
+  KOKKOS_INLINE_FUNCTION
+  void single(const Impl::VectorSingleStruct<Impl::TaskExec< Kokkos::Cuda > >& , const FunctorType& lambda) {
+#ifdef __CUDA_ARCH__
+    if(threadIdx.x == 0) lambda();
+#endif
+  }
+  
+  template<class FunctorType>
+  KOKKOS_INLINE_FUNCTION
+  void single(const Impl::ThreadSingleStruct<Impl::TaskExec< Kokkos::Cuda > >& , const FunctorType& lambda) {
+#ifdef __CUDA_ARCH__
+    if(threadIdx.x == 0 && threadIdx.y == 0) lambda();
+#endif
+  }
+  
+  template<class FunctorType, class ValueType>
+  KOKKOS_INLINE_FUNCTION
+  void single(const Impl::VectorSingleStruct<Impl::TaskExec< Kokkos::Cuda > >& , const FunctorType& lambda, ValueType& val) {
+#ifdef __CUDA_ARCH__
+    if(threadIdx.x == 0) lambda(val);
+    val = shfl(val,0,blockDim.x);
+#endif
+  }
+  
+  template<class FunctorType, class ValueType>
+  KOKKOS_INLINE_FUNCTION
+  void single(const Impl::ThreadSingleStruct<Impl::TaskExec< Kokkos::Cuda > >& single_struct, const FunctorType& lambda, ValueType& val) {
+#ifdef __CUDA_ARCH__
+    if(threadIdx.x == 0 && threadIdx.y == 0) {
+      lambda(val);
+    }
+    single_struct.team_member.team_broadcast(val,0);
+#endif
+  }
+
+} // namespace Kokkos
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

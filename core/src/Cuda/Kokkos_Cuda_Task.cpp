@@ -229,19 +229,27 @@ printf("cuda_task_queue_execute before\n");
 #endif
 
   // Query the stack size, in bytes:
-  //
-  // size_t stack_size = 0 ;
-  // CUDA_SAFE_CALL( cudaDeviceGetLimit( & stack_size , cudaLimitStackSize ) );
-  //
+
+  size_t previous_stack_size = 0 ;
+  CUDA_SAFE_CALL( cudaDeviceGetLimit( & previous_stack_size , cudaLimitStackSize ) );
+
   // If not large enough then set the stack size, in bytes:
-  //
-  // CUDA_SAFE_CALL( cudaDeviceSetLimit( cudaLimitStackSize , stack_size ) );
+
+  const size_t larger_stack_size = 8192 ;
+
+  if ( previous_stack_size < larger_stack_size ) {
+    CUDA_SAFE_CALL( cudaDeviceSetLimit( cudaLimitStackSize , larger_stack_size ) );
+  }
 
   cuda_task_queue_execute<<< grid , block , shared_total , stream >>>( queue , shared_per_warp );
 
   CUDA_SAFE_CALL( cudaGetLastError() );
 
   CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+
+  if ( previous_stack_size < larger_stack_size ) {
+    CUDA_SAFE_CALL( cudaDeviceSetLimit( cudaLimitStackSize , previous_stack_size ) );
+  }
 
 #if 0
 printf("cuda_task_queue_execute after\n");

@@ -526,7 +526,14 @@ public:
 
       member->team_barrier();
 
-      if ( 0 == member->team_rank() && !(task->requested_respawn()) ) {
+      const bool only_one_thread =
+#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA)
+        0 == threadIdx.x && 0 == threadIdx.y ;
+#else
+        0 == member->team_rank();
+#endif
+
+      if ( only_one_thread && !(task->requested_respawn()) ) {
         // Did not respawn, destroy the functor to free memory.
         static_cast<functor_type*>(task)->~functor_type();
         // Cannot destroy and deallocate the task until its dependences
