@@ -264,7 +264,8 @@ set(KOKKOS_ENABLE_PROFILING ${KOKKOS_INTERNAL_ENABLE_PROFILING_DEFAULT} CACHE BO
 set_kokkos_default_default(PROFILING_LOAD_PRINT OFF)
 set(KOKKOS_ENABLE_PROFILING_LOAD_PRINT ${KOKKOS_INTERNAL_ENABLE_PROFILING_LOAD_PRINT_DEFAULT} CACHE BOOL "Enable profile load print.")
 
-
+set_kokkos_default_default(DEPRECATED_CODE ON)
+set(KOKKOS_ENABLE_DEPRECATED_CODE ${KOKKOS_INTERNAL_ENABLE_DEPRECATED_CODE_DEFAULT} CACHE BOOL "Enable deprecated code.")
 
 
 #-------------------------------------------------------------------------------
