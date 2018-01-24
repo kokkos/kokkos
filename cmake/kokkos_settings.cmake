@@ -197,43 +197,14 @@ if(KOKKOS_CMAKE_VERBOSE)
     message(STATUS "  KOKKOS_SEPARATE_LIBS")
   endif()
 
-  if(KOKKOS_ENABLE_HWLOC)
-    message(STATUS "  KOKKOS_ENABLE_HWLOC")
-  endif()
-
-  if(KOKKOS_ENABLE_MEMKIND)
-    message(STATUS "  KOKKOS_ENABLE_MEMKIND")
-  endif()
-
-  if(KOKKOS_ENABLE_DEBUG)
-    message(STATUS "  KOKKOS_ENABLE_DEBUG")
-  endif()
-
-  if(KOKKOS_ENABLE_PROFILING)
-    message(STATUS "  KOKKOS_ENABLE_PROFILING")
-  endif()
-
-  if(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION)
-    message(STATUS "  KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION")
-  endif()
+  foreach(opt IN LISTS KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST)
+    string(TOUPPER ${opt} OPT)
+    if (KOKKOS_ENABLE_${OPT})
+      message(STATUS "  KOKKOS_ENABLE_${OPT}")
+    endif()
+  endforeach()
 
   if(KOKKOS_ENABLE_CUDA)
-    if(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC)
-      message(STATUS "  KOKKOS_ENABLE_CUDA_LDG_INTRINSIC")
-    endif()
-
-    if(KOKKOS_ENABLE_CUDA_UVM)
-      message(STATUS "  KOKKOS_ENABLE_CUDA_UVM")
-    endif()
-
-    if(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
-      message(STATUS "  KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE")
-    endif()
-
-    if(KOKKOS_ENABLE_CUDA_LAMBDA)
-      message(STATUS "  KOKKOS_ENABLE_CUDA_LAMBDA")
-    endif()
-
     if(KOKKOS_CUDA_DIR)
       message(STATUS "  KOKKOS_CUDA_DIR: ${KOKKOS_CUDA_DIR}")
     endif()
