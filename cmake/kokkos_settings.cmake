@@ -46,7 +46,7 @@ endforeach()
 string(REPLACE ";" "," KOKKOS_DEVICES "${KOKKOS_DEVICESl}")
 
 #------------------------------- KOKKOS_OPTIONS --------------------------------
-# From Makefile.kokkos: Options: aggressive_vectorization,disable_profiling
+# From Makefile.kokkos: Options: aggressive_vectorization,disable_profiling,disable_deprecated_code
 #compiler_warnings, aggressive_vectorization, disable_profiling, disable_dualview_modify_check, enable_profile_load_print
 
 set(KOKKOS_OPTIONSl)
@@ -58,6 +58,9 @@ if(${KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION})
 endif()
 if(NOT ${KOKKOS_ENABLE_PROFILING})
       list(APPEND KOKKOS_OPTIONSl disable_profiling)
+endif()
+if(NOT ${KOKKOS_ENABLE_DEPRECATED_CODE})
+      list(APPEND KOKKOS_OPTIONSl disable_deprecated_code)
 endif()
 if(NOT ${KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK})
       list(APPEND KOKKOS_OPTIONSl disable_dualview_modify_check)

@@ -30,6 +30,7 @@ list(APPEND KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST
      Profiling
      Profiling_Load_Print
      Aggressive_Vectorization
+     Deprecated_Code
      )
 
 #-------------------------------------------------------------------------------
