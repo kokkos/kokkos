@@ -17,20 +17,22 @@
 foreach(arch ${KOKKOS_ARCH})
   list(FIND KOKKOS_ARCH_LIST ${arch} indx)
   if (indx EQUAL -1)
+    if (arch MATCHES ",")
+      message(FATAL_ERROR "KOKKOS_ARCH=${arch} should only contain semicolons (;), not commas (,).")
+    endif()
     message(FATAL_ERROR "${arch} is not an accepted value for KOKKOS_ARCH."
       "  Please pick from these choices: ${KOKKOS_INTERNAL_ARCH_DOCSTR}")
   endif ()
 endforeach()
 
 # KOKKOS_SETTINGS uses KOKKOS_ARCH
-string(REPLACE ";" "," KOKKOS_ARCH "${KOKKOS_ARCH}")
-set(KOKKOS_ARCH ${KOKKOS_ARCH})
+string(REPLACE ";" "," KOKKOS_GMAKE_ARCH "${KOKKOS_ARCH}")
 
 # From Makefile.kokkos: Options: yes,no
 if(${KOKKOS_ENABLE_DEBUG})
-  set(KOKKOS_DEBUG yes)
+  set(KOKKOS_GMAKE_DEBUG yes)
 else()
-  set(KOKKOS_DEBUG no)
+  set(KOKKOS_GMAKE_DEBUG no)
 endif()
 
 #------------------------------- KOKKOS_DEVICES --------------------------------
@@ -43,7 +45,7 @@ foreach(devopt ${KOKKOS_DEVICES_LIST})
   endif ()
 endforeach()
 # List needs to be comma-delmitted
-string(REPLACE ";" "," KOKKOS_DEVICES "${KOKKOS_DEVICESl}")
+string(REPLACE ";" "," KOKKOS_GMAKE_DEVICES "${KOKKOS_DEVICESl}")
 
 #------------------------------- KOKKOS_OPTIONS --------------------------------
 # From Makefile.kokkos: Options: aggressive_vectorization,disable_profiling,disable_deprecated_code
@@ -69,7 +71,7 @@ if(${KOKKOS_ENABLE_PROFILING_LOAD_PRINT})
       list(APPEND KOKKOS_OPTIONSl enable_profile_load_print)
 endif()
 # List needs to be comma-delimitted
-string(REPLACE ";" "," KOKKOS_OPTIONS "${KOKKOS_OPTIONSl}")
+string(REPLACE ";" "," KOKKOS_GMAKE_OPTIONS "${KOKKOS_OPTIONSl}")
 
 
 #------------------------------- KOKKOS_USE_TPLS -------------------------------
@@ -81,19 +83,19 @@ foreach(tplopt ${KOKKOS_USE_TPLS_LIST})
   endif ()
 endforeach()
 # List needs to be comma-delimitted
-string(REPLACE ";" "," KOKKOS_USE_TPLS "${KOKKOS_USE_TPLSl}")
+string(REPLACE ";" "," KOKKOS_GMAKE_USE_TPLS "${KOKKOS_USE_TPLSl}")
 
 
 #------------------------------- KOKKOS_CUDA_OPTIONS ---------------------------
 # Construct the Makefile options
-set(KOKKOS_CUDA_OPTIONS)
+set(KOKKOS_CUDA_OPTIONSl)
 foreach(cudaopt ${KOKKOS_CUDA_OPTIONS_LIST})
   if (${KOKKOS_ENABLE_CUDA_${cudaopt}})
     list(APPEND KOKKOS_CUDA_OPTIONSl ${KOKKOS_INTERNAL_${cudaopt}})
   endif ()
 endforeach()
 # List needs to be comma-delmitted
-string(REPLACE ";" "," KOKKOS_CUDA_OPTIONS "${KOKKOS_CUDA_OPTIONSl}")
+string(REPLACE ";" "," KOKKOS_GMAKE_CUDA_OPTIONS "${KOKKOS_CUDA_OPTIONSl}")
 
 #------------------------------- PATH VARIABLES --------------------------------
 #  Want makefile to use same executables specified which means modifying
@@ -127,10 +129,9 @@ set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} KOKKOS_INSTALL_PATH=${CMAKE_INSTALL_PREFI
 
 # Form of KOKKOS_foo=$KOKKOS_foo
 foreach(kvar ARCH;DEVICES;DEBUG;OPTIONS;CUDA_OPTIONS;USE_TPLS)
-  set(KOKKOS_VAR KOKKOS_${kvar})
-  if(DEFINED KOKKOS_${kvar})
-    if (NOT "${${KOKKOS_VAR}}" STREQUAL "")
-      set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} ${KOKKOS_VAR}=${${KOKKOS_VAR}})
+  if(DEFINED KOKKOS_GMAKE_${kvar})
+    if (NOT "${KOKKOS_GMAKE_${kvar}}" STREQUAL "")
+      set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} KOKKOS_${kvar}=${KOKKOS_GMAKE_${kvar}})
     endif()
   endif()
 endforeach()
@@ -188,7 +189,7 @@ if(KOKKOS_CMAKE_VERBOSE)
 
   message(STATUS "")
   message(STATUS "Architectures:")
-  message(STATUS "    ${KOKKOS_ARCH}")
+  message(STATUS "    ${KOKKOS_GMAKE_ARCH}")
 
   message(STATUS "")
   message(STATUS "Enabled options")
