@@ -1239,11 +1239,11 @@ void deep_copy
     message+= std::to_string(dst.extent(dst_type::Rank-1)); message += ") ";
     message += src.label(); message += "(";
     for(int r = 0; r<src_type::Rank-1; r++)
-      { message+= src::to_string(src.extent(r)); message += ","; }
+      { message+= std::to_string(src.extent(r)); message += ","; }
     message+= std::to_string(src.extent(src_type::Rank-1)); message += ") ";
 
-    Kokkos::throw_runtime_exception(message);
-    #endif
+    Kokkos::Impl::throw_runtime_exception(message);
+#endif
   }
 
   // If same type, equal layout, equal dimensions, equal span, and contiguous memory then can byte-wise copy
@@ -1469,11 +1469,11 @@ void deep_copy
     message+= std::to_string(dst.extent(dst_type::Rank-1)); message += ") ";
     message += src.label(); message += "(";
     for(int r = 0; r<src_type::Rank-1; r++)
-      { message+= src::to_string(src.extent(r)); message += ","; }
+      { message+= std::to_string(src.extent(r)); message += ","; }
     message+= std::to_string(src.extent(src_type::Rank-1)); message += ") ";
 
-    Kokkos::throw_runtime_exception(message);
-    #endif
+    Kokkos::Impl::throw_runtime_exception(message);
+#endif
   }
 
   // If same type, equal layout, equal dimensions, equal span, and contiguous memory then can byte-wise copy
