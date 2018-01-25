@@ -655,7 +655,9 @@ void TaskQueue< ExecSpace >::complete
           schedule_runnable( x );
         }
         else {
+#if !defined( __HCC_ACCELERATOR__ )
           schedule_aggregate( x );
+#endif
         }
 
         x = next ;

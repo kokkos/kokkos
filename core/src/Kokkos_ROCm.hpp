@@ -47,6 +47,13 @@
 #include <Kokkos_Core_fwd.hpp>
 
 #if defined( KOKKOS_ENABLE_ROCM )
+
+class dim3 {
+public:
+int x,y,z;
+dim3(int _x, int _y, int _z):x(_x),y(_y),z(_z) {};
+};
+
 #include <ROCm/hc_math_std.hpp>
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -207,8 +214,11 @@ struct VerifyExecutionCanAccessMemorySpace
   inline static void verify( void ) { Kokkos::Experimental::ROCmSpace::access_error(); }
   inline static void verify( const void * p ) { Kokkos::Experimental::ROCmSpace::access_error(p); }
 };
+
 } // namespace Experimental
 } // namespace Kokkos
+
+
 
 
 

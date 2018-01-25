@@ -55,6 +55,11 @@
 #include <Cuda/KokkosExp_Cuda_IterateTile_Refactor.hpp>
 #endif
 
+#if defined( __HCC__ ) && defined( KOKKOS_ENABLE_ROCM )
+//#include<ROCm/KokkosExp_ROCm_IterateTile.hpp>
+#include <ROCm/KokkosExp_ROCm_IterateTile_Refactor.hpp>
+#endif
+
 namespace Kokkos {
 
 // ------------------------------------------------------------------ //
@@ -195,6 +200,9 @@ struct MDRangePolicy
        #if defined(KOKKOS_ENABLE_CUDA)
          && !std::is_same< typename traits::execution_space, Kokkos::Cuda >::value
        #endif
+       #if defined(KOKKOS_ENABLE_ROCM)
+         && !std::is_same< typename traits::execution_space, Kokkos::Experimental::ROCm >::value
+       #endif
        )
     {
       index_type span;
@@ -283,6 +291,9 @@ struct MDRangePolicy
        #if defined(KOKKOS_ENABLE_CUDA)
          && !std::is_same< typename traits::execution_space, Kokkos::Cuda >::value
        #endif
+       #if defined(KOKKOS_ENABLE_ROCM)
+         && !std::is_same< typename traits::execution_space, Kokkos::Experimental::ROCm >::value
+       #endif
        )
     {
       index_type span;
@@ -344,6 +355,47 @@ struct MDRangePolicy
       }
     }
     #endif
+    #if defined(KOKKOS_ENABLE_ROCM)
+    else // ROCm
+    {
+      index_type span;
+      int increment = 1;
+      int rank_start = 0;
+      int rank_end = rank;
+      if((int)inner_direction == (int)Right) {
+        increment = -1;
+        rank_start = rank-1;
+        rank_end = -1;
+      }
+      for (int i=rank_start; i!=rank_end; i+=increment) {
+        span = m_upper[i] - m_lower[i];
+        if ( m_tile[i] <= 0 ) {
+          // TODO: determine what is a good default tile size for cuda
+          // may be rank dependent
+          if (  ((int)inner_direction == (int)Right && (i < rank-1))
+              || ((int)inner_direction == (int)Left && (i > 0)) )
+          {
+            if ( m_prod_tile_dims < 256 ) {
+              m_tile[i] = 2;
+            } else {
+              m_tile[i] = 1;
+            }
+          }
+          else {
+            m_tile[i] = 16;
+          }
+        }
+        m_tile_end[i] = static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
+        m_num_tiles *= m_tile_end[i];
+        m_prod_tile_dims *= m_tile[i];
+      }
+      if ( m_prod_tile_dims > 1024 ) { // Match ROCm restriction for ParallelReduce; 1024,1024,1024 max per dim , but product num_threads < 1024
+        printf(" Tile dimensions exceed ROCm limits\n");
+        Kokkos::abort(" ROCm ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
+        //Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error: MDRange tile dims exceed maximum number of threads per block - choose smaller tile dims");
+      }
+    }
+    #endif
   }
 
 };
@@ -372,6 +424,9 @@ void md_parallel_for( MDRange const& range
                       #if defined( KOKKOS_ENABLE_CUDA)
                       && !std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Cuda>::value
                       #endif
+                      #if defined( KOKKOS_ENABLE_ROCM)
+                      && !std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Experimental::ROCm>::value
+                      #endif
                       ) >::type* = 0
                     )
 {
@@ -389,6 +444,9 @@ void md_parallel_for( const std::string& str
                     , typename std::enable_if<( true
                       #if defined( KOKKOS_ENABLE_CUDA)
                       && !std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Cuda>::value
+                      #endif
+                      #if defined( KOKKOS_ENABLE_ROCM)
+                      && !std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Experimental::ROCm>::value
                       #endif
                       ) >::type* = 0
                     )
@@ -446,6 +504,9 @@ void md_parallel_reduce( MDRange const& range
                       #if defined( KOKKOS_ENABLE_CUDA)
                       && !std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Cuda>::value
                       #endif
+                      #if defined( KOKKOS_ENABLE_ROCM)
+                      && !std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Experimental::ROCm>::value
+                      #endif
                       ) >::type* = 0
                     )
 {
@@ -463,6 +524,9 @@ void md_parallel_reduce( const std::string& str
                     , typename std::enable_if<( true
                       #if defined( KOKKOS_ENABLE_CUDA)
                       && !std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Cuda>::value
+                      #endif
+                      #if defined( KOKKOS_ENABLE_ROCM)
+                      && !std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Experimental::ROCm>::value
                       #endif
                       ) >::type* = 0
                     )

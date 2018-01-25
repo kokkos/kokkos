@@ -80,18 +80,18 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
         OBJ_ROCM = UnitTestMainInit.o gtest-all.o
         OBJ_ROCM += TestROCm_Init.o
         OBJ_ROCM += TestROCm_Complex.o
-#        OBJ_ROCM += TestROCm_RangePolicy.o
-# rocm.range_scan locking up
+        OBJ_ROCM += TestROCm_RangePolicy.o
         OBJ_ROCM += TestROCm_AtomicOperations.o
         OBJ_ROCM += TestROCm_Atomics.o
 # complex failing
         OBJ_ROCM += TestROCm_AtomicViews.o
         OBJ_ROCM += TestROCm_Other.o
+#        OBJ_ROCM += TestROCm_MDRange.o
 # rocm.memory_pool
         OBJ_ROCM += TestROCm_Scan.o
         OBJ_ROCM += TestROCm_SharedAlloc.o
         OBJ_ROCM += TestROCm_SubView_a.o
-#        OBJ_ROCM += TestROCm_SubView_b.o
+        OBJ_ROCM += TestROCm_SubView_b.o
 # relies on host accessable device memory
 #        OBJ_ROCM += TestROCm_SubView_c01.o
 #        OBJ_ROCM += TestROCm_SubView_c02.o
@@ -111,9 +111,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
 #        OBJ_ROCM += TestROCm_TeamReductionScan.o
 # compile fails
 #        OBJ_ROCM += TestROCm_TeamScratch.o
-# compile fails
         OBJ_ROCM += TestROCm_ViewAPI_b.o
-#  test fail in view_api
         OBJ_ROCM += TestROCm_ViewMapping_a.o
         OBJ_ROCM += TestROCm_ViewMapping_b.o
         OBJ_ROCM += TestROCm_ViewMapping_subview.o
