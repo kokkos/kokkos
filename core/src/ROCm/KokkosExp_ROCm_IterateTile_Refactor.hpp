@@ -2729,6 +2729,22 @@ private:
 // ----------------------------------------------------------------------------------
 
 } } //end namespace Kokkos::Impl
+#undef threadIdx_x
+#undef threadIdx_y
+#undef threadIdx_z
+
+#undef blockIdx_x
+#undef blockIdx_y
+#undef blockIdx_z
+
+#undef blockDim_x
+#undef blockDim_y
+#undef blockDim_z
+
+#undef gridDim_x
+#undef gridDim_y
+#undef gridDim_z
+
 
 #endif
 #endif

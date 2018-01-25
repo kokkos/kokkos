@@ -490,36 +490,6 @@ void md_parallel_for( MDRange const& range
   closure.execute();
 }
 #endif
-// ROCm specialization
-#if 0
-#if defined( __HCC__ ) && defined( KOKKOS_ENABLE_ROCM )
-template <typename MDRange, typename Functor>
-void md_parallel_for( const std::string& str
-                    , MDRange const& range
-                    , Functor const& f
-                    , typename std::enable_if<( true
-                      && std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Experimental::ROCm>::value
-                      ) >::type* = 0
-                    )
-{
-  Kokkos::Impl::DeviceIterateTile<MDRange, Functor, typename MDRange::work_tag> closure(range, f);
-  closure.execute();
-}
-
-template <typename MDRange, typename Functor>
-void md_parallel_for( MDRange const& range
-                    , Functor const& f
-                    , const std::string& str = ""
-                    , typename std::enable_if<( true
-                      && std::is_same< typename MDRange::range_policy::execution_space, Kokkos::Experimental::ROCm>::value
-                      ) >::type* = 0
-                    )
-{
-  Kokkos::Impl::DeviceIterateTile<MDRange, Functor, typename MDRange::work_tag> closure(range, f);
-  closure.execute();
-}
-#endif
-#endif
 // ------------------------------------------------------------------ //
 
 // ------------------------------------------------------------------ //
