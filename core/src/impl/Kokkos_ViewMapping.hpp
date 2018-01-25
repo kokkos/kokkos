@@ -361,7 +361,8 @@ struct SubviewExtents {
 private:
 
   // Cannot declare zero-length arrays
-  enum { InternalRangeRank = RangeRank ? RangeRank : 1u };
+  // '+' is used to silence GCC 7.2.0 -Wduplicated-branches warning when RangeRank=1
+  enum { InternalRangeRank = RangeRank ? RangeRank : +1u };
 
   size_t   m_begin[  DomainRank ];
   size_t   m_length[ InternalRangeRank ];
