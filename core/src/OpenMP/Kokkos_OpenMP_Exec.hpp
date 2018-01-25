@@ -332,7 +332,7 @@ public:
 } // namespace Experimental
 
 
-#if !defined( KOKKOS_DISABLE_DEPRECATED )
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 
 inline
 int OpenMP::thread_pool_size( int depth )
@@ -358,7 +358,7 @@ int OpenMP::max_hardware_threads() noexcept
   return Impl::g_openmp_hardware_max_threads;
 }
 
-#endif // KOKKOS_DISABLE_DEPRECATED
+#endif
 
 } // namespace Kokkos
 

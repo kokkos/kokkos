@@ -176,7 +176,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   static int thread_pool_rank() noexcept;
 
-#if !defined( KOKKOS_DISABLE_DEPRECATED )
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   /// \brief Initialize the default execution space
   static void initialize( int thread_count,
                           int use_numa_count,

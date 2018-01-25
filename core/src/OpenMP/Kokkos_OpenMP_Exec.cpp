@@ -453,7 +453,7 @@ std::vector<OpenMP> OpenMP::partition(...)
 OpenMP OpenMP::create_instance(...) { return OpenMP(); }
 
 
-#if !defined( KOKKOS_DISABLE_DEPRECATED )
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 
 int OpenMP::concurrency() {
   return Impl::g_openmp_hardware_max_threads;

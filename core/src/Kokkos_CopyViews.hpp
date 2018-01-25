@@ -1216,22 +1216,22 @@ void deep_copy
        (src.extent(6) != dst.extent(6)) ||
        (src.extent(7) != dst.extent(7))
      ) {
-    #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_REMOVAL
-      Kokkos::fence();
-      if ( DstExecCanAccessSrc ) {
-        // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
-        Kokkos::Impl::ViewRemap< dst_type , src_type >( dst , src );
-      }
-      else if ( SrcExecCanAccessDst ) {
-        // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
-        Kokkos::Impl::ViewRemap< dst_type , src_type , src_execution_space >( dst , src );
-      }
-      else {
-        Kokkos::Impl::throw_runtime_exception("deep_copy given views that would require a temporary allocation");
-      }
-      Kokkos::fence();
-      return;
-    #else
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+    Kokkos::fence();
+    if ( DstExecCanAccessSrc ) {
+      // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
+      Kokkos::Impl::ViewRemap< dst_type , src_type >( dst , src );
+    }
+    else if ( SrcExecCanAccessDst ) {
+      // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
+      Kokkos::Impl::ViewRemap< dst_type , src_type , src_execution_space >( dst , src );
+    }
+    else {
+      Kokkos::Impl::throw_runtime_exception("deep_copy given views that would require a temporary allocation");
+    }
+    Kokkos::fence();
+    return;
+#else
     std::string message("Deprecation Error: Kokkos::deep_copy extents of views don't match: ");
     message += dst.label(); message += "(";
     for(int r = 0; r<dst_type::Rank-1; r++)
@@ -1239,11 +1239,11 @@ void deep_copy
     message+= std::to_string(dst.extent(dst_type::Rank-1)); message += ") ";
     message += src.label(); message += "(";
     for(int r = 0; r<src_type::Rank-1; r++)
-      { message+= src::to_string(src.extent(r)); message += ","; }
+      { message+= std::to_string(src.extent(r)); message += ","; }
     message+= std::to_string(src.extent(src_type::Rank-1)); message += ") ";
 
-    Kokkos::throw_runtime_exception(message);
-    #endif
+    Kokkos::Impl::throw_runtime_exception(message);
+#endif
   }
 
   // If same type, equal layout, equal dimensions, equal span, and contiguous memory then can byte-wise copy
@@ -1443,25 +1443,25 @@ void deep_copy
        (src.extent(6) != dst.extent(6)) ||
        (src.extent(7) != dst.extent(7))
      ) {
-    #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_REMOVAL
-      exec_space.fence();
-      if ( ExecCanAccessSrcDst ) {
-        Kokkos::Impl::ViewRemap< dst_type , src_type , ExecSpace >( dst , src );
-      }
-      else if ( DstExecCanAccessSrc ) {
-        // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
-        Kokkos::Impl::ViewRemap< dst_type , src_type >( dst , src );
-      }
-      else if ( SrcExecCanAccessDst ) {
-        // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
-        Kokkos::Impl::ViewRemap< dst_type , src_type , src_execution_space >( dst , src );
-      }
-      else {
-        Kokkos::Impl::throw_runtime_exception("deep_copy given views that would require a temporary allocation");
-      }
-      exec_space.fence();
-      return;
-    #else
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+    exec_space.fence();
+    if ( ExecCanAccessSrcDst ) {
+      Kokkos::Impl::ViewRemap< dst_type , src_type , ExecSpace >( dst , src );
+    }
+    else if ( DstExecCanAccessSrc ) {
+      // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
+      Kokkos::Impl::ViewRemap< dst_type , src_type >( dst , src );
+    }
+    else if ( SrcExecCanAccessDst ) {
+      // Copying data between views in accessible memory spaces and either non-contiguous or incompatible shape.
+      Kokkos::Impl::ViewRemap< dst_type , src_type , src_execution_space >( dst , src );
+    }
+    else {
+      Kokkos::Impl::throw_runtime_exception("deep_copy given views that would require a temporary allocation");
+    }
+    exec_space.fence();
+    return;
+#else
     std::string message("Deprecation Error: Kokkos::deep_copy extents of views don't match: ");
     message += dst.label(); message += "(";
     for(int r = 0; r<dst_type::Rank-1; r++)
@@ -1469,11 +1469,11 @@ void deep_copy
     message+= std::to_string(dst.extent(dst_type::Rank-1)); message += ") ";
     message += src.label(); message += "(";
     for(int r = 0; r<src_type::Rank-1; r++)
-      { message+= src::to_string(src.extent(r)); message += ","; }
+      { message+= std::to_string(src.extent(r)); message += ","; }
     message+= std::to_string(src.extent(src_type::Rank-1)); message += ") ";
 
-    Kokkos::throw_runtime_exception(message);
-    #endif
+    Kokkos::Impl::throw_runtime_exception(message);
+#endif
   }
 
   // If same type, equal layout, equal dimensions, equal span, and contiguous memory then can byte-wise copy
