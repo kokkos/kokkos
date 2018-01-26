@@ -37,8 +37,12 @@ IF(NOT KOKKOS_HAS_TRILINOS)
     COMMAND ${KOKKOS_SETTINGS} make -f ${KOKKOS_SRC_PATH}/cmake/Makefile.generate_cmake_settings CXX=${CMAKE_CXX_COMPILER} generate_build_settings
     WORKING_DIRECTORY "${Kokkos_BINARY_DIR}"
     OUTPUT_FILE ${Kokkos_BINARY_DIR}/core_src_make.out
-    RESULT_VARIABLE res
+    RESULT_VARIABLE GEN_SETTINGS_RESULT
   )
+  if (GEN_SETTINGS_RESULT)
+    message(FATAL_ERROR "Kokkos settings generation failed:\n"
+        "${KOKKOS_SETTINGS} make -f ${KOKKOS_SRC_PATH}/cmake/Makefile.generate_cmake_settings CXX=${CMAKE_CXX_COMPILER} generate_build_settings")
+  endif()
   include(${Kokkos_BINARY_DIR}/kokkos_generated_settings.cmake)
   set_kokkos_srcs(KOKKOS_SRC ${KOKKOS_SRC})
 
