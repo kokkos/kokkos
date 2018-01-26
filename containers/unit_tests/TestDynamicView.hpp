@@ -72,58 +72,6 @@ struct TestDynamicView
   struct TEST {};
   struct VERIFY {};
 
-  view_type a;
-  const unsigned total_size ;
-
-  TestDynamicView( const view_type & arg_a , const unsigned arg_total )
-    : a(arg_a), total_size( arg_total ) {}
-
-  KOKKOS_INLINE_FUNCTION
-  void operator() ( const TEST , member_type team_member, double& value) const
-  {
-    const unsigned int team_idx = team_member.league_rank() * team_member.team_size();
-
-    if ( team_member.team_rank() == 0 ) {
-      unsigned n = team_idx + team_member.team_size();
-
-      if ( total_size < n ) n = total_size ;
-
-      a.resize_parallel( n );
-
-      if ( a.extent(0) < n ) {
-        Kokkos::abort("GrowTest TEST failed resize_parallel");
-      }
-    }
-
-    // Make sure resize is done for all team members:
-    team_member.team_barrier();
-
-    const unsigned int val = team_idx + team_member.team_rank();
-
-    if ( val < total_size ) {
-      value += val ;
-
-      a( val ) = val ;
-    }
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator() ( const VERIFY , member_type team_member, double& value) const
-  {
-    const unsigned int val =
-      team_member.team_rank() + 
-      team_member.league_rank() * team_member.team_size();
-
-    if ( val < total_size ) {
-    
-      if ( val != a(val) ) {
-        Kokkos::abort("GrowTest VERIFY failed resize_parallel");
-      }
-
-      value += a(val);
-    }
-  }
-
   static void run( unsigned arg_total_size )
   {
     typedef Kokkos::TeamPolicy<execution_space,TEST> TestPolicy ;
@@ -131,43 +79,18 @@ struct TestDynamicView
 
 // printf("TestDynamicView::run(%d) construct memory pool\n",arg_total_size);
 
-    const size_t total_alloc_size = arg_total_size * sizeof(Scalar) * 1.2 ;
-    const size_t superblock = std::min( total_alloc_size , size_t(1000000) );
 
-    memory_pool_type pool( memory_space()
-                         , total_alloc_size
-                         ,     500 /* min block size in bytes */
-                         ,   30000 /* max block size in bytes */
-                         , superblock
-                         );
+    printf("input max_num_entries = %lu\n", arg_total_size );
+    view_type da("da", 1024, arg_total_size );
+    printf("da size() = %ul\n", (unsigned)da.size() );
+    da.resize_serial(arg_total_size/8);
+    printf("da size() = %ul\n", (unsigned)da.size() );
+    da(15) = 1;
+    da(1025) = 1;
+    printf("\n");
+
 
 // printf("TestDynamicView::run(%d) construct dynamic view\n",arg_total_size);
-
-    view_type da("A",pool,arg_total_size);
-
-    const_view_type ca(da);
-
-// printf("TestDynamicView::run(%d) construct test functor\n",arg_total_size);
-
-    TestDynamicView functor(da,arg_total_size);
-
-    const unsigned team_size = TestPolicy::team_size_recommended(functor);
-    const unsigned league_size = ( arg_total_size + team_size - 1 ) / team_size ;
-
-    double reference = 0;
-    double result = 0;
-
-// printf("TestDynamicView::run(%d) run functor test\n",arg_total_size);
-
-    Kokkos::parallel_reduce( TestPolicy(league_size,team_size) , functor , reference);
-    execution_space::fence();
-
-
-// printf("TestDynamicView::run(%d) run functor verify\n",arg_total_size);
-
-    Kokkos::parallel_reduce( VerifyPolicy(league_size,team_size) , functor , result );
-    execution_space::fence();
-
 // printf("TestDynamicView::run(%d) done\n",arg_total_size);
 
   }
