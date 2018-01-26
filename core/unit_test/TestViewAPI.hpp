@@ -1165,6 +1165,15 @@ return;
     ASSERT_TRUE( dx.ptr_on_device() == 0 );
     ASSERT_TRUE( dy.ptr_on_device() == 0 );
     ASSERT_TRUE( dz.ptr_on_device() == 0 );
+
+    {
+      // Check Deep Copy of LayoutLeft to LayoutRight
+
+      Kokkos::View<double*,Kokkos::LayoutLeft> dll("dll",10);
+      Kokkos::View<double*,Kokkos::LayoutRight,Kokkos::HostSpace> hlr("hlr",10);
+      Kokkos::deep_copy(dll,hlr);
+      Kokkos::deep_copy(hlr,dll);
+    }
   }
 
   typedef T DataType[2];

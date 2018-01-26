@@ -1259,14 +1259,14 @@ void deep_copy
        ) &&
        dst.span_is_contiguous() &&
        src.span_is_contiguous() &&
-       dst.stride_0() == src.stride_0() &&
-       dst.stride_1() == src.stride_1() &&
-       dst.stride_2() == src.stride_2() &&
-       dst.stride_3() == src.stride_3() &&
-       dst.stride_4() == src.stride_4() &&
-       dst.stride_5() == src.stride_5() &&
-       dst.stride_6() == src.stride_6() &&
-       dst.stride_7() == src.stride_7()
+       ((ViewTraits<DT,DP...>::rank < 1) || (dst.stride_0() == src.stride_0()))  &&
+       ((ViewTraits<DT,DP...>::rank < 2) || (dst.stride_1() == src.stride_1())) &&
+       ((ViewTraits<DT,DP...>::rank < 3) || (dst.stride_2() == src.stride_2())) &&
+       ((ViewTraits<DT,DP...>::rank < 4) || (dst.stride_3() == src.stride_3())) &&
+       ((ViewTraits<DT,DP...>::rank < 5) || (dst.stride_4() == src.stride_4())) &&
+       ((ViewTraits<DT,DP...>::rank < 6) || (dst.stride_5() == src.stride_5())) &&
+       ((ViewTraits<DT,DP...>::rank < 7) || (dst.stride_6() == src.stride_6())) &&
+       ((ViewTraits<DT,DP...>::rank < 8) || (dst.stride_7() == src.stride_7()))
     ) {
     const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
     Kokkos::fence();
@@ -1489,14 +1489,14 @@ void deep_copy
        ) &&
        dst.span_is_contiguous() &&
        src.span_is_contiguous() &&
-       dst.stride_0() == src.stride_0() &&
-       dst.stride_1() == src.stride_1() &&
-       dst.stride_2() == src.stride_2() &&
-       dst.stride_3() == src.stride_3() &&
-       dst.stride_4() == src.stride_4() &&
-       dst.stride_5() == src.stride_5() &&
-       dst.stride_6() == src.stride_6() &&
-       dst.stride_7() == src.stride_7()
+       ((ViewTraits<DT,DP...>::rank < 1) || (dst.stride_0() == src.stride_0()))  &&
+       ((ViewTraits<DT,DP...>::rank < 2) || (dst.stride_1() == src.stride_1())) &&
+       ((ViewTraits<DT,DP...>::rank < 3) || (dst.stride_2() == src.stride_2())) &&
+       ((ViewTraits<DT,DP...>::rank < 4) || (dst.stride_3() == src.stride_3())) &&
+       ((ViewTraits<DT,DP...>::rank < 5) || (dst.stride_4() == src.stride_4())) &&
+       ((ViewTraits<DT,DP...>::rank < 6) || (dst.stride_5() == src.stride_5())) &&
+       ((ViewTraits<DT,DP...>::rank < 7) || (dst.stride_6() == src.stride_6())) &&
+       ((ViewTraits<DT,DP...>::rank < 8) || (dst.stride_7() == src.stride_7()))
     ) {
 
     const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
