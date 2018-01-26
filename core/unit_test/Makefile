@@ -183,6 +183,7 @@ endif
 	OBJ_OPENMP += TestOpenMP_UniqueToken.o
 	
 	TARGETS += KokkosCore_UnitTest_OpenMP
+    TARGETS += KokkosCore_UnitTest_OpenMPInterOp
 
 	TEST_TARGETS += test-openmp
 endif
@@ -321,6 +322,9 @@ KokkosCore_UnitTest_Threads: $(OBJ_THREADS) $(KOKKOS_LINK_DEPENDS)
 KokkosCore_UnitTest_OpenMP: $(OBJ_OPENMP) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_OPENMP) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_OpenMP
 
+KokkosCore_UnitTest_OpenMPInterOp: UnitTestMain.o gtest-all.o TestOpenMP_InterOp.o
+	$(LINK) $(EXTRA_PATH) UnitTestMain.o gtest-all.o TestOpenMP_InterOp.o $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_OpenMPInterOp
+
 KokkosCore_UnitTest_OpenMPTarget: $(OBJ_OPENMPTARGET) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ_OPENMPTARGET) $(KOKKOS_LIBS) $(LIB) -o KokkosCore_UnitTest_OpenMPTarget
 
@@ -364,6 +368,7 @@ test-threads: KokkosCore_UnitTest_Threads
 
 test-openmp: KokkosCore_UnitTest_OpenMP
 	./KokkosCore_UnitTest_OpenMP
+	./KokkosCore_UnitTest_OpenMPInterOp
 
 test-openmptarget: KokkosCore_UnitTest_OpenMPTarget
 	./KokkosCore_UnitTest_OpenMPTarget
