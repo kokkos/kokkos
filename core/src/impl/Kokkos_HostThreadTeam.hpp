@@ -549,6 +549,7 @@ public:
   template< class Closure , typename T >
   KOKKOS_INLINE_FUNCTION
   void team_broadcast( Closure const & f , T & value , const int source_team_rank) const noexcept
+#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     {
       T volatile * const shared_value = (T*) m_data.team_reduce();
 
@@ -572,6 +573,9 @@ public:
         value = *shared_value ;
       }
     }
+#else
+    { Kokkos::abort("HostThreadTeamMember team_broadcast\n"); }
+#endif
 
   //--------------------------------------------------------------------------
   // team_reduce( Sum(result) );
