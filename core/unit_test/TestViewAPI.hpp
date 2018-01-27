@@ -1166,14 +1166,30 @@ return;
     ASSERT_TRUE( dy.ptr_on_device() == 0 );
     ASSERT_TRUE( dz.ptr_on_device() == 0 );
 
+    // Check Deep Copy of LayoutLeft to LayoutRight
     {
-      // Check Deep Copy of LayoutLeft to LayoutRight
-
       Kokkos::View<double*,Kokkos::LayoutLeft> dll("dll",10);
       Kokkos::View<double*,Kokkos::LayoutRight,Kokkos::HostSpace> hlr("hlr",10);
       Kokkos::deep_copy(dll,hlr);
       Kokkos::deep_copy(hlr,dll);
     }
+
+    // Check Deep Copy of two empty 1D views
+    {
+      Kokkos::View<double*> d;
+      Kokkos::View<double*,Kokkos::HostSpace> h;
+      Kokkos::deep_copy(d,h);
+      Kokkos::deep_copy(h,d);
+    }
+
+    // Check Deep Copy of two empty 2D views
+    {
+      Kokkos::View<double*[3],Kokkos::LayoutRight> d;
+      Kokkos::View<double*[3],Kokkos::LayoutRight,Kokkos::HostSpace> h;
+      Kokkos::deep_copy(d,h);
+      Kokkos::deep_copy(h,d);
+    }
+
   }
 
   typedef T DataType[2];
