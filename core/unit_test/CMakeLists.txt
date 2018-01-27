@@ -171,6 +171,16 @@ IF(Kokkos_ENABLE_OpenMP)
     FAIL_REGULAR_EXPRESSION "  FAILED  "
     TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
   )
+  TRIBITS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_OpenMPInterOp
+    SOURCES
+      UnitTestMain.cpp
+      openmp/TestOpenMP_InterOp.cpp
+    COMM serial mpi
+    NUM_MPI_PROCS 1
+    FAIL_REGULAR_EXPRESSION "  FAILED  "
+    TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+  )
 ENDIF()
 
 IF(Kokkos_ENABLE_Qthreads)
@@ -261,6 +271,16 @@ IF(Kokkos_ENABLE_Cuda)
       cuda/TestCuda_Crs.cpp
       cuda/TestCuda_WorkGraph.cpp
       cuda/TestCuda_UniqueToken.cpp
+    COMM serial mpi
+    NUM_MPI_PROCS 1
+    FAIL_REGULAR_EXPRESSION "  FAILED  "
+    TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+  )
+  TRIBITS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_CudaInterOp
+    SOURCES
+      UnitTestMain.cpp
+      cuda/TestCuda_InterOp.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "

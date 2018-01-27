@@ -401,7 +401,6 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
     m_cudaDev = cuda_device_id ;
 
     CUDA_SAFE_CALL( cudaSetDevice( m_cudaDev ) );
-    CUDA_SAFE_CALL( cudaDeviceReset() );
     Kokkos::Impl::cuda_device_synchronize();
 
     // Query what compute capability architecture a kernel executes:
