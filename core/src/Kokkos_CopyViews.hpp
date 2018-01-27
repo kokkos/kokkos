@@ -1105,7 +1105,7 @@ void deep_copy
   static_assert( ViewTraits<ST,SP...>::rank == 0
                , "ERROR: Non-rank-zero view in deep_copy( value , View )" );
 
-  if(dst.data() == NULL && src.data() == NULL) {
+  if(src.data() == NULL) {
     Kokkos::fence();
     return;
   }
@@ -1344,7 +1344,7 @@ void deep_copy
   static_assert( ViewTraits<ST,SP...>::rank == 0
                , "ERROR: Non-rank-zero view in deep_copy( value , View )" );
 
-  if(dst.data() == NULL && src.data() == NULL) {
+  if(src.data() == NULL) {
     exec_space.fence();
     return;
   }
