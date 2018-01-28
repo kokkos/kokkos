@@ -390,7 +390,8 @@ public:
   void execute() const
     {
       const int nwork = m_policy.end() - m_policy.begin();
-      const dim3 block(  1 , CudaTraits::WarpSize * cuda_internal_maximum_warp_count(), 1);
+      const int block_size = Kokkos::Impl::cuda_get_opt_block_size< ParallelFor >( m_functor , 1, 0 , 0 );
+      const dim3 block(  1 , block_size , 1);
       const dim3 grid( std::min( ( nwork + block.y - 1 ) / block.y , cuda_internal_maximum_grid_count() ) , 1 , 1);
 
       CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
