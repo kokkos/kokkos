@@ -219,7 +219,7 @@ void test_dynamic_view_sort(unsigned int n )
 //        ,     500 /* min block size in bytes */
 //        ,   30000 /* max block size in bytes */
 
-  KeyDynamicViewType keys("Keys", upper_bound, min_chunk_size);
+  KeyDynamicViewType keys("Keys", min_chunk_size, upper_bound);
 
   keys.resize_serial(n);
 
