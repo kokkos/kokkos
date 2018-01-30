@@ -113,12 +113,12 @@ public:
 private:
 
   track_type                     m_track ;
-  typename traits::value_type ** m_chunks ; // array of pointers to 'chunks' of memory
-  unsigned                       m_chunk_shift ; // log2(m_chunk_size)
+  typename traits::value_type ** m_chunks ;      // array of pointers to 'chunks' of memory
+  unsigned                       m_chunk_shift ; // ceil(log2(m_chunk_size))
   unsigned                       m_chunk_mask ;  // m_chunk_size - 1
-  unsigned                       m_chunk_max ;   // number of entries in the chunk array - each pointing to a chunk of 'size' m_chunk_size (num_entries)?
-  unsigned                       m_size ; // current extent of the DynamicView
-  unsigned                       m_chunk_size ; // chunk size
+  unsigned                       m_chunk_max ;   // number of entries in the chunk array - each pointing to a chunk of 'size' m_chunk_size entries
+  unsigned                       m_size ;        // current extent of the DynamicView
+  unsigned                       m_chunk_size ;  // 2 << (m_chunk_shift - 1)
 
 public:
 
@@ -147,13 +147,25 @@ public:
   enum { Rank = 1 };
 
   KOKKOS_INLINE_FUNCTION
-  size_t size() const noexcept
+  size_t allocation_size() const noexcept
     {
       // TODO should size return the requested 'extent', or actual 'capacity' available (num_chunks*chunk_size)?
       uintptr_t n = *reinterpret_cast<const uintptr_t*>( m_chunks + m_chunk_max );
-      //printf("n (num chunks?): %lu  size via existing mechanism: %lu\n", n, ( n << m_chunk_shift ) );
+      return (n << m_chunk_shift);
+    }
 
-      return m_size;
+  KOKKOS_INLINE_FUNCTION
+  size_t chunk_size() const noexcept
+    {
+      // TODO should size return the requested 'extent', or actual 'capacity' available (num_chunks*chunk_size)?
+      return m_chunk_size;
+    }
+
+  KOKKOS_INLINE_FUNCTION
+  size_t size() const noexcept
+    {
+      // TODO This now returns the 'extent' requested by resize - should this return the value now in allocation_size?
+      return (size_t)m_size;
     }
 
   template< typename iType >
@@ -226,9 +238,6 @@ public:
 
       typename traits::value_type * volatile * const ch = m_chunks + ic ;
 
-      printf("  op(): ic = %lu\n", ic );
-      printf("  op(): local id = %lu\n", (unsigned)(i0 & m_chunk_mask) );
-
       // Do bounds checking if enabled or if the chunk pointer is zero.
       // If not bounds checking then we assume a non-zero pointer is valid.
 
@@ -273,15 +282,15 @@ public:
       typedef typename traits::value_type value_type ;
       typedef value_type * pointer_type ;
 
-      const uintptr_t NC = ( n + m_chunk_mask ) >> m_chunk_shift ; // New chunk total
+      const uintptr_t NC = ( n + m_chunk_mask ) >> m_chunk_shift ; // New total number of chunks needed for resize
 
       if ( m_chunk_max < NC ) {
         Kokkos::abort("DynamicView::resize_serial exceeded maximum size");
       }
 
-      m_size = n;
+      m_size = (unsigned)n; // extent, not total memory already allocated
 
-      // m_chunks[m_chunk_max][0] stores the current number of chunks being used
+      // *m_chunks[m_chunk_max] stores the current number of chunks being used
       uintptr_t * const pc =
         reinterpret_cast<uintptr_t*>( m_chunks + m_chunk_max );
 
@@ -394,19 +403,19 @@ public:
    */
   explicit inline
   DynamicView( const std::string & arg_label
-             , const unsigned min_chunk_size // TODO round this up to closest power of 2
-             , const unsigned max_extent )
+             , const unsigned min_chunk_size
+             , const unsigned max_extent ) 
+             // TODO/FIXME max_extent will get mapped to max num chunks of some chunk size - that product may be > max_extent; should max_extent be enforced to avoid hard-to-find bugs? Would require another member variable
     : m_track()
     , m_chunks(0)
-    // The memory pool chunk is guaranteed to be a power of two
+    // The chunk size is guaranteed to be a power of two
     , m_chunk_shift(
-        Kokkos::Impl::integral_power_of_two( min_chunk_size ) ) // div - FIXME round min_chunk_size to pow-of-two, then store the exponent (for shifts rather than divs)
+        Kokkos::Impl::integral_power_of_two_that_contains( min_chunk_size ) ) // div ceil(log2(min_chunk_size))
     , m_chunk_mask( ( 1 << m_chunk_shift ) - 1 ) // mod
     , m_chunk_max( ( max_extent + m_chunk_mask ) >> m_chunk_shift ) // max num pointers-to-chunks in array
     , m_size ( 0 )
-    , m_chunk_size ( 2 << (Kokkos::Impl::is_integral_power_of_two(min_chunk_size) ? (m_chunk_shift - 1) : m_chunk_shift ) )
+    , m_chunk_size ( 2 << (m_chunk_shift - 1) )
     {
-
       // TODO If Cuda is the memory space, allocate m_chunks using UVM, and *m_chunks using Cuda
 //      typedef typename traits::memory_space  memory_space ;
       typedef typename Impl::ChunkArraySpace< typename traits::memory_space >::type chunk_array_memory_space;
@@ -414,7 +423,6 @@ public:
       typedef Kokkos::Impl::SharedAllocationRecord< chunk_array_memory_space , Destroy > record_type ;
 
       // Allocate chunk pointers and allocation counter
-      // TODO If Cuda is the memory space, allocate m_chunks using UVM, and *m_chunks using Cuda
       record_type * const record =
         record_type::allocate( chunk_array_memory_space()
                              , arg_label
