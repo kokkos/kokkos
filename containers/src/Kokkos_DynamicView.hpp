@@ -63,7 +63,7 @@ struct ChunkArraySpace {
   using type = MemSpace;
 };
 
-#if KOKKOS_ENABLE_CUDA
+#ifdef KOKKOS_ENABLE_CUDA
 template <>
 struct ChunkArraySpace< Kokkos::CudaSpace > {
   using type = typename Kokkos::CudaUVMSpace;
