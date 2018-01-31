@@ -1034,6 +1034,10 @@ void deep_copy
     >::type * = 0 )
 {
   typedef View<DT,DP...> ViewType;
+  if(dst.data() == NULL ) {
+    Kokkos::fence();
+    return;
+  }
 
   Kokkos::fence();
   static_assert(
@@ -1101,6 +1105,11 @@ void deep_copy
   static_assert( ViewTraits<ST,SP...>::rank == 0
                , "ERROR: Non-rank-zero view in deep_copy( value , View )" );
 
+  if(src.data() == NULL) {
+    Kokkos::fence();
+    return;
+  }
+
   typedef ViewTraits<ST,SP...>               src_traits ;
   typedef typename src_traits::memory_space  src_memory_space ;
   Kokkos::Impl::DeepCopy< HostSpace , src_memory_space >( & dst , src.data() , sizeof(ST) );
@@ -1124,6 +1133,11 @@ void deep_copy
     std::is_same< typename ViewTraits<DT,DP...>::value_type ,
                   typename ViewTraits<ST,SP...>::non_const_value_type >::value
     , "deep_copy requires matching non-const destination type" );
+
+  if(dst.data() == NULL && src.data() == NULL) {
+    Kokkos::fence();
+    return;
+  }
 
   typedef View<DT,DP...>  dst_type ;
   typedef View<ST,SP...>  src_type ;
@@ -1174,6 +1188,10 @@ void deep_copy
   typedef typename src_type::memory_space     src_memory_space ;
   typedef typename dst_type::value_type       dst_value_type ;
   typedef typename src_type::value_type       src_value_type ;
+  if(dst.data() == NULL && src.data() == NULL) {
+    Kokkos::fence();
+    return;
+  }
 
   enum { DstExecCanAccessSrc =
    Kokkos::Impl::SpaceAccessibility< dst_execution_space , src_memory_space >::accessible };
@@ -1259,14 +1277,14 @@ void deep_copy
        ) &&
        dst.span_is_contiguous() &&
        src.span_is_contiguous() &&
-       dst.stride_0() == src.stride_0() &&
-       dst.stride_1() == src.stride_1() &&
-       dst.stride_2() == src.stride_2() &&
-       dst.stride_3() == src.stride_3() &&
-       dst.stride_4() == src.stride_4() &&
-       dst.stride_5() == src.stride_5() &&
-       dst.stride_6() == src.stride_6() &&
-       dst.stride_7() == src.stride_7()
+       ((ViewTraits<DT,DP...>::rank < 1) || (dst.stride_0() == src.stride_0()))  &&
+       ((ViewTraits<DT,DP...>::rank < 2) || (dst.stride_1() == src.stride_1())) &&
+       ((ViewTraits<DT,DP...>::rank < 3) || (dst.stride_2() == src.stride_2())) &&
+       ((ViewTraits<DT,DP...>::rank < 4) || (dst.stride_3() == src.stride_3())) &&
+       ((ViewTraits<DT,DP...>::rank < 5) || (dst.stride_4() == src.stride_4())) &&
+       ((ViewTraits<DT,DP...>::rank < 6) || (dst.stride_5() == src.stride_5())) &&
+       ((ViewTraits<DT,DP...>::rank < 7) || (dst.stride_6() == src.stride_6())) &&
+       ((ViewTraits<DT,DP...>::rank < 8) || (dst.stride_7() == src.stride_7()))
     ) {
     const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
     Kokkos::fence();
@@ -1326,6 +1344,11 @@ void deep_copy
   static_assert( ViewTraits<ST,SP...>::rank == 0
                , "ERROR: Non-rank-zero view in deep_copy( value , View )" );
 
+  if(src.data() == NULL) {
+    exec_space.fence();
+    return;
+  }
+
   typedef ViewTraits<ST,SP...>               src_traits ;
   typedef typename src_traits::memory_space  src_memory_space ;
   Kokkos::Impl::DeepCopy< HostSpace , src_memory_space , ExecSpace >
@@ -1359,6 +1382,10 @@ void deep_copy
   typedef typename dst_type::value_type    value_type ;
   typedef typename dst_type::memory_space  dst_memory_space ;
   typedef typename src_type::memory_space  src_memory_space ;
+  if(dst.data() == NULL && src.data() == NULL) {
+    exec_space.fence();
+    return;
+  }
 
   exec_space.fence();
   if ( dst.data() != src.data() ) {
@@ -1405,6 +1432,11 @@ void deep_copy
   typedef typename src_type::memory_space     src_memory_space ;
   typedef typename dst_type::value_type       dst_value_type ;
   typedef typename src_type::value_type       src_value_type ;
+
+  if(dst.data() == NULL && src.data() == NULL) {
+    exec_space.fence();
+    return;
+  }
 
   enum { ExecCanAccessSrcDst =
       Kokkos::Impl::SpaceAccessibility< ExecSpace , dst_memory_space >::accessible &&
@@ -1489,14 +1521,14 @@ void deep_copy
        ) &&
        dst.span_is_contiguous() &&
        src.span_is_contiguous() &&
-       dst.stride_0() == src.stride_0() &&
-       dst.stride_1() == src.stride_1() &&
-       dst.stride_2() == src.stride_2() &&
-       dst.stride_3() == src.stride_3() &&
-       dst.stride_4() == src.stride_4() &&
-       dst.stride_5() == src.stride_5() &&
-       dst.stride_6() == src.stride_6() &&
-       dst.stride_7() == src.stride_7()
+       ((ViewTraits<DT,DP...>::rank < 1) || (dst.stride_0() == src.stride_0()))  &&
+       ((ViewTraits<DT,DP...>::rank < 2) || (dst.stride_1() == src.stride_1())) &&
+       ((ViewTraits<DT,DP...>::rank < 3) || (dst.stride_2() == src.stride_2())) &&
+       ((ViewTraits<DT,DP...>::rank < 4) || (dst.stride_3() == src.stride_3())) &&
+       ((ViewTraits<DT,DP...>::rank < 5) || (dst.stride_4() == src.stride_4())) &&
+       ((ViewTraits<DT,DP...>::rank < 6) || (dst.stride_5() == src.stride_5())) &&
+       ((ViewTraits<DT,DP...>::rank < 7) || (dst.stride_6() == src.stride_6())) &&
+       ((ViewTraits<DT,DP...>::rank < 8) || (dst.stride_7() == src.stride_7()))
     ) {
 
     const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
