@@ -7,7 +7,7 @@ ELSE()
 ENDIF()
 
 IF(NOT KOKKOS_HAS_TRILINOS)
-  cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 
   # Define Project Name if this is a standalone build
   IF(NOT DEFINED ${PROJECT_NAME})
