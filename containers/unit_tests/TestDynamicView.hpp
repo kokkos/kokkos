@@ -70,8 +70,6 @@ struct TestDynamicView
     // Test: Create DynamicView, initialize size (via resize), run through parallel_for to set values, check values (via parallel_reduce); resize values and repeat
     //   Case 1: min_chunk_size is a power of 2
     {
-      // TODO Cleanup printf statments
-      //printf("Test 1\n");
       view_type da("da", 1024, arg_total_size );
       ASSERT_EQ( da.size(), 0 );
       // Init
@@ -93,7 +91,6 @@ struct TestDynamicView
           , result_sum
           );
 
-      //printf("result_sum = %lf  expected = %lf\n", result_sum, (value_type)( da_size * (da_size - 1) / 2 ) );
       ASSERT_EQ(result_sum, (value_type)( da_size * (da_size - 1) / 2 ) );
 
       // add 3x more entries i.e. 4x larger than previous size
@@ -116,15 +113,14 @@ struct TestDynamicView
           , new_result_sum
           );
 
-      //printf("result_sum = %lf  expected = %lf\n", new_result_sum+result_sum, (value_type)( da_resize * (da_resize - 1) / 2 ) );
       ASSERT_EQ(new_result_sum+result_sum, (value_type)( da_resize * (da_resize - 1) / 2 ) );
     } // end scope
 
     // Test: Create DynamicView, initialize size (via resize), run through parallel_for to set values, check values (via parallel_reduce); resize values and repeat
     //   Case 2: min_chunk_size is NOT a power of 2
     {
-      //printf("Test 2\n");
       view_type da("da", 1023, arg_total_size );
+      ASSERT_EQ( da.size(), 0 );
       // Init
       unsigned da_size = arg_total_size / 8;
       da.resize_serial(da_size);
@@ -144,7 +140,6 @@ struct TestDynamicView
           , result_sum
           );
 
-      //printf("result_sum = %lf  expected = %lf\n", result_sum, (value_type)( da_size * (da_size - 1) / 2 ) );
       ASSERT_EQ(result_sum, (value_type)( da_size * (da_size - 1) / 2 ) );
 
       // add 3x more entries i.e. 4x larger than previous size
@@ -167,8 +162,55 @@ struct TestDynamicView
           , new_result_sum
           );
 
-      //printf("result_sum = %lf  expected = %lf\n", new_result_sum+result_sum, (value_type)( da_resize * (da_resize - 1) / 2 ) );
       ASSERT_EQ(new_result_sum+result_sum, (value_type)( da_resize * (da_resize - 1) / 2 ) );
+    } // end scope
+
+    // Test: Create DynamicView, initialize size (via resize), run through parallel_for to set values, check values (via parallel_reduce); resize values and repeat
+    //   Case 3: resize reduces the size
+    {
+      view_type da("da", 1023, arg_total_size );
+      ASSERT_EQ( da.size(), 0 );
+      // Init
+      unsigned da_size = arg_total_size / 2;
+      da.resize_serial(da_size);
+      ASSERT_EQ( da.size(), da_size );
+
+      Kokkos::parallel_for( Kokkos::RangePolicy<execution_space>(0, da_size), KOKKOS_LAMBDA ( const int i )
+          {
+          da(i) = Scalar(i);
+          }
+          );
+
+      value_type result_sum = 0.0;
+      Kokkos::parallel_reduce( Kokkos::RangePolicy<execution_space>(0, da_size), KOKKOS_LAMBDA ( const int i, value_type& partial_sum )
+          {
+          partial_sum += (value_type)da(i);
+          }
+          , result_sum
+          );
+
+      ASSERT_EQ(result_sum, (value_type)( da_size * (da_size - 1) / 2 ) );
+
+      // remove the final 3/4 entries i.e. first 1/4 remain
+      unsigned da_resize = arg_total_size / 8;
+      da.resize_serial(da_resize);
+      ASSERT_EQ( da.size(), da_resize );
+
+      Kokkos::parallel_for( Kokkos::RangePolicy<execution_space>(0, da_resize), KOKKOS_LAMBDA ( const int i )
+          {
+          da(i) = Scalar(i);
+          }
+          );
+
+      value_type new_result_sum = 0.0;
+      Kokkos::parallel_reduce( Kokkos::RangePolicy<execution_space>(0, da_resize), KOKKOS_LAMBDA ( const int i, value_type& partial_sum )
+          {
+          partial_sum += (value_type)da(i);
+          }
+          , new_result_sum
+          );
+
+      ASSERT_EQ(new_result_sum, (value_type)( da_resize * (da_resize - 1) / 2 ) );
     } // end scope
 
   }

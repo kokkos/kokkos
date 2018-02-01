@@ -106,18 +106,13 @@ private:
         { Kokkos::abort("Kokkos::DynamicView ERROR: attempt to access inaccessible memory space"); };
     };
 
-public:
-
-  typedef Kokkos::MemoryPool< typename traits::device_type > memory_pool ;
-
 private:
 
   track_type                     m_track ;
   typename traits::value_type ** m_chunks ;      // array of pointers to 'chunks' of memory
   unsigned                       m_chunk_shift ; // ceil(log2(m_chunk_size))
   unsigned                       m_chunk_mask ;  // m_chunk_size - 1
-  unsigned                       m_chunk_max ;   // number of entries in the chunk array - each pointing to a chunk of 'size' m_chunk_size entries
-  unsigned                       m_size ;        // current extent of the DynamicView
+  unsigned                       m_chunk_max ;   // number of entries in the chunk array - each pointing to a chunk of extent == m_chunk_size entries
   unsigned                       m_chunk_size ;  // 2 << (m_chunk_shift - 1)
 
 public:
@@ -147,9 +142,8 @@ public:
   enum { Rank = 1 };
 
   KOKKOS_INLINE_FUNCTION
-  size_t allocation_size() const noexcept
+  size_t allocation_extent() const noexcept
     {
-      // TODO should size return the requested 'extent', or actual 'capacity' available (num_chunks*chunk_size)?
       uintptr_t n = *reinterpret_cast<const uintptr_t*>( m_chunks + m_chunk_max );
       return (n << m_chunk_shift);
     }
@@ -157,15 +151,14 @@ public:
   KOKKOS_INLINE_FUNCTION
   size_t chunk_size() const noexcept
     {
-      // TODO should size return the requested 'extent', or actual 'capacity' available (num_chunks*chunk_size)?
       return m_chunk_size;
     }
 
   KOKKOS_INLINE_FUNCTION
   size_t size() const noexcept
     {
-      // TODO This now returns the 'extent' requested by resize - should this return the value now in allocation_size?
-      return (size_t)m_size;
+      size_t extent = *reinterpret_cast<const size_t*>( m_chunks + m_chunk_max +1 );
+      return extent;
     }
 
   template< typename iType >
@@ -241,7 +234,6 @@ public:
       // Do bounds checking if enabled or if the chunk pointer is zero.
       // If not bounds checking then we assume a non-zero pointer is valid.
 
-      // TODO is this still necessary?
 #if ! defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       if ( 0 == *ch )
 #endif
@@ -265,10 +257,9 @@ public:
     }
 
   //----------------------------------------
-  /** \brief  Resizing in parallel only increases the array size,
-   *          never decrease.
-   */
-  /** \brief  Resizing in serial can grow or shrink the array size, */
+  /** \brief  Resizing in serial can grow or shrink the array size
+   *          up to the maximum number of chunks
+   * */
   template< typename IntType >
   inline
   typename std::enable_if
@@ -287,8 +278,6 @@ public:
       if ( m_chunk_max < NC ) {
         Kokkos::abort("DynamicView::resize_serial exceeded maximum size");
       }
-
-      m_size = (unsigned)n; // extent, not total memory already allocated
 
       // *m_chunks[m_chunk_max] stores the current number of chunks being used
       uintptr_t * const pc =
@@ -311,6 +300,8 @@ public:
           m_chunks[*pc] = 0 ;
         }
       }
+      // *m_chunks[m_chunk_max+1] stores the 'extent' requested by resize
+      *(pc+1) = n;
     }
 
   //----------------------------------------------------------------------
@@ -329,7 +320,6 @@ public:
     , m_chunk_shift( rhs.m_chunk_shift )
     , m_chunk_mask( rhs.m_chunk_mask )
     , m_chunk_max( rhs.m_chunk_max )
-    , m_size( rhs.m_size )
     , m_chunk_size( rhs.m_chunk_size )
     {
       typedef typename DynamicView<RT,RP...>::traits  SrcTraits ;
@@ -364,7 +354,7 @@ public:
         m_destroy = arg_destroy ;
 
         Kokkos::Impl::ParallelFor<Destroy,Range>
-          closure( *this , Range(0, m_chunk_max + 1) );
+          closure( *this , Range(0, m_chunk_max + 2) ); // Add 2 to 'destroy' extra slots storing num_chunks and extent
 
         closure.execute();
 
@@ -396,8 +386,7 @@ public:
 
   /**\brief  Allocation constructor
    *
-   *  Memory is allocated in chunks from the memory pool.
-   *  The chunk size conforms to the memory pool's chunk size.
+   *  Memory is allocated in chunks
    *  A maximum size is required in order to allocate a
    *  chunk-pointer array.
    */
@@ -405,19 +394,15 @@ public:
   DynamicView( const std::string & arg_label
              , const unsigned min_chunk_size
              , const unsigned max_extent ) 
-             // TODO/FIXME max_extent will get mapped to max num chunks of some chunk size - that product may be > max_extent; should max_extent be enforced to avoid hard-to-find bugs? Would require another member variable
     : m_track()
     , m_chunks(0)
     // The chunk size is guaranteed to be a power of two
     , m_chunk_shift(
         Kokkos::Impl::integral_power_of_two_that_contains( min_chunk_size ) ) // div ceil(log2(min_chunk_size))
-    , m_chunk_mask( ( 1 << m_chunk_shift ) - 1 ) // mod
-    , m_chunk_max( ( max_extent + m_chunk_mask ) >> m_chunk_shift ) // max num pointers-to-chunks in array
-    , m_size ( 0 )
+    , m_chunk_mask( ( 1 << m_chunk_shift ) - 1 )                              // mod
+    , m_chunk_max( ( max_extent + m_chunk_mask ) >> m_chunk_shift )           // max num pointers-to-chunks in array
     , m_chunk_size ( 2 << (m_chunk_shift - 1) )
     {
-      // TODO If Cuda is the memory space, allocate m_chunks using UVM, and *m_chunks using Cuda
-//      typedef typename traits::memory_space  memory_space ;
       typedef typename Impl::ChunkArraySpace< typename traits::memory_space >::type chunk_array_memory_space;
       // A functor to deallocate all of the chunks upon final destruction
       typedef Kokkos::Impl::SharedAllocationRecord< chunk_array_memory_space , Destroy > record_type ;
@@ -426,7 +411,9 @@ public:
       record_type * const record =
         record_type::allocate( chunk_array_memory_space()
                              , arg_label
-                             , ( sizeof(pointer_type) * ( m_chunk_max + 1 ) ) ); // allocate 1 extra chunk so that *m_chunk[m_chunk_max] stores num of chunks used
+                             , ( sizeof(pointer_type) * ( m_chunk_max + 2 ) ) ); 
+      // Allocate + 2 extra slots so that *m_chunk[m_chunk_max] == num_chunks_alloc and *m_chunk[m_chunk_max+1] == extent
+      // This must match in Destroy's execute(...) method
 
       m_chunks = reinterpret_cast<pointer_type*>( record->data() );
 
