@@ -171,6 +171,7 @@ public:
   size_t extent_int( const iType & r ) const
     { return r == 0 ? size() : 1 ; }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   KOKKOS_INLINE_FUNCTION size_t dimension_0() const { return size(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_1() const { return 1 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_2() const { return 1 ; }
@@ -179,6 +180,7 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_5() const { return 1 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_6() const { return 1 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_7() const { return 1 ; }
+#endif
 
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_0() const { return 0 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_1() const { return 0 ; }
