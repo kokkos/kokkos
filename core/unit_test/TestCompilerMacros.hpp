@@ -67,7 +67,7 @@ struct AddFunctor {
   type a, b;
   int length;
 
-  AddFunctor( type a_, type b_ ) : a( a_ ), b( b_ ), length( a.dimension_1() ) {}
+  AddFunctor( type a_, type b_ ) : a( a_ ), b( b_ ), length( a.extent(1) ) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()( int i ) const {

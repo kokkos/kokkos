@@ -862,7 +862,7 @@ public:
   : m_functor( arg_functor )
   , m_policy(  arg_policy )
   , m_reducer( InvalidType() )
-  , m_result_ptr( arg_result.ptr_on_device() )
+  , m_result_ptr( arg_result.data() )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
@@ -874,7 +874,7 @@ public:
   : m_functor( arg_functor )
   , m_policy(  arg_policy )
   , m_reducer( reducer )
-  , m_result_ptr( reducer.view().ptr_on_device() )
+  , m_result_ptr( reducer.view().data() )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
@@ -1088,7 +1088,7 @@ public:
   : m_functor( arg_functor )
   , m_policy(  arg_policy )
   , m_reducer( InvalidType() )
-  , m_result_ptr( arg_result.ptr_on_device() )
+  , m_result_ptr( arg_result.data() )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
@@ -1100,7 +1100,7 @@ public:
   : m_functor( arg_functor )
   , m_policy(  arg_policy )
   , m_reducer( reducer )
-  , m_result_ptr( reducer.view().ptr_on_device() )
+  , m_result_ptr( reducer.view().data() )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
@@ -1342,7 +1342,7 @@ public:
                                 ,void*>::type = NULL)
   : m_functor( arg_functor )
   , m_reducer( InvalidType() )
-  , m_result_ptr( arg_result.ptr_on_device() )
+  , m_result_ptr( arg_result.data() )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
@@ -1369,7 +1369,7 @@ public:
   {
     // Return Init value if the number of worksets is zero
     if( arg_policy.league_size() == 0) {
-      ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , arg_result.ptr_on_device() );
+      ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , arg_result.data() );
       return ;
     }
 
@@ -1412,7 +1412,7 @@ public:
                 , const ReducerType & reducer)
   : m_functor( arg_functor )
   , m_reducer( reducer )
-  , m_result_ptr( reducer.view().ptr_on_device() )
+  , m_result_ptr( reducer.view().data() )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )

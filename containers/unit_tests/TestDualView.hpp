@@ -88,10 +88,10 @@ namespace Impl {
 
       a.template sync<typename ViewType::host_mirror_space>();
       Scalar count = 0;
-      for(unsigned int i = 0; i<a.d_view.dimension_0(); i++)
-        for(unsigned int j = 0; j<a.d_view.dimension_1(); j++)
+      for(unsigned int i = 0; i<a.d_view.extent(0); i++)
+        for(unsigned int j = 0; j<a.d_view.extent(1); j++)
           count += a.h_view(i,j);
-      return count -  a.d_view.dimension_0()*a.d_view.dimension_1()-2-4-3*2;
+      return count -  a.d_view.extent(0)*a.d_view.extent(1)-2-4-3*2;
     }
 
 
