@@ -57,6 +57,11 @@
 
 namespace Kokkos {
 
+struct ChunkSize {
+  int value;
+  ChunkSize(int value_):value(value_) {}
+};
+
 /** \brief  Execution policy for work over a range of an integral type.
  *
  * Valid template argument options:
@@ -132,7 +137,56 @@ public:
              )
     : RangePolicy( typename traits::execution_space()
                  , work_begin , work_end )
-    {}
+    {
+      set_auto_chunk_size();
+    }
+
+  /** \brief  Total range */
+  template<class ... Args>
+  inline
+  RangePolicy( const typename traits::execution_space & work_space
+             , const member_type work_begin
+             , const member_type work_end
+             , Args ... args
+             )
+    : m_space( work_space )
+    , m_begin( work_begin < work_end ? work_begin : 0 )
+    , m_end(   work_begin < work_end ? work_end : 0 )
+    , m_granularity(0)
+    , m_granularity_mask(0)
+    {
+      set_auto_chunk_size();
+      set(args...);
+    }
+
+  /** \brief  Total range */
+  template<class ... Args>
+  inline
+  RangePolicy( const member_type work_begin
+             , const member_type work_end
+             , Args ... args
+             )
+    : RangePolicy( typename traits::execution_space()
+                 , work_begin , work_end )
+    {
+      set_auto_chunk_size();
+      set(args...);
+    }
+
+private:
+  inline void set() {}
+
+public:
+  template<class ... Args>
+  inline void set(Args ...) {
+    static_assert( 0 == sizeof...(Args), "Kokkos::RangePolicy: unhandled constructor arguments encountered.");
+  }
+
+  template<class ... Args>
+  inline void set(const ChunkSize& chunksize, Args ... args) {
+    m_granularity = chunksize.value;
+    m_granularity_mask = m_granularity - 1;
+  }
 
 public:
   /** \brief return chunk_size */
@@ -383,11 +437,6 @@ public:
 
 Impl::PerTeamValue PerTeam(const int& arg);
 Impl::PerThreadValue PerThread(const int& arg);
-
-struct ChunkSize {
-  int value;
-  ChunkSize(int value_):value(value_) {}
-};
 
 struct ScratchRequest {
   int level;

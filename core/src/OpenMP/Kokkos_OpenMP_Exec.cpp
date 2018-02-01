@@ -391,10 +391,11 @@ void OpenMP::finalize()
   }
 
   if ( Impl::t_openmp_instance ) {
-
+    // Silence Cuda Warning
     const int nthreads = Impl::t_openmp_instance->m_pool_size <= Impl::g_openmp_hardware_max_threads
                        ? Impl::g_openmp_hardware_max_threads
                        : Impl::t_openmp_instance->m_pool_size;
+    (void) nthreads;
 
     using Exec = Impl::OpenMPExec;
     Exec * instance = Impl::t_openmp_instance;

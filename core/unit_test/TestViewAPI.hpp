@@ -1165,6 +1165,31 @@ return;
     ASSERT_TRUE( dx.data() == 0 );
     ASSERT_TRUE( dy.data() == 0 );
     ASSERT_TRUE( dz.data() == 0 );
+
+    // Check Deep Copy of LayoutLeft to LayoutRight
+    {
+      Kokkos::View<double*,Kokkos::LayoutLeft> dll("dll",10);
+      Kokkos::View<double*,Kokkos::LayoutRight,Kokkos::HostSpace> hlr("hlr",10);
+      Kokkos::deep_copy(dll,hlr);
+      Kokkos::deep_copy(hlr,dll);
+    }
+
+    // Check Deep Copy of two empty 1D views
+    {
+      Kokkos::View<double*> d;
+      Kokkos::View<double*,Kokkos::HostSpace> h;
+      Kokkos::deep_copy(d,h);
+      Kokkos::deep_copy(h,d);
+    }
+
+    // Check Deep Copy of two empty 2D views
+    {
+      Kokkos::View<double*[3],Kokkos::LayoutRight> d;
+      Kokkos::View<double*[3],Kokkos::LayoutRight,Kokkos::HostSpace> h;
+      Kokkos::deep_copy(d,h);
+      Kokkos::deep_copy(h,d);
+    }
+
   }
 
   typedef T DataType[2];
@@ -1467,6 +1492,8 @@ TEST_F( TEST_CATEGORY, view_stride_method )
 }
 
 inline void test_anonymous_space() {
+  /* apparently TEST_EXECSPACE is sometimes a memory space. */
+  using ExecSpace = TEST_EXECSPACE::execution_space;
   int host_array[10];
   Kokkos::View<int[10], Kokkos::AnonymousSpace> host_anon_stat_view(host_array);
   Kokkos::View<int*, Kokkos::AnonymousSpace> host_anon_dyn_view(host_array, 10);
@@ -1476,9 +1503,9 @@ inline void test_anonymous_space() {
     host_anon_stat_view(i) = host_anon_dyn_view(i) = 142;
     host_anon_assign_view(i) = 142;
   }
-  Kokkos::View<int**, Kokkos::LayoutRight, TEST_EXECSPACE> d_view("d_view", 100, 10);
+  Kokkos::View<int**, Kokkos::LayoutRight, ExecSpace> d_view("d_view", 100, 10);
 #ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
-  Kokkos::parallel_for(100, KOKKOS_LAMBDA(int i) {
+  Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace, int>(0, 100), KOKKOS_LAMBDA(int i) {
     int* ptr = &(d_view(i, 0));
     Kokkos::View<int[10], Kokkos::AnonymousSpace> d_anon_stat_view(ptr);
     Kokkos::View<int*, Kokkos::AnonymousSpace> d_anon_dyn_view(ptr, 10);

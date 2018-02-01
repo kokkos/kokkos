@@ -401,7 +401,6 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
     m_cudaDev = cuda_device_id ;
 
     CUDA_SAFE_CALL( cudaSetDevice( m_cudaDev ) );
-    CUDA_SAFE_CALL( cudaDeviceReset() );
     Kokkos::Impl::cuda_device_synchronize();
 
     // Query what compute capability architecture a kernel executes:
@@ -438,19 +437,7 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
     // Maximum number of warps,
     // at most one warp per thread in a warp for reduction.
 
-    // HCE 2012-February :
-    // Found bug in CUDA 4.1 that sometimes a kernel launch would fail
-    // if the thread count == 1024 and a functor is passed to the kernel.
-    // Copying the kernel to constant memory and then launching with
-    // thread count == 1024 would work fine.
-    //
-    // HCE 2012-October :
-    // All compute capabilities support at least 16 warps (512 threads).
-    // However, we have found that 8 warps typically gives better performance.
-
-    m_maxWarpCount = 8 ;
-
-    // m_maxWarpCount = cudaProp.maxThreadsPerBlock / Impl::CudaTraits::WarpSize ;
+    m_maxWarpCount = cudaProp.maxThreadsPerBlock / Impl::CudaTraits::WarpSize ;
 
     if ( Impl::CudaTraits::WarpSize < m_maxWarpCount ) {
       m_maxWarpCount = Impl::CudaTraits::WarpSize ;

@@ -56,6 +56,7 @@ class TestRangePolicyConstruction {
 public:
   TestRangePolicyConstruction() {
     test_compile_time_parameters();
+    test_runtime_parameters();
   }
 
 private:
@@ -245,6 +246,34 @@ private:
       ASSERT_TRUE( ( std::is_same< index_type,      long                                >::value ) );
       ASSERT_TRUE( ( std::is_same< schedule_type,   Kokkos::Schedule<Kokkos::Dynamic>   >::value ) );
       ASSERT_TRUE( ( std::is_same< work_tag,        SomeTag                             >::value ) );
+    }
+  }
+  void test_runtime_parameters() {
+    {
+      typedef Kokkos::RangePolicy<> policy_t;
+      policy_t p(5,15);
+      ASSERT_TRUE( (p.begin() == 5) );
+      ASSERT_TRUE( (p.end() == 15) );
+    }
+    {
+      typedef Kokkos::RangePolicy<> policy_t;
+      policy_t p(Kokkos::DefaultExecutionSpace(),5,15);
+      ASSERT_TRUE( (p.begin() == 5) );
+      ASSERT_TRUE( (p.end() == 15) );
+    }
+    {
+      typedef Kokkos::RangePolicy<> policy_t;
+      policy_t p(5,15,Kokkos::ChunkSize(10));
+      ASSERT_TRUE( (p.begin() == 5) );
+      ASSERT_TRUE( (p.end() == 15) );
+      ASSERT_TRUE( (p.chunk_size() == 10) );
+    }
+    {
+      typedef Kokkos::RangePolicy<> policy_t;
+      policy_t p(Kokkos::DefaultExecutionSpace(),5,15,Kokkos::ChunkSize(10));
+      ASSERT_TRUE( (p.begin() == 5) );
+      ASSERT_TRUE( (p.end() == 15) );
+      ASSERT_TRUE( (p.chunk_size() == 10) );
     }
   }
 };
