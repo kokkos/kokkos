@@ -500,15 +500,9 @@ public:
      modified_device() = modified_device()+1;
 
    } else {
-     /* Realloc on Device */
-
-     ::Kokkos::realloc(d_view,n0,n1,n2,n3,n4,n5,n6,n7);
-     t_host temp_view = create_mirror_view( d_view );
-
-     /* Remap on Host */
-     Kokkos::deep_copy( temp_view , h_view );
-
-     h_view = temp_view;
+     /* Resize on Host */
+     ::Kokkos::resize(h_view,n0,n1,n2,n3,n4,n5,n6,n7);
+     d_view = create_mirror_view( typename t_dev::execution_space(), h_view );
 
      /* Mark Host copy as modified */
      modified_host() = modified_host()+1;
