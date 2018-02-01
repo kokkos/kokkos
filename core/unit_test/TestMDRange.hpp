@@ -265,6 +265,8 @@ struct TestMDRange_2D {
 
   static void test_reduce2( const int N0, const int N1 )
   {
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
+#if !defined(KOKKOS_ENABLE_CUDA) || ( 8000 <= CUDA_VERSION )
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<2>, Kokkos::IndexType<int> > range_type;
       typedef typename range_type::tile_type tile_type;
@@ -279,6 +281,8 @@ struct TestMDRange_2D {
         , sum );
       ASSERT_EQ( sum, N0 * N1 );
     }
+#endif
+#endif
 
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<2>, Kokkos::IndexType<int> > range_type;
@@ -454,6 +458,8 @@ struct TestMDRange_2D {
   static void test_for2( const int N0, const int N1 )
   {
 
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
+#if !defined(KOKKOS_ENABLE_CUDA) || ( 8000 <= CUDA_VERSION )
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<2>, Kokkos::IndexType<int> > range_type;
       typedef typename range_type::tile_type tile_type;
@@ -490,6 +496,8 @@ struct TestMDRange_2D {
 
       ASSERT_EQ( counter, 0 );
     }
+#endif
+#endif
 
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<2>, Kokkos::IndexType<int>, InitTag > range_type;
@@ -796,6 +804,8 @@ struct TestMDRange_3D {
 
   static void test_reduce3( const int N0, const int N1, const int N2 )
   {
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
+#if !defined(KOKKOS_ENABLE_CUDA) || ( 8000 <= CUDA_VERSION )
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<3>, Kokkos::IndexType<int> > range_type;
       typedef typename range_type::tile_type tile_type;
@@ -810,6 +820,8 @@ struct TestMDRange_3D {
         , sum );
       ASSERT_EQ( sum, N0 * N1 * N2 );
     }
+#endif
+#endif
 
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<3>, Kokkos::IndexType<int> > range_type;
@@ -986,6 +998,8 @@ struct TestMDRange_3D {
 
   static void test_for3( const int N0, const int N1, const int N2 )
   {
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
+#if !defined(KOKKOS_ENABLE_CUDA) || ( 8000 <= CUDA_VERSION )
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<3>, Kokkos::IndexType<int> > range_type;
       typedef typename range_type::tile_type tile_type;
@@ -1024,6 +1038,8 @@ struct TestMDRange_3D {
 
       ASSERT_EQ( counter, 0 );
     }
+#endif
+#endif
 
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<3> > range_type;
@@ -1310,6 +1326,8 @@ struct TestMDRange_4D {
 
   static void test_reduce4( const int N0, const int N1, const int N2, const int N3 )
   {
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
+#if !defined(KOKKOS_ENABLE_CUDA) || ( 8000 <= CUDA_VERSION )
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<4>, Kokkos::IndexType<int> > range_type;
       typedef typename range_type::tile_type tile_type;
@@ -1324,6 +1342,8 @@ struct TestMDRange_4D {
         , sum );
       ASSERT_EQ( sum, N0 * N1 * N2 * N3 );
     }
+#endif
+#endif
 
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<4>, Kokkos::IndexType<int> > range_type;
@@ -1505,6 +1525,8 @@ struct TestMDRange_4D {
 
   static void test_for4( const int N0, const int N1, const int N2, const int N3 )
   {
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
+#if !defined(KOKKOS_ENABLE_CUDA) || ( 8000 <= CUDA_VERSION )
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<4>, Kokkos::IndexType<int> > range_type;
       typedef typename range_type::tile_type tile_type;
@@ -1545,6 +1567,8 @@ struct TestMDRange_4D {
 
       ASSERT_EQ( counter, 0 );
     }
+#endif
+#endif
 
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<4> > range_type;
@@ -1845,6 +1869,8 @@ struct TestMDRange_5D {
 
   static void test_reduce5( const int N0, const int N1, const int N2, const int N3, const int N4 )
   {
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
+#if !defined(KOKKOS_ENABLE_CUDA) || ( 8000 <= CUDA_VERSION )
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<5>, Kokkos::IndexType<int> > range_type;
       typedef typename range_type::tile_type tile_type;
@@ -1859,6 +1885,8 @@ struct TestMDRange_5D {
         , sum );
       ASSERT_EQ( sum, N0 * N1 * N2 * N3 * N4 );
     }
+#endif
+#endif
 
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<5>, Kokkos::IndexType<int> > range_type;
@@ -1960,6 +1988,8 @@ struct TestMDRange_5D {
 
   static void test_for5( const int N0, const int N1, const int N2, const int N3, const int N4 )
   {
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
+#if !defined(KOKKOS_ENABLE_CUDA) || ( 8000 <= CUDA_VERSION )
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<5>, Kokkos::IndexType<int> > range_type;
       typedef typename range_type::tile_type tile_type;
@@ -2002,6 +2032,8 @@ struct TestMDRange_5D {
 
       ASSERT_EQ( counter, 0 );
     }
+#endif
+#endif
 
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<5> > range_type;
@@ -2311,6 +2343,8 @@ struct TestMDRange_6D {
 
   static void test_reduce6( const int N0, const int N1, const int N2, const int N3, const int N4, const int N5 )
   {
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
+#if !defined(KOKKOS_ENABLE_CUDA) || ( 8000 <= CUDA_VERSION )
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<6>, Kokkos::IndexType<int> > range_type;
       typedef typename range_type::tile_type tile_type;
@@ -2325,6 +2359,8 @@ struct TestMDRange_6D {
         , sum );
       ASSERT_EQ( sum, N0 * N1 * N2 * N3 * N4 * N5 );
     }
+#endif
+#endif
 
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<6>, Kokkos::IndexType<int> > range_type;
@@ -2428,6 +2464,8 @@ struct TestMDRange_6D {
 
   static void test_for6( const int N0, const int N1, const int N2, const int N3, const int N4, const int N5 )
   {
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
+#if !defined(KOKKOS_ENABLE_CUDA) || ( 8000 <= CUDA_VERSION )
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<6>, Kokkos::IndexType<int> > range_type;
       typedef typename range_type::tile_type tile_type;
@@ -2472,6 +2510,8 @@ struct TestMDRange_6D {
 
       ASSERT_EQ( counter, 0 );
     }
+#endif
+#endif
 
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<6> > range_type;
