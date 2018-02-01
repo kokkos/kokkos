@@ -556,7 +556,6 @@ private:
 
   //----------------------------------------
   // parallel_reduce operator without a tag:
-// TODO Begin here to fix...
   template< class ArgMember , class T >
   KOKKOS_INLINE_FUNCTION
   static T deduce_reduce_type( VOIDTAG , void (FunctorType::*)( ArgMember , T & ) const ) {}
