@@ -157,8 +157,8 @@ public:
   KOKKOS_INLINE_FUNCTION
   size_t size() const noexcept
     {
-      size_t extent = *reinterpret_cast<const size_t*>( m_chunks + m_chunk_max +1 );
-      return extent;
+      size_t extent_0 = *reinterpret_cast<const size_t*>( m_chunks + m_chunk_max +1 );
+      return extent_0;
     }
 
   template< typename iType >
