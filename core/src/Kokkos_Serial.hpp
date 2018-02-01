@@ -705,21 +705,20 @@ private:
   typedef typename ReducerConditional::type ReducerTypeFwd;
   typedef typename Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, WorkTag, void>::type WorkTagFwd;
 
-  typedef typename ReducerTypeFwd::value_type ValueType; 
-
-  typedef FunctorAnalysis< FunctorPatternInterface::REDUCE , Policy , FunctorType > Analysis ;
+  typedef FunctorAnalysis< FunctorPatternInterface::REDUCE , MDRangePolicy , FunctorType > Analysis ;
 
   typedef Kokkos::Impl::FunctorValueInit<   ReducerTypeFwd , WorkTagFwd >  ValueInit ;
 
   typedef typename Analysis::pointer_type    pointer_type ;
+  typedef typename Analysis::value_type      value_type ;
   typedef typename Analysis::reference_type  reference_type ;
 
 
   using iterate_type = typename Kokkos::Impl::HostIterateTile< MDRangePolicy
-                                                                           , FunctorType
-                                                                           , WorkTag
-                                                                           , ValueType
-                                                                           >;
+                                                             , FunctorType
+                                                             , WorkTag
+                                                             , reference_type
+                                                             >;
 
 
   const FunctorType   m_functor ;
