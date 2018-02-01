@@ -205,19 +205,11 @@ void test_3D_sort(unsigned int n) {
 template<class ExecutionSpace, typename KeyType>
 void test_dynamic_view_sort(unsigned int n )
 {
-  typedef typename ExecutionSpace::memory_space memory_space ;
   typedef Kokkos::Experimental::DynamicView<KeyType*,ExecutionSpace> KeyDynamicViewType;
   typedef Kokkos::View<KeyType*,ExecutionSpace> KeyViewType;
 
-  // TODO What should chunk_size be?
   const size_t upper_bound = 2 * n ;
   const size_t min_chunk_size = 1024;
-
-  // TODO Clean this up; leaving values as reminder in case min_chunk_size should be changed
-//  const size_t total_alloc_size = n * sizeof(KeyType) * 1.2 ;
-//  const size_t superblock_size  = std::min(total_alloc_size, size_t(1000000));
-//        ,     500 /* min block size in bytes */
-//        ,   30000 /* max block size in bytes */
 
   KeyDynamicViewType keys("Keys", min_chunk_size, upper_bound);
 
