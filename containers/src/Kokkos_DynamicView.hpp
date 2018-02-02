@@ -60,13 +60,13 @@ namespace Experimental {
 namespace Impl {
 template < class MemSpace >
 struct ChunkArraySpace {
-  using type = MemSpace;
+  using memory_space = MemSpace;
 };
 
 #ifdef KOKKOS_ENABLE_CUDA
 template <>
 struct ChunkArraySpace< Kokkos::CudaSpace > {
-  using type = typename Kokkos::CudaUVMSpace;
+  using memory_space = typename Kokkos::CudaUVMSpace;
 };
 #endif
 } // end namespace Impl
@@ -267,7 +267,7 @@ public:
   typename std::enable_if
     < std::is_integral<IntType>::value &&
       Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace
-                                     , typename traits::memory_space
+                                     , typename Impl::ChunkArraySpace< typename traits::memory_space >::memory_space 
                                      >::accessible
     >::type
   resize_serial( IntType const & n )
@@ -340,6 +340,10 @@ public:
     // Initialize or destroy array of chunk pointers.
     // Two entries beyond the max chunks are allocation counters.
 
+    // Warning: 
+    // /.../kokkos/containers/src/Kokkos_DynamicView.hpp(348): warning: calling a __host__ function("Kokkos::CudaSpace::deallocate") from a __host__ __device__ function("Kokkos::Experimental::DynamicView<unsigned int *,  ::Kokkos::Cuda > ::Destroy::operator ()") is not allowed
+    //
+    // /.../kokkos/containers/src/Kokkos_DynamicView.hpp(348): warning: calling a __host__ function("Kokkos::HostSpace::deallocate") from a __host__ __device__ function("Kokkos::Experimental::DynamicView<unsigned int *,  ::Kokkos::Serial > ::Destroy::operator ()") is not allowed
     KOKKOS_INLINE_FUNCTION
     void operator()( unsigned i ) const
       {
@@ -352,15 +356,17 @@ public:
     void execute( bool arg_destroy )
       {
         typedef Kokkos::RangePolicy< typename traits::execution_space > Range ;
+        //typedef Kokkos::RangePolicy< typename Impl::ChunkArraySpace< typename traits::memory_space >::memory_space::execution_space > Range ;
 
         m_destroy = arg_destroy ;
 
         Kokkos::Impl::ParallelFor<Destroy,Range>
-          closure( *this , Range(0, m_chunk_max + 2) ); // Add 2 to 'destroy' extra slots storing num_chunks and extent
+          closure( *this , Range(0, m_chunk_max + 2) ); // Add 2 to 'destroy' extra slots storing num_chunks and extent; previously + 1
 
         closure.execute();
 
         traits::execution_space::fence();
+        //Impl::ChunkArraySpace< typename traits::memory_space >::memory_space::execution_space::fence(); 
       }
 
     void construct_shared_allocation()
@@ -405,7 +411,7 @@ public:
     , m_chunk_max( ( max_extent + m_chunk_mask ) >> m_chunk_shift )           // max num pointers-to-chunks in array
     , m_chunk_size ( 2 << (m_chunk_shift - 1) )
     {
-      typedef typename Impl::ChunkArraySpace< typename traits::memory_space >::type chunk_array_memory_space;
+      typedef typename Impl::ChunkArraySpace< typename traits::memory_space >::memory_space chunk_array_memory_space;
       // A functor to deallocate all of the chunks upon final destruction
       typedef Kokkos::Impl::SharedAllocationRecord< chunk_array_memory_space , Destroy > record_type ;
 
