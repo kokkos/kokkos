@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -48,6 +48,9 @@
 #include <Kokkos_Core.hpp>
 
 #include <algorithm>
+#if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG)) && defined(_OPENMP) && defined(KOKKOS_ENABLE_OPENMP)
+#  include <parallel/algorithm> // __gnu_parallel::sort
+#endif // (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG)) && defined(_OPENMP) && defined(KOKKOS_ENABLE_OPENMP)
 
 namespace Kokkos {
 
@@ -478,6 +481,36 @@ struct BinOp3D {
 
 namespace Impl {
 
+#if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG)) && defined(_OPENMP) && defined(KOKKOS_ENABLE_OPENMP)
+template<class ViewType>
+bool try_gnu_sort (const ViewType& view) {
+  // Put the constexpr tests first.
+  if (! std::is_same<typename ViewType::memory_space, HostSpace>::value) {
+    return false;
+  }
+  else if (ViewType::Rank != 1) {
+    return false;
+  }
+  else if (! OpenMP::is_initialized()) {
+    // It doesn't matter if the View is an OpenMP View, but we do need
+    // OpenMP to have been initialized.
+    return false;
+  }
+  else if (size_t (view.stride_0()) != size_t (1)) {
+    return false;
+  }
+  else {
+    __gnu_parallel::sort(view.data(), view.data() + view.extent(0));
+    return true;
+  }
+}
+#else
+template<class ViewType>
+bool try_gnu_sort(const ViewType& /* view */) {
+  return false;
+}
+#endif // (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG)) && defined(_OPENMP) && defined(KOKKOS_ENABLE_OPENMP)
+
 template<class ViewType>
 bool try_std_sort(ViewType view) {
   bool possible = true;
@@ -519,6 +552,7 @@ template<class ViewType>
 void sort( ViewType const & view , bool const always_use_kokkos_sort = false)
 {
   if(!always_use_kokkos_sort) {
+    if(Impl::try_gnu_sort(view)) return;
     if(Impl::try_std_sort(view)) return;
   }
   typedef BinOp1D<ViewType> CompType;
