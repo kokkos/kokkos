@@ -143,13 +143,20 @@ void unlock_address_cuda_space(void* ptr) {
 } // namespace Impl
 } // namespace Kokkos
 
+// Make lock_array_copied an explicit translation unit scope thingy
+namespace Kokkos {
+namespace Impl {
+namespace {
+  static int lock_array_copied = 0;
+}
+}
+}
 /* Dan Ibanez: it is critical that this code be a macro, so that it will
    capture the right address for Kokkos::Impl::g_device_cuda_lock_arrays!
    putting this in an inline function will NOT do the right thing! */
 #define KOKKOS_COPY_CUDA_LOCK_ARRAYS_TO_DEVICE() \
 { \
-  static int lock_array_copied = 0; \
-  if(lock_array_copied == 0) { \
+  if(::Kokkos::Impl::lock_array_copied == 0) { \
     CUDA_SAFE_CALL(cudaMemcpyToSymbol( \
         Kokkos::Impl::g_device_cuda_lock_arrays , \
         & Kokkos::Impl::g_host_cuda_lock_arrays , \
