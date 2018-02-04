@@ -48,7 +48,7 @@
 #include <Kokkos_Core.hpp>
 
 #include <algorithm>
-#if defined(__GNUC__) && defined(_OPENMP) && defined(KOKKOS_ENABLE_OPENMP)
+#if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG)) && defined(_OPENMP) && defined(KOKKOS_ENABLE_OPENMP)
 #  include <parallel/algorithm> // __gnu_parallel::sort
 #endif // defined(__GNUC__) && defined(_OPENMP) && defined(KOKKOS_ENABLE_OPENMP)
 
@@ -481,7 +481,7 @@ struct BinOp3D {
 
 namespace Impl {
 
-#if defined(__GNUC__) && defined(_OPENMP) && defined(KOKKOS_ENABLE_OPENMP)
+#if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG)) && defined(_OPENMP) && defined(KOKKOS_ENABLE_OPENMP)
 template<class ViewType>
 bool try_gnu_sort (ViewType view) {
   if (! std::is_same<typename ViewType::memory_space, HostSpace>::value) {
