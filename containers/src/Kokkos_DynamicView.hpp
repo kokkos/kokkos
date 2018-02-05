@@ -69,6 +69,12 @@ struct ChunkArraySpace< Kokkos::CudaSpace > {
   using memory_space = typename Kokkos::CudaUVMSpace;
 };
 #endif
+#ifdef KOKKOS_ENABLE_ROCM
+template <>
+struct ChunkArraySpace< Kokkos::Experimental::ROCmSpace > {
+  using memory_space = typename Kokkos::Experimental::ROCmHostPinnedSpace;
+};
+#endif
 } // end namespace Impl
 
 /** \brief Dynamic views are restricted to rank-one and no layout.
@@ -339,12 +345,7 @@ public:
 
     // Initialize or destroy array of chunk pointers.
     // Two entries beyond the max chunks are allocation counters.
-
-    // Warning: 
-    // /.../kokkos/containers/src/Kokkos_DynamicView.hpp(348): warning: calling a __host__ function("Kokkos::CudaSpace::deallocate") from a __host__ __device__ function("Kokkos::Experimental::DynamicView<unsigned int *,  ::Kokkos::Cuda > ::Destroy::operator ()") is not allowed
-    //
-    // /.../kokkos/containers/src/Kokkos_DynamicView.hpp(348): warning: calling a __host__ function("Kokkos::HostSpace::deallocate") from a __host__ __device__ function("Kokkos::Experimental::DynamicView<unsigned int *,  ::Kokkos::Serial > ::Destroy::operator ()") is not allowed
-    KOKKOS_INLINE_FUNCTION
+    inline
     void operator()( unsigned i ) const
       {
         if ( m_destroy && i < m_chunk_max && 0 != m_chunks[i] ) {
@@ -355,7 +356,7 @@ public:
 
     void execute( bool arg_destroy )
       {
-        typedef Kokkos::RangePolicy< typename traits::execution_space > Range ;
+        typedef Kokkos::RangePolicy< typename HostSpace::execution_space > Range ;
         //typedef Kokkos::RangePolicy< typename Impl::ChunkArraySpace< typename traits::memory_space >::memory_space::execution_space > Range ;
 
         m_destroy = arg_destroy ;
