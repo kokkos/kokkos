@@ -62,13 +62,10 @@ class serial : public ::testing::Test {
 protected:
   static void SetUpTestCase()
   {
-    std::cout << std::setprecision (5) << std::scientific;
-    Kokkos::Serial::initialize ();
   }
 
   static void TearDownTestCase ()
   {
-    Kokkos::Serial::finalize ();
   }
 };
 
