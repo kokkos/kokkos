@@ -2148,15 +2148,19 @@ public:
   // Shared scratch memory constructor
 
   static inline
-  size_t shmem_size( const size_t arg_N0 = ~size_t(0) ,
-                     const size_t arg_N1 = ~size_t(0) ,
-                     const size_t arg_N2 = ~size_t(0) ,
-                     const size_t arg_N3 = ~size_t(0) ,
-                     const size_t arg_N4 = ~size_t(0) ,
-                     const size_t arg_N5 = ~size_t(0) ,
-                     const size_t arg_N6 = ~size_t(0) ,
-                     const size_t arg_N7 = ~size_t(0) )
+  size_t
+  shmem_size( const size_t arg_N0 = ~size_t(0) ,
+              const size_t arg_N1 = ~size_t(0) ,
+              const size_t arg_N2 = ~size_t(0) ,
+              const size_t arg_N3 = ~size_t(0) ,
+              const size_t arg_N4 = ~size_t(0) ,
+              const size_t arg_N5 = ~size_t(0) ,
+              const size_t arg_N6 = ~size_t(0) ,
+              const size_t arg_N7 = ~size_t(0) )
   {
+    if ( is_layout_stride ) {
+      Kokkos::abort( "Kokkos::View::shmem_size(extents...) doesn't work with LayoutStride. Pass a LayoutStride object instead" );
+    }
     const size_t num_passed_args =
       ( arg_N0 != ~size_t(0) ) + ( arg_N1 != ~size_t(0) ) + ( arg_N2 != ~size_t(0) ) +
       ( arg_N3 != ~size_t(0) ) + ( arg_N4 != ~size_t(0) ) + ( arg_N5 != ~size_t(0) ) +
@@ -2166,10 +2170,16 @@ public:
       Kokkos::abort( "Kokkos::View::shmem_size() rank_dynamic != number of arguments.\n" );
     }
 
-    return map_type::memory_span(
+    return View::shmem_size(
            typename traits::array_layout
             ( arg_N0 , arg_N1 , arg_N2 , arg_N3
             , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) );
+  }
+
+  static inline
+  size_t shmem_size( typename traits::array_layout const& arg_layout )
+  {
+    return map_type::memory_span( arg_layout );
   }
 
   explicit KOKKOS_INLINE_FUNCTION
