@@ -774,6 +774,140 @@ public:
       return m_map.reference(i0,i1,i2,i3,i4,i5,i6);
     }
 
+  // Rank 0
+  KOKKOS_INLINE_FUNCTION
+  reference_type access() const
+    {
+      KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (0 , this->rank(), m_track, m_map) )
+      return implementation_map().reference();
+      //return m_map.reference(0,0,0,0,0,0,0);
+    }
+
+  // Rank 1
+   // Rank 1 parenthesis
+  template< typename iType >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType>::value), reference_type>::type
+  access(const iType & i0 ) const
+    {
+      KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (1 , this->rank(), m_track, m_map, i0) )
+      return m_map.reference(i0);
+    }
+
+  template< typename iType >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename traits::specialize , void>::value && std::is_integral<iType>::value), reference_type>::type
+  access(const iType & i0 ) const
+    {
+      KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (1 , this->rank(), m_track, m_map, i0) )
+      return m_map.reference(i0,0,0,0,0,0,0);
+    }
+
+  // Rank 2
+  template< typename iType0 , typename iType1 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value), reference_type>::type
+ access(const iType0 & i0 , const iType1 & i1 ) const
+    {
+      KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (2 , this->rank(), m_track, m_map, i0, i1) )
+      return m_map.reference(i0,i1);
+    }
+
+  template< typename iType0 , typename iType1 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename drvtraits::specialize , void>::value && std::is_integral<iType0>::value), reference_type>::type
+  access(const iType0 & i0 , const iType1 & i1 ) const
+    {
+      KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (2 , this->rank(), m_track, m_map, i0, i1) )
+      return m_map.reference(i0,i1,0,0,0,0,0);
+    }
+
+  // Rank 3
+  template< typename iType0 , typename iType1 , typename iType2 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value), reference_type>::type
+  access(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 ) const
+    {
+      KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (3 , this->rank(), m_track, m_map, i0, i1, i2) )
+      return m_map.reference(i0,i1,i2);
+    }
+
+  template< typename iType0 , typename iType1 , typename iType2 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename drvtraits::specialize , void>::value && std::is_integral<iType0>::value), reference_type>::type
+  access(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 ) const
+    {
+      KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (3 , this->rank(), m_track, m_map, i0, i1, i2) )
+      return m_map.reference(i0,i1,i2,0,0,0,0);
+    }
+
+  // Rank 4
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value && std::is_integral<iType3>::value), reference_type>::type
+  access(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 ) const
+    {
+      KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (4 , this->rank(), m_track, m_map, i0, i1, i2, i3) )
+      return m_map.reference(i0,i1,i2,i3);
+    }
+
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename drvtraits::specialize , void>::value && std::is_integral<iType0>::value), reference_type>::type
+  access(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 ) const
+    {
+      KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (4 , this->rank(), m_track, m_map, i0, i1, i2, i3) )
+      return m_map.reference(i0,i1,i2,i3,0,0,0);
+    }
+
+  // Rank 5
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value && std::is_integral<iType3>::value && std::is_integral<iType4>::value), reference_type>::type
+  access(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 ) const
+    {
+      KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (5 , this->rank(), m_track, m_map, i0, i1, i2, i3, i4) )
+      return m_map.reference(i0,i1,i2,i3,i4);
+    }
+
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename drvtraits::specialize , void>::value && std::is_integral<iType0>::value), reference_type>::type
+  access(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 ) const
+    {
+      KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (5 , this->rank(), m_track, m_map, i0, i1, i2, i3, i4) )
+      return m_map.reference(i0,i1,i2,i3,i4,0,0);
+    }
+
+  // Rank 6
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 , typename iType5 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< (std::is_same<typename traits::specialize , void>::value && std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value && std::is_integral<iType3>::value && std::is_integral<iType4>::value && std::is_integral<iType5>::value), reference_type>::type
+  access(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 ) const
+    {
+      KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (6 , this->rank(), m_track, m_map, i0, i1, i2, i3, i4, i5) )
+      return m_map.reference(i0,i1,i2,i3,i4,i5);
+    }
+
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 , typename iType5 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< !(std::is_same<typename drvtraits::specialize , void>::value && std::is_integral<iType0>::value), reference_type>::type
+  access(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 ) const
+    {
+      KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (6 , this->rank(), m_track, m_map, i0, i1, i2, i3, i4, i5) )
+      return m_map.reference(i0,i1,i2,i3,i4,i5,0);
+    }
+
+  // Rank 7
+  template< typename iType0 , typename iType1 , typename iType2 , typename iType3, typename iType4 , typename iType5 , typename iType6 >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< (std::is_integral<iType0>::value  && std::is_integral<iType1>::value && std::is_integral<iType2>::value && std::is_integral<iType3>::value && std::is_integral<iType4>::value && std::is_integral<iType5>::value && std::is_integral<iType6>::value), reference_type>::type
+  access(const iType0 & i0 , const iType1 & i1 , const iType2 & i2 , const iType3 & i3 , const iType4 & i4 , const iType5 & i5 , const iType6 & i6 ) const
+    {
+      KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (7 , this->rank(), m_track, m_map, i0, i1, i2, i3, i4, i5, i6) )
+      return m_map.reference(i0,i1,i2,i3,i4,i5,i6);
+    }
+
 #undef KOKKOS_IMPL_VIEW_OPERATOR_VERIFY
 
   //----------------------------------------
@@ -1445,7 +1579,7 @@ struct DynRankViewFill {
     for ( size_t i4 = 0 ; i4 < n4 ; ++i4 ) {
     for ( size_t i5 = 0 ; i5 < n5 ; ++i5 ) {
     for ( size_t i6 = 0 ; i6 < n6 ; ++i6 ) {
-      output(i0,i1,i2,i3,i4,i5,i6) = input ;
+      output.access(i0,i1,i2,i3,i4,i5,i6) = input ;
     }}}}}}
   }
 
@@ -1511,7 +1645,7 @@ struct DynRankViewRemap {
     for ( size_t i4 = 0 ; i4 < n4 ; ++i4 ) {
     for ( size_t i5 = 0 ; i5 < n5 ; ++i5 ) {
     for ( size_t i6 = 0 ; i6 < n6 ; ++i6 ) {
-      output(i0,i1,i2,i3,i4,i5,i6) = input(i0,i1,i2,i3,i4,i5,i6);
+      output.access(i0,i1,i2,i3,i4,i5,i6) = input.access(i0,i1,i2,i3,i4,i5,i6);
     }}}}}}
   }
 };
@@ -1629,7 +1763,7 @@ void deep_copy
          dst.span_is_contiguous() &&
          src.span_is_contiguous() &&
          dst.span() == src.span() &&
-         dst.dimension_0() == src.dimension_0() &&
+         dst.extent(0) == src.extent(0) &&
          dst.dimension_1() == src.dimension_1() &&
          dst.dimension_2() == src.dimension_2() &&
          dst.dimension_3() == src.dimension_3() &&

@@ -262,14 +262,14 @@ public:
     modified_host (View<unsigned int,LayoutLeft,typename t_host::execution_space> ("DualView::modified_host"))
   {
     if ( int(d_view.rank)     != int(h_view.rank) ||
-         d_view.dimension_0() != h_view.dimension_0() ||
-         d_view.dimension_1() != h_view.dimension_1() ||
-         d_view.dimension_2() != h_view.dimension_2() ||
-         d_view.dimension_3() != h_view.dimension_3() ||
-         d_view.dimension_4() != h_view.dimension_4() ||
-         d_view.dimension_5() != h_view.dimension_5() ||
-         d_view.dimension_6() != h_view.dimension_6() ||
-         d_view.dimension_7() != h_view.dimension_7() ||
+         d_view.extents(0) != h_view.extents(0) ||
+         d_view.extents(1) != h_view.extents(1) ||
+         d_view.extents(2) != h_view.extents(2) ||
+         d_view.extents(3) != h_view.extents(3) ||
+         d_view.extents(4) != h_view.extents(4) ||
+         d_view.extents(5) != h_view.extents(5) ||
+         d_view.extents(6) != h_view.extents(6) ||
+         d_view.extents(7) != h_view.extents(7) ||
          d_view.stride_0()    != h_view.stride_0() ||
          d_view.stride_1()    != h_view.stride_1() ||
          d_view.stride_2()    != h_view.stride_2() ||
@@ -502,7 +502,8 @@ public:
    } else {
      /* Realloc on Device */
 
-     ::Kokkos::realloc(d_view,n0,n1,n2,n3,n4,n5,n6,n7);
+       ::Kokkos::realloc(d_view,n0,n1,n2,n3,n4,n5,n6,n7);
+       ::Kokkos::resize(h_view,n0,n1,n2,n3,n4,n5,n6,n7);
      t_host temp_view = create_mirror_view( d_view );
 
      /* Remap on Host */
@@ -530,6 +531,7 @@ public:
     d_view.stride(stride_);
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   /* \brief return size of dimension 0 */
   size_t dimension_0() const {return d_view.dimension_0();}
   /* \brief return size of dimension 1 */
@@ -546,6 +548,7 @@ public:
   size_t dimension_6() const {return d_view.dimension_6();}
   /* \brief return size of dimension 7 */
   size_t dimension_7() const {return d_view.dimension_7();}
+#endif
 
   //@}
 };
