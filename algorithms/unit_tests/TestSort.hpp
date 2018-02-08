@@ -171,10 +171,10 @@ void test_3D_sort(unsigned int n) {
   double sum_after = 0.0;
   unsigned int sort_fails = 0;
 
-  Kokkos::parallel_reduce(keys.dimension_0(),sum3D<ExecutionSpace, KeyType>(keys),sum_before);
+  Kokkos::parallel_reduce(keys.extent(0),sum3D<ExecutionSpace, KeyType>(keys),sum_before);
 
   int bin_1d = 1;
-  while( bin_1d*bin_1d*bin_1d*4< (int) keys.dimension_0() ) bin_1d*=2;
+  while( bin_1d*bin_1d*bin_1d*4< (int) keys.extent(0) ) bin_1d*=2;
   int bin_max[3] = {bin_1d,bin_1d,bin_1d};
   typename KeyViewType::value_type min[3] = {0,0,0};
   typename KeyViewType::value_type max[3] = {100,100,100};
@@ -186,8 +186,8 @@ void test_3D_sort(unsigned int n) {
   Sorter.create_permute_vector();
   Sorter.template sort< KeyViewType >(keys);
 
-  Kokkos::parallel_reduce(keys.dimension_0(),sum3D<ExecutionSpace, KeyType>(keys),sum_after);
-  Kokkos::parallel_reduce(keys.dimension_0()-1,bin3d_is_sorted_struct<ExecutionSpace, KeyType>(keys,bin_1d,min[0],max[0]),sort_fails);
+  Kokkos::parallel_reduce(keys.extent(0),sum3D<ExecutionSpace, KeyType>(keys),sum_after);
+  Kokkos::parallel_reduce(keys.extent(0)-1,bin3d_is_sorted_struct<ExecutionSpace, KeyType>(keys,bin_1d,min[0],max[0]),sort_fails);
 
   double ratio = sum_before/sum_after;
   double epsilon = 1e-10;

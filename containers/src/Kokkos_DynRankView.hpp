@@ -1488,14 +1488,14 @@ struct DynRankViewRemap {
 
   DynRankViewRemap( const OutputView & arg_out , const InputView & arg_in )
     : output( arg_out ), input( arg_in )
-    , n0( std::min( (size_t)arg_out.dimension_0() , (size_t)arg_in.dimension_0() ) )
-    , n1( std::min( (size_t)arg_out.dimension_1() , (size_t)arg_in.dimension_1() ) )
-    , n2( std::min( (size_t)arg_out.dimension_2() , (size_t)arg_in.dimension_2() ) )
-    , n3( std::min( (size_t)arg_out.dimension_3() , (size_t)arg_in.dimension_3() ) )
-    , n4( std::min( (size_t)arg_out.dimension_4() , (size_t)arg_in.dimension_4() ) )
-    , n5( std::min( (size_t)arg_out.dimension_5() , (size_t)arg_in.dimension_5() ) )
-    , n6( std::min( (size_t)arg_out.dimension_6() , (size_t)arg_in.dimension_6() ) )
-    , n7( std::min( (size_t)arg_out.dimension_7() , (size_t)arg_in.dimension_7() ) )
+    , n0( std::min( (size_t)arg_out.extent(0) , (size_t)arg_in.extent(0) ) )
+    , n1( std::min( (size_t)arg_out.extent(1) , (size_t)arg_in.extent(1) ) )
+    , n2( std::min( (size_t)arg_out.extent(2) , (size_t)arg_in.extent(2) ) )
+    , n3( std::min( (size_t)arg_out.extent(3) , (size_t)arg_in.extent(3) ) )
+    , n4( std::min( (size_t)arg_out.extent(4) , (size_t)arg_in.extent(4) ) )
+    , n5( std::min( (size_t)arg_out.extent(5) , (size_t)arg_in.extent(5) ) )
+    , n6( std::min( (size_t)arg_out.extent(6) , (size_t)arg_in.extent(6) ) )
+    , n7( std::min( (size_t)arg_out.extent(7) , (size_t)arg_in.extent(7) ) )
     {
       typedef Kokkos::RangePolicy< ExecSpace > Policy ;
       const Kokkos::Impl::ParallelFor< DynRankViewRemap , Policy > closure( *this , Policy( 0 , n0 ) );
@@ -1629,14 +1629,14 @@ void deep_copy
          dst.span_is_contiguous() &&
          src.span_is_contiguous() &&
          dst.span() == src.span() &&
-         dst.dimension_0() == src.dimension_0() &&
-         dst.dimension_1() == src.dimension_1() &&
-         dst.dimension_2() == src.dimension_2() &&
-         dst.dimension_3() == src.dimension_3() &&
-         dst.dimension_4() == src.dimension_4() &&
-         dst.dimension_5() == src.dimension_5() &&
-         dst.dimension_6() == src.dimension_6() &&
-         dst.dimension_7() == src.dimension_7() ) {
+         dst.extent(0) == src.extent(0) &&
+         dst.extent(1) == src.extent(1) &&
+         dst.extent(2) == src.extent(2) &&
+         dst.extent(3) == src.extent(3) &&
+         dst.extent(4) == src.extent(4) &&
+         dst.extent(5) == src.extent(5) &&
+         dst.extent(6) == src.extent(6) &&
+         dst.extent(7) == src.extent(7) ) {
 
       const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
 
@@ -1661,14 +1661,14 @@ void deep_copy
          dst.span_is_contiguous() &&
          src.span_is_contiguous() &&
          dst.span() == src.span() &&
-         dst.dimension_0() == src.dimension_0() &&
-         dst.dimension_1() == src.dimension_1() &&
-         dst.dimension_2() == src.dimension_2() &&
-         dst.dimension_3() == src.dimension_3() &&
-         dst.dimension_4() == src.dimension_4() &&
-         dst.dimension_5() == src.dimension_5() &&
-         dst.dimension_6() == src.dimension_6() &&
-         dst.dimension_7() == src.dimension_7() &&
+         dst.extent(0) == src.extent(0) &&
+         dst.extent(1) == src.extent(1) &&
+         dst.extent(2) == src.extent(2) &&
+         dst.extent(3) == src.extent(3) &&
+         dst.extent(4) == src.extent(4) &&
+         dst.extent(5) == src.extent(5) &&
+         dst.extent(6) == src.extent(6) &&
+         dst.extent(7) == src.extent(7) &&
          dst.stride_0() == src.stride_0() &&
          dst.stride_1() == src.stride_1() &&
          dst.stride_2() == src.stride_2() &&

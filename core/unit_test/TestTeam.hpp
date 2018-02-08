@@ -339,7 +339,7 @@ public:
 
     const long int thread_rank = ind.team_rank() +
                                  ind.team_size() * ind.league_rank();
-    ind.team_scan( 1 + thread_rank, accum.ptr_on_device() );
+    ind.team_scan( 1 + thread_rank, accum.data() );
   }
 };
 
@@ -426,8 +426,8 @@ struct SharedTeamFunctor {
     const shared_int_array_type shared_A( ind.team_shmem(), SHARED_COUNT );
     const shared_int_array_type shared_B( ind.team_shmem(), SHARED_COUNT );
 
-    if ( ( shared_A.ptr_on_device () == NULL && SHARED_COUNT > 0 ) ||
-         ( shared_B.ptr_on_device () == NULL && SHARED_COUNT > 0 ) )
+    if ( ( shared_A.data() == nullptr && SHARED_COUNT > 0 ) ||
+         ( shared_B.data() == nullptr && SHARED_COUNT > 0 ) )
     {
       printf ("member( %d/%d , %d/%d ) Failed to allocate shared memory of size %lu\n"
              , ind.league_rank()
@@ -526,8 +526,8 @@ struct TestLambdaSharedTeam {
       const shared_int_array_type shared_A( ind.team_shmem(), SHARED_COUNT );
       const shared_int_array_type shared_B( ind.team_shmem(), SHARED_COUNT );
 
-      if ( ( shared_A.ptr_on_device () == NULL && SHARED_COUNT > 0 ) ||
-           ( shared_B.ptr_on_device () == NULL && SHARED_COUNT > 0 ) )
+      if ( ( shared_A.data () == nullptr && SHARED_COUNT > 0 ) ||
+           ( shared_B.data () == nullptr && SHARED_COUNT > 0 ) )
       {
         printf( "Failed to allocate shared memory of size %lu\n",
                 static_cast<unsigned long>( SHARED_COUNT ) );
@@ -588,9 +588,9 @@ struct ScratchTeamFunctor {
     const shared_int_array_type scratch_A( ind.team_scratch( 1 ), SHARED_TEAM_COUNT );
     const shared_int_array_type scratch_B( ind.thread_scratch( 1 ), SHARED_THREAD_COUNT );
 
-    if ( ( scratch_ptr.ptr_on_device () == NULL ) ||
-         ( scratch_A.  ptr_on_device () == NULL && SHARED_TEAM_COUNT > 0 ) ||
-         ( scratch_B.  ptr_on_device () == NULL && SHARED_THREAD_COUNT > 0 ) )
+    if ( ( scratch_ptr.data() == nullptr ) ||
+         ( scratch_A.  data() == nullptr && SHARED_TEAM_COUNT > 0 ) ||
+         ( scratch_B.  data() == nullptr && SHARED_THREAD_COUNT > 0 ) )
     {
       printf( "Failed to allocate shared memory of size %lu\n",
               static_cast<unsigned long>( SHARED_TEAM_COUNT ) );
@@ -606,8 +606,8 @@ struct ScratchTeamFunctor {
         scratch_B[i] = 10000 * ind.league_rank() + 100 * ind.team_rank() + i;
       }
 
-      scratch_ptr[ind.team_rank()] = (size_t) scratch_A.ptr_on_device();
-      scratch_ptr[ind.team_rank() + ind.team_size()] = (size_t) scratch_B.ptr_on_device();
+      scratch_ptr[ind.team_rank()] = (size_t) scratch_A.data();
+      scratch_ptr[ind.team_rank() + ind.team_size()] = (size_t) scratch_B.data();
 
       ind.team_barrier();
 
