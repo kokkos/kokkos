@@ -954,8 +954,19 @@ struct TestShmemSize {
     size_t size = view_type::shmem_size( d1, d2, d3 );
 
     ASSERT_EQ( size, d1 * d2 * d3 * sizeof( long ) );
+
+    test_layout_stride();
+  }
+
+  void test_layout_stride()
+  {
+    int rank = 3;
+    int order[3] = {2, 0, 1};
+    int extents[3] = {100, 10, 3};
+    auto s1 = Kokkos::View<double***, Kokkos::LayoutStride, ExecSpace>::shmem_size(Kokkos::LayoutStride::order_dimensions(rank, order, extents));
+    auto s2 = Kokkos::View<double***, Kokkos::LayoutRight, ExecSpace>::shmem_size(extents[0], extents[1], extents[2]);
+    ASSERT_EQ(s1, s2);
   }
 };
-
 
 } // namespace Test
