@@ -80,6 +80,8 @@ IF(KOKKOS_SEPARATE_LIBS)
     target_link_libraries(kokkoscore PUBLIC ${LIB_${lib}})
   endforeach()
 
+  target_link_libraries(kokkoscore PUBLIC "${KOKKOS_LINK_FLAGS}")
+
   # Install the kokkoscore library
   INSTALL (TARGETS kokkoscore
            EXPORT KokkosTargets
@@ -155,6 +157,8 @@ ELSE()
     find_library(LIB_${lib} ${lib} PATHS ${KOKKOS_TPL_LIBRARY_DIRS})
     target_link_libraries(kokkos PUBLIC ${LIB_${lib}})
   endforeach()
+
+  target_link_libraries(kokkos PUBLIC "${KOKKOS_LINK_FLAGS}")
 
   # Install the kokkos library
   INSTALL (TARGETS kokkos
