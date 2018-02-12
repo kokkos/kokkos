@@ -863,7 +863,7 @@ public:
   : m_functor( arg_functor )
   , m_policy(  arg_policy )
   , m_reducer( InvalidType() )
-  , m_result_ptr( arg_result.ptr_on_device() )
+  , m_result_ptr( arg_result.data() )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
@@ -875,7 +875,7 @@ public:
   : m_functor( arg_functor )
   , m_policy(  arg_policy )
   , m_reducer( reducer )
-  , m_result_ptr( reducer.view().ptr_on_device() )
+  , m_result_ptr( reducer.view().data() )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
@@ -1089,7 +1089,7 @@ public:
   : m_functor( arg_functor )
   , m_policy(  arg_policy )
   , m_reducer( InvalidType() )
-  , m_result_ptr( arg_result.ptr_on_device() )
+  , m_result_ptr( arg_result.data() )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
@@ -1101,7 +1101,7 @@ public:
   : m_functor( arg_functor )
   , m_policy(  arg_policy )
   , m_reducer( reducer )
-  , m_result_ptr( reducer.view().ptr_on_device() )
+  , m_result_ptr( reducer.view().data() )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
@@ -1343,7 +1343,7 @@ public:
                                 ,void*>::type = NULL)
   : m_functor( arg_functor )
   , m_reducer( InvalidType() )
-  , m_result_ptr( arg_result.ptr_on_device() )
+  , m_result_ptr( arg_result.data() )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
@@ -1370,7 +1370,7 @@ public:
   {
     // Return Init value if the number of worksets is zero
     if( arg_policy.league_size() == 0) {
-      ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , arg_result.ptr_on_device() );
+      ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , arg_result.data() );
       return ;
     }
 
@@ -1413,7 +1413,7 @@ public:
                 , const ReducerType & reducer)
   : m_functor( arg_functor )
   , m_reducer( reducer )
-  , m_result_ptr( reducer.view().ptr_on_device() )
+  , m_result_ptr( reducer.view().data() )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
@@ -2068,8 +2068,39 @@ namespace Impl {
     __device__ inline
     void operator() (typename ExecPolicy::work_tag, const typename ExecPolicy::member_type& i, ValueType& val) const {
       //Insert Static Assert with decltype on ValueType equals third argument type of FunctorType::operator()
-      f(typename ExecPolicy::work_tag(), i,val);
+      f(typename ExecPolicy::work_tag(), i, val);
     }
+
+    __device__ inline
+    void operator() (typename ExecPolicy::work_tag, const typename ExecPolicy::member_type& i, const typename ExecPolicy::member_type& j, ValueType& val) const {
+      //Insert Static Assert with decltype on ValueType equals third argument type of FunctorType::operator()
+      f(typename ExecPolicy::work_tag(), i, j, val);
+    }
+
+    __device__ inline
+    void operator() (typename ExecPolicy::work_tag, const typename ExecPolicy::member_type& i, const typename ExecPolicy::member_type& j, const typename ExecPolicy::member_type& k, ValueType& val) const {
+      //Insert Static Assert with decltype on ValueType equals third argument type of FunctorType::operator()
+      f(typename ExecPolicy::work_tag(), i, j, k, val);
+    }
+
+    __device__ inline
+    void operator() (typename ExecPolicy::work_tag, const typename ExecPolicy::member_type& i, const typename ExecPolicy::member_type& j, const typename ExecPolicy::member_type& k, const typename ExecPolicy::member_type& l, ValueType& val) const {
+      //Insert Static Assert with decltype on ValueType equals third argument type of FunctorType::operator()
+      f(typename ExecPolicy::work_tag(), i, j, k, l, val);
+    }
+
+    __device__ inline
+    void operator() (typename ExecPolicy::work_tag, const typename ExecPolicy::member_type& i, const typename ExecPolicy::member_type& j, const typename ExecPolicy::member_type& k, const typename ExecPolicy::member_type& l, const typename ExecPolicy::member_type& m, ValueType& val) const {
+      //Insert Static Assert with decltype on ValueType equals third argument type of FunctorType::operator()
+      f(typename ExecPolicy::work_tag(), i, j, k, l, m, val);
+    }
+
+    __device__ inline
+    void operator() (typename ExecPolicy::work_tag, const typename ExecPolicy::member_type& i, const typename ExecPolicy::member_type& j, const typename ExecPolicy::member_type& k, const typename ExecPolicy::member_type& l, const typename ExecPolicy::member_type& m, const typename ExecPolicy::member_type& n, ValueType& val) const {
+      //Insert Static Assert with decltype on ValueType equals third argument type of FunctorType::operator()
+      f(typename ExecPolicy::work_tag(), i, j, k, l, m, n, val);
+    }
+
   };
 
   template< class FunctorType, class ExecPolicy, class ValueType >
@@ -2083,10 +2114,72 @@ namespace Impl {
       //Insert Static Assert with decltype on ValueType equals second argument type of FunctorType::operator()
       f(i,val);
     }
+
+    __device__ inline
+    void operator() (const typename ExecPolicy::member_type& i, const typename ExecPolicy::member_type& j, ValueType& val) const {
+      //Insert Static Assert with decltype on ValueType equals second argument type of FunctorType::operator()
+      f(i,j,val);
+    }
+
+    __device__ inline
+    void operator() (const typename ExecPolicy::member_type& i, const typename ExecPolicy::member_type& j, const typename ExecPolicy::member_type& k, ValueType& val) const {
+      //Insert Static Assert with decltype on ValueType equals second argument type of FunctorType::operator()
+      f(i,j,k,val);
+    }
+
+    __device__ inline
+    void operator() (const typename ExecPolicy::member_type& i, const typename ExecPolicy::member_type& j, const typename ExecPolicy::member_type& k, const typename ExecPolicy::member_type& l, ValueType& val) const {
+      //Insert Static Assert with decltype on ValueType equals second argument type of FunctorType::operator()
+      f(i,j,k,l,val);
+    }
+
+    __device__ inline
+    void operator() (const typename ExecPolicy::member_type& i, const typename ExecPolicy::member_type& j, const typename ExecPolicy::member_type& k, const typename ExecPolicy::member_type& l, const typename ExecPolicy::member_type& m, ValueType& val) const {
+      //Insert Static Assert with decltype on ValueType equals second argument type of FunctorType::operator()
+      f(i,j,k,l,m,val);
+    }
+
+    __device__ inline
+    void operator() (const typename ExecPolicy::member_type& i, const typename ExecPolicy::member_type& j, const typename ExecPolicy::member_type& k, const typename ExecPolicy::member_type& l, const typename ExecPolicy::member_type& m, const typename ExecPolicy::member_type& n, ValueType& val) const {
+      //Insert Static Assert with decltype on ValueType equals second argument type of FunctorType::operator()
+      f(i,j,k,l,m,n,val);
+    }
+
+
     __device__ inline
     void operator() (typename ExecPolicy::member_type& i, ValueType& val) const {
       //Insert Static Assert with decltype on ValueType equals second argument type of FunctorType::operator()
       f(i,val);
+    }
+
+    __device__ inline
+    void operator() (typename ExecPolicy::member_type& i, typename ExecPolicy::member_type& j, ValueType& val) const {
+      //Insert Static Assert with decltype on ValueType equals second argument type of FunctorType::operator()
+      f(i,j,val);
+    }
+
+    __device__ inline
+    void operator() (typename ExecPolicy::member_type& i, typename ExecPolicy::member_type& j, typename ExecPolicy::member_type& k, ValueType& val) const {
+      //Insert Static Assert with decltype on ValueType equals second argument type of FunctorType::operator()
+      f(i,j,k,val);
+    }
+
+    __device__ inline
+    void operator() (typename ExecPolicy::member_type& i, typename ExecPolicy::member_type& j, typename ExecPolicy::member_type& k, typename ExecPolicy::member_type& l, ValueType& val) const {
+      //Insert Static Assert with decltype on ValueType equals second argument type of FunctorType::operator()
+      f(i,j,k,l,val);
+    }
+
+    __device__ inline
+    void operator() (typename ExecPolicy::member_type& i, typename ExecPolicy::member_type& j, typename ExecPolicy::member_type& k, typename ExecPolicy::member_type& l, typename ExecPolicy::member_type& m, ValueType& val) const {
+      //Insert Static Assert with decltype on ValueType equals second argument type of FunctorType::operator()
+      f(i,j,k,l,m,val);
+    }
+
+    __device__ inline
+    void operator() (typename ExecPolicy::member_type& i, typename ExecPolicy::member_type& j, typename ExecPolicy::member_type& k, typename ExecPolicy::member_type& l, typename ExecPolicy::member_type& m, typename ExecPolicy::member_type& n, ValueType& val) const {
+      //Insert Static Assert with decltype on ValueType equals second argument type of FunctorType::operator()
+      f(i,j,k,l,m,n,val);
     }
 
   };

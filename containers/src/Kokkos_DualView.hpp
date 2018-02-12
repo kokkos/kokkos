@@ -502,14 +502,27 @@ public:
    } else {
      /* Realloc on Device */
 
-       ::Kokkos::realloc(d_view,n0,n1,n2,n3,n4,n5,n6,n7);
+     ::Kokkos::realloc(d_view,n0,n1,n2,n3,n4,n5,n6,n7);
+
+     const bool sizeMismatch = ( h_view.extent(0) != n0 ) ||
+         ( h_view.extent(1) != n1 ) ||
+         ( h_view.extent(2) != n2 ) ||
+         ( h_view.extent(3) != n3 ) ||
+         ( h_view.extent(4) != n4 ) ||
+         ( h_view.extent(5) != n5 ) ||
+         ( h_view.extent(6) != n6 ) ||
+         ( h_view.extent(7) != n7 );
+     if ( sizeMismatch )
        ::Kokkos::resize(h_view,n0,n1,n2,n3,n4,n5,n6,n7);
+
      t_host temp_view = create_mirror_view( d_view );
 
      /* Remap on Host */
      Kokkos::deep_copy( temp_view , h_view );
 
      h_view = temp_view;
+
+     d_view = create_mirror_view( typename t_dev::execution_space(), h_view );
 
      /* Mark Host copy as modified */
      modified_host() = modified_host()+1;
@@ -531,24 +544,34 @@ public:
     d_view.stride(stride_);
   }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+  template< typename iType >
+   KOKKOS_INLINE_FUNCTION constexpr
+   typename std::enable_if< std::is_integral<iType>::value , size_t >::type
+   extent( const iType & r ) const
+     { return d_view.extent(r); }
+
+   template< typename iType >
+   KOKKOS_INLINE_FUNCTION constexpr
+   typename std::enable_if< std::is_integral<iType>::value , int >::type
+   extent_int( const iType & r ) const
+     { return static_cast<int>(d_view.extent(r)); }
+
   /* \brief return size of dimension 0 */
-  size_t dimension_0() const {return d_view.dimension_0();}
+  size_t dimension_0() const {return d_view.extent(0);}
   /* \brief return size of dimension 1 */
-  size_t dimension_1() const {return d_view.dimension_1();}
+  size_t dimension_1() const {return d_view.extent(1);}
   /* \brief return size of dimension 2 */
-  size_t dimension_2() const {return d_view.dimension_2();}
+  size_t dimension_2() const {return d_view.extent(2);}
   /* \brief return size of dimension 3 */
-  size_t dimension_3() const {return d_view.dimension_3();}
+  size_t dimension_3() const {return d_view.extent(3);}
   /* \brief return size of dimension 4 */
-  size_t dimension_4() const {return d_view.dimension_4();}
+  size_t dimension_4() const {return d_view.extent(4);}
   /* \brief return size of dimension 5 */
-  size_t dimension_5() const {return d_view.dimension_5();}
+  size_t dimension_5() const {return d_view.extent(5);}
   /* \brief return size of dimension 6 */
-  size_t dimension_6() const {return d_view.dimension_6();}
+  size_t dimension_6() const {return d_view.extent(6);}
   /* \brief return size of dimension 7 */
-  size_t dimension_7() const {return d_view.dimension_7();}
-#endif
+  size_t dimension_7() const {return d_view.extent(7);}
 
   //@}
 };

@@ -171,10 +171,10 @@ void test_3D_sort(unsigned int n) {
   double sum_after = 0.0;
   unsigned int sort_fails = 0;
 
-  Kokkos::parallel_reduce(keys.dimension_0(),sum3D<ExecutionSpace, KeyType>(keys),sum_before);
+  Kokkos::parallel_reduce(keys.extent(0),sum3D<ExecutionSpace, KeyType>(keys),sum_before);
 
   int bin_1d = 1;
-  while( bin_1d*bin_1d*bin_1d*4< (int) keys.dimension_0() ) bin_1d*=2;
+  while( bin_1d*bin_1d*bin_1d*4< (int) keys.extent(0) ) bin_1d*=2;
   int bin_max[3] = {bin_1d,bin_1d,bin_1d};
   typename KeyViewType::value_type min[3] = {0,0,0};
   typename KeyViewType::value_type max[3] = {100,100,100};
@@ -186,8 +186,8 @@ void test_3D_sort(unsigned int n) {
   Sorter.create_permute_vector();
   Sorter.template sort< KeyViewType >(keys);
 
-  Kokkos::parallel_reduce(keys.dimension_0(),sum3D<ExecutionSpace, KeyType>(keys),sum_after);
-  Kokkos::parallel_reduce(keys.dimension_0()-1,bin3d_is_sorted_struct<ExecutionSpace, KeyType>(keys,bin_1d,min[0],max[0]),sort_fails);
+  Kokkos::parallel_reduce(keys.extent(0),sum3D<ExecutionSpace, KeyType>(keys),sum_after);
+  Kokkos::parallel_reduce(keys.extent(0)-1,bin3d_is_sorted_struct<ExecutionSpace, KeyType>(keys,bin_1d,min[0],max[0]),sort_fails);
 
   double ratio = sum_before/sum_after;
   double epsilon = 1e-10;
@@ -205,24 +205,13 @@ void test_3D_sort(unsigned int n) {
 template<class ExecutionSpace, typename KeyType>
 void test_dynamic_view_sort(unsigned int n )
 {
-  typedef typename ExecutionSpace::memory_space memory_space ;
   typedef Kokkos::Experimental::DynamicView<KeyType*,ExecutionSpace> KeyDynamicViewType;
   typedef Kokkos::View<KeyType*,ExecutionSpace> KeyViewType;
 
   const size_t upper_bound = 2 * n ;
+  const size_t min_chunk_size = 1024;
 
-  const size_t total_alloc_size = n * sizeof(KeyType) * 1.2 ;
-  const size_t superblock_size  = std::min(total_alloc_size, size_t(1000000));
-
-  typename KeyDynamicViewType::memory_pool
-    pool( memory_space()
-        , n * sizeof(KeyType) * 1.2
-        ,     500 /* min block size in bytes */
-        ,   30000 /* max block size in bytes */
-        , superblock_size
-        );
-
-  KeyDynamicViewType keys("Keys",pool,upper_bound);
+  KeyDynamicViewType keys("Keys", min_chunk_size, upper_bound);
 
   keys.resize_serial(n);
 
@@ -236,7 +225,9 @@ void test_dynamic_view_sort(unsigned int n )
   Kokkos::Random_XorShift64_Pool<ExecutionSpace> g(1931);
   Kokkos::fill_random(keys_view,g,Kokkos::Random_XorShift64_Pool<ExecutionSpace>::generator_type::MAX_URAND);
 
+  ExecutionSpace::fence();
   Kokkos::deep_copy(keys,keys_view);
+  //ExecutionSpace::fence();
 
   double sum_before = 0.0;
   double sum_after = 0.0;
@@ -246,7 +237,9 @@ void test_dynamic_view_sort(unsigned int n )
 
   Kokkos::sort(keys, 0 /* begin */ , n /* end */ );
 
+  ExecutionSpace::fence(); // Need this fence to prevent BusError with Cuda
   Kokkos::deep_copy( keys_view , keys );
+  //ExecutionSpace::fence();
 
   Kokkos::parallel_reduce(n,sum<ExecutionSpace, KeyType>(keys_view),sum_after);
   Kokkos::parallel_reduce(n-1,is_sorted_struct<ExecutionSpace, KeyType>(keys_view),sort_fails);

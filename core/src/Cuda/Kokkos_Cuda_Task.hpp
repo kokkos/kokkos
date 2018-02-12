@@ -152,13 +152,30 @@ private:
 public:
 
 #if defined( __CUDA_ARCH__ )
-  __device__ void team_barrier() { /* __threadfence_block(); */ }
+#if ( 700 <= __CUDA_ARCH__ )
+  #error "TBD: Warp level collectives for Volta with non-synchronous warps"
+#else
   __device__ int  team_rank() const { return threadIdx.y ; }
   __device__ int  team_size() const { return m_team_size ; }
+  __device__ void team_barrier() const
+    {
+      __threadfence_block();
+    }
+  template< class ValueType >
+  __device__ void team_broadcast( ValueType & val , const int thread_id ) const
+    {
+      // WarpSize = blockDim.X * blockDim.y
+      // thread_id < blockDim.y
+      ValueType tmp( val ); // input might not be register variable
+      cuda_shfl( val, tmp, blockDim.x * thread_id, blockDim.X * blockDim.y );
+    }
+#endif
 #else
-  __host__ void team_barrier() {}
   __host__ int  team_rank() const { return 0 ; }
   __host__ int  team_size() const { return 0 ; }
+  __host__ void team_barrier() const {}
+  template< class ValueType >
+  __host__ void team_broadcast( ValueType & , const int ) const {}
 #endif
 
 };

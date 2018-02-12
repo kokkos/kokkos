@@ -453,10 +453,10 @@ public:
 
       std::string str( "TestKernelReduce" );
       if ( count % 2 == 0 ) {
-        Kokkos::parallel_reduce( nw, functor_type( nw, count ), host_result.ptr_on_device() );
+        Kokkos::parallel_reduce( nw, functor_type( nw, count ), host_result.data() );
       }
       else {
-        Kokkos::parallel_reduce( str, nw, functor_type( nw, count ), host_result.ptr_on_device() );
+        Kokkos::parallel_reduce( str, nw, functor_type( nw, count ), host_result.data() );
       }
 
       for ( unsigned j = 0; j < count; ++j ) {

@@ -80,7 +80,7 @@ struct BitsetCount
   size_type apply() const
   {
     size_type count = 0u;
-    parallel_reduce( m_bitset.m_blocks.dimension_0(), *this, count );
+    parallel_reduce( m_bitset.m_blocks.extent(0), *this, count );
     return count;
   }
 

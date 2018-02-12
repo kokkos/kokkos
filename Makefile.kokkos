@@ -319,6 +319,9 @@ endif
 # Generating the list of Flags.
 
 KOKKOS_CPPFLAGS = -I./ -I$(KOKKOS_PATH)/core/src -I$(KOKKOS_PATH)/containers/src -I$(KOKKOS_PATH)/algorithms/src
+KOKKOS_TPL_INCLUDE_DIRS =
+KOKKOS_TPL_LIBRARY_DIRS =
+KOKKOS_TPL_LIBRARY_NAMES =
 
 KOKKOS_CXXFLAGS =
 ifeq ($(KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS), 1)
@@ -326,6 +329,7 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS), 1)
 endif
 
 KOKKOS_LIBS = -ldl
+KOKKOS_TPL_LIBRARY_NAMES += dl
 KOKKOS_LDFLAGS = -L$(shell pwd)
 KOKKOS_SRC =
 KOKKOS_HEADERS =
@@ -440,21 +444,32 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_PROFILING_LOAD_PRINT), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HWLOC), 1)
-  KOKKOS_CPPFLAGS += -I$(HWLOC_PATH)/include
-  KOKKOS_LDFLAGS += -L$(HWLOC_PATH)/lib
+  ifneq ($(HWLOC_PATH),)
+    KOKKOS_CPPFLAGS += -I$(HWLOC_PATH)/include
+    KOKKOS_LDFLAGS += -L$(HWLOC_PATH)/lib
+    KOKKOS_TPL_INCLUDE_DIRS += $(HWLOC_PATH)/include
+    KOKKOS_TPL_LIBRARY_DIRS += $(HWLOC_PATH)/lib
+  endif
   KOKKOS_LIBS += -lhwloc
+  KOKKOS_TPL_LIBRARY_NAMES += hwloc
   tmp := $(call kokkos_append_header,"\#define KOKKOS_HAVE_HWLOC")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_LIBRT), 1)
   tmp := $(call kokkos_append_header,"\#define KOKKOS_USE_LIBRT")
   KOKKOS_LIBS += -lrt
+  KOKKOS_TPL_LIBRARY_NAMES += rt
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_MEMKIND), 1)
-  KOKKOS_CPPFLAGS += -I$(MEMKIND_PATH)/include
-  KOKKOS_LDFLAGS += -L$(MEMKIND_PATH)/lib
+  ifneq ($(MEMKIND_PATH),)
+    KOKKOS_CPPFLAGS += -I$(MEMKIND_PATH)/include
+    KOKKOS_LDFLAGS += -L$(MEMKIND_PATH)/lib
+    KOKKOS_TPL_INCLUDE_DIRS += $(MEMKIND_PATH)/include
+    KOKKOS_TPL_LIBRARY_DIRS += $(MEMKIND_PATH)/lib
+  endif
   KOKKOS_LIBS += -lmemkind -lnuma
+  KOKKOS_TPL_LIBRARY_NAMES += memkind numa
   tmp := $(call kokkos_append_header,"\#define KOKKOS_HAVE_HBWSPACE")
 endif
 
@@ -868,6 +883,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
 
   KOKKOS_CXXFLAGS += $(shell $(ROCM_HCC_PATH)/bin/hcc-config --cxxflags) 
   KOKKOS_LDFLAGS += $(shell $(ROCM_HCC_PATH)/bin/hcc-config --ldflags) -lhc_am -lm 
+  KOKKOS_TPL_LIBRARY_NAMES += hc_am m
   KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_ROCM_ARCH_FLAG)
 
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/ROCm/*.cpp)
@@ -898,13 +914,17 @@ KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/containers/src/impl/*.cpp)
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.cpp)
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.hpp)
-  KOKKOS_CPPFLAGS += -I$(CUDA_PATH)/include
-  KOKKOS_LDFLAGS += -L$(CUDA_PATH)/lib64
-  KOKKOS_LIBS += -lcudart -lcuda
-
-  ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-    KOKKOS_CXXFLAGS += --cuda-path=$(CUDA_PATH)
+  ifneq ($(CUDA_PATH),)
+    KOKKOS_CPPFLAGS += -I$(CUDA_PATH)/include
+    KOKKOS_LDFLAGS += -L$(CUDA_PATH)/lib64
+    KOKKOS_TPL_INCLUDE_DIRS += $(CUDA_PATH)/include
+    KOKKOS_TPL_LIBRARY_DIRS += $(CUDA_PATH)/lib64
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+      KOKKOS_CXXFLAGS += --cuda-path=$(CUDA_PATH)
+    endif
   endif
+  KOKKOS_LIBS += -lcudart -lcuda
+  KOKKOS_TPL_LIBRARY_NAMES += cudart cuda
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
@@ -935,14 +955,20 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Threads/*.cpp)
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Threads/*.hpp)
   KOKKOS_LIBS += -lpthread
+  KOKKOS_TPL_LIBRARY_NAMES += pthread
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Qthreads/*.cpp)
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Qthreads/*.hpp)
-  KOKKOS_CPPFLAGS += -I$(QTHREADS_PATH)/include
-  KOKKOS_LDFLAGS += -L$(QTHREADS_PATH)/lib
+  ifneq ($(QTHREADS_PATH),)
+    KOKKOS_CPPFLAGS += -I$(QTHREADS_PATH)/include
+    KOKKOS_LDFLAGS += -L$(QTHREADS_PATH)/lib
+    KOKKOS_TPL_INCLUDE_DIRS += $(QTHREADS_PATH)/include
+    KOKKOS_TPL_LIBRARY_DIRS += $(QTHREADS_PATH)/lib64
+  endif
   KOKKOS_LIBS += -lqthread
+  KOKKOS_TPL_LIBRARY_NAMES += qthread
 endif
 
 # Explicitly set the GCC Toolchain for Clang.

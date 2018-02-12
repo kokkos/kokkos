@@ -35,7 +35,7 @@ kokkos_append_varval = $(call kokkos_appendval_makefile,$1,$2); $(call kokkos_ap
 
 #This function should be used for variables whose values are different in GNU Make versus CMake,
 #especially lists which are delimited by commas in one case and semicolons in another
-kokkos_append_gmakevar = $(call kokkos_appendvar_makefile,$1,$2); $(call kokkos_append_gmakevar_cmakefile,$1,$2)
+kokkos_append_gmakevar = $(call kokkos_appendvar_makefile,$1); $(call kokkos_append_gmakevar_cmakefile,$1,$2)
 
 generate_build_settings: $(KOKKOS_CONFIG_HEADER)
 	@rm -f $(KOKKOS_MAKEFILE)
@@ -50,6 +50,9 @@ generate_build_settings: $(KOKKOS_CONFIG_HEADER)
 	@$(call kokkos_append_var,KOKKOS_CXX_STANDARD,'STRING "Kokkos C++ standard"')
 	@$(call kokkos_append_gmakevar,KOKKOS_OPTIONS,'STRING "Kokkos options"')
 	@$(call kokkos_append_gmakevar,KOKKOS_CUDA_OPTIONS,'STRING "Kokkos Cuda options"')
+	@$(call kokkos_append_gmakevar,KOKKOS_TPL_INCLUDE_DIRS,'STRING "Kokkos TPL include directories"')
+	@$(call kokkos_append_gmakevar,KOKKOS_TPL_LIBRARY_DIRS,'STRING "Kokkos TPL library directories"')
+	@$(call kokkos_append_gmakevar,KOKKOS_TPL_LIBRARY_NAMES,'STRING "Kokkos TPL library names"')
 	@$(call kokkos_appendvar2,CXX,'KOKKOS C++ Compiler')
 	@$(call kokkos_append_cmakefile,"if(NOT DEFINED ENV{NVCC_WRAPPER})")
 	@$(call kokkos_append_var2,NVCC_WRAPPER,'FILEPATH "Path to command nvcc_wrapper"')

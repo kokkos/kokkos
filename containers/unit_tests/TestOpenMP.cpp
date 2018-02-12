@@ -79,13 +79,10 @@ protected:
   static void SetUpTestCase()
   {
     std::cout << std::setprecision(5) << std::scientific;
-
-    Kokkos::OpenMP::initialize();
   }
 
   static void TearDownTestCase()
   {
-    Kokkos::OpenMP::finalize();
   }
 };
 

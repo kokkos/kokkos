@@ -524,6 +524,8 @@ public:
    *  ISO/C++ vocabulary 'extent'.
    */
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+
   template< typename iType >
   KOKKOS_INLINE_FUNCTION constexpr
   typename std::enable_if< std::is_integral<iType>::value , size_t >::type
@@ -537,6 +539,8 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_5() const { return m_map.dimension_5(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_6() const { return m_map.dimension_6(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_7() const { return m_map.dimension_7(); }
+
+#endif
 
   //----------------------------------------
 
@@ -584,15 +588,19 @@ public:
   enum { reference_type_is_lvalue_reference = std::is_lvalue_reference< reference_type >::value };
 
   KOKKOS_INLINE_FUNCTION constexpr size_t span() const { return m_map.span(); }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   // Deprecated, use 'span()' instead
   KOKKOS_INLINE_FUNCTION constexpr size_t capacity() const { return m_map.span(); }
+#endif
   KOKKOS_INLINE_FUNCTION bool span_is_contiguous() const { return m_map.span_is_contiguous(); }
   KOKKOS_INLINE_FUNCTION constexpr pointer_type data() const { return m_map.data(); }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   // Deprecated, use 'span_is_contigous()' instead
   KOKKOS_INLINE_FUNCTION constexpr bool   is_contiguous() const { return m_map.span_is_contiguous(); }
   // Deprecated, use 'data()' instead
   KOKKOS_INLINE_FUNCTION constexpr pointer_type ptr_on_device() const { return m_map.data(); }
+#endif
 
   //----------------------------------------
   // Allow specializations to query their specialized map
@@ -2291,14 +2299,14 @@ bool operator == ( const View<LT,LP...> & lhs ,
     unsigned(lhs_traits::rank) == unsigned(rhs_traits::rank) &&
     lhs.data()        == rhs.data() &&
     lhs.span()        == rhs.span() &&
-    lhs.dimension_0() == rhs.dimension_0() &&
-    lhs.dimension_1() == rhs.dimension_1() &&
-    lhs.dimension_2() == rhs.dimension_2() &&
-    lhs.dimension_3() == rhs.dimension_3() &&
-    lhs.dimension_4() == rhs.dimension_4() &&
-    lhs.dimension_5() == rhs.dimension_5() &&
-    lhs.dimension_6() == rhs.dimension_6() &&
-    lhs.dimension_7() == rhs.dimension_7();
+    lhs.extent(0) == rhs.extent(0) &&
+    lhs.extent(1) == rhs.extent(1) &&
+    lhs.extent(2) == rhs.extent(2) &&
+    lhs.extent(3) == rhs.extent(3) &&
+    lhs.extent(4) == rhs.extent(4) &&
+    lhs.extent(5) == rhs.extent(5) &&
+    lhs.extent(6) == rhs.extent(6) &&
+    lhs.extent(7) == rhs.extent(7);
 }
 
 template< class LT , class ... LP , class RT , class ... RP >
@@ -2389,14 +2397,14 @@ create_mirror( const Kokkos::View<T,P...> & src
   typedef typename src_type::HostMirror  dst_type ;
 
   return dst_type( std::string( src.label() ).append("_mirror")
-                 , src.dimension_0()
-                 , src.dimension_1()
-                 , src.dimension_2()
-                 , src.dimension_3()
-                 , src.dimension_4()
-                 , src.dimension_5()
-                 , src.dimension_6()
-                 , src.dimension_7() );
+                 , src.extent(0)
+                 , src.extent(1)
+                 , src.extent(2)
+                 , src.extent(3)
+                 , src.extent(4)
+                 , src.extent(5)
+                 , src.extent(6)
+                 , src.extent(7) );
 }
 
 template< class T , class ... P >
@@ -2414,14 +2422,14 @@ create_mirror( const Kokkos::View<T,P...> & src
 
   Kokkos::LayoutStride layout ;
 
-  layout.dimension[0] = src.dimension_0();
-  layout.dimension[1] = src.dimension_1();
-  layout.dimension[2] = src.dimension_2();
-  layout.dimension[3] = src.dimension_3();
-  layout.dimension[4] = src.dimension_4();
-  layout.dimension[5] = src.dimension_5();
-  layout.dimension[6] = src.dimension_6();
-  layout.dimension[7] = src.dimension_7();
+  layout.dimension[0] = src.extent(0);
+  layout.dimension[1] = src.extent(1);
+  layout.dimension[2] = src.extent(2);
+  layout.dimension[3] = src.extent(3);
+  layout.dimension[4] = src.extent(4);
+  layout.dimension[5] = src.extent(5);
+  layout.dimension[6] = src.extent(6);
+  layout.dimension[7] = src.extent(7);
 
   layout.stride[0] = src.stride_0();
   layout.stride[1] = src.stride_1();

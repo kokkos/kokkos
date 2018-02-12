@@ -62,13 +62,9 @@ protected:
   static void SetUpTestCase()
   {
     std::cout << std::setprecision(5) << std::scientific;
-    Kokkos::HostSpace::execution_space::initialize();
-    Kokkos::Experimental::ROCm::initialize( Kokkos::Experimental::ROCm::SelectDevice(0) );
   }
   static void TearDownTestCase()
   {
-    Kokkos::Experimental::ROCm::finalize();
-    Kokkos::HostSpace::execution_space::finalize();
   }
 };
 

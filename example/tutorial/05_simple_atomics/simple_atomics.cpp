@@ -123,12 +123,12 @@ int main () {
   // Fill the 'data' array on the host with random numbers.  We assume
   // that they come from some process which is only implemented on the
   // host, via some library.  (That's true in this case.)
-  for (size_type i = 0; i < data.dimension_0 (); ++i) {
+  for (size_type i = 0; i < data.extent(0); ++i) {
     h_data(i) = rand () % nnumbers;
   }
   Kokkos::deep_copy (data, h_data); // copy from host to device
 
-  Kokkos::parallel_for (data.dimension_0 (), findprimes (data, result, count));
+  Kokkos::parallel_for (data.extent(0), findprimes (data, result, count));
   Kokkos::deep_copy (h_count, count); // copy from device to host
 
   printf ("Found %i prime numbers in %i random numbers\n", h_count(), nnumbers);
