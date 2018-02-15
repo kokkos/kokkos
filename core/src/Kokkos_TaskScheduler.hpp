@@ -418,16 +418,16 @@ public:
   KOKKOS_INLINE_FUNCTION
   TaskScheduler() : m_track(), m_queue(0) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_INLINE_FUNCTION_DEFAULTED
   TaskScheduler( TaskScheduler && rhs ) = default ;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_INLINE_FUNCTION_DEFAULTED
   TaskScheduler( TaskScheduler const & rhs ) = default ;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_INLINE_FUNCTION_DEFAULTED
   TaskScheduler & operator = ( TaskScheduler && rhs ) = default ;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_INLINE_FUNCTION_DEFAULTED
   TaskScheduler & operator = ( TaskScheduler const & rhs ) = default ;
 
   TaskScheduler( memory_pool const & arg_memory_pool )

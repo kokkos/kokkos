@@ -180,7 +180,7 @@ public:
   TaskBase & operator = ( TaskBase && ) = delete ;
   TaskBase & operator = ( const TaskBase & ) = delete ;
 
-  KOKKOS_INLINE_FUNCTION ~TaskBase() = default ;
+  KOKKOS_INLINE_FUNCTION_DEFAULTED ~TaskBase() = default ;
 
   KOKKOS_INLINE_FUNCTION constexpr
   TaskBase()
