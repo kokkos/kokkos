@@ -128,7 +128,7 @@ changing the device type for which to build.
 To install Kokkos as a library create a build directory and run the following
 
 KOKKOS_PATH/generate_makefile.bash --prefix=INSTALL_PATH
-make lib
+make kokkoslib
 make install
 
 KOKKOS_PATH/generate_makefile.bash --help for more detailed options such as
