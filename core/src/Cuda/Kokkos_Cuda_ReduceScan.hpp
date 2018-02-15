@@ -512,12 +512,18 @@ void cuda_intra_block_reduce_scan( const FunctorType & functor ,
   const pointer_type tdata_intra = base_data + value_count * threadIdx.y ;
 
   { // Intra-warp reduction:
+    KOKKOS_IMPL_CUDA_SYNCWARP;
     BLOCK_REDUCE_STEP(rtid_intra,tdata_intra,0)
+    KOKKOS_IMPL_CUDA_SYNCWARP;
     BLOCK_REDUCE_STEP(rtid_intra,tdata_intra,1)
+    KOKKOS_IMPL_CUDA_SYNCWARP;
     BLOCK_REDUCE_STEP(rtid_intra,tdata_intra,2)
+    KOKKOS_IMPL_CUDA_SYNCWARP;
     BLOCK_REDUCE_STEP(rtid_intra,tdata_intra,3)
+    KOKKOS_IMPL_CUDA_SYNCWARP;
     BLOCK_REDUCE_STEP(rtid_intra,tdata_intra,4)
-  }
+    KOKKOS_IMPL_CUDA_SYNCWARP;
+ }
 
   __syncthreads(); // Wait for all warps to reduce
 
