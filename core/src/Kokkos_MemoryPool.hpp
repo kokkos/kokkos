@@ -258,10 +258,10 @@ public:
 
   //--------------------------------------------------------------------------
 
-  KOKKOS_INLINE_FUNCTION MemoryPool( MemoryPool && ) = default ;
-  KOKKOS_INLINE_FUNCTION MemoryPool( const MemoryPool & ) = default ;
-  KOKKOS_INLINE_FUNCTION MemoryPool & operator = ( MemoryPool && ) = default ;
-  KOKKOS_INLINE_FUNCTION MemoryPool & operator = ( const MemoryPool & ) = default ;
+  KOKKOS_INLINE_FUNCTION_DEFAULTED MemoryPool( MemoryPool && ) = default ;
+  KOKKOS_INLINE_FUNCTION_DEFAULTED MemoryPool( const MemoryPool & ) = default ;
+  KOKKOS_INLINE_FUNCTION_DEFAULTED MemoryPool & operator = ( MemoryPool && ) = default ;
+  KOKKOS_INLINE_FUNCTION_DEFAULTED MemoryPool & operator = ( const MemoryPool & ) = default ;
 
   KOKKOS_INLINE_FUNCTION MemoryPool()
     : m_tracker()
