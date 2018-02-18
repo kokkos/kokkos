@@ -599,8 +599,13 @@ struct TestViewOperator_LeftAndRight< DataType, DeviceType, 3 >
     for ( unsigned i1 = 0; i1 < unsigned( left.extent(1) ); ++i1 )
     for ( unsigned i2 = 0; i2 < unsigned( left.extent(2) ); ++i2 )
     {
-      if ( & left( i0, i1, i2 )  != & left( i0, i1, i2, 0, 0, 0, 0, 0 ) )  { update |= 3; }
-      if ( & right( i0, i1, i2 ) != & right( i0, i1, i2, 0, 0, 0, 0, 0 ) ) { update |= 3; }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+        if ( & left( i0, i1, i2 )  != & left( i0, i1, i2, 0, 0, 0, 0, 0 ) )  { update |= 3; }
+        if ( & right( i0, i1, i2 ) != & right( i0, i1, i2, 0, 0, 0, 0, 0 ) ) { update |= 3; }
+#else
+        if ( & left( i0, i1, i2 )  != & left.access( i0, i1, i2, 0, 0, 0, 0, 0 ) )  { update |= 3; }
+        if ( & right( i0, i1, i2 ) != & right.access( i0, i1, i2, 0, 0, 0, 0, 0 ) ) { update |= 3; }
+#endif
     }
   }
 };
@@ -676,8 +681,13 @@ struct TestViewOperator_LeftAndRight< DataType, DeviceType, 2 >
     for ( unsigned i0 = 0; i0 < unsigned( left.extent(0) ); ++i0 )
     for ( unsigned i1 = 0; i1 < unsigned( left.extent(1) ); ++i1 )
     {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
       if ( & left( i0, i1 )  != & left( i0, i1, 0, 0, 0, 0, 0, 0 ) )  { update |= 3; }
       if ( & right( i0, i1 ) != & right( i0, i1, 0, 0, 0, 0, 0, 0 ) ) { update |= 3; }
+#else
+      if ( & left( i0, i1 )  != & left.access( i0, i1, 0, 0, 0, 0, 0, 0 ) )  { update |= 3; }
+      if ( & right( i0, i1 ) != & right.access( i0, i1, 0, 0, 0, 0, 0, 0 ) ) { update |= 3; }
+#endif
     }
   }
 };
@@ -736,8 +746,13 @@ struct TestViewOperator_LeftAndRight< DataType, DeviceType, 1 >
   {
     for ( unsigned i0 = 0; i0 < unsigned( left.extent(0) ); ++i0 )
     {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
       if ( & left( i0 )  != & left( i0, 0, 0, 0, 0, 0, 0, 0 ) )  { update |= 3; }
       if ( & right( i0 ) != & right( i0, 0, 0, 0, 0, 0, 0, 0 ) ) { update |= 3; }
+#else
+      if ( & left( i0 )  != & left.access( i0, 0, 0, 0, 0, 0, 0, 0 ) )  { update |= 3; }
+      if ( & right( i0 ) != & right.access( i0, 0, 0, 0, 0, 0, 0, 0 ) ) { update |= 3; }
+#endif
       if ( & left( i0 )  != & left_stride( i0 ) ) { update |= 4; }
       if ( & right( i0 ) != & right_stride( i0 ) ) { update |= 8; }
     }

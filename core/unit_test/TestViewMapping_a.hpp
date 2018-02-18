@@ -1048,7 +1048,11 @@ struct TestViewMapOperator {
   KOKKOS_INLINE_FUNCTION
   void test_left( size_t i0, long & error_count ) const
   {
+#ifdef KOKKOS_ENABLE_DEPPRECATED_CODE
     typename ViewType::value_type * const base_ptr = & v( 0, 0, 0, 0, 0, 0, 0, 0 );
+#else
+    typename ViewType::value_type * const base_ptr = & v.access( 0, 0, 0, 0, 0, 0, 0, 0 );
+#endif
     const size_t n1 = v.extent(1);
     const size_t n2 = v.extent(2);
     const size_t n3 = v.extent(3);
@@ -1067,8 +1071,12 @@ struct TestViewMapOperator {
     for ( size_t i2 = 0; i2 < n2; ++i2 )
     for ( size_t i1 = 0; i1 < n1; ++i1 )
     {
-      const long d = & v( i0, i1, i2, i3, i4, i5, i6, i7 ) - base_ptr;
-      if ( d < offset ) ++error_count;
+#ifdef KOKKOS_ENABLE_DEPREACATED_CODE
+        const long d = & v( i0, i1, i2, i3, i4, i5, i6, i7 ) - base_ptr;
+#else
+        const long d = & v.access( i0, i1, i2, i3, i4, i5, i6, i7 ) - base_ptr;
+#endif
+        if ( d < offset ) ++error_count;
       offset = d;
     }
 
@@ -1078,7 +1086,11 @@ struct TestViewMapOperator {
   KOKKOS_INLINE_FUNCTION
   void test_right( size_t i0, long & error_count ) const
   {
+#ifdef KOKKOS_ENABLE_DEPREACATED_CODE
     typename ViewType::value_type * const base_ptr = & v( 0, 0, 0, 0, 0, 0, 0, 0 );
+#else
+    typename ViewType::value_type * const base_ptr = & v.access( 0, 0, 0, 0, 0, 0, 0, 0 );
+#endif
     const size_t n1 = v.extent(1);
     const size_t n2 = v.extent(2);
     const size_t n3 = v.extent(3);
@@ -1097,8 +1109,12 @@ struct TestViewMapOperator {
     for ( size_t i6 = 0; i6 < n6; ++i6 )
     for ( size_t i7 = 0; i7 < n7; ++i7 )
     {
-      const long d = & v( i0, i1, i2, i3, i4, i5, i6, i7 ) - base_ptr;
-      if ( d < offset ) ++error_count;
+#ifdef KOKKOS_ENABLE_DEPREACATED_CODE
+        const long d = & v( i0, i1, i2, i3, i4, i5, i6, i7 ) - base_ptr;
+#else
+        const long d = & v.access( i0, i1, i2, i3, i4, i5, i6, i7 ) - base_ptr;
+#endif
+        if ( d < offset ) ++error_count;
       offset = d;
     }
 

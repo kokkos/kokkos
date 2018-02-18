@@ -285,7 +285,7 @@ void test_issue_1160()
   h_element(9) = 0;
 
   for (int i = 0; i < 10; ++i) {
-    h_v(i, 0) = h_x(i, 0) = double(h_element(i));
+    h_v.access(i, 0) = h_x.access(i, 0) = double(h_element(i));
   }
   Kokkos::deep_copy(element_, h_element);
   Kokkos::deep_copy(x_, h_x);
@@ -323,8 +323,8 @@ void test_issue_1160()
   ASSERT_EQ(h_element(9), 0);
 
   for (int i = 0; i < 10; ++i) {
-    ASSERT_EQ(h_element(i), int(h_x(i, 0)));
-    ASSERT_EQ(h_element(i), int(h_v(i, 0)));
+    ASSERT_EQ(h_element(i), int(h_x.access(i, 0)));
+    ASSERT_EQ(h_element(i), int(h_v.access(i, 0)));
   }
 }
 

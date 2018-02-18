@@ -132,7 +132,7 @@ void test_fixture()
     
     typename FixtureVerifyElemNodeCoord<Device>::value_type result = { 0 , 0 };
 
-    Kokkos::parallel_reduce( fixture.elem_node().dimension_0() , FixtureVerifyElemNodeCoord<Device>( fixture ) , result );
+    Kokkos::parallel_reduce( fixture.elem_node().extent(0) , FixtureVerifyElemNodeCoord<Device>( fixture ) , result );
 
     if ( result.error ) {
       std::cout << "P[" << my_rank << ":" << global_size

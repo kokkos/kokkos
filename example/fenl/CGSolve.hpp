@@ -69,7 +69,7 @@ struct CrsMatrix {
 
   CrsMatrix( const StaticCrsGraphType & arg_graph )
     : graph( arg_graph )
-    , coeff( "crs_matrix_coeff" , arg_graph.entries.dimension_0() )
+    , coeff( "crs_matrix_coeff" , arg_graph.entries.extent(0) )
     {}
 };
 

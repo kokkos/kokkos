@@ -777,11 +777,11 @@ public:
       Kokkos::DynRankView<double, Kokkos::LayoutLeft, Kokkos::HostSpace> a_h("A",1000);
       auto a_h2 = Kokkos::create_mirror(Kokkos::HostSpace(),a_h);
       auto a_d = Kokkos::create_mirror(typename device::memory_space(),a_h);
-  
+
       int equal_ptr_h_h2  = (a_h.data() ==a_h2.data())?1:0;
       int equal_ptr_h_d   = (a_h.data() ==a_d. data())?1:0;
       int equal_ptr_h2_d  = (a_h2.data()==a_d. data())?1:0;
-  
+
       ASSERT_EQ(equal_ptr_h_h2,0);
       ASSERT_EQ(equal_ptr_h_d ,0);
       ASSERT_EQ(equal_ptr_h2_d,0);
@@ -797,11 +797,11 @@ public:
       Kokkos::DynRankView<double, Kokkos::LayoutRight, Kokkos::HostSpace> a_h("A",1000);
       auto a_h2 = Kokkos::create_mirror(Kokkos::HostSpace(),a_h);
       auto a_d = Kokkos::create_mirror(typename device::memory_space(),a_h);
-  
+
       int equal_ptr_h_h2  = (a_h.data() ==a_h2.data())?1:0;
       int equal_ptr_h_d   = (a_h.data() ==a_d. data())?1:0;
       int equal_ptr_h2_d  = (a_h2.data()==a_d. data())?1:0;
-  
+
       ASSERT_EQ(equal_ptr_h_h2,0);
       ASSERT_EQ(equal_ptr_h_d ,0);
       ASSERT_EQ(equal_ptr_h2_d,0);
@@ -818,43 +818,44 @@ public:
       Kokkos::DynRankView<double, Kokkos::LayoutLeft, Kokkos::HostSpace> a_h("A",1000);
       auto a_h2 = Kokkos::create_mirror_view(Kokkos::HostSpace(),a_h);
       auto a_d = Kokkos::create_mirror_view(typename device::memory_space(),a_h);
-  
+
       int equal_ptr_h_h2  = a_h.data() ==a_h2.data()?1:0;
       int equal_ptr_h_d   = a_h.data() ==a_d. data()?1:0;
       int equal_ptr_h2_d  = a_h2.data()==a_d. data()?1:0;
-  
-      int is_same_memspace = std::is_same<Kokkos::HostSpace,typename device::memory_space>::value?1:0; 
+
+      int is_same_memspace = std::is_same<Kokkos::HostSpace,typename device::memory_space>::value?1:0;
       ASSERT_EQ(equal_ptr_h_h2,1);
       ASSERT_EQ(equal_ptr_h_d ,is_same_memspace);
       ASSERT_EQ(equal_ptr_h2_d ,is_same_memspace);
-  
+
       ASSERT_EQ(a_h.extent(0),a_h2.extent(0));
       ASSERT_EQ(a_h.extent(0),a_d .extent(0));
 
       ASSERT_EQ(a_h.rank(),a_h2.rank());
       ASSERT_EQ(a_h.rank(),a_d.rank());
-    } 
+    }
     if (Kokkos::HostSpace::execution_space::is_initialized() )
     {
       Kokkos::DynRankView<double, Kokkos::LayoutRight, Kokkos::HostSpace> a_h("A",1000);
       auto a_h2 = Kokkos::create_mirror_view(Kokkos::HostSpace(),a_h);
       auto a_d = Kokkos::create_mirror_view(typename device::memory_space(),a_h);
-  
+
       int equal_ptr_h_h2  = a_h.data() ==a_h2.data()?1:0;
       int equal_ptr_h_d   = a_h.data() ==a_d. data()?1:0;
       int equal_ptr_h2_d  = a_h2.data()==a_d. data()?1:0;
-  
-      int is_same_memspace = std::is_same<Kokkos::HostSpace,typename device::memory_space>::value?1:0; 
+
+      int is_same_memspace = std::is_same<Kokkos::HostSpace,typename device::memory_space>::value?1:0;
       ASSERT_EQ(equal_ptr_h_h2,1);
       ASSERT_EQ(equal_ptr_h_d ,is_same_memspace);
       ASSERT_EQ(equal_ptr_h2_d ,is_same_memspace);
+
   
       ASSERT_EQ(a_h.extent(0),a_h2.extent(0));
       ASSERT_EQ(a_h.extent(0),a_d .extent(0));
 
       ASSERT_EQ(a_h.rank(),a_h2.rank());
       ASSERT_EQ(a_h.rank(),a_d.rank());
-    } 
+    }
     if (Kokkos::HostSpace::execution_space::is_initialized() )
     {
       typedef Kokkos::DynRankView< int , Kokkos::LayoutStride , Kokkos::HostSpace > view_stride_type ;
@@ -862,16 +863,16 @@ public:
       view_stride_type a_h( "a" , Kokkos::LayoutStride::order_dimensions(7, order, dimen) );
       auto a_h2 = Kokkos::create_mirror_view(Kokkos::HostSpace(),a_h);
       auto a_d = Kokkos::create_mirror_view(typename device::memory_space(),a_h);
-  
+
       int equal_ptr_h_h2  = a_h.data() ==a_h2.data()?1:0;
       int equal_ptr_h_d   = a_h.data() ==a_d. data()?1:0;
       int equal_ptr_h2_d  = a_h2.data()==a_d. data()?1:0;
-  
-      int is_same_memspace = std::is_same<Kokkos::HostSpace,typename device::memory_space>::value?1:0; 
+
+      int is_same_memspace = std::is_same<Kokkos::HostSpace,typename device::memory_space>::value?1:0;
       ASSERT_EQ(equal_ptr_h_h2,1);
       ASSERT_EQ(equal_ptr_h_d ,is_same_memspace);
       ASSERT_EQ(equal_ptr_h2_d ,is_same_memspace);
-  
+
       ASSERT_EQ(a_h.extent(0),a_h2.extent(0));
       ASSERT_EQ(a_h.extent(0),a_d .extent(0));
 
