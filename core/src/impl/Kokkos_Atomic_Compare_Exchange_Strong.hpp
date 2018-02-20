@@ -283,6 +283,18 @@ T atomic_compare_exchange( volatile T * const dest, const T compare, const T val
   return retval;
 }
 
+#elif defined( KOKKOS_ENABLE_SERIAL_ATOMICS )
+
+template< typename T >
+KOKKOS_INLINE_FUNCTION
+T atomic_compare_exchange( volatile T * const dest_v, const T compare, const T val )
+{
+  T* dest = const_cast<T*>(dest_v);
+  T retval = *dest;
+  if (retval == compare) *dest = val;
+  return retval;
+}
+
 #endif
 #endif
 #endif // !defined ROCM_ATOMICS

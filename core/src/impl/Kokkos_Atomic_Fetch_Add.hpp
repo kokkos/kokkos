@@ -358,6 +358,17 @@ T atomic_fetch_add( volatile T * const dest , const T val )
   return retval;
 }
 
+#elif defined( KOKKOS_ENABLE_SERIAL_ATOMICS )
+
+template< typename T >
+T atomic_fetch_add( volatile T * const dest_v , const T val )
+{
+  T* dest = const_cast<T*>(dest_v);
+  T retval = *dest;
+  *dest += val;
+  return retval;
+}
+
 #endif
 #endif
 #endif // !defined ROCM_ATOMICS
