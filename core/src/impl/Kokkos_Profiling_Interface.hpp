@@ -50,12 +50,12 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <string>
 
-#include <dlfcn.h>
 #include <iostream>
 #include <cstdlib>
 
 
 #if defined(KOKKOS_ENABLE_PROFILING)
+#include <dlfcn.h>
 
 #include <impl/Kokkos_Profiling_DeviceInfo.hpp>
 
