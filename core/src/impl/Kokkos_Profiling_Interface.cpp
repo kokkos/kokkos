@@ -339,5 +339,45 @@ void finalize() {
 
 #else
 void KOKKOS_CORE_SRC_IMPL_PROFILING_INTERFACE_PREVENT_LINK_ERROR() {}
+
+#include <impl/Kokkos_Profiling_Interface.hpp>
+#include <cstring>
+namespace Kokkos {
+namespace Profiling {
+
+bool profileLibraryLoaded() {}
+
+
+void beginParallelFor(const std::string& , const uint32_t , uint64_t* ) {}
+void endParallelFor(const uint64_t ) {}
+void beginParallelScan(const std::string& , const uint32_t , uint64_t* ) {}
+void endParallelScan(const uint64_t ) {}
+void beginParallelReduce(const std::string& , const uint32_t , uint64_t* ) {}
+void endParallelReduce(const uint64_t ) {}
+
+void pushRegion(const std::string& ) {}
+void popRegion() {}
+void createProfileSection(const std::string& , uint32_t* ) {}
+void startSection(const uint32_t ) {}
+void stopSection(const uint32_t ) {}
+void destroyProfileSection(const uint32_t ) {}
+
+void markEvent(const std::string& ) {}
+
+void allocateData(const SpaceHandle , const std::string , const void* , const uint64_t ) {}
+void deallocateData(const SpaceHandle , const std::string , const void* , const uint64_t ) {}
+
+void beginDeepCopy(const SpaceHandle , const std::string , const void* , 
+    const SpaceHandle , const std::string , const void* ,
+    const uint64_t ) {}
+void endDeepCopy() {}
+
+void initialize() {}
+void finalize() {}
+
+}
+}
+
+
 #endif
 
