@@ -157,17 +157,21 @@ public:
 
   __device__ void team_barrier() const
     {
-      KOKKOS_IMPL_CUDA_SYNCWARP ;
+      if ( 1 < m_team_size ) {
+        KOKKOS_IMPL_CUDA_SYNCWARP ;
+      }
     }
 
   template< class ValueType >
   __device__ void team_broadcast( ValueType & val , const int thread_id ) const
     {
-      // WarpSize = blockDim.X * blockDim.y
-      // thread_id < blockDim.y
-      KOKKOS_IMPL_CUDA_SYNCWARP ;
-      ValueType tmp( val ); // input might not be register variable
-      cuda_shfl( val, tmp, blockDim.x * thread_id, blockDim.X * blockDim.y );
+      if ( 1 < m_team_size ) {
+        // WarpSize = blockDim.X * blockDim.y
+        // thread_id < blockDim.y
+        KOKKOS_IMPL_CUDA_SYNCWARP ;
+        ValueType tmp( val ); // input might not be register variable
+        cuda_shfl( val, tmp, blockDim.x * thread_id, blockDim.X * blockDim.y );
+      }
     }
 
 #else
@@ -381,8 +385,13 @@ ValueType shfl_warp_broadcast
    int src_lane,
    int width)
 {
-  KOKKOS_IMPL_CUDA_SYNCWARP ;
-  return Kokkos::shfl(val, src_lane, width);
+  if ( 1 < width ) {
+    KOKKOS_IMPL_CUDA_SYNCWARP ;
+    return Kokkos::shfl(val, src_lane, width);
+  }
+  else {
+    return val ;
+  }
 }
 
 /*// all-reduce across corresponding vector lanes between team members within warp
