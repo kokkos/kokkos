@@ -165,6 +165,7 @@ public:
     {
       // WarpSize = blockDim.X * blockDim.y
       // thread_id < blockDim.y
+      KOKKOS_IMPL_CUDA_SYNCWARP ;
       ValueType tmp( val ); // input might not be register variable
       cuda_shfl( val, tmp, blockDim.x * thread_id, blockDim.X * blockDim.y );
     }
@@ -353,6 +354,7 @@ void strided_shfl_warp_reduction
    int stride)
 {
   for (int lane_delta=(team_size*stride)>>1; lane_delta>=stride; lane_delta>>=1) {
+    KOKKOS_IMPL_CUDA_SYNCWARP ;
     join(val, Kokkos::shfl_down(val, lane_delta, team_size*stride));
   }
 }
@@ -366,6 +368,7 @@ void multi_shfl_warp_reduction
    int vec_length)
 {
   for (int lane_delta=vec_length>>1; lane_delta; lane_delta>>=1) {
+    KOKKOS_IMPL_CUDA_SYNCWARP ;
     join(val, Kokkos::shfl_down(val, lane_delta, vec_length));
   }
 }
@@ -378,6 +381,7 @@ ValueType shfl_warp_broadcast
    int src_lane,
    int width)
 {
+  KOKKOS_IMPL_CUDA_SYNCWARP ;
   return Kokkos::shfl(val, src_lane, width);
 }
 
@@ -579,6 +583,7 @@ void parallel_scan
                                             Impl::CudaTraits::WarpSize);
 
     // make EXCLUSIVE scan by shifting values over one
+    KOKKOS_IMPL_CUDA_SYNCWARP ;
     val = Kokkos::shfl_up(val, blockDim.x, Impl::CudaTraits::WarpSize);
     if ( threadIdx.y == 0 ) { val = 0 ; }
 
@@ -620,6 +625,7 @@ void parallel_scan
 
     // INCLUSIVE scan
     for( int offset = 1 ; offset < blockDim.x ; offset <<= 1 ) {
+      KOKKOS_IMPL_CUDA_SYNCWARP ;
       y = Kokkos::shfl_up(val, offset, blockDim.x);
       if(threadIdx.x >= offset) { val += y; }
     }
@@ -628,6 +634,7 @@ void parallel_scan
     local_total = shfl_warp_broadcast<value_type>(val, blockDim.x-1, blockDim.x);
 
     // make EXCLUSIVE scan by shifting values over one
+    KOKKOS_IMPL_CUDA_SYNCWARP ;
     val = Kokkos::shfl_up(val, 1, blockDim.x);
     if ( threadIdx.x == 0 ) { val = 0 ; }
 
@@ -662,6 +669,7 @@ namespace Kokkos {
   void single(const Impl::VectorSingleStruct<Impl::TaskExec< Kokkos::Cuda > >& , const FunctorType& lambda, ValueType& val) {
 #ifdef __CUDA_ARCH__
     if(threadIdx.x == 0) lambda(val);
+    KOKKOS_IMPL_CUDA_SYNCWARP ;
     val = shfl(val,0,blockDim.x);
 #endif
   }
