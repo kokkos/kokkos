@@ -608,16 +608,17 @@ void parallel_scan
       , Closure >::value_type ;
 
   if ( 1 < loop_boundaries.thread.team_size() ) {
-    // TODO:  This is not a performant algorithm and needs to be replaced.
-    // TODO:  This algorithm is erroneous when all threads of the warp
-    //        do not have the exact same iteration.
+
+    // make sure all threads perform all loop iterations
+    const iType bound = loop_boundaries.end + loop_boundaries.start ;
+    const int lane = threadIdx.y * blockDim.x ;
 
     value_type accum = 0 ;
     value_type val, y, local_total;
 
-    for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+    for( iType i = loop_boundaries.start; i < bound; i+=loop_boundaries.increment) {
       val = 0;
-      closure(i,val,false);
+      if ( i < loop_boundaries.end ) closure(i,val,false);
 
       // intra-blockDim.y exclusive scan on 'val'
       // accum = accumulated, sum in total for this iteration
@@ -625,21 +626,21 @@ void parallel_scan
       // INCLUSIVE scan
       for( int offset = blockDim.x ; offset < Impl::CudaTraits::WarpSize ; offset <<= 1 ) {
         y = Kokkos::shfl_up(val, offset, Impl::CudaTraits::WarpSize);
-        if(threadIdx.y*blockDim.x >= offset) { val += y; }
+        if(lane >= offset) { val += y; }
       }
 
       // pass accum to all threads
-      local_total = shfl_warp_broadcast<value_type>(val,
-                                            threadIdx.x+Impl::CudaTraits::WarpSize-blockDim.x,
-                                            Impl::CudaTraits::WarpSize);
+      local_total = shfl_warp_broadcast<value_type>(
+         val,
+         threadIdx.x+Impl::CudaTraits::WarpSize-blockDim.x,
+         Impl::CudaTraits::WarpSize);
 
       // make EXCLUSIVE scan by shifting values over one
-      KOKKOS_IMPL_CUDA_SYNCWARP ;
       val = Kokkos::shfl_up(val, blockDim.x, Impl::CudaTraits::WarpSize);
       if ( threadIdx.y == 0 ) { val = 0 ; }
 
       val += accum;
-      closure(i,val,true);
+      if ( i < loop_boundaries.end ) closure(i,val,true);
       accum += local_total;
     }
   }
@@ -672,16 +673,16 @@ void parallel_scan
       , Closure >::value_type ;
 
   if ( 1 < loop_boundaries.thread.team_size() ) {
-    // TODO:  This is not a performant algorithm and needs to be replaced.
-    // TODO:  This algorithm is erroneous when all threads of the warp
-    //        do not have the exact same iteration.
+
+    // make sure all threads perform all loop iterations
+    const iType bound = loop_boundaries.end + loop_boundaries.start ;
 
     value_type accum = 0 ;
     value_type val, y, local_total;
 
-    for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
+    for( iType i = loop_boundaries.start; i < bound; i+=loop_boundaries.increment) {
       val = 0;
-      closure(i,val,false);
+      if ( i < loop_boundaries.end ) closure(i,val,false);
 
       // intra-blockDim.x exclusive scan on 'val'
       // accum = accumulated, sum in total for this iteration
@@ -702,7 +703,7 @@ void parallel_scan
       if ( threadIdx.x == 0 ) { val = 0 ; }
 
       val += accum;
-      closure(i,val,true);
+      if ( i < loop_boundaries.end ) closure(i,val,true);
       accum += local_total;
     }
   }
