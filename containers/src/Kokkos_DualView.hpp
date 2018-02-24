@@ -262,14 +262,14 @@ public:
     modified_host (View<unsigned int,LayoutLeft,typename t_host::execution_space> ("DualView::modified_host"))
   {
     if ( int(d_view.rank)     != int(h_view.rank) ||
-         d_view.extents(0) != h_view.extents(0) ||
-         d_view.extents(1) != h_view.extents(1) ||
-         d_view.extents(2) != h_view.extents(2) ||
-         d_view.extents(3) != h_view.extents(3) ||
-         d_view.extents(4) != h_view.extents(4) ||
-         d_view.extents(5) != h_view.extents(5) ||
-         d_view.extents(6) != h_view.extents(6) ||
-         d_view.extents(7) != h_view.extents(7) ||
+         d_view.extent(0) != h_view.extent(0) ||
+         d_view.extent(1) != h_view.extent(1) ||
+         d_view.extent(2) != h_view.extent(2) ||
+         d_view.extent(3) != h_view.extent(3) ||
+         d_view.extent(4) != h_view.extent(4) ||
+         d_view.extent(5) != h_view.extent(5) ||
+         d_view.extent(6) != h_view.extent(6) ||
+         d_view.extent(7) != h_view.extent(7) ||
          d_view.stride_0()    != h_view.stride_0() ||
          d_view.stride_1()    != h_view.stride_1() ||
          d_view.stride_2()    != h_view.stride_2() ||
