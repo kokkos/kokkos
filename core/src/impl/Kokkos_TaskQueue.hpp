@@ -518,13 +518,9 @@ public:
       member_type * const member = reinterpret_cast< member_type * >( exec );
       result_type * const result = TaskResult< result_type >::ptr( task );
 
-      task->apply_functor( member , result );
-
       // Task may be serial or team.
       // If team then must synchronize before querying if respawn was requested.
       // If team then only one thread calls destructor.
-
-      member->team_barrier();
 
       const bool only_one_thread =
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA)
@@ -532,6 +528,10 @@ public:
 #else
         0 == member->team_rank();
 #endif
+
+      task->apply_functor( member , result );
+
+      member->team_barrier();
 
       if ( only_one_thread && !(task->requested_respawn()) ) {
         // Did not respawn, destroy the functor to free memory.
@@ -544,7 +544,7 @@ public:
   // Constructor for runnable task
   KOKKOS_INLINE_FUNCTION constexpr
   TaskBase( FunctorType && arg_functor )
-    : root_type() , functor_type( std::move(arg_functor) ) {}
+    : root_type() , functor_type( arg_functor ) {}
 
   KOKKOS_INLINE_FUNCTION
   ~TaskBase() {}

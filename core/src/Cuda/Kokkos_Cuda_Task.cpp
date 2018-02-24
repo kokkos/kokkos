@@ -58,32 +58,6 @@ template class TaskQueue< Kokkos::Cuda > ;
 
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_DEBUG )
-
-__device__
-void verify_warp_convergence( const char * const where )
-{
-  const unsigned b = __ballot(1);
-
-  if ( b != ~0u ) {
-
-printf(" verify_warp_convergence( %s ) (%d,%d,%d) (%d,%d,%d) failed %x\n"
-      , where
-      , blockIdx.x
-      , blockIdx.y
-      , blockIdx.z
-      , threadIdx.x
-      , threadIdx.y
-      , threadIdx.z
-      , b );
-
-  }
-}
-
-#endif // #if defined( KOKKOS_DEBUG )
-
-//----------------------------------------------------------------------------
-
 __device__
 void TaskQueueSpecialization< Kokkos::Cuda >::driver
   ( TaskQueueSpecialization< Kokkos::Cuda >::queue_type * const queue 
@@ -134,13 +108,18 @@ printf("TaskQueue<Cuda>::driver(%d,%d) task(%lx)\n",threadIdx.z,blockIdx.x
 
     }
 
-    // shuffle broadcast
+    // Synchronize warp with memory fence before broadcasting task pointer:
 
-    ((int*) & task_ptr )[0] = __shfl( ((int*) & task_ptr )[0] , 0 );
-    ((int*) & task_ptr )[1] = __shfl( ((int*) & task_ptr )[1] , 0 );
+    // KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN( "A" );
+    KOKKOS_IMPL_CUDA_SYNCWARP ;
+
+    // Broadcast task pointer:
+
+    ((int*) & task_ptr )[0] = KOKKOS_IMPL_CUDA_SHFL( ((int*) & task_ptr )[0] , 0 , 32 );
+    ((int*) & task_ptr )[1] = KOKKOS_IMPL_CUDA_SHFL( ((int*) & task_ptr )[1] , 0 , 32 );
 
 #if defined( KOKKOS_DEBUG )
-    verify_warp_convergence("task_ptr");
+    KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN( "TaskQueue CUDA task_ptr" );
 #endif
 
     if ( 0 == task_ptr ) break ; // 0 == queue->m_ready_count
@@ -155,17 +134,17 @@ printf("TaskQueue<Cuda>::driver(%d,%d) task(%lx)\n",threadIdx.z,blockIdx.x
 
       int32_t volatile * const task_mem = (int32_t volatile *) task_ptr ;
 
-      // copy global to shared memory:
+      // copy task closure from global to shared memory:
 
       for ( int32_t i = warp_lane ; i < e ; i += CudaTraits::WarpSize ) {
         warp_shmem[i] = task_mem[i] ;
       }
 
-      Kokkos::memory_fence();
+      // Synchronize threads of the warp and insure memory
+      // writes are visible to all threads in the warp.
 
-      // Copy done - use memory fence so that memory writes are visible.
-      // For reliable warp convergence on Pascal and Volta an explicit
-      // warp level synchronization will also be required.
+      // KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN( "B" );
+      KOKKOS_IMPL_CUDA_SYNCWARP ;
 
       if ( task_root_type::TaskTeam == task_shmem->m_task_type ) {
         // Thread Team Task
@@ -176,17 +155,24 @@ printf("TaskQueue<Cuda>::driver(%d,%d) task(%lx)\n",threadIdx.z,blockIdx.x
         (*task_shmem->m_apply)( task_shmem , & single_exec );
       }
 
-      // copy shared to global memory:
+      // Synchronize threads of the warp and insure memory
+      // writes are visible to all threads in the warp.
+
+      // KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN( "C" );
+      KOKKOS_IMPL_CUDA_SYNCWARP ;
+
+      // copy task closure from shared to global memory:
 
       for ( int32_t i = b + warp_lane ; i < e ; i += CudaTraits::WarpSize ) {
         task_mem[i] = warp_shmem[i] ;
       }
 
-      Kokkos::memory_fence();
+      // Synchronize threads of the warp and insure memory
+      // writes are visible to root thread of the warp for
+      // respawn or completion.
 
-#if defined( KOKKOS_DEBUG )
-    verify_warp_convergence("apply");
-#endif
+      // KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN( "D" );
+      KOKKOS_IMPL_CUDA_SYNCWARP ;
 
       // If respawn requested copy respawn data back to main memory
 
