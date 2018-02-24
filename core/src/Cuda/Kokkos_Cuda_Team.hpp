@@ -352,8 +352,10 @@ public:
       // Intra vector lane shuffle reduction:
       typename ReducerType::value_type tmp ( reducer.reference() );
 
+      unsigned mask = blockDim.x==32?0xffffffff:((1<<blockDim.x)-1)<<(threadIdx.y%(32/blockDim.x))*blockDim.x;
+
       for ( int i = blockDim.x ; ( i >>= 1 ) ; ) {
-        cuda_shfl_down( reducer.reference() , tmp , i , blockDim.x );
+        cuda_shfl_down( reducer.reference() , tmp , i , blockDim.x , mask );
         if ( (int)threadIdx.x < i ) { reducer.join( tmp , reducer.reference() ); }
       }
 
@@ -362,7 +364,7 @@ public:
       // because floating point summation is not associative
       // and thus different threads could have different results.
 
-      cuda_shfl( reducer.reference() , tmp , 0 , blockDim.x );
+      cuda_shfl( reducer.reference() , tmp , 0 , blockDim.x , mask );
       #endif
     }
 
@@ -901,6 +903,7 @@ void parallel_scan
   //   1 <= blockDim.x <= CudaTraits::WarpSize
 
   const int mask = blockDim.x - 1 ;
+  const unsigned active_mask = blockDim.x==32?0xffffffff:((1<<blockDim.x)-1)<<(threadIdx.y%(32/blockDim.x))*blockDim.x;
   const int rem  = loop_boundaries.end & mask ; // == end % blockDim.x
   const int end  = loop_boundaries.end + ( rem ? blockDim.x - rem : 0 );
 
@@ -923,7 +926,7 @@ void parallel_scan
 
     for ( int j = 1 ; j < (int)blockDim.x ; j <<= 1 ) {
       value_type tmp = 0 ;
-      Impl::cuda_shfl_up( tmp , sval , j , blockDim.x );
+      Impl::cuda_shfl_up(tmp, sval , j , blockDim.x, active_mask );
       if ( j <= (int)threadIdx.x ) { sval += tmp ; }
     }
 
@@ -934,7 +937,7 @@ void parallel_scan
     if ( i < loop_boundaries.end ) closure( i , val , true );
 
     // Accumulate the last value in the inclusive scan:
-    Impl::cuda_shfl( sval , sval , mask , blockDim.x );
+    Impl::cuda_shfl( sval , sval , mask , blockDim.x, active_mask );
 
     accum += sval ;
   }
@@ -967,7 +970,8 @@ KOKKOS_INLINE_FUNCTION
 void single(const Impl::VectorSingleStruct<Impl::CudaTeamMember>& , const FunctorType& lambda, ValueType& val) {
 #ifdef __CUDA_ARCH__
   if(threadIdx.x == 0) lambda(val);
-  val = shfl(val,0,blockDim.x);
+  unsigned mask = blockDim.x==32?0xffffffff:((1<<blockDim.x)-1)<<(threadIdx.y%(32/blockDim.x))*blockDim.x;
+  Impl::cuda_shfl(val,val,0,blockDim.x,mask);
 #endif
 }
 
