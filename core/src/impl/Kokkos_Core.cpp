@@ -666,7 +666,12 @@ void print_configuration( std::ostream & out , const bool detail )
 #else
   msg << "no" << std::endl;
 #endif
-
+  msg << "  KOKKOS_ENABLE_SERIAL_ATOMICS: ";
+#ifdef KOKKOS_ENABLE_SERIAL_ATOMICS
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
 
   msg << "Vectorization:" << std::endl;
   msg << "  KOKKOS_ENABLE_PRAGMA_IVDEP: ";
