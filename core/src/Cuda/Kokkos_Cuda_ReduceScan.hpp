@@ -66,10 +66,11 @@ namespace Impl {
 template< typename T >
 __device__ inline
 void cuda_shfl( T & out , T const & in , int lane ,
-  typename std::enable_if< sizeof(int) == sizeof(T) , int >::type width )
+  typename std::enable_if< sizeof(int) == sizeof(T) , int >::type width
+  , unsigned mask = 0xffffffff )
 {
   *reinterpret_cast<int*>(&out) =
-    KOKKOS_IMPL_CUDA_SHFL( *reinterpret_cast<int const *>(&in) , lane , width );
+    KOKKOS_IMPL_CUDA_SHFL_MASK( mask , *reinterpret_cast<int const *>(&in) , lane , width );
 }
 
 template< typename T >
@@ -77,13 +78,13 @@ __device__ inline
 void cuda_shfl( T & out , T const & in , int lane ,
   typename std::enable_if
     < ( sizeof(int) < sizeof(T) ) && ( 0 == ( sizeof(T) % sizeof(int) ) )
-    , int >::type width )
+    , int >::type width, unsigned mask = 0xffffffff )
 {
   enum : int { N = sizeof(T) / sizeof(int) };
 
   for ( int i = 0 ; i < N ; ++i ) {
     reinterpret_cast<int*>(&out)[i] =
-      KOKKOS_IMPL_CUDA_SHFL( reinterpret_cast<int const *>(&in)[i] , lane , width );
+      KOKKOS_IMPL_CUDA_SHFL_MASK( mask , reinterpret_cast<int const *>(&in)[i] , lane , width );
   }
 }
 
@@ -92,10 +93,10 @@ void cuda_shfl( T & out , T const & in , int lane ,
 template< typename T >
 __device__ inline
 void cuda_shfl_down( T & out , T const & in , int delta ,
-  typename std::enable_if< sizeof(int) == sizeof(T) , int >::type width )
+  typename std::enable_if< sizeof(int) == sizeof(T) , int >::type width , unsigned mask = 0xffffffff )
 {
   *reinterpret_cast<int*>(&out) =
-    KOKKOS_IMPL_CUDA_SHFL_DOWN( *reinterpret_cast<int const *>(&in) , delta , width );
+    KOKKOS_IMPL_CUDA_SHFL_DOWN_MASK( mask , *reinterpret_cast<int const *>(&in) , delta , width );
 }
 
 template< typename T >
@@ -103,13 +104,13 @@ __device__ inline
 void cuda_shfl_down( T & out , T const & in , int delta ,
   typename std::enable_if
     < ( sizeof(int) < sizeof(T) ) && ( 0 == ( sizeof(T) % sizeof(int) ) )
-    , int >::type width )
+    , int >::type width , unsigned mask = 0xffffffff )
 {
   enum : int { N = sizeof(T) / sizeof(int) };
 
   for ( int i = 0 ; i < N ; ++i ) {
     reinterpret_cast<int*>(&out)[i] =
-      KOKKOS_IMPL_CUDA_SHFL_DOWN( reinterpret_cast<int const *>(&in)[i] , delta , width );
+      KOKKOS_IMPL_CUDA_SHFL_DOWN_MASK( mask , reinterpret_cast<int const *>(&in)[i] , delta , width );
   }
 }
 
@@ -118,10 +119,10 @@ void cuda_shfl_down( T & out , T const & in , int delta ,
 template< typename T >
 __device__ inline
 void cuda_shfl_up( T & out , T const & in , int delta ,
-  typename std::enable_if< sizeof(int) == sizeof(T) , int >::type width )
+  typename std::enable_if< sizeof(int) == sizeof(T) , int >::type width , unsigned mask = 0xffffffff )
 {
   *reinterpret_cast<int*>(&out) =
-    KOKKOS_IMPL_CUDA_SHFL_UP( *reinterpret_cast<int const *>(&in) , delta , width );
+    KOKKOS_IMPL_CUDA_SHFL_UP_MASK( mask , *reinterpret_cast<int const *>(&in) , delta , width );
 }
 
 template< typename T >
@@ -129,13 +130,13 @@ __device__ inline
 void cuda_shfl_up( T & out , T const & in , int delta ,
   typename std::enable_if
     < ( sizeof(int) < sizeof(T) ) && ( 0 == ( sizeof(T) % sizeof(int) ) )
-    , int >::type width )
+    , int >::type width , unsigned mask = 0xffffffff )
 {
   enum : int { N = sizeof(T) / sizeof(int) };
 
   for ( int i = 0 ; i < N ; ++i ) {
     reinterpret_cast<int*>(&out)[i] =
-      KOKKOS_IMPL_CUDA_SHFL_UP( reinterpret_cast<int const *>(&in)[i] , delta , width );
+      KOKKOS_IMPL_CUDA_SHFL_UP_MASK( mask , reinterpret_cast<int const *>(&in)[i] , delta , width );
   }
 }
 
