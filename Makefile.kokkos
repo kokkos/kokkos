@@ -1005,10 +1005,8 @@ ifneq ($(KOKKOS_INTERNAL_USE_MEMKIND), 1)
   KOKKOS_SRC := $(filter-out $(KOKKOS_PATH)/core/src/impl/Kokkos_HBWSpace.cpp,$(KOKKOS_SRC))
 endif
 
-# Don't include Kokkos_Profiling_Interface.cpp if not using profiling to avoid a link warning.
-ifeq ($(KOKKOS_INTERNAL_DISABLE_PROFILING), 1)
-  KOKKOS_SRC := $(filter-out $(KOKKOS_PATH)/core/src/impl/Kokkos_Profiling_Interface.cpp,$(KOKKOS_SRC))
-endif
+# Kokkos_Profiling_Interface.cpp needs to be compiled even with profiling disabled.
+KOKKOS_SRC := $(filter-out $(KOKKOS_PATH)/core/src/impl/Kokkos_Profiling_Interface.cpp,$(KOKKOS_SRC))
 
 # Don't include Kokkos_Serial.cpp or Kokkos_Serial_Task.cpp if not using Serial
 # device to avoid a link warning.

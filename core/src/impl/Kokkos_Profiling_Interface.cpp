@@ -42,6 +42,7 @@
  */
 
 #include <Kokkos_Macros.hpp>
+
 #if defined(KOKKOS_ENABLE_PROFILING)
 
 #include <impl/Kokkos_Profiling_Interface.hpp>
@@ -338,10 +339,10 @@ void finalize() {
 }
 
 #else
-void KOKKOS_CORE_SRC_IMPL_PROFILING_INTERFACE_PREVENT_LINK_ERROR() {}
 
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <cstring>
+
 namespace Kokkos {
 namespace Profiling {
 
@@ -355,6 +356,7 @@ void endParallelScan(const uint64_t ) {}
 void beginParallelReduce(const std::string& , const uint32_t , uint64_t* ) {}
 void endParallelReduce(const uint64_t ) {}
 
+#error "defining pushRegion..."
 void pushRegion(const std::string& ) {}
 void popRegion() {}
 void createProfileSection(const std::string& , uint32_t* ) {}
@@ -375,9 +377,6 @@ void endDeepCopy() {}
 void initialize() {}
 void finalize() {}
 
-}
-}
-
+}} // end namespace Kokkos::Profiling
 
 #endif
-
