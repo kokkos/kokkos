@@ -107,7 +107,7 @@ void atomic_decrement<int>(volatile int* a) {
       : "memory"
     );
 #else
-  Kokkos::atomic_fetch_sub(a, 1);
+  Kokkos::atomic_fetch_sub(a, (int)1);
 #endif
 }
 
@@ -125,14 +125,14 @@ void atomic_decrement<long long int>(volatile long long int* a) {
       : "memory"
     );
 #else
-  Kokkos::atomic_fetch_sub(a, 1);
+  Kokkos::atomic_fetch_sub(a, (long long int)1);
 #endif
 }
 
 template<typename T>
 KOKKOS_INLINE_FUNCTION
 void atomic_decrement(volatile T* a) {
-  Kokkos::atomic_fetch_sub(a, 1);
+  Kokkos::atomic_fetch_sub(a, (T)1);
 }
 
 } // End of namespace Kokkos

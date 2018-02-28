@@ -92,18 +92,18 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator -- () const {
-    const_value_type tmp = Kokkos::atomic_fetch_add(ptr,-1);
+    const_value_type tmp = Kokkos::atomic_fetch_add(ptr,(non_const_value_type)-1);
     return tmp-1;
   }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator ++ (int) const {
-    return Kokkos::atomic_fetch_add(ptr,1);
+    return Kokkos::atomic_fetch_add(ptr,(non_const_value_type)1);
   }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator -- (int) const {
-    return Kokkos::atomic_fetch_add(ptr,-1);
+    return Kokkos::atomic_fetch_add(ptr,(non_const_value_type)-1);
   }
 
   KOKKOS_INLINE_FUNCTION

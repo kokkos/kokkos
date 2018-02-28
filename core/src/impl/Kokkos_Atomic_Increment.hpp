@@ -111,7 +111,7 @@ void atomic_increment<int>(volatile int* a) {
   int* a_nv = const_cast<int*>(a);
   ++(*a_nv);
 #else
-  Kokkos::atomic_fetch_add(a,1);
+  Kokkos::atomic_fetch_add(a,(int)1);
 #endif
 }
 
@@ -132,7 +132,7 @@ void atomic_increment<long long int>(volatile long long int* a) {
   long long int* a_nv = const_cast<long long int*>(a);
   ++(*a_nv);
 #else
-  Kokkos::atomic_fetch_add(a,1);
+  Kokkos::atomic_fetch_add(a,(long long int)1);
 #endif
 }
 
@@ -143,7 +143,7 @@ void atomic_increment(volatile T* a) {
   T* a_nv = const_cast<T*>(a);
   *a_nv += T(1);
 #else
-  Kokkos::atomic_fetch_add(a,1);
+  Kokkos::atomic_fetch_add(a,(T)1);
 #endif
 }
 
