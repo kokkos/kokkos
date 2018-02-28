@@ -86,24 +86,24 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator ++ () const {
-    const_value_type tmp = Kokkos::atomic_fetch_add(ptr,(non_const_value_type)1);
+    const_value_type tmp = Kokkos::atomic_fetch_add(ptr,non_const_value_type(1));
     return tmp+1;
   }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator -- () const {
-    const_value_type tmp = Kokkos::atomic_fetch_add(ptr,(non_const_value_type)-1);
+    const_value_type tmp = Kokkos::atomic_fetch_sub(ptr,non_const_value_type(1));
     return tmp-1;
   }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator ++ (int) const {
-    return Kokkos::atomic_fetch_add(ptr,(non_const_value_type)1);
+    return Kokkos::atomic_fetch_add(ptr,non_const_value_type(1));
   }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator -- (int) const {
-    return Kokkos::atomic_fetch_add(ptr,(non_const_value_type)-1);
+    return Kokkos::atomic_fetch_sub(ptr,non_const_value_type(1));
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -119,12 +119,12 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator -= (const_value_type& val) const {
-    const_value_type tmp = Kokkos::atomic_fetch_add(ptr,-val);
+    const_value_type tmp = Kokkos::atomic_fetch_sub(ptr,val);
     return tmp-val;
   }
   KOKKOS_INLINE_FUNCTION
   const_value_type operator -= (volatile const_value_type& val) const {
-    const_value_type tmp = Kokkos::atomic_fetch_add(ptr,-val);
+    const_value_type tmp = Kokkos::atomic_fetch_sub(ptr,val);
     return tmp-val;
   }
 
