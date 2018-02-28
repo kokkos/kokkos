@@ -42,6 +42,7 @@
  */
 
 #include <Kokkos_Macros.hpp>
+
 #if defined(KOKKOS_ENABLE_PROFILING)
 
 #include <impl/Kokkos_Profiling_Interface.hpp>
@@ -338,14 +339,14 @@ void finalize() {
 }
 
 #else
-void KOKKOS_CORE_SRC_IMPL_PROFILING_INTERFACE_PREVENT_LINK_ERROR() {}
 
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <cstring>
+
 namespace Kokkos {
 namespace Profiling {
 
-bool profileLibraryLoaded() {}
+bool profileLibraryLoaded() { return false; }
 
 
 void beginParallelFor(const std::string& , const uint32_t , uint64_t* ) {}
@@ -375,9 +376,6 @@ void endDeepCopy() {}
 void initialize() {}
 void finalize() {}
 
-}
-}
-
+}} // end namespace Kokkos::Profiling
 
 #endif
-
