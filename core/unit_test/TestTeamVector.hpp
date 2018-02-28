@@ -47,6 +47,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <cstdint>
+#include <cinttypes>
 
 namespace TestTeamVector {
 
