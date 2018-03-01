@@ -439,11 +439,11 @@
 // Define Macro for alignment:
 
 #if ! defined( KOKKOS_MEMORY_ALIGNMENT )
-  #define KOKKOS_MEMORY_ALIGNMENT 16
+  #define KOKKOS_MEMORY_ALIGNMENT 64
 #endif
 
 #if ! defined( KOKKOS_MEMORY_ALIGNMENT_THRESHOLD )
-  #define KOKKOS_MEMORY_ALIGNMENT_THRESHOLD 4
+  #define KOKKOS_MEMORY_ALIGNMENT_THRESHOLD 1
 #endif
 
 #if !defined( KOKKOS_IMPL_ALIGN_PTR )
