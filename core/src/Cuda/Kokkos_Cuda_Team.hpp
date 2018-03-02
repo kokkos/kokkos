@@ -954,6 +954,8 @@ KOKKOS_INLINE_FUNCTION
 void single(const Impl::VectorSingleStruct<Impl::CudaTeamMember>& , const FunctorType& lambda) {
 #ifdef __CUDA_ARCH__
   if(threadIdx.x == 0) lambda();
+  unsigned mask = blockDim.x==32?0xffffffff:((1<<blockDim.x)-1)<<(threadIdx.y%(32/blockDim.x))*blockDim.x;
+  KOKKOS_IMPL_CUDA_SYNCWARP_MASK(mask);
 #endif
 }
 
@@ -962,6 +964,8 @@ KOKKOS_INLINE_FUNCTION
 void single(const Impl::ThreadSingleStruct<Impl::CudaTeamMember>& , const FunctorType& lambda) {
 #ifdef __CUDA_ARCH__
   if(threadIdx.x == 0 && threadIdx.y == 0) lambda();
+  unsigned mask = blockDim.x==32?0xffffffff:((1<<blockDim.x)-1)<<(threadIdx.y%(32/blockDim.x))*blockDim.x;
+  KOKKOS_IMPL_CUDA_SYNCWARP_MASK(mask);
 #endif
 }
 
