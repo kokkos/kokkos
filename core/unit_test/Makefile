@@ -49,16 +49,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	OBJ_CUDA += TestCudaHostPinned_ViewAPI.o
 	OBJ_CUDA += TestCudaHostPinned_ViewMapping_a.o TestCudaHostPinned_ViewMapping_b.o TestCudaHostPinned_ViewMapping_subview.o
 	OBJ_CUDA += TestCuda_ViewOfClass.o
-ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-	OBJ_CUDA += TestCuda_SubView_c_all.o
-else
 	OBJ_CUDA += TestCuda_SubView_a.o TestCuda_SubView_b.o
 	OBJ_CUDA += TestCuda_SubView_c01.o TestCuda_SubView_c02.o TestCuda_SubView_c03.o
 	OBJ_CUDA += TestCuda_SubView_c04.o TestCuda_SubView_c05.o TestCuda_SubView_c06.o
 	OBJ_CUDA += TestCuda_SubView_c07.o TestCuda_SubView_c08.o TestCuda_SubView_c09.o
 	OBJ_CUDA += TestCuda_SubView_c10.o TestCuda_SubView_c11.o TestCuda_SubView_c12.o
 	OBJ_CUDA += TestCuda_SubView_c13.o
-endif
 	OBJ_CUDA += TestCuda_Reductions.o TestCuda_Scan.o
 	OBJ_CUDA += TestCuda_Complex.o
 	OBJ_CUDA += TestCuda_AtomicOperations.o TestCuda_AtomicViews.o TestCuda_Atomics.o
@@ -161,16 +157,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	OBJ_OPENMP += TestOpenMP_ViewAPI_b.o
 	OBJ_OPENMP += TestOpenMP_ViewMapping_a.o TestOpenMP_ViewMapping_b.o TestOpenMP_ViewMapping_subview.o
 	OBJ_OPENMP += TestOpenMP_ViewOfClass.o
-ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-	OBJ_OPENMP += TestOpenMP_SubView_c_all.o
-else
 	OBJ_OPENMP += TestOpenMP_SubView_a.o TestOpenMP_SubView_b.o
 	OBJ_OPENMP += TestOpenMP_SubView_c01.o TestOpenMP_SubView_c02.o TestOpenMP_SubView_c03.o
 	OBJ_OPENMP += TestOpenMP_SubView_c04.o TestOpenMP_SubView_c05.o TestOpenMP_SubView_c06.o
 	OBJ_OPENMP += TestOpenMP_SubView_c07.o TestOpenMP_SubView_c08.o TestOpenMP_SubView_c09.o
 	OBJ_OPENMP += TestOpenMP_SubView_c10.o TestOpenMP_SubView_c11.o TestOpenMP_SubView_c12.o
 	OBJ_OPENMP += TestOpenMP_SubView_c13.o
-endif
 	OBJ_OPENMP += TestOpenMP_Reductions.o TestOpenMP_Scan.o
 	OBJ_OPENMP += TestOpenMP_Complex.o
 	OBJ_OPENMP += TestOpenMP_AtomicOperations.o TestOpenMP_AtomicViews.o TestOpenMP_Atomics.o
@@ -226,14 +218,10 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
 	OBJ_QTHREADS = TestQthreads_Other.o TestQthreads_Reductions.o TestQthreads_Atomics.o TestQthreads_Team.o
 	OBJ_QTHREADS += TestQthreads_SubView_a.o TestQthreads_SubView_b.o
-ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-	OBJ_QTHREADS += TestQthreads_SubView_c_all.o
-else
 	OBJ_QTHREADS += TestQthreads_SubView_c01.o TestQthreads_SubView_c02.o TestQthreads_SubView_c03.o
 	OBJ_QTHREADS += TestQthreads_SubView_c04.o TestQthreads_SubView_c05.o TestQthreads_SubView_c06.o
 	OBJ_QTHREADS += TestQthreads_SubView_c07.o TestQthreads_SubView_c08.o TestQthreads_SubView_c09.o
 	OBJ_QTHREADS += TestQthreads_SubView_c10.o TestQthreads_SubView_c11.o TestQthreads_SubView_c12.o
-endif
 	OBJ_QTHREADS += TestQthreads_ViewAPI_a.o TestQthreads_ViewAPI_b.o UnitTestMain.o gtest-all.o
 	TARGETS += KokkosCore_UnitTest_Qthreads
 
@@ -252,16 +240,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
         OBJ_SERIAL += TestSerial_ViewAPI_b.o
         OBJ_SERIAL += TestSerial_ViewMapping_a.o TestSerial_ViewMapping_b.o TestSerial_ViewMapping_subview.o
         OBJ_SERIAL += TestSerial_ViewOfClass.o
-ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-	    OBJ_SERIAL += TestSerial_SubView_c_all.o
-else
         OBJ_SERIAL += TestSerial_SubView_a.o TestSerial_SubView_b.o
         OBJ_SERIAL += TestSerial_SubView_c01.o TestSerial_SubView_c02.o TestSerial_SubView_c03.o
         OBJ_SERIAL += TestSerial_SubView_c04.o TestSerial_SubView_c05.o TestSerial_SubView_c06.o
         OBJ_SERIAL += TestSerial_SubView_c07.o TestSerial_SubView_c08.o TestSerial_SubView_c09.o
         OBJ_SERIAL += TestSerial_SubView_c10.o TestSerial_SubView_c11.o TestSerial_SubView_c12.o
         OBJ_SERIAL += TestSerial_SubView_c13.o
-endif
         OBJ_SERIAL += TestSerial_Reductions.o TestSerial_Scan.o
         OBJ_SERIAL += TestSerial_Complex.o
         OBJ_SERIAL += TestSerial_AtomicOperations.o TestSerial_AtomicViews.o TestSerial_Atomics.o
