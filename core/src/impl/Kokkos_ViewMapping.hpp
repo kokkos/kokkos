@@ -3196,7 +3196,7 @@ struct OperatorBoundsErrorOnDevice< MapType, true > {
 KOKKOS_INLINE_FUNCTION
 static void run(MapType const& map) {
   SharedAllocationHeader const* const header =
-    SharedAllocationHeader::get_header(map.data());
+    SharedAllocationHeader::get_header((void*)(map.data()));
   char const* const label = header->label();
   enum { LEN = 128 };
   char msg[LEN];
