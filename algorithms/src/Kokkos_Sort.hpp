@@ -260,14 +260,14 @@ public:
   // Create the permutation vector, the bin_offset array and the bin_count array. Can be called again if keys changed
   void create_permute_vector() {
     const size_t len = range_end - range_begin ;
-    Kokkos::parallel_for (Kokkos::RangePolicy<execution_space,bin_count_tag>    (0,len),*this);
-    Kokkos::parallel_scan(Kokkos::RangePolicy<execution_space,bin_offset_tag>   (0,bin_op.max_bins()) ,*this);
+    Kokkos::parallel_for ("Kokkos::Sort::BinCount",Kokkos::RangePolicy<execution_space,bin_count_tag>    (0,len),*this);
+    Kokkos::parallel_scan("Kokkos::Sort::BinOffset",Kokkos::RangePolicy<execution_space,bin_offset_tag>   (0,bin_op.max_bins()) ,*this);
 
     Kokkos::deep_copy(bin_count_atomic,0);
-    Kokkos::parallel_for (Kokkos::RangePolicy<execution_space,bin_binning_tag>  (0,len),*this);
+    Kokkos::parallel_for ("Kokkos::Sort::BinBinning",Kokkos::RangePolicy<execution_space,bin_binning_tag>  (0,len),*this);
 
     if(sort_within_bins)
-      Kokkos::parallel_for (Kokkos::RangePolicy<execution_space,bin_sort_bins_tag>(0,bin_op.max_bins()) ,*this);
+      Kokkos::parallel_for ("Kokkos::Sort::BinSort",Kokkos::RangePolicy<execution_space,bin_sort_bins_tag>(0,bin_op.max_bins()) ,*this);
   }
 
   // Sort a subset of a view with respect to the first dimension using the permutation array
@@ -306,14 +306,14 @@ public:
                           >
         functor( sorted_values , sort_order , values, values_range_begin - range_begin );
 
-      parallel_for( Kokkos::RangePolicy<execution_space>(0,len),functor);
+      parallel_for("Kokkos::Sort::CopyPermute", Kokkos::RangePolicy<execution_space>(0,len),functor);
     }
 
     {
       copy_functor< ValuesViewType , scratch_view_type >
         functor( values , range_begin , sorted_values );
 
-      parallel_for( Kokkos::RangePolicy<execution_space>(0,len),functor);
+      parallel_for("Kokkos::Sort::Copy", Kokkos::RangePolicy<execution_space>(0,len),functor);
     }
   }
 
@@ -525,7 +525,7 @@ void sort( ViewType const & view , bool const always_use_kokkos_sort = false)
 
   Kokkos::Experimental::MinMaxScalar<typename ViewType::non_const_value_type> result;
   Kokkos::Experimental::MinMax<typename ViewType::non_const_value_type> reducer(result);
-  parallel_reduce(Kokkos::RangePolicy<typename ViewType::execution_space>(0,view.extent(0)),
+  parallel_reduce("Kokkos::Sort::FindExtent",Kokkos::RangePolicy<typename ViewType::execution_space>(0,view.extent(0)),
                   Impl::min_max_functor<ViewType>(view),reducer);
   if(result.min_val == result.max_val) return;
   BinSort<ViewType, CompType> bin_sort(view,CompType(view.extent(0)/2,result.min_val,result.max_val),true);
@@ -545,7 +545,7 @@ void sort( ViewType view
   Kokkos::Experimental::MinMaxScalar<typename ViewType::non_const_value_type> result;
   Kokkos::Experimental::MinMax<typename ViewType::non_const_value_type> reducer(result);
 
-  parallel_reduce( range_policy( begin , end )
+  parallel_reduce("Kokkos::Sort::FindExtent", range_policy( begin , end )
                  , Impl::min_max_functor<ViewType>(view),reducer );
 
   if(result.min_val == result.max_val) return;
