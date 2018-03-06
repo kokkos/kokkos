@@ -215,7 +215,7 @@ struct MDRangePolicy
             m_tile[i] = 2;
           }
           else {
-            m_tile[i] = span;
+            m_tile[i] = (span == 0 ? 1 : span);
           }
         }
         m_tile_end[i] = static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
