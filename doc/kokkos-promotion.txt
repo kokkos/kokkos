@@ -4,11 +4,13 @@ Summary:
 
 - Step 2: Testing of Kokkos integrated into Trilinos (scripts/trilinos-integration/*.sh)
 
-- Step 3: Locally update CHANGELOG, merge into master, edit scripts/master_history.txt
+- Step 3: Close all issues labeled "InDevelop"
 
-- Step 4: Locally snapshot new master into corresponding Trilinos branch (develop or temporary), push with checking-test-sems.sh
+- Step 4: Locally update CHANGELOG, merge into master, edit scripts/master_history.txt
 
-- Step 5: Push local Kokkos master to GitHub (need Owner approval)
+- Step 5: Locally snapshot new master into corresponding Trilinos branch (develop or temporary), push with checking-test-sems.sh
+
+- Step 6: Push local Kokkos master to GitHub (need Owner approval)
 
 Steps 1, 2, and 4 include testing that may fail. These failures must be fixed either by pull requests to Kokkos develop, or by creating a new Trilinos branch for parts of Trilinos that must be updated. This is what usually takes the most time.
 
@@ -50,35 +52,48 @@ Step 2:
 
 // -------------------------------------------------------------------------------- //
 
-Step 3: This step should be run on kokkos-dev
+Step 3: Close all issues labeled "InDevelop"
+      
+       Use the GitHub web interface: https://github.com/kokkos/kokkos/issues?q=is%3Aopen+is%3Aissue+label%3AInDevelop
+       Select all with checkbox in upper left, "Mark as closed" 
 
-  3.1. If you don't have a GitHub token already, generate one for yourself (this will give you TOKEN):
+// -------------------------------------------------------------------------------- //
+
+Step 4: This step should be run on kokkos-dev
+
+  4.1. If you don't have a GitHub token already, generate one for yourself (this will give you TOKEN):
 
        https://github.com/settings/tokens
 
-  3.2. Get a clean copy of the Kokkos develop branch
+  4.2. Get a clean copy of the Kokkos develop branch
 
        git clone -b develop git@github.com:kokkos/kokkos.git
        cd kokkos
 
-  3.3. Generate the initial changelog. Use the most recent tag as OLDTAG (`git tag -l` can show you all tags). The NEWTAG is the new version number, e.g. "2.04.00". RUN THIS OUTSIDE THE KOKKOS SOURCE TREE!
+  4.3. If you haven't already, install Ruby and the "github_changelog_generator" "gem"
+       The github_changelog_generator is here: https://github.com/skywinder/github-changelog-generator
+       Its compatible Ruby version can be found here: https://github.com/skywinder/github-changelog-generator/blob/master/.ruby-version
+       Grab the corresponding Ruby version from here: https://www.ruby-lang.org/en/downloads/
+       Follow the usual configure,make,make install process: https://www.ruby-lang.org/en/documentation/installation/#building-from-source
+       Note that you will likely have to install to a non-default location with "./configure --prefix=/path"
 
-       module load ruby/2.3.1/gcc/5.3.0
-       gitthub_changelog_generator kokkos/kokkos --token TOKEN --no-pull-requests --include-labels 'InDevelop' --enhancement-labels 'enhancement,Feature Request' --future-release 'NEWTAG' --between-tags 'NEWTAG,OLDTAG'
+  4.4. Generate the initial changelog. Use the most recent tag as OLDTAG (`git tag -l` can show you all tags). The NEWTAG is the new version number, e.g. "2.04.00". RUN THIS OUTSIDE THE KOKKOS SOURCE TREE!
+
+       gitthub_changelog_generator kokkos/kokkos --token TOKEN --no-pull-requests --include-labels 'InDevelop' --exclude-labels 'question' --enhancement-labels 'enhancement,Feature Request' --future-release 'NEWTAG' --between-tags 'NEWTAG,OLDTAG'
        cat CHANGELOG.md
 
-  3.4. Manually cleanup and commit the change log. Pushing to develop requires Owner permission.
+  4.5. Manually cleanup and commit the change log. Pushing to develop requires Owner permission.
        (Copy the new section from the generated CHANGELOG.md to KOKKOS_PATH/CHANGELOG.md)
        (Make desired changes to CHANGELOG.md to enhance clarity (remove issues not noteworthy))
        (Commit and push the CHANGELOG.md to develop)
 
-  3.5. Merge develop into master. DO NOT FAST-FORWARD THE MERGE!!!!
+  4.6. Merge develop into master. DO NOT FAST-FORWARD THE MERGE!!!!
 
        (From kokkos directory):
        git checkout master
        git merge --no-ff origin/develop
 
-  3.6. Update the tag in kokkos/scripts/master_history.txt
+  4.7. Update the tag in kokkos/scripts/master_history.txt
 
        Tag description: MajorNumber.MinorNumber.WeeksSinceMinorNumberUpdate
        Tag field widths: #.#.##
@@ -95,7 +110,7 @@ Step 3: This step should be run on kokkos-dev
        git commit --amend -a
 
 
-  3.7. Create the new tag:
+  4.8. Create the new tag:
 
        git tag -a #.#.##
 
@@ -105,36 +120,35 @@ Step 3: This step should be run on kokkos-dev
          master: sha1
          develop: sha1
 
-  3.8. DO NOT PUSH YET !!!
+  4.9. DO NOT PUSH YET !!!
 
 
 // -------------------------------------------------------------------------------- //
 
-Step 4: This step can be done on any SEMS machine (e.g. kokkos-dev). Actually, the checkin step requires lots of disk space and RAM. Use ceerws1113 if you have access to it.
+Step 5: This step can be done on any SEMS machine (e.g. kokkos-dev). Actually, the checkin step requires lots of disk space and RAM. Use ceerws1113 if you have access to it.
 
-  4.1 Clone the Trilinos corresponding branch (or just switch to it)
+  5.1 Clone the Trilinos corresponding branch (or just switch to it)
 
         git clone -b develop git@github.com:trilinos/Trilinos.git
         TRILINOS_PATH=$PWD/Trilinos
 
-  4.2 Snapshot Kokkos into Trilinos - this requires python/2.7.9 and that both Trilinos and Kokkos be clean - no untracked or modified files. Run the following outside of the Kokkos and Trilinos source trees.
+  5.2 Snapshot Kokkos into Trilinos - this requires python/2.7.9 and that both Trilinos and Kokkos be clean - no untracked or modified files. Run the following outside of the Kokkos and Trilinos source trees.
 
         module load sems-python/2.7.9
         python KOKKOS_PATH/scripts/snapshot.py KOKKOS_PATH TRILINOS_PATH/packages
 
-  4.3. Run checkin-test to push to trilinos using the CI build modules (gcc/4.9.3)
+  5.3. Run checkin-test to push to trilinos using the CI build modules (gcc/4.9.3)
 
        cd TRILINOS_PATH
        mkdir CHECKIN
        cd CHECKIN
        nohup ../cmake/std/sems/checkin-test-sems.sh --do-all --push &
 
-  4.4. If there are failures, fix and backtrack. Otherwise, go to next step
+  5.4. If there are failures, fix and backtrack. Otherwise, go to next step
 
 // -------------------------------------------------------------------------------- //
 
-Step 5: Push Kokkos master to GitHub (requires Owner permission).
+Step 6: Push Kokkos master to GitHub (requires Owner permission).
       
        cd KOKKOS_PATH
        git push --follow-tags origin master 
-
