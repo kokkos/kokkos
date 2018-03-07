@@ -6,3 +6,5 @@
 .*.swp
 .cproject
 .project
+testing/
+.settings/
