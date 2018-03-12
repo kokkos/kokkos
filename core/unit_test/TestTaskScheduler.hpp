@@ -149,8 +149,6 @@ struct TestFib
                          , std::min(size_t(MaxBlockSize),MemoryCapacity)
                          , std::min(size_t(SuperBlockSize),MemoryCapacity) );
 
-    using MemorySpace = typename Space::memory_space;
-
     future_type f = Kokkos::host_spawn( Kokkos::TaskSingle( root_sched )
                                       , TestFib( root_sched, i ) );
 
