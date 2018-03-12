@@ -84,11 +84,9 @@ struct TestFib
   future_type fib_m2;
   const value_type n;
 
-  Kokkos::MemoryPool<Space> memory_pool;
-
   KOKKOS_INLINE_FUNCTION
-  TestFib( const sched_type & arg_sched, const value_type arg_n, Kokkos::MemoryPool<Space> pool_in )
-    : sched( arg_sched ), fib_m1(), fib_m2(), n( arg_n ), memory_pool(pool_in) {}
+  TestFib( const sched_type & arg_sched, const value_type arg_n )
+    : sched( arg_sched ), fib_m1(), fib_m2(), n( arg_n ) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()( typename sched_type::member_type &, value_type & result )
@@ -109,10 +107,10 @@ struct TestFib
       // path to completion.
 
       fib_m2 = Kokkos::task_spawn( Kokkos::TaskSingle( sched, Kokkos::TaskPriority::High )
-                                 , TestFib( sched, n - 2, memory_pool ) );
+                                 , TestFib( sched, n - 2 ) );
 
       fib_m1 = Kokkos::task_spawn( Kokkos::TaskSingle( sched )
-                                 , TestFib( sched, n - 1, memory_pool ) );
+                                 , TestFib( sched, n - 1 ) );
 
       Kokkos::Future< Space > dep[] = { fib_m1, fib_m2 };
       Kokkos::Future< Space > fib_all = Kokkos::when_all( dep, 2 );
@@ -152,10 +150,9 @@ struct TestFib
                          , std::min(size_t(SuperBlockSize),MemoryCapacity) );
 
     using MemorySpace = typename Space::memory_space;
-    Kokkos::MemoryPool<Space> memory_pool_host( MemorySpace(), 10000, 100, 200, 1000);
 
     future_type f = Kokkos::host_spawn( Kokkos::TaskSingle( root_sched )
-                                      , TestFib( root_sched, i, memory_pool_host ) );
+                                      , TestFib( root_sched, i ) );
 
     Kokkos::wait( root_sched );
 
