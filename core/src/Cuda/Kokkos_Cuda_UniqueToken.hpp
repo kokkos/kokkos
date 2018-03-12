@@ -73,17 +73,33 @@ public:
   KOKKOS_INLINE_FUNCTION
   UniqueToken() : m_buffer(0), m_count(0) {}
 
-  KOKKOS_FUNCTION_DEFAULTED
-  UniqueToken( const UniqueToken & ) = default;
+  KOKKOS_INLINE_FUNCTION
+  UniqueToken( const UniqueToken & rhs )
+  : m_buffer(rhs.m_buffer)
+  , m_count(rhs.m_count)
+  {
+  }
 
-  KOKKOS_FUNCTION_DEFAULTED
-  UniqueToken( UniqueToken && )      = default;
+  KOKKOS_INLINE_FUNCTION
+  UniqueToken( UniqueToken && rhs )
+  : m_buffer(std::move(rhs.m_buffer))
+  , m_count(std::move(rhs.m_count))
+  {
+  }
 
-  KOKKOS_FUNCTION_DEFAULTED
-  UniqueToken & operator=( const UniqueToken & ) = default ;
+  KOKKOS_INLINE_FUNCTION
+  UniqueToken & operator=( const UniqueToken & rhs ) {
+    m_buffer = rhs.m_buffer;
+    m_count = rhs.m_count;
+    return *this;
+  }
 
-  KOKKOS_FUNCTION_DEFAULTED
-  UniqueToken & operator=( UniqueToken && ) = default ;
+  KOKKOS_INLINE_FUNCTION
+  UniqueToken & operator=( UniqueToken && rhs ) {
+    m_buffer = std::move(rhs.m_buffer);
+    m_count = std::move(rhs.m_count);
+    return *this;
+  }
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
