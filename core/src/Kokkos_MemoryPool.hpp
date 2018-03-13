@@ -293,6 +293,7 @@ public:
     m_sb_count = std::move(rhs.m_sb_count);
     m_hint_offset = std::move(rhs.m_hint_offset);
     m_data_offset = std::move(rhs.m_data_offset);
+    return *this;
   }
   KOKKOS_INLINE_FUNCTION MemoryPool & operator = ( const MemoryPool & rhs )
   {
@@ -305,6 +306,7 @@ public:
     m_sb_count = rhs.m_sb_count;
     m_hint_offset = rhs.m_hint_offset;
     m_data_offset = rhs.m_data_offset;
+    return *this;
   }
 
   KOKKOS_INLINE_FUNCTION MemoryPool()
