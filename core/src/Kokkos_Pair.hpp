@@ -79,7 +79,7 @@ struct pair
   /// compile if those default constructors are not defined and
   /// public.
   KOKKOS_FORCEINLINE_FUNCTION constexpr
-  pair() {}
+  pair() : first(), second() {}
 
   /// \brief Constructor that takes both elements of the pair.
   ///
