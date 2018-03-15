@@ -164,6 +164,12 @@
   #else // !defined(KOKKOS_ENABLE_CUDA_LAMBDA)
     #undef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
   #endif // !defined(KOKKOS_ENABLE_CUDA_LAMBDA)
+
+  #if ( 9000 <= CUDA_VERSION ) && ( CUDA_VERSION < 10000 )
+    // CUDA 9 introduced an incorrect warning,
+    // see https://github.com/kokkos/kokkos/issues/1470
+    #define KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
+  #endif
 #endif // #if defined( KOKKOS_ENABLE_CUDA ) && defined( __CUDACC__ )
 
 //----------------------------------------------------------------------------

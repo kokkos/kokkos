@@ -258,6 +258,7 @@ public:
 
   //--------------------------------------------------------------------------
 
+#ifdef KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
   KOKKOS_INLINE_FUNCTION MemoryPool( MemoryPool && rhs )
     : m_tracker(std::move(rhs.m_tracker))
     , m_sb_state_array(std::move(rhs.m_sb_state_array))
@@ -308,6 +309,12 @@ public:
     m_data_offset = rhs.m_data_offset;
     return *this;
   }
+#else
+  KOKKOS_INLINE_FUNCTION MemoryPool( MemoryPool && ) = default ;
+  KOKKOS_INLINE_FUNCTION MemoryPool( const MemoryPool & ) = default ;
+  KOKKOS_INLINE_FUNCTION MemoryPool & operator = ( MemoryPool && ) = default ;
+  KOKKOS_INLINE_FUNCTION MemoryPool & operator = ( const MemoryPool & ) = default ;
+#endif
 
   KOKKOS_INLINE_FUNCTION MemoryPool()
     : m_tracker()

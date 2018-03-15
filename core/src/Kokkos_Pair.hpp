@@ -79,7 +79,11 @@ struct pair
   /// compile if those default constructors are not defined and
   /// public.
   KOKKOS_FORCEINLINE_FUNCTION constexpr
+#ifdef KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
   pair() {}
+#else
+  pair() = default;
+#endif
 
   /// \brief Constructor that takes both elements of the pair.
   ///
@@ -459,7 +463,11 @@ struct pair<T1,void>
   enum { second = 0 };
 
   KOKKOS_FORCEINLINE_FUNCTION constexpr
+#ifdef KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
   pair() {}
+#else
+  pair() = default;
+#endif
 
   KOKKOS_FORCEINLINE_FUNCTION constexpr
   pair(const first_type & f)
