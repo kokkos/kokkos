@@ -510,6 +510,14 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     KOKKOS_LDFLAGS += --relocatable-device-code=true
   endif
 
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
+    ifeq ($(shell test $(KOKKOS_INTERNAL_COMPILER_NVCC_VERSION) -ge 90; echo $$?),0)
+      # This diagnostic is just plain wrong in CUDA 9
+      # See https://github.com/kokkos/kokkos/issues/1470
+      KOKKOS_CXXFLAGS += -Xcudafe --diag_suppress=esa_on_defaulted_function_ignored
+    endif
+  endif
+
   ifeq ($(KOKKOS_INTERNAL_CUDA_USE_LAMBDA), 1)
     ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
       ifeq ($(shell test $(KOKKOS_INTERNAL_COMPILER_NVCC_VERSION) -gt 70; echo $$?),0)
