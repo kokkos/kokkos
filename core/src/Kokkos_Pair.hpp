@@ -80,7 +80,7 @@ struct pair
   /// public.
   KOKKOS_FORCEINLINE_FUNCTION constexpr
 #ifdef KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
-  pair() {}
+  pair() : first(), second() {}
 #else
   pair() = default;
 #endif
