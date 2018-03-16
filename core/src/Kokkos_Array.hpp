@@ -55,7 +55,7 @@ namespace Kokkos {
  *         Dropping the iterator interface.
  */
 template< class T      = void
-        , size_t N     = ~size_t(0)
+        , size_t N     =KOKKOS_INVALID_INDEX
         , class Proxy  = void
         >
 struct Array {
@@ -179,7 +179,7 @@ struct Array<void,~size_t(0),void>
 };
 
 template< class T >
-struct Array< T , ~size_t(0) , Array<>::contiguous >
+struct Array< T ,KOKKOS_INVALID_INDEX , Array<>::contiguous >
 {
 private:
   T *    m_elem ;
@@ -251,7 +251,7 @@ public:
 };
 
 template< class T >
-struct Array< T , ~size_t(0) , Array<>::strided >
+struct Array< T ,KOKKOS_INVALID_INDEX , Array<>::strided >
 {
 private:
   T *    m_elem ;

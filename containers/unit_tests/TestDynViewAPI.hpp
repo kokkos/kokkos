@@ -1362,13 +1362,13 @@ public:
     ASSERT_EQ( dr5.rank() , 5 );
 
 // LayoutStride but arranged as LayoutRight
-  // NOTE: unused arg_layout dimensions must be set to ~size_t(0) so that 
+  // NOTE: unused arg_layout dimensions must be set toKOKKOS_INVALID_INDEX so that 
   //  rank deduction can properly take place
     unsigned order5[] = { 4,3,2,1,0 }, dimen5[] = { N0, N1, N2, 2, 2 };
     Kokkos::LayoutStride ls = Kokkos::LayoutStride::order_dimensions(5, order5, dimen5);
-    ls.dimension[5] = ~size_t(0);
-    ls.dimension[6] = ~size_t(0);
-    ls.dimension[7] = ~size_t(0);
+    ls.dimension[5] =KOKKOS_INVALID_INDEX;
+    ls.dimension[6] =KOKKOS_INVALID_INDEX;
+    ls.dimension[7] =KOKKOS_INVALID_INDEX;
     sdView d5("d5", ls);
     ASSERT_EQ( d5.rank() , 5 );
 
@@ -1381,7 +1381,7 @@ public:
 //
 //  Explanation: In construction of the Kokkos::LayoutStride below, since the 
 //   remaining dimensions are not specified, they will default to values of 0 
-//   rather than ~size_t(0). 
+//   rather thanKOKKOS_INVALID_INDEX. 
 //  When passed to the DynRankView constructor the default dimensions (of 0) 
 //   will be counted toward the dynamic rank and returning an incorrect value 
 //   (i.e. rank 7 rather than 5).
