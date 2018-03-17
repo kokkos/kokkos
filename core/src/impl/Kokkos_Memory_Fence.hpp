@@ -68,7 +68,7 @@ void memory_fence()
   #pragma omp flush
 #elif defined( KOKKOS_ENABLE_WINDOWS_ATOMICS )
   MemoryBarrier();
-#else
+#elif !defined( KOKKOS_ENABLE_SERIAL_ATOMICS )
  #error "Error: memory_fence() not defined"
 #endif
 }
