@@ -116,7 +116,7 @@ int bit_scan_forward( unsigned i )
 KOKKOS_FORCEINLINE_FUNCTION
 int bit_scan_reverse( unsigned i )
 {
-  enum { shift = static_cast<int>( sizeof(unsigned) * CHAR_BIT - 1 ) };
+  enum : int { shift = sizeof(unsigned) * CHAR_BIT - 1 };
 #if defined( __CUDA_ARCH__ )
   return shift - __clz(i);
 #elif defined( __HCC_ACCELERATOR__ )
