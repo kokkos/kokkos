@@ -46,7 +46,7 @@
 #include <impl/Kokkos_HostBarrier.hpp>
 #include <impl/Kokkos_BitOps.hpp>
 
-#include "Kokkos_HostBarrier.hpp"
+#include <impl/Kokkos_HostBarrier.hpp>
 
 #if !defined( _WIN32 )
   #include <sched.h>
@@ -59,7 +59,10 @@
 
 namespace Kokkos { namespace Impl {
 
-void HostBarrier::impl_backoff_wait_until_equal( int * ptr, const int v, const bool active_wait ) noexcept
+void HostBarrier::impl_backoff_wait_until_equal( int * ptr
+                                               , const int v
+                                               , const bool active_wait
+                                               ) noexcept
 {
   #if !defined( _WIN32 )
   timespec req ;
@@ -68,11 +71,11 @@ void HostBarrier::impl_backoff_wait_until_equal( int * ptr, const int v, const b
 
   while (!test_equal( ptr, v )) {
     const int c = bit_scan_reverse(++count);
-    if (c > log2_iterations_till_sleep) {
+    if ( !active_wait || c > log2_iterations_till_sleep) {
       req.tv_nsec = c < 16 ? 128*c : 2048;
       nanosleep( &req, nullptr );
     }
-    else if (!active_wait || c > log2_iterations_till_yield) {
+    else if (c > log2_iterations_till_yield) {
       sched_yield();
     }
     #if defined( KOKKOS_ENABLE_ASM )

@@ -78,12 +78,16 @@ public:
   static constexpr int required_buffer_size = 128;
 
 private:
+  // fit the following 3 atomics within a 128 bytes while
+  // keeping the arrive atomic at least 64 bytes away from
+  // the wait atomic to reduce contention on the caches
   static constexpr int arrive_idx = 32 / sizeof(int);
-  static constexpr int wait_idx   = 64 / sizeof(int);
-  static constexpr int master_idx = 96 / sizeof(int);
+  static constexpr int master_idx = 64 / sizeof(int);
+  static constexpr int wait_idx   = 96 / sizeof(int);
 
-  static constexpr int num_nops = 8;
-  static constexpr int iterations_till_nop = 3;
+
+  static constexpr int num_nops                   = 8;
+  static constexpr int iterations_till_nop        = 3;
   static constexpr int log2_iterations_till_yield = 8;
   static constexpr int log2_iterations_till_sleep = 10;
 
@@ -91,7 +95,15 @@ public:
 
   // will return true if call is the last thread to arrive
   KOKKOS_INLINE_FUNCTION
-  static bool split_arrive( int * buffer, const int size, int & step ) noexcept
+  static bool split_arrive( int * buffer
+                          , const int size
+                          , int & step
+                          #if !defined(__CUDA_ARCH__)
+                          , const bool master_wait = true
+                          #else
+                          , const bool = true
+                          #endif
+                          ) noexcept
   {
     if (size <= 1) return true;
 
@@ -99,19 +111,24 @@ public:
     Kokkos::memory_fence();
     const bool result = Kokkos::atomic_fetch_add( buffer + arrive_idx, 1 ) == size-1;
 
-    if (result) {
+    #if !defined(__CUDA_ARCH__)
+    if (master_wait && result) {
       Kokkos::atomic_fetch_add( buffer + master_idx, 1 );
       Kokkos::memory_fence();
     }
+    #endif
 
     return result;
   }
 
   // release waiting threads
-  // only the thread which recieved a return value of true from a split_arrive
-  // function can call split_release
+  // only the thread which recieved a return value of true from split_arrive
+  // or the thread which calls split_master_wait may call split_release
   KOKKOS_INLINE_FUNCTION
-  static void split_release( int * buffer, const int size, const int /*step*/ ) noexcept
+  static void split_release( int * buffer
+                           , const int size
+                           , const int /*step*/
+                           ) noexcept
   {
     if (size <= 1) return;
     Kokkos::memory_fence();
@@ -119,19 +136,26 @@ public:
     Kokkos::atomic_fetch_add( buffer + wait_idx, 1 );
   }
 
-  KOKKOS_INLINE_FUNCTION
+  #if !defined(__CUDA_ARCH__)
   // should only be called by the master thread, will allow the master thread to resume
   // after all threads have arrived
-  static void split_master_wait( int * buffer, const int size, const int step, const bool active_wait = true) noexcept
+  static void split_master_wait( int * buffer
+                               , const int size
+                               , const int step
+                               , const bool active_wait = true
+                               ) noexcept
   {
     if (size <= 1) return;
     wait_until_equal( buffer + master_idx, step, active_wait );
   }
-
+  #endif
 
   // arrive, last thread automatically release waiting threads
   KOKKOS_INLINE_FUNCTION
-  static void arrive( int * buffer, const int size, int & step ) noexcept
+  static void arrive( int * buffer
+                    , const int size
+                    , int & step
+                    ) noexcept
   {
     if (size <= 1) return;
     if (split_arrive(buffer, size, step)) {
@@ -141,7 +165,10 @@ public:
 
   // test if all threads have arrived
   KOKKOS_INLINE_FUNCTION
-  static bool try_wait( int * buffer, const int size, const int step ) noexcept
+  static bool try_wait( int * buffer
+                      , const int size
+                      , const int step
+                      ) noexcept
   {
     if (size <= 1) return true;
     return test_equal( buffer + wait_idx, step );
@@ -149,7 +176,11 @@ public:
 
   // wait for all threads to arrive
   KOKKOS_INLINE_FUNCTION
-  static void wait( int * buffer, const int size, const int step, bool active_wait = true ) noexcept
+  static void wait( int * buffer
+                  , const int size
+                  , const int step
+                  , bool active_wait = true
+                  ) noexcept
   {
     if (size <= 1) return;
     wait_until_equal( buffer + wait_idx, step, active_wait );
@@ -158,9 +189,9 @@ public:
 public:
 
   KOKKOS_INLINE_FUNCTION
-  bool split_arrive() const noexcept
+  bool split_arrive( const bool master_wait = true ) const noexcept
   {
-    return split_arrive( m_buffer, m_size, m_step );
+    return split_arrive( m_buffer, m_size, m_step, master_wait );
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -219,7 +250,10 @@ private:
   }
 
   KOKKOS_INLINE_FUNCTION
-  static void wait_until_equal( int * ptr, const int v, bool active_wait ) noexcept
+  static void wait_until_equal( int * ptr
+                              , const int v
+                              , bool active_wait = true
+                              ) noexcept
   {
     #if !defined( __CUDA_ARCH__ )
     bool result = test_equal( ptr, v );
@@ -259,7 +293,10 @@ private:
     #endif
   }
 
-  static void impl_backoff_wait_until_equal( int * ptr, const int v, const bool active_wait ) noexcept;
+  static void impl_backoff_wait_until_equal( int * ptr
+                                           , const int v
+                                           , const bool active_wait
+                                           ) noexcept;
 
 private:
   int         m_size;
