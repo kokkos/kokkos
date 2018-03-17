@@ -224,6 +224,10 @@ public:
     wait( m_buffer, m_size, m_step );
   }
 
+  HostBarrier()                             = default;
+  HostBarrier( HostBarrier && )             = default;
+  HostBarrier & operator=( HostBarrier && ) = default;
+
   KOKKOS_INLINE_FUNCTION
   HostBarrier( int size, int * buffer )
     : m_size{size}
@@ -231,12 +235,8 @@ public:
     , m_buffer{ buffer }
   {}
 
-  HostBarrier()                       = delete;
-  HostBarrier( const HostBarrier &  ) = delete;
-  HostBarrier(       HostBarrier && ) = delete;
-
+  HostBarrier( const HostBarrier &  )             = delete;
   HostBarrier & operator=( const HostBarrier &  ) = delete;
-  HostBarrier & operator=(       HostBarrier && ) = delete;
 
 private:
   KOKKOS_INLINE_FUNCTION
@@ -299,9 +299,9 @@ private:
                                            ) noexcept;
 
 private:
-  int         m_size;
-  mutable int m_step;
-  int *       m_buffer;
+  int         m_size   {0};
+  mutable int m_step   {0};
+  int *       m_buffer {nullptr};
 };
 
 }} // namespace Kokkos::Impl
