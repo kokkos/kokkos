@@ -74,7 +74,12 @@ KOKKOS_INTERNAL_USE_OPENMPTARGET := $(call kokkos_has_string,$(KOKKOS_DEVICES),O
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   KOKKOS_INTERNAL_NVCC_PATH := $(shell which nvcc)
-  CUDA_PATH ?= $(KOKKOS_INTERNAL_NVCC_PATH:/bin/nvcc=)
+  ifeq ($(origin CUDA_PATH), undefined)
+    CUDA_PATH = $(KOKKOS_INTERNAL_NVCC_PATH:/bin/nvcc=)
+  endif
+  ifeq ($(CUDA_PATH),)
+    CUDA_PATH = $(KOKKOS_INTERNAL_NVCC_PATH:/bin/nvcc=)
+  endif
   KOKKOS_INTERNAL_COMPILER_NVCC_VERSION := $(shell nvcc --version 2>&1 | grep release | cut -d' ' -f5 | cut -d',' -f1 | tr -d .)
 endif
 
