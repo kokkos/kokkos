@@ -75,7 +75,9 @@ namespace Kokkos { namespace Impl {
 class HostBarrier
 {
 public:
-  static constexpr int required_buffer_size = 128;
+  using buffer_type = int;
+  static constexpr int required_buffer_size   = 128;
+  static constexpr int required_buffer_length = required_buffer_size / sizeof(int);
 
 private:
   // fit the following 3 atomics within a 128 bytes while
@@ -87,6 +89,7 @@ private:
 
 
   static constexpr int num_nops                   = 8;
+  static constexpr int iterations_till_backoff    = 8;
   static constexpr int iterations_till_nop        = 3;
   static constexpr int log2_iterations_till_yield = 8;
   static constexpr int log2_iterations_till_sleep = 10;
@@ -114,7 +117,6 @@ public:
     #if !defined(__CUDA_ARCH__)
     if (master_wait && result) {
       Kokkos::atomic_fetch_add( buffer + master_idx, 1 );
-      Kokkos::memory_fence();
     }
     #endif
 
@@ -122,7 +124,7 @@ public:
   }
 
   // release waiting threads
-  // only the thread which recieved a return value of true from split_arrive
+  // only the thread which received a return value of true from split_arrive
   // or the thread which calls split_master_wait may call split_release
   KOKKOS_INLINE_FUNCTION
   static void split_release( int * buffer
@@ -257,7 +259,7 @@ private:
   {
     #if !defined( __CUDA_ARCH__ )
     bool result = test_equal( ptr, v );
-    for (int i=0; !result && i<8; ++i) {
+    for (int i=0; !result && i < iterations_till_backoff; ++i) {
       #if defined( KOKKOS_ENABLE_ASM )
       #if   defined( _WIN32 )
       if (i > iterations_till_nop) {
@@ -267,7 +269,7 @@ private:
       }
       __asm__ __volatile__( "pause\n":::"memory" );
       #elif defined( __PPC64__ )
-      if (i > 3) {
+      if (i > iterations_till_nop) {
         for (int j=0; j<num_nops; ++j) {
           asm volatile( "nop\n" );
         }
@@ -275,7 +277,7 @@ private:
       asm volatile( "or 27, 27, 27" ::: "memory" );
       #elif defined( __amd64 ) || defined( __amd64__ ) || \
             defined( __x86_64 ) || defined( __x86_64__ )
-      if (i > 3) {
+      if (i > iterations_till_nop) {
         for (int j=0; j<num_nops; ++j) {
           asm volatile( "nop\n" );
         }
