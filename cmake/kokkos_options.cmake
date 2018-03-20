@@ -103,6 +103,8 @@ list(APPEND KOKKOS_ARCH_LIST
      Maxwell53       # (GPU) NVIDIA Maxwell generation CC 5.3
      Pascal60        # (GPU) NVIDIA Pascal generation CC 6.0
      Pascal61        # (GPU) NVIDIA Pascal generation CC 6.1
+     Volta70         # (GPU) NVIDIA Volta generation CC 7.0
+     Volta72         # (GPU) NVIDIA Volta generation CC 7.2
     )
 
 # List of possible device architectures.
