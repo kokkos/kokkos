@@ -101,11 +101,7 @@ public:
   static bool split_arrive( int * buffer
                           , const int size
                           , int & step
-                          #if !defined(__CUDA_ARCH__)
                           , const bool master_wait = true
-                          #else
-                          , const bool = true
-                          #endif
                           ) noexcept
   {
     if (size <= 1) return true;
@@ -114,11 +110,9 @@ public:
     Kokkos::memory_fence();
     const bool result = Kokkos::atomic_fetch_add( buffer + arrive_idx, 1 ) == size-1;
 
-    #if !defined(__CUDA_ARCH__)
     if (master_wait && result) {
       Kokkos::atomic_fetch_add( buffer + master_idx, 1 );
     }
-    #endif
 
     return result;
   }
@@ -138,9 +132,9 @@ public:
     Kokkos::atomic_fetch_add( buffer + wait_idx, 1 );
   }
 
-  #if !defined(__CUDA_ARCH__)
   // should only be called by the master thread, will allow the master thread to resume
   // after all threads have arrived
+  KOKKOS_INLINE_FUNCTION
   static void split_master_wait( int * buffer
                                , const int size
                                , const int step
@@ -150,7 +144,6 @@ public:
     if (size <= 1) return;
     wait_until_equal( buffer + master_idx, step, active_wait );
   }
-  #endif
 
   // arrive, last thread automatically release waiting threads
   KOKKOS_INLINE_FUNCTION
@@ -205,7 +198,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   void split_master_wait( const bool active_wait = true) noexcept
   {
-    split_master_wait( m_buffer, m_size, active_wait );
+    split_master_wait( m_buffer, m_size, m_step,  active_wait );
   }
 
   KOKKOS_INLINE_FUNCTION
