@@ -72,7 +72,7 @@ void HostBarrier::impl_backoff_wait_until_equal( int * ptr
   while (!test_equal( ptr, v )) {
     const int c = bit_scan_reverse(++count);
     if ( !active_wait || c > log2_iterations_till_sleep) {
-      req.tv_nsec = c < 16 ? 128*c : 2048;
+      req.tv_nsec = c < 16 ? 256*c : 4096;
       nanosleep( &req, nullptr );
     }
     else if (c > log2_iterations_till_yield) {
@@ -103,6 +103,7 @@ void HostBarrier::impl_backoff_wait_until_equal( int * ptr
     #endif
   }
   #endif
+  //printf("W: %d\n", count);
 }
 
 }} // namespace Kokkos::Impl

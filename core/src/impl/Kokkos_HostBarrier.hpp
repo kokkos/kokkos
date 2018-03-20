@@ -88,11 +88,10 @@ private:
   static constexpr int wait_idx   = 96 / sizeof(int);
 
 
-  static constexpr int num_nops                   = 8;
-  static constexpr int iterations_till_backoff    = 8;
-  static constexpr int iterations_till_nop        = 3;
-  static constexpr int log2_iterations_till_yield = 8;
-  static constexpr int log2_iterations_till_sleep = 10;
+  static constexpr int num_nops                   = 32;
+  static constexpr int iterations_till_backoff    = 64;
+  static constexpr int log2_iterations_till_yield = 4;
+  static constexpr int log2_iterations_till_sleep = 6;
 
 public:
 
@@ -255,25 +254,19 @@ private:
     for (int i=0; !result && i < iterations_till_backoff; ++i) {
       #if defined( KOKKOS_ENABLE_ASM )
       #if   defined( _WIN32 )
-      if (i > iterations_till_nop) {
-        for (int j=0; j<num_nops; ++j) {
-          __asm__ __volatile__( "nop\n" );
-        }
+      for (int j=0; j<num_nops; ++j) {
+        __asm__ __volatile__( "nop\n" );
       }
       __asm__ __volatile__( "pause\n":::"memory" );
       #elif defined( __PPC64__ )
-      if (i > iterations_till_nop) {
-        for (int j=0; j<num_nops; ++j) {
-          asm volatile( "nop\n" );
-        }
+      for (int j=0; j<num_nops; ++j) {
+        asm volatile( "nop\n" );
       }
       asm volatile( "or 27, 27, 27" ::: "memory" );
       #elif defined( __amd64 ) || defined( __amd64__ ) || \
             defined( __x86_64 ) || defined( __x86_64__ )
-      if (i > iterations_till_nop) {
-        for (int j=0; j<num_nops; ++j) {
-          asm volatile( "nop\n" );
-        }
+      for (int j=0; j<num_nops; ++j) {
+        asm volatile( "nop\n" );
       }
       asm volatile( "pause\n":::"memory" );
       #endif
