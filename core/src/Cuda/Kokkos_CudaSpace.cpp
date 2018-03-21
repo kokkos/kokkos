@@ -650,7 +650,6 @@ SharedAllocationRecord< Kokkos::CudaSpace , void >::get_record( void * alloc_ptr
   using RecordBase = SharedAllocationRecord< void , void > ;
   using RecordCuda = SharedAllocationRecord< Kokkos::CudaSpace , void > ;
 
-#if 0
   using Header     = SharedAllocationHeader ;
 
   // Copy the header from the allocation
@@ -667,19 +666,6 @@ SharedAllocationRecord< Kokkos::CudaSpace , void >::get_record( void * alloc_ptr
   if ( ! alloc_ptr || record->m_alloc_ptr != head_cuda ) {
     Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void >::get_record ERROR" ) );
   }
-
-#else
-
-  // Iterate the list to search for the record among all allocations
-  // requires obtaining the root of the list and then locking the list.
-
-  RecordCuda * const record = static_cast< RecordCuda * >( RecordBase::find( & s_root_record , alloc_ptr ) );
-
-  if ( record == 0 ) {
-    Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void >::get_record ERROR" ) );
-  }
-
-#endif
 
   return record ;
 }
