@@ -496,6 +496,96 @@ void parallel_scan( const std::string& str
   (void) str;
 }
 
+//VINH DANG -- Adding the following for returning final scan result
+template< class ExecutionPolicy , class FunctorType, class ReturnType >
+inline
+void parallel_scan( const ExecutionPolicy & policy
+                  , const FunctorType     & functor
+                  , const std::string& str = ""
+                  , typename Impl::enable_if< ! Impl::is_integral< ExecutionPolicy >::value >::type * = 0
+                  , ReturnType        & return_value=0
+                  )
+{
+#if defined(KOKKOS_ENABLE_PROFILING)
+  uint64_t kpID = 0;
+  if(Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Impl::ParallelConstructName<FunctorType, typename ExecutionPolicy::work_tag> name(str);
+    Kokkos::Profiling::beginParallelScan(name.get(), 0, &kpID);
+  }
+#endif
+
+  Kokkos::Impl::shared_allocation_tracking_disable();
+  Impl::ParallelScan_< FunctorType , ExecutionPolicy, ReturnType > closure( functor, policy, return_value );
+  Kokkos::Impl::shared_allocation_tracking_enable();
+
+  closure.execute();
+
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if(Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::endParallelScan(kpID);
+  }
+#endif
+
+}
+
+template< class FunctorType, class ReturnType >
+inline
+void parallel_scan( const size_t        work_count
+                  , const FunctorType & functor
+                  , const std::string & str = ""
+                  , ReturnType        & return_value=0 )
+{
+  typedef typename
+    Kokkos::Impl::FunctorPolicyExecutionSpace< FunctorType , void >::execution_space
+      execution_space ;
+
+  typedef Kokkos::RangePolicy< execution_space > policy ;
+
+#if defined(KOKKOS_ENABLE_PROFILING)
+  uint64_t kpID = 0;
+  if(Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Impl::ParallelConstructName<FunctorType, void> name(str);
+    Kokkos::Profiling::beginParallelScan(name.get(), 0, &kpID);
+  }
+#endif
+
+  Kokkos::Impl::shared_allocation_tracking_disable();
+  Impl::ParallelScan_< FunctorType, policy, ReturnType > closure( functor, policy(0,work_count), return_value );
+  Kokkos::Impl::shared_allocation_tracking_enable();
+
+  closure.execute();
+
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if(Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::endParallelScan(kpID);
+  }
+#endif
+
+}
+
+template< class ExecutionPolicy, class FunctorType, class ReturnType >
+inline
+void parallel_scan( const std::string& str
+                  , const ExecutionPolicy & policy
+                  , const FunctorType     & functor
+                  , ReturnType            & return_value)
+{
+  #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
+  Kokkos::fence();
+  std::cout << "KOKKOS_DEBUG Start parallel_scan kernel: " << str << std::endl;
+  #endif
+
+  ::Kokkos::parallel_scan(policy,functor,str,return_value);
+
+  #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
+  Kokkos::fence();
+  std::cout << "KOKKOS_DEBUG End parallel_scan kernel: " << str << std::endl;
+  #endif
+  (void) str;
+}
+//VINH DANG -- End of Adding
+
+
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------

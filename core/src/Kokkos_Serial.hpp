@@ -634,6 +634,90 @@ public:
     {}
 };
 
+/*--------------------------------------------------------------------------*/
+//VINH DANG -- Adding the following for returning final scan result
+template< class FunctorType , class ReturnType, class ... Traits >
+class ParallelScan_< FunctorType
+                  , Kokkos::RangePolicy< Traits ... >
+                  , ReturnType
+                  >
+{
+private:
+
+  typedef Kokkos::RangePolicy< Traits ... > Policy ;
+  typedef typename Policy::work_tag                                  WorkTag ;
+
+  typedef FunctorAnalysis< FunctorPatternInterface::SCAN , Policy , FunctorType > Analysis ;
+
+  typedef Kokkos::Impl::FunctorValueInit<   FunctorType , WorkTag >  ValueInit ;
+
+  typedef typename Analysis::pointer_type    pointer_type ;
+  typedef typename Analysis::reference_type  reference_type ;
+
+  const FunctorType   m_functor ;
+  const Policy        m_policy ;
+  ReturnType & m_returnvalue; ;
+
+  template< class TagType >
+  inline
+  typename std::enable_if< std::is_same< TagType , void >::value >::type
+  exec( reference_type update ) const
+    {
+      const typename Policy::member_type e = m_policy.end();
+      for ( typename Policy::member_type i = m_policy.begin() ; i < e ; ++i ) {
+        m_functor( i , update , true );
+      }
+    }
+
+  template< class TagType >
+  inline
+  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
+  exec( reference_type update ) const
+    {
+      const TagType t{} ;
+      const typename Policy::member_type e = m_policy.end();
+      for ( typename Policy::member_type i = m_policy.begin() ; i < e ; ++i ) {
+        m_functor( t , i , update , true );
+      }
+    }
+
+public:
+
+  inline
+  void execute()
+    {
+      const size_t pool_reduce_size = Analysis::value_size( m_functor );
+      const size_t team_reduce_size  = 0 ; // Never shrinks
+      const size_t team_shared_size  = 0 ; // Never shrinks
+      const size_t thread_local_size = 0 ; // Never shrinks
+
+     serial_resize_thread_team_data( pool_reduce_size
+                                    , team_reduce_size
+                                    , team_shared_size
+                                    , thread_local_size );
+
+      HostThreadTeamData & data = *serial_get_thread_team_data();
+
+      reference_type update =
+        ValueInit::init( m_functor , pointer_type(data.pool_reduce_local()) );
+
+      this-> template exec< WorkTag >( update );
+
+      m_returnvalue = update;
+    }
+
+  inline
+  ParallelScan_( const FunctorType & arg_functor
+              , const Policy      & arg_policy
+              , ReturnType        & arg_returnvalue
+              )
+    : m_functor( arg_functor )
+    , m_policy(  arg_policy )
+    , m_returnvalue(  arg_returnvalue )
+    {}
+};
+//VINH DANG -- End of Adding
+
 } // namespace Impl
 } // namespace Kokkos
 
