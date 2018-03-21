@@ -207,7 +207,14 @@ decrement( SharedAllocationRecord< void , void > * arg_record )
 
   if ( old_count == 1 ) {
 
-    // TODO: check Kokkos::is_initialized()
+    if (!Kokkos::is_initialized()) {
+      std::stringstream ss;
+      ss << "Kokkos allocation \"";
+      ss << arg_record->get_label();
+      ss << "\" is being deallocated after Kokkos::finalize was called\n";
+      auto s = ss.str();
+      Kokkos::Impl::throw_runtime_exception(s);
+    }
 
 #ifdef KOKKOS_DEBUG
     // before:  arg_record->m_prev->m_next == arg_record  &&
