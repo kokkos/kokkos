@@ -197,14 +197,6 @@ decrement( SharedAllocationRecord< void , void > * arg_record )
 
   const int old_count = Kokkos::atomic_fetch_add( & arg_record->m_count , -1 );
 
-#if 0
-  if ( old_count <= 1 ) {
-    fprintf(stderr,"Kokkos::Impl::SharedAllocationRecord '%s' at 0x%lx delete count = %d\n", arg_record->m_alloc_ptr->m_label , (unsigned long) arg_record , old_count );
-    fflush(stderr);
-  }
-#endif
-
-
   if ( old_count == 1 ) {
 
     // before:  arg_record->m_prev->m_next == arg_record  &&
