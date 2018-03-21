@@ -117,7 +117,7 @@ private:
   static __thread int t_tracking_enabled;
 
 public:
-  inline std::string get_label() const { return std::string("Unmanaged"); }
+  virtual std::string get_label() const { return std::string("Unmanaged"); }
 
   static int tracking_enabled() { return t_tracking_enabled; }
 
@@ -131,7 +131,7 @@ public:
    */
   static void tracking_enable() { t_tracking_enabled = 1; }
 
-  ~SharedAllocationRecord() = default ;
+  virtual ~SharedAllocationRecord() = default ;
 
   SharedAllocationRecord()
     : m_alloc_ptr( 0 )
