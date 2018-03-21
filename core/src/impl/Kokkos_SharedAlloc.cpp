@@ -203,7 +203,7 @@ SharedAllocationRecord< void , void > *
 SharedAllocationRecord< void , void >::
 decrement( SharedAllocationRecord< void , void > * arg_record )
 {
-  const int old_count = Kokkos::atomic_fetch_add( & arg_record->m_count , -1 );
+  const int old_count = Kokkos::atomic_fetch_sub( & arg_record->m_count , 1 );
 
   if ( old_count == 1 ) {
 
