@@ -104,7 +104,8 @@ struct find_2_tuples {
 
 int main(int narg, char* args[]) {
   Kokkos::initialize(narg,args);
-  
+
+  {
   int chunk_size = 1024;
   int nchunks = 100000; //1024*1024;
   Kokkos::DualView<int*> data("data",nchunks*chunk_size+1);
@@ -139,6 +140,7 @@ int main(int narg, char* args[]) {
     printf("\n");
   }
   printf("Result: %i %i\n",sum,chunk_size*nchunks);
+  }
   Kokkos::finalize();
 }
 
