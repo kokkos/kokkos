@@ -1151,7 +1151,7 @@ struct TestViewMapOperator {
  #else
   TestViewMapOperator() {
 
-    const size_t dyn_rank = v.traits::rank_dynamic;
+    const size_t dyn_rank = v.rank_dynamic;
     const std::string label("Test");
     switch(dyn_rank) {
       case 0:
