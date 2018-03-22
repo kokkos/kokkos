@@ -2551,14 +2551,14 @@ create_mirror( const Kokkos::View<T,P...> & src
                    , src.extent(6)
                    , src.extent(7) );
 #else
-                 , src.traits::rank_dynamic > 0 ? src.extent(0): KOKKOS_CTOR_DEFAULT_ARG
-                 , src.traits::rank_dynamic > 1 ? src.extent(1): KOKKOS_CTOR_DEFAULT_ARG
-                 , src.traits::rank_dynamic > 2 ? src.extent(2): KOKKOS_CTOR_DEFAULT_ARG
-                 , src.traits::rank_dynamic > 3 ? src.extent(3): KOKKOS_CTOR_DEFAULT_ARG
-                 , src.traits::rank_dynamic > 4 ? src.extent(4): KOKKOS_CTOR_DEFAULT_ARG
-                 , src.traits::rank_dynamic > 5 ? src.extent(5): KOKKOS_CTOR_DEFAULT_ARG
-                 , src.traits::rank_dynamic > 6 ? src.extent(6): KOKKOS_CTOR_DEFAULT_ARG
-                 , src.traits::rank_dynamic > 7 ? src.extent(7): KOKKOS_CTOR_DEFAULT_ARG );
+                 , src.rank_dynamic > 0 ? src.extent(0): KOKKOS_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 1 ? src.extent(1): KOKKOS_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 2 ? src.extent(2): KOKKOS_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 3 ? src.extent(3): KOKKOS_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 4 ? src.extent(4): KOKKOS_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 5 ? src.extent(5): KOKKOS_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 6 ? src.extent(6): KOKKOS_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 7 ? src.extent(7): KOKKOS_CTOR_DEFAULT_ARG );
 #endif
 }
 
