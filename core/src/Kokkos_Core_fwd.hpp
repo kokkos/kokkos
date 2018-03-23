@@ -285,7 +285,7 @@ template< class FunctorType, class ExecPolicy, class ExecutionSapce =
 
 template< class FunctorType, class ExecPolicy, class ReturnType = InvalidType, class ExecutionSapce =
           typename Impl::FunctorPolicyExecutionSpace< FunctorType, ExecPolicy >::execution_space
-        > class ParallelScan_;//VINH DANG -- Adding class ParallelScan_ for returning final scan result
+        > class ParallelScanWithTotal;//VINH DANG -- Adding class ParallelScan_ for returning final scan result
 
 } // namespace Impl
 

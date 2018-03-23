@@ -751,7 +751,7 @@ public:
 
 //VINH DANG -- Adding the following for returning final scan result
 template< class FunctorType, class ReturnType, class ... Traits >
-class ParallelScan_< FunctorType
+class ParallelScanWithTotal< FunctorType
                   , Kokkos::RangePolicy< Traits ... >
                   , ReturnType
                   , Kokkos::OpenMP
@@ -777,7 +777,7 @@ private:
         OpenMPExec   * m_instance;
   const FunctorType    m_functor;
   const Policy         m_policy;
-  ReturnType         & m_returnvalue;
+        ReturnType   & m_returnvalue;
 
   template< class TagType >
   inline static
@@ -829,7 +829,7 @@ public:
         reference_type update_sum =
           ValueInit::init( m_functor , data.pool_reduce_local() );
 
-        ParallelScan_::template exec_range< WorkTag >
+        ParallelScanWithTotal::template exec_range< WorkTag >
           ( m_functor , range.begin() , range.end() , update_sum , false );
 
         if ( data.pool_rendezvous() ) {
@@ -863,7 +863,7 @@ public:
           ValueOps::reference
             ( ((pointer_type)data.pool_reduce_local()) + value_count );
 
-        ParallelScan_::template exec_range< WorkTag >
+        ParallelScanWithTotal::template exec_range< WorkTag >
           ( m_functor , range.begin() , range.end() , update_base , true );
 
         if (omp_get_thread_num()==omp_get_num_threads()-1) {
@@ -876,7 +876,7 @@ public:
   //----------------------------------------
 
   inline
-  ParallelScan_( const FunctorType & arg_functor
+  ParallelScanWithTotal( const FunctorType & arg_functor
               , const Policy      & arg_policy
               , ReturnType        & arg_returnvalue )
     : m_instance( t_openmp_instance )

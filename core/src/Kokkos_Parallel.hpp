@@ -515,7 +515,7 @@ void parallel_scan( const ExecutionPolicy & policy
 #endif
 
   Kokkos::Impl::shared_allocation_tracking_disable();
-  Impl::ParallelScan_< FunctorType , ExecutionPolicy, ReturnType > closure( functor, policy, return_value );
+  Impl::ParallelScanWithTotal< FunctorType , ExecutionPolicy, ReturnType > closure( functor, policy, return_value );
   Kokkos::Impl::shared_allocation_tracking_enable();
 
   closure.execute();
@@ -550,7 +550,7 @@ void parallel_scan( const size_t        work_count
 #endif
 
   Kokkos::Impl::shared_allocation_tracking_disable();
-  Impl::ParallelScan_< FunctorType, policy, ReturnType > closure( functor, policy(0,work_count), return_value );
+  Impl::ParallelScanWithTotal< FunctorType, policy, ReturnType > closure( functor, policy(0,work_count), return_value );
   Kokkos::Impl::shared_allocation_tracking_enable();
 
   closure.execute();
