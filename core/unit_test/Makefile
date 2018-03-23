@@ -106,7 +106,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
 # compile fails
 #        OBJ_ROCM += TestROCm_TeamReductionScan.o
 # compile fails
-#        OBJ_ROCM += TestROCm_TeamScratch.o
+        OBJ_ROCM += TestROCm_TeamScratch.o
         OBJ_ROCM += TestROCm_ViewAPI_b.o
         OBJ_ROCM += TestROCm_ViewMapping_a.o
         OBJ_ROCM += TestROCm_ViewMapping_b.o
