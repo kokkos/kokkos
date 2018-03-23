@@ -501,9 +501,9 @@ template< class ExecutionPolicy , class FunctorType, class ReturnType >
 inline
 void parallel_scan( const ExecutionPolicy & policy
                   , const FunctorType     & functor
+                  , ReturnType        & return_value
                   , const std::string& str = ""
                   , typename Impl::enable_if< ! Impl::is_integral< ExecutionPolicy >::value >::type * = 0
-                  , ReturnType        & return_value=0
                   )
 {
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -532,8 +532,8 @@ template< class FunctorType, class ReturnType >
 inline
 void parallel_scan( const size_t        work_count
                   , const FunctorType & functor
-                  , const std::string & str = ""
-                  , ReturnType        & return_value=0 )
+                  , ReturnType        & return_value
+                  , const std::string & str = "" )
 {
   typedef typename
     Kokkos::Impl::FunctorPolicyExecutionSpace< FunctorType , void >::execution_space
@@ -575,7 +575,7 @@ void parallel_scan( const std::string& str
   std::cout << "KOKKOS_DEBUG Start parallel_scan kernel: " << str << std::endl;
   #endif
 
-  ::Kokkos::parallel_scan(policy,functor,str,return_value);
+  ::Kokkos::parallel_scan(policy,functor,return_value,str);
 
   #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
   Kokkos::fence();
