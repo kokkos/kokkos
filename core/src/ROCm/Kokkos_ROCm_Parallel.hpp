@@ -197,14 +197,14 @@ public:
   KOKKOS_INLINE_FUNCTION static
   int team_size_max( const Functor_Type & functor)
   {
-    typedef typename Kokkos::Impl::FunctorValueTraits<Functor_Type, void>::value_type value_type;
+    typedef typename Kokkos::Impl::FunctorValueTraits<Functor_Type, typename traits::work_tag>::value_type value_type;
     return team_size_recommended(functor);
     // return std::min(Kokkos::Impl::get_max_tile_size() / sizeof(value_type), Kokkos::Impl::get_max_tile_thread());
   }
 
   template< class Functor_Type>
   KOKKOS_INLINE_FUNCTION static int team_size_recommended(const Functor_Type & functor)
-  { return Kokkos::Impl::get_tile_size<typename Kokkos::Impl::FunctorValueTraits<Functor_Type, void>::value_type>(); }
+  { return Kokkos::Impl::get_tile_size<typename Kokkos::Impl::FunctorValueTraits<Functor_Type, typename traits::work_tag>::value_type>(); }
 
   template< class Functor_Type >
   KOKKOS_INLINE_FUNCTION static int team_size_recommended(const Functor_Type &functor, const int vector_length)
