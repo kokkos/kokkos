@@ -1560,14 +1560,14 @@ typename std::enable_if<
   std::is_same<typename Kokkos::View<T,P...>::array_layout,Kokkos::LayoutRight>::value
 >::type
 resize( Kokkos::View<T,P...> & v ,
-             const size_t n0 = KOKKOS_CTOR_DEFAULT_ARG ,
-             const size_t n1 = KOKKOS_CTOR_DEFAULT_ARG ,
-             const size_t n2 = KOKKOS_CTOR_DEFAULT_ARG ,
-             const size_t n3 = KOKKOS_CTOR_DEFAULT_ARG ,
-             const size_t n4 = KOKKOS_CTOR_DEFAULT_ARG ,
-             const size_t n5 = KOKKOS_CTOR_DEFAULT_ARG ,
-             const size_t n6 = KOKKOS_CTOR_DEFAULT_ARG ,
-             const size_t n7 = KOKKOS_CTOR_DEFAULT_ARG )
+             const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+             const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+             const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+             const size_t n3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+             const size_t n4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+             const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+             const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+             const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG )
 {
   typedef Kokkos::View<T,P...>  view_type ;
 
@@ -1681,14 +1681,14 @@ typename std::enable_if<
   std::is_same<typename Kokkos::View<T,P...>::array_layout,Kokkos::LayoutRight>::value
 >::type
 realloc( Kokkos::View<T,P...> & v ,
-              const size_t n0 = KOKKOS_CTOR_DEFAULT_ARG ,
-              const size_t n1 = KOKKOS_CTOR_DEFAULT_ARG ,
-              const size_t n2 = KOKKOS_CTOR_DEFAULT_ARG ,
-              const size_t n3 = KOKKOS_CTOR_DEFAULT_ARG ,
-              const size_t n4 = KOKKOS_CTOR_DEFAULT_ARG ,
-              const size_t n5 = KOKKOS_CTOR_DEFAULT_ARG ,
-              const size_t n6 = KOKKOS_CTOR_DEFAULT_ARG ,
-              const size_t n7 = KOKKOS_CTOR_DEFAULT_ARG )
+              const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+              const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+              const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+              const size_t n3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+              const size_t n4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+              const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+              const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+              const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG )
 {
   typedef Kokkos::View<T,P...>  view_type ;
 

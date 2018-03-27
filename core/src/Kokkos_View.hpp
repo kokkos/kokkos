@@ -2082,14 +2082,14 @@ public:
   View( const Impl::ViewCtorProp< P ... > & arg_prop
       , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer
                                , size_t
-                               >::type const arg_N0 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N1 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N2 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N3 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N4 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N5 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N6 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N7 = KOKKOS_CTOR_DEFAULT_ARG
+                               >::type const arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
       )
     : View( arg_prop
           , typename traits::array_layout
@@ -2113,14 +2113,14 @@ public:
   View( const Impl::ViewCtorProp< P ... > & arg_prop
       , typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer
                                , size_t
-                               >::type const arg_N0 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N1 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N2 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N3 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N4 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N5 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N6 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N7 = KOKKOS_CTOR_DEFAULT_ARG
+                               >::type const arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
       )
     : View( arg_prop
           , typename traits::array_layout
@@ -2156,14 +2156,14 @@ public:
   View( const Label & arg_label
       , typename std::enable_if<
           Kokkos::Impl::is_view_label<Label>::value ,
-        const size_t >::type arg_N0 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N1 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N2 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N3 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N4 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N5 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N6 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N7 = KOKKOS_CTOR_DEFAULT_ARG
+        const size_t >::type arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
       )
     : View( Impl::ViewCtorProp< std::string >( arg_label )
           , typename traits::array_layout
@@ -2197,14 +2197,14 @@ public:
 
   explicit inline
   View( const ViewAllocateWithoutInitializing & arg_prop
-      , const size_t arg_N0 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N1 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N2 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N3 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N4 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N5 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N6 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N7 = KOKKOS_CTOR_DEFAULT_ARG
+      , const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
       )
     : View( Impl::ViewCtorProp< std::string , Kokkos::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::WithoutInitializing )
           , typename traits::array_layout
@@ -2244,14 +2244,14 @@ public:
 
   explicit KOKKOS_INLINE_FUNCTION
   View( pointer_type arg_ptr
-      , const size_t arg_N0 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N1 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N2 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N3 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N4 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N5 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N6 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N7 = KOKKOS_CTOR_DEFAULT_ARG
+      , const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
       )
     : View( Impl::ViewCtorProp<pointer_type>(arg_ptr)
           , typename traits::array_layout
@@ -2325,14 +2325,14 @@ public:
 
   explicit KOKKOS_INLINE_FUNCTION
   View( const typename traits::execution_space::scratch_memory_space & arg_space
-      , const size_t arg_N0 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N1 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N2 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N3 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N4 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N5 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N6 = KOKKOS_CTOR_DEFAULT_ARG
-      , const size_t arg_N7 = KOKKOS_CTOR_DEFAULT_ARG )
+      , const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG )
     : View( Impl::ViewCtorProp<pointer_type>(
               reinterpret_cast<pointer_type>(
                 arg_space.get_shmem(
@@ -2551,14 +2551,14 @@ create_mirror( const Kokkos::View<T,P...> & src
                    , src.extent(6)
                    , src.extent(7) );
 #else
-                 , src.rank_dynamic > 0 ? src.extent(0): KOKKOS_CTOR_DEFAULT_ARG
-                 , src.rank_dynamic > 1 ? src.extent(1): KOKKOS_CTOR_DEFAULT_ARG
-                 , src.rank_dynamic > 2 ? src.extent(2): KOKKOS_CTOR_DEFAULT_ARG
-                 , src.rank_dynamic > 3 ? src.extent(3): KOKKOS_CTOR_DEFAULT_ARG
-                 , src.rank_dynamic > 4 ? src.extent(4): KOKKOS_CTOR_DEFAULT_ARG
-                 , src.rank_dynamic > 5 ? src.extent(5): KOKKOS_CTOR_DEFAULT_ARG
-                 , src.rank_dynamic > 6 ? src.extent(6): KOKKOS_CTOR_DEFAULT_ARG
-                 , src.rank_dynamic > 7 ? src.extent(7): KOKKOS_CTOR_DEFAULT_ARG );
+                 , src.rank_dynamic > 0 ? src.extent(0): KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 1 ? src.extent(1): KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 2 ? src.extent(2): KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 3 ? src.extent(3): KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 4 ? src.extent(4): KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 5 ? src.extent(5): KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 6 ? src.extent(6): KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 7 ? src.extent(7): KOKKOS_IMPL_CTOR_DEFAULT_ARG );
 #endif
 }
 
