@@ -145,7 +145,7 @@ public:
         do {
 
           range = is_dynamic ? data.get_work_stealing_chunk()
-            : data.get_work_partition();
+                             : data.get_work_partition();
 
           ParallelFor::template
             exec_range< WorkTag >( m_functor
@@ -192,7 +192,7 @@ private:
 
   inline static
   void
-  exec_range( const MDRangePolicy & mdr_policy 
+  exec_range( const MDRangePolicy & mdr_policy
             , const FunctorType & functor
             , const Member ibeg , const Member iend )
     {
@@ -243,7 +243,7 @@ public:
           range = is_dynamic ? data.get_work_stealing_chunk()
                              : data.get_work_partition();
 
-          ParallelFor::exec_range( m_mdr_policy 
+          ParallelFor::exec_range( m_mdr_policy
                                  , m_functor
                                  , range.first  + m_policy.begin()
                                  , range.second + m_policy.begin() );

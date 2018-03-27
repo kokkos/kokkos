@@ -106,7 +106,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
 # compile fails
 #        OBJ_ROCM += TestROCm_TeamReductionScan.o
 # compile fails
-#        OBJ_ROCM += TestROCm_TeamScratch.o
+        OBJ_ROCM += TestROCm_TeamScratch.o
         OBJ_ROCM += TestROCm_ViewAPI_b.o
         OBJ_ROCM += TestROCm_ViewMapping_a.o
         OBJ_ROCM += TestROCm_ViewMapping_b.o
@@ -268,6 +268,10 @@ OBJ_HWLOC = TestHWLOC.o UnitTestMain.o gtest-all.o
 TARGETS += KokkosCore_UnitTest_HWLOC
 TEST_TARGETS += test-hwloc
 
+OBJ_HOST_BARRIER = TestHostBarrier.o UnitTestMain.o gtest-all.o
+TARGETS += KokkosCore_UnitTest_HostBarrier
+TEST_TARGETS += test-host-barrier
+
 OBJ_DEFAULT = UnitTestMainInit.o gtest-all.o
 ifneq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
 ifneq ($(KOKKOS_INTERNAL_COMPILER_HCC), 1)
@@ -324,6 +328,9 @@ KokkosCore_UnitTest_Qthreads2: $(OBJ_QTHREADS2) $(KOKKOS_LINK_DEPENDS)
 KokkosCore_UnitTest_HWLOC: $(OBJ_HWLOC) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_HWLOC) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_HWLOC
 
+KokkosCore_UnitTest_HostBarrier: $(OBJ_HOST_BARRIER) $(KOKKOS_LINK_DEPENDS)
+	$(LINK) $(EXTRA_PATH) $(OBJ_HOST_BARRIER) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_HostBarrier
+
 KokkosCore_UnitTest_AllocationTracker: $(OBJ_ALLOCATIONTRACKER) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_ALLOCATIONTRACKER) $(KOKKOS_LIBS) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(LIB) -o KokkosCore_UnitTest_AllocationTracker
 
@@ -366,6 +373,9 @@ test-qthreads: KokkosCore_UnitTest_Qthreads KokkosCore_UnitTest_Qthreads2
 
 test-hwloc: KokkosCore_UnitTest_HWLOC
 	./KokkosCore_UnitTest_HWLOC
+
+test-host-barrier: KokkosCore_UnitTest_HostBarrier
+	./KokkosCore_UnitTest_HostBarrier
 
 test-allocationtracker: KokkosCore_UnitTest_AllocationTracker
 	./KokkosCore_UnitTest_AllocationTracker
