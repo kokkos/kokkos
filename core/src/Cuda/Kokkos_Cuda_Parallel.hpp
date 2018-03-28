@@ -1872,7 +1872,6 @@ private:
   size_type *       m_scratch_space ;
   size_type *       m_scratch_flags ;
   size_type         m_final ;
-  //size_type  testval;
 
   template< class TagType >
   __device__ inline
@@ -2038,10 +2037,6 @@ public:
 
         m_final = true ;
         CudaParallelLaunch< ParallelScan, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
-
-        //const int size = ValueTraits::value_size( m_functor );
-        //DeepCopy<HostSpace,CudaSpace>( &testval , m_scratch_space + (grid_x - 1)*size/sizeof(int), size );
-        //std::cout << "KOKKOS_DEBUG -- Testval = " << testval << " size = "<< ValueTraits::value_size( m_functor ) << std::endl;
       }
     }
 

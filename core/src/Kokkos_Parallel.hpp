@@ -431,7 +431,7 @@ void parallel_scan( const ExecutionPolicy & policy
   Kokkos::Impl::shared_allocation_tracking_disable();
   Impl::ParallelScan< FunctorType , ExecutionPolicy > closure( functor , policy );
   Kokkos::Impl::shared_allocation_tracking_enable();
-  //std::cout << "KOKKOS_DEBUG parallel_scan kernel (1st)" << std::endl;
+  
   closure.execute();
 
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -465,7 +465,7 @@ void parallel_scan( const size_t        work_count
   Kokkos::Impl::shared_allocation_tracking_disable();
   Impl::ParallelScan< FunctorType , policy > closure( functor , policy(0,work_count) );
   Kokkos::Impl::shared_allocation_tracking_enable();
-  //std::cout << "KOKKOS_DEBUG parallel_scan kernel (2nd): work_count " << work_count << std::endl;
+  
   closure.execute();
 
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -486,12 +486,12 @@ void parallel_scan( const std::string& str
   Kokkos::fence();
   std::cout << "KOKKOS_DEBUG Start parallel_scan kernel: " << str << std::endl;
   #endif
-  //std::cout << "KOKKOS_DEBUG parallel_scan kernel (3rd)" << std::endl;
+  
   ::Kokkos::parallel_scan(policy,functor,str);
 
   #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
   Kokkos::fence();
-  std::cout << "KOKKOS_DEBUG End   parallel_scan kernel: " << str << std::endl;
+  std::cout << "KOKKOS_DEBUG End parallel_scan kernel: " << str << std::endl;
   #endif
   (void) str;
 }
@@ -499,12 +499,6 @@ void parallel_scan( const std::string& str
 //VINH DANG -- Adding the following for returning final scan result
 template< class ExecutionPolicy , class FunctorType, class ReturnType >
 inline
-//void parallel_scan( const ExecutionPolicy & policy
-//                  , const FunctorType     & functor
-//                  , ReturnType        & return_value
-//                  , const std::string& str = ""
-//                  , typename Impl::enable_if< ! Impl::is_integral< ExecutionPolicy >::value >::type * = 0
-//                  )
 void parallel_scan( const ExecutionPolicy & policy
                   , const FunctorType     & functor
                   , const std::string& str = ""
@@ -521,13 +515,13 @@ void parallel_scan( const ExecutionPolicy & policy
 #endif
 
   Kokkos::Impl::shared_allocation_tracking_disable();
-#if defined( KOKKOS_ENABLE_CUDA )//Workaround
+#if defined( KOKKOS_ENABLE_CUDA )
   Impl::ParallelScanWithTotal_Cuda< FunctorType, ExecutionPolicy, ReturnType, Cuda > closure( functor, policy, return_value );
 #else
   Impl::ParallelScanWithTotal< FunctorType , ExecutionPolicy, ReturnType > closure( functor, policy, return_value );
 #endif
   Kokkos::Impl::shared_allocation_tracking_enable();
-  //std::cout << "KOKKOS_DEBUG parallel_scan kernel (4th)" << std::endl;
+  
   closure.execute();
 
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -536,14 +530,10 @@ void parallel_scan( const ExecutionPolicy & policy
   }
 #endif
 
-}//temporary comment
+}
 
 template< class FunctorType, class ReturnType >
 inline
-//void parallel_scan( const size_t        work_count
-//                  , const FunctorType & functor
-//                  , ReturnType        & return_value
-//                  , const std::string & str = "" )
 void parallel_scan( const size_t        work_count
                   , const FunctorType & functor
                   , const std::string & str = ""
@@ -570,7 +560,7 @@ void parallel_scan( const size_t        work_count
   Impl::ParallelScanWithTotal< FunctorType, policy, ReturnType > closure( functor, policy(0,work_count), return_value );
 #endif
   Kokkos::Impl::shared_allocation_tracking_enable();
-  //std::cout << "KOKKOS_DEBUG parallel_scan kernel (5th): work_count " << work_count << std::endl;
+ 
   closure.execute();
 
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -592,8 +582,7 @@ void parallel_scan( const std::string& str
   Kokkos::fence();
   std::cout << "KOKKOS_DEBUG Start parallel_scan kernel: " << str << std::endl;
   #endif
-  //std::cout << "KOKKOS_DEBUG parallel_scan kernel (6th)" << std::endl;
-  //::Kokkos::parallel_scan(policy,functor,return_value,str);
+ 
   ::Kokkos::parallel_scan(policy,functor,str,return_value);
 
   #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
