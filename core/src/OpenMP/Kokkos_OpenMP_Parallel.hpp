@@ -749,7 +749,7 @@ public:
   //----------------------------------------
 };
 
-//VINH DANG -- Adding the following for returning final scan result
+//VINH DANG -- Adding the following for returning final scan result  
 template< class FunctorType, class ReturnType, class ... Traits >
 class ParallelScanWithTotal< FunctorType
                   , Kokkos::RangePolicy< Traits ... >
