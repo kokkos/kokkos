@@ -179,6 +179,12 @@ struct TestRange {
     Kokkos::parallel_for( Kokkos::RangePolicy< ExecSpace, ScheduleType >( 0, N ), *this );
 
     Kokkos::parallel_scan( "TestKernelScan", Kokkos::RangePolicy< ExecSpace, ScheduleType, OffsetTag>( 0, N ), *this );
+
+    //VINH DANG -- Adding the following for testing ParallelScanWithTotal
+    int total = 0;
+    Kokkos::parallel_scan( "TestKernelScanWithTotal", Kokkos::RangePolicy< ExecSpace, ScheduleType, OffsetTag>( 0, N ), *this, total );
+    ASSERT_EQ( size_t( ( N - 1 ) * ( N ) / 2 ), size_t( total ) );// sum( 0 .. N-1 )
+    //VINH DANG -- End of Adding
   }
 
   KOKKOS_INLINE_FUNCTION

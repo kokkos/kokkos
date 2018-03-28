@@ -656,7 +656,7 @@ private:
 
   const FunctorType   m_functor ;
   const Policy        m_policy ;
-  ReturnType & m_returnvalue; ;
+  ReturnType & m_returnvalue;
 
   template< class TagType >
   inline

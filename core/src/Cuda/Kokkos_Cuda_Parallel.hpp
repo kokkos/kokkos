@@ -1872,6 +1872,7 @@ private:
   size_type *       m_scratch_space ;
   size_type *       m_scratch_flags ;
   size_type         m_final ;
+  //size_type  testval;
 
   template< class TagType >
   __device__ inline
@@ -2037,6 +2038,10 @@ public:
 
         m_final = true ;
         CudaParallelLaunch< ParallelScan, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
+
+        //const int size = ValueTraits::value_size( m_functor );
+        //DeepCopy<HostSpace,CudaSpace>( &testval , m_scratch_space + (grid_x - 1)*size/sizeof(int), size );
+        //std::cout << "KOKKOS_DEBUG -- Testval = " << testval << " size = "<< ValueTraits::value_size( m_functor ) << std::endl;
       }
     }
 
@@ -2049,6 +2054,232 @@ public:
   , m_final( false )
   { }
 };
+
+//----------------------------------------------------------------------------
+//VINH DANG -- Adding the following for returning final scan result
+template< class FunctorType, class ReturnType, class ... Traits >
+class ParallelScanWithTotal_Cuda< FunctorType
+                                , Kokkos::RangePolicy< Traits ... >
+                                , ReturnType
+                                , Kokkos::Cuda
+                                >
+{
+private:
+
+  typedef Kokkos::RangePolicy< Traits ... >  Policy ;
+  typedef typename Policy::member_type  Member ;
+  typedef typename Policy::work_tag     WorkTag ;
+  typedef typename Policy::WorkRange    WorkRange ;
+  typedef typename Policy::launch_bounds  LaunchBounds ;
+
+  typedef Kokkos::Impl::FunctorValueTraits< FunctorType, WorkTag > ValueTraits ;
+  typedef Kokkos::Impl::FunctorValueInit<   FunctorType, WorkTag > ValueInit ;
+  typedef Kokkos::Impl::FunctorValueOps<    FunctorType, WorkTag > ValueOps ;
+
+public:
+
+  typedef typename ValueTraits::pointer_type    pointer_type ;
+  typedef typename ValueTraits::reference_type  reference_type ;
+  typedef FunctorType                           functor_type ;
+  typedef Cuda::size_type                       size_type ;
+
+private:
+
+  // Algorithmic constraints:
+  //  (a) blockDim.y is a power of two
+  //  (b) blockDim.y == blockDim.z == 1
+  //  (c) gridDim.x  <= blockDim.y * blockDim.y
+  //  (d) gridDim.y  == gridDim.z == 1
+
+  const FunctorType m_functor ;
+  const Policy      m_policy ;
+  size_type *       m_scratch_space ;
+  size_type *       m_scratch_flags ;
+  size_type         m_final ;
+  ReturnType      & m_returnvalue;
+
+  template< class TagType >
+  __device__ inline
+  typename std::enable_if< std::is_same< TagType , void >::value >::type
+  exec_range( const Member & i , reference_type update , const bool final_result ) const
+    { m_functor( i , update , final_result ); }
+
+  template< class TagType >
+  __device__ inline
+  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
+  exec_range( const Member & i , reference_type update , const bool final_result ) const
+    { m_functor( TagType() , i , update , final_result ); }
+
+  //----------------------------------------
+
+  __device__ inline
+  void initial(void) const
+  {
+    const integral_nonzero_constant< size_type , ValueTraits::StaticValueSize / sizeof(size_type) >
+      word_count( ValueTraits::value_size( m_functor ) / sizeof(size_type) );
+
+    size_type * const shared_value = kokkos_impl_cuda_shared_memory<size_type>() + word_count.value * threadIdx.y ;
+
+    ValueInit::init( m_functor , shared_value );
+
+    // Number of blocks is bounded so that the reduction can be limited to two passes.
+    // Each thread block is given an approximately equal amount of work to perform.
+    // Accumulate the values for this block.
+    // The accumulation ordering does not match the final pass, but is arithmatically equivalent.
+
+    const WorkRange range( m_policy , blockIdx.x , gridDim.x );
+
+    for ( Member iwork = range.begin() + threadIdx.y , iwork_end = range.end() ;
+          iwork < iwork_end ; iwork += blockDim.y ) {
+      this-> template exec_range< WorkTag >( iwork , ValueOps::reference( shared_value ) , false );
+    }
+
+    // Reduce and scan, writing out scan of blocks' totals and block-groups' totals.
+    // Blocks' scan values are written to 'blockIdx.x' location.
+    // Block-groups' scan values are at: i = ( j * blockDim.y - 1 ) for i < gridDim.x
+    cuda_single_inter_block_reduce_scan<true,FunctorType,WorkTag>( m_functor , blockIdx.x , gridDim.x , kokkos_impl_cuda_shared_memory<size_type>() , m_scratch_space , m_scratch_flags );
+  }
+
+  //----------------------------------------
+
+  __device__ inline
+  void final(void) const
+  {
+    const integral_nonzero_constant< size_type , ValueTraits::StaticValueSize / sizeof(size_type) >
+      word_count( ValueTraits::value_size( m_functor ) / sizeof(size_type) );
+
+    // Use shared memory as an exclusive scan: { 0 , value[0] , value[1] , value[2] , ... }
+    size_type * const shared_data   = kokkos_impl_cuda_shared_memory<size_type>();
+    size_type * const shared_prefix = shared_data + word_count.value * threadIdx.y ;
+    size_type * const shared_accum  = shared_data + word_count.value * ( blockDim.y + 1 );
+
+    // Starting value for this thread block is the previous block's total.
+    if ( blockIdx.x ) {
+      size_type * const block_total = m_scratch_space + word_count.value * ( blockIdx.x - 1 );
+      for ( unsigned i = threadIdx.y ; i < word_count.value ; ++i ) { shared_accum[i] = block_total[i] ; }
+    }
+    else if ( 0 == threadIdx.y ) {
+      ValueInit::init( m_functor , shared_accum );
+    }
+
+    const WorkRange range( m_policy , blockIdx.x , gridDim.x );
+
+    for ( typename Policy::member_type iwork_base = range.begin(); iwork_base < range.end() ; iwork_base += blockDim.y ) {
+
+      const typename Policy::member_type iwork = iwork_base + threadIdx.y ;
+
+      __syncthreads(); // Don't overwrite previous iteration values until they are used
+
+      ValueInit::init( m_functor , shared_prefix + word_count.value );
+
+      // Copy previous block's accumulation total into thread[0] prefix and inclusive scan value of this block
+      for ( unsigned i = threadIdx.y ; i < word_count.value ; ++i ) {
+        shared_data[i + word_count.value] = shared_data[i] = shared_accum[i] ;
+      }
+
+      if ( CudaTraits::WarpSize < word_count.value ) { __syncthreads(); } // Protect against large scan values.
+
+      // Call functor to accumulate inclusive scan value for this work item
+      if ( iwork < range.end() ) {
+        this-> template exec_range< WorkTag >( iwork , ValueOps::reference( shared_prefix + word_count.value ) , false );
+      }
+
+      // Scan block values into locations shared_data[1..blockDim.y]
+      cuda_intra_block_reduce_scan<true,FunctorType,WorkTag>( m_functor , typename ValueTraits::pointer_type(shared_data+word_count.value) );
+
+      {
+        size_type * const block_total = shared_data + word_count.value * blockDim.y ;
+        for ( unsigned i = threadIdx.y ; i < word_count.value ; ++i ) { shared_accum[i] = block_total[i]; }
+      }
+
+      // Call functor with exclusive scan value
+      if ( iwork < range.end() ) {
+        this-> template exec_range< WorkTag >( iwork , ValueOps::reference( shared_prefix ) , true );
+      }
+    }
+  }
+
+public:
+
+  //----------------------------------------
+
+  __device__ inline
+  void operator()(void) const
+  {
+    if ( ! m_final ) {
+      initial();
+    }
+    else {
+      final();
+    }
+  }
+
+  // Determine block size constrained by shared memory:
+  static inline
+  unsigned local_block_size( const FunctorType & f )
+    {
+      // blockDim.y must be power of two = 128 (4 warps) or 256 (8 warps) or 512 (16 warps)
+      // gridDim.x <= blockDim.y * blockDim.y
+      //
+      // 4 warps was 10% faster than 8 warps and 20% faster than 16 warps in unit testing
+
+      unsigned n = CudaTraits::WarpSize * 4 ;
+      while ( n && CudaTraits::SharedMemoryCapacity < cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( f , n ) ) { n >>= 1 ; }
+      return n ;
+    }
+
+  inline
+  void execute()
+    {
+      const int nwork    = m_policy.end() - m_policy.begin();
+      if ( nwork ) {
+        enum { GridMaxComputeCapability_2x = 0x0ffff };
+
+        const int block_size = local_block_size( m_functor );
+
+        const int grid_max =
+          ( block_size * block_size ) < GridMaxComputeCapability_2x ?
+          ( block_size * block_size ) : GridMaxComputeCapability_2x ;
+
+        // At most 'max_grid' blocks:
+        const int max_grid = std::min( int(grid_max) , int(( nwork + block_size - 1 ) / block_size ));
+
+        // How much work per block:
+        const int work_per_block = ( nwork + max_grid - 1 ) / max_grid ;
+
+        // How many block are really needed for this much work:
+        const int grid_x = ( nwork + work_per_block - 1 ) / work_per_block ;
+
+        m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( m_functor ) * grid_x );
+        m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) * 1 );
+
+        const dim3 grid( grid_x , 1 , 1 );
+        const dim3 block( 1 , block_size , 1 ); // REQUIRED DIMENSIONS ( 1 , N , 1 )
+        const int shmem = ValueTraits::value_size( m_functor ) * ( block_size + 2 );
+
+        m_final = false ;
+        CudaParallelLaunch< ParallelScanWithTotal_Cuda, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
+
+        m_final = true ;
+        CudaParallelLaunch< ParallelScanWithTotal_Cuda, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
+
+        const int size = ValueTraits::value_size( m_functor );
+        DeepCopy<HostSpace,CudaSpace>( &m_returnvalue, m_scratch_space + (grid_x - 1)*size/sizeof(int), size );
+      }
+    }
+
+  ParallelScanWithTotal_Cuda( const FunctorType  & arg_functor ,
+                              const Policy       & arg_policy ,   
+                                    ReturnType   & arg_returnvalue )
+  : m_functor( arg_functor )
+  , m_policy( arg_policy )
+  , m_scratch_space( 0 )
+  , m_scratch_flags( 0 )
+  , m_final( false )
+  , m_returnvalue( arg_returnvalue )
+  { }
+};
+//VINH DANG -- End of Adding
 
 } // namespace Impl
 } // namespace Kokkos
