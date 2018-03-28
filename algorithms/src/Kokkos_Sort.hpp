@@ -362,8 +362,10 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void operator() (const bin_sort_bins_tag& tag, const int&i )  const {
+    auto bin_size = bin_count_const(i);
+    if (bin_size <= 1) return;
+    int upper_bound = bin_offsets(i)+bin_size;
     bool sorted = false;
-    int upper_bound = bin_offsets(i)+bin_count_const(i);
     while(!sorted) {
       sorted = true;
       int old_idx = sort_order(bin_offsets(i));
