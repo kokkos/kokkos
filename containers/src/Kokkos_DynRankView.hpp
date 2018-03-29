@@ -1536,14 +1536,14 @@ bool operator == ( const DynRankView<LT,LP...> & lhs ,
     lhs.rank()       ==  rhs.rank() &&
     lhs.data()       == rhs.data() &&
     lhs.span()       == rhs.span() &&
-    lhs.dimension(0) == rhs.dimension(0) &&
-    lhs.dimension(1) == rhs.dimension(1) &&
-    lhs.dimension(2) == rhs.dimension(2) &&
-    lhs.dimension(3) == rhs.dimension(3) &&
-    lhs.dimension(4) == rhs.dimension(4) &&
-    lhs.dimension(5) == rhs.dimension(5) &&
-    lhs.dimension(6) == rhs.dimension(6) &&
-    lhs.dimension(7) == rhs.dimension(7);
+    lhs.extent(0) == rhs.extent(0) &&
+    lhs.extent(1) == rhs.extent(1) &&
+    lhs.extent(2) == rhs.extent(2) &&
+    lhs.extent(3) == rhs.extent(3) &&
+    lhs.extent(4) == rhs.extent(4) &&
+    lhs.extent(5) == rhs.extent(5) &&
+    lhs.extent(6) == rhs.extent(6) &&
+    lhs.extent(7) == rhs.extent(7);
 }
 
 template< class LT , class ... LP , class RT , class ... RP >
