@@ -533,9 +533,20 @@ public:
   //! \name Methods for getting capacity, stride, or dimension(s).
   //@{
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   //! The allocation size (same as Kokkos::View::capacity).
   size_t capacity() const {
     return d_view.span();
+  }
+#endif
+
+  //! The allocation size (same as Kokkos::View::span).
+  KOKKOS_INLINE_FUNCTION constexpr size_t span() const {
+    return d_view.span();
+  }
+
+  KOKKOS_INLINE_FUNCTION bool span_is_contiguous() const { 
+    return d_view.span_is_contiguous(); 
   }
 
   //! Get stride(s) for each dimension.
@@ -556,6 +567,11 @@ public:
    extent_int( const iType & r ) const
      { return static_cast<int>(d_view.extent(r)); }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+  /*  Deprecate all 'dimension' functions in favor of
+   *  ISO/C++ vocabulary 'extent'.
+   */
+
   /* \brief return size of dimension 0 */
   size_t dimension_0() const {return d_view.extent(0);}
   /* \brief return size of dimension 1 */
@@ -572,6 +588,7 @@ public:
   size_t dimension_6() const {return d_view.extent(6);}
   /* \brief return size of dimension 7 */
   size_t dimension_7() const {return d_view.extent(7);}
+#endif
 
   //@}
 };
