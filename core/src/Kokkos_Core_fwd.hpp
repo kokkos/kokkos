@@ -287,10 +287,6 @@ template< class FunctorType, class ExecPolicy, class ExecutionSapce =
 template< class FunctorType, class ExecPolicy, class ReturnType = InvalidType, class ExecutionSapce =
           typename Impl::FunctorPolicyExecutionSpace< FunctorType, ExecPolicy >::execution_space
         > class ParallelScanWithTotal;
-
-#if defined( KOKKOS_ENABLE_CUDA )
-template< class FunctorType, class ExecPolicy, class ReturnType = InvalidType, class ExecutionSapce = Cuda > class ParallelScanWithTotal_Cuda;
-#endif
 //VINH DANG -- End of Adding
 
 } // namespace Impl

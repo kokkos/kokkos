@@ -2053,11 +2053,11 @@ public:
 //----------------------------------------------------------------------------
 //VINH DANG -- Adding the following for returning final scan result
 template< class FunctorType, class ReturnType, class ... Traits >
-class ParallelScanWithTotal_Cuda< FunctorType
-                                , Kokkos::RangePolicy< Traits ... >
-                                , ReturnType
-                                , Kokkos::Cuda
-                                >
+class ParallelScanWithTotal< FunctorType
+                           , Kokkos::RangePolicy< Traits ... >
+                           , ReturnType
+                           , Kokkos::Cuda
+                           >
 {
 private:
 
@@ -2253,19 +2253,19 @@ public:
         const int shmem = ValueTraits::value_size( m_functor ) * ( block_size + 2 );
 
         m_final = false ;
-        CudaParallelLaunch< ParallelScanWithTotal_Cuda, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
+        CudaParallelLaunch< ParallelScanWithTotal, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
 
         m_final = true ;
-        CudaParallelLaunch< ParallelScanWithTotal_Cuda, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
+        CudaParallelLaunch< ParallelScanWithTotal, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
 
         const int size = ValueTraits::value_size( m_functor );
         DeepCopy<HostSpace,CudaSpace>( &m_returnvalue, m_scratch_space + (grid_x - 1)*size/sizeof(int), size );
       }
     }
 
-  ParallelScanWithTotal_Cuda( const FunctorType  & arg_functor ,
-                              const Policy       & arg_policy ,   
-                                    ReturnType   & arg_returnvalue )
+  ParallelScanWithTotal( const FunctorType  & arg_functor ,
+                         const Policy       & arg_policy ,   
+                         ReturnType         & arg_returnvalue )
   : m_functor( arg_functor )
   , m_policy( arg_policy )
   , m_scratch_space( 0 )

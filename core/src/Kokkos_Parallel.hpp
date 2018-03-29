@@ -515,11 +515,7 @@ void parallel_scan( const ExecutionPolicy & policy
 #endif
 
   Kokkos::Impl::shared_allocation_tracking_disable();
-#if defined( KOKKOS_ENABLE_CUDA )
-  Impl::ParallelScanWithTotal_Cuda< FunctorType, ExecutionPolicy, ReturnType, Cuda > closure( functor, policy, return_value );
-#else
   Impl::ParallelScanWithTotal< FunctorType , ExecutionPolicy, ReturnType > closure( functor, policy, return_value );
-#endif
   Kokkos::Impl::shared_allocation_tracking_enable();
   
   closure.execute();
@@ -554,11 +550,7 @@ void parallel_scan( const size_t        work_count
 #endif
 
   Kokkos::Impl::shared_allocation_tracking_disable();
-#if defined( KOKKOS_ENABLE_CUDA )
-  Impl::ParallelScanWithTotal_Cuda< FunctorType, policy, ReturnType, Cuda > closure( functor, policy(0,work_count), return_value );
-#else
   Impl::ParallelScanWithTotal< FunctorType, policy, ReturnType > closure( functor, policy(0,work_count), return_value );
-#endif
   Kokkos::Impl::shared_allocation_tracking_enable();
  
   closure.execute();

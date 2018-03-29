@@ -638,9 +638,10 @@ public:
 //VINH DANG -- Adding the following for returning final scan result
 template< class FunctorType , class ReturnType, class ... Traits >
 class ParallelScanWithTotal< FunctorType
-                  , Kokkos::RangePolicy< Traits ... >
-                  , ReturnType
-                  >
+                           , Kokkos::RangePolicy< Traits ... >
+                           , ReturnType
+                           , Kokkos::Serial
+                           >
 {
 private:
 
@@ -708,9 +709,9 @@ public:
 
   inline
   ParallelScanWithTotal( const FunctorType & arg_functor
-              , const Policy      & arg_policy
-              , ReturnType        & arg_returnvalue
-              )
+                       , const Policy      & arg_policy
+                       , ReturnType        & arg_returnvalue
+                       )
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
     , m_returnvalue(  arg_returnvalue )

@@ -752,10 +752,10 @@ public:
 //VINH DANG -- Adding the following for returning final scan result  
 template< class FunctorType, class ReturnType, class ... Traits >
 class ParallelScanWithTotal< FunctorType
-                  , Kokkos::RangePolicy< Traits ... >
-                  , ReturnType
-                  , Kokkos::OpenMP
-                  >
+                           , Kokkos::RangePolicy< Traits ... >
+                           , ReturnType
+                           , Kokkos::OpenMP
+                           >
 {
 private:
 
@@ -877,8 +877,8 @@ public:
 
   inline
   ParallelScanWithTotal( const FunctorType & arg_functor
-              , const Policy      & arg_policy
-              , ReturnType        & arg_returnvalue )
+                       , const Policy      & arg_policy
+                       , ReturnType        & arg_returnvalue )
     : m_instance( t_openmp_instance )
     , m_functor( arg_functor )
     , m_policy(  arg_policy )
