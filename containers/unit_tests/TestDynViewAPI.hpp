@@ -1004,12 +1004,12 @@ public:
     ASSERT_TRUE( Kokkos::is_dyn_rank_view<dView0>::value );
     ASSERT_FALSE( Kokkos::is_dyn_rank_view< Kokkos::View<double> >::value );
 
-    ASSERT_TRUE( dx.ptr_on_device() == 0 ); //Okay with UVM
-    ASSERT_TRUE( dy.ptr_on_device() == 0 );  //Okay with UVM
-    ASSERT_TRUE( dz.ptr_on_device() == 0 ); //Okay with UVM
-    ASSERT_TRUE( hx.ptr_on_device() == 0 );
-    ASSERT_TRUE( hy.ptr_on_device() == 0 );
-    ASSERT_TRUE( hz.ptr_on_device() == 0 );
+    ASSERT_TRUE( dx.data() == 0 ); //Okay with UVM
+    ASSERT_TRUE( dy.data() == 0 );  //Okay with UVM
+    ASSERT_TRUE( dz.data() == 0 ); //Okay with UVM
+    ASSERT_TRUE( hx.data() == 0 );
+    ASSERT_TRUE( hy.data() == 0 );
+    ASSERT_TRUE( hz.data() == 0 );
     ASSERT_EQ( dx.extent(0) , 0u ); //Okay with UVM
     ASSERT_EQ( dy.extent(0) , 0u ); //Okay with UVM
     ASSERT_EQ( dz.extent(0) , 0u ); //Okay with UVM
@@ -1052,7 +1052,7 @@ public:
     ASSERT_EQ( dx.use_count() , size_t(1) );
 
 
-    dView0_unmanaged unmanaged_from_ptr_dx = dView0_unmanaged(dx.ptr_on_device(),
+    dView0_unmanaged unmanaged_from_ptr_dx = dView0_unmanaged(dx.data(),
                                                               dx.extent(0),
                                                               dx.extent(1),
                                                               dx.extent(2),
@@ -1061,7 +1061,7 @@ public:
 
     {
       // Destruction of this view should be harmless
-      const_dView0 unmanaged_from_ptr_const_dx( dx.ptr_on_device() ,
+      const_dView0 unmanaged_from_ptr_const_dx( dx.data() ,
                                                 dx.extent(0) ,
                                                 dx.extent(1) ,
                                                 dx.extent(2) ,
@@ -1089,11 +1089,11 @@ public:
     ASSERT_EQ( dx.use_count() , size_t(2) );
 
 
-    ASSERT_FALSE( dx.ptr_on_device() == 0 );
-    ASSERT_FALSE( const_dx.ptr_on_device() == 0 );
-    ASSERT_FALSE( unmanaged_dx.ptr_on_device() == 0 );
-    ASSERT_FALSE( unmanaged_from_ptr_dx.ptr_on_device() == 0 );
-    ASSERT_FALSE( dy.ptr_on_device() == 0 );
+    ASSERT_FALSE( dx.data() == 0 );
+    ASSERT_FALSE( const_dx.data() == 0 );
+    ASSERT_FALSE( unmanaged_dx.data() == 0 );
+    ASSERT_FALSE( unmanaged_from_ptr_dx.data() == 0 );
+    ASSERT_FALSE( dy.data() == 0 );
     ASSERT_NE( dx , dy );
 
     ASSERT_EQ( dx.extent(0) , unsigned(N0) );
@@ -1106,7 +1106,7 @@ public:
     ASSERT_EQ( dy.extent(2) , unsigned(N2) );
     ASSERT_EQ( dy.extent(3) , unsigned(N3) );
 
-    ASSERT_EQ( unmanaged_from_ptr_dx.capacity(),unsigned(N0)*unsigned(N1)*unsigned(N2)*unsigned(N3) );
+    ASSERT_EQ( unmanaged_from_ptr_dx.span(),unsigned(N0)*unsigned(N1)*unsigned(N2)*unsigned(N3) );
 
     hx = Kokkos::create_mirror( dx );
     hy = Kokkos::create_mirror( dy );
@@ -1232,17 +1232,17 @@ public:
     dz = dy ; ASSERT_EQ( dy, dz); ASSERT_NE( dx, dz);
 
     dx = dView0();
-    ASSERT_TRUE( dx.ptr_on_device() == 0 );
-    ASSERT_FALSE( dy.ptr_on_device() == 0 );
-    ASSERT_FALSE( dz.ptr_on_device() == 0 );
+    ASSERT_TRUE( dx.data() == 0 );
+    ASSERT_FALSE( dy.data() == 0 );
+    ASSERT_FALSE( dz.data() == 0 );
     dy = dView0();
-    ASSERT_TRUE( dx.ptr_on_device() == 0 );
-    ASSERT_TRUE( dy.ptr_on_device() == 0 );
-    ASSERT_FALSE( dz.ptr_on_device() == 0 );
+    ASSERT_TRUE( dx.data() == 0 );
+    ASSERT_TRUE( dy.data() == 0 );
+    ASSERT_FALSE( dz.data() == 0 );
     dz = dView0();
-    ASSERT_TRUE( dx.ptr_on_device() == 0 );
-    ASSERT_TRUE( dy.ptr_on_device() == 0 );
-    ASSERT_TRUE( dz.ptr_on_device() == 0 );
+    ASSERT_TRUE( dx.data() == 0 );
+    ASSERT_TRUE( dy.data() == 0 );
+    ASSERT_TRUE( dz.data() == 0 );
 
   //View - DynRankView Interoperability tests
     // deep_copy from view to dynrankview
@@ -1303,7 +1303,7 @@ public:
     if ( ! std::is_same< typename device::execution_space , Kokkos::Cuda >::value )
 #endif
     {
-      ASSERT_TRUE( x.ptr_on_device() == xr.ptr_on_device() );
+      ASSERT_TRUE( x.data() == xr.data() );
     }
 
     // typeX xf = xc ; // setting non-const from const must not compile
