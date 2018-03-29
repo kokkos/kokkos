@@ -995,11 +995,15 @@ public:
 
     {
       // Destruction of this view should be harmless.
+
       const_dView4 unmanaged_from_ptr_const_dx( dx.data(),
-                                                dx.extent(0),
-                                                dx.extent(1),
+                                                dx.extent(0)
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+                                                ,dx.extent(1),
                                                 dx.extent(2),
-                                                dx.extent(3) );
+                                                dx.extent(3)
+#endif
+                                                );
     }
 
     const_dView4 const_dx = dx;

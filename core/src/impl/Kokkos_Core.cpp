@@ -333,7 +333,9 @@ bool check_int_arg(char const* arg, char const* expected, int* value) {
   return true;
 }
 
-}}} // namespace Kokkos::Impl::{unnamed}
+}
+
+}} // namespace Kokkos::Impl::{unnamed}
 
 //----------------------------------------------------------------------------
 

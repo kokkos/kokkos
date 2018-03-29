@@ -76,6 +76,78 @@ struct ViewDataAnalysis ;
 template< class , class ... >
 class ViewMapping { public: enum { is_assignable = false }; };
 
+
+
+template <typename IntType>
+KOKKOS_INLINE_FUNCTION
+std::size_t count_valid_integers(const IntType i0,
+                            const IntType i1,
+                            const IntType i2,
+                            const IntType i3,
+                            const IntType i4,
+                            const IntType i5,
+                            const IntType i6,
+                            const IntType i7 ){
+  static_assert(std::is_integral<IntType>::value, "count_valid_integers() must have integer arguments.");
+
+  return ( i0 !=KOKKOS_INVALID_INDEX ) + ( i1 !=KOKKOS_INVALID_INDEX ) + ( i2 !=KOKKOS_INVALID_INDEX ) +
+      ( i3 !=KOKKOS_INVALID_INDEX ) + ( i4 !=KOKKOS_INVALID_INDEX ) + ( i5 !=KOKKOS_INVALID_INDEX ) +
+      ( i6 !=KOKKOS_INVALID_INDEX ) + ( i7 !=KOKKOS_INVALID_INDEX );
+
+
+}
+
+KOKKOS_INLINE_FUNCTION
+void runtime_check_rank_device(const size_t dyn_rank,
+                        const size_t i0,
+                        const size_t i1,
+                        const size_t i2,
+                        const size_t i3,
+                        const size_t i4,
+                        const size_t i5,
+                        const size_t i6,
+                        const size_t i7 ){
+
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
+
+  const size_t num_passed_args = count_valid_integers(i0, i1, i2, i3,
+                                                      i4, i5, i6, i7);
+
+  if ( num_passed_args != dyn_rank ) {
+
+      Kokkos::abort("Number of arguments passed to Kokkos::View() constructor must match the dynamic rank of the view.") ;
+
+  }
+#endif
+}
+
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+KOKKOS_INLINE_FUNCTION
+void runtime_check_rank_host(const size_t dyn_rank,
+                        const size_t i0,
+                        const size_t i1,
+                        const size_t i2,
+                        const size_t i3,
+                        const size_t i4,
+                        const size_t i5,
+                        const size_t i6,
+                        const size_t i7, const std::string & label ){
+
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
+
+  const size_t num_passed_args = count_valid_integers(i0, i1, i2, i3,
+                                                      i4, i5, i6, i7);
+
+  if ( num_passed_args != dyn_rank ) {
+
+      const std::string message = "Constructor for Kokkos View '" + label + "' has mismatched number of arguments. Number of arguments = "
+          + std::to_string(num_passed_args) + " but dynamic rank = " + std::to_string(dyn_rank) + " \n";
+      Kokkos::abort(message.c_str()) ;
+  }
+#endif
+}
+#endif
+
 } /* namespace Impl */
 } /* namespace Kokkos */
 
@@ -2010,42 +2082,62 @@ public:
   View( const Impl::ViewCtorProp< P ... > & arg_prop
       , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer
                                , size_t
-                               >::type const arg_N0 = 0
-      , const size_t arg_N1 = 0
-      , const size_t arg_N2 = 0
-      , const size_t arg_N3 = 0
-      , const size_t arg_N4 = 0
-      , const size_t arg_N5 = 0
-      , const size_t arg_N6 = 0
-      , const size_t arg_N7 = 0
+                               >::type const arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
       )
     : View( arg_prop
           , typename traits::array_layout
               ( arg_N0 , arg_N1 , arg_N2 , arg_N3
               , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
           )
-    {}
+    {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                             arg_N4, arg_N5, arg_N6, arg_N7, label());
+#else
+    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                             arg_N4, arg_N5, arg_N6, arg_N7);
+
+#endif
+
+    }
 
   template< class ... P >
   explicit KOKKOS_INLINE_FUNCTION
   View( const Impl::ViewCtorProp< P ... > & arg_prop
       , typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer
                                , size_t
-                               >::type const arg_N0 = 0
-      , const size_t arg_N1 = 0
-      , const size_t arg_N2 = 0
-      , const size_t arg_N3 = 0
-      , const size_t arg_N4 = 0
-      , const size_t arg_N5 = 0
-      , const size_t arg_N6 = 0
-      , const size_t arg_N7 = 0
+                               >::type const arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
       )
     : View( arg_prop
           , typename traits::array_layout
               ( arg_N0 , arg_N1 , arg_N2 , arg_N3
               , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
           )
-    {}
+    {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                             arg_N4, arg_N5, arg_N6, arg_N7, label());
+#else
+    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                             arg_N4, arg_N5, arg_N6, arg_N7);
+
+#endif
+
+    }
 
   // Allocate with label and layout
   template< typename Label >
@@ -2064,21 +2156,34 @@ public:
   View( const Label & arg_label
       , typename std::enable_if<
           Kokkos::Impl::is_view_label<Label>::value ,
-        const size_t >::type arg_N0 = 0
-      , const size_t arg_N1 = 0
-      , const size_t arg_N2 = 0
-      , const size_t arg_N3 = 0
-      , const size_t arg_N4 = 0
-      , const size_t arg_N5 = 0
-      , const size_t arg_N6 = 0
-      , const size_t arg_N7 = 0
+        const size_t >::type arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
       )
     : View( Impl::ViewCtorProp< std::string >( arg_label )
           , typename traits::array_layout
               ( arg_N0 , arg_N1 , arg_N2 , arg_N3
               , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
           )
-    {}
+    {
+
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                             arg_N4, arg_N5, arg_N6, arg_N7, label());
+#else
+    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                             arg_N4, arg_N5, arg_N6, arg_N7);
+
+#endif
+
+
+
+    }
 
   // For backward compatibility
   explicit inline
@@ -2092,21 +2197,31 @@ public:
 
   explicit inline
   View( const ViewAllocateWithoutInitializing & arg_prop
-      , const size_t arg_N0 = 0
-      , const size_t arg_N1 = 0
-      , const size_t arg_N2 = 0
-      , const size_t arg_N3 = 0
-      , const size_t arg_N4 = 0
-      , const size_t arg_N5 = 0
-      , const size_t arg_N6 = 0
-      , const size_t arg_N7 = 0
+      , const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
       )
     : View( Impl::ViewCtorProp< std::string , Kokkos::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::WithoutInitializing )
           , typename traits::array_layout
               ( arg_N0 , arg_N1 , arg_N2 , arg_N3
               , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
           )
-    {}
+    {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                             arg_N4, arg_N5, arg_N6, arg_N7, label());
+#else
+    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                             arg_N4, arg_N5, arg_N6, arg_N7);
+
+#endif
+
+    }
 
   //----------------------------------------
   // Memory span required to wrap these dimensions.
@@ -2129,50 +2244,59 @@ public:
 
   explicit KOKKOS_INLINE_FUNCTION
   View( pointer_type arg_ptr
-      , const size_t arg_N0 = 0
-      , const size_t arg_N1 = 0
-      , const size_t arg_N2 = 0
-      , const size_t arg_N3 = 0
-      , const size_t arg_N4 = 0
-      , const size_t arg_N5 = 0
-      , const size_t arg_N6 = 0
-      , const size_t arg_N7 = 0
+      , const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
       )
     : View( Impl::ViewCtorProp<pointer_type>(arg_ptr)
           , typename traits::array_layout
              ( arg_N0 , arg_N1 , arg_N2 , arg_N3
              , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
           )
-    {}
+    {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                             arg_N4, arg_N5, arg_N6, arg_N7, label());
+#else
+    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                             arg_N4, arg_N5, arg_N6, arg_N7);
+
+#endif
+    }
 
   explicit KOKKOS_INLINE_FUNCTION
   View( pointer_type arg_ptr
       , const typename traits::array_layout & arg_layout
       )
     : View( Impl::ViewCtorProp<pointer_type>(arg_ptr) , arg_layout )
-    {}
+    {
+
+    }
 
   //----------------------------------------
   // Shared scratch memory constructor
 
   static inline
   size_t
-  shmem_size( const size_t arg_N0 = ~size_t(0) ,
-              const size_t arg_N1 = ~size_t(0) ,
-              const size_t arg_N2 = ~size_t(0) ,
-              const size_t arg_N3 = ~size_t(0) ,
-              const size_t arg_N4 = ~size_t(0) ,
-              const size_t arg_N5 = ~size_t(0) ,
-              const size_t arg_N6 = ~size_t(0) ,
-              const size_t arg_N7 = ~size_t(0) )
+  shmem_size( const size_t arg_N0 = KOKKOS_INVALID_INDEX,
+              const size_t arg_N1 = KOKKOS_INVALID_INDEX,
+              const size_t arg_N2 = KOKKOS_INVALID_INDEX,
+              const size_t arg_N3 = KOKKOS_INVALID_INDEX,
+              const size_t arg_N4 = KOKKOS_INVALID_INDEX,
+              const size_t arg_N5 = KOKKOS_INVALID_INDEX,
+              const size_t arg_N6 = KOKKOS_INVALID_INDEX,
+              const size_t arg_N7 = KOKKOS_INVALID_INDEX )
   {
     if ( is_layout_stride ) {
       Kokkos::abort( "Kokkos::View::shmem_size(extents...) doesn't work with LayoutStride. Pass a LayoutStride object instead" );
     }
-    const size_t num_passed_args =
-      ( arg_N0 != ~size_t(0) ) + ( arg_N1 != ~size_t(0) ) + ( arg_N2 != ~size_t(0) ) +
-      ( arg_N3 != ~size_t(0) ) + ( arg_N4 != ~size_t(0) ) + ( arg_N5 != ~size_t(0) ) +
-      ( arg_N6 != ~size_t(0) ) + ( arg_N7 != ~size_t(0) );
+    const size_t num_passed_args = Impl::count_valid_integers(arg_N0, arg_N1, arg_N2, arg_N3,
+                                                              arg_N4, arg_N5, arg_N6, arg_N7);
 
     if ( std::is_same<typename traits::specialize,void>::value && num_passed_args != traits::rank_dynamic ) {
       Kokkos::abort( "Kokkos::View::shmem_size() rank_dynamic != number of arguments.\n" );
@@ -2201,14 +2325,14 @@ public:
 
   explicit KOKKOS_INLINE_FUNCTION
   View( const typename traits::execution_space::scratch_memory_space & arg_space
-      , const size_t arg_N0 = 0
-      , const size_t arg_N1 = 0
-      , const size_t arg_N2 = 0
-      , const size_t arg_N3 = 0
-      , const size_t arg_N4 = 0
-      , const size_t arg_N5 = 0
-      , const size_t arg_N6 = 0
-      , const size_t arg_N7 = 0 )
+      , const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+      , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG )
     : View( Impl::ViewCtorProp<pointer_type>(
               reinterpret_cast<pointer_type>(
                 arg_space.get_shmem(
@@ -2220,7 +2344,17 @@ public:
              ( arg_N0 , arg_N1 , arg_N2 , arg_N3
              , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
        )
-    {}
+    {
+
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                             arg_N4, arg_N5, arg_N6, arg_N7, label());
+#else
+    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                             arg_N4, arg_N5, arg_N6, arg_N7);
+
+#endif
+    }
 };
 
 
@@ -2407,14 +2541,25 @@ create_mirror( const Kokkos::View<T,P...> & src
   typedef typename src_type::HostMirror  dst_type ;
 
   return dst_type( std::string( src.label() ).append("_mirror")
-                 , src.extent(0)
-                 , src.extent(1)
-                 , src.extent(2)
-                 , src.extent(3)
-                 , src.extent(4)
-                 , src.extent(5)
-                 , src.extent(6)
-                 , src.extent(7) );
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+                   , src.extent(0)
+                   , src.extent(1)
+                   , src.extent(2)
+                   , src.extent(3)
+                   , src.extent(4)
+                   , src.extent(5)
+                   , src.extent(6)
+                   , src.extent(7) );
+#else
+                 , src.rank_dynamic > 0 ? src.extent(0): KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 1 ? src.extent(1): KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 2 ? src.extent(2): KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 3 ? src.extent(3): KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 4 ? src.extent(4): KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 5 ? src.extent(5): KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 6 ? src.extent(6): KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                 , src.rank_dynamic > 7 ? src.extent(7): KOKKOS_IMPL_CTOR_DEFAULT_ARG );
+#endif
 }
 
 template< class T , class ... P >
