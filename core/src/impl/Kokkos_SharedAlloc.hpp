@@ -131,7 +131,7 @@ public:
    */
   static void tracking_enable() { t_tracking_enabled = 1; }
 
-  virtual ~SharedAllocationRecord() = default ;
+  virtual ~SharedAllocationRecord() {}
 
   SharedAllocationRecord()
     : m_alloc_ptr( 0 )
