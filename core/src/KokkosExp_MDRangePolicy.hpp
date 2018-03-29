@@ -410,6 +410,7 @@ namespace Kokkos { namespace Experimental {
 } } // end Kokkos::Experimental
 // ------------------------------------------------------------------ //
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 // ------------------------------------------------------------------ //
 //md_parallel_for - deprecated use parallel_for
 // ------------------------------------------------------------------ //
@@ -541,6 +542,7 @@ void md_parallel_reduce( const std::string& str
 // Cuda - md_parallel_reduce not implemented - use parallel_reduce
 
 } } // namespace Kokkos::Experimental
+#endif
 
 #endif //KOKKOS_CORE_EXP_MD_RANGE_POLICY_HPP
 
