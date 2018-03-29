@@ -501,6 +501,7 @@ public:
    *  ISO/C++ vocabulary 'extent'.
    */
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   template< typename iType >
   KOKKOS_INLINE_FUNCTION constexpr
   typename std::enable_if< std::is_integral<iType>::value , size_t >::type
@@ -514,17 +515,18 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_5() const { return m_map.dimension_5(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_6() const { return m_map.dimension_6(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t dimension_7() const { return m_map.dimension_7(); }
+#endif
 
   //----------------------------------------
 
-  KOKKOS_INLINE_FUNCTION constexpr size_t size() const { return m_map.dimension_0() *
-                                                                m_map.dimension_1() *
-                                                                m_map.dimension_2() *
-                                                                m_map.dimension_3() *
-                                                                m_map.dimension_4() *
-                                                                m_map.dimension_5() *
-                                                                m_map.dimension_6() *
-                                                                m_map.dimension_7(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t size() const { return m_map.extent(0) *
+                                                                m_map.extent(1) *
+                                                                m_map.extent(2) *
+                                                                m_map.extent(3) *
+                                                                m_map.extent(4) *
+                                                                m_map.extent(5) *
+                                                                m_map.extent(6) *
+                                                                m_map.extent(7); }
 
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_0() const { return m_map.stride_0(); }
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_1() const { return m_map.stride_1(); }
@@ -547,15 +549,19 @@ public:
   enum { reference_type_is_lvalue_reference = std::is_lvalue_reference< reference_type >::value };
 
   KOKKOS_INLINE_FUNCTION constexpr size_t span() const { return m_map.span(); }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   // Deprecated, use 'span()' instead
   KOKKOS_INLINE_FUNCTION constexpr size_t capacity() const { return m_map.span(); }
+#endif
   KOKKOS_INLINE_FUNCTION constexpr bool   span_is_contiguous() const { return m_map.span_is_contiguous(); }
   KOKKOS_INLINE_FUNCTION constexpr pointer_type data() const { return m_map.data(); }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   // Deprecated, use 'span_is_contigous()' instead
   KOKKOS_INLINE_FUNCTION constexpr bool   is_contiguous() const { return m_map.span_is_contiguous(); }
   // Deprecated, use 'data()' instead
   KOKKOS_INLINE_FUNCTION constexpr pointer_type ptr_on_device() const { return m_map.data(); }
+#endif
 
   //----------------------------------------
   // Allow specializations to query their specialized map
@@ -1566,12 +1572,12 @@ struct DynRankViewFill {
   KOKKOS_INLINE_FUNCTION
   void operator()( const size_t i0 ) const
   {
-    const size_t n1 = output.dimension_1();
-    const size_t n2 = output.dimension_2();
-    const size_t n3 = output.dimension_3();
-    const size_t n4 = output.dimension_4();
-    const size_t n5 = output.dimension_5();
-    const size_t n6 = output.dimension_6();
+    const size_t n1 = output.extent(1);
+    const size_t n2 = output.extent(2);
+    const size_t n3 = output.extent(3);
+    const size_t n4 = output.extent(4);
+    const size_t n5 = output.extent(5);
+    const size_t n6 = output.extent(6);
 
     for ( size_t i1 = 0 ; i1 < n1 ; ++i1 ) {
     for ( size_t i2 = 0 ; i2 < n2 ; ++i2 ) {
@@ -1589,7 +1595,7 @@ struct DynRankViewFill {
       typedef typename OutputView::execution_space  execution_space ;
       typedef Kokkos::RangePolicy< execution_space > Policy ;
 
-      const Kokkos::Impl::ParallelFor< DynRankViewFill , Policy > closure( *this , Policy( 0 , output.dimension_0() ) );
+      const Kokkos::Impl::ParallelFor< DynRankViewFill , Policy > closure( *this , Policy( 0 , output.extent(0) ) );
 
       closure.execute();
 
