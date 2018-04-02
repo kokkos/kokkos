@@ -223,7 +223,7 @@ public:
 
 
 template<>
-struct Array<void,~size_t(0),void>
+struct Array<void,KOKKOS_INVALID_INDEX,void>
 {
   struct contiguous {};
   struct strided {};
