@@ -62,7 +62,7 @@ struct ArrayBoundsCheck<Integral, true> {
     if (i < 0) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
       std::string s = "Kokkos::Array: index ";
-      s += std::to_string(ssize_t i);
+      s += std::to_string(i);
       s += " < 0";
       Kokkos::Impl::throw_runtime_exception(s);
 #else
@@ -79,8 +79,8 @@ struct ArrayBoundsCheck<Integral, false> {
     if (i >= N) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
       std::string s = "Kokkos::Array: index ";
-      s += std::to_string(ssize_t i);
-      s += " >= "
+      s += std::to_string(i);
+      s += " >= ";
       s += std::to_string(N);
       Kokkos::Impl::throw_runtime_exception(s);
 #else
