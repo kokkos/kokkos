@@ -51,6 +51,55 @@
 
 namespace Kokkos {
 
+#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
+namespace Impl {
+template <typename Integral, bool Signed = std::is_signed<Integral>::value>
+struct ArrayBoundsCheck;
+
+template <typename Integral>
+struct ArrayBoundsCheck<Integral, true> {
+  ArrayBoundsCheck(Integral i, size_t N) {
+    if (i < 0) {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+      std::string s = "Kokkos::Array: index ";
+      s += std::to_string(ssize_t i);
+      s += " < 0";
+      Kokkos::Impl::throw_runtime_exception(s);
+#else
+      Kokkos::abort("Kokkos::Array: negative index in device code");
+#endif
+    }
+    ArrayBoundsCheck<Integral, false>(i, N);
+  }
+};
+
+template <typename Integral>
+struct ArrayBoundsCheck<Integral, false> {
+  ArrayBoundsCheck(Integral i, size_t N) {
+    if (i >= N) {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+      std::string s = "Kokkos::Array: index ";
+      s += std::to_string(ssize_t i);
+      s += " >= "
+      s += std::to_string(N);
+      Kokkos::Impl::throw_runtime_exception(s);
+#else
+      Kokkos::abort("Kokkos::Array: index >= size");
+#endif
+    }
+  }
+};
+} // end namespace Impl
+
+#define KOKKOS_ARRAY_BOUNDS_CHECK(i, N) \
+  Kokkos::Impl::ArrayBoundsCheck<decltype(i)>(i, N)
+
+#else  // !defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
+
+#define KOKKOS_ARRAY_BOUNDS_CHECK(i, N) (void)0
+
+#endif // !defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
+
 /**\brief  Derived from the C++17 'std::array'.
  *         Dropping the iterator interface.
  */
@@ -85,6 +134,7 @@ public:
   reference operator[]( const iType & i )
     {
       static_assert( ( std::is_integral<iType>::value || std::is_enum<iType>::value ) , "Must be integral argument" );
+      KOKKOS_ARRAY_BOUNDS_CHECK(i, N);
       return m_internal_implementation_private_member_data[i];
     }
 
@@ -93,6 +143,7 @@ public:
   const_reference operator[]( const iType & i ) const
     {
       static_assert( ( std::is_integral<iType>::value || std::is_enum<iType>::value ) , "Must be integral argument" );
+      KOKKOS_ARRAY_BOUNDS_CHECK(i, N);
       return m_internal_implementation_private_member_data[i];
     }
 
@@ -202,6 +253,7 @@ public:
   reference operator[]( const iType & i )
     {
       static_assert( ( std::is_integral<iType>::value || std::is_enum<iType>::value ) , "Must be integral argument" );
+      KOKKOS_ARRAY_BOUNDS_CHECK(i, m_size);
       return m_elem[i];
     }
 
@@ -210,6 +262,7 @@ public:
   const_reference operator[]( const iType & i ) const
     {
       static_assert( ( std::is_integral<iType>::value || std::is_enum<iType>::value ) , "Must be integral argument" );
+      KOKKOS_ARRAY_BOUNDS_CHECK(i, m_size);
       return m_elem[i];
     }
 
@@ -275,6 +328,7 @@ public:
   reference operator[]( const iType & i )
     {
       static_assert( ( std::is_integral<iType>::value || std::is_enum<iType>::value ) , "Must be integral argument" );
+      KOKKOS_ARRAY_BOUNDS_CHECK(i, m_size);
       return m_elem[i*m_stride];
     }
 
@@ -283,6 +337,7 @@ public:
   const_reference operator[]( const iType & i ) const
     {
       static_assert( ( std::is_integral<iType>::value || std::is_enum<iType>::value ) , "Must be integral argument" );
+      KOKKOS_ARRAY_BOUNDS_CHECK(i, m_size);
       return m_elem[i*m_stride];
     }
 
