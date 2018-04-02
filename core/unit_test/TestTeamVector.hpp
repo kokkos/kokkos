@@ -903,12 +903,12 @@ TEST_F( TEST_CATEGORY, triple_nested_parallelism )
 // With KOKKOS_DEBUG enabled, the functor uses too many registers to run
 // with a team size of 32 on GPUs, 16 is the max possible (at least on a K80 GPU)
 // See https://github.com/kokkos/kokkos/issues/1513
-#if defined(KOKKOS_DEBUG)
+#if defined(KOKKOS_DEBUG) && defined(KOKKOS_ENABLE_CUDA)
   if (!std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value) {
 #endif
   TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 32, 32 );
   TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 32, 16 );
-#if defined(KOKKOS_DEBUG)
+#if defined(KOKKOS_DEBUG) && defined(KOKKOS_ENABLE_CUDA)
   }
 #endif
   TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 16, 16 );
