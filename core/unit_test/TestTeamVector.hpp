@@ -86,6 +86,22 @@ struct my_complex {
   }
 
   KOKKOS_INLINE_FUNCTION
+  volatile my_complex & operator=( const my_complex & src ) volatile {
+    re = src.re;
+    im = src.im;
+    dummy = src.dummy;
+    return *this ;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  volatile my_complex & operator=( const volatile my_complex & src ) volatile {
+    re = src.re;
+    im = src.im;
+    dummy = src.dummy;
+    return *this ;
+  }
+
+  KOKKOS_INLINE_FUNCTION
   my_complex( const volatile my_complex & src ) {
     re = src.re;
     im = src.im;
@@ -112,6 +128,24 @@ struct my_complex {
     re += src.re;
     im += src.im;
     dummy += src.dummy;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  my_complex operator +( const my_complex & src ) {
+    my_complex tmp = *this;
+    tmp.re += src.re;
+    tmp.im += src.im;
+    tmp.dummy += src.dummy;
+    return tmp;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  my_complex operator+( const volatile my_complex & src ) volatile {
+    my_complex tmp = *this;
+    tmp.re += src.re;
+    tmp.im += src.im;
+    tmp.dummy += src.dummy;
+    return tmp;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -705,15 +739,23 @@ bool test_scalar( int nteams, int team_size, int test ) {
                           functor_vec_red< Scalar, ExecutionSpace >( d_flag ) );
   }
   else if ( test == 1 ) {
+    // WORKAROUND ROCM/CUDA
     #if defined(KOKKOS_ENABLE_CUDA)
     #if defined(KOKKOS_CUDA_CLANG_WORKAROUND) || defined(KOKKOS_ARCH_PASCAL)
     if(!std::is_same<ExecutionSpace,Kokkos::Cuda>::value)
     #endif
     #endif
+    #if defined(KOKKOS_ENABLE_ROCM)
+    if(!std::is_same<ExecutionSpace,Kokkos::Experimental::ROCm>::value)
+    #endif
     Kokkos::parallel_for( Kokkos::TeamPolicy< ExecutionSpace >( nteams, team_size, 8 ),
                           functor_vec_red_reducer< Scalar, ExecutionSpace >( d_flag ) );
   }
   else if ( test == 2 ) {
+    // WORKAROUND ROCM
+    #if defined(KOKKOS_ENABLE_ROCM)
+    if(!std::is_same<ExecutionSpace,Kokkos::Experimental::ROCm>::value)
+    #endif
     Kokkos::parallel_for( Kokkos::TeamPolicy< ExecutionSpace >( nteams, team_size, 8 ),
                           functor_vec_scan< Scalar, ExecutionSpace >( d_flag ) );
   }
@@ -734,6 +776,10 @@ bool test_scalar( int nteams, int team_size, int test ) {
                           functor_team_reduce< Scalar, ExecutionSpace >( d_flag ) );
   }
   else if ( test == 7 ) {
+    // WORKAROUND ROCM
+    #if defined(KOKKOS_ENABLE_ROCM)
+    if(!std::is_same<ExecutionSpace,Kokkos::Experimental::ROCm>::value)
+    #endif
     Kokkos::parallel_for( Kokkos::TeamPolicy< ExecutionSpace >( nteams, team_size ),
                           functor_team_reduce_reducer< Scalar, ExecutionSpace >( d_flag ) );
   }
@@ -746,6 +792,10 @@ bool test_scalar( int nteams, int team_size, int test ) {
                           functor_team_vector_reduce< Scalar, ExecutionSpace >( d_flag ) );
   }
   else if ( test == 10 ) {
+    // WORKAROUND ROCM
+    #if defined(KOKKOS_ENABLE_ROCM)
+    if(!std::is_same<ExecutionSpace,Kokkos::Experimental::ROCm>::value)
+    #endif
     Kokkos::parallel_for( Kokkos::TeamPolicy< ExecutionSpace >( nteams, team_size, 8 ),
                           functor_team_vector_reduce_reducer< Scalar, ExecutionSpace >( d_flag ) );
   }
@@ -758,6 +808,7 @@ bool test_scalar( int nteams, int team_size, int test ) {
 template< class ExecutionSpace >
 bool Test( int test ) {
   bool passed = true;
+
   passed = passed && test_scalar< int, ExecutionSpace >( 317, 33, test );
   passed = passed && test_scalar< long long int, ExecutionSpace >( 317, 33, test );
   passed = passed && test_scalar< float, ExecutionSpace >( 317, 33, test );
@@ -809,6 +860,7 @@ public:
 
     // Initialize x vector.
     Kokkos::parallel_for( range_policy( 0, ncols ), KOKKOS_LAMBDA ( const int i ) { x( i ) = 1; } );
+    Kokkos::fence();
 
     typedef Kokkos::TeamPolicy< DeviceType >                        team_policy;
     typedef typename Kokkos::TeamPolicy< DeviceType >::member_type  member_type;
@@ -820,6 +872,7 @@ public:
         A( j, i ) = 1;
       } );
     } );
+    Kokkos::fence();
 
     // Three level parallelism kernel to force caching of vector x.
     ScalarType result = 0.0;
@@ -838,9 +891,9 @@ public:
         } );
       } );
     }, result );
+    Kokkos::fence();
 
     const ScalarType solution = (ScalarType) nrows * (ScalarType) ncols;
-
     if ( int64_t(solution) != int64_t(result) ) {
       printf( "  TestTripleNestedReduce failed solution(%" PRId64 ") != result(%" PRId64 "),"
               " nrows(%" PRId32 ") ncols(%" PRId32 ") league_size(%" PRId32 ") team_size(%" PRId32 ")\n"
@@ -900,9 +953,14 @@ TEST_F( TEST_CATEGORY, team_vector )
 #ifndef SKIP_TEST
 TEST_F( TEST_CATEGORY, triple_nested_parallelism )
 {
+  #ifndef KOKKOS_ENABLE_ROCM // ROCm doesn't support TeamSize 32x32
   TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 32, 32 );
+  #endif
   TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 32, 16 );
   TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 16, 16 );
+  #ifndef KOKKOS_ENABLE_ROCM // ROCm doesn't support TeamSize not a power of 2
+  TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 7, 16 );
+  #endif
 }
 #endif
 #endif

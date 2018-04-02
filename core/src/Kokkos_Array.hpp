@@ -105,16 +105,26 @@ public:
       return & m_internal_implementation_private_member_data[0];
     }
 
+  #ifdef KOKKOS_ROCM_CLANG_WORKAROUND
   // Do not default unless move and move-assignment are also defined
-  // ~Array() = default ;
-  // Array() = default ;
-  // Array( const Array & ) = default ;
-  // Array & operator = ( const Array & ) = default ;
+  KOKKOS_INLINE_FUNCTION
+  ~Array() = default ;
+  Array() = default ;
+  Array( const Array & ) = default ;
+  Array & operator = ( const Array & ) = default ;
 
   // Some supported compilers are not sufficiently C++11 compliant
   // for default move constructor and move assignment operator.
-  // Array( Array && ) = default ;
-  // Array & operator = ( Array && ) = default ;
+  Array( Array && ) = default ;
+  Array & operator = ( Array && ) = default ;
+ 
+  KOKKOS_INLINE_FUNCTION
+  Array(const std::initializer_list<T>& vals) {
+    for(int i=0; i<N; i++) {
+      m_internal_implementation_private_member_data[i] = vals.begin()[i];
+    }
+  }
+  #endif
 };
 
 
