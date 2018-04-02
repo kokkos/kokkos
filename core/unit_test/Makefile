@@ -82,29 +82,28 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
 # complex failing
         OBJ_ROCM += TestROCm_AtomicViews.o
         OBJ_ROCM += TestROCm_Other.o
-#        OBJ_ROCM += TestROCm_MDRange.o
+# Compiles but runtime Segfaults:
+        #OBJ_ROCM += TestROCm_MDRange.o
 # rocm.memory_pool
         OBJ_ROCM += TestROCm_Scan.o
         OBJ_ROCM += TestROCm_SharedAlloc.o
         OBJ_ROCM += TestROCm_SubView_a.o
         OBJ_ROCM += TestROCm_SubView_b.o
-# relies on host accessable device memory
-#        OBJ_ROCM += TestROCm_SubView_c01.o
-#        OBJ_ROCM += TestROCm_SubView_c02.o
-#        OBJ_ROCM += TestROCm_SubView_c03.o
-#        OBJ_ROCM += TestROCm_SubView_c04.o
-#        OBJ_ROCM += TestROCm_SubView_c05.o
-#        OBJ_ROCM += TestROCm_SubView_c06.o
-#        OBJ_ROCM += TestROCm_SubView_c07.o
-#        OBJ_ROCM += TestROCm_SubView_c08.o
-#        OBJ_ROCM += TestROCm_SubView_c09.o
-#        OBJ_ROCM += TestROCm_SubView_c10.o
-#        OBJ_ROCM += TestROCm_SubView_c11.o
-#        OBJ_ROCM += TestROCm_SubView_c12.o
-# all of the above use UVM or Host accessable memory
-#        OBJ_ROCM += TestROCm_Team.o
-# compile fails
-#        OBJ_ROCM += TestROCm_TeamReductionScan.o
+        OBJ_ROCM += TestROCm_SubView_c01.o
+        OBJ_ROCM += TestROCm_SubView_c02.o
+        OBJ_ROCM += TestROCm_SubView_c03.o
+        OBJ_ROCM += TestROCm_SubView_c04.o
+        OBJ_ROCM += TestROCm_SubView_c05.o
+        OBJ_ROCM += TestROCm_SubView_c06.o
+        OBJ_ROCM += TestROCm_SubView_c07.o
+        OBJ_ROCM += TestROCm_SubView_c08.o
+        OBJ_ROCM += TestROCm_SubView_c09.o
+        OBJ_ROCM += TestROCm_SubView_c10.o
+        OBJ_ROCM += TestROCm_SubView_c11.o
+        OBJ_ROCM += TestROCm_SubView_c12.o
+        OBJ_ROCM += TestROCm_Team.o
+# compile fails / compiler segfaults
+        #OBJ_ROCM += TestROCm_TeamReductionScan.o
 # compile fails
         OBJ_ROCM += TestROCm_TeamScratch.o
         OBJ_ROCM += TestROCm_ViewAPI_b.o
