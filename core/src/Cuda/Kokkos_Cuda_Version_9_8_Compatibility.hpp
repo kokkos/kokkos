@@ -29,6 +29,12 @@
 #define KOKKOS_IMPL_CUDA_SHFL_DOWN(x,y,z) 0
 #endif 
 
+#if ( CUDA_VERSION < 9000 )
+#define KOKKOS_IMPL_CUDA_MAX_SHFL_SIZEOF sizeof(int)
+#else
+#define KOKKOS_IMPL_CUDA_MAX_SHFL_SIZEOF sizeof(long long)
+#endif
+
 #if defined( __CUDA_ARCH__ )
 #if ( CUDA_VERSION < 9000 )
 #define KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN( MSG ) { \
