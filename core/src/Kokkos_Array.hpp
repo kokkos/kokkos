@@ -76,7 +76,7 @@ struct ArrayBoundsCheck<Integral, true> {
 template <typename Integral>
 struct ArrayBoundsCheck<Integral, false> {
   ArrayBoundsCheck(Integral i, size_t N) {
-    if (i >= N) {
+    if ( size_t(i) >= N) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
       std::string s = "Kokkos::Array: index ";
       s += std::to_string(i);
