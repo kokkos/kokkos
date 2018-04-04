@@ -1,4 +1,3 @@
-
 /*
 //@HEADER
 // ************************************************************************
@@ -42,6 +41,5 @@
 //@HEADER
 */
 
-#include<serial/TestSerial_Category.hpp>
-#include<TestMDRange.hpp>
-
+#include <qthreads/TestQqthreads_Category.hpp>
+#include <TestViewAPI_d.hpp>

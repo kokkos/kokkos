@@ -41,5 +41,19 @@
 //@HEADER
 */
 
-#include <cuda/TestCuda_Category.hpp>
-#include <TestViewAPI_b.hpp>
+#include<TestViewAPI.hpp>
+
+namespace Test {
+
+#if !defined(KOKKOS_ENABLE_ROCM)
+TEST_F( TEST_CATEGORY, view_api_d )
+{
+  TestViewAPI< double, TEST_EXECSPACE >::run_test_const();
+  TestViewAPI< double, TEST_EXECSPACE >::run_test_subview();
+  TestViewAPI< double, TEST_EXECSPACE >::run_test_subview_strided();
+  TestViewAPI< double, TEST_EXECSPACE >::run_test_vector();
+  TestViewAPI< double, TEST_EXECSPACE >::run_test_view_operator_c();
+}
+#endif
+
+}

@@ -41,5 +41,5 @@
 //@HEADER
 */
 
-#include <rocm/TestROCmHostPinned_Category.hpp>
-#include <TestViewAPI.hpp>
+#include <openmptarget/TestOpenMPTarget_Category.hpp>
+#include <TestViewAPI_e.hpp>

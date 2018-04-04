@@ -41,5 +41,5 @@
 //@HEADER
 */
 
-#include <cuda/TestCuda_Category.hpp>
-#include <TestViewAPI_b.hpp>
+#include <qthreads/TestQqthreads_Category.hpp>
+#include <TestViewAPI_e.hpp>

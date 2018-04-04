@@ -41,5 +41,5 @@
 //@HEADER
 */
 
-#include <cuda/TestCuda_Category.hpp>
+#include <rocm/TestROCmHostPinned_Category.hpp>
 #include <TestViewAPI_b.hpp>

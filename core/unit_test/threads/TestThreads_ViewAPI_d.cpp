@@ -1,4 +1,3 @@
-
 /*
 //@HEADER
 // ************************************************************************
@@ -42,6 +41,5 @@
 //@HEADER
 */
 
-#include<openmp/TestOpenMP_Category.hpp>
-#include<TestMDRange.hpp>
-
+#include <threads/TestThreads_Category.hpp>
+#include <TestViewAPI_d.hpp>

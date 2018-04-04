@@ -1,4 +1,3 @@
-
 /*
 //@HEADER
 // ************************************************************************
@@ -42,6 +41,5 @@
 //@HEADER
 */
 
-#include<cuda/TestCuda_Category.hpp>
-#include<TestMDRange.hpp>
-
+#include <qthreads/TestQqthreads_Category.hpp>
+#include <TestViewAPI_a.hpp>

@@ -1,4 +1,3 @@
-
 /*
 //@HEADER
 // ************************************************************************
@@ -42,6 +41,5 @@
 //@HEADER
 */
 
-#include<rocm/TestROCm_Category.hpp>
-#include<TestMDRange.hpp>
-
+#include <rocm/TestROCm_Category.hpp>
+#include <TestViewAPI_e.hpp>

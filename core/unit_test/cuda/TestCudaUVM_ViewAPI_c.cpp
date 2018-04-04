@@ -1,4 +1,3 @@
-
 /*
 //@HEADER
 // ************************************************************************
@@ -42,6 +41,5 @@
 //@HEADER
 */
 
-#include<openmptarget/TestOpenMPTarget_Category.hpp>
-#include<TestMDRange.hpp>
-
+#include <cuda/TestCudaUVM_Category.hpp>
+#include <TestViewAPI_c.hpp>
