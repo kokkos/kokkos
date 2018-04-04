@@ -42,6 +42,6 @@
 //@HEADER
 */
 
-#include<threads/TestThreads_Category.hpp>
-#include<TestMDRange.hpp>
+#include<openmptarget/TestOpenMPTarget_Category.hpp>
+#include<TestMDRange_d.hpp>
 

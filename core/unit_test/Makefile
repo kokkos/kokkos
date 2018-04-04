@@ -42,7 +42,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	OBJ_CUDA += TestCuda_Init.o
 	OBJ_CUDA += TestCuda_SharedAlloc.o TestCudaUVM_SharedAlloc.o TestCudaHostPinned_SharedAlloc.o
 	OBJ_CUDA += TestCuda_RangePolicy.o
-	OBJ_CUDA += TestCuda_ViewAPI_b.o
+	OBJ_CUDA += TestCuda_ViewAPI_a.o TestCuda_ViewAPI_b.o TestCuda_ViewAPI_c.o TestCuda_ViewAPI_d.o TestCuda_ViewAPI_e.o
 	OBJ_CUDA += TestCuda_ViewMapping_a.o TestCuda_ViewMapping_b.o TestCuda_ViewMapping_subview.o
 	OBJ_CUDA += TestCudaUVM_ViewAPI.o
 	OBJ_CUDA += TestCudaUVM_ViewMapping_a.o TestCudaUVM_ViewMapping_b.o TestCudaUVM_ViewMapping_subview.o
@@ -61,7 +61,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	OBJ_CUDA += TestCuda_Team.o TestCuda_TeamScratch.o
 	OBJ_CUDA += TestCuda_TeamReductionScan.o
 	OBJ_CUDA += TestCuda_Other.o
-	OBJ_CUDA += TestCuda_MDRange.o
+	OBJ_CUDA += TestCuda_MDRange_a.o TestCuda_MDRange_b.o TestCuda_MDRange_c.o TestCuda_MDRange_d.o TestCuda_MDRange_e.o
 	OBJ_CUDA += TestCuda_Crs.o
 	OBJ_CUDA += TestCuda_Task.o TestCuda_WorkGraph.o
 	OBJ_CUDA += TestCuda_Spaces.o
@@ -82,7 +82,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
 # complex failing
         OBJ_ROCM += TestROCm_AtomicViews.o
         OBJ_ROCM += TestROCm_Other.o
-#        OBJ_ROCM += TestROCm_MDRange.o
+#        OBJ_ROCM += TestROCm_MDRange_a.o TestROCm_MDRange_b.o TestROCm_MDRange_c.o TestROCm_MDRange_d.o TestROCm_MDRange_e.o
 # rocm.memory_pool
         OBJ_ROCM += TestROCm_Scan.o
         OBJ_ROCM += TestROCm_SharedAlloc.o
@@ -107,7 +107,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
 #        OBJ_ROCM += TestROCm_TeamReductionScan.o
 # compile fails
         OBJ_ROCM += TestROCm_TeamScratch.o
-        OBJ_ROCM += TestROCm_ViewAPI_b.o
+        OBJ_ROCM += TestROCm_ViewAPI_a.o TestROCm_ViewAPI_b.o TestROCm_ViewAPI_c.o TestROCm_ViewAPI_d.o TestROCm_ViewAPI_e.o
         OBJ_ROCM += TestROCm_ViewMapping_a.o
         OBJ_ROCM += TestROCm_ViewMapping_b.o
         OBJ_ROCM += TestROCm_ViewMapping_subview.o
@@ -128,7 +128,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 	OBJ_THREADS += TestThreads_Init.o
 	OBJ_THREADS += TestThreads_SharedAlloc.o
 	OBJ_THREADS += TestThreads_RangePolicy.o
-	OBJ_THREADS += TestThreads_ViewAPI_b.o
+	OBJ_THREADS += TestThreads_ViewAPI_a.o TestThreads_ViewAPI_b.o TestThreads_ViewAPI_c.o TestThreads_ViewAPI_d.o TestThreads_ViewAPI_e.o
 	OBJ_THREADS += TestThreads_ViewMapping_a.o TestThreads_ViewMapping_b.o TestThreads_ViewMapping_subview.o
 	OBJ_THREADS += TestThreads_ViewOfClass.o
 	OBJ_THREADS += TestThreads_SubView_a.o TestThreads_SubView_b.o
@@ -142,7 +142,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 	OBJ_THREADS += TestThreads_Team.o TestThreads_TeamScratch.o
 	OBJ_THREADS += TestThreads_TeamReductionScan.o
 	OBJ_THREADS += TestThreads_Other.o
-	OBJ_THREADS += TestThreads_MDRange.o
+	OBJ_THREADS += TestThreads_MDRange_a.o TestThreads_MDRange_b.o TestThreads_MDRange_c.o TestThreads_MDRange_d.o TestThreads_MDRange_e.o
 
 	TARGETS += KokkosCore_UnitTest_Threads
 
@@ -154,7 +154,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	OBJ_OPENMP += TestOpenMP_Init.o
 	OBJ_OPENMP += TestOpenMP_SharedAlloc.o
 	OBJ_OPENMP += TestOpenMP_RangePolicy.o
-	OBJ_OPENMP += TestOpenMP_ViewAPI_b.o
+	OBJ_OPENMP += TestOpenMP_ViewAPI_a.o TestOpenMP_ViewAPI_b.o TestOpenMP_ViewAPI_c.o TestOpenMP_ViewAPI_d.o TestOpenMP_ViewAPI_e.o
 	OBJ_OPENMP += TestOpenMP_ViewMapping_a.o TestOpenMP_ViewMapping_b.o TestOpenMP_ViewMapping_subview.o
 	OBJ_OPENMP += TestOpenMP_ViewOfClass.o
 	OBJ_OPENMP += TestOpenMP_SubView_a.o TestOpenMP_SubView_b.o
@@ -169,10 +169,10 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	OBJ_OPENMP += TestOpenMP_Team.o TestOpenMP_TeamScratch.o
 	OBJ_OPENMP += TestOpenMP_TeamReductionScan.o
 	OBJ_OPENMP += TestOpenMP_Other.o
-	OBJ_OPENMP += TestOpenMP_MDRange.o
+	OBJ_OPENMP += TestOpenMP_MDRange_a.o TestOpenMP_MDRange_b.o TestOpenMP_MDRange_c.o TestOpenMP_MDRange_d.o TestOpenMP_MDRange_e.o
 	OBJ_OPENMP += TestOpenMP_Crs.o
 	OBJ_OPENMP += TestOpenMP_Task.o TestOpenMP_WorkGraph.o
-	OBJ_OPENMP += TestOpenMP_UniqueToken.o
+	sOBJ_OPENMP += TestOpenMP_UniqueToken.o
 	
 	TARGETS += KokkosCore_UnitTest_OpenMP
     TARGETS += KokkosCore_UnitTest_OpenMPInterOp
@@ -185,7 +185,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
 	OBJ_OPENMPTARGET += TestOpenMPTarget_Init.o
 	#OBJ_OPENMPTARGET += TestOpenMPTarget_SharedAlloc.o
 	OBJ_OPENMPTARGET += TestOpenMPTarget_RangePolicy.o
-	OBJ_OPENMPTARGET += TestOpenMPTarget_ViewAPI_b.o #Some commented out code
+	OBJ_OPENMPTARGET += TestOpenMPTarget_ViewAPI_a.o TestOpenMPTarget_ViewAPI_b.o TestOpenMPTarget_ViewAPI_c.o TestOpenMPTarget_ViewAPI_d.o TestOpenMPTarget_ViewAPI_e.o #Some commented out code
 	OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_a.o 
         OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_b.o 
         OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_subview.o
@@ -206,7 +206,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
         #OBJ_OPENMPTARGET += TestOpenMPTarget_TeamScratch.o
 	#OBJ_OPENMPTARGET += TestOpenMPTarget_TeamReductionScan.o
 	#OBJ_OPENMPTARGET += TestOpenMPTarget_Other.o
-	#OBJ_OPENMPTARGET += TestOpenMPTarget_MDRange.o
+	#OBJ_OPENMPTARGET += TestOpenMPTarget_MDRange_a.o TestOpenMPTarget_MDRange_b.o TestOpenMPTarget_MDRange_c.o TestOpenMPTarget_MDRange_d.o TestOpenMPTarget_MDRange_d.e
 	#OBJ_OPENMPTARGET += TestOpenMPTarget_Task.o
 	
 	TARGETS += KokkosCore_UnitTest_OpenMPTarget
@@ -222,7 +222,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
 	OBJ_QTHREADS += TestQthreads_SubView_c04.o TestQthreads_SubView_c05.o TestQthreads_SubView_c06.o
 	OBJ_QTHREADS += TestQthreads_SubView_c07.o TestQthreads_SubView_c08.o TestQthreads_SubView_c09.o
 	OBJ_QTHREADS += TestQthreads_SubView_c10.o TestQthreads_SubView_c11.o TestQthreads_SubView_c12.o
-	OBJ_QTHREADS += TestQthreads_ViewAPI_a.o TestQthreads_ViewAPI_b.o UnitTestMain.o gtest-all.o
+	OBJ_QTHREADS += TestQthreads_ViewAPI_a.o TestQthreads_ViewAPI_b.o TestQthreads_ViewAPI_c.o TestQthreads_ViewAPI_d.o TestQthreads_ViewAPI_e.o UnitTestMain.o gtest-all.o
 	TARGETS += KokkosCore_UnitTest_Qthreads
 
 	OBJ_QTHREADS2 = UnitTestMainInit.o gtest-all.o
@@ -237,7 +237,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
         OBJ_SERIAL += TestSerial_Init.o
         OBJ_SERIAL += TestSerial_SharedAlloc.o
         OBJ_SERIAL += TestSerial_RangePolicy.o
-        OBJ_SERIAL += TestSerial_ViewAPI_b.o
+        OBJ_SERIAL += TestSerial_ViewAPI_a.o TestSerial_ViewAPI_b.o TestSerial_ViewAPI_c.o TestSerial_ViewAPI_d.o TestSerial_ViewAPI_e.o
         OBJ_SERIAL += TestSerial_ViewMapping_a.o TestSerial_ViewMapping_b.o TestSerial_ViewMapping_subview.o
         OBJ_SERIAL += TestSerial_ViewOfClass.o
         OBJ_SERIAL += TestSerial_SubView_a.o TestSerial_SubView_b.o
@@ -254,7 +254,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
         OBJ_SERIAL += TestSerial_Other.o
         #HCC_WORKAROUND
         ifneq ($(KOKKOS_INTERNAL_COMPILER_HCC), 1)
-        OBJ_SERIAL += TestSerial_MDRange.o
+        OBJ_SERIAL += TestSerial_MDRange_a.o TestSerial_MDRange_b.o TestSerial_MDRange_c.o TestSerial_MDRange_d.o TestSerial_MDRange_e.o
         endif
         OBJ_SERIAL += TestSerial_Crs.o
         OBJ_SERIAL += TestSerial_Task.o TestSerial_WorkGraph.o

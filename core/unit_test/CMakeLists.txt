@@ -38,7 +38,11 @@ IF(Kokkos_ENABLE_Serial)
       serial/TestSerial_Atomics.cpp
       serial/TestSerial_Complex.cpp
       serial/TestSerial_Init.cpp
-      serial/TestSerial_MDRange.cpp
+      serial/TestSerial_MDRange_a.cpp
+      serial/TestSerial_MDRange_b.cpp
+      serial/TestSerial_MDRange_c.cpp
+      serial/TestSerial_MDRange_d.cpp
+      serial/TestSerial_MDRange_e.cpp
       serial/TestSerial_Other.cpp
       serial/TestSerial_RangePolicy.cpp
       serial/TestSerial_Reductions.cpp
@@ -62,7 +66,11 @@ IF(Kokkos_ENABLE_Serial)
       serial/TestSerial_Team.cpp
       serial/TestSerial_TeamReductionScan.cpp
       serial/TestSerial_TeamScratch.cpp
+      serial/TestSerial_ViewAPI_a.cpp
       serial/TestSerial_ViewAPI_b.cpp
+      serial/TestSerial_ViewAPI_c.cpp
+      serial/TestSerial_ViewAPI_d.cpp
+      serial/TestSerial_ViewAPI_e.cpp
       serial/TestSerial_ViewMapping_a.cpp
       serial/TestSerial_ViewMapping_b.cpp
       serial/TestSerial_ViewMapping_subview.cpp
@@ -86,7 +94,11 @@ IF(Kokkos_ENABLE_Pthread)
       threads/TestThreads_Atomics.cpp
       threads/TestThreads_Complex.cpp
       threads/TestThreads_Init.cpp
-      threads/TestThreads_MDRange.cpp
+      threads/TestThreads_MDRange_a.cpp
+      threads/TestThreads_MDRange_b.cpp
+      threads/TestThreads_MDRange_c.cpp
+      threads/TestThreads_MDRange_d.cpp
+      threads/TestThreads_MDRange_e.cpp
       threads/TestThreads_Other.cpp
       threads/TestThreads_RangePolicy.cpp
       threads/TestThreads_Reductions.cpp
@@ -110,7 +122,11 @@ IF(Kokkos_ENABLE_Pthread)
       threads/TestThreads_Team.cpp
       threads/TestThreads_TeamReductionScan.cpp
       threads/TestThreads_TeamScratch.cpp
+      threads/TestThreads_ViewAPI_a.cpp
       threads/TestThreads_ViewAPI_b.cpp
+      threads/TestThreads_ViewAPI_c.cpp
+      threads/TestThreads_ViewAPI_d.cpp
+      threads/TestThreads_ViewAPI_e.cpp
       threads/TestThreads_ViewMapping_a.cpp
       threads/TestThreads_ViewMapping_b.cpp
       threads/TestThreads_ViewMapping_subview.cpp
@@ -134,7 +150,11 @@ IF(Kokkos_ENABLE_OpenMP)
       openmp/TestOpenMP_Atomics.cpp
       openmp/TestOpenMP_Complex.cpp
       openmp/TestOpenMP_Init.cpp
-      openmp/TestOpenMP_MDRange.cpp
+      openmp/TestOpenMP_MDRange_a.cpp
+      openmp/TestOpenMP_MDRange_b.cpp
+      openmp/TestOpenMP_MDRange_c.cpp
+      openmp/TestOpenMP_MDRange_d.cpp
+      openmp/TestOpenMP_MDRange_e.cpp
       openmp/TestOpenMP_Other.cpp
       openmp/TestOpenMP_RangePolicy.cpp
       openmp/TestOpenMP_Reductions.cpp
@@ -158,7 +178,11 @@ IF(Kokkos_ENABLE_OpenMP)
       openmp/TestOpenMP_Task.cpp
       openmp/TestOpenMP_Team.cpp
       openmp/TestOpenMP_TeamReductionScan.cpp
+      openmp/TestOpenMP_ViewAPI_a.cpp
       openmp/TestOpenMP_ViewAPI_b.cpp
+      openmp/TestOpenMP_ViewAPI_c.cpp
+      openmp/TestOpenMP_ViewAPI_d.cpp
+      openmp/TestOpenMP_ViewAPI_e.cpp
       openmp/TestOpenMP_ViewMapping_a.cpp
       openmp/TestOpenMP_ViewMapping_b.cpp
       openmp/TestOpenMP_ViewMapping_subview.cpp
@@ -210,6 +234,9 @@ IF(Kokkos_ENABLE_Qthreads)
       qthreads/TestQthreads_Team.cpp
       qthreads/TestQthreads_ViewAPI_a.cpp
       qthreads/TestQthreads_ViewAPI_b.cpp
+      qthreads/TestQthreads_ViewAPI_c.cpp
+      qthreads/TestQthreads_ViewAPI_d.cpp
+      qthreads/TestQthreads_ViewAPI_e.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "
@@ -237,7 +264,11 @@ IF(Kokkos_ENABLE_Cuda)
       cuda/TestCuda_Atomics.cpp
       cuda/TestCuda_Complex.cpp
       cuda/TestCuda_Init.cpp
-      cuda/TestCuda_MDRange.cpp
+      cuda/TestCuda_MDRange_a.cpp
+      cuda/TestCuda_MDRange_b.cpp
+      cuda/TestCuda_MDRange_c.cpp
+      cuda/TestCuda_MDRange_d.cpp
+      cuda/TestCuda_MDRange_e.cpp
       cuda/TestCuda_Other.cpp
       cuda/TestCuda_RangePolicy.cpp
       cuda/TestCuda_Reductions.cpp
@@ -263,7 +294,11 @@ IF(Kokkos_ENABLE_Cuda)
       cuda/TestCuda_Team.cpp
       cuda/TestCuda_TeamReductionScan.cpp
       cuda/TestCuda_TeamScratch.cpp
+      cuda/TestCuda_ViewAPI_a.cpp
       cuda/TestCuda_ViewAPI_b.cpp
+      cuda/TestCuda_ViewAPI_c.cpp
+      cuda/TestCuda_ViewAPI_d.cpp
+      cuda/TestCuda_ViewAPI_e.cpp
       cuda/TestCuda_ViewMapping_a.cpp
       cuda/TestCuda_ViewMapping_b.cpp
       cuda/TestCuda_ViewMapping_subview.cpp
