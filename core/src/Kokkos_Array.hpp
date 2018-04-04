@@ -58,6 +58,7 @@ struct ArrayBoundsCheck;
 
 template <typename Integral>
 struct ArrayBoundsCheck<Integral, true> {
+  KOKKOS_INLINE_FUNCTION
   ArrayBoundsCheck(Integral i, size_t N) {
     if (i < 0) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
@@ -75,6 +76,7 @@ struct ArrayBoundsCheck<Integral, true> {
 
 template <typename Integral>
 struct ArrayBoundsCheck<Integral, false> {
+  KOKKOS_INLINE_FUNCTION
   ArrayBoundsCheck(Integral i, size_t N) {
     if ( size_t(i) >= N) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
