@@ -155,29 +155,29 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	OBJ_OPENMP = UnitTestMainInit.o gtest-all.o
-	#OBJ_OPENMP += TestOpenMP_Init.o
-	#OBJ_OPENMP += TestOpenMP_SharedAlloc.o
-	#OBJ_OPENMP += TestOpenMP_RangePolicy.o
-	#OBJ_OPENMP += TestOpenMP_ViewAPI_a.o TestOpenMP_ViewAPI_b.o TestOpenMP_ViewAPI_c.o TestOpenMP_ViewAPI_d.o TestOpenMP_ViewAPI_e.o
-	#OBJ_OPENMP += TestOpenMP_ViewMapping_a.o TestOpenMP_ViewMapping_b.o TestOpenMP_ViewMapping_subview.o
-	#OBJ_OPENMP += TestOpenMP_ViewOfClass.o
-	#OBJ_OPENMP += TestOpenMP_SubView_a.o TestOpenMP_SubView_b.o
-	#OBJ_OPENMP += TestOpenMP_SubView_c01.o TestOpenMP_SubView_c02.o TestOpenMP_SubView_c03.o
-	#OBJ_OPENMP += TestOpenMP_SubView_c04.o TestOpenMP_SubView_c05.o TestOpenMP_SubView_c06.o
-	#OBJ_OPENMP += TestOpenMP_SubView_c07.o TestOpenMP_SubView_c08.o TestOpenMP_SubView_c09.o
-	#OBJ_OPENMP += TestOpenMP_SubView_c10.o TestOpenMP_SubView_c11.o TestOpenMP_SubView_c12.o
-	#OBJ_OPENMP += TestOpenMP_SubView_c13.o
+	OBJ_OPENMP += TestOpenMP_Init.o
+	OBJ_OPENMP += TestOpenMP_SharedAlloc.o
+	OBJ_OPENMP += TestOpenMP_RangePolicy.o
+	OBJ_OPENMP += TestOpenMP_ViewAPI_a.o TestOpenMP_ViewAPI_b.o TestOpenMP_ViewAPI_c.o TestOpenMP_ViewAPI_d.o TestOpenMP_ViewAPI_e.o
+	OBJ_OPENMP += TestOpenMP_ViewMapping_a.o TestOpenMP_ViewMapping_b.o TestOpenMP_ViewMapping_subview.o
+	OBJ_OPENMP += TestOpenMP_ViewOfClass.o
+	OBJ_OPENMP += TestOpenMP_SubView_a.o TestOpenMP_SubView_b.o
+	OBJ_OPENMP += TestOpenMP_SubView_c01.o TestOpenMP_SubView_c02.o TestOpenMP_SubView_c03.o
+	OBJ_OPENMP += TestOpenMP_SubView_c04.o TestOpenMP_SubView_c05.o TestOpenMP_SubView_c06.o
+	OBJ_OPENMP += TestOpenMP_SubView_c07.o TestOpenMP_SubView_c08.o TestOpenMP_SubView_c09.o
+	OBJ_OPENMP += TestOpenMP_SubView_c10.o TestOpenMP_SubView_c11.o TestOpenMP_SubView_c12.o
+	OBJ_OPENMP += TestOpenMP_SubView_c13.o
 	OBJ_OPENMP += TestOpenMP_Reductions.o TestOpenMP_Scan.o
 	OBJ_OPENMP += TestOpenMP_Reducers_a.o TestOpenMP_Reducers_b.o TestOpenMP_Reducers_c.o TestOpenMP_Reducers_d.o
-	#OBJ_OPENMP += TestOpenMP_Complex.o
-	#OBJ_OPENMP += TestOpenMP_AtomicOperations.o TestOpenMP_AtomicViews.o TestOpenMP_Atomics.o
-	#OBJ_OPENMP += TestOpenMP_Team.o TestOpenMP_TeamScratch.o
-	#OBJ_OPENMP += TestOpenMP_TeamReductionScan.o
-	#OBJ_OPENMP += TestOpenMP_Other.o
-	#OBJ_OPENMP += TestOpenMP_MDRange_a.o TestOpenMP_MDRange_b.o TestOpenMP_MDRange_c.o TestOpenMP_MDRange_d.o TestOpenMP_MDRange_e.o
-	#OBJ_OPENMP += TestOpenMP_Crs.o
-	#OBJ_OPENMP += TestOpenMP_Task.o TestOpenMP_WorkGraph.o
-	#OBJ_OPENMP += TestOpenMP_UniqueToken.o
+	OBJ_OPENMP += TestOpenMP_Complex.o
+	OBJ_OPENMP += TestOpenMP_AtomicOperations.o TestOpenMP_AtomicViews.o TestOpenMP_Atomics.o
+	OBJ_OPENMP += TestOpenMP_Team.o TestOpenMP_TeamScratch.o
+	OBJ_OPENMP += TestOpenMP_TeamReductionScan.o
+	OBJ_OPENMP += TestOpenMP_Other.o
+	OBJ_OPENMP += TestOpenMP_MDRange_a.o TestOpenMP_MDRange_b.o TestOpenMP_MDRange_c.o TestOpenMP_MDRange_d.o TestOpenMP_MDRange_e.o
+	OBJ_OPENMP += TestOpenMP_Crs.o
+	OBJ_OPENMP += TestOpenMP_Task.o TestOpenMP_WorkGraph.o
+	OBJ_OPENMP += TestOpenMP_UniqueToken.o
 	
 	TARGETS += KokkosCore_UnitTest_OpenMP
     TARGETS += KokkosCore_UnitTest_OpenMPInterOp
@@ -282,7 +282,11 @@ TEST_TARGETS += test-host-barrier
 OBJ_DEFAULT = UnitTestMainInit.o gtest-all.o
 ifneq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
 ifneq ($(KOKKOS_INTERNAL_COMPILER_HCC), 1)
-  OBJ_DEFAULT += TestDefaultDeviceType.o TestDefaultDeviceType_a.o TestDefaultDeviceType_b.o TestDefaultDeviceType_c.o TestDefaultDeviceType_d.o
+  OBJ_DEFAULT += TestDefaultDeviceType.o 
+  OBJ_DEFAULT += TestDefaultDeviceType_a1.o TestDefaultDeviceType_b1.o TestDefaultDeviceType_c1.o 
+  OBJ_DEFAULT += TestDefaultDeviceType_a2.o TestDefaultDeviceType_b2.o TestDefaultDeviceType_c2.o 
+  OBJ_DEFAULT += TestDefaultDeviceType_a3.o TestDefaultDeviceType_b3.o TestDefaultDeviceType_c3.o 
+  OBJ_DEFAULT += TestDefaultDeviceType_d.o
 endif
 endif
 

@@ -46,6 +46,10 @@ IF(Kokkos_ENABLE_Serial)
       serial/TestSerial_Other.cpp
       serial/TestSerial_RangePolicy.cpp
       serial/TestSerial_Reductions.cpp
+      serial/TestSerial_Reducers_a.cpp
+      serial/TestSerial_Reducers_b.cpp
+      serial/TestSerial_Reducers_c.cpp
+      serial/TestSerial_Reducers_d.cpp
       serial/TestSerial_Scan.cpp
       serial/TestSerial_SharedAlloc.cpp
       serial/TestSerial_SubView_a.cpp
@@ -102,6 +106,10 @@ IF(Kokkos_ENABLE_Pthread)
       threads/TestThreads_Other.cpp
       threads/TestThreads_RangePolicy.cpp
       threads/TestThreads_Reductions.cpp
+      threads/TestThreads_Reducers_a.cpp
+      threads/TestThreads_Reducers_b.cpp
+      threads/TestThreads_Reducers_c.cpp
+      threads/TestThreads_Reducers_d.cpp
       threads/TestThreads_Scan.cpp
       threads/TestThreads_SharedAlloc.cpp
       threads/TestThreads_SubView_a.cpp
@@ -158,6 +166,10 @@ IF(Kokkos_ENABLE_OpenMP)
       openmp/TestOpenMP_Other.cpp
       openmp/TestOpenMP_RangePolicy.cpp
       openmp/TestOpenMP_Reductions.cpp
+      openmp/TestOpenMP_Reducers_a.cpp
+      openmp/TestOpenMP_Reducers_b.cpp
+      openmp/TestOpenMP_Reducers_c.cpp
+      openmp/TestOpenMP_Reducers_d.cpp
       openmp/TestOpenMP_Scan.cpp
       openmp/TestOpenMP_SharedAlloc.cpp
       openmp/TestOpenMP_SubView_a.cpp
@@ -216,6 +228,10 @@ IF(Kokkos_ENABLE_Qthreads)
       qthreads/TestQthreads_Complex.cpp
       qthreads/TestQthreads_Other.cpp
       qthreads/TestQthreads_Reductions.cpp
+      qthreads/TestQthreads_Reducers_a.cpp
+      qthreads/TestQthreads_Reducers_b.cpp
+      qthreads/TestQthreads_Reducers_c.cpp
+      qthreads/TestQthreads_Reducers_d.cpp
       qthreads/TestQthreads_SubView_a.cpp
       qthreads/TestQthreads_SubView_b.cpp
       qthreads/TestQthreads_SubView_c01.cpp
@@ -272,6 +288,10 @@ IF(Kokkos_ENABLE_Cuda)
       cuda/TestCuda_Other.cpp
       cuda/TestCuda_RangePolicy.cpp
       cuda/TestCuda_Reductions.cpp
+      cuda/TestCuda_Reducers_a.cpp
+      cuda/TestCuda_Reducers_b.cpp
+      cuda/TestCuda_Reducers_c.cpp
+      cuda/TestCuda_Reducers_d.cpp
       cuda/TestCuda_Scan.cpp
       cuda/TestCuda_SharedAlloc.cpp
       cuda/TestCuda_Spaces.cpp
@@ -328,9 +348,15 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
   SOURCES
     UnitTestMainInit.cpp
     default/TestDefaultDeviceType.cpp
-    default/TestDefaultDeviceType_a.cpp
-    default/TestDefaultDeviceType_b.cpp
-    default/TestDefaultDeviceType_c.cpp
+    default/TestDefaultDeviceType_a1.cpp
+    default/TestDefaultDeviceType_b1.cpp
+    default/TestDefaultDeviceType_c1.cpp
+    default/TestDefaultDeviceType_a2.cpp
+    default/TestDefaultDeviceType_b2.cpp
+    default/TestDefaultDeviceType_c2.cpp
+    default/TestDefaultDeviceType_a3.cpp
+    default/TestDefaultDeviceType_b3.cpp
+    default/TestDefaultDeviceType_c3.cpp
     default/TestDefaultDeviceType_d.cpp
     default/TestDefaultDeviceTypeResize.cpp
   COMM serial mpi
