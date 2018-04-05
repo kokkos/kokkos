@@ -58,7 +58,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	OBJ_CUDA += TestCuda_Reductions.o TestCuda_Scan.o
 	OBJ_CUDA += TestCuda_Reducers_a.o TestCuda_Reducers_b.o TestCuda_Reducers_c.o TestCuda_Reducers_d.o
 	OBJ_CUDA += TestCuda_Complex.o
-	OBJ_CUDA += TestCuda_AtomicOperations.o TestCuda_AtomicViews.o TestCuda_Atomics.o
+	OBJ_CUDA += TestCuda_AtomicOperations_int.o TestCuda_AtomicOperations_unsignedint.o TestCuda_AtomicOperations_longint.o 
+	OBJ_CUDA += TestCuda_AtomicOperations_unsignedlongint.o TestCuda_AtomicOperations_longlongint.o TestCuda_AtomicOperations_double.o TestCuda_AtomicOperations_float.o
+	OBJ_CUDA += TestCuda_AtomicViews.o TestCuda_Atomics.o
 	OBJ_CUDA += TestCuda_Team.o TestCuda_TeamScratch.o
 	OBJ_CUDA += TestCuda_TeamReductionScan.o
 	OBJ_CUDA += TestCuda_Other.o
@@ -78,7 +80,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
         OBJ_ROCM += TestROCm_Init.o
         OBJ_ROCM += TestROCm_Complex.o
         OBJ_ROCM += TestROCm_RangePolicy.o
-        OBJ_ROCM += TestROCm_AtomicOperations.o
+	OBJ_ROCM += TestROCm_AtomicOperations_int.o TestROCm_AtomicOperations_unsignedint.o TestROCm_AtomicOperations_longint.o 
+	OBJ_ROCM += TestROCm_AtomicOperations_unsignedlongint.o TestROCm_AtomicOperations_longlongint.o TestROCm_AtomicOperations_double.o TestROCm_AtomicOperations_float.o
         OBJ_ROCM += TestROCm_Atomics.o
 # complex failing
         OBJ_ROCM += TestROCm_AtomicViews.o
@@ -142,7 +145,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 	OBJ_THREADS += TestThreads_Reductions.o TestThreads_Scan.o
 	OBJ_THREADS += TestThreads_Reducers_a.o TestThreads_Reducers_b.o TestThreads_Reducers_c.o TestThreads_Reducers_d.o
 	OBJ_THREADS += TestThreads_Complex.o
-	OBJ_THREADS += TestThreads_AtomicOperations.o TestThreads_AtomicViews.o TestThreads_Atomics.o
+	OBJ_THREADS += TestThreads_AtomicOperations_int.o TestThreads_AtomicOperations_unsignedint.o TestThreads_AtomicOperations_longint.o 
+	OBJ_THREADS += TestThreads_AtomicOperations_unsignedlongint.o TestThreads_AtomicOperations_longlongint.o TestThreads_AtomicOperations_double.o TestThreads_AtomicOperations_float.o
+	OBJ_THREADS += TestThreads_AtomicViews.o TestThreads_Atomics.o
 	OBJ_THREADS += TestThreads_Team.o TestThreads_TeamScratch.o
 	OBJ_THREADS += TestThreads_TeamReductionScan.o
 	OBJ_THREADS += TestThreads_Other.o
@@ -170,7 +175,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	OBJ_OPENMP += TestOpenMP_Reductions.o TestOpenMP_Scan.o
 	OBJ_OPENMP += TestOpenMP_Reducers_a.o TestOpenMP_Reducers_b.o TestOpenMP_Reducers_c.o TestOpenMP_Reducers_d.o
 	OBJ_OPENMP += TestOpenMP_Complex.o
-	OBJ_OPENMP += TestOpenMP_AtomicOperations.o TestOpenMP_AtomicViews.o TestOpenMP_Atomics.o
+	OBJ_OPENMP += TestOpenMP_AtomicOperations_int.o TestOpenMP_AtomicOperations_unsignedint.o TestOpenMP_AtomicOperations_longint.o 
+	OBJ_OPENMP += TestOpenMP_AtomicOperations_unsignedlongint.o TestOpenMP_AtomicOperations_longlongint.o TestOpenMP_AtomicOperations_double.o TestOpenMP_AtomicOperations_float.o
+	OBJ_OPENMP += TestOpenMP_AtomicViews.o TestOpenMP_Atomics.o
 	OBJ_OPENMP += TestOpenMP_Team.o TestOpenMP_TeamScratch.o
 	OBJ_OPENMP += TestOpenMP_TeamReductionScan.o
 	OBJ_OPENMP += TestOpenMP_Other.o
@@ -192,8 +199,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
 	OBJ_OPENMPTARGET += TestOpenMPTarget_RangePolicy.o
 	OBJ_OPENMPTARGET += TestOpenMPTarget_ViewAPI_a.o TestOpenMPTarget_ViewAPI_b.o TestOpenMPTarget_ViewAPI_c.o TestOpenMPTarget_ViewAPI_d.o TestOpenMPTarget_ViewAPI_e.o #Some commented out code
 	OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_a.o 
-        OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_b.o 
-        OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_subview.o
+    OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_b.o 
+    OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_subview.o
 	#OBJ_OPENMPTARGET += TestOpenMPTarget_ViewOfClass.o
 	OBJ_OPENMPTARGET += TestOpenMPTarget_SubView_a.o TestOpenMPTarget_SubView_b.o
 	#The following subview tests need something like UVM:
@@ -205,7 +212,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
 	#OBJ_OPENMPTARGET += TestOpenMPTarget_Reducers_a.o TestOpenMPTarget_Reducers_b.o TestOpenMPTarget_Reducers_c.o TestOpenMPTarget_Reducers_d.o
         #OBJ_OPENMPTARGET += TestOpenMPTarget_Scan.o
 	OBJ_OPENMPTARGET += TestOpenMPTarget_Complex.o
-	OBJ_OPENMPTARGET += TestOpenMPTarget_AtomicOperations.o 
+	OBJ_OPENMPTARGET += TestOpenMPTarget_AtomicOperations_int.o TestOpenMPTarget_AtomicOperations_unsignedint.o TestOpenMPTarget_AtomicOperations_longint.o 
+	OBJ_OPENMPTARGET += TestOpenMPTarget_AtomicOperations_unsignedlongint.o TestOpenMPTarget_AtomicOperations_longlongint.o TestOpenMPTarget_AtomicOperations_double.o TestOpenMPTarget_AtomicOperations_float.o
         OBJ_OPENMPTARGET += TestOpenMPTarget_AtomicViews.o 
         OBJ_OPENMPTARGET += TestOpenMPTarget_Atomics.o # Commented Out Arbitrary Type Atomics
 	#OBJ_OPENMPTARGET += TestOpenMPTarget_Team.o # There is still a static function in this
@@ -255,7 +263,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
         OBJ_SERIAL += TestSerial_Reductions.o TestSerial_Scan.o
     	OBJ_SERIAL += TestSerial_Reducers_a.o TestSerial_Reducers_b.o TestSerial_Reducers_c.o TestSerial_Reducers_d.o
         OBJ_SERIAL += TestSerial_Complex.o
-        OBJ_SERIAL += TestSerial_AtomicOperations.o TestSerial_AtomicViews.o TestSerial_Atomics.o
+	    OBJ_SERIAL += TestSerial_AtomicOperations_int.o TestSerial_AtomicOperations_unsignedint.o TestSerial_AtomicOperations_longint.o 
+	    OBJ_SERIAL += TestSerial_AtomicOperations_unsignedlongint.o TestSerial_AtomicOperations_longlongint.o TestSerial_AtomicOperations_double.o TestSerial_AtomicOperations_float.o
+	    OBJ_SERIAL += TestSerial_AtomicViews.o TestSerial_Atomics.o
         OBJ_SERIAL += TestSerial_Team.o TestSerial_TeamScratch.o
         OBJ_SERIAL += TestSerial_TeamReductionScan.o
         OBJ_SERIAL += TestSerial_Other.o

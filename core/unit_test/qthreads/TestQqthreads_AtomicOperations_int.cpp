@@ -41,6 +41,6 @@
 //@HEADER
 */
 
-#include<rocm/TestROCm_Category.hpp>
-#include<TestAtomicOperations.hpp>
+#include<qthreads/TestQqthreads_Category.hpp>
+#include<TestAtomicOperations_int.hpp>
 

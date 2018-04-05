@@ -42,5 +42,5 @@
 */
 
 #include<threads/TestThreads_Category.hpp>
-#include<TestAtomicOperations.hpp>
+#include<TestAtomicOperations_int.hpp>
 

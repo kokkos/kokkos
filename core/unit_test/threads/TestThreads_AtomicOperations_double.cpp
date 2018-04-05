@@ -41,6 +41,6 @@
 //@HEADER
 */
 
-#include<cuda/TestCuda_Category.hpp>
-#include<TestAtomicOperations.hpp>
+#include<threads/TestThreads_Category.hpp>
+#include<TestAtomicOperations_double.hpp>
 

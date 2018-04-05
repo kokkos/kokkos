@@ -41,6 +41,6 @@
 //@HEADER
 */
 
-#include<serial/TestSerial_Category.hpp>
-#include<TestAtomicOperations.hpp>
+#include<openmptarget/TestOpenMPTarget_Category.hpp>
+#include<TestAtomicOperations_unsignedint.hpp>
 
