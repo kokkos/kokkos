@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include <rocm/TestROCm_Category.hpp>
-#include <TestReduce.hpp>
-#include <TestCXX11Deduction.hpp>
+#include <openmp/TestOpenMP_Category.hpp>
+#include <TestReducers_d.hpp>

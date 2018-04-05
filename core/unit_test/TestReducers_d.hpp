@@ -41,6 +41,13 @@
 //@HEADER
 */
 
-#include <rocm/TestROCm_Category.hpp>
-#include <TestReduce.hpp>
-#include <TestCXX11Deduction.hpp>
+#include <TestReducers.hpp>
+
+namespace Test {
+TEST_F( TEST_CATEGORY, reducers_complex_double )
+{
+  TestReducers< Kokkos::complex<double>, TEST_EXECSPACE >::execute_basic();
+}
+
+
+} // namespace Test

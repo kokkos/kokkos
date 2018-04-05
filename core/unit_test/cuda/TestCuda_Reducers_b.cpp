@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include <rocm/TestROCm_Category.hpp>
-#include <TestReduce.hpp>
-#include <TestCXX11Deduction.hpp>
+#include <cuda/TestCuda_Category.hpp>
+#include <TestReducers_b.hpp>

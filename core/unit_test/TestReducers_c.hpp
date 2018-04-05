@@ -41,6 +41,11 @@
 //@HEADER
 */
 
-#include <rocm/TestROCm_Category.hpp>
-#include <TestReduce.hpp>
-#include <TestCXX11Deduction.hpp>
+#include <TestReducers.hpp>
+
+namespace Test {
+TEST_F( TEST_CATEGORY, reducers_double )
+{
+  TestReducers< double, TEST_EXECSPACE >::execute_float();
+}
+} // namespace Test

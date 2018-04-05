@@ -56,6 +56,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	OBJ_CUDA += TestCuda_SubView_c10.o TestCuda_SubView_c11.o TestCuda_SubView_c12.o
 	OBJ_CUDA += TestCuda_SubView_c13.o
 	OBJ_CUDA += TestCuda_Reductions.o TestCuda_Scan.o
+	OBJ_CUDA += TestCuda_Reducers_a.o TestCuda_Reducers_b.o TestCuda_Reducers_c.o TestCuda_Reducers_d.o
 	OBJ_CUDA += TestCuda_Complex.o
 	OBJ_CUDA += TestCuda_AtomicOperations.o TestCuda_AtomicViews.o TestCuda_Atomics.o
 	OBJ_CUDA += TestCuda_Team.o TestCuda_TeamScratch.o
@@ -84,6 +85,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
         OBJ_ROCM += TestROCm_Other.o
 #        OBJ_ROCM += TestROCm_MDRange_a.o TestROCm_MDRange_b.o TestROCm_MDRange_c.o TestROCm_MDRange_d.o TestROCm_MDRange_e.o
 # rocm.memory_pool
+	OBJ_ROCM += TestROCm_Reductions.o 
+	OBJ_ROCM += TestROCm_Reducers_a.o TestROCm_Reducers_b.o TestROCm_Reducers_c.o TestROCm_Reducers_d.o
         OBJ_ROCM += TestROCm_Scan.o
         OBJ_ROCM += TestROCm_SharedAlloc.o
         OBJ_ROCM += TestROCm_SubView_a.o
@@ -111,12 +114,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
         OBJ_ROCM += TestROCm_ViewMapping_a.o
         OBJ_ROCM += TestROCm_ViewMapping_b.o
         OBJ_ROCM += TestROCm_ViewMapping_subview.o
-	OBJ_ROCM += TestROCmHostPinned_ViewAPI.o
-	OBJ_ROCM += TestROCmHostPinned_ViewMapping_a.o 
-	OBJ_ROCM += TestROCmHostPinned_ViewMapping_b.o 
-	OBJ_ROCM += TestROCmHostPinned_ViewMapping_subview.o
+	    OBJ_ROCM += TestROCmHostPinned_ViewAPI.o
+	    OBJ_ROCM += TestROCmHostPinned_ViewMapping_a.o 
+	    OBJ_ROCM += TestROCmHostPinned_ViewMapping_b.o 
+	    OBJ_ROCM += TestROCmHostPinned_ViewMapping_subview.o
         OBJ_ROCM += TestROCm_ViewOfClass.o
-	OBJ_ROCM += TestROCm_Spaces.o
+	    OBJ_ROCM += TestROCm_Spaces.o
      
         TARGETS += KokkosCore_UnitTest_ROCm
         TEST_TARGETS += test-rocm
@@ -137,6 +140,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 	OBJ_THREADS += TestThreads_SubView_c07.o TestThreads_SubView_c08.o TestThreads_SubView_c09.o
 	OBJ_THREADS += TestThreads_SubView_c10.o TestThreads_SubView_c11.o TestThreads_SubView_c12.o
 	OBJ_THREADS += TestThreads_Reductions.o TestThreads_Scan.o
+	OBJ_THREADS += TestThreads_Reducers_a.o TestThreads_Reducers_b.o TestThreads_Reducers_c.o TestThreads_Reducers_d.o
 	OBJ_THREADS += TestThreads_Complex.o
 	OBJ_THREADS += TestThreads_AtomicOperations.o TestThreads_AtomicViews.o TestThreads_Atomics.o
 	OBJ_THREADS += TestThreads_Team.o TestThreads_TeamScratch.o
@@ -151,28 +155,29 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	OBJ_OPENMP = UnitTestMainInit.o gtest-all.o
-	OBJ_OPENMP += TestOpenMP_Init.o
-	OBJ_OPENMP += TestOpenMP_SharedAlloc.o
-	OBJ_OPENMP += TestOpenMP_RangePolicy.o
-	OBJ_OPENMP += TestOpenMP_ViewAPI_a.o TestOpenMP_ViewAPI_b.o TestOpenMP_ViewAPI_c.o TestOpenMP_ViewAPI_d.o TestOpenMP_ViewAPI_e.o
-	OBJ_OPENMP += TestOpenMP_ViewMapping_a.o TestOpenMP_ViewMapping_b.o TestOpenMP_ViewMapping_subview.o
-	OBJ_OPENMP += TestOpenMP_ViewOfClass.o
-	OBJ_OPENMP += TestOpenMP_SubView_a.o TestOpenMP_SubView_b.o
-	OBJ_OPENMP += TestOpenMP_SubView_c01.o TestOpenMP_SubView_c02.o TestOpenMP_SubView_c03.o
-	OBJ_OPENMP += TestOpenMP_SubView_c04.o TestOpenMP_SubView_c05.o TestOpenMP_SubView_c06.o
-	OBJ_OPENMP += TestOpenMP_SubView_c07.o TestOpenMP_SubView_c08.o TestOpenMP_SubView_c09.o
-	OBJ_OPENMP += TestOpenMP_SubView_c10.o TestOpenMP_SubView_c11.o TestOpenMP_SubView_c12.o
-	OBJ_OPENMP += TestOpenMP_SubView_c13.o
+	#OBJ_OPENMP += TestOpenMP_Init.o
+	#OBJ_OPENMP += TestOpenMP_SharedAlloc.o
+	#OBJ_OPENMP += TestOpenMP_RangePolicy.o
+	#OBJ_OPENMP += TestOpenMP_ViewAPI_a.o TestOpenMP_ViewAPI_b.o TestOpenMP_ViewAPI_c.o TestOpenMP_ViewAPI_d.o TestOpenMP_ViewAPI_e.o
+	#OBJ_OPENMP += TestOpenMP_ViewMapping_a.o TestOpenMP_ViewMapping_b.o TestOpenMP_ViewMapping_subview.o
+	#OBJ_OPENMP += TestOpenMP_ViewOfClass.o
+	#OBJ_OPENMP += TestOpenMP_SubView_a.o TestOpenMP_SubView_b.o
+	#OBJ_OPENMP += TestOpenMP_SubView_c01.o TestOpenMP_SubView_c02.o TestOpenMP_SubView_c03.o
+	#OBJ_OPENMP += TestOpenMP_SubView_c04.o TestOpenMP_SubView_c05.o TestOpenMP_SubView_c06.o
+	#OBJ_OPENMP += TestOpenMP_SubView_c07.o TestOpenMP_SubView_c08.o TestOpenMP_SubView_c09.o
+	#OBJ_OPENMP += TestOpenMP_SubView_c10.o TestOpenMP_SubView_c11.o TestOpenMP_SubView_c12.o
+	#OBJ_OPENMP += TestOpenMP_SubView_c13.o
 	OBJ_OPENMP += TestOpenMP_Reductions.o TestOpenMP_Scan.o
-	OBJ_OPENMP += TestOpenMP_Complex.o
-	OBJ_OPENMP += TestOpenMP_AtomicOperations.o TestOpenMP_AtomicViews.o TestOpenMP_Atomics.o
-	OBJ_OPENMP += TestOpenMP_Team.o TestOpenMP_TeamScratch.o
-	OBJ_OPENMP += TestOpenMP_TeamReductionScan.o
-	OBJ_OPENMP += TestOpenMP_Other.o
-	OBJ_OPENMP += TestOpenMP_MDRange_a.o TestOpenMP_MDRange_b.o TestOpenMP_MDRange_c.o TestOpenMP_MDRange_d.o TestOpenMP_MDRange_e.o
-	OBJ_OPENMP += TestOpenMP_Crs.o
-	OBJ_OPENMP += TestOpenMP_Task.o TestOpenMP_WorkGraph.o
-	sOBJ_OPENMP += TestOpenMP_UniqueToken.o
+	OBJ_OPENMP += TestOpenMP_Reducers_a.o TestOpenMP_Reducers_b.o TestOpenMP_Reducers_c.o TestOpenMP_Reducers_d.o
+	#OBJ_OPENMP += TestOpenMP_Complex.o
+	#OBJ_OPENMP += TestOpenMP_AtomicOperations.o TestOpenMP_AtomicViews.o TestOpenMP_Atomics.o
+	#OBJ_OPENMP += TestOpenMP_Team.o TestOpenMP_TeamScratch.o
+	#OBJ_OPENMP += TestOpenMP_TeamReductionScan.o
+	#OBJ_OPENMP += TestOpenMP_Other.o
+	#OBJ_OPENMP += TestOpenMP_MDRange_a.o TestOpenMP_MDRange_b.o TestOpenMP_MDRange_c.o TestOpenMP_MDRange_d.o TestOpenMP_MDRange_e.o
+	#OBJ_OPENMP += TestOpenMP_Crs.o
+	#OBJ_OPENMP += TestOpenMP_Task.o TestOpenMP_WorkGraph.o
+	#OBJ_OPENMP += TestOpenMP_UniqueToken.o
 	
 	TARGETS += KokkosCore_UnitTest_OpenMP
     TARGETS += KokkosCore_UnitTest_OpenMPInterOp
@@ -197,6 +202,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
 	#OBJ_OPENMPTARGET += TestOpenMPTarget_SubView_c07.o TestOpenMPTarget_SubView_c08.o TestOpenMPTarget_SubView_c09.o
 	#OBJ_OPENMPTARGET += TestOpenMPTarget_SubView_c10.o TestOpenMPTarget_SubView_c11.o TestOpenMPTarget_SubView_c12.o
 	#OBJ_OPENMPTARGET += TestOpenMPTarget_Reductions.o # Need custom reductions
+	#OBJ_OPENMPTARGET += TestOpenMPTarget_Reducers_a.o TestOpenMPTarget_Reducers_b.o TestOpenMPTarget_Reducers_c.o TestOpenMPTarget_Reducers_d.o
         #OBJ_OPENMPTARGET += TestOpenMPTarget_Scan.o
 	OBJ_OPENMPTARGET += TestOpenMPTarget_Complex.o
 	OBJ_OPENMPTARGET += TestOpenMPTarget_AtomicOperations.o 
@@ -247,6 +253,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
         OBJ_SERIAL += TestSerial_SubView_c10.o TestSerial_SubView_c11.o TestSerial_SubView_c12.o
         OBJ_SERIAL += TestSerial_SubView_c13.o
         OBJ_SERIAL += TestSerial_Reductions.o TestSerial_Scan.o
+    	OBJ_SERIAL += TestSerial_Reducers_a.o TestSerial_Reducers_b.o TestSerial_Reducers_c.o TestSerial_Reducers_d.o
         OBJ_SERIAL += TestSerial_Complex.o
         OBJ_SERIAL += TestSerial_AtomicOperations.o TestSerial_AtomicViews.o TestSerial_Atomics.o
         OBJ_SERIAL += TestSerial_Team.o TestSerial_TeamScratch.o
