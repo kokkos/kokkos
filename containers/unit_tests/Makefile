@@ -4,6 +4,10 @@ GTEST_PATH = ../../TPL/gtest
 
 vpath %.cpp ${KOKKOS_PATH}/containers/unit_tests
 vpath %.cpp ${KOKKOS_PATH}/containers/unit_tests/openmp
+vpath %.cpp ${KOKKOS_PATH}/containers/unit_tests/serial
+vpath %.cpp ${KOKKOS_PATH}/containers/unit_tests/threads
+vpath %.cpp ${KOKKOS_PATH}/containers/unit_tests/rocm
+vpath %.cpp ${KOKKOS_PATH}/containers/unit_tests/cuda
 
 default: build_all
 	echo "End Build"
