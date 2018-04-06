@@ -47,6 +47,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <iostream>
+#include <Kokkos_DynRankView.hpp>
 
 /*--------------------------------------------------------------------------*/
 
@@ -723,6 +724,9 @@ public:
 
   TestDynViewAPI()
   {
+  }
+
+  static void run_tests() {
     run_test_resize_realloc();
     run_test_mirror();
     run_test_scalar();
@@ -731,15 +735,20 @@ public:
     run_test_subview();
     run_test_subview_strided();
     run_test_vector();
+  }
 
+  static void run_operator_test_rank12345 () {
     TestViewOperator< T , device >::testit();
-    TestViewOperator_LeftAndRight< int , device , 7 >::testit(2,3,4,2,3,4,2); 
-    TestViewOperator_LeftAndRight< int , device , 6 >::testit(2,3,4,2,3,4); 
     TestViewOperator_LeftAndRight< int , device , 5 >::testit(2,3,4,2,3);
     TestViewOperator_LeftAndRight< int , device , 4 >::testit(2,3,4,2);
     TestViewOperator_LeftAndRight< int , device , 3 >::testit(2,3,4);
     TestViewOperator_LeftAndRight< int , device , 2 >::testit(2,3);
     TestViewOperator_LeftAndRight< int , device , 1 >::testit(2);
+  }
+
+  static void run_operator_test_rank67 () {
+    TestViewOperator_LeftAndRight< int , device , 7 >::testit(2,3,4,2,3,4,2);
+    TestViewOperator_LeftAndRight< int , device , 6 >::testit(2,3,4,2,3,4);
   }
 
   static void run_test_resize_realloc()
