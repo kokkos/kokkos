@@ -41,7 +41,7 @@ if [[ "$HOSTNAME" == apollo\.* ]]; then
   module load git
 fi
 
-if [[ "$HOSTNAME" == sullivan\.* ]]; then
+if [[ "$HOSTNAME" == sullivan ]]; then
   MACHINE=sullivan
   module load git
 fi
