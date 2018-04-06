@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include<Kokkos_Core.hpp>
 
 namespace Test {
 
@@ -49,7 +50,9 @@ void test_64bit(){
   int64_t N = 5000000000;
   int64_t sum = 0;
   {
-    Kokkos::parallel_reduce(N,KOKKOS_LAMBDA(const int64_t& i, int64_t& lsum) {
+    Kokkos::parallel_reduce(
+      Kokkos::RangePolicy<typename Device::execution_space>(0,N),
+      KOKKOS_LAMBDA(const int64_t& i, int64_t& lsum) {
       lsum += 1;
     },sum);
     ASSERT_EQ(sum,N);
