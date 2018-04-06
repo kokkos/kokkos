@@ -59,9 +59,9 @@ is_sane( SharedAllocationRecord< void , void > * arg_record )
 
   if ( ok ) {
     SharedAllocationRecord * root_next = 0 ;
-
+    static constexpr SharedAllocationRecord * zero = nullptr;
     // Lock the list:
-    while ( ( root_next = Kokkos::atomic_exchange( & root->m_next , nullptr ) ) == nullptr );
+    while ( ( root_next = Kokkos::atomic_exchange( & root->m_next , zero ) ) == nullptr );
 
     for ( SharedAllocationRecord * rec = root_next ; ok && rec != root ; rec = rec->m_next ) {
       const bool ok_non_null  = rec && rec->m_prev && ( rec == root || rec->m_next );
@@ -113,9 +113,10 @@ SharedAllocationRecord<void,void>::find( SharedAllocationRecord<void,void> * con
 {
 #ifdef KOKKOS_DEBUG
   SharedAllocationRecord * root_next = 0 ;
+  static constexpr SharedAllocationRecord * zero = nullptr;
 
   // Lock the list:
-  while ( ( root_next = Kokkos::atomic_exchange( & arg_root->m_next , nullptr ) ) == nullptr );
+  while ( ( root_next = Kokkos::atomic_exchange( & arg_root->m_next , zero ) ) == nullptr );
 
   // Iterate searching for the record with this data pointer
 
@@ -168,9 +169,10 @@ SharedAllocationRecord(
     //              this->m_next == next ; next->m_prev == this
 
     m_prev = m_root ;
+    static constexpr SharedAllocationRecord * zero = nullptr;
 
     // Read root->m_next and lock by setting to NULL
-    while ( ( m_next = Kokkos::atomic_exchange( & m_root->m_next , nullptr ) ) == nullptr );
+    while ( ( m_next = Kokkos::atomic_exchange( & m_root->m_next , zero ) ) == nullptr );
 
     m_next->m_prev = this ;
 
@@ -229,9 +231,10 @@ decrement( SharedAllocationRecord< void , void > * arg_record )
     //          arg_record->m_next->m_prev == arg_record->m_prev
 
     SharedAllocationRecord * root_next = 0 ;
+    static constexpr SharedAllocationRecord * zero = nullptr;
 
     // Lock the list:
-    while ( ( root_next = Kokkos::atomic_exchange( & arg_record->m_root->m_next , nullptr ) ) == nullptr );
+    while ( ( root_next = Kokkos::atomic_exchange( & arg_record->m_root->m_next , zero ) ) == nullptr );
 
     arg_record->m_next->m_prev = arg_record->m_prev ;
 

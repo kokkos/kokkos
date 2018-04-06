@@ -102,6 +102,8 @@ struct InitArguments {
   int num_threads;
   int num_numa;
   int device_id;
+  int ndevices;
+  int skip_device;
   bool disable_warnings;
 
   InitArguments( int nt = -1
@@ -112,6 +114,8 @@ struct InitArguments {
     : num_threads{ nt }
     , num_numa{ nn }
     , device_id{ dv }
+    , ndevices{ -1 }
+    , skip_device{ 9999 }
     , disable_warnings{ dw }
   {}
 };

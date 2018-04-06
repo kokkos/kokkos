@@ -786,6 +786,7 @@ void parallel_for
       ; i += blockDim.x ) {
     closure(i);
   }
+  KOKKOS_IMPL_CUDA_SYNCWARP_MASK(blockDim.x==32?0xffffffff:((1<<blockDim.x)-1)<<(threadIdx.y%(32/blockDim.x))*blockDim.x);
 #endif
 }
 
