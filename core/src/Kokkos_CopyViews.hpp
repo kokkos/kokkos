@@ -258,7 +258,7 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,1,iType> {
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
     ExecSpace::fence();
-    Kokkos::parallel_for("Kokkos::ViewCopy-2D",
+    Kokkos::parallel_for("Kokkos::ViewCopy-1D",
        policy_type(0,a.extent(0)),*this);
     ExecSpace::fence();
   }
