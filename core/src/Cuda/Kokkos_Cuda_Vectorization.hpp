@@ -99,7 +99,8 @@ namespace Impl {
       return KOKKOS_IMPL_CUDA_SHFL(val,srcLane,width);
     }
 
-#if ( CUDA_VERSION >= 9000 )
+// TODO: figure out why 64-bit shfl fails with Clang
+#if ( CUDA_VERSION >= 9000 ) && (!defined(KOKKOS_COMPILER_CLANG))
 
     KOKKOS_INLINE_FUNCTION
     long shfl(const long &val, const int& srcLane, const int& width ) {
@@ -182,7 +183,8 @@ namespace Impl {
       return KOKKOS_IMPL_CUDA_SHFL_DOWN(val,delta,width);
     }
 
-#if ( CUDA_VERSION >= 9000 )
+// TODO: figure out why 64-bit shfl fails with Clang
+#if ( CUDA_VERSION >= 9000 ) && (!defined(KOKKOS_COMPILER_CLANG))
 
     KOKKOS_INLINE_FUNCTION
     long shfl_down(const long &val, const int& delta, const int& width) {
@@ -263,7 +265,8 @@ namespace Impl {
       return KOKKOS_IMPL_CUDA_SHFL_UP(val,delta,width);
     }
 
-#if ( CUDA_VERSION >= 9000 )
+// TODO: figure out why 64-bit shfl fails with Clang
+#if ( CUDA_VERSION >= 9000 ) && (!defined(KOKKOS_COMPILER_CLANG))
 
     KOKKOS_INLINE_FUNCTION
     long shfl_up(const long &val, const int& delta, const int& width ) {
