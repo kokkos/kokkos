@@ -309,9 +309,10 @@ void test_deep_copy( uint32_t num_nodes )
 }
 
 TEST_F( TEST_CATEGORY, UnorderedMap_insert) {
-  for (int i=0; i<500; ++i)
+  for (int i=0; i<500; ++i) {
     test_insert<TEST_EXECSPACE>(100000, 90000, 100, true);
     test_insert<TEST_EXECSPACE>(100000, 90000, 100, false);
+  }
 }
 
 TEST_F( TEST_CATEGORY, UnorderedMap_failed_insert) {
