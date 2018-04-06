@@ -75,7 +75,8 @@ void cuda_shfl( T & out , T const & in , int lane ,
     KOKKOS_IMPL_CUDA_SHFL_MASK( mask , *reinterpret_cast<int const *>(&in) , lane , width );
 }
 
-#if ( CUDA_VERSION >= 9000 )
+// TODO: figure out why 64-bit shfl fails in Clang
+#if ( CUDA_VERSION >= 9000 ) && (!defined(KOKKOS_COMPILER_CLANG))
 
 template< typename T >
 __device__ inline
@@ -115,7 +116,8 @@ void cuda_shfl_down( T & out , T const & in , int delta ,
     KOKKOS_IMPL_CUDA_SHFL_DOWN_MASK( mask , *reinterpret_cast<int const *>(&in) , delta , width );
 }
 
-#if ( CUDA_VERSION >= 9000 )
+// TODO: figure out why 64-bit shfl fails in Clang
+#if ( CUDA_VERSION >= 9000 ) && (!defined(KOKKOS_COMPILER_CLANG))
 
 template< typename T >
 __device__ inline
@@ -154,7 +156,8 @@ void cuda_shfl_up( T & out , T const & in , int delta ,
     KOKKOS_IMPL_CUDA_SHFL_UP_MASK( mask , *reinterpret_cast<int const *>(&in) , delta , width );
 }
 
-#if ( CUDA_VERSION >= 9000 )
+// TODO: figure out why 64-bit shfl fails in Clang
+#if ( CUDA_VERSION >= 9000 ) && (!defined(KOKKOS_COMPILER_CLANG))
 
 template< typename T >
 __device__ inline
