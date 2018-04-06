@@ -62,8 +62,8 @@ double fill_view (ViewType& a, typename ViewType::const_value_type& val, int rep
 template<class Layout>
 void run_fillview_tests123(int N, int R) {
   const int N1 = N;
-  const int N2 = N*N;
-  const int N3 = N2*N;
+  const int N2 = N1*N1;
+  const int N3 = N2*N1;
   const int N4 = N2*N2;
   const int N8 = N4*N4;
 
@@ -103,8 +103,7 @@ void run_fillview_tests123(int N, int R) {
 template<class Layout>
 void run_fillview_tests45(int N, int R) {
   const int N1 = N;
-  const int N2 = N*N;
-  const int N3 = N2*N;
+  const int N2 = N1*N1;
   const int N4 = N2*N2;
   const int N8 = N4*N4;
 
@@ -139,8 +138,7 @@ void run_fillview_tests45(int N, int R) {
 template<class Layout>
 void run_fillview_tests6(int N, int R) {
   const int N1 = N;
-  const int N2 = N*N;
-  const int N3 = N2*N;
+  const int N2 = N1*N1;
   const int N4 = N2*N2;
   const int N8 = N4*N4;
 
@@ -170,8 +168,7 @@ void run_fillview_tests6(int N, int R) {
 template<class Layout>
 void run_fillview_tests7(int N, int R) {
   const int N1 = N;
-  const int N2 = N*N;
-  const int N3 = N2*N;
+  const int N2 = N1*N1;
   const int N4 = N2*N2;
   const int N8 = N4*N4;
 
@@ -201,8 +198,7 @@ void run_fillview_tests7(int N, int R) {
 template<class Layout>
 void run_fillview_tests8(int N, int R) {
   const int N1 = N;
-  const int N2 = N*N;
-  const int N3 = N2*N;
+  const int N2 = N1*N1;
   const int N4 = N2*N2;
   const int N8 = N4*N4;
 

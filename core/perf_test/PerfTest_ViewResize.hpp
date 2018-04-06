@@ -51,8 +51,8 @@ namespace Test {
 template<class Layout>
 void run_resizeview_tests123(int N, int R) {
   const int N1 = N;
-  const int N2 = N*N;
-  const int N3 = N2*N;
+  const int N2 = N1*N1;
+  const int N3 = N2*N1;
   const int N4 = N2*N2;
   const int N8 = N4*N4;
 
@@ -109,8 +109,7 @@ void run_resizeview_tests123(int N, int R) {
 template<class Layout>
 void run_resizeview_tests45(int N, int R) {
   const int N1 = N;
-  const int N2 = N*N;
-  const int N3 = N2*N;
+  const int N2 = N1*N1;
   const int N4 = N2*N2;
   const int N8 = N4*N4;
 
@@ -157,8 +156,7 @@ void run_resizeview_tests45(int N, int R) {
 template<class Layout>
 void run_resizeview_tests6(int N, int R) {
   const int N1 = N;
-  const int N2 = N*N;
-  const int N3 = N2*N;
+  const int N2 = N1*N1;
   const int N4 = N2*N2;
   const int N8 = N4*N4;
 
@@ -195,8 +193,7 @@ void run_resizeview_tests6(int N, int R) {
 template<class Layout>
 void run_resizeview_tests7(int N, int R) {
   const int N1 = N;
-  const int N2 = N*N;
-  const int N3 = N2*N;
+  const int N2 = N1*N1;
   const int N4 = N2*N2;
   const int N8 = N4*N4;
 
@@ -233,8 +230,7 @@ void run_resizeview_tests7(int N, int R) {
 template<class Layout>
 void run_resizeview_tests8(int N, int R) {
   const int N1 = N;
-  const int N2 = N*N;
-  const int N3 = N2*N;
+  const int N2 = N1*N1;
   const int N4 = N2*N2;
   const int N8 = N4*N4;
 
