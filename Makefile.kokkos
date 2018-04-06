@@ -17,7 +17,7 @@ KOKKOS_DEBUG ?= "no"
 KOKKOS_USE_TPLS ?= ""
 # Options: c++11,c++1z
 KOKKOS_CXX_STANDARD ?= "c++11"
-# Options: aggressive_vectorization,disable_profiling,disable_deprecated_code
+# Options: aggressive_vectorization,disable_profiling,disable_deprecated_code,enable_large_mem_tests
 KOKKOS_OPTIONS ?= ""
 
 # Default settings specific options.
@@ -47,6 +47,7 @@ KOKKOS_INTERNAL_DISABLE_PROFILING := $(call kokkos_has_string,$(KOKKOS_OPTIONS),
 KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE := $(call kokkos_has_string,$(KOKKOS_OPTIONS),disable_deprecated_code)
 KOKKOS_INTERNAL_DISABLE_DUALVIEW_MODIFY_CHECK := $(call kokkos_has_string,$(KOKKOS_OPTIONS),disable_dualview_modify_check)
 KOKKOS_INTERNAL_ENABLE_PROFILING_LOAD_PRINT := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_profile_load_print)
+KOKKOS_INTERNAL_ENABLE_LARGE_MEM_TESTS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_large_mem_tests)
 KOKKOS_INTERNAL_CUDA_USE_LDG := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),use_ldg)
 KOKKOS_INTERNAL_CUDA_USE_UVM := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),force_uvm)
 KOKKOS_INTERNAL_CUDA_USE_RELOC := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),rdc)
@@ -486,6 +487,10 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE), 0)
   tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_DEPRECATED_CODE")
+endif
+
+ifeq ($(KOKKOS_INTERNAL_ENABLE_LARGE_MEM_TESTS), 1)
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_LARGE_MEM_TESTS")
 endif
 
 tmp := $(call kokkos_append_header,"/* Optimization Settings */")

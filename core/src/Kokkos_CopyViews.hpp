@@ -1052,7 +1052,10 @@ void deep_copy
      ViewTypeFlat;
 
     ViewTypeFlat dst_flat(dst.data(),dst.size());
-    Kokkos::Impl::ViewFill< ViewTypeFlat , Kokkos::LayoutLeft, typename ViewType::execution_space, ViewTypeFlat::Rank, int >( dst_flat , value );
+    if(dst.span() < std::numeric_limits<int>::max())
+      Kokkos::Impl::ViewFill< ViewTypeFlat , Kokkos::LayoutLeft, typename ViewType::execution_space, ViewTypeFlat::Rank, int >( dst_flat , value );
+    else
+      Kokkos::Impl::ViewFill< ViewTypeFlat , Kokkos::LayoutLeft, typename ViewType::execution_space, ViewTypeFlat::Rank, int64_t >( dst_flat , value );
     Kokkos::fence();
     return;
   }
