@@ -3084,35 +3084,4 @@ struct TestMDRange_6D_NegIdx {
 
 } // namespace
 
-TEST_F( TEST_CATEGORY , mdrange_for ) {
-  TestMDRange_2D< TEST_EXECSPACE >::test_for2( 100, 100 );
-  TestMDRange_3D< TEST_EXECSPACE >::test_for3( 100, 10, 100 );
-  TestMDRange_4D< TEST_EXECSPACE >::test_for4( 100, 10, 10, 10 );
-  TestMDRange_5D< TEST_EXECSPACE >::test_for5( 100, 10, 10, 10, 5 );
-  TestMDRange_6D< TEST_EXECSPACE >::test_for6( 10, 10, 10, 10, 5, 5 );
-}
-
-TEST_F( TEST_CATEGORY , mdrange_reduce ) {
-  TestMDRange_2D< TEST_EXECSPACE >::test_reduce2( 100, 100 );
-  TestMDRange_3D< TEST_EXECSPACE >::test_reduce3( 100, 10, 100 );
-  TestMDRange_4D< TEST_EXECSPACE >::test_reduce4( 100, 10, 10, 10 );
-  TestMDRange_5D< TEST_EXECSPACE >::test_reduce5( 100, 10, 10, 10, 5 );
-  TestMDRange_6D< TEST_EXECSPACE >::test_reduce6( 100, 10, 10, 10, 5, 5 );
-}
-
-//#ifndef KOKKOS_ENABLE_CUDA
-TEST_F( TEST_CATEGORY , mdrange_array_reduce ) {
-  TestMDRange_ReduceArray_2D< TEST_EXECSPACE >::test_arrayreduce2( 4, 5 );
-  TestMDRange_ReduceArray_3D< TEST_EXECSPACE >::test_arrayreduce3( 4, 5, 10 );
-}
-
-TEST_F( TEST_CATEGORY , mdrange_neg_idx ) {
-  TestMDRange_2D_NegIdx< TEST_EXECSPACE >::test_2D_negidx( 128, 32 );
-  TestMDRange_3D_NegIdx< TEST_EXECSPACE >::test_3D_negidx( 128, 32, 8 );
-  TestMDRange_4D_NegIdx< TEST_EXECSPACE >::test_4D_negidx( 128, 32, 8, 8 );
-  TestMDRange_5D_NegIdx< TEST_EXECSPACE >::test_5D_negidx( 128, 32, 8, 8, 4 );
-  TestMDRange_6D_NegIdx< TEST_EXECSPACE >::test_6D_negidx( 128, 32, 8, 8, 4, 2 );
-}
-//#endif
-
 } // namespace Test

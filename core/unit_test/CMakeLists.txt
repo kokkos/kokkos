@@ -38,10 +38,18 @@ IF(Kokkos_ENABLE_Serial)
       serial/TestSerial_Atomics.cpp
       serial/TestSerial_Complex.cpp
       serial/TestSerial_Init.cpp
-      serial/TestSerial_MDRange.cpp
+      serial/TestSerial_MDRange_a.cpp
+      serial/TestSerial_MDRange_b.cpp
+      serial/TestSerial_MDRange_c.cpp
+      serial/TestSerial_MDRange_d.cpp
+      serial/TestSerial_MDRange_e.cpp
       serial/TestSerial_Other.cpp
       serial/TestSerial_RangePolicy.cpp
       serial/TestSerial_Reductions.cpp
+      serial/TestSerial_Reducers_a.cpp
+      serial/TestSerial_Reducers_b.cpp
+      serial/TestSerial_Reducers_c.cpp
+      serial/TestSerial_Reducers_d.cpp
       serial/TestSerial_Scan.cpp
       serial/TestSerial_SharedAlloc.cpp
       serial/TestSerial_SubView_a.cpp
@@ -62,7 +70,11 @@ IF(Kokkos_ENABLE_Serial)
       serial/TestSerial_Team.cpp
       serial/TestSerial_TeamReductionScan.cpp
       serial/TestSerial_TeamScratch.cpp
+      serial/TestSerial_ViewAPI_a.cpp
       serial/TestSerial_ViewAPI_b.cpp
+      serial/TestSerial_ViewAPI_c.cpp
+      serial/TestSerial_ViewAPI_d.cpp
+      serial/TestSerial_ViewAPI_e.cpp
       serial/TestSerial_ViewMapping_a.cpp
       serial/TestSerial_ViewMapping_b.cpp
       serial/TestSerial_ViewMapping_subview.cpp
@@ -86,10 +98,18 @@ IF(Kokkos_ENABLE_Pthread)
       threads/TestThreads_Atomics.cpp
       threads/TestThreads_Complex.cpp
       threads/TestThreads_Init.cpp
-      threads/TestThreads_MDRange.cpp
+      threads/TestThreads_MDRange_a.cpp
+      threads/TestThreads_MDRange_b.cpp
+      threads/TestThreads_MDRange_c.cpp
+      threads/TestThreads_MDRange_d.cpp
+      threads/TestThreads_MDRange_e.cpp
       threads/TestThreads_Other.cpp
       threads/TestThreads_RangePolicy.cpp
       threads/TestThreads_Reductions.cpp
+      threads/TestThreads_Reducers_a.cpp
+      threads/TestThreads_Reducers_b.cpp
+      threads/TestThreads_Reducers_c.cpp
+      threads/TestThreads_Reducers_d.cpp
       threads/TestThreads_Scan.cpp
       threads/TestThreads_SharedAlloc.cpp
       threads/TestThreads_SubView_a.cpp
@@ -110,7 +130,11 @@ IF(Kokkos_ENABLE_Pthread)
       threads/TestThreads_Team.cpp
       threads/TestThreads_TeamReductionScan.cpp
       threads/TestThreads_TeamScratch.cpp
+      threads/TestThreads_ViewAPI_a.cpp
       threads/TestThreads_ViewAPI_b.cpp
+      threads/TestThreads_ViewAPI_c.cpp
+      threads/TestThreads_ViewAPI_d.cpp
+      threads/TestThreads_ViewAPI_e.cpp
       threads/TestThreads_ViewMapping_a.cpp
       threads/TestThreads_ViewMapping_b.cpp
       threads/TestThreads_ViewMapping_subview.cpp
@@ -134,10 +158,18 @@ IF(Kokkos_ENABLE_OpenMP)
       openmp/TestOpenMP_Atomics.cpp
       openmp/TestOpenMP_Complex.cpp
       openmp/TestOpenMP_Init.cpp
-      openmp/TestOpenMP_MDRange.cpp
+      openmp/TestOpenMP_MDRange_a.cpp
+      openmp/TestOpenMP_MDRange_b.cpp
+      openmp/TestOpenMP_MDRange_c.cpp
+      openmp/TestOpenMP_MDRange_d.cpp
+      openmp/TestOpenMP_MDRange_e.cpp
       openmp/TestOpenMP_Other.cpp
       openmp/TestOpenMP_RangePolicy.cpp
       openmp/TestOpenMP_Reductions.cpp
+      openmp/TestOpenMP_Reducers_a.cpp
+      openmp/TestOpenMP_Reducers_b.cpp
+      openmp/TestOpenMP_Reducers_c.cpp
+      openmp/TestOpenMP_Reducers_d.cpp
       openmp/TestOpenMP_Scan.cpp
       openmp/TestOpenMP_SharedAlloc.cpp
       openmp/TestOpenMP_SubView_a.cpp
@@ -158,7 +190,11 @@ IF(Kokkos_ENABLE_OpenMP)
       openmp/TestOpenMP_Task.cpp
       openmp/TestOpenMP_Team.cpp
       openmp/TestOpenMP_TeamReductionScan.cpp
+      openmp/TestOpenMP_ViewAPI_a.cpp
       openmp/TestOpenMP_ViewAPI_b.cpp
+      openmp/TestOpenMP_ViewAPI_c.cpp
+      openmp/TestOpenMP_ViewAPI_d.cpp
+      openmp/TestOpenMP_ViewAPI_e.cpp
       openmp/TestOpenMP_ViewMapping_a.cpp
       openmp/TestOpenMP_ViewMapping_b.cpp
       openmp/TestOpenMP_ViewMapping_subview.cpp
@@ -192,6 +228,10 @@ IF(Kokkos_ENABLE_Qthreads)
       qthreads/TestQthreads_Complex.cpp
       qthreads/TestQthreads_Other.cpp
       qthreads/TestQthreads_Reductions.cpp
+      qthreads/TestQthreads_Reducers_a.cpp
+      qthreads/TestQthreads_Reducers_b.cpp
+      qthreads/TestQthreads_Reducers_c.cpp
+      qthreads/TestQthreads_Reducers_d.cpp
       qthreads/TestQthreads_SubView_a.cpp
       qthreads/TestQthreads_SubView_b.cpp
       qthreads/TestQthreads_SubView_c01.cpp
@@ -210,6 +250,9 @@ IF(Kokkos_ENABLE_Qthreads)
       qthreads/TestQthreads_Team.cpp
       qthreads/TestQthreads_ViewAPI_a.cpp
       qthreads/TestQthreads_ViewAPI_b.cpp
+      qthreads/TestQthreads_ViewAPI_c.cpp
+      qthreads/TestQthreads_ViewAPI_d.cpp
+      qthreads/TestQthreads_ViewAPI_e.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "
@@ -223,12 +266,20 @@ IF(Kokkos_ENABLE_Cuda)
     SOURCES
       UnitTestMainInit.cpp
       cuda/TestCudaHostPinned_SharedAlloc.cpp
-      cuda/TestCudaHostPinned_ViewAPI.cpp
+      cuda/TestCudaHostPinned_ViewAPI_a.cpp
+      cuda/TestCudaHostPinned_ViewAPI_b.cpp
+      cuda/TestCudaHostPinned_ViewAPI_c.cpp
+      cuda/TestCudaHostPinned_ViewAPI_d.cpp
+      cuda/TestCudaHostPinned_ViewAPI_e.cpp
       cuda/TestCudaHostPinned_ViewMapping_a.cpp
       cuda/TestCudaHostPinned_ViewMapping_b.cpp
       cuda/TestCudaHostPinned_ViewMapping_subview.cpp
       cuda/TestCudaUVM_SharedAlloc.cpp
-      cuda/TestCudaUVM_ViewAPI.cpp
+      cuda/TestCudaUVM_ViewAPI_a.cpp
+      cuda/TestCudaUVM_ViewAPI_b.cpp
+      cuda/TestCudaUVM_ViewAPI_c.cpp
+      cuda/TestCudaUVM_ViewAPI_d.cpp
+      cuda/TestCudaUVM_ViewAPI_e.cpp
       cuda/TestCudaUVM_ViewMapping_a.cpp
       cuda/TestCudaUVM_ViewMapping_b.cpp
       cuda/TestCudaUVM_ViewMapping_subview.cpp
@@ -237,10 +288,18 @@ IF(Kokkos_ENABLE_Cuda)
       cuda/TestCuda_Atomics.cpp
       cuda/TestCuda_Complex.cpp
       cuda/TestCuda_Init.cpp
-      cuda/TestCuda_MDRange.cpp
+      cuda/TestCuda_MDRange_a.cpp
+      cuda/TestCuda_MDRange_b.cpp
+      cuda/TestCuda_MDRange_c.cpp
+      cuda/TestCuda_MDRange_d.cpp
+      cuda/TestCuda_MDRange_e.cpp
       cuda/TestCuda_Other.cpp
       cuda/TestCuda_RangePolicy.cpp
       cuda/TestCuda_Reductions.cpp
+      cuda/TestCuda_Reducers_a.cpp
+      cuda/TestCuda_Reducers_b.cpp
+      cuda/TestCuda_Reducers_c.cpp
+      cuda/TestCuda_Reducers_d.cpp
       cuda/TestCuda_Scan.cpp
       cuda/TestCuda_SharedAlloc.cpp
       cuda/TestCuda_Spaces.cpp
@@ -263,7 +322,11 @@ IF(Kokkos_ENABLE_Cuda)
       cuda/TestCuda_Team.cpp
       cuda/TestCuda_TeamReductionScan.cpp
       cuda/TestCuda_TeamScratch.cpp
+      cuda/TestCuda_ViewAPI_a.cpp
       cuda/TestCuda_ViewAPI_b.cpp
+      cuda/TestCuda_ViewAPI_c.cpp
+      cuda/TestCuda_ViewAPI_d.cpp
+      cuda/TestCuda_ViewAPI_e.cpp
       cuda/TestCuda_ViewMapping_a.cpp
       cuda/TestCuda_ViewMapping_b.cpp
       cuda/TestCuda_ViewMapping_subview.cpp
@@ -293,9 +356,15 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
   SOURCES
     UnitTestMainInit.cpp
     default/TestDefaultDeviceType.cpp
-    default/TestDefaultDeviceType_a.cpp
-    default/TestDefaultDeviceType_b.cpp
-    default/TestDefaultDeviceType_c.cpp
+    default/TestDefaultDeviceType_a1.cpp
+    default/TestDefaultDeviceType_b1.cpp
+    default/TestDefaultDeviceType_c1.cpp
+    default/TestDefaultDeviceType_a2.cpp
+    default/TestDefaultDeviceType_b2.cpp
+    default/TestDefaultDeviceType_c2.cpp
+    default/TestDefaultDeviceType_a3.cpp
+    default/TestDefaultDeviceType_b3.cpp
+    default/TestDefaultDeviceType_c3.cpp
     default/TestDefaultDeviceType_d.cpp
     default/TestDefaultDeviceTypeResize.cpp
   COMM serial mpi

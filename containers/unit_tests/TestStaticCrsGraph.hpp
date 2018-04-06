@@ -48,7 +48,7 @@
 #include <Kokkos_StaticCrsGraph.hpp>
 
 /*--------------------------------------------------------------------------*/
-
+namespace Test {
 namespace TestStaticCrsGraph {
 
 template< class Space >
@@ -195,3 +195,21 @@ void run_test_graph3(size_t B, size_t N)
 
 } /* namespace TestStaticCrsGraph */
 
+TEST_F( TEST_CATEGORY , staticcrsgraph )
+{
+  TestStaticCrsGraph::run_test_graph< TEST_EXECSPACE >();
+  TestStaticCrsGraph::run_test_graph2< TEST_EXECSPACE >();
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(1, 0);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(1, 1000);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(1, 10000);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(1, 100000);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(3, 0);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(3, 1000);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(3, 10000);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(3, 100000);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(75, 0);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(75, 1000);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(75, 10000);
+  TestStaticCrsGraph::run_test_graph3< TEST_EXECSPACE >(75, 100000);
+}
+}
