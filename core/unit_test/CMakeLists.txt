@@ -266,12 +266,20 @@ IF(Kokkos_ENABLE_Cuda)
     SOURCES
       UnitTestMainInit.cpp
       cuda/TestCudaHostPinned_SharedAlloc.cpp
-      cuda/TestCudaHostPinned_ViewAPI.cpp
+      cuda/TestCudaHostPinned_ViewAPI_a.cpp
+      cuda/TestCudaHostPinned_ViewAPI_b.cpp
+      cuda/TestCudaHostPinned_ViewAPI_c.cpp
+      cuda/TestCudaHostPinned_ViewAPI_d.cpp
+      cuda/TestCudaHostPinned_ViewAPI_e.cpp
       cuda/TestCudaHostPinned_ViewMapping_a.cpp
       cuda/TestCudaHostPinned_ViewMapping_b.cpp
       cuda/TestCudaHostPinned_ViewMapping_subview.cpp
       cuda/TestCudaUVM_SharedAlloc.cpp
-      cuda/TestCudaUVM_ViewAPI.cpp
+      cuda/TestCudaUVM_ViewAPI_a.cpp
+      cuda/TestCudaUVM_ViewAPI_b.cpp
+      cuda/TestCudaUVM_ViewAPI_c.cpp
+      cuda/TestCudaUVM_ViewAPI_d.cpp
+      cuda/TestCudaUVM_ViewAPI_e.cpp
       cuda/TestCudaUVM_ViewMapping_a.cpp
       cuda/TestCudaUVM_ViewMapping_b.cpp
       cuda/TestCudaUVM_ViewMapping_subview.cpp
