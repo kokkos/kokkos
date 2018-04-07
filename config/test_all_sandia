@@ -150,6 +150,9 @@ do
     --with-cuda-options*)
       KOKKOS_CUDA_OPTIONS="--with-cuda-options=${key#*=}"
       ;;
+    --with-options*)
+      KOKKOS_OPTIONS="--with-options=enable_large_mem_tests,${key#*=}"
+      ;;
     --cxxflags-extra*)
       CXX_FLAGS_EXTRA="${key#*=}"
       ;;
@@ -652,6 +655,11 @@ single_build_and_test() {
   if [[ "$KOKKOS_CUDA_OPTIONS" != "" ]]; then
     local extra_args="$extra_args $KOKKOS_CUDA_OPTIONS"
   fi
+  if [[ "$KOKKOS_OPTIONS" != "" ]]; then
+    local extra_args="$extra_args $KOKKOS_OPTIONS"
+  else
+    local extra_args="$extra_args --with-options=enable_large_mem_tests"
+  fi    
 
   echo "  Starting job $desc"
 

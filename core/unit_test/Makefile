@@ -48,6 +48,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	OBJ_CUDA += TestCudaUVM_ViewMapping_a.o TestCudaUVM_ViewMapping_b.o TestCudaUVM_ViewMapping_subview.o
 	OBJ_CUDA += TestCudaHostPinned_ViewAPI_a.o TestCudaHostPinned_ViewAPI_b.o TestCudaHostPinned_ViewAPI_c.o TestCudaHostPinned_ViewAPI_d.o TestCudaHostPinned_ViewAPI_e.o
 	OBJ_CUDA += TestCudaHostPinned_ViewMapping_a.o TestCudaHostPinned_ViewMapping_b.o TestCudaHostPinned_ViewMapping_subview.o
+    OBJ_CUDA += TestCudaHostPinned_View_64bit.o
 	OBJ_CUDA += TestCuda_ViewOfClass.o
 	OBJ_CUDA += TestCuda_SubView_a.o TestCuda_SubView_b.o
 	OBJ_CUDA += TestCuda_SubView_c01.o TestCuda_SubView_c02.o TestCuda_SubView_c03.o
@@ -117,6 +118,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
         OBJ_ROCM += TestROCm_ViewMapping_b.o
         OBJ_ROCM += TestROCm_ViewMapping_subview.o
         OBJ_ROCM += TestROCmHostPinned_ViewAPI_a.o TestROCmHostPinned_ViewAPI_b.o TestROCmHostPinned_ViewAPI_c.o TestROCmHostPinned_ViewAPI_d.o TestROCmHostPinned_ViewAPI_e.o
+        OBJ_ROCM += TestROCmHostPinned_View_64bit.o
 	    OBJ_ROCM += TestROCmHostPinned_ViewMapping_a.o 
 	    OBJ_ROCM += TestROCmHostPinned_ViewMapping_b.o 
 	    OBJ_ROCM += TestROCmHostPinned_ViewMapping_subview.o
@@ -133,6 +135,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 	OBJ_THREADS += TestThreads_Init.o
 	OBJ_THREADS += TestThreads_SharedAlloc.o
 	OBJ_THREADS += TestThreads_RangePolicy.o
+    OBJ_THREADS += TestThreads_View_64bit.o
 	OBJ_THREADS += TestThreads_ViewAPI_a.o TestThreads_ViewAPI_b.o TestThreads_ViewAPI_c.o TestThreads_ViewAPI_d.o TestThreads_ViewAPI_e.o
 	OBJ_THREADS += TestThreads_ViewMapping_a.o TestThreads_ViewMapping_b.o TestThreads_ViewMapping_subview.o
 	OBJ_THREADS += TestThreads_ViewOfClass.o
@@ -162,6 +165,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	OBJ_OPENMP += TestOpenMP_Init.o
 	OBJ_OPENMP += TestOpenMP_SharedAlloc.o
 	OBJ_OPENMP += TestOpenMP_RangePolicy.o
+    OBJ_OPENMP += TestOpenMP_View_64bit.o
 	OBJ_OPENMP += TestOpenMP_ViewAPI_a.o TestOpenMP_ViewAPI_b.o TestOpenMP_ViewAPI_c.o TestOpenMP_ViewAPI_d.o TestOpenMP_ViewAPI_e.o
 	OBJ_OPENMP += TestOpenMP_ViewMapping_a.o TestOpenMP_ViewMapping_b.o TestOpenMP_ViewMapping_subview.o
 	OBJ_OPENMP += TestOpenMP_ViewOfClass.o
@@ -250,6 +254,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
         OBJ_SERIAL += TestSerial_Init.o
         OBJ_SERIAL += TestSerial_SharedAlloc.o
         OBJ_SERIAL += TestSerial_RangePolicy.o
+        OBJ_SERIAL += TestSerial_View_64bit.o
         OBJ_SERIAL += TestSerial_ViewAPI_a.o TestSerial_ViewAPI_b.o TestSerial_ViewAPI_c.o TestSerial_ViewAPI_d.o TestSerial_ViewAPI_e.o
         OBJ_SERIAL += TestSerial_ViewMapping_a.o TestSerial_ViewMapping_b.o TestSerial_ViewMapping_subview.o
         OBJ_SERIAL += TestSerial_ViewOfClass.o
