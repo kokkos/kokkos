@@ -75,7 +75,7 @@ template <typename ExecSpace>
 struct default_outer_direction
 {
   using type = Iterate;
-  #if defined( KOKKOS_ENABLE_CUDA)
+  #if defined( KOKKOS_ENABLE_CUDA)||defined( KOKKOS_ENABLE_ROCM)
   static constexpr Iterate value = Iterate::Left;
   #else
   static constexpr Iterate value = Iterate::Right;
@@ -86,7 +86,7 @@ template <typename ExecSpace>
 struct default_inner_direction
 {
   using type = Iterate;
-  #if defined( KOKKOS_ENABLE_CUDA)
+  #if defined( KOKKOS_ENABLE_CUDA)||defined( KOKKOS_ENABLE_ROCM)
   static constexpr Iterate value = Iterate::Left;
   #else
   static constexpr Iterate value = Iterate::Right;
