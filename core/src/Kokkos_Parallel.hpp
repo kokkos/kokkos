@@ -396,7 +396,7 @@ namespace Kokkos {
 ///     // The last entry of m_y gets the final sum.
 ///     if (final_pass && i == last_index_) {
 ///       m_y(i+1) = update;
-///     }
+//i/     }
 ///   }
 ///   void init (value_type& update) const {
 ///     update = 0;
@@ -496,13 +496,13 @@ void parallel_scan( const std::string& str
   (void) str;
 }
 
-//VINH DANG -- Adding the following for returning final scan result
+
 template< class ExecutionPolicy , class FunctorType, class ReturnType >
 inline
 void parallel_scan( const ExecutionPolicy & policy
                   , const FunctorType     & functor
+                  , ReturnType            & return_value
                   , const std::string& str = ""
-                  , ReturnType       & return_value = 0
                   , typename Impl::enable_if< ! Impl::is_integral< ExecutionPolicy >::value >::type * = 0
                   )
 {
@@ -532,8 +532,8 @@ template< class FunctorType, class ReturnType >
 inline
 void parallel_scan( const size_t        work_count
                   , const FunctorType & functor
-                  , const std::string & str = ""
-                  , ReturnType        & return_value = 0 )
+                  , ReturnType        & return_value
+                  , const std::string & str = "" )
 {
   typedef typename
     Kokkos::Impl::FunctorPolicyExecutionSpace< FunctorType , void >::execution_space
@@ -574,8 +574,8 @@ void parallel_scan( const std::string& str
   Kokkos::fence();
   std::cout << "KOKKOS_DEBUG Start parallel_scan kernel: " << str << std::endl;
   #endif
- 
-  ::Kokkos::parallel_scan(policy,functor,str,return_value);
+  
+  ::Kokkos::parallel_scan(policy,functor,return_value,str);
 
   #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
   Kokkos::fence();
@@ -583,7 +583,7 @@ void parallel_scan( const std::string& str
   #endif
   (void) str;
 }
-//VINH DANG -- End of Adding
+
 
 
 } // namespace Kokkos
