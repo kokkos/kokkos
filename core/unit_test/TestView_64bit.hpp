@@ -82,7 +82,7 @@ void test_64bit(){
     int64_t N0 = 56925;
     int64_t N1 = 56927;
 
-    Kokkos::View<char**> m("Matrix", N0,N1);
+    Kokkos::View<char**,Device> m("Matrix", N0,N1);
     Kokkos::deep_copy(m,char(1));
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<typename Device::execution_space>(0,N0*N1),
