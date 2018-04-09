@@ -94,11 +94,9 @@ struct TestScan {
 
     Kokkos::parallel_scan( N , *this );
 
-    //VINH DANG -- Adding the following for testing ParallelScanWithTotal
     long long int total = 0;
     Kokkos::parallel_scan( N, *this, "", total );
     run_check( size_t( ( N+1 )*N/2 ), size_t( total ) );
-    //VINH DANG -- End of Adding
   }
 
   TestScan( const WorkSpec & Start , const WorkSpec & N )
@@ -119,12 +117,10 @@ struct TestScan {
     }
   }
 
-  //VINH DANG -- Adding the following for testing ParallelScanWithTotal
   void run_check( const size_t & expected, const size_t & actual )
   { 
     ASSERT_EQ( expected, actual ); 
   }
-  //VINH DANG -- End of Adding
 
 };
 
