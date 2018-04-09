@@ -2051,7 +2051,6 @@ public:
 };
 
 //----------------------------------------------------------------------------
-//VINH DANG -- Adding the following for returning final scan result
 template< class FunctorType, class ReturnType, class ... Traits >
 class ParallelScanWithTotal< FunctorType
                            , Kokkos::RangePolicy< Traits ... >
@@ -2274,7 +2273,6 @@ public:
   , m_returnvalue( arg_returnvalue )
   { }
 };
-//VINH DANG -- End of Adding
 
 } // namespace Impl
 } // namespace Kokkos
