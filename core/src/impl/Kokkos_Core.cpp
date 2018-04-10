@@ -113,12 +113,7 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
 #if defined( KOKKOS_ENABLE_OPENMP )
   if( std::is_same< Kokkos::OpenMP , Kokkos::DefaultExecutionSpace >::value ||
       std::is_same< Kokkos::OpenMP , Kokkos::HostSpace::execution_space >::value ) {
-    if(use_numa>0) {
-      Kokkos::OpenMP::initialize(num_threads,use_numa);
-    }
-    else {
-      Kokkos::OpenMP::initialize(num_threads);
-    }
+    Kokkos::OpenMP::impl_initialize(num_threads);
   }
   else {
     //std::cout << "Kokkos::initialize() fyi: OpenMP enabled but not initialized" << std::endl ;
@@ -152,7 +147,11 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
   (void) args;
 
   // Always initialize Serial if it is configure time enabled
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   Kokkos::Serial::initialize();
+#else
+  Kokkos::Serial::impl_initialize();
+#endif
 #endif
 
 #if defined( KOKKOS_ENABLE_OPENMPTARGET )
@@ -177,10 +176,18 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
 #if defined( KOKKOS_ENABLE_CUDA )
   if( std::is_same< Kokkos::Cuda , Kokkos::DefaultExecutionSpace >::value || 0 < use_gpu ) {
     if (use_gpu > -1) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
       Kokkos::Cuda::initialize( Kokkos::Cuda::SelectDevice( use_gpu ) );
+#else
+      Kokkos::Cuda::impl_initialize( Kokkos::Cuda::SelectDevice( use_gpu ) );
+#endif
     }
     else {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
       Kokkos::Cuda::initialize();
+#else
+      Kokkos::Cuda::impl_initialize();
+#endif
     }
     //std::cout << "Kokkos::initialize() fyi: Cuda enabled and initialized" << std::endl ;
   }
@@ -233,8 +240,13 @@ void finalize_internal( const bool all_spaces = false )
 
 #if defined( KOKKOS_ENABLE_CUDA )
   if( std::is_same< Kokkos::Cuda , Kokkos::DefaultExecutionSpace >::value || all_spaces ) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     if(Kokkos::Cuda::is_initialized())
       Kokkos::Cuda::finalize();
+#else
+    if(Kokkos::Cuda::impl_is_initialized())
+      Kokkos::Cuda::impl_finalize();
+#endif
   }
 #endif
 
@@ -256,8 +268,8 @@ void finalize_internal( const bool all_spaces = false )
   if( std::is_same< Kokkos::OpenMP , Kokkos::DefaultExecutionSpace >::value ||
       std::is_same< Kokkos::OpenMP , Kokkos::HostSpace::execution_space >::value ||
       all_spaces ) {
-    if(Kokkos::OpenMP::is_initialized())
-      Kokkos::OpenMP::finalize();
+    if(Kokkos::OpenMP::impl_is_initialized())
+      Kokkos::OpenMP::impl_finalize();
   }
 #endif
 
@@ -271,8 +283,13 @@ void finalize_internal( const bool all_spaces = false )
 #endif
 
 #if defined( KOKKOS_ENABLE_SERIAL )
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   if(Kokkos::Serial::is_initialized())
     Kokkos::Serial::finalize();
+#else
+  if(Kokkos::Serial::impl_is_initialized())
+    Kokkos::Serial::impl_finalize();
+#endif
 #endif
 
   g_is_initialized = false;

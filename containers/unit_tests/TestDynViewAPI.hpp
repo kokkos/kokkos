@@ -781,7 +781,6 @@ public:
     ASSERT_EQ( a.rank() , am.rank() );
     ASSERT_EQ( ax.rank() , am.rank() );
 
-    if (Kokkos::HostSpace::execution_space::is_initialized() )
     {
       Kokkos::DynRankView<double, Kokkos::LayoutLeft, Kokkos::HostSpace> a_h("A",1000);
       auto a_h2 = Kokkos::create_mirror(Kokkos::HostSpace(),a_h);
@@ -801,7 +800,6 @@ public:
       ASSERT_EQ(a_h.rank(),a_h2.rank());
       ASSERT_EQ(a_h.rank(),a_d.rank());
     }
-    if (Kokkos::HostSpace::execution_space::is_initialized() )
     {
       Kokkos::DynRankView<double, Kokkos::LayoutRight, Kokkos::HostSpace> a_h("A",1000);
       auto a_h2 = Kokkos::create_mirror(Kokkos::HostSpace(),a_h);
@@ -822,7 +820,6 @@ public:
       ASSERT_EQ(a_h.rank(),a_d.rank());
     }
 
-    if (Kokkos::HostSpace::execution_space::is_initialized() )
     {
       Kokkos::DynRankView<double, Kokkos::LayoutLeft, Kokkos::HostSpace> a_h("A",1000);
       auto a_h2 = Kokkos::create_mirror_view(Kokkos::HostSpace(),a_h);
@@ -843,7 +840,6 @@ public:
       ASSERT_EQ(a_h.rank(),a_h2.rank());
       ASSERT_EQ(a_h.rank(),a_d.rank());
     }
-    if (Kokkos::HostSpace::execution_space::is_initialized() )
     {
       Kokkos::DynRankView<double, Kokkos::LayoutRight, Kokkos::HostSpace> a_h("A",1000);
       auto a_h2 = Kokkos::create_mirror_view(Kokkos::HostSpace(),a_h);
@@ -865,7 +861,6 @@ public:
       ASSERT_EQ(a_h.rank(),a_h2.rank());
       ASSERT_EQ(a_h.rank(),a_d.rank());
     }
-    if (Kokkos::HostSpace::execution_space::is_initialized() )
     {
       typedef Kokkos::DynRankView< int , Kokkos::LayoutStride , Kokkos::HostSpace > view_stride_type ;
       unsigned order[] = { 6,5,4,3,2,1,0 }, dimen[] = { N0, N1, N2, 2, 2, 2, 2 }; //LayoutRight equivalent

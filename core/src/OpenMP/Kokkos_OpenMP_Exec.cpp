@@ -280,8 +280,11 @@ int OpenMP::get_current_max_threads() noexcept
   return count;
 }
 
-
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 void OpenMP::initialize( int thread_count )
+#else
+void OpenMP::impl_initialize( int thread_count )
+#endif
 {
   if ( omp_in_parallel() ) {
     std::string msg("Kokkos::OpenMP::initialize ERROR : in parallel");
@@ -373,14 +376,18 @@ void OpenMP::initialize( int thread_count )
   // Init the array for used for arbitrarily sized atomics
   Impl::init_lock_array_host_space();
 
-  #if defined(KOKKOS_ENABLE_PROFILING)
-    Kokkos::Profiling::initialize();
+  #if defined(KOKKOS_ENABLE_DEPRECATED_CODE) && defined(KOKKOS_ENABLE_PROFILING)
+  Kokkos::Profiling::initialize();
   #endif
 }
 
 //----------------------------------------------------------------------------
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 void OpenMP::finalize()
+#else
+void OpenMP::impl_finalize()
+#endif
 {
   if ( omp_in_parallel() )
   {
@@ -453,12 +460,11 @@ std::vector<OpenMP> OpenMP::partition(...)
 
 OpenMP OpenMP::create_instance(...) { return OpenMP(); }
 
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-
 int OpenMP::concurrency() {
   return Impl::g_openmp_hardware_max_threads;
 }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 
 void OpenMP::initialize( int thread_count , int, int )
 {

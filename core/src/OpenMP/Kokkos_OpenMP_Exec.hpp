@@ -141,7 +141,11 @@ inline OpenMP::OpenMP() noexcept
 {}
 
 inline
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 bool OpenMP::is_initialized() noexcept
+#else
+bool OpenMP::impl_is_initialized() noexcept
+#endif
 { return Impl::t_openmp_instance != nullptr; }
 
 inline
