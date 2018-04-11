@@ -115,7 +115,11 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
 #if defined( KOKKOS_ENABLE_OPENMP )
   if( std::is_same< Kokkos::OpenMP , Kokkos::DefaultExecutionSpace >::value ||
       std::is_same< Kokkos::OpenMP , Kokkos::HostSpace::execution_space >::value ) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+    Kokkos::OpenMP::initialize(num_threads);
+#else
     Kokkos::OpenMP::impl_initialize(num_threads);
+#endif
   }
   else {
     //std::cout << "Kokkos::initialize() fyi: OpenMP enabled but not initialized" << std::endl ;
@@ -270,8 +274,13 @@ void finalize_internal( const bool all_spaces = false )
   if( std::is_same< Kokkos::OpenMP , Kokkos::DefaultExecutionSpace >::value ||
       std::is_same< Kokkos::OpenMP , Kokkos::HostSpace::execution_space >::value ||
       all_spaces ) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+    if(Kokkos::OpenMP::is_initialized())
+      Kokkos::OpenMP::finalize();
+#else
     if(Kokkos::OpenMP::impl_is_initialized())
       Kokkos::OpenMP::impl_finalize();
+#endif
   }
 #endif
 
