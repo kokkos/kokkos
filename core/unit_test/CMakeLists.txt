@@ -33,7 +33,13 @@ IF(Kokkos_ENABLE_Serial)
     UnitTest_Serial
     SOURCES
       UnitTestMainInit.cpp
-      serial/TestSerial_AtomicOperations.cpp
+      serial/TestSerial_AtomicOperations_int.cpp
+      serial/TestSerial_AtomicOperations_unsignedint.cpp
+      serial/TestSerial_AtomicOperations_longint.cpp
+      serial/TestSerial_AtomicOperations_unsignedlongint.cpp
+      serial/TestSerial_AtomicOperations_longlongint.cpp
+      serial/TestSerial_AtomicOperations_double.cpp
+      serial/TestSerial_AtomicOperations_float.cpp
       serial/TestSerial_AtomicViews.cpp
       serial/TestSerial_Atomics.cpp
       serial/TestSerial_Complex.cpp
@@ -93,7 +99,13 @@ IF(Kokkos_ENABLE_Pthread)
     UnitTest_Threads
     SOURCES
       UnitTestMainInit.cpp
-      threads/TestThreads_AtomicOperations.cpp
+      threads/TestThreads_AtomicOperations_int.cpp
+      threads/TestThreads_AtomicOperations_unsignedint.cpp
+      threads/TestThreads_AtomicOperations_longint.cpp
+      threads/TestThreads_AtomicOperations_unsignedlongint.cpp
+      threads/TestThreads_AtomicOperations_longlongint.cpp
+      threads/TestThreads_AtomicOperations_double.cpp
+      threads/TestThreads_AtomicOperations_float.cpp
       threads/TestThreads_AtomicViews.cpp
       threads/TestThreads_Atomics.cpp
       threads/TestThreads_Complex.cpp
@@ -153,7 +165,13 @@ IF(Kokkos_ENABLE_OpenMP)
     UnitTest_OpenMP
     SOURCES
       UnitTestMainInit.cpp
-      openmp/TestOpenMP_AtomicOperations.cpp
+      openmp/TestOpenMP_AtomicOperations_int.cpp
+      openmp/TestOpenMP_AtomicOperations_unsignedint.cpp
+      openmp/TestOpenMP_AtomicOperations_longint.cpp
+      openmp/TestOpenMP_AtomicOperations_unsignedlongint.cpp
+      openmp/TestOpenMP_AtomicOperations_longlongint.cpp
+      openmp/TestOpenMP_AtomicOperations_double.cpp
+      openmp/TestOpenMP_AtomicOperations_float.cpp
       openmp/TestOpenMP_AtomicViews.cpp
       openmp/TestOpenMP_Atomics.cpp
       openmp/TestOpenMP_Complex.cpp
@@ -283,7 +301,13 @@ IF(Kokkos_ENABLE_Cuda)
       cuda/TestCudaUVM_ViewMapping_a.cpp
       cuda/TestCudaUVM_ViewMapping_b.cpp
       cuda/TestCudaUVM_ViewMapping_subview.cpp
-      cuda/TestCuda_AtomicOperations.cpp
+      cuda/TestCuda_AtomicOperations_int.cpp
+      cuda/TestCuda_AtomicOperations_unsignedint.cpp
+      cuda/TestCuda_AtomicOperations_longint.cpp
+      cuda/TestCuda_AtomicOperations_unsignedlongint.cpp
+      cuda/TestCuda_AtomicOperations_longlongint.cpp
+      cuda/TestCuda_AtomicOperations_double.cpp
+      cuda/TestCuda_AtomicOperations_float.cpp
       cuda/TestCuda_AtomicViews.cpp
       cuda/TestCuda_Atomics.cpp
       cuda/TestCuda_Complex.cpp
