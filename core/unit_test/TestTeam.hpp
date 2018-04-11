@@ -104,7 +104,7 @@ struct TestTeamPolicy {
     const int level = 0;
     int mem_size = 960;
     const int num_teams = ns / bs;
-    const Kokkos::TeamPolicy< ExecSpace, NoOpTag > policy( num_teams, Kokkos::AUTO() );
+    Kokkos::TeamPolicy< ExecSpace, NoOpTag > policy( num_teams, Kokkos::AUTO() );
 
     Kokkos::parallel_for( policy.set_scratch_size( level, Kokkos::PerTeam( mem_size ), Kokkos::PerThread( 0 ) ),
                           TestTeamPolicy() );
@@ -663,14 +663,6 @@ struct TestScratchTeam {
                                                          Kokkos::PerThread( thread_scratch_size ) ),
                              Functor(), result_type( & error_count ) );
     ASSERT_EQ( error_count, 0 );
-
-    Kokkos::parallel_reduce( p_type( 8192 / team_size, team_size ,
-                                     Kokkos::ScratchRequest( 1, Kokkos::PerTeam( team_scratch_size ),
-                                                                Kokkos::PerThread( thread_scratch_size ))
-                                   ),
-                             Functor(), result_type( & error_count ) );
-    ASSERT_EQ( error_count, 0 );
-
   }
 };
 

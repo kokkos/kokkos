@@ -437,6 +437,7 @@ public:
 
   inline int chunk_size() const { return m_chunk_size ; }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   /** \brief set chunk_size to a discrete value*/
   inline TeamPolicyInternal set_chunk_size(typename traits::index_type chunk_size_) const {
     TeamPolicyInternal p = *this;
@@ -448,22 +449,49 @@ public:
     TeamPolicyInternal p = *this;
     p.m_team_scratch_size[level] = per_team.value;
     return p;
-  };
+  }
 
   inline TeamPolicyInternal set_scratch_size(const int& level, const PerThreadValue& per_thread) const {
     TeamPolicyInternal p = *this;
     p.m_thread_scratch_size[level] = per_thread.value;
     return p;
-  };
+  }
 
   inline TeamPolicyInternal set_scratch_size(const int& level, const PerTeamValue& per_team, const PerThreadValue& per_thread) const {
     TeamPolicyInternal p = *this;
     p.m_team_scratch_size[level] = per_team.value;
     p.m_thread_scratch_size[level] = per_thread.value;
     return p;
-  };
+  }
+#else
+  /** \brief set chunk_size to a discrete value*/
+  inline TeamPolicyInternal& set_chunk_size(typename traits::index_type chunk_size_) {
+    m_chunk_size = chunk_size_;
+    return *this;
+  }
+
+  /** \brief set per team scratch size for a specific level of the scratch hierarchy */
+  inline TeamPolicyInternal& set_scratch_size(const int& level, const PerTeamValue& per_team) {
+    m_team_scratch_size[level] = per_team.value;
+    return *this;
+  }
+
+  /** \brief set per thread scratch size for a specific level of the scratch hierarchy */
+  inline TeamPolicyInternal& set_scratch_size(const int& level, const PerThreadValue& per_thread) {
+    m_thread_scratch_size[level] = per_thread.value;
+    return *this;
+  }
+
+  /** \brief set per thread and per team scratch size for a specific level of the scratch hierarchy */
+  inline TeamPolicyInternal& set_scratch_size(const int& level, const PerTeamValue& per_team, const PerThreadValue& per_thread) {
+    m_team_scratch_size[level] = per_team.value;
+    m_thread_scratch_size[level] = per_thread.value;
+    return *this;
+  }
+#endif
 
 protected:
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   /** \brief set chunk_size to a discrete value*/
   inline TeamPolicyInternal internal_set_chunk_size(typename traits::index_type chunk_size_) {
     m_chunk_size = chunk_size_;
@@ -474,20 +502,21 @@ protected:
   inline TeamPolicyInternal internal_set_scratch_size(const int& level, const PerTeamValue& per_team) {
     m_team_scratch_size[level] = per_team.value;
     return *this;
-  };
+  }
 
   /** \brief set per thread scratch size for a specific level of the scratch hierarchy */
   inline TeamPolicyInternal internal_set_scratch_size(const int& level, const PerThreadValue& per_thread) {
     m_thread_scratch_size[level] = per_thread.value;
     return *this;
-  };
+  }
 
   /** \brief set per thread and per team scratch size for a specific level of the scratch hierarchy */
   inline TeamPolicyInternal internal_set_scratch_size(const int& level, const PerTeamValue& per_team, const PerThreadValue& per_thread) {
     m_team_scratch_size[level] = per_team.value;
     m_thread_scratch_size[level] = per_thread.value;
     return *this;
-  };
+  }
+#endif
 
 private:
   /** \brief finalize chunk_size if it was set to AUTO*/
