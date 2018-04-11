@@ -224,6 +224,8 @@ public:
   // use UniqueToken
   KOKKOS_INLINE_FUNCTION
   static int impl_hardware_thread_id() noexcept;
+
+  static int impl_get_current_max_threads() noexcept;
 #endif
 
   static constexpr const char* name() noexcept { return "OpenMP"; }

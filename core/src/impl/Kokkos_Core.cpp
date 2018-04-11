@@ -87,8 +87,10 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
   // Protect declarations, to prevent "unused variable" warnings.
 #if defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_THREADS ) || defined( KOKKOS_ENABLE_OPENMPTARGET )
   const int num_threads = args.num_threads;
+#endif
+#if defined( KOKKOS_ENABLE_THREADS ) || defined( KOKKOS_ENABLE_OPENMPTARGET )
   const int use_numa = args.num_numa;
-#endif // defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_THREADS )
+#endif
 #if defined( KOKKOS_ENABLE_CUDA ) || defined( KOKKOS_ENABLE_ROCM )
   int use_gpu = args.device_id;
   const int ndevices = args.ndevices;

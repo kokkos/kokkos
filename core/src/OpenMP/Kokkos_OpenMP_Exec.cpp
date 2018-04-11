@@ -260,7 +260,11 @@ namespace Kokkos {
 
 //----------------------------------------------------------------------------
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 int OpenMP::get_current_max_threads() noexcept
+#else
+int OpenMP::impl_get_current_max_threads() noexcept
+#endif
 {
   // Using omp_get_max_threads(); is problematic in conjunction with
   // Hwloc on Intel (essentially an initial call to the OpenMP runtime
@@ -309,7 +313,11 @@ void OpenMP::impl_initialize( int thread_count )
     // Before any other call to OMP query the maximum number of threads
     // and save the value for re-initialization unit testing.
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     Impl::g_openmp_hardware_max_threads = get_current_max_threads();
+#else
+    Impl::g_openmp_hardware_max_threads = impl_get_current_max_threads();
+#endif
 
     int process_num_threads = Impl::g_openmp_hardware_max_threads;
 
