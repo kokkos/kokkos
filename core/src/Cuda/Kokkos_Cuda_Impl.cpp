@@ -375,7 +375,11 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
 
   enum { WordSize = sizeof(size_type) };
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   if ( ! HostSpace::execution_space::is_initialized() ) {
+#else
+  if ( ! HostSpace::execution_space::impl_is_initialized() ) {
+#endif
     const std::string msg("Cuda::initialize ERROR : HostSpace::execution_space is not initialized");
     throw_runtime_exception( msg );
   }
@@ -724,10 +728,18 @@ Cuda::size_type Cuda::detect_device_count()
 int Cuda::concurrency()
 { return Impl::CudaInternal::singleton().m_maxConcurrency ; }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 int Cuda::is_initialized()
+#else
+int Cuda::impl_is_initialized()
+#endif
 { return Impl::CudaInternal::singleton().is_initialized(); }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 void Cuda::initialize( const Cuda::SelectDevice config , size_t num_instances )
+#else
+void Cuda::impl_initialize( const Cuda::SelectDevice config , size_t num_instances )
+#endif
 {
   Impl::CudaInternal::singleton().initialize( config.cuda_device_id , num_instances );
 
@@ -766,7 +778,11 @@ Cuda::size_type Cuda::device_arch()
   return dev_arch ;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 void Cuda::finalize()
+#else
+void Cuda::impl_finalize()
+#endif
 {
   Impl::CudaInternal::singleton().finalize();
 
@@ -793,9 +809,11 @@ Cuda::Cuda( const int instance_id )
 void Cuda::print_configuration( std::ostream & s , const bool )
 { Impl::CudaInternal::singleton().print_configuration( s ); }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 bool Cuda::sleep() { return false ; }
 
 bool Cuda::wake() { return true ; }
+#endif
 
 void Cuda::fence()
 {

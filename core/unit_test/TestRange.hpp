@@ -207,7 +207,11 @@ struct TestRange {
         for ( int k = 0; k < ( i < N / 2 ? 1 : 10000 ); k++ ) {
           a( i )++;
         }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
         count( ExecSpace::hardware_thread_id() )++;
+#else
+        count( ExecSpace::impl_hardware_thread_id() )++;
+#endif
       });
 
       int error = 0;
@@ -240,7 +244,11 @@ struct TestRange {
         for ( int k = 0; k < ( i < N / 2 ? 1 : 10000 ); k++ ) {
           a( i )++;
         }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
         count( ExecSpace::hardware_thread_id() )++;
+#else
+        count( ExecSpace::impl_hardware_thread_id() )++;
+#endif
         lsum++;
       }, sum );
       ASSERT_EQ( sum, N );

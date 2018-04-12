@@ -127,7 +127,11 @@ public:
 
       OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
       const int pool_size = OpenMP::thread_pool_size();
+#else
+      const int pool_size = OpenMP::impl_thread_pool_size();
+#endif
       #pragma omp parallel num_threads(pool_size)
       {
         HostThreadTeamData & data = *(m_instance->get_thread_data());
@@ -223,7 +227,11 @@ public:
 
       OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
       const int pool_size = OpenMP::thread_pool_size();
+#else
+      const int pool_size = OpenMP::impl_thread_pool_size();
+#endif
       #pragma omp parallel num_threads(pool_size)
       {
         HostThreadTeamData & data = *(m_instance->get_thread_data());
@@ -351,7 +359,11 @@ public:
                                     , 0 // thread_local_bytes
                                     );
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
       const int pool_size = OpenMP::thread_pool_size();
+#else
+      const int pool_size = OpenMP::impl_thread_pool_size();
+#endif
       #pragma omp parallel num_threads(pool_size)
       {
         HostThreadTeamData & data = *(m_instance->get_thread_data());
@@ -516,7 +528,11 @@ public:
                                     , 0 // thread_local_bytes
                                     );
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
       const int pool_size = OpenMP::thread_pool_size();
+#else
+      const int pool_size = OpenMP::impl_thread_pool_size();
+#endif
       #pragma omp parallel num_threads(pool_size)
       {
         HostThreadTeamData & data = *(m_instance->get_thread_data());
@@ -686,7 +702,11 @@ public:
                                     , 0 // thread_local_bytes
                                     );
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
       const int pool_size = OpenMP::thread_pool_size();
+#else
+      const int pool_size = OpenMP::impl_thread_pool_size();
+#endif
       #pragma omp parallel num_threads(pool_size)
       {
         HostThreadTeamData & data = *(m_instance->get_thread_data());
@@ -842,7 +862,11 @@ public:
                                     , team_shared_size
                                     , thread_local_size );
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
       const int pool_size = OpenMP::thread_pool_size();
+#else
+      const int pool_size = OpenMP::impl_thread_pool_size();
+#endif
       #pragma omp parallel num_threads(pool_size)
       {
         HostThreadTeamData & data = *(m_instance->get_thread_data());
@@ -1004,7 +1028,11 @@ public:
                                     , team_shared_size
                                     , thread_local_size );
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
       const int pool_size = OpenMP::thread_pool_size();
+#else
+      const int pool_size = OpenMP::impl_thread_pool_size();
+#endif
       #pragma omp parallel num_threads(pool_size)
       {
         HostThreadTeamData & data = *(m_instance->get_thread_data());
@@ -1093,7 +1121,7 @@ public:
     , m_functor( arg_functor )
     , m_policy(  arg_policy )
     , m_reducer( InvalidType() )
-    , m_result_ptr( arg_result.ptr_on_device() )
+    , m_result_ptr( arg_result.data() )
     , m_shmem_size( arg_policy.scratch_size(0) +
                     arg_policy.scratch_size(1) +
                     FunctorTeamShmemSize< FunctorType >
