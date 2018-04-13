@@ -768,6 +768,144 @@ public:
 
   //----------------------------------------
 };
+  
+template< class FunctorType, class ReturnType, class ... Traits >
+class ParallelScanWithTotal< FunctorType
+                           , Kokkos::RangePolicy< Traits ... >
+                           , ReturnType
+                           , Kokkos::OpenMP
+                           >
+{
+private:
+
+  typedef Kokkos::RangePolicy< Traits ... > Policy ;
+
+  typedef FunctorAnalysis< FunctorPatternInterface::SCAN , Policy , FunctorType > Analysis ;
+
+  typedef typename Policy::work_tag     WorkTag ;
+  typedef typename Policy::WorkRange    WorkRange ;
+  typedef typename Policy::member_type  Member ;
+
+  typedef Kokkos::Impl::FunctorValueInit<   FunctorType, WorkTag > ValueInit ;
+  typedef Kokkos::Impl::FunctorValueJoin<   FunctorType, WorkTag > ValueJoin ;
+  typedef Kokkos::Impl::FunctorValueOps<    FunctorType, WorkTag > ValueOps ;
+
+  typedef typename Analysis::pointer_type    pointer_type ;
+  typedef typename Analysis::reference_type  reference_type ;
+
+        OpenMPExec   * m_instance;
+  const FunctorType    m_functor;
+  const Policy         m_policy;
+        ReturnType   & m_returnvalue;
+
+  template< class TagType >
+  inline static
+  typename std::enable_if< std::is_same< TagType , void >::value >::type
+  exec_range( const FunctorType & functor
+            , const Member ibeg , const Member iend
+            , reference_type update , const bool final )
+    {
+      for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
+        functor( iwork , update , final );
+      }
+    }
+
+  template< class TagType >
+  inline static
+  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
+  exec_range( const FunctorType & functor
+            , const Member ibeg , const Member iend
+            , reference_type update , const bool final )
+    {
+      const TagType t{} ;
+      for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
+        functor( t , iwork , update , final );
+      }
+    }
+
+public:
+
+  inline
+  void execute() const
+    {
+      OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_scan");
+
+      const int    value_count       = Analysis::value_count( m_functor );
+      const size_t pool_reduce_bytes = 2 * Analysis::value_size( m_functor );
+
+      m_instance->resize_thread_data( pool_reduce_bytes
+                                    , 0 // team_reduce_bytes
+                                    , 0 // team_shared_bytes
+                                    , 0 // thread_local_bytes
+                                    );
+
+      const int pool_size = OpenMP::thread_pool_size();
+      #pragma omp parallel num_threads(pool_size)
+      {
+        HostThreadTeamData & data = *(m_instance->get_thread_data());
+
+        const WorkRange range( m_policy, omp_get_thread_num(), omp_get_num_threads() );
+        reference_type update_sum =
+          ValueInit::init( m_functor , data.pool_reduce_local() );
+
+        ParallelScanWithTotal::template exec_range< WorkTag >
+          ( m_functor , range.begin() , range.end() , update_sum , false );
+
+        if ( data.pool_rendezvous() ) {
+
+          pointer_type ptr_prev = 0 ;
+
+          const int n = omp_get_num_threads();
+
+          for ( int i = 0 ; i < n ; ++i ) {
+
+            pointer_type ptr = (pointer_type)
+              data.pool_member(i)->pool_reduce_local();
+
+            if ( i ) {
+              for ( int j = 0 ; j < value_count ; ++j ) {
+                ptr[j+value_count] = ptr_prev[j+value_count] ;
+              }
+              ValueJoin::join( m_functor , ptr + value_count , ptr_prev );
+            }
+            else {
+              ValueInit::init( m_functor , ptr + value_count );
+            }
+
+            ptr_prev = ptr ;
+          }
+
+          data.pool_rendezvous_release();
+        }
+
+        reference_type update_base =
+          ValueOps::reference
+            ( ((pointer_type)data.pool_reduce_local()) + value_count );
+
+        ParallelScanWithTotal::template exec_range< WorkTag >
+          ( m_functor , range.begin() , range.end() , update_base , true );
+
+        if (omp_get_thread_num()==omp_get_num_threads()-1) {
+          m_returnvalue = update_base;
+        }
+      }
+
+    }
+
+  //----------------------------------------
+
+  inline
+  ParallelScanWithTotal( const FunctorType & arg_functor
+                       , const Policy      & arg_policy
+                       , ReturnType        & arg_returnvalue )
+    : m_instance( t_openmp_instance )
+    , m_functor( arg_functor )
+    , m_policy(  arg_policy )
+    , m_returnvalue(  arg_returnvalue )
+  {}
+
+  //----------------------------------------
+};
 
 } // namespace Impl
 } // namespace Kokkos

@@ -920,6 +920,106 @@ public:
     { }
 };
 
+template< class FunctorType, class ReturnType, class ... Traits >
+class ParallelScanWithTotal< FunctorType
+                           , Kokkos::RangePolicy< Traits ... >
+                           , ReturnType
+                           , Kokkos::Threads
+                           >
+{
+private:
+
+  typedef Kokkos::RangePolicy< Traits ... > Policy ;
+  typedef typename Policy::WorkRange                               WorkRange ;
+  typedef typename Policy::work_tag                                WorkTag ;
+  typedef typename Policy::member_type                             Member ;
+  typedef Kokkos::Impl::FunctorValueTraits< FunctorType, WorkTag > ValueTraits ;
+  typedef Kokkos::Impl::FunctorValueInit<   FunctorType, WorkTag > ValueInit ;
+
+  typedef typename ValueTraits::pointer_type    pointer_type ;
+  typedef typename ValueTraits::reference_type  reference_type ;
+
+  const FunctorType  m_functor ;
+  const Policy       m_policy ;
+  ReturnType       & m_returnvalue;
+
+  template< class TagType >
+  inline static
+  typename std::enable_if< std::is_same< TagType , void >::value >::type
+  exec_range( const FunctorType & functor
+            , const Member & ibeg , const Member & iend
+            , reference_type update , const bool final )
+    {
+      #if defined( KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION ) && \
+          defined( KOKKOS_ENABLE_PRAGMA_IVDEP )
+      #pragma ivdep
+      #endif
+      for ( Member i = ibeg ; i < iend ; ++i ) {
+        functor( i , update , final );
+      }
+    }
+
+  template< class TagType >
+  inline static
+  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
+  exec_range( const FunctorType & functor
+            , const Member & ibeg , const Member & iend
+            , reference_type update , const bool final )
+    {
+      const TagType t{} ;
+      #if defined( KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION ) && \
+          defined( KOKKOS_ENABLE_PRAGMA_IVDEP )
+      #pragma ivdep
+      #endif
+      for ( Member i = ibeg ; i < iend ; ++i ) {
+        functor( t , i , update , final );
+      }
+    }
+
+  static void exec( ThreadsExec & exec , const void * arg )
+  {
+    const ParallelScanWithTotal & self = * ((const ParallelScanWithTotal *) arg );
+
+    const WorkRange range( self.m_policy, exec.pool_rank(), exec.pool_size() );
+
+    reference_type update =
+      ValueInit::init( self.m_functor , exec.reduce_memory() );
+
+    ParallelScanWithTotal::template exec_range< WorkTag >
+      ( self.m_functor , range.begin(), range.end(), update, false );
+
+    //  exec.template scan_large<FunctorType,WorkTag>( self.m_functor );
+    exec.template scan_small<FunctorType,WorkTag>( self.m_functor );
+
+    ParallelScanWithTotal::template exec_range< WorkTag >
+      ( self.m_functor , range.begin(), range.end(), update, true );
+
+    exec.fan_in();
+
+    if (exec.pool_rank()==exec.pool_size()-1) {
+      self.m_returnvalue = update;
+    }
+  }
+
+public:
+
+  inline
+  void execute() const
+    {
+      ThreadsExec::resize_scratch( 2 * ValueTraits::value_size( m_functor ) , 0 );
+      ThreadsExec::start( & ParallelScanWithTotal::exec , this );
+      ThreadsExec::fence();
+    }
+
+  ParallelScanWithTotal( const FunctorType & arg_functor
+                       , const Policy      & arg_policy
+                       , ReturnType        & arg_returnvalue )
+    : m_functor( arg_functor )
+    , m_policy( arg_policy )
+    , m_returnvalue(  arg_returnvalue )
+    { }
+};
+
 } // namespace Impl
 } // namespace Kokkos
 

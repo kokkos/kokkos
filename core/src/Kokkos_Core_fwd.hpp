@@ -282,6 +282,10 @@ template< class FunctorType, class ExecPolicy, class ExecutionSapce =
           typename Impl::FunctorPolicyExecutionSpace< FunctorType, ExecPolicy >::execution_space
         > class ParallelScan;
 
+template< class FunctorType, class ExecPolicy, class ReturnType = InvalidType, class ExecutionSapce =
+          typename Impl::FunctorPolicyExecutionSpace< FunctorType, ExecPolicy >::execution_space
+        > class ParallelScanWithTotal;
+
 } // namespace Impl
 
 namespace Experimental {
