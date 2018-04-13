@@ -95,7 +95,7 @@ struct TestScan {
     Kokkos::parallel_scan( N , *this );
 
     long long int total = 0;
-    Kokkos::parallel_scan( N, *this, "", total );
+    Kokkos::parallel_scan( N, *this, total );
     run_check( size_t( ( N+1 )*N/2 ), size_t( total ) );
   }
 

@@ -173,7 +173,7 @@ inline
 void parallel_for( const ExecPolicy  & policy
                  , const FunctorType & functor
                  , const std::string& str = ""
-                 , typename Impl::enable_if< ! Impl::is_integral< ExecPolicy >::value >::type * = 0
+                 , typename Impl::enable_if< Kokkos::Impl::is_execution_policy< ExecPolicy >::value >::type * = 0
                  )
 {
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -417,7 +417,7 @@ inline
 void parallel_scan( const ExecutionPolicy & policy
                   , const FunctorType     & functor
                   , const std::string& str = ""
-                  , typename Impl::enable_if< ! Impl::is_integral< ExecutionPolicy >::value >::type * = 0
+                  , typename Impl::enable_if< Kokkos::Impl::is_execution_policy< ExecutionPolicy >::value >::type * = 0
                   )
 {
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -503,7 +503,7 @@ void parallel_scan( const ExecutionPolicy & policy
                   , const FunctorType     & functor
                   , ReturnType            & return_value
                   , const std::string& str = ""
-                  , typename Impl::enable_if< ! Impl::is_integral< ExecutionPolicy >::value >::type * = 0
+                  , typename Impl::enable_if< Kokkos::Impl::is_execution_policy< ExecutionPolicy >::value >::type * = 0
                   )
 {
 #if defined(KOKKOS_ENABLE_PROFILING)
