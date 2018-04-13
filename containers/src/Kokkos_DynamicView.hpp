@@ -540,7 +540,7 @@ struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>,ViewTypeB,Layout,ExecSp
   typedef Kokkos::RangePolicy<ExecSpace,Kokkos::IndexType<iType>> policy_type;
 
   ViewCopy(const Kokkos::Experimental::DynamicView<DP...>& a_, const ViewTypeB& b_):a(a_),b(b_) {
-    Kokkos::parallel_for("Kokkos::ViewCopy-2D",
+    Kokkos::parallel_for("Kokkos::ViewCopy-1D",
        policy_type(0,b.extent(0)),*this);
   }
 
@@ -561,7 +561,7 @@ struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>,
   ViewCopy(const Kokkos::Experimental::DynamicView<DP...>& a_,
            const Kokkos::Experimental::DynamicView<SP...>& b_):a(a_),b(b_) {
     const iType n = std::min(a.extent(0),b.extent(0));
-    Kokkos::parallel_for("Kokkos::ViewCopy-2D",
+    Kokkos::parallel_for("Kokkos::ViewCopy-1D",
        policy_type(0,n),*this);
   }
 
