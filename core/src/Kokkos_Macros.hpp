@@ -523,5 +523,16 @@
   #define KOKKOS_IMPL_CUDA_VERSION_9_WORKAROUND
   #endif
 #endif
+
+#define KOKKOS_INVALID_INDEX (~std::size_t(0))
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+  #define KOKKOS_IMPL_CTOR_DEFAULT_ARG 0
+#else
+  #define KOKKOS_IMPL_CTOR_DEFAULT_ARG KOKKOS_INVALID_INDEX
+#endif
+
+
+
 #endif // #ifndef KOKKOS_MACROS_HPP
 

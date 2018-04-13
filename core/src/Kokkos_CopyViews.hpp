@@ -258,7 +258,7 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,1,iType> {
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
     ExecSpace::fence();
-    Kokkos::parallel_for("Kokkos::ViewCopy-2D",
+    Kokkos::parallel_for("Kokkos::ViewCopy-1D",
        policy_type(0,a.extent(0)),*this);
     ExecSpace::fence();
   }
@@ -1052,7 +1052,10 @@ void deep_copy
      ViewTypeFlat;
 
     ViewTypeFlat dst_flat(dst.data(),dst.size());
-    Kokkos::Impl::ViewFill< ViewTypeFlat , Kokkos::LayoutLeft, typename ViewType::execution_space, ViewTypeFlat::Rank, int >( dst_flat , value );
+    if(dst.span() < std::numeric_limits<int>::max())
+      Kokkos::Impl::ViewFill< ViewTypeFlat , Kokkos::LayoutLeft, typename ViewType::execution_space, ViewTypeFlat::Rank, int >( dst_flat , value );
+    else
+      Kokkos::Impl::ViewFill< ViewTypeFlat , Kokkos::LayoutLeft, typename ViewType::execution_space, ViewTypeFlat::Rank, int64_t >( dst_flat , value );
     Kokkos::fence();
     return;
   }
@@ -1560,14 +1563,14 @@ typename std::enable_if<
   std::is_same<typename Kokkos::View<T,P...>::array_layout,Kokkos::LayoutRight>::value
 >::type
 resize( Kokkos::View<T,P...> & v ,
-             const size_t n0 = 0 ,
-             const size_t n1 = 0 ,
-             const size_t n2 = 0 ,
-             const size_t n3 = 0 ,
-             const size_t n4 = 0 ,
-             const size_t n5 = 0 ,
-             const size_t n6 = 0 ,
-             const size_t n7 = 0 )
+             const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+             const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+             const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+             const size_t n3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+             const size_t n4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+             const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+             const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+             const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG )
 {
   typedef Kokkos::View<T,P...>  view_type ;
 
@@ -1681,14 +1684,14 @@ typename std::enable_if<
   std::is_same<typename Kokkos::View<T,P...>::array_layout,Kokkos::LayoutRight>::value
 >::type
 realloc( Kokkos::View<T,P...> & v ,
-              const size_t n0 = 0 ,
-              const size_t n1 = 0 ,
-              const size_t n2 = 0 ,
-              const size_t n3 = 0 ,
-              const size_t n4 = 0 ,
-              const size_t n5 = 0 ,
-              const size_t n6 = 0 ,
-              const size_t n7 = 0 )
+              const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+              const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+              const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+              const size_t n3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+              const size_t n4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+              const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+              const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+              const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG )
 {
   typedef Kokkos::View<T,P...>  view_type ;
 

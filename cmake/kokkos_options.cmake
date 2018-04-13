@@ -61,14 +61,11 @@ foreach(opt ${KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST})
   ENDIF()
 endforeach()
 
+IF(DEFINED Kokkos_ARCH)
+  MESSAGE(FATAL_ERROR "Defined Kokkos_ARCH, use KOKKOS_ARCH instead!")
+ENDIF()
 IF(DEFINED Kokkos_Arch)
-  IF(DEFINED KOKKOS_ARCH)
-    IF(NOT (${KOKKOS_ARCH} STREQUAL "${Kokkos_Arch}"))
-      MESSAGE(FATAL_ERROR "Defined both Kokkos_Arch and KOKKOS_ARCH and they differ!")
-    ENDIF()
-  ELSE()
-    SET(KOKKOS_ARCH ${Kokkos_Arch})
-  ENDIF()
+  MESSAGE(FATAL_ERROR "Defined Kokkos_Arch, use KOKKOS_ARCH instead!")
 ENDIF()
   
 #-------------------------------------------------------------------------------

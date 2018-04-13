@@ -579,7 +579,7 @@ public:
           done = (0 == atomicCAS(&Kokkos::Impl::g_device_cuda_lock_arrays.scratch[threadid],0,1));
           if(!done) {
             threadid += blockDim.x * blockDim.y;
-            if(threadid+blockDim.x * blockDim.y >= Kokkos::Impl::g_device_cuda_lock_arrays.n) threadid = 0;
+            if(int(threadid+blockDim.x * blockDim.y) >= int(Kokkos::Impl::g_device_cuda_lock_arrays.n)) threadid = 0;
           }
         }
         base_thread_id = threadid;
@@ -1201,7 +1201,7 @@ public:
           done = (0 == atomicCAS(&Kokkos::Impl::g_device_cuda_lock_arrays.scratch[threadid],0,1));
           if(!done) {
             threadid += blockDim.x * blockDim.y;
-            if(threadid + blockDim.x * blockDim.y >= Kokkos::Impl::g_device_cuda_lock_arrays.n) threadid = 0;
+            if(int(threadid + blockDim.x * blockDim.y) >= int(Kokkos::Impl::g_device_cuda_lock_arrays.n)) threadid = 0;
           }
         }
         base_thread_id = threadid;

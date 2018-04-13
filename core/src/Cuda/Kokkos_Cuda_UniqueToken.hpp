@@ -66,12 +66,18 @@ private:
 public:
 
   using execution_space = Cuda;
+  using size_type = int32_t;
 
+#if defined( KOKKOS_ENABLE_DEPRECATED_CODE )
   explicit
   UniqueToken( execution_space const& );
 
   KOKKOS_INLINE_FUNCTION
   UniqueToken() : m_buffer(0), m_count(0) {}
+#else
+  explicit
+  UniqueToken( execution_space const& = execution_space() );
+#endif
 
 #ifdef KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
   KOKKOS_INLINE_FUNCTION
@@ -117,11 +123,11 @@ public:
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
-  int32_t size() const noexcept { return m_count ; }
+  size_type size() const noexcept { return m_count ; }
 
   /// \brief acquire value such that 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
-  int32_t acquire() const
+  size_type acquire() const
   {
     const Kokkos::pair<int,int> result =
       Kokkos::Impl::concurrent_bitset::
@@ -130,16 +136,16 @@ public:
                        , Kokkos::Impl::clock_tic() % m_count
                        );
 
-   if ( result.first < 0 ) {
-     Kokkos::abort("UniqueToken<Cuda> failure to release tokens, no tokens available" );
-   }
+    if ( result.first < 0 ) {
+      Kokkos::abort("UniqueToken<Cuda> failure to release tokens, no tokens available" );
+    }
 
     return result.first;
   }
 
   /// \brief release an acquired value
   KOKKOS_INLINE_FUNCTION
-  void release( int32_t i ) const noexcept
+  void release( size_type i ) const noexcept
   {
     Kokkos::Impl::concurrent_bitset::release( m_buffer, i );
   }
@@ -151,9 +157,15 @@ class UniqueToken< Cuda, UniqueTokenScope::Instance >
 {
 public:
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   explicit
   UniqueToken( execution_space const& arg )
     : UniqueToken< Cuda, UniqueTokenScope::Global >( arg ) {}
+#else
+  explicit
+  UniqueToken( execution_space const& arg = execution_space() )
+    : UniqueToken< Cuda, UniqueTokenScope::Global >( arg ) {}
+#endif
 };
 
 }} // namespace Kokkos::Experimental

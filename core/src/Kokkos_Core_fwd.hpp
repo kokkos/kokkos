@@ -214,7 +214,6 @@ struct VerifyExecutionCanAccessMemorySpace< Space, Space >
   KOKKOS_INLINE_FUNCTION static void verify(void) {}
   KOKKOS_INLINE_FUNCTION static void verify(const void *) {}
 };
-
 } // namespace Impl
 
 } // namespace Kokkos

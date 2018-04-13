@@ -1,4 +1,5 @@
 #include<Kokkos_Macros.hpp>
+
 #if defined( __CUDA_ARCH__ )
 #if ( CUDA_VERSION < 9000 )
 #define KOKKOS_IMPL_CUDA_SYNCWARP __threadfence_block()
@@ -28,6 +29,12 @@
 #define KOKKOS_IMPL_CUDA_SHFL_UP(x,y,z) 0
 #define KOKKOS_IMPL_CUDA_SHFL_DOWN(x,y,z) 0
 #endif 
+
+#if ( CUDA_VERSION >= 9000 ) && (!defined(KOKKOS_COMPILER_CLANG))
+#define KOKKOS_IMPL_CUDA_MAX_SHFL_SIZEOF sizeof(long long)
+#else
+#define KOKKOS_IMPL_CUDA_MAX_SHFL_SIZEOF sizeof(int)
+#endif
 
 #if defined( __CUDA_ARCH__ )
 #if ( CUDA_VERSION < 9000 )

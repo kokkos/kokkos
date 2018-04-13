@@ -288,6 +288,7 @@ public:
       Kokkos::abort("BinSort::sort: values range length != permutation vector length");
     }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     scratch_view_type
       sorted_values("Scratch",
                     len,
@@ -298,6 +299,18 @@ public:
                     values.extent(5),
                     values.extent(6),
                     values.extent(7));
+#else
+    scratch_view_type
+      sorted_values("Scratch",
+                  values.rank_dynamic > 0 ? len : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                  values.rank_dynamic > 1 ? values.extent(1) : KOKKOS_IMPL_CTOR_DEFAULT_ARG ,
+                  values.rank_dynamic > 2 ? values.extent(2) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                  values.rank_dynamic > 3 ? values.extent(3) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                  values.rank_dynamic > 4 ? values.extent(4) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                  values.rank_dynamic > 5 ? values.extent(5) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                  values.rank_dynamic > 6 ? values.extent(6) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                  values.rank_dynamic > 7 ? values.extent(7) : KOKKOS_IMPL_CTOR_DEFAULT_ARG);
+#endif
 
     {
       copy_permute_functor< scratch_view_type /* DstViewType */
@@ -362,8 +375,10 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void operator() (const bin_sort_bins_tag& tag, const int&i )  const {
+    auto bin_size = bin_count_const(i);
+    if (bin_size <= 1) return;
+    int upper_bound = bin_offsets(i)+bin_size;
     bool sorted = false;
-    int upper_bound = bin_offsets(i)+bin_count_const(i);
     while(!sorted) {
       sorted = true;
       int old_idx = sort_order(bin_offsets(i));

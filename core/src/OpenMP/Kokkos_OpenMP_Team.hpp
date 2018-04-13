@@ -79,20 +79,36 @@ public:
   template< class FunctorType >
   inline static
   int team_size_max( const FunctorType & ) {
-      int pool_size = traits::execution_space::thread_pool_size(1);
-      int max_host_team_size =  Impl::HostThreadTeamData::max_team_members;
-      return pool_size<max_host_team_size?pool_size:max_host_team_size;
-    }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+    int pool_size = traits::execution_space::thread_pool_size(1);
+#else
+    int pool_size = traits::execution_space::impl_thread_pool_size(1);
+#endif
+    int max_host_team_size =  Impl::HostThreadTeamData::max_team_members;
+    return pool_size<max_host_team_size?pool_size:max_host_team_size;
+  }
 
   template< class FunctorType >
   inline static
   int team_size_recommended( const FunctorType & )
-    { return traits::execution_space::thread_pool_size(2); }
+  {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+    return traits::execution_space::thread_pool_size(2);
+#else
+    return traits::execution_space::impl_thread_pool_size(2);
+#endif
+  }
 
   template< class FunctorType >
   inline static
   int team_size_recommended( const FunctorType &, const int& )
-    { return traits::execution_space::thread_pool_size(2); }
+  {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+    return traits::execution_space::thread_pool_size(2);
+#else
+    return traits::execution_space::impl_thread_pool_size(2);
+#endif
+  }
 
   //----------------------------------------
 
@@ -111,10 +127,15 @@ private:
   inline void init( const int league_size_request
                   , const int team_size_request )
     {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
       const int pool_size  = traits::execution_space::thread_pool_size(0);
-      const int max_host_team_size =  Impl::HostThreadTeamData::max_team_members;
-      const int team_max   = pool_size<max_host_team_size?pool_size:max_host_team_size;
       const int team_grain = traits::execution_space::thread_pool_size(2);
+#else
+      const int pool_size  = traits::execution_space::impl_thread_pool_size(0);
+      const int team_grain = traits::execution_space::impl_thread_pool_size(2);
+#endif
+      const int max_host_team_size =  Impl::HostThreadTeamData::max_team_members;
+      const int team_max   = ((pool_size < max_host_team_size) ? pool_size : max_host_team_size);
 
       m_league_size = league_size_request ;
 
@@ -177,7 +198,15 @@ public:
             : m_team_scratch_size { 0 , 0 }
             , m_thread_scratch_size { 0 , 0 }
             , m_chunk_size(0)
-    { init( league_size_request , traits::execution_space::thread_pool_size(2) ); }
+  {
+    init( league_size_request ,
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+        traits::execution_space::thread_pool_size(2)
+#else
+        traits::execution_space::impl_thread_pool_size(2)
+#endif
+        );
+  }
 
   inline int team_alloc() const { return m_team_alloc ; }
   inline int team_iter()  const { return m_team_iter ; }
@@ -240,7 +269,11 @@ private:
   /** \brief finalize chunk_size if it was set to AUTO*/
   inline void set_auto_chunk_size() {
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     int concurrency = traits::execution_space::thread_pool_size(0)/m_team_alloc;
+#else
+    int concurrency = traits::execution_space::impl_thread_pool_size(0)/m_team_alloc;
+#endif
     if( concurrency==0 ) concurrency=1;
 
     if(m_chunk_size > 0) {
