@@ -348,7 +348,11 @@ public:
 
   inline typename traits::index_type chunk_size() const ;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   inline TeamPolicyInternal set_chunk_size(int chunk_size) const ;
+#else
+  inline TeamPolicyInternal& set_chunk_size(int chunk_size);
+#endif
 
   /** \brief  Parallel execution of a functor calls the functor once with
    *          each member of the execution policy.
@@ -529,6 +533,7 @@ public:
   TeamPolicy( int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 )
     : internal_policy(league_size_request,Kokkos::AUTO(), vector_length_request) {first_arg = false;}
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   /** \brief  Construct policy with the given instance of the execution space */
   template<class ... Args>
   TeamPolicy( const typename traits::execution_space & , int league_size_request , int team_size_request , int vector_length_request,
@@ -600,14 +605,18 @@ public:
     first_arg = true;
     set(args...);
   }
+#endif
 
 private:
   bool first_arg;
   TeamPolicy(const internal_policy& p):internal_policy(p) {first_arg = false;}
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   inline void set() {}
+#endif
 
 public:
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   template<class ... Args>
   inline void set(Args ...) {
     static_assert( 0 == sizeof...(Args), "Kokkos::TeamPolicy: unhandled constructor arguments encountered.");
@@ -641,20 +650,41 @@ public:
 
   inline TeamPolicy set_chunk_size(int chunk) const {
     return TeamPolicy(internal_policy::set_chunk_size(chunk));
-  };
+  }
 
   inline TeamPolicy set_scratch_size(const int& level, const Impl::PerTeamValue& per_team) const {
     return TeamPolicy(internal_policy::set_scratch_size(level,per_team));
-  };
+  }
   inline TeamPolicy set_scratch_size(const int& level, const Impl::PerThreadValue& per_thread) const {
     return TeamPolicy(internal_policy::set_scratch_size(level,per_thread));
-  };
+  }
   inline TeamPolicy set_scratch_size(const int& level, const Impl::PerTeamValue& per_team, const Impl::PerThreadValue& per_thread) const {
     return TeamPolicy(internal_policy::set_scratch_size(level, per_team, per_thread));
-  };
+  }
   inline TeamPolicy set_scratch_size(const int& level, const Impl::PerThreadValue& per_thread, const Impl::PerTeamValue& per_team) const {
     return TeamPolicy(internal_policy::set_scratch_size(level, per_team, per_thread));
-  };
+  }
+
+#else
+  inline TeamPolicy& set_chunk_size(int chunk) {
+    static_assert(std::is_same<decltype(internal_policy::set_chunk_size(chunk)), internal_policy&>::value, "internal set_chunk_size should return a reference");
+    return static_cast<TeamPolicy&>(internal_policy::set_chunk_size(chunk));
+  }
+
+  inline TeamPolicy& set_scratch_size(const int& level, const Impl::PerTeamValue& per_team) {
+    static_assert(std::is_same<decltype(internal_policy::set_scratch_size(level,per_team)), internal_policy&>::value, "internal set_chunk_size should return a reference");
+    return static_cast<TeamPolicy&>(internal_policy::set_scratch_size(level,per_team));
+  }
+  inline TeamPolicy& set_scratch_size(const int& level, const Impl::PerThreadValue& per_thread) {
+    return static_cast<TeamPolicy&>(internal_policy::set_scratch_size(level,per_thread));
+  }
+  inline TeamPolicy& set_scratch_size(const int& level, const Impl::PerTeamValue& per_team, const Impl::PerThreadValue& per_thread) {
+    return static_cast<TeamPolicy&>(internal_policy::set_scratch_size(level, per_team, per_thread));
+  }
+  inline TeamPolicy& set_scratch_size(const int& level, const Impl::PerThreadValue& per_thread, const Impl::PerTeamValue& per_team) {
+    return static_cast<TeamPolicy&>(internal_policy::set_scratch_size(level, per_team, per_thread));
+  }
+#endif
 
 };
 
