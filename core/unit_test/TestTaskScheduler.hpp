@@ -345,7 +345,7 @@ struct TestTaskTeam {
     tot = 0;
     Kokkos::parallel_reduce( Kokkos::TeamThreadRange( member, begin, end )
                            , [&] ( int i, long & res ) { res += parfor_result[i]; }
-                           , Kokkos::Experimental::Sum<long>( tot )
+                           , Kokkos::Sum<long>( tot )
                            );
 
     Kokkos::parallel_for( Kokkos::TeamThreadRange( member, begin, end )

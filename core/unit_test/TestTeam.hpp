@@ -309,7 +309,7 @@ public:
 
     // Team max:
     int long m = (long int) ( ind.league_rank() + ind.team_rank() );
-    ind.team_reduce(  Kokkos::Experimental::Max<int long>(m) );
+    ind.team_reduce(  Kokkos::Max<int long>(m) );
 
     if ( m != ind.league_rank() + ( ind.team_size() - 1 ) ) {
       printf( "ScanTeamFunctor[%d.%d of %d.%d] reduce_max_answer(%ld) != reduce_max(%ld)\n",

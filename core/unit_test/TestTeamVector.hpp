@@ -343,7 +343,7 @@ struct functor_team_reduce_reducer {
     {
       val += i - team.league_rank() + team.league_size() + team.team_size();
     },
-      Kokkos::Experimental::Sum<Scalar>(value)
+      Kokkos::Sum<Scalar>(value)
     );
 
     team.team_barrier();
@@ -495,7 +495,7 @@ struct functor_team_vector_reduce_reducer {
     {
       val += i - team.league_rank() + team.league_size() + team.team_size();
     },
-      Kokkos::Experimental::Sum<Scalar>(value)
+      Kokkos::Sum<Scalar>(value)
     );
 
     team.team_barrier();
@@ -664,7 +664,7 @@ struct functor_vec_red_reducer {
     Kokkos::parallel_reduce( Kokkos::ThreadVectorRange( team, 13 ), [&] ( int i, Scalar & val )
     {
       val *= ( i % 5 + 1 );
-    }, Kokkos::Experimental::Prod<Scalar>(value)
+    }, Kokkos::Prod<Scalar>(value)
     );
 
     Kokkos::single( Kokkos::PerThread( team ), [&] ()
