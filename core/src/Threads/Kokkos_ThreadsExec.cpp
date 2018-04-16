@@ -92,7 +92,7 @@ struct Sentinel {
          s_current_function ||
          s_current_function_arg ||
          s_threads_exec[0] ) {
-      std::cerr << "ERROR : Process exiting without calling Kokkos::Threads::terminate()" << std::endl ;
+      std::cerr << "ERROR : Process exiting while Kokkos::Threads is still initialized" << std::endl ;
     }
   }
 };
@@ -567,13 +567,22 @@ void ThreadsExec::print_configuration( std::ostream & s , const bool detail )
 
 //----------------------------------------------------------------------------
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 int ThreadsExec::is_initialized()
+#else
+int ThreadsExec::impl_is_initialized()
+#endif
 { return 0 != s_threads_exec[0] ; }
 
-void ThreadsExec::initialize( unsigned thread_count ,
-                              unsigned use_numa_count ,
-                              unsigned use_cores_per_numa ,
-                              bool allow_asynchronous_threadpool )
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+void ThreadsExec::initialize
+#else
+void ThreadsExec::impl_initialize
+#endif
+( unsigned thread_count ,
+  unsigned use_numa_count ,
+  unsigned use_cores_per_numa ,
+  bool allow_asynchronous_threadpool )
 {
   static const Sentinel sentinel ;
 
@@ -728,7 +737,7 @@ void ThreadsExec::initialize( unsigned thread_count ,
 
   Impl::SharedAllocationRecord< void, void >::tracking_enable();
 
-  #if defined(KOKKOS_ENABLE_PROFILING)
+  #if defined(KOKKOS_ENABLE_DEPRECATED_CODE) && defined(KOKKOS_ENABLE_PROFILING)
     Kokkos::Profiling::initialize();
   #endif
 }

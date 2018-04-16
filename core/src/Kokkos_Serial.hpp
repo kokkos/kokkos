@@ -112,26 +112,6 @@ public:
   /// always execute sequentially.
   inline static int in_parallel() { return false ; }
 
-  /** \brief  Set the device in a "sleep" state.
-   *
-   * This function sets the device in a "sleep" state in which it is
-   * not ready for work.  This may consume less resources than if the
-   * device were in an "awake" state, but it may also take time to
-   * bring the device from a sleep state to be ready for work.
-   *
-   * \return True if the device is in the "sleep" state, else false if
-   *   the device is actively working and could not enter the "sleep"
-   *   state.
-   */
-  static bool sleep();
-
-  /// \brief Wake the device from the 'sleep' state so it is ready for work.
-  ///
-  /// \return True if the device is in the "ready" state, else "false"
-  ///  if the device is actively working (which also means that it's
-  ///  awake).
-  static bool wake();
-
   /// \brief Wait until all dispatched functors complete.
   ///
   /// The parallel_for or parallel_reduce dispatch of a functor may
@@ -140,6 +120,16 @@ public:
   /// device have completed.
   static void fence() {}
 
+  /** \brief  Return the maximum amount of concurrency.  */
+  static int concurrency() {return 1;};
+
+  //! Print configuration information to the given output stream.
+  static void print_configuration( std::ostream & , const bool /* detail */ = false ) {}
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+  static bool sleep();
+  static bool wake();
+
   static void initialize( unsigned threads_count = 1 ,
                           unsigned use_numa_count = 0 ,
                           unsigned use_cores_per_numa = 0 ,
@@ -147,14 +137,8 @@ public:
 
   static bool is_initialized();
 
-  /** \brief  Return the maximum amount of concurrency.  */
-  static int concurrency() {return 1;};
-
   //! Free any resources being consumed by the device.
   static void finalize();
-
-  //! Print configuration information to the given output stream.
-  static void print_configuration( std::ostream & , const bool /* detail */ = false ) {}
 
   //--------------------------------------------------------------------------
 
@@ -165,6 +149,24 @@ public:
 
   KOKKOS_INLINE_FUNCTION static unsigned hardware_thread_id() { return thread_pool_rank(); }
   inline static unsigned max_hardware_threads() { return thread_pool_size(0); }
+#else
+  static void impl_initialize();
+
+  static bool impl_is_initialized();
+
+  //! Free any resources being consumed by the device.
+  static void impl_finalize();
+
+  //--------------------------------------------------------------------------
+
+  inline static int impl_thread_pool_size( int = 0 ) { return 1 ; }
+  KOKKOS_INLINE_FUNCTION static int impl_thread_pool_rank() { return 0 ; }
+
+  //--------------------------------------------------------------------------
+
+  KOKKOS_INLINE_FUNCTION static unsigned impl_hardware_thread_id() { return impl_thread_pool_rank(); }
+  inline static unsigned impl_max_hardware_threads() { return impl_thread_pool_size(0); }
+#endif
 
   static const char* name();
   //--------------------------------------------------------------------------

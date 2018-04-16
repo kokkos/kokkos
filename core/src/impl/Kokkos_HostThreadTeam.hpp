@@ -92,7 +92,7 @@ private:
   enum : int { m_team_rendezvous = m_pool_rendezvous + max_pool_rendezvous };
   enum : int { m_pool_reduce     = m_team_rendezvous + max_team_rendezvous };
 
-  using pair_int_t = Kokkos::pair<int,int> ;
+  using pair_int_t = Kokkos::pair<int64_t,int64_t> ;
 
   pair_int_t  m_work_range ;
   int64_t     m_work_end ;

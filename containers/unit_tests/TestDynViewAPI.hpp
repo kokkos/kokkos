@@ -47,6 +47,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <iostream>
+#include <Kokkos_DynRankView.hpp>
 
 /*--------------------------------------------------------------------------*/
 
@@ -723,6 +724,9 @@ public:
 
   TestDynViewAPI()
   {
+  }
+
+  static void run_tests() {
     run_test_resize_realloc();
     run_test_mirror();
     run_test_scalar();
@@ -731,15 +735,20 @@ public:
     run_test_subview();
     run_test_subview_strided();
     run_test_vector();
+  }
 
+  static void run_operator_test_rank12345 () {
     TestViewOperator< T , device >::testit();
-    TestViewOperator_LeftAndRight< int , device , 7 >::testit(2,3,4,2,3,4,2); 
-    TestViewOperator_LeftAndRight< int , device , 6 >::testit(2,3,4,2,3,4); 
     TestViewOperator_LeftAndRight< int , device , 5 >::testit(2,3,4,2,3);
     TestViewOperator_LeftAndRight< int , device , 4 >::testit(2,3,4,2);
     TestViewOperator_LeftAndRight< int , device , 3 >::testit(2,3,4);
     TestViewOperator_LeftAndRight< int , device , 2 >::testit(2,3);
     TestViewOperator_LeftAndRight< int , device , 1 >::testit(2);
+  }
+
+  static void run_operator_test_rank67 () {
+    TestViewOperator_LeftAndRight< int , device , 7 >::testit(2,3,4,2,3,4,2);
+    TestViewOperator_LeftAndRight< int , device , 6 >::testit(2,3,4,2,3,4);
   }
 
   static void run_test_resize_realloc()
@@ -772,7 +781,6 @@ public:
     ASSERT_EQ( a.rank() , am.rank() );
     ASSERT_EQ( ax.rank() , am.rank() );
 
-    if (Kokkos::HostSpace::execution_space::is_initialized() )
     {
       Kokkos::DynRankView<double, Kokkos::LayoutLeft, Kokkos::HostSpace> a_h("A",1000);
       auto a_h2 = Kokkos::create_mirror(Kokkos::HostSpace(),a_h);
@@ -792,7 +800,6 @@ public:
       ASSERT_EQ(a_h.rank(),a_h2.rank());
       ASSERT_EQ(a_h.rank(),a_d.rank());
     }
-    if (Kokkos::HostSpace::execution_space::is_initialized() )
     {
       Kokkos::DynRankView<double, Kokkos::LayoutRight, Kokkos::HostSpace> a_h("A",1000);
       auto a_h2 = Kokkos::create_mirror(Kokkos::HostSpace(),a_h);
@@ -813,7 +820,6 @@ public:
       ASSERT_EQ(a_h.rank(),a_d.rank());
     }
 
-    if (Kokkos::HostSpace::execution_space::is_initialized() )
     {
       Kokkos::DynRankView<double, Kokkos::LayoutLeft, Kokkos::HostSpace> a_h("A",1000);
       auto a_h2 = Kokkos::create_mirror_view(Kokkos::HostSpace(),a_h);
@@ -834,7 +840,6 @@ public:
       ASSERT_EQ(a_h.rank(),a_h2.rank());
       ASSERT_EQ(a_h.rank(),a_d.rank());
     }
-    if (Kokkos::HostSpace::execution_space::is_initialized() )
     {
       Kokkos::DynRankView<double, Kokkos::LayoutRight, Kokkos::HostSpace> a_h("A",1000);
       auto a_h2 = Kokkos::create_mirror_view(Kokkos::HostSpace(),a_h);
@@ -856,7 +861,6 @@ public:
       ASSERT_EQ(a_h.rank(),a_h2.rank());
       ASSERT_EQ(a_h.rank(),a_d.rank());
     }
-    if (Kokkos::HostSpace::execution_space::is_initialized() )
     {
       typedef Kokkos::DynRankView< int , Kokkos::LayoutStride , Kokkos::HostSpace > view_stride_type ;
       unsigned order[] = { 6,5,4,3,2,1,0 }, dimen[] = { N0, N1, N2, 2, 2, 2, 2 }; //LayoutRight equivalent

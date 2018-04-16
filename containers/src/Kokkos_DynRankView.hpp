@@ -1044,7 +1044,12 @@ public:
                    , "View allocation constructor requires managed memory" );
 
       if ( alloc_prop::initialize &&
-           ! alloc_prop::execution_space::is_initialized() ) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+           ! alloc_prop::execution_space::is_initialized()
+#else
+           ! alloc_prop::execution_space::impl_is_initialized()
+#endif
+           ) {
         // If initializing view data then
         // the execution space must be initialized.
         Kokkos::Impl::throw_runtime_exception("Constructing DynRankView and initializing data with uninitialized execution space");
