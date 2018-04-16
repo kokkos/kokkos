@@ -285,9 +285,17 @@ int main()
 
   {
     std::cout << "test_fixture< Host >" << std::endl ;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     Kokkos::HostSpace::execution_space::initialize( 1 );
+#else
+    Kokkos::HostSpace::execution_space::impl_initialize();
+#endif
     Kokkos::Example::test_fixture< Kokkos::HostSpace::execution_space >();
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     Kokkos::HostSpace::execution_space::finalize();
+#else
+    Kokkos::HostSpace::execution_space::impl_finalize();
+#endif
   }
 
 #if defined( KOKKOS_ENABLE_CUDA )

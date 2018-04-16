@@ -112,7 +112,7 @@ int main(int narg, char* args[]) {
 
   srand(1231093);
 
-  for(int i = 0; i < (int) data.dimension_0(); i++) {
+  for(int i = 0; i < (int) data.extent(0); i++) {
     data.h_view(i) = rand()%TEAM_SIZE;
   }
   data.modify<Host>();

@@ -62,9 +62,6 @@ struct is_reducer_type<T,typename std::enable_if<
   enum { value = 1 };
 };
 
-namespace Experimental {
-
-
 template<class Scalar, class Space>
 struct Sum {
 public:
@@ -740,10 +737,7 @@ public:
   }
 };
 }
-}
-
-
-namespace Kokkos {
+namespace Kokkos{
 namespace Impl {
 
 template< class T, class ReturnType , class ValueTraits>
@@ -823,9 +817,7 @@ struct ParallelReduceReturnValue<typename std::enable_if<
     return return_val;
   }
 };
-}
 
-namespace Impl {
 template< class T, class ReturnType , class FunctorType>
 struct ParallelReducePolicyType;
 
@@ -851,9 +843,7 @@ struct ParallelReducePolicyType<typename std::enable_if<std::is_integral<PolicyT
   }
 };
 
-}
 
-namespace Impl {
   template< class FunctorType, class ExecPolicy, class ValueType, class ExecutionSpace>
   struct ParallelReduceFunctorType {
     typedef FunctorType functor_type;
@@ -861,9 +851,6 @@ namespace Impl {
       return functor;
     }
   };
-}
-
-namespace Impl {
 
   template< class PolicyType, class FunctorType, class ReturnType >
   struct ParallelReduceAdaptor {
@@ -1140,6 +1127,8 @@ void parallel_reduce(const std::string& label,
 }
 
 } //namespace Kokkos
+
+
 
 #endif // KOKKOS_PARALLEL_REDUCE_HPP
 

@@ -876,7 +876,7 @@ parallel_reduce
   , ValueType      & result
   )
 {
-  Kokkos::Experimental::Sum<ValueType> reducer( result );
+  Sum<ValueType> reducer( result );
 
   reducer.init( result );
 

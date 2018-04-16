@@ -288,7 +288,6 @@ template< class FunctorType, class ExecPolicy, class ReturnType = InvalidType, c
 
 } // namespace Impl
 
-namespace Experimental {
 template<class ScalarType , class Space = HostSpace> struct Sum;
 template<class ScalarType , class Space = HostSpace> struct Prod;
 template<class ScalarType , class Space = HostSpace> struct Min;
@@ -301,8 +300,34 @@ template<class ScalarType , class Space = HostSpace> struct BAnd;
 template<class ScalarType , class Space = HostSpace> struct BOr;
 template<class ScalarType , class Space = HostSpace> struct LAnd;
 template<class ScalarType , class Space = HostSpace> struct LOr;
-}
+
+
 } // namespace Kokkos
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+namespace Kokkos{
+  template<class ScalarType> struct MinMaxScalar;
+  template<class ScalarType, class Index> struct MinMaxLocScalar;
+  template<class ScalarType, class Index> struct ValLocScalar;
+
+  namespace Experimental {
+    using Kokkos::Sum;
+    using Kokkos::Prod;
+    using Kokkos::Min;
+    using Kokkos::Max;
+    using Kokkos::MinMax;
+    using Kokkos::MinLoc;
+    using Kokkos::MaxLoc;
+    using Kokkos::MinMaxLoc;
+    using Kokkos::BAnd;
+    using Kokkos::BOr;
+    using Kokkos::LAnd;
+    using Kokkos::LOr;
+    using Kokkos::MinMaxScalar;
+    using Kokkos::MinMaxLocScalar;
+    using Kokkos::ValLocScalar;
+  }
+}
+#endif
 
 #endif /* #ifndef KOKKOS_CORE_FWD_HPP */
 
