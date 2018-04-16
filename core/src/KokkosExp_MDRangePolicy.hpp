@@ -417,7 +417,7 @@ struct MDRangePolicy
               || ((int)inner_direction == (int)Left && (i > 0)) )
           {
             if ( m_prod_tile_dims < 256 ) {
-              m_tile[i] = 4;
+              m_tile[i] = 2;
             } else {
               m_tile[i] = 1;
             }
