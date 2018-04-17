@@ -502,7 +502,7 @@ SharedAllocationRecord< Kokkos::Experimental::ROCmSpace , void >::get_record( vo
   Header const * const head_rocm = alloc_ptr ? Header::get_header( alloc_ptr ) : (Header*) 0 ;
 
   if ( alloc_ptr ) {
-    Kokkos::Impl::DeepCopy<HostSpace,Experimental::ROCmSpace>( & head , head_rocm , sizeof(SharedAllocationHeader) );
+    Kokkos::Impl::DeepCopy<HostSpace,Kokkos::Experimental::ROCmSpace>( & head , head_rocm , sizeof(SharedAllocationHeader) );
   }
 
   RecordROCm * const record = alloc_ptr ? static_cast< RecordROCm * >( head.m_record ) : (RecordROCm *) 0 ;

@@ -747,8 +747,8 @@ public:
     {
       const dim3 block( m_rp.m_tile[0] , m_rp.m_tile[1] , 1);
       const dim3 grid(
-            std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks )
-          , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks )
+            std::min( m_rp.m_upper[0] - m_rp.m_lower[0] , maxblocks )
+          , std::min( m_rp.m_upper[1] - m_rp.m_lower[1] , maxblocks )
           , 1 );
       ROCmParallelLaunch< ParallelFor, LaunchBounds >( *this, grid, block, 0);
     }
@@ -756,9 +756,9 @@ public:
     {
       const dim3 block( m_rp.m_tile[0] , m_rp.m_tile[1] , m_rp.m_tile[2] );
       const dim3 grid(
-          std::min( ( m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1 ) / block.x , maxblocks )
-        , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks )
-        , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.z - 1 ) / block.z , maxblocks ));
+            std::min( m_rp.m_upper[0] - m_rp.m_lower[0] , maxblocks )
+          , std::min( m_rp.m_upper[1] - m_rp.m_lower[1] , maxblocks )
+          , std::min( m_rp.m_upper[2] - m_rp.m_lower[2] , maxblocks ));
       ROCmParallelLaunch< ParallelFor, LaunchBounds >( *this, grid, block, 0);
     }
     else if ( RP::rank == 4 )
@@ -766,9 +766,10 @@ public:
       // id0,id1 encoded within threadIdx.x; id2 to threadIdx.y; id3 to threadIdx.z
       const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2] , m_rp.m_tile[3] );
       const dim3 grid(
-          std::min(  m_rp.m_tile_end[0] * m_rp.m_tile_end[1] , maxblocks )
-        , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.y - 1 ) / block.y , maxblocks )
-        , std::min( ( m_rp.m_upper[3] - m_rp.m_lower[3] + block.z - 1 ) / block.z , maxblocks ));
+          std::min(  m_rp.m_tile_end[0] * m_rp.m_tile_end[1] *
+              m_rp.m_tile[0] * m_rp.m_tile[1] , maxblocks )
+        , std::min( m_rp.m_upper[2] - m_rp.m_lower[2] , maxblocks )
+        , std::min( m_rp.m_upper[3] - m_rp.m_lower[3] , maxblocks ));
       ROCmParallelLaunch< ParallelFor, LaunchBounds >( *this, grid, block, 0);
     }
     else if ( RP::rank == 5 )
@@ -776,9 +777,11 @@ public:
       // id0,id1 encoded within threadIdx.x; id2,id3 to threadIdx.y; id4 to threadIdx.z
       const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2]*m_rp.m_tile[3] , m_rp.m_tile[4] );
       const dim3 grid(
-          std::min( m_rp.m_tile_end[0] * m_rp.m_tile_end[1] , maxblocks )
-        , std::min( m_rp.m_tile_end[2] * m_rp.m_tile_end[3] , maxblocks )
-        , std::min( ( m_rp.m_upper[4] - m_rp.m_lower[4] + block.z - 1 ) / block.z , maxblocks ));
+          std::min(  m_rp.m_tile_end[0] * m_rp.m_tile_end[1] *
+              m_rp.m_tile[0] * m_rp.m_tile[1] , maxblocks )
+        , std::min(  m_rp.m_tile_end[2] * m_rp.m_tile_end[3] *
+              m_rp.m_tile[2] * m_rp.m_tile[3] , maxblocks )
+        , std::min(  m_rp.m_upper[4] - m_rp.m_lower[4] , maxblocks ));
       ROCmParallelLaunch< ParallelFor, LaunchBounds >( *this, grid, block, 0);
     }
     else if ( RP::rank == 6 )
@@ -786,9 +789,12 @@ public:
       // id0,id1 encoded within threadIdx.x; id2,id3 to threadIdx.y; id4,id5 to threadIdx.z
       const dim3 block( m_rp.m_tile[0]*m_rp.m_tile[1] , m_rp.m_tile[2]*m_rp.m_tile[3] , m_rp.m_tile[4]*m_rp.m_tile[5] );
       const dim3 grid(
-          std::min( m_rp.m_tile_end[0] * m_rp.m_tile_end[1] , maxblocks )
-        ,  std::min( m_rp.m_tile_end[2] * m_rp.m_tile_end[3] , maxblocks )
-        , std::min( m_rp.m_tile_end[4] * m_rp.m_tile_end[5] , maxblocks ));
+          std::min(  m_rp.m_tile_end[0] * m_rp.m_tile_end[1] *
+              m_rp.m_tile[0] * m_rp.m_tile[1] , maxblocks )
+        , std::min(  m_rp.m_tile_end[2] * m_rp.m_tile_end[3] *
+              m_rp.m_tile[2] * m_rp.m_tile[3] , maxblocks )
+        , std::min(  m_rp.m_tile_end[4] * m_rp.m_tile_end[5] *
+              m_rp.m_tile[4] * m_rp.m_tile[5] , maxblocks ));
       ROCmParallelLaunch< ParallelFor, LaunchBounds >( *this, grid, block, 0);
     }
     else
