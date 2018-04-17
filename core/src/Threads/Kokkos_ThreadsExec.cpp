@@ -567,18 +567,10 @@ void ThreadsExec::print_configuration( std::ostream & s , const bool detail )
 
 //----------------------------------------------------------------------------
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 int ThreadsExec::is_initialized()
-#else
-int ThreadsExec::impl_is_initialized()
-#endif
 { return 0 != s_threads_exec[0] ; }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 void ThreadsExec::initialize
-#else
-void ThreadsExec::impl_initialize
-#endif
 ( unsigned thread_count ,
   unsigned use_numa_count ,
   unsigned use_cores_per_numa ,
@@ -806,22 +798,38 @@ void ThreadsExec::finalize()
 namespace Kokkos {
 
 int Threads::concurrency() {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   return thread_pool_size(0);
+#else
+  return impl_thread_pool_size(0);
+#endif
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 Threads & Threads::instance(int)
+#else
+Threads & Threads::impl_instance(int)
+#endif
 {
   static Threads t ;
   return t ;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 int Threads::thread_pool_size( int depth )
+#else
+int Threads::impl_thread_pool_size( int depth )
+#endif
 {
   return Impl::s_thread_pool_size[depth];
 }
 
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 int Threads::thread_pool_rank()
+#else
+int Threads::impl_thread_pool_rank()
+#endif
 {
   const pthread_t pid = pthread_self();
   int i = 0;

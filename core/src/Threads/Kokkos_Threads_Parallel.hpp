@@ -520,7 +520,7 @@ public:
     : m_functor( arg_functor )
     , m_policy( arg_policy )
     , m_reducer( InvalidType() )
-    , m_result_ptr( arg_result_view.ptr_on_device() )
+    , m_result_ptr( arg_result_view.data() )
     {
       static_assert( Kokkos::is_view< HostViewType >::value
         , "Kokkos::Threads reduce result must be a View" );
@@ -681,7 +681,7 @@ public:
     , m_mdr_policy( arg_policy )
     , m_policy( Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1) )
     , m_reducer( InvalidType() )
-    , m_result_ptr( arg_result_view.ptr_on_device() )
+    , m_result_ptr( arg_result_view.data() )
     {
       static_assert( Kokkos::is_view< HostViewType >::value
         , "Kokkos::Threads reduce result must be a View" );
@@ -804,7 +804,7 @@ public:
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
     , m_reducer( InvalidType() )
-    , m_result_ptr( arg_result.ptr_on_device() )
+    , m_result_ptr( arg_result.data() )
     , m_shared( arg_policy.scratch_size(0) + arg_policy.scratch_size(1) + FunctorTeamShmemSize< FunctorType >::value( arg_functor , arg_policy.team_size() ) )
     {}
 
