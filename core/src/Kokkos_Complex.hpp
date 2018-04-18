@@ -671,6 +671,7 @@ complex<RealType> exp (const complex<RealType>& x) {
 /// because std::complex's methods and nonmember functions are not
 /// marked as CUDA device functions.
 template<class RealType>
+inline
 complex<RealType>
 exp (const std::complex<RealType>& c) {
   return complex<RealType>( std::exp( c.real() )*std::cos( c.imag() ), std::exp( c.real() )*std::sin( c.imag() ) );
