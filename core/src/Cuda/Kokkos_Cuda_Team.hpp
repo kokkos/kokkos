@@ -749,7 +749,7 @@ parallel_reduce
 {
 #ifdef __CUDA_ARCH__
 
-  Kokkos::Experimental::Sum<ValueType> reducer(result);
+  Kokkos::Sum<ValueType> reducer(result);
 
   reducer.init( reducer.reference() );
 
@@ -857,7 +857,7 @@ parallel_reduce
   }
 
   Impl::CudaTeamMember::vector_reduce(
-    Kokkos::Experimental::Sum<ValueType>(result ) );
+    Kokkos::Sum<ValueType>(result ) );
 
 #endif
 }

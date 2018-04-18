@@ -129,6 +129,7 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
 #if defined( KOKKOS_ENABLE_THREADS )
   if( std::is_same< Kokkos::Threads , Kokkos::DefaultExecutionSpace >::value ||
       std::is_same< Kokkos::Threads , Kokkos::HostSpace::execution_space >::value ) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     if(num_threads>0) {
       if(use_numa>0) {
         Kokkos::Threads::initialize(num_threads,use_numa);
@@ -139,6 +140,18 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
     } else {
       Kokkos::Threads::initialize();
     }
+#else
+    if(num_threads>0) {
+      if(use_numa>0) {
+        Kokkos::Threads::impl_initialize(num_threads,use_numa);
+      }
+      else {
+        Kokkos::Threads::impl_initialize(num_threads);
+      }
+    } else {
+      Kokkos::Threads::impl_initialize();
+    }
+#endif
     //std::cout << "Kokkos::initialize() fyi: Pthread enabled and initialized" << std::endl ;
   }
   else {
@@ -288,8 +301,13 @@ void finalize_internal( const bool all_spaces = false )
   if( std::is_same< Kokkos::Threads , Kokkos::DefaultExecutionSpace >::value ||
       std::is_same< Kokkos::Threads , Kokkos::HostSpace::execution_space >::value ||
       all_spaces ) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     if(Kokkos::Threads::is_initialized())
       Kokkos::Threads::finalize();
+#else
+    if(Kokkos::Threads::impl_is_initialized())
+      Kokkos::Threads::impl_finalize();
+#endif
   }
 #endif
 
