@@ -367,7 +367,7 @@ tmp := $(call kokkos_append_header,'\#endif')
 tmp := $(call kokkos_append_header,"/* Execution Spaces */")
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
-  tmp := $(call kokkos_append_header,"\#define KOKKOS_HAVE_CUDA")
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_CUDA")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
@@ -379,19 +379,19 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
-  tmp := $(call kokkos_append_header,'\#define KOKKOS_HAVE_OPENMP')
+  tmp := $(call kokkos_append_header,'\#define KOKKOS_ENABLE_OPENMP')
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
-  tmp := $(call kokkos_append_header,"\#define KOKKOS_HAVE_PTHREAD")
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_THREADS")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
-  tmp := $(call kokkos_append_header,"\#define KOKKOS_HAVE_QTHREADS")
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_QTHREADS")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
-  tmp := $(call kokkos_append_header,"\#define KOKKOS_HAVE_SERIAL")
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_SERIAL")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_TM), 1)
@@ -427,13 +427,13 @@ endif
 tmp := $(call kokkos_append_header,"/* General Settings */")
 ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX11), 1)
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX11_FLAG)
-  tmp := $(call kokkos_append_header,"\#define KOKKOS_HAVE_CXX11")
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_CXX11")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX1Z), 1)
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX1Z_FLAG)
-  tmp := $(call kokkos_append_header,"\#define KOKKOS_HAVE_CXX11")
-  tmp := $(call kokkos_append_header,"\#define KOKKOS_HAVE_CXX1Z")
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_CXX11")
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_CXX1Z")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_ENABLE_DEBUG), 1)
@@ -444,7 +444,7 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_DEBUG), 1)
   KOKKOS_CXXFLAGS += -g
   KOKKOS_LDFLAGS += -g
   tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK")
-  tmp := $(call kokkos_append_header,"\#define KOKKOS_HAVE_DEBUG")
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_DEBUG")
   ifeq ($(KOKKOS_INTERNAL_DISABLE_DUALVIEW_MODIFY_CHECK), 0)
     tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK")
   endif
@@ -464,7 +464,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_HWLOC), 1)
   endif
   KOKKOS_LIBS += -lhwloc
   KOKKOS_TPL_LIBRARY_NAMES += hwloc
-  tmp := $(call kokkos_append_header,"\#define KOKKOS_HAVE_HWLOC")
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_HWLOC")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_LIBRT), 1)
@@ -483,7 +483,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_MEMKIND), 1)
   endif
   KOKKOS_LIBS += -lmemkind -lnuma
   KOKKOS_TPL_LIBRARY_NAMES += memkind numa
-  tmp := $(call kokkos_append_header,"\#define KOKKOS_HAVE_HBWSPACE")
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_HBWSPACE")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_DISABLE_PROFILING), 0)
@@ -508,19 +508,19 @@ tmp := $(call kokkos_append_header,"/* Cuda Settings */")
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   ifeq ($(KOKKOS_INTERNAL_CUDA_USE_LDG), 1)
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_CUDA_USE_LDG_INTRINSIC")
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC")
   else
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-      tmp := $(call kokkos_append_header,"\#define KOKKOS_CUDA_USE_LDG_INTRINSIC")
+      tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC")
     endif
   endif
 
   ifeq ($(KOKKOS_INTERNAL_CUDA_USE_UVM), 1)
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_CUDA_USE_UVM")
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_CUDA_UVM")
   endif
 
   ifeq ($(KOKKOS_INTERNAL_CUDA_USE_RELOC), 1)
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_CUDA_USE_RELOCATABLE_DEVICE_CODE")
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE")
     KOKKOS_CXXFLAGS += --relocatable-device-code=true
     KOKKOS_LDFLAGS += --relocatable-device-code=true
   endif
@@ -536,7 +536,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   ifeq ($(KOKKOS_INTERNAL_CUDA_USE_LAMBDA), 1)
     ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
       ifeq ($(shell test $(KOKKOS_INTERNAL_COMPILER_NVCC_VERSION) -gt 70; echo $$?),0)
-        tmp := $(call kokkos_append_header,"\#define KOKKOS_CUDA_USE_LAMBDA")
+        tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_CUDA_LAMBDA")
         KOKKOS_CXXFLAGS += -expt-extended-lambda
       else
         $(warning Warning: Cuda Lambda support was requested but NVCC version is too low. This requires NVCC for Cuda version 7.5 or higher. Disabling Lambda support now.)
@@ -544,12 +544,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     endif
 
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-      tmp := $(call kokkos_append_header,"\#define KOKKOS_CUDA_USE_LAMBDA")
+      tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_CUDA_LAMBDA")
     endif
   endif
 
   ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_CUDA_CLANG_WORKAROUND")
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_IMPL_CUDA_CLANG_WORKAROUND")
   endif
 endif
 

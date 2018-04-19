@@ -351,7 +351,7 @@ private:
             , reference_type update , const bool final )
     {
       #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
-      #ifdef KOKKOS_HAVE_PRAGMA_IVDEP
+      #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
       #pragma ivdep
       #endif
       #endif
@@ -369,7 +369,7 @@ private:
     {
       const TagType t{} ;
       #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
-      #ifdef KOKKOS_HAVE_PRAGMA_IVDEP
+      #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
       #pragma ivdep
       #endif
       #endif
