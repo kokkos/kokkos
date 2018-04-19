@@ -549,7 +549,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   endif
 
   ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_CUDA_CLANG_WORKAROUND")
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_IMPL_CUDA_CLANG_WORKAROUND")
   endif
 endif
 
