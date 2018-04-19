@@ -383,7 +383,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
-  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_PTHREAD")
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_THREADS")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
