@@ -869,6 +869,13 @@ Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ThreadsExecTeamMember >
   return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ThreadsExecTeamMember >(thread,count);
 }
 
+template<typename iType>
+KOKKOS_INLINE_FUNCTION
+Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ThreadsExecTeamMember >
+  ThreadVectorRange(const Impl::ThreadsExecTeamMember& thread, const iType& arg_begin, const iType& arg_end) {
+  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ThreadsExecTeamMember >(thread,arg_begin,arg_end);
+}
+
 
 KOKKOS_INLINE_FUNCTION
 Impl::ThreadSingleStruct<Impl::ThreadsExecTeamMember> PerTeam(const Impl::ThreadsExecTeamMember& thread) {

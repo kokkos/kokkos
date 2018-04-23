@@ -622,16 +622,24 @@ struct TeamThreadRangeBoundariesStruct<iType,CudaTeamMember> {
 template<typename iType>
 struct ThreadVectorRangeBoundariesStruct<iType,CudaTeamMember> {
   typedef iType index_type;
-  const iType start;
-  const iType end;
+  const index_type start;
+  const index_type end;
 
   KOKKOS_INLINE_FUNCTION
-  ThreadVectorRangeBoundariesStruct (const CudaTeamMember, const iType& count)
-    : start( 0 ), end( count ) {}
+  ThreadVectorRangeBoundariesStruct (const CudaTeamMember, const index_type& count)
+    : start( static_cast<index_type>(0) ), end( count ) {}
 
   KOKKOS_INLINE_FUNCTION
-  ThreadVectorRangeBoundariesStruct (const iType& count)
-    : start( 0 ), end( count ) {}
+  ThreadVectorRangeBoundariesStruct (const index_type& count)
+    : start( static_cast<index_type>(0) ), end( count ) {}
+
+  KOKKOS_INLINE_FUNCTION
+  ThreadVectorRangeBoundariesStruct (const CudaTeamMember, const index_type& arg_begin, const index_type& arg_end)
+    : start( arg_begin ), end( arg_end ) {}
+
+  KOKKOS_INLINE_FUNCTION
+  ThreadVectorRangeBoundariesStruct (const index_type& arg_begin, const index_type& arg_end)
+    : start( arg_begin0 ), end( arg_end ) {}
 };
 
 } // namespace Impl
@@ -657,6 +665,13 @@ KOKKOS_INLINE_FUNCTION
 Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember >
 ThreadVectorRange(const Impl::CudaTeamMember& thread, const iType& count) {
   return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember >(thread,count);
+}
+
+template<typename iType>
+KOKKOS_INLINE_FUNCTION
+Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember >
+ThreadVectorRange(const Impl::CudaTeamMember& thread, const iType& arg_begin, const iType& arg_end) {
+  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember >(thread,arg_begin,arg_end);
 }
 
 KOKKOS_INLINE_FUNCTION

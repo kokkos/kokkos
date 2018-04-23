@@ -746,14 +746,29 @@ public:
 template<typename iType, class TeamMemberType>
 struct ThreadVectorRangeBoundariesStruct {
   typedef iType index_type;
-  enum {start = 0};
-  const iType end;
+  const index_type start;
+  const index_type end;
   enum {increment = 1};
 
   KOKKOS_INLINE_FUNCTION
-  ThreadVectorRangeBoundariesStruct ( const TeamMemberType, const iType& count ) : end( count ) {}
+  constexpr ThreadVectorRangeBoundariesStruct ( const TeamMemberType, const index_type& count ) noexcept 
+  : start( static_cast<index_type>(0) )
+  , end( count ) {}
+
   KOKKOS_INLINE_FUNCTION
-  ThreadVectorRangeBoundariesStruct ( const iType& count ) : end( count ) {}
+  constexpr ThreadVectorRangeBoundariesStruct ( const index_type& count ) noexcept
+  : start( static_cast<index_type>(0) )
+  , end( count ) {}
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr ThreadVectorRangeBoundariesStruct ( const TeamMemberType, const index_type& arg_begin, const index_type& arg_end ) noexcept 
+  : start( static_cast<index_type>(arg_begin) )
+  , end( arg_end ) {}
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr ThreadVectorRangeBoundariesStruct ( const index_type& arg_begin, const index_type& arg_end ) noexcept
+  : start( static_cast<index_type>(arg_begin) )
+  , end( arg_end ) {}
 };
 
 template<class TeamMemberType>
@@ -804,6 +819,11 @@ template<typename iType, class TeamMemberType>
 KOKKOS_INLINE_FUNCTION
 Impl::ThreadVectorRangeBoundariesStruct<iType,TeamMemberType>
 ThreadVectorRange( const TeamMemberType&, const iType& count );
+
+template<typename iType, class TeamMemberType>
+KOKKOS_INLINE_FUNCTION
+Impl::ThreadVectorRangeBoundariesStruct<iType,TeamMemberType>
+ThreadVectorRange( const TeamMemberType&, const iType& arg_begin, const iType& arg_end );
 
 #if defined(KOKKOS_ENABLE_PROFILING)
 namespace Impl {
