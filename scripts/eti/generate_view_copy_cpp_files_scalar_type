@@ -1,0 +1,13 @@
+EXECUTION_SPACE=$1
+EXECUTION_SPACE_DIR=$2
+
+../../scripts/eti/generate_view_copy_cpp_files_rank ${EXECUTION_SPACE} ${EXECUTION_SPACE_DIR} int int
+../../scripts/eti/generate_view_copy_cpp_files_rank ${EXECUTION_SPACE} ${EXECUTION_SPACE_DIR} int64_t int
+../../scripts/eti/generate_view_copy_cpp_files_rank ${EXECUTION_SPACE} ${EXECUTION_SPACE_DIR} float int
+../../scripts/eti/generate_view_copy_cpp_files_rank ${EXECUTION_SPACE} ${EXECUTION_SPACE_DIR} double int
+
+../../scripts/eti/generate_view_copy_cpp_files_rank ${EXECUTION_SPACE} ${EXECUTION_SPACE_DIR} int int64_t
+../../scripts/eti/generate_view_copy_cpp_files_rank ${EXECUTION_SPACE} ${EXECUTION_SPACE_DIR} int64_t int64_t
+../../scripts/eti/generate_view_copy_cpp_files_rank ${EXECUTION_SPACE} ${EXECUTION_SPACE_DIR} float int64_t
+../../scripts/eti/generate_view_copy_cpp_files_rank ${EXECUTION_SPACE} ${EXECUTION_SPACE_DIR} double int64_t
+

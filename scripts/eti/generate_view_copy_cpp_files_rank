@@ -1,0 +1,14 @@
+EXECUTION_SPACE=$1
+EXECUTION_SPACE_DIR=$2
+SCALAR_TYPE=$3
+INDEX_TYPE=$4
+
+../../scripts/eti/generate_view_copy_cpp_files_write ${EXECUTION_SPACE} ${EXECUTION_SPACE_DIR} ${SCALAR_TYPE} ${INDEX_TYPE} 1 "*"
+../../scripts/eti/generate_view_copy_cpp_files_write ${EXECUTION_SPACE} ${EXECUTION_SPACE_DIR} ${SCALAR_TYPE} ${INDEX_TYPE} 2 "**"
+../../scripts/eti/generate_view_copy_cpp_files_write ${EXECUTION_SPACE} ${EXECUTION_SPACE_DIR} ${SCALAR_TYPE} ${INDEX_TYPE} 3 "***"
+../../scripts/eti/generate_view_copy_cpp_files_write ${EXECUTION_SPACE} ${EXECUTION_SPACE_DIR} ${SCALAR_TYPE} ${INDEX_TYPE} 4 "****"
+../../scripts/eti/generate_view_copy_cpp_files_write ${EXECUTION_SPACE} ${EXECUTION_SPACE_DIR} ${SCALAR_TYPE} ${INDEX_TYPE} 5 "*****"
+../../scripts/eti/generate_view_copy_cpp_files_write ${EXECUTION_SPACE} ${EXECUTION_SPACE_DIR} ${SCALAR_TYPE} ${INDEX_TYPE} 6 "******"
+../../scripts/eti/generate_view_copy_cpp_files_write ${EXECUTION_SPACE} ${EXECUTION_SPACE_DIR} ${SCALAR_TYPE} ${INDEX_TYPE} 7 "*******"
+../../scripts/eti/generate_view_copy_cpp_files_write ${EXECUTION_SPACE} ${EXECUTION_SPACE_DIR} ${SCALAR_TYPE} ${INDEX_TYPE} 8 "********"
+

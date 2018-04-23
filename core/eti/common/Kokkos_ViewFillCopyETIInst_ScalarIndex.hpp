@@ -41,17 +41,27 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_OPENMP_VIEWETIDECL_HPP
-#define KOKKOS_OPENMP_VIEWETIDECL_HPP
+#define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_INDEXTYPE int
+#define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_SCALAR int
+#include<../eti/common//Kokkos_ViewFillCopyETIInst_DataType.hpp>
+#undef KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_SCALAR
+#define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_SCALAR int64_t
+#include<../eti/common//Kokkos_ViewFillCopyETIInst_DataType.hpp>
+#undef KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_SCALAR
+#define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_SCALAR double
+#include<../eti/common//Kokkos_ViewFillCopyETIInst_DataType.hpp>
+#undef KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_SCALAR
+#undef KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_INDEXTYPE
 
-namespace Kokkos {
-namespace Impl {
-#define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_EXECSPACE Kokkos::OpenMP
-
-#include<impl/Kokkos_ViewFillCopyETIDecl_ScalarIndex.hpp>
-
-#undef KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_EXECSPACE
-}
-}
-#endif
+#define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_INDEXTYPE int64_t
+#define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_SCALAR int
+#include<../eti/common//Kokkos_ViewFillCopyETIInst_DataType.hpp>
+#undef KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_SCALAR
+#define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_SCALAR int64_t
+#include<../eti/common//Kokkos_ViewFillCopyETIInst_DataType.hpp>
+#undef KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_SCALAR
+#define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_SCALAR double
+#include<../eti/common//Kokkos_ViewFillCopyETIInst_DataType.hpp>
+#undef KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_SCALAR
+#undef KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_INDEXTYPE
 

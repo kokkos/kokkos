@@ -85,5 +85,10 @@ struct ViewFillETIAvail {
 
 }
 }
+#ifdef KOKKOS_ENABLE_ETI
+#ifdef KOKKOS_ENABLE_OPENMP
 #include<OpenMP/Kokkos_OpenMP_ViewCopyETIAvail.hpp>
+#endif
+#endif
+
 #endif

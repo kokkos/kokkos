@@ -1,0 +1,28 @@
+EXECUTION_SPACE=$1
+EXECUTION_SPACE_DIR=$2
+SCALAR_TYPE=$3
+INDEX_TYPE=$4
+RANK=$5
+RANK_STARS=$6
+
+FileName=${EXECUTION_SPACE_DIR}/Kokkos_${EXECUTION_SPACE}_ViewCopyETIInst_${INDEX_TYPE}_${SCALAR_TYPE}_Rank${RANK}.cpp
+ObjectName=Kokkos_${EXECUTION_SPACE}_ViewCopyETIInst_${INDEX_TYPE}_${SCALAR_TYPE}_Rank${RANK}.o
+
+cp ../../LICENSE ${FileName}
+
+echo "" >> ${FileName}
+echo "#define KOKKOS_IMPL_COMPILING_LIBRARY true" >> ${FileName}
+echo "#include<Kokkos_Core.hpp>" >> ${FileName}
+echo "namespace Kokkos {" >> ${FileName}
+echo "namespace Impl {" >> ${FileName}
+echo "#define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_EXECSPACE ${EXECUTION_SPACE}" >> ${FileName}
+echo "#define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_SCALARTYPE ${SCALAR_TYPE}" >> ${FileName}
+echo "#define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_INDEXTYPE ${INDEX_TYPE}" >> ${FileName}
+echo "#define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_DATATYPE KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_SCALARTYPE${RANK_STARS}" >> ${FileName}
+echo "#include<../eti/common/Kokkos_ViewFillCopyETIInst_DataType.hpp>" >> ${FileName}
+echo "" >> ${FileName}
+echo "}" >> ${FileName}
+echo "}" >> ${FileName}
+
+echo "${ObjectName}: \$(KOKKOS_CPP_DEPENDS) \$(KOKKOS_PATH)/core/eti/${FileName}" >> ${EXECUTION_SPACE_DIR}/Makefile.eti_${EXECUTION_SPACE}
+echo -e "\t\$(CXX) \$(KOKKOS_CPPFLAGS) \$(KOKKOS_CXXFLAGS) \$(CXXFLAGS) -c \$(KOKKOS_PATH)/core/eti/${FileName}" >> ${EXECUTION_SPACE_DIR}/Makefile.eti_${EXECUTION_SPACE}

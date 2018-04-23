@@ -61,8 +61,25 @@ namespace Impl {
   extern template struct ViewFill<Kokkos::View<DATATYPE,LAYOUT,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
                                   Kokkos::LayoutRight,EXECSPACE,Kokkos::View<DATATYPE>::rank,ITYPE,true>;
 
-}
-}
+#define KOKKOS_IMPL_VIEWCOPY_ETI_INST(DATATYPE,LAYOUTA,LAYOUTB,EXECSPACE,ITYPE) \
+  template struct ViewCopy<Kokkos::View<DATATYPE,LAYOUTA,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
+                  Kokkos::View<const DATATYPE,LAYOUTB,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
+                  Kokkos::LayoutLeft,EXECSPACE,Kokkos::View<DATATYPE>::rank,ITYPE,true>; \
+  template struct ViewCopy<Kokkos::View<DATATYPE,LAYOUTA,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
+                  Kokkos::View<const DATATYPE,LAYOUTB,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
+                  Kokkos::LayoutRight,EXECSPACE,Kokkos::View<DATATYPE>::rank,ITYPE,true>;
 
+#define KOKKOS_IMPL_VIEWFILL_ETI_INST(DATATYPE,LAYOUT,EXECSPACE,ITYPE) \
+  template struct ViewFill<Kokkos::View<DATATYPE,LAYOUT,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
+                                  Kokkos::LayoutLeft,EXECSPACE,Kokkos::View<DATATYPE>::rank,ITYPE,true>; \
+  template struct ViewFill<Kokkos::View<DATATYPE,LAYOUT,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
+                                  Kokkos::LayoutRight,EXECSPACE,Kokkos::View<DATATYPE>::rank,ITYPE,true>;
+
+}
+}
+#ifdef KOKKOS_ENABLE_ETI
+#ifdef KOKKOS_ENABLE_OPENMP
 #include<OpenMP/Kokkos_OpenMP_ViewCopyETIDecl.hpp>
+#endif
+#endif
 #endif
