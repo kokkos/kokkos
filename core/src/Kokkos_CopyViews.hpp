@@ -1329,18 +1329,19 @@ void deep_copy
       unsigned(ViewTraits<ST,SP...>::rank) != 0 )
   )>::type * = 0 )
 {
+  typedef View<DT,DP...>  dst_type ;
+  typedef View<ST,SP...>  src_type ;
+
   static_assert(
-    std::is_same< typename ViewTraits<DT,DP...>::value_type ,
-                  typename ViewTraits<DT,DP...>::non_const_value_type >::value
+    std::is_same< typename dst_type::value_type ,
+                  typename dst_type::non_const_value_type >::value
     , "deep_copy requires non-const destination type" );
 
   static_assert(
-    ( unsigned(ViewTraits<DT,DP...>::rank) ==
-      unsigned(ViewTraits<ST,SP...>::rank) )
+    ( unsigned(dst_type::rank) ==
+      unsigned(src_type::rank) )
     , "deep_copy requires Views of equal rank" );
 
-  typedef View<DT,DP...>  dst_type ;
-  typedef View<ST,SP...>  src_type ;
 
   typedef typename dst_type::execution_space  dst_execution_space ;
   typedef typename src_type::execution_space  src_execution_space ;
@@ -1426,25 +1427,25 @@ void deep_copy
 
   // If same type, equal layout, equal dimensions, equal span, and contiguous memory then can byte-wise copy
 
-  if ( std::is_same< typename ViewTraits<DT,DP...>::value_type ,
-                     typename ViewTraits<ST,SP...>::non_const_value_type >::value &&
+  if ( std::is_same< typename dst_type::value_type ,
+                     typename src_type::non_const_value_type >::value &&
        (
-         std::is_same< typename ViewTraits<DT,DP...>::array_layout ,
-                       typename ViewTraits<ST,SP...>::array_layout >::value
+         std::is_same< typename dst_type::array_layout ,
+                       typename src_type::array_layout >::value
          ||
-         ( ViewTraits<DT,DP...>::rank == 1 &&
-           ViewTraits<ST,SP...>::rank == 1 )
+         ( dst_type::rank == 1 &&
+           src_type::rank == 1 )
        ) &&
        dst.span_is_contiguous() &&
        src.span_is_contiguous() &&
-       ((ViewTraits<DT,DP...>::rank < 1) || (dst.stride_0() == src.stride_0()))  &&
-       ((ViewTraits<DT,DP...>::rank < 2) || (dst.stride_1() == src.stride_1())) &&
-       ((ViewTraits<DT,DP...>::rank < 3) || (dst.stride_2() == src.stride_2())) &&
-       ((ViewTraits<DT,DP...>::rank < 4) || (dst.stride_3() == src.stride_3())) &&
-       ((ViewTraits<DT,DP...>::rank < 5) || (dst.stride_4() == src.stride_4())) &&
-       ((ViewTraits<DT,DP...>::rank < 6) || (dst.stride_5() == src.stride_5())) &&
-       ((ViewTraits<DT,DP...>::rank < 7) || (dst.stride_6() == src.stride_6())) &&
-       ((ViewTraits<DT,DP...>::rank < 8) || (dst.stride_7() == src.stride_7()))
+       ((dst_type::rank < 1) || (dst.stride_0() == src.stride_0()))  &&
+       ((dst_type::rank < 2) || (dst.stride_1() == src.stride_1())) &&
+       ((dst_type::rank < 3) || (dst.stride_2() == src.stride_2())) &&
+       ((dst_type::rank < 4) || (dst.stride_3() == src.stride_3())) &&
+       ((dst_type::rank < 5) || (dst.stride_4() == src.stride_4())) &&
+       ((dst_type::rank < 6) || (dst.stride_5() == src.stride_5())) &&
+       ((dst_type::rank < 7) || (dst.stride_6() == src.stride_6())) &&
+       ((dst_type::rank < 8) || (dst.stride_7() == src.stride_7()))
     ) {
     const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
     Kokkos::fence();
@@ -1455,7 +1456,7 @@ void deep_copy
     Kokkos::fence();
   } else {
     Kokkos::fence();
-    Impl::view_copy(dst,src);
+    Impl::view_copy(dst_type::uniform_runtime_nomemspace_type(dst),src_type::uniform_runtime_const_nomemspace_type(src));
     Kokkos::fence();
   }
 }
@@ -1574,18 +1575,18 @@ void deep_copy
       unsigned(ViewTraits<ST,SP...>::rank) != 0 )
   )>::type * = 0 )
 {
+  typedef View<DT,DP...>  dst_type ;
+  typedef View<ST,SP...>  src_type ;
+
   static_assert(
-    std::is_same< typename ViewTraits<DT,DP...>::value_type ,
-                  typename ViewTraits<DT,DP...>::non_const_value_type >::value
+    std::is_same< typename dst_type::value_type ,
+                  typename dst_type::non_const_value_type >::value
     , "deep_copy requires non-const destination type" );
 
   static_assert(
-    ( unsigned(ViewTraits<DT,DP...>::rank) ==
-      unsigned(ViewTraits<ST,SP...>::rank) )
+    ( unsigned(dst_type::rank) ==
+      unsigned(src_type::rank) )
     , "deep_copy requires Views of equal rank" );
-
-  typedef View<DT,DP...>  dst_type ;
-  typedef View<ST,SP...>  src_type ;
 
   typedef typename dst_type::execution_space  dst_execution_space ;
   typedef typename src_type::execution_space  src_execution_space ;
@@ -1671,25 +1672,25 @@ void deep_copy
 
   // If same type, equal layout, equal dimensions, equal span, and contiguous memory then can byte-wise copy
 
-  if ( std::is_same< typename ViewTraits<DT,DP...>::value_type ,
-                     typename ViewTraits<ST,SP...>::non_const_value_type >::value &&
+  if ( std::is_same< typename dst_type::value_type ,
+                     typename src_type::non_const_value_type >::value &&
        (
-         std::is_same< typename ViewTraits<DT,DP...>::array_layout ,
-                       typename ViewTraits<ST,SP...>::array_layout >::value
+         std::is_same< typename dst_type::array_layout ,
+                       typename src_type::array_layout >::value
          ||
-         ( ViewTraits<DT,DP...>::rank == 1 &&
-           ViewTraits<ST,SP...>::rank == 1 )
+         ( dst_type::rank == 1 &&
+           src_type::rank == 1 )
        ) &&
        dst.span_is_contiguous() &&
        src.span_is_contiguous() &&
-       ((ViewTraits<DT,DP...>::rank < 1) || (dst.stride_0() == src.stride_0()))  &&
-       ((ViewTraits<DT,DP...>::rank < 2) || (dst.stride_1() == src.stride_1())) &&
-       ((ViewTraits<DT,DP...>::rank < 3) || (dst.stride_2() == src.stride_2())) &&
-       ((ViewTraits<DT,DP...>::rank < 4) || (dst.stride_3() == src.stride_3())) &&
-       ((ViewTraits<DT,DP...>::rank < 5) || (dst.stride_4() == src.stride_4())) &&
-       ((ViewTraits<DT,DP...>::rank < 6) || (dst.stride_5() == src.stride_5())) &&
-       ((ViewTraits<DT,DP...>::rank < 7) || (dst.stride_6() == src.stride_6())) &&
-       ((ViewTraits<DT,DP...>::rank < 8) || (dst.stride_7() == src.stride_7()))
+       ((dst_type::rank < 1) || (dst.stride_0() == src.stride_0()))  &&
+       ((dst_type::rank < 2) || (dst.stride_1() == src.stride_1())) &&
+       ((dst_type::rank < 3) || (dst.stride_2() == src.stride_2())) &&
+       ((dst_type::rank < 4) || (dst.stride_3() == src.stride_3())) &&
+       ((dst_type::rank < 5) || (dst.stride_4() == src.stride_4())) &&
+       ((dst_type::rank < 6) || (dst.stride_5() == src.stride_5())) &&
+       ((dst_type::rank < 7) || (dst.stride_6() == src.stride_6())) &&
+       ((dst_type::rank < 8) || (dst.stride_7() == src.stride_7()))
     ) {
 
     const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
@@ -1701,7 +1702,7 @@ void deep_copy
     exec_space.fence();
   } else {
     exec_space.fence();
-    Impl::view_copy(dst,src);
+    Impl::view_copy(dst_type::uniform_runtime_nomemspace_type(dst),src_type::uniform_runtime_const_nomemspace_type(src));
     exec_space.fence();
   }
 }
