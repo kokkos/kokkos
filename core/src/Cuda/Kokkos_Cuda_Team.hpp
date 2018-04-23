@@ -639,7 +639,7 @@ struct ThreadVectorRangeBoundariesStruct<iType,CudaTeamMember> {
 
   KOKKOS_INLINE_FUNCTION
   ThreadVectorRangeBoundariesStruct (const index_type& arg_begin, const index_type& arg_end)
-    : start( arg_begin0 ), end( arg_end ) {}
+    : start( arg_begin ), end( arg_end ) {}
 };
 
 } // namespace Impl
