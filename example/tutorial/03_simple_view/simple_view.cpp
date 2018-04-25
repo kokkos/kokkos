@@ -113,7 +113,8 @@ struct ReduceFunctor {
 };
 
 int main (int argc, char* argv[]) {
-  Kokkos::initialize (argc, argv);
+  //Kokkos::initialize (argc, argv);
+  Kokkos::ScopeGuard (argc, argv);
   {
     const int N = 10;
 
@@ -139,6 +140,6 @@ int main (int argc, char* argv[]) {
     Kokkos::parallel_reduce (N, ReduceFunctor (a), sum);
     printf ("Result: %f\n", sum);
   } // use this scope to ensure the lifetime of "A" ends before finalize
-  Kokkos::finalize ();
+  //Kokkos::finalize ();
 }
 
