@@ -228,7 +228,7 @@ public:
   {
     sg_init = false; 
     if ( ! Kokkos::is_initialized() ) { 
-      initialize();
+      initialize( narg, arg );
       sg_init = true;
     }
   }
@@ -237,7 +237,7 @@ public:
   {
     sg_init = false; 
     if ( ! Kokkos::is_initialized() ) { 
-      initialize();
+      initialize( args );
       sg_init = true;
     }
   }
