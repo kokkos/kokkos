@@ -298,14 +298,17 @@ public:
   row_block_type row_block_offsets;
 
   //! Construct an empty view.
+  KOKKOS_INLINE_FUNCTION
   StaticCrsGraph () : entries(), row_map(), row_block_offsets() {}
 
   //! Copy constructor (shallow copy).
+  KOKKOS_INLINE_FUNCTION
   StaticCrsGraph (const StaticCrsGraph& rhs) : entries (rhs.entries), row_map (rhs.row_map),
                                                row_block_offsets(rhs.row_block_offsets)
   {}
 
   template<class EntriesType, class RowMapType>
+  KOKKOS_INLINE_FUNCTION
   StaticCrsGraph (const EntriesType& entries_,const RowMapType& row_map_) : entries (entries_), row_map (row_map_),
   row_block_offsets()
   {}
@@ -314,6 +317,7 @@ public:
    *          If the old view is the last view
    *          then allocated memory is deallocated.
    */
+  KOKKOS_INLINE_FUNCTION
   StaticCrsGraph& operator= (const StaticCrsGraph& rhs) {
     entries = rhs.entries;
     row_map = rhs.row_map;
@@ -324,6 +328,7 @@ public:
   /**  \brief  Destroy this view of the array.
    *           If the last view then allocated memory is deallocated.
    */
+  KOKKOS_INLINE_FUNCTION
   ~StaticCrsGraph() {}
 
   /**  \brief  Return number of rows in the graph
