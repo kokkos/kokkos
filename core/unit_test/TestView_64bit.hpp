@@ -58,6 +58,7 @@ void test_64bit(){
     },sum);
     ASSERT_EQ(N,sum);
   }
+/*
   {
     Kokkos::View<char*,Device> a("A",N);
     Kokkos::deep_copy(a,char(1));
@@ -112,6 +113,7 @@ void test_64bit(){
     int64_t expected = (P*(P-1)/2) * int64_t(N0/P) + (N0%P)*(N0%P-1)/2;
     ASSERT_EQ(expected,sum0);
   }
+*/
 #endif
 }
 
