@@ -98,18 +98,18 @@ void test_64bit(){
     ASSERT_EQ(N0*N1,sum);
   }
   {
-    int N = 1024*1024*1500;
+    int N0 = 1024*1024*1500;
     int64_t P = 1713091;
-    Kokkos::View<int*, Device> a("A",N);
-    Kokkos::parallel_for("FillA",Kokkos::RangePolicy<Kokkos::IndexType<int>>(0,N), KOKKOS_LAMBDA(const int& i) {
+    Kokkos::View<int*, Device> a("A",N0);
+    Kokkos::parallel_for("FillA",Kokkos::RangePolicy<Kokkos::IndexType<int>>(0,N0), KOKKOS_LAMBDA(const int& i) {
       a(i) = i%P;
     });
-    int64_t sum=0;
-    Kokkos::parallel_reduce("FillA",Kokkos::RangePolicy<Kokkos::IndexType<int>>(0,N), KOKKOS_LAMBDA(const int& i,int64_t& lsum) {
+    int64_t sum0=0;
+    Kokkos::parallel_reduce("FillA",Kokkos::RangePolicy<Kokkos::IndexType<int>>(0,N0), KOKKOS_LAMBDA(const int& i,int64_t& lsum) {
       lsum += a(i);
-    },sum);
-    int64_t expected = (P*(P-1)/2) * int64_t(N/P) + (N%P)*(N%P-1)/2;
-    ASSERT_EQ(expected,sum);
+    },sum0);
+    int64_t expected = (P*(P-1)/2) * int64_t(N0/P) + (N0%P)*(N0%P-1)/2;
+    ASSERT_EQ(expected,sum0);
   }
 }
 
