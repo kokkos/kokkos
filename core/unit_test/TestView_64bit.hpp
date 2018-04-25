@@ -51,7 +51,7 @@ void test_64bit(){
   int64_t sum = 0;
   {
     Kokkos::parallel_reduce(
-      Kokkos::RangePolicy<typename Device::execution_space>(0,N),
+      Kokkos::RangePolicy<typename Device::execution_space,Kokkos::IndexType<int64_t>>(0,N),
       KOKKOS_LAMBDA(const int64_t& i, int64_t& lsum) {
       lsum += 1;
     },sum);
@@ -61,18 +61,18 @@ void test_64bit(){
     Kokkos::View<char*,Device> a("A",N);
     Kokkos::deep_copy(a,char(1));
     Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<typename Device::execution_space>(0,N),
+        Kokkos::RangePolicy<typename Device::execution_space,Kokkos::IndexType<int64_t>>(0,N),
         KOKKOS_LAMBDA(const int64_t& i, int64_t& lsum) {
       lsum += int64_t(a(i));
     },sum);
     ASSERT_EQ(N,sum);
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<typename Device::execution_space>(0,N),
+        Kokkos::RangePolicy<typename Device::execution_space,Kokkos::IndexType<int64_t>>(0,N),
         KOKKOS_LAMBDA(const int64_t& i) {
       a(i) = 3;
     });
     Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<typename Device::execution_space>(0,N),
+        Kokkos::RangePolicy<typename Device::execution_space,Kokkos::IndexType<int64_t>>(0,N),
         KOKKOS_LAMBDA(const int64_t& i, int64_t& lsum) {
       lsum += int64_t(a(i));
     },sum);
@@ -85,13 +85,13 @@ void test_64bit(){
     Kokkos::View<char**,Device> m("Matrix", N0,N1);
     Kokkos::deep_copy(m,char(1));
     Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<typename Device::execution_space>(0,N0*N1),
+        Kokkos::RangePolicy<typename Device::execution_space,Kokkos::IndexType<int64_t>>(0,N0*N1),
         KOKKOS_LAMBDA(const int64_t& i, int64_t& lsum) {
       lsum += int64_t(m(i%N0,i/N0));
     },sum);
     ASSERT_EQ(N0*N1,sum);
     Kokkos::parallel_reduce(
-        Kokkos::MDRangePolicy<typename Device::execution_space,Kokkos::Rank<2>>({0,0},{N0,N1}),
+        Kokkos::MDRangePolicy<typename Device::execution_space,Kokkos::Rank<2>,Kokkos::IndexType<int64_t>>({0,0},{N0,N1}),
         KOKKOS_LAMBDA(const int64_t& i0, const int64_t& i1, int64_t& lsum) {
       lsum += int64_t(m(i0,i1));
     },sum);

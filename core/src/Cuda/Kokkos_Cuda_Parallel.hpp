@@ -716,7 +716,8 @@ public:
   typedef typename ValueTraits::value_type      value_type ;
   typedef typename ValueTraits::reference_type  reference_type ;
   typedef FunctorType                           functor_type ;
-  typedef Cuda::size_type                       size_type ;
+  typedef Kokkos::Cuda::size_type                  size_type ;
+  typedef typename Policy::index_type             index_type ;
 
   // Algorithmic constraints: blockSize is a power of two AND blockDim.y == blockDim.z == 1
 
@@ -845,7 +846,7 @@ public:
   inline
   void execute()
     {
-      const int nwork = m_policy.end() - m_policy.begin();
+      const index_type nwork = m_policy.end() - m_policy.begin();
       if ( nwork ) {
         const int block_size = local_block_size( m_functor );
 

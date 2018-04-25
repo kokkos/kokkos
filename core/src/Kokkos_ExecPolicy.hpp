@@ -100,6 +100,7 @@ public:
   //! Tag this class as an execution policy
   typedef RangePolicy execution_policy;
   typedef typename traits::index_type member_type ;
+  typedef typename traits::index_type index_type;
 
   KOKKOS_INLINE_FUNCTION const typename traits::execution_space & space() const { return m_space ; }
   KOKKOS_INLINE_FUNCTION member_type begin() const { return m_begin ; }
@@ -287,6 +288,8 @@ private:
   typedef Impl::PolicyTraits<Properties ... > traits;
 
 public:
+  
+  typedef typename traits::index_type index_type;
 
   //----------------------------------------
   /** \brief  Query maximum team size for a given functor.
