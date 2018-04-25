@@ -60,6 +60,6 @@ protected:
 } // namespace Test
 
 #define TEST_CATEGORY cuda_hostpinned
-#define TEST_EXECSPACE Kokkos::CudaHostPinnedSpace
+#define TEST_EXECSPACE Kokkos::Device<Kokkos::Cuda,Kokkos::CudaHostPinnedSpace>
 
 #endif

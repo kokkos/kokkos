@@ -55,7 +55,7 @@ void test_64bit(){
       KOKKOS_LAMBDA(const int64_t& i, int64_t& lsum) {
       lsum += 1;
     },sum);
-    ASSERT_EQ(sum,N);
+    ASSERT_EQ(N,sum);
   }
   {
     Kokkos::View<char*,Device> a("A",N);
@@ -65,7 +65,7 @@ void test_64bit(){
         KOKKOS_LAMBDA(const int64_t& i, int64_t& lsum) {
       lsum += int64_t(a(i));
     },sum);
-    ASSERT_EQ(sum,N);
+    ASSERT_EQ(N,sum);
     Kokkos::parallel_for(
         Kokkos::RangePolicy<typename Device::execution_space>(0,N),
         KOKKOS_LAMBDA(const int64_t& i) {
@@ -76,7 +76,7 @@ void test_64bit(){
         KOKKOS_LAMBDA(const int64_t& i, int64_t& lsum) {
       lsum += int64_t(a(i));
     },sum);
-    ASSERT_EQ(sum,N*3);
+    ASSERT_EQ(N*3,sum);
   }
   {
     int64_t N0 = 56925;
@@ -89,13 +89,13 @@ void test_64bit(){
         KOKKOS_LAMBDA(const int64_t& i, int64_t& lsum) {
       lsum += int64_t(m(i%N0,i/N0));
     },sum);
-    ASSERT_EQ(sum,N0*N1);
+    ASSERT_EQ(N0*N1,sum);
     Kokkos::parallel_reduce(
         Kokkos::MDRangePolicy<typename Device::execution_space,Kokkos::Rank<2>>({0,0},{N0,N1}),
         KOKKOS_LAMBDA(const int64_t& i0, const int64_t& i1, int64_t& lsum) {
       lsum += int64_t(m(i0,i1));
     },sum);
-    ASSERT_EQ(sum,N0*N1);
+    ASSERT_EQ(N0*N1,sum);
   }
 
 }

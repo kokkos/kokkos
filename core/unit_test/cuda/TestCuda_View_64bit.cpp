@@ -41,5 +41,5 @@
 //@HEADER
 */
 
-#include <cuda/TestCudaHostPinned_Category.hpp>
+#include <cuda/TestCuda_Category.hpp>
 #include <TestView_64bit.hpp>
