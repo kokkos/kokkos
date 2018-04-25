@@ -410,7 +410,7 @@ public:
       for ( Member
               iwork =  m_policy.begin() + threadIdx.y + blockDim.y * blockIdx.x ;
               iwork <  work_end ;
-              iwork += work_stride ) {
+              iwork = iwork < work_end - work_stride ? iwork + work_stride : work_end) {
         this-> template exec_range< WorkTag >( iwork );
       }
     }
@@ -418,10 +418,10 @@ public:
   inline
   void execute() const
     {
-      const int nwork = m_policy.end() - m_policy.begin();
+      const typename Policy::index_type nwork = m_policy.end() - m_policy.begin();
       const int block_size = Kokkos::Impl::cuda_get_opt_block_size< ParallelFor >( m_functor , 1, 0 , 0 );
       const dim3 block(  1 , block_size , 1);
-      const dim3 grid( std::min( ( nwork + block.y - 1 ) / block.y , cuda_internal_maximum_grid_count() ) , 1 , 1);
+      const dim3 grid( std::min( typename Policy::index_type(( nwork + block.y - 1 ) / block.y) , typename Policy::index_type(cuda_internal_maximum_grid_count()) ) , 1 , 1);
 
       CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
     }
