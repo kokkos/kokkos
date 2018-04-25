@@ -47,6 +47,7 @@ namespace Test {
 
 template<class Device>
 void test_64bit(){
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
   int64_t N = 5000000000;
   int64_t sum = 0;
   {
@@ -111,6 +112,7 @@ void test_64bit(){
     int64_t expected = (P*(P-1)/2) * int64_t(N0/P) + (N0%P)*(N0%P-1)/2;
     ASSERT_EQ(expected,sum0);
   }
+#endif
 }
 
 #ifdef KOKKOS_ENABLE_LARGE_MEM_TESTS
