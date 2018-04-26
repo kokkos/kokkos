@@ -244,7 +244,7 @@ public:
 
   ~ScopeGuard( )
   {
-    if ( ! Kokkos::is_initialized() && sg_init) { 
+    if ( Kokkos::is_initialized() && sg_init) { 
       finalize(); 
     }
   }
