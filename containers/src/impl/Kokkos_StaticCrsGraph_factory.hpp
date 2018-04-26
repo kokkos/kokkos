@@ -49,23 +49,23 @@
 
 namespace Kokkos {
 
-template< class DataType , class Arg1Type , class Arg2Type , typename SizeType >
+template< class DataType , class Arg1Type , class Arg2Type , class Arg3Type, typename SizeType >
 inline
-typename StaticCrsGraph< DataType , Arg1Type , Arg2Type , SizeType >::HostMirror
-create_mirror_view( const StaticCrsGraph<DataType,Arg1Type,Arg2Type,SizeType > & view ,
-                    typename Impl::enable_if< ViewTraits<DataType,Arg1Type,Arg2Type,void>::is_hostspace >::type * = 0 )
+typename StaticCrsGraph< DataType , Arg1Type , Arg2Type , Arg3Type , SizeType >::HostMirror
+create_mirror_view( const StaticCrsGraph<DataType,Arg1Type,Arg2Type,Arg3Type,SizeType > & view ,
+                    typename Impl::enable_if< ViewTraits<DataType,Arg1Type,Arg2Type,Arg3Type>::is_hostspace >::type * = 0 )
 {
   return view ;
 }
 
-template< class DataType , class Arg1Type , class Arg2Type , typename SizeType >
+template< class DataType , class Arg1Type , class Arg2Type , class Arg3Type, typename SizeType >
 inline
-typename StaticCrsGraph< DataType , Arg1Type , Arg2Type , SizeType >::HostMirror
-create_mirror( const StaticCrsGraph<DataType,Arg1Type,Arg2Type,SizeType > & view )
+typename StaticCrsGraph< DataType , Arg1Type , Arg2Type , Arg3Type , SizeType >::HostMirror
+create_mirror( const StaticCrsGraph<DataType,Arg1Type,Arg2Type,Arg3Type,SizeType > & view )
 {
   // Force copy:
   //typedef Impl::ViewAssignment< Impl::ViewDefault > alloc ; // unused
-  typedef StaticCrsGraph< DataType , Arg1Type , Arg2Type , SizeType >  staticcrsgraph_type ;
+  typedef StaticCrsGraph< DataType , Arg1Type , Arg2Type , Arg3Type , SizeType >  staticcrsgraph_type ;
 
   typename staticcrsgraph_type::HostMirror               tmp ;
   typename staticcrsgraph_type::row_map_type::HostMirror tmp_row_map = create_mirror( view.row_map);
@@ -84,11 +84,11 @@ create_mirror( const StaticCrsGraph<DataType,Arg1Type,Arg2Type,SizeType > & view
   return tmp ;
 }
 
-template< class DataType , class Arg1Type , class Arg2Type , typename SizeType >
+template< class DataType , class Arg1Type , class Arg2Type , class Arg3Type, typename SizeType >
 inline
-typename StaticCrsGraph< DataType , Arg1Type , Arg2Type , SizeType >::HostMirror
-create_mirror_view( const StaticCrsGraph<DataType,Arg1Type,Arg2Type,SizeType > & view ,
-                    typename Impl::enable_if< ! ViewTraits<DataType,Arg1Type,Arg2Type,void>::is_hostspace >::type * = 0 )
+typename StaticCrsGraph< DataType , Arg1Type , Arg2Type , Arg3Type , SizeType >::HostMirror
+create_mirror_view( const StaticCrsGraph<DataType,Arg1Type,Arg2Type,Arg3Type,SizeType > & view ,
+                    typename Impl::enable_if< ! ViewTraits<DataType,Arg1Type,Arg2Type,Arg3Type>::is_hostspace >::type * = 0 )
 {
   return create_mirror( view );
 }
@@ -112,7 +112,8 @@ create_staticcrsgraph( const std::string & label ,
 
   typedef View< typename output_type::size_type [] ,
                 typename output_type::array_layout ,
-                typename output_type::execution_space > work_type ;
+                typename output_type::execution_space,
+                typename output_type::memory_traits > work_type ;
 
   output_type output ;
 
@@ -157,7 +158,8 @@ create_staticcrsgraph( const std::string & label ,
 
   typedef View< typename output_type::size_type [] ,
                 typename output_type::array_layout ,
-                typename output_type::execution_space > work_type ;
+                typename output_type::execution_space,
+                typename output_type::memory_traits > work_type ;
 
   output_type output ;
 

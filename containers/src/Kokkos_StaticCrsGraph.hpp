@@ -258,6 +258,9 @@ public:
 /// \tparam Arg2Type The third template parameter, which if provided
 ///   corresponds to the Device type.
 ///
+/// \tparam Arg3Type The third template parameter, which if provided
+///   corresponds to the MemoryTraits.
+///
 /// \tparam SizeType The type of row offsets.  Usually the default
 ///   parameter suffices.  However, setting a nondefault value is
 ///   necessary in some cases, for example, if you want to have a
@@ -275,23 +278,26 @@ public:
 template< class DataType,
           class Arg1Type,
           class Arg2Type = void,
-          typename SizeType = typename ViewTraits<DataType*, Arg1Type, Arg2Type, void >::size_type>
+          class Arg3Type = void,
+          typename SizeType = typename ViewTraits<DataType*, Arg1Type, Arg2Type, Arg3Type >::size_type>
 class StaticCrsGraph {
 private:
-  typedef ViewTraits<DataType*, Arg1Type, Arg2Type, void> traits;
+  typedef ViewTraits<DataType*, Arg1Type, Arg2Type, Arg3Type> traits;
 
 public:
   typedef DataType                                            data_type;
   typedef typename traits::array_layout                       array_layout;
   typedef typename traits::execution_space                    execution_space;
   typedef typename traits::device_type                        device_type;
+  typedef typename traits::memory_traits                      memory_traits;
   typedef SizeType                                            size_type;
 
-  typedef StaticCrsGraph< DataType , Arg1Type , Arg2Type , SizeType > staticcrsgraph_type;
-  typedef StaticCrsGraph< DataType , array_layout , typename traits::host_mirror_space , SizeType > HostMirror;
-  typedef View< const size_type* , array_layout, device_type >  row_map_type;
-  typedef View<       DataType*  , array_layout, device_type >  entries_type;
-  typedef View< const size_type* , array_layout, device_type >  row_block_type;
+  typedef StaticCrsGraph< DataType , Arg1Type , Arg2Type , Arg3Type, SizeType > staticcrsgraph_type;
+  typedef StaticCrsGraph< data_type , array_layout , typename traits::host_mirror_space , memory_traits, size_type > HostMirror;
+
+  typedef View< const size_type* , array_layout, device_type , memory_traits >  row_map_type;
+  typedef View<       data_type* , array_layout, device_type , memory_traits >  entries_type;
+  typedef View< const size_type* , array_layout, device_type , memory_traits >  row_block_type;
 
   entries_type entries;
   row_map_type row_map;
@@ -406,16 +412,18 @@ create_staticcrsgraph( const std::string & label ,
 template< class DataType ,
           class Arg1Type ,
           class Arg2Type ,
+          class Arg3Type ,
           typename SizeType >
-typename StaticCrsGraph< DataType , Arg1Type , Arg2Type , SizeType >::HostMirror
-create_mirror_view( const StaticCrsGraph<DataType,Arg1Type,Arg2Type,SizeType > & input );
+typename StaticCrsGraph< DataType , Arg1Type , Arg2Type , Arg3Type , SizeType >::HostMirror
+create_mirror_view( const StaticCrsGraph<DataType,Arg1Type,Arg2Type,Arg3Type,SizeType > & input );
 
 template< class DataType ,
           class Arg1Type ,
           class Arg2Type ,
+          class Arg3Type ,
           typename SizeType >
-typename StaticCrsGraph< DataType , Arg1Type , Arg2Type , SizeType >::HostMirror
-create_mirror( const StaticCrsGraph<DataType,Arg1Type,Arg2Type,SizeType > & input );
+typename StaticCrsGraph< DataType , Arg1Type , Arg2Type , Arg3Type , SizeType >::HostMirror
+create_mirror( const StaticCrsGraph<DataType,Arg1Type,Arg2Type,Arg3Type,SizeType > & input );
 
 } // namespace Kokkos
 

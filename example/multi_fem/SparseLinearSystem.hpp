@@ -59,7 +59,7 @@ struct CrsMatrix {
   typedef Device      execution_space ;
   typedef ScalarType  value_type ;
 
-  typedef StaticCrsGraph< int , execution_space , void , int >  graph_type ;
+  typedef StaticCrsGraph< int , execution_space , void , void , int >  graph_type ;
   typedef View< value_type* , execution_space >   coefficients_type ;
 
   graph_type         graph ;
