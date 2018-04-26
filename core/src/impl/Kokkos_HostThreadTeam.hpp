@@ -805,6 +805,17 @@ ThreadVectorRange
   return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >(member,count);
 }
 
+template<class Space, typename iType>
+KOKKOS_INLINE_FUNCTION
+Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >
+ThreadVectorRange
+  ( Impl::HostThreadTeamMember<Space> const & member
+  , const iType & arg_begin
+  , const iType & arg_end )
+{
+  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >(member,arg_begin,arg_end);
+}
+
 //----------------------------------------------------------------------------
 /** \brief  Inter-thread parallel_for.
  *

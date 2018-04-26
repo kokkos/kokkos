@@ -534,7 +534,7 @@ struct functor_vec_single {
     // inside a parallel_for and write to it.
     Scalar value = 0;
 
-    Kokkos::parallel_for( Kokkos::ThreadVectorRange( team, 13 ), [&] ( int i )
+    Kokkos::parallel_for( Kokkos::ThreadVectorRange( team, 0, 13 ), [&] ( int i )
     {
       value = i; // This write is violating Kokkos semantics for nested parallelism.
     });
@@ -545,7 +545,7 @@ struct functor_vec_single {
     }, value );
 
     Scalar value2 = 0;
-    Kokkos::parallel_reduce( Kokkos::ThreadVectorRange( team, 13 ), [&] ( int i, Scalar & val )
+    Kokkos::parallel_reduce( Kokkos::ThreadVectorRange( team, 0, 13 ), [&] ( int i, Scalar & val )
     {
       val += value;
     }, value2 );
