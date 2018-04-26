@@ -1,7 +1,8 @@
 
-../../scripts/eti/generate_view_copy_cpp_files_scalar_type Serial Serial
-../../scripts/eti/generate_view_copy_cpp_files_scalar_type OpenMP OpenMP
-../../scripts/eti/generate_view_copy_cpp_files_scalar_type Threads Threads
-../../scripts/eti/generate_view_copy_cpp_files_scalar_type Cuda Cuda
-../../scripts/eti/generate_view_copy_cpp_files_scalar_type "Experimental::ROCm" ROCm
+rm common/*
+../../scripts/eti/generate_view_copy_cpp_files_iterate Serial Serial
+../../scripts/eti/generate_view_copy_cpp_files_iterate OpenMP OpenMP
+../../scripts/eti/generate_view_copy_cpp_files_iterate Threads Threads
+../../scripts/eti/generate_view_copy_cpp_files_iterate Cuda Cuda
+../../scripts/eti/generate_view_copy_cpp_files_iterate "Experimental::ROCm" ROCm
 

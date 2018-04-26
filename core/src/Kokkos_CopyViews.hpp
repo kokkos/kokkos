@@ -1456,7 +1456,7 @@ void deep_copy
     Kokkos::fence();
   } else {
     Kokkos::fence();
-    Impl::view_copy(dst_type::uniform_runtime_nomemspace_type(dst),src_type::uniform_runtime_const_nomemspace_type(src));
+    Impl::view_copy(typename dst_type::uniform_runtime_nomemspace_type(dst),typename src_type::uniform_runtime_const_nomemspace_type(src));
     Kokkos::fence();
   }
 }
