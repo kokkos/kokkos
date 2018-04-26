@@ -464,10 +464,10 @@ struct StaticCrsGraphMaximumEntry {
 
 }
 
-template< class DataType, class Arg1Type, class Arg2Type, typename SizeType >
-DataType maximum_entry( const StaticCrsGraph< DataType , Arg1Type , Arg2Type , SizeType > & graph )
+template< class DataType, class Arg1Type, class Arg2Type, class Arg3Type, typename SizeType >
+DataType maximum_entry( const StaticCrsGraph< DataType , Arg1Type , Arg2Type , Arg3Type , SizeType > & graph )
 {
-  typedef StaticCrsGraph<DataType,Arg1Type,Arg2Type,SizeType> GraphType ;
+  typedef StaticCrsGraph<DataType,Arg1Type,Arg2Type,Arg3Type,SizeType> GraphType ;
   typedef Impl::StaticCrsGraphMaximumEntry< GraphType > FunctorType ;
 
   DataType result = 0 ;
