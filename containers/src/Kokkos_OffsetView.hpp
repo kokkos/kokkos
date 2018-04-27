@@ -35,6 +35,13 @@ namespace Kokkos {
 
     typedef ViewTraits< DataType , Properties ... > traits ;
 
+    template <typename iType,
+              typename std::enable_if< std::is_integral<iType>::value &&
+                                       std::is_signed<iType>::value, iType >::type = 0>
+    using IndexRange  = Kokkos::Array<iType, 2>;
+
+
+
   private:
 
     template< class , class ... > friend class OffsetView ;
@@ -1080,8 +1087,7 @@ namespace Kokkos {
       return *this ;
     }
 
-  //----------------------------------------
-  // Compatible view copy constructor and assignment
+
   // may assign unmanaged from managed.
 
 #if 0
@@ -1139,7 +1145,6 @@ namespace Kokkos {
 
   //----------------------------------------
   // Allocation tracking properties
-#if 0
   KOKKOS_INLINE_FUNCTION
   int use_count() const
   { return m_track.use_count(); }
@@ -1148,6 +1153,7 @@ namespace Kokkos {
   const std::string label() const
   { return m_track.template get_label< typename traits::memory_space >(); }
 
+#if 0
   //----------------------------------------
   // Allocation according to allocation properties and array layout
 
@@ -1186,14 +1192,14 @@ namespace Kokkos {
     > alloc_prop ;
 
     static_assert( traits::is_managed
-                   , "View allocation constructor requires managed memory" );
+                   , "OffsetView allocation constructor requires managed memory" );
 
     if ( alloc_prop::initialize &&
         ! alloc_prop::execution_space::impl_is_initialized()
     ) {
         // If initializing view data then
         // the execution space must be initialized.
-        Kokkos::Impl::throw_runtime_exception("Constructing View and initializing data with uninitialized execution space");
+        Kokkos::Impl::throw_runtime_exception("Constructing OffsetView and initializing data with uninitialized execution space");
     }
 
     // Copy the input allocation properties with possibly defaulted properties
@@ -1249,7 +1255,7 @@ namespace Kokkos {
         std::is_same< pointer_type
         , typename Impl::ViewCtorProp< P... >::pointer_type
         >::value ,
-        "Constructing View to wrap user memory must supply matching pointer type" );
+        "Constructing OffsetView to wrap user memory must supply matching pointer type" );
   }
 
   // Simple dimension-only layout
@@ -1532,6 +1538,21 @@ namespace Kokkos {
 #endif
   }
 #endif
+
+#define KOKKOS_INVALID_INDEX_RANGE {-~int64_t(0), ~int64_t(0)}
+
+
+  template< typename Label, typename iType >
+   explicit inline
+   OffsetView( const Label & arg_label
+         , const std::initializer_list<iType> range0 = KOKKOS_INVALID_INDEX_RANGE
+         ,typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value , const std::initializer_list<iType> >::type range1 = KOKKOS_INVALID_INDEX_RANGE
+
+   )
+   {
+
+   }
+
 };
 
 
