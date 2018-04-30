@@ -97,11 +97,10 @@ private:
   static_assert( traits::rank == 1 && traits::rank_dynamic == 1
                , "DynamicView must be rank-one" );
 
-  static_assert( std::is_trivial< typename traits::value_type >::value &&
-                 std::is_same< typename traits::specialize , void >::value &&
-                 Kokkos::Impl::is_power_of_two
-                   <sizeof(typename traits::value_type)>::value
-               , "DynamicView must have trivial value_type and sizeof(value_type) is a power-of-two");
+  // It is assumed that the value_type is trivially copyable; 
+  // when this is not the case, potential problems can occur.
+  static_assert( std::is_same< typename traits::specialize , void >::value
+               , "DynamicView only implemented for non-specialized View type");
 
 
   template< class Space , bool = Kokkos::Impl::MemorySpaceAccess< Space , typename traits::memory_space >::accessible > struct verify_space
