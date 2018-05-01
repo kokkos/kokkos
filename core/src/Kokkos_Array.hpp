@@ -44,6 +44,8 @@
 #ifndef KOKKOS_ARRAY_HPP
 #define KOKKOS_ARRAY_HPP
 
+#include <Kokkos_Macros.hpp>
+
 #include <type_traits>
 #include <algorithm>
 #include <limits>

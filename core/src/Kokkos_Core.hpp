@@ -211,6 +211,54 @@ void * kokkos_realloc( void * arg_alloc , const size_t arg_alloc_size )
 
 } // namespace Kokkos
 
+namespace Kokkos {
+
+/** \brief  ScopeGuard
+ *  Some user scope issues have been identified with some Kokkos::finalize calls;
+ *  ScopeGuard aims to correct these issues.
+ *
+ *  Two requirements for ScopeGuard: 
+ *     if Kokkos::is_initialized() in the constructor, don't call Kokkos::initialize or Kokkos::finalize
+ *     it is not copyable or assignable
+ */
+
+class ScopeGuard {
+public:
+  ScopeGuard ( int& narg, char* arg[] )
+  {
+    sg_init = false; 
+    if ( ! Kokkos::is_initialized() ) { 
+      initialize( narg, arg );
+      sg_init = true;
+    }
+  }
+
+  ScopeGuard ( const InitArguments& args = InitArguments() )
+  {
+    sg_init = false; 
+    if ( ! Kokkos::is_initialized() ) { 
+      initialize( args );
+      sg_init = true;
+    }
+  }
+
+  ~ScopeGuard( )
+  {
+    if ( Kokkos::is_initialized() && sg_init) { 
+      finalize(); 
+    }
+  }
+
+//private:
+  bool sg_init;    
+
+  ScopeGuard& operator=( const ScopeGuard& ) = delete;
+  ScopeGuard( const ScopeGuard& ) = delete;
+
+};
+
+} // namespace Kokkos
+
 #include <Kokkos_Crs.hpp>
 #include <Kokkos_WorkGraphPolicy.hpp>
 

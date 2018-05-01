@@ -595,6 +595,13 @@ Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember >
   return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember >(thread,count);
 }
 
+template<typename iType>
+KOKKOS_INLINE_FUNCTION
+Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember >
+  ThreadVectorRange(const Impl::OpenMPTargetExecTeamMember& thread, const iType& arg_begin, const iType& arg_end) {
+  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember >(thread,arg_begin,arg_end);
+}
+
 KOKKOS_INLINE_FUNCTION
 Impl::ThreadSingleStruct<Impl::OpenMPTargetExecTeamMember> PerTeam(const Impl::OpenMPTargetExecTeamMember& thread) {
   return Impl::ThreadSingleStruct<Impl::OpenMPTargetExecTeamMember>(thread);
@@ -707,7 +714,7 @@ void parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::O
       loop_boundaries, const Lambda & lambda, const JoinType& join, ValueType& init_result) {
 
   ValueType result = init_result;
-#ifdef KOKKOS_HAVE_PRAGMA_IVDEP
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
@@ -738,7 +745,7 @@ void parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::Ope
 
   value_type scan_val = value_type();
 
-#ifdef KOKKOS_HAVE_PRAGMA_IVDEP
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {

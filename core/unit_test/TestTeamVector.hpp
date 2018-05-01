@@ -534,7 +534,7 @@ struct functor_vec_single {
     // inside a parallel_for and write to it.
     Scalar value = 0;
 
-    Kokkos::parallel_for( Kokkos::ThreadVectorRange( team, 13 ), [&] ( int i )
+    Kokkos::parallel_for( Kokkos::ThreadVectorRange( team, 0, 13 ), [&] ( int i )
     {
       value = i; // This write is violating Kokkos semantics for nested parallelism.
     });
@@ -545,7 +545,7 @@ struct functor_vec_single {
     }, value );
 
     Scalar value2 = 0;
-    Kokkos::parallel_reduce( Kokkos::ThreadVectorRange( team, 13 ), [&] ( int i, Scalar & val )
+    Kokkos::parallel_reduce( Kokkos::ThreadVectorRange( team, 0, 13 ), [&] ( int i, Scalar & val )
     {
       val += value;
     }, value2 );
@@ -741,7 +741,7 @@ bool test_scalar( int nteams, int team_size, int test ) {
   else if ( test == 1 ) {
     // WORKAROUND ROCM/CUDA
     #if defined(KOKKOS_ENABLE_CUDA)
-    #if defined(KOKKOS_CUDA_CLANG_WORKAROUND) || defined(KOKKOS_ARCH_PASCAL)
+    #if defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND) || defined(KOKKOS_ARCH_PASCAL)
     if(!std::is_same<ExecutionSpace,Kokkos::Cuda>::value)
     #endif
     #endif
@@ -926,7 +926,7 @@ public:
 
 #endif
         
-#if !defined(KOKKOS_CUDA_CLANG_WORKAROUND)
+#if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 TEST_F( TEST_CATEGORY, team_vector )
 {
   ASSERT_TRUE( ( TestTeamVector::Test< TEST_EXECSPACE >( 0 ) ) );
@@ -943,7 +943,7 @@ TEST_F( TEST_CATEGORY, team_vector )
 }
 #endif
 
-#if !defined(KOKKOS_CUDA_CLANG_WORKAROUND)
+#if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 TEST_F( TEST_CATEGORY, triple_nested_parallelism )
 {
 // With KOKKOS_DEBUG enabled, the functor uses too many registers to run
