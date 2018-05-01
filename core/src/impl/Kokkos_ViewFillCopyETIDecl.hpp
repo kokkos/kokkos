@@ -78,8 +78,20 @@ namespace Impl {
 }
 }
 #ifdef KOKKOS_ENABLE_ETI
+#ifdef KOKKOS_ENABLE_Serial
+#include<Serial/Kokkos_Serial_ViewCopyETIDecl.hpp>
+#endif
 #ifdef KOKKOS_ENABLE_OPENMP
 #include<OpenMP/Kokkos_OpenMP_ViewCopyETIDecl.hpp>
+#endif
+#ifdef KOKKOS_ENABLE_THREADS
+#include<Threads/Kokkos_Threads_ViewCopyETIDecl.hpp>
+#endif
+#ifdef KOKKOS_ENABLE_CUDA
+#include<Cuda/Kokkos_Cuda_ViewCopyETIDecl.hpp>
+#endif
+#ifdef KOKKOS_ENABLE_ROCM
+#include<ROCm/Kokkos_ROCm_ViewCopyETIDecl.hpp>
 #endif
 #endif
 #endif

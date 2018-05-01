@@ -48,7 +48,7 @@ namespace Kokkos {
 namespace Impl {
 #define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_EXECSPACE Kokkos::OpenMP
 
-#include<../eti/common/Kokkos_ViewFillCopyETIAvail_Macros.hpp>
+#include<common/Kokkos_ViewFillCopyETIAvail_Macros.hpp>
 
 #undef KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_EXECSPACE
 }

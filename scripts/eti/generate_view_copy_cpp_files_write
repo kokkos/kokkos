@@ -1,3 +1,5 @@
+SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 EXECUTION_SPACE=$1
 EXECUTION_SPACE_DIR=$2
 SCALAR_TYPE=$3
@@ -20,7 +22,7 @@ echo "KOKKOS_IMPL_VIEWFILL_ETI_DECL(${SCALAR_TYPE}${RANK_STARS},${LAYOUT_TYPE},K
 FileName=${EXECUTION_SPACE_DIR}/Kokkos_${EXECUTION_SPACE}_ViewCopyETIInst_${INDEX_TYPE}_${SCALAR_TYPE}_${LAYOUT_TYPE}_Rank${RANK}.cpp
 ObjectName=Kokkos_${EXECUTION_SPACE}_ViewCopyETIInst_${INDEX_TYPE}_${SCALAR_TYPE}_${LAYOUT_TYPE}_Rank${RANK}.o
 
-cp ../../LICENSE ${FileName}
+cp ${SCRIPT_PATH}/../../LICENSE ${FileName}
 
 echo "" >> ${FileName}
 echo "#define KOKKOS_IMPL_COMPILING_LIBRARY true" >> ${FileName}
@@ -35,5 +37,5 @@ echo "" >> ${FileName}
 echo "}" >> ${FileName}
 echo "}" >> ${FileName}
 
-echo "${ObjectName}: \$(KOKKOS_CPP_DEPENDS) \$(KOKKOS_PATH)/core/eti/${FileName}" >> ${EXECUTION_SPACE_DIR}/Makefile.eti_${EXECUTION_SPACE}
-echo -e "\t\$(CXX) \$(KOKKOS_CPPFLAGS) \$(KOKKOS_CXXFLAGS) \$(CXXFLAGS) -c \$(KOKKOS_PATH)/core/eti/${FileName}" >> ${EXECUTION_SPACE_DIR}/Makefile.eti_${EXECUTION_SPACE}
+echo "${ObjectName}: \$(KOKKOS_CPP_DEPENDS) \$(KOKKOS_ETI_PATH)/${FileName}" >> ${EXECUTION_SPACE_DIR}/Makefile.eti_${EXECUTION_SPACE}
+echo -e "\t\$(CXX) \$(KOKKOS_CPPFLAGS) \$(KOKKOS_CXXFLAGS) \$(CXXFLAGS) -c \$(KOKKOS_ETI_PATH)/${FileName}" >> ${EXECUTION_SPACE_DIR}/Makefile.eti_${EXECUTION_SPACE}

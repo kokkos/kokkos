@@ -86,8 +86,20 @@ struct ViewFillETIAvail {
 }
 }
 #ifdef KOKKOS_ENABLE_ETI
+#ifdef KOKKOS_ENABLE_Serial
+#include<Serial/Kokkos_Serial_ViewCopyETIAvail.hpp>
+#endif
 #ifdef KOKKOS_ENABLE_OPENMP
 #include<OpenMP/Kokkos_OpenMP_ViewCopyETIAvail.hpp>
+#endif
+#ifdef KOKKOS_ENABLE_THREADS
+#include<Threads/Kokkos_Threads_ViewCopyETIAvail.hpp>
+#endif
+#ifdef KOKKOS_ENABLE_CUDA
+#include<Cuda/Kokkos_Cuda_ViewCopyETIAvail.hpp>
+#endif
+#ifdef KOKKOS_ENABLE_ROCM
+#include<ROCm/Kokkos_ROCm_ViewCopyETIAvail.hpp>
 #endif
 #endif
 

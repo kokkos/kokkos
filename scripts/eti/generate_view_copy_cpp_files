@@ -1,8 +1,12 @@
-
+SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+mkdir -p eti
+cd eti
+mkdir -p common 
 rm common/*
-../../scripts/eti/generate_view_copy_cpp_files_iterate Serial Serial
-../../scripts/eti/generate_view_copy_cpp_files_iterate OpenMP OpenMP
-../../scripts/eti/generate_view_copy_cpp_files_iterate Threads Threads
-../../scripts/eti/generate_view_copy_cpp_files_iterate Cuda Cuda
-../../scripts/eti/generate_view_copy_cpp_files_iterate "Experimental::ROCm" ROCm
+
+${SCRIPT_PATH}/generate_view_copy_cpp_files_iterate Serial Serial
+${SCRIPT_PATH}/generate_view_copy_cpp_files_iterate OpenMP OpenMP
+${SCRIPT_PATH}/generate_view_copy_cpp_files_iterate Threads Threads
+${SCRIPT_PATH}/generate_view_copy_cpp_files_iterate Cuda Cuda
+${SCRIPT_PATH}/generate_view_copy_cpp_files_iterate "Experimental::ROCm" ROCm
 
