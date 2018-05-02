@@ -118,7 +118,7 @@ ifeq ($(KOKKOS_INTERNAL_COMPILER_HCC), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-  KOKKOS_INTERNAL_COMPILER_CLANG_VERSION := $(shell clang --version | grep version | cut -d ' ' -f3 | tr -d '.')
+  KOKKOS_INTERNAL_COMPILER_CLANG_VERSION := $(shell $(CXX) --version | grep version | cut -d ' ' -f3 | tr -d '.')
 
   ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     ifeq ($(shell test $(KOKKOS_INTERNAL_COMPILER_CLANG_VERSION) -lt 400; echo $$?),0)
