@@ -142,6 +142,17 @@ public:
   /** \brief  Must be accessible everywhere */
   typedef DynamicView  HostMirror ;
 
+  /** \brief Unified types */
+  typedef Kokkos::Device<typename traits::device_type::execution_space, Kokkos::AnonymousSpace> uniform_device;
+  typedef array_type uniform_type;
+  typedef const_type uniform_const_type;
+  typedef array_type uniform_runtime_type;
+  typedef const_type uniform_runtime_const_type;
+  typedef DynamicView<typename traits::data_type, uniform_device> uniform_nomemspace_type;
+  typedef DynamicView<typename traits::const_data_type, uniform_device> uniform_const_nomemspace_type;
+  typedef DynamicView<typename traits::data_type, uniform_device> uniform_runtime_nomemspace_type;
+  typedef DynamicView<typename traits::const_data_type, uniform_device> uniform_runtime_const_nomemspace_type;
+
   //----------------------------------------------------------------------
 
   enum { Rank = 1 };
