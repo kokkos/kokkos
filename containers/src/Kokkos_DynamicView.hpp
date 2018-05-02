@@ -279,7 +279,7 @@ public:
   resize_serial( IntType const & n )
     {
       typedef typename traits::value_type value_type ;
-      typedef value_type * pointer_type ;
+      typedef value_type * value_pointer_type ;
 
       const uintptr_t NC = ( n + m_chunk_mask ) >> m_chunk_shift ; // New total number of chunks needed for resize
 
@@ -293,7 +293,7 @@ public:
 
       if ( *pc < NC ) {
         while ( *pc < NC ) {
-          m_chunks[*pc] = reinterpret_cast<pointer_type>
+          m_chunks[*pc] = reinterpret_cast<value_pointer_type>
             ( 
              typename traits::memory_space().allocate( sizeof(value_type) << m_chunk_shift ) 
             );
