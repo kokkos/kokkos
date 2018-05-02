@@ -596,9 +596,9 @@ public:
   void operator()(void) const
   {
     // Iterate this block through the league
-    int threadid = 0;
+    int64_t threadid = 0;
     if ( m_scratch_size[1]>0 ) {
-      __shared__ int base_thread_id;
+      __shared__ int64_t base_thread_id;
       if (threadIdx.x==0 && threadIdx.y==0 ) {
         threadid = (blockIdx.x*blockDim.z + threadIdx.z) %
           (Kokkos::Impl::g_device_cuda_lock_arrays.n / (blockDim.x * blockDim.y));
@@ -608,7 +608,7 @@ public:
           done = (0 == atomicCAS(&Kokkos::Impl::g_device_cuda_lock_arrays.scratch[threadid],0,1));
           if(!done) {
             threadid += blockDim.x * blockDim.y;
-            if(int(threadid+blockDim.x * blockDim.y) >= int(Kokkos::Impl::g_device_cuda_lock_arrays.n)) threadid = 0;
+            if(int64_t(threadid+blockDim.x * blockDim.y) >= int64_t(Kokkos::Impl::g_device_cuda_lock_arrays.n)) threadid = 0;
           }
         }
         base_thread_id = threadid;
@@ -1219,9 +1219,9 @@ public:
 
   __device__ inline
   void operator() () const {
-    int threadid = 0;
+    int64_t threadid = 0;
     if ( m_scratch_size[1]>0 ) {
-      __shared__ int base_thread_id;
+      __shared__ int64_t base_thread_id;
       if (threadIdx.x==0 && threadIdx.y==0 ) {
         threadid = (blockIdx.x*blockDim.z + threadIdx.z) %
           (Kokkos::Impl::g_device_cuda_lock_arrays.n / (blockDim.x * blockDim.y));
@@ -1231,7 +1231,7 @@ public:
           done = (0 == atomicCAS(&Kokkos::Impl::g_device_cuda_lock_arrays.scratch[threadid],0,1));
           if(!done) {
             threadid += blockDim.x * blockDim.y;
-            if(int(threadid + blockDim.x * blockDim.y) >= int(Kokkos::Impl::g_device_cuda_lock_arrays.n)) threadid = 0;
+            if(int64_t(threadid + blockDim.x * blockDim.y) >= int64_t(Kokkos::Impl::g_device_cuda_lock_arrays.n)) threadid = 0;
           }
         }
         base_thread_id = threadid;

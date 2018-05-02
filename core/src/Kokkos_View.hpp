@@ -151,6 +151,14 @@ void runtime_check_rank_host(const size_t dyn_rank,
 } /* namespace Impl */
 } /* namespace Kokkos */
 
+// Class to provide a uniform type
+namespace Kokkos {
+namespace Impl {
+  template< class ViewType , int Traits = 0 >
+  struct ViewUniformType;
+}
+}
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -563,6 +571,22 @@ public:
                 typename traits::array_layout ,
                 typename traits::host_mirror_space >
     HostMirror ;
+
+  /** \brief  Compatible HostMirror view */
+  typedef View< typename traits::non_const_data_type ,
+                typename traits::array_layout ,
+                typename traits::host_mirror_space >
+    host_mirror_type ;
+
+  /** \brief Unified types */
+  typedef typename Impl::ViewUniformType<View,0>::type uniform_type;
+  typedef typename Impl::ViewUniformType<View,0>::const_type uniform_const_type;
+  typedef typename Impl::ViewUniformType<View,0>::runtime_type uniform_runtime_type;
+  typedef typename Impl::ViewUniformType<View,0>::runtime_const_type uniform_runtime_const_type;
+  typedef typename Impl::ViewUniformType<View,0>::nomemspace_type uniform_nomemspace_type;
+  typedef typename Impl::ViewUniformType<View,0>::const_nomemspace_type uniform_const_nomemspace_type;
+  typedef typename Impl::ViewUniformType<View,0>::runtime_nomemspace_type uniform_runtime_nomemspace_type;
+  typedef typename Impl::ViewUniformType<View,0>::runtime_const_nomemspace_type uniform_runtime_const_nomemspace_type;
 
   //----------------------------------------
   // Domain rank and extents
@@ -2799,6 +2823,7 @@ using Kokkos::is_view ;
 } /* namespace Impl */
 } /* namespace Kokkos */
 
+#include <impl/Kokkos_ViewUniformType.hpp>
 #include <impl/Kokkos_Atomic_View.hpp>
 
 //----------------------------------------------------------------------------
