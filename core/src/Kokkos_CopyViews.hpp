@@ -620,7 +620,6 @@ namespace Impl {
 
 template<class DstType, class SrcType>
 void view_copy(const DstType& dst, const SrcType& src) {
-  printf("Enter view_copy\n");
   typedef typename DstType::execution_space dst_execution_space;
   typedef typename SrcType::execution_space src_execution_space;
   typedef typename DstType::memory_space dst_memory_space;
@@ -694,7 +693,6 @@ void view_copy(const DstType& dst, const SrcType& src) {
     }
 
   }
-  printf("Exit view_copy\n");
 }
 
 template<class DstType, class SrcType, int Rank, class ... Args>
@@ -1495,9 +1493,7 @@ void deep_copy
     Kokkos::fence();
   } else {
     Kokkos::fence();
-  printf("ViewCopyEnter\n");
     Impl::view_copy(typename dst_type::uniform_runtime_nomemspace_type(dst),typename src_type::uniform_runtime_const_nomemspace_type(src));
-  printf("ViewCopyExit\n");
     Kokkos::fence();
   }
 }
