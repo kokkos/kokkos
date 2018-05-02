@@ -532,7 +532,7 @@ struct CommonSubview<DstType,Kokkos::Experimental::DynamicView<SP...>,1,Arg0> {
 };
 
 template<class ...DP,class ViewTypeB, class Layout, class ExecSpace,typename iType>
-struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>,ViewTypeB,Layout,ExecSpace,1,iType> {
+struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>,ViewTypeB,Layout,ExecSpace,1,iType,false> {
   Kokkos::Experimental::DynamicView<DP...> a;
   ViewTypeB b;
 
@@ -551,7 +551,7 @@ struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>,ViewTypeB,Layout,ExecSp
 
 template<class ...DP,class ...SP, class Layout, class ExecSpace,typename iType>
 struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>,
-                Kokkos::Experimental::DynamicView<SP...>,Layout,ExecSpace,1,iType> {
+                Kokkos::Experimental::DynamicView<SP...>,Layout,ExecSpace,1,iType,false> {
   Kokkos::Experimental::DynamicView<DP...> a;
   Kokkos::Experimental::DynamicView<SP...> b;
 
