@@ -239,6 +239,8 @@ namespace Kokkos {
 
 namespace Impl {
 
+template< class DstSpace, class SrcSpace, class ExecutionSpace = typename DstSpace::execution_space >
+struct DeepCopy;
 
 template<class ViewType, class Layout, class ExecSpace, int Rank, typename iType>
 struct ViewFillETIAvail;

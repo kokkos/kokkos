@@ -1237,7 +1237,10 @@ void deep_copy
   // If contigous we can simply do a 1D flat loop
   if(dst.span_is_contiguous()) {
     typedef Kokkos::View<typename ViewType::value_type*,Kokkos::LayoutRight,
-        Kokkos::Device<typename ViewType::execution_space,Kokkos::AnonymousSpace>,
+        Kokkos::Device<typename ViewType::execution_space,
+                       typename std::conditional<ViewType::Rank==0,
+                                      typename ViewType::memory_space,Kokkos::AnonymousSpace
+                                >::type>,
         Kokkos::MemoryTraits<0> >
      ViewTypeFlat;
 
@@ -1271,7 +1274,9 @@ void deep_copy
   }
 
   // Lets call the right ViewFill functor based on integer space needed and iteration type
-  typedef typename ViewType::uniform_runtime_nomemspace_type ViewTypeUniform;
+  typedef typename std::conditional<ViewType::Rank==0,
+                      typename ViewType::uniform_runtime_type,
+                      typename ViewType::uniform_runtime_nomemspace_type>::type ViewTypeUniform;
   if(dst.span() > std::numeric_limits<int>::max()) {
     if(iterate == Kokkos::Iterate::Right)
       Kokkos::Impl::ViewFill< ViewTypeUniform, Kokkos::LayoutRight, typename ViewType::execution_space, ViewType::Rank, int64_t >( dst , value );
@@ -1738,7 +1743,8 @@ void deep_copy
     exec_space.fence();
   } else {
     exec_space.fence();
-    Impl::view_copy(dst_type::uniform_runtime_nomemspace_type(dst),src_type::uniform_runtime_const_nomemspace_type(src));
+    Impl::view_copy(typename dst_type::uniform_runtime_nomemspace_type(dst),
+                    typename src_type::uniform_runtime_const_nomemspace_type(src));
     exec_space.fence();
   }
 }

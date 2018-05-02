@@ -291,8 +291,6 @@ namespace Kokkos {
 
 namespace Impl {
 
-template< class DstSpace, class SrcSpace, class ExecutionSpace = typename DstSpace::execution_space > struct DeepCopy;
-
 template< class ExecutionSpace >
 struct DeepCopy< HostSpace, HostSpace, ExecutionSpace > {
   DeepCopy( void * dst, const void * src, size_t n ) {
