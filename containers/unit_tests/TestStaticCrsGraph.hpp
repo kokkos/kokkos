@@ -200,7 +200,11 @@ void run_test_graph4()
   typedef Kokkos::LayoutRight layout_type;
   typedef Space space_type;
   typedef Kokkos::MemoryUnmanaged memory_traits_type;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+  typedef Kokkos::StaticCrsGraph< ordinal_type , layout_type , space_type , ordinal_type , memory_traits_type > dView ;
+#else
   typedef Kokkos::StaticCrsGraph< ordinal_type , layout_type , space_type , memory_traits_type > dView ;
+#endif
   typedef typename dView::HostMirror hView ;
 
   dView dx ;
