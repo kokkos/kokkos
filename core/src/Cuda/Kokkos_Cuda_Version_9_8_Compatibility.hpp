@@ -14,7 +14,7 @@
 #else
 #define KOKKOS_IMPL_CUDA_SYNCWARP __syncwarp(0xffffffff)
 #define KOKKOS_IMPL_CUDA_SYNCWARP_MASK(m) __syncwarp(m)
-#define KOKKOS_IMPL_CUDA_BALLOT(x) __ballot_sync(0xffffffff,x)
+#define KOKKOS_IMPL_CUDA_BALLOT(x) __ballot_sync(__activemask(),x)
 #define KOKKOS_IMPL_CUDA_SHFL(x,y,z) __shfl_sync(0xffffffff,x,y,z)
 #define KOKKOS_IMPL_CUDA_SHFL_MASK(m,x,y,z) __shfl_sync(m,x,y,z)
 #define KOKKOS_IMPL_CUDA_SHFL_UP(x,y,z) __shfl_up_sync(0xffffffff,x,y,z)
