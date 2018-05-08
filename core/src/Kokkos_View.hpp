@@ -192,6 +192,7 @@ struct ViewTraits< void >
   typedef void  HostMirrorSpace ;
   typedef void  array_layout ;
   typedef void  memory_traits ;
+  typedef void  specialize ;
 };
 
 template< class ... Prop >
@@ -203,6 +204,7 @@ struct ViewTraits< void , void , Prop ... >
   typedef typename ViewTraits<void,Prop...>::HostMirrorSpace  HostMirrorSpace ;
   typedef typename ViewTraits<void,Prop...>::array_layout     array_layout ;
   typedef typename ViewTraits<void,Prop...>::memory_traits    memory_traits ;
+  typedef typename ViewTraits<void,Prop...>::specialize       specialize ;
 };
 
 template< class ArrayLayout , class ... Prop >
@@ -215,6 +217,7 @@ struct ViewTraits< typename std::enable_if< Kokkos::Impl::is_array_layout<ArrayL
   typedef typename ViewTraits<void,Prop...>::HostMirrorSpace  HostMirrorSpace ;
   typedef          ArrayLayout                                array_layout ;
   typedef typename ViewTraits<void,Prop...>::memory_traits    memory_traits ;
+  typedef typename ViewTraits<void,Prop...>::specialize       specialize ;
 };
 
 template< class Space , class ... Prop >
@@ -233,6 +236,7 @@ struct ViewTraits< typename std::enable_if< Kokkos::Impl::is_space<Space>::value
   typedef typename Kokkos::Impl::HostMirror< Space >::Space HostMirrorSpace ;
   typedef typename execution_space::array_layout            array_layout ;
   typedef typename ViewTraits<void,Prop...>::memory_traits  memory_traits ;
+  typedef typename ViewTraits<void,Prop...>::specialize       specialize ;
 };
 
 template< class MemoryTraits , class ... Prop >
@@ -251,6 +255,7 @@ struct ViewTraits< typename std::enable_if< Kokkos::Impl::is_memory_traits<Memor
   typedef void          HostMirrorSpace ;
   typedef void          array_layout ;
   typedef MemoryTraits  memory_traits ;
+  typedef void          specialize ;
 };
 
 
@@ -329,7 +334,12 @@ public:
 
   typedef ArrayLayout                         array_layout ;
   typedef typename data_analysis::dimension   dimension ;
-  typedef typename data_analysis::specialize  specialize /* mapping specialization tag */ ;
+
+  typedef typename std::conditional<
+                      std::is_same<typename data_analysis::specialize,void>::value
+                      ,typename prop::specialize
+                      ,typename data_analysis::specialize>::type
+                   specialize ; /* mapping specialization tag */
 
   enum { rank         = dimension::rank };
   enum { rank_dynamic = dimension::rank_dynamic };
@@ -536,7 +546,7 @@ public:
 
 private:
 
-  typedef Kokkos::Impl::ViewMapping< traits , void > map_type ;
+  typedef Kokkos::Impl::ViewMapping< traits , typename traits::specialize > map_type ;
   typedef Kokkos::Impl::SharedAllocationTracker      track_type ;
 
   track_type  m_track ;
