@@ -809,11 +809,14 @@ template< class ExecutionSpace >
 bool Test( int test ) {
   bool passed = true;
 
-  passed = passed && test_scalar< int, ExecutionSpace >( 317, 33, test );
-  passed = passed && test_scalar< long long int, ExecutionSpace >( 317, 33, test );
-  passed = passed && test_scalar< float, ExecutionSpace >( 317, 33, test );
-  passed = passed && test_scalar< double, ExecutionSpace >( 317, 33, test );
-  passed = passed && test_scalar< my_complex, ExecutionSpace >( 317, 33, test );
+  int team_size = 33;
+  if( team_size > ExecutionSpace::concurrency())
+    team_size = ExecutionSpace::concurrency()-1;
+  passed = passed && test_scalar< int, ExecutionSpace >( 317, team_size, test );
+  passed = passed && test_scalar< long long int, ExecutionSpace >( 317, team_size, test );
+  passed = passed && test_scalar< float, ExecutionSpace >( 317, team_size, test );
+  passed = passed && test_scalar< double, ExecutionSpace >( 317, team_size, test );
+  passed = passed && test_scalar< my_complex, ExecutionSpace >( 317, team_size, test );
 
   return passed;
 }
@@ -841,8 +844,11 @@ public:
   }
 
   void run_test( const size_type & nrows, const size_type & ncols
-               , const size_type & team_size, const size_type & vector_length )
+               , size_type team_size, const size_type & vector_length )
   {
+    if( team_size > DeviceType::execution_space::concurrency())
+      team_size = DeviceType::execution_space::concurrency()-1;
+
     //typedef Kokkos::LayoutLeft Layout;
     typedef Kokkos::LayoutRight Layout;
 
