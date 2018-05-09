@@ -810,8 +810,8 @@ bool Test( int test ) {
   bool passed = true;
 
   int team_size = 33;
-  if( team_size > ExecutionSpace::concurrency())
-    team_size = ExecutionSpace::concurrency()-1;
+  if( team_size > int(ExecutionSpace::concurrency()))
+    team_size = int(ExecutionSpace::concurrency());
   passed = passed && test_scalar< int, ExecutionSpace >( 317, team_size, test );
   passed = passed && test_scalar< long long int, ExecutionSpace >( 317, team_size, test );
   passed = passed && test_scalar< float, ExecutionSpace >( 317, team_size, test );
@@ -846,8 +846,8 @@ public:
   void run_test( const size_type & nrows, const size_type & ncols
                , size_type team_size, const size_type & vector_length )
   {
-    if( team_size > DeviceType::execution_space::concurrency())
-      team_size = DeviceType::execution_space::concurrency()-1;
+    if( team_size > size_type(DeviceType::execution_space::concurrency()))
+      team_size = size_type(DeviceType::execution_space::concurrency());
 
     //typedef Kokkos::LayoutLeft Layout;
     typedef Kokkos::LayoutRight Layout;
