@@ -2200,8 +2200,8 @@ public:
               , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
           )
     {
-      static_assert ( is_layout_left || is_layout_right , "Layout input was not provided for LayoutStride. Pass a LayoutStride object instead!\n" );
-
+      static_assert ( traits::array_layout::is_regular , "Layout is not regular. A layout object should be passed too.\n" );
+	  
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7, label());
