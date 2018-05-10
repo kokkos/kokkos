@@ -582,6 +582,10 @@ private:
 
       m_league_size = league_size_request ;
 
+      #ifndef KOKKOS_ENABLE_DEPRECATED_CODE
+      if(team_size_request > team_max) Kokkos::abort("Kokkos::abort: Requested Team Size is too large!");
+      #endif
+
       m_team_size = team_size_request < team_max ?
                     team_size_request : team_max ;
 
