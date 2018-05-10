@@ -9,6 +9,7 @@
 #define KOKKOS_OFFSETVIEW_HPP_
 
 
+#include <Kokkos_Core.hpp>
 
 #include <Kokkos_View.hpp>
 
@@ -28,18 +29,40 @@ namespace Kokkos {
   template< class D, class ... P >
   struct is_offset_view< const OffsetView<D,P...> > : public std::true_type {};
 
-  template< class DataType , class ... Properties >
+#define KOKKOS_INVALID_OFFSET iType(0)
+#define KOKKOS_INVALID_INDEX_RANGE {-KOKKOS_INVALID_OFFSET, KOKKOS_INVALID_OFFSET}
 
+  template <typename iType, typename std::enable_if< std::is_integral<iType>::value &&
+    std::is_signed<iType>::value, iType >::type = 0>
+      using IndexRange  = Kokkos::Array<iType, 2>;
+
+
+  template <typename iType>
+    using ilist_type = std::initializer_list<iType>;
+
+
+//  template <typename iType,
+//    typename std::enable_if< std::is_integral<iType>::value &&
+//      std::is_signed<iType>::value, iType >::type = 0> using ilist_type = std::initializer_list<iType>;
+
+  namespace Impl {
+  template <typename iType>
+  void check_number_of_offsets(const ilist_type<iType> offset_list, const size_t rank) {
+		  size_t numOffsets = 0;
+		  for(size_t i = 0; i < offset_list.size(); ++i ){
+			  if( offset_list.begin()[i] != -KOKKOS_INVALID_OFFSET) numOffsets++;
+		  }
+		  if(numOffsets != rank)
+			  Kokkos::abort("length of offset_list does not match rank of OffsetView.");
+	  }
+
+  }
+
+  template< class DataType , class ... Properties >
   class OffsetView : public ViewTraits< DataType , Properties ... > {
   public:
 
     typedef ViewTraits< DataType , Properties ... > traits ;
-
-    template <typename iType,
-              typename std::enable_if< std::is_integral<iType>::value &&
-                                       std::is_signed<iType>::value, iType >::type = 0>
-    using IndexRange  = Kokkos::Array<iType, 2>;
-
 
 
   private:
@@ -55,7 +78,7 @@ namespace Kokkos {
     enum { Rank = map_type::Rank };
 
   private:
-    typedef Kokkos::Array<size_t, Rank>  offsets_type ;
+    typedef Kokkos::Array<int64_t, Rank>  offsets_type ;
 
     track_type  m_track ;
     map_type    m_map ;
@@ -1539,21 +1562,134 @@ namespace Kokkos {
   }
 #endif
 
-#define KOKKOS_INVALID_INDEX_RANGE {-~int64_t(0), ~int64_t(0)}
-
-
   template< typename Label, typename iType >
-   explicit inline
-   OffsetView( const Label & arg_label
-         , const std::initializer_list<iType> range0 = KOKKOS_INVALID_INDEX_RANGE
-         ,typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value , const std::initializer_list<iType> >::type range1 = KOKKOS_INVALID_INDEX_RANGE
+  explicit inline
+  OffsetView( const Label & arg_label
+              ,const ilist_type<iType> range0 = KOKKOS_INVALID_INDEX_RANGE
+//              ,typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value , const ilist_type<iType> >::type range1 = KOKKOS_INVALID_INDEX_RANGE
+              ,const ilist_type<iType> range1 = KOKKOS_INVALID_INDEX_RANGE
+              ,const ilist_type<iType> range2 = KOKKOS_INVALID_INDEX_RANGE
+              ,const ilist_type<iType> range3 = KOKKOS_INVALID_INDEX_RANGE
+              ,const ilist_type<iType> range4 = KOKKOS_INVALID_INDEX_RANGE
+              ,const ilist_type<iType> range5 = KOKKOS_INVALID_INDEX_RANGE
+              ,const ilist_type<iType> range6 = KOKKOS_INVALID_INDEX_RANGE
+              ,const ilist_type<iType> range7 = KOKKOS_INVALID_INDEX_RANGE
 
-   )
-   {
+  ) : OffsetView( Impl::ViewCtorProp< std::string >( arg_label ),
+                  typename traits::array_layout
+                  ( range0.begin()[1] - range0.begin()[0] + 1, range1.begin()[1] - range1.begin()[0] + 1 ,
+                    range2.begin()[1] - range2.begin()[0] + 1, range3.begin()[1] - range3.begin()[0] + 1,
+                    range4.begin()[1] - range4.begin()[0] + 1, range5.begin()[1] - range5.begin()[0] + 1 ,
+                    range6.begin()[1] - range6.begin()[0] + 1, range7.begin()[1] - range7.begin()[0] + 1 ),
+                    {range0.begin()[0], range1.begin()[0], range2.begin()[0], range3.begin()[0], range4.begin()[0],
+                        range5.begin()[0], range6.begin()[0], range7.begin()[0] })
+  {
 
-   }
+  }
 
-};
+  template< typename iType, class ... P >
+  explicit KOKKOS_INLINE_FUNCTION
+  OffsetView( const Impl::ViewCtorProp< P ... > & arg_prop
+        ,typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer , typename traits::array_layout >::type const & arg_layout
+        ,const ilist_type<iType> offset_list
+  )
+  : m_track() // No memory tracking
+  , m_map( arg_prop , arg_layout )
+  {
+
+
+    for (size_t i = 0; i < offset_list.size(); ++i) {
+        m_offsets[i] = offset_list.begin()[i];
+    }
+    static_assert(
+        std::is_same< pointer_type
+        , typename Impl::ViewCtorProp< P... >::pointer_type
+        >::value ,
+        "Constructing OffsetView to wrap user memory must supply matching pointer type" );
+  }
+
+  template< typename iType, class ... P >
+  explicit inline
+  OffsetView( const Impl::ViewCtorProp< P ... > & arg_prop
+		  , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer, typename traits::array_layout>::type const & arg_layout
+		  ,const std::initializer_list<iType> offset_list
+  )
+  : m_track()
+  , m_map()
+
+  {
+
+	  Impl::check_number_of_offsets(offset_list, Rank);
+
+	  for(size_t i = 0; i < Rank; ++i)
+		  m_offsets[i] = offset_list.begin()[i];
+
+	  // Append layout and spaces if not input
+	  typedef Impl::ViewCtorProp< P ... > alloc_prop_input ;
+
+	  // use 'std::integral_constant<unsigned,I>' for non-types
+	  // to avoid duplicate class error.
+	  typedef Impl::ViewCtorProp
+			  < P ...
+			  , typename std::conditional
+			  < alloc_prop_input::has_label
+			  , std::integral_constant<unsigned,0>
+	  , typename std::string
+	  >::type
+	  , typename std::conditional
+	  < alloc_prop_input::has_memory_space
+	  , std::integral_constant<unsigned,1>
+	  , typename traits::device_type::memory_space
+	  >::type
+	  , typename std::conditional
+	  < alloc_prop_input::has_execution_space
+	  , std::integral_constant<unsigned,2>
+	  , typename traits::device_type::execution_space
+	  >::type
+	  > alloc_prop ;
+
+	  static_assert( traits::is_managed
+			  , "OffsetView allocation constructor requires managed memory" );
+
+	  if ( alloc_prop::initialize &&
+			  ! alloc_prop::execution_space::impl_is_initialized()
+	  ) {
+		  // If initializing view data then
+		  // the execution space must be initialized.
+		  Kokkos::Impl::throw_runtime_exception("Constructing OffsetView and initializing data with uninitialized execution space");
+	  }
+
+	  // Copy the input allocation properties with possibly defaulted properties
+	  alloc_prop prop( arg_prop );
+
+	  //------------------------------------------------------------
+#if defined( KOKKOS_ENABLE_CUDA )
+	  // If allocating in CudaUVMSpace must fence before and after
+	  // the allocation to protect against possible concurrent access
+	  // on the CPU and the GPU.
+	  // Fence using the trait's executon space (which will be Kokkos::Cuda)
+	  // to avoid incomplete type errors from usng Kokkos::Cuda directly.
+	  if ( std::is_same< Kokkos::CudaUVMSpace , typename traits::device_type::memory_space >::value ) {
+		  traits::device_type::memory_space::execution_space::fence();
+	  }
+#endif
+	  //------------------------------------------------------------
+
+	  Kokkos::Impl::SharedAllocationRecord<> *
+	  record = m_map.allocate_shared( prop , arg_layout );
+
+	  //------------------------------------------------------------
+#if defined( KOKKOS_ENABLE_CUDA )
+	  if ( std::is_same< Kokkos::CudaUVMSpace , typename traits::device_type::memory_space >::value ) {
+		  traits::device_type::memory_space::execution_space::fence();
+	  }
+#endif
+	  //------------------------------------------------------------
+
+	  // Setup and initialization complete, start tracking
+	  m_track.assign_allocated_record_to_uninitialized( record );
+  }
+  };
 
 
 /** \brief Temporary free function rank()

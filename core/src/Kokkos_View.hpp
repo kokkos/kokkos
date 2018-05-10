@@ -506,6 +506,8 @@ namespace Kokkos {
 
 template< class DataType , class ... Properties >
 class View ;
+template< class DataType , class ... Properties >
+class OffsetView ;
 
 template< class > struct is_view : public std::false_type {};
 
@@ -520,6 +522,7 @@ class View : public ViewTraits< DataType , Properties ... > {
 private:
 
   template< class , class ... > friend class View ;
+  template< class , class ... > friend class OffsetView ;
   template< class , class ... > friend class Kokkos::Impl::ViewMapping ;
 
 public:
