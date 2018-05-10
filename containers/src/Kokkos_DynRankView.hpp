@@ -565,11 +565,15 @@ public:
 
   //----------------------------------------
   // Allow specializations to query their specialized map
-
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   KOKKOS_INLINE_FUNCTION
   const Kokkos::Impl::ViewMapping< traits , void > &
   implementation_map() const { return m_map ; }
-
+#else
+  KOKKOS_INLINE_FUNCTION
+  const Kokkos::Impl::ViewMapping< traits , void > &
+  impl_map() const { return m_map ; }
+#endif
   //----------------------------------------
 
 private:
@@ -624,7 +628,7 @@ public:
   reference_type operator()() const
     {
       KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (0 , this->rank(), m_track, m_map) )
-      return implementation_map().reference();
+      return impl_map().reference();
       //return m_map.reference(0,0,0,0,0,0,0);
     }
 
@@ -647,7 +651,7 @@ public:
   typename std::enable_if< !std::is_same<typename drvtraits::value_type, typename drvtraits::scalar_array_type>::value && std::is_integral<iType>::value, reference_type>::type
   operator[](const iType & i0) const
     {
-//      auto map = implementation_map();
+//      auto map = impl_map();
       const size_t dim_scalar = m_map.dimension_scalar();
       const size_t bytes = this->span() / dim_scalar;
 
@@ -785,7 +789,7 @@ public:
   reference_type access() const
     {
       KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (0 , this->rank(), m_track, m_map) )
-      return implementation_map().reference();
+      return impl_map().reference();
       //return m_map.reference(0,0,0,0,0,0,0);
     }
 

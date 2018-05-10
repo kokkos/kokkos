@@ -677,10 +677,15 @@ public:
   //----------------------------------------
   // Allow specializations to query their specialized map
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   KOKKOS_INLINE_FUNCTION
   const Kokkos::Impl::ViewMapping< traits , void > &
   implementation_map() const { return m_map ; }
-
+#else
+  KOKKOS_INLINE_FUNCTION
+  const Kokkos::Impl::ViewMapping< traits , void > &
+  impl_map() const { return m_map ; }
+#endif
   //----------------------------------------
 
 private:

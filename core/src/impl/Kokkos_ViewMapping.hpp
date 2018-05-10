@@ -2588,11 +2588,8 @@ class ViewMapping< Traits ,
               , void >::is_mapping_plugin::value
   )>::type >
 {
-private:
 
-  template< class , class ... > friend class ViewMapping ;
-  template< class , class ... > friend class Kokkos::View ;
-
+public:
   typedef ViewOffset< typename Traits::dimension
                     , typename Traits::array_layout
                     , void
@@ -2602,6 +2599,10 @@ private:
 
   handle_type  m_handle ;
   offset_type  m_offset ;
+
+private:
+
+  template < class , class ...> friend class ViewMapping;
 
   KOKKOS_INLINE_FUNCTION
   ViewMapping( const handle_type & arg_handle , const offset_type & arg_offset )
