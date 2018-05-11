@@ -48,7 +48,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	OBJ_CUDA += TestCudaUVM_ViewMapping_a.o TestCudaUVM_ViewMapping_b.o TestCudaUVM_ViewMapping_subview.o
 	OBJ_CUDA += TestCudaHostPinned_ViewAPI_a.o TestCudaHostPinned_ViewAPI_b.o TestCudaHostPinned_ViewAPI_c.o TestCudaHostPinned_ViewAPI_d.o TestCudaHostPinned_ViewAPI_e.o
 	OBJ_CUDA += TestCudaHostPinned_ViewMapping_a.o TestCudaHostPinned_ViewMapping_b.o TestCudaHostPinned_ViewMapping_subview.o
-    OBJ_CUDA += TestCudaHostPinned_View_64bit.o
+        OBJ_CUDA += TestCuda_View_64bit.o
 	OBJ_CUDA += TestCuda_ViewOfClass.o
 	OBJ_CUDA += TestCuda_SubView_a.o TestCuda_SubView_b.o
 	OBJ_CUDA += TestCuda_SubView_c01.o TestCuda_SubView_c02.o TestCuda_SubView_c03.o

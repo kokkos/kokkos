@@ -123,7 +123,10 @@ int main(int narg, char* args[]) {
 
   Kokkos::Timer timer;
   // threads/team is automatically limited to maximum supported by the device.
-  Kokkos::parallel_for( team_policy( nchunks , TEAM_SIZE )
+  int team_size = TEAM_SIZE;
+  if( team_size > Device::execution_space::concurrency() )
+    team_size = Device::execution_space::concurrency();
+  Kokkos::parallel_for( team_policy( nchunks , team_size )
                       , find_2_tuples(chunk_size,data,histogram) );
   Kokkos::fence();
   double time = timer.seconds();

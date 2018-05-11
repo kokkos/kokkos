@@ -1128,7 +1128,26 @@ void parallel_reduce(const std::string& label,
 
 } //namespace Kokkos
 
-
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+//backwards compatiblity for Kokkos::Experimental reducers
+namespace Kokkos { namespace Experimental {
+using Kokkos::Sum;
+using Kokkos::Prod;
+using Kokkos::Min;
+using Kokkos::Max;
+using Kokkos::LAnd;
+using Kokkos::LOr;
+using Kokkos::BAnd;
+using Kokkos::BOr;
+using Kokkos::ValLocScalar;
+using Kokkos::MinLoc;
+using Kokkos::MaxLoc;
+using Kokkos::MinMaxScalar;
+using Kokkos::MinMax;
+using Kokkos::MinMaxLocScalar;
+using Kokkos::MinMaxLoc;
+}} //namespace Kokkos::Experimental
+#endif
 
 #endif // KOKKOS_PARALLEL_REDUCE_HPP
 

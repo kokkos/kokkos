@@ -56,8 +56,11 @@ void custom_reduction_test(int N, int R, int num_trials) {
 
   Scalar max;
 
+  int team_size = 32;
+  if ( team_size > Kokkos::DefaultExecutionSpace::concurrency() )
+    team_size = Kokkos::DefaultExecutionSpace::concurrency();
   // Warm up
-  Kokkos::parallel_reduce(Kokkos::TeamPolicy<>(N/1024,32), KOKKOS_LAMBDA( const Kokkos::TeamPolicy<>::member_type& team, Scalar& lmax) {
+  Kokkos::parallel_reduce(Kokkos::TeamPolicy<>(N/1024,team_size), KOKKOS_LAMBDA( const Kokkos::TeamPolicy<>::member_type& team, Scalar& lmax) {
     Scalar team_max = Scalar(0);
     for(int rr = 0; rr<R; rr++) {
     int i = team.league_rank();
@@ -77,7 +80,7 @@ void custom_reduction_test(int N, int R, int num_trials) {
   // Timing
   Kokkos::Timer timer;
   for(int r = 0; r<num_trials; r++) {
-    Kokkos::parallel_reduce(Kokkos::TeamPolicy<>(N/1024,32), KOKKOS_LAMBDA( const Kokkos::TeamPolicy<>::member_type& team, Scalar& lmax) {
+    Kokkos::parallel_reduce(Kokkos::TeamPolicy<>(N/1024,team_size), KOKKOS_LAMBDA( const Kokkos::TeamPolicy<>::member_type& team, Scalar& lmax) {
       Scalar team_max = Scalar(0);
       for(int rr = 0; rr<R; rr++) {
       int i = team.league_rank();

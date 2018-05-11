@@ -1190,42 +1190,65 @@ namespace Impl {
     {}
 #endif
   };
+
   template<typename iType>
   struct ThreadVectorRangeBoundariesStruct<iType,ROCmTeamMember> {
     typedef iType index_type;
-    const iType start;
-    const iType end;
-    const iType increment;
+    const index_type start;
+    const index_type end;
+    const index_type increment;
     const ROCmTeamMember& thread;
 
 #if defined( __HCC_ACCELERATOR__ )
     KOKKOS_INLINE_FUNCTION
-    ThreadVectorRangeBoundariesStruct (const ROCmTeamMember& thread_, const iType& count):
+    ThreadVectorRangeBoundariesStruct (const ROCmTeamMember& thread_, const index_type& count):
       start( thread_.lindex()%thread_.vector_length() ),
       end( count ),
       increment( thread_.vector_length() ),
       thread(thread_)
     {}
 
+    KOKKOS_INLINE_FUNCTION
+    ThreadVectorRangeBoundariesStruct (const ROCmTeamMember& thread_, const index_type& arg_begin, const index_type& arg_end):
+      start( arg_begin + thread_.lindex()%thread_.vector_length() ),
+      end( arg_end ),
+      increment( thread_.vector_length() ),
+      thread(thread_)
+    {}
+
 //    KOKKOS_INLINE_FUNCTION
-//    ThreadVectorRangeBoundariesStruct (const iType& count):
+//    ThreadVectorRangeBoundariesStruct (const index_type& count):
 //      start( 0 ),
 //      end( count ),
 //      increment( 1 )
 //    {}
 #else
     KOKKOS_INLINE_FUNCTION
-    ThreadVectorRangeBoundariesStruct (const ROCmTeamMember& thread_, const iType& count):
-      start( 0 ),
+    ThreadVectorRangeBoundariesStruct (const ROCmTeamMember& thread_, const index_type& count):
+      start( static_cast<index_type>(0) ),
       end( count ),
-      increment( 1 ),
+      increment( static_cast<index_type>(1) ),
       thread(thread_)
     {}
     KOKKOS_INLINE_FUNCTION
-    ThreadVectorRangeBoundariesStruct (const iType& count):
-      start( 0 ),
+    ThreadVectorRangeBoundariesStruct (const index_type& count):
+      start( static_cast<index_type>(0) ),
       end( count ),
-      increment( 1 )
+      increment( static_cast<index_type>(1) )
+    {}
+
+    KOKKOS_INLINE_FUNCTION
+    ThreadVectorRangeBoundariesStruct (const ROCmTeamMember& thread_, const index_type& arg_begin, const index_type& arg_end):
+      start( arg_begin ),
+      end( arg_end ),
+      increment( static_cast<index_type>(1) ),
+      thread(thread_)
+    {}
+    KOKKOS_INLINE_FUNCTION
+    ThreadVectorRangeBoundariesStruct (const index_type& arg_begin, const index_type& arg_end):
+      start( arg_begin ),
+      end( arg_end ),
+      increment( static_cast<index_type>(1) )
     {}
 #endif
   };
@@ -1255,6 +1278,13 @@ KOKKOS_INLINE_FUNCTION
 Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ROCmTeamMember >
   ThreadVectorRange(const Impl::ROCmTeamMember& thread, const iType& count) {
   return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ROCmTeamMember >(thread,count);
+}
+
+template<typename iType>
+KOKKOS_INLINE_FUNCTION
+Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ROCmTeamMember >
+  ThreadVectorRange(const Impl::ROCmTeamMember& thread, const iType& arg_begin, const iType& arg_end) {
+  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ROCmTeamMember >(thread,arg_begin,arg_end);
 }
 
 KOKKOS_INLINE_FUNCTION
