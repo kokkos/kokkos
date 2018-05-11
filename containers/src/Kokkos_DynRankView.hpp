@@ -384,8 +384,8 @@ public:
     // Removed dimension checks...
 
       typedef typename DstType::offset_type  dst_offset_type ;
-      dst.m_map.m_offset = dst_offset_type(std::integral_constant<unsigned,0>() , src.layout() ); //Check this for integer input1 for padding, etc
-      dst.m_map.m_handle = Kokkos::Impl::ViewDataHandle< DstTraits >::assign( src.m_map.m_handle , src.m_track );
+      dst.m_map.m_impl_offset = dst_offset_type(std::integral_constant<unsigned,0>() , src.layout() ); //Check this for integer input1 for padding, etc
+      dst.m_map.m_impl_handle = Kokkos::Impl::ViewDataHandle< DstTraits >::assign( src.m_map.m_impl_handle , src.m_track );
       dst.m_track.assign( src.m_track , DstTraits::is_managed );
       dst.m_rank = src.Rank ;
     }
@@ -569,11 +569,11 @@ public:
   KOKKOS_INLINE_FUNCTION
   const Kokkos::Impl::ViewMapping< traits , void > &
   implementation_map() const { return m_map ; }
-#else
+#endif
   KOKKOS_INLINE_FUNCTION
   const Kokkos::Impl::ViewMapping< traits , void > &
   impl_map() const { return m_map ; }
-#endif
+
   //----------------------------------------
 
 private:
@@ -1449,30 +1449,30 @@ public:
       ret_type dst ;
 
       const SubviewExtents< 7 , rank > extents =
-        ExtentGenerator< Args ... >::generator( src.m_map.m_offset.m_dim , args... ) ;
+        ExtentGenerator< Args ... >::generator( src.m_map.m_impl_offset.m_dim , args... ) ;
 
-      dst_offset_type tempdst( src.m_map.m_offset , extents ) ;
+      dst_offset_type tempdst( src.m_map.m_impl_offset , extents ) ;
 
       dst.m_track = src.m_track ;
 
-      dst.m_map.m_offset.m_dim.N0 = tempdst.m_dim.N0 ;
-      dst.m_map.m_offset.m_dim.N1 = tempdst.m_dim.N1 ;
-      dst.m_map.m_offset.m_dim.N2 = tempdst.m_dim.N2 ;
-      dst.m_map.m_offset.m_dim.N3 = tempdst.m_dim.N3 ;
-      dst.m_map.m_offset.m_dim.N4 = tempdst.m_dim.N4 ;
-      dst.m_map.m_offset.m_dim.N5 = tempdst.m_dim.N5 ;
-      dst.m_map.m_offset.m_dim.N6 = tempdst.m_dim.N6 ;
+      dst.m_map.m_impl_offset.m_dim.N0 = tempdst.m_dim.N0 ;
+      dst.m_map.m_impl_offset.m_dim.N1 = tempdst.m_dim.N1 ;
+      dst.m_map.m_impl_offset.m_dim.N2 = tempdst.m_dim.N2 ;
+      dst.m_map.m_impl_offset.m_dim.N3 = tempdst.m_dim.N3 ;
+      dst.m_map.m_impl_offset.m_dim.N4 = tempdst.m_dim.N4 ;
+      dst.m_map.m_impl_offset.m_dim.N5 = tempdst.m_dim.N5 ;
+      dst.m_map.m_impl_offset.m_dim.N6 = tempdst.m_dim.N6 ;
 
-      dst.m_map.m_offset.m_stride.S0 = tempdst.m_stride.S0 ;
-      dst.m_map.m_offset.m_stride.S1 = tempdst.m_stride.S1 ;
-      dst.m_map.m_offset.m_stride.S2 = tempdst.m_stride.S2 ;
-      dst.m_map.m_offset.m_stride.S3 = tempdst.m_stride.S3 ;
-      dst.m_map.m_offset.m_stride.S4 = tempdst.m_stride.S4 ;
-      dst.m_map.m_offset.m_stride.S5 = tempdst.m_stride.S5 ;
-      dst.m_map.m_offset.m_stride.S6 = tempdst.m_stride.S6 ;
+      dst.m_map.m_impl_offset.m_stride.S0 = tempdst.m_stride.S0 ;
+      dst.m_map.m_impl_offset.m_stride.S1 = tempdst.m_stride.S1 ;
+      dst.m_map.m_impl_offset.m_stride.S2 = tempdst.m_stride.S2 ;
+      dst.m_map.m_impl_offset.m_stride.S3 = tempdst.m_stride.S3 ;
+      dst.m_map.m_impl_offset.m_stride.S4 = tempdst.m_stride.S4 ;
+      dst.m_map.m_impl_offset.m_stride.S5 = tempdst.m_stride.S5 ;
+      dst.m_map.m_impl_offset.m_stride.S6 = tempdst.m_stride.S6 ;
 
-      dst.m_map.m_handle = dst_handle_type( src.m_map.m_handle +
-                                      src.m_map.m_offset( extents.domain_offset(0)
+      dst.m_map.m_impl_handle = dst_handle_type( src.m_map.m_impl_handle +
+                                      src.m_map.m_impl_offset( extents.domain_offset(0)
                                                   , extents.domain_offset(1)
                                                   , extents.domain_offset(2)
                                                   , extents.domain_offset(3)
