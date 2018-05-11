@@ -47,36 +47,37 @@ namespace Test {
 
 template<class Device>
 void test_64bit(){
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
   int64_t N = 5000000000;
   int64_t sum = 0;
   {
     Kokkos::parallel_reduce(
-      Kokkos::RangePolicy<typename Device::execution_space>(0,N),
+      Kokkos::RangePolicy<typename Device::execution_space,Kokkos::IndexType<int64_t>>(0,N),
       KOKKOS_LAMBDA(const int64_t& i, int64_t& lsum) {
       lsum += 1;
     },sum);
-    ASSERT_EQ(sum,N);
+    ASSERT_EQ(N,sum);
   }
   {
     Kokkos::View<char*,Device> a("A",N);
     Kokkos::deep_copy(a,char(1));
     Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<typename Device::execution_space>(0,N),
+        Kokkos::RangePolicy<typename Device::execution_space,Kokkos::IndexType<int64_t>>(0,N),
         KOKKOS_LAMBDA(const int64_t& i, int64_t& lsum) {
       lsum += int64_t(a(i));
     },sum);
-    ASSERT_EQ(sum,N);
+    ASSERT_EQ(N,sum);
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<typename Device::execution_space>(0,N),
+        Kokkos::RangePolicy<typename Device::execution_space,Kokkos::IndexType<int64_t>>(0,N),
         KOKKOS_LAMBDA(const int64_t& i) {
       a(i) = 3;
     });
     Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<typename Device::execution_space>(0,N),
+        Kokkos::RangePolicy<typename Device::execution_space,Kokkos::IndexType<int64_t>>(0,N),
         KOKKOS_LAMBDA(const int64_t& i, int64_t& lsum) {
       lsum += int64_t(a(i));
     },sum);
-    ASSERT_EQ(sum,N*3);
+    ASSERT_EQ(N*3,sum);
   }
   {
     int64_t N0 = 56925;
@@ -85,19 +86,33 @@ void test_64bit(){
     Kokkos::View<char**,Device> m("Matrix", N0,N1);
     Kokkos::deep_copy(m,char(1));
     Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<typename Device::execution_space>(0,N0*N1),
+        Kokkos::RangePolicy<typename Device::execution_space,Kokkos::IndexType<int64_t>>(0,N0*N1),
         KOKKOS_LAMBDA(const int64_t& i, int64_t& lsum) {
       lsum += int64_t(m(i%N0,i/N0));
     },sum);
-    ASSERT_EQ(sum,N0*N1);
+    ASSERT_EQ(N0*N1,sum);
     Kokkos::parallel_reduce(
-        Kokkos::MDRangePolicy<typename Device::execution_space,Kokkos::Rank<2>>({0,0},{N0,N1}),
+        Kokkos::MDRangePolicy<typename Device::execution_space,Kokkos::Rank<2>,Kokkos::IndexType<int64_t>>({0,0},{N0,N1}),
         KOKKOS_LAMBDA(const int64_t& i0, const int64_t& i1, int64_t& lsum) {
       lsum += int64_t(m(i0,i1));
     },sum);
-    ASSERT_EQ(sum,N0*N1);
+    ASSERT_EQ(N0*N1,sum);
   }
-
+  {
+    int N0 = 1024*1024*1500;
+    int64_t P = 1713091;
+    Kokkos::View<int*, Device> a("A",N0);
+    Kokkos::parallel_for("FillA",Kokkos::RangePolicy<typename Device::execution_space, Kokkos::IndexType<int>>(0,N0), KOKKOS_LAMBDA(const int& i) {
+      a(i) = i%P;
+    });
+    int64_t sum0=0;
+    Kokkos::parallel_reduce("FillA",Kokkos::RangePolicy<typename Device::execution_space, Kokkos::IndexType<int>>(0,N0), KOKKOS_LAMBDA(const int& i,int64_t& lsum) {
+      lsum += a(i);
+    },sum0);
+    int64_t expected = (P*(P-1)/2) * int64_t(N0/P) + (N0%P)*(N0%P-1)/2;
+    ASSERT_EQ(expected,sum0);
+  }
+#endif
 }
 
 #ifdef KOKKOS_ENABLE_LARGE_MEM_TESTS

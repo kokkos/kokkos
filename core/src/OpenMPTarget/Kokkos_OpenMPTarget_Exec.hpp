@@ -595,6 +595,13 @@ Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember >
   return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember >(thread,count);
 }
 
+template<typename iType>
+KOKKOS_INLINE_FUNCTION
+Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember >
+  ThreadVectorRange(const Impl::OpenMPTargetExecTeamMember& thread, const iType& arg_begin, const iType& arg_end) {
+  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember >(thread,arg_begin,arg_end);
+}
+
 KOKKOS_INLINE_FUNCTION
 Impl::ThreadSingleStruct<Impl::OpenMPTargetExecTeamMember> PerTeam(const Impl::OpenMPTargetExecTeamMember& thread) {
   return Impl::ThreadSingleStruct<Impl::OpenMPTargetExecTeamMember>(thread);

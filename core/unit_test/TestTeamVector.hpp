@@ -534,7 +534,7 @@ struct functor_vec_single {
     // inside a parallel_for and write to it.
     Scalar value = 0;
 
-    Kokkos::parallel_for( Kokkos::ThreadVectorRange( team, 13 ), [&] ( int i )
+    Kokkos::parallel_for( Kokkos::ThreadVectorRange( team, 0, 13 ), [&] ( int i )
     {
       value = i; // This write is violating Kokkos semantics for nested parallelism.
     });
@@ -545,7 +545,7 @@ struct functor_vec_single {
     }, value );
 
     Scalar value2 = 0;
-    Kokkos::parallel_reduce( Kokkos::ThreadVectorRange( team, 13 ), [&] ( int i, Scalar & val )
+    Kokkos::parallel_reduce( Kokkos::ThreadVectorRange( team, 0, 13 ), [&] ( int i, Scalar & val )
     {
       val += value;
     }, value2 );
@@ -809,11 +809,14 @@ template< class ExecutionSpace >
 bool Test( int test ) {
   bool passed = true;
 
-  passed = passed && test_scalar< int, ExecutionSpace >( 317, 33, test );
-  passed = passed && test_scalar< long long int, ExecutionSpace >( 317, 33, test );
-  passed = passed && test_scalar< float, ExecutionSpace >( 317, 33, test );
-  passed = passed && test_scalar< double, ExecutionSpace >( 317, 33, test );
-  passed = passed && test_scalar< my_complex, ExecutionSpace >( 317, 33, test );
+  int team_size = 33;
+  if( team_size > int(ExecutionSpace::concurrency()))
+    team_size = int(ExecutionSpace::concurrency());
+  passed = passed && test_scalar< int, ExecutionSpace >( 317, team_size, test );
+  passed = passed && test_scalar< long long int, ExecutionSpace >( 317, team_size, test );
+  passed = passed && test_scalar< float, ExecutionSpace >( 317, team_size, test );
+  passed = passed && test_scalar< double, ExecutionSpace >( 317, team_size, test );
+  passed = passed && test_scalar< my_complex, ExecutionSpace >( 317, team_size, test );
 
   return passed;
 }
@@ -841,8 +844,11 @@ public:
   }
 
   void run_test( const size_type & nrows, const size_type & ncols
-               , const size_type & team_size, const size_type & vector_length )
+               , size_type team_size, const size_type & vector_length )
   {
+    if( team_size > size_type(DeviceType::execution_space::concurrency()))
+      team_size = size_type(DeviceType::execution_space::concurrency());
+
     //typedef Kokkos::LayoutLeft Layout;
     typedef Kokkos::LayoutRight Layout;
 
