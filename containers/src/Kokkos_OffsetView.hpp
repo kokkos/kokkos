@@ -29,31 +29,29 @@ namespace Kokkos {
   template< class D, class ... P >
   struct is_offset_view< const OffsetView<D,P...> > : public std::true_type {};
 
-#define KOKKOS_INVALID_OFFSET iType(0)
-#define KOKKOS_INVALID_INDEX_RANGE {-KOKKOS_INVALID_OFFSET, KOKKOS_INVALID_OFFSET}
+#define KOKKOS_INVALID_OFFSET int64_t(0)
+#define KOKKOS_INVALID_INDEX_RANGE {KOKKOS_INVALID_OFFSET, KOKKOS_INVALID_OFFSET}
 
   template <typename iType, typename std::enable_if< std::is_integral<iType>::value &&
   std::is_signed<iType>::value, iType >::type = 0>
   using IndexRange  = Kokkos::Array<iType, 2>;
 
 
-  template <typename iType>
-  using ilist_type = std::initializer_list<iType>;
+  using min_index_type = std::initializer_list<int64_t>;
 
 
   //  template <typename iType,
   //    typename std::enable_if< std::is_integral<iType>::value &&
-  //      std::is_signed<iType>::value, iType >::type = 0> using ilist_type = std::initializer_list<iType>;
+  //      std::is_signed<iType>::value, iType >::type = 0> using min_index_type = std::initializer_list<iType>;
 
   namespace Impl {
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
 
 
-template <typename iType>
 KOKKOS_INLINE_FUNCTION
 void runtime_check_rank_host(const size_t rank_dynamic, const size_t rank,
-                               const ilist_type<iType> offset_list, const std::string & label)
+                               const min_index_type minIndices, const std::string & label)
     {
   bool isBad = false;
       std::string message = "Kokkos::OffsetView ERROR: for OffsetView labeled '" + label + "':";
@@ -64,8 +62,8 @@ void runtime_check_rank_host(const size_t rank_dynamic, const size_t rank,
       }
 
       size_t numOffsets = 0;
-      for(size_t i = 0; i < offset_list.size(); ++i ){
-          if( offset_list.begin()[i] != -KOKKOS_INVALID_OFFSET) numOffsets++;
+      for(size_t i = 0; i < minIndices.size(); ++i ){
+          if( minIndices.begin()[i] != -KOKKOS_INVALID_OFFSET) numOffsets++;
       }
       if (numOffsets != rank_dynamic) {
           message += "The number of offsets provided ( " + std::to_string(numOffsets) +
@@ -77,18 +75,17 @@ void runtime_check_rank_host(const size_t rank_dynamic, const size_t rank,
     }
 #endif
 
-template <typename iType>
 KOKKOS_INLINE_FUNCTION
 void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
-                               const ilist_type<iType> offset_list)
+                               const min_index_type minIndices)
     {
       if (rank_dynamic != rank) {
           Kokkos::abort("The full rank of an OffsetView must be the same as the dynamic rank.");
       }
 
       size_t numOffsets = 0;
-      for(size_t i = 0; i < offset_list.size(); ++i ){
-          if( offset_list.begin()[i] != -KOKKOS_INVALID_OFFSET) numOffsets++;
+      for(size_t i = 0; i < minIndices.size(); ++i ){
+          if( minIndices.begin()[i] != -KOKKOS_INVALID_OFFSET) numOffsets++;
       }
       if (numOffsets != rank) {
           Kokkos::abort("The number of offsets provided to an OffsetView constructor must equal the dynamic rank.");
@@ -781,6 +778,26 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
       return *this ;
     }
 
+    template<class ViewType>
+    KOKKOS_INLINE_FUNCTION
+    OffsetView & operator = ( const ViewType & rhs ) {
+      m_track = rhs.m_track ;
+      m_map = rhs.m_map ;
+      for(size_t i = 0; i < Rank; ++i )
+        m_begins[i] = 0;
+      return *this ;
+    }
+
+    template<class ViewType>
+    KOKKOS_INLINE_FUNCTION
+    OffsetView & operator = ( ViewType && rhs ) {
+      m_track =std::move(rhs.m_track) ;
+      m_map = std::move(rhs.m_map);
+      for(size_t i = 0; i < Rank; ++i )
+        m_begins[i] = 0;
+      return *this ;
+    }
+
 
     // may assign unmanaged from managed.
 
@@ -1233,18 +1250,18 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     }
 #endif
 
-    template< typename Label, typename iType >
+    template< typename Label>
     explicit inline
     OffsetView( const Label & arg_label
-                ,const ilist_type<iType> range0 = KOKKOS_INVALID_INDEX_RANGE
-                //              ,typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value , const ilist_type<iType> >::type range1 = KOKKOS_INVALID_INDEX_RANGE
-                ,const ilist_type<iType> range1 = KOKKOS_INVALID_INDEX_RANGE
-                ,const ilist_type<iType> range2 = KOKKOS_INVALID_INDEX_RANGE
-                ,const ilist_type<iType> range3 = KOKKOS_INVALID_INDEX_RANGE
-                ,const ilist_type<iType> range4 = KOKKOS_INVALID_INDEX_RANGE
-                ,const ilist_type<iType> range5 = KOKKOS_INVALID_INDEX_RANGE
-                ,const ilist_type<iType> range6 = KOKKOS_INVALID_INDEX_RANGE
-                ,const ilist_type<iType> range7 = KOKKOS_INVALID_INDEX_RANGE
+                ,typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value , const min_index_type >::type
+                                      range0 = KOKKOS_INVALID_INDEX_RANGE
+                ,const min_index_type range1 = KOKKOS_INVALID_INDEX_RANGE
+                ,const min_index_type range2 = KOKKOS_INVALID_INDEX_RANGE
+                ,const min_index_type range3 = KOKKOS_INVALID_INDEX_RANGE
+                ,const min_index_type range4 = KOKKOS_INVALID_INDEX_RANGE
+                ,const min_index_type range5 = KOKKOS_INVALID_INDEX_RANGE
+                ,const min_index_type range6 = KOKKOS_INVALID_INDEX_RANGE
+                ,const min_index_type range7 = KOKKOS_INVALID_INDEX_RANGE
 
     ) : OffsetView( Impl::ViewCtorProp< std::string >( arg_label ),
                     typename traits::array_layout
@@ -1258,19 +1275,39 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
 
     }
 
-    template< typename iType, class ... P >
+    template< class ViewType>
+    explicit KOKKOS_INLINE_FUNCTION
+    OffsetView( const ViewType & view
+                , typename std::enable_if<Kokkos::is_view<ViewType>::value , const min_index_type >::type
+                 minIndices) :
+                m_track(view.m_track), m_map(view.m_map){
+
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+          Impl::runtime_check_rank_host(traits::rank_dynamic, Rank, minIndices, label());
+#else
+          Impl::runtime_check_rank_device(traits::rank_dynamic, Rank, minIndices);
+
+#endif
+
+      for (size_t i = 0; i < minIndices.size(); ++i) {
+          m_begins[i] = minIndices.begin()[i];
+      }
+    }
+
+
+    template<class ... P >
     explicit KOKKOS_INLINE_FUNCTION
     OffsetView( const Impl::ViewCtorProp< P ... > & arg_prop
                 ,typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer , typename traits::array_layout >::type const & arg_layout
-                ,const ilist_type<iType> offset_list
+                ,const min_index_type minIndices
     )
     : m_track() // No memory tracking
     , m_map( arg_prop , arg_layout )
     {
 
 
-      for (size_t i = 0; i < offset_list.size(); ++i) {
-          m_begins[i] = offset_list.begin()[i];
+      for (size_t i = 0; i < minIndices.size(); ++i) {
+          m_begins[i] = minIndices.begin()[i];
       }
       static_assert(
           std::is_same< pointer_type
@@ -1279,11 +1316,11 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
           "When constructing OffsetView to wrap user memory, you must supply matching pointer type" );
     }
 
-    template< typename iType, class ... P >
+    template<class ... P >
     explicit inline
     OffsetView( const Impl::ViewCtorProp< P ... > & arg_prop
-                , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer, typename traits::array_layout>::type const & arg_layout
-                ,const std::initializer_list<iType> offset_list
+                , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer , typename traits::array_layout>::type const & arg_layout
+                ,const min_index_type minIndices
     )
     : m_track()
     , m_map()
@@ -1291,7 +1328,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     {
 
       for(size_t i = 0; i < Rank; ++i)
-        m_begins[i] = offset_list.begin()[i];
+        m_begins[i] = minIndices.begin()[i];
 
       // Append layout and spaces if not input
       typedef Impl::ViewCtorProp< P ... > alloc_prop_input ;
@@ -1355,15 +1392,25 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
       m_track.assign_allocated_record_to_uninitialized( record );
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-          Impl::runtime_check_rank_host(traits::rank_dynamic, Rank, offset_list, label());
+          Impl::runtime_check_rank_host(traits::rank_dynamic, Rank, minIndices, label());
 #else
-          Impl::runtime_check_rank_device(traits::rank_dynamic, Rank, offset_list);
+          Impl::runtime_check_rank_device(traits::rank_dynamic, Rank, minIndices);
 
 #endif
 
     }
 
   };
+
+  template<class ViewType, typename D , class ... P>
+   KOKKOS_INLINE_FUNCTION
+   ViewType & convert_view( const OffsetView<D , P...> & rhs ) {
+     ViewType v(Impl::ViewCtorProp< std::string >( rhs.label(), rhs.layout()) );
+     v.m_track = rhs.m_track ;
+     v.m_map = rhs.m_map ;
+
+     return v ;
+   }
 
 
   /** \brief Temporary free function rank()
