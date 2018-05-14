@@ -46,17 +46,57 @@ namespace Kokkos {
   //      std::is_signed<iType>::value, iType >::type = 0> using ilist_type = std::initializer_list<iType>;
 
   namespace Impl {
-    template <typename iType>
-    void check_number_of_offsets(const ilist_type<iType> offset_list, const size_t rank)
+
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+
+
+template <typename iType>
+KOKKOS_INLINE_FUNCTION
+void runtime_check_rank_host(const size_t rank_dynamic, const size_t rank,
+                               const ilist_type<iType> offset_list, const std::string & label)
     {
+  bool isBad = false;
+      std::string message = "Kokkos::OffsetView ERROR: for OffsetView labeled '" + label + "':";
+      if (rank_dynamic != rank) {
+          message += "The full rank must be the same as the dynamic rank. full rank = ";
+          message += std::to_string(rank) + " dynamic rank = " + std::to_string(rank_dynamic) + "\n";
+          isBad = true;
+      }
+
       size_t numOffsets = 0;
       for(size_t i = 0; i < offset_list.size(); ++i ){
           if( offset_list.begin()[i] != -KOKKOS_INVALID_OFFSET) numOffsets++;
       }
-      if(numOffsets != rank)
-        Kokkos::abort("length of offset_list does not match rank of OffsetView.");
+      if (numOffsets != rank_dynamic) {
+          message += "The number of offsets provided ( " + std::to_string(numOffsets) +
+              " ) must equal the dynamic rank ( " + std::to_string(rank_dynamic) + " ).";
+          isBad = true;
+      }
+
+      if(isBad) Kokkos::abort(message.c_str());
+    }
+#endif
+
+template <typename iType>
+KOKKOS_INLINE_FUNCTION
+void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
+                               const ilist_type<iType> offset_list)
+    {
+      if (rank_dynamic != rank) {
+          Kokkos::abort("The full rank of an OffsetView must be the same as the dynamic rank.");
+      }
+
+      size_t numOffsets = 0;
+      for(size_t i = 0; i < offset_list.size(); ++i ){
+          if( offset_list.begin()[i] != -KOKKOS_INVALID_OFFSET) numOffsets++;
+      }
+      if (numOffsets != rank) {
+          Kokkos::abort("The number of offsets provided to an OffsetView constructor must equal the dynamic rank.");
+      }
+
     }
   }
+
   template< class DataType , class ... Properties >
   class OffsetView : public ViewTraits< DataType , Properties ... > {
   public:
@@ -227,13 +267,13 @@ namespace Kokkos {
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
 
 #define KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( ARG ) \
-        OffsetView::template verify_space< Kokkos::Impl::ActiveExecutionMemorySpace >::check(); \
-        Kokkos::Impl::offsetview_verify_operator_bounds< typename traits::memory_space > ARG ;
+    OffsetView::template verify_space< Kokkos::Impl::ActiveExecutionMemorySpace >::check(); \
+    Kokkos::Impl::offsetview_verify_operator_bounds< typename traits::memory_space > ARG ;
 
 #else
 
 #define KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( ARG ) \
-        OffsetView::template verify_space< Kokkos::Impl::ActiveExecutionMemorySpace >::check();
+    OffsetView::template verify_space< Kokkos::Impl::ActiveExecutionMemorySpace >::check();
 
 #endif
   public:
@@ -441,7 +481,7 @@ namespace Kokkos {
       const size_t j1 = i1 - m_begins[1];
       KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1) )
       return m_map.m_impl_handle[ j0 * m_map.m_impl_offset.m_stride.S0 +
-                             j1 * m_map.m_impl_offset.m_stride.S1 ];
+                                  j1 * m_map.m_impl_offset.m_stride.S1 ];
     }
 
     //------------------------------
@@ -742,642 +782,641 @@ namespace Kokkos {
     }
 
 
-  // may assign unmanaged from managed.
+    // may assign unmanaged from managed.
 
 #if 0
-  template< class RT , class ... RP >
-  KOKKOS_INLINE_FUNCTION
-  OffsetView( const OffsetView<RT,RP...> & rhs )
-  : m_track( rhs.m_track , traits::is_managed )
-  , m_map()
-  , m_begins(rhs.m_begins)
-  {
-    typedef typename OffsetView<RT,RP...>::traits  SrcTraits ;
-    typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
-    static_assert( Mapping::is_assignable , "Incompatible OffsetView copy construction" );
-    Mapping::assign( m_map , rhs.m_map , rhs.m_track );  //swb what about assign?
-  }
+    template< class RT , class ... RP >
+    KOKKOS_INLINE_FUNCTION
+    OffsetView( const OffsetView<RT,RP...> & rhs )
+    : m_track( rhs.m_track , traits::is_managed )
+    , m_map()
+    , m_begins(rhs.m_begins)
+    {
+      typedef typename OffsetView<RT,RP...>::traits  SrcTraits ;
+      typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
+      static_assert( Mapping::is_assignable , "Incompatible OffsetView copy construction" );
+      Mapping::assign( m_map , rhs.m_map , rhs.m_track );  //swb what about assign?
+    }
 
-  template< class RT , class ... RP >
-  KOKKOS_INLINE_FUNCTION
-  View & operator = ( const View<RT,RP...> & rhs )
-  {
-    typedef typename View<RT,RP...>::traits  SrcTraits ;
-    typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
-    static_assert( Mapping::is_assignable , "Incompatible View copy assignment" );
-    Mapping::assign( m_map , rhs.m_map , rhs.m_track );
-    m_track.assign( rhs.m_track , traits::is_managed );
-    return *this ;
-  }
+    template< class RT , class ... RP >
+    KOKKOS_INLINE_FUNCTION
+    View & operator = ( const View<RT,RP...> & rhs )
+    {
+      typedef typename View<RT,RP...>::traits  SrcTraits ;
+      typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
+      static_assert( Mapping::is_assignable , "Incompatible View copy assignment" );
+      Mapping::assign( m_map , rhs.m_map , rhs.m_track );
+      m_track.assign( rhs.m_track , traits::is_managed );
+      return *this ;
+    }
 
-  //----------------------------------------
-  // Compatible subview constructor
-  // may assign unmanaged from managed.
+    //----------------------------------------
+    // Compatible subview constructor
+    // may assign unmanaged from managed.
 
-  template< class RT , class ... RP , class Arg0 , class ... Args >
-  KOKKOS_INLINE_FUNCTION
-  View( const View< RT , RP... > & src_view
-        , const Arg0 & arg0 , Args ... args )
-  : m_track( src_view.m_track , traits::is_managed )
-  , m_map()
-  {
-    typedef View< RT , RP... > SrcType ;
+    template< class RT , class ... RP , class Arg0 , class ... Args >
+    KOKKOS_INLINE_FUNCTION
+    View( const View< RT , RP... > & src_view
+          , const Arg0 & arg0 , Args ... args )
+    : m_track( src_view.m_track , traits::is_managed )
+    , m_map()
+    {
+      typedef View< RT , RP... > SrcType ;
 
-    typedef Kokkos::Impl::ViewMapping
-        < void /* deduce destination view type from source view traits */
-        , typename SrcType::traits
-        , Arg0 , Args... > Mapping ;
+      typedef Kokkos::Impl::ViewMapping
+          < void /* deduce destination view type from source view traits */
+          , typename SrcType::traits
+          , Arg0 , Args... > Mapping ;
 
-    typedef typename Mapping::type DstType ;
+      typedef typename Mapping::type DstType ;
 
-    static_assert( Kokkos::Impl::ViewMapping< traits , typename DstType::traits , void >::is_assignable
-                   , "Subview construction requires compatible view and subview arguments" );
+      static_assert( Kokkos::Impl::ViewMapping< traits , typename DstType::traits , void >::is_assignable
+                     , "Subview construction requires compatible view and subview arguments" );
 
-    Mapping::assign( m_map, src_view.m_map, arg0 , args... );
-  }
+      Mapping::assign( m_map, src_view.m_map, arg0 , args... );
+    }
 #endif
 
-  //----------------------------------------
-  // Allocation tracking properties
-  KOKKOS_INLINE_FUNCTION
-  int use_count() const
-  { return m_track.use_count(); }
+    //----------------------------------------
+    // Allocation tracking properties
+    KOKKOS_INLINE_FUNCTION
+    int use_count() const
+    { return m_track.use_count(); }
 
-  inline
-  const std::string label() const
-  { return m_track.template get_label< typename traits::memory_space >(); }
+    inline
+    const std::string label() const
+    { return m_track.template get_label< typename traits::memory_space >(); }
 
 #if 0
-  //----------------------------------------
-  // Allocation according to allocation properties and array layout
+    //----------------------------------------
+    // Allocation according to allocation properties and array layout
 
-  template< class ... P >
-  explicit inline
-  View( const Impl::ViewCtorProp< P ... > & arg_prop
-        , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer
-        , typename traits::array_layout
-        >::type const & arg_layout
-  )
-  : m_track()
-  , m_map()
-  {
-    // Append layout and spaces if not input
-    typedef Impl::ViewCtorProp< P ... > alloc_prop_input ;
+    template< class ... P >
+    explicit inline
+    View( const Impl::ViewCtorProp< P ... > & arg_prop
+          , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer
+          , typename traits::array_layout
+          >::type const & arg_layout
+    )
+    : m_track()
+    , m_map()
+    {
+      // Append layout and spaces if not input
+      typedef Impl::ViewCtorProp< P ... > alloc_prop_input ;
 
-    // use 'std::integral_constant<unsigned,I>' for non-types
-    // to avoid duplicate class error.
-    typedef Impl::ViewCtorProp
-        < P ...
-        , typename std::conditional
-        < alloc_prop_input::has_label
-        , std::integral_constant<unsigned,0>
-    , typename std::string
-    >::type
-    , typename std::conditional
-    < alloc_prop_input::has_memory_space
-    , std::integral_constant<unsigned,1>
-    , typename traits::device_type::memory_space
-    >::type
-    , typename std::conditional
-    < alloc_prop_input::has_execution_space
-    , std::integral_constant<unsigned,2>
-    , typename traits::device_type::execution_space
-    >::type
-    > alloc_prop ;
+      // use 'std::integral_constant<unsigned,I>' for non-types
+      // to avoid duplicate class error.
+      typedef Impl::ViewCtorProp
+          < P ...
+          , typename std::conditional
+          < alloc_prop_input::has_label
+          , std::integral_constant<unsigned,0>
+      , typename std::string
+      >::type
+      , typename std::conditional
+      < alloc_prop_input::has_memory_space
+      , std::integral_constant<unsigned,1>
+      , typename traits::device_type::memory_space
+      >::type
+      , typename std::conditional
+      < alloc_prop_input::has_execution_space
+      , std::integral_constant<unsigned,2>
+      , typename traits::device_type::execution_space
+      >::type
+      > alloc_prop ;
 
-    static_assert( traits::is_managed
-                   , "OffsetView allocation constructor requires managed memory" );
+      static_assert( traits::is_managed
+                     , "OffsetView allocation constructor requires managed memory" );
 
-    if ( alloc_prop::initialize &&
-        ! alloc_prop::execution_space::impl_is_initialized()
-    ) {
-        // If initializing view data then
-        // the execution space must be initialized.
-        Kokkos::Impl::throw_runtime_exception("Constructing OffsetView and initializing data with uninitialized execution space");
-    }
+      if ( alloc_prop::initialize &&
+          ! alloc_prop::execution_space::impl_is_initialized()
+      ) {
+          // If initializing view data then
+          // the execution space must be initialized.
+          Kokkos::Impl::throw_runtime_exception("Constructing OffsetView and initializing data with uninitialized execution space");
+      }
 
-    // Copy the input allocation properties with possibly defaulted properties
-    alloc_prop prop( arg_prop );
+      // Copy the input allocation properties with possibly defaulted properties
+      alloc_prop prop( arg_prop );
 
-    //------------------------------------------------------------
+      //------------------------------------------------------------
 #if defined( KOKKOS_ENABLE_CUDA )
-    // If allocating in CudaUVMSpace must fence before and after
-    // the allocation to protect against possible concurrent access
-    // on the CPU and the GPU.
-    // Fence using the trait's executon space (which will be Kokkos::Cuda)
-    // to avoid incomplete type errors from usng Kokkos::Cuda directly.
-    if ( std::is_same< Kokkos::CudaUVMSpace , typename traits::device_type::memory_space >::value ) {
-        traits::device_type::memory_space::execution_space::fence();
-    }
+      // If allocating in CudaUVMSpace must fence before and after
+      // the allocation to protect against possible concurrent access
+      // on the CPU and the GPU.
+      // Fence using the trait's executon space (which will be Kokkos::Cuda)
+      // to avoid incomplete type errors from usng Kokkos::Cuda directly.
+      if ( std::is_same< Kokkos::CudaUVMSpace , typename traits::device_type::memory_space >::value ) {
+          traits::device_type::memory_space::execution_space::fence();
+      }
 #endif
-    //------------------------------------------------------------
+      //------------------------------------------------------------
 
-    Kokkos::Impl::SharedAllocationRecord<> *
-    record = m_map.allocate_shared( prop , arg_layout );
+      Kokkos::Impl::SharedAllocationRecord<> *
+      record = m_map.allocate_shared( prop , arg_layout );
 
-    //------------------------------------------------------------
+      //------------------------------------------------------------
 #if defined( KOKKOS_ENABLE_CUDA )
-    if ( std::is_same< Kokkos::CudaUVMSpace , typename traits::device_type::memory_space >::value ) {
-        traits::device_type::memory_space::execution_space::fence();
-    }
+      if ( std::is_same< Kokkos::CudaUVMSpace , typename traits::device_type::memory_space >::value ) {
+          traits::device_type::memory_space::execution_space::fence();
+      }
 #endif
-    //------------------------------------------------------------
+      //------------------------------------------------------------
 
-    // Setup and initialization complete, start tracking
-    m_track.assign_allocated_record_to_uninitialized( record );
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void assign_data( pointer_type arg_data )
-  {
-    m_track.clear();
-    m_map.assign_data( arg_data );
-  }
-
-  // Wrap memory according to properties and array layout
-  template< class ... P >
-  explicit KOKKOS_INLINE_FUNCTION
-  View( const Impl::ViewCtorProp< P ... > & arg_prop
-        , typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer
-        , typename traits::array_layout
-        >::type const & arg_layout
-  )
-  : m_track() // No memory tracking
-  , m_map( arg_prop , arg_layout )
-  {
-    static_assert(
-        std::is_same< pointer_type
-        , typename Impl::ViewCtorProp< P... >::pointer_type
-        >::value ,
-        "Constructing OffsetView to wrap user memory must supply matching pointer type" );
-  }
-
-  // Simple dimension-only layout
-  template< class ... P >
-  explicit inline
-  View( const Impl::ViewCtorProp< P ... > & arg_prop
-        , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer
-        , size_t
-        >::type const arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-  )
-  : View( arg_prop
-          , typename traits::array_layout
-          ( arg_N0 , arg_N1 , arg_N2 , arg_N3
-            , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
-  )
-  {
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
-                                  arg_N4, arg_N5, arg_N6, arg_N7, label());
-#else
-    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
-                                    arg_N4, arg_N5, arg_N6, arg_N7);
-
-#endif
-
-  }
-
-  template< class ... P >
-  explicit KOKKOS_INLINE_FUNCTION
-  View( const Impl::ViewCtorProp< P ... > & arg_prop
-        , typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer
-        , size_t
-        >::type const arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-  )
-  : View( arg_prop
-          , typename traits::array_layout
-          ( arg_N0 , arg_N1 , arg_N2 , arg_N3
-            , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
-  )
-  {
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
-                                  arg_N4, arg_N5, arg_N6, arg_N7, label());
-#else
-    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
-                                    arg_N4, arg_N5, arg_N6, arg_N7);
-
-#endif
-
-  }
-
-  // Allocate with label and layout
-  template< typename Label >
-  explicit inline
-  View( const Label & arg_label
-        , typename std::enable_if<
-        Kokkos::Impl::is_view_label<Label>::value ,
-        typename traits::array_layout >::type const & arg_layout
-  )
-  : View( Impl::ViewCtorProp< std::string >( arg_label ) , arg_layout )
-  {}
-
-  // Allocate label and layout, must disambiguate from subview constructor.
-  template< typename Label >
-  explicit inline
-  View( const Label & arg_label
-        , typename std::enable_if<
-        Kokkos::Impl::is_view_label<Label>::value ,
-        const size_t >::type arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-  )
-  : View( Impl::ViewCtorProp< std::string >( arg_label )
-          , typename traits::array_layout
-          ( arg_N0 , arg_N1 , arg_N2 , arg_N3
-            , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
-  )
-  {
-
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
-                                  arg_N4, arg_N5, arg_N6, arg_N7, label());
-#else
-    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
-                                    arg_N4, arg_N5, arg_N6, arg_N7);
-
-#endif
-
-
-
-  }
-
-  // For backward compatibility
-  explicit inline
-  View( const ViewAllocateWithoutInitializing & arg_prop
-        , const typename traits::array_layout & arg_layout
-  )
-  : View( Impl::ViewCtorProp< std::string , Kokkos::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::WithoutInitializing )
-          , arg_layout
-  )
-  {}
-
-  explicit inline
-  View( const ViewAllocateWithoutInitializing & arg_prop
-        , const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-  )
-  : View( Impl::ViewCtorProp< std::string , Kokkos::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::WithoutInitializing )
-          , typename traits::array_layout
-          ( arg_N0 , arg_N1 , arg_N2 , arg_N3
-            , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
-  )
-  {
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
-                                  arg_N4, arg_N5, arg_N6, arg_N7, label());
-#else
-    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
-                                    arg_N4, arg_N5, arg_N6, arg_N7);
-
-#endif
-
-  }
-
-  //----------------------------------------
-  // Memory span required to wrap these dimensions.
-  static constexpr size_t required_allocation_size(
-      const size_t arg_N0 = 0
-      , const size_t arg_N1 = 0
-      , const size_t arg_N2 = 0
-      , const size_t arg_N3 = 0
-      , const size_t arg_N4 = 0
-      , const size_t arg_N5 = 0
-      , const size_t arg_N6 = 0
-      , const size_t arg_N7 = 0
-  )
-  {
-    return map_type::memory_span(
-        typename traits::array_layout
-        ( arg_N0 , arg_N1 , arg_N2 , arg_N3
-          , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) );
-  }
-
-  explicit KOKKOS_INLINE_FUNCTION
-  View( pointer_type arg_ptr
-        , const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-  )
-  : View( Impl::ViewCtorProp<pointer_type>(arg_ptr)
-          , typename traits::array_layout
-          ( arg_N0 , arg_N1 , arg_N2 , arg_N3
-            , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
-  )
-  {
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
-                                  arg_N4, arg_N5, arg_N6, arg_N7, label());
-#else
-    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
-                                    arg_N4, arg_N5, arg_N6, arg_N7);
-
-#endif
-  }
-
-  explicit KOKKOS_INLINE_FUNCTION
-  View( pointer_type arg_ptr
-        , const typename traits::array_layout & arg_layout
-  )
-  : View( Impl::ViewCtorProp<pointer_type>(arg_ptr) , arg_layout )
-  {
-
-  }
-
-  //----------------------------------------
-  // Shared scratch memory constructor
-
-  static inline
-  size_t
-  shmem_size( const size_t arg_N0 = KOKKOS_INVALID_INDEX,
-              const size_t arg_N1 = KOKKOS_INVALID_INDEX,
-              const size_t arg_N2 = KOKKOS_INVALID_INDEX,
-              const size_t arg_N3 = KOKKOS_INVALID_INDEX,
-              const size_t arg_N4 = KOKKOS_INVALID_INDEX,
-              const size_t arg_N5 = KOKKOS_INVALID_INDEX,
-              const size_t arg_N6 = KOKKOS_INVALID_INDEX,
-              const size_t arg_N7 = KOKKOS_INVALID_INDEX )
-  {
-    if ( is_layout_stride ) {
-        Kokkos::abort( "Kokkos::View::shmem_size(extents...) doesn't work with LayoutStride. Pass a LayoutStride object instead" );
-    }
-    const size_t num_passed_args = Impl::count_valid_integers(arg_N0, arg_N1, arg_N2, arg_N3,
-                                                              arg_N4, arg_N5, arg_N6, arg_N7);
-
-    if ( std::is_same<typename traits::specialize,void>::value && num_passed_args != traits::rank_dynamic ) {
-        Kokkos::abort( "Kokkos::View::shmem_size() rank_dynamic != number of arguments.\n" );
+      // Setup and initialization complete, start tracking
+      m_track.assign_allocated_record_to_uninitialized( record );
     }
 
-    return View::shmem_size(
-        typename traits::array_layout
-        ( arg_N0 , arg_N1 , arg_N2 , arg_N3
-          , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) );
-  }
+    KOKKOS_INLINE_FUNCTION
+    void assign_data( pointer_type arg_data )
+    {
+      m_track.clear();
+      m_map.assign_data( arg_data );
+    }
 
-  static inline
-  size_t shmem_size( typename traits::array_layout const& arg_layout )
-  {
-    return map_type::memory_span( arg_layout );
-  }
-
-  explicit KOKKOS_INLINE_FUNCTION
-  View( const typename traits::execution_space::scratch_memory_space & arg_space
-        , const typename traits::array_layout & arg_layout )
-  : View( Impl::ViewCtorProp<pointer_type>(
-      reinterpret_cast<pointer_type>(
-          arg_space.get_shmem( map_type::memory_span( arg_layout ) ) ) )
-          , arg_layout )
-  {}
-
-  explicit KOKKOS_INLINE_FUNCTION
-  View( const typename traits::execution_space::scratch_memory_space & arg_space
-        , const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
-        , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG )
-  : View( Impl::ViewCtorProp<pointer_type>(
-      reinterpret_cast<pointer_type>(
-          arg_space.get_shmem(
-              map_type::memory_span(
-                  typename traits::array_layout
-                  ( arg_N0 , arg_N1 , arg_N2 , arg_N3
-                    , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) ) ) ) )
+    // Wrap memory according to properties and array layout
+    template< class ... P >
+    explicit KOKKOS_INLINE_FUNCTION
+    View( const Impl::ViewCtorProp< P ... > & arg_prop
+          , typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer
           , typename traits::array_layout
-          ( arg_N0 , arg_N1 , arg_N2 , arg_N3
-            , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
-  )
-  {
+          >::type const & arg_layout
+    )
+    : m_track() // No memory tracking
+    , m_map( arg_prop , arg_layout )
+    {
+      static_assert(
+          std::is_same< pointer_type
+          , typename Impl::ViewCtorProp< P... >::pointer_type
+          >::value ,
+          "Constructing OffsetView to wrap user memory must supply matching pointer type" );
+    }
+
+    // Simple dimension-only layout
+    template< class ... P >
+    explicit inline
+    View( const Impl::ViewCtorProp< P ... > & arg_prop
+          , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer
+          , size_t
+          >::type const arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+    )
+    : View( arg_prop
+            , typename traits::array_layout
+            ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+              , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+    )
+    {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+      Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                                    arg_N4, arg_N5, arg_N6, arg_N7, label());
+#else
+      Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                                      arg_N4, arg_N5, arg_N6, arg_N7);
+
+#endif
+
+    }
+
+    template< class ... P >
+    explicit KOKKOS_INLINE_FUNCTION
+    View( const Impl::ViewCtorProp< P ... > & arg_prop
+          , typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer
+          , size_t
+          >::type const arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+    )
+    : View( arg_prop
+            , typename traits::array_layout
+            ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+              , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+    )
+    {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+      Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                                    arg_N4, arg_N5, arg_N6, arg_N7, label());
+#else
+      Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                                      arg_N4, arg_N5, arg_N6, arg_N7);
+
+#endif
+
+    }
+
+    // Allocate with label and layout
+    template< typename Label >
+    explicit inline
+    View( const Label & arg_label
+          , typename std::enable_if<
+          Kokkos::Impl::is_view_label<Label>::value ,
+          typename traits::array_layout >::type const & arg_layout
+    )
+    : View( Impl::ViewCtorProp< std::string >( arg_label ) , arg_layout )
+    {}
+
+    // Allocate label and layout, must disambiguate from subview constructor.
+    template< typename Label >
+    explicit inline
+    View( const Label & arg_label
+          , typename std::enable_if<
+          Kokkos::Impl::is_view_label<Label>::value ,
+          const size_t >::type arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+    )
+    : View( Impl::ViewCtorProp< std::string >( arg_label )
+            , typename traits::array_layout
+            ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+              , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+    )
+    {
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
-                                  arg_N4, arg_N5, arg_N6, arg_N7, label());
+      Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                                    arg_N4, arg_N5, arg_N6, arg_N7, label());
 #else
-    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
-                                    arg_N4, arg_N5, arg_N6, arg_N7);
+      Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                                      arg_N4, arg_N5, arg_N6, arg_N7);
 
 #endif
-  }
+
+
+
+    }
+
+    // For backward compatibility
+    explicit inline
+    View( const ViewAllocateWithoutInitializing & arg_prop
+          , const typename traits::array_layout & arg_layout
+    )
+    : View( Impl::ViewCtorProp< std::string , Kokkos::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::WithoutInitializing )
+            , arg_layout
+    )
+    {}
+
+    explicit inline
+    View( const ViewAllocateWithoutInitializing & arg_prop
+          , const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+    )
+    : View( Impl::ViewCtorProp< std::string , Kokkos::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::WithoutInitializing )
+            , typename traits::array_layout
+            ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+              , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+    )
+    {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+      Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                                    arg_N4, arg_N5, arg_N6, arg_N7, label());
+#else
+      Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                                      arg_N4, arg_N5, arg_N6, arg_N7);
+
 #endif
 
-  template< typename Label, typename iType >
-  explicit inline
-  OffsetView( const Label & arg_label
-              ,const ilist_type<iType> range0 = KOKKOS_INVALID_INDEX_RANGE
-//              ,typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value , const ilist_type<iType> >::type range1 = KOKKOS_INVALID_INDEX_RANGE
-              ,const ilist_type<iType> range1 = KOKKOS_INVALID_INDEX_RANGE
-              ,const ilist_type<iType> range2 = KOKKOS_INVALID_INDEX_RANGE
-              ,const ilist_type<iType> range3 = KOKKOS_INVALID_INDEX_RANGE
-              ,const ilist_type<iType> range4 = KOKKOS_INVALID_INDEX_RANGE
-              ,const ilist_type<iType> range5 = KOKKOS_INVALID_INDEX_RANGE
-              ,const ilist_type<iType> range6 = KOKKOS_INVALID_INDEX_RANGE
-              ,const ilist_type<iType> range7 = KOKKOS_INVALID_INDEX_RANGE
+    }
 
-  ) : OffsetView( Impl::ViewCtorProp< std::string >( arg_label ),
-                  typename traits::array_layout
-                  ( range0.begin()[1] - range0.begin()[0] + 1, range1.begin()[1] - range1.begin()[0] + 1 ,
-                    range2.begin()[1] - range2.begin()[0] + 1, range3.begin()[1] - range3.begin()[0] + 1,
-                    range4.begin()[1] - range4.begin()[0] + 1, range5.begin()[1] - range5.begin()[0] + 1 ,
-                    range6.begin()[1] - range6.begin()[0] + 1, range7.begin()[1] - range7.begin()[0] + 1 ),
-                    {range0.begin()[0], range1.begin()[0], range2.begin()[0], range3.begin()[0], range4.begin()[0],
-                        range5.begin()[0], range6.begin()[0], range7.begin()[0] })
-  {
+    //----------------------------------------
+    // Memory span required to wrap these dimensions.
+    static constexpr size_t required_allocation_size(
+        const size_t arg_N0 = 0
+        , const size_t arg_N1 = 0
+        , const size_t arg_N2 = 0
+        , const size_t arg_N3 = 0
+        , const size_t arg_N4 = 0
+        , const size_t arg_N5 = 0
+        , const size_t arg_N6 = 0
+        , const size_t arg_N7 = 0
+    )
+    {
+      return map_type::memory_span(
+          typename traits::array_layout
+          ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+            , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) );
+    }
 
-  }
+    explicit KOKKOS_INLINE_FUNCTION
+    View( pointer_type arg_ptr
+          , const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+    )
+    : View( Impl::ViewCtorProp<pointer_type>(arg_ptr)
+            , typename traits::array_layout
+            ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+              , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+    )
+    {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+      Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                                    arg_N4, arg_N5, arg_N6, arg_N7, label());
+#else
+      Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                                      arg_N4, arg_N5, arg_N6, arg_N7);
 
-  template< typename iType, class ... P >
-  explicit KOKKOS_INLINE_FUNCTION
-  OffsetView( const Impl::ViewCtorProp< P ... > & arg_prop
-        ,typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer , typename traits::array_layout >::type const & arg_layout
-        ,const ilist_type<iType> offset_list
-  )
-  : m_track() // No memory tracking
-  , m_map( arg_prop , arg_layout )
-  {
+#endif
+    }
+
+    explicit KOKKOS_INLINE_FUNCTION
+    View( pointer_type arg_ptr
+          , const typename traits::array_layout & arg_layout
+    )
+    : View( Impl::ViewCtorProp<pointer_type>(arg_ptr) , arg_layout )
+    {
+
+    }
+
+    //----------------------------------------
+    // Shared scratch memory constructor
+
+    static inline
+    size_t
+    shmem_size( const size_t arg_N0 = KOKKOS_INVALID_INDEX,
+                const size_t arg_N1 = KOKKOS_INVALID_INDEX,
+                const size_t arg_N2 = KOKKOS_INVALID_INDEX,
+                const size_t arg_N3 = KOKKOS_INVALID_INDEX,
+                const size_t arg_N4 = KOKKOS_INVALID_INDEX,
+                const size_t arg_N5 = KOKKOS_INVALID_INDEX,
+                const size_t arg_N6 = KOKKOS_INVALID_INDEX,
+                const size_t arg_N7 = KOKKOS_INVALID_INDEX )
+    {
+      if ( is_layout_stride ) {
+          Kokkos::abort( "Kokkos::View::shmem_size(extents...) doesn't work with LayoutStride. Pass a LayoutStride object instead" );
+      }
+      const size_t num_passed_args = Impl::count_valid_integers(arg_N0, arg_N1, arg_N2, arg_N3,
+                                                                arg_N4, arg_N5, arg_N6, arg_N7);
+
+      if ( std::is_same<typename traits::specialize,void>::value && num_passed_args != traits::rank_dynamic ) {
+          Kokkos::abort( "Kokkos::View::shmem_size() rank_dynamic != number of arguments.\n" );
+      }
+
+      return View::shmem_size(
+          typename traits::array_layout
+          ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+            , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) );
+    }
+
+    static inline
+    size_t shmem_size( typename traits::array_layout const& arg_layout )
+    {
+      return map_type::memory_span( arg_layout );
+    }
+
+    explicit KOKKOS_INLINE_FUNCTION
+    View( const typename traits::execution_space::scratch_memory_space & arg_space
+          , const typename traits::array_layout & arg_layout )
+    : View( Impl::ViewCtorProp<pointer_type>(
+        reinterpret_cast<pointer_type>(
+            arg_space.get_shmem( map_type::memory_span( arg_layout ) ) ) )
+            , arg_layout )
+    {}
+
+    explicit KOKKOS_INLINE_FUNCTION
+    View( const typename traits::execution_space::scratch_memory_space & arg_space
+          , const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG
+          , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG )
+    : View( Impl::ViewCtorProp<pointer_type>(
+        reinterpret_cast<pointer_type>(
+            arg_space.get_shmem(
+                map_type::memory_span(
+                    typename traits::array_layout
+                    ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+                      , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) ) ) ) )
+            , typename traits::array_layout
+            ( arg_N0 , arg_N1 , arg_N2 , arg_N3
+              , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
+    )
+    {
+
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+      Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                                    arg_N4, arg_N5, arg_N6, arg_N7, label());
+#else
+      Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+                                      arg_N4, arg_N5, arg_N6, arg_N7);
+
+#endif
+    }
+#endif
+
+    template< typename Label, typename iType >
+    explicit inline
+    OffsetView( const Label & arg_label
+                ,const ilist_type<iType> range0 = KOKKOS_INVALID_INDEX_RANGE
+                //              ,typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value , const ilist_type<iType> >::type range1 = KOKKOS_INVALID_INDEX_RANGE
+                ,const ilist_type<iType> range1 = KOKKOS_INVALID_INDEX_RANGE
+                ,const ilist_type<iType> range2 = KOKKOS_INVALID_INDEX_RANGE
+                ,const ilist_type<iType> range3 = KOKKOS_INVALID_INDEX_RANGE
+                ,const ilist_type<iType> range4 = KOKKOS_INVALID_INDEX_RANGE
+                ,const ilist_type<iType> range5 = KOKKOS_INVALID_INDEX_RANGE
+                ,const ilist_type<iType> range6 = KOKKOS_INVALID_INDEX_RANGE
+                ,const ilist_type<iType> range7 = KOKKOS_INVALID_INDEX_RANGE
+
+    ) : OffsetView( Impl::ViewCtorProp< std::string >( arg_label ),
+                    typename traits::array_layout
+                    ( range0.begin()[1] - range0.begin()[0] + 1, range1.begin()[1] - range1.begin()[0] + 1 ,
+                      range2.begin()[1] - range2.begin()[0] + 1, range3.begin()[1] - range3.begin()[0] + 1,
+                      range4.begin()[1] - range4.begin()[0] + 1, range5.begin()[1] - range5.begin()[0] + 1 ,
+                      range6.begin()[1] - range6.begin()[0] + 1, range7.begin()[1] - range7.begin()[0] + 1 ),
+                      {range0.begin()[0], range1.begin()[0], range2.begin()[0], range3.begin()[0], range4.begin()[0],
+                          range5.begin()[0], range6.begin()[0], range7.begin()[0] })
+    {
+
+    }
+
+    template< typename iType, class ... P >
+    explicit KOKKOS_INLINE_FUNCTION
+    OffsetView( const Impl::ViewCtorProp< P ... > & arg_prop
+                ,typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer , typename traits::array_layout >::type const & arg_layout
+                ,const ilist_type<iType> offset_list
+    )
+    : m_track() // No memory tracking
+    , m_map( arg_prop , arg_layout )
+    {
 
 
-    for (size_t i = 0; i < offset_list.size(); ++i) {
+      for (size_t i = 0; i < offset_list.size(); ++i) {
+          m_begins[i] = offset_list.begin()[i];
+      }
+      static_assert(
+          std::is_same< pointer_type
+          , typename Impl::ViewCtorProp< P... >::pointer_type
+          >::value ,
+          "When constructing OffsetView to wrap user memory, you must supply matching pointer type" );
+    }
+
+    template< typename iType, class ... P >
+    explicit inline
+    OffsetView( const Impl::ViewCtorProp< P ... > & arg_prop
+                , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer, typename traits::array_layout>::type const & arg_layout
+                ,const std::initializer_list<iType> offset_list
+    )
+    : m_track()
+    , m_map()
+
+    {
+
+      for(size_t i = 0; i < Rank; ++i)
         m_begins[i] = offset_list.begin()[i];
-    }
-    static_assert(
-        std::is_same< pointer_type
-        , typename Impl::ViewCtorProp< P... >::pointer_type
-        >::value ,
-        "Constructing OffsetView to wrap user memory must supply matching pointer type" );
-  }
 
-  template< typename iType, class ... P >
-  explicit inline
-  OffsetView( const Impl::ViewCtorProp< P ... > & arg_prop
-		  , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer, typename traits::array_layout>::type const & arg_layout
-		  ,const std::initializer_list<iType> offset_list
-  )
-  : m_track()
-  , m_map()
+      // Append layout and spaces if not input
+      typedef Impl::ViewCtorProp< P ... > alloc_prop_input ;
 
-  {
+      // use 'std::integral_constant<unsigned,I>' for non-types
+      // to avoid duplicate class error.
+      typedef Impl::ViewCtorProp
+          < P ..., typename std::conditional < alloc_prop_input::has_label
+          , std::integral_constant<unsigned,0>, typename std::string >::type
+          , typename std::conditional
+      < alloc_prop_input::has_memory_space
+      , std::integral_constant<unsigned,1>
+      , typename traits::device_type::memory_space
+      >::type
+      , typename std::conditional
+      < alloc_prop_input::has_execution_space
+      , std::integral_constant<unsigned,2>
+      , typename traits::device_type::execution_space
+      >::type
+      > alloc_prop ;
 
-	  Impl::check_number_of_offsets(offset_list, Rank);
+      static_assert( traits::is_managed
+                     , "OffsetView allocation constructor requires managed memory" );
 
-	  for(size_t i = 0; i < Rank; ++i)
-		  m_begins[i] = offset_list.begin()[i];
+      if ( alloc_prop::initialize && ! alloc_prop::execution_space::impl_is_initialized()
 
-	  // Append layout and spaces if not input
-	  typedef Impl::ViewCtorProp< P ... > alloc_prop_input ;
+      ) {
+          // If initializing view data then
+          // the execution space must be initialized.
+          Kokkos::Impl::throw_runtime_exception("Constructing OffsetView and initializing data with uninitialized execution space");
+      }
 
-	  // use 'std::integral_constant<unsigned,I>' for non-types
-	  // to avoid duplicate class error.
-	  typedef Impl::ViewCtorProp
-			  < P ...
-			  , typename std::conditional
-			  < alloc_prop_input::has_label
-			  , std::integral_constant<unsigned,0>
-	  , typename std::string
-	  >::type
-	  , typename std::conditional
-	  < alloc_prop_input::has_memory_space
-	  , std::integral_constant<unsigned,1>
-	  , typename traits::device_type::memory_space
-	  >::type
-	  , typename std::conditional
-	  < alloc_prop_input::has_execution_space
-	  , std::integral_constant<unsigned,2>
-	  , typename traits::device_type::execution_space
-	  >::type
-	  > alloc_prop ;
+      // Copy the input allocation properties with possibly defaulted properties
+      alloc_prop prop( arg_prop );
 
-	  static_assert( traits::is_managed
-			  , "OffsetView allocation constructor requires managed memory" );
+      //------------------------------------------------------------
+#if defined( KOKKOS_ENABLE_CUDA )
+      // If allocating in CudaUVMSpace must fence before and after
+      // the allocation to protect against possible concurrent access
+      // on the CPU and the GPU.
+      // Fence using the trait's executon space (which will be Kokkos::Cuda)
+      // to avoid incomplete type errors from usng Kokkos::Cuda directly.
+      if ( std::is_same< Kokkos::CudaUVMSpace , typename traits::device_type::memory_space >::value ) {
+          traits::device_type::memory_space::execution_space::fence();
+      }
+#endif
+      //------------------------------------------------------------
 
-	  if ( alloc_prop::initialize &&
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-           ! alloc_prop::execution_space::is_initialized()
+      Kokkos::Impl::SharedAllocationRecord<> *
+      record = m_map.allocate_shared( prop , arg_layout );
+
+      //------------------------------------------------------------
+#if defined( KOKKOS_ENABLE_CUDA )
+      if ( std::is_same< Kokkos::CudaUVMSpace , typename traits::device_type::memory_space >::value ) {
+          traits::device_type::memory_space::execution_space::fence();
+      }
+#endif
+      //------------------------------------------------------------
+
+      // Setup and initialization complete, start tracking
+      m_track.assign_allocated_record_to_uninitialized( record );
+
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+          Impl::runtime_check_rank_host(traits::rank_dynamic, Rank, offset_list, label());
 #else
-           ! alloc_prop::execution_space::impl_is_initialized()
+          Impl::runtime_check_rank_device(traits::rank_dynamic, Rank, offset_list);
+
 #endif
-	  ) {
-		  // If initializing view data then
-		  // the execution space must be initialized.
-		  Kokkos::Impl::throw_runtime_exception("Constructing OffsetView and initializing data with uninitialized execution space");
-	  }
 
-	  // Copy the input allocation properties with possibly defaulted properties
-	  alloc_prop prop( arg_prop );
+    }
 
-	  //------------------------------------------------------------
-#if defined( KOKKOS_ENABLE_CUDA )
-	  // If allocating in CudaUVMSpace must fence before and after
-	  // the allocation to protect against possible concurrent access
-	  // on the CPU and the GPU.
-	  // Fence using the trait's executon space (which will be Kokkos::Cuda)
-	  // to avoid incomplete type errors from usng Kokkos::Cuda directly.
-	  if ( std::is_same< Kokkos::CudaUVMSpace , typename traits::device_type::memory_space >::value ) {
-		  traits::device_type::memory_space::execution_space::fence();
-	  }
-#endif
-	  //------------------------------------------------------------
-
-	  Kokkos::Impl::SharedAllocationRecord<> *
-	  record = m_map.allocate_shared( prop , arg_layout );
-
-	  //------------------------------------------------------------
-#if defined( KOKKOS_ENABLE_CUDA )
-	  if ( std::is_same< Kokkos::CudaUVMSpace , typename traits::device_type::memory_space >::value ) {
-		  traits::device_type::memory_space::execution_space::fence();
-	  }
-#endif
-	  //------------------------------------------------------------
-
-	  // Setup and initialization complete, start tracking
-	  m_track.assign_allocated_record_to_uninitialized( record );
-  }
   };
 
 
-/** \brief Temporary free function rank()
- *         until rank() is implemented
- *         in the View
- */
-template < typename D , class ... P >
-KOKKOS_INLINE_FUNCTION
-constexpr unsigned rank( const OffsetView<D , P...> & V ) { return V.Rank; } //Temporary until added to view
+  /** \brief Temporary free function rank()
+   *         until rank() is implemented
+   *         in the View
+   */
+  template < typename D , class ... P >
+  KOKKOS_INLINE_FUNCTION
+  constexpr unsigned rank( const OffsetView<D , P...> & V ) { return V.Rank; } //Temporary until added to view
 
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
 
 #if 0
-template< class D, class ... P , class ... Args >
-KOKKOS_INLINE_FUNCTION
-typename Kokkos::Impl::ViewMapping
-< void /* deduce subview type from source view traits */
-, ViewTraits< D , P... >
-, Args ...
->::type
-subview( const View< D, P... > & src , Args ... args )
-{
-  static_assert( View< D , P... >::Rank == sizeof...(Args) ,
-                 "subview requires one argument for each source View rank" );
+  template< class D, class ... P , class ... Args >
+  KOKKOS_INLINE_FUNCTION
+  typename Kokkos::Impl::ViewMapping
+  < void /* deduce subview type from source view traits */
+  , ViewTraits< D , P... >
+  , Args ...
+  >::type
+  subview( const View< D, P... > & src , Args ... args )
+  {
+    static_assert( View< D , P... >::Rank == sizeof...(Args) ,
+                   "subview requires one argument for each source View rank" );
 
-  return typename
-      Kokkos::Impl::ViewMapping
-      < void /* deduce subview type from source view traits */
-      , ViewTraits< D , P ... >
-  , Args ... >::type( src , args ... );
-}
+    return typename
+        Kokkos::Impl::ViewMapping
+        < void /* deduce subview type from source view traits */
+        , ViewTraits< D , P ... >
+    , Args ... >::type( src , args ... );
+  }
 
-template< class MemoryTraits , class D, class ... P , class ... Args >
-KOKKOS_INLINE_FUNCTION
-typename Kokkos::Impl::ViewMapping
-< void /* deduce subview type from source view traits */
-, ViewTraits< D , P... >
-, Args ...
->::template apply< MemoryTraits >::type
-subview( const View< D, P... > & src , Args ... args )
-{
-  static_assert( View< D , P... >::Rank == sizeof...(Args) ,
-                 "subview requires one argument for each source View rank" );
+  template< class MemoryTraits , class D, class ... P , class ... Args >
+  KOKKOS_INLINE_FUNCTION
+  typename Kokkos::Impl::ViewMapping
+  < void /* deduce subview type from source view traits */
+  , ViewTraits< D , P... >
+  , Args ...
+  >::template apply< MemoryTraits >::type
+  subview( const View< D, P... > & src , Args ... args )
+  {
+    static_assert( View< D , P... >::Rank == sizeof...(Args) ,
+                   "subview requires one argument for each source View rank" );
 
-  return typename
-      Kokkos::Impl::ViewMapping
-      < void /* deduce subview type from source view traits */
-      , ViewTraits< D , P ... >
-  , Args ... >
-  ::template apply< MemoryTraits >
-  ::type( src , args ... );
-}
+    return typename
+        Kokkos::Impl::ViewMapping
+        < void /* deduce subview type from source view traits */
+        , ViewTraits< D , P ... >
+    , Args ... >
+    ::template apply< MemoryTraits >
+    ::type( src , args ... );
+  }
 #endif
 } /* namespace Kokkos */
 
@@ -1421,7 +1460,7 @@ namespace Kokkos {
         lhs.m_begins[5] == rhs.m_begins[5] &&
         lhs.m_begins[6] == rhs.m_begins[6] &&
         lhs.m_begins[7] == rhs.m_begins[7]
-        ;
+                                        ;
       }
 
   template< class LT , class ... LP , class RT , class ... RP >
