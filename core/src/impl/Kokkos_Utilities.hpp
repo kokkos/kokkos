@@ -411,6 +411,16 @@ struct inclusive_scan_integer_sequence
 
 }} // namespace Kokkos::Impl
 
+namespace Kokkos {
+
+template <class T>
+KOKKOS_INLINE_FUNCTION void swap(T& a, T& b) {
+  T c{std::move(a)};
+  a = std::move(b);
+  b = std::move(c);
+}
+
+}
 
 #endif //KOKKOS_CORE_IMPL_UTILITIES_HPP
 
