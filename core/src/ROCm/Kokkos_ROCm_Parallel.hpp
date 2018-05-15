@@ -1128,6 +1128,39 @@ public:
   //----------------------------------------
 };
 
+template< class FunctorType , class ReturnType , class... Traits >
+class ParallelScanWithTotal< FunctorType , Kokkos::RangePolicy< Traits... >,
+                             ReturnType, Kokkos::Experimental::ROCm >
+{
+private:
+
+  typedef Kokkos::RangePolicy< Traits... > Policy;
+  typedef typename Policy::work_tag Tag;
+  typedef Kokkos::Impl::FunctorValueTraits< FunctorType, Tag>  ValueTraits;
+
+public:
+
+  //----------------------------------------
+
+  inline
+  ParallelScanWithTotal( const FunctorType & f
+              , const Policy      & policy 
+              , ReturnType        & arg_returnvalue)
+  {
+    const auto len = policy.end()-policy.begin();
+
+
+    if(len==0) return;
+
+    scan_enqueue<Tag,ReturnType>(len, f, arg_returnvalue, [](hc::tiled_index<1> idx, int, int) { return idx.global[0]; });
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void execute() const {}
+
+  //----------------------------------------
+};
+
 template< class FunctorType , class... Traits>
 class ParallelScan< FunctorType , Kokkos::TeamPolicy< Traits... >, Kokkos::Experimental::ROCm >
 {

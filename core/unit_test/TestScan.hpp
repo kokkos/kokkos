@@ -94,11 +94,9 @@ struct TestScan {
 
     Kokkos::parallel_scan( N , *this );
 
-#ifndef KOKKOS_ENABLE_ROCM
     long long int total = 0;
     Kokkos::parallel_scan( N, *this, total );
     run_check( size_t( ( N+1 )*N/2 ), size_t( total ) );
-#endif
   }
 
   TestScan( const WorkSpec & Start , const WorkSpec & N )
