@@ -90,7 +90,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
 # Compiles but runtime Segfaults:
 #        OBJ_ROCM += TestROCm_MDRange_a.o TestROCm_MDRange_b.o TestROCm_MDRange_c.o TestROCm_MDRange_d.o TestROCm_MDRange_e.o
 # rocm.memory_pool
-#	OBJ_ROCM += TestROCm_Reductions.o 
+	OBJ_ROCM += TestROCm_Reductions.o
 	OBJ_ROCM += TestROCm_Reducers_a.o TestROCm_Reducers_b.o TestROCm_Reducers_c.o TestROCm_Reducers_d.o
         OBJ_ROCM += TestROCm_Scan.o
         OBJ_ROCM += TestROCm_SharedAlloc.o
