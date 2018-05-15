@@ -84,12 +84,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
 	OBJ_ROCM += TestROCm_AtomicOperations_int.o TestROCm_AtomicOperations_unsignedint.o TestROCm_AtomicOperations_longint.o 
 	OBJ_ROCM += TestROCm_AtomicOperations_unsignedlongint.o TestROCm_AtomicOperations_longlongint.o TestROCm_AtomicOperations_double.o TestROCm_AtomicOperations_float.o
         OBJ_ROCM += TestROCm_Atomics.o
-# complex failing
         OBJ_ROCM += TestROCm_AtomicViews.o
         OBJ_ROCM += TestROCm_Other.o
-# Compiles but runtime Segfaults:
-#        OBJ_ROCM += TestROCm_MDRange_a.o TestROCm_MDRange_b.o TestROCm_MDRange_c.o TestROCm_MDRange_d.o TestROCm_MDRange_e.o
-# rocm.memory_pool
+        OBJ_ROCM += TestROCm_MDRange_a.o TestROCm_MDRange_b.o TestROCm_MDRange_c.o TestROCm_MDRange_d.o TestROCm_MDRange_e.o
 	OBJ_ROCM += TestROCm_Reductions.o
 	OBJ_ROCM += TestROCm_Reducers_a.o TestROCm_Reducers_b.o TestROCm_Reducers_c.o TestROCm_Reducers_d.o
         OBJ_ROCM += TestROCm_Scan.o
