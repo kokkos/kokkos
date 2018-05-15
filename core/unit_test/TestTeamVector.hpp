@@ -739,14 +739,11 @@ bool test_scalar( int nteams, int team_size, int test ) {
                           functor_vec_red< Scalar, ExecutionSpace >( d_flag ) );
   }
   else if ( test == 1 ) {
-    // WORKAROUND ROCM/CUDA
+    // WORKAROUND CUDA
     #if defined(KOKKOS_ENABLE_CUDA)
     #if defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND) || defined(KOKKOS_ARCH_PASCAL)
     if(!std::is_same<ExecutionSpace,Kokkos::Cuda>::value)
     #endif
-    #endif
-    #if defined(KOKKOS_ENABLE_ROCM)
-    if(!std::is_same<ExecutionSpace,Kokkos::Experimental::ROCm>::value)
     #endif
     Kokkos::parallel_for( Kokkos::TeamPolicy< ExecutionSpace >( nteams, team_size, 8 ),
                           functor_vec_red_reducer< Scalar, ExecutionSpace >( d_flag ) );
@@ -776,10 +773,6 @@ bool test_scalar( int nteams, int team_size, int test ) {
                           functor_team_reduce< Scalar, ExecutionSpace >( d_flag ) );
   }
   else if ( test == 7 ) {
-    // WORKAROUND ROCM
-    #if defined(KOKKOS_ENABLE_ROCM)
-    if(!std::is_same<ExecutionSpace,Kokkos::Experimental::ROCm>::value)
-    #endif
     Kokkos::parallel_for( Kokkos::TeamPolicy< ExecutionSpace >( nteams, team_size ),
                           functor_team_reduce_reducer< Scalar, ExecutionSpace >( d_flag ) );
   }
@@ -792,10 +785,6 @@ bool test_scalar( int nteams, int team_size, int test ) {
                           functor_team_vector_reduce< Scalar, ExecutionSpace >( d_flag ) );
   }
   else if ( test == 10 ) {
-    // WORKAROUND ROCM
-    #if defined(KOKKOS_ENABLE_ROCM)
-    if(!std::is_same<ExecutionSpace,Kokkos::Experimental::ROCm>::value)
-    #endif
     Kokkos::parallel_for( Kokkos::TeamPolicy< ExecutionSpace >( nteams, team_size, 8 ),
                           functor_team_vector_reduce_reducer< Scalar, ExecutionSpace >( d_flag ) );
   }

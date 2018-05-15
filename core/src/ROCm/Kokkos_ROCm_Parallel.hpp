@@ -487,6 +487,7 @@ public:
 #endif
       }
       m_idx.barrier.wait();
+      reducer.reference() = buffer[0];
     }
 
     /** \brief  Intra-team vector reduce 
@@ -541,19 +542,19 @@ public:
     }
 
   template< typename ReducerType >
-  KOKKOS_INLINE_FUNCTION static
+  KOKKOS_INLINE_FUNCTION
   typename std::enable_if< is_reducer< ReducerType >::value >::type
-  vector_reduce( ReducerType const & reducer )
+  vector_reduce( ReducerType const & reducer ) const
     {
       #ifdef __HCC_ACCELERATOR__
-      if(blockDim_x == 1) return;
+      if(m_vector_length == 1) return;
 
       // Intra vector lane shuffle reduction:
       typename ReducerType::value_type tmp ( reducer.reference() );
 
-      for ( int i = blockDim_x ; ( i >>= 1 ) ; ) {
-        shfl_down( reducer.reference() , i , blockDim_x );
-        if ( (int)threadIdx_x < i ) { reducer.join( tmp , reducer.reference() ); }
+      for ( int i = m_vector_length ; ( i >>= 1 ) ; ) {
+        reducer.reference() = shfl_down( tmp , i , m_vector_length );
+        if ( (int)vector_rank() < i ) { reducer.join( tmp , reducer.reference() ); }
       }
 
       // Broadcast from root lane to all other lanes.
@@ -561,7 +562,7 @@ public:
       // because floating point summation is not associative
       // and thus different threads could have different results.
 
-      shfl( reducer.reference() , 0 , blockDim_x );
+      reducer.reference() = shfl( tmp , 0 , m_vector_length );
       #endif
     }
 
@@ -847,7 +848,7 @@ public:
 
       hc::extent< 1 > flat_extent( total_size );
 
-      hc::tiled_extent< 1 > team_extent = flat_extent.tile(team_size*vector_length);
+      hc::tiled_extent< 1 > team_extent = flat_extent.tile(vector_length*team_size);
       hc::parallel_for_each( team_extent , [=](hc::tiled_index<1> idx) [[hc]]
       {
         rocm_invoke<typename Policy::work_tag>(f, typename Policy::member_type(idx, league_size, team_size, shared, shared_size, scratch_size0, scratch, scratch_size1,vector_length));
@@ -1398,22 +1399,17 @@ void parallel_for(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::ROCmTe
  * val is performed and put into result. This functionality requires C++11 support.*/
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
-void parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::ROCmTeamMember>& loop_boundaries,
+typename std::enable_if< ! Kokkos::is_reducer< ValueType >::value >::type
+parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::ROCmTeamMember>& loop_boundaries,
                      const Lambda & lambda, ValueType& result) {
 
-  result = ValueType();
+  Kokkos::Sum<ValueType> reducer(result);
+  reducer.init( reducer.reference() );
 
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
-    ValueType tmp = ValueType();
-    lambda(i,tmp);
-    result+=tmp;
+    lambda(i,reducer.reference());
   }
-  result = loop_boundaries.thread.team_reduce(result,
-                                              Impl::JoinAdd<ValueType>());
-//  Impl::rocm_intra_workgroup_reduction( loop_boundaries.thread, result,
-//               Impl::JoinAdd<ValueType>());
-//  Impl::rocm_inter_workgroup_reduction( loop_boundaries.thread, result,
-//               Impl::JoinAdd<ValueType>());
+  loop_boundaries.thread.team_reduce(reducer);
 }
 
 /** \brief  Inter-thread thread range parallel_reduce. Executes lambda(iType i, ValueType & val) for each i=0..N-1.
@@ -1422,7 +1418,8 @@ void parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::ROC
  * val is performed and put into result. This functionality requires C++11 support.*/
 template< typename iType, class Lambda, typename ReducerType >
 KOKKOS_INLINE_FUNCTION
-void parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::ROCmTeamMember>& loop_boundaries,
+typename std::enable_if< Kokkos::is_reducer< ReducerType >::value >::type
+parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::ROCmTeamMember>& loop_boundaries,
                      const Lambda & lambda, ReducerType const & reducer) {
   reducer.init( reducer.reference() );
 
@@ -1487,7 +1484,8 @@ void parallel_for(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ROCm
  * val is performed and put into result. This functionality requires C++11 support.*/
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
-void parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ROCmTeamMember >&
+typename std::enable_if< !Kokkos::is_reducer< ValueType >::value >::type 
+parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ROCmTeamMember >&
       loop_boundaries, const Lambda & lambda, ValueType& result) {
   result = ValueType();
 
@@ -1525,7 +1523,8 @@ void parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::R
  * val is performed and put into result. This functionality requires C++11 support.*/
 template< typename iType, class Lambda, typename ReducerType >
 KOKKOS_INLINE_FUNCTION
-void parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ROCmTeamMember >&
+typename std::enable_if< Kokkos::is_reducer< ReducerType >::value >::type
+parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ROCmTeamMember >&
       loop_boundaries, const Lambda & lambda, ReducerType const & reducer) {
   reducer.init( reducer.reference() );
 
