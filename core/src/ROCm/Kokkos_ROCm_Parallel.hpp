@@ -992,8 +992,14 @@ public:
       const int scratch_size0 = policy.scratch_size(0,team_size);
       const int scratch_size1 = policy.scratch_size(1,team_size);
       const int total_size = league_size * team_size ;
-
-      if(total_size == 0) return;
+      
+      typedef Kokkos::Impl::FunctorValueInit< FunctorType, typename Policy::work_tag > ValueInit ;
+      if(total_size==0) {
+        if (result_view.data()) {
+           ValueInit::init( f , result_view.data() );
+        }
+        return;
+      }
 
       const int reduce_size = ValueTraits::value_size( f );
       const int shared_size = FunctorTeamShmemSize< FunctorType >::value( f , team_size );
@@ -1042,7 +1048,16 @@ public:
       const int vector_length = policy.vector_length();
       const int total_size = league_size * team_size;
 
-      if(total_size == 0) return;
+      typedef Kokkos::Impl::FunctorValueInit< ReducerType, typename Policy::work_tag > ValueInit ;
+      typedef Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value,
+                                   FunctorType, ReducerType> ReducerConditional;
+      if(total_size==0) {
+        if (reducer.view().data()) {
+           ValueInit::init( ReducerConditional::select(f,reducer), 
+                            reducer.view().data() );
+        }
+        return;
+      }
 
       const int reduce_size = ValueTraits::value_size( f );
       const int shared_size = FunctorTeamShmemSize< FunctorType >::value( f , team_size );

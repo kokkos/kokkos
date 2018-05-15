@@ -107,7 +107,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
         OBJ_ROCM += TestROCm_SubView_c12.o
         OBJ_ROCM += TestROCm_Team.o
 # compile fails / compiler segfaults
-        #OBJ_ROCM += TestROCm_TeamReductionScan.o
+        OBJ_ROCM += TestROCm_TeamReductionScan.o
 # compile fails
         OBJ_ROCM += TestROCm_TeamScratch.o
         OBJ_ROCM += TestROCm_ViewAPI_a.o TestROCm_ViewAPI_b.o TestROCm_ViewAPI_c.o TestROCm_ViewAPI_d.o TestROCm_ViewAPI_e.o
@@ -116,11 +116,11 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
         OBJ_ROCM += TestROCm_ViewMapping_subview.o
         OBJ_ROCM += TestROCmHostPinned_ViewAPI_a.o TestROCmHostPinned_ViewAPI_b.o TestROCmHostPinned_ViewAPI_c.o TestROCmHostPinned_ViewAPI_d.o TestROCmHostPinned_ViewAPI_e.o
         OBJ_ROCM += TestROCmHostPinned_View_64bit.o
-	    OBJ_ROCM += TestROCmHostPinned_ViewMapping_a.o 
-	    OBJ_ROCM += TestROCmHostPinned_ViewMapping_b.o 
-	    OBJ_ROCM += TestROCmHostPinned_ViewMapping_subview.o
+        OBJ_ROCM += TestROCmHostPinned_ViewMapping_a.o 
+        OBJ_ROCM += TestROCmHostPinned_ViewMapping_b.o 
+        OBJ_ROCM += TestROCmHostPinned_ViewMapping_subview.o
         OBJ_ROCM += TestROCm_ViewOfClass.o
-	    OBJ_ROCM += TestROCm_Spaces.o
+        OBJ_ROCM += TestROCm_Spaces.o
      
         TARGETS += KokkosCore_UnitTest_ROCm
         TEST_TARGETS += test-rocm
