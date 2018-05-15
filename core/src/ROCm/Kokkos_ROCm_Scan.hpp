@@ -135,7 +135,8 @@ void scan_enqueue(
       ValueJoin::join(f, &result_cpu[i], &result_cpu[i-1]);
 
     copy(result_cpu.data(),result);
-    hc::parallel_for_each(hc::extent<1>(len).tile(td.tile_size), [&,f,len,td](hc::tiled_index<1> t_idx) [[hc]] 
+    size_t launch_len = (((len - 1) / td.tile_size) + 1) * td.tile_size;
+    hc::parallel_for_each(hc::extent<1>(launch_len).tile(td.tile_size), [&,f,len,td](hc::tiled_index<1> t_idx) [[hc]] 
     {
 //        const auto local = t_idx.local[0];
         const auto global = t_idx.global[0];

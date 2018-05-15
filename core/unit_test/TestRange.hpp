@@ -180,9 +180,11 @@ struct TestRange {
 
     Kokkos::parallel_scan( "TestKernelScan", Kokkos::RangePolicy< ExecSpace, ScheduleType, OffsetTag>( 0, N ), *this );
 
+    #ifndef KOKKOS_ENABLE_ROCM
     int total = 0;
     Kokkos::parallel_scan( "TestKernelScanWithTotal", Kokkos::RangePolicy< ExecSpace, ScheduleType, OffsetTag>( 0, N ), *this, total );
     ASSERT_EQ( size_t( ( N - 1 ) * ( N ) / 2 ), size_t( total ) );// sum( 0 .. N-1 )
+    #endif
   }
 
   KOKKOS_INLINE_FUNCTION
