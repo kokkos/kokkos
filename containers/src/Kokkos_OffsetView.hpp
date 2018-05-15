@@ -37,7 +37,7 @@ namespace Kokkos {
   using IndexRange  = Kokkos::Array<iType, 2>;
 
 
-  using min_index_type = std::initializer_list<int64_t>;
+  using index_list_type = std::initializer_list<int64_t>;
 
 
   //  template <typename iType,
@@ -51,7 +51,7 @@ namespace Kokkos {
 
 KOKKOS_INLINE_FUNCTION
 void runtime_check_rank_host(const size_t rank_dynamic, const size_t rank,
-                               const min_index_type minIndices, const std::string & label)
+                               const index_list_type minIndices, const std::string & label)
     {
   bool isBad = false;
       std::string message = "Kokkos::OffsetView ERROR: for OffsetView labeled '" + label + "':";
@@ -77,7 +77,7 @@ void runtime_check_rank_host(const size_t rank_dynamic, const size_t rank,
 
 KOKKOS_INLINE_FUNCTION
 void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
-                               const min_index_type minIndices)
+                               const index_list_type minIndices)
     {
       if (rank_dynamic != rank) {
           Kokkos::abort("The full rank of an OffsetView must be the same as the dynamic rank.");
@@ -1264,15 +1264,15 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     template< typename Label>
     explicit inline
     OffsetView( const Label & arg_label
-                ,typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value , const min_index_type >::type
+                ,typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value , const index_list_type >::type
                                       range0 = KOKKOS_INVALID_INDEX_RANGE
-                ,const min_index_type range1 = KOKKOS_INVALID_INDEX_RANGE
-                ,const min_index_type range2 = KOKKOS_INVALID_INDEX_RANGE
-                ,const min_index_type range3 = KOKKOS_INVALID_INDEX_RANGE
-                ,const min_index_type range4 = KOKKOS_INVALID_INDEX_RANGE
-                ,const min_index_type range5 = KOKKOS_INVALID_INDEX_RANGE
-                ,const min_index_type range6 = KOKKOS_INVALID_INDEX_RANGE
-                ,const min_index_type range7 = KOKKOS_INVALID_INDEX_RANGE
+                ,const index_list_type range1 = KOKKOS_INVALID_INDEX_RANGE
+                ,const index_list_type range2 = KOKKOS_INVALID_INDEX_RANGE
+                ,const index_list_type range3 = KOKKOS_INVALID_INDEX_RANGE
+                ,const index_list_type range4 = KOKKOS_INVALID_INDEX_RANGE
+                ,const index_list_type range5 = KOKKOS_INVALID_INDEX_RANGE
+                ,const index_list_type range6 = KOKKOS_INVALID_INDEX_RANGE
+                ,const index_list_type range7 = KOKKOS_INVALID_INDEX_RANGE
 
     ) : OffsetView( Impl::ViewCtorProp< std::string >( arg_label ),
                     typename traits::array_layout
@@ -1289,7 +1289,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     template< class ViewType>
     explicit KOKKOS_INLINE_FUNCTION
     OffsetView( const ViewType & view
-                , typename std::enable_if<Kokkos::is_view<ViewType>::value , const min_index_type >::type
+                , typename std::enable_if<Kokkos::is_view<ViewType>::value , const index_list_type >::type
                  minIndices) :
                 m_track(view.m_track), m_map(view.m_map){
 
@@ -1310,7 +1310,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     explicit KOKKOS_INLINE_FUNCTION
     OffsetView( const Impl::ViewCtorProp< P ... > & arg_prop
                 ,typename std::enable_if< Impl::ViewCtorProp< P... >::has_pointer , typename traits::array_layout >::type const & arg_layout
-                ,const min_index_type minIndices
+                ,const index_list_type minIndices
     )
     : m_track() // No memory tracking
     , m_map( arg_prop , arg_layout )
@@ -1331,7 +1331,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     explicit inline
     OffsetView( const Impl::ViewCtorProp< P ... > & arg_prop
                 , typename std::enable_if< ! Impl::ViewCtorProp< P... >::has_pointer , typename traits::array_layout>::type const & arg_layout
-                ,const min_index_type minIndices
+                ,const index_list_type minIndices
     )
     : m_track()
     , m_map()
