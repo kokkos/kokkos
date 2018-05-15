@@ -138,28 +138,28 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
   public:
     //----------------------------------------
     /** \brief  Compatible view of array of scalar types */
-    typedef View< typename traits::scalar_array_type ,
+    typedef OffsetView< typename traits::scalar_array_type ,
         typename traits::array_layout ,
         typename traits::device_type ,
         typename traits::memory_traits >
     array_type ;
 
     /** \brief  Compatible view of const data type */
-    typedef View< typename traits::const_data_type ,
+    typedef OffsetView< typename traits::const_data_type ,
         typename traits::array_layout ,
         typename traits::device_type ,
         typename traits::memory_traits >
     const_type ;
 
     /** \brief  Compatible view of non-const data type */
-    typedef View< typename traits::non_const_data_type ,
+    typedef OffsetView< typename traits::non_const_data_type ,
         typename traits::array_layout ,
         typename traits::device_type ,
         typename traits::memory_traits >
     non_const_type ;
 
     /** \brief  Compatible HostMirror view */
-    typedef View< typename traits::non_const_data_type ,
+    typedef OffsetView< typename traits::non_const_data_type ,
         typename traits::array_layout ,
         typename traits::host_mirror_space >
     HostMirror ;
@@ -789,6 +789,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
       return *this ;
     }
 
+    //interoperability with View
     template<class ViewType>
     KOKKOS_INLINE_FUNCTION
     OffsetView & operator = ( const ViewType & rhs ) {
@@ -809,6 +810,37 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
       return *this ;
     }
 
+  private:
+      typedef View< typename traits::scalar_array_type ,
+          typename traits::array_layout ,
+          typename traits::device_type ,
+          typename traits::memory_traits > view_type;
+  public:
+    KOKKOS_INLINE_FUNCTION
+    view_type view() {
+
+      view_type v(m_track, m_map);
+      return v ;
+    }
+
+    template< class ViewType>
+    explicit KOKKOS_INLINE_FUNCTION
+    OffsetView( const ViewType & view
+                , typename std::enable_if<Kokkos::is_view<ViewType>::value , const index_list_type >::type
+                 minIndices) :
+                m_track(view.m_track), m_map(view.m_map){
+
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+          Impl::runtime_check_rank_host(traits::rank_dynamic, Rank, minIndices, label());
+#else
+          Impl::runtime_check_rank_device(traits::rank_dynamic, Rank, minIndices);
+
+#endif
+
+      for (size_t i = 0; i < minIndices.size(); ++i) {
+          m_begins[i] = minIndices.begin()[i];
+      }
+    }
 
     // may assign unmanaged from managed.
 
@@ -1286,24 +1318,6 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
 
     }
 
-    template< class ViewType>
-    explicit KOKKOS_INLINE_FUNCTION
-    OffsetView( const ViewType & view
-                , typename std::enable_if<Kokkos::is_view<ViewType>::value , const index_list_type >::type
-                 minIndices) :
-                m_track(view.m_track), m_map(view.m_map){
-
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-          Impl::runtime_check_rank_host(traits::rank_dynamic, Rank, minIndices, label());
-#else
-          Impl::runtime_check_rank_device(traits::rank_dynamic, Rank, minIndices);
-
-#endif
-
-      for (size_t i = 0; i < minIndices.size(); ++i) {
-          m_begins[i] = minIndices.begin()[i];
-      }
-    }
 
 
     template<class ... P >
@@ -1410,11 +1424,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
 #endif
 
     }
-    KOKKOS_INLINE_FUNCTION
-       array_type view() {
-      array_type v(m_track, m_map);
-       return v ;
-     }
+
 
   };
 
