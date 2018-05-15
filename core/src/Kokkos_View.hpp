@@ -1521,6 +1521,8 @@ public:
   KOKKOS_INLINE_FUNCTION
   View & operator = ( View && rhs ) { m_track = std::move(rhs.m_track) ; m_map = std::move(rhs.m_map) ; return *this ; }
 
+
+
   //----------------------------------------
   // Compatible view copy constructor and assignment
   // may assign unmanaged from managed.
@@ -1840,6 +1842,17 @@ public:
 #endif
 
     }
+  template <class Traits>
+  KOKKOS_INLINE_FUNCTION
+  View( track_type & track,  Kokkos::Impl::ViewMapping< Traits , void >  &map ) :
+  m_track(track), m_map()
+  {
+   // typedef typename View<RT,RP...>::traits  SrcTraits ;
+    typedef Kokkos::Impl::ViewMapping< traits , Traits , void >  Mapping ;
+    static_assert( Mapping::is_assignable , "Incompatible View copy construction" );
+    Mapping::assign( m_map , map , track );
+    //  m_map = map;
+  }
 
   //----------------------------------------
   // Memory span required to wrap these dimensions.

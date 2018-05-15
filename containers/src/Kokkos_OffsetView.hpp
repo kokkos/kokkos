@@ -113,16 +113,27 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     typedef Kokkos::Impl::SharedAllocationTracker      track_type ;
   public:
     enum { Rank = map_type::Rank };
-    typedef Kokkos::Array<int64_t, Rank>  offsets_type ;
+    typedef Kokkos::Array<int64_t, Rank>  begins_type ;
+
+    // can use 'index semantics' :  use min_index() <= index <= max_index()
+    template <typename iType, typename std::enable_if< std::is_integral<iType>::value, iType>::type = 0>
+    int64_t min_index(const iType dimension) {return m_begins[dimension];}
 
     template <typename iType, typename std::enable_if< std::is_integral<iType>::value, iType>::type = 0>
-    int64_t begin(const iType i) {return m_begins[i];}
+    int64_t max_index(const iType dimension) {return m_begins[dimension] + m_map.extent(dimension) - 1;}
+
+    // can use 'iterator semantics, where end() is invalid : use begin() <= index < end()
+    template <typename iType, typename std::enable_if< std::is_integral<iType>::value, iType>::type = 0>
+    int64_t begin(const iType dimension) {return m_begins[dimension];}
+
+    template <typename iType, typename std::enable_if< std::is_integral<iType>::value, iType>::type = 0>
+    int64_t end(const iType dimension) {return m_begins[dimension] + m_map.extent(dimension);}
 
 
   private:
     track_type  m_track ;
     map_type    m_map ;
-    offsets_type  m_begins;
+    begins_type  m_begins;
 
   public:
     //----------------------------------------
@@ -1399,18 +1410,14 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
 #endif
 
     }
+    KOKKOS_INLINE_FUNCTION
+       array_type view() {
+      array_type v(m_track, m_map);
+       return v ;
+     }
 
   };
 
-  template<class ViewType, typename D , class ... P>
-   KOKKOS_INLINE_FUNCTION
-   ViewType & convert_view( const OffsetView<D , P...> & rhs ) {
-     ViewType v(Impl::ViewCtorProp< std::string >( rhs.label(), rhs.layout()) );
-     v.m_track = rhs.m_track ;
-     v.m_map = rhs.m_map ;
-
-     return v ;
-   }
 
 
   /** \brief Temporary free function rank()
