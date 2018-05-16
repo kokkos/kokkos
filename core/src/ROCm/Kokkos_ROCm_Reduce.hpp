@@ -74,7 +74,7 @@ T& reduce_value(T* x, std::false_type) [[hc]]
   return *x;
 }
 
-#if KOKKOS_ROCM_HAS_WORKAROUNDS
+#ifdef KOKKOS_IMPL_ROCM_CLANG_WORKAROUND
 struct always_true
 {
     template<class... Ts>
@@ -148,7 +148,7 @@ void reduce_enqueue(
       // Store the tile result in the global memory.
       if (local == 0)
       {
-#if KOKKOS_ROCM_HAS_WORKAROUNDS
+#ifdef KOKKOS_IMPL_ROCM_CLANG_WORKAROUND
           // Workaround for assigning from LDS memory: std::copy should work
           // directly
           buffer.action_at(0, [&](T* x)
