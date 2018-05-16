@@ -46,9 +46,7 @@
 namespace Test {
 
 TEST_F( TEST_CATEGORY , mdrange_5d ) {
-#if !defined( KOKKOS_ENABLE_ROCM )
-  TestMDRange_5D< TEST_EXECSPACE >::test_reduce5( 100, 10, 10, 10, 5 );
-#endif
+//  TestMDRange_5D< TEST_EXECSPACE >::test_reduce5( 100, 10, 10, 10, 5 );
   TestMDRange_5D< TEST_EXECSPACE >::test_for5( 100, 10, 10, 10, 5 );
 }
 

@@ -160,7 +160,7 @@ public:
       return & m_internal_implementation_private_member_data[0];
     }
 
-  #ifdef KOKKOS_ROCM_CLANG_WORKAROUND
+//  #ifdef KOKKOS_ROCM_CLANG_WORKAROUND
   // Do not default unless move and move-assignment are also defined
   KOKKOS_INLINE_FUNCTION
   ~Array() = default ;
@@ -179,7 +179,7 @@ public:
       m_internal_implementation_private_member_data[i] = vals.begin()[i];
     }
   }
-  #endif
+//  #endif
 };
 
 
