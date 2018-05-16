@@ -72,7 +72,7 @@ unsigned int atomic_fetch_sub( volatile unsigned int * const dest , const unsign
 
 __inline__ __device__
 unsigned int atomic_fetch_sub( volatile int64_t * const dest , const int64_t val )
-{ return atomicAdd((int64_t*)dest,-val); }
+{ return atomic_fetch_add(dest,-val); }
 
 __inline__ __device__
 unsigned int atomic_fetch_sub( volatile float * const dest , const float val )
