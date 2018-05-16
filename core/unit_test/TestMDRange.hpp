@@ -1878,11 +1878,11 @@ struct TestMDRange_5D {
 
       range_type range( point_type{ { 0, 0, 0, 0, 0 } }, point_type{ { N0, N1, N2, N3, N4 } }, tile_type{ { 3, 3, 3, 3, 1 } } );
       double sum = 0.0;
-//      parallel_reduce( range
-//        , KOKKOS_LAMBDA(const int i, const int j, const int k, const int l, const int m, double &lsum) {
-//            lsum+=1.0;
-//          }
-//        , sum );
+      parallel_reduce( range
+        , KOKKOS_LAMBDA(const int i, const int j, const int k, const int l, const int m, double &lsum) {
+            lsum+=1.0;
+          }
+        , sum );
       ASSERT_EQ( sum, N0 * N1 * N2 * N3 * N4 );
     }
 #endif
@@ -1904,7 +1904,7 @@ struct TestMDRange_5D {
 
       parallel_for( range, functor );
       double sum = 0.0;
-//      parallel_reduce( range, functor, sum );
+      parallel_reduce( range, functor, sum );
 
       ASSERT_EQ( sum, 2 * (N0 - s0) * (N1 - s1) * (N2 - s2) * (N3 - s3) * (N4 - s4) );
     }
@@ -1921,7 +1921,7 @@ struct TestMDRange_5D {
       value_type sum = 0.0;
       Kokkos::Sum< value_type > reducer_scalar( sum );
 
-//      parallel_reduce( range, functor, reducer_scalar );
+      parallel_reduce( range, functor, reducer_scalar );
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 * N3 * N4 );
     }
@@ -1940,7 +1940,7 @@ struct TestMDRange_5D {
       sum_view() = sum;
       Kokkos::Sum< value_type > reducer_view( sum_view );
 
-//      parallel_reduce( range, functor, reducer_view);
+      parallel_reduce( range, functor, reducer_view);
       sum = sum_view();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 * N3 * N4 );
@@ -1980,7 +1980,7 @@ struct TestMDRange_5D {
 
 
       double sum = 0.0;
-//      parallel_reduce( range, functor, sum );
+      parallel_reduce( range, functor, sum );
 
       ASSERT_EQ( sum, 9 * N0 * N1 * N2 * N3 * N4 );
     }
