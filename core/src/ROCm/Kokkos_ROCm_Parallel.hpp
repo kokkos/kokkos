@@ -959,6 +959,183 @@ public:
 
 };
 
+//----------------------------------------------------------------------------
+
+template< class FunctorType , class ReducerType, class... Traits >
+class ParallelReduce<
+  FunctorType , Kokkos::MDRangePolicy< Traits... >, ReducerType, Kokkos::Experimental::ROCm >
+{
+private:
+  typedef Kokkos::MDRangePolicy< Traits ...  > Policy ;
+  using RP = Policy;
+  typedef typename Policy::array_index_type array_index_type;
+  typedef typename Policy::index_type index_type;
+  typedef typename Policy::work_tag     WorkTag ;
+  typedef typename Policy::member_type  Member ;
+  typedef typename Policy::launch_bounds LaunchBounds;
+
+  typedef Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
+  typedef typename ReducerConditional::type ReducerTypeFwd;
+  typedef typename Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, WorkTag, void>::type WorkTagFwd;
+
+  typedef Kokkos::Impl::FunctorValueTraits< ReducerTypeFwd, WorkTagFwd > ValueTraits ;
+  typedef Kokkos::Impl::FunctorValueInit<   ReducerTypeFwd, WorkTagFwd > ValueInit ;
+  typedef Kokkos::Impl::FunctorValueJoin<   ReducerTypeFwd, WorkTagFwd > ValueJoin ;
+
+
+public:
+
+  typedef typename ValueTraits::pointer_type    pointer_type ;
+  typedef typename ValueTraits::value_type      value_type ;
+  typedef typename ValueTraits::reference_type  reference_type ;
+  typedef FunctorType                           functor_type ;
+  typedef Kokkos::Experimental::ROCm::size_type size_type ;
+
+  // Algorithmic constraints: blockSize is a power of two AND blockDim.y == blockDim.z == 1
+
+  const FunctorType   m_functor ;
+  const Policy        m_policy ; // used for workrange and nwork
+  const ReducerType   m_reducer ;
+  const pointer_type  m_result_ptr ;
+  size_type *         m_scratch_space ;
+  size_type *         m_scratch_flags ;
+
+  typedef typename Kokkos::Impl::Reduce::DeviceIterateTile<Policy::rank, Policy, FunctorType, typename Policy::work_tag, reference_type> DeviceIteratePattern;
+
+  KOKKOS_INLINE_FUNCTION
+  void exec_range( reference_type update ) const
+  {
+    Kokkos::Impl::Reduce::DeviceIterateTile<Policy::rank,Policy,FunctorType,typename Policy::work_tag, reference_type>(m_policy, m_functor, update).exec_range();
+  }
+
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(void) const
+    {
+       run();
+    }
+
+  KOKKOS_INLINE_FUNCTION
+  void run( ) const
+  {
+    const integral_nonzero_constant< size_type , ValueTraits::StaticValueSize / sizeof(size_type) >
+      word_count( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) / sizeof(size_type) );
+
+    {
+      reference_type value =
+        ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , kokkos_impl_rocm_shared_memory<size_type>() + threadIdx_y * word_count.value );
+
+      // Number of blocks is bounded so that the reduction can be limited to two passes.
+      // Each thread block is given an approximately equal amount of work to perform.
+      // Accumulate the values for this block.
+      // The accumulation ordering does not match the final pass, but is arithmatically equivalent.
+
+      this-> exec_range( value );
+    }
+
+    // Reduce with final value at blockDim.y - 1 location.
+    // Problem: non power-of-two blockDim
+    if ( rocm_single_inter_block_reduce_scan<false,ReducerTypeFwd,WorkTagFwd>(
+           ReducerConditional::select(m_functor , m_reducer) , blockIdx_x , gridDim_x ,
+           kokkos_impl_rocm_shared_memory<size_type>() , m_scratch_space , m_scratch_flags ) ) {
+
+      // This is the final block with the final result at the final threads' location
+      size_type * const shared = kokkos_impl_rocm_shared_memory<size_type>() + ( blockDim_y - 1 ) * word_count.value ;
+      size_type * const global =  m_scratch_space ;
+
+      if ( threadIdx_y == 0 ) {
+        Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTagFwd >::final( ReducerConditional::select(m_functor , m_reducer) , shared );
+      }
+
+      if ( ROCmTraits::WavefrontSize < word_count.value ) { __syncthreads(); }
+
+      for ( unsigned i = threadIdx_y ; i < word_count.value ; i += blockDim_y ) { global[i] = shared[i]; }
+    }
+  }
+
+
+
+  // Determine block size constrained by shared memory:
+  static inline
+  unsigned local_block_size( const FunctorType & f )
+    {
+      unsigned n = ROCmTraits::WavefrontSize * 8 ;
+      while ( n && ROCmTraits::SharedMemoryCapacity < rocm_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( f , n ) ) { n >>= 1 ; }
+      return n ;
+    }
+
+  inline
+  void execute()
+    {
+      const int nwork = m_policy.m_num_tiles;
+      if ( nwork ) {
+        int block_size = m_policy.m_prod_tile_dims;
+        // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
+        // Nearest power of two
+        int exponent_pow_two = std::ceil( std::log2((float)block_size) );
+//        block_size = std::pow(2, exponent_pow_two);
+        block_size = 1<<(exponent_pow_two+1);
+        int suggested_blocksize = local_block_size( m_functor );
+
+        block_size = (block_size > suggested_blocksize) ? block_size : suggested_blocksize ; //Note: block_size must be less than or equal to 512
+
+
+        m_scratch_space = rocm_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_size /* block_size == max block_count */ );
+        m_scratch_flags = rocm_internal_scratch_flags( sizeof(size_type) );
+
+        // REQUIRED ( 1 , N , 1 )
+        const dim3 block( 1 , block_size , 1 );
+        // Required grid.x <= block.y
+        const dim3 grid( std::min( int(block.y) , int( nwork ) ) , 1 , 1 );
+
+      const int shmem = rocm_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( m_functor , block.y );
+
+      ROCmParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
+
+      ROCM::fence();
+
+      if ( m_result_ptr ) {
+          const int size = ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer)  );
+          DeepCopy<HostSpace,Kokkos::Experimental::ROCmSpace>( m_result_ptr , m_scratch_space , size );
+      }
+    }
+    else {
+      if (m_result_ptr) {
+        ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , m_result_ptr );
+      }
+    }
+  }
+
+
+  template< class HostViewType >
+  ParallelReduce( const FunctorType  & arg_functor
+                , const Policy       & arg_policy
+                , const HostViewType & arg_result
+                , typename std::enable_if<
+                   Kokkos::is_view< HostViewType >::value
+                ,void*>::type = NULL)
+  : m_functor( arg_functor )
+  , m_policy(  arg_policy )
+  , m_reducer( InvalidType() )
+  , m_result_ptr( arg_result.data() )
+  , m_scratch_space( 0 )
+  , m_scratch_flags( 0 )
+  {}
+
+  ParallelReduce( const FunctorType  & arg_functor
+                , const Policy       & arg_policy
+                , const ReducerType & reducer)
+  : m_functor( arg_functor )
+  , m_policy(  arg_policy )
+  , m_reducer( reducer )
+  , m_result_ptr( reducer.view().data() )
+  , m_scratch_space( 0 )
+  , m_scratch_flags( 0 )
+  {}
+
+};
+//----------------------------------------------------------------------------
+
 template< class FunctorType, class ReducerType, class... Traits >
 class ParallelReduce<
    FunctorType , Kokkos::TeamPolicy< Traits... >, ReducerType, Kokkos::Experimental::ROCm >

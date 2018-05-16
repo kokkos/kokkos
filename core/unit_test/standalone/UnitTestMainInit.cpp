@@ -55,7 +55,8 @@
 #ifdef KOKKOS_ENABLE_OPENMP
 #include <openmp/TestOpenMP_Category.hpp>
 #endif
-#include <TestReduce.hpp>
+//#include <TestReduce.hpp>
+#include <TestMDRange_a.hpp>
 
 int main( int argc, char *argv[] ) {
   Kokkos::initialize(argc,argv);
