@@ -793,7 +793,7 @@ public:
              , Args ... args ) const
      {
        KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (m_track,m_map,i0,args...) )
-       return m_map.m_handle[ i0 ];
+       return m_map.m_impl_handle[ i0 ];
      }
 
    template< typename I0
@@ -809,7 +809,7 @@ public:
              , Args ... args ) const
      {
        KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (m_track,m_map,i0,args...) )
-       return m_map.m_handle[ m_map.m_offset.m_stride.S0 * i0 ];
+       return m_map.m_impl_handle[ m_map.m_impl_offset.m_stride.S0 * i0 ];
      }
 
    //------------------------------
@@ -839,7 +839,7 @@ public:
      operator[]( const I0 & i0 ) const
        {
          KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (m_track,m_map,i0) )
-         return m_map.m_handle[ i0 ];
+         return m_map.m_impl_handle[ i0 ];
        }
 
      template< typename I0 >
@@ -853,7 +853,7 @@ public:
      operator[]( const I0 & i0 ) const
        {
          KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (m_track,m_map,i0) )
-         return m_map.m_handle[ m_map.m_offset.m_stride.S0 * i0 ];
+         return m_map.m_impl_handle[ m_map.m_impl_offset.m_stride.S0 * i0 ];
        }
 
    template< typename I0 , typename I1
@@ -884,7 +884,7 @@ public:
              , Args ... args ) const
      {
        KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (m_track,m_map,i0,i1,args...) )
-       return m_map.m_handle[ i0 + m_map.m_offset.m_dim.N0 * i1 ];
+       return m_map.m_impl_handle[ i0 + m_map.m_impl_offset.m_dim.N0 * i1 ];
      }
 
    template< typename I0 , typename I1
@@ -900,7 +900,7 @@ public:
              , Args ... args ) const
      {
        KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (m_track,m_map,i0,i1,args...) )
-       return m_map.m_handle[ i0 + m_map.m_offset.m_stride * i1 ];
+       return m_map.m_impl_handle[ i0 + m_map.m_impl_offset.m_stride * i1 ];
      }
 
    template< typename I0 , typename I1
@@ -916,7 +916,7 @@ public:
              , Args ... args ) const
      {
        KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (m_track,m_map,i0,i1,args...) )
-       return m_map.m_handle[ i1 + m_map.m_offset.m_dim.N1 * i0 ];
+       return m_map.m_impl_handle[ i1 + m_map.m_impl_offset.m_dim.N1 * i0 ];
      }
 
    template< typename I0 , typename I1
@@ -932,7 +932,7 @@ public:
              , Args ... args ) const
      {
        KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (m_track,m_map,i0,i1,args...) )
-       return m_map.m_handle[ i1 + m_map.m_offset.m_stride * i0 ];
+       return m_map.m_impl_handle[ i1 + m_map.m_impl_offset.m_stride * i0 ];
      }
 
    template< typename I0 , typename I1
@@ -948,8 +948,8 @@ public:
              , Args ... args ) const
      {
        KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (m_track,m_map,i0,i1,args...) )
-       return m_map.m_handle[ i0 * m_map.m_offset.m_stride.S0 +
-                              i1 * m_map.m_offset.m_stride.S1 ];
+       return m_map.m_impl_handle[ i0 * m_map.m_impl_offset.m_stride.S0 +
+                              i1 * m_map.m_impl_offset.m_stride.S1 ];
      }
 
    //------------------------------
@@ -967,7 +967,7 @@ public:
              , Args ... args ) const
      {
        KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (m_track,m_map,i0,i1,i2,args...) )
-       return m_map.m_handle[ m_map.m_offset(i0,i1,i2) ];
+       return m_map.m_impl_handle[ m_map.m_impl_offset(i0,i1,i2) ];
      }
 
    template< typename I0 , typename I1 , typename I2
@@ -1000,7 +1000,7 @@ public:
              , Args ... args ) const
      {
        KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (m_track,m_map,i0,i1,i2,i3,args...) )
-       return m_map.m_handle[ m_map.m_offset(i0,i1,i2,i3) ];
+       return m_map.m_impl_handle[ m_map.m_impl_offset(i0,i1,i2,i3) ];
      }
 
    template< typename I0 , typename I1 , typename I2 , typename I3
@@ -1035,7 +1035,7 @@ public:
              , Args ... args ) const
      {
        KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (m_track,m_map,i0,i1,i2,i3,i4,args...) )
-       return m_map.m_handle[ m_map.m_offset(i0,i1,i2,i3,i4) ];
+       return m_map.m_impl_handle[ m_map.m_impl_offset(i0,i1,i2,i3,i4) ];
      }
 
    template< typename I0 , typename I1 , typename I2 , typename I3
@@ -1072,7 +1072,7 @@ public:
              , Args ... args ) const
      {
        KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (m_track,m_map,i0,i1,i2,i3,i4,i5,args...) )
-       return m_map.m_handle[ m_map.m_offset(i0,i1,i2,i3,i4,i5) ];
+       return m_map.m_impl_handle[ m_map.m_impl_offset(i0,i1,i2,i3,i4,i5) ];
      }
 
    template< typename I0 , typename I1 , typename I2 , typename I3
@@ -1109,7 +1109,7 @@ public:
              , Args ... args ) const
      {
        KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (m_track,m_map,i0,i1,i2,i3,i4,i5,i6,args...) )
-       return m_map.m_handle[ m_map.m_offset(i0,i1,i2,i3,i4,i5,i6) ];
+       return m_map.m_impl_handle[ m_map.m_impl_offset(i0,i1,i2,i3,i4,i5,i6) ];
      }
 
    template< typename I0 , typename I1 , typename I2 , typename I3
@@ -1146,7 +1146,7 @@ public:
              , Args ... args ) const
      {
        KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (m_track,m_map,i0,i1,i2,i3,i4,i5,i6,i7,args...) )
-       return m_map.m_handle[ m_map.m_offset(i0,i1,i2,i3,i4,i5,i6,i7) ];
+       return m_map.m_impl_handle[ m_map.m_impl_offset(i0,i1,i2,i3,i4,i5,i6,i7) ];
      }
 
    template< typename I0 , typename I1 , typename I2 , typename I3
