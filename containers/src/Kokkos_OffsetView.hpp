@@ -790,7 +790,9 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
         typename traits::device_type ,
         typename traits::memory_traits > view_type;
   public:
-    //    template<class ViewType>
+
+    // i don't think these conversion-assignment operators are right. they wont do the right thing if you use
+    // one to create, eg MyOffsetViewType ov = preexistingView;
     KOKKOS_INLINE_FUNCTION
     OffsetView & operator = ( const view_type & rhs ) {
       m_track = rhs.m_track ;
@@ -817,11 +819,16 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
       return v ;
     }
 
-    template<class ViewType>
+    template<class RT, class ... RP>
     explicit KOKKOS_INLINE_FUNCTION
-    OffsetView( const ViewType & view
-                ,typename std::enable_if< Kokkos::is_view<ViewType>::value, const index_list_type>::type & minIndices) :
-                m_track(view.m_track), m_map(view.m_map){
+    OffsetView( const View<RT, RP...> & view
+                ,const index_list_type & minIndices) :
+                m_track(view.m_track), m_map(){
+
+      typedef typename OffsetView<RT,RP...>::traits  SrcTraits ;
+      typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
+       static_assert( Mapping::is_assignable , "Incompatible OffsetView copy construction" );
+       Mapping::assign( m_map , view.m_map , view.m_track );
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
           Impl::runtime_check_rank_host(traits::rank_dynamic, Rank, minIndices, label());
