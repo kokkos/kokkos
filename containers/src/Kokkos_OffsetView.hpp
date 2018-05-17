@@ -115,19 +115,13 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     enum { Rank = map_type::Rank };
     typedef Kokkos::Array<int64_t, Rank>  begins_type ;
 
-    // can use 'index semantics' :  use min_index() <= index <= max_index()
-    template <typename iType, typename std::enable_if< std::is_integral<iType>::value, iType>::type = 0>
-    int64_t min_index(const iType dimension) {return m_begins[dimension];}
-
-    template <typename iType, typename std::enable_if< std::is_integral<iType>::value, iType>::type = 0>
-    int64_t max_index(const iType dimension) {return m_begins[dimension] + m_map.extent(dimension) - 1;}
 
     // can use 'iterator semantics, where end() is invalid : use begin() <= index < end()
     template <typename iType, typename std::enable_if< std::is_integral<iType>::value, iType>::type = 0>
-    int64_t begin(const iType dimension) {return m_begins[dimension];}
+    int64_t begin(const iType dimension) const {return m_begins[dimension];}
 
     template <typename iType, typename std::enable_if< std::is_integral<iType>::value, iType>::type = 0>
-    int64_t end(const iType dimension) {return m_begins[dimension] + m_map.extent(dimension);}
+    int64_t end(const iType dimension) const {return m_begins[dimension] + m_map.extent(dimension);}
 
 
   private:
@@ -790,9 +784,15 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     }
 
     //interoperability with View
-    template<class ViewType>
+  private:
+    typedef View< typename traits::scalar_array_type ,
+        typename traits::array_layout ,
+        typename traits::device_type ,
+        typename traits::memory_traits > view_type;
+  public:
+    //    template<class ViewType>
     KOKKOS_INLINE_FUNCTION
-    OffsetView & operator = ( const ViewType & rhs ) {
+    OffsetView & operator = ( const view_type & rhs ) {
       m_track = rhs.m_track ;
       m_map = rhs.m_map ;
       for(size_t i = 0; i < Rank; ++i )
@@ -810,12 +810,6 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
       return *this ;
     }
 
-  private:
-      typedef View< typename traits::scalar_array_type ,
-          typename traits::array_layout ,
-          typename traits::device_type ,
-          typename traits::memory_traits > view_type;
-  public:
     KOKKOS_INLINE_FUNCTION
     view_type view() {
 
@@ -823,11 +817,10 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
       return v ;
     }
 
-    template< class ViewType>
+    template<class ViewType>
     explicit KOKKOS_INLINE_FUNCTION
     OffsetView( const ViewType & view
-                , typename std::enable_if<Kokkos::is_view<ViewType>::value , const index_list_type >::type
-                 minIndices) :
+                ,typename std::enable_if< Kokkos::is_view<ViewType>::value, const index_list_type>::type & minIndices) :
                 m_track(view.m_track), m_map(view.m_map){
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
@@ -1378,8 +1371,12 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
       static_assert( traits::is_managed
                      , "OffsetView allocation constructor requires managed memory" );
 
-      if ( alloc_prop::initialize && ! alloc_prop::execution_space::impl_is_initialized()
-
+      if ( alloc_prop::initialize &&
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+           ! alloc_prop::execution_space::is_initialized()
+#else
+           ! alloc_prop::execution_space::impl_is_initialized()
+#endif
       ) {
           // If initializing view data then
           // the execution space must be initialized.
@@ -1516,14 +1513,14 @@ namespace Kokkos {
         lhs.extent(5) == rhs.extent(5) &&
         lhs.extent(6) == rhs.extent(6) &&
         lhs.extent(7) == rhs.extent(7) &&
-        lhs.m_begins[0] == rhs.m_begins[0] &&
-        lhs.m_begins[1] == rhs.m_begins[1] &&
-        lhs.m_begins[2] == rhs.m_begins[2] &&
-        lhs.m_begins[3] == rhs.m_begins[3] &&
-        lhs.m_begins[4] == rhs.m_begins[4] &&
-        lhs.m_begins[5] == rhs.m_begins[5] &&
-        lhs.m_begins[6] == rhs.m_begins[6] &&
-        lhs.m_begins[7] == rhs.m_begins[7]
+        lhs.begin(0) == rhs.begin(0) &&
+        lhs.begin(1) == rhs.begin(1) &&
+        lhs.begin(2) == rhs.begin(2) &&
+        lhs.begin(3) == rhs.begin(3) &&
+        lhs.begin(4) == rhs.begin(4) &&
+        lhs.begin(5) == rhs.begin(5) &&
+        lhs.begin(6) == rhs.begin(6) &&
+        lhs.begin(7) == rhs.begin(7)
                                         ;
       }
 
@@ -1534,6 +1531,43 @@ namespace Kokkos {
       {
     return ! ( operator==(lhs,rhs) );
       }
+
+  template< class LT , class ... LP , class RT , class ... RP >
+    KOKKOS_INLINE_FUNCTION
+    bool operator == ( const View<LT,LP...> & lhs ,
+        const OffsetView<RT,RP...> & rhs )
+        {
+      // Same data, layout, dimensions
+      typedef ViewTraits<LT,LP...>  lhs_traits ;
+      typedef ViewTraits<RT,RP...>  rhs_traits ;
+
+      return
+          std::is_same< typename lhs_traits::const_value_type ,
+          typename rhs_traits::const_value_type >::value &&
+          std::is_same< typename lhs_traits::array_layout ,
+          typename rhs_traits::array_layout >::value &&
+          std::is_same< typename lhs_traits::memory_space ,
+          typename rhs_traits::memory_space >::value &&
+          unsigned(lhs_traits::rank) == unsigned(rhs_traits::rank) &&
+          lhs.data()        == rhs.data() &&
+          lhs.span()        == rhs.span() &&
+          lhs.extent(0) == rhs.extent(0) &&
+          lhs.extent(1) == rhs.extent(1) &&
+          lhs.extent(2) == rhs.extent(2) &&
+          lhs.extent(3) == rhs.extent(3) &&
+          lhs.extent(4) == rhs.extent(4) &&
+          lhs.extent(5) == rhs.extent(5) &&
+          lhs.extent(6) == rhs.extent(6) &&
+          lhs.extent(7) == rhs.extent(7)
+                                          ;
+        }
+
+  template< class LT , class ... LP , class RT , class ... RP >
+    KOKKOS_INLINE_FUNCTION
+    bool operator == ( const OffsetView<LT,LP...> & lhs ,
+        const View<RT,RP...> & rhs )
+        { return rhs == lhs;}
+
 
 } /* namespace Kokkos */
 

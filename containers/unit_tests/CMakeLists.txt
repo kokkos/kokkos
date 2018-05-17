@@ -47,6 +47,7 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
     serial/TestSerial_DynRankViewAPI_rank12345.cpp
     serial/TestSerial_DynRankViewAPI_rank67.cpp
     serial/TestSerial_ErrorReporter.cpp
+    serial/TestSerial_OffsetView.cpp
     serial/TestSerial_ScatterView.cpp
     serial/TestSerial_StaticCrsGraph.cpp
     serial/TestSerial_UnorderedMap.cpp
