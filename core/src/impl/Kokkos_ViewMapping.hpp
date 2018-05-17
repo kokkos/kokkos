@@ -3098,7 +3098,7 @@ public:
 
       /*static_assert( is_assignable_layout
                    , "View assignment must have compatible layout or have rank <= 1" );*///COMMENTED: taken care by runtime check
-      bool assignable_layout = assignable_layout_check(dst, src);//Runtime check
+      bool assignable_layout = assignable_layout_check(dst, src);//ADDED: Runtime check
       if(!assignable_layout)
           Kokkos::abort("View assignment must have compatible layout\n");
 	  
