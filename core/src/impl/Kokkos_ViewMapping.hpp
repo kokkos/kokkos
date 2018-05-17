@@ -1030,13 +1030,6 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
   ViewOffset( const ViewOffset< DimRHS , Kokkos::LayoutStride , void > & rhs )
     : m_dim( rhs.m_dim.N0, 0, 0, 0, 0, 0, 0, 0 )
     {
-      /*static_assert( 
-        ( DimRHS::rank == 0 &&
-          dimension_type::rank == 0 ) ||
-        ( DimRHS::rank == 1 &&
-          dimension_type::rank == 1 &&
-          dimension_type::rank_dynamic == 1 )
-        , "ViewOffset LayoutLeft and LayoutStride are only compatible when rank <= 1" );*///COMMENTED: taken care by runtime check
       if ( rhs.m_stride.S0 != 1 ) {
         Kokkos::abort("Kokkos::Impl::ViewOffset assignment of LayoutLeft from LayoutStride  requires stride == 1" );
       }
@@ -1518,16 +1511,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
   ViewOffset( const ViewOffset< DimRHS , Kokkos::LayoutStride , void > & rhs )
     : m_dim( rhs.m_dim.N0, 0, 0, 0, 0, 0, 0, 0 )
     {
-      /*static_assert(
-       ( DimRHS::rank == 0 &&
-         dimension_type::rank == 0 ) ||
-       ( DimRHS::rank == 1 &&
-         dimension_type::rank == 1 &&
-         dimension_type::rank_dynamic == 1 )
-      , "ViewOffset LayoutRight and LayoutString are only compatible when rank <= 1" );
-      if ( rhs.m_stride.S0 != 1 ) {
-        Kokkos::abort("Kokkos::Impl::ViewOffset assignment of LayoutLeft/Right from LayoutStride  requires stride == 1" );
-      }*///COMMENTED: taken care by runtime check
+
     }
 
   //----------------------------------------
@@ -2859,17 +2843,17 @@ public:
 template< class DstTraits , class SrcTraits >
 class ViewMapping< DstTraits , SrcTraits ,
   typename std::enable_if<(
-    !(std::is_same<typename SrcTraits::array_layout, LayoutStride>::value) &&//Added to have a new specialization for SrcType of LayoutStride
-    /* default mappings */
+    !(std::is_same<typename SrcTraits::array_layout, LayoutStride>::value) && //Added to have a new specialization for SrcType of LayoutStride
+    // default mappings
     std::is_same< typename DstTraits::specialize , void >::value
     &&
     std::is_same< typename SrcTraits::specialize , void >::value
     &&
     (
-      /* same layout */
+      // same layout
       std::is_same< typename DstTraits::array_layout , typename SrcTraits::array_layout >::value
       ||
-      /* known layout */
+      // known layout
       (
         (
           std::is_same< typename DstTraits::array_layout , Kokkos::LayoutLeft >::value ||
@@ -2975,21 +2959,21 @@ public:
 };
 
 //----------------------------------------------------------------------------
-//Create new specialization for SrcType of LayoutStride. COMMENTED: taken care by runtime check
+//Create new specialization for SrcType of LayoutStride. Runtime check for compatible layout
 template< class DstTraits , class SrcTraits >
 class ViewMapping< DstTraits , SrcTraits ,
   typename std::enable_if<(
     (std::is_same<typename SrcTraits::array_layout, LayoutStride>::value) &&
-    /* default mappings */
+    // default mappings
     std::is_same< typename DstTraits::specialize , void >::value
     &&
     std::is_same< typename SrcTraits::specialize , void >::value
     &&
     (
-      /* same layout */
+      // same layout
       std::is_same< typename DstTraits::array_layout , typename SrcTraits::array_layout >::value
       ||
-      /* known layout */
+      // known layout
       (
         (
           std::is_same< typename DstTraits::array_layout , Kokkos::LayoutLeft >::value ||
@@ -3028,32 +3012,8 @@ private:
     ViewDimensionAssignable< typename DstTraits::dimension
                            , typename SrcTraits::dimension >::value };
 
-  /*enum { is_assignable_layout =
-    std::is_same< typename DstTraits::array_layout
-                , typename SrcTraits::array_layout >::value ||
-    std::is_same< typename DstTraits::array_layout
-                , Kokkos::LayoutStride >::value ||
-    ( DstTraits::dimension::rank == 0 ) ||
-    ( DstTraits::dimension::rank == 1 &&
-      DstTraits::dimension::rank_dynamic == 1 )
-    };*///COMMENTED: taken care by runtime check
-  /*enum { is_assignable_layout =
-    std::is_same< typename DstTraits::array_layout
-                , typename SrcTraits::array_layout >::value ||
-    std::is_same< typename DstTraits::array_layout
-                , Kokkos::LayoutStride >::value ||
-    ( DstTraits::dimension::rank == 0 ) ||
-    ( DstTraits::dimension::rank == 1 &&
-      DstTraits::dimension::rank_dynamic == 1 ) ||
-    (std::is_same<typename SrcTraits::array_layout, Kokkos::LayoutStride>::value)//workaround: add this condition to move the check from compile time to run time
-    };*///VINH
-
 public:
 
-  /*enum { is_assignable = is_assignable_space &&
-                         is_assignable_value_type &&
-                         is_assignable_dimension &&
-                         is_assignable_layout };*///COMMENTED: taken care by runtime check
   enum { is_assignable = is_assignable_space &&
                          is_assignable_value_type &&
                          is_assignable_dimension };
@@ -3063,7 +3023,7 @@ public:
   typedef ViewMapping< SrcTraits , void >  SrcType ;
 
   KOKKOS_INLINE_FUNCTION
-  static bool assignable_layout_check(DstType & dst, const SrcType & src)//Runtime check
+  static bool assignable_layout_check(DstType & dst, const SrcType & src) //Runtime check
     {
       size_t strides[8];
       bool assignable = true;
@@ -3096,9 +3056,7 @@ public:
       static_assert( is_assignable_dimension
                    , "View assignment must have compatible dimensions" );
 
-      /*static_assert( is_assignable_layout
-                   , "View assignment must have compatible layout or have rank <= 1" );*///COMMENTED: taken care by runtime check
-      bool assignable_layout = assignable_layout_check(dst, src);//ADDED: Runtime check
+      bool assignable_layout = assignable_layout_check(dst, src); //Runtime check
       if(!assignable_layout)
           Kokkos::abort("View assignment must have compatible layout\n");
 	  
