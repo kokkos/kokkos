@@ -109,7 +109,7 @@ namespace Test{
       ASSERT_EQ(ovAssigned==ov, true) <<  "Assignment operator or equivalence operator broken";
     }
 
-    auto viewFromOV = ov.view();//why does auto cause the OffsetView(viewFromOV, {-1,-2}) call below to not compile?
+    auto viewFromOV = ov.view();
     ASSERT_EQ(viewFromOV == ov, true) << "Assignment of OffsetView to View or equivalence operator View == OffsetView broken";
 
     {
