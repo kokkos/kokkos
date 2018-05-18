@@ -569,8 +569,8 @@ KOKKOS_INLINE_FUNCTION
 bool rocm_single_inter_block_reduce_scan( const FunctorType     & functor ,
                                           const ROCM::size_type   block_id ,
                                           const ROCM::size_type   block_count ,
-                                          ROCM::size_type * const shared_data ,
-                                          ROCM::size_type * const global_data ,
+                                          typename FunctorValueTraits<FunctorType, ArgTag>::value_type * const shared_data ,
+                                          typename FunctorValueTraits<FunctorType, ArgTag>::value_type * const global_data ,
                                           ROCM::size_type * const global_flags )
 {
   typedef ROCM::size_type                  size_type ;
@@ -586,15 +586,15 @@ bool rocm_single_inter_block_reduce_scan( const FunctorType     & functor ,
   // '__ffs' = position of the least significant bit set to 1.
   // blockDim_y is guaranteed to be a power of two so this
   // is the integral shift value that can replace an integral divide.
-//  const unsigned long BlockSizeShift = __ffs( blockDim_y ) - 1 ;
+  //  const unsigned long BlockSizeShift = __ffs( blockDim_y ) - 1 ;
   const unsigned long BlockSizeShift = __lastbit_u32_u32( blockDim_y ) - 1 ;
   const unsigned long BlockSizeMask  = blockDim_y - 1 ;
 
   // Must have power of two thread count
   if ( BlockSizeMask & blockDim_y ) { Kokkos::abort("ROCm::rocm_single_inter_block_reduce_scan requires power-of-two blockDim"); }
 
-  const integral_nonzero_constant< size_type , ValueTraits::StaticValueSize / sizeof(size_type) >
-    word_count( ValueTraits::value_size( functor ) / sizeof(size_type) );
+  const integral_nonzero_constant< size_type , ValueTraits::StaticValueSize / sizeof(value_type) >
+    word_count( ValueTraits::value_size( functor )/ sizeof(value_type) );
 
   // Reduce the accumulation for the entire block.
   rocm_intra_block_reduce_scan<false,FunctorType,ArgTag>( functor , pointer_type(shared_data) );
@@ -602,12 +602,11 @@ bool rocm_single_inter_block_reduce_scan( const FunctorType     & functor ,
   {
     // Write accumulation total to global scratch space.
     // Accumulation total is the last thread's data.
-    unsigned long * const shared = shared_data +  
+    value_type * const shared = shared_data +  
                                    word_count.value * BlockSizeMask ;
-    unsigned long * const global = global_data + word_count.value * block_id ;
+    value_type * const global = global_data + word_count.value * block_id ;
 
     for ( int i = int(threadIdx_y) ; i < word_count.value ; i += blockDim_y ) { global[i] = shared[i] ; }
-//if(blockIdx_x&&(threadIdx_y==1)) global[1] = global[0];
   }
 
   // Contributing blocks note that their contribution has been completed via an atomic-increment flag
@@ -621,34 +620,25 @@ bool rocm_single_inter_block_reduce_scan( const FunctorType     & functor ,
     const size_type e = ( long(block_count) * long(threadIdx_y + 1 ) ) >> BlockSizeShift ;
 
     {
-      void * const shared_ptr = shared_data + word_count.value * threadIdx_y ;
+      value_type * const shared_ptr = shared_data + word_count.value * threadIdx_y ;
       ValueInit::init( functor , shared_ptr );
 
-unsigned long * const glob = global_data+3 ;
-unsigned long * const shard = (unsigned long * )shared_ptr;
-shard[0]=0;
-
-__threadfence_block();
-if((threadIdx_y==31)) global_data[3] = shard[0];
 
       for ( size_type i = b ; i < e ; ++i ) {
         ValueJoin::join( functor , shared_ptr , global_data + word_count.value * i );
       }
     }
-//unsigned long * const glob = global_data+3 ;
-//if((threadIdx_y==1)) atomicInc(glob,58);
-//if((threadIdx_y==1)) global_data[3] = long(threadIdx_x);
 
     rocm_intra_block_reduce_scan<DoScan,FunctorType,ArgTag>( functor , pointer_type(shared_data) );
 
     if ( DoScan ) {
-      size_type * const shared_value = shared_data + word_count.value * ( threadIdx_y ? threadIdx_y - 1 : blockDim_y );
+      value_type * const shared_value = shared_data + word_count.value * ( threadIdx_y ? threadIdx_y - 1 : blockDim_y );
 
       if ( ! threadIdx_y ) { ValueInit::init( functor , shared_value ); }
 
       // Join previous inclusive scan value to each member
       for ( size_type i = b ; i < e ; ++i ) {
-        size_type * const global_value = global_data + word_count.value * i ;
+        value_type * const global_value = global_data + word_count.value * i ;
         ValueJoin::join( functor , shared_value , global_value );
         ValueOps ::copy( functor , global_value , shared_value );
       }

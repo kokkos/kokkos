@@ -997,7 +997,7 @@ public:
   const Policy        m_policy ; // used for workrange and nwork
   const ReducerType   m_reducer ;
   const pointer_type  m_result_ptr ;
-  size_type *         m_scratch_space ;
+  value_type *         m_scratch_space ;
   size_type *         m_scratch_flags ;
 
   typedef typename Kokkos::Impl::Reduce::DeviceIterateTile<Policy::rank, Policy, FunctorType, typename Policy::work_tag, reference_type> DeviceIteratePattern;
@@ -1018,13 +1018,12 @@ public:
   KOKKOS_INLINE_FUNCTION
   void run( ) const
   {
-    const integral_nonzero_constant< size_type , ValueTraits::StaticValueSize / sizeof(size_type) >
-      word_count( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) / sizeof(size_type) );
+    const integral_nonzero_constant< size_type , ValueTraits::StaticValueSize / sizeof(value_type) >
+      word_count( (ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) )) / sizeof(value_type) );
 
     {
       reference_type value =
-        ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , kokkos_impl_rocm_shared_memory<size_type>() + threadIdx_y * word_count.value );
-
+        ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , kokkos_impl_rocm_shared_memory<value_type>() + threadIdx_y * word_count.value );
       // Number of blocks is bounded so that the reduction can be limited to two passes.
       // Each thread block is given an approximately equal amount of work to perform.
       // Accumulate the values for this block.
@@ -1037,19 +1036,16 @@ public:
     // Problem: non power-of-two blockDim
     if ( rocm_single_inter_block_reduce_scan<false,ReducerTypeFwd,WorkTagFwd>(
            ReducerConditional::select(m_functor , m_reducer) , blockIdx_x , gridDim_x ,
-           kokkos_impl_rocm_shared_memory<size_type>() , m_scratch_space , m_scratch_flags ) ) {
+           kokkos_impl_rocm_shared_memory<value_type>() , m_scratch_space , m_scratch_flags ) ) {
 
       // This is the final block with the final result at the final threads' location
-      size_type * const shared = kokkos_impl_rocm_shared_memory<size_type>() + ( blockDim_y - 1 ) * word_count.value ;
-      size_type * const global =  m_scratch_space ;
+      value_type * const shared = kokkos_impl_rocm_shared_memory<value_type>() + ( blockDim_y - 1 ) * word_count.value ;
+      value_type * const global =  m_scratch_space ;
 
       if ( threadIdx_y == 0 ) {
         Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTagFwd >::final( ReducerConditional::select(m_functor , m_reducer) , shared );
+        for ( unsigned i = 0 ; i < word_count.value ; i ++ ) { global[i] = shared[i]; }
       }
-
-      if ( ROCmTraits::WavefrontSize < word_count.value ) { __syncthreads(); }
-
-      for ( unsigned i = threadIdx_y ; i < word_count.value ; i += blockDim_y ) { global[i] = shared[i]; }
     }
   }
 
@@ -1073,21 +1069,14 @@ public:
         // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
         // Nearest power of two
         int exponent_pow_two = std::ceil( std::log2((float)block_size) );
-//        block_size = std::pow(2, exponent_pow_two);
-        block_size = 1<<(exponent_pow_two+1);
-        int suggested_blocksize = local_block_size( m_functor );
+        block_size = 1<<(exponent_pow_two);
 
-        block_size = (block_size > suggested_blocksize) ? block_size : suggested_blocksize ; //Note: block_size must be less than or equal to 512
-
-
-        m_scratch_space = rocm_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_size /* block_size == max block_count */ );
+        m_scratch_space = (value_type*)rocm_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_size /* block_size == max block_count */ );
         m_scratch_flags = rocm_internal_scratch_flags( sizeof(size_type) );
 
-        // REQUIRED ( 1 , N , 1 )
         const dim3 block( 1 , block_size , 1 );
         // Required grid.x <= block.y
-        const dim3 grid( std::min( int(block.y) , int( nwork ) ) , 1 , 1 );
-
+        const dim3 grid( nwork, block_size ,  1 );
       const int shmem = rocm_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( m_functor , block.y );
 
       ROCmParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
