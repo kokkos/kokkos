@@ -73,6 +73,9 @@ void __syncthreads() [[hc]]
 
 
 // returns non-zero if and only if predicate is non-zero for all threads
+// note that syncthreads_or uses the first 64 bits of dynamic group memory.
+// this reserved memory must be accounted for everwhere 
+// that get_dynamic_group_segment_base_pointer is called.
 KOKKOS_INLINE_FUNCTION
 uint64_t __syncthreads_or(uint64_t  pred) 
 {
@@ -469,7 +472,7 @@ void rocm_intra_block_reduce_scan( const FunctorType & functor ,
   if ( BlockSizeMask & blockDim_y ) { Kokkos::abort("ROCm::rocm_intra_block_scan requires power-of-two blockDim"); }
 
 #define BLOCK_REDUCE_STEP( R , TD , S )  \
-  if ( ! ( R & ((1<<(S+1))-1) ) ) { ValueJoin::join( functor , TD , (TD - (value_count<<S)) ); }
+  if ( ! (( R & ((1<<(S+1))-1) )|(blockDim_y<(1<<(S+1)))) ) { ValueJoin::join( functor , TD , (TD - (value_count<<S)) ); }
 
 #define BLOCK_SCAN_STEP( TD , N , S )  \
   if ( N == (1<<S) ) { ValueJoin::join( functor , TD , (TD - (value_count<<S))); }
@@ -508,10 +511,10 @@ void rocm_intra_block_reduce_scan( const FunctorType & functor ,
 // The remaining steps are only done if block size is > 64, so we leave them
 // in place until we tune blocksize for performance, then remove the ones 
 // that will never be used.
-      if ( (1<<6) < BlockSizeMask ) { __threadfence_block(); BLOCK_REDUCE_STEP(rtid_inter,tdata_inter,6) }
-      if ( (1<<7) < BlockSizeMask ) { __threadfence_block(); BLOCK_REDUCE_STEP(rtid_inter,tdata_inter,7) }
-      if ( (1<<8) < BlockSizeMask ) { __threadfence_block(); BLOCK_REDUCE_STEP(rtid_inter,tdata_inter,8) }
-      if ( (1<<9) < BlockSizeMask ) { __threadfence_block(); BLOCK_REDUCE_STEP(rtid_inter,tdata_inter,9) }
+//      if ( (1<<6) < BlockSizeMask ) { __threadfence_block(); BLOCK_REDUCE_STEP(rtid_inter,tdata_inter,6) }
+//      if ( (1<<7) < BlockSizeMask ) { __threadfence_block(); BLOCK_REDUCE_STEP(rtid_inter,tdata_inter,7) }
+//      if ( (1<<8) < BlockSizeMask ) { __threadfence_block(); BLOCK_REDUCE_STEP(rtid_inter,tdata_inter,8) }
+//      if ( (1<<9) < BlockSizeMask ) { __threadfence_block(); BLOCK_REDUCE_STEP(rtid_inter,tdata_inter,9) }
 
 
       if ( DoScan ) {
@@ -552,6 +555,7 @@ void rocm_intra_block_reduce_scan( const FunctorType & functor ,
 
 #undef BLOCK_SCAN_STEP
 #undef BLOCK_REDUCE_STEP
+#undef KOKKOS_IMPL_ROCM_SYNCWF
 }
 
 //----------------------------------------------------------------------------
@@ -587,7 +591,7 @@ bool rocm_single_inter_block_reduce_scan( const FunctorType     & functor ,
   // blockDim_y is guaranteed to be a power of two so this
   // is the integral shift value that can replace an integral divide.
   //  const unsigned long BlockSizeShift = __ffs( blockDim_y ) - 1 ;
-  const unsigned long BlockSizeShift = __lastbit_u32_u32( blockDim_y ) - 1 ;
+  const unsigned long BlockSizeShift = __lastbit_u32_u32( blockDim_y )  ;
   const unsigned long BlockSizeMask  = blockDim_y - 1 ;
 
   // Must have power of two thread count
@@ -628,7 +632,6 @@ bool rocm_single_inter_block_reduce_scan( const FunctorType     & functor ,
         ValueJoin::join( functor , shared_ptr , global_data + word_count.value * i );
       }
     }
-
     rocm_intra_block_reduce_scan<DoScan,FunctorType,ArgTag>( functor , pointer_type(shared_data) );
 
     if ( DoScan ) {

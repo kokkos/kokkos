@@ -57,6 +57,10 @@
 #endif
 //#include <TestReduce.hpp>
 #include <TestMDRange_a.hpp>
+//#include <TestMDRange_b.hpp>
+//#include <TestMDRange_c.hpp>
+//#include <TestMDRange_d.hpp>
+//#include <TestMDRange_e.hpp>
 
 int main( int argc, char *argv[] ) {
   Kokkos::initialize(argc,argv);

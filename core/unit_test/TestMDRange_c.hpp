@@ -47,16 +47,12 @@ namespace Test {
 
 TEST_F( TEST_CATEGORY , mdrange_2d) {
   TestMDRange_2D< TEST_EXECSPACE >::test_for2( 100, 100 );
-#if !defined( KOKKOS_ENABLE_ROCM )
   TestMDRange_2D< TEST_EXECSPACE >::test_reduce2( 100, 100 );
-#endif
 }
 
-#if !defined( KOKKOS_ENABLE_ROCM )
 TEST_F( TEST_CATEGORY , mdrange_array_reduce ) {
   TestMDRange_ReduceArray_2D< TEST_EXECSPACE >::test_arrayreduce2( 4, 5 );
   TestMDRange_ReduceArray_3D< TEST_EXECSPACE >::test_arrayreduce3( 4, 5, 10 );
 }
-#endif
 
 }

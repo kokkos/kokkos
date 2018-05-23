@@ -1020,10 +1020,13 @@ public:
   {
     const integral_nonzero_constant< size_type , ValueTraits::StaticValueSize / sizeof(value_type) >
       word_count( (ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) )) / sizeof(value_type) );
+      // pointer to shared data accounts for the reserved space at the start
+      value_type * const shared = kokkos_impl_rocm_shared_memory<value_type>()
+                                 + 2*sizeof(uint64_t); 
 
     {
       reference_type value =
-        ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , kokkos_impl_rocm_shared_memory<value_type>() + threadIdx_y * word_count.value );
+        ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , shared + threadIdx_y * word_count.value );
       // Number of blocks is bounded so that the reduction can be limited to two passes.
       // Each thread block is given an approximately equal amount of work to perform.
       // Accumulate the values for this block.
@@ -1034,17 +1037,19 @@ public:
 
     // Reduce with final value at blockDim.y - 1 location.
     // Problem: non power-of-two blockDim
+
     if ( rocm_single_inter_block_reduce_scan<false,ReducerTypeFwd,WorkTagFwd>(
-           ReducerConditional::select(m_functor , m_reducer) , blockIdx_x , gridDim_x ,
-           kokkos_impl_rocm_shared_memory<value_type>() , m_scratch_space , m_scratch_flags ) ) {
+           ReducerConditional::select(m_functor , m_reducer) , blockIdx_x ,
+           gridDim_x , shared , m_scratch_space , m_scratch_flags ) ) {
 
       // This is the final block with the final result at the final threads' location
-      value_type * const shared = kokkos_impl_rocm_shared_memory<value_type>() + ( blockDim_y - 1 ) * word_count.value ;
+      value_type * const tshared = shared + ( blockDim_y - 1 ) * word_count.value ;
       value_type * const global =  m_scratch_space ;
 
       if ( threadIdx_y == 0 ) {
-        Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTagFwd >::final( ReducerConditional::select(m_functor , m_reducer) , shared );
-        for ( unsigned i = 0 ; i < word_count.value ; i ++ ) { global[i] = shared[i]; }
+        Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTagFwd >::final( ReducerConditional::select(m_functor , m_reducer) , tshared );
+        for ( unsigned i = 0 ; i < word_count.value ; i+=blockDim_y ) { global[i] = tshared[i]; }
+//        for ( unsigned i = 0 ; i < word_count.value ; i++ ) { global[i] = tshared[i]; }
       }
     }
   }
@@ -1071,7 +1076,7 @@ public:
         int exponent_pow_two = std::ceil( std::log2((float)block_size) );
         block_size = 1<<(exponent_pow_two);
 
-        m_scratch_space = (value_type*)rocm_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_size /* block_size == max block_count */ );
+        m_scratch_space = (value_type*)rocm_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_size*nwork /* block_size == max block_count */ );
         m_scratch_flags = rocm_internal_scratch_flags( sizeof(size_type) );
 
         const dim3 block( 1 , block_size , 1 );
