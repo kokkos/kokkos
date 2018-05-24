@@ -407,6 +407,9 @@ struct CudaParallelLaunch< DriverType
 
 //----------------------------------------------------------------------------
 
+
+bool cuda_launch_blocking_enabled();
+
 } // namespace Impl
 } // namespace Kokkos
 

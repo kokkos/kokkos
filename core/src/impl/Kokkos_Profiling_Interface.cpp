@@ -87,42 +87,78 @@ bool profileLibraryLoaded() {
 
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID) {
   if(nullptr != beginForCallee) {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
+    if ( !Impl::cuda_launch_blocking_enabled() ) {
+      Kokkos::fence();
+    }
+#else
     Kokkos::fence();
+#endif
     (*beginForCallee)(kernelPrefix.c_str(), devID, kernelID);
   }
 }
 
 void endParallelFor(const uint64_t kernelID) {
   if(nullptr != endForCallee) {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
+    if ( !Impl::cuda_launch_blocking_enabled() ) {
+      Kokkos::fence();
+    }
+#else
     Kokkos::fence();
+#endif
     (*endForCallee)(kernelID);
   }
 }
 
 void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID) {
   if(nullptr != beginScanCallee) {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
+    if ( !Impl::cuda_launch_blocking_enabled() ) {
+      Kokkos::fence();
+    }
+#else
     Kokkos::fence();
+#endif
     (*beginScanCallee)(kernelPrefix.c_str(), devID, kernelID);
   }
 }
 
 void endParallelScan(const uint64_t kernelID) {
   if(nullptr != endScanCallee) {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
+    if ( !Impl::cuda_launch_blocking_enabled() ) {
+      Kokkos::fence();
+    }
+#else
     Kokkos::fence();
+#endif
     (*endScanCallee)(kernelID);
   }
 }
 
 void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID, uint64_t* kernelID) {
   if(nullptr != beginReduceCallee) {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
+    if ( !Impl::cuda_launch_blocking_enabled() ) {
+      Kokkos::fence();
+    }
+#else
     Kokkos::fence();
+#endif
     (*beginReduceCallee)(kernelPrefix.c_str(), devID, kernelID);
   }
 }
 
 void endParallelReduce(const uint64_t kernelID) {
   if(nullptr != endReduceCallee) {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
+    if ( !Impl::cuda_launch_blocking_enabled() ) {
+      Kokkos::fence();
+    }
+#else
     Kokkos::fence();
+#endif
     (*endReduceCallee)(kernelID);
   }
 }
@@ -130,14 +166,26 @@ void endParallelReduce(const uint64_t kernelID) {
 
 void pushRegion(const std::string& kName) {
   if( nullptr != pushRegionCallee ) {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
+    if ( !Impl::cuda_launch_blocking_enabled() ) {
+      Kokkos::fence();
+    }
+#else
     Kokkos::fence();
+#endif
     (*pushRegionCallee)(kName.c_str());
   }
 }
 
 void popRegion() {
   if( nullptr != popRegionCallee ) {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
+    if ( !Impl::cuda_launch_blocking_enabled() ) {
+      Kokkos::fence();
+    }
+#else
     Kokkos::fence();
+#endif
     (*popRegionCallee)();
   }
 }
