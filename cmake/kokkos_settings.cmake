@@ -74,6 +74,9 @@ endif()
 if(${KOKKOS_ENABLE_PROFILING_LOAD_PRINT})
       list(APPEND KOKKOS_OPTIONSl enable_profile_load_print)
 endif()
+if(${KOKKOS_ENABLE_EXPLICIT_INSTANTIATION})
+      list(APPEND KOKKOS_OPTIONSl enable_eti)
+endif()
 # List needs to be comma-delimitted
 string(REPLACE ";" "," KOKKOS_GMAKE_OPTIONS "${KOKKOS_OPTIONSl}")
 
