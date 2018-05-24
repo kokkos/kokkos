@@ -101,7 +101,6 @@ int cuda_kernel_arch()
   return arch ;
 }
 
-#ifdef KOKKOS_ENABLE_CUDA_UVM
 bool cuda_launch_blocking()
 {
   const char * env = getenv("CUDA_LAUNCH_BLOCKING");
@@ -110,8 +109,13 @@ bool cuda_launch_blocking()
 
   return atoi(env);
 }
-#endif
 
+} // end namespace (anonymous)
+
+bool cuda_launch_blocking_enabled()
+{
+  static const bool result = cuda_launch_blocking();
+  return result;
 }
 
 void cuda_device_synchronize()
