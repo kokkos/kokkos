@@ -500,9 +500,16 @@ void rocm_intra_block_reduce_scan( const FunctorType & functor ,
   __syncthreads(); // Wait for all workgroups to reduce
 
   { // Inter-workgroup reduce-scan by a single workgroup to avoid extra synchronizations
+    if(threadIdx_y < value_count) {
+      for(int i=blockDim_y-65; i>0; i-= 64)
+        ValueJoin::join( functor , base_data + (blockDim_y-1)*value_count + threadIdx_y ,  base_data + i*value_count + threadIdx_y );
+    }
+    __syncthreads();
+#if 0
     const unsigned rtid_inter = ( threadIdx_y ^ BlockSizeMask ) << ROCmTraits::WavefrontIndexShift ;
 
     if ( rtid_inter < blockDim_y ) {
+
 
       const pointer_type tdata_inter = base_data + value_count * ( rtid_inter ^ BlockSizeMask );
 //
@@ -531,6 +538,7 @@ void rocm_intra_block_reduce_scan( const FunctorType & functor ,
 //        __threadfence_block(); BLOCK_SCAN_STEP(tdata_inter,n,5)
       }
     }
+#endif
   }
 
   __syncthreads(); // Wait for inter-workgroup reduce-scan to complete
