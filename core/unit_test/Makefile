@@ -87,6 +87,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
         OBJ_ROCM += TestROCm_AtomicViews.o
         OBJ_ROCM += TestROCm_Other.o
         OBJ_ROCM += TestROCm_MDRange_a.o TestROCm_MDRange_b.o TestROCm_MDRange_c.o TestROCm_MDRange_d.o TestROCm_MDRange_e.o
+        OBJ_ROCM += TestROCm_MDRangeReduce_a.o TestROCm_MDRangeReduce_b.o TestROCm_MDRangeReduce_c.o TestROCm_MDRangeReduce_d.o TestROCm_MDRangeReduce_e.o
 	OBJ_ROCM += TestROCm_Reductions.o
 	OBJ_ROCM += TestROCm_Reducers_a.o TestROCm_Reducers_b.o TestROCm_Reducers_c.o TestROCm_Reducers_d.o
         OBJ_ROCM += TestROCm_Scan.o

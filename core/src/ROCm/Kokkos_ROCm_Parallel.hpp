@@ -1048,8 +1048,8 @@ public:
 
       if ( threadIdx_y == 0 ) {
         Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTagFwd >::final( ReducerConditional::select(m_functor , m_reducer) , tshared );
-        for ( unsigned i = 0 ; i < word_count.value ; i+=blockDim_y ) { global[i] = tshared[i]; }
-//        for ( unsigned i = 0 ; i < word_count.value ; i++ ) { global[i] = tshared[i]; }
+//        for ( unsigned i = 0 ; i < word_count.value ; i+=blockDim_y ) { global[i] = tshared[i]; }
+        for ( unsigned i = 0 ; i < word_count.value ; i++ ) { global[i] = tshared[i]; }
       }
     }
   }
@@ -1078,7 +1078,6 @@ public:
 
         m_scratch_space = (value_type*)rocm_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_size*nwork /* block_size == max block_count */ );
         m_scratch_flags = rocm_internal_scratch_flags( sizeof(size_type) );
-
         const dim3 block( 1 , block_size , 1 );
         // Required grid.x <= block.y
         const dim3 grid( nwork, block_size ,  1 );
