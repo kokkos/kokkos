@@ -2993,14 +2993,9 @@ class ViewMapping< DstTraits , SrcTraits ,
 private:
 
   enum { is_assignable_space =
-#if 1
    Kokkos::Impl::MemorySpaceAccess
      < typename DstTraits::memory_space
      , typename SrcTraits::memory_space >::assignable };
-#else
-   std::is_same< typename DstTraits::memory_space
-               , typename SrcTraits::memory_space >::value };
-#endif
 
   enum { is_assignable_value_type =
     std::is_same< typename DstTraits::value_type
