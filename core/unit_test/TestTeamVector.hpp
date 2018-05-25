@@ -750,7 +750,7 @@ bool test_scalar( int nteams, int team_size, int test ) {
   }
   else if ( test == 2 ) {
     // WORKAROUND ROCM
-    #if defined(KOKKOS_ENABLE_ROCM)
+    #if defined(KOKKOS_ENABLE_ROCM) //VectorScan not implemented?
     if(!std::is_same<ExecutionSpace,Kokkos::Experimental::ROCm>::value)
     #endif
     Kokkos::parallel_for( Kokkos::TeamPolicy< ExecutionSpace >( nteams, team_size, 8 ),
@@ -948,24 +948,18 @@ TEST_F( TEST_CATEGORY, triple_nested_parallelism )
   if (!std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value) {
 #endif
 #ifdef KOKKOS_ENABLE_ROCM // ROCm doesn't support TeamSize 32x32
-  if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::ROCm>::value) {
+  if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::ROCm>::value)
 #endif
   TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 32, 32 );
-#ifdef KOKKOS_ENABLE_ROCM
-  }
-#endif
   TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 32, 16 );
 #if defined(KOKKOS_DEBUG) && defined(KOKKOS_ENABLE_CUDA)
   }
 #endif
   TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 16, 16 );
 #ifdef KOKKOS_ENABLE_ROCM // ROCm doesn't support team sizes not powers of two
-  if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::ROCm>::value) {
+  if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::ROCm>::value)
 #endif
   TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 7, 16 );
-#ifdef KOKKOS_ENABLE_ROCM
-  }
-#endif
 }
 #endif
 
