@@ -1,3 +1,4 @@
+
 /*
 //@HEADER
 // ************************************************************************
@@ -41,15 +42,13 @@
 //@HEADER
 */
 
-#include<TestViewAPI.hpp>
-
+#include<rocm/TestROCm_Category.hpp>
+#include<TestMDRange.hpp>
 namespace Test {
 
-TEST_F( TEST_CATEGORY, view_api_b )
-{
-  TestViewAPI< double, TEST_EXECSPACE >::run_test_view_operator_a();
-  TestViewAPI< double, TEST_EXECSPACE >::run_test_mirror();
-  TestViewAPI< double, TEST_EXECSPACE >::run_test_scalar();
+TEST_F( TEST_CATEGORY , mdrange_4d_reduce ) {
+  TestMDRange_4D< TEST_EXECSPACE >::test_reduce4( 100, 100, 10, 5 );
 }
 
 }
+
