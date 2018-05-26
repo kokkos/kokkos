@@ -749,10 +749,6 @@ bool test_scalar( int nteams, int team_size, int test ) {
                           functor_vec_red_reducer< Scalar, ExecutionSpace >( d_flag ) );
   }
   else if ( test == 2 ) {
-    // WORKAROUND ROCM
-    #if defined(KOKKOS_ENABLE_ROCM) //VectorScan not implemented?
-    if(!std::is_same<ExecutionSpace,Kokkos::Experimental::ROCm>::value)
-    #endif
     Kokkos::parallel_for( Kokkos::TeamPolicy< ExecutionSpace >( nteams, team_size, 8 ),
                           functor_vec_scan< Scalar, ExecutionSpace >( d_flag ) );
   }

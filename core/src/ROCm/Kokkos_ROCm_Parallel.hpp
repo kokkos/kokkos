@@ -1740,86 +1740,46 @@ void parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ROC
   typedef Kokkos::Impl::FunctorValueTraits< FunctorType , void > ValueTraits ;
   typedef typename ValueTraits::value_type value_type ;
 
-  value_type scan_val = value_type();
-#if (__ROCM_ARCH__ >= 800)
-// adopt the cuda vector shuffle method
-  const int VectorLength = loop_boundaries.increment;
-  int lid = loop_boundaries.thread.lindex();
-  int vector_rank = lid%VectorLength;
+  value_type val = value_type();
+  const int vector_length = loop_boundaries.thread.vector_length();
+  const int vector_rank = loop_boundaries.thread.vector_rank();
 
-  iType loop_bound = ((loop_boundaries.end+VectorLength-1)/VectorLength) * VectorLength;
-  value_type val ;
-  for(int _i = vector_rank; _i < loop_bound; _i += VectorLength) {
-    val = value_type();
-    if(_i<loop_boundaries.end)
-      lambda(_i , val , false);
+  iType end = ((loop_boundaries.end+vector_length-1)/vector_length) * vector_length;
+  value_type accum = value_type();
 
-    value_type tmp = val;
-    value_type result_i;
+  for ( int i = vector_rank ; i < end ; i += vector_length ) {
 
-    if(vector_rank == 0)
-      result_i = tmp;
-    if (VectorLength > 1) {
-      const value_type tmp2 = shfl_up(tmp, 1,VectorLength);
-      if(vector_rank > 0)
-        tmp+=tmp2;
-    }
-    if(vector_rank == 1)
-      result_i = tmp;
-    if (VectorLength > 3) {
-      const value_type tmp2 = shfl_up(tmp, 2,VectorLength);
-      if(vector_rank > 1)
-        tmp+=tmp2;
-    }
-    if ((vector_rank >= 2) &&
-        (vector_rank < 4))
-      result_i = tmp;
-    if (VectorLength > 7) {
-      const value_type tmp2 = shfl_up(tmp, 4,VectorLength);
-      if(vector_rank > 3)
-        tmp+=tmp2;
-    }
-    if ((vector_rank >= 4) &&
-        (vector_rank < 8))
-      result_i = tmp;
-    if (VectorLength > 15) {
-      const value_type tmp2 = shfl_up(tmp, 8,VectorLength);
-      if(vector_rank > 7)
-        tmp+=tmp2;
-    }
-    if ((vector_rank >= 8) &&
-        (vector_rank < 16))
-      result_i = tmp;
-    if (VectorLength > 31) {
-      const value_type tmp2 = shfl_up(tmp, 16,VectorLength);
-      if(vector_rank > 15)
-        tmp+=tmp2;
-    }
-    if ((vector_rank >=16) &&
-        (vector_rank < 32))
-      result_i = tmp;
-    if (VectorLength > 63) {
-      const value_type tmp2 = shfl_up(tmp, 32,VectorLength);
-      if(vector_rank > 31)
-        tmp+=tmp2;
+    value_type val = 0 ;
+
+    // First acquire per-lane contributions:
+    if ( i < loop_boundaries.end ) lambda( i , val , false );
+
+    value_type sval = val ;
+
+    // Bottom up inclusive scan in triangular pattern
+    // where each thread is the root of a reduction tree
+    // from the zeroth "lane" to itself.
+    //  [t] += [t-1] if t >= 1
+    //  [t] += [t-2] if t >= 2
+    //  [t] += [t-4] if t >= 4
+    //  ...
+
+    for ( int j = 1 ; j < vector_length ; j <<= 1 ) {
+      value_type tmp = 0 ;
+      tmp = shfl_up(sval , j , vector_length );
+      if ( j <= vector_rank ) { sval += tmp ; }
     }
 
-    if (vector_rank >= 32)
-      result_i = tmp;
+    // Include accumulation and remove value for exclusive scan:
+    val = accum + sval - val ;
 
-    val = scan_val + result_i - val;
-    scan_val += shfl(tmp,VectorLength-1,VectorLength);
-    if(_i<loop_boundaries.end)
-      lambda(_i , val , true);
+    // Provide exclusive scan value:
+    if ( i < loop_boundaries.end ) lambda( i , val , true );
+
+    // Accumulate the last value in the inclusive scan:
+    sval = shfl( sval , vector_length-1 , vector_length);
+    accum += sval ;
   }
-#else
-// for kaveri, call the LDS based thread_scan routine
-  for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
-    lambda(i,scan_val,true);
-  }
-  scan_val = loop_boundaries.thread.team_scan(scan_val);
-
-#endif
 }
 
 } // namespace Kokkos
