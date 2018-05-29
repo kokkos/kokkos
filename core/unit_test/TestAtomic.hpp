@@ -529,7 +529,7 @@ TEST_F( TEST_CATEGORY, atomics )
   ASSERT_TRUE( ( TestAtomic::Loop< float, TEST_EXECSPACE >( 100, 3 ) ) );
 
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
-#ifndef KOKKOS_ENABLE_ROCM
+#ifndef KOKKOS_ENABLE_ROCM // ROCM doesn't yet support atomics for >64bit types
   ASSERT_TRUE( ( TestAtomic::Loop< Kokkos::complex<double>, TEST_EXECSPACE >( 1, 1 ) ) );
   ASSERT_TRUE( ( TestAtomic::Loop< Kokkos::complex<double>, TEST_EXECSPACE >( 1, 2 ) ) );
   ASSERT_TRUE( ( TestAtomic::Loop< Kokkos::complex<double>, TEST_EXECSPACE >( 1, 3 ) ) );

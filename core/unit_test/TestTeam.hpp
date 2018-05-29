@@ -177,8 +177,10 @@ public:
 
   const size_type nwork;
 
+  KOKKOS_INLINE_FUNCTION
   ReduceTeamFunctor( const size_type & arg_nwork ) : nwork( arg_nwork ) {}
 
+  KOKKOS_INLINE_FUNCTION
   ReduceTeamFunctor( const ReduceTeamFunctor & rhs ) : nwork( rhs.nwork ) {}
 
   KOKKOS_INLINE_FUNCTION
@@ -227,6 +229,7 @@ public:
   typedef Kokkos::TeamPolicy< ScheduleType,  execution_space >  policy_type;
   typedef typename execution_space::size_type                   size_type;
 
+  KOKKOS_INLINE_FUNCTION
   TestReduceTeam( const size_type & nwork ) { run_test( nwork ); }
 
   void run_test( const size_type & nwork )
@@ -786,8 +789,11 @@ struct ClassNoShmemSizeFunction {
     const int per_team1 = 3 * Kokkos::View< double*, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size( 128000 );
     const int per_thread1 = 3 * Kokkos::View< double*, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size( 16000 );
 
+    int team_size = 8;
+    if(team_size > ExecSpace::concurrency())
+      team_size = ExecSpace::concurrency();
     {
-      Kokkos::TeamPolicy< TagFor, ExecSpace, ScheduleType > policy( 10, 8, 16 );
+      Kokkos::TeamPolicy< TagFor, ExecSpace, ScheduleType > policy( 10, team_size, 16 );
 
       Kokkos::parallel_for( policy.set_scratch_size( 0, Kokkos::PerTeam( per_team0 ), Kokkos::PerThread( per_thread0 ) ).set_scratch_size( 1, Kokkos::PerTeam( per_team1 ), Kokkos::PerThread( per_thread1 ) ), *this );
       Kokkos::fence();
@@ -799,7 +805,7 @@ struct ClassNoShmemSizeFunction {
 
     {
       int error = 0;
-      Kokkos::TeamPolicy< TagReduce, ExecSpace, ScheduleType > policy( 10, 8, 16 );
+      Kokkos::TeamPolicy< TagReduce, ExecSpace, ScheduleType > policy( 10, team_size, 16 );
 
       Kokkos::parallel_reduce( policy.set_scratch_size( 0, Kokkos::PerTeam( per_team0 ), Kokkos::PerThread( per_thread0 ) ).set_scratch_size( 1, Kokkos::PerTeam( per_team1 ), Kokkos::PerThread( per_thread1 ) ), *this, error );
       Kokkos::fence();
@@ -833,8 +839,12 @@ struct ClassWithShmemSizeFunction {
     const int per_team1 = 3 * Kokkos::View< double*, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size( 128000 );
     const int per_thread1 = 3 * Kokkos::View< double*, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size( 16000 );
 
+    int team_size = 8;
+    if(team_size > ExecSpace::concurrency())
+      team_size = ExecSpace::concurrency();
+
     {
-      Kokkos::TeamPolicy< TagFor, ExecSpace, ScheduleType > policy( 10, 8, 16 );
+      Kokkos::TeamPolicy< TagFor, ExecSpace, ScheduleType > policy( 10, team_size, 16 );
 
       Kokkos::parallel_for( policy.set_scratch_size( 1, Kokkos::PerTeam( per_team1 ),
                                                      Kokkos::PerThread( per_thread1 ) ),
@@ -848,7 +858,7 @@ struct ClassWithShmemSizeFunction {
 
     {
       int error = 0;
-      Kokkos::TeamPolicy< TagReduce, ExecSpace, ScheduleType > policy( 10, 8, 16 );
+      Kokkos::TeamPolicy< TagReduce, ExecSpace, ScheduleType > policy( 10, team_size, 16 );
 
       Kokkos::parallel_reduce( policy.set_scratch_size( 1, Kokkos::PerTeam( per_team1 ),
                                                         Kokkos::PerThread( per_thread1 ) ),
@@ -880,7 +890,11 @@ void test_team_mulit_level_scratch_test_lambda() {
   const int per_team1 = 3 * Kokkos::View< double*, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size( 128000 );
   const int per_thread1 = 3 * Kokkos::View< double*, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size( 16000 );
 
-  Kokkos::TeamPolicy< ExecSpace, ScheduleType > policy( 10, 8, 16 );
+  int team_size = 8;
+  if(team_size > ExecSpace::concurrency())
+    team_size = ExecSpace::concurrency();
+
+  Kokkos::TeamPolicy< ExecSpace, ScheduleType > policy( 10, team_size, 16 );
 
   Kokkos::parallel_for( policy.set_scratch_size( 0, Kokkos::PerTeam( per_team0 ), Kokkos::PerThread( per_thread0 ) ).set_scratch_size( 1, Kokkos::PerTeam( per_team1 ), Kokkos::PerThread( per_thread1 ) ),
                         KOKKOS_LAMBDA ( const typename Kokkos::TeamPolicy< ExecSpace >::member_type & team )
