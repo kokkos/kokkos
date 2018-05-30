@@ -76,7 +76,7 @@ struct LayoutLeft {
 
   size_t dimension[ ARRAY_LAYOUT_MAX_RANK ];
 
-  enum { is_regular = true };
+  enum { is_extent_constructible = true };
 
   LayoutLeft( LayoutLeft const & ) = default ;
   LayoutLeft( LayoutLeft && ) = default ;
@@ -110,7 +110,7 @@ struct LayoutRight {
 
   size_t dimension[ ARRAY_LAYOUT_MAX_RANK ];
 
-  enum { is_regular = true };
+  enum { is_extent_constructible = true };
 
   LayoutRight( LayoutRight const & ) = default ;
   LayoutRight( LayoutRight && ) = default ;
@@ -136,7 +136,7 @@ struct LayoutStride {
   size_t dimension[ ARRAY_LAYOUT_MAX_RANK ] ;
   size_t stride[ ARRAY_LAYOUT_MAX_RANK ] ;
 
-  enum { is_regular = false };
+  enum { is_extent_constructible = false };
 
   LayoutStride( LayoutStride const & ) = default ;
   LayoutStride( LayoutStride && ) = default ;
@@ -228,7 +228,7 @@ struct LayoutTileLeft {
 
   size_t dimension[ ARRAY_LAYOUT_MAX_RANK ] ;
 
-  enum { is_regular = true };
+  enum { is_extent_constructible = true };
 
   LayoutTileLeft( LayoutTileLeft const & ) = default ;
   LayoutTileLeft( LayoutTileLeft && ) = default ;
