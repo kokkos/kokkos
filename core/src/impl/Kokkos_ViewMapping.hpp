@@ -1268,6 +1268,18 @@ public:
       // Also requires equal static dimensions ...
     }
 
+  template< class DimRHS >
+  KOKKOS_INLINE_FUNCTION
+  ViewOffset( const ViewOffset< DimRHS , Kokkos::LayoutStride , void > & rhs )
+    : m_dim( rhs.m_dim.N0 , rhs.m_dim.N1 , rhs.m_dim.N2 , rhs.m_dim.N3
+           , rhs.m_dim.N4 , rhs.m_dim.N5 , rhs.m_dim.N6 , rhs.m_dim.N7 )
+    , m_stride( rhs.stride_1() )
+    {
+      if ( rhs.m_stride.S0 != 1 ) {
+        Kokkos::abort("Kokkos::Impl::ViewOffset assignment of LayoutLeft from LayoutStride requires stride == 1" );
+      }
+    }
+
   //----------------------------------------
   // Subview construction
   // This subview must be 2 == rank and 2 == rank_dynamic
@@ -1753,6 +1765,23 @@ public:
     {
       static_assert( int(DimRHS::rank) == int(dimension_type::rank) , "ViewOffset assignment requires equal rank" );
       // Also requires equal static dimensions ...
+    }
+
+  template< class DimRHS >
+  KOKKOS_INLINE_FUNCTION
+  ViewOffset( const ViewOffset< DimRHS , Kokkos::LayoutStride , void > & rhs )
+    : m_dim( rhs.m_dim.N0 , rhs.m_dim.N1 , rhs.m_dim.N2 , rhs.m_dim.N3
+           , rhs.m_dim.N4 , rhs.m_dim.N5 , rhs.m_dim.N6 , rhs.m_dim.N7 )
+    , m_stride( rhs.stride_0() )
+    {
+      if ( ((dimension_type::rank == 2)?rhs.m_stride.S1:
+           ((dimension_type::rank == 3)?rhs.m_stride.S2:
+           ((dimension_type::rank == 4)?rhs.m_stride.S3:
+           ((dimension_type::rank == 5)?rhs.m_stride.S4:
+           ((dimension_type::rank == 6)?rhs.m_stride.S5:
+           ((dimension_type::rank == 7)?rhs.m_stride.S6:rhs.m_stride.S7)))))) != 1 ){
+        Kokkos::abort("Kokkos::Impl::ViewOffset assignment of LayoutRight from LayoutStride requires right-most stride == 1" );
+      }
     }
 
   //----------------------------------------
@@ -3038,7 +3067,7 @@ public:
       }
       return assignable; 
     }
-  
+
   KOKKOS_INLINE_FUNCTION
   static void assign( DstType & dst , const SrcType & src , const TrackType & src_track )
     {
@@ -3053,7 +3082,7 @@ public:
 
       bool assignable_layout = assignable_layout_check(dst, src); //Runtime check
       if(!assignable_layout)
-          Kokkos::abort("View assignment must have compatible layout\n");
+          Kokkos::abort("View assignment must have compatible layouts\n");
 	  
       typedef typename DstType::offset_type  dst_offset_type ;
 

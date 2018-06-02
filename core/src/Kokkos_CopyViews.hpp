@@ -1243,9 +1243,9 @@ void deep_copy
      ViewTypeFlat;
 
     ViewTypeFlat dst_flat(dst.data(),dst.size());
-    if(dst.span() < std::numeric_limits<int>::max())
+    if(dst.span() < std::numeric_limits<int>::max()) {
       Kokkos::Impl::ViewFill< ViewTypeFlat , Kokkos::LayoutRight, typename ViewType::execution_space, ViewTypeFlat::Rank, int >( dst_flat , value );
-    else
+    } else
       Kokkos::Impl::ViewFill< ViewTypeFlat , Kokkos::LayoutRight, typename ViewType::execution_space, ViewTypeFlat::Rank, int64_t >( dst_flat , value );
     Kokkos::fence();
     return;
@@ -1396,7 +1396,6 @@ void deep_copy
 
   enum { SrcExecCanAccessDst =
    Kokkos::Impl::SpaceAccessibility< src_execution_space , dst_memory_space >::accessible };
-
 
   // Checking for Overlapping Views.
   dst_value_type* dst_start = dst.data();

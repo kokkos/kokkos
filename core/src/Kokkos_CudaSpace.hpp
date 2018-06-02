@@ -395,7 +395,7 @@ template<class ExecutionSpace> struct DeepCopy< CudaSpace , CudaSpace , Executio
 {
   inline
   DeepCopy( void * dst , const void * src , size_t n )
-  { (void) DeepCopy< CudaSpace , CudaSpace , Cuda >( dst , src , n ); }
+  { (void) DeepCopy< CudaSpace , CudaSpace , Cuda >( dst , src , n ); printf("DeepCopy< CudaSpace , CudaSpace , Cuda >( dst , src , %ld ) Done!!!\n",n); }
 
   inline
   DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
