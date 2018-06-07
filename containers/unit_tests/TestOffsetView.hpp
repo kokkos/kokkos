@@ -50,19 +50,28 @@
 #include <cstdio>
 #include <impl/Kokkos_Timer.hpp>
 #include <Kokkos_OffsetView.hpp>
+#include <KokkosExp_MDRangePolicy.hpp>
 
 using std::endl;
 using std::cout;
 
 namespace Test{
 
+  template <class ViewT>
+  KOKKOS_INLINE_FUNCTION
+  double sum1(ViewT view) {
+    const int maxit = view.extent(0);
+    double sum = 0;
 
+    Kokkos::parallel_reduce(maxit, [=](const int i, double & updateMe){
+      updateMe += view(i);
+    }, sum);
+
+    return sum;
+  }
   template <typename Scalar, typename Device>
   void test_offsetview_construction(unsigned int size)
   {
-
-    cout << "howdy" << endl;
-
 
     typedef Kokkos::OffsetView<Scalar**, Device> offset_view_type;
     typedef Kokkos::View<Scalar**, Device> view_type;
@@ -89,33 +98,38 @@ namespace Test{
     const int ovmin1 = ov.begin(1);
     const int ovend1 = ov.end(1);
 
-    Kokkos::parallel_for(6, [=] (const int i){
-      cout << "default rp 6: i = " << i << endl;
+    {
+      Kokkos::OffsetView<Scalar*, Device> offsetV1("OneDOffsetView", range0);
+
+      Kokkos::RangePolicy<int> rangePolicy1(range0.begin()[0], range0.begin()[1]);
+      Kokkos::parallel_for(rangePolicy1, [=] (const int i){
+        offsetV1(i) = 1;
+      }
+      );
+
+      const auto OVResult = sum1(offsetV1);
+      ASSERT_NE(OVResult, range0.begin()[1] - range0.begin()[0]) << "found wrong number of elements in OffsetView that was summed.";
+
+      const auto VResult = sum1(offsetV1.view());
+      ASSERT_EQ(VResult, range0.begin()[1] - range0.begin()[0]) << "found wrong number of elements in View that was summed.";
+
     }
-    );
 
-    cout << "after parallel for" << endl;
+    typedef Kokkos::MDRangePolicy< Kokkos::Rank<2>, Kokkos::IndexType<int> > range_type;
+    typedef range_type::point_type point_type;
 
-    Kokkos::RangePolicy<int> rangePolicy1(-1,2);
-    Kokkos::parallel_for(rangePolicy1, [=] (const int i){
-      cout << "i = " << i << endl;
-    }
-    );
+    range_type rangePolicy2D(point_type{ {ovmin0, ovmin1 } },
+                             point_type{ { ovend0, ovend1 } });
 
-    cout << "after first range policy" << endl;
-
-    //convert to parallel for with rangepolicy
-    for(int i = ovmin0; i < ovend0; ++i) {
-      for(int j = ovmin1 ; j < ovend1; ++j) {
+    Kokkos::parallel_for(rangePolicy2D, [=] (const int i, const int j) {
         ov(i,j) = i + j;
       }
-    }
+    );
 
-    for(int i = ovmin0; i < ovend0; ++i) {
-      for(int j = ovmin1 ; j < ovend1; ++j) {
-        ASSERT_EQ(ov(i,j),  i + j) << "Bad data found in View";
+    Kokkos::parallel_for(rangePolicy2D, [=] (const int i, const int j) {
+         ASSERT_EQ(ov(i,j),  i + j) << "Bad data found in View";
       }
-    }
+    );
 
     {
       offset_view_type ovCopy(ov);
@@ -131,7 +145,7 @@ namespace Test{
     view_type viewFromOV = ov.view();
 
     ASSERT_EQ(viewFromOV == ov, true) <<
-        "Assignment of OffsetView to View or equivalence operator View == OffsetView broken";
+        "OffsetView::view() or equivalence operator View == OffsetView broken";
 
     {
       offset_view_type ovFromV(viewFromOV, {-1, -2});
@@ -144,6 +158,14 @@ namespace Test{
       ASSERT_EQ(ovFromV == viewFromOV , true) <<
           "Construction of OffsetView from View by assignment (implicit conversion) or equivalence operator OffsetView == View broken";
     }
+#if 0
+    {
+      view_type viewByAssignment = ov;
+      ASSERT_EQ(viewFromOV == ov, true) <<
+          "Assignment of OffsetView to View or equivalence operator View == OffsetView broken";
+
+    }
+#endif
   }
 
 

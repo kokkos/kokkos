@@ -799,12 +799,12 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     template<class RT, class ... RP>
     KOKKOS_INLINE_FUNCTION
     OffsetView( const View<RT, RP...> & view) :
-                m_track(view.m_track), m_map(){
+                m_track(view.impl_track()), m_map(){
 
       typedef typename OffsetView<RT,RP...>::traits  SrcTraits ;
       typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
        static_assert( Mapping::is_assignable , "Incompatible OffsetView copy construction" );
-       Mapping::assign( m_map , view.m_map , view.m_track );
+       Mapping::assign( m_map , view.impl_map() , m_track );
 
       for (size_t i = 0; i < view.Rank; ++i) {
           m_begins[i] = 0;
@@ -815,12 +815,12 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     KOKKOS_INLINE_FUNCTION
     OffsetView( const View<RT, RP...> & view
                 ,const index_list_type & minIndices) :
-                m_track(view.m_track), m_map(){
+                m_track(view.impl_track()), m_map(){
 
       typedef typename OffsetView<RT,RP...>::traits  SrcTraits ;
       typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
        static_assert( Mapping::is_assignable , "Incompatible OffsetView copy construction" );
-       Mapping::assign( m_map , view.m_map , view.m_track );
+       Mapping::assign( m_map , view.impl_map() , m_track );
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
           Impl::runtime_check_rank_host(traits::rank_dynamic, Rank, minIndices, label());
