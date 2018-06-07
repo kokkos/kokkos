@@ -2262,11 +2262,9 @@ public:
   View( track_type & track,  Kokkos::Impl::ViewMapping< Traits , void >  &map ) :
   m_track(track), m_map()
   {
-   // typedef typename View<RT,RP...>::traits  SrcTraits ;
     typedef Kokkos::Impl::ViewMapping< traits , Traits , void >  Mapping ;
     static_assert( Mapping::is_assignable , "Incompatible View copy construction" );
     Mapping::assign( m_map , map , track );
-    //  m_map = map;
   }
 
   //----------------------------------------

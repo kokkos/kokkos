@@ -61,6 +61,9 @@ namespace Test{
   void test_offsetview_construction(unsigned int size)
   {
 
+    cout << "howdy" << endl;
+
+
     typedef Kokkos::OffsetView<Scalar**, Device> offset_view_type;
     typedef Kokkos::View<Scalar**, Device> view_type;
 
@@ -86,8 +89,22 @@ namespace Test{
     const int ovmin1 = ov.begin(1);
     const int ovend1 = ov.end(1);
 
-    auto x = ovmin0;
+    Kokkos::parallel_for(6, [=] (const int i){
+      cout << "default rp 6: i = " << i << endl;
+    }
+    );
 
+    cout << "after parallel for" << endl;
+
+    Kokkos::RangePolicy<int> rangePolicy1(-1,2);
+    Kokkos::parallel_for(rangePolicy1, [=] (const int i){
+      cout << "i = " << i << endl;
+    }
+    );
+
+    cout << "after first range policy" << endl;
+
+    //convert to parallel for with rangepolicy
     for(int i = ovmin0; i < ovend0; ++i) {
       for(int j = ovmin1 ; j < ovend1; ++j) {
         ov(i,j) = i + j;
@@ -102,19 +119,30 @@ namespace Test{
 
     {
       offset_view_type ovCopy(ov);
-      ASSERT_EQ(ovCopy==ov, true) << "Copy constructor or equivalence operator broken";
+      ASSERT_EQ(ovCopy==ov, true) <<
+          "Copy constructor or equivalence operator broken";
     }
     {
       offset_view_type ovAssigned = ov;
-      ASSERT_EQ(ovAssigned==ov, true) <<  "Assignment operator or equivalence operator broken";
+      ASSERT_EQ(ovAssigned==ov, true) <<
+          "Assignment operator or equivalence operator broken";
     }
 
-    auto viewFromOV = ov.view();
-    ASSERT_EQ(viewFromOV == ov, true) << "Assignment of OffsetView to View or equivalence operator View == OffsetView broken";
+    view_type viewFromOV = ov.view();
+
+    ASSERT_EQ(viewFromOV == ov, true) <<
+        "Assignment of OffsetView to View or equivalence operator View == OffsetView broken";
 
     {
       offset_view_type ovFromV(viewFromOV, {-1, -2});
-      ASSERT_EQ(ovFromV == viewFromOV , true) << "Construction of OffsetView from View or equivalence operator OffsetView == View broken";
+      ASSERT_EQ(ovFromV == viewFromOV , true) <<
+          "Construction of OffsetView from View or equivalence operator OffsetView == View broken";
+    }
+
+    {
+      offset_view_type ovFromV = viewFromOV;
+      ASSERT_EQ(ovFromV == viewFromOV , true) <<
+          "Construction of OffsetView from View by assignment (implicit conversion) or equivalence operator OffsetView == View broken";
     }
   }
 

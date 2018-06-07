@@ -82,7 +82,6 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
       if (rank_dynamic != rank) {
           Kokkos::abort("The full rank of an OffsetView must be the same as the dynamic rank.");
       }
-
       size_t numOffsets = 0;
       for(size_t i = 0; i < minIndices.size(); ++i ){
           if( minIndices.begin()[i] != -KOKKOS_INVALID_OFFSET) numOffsets++;
@@ -116,7 +115,6 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     typedef Kokkos::Array<int64_t, Rank>  begins_type ;
 
 
-    // can use 'iterator semantics, where end() is invalid : use begin() <= index < end()
     template <typename iType, typename std::enable_if< std::is_integral<iType>::value, iType>::type = 0>
     int64_t begin(const iType dimension) const {return m_begins[dimension];}
 
@@ -791,27 +789,6 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
         typename traits::memory_traits > view_type;
   public:
 
-    // i don't think these conversion-assignment operators are right. they wont do the right thing if you use
-    // one to create, eg MyOffsetViewType ov = preexistingView;
-    KOKKOS_INLINE_FUNCTION
-    OffsetView & operator = ( const view_type & rhs ) {
-      m_track = rhs.m_track ;
-      m_map = rhs.m_map ;
-      for(size_t i = 0; i < Rank; ++i )
-        m_begins[i] = 0;
-      return *this ;
-    }
-
-    template<class ViewType>
-    KOKKOS_INLINE_FUNCTION
-    OffsetView & operator = ( ViewType && rhs ) {
-      m_track =std::move(rhs.m_track) ;
-      m_map = std::move(rhs.m_map);
-      for(size_t i = 0; i < Rank; ++i )
-        m_begins[i] = 0;
-      return *this ;
-    }
-
     KOKKOS_INLINE_FUNCTION
     view_type view() {
 
@@ -820,7 +797,22 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     }
 
     template<class RT, class ... RP>
-    explicit KOKKOS_INLINE_FUNCTION
+    KOKKOS_INLINE_FUNCTION
+    OffsetView( const View<RT, RP...> & view) :
+                m_track(view.m_track), m_map(){
+
+      typedef typename OffsetView<RT,RP...>::traits  SrcTraits ;
+      typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
+       static_assert( Mapping::is_assignable , "Incompatible OffsetView copy construction" );
+       Mapping::assign( m_map , view.m_map , view.m_track );
+
+      for (size_t i = 0; i < view.Rank; ++i) {
+          m_begins[i] = 0;
+      }
+    }
+
+    template<class RT, class ... RP>
+    KOKKOS_INLINE_FUNCTION
     OffsetView( const View<RT, RP...> & view
                 ,const index_list_type & minIndices) :
                 m_track(view.m_track), m_map(){
