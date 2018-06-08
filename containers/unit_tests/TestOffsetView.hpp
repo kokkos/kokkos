@@ -114,8 +114,8 @@ namespace Test{
       ASSERT_EQ(VResult, range0.begin()[1] - range0.begin()[0]) << "found wrong number of elements in View that was summed.";
 
     }
-
-    typedef Kokkos::MDRangePolicy< Kokkos::Rank<2>, Kokkos::IndexType<int> > range_type;
+/*
+    typedef Kokkos::MDRangePolicy<Kokkos::Rank<2>, Kokkos::IndexType<int> > range_type;
     typedef range_type::point_type point_type;
 
     range_type rangePolicy2D(point_type{ {ovmin0, ovmin1 } },
@@ -130,7 +130,7 @@ namespace Test{
          ASSERT_EQ(ov(i,j),  i + j) << "Bad data found in View";
       }
     );
-
+*/
     {
       offset_view_type ovCopy(ov);
       ASSERT_EQ(ovCopy==ov, true) <<
