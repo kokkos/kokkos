@@ -23,6 +23,7 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
     threads/TestThreads_DynRankViewAPI_rank12345.cpp
     threads/TestThreads_DynRankViewAPI_rank67.cpp
     threads/TestThreads_ErrorReporter.cpp
+    threads/TestThreads_OffsetView.cpp
     threads/TestThreads_ScatterView.cpp
     threads/TestThreads_StaticCrsGraph.cpp
     threads/TestThreads_UnorderedMap.cpp
@@ -72,6 +73,7 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
     openmp/TestOpenMP_DynRankViewAPI_rank12345.cpp
     openmp/TestOpenMP_DynRankViewAPI_rank67.cpp
     openmp/TestOpenMP_ErrorReporter.cpp
+    openmp/TestOpenMP_OffsetView.cpp
     openmp/TestOpenMP_ScatterView.cpp
     openmp/TestOpenMP_StaticCrsGraph.cpp
     openmp/TestOpenMP_UnorderedMap.cpp
@@ -96,6 +98,7 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
     cuda/TestCuda_DynRankViewAPI_rank12345.cpp
     cuda/TestCuda_DynRankViewAPI_rank67.cpp
     cuda/TestCuda_ErrorReporter.cpp
+    cuda/TestCuda_OffsetView.cpp
     cuda/TestCuda_ScatterView.cpp
     cuda/TestCuda_StaticCrsGraph.cpp
     cuda/TestCuda_UnorderedMap.cpp
