@@ -86,7 +86,7 @@ namespace Test{
     const int ovmin1 = ov.begin(1);
     const int ovend1 = ov.end(1);
 
-#ifdef KOKKOS_ENABLE_CUDA_LAMBDA
+//#ifdef KOKKOS_ENABLE_CUDA_LAMBDA
     {
       Kokkos::OffsetView<Scalar*, Device> offsetV1("OneDOffsetView", range0);
 
@@ -107,12 +107,12 @@ namespace Test{
 //      ASSERT_EQ(VResult, range0.begin()[1] - range0.begin()[0]) << "found wrong number of elements in View that was summed.";
 
     }
-#endif
+//#endif
 
-#ifdef KOKKOS_ENABLE_CUDA_LAMBDA
+//#ifdef KOKKOS_ENABLE_CUDA_LAMBDA
 
-    typedef Kokkos::MDRangePolicy<Kokkos::Rank<2>, Device, Kokkos::IndexType<int> > range_type;
-    typedef range_type::point_type point_type;
+    typedef Kokkos::MDRangePolicy<Device, Kokkos::Rank<2>, Kokkos::IndexType<int> > range_type;
+    typedef typename range_type::point_type point_type;
 
     range_type rangePolicy2D(point_type{ {ovmin0, ovmin1 } },
                              point_type{ { ovend0, ovend1 } });
@@ -126,7 +126,7 @@ namespace Test{
          ASSERT_EQ(ov(i,j),  i + j) << "Bad data found in View";
       }
     );
-#endif
+//#endif
     {
       offset_view_type ovCopy(ov);
       ASSERT_EQ(ovCopy==ov, true) <<
