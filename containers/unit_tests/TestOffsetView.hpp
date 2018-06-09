@@ -57,18 +57,6 @@ using std::cout;
 
 namespace Test{
 
-  template <class ViewT>
-  KOKKOS_INLINE_FUNCTION
-  double sum1(ViewT view) {
-    const int maxit = view.extent(0);
-    double sum = 0;
-
-    Kokkos::parallel_reduce(maxit, [=](const int i, double & updateMe){
-      updateMe += view(i);
-    }, sum);
-
-    return sum;
-  }
   template <typename Scalar, typename Device>
   void test_offsetview_construction(unsigned int size)
   {
@@ -98,11 +86,12 @@ namespace Test{
     const int ovmin1 = ov.begin(1);
     const int ovend1 = ov.end(1);
 
+#ifdef KOKKOS_ENABLE_CUDA_LAMBDA
     {
       Kokkos::OffsetView<Scalar*, Device> offsetV1("OneDOffsetView", range0);
 
       Kokkos::RangePolicy<Device, int> rangePolicy1(range0.begin()[0], range0.begin()[1]);
-      Kokkos::parallel_for(rangePolicy1, [=] (const int i){
+      Kokkos::parallel_for(rangePolicy1, KOKKOS_LAMBDA (const int i){
         offsetV1(i) = 1;
       }
       );
@@ -118,23 +107,26 @@ namespace Test{
 //      ASSERT_EQ(VResult, range0.begin()[1] - range0.begin()[0]) << "found wrong number of elements in View that was summed.";
 
     }
-/*
-    typedef Kokkos::MDRangePolicy<Kokkos::Rank<2>, Kokkos::IndexType<int> > range_type;
+#endif
+
+#ifdef KOKKOS_ENABLE_CUDA_LAMBDA
+
+    typedef Kokkos::MDRangePolicy<Kokkos::Rank<2>, Device, Kokkos::IndexType<int> > range_type;
     typedef range_type::point_type point_type;
 
     range_type rangePolicy2D(point_type{ {ovmin0, ovmin1 } },
                              point_type{ { ovend0, ovend1 } });
 
-    Kokkos::parallel_for(rangePolicy2D, [=] (const int i, const int j) {
+    Kokkos::parallel_for(rangePolicy2D, KOKKOS_LAMBDA (const int i, const int j) {
         ov(i,j) = i + j;
       }
     );
 
-    Kokkos::parallel_for(rangePolicy2D, [=] (const int i, const int j) {
+    Kokkos::parallel_for(rangePolicy2D, KOKKOS_LAMBDA (const int i, const int j) {
          ASSERT_EQ(ov(i,j),  i + j) << "Bad data found in View";
       }
     );
-*/
+#endif
     {
       offset_view_type ovCopy(ov);
       ASSERT_EQ(ovCopy==ov, true) <<

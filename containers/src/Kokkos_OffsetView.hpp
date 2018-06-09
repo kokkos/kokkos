@@ -116,10 +116,14 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
 
 
     template <typename iType, typename std::enable_if< std::is_integral<iType>::value, iType>::type = 0>
-    int64_t begin(const iType dimension) const {return m_begins[dimension];}
+    KOKKOS_INLINE_FUNCTION
+    int64_t begin(const iType dimension) const {
+      return dimension < Rank ? m_begins[dimension] : 0;
+    }
 
     template <typename iType, typename std::enable_if< std::is_integral<iType>::value, iType>::type = 0>
-    int64_t end(const iType dimension) const {return m_begins[dimension] + m_map.extent(dimension);}
+    KOKKOS_INLINE_FUNCTION
+    int64_t end(const iType dimension) const {return begin(dimension) + m_map.extent(dimension);}
 
 
   private:
@@ -301,8 +305,8 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     operator()( const I0 & i0) const
     {
 
-      const size_t j0 = i0 - m_begins[0];
       KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0) )
+      const size_t j0 = i0 - m_begins[0];
       return m_map.reference(j0);
     }
 
@@ -316,8 +320,8 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     ), reference_type >::type
     operator()( const I0 & i0 ) const
     {
-      const size_t j0 = i0 - m_begins[0];
       KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0) )
+      const size_t j0 = i0 - m_begins[0];
       return m_map.m_impl_handle[ j0 ];
     }
 
@@ -331,8 +335,8 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     ), reference_type >::type
     operator()( const I0 & i0) const
     {
-      const size_t j0 = i0 - m_begins[0];
       KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0) )
+      const size_t j0 = i0 - m_begins[0];
       return m_map.m_impl_handle[ m_map.m_impl_offset.m_stride.S0 * j0 ];
     }
     //------------------------------
@@ -347,8 +351,8 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     ), reference_type >::type
     operator[]( const I0 & i0 ) const
     {
-      const size_t j0 = i0 - m_begins[0];
       KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0) )
+      const size_t j0 = i0 - m_begins[0];
       return m_map.reference(j0);
     }
 
@@ -362,8 +366,8 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     ), reference_type >::type
     operator[]( const I0 & i0 ) const
     {
-      const size_t j0 = i0 - m_begins[0];
       KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0) )
+      const size_t j0 = i0 - m_begins[0];
       return m_map.m_impl_handle[ j0 ];
     }
 
@@ -377,10 +381,8 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     ), reference_type >::type
     operator[]( const I0 & i0 ) const
     {
-
-      const size_t j0 = i0 - m_begins[0];
-
       KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0) )
+      const size_t j0 = i0 - m_begins[0];
       return m_map.m_impl_handle[ m_map.m_impl_offset.m_stride.S0 * j0 ];
     }
 
@@ -397,9 +399,9 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     ), reference_type >::type
     operator()( const I0 & i0 , const I1 & i1) const
     {
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1) )
       return m_map.reference(j0,j1);
     }
 
@@ -413,9 +415,9 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     ), reference_type >::type
     operator()( const I0 & i0 , const I1 & i1) const
     {
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1) )
       return m_map.m_impl_handle[ j0 + m_map.m_impl_offset.m_dim.N0 * j1 ];
     }
 
@@ -429,9 +431,9 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     ), reference_type >::type
     operator()( const I0 & i0 , const I1 & i1) const
     {
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1) )
       return m_map.m_impl_handle[ j0 + m_map.m_impl_offset.m_stride * j1 ];
     }
 
@@ -445,9 +447,9 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     ), reference_type >::type
     operator()( const I0 & i0 , const I1 & i1 ) const
     {
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1) )
       return m_map.m_impl_handle[ j1 + m_map.m_impl_offset.m_dim.N1 * j0 ];
     }
 
@@ -461,9 +463,9 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     ), reference_type >::type
     operator()( const I0 & i0 , const I1 & i1 ) const
     {
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1) )
       return m_map.m_impl_handle[ j1 + m_map.m_impl_offset.m_stride * j0 ];
     }
 
@@ -477,9 +479,9 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     ), reference_type >::type
     operator()( const I0 & i0 , const I1 & i1 ) const
     {
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1) )
       return m_map.m_impl_handle[ j0 * m_map.m_impl_offset.m_stride.S0 +
                                   j1 * m_map.m_impl_offset.m_stride.S1 ];
     }
@@ -496,11 +498,10 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     ), reference_type >::type
     operator()( const I0 & i0 , const I1 & i1 , const I2 & i2) const
     {
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1, i2) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
       const size_t j2 = i2 - m_begins[2];
-
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1, i2) )
       return m_map.m_impl_handle[ m_map.m_impl_offset(j0, j1, j2) ];
     }
 
@@ -513,10 +514,10 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     ), reference_type >::type
     operator()( const I0 & i0 , const I1 & i1 , const I2 & i2) const
     {
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map,m_begins, i0,i1, i2) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
       const size_t j2 = i2 - m_begins[2];
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map,m_begins, i0,i1, i2) )
       return m_map.reference(j0, j1, j2);
     }
 
@@ -532,11 +533,11 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     ), reference_type >::type
     operator()( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3) const
     {
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1, i2, i3) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
       const size_t j2 = i2 - m_begins[2];
       const size_t j3 = i3 - m_begins[3];
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1, i2, i3) )
       return m_map.m_impl_handle[ m_map.m_impl_offset(j0,j1,j2,j3) ];
     }
 
@@ -549,11 +550,11 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     ), reference_type >::type
     operator()( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3) const
     {
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1, i2, i3) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
       const size_t j2 = i2 - m_begins[2];
       const size_t j3 = i3 - m_begins[3];
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1, i2, i3) )
       return m_map.reference(j0,j1,j2,j3);
     }
 
@@ -571,12 +572,12 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     operator()( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3
                 , const I4 & i4 ) const
     {
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1, i2, i3, i4) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
       const size_t j2 = i2 - m_begins[2];
       const size_t j3 = i3 - m_begins[3];
       const size_t j4 = i4 - m_begins[4];
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1, i2, i3, i4) )
       return m_map.m_impl_handle[ m_map.m_impl_offset(j0, j1,j2, j3, j4) ];
     }
 
@@ -591,12 +592,12 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     operator()( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3
                 , const I4 & i4) const
     {
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1, i2, i3, i4) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
       const size_t j2 = i2 - m_begins[2];
       const size_t j3 = i3 - m_begins[3];
       const size_t j4 = i4 - m_begins[4];
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map, m_begins, i0,i1, i2, i3, i4) )
       return m_map.reference(j0,j1,j2,j3,j4);
     }
 
@@ -614,13 +615,13 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     operator()( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3
                 , const I4 & i4 , const I5 & i5 ) const
     {
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map,m_begins, i0,i1, i2, i3, i4, i5) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
       const size_t j2 = i2 - m_begins[2];
       const size_t j3 = i3 - m_begins[3];
       const size_t j4 = i4 - m_begins[4];
       const size_t j5 = i5 - m_begins[5];
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map,m_begins, i0,i1, i2, i3, i4, i5) )
       return m_map.m_impl_handle[ m_map.m_impl_offset(j0,j1,j2,j3,j4,j5) ];
     }
 
@@ -635,14 +636,13 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     operator()( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3
                 , const I4 & i4 , const I5 & i5) const
     {
-
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map,m_begins, i0,i1, i2, i3, i4, i5) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
       const size_t j2 = i2 - m_begins[2];
       const size_t j3 = i3 - m_begins[3];
       const size_t j4 = i4 - m_begins[4];
       const size_t j5 = i5 - m_begins[5];
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map,m_begins, i0,i1, i2, i3, i4, i5) )
       return m_map.reference(j0,j1,j2,j3,j4,j5);
     }
 
@@ -660,6 +660,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     operator()( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3
                 , const I4 & i4 , const I5 & i5 , const I6 & i6) const
     {
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map,m_begins, i0,i1, i2, i3, i4, i5, i6) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
       const size_t j2 = i2 - m_begins[2];
@@ -667,7 +668,6 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
       const size_t j4 = i4 - m_begins[4];
       const size_t j5 = i5 - m_begins[5];
       const size_t j6 = i6 - m_begins[6];
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map,m_begins, i0,i1, i2, i3, i4, i5, i6) )
       return m_map.m_impl_handle[ m_map.m_impl_offset(j0,j1,j2,j3,j4,j5,j6) ];
     }
 
@@ -682,6 +682,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     operator()( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3
                 , const I4 & i4 , const I5 & i5 , const I6 & i6) const
     {
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map,m_begins, i0,i1, i2, i3, i4, i5, i6) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
       const size_t j2 = i2 - m_begins[2];
@@ -689,7 +690,6 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
       const size_t j4 = i4 - m_begins[4];
       const size_t j5 = i5 - m_begins[5];
       const size_t j6 = i6 - m_begins[6];
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map,m_begins, i0,i1, i2, i3, i4, i5, i6) )
       return m_map.reference(j0,j1,j2,j3,j4,j5,j6);
     }
 
@@ -707,6 +707,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     operator()( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3
                 , const I4 & i4 , const I5 & i5 , const I6 & i6 , const I7 & i7) const
     {
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map,m_begins, i0,i1, i2, i3, i4, i5, i6, i7) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
       const size_t j2 = i2 - m_begins[2];
@@ -715,7 +716,6 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
       const size_t j5 = i5 - m_begins[5];
       const size_t j6 = i6 - m_begins[6];
       const size_t j7 = i7 - m_begins[7];
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map,m_begins, i0,i1, i2, i3, i4, i5, i6, i7) )
       return m_map.m_impl_handle[ m_map.m_impl_offset(j0,j1,j2,j3,j4,j5,j6,j7) ];
     }
 
@@ -730,6 +730,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
     operator()( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3
                 , const I4 & i4 , const I5 & i5 , const I6 & i6 , const I7 & i7 ) const
     {
+      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map,m_begins, i0,i1, i2, i3, i4, i5, i6, i7) )
       const size_t j0 = i0 - m_begins[0];
       const size_t j1 = i1 - m_begins[1];
       const size_t j2 = i2 - m_begins[2];
@@ -738,7 +739,6 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
       const size_t j5 = i5 - m_begins[5];
       const size_t j6 = i6 - m_begins[6];
       const size_t j7 = i7 - m_begins[7];
-      KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY( (m_track,m_map,m_begins, i0,i1, i2, i3, i4, i5, i6, i7) )
       return m_map.reference(j0,j1,j2,j3,j4,j5,j6,j7);
     }
 
