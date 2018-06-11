@@ -130,16 +130,30 @@ namespace Test{
     );
     
     //need hostmirror and deep copy for this to work.
-    for(int i = ov.begin(0); i < ov.end(0); ++i) {
-      for(int j = ov.begin(1); j < ov.end(1); ++j) {
-    	 ASSERT_EQ(ov(i,j),  i + j) << "Bad data found in View";
-      }
-    }
+//    for(int i = ov.begin(0); i < ov.end(0); ++i) {
+//      for(int j = ov.begin(1); j < ov.end(1); ++j) {
+//    	 ASSERT_EQ(ov(i,j),  i + j) << "Bad data found in OffsetView";
+//      }
+//    }
 
        // Kokkos::parallel_for(rangePolicy2D, KOKKOS_LAMBDA (const int i, const int j) {
        // 	   ASSERT_EQ(ov(i,j),  i + j);
        //   }
        // );
+
+    int OVResult = 0;
+    Kokkos::parallel_reduce(rangePolicy2D, KOKKOS_LAMBDA(const int i, const int j, int & updateMe){
+      updateMe += ov(i, j);
+    }, OVResult);
+
+    int answer = 0;
+    for(int i = ov.begin(0); i < ov.end(0); ++i) {
+      for(int j = ov.begin(1); j < ov.end(1); ++j) {
+         answer += i + j;
+      }
+    }
+
+    ASSERT_EQ(OVResult, answer) << "Bad data found in OffsetView";
 
 //#endif
     {
