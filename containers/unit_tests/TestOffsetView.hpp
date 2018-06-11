@@ -68,6 +68,10 @@ namespace Test{
     Kokkos::index_list_type range1 = {-2, 2};
 
     offset_view_type ov("firstOV", range0, range1);
+    
+    view_type aView = ov.view();
+    typename view_type::HostMirror hostView = 
+      Kokkos::create_mirror_view(aView);
 
     ASSERT_EQ("firstOV", ov.label());
     ASSERT_EQ(2, ov.Rank);
@@ -95,7 +99,9 @@ namespace Test{
         offsetV1(i) = 1;
       }
       );
-      const int maxit = offsetV1.extent(0);
+
+      const int maxit = offsetV1.end(0);
+
       int OVResult = 0;
       Kokkos::parallel_reduce(maxit, KOKKOS_LAMBDA(const int i, int & updateMe){
         updateMe += offsetV1(i);
@@ -111,6 +117,7 @@ namespace Test{
 
 //#ifdef KOKKOS_ENABLE_CUDA_LAMBDA
 
+
     typedef Kokkos::MDRangePolicy<Device, Kokkos::Rank<2>, Kokkos::IndexType<int> > range_type;
     typedef typename range_type::point_type point_type;
 
@@ -121,17 +128,26 @@ namespace Test{
         ov(i,j) = i + j;
       }
     );
-
-    Kokkos::parallel_for(rangePolicy2D, KOKKOS_LAMBDA (const int i, const int j) {
-         ASSERT_EQ(ov(i,j),  i + j) << "Bad data found in View";
+    
+    //need hostmirror and deep copy for this to work.
+    for(int i = ov.begin(0); i < ov.end(0); ++i) {
+      for(int j = ov.begin(1); j < ov.end(1); ++j) {
+    	 ASSERT_EQ(ov(i,j),  i + j) << "Bad data found in View";
       }
-    );
+    }
+
+       // Kokkos::parallel_for(rangePolicy2D, KOKKOS_LAMBDA (const int i, const int j) {
+       // 	   ASSERT_EQ(ov(i,j),  i + j);
+       //   }
+       // );
+
 //#endif
     {
       offset_view_type ovCopy(ov);
       ASSERT_EQ(ovCopy==ov, true) <<
           "Copy constructor or equivalence operator broken";
     }
+
     {
       offset_view_type ovAssigned = ov;
       ASSERT_EQ(ovAssigned==ov, true) <<
@@ -145,15 +161,16 @@ namespace Test{
 
     {
       offset_view_type ovFromV(viewFromOV, {-1, -2});
+
       ASSERT_EQ(ovFromV == viewFromOV , true) <<
           "Construction of OffsetView from View or equivalence operator OffsetView == View broken";
     }
-
     {
       offset_view_type ovFromV = viewFromOV;
       ASSERT_EQ(ovFromV == viewFromOV , true) <<
           "Construction of OffsetView from View by assignment (implicit conversion) or equivalence operator OffsetView == View broken";
     }
+
 #if 0
     {
       view_type viewByAssignment = ov;
