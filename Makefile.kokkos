@@ -378,6 +378,7 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
   tmp := $(call kokkos_append_header,'\#define KOKKOS_ENABLE_ROCM')
+  tmp := $(call kokkos_append_header,'\#define KOKKOS_IMPL_ROCM_CLANG_WORKAROUND 1')
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
