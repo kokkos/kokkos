@@ -344,9 +344,11 @@ endif
 
 KOKKOS_LIBS = -ldl
 KOKKOS_TPL_LIBRARY_NAMES += dl
-KOKKOS_LDFLAGS = -L$(shell pwd)
-# CXXLDFLAGS is used together with CXXFLAGS in a combined compile/link command
-KOKKOS_CXXLDFLAGS = -L$(shell pwd)
+ifneq ($(KOKKOS_CMAKE), yes)
+  KOKKOS_LDFLAGS = -L$(shell pwd)
+  # CXXLDFLAGS is used together with CXXFLAGS in a combined compile/link command
+  KOKKOS_CXXLDFLAGS = -L$(shell pwd)
+endif
 KOKKOS_LINK_FLAGS = 
 KOKKOS_SRC =
 KOKKOS_HEADERS =
