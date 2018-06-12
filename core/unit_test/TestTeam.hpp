@@ -229,7 +229,6 @@ public:
   typedef Kokkos::TeamPolicy< ScheduleType,  execution_space >  policy_type;
   typedef typename execution_space::size_type                   size_type;
 
-  KOKKOS_INLINE_FUNCTION
   TestReduceTeam( const size_type & nwork ) { run_test( nwork ); }
 
   void run_test( const size_type & nwork )
