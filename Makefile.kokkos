@@ -21,6 +21,7 @@ KOKKOS_CXX_STANDARD ?= "c++11"
 KOKKOS_OPTIONS ?= ""
 # Option for setting ETI path
 KOKKOS_ETI_PATH ?= ${KOKKOS_PATH}/core/src/eti
+KOKKOS_CMAKE ?= "no"
 
 # Default settings specific options.
 # Options: force_uvm,use_ldg,rdc,enable_lambda
@@ -330,7 +331,9 @@ endif
 
 #CPPFLAGS is now unused
 KOKKOS_CPPFLAGS =
-KOKKOS_CXXFLAGS = -I./ -I$(KOKKOS_PATH)/core/src -I$(KOKKOS_PATH)/containers/src -I$(KOKKOS_PATH)/algorithms/src -I$(KOKKOS_ETI_PATH)
+ifneq ($(KOKKOS_CMAKE), yes)
+  KOKKOS_CXXFLAGS = -I./ -I$(KOKKOS_PATH)/core/src -I$(KOKKOS_PATH)/containers/src -I$(KOKKOS_PATH)/algorithms/src -I$(KOKKOS_ETI_PATH)
+endif
 KOKKOS_TPL_INCLUDE_DIRS =
 KOKKOS_TPL_LIBRARY_DIRS =
 KOKKOS_TPL_LIBRARY_NAMES =
@@ -459,7 +462,9 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HWLOC), 1)
   ifneq ($(HWLOC_PATH),)
-    KOKKOS_CXXFLAGS += -I$(HWLOC_PATH)/include
+    ifneq ($(KOKKOS_CMAKE), yes)
+      KOKKOS_CXXFLAGS += -I$(HWLOC_PATH)/include
+    endif
     KOKKOS_LDFLAGS += -L$(HWLOC_PATH)/lib
     KOKKOS_CXXLDFLAGS += -L$(HWLOC_PATH)/lib
     KOKKOS_TPL_INCLUDE_DIRS += $(HWLOC_PATH)/include
@@ -478,7 +483,9 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_MEMKIND), 1)
   ifneq ($(MEMKIND_PATH),)
-    KOKKOS_CXXFLAGS += -I$(MEMKIND_PATH)/include
+    ifneq ($(KOKKOS_CMAKE), yes)
+      KOKKOS_CXXFLAGS += -I$(MEMKIND_PATH)/include
+    endif
     KOKKOS_LDFLAGS += -L$(MEMKIND_PATH)/lib
     KOKKOS_CXXLDFLAGS += -L$(MEMKIND_PATH)/lib
     KOKKOS_TPL_INCLUDE_DIRS += $(MEMKIND_PATH)/include
@@ -971,7 +978,9 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_ETI), 1)
 endif
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.hpp)
   ifneq ($(CUDA_PATH),)
-    KOKKOS_CXXFLAGS += -I$(CUDA_PATH)/include
+    ifneq ($(KOKKOS_CMAKE), yes)
+      KOKKOS_CXXFLAGS += -I$(CUDA_PATH)/include
+    endif
     KOKKOS_LDFLAGS += -L$(CUDA_PATH)/lib64
     KOKKOS_CXXLDFLAGS += -L$(CUDA_PATH)/lib64
     KOKKOS_TPL_INCLUDE_DIRS += $(CUDA_PATH)/include
@@ -1026,7 +1035,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Qthreads/*.cpp)
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Qthreads/*.hpp)
   ifneq ($(QTHREADS_PATH),)
-    KOKKOS_CXXFLAGS += -I$(QTHREADS_PATH)/include
+    ifneq ($(KOKKOS_CMAKE), yes)
+      KOKKOS_CXXFLAGS += -I$(QTHREADS_PATH)/include
+    endif
     KOKKOS_LDFLAGS += -L$(QTHREADS_PATH)/lib
     KOKKOS_CXXLDFLAGS += -L$(QTHREADS_PATH)/lib
     KOKKOS_TPL_INCLUDE_DIRS += $(QTHREADS_PATH)/include
