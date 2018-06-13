@@ -1562,7 +1562,7 @@ namespace Kokkos {
         }
 
   template< class LT , class ... LP , class RT , class ... RP >
-    KOKKOS_INLINE_FUNCTION
+  KOKKOS_INLINE_FUNCTION
     bool operator == ( const OffsetView<LT,LP...> & lhs ,
         const View<RT,RP...> & rhs )
         { return rhs == lhs;}
@@ -1594,7 +1594,6 @@ namespace Kokkos {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#if 0
 namespace Kokkos {
   namespace Impl {
 
@@ -1649,15 +1648,12 @@ namespace Kokkos {
     typedef OffsetView<T,P...>             src_type ;
     typedef typename src_type::HostMirror  dst_type ;
 
-    return dst_type( std::string( src.label() ).append("_mirror")
-                     , src.rank_dynamic > 0 ? src.extent(0): KOKKOS_IMPL_CTOR_DEFAULT_ARG
-                         , src.rank_dynamic > 1 ? src.extent(1): KOKKOS_IMPL_CTOR_DEFAULT_ARG
-                             , src.rank_dynamic > 2 ? src.extent(2): KOKKOS_IMPL_CTOR_DEFAULT_ARG
-                                 , src.rank_dynamic > 3 ? src.extent(3): KOKKOS_IMPL_CTOR_DEFAULT_ARG
-                                     , src.rank_dynamic > 4 ? src.extent(4): KOKKOS_IMPL_CTOR_DEFAULT_ARG
-                                         , src.rank_dynamic > 5 ? src.extent(5): KOKKOS_IMPL_CTOR_DEFAULT_ARG
-                                             , src.rank_dynamic > 6 ? src.extent(6): KOKKOS_IMPL_CTOR_DEFAULT_ARG
-                                                 , src.rank_dynamic > 7 ? src.extent(7): KOKKOS_IMPL_CTOR_DEFAULT_ARG );
+    return dst_type( std::string( src.label() ).append("_mirror"),
+                     typename traits::array_layout
+                     ( src.extent(0), src.extent(1), src.extent(2), src.extent(3), src.extent(4),
+                       src.extent(5), src.extent(6), src.extent(7) ),
+                     { src.begin(0), src.begin(1), src.begin(2), src.begin(3), src.begin(4),
+                         src.begin(5), src.begin(6), src.begin(7) });
   }
 
   template< class T , class ... P >
@@ -1693,14 +1689,18 @@ namespace Kokkos {
     layout.stride[6] = src.stride_6();
     layout.stride[7] = src.stride_7();
 
-    return dst_type( std::string( src.label() ).append("_mirror") , layout );
+    return dst_type( std::string( src.label() ).append("_mirror") , layout,
+                     { src.begin(0), src.begin(1), src.begin(2), src.begin(3), src.begin(4),
+                         src.begin(5), src.begin(6), src.begin(7) } );
   }
 
 
   // Create a mirror in a new space (specialization for different space)
   template<class Space, class T, class ... P>
   typename Impl::MirrorType<Space,T,P ...>::view_type create_mirror(const Space& , const Kokkos::OffsetView<T,P...> & src) {
-    return typename Impl::MirrorType<Space,T,P ...>::view_type(src.label(),src.layout());
+    return typename Impl::MirrorType<Space,T,P ...>::view_type(src.label(),src.layout(),
+                                                               { src.begin(0), src.begin(1), src.begin(2), src.begin(3), src.begin(4),
+                                                                   src.begin(5), src.begin(6), src.begin(7) } );
   }
 
   template< class T , class ... P >
@@ -1742,7 +1742,7 @@ namespace Kokkos {
   // Create a mirror view in a new space (specialization for same space)
   template<class Space, class T, class ... P>
   typename Impl::MirrorViewType<Space,T,P ...>::view_type
-  create_mirror_view(const Space& , const Kokkos::View<T,P...> & src
+  create_mirror_view(const Space& , const Kokkos::OffsetView<T,P...> & src
                      , typename std::enable_if<Impl::MirrorViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
     return src;
   }
@@ -1752,7 +1752,9 @@ namespace Kokkos {
   typename Impl::MirrorViewType<Space,T,P ...>::view_type
   create_mirror_view(const Space& , const Kokkos::OffsetView<T,P...> & src
                      , typename std::enable_if<!Impl::MirrorViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
-    return typename Impl::MirrorViewType<Space,T,P ...>::view_type(src.label(),src.layout());
+    return typename Impl::MirrorViewType<Space,T,P ...>::view_type(src.label(),src.layout(),
+                                                                   { src.begin(0), src.begin(1), src.begin(2), src.begin(3), src.begin(4),
+                                                                       src.begin(5), src.begin(6), src.begin(7) } );
   }
 
   // Create a mirror view and deep_copy in a new space (specialization for same space)
@@ -1773,14 +1775,15 @@ namespace Kokkos {
                                   , typename std::enable_if<!Impl::MirrorViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
     using Mirror = typename Impl::MirrorViewType<Space,T,P ...>::view_type;
     std::string label = name.empty() ? src.label() : name;
-    auto mirror = Mirror(ViewAllocateWithoutInitializing(label), src.layout());
+    auto mirror = Mirror(ViewAllocateWithoutInitializing(label), src.layout(),
+                         { src.begin(0), src.begin(1), src.begin(2), src.begin(3), src.begin(4),
+                             src.begin(5), src.begin(6), src.begin(7) });
     deep_copy(mirror, src);
     return mirror;
   }
 
 } /* namespace Kokkos */
 
-#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
