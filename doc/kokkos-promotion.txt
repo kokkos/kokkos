@@ -175,16 +175,7 @@ Step 5: This step can be done on any SEMS machine (e.g. kokkos-dev). Actually, t
 
        ## KokkosKernels Changelog
 
-  5.4. Run checkin-test to push to trilinos using the CI build modules (gcc/4.9.3)
-
-     * This step is optional, the Github auto-tester is now the favored method for testing.
-
-       cd $TRILINOS_PATH
-       mkdir CHECKIN
-       cd CHECKIN
-       nohup ../cmake/std/sems/checkin-test-sems.sh --do-all --push &
-
-       Although Trilinos has experimental Pull Request testing, it is not good enough to replace the checkin script yet.
+  5.4. Wait for Trilinos Autotester results
 
   5.5. If there are failures, fix and backtrack. Otherwise, go to next step
 
