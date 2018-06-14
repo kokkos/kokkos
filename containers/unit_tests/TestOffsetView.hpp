@@ -111,45 +111,55 @@ namespace Test{
     }
 //#endif
 
-//#ifdef KOKKOS_ENABLE_CUDA_LAMBDA
+    //#ifdef KOKKOS_ENABLE_CUDA_LAMBDA
 
+    {  //test deep copy of scalar const value into mirro
+        const int constVal = 6;
+        typename offset_view_type::HostMirror hostOffsetView =
+                Kokkos::create_mirror_view(ov);
+
+        Kokkos::deep_copy(hostOffsetView, constVal);
+
+        for(int i = hostOffsetView.begin(0); i < hostOffsetView.end(0); ++i) {
+            for(int j = hostOffsetView.begin(1); j < hostOffsetView.end(1); ++j) {
+                ASSERT_EQ(hostOffsetView(i,j),  constVal) << "Bad data found in OffsetView";
+            }
+        }
+    }
 
     typedef Kokkos::MDRangePolicy<Device, Kokkos::Rank<2>, Kokkos::IndexType<int> > range_type;
     typedef typename range_type::point_type point_type;
 
     range_type rangePolicy2D(point_type{ {ovmin0, ovmin1 } },
-                             point_type{ { ovend0, ovend1 } });
+            point_type{ { ovend0, ovend1 } });
 
+    const int constValue = 9;
     Kokkos::parallel_for(rangePolicy2D, KOKKOS_LAMBDA (const int i, const int j) {
-        ov(i,j) = i + j;
-      }
+        ov(i,j) =  constValue;
+    }
     );
-    
-    typename offset_view_type::HostMirror hostView =
-      Kokkos::create_mirror_view(ov);
 
+    typename offset_view_type::HostMirror hostOffsetView =
+            Kokkos::create_mirror_view(ov);
+
+    Kokkos::deep_copy(hostOffsetView, ov);
 
     //need hostmirror and deep copy for this to work.
-        for(int i = hostView.begin(0); i < hostView.end(0); ++i) {
-          for(int j = hostView.begin(1); j < hostView.end(1); ++j) {
-        	 ASSERT_EQ(hostView(i,j),  i + j) << "Bad data found in OffsetView";
-          }
+    for(int i = hostOffsetView.begin(0); i < hostOffsetView.end(0); ++i) {
+        for(int j = hostOffsetView.begin(1); j < hostOffsetView.end(1); ++j) {
+            ASSERT_EQ(hostOffsetView(i,j),  constValue) << "Bad data found in OffsetView";
         }
-
-       // Kokkos::parallel_for(rangePolicy2D, KOKKOS_LAMBDA (const int i, const int j) {
-       // 	   ASSERT_EQ(ov(i,j),  i + j);
-       //   }
-       // );
+    }
 
     int OVResult = 0;
     Kokkos::parallel_reduce(rangePolicy2D, KOKKOS_LAMBDA(const int i, const int j, int & updateMe){
-      updateMe += ov(i, j);
+        updateMe += ov(i, j);
     }, OVResult);
 
     int answer = 0;
     for(int i = ov.begin(0); i < ov.end(0); ++i) {
       for(int j = ov.begin(1); j < ov.end(1); ++j) {
-         answer += i + j;
+         answer += constValue;
       }
     }
 

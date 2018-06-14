@@ -2259,7 +2259,7 @@ public:
     }
   template <class Traits>
   KOKKOS_INLINE_FUNCTION
-  View( track_type & track,  Kokkos::Impl::ViewMapping< Traits , void >  &map ) :
+  View( const track_type & track,  const Kokkos::Impl::ViewMapping< Traits , void >  &map ) :
   m_track(track), m_map()
   {
     typedef Kokkos::Impl::ViewMapping< traits , Traits , void >  Mapping ;

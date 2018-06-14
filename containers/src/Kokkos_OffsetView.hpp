@@ -790,7 +790,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
   public:
 
     KOKKOS_INLINE_FUNCTION
-    view_type view() {
+    view_type view() const {
 
       view_type v(m_track, m_map);
       return v ;
@@ -1596,6 +1596,45 @@ namespace Kokkos {
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+
+template< class DT , class ... DP >
+inline
+void deep_copy
+( const OffsetView<DT,DP...> & dst
+        , typename ViewTraits<DT,DP...>::const_value_type & value
+        , typename std::enable_if<
+        std::is_same< typename ViewTraits<DT,DP...>::specialize , void >::value
+        >::type * = 0 )
+{
+    static_assert(
+            std::is_same< typename ViewTraits<DT,DP...>::non_const_value_type ,
+            typename ViewTraits<DT,DP...>::value_type >::value
+            , "deep_copy requires non-const type" );
+
+    auto dstView = dst.view();
+    Kokkos::deep_copy( dstView , value );
+
+}
+
+template< class DT , class ... DP , class ST , class ... SP >
+inline
+void deep_copy
+( const OffsetView<DT,DP...> & dst
+        , const OffsetView<ST,SP...> & value
+        , typename std::enable_if<
+        std::is_same< typename ViewTraits<DT,DP...>::specialize , void >::value
+        >::type * = 0 )
+{
+    static_assert(
+      std::is_same< typename ViewTraits<DT,DP...>::value_type ,
+                    typename ViewTraits<ST,SP...>::non_const_value_type >::value
+      , "deep_copy requires matching non-const destination type" );
+
+    auto dstView = dst.view();
+    Kokkos::deep_copy( dstView , value.view() );
+
+}
+
   namespace Impl {
 
     // Deduce Mirror Types
