@@ -121,7 +121,6 @@ struct TestViewCopy {
    }
 
    // Test 3: deep_copy from host_space to ExecSpace and ExecSpace back to host_space
-  #if defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_SERIAL ) || defined( KOKKOS_ENABLE_THREADS )
    {
     const int dim0 = 4;
     const int dim1 = 2;
@@ -131,15 +130,7 @@ struct TestViewCopy {
     Rank4ViewType view_4;
     view_4 = Rank4ViewType("view_4", dim0, dim1, dim2, dim2);
 
-  #if defined( KOKKOS_ENABLE_OPENMP ) 
-    typedef Kokkos::OpenMP host_space_type;
-  #endif
-  #if defined( KOKKOS_ENABLE_THREADS )
-    typedef Kokkos::Threads host_space_type;
-  #endif
-  #if defined( KOKKOS_ENABLE_SERIAL ) 
-    typedef Kokkos::Serial host_space_type;
-  #endif
+    typedef Kokkos::HostSpace host_space_type;
     Kokkos::View<double**,Kokkos::LayoutLeft,host_space_type> srcView("srcView", dim2, dim2);
 
     // Strided dst view
@@ -155,7 +146,6 @@ struct TestViewCopy {
     Kokkos::deep_copy( srcView, dstView );
     Kokkos::fence();
    }
-  #endif
 #endif
   } // end test_view_copy
 
