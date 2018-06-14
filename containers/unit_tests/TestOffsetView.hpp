@@ -69,10 +69,6 @@ namespace Test{
 
     offset_view_type ov("firstOV", range0, range1);
     
-    view_type aView = ov.view();
-    typename view_type::HostMirror hostView = 
-      Kokkos::create_mirror_view(aView);
-
     ASSERT_EQ("firstOV", ov.label());
     ASSERT_EQ(2, ov.Rank);
 
@@ -129,12 +125,16 @@ namespace Test{
       }
     );
     
+    typename offset_view_type::HostMirror hostView =
+      Kokkos::create_mirror_view(ov);
+
+
     //need hostmirror and deep copy for this to work.
-//    for(int i = ov.begin(0); i < ov.end(0); ++i) {
-//      for(int j = ov.begin(1); j < ov.end(1); ++j) {
-//    	 ASSERT_EQ(ov(i,j),  i + j) << "Bad data found in OffsetView";
-//      }
-//    }
+        for(int i = hostView.begin(0); i < hostView.end(0); ++i) {
+          for(int j = hostView.begin(1); j < hostView.end(1); ++j) {
+        	 ASSERT_EQ(hostView(i,j),  i + j) << "Bad data found in OffsetView";
+          }
+        }
 
        // Kokkos::parallel_for(rangePolicy2D, KOKKOS_LAMBDA (const int i, const int j) {
        // 	   ASSERT_EQ(ov(i,j),  i + j);

@@ -104,7 +104,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
   private:
 
     template< class , class ... > friend class OffsetView ;
-    template< class , class ... > friend class View ;
+    template< class , class ... > friend class View ;  //FIXME delete this line
     template< class , class ... > friend class Kokkos::Impl::ViewMapping ;
 
 
@@ -836,7 +836,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
 
     // may assign unmanaged from managed.
 
-#if 0
+
     template< class RT , class ... RP >
     KOKKOS_INLINE_FUNCTION
     OffsetView( const OffsetView<RT,RP...> & rhs )
@@ -850,6 +850,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
       Mapping::assign( m_map , rhs.m_map , rhs.m_track );  //swb what about assign?
     }
 
+#if 0
     template< class RT , class ... RP >
     KOKKOS_INLINE_FUNCTION
     View & operator = ( const View<RT,RP...> & rhs )
@@ -1697,16 +1698,18 @@ namespace Kokkos {
 
   // Create a mirror in a new space (specialization for different space)
   template<class Space, class T, class ... P>
-  typename Impl::MirrorOffsetType<Space,T,P ...>::view_type create_mirror(const Space& , const Kokkos::OffsetView<T,P...> & src) {
-    return typename Impl::MirrorOffsetType<Space,T,P ...>::view_type(src.label(),src.layout(),
-                                                               { src.begin(0), src.begin(1), src.begin(2), src.begin(3), src.begin(4),
-                                                                   src.begin(5), src.begin(6), src.begin(7) } );
+  typename Impl::MirrorOffsetType<Space,T,P ...>::view_type
+  create_mirror(const Space& , const Kokkos::OffsetView<T,P...> & src) {
+      return typename Impl::MirrorOffsetType<Space,T,P ...>::view_type(src.label(),src.layout(),
+              { src.begin(0), src.begin(1), src.begin(2), src.begin(3), src.begin(4),
+                      src.begin(5), src.begin(6), src.begin(7) } );
   }
+
 
   template< class T , class ... P >
   inline
-  typename Kokkos::OffsetView<T,P...>::HostMirror
-  create_mirror_view( const Kokkos::OffsetView<T,P...> & src
+  typename Kokkos::OffsetView< T, P... >::HostMirror
+  create_mirror_view( const typename Kokkos::OffsetView< T,P... > & src
                       , typename std::enable_if<(
                           std::is_same< typename Kokkos::OffsetView<T,P...>::memory_space
                           , typename Kokkos::OffsetView<T,P...>::HostMirror::memory_space
@@ -1718,7 +1721,7 @@ namespace Kokkos {
                       )>::type * = 0
   )
   {
-    return src ;
+      return src ;
   }
 
   template< class T , class ... P >
