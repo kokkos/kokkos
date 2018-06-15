@@ -1634,7 +1634,42 @@ void deep_copy
     Kokkos::deep_copy( dstView , value.view() );
 
 }
+template< class DT , class ... DP , class ST , class ... SP >
+inline
+void deep_copy
+( const OffsetView<DT,DP...> & dst
+        , const View<ST,SP...> & value
+        , typename std::enable_if<
+        std::is_same< typename ViewTraits<DT,DP...>::specialize , void >::value
+        >::type * = 0 )
+{
+    static_assert(
+      std::is_same< typename ViewTraits<DT,DP...>::value_type ,
+                    typename ViewTraits<ST,SP...>::non_const_value_type >::value
+      , "deep_copy requires matching non-const destination type" );
 
+    auto dstView = dst.view();
+    Kokkos::deep_copy( dstView , value);
+
+}
+
+template< class DT , class ... DP , class ST , class ... SP >
+inline
+void deep_copy
+( const View<DT,DP...> & dst
+        , const OffsetView<ST,SP...> & value
+        , typename std::enable_if<
+        std::is_same< typename ViewTraits<DT,DP...>::specialize , void >::value
+        >::type * = 0 )
+{
+    static_assert(
+      std::is_same< typename ViewTraits<DT,DP...>::value_type ,
+                    typename ViewTraits<ST,SP...>::non_const_value_type >::value
+      , "deep_copy requires matching non-const destination type" );
+
+    Kokkos::deep_copy( dst , value.view() );
+
+}
   namespace Impl {
 
     // Deduce Mirror Types

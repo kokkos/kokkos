@@ -139,12 +139,12 @@ namespace Test{
     }
     );
 
+    //test offsetview to offsetviewmirror deep copy
     typename offset_view_type::HostMirror hostOffsetView =
             Kokkos::create_mirror_view(ov);
 
     Kokkos::deep_copy(hostOffsetView, ov);
 
-    //need hostmirror and deep copy for this to work.
     for(int i = hostOffsetView.begin(0); i < hostOffsetView.end(0); ++i) {
         for(int j = hostOffsetView.begin(1); j < hostOffsetView.end(1); ++j) {
             ASSERT_EQ(hostOffsetView(i,j),  constValue) << "Bad data found in OffsetView";
@@ -164,6 +164,8 @@ namespace Test{
     }
 
     ASSERT_EQ(OVResult, answer) << "Bad data found in OffsetView";
+
+
 
 //#endif
     {
@@ -193,6 +195,31 @@ namespace Test{
       offset_view_type ovFromV = viewFromOV;
       ASSERT_EQ(ovFromV == viewFromOV , true) <<
           "Construction of OffsetView from View by assignment (implicit conversion) or equivalence operator OffsetView == View broken";
+    }
+
+    {// test offsetview to view deep copy
+        view_type aView("aView", ov.extent(0), ov.extent(1));
+        Kokkos::deep_copy(aView, ov);
+
+        int sum = 0;
+        Kokkos::parallel_reduce(rangePolicy2D, KOKKOS_LAMBDA(const int i, const int j, int & updateMe){
+            updateMe += ov(i, j) - aView(i- ov.begin(0), j-ov.begin(1));
+        }, sum);
+
+        ASSERT_EQ(sum, 0) << "deep_copy(view, offsetView) broken.";
+    }
+    {// test view to  offsetview deep copy
+        view_type aView("aView", ov.extent(0), ov.extent(1));
+
+        Kokkos::deep_copy(aView, 99);
+        Kokkos::deep_copy(ov, aView);
+
+        int sum = 0;
+        Kokkos::parallel_reduce(rangePolicy2D, KOKKOS_LAMBDA(const int i, const int j, int & updateMe){
+            updateMe += ov(i, j) - aView(i- ov.begin(0), j-ov.begin(1));
+        }, sum);
+
+        ASSERT_EQ(sum, 0) << "deep_copy(offsetView, view) broken.";
     }
 
 #if 0
