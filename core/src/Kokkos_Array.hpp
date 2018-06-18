@@ -45,11 +45,13 @@
 #define KOKKOS_ARRAY_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <impl/Kokkos_Error.hpp>
 
 #include <type_traits>
 #include <algorithm>
 #include <limits>
 #include <cstddef>
+#include <string>
 
 namespace Kokkos {
 
