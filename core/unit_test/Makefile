@@ -44,9 +44,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	OBJ_CUDA += TestCuda_RangePolicy.o
 	OBJ_CUDA += TestCuda_ViewAPI_a.o TestCuda_ViewAPI_b.o TestCuda_ViewAPI_c.o TestCuda_ViewAPI_d.o TestCuda_ViewAPI_e.o
 	OBJ_CUDA += TestCuda_ViewMapping_a.o TestCuda_ViewMapping_b.o TestCuda_ViewMapping_subview.o
-	OBJ_CUDA += TestCudaUVM_ViewAPI_a.o TestCudaUVM_ViewAPI_b.o TestCudaUVM_ViewAPI_c.o TestCudaUVM_ViewAPI_d.o TestCudaUVM_ViewAPI_e.o
+	OBJ_CUDA += TestCudaUVM_ViewCopy.o TestCudaUVM_ViewAPI_a.o TestCudaUVM_ViewAPI_b.o TestCudaUVM_ViewAPI_c.o TestCudaUVM_ViewAPI_d.o TestCudaUVM_ViewAPI_e.o
 	OBJ_CUDA += TestCudaUVM_ViewMapping_a.o TestCudaUVM_ViewMapping_b.o TestCudaUVM_ViewMapping_subview.o
-	OBJ_CUDA += TestCudaHostPinned_ViewAPI_a.o TestCudaHostPinned_ViewAPI_b.o TestCudaHostPinned_ViewAPI_c.o TestCudaHostPinned_ViewAPI_d.o TestCudaHostPinned_ViewAPI_e.o
+	OBJ_CUDA += TestCudaHostPinned_ViewCopy.o TestCudaHostPinned_ViewAPI_a.o TestCudaHostPinned_ViewAPI_b.o TestCudaHostPinned_ViewAPI_c.o TestCudaHostPinned_ViewAPI_d.o TestCudaHostPinned_ViewAPI_e.o
 	OBJ_CUDA += TestCudaHostPinned_ViewMapping_a.o TestCudaHostPinned_ViewMapping_b.o TestCudaHostPinned_ViewMapping_subview.o
         OBJ_CUDA += TestCuda_View_64bit.o
 	OBJ_CUDA += TestCuda_ViewOfClass.o
@@ -114,7 +114,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
         OBJ_ROCM += TestROCm_ViewMapping_a.o
         OBJ_ROCM += TestROCm_ViewMapping_b.o
         OBJ_ROCM += TestROCm_ViewMapping_subview.o
-        OBJ_ROCM += TestROCmHostPinned_ViewAPI_a.o TestROCmHostPinned_ViewAPI_b.o TestROCmHostPinned_ViewAPI_c.o TestROCmHostPinned_ViewAPI_d.o TestROCmHostPinned_ViewAPI_e.o
+        OBJ_ROCM += TestROCmHostPinned_ViewCopy.o TestROCmHostPinned_ViewAPI_a.o TestROCmHostPinned_ViewAPI_b.o TestROCmHostPinned_ViewAPI_c.o TestROCmHostPinned_ViewAPI_d.o TestROCmHostPinned_ViewAPI_e.o
         OBJ_ROCM += TestROCmHostPinned_View_64bit.o
         OBJ_ROCM += TestROCmHostPinned_ViewMapping_a.o 
         OBJ_ROCM += TestROCmHostPinned_ViewMapping_b.o 
