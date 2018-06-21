@@ -260,6 +260,9 @@ namespace Impl {
 struct ALL_t {
   KOKKOS_INLINE_FUNCTION
   constexpr const ALL_t & operator()() const { return *this ; }
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr bool operator == ( const ALL_t & right) const { return true;}
 };
 
 }} // namespace Kokkos::Impl

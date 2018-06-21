@@ -254,6 +254,11 @@ namespace Test{
         ASSERT_EQ(sum, 0) << "deep_copy(offsetView, view) broken.";
     }
 
+    {//test subview
+       auto offsetSubview = Kokkos::subview(ov,Kokkos::ALL,-2);
+       ASSERT_EQ(offsetSubview.Rank, 1) << "subview of offset is broken.";
+
+    }
 #if 0
     {
       view_type viewByAssignment = ov;
