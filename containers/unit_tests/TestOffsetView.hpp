@@ -180,6 +180,38 @@ namespace Test{
           "Assignment operator or equivalence operator broken";
     }
 
+    {  //construct OffsetView from a View plus begins array
+        const int extent0 = 100;
+        const int extent1 = 200;
+        const int extent2 = 300;
+        Kokkos::View<Scalar***, Device> view3D("view3D", extent0, extent1, extent2);
+
+        Kokkos::deep_copy(view3D, 1);
+
+        Kokkos::Array<int64_t,3> begins = {-10, -20, -30};
+        Kokkos::OffsetView<Scalar***, Device> offsetView3D(view3D, begins);
+
+        typedef Kokkos::MDRangePolicy<Device, Kokkos::Rank<3>, Kokkos::IndexType<int64_t> > range3_type;
+        typedef typename range3_type::point_type point3_type;
+
+        range3_type rangePolicy3DZero(point3_type{ {0, 0, 0 } },
+                point3_type{ { extent0, extent1, extent2 } });
+
+        int view3DSum = 0;
+        Kokkos::parallel_reduce(rangePolicy3DZero, KOKKOS_LAMBDA(const int i, const int j, int k, int & updateMe){
+            updateMe += view3D(i, j, k);
+        }, view3DSum);
+
+        range3_type rangePolicy3D(point3_type{ {begins[0], begins[1], begins[2] } },
+                point3_type{ { begins[0] + extent0, begins[1] + extent1, begins[2] + extent2 } });
+        int offsetView3DSum = 0;
+
+        Kokkos::parallel_reduce(rangePolicy3D, KOKKOS_LAMBDA(const int i, const int j, int k, int & updateMe){
+            updateMe += offsetView3D(i, j, k);
+        }, offsetView3DSum);
+
+        ASSERT_EQ(view3DSum, offsetView3DSum) << "construction of OffsetView from View and begins array broken.";
+    }
     view_type viewFromOV = ov.view();
 
     ASSERT_EQ(viewFromOV == ov, true) <<

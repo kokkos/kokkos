@@ -121,6 +121,9 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
       return dimension < Rank ? m_begins[dimension] : 0;
     }
 
+    KOKKOS_INLINE_FUNCTION
+    begins_type begins() { return m_begins;}
+
     template <typename iType, typename std::enable_if< std::is_integral<iType>::value, iType>::type = 0>
     KOKKOS_INLINE_FUNCTION
     int64_t end(const iType dimension) const {return begin(dimension) + m_map.extent(dimension);}
@@ -833,6 +836,26 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
           m_begins[i] = minIndices.begin()[i];
       }
     }
+    template<class RT, class ... RP>
+    KOKKOS_INLINE_FUNCTION
+    OffsetView( const View<RT, RP...> & view
+            ,const begins_type & begins) :
+            m_track(view.impl_track()), m_map(), m_begins(begins){
+
+        typedef typename OffsetView<RT,RP...>::traits  SrcTraits ;
+        typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
+        static_assert( Mapping::is_assignable , "Incompatible OffsetView copy construction" );
+        Mapping::assign( m_map , view.impl_map() , m_track );
+
+
+//#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+//        Impl::runtime_check_rank_host(traits::rank_dynamic, Rank, minIndices, label());
+//#else
+//        Impl::runtime_check_rank_device(traits::rank_dynamic, Rank, minIndices);
+//
+//#endif
+
+    }
 
     // may assign unmanaged from managed.
 
@@ -1437,27 +1460,139 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
 
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
+namespace Impl {
 
+template< class T >
+KOKKOS_INLINE_FUNCTION
+typename  std::enable_if< std::is_integral<T>::value, T>::value
+shift_input(const T arg, const int64_t offset)
+{
+    return arg - offset;
+}
+
+KOKKOS_INLINE_FUNCTION
+Kokkos::Impl::ALL_t
+shift_input(const Kokkos::Impl::ALL_t arg, const int64_t offset)
+{
+     return arg;
+}
+
+template< class T >
+KOKKOS_INLINE_FUNCTION
+typename  std::enable_if< std::is_integral<T>::value, std::pair<T,T> >::value
+shift_input(const std::pair<T, T> arg, const int64_t offset)
+{
+
+    return std::make_pair<T,T>(arg.first - offset, arg.second - offset);
+
+}
 #if 0
-  template< class D, class ... P , class ... Args >
-  KOKKOS_INLINE_FUNCTION
+template< class D, class ... P , class T >
+KOKKOS_INLINE_FUNCTION
+void //for now need a way to get the return type
+subview_offset(const OffsetView< D, P... > & src, T arg) {
+
+    auto theView = src.view();
+    auto begins = src.begins();
+
+    T shiftedArg = shift_input(arg, begins[0]);
+    auto theSubview = Kokkos::subview( theView , shiftedArg);
+
+    Kokkos::Array<int64_t, theSubview.Rank> subBegins;
+
+    if( !std::is_integral<T0>::value )
+        subBegins[0] = shiftedArg == arg ? begins[0] : 0;
+    return OffsetView(theSubView, subBegins);
+
+}
+#endif
+
+template< class D, class ... P , class T0, class T1 >
+KOKKOS_INLINE_FUNCTION
+void //for now need a way to get the return type
+subview_offset(const OffsetView< D, P... > & src, T0 arg0, T1 arg1) {
+
+    auto theView = src.view();
+    auto begins = src.begins();
+
+    T0 shiftedArg0 = shift_input(arg0, begins[0]);
+    T1 shiftedArg1 = shift_input(arg1, begins[1]);
+
+    auto theSubview = Kokkos::subview(theView , shiftedArg0, shiftedArg1);
+
+    Kokkos::Array<int64_t, theSubview.Rank> subBegins;
+
+    int counter = 0;
+    if( !std::is_integral<T0>::value ) {
+        subBegins[counter]= shiftedArg0 == arg0 ? begins[0] : 0;
+        counter++;
+    }
+    if( !std::is_integral<T1>::value ) {
+        subBegins[counter]= shiftedArg1 == arg1 ? begins[1] : 0;
+        counter++;
+    }
+
+    return OffsetView(theSubView, subBegins);
+
+}
+#if 0
+template< class D, class ... P , class T0, class T1, class T2 >
+KOKKOS_INLINE_FUNCTION
+void //for now need a way to get the return type
+subview_offset(const OffsetView< D, P... > & src, T0 arg0, T1 arg1, T2 arg2) {
+
+    const bool shift_down = true;
+    auto theView = src.view();
+    auto begins = src.begins();
+
+    T0 shiftedArg0 = shift_input(arg0, begins[0]);
+    T1 shiftedArg1 = shift_input(arg1, begins[1]);
+    T2 shiftedArg2 = shift_input(arg2, begins[2]);
+
+    auto theSubview = Kokkos::subview( theView , shiftedArg0, shiftedArg1, shiftedArg2);
+
+    Kokkos::Array<int64_t, theSubview.Rank> subBegins;
+
+    int counter = 0;
+    if( !std::is_integral<T0>::value ) {
+        subBegins[counter]= shiftedArg0 == arg0 ? begins[0] : 0;
+        counter++;
+    }
+    if( !std::is_integral<T1>::value ) {
+        subBegins[counter]= shiftedArg1 == arg1 ? begins[1] : 0;
+        counter++;
+    }
+    if( !std::is_integral<T2>::value ) {
+        subBegins[counter]= shiftedArg2 == arg2 ? begins[2] : 0;
+        counter++;
+    }
+
+    return OffsetView(theSubView, subBegins);
+
+}
+#endif
+}
+
+template< class D, class ... P , class ... Args >
+KOKKOS_INLINE_FUNCTION
   typename Kokkos::Impl::ViewMapping
   < void /* deduce subview type from source view traits */
   , ViewTraits< D , P... >
   , Args ...
   >::type
-  subview( const View< D, P... > & src , Args ... args )
+  subview( const OffsetView< D, P... > & src , Args ... args )
   {
-    static_assert( View< D , P... >::Rank == sizeof...(Args) ,
-                   "subview requires one argument for each source View rank" );
+    static_assert( OffsetView< D , P... >::Rank == sizeof...(Args) ,
+                   "subview requires one argument for each source OffsetView rank" );
 
-    return typename
-        Kokkos::Impl::ViewMapping
-        < void /* deduce subview type from source view traits */
-        , ViewTraits< D , P ... >
-    , Args ... >::type( src , args ... );
+
+    return Impl::subview_offset(src, args);
+
+
   }
 
+
+#if 0
   template< class MemoryTraits , class D, class ... P , class ... Args >
   KOKKOS_INLINE_FUNCTION
   typename Kokkos::Impl::ViewMapping
@@ -1465,9 +1600,9 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
   , ViewTraits< D , P... >
   , Args ...
   >::template apply< MemoryTraits >::type
-  subview( const View< D, P... > & src , Args ... args )
+  subview( const OffsetView< D, P... > & src , Args ... args )
   {
-    static_assert( View< D , P... >::Rank == sizeof...(Args) ,
+    static_assert( OffsetView< D , P... >::Rank == sizeof...(Args) ,
                    "subview requires one argument for each source View rank" );
 
     return typename
