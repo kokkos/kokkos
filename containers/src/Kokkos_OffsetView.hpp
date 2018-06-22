@@ -1501,8 +1501,9 @@ namespace Kokkos {
        map_arg_to_new_begin(const size_t i,
              Kokkos::Array<int64_t, N> &subviewBegins, typename std::enable_if< N != 0, const Arg>::type shiftedArg,
              const Arg arg, const Array viewBegins, size_t & counter) {
-         if( !std::is_integral<Arg>::value ) {
-            subviewBegins[i] = shiftedArg == arg ? viewBegins[i] : 0;
+
+         if( !std::is_integral<Arg>::value) {
+            subviewBegins[counter] = shiftedArg == arg ? viewBegins[i] : 0;
             counter++;
          }
        }
