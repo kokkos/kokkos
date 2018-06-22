@@ -254,12 +254,7 @@ namespace Test{
         ASSERT_EQ(sum, 0) << "deep_copy(offsetView, view) broken.";
     }
 
-    {//test subview
-       auto offsetSubview = Kokkos::subview(ov,Kokkos::ALL,-2);
-       ASSERT_EQ(offsetSubview.Rank, 1) << "subview of offset is broken.";
-
-    }
-#if 0
+ #if 0
     {
       view_type viewByAssignment = ov;
       ASSERT_EQ(viewFromOV == ov, true) <<
@@ -268,10 +263,91 @@ namespace Test{
     }
 #endif
   }
+  template <typename Scalar, typename Device>
+   void test_offsetview_subview(unsigned int size)
+   {
+     {//test subview 2
+        Kokkos::OffsetView<Scalar**, Device> sliceMe("offsetToSlice", {-10,20}, {-20,30});
 
+        auto offsetSubviewa = Kokkos::subview(sliceMe, Kokkos::ALL(),-2);
+        ASSERT_EQ(offsetSubviewa.Rank, 1) << "subview of offset is broken.";
+
+        auto offsetSubviewb = Kokkos::subview(sliceMe, 0, Kokkos::ALL());
+        ASSERT_EQ(offsetSubviewb.Rank, 1) << "subview of offset is broken.";
+      }
+
+
+      {//test subview rank 3
+
+         Kokkos::OffsetView<Scalar***, Device> sliceMe("offsetToSlice", {-10,20}, {-20,30}, {-30,40});
+
+         //slice 1
+         auto offsetSubview2a = Kokkos::subview(sliceMe,Kokkos::ALL(),Kokkos::ALL(), 0);
+         ASSERT_EQ(offsetSubview2a.Rank, 2) << "subview of offset is broken.";
+
+         auto offsetSubview2b = Kokkos::subview(sliceMe,Kokkos::ALL(), 0,Kokkos::ALL());
+         ASSERT_EQ(offsetSubview2b.Rank, 2) << "subview of offset is broken.";
+
+         auto offsetSubview2c = Kokkos::subview(sliceMe,0, Kokkos::ALL(),Kokkos::ALL());
+         ASSERT_EQ(offsetSubview2b.Rank, 2) << "subview of offset is broken.";
+
+         // slice 2
+         auto offsetSubview1a = Kokkos::subview(sliceMe, Kokkos::ALL(), 0, 0);
+         ASSERT_EQ(offsetSubview1a.Rank, 1) << "subview of offset is broken.";
+
+         auto offsetSubview1b = Kokkos::subview(sliceMe, 0, 0, Kokkos::ALL());
+         ASSERT_EQ(offsetSubview1b.Rank, 1) << "subview of offset is broken.";
+
+         auto offsetSubview1c = Kokkos::subview(sliceMe, 0, Kokkos::ALL(), 0);
+         ASSERT_EQ(offsetSubview1c.Rank, 1) << "subview of offset is broken.";
+      }
+
+      {//test subview rank 4
+
+         Kokkos::OffsetView<Scalar****, Device> sliceMe("offsetToSlice", {-10,20}, {-20,30}, {-30,40}, {-40, 50});
+
+         //slice 1
+         auto offsetSubview3a = Kokkos::subview(sliceMe, Kokkos::ALL(),Kokkos::ALL(), Kokkos::ALL(), 0);
+         ASSERT_EQ(offsetSubview3a.Rank, 3) << "subview of offset is broken.";
+
+         auto offsetSubview3b = Kokkos::subview(sliceMe, Kokkos::ALL(), Kokkos::ALL(), 0, Kokkos::ALL());
+         ASSERT_EQ(offsetSubview3b.Rank, 3) << "subview of offset is broken.";
+
+         auto offsetSubview3c = Kokkos::subview(sliceMe ,Kokkos::ALL(), 0, Kokkos::ALL(),Kokkos::ALL());
+         ASSERT_EQ(offsetSubview3b.Rank, 3) << "subview of offset is broken.";
+
+         auto offsetSubview3d = Kokkos::subview(sliceMe , 0, Kokkos::ALL(), Kokkos::ALL(),  Kokkos::ALL() );
+         ASSERT_EQ(offsetSubview3d.Rank, 3) << "subview of offset is broken.";
+
+         // slice 2
+         auto offsetSubview2a = Kokkos::subview(sliceMe, Kokkos::ALL(), Kokkos::ALL(), 0, 0);
+         ASSERT_EQ(offsetSubview2a.Rank, 2) << "subview of offset is broken.";
+         {
+            auto offsetSubview2b = Kokkos::subview(sliceMe, Kokkos::ALL(), 0, Kokkos::ALL(), 0);
+            ASSERT_EQ(offsetSubview2b.Rank, 2) << "subview of offset is broken.";
+         }
+         {
+            auto offsetSubview2b = Kokkos::subview(sliceMe, Kokkos::ALL(), 0, 0, Kokkos::ALL());
+            ASSERT_EQ(offsetSubview2b.Rank, 2) << "subview of offset is broken.";
+         }
+         {
+            auto offsetSubview2b = Kokkos::subview(sliceMe,  0, Kokkos::ALL(), 0, Kokkos::ALL());
+            ASSERT_EQ(offsetSubview2b.Rank, 2) << "subview of offset is broken.";
+         }
+         {
+            auto offsetSubview2b = Kokkos::subview(sliceMe,  0, 0, Kokkos::ALL(), Kokkos::ALL());
+            ASSERT_EQ(offsetSubview2b.Rank, 2) << "subview of offset is broken.";
+         }
+
+      }
+
+   }
 
   TEST_F( TEST_CATEGORY, offsetview_construction) {
-      test_offsetview_construction<int,TEST_EXECSPACE>(10);
+     test_offsetview_construction<int,TEST_EXECSPACE>(10);
+  }
+  TEST_F( TEST_CATEGORY, offsetview_subview) {
+     test_offsetview_subview<int,TEST_EXECSPACE>(10);
   }
 
 } // namespace Test
