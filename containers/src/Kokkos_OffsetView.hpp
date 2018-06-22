@@ -1318,10 +1318,10 @@ namespace Kokkos {
 #endif
 
       template< typename Label>
-      explicit inline
+      explicit KOKKOS_INLINE_FUNCTION
       OffsetView( const Label & arg_label
             ,typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value , const index_list_type >::type
-            range0 = KOKKOS_INVALID_INDEX_RANGE
+            range0
             ,const index_list_type range1 = KOKKOS_INVALID_INDEX_RANGE
             ,const index_list_type range2 = KOKKOS_INVALID_INDEX_RANGE
             ,const index_list_type range3 = KOKKOS_INVALID_INDEX_RANGE
@@ -1495,6 +1495,27 @@ namespace Kokkos {
 
       }
 
+      template <size_t N, class Arg, class Array>
+       KOKKOS_INLINE_FUNCTION
+       void
+       map_arg_to_new_begin(const size_t i,
+             Kokkos::Array<int64_t, N> &subviewBegins, typename std::enable_if< N != 0, const Arg>::type shiftedArg,
+             const Arg arg, const Array viewBegins, size_t & counter) {
+         if( !std::is_integral<Arg>::value ) {
+            subviewBegins[i] = shiftedArg == arg ? viewBegins[i] : 0;
+            counter++;
+         }
+       }
+
+      template <size_t N, class Arg, class Array>
+       KOKKOS_INLINE_FUNCTION
+       void
+       map_arg_to_new_begin(const size_t i,
+             Kokkos::Array<int64_t, N> &subviewBegins, typename std::enable_if< N == 0, const Arg>::type shiftedArg,
+             const Arg arg, const Array viewBegins, size_t & counter) {
+
+       }
+
       template< class D, class ... P , class T >
       KOKKOS_INLINE_FUNCTION
       typename Kokkos::Impl::GetOffsetViewTypeFromViewType<typename Kokkos::Impl::ViewMapping
@@ -1511,9 +1532,8 @@ namespace Kokkos {
          auto theSubview = Kokkos::subview( theView , shiftedArg);
 
          Kokkos::Array<int64_t, theSubview.Rank> subviewBegins;
-
-         if( !std::is_integral<T>::value )
-            subviewBegins[0] = shiftedArg == arg ? begins[0] : 0;
+         size_t counter = 0;
+         Impl::map_arg_to_new_begin(0, subviewBegins, shiftedArg, arg, begins, counter);
 
          typename Kokkos::Impl::GetOffsetViewTypeFromViewType<typename Kokkos::Impl::ViewMapping<
              void /* deduce subview type from source view traits */
@@ -1541,16 +1561,9 @@ namespace Kokkos {
          auto theSubview = Kokkos::subview(theView , shiftedArg0, shiftedArg1);
 
          Kokkos::Array<int64_t, theSubview.Rank> subviewBegins;
-
-         int counter = 0;
-         if( !std::is_integral<T0>::value ) {
-            subviewBegins[counter]= shiftedArg0 == arg0 ? begins[0] : 0;
-            counter++;
-         }
-         if( !std::is_integral<T1>::value ) {
-            subviewBegins[counter]= shiftedArg1 == arg1 ? begins[1] : 0;
-            counter++;
-         }
+         size_t counter = 0;
+         Impl::map_arg_to_new_begin(0, subviewBegins, shiftedArg0, arg0, begins, counter);
+         Impl::map_arg_to_new_begin(1, subviewBegins, shiftedArg1, arg1, begins, counter);
 
          typename Kokkos::Impl::GetOffsetViewTypeFromViewType<typename Kokkos::Impl::ViewMapping<
             void /* deduce subview type from source view traits */
@@ -1581,19 +1594,10 @@ namespace Kokkos {
 
          Kokkos::Array<int64_t, theSubview.Rank> subviewBegins;
 
-         int counter = 0;
-         if( !std::is_integral<T0>::value ) {
-            subviewBegins[counter]= shiftedArg0 == arg0 ? begins[0] : 0;
-            counter++;
-         }
-         if( !std::is_integral<T1>::value ) {
-            subviewBegins[counter]= shiftedArg1 == arg1 ? begins[1] : 0;
-            counter++;
-         }
-         if( !std::is_integral<T2>::value ) {
-            subviewBegins[counter]= shiftedArg2 == arg2 ? begins[2] : 0;
-            counter++;
-         }
+         size_t counter = 0;
+         Impl::map_arg_to_new_begin(0, subviewBegins, shiftedArg0, arg0, begins, counter);
+         Impl::map_arg_to_new_begin(1, subviewBegins, shiftedArg1, arg1, begins, counter);
+         Impl::map_arg_to_new_begin(2, subviewBegins, shiftedArg2, arg2, begins, counter);
 
          typename Kokkos::Impl::GetOffsetViewTypeFromViewType<typename Kokkos::Impl::ViewMapping<
             void /* deduce subview type from source view traits */
@@ -1624,23 +1628,11 @@ namespace Kokkos {
 
          Kokkos::Array<int64_t, theSubview.Rank> subviewBegins;
 
-         int counter = 0;
-         if( !std::is_integral<T0>::value ) {
-            subviewBegins[counter]= shiftedArg0 == arg0 ? begins[0] : 0;
-            counter++;
-         }
-         if( !std::is_integral<T1>::value ) {
-            subviewBegins[counter]= shiftedArg1 == arg1 ? begins[1] : 0;
-            counter++;
-         }
-         if( !std::is_integral<T2>::value ) {
-            subviewBegins[counter]= shiftedArg2 == arg2 ? begins[2] : 0;
-            counter++;
-         }
-         if( !std::is_integral<T3>::value ) {
-            subviewBegins[counter]= shiftedArg3 == arg3 ? begins[3] : 0;
-            counter++;
-         }
+         size_t counter = 0;
+         Impl::map_arg_to_new_begin(0, subviewBegins, shiftedArg0, arg0, begins, counter);
+         Impl::map_arg_to_new_begin(1, subviewBegins, shiftedArg1, arg1, begins, counter);
+         Impl::map_arg_to_new_begin(2, subviewBegins, shiftedArg2, arg2, begins, counter);
+         Impl::map_arg_to_new_begin(3, subviewBegins, shiftedArg3, arg3, begins, counter);
 
          typename Kokkos::Impl::GetOffsetViewTypeFromViewType<typename Kokkos::Impl::ViewMapping<
             void /* deduce subview type from source view traits */
@@ -1672,27 +1664,12 @@ namespace Kokkos {
 
           Kokkos::Array<int64_t, theSubview.Rank> subviewBegins;
 
-          int counter = 0;
-          if( !std::is_integral<T0>::value ) {
-             subviewBegins[counter]= shiftedArg0 == arg0 ? begins[0] : 0;
-             counter++;
-          }
-          if( !std::is_integral<T1>::value ) {
-             subviewBegins[counter]= shiftedArg1 == arg1 ? begins[1] : 0;
-             counter++;
-          }
-          if( !std::is_integral<T2>::value ) {
-             subviewBegins[counter]= shiftedArg2 == arg2 ? begins[2] : 0;
-             counter++;
-          }
-          if( !std::is_integral<T3>::value ) {
-             subviewBegins[counter]= shiftedArg3 == arg3 ? begins[3] : 0;
-             counter++;
-          }
-          if( !std::is_integral<T4>::value ) {
-             subviewBegins[counter]= shiftedArg4 == arg4 ? begins[4] : 0;
-             counter++;
-          }
+          size_t counter = 0;
+          Impl::map_arg_to_new_begin(0, subviewBegins, shiftedArg0, arg0, begins, counter);
+          Impl::map_arg_to_new_begin(1, subviewBegins, shiftedArg1, arg1, begins, counter);
+          Impl::map_arg_to_new_begin(2, subviewBegins, shiftedArg2, arg2, begins, counter);
+          Impl::map_arg_to_new_begin(3, subviewBegins, shiftedArg3, arg3, begins, counter);
+          Impl::map_arg_to_new_begin(4, subviewBegins, shiftedArg4, arg4, begins, counter);
 
           typename Kokkos::Impl::GetOffsetViewTypeFromViewType<typename Kokkos::Impl::ViewMapping<
              void /* deduce subview type from source view traits */
@@ -1726,31 +1703,13 @@ namespace Kokkos {
 
           Kokkos::Array<int64_t, theSubview.Rank> subviewBegins;
 
-          int counter = 0;
-          if( !std::is_integral<T0>::value ) {
-             subviewBegins[counter]= shiftedArg0 == arg0 ? begins[0] : 0;
-             counter++;
-          }
-          if( !std::is_integral<T1>::value ) {
-             subviewBegins[counter]= shiftedArg1 == arg1 ? begins[1] : 0;
-             counter++;
-          }
-          if( !std::is_integral<T2>::value ) {
-             subviewBegins[counter]= shiftedArg2 == arg2 ? begins[2] : 0;
-             counter++;
-          }
-          if( !std::is_integral<T3>::value ) {
-             subviewBegins[counter]= shiftedArg3 == arg3 ? begins[3] : 0;
-             counter++;
-          }
-          if( !std::is_integral<T4>::value ) {
-             subviewBegins[counter]= shiftedArg4 == arg4 ? begins[4] : 0;
-             counter++;
-          }
-          if( !std::is_integral<T5>::value ) {
-             subviewBegins[counter]= shiftedArg5 == arg5 ? begins[5] : 0;
-             counter++;
-          }
+          size_t counter = 0;
+          Impl::map_arg_to_new_begin(0, subviewBegins, shiftedArg0, arg0, begins, counter);
+          Impl::map_arg_to_new_begin(1, subviewBegins, shiftedArg1, arg1, begins, counter);
+          Impl::map_arg_to_new_begin(2, subviewBegins, shiftedArg2, arg2, begins, counter);
+          Impl::map_arg_to_new_begin(3, subviewBegins, shiftedArg3, arg3, begins, counter);
+          Impl::map_arg_to_new_begin(4, subviewBegins, shiftedArg4, arg4, begins, counter);
+          Impl::map_arg_to_new_begin(5, subviewBegins, shiftedArg5, arg5, begins, counter);
 
           typename Kokkos::Impl::GetOffsetViewTypeFromViewType<typename Kokkos::Impl::ViewMapping<
              void /* deduce subview type from source view traits */
@@ -1786,35 +1745,14 @@ namespace Kokkos {
 
           Kokkos::Array<int64_t, theSubview.Rank> subviewBegins;
 
-          int counter = 0;
-          if( !std::is_integral<T0>::value ) {
-             subviewBegins[counter]= shiftedArg0 == arg0 ? begins[0] : 0;
-             counter++;
-          }
-          if( !std::is_integral<T1>::value ) {
-             subviewBegins[counter]= shiftedArg1 == arg1 ? begins[1] : 0;
-             counter++;
-          }
-          if( !std::is_integral<T2>::value ) {
-             subviewBegins[counter]= shiftedArg2 == arg2 ? begins[2] : 0;
-             counter++;
-          }
-          if( !std::is_integral<T3>::value ) {
-             subviewBegins[counter]= shiftedArg3 == arg3 ? begins[3] : 0;
-             counter++;
-          }
-          if( !std::is_integral<T4>::value ) {
-             subviewBegins[counter]= shiftedArg4 == arg4 ? begins[4] : 0;
-             counter++;
-          }
-          if( !std::is_integral<T5>::value ) {
-             subviewBegins[counter]= shiftedArg5 == arg5 ? begins[5] : 0;
-             counter++;
-          }
-          if( !std::is_integral<T6>::value ) {
-             subviewBegins[counter]= shiftedArg6 == arg6 ? begins[6] : 0;
-             counter++;
-          }
+          size_t counter = 0;
+          Impl::map_arg_to_new_begin(0, subviewBegins, shiftedArg0, arg0, begins, counter);
+          Impl::map_arg_to_new_begin(1, subviewBegins, shiftedArg1, arg1, begins, counter);
+          Impl::map_arg_to_new_begin(2, subviewBegins, shiftedArg2, arg2, begins, counter);
+          Impl::map_arg_to_new_begin(3, subviewBegins, shiftedArg3, arg3, begins, counter);
+          Impl::map_arg_to_new_begin(4, subviewBegins, shiftedArg4, arg4, begins, counter);
+          Impl::map_arg_to_new_begin(5, subviewBegins, shiftedArg5, arg5, begins, counter);
+          Impl::map_arg_to_new_begin(6, subviewBegins, shiftedArg6, arg6, begins, counter);
 
           typename Kokkos::Impl::GetOffsetViewTypeFromViewType<typename Kokkos::Impl::ViewMapping<
              void /* deduce subview type from source view traits */
@@ -1853,39 +1791,15 @@ namespace Kokkos {
 
            Kokkos::Array<int64_t, theSubview.Rank> subviewBegins;
 
-           int counter = 0;
-           if( !std::is_integral<T0>::value ) {
-              subviewBegins[counter]= shiftedArg0 == arg0 ? begins[0] : 0;
-              counter++;
-           }
-           if( !std::is_integral<T1>::value ) {
-              subviewBegins[counter]= shiftedArg1 == arg1 ? begins[1] : 0;
-              counter++;
-           }
-           if( !std::is_integral<T2>::value ) {
-              subviewBegins[counter]= shiftedArg2 == arg2 ? begins[2] : 0;
-              counter++;
-           }
-           if( !std::is_integral<T3>::value ) {
-              subviewBegins[counter]= shiftedArg3 == arg3 ? begins[3] : 0;
-              counter++;
-           }
-           if( !std::is_integral<T4>::value ) {
-              subviewBegins[counter]= shiftedArg4 == arg4 ? begins[4] : 0;
-              counter++;
-           }
-           if( !std::is_integral<T5>::value ) {
-              subviewBegins[counter]= shiftedArg5 == arg5 ? begins[5] : 0;
-              counter++;
-           }
-           if( !std::is_integral<T6>::value ) {
-              subviewBegins[counter]= shiftedArg6 == arg6 ? begins[6] : 0;
-              counter++;
-           }
-           if( !std::is_integral<T7>::value ) {
-              subviewBegins[counter]= shiftedArg7 == arg7 ? begins[7] : 0;
-              counter++;
-           }
+           size_t counter = 0;
+           Impl::map_arg_to_new_begin(0, subviewBegins, shiftedArg0, arg0, begins, counter);
+           Impl::map_arg_to_new_begin(1, subviewBegins, shiftedArg1, arg1, begins, counter);
+           Impl::map_arg_to_new_begin(2, subviewBegins, shiftedArg2, arg2, begins, counter);
+           Impl::map_arg_to_new_begin(3, subviewBegins, shiftedArg3, arg3, begins, counter);
+           Impl::map_arg_to_new_begin(4, subviewBegins, shiftedArg4, arg4, begins, counter);
+           Impl::map_arg_to_new_begin(5, subviewBegins, shiftedArg5, arg5, begins, counter);
+           Impl::map_arg_to_new_begin(6, subviewBegins, shiftedArg6, arg6, begins, counter);
+           Impl::map_arg_to_new_begin(7, subviewBegins, shiftedArg7, arg7, begins, counter);
 
            typename Kokkos::Impl::GetOffsetViewTypeFromViewType<typename Kokkos::Impl::ViewMapping<
               void /* deduce subview type from source view traits */
