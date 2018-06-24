@@ -1318,7 +1318,7 @@ namespace Kokkos {
 #endif
 
       template< typename Label>
-      explicit KOKKOS_INLINE_FUNCTION
+      explicit inline
       OffsetView( const Label & arg_label
             ,typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value , const index_list_type >::type
             range0
