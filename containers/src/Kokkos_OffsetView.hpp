@@ -1517,6 +1517,7 @@ namespace Kokkos {
 
        }
 
+
       template< class D, class ... P , class T >
       KOKKOS_INLINE_FUNCTION
       typename Kokkos::Impl::GetOffsetViewTypeFromViewType<typename Kokkos::Impl::ViewMapping
@@ -1531,20 +1532,20 @@ namespace Kokkos {
 
          T shiftedArg = shift_input(arg, begins[0]);
 
-	 const size_t rank = Kokkos::Impl::ViewMapping
-	   < void /* deduce subview type from source view traits */
-	     , ViewTraits< D , P... >
-	     , T
-	     >::type::Rank;
-	 auto theSubview = Kokkos::subview( theView , shiftedArg);
+         constexpr size_t rank = Kokkos::Impl::ViewMapping
+               < void /* deduce subview type from source view traits */
+               , ViewTraits< D , P... >
+         , T>::type::Rank;
+
+         auto theSubview = Kokkos::subview( theView , shiftedArg);
 
          Kokkos::Array<int64_t, rank> subviewBegins;
          size_t counter = 0;
          Impl::map_arg_to_new_begin(0, subviewBegins, shiftedArg, arg, begins, counter);
 
          typename Kokkos::Impl::GetOffsetViewTypeFromViewType<typename Kokkos::Impl::ViewMapping<
-             void /* deduce subview type from source view traits */
-             , ViewTraits< D , P... > , T >::type >::type offsetView(theSubview, subviewBegins);
+         void /* deduce subview type from source view traits */
+         , ViewTraits< D , P... > , T >::type >::type offsetView(theSubview, subviewBegins);
 
          return offsetView;
 
@@ -1566,8 +1567,12 @@ namespace Kokkos {
          T1 shiftedArg1 = shift_input(arg1, begins[1]);
 
          auto theSubview = Kokkos::subview(theView , shiftedArg0, shiftedArg1);
+         constexpr size_t rank = Kokkos::Impl::ViewMapping
+               < void /* deduce subview type from source view traits */
+               , ViewTraits< D , P... >
+         , T0, T1>::type::Rank;
 
-         Kokkos::Array<int64_t, theSubview.Rank> subviewBegins;
+         Kokkos::Array<int64_t, rank> subviewBegins;
          size_t counter = 0;
          Impl::map_arg_to_new_begin(0, subviewBegins, shiftedArg0, arg0, begins, counter);
          Impl::map_arg_to_new_begin(1, subviewBegins, shiftedArg1, arg1, begins, counter);
@@ -1599,7 +1604,12 @@ namespace Kokkos {
 
          auto theSubview = Kokkos::subview( theView , shiftedArg0, shiftedArg1, shiftedArg2);
 
-         Kokkos::Array<int64_t, theSubview.Rank> subviewBegins;
+         constexpr size_t rank = Kokkos::Impl::ViewMapping
+               < void /* deduce subview type from source view traits */
+               , ViewTraits< D , P... >
+         , T0, T1, T2>::type::Rank;
+
+         Kokkos::Array<int64_t, rank> subviewBegins;
 
          size_t counter = 0;
          Impl::map_arg_to_new_begin(0, subviewBegins, shiftedArg0, arg0, begins, counter);
@@ -1633,7 +1643,11 @@ namespace Kokkos {
 
          auto theSubview = Kokkos::subview( theView , shiftedArg0, shiftedArg1, shiftedArg2, shiftedArg3);
 
-         Kokkos::Array<int64_t, theSubview.Rank> subviewBegins;
+         constexpr size_t rank = Kokkos::Impl::ViewMapping
+               < void /* deduce subview type from source view traits */
+               , ViewTraits< D , P... >
+         , T0, T1, T2, T3>::type::Rank;
+         Kokkos::Array<int64_t, rank> subviewBegins;
 
          size_t counter = 0;
          Impl::map_arg_to_new_begin(0, subviewBegins, shiftedArg0, arg0, begins, counter);
@@ -1669,7 +1683,11 @@ namespace Kokkos {
 
           auto theSubview = Kokkos::subview( theView , shiftedArg0, shiftedArg1, shiftedArg2, shiftedArg3, shiftedArg4);
 
-          Kokkos::Array<int64_t, theSubview.Rank> subviewBegins;
+          constexpr size_t rank = Kokkos::Impl::ViewMapping
+                < void /* deduce subview type from source view traits */
+                , ViewTraits< D , P... >
+          , T0, T1, T2, T3, T4>::type::Rank;
+          Kokkos::Array<int64_t, rank> subviewBegins;
 
           size_t counter = 0;
           Impl::map_arg_to_new_begin(0, subviewBegins, shiftedArg0, arg0, begins, counter);
@@ -1708,7 +1726,12 @@ namespace Kokkos {
 
           auto theSubview = Kokkos::subview( theView , shiftedArg0, shiftedArg1, shiftedArg2, shiftedArg3, shiftedArg4, shiftedArg5);
 
-          Kokkos::Array<int64_t, theSubview.Rank> subviewBegins;
+          constexpr size_t rank = Kokkos::Impl::ViewMapping
+                < void /* deduce subview type from source view traits */
+                , ViewTraits< D , P... >
+          , T0, T1, T2, T3, T4, T5>::type::Rank;
+
+          Kokkos::Array<int64_t, rank> subviewBegins;
 
           size_t counter = 0;
           Impl::map_arg_to_new_begin(0, subviewBegins, shiftedArg0, arg0, begins, counter);
@@ -1750,7 +1773,12 @@ namespace Kokkos {
           auto theSubview = Kokkos::subview( theView , shiftedArg0, shiftedArg1, shiftedArg2, shiftedArg3, shiftedArg4, shiftedArg5,
                                               shiftedArg6);
 
-          Kokkos::Array<int64_t, theSubview.Rank> subviewBegins;
+          constexpr size_t rank = Kokkos::Impl::ViewMapping
+                < void /* deduce subview type from source view traits */
+                , ViewTraits< D , P... >
+          , T0, T1, T2, T3, T4, T5, T6>::type::Rank;
+
+          Kokkos::Array<int64_t, rank> subviewBegins;
 
           size_t counter = 0;
           Impl::map_arg_to_new_begin(0, subviewBegins, shiftedArg0, arg0, begins, counter);
@@ -1796,7 +1824,12 @@ namespace Kokkos {
            auto theSubview = Kokkos::subview( theView , shiftedArg0, shiftedArg1, shiftedArg2, shiftedArg3, shiftedArg4, shiftedArg5,
                                                shiftedArg6, shiftedArg7);
 
-           Kokkos::Array<int64_t, theSubview.Rank> subviewBegins;
+           constexpr size_t rank = Kokkos::Impl::ViewMapping
+                 < void /* deduce subview type from source view traits */
+                 , ViewTraits< D , P... >
+           , T0, T1, T2, T3, T4, T5, T6, T7>::type::Rank;
+
+           Kokkos::Array<int64_t, rank> subviewBegins;
 
            size_t counter = 0;
            Impl::map_arg_to_new_begin(0, subviewBegins, shiftedArg0, arg0, begins, counter);
