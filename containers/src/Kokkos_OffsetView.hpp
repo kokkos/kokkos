@@ -1530,9 +1530,15 @@ namespace Kokkos {
          auto begins = src.begins();
 
          T shiftedArg = shift_input(arg, begins[0]);
-         auto theSubview = Kokkos::subview( theView , shiftedArg);
 
-         Kokkos::Array<int64_t, theSubview.Rank> subviewBegins;
+	 const size_t rank = Kokkos::Impl::ViewMapping
+	   < void /* deduce subview type from source view traits */
+	     , ViewTraits< D , P... >
+	     , T
+	     >::type::Rank;
+	 auto theSubview = Kokkos::subview( theView , shiftedArg);
+
+         Kokkos::Array<int64_t, rank> subviewBegins;
          size_t counter = 0;
          Impl::map_arg_to_new_begin(0, subviewBegins, shiftedArg, arg, begins, counter);
 
