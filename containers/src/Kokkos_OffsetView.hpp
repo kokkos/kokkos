@@ -1594,7 +1594,6 @@ namespace Kokkos {
                >::type >::type
       subview_offset(const OffsetView< D, P... > & src, T0 arg0, T1 arg1, T2 arg2) {
 
-         const bool shift_down = true;
          auto theView = src.view();
          auto begins = src.begins();
 
@@ -1632,7 +1631,6 @@ namespace Kokkos {
                >::type >::type
       subview_offset(const OffsetView< D, P... > & src, T0 arg0, T1 arg1, T2 arg2, T3 arg3) {
 
-         const bool shift_down = true;
          auto theView = src.view();
          auto begins = src.begins();
 
@@ -1671,7 +1669,6 @@ namespace Kokkos {
                 >::type >::type
        subview_offset(const OffsetView< D, P... > & src, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4) {
 
-          const bool shift_down = true;
           auto theView = src.view();
           auto begins = src.begins();
 
@@ -1713,7 +1710,6 @@ namespace Kokkos {
                 >::type >::type
        subview_offset(const OffsetView< D, P... > & src, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) {
 
-          const bool shift_down = true;
           auto theView = src.view();
           auto begins = src.begins();
 
@@ -1758,7 +1754,6 @@ namespace Kokkos {
        subview_offset(const OffsetView< D, P... > & src, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5,
                       T6 arg6) {
 
-          const bool shift_down = true;
           auto theView = src.view();
           auto begins = src.begins();
 
@@ -1808,7 +1803,6 @@ namespace Kokkos {
         subview_offset(const OffsetView< D, P... > & src, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5,
                        T6 arg6, T7 arg7) {
 
-           const bool shift_down = true;
            auto theView = src.view();
            auto begins = src.begins();
 
