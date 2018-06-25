@@ -1495,12 +1495,12 @@ namespace Kokkos {
 
       }
 
-      template <size_t N, class Arg, class Array>
+      template <size_t N, class Arg, class A>
        KOKKOS_INLINE_FUNCTION
        void
        map_arg_to_new_begin(const size_t i,
              Kokkos::Array<int64_t, N> &subviewBegins, typename std::enable_if< N != 0, const Arg>::type shiftedArg,
-             const Arg arg, const Array viewBegins, size_t & counter) {
+             const Arg arg, const A viewBegins, size_t & counter) {
 
          if( !std::is_integral<Arg>::value) {
             subviewBegins[counter] = shiftedArg == arg ? viewBegins[i] : 0;
@@ -1508,12 +1508,12 @@ namespace Kokkos {
          }
        }
 
-      template <size_t N, class Arg, class Array>
+      template <size_t N, class Arg, class A>
        KOKKOS_INLINE_FUNCTION
        void
        map_arg_to_new_begin(const size_t i,
              Kokkos::Array<int64_t, N> &subviewBegins, typename std::enable_if< N == 0, const Arg>::type shiftedArg,
-             const Arg arg, const Array viewBegins, size_t & counter) {
+             const Arg arg, const A viewBegins, size_t & counter) {
 
        }
 
@@ -2129,7 +2129,7 @@ namespace Kokkos {
       typedef OffsetView<T,P...>             src_type ;
       typedef typename src_type::HostMirror  dst_type ;
 
-      return dst_type( std::string( src.label() ).append("_mirror"),
+      return dst_type( Impl::ViewCtorProp< std::string >(std::string( src.label() ).append("_mirror") ),
             typename Kokkos::ViewTraits<T,P...>::array_layout
             ( src.extent(0), src.extent(1), src.extent(2), src.extent(3), src.extent(4),
                   src.extent(5), src.extent(6), src.extent(7) ),
