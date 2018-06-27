@@ -41,15 +41,14 @@
 //@HEADER
 */
 
-#include<TestViewAPI.hpp>
+#include <rocm/TestROCmHostPinned_Category.hpp>
+#include <TestViewSubview.hpp>
 
 namespace Test {
 
-TEST_F( TEST_CATEGORY, view_api_b )
+TEST_F( TEST_CATEGORY, view_test_unmanaged_subview_reset )
 {
-  TestViewAPI< double, TEST_EXECSPACE >::run_test_view_operator_a();
-  TestViewAPI< double, TEST_EXECSPACE >::run_test_mirror();
-  TestViewAPI< double, TEST_EXECSPACE >::run_test_scalar();
+  TestViewSubview::test_unmanaged_subview_reset< TEST_EXECSPACE >();
 }
 
-}
+} // namespace Test
