@@ -76,6 +76,8 @@ struct LayoutLeft {
 
   size_t dimension[ ARRAY_LAYOUT_MAX_RANK ];
 
+  enum { is_extent_constructible = true };
+
   LayoutLeft( LayoutLeft const & ) = default ;
   LayoutLeft( LayoutLeft && ) = default ;
   LayoutLeft & operator = ( LayoutLeft const & ) = default ;
@@ -108,6 +110,8 @@ struct LayoutRight {
 
   size_t dimension[ ARRAY_LAYOUT_MAX_RANK ];
 
+  enum { is_extent_constructible = true };
+
   LayoutRight( LayoutRight const & ) = default ;
   LayoutRight( LayoutRight && ) = default ;
   LayoutRight & operator = ( LayoutRight const & ) = default ;
@@ -131,6 +135,8 @@ struct LayoutStride {
 
   size_t dimension[ ARRAY_LAYOUT_MAX_RANK ] ;
   size_t stride[ ARRAY_LAYOUT_MAX_RANK ] ;
+
+  enum { is_extent_constructible = false };
 
   LayoutStride( LayoutStride const & ) = default ;
   LayoutStride( LayoutStride && ) = default ;
@@ -221,6 +227,8 @@ struct LayoutTileLeft {
   enum { N1 = ArgN1 };
 
   size_t dimension[ ARRAY_LAYOUT_MAX_RANK ] ;
+
+  enum { is_extent_constructible = true };
 
   LayoutTileLeft( LayoutTileLeft const & ) = default ;
   LayoutTileLeft( LayoutTileLeft && ) = default ;
