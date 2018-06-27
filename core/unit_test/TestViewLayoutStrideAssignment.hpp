@@ -67,7 +67,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
 	
     Kokkos::View< double*, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -78,7 +78,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );
@@ -93,7 +93,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
   
     Kokkos::View< double**, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -104,7 +104,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );
@@ -119,7 +119,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
 	
     Kokkos::View< double***, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -130,7 +130,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );
@@ -145,7 +145,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
 	
     Kokkos::View< double****, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -156,7 +156,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );
@@ -171,7 +171,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
 	
     Kokkos::View< double*****, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -182,7 +182,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );
@@ -197,7 +197,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
 	
     Kokkos::View< double******, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -208,7 +208,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );
@@ -223,7 +223,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
 	
     Kokkos::View< double*******, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -234,7 +234,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );
@@ -249,7 +249,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
 	
     Kokkos::View< double********, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -260,7 +260,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );
@@ -284,7 +284,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
 	
     Kokkos::View< double*, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -295,7 +295,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );
@@ -310,7 +310,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
 	
     Kokkos::View< double**, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -321,7 +321,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );
@@ -336,7 +336,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
 	
     Kokkos::View< double***, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -347,7 +347,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );
@@ -362,7 +362,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
 	
     Kokkos::View< double****, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -373,7 +373,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );
@@ -388,7 +388,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
 	
     Kokkos::View< double*****, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -399,7 +399,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );
@@ -414,7 +414,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
 	
     Kokkos::View< double******, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -425,7 +425,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );
@@ -440,7 +440,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
 	
     Kokkos::View< double*******, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -451,7 +451,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );
@@ -466,7 +466,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
 	
     Kokkos::View< double********, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -477,7 +477,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );
@@ -501,7 +501,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutleft_assignment )
 
     Kokkos::View< double*, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -514,7 +514,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutleft_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );
@@ -622,7 +622,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutright_assignment )
 
     Kokkos::View< double*, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
-    for(int i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
+    for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
     Kokkos::deep_copy( src, h_src );
 
@@ -635,7 +635,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutright_assignment )
     Kokkos::deep_copy( h_dst, dst );
 
     bool test = true;
-    for(int i=0; i<src.span();i++){
+    for(size_t i=0; i<src.span();i++){
       if (h_src.data()[i]!=h_dst.data()[i]) {test = false;break;}
     }
     ASSERT_EQ( dst.span(), src.span() );

@@ -3052,7 +3052,7 @@ public:
       size_t strides[8];
       bool assignable = true;
       src.stride(strides);
-      int exp_stride = 1;
+      size_t exp_stride = 1;
       if (std::is_same< typename DstTraits::array_layout, Kokkos::LayoutLeft >::value) {
 	    for(int i=0; i<src.Rank; i++) {
           if (i>0) exp_stride *= src.extent(i-1);
