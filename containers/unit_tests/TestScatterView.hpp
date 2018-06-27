@@ -111,9 +111,6 @@ struct TestDuplicatedScatterView {
     test_scatter_view_config<ExecSpace, Kokkos::LayoutRight,
       Kokkos::Experimental::ScatterDuplicated,
       Kokkos::Experimental::ScatterNonAtomic>(n);
-    test_scatter_view_config<ExecSpace, Kokkos::LayoutRight,
-      Kokkos::Experimental::ScatterDuplicated,
-      Kokkos::Experimental::ScatterAtomic>(n);
   }
 };
 
@@ -152,9 +149,15 @@ void test_scatter_view(int n)
       Kokkos::Experimental::ScatterNonDuplicated,
       Kokkos::Experimental::ScatterNonAtomic>(n);
   }
+#ifdef KOKKOS_ENABLE_SERIAL
+  if (!std::is_same<ExecSpace, Kokkos::Serial>::value) {
+#endif
   test_scatter_view_config<ExecSpace, Kokkos::LayoutRight,
     Kokkos::Experimental::ScatterNonDuplicated,
     Kokkos::Experimental::ScatterAtomic>(n);
+#ifdef KOKKOS_ENABLE_SERIAL
+  }
+#endif
 
   TestDuplicatedScatterView<ExecSpace> duptest(n);
 }
@@ -162,7 +165,11 @@ void test_scatter_view(int n)
 TEST_F( TEST_CATEGORY, scatterview) {
 #ifndef KOKKOS_ENABLE_ROCM
   test_scatter_view<TEST_EXECSPACE>(10);
+#ifdef KOKKOS_ENABLE_DEBUG
+  test_scatter_view<TEST_EXECSPACE>(100000);
+#else
   test_scatter_view<TEST_EXECSPACE>(10000000);
+#endif
 #endif
 }
 
