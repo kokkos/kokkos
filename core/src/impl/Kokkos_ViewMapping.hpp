@@ -3049,7 +3049,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   static bool assignable_layout_check(DstType & dst, const SrcType & src) //Runtime check
     {
-      size_t strides[8];
+      size_t strides[9];
       bool assignable = true;
       src.stride(strides);
       size_t exp_stride = 1;
