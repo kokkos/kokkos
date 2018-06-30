@@ -40,8 +40,7 @@
 //@HEADER
 
 /*
- * FIXME the OffsetView class is really not very well tested.  especially the subviews need to be
- *  exercised more thoroughly than a rank check.
+ * FIXME the OffsetView class is really not very well tested.
  */
 #ifndef CONTAINERS_UNIT_TESTS_TESTOFFSETVIEW_HPP_
 #define CONTAINERS_UNIT_TESTS_TESTOFFSETVIEW_HPP_
@@ -140,6 +139,7 @@ namespace Test{
       const int constValue = 9;
       Kokkos::parallel_for(rangePolicy2D, KOKKOS_LAMBDA (const int i, const int j) {
          ov(i,j) =  constValue;
+         cout << "2d range i = " << i << " j = " << j << endl;
       }
       );
 
@@ -300,6 +300,37 @@ namespace Test{
          {
             auto offsetSubview = Kokkos::Experimental::subview(sliceMe,0, Kokkos::ALL(),Kokkos::ALL());
             ASSERT_EQ(offsetSubview.Rank, 2) << "subview of offset is broken.";
+
+         }
+         {
+            auto offsetSubview = Kokkos::Experimental::subview(sliceMe,0, Kokkos::ALL(), std::make_pair(-30, -21));
+            ASSERT_EQ(offsetSubview.Rank, 2) << "subview of offset is broken.";
+
+            ASSERT_EQ(offsetSubview.begin(0) , -20);
+            ASSERT_EQ(offsetSubview.end(0) , 31);
+            ASSERT_EQ(offsetSubview.begin(1) , 0);
+            ASSERT_EQ(offsetSubview.end(1) , 9);
+
+            typedef Kokkos::MDRangePolicy<Device, Kokkos::Rank<2>, Kokkos::IndexType<int> > range_type;
+            typedef typename range_type::point_type point_type;
+
+            const int b0 = -1;
+            const int e0 = 4;
+            const int b1 = -2;
+            const int e1 = 3;
+
+//            range_type rangePolicy2D(point_type{ {sliceMe.begin(1), sliceMe.end(1) } },
+            range_type rangePolicy2D(point_type{ {b0, e0 } },
+                  point_type{ { b1, e1} });
+
+            cout << "howdy " << endl;
+            Kokkos::parallel_for(rangePolicy2D, KOKKOS_LAMBDA (const int i, const int j) {
+               offsetSubview(i,j) =  6;
+               cout << "i = " << i << " j = " << j << endl;
+            }
+            );
+            cout.flush();
+            ASSERT_EQ(offsetSubview(0,0), 6);
          }
 
          // slice 2
