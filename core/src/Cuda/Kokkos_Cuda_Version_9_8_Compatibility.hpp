@@ -24,6 +24,7 @@
 #endif 
 #else
 #define KOKKOS_IMPL_CUDA_SYNCWARP 
+#define KOKKOS_IMPL_CUDA_SYNCWARP_MASK(m) 
 #define KOKKOS_IMPL_CUDA_BALLOT(x) 0
 #define KOKKOS_IMPL_CUDA_SHFL(x,y,z) 0
 #define KOKKOS_IMPL_CUDA_SHFL_UP(x,y,z) 0
