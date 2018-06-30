@@ -2194,6 +2194,9 @@ private:
     const WorkRange range( m_policy , blockIdx.x , gridDim.x );
 
     for ( typename Policy::member_type iwork_base = range.begin(); iwork_base < range.end() ; iwork_base += blockDim.y ) {
+      #ifdef __CUDA_ARCH__
+      unsigned MASK=__activemask();
+      #endif
 
       const typename Policy::member_type iwork = iwork_base + threadIdx.y ;
 
@@ -2206,6 +2209,9 @@ private:
         shared_data[i + word_count.value] = shared_data[i] = shared_accum[i] ;
       }
 
+      #ifdef __CUDA_ARCH__
+      KOKKOS_IMPL_CUDA_SYNCWARP_MASK(MASK);
+      #endif
       if ( CudaTraits::WarpSize < word_count.value ) { __syncthreads(); } // Protect against large scan values.
 
       // Call functor to accumulate inclusive scan value for this work item
