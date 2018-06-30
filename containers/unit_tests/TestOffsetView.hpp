@@ -65,11 +65,11 @@ namespace Test{
    void test_offsetview_construction(unsigned int size)
    {
 
-      typedef Kokkos::OffsetView<Scalar**, Device> offset_view_type;
+      typedef Kokkos::Experimental::OffsetView<Scalar**, Device> offset_view_type;
       typedef Kokkos::View<Scalar**, Device> view_type;
 
-      Kokkos::index_list_type range0 = {-1, 3};
-      Kokkos::index_list_type range1 = {-2, 2};
+      Kokkos::Experimental::index_list_type range0 = {-1, 3};
+      Kokkos::Experimental::index_list_type range1 = {-2, 2};
 
       offset_view_type ov("firstOV", range0, range1);
 
@@ -92,7 +92,7 @@ namespace Test{
 
       //#ifdef KOKKOS_ENABLE_CUDA_LAMBDA
       {
-         Kokkos::OffsetView<Scalar*, Device> offsetV1("OneDOffsetView", range0);
+         Kokkos::Experimental::OffsetView<Scalar*, Device> offsetV1("OneDOffsetView", range0);
 
          Kokkos::RangePolicy<Device, int> rangePolicy1(range0.begin()[0], range0.begin()[1]);
          Kokkos::parallel_for(rangePolicy1, KOKKOS_LAMBDA (const int i){
@@ -120,9 +120,9 @@ namespace Test{
       {  //test deep copy of scalar const value into mirro
          const int constVal = 6;
          typename offset_view_type::HostMirror hostOffsetView =
-               Kokkos::create_mirror_view(ov);
+               Kokkos::Experimental::create_mirror_view(ov);
 
-         Kokkos::deep_copy(hostOffsetView, constVal);
+         Kokkos::Experimental::deep_copy(hostOffsetView, constVal);
 
          for(int i = hostOffsetView.begin(0); i < hostOffsetView.end(0); ++i) {
             for(int j = hostOffsetView.begin(1); j < hostOffsetView.end(1); ++j) {
@@ -145,9 +145,9 @@ namespace Test{
 
       //test offsetview to offsetviewmirror deep copy
       typename offset_view_type::HostMirror hostOffsetView =
-            Kokkos::create_mirror_view(ov);
+            Kokkos::Experimental::create_mirror_view(ov);
 
-      Kokkos::deep_copy(hostOffsetView, ov);
+      Kokkos::Experimental::deep_copy(hostOffsetView, ov);
 
       for(int i = hostOffsetView.begin(0); i < hostOffsetView.end(0); ++i) {
          for(int j = hostOffsetView.begin(1); j < hostOffsetView.end(1); ++j) {
@@ -193,7 +193,7 @@ namespace Test{
          Kokkos::deep_copy(view3D, 1);
 
          Kokkos::Array<int64_t,3> begins = {-10, -20, -30};
-         Kokkos::OffsetView<Scalar***, Device> offsetView3D(view3D, begins);
+         Kokkos::Experimental::OffsetView<Scalar***, Device> offsetView3D(view3D, begins);
 
          typedef Kokkos::MDRangePolicy<Device, Kokkos::Rank<3>, Kokkos::IndexType<int64_t> > range3_type;
          typedef typename range3_type::point_type point3_type;
@@ -235,7 +235,7 @@ namespace Test{
 
       {// test offsetview to view deep copy
          view_type aView("aView", ov.extent(0), ov.extent(1));
-         Kokkos::deep_copy(aView, ov);
+         Kokkos::Experimental::deep_copy(aView, ov);
 
          int sum = 0;
          Kokkos::parallel_reduce(rangePolicy2D, KOKKOS_LAMBDA(const int i, const int j, int & updateMe){
@@ -248,7 +248,7 @@ namespace Test{
          view_type aView("aView", ov.extent(0), ov.extent(1));
 
          Kokkos::deep_copy(aView, 99);
-         Kokkos::deep_copy(ov, aView);
+         Kokkos::Experimental::deep_copy(ov, aView);
 
          int sum = 0;
          Kokkos::parallel_reduce(rangePolicy2D, KOKKOS_LAMBDA(const int i, const int j, int & updateMe){
@@ -257,36 +257,27 @@ namespace Test{
 
          ASSERT_EQ(sum, 0) << "deep_copy(offsetView, view) broken.";
       }
-
-#if 0
-      {
-         view_type viewByAssignment = ov;
-         ASSERT_EQ(viewFromOV == ov, true) <<
-               "Assignment of OffsetView to View or equivalence operator View == OffsetView broken";
-
-      }
-#endif
    }
    template <typename Scalar, typename Device>
    void test_offsetview_subview(unsigned int size)
    {
       {//test subview 1
-          Kokkos::OffsetView<Scalar*, Device> sliceMe("offsetToSlice", {-10, 20});
+          Kokkos::Experimental::OffsetView<Scalar*, Device> sliceMe("offsetToSlice", {-10, 20});
           {
-             auto offsetSubviewa = Kokkos::subview(sliceMe, 0);
+             auto offsetSubviewa = Kokkos::Experimental::subview(sliceMe, 0);
              ASSERT_EQ(offsetSubviewa.Rank, 0) << "subview of offset is broken.";
           }
 
        }
       {//test subview 2
-         Kokkos::OffsetView<Scalar**, Device> sliceMe("offsetToSlice", {-10,20}, {-20,30});
+         Kokkos::Experimental::OffsetView<Scalar**, Device> sliceMe("offsetToSlice", {-10,20}, {-20,30});
          {
-            auto offsetSubview = Kokkos::subview(sliceMe, Kokkos::ALL(),-2);
+            auto offsetSubview = Kokkos::Experimental::subview(sliceMe, Kokkos::ALL(),-2);
             ASSERT_EQ(offsetSubview.Rank, 1) << "subview of offset is broken.";
          }
 
          {
-            auto offsetSubview = Kokkos::subview(sliceMe, 0, Kokkos::ALL());
+            auto offsetSubview = Kokkos::Experimental::subview(sliceMe, 0, Kokkos::ALL());
             ASSERT_EQ(offsetSubview.Rank, 1) << "subview of offset is broken.";
          }
       }
@@ -294,95 +285,95 @@ namespace Test{
 
       {//test subview rank 3
 
-         Kokkos::OffsetView<Scalar***, Device> sliceMe("offsetToSlice", {-10,20}, {-20,30}, {-30,40});
+         Kokkos::Experimental::OffsetView<Scalar***, Device> sliceMe("offsetToSlice", {-10,20}, {-20,30}, {-30,40});
 
          //slice 1
          {
-            auto offsetSubview = Kokkos::subview(sliceMe,Kokkos::ALL(),Kokkos::ALL(), 0);
+            auto offsetSubview = Kokkos::Experimental::subview(sliceMe,Kokkos::ALL(),Kokkos::ALL(), 0);
             ASSERT_EQ(offsetSubview.Rank, 2) << "subview of offset is broken.";
          }
          {
-            auto offsetSubview = Kokkos::subview(sliceMe,Kokkos::ALL(), 0,Kokkos::ALL());
+            auto offsetSubview = Kokkos::Experimental::subview(sliceMe,Kokkos::ALL(), 0,Kokkos::ALL());
             ASSERT_EQ(offsetSubview.Rank, 2) << "subview of offset is broken.";
          }
 
          {
-            auto offsetSubview = Kokkos::subview(sliceMe,0, Kokkos::ALL(),Kokkos::ALL());
+            auto offsetSubview = Kokkos::Experimental::subview(sliceMe,0, Kokkos::ALL(),Kokkos::ALL());
             ASSERT_EQ(offsetSubview.Rank, 2) << "subview of offset is broken.";
          }
 
          // slice 2
          {
-            auto offsetSubview = Kokkos::subview(sliceMe, Kokkos::ALL(), 0, 0);
+            auto offsetSubview = Kokkos::Experimental::subview(sliceMe, Kokkos::ALL(), 0, 0);
             ASSERT_EQ(offsetSubview.Rank, 1) << "subview of offset is broken.";
          }
          {
-            auto offsetSubview = Kokkos::subview(sliceMe, 0, 0, Kokkos::ALL());
+            auto offsetSubview = Kokkos::Experimental::subview(sliceMe, 0, 0, Kokkos::ALL());
             ASSERT_EQ(offsetSubview.Rank, 1) << "subview of offset is broken.";
          }
 
          {
-            auto offsetSubview = Kokkos::subview(sliceMe, 0, Kokkos::ALL(), 0);
+            auto offsetSubview = Kokkos::Experimental::subview(sliceMe, 0, Kokkos::ALL(), 0);
             ASSERT_EQ(offsetSubview.Rank, 1) << "subview of offset is broken.";
          }
       }
 
       {//test subview rank 4
 
-         Kokkos::OffsetView<Scalar****, Device> sliceMe("offsetToSlice", {-10,20}, {-20,30}, {-30,40}, {-40, 50});
+         Kokkos::Experimental::OffsetView<Scalar****, Device> sliceMe("offsetToSlice", {-10,20}, {-20,30}, {-30,40}, {-40, 50});
 
          //slice 1
          {
-            auto offsetSubview = Kokkos::subview(sliceMe, Kokkos::ALL(),Kokkos::ALL(), Kokkos::ALL(), 0);
+            auto offsetSubview = Kokkos::Experimental::subview(sliceMe, Kokkos::ALL(),Kokkos::ALL(), Kokkos::ALL(), 0);
             ASSERT_EQ(offsetSubview.Rank, 3) << "subview of offset is broken.";
          }
          {
-            auto offsetSubview = Kokkos::subview(sliceMe, Kokkos::ALL(), Kokkos::ALL(), 0, Kokkos::ALL());
+            auto offsetSubview = Kokkos::Experimental::subview(sliceMe, Kokkos::ALL(), Kokkos::ALL(), 0, Kokkos::ALL());
             ASSERT_EQ(offsetSubview.Rank, 3) << "subview of offset is broken.";
          }
          {
-            auto offsetSubview = Kokkos::subview(sliceMe ,Kokkos::ALL(), 0, Kokkos::ALL(),Kokkos::ALL());
+            auto offsetSubview = Kokkos::Experimental::subview(sliceMe ,Kokkos::ALL(), 0, Kokkos::ALL(),Kokkos::ALL());
             ASSERT_EQ(offsetSubview.Rank, 3) << "subview of offset is broken.";
          }
          {
-            auto offsetSubview = Kokkos::subview(sliceMe , 0, Kokkos::ALL(), Kokkos::ALL(),  Kokkos::ALL() );
+            auto offsetSubview = Kokkos::Experimental::subview(sliceMe , 0, Kokkos::ALL(), Kokkos::ALL(),  Kokkos::ALL() );
             ASSERT_EQ(offsetSubview.Rank, 3) << "subview of offset is broken.";
          }
 
          // slice 2
-         auto offsetSubview2a = Kokkos::subview(sliceMe, Kokkos::ALL(), Kokkos::ALL(), 0, 0);
+         auto offsetSubview2a = Kokkos::Experimental::subview(sliceMe, Kokkos::ALL(), Kokkos::ALL(), 0, 0);
          ASSERT_EQ(offsetSubview2a.Rank, 2) << "subview of offset is broken.";
          {
-            auto offsetSubview2b = Kokkos::subview(sliceMe, Kokkos::ALL(), 0, Kokkos::ALL(), 0);
+            auto offsetSubview2b = Kokkos::Experimental::subview(sliceMe, Kokkos::ALL(), 0, Kokkos::ALL(), 0);
             ASSERT_EQ(offsetSubview2b.Rank, 2) << "subview of offset is broken.";
          }
          {
-            auto offsetSubview2b = Kokkos::subview(sliceMe, Kokkos::ALL(), 0, 0, Kokkos::ALL());
+            auto offsetSubview2b = Kokkos::Experimental::subview(sliceMe, Kokkos::ALL(), 0, 0, Kokkos::ALL());
             ASSERT_EQ(offsetSubview2b.Rank, 2) << "subview of offset is broken.";
          }
          {
-            auto offsetSubview2b = Kokkos::subview(sliceMe,  0, Kokkos::ALL(), 0, Kokkos::ALL());
+            auto offsetSubview2b = Kokkos::Experimental::subview(sliceMe,  0, Kokkos::ALL(), 0, Kokkos::ALL());
             ASSERT_EQ(offsetSubview2b.Rank, 2) << "subview of offset is broken.";
          }
          {
-            auto offsetSubview2b = Kokkos::subview(sliceMe,  0, 0, Kokkos::ALL(), Kokkos::ALL());
+            auto offsetSubview2b = Kokkos::Experimental::subview(sliceMe,  0, 0, Kokkos::ALL(), Kokkos::ALL());
             ASSERT_EQ(offsetSubview2b.Rank, 2) << "subview of offset is broken.";
          }
          // slice 3
          {
-            auto offsetSubview = Kokkos::subview(sliceMe, Kokkos::ALL(), 0, 0, 0);
+            auto offsetSubview = Kokkos::Experimental::subview(sliceMe, Kokkos::ALL(), 0, 0, 0);
             ASSERT_EQ(offsetSubview.Rank, 1) << "subview of offset is broken.";
          }
          {
-            auto offsetSubview = Kokkos::subview(sliceMe, 0, Kokkos::ALL(), 0, 0);
+            auto offsetSubview = Kokkos::Experimental::subview(sliceMe, 0, Kokkos::ALL(), 0, 0);
             ASSERT_EQ(offsetSubview.Rank, 1) << "subview of offset is broken.";
          }
          {
-            auto offsetSubview = Kokkos::subview(sliceMe,  0, 0, Kokkos::ALL(), 0);
+            auto offsetSubview = Kokkos::Experimental::subview(sliceMe,  0, 0, Kokkos::ALL(), 0);
             ASSERT_EQ(offsetSubview.Rank, 1) << "subview of offset is broken.";
          }
          {
-            auto offsetSubview = Kokkos::subview(sliceMe,  0, 0, 0, Kokkos::ALL());
+            auto offsetSubview = Kokkos::Experimental::subview(sliceMe,  0, 0, 0, Kokkos::ALL());
             ASSERT_EQ(offsetSubview.Rank, 1) << "subview of offset is broken.";
          }
 

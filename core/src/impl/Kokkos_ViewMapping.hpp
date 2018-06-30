@@ -3156,26 +3156,6 @@ bool view_verify_operator_bounds
          && view_verify_operator_bounds<R+1>( map , args ... );
 }
 
-template< unsigned , class MapType, class BeginsType >
-KOKKOS_INLINE_FUNCTION
-bool offsetview_verify_operator_bounds( const MapType &, const BeginsType & )
-{ return true ; }
-
-template< unsigned R , class MapType , class BeginsType, class iType , class ... Args >
-KOKKOS_INLINE_FUNCTION
-bool offsetview_verify_operator_bounds
-( const MapType & map
-  , const BeginsType & begins
-  , const iType   & i
-  , Args ... args
-)
-{
-
-  const bool legalIndex =  ( int64_t(i) >=  begins[R]  ) &&
-      ( int64_t(i) <= int64_t(begins[R] + map.extent(R) - 1) );
-  return  legalIndex
-      && offsetview_verify_operator_bounds<R+1>( map , begins,  args ... );
-}
 
 template< unsigned , class MapType >
 inline
@@ -3201,33 +3181,6 @@ void view_error_operator_bounds
   view_error_operator_bounds<R+1>(buf+n,len-n,map,args...);
 }
 
-template< unsigned , class MapType, class BeginsType >
-inline
-void offsetview_error_operator_bounds( char * , int , const MapType & , const BeginsType &)
-{}
-
-template< unsigned R , class MapType , class BeginsType , class iType , class ... Args >
-inline
-void offsetview_error_operator_bounds
-  ( char * buf
-  , int len
-  , const MapType & map
-  , const  BeginsType begins
-  , const iType   & i
-  , Args ... args
-  )
-{
-  const int64_t b = begins[R];
-  const int64_t e = b + map.extent(R) - 1;
-  const int n =
-    snprintf(buf,len," %ld <= %ld <= %ld %c"
-            , static_cast<unsigned long>(b)
-            , static_cast<unsigned long>(i)
-            , static_cast<unsigned long>(e)
-            , ( sizeof...(Args) ? ',' : ')' )
-            );
-  offsetview_error_operator_bounds<R+1>(buf+n,len-n,map,begins,args...);
-}
 
 #if ! defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
 
@@ -3328,35 +3281,6 @@ void view_verify_operator_bounds
   }
 }
 
-template< class MemorySpace , class MapType , class BeginsType, class ... Args >
-KOKKOS_INLINE_FUNCTION
-void offsetview_verify_operator_bounds
-  ( Kokkos::Impl::SharedAllocationTracker const & tracker
-  , const MapType & map , const BeginsType & begins, Args ... args )
-{
-  if ( ! offsetview_verify_operator_bounds<0>( map , begins, args ... ) ) {
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-    enum { LEN = 1024 };
-    char buffer[ LEN ];
-    const std::string label = tracker.template get_label<MemorySpace>();
-    int n = snprintf(buffer,LEN,"OffsetView bounds error of view labeled %s (",label.c_str());
-    offsetview_error_operator_bounds<0>( buffer + n , LEN - n , map ,begins, args ... );
-    Kokkos::Impl::throw_runtime_exception(std::string(buffer));
-#else
-    /* Check #1: is there a SharedAllocationRecord?
-       (we won't use it, but if its not there then there isn't
-        a corresponding SharedAllocationHeader containing a label).
-       This check should cover the case of Views that don't
-       have the Unmanaged trait but were initialized by pointer. */
-    if (tracker.has_record()) {
-      operator_bounds_error_on_device<MapType>(
-          map, has_printable_label_typedef<MapType>());
-    } else {
-      Kokkos::abort("OffsetView bounds error");
-    }
-#endif
-  }
-}
 
 
 } /* namespace Impl */
