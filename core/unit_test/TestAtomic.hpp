@@ -224,7 +224,8 @@ T AddLoop( int loop ) {
 
   struct AddFunctorReduce< T, execution_space > f_add_red;
   f_add_red.data = data;
-  Kokkos::parallel_reduce( loop, f_add_red );
+  int dummy_result;
+  Kokkos::parallel_reduce( loop, f_add_red , dummy_result );
   execution_space::fence();
 
   return val;
@@ -309,7 +310,8 @@ T CASLoop( int loop ) {
 
   struct CASFunctorReduce< T, execution_space > f_cas_red;
   f_cas_red.data = data;
-  Kokkos::parallel_reduce( loop, f_cas_red );
+  int dummy_result;
+  Kokkos::parallel_reduce( loop, f_cas_red , dummy_result );
   execution_space::fence();
 
   return val;
@@ -401,7 +403,8 @@ T ExchLoop( int loop ) {
   struct ExchFunctorReduce< T, execution_space > f_exch_red;
   f_exch_red.data = data;
   f_exch_red.data2 = data2;
-  Kokkos::parallel_reduce( loop, f_exch_red );
+  int dummy_result;
+  Kokkos::parallel_reduce( loop, f_exch_red , dummy_result );
   execution_space::fence();
 
   return val;
