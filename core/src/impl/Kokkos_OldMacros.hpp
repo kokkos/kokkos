@@ -142,7 +142,8 @@
 #endif
 #endif
 
-#ifdef KOKKOS_HAVE_CXX1Z
+
+#if defined(KOKKOS_HAVE_CXX1Z) || defined(KOKKOS_ENABLE_CXX17)
 #ifndef KOKKOS_ENABLE_CXX1Z
 #define KOKKOS_ENABLE_CXX1Z KOKKOS_HAVE_CXX1Z
 #endif
