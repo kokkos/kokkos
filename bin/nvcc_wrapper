@@ -132,7 +132,12 @@ do
     fi
     ;;
   #Handle shared args (valid for both nvcc and the host compiler)
-  -D*|-I*|-L*|-l*|-g|--help|--version|-E|-M|-shared)
+  -D*)
+    unescape_commas=`echo "$1" | sed -e 's/\\\,/,/g'`
+    arg=`printf "%q" $unescape_commas`
+    shared_args="$shared_args $arg"
+    ;;
+  -I*|-L*|-l*|-g|--help|--version|-E|-M|-shared)
     shared_args="$shared_args $1"
     ;;
   #Handle compilation argument
@@ -172,8 +177,11 @@ do
     cuda_args="$cuda_args $1 $2"
     shift
     ;;
+  -rdc=*|-maxrregcount*|--maxrregcount*)
+    cuda_args="$cuda_args $1"
+    ;;
   #Handle c++11
-  --std=c++11|-std=c++11|--std=c++14|-std=c++14|--std=c++1z|-std=c++1z)
+  --std=c++11|-std=c++11|--std=c++14|-std=c++14|--std=c++1y|-std=c++1y|--std=c++17|-std=c++17|--std=c++1z|-std=c++1z)
     if [ $stdcxx_applied -eq 1 ]; then
        echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-std=c++1* or --std=c++1*), only the first is used because nvcc can only accept a single std setting"
     else
@@ -220,15 +228,25 @@ do
     host_compiler=$2
     shift
     ;;
-  #Handle -arch argument (if its not set use a default
+  #Handle -arch argument (if its not set use a default) this is the version with = sign
   -arch*)
     cuda_args="$cuda_args $1"
     arch_set=1
-    shift
     ;;
-  #Handle -code argument (if its not set use a default
+  #Handle -code argument (if its not set use a default) this is the version with = sign
   -code*)
     cuda_args="$cuda_args $1"
+    code_set=1
+    ;;
+  #Handle -arch argument (if its not set use a default) this is the version without = sign
+  -arch)
+    cuda_args="$cuda_args $1 $2"
+    arch_set=1
+    shift
+    ;;
+  #Handle -code argument (if its not set use a default) this is the version without = sign
+  -code)
+    cuda_args="$cuda_args $1 $2"
     code_set=1
     shift
     ;;
