@@ -400,7 +400,6 @@ private:
 
   using track_type = Kokkos::Impl::SharedAllocationTracker ;
   using queue_type = Kokkos::Impl::TaskQueue< ExecSpace > ;
-  using task_base  = Impl::TaskBase< void , void , void > ;
 
   track_type   m_track ;
   queue_type * m_queue ;
