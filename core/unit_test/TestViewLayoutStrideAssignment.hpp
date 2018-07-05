@@ -67,7 +67,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double*, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);
 	
-    Kokkos::View< double*, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double*, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -75,7 +75,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
 
     Kokkos::View< double*, Kokkos::LayoutLeft, exec_space > dst = src;
 
-    Kokkos::View< double*, Kokkos::LayoutLeft >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double*, Kokkos::LayoutLeft, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
@@ -93,7 +93,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double**, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);  
   
-    Kokkos::View< double**, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double**, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -101,7 +101,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
 
     Kokkos::View< double**, Kokkos::LayoutLeft, exec_space > dst = src;
 
-    Kokkos::View< double**, Kokkos::LayoutLeft >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double**, Kokkos::LayoutLeft, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
@@ -119,7 +119,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double***, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);
 	
-    Kokkos::View< double***, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double***, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -127,7 +127,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
 
     Kokkos::View< double***, Kokkos::LayoutLeft, exec_space > dst = src;
 
-    Kokkos::View< double***, Kokkos::LayoutLeft >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double***, Kokkos::LayoutLeft, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
@@ -145,7 +145,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double****, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);
 	
-    Kokkos::View< double****, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double****, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -153,7 +153,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
 
     Kokkos::View< double****, Kokkos::LayoutLeft, exec_space > dst = src;
 
-    Kokkos::View< double****, Kokkos::LayoutLeft >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double****, Kokkos::LayoutLeft, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
@@ -171,7 +171,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double*****, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);
 	
-    Kokkos::View< double*****, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double*****, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -179,7 +179,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
 
     Kokkos::View< double*****, Kokkos::LayoutLeft, exec_space > dst = src;
 
-    Kokkos::View< double*****, Kokkos::LayoutLeft >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double*****, Kokkos::LayoutLeft, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
@@ -197,7 +197,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double******, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);
 	
-    Kokkos::View< double******, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double******, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -205,7 +205,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
 
     Kokkos::View< double******, Kokkos::LayoutLeft, exec_space > dst = src;
 
-    Kokkos::View< double******, Kokkos::LayoutLeft >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double******, Kokkos::LayoutLeft, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
@@ -223,7 +223,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double*******, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);
 	
-    Kokkos::View< double*******, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double*******, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -231,7 +231,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
 
     Kokkos::View< double*******, Kokkos::LayoutLeft, exec_space > dst = src;
 
-    Kokkos::View< double*******, Kokkos::LayoutLeft >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double*******, Kokkos::LayoutLeft, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
@@ -249,7 +249,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double********, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);
 	
-    Kokkos::View< double********, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double********, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -257,7 +257,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutleft_assignment )
 
     Kokkos::View< double********, Kokkos::LayoutLeft, exec_space > dst = src;
 
-    Kokkos::View< double********, Kokkos::LayoutLeft >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double********, Kokkos::LayoutLeft, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
@@ -286,7 +286,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double*, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);
 	
-    Kokkos::View< double*, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double*, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -294,7 +294,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
 
     Kokkos::View< double*, Kokkos::LayoutRight, exec_space > dst = src;
 
-    Kokkos::View< double*, Kokkos::LayoutRight >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double*, Kokkos::LayoutRight, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
@@ -312,7 +312,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double**, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);
 	
-    Kokkos::View< double**, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double**, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -320,7 +320,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
 
     Kokkos::View< double**, Kokkos::LayoutRight, exec_space > dst = src;
 
-    Kokkos::View< double**, Kokkos::LayoutRight >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double**, Kokkos::LayoutRight, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
@@ -338,7 +338,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double***, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);
 	
-    Kokkos::View< double***, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double***, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -346,7 +346,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
 
     Kokkos::View< double***, Kokkos::LayoutRight, exec_space > dst = src;
 
-    Kokkos::View< double***, Kokkos::LayoutRight >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double***, Kokkos::LayoutRight, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
@@ -364,7 +364,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double****, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);
 	
-    Kokkos::View< double****, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double****, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -372,7 +372,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
 
     Kokkos::View< double****, Kokkos::LayoutRight, exec_space > dst = src;
 
-    Kokkos::View< double****, Kokkos::LayoutRight >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double****, Kokkos::LayoutRight, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
@@ -390,7 +390,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double*****, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);
 	
-    Kokkos::View< double*****, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double*****, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -398,7 +398,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
 
     Kokkos::View< double*****, Kokkos::LayoutRight, exec_space > dst = src;
 
-    Kokkos::View< double*****, Kokkos::LayoutRight >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double*****, Kokkos::LayoutRight, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
@@ -416,7 +416,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double******, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);
 	
-    Kokkos::View< double******, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double******, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -424,7 +424,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
 
     Kokkos::View< double******, Kokkos::LayoutRight, exec_space > dst = src;
 
-    Kokkos::View< double******, Kokkos::LayoutRight >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double******, Kokkos::LayoutRight, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
@@ -442,7 +442,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double*******, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);
 	
-    Kokkos::View< double*******, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double*******, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -450,7 +450,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
 
     Kokkos::View< double*******, Kokkos::LayoutRight, exec_space > dst = src;
 
-    Kokkos::View< double*******, Kokkos::LayoutRight >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double*******, Kokkos::LayoutRight, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
@@ -468,7 +468,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double********, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);
 	
-    Kokkos::View< double********, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double********, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -476,7 +476,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutright_assignment )
 
     Kokkos::View< double********, Kokkos::LayoutRight, exec_space > dst = src;
 
-    Kokkos::View< double********, Kokkos::LayoutRight >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double********, Kokkos::LayoutRight, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
@@ -505,7 +505,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutleft_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double*, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);
 
-    Kokkos::View< double*, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double*, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -515,7 +515,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_right_to_layoutleft_assignment )
     
     dst = src;
 
-    Kokkos::View< double*, Kokkos::LayoutLeft >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double*, Kokkos::LayoutLeft, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
@@ -628,7 +628,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutright_assignment )
     Kokkos::LayoutStride layout = Kokkos::LayoutStride::order_dimensions(ndims, order, dims);
     Kokkos::View< double*, Kokkos::LayoutStride, exec_space > src("LayoutStride", layout);
 
-    Kokkos::View< double*, Kokkos::LayoutStride >::HostMirror h_src = Kokkos::create_mirror_view( src );
+    Kokkos::View< double*, Kokkos::LayoutStride, exec_space >::HostMirror h_src = Kokkos::create_mirror_view( src );
 
     for(size_t i=0; i<src.span(); i++) h_src.data()[i] = (double)rand() / RAND_MAX * (100);
 
@@ -638,7 +638,7 @@ TEST_F( TEST_CATEGORY , view_layoutstride_left_to_layoutright_assignment )
     
     dst = src;
 
-    Kokkos::View< double*, Kokkos::LayoutRight >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
+    Kokkos::View< double*, Kokkos::LayoutRight, exec_space >::HostMirror h_dst = Kokkos::create_mirror_view( dst );
 
     Kokkos::deep_copy( h_dst, dst );
 
