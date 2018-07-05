@@ -139,7 +139,6 @@ namespace Test{
       const int constValue = 9;
       Kokkos::parallel_for(rangePolicy2D, KOKKOS_LAMBDA (const int i, const int j) {
          ov(i,j) =  constValue;
-         cout << "2d range i = " << i << " j = " << j << endl;
       }
       );
 
@@ -314,23 +313,25 @@ namespace Test{
             typedef Kokkos::MDRangePolicy<Device, Kokkos::Rank<2>, Kokkos::IndexType<int> > range_type;
             typedef typename range_type::point_type point_type;
 
-            const int b0 = -1;
-            const int e0 = 4;
-            const int b1 = -2;
-            const int e1 = 3;
+            const int b0 = offsetSubview.begin(0);
+            const int b1 = offsetSubview.begin(1);
 
-//            range_type rangePolicy2D(point_type{ {sliceMe.begin(1), sliceMe.end(1) } },
-            range_type rangePolicy2D(point_type{ {b0, e0 } },
-                  point_type{ { b1, e1} });
+            const int e0 = offsetSubview.end(0);
+            const int e1 = offsetSubview.end(1);
 
-            cout << "howdy " << endl;
-            Kokkos::parallel_for(rangePolicy2D, KOKKOS_LAMBDA (const int i, const int j) {
+            range_type rangeP2D(point_type{ {b0, b1 } }, point_type{ { e0, e1} });
+
+            Kokkos::parallel_for(rangeP2D, KOKKOS_LAMBDA(const int i, const int j) {
                offsetSubview(i,j) =  6;
-               cout << "i = " << i << " j = " << j << endl;
             }
             );
-            cout.flush();
-            ASSERT_EQ(offsetSubview(0,0), 6);
+
+            int sum = 0;
+             Kokkos::parallel_reduce(rangeP2D, KOKKOS_LAMBDA(const int i, const int j, int & updateMe){
+                updateMe += offsetSubview(i, j);
+             }, sum);
+
+            ASSERT_EQ(sum, 6*(e0-b0)*(e1-b1));
          }
 
          // slice 2
