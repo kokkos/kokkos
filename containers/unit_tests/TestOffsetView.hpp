@@ -89,7 +89,7 @@ namespace Test{
       const int ovmin1 = ov.begin(1);
       const int ovend1 = ov.end(1);
 
-      //#ifdef KOKKOS_ENABLE_CUDA_LAMBDA
+//#ifdef KOKKOS_ENABLE_CUDA_LAMBDA
       {
          Kokkos::Experimental::OffsetView<Scalar*, Device> offsetV1("OneDOffsetView", range0);
 
@@ -112,9 +112,6 @@ namespace Test{
          //      ASSERT_EQ(VResult, range0.begin()[1] - range0.begin()[0]) << "found wrong number of elements in View that was summed.";
 
       }
-      //#endif
-
-      //#ifdef KOKKOS_ENABLE_CUDA_LAMBDA
 
       {  //test deep copy of scalar const value into mirro
          const int constVal = 6;
@@ -169,8 +166,8 @@ namespace Test{
       ASSERT_EQ(OVResult, answer) << "Bad data found in OffsetView";
 
 
+//#endif
 
-      //#endif
       {
          offset_view_type ovCopy(ov);
          ASSERT_EQ(ovCopy==ov, true) <<
@@ -191,7 +188,7 @@ namespace Test{
 
          Kokkos::deep_copy(view3D, 1);
 
-         Kokkos::Array<int64_t,3> begins = {-10, -20, -30};
+         Kokkos::Array<int64_t,3> begins = {{-10, -20, -30}};
          Kokkos::Experimental::OffsetView<Scalar***, Device> offsetView3D(view3D, begins);
 
          typedef Kokkos::MDRangePolicy<Device, Kokkos::Rank<3>, Kokkos::IndexType<int64_t> > range3_type;
