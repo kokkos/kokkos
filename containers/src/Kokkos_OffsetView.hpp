@@ -134,7 +134,7 @@ namespace Kokkos {
          }
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-
+         KOKKOS_INLINE_FUNCTION
          void runtime_check_rank_host(const size_t rank_dynamic, const size_t rank,
                const index_list_type minIndices, const std::string & label)
          {

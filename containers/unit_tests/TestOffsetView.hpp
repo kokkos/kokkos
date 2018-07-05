@@ -89,7 +89,7 @@ namespace Test{
       const int ovmin1 = ov.begin(1);
       const int ovend1 = ov.end(1);
 
-//#ifdef KOKKOS_ENABLE_CUDA_LAMBDA
+#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
       {
          Kokkos::Experimental::OffsetView<Scalar*, Device> offsetV1("OneDOffsetView", range0);
 
@@ -108,11 +108,8 @@ namespace Test{
 
          ASSERT_NE(OVResult, range0.begin()[1] - range0.begin()[0]) << "found wrong number of elements in OffsetView that was summed.";
 
-         //      const auto VResult = sum1(offsetV1.view());
-         //      ASSERT_EQ(VResult, range0.begin()[1] - range0.begin()[0]) << "found wrong number of elements in View that was summed.";
-
       }
-
+#endif
       {  //test deep copy of scalar const value into mirro
          const int constVal = 6;
          typename offset_view_type::HostMirror hostOffsetView =
@@ -151,7 +148,8 @@ namespace Test{
          }
       }
 
-      int OVResult = 0;
+#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
+     int OVResult = 0;
       Kokkos::parallel_reduce(rangePolicy2D, KOKKOS_LAMBDA(const int i, const int j, int & updateMe){
          updateMe += ov(i, j);
       }, OVResult);
@@ -164,9 +162,7 @@ namespace Test{
       }
 
       ASSERT_EQ(OVResult, answer) << "Bad data found in OffsetView";
-
-
-//#endif
+#endif
 
       {
          offset_view_type ovCopy(ov);
@@ -197,7 +193,8 @@ namespace Test{
          range3_type rangePolicy3DZero(point3_type{ {0, 0, 0 } },
                point3_type{ { extent0, extent1, extent2 } });
 
-         int view3DSum = 0;
+#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
+        int view3DSum = 0;
          Kokkos::parallel_reduce(rangePolicy3DZero, KOKKOS_LAMBDA(const int i, const int j, int k, int & updateMe){
             updateMe += view3D(i, j, k);
          }, view3DSum);
@@ -211,6 +208,7 @@ namespace Test{
          }, offsetView3DSum);
 
          ASSERT_EQ(view3DSum, offsetView3DSum) << "construction of OffsetView from View and begins array broken.";
+#endif
       }
       view_type viewFromOV = ov.view();
 
@@ -233,12 +231,14 @@ namespace Test{
          view_type aView("aView", ov.extent(0), ov.extent(1));
          Kokkos::Experimental::deep_copy(aView, ov);
 
+#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
          int sum = 0;
          Kokkos::parallel_reduce(rangePolicy2D, KOKKOS_LAMBDA(const int i, const int j, int & updateMe){
             updateMe += ov(i, j) - aView(i- ov.begin(0), j-ov.begin(1));
          }, sum);
 
          ASSERT_EQ(sum, 0) << "deep_copy(view, offsetView) broken.";
+#endif
       }
       {// test view to  offsetview deep copy
          view_type aView("aView", ov.extent(0), ov.extent(1));
@@ -246,12 +246,14 @@ namespace Test{
          Kokkos::deep_copy(aView, 99);
          Kokkos::Experimental::deep_copy(ov, aView);
 
+#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
          int sum = 0;
          Kokkos::parallel_reduce(rangePolicy2D, KOKKOS_LAMBDA(const int i, const int j, int & updateMe){
             updateMe += ov(i, j) - aView(i- ov.begin(0), j-ov.begin(1));
          }, sum);
 
          ASSERT_EQ(sum, 0) << "deep_copy(offsetView, view) broken.";
+#endif
       }
    }
    template <typename Scalar, typename Device>
@@ -307,6 +309,7 @@ namespace Test{
             ASSERT_EQ(offsetSubview.begin(1) , 0);
             ASSERT_EQ(offsetSubview.end(1) , 9);
 
+#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
             typedef Kokkos::MDRangePolicy<Device, Kokkos::Rank<2>, Kokkos::IndexType<int> > range_type;
             typedef typename range_type::point_type point_type;
 
@@ -329,6 +332,7 @@ namespace Test{
              }, sum);
 
             ASSERT_EQ(sum, 6*(e0-b0)*(e1-b1));
+#endif
          }
 
          // slice 2
