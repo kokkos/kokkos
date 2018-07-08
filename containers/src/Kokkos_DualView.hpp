@@ -316,6 +316,15 @@ public:
     t_dev,
     t_host>::type& view () const
   {
+    static_assert(
+      std::is_same<
+        typename t_dev::memory_space,
+        typename Device::memory_space>::value
+      ||
+      std::is_same<
+        typename t_host::memory_space,
+        typename Device::memory_space>::value,
+      "Template parameter to .view() must exactly match one of the DualView's memory spaces");
     return Impl::if_c<
       std::is_same<
         typename t_dev::memory_space,
@@ -347,6 +356,15 @@ public:
         ( std::is_same< Device , int>::value)
         , int >::type& = 0)
   {
+    static_assert(
+      std::is_same<
+        typename t_dev::memory_space,
+        typename Device::memory_space>::value
+      ||
+      std::is_same<
+        typename t_host::memory_space,
+        typename Device::memory_space>::value,
+      "Template parameter to .sync() must exactly match one of the DualView's memory spaces");
     const unsigned int dev =
       Impl::if_c<
         std::is_same<
@@ -378,6 +396,15 @@ public:
       ( std::is_same< Device , int>::value)
       , int >::type& = 0 )
   {
+    static_assert(
+      std::is_same<
+        typename t_dev::memory_space,
+        typename Device::memory_space>::value
+      ||
+      std::is_same<
+        typename t_host::memory_space,
+        typename Device::memory_space>::value,
+      "Template parameter to .sync() must exactly match one of the DualView's memory spaces");
     const unsigned int dev =
       Impl::if_c<
         std::is_same<
@@ -425,6 +452,15 @@ public:
   /// data as modified.
   template<class Device>
   void modify () {
+    static_assert(
+      std::is_same<
+        typename t_dev::memory_space,
+        typename Device::memory_space>::value
+      ||
+      std::is_same<
+        typename t_host::memory_space,
+        typename Device::memory_space>::value,
+      "Template parameter to .modify() must exactly match one of the DualView's memory spaces");
     const unsigned int dev =
       Impl::if_c<
         std::is_same<
