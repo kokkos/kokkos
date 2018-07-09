@@ -177,8 +177,10 @@ public:
 
   const size_type nwork;
 
+  KOKKOS_INLINE_FUNCTION
   ReduceTeamFunctor( const size_type & arg_nwork ) : nwork( arg_nwork ) {}
 
+  KOKKOS_INLINE_FUNCTION
   ReduceTeamFunctor( const ReduceTeamFunctor & rhs ) : nwork( rhs.nwork ) {}
 
   KOKKOS_INLINE_FUNCTION

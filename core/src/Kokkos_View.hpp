@@ -99,6 +99,7 @@ std::size_t count_valid_integers(const IntType i0,
 
 KOKKOS_INLINE_FUNCTION
 void runtime_check_rank_device(const size_t dyn_rank,
+                        const bool is_void_spec,
                         const size_t i0,
                         const size_t i1,
                         const size_t i2,
@@ -110,13 +111,15 @@ void runtime_check_rank_device(const size_t dyn_rank,
 
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE
 
-  const size_t num_passed_args = count_valid_integers(i0, i1, i2, i3,
-                                                      i4, i5, i6, i7);
+  if ( is_void_spec ) {
+    const size_t num_passed_args = count_valid_integers(i0, i1, i2, i3,
+        i4, i5, i6, i7);
 
-  if ( num_passed_args != dyn_rank ) {
+    if ( num_passed_args != dyn_rank && is_void_spec ) {
 
       Kokkos::abort("Number of arguments passed to Kokkos::View() constructor must match the dynamic rank of the view.") ;
 
+    }
   }
 #endif
 }
@@ -124,6 +127,7 @@ void runtime_check_rank_device(const size_t dyn_rank,
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
 KOKKOS_INLINE_FUNCTION
 void runtime_check_rank_host(const size_t dyn_rank,
+                        const bool is_void_spec,
                         const size_t i0,
                         const size_t i1,
                         const size_t i2,
@@ -135,14 +139,16 @@ void runtime_check_rank_host(const size_t dyn_rank,
 
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE
 
-  const size_t num_passed_args = count_valid_integers(i0, i1, i2, i3,
-                                                      i4, i5, i6, i7);
+  if ( is_void_spec ) {
+    const size_t num_passed_args = count_valid_integers(i0, i1, i2, i3,
+        i4, i5, i6, i7);
 
-  if ( num_passed_args != dyn_rank ) {
+    if ( num_passed_args != dyn_rank ) {
 
       const std::string message = "Constructor for Kokkos View '" + label + "' has mismatched number of arguments. Number of arguments = "
-          + std::to_string(num_passed_args) + " but dynamic rank = " + std::to_string(dyn_rank) + " \n";
+        + std::to_string(num_passed_args) + " but dynamic rank = " + std::to_string(dyn_rank) + " \n";
       Kokkos::abort(message.c_str()) ;
+    }
   }
 #endif
 }
@@ -2133,10 +2139,10 @@ public:
           )
     {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+    Impl::runtime_check_rank_host(traits::rank_dynamic, std::is_same<typename traits::specialize,void>::value, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7, label());
 #else
-    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+    Impl::runtime_check_rank_device(traits::rank_dynamic, std::is_same<typename traits::specialize,void>::value, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7);
 
 #endif
@@ -2164,10 +2170,10 @@ public:
           )
     {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+    Impl::runtime_check_rank_host(traits::rank_dynamic, std::is_same<typename traits::specialize,void>::value, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7, label());
 #else
-    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+    Impl::runtime_check_rank_device(traits::rank_dynamic, std::is_same<typename traits::specialize,void>::value, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7);
 
 #endif
@@ -2206,12 +2212,13 @@ public:
               , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
           )
     {
-
+      static_assert ( traits::array_layout::is_extent_constructible , "Layout is not extent constructible. A layout object should be passed too.\n" );
+	  
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+    Impl::runtime_check_rank_host(traits::rank_dynamic, std::is_same<typename traits::specialize,void>::value, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7, label());
 #else
-    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+    Impl::runtime_check_rank_device(traits::rank_dynamic, std::is_same<typename traits::specialize,void>::value, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7);
 
 #endif
@@ -2248,10 +2255,10 @@ public:
           )
     {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+    Impl::runtime_check_rank_host(traits::rank_dynamic, std::is_same<typename traits::specialize,void>::value, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7, label());
 #else
-    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+    Impl::runtime_check_rank_device(traits::rank_dynamic, std::is_same<typename traits::specialize,void>::value, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7);
 
 #endif
@@ -2304,10 +2311,10 @@ public:
           )
     {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+    Impl::runtime_check_rank_host(traits::rank_dynamic, std::is_same<typename traits::specialize,void>::value, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7, label());
 #else
-    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+    Impl::runtime_check_rank_device(traits::rank_dynamic, std::is_same<typename traits::specialize,void>::value, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7);
 
 #endif
@@ -2391,10 +2398,10 @@ public:
     {
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    Impl::runtime_check_rank_host(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+    Impl::runtime_check_rank_host(traits::rank_dynamic, std::is_same<typename traits::specialize,void>::value, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7, label());
 #else
-    Impl::runtime_check_rank_device(traits::rank_dynamic, arg_N0, arg_N1, arg_N2, arg_N3,
+    Impl::runtime_check_rank_device(traits::rank_dynamic, std::is_same<typename traits::specialize,void>::value, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7);
 
 #endif

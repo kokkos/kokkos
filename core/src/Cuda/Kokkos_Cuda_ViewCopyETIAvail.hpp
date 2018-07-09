@@ -48,7 +48,7 @@ namespace Kokkos {
 namespace Impl {
 #define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_EXECSPACE Kokkos::Cuda
 
-#include<common/Kokkos_ViewFillCopyETIAvail_Macros.hpp>
+#include<eti/common/Kokkos_ViewFillCopyETIAvail_Macros.hpp>
 
 #undef KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_EXECSPACE
 }

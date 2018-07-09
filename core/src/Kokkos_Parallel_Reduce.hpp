@@ -1054,6 +1054,9 @@ void parallel_reduce(const std::string& label,
                                      , typename ValueTraits::pointer_type
                                      >::type value_type ;
 
+  static_assert(Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,PolicyType,FunctorType>::
+                 has_final_member_function,"Calling parallel_reduce without either return value or final function.");
+
   typedef Kokkos::View< value_type
               , Kokkos::HostSpace
               , Kokkos::MemoryUnmanaged
@@ -1076,6 +1079,9 @@ void parallel_reduce(const PolicyType& policy,
                                      , typename ValueTraits::pointer_type
                                      >::type value_type ;
 
+  static_assert(Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,PolicyType,FunctorType>::
+                 has_final_member_function,"Calling parallel_reduce without either return value or final function.");
+
   typedef Kokkos::View< value_type
               , Kokkos::HostSpace
               , Kokkos::MemoryUnmanaged
@@ -1095,6 +1101,9 @@ void parallel_reduce(const size_t& policy,
                                      , typename ValueTraits::value_type
                                      , typename ValueTraits::pointer_type
                                      >::type value_type ;
+
+  static_assert(Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,RangePolicy<>,FunctorType>::
+                 has_final_member_function,"Calling parallel_reduce without either return value or final function.");
 
   typedef Kokkos::View< value_type
               , Kokkos::HostSpace
@@ -1116,6 +1125,9 @@ void parallel_reduce(const std::string& label,
                                      , typename ValueTraits::value_type
                                      , typename ValueTraits::pointer_type
                                      >::type value_type ;
+
+  static_assert(Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,RangePolicy<>,FunctorType>::
+                 has_final_member_function,"Calling parallel_reduce without either return value or final function.");
 
   typedef Kokkos::View< value_type
               , Kokkos::HostSpace
