@@ -74,6 +74,9 @@ endif()
 if(${KOKKOS_ENABLE_PROFILING_LOAD_PRINT})
       list(APPEND KOKKOS_OPTIONSl enable_profile_load_print)
 endif()
+if(${KOKKOS_ENABLE_EXPLICIT_INSTANTIATION})
+      list(APPEND KOKKOS_OPTIONSl enable_eti)
+endif()
 # List needs to be comma-delimitted
 string(REPLACE ";" "," KOKKOS_GMAKE_OPTIONS "${KOKKOS_OPTIONSl}")
 
@@ -127,7 +130,8 @@ string(REPLACE ";" ":" KOKKOS_INTERNAL_ADDTOPATH "${addpathl}")
 # Set the KOKKOS_SETTINGS String -- this is the primary communication with the
 # makefile configuration.  See Makefile.kokkos
 
-set(KOKKOS_SETTINGS KOKKOS_SRC_PATH=${KOKKOS_SRC_PATH})
+set(KOKKOS_SETTINGS KOKKOS_CMAKE=yes)
+set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} KOKKOS_SRC_PATH=${KOKKOS_SRC_PATH})
 set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} KOKKOS_PATH=${KOKKOS_PATH})
 set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} KOKKOS_INSTALL_PATH=${CMAKE_INSTALL_PREFIX})
 

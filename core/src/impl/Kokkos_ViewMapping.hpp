@@ -1033,13 +1033,6 @@ struct ViewOffset< Dimension , Kokkos::LayoutLeft
   ViewOffset( const ViewOffset< DimRHS , Kokkos::LayoutStride , void > & rhs )
     : m_dim( rhs.m_dim.N0, 0, 0, 0, 0, 0, 0, 0 )
     {
-      static_assert( 
-        ( DimRHS::rank == 0 &&
-          dimension_type::rank == 0 ) ||
-        ( DimRHS::rank == 1 &&
-          dimension_type::rank == 1 &&
-          dimension_type::rank_dynamic == 1 )
-        , "ViewOffset LayoutLeft and LayoutStride are only compatible when rank <= 1" );
       if ( rhs.m_stride.S0 != 1 ) {
         Kokkos::abort("Kokkos::Impl::ViewOffset assignment of LayoutLeft from LayoutStride  requires stride == 1" );
       }
@@ -1276,6 +1269,18 @@ public:
     {
       static_assert( int(DimRHS::rank) == int(dimension_type::rank) , "ViewOffset assignment requires equal rank" );
       // Also requires equal static dimensions ...
+    }
+
+  template< class DimRHS >
+  KOKKOS_INLINE_FUNCTION
+  ViewOffset( const ViewOffset< DimRHS , Kokkos::LayoutStride , void > & rhs )
+    : m_dim( rhs.m_dim.N0 , rhs.m_dim.N1 , rhs.m_dim.N2 , rhs.m_dim.N3
+           , rhs.m_dim.N4 , rhs.m_dim.N5 , rhs.m_dim.N6 , rhs.m_dim.N7 )
+    , m_stride( rhs.stride_1() )
+    {
+      if ( rhs.m_stride.S0 != 1 ) {
+        Kokkos::abort("Kokkos::Impl::ViewOffset assignment of LayoutLeft from LayoutStride requires stride == 1" );
+      }
     }
 
   //----------------------------------------
@@ -1521,16 +1526,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
   ViewOffset( const ViewOffset< DimRHS , Kokkos::LayoutStride , void > & rhs )
     : m_dim( rhs.m_dim.N0, 0, 0, 0, 0, 0, 0, 0 )
     {
-      static_assert(
-       ( DimRHS::rank == 0 &&
-         dimension_type::rank == 0 ) ||
-       ( DimRHS::rank == 1 &&
-         dimension_type::rank == 1 &&
-         dimension_type::rank_dynamic == 1 )
-      , "ViewOffset LayoutRight and LayoutString are only compatible when rank <= 1" );
-      if ( rhs.m_stride.S0 != 1 ) {
-        Kokkos::abort("Kokkos::Impl::ViewOffset assignment of LayoutLeft/Right from LayoutStride  requires stride == 1" );
-      }
+
     }
 
   //----------------------------------------
@@ -1772,6 +1768,23 @@ public:
     {
       static_assert( int(DimRHS::rank) == int(dimension_type::rank) , "ViewOffset assignment requires equal rank" );
       // Also requires equal static dimensions ...
+    }
+
+  template< class DimRHS >
+  KOKKOS_INLINE_FUNCTION
+  ViewOffset( const ViewOffset< DimRHS , Kokkos::LayoutStride , void > & rhs )
+    : m_dim( rhs.m_dim.N0 , rhs.m_dim.N1 , rhs.m_dim.N2 , rhs.m_dim.N3
+           , rhs.m_dim.N4 , rhs.m_dim.N5 , rhs.m_dim.N6 , rhs.m_dim.N7 )
+    , m_stride( rhs.stride_0() )
+    {
+      if ( ((dimension_type::rank == 2)?rhs.m_stride.S1:
+           ((dimension_type::rank == 3)?rhs.m_stride.S2:
+           ((dimension_type::rank == 4)?rhs.m_stride.S3:
+           ((dimension_type::rank == 5)?rhs.m_stride.S4:
+           ((dimension_type::rank == 6)?rhs.m_stride.S5:
+           ((dimension_type::rank == 7)?rhs.m_stride.S6:rhs.m_stride.S7)))))) != 1 ){
+        Kokkos::abort("Kokkos::Impl::ViewOffset assignment of LayoutRight from LayoutStride requires right-most stride == 1" );
+      }
     }
 
   //----------------------------------------
@@ -2863,16 +2876,17 @@ public:
 template< class DstTraits , class SrcTraits >
 class ViewMapping< DstTraits , SrcTraits ,
   typename std::enable_if<(
-    /* default mappings */
+    !(std::is_same<typename SrcTraits::array_layout, LayoutStride>::value) && //Added to have a new specialization for SrcType of LayoutStride
+    // default mappings
     std::is_same< typename DstTraits::specialize , void >::value
     &&
     std::is_same< typename SrcTraits::specialize , void >::value
     &&
     (
-      /* same layout */
+      // same layout
       std::is_same< typename DstTraits::array_layout , typename SrcTraits::array_layout >::value
       ||
-      /* known layout */
+      // known layout
       (
         (
           std::is_same< typename DstTraits::array_layout , Kokkos::LayoutLeft >::value ||
@@ -2947,6 +2961,133 @@ public:
       static_assert( is_assignable_layout
                    , "View assignment must have compatible layout or have rank <= 1" );
 
+      typedef typename DstType::offset_type  dst_offset_type ;
+
+      if ( size_t(DstTraits::dimension::rank_dynamic) < size_t(SrcTraits::dimension::rank_dynamic) ) {
+        typedef typename DstTraits::dimension dst_dim;
+        bool assignable =
+          ( ( 1 > DstTraits::dimension::rank_dynamic && 1 <= SrcTraits::dimension::rank_dynamic ) ?
+            dst_dim::ArgN0 == src.dimension_0() : true ) &&
+          ( ( 2 > DstTraits::dimension::rank_dynamic && 2 <= SrcTraits::dimension::rank_dynamic ) ?
+            dst_dim::ArgN1 == src.dimension_1() : true ) &&
+          ( ( 3 > DstTraits::dimension::rank_dynamic && 3 <= SrcTraits::dimension::rank_dynamic ) ?
+            dst_dim::ArgN2 == src.dimension_2() : true ) &&
+          ( ( 4 > DstTraits::dimension::rank_dynamic && 4 <= SrcTraits::dimension::rank_dynamic ) ?
+            dst_dim::ArgN3 == src.dimension_3() : true ) &&
+          ( ( 5 > DstTraits::dimension::rank_dynamic && 5 <= SrcTraits::dimension::rank_dynamic ) ?
+            dst_dim::ArgN4 == src.dimension_4() : true ) &&
+          ( ( 6 > DstTraits::dimension::rank_dynamic && 6 <= SrcTraits::dimension::rank_dynamic ) ?
+            dst_dim::ArgN5 == src.dimension_5() : true ) &&
+          ( ( 7 > DstTraits::dimension::rank_dynamic && 7 <= SrcTraits::dimension::rank_dynamic ) ?
+            dst_dim::ArgN6 == src.dimension_6() : true ) &&
+          ( ( 8 > DstTraits::dimension::rank_dynamic && 8 <= SrcTraits::dimension::rank_dynamic ) ?
+            dst_dim::ArgN7 == src.dimension_7() : true )
+          ;
+        if(!assignable)
+          Kokkos::abort("View Assignment: trying to assign runtime dimension to non matching compile time dimension.");
+      }
+      dst.m_impl_offset = dst_offset_type( src.m_impl_offset );
+      dst.m_impl_handle = Kokkos::Impl::ViewDataHandle< DstTraits >::assign( src.m_impl_handle , src_track );
+    }
+};
+
+//----------------------------------------------------------------------------
+//Create new specialization for SrcType of LayoutStride. Runtime check for compatible layout
+template< class DstTraits , class SrcTraits >
+class ViewMapping< DstTraits , SrcTraits ,
+  typename std::enable_if<(
+    (std::is_same<typename SrcTraits::array_layout, LayoutStride>::value) &&
+    // default mappings
+    std::is_same< typename DstTraits::specialize , void >::value
+    &&
+    std::is_same< typename SrcTraits::specialize , void >::value
+    &&
+    (
+      // same layout
+      std::is_same< typename DstTraits::array_layout , typename SrcTraits::array_layout >::value
+      ||
+      // known layout
+      (
+        (
+          std::is_same< typename DstTraits::array_layout , Kokkos::LayoutLeft >::value ||
+          std::is_same< typename DstTraits::array_layout , Kokkos::LayoutRight >::value ||
+          std::is_same< typename DstTraits::array_layout , Kokkos::LayoutStride >::value
+        )
+        &&
+        (
+          std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutLeft >::value ||
+          std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutRight >::value ||
+          std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutStride >::value
+        )
+      )
+    )
+  )>::type >
+{
+private:
+
+  enum { is_assignable_space =
+   Kokkos::Impl::MemorySpaceAccess
+     < typename DstTraits::memory_space
+     , typename SrcTraits::memory_space >::assignable };
+
+  enum { is_assignable_value_type =
+    std::is_same< typename DstTraits::value_type
+                , typename SrcTraits::value_type >::value ||
+    std::is_same< typename DstTraits::value_type
+                , typename SrcTraits::const_value_type >::value };
+
+  enum { is_assignable_dimension =
+    ViewDimensionAssignable< typename DstTraits::dimension
+                           , typename SrcTraits::dimension >::value };
+
+public:
+
+  enum { is_assignable = is_assignable_space &&
+                         is_assignable_value_type &&
+                         is_assignable_dimension };
+
+  typedef Kokkos::Impl::SharedAllocationTracker  TrackType ;
+  typedef ViewMapping< DstTraits , void >  DstType ;
+  typedef ViewMapping< SrcTraits , void >  SrcType ;
+
+  KOKKOS_INLINE_FUNCTION
+  static bool assignable_layout_check(DstType & dst, const SrcType & src) //Runtime check
+    {
+      size_t strides[9];
+      bool assignable = true;
+      src.stride(strides);
+      size_t exp_stride = 1;
+      if (std::is_same< typename DstTraits::array_layout, Kokkos::LayoutLeft >::value) {
+	    for(int i=0; i<src.Rank; i++) {
+          if (i>0) exp_stride *= src.extent(i-1);
+          if (strides[i] != exp_stride){assignable=false;break;}
+	    }
+      }
+      else if (std::is_same< typename DstTraits::array_layout, Kokkos::LayoutRight >::value) {
+	    for(int i=src.Rank-1; i>=0; i--) {
+          if (i<src.Rank-1) exp_stride *= src.extent(i+1);
+          if (strides[i] != exp_stride){assignable=false;break;}
+	    }
+      }
+      return assignable; 
+    }
+
+  KOKKOS_INLINE_FUNCTION
+  static void assign( DstType & dst , const SrcType & src , const TrackType & src_track )
+    {
+      static_assert( is_assignable_space
+                   , "View assignment must have compatible spaces" );
+
+      static_assert( is_assignable_value_type
+                   , "View assignment must have same value type or const = non-const" );
+
+      static_assert( is_assignable_dimension
+                   , "View assignment must have compatible dimensions" );
+
+      bool assignable_layout = assignable_layout_check(dst, src); //Runtime check
+      if(!assignable_layout)
+          Kokkos::abort("View assignment must have compatible layouts\n");
+	  
       typedef typename DstType::offset_type  dst_offset_type ;
 
       if ( size_t(DstTraits::dimension::rank_dynamic) < size_t(SrcTraits::dimension::rank_dynamic) ) {

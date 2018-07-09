@@ -1167,15 +1167,15 @@ public:
   UniqueToken( execution_space const& = execution_space() ) noexcept {}
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
-  inline
+  KOKKOS_INLINE_FUNCTION
   int size() const noexcept { return 1; }
 
   /// \brief acquire value such that 0 <= value < size()
-  inline
+  KOKKOS_INLINE_FUNCTION
   int acquire() const  noexcept { return 0; }
 
   /// \brief release a value acquired by generate
-  inline
+  KOKKOS_INLINE_FUNCTION
   void release( int ) const noexcept {}
 };
 
@@ -1192,15 +1192,15 @@ public:
   UniqueToken( execution_space const& = execution_space() ) noexcept {}
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
-  inline
+  KOKKOS_INLINE_FUNCTION
   int size() const noexcept { return 1; }
 
   /// \brief acquire value such that 0 <= value < size()
-  inline
+  KOKKOS_INLINE_FUNCTION
   int acquire() const  noexcept { return 0; }
 
   /// \brief release a value acquired by generate
-  inline
+  KOKKOS_INLINE_FUNCTION
   void release( int ) const noexcept {}
 };
 

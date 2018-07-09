@@ -60,6 +60,7 @@
 #include <Cuda/Kokkos_Cuda_Internal.hpp>
 #include <Cuda/Kokkos_Cuda_Locks.hpp>
 #include <Kokkos_Vectorization.hpp>
+#include <Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
 
 #if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Profiling_Interface.hpp>
@@ -1970,7 +1971,10 @@ private:
     const WorkRange range( m_policy , blockIdx.x , gridDim.x );
 
     for ( typename Policy::member_type iwork_base = range.begin(); iwork_base < range.end() ; iwork_base += blockDim.y ) {
-
+      #ifdef __CUDA_ARCH__
+      unsigned MASK=KOKKOS_IMPL_CUDA_ACTIVEMASK;
+      MASK=MASK; // Silence warning about unused variable (void) MASK did not work
+      #endif
       const typename Policy::member_type iwork = iwork_base + threadIdx.y ;
 
       __syncthreads(); // Don't overwrite previous iteration values until they are used
@@ -1981,7 +1985,9 @@ private:
       for ( unsigned i = threadIdx.y ; i < word_count.value ; ++i ) {
         shared_data[i + word_count.value] = shared_data[i] = shared_accum[i] ;
       }
-
+      #ifdef __CUDA_ARCH__
+      KOKKOS_IMPL_CUDA_SYNCWARP_MASK(MASK);
+      #endif
       if ( CudaTraits::WarpSize < word_count.value ) { __syncthreads(); } // Protect against large scan values.
 
       // Call functor to accumulate inclusive scan value for this work item
@@ -2189,6 +2195,10 @@ private:
     const WorkRange range( m_policy , blockIdx.x , gridDim.x );
 
     for ( typename Policy::member_type iwork_base = range.begin(); iwork_base < range.end() ; iwork_base += blockDim.y ) {
+      #ifdef __CUDA_ARCH__
+      unsigned MASK=KOKKOS_IMPL_CUDA_ACTIVEMASK;
+      MASK=MASK; // Silence warning about unused variable (void) MASK did not work
+      #endif
 
       const typename Policy::member_type iwork = iwork_base + threadIdx.y ;
 
@@ -2201,6 +2211,9 @@ private:
         shared_data[i + word_count.value] = shared_data[i] = shared_accum[i] ;
       }
 
+      #ifdef __CUDA_ARCH__
+      KOKKOS_IMPL_CUDA_SYNCWARP_MASK(MASK);
+      #endif
       if ( CudaTraits::WarpSize < word_count.value ) { __syncthreads(); } // Protect against large scan values.
 
       // Call functor to accumulate inclusive scan value for this work item
