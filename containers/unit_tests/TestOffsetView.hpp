@@ -299,7 +299,7 @@ namespace Test{
 
          }
          {
-            auto offsetSubview = Kokkos::Experimental::subview(sliceMe,0, Kokkos::ALL(), std::make_pair(-30, -21));
+	   auto offsetSubview = Kokkos::Experimental::subview(sliceMe,0, Kokkos::ALL(), Kokkos::make_pair(-30, -21));
             ASSERT_EQ(offsetSubview.Rank, 2) << "subview of offset is broken.";
 
             ASSERT_EQ(offsetSubview.begin(0) , -20);

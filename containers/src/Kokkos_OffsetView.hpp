@@ -1140,6 +1140,15 @@ namespace Kokkos {
 
          template< class T >
          KOKKOS_INLINE_FUNCTION
+         typename  std::enable_if< std::is_integral<T>::value, Kokkos::pair<T,T> >::type
+         shift_input(const Kokkos::pair<T, T> arg, const int64_t offset)
+         {
+
+            return Kokkos::make_pair<T,T>(arg.first - offset, arg.second - offset);
+
+         }
+         template< class T >
+	 inline
          typename  std::enable_if< std::is_integral<T>::value, std::pair<T,T> >::type
          shift_input(const std::pair<T, T> arg, const int64_t offset)
          {
@@ -1829,7 +1838,7 @@ namespace Kokkos {
             )>::type * = 0
       )
       {
-         return Kokkos::create_mirror( src );
+	return Kokkos::Experimental::create_mirror( src );
       }
 
       // Create a mirror view in a new space (specialization for same space)
