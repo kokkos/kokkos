@@ -1973,6 +1973,7 @@ private:
     for ( typename Policy::member_type iwork_base = range.begin(); iwork_base < range.end() ; iwork_base += blockDim.y ) {
       #ifdef __CUDA_ARCH__
       unsigned MASK=KOKKOS_IMPL_CUDA_ACTIVEMASK;
+      MASK=MASK; // Silence warning about unused variable (void) MASK did not work
       #endif
       const typename Policy::member_type iwork = iwork_base + threadIdx.y ;
 
@@ -2196,6 +2197,7 @@ private:
     for ( typename Policy::member_type iwork_base = range.begin(); iwork_base < range.end() ; iwork_base += blockDim.y ) {
       #ifdef __CUDA_ARCH__
       unsigned MASK=KOKKOS_IMPL_CUDA_ACTIVEMASK;
+      MASK=MASK; // Silence warning about unused variable (void) MASK did not work
       #endif
 
       const typename Policy::member_type iwork = iwork_base + threadIdx.y ;
