@@ -77,8 +77,6 @@ struct TestViewCopy {
     // Strided dst view
     auto dstView = Kokkos::subview(view_4, 0, 0, Kokkos::ALL(), Kokkos::ALL());
 
-    const Kokkos::pair<int,int> range(0, dim2);
-
     // host_mirror_space to ExecSpace
     Kokkos::deep_copy( dstView, srcView );
     Kokkos::fence();
@@ -109,8 +107,6 @@ struct TestViewCopy {
     // Strided dst view
     auto dstView = Kokkos::subview(view_4, 0, 0, Kokkos::ALL(), Kokkos::ALL());
 
-    const Kokkos::pair<int,int> range(0, dim2);
-
     // Cuda to ExecSpace
     Kokkos::deep_copy( dstView, srcView );
     Kokkos::fence();
@@ -135,8 +131,6 @@ struct TestViewCopy {
 
     // Strided dst view
     auto dstView = Kokkos::subview(view_4, 0, 0, Kokkos::ALL(), Kokkos::ALL());
-
-    const Kokkos::pair<int,int> range(0, dim2);
 
     // host_space to ExecSpace
     Kokkos::deep_copy( dstView, srcView );
