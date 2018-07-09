@@ -145,6 +145,15 @@ public:
       return max;
     }
 
+
+  template<class FunctorType>
+  int team_size_recommended( const FunctorType& f, const ParallelForTag& ) {
+    typedef Impl::ParallelFor< FunctorType , TeamPolicy<Properties...> > closure_type;
+    int block_size = Kokkos::Impl::cuda_get_opt_block_size< closure_type, typename traits::launch_bounds >( f ,(size_t) vector_length(),
+        (size_t) team_scratch_size(0), (size_t) thread_scratch_size(0) );
+    return block_size/vector_length();
+  }
+
   inline static
   int vector_length_max()
     { return Impl::CudaTraits::WarpSize; }

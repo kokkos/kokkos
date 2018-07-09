@@ -125,17 +125,17 @@ struct CudaGetMaxBlockSize<DriverType,false> {
 
 
 
-template<class DriverType, bool Large>
+template<class DriverType, class LaunchBounds, bool Large>
 struct CudaGetOptBlockSize;
 
-template<class DriverType, bool Large = (CudaTraits::ConstantMemoryUseThreshold < sizeof(DriverType))>
+template<class DriverType, class LaunchBounds>
 int cuda_get_opt_block_size(const typename DriverType::functor_type & f, const size_t vector_length,
                             const size_t shmem_extra_block, const size_t shmem_extra_thread) {
-  return CudaGetOptBlockSize<DriverType,Large>::get_block_size(f,vector_length,shmem_extra_block,shmem_extra_thread);
+  return CudaGetOptBlockSize<DriverType,LaunchBounds,(CudaTraits::ConstantMemoryUseThreshold < sizeof(DriverType))>::get_block_size(f,vector_length,shmem_extra_block,shmem_extra_thread);
 }
 
 template<class DriverType>
-struct CudaGetOptBlockSize<DriverType,true> {
+struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds<>,true> {
   static int get_block_size(const typename DriverType::functor_type & f, const size_t vector_length,
                             const size_t shmem_extra_block, const size_t shmem_extra_thread) {
     int blockSize=16;
@@ -165,7 +165,7 @@ struct CudaGetOptBlockSize<DriverType,true> {
 };
 
 template<class DriverType>
-struct CudaGetOptBlockSize<DriverType,false> {
+struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds<>,false> {
   static int get_block_size(const typename DriverType::functor_type & f, const size_t vector_length,
                             const size_t shmem_extra_block, const size_t shmem_extra_thread) {
     int blockSize=16;
@@ -182,6 +182,66 @@ struct CudaGetOptBlockSize<DriverType,false> {
       cudaOccupancyMaxActiveBlocksPerMultiprocessor(
               &numBlocks,
               cuda_parallel_launch_local_memory<DriverType>,
+              blockSize,
+              sharedmem);
+
+      if(maxOccupancy < numBlocks*blockSize) {
+        maxOccupancy = numBlocks*blockSize;
+        bestBlockSize = blockSize;
+      }
+    }
+    return bestBlockSize;
+  }
+};
+
+template<class DriverType, unsigned int MaxThreadsPerBlock, unsigned int MinBlocksPerSM>
+struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds< MaxThreadsPerBlock, MinBlocksPerSM >,true> {
+  static int get_block_size(const typename DriverType::functor_type & f, const size_t vector_length,
+                            const size_t shmem_extra_block, const size_t shmem_extra_thread) {
+    int blockSize=16;
+    int numBlocks;
+    int sharedmem;
+    int maxOccupancy=0;
+    int bestBlockSize=0;
+
+    while(blockSize<1024) {
+      blockSize*=2;
+
+      //calculate the occupancy with that optBlockSize and check whether its larger than the largest one found so far
+      sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
+                  FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
+      cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+              &numBlocks,
+              cuda_parallel_launch_constant_memory<DriverType,MaxThreadsPerBlock,MinBlocksPerSM>,
+              blockSize,
+              sharedmem);
+      if(maxOccupancy < numBlocks*blockSize) {
+         maxOccupancy = numBlocks*blockSize;
+         bestBlockSize = blockSize;
+      }
+    }
+    return bestBlockSize;
+  }
+};
+
+template<class DriverType, unsigned int MaxThreadsPerBlock, unsigned int MinBlocksPerSM>
+struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds< MaxThreadsPerBlock, MinBlocksPerSM >,false> {
+  static int get_block_size(const typename DriverType::functor_type & f, const size_t vector_length,
+                            const size_t shmem_extra_block, const size_t shmem_extra_thread) {
+    int blockSize=16;
+    int numBlocks;
+    int sharedmem;
+    int maxOccupancy=0;
+    int bestBlockSize=0;
+
+    while(blockSize<1024) {
+      blockSize*=2;
+      sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
+                  FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
+
+      cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+              &numBlocks,
+              cuda_parallel_launch_local_memory<DriverType,MaxThreadsPerBlock,MinBlocksPerSM>,
               blockSize,
               sharedmem);
 
