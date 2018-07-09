@@ -109,7 +109,6 @@ namespace Test{
          ASSERT_NE(OVResult, range0.begin()[1] - range0.begin()[0]) << "found wrong number of elements in OffsetView that was summed.";
 
       }
-#endif
       {  //test deep copy of scalar const value into mirro
          const int constVal = 6;
          typename offset_view_type::HostMirror hostOffsetView =
@@ -148,7 +147,6 @@ namespace Test{
          }
       }
 
-#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
      int OVResult = 0;
       Kokkos::parallel_reduce(rangePolicy2D, KOKKOS_LAMBDA(const int i, const int j, int & updateMe){
          updateMe += ov(i, j);
