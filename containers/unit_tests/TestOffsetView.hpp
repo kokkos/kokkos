@@ -93,20 +93,22 @@ namespace Test{
       {
          Kokkos::Experimental::OffsetView<Scalar*, Device> offsetV1("OneDOffsetView", range0);
 
-         Kokkos::RangePolicy<Device, int> rangePolicy1(range0.begin()[0], range0.begin()[1]);
+         Kokkos::RangePolicy<Device, int> rangePolicy1(offsetV1.begin(0), offsetV1.end(0));
          Kokkos::parallel_for(rangePolicy1, KOKKOS_LAMBDA (const int i){
             offsetV1(i) = 1;
          }
          );
+	 Kokkos::fence();
 
-         const int maxit = offsetV1.end(0);
+         const int maxit = offsetV1.end(0)-offsetV1.begin(0);
 
          int OVResult = 0;
-         Kokkos::parallel_reduce(maxit, KOKKOS_LAMBDA(const int i, int & updateMe){
+         Kokkos::parallel_reduce(rangePolicy1, KOKKOS_LAMBDA(const int i, int & updateMe){
             updateMe += offsetV1(i);
          }, OVResult);
-
-         ASSERT_NE(OVResult, range0.begin()[1] - range0.begin()[0]) << "found wrong number of elements in OffsetView that was summed.";
+	 
+	 Kokkos::fence();
+         ASSERT_EQ(OVResult, offsetV1.end(0) - offsetV1.begin(0)) << "found wrong number of elements in OffsetView that was summed.";
 
       }
       {  //test deep copy of scalar const value into mirro
@@ -134,7 +136,7 @@ namespace Test{
          ov(i,j) =  constValue;
       }
       );
-
+      
       //test offsetview to offsetviewmirror deep copy
       typename offset_view_type::HostMirror hostOffsetView =
             Kokkos::Experimental::create_mirror_view(ov);
@@ -146,7 +148,7 @@ namespace Test{
             ASSERT_EQ(hostOffsetView(i,j),  constValue) << "Bad data found in OffsetView";
          }
       }
-
+      
      int OVResult = 0;
       Kokkos::parallel_reduce(rangePolicy2D, KOKKOS_LAMBDA(const int i, const int j, int & updateMe){
          updateMe += ov(i, j);
@@ -158,7 +160,7 @@ namespace Test{
             answer += constValue;
          }
       }
-
+      
       ASSERT_EQ(OVResult, answer) << "Bad data found in OffsetView";
 #endif
 
@@ -167,13 +169,13 @@ namespace Test{
          ASSERT_EQ(ovCopy==ov, true) <<
                "Copy constructor or equivalence operator broken";
       }
-
+      
       {
          offset_view_type ovAssigned = ov;
          ASSERT_EQ(ovAssigned==ov, true) <<
                "Assignment operator or equivalence operator broken";
       }
-
+      
       {  //construct OffsetView from a View plus begins array
          const int extent0 = 100;
          const int extent1 = 200;
@@ -238,11 +240,13 @@ namespace Test{
          ASSERT_EQ(sum, 0) << "deep_copy(view, offsetView) broken.";
 #endif
       }
+
       {// test view to  offsetview deep copy
          view_type aView("aView", ov.extent(0), ov.extent(1));
 
          Kokkos::deep_copy(aView, 99);
          Kokkos::Experimental::deep_copy(ov, aView);
+	 
 
 #if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
          int sum = 0;

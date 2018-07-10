@@ -124,8 +124,8 @@ namespace Kokkos {
                 This check should cover the case of Views that don't
                 have the Unmanaged trait but were initialized by pointer. */
               if (tracker.has_record()) {
-                 operator_bounds_error_on_device<MapType>(
-                       map, has_printable_label_typedef<MapType>());
+		Kokkos::Impl::operator_bounds_error_on_device<MapType>(
+			      map, Kokkos::Impl::has_printable_label_typedef<MapType>());
               } else {
                  Kokkos::abort("OffsetView bounds error");
               }
