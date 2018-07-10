@@ -100,8 +100,6 @@ namespace Test{
          );
 	 Kokkos::fence();
 
-         const int maxit = offsetV1.end(0)-offsetV1.begin(0);
-
          int OVResult = 0;
          Kokkos::parallel_reduce(rangePolicy1, KOKKOS_LAMBDA(const int i, int & updateMe){
             updateMe += offsetV1(i);
