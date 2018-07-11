@@ -203,8 +203,9 @@ struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds< MaxThreadsPerBlock, 
     int sharedmem;
     int maxOccupancy=0;
     int bestBlockSize=0;
+    int max_threads_per_block = std::min(MaxThreadsPerBlock,cuda_internal_maximum_warp_count()*CudaTraits::WarpSize);
 
-    while(blockSize<1024) {
+    while(blockSize < max_threads_per_block ) {
       blockSize*=2;
 
       //calculate the occupancy with that optBlockSize and check whether its larger than the largest one found so far
@@ -215,9 +216,11 @@ struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds< MaxThreadsPerBlock, 
               cuda_parallel_launch_constant_memory<DriverType,MaxThreadsPerBlock,MinBlocksPerSM>,
               blockSize,
               sharedmem);
-      if(maxOccupancy < numBlocks*blockSize) {
-         maxOccupancy = numBlocks*blockSize;
-         bestBlockSize = blockSize;
+      if(numBlocks >= MinBlocksPerSM) {
+        if(maxOccupancy < numBlocks*blockSize) {
+           maxOccupancy = numBlocks*blockSize;
+           bestBlockSize = blockSize;
+        }
       }
     }
     return bestBlockSize;
@@ -233,8 +236,9 @@ struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds< MaxThreadsPerBlock, 
     int sharedmem;
     int maxOccupancy=0;
     int bestBlockSize=0;
+    int max_threads_per_block = std::min(MaxThreadsPerBlock,cuda_internal_maximum_warp_count()*CudaTraits::WarpSize);
 
-    while(blockSize<1024) {
+    while(blockSize < max_threads_per_block ) {
       blockSize*=2;
       sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
                   FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
@@ -244,10 +248,11 @@ struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds< MaxThreadsPerBlock, 
               cuda_parallel_launch_local_memory<DriverType,MaxThreadsPerBlock,MinBlocksPerSM>,
               blockSize,
               sharedmem);
-
-      if(maxOccupancy < numBlocks*blockSize) {
-        maxOccupancy = numBlocks*blockSize;
-        bestBlockSize = blockSize;
+      if(numBlocks >= MinBlocksPerSM) {
+        if(maxOccupancy < numBlocks*blockSize) {
+          maxOccupancy = numBlocks*blockSize;
+          bestBlockSize = blockSize;
+        }
       }
     }
     return bestBlockSize;
