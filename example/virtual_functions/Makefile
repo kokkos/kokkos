@@ -2,6 +2,9 @@ KOKKOS_DEVICES=Cuda
 KOKKOS_CUDA_OPTIONS=enable_lambda
 KOKKOS_ARCH = "SNB,Kepler35"
 
+#KOKKOS_DEVICES=OpenMP
+#KOKKOS_CUDA_OPTIONS=enable_lambda
+#KOKKOS_ARCH = "SNB"
 
 MAKEFILE_PATH := $(subst Makefile,,$(abspath $(lastword $(MAKEFILE_LIST))))
 
@@ -41,7 +44,7 @@ include $(KOKKOS_PATH)/Makefile.kokkos
 build: $(EXE)
 
 $(EXE): $(OBJ) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ) $(KOKKOS_LIBS) $(OBJ) $(KOKKOS_LIBS) $(LIB) $(LIB) -o $(EXE)
+	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ) $(KOKKOS_LIBS) $(KOKKOS_LIBS) $(LIB) $(LIB) -o $(EXE)
 
 clean: kokkos-clean
 	rm -f *.o *.cuda *.host
