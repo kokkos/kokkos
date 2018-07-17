@@ -1896,6 +1896,7 @@ inline
 typename DynRankView<T,P...>::HostMirror
 create_mirror( const DynRankView<T,P...> & src
              , typename std::enable_if<
+                 std::is_same< typename ViewTraits<T,P...>::specialize , void >::value &&
                  ! std::is_same< typename Kokkos::ViewTraits<T,P...>::array_layout
                                , Kokkos::LayoutStride >::value
                >::type * = 0
@@ -1914,6 +1915,7 @@ inline
 typename DynRankView<T,P...>::HostMirror
 create_mirror( const DynRankView<T,P...> & src
              , typename std::enable_if<
+                 std::is_same< typename ViewTraits<T,P...>::specialize , void >::value &&
                  std::is_same< typename Kokkos::ViewTraits<T,P...>::array_layout
                              , Kokkos::LayoutStride >::value
                >::type * = 0
@@ -1929,7 +1931,11 @@ create_mirror( const DynRankView<T,P...> & src
 
 // Create a mirror in a new space (specialization for different space)
 template<class Space, class T, class ... P>
-typename Impl::MirrorDRVType<Space,T,P ...>::view_type create_mirror(const Space& , const Kokkos::DynRankView<T,P...> & src) {
+typename Impl::MirrorDRVType<Space,T,P ...>::view_type
+create_mirror(const Space& , const Kokkos::DynRankView<T,P...> & src
+             , typename std::enable_if<
+                 std::is_same< typename ViewTraits<T,P...>::specialize , void >::value
+               >::type * = 0) {
   return typename Impl::MirrorDRVType<Space,T,P ...>::view_type(src.label(), Impl::reconstructLayout(src.layout(), src.rank()) );
 }
 
