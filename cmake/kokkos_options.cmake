@@ -121,11 +121,18 @@ list(APPEND KOKKOS_DEVICES_LIST
 # List of possible TPLs for Kokkos
 # From Makefile.kokkos: Options: hwloc,librt,experimental_memkind
 set(KOKKOS_USE_TPLS_LIST)
+if(APPLE)
+list(APPEND KOKKOS_USE_TPLS_LIST
+    HWLOC          # hwloc
+    MEMKIND        # experimental_memkind
+    )
+else()
 list(APPEND KOKKOS_USE_TPLS_LIST
     HWLOC          # hwloc
     LIBRT          # librt
     MEMKIND        # experimental_memkind
     )
+endif()
 # Map of cmake variables to Makefile variables
 set(KOKKOS_INTERNAL_HWLOC hwloc)
 set(KOKKOS_INTERNAL_LIBRT librt)
