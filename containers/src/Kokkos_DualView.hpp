@@ -283,6 +283,27 @@ public:
     }
   }
 
+  template<typename V>
+  DualView (V view,
+        typename std::enable_if< std::is_same<typename V::memory_space, HostSpace>::value, int>::type dummmy = 0)
+      : d_view (create_mirror_view(DefaultExecutionSpace(), view))
+      , h_view (view)
+      , modified_device (View<unsigned int,LayoutLeft,typename t_host::execution_space> ("DualView::modified_device"))
+      , modified_host (View<unsigned int,LayoutLeft,typename t_host::execution_space> ("DualView::modified_host"))
+    {
+
+    }
+  template<typename V>
+   DualView (V view,
+         typename std::enable_if< !std::is_same<typename V::memory_space, HostSpace>::value, int>::type dummmy = 0)
+       : d_view (view)
+       , h_view (create_mirror_view(view))
+       , modified_device (View<unsigned int,LayoutLeft,typename t_host::execution_space> ("DualView::modified_device"))
+       , modified_host (View<unsigned int,LayoutLeft,typename t_host::execution_space> ("DualView::modified_host"))
+     {
+
+     }
+
   //@}
   //! \name Methods for synchronizing, marking as modified, and getting Views.
   //@{
