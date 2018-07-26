@@ -283,6 +283,7 @@ public:
     }
   }
 
+  // given a View in HostSpace, create another view in the Default space and wrap them with a DualView
   template<typename V>
   DualView (V view,
         typename std::enable_if< std::is_same<typename V::memory_space, HostSpace>::value, int>::type dummmy = 0)
@@ -293,6 +294,7 @@ public:
     {
 
     }
+  // given a View not in HostSpace, create another view in the Host space and wrap them with a DualView
   template<typename V>
    DualView (V view,
          typename std::enable_if< !std::is_same<typename V::memory_space, HostSpace>::value, int>::type dummmy = 0)
