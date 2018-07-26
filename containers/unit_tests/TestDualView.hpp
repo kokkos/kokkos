@@ -67,10 +67,13 @@ namespace Impl {
     Scalar result;
 
     template <typename ViewType>
-    Scalar run_me(unsigned int n,unsigned int m){
-      if(n<10) n = 10;
-      if(m<3) m = 3;
-      ViewType a("A",n,m);
+    Scalar run_me(ViewType a){
+      int n = a.extent(0);
+      int m = a.extent(1);
+      const bool tooSmall = n < 10 || m < 3;
+      if(tooSmall) {
+         a.resize(10,3);
+      }
 
       Kokkos::deep_copy( a.d_view , 1 );
 
@@ -98,7 +101,17 @@ namespace Impl {
 
     test_dualview_combinations(unsigned int size)
     {
-      result = run_me< Kokkos::DualView<Scalar**,Kokkos::LayoutLeft,Device> >(size,3);
+       const int size2 = 3;
+       Kokkos::DualView<Scalar**,Kokkos::LayoutLeft,Device> a("dView", size, size2);
+       result = run_me(a);
+
+       Scalar data[size*size2];
+       typedef Kokkos::View<Scalar**, Kokkos::LayoutLeft, Kokkos::HostSpace> unmanaged_type;
+       unmanaged_type unmanagedView(&data[0], size, size2);
+       Kokkos::DualView<Scalar**, typename unmanaged_type::array_layout,Device> b(unmanagedView);
+       result += run_me(b);
+
+
     }
 
    };
