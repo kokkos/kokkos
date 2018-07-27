@@ -105,12 +105,13 @@ namespace Impl {
        Kokkos::DualView<Scalar**,Kokkos::LayoutLeft,Device> a("dView", size, size2);
        result = run_me(a);
 
-       Scalar data[size*size2];
+       Scalar * data = new Scalar[size*size2];
        typedef Kokkos::View<Scalar**, Kokkos::LayoutLeft, Kokkos::HostSpace> unmanaged_type;
        unmanaged_type unmanagedView(&data[0], size, size2);
-       Kokkos::DualView<Scalar**, typename unmanaged_type::array_layout,Device> b(unmanagedView);
+       Kokkos::DualView<Scalar**, typename unmanaged_type::array_layout, typename Device::memory_space> b(unmanagedView);
        result += run_me(b);
 
+       delete [] data;
 
     }
 

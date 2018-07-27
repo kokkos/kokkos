@@ -285,10 +285,10 @@ public:
 
   // given a View in HostSpace, create another view in the Default space and wrap them with a DualView
   template<typename V>
-  DualView (V view,
+  DualView (V aView,
         typename std::enable_if< std::is_same<typename V::memory_space, HostSpace>::value, int>::type dummmy = 0)
-      : d_view (create_mirror_view(DefaultExecutionSpace(), view))
-      , h_view (view)
+    : d_view (create_mirror_view(typename t_dev::memory_space(), aView))
+      , h_view (aView)
       , modified_device (View<unsigned int,LayoutLeft,typename t_host::execution_space> ("DualView::modified_device"))
       , modified_host (View<unsigned int,LayoutLeft,typename t_host::execution_space> ("DualView::modified_host"))
     {
@@ -296,10 +296,10 @@ public:
     }
   // given a View not in HostSpace, create another view in the Host space and wrap them with a DualView
   template<typename V>
-   DualView (V view,
+   DualView (V aView,
          typename std::enable_if< !std::is_same<typename V::memory_space, HostSpace>::value, int>::type dummmy = 0)
-       : d_view (view)
-       , h_view (create_mirror_view(view))
+       : d_view (aView)
+       , h_view (create_mirror_view(aView))
        , modified_device (View<unsigned int,LayoutLeft,typename t_host::execution_space> ("DualView::modified_device"))
        , modified_host (View<unsigned int,LayoutLeft,typename t_host::execution_space> ("DualView::modified_host"))
      {
