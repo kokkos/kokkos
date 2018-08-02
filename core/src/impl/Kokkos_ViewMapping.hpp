@@ -2511,7 +2511,7 @@ struct ViewValueFunctor< ExecSpace , ValueType , false /* is_scalar */ >
 #if defined(KOKKOS_ENABLE_PROFILING)
         uint64_t kpID = 0;
         if(Kokkos::Profiling::profileLibraryLoaded()) {
-          Kokkos::Profiling::beginParallelFor("Kokkos::View::initialization", 0, &kpID);
+          Kokkos::Profiling::beginParallelFor((destroy ? "Kokkos::View::destruction" : "Kokkos::View::initialization"), 0, &kpID);
         }
 #endif
         const Kokkos::Impl::ParallelFor< ViewValueFunctor , PolicyType >
