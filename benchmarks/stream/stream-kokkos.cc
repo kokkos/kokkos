@@ -136,17 +136,17 @@ int perform_validation(StreamHostArray& a, StreamHostArray& b, StreamHostArray& 
 	const double epsilon = 1.0e-13;
 	int errorCount = 0;
 
-	if( std::abs( aAvgError / ai > epsilon ) ) {
+	if( std::abs( aAvgError / ai ) > epsilon ) {
 		fprintf(stderr, "Error: validation check on View a failed.\n");
 		errorCount++;
 	}
 
-	if( std::abs( bAvgError / bi > epsilon ) ) {
+	if( std::abs( bAvgError / bi ) > epsilon ) {
 		fprintf(stderr, "Error: validation check on View b failed.\n");
 		errorCount++;
 	}
 
-	if( std::abs( cAvgError / ci > epsilon ) ) {
+	if( std::abs( cAvgError / ci ) > epsilon ) {
 		fprintf(stderr, "Error: validation check on View c failed.\n");
 		errorCount++;
 	}
