@@ -483,7 +483,7 @@ struct BinOp3D {
     if (keys(i1,0)>keys(i2,0)) return true;
     else if (keys(i1,0)==keys(i2,0)) {
       if (keys(i1,1)>keys(i2,1)) return true;
-      else if (keys(i1,1)==keys(i2,2)) {
+      else if (keys(i1,1)==keys(i2,1)) {
         if (keys(i1,2)>keys(i2,2)) return true;
       }
     }
