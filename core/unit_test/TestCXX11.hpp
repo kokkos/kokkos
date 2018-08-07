@@ -331,12 +331,14 @@ bool Test( int test ) {
   auto b = res_lambda;
   // use a tolerant comparison because functors and lambdas vectorize differently
   // https://github.com/trilinos/Trilinos/issues/3233
-  if ( (std::abs(b - a) / std::max(std::abs(a), std::abs(b))) > 1e-14) {
+  auto rel_err = (std::abs(b - a) / std::max(std::abs(a), std::abs(b)));
+  auto tol = 1e-14;
+  if (rel_err > tol) {
     passed = false;
 
     std::cout << "CXX11 ( test = '"
-              << testnames[test] << "' FAILED : "
-              << res_functor << " != " << res_lambda
+              << testnames[test] << "' FAILED : relative error "
+              << rel_err << " > tolerance " << tol
               << std::endl;
   }
 
