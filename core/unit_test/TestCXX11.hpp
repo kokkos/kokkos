@@ -327,7 +327,11 @@ bool Test( int test ) {
                            };
   bool passed = true;
 
-  if ( res_functor != res_lambda ) {
+  auto a = res_functor;
+  auto b = res_lambda;
+  // use a tolerant comparison because functors and lambdas vectorize differently
+  // https://github.com/trilinos/Trilinos/issues/3233
+  if ( (std::abs(b - a) / std::max(std::abs(a), std::abs(b))) > 1e-14) {
     passed = false;
 
     std::cout << "CXX11 ( test = '"
