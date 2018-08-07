@@ -243,6 +243,85 @@ struct LayoutTileLeft {
     : dimension { argN0 , argN1 , argN2 , argN3 , argN4 , argN5 , argN6 , argN7 } {}
 };
 
+
+/// LayoutTiled Specializations
+
+// TODO: Remove this enum class after resolving where to move the same class in MDRangePolicy to for reuse
+namespace Pattern {
+enum class Iterate
+{
+  Left,    // Left indices stride fastest
+  Right,   // Right indices stride fastest
+};
+} // end namespace Pattern
+
+// Must have Rank >= 2
+// TODO: Possibly specialize for each rank, allow for iterate pattern to default
+template < Kokkos::Pattern::Iterate OuterP, Kokkos::Pattern::Iterate InnerP,
+           unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 = 0,  unsigned ArgN3 = 0,  unsigned ArgN4 = 0,  unsigned ArgN5 = 0,  unsigned ArgN6 = 0,  unsigned ArgN7 = 0, 
+           bool IsPowerOfTwo = 
+#if 1
+           true
+#else
+           ( Impl::is_integral_power_of_two(ArgN0) &&
+                                 Impl::is_integral_power_of_two(ArgN1) &&
+                                 Impl::is_integral_power_of_two(ArgN2) &&
+                                 Impl::is_integral_power_of_two(ArgN3) &&
+                                 Impl::is_integral_power_of_two(ArgN4) &&
+                                 Impl::is_integral_power_of_two(ArgN5) &&
+                                 Impl::is_integral_power_of_two(ArgN6) &&
+                                 Impl::is_integral_power_of_two(ArgN7)
+                               )
+#endif
+         >
+struct LayoutTiled {
+
+#if 0
+  static_assert( Impl::is_integral_power_of_two(ArgN0) &&
+                 Impl::is_integral_power_of_two(ArgN1) &&
+                 Impl::is_integral_power_of_two(ArgN2) &&
+                 Impl::is_integral_power_of_two(ArgN3) &&
+                 Impl::is_integral_power_of_two(ArgN4) &&
+                 Impl::is_integral_power_of_two(ArgN5) &&
+                 Impl::is_integral_power_of_two(ArgN6) &&
+                 Impl::is_integral_power_of_two(ArgN7)
+               , "LayoutTiled must be given power-of-two tile dimensions" );
+#endif
+
+  //! Tag this class as a kokkos array_layout
+  typedef LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, ArgN2, ArgN3, ArgN4, ArgN5, ArgN6, ArgN7, IsPowerOfTwo> array_layout ;
+  static constexpr Pattern::Iterate outer_pattern = OuterP;
+  static constexpr Pattern::Iterate inner_pattern = InnerP;
+
+  enum { N0 = ArgN0 };
+  enum { N1 = ArgN1 };
+  enum { N2 = ArgN2 };
+  enum { N3 = ArgN3 };
+  enum { N4 = ArgN4 };
+  enum { N5 = ArgN5 };
+  enum { N6 = ArgN6 };
+  enum { N7 = ArgN7 };
+
+  size_t dimension[ ARRAY_LAYOUT_MAX_RANK ] ;
+
+  enum { is_extent_constructible = true };
+
+  LayoutTiled( LayoutTiled const & ) = default ;
+  LayoutTiled( LayoutTiled && ) = default ;
+  LayoutTiled & operator = ( LayoutTiled const & ) = default ;
+  LayoutTiled & operator = ( LayoutTiled && ) = default ;
+
+  KOKKOS_INLINE_FUNCTION
+  explicit constexpr
+  LayoutTiled( size_t argN0 = 0 , size_t argN1 = 0 , size_t argN2 = 0 , size_t argN3 = 0
+                , size_t argN4 = 0 , size_t argN5 = 0 , size_t argN6 = 0 , size_t argN7 = 0
+                )
+    : dimension { argN0 , argN1 , argN2 , argN3 , argN4 , argN5 , argN6 , argN7 } {}
+};
+
+
+
+
 } // namespace Kokkos
 
 #endif // #ifndef KOKKOS_LAYOUT_HPP
