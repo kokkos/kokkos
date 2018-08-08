@@ -327,12 +327,18 @@ bool Test( int test ) {
                            };
   bool passed = true;
 
-  if ( res_functor != res_lambda ) {
+  auto a = res_functor;
+  auto b = res_lambda;
+  // use a tolerant comparison because functors and lambdas vectorize differently
+  // https://github.com/trilinos/Trilinos/issues/3233
+  auto rel_err = (std::abs(b - a) / std::max(std::abs(a), std::abs(b)));
+  auto tol = 1e-14;
+  if (rel_err > tol) {
     passed = false;
 
     std::cout << "CXX11 ( test = '"
-              << testnames[test] << "' FAILED : "
-              << res_functor << " != " << res_lambda
+              << testnames[test] << "' FAILED : relative error "
+              << rel_err << " > tolerance " << tol
               << std::endl;
   }
 
