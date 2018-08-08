@@ -541,7 +541,7 @@ struct TestViewLayoutTiled {
         for ( int j = 0; j < T1; ++j ) {
         for ( int k = 0; k < T2; ++k ) {
         for ( int l = 0; l < T3; ++l ) {
-          auto tile_subview = Kokkos::tile_subview( v, ti, tj, tk );
+          auto tile_subview = Kokkos::tile_subview( v, ti, tj, tk, tl );
           if ( tile_subview(i,j,k,l) != v(ti*T0+i, tj*T1+j, tk*T2+k, tl*T3 + l) ) { ++counter[2]; }
 #if DEBUG_VERBOSE_OUTPUT
           std::cout << "idx0,idx1,idx2,idx3 = " << ti*T0 + i << "," << tj*T1 + j << "," << tk*T2 + k << "," << tl*T3 + l<< std::endl;
@@ -581,7 +581,7 @@ struct TestViewLayoutTiled {
         for ( int j = 0; j < T1; ++j ) {
         for ( int k = 0; k < T2; ++k ) {
         for ( int l = 0; l < T3; ++l ) {
-          auto tile_subview = Kokkos::tile_subview( v, ti, tj, tk );
+          auto tile_subview = Kokkos::tile_subview( v, ti, tj, tk, tl );
           if ( tile_subview(i,j,k,l) != v(ti*T0+i, tj*T1+j, tk*T2+k, tl*T3 + l) ) { ++counter[3]; }
 #if DEBUG_VERBOSE_OUTPUT
           std::cout << "idx0,idx1,idx2,idx3 = " << ti*T0 + i << "," << tj*T1 + j << "," << tk*T2 + k << "," << tl*T3 + l<< std::endl;
