@@ -81,7 +81,7 @@ struct TestViewLayoutTiled {
   static constexpr int T0 = 2;
   static constexpr int T1 = 4;
   static constexpr int T2 = 4;
-  static constexpr int T3 = 4;
+  static constexpr int T3 = 2;
   static constexpr int T4 = 4;
   static constexpr int T5 = 4;
   static constexpr int T6 = 4;
@@ -98,6 +98,13 @@ struct TestViewLayoutTiled {
   typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Right, Kokkos::Pattern::Iterate::Left, T0, T1, T2>  LayoutRL_3D_2x4x4;
   typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Left, Kokkos::Pattern::Iterate::Right, T0, T1, T2>  LayoutLR_3D_2x4x4;
   typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Right, Kokkos::Pattern::Iterate::Right, T0, T1, T2> LayoutRR_3D_2x4x4;
+
+  // Rank 4
+  typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Left, Kokkos::Pattern::Iterate::Left, T0, T1, T2, T3>   LayoutLL_4D_2x4x4x2;
+  typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Right, Kokkos::Pattern::Iterate::Left, T0, T1, T2, T3>  LayoutRL_4D_2x4x4x2;
+  typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Left, Kokkos::Pattern::Iterate::Right, T0, T1, T2, T3>  LayoutLR_4D_2x4x4x2;
+  typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Right, Kokkos::Pattern::Iterate::Right, T0, T1, T2, T3> LayoutRR_4D_2x4x4x2;
+
 
 #define DEBUG_VERBOSE_OUTPUT 1
 #define DEBUG_SUMMARY_OUTPUT 1
@@ -412,6 +419,201 @@ struct TestViewLayoutTiled {
 
   } // end test_view_layout_tiled_3d
 
+
+  static void test_view_layout_tiled_4d( const int N0, const int N1, const int N2, const int N3 )
+  {
+
+    const int FT = T0*T1*T2*T3;
+
+    const int NT0 = int( std::ceil( N0 / T0 ) );
+    const int NT1 = int( std::ceil( N1 / T1 ) );
+    const int NT2 = int( std::ceil( N2 / T2 ) );
+    const int NT3 = int( std::ceil( N3 / T3 ) );
+
+    // 4x12x16x12 view
+    // tiledims 2x4x4x2
+    // full tile 64
+    // num tiles 2x3x4x6
+    std::cout << "\nBegin output \n N0 = " << N0 << " N1 = " << N1 << " N2 = " << N2  << " N3 = " << N3 << "\n T0 = " << T0 << " T1 = " << T1 << " T2 = " << T2 << " T3 = " << T3 << "  FTD = " << FT << "  NT0 = " << NT0 << "  NT1 = " << NT1 << " NT2 = " << NT2 << " NT3 = " << NT3 << std::endl;
+    long counter[4] = {0};
+    // Create LL View
+    {
+      std::cout << "Init LL View" << std::endl;
+      Kokkos::View< Scalar****, LayoutLL_4D_2x4x4x2, Kokkos::HostSpace > v("v", N0, N1, N2, N3);
+      for ( int tl = 0; tl < NT3; ++tl ) {
+      for ( int tk = 0; tk < NT2; ++tk ) {
+      for ( int tj = 0; tj < NT1; ++tj ) {
+      for ( int ti = 0; ti < NT0; ++ti ) {
+        for ( int l = 0; l < T3; ++l ) {
+        for ( int k = 0; k < T2; ++k ) {
+        for ( int j = 0; j < T1; ++j ) {
+        for ( int i = 0; i < T0; ++i ) {
+          v(ti*T0 + i, tj*T1+j, tk*T2 + k, tl*T3 + l) = ( ti + tj*NT0 + tk*N0*N1 + tl*N0*N1*N2 )*FT + ( i + j*T0 + k*T0*T1 + l*T0*T1*T2 );
+        } } } }
+      } } } }
+
+      std::cout << "\nOutput L-L pattern 2x4x4x2 tiles:" << std::endl;
+      for ( int tl = 0; tl < NT3; ++tl ) {
+      for ( int tk = 0; tk < NT2; ++tk ) {
+      for ( int tj = 0; tj < NT1; ++tj ) {
+      for ( int ti = 0; ti < NT0; ++ti ) {
+        for ( int l = 0; l < T3; ++l ) {
+        for ( int k = 0; k < T2; ++k ) {
+        for ( int j = 0; j < T1; ++j ) {
+        for ( int i = 0; i < T0; ++i ) {
+          auto tile_subview = Kokkos::tile_subview( v, ti, tj, tk, tl );
+          if ( tile_subview(i,j,k,l) != v(ti*T0+i, tj*T1+j, tk*T2+k, tl*T3 + l) ) { ++counter[0]; }
+#if DEBUG_VERBOSE_OUTPUT
+          std::cout << "idx0,idx1,idx2,idx3 = " << ti*T0 + i << "," << tj*T1 + j << "," << tk*T2 + k << "," << tl*T3 + l<< std::endl;
+          std::cout << "ti,tj,tk,tl: " << ti << "," << tj << "," << tk << "," << tl << ","
+          << "  i,j,k,l: " <<  i << "," << j << "," << k << "," << l
+          << "  v = " << v(ti*T0 + i, tj*T1+j, tk*T2 + k, tl*T3 + l) 
+          << "  flat idx = " << ( ti + tj*NT0 + tk*N0*N1 + tl*N0*N1*N2 )*FT + ( i + j*T0 + k*T0*T1 + l*T0*T1*T2 ) << std::endl;
+          std::cout << "subview_tile output = " << tile_subview(i,j,k,l) << std::endl;
+          std::cout << "subview tile rank = " << Kokkos::rank(tile_subview) << std::endl;
+#endif
+        } } } }
+      } } } }
+    } // end scope
+
+    // Create RL View
+    {
+      std::cout << "\nInit RL View" << std::endl;
+      Kokkos::View< Scalar****, LayoutRL_4D_2x4x4x2, Kokkos::HostSpace > v("v", N0, N1, N2, N3);
+      for ( int ti = 0; ti < NT0; ++ti ) {
+      for ( int tj = 0; tj < NT1; ++tj ) {
+      for ( int tk = 0; tk < NT2; ++tk ) {
+      for ( int tl = 0; tl < NT3; ++tl ) {
+        for ( int l = 0; l < T3; ++l ) {
+        for ( int k = 0; k < T2; ++k ) {
+        for ( int j = 0; j < T1; ++j ) {
+        for ( int i = 0; i < T0; ++i ) {
+          v(ti*T0 + i, tj*T1+j, tk*T2 + k, tl*T3 + l) = ( ti*NT1*NT2*N3 + tj*NT2*N3 + tk*N3 + tl )*FT + ( i + j*T0 + k*T0*T1 + l*T0*T1*T2 );
+        } } } }
+      } } } }
+
+      std::cout << "\nOutput R-L pattern 2x4x4x2 tiles:" << std::endl;
+      for ( int ti = 0; ti < NT0; ++ti ) {
+      for ( int tj = 0; tj < NT1; ++tj ) {
+      for ( int tk = 0; tk < NT2; ++tk ) {
+      for ( int tl = 0; tl < NT3; ++tl ) {
+        for ( int l = 0; l < T3; ++l ) {
+        for ( int k = 0; k < T2; ++k ) {
+        for ( int j = 0; j < T1; ++j ) {
+        for ( int i = 0; i < T0; ++i ) {
+          auto tile_subview = Kokkos::tile_subview( v, ti, tj, tk, tl );
+          if ( tile_subview(i,j,k,l) != v(ti*T0+i, tj*T1+j, tk*T2+k, tl*T3 + l) ) { ++counter[1]; }
+#if DEBUG_VERBOSE_OUTPUT
+          std::cout << "idx0,idx1,idx2,idx3 = " << ti*T0 + i << "," << tj*T1 + j << "," << tk*T2 + k << "," << tl*T3 + l<< std::endl;
+          std::cout << "ti,tj,tk,tl: " << ti << "," << tj << "," << tk << "," << tl << ","
+          << "  i,j,k,l: " <<  i << "," << j << "," << k << "," << l
+          << "  v = " << v(ti*T0 + i, tj*T1+j, tk*T2 + k, tl*T3 + l) 
+          << "  flat idx = " << ( ti*NT1*NT2*N3 + tj*NT2*N3 + tk*N3 + tl )*FT + ( i + j*T0 + k*T0*T1 + l*T0*T1*T2 ) << std::endl;
+          std::cout << "subview_tile output = " << tile_subview(i,j,k,l) << std::endl;
+          std::cout << "subview tile rank = " << Kokkos::rank(tile_subview) << std::endl;
+#endif
+        } } } }
+      } } } }
+    } // end scope
+
+    // Create LR View
+    {
+      std::cout << "\nInit LR View" << std::endl;
+      Kokkos::View< Scalar****, LayoutLR_4D_2x4x4x2, Kokkos::HostSpace > v("v", N0, N1, N2, N3);
+      for ( int tl = 0; tl < NT3; ++tl ) {
+      for ( int tk = 0; tk < NT2; ++tk ) {
+      for ( int tj = 0; tj < NT1; ++tj ) {
+      for ( int ti = 0; ti < NT0; ++ti ) {
+        for ( int i = 0; i < T0; ++i ) {
+        for ( int j = 0; j < T1; ++j ) {
+        for ( int k = 0; k < T2; ++k ) {
+        for ( int l = 0; l < T3; ++l ) {
+          v(ti*T0 + i, tj*T1+j, tk*T2 + k, tl*T3 + l) = ( ti + tj*NT0 + tk*NT0*NT1 + tl*NT0*NT1*NT2 )*FT + ( i*T1*T2*T3 + j*T2*T3 + k*T3 + l );
+        } } } }
+      } } } }
+
+      std::cout << "\nOutput L-R pattern 2x4x4x2 tiles:" << std::endl;
+      for ( int tl = 0; tl < NT3; ++tl ) {
+      for ( int tk = 0; tk < NT2; ++tk ) {
+      for ( int tj = 0; tj < NT1; ++tj ) {
+      for ( int ti = 0; ti < NT0; ++ti ) {
+        for ( int i = 0; i < T0; ++i ) {
+        for ( int j = 0; j < T1; ++j ) {
+        for ( int k = 0; k < T2; ++k ) {
+        for ( int l = 0; l < T3; ++l ) {
+          auto tile_subview = Kokkos::tile_subview( v, ti, tj, tk );
+          if ( tile_subview(i,j,k,l) != v(ti*T0+i, tj*T1+j, tk*T2+k, tl*T3 + l) ) { ++counter[2]; }
+#if DEBUG_VERBOSE_OUTPUT
+          std::cout << "idx0,idx1,idx2,idx3 = " << ti*T0 + i << "," << tj*T1 + j << "," << tk*T2 + k << "," << tl*T3 + l<< std::endl;
+          std::cout << "ti,tj,tk,tl: " << ti << "," << tj << "," << tk << "," << tl << ","
+          << "  i,j,k,l: " <<  i << "," << j << "," << k << "," << l
+          << "  v = " << v(ti*T0 + i, tj*T1+j, tk*T2 + k, tl*T3 + l) 
+          << "  flat idx = " << ( ti + tj*NT0 + tk*NT0*NT1 + tl*NT0*NT1*NT2 )*FT + ( i*T1*T2*T3 + j*T2*T3 + k*T3 + l ) << std::endl;
+          std::cout << "subview_tile output = " << tile_subview(i,j,k,l) << std::endl;
+          std::cout << "subview tile rank = " << Kokkos::rank(tile_subview) << std::endl;
+#endif
+        } } } }
+      } } } }
+    } // end scope
+
+    // Create RR View
+    {
+      std::cout << "\nInit RR View" << std::endl;
+      Kokkos::View< Scalar****, LayoutRR_4D_2x4x4x2, Kokkos::HostSpace > v("v", N0, N1, N2, N3);
+      for ( int ti = 0; ti < NT0; ++ti ) {
+      for ( int tj = 0; tj < NT1; ++tj ) {
+      for ( int tk = 0; tk < NT2; ++tk ) {
+      for ( int tl = 0; tl < NT3; ++tl ) {
+        for ( int i = 0; i < T0; ++i ) {
+        for ( int j = 0; j < T1; ++j ) {
+        for ( int k = 0; k < T2; ++k ) {
+        for ( int l = 0; l < T3; ++l ) {
+          v(ti*T0 + i, tj*T1+j, tk*T2 + k, tl*T3 + l) = ( ti*NT1*NT2*NT3 + tj*NT2*NT3 + tk*NT3 + tl )*FT + ( i*T1*T2*T3 + j*T2*T3 + k*T3 + l );
+        } } } }
+      } } } }
+
+      std::cout << "\nOutput R-R pattern 2x4x4x2 tiles:" << std::endl;
+      for ( int ti = 0; ti < NT0; ++ti ) {
+      for ( int tj = 0; tj < NT1; ++tj ) {
+      for ( int tk = 0; tk < NT2; ++tk ) {
+      for ( int tl = 0; tl < NT3; ++tl ) {
+        for ( int i = 0; i < T0; ++i ) {
+        for ( int j = 0; j < T1; ++j ) {
+        for ( int k = 0; k < T2; ++k ) {
+        for ( int l = 0; l < T3; ++l ) {
+          auto tile_subview = Kokkos::tile_subview( v, ti, tj, tk );
+          if ( tile_subview(i,j,k,l) != v(ti*T0+i, tj*T1+j, tk*T2+k, tl*T3 + l) ) { ++counter[3]; }
+#if DEBUG_VERBOSE_OUTPUT
+          std::cout << "idx0,idx1,idx2,idx3 = " << ti*T0 + i << "," << tj*T1 + j << "," << tk*T2 + k << "," << tl*T3 + l<< std::endl;
+          std::cout << "ti,tj,tk,tl: " << ti << "," << tj << "," << tk << "," << tl << ","
+          << "  i,j,k,l: " <<  i << "," << j << "," << k << "," << l
+          << "  v = " << v(ti*T0 + i, tj*T1+j, tk*T2 + k, tl*T3 + l) 
+          << "  flat idx = " << ( ti*NT1*NT2*NT3 + tj*NT2*NT3 + tk*NT3 + tl )*FT + ( i*T1*T2*T3 + j*T2*T3 + k*T3 + l ) << std::endl;
+          std::cout << "subview_tile output = " << tile_subview(i,j,k,l) << std::endl;
+          std::cout << "subview tile rank = " << Kokkos::rank(tile_subview) << std::endl;
+#endif
+        } } } }
+      } } } }
+    } // end scope
+
+#if DEBUG_SUMMARY_OUTPUT
+    std::cout << "subview_tile vs view errors:\n"
+      << " LL: " << counter[0]
+      << " RL: " << counter[1]
+      << " LR: " << counter[2]
+      << " RR: " << counter[3] 
+      << std::endl;
+#endif
+
+    ASSERT_EQ(counter[0], long(0));
+    ASSERT_EQ(counter[1], long(0));
+    ASSERT_EQ(counter[2], long(0));
+    ASSERT_EQ(counter[3], long(0));
+
+  } // end test_view_layout_tiled_4d
+
+
+
 #ifdef DEBUG_VERBOSE_OUTPUT
 #undef DEBUG_VERBOSE_OUTPUT
 #endif
@@ -428,6 +630,7 @@ TEST_F( TEST_CATEGORY , view_layouttiled) {
   // If N# is not a power of two, but want to iterate by tile then within a tile, need to check that mapped index is within extent
   TestViewLayoutTiled< TEST_EXECSPACE >::test_view_layout_tiled_2d( 4, 12 );
   TestViewLayoutTiled< TEST_EXECSPACE >::test_view_layout_tiled_3d( 4, 12, 16 );
+  TestViewLayoutTiled< TEST_EXECSPACE >::test_view_layout_tiled_4d( 4, 12, 16, 12 );
 }
 
 } // namespace Test
