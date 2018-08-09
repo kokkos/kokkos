@@ -260,6 +260,9 @@ namespace Impl {
 struct ALL_t {
   KOKKOS_INLINE_FUNCTION
   constexpr const ALL_t & operator()() const { return *this ; }
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr bool operator == ( const ALL_t & right) const { return true;}
 };
 
 }} // namespace Kokkos::Impl
@@ -2601,11 +2604,8 @@ class ViewMapping< Traits ,
               , void >::is_mapping_plugin::value
   )>::type >
 {
-private:
 
-  template< class , class ... > friend class ViewMapping ;
-  template< class , class ... > friend class Kokkos::View ;
-
+public:
   typedef ViewOffset< typename Traits::dimension
                     , typename Traits::array_layout
                     , void
@@ -2613,13 +2613,17 @@ private:
 
   typedef typename ViewDataHandle< Traits >::handle_type  handle_type ;
 
-  handle_type  m_handle ;
-  offset_type  m_offset ;
+  handle_type  m_impl_handle ;
+  offset_type  m_impl_offset ;
+
+private:
+
+  template < class , class ...> friend class ViewMapping;
 
   KOKKOS_INLINE_FUNCTION
   ViewMapping( const handle_type & arg_handle , const offset_type & arg_offset )
-    : m_handle( arg_handle )
-    , m_offset( arg_offset )
+    : m_impl_handle( arg_handle )
+    , m_impl_offset( arg_offset )
     {}
 
 public:
@@ -2634,44 +2638,44 @@ public:
 
   template< typename iType >
   KOKKOS_INLINE_FUNCTION constexpr size_t extent( const iType & r ) const
-    { return m_offset.m_dim.extent(r); }
+    { return m_impl_offset.m_dim.extent(r); }
 
   KOKKOS_INLINE_FUNCTION constexpr
   typename Traits::array_layout layout() const
-    { return m_offset.layout(); }
+    { return m_impl_offset.layout(); }
 
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_0() const { return m_offset.dimension_0(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_1() const { return m_offset.dimension_1(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_2() const { return m_offset.dimension_2(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_3() const { return m_offset.dimension_3(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_4() const { return m_offset.dimension_4(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_5() const { return m_offset.dimension_5(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_6() const { return m_offset.dimension_6(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_7() const { return m_offset.dimension_7(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_0() const { return m_impl_offset.dimension_0(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_1() const { return m_impl_offset.dimension_1(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_2() const { return m_impl_offset.dimension_2(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_3() const { return m_impl_offset.dimension_3(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_4() const { return m_impl_offset.dimension_4(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_5() const { return m_impl_offset.dimension_5(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_6() const { return m_impl_offset.dimension_6(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_7() const { return m_impl_offset.dimension_7(); }
 
   // Is a regular layout with uniform striding for each index.
   using is_regular = typename offset_type::is_regular ;
 
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_0() const { return m_offset.stride_0(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_1() const { return m_offset.stride_1(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_2() const { return m_offset.stride_2(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_3() const { return m_offset.stride_3(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_4() const { return m_offset.stride_4(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_5() const { return m_offset.stride_5(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_6() const { return m_offset.stride_6(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_7() const { return m_offset.stride_7(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_0() const { return m_impl_offset.stride_0(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_1() const { return m_impl_offset.stride_1(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_2() const { return m_impl_offset.stride_2(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_3() const { return m_impl_offset.stride_3(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_4() const { return m_impl_offset.stride_4(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_5() const { return m_impl_offset.stride_5(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_6() const { return m_impl_offset.stride_6(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t stride_7() const { return m_impl_offset.stride_7(); }
 
   template< typename iType >
-  KOKKOS_INLINE_FUNCTION void stride( iType * const s ) const { m_offset.stride(s); }
+  KOKKOS_INLINE_FUNCTION void stride( iType * const s ) const { m_impl_offset.stride(s); }
 
   //----------------------------------------
   // Range span
 
   /** \brief  Span of the mapped range */
-  KOKKOS_INLINE_FUNCTION constexpr size_t span() const { return m_offset.span(); }
+  KOKKOS_INLINE_FUNCTION constexpr size_t span() const { return m_impl_offset.span(); }
 
   /** \brief  Is the mapped range span contiguous */
-  KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const { return m_offset.span_is_contiguous(); }
+  KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const { return m_impl_offset.span_is_contiguous(); }
 
   typedef typename ViewDataHandle< Traits >::return_type  reference_type ;
   typedef typename Traits::value_type *                   pointer_type ;
@@ -2679,7 +2683,7 @@ public:
   /** \brief  Query raw pointer to memory */
   KOKKOS_INLINE_FUNCTION constexpr pointer_type data() const
     {
-      return m_handle;
+      return m_impl_handle;
     }
 
   //----------------------------------------
@@ -2687,7 +2691,7 @@ public:
   // calling these element reference methods.
 
   KOKKOS_FORCEINLINE_FUNCTION
-  reference_type reference() const { return m_handle[0]; }
+  reference_type reference() const { return m_impl_handle[0]; }
 
   template< typename I0 >
   KOKKOS_FORCEINLINE_FUNCTION
@@ -2695,7 +2699,7 @@ public:
     std::enable_if< std::is_integral<I0>::value &&
                     ! std::is_same< typename Traits::array_layout , Kokkos::LayoutStride >::value
                   , reference_type >::type
-  reference( const I0 & i0 ) const { return m_handle[i0]; }
+  reference( const I0 & i0 ) const { return m_impl_handle[i0]; }
 
   template< typename I0 >
   KOKKOS_FORCEINLINE_FUNCTION
@@ -2703,50 +2707,50 @@ public:
     std::enable_if< std::is_integral<I0>::value &&
                     std::is_same< typename Traits::array_layout , Kokkos::LayoutStride >::value
                   , reference_type >::type
-  reference( const I0 & i0 ) const { return m_handle[ m_offset(i0) ]; }
+  reference( const I0 & i0 ) const { return m_impl_handle[ m_impl_offset(i0) ]; }
 
   template< typename I0 , typename I1 >
   KOKKOS_FORCEINLINE_FUNCTION
   reference_type reference( const I0 & i0 , const I1 & i1 ) const
-    { return m_handle[ m_offset(i0,i1) ]; }
+    { return m_impl_handle[ m_impl_offset(i0,i1) ]; }
 
   template< typename I0 , typename I1 , typename I2 >
   KOKKOS_FORCEINLINE_FUNCTION
   reference_type reference( const I0 & i0 , const I1 & i1 , const I2 & i2 ) const
-    { return m_handle[ m_offset(i0,i1,i2) ]; }
+    { return m_impl_handle[ m_impl_offset(i0,i1,i2) ]; }
 
   template< typename I0 , typename I1 , typename I2 , typename I3 >
   KOKKOS_FORCEINLINE_FUNCTION
   reference_type reference( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3 ) const
-    { return m_handle[ m_offset(i0,i1,i2,i3) ]; }
+    { return m_impl_handle[ m_impl_offset(i0,i1,i2,i3) ]; }
 
   template< typename I0 , typename I1 , typename I2 , typename I3
           , typename I4 >
   KOKKOS_FORCEINLINE_FUNCTION
   reference_type reference( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3
                           , const I4 & i4 ) const
-    { return m_handle[ m_offset(i0,i1,i2,i3,i4) ]; }
+    { return m_impl_handle[ m_impl_offset(i0,i1,i2,i3,i4) ]; }
 
   template< typename I0 , typename I1 , typename I2 , typename I3
           , typename I4 , typename I5 >
   KOKKOS_FORCEINLINE_FUNCTION
   reference_type reference( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3
                           , const I4 & i4 , const I5 & i5 ) const
-    { return m_handle[ m_offset(i0,i1,i2,i3,i4,i5) ]; }
+    { return m_impl_handle[ m_impl_offset(i0,i1,i2,i3,i4,i5) ]; }
 
   template< typename I0 , typename I1 , typename I2 , typename I3
           , typename I4 , typename I5 , typename I6 >
   KOKKOS_FORCEINLINE_FUNCTION
   reference_type reference( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3
                           , const I4 & i4 , const I5 & i5 , const I6 & i6 ) const
-    { return m_handle[ m_offset(i0,i1,i2,i3,i4,i5,i6) ]; }
+    { return m_impl_handle[ m_impl_offset(i0,i1,i2,i3,i4,i5,i6) ]; }
 
   template< typename I0 , typename I1 , typename I2 , typename I3
           , typename I4 , typename I5 , typename I6 , typename I7 >
   KOKKOS_FORCEINLINE_FUNCTION
   reference_type reference( const I0 & i0 , const I1 & i1 , const I2 & i2 , const I3 & i3
                           , const I4 & i4 , const I5 & i5 , const I6 & i6 , const I7 & i7 ) const
-    { return m_handle[ m_offset(i0,i1,i2,i3,i4,i5,i6,i7) ]; }
+    { return m_impl_handle[ m_impl_offset(i0,i1,i2,i3,i4,i5,i6,i7) ]; }
 
   //----------------------------------------
 
@@ -2760,22 +2764,22 @@ public:
   /** \brief  Span, in bytes, of the referenced memory */
   KOKKOS_INLINE_FUNCTION constexpr size_t memory_span() const
     {
-      return ( m_offset.span() * sizeof(typename Traits::value_type) + MemorySpanMask ) & ~size_t(MemorySpanMask);
+      return ( m_impl_offset.span() * sizeof(typename Traits::value_type) + MemorySpanMask ) & ~size_t(MemorySpanMask);
     }
 
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION ~ViewMapping() {}
-  KOKKOS_INLINE_FUNCTION ViewMapping() : m_handle(), m_offset() {}
+  KOKKOS_INLINE_FUNCTION ViewMapping() : m_impl_handle(), m_impl_offset() {}
   KOKKOS_INLINE_FUNCTION ViewMapping( const ViewMapping & rhs )
-    : m_handle( rhs.m_handle ), m_offset( rhs.m_offset ) {}
+    : m_impl_handle( rhs.m_impl_handle ), m_impl_offset( rhs.m_impl_offset ) {}
   KOKKOS_INLINE_FUNCTION ViewMapping & operator = ( const ViewMapping & rhs )
-    { m_handle = rhs.m_handle ; m_offset = rhs.m_offset ; return *this ; }
+    { m_impl_handle = rhs.m_impl_handle ; m_impl_offset = rhs.m_impl_offset ; return *this ; }
 
   KOKKOS_INLINE_FUNCTION ViewMapping( ViewMapping && rhs )
-    : m_handle( rhs.m_handle ), m_offset( rhs.m_offset ) {}
+    : m_impl_handle( rhs.m_impl_handle ), m_impl_offset( rhs.m_impl_offset ) {}
   KOKKOS_INLINE_FUNCTION ViewMapping & operator = ( ViewMapping && rhs )
-    { m_handle = rhs.m_handle ; m_offset = rhs.m_offset ; return *this ; }
+    { m_impl_handle = rhs.m_impl_handle ; m_impl_offset = rhs.m_impl_offset ; return *this ; }
 
   //----------------------------------------
 
@@ -2793,14 +2797,14 @@ public:
   ViewMapping( Kokkos::Impl::ViewCtorProp< P ... > const & arg_prop
              , typename Traits::array_layout const & arg_layout
              )
-    : m_handle( ( (Kokkos::Impl::ViewCtorProp<void,pointer_type> const &) arg_prop ).value )
-    , m_offset( std::integral_constant< unsigned , 0 >() , arg_layout )
+    : m_impl_handle( ( (Kokkos::Impl::ViewCtorProp<void,pointer_type> const &) arg_prop ).value )
+    , m_impl_offset( std::integral_constant< unsigned , 0 >() , arg_layout )
     {}
 
   /**\brief  Assign data */
   KOKKOS_INLINE_FUNCTION
   void assign_data( pointer_type arg_ptr )
-    { m_handle = handle_type( arg_ptr ); }
+    { m_impl_handle = handle_type( arg_ptr ); }
 
   //----------------------------------------
   /*  Allocate and construct mapped array.
@@ -2828,10 +2832,10 @@ public:
       , alloc_prop::allow_padding ? sizeof(value_type) : 0
       > padding ;
 
-    m_offset = offset_type( padding(), arg_layout );
+    m_impl_offset = offset_type( padding(), arg_layout );
 
     const size_t alloc_size =
-      ( m_offset.span() * MemorySpanSize + MemorySpanMask ) & ~size_t(MemorySpanMask);
+      ( m_impl_offset.span() * MemorySpanSize + MemorySpanMask ) & ~size_t(MemorySpanMask);
 
     // Create shared memory tracking record with allocate memory from the memory space
     record_type * const record =
@@ -2842,7 +2846,7 @@ public:
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     if ( alloc_size ) {
 #endif
-    m_handle = handle_type( reinterpret_cast< pointer_type >( record->data() ) );
+    m_impl_handle = handle_type( reinterpret_cast< pointer_type >( record->data() ) );
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     }
 #endif
@@ -2853,8 +2857,8 @@ public:
       // Assume destruction is only required when construction is requested.
       // The ViewValueFunctor has both value construction and destruction operators.
       record->m_destroy = functor_type( ( (Kokkos::Impl::ViewCtorProp<void,execution_space> const &) arg_prop).value
-                                      , (value_type *) m_handle
-                                      , m_offset.span()
+                                      , (value_type *) m_impl_handle
+                                      , m_impl_offset.span()
                                       );
 
       // Construct values
@@ -2982,8 +2986,8 @@ public:
         if(!assignable)
           Kokkos::abort("View Assignment: trying to assign runtime dimension to non matching compile time dimension.");
       }
-      dst.m_offset = dst_offset_type( src.m_offset );
-      dst.m_handle = Kokkos::Impl::ViewDataHandle< DstTraits >::assign( src.m_handle , src_track );
+      dst.m_impl_offset = dst_offset_type( src.m_impl_offset );
+      dst.m_impl_handle = Kokkos::Impl::ViewDataHandle< DstTraits >::assign( src.m_impl_handle , src_track );
     }
 };
 
@@ -3109,8 +3113,8 @@ public:
         if(!assignable)
           Kokkos::abort("View Assignment: trying to assign runtime dimension to non matching compile time dimension.");
       }
-      dst.m_offset = dst_offset_type( src.m_offset );
-      dst.m_handle = Kokkos::Impl::ViewDataHandle< DstTraits >::assign( src.m_handle , src_track );
+      dst.m_impl_offset = dst_offset_type( src.m_impl_offset );
+      dst.m_impl_handle = Kokkos::Impl::ViewDataHandle< DstTraits >::assign( src.m_impl_handle , src_track );
     }
 };
 
@@ -3247,12 +3251,12 @@ public:
       typedef typename DstType::offset_type  dst_offset_type ;
 
       const SubviewExtents< SrcTraits::rank , rank >
-        extents( src.m_offset.m_dim , args... );
+        extents( src.m_impl_offset.m_dim , args... );
 
-      dst.m_offset = dst_offset_type( src.m_offset , extents );
+      dst.m_impl_offset = dst_offset_type( src.m_impl_offset , extents );
 
-      dst.m_handle = ViewDataHandle< DstTraits >::assign(src.m_handle,
-          src.m_offset( extents.domain_offset(0)
+      dst.m_impl_handle = ViewDataHandle< DstTraits >::assign(src.m_impl_handle,
+          src.m_impl_offset( extents.domain_offset(0)
                       , extents.domain_offset(1)
                       , extents.domain_offset(2)
                       , extents.domain_offset(3)
@@ -3293,6 +3297,7 @@ bool view_verify_operator_bounds
          && view_verify_operator_bounds<R+1>( map , args ... );
 }
 
+
 template< unsigned , class MapType >
 inline
 void view_error_operator_bounds( char * , int , const MapType & )
@@ -3316,6 +3321,7 @@ void view_error_operator_bounds
             );
   view_error_operator_bounds<R+1>(buf+n,len-n,map,args...);
 }
+
 
 #if ! defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
 
@@ -3415,6 +3421,8 @@ void view_verify_operator_bounds
 #endif
   }
 }
+
+
 
 } /* namespace Impl */
 } /* namespace Kokkos */
