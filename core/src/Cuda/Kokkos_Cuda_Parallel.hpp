@@ -115,6 +115,7 @@ public:
 
   //----------------------------------------
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   template< class FunctorType >
   inline static
   int team_size_max( const FunctorType & functor )
@@ -132,7 +133,31 @@ public:
 
       return n ;
     }
+#endif
 
+  template<class FunctorType>
+  int team_size_max( const FunctorType& f, const ParallelForTag& ) const {
+    typedef Impl::ParallelFor< FunctorType , TeamPolicy<Properties...> > closure_type;
+    typedef Impl::FunctorValueTraits< FunctorType , typename traits::work_tag > functor_value_traits;
+    int block_size = Kokkos::Impl::cuda_get_max_block_size< closure_type, typename traits::launch_bounds >( f ,(size_t) vector_length(),
+        (size_t) team_scratch_size(0) + 2*sizeof(double), (size_t) thread_scratch_size(0) + sizeof(double) );
+    return block_size/vector_length();
+  }
+
+  template<class FunctorType>
+  int team_size_max( const FunctorType& f, const ParallelReduceTag& ) const {
+    typedef Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,TeamPolicyInternal,FunctorType> functor_analysis_type;
+    typedef typename Impl::ParallelReduceReturnValue<void,typename functor_analysis_type::value_type,FunctorType>::reducer_type reducer_type;
+    typedef Impl::ParallelReduce< FunctorType , TeamPolicy<Properties...>, reducer_type > closure_type;
+    typedef Impl::FunctorValueTraits< FunctorType , typename traits::work_tag > functor_value_traits;
+
+    int block_size = Kokkos::Impl::cuda_get_max_block_size< closure_type, typename traits::launch_bounds >( f ,(size_t) vector_length(),
+        (size_t) team_scratch_size(0) + 2*sizeof(double), (size_t) thread_scratch_size(0) + sizeof(double) +
+                                                          (functor_value_traits::StaticValueSize?0:functor_value_traits::value_size( f )));
+    return block_size/vector_length();
+  }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   template< class FunctorType >
   static int team_size_recommended( const FunctorType & functor )
     { return team_size_max( functor ); }
@@ -144,10 +169,41 @@ public:
       if(max<1) max = 1;
       return max;
     }
+#endif
+
+  template<class FunctorType>
+  int team_size_recommended( const FunctorType& f, const ParallelForTag& ) const {
+    typedef Impl::ParallelFor< FunctorType , TeamPolicy<Properties...> > closure_type;
+    typedef Impl::FunctorValueTraits< FunctorType , typename traits::work_tag > functor_value_traits;
+    int block_size = Kokkos::Impl::cuda_get_opt_block_size< closure_type, typename traits::launch_bounds >( f ,(size_t) vector_length(),
+        (size_t) team_scratch_size(0) + 2*sizeof(double), (size_t) thread_scratch_size(0) + sizeof(double));
+    return block_size/vector_length();
+  }
+
+  template<class FunctorType>
+  int team_size_recommended( const FunctorType& f, const ParallelReduceTag& ) const {
+    typedef Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,TeamPolicyInternal,FunctorType> functor_analysis_type;
+    typedef typename Impl::ParallelReduceReturnValue<void,typename functor_analysis_type::value_type,FunctorType>::reducer_type reducer_type;
+    typedef Impl::ParallelReduce< FunctorType , TeamPolicy<Properties...>, reducer_type > closure_type;
+    typedef Impl::FunctorValueTraits< FunctorType , typename traits::work_tag > functor_value_traits;
+
+    int block_size = Kokkos::Impl::cuda_get_opt_block_size< closure_type, typename traits::launch_bounds >( f ,(size_t) vector_length(),
+        (size_t) team_scratch_size(0) + 2*sizeof(double), (size_t) thread_scratch_size(0) + sizeof(double) +
+                                                            functor_value_traits::StaticValueSize?0:functor_value_traits::value_size( f ));
+    return block_size/vector_length();
+  }
+
 
   inline static
   int vector_length_max()
     { return Impl::CudaTraits::WarpSize; }
+
+  inline static
+  int scratch_size_max(int level)
+    { return (level==0?
+        1024*40:             // 48kB is the max for CUDA, but we need some for team_member.reduce etc.
+        20*1024*1024);   // arbitrarily setting this to 20MB, for a Volta V100 that would give us about 3.2GB for 2 teams per SM
+    }
 
   //----------------------------------------
 
@@ -420,7 +476,7 @@ public:
   void execute() const
     {
       const typename Policy::index_type nwork = m_policy.end() - m_policy.begin();
-      const int block_size = Kokkos::Impl::cuda_get_opt_block_size< ParallelFor >( m_functor , 1, 0 , 0 );
+      const int block_size = Kokkos::Impl::cuda_get_opt_block_size< ParallelFor, LaunchBounds>( m_functor , 1, 0 , 0 );
       const dim3 block(  1 , block_size , 1);
       const dim3 grid( std::min( typename Policy::index_type(( nwork + block.y - 1 ) / block.y) , typename Policy::index_type(cuda_internal_maximum_grid_count()) ) , 1 , 1);
 
@@ -655,7 +711,7 @@ public:
     : m_functor( arg_functor )
     , m_league_size( arg_policy.league_size() )
     , m_team_size( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
-        Kokkos::Impl::cuda_get_opt_block_size< ParallelFor >( arg_functor , arg_policy.vector_length(), arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) / arg_policy.vector_length() )
+        Kokkos::Impl::cuda_get_opt_block_size< ParallelFor, LaunchBounds >( arg_functor , arg_policy.vector_length(), arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) / arg_policy.vector_length() )
     , m_vector_size( arg_policy.vector_length() )
     , m_shmem_begin( sizeof(double) * ( m_team_size + 2 ) )
     , m_shmem_size( arg_policy.scratch_size(0,m_team_size) + FunctorTeamShmemSize< FunctorType >::value( m_functor , m_team_size ) )
@@ -671,7 +727,7 @@ public:
       }
 
       if ( int(m_team_size) >
-           int(Kokkos::Impl::cuda_get_max_block_size< ParallelFor >
+           int(Kokkos::Impl::cuda_get_max_block_size< ParallelFor, LaunchBounds >
                  ( arg_functor , arg_policy.vector_length(), arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) / arg_policy.vector_length())) {
         Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelFor< Cuda > requested too large team size."));
       }
@@ -1332,7 +1388,7 @@ public:
     {
       const int nwork = m_league_size * m_team_size ;
       if ( nwork ) {
-        const int block_count = UseShflReduction? std::min( m_league_size , size_type(1024) )
+        const int block_count = UseShflReduction? std::min( m_league_size , size_type(1024*32) )
           :std::min( m_league_size , m_team_size );
 
         m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_count );
@@ -1384,17 +1440,17 @@ public:
   , m_scratch_ptr{NULL,NULL}
   , m_scratch_size{
     arg_policy.scratch_size(0,( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
-        Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( arg_functor , arg_policy.vector_length(),
+        Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce, LaunchBounds >( arg_functor , arg_policy.vector_length(),
                                                                  arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) /
                                                                  arg_policy.vector_length() )
     ), arg_policy.scratch_size(1,( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
-        Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( arg_functor , arg_policy.vector_length(),
+        Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce, LaunchBounds >( arg_functor , arg_policy.vector_length(),
                                                                  arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) /
                                                                  arg_policy.vector_length() )
         )}
   , m_league_size( arg_policy.league_size() )
   , m_team_size( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
-      Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( arg_functor , arg_policy.vector_length(),
+      Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce, LaunchBounds >( arg_functor , arg_policy.vector_length(),
                                                                arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) /
                                                                arg_policy.vector_length() )
   , m_vector_size( arg_policy.vector_length() )
@@ -1431,9 +1487,7 @@ public:
       Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too much L0 scratch memory"));
     }
 
-    if ( unsigned(m_team_size) >
-         unsigned(Kokkos::Impl::cuda_get_max_block_size< ParallelReduce >
-               ( arg_functor , arg_policy.vector_length(), arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) / arg_policy.vector_length())) {
+    if ( int(m_team_size) > arg_policy.team_size_max(m_functor,ParallelReduceTag()) ) {
       Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too large team size."));
     }
 
@@ -1454,7 +1508,7 @@ public:
   , m_scratch_ptr{NULL,NULL}
   , m_league_size( arg_policy.league_size() )
   , m_team_size( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
-      Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >( arg_functor , arg_policy.vector_length(),
+      Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce, LaunchBounds >( arg_functor , arg_policy.vector_length(),
                                                                arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) /
       arg_policy.vector_length() )
   , m_vector_size( arg_policy.vector_length() )
@@ -1487,10 +1541,7 @@ public:
          CudaTraits::SharedMemoryCapacity < shmem_size_total ) {
       Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > bad team size"));
     }
-
-    if ( int(m_team_size) >
-         int(Kokkos::Impl::cuda_get_max_block_size< ParallelReduce >
-               ( arg_functor , arg_policy.vector_length(), arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) / arg_policy.vector_length())) {
+    if ( int(m_team_size) > arg_policy.team_size_max(m_functor,ParallelReduceTag()) ) {
       Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too large team size."));
     }
 
@@ -1754,7 +1805,7 @@ public:
       // Occupancy calculator assumes whole block.
 
       m_team_size =
-        Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce >
+        Kokkos::Impl::cuda_get_opt_block_size< ParallelReduce, LaunchBounds >
           ( arg_functor
           , arg_policy.vector_length()
           , arg_policy.team_scratch_size(0)
