@@ -115,6 +115,7 @@ public:
 
   //----------------------------------------
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   template< class FunctorType >
   inline static
   int team_size_max( const FunctorType & functor )
@@ -132,14 +133,14 @@ public:
 
       return n ;
     }
+#endif
 
   template<class FunctorType>
   int team_size_max( const FunctorType& f, const ParallelForTag& ) const {
     typedef Impl::ParallelFor< FunctorType , TeamPolicy<Properties...> > closure_type;
     typedef Impl::FunctorValueTraits< FunctorType , typename traits::work_tag > functor_value_traits;
     int block_size = Kokkos::Impl::cuda_get_max_block_size< closure_type, typename traits::launch_bounds >( f ,(size_t) vector_length(),
-        (size_t) team_scratch_size(0),  + 2*sizeof(double), (size_t) thread_scratch_size(0) + sizeof(double) +
-                                                            (functor_value_traits::StaticValueSize?0:functor_value_traits::value_size( f )));
+        (size_t) team_scratch_size(0),  + 2*sizeof(double), (size_t) thread_scratch_size(0) + sizeof(double) );
     return block_size/vector_length();
   }
 
@@ -156,6 +157,7 @@ public:
     return block_size/vector_length();
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   template< class FunctorType >
   static int team_size_recommended( const FunctorType & functor )
     { return team_size_max( functor ); }
@@ -167,15 +169,14 @@ public:
       if(max<1) max = 1;
       return max;
     }
-
+#endif
 
   template<class FunctorType>
   int team_size_recommended( const FunctorType& f, const ParallelForTag& ) const {
     typedef Impl::ParallelFor< FunctorType , TeamPolicy<Properties...> > closure_type;
     typedef Impl::FunctorValueTraits< FunctorType , typename traits::work_tag > functor_value_traits;
     int block_size = Kokkos::Impl::cuda_get_opt_block_size< closure_type, typename traits::launch_bounds >( f ,(size_t) vector_length(),
-        (size_t) team_scratch_size(0) + 2*sizeof(double), (size_t) thread_scratch_size(0) + sizeof(double) +
-                                                            functor_value_traits::StaticValueSize?0:functor_value_traits::value_size( f ));
+        (size_t) team_scratch_size(0) + 2*sizeof(double), (size_t) thread_scratch_size(0) + sizeof(double));
     return block_size/vector_length();
   }
 

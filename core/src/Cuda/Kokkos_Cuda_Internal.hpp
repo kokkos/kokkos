@@ -127,7 +127,7 @@ template<class DriverType, unsigned int MaxThreadsPerBlock, unsigned int MinBloc
 struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<MaxThreadsPerBlock,MinBlocksPerSM>,true> {
   static int get_block_size(const typename DriverType::functor_type & f, const size_t vector_length,
                             const size_t shmem_extra_block, const size_t shmem_extra_thread) {
-    int numBlocks;
+    int numBlocks = 0, oldNumBlocks = 0;
     int blockSize=32;
     int sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
                     FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
@@ -142,15 +142,17 @@ struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<MaxThreadsPerBlock,Mi
       sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
                   FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
 
+      oldNumBlocks = numBlocks;
+
       cudaOccupancyMaxActiveBlocksPerMultiprocessor(
           &numBlocks,
           cuda_parallel_launch_constant_memory<DriverType,MaxThreadsPerBlock,MinBlocksPerSM>,
           blockSize,
           sharedmem);
-      printf("A %i %i\n",numBlocks,blockSize);
     }
-    if(numBlocks>0) return blockSize;
-    else return blockSize/2;
+    if( numBlocks    >= MinBlocksPerSM && blockSize   <= MaxThreadsPerBlock ) return blockSize;
+    if( oldNumBlocks >= MinBlocksPerSM && blockSize/2 <= MaxThreadsPerBlock ) return blockSize/2;
+    return -1;
   }
 };
 
@@ -158,7 +160,7 @@ template<class DriverType, unsigned int MaxThreadsPerBlock, unsigned int MinBloc
 struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<MaxThreadsPerBlock,MinBlocksPerSM>,false> {
   static int get_block_size(const typename DriverType::functor_type & f, const size_t vector_length,
                             const size_t shmem_extra_block, const size_t shmem_extra_thread) {
-    int numBlocks;
+    int numBlocks = 0, oldNumBlocks = 0;
 
     int blockSize=32;
     int sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
@@ -169,20 +171,22 @@ struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<MaxThreadsPerBlock,Mi
         blockSize,
         sharedmem);
 
-    while (blockSize<1024 && numBlocks>0) {
+    while (blockSize*2<=MaxThreadsPerBlock && numBlocks>0) {
       blockSize*=2;
       sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
                   FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
+
+      oldNumBlocks = numBlocks;
 
       cudaOccupancyMaxActiveBlocksPerMultiprocessor(
           &numBlocks,
           cuda_parallel_launch_local_memory<DriverType,MaxThreadsPerBlock,MinBlocksPerSM>,
           blockSize,
           sharedmem);
-      printf("B %i %i %i %i\n",numBlocks,blockSize,sharedmem,shmem_extra_thread);
     }
-    if(numBlocks>0) return blockSize;
-    else return blockSize/2;
+    if( numBlocks    >= MinBlocksPerSM && blockSize   <= MaxThreadsPerBlock ) return blockSize;
+    if( oldNumBlocks >= MinBlocksPerSM && blockSize/2 <= MaxThreadsPerBlock ) return blockSize/2;
+    return -1;
   }
 };
 
@@ -278,14 +282,16 @@ struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds< MaxThreadsPerBlock, 
               cuda_parallel_launch_constant_memory<DriverType,MaxThreadsPerBlock,MinBlocksPerSM>,
               blockSize,
               sharedmem);
-      if(numBlocks >= MinBlocksPerSM) {
+      if(numBlocks >= MinBlocksPerSM && blockSize<=MaxThreadsPerBlock) {
         if(maxOccupancy < numBlocks*blockSize) {
            maxOccupancy = numBlocks*blockSize;
            bestBlockSize = blockSize;
         }
       }
     }
-    return bestBlockSize;
+    if(maxOccupancy > 0)
+      return bestBlockSize;
+    return -1;
   }
 };
 
@@ -310,14 +316,16 @@ struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds< MaxThreadsPerBlock, 
               cuda_parallel_launch_local_memory<DriverType,MaxThreadsPerBlock,MinBlocksPerSM>,
               blockSize,
               sharedmem);
-      if(numBlocks >= MinBlocksPerSM) {
+      if(numBlocks >= MinBlocksPerSM && blockSize<=MaxThreadsPerBlock) {
         if(maxOccupancy < numBlocks*blockSize) {
           maxOccupancy = numBlocks*blockSize;
           bestBlockSize = blockSize;
         }
       }
     }
-    return bestBlockSize;
+    if(maxOccupancy > 0)
+      return bestBlockSize;
+    return -1;
   }
 };
 
