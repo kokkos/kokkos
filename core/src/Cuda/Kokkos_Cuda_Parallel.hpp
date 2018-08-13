@@ -198,6 +198,13 @@ public:
   int vector_length_max()
     { return Impl::CudaTraits::WarpSize; }
 
+  inline static
+  int scratch_size_max(int level)
+    { return level==0?
+        1024*40:             // 48kB is the max for CUDA, but we need some for team_member.reduce etc.
+        20*1024*1024*1024;   // arbitrarily setting this to 100MB, for a Volta V100 that would give us about 3.2GB for 2 teams per SM
+    }
+
   //----------------------------------------
 
   inline int vector_length()   const { return m_vector_length ; }
