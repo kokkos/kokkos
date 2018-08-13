@@ -137,7 +137,7 @@ struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<MaxThreadsPerBlock,Mi
         blockSize,
         sharedmem);
 
-    while (blockSize<1024 && numBlocks>0) {
+    while (blockSize*2<=int(MaxThreadsPerBlock) && numBlocks>0) {
       blockSize*=2;
       sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
                   FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
@@ -150,8 +150,8 @@ struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<MaxThreadsPerBlock,Mi
           blockSize,
           sharedmem);
     }
-    if( numBlocks    >= MinBlocksPerSM && blockSize   <= MaxThreadsPerBlock ) return blockSize;
-    if( oldNumBlocks >= MinBlocksPerSM && blockSize/2 <= MaxThreadsPerBlock ) return blockSize/2;
+    if( numBlocks    >= int(MinBlocksPerSM) && blockSize   <= int(MaxThreadsPerBlock) ) return blockSize;
+    if( oldNumBlocks >= int(MinBlocksPerSM) && blockSize/2 <= int(MaxThreadsPerBlock) ) return blockSize/2;
     return -1;
   }
 };
@@ -171,7 +171,7 @@ struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<MaxThreadsPerBlock,Mi
         blockSize,
         sharedmem);
 
-    while (blockSize*2<=MaxThreadsPerBlock && numBlocks>0) {
+    while (blockSize*2<=int(MaxThreadsPerBlock) && numBlocks>0) {
       blockSize*=2;
       sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
                   FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
@@ -184,8 +184,8 @@ struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<MaxThreadsPerBlock,Mi
           blockSize,
           sharedmem);
     }
-    if( numBlocks    >= MinBlocksPerSM && blockSize   <= MaxThreadsPerBlock ) return blockSize;
-    if( oldNumBlocks >= MinBlocksPerSM && blockSize/2 <= MaxThreadsPerBlock ) return blockSize/2;
+    if( numBlocks    >= int(MinBlocksPerSM) && blockSize   <= int(MaxThreadsPerBlock) ) return blockSize;
+    if( oldNumBlocks >= int(MinBlocksPerSM) && blockSize/2 <= int(MaxThreadsPerBlock) ) return blockSize/2;
     return -1;
   }
 };
@@ -282,7 +282,7 @@ struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds< MaxThreadsPerBlock, 
               cuda_parallel_launch_constant_memory<DriverType,MaxThreadsPerBlock,MinBlocksPerSM>,
               blockSize,
               sharedmem);
-      if(numBlocks >= MinBlocksPerSM && blockSize<=MaxThreadsPerBlock) {
+      if(numBlocks >= int(MinBlocksPerSM) && blockSize<=int(MaxThreadsPerBlock)) {
         if(maxOccupancy < numBlocks*blockSize) {
            maxOccupancy = numBlocks*blockSize;
            bestBlockSize = blockSize;
@@ -316,7 +316,7 @@ struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds< MaxThreadsPerBlock, 
               cuda_parallel_launch_local_memory<DriverType,MaxThreadsPerBlock,MinBlocksPerSM>,
               blockSize,
               sharedmem);
-      if(numBlocks >= MinBlocksPerSM && blockSize<=MaxThreadsPerBlock) {
+      if(numBlocks >= int(MinBlocksPerSM) && blockSize<=int(MaxThreadsPerBlock)) {
         if(maxOccupancy < numBlocks*blockSize) {
           maxOccupancy = numBlocks*blockSize;
           bestBlockSize = blockSize;
