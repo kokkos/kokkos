@@ -109,7 +109,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
         OBJ_ROCM += TestROCm_SubView_c13.o
         OBJ_ROCM += TestROCm_Team.o
         OBJ_ROCM += TestROCm_TeamReductionScan.o
-        OBJ_ROCM += TestROCm_TeamScratch.o
+        OBJ_ROCM += TestROCm_TeamScratch.o TestROCm_TeamTeamSize.o
         OBJ_ROCM += TestROCm_ViewAPI_a.o TestROCm_ViewAPI_b.o TestROCm_ViewAPI_c.o TestROCm_ViewAPI_d.o TestROCm_ViewAPI_e.o
         OBJ_ROCM += TestROCm_ViewMapping_a.o
         OBJ_ROCM += TestROCm_ViewMapping_b.o
@@ -148,7 +148,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 	OBJ_THREADS += TestThreads_AtomicOperations_int.o TestThreads_AtomicOperations_unsignedint.o TestThreads_AtomicOperations_longint.o 
 	OBJ_THREADS += TestThreads_AtomicOperations_unsignedlongint.o TestThreads_AtomicOperations_longlongint.o TestThreads_AtomicOperations_double.o TestThreads_AtomicOperations_float.o
 	OBJ_THREADS += TestThreads_AtomicViews.o TestThreads_Atomics.o
-	OBJ_THREADS += TestThreads_Team.o TestThreads_TeamScratch.o
+	OBJ_THREADS += TestThreads_Team.o TestThreads_TeamScratch.o TestThreads_TeamTeamSize.o
 	OBJ_THREADS += TestThreads_TeamReductionScan.o
 	OBJ_THREADS += TestThreads_Other.o
 	OBJ_THREADS += TestThreads_MDRange_a.o TestThreads_MDRange_b.o TestThreads_MDRange_c.o TestThreads_MDRange_d.o TestThreads_MDRange_e.o
@@ -180,7 +180,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	OBJ_OPENMP += TestOpenMP_AtomicOperations_unsignedlongint.o TestOpenMP_AtomicOperations_longlongint.o TestOpenMP_AtomicOperations_double.o TestOpenMP_AtomicOperations_float.o
 	OBJ_OPENMP += TestOpenMP_AtomicViews.o TestOpenMP_Atomics.o
 	OBJ_OPENMP += TestOpenMP_Team.o TestOpenMP_TeamScratch.o
-	OBJ_OPENMP += TestOpenMP_TeamReductionScan.o
+	OBJ_OPENMP += TestOpenMP_TeamReductionScan.o TestOpenMP_TeamTeamSize.o
 	OBJ_OPENMP += TestOpenMP_Other.o
 	OBJ_OPENMP += TestOpenMP_MDRange_a.o TestOpenMP_MDRange_b.o TestOpenMP_MDRange_c.o TestOpenMP_MDRange_d.o TestOpenMP_MDRange_e.o
 	OBJ_OPENMP += TestOpenMP_Crs.o
@@ -269,7 +269,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
 	    OBJ_SERIAL += TestSerial_AtomicOperations_unsignedlongint.o TestSerial_AtomicOperations_longlongint.o TestSerial_AtomicOperations_double.o TestSerial_AtomicOperations_float.o
 	    OBJ_SERIAL += TestSerial_AtomicViews.o TestSerial_Atomics.o
         OBJ_SERIAL += TestSerial_Team.o TestSerial_TeamScratch.o
-        OBJ_SERIAL += TestSerial_TeamReductionScan.o
+        OBJ_SERIAL += TestSerial_TeamReductionScan.o TestSerial_TeamTeamSize.o
         OBJ_SERIAL += TestSerial_Other.o
         #HCC_WORKAROUND
         ifneq ($(KOKKOS_INTERNAL_COMPILER_HCC), 1)
