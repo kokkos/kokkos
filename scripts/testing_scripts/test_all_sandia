@@ -271,7 +271,7 @@ elif [ "$MACHINE" = "bowman" ]; then
   # Format: (compiler module-list build-list exe-name warning-flag)
   COMPILERS=("intel/16.4.258 $BASE_MODULE_LIST $OLD_INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
              "intel/17.2.174 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-             "intel/18.0.128 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+             "intel/18.2.199 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
   )
 
   if [ -z "$ARCH_FLAG" ]; then
@@ -404,7 +404,9 @@ else
   exit 1
 fi
 
-export OMP_NUM_THREADS=4
+export OMP_NUM_THREADS=8
+export OMP_PROC_BIND=spread
+export OMP_PLACES=cores
 
 declare -i NUM_RESULTS_TO_KEEP=7
 
