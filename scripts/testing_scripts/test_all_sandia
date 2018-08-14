@@ -29,11 +29,9 @@ if [[ "$HOSTNAME" == n* ]]; then # Warning: very generic name
   fi
 fi
 
-if [[ "$HOSTNAME" == node* ]]; then # Warning: very generic name
-  if [[ "$MACHINE" = "" ]]; then
-    MACHINE=shepard
-    module load git
-  fi
+if [[ "$HOSTNAME" == *blake* ]]; then # Warning: very generic name
+  MACHINE=blake
+  module load git
 fi
 
 if [[ "$HOSTNAME" == apollo\.* ]]; then
@@ -241,17 +239,18 @@ elif [ "$MACHINE" = "white" ]; then
 
   BASE_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>"
   IBM_MODULE_LIST="<COMPILER_NAME>/xl/<COMPILER_VERSION>"
-  CUDA_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>,gcc/5.4.0"
-  CUDA_MODULE_LIST2="<COMPILER_NAME>/<COMPILER_VERSION>,gcc/6.3.0,ibm/xl/13.1.6"
+  CUDA_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.2.0"
+  CUDA_MODULE_LIST2="<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.2.0,ibm/xl/16.1.0"
 
   # Don't do pthread on white.
   GCC_BUILD_LIST="OpenMP,Serial,OpenMP_Serial"
 
   # Format: (compiler module-list build-list exe-name warning-flag)
-  COMPILERS=("gcc/5.4.0 $BASE_MODULE_LIST $IBM_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-             "ibm/13.1.6 $IBM_MODULE_LIST $IBM_BUILD_LIST xlC $IBM_WARNING_FLAGS"
-             "cuda/8.0.44 $CUDA_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-             "cuda/9.0.103 $CUDA_MODULE_LIST2 $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+  COMPILERS=("gcc/6.4.0 $BASE_MODULE_LIST $IBM_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "gcc/7.2.0 $BASE_MODULE_LIST $IBM_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "ibm/16.1.0 $IBM_MODULE_LIST $IBM_BUILD_LIST xlC $IBM_WARNING_FLAGS"
+             "cuda/9.2.88 $CUDA_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+             "cuda/9.2.88 $CUDA_MODULE_LIST2 $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
   )
 
   if [ -z "$ARCH_FLAG" ]; then
@@ -272,7 +271,7 @@ elif [ "$MACHINE" = "bowman" ]; then
   # Format: (compiler module-list build-list exe-name warning-flag)
   COMPILERS=("intel/16.4.258 $BASE_MODULE_LIST $OLD_INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
              "intel/17.2.174 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-             "intel/18.0.128 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+             "intel/18.2.199 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
   )
 
   if [ -z "$ARCH_FLAG" ]; then
@@ -314,7 +313,7 @@ elif [ "$MACHINE" = "mayer" ]; then
 
   NUM_JOBS_TO_RUN_IN_PARALLEL=1
 
-elif [ "$MACHINE" = "shepard" ]; then
+elif [ "$MACHINE" = "blake" ]; then
   source /etc/profile.d/modules.sh
   SKIP_HWLOC=True
   export SLURM_TASKS_PER_NODE=32
@@ -322,14 +321,26 @@ elif [ "$MACHINE" = "shepard" ]; then
   BASE_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>"
   BASE_MODULE_LIST_INTEL="<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
 
+  if [ "$SPOT_CHECK" = "True" ]; then
+
   # Format: (compiler module-list build-list exe-name warning-flag)
-  COMPILERS=("intel/17.4.196 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-             "intel/18.0.128 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+  COMPILERS=("intel/18.1.163 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+             "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "pgi/17.10.0 $BASE_MODULE_LIST $GCC_BUILD_LIST pgc++ $PGI_WARNING_FLAGS"
+  )
+  else
+  COMPILERS=("intel/18.1.163 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+             "gcc/4.9.3 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "gcc/5.5.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "gcc/6.4.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "gcc/8.1.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "pgi/17.10.0 $BASE_MODULE_LIST $GCC_BUILD_LIST pgc++ $PGI_WARNING_FLAGS"
   )
 
+  fi
   if [ -z "$ARCH_FLAG" ]; then
-    ARCH_FLAG="--arch=HSW"
+    ARCH_FLAG="--arch=SKX"
   fi
   NUM_JOBS_TO_RUN_IN_PARALLEL=1
 
@@ -393,7 +404,9 @@ else
   exit 1
 fi
 
-export OMP_NUM_THREADS=4
+export OMP_NUM_THREADS=8
+export OMP_PROC_BIND=spread
+export OMP_PLACES=cores
 
 declare -i NUM_RESULTS_TO_KEEP=7
 
