@@ -642,11 +642,11 @@ void view_copy(const DstType& dst, const SrcType& src) {
   int64_t strides[DstType::Rank+1];
   dst.stride(strides);
   Kokkos::Iterate iterate;
-  if        ( std::is_same<typename DstType::array_layout,Kokkos::LayoutRight>::value ) {
+  if        ((std::is_same<typename DstType::array_layout,Kokkos::LayoutRight>::value)) {
     iterate = Kokkos::Iterate::Right;
-  } else if ( std::is_same<typename DstType::array_layout,Kokkos::LayoutLeft>::value ) {
+  } else if ((std::is_same<typename DstType::array_layout,Kokkos::LayoutLeft>::value)) {
     iterate = Kokkos::Iterate::Left;
-  } else if ( std::is_same<typename DstType::array_layout,Kokkos::LayoutStride>::value ) {
+  } else if ((std::is_same<typename DstType::array_layout,Kokkos::LayoutStride>::value)) {
     if( strides[0] > strides[DstType::Rank-1] )
       iterate = Kokkos::Iterate::Right;
     else
