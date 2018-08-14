@@ -333,6 +333,58 @@ public:
       t_host >::select (d_view , h_view);
   }
 
+  template<class Device>
+  static int get_device_side() {
+    constexpr bool device_is_memspace  = std::is_same<Device,typename Device::memory_space>::value;
+    constexpr bool device_is_execspace = std::is_same<Device,typename Device::execution_space>::value;
+    constexpr bool device_exec_is_t_dev_exec  = std::is_same<typename Device::execution_space,typename t_dev::execution_space>::value;
+    constexpr bool device_mem_is_t_dev_mem    = std::is_same<typename Device::memory_space,typename t_dev::memory_space>::value;
+    constexpr bool device_exec_is_t_host_exec  = std::is_same<typename Device::execution_space,typename t_host::execution_space>::value;
+    constexpr bool device_mem_is_t_host_mem    = std::is_same<typename Device::memory_space,typename t_host::memory_space>::value;
+    constexpr bool device_is_t_host_device  = std::is_same<typename Device::execution_space,typename t_host::device_type>::value;
+    constexpr bool device_is_t_dev_device    = std::is_same<typename Device::memory_space,typename t_host::device_type>::value;
+
+    #ifndef KOKKOS_ENABLE_DEPRECATED_CODE
+    static_assert(
+        device_is_t_dev_device || device_is_t_host_device ||
+        (device_is_memspace  && (device_mem_is_t_dev_mem   || device_mem_is_t_host_mem) ) ||
+        (device_is_execspace && (device_exec_is_t_dev_exec || device_exec_is_t_host_exec) ) ||
+        (
+          (!device_is_execspace && !device_is_memspace) && (
+            (device_mem_is_t_dev_mem   || device_mem_is_t_host_mem)  ||
+            (device_exec_is_t_dev_exec || device_exec_is_t_host_exec)
+          )
+        )
+        ,
+        "Template parameter to .sync() must exactly match one of the DualView's device types or one of the execution or memory spaces");
+    #endif
+
+    int dev = -1;
+    if(device_is_t_dev_device) dev = 1;
+    else if(device_is_t_host_device) dev = 0;
+    else {
+      if(device_is_memspace) {
+        if(device_mem_is_t_dev_mem) dev = 1;
+        if(device_mem_is_t_host_mem) dev = 0;
+        if(device_mem_is_t_host_mem && device_mem_is_t_dev_mem) dev = -1;
+      }
+      if(device_is_execspace) {
+        if(device_exec_is_t_dev_exec) dev = 1;
+        if(device_exec_is_t_host_exec) dev = 0;
+        if(device_exec_is_t_host_exec && device_exec_is_t_dev_exec) dev = -1;
+      }
+      if(!device_is_execspace && !device_is_memspace) {
+        if(device_mem_is_t_dev_mem) dev = 1;
+        if(device_mem_is_t_host_mem) dev = 0;
+        if(device_mem_is_t_host_mem && device_mem_is_t_dev_mem) dev = -1;
+        if(device_exec_is_t_dev_exec) dev = 1;
+        if(device_exec_is_t_host_exec) dev = 0;
+        if(device_exec_is_t_host_exec && device_exec_is_t_dev_exec) dev = -1;
+      }
+    }
+    return dev;
+  }
+
   /// \brief Update data on device or host only if data in the other
   ///   space has been marked as modified.
   ///
@@ -356,29 +408,16 @@ public:
         ( std::is_same< Device , int>::value)
         , int >::type& = 0)
   {
-    static_assert(
-      std::is_same<
-        typename t_dev::memory_space,
-        typename Device::memory_space>::value
-      ||
-      std::is_same<
-        typename t_host::memory_space,
-        typename Device::memory_space>::value,
-      "Template parameter to .sync() must exactly match one of the DualView's memory spaces");
-    const unsigned int dev =
-      Impl::if_c<
-        std::is_same<
-          typename t_dev::memory_space,
-          typename Device::memory_space>::value ,
-        unsigned int,
-        unsigned int>::select (1, 0);
 
-    if (dev) { // if Device is the same as DualView's device type
+    int dev = get_device_side<Device>();
+
+    if (dev == 1) { // if Device is the same as DualView's device type
       if ((modified_host () > 0) && (modified_host () >= modified_device ())) {
         deep_copy (d_view, h_view);
         modified_host() = modified_device() = 0;
       }
-    } else { // hopefully Device is the same as DualView's host type
+    }
+    if (dev == 0) { // hopefully Device is the same as DualView's host type
       if ((modified_device () > 0) && (modified_device () >= modified_host ())) {
         deep_copy (h_view, d_view);
         modified_host() = modified_device() = 0;
@@ -396,27 +435,14 @@ public:
       ( std::is_same< Device , int>::value)
       , int >::type& = 0 )
   {
-    static_assert(
-      std::is_same<
-        typename t_dev::memory_space,
-        typename Device::memory_space>::value
-      ||
-      std::is_same<
-        typename t_host::memory_space,
-        typename Device::memory_space>::value,
-      "Template parameter to .sync() must exactly match one of the DualView's memory spaces");
-    const unsigned int dev =
-      Impl::if_c<
-        std::is_same<
-          typename t_dev::memory_space,
-          typename Device::memory_space>::value,
-        unsigned int,
-        unsigned int>::select (1, 0);
-    if (dev) { // if Device is the same as DualView's device type
+    int dev = get_device_side<Device>();
+
+    if (dev == 1) { // if Device is the same as DualView's device type
       if ((modified_host () > 0) && (modified_host () >= modified_device ())) {
         Impl::throw_runtime_exception("Calling sync on a DualView with a const datatype.");
       }
-    } else { // hopefully Device is the same as DualView's host type
+    }
+    if (dev == 0){ // hopefully Device is the same as DualView's host type
       if ((modified_device () > 0) && (modified_device () >= modified_host ())) {
         Impl::throw_runtime_exception("Calling sync on a DualView with a const datatype.");
       }
@@ -426,19 +452,14 @@ public:
   template<class Device>
   bool need_sync() const
   {
-    const unsigned int dev =
-      Impl::if_c<
-        std::is_same<
-          typename t_dev::memory_space,
-          typename Device::memory_space>::value ,
-        unsigned int,
-        unsigned int>::select (1, 0);
+    int dev = get_device_side<Device>();
 
-    if (dev) { // if Device is the same as DualView's device type
+    if (dev == 1) { // if Device is the same as DualView's device type
       if ((modified_host () > 0) && (modified_host () >= modified_device ())) {
         return true;
       }
-    } else { // hopefully Device is the same as DualView's host type
+    }
+    if (dev == 0){ // hopefully Device is the same as DualView's host type
       if ((modified_device () > 0) && (modified_device () >= modified_host ())) {
         return true;
       }
@@ -452,28 +473,14 @@ public:
   /// data as modified.
   template<class Device>
   void modify () {
-    static_assert(
-      std::is_same<
-        typename t_dev::memory_space,
-        typename Device::memory_space>::value
-      ||
-      std::is_same<
-        typename t_host::memory_space,
-        typename Device::memory_space>::value,
-      "Template parameter to .modify() must exactly match one of the DualView's memory spaces");
-    const unsigned int dev =
-      Impl::if_c<
-        std::is_same<
-          typename t_dev::memory_space,
-          typename Device::memory_space>::value,
-        unsigned int,
-        unsigned int>::select (1, 0);
+    int dev = get_device_side<Device>();
 
-    if (dev) { // if Device is the same as DualView's device type
+    if (dev == 1) { // if Device is the same as DualView's device type
       // Increment the device's modified count.
       modified_device () = (modified_device () > modified_host () ?
                             modified_device () : modified_host ()) + 1;
-    } else { // hopefully Device is the same as DualView's host type
+    }
+    if (dev == 0) { // hopefully Device is the same as DualView's host type
       // Increment the host's modified count.
       modified_host () = (modified_device () > modified_host () ?
                           modified_device () : modified_host ())  + 1;
