@@ -370,7 +370,7 @@ struct CudaParallelLaunch< DriverType
                     , const int          shmem
                     , const cudaStream_t stream = 0 )
   {
-    if ( grid.x && ( block.x * block.y * block.z ) ) {
+    if ( (grid.x != 0) && ( block.x * block.y * block.z ) ) {
 
       if ( sizeof( Kokkos::Impl::CudaTraits::ConstantGlobalBufferType ) <
            sizeof( DriverType ) ) {
