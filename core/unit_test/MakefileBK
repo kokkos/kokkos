@@ -40,36 +40,36 @@ TARGETS =
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	OBJ_CUDA = UnitTestMainInit.o gtest-all.o
 	OBJ_CUDA += TestCuda_Init.o
-	#OBJ_CUDA += TestCuda_SharedAlloc.o TestCudaUVM_SharedAlloc.o TestCudaHostPinned_SharedAlloc.o
-	#OBJ_CUDA += TestCuda_RangePolicy.o
-	#OBJ_CUDA += TestCuda_ViewAPI_a.o TestCuda_ViewAPI_b.o TestCuda_ViewAPI_c.o TestCuda_ViewAPI_d.o TestCuda_ViewAPI_e.o
-	#OBJ_CUDA += TestCuda_ViewMapping_a.o TestCuda_ViewMapping_b.o TestCuda_ViewMapping_subview.o TestCuda_ViewLayoutStrideAssignment.o
-	#OBJ_CUDA += TestCudaUVM_ViewCopy.o TestCudaUVM_ViewAPI_a.o TestCudaUVM_ViewAPI_b.o TestCudaUVM_ViewAPI_c.o TestCudaUVM_ViewAPI_d.o TestCudaUVM_ViewAPI_e.o
-	#OBJ_CUDA += TestCudaUVM_ViewMapping_a.o TestCudaUVM_ViewMapping_b.o TestCudaUVM_ViewMapping_subview.o
-	#OBJ_CUDA += TestCudaHostPinned_ViewCopy.o TestCudaHostPinned_ViewAPI_a.o TestCudaHostPinned_ViewAPI_b.o TestCudaHostPinned_ViewAPI_c.o TestCudaHostPinned_ViewAPI_d.o TestCudaHostPinned_ViewAPI_e.o
-	#OBJ_CUDA += TestCudaHostPinned_ViewMapping_a.o TestCudaHostPinned_ViewMapping_b.o TestCudaHostPinned_ViewMapping_subview.o
-	#OBJ_CUDA += TestCuda_View_64bit.o
-	#OBJ_CUDA += TestCuda_ViewOfClass.o
-	#OBJ_CUDA += TestCuda_SubView_a.o TestCuda_SubView_b.o
-	#OBJ_CUDA += TestCuda_SubView_c01.o TestCuda_SubView_c02.o TestCuda_SubView_c03.o
-	#OBJ_CUDA += TestCuda_SubView_c04.o TestCuda_SubView_c05.o TestCuda_SubView_c06.o
-	#OBJ_CUDA += TestCuda_SubView_c07.o TestCuda_SubView_c08.o TestCuda_SubView_c09.o
-	#OBJ_CUDA += TestCuda_SubView_c10.o TestCuda_SubView_c11.o TestCuda_SubView_c12.o
-	#OBJ_CUDA += TestCuda_SubView_c13.o
-	#OBJ_CUDA += TestCuda_Reductions.o TestCuda_Scan.o
-	#OBJ_CUDA += TestCuda_Reducers_a.o TestCuda_Reducers_b.o TestCuda_Reducers_c.o TestCuda_Reducers_d.o
-	#OBJ_CUDA += TestCuda_Complex.o
-	#OBJ_CUDA += TestCuda_AtomicOperations_int.o TestCuda_AtomicOperations_unsignedint.o TestCuda_AtomicOperations_longint.o 
-	#OBJ_CUDA += TestCuda_AtomicOperations_unsignedlongint.o TestCuda_AtomicOperations_longlongint.o TestCuda_AtomicOperations_double.o TestCuda_AtomicOperations_float.o
-	#OBJ_CUDA += TestCuda_AtomicViews.o TestCuda_Atomics.o
-	OBJ_CUDA += TestCuda_Team.o 
-	#OBJ_CUDA += TestCuda_TeamScratch.o TestCuda_TeamReductionScan.o TestCuda_TeamTeamSize.o
-	#OBJ_CUDA += TestCuda_Other.o
-	#OBJ_CUDA += TestCuda_MDRange_a.o TestCuda_MDRange_b.o TestCuda_MDRange_c.o TestCuda_MDRange_d.o TestCuda_MDRange_e.o
-	#OBJ_CUDA += TestCuda_Crs.o
-	#OBJ_CUDA += TestCuda_Task.o TestCuda_WorkGraph.o
-	#OBJ_CUDA += TestCuda_Spaces.o
-	#OBJ_CUDA += TestCuda_UniqueToken.o
+	OBJ_CUDA += TestCuda_SharedAlloc.o TestCudaUVM_SharedAlloc.o TestCudaHostPinned_SharedAlloc.o
+	OBJ_CUDA += TestCuda_RangePolicy.o
+	OBJ_CUDA += TestCuda_ViewAPI_a.o TestCuda_ViewAPI_b.o TestCuda_ViewAPI_c.o TestCuda_ViewAPI_d.o TestCuda_ViewAPI_e.o
+	OBJ_CUDA += TestCuda_ViewMapping_a.o TestCuda_ViewMapping_b.o TestCuda_ViewMapping_subview.o TestCuda_ViewLayoutStrideAssignment.o
+	OBJ_CUDA += TestCudaUVM_ViewCopy.o TestCudaUVM_ViewAPI_a.o TestCudaUVM_ViewAPI_b.o TestCudaUVM_ViewAPI_c.o TestCudaUVM_ViewAPI_d.o TestCudaUVM_ViewAPI_e.o
+	OBJ_CUDA += TestCudaUVM_ViewMapping_a.o TestCudaUVM_ViewMapping_b.o TestCudaUVM_ViewMapping_subview.o
+	OBJ_CUDA += TestCudaHostPinned_ViewCopy.o TestCudaHostPinned_ViewAPI_a.o TestCudaHostPinned_ViewAPI_b.o TestCudaHostPinned_ViewAPI_c.o TestCudaHostPinned_ViewAPI_d.o TestCudaHostPinned_ViewAPI_e.o
+	OBJ_CUDA += TestCudaHostPinned_ViewMapping_a.o TestCudaHostPinned_ViewMapping_b.o TestCudaHostPinned_ViewMapping_subview.o
+    OBJ_CUDA += TestCuda_View_64bit.o
+	OBJ_CUDA += TestCuda_ViewOfClass.o
+	OBJ_CUDA += TestCuda_SubView_a.o TestCuda_SubView_b.o
+	OBJ_CUDA += TestCuda_SubView_c01.o TestCuda_SubView_c02.o TestCuda_SubView_c03.o
+	OBJ_CUDA += TestCuda_SubView_c04.o TestCuda_SubView_c05.o TestCuda_SubView_c06.o
+	OBJ_CUDA += TestCuda_SubView_c07.o TestCuda_SubView_c08.o TestCuda_SubView_c09.o
+	OBJ_CUDA += TestCuda_SubView_c10.o TestCuda_SubView_c11.o TestCuda_SubView_c12.o
+	OBJ_CUDA += TestCuda_SubView_c13.o
+	OBJ_CUDA += TestCuda_Reductions.o TestCuda_Scan.o
+	OBJ_CUDA += TestCuda_Reducers_a.o TestCuda_Reducers_b.o TestCuda_Reducers_c.o TestCuda_Reducers_d.o
+	OBJ_CUDA += TestCuda_Complex.o
+	OBJ_CUDA += TestCuda_AtomicOperations_int.o TestCuda_AtomicOperations_unsignedint.o TestCuda_AtomicOperations_longint.o 
+	OBJ_CUDA += TestCuda_AtomicOperations_unsignedlongint.o TestCuda_AtomicOperations_longlongint.o TestCuda_AtomicOperations_double.o TestCuda_AtomicOperations_float.o
+	OBJ_CUDA += TestCuda_AtomicViews.o TestCuda_Atomics.o
+	OBJ_CUDA += TestCuda_Team.o TestCuda_TeamScratch.o
+	OBJ_CUDA += TestCuda_TeamReductionScan.o TestCuda_TeamTeamSize.o
+	OBJ_CUDA += TestCuda_Other.o
+	OBJ_CUDA += TestCuda_MDRange_a.o TestCuda_MDRange_b.o TestCuda_MDRange_c.o TestCuda_MDRange_d.o TestCuda_MDRange_e.o
+	OBJ_CUDA += TestCuda_Crs.o
+	OBJ_CUDA += TestCuda_Task.o TestCuda_WorkGraph.o
+	OBJ_CUDA += TestCuda_Spaces.o
+	OBJ_CUDA += TestCuda_UniqueToken.o
 	
 	TARGETS += KokkosCore_UnitTest_Cuda
     TARGETS += KokkosCore_UnitTest_CudaInterOp
@@ -247,41 +247,41 @@ ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
 	TEST_TARGETS += test-qthreads
 endif
 
-#ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
-#        OBJ_SERIAL = UnitTestMainInit.o gtest-all.o
-#        OBJ_SERIAL += TestSerial_Init.o
-#        OBJ_SERIAL += TestSerial_SharedAlloc.o
-#        OBJ_SERIAL += TestSerial_RangePolicy.o
-#        OBJ_SERIAL += TestSerial_View_64bit.o
-#        OBJ_SERIAL += TestSerial_ViewAPI_a.o TestSerial_ViewAPI_b.o TestSerial_ViewAPI_c.o TestSerial_ViewAPI_d.o TestSerial_ViewAPI_e.o
-#        OBJ_SERIAL += TestSerial_ViewMapping_a.o TestSerial_ViewMapping_b.o TestSerial_ViewMapping_subview.o TestSerial_ViewLayoutStrideAssignment.o
-#        OBJ_SERIAL += TestSerial_ViewOfClass.o
-#        OBJ_SERIAL += TestSerial_SubView_a.o TestSerial_SubView_b.o
-#        OBJ_SERIAL += TestSerial_SubView_c01.o TestSerial_SubView_c02.o TestSerial_SubView_c03.o
-#        OBJ_SERIAL += TestSerial_SubView_c04.o TestSerial_SubView_c05.o TestSerial_SubView_c06.o
-#        OBJ_SERIAL += TestSerial_SubView_c07.o TestSerial_SubView_c08.o TestSerial_SubView_c09.o
-#        OBJ_SERIAL += TestSerial_SubView_c10.o TestSerial_SubView_c11.o TestSerial_SubView_c12.o
-#        OBJ_SERIAL += TestSerial_SubView_c13.o
-#        OBJ_SERIAL += TestSerial_Reductions.o TestSerial_Scan.o
-#    	OBJ_SERIAL += TestSerial_Reducers_a.o TestSerial_Reducers_b.o TestSerial_Reducers_c.o TestSerial_Reducers_d.o
-#        OBJ_SERIAL += TestSerial_Complex.o
-#	    OBJ_SERIAL += TestSerial_AtomicOperations_int.o TestSerial_AtomicOperations_unsignedint.o TestSerial_AtomicOperations_longint.o 
-#	    OBJ_SERIAL += TestSerial_AtomicOperations_unsignedlongint.o TestSerial_AtomicOperations_longlongint.o TestSerial_AtomicOperations_double.o TestSerial_AtomicOperations_float.o
-#	    OBJ_SERIAL += TestSerial_AtomicViews.o TestSerial_Atomics.o
-#        OBJ_SERIAL += TestSerial_Team.o TestSerial_TeamScratch.o
-#        OBJ_SERIAL += TestSerial_TeamReductionScan.o TestSerial_TeamTeamSize.o
-#        OBJ_SERIAL += TestSerial_Other.o
-#        #HCC_WORKAROUND
-#        ifneq ($(KOKKOS_INTERNAL_COMPILER_HCC), 1)
-#        OBJ_SERIAL += TestSerial_MDRange_a.o TestSerial_MDRange_b.o TestSerial_MDRange_c.o TestSerial_MDRange_d.o TestSerial_MDRange_e.o
-#        endif
-#        OBJ_SERIAL += TestSerial_Crs.o
-#        OBJ_SERIAL += TestSerial_Task.o TestSerial_WorkGraph.o
-#	
-#	TARGETS += KokkosCore_UnitTest_Serial
-#
-#	TEST_TARGETS += test-serial
-#endif
+ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
+        OBJ_SERIAL = UnitTestMainInit.o gtest-all.o
+        OBJ_SERIAL += TestSerial_Init.o
+        OBJ_SERIAL += TestSerial_SharedAlloc.o
+        OBJ_SERIAL += TestSerial_RangePolicy.o
+        OBJ_SERIAL += TestSerial_View_64bit.o
+        OBJ_SERIAL += TestSerial_ViewAPI_a.o TestSerial_ViewAPI_b.o TestSerial_ViewAPI_c.o TestSerial_ViewAPI_d.o TestSerial_ViewAPI_e.o
+        OBJ_SERIAL += TestSerial_ViewMapping_a.o TestSerial_ViewMapping_b.o TestSerial_ViewMapping_subview.o TestSerial_ViewLayoutStrideAssignment.o
+        OBJ_SERIAL += TestSerial_ViewOfClass.o
+        OBJ_SERIAL += TestSerial_SubView_a.o TestSerial_SubView_b.o
+        OBJ_SERIAL += TestSerial_SubView_c01.o TestSerial_SubView_c02.o TestSerial_SubView_c03.o
+        OBJ_SERIAL += TestSerial_SubView_c04.o TestSerial_SubView_c05.o TestSerial_SubView_c06.o
+        OBJ_SERIAL += TestSerial_SubView_c07.o TestSerial_SubView_c08.o TestSerial_SubView_c09.o
+        OBJ_SERIAL += TestSerial_SubView_c10.o TestSerial_SubView_c11.o TestSerial_SubView_c12.o
+        OBJ_SERIAL += TestSerial_SubView_c13.o
+        OBJ_SERIAL += TestSerial_Reductions.o TestSerial_Scan.o
+    	OBJ_SERIAL += TestSerial_Reducers_a.o TestSerial_Reducers_b.o TestSerial_Reducers_c.o TestSerial_Reducers_d.o
+        OBJ_SERIAL += TestSerial_Complex.o
+	    OBJ_SERIAL += TestSerial_AtomicOperations_int.o TestSerial_AtomicOperations_unsignedint.o TestSerial_AtomicOperations_longint.o 
+	    OBJ_SERIAL += TestSerial_AtomicOperations_unsignedlongint.o TestSerial_AtomicOperations_longlongint.o TestSerial_AtomicOperations_double.o TestSerial_AtomicOperations_float.o
+	    OBJ_SERIAL += TestSerial_AtomicViews.o TestSerial_Atomics.o
+        OBJ_SERIAL += TestSerial_Team.o TestSerial_TeamScratch.o
+        OBJ_SERIAL += TestSerial_TeamReductionScan.o TestSerial_TeamTeamSize.o
+        OBJ_SERIAL += TestSerial_Other.o
+        #HCC_WORKAROUND
+        ifneq ($(KOKKOS_INTERNAL_COMPILER_HCC), 1)
+        OBJ_SERIAL += TestSerial_MDRange_a.o TestSerial_MDRange_b.o TestSerial_MDRange_c.o TestSerial_MDRange_d.o TestSerial_MDRange_e.o
+        endif
+        OBJ_SERIAL += TestSerial_Crs.o
+        OBJ_SERIAL += TestSerial_Task.o TestSerial_WorkGraph.o
+	
+	TARGETS += KokkosCore_UnitTest_Serial
+
+	TEST_TARGETS += test-serial
+endif
 
 OBJ_HWLOC = TestHWLOC.o UnitTestMain.o gtest-all.o
 TARGETS += KokkosCore_UnitTest_HWLOC
