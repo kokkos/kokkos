@@ -1216,12 +1216,18 @@ struct FunctorValueJoin< FunctorType , ArgTag , T & , Enable >
   KOKKOS_FORCEINLINE_FUNCTION static
   void join( const FunctorType & f , volatile void * const lhs , const volatile void * const rhs )
     {
-      *((volatile T*)lhs) += *((const volatile T*)rhs);
+      const auto lhs_typed = reinterpret_cast<volatile T*>(lhs);
+      const auto rhs_typed = reinterpret_cast<const volatile T*>(rhs);
+      auto lhs_tmp = volatile_load(lhs_typed);
+      lhs_tmp += volatile_load(rhs_typed);
+      volatile_store(lhs_typed, &lhs_tmp);
     }
   KOKKOS_FORCEINLINE_FUNCTION
   void operator()( volatile T& lhs , const volatile T& rhs ) const
     {
-      lhs += rhs;
+      auto lhs_tmp = volatile_load(&lhs);
+      lhs_tmp += volatile_load(&rhs);
+      volatile_store(&lhs, &lhs_tmp);
     }
   KOKKOS_FORCEINLINE_FUNCTION
   void operator() ( T& lhs , const T& rhs ) const
@@ -1243,15 +1249,25 @@ struct FunctorValueJoin< FunctorType , ArgTag , T * , Enable >
   void join( const FunctorType & f_ , volatile void * const lhs , const volatile void * const rhs )
     {
       const int n = FunctorValueTraits<FunctorType,ArgTag>::value_count(f_);
+      const auto lhs_typed = reinterpret_cast<volatile T*>(lhs);
+      const auto rhs_typed = reinterpret_cast<const volatile T*>(rhs);
 
-      for ( int i = 0 ; i < n ; ++i ) { ((volatile T*)lhs)[i] += ((const volatile T*)rhs)[i]; }
+      for ( int i = 0 ; i < n ; ++i ) {
+        auto lhs_tmp = volatile_load(lhs_typed + i);
+        lhs_tmp += volatile_load(rhs_typed + i);
+        volatile_store(lhs_typed + i, &lhs_tmp);
+      }
     }
   KOKKOS_FORCEINLINE_FUNCTION
   void operator()( volatile T* const lhs , const volatile T* const rhs ) const
     {
       const int n = FunctorValueTraits<FunctorType,ArgTag>::value_count(f);
 
-      for ( int i = 0 ; i < n ; ++i ) { lhs[i] += rhs[i]; }
+      for ( int i = 0 ; i < n ; ++i ) {
+        auto lhs_tmp = volatile_load(lhs + i);
+        lhs_tmp += volatile_load(rhs + i);
+        volatile_store(lhs + i, &lhs_tmp);
+      }
     }
   KOKKOS_FORCEINLINE_FUNCTION
   void operator() ( T* lhs , const T* rhs ) const
@@ -1467,7 +1483,9 @@ namespace Impl {
 
     KOKKOS_INLINE_FUNCTION
     void join(volatile value_type& dst, const volatile value_type& src) const {
-      dst+=src;
+      auto dst_tmp = volatile_load(&dst);
+      dst_tmp += volatile_load(&src);
+      volatile_store(&dst, &dst_tmp);
     }
     KOKKOS_INLINE_FUNCTION
     void operator() (value_type& dst, const value_type& src) const {
@@ -1475,7 +1493,9 @@ namespace Impl {
     }
     KOKKOS_INLINE_FUNCTION
     void operator() (volatile value_type& dst, const volatile value_type& src) const {
-      dst+=src;
+      auto dst_tmp = volatile_load(&dst);
+      dst_tmp += volatile_load(&src);
+      volatile_store(&dst, &dst_tmp);
     }
   };
 
