@@ -170,10 +170,9 @@ public:
           *((ValueType*) m_team_reduce) = val ;
         }
         __syncthreads(); // Wait for shared data read until root thread writes
-        val = *((ValueType*) m_team_reduce);//printf("Hello\n");
+        val = *((ValueType*) m_team_reduce);
       }
       else { // team <= warp
-        //printf("Hello\n");
         ValueType tmp( val ); // input might not be a register variable
         cuda_shfl( val, tmp, blockDim.x * thread_id, blockDim.x * blockDim.y );
       }
@@ -194,10 +193,9 @@ public:
           *((ValueType*) m_team_reduce) = val ;
         }
         __syncthreads(); // Wait for shared data read until root thread writes
-        val = *((ValueType*) m_team_reduce);//printf("Hello\n");
+        val = *((ValueType*) m_team_reduce);
       }
       else { // team <= warp
-        //printf("Hello\n");
         ValueType tmp( val ); // input might not be a register variable
         cuda_shfl( val, tmp, blockDim.x * thread_id, blockDim.x * blockDim.y );
       }
