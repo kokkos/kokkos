@@ -90,7 +90,9 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile value_type& dest, const volatile value_type& src) const {
-    dest += src;
+    auto dest_tmp = volatile_load(&dest);
+    dest_tmp += volatile_load(&src);
+    volatile_store(&dest, &dest_tmp);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -137,7 +139,9 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile value_type& dest, const volatile value_type& src) const {
-    dest *= src;
+    auto dest_tmp = volatile_load(&dest);
+    dest_tmp += volatile_load(&src);
+    volatile_store(&dest, &dest_tmp);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -185,8 +189,11 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile value_type& dest, const volatile value_type& src) const {
-    if ( src < dest )
-      dest = src;
+    auto dest_tmp = volatile_load(&dest);
+    auto src_tmp = volatile_load(&src);
+    if ( src_tmp < dest_tmp )
+      dest_tmp = src_tmp;
+    volatile_store(&dest, &dest_tmp);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -234,8 +241,11 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile value_type& dest, const volatile value_type& src) const {
-    if ( src > dest )
-      dest = src;
+    auto dest_tmp = volatile_load(&dest);
+    auto src_tmp = volatile_load(&src);
+    if ( src_tmp > dest_tmp )
+      dest_tmp = src_tmp;
+    volatile_store(&dest, &dest_tmp);
   }
 
   //Required
@@ -282,7 +292,9 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile value_type& dest, const volatile value_type& src) const {
-    dest = dest && src;
+    auto dest_tmp = volatile_load(&dest);
+    dest_tmp = dest_tmp && volatile_load(&src);
+    volatile_store(&dest, &dest_tmp);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -329,7 +341,9 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile value_type& dest, const volatile value_type& src) const {
-    dest = dest || src;
+    auto dest_tmp = volatile_load(&dest);
+    dest_tmp = dest_tmp || volatile_load(&src);
+    volatile_store(&dest, &dest_tmp);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -376,7 +390,9 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile value_type& dest, const volatile value_type& src) const {
-    dest = dest & src;
+    auto dest_tmp = volatile_load(&dest);
+    dest_tmp = dest_tmp & volatile_load(&src);
+    volatile_store(&dest, &dest_tmp);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -423,7 +439,9 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile value_type& dest, const volatile value_type& src) const {
-    dest = dest | src;
+    auto dest_tmp = volatile_load(&dest);
+    dest_tmp = dest_tmp | volatile_load(&src);
+    volatile_store(&dest, &dest_tmp);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -494,8 +512,11 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile value_type& dest, const volatile value_type& src) const {
-    if ( src.val < dest.val )
-      dest = src;
+    auto dest_tmp = volatile_load(&dest);
+    auto src_tmp = volatile_load(&src);
+    if ( src_tmp.val < dest_tmp.val )
+      dest_tmp = src_tmp;
+    volatile_store(&dest, &dest_tmp);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -548,8 +569,11 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile value_type& dest, const volatile value_type& src) const {
-    if ( src.val > dest.val )
-      dest = src;
+    auto dest_tmp = volatile_load(&dest);
+    auto src_tmp = volatile_load(&src);
+    if ( src_tmp.val > dest_tmp.val )
+      dest_tmp = src_tmp;
+    volatile_store(&dest, &dest_tmp);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -622,12 +646,15 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile value_type& dest, const volatile value_type& src) const {
-    if ( src.min_val < dest.min_val ) {
-      dest.min_val = src.min_val;
+    auto dest_tmp = volatile_load(&dest);
+    auto src_tmp = volatile_load(&src);
+    if ( src_tmp.min_val < dest_tmp.min_val ) {
+      dest_tmp.min_val = src_tmp.min_val;
     }
-    if ( src.max_val > dest.max_val ) {
-      dest.max_val = src.max_val;
+    if ( src_tmp.max_val > dest_tmp.max_val ) {
+      dest_tmp.max_val = src_tmp.max_val;
     }
+    volatile_store(&dest, &dest_tmp);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -708,14 +735,17 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile value_type& dest, const volatile value_type& src) const {
-    if ( src.min_val < dest.min_val ) {
-      dest.min_val = src.min_val;
-      dest.min_loc = src.min_loc;
+    auto dest_tmp = volatile_load(&dest);
+    auto src_tmp = volatile_load(&src);
+    if ( src_tmp.min_val < dest_tmp.min_val ) {
+      dest_tmp.min_val = src_tmp.min_val;
+      dest_tmp.min_loc = src_tmp.min_loc;
     }
-    if ( src.max_val > dest.max_val ) {
-      dest.max_val = src.max_val;
-      dest.max_loc = src.max_loc;
+    if ( src_tmp.max_val > dest_tmp.max_val ) {
+      dest_tmp.max_val = src_tmp.max_val;
+      dest_tmp.max_loc = src_tmp.max_loc;
     }
+    volatile_store(&dest, &dest_tmp);
   }
 
   KOKKOS_INLINE_FUNCTION
