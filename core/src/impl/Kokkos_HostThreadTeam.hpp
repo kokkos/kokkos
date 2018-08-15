@@ -538,10 +538,9 @@ public:
   void team_broadcast( T & value , const int source_team_rank ) const noexcept
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     {
-      printf("HELLO value = %f, m_data.m_team_size = %d\n",value, m_data.m_team_size);
       if ( 1 < m_data.m_team_size ) {
         T volatile * const shared_value = (T*) m_data.team_reduce();
-printf("HELLO1 value = %f, m_data.m_team_size = %d, shared_value=%f\n",value, m_data.m_team_size, shared_value);
+
         // Don't overwrite shared memory until all threads arrive
 
         if ( m_data.team_rendezvous() ) {
@@ -558,7 +557,6 @@ printf("HELLO1 value = %f, m_data.m_team_size = %d, shared_value=%f\n",value, m_
         else {
           value = *shared_value ;
         }
-printf("HELLO4 value = %f, m_data.m_team_size = %d, shared_value=%f\n",value, m_data.m_team_size, shared_value);
       }
     }
 #else
