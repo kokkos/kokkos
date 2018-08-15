@@ -140,7 +140,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   void join(volatile value_type& dest, const volatile value_type& src) const {
     auto dest_tmp = volatile_load(&dest);
-    dest_tmp += volatile_load(&src);
+    dest_tmp *= volatile_load(&src);
     volatile_store(&dest, &dest_tmp);
   }
 
