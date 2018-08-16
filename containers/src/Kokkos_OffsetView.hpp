@@ -894,7 +894,7 @@ namespace Kokkos {
             static_assert( Mapping::is_assignable , "Incompatible OffsetView copy construction" );
             Mapping::assign( m_map , aview.impl_map() , m_track );
 
-            for (size_t i = 0; i < aview.Rank; ++i) {
+            for (int i = 0; i < aview.Rank; ++i) {
                m_begins[i] = 0;
             }
          }
