@@ -153,7 +153,7 @@
     #else
       #define KOKKOS_LAMBDA [=]__host__ __device__
 
-      #if defined( KOKKOS_ENABLE_CXX1Z )
+      #if defined( KOKKOS_ENABLE_CXX17 ) || defined( KOKKOS_ENABLE_CXX20 )
         #define KOKKOS_CLASS_LAMBDA        [=,*this] __host__ __device__
       #endif
     #endif
@@ -213,7 +213,7 @@
   #define KOKKOS_LAMBDA [=]
 #endif
 
-#if defined( KOKKOS_ENABLE_CXX1Z ) && !defined( KOKKOS_CLASS_LAMBDA )
+#if (defined( KOKKOS_ENABLE_CXX17 ) || defined( KOKKOS_ENABLE_CXX20) )&& !defined( KOKKOS_CLASS_LAMBDA )
   #define KOKKOS_CLASS_LAMBDA [=,*this]
 #endif
 

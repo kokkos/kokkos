@@ -45,11 +45,13 @@
 #define KOKKOS_ARRAY_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <impl/Kokkos_Error.hpp>
 
 #include <type_traits>
 #include <algorithm>
 #include <limits>
 #include <cstddef>
+#include <string>
 
 namespace Kokkos {
 
@@ -160,7 +162,7 @@ public:
       return & m_internal_implementation_private_member_data[0];
     }
 
-  #ifdef KOKKOS_ROCM_CLANG_WORKAROUND
+  #ifdef KOKKOS_IMPL_ROCM_CLANG_WORKAROUND
   // Do not default unless move and move-assignment are also defined
   KOKKOS_INLINE_FUNCTION
   ~Array() = default ;

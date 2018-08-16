@@ -60,6 +60,7 @@ shared_versioned_libraries=""
 
 # Does the User set the architecture 
 arch_set=0
+code_set=0
 
 # Does the user overwrite the host compiler
 ccbin_set=0
@@ -93,6 +94,9 @@ depfile_separate=0
 depfile_output_arg=""
 depfile_target_arg=""
 
+# Option to remove duplicate libraries and object files
+remove_duplicate_link_files=0
+
 #echo "Arguments: $# $@"
 
 while [ $# -gt 0 ]
@@ -110,6 +114,10 @@ do
   --replace-pragma-ident)
     replace_pragma_ident=1
     ;;
+  #remove duplicate link files
+  --remove-duplicate-link-files)
+    remove_duplicate_link_files=1
+    ;;
   #handle source files to be compiled as cuda files
   *.cpp|*.cxx|*.cc|*.C|*.c++|*.cu)
     cpp_files="$cpp_files $1"
@@ -124,7 +132,12 @@ do
     fi
     ;;
   #Handle shared args (valid for both nvcc and the host compiler)
-  -D*|-I*|-L*|-l*|-g|--help|--version|-E|-M|-shared)
+  -D*)
+    unescape_commas=`echo "$1" | sed -e 's/\\\,/,/g'`
+    arg=`printf "%q" $unescape_commas`
+    shared_args="$shared_args $arg"
+    ;;
+  -I*|-L*|-l*|-g|--help|--version|-E|-M|-shared)
     shared_args="$shared_args $1"
     ;;
   #Handle compilation argument
@@ -152,7 +165,7 @@ do
     shift
     ;;
   #Handle known nvcc args
-  -gencode*|--dryrun|--verbose|--keep|--keep-dir*|-G|--relocatable-device-code*|-lineinfo|-expt-extended-lambda|--resource-usage|-Xptxas*)
+  --dryrun|--verbose|--keep|--keep-dir*|-G|--relocatable-device-code*|-lineinfo|-expt-extended-lambda|--resource-usage|-Xptxas*)
     cuda_args="$cuda_args $1"
     ;;
   #Handle more known nvcc args
@@ -164,8 +177,11 @@ do
     cuda_args="$cuda_args $1 $2"
     shift
     ;;
+  -rdc=*|-maxrregcount*|--maxrregcount*)
+    cuda_args="$cuda_args $1"
+    ;;
   #Handle c++11
-  --std=c++11|-std=c++11|--std=c++14|-std=c++14|--std=c++1z|-std=c++1z)
+  --std=c++11|-std=c++11|--std=c++14|-std=c++14|--std=c++1y|-std=c++1y|--std=c++17|-std=c++17|--std=c++1z|-std=c++1z)
     if [ $stdcxx_applied -eq 1 ]; then
        echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-std=c++1* or --std=c++1*), only the first is used because nvcc can only accept a single std setting"
     else
@@ -212,10 +228,34 @@ do
     host_compiler=$2
     shift
     ;;
-  #Handle -arch argument (if its not set use a default
+  #Handle -arch argument (if its not set use a default) this is the version with = sign
   -arch*)
     cuda_args="$cuda_args $1"
     arch_set=1
+    ;;
+  #Handle -code argument (if its not set use a default) this is the version with = sign
+  -code*)
+    cuda_args="$cuda_args $1"
+    code_set=1
+    ;;
+  #Handle -arch argument (if its not set use a default) this is the version without = sign
+  -arch)
+    cuda_args="$cuda_args $1 $2"
+    arch_set=1
+    shift
+    ;;
+  #Handle -code argument (if its not set use a default) this is the version without = sign
+  -code)
+    cuda_args="$cuda_args $1 $2"
+    code_set=1
+    shift
+    ;;
+  #Handle -gencode argument (if its not set use a default
+  -gencode)
+    cuda_args="$cuda_args $1 $2"
+    arch_set=1
+    code_set=1
+    shift
     ;;
   #Handle -Xcudafe argument
   -Xcudafe)
@@ -255,6 +295,38 @@ do
 
   shift
 done
+
+#Remove duplicate object files
+if [ $remove_duplicate_link_files -eq 1 ]; then
+for obj in $object_files
+do
+  object_files_reverse="$obj $object_files_reverse"
+done
+
+object_files_reverse_clean=""
+for obj in $object_files_reverse
+do
+  exists=false
+  for obj2 in $object_files_reverse_clean
+  do
+    if [ "$obj" == "$obj2" ]
+    then
+      exists=true
+      echo "Exists: $obj"
+    fi
+  done
+  if [ "$exists" == "false" ]
+  then
+    object_files_reverse_clean="$object_files_reverse_clean $obj"
+  fi
+done
+
+object_files=""
+for obj in $object_files_reverse_clean
+do
+  object_files="$obj $object_files"
+done
+fi
 
 #Add default host compiler if necessary
 if [ $ccbin_set -ne 1 ]; then
