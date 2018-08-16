@@ -107,7 +107,8 @@ T atomic_compare_exchange( volatile T * const dest , const T & compare ,
   T return_val;
   // This is a way to (hopefully) avoid dead lock in a warp
   int done = 0;
-  unsigned int active = KOKKOS_IMPL_CUDA_BALLOT(1);
+  unsigned int mask = KOKKOS_IMPL_CUDA_ACTIVEMASK;
+  unsigned int active = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
   unsigned int done_active = 0;
   while (active!=done_active) {
     if(!done) {
@@ -119,7 +120,7 @@ T atomic_compare_exchange( volatile T * const dest , const T & compare ,
         done = 1;
       }
     }
-    done_active = KOKKOS_IMPL_CUDA_BALLOT(done);
+    done_active = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,done);
   }
   return return_val;
 }
