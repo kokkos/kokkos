@@ -67,6 +67,39 @@ TEST_F( TEST_CATEGORY, host_space_access )
     Kokkos::Impl::SpaceAccessibility< mirror_space, Kokkos::HostSpace >::accessible, "" );
 }
 
+TEST_F( TEST_CATEGORY, swap_min_max )
+{
+  // implement bubble sort using our swap()
+  int A[] = {5, 1, 4, 2, 8};
+  auto n = int(sizeof(A) / sizeof(int));
+  bool swapped;
+  do {
+    swapped = true;
+    for (int i = 1; i < n; ++i) {
+      if (A[i-1] > A[i]) {
+        Kokkos::swap(A[i-1], A[i])
+        swapped = false
+      }
+    }
+    n = n - 1;
+  } while (!swapped);
+  // check that the result is sorted
+  n = int(sizeof(A) / sizeof(int));
+  bool is_sorted = true;
+  for (int i = 0; i < n - 1; ++i) {
+    if (!(A[i] < A[i + 1])) is_sorted = false;
+  }
+  ASSERT_EQ(is_sorted, true);
+  // find the min and max values:
+  int min_val = 1000, max_val = -1000;
+  for (int i = 0; i < n; ++i) {
+    min_val = Kokkos::min(min_val, A[i]);
+    max_val = Kokkos::max(max_val, A[i]);
+  }
+  ASSERT_EQ(min_val, 1);
+  ASSERT_EQ(max_val, 8);
+}
+
 } // namespace Test
 
 #endif
