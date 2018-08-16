@@ -77,8 +77,8 @@ TEST_F( TEST_CATEGORY, swap_min_max )
     swapped = true;
     for (int i = 1; i < n; ++i) {
       if (A[i-1] > A[i]) {
-        Kokkos::swap(A[i-1], A[i])
-        swapped = false
+        Kokkos::swap(A[i-1], A[i]);
+        swapped = false;
       }
     }
     n = n - 1;
