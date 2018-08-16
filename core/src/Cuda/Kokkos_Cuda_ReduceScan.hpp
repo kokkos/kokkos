@@ -680,11 +680,14 @@ bool cuda_single_inter_block_reduce_scan( const FunctorType     & functor ,
     size_type * const shared = shared_data + word_count.value * BlockSizeMask ;
     size_type * const global = global_data + word_count.value * block_id ;
 
-//#if (__CUDA_ARCH__ < 500)
+    // Originally this was an issue with NVCC of permanent block divergence (i.e. syncthreads would not get it rejoined)
+    // Now there seems to be an issue with clang which can get fixed the same way ...
+
+#if (__CUDA_ARCH__ < 500) || !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
     for ( int i = int(threadIdx.y) ; i < int(word_count.value) ; i += int(blockDim.y) ) { global[i] = shared[i] ; }
-//#else
-//    for ( size_type i = 0 ; i < word_count.value ; i += 1 ) { global[i] = shared[i] ; }
-//#endif
+#else
+    for ( size_type i = 0 ; i < word_count.value ; i += 1 ) { global[i] = shared[i] ; }
+#endif
 
   }
 
