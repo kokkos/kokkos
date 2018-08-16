@@ -2996,8 +2996,8 @@ public:
 template< class DstTraits , class SrcTraits >
 class ViewMapping< DstTraits , SrcTraits ,
   typename std::enable_if<(
-    (std::is_same<typename SrcTraits::array_layout, LayoutStride>::value) &&
-    // default mappings
+    std::is_same< typename SrcTraits::array_layout, Kokkos::LayoutStride >::value
+    &&
     std::is_same< typename DstTraits::specialize , void >::value
     &&
     std::is_same< typename SrcTraits::specialize , void >::value
@@ -3008,17 +3008,9 @@ class ViewMapping< DstTraits , SrcTraits ,
       ||
       // known layout
       (
-        (
-          std::is_same< typename DstTraits::array_layout , Kokkos::LayoutLeft >::value ||
-          std::is_same< typename DstTraits::array_layout , Kokkos::LayoutRight >::value ||
-          std::is_same< typename DstTraits::array_layout , Kokkos::LayoutStride >::value
-        )
-        &&
-        (
-          std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutLeft >::value ||
-          std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutRight >::value ||
-          std::is_same< typename SrcTraits::array_layout , Kokkos::LayoutStride >::value
-        )
+        std::is_same< typename DstTraits::array_layout , Kokkos::LayoutLeft >::value ||
+        std::is_same< typename DstTraits::array_layout , Kokkos::LayoutRight >::value ||
+        std::is_same< typename DstTraits::array_layout , Kokkos::LayoutStride >::value
       )
     )
   )>::type >
