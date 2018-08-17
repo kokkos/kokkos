@@ -46,6 +46,9 @@
 
 #include <initializer_list>
 
+// TODO Remove me once Iterate enum class finds a home...
+#include <Kokkos_Layout.hpp>
+
 #include<impl/KokkosExp_Host_IterateTile.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_Parallel.hpp>
@@ -63,13 +66,15 @@
 namespace Kokkos {
 
 // ------------------------------------------------------------------ //
-
+// TODO Move me somewhere else for more general use
+/*
 enum class Iterate
 {
   Default, // Default for the device
   Left,    // Left indices stride fastest
   Right,   // Right indices stride fastest
 };
+*/
 
 template <typename ExecSpace>
 struct default_outer_direction

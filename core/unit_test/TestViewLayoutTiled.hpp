@@ -106,7 +106,7 @@ struct TestViewLayoutTiled {
   typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Right, Kokkos::Pattern::Iterate::Right, T0, T1, T2, T3> LayoutRR_4D_2x4x4x2;
 
 
-#define DEBUG_VERBOSE_OUTPUT 1
+#define DEBUG_VERBOSE_OUTPUT 0
 #define DEBUG_SUMMARY_OUTPUT 1
 
   // Rank 2 tests
@@ -253,6 +253,55 @@ struct TestViewLayoutTiled {
     ASSERT_EQ(counter[1], long(0));
     ASSERT_EQ(counter[2], long(0));
     ASSERT_EQ(counter[3], long(0));
+
+    // Test create_mirror_view, deep_copy
+    {
+      std::cout << "\nCreate LL View - test mirror view and deep_copy and use in parallel_for" << std::endl;
+      typedef typename Kokkos::View< Scalar**, LayoutLL_2D_2x4 > ViewType;
+      ViewType v("v", N0, N1);
+
+      typename ViewType::HostMirror hv = Kokkos::create_mirror_view(v);
+
+      std::cout << "  ViewType: " << typeid(ViewType()).name() << "\n  HostMirror: " << typeid(typename ViewType::HostMirror() ).name() << std::endl;
+      std::cout << "  ViewType Layout: " << typeid(typename ViewType::array_layout()).name() << "\n  HostMirror Layout: " << typeid(typename ViewType::HostMirror::array_layout() ).name() << std::endl;
+
+      for ( int tj = 0; tj < NT1; ++tj ) {
+      for ( int ti = 0; ti < NT0; ++ti ) {
+        for ( int j = 0; j < T1; ++j ) {
+        for ( int i = 0; i < T0; ++i ) {
+          hv(ti*T0 + i, tj*T1+j) = ( ti + tj*NT0 )*FT + ( i + j*T0 );
+        } }
+      } }
+#if 1
+      Kokkos::deep_copy(v, hv);
+
+      Kokkos::MDRangePolicy< Kokkos::Rank<2, Kokkos::Iterate::Left, Kokkos::Iterate::Left>, ExecSpace > mdrangepolicy( {0,0}, {NT0, NT1}, {T0,T1} );
+
+      Kokkos::parallel_for( "ViewTile rank 2 test 1", mdrangepolicy, 
+        KOKKOS_LAMBDA (const int ti, const int tj) {
+          for ( int j = 0; j < T1; ++j ) {
+          for ( int i = 0; i < T0; ++i ) {
+            if ( (ti*T0 + i < N0) && (tj*T1 + j < N1) ) { v(ti*T0 + i, tj*T1+j) += 1; }
+          } }
+        });
+
+      Kokkos::deep_copy(hv, v);
+
+      long counter_subview = 0;
+      long counter_inc = 0;
+      for ( int tj = 0; tj < NT1; ++tj ) {
+      for ( int ti = 0; ti < NT0; ++ti ) {
+        auto tile_subview = Kokkos::tile_subview( hv, ti, tj );
+        for ( int j = 0; j < T1; ++j ) {
+        for ( int i = 0; i < T0; ++i ) {
+          if ( tile_subview(i,j) != hv(ti*T0+i, tj*T1+j) ) { ++counter_subview; }
+          if ( tile_subview(i,j) != (( ti + tj*NT0 )*FT + ( i + j*T0 ) + 1 )) { ++counter_inc; }
+        } }
+      } }
+      ASSERT_EQ(counter_subview, long(0));
+      ASSERT_EQ(counter_inc, long(0));
+#endif    
+    }
 
   } // end test_view_layout_tiled_2d
 

@@ -453,8 +453,9 @@ template<class ViewTypeA,class ViewTypeB, class Layout, class ExecSpace,typename
 struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,2,iType,KOKKOS_IMPL_COMPILING_LIBRARY> {
   ViewTypeA a;
   ViewTypeB b;
-
-  typedef Kokkos::Rank<2,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  static const Kokkos::Iterate outer_iteration_pattern = Kokkos::layout_iterate_type_selector<Layout>::outer_iteration_pattern;
+  static const Kokkos::Iterate inner_iteration_pattern = Kokkos::layout_iterate_type_selector<Layout>::inner_iteration_pattern;
+  typedef Kokkos::Rank<2,outer_iteration_pattern,inner_iteration_pattern> iterate_type;
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
@@ -475,7 +476,9 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,3,iType,KOKKOS_IMPL_COMPILI
   ViewTypeA a;
   ViewTypeB b;
 
-  typedef Kokkos::Rank<3,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  static const Kokkos::Iterate outer_iteration_pattern = Kokkos::layout_iterate_type_selector<Layout>::outer_iteration_pattern;
+  static const Kokkos::Iterate inner_iteration_pattern = Kokkos::layout_iterate_type_selector<Layout>::inner_iteration_pattern;
+  typedef Kokkos::Rank<3,outer_iteration_pattern,inner_iteration_pattern> iterate_type;
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
@@ -496,7 +499,9 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,4,iType,KOKKOS_IMPL_COMPILI
   ViewTypeA a;
   ViewTypeB b;
 
-  typedef Kokkos::Rank<4,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  static const Kokkos::Iterate outer_iteration_pattern = Kokkos::layout_iterate_type_selector<Layout>::outer_iteration_pattern;
+  static const Kokkos::Iterate inner_iteration_pattern = Kokkos::layout_iterate_type_selector<Layout>::inner_iteration_pattern;
+  typedef Kokkos::Rank<4,outer_iteration_pattern,inner_iteration_pattern> iterate_type;
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
@@ -519,7 +524,9 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,5,iType,KOKKOS_IMPL_COMPILI
   ViewTypeA a;
   ViewTypeB b;
 
-  typedef Kokkos::Rank<5,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  static const Kokkos::Iterate outer_iteration_pattern = Kokkos::layout_iterate_type_selector<Layout>::outer_iteration_pattern;
+  static const Kokkos::Iterate inner_iteration_pattern = Kokkos::layout_iterate_type_selector<Layout>::inner_iteration_pattern;
+  typedef Kokkos::Rank<5,outer_iteration_pattern,inner_iteration_pattern> iterate_type;
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
@@ -542,7 +549,9 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,6,iType,KOKKOS_IMPL_COMPILI
   ViewTypeA a;
   ViewTypeB b;
 
-  typedef Kokkos::Rank<6,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  static const Kokkos::Iterate outer_iteration_pattern = Kokkos::layout_iterate_type_selector<Layout>::outer_iteration_pattern;
+  static const Kokkos::Iterate inner_iteration_pattern = Kokkos::layout_iterate_type_selector<Layout>::inner_iteration_pattern;
+  typedef Kokkos::Rank<6,outer_iteration_pattern,inner_iteration_pattern> iterate_type;
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
@@ -566,7 +575,9 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,7,iType,KOKKOS_IMPL_COMPILI
   ViewTypeA a;
   ViewTypeB b;
 
-  typedef Kokkos::Rank<6,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  static const Kokkos::Iterate outer_iteration_pattern = Kokkos::layout_iterate_type_selector<Layout>::outer_iteration_pattern;
+  static const Kokkos::Iterate inner_iteration_pattern = Kokkos::layout_iterate_type_selector<Layout>::inner_iteration_pattern;
+  typedef Kokkos::Rank<6,outer_iteration_pattern,inner_iteration_pattern> iterate_type;
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
@@ -590,7 +601,9 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,8,iType,KOKKOS_IMPL_COMPILI
   ViewTypeA a;
   ViewTypeB b;
 
-  typedef Kokkos::Rank<6,ViewFillLayoutSelector<Layout>::iterate,ViewFillLayoutSelector<Layout>::iterate> iterate_type;
+  static const Kokkos::Iterate outer_iteration_pattern = Kokkos::layout_iterate_type_selector<Layout>::outer_iteration_pattern;
+  static const Kokkos::Iterate inner_iteration_pattern = Kokkos::layout_iterate_type_selector<Layout>::inner_iteration_pattern;
+  typedef Kokkos::Rank<6,outer_iteration_pattern,inner_iteration_pattern> iterate_type;
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
@@ -642,20 +655,30 @@ void view_copy(const DstType& dst, const SrcType& src) {
   int64_t strides[DstType::Rank+1];
   dst.stride(strides);
   Kokkos::Iterate iterate;
-  if        ( std::is_same<typename DstType::array_layout,Kokkos::LayoutRight>::value ) {
+//  Kokkos::Iterate iterate_inner;
+  if        ( Kokkos::check_layout_is_tiled<typename DstType::array_layout>::value ) {
+    iterate = Kokkos::layout_iterate_type_selector<typename DstType::array_layout>::outer_iteration_pattern;
+//    iterate_inner = Kokkos::layout_iterate_type_selector::inner_iteration_pattern;
+  } else if        ( std::is_same<typename DstType::array_layout,Kokkos::LayoutRight>::value ) {
     iterate = Kokkos::Iterate::Right;
+//    iterate_inner = Kokkos::Iterate::Right;
   } else if ( std::is_same<typename DstType::array_layout,Kokkos::LayoutLeft>::value ) {
     iterate = Kokkos::Iterate::Left;
+//    iterate_inner = Kokkos::Iterate::Left;
   } else if ( std::is_same<typename DstType::array_layout,Kokkos::LayoutStride>::value ) {
     if( strides[0] > strides[DstType::Rank-1] )
       iterate = Kokkos::Iterate::Right;
+//      iterate_inner = Kokkos::Iterate::Right;
     else
       iterate = Kokkos::Iterate::Left;
+//      iterate_inner = Kokkos::Iterate::Left;
   } else {
     if( std::is_same<typename DstType::execution_space::array_layout, Kokkos::LayoutRight>::value )
       iterate = Kokkos::Iterate::Right;
+//      iterate_inner = Kokkos::Iterate::Right;
     else
       iterate = Kokkos::Iterate::Left;
+//      iterate_inner = Kokkos::Iterate::Left;
   }
 
   if( (dst.span() >= size_t(std::numeric_limits<int>::max())) ||

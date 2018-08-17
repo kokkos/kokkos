@@ -244,6 +244,8 @@ struct LayoutTileLeft {
 };
 
 
+//////////////////////////////////////////////////////////////////////////////////////
+
 /// LayoutTiled Specializations
 
 // TODO: Remove this enum class after resolving where to move the same class in MDRangePolicy to for reuse
@@ -251,12 +253,30 @@ namespace Pattern {
 enum class Iterate
 {
   Left,    // Left indices stride fastest
-  Right,   // Right indices stride fastest
+  Right   // Right indices stride fastest
 };
 } // end namespace Pattern
 
+// TODO: Find a home for me and delete from here, as well including this file in KokkosExp_MDRange
+// Copied here and commented out of KokkosExp_MDRangePolicy.hpp code (and this file is included as header there).
+enum class Iterate
+{
+  Default,
+  Left,    // Left indices stride fastest
+  Right   // Right indices stride fastest
+};
+
+// To check for tiled layout
+// This is to hide extra compile-time 'identifier' info within the LayoutTiled class by not relying on template specialization to include the ArgN*'s
+template < typename LayoutTiledCheck, class Enable = void >
+struct check_layout_is_tiled : std::false_type {};
+
+template < typename LayoutTiledCheck >
+struct check_layout_is_tiled< LayoutTiledCheck, typename std::enable_if<LayoutTiledCheck::is_array_layout_tiled>::type > : std::true_type {};
+// End tiled layout meta-function
+
 // Must have Rank >= 2
-// TODO: Possibly specialize for each rank, allow for iterate pattern to default
+// TODO: Possibly allow default iterate patterns by specializing for each rank
 template < Kokkos::Pattern::Iterate OuterP, Kokkos::Pattern::Iterate InnerP,
            unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 = 0,  unsigned ArgN3 = 0,  unsigned ArgN4 = 0,  unsigned ArgN5 = 0,  unsigned ArgN6 = 0,  unsigned ArgN7 = 0, 
            bool IsPowerOfTwo = 
@@ -289,6 +309,8 @@ struct LayoutTiled {
 #endif
 
   //! Tag this class as a kokkos array_layout
+  enum { is_array_tiled_layout = true };
+
   typedef LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, ArgN2, ArgN3, ArgN4, ArgN5, ArgN6, ArgN7, IsPowerOfTwo> array_layout ;
   static constexpr Pattern::Iterate outer_pattern = OuterP;
   static constexpr Pattern::Iterate inner_pattern = InnerP;
@@ -319,7 +341,57 @@ struct LayoutTiled {
     : dimension { argN0 , argN1 , argN2 , argN3 , argN4 , argN5 , argN6 , argN7 } {}
 };
 
+// TODO
+// deep_copy
+// 1. Enhance ViewFillLayoutSelector to handle LayoutTiled
+// 2. CommonSubview - remove usage for LayoutTiled case - will require adding Layout template parameter to ViewRemap; unnecessary with disabled deprecated code
+// 3. view_copy - enhance to allow for LayoutTiled check
+// 4. ViewCopy - use outer/inner layout info from layout iteration selector in the iterate_type i.e. Rank<N,OP,IP>
 
+template < typename ... Layout >
+struct layout_iterate_type_selector;
+
+template <>
+struct layout_iterate_type_selector< Kokkos::LayoutRight > {
+  static const Kokkos::Iterate outer_iteration_pattern = Kokkos::Iterate::Right ;
+  static const Kokkos::Iterate inner_iteration_pattern = Kokkos::Iterate::Right ;
+};
+
+template <>
+struct layout_iterate_type_selector< Kokkos::LayoutLeft > {
+  static const Kokkos::Iterate outer_iteration_pattern = Kokkos::Iterate::Left ;
+  static const Kokkos::Iterate inner_iteration_pattern = Kokkos::Iterate::Left ;
+};
+
+template <>
+struct layout_iterate_type_selector< Kokkos::LayoutStride > {
+  static const Kokkos::Iterate outer_iteration_pattern = Kokkos::Iterate::Default ;
+  static const Kokkos::Iterate inner_iteration_pattern = Kokkos::Iterate::Default ;
+};
+
+template < unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 ,  unsigned ArgN4 ,  unsigned ArgN5 ,  unsigned ArgN6 ,  unsigned ArgN7 >
+struct layout_iterate_type_selector< Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Left, Kokkos::Pattern::Iterate::Left, ArgN0, ArgN1, ArgN2, ArgN3, ArgN4, ArgN5, ArgN6, ArgN7, true> > {
+  static const Kokkos::Iterate outer_iteration_pattern = Kokkos::Iterate::Left ;
+  static const Kokkos::Iterate inner_iteration_pattern = Kokkos::Iterate::Left ;
+};
+
+template < unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 ,  unsigned ArgN4 ,  unsigned ArgN5 ,  unsigned ArgN6 ,  unsigned ArgN7 >
+struct layout_iterate_type_selector< Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Right, Kokkos::Pattern::Iterate::Left, ArgN0, ArgN1, ArgN2, ArgN3, ArgN4, ArgN5, ArgN6, ArgN7, true> > {
+  static const Kokkos::Iterate outer_iteration_pattern = Kokkos::Iterate::Right ;
+  static const Kokkos::Iterate inner_iteration_pattern = Kokkos::Iterate::Left ;
+};
+
+template < unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 ,  unsigned ArgN4 ,  unsigned ArgN5 ,  unsigned ArgN6 ,  unsigned ArgN7 >
+struct layout_iterate_type_selector< Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Left, Kokkos::Pattern::Iterate::Right, ArgN0, ArgN1, ArgN2, ArgN3, ArgN4, ArgN5, ArgN6, ArgN7, true> > {
+  static const Kokkos::Iterate outer_iteration_pattern = Kokkos::Iterate::Left ;
+  static const Kokkos::Iterate inner_iteration_pattern = Kokkos::Iterate::Right ;
+};
+
+template < unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 ,  unsigned ArgN4 ,  unsigned ArgN5 ,  unsigned ArgN6 ,  unsigned ArgN7 >
+struct layout_iterate_type_selector< Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Right, Kokkos::Pattern::Iterate::Right, ArgN0, ArgN1, ArgN2, ArgN3, ArgN4, ArgN5, ArgN6, ArgN7, true> > {
+  static const Kokkos::Iterate outer_iteration_pattern = Kokkos::Iterate::Right ;
+  static const Kokkos::Iterate inner_iteration_pattern = Kokkos::Iterate::Right ;
+};
 
 
 } // namespace Kokkos

@@ -317,6 +317,22 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_6() const { return 0 ; }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_7() const { return 0 ; }
 
+  // Stride with [ rank ] value is the total length
+  template< typename iType >
+  KOKKOS_INLINE_FUNCTION
+  void stride( iType * const s ) const
+    {
+      s[0] = 0 ;
+      if ( 0 < dimension_type::rank ) { s[1] = 0 ; }
+      if ( 1 < dimension_type::rank ) { s[2] = 0 ; }
+      if ( 2 < dimension_type::rank ) { s[3] = 0 ; }
+      if ( 3 < dimension_type::rank ) { s[4] = 0 ; }
+      if ( 4 < dimension_type::rank ) { s[5] = 0 ; }
+      if ( 5 < dimension_type::rank ) { s[6] = 0 ; }
+      if ( 6 < dimension_type::rank ) { s[7] = 0 ; }
+      if ( 7 < dimension_type::rank ) { s[8] = 0 ; }
+    }
+
   KOKKOS_INLINE_FUNCTION constexpr size_type span() const
     {
       // Rank2: ( NumTile0 * ( NumTile1 ) ) * TileSize, etc
