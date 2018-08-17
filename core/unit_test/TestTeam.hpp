@@ -1015,10 +1015,10 @@ struct TestTeamBroadcast {
     int ts  = teamMember.team_size();
 
     value_type parUpdate = 0;
-    value_type value     = tid * 3;
+    value_type value     = tid * 3 + 1;
 	
-    teamMember.team_broadcast(value, lid%ts);
-    
+    teamMember.team_broadcast(value, lid%ts); 
+
     Kokkos::parallel_reduce( Kokkos::TeamThreadRange( teamMember, ts ), [&] ( const int j, value_type &teamUpdate ) {
       teamUpdate += value;
     }, parUpdate );
@@ -1034,7 +1034,7 @@ struct TestTeamBroadcast {
     int ts  = teamMember.team_size();
 
     value_type parUpdate = 0;
-    value_type value     = tid * 3;
+    value_type value     = tid * 3 + 1;
 
     teamMember.team_broadcast([&] (value_type & var) { var*=2; }, value, lid%ts);
     
@@ -1050,9 +1050,9 @@ struct TestTeamBroadcast {
     TestTeamBroadcast functor( league_size );
 
     typedef Kokkos::TeamPolicy< ScheduleType, ExecSpace > policy_type;
-    typedef Kokkos::TeamPolicy< ScheduleType, ExecSpace, BroadcastTag > policy_type_bcastf;
+    typedef Kokkos::TeamPolicy< ScheduleType, ExecSpace, BroadcastTag > policy_type_f;
 
-    const int team_size = 4;
+    const int team_size = policy_type_f(league_size,1).team_size_max( functor, Kokkos::ParallelReduceTag() ); //printf("team_size=%d\n",team_size);
 
     //team_broadcast with value
     long total = 0;
@@ -1061,22 +1061,22 @@ struct TestTeamBroadcast {
     
     value_type expected_result = 0;
     for (int i=0; i<league_size; i++){
-      value_type val  = ((i%team_size)*3)*team_size;
+      value_type val  = ((i%team_size)*3+1)*team_size;
       expected_result+= val;
     }
-    ASSERT_EQ( size_t( expected_result ), size_t( total ) ); printf("team_broadcast with value -- expected_result=%d, total=%d\n",expected_result, total);
+    ASSERT_EQ( size_t( expected_result ), size_t( total ) ); //printf("team_broadcast with value -- expected_result=%d, total=%d\n",expected_result, total);
 
     //team_broadcast with funtion object
     total = 0;
 
-    Kokkos::parallel_reduce( policy_type_bcastf( league_size, team_size ), functor, total );
+    Kokkos::parallel_reduce( policy_type_f( league_size, team_size ), functor, total );
 
     expected_result = 0;
     for (int i=0; i<league_size; i++){
-      value_type val  = ((i%team_size)*3)*2*team_size;
+      value_type val  = ((i%team_size)*3+1)*2*team_size;
       expected_result+= val;
     }
-    ASSERT_EQ( size_t( expected_result ), size_t( total ) ); printf("team_broadcast with funtion object -- expected_result=%d, total=%d\n",expected_result, total);
+    ASSERT_EQ( size_t( expected_result ), size_t( total ) ); //printf("team_broadcast with funtion object -- expected_result=%d, total=%d\n",expected_result, total);
   }
 };
 
