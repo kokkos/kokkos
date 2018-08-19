@@ -1060,7 +1060,7 @@ struct TestTeamBroadcast {
     Kokkos::parallel_reduce( policy_type( league_size, team_size ), functor, total );
     
     value_type expected_result = 0;
-    for (int i=0; i<league_size; i++){
+    for (unsigned int i=0; i<league_size; i++){
       value_type val  = ((i%team_size)*3+1)*team_size;
       expected_result+= val;
     }
@@ -1072,7 +1072,7 @@ struct TestTeamBroadcast {
     Kokkos::parallel_reduce( policy_type_f( league_size, team_size ), functor, total );
 
     expected_result = 0;
-    for (int i=0; i<league_size; i++){
+    for (unsigned int i=0; i<league_size; i++){
       value_type val  = ((i%team_size)*3+1)*2*team_size;
       expected_result+= val;
     }
