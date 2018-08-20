@@ -256,8 +256,6 @@ elif [ "$MACHINE" = "white" ]; then
     ARCH_FLAG="--arch=Power8,Kepler37"
   fi
 
-  NUM_JOBS_TO_RUN_IN_PARALLEL=1
-
 elif [ "$MACHINE" = "bowman" ]; then
   source /etc/profile.d/modules.sh
   SKIP_HWLOC=True
@@ -277,40 +275,20 @@ elif [ "$MACHINE" = "bowman" ]; then
     ARCH_FLAG="--arch=KNL"
   fi
 
-  NUM_JOBS_TO_RUN_IN_PARALLEL=1
-
-elif [ "$MACHINE" = "sullivan" ]; then
-  source /etc/profile.d/modules.sh
-  SKIP_HWLOC=True
-  export SLURM_TASKS_PER_NODE=96
-
-  BASE_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>"
-
-  # Format: (compiler module-list build-list exe-name warning-flag)
-  COMPILERS=("gcc/6.1.0 $BASE_MODULE_LIST $ARM_GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS")
-
-  if [ -z "$ARCH_FLAG" ]; then
-    ARCH_FLAG="--arch=ARMv8-ThunderX"
-  fi
-
-  NUM_JOBS_TO_RUN_IN_PARALLEL=1
-
 elif [ "$MACHINE" = "mayer" ]; then
   SKIP_HWLOC=True
   export SLURM_TASKS_PER_NODE=96
 
   BASE_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>"
-  ARM_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>"
+  ARM_MODULE_LIST="<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
 
   # Format: (compiler module-list build-list exe-name warning-flag)
   COMPILERS=("gcc/7.2.0 $BASE_MODULE_LIST $ARM_GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-             "arm/1.4.0 $ARM_MODULE_LIST $ARM_GCC_BUILD_LIST armclang++ $CLANG_WARNING_FLAGS")
+             "arm/18.4.0 $ARM_MODULE_LIST $ARM_GCC_BUILD_LIST armclang++ $CLANG_WARNING_FLAGS")
 
   if [ -z "$ARCH_FLAG" ]; then
     ARCH_FLAG="--arch=ARMv8-TX2"
   fi
-
-  NUM_JOBS_TO_RUN_IN_PARALLEL=1
 
 elif [ "$MACHINE" = "blake" ]; then
   source /etc/profile.d/modules.sh
@@ -341,7 +319,6 @@ elif [ "$MACHINE" = "blake" ]; then
   if [ -z "$ARCH_FLAG" ]; then
     ARCH_FLAG="--arch=SKX"
   fi
-  NUM_JOBS_TO_RUN_IN_PARALLEL=1
 
 elif [ "$MACHINE" = "apollo" ]; then
   source /projects/sems/modulefiles/utils/sems-modules-init.sh
@@ -360,6 +337,7 @@ elif [ "$MACHINE" = "apollo" ]; then
   CUDA8_MODULE_LIST="sems-env,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0,kokkos-hwloc/1.10.1/base"
 
   CLANG_MODULE_LIST="sems-env,kokkos-env,sems-git,sems-cmake/3.5.2,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/9.0.69"
+  CLANG7_MODULE_LIST="sems-env,kokkos-env,sems-git,sems-cmake/3.5.2,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/9.1"
   NVCC_MODULE_LIST="sems-env,kokkos-env,sems-git,sems-cmake/3.5.2,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0"
 
   BUILD_LIST_CUDA_NVCC="Cuda_Serial,Cuda_OpenMP"
@@ -379,6 +357,7 @@ elif [ "$MACHINE" = "apollo" ]; then
     # Format: (compiler module-list build-list exe-name warning-flag)
     COMPILERS=("cuda/9.1 $CUDA8_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "clang/6.0 $CLANG_MODULE_LIST $BUILD_LIST_CUDA_CLANG clang++ $CUDA_WARNING_FLAGS"
+               "clang/7.0 $CLANG7_MODULE_LIST $BUILD_LIST_CUDA_CLANG clang++ $CUDA_WARNING_FLAGS"
                "clang/3.9.0 $CLANG_MODULE_LIST $BUILD_LIST_CLANG clang++ $CLANG_WARNING_FLAGS"
                "gcc/4.8.4 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/4.9.3 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
@@ -395,8 +374,6 @@ elif [ "$MACHINE" = "apollo" ]; then
   if [ -z "$ARCH_FLAG" ]; then
     ARCH_FLAG="--arch=SNB,Volta70"
   fi
-
-  NUM_JOBS_TO_RUN_IN_PARALLEL=1
 
 else
   echo "Unhandled machine $MACHINE" >&2
