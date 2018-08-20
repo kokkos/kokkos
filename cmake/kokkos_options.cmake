@@ -14,6 +14,7 @@ list(APPEND KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST
      OpenMP
      Pthread
      Qthread
+     HPX
      Cuda
      ROCm
      HWLOC
@@ -116,6 +117,7 @@ list(APPEND KOKKOS_DEVICES_LIST
     OpenMP        # OpenMP
     Pthread       # pthread
     Qthreads      # qthreads
+    HPX           # HPX
     Serial        # serial
     ROCm          # Relocatable device code
     )
@@ -217,6 +219,11 @@ IF(Trilinos_ENABLE_Kokkos)
   ELSE()
     set_kokkos_default_default(QTHREADS OFF)
   ENDIF()
+  IF(TPL_ENABLE_HPX)
+    set_kokkos_default_default(HPX ${TPL_ENABLE_HPX})
+  ELSE()
+    set_kokkos_default_default(HPX OFF)
+  ENDIF()
   IF(Trilinos_ENABLE_OpenMP)
     set_kokkos_default_default(OPENMP ${Trilinos_ENABLE_OpenMP})
   ELSE()
@@ -233,6 +240,7 @@ ELSE()
   set_kokkos_default_default(OPENMP OFF)
   set_kokkos_default_default(PTHREAD OFF)
   set_kokkos_default_default(QTHREAD OFF)
+  set_kokkos_default_default(HPX OFF)
   set_kokkos_default_default(CUDA OFF)
   set_kokkos_default_default(ROCM OFF)
 ENDIF()
@@ -243,6 +251,7 @@ set(KOKKOS_ENABLE_SERIAL ${KOKKOS_INTERNAL_ENABLE_SERIAL_DEFAULT} CACHE BOOL "Wh
 set(KOKKOS_ENABLE_OPENMP ${KOKKOS_INTERNAL_ENABLE_OPENMP_DEFAULT} CACHE BOOL "Enable OpenMP support in Kokkos." FORCE)
 set(KOKKOS_ENABLE_PTHREAD ${KOKKOS_INTERNAL_ENABLE_PTHREAD_DEFAULT} CACHE BOOL "Enable Pthread support in Kokkos.")
 set(KOKKOS_ENABLE_QTHREADS ${KOKKOS_INTERNAL_ENABLE_QTHREADS_DEFAULT} CACHE BOOL "Enable Qthreads support in Kokkos.")
+set(KOKKOS_ENABLE_HPX ${KOKKOS_INTERNAL_ENABLE_HPX_DEFAULT} CACHE BOOL "Enable HPX support in Kokkos.")
 set(KOKKOS_ENABLE_CUDA ${KOKKOS_INTERNAL_ENABLE_CUDA_DEFAULT} CACHE BOOL "Enable CUDA support in Kokkos.")
 set(KOKKOS_ENABLE_ROCM ${KOKKOS_INTERNAL_ENABLE_ROCM_DEFAULT} CACHE BOOL "Enable ROCm support in Kokkos.")
 

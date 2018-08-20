@@ -70,12 +70,15 @@ KOKKOS_INTERNAL_ENABLE_ETI := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_
 KOKKOS_INTERNAL_USE_OPENMP := $(call kokkos_has_string,$(subst OpenMPTarget,,$(KOKKOS_DEVICES)),OpenMP)
 KOKKOS_INTERNAL_USE_PTHREADS := $(call kokkos_has_string,$(KOKKOS_DEVICES),Pthread)
 KOKKOS_INTERNAL_USE_QTHREADS := $(call kokkos_has_string,$(KOKKOS_DEVICES),Qthreads)
+KOKKOS_INTERNAL_USE_HPX := $(call kokkos_has_string,$(KOKKOS_DEVICES),HPX)
 KOKKOS_INTERNAL_USE_SERIAL := $(call kokkos_has_string,$(KOKKOS_DEVICES),Serial)
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 0)
   ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 0)
     ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 0)
-      KOKKOS_INTERNAL_USE_SERIAL := 1
+      ifeq ($(KOKKOS_INTERNAL_USE_HPX), 0)
+        KOKKOS_INTERNAL_USE_SERIAL := 1
+      endif
     endif
   endif
 endif
@@ -437,6 +440,10 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
   tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_QTHREADS")
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_HPX")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
@@ -1133,6 +1140,21 @@ ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
   endif
   KOKKOS_LIBS += -lqthread
   KOKKOS_TPL_LIBRARY_NAMES += qthread
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
+  KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/HPX/*.cpp)
+  KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/HPX/*.hpp)
+  ifneq ($(HPX_PATH),)
+    KOKKOS_CXXFLAGS += -I$(HPX_PATH)/include
+    KOKKOS_LDFLAGS += -L$(HPX_PATH)/lib
+    KOKKOS_CXXLDFLAGS += -L$(HPX_PATH)/lib
+    KOKKOS_TPL_INCLUDE_DIRS += $(HPX_PATH)/include
+    KOKKOS_TPL_LIBRARY_DIRS += $(HPX_PATH)/lib64
+  endif
+  # TODO: Use pkgconfig
+  KOKKOS_LIBS += -lhpx
+  KOKKOS_TPL_LIBRARY_NAMES += hpx
 endif
 
 # Explicitly set the GCC Toolchain for Clang.
