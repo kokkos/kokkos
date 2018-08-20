@@ -134,6 +134,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION static constexpr size_type size() { return N ; }
   KOKKOS_INLINE_FUNCTION static constexpr bool      empty(){ return false ; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type max_size() const { return N ; }
 
   template< typename iType >
   KOKKOS_INLINE_FUNCTION
