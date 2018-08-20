@@ -115,6 +115,8 @@ public:
   typedef Kokkos::OpenMP    execution_space;
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS )
   typedef Kokkos::Threads   execution_space;
+#elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX )
+  typedef Kokkos::HPX   execution_space;
 //#elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS )
 //  typedef Kokkos::Qthreads  execution_space;
 #elif defined( KOKKOS_ENABLE_OPENMP )
