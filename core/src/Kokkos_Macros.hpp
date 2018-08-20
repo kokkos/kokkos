@@ -50,6 +50,7 @@
  *  KOKKOS_ENABLE_CUDA                Kokkos::Cuda execution and memory spaces
  *  KOKKOS_ENABLE_THREADS             Kokkos::Threads execution space
  *  KOKKOS_ENABLE_QTHREADS            Kokkos::Qthreads execution space
+ *  KOKKOS_ENABLE_HPX                 Kokkos::HPX execution space
  *  KOKKOS_ENABLE_OPENMP              Kokkos::OpenMP execution space
  *  KOKKOS_ENABLE_OPENMPTARGET        Kokkos::Experimental::OpenMPTarget execution space
  *  KOKKOS_ENABLE_HWLOC               HWLOC library is available.
@@ -98,12 +99,14 @@
 
 #if defined(KOKKOS_ENABLE_SERIAL) || defined(KOKKOS_ENABLE_THREADS) || \
     defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_QTHREADS) || \
+    defined(KOKKOS_ENABLE_HPX) || \
     defined(KOKKOS_ENABLE_ROCM) || defined(KOKKOS_ENABLE_OPENMPTARGET)
   #define KOKKOS_INTERNAL_ENABLE_NON_CUDA_BACKEND
 #endif
 
 #if !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_CUDA) && \
     !defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_ENABLE_QTHREADS) && \
+    !defined(KOKKOS_ENABLE_HPX) || \
     !defined(KOKKOS_ENABLE_ROCM) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
   #define KOKKOS_INTERNAL_NOT_PARALLEL
 #endif
@@ -492,6 +495,8 @@
   #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS
 //#elif defined( KOKKOS_ENABLE_QTHREADS )
 //  #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS
+#elif defined( KOKKOS_ENABLE_HPX )
+  #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX
 #else
   #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL
 #endif
