@@ -671,6 +671,14 @@ bool cuda_single_inter_block_reduce_scan( const FunctorType     & functor ,
   const integral_nonzero_constant< size_type , ValueTraits::StaticValueSize / sizeof(size_type) >
     word_count( ValueTraits::value_size( functor ) / sizeof(size_type) );
 
+  // Workaround for issue https://github.com/kokkos/kokkos/issues/1753
+  #ifdef KOKKOS_CUDA_CLANG_WORKAROUND
+  {
+    pointer_type g = pointer_type(global_data + word_count.value * block_id);
+    g[0] = typename ValueTraits::value_type();
+  }
+  #endif
+
   // Reduce the accumulation for the entire block.
   cuda_intra_block_reduce_scan<false,FunctorType,ArgTag>( functor , pointer_type(shared_data) );
 
