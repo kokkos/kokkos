@@ -809,12 +809,12 @@ public:
 
   __device__ inline
   void operator() () const {
-    run(Kokkos::Impl::if_c<UseShflReduction, DummyShflReductionType, DummySHMEMReductionType>::select(1,1.0) );
+/*    run(Kokkos::Impl::if_c<UseShflReduction, DummyShflReductionType, DummySHMEMReductionType>::select(1,1.0) );
   }
 
   __device__ inline
   void run(const DummySHMEMReductionType& ) const
-  {
+  {*/
     const integral_nonzero_constant< size_type , ValueTraits::StaticValueSize / sizeof(size_type) >
       word_count( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) / sizeof(size_type) );
 
@@ -855,10 +855,9 @@ public:
     }
   }
 
-  __device__ inline
+/*  __device__ inline
    void run(const DummyShflReductionType&) const
    {
-
      value_type value;
      ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , &value);
      // Number of blocks is bounded so that the reduction can be limited to two passes.
@@ -889,7 +888,7 @@ public:
          *result = value;
        }
      }
-   }
+   }*/
 
   // Determine block size constrained by shared memory:
   static inline
@@ -1035,12 +1034,12 @@ public:
   inline
   __device__
   void operator() (void) const {
-    run(Kokkos::Impl::if_c<UseShflReduction, DummyShflReductionType, DummySHMEMReductionType>::select(1,1.0) );
+/*    run(Kokkos::Impl::if_c<UseShflReduction, DummyShflReductionType, DummySHMEMReductionType>::select(1,1.0) );
   }
 
   __device__ inline
   void run(const DummySHMEMReductionType& ) const
-  {
+  {*/
     const integral_nonzero_constant< size_type , ValueTraits::StaticValueSize / sizeof(size_type) >
       word_count( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) / sizeof(size_type) );
 
@@ -1076,7 +1075,7 @@ public:
     }
   }
 
-  __device__ inline
+/*  __device__ inline
    void run(const DummyShflReductionType&) const
    {
 
@@ -1108,7 +1107,7 @@ public:
        }
      }
    }
-
+*/
   // Determine block size constrained by shared memory:
   static inline
   unsigned local_block_size( const FunctorType & f )
@@ -1373,8 +1372,13 @@ public:
 
     value_type init;
     ValueInit::init( ReducerConditional::select(m_functor , m_reducer) , &init);
-    if(Impl::cuda_inter_block_reduction<FunctorType,ValueJoin,WorkTag>
-           (value,init,ValueJoin(ReducerConditional::select(m_functor , m_reducer)),m_scratch_space,result,m_scratch_flags,blockDim.y)) {
+    if(
+        Impl::cuda_inter_block_reduction<FunctorType,ValueJoin,WorkTag>
+           (value,init,ValueJoin(ReducerConditional::select(m_functor , m_reducer)),m_scratch_space,result,m_scratch_flags,blockDim.y)
+        //This breaks a test
+        //   Kokkos::Impl::CudaReductionsFunctor<FunctorType,WorkTag,false,true>::scalar_inter_block_reduction(ReducerConditional::select(m_functor , m_reducer) , blockIdx.x , gridDim.x ,
+        //              kokkos_impl_cuda_shared_memory<size_type>() , m_scratch_space , m_scratch_flags)
+    ) {
       const unsigned id = threadIdx.y*blockDim.x + threadIdx.x;
       if(id==0) {
         Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTagFwd >::final( ReducerConditional::select(m_functor , m_reducer) , (void*) &value );
