@@ -97,12 +97,16 @@ do
         echo "Invalid compiler by --compiler command: '${COMPILER}'"
         exit
       fi
+      # ... ensure compiler path is an absolute path
+      COMPDIR=$( cd `dirname $COMPILER`  && pwd ) ; COMPNAME=`basename $COMPILER`
+      COMPILER=`ls $COMPDIR'/'$COMPNAME`
       ;;
     --with-options*)
       KOKKOS_OPT="${key#*=}"
       ;;
     --help)
       echo "Kokkos configure options:"
+      echo ""
       echo "--kokkos-path=/Path/To/Kokkos:        Path to the Kokkos root directory."
       echo "--qthreads-path=/Path/To/Qthreads:    Path to Qthreads install directory."
       echo "                                        Overrides path given by --with-qthreads."
@@ -183,6 +187,7 @@ do
   shift
 done
 
+
 # Remove leading ',' from KOKKOS_DEVICES.
 KOKKOS_DEVICES=$(echo $KOKKOS_DEVICES | sed 's/^,//')
 
@@ -195,7 +200,7 @@ else
 fi
 
 if [ "${KOKKOS_PATH}"  = "${PWD}" ] || [ "${KOKKOS_PATH}"  = "${PWD}/" ]; then
-  echo "Running generate_makefile.sh in the Kokkos root directory is not allowed"
+  echo "Running generate_makefile.bash in the Kokkos root directory is not allowed"
   exit
 fi
 
@@ -204,7 +209,10 @@ KOKKOS_SRC_PATH=${KOKKOS_PATH}
 KOKKOS_SETTINGS="KOKKOS_SRC_PATH=${KOKKOS_SRC_PATH}"
 #KOKKOS_SETTINGS="KOKKOS_PATH=${KOKKOS_PATH}"
 
-if [ ${#COMPILER} -gt 0 ]; then
+if [ ${#COMPILER} -gt 0 ] && [ ${#KOKKOS_DEVICES} -gt 0 ]; then
+   if [ ${#CUDA_PATH} -gt 0 ]; then
+      COMPILER="${KOKKOS_PATH}/bin/nvcc_wrapper"
+   fi
   KOKKOS_SETTINGS="${KOKKOS_SETTINGS} CXX=${COMPILER}"
 fi
 
