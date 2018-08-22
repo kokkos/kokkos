@@ -515,9 +515,11 @@ cuda_inter_block_reduction( const ReducerType& reducer,
 #endif
 }
 
+template<class FunctorType, class ArgTag, bool UseShfl>
+struct CudaReductionsFunctor;
 
 template<class FunctorType, class ArgTag>
-struct CudaReductionsFunctor {
+struct CudaReductionsFunctor<FunctorType, ArgTag, true> {
   typedef FunctorValueTraits< FunctorType , ArgTag >  ValueTraits ;
   typedef FunctorValueJoin<   FunctorType , ArgTag >  ValueJoin ;
   typedef FunctorValueInit<   FunctorType , ArgTag >  ValueInit ;
@@ -581,7 +583,6 @@ struct CudaReductionsFunctor {
       ValueInit::init( functor , &value );
       for(int i=threadIdx.y*blockDim.x+threadIdx.x; i<blockDim.y*blockDim.x/32; i+=32)
         ValueJoin::join( functor , &value,&shared_team_buffer_element[i]);
-      //__syncwarp(0xffffffff);
       scalar_warp_level_reduction(functor,value,false,32,*my_global_team_buffer_element);
     }
   }
@@ -604,7 +605,6 @@ struct CudaReductionsFunctor {
 
     scalar_block_level_reduction(functor,value,true,my_global_team_buffer_element,shared_elements,shared_team_buffer_elements);
     __syncthreads();
-//printf("BlockLevel1 Done: %lf\n",*my_global_team_buffer_element);
     int num_teams_done = 0;
     if(threadIdx.x + threadIdx.y == 0) {
       __threadfence();
@@ -621,13 +621,111 @@ struct CudaReductionsFunctor {
       const unsigned BlockSizeShift = __ffs( blockDim.y ) - 1 ;
       const long b = ( long(block_count) * long(threadIdx.y) ) >> BlockSizeShift ;
       scalar_block_level_reduction(functor,value,false,shared_team_buffer_elements+(blockDim.y-1),shared_elements,shared_team_buffer_elements);
-      //*(global_team_buffer_element+b) = *my_global_team_buffer_element;
-      //printf("GridResult: %lf\n",*global_team_buffer_element);
     }
     return is_last_block;
   }
 };
 
+template<class FunctorType, class ArgTag>
+struct CudaReductionsFunctor<FunctorType, ArgTag, false> {
+  typedef FunctorValueTraits< FunctorType , ArgTag >  ValueTraits ;
+  typedef FunctorValueJoin<   FunctorType , ArgTag >  ValueJoin ;
+  typedef FunctorValueInit<   FunctorType , ArgTag >  ValueInit ;
+  typedef FunctorValueOps<    FunctorType , ArgTag >  ValueOps ;
+  typedef typename ValueTraits::pointer_type  pointer_type ;
+  typedef typename ValueTraits::value_type Scalar;
+
+  __device__
+  static inline void scalar_warp_level_reduction(
+      const FunctorType& functor,
+      Scalar* value,                           // Contribution
+      const bool skip_vector,                  // Skip threads if Kokkos vector lanes are not part of the reduction
+      const int width)                         // How much of the warp participates
+  {
+    Scalar value_init = *value;
+    const unsigned mask = width==32?0xffffffff:((1<<width)-1)<<((threadIdx.y*blockDim.x+threadIdx.x)%(32/width))*width;
+    const int lane_id = (threadIdx.y*blockDim.x+threadIdx.x)%32;
+    for(int delta=skip_vector?blockDim.x:1; delta<width; delta*=2) {
+      if(lane_id + delta<32)
+        ValueJoin::join( functor , value, value+delta);
+      KOKKOS_IMPL_CUDA_SYNCWARP_MASK(mask);
+    }
+    *value=*(value-lane_id);
+   // printf("VectorReduce: %i %i %i %i %lf %lf %p\n",blockIdx.x,threadIdx.y,threadIdx.x,lane_id,*value,value_init,value);
+  }
+
+
+  __device__
+  static inline void scalar_block_level_reduction(
+      const FunctorType& functor,
+      Scalar value,
+      const bool skip,
+      Scalar* result,
+      const int shared_elements,
+      Scalar* shared_team_buffer_element) {
+
+    const int warp_id = (threadIdx.y*blockDim.x)/32;
+    Scalar* const my_shared_team_buffer_element =
+        shared_team_buffer_element + threadIdx.y*blockDim.x+threadIdx.x;
+    *my_shared_team_buffer_element = value;
+    // Warp Level Reduction, ignoring Kokkos vector entries
+    scalar_warp_level_reduction(functor,my_shared_team_buffer_element,skip,32);
+    //printf("Initial warp done %i %i %i %lf\n",blockIdx.x,threadIdx.y,threadIdx.x,*my_shared_team_buffer_element);
+    // Wait for every warp to be done before using one warp to do final cross warp reduction
+    __syncthreads();
+
+    if( warp_id == 0) {
+      //ValueInit::init( functor , my_shared_team_buffer_element );
+      //for(int i=32+(threadIdx.y*blockDim.x+threadIdx.x; i<blockDim.y*blockDim.x; i+=32)
+      const int delta = (threadIdx.y*blockDim.x+threadIdx.x)*32;
+      if(delta<blockDim.x*blockDim.y)
+        *my_shared_team_buffer_element = shared_team_buffer_element[delta];
+      //printf("Shared stuff: %i %i %i %lf %i\n",blockIdx.x,threadIdx.y,threadIdx.x,*my_shared_team_buffer_element,delta);
+      KOKKOS_IMPL_CUDA_SYNCWARP;   
+      //ValueJoin::join( functor , my_shared_team_buffer_element,&shared_team_buffer_element[i]);
+      scalar_warp_level_reduction(functor,my_shared_team_buffer_element,false,blockDim.x*blockDim.y/32);
+      //printf("Shared stuff 2: %i %i %i %lf %lf\n",blockIdx.x,threadIdx.y,threadIdx.x,*my_shared_team_buffer_element, *shared_team_buffer_element);
+      if(threadIdx.x + threadIdx.y == 0) *result = *shared_team_buffer_element;
+    }
+  }
+
+  __device__
+  static inline bool scalar_inter_block_reduction(
+      const FunctorType     & functor ,
+      const Cuda::size_type   block_id ,
+      const Cuda::size_type   block_count ,
+      Cuda::size_type * const shared_data ,
+      Cuda::size_type * const global_data ,
+      Cuda::size_type * const global_flags )  {
+    Scalar* const global_team_buffer_element = ((Scalar*) global_data);
+    Scalar* const my_global_team_buffer_element = global_team_buffer_element + blockIdx.x;
+    Scalar* shared_team_buffer_elements = ((Scalar*) shared_data);
+    Scalar value = shared_team_buffer_elements[threadIdx.y];
+    int shared_elements=blockDim.x*blockDim.y/32;
+    int global_elements=block_count;
+    //__syncthreads();
+
+    scalar_block_level_reduction(functor,value,true,my_global_team_buffer_element,shared_elements,shared_team_buffer_elements);
+    __syncthreads();
+//printf("initial block level done %i %i %i %lf\n",blockIdx.x,threadIdx.y,threadIdx.x,*my_global_team_buffer_element);
+    int num_teams_done = 0;
+    if(threadIdx.x + threadIdx.y == 0) {
+      __threadfence();
+      num_teams_done = Kokkos::atomic_fetch_add(global_flags,1)+1;
+    }
+    bool is_last_block = false;
+    if(__syncthreads_or(num_teams_done == gridDim.x)) {
+      is_last_block=true;
+      *global_flags = 0;
+      ValueInit::init( functor, &value);
+      for(int i=threadIdx.y*blockDim.x+threadIdx.x; i<global_elements; i+=blockDim.x*blockDim.y) {
+        ValueJoin::join( functor , &value,&global_team_buffer_element[i]);
+      }
+      scalar_block_level_reduction(functor,value,false,shared_team_buffer_elements+(blockDim.y-1),shared_elements,shared_team_buffer_elements);
+    }
+    return is_last_block;
+  }
+};
 //----------------------------------------------------------------------------
 // See section B.17 of Cuda C Programming Guide Version 3.2
 // for discussion of
@@ -770,7 +868,7 @@ bool cuda_single_inter_block_reduce_scan( const FunctorType     & functor ,
   typedef FunctorValueOps<    FunctorType , ArgTag >  ValueOps ;
 
   if(!DoScan && (ValueTraits::value_count( functor )==1))
-    return Kokkos::Impl::CudaReductionsFunctor<FunctorType,ArgTag>::scalar_inter_block_reduction(functor,block_id,block_count,shared_data,global_data,global_flags);
+    return Kokkos::Impl::CudaReductionsFunctor<FunctorType,ArgTag,false>::scalar_inter_block_reduction(functor,block_id,block_count,shared_data,global_data,global_flags);
 
   typedef typename ValueTraits::pointer_type    pointer_type ;
   //typedef typename ValueTraits::reference_type  reference_type ;
