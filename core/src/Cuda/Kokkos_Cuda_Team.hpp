@@ -160,9 +160,32 @@ public:
 
   template<class ValueType>
   KOKKOS_INLINE_FUNCTION
-  void team_broadcast( ValueType & val, const int& thread_id) const
+  void team_broadcast( ValueType & val, const int& thread_id ) const
     {
       #ifdef __CUDA_ARCH__
+      if ( 1 == blockDim.z ) { // team == block
+        __syncthreads();
+        // Wait for shared data write until all threads arrive here
+        if ( threadIdx.x == 0u && threadIdx.y == (uint32_t)thread_id ) {
+          *((ValueType*) m_team_reduce) = val ;
+        }
+        __syncthreads(); // Wait for shared data read until root thread writes
+        val = *((ValueType*) m_team_reduce);
+      }
+      else { // team <= warp
+        ValueType tmp( val ); // input might not be a register variable
+        cuda_shfl( val, tmp, blockDim.x * thread_id, blockDim.x * blockDim.y );
+      }
+      #endif
+    }
+	
+  template<class Closure, class ValueType>
+  KOKKOS_INLINE_FUNCTION
+  void team_broadcast( Closure const & f, ValueType & val, const int& thread_id ) const
+    {
+      #ifdef __CUDA_ARCH__
+      f( val );
+
       if ( 1 == blockDim.z ) { // team == block
         __syncthreads();
         // Wait for shared data write until all threads arrive here

@@ -990,3 +990,98 @@ struct TestShmemSize {
 };
 
 } // namespace Test
+
+/*--------------------------------------------------------------------------*/
+
+namespace Test {
+
+namespace {
+
+template< class ExecSpace, class ScheduleType >
+struct TestTeamBroadcast {
+  typedef typename Kokkos::TeamPolicy< ScheduleType,  ExecSpace >::member_type team_member;
+
+  TestTeamBroadcast( const size_t league_size ) {}
+
+  struct BroadcastTag {};
+
+  typedef long value_type;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const team_member &teamMember, value_type &update ) const
+  {
+    int lid = teamMember.league_rank();
+    int tid = teamMember.team_rank();
+    int ts  = teamMember.team_size();
+
+    value_type parUpdate = 0;
+    value_type value     = tid * 3 + 1;
+	
+    teamMember.team_broadcast(value, lid%ts); 
+
+    Kokkos::parallel_reduce( Kokkos::TeamThreadRange( teamMember, ts ), [&] ( const int j, value_type &teamUpdate ) {
+      teamUpdate += value;
+    }, parUpdate );
+
+    if ( teamMember.team_rank() == 0 ) update += parUpdate;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()( const BroadcastTag &, const team_member &teamMember, value_type &update ) const
+  {
+    int lid = teamMember.league_rank();
+    int tid = teamMember.team_rank();
+    int ts  = teamMember.team_size();
+
+    value_type parUpdate = 0;
+    value_type value     = tid * 3 + 1;
+
+    teamMember.team_broadcast([&] (value_type & var) { var*=2; }, value, lid%ts);
+    
+    Kokkos::parallel_reduce( Kokkos::TeamThreadRange( teamMember, ts ), [&] ( const int j, value_type &teamUpdate ) {
+      teamUpdate += value;
+    }, parUpdate );
+
+    if ( teamMember.team_rank() == 0 ) update += parUpdate;
+  }
+
+  static void test_teambroadcast( const size_t league_size )
+  {
+    TestTeamBroadcast functor( league_size );
+
+    typedef Kokkos::TeamPolicy< ScheduleType, ExecSpace > policy_type;
+    typedef Kokkos::TeamPolicy< ScheduleType, ExecSpace, BroadcastTag > policy_type_f;
+
+    const int team_size = policy_type_f(league_size,1).team_size_max( functor, Kokkos::ParallelReduceTag() ); //printf("team_size=%d\n",team_size);
+
+    //team_broadcast with value
+    long total = 0;
+
+    Kokkos::parallel_reduce( policy_type( league_size, team_size ), functor, total );
+    
+    value_type expected_result = 0;
+    for (unsigned int i=0; i<league_size; i++){
+      value_type val  = ((i%team_size)*3+1)*team_size;
+      expected_result+= val;
+    }
+    ASSERT_EQ( size_t( expected_result ), size_t( total ) ); //printf("team_broadcast with value -- expected_result=%d, total=%d\n",expected_result, total);
+
+    //team_broadcast with funtion object
+    total = 0;
+
+    Kokkos::parallel_reduce( policy_type_f( league_size, team_size ), functor, total );
+
+    expected_result = 0;
+    for (unsigned int i=0; i<league_size; i++){
+      value_type val  = ((i%team_size)*3+1)*2*team_size;
+      expected_result+= val;
+    }
+    ASSERT_EQ( size_t( expected_result ), size_t( total ) ); //printf("team_broadcast with funtion object -- expected_result=%d, total=%d\n",expected_result, total);
+  }
+};
+
+} // namespace
+
+} // namespace Test
+
+/*--------------------------------------------------------------------------*/

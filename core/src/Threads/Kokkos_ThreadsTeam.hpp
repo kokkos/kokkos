@@ -175,6 +175,27 @@ public:
 #endif
   }
 
+  template<class Closure, class ValueType>
+  KOKKOS_INLINE_FUNCTION
+  void team_broadcast(Closure const & f, ValueType& value, const int& thread_id) const
+  {
+#if ! defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+    { }
+#else
+    // Make sure there is enough scratch space:
+    typedef typename if_c< sizeof(ValueType) < TEAM_REDUCE_SIZE
+                         , ValueType , void >::type type ;
+    f( value );
+    if ( m_team_base ) {
+      type * const local_value = ((type*) m_team_base[0]->scratch_memory());
+      if(team_rank() == thread_id) *local_value = value;
+      memory_fence();
+      team_barrier();
+      value = *local_value;
+    }
+#endif
+  }
+  
   template< typename Type >
   KOKKOS_INLINE_FUNCTION
   typename std::enable_if< !Kokkos::is_reducer< Type >::value , Type>::type
