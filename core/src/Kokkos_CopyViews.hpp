@@ -2117,6 +2117,23 @@ create_mirror_view_and_copy(const Space& , const Kokkos::View<T,P...> & src
   deep_copy(mirror, src);
   return mirror;
 }
+    
+// Create a mirror view in a new space without initializing (specialization for same space)
+template<class Space, class T, class ... P>
+typename Impl::MirrorViewType<Space,T,P ...>::view_type
+create_mirror_view_without_initializing(const Space& , const Kokkos::View<T,P...> & src
+  , typename std::enable_if<Impl::MirrorViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
+  return src;
+}
+    
+// Create a mirror view in a new space without initializing (specialization for different space)
+template<class Space, class T, class ... P>
+typename Impl::MirrorViewType<Space,T,P ...>::view_type
+create_mirror_view(const Space& , const Kokkos::View<T,P...> & src
+  , typename std::enable_if<!Impl::MirrorViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
+  using Mirror = typename Impl::MirrorViewType<Space,T,P ...>::view_type;
+  return Mirror(ViewAllocateWithoutInitializing(src.label()),src.layout());
+}
 
 } /* namespace Kokkos */
 
