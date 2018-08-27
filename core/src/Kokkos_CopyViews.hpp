@@ -2121,8 +2121,8 @@ create_mirror_view_and_copy(const Space& , const Kokkos::View<T,P...> & src
 // Create a mirror view in a new space without initializing (specialization for same space)
 template<class Space, class T, class ... P>
 typename Impl::MirrorViewType<Space,T,P ...>::view_type
-create_mirror_view(const Space& , const ViewAllocateWithoutInitializing & arg_prop
-  , const Kokkos::View<T,P...> & src
+create_mirror_view(const Space& , const Kokkos::View<T,P...> & src
+  , Kokkos::Impl::WithoutInitializing_t
   , typename std::enable_if<Impl::MirrorViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
   return src;
 }
@@ -2130,12 +2130,11 @@ create_mirror_view(const Space& , const ViewAllocateWithoutInitializing & arg_pr
 // Create a mirror view in a new space without initializing (specialization for different space)
 template<class Space, class T, class ... P>
 typename Impl::MirrorViewType<Space,T,P ...>::view_type
-create_mirror_view(const Space& , const ViewAllocateWithoutInitializing & arg_prop
-  , const Kokkos::View<T,P...> & src
+create_mirror_view(const Space& , const Kokkos::View<T,P...> & src
+  , Kokkos::Impl::WithoutInitializing_t
   , typename std::enable_if<!Impl::MirrorViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
   using Mirror = typename Impl::MirrorViewType<Space,T,P ...>::view_type;
-  return Mirror(Impl::ViewCtorProp< std::string , Kokkos::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::WithoutInitializing )
-    , src.layout());
+  return Mirror(Kokkos::ViewAllocateWithoutInitializing(src.label()), src.layout());
 }
 
 } /* namespace Kokkos */
