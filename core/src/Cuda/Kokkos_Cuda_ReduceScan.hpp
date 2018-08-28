@@ -194,8 +194,9 @@ void cuda_shfl_up( T & out , T const & in , int delta ,
  */
 
 template< class ValueType , class JoinOp>
-__device__
-inline void cuda_intra_warp_reduction( ValueType& result,
+__device__ inline
+typename std::enable_if< !Kokkos::is_reducer<ValueType>::value >::type
+cuda_intra_warp_reduction( ValueType& result,
                                        const JoinOp& join,
                                        const uint32_t max_active_thread = blockDim.y) {
 
@@ -214,8 +215,9 @@ inline void cuda_intra_warp_reduction( ValueType& result,
 }
 
 template< class ValueType , class JoinOp>
-__device__
-inline void cuda_inter_warp_reduction( ValueType& value,
+__device__ inline
+typename std::enable_if< !Kokkos::is_reducer<ValueType>::value >::type
+cuda_inter_warp_reduction( ValueType& value,
                                        const JoinOp& join,
                                        const int max_active_thread = blockDim.y) {
 
@@ -247,8 +249,9 @@ inline void cuda_inter_warp_reduction( ValueType& value,
 }
 
 template< class ValueType , class JoinOp>
-__device__
-inline void cuda_intra_block_reduction( ValueType& value,
+__device__ inline
+typename std::enable_if< !Kokkos::is_reducer<ValueType>::value >::type
+cuda_intra_block_reduction( ValueType& value,
                                         const JoinOp& join,
                                         const int max_active_thread = blockDim.y) {
   cuda_intra_warp_reduction(value,join,max_active_thread);
