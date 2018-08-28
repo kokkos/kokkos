@@ -827,6 +827,20 @@ struct TestViewMirror
     ASSERT_EQ( a_org(5), a_h3(5) );
   }
 
+  template< class MemoryTraits >
+  void static test_mirror_no_initialize() {
+    Kokkos::View< double*, Layout, Kokkos::HostSpace > a_org( "A", 10 );
+    Kokkos::View< double*, Layout, Kokkos::HostSpace, MemoryTraits > a_h = a_org;
+    auto a_d = Kokkos::create_mirror_view( DeviceType(), a_h, Kokkos::WithoutInitializing );
+    
+    int equal_ptr_h_d = a_h.data() == a_d.data() ? 1 : 0;
+    int is_same_memspace = std::is_same< Kokkos::HostSpace, typename DeviceType::memory_space >::value ? 1 : 0;
+    int is_a_d_init = (a_d.use_count() == 0  && a_d.data() == nullptr) ||
+                       is_same_memspace == 1 ? 1 : 0;
+    
+    ASSERT_EQ( is_a_d_init, 1);
+    ASSERT_EQ( equal_ptr_h_d, is_same_memspace);
+  }
 
   void static testit() {
     test_mirror< Kokkos::MemoryTraits<0> >();
@@ -835,6 +849,8 @@ struct TestViewMirror
     test_mirror_view< Kokkos::MemoryTraits<Kokkos::Unmanaged> >();
     test_mirror_copy< Kokkos::MemoryTraits<0> >();
     test_mirror_copy< Kokkos::MemoryTraits<Kokkos::Unmanaged> >();
+    test_mirror_no_initialize< Kokkos::MemoryTraits<0> >();
+    test_mirror_no_initialize< Kokkos::MemoryTraits<Kokkos::Unmanaged> >();
   }
 };
 
