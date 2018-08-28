@@ -56,7 +56,7 @@
 #include <openmp/TestOpenMP_Category.hpp>
 #endif
 //#include <TestReduce.hpp>
-#include <TestMDRange_a.hpp>
+#include <TestMemoryPool.hpp>
 //#include <TestMDRange_b.hpp>
 //#include <TestMDRange_c.hpp>
 //#include <TestMDRange_d.hpp>
