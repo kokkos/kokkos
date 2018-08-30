@@ -70,6 +70,20 @@ __inline__ __device__
 unsigned int atomic_fetch_sub( volatile unsigned int * const dest , const unsigned int val )
 { return atomicSub((unsigned int*)dest,val); }
 
+__inline__ __device__
+unsigned int atomic_fetch_sub( volatile int64_t * const dest , const int64_t val )
+{ return atomic_fetch_add(dest,-val); }
+
+__inline__ __device__
+unsigned int atomic_fetch_sub( volatile float * const dest , const float val )
+{ return atomicAdd((float*)dest,-val); }
+
+#if ( 600 <= __CUDA_ARCH__ )
+__inline__ __device__
+unsigned int atomic_fetch_sub( volatile double * const dest , const double val )
+{ return atomicAdd((double*)dest,-val); }
+#endif
+
 template < typename T >
 __inline__ __device__
 T atomic_fetch_sub( volatile T * const dest ,
@@ -121,7 +135,8 @@ T atomic_fetch_sub( volatile T * const dest ,
   T return_val;
   // This is a way to (hopefully) avoid dead lock in a warp
   int done = 0;
-  unsigned int active = KOKKOS_IMPL_CUDA_BALLOT(1);
+  unsigned int mask = KOKKOS_IMPL_CUDA_ACTIVEMASK;
+  unsigned int active = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
   unsigned int done_active = 0;
   while (active!=done_active) {
     if(!done) {
@@ -132,7 +147,7 @@ T atomic_fetch_sub( volatile T * const dest ,
         done = 1;
       }
     }
-    done_active = KOKKOS_IMPL_CUDA_BALLOT(done);
+    done_active = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,done);
   }
   return return_val;
 }

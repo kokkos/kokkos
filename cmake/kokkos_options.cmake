@@ -31,6 +31,7 @@ list(APPEND KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST
      Profiling_Load_Print
      Aggressive_Vectorization
      Deprecated_Code
+     Explicit_Instantiation
      )
 
 #-------------------------------------------------------------------------------
@@ -120,11 +121,18 @@ list(APPEND KOKKOS_DEVICES_LIST
 # List of possible TPLs for Kokkos
 # From Makefile.kokkos: Options: hwloc,librt,experimental_memkind
 set(KOKKOS_USE_TPLS_LIST)
+if(APPLE)
+list(APPEND KOKKOS_USE_TPLS_LIST
+    HWLOC          # hwloc
+    MEMKIND        # experimental_memkind
+    )
+else()
 list(APPEND KOKKOS_USE_TPLS_LIST
     HWLOC          # hwloc
     LIBRT          # librt
     MEMKIND        # experimental_memkind
     )
+endif()
 # Map of cmake variables to Makefile variables
 set(KOKKOS_INTERNAL_HWLOC hwloc)
 set(KOKKOS_INTERNAL_LIBRT librt)
@@ -169,6 +177,7 @@ set(KOKKOS_INTERNAL_LAMBDA enable_lambda)
 
 set(tmpr "\n       ")
 string(REPLACE ";" ${tmpr} KOKKOS_INTERNAL_ARCH_DOCSTR "${KOKKOS_ARCH_LIST}")
+set(KOKKOS_INTERNAL_ARCH_DOCSTR "${tmpr}${KOKKOS_INTERNAL_ARCH_DOCSTR}")
 # This would be useful, but we use Foo_ENABLE mechanisms
 #string(REPLACE ";" ${tmpr} KOKKOS_INTERNAL_DEVICES_DOCSTR "${KOKKOS_DEVICES_LIST}")
 #string(REPLACE ";" ${tmpr} KOKKOS_INTERNAL_USE_TPLS_DOCSTR "${KOKKOS_USE_TPLS_LIST}")
@@ -266,6 +275,8 @@ set(KOKKOS_ENABLE_PROFILING_LOAD_PRINT ${KOKKOS_INTERNAL_ENABLE_PROFILING_LOAD_P
 set_kokkos_default_default(DEPRECATED_CODE ON)
 set(KOKKOS_ENABLE_DEPRECATED_CODE ${KOKKOS_INTERNAL_ENABLE_DEPRECATED_CODE_DEFAULT} CACHE BOOL "Enable deprecated code.")
 
+set_kokkos_default_default(EXPLICIT_INSTANTIATION OFF)
+set(KOKKOS_ENABLE_EXPLICIT_INSTANTIATION ${KOKKOS_INTERNAL_ENABLE_EXPLICIT_INSTANTIATION_DEFAULT} CACHE BOOL "Enable explicit template instantiation.")
 
 #-------------------------------------------------------------------------------
 #------------------------------- KOKKOS_USE_TPLS -------------------------------

@@ -262,7 +262,7 @@ public:
   }
 
   //----------------------------------------
-
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   template< class FunctorType >
   static
   int team_size_max( const FunctorType & ) { return 1 ; }
@@ -274,6 +274,16 @@ public:
   template< class FunctorType >
   static
   int team_size_recommended( const FunctorType & , const int& ) { return 1 ; }
+#endif
+
+  template<class FunctorType>
+  int team_size_max( const FunctorType&, const ParallelForTag& ) const { return 1 ; }
+  template<class FunctorType>
+  int team_size_max( const FunctorType&, const ParallelReduceTag& ) const { return 1 ; }
+  template<class FunctorType>
+  int team_size_recommended( const FunctorType&, const ParallelForTag& ) const { return 1 ; }
+  template<class FunctorType>
+  int team_size_recommended( const FunctorType&, const ParallelReduceTag& ) const { return 1 ; }
 
   //----------------------------------------
 
@@ -281,16 +291,34 @@ public:
   inline int league_size() const { return m_league_size ; }
   inline size_t scratch_size(const int& level, int = 0) const { return m_team_scratch_size[level] + m_thread_scratch_size[level]; }
 
+  inline static
+  int vector_length_max()
+    { return 1024; } // Use arbitrary large number, is meant as a vectorizable length
+
+  inline static
+  int scratch_size_max(int level)
+  { return (level==0?
+        1024*32:
+        20*1024*1024);
+  }
   /** \brief  Specify league size, request team size */
   TeamPolicyInternal( execution_space &
             , int league_size_request
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
+            , int team_size_request
+#else
             , int /* team_size_request */
+#endif
             , int /* vector_length_request */ = 1 )
     : m_team_scratch_size { 0 , 0 }
     , m_thread_scratch_size { 0 , 0 }
     , m_league_size( league_size_request )
     , m_chunk_size ( 32 )
-    {}
+    {
+      #ifndef KOKKOS_ENABLE_DEPRECATED_CODE
+      if(team_size_request > 1) Kokkos::abort("Kokkos::abort: Requested Team Size is too large!");
+      #endif
+    }
 
   TeamPolicyInternal( execution_space &
             , int league_size_request
@@ -303,13 +331,21 @@ public:
     {}
 
   TeamPolicyInternal( int league_size_request
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
+            , int team_size_request
+#else
             , int /* team_size_request */
+#endif
             , int /* vector_length_request */ = 1 )
     : m_team_scratch_size { 0 , 0 }
     , m_thread_scratch_size { 0 , 0 }
     , m_league_size( league_size_request )
     , m_chunk_size ( 32 )
-    {}
+    {
+      #ifndef KOKKOS_ENABLE_DEPRECATED_CODE
+      if(team_size_request > 1) Kokkos::abort("Kokkos::abort: Requested Team Size is too large!");
+      #endif
+    }
 
   TeamPolicyInternal( int league_size_request
             , const Kokkos::AUTO_t & /* team_size_request */
@@ -1151,15 +1187,15 @@ public:
   UniqueToken( execution_space const& = execution_space() ) noexcept {}
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
-  inline
+  KOKKOS_INLINE_FUNCTION
   int size() const noexcept { return 1; }
 
   /// \brief acquire value such that 0 <= value < size()
-  inline
+  KOKKOS_INLINE_FUNCTION
   int acquire() const  noexcept { return 0; }
 
   /// \brief release a value acquired by generate
-  inline
+  KOKKOS_INLINE_FUNCTION
   void release( int ) const noexcept {}
 };
 
@@ -1176,15 +1212,15 @@ public:
   UniqueToken( execution_space const& = execution_space() ) noexcept {}
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
-  inline
+  KOKKOS_INLINE_FUNCTION
   int size() const noexcept { return 1; }
 
   /// \brief acquire value such that 0 <= value < size()
-  inline
+  KOKKOS_INLINE_FUNCTION
   int acquire() const  noexcept { return 0; }
 
   /// \brief release a value acquired by generate
-  inline
+  KOKKOS_INLINE_FUNCTION
   void release( int ) const noexcept {}
 };
 
