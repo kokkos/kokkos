@@ -638,60 +638,132 @@ void view_copy(const DstType& dst, const SrcType& src) {
     Kokkos::Impl::throw_runtime_exception(message);
   }
 
-  // Figure out iteration order in case we need it
-  int64_t strides[DstType::Rank+1];
-  dst.stride(strides);
+  using copy_execution_space = typename std::conditional<DstExecCanAccessSrc, dst_execution_space, src_execution_space>::type;
+
+  // Figure out iteration order
   Kokkos::Iterate iterate;
-  if        ((std::is_same<typename DstType::array_layout,Kokkos::LayoutRight>::value)) {
+  if (DstType::Rank <= 1) {
     iterate = Kokkos::Iterate::Right;
-  } else if ((std::is_same<typename DstType::array_layout,Kokkos::LayoutLeft>::value)) {
-    iterate = Kokkos::Iterate::Left;
-  } else if ((std::is_same<typename DstType::array_layout,Kokkos::LayoutStride>::value)) {
-    if( strides[0] > strides[DstType::Rank-1] )
-      iterate = Kokkos::Iterate::Right;
-    else
-      iterate = Kokkos::Iterate::Left;
   } else {
-    if( std::is_same<typename DstType::execution_space::array_layout, Kokkos::LayoutRight>::value )
+    using dst_layout = typename DstType::array_layout;
+    using src_layout = typename SrcType::array_layout;
+    enum { dst_is_left = std::is_same<dst_layout, Kokkos::LayoutLeft>::value };
+    enum { src_is_left = std::is_same<src_layout, Kokkos::LayoutLeft>::value };
+    enum { dst_is_right = std::is_same<dst_layout, Kokkos::LayoutRight>::value };
+    enum { src_is_right = std::is_same<src_layout, Kokkos::LayoutRight>::value };
+    bool dst_is_leftish;
+    if (dst_is_left) {
+      dst_is_leftish = true;
+    } else if (dst_is_right) {
+      dst_is_leftish = false;
+    } else {
+      int64_t strides[DstType::Rank+1];
+      dst.stride(strides);
+      dst_is_leftish = strides[0] < strides[DstType::Rank - 1];
+    }
+    bool const dst_is_rightish = !dst_is_leftish;
+    bool src_is_leftish;
+    if (src_is_left) {
+      src_is_leftish = true;
+    } else if (src_is_right) {
+      src_is_leftish = false;
+    } else {
+      int64_t strides[SrcType::Rank+1];
+      src.stride(strides);
+      src_is_leftish = strides[0] < strides[SrcType::Rank - 1];
+    }
+    bool const src_is_rightish = !src_is_leftish;
+    if (dst_is_rightish && src_is_rightish) {
       iterate = Kokkos::Iterate::Right;
-    else
+    } else if (dst_is_leftish && src_is_leftish) {
       iterate = Kokkos::Iterate::Left;
+    } else {
+      // switching from right-ish to left-ish or vice versa
+      // for some reason right/right iteration almost always does better on the GPU
+#ifdef KOKKOS_ENABLE_CUDA
+      if (std::is_same<copy_execution_space, Kokkos::Cuda>::value) {
+        iterate = Kokkos::Iterate::Right;
+      } else
+#endif
+#ifdef KOKKOS_ENABLE_ROCM
+      if (std::is_same<copy_execution_space, Kokkos::ROCm>::value) {
+        iterate = Kokkos::Iterate::Right;
+      } else
+#endif
+      { // now we're running on a host/CPU backend
+        std::size_t avg_extent = 0;
+        for (int dim = 0; dim < SrcType::Rank; ++dim) {
+          avg_extent += src.extent(dim);
+        }
+        avg_extent /= SrcType::Rank;
+        // view is "square" (hyper-cube) -ish if all extents are with a factor of 2
+        bool is_hypercubeish = true;
+        for (int dim = 0; dim < SrcType::Rank; ++dim) {
+          if (!(avg_extent / 2 <= src.extent(dim) && src.extent(dim) <= avg_extent * 2)) {
+            is_hypercubeish = false;
+          }
+        }
+        if (is_hypercubeish) {
+          // for a "square" view, the destination layout was the best on CPU backends
+          if (dst_is_leftish) iterate = Kokkos::Iterate::Left;
+          if (dst_is_rightish) iterate = Kokkos::Iterate::Right;
+        } else {
+#ifdef KOKKOS_ENABLE_SERIAL
+          if (std::is_same<copy_execution_space, Kokkos::Serial>::value) {
+            // Serial seems to like its first dimension big, but not too big...
+            constexpr std::size_t too_big = 30 * 1000;
+            if ((src.extent(0) < too_big) && (src.extent(SrcType::Rank - 1) < too_big)) {
+              if (src.extent(0) > src.extent(SrcType::Rank - 1)) {
+                iterate = Kokkos::Iterate::Left;
+              } else {
+                iterate = Kokkos::Iterate::Right;
+              }
+            } else if (src.extent(0) < too_big) {
+              iterate = Kokkos::Iterate::Left;
+            } else if (src.extent(SrcType::Rank - 1) < too_big) {
+              iterate = Kokkos::Iterate::Right;
+            } else {
+              // if both are big, treat as hypercube-ish?
+              if (dst_is_leftish) iterate = Kokkos::Iterate::Left;
+              else iterate = Kokkos::Iterate::Right;
+            }
+          } else
+#endif
+          { // now we're running on Threads/OpenMP
+            // Threads like smaller first dimensions, less than 1K
+            constexpr std::size_t too_big = 1000;
+            if (src.extent(0) < src.extent(SrcType::Rank - 1) && (src.extent(0) < too_big)) {
+              iterate = Kokkos::Iterate::Left;
+            } else if (src.extent(SrcType::Rank - 1) < src.extent(0) && (src.extent(SrcType::Rank - 1) < too_big)) {
+              iterate = Kokkos::Iterate::Right;
+            } else {
+              // if both are big, the source layout does better
+              if (src_is_leftish) iterate = Kokkos::Iterate::Left;
+              else iterate = Kokkos::Iterate::Right;
+            }
+          }
+        }
+      }
+    }
   }
 
   if( (dst.span() >= size_t(std::numeric_limits<int>::max())) ||
       (src.span() >= size_t(std::numeric_limits<int>::max())) ){
-    if(DstExecCanAccessSrc) {
-      if(iterate == Kokkos::Iterate::Right)
-        Kokkos::Impl::ViewCopy< typename DstType::uniform_runtime_nomemspace_type, typename SrcType::uniform_runtime_const_nomemspace_type, Kokkos::LayoutRight, dst_execution_space,
-                                DstType::Rank, int64_t >( dst , src );
-      else
-        Kokkos::Impl::ViewCopy< typename DstType::uniform_runtime_nomemspace_type, typename SrcType::uniform_runtime_const_nomemspace_type, Kokkos::LayoutLeft, dst_execution_space,
-                                DstType::Rank, int64_t >( dst , src );
+    if(iterate == Kokkos::Iterate::Right) {
+      Kokkos::Impl::ViewCopy< typename DstType::uniform_runtime_nomemspace_type, typename SrcType::uniform_runtime_const_nomemspace_type, Kokkos::LayoutRight, copy_execution_space,
+                              DstType::Rank, int64_t >( dst , src );
     } else {
-      if(iterate == Kokkos::Iterate::Right)
-        Kokkos::Impl::ViewCopy< typename DstType::uniform_runtime_nomemspace_type, typename SrcType::uniform_runtime_const_nomemspace_type, Kokkos::LayoutRight, src_execution_space,
-                                DstType::Rank, int64_t >( dst , src );
-      else
-        Kokkos::Impl::ViewCopy< typename DstType::uniform_runtime_nomemspace_type, typename SrcType::uniform_runtime_const_nomemspace_type, Kokkos::LayoutLeft, src_execution_space,
-                                DstType::Rank, int64_t >( dst , src );
+      Kokkos::Impl::ViewCopy< typename DstType::uniform_runtime_nomemspace_type, typename SrcType::uniform_runtime_const_nomemspace_type, Kokkos::LayoutLeft, copy_execution_space,
+                              DstType::Rank, int64_t >( dst , src );
     }
   } else {
-    if(DstExecCanAccessSrc) {
-      if(iterate == Kokkos::Iterate::Right)
-        Kokkos::Impl::ViewCopy< typename DstType::uniform_runtime_nomemspace_type, typename SrcType::uniform_runtime_const_nomemspace_type, Kokkos::LayoutRight, dst_execution_space,
-                                DstType::Rank, int >( dst , src );
-      else
-        Kokkos::Impl::ViewCopy< typename DstType::uniform_runtime_nomemspace_type, typename SrcType::uniform_runtime_const_nomemspace_type, Kokkos::LayoutLeft, dst_execution_space,
-                                DstType::Rank, int >( dst , src );
+    if(iterate == Kokkos::Iterate::Right) {
+      Kokkos::Impl::ViewCopy< typename DstType::uniform_runtime_nomemspace_type, typename SrcType::uniform_runtime_const_nomemspace_type, Kokkos::LayoutRight, copy_execution_space,
+                              DstType::Rank, int >( dst , src );
     } else {
-      if(iterate == Kokkos::Iterate::Right)
-        Kokkos::Impl::ViewCopy< typename DstType::uniform_runtime_nomemspace_type, typename SrcType::uniform_runtime_const_nomemspace_type, Kokkos::LayoutRight, src_execution_space,
-                                DstType::Rank, int >( dst , src );
-      else
-        Kokkos::Impl::ViewCopy< typename DstType::uniform_runtime_nomemspace_type, typename SrcType::uniform_runtime_const_nomemspace_type, Kokkos::LayoutLeft, src_execution_space,
-                                DstType::Rank, int >( dst , src );
+      Kokkos::Impl::ViewCopy< typename DstType::uniform_runtime_nomemspace_type, typename SrcType::uniform_runtime_const_nomemspace_type, Kokkos::LayoutLeft, copy_execution_space,
+                              DstType::Rank, int >( dst , src );
     }
-
   }
 }
 
@@ -1243,9 +1315,9 @@ void deep_copy
      ViewTypeFlat;
 
     ViewTypeFlat dst_flat(dst.data(),dst.size());
-    if(dst.span() < std::numeric_limits<int>::max()) {
+    if(dst.span() < std::numeric_limits<int>::max())
       Kokkos::Impl::ViewFill< ViewTypeFlat , Kokkos::LayoutRight, typename ViewType::execution_space, ViewTypeFlat::Rank, int >( dst_flat , value );
-    } else
+    else
       Kokkos::Impl::ViewFill< ViewTypeFlat , Kokkos::LayoutRight, typename ViewType::execution_space, ViewTypeFlat::Rank, int64_t >( dst_flat , value );
     Kokkos::fence();
     return;
@@ -1396,6 +1468,7 @@ void deep_copy
 
   enum { SrcExecCanAccessDst =
    Kokkos::Impl::SpaceAccessibility< src_execution_space , dst_memory_space >::accessible };
+
 
   // Checking for Overlapping Views.
   dst_value_type* dst_start = dst.data();
