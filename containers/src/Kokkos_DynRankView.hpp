@@ -1995,6 +1995,29 @@ create_mirror_view(const Space& , const Kokkos::DynRankView<T,P...> & src
   return typename Impl::MirrorDRViewType<Space,T,P ...>::view_type(src.label(), Impl::reconstructLayout(src.layout(), src.rank()) );
 }
 
+// Create a mirror view and deep_copy in a new space (specialization for same space)
+template<class Space, class T, class ... P>
+typename Impl::MirrorDRViewType<Space,T,P ...>::view_type
+create_mirror_view_and_copy(const Space& , const Kokkos::DynRankView<T,P...> & src
+  , std::string const& name = ""
+  , typename std::enable_if<Impl::MirrorDRViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
+  (void)name;
+  return src;
+}
+
+// Create a mirror view and deep_copy in a new space (specialization for different space)
+template<class Space, class T, class ... P>
+typename Impl::MirrorDRViewType<Space,T,P ...>::view_type
+create_mirror_view_and_copy(const Space& , const Kokkos::DynRankView<T,P...> & src
+  , std::string const& name = ""
+  , typename std::enable_if<!Impl::MirrorDRViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
+  using Mirror = typename Impl::MirrorDRViewType<Space,T,P ...>::view_type;
+  std::string label = name.empty() ? src.label() : name;
+  auto mirror = Mirror(ViewAllocateWithoutInitializing(label), src.layout());
+  deep_copy(mirror, src);
+  return mirror;
+}
+
 } //end Kokkos
 
 
