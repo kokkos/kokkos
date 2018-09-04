@@ -109,6 +109,7 @@ do
       ;;
     --help)
       echo "Kokkos configure options:"
+      echo ""
       echo "--kokkos-path=/Path/To/Kokkos:        Path to the Kokkos root directory."
       echo "--qthreads-path=/Path/To/Qthreads:    Path to Qthreads install directory."
       echo "                                        Overrides path given by --with-qthreads."
@@ -201,8 +202,8 @@ else
 fi
 
 if [ "${KOKKOS_PATH}"  = "${PWD}" ] || [ "${KOKKOS_PATH}"  = "${PWD}/" ]; then
-  echo "Running generate_makefile.sh in the Kokkos root directory is not allowed"
-  
+  echo "Running generate_makefile.bash in the Kokkos root directory is not allowed"
+  exit
 fi
 
 KOKKOS_SRC_PATH=${KOKKOS_PATH}
@@ -213,11 +214,10 @@ KOKKOS_SETTINGS="KOKKOS_SRC_PATH=${KOKKOS_SRC_PATH}"
 if [ ${#COMPILER} -gt 0 ]; then
   KOKKOS_SETTINGS="${KOKKOS_SETTINGS} CXX=${COMPILER}"
 elif
-  [ ${#COMPILER} -eq 0 ] && [ ${#KOKKOS_DEVICES} -gt 0 ]; then
-    COMPILER="${KOKKOS_PATH}/bin/nvcc_wrapper"                                                  
-
-    KOKKOS_SETTINGS="${KOKKOS_SETTINGS} CXX=${COMPILER}"   
-    #echo "CXX= ${CXX}"
+   [ ${#COMPILER} -eq 0 ] && [ ${#KOKKOS_DEVICES} -gt 0 ]; then
+  COMPILER="${KOKKOS_PATH}/bin/nvcc_wrapper"                                                  
+  KOKKOS_SETTINGS="${KOKKOS_SETTINGS} CXX=${COMPILER}"   
+  #echo "CXX= ${CXX}"
 fi
 
 if [ ${#KOKKOS_DEVICES} -gt 0 ]; then
