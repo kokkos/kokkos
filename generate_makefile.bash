@@ -101,7 +101,7 @@ do
       WCOMPATH=`which $COMPILER`
       COMPDIR=`dirname $WCOMPATH`
       COMPNAME=`basename $WCOMPATH`
-      COMPILER=${COMPDIR}"/"${COMPNAME}
+      COMPILER=${COMPDIR}/${COMPNAME}
       ;;
     --with-options*)
       KOKKOS_OPT="${key#*=}"
@@ -210,11 +210,12 @@ KOKKOS_SRC_PATH=${KOKKOS_PATH}
 KOKKOS_SETTINGS="KOKKOS_SRC_PATH=${KOKKOS_SRC_PATH}"
 #KOKKOS_SETTINGS="KOKKOS_PATH=${KOKKOS_PATH}"
 
+# The double [[  ]] in the elif branch is not a typo
 if [ ${#COMPILER} -gt 0 ]; then
   KOKKOS_SETTINGS="${KOKKOS_SETTINGS} CXX=${COMPILER}"
 elif
-   [ ${#COMPILER} -eq 0 ] && [ ${#KOKKOS_DEVICES} -gt 0 ]; then
-  COMPILER="${KOKKOS_PATH}/bin/nvcc_wrapper"                                                  
+   [ ${#COMPILER} -eq 0 ] && [[ ${KOKKOS_DEVICES} =~ .*Cuda.* ]]; then
+  COMPILER="${KOKKOS_PATH}/bin/nvcc_wrapper"
   KOKKOS_SETTINGS="${KOKKOS_SETTINGS} CXX=${COMPILER}"   
 fi
 
