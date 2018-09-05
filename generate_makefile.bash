@@ -101,8 +101,7 @@ do
       WCOMPATH=`which $COMPILER`
       COMPDIR=`dirname $WCOMPATH`
       COMPNAME=`basename $WCOMPATH`
-      COMPILER=$COMPDIR"/"$COMPNAME
-      echo "COMPILER set: '${COMPILER}'"
+      COMPILER=${COMPDIR}"/"${COMPNAME}
       ;;
     --with-options*)
       KOKKOS_OPT="${key#*=}"
@@ -217,7 +216,6 @@ elif
    [ ${#COMPILER} -eq 0 ] && [ ${#KOKKOS_DEVICES} -gt 0 ]; then
   COMPILER="${KOKKOS_PATH}/bin/nvcc_wrapper"                                                  
   KOKKOS_SETTINGS="${KOKKOS_SETTINGS} CXX=${COMPILER}"   
-  #echo "CXX= ${CXX}"
 fi
 
 if [ ${#KOKKOS_DEVICES} -gt 0 ]; then
