@@ -47,7 +47,6 @@
 #include <Kokkos_Macros.hpp>
 #include <cstdint>
 #include <type_traits>
-#include <utility>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -412,26 +411,6 @@ struct inclusive_scan_integer_sequence
 
 }} // namespace Kokkos::Impl
 
-namespace Kokkos {
-
-template <class T>
-KOKKOS_INLINE_FUNCTION void swap(T& a, T& b) {
-  T c{std::move(a)};
-  a = std::move(b);
-  b = std::move(c);
-}
-
-template <class T>
-KOKKOS_INLINE_FUNCTION T const& min(T const& a, T const& b) {
-  return (b < a) ? b : a;
-}
-
-template <class T>
-KOKKOS_INLINE_FUNCTION T const& max(T const& a, T const& b) {
-  return (a < b) ? b : a;
-}
-
-}
 
 #endif //KOKKOS_CORE_IMPL_UTILITIES_HPP
 
