@@ -911,6 +911,11 @@ public:
       ASSERT_EQ( a_h.extent(0), a_h3.extent(0) );
       ASSERT_EQ( a_h.extent(0), a_h2.extent(0) );
       ASSERT_EQ( a_h.extent(0), a_d .extent(0) );
+      ASSERT_EQ( a_h.extent(0), a_h3.extent(0) );
+      ASSERT_EQ( a_h.rank(), a_org.rank() );
+      ASSERT_EQ( a_h.rank(), a_h2.rank() );
+      ASSERT_EQ( a_h.rank(), a_h3.rank() );
+      ASSERT_EQ( a_h.rank(), a_d.rank() );
       ASSERT_EQ( a_org(5), a_h3(5) );
     }
     // LayoutRight
@@ -936,6 +941,10 @@ public:
       ASSERT_EQ( a_h.extent(0), a_h3.extent(0) );
       ASSERT_EQ( a_h.extent(0), a_h2.extent(0) );
       ASSERT_EQ( a_h.extent(0), a_d .extent(0) );
+      ASSERT_EQ( a_h.rank(), a_org.rank() );
+      ASSERT_EQ( a_h.rank(), a_h2.rank() );
+      ASSERT_EQ( a_h.rank(), a_h3.rank() );
+      ASSERT_EQ( a_h.rank(), a_d.rank() );
       ASSERT_EQ( a_org(5), a_h3(5) );
     }
   }
