@@ -645,10 +645,12 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
     unsigned mask = width==32?0xffffffff:((1<<width)-1)<<((threadIdx.y*blockDim.x+threadIdx.x)%(32/width))*width;
     const int lane_id = (threadIdx.y*blockDim.x+threadIdx.x)%32;
     for(int delta=skip_vector?blockDim.x:1; delta<width; delta*=2) {
-      if(lane_id + delta<32)
+      if(lane_id + delta<32) {
         ValueJoin::join( functor , value, value+delta);
+      }
       KOKKOS_IMPL_CUDA_SYNCWARP_MASK(mask);
     }
+    fcn_to_silence_unused_var_warnings(mask);
     *value=*(value-lane_id);
   }
 

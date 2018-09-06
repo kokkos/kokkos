@@ -76,6 +76,10 @@ constexpr AUTO_t AUTO = Kokkos::AUTO_t();
 
 struct InvalidType {};
 
+template <class Type>
+KOKKOS_INLINE_FUNCTION
+void fcn_to_silence_unused_var_warnings ( Type const& input ) {}
+
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
