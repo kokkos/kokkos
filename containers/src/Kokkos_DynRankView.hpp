@@ -64,7 +64,7 @@ namespace Impl {
 template <typename Specialize>
 struct DynRankDimTraits {
 
-  enum : size_t{unspecified =KOKKOS_INVALID_INDEX};
+  enum : size_t{unspecified = KOKKOS_INVALID_INDEX};
 
   // Compute the rank of the view from the nonzero dimension arguments.
   KOKKOS_INLINE_FUNCTION
@@ -1008,7 +1008,7 @@ public:
 
   //----------------------------------------
   // Allocation according to allocation properties and array layout
-  // unused arg_layout dimensions must be set toKOKKOS_INVALID_INDEX so that rank deduction can properly take place
+  // unused arg_layout dimensions must be set to KOKKOS_INVALID_INDEX so that rank deduction can properly take place
   template< class ... P >
   explicit inline
   DynRankView( const Kokkos::Impl::ViewCtorProp< P ... > & arg_prop
@@ -1183,7 +1183,7 @@ public:
     : DynRankView( Kokkos::Impl::ViewCtorProp< std::string >( arg_label )
     , typename traits::array_layout
           ( arg_N0 , arg_N1 , arg_N2 , arg_N3 , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
-          )
+      )
     {}
 
   // For backward compatibility
@@ -1193,8 +1193,7 @@ public:
       , const typename traits::array_layout & arg_layout
       )
     : DynRankView( Kokkos::Impl::ViewCtorProp< std::string , Kokkos::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::WithoutInitializing )
-
-          , Impl::DynRankDimTraits<typename traits::specialize>::createLayout(arg_layout)
+                 , arg_layout
       )
     {}
 
@@ -1209,7 +1208,9 @@ public:
       , const size_t arg_N6 =KOKKOS_INVALID_INDEX
       , const size_t arg_N7 =KOKKOS_INVALID_INDEX
       )
-    : DynRankView(Kokkos::Impl::ViewCtorProp< std::string , Kokkos::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::WithoutInitializing ), arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7 )
+    : DynRankView(Kokkos::Impl::ViewCtorProp< std::string , Kokkos::Impl::WithoutInitializing_t >( arg_prop.label , Kokkos::WithoutInitializing )
+      , typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7)
+      )
     {}
 
   //----------------------------------------
@@ -2013,7 +2014,8 @@ create_mirror_view_and_copy(const Space& , const Kokkos::DynRankView<T,P...> & s
   , typename std::enable_if<!Impl::MirrorDRViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
   using Mirror = typename Impl::MirrorDRViewType<Space,T,P ...>::view_type;
   std::string label = name.empty() ? src.label() : name;
-  auto mirror = Mirror(ViewAllocateWithoutInitializing(label), src.layout());
+  auto reconstructed_layout = Impl::reconstructLayout(src.layout(), src.rank());
+  auto mirror = Mirror( Kokkos::ViewAllocateWithoutInitializing(label), Impl::reconstructLayout(src.layout(), src.rank()) );
   deep_copy(mirror, src);
   return mirror;
 }
