@@ -130,7 +130,6 @@ T atomic_compare_exchange( volatile T * const dest , const T & compare ,
     done_active = KOKKOS_IMPL_CUDA_BALLOT_MASK(done);
 #endif
   }
-//  fcn_to_silence_unused_var_warnings(mask);
   return return_val;
 }
 #endif

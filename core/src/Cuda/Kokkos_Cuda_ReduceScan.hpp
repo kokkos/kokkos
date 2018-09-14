@@ -696,9 +696,6 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
       KOKKOS_IMPL_CUDA_SYNCWARP_MASK;
 #endif
     }
-#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
-    fcn_to_silence_unused_var_warnings(mask);
-#endif
     *value=*(value-lane_id);
   }
 

@@ -268,7 +268,6 @@ T atomic_fetch_oper( const Oper& op, volatile T * const dest ,
     done_active = KOKKOS_IMPL_CUDA_BALLOT_MASK(done);
 #endif
   }
-//  fcn_to_silence_unused_var_warnings(mask);
   return return_val;
 #endif
 }
@@ -317,7 +316,6 @@ T atomic_oper_fetch( const Oper& op, volatile T * const dest ,
     done_active = KOKKOS_IMPL_CUDA_BALLOT_MASK(done);
 #endif
   }
-//  fcn_to_silence_unused_var_warnings(mask);
   return return_val;
 #endif
 }

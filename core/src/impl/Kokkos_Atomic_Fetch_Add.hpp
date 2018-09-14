@@ -167,7 +167,6 @@ T atomic_fetch_add( volatile T * const dest ,
     done_active = KOKKOS_IMPL_CUDA_BALLOT_MASK(done);
 #endif
   }
-//  fcn_to_silence_unused_var_warnings(mask);
   return return_val;
 }
 #endif
