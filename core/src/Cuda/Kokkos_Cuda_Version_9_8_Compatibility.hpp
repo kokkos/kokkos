@@ -4,9 +4,9 @@
 #if ( CUDA_VERSION < 9000 )
 #define KOKKOS_IMPL_CUDA_ACTIVEMASK 0
 #define KOKKOS_IMPL_CUDA_SYNCWARP __threadfence_block()
-#define KOKKOS_IMPL_CUDA_SYNCWARP_MASK(x) __threadfence_block()
+#define KOKKOS_IMPL_CUDA_SYNCWARP_MASK __threadfence_block()
 #define KOKKOS_IMPL_CUDA_BALLOT(x) __ballot(x)
-#define KOKKOS_IMPL_CUDA_BALLOT_MASK(m,x) __ballot(x)
+#define KOKKOS_IMPL_CUDA_BALLOT_MASK(x) __ballot(x)
 #define KOKKOS_IMPL_CUDA_SHFL(x,y,z) __shfl(x,y,z)
 #define KOKKOS_IMPL_CUDA_SHFL_MASK(m,x,y,z) __shfl(x,y,z)
 #define KOKKOS_IMPL_CUDA_SHFL_UP(x,y,z) __shfl_up(x,y,z)
