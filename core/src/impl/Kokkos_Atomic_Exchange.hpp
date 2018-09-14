@@ -130,8 +130,12 @@ T atomic_exchange( volatile T * const dest ,
 #endif
 
   int done = 0;
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
   unsigned int mask = KOKKOS_IMPL_CUDA_ACTIVEMASK;
   unsigned int active = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
+#else
+  unsigned int active = KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+#endif
   unsigned int done_active = 0;
   while (active!=done_active) {
     if(!done) {
@@ -142,7 +146,11 @@ T atomic_exchange( volatile T * const dest ,
         done = 1;
       }
     }
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
     done_active = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,done);
+#else
+    done_active = KOKKOS_IMPL_CUDA_BALLOT_MASK(done);
+#endif
   }
   return return_val;
 }
