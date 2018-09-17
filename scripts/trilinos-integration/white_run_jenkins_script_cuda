@@ -20,7 +20,7 @@ then
   TRILINOS_PRISTINE_BRANCH=develop
 fi
 
-module load devpack/openmpi/1.10.4/gcc/5.4.0/cuda/8.0.44
+module load devpack/20180521/openmpi/3.1.0/gcc/7.2.0/cuda/9.2.88
 export OMP_NUM_THREADS=8
 export JENKINS_DO_CUDA=ON
 export JENKINS_DO_OPENMP=OFF
