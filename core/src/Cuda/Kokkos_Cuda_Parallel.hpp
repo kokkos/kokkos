@@ -2026,9 +2026,8 @@ private:
     const WorkRange range( m_policy , blockIdx.x , gridDim.x );
 
     for ( typename Policy::member_type iwork_base = range.begin(); iwork_base < range.end() ; iwork_base += blockDim.y ) {
-      #ifdef __CUDA_ARCH__
+      #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       unsigned MASK=KOKKOS_IMPL_CUDA_ACTIVEMASK;
-      MASK=MASK; // Silence warning about unused variable (void) MASK did not work
       #endif
       const typename Policy::member_type iwork = iwork_base + threadIdx.y ;
 
@@ -2040,8 +2039,10 @@ private:
       for ( unsigned i = threadIdx.y ; i < word_count.value ; ++i ) {
         shared_data[i + word_count.value] = shared_data[i] = shared_accum[i] ;
       }
-      #ifdef __CUDA_ARCH__
+      #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       KOKKOS_IMPL_CUDA_SYNCWARP_MASK(MASK);
+      #else
+      KOKKOS_IMPL_CUDA_SYNCWARP_MASK;
       #endif
       if ( CudaTraits::WarpSize < word_count.value ) { __syncthreads(); } // Protect against large scan values.
 
@@ -2250,9 +2251,8 @@ private:
     const WorkRange range( m_policy , blockIdx.x , gridDim.x );
 
     for ( typename Policy::member_type iwork_base = range.begin(); iwork_base < range.end() ; iwork_base += blockDim.y ) {
-      #ifdef __CUDA_ARCH__
+      #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       unsigned MASK=KOKKOS_IMPL_CUDA_ACTIVEMASK;
-      MASK=MASK; // Silence warning about unused variable (void) MASK did not work
       #endif
 
       const typename Policy::member_type iwork = iwork_base + threadIdx.y ;
@@ -2266,8 +2266,10 @@ private:
         shared_data[i + word_count.value] = shared_data[i] = shared_accum[i] ;
       }
 
-      #ifdef __CUDA_ARCH__
+      #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       KOKKOS_IMPL_CUDA_SYNCWARP_MASK(MASK);
+      #else
+      KOKKOS_IMPL_CUDA_SYNCWARP_MASK;
       #endif
       if ( CudaTraits::WarpSize < word_count.value ) { __syncthreads(); } // Protect against large scan values.
 
