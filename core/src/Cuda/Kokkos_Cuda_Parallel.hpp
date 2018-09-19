@@ -154,7 +154,12 @@ public:
     int block_size = Kokkos::Impl::cuda_get_max_block_size< closure_type, typename traits::launch_bounds >( f ,(size_t) vector_length(),
         (size_t) team_scratch_size(0) + 2*sizeof(double), (size_t) thread_scratch_size(0) + sizeof(double) +
                                                           (functor_value_traits::StaticValueSize?0:functor_value_traits::value_size( f )));
-    return block_size/vector_length();
+
+    // Currently we require Power-of-2 team size for reductions.
+    int p2 = 1;
+    while(p2<=block_size) p2*=2;
+    p2/=2;
+    return p2/vector_length();
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
