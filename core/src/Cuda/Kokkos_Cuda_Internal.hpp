@@ -67,7 +67,7 @@ struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<>,true> {
   static int get_block_size(const typename DriverType::functor_type & f, const size_t vector_length,
                             const size_t shmem_extra_block, const size_t shmem_extra_thread) {
     int numBlocks;
-    int blockSize=32;
+    int blockSize=1024;
     int sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
                     FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
     cudaOccupancyMaxActiveBlocksPerMultiprocessor(
@@ -76,8 +76,9 @@ struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<>,true> {
         blockSize,
         sharedmem);
 
-    while (blockSize<1024 && numBlocks>0) {
-      blockSize*=2;
+    if(numBlocks>0) return blockSize;
+    while (blockSize>32 && numBlocks==0) {
+      blockSize/=2;
       sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
                   FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
 
@@ -87,8 +88,19 @@ struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<>,true> {
           blockSize,
           sharedmem);
     }
-    if(numBlocks>0) return blockSize;
-    else return blockSize/2;
+    int blockSizeUpperBound = blockSize*2;
+    while (blockSize<blockSizeUpperBound && numBlocks>0) {
+      blockSize+=32;
+      sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
+                  FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
+
+      cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+            &numBlocks,
+            cuda_parallel_launch_constant_memory<DriverType>,
+            blockSize,
+            sharedmem);
+    }
+    return blockSize - 32;
   }
 };
 
@@ -98,7 +110,7 @@ struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<>,false> {
                             const size_t shmem_extra_block, const size_t shmem_extra_thread) {
     int numBlocks;
 
-    int blockSize=32;
+    int blockSize=1024;
     int sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
                     FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
     cudaOccupancyMaxActiveBlocksPerMultiprocessor(
@@ -107,8 +119,9 @@ struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<>,false> {
         blockSize,
         sharedmem);
 
-    while (blockSize<1024 && numBlocks>0) {
-      blockSize*=2;
+    if(numBlocks>0) return blockSize;
+    while (blockSize>32 && numBlocks==0) {
+      blockSize/=2;
       sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
                   FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
 
@@ -118,8 +131,19 @@ struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<>,false> {
           blockSize,
           sharedmem);
     }
-    if(numBlocks>0) return blockSize;
-    else return blockSize/2;
+    int blockSizeUpperBound = blockSize*2;
+    while (blockSize<blockSizeUpperBound && numBlocks>0) {
+      blockSize+=32;
+      sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
+                  FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
+
+      cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+            &numBlocks,
+            cuda_parallel_launch_local_memory<DriverType>,
+            blockSize,
+            sharedmem);
+    }
+    return blockSize - 32;
   }
 };
 
@@ -128,7 +152,7 @@ struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<MaxThreadsPerBlock,Mi
   static int get_block_size(const typename DriverType::functor_type & f, const size_t vector_length,
                             const size_t shmem_extra_block, const size_t shmem_extra_thread) {
     int numBlocks = 0, oldNumBlocks = 0;
-    int blockSize=32;
+    int blockSize=MaxThreadsPerBlock;
     int sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
                     FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
     cudaOccupancyMaxActiveBlocksPerMultiprocessor(
@@ -137,21 +161,32 @@ struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<MaxThreadsPerBlock,Mi
         blockSize,
         sharedmem);
 
-    while (blockSize*2<=int(MaxThreadsPerBlock) && numBlocks>0) {
-      blockSize*=2;
+    if(numBlocks>=MinBlocksPerSM) return blockSize;
+
+    while (blockSize>32 && numBlocks<MinBlocksPerSM) {
+      blockSize/=2;
       sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
                   FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
 
-      oldNumBlocks = numBlocks;
-
       cudaOccupancyMaxActiveBlocksPerMultiprocessor(
           &numBlocks,
-          cuda_parallel_launch_constant_memory<DriverType,MaxThreadsPerBlock,MinBlocksPerSM>,
+          cuda_parallel_launch_constant_memory<DriverType>,
           blockSize,
           sharedmem);
     }
-    if( numBlocks    >= int(MinBlocksPerSM) && blockSize   <= int(MaxThreadsPerBlock) ) return blockSize;
-    if( oldNumBlocks >= int(MinBlocksPerSM) && blockSize/2 <= int(MaxThreadsPerBlock) ) return blockSize/2;
+    int blockSizeUpperBound = (blockSize*2<MaxThreadsPerBlock?blockSize*2:MaxThreadsPerBlock);
+    while (blockSize<blockSizeUpperBound && numBlocks>MinBlocksPerSM) {
+      blockSize+=32;
+      sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
+                  FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
+      oldNumBlocks = numBlocks;
+      cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+            &numBlocks,
+            cuda_parallel_launch_constant_memory<DriverType>,
+            blockSize,
+            sharedmem);
+    }
+    if(oldNumBlocks>=MinBlocksPerSM) return blockSize - 32;
     return -1;
   }
 };
@@ -161,8 +196,7 @@ struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<MaxThreadsPerBlock,Mi
   static int get_block_size(const typename DriverType::functor_type & f, const size_t vector_length,
                             const size_t shmem_extra_block, const size_t shmem_extra_thread) {
     int numBlocks = 0, oldNumBlocks = 0;
-
-    int blockSize=32;
+    int blockSize=MaxThreadsPerBlock;
     int sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
                     FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
     cudaOccupancyMaxActiveBlocksPerMultiprocessor(
@@ -170,22 +204,32 @@ struct CudaGetMaxBlockSize<DriverType,Kokkos::LaunchBounds<MaxThreadsPerBlock,Mi
         cuda_parallel_launch_local_memory<DriverType,MaxThreadsPerBlock,MinBlocksPerSM>,
         blockSize,
         sharedmem);
+    if(numBlocks>=MinBlocksPerSM) return blockSize;
 
-    while (blockSize*2<=int(MaxThreadsPerBlock) && numBlocks>0) {
-      blockSize*=2;
+    while (blockSize>32 && numBlocks<MinBlocksPerSM) {
+      blockSize/=2;
       sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
                   FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
 
-      oldNumBlocks = numBlocks;
-
       cudaOccupancyMaxActiveBlocksPerMultiprocessor(
           &numBlocks,
-          cuda_parallel_launch_local_memory<DriverType,MaxThreadsPerBlock,MinBlocksPerSM>,
+          cuda_parallel_launch_local_memory<DriverType>,
           blockSize,
           sharedmem);
     }
-    if( numBlocks    >= int(MinBlocksPerSM) && blockSize   <= int(MaxThreadsPerBlock) ) return blockSize;
-    if( oldNumBlocks >= int(MinBlocksPerSM) && blockSize/2 <= int(MaxThreadsPerBlock) ) return blockSize/2;
+    int blockSizeUpperBound = (blockSize*2<MaxThreadsPerBlock?blockSize*2:MaxThreadsPerBlock);
+    while (blockSize<blockSizeUpperBound && numBlocks>=MinBlocksPerSM) {
+      blockSize+=32;
+      sharedmem = shmem_extra_block + shmem_extra_thread*(blockSize/vector_length) +
+                  FunctorTeamShmemSize< typename DriverType::functor_type  >::value( f , blockSize/vector_length );
+      oldNumBlocks = numBlocks;
+      cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+            &numBlocks,
+            cuda_parallel_launch_local_memory<DriverType>,
+            blockSize,
+            sharedmem);
+    }
+    if(oldNumBlocks>=MinBlocksPerSM) return blockSize - 32;
     return -1;
   }
 };
