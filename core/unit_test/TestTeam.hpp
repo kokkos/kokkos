@@ -1080,6 +1080,31 @@ struct TestTeamBroadcast {
   }
 };
 
+template<class ExecSpace>
+struct TestScratchAlignment {
+  struct TestScalar {
+    double x,y,z;
+  };
+  TestScratchAlignment() {
+    test(true);
+    test(false);
+  }
+  typedef Kokkos::View<TestScalar*,typename ExecSpace::scratch_memory_space> ScratchView;
+  typedef Kokkos::View<int*,typename ExecSpace::scratch_memory_space> ScratchViewInt;
+  void test(bool allocate_small) {
+    int shmem_size = ScratchView::shmem_size(11);
+    if(allocate_small) shmem_size += ScratchViewInt::shmem_size(1);
+    Kokkos::parallel_for(Kokkos::TeamPolicy<ExecSpace>(1,1).set_scratch_size(0,Kokkos::PerTeam(shmem_size)),
+     KOKKOS_LAMBDA (const typename Kokkos::TeamPolicy<ExecSpace>::member_type& team) {
+     if(allocate_small) ScratchViewInt p(team.team_scratch(0),1);
+     ScratchView a(team.team_scratch(0),11);
+     if(ptrdiff_t(a.data())%sizeof(TestScalar)!=0)
+       Kokkos::abort("Error: invalid scratch view alignment\n");
+    });
+    Kokkos::fence();
+  }
+};
+
 } // namespace
 
 } // namespace Test
