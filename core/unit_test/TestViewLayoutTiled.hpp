@@ -58,24 +58,6 @@ namespace {
 template <typename ExecSpace >
 struct TestViewLayoutTiled {
 
-  using ViewIntType     = typename Kokkos::View< int**, ExecSpace >;
-  using ViewDoubleType     = typename Kokkos::View< double*, ExecSpace >;
-
-
-  template < class ViewType >
-  struct Functor {
-
-    ViewType v;
-
-    Functor( const ViewType & v_ ) : v(v_) {}
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()( const int i ) const {
-      v(i) = i;
-    }
-
-  };
-
   typedef double Scalar;
 
   static constexpr int T0 = 2;
@@ -107,7 +89,6 @@ struct TestViewLayoutTiled {
 
 
 #define DEBUG_VERBOSE_OUTPUT 0
-#define DEBUG_SUMMARY_OUTPUT 1
 
   // Rank 2 tests
   // Create N0 x N1 view with tile dimensions of T0 x T1
@@ -257,7 +238,7 @@ struct TestViewLayoutTiled {
     // Test create_mirror_view, deep_copy
     {
       std::cout << "\nCreate LL View - test mirror view and deep_copy and use in parallel_for" << std::endl;
-      typedef typename Kokkos::View< Scalar**, LayoutLL_2D_2x4 > ViewType;
+      typedef typename Kokkos::View< Scalar**, LayoutLL_2D_2x4, ExecSpace > ViewType;
       ViewType v("v", N0, N1);
 
       typename ViewType::HostMirror hv = Kokkos::create_mirror_view(v);
