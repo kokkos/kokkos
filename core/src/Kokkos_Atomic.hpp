@@ -85,6 +85,10 @@
 
 #define KOKKOS_ENABLE_ROCM_ATOMICS
 
+#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU)
+
+#define KOKKOS_ENABLE_HIP_ATOMICS
+
 #endif
 
 #if ! defined( KOKKOS_ENABLE_GNU_ATOMICS ) && \
@@ -180,6 +184,9 @@ void unlock_address_rocm_space(void* ptr);
 }
 }
 #include <ROCm/Kokkos_ROCm_Atomic.hpp>
+#endif
+#if defined( KOKKOS_ENABLE_HIP )
+#include <HIP/Kokkos_HIP_Atomic.hpp>
 #endif
 
 #ifdef _WIN32

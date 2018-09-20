@@ -179,6 +179,36 @@
   #endif
 #endif // #if defined( KOKKOS_ENABLE_CUDA ) && defined( __CUDACC__ )
 
+#if defined( KOKKOS_ENABLE_CUDA ) 
+  // Compiling Cuda code to 'ptx'
+
+  #define KOKKOS_FORCEINLINE_FUNCTION  __device__  __host__  __forceinline__
+  #define KOKKOS_INLINE_FUNCTION       __device__  __host__  inline
+  #define KOKKOS_FUNCTION              __device__  __host__
+#endif // #if defined( __CUDA_ARCH__ )
+
+#if defined( KOKKOS_ENABLE_HIP ) 
+
+  #include<hip/hip_runtime.h>
+  #include<hip/hip_runtime_api.h>
+  
+  #define KOKKOS_FORCEINLINE_FUNCTION  __device__  __host__  __forceinline__
+  #define KOKKOS_INLINE_FUNCTION       __device__  __host__  inline
+  #define KOKKOS_FUNCTION              __device__  __host__
+  #define KOKKOS_LAMBDA                [=] __host__ __device__
+  #if defined ( KOKKOS_ENABLE_CXX17) || defined (KOKKOS_ENABLE_CXX20)
+    #define KOKKOS_CLASS_LAMBDA [=,*this] __host__ __device__
+  #endif
+#endif // #if defined( KOKKOS_ENABLE_HIP )
+
+#if defined( KOKKOS_ENABLE_ROCM ) && defined( __HCC__ )
+
+  #define KOKKOS_FORCEINLINE_FUNCTION  __attribute__((amp,cpu)) inline
+  #define KOKKOS_INLINE_FUNCTION       __attribute__((amp,cpu)) inline
+  #define KOKKOS_FUNCTION              __attribute__((amp,cpu))
+  #define KOKKOS_LAMBDA                [=] __attribute__((amp,cpu))
+#endif
+
 
 //----------------------------------------------------------------------------
 // Mapping compiler built-ins to KOKKOS_COMPILER_*** macros
@@ -515,6 +545,8 @@
   #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
 #elif   defined( __HCC__ ) && defined( __HCC_ACCELERATOR__ ) && defined( KOKKOS_ENABLE_ROCM )
   #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_ROCM_GPU
+#elif   defined( __HIPCC__ ) && defined( __HCC_ACCELERATOR__ ) && defined( KOKKOS_ENABLE_HIP )
+  #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU
 #else
   #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
 #endif

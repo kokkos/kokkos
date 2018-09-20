@@ -1,6 +1,6 @@
 # Default settings common options.
 
-# Options: Cuda,ROCm,OpenMP,Pthread,Qthreads,Serial
+# Options: Cuda,HIP,ROCm,OpenMP,Pthread,Qthreads,Serial
 #KOKKOS_DEVICES ?= "OpenMP"
 KOKKOS_DEVICES ?= "Pthread"
 # Options: 
@@ -92,6 +92,7 @@ endif
 # Check for other Execution Spaces.
 KOKKOS_INTERNAL_USE_CUDA := $(call kokkos_has_string,$(KOKKOS_DEVICES),Cuda)
 KOKKOS_INTERNAL_USE_ROCM := $(call kokkos_has_string,$(KOKKOS_DEVICES),ROCm)
+KOKKOS_INTERNAL_USE_HIP := $(call kokkos_has_string,$(KOKKOS_DEVICES),HIP)
 KOKKOS_INTERNAL_USE_OPENMPTARGET := $(call kokkos_has_string,$(KOKKOS_DEVICES),OpenMPTarget)
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
@@ -430,6 +431,10 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
   tmp := $(call kokkos_append_header,'\#define KOKKOS_ENABLE_ROCM')
   tmp := $(call kokkos_append_header,'\#define KOKKOS_IMPL_ROCM_CLANG_WORKAROUND 1')
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
+  tmp := $(call kokkos_append_header,'\#define KOKKOS_ENABLE_HIP')
+  tmp := $(call kokkos_append_header,'\#define KOKKOS_IMPL_HIP_CLANG_WORKAROUND 1')
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
@@ -1003,19 +1008,38 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   endif
 endif
 
+
+# Figure out the architecture flag for ROCm.
+ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
+  # Lets start with adding architecture defines
+  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_FIJI), 1)
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_HIP 803")
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_FIJI")
+    KOKKOS_INTERNAL_HIP_ARCH_FLAG := -amdgpu-target=gfx803
+  endif
+  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA), 1)
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_HIP 900")
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_VEGA")
+    KOKKOS_INTERNAL_HIP_ARCH_FLAG := -amdgpu-target=gfx900 
+  endif
+  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_GFX901), 1)
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_HIP 901")
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_GFX901")
+    KOKKOS_INTERNAL_HIP_ARCH_FLAG := -amdgpu-target=gfx901 
+  endif
+
+  KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/HIP/*.cpp)
+  ifeq ($(KOKKOS_INTERNAL_ENABLE_ETI), 1)
+    KOKKOS_SRC += $(wildcard $(KOKKOS_ETI_PATH)/HIP/*.cpp)
+  endif
+  KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/HIP/*.hpp)
+
+  KOKKOS_CXXFLAGS+=$(KOKKOS_INTERNAL_HIP_ARCH_FLAG)
+endif 
+
 # Figure out the architecture flag for ROCm.
 ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
   # Lets start with adding architecture defines
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KAVERI), 1)
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_ROCM 701")
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_KAVERI")
-    KOKKOS_INTERNAL_ROCM_ARCH_FLAG := --amdgpu-target=gfx701 
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_CARRIZO), 1)
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_ROCM 801")
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_CARRIZO")
-    KOKKOS_INTERNAL_ROCM_ARCH_FLAG := --amdgpu-target=gfx801 
-  endif
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_FIJI), 1)
     tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_ROCM 803")
     tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_FIJI")
