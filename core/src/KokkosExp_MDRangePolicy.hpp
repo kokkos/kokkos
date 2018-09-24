@@ -46,7 +46,6 @@
 
 #include <initializer_list>
 
-// TODO Remove me once Iterate enum class finds a home...
 #include <Kokkos_Layout.hpp>
 
 #include<impl/KokkosExp_Host_IterateTile.hpp>
@@ -66,7 +65,7 @@
 namespace Kokkos {
 
 // ------------------------------------------------------------------ //
-// TODO Move me somewhere else for more general use
+// Moved to Kokkos_Layout.hpp for more general accessibility
 /*
 enum class Iterate
 {

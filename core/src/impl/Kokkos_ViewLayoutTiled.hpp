@@ -57,32 +57,32 @@ namespace Kokkos {
 //template< class L >
 //struct is_array_layout : public std::false_type {};
 
-template < Kokkos::Pattern::Iterate OuterP, Kokkos::Pattern::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 >
+template < Kokkos::Iterate OuterP, Kokkos::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 >
 struct is_array_layout < Kokkos::LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, 0, 0, 0, 0, 0, 0, true> > : public std::true_type {};
 
-template < Kokkos::Pattern::Iterate OuterP, Kokkos::Pattern::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 >
+template < Kokkos::Iterate OuterP, Kokkos::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 >
 struct is_array_layout < Kokkos::LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, ArgN2, 0, 0, 0, 0, 0, true> > : public std::true_type {};
 
-template < Kokkos::Pattern::Iterate OuterP, Kokkos::Pattern::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 >
+template < Kokkos::Iterate OuterP, Kokkos::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 >
 struct is_array_layout < Kokkos::LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, ArgN2, ArgN3, 0, 0, 0, 0, true> > : public std::true_type {};
 
-template < Kokkos::Pattern::Iterate OuterP, Kokkos::Pattern::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 ,  unsigned ArgN4 >
+template < Kokkos::Iterate OuterP, Kokkos::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 ,  unsigned ArgN4 >
 struct is_array_layout < Kokkos::LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, ArgN2, ArgN3, ArgN4, 0, 0, 0, true> > : public std::true_type {};
 
-template < Kokkos::Pattern::Iterate OuterP, Kokkos::Pattern::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 ,  unsigned ArgN4 ,  unsigned ArgN5 >
+template < Kokkos::Iterate OuterP, Kokkos::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 ,  unsigned ArgN4 ,  unsigned ArgN5 >
 struct is_array_layout < Kokkos::LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, ArgN2, ArgN3, ArgN4, ArgN5, 0, 0, true> > : public std::true_type {};
 
-template < Kokkos::Pattern::Iterate OuterP, Kokkos::Pattern::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 ,  unsigned ArgN4 ,  unsigned ArgN5 ,  unsigned ArgN6 >
+template < Kokkos::Iterate OuterP, Kokkos::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 ,  unsigned ArgN4 ,  unsigned ArgN5 ,  unsigned ArgN6 >
 struct is_array_layout < Kokkos::LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, ArgN2, ArgN3, ArgN4, ArgN5, ArgN6, 0, true> > : public std::true_type {};
 
-template < Kokkos::Pattern::Iterate OuterP, Kokkos::Pattern::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 ,  unsigned ArgN4 ,  unsigned ArgN5 ,  unsigned ArgN6 ,  unsigned ArgN7 > 
+template < Kokkos::Iterate OuterP, Kokkos::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 ,  unsigned ArgN4 ,  unsigned ArgN5 ,  unsigned ArgN6 ,  unsigned ArgN7 > 
 struct is_array_layout < Kokkos::LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, ArgN2, ArgN3, ArgN4, ArgN5, ArgN6, ArgN7, true> > : public std::true_type {};
 
 
 template< class L >
 struct is_array_layout_tiled : public std::false_type {};
 
-template < Kokkos::Pattern::Iterate OuterP, Kokkos::Pattern::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 ,  unsigned ArgN4 ,  unsigned ArgN5 ,  unsigned ArgN6 ,  unsigned ArgN7 > 
+template < Kokkos::Iterate OuterP, Kokkos::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 ,  unsigned ArgN4 ,  unsigned ArgN5 ,  unsigned ArgN6 ,  unsigned ArgN7 > 
 struct is_array_layout_tiled < Kokkos::LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, ArgN2, ArgN3, ArgN4, ArgN5, ArgN6, ArgN7, true> > : public std::true_type {};
 
 
@@ -104,8 +104,8 @@ public:
 
 //  enum { outer_pattern = Layout::outer_pattern };
 //  enum { inner_pattern = Layout::inner_pattern };
-  static constexpr Kokkos::Pattern::Iterate outer_pattern = Layout::outer_pattern;
-  static constexpr Kokkos::Pattern::Iterate inner_pattern = Layout::inner_pattern;
+  static constexpr Kokkos::Iterate outer_pattern = Layout::outer_pattern;
+  static constexpr Kokkos::Iterate inner_pattern = Layout::inner_pattern;
 
   enum { VORank = Dimension::rank };
 
@@ -160,19 +160,19 @@ public:
   template< typename I0 , typename I1 >
   KOKKOS_INLINE_FUNCTION
   size_type operator()( I0 const & i0 , I1 const & i1 ) const {
-    auto tile_offset = (outer_pattern == (Kokkos::Pattern::Iterate::Left)) 
+    auto tile_offset = (outer_pattern == (Kokkos::Iterate::Left)) 
                      ? ( ( (i0>>SHIFT_0) + m_tile_N0*((i1>>SHIFT_1)) ) << SHIFT_2T)
                      : ( ( (m_tile_N1*(i0>>SHIFT_0) + (i1>>SHIFT_1)) ) << SHIFT_2T) ;
     //                     ( num_tiles[1] * ti0     +  ti1 ) * FTD
 
-    auto local_offset = (inner_pattern == (Kokkos::Pattern::Iterate::Left)) 
+    auto local_offset = (inner_pattern == (Kokkos::Iterate::Left)) 
                       ? ( (i0 & MASK_0) + ((i1 & MASK_1)<<SHIFT_0) )
                       : ( ((i0 & MASK_0) << SHIFT_1) + (i1 & MASK_1) ) ;
     //                     ( tile_dim[1] * li0         +  li1 )
 
 #if DEBUG_OUTPUT_CHECK
-    std::cout << "Am I Outer Left? " << (outer_pattern == (Kokkos::Pattern::Iterate::Left)) << std::endl;
-    std::cout << "Am I Inner Left? " << (inner_pattern == (Kokkos::Pattern::Iterate::Left)) << std::endl;
+    std::cout << "Am I Outer Left? " << (outer_pattern == (Kokkos::Iterate::Left)) << std::endl;
+    std::cout << "Am I Inner Left? " << (inner_pattern == (Kokkos::Iterate::Left)) << std::endl;
     std::cout << "i0 = " << i0
       << " i1 = " << i1
       << "\ntilei0 = " << (i0>>SHIFT_0)
@@ -189,17 +189,17 @@ public:
   template< typename I0 , typename I1 , typename I2 >
   KOKKOS_INLINE_FUNCTION
   size_type operator()( I0 const & i0 , I1 const & i1 , I2 const & i2 ) const {
-    auto tile_offset = (outer_pattern == Kokkos::Pattern::Iterate::Left) 
+    auto tile_offset = (outer_pattern == Kokkos::Iterate::Left) 
                      ? ( ( (i0>>SHIFT_0) + m_tile_N0*((i1>>SHIFT_1) + m_tile_N1*(i2>>SHIFT_2)) ) << SHIFT_3T)
                      : ( ( m_tile_N2*(m_tile_N1*(i0>>SHIFT_0) + (i1>>SHIFT_1)) + (i2>>SHIFT_2) ) << SHIFT_3T) ;
 
-    auto local_offset = (inner_pattern == Kokkos::Pattern::Iterate::Left) 
+    auto local_offset = (inner_pattern == Kokkos::Iterate::Left) 
                       ? ( (i0 & MASK_0) + ((i1 & MASK_1)<<SHIFT_0) + ((i2 & MASK_2)<<(SHIFT_0+SHIFT_1)) )
                       : ( ((i0 & MASK_0) << (SHIFT_2+SHIFT_1)) + ((i1 & MASK_1) << (SHIFT_2)) + (i2 & MASK_2) ) ;
 
 #if DEBUG_OUTPUT_CHECK
-    std::cout << "Am I Outer Left? " << (outer_pattern == (Kokkos::Pattern::Iterate::Left)) << std::endl;
-    std::cout << "Am I Inner Left? " << (inner_pattern == (Kokkos::Pattern::Iterate::Left)) << std::endl;
+    std::cout << "Am I Outer Left? " << (outer_pattern == (Kokkos::Iterate::Left)) << std::endl;
+    std::cout << "Am I Inner Left? " << (inner_pattern == (Kokkos::Iterate::Left)) << std::endl;
     std::cout << "i0 = " << i0
       << " i1 = " << i1
       << " i2 = " << i2
@@ -219,11 +219,11 @@ public:
   template< typename I0 , typename I1 , typename I2 , typename I3 >
   KOKKOS_INLINE_FUNCTION
   size_type operator()( I0 const & i0 , I1 const & i1 , I2 const & i2 , I3 const & i3 ) const {
-    auto tile_offset = (outer_pattern == Kokkos::Pattern::Iterate::Left) 
+    auto tile_offset = (outer_pattern == Kokkos::Iterate::Left) 
                      ? ( ( (i0>>SHIFT_0) + m_tile_N0*((i1>>SHIFT_1) + m_tile_N1*((i2>>SHIFT_2) + m_tile_N2*(i3>>SHIFT_3))) ) << SHIFT_4T)
                      : ( ( m_tile_N3*(m_tile_N2*(m_tile_N1*(i0>>SHIFT_0) + (i1>>SHIFT_1)) + (i2>>SHIFT_2)) + (i3>>SHIFT_3) ) << SHIFT_4T) ;
 
-    auto local_offset = (inner_pattern == Kokkos::Pattern::Iterate::Left) 
+    auto local_offset = (inner_pattern == Kokkos::Iterate::Left) 
                       ? ( (i0 & MASK_0) + ((i1 & MASK_1)<<SHIFT_0) + ((i2 & MASK_2)<<(SHIFT_0+SHIFT_1)) + ((i3 & MASK_3)<<(SHIFT_0+SHIFT_1+SHIFT_2)) )
                       : ( ((i0 & MASK_0) << (SHIFT_3+SHIFT_2+SHIFT_1)) + ((i1 & MASK_1) << (SHIFT_3+SHIFT_2)) + ((i2 & MASK_2)<<(SHIFT_3)) + (i3 & MASK_3) ) ;
 
@@ -234,11 +234,11 @@ public:
   template< typename I0 , typename I1 , typename I2 , typename I3 , typename I4 >
   KOKKOS_INLINE_FUNCTION
   size_type operator()( I0 const & i0 , I1 const & i1 , I2 const & i2 , I3 const & i3 , I4 const & i4 ) const {
-    auto tile_offset = (outer_pattern == Kokkos::Pattern::Iterate::Left) 
+    auto tile_offset = (outer_pattern == Kokkos::Iterate::Left) 
                      ? ( ( (i0>>SHIFT_0) + m_tile_N0*((i1>>SHIFT_1) + m_tile_N1*((i2>>SHIFT_2) + m_tile_N2*((i3>>SHIFT_3) + m_tile_N3*(i4>>SHIFT_4)))) ) << SHIFT_5T)
                      : ( ( m_tile_N4*(m_tile_N3*(m_tile_N2*(m_tile_N1*(i0>>SHIFT_0) + (i1>>SHIFT_1)) + (i2>>SHIFT_2)) + (i3>>SHIFT_3)) + (i4>>SHIFT_4) ) << SHIFT_5T) ;
 
-    auto local_offset = (inner_pattern == Kokkos::Pattern::Iterate::Left) 
+    auto local_offset = (inner_pattern == Kokkos::Iterate::Left) 
                       ? ( (i0 & MASK_0) + ((i1 & MASK_1)<<SHIFT_0) + ((i2 & MASK_2)<<(SHIFT_0+SHIFT_1)) + ((i3 & MASK_3)<<(SHIFT_0+SHIFT_1+SHIFT_2)) + ((i4 & MASK_4)<<(SHIFT_0+SHIFT_1+SHIFT_2+SHIFT_3)) )
                       : ( ((i0 & MASK_0) << (SHIFT_4+SHIFT_3+SHIFT_2+SHIFT_1)) + ((i1 & MASK_1) << (SHIFT_4+SHIFT_3+SHIFT_2)) + ((i2 & MASK_2)<<(SHIFT_4+SHIFT_3)) + ((i3 & MASK_3)<<(SHIFT_4)) + (i4 & MASK_4) ) ;
 
@@ -249,11 +249,11 @@ public:
   template< typename I0 , typename I1 , typename I2 , typename I3 , typename I4 , typename I5 >
   KOKKOS_INLINE_FUNCTION
   size_type operator()( I0 const & i0 , I1 const & i1 , I2 const & i2 , I3 const & i3 , I4 const & i4 , I5 const & i5 ) const {
-    auto tile_offset = (outer_pattern == Kokkos::Pattern::Iterate::Left) 
+    auto tile_offset = (outer_pattern == Kokkos::Iterate::Left) 
                      ? ( ( (i0>>SHIFT_0) + m_tile_N0*((i1>>SHIFT_1) + m_tile_N1*((i2>>SHIFT_2) + m_tile_N2*((i3>>SHIFT_3) + m_tile_N3*((i4>>SHIFT_4) + m_tile_N4*(i5>>SHIFT_5))))) ) << SHIFT_6T)
                      : ( ( m_tile_N5*(m_tile_N4*(m_tile_N3*(m_tile_N2*(m_tile_N1*(i0>>SHIFT_0) + (i1>>SHIFT_1)) + (i2>>SHIFT_2)) + (i3>>SHIFT_3)) + (i4>>SHIFT_4)) + (i5>>SHIFT_5) ) << SHIFT_6T) ;
 
-    auto local_offset = (inner_pattern == Kokkos::Pattern::Iterate::Left) 
+    auto local_offset = (inner_pattern == Kokkos::Iterate::Left) 
                       ? ( (i0 & MASK_0) + ((i1 & MASK_1)<<SHIFT_0) + ((i2 & MASK_2)<<(SHIFT_0+SHIFT_1)) + ((i3 & MASK_3)<<(SHIFT_0+SHIFT_1+SHIFT_2)) + ((i4 & MASK_4)<<(SHIFT_0+SHIFT_1+SHIFT_2+SHIFT_3)) + ((i5 & MASK_5)<<(SHIFT_0+SHIFT_1+SHIFT_2+SHIFT_3+SHIFT_4)) )
                       : ( ((i0 & MASK_0) << (SHIFT_5+SHIFT_4+SHIFT_3+SHIFT_2+SHIFT_1)) + ((i1 & MASK_1) << (SHIFT_5+SHIFT_4+SHIFT_3+SHIFT_2)) + ((i2 & MASK_2)<<(SHIFT_5+SHIFT_4+SHIFT_3)) + ((i3 & MASK_3)<<(SHIFT_5+SHIFT_4)) + ((i4 & MASK_4)<<(SHIFT_5)) + (i5 & MASK_5) ) ;
 
@@ -264,11 +264,11 @@ public:
   template< typename I0 , typename I1 , typename I2 , typename I3 , typename I4 , typename I5 , typename I6 >
   KOKKOS_INLINE_FUNCTION
   size_type operator()( I0 const & i0 , I1 const & i1 , I2 const & i2 , I3 const & i3 , I4 const & i4 , I5 const & i5 , I6 const & i6 ) const {
-    auto tile_offset = (outer_pattern == Kokkos::Pattern::Iterate::Left) 
+    auto tile_offset = (outer_pattern == Kokkos::Iterate::Left) 
                      ? ( ( (i0>>SHIFT_0) + m_tile_N0*((i1>>SHIFT_1) + m_tile_N1*((i2>>SHIFT_2) + m_tile_N2*((i3>>SHIFT_3) + m_tile_N3*((i4>>SHIFT_4) + m_tile_N4*((i5>>SHIFT_5) + m_tile_N5*(i6>>SHIFT_6)))))) ) << SHIFT_7T)
                      : ( ( m_tile_N6*(m_tile_N5*(m_tile_N4*(m_tile_N3*(m_tile_N2*(m_tile_N1*(i0>>SHIFT_0) + (i1>>SHIFT_1)) + (i2>>SHIFT_2)) + (i3>>SHIFT_3)) + (i4>>SHIFT_4)) + (i5>>SHIFT_5)) + (i6>>SHIFT_6) ) << SHIFT_7T) ;
 
-    auto local_offset = (inner_pattern == Kokkos::Pattern::Iterate::Left) 
+    auto local_offset = (inner_pattern == Kokkos::Iterate::Left) 
                       ? ( (i0 & MASK_0) + ((i1 & MASK_1)<<SHIFT_0) + ((i2 & MASK_2)<<(SHIFT_0+SHIFT_1)) + ((i3 & MASK_3)<<(SHIFT_0+SHIFT_1+SHIFT_2)) + ((i4 & MASK_4)<<(SHIFT_0+SHIFT_1+SHIFT_2+SHIFT_3)) + ((i5 & MASK_5)<<(SHIFT_0+SHIFT_1+SHIFT_2+SHIFT_3+SHIFT_4)) + ((i6 & MASK_6)<<(SHIFT_0+SHIFT_1+SHIFT_2+SHIFT_3+SHIFT_4+SHIFT_5)) )
                       : ( ((i0 & MASK_0) << (SHIFT_6+SHIFT_5+SHIFT_4+SHIFT_3+SHIFT_2+SHIFT_1)) + ((i1 & MASK_1) << (SHIFT_6+SHIFT_5+SHIFT_4+SHIFT_3+SHIFT_2)) + ((i2 & MASK_2)<<(SHIFT_6+SHIFT_5+SHIFT_4+SHIFT_3)) + ((i3 & MASK_3)<<(SHIFT_6+SHIFT_5+SHIFT_4)) + ((i4 & MASK_4)<<(SHIFT_6+SHIFT_5)) + ((i5 & MASK_5)<<(SHIFT_6)) + (i6 & MASK_6) ) ;
 
@@ -279,11 +279,11 @@ public:
   template< typename I0 , typename I1 , typename I2 , typename I3 , typename I4 , typename I5 , typename I6 , typename I7 >
   KOKKOS_INLINE_FUNCTION
   size_type operator()( I0 const & i0 , I1 const & i1 , I2 const & i2 , I3 const & i3 , I4 const & i4 , I5 const & i5 , I6 const & i6 , I7 const & i7 ) const {
-    auto tile_offset = (outer_pattern == Kokkos::Pattern::Iterate::Left) 
+    auto tile_offset = (outer_pattern == Kokkos::Iterate::Left) 
                      ? ( ( (i0>>SHIFT_0) + m_tile_N0*((i1>>SHIFT_1) + m_tile_N1*((i2>>SHIFT_2) + m_tile_N2*((i3>>SHIFT_3) + m_tile_N3*((i4>>SHIFT_4) + m_tile_N4*((i5>>SHIFT_5) + m_tile_N5*((i6>>SHIFT_6) + m_tile_N6*(i7>>SHIFT_7))))))) ) << SHIFT_8T)
                      : ( ( m_tile_N7*(m_tile_N6*(m_tile_N5*(m_tile_N4*(m_tile_N3*(m_tile_N2*(m_tile_N1*(i0>>SHIFT_0) + (i1>>SHIFT_1)) + (i2>>SHIFT_2)) + (i3>>SHIFT_3)) + (i4>>SHIFT_4)) + (i5>>SHIFT_5)) + (i6>>SHIFT_6)) + (i7>>SHIFT_7) ) << SHIFT_8T) ;
 
-    auto local_offset = (inner_pattern == Kokkos::Pattern::Iterate::Left) 
+    auto local_offset = (inner_pattern == Kokkos::Iterate::Left) 
                       ? ( (i0 & MASK_0) + ((i1 & MASK_1)<<SHIFT_0) + ((i2 & MASK_2)<<(SHIFT_0+SHIFT_1)) + ((i3 & MASK_3)<<(SHIFT_0+SHIFT_1+SHIFT_2)) + ((i4 & MASK_4)<<(SHIFT_0+SHIFT_1+SHIFT_2+SHIFT_3)) + ((i5 & MASK_5)<<(SHIFT_0+SHIFT_1+SHIFT_2+SHIFT_3+SHIFT_4)) + ((i6 & MASK_6)<<(SHIFT_0+SHIFT_1+SHIFT_2+SHIFT_3+SHIFT_4+SHIFT_5)) + ((i7 & MASK_7)<<(SHIFT_0+SHIFT_1+SHIFT_2+SHIFT_3+SHIFT_4+SHIFT_5+SHIFT_6)) )
                       : ( ((i0 & MASK_0) << (SHIFT_7+SHIFT_6+SHIFT_5+SHIFT_4+SHIFT_3+SHIFT_2+SHIFT_1)) + ((i1 & MASK_1) << (SHIFT_7+SHIFT_6+SHIFT_5+SHIFT_4+SHIFT_3+SHIFT_2)) + ((i2 & MASK_2)<<(SHIFT_7+SHIFT_6+SHIFT_5+SHIFT_4+SHIFT_3)) + ((i3 & MASK_3)<<(SHIFT_7+SHIFT_6+SHIFT_5+SHIFT_4)) + ((i4 & MASK_4)<<(SHIFT_7+SHIFT_6+SHIFT_5)) + ((i5 & MASK_5)<<(SHIFT_7+SHIFT_6)) + ((i6 & MASK_6)<<(SHIFT_7)) + (i7 & MASK_7) ) ;
 
@@ -419,7 +419,7 @@ public:
 // The outer iteration pattern determines the mapping of the pointer offset to the beginning of requested tile
 // The inner iteration pattern is needed for the layout of the tile's View to be returned
 // Rank 2
-template< typename T , Kokkos::Pattern::Iterate OuterP , Kokkos::Pattern::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7
+template< typename T , Kokkos::Iterate OuterP , Kokkos::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7
         , class ... P
         , typename iType0 , typename iType1
         >
@@ -433,8 +433,8 @@ struct ViewMapping
   typedef Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true>  src_layout ;
   typedef Kokkos::ViewTraits< T** , src_layout , P... > src_traits ;
 
-  enum { is_outer_left = (OuterP == Kokkos::Pattern::Iterate::Left) };
-  enum { is_inner_left = (InnerP == Kokkos::Pattern::Iterate::Left) };
+  enum { is_outer_left = (OuterP == Kokkos::Iterate::Left) };
+  enum { is_inner_left = (InnerP == Kokkos::Iterate::Left) };
   typedef typename std::conditional< is_inner_left, Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
   typedef Kokkos::ViewTraits< T[N0][N1] , array_layout , P ... > traits ;
   typedef Kokkos::View< T[N0][N1] , array_layout , P ... > type ;
@@ -464,7 +464,7 @@ struct ViewMapping
 };
 
 // Rank 3
-template< typename T , Kokkos::Pattern::Iterate OuterP , Kokkos::Pattern::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7
+template< typename T , Kokkos::Iterate OuterP , Kokkos::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7
         , class ... P
         , typename iType0 , typename iType1 , typename iType2
         >
@@ -479,8 +479,8 @@ struct ViewMapping
   typedef Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true>  src_layout ;
   typedef Kokkos::ViewTraits< T*** , src_layout , P... > src_traits ;
 
-  enum { is_outer_left = (OuterP == Kokkos::Pattern::Iterate::Left) };
-  enum { is_inner_left = (InnerP == Kokkos::Pattern::Iterate::Left) };
+  enum { is_outer_left = (OuterP == Kokkos::Iterate::Left) };
+  enum { is_inner_left = (InnerP == Kokkos::Iterate::Left) };
   typedef typename std::conditional< is_inner_left, Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
   typedef Kokkos::ViewTraits< T[N0][N1][N2] , array_layout , P ... > traits ;
   typedef Kokkos::View< T[N0][N1][N2] , array_layout , P ... > type ;
@@ -511,7 +511,7 @@ struct ViewMapping
 };
 
 // Rank 4
-template< typename T , Kokkos::Pattern::Iterate OuterP , Kokkos::Pattern::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7
+template< typename T , Kokkos::Iterate OuterP , Kokkos::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7
         , class ... P
         , typename iType0 , typename iType1 , typename iType2 , typename iType3
         >
@@ -527,8 +527,8 @@ struct ViewMapping
   typedef Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true>  src_layout ;
   typedef Kokkos::ViewTraits< T**** , src_layout , P... > src_traits ;
 
-  enum { is_outer_left = (OuterP == Kokkos::Pattern::Iterate::Left) };
-  enum { is_inner_left = (InnerP == Kokkos::Pattern::Iterate::Left) };
+  enum { is_outer_left = (OuterP == Kokkos::Iterate::Left) };
+  enum { is_inner_left = (InnerP == Kokkos::Iterate::Left) };
   typedef typename std::conditional< is_inner_left, Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
   typedef Kokkos::ViewTraits< T[N0][N1][N2][N3] , array_layout , P ... > traits ;
   typedef Kokkos::View< T[N0][N1][N2][N3] , array_layout , P ... > type ;
@@ -560,7 +560,7 @@ struct ViewMapping
 };
 
 // Rank 5
-template< typename T , Kokkos::Pattern::Iterate OuterP , Kokkos::Pattern::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7
+template< typename T , Kokkos::Iterate OuterP , Kokkos::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7
         , class ... P
         , typename iType0 , typename iType1 , typename iType2 , typename iType3 , typename iType4
         >
@@ -577,8 +577,8 @@ struct ViewMapping
   typedef Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true>  src_layout ;
   typedef Kokkos::ViewTraits< T***** , src_layout , P... > src_traits ;
 
-  enum { is_outer_left = (OuterP == Kokkos::Pattern::Iterate::Left) };
-  enum { is_inner_left = (InnerP == Kokkos::Pattern::Iterate::Left) };
+  enum { is_outer_left = (OuterP == Kokkos::Iterate::Left) };
+  enum { is_inner_left = (InnerP == Kokkos::Iterate::Left) };
   typedef typename std::conditional< is_inner_left, Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
   typedef Kokkos::ViewTraits< T[N0][N1][N2][N3][N4] , array_layout , P ... > traits ;
   typedef Kokkos::View< T[N0][N1][N2][N3][N4] , array_layout , P ... > type ;
@@ -611,7 +611,7 @@ struct ViewMapping
 };
 
 // Rank 6
-template< typename T , Kokkos::Pattern::Iterate OuterP , Kokkos::Pattern::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7
+template< typename T , Kokkos::Iterate OuterP , Kokkos::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7
         , class ... P
         , typename iType0 , typename iType1 , typename iType2 , typename iType3 , typename iType4 , typename iType5
         >
@@ -629,8 +629,8 @@ struct ViewMapping
   typedef Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true>  src_layout ;
   typedef Kokkos::ViewTraits< T****** , src_layout , P... > src_traits ;
 
-  enum { is_outer_left = (OuterP == Kokkos::Pattern::Iterate::Left) };
-  enum { is_inner_left = (InnerP == Kokkos::Pattern::Iterate::Left) };
+  enum { is_outer_left = (OuterP == Kokkos::Iterate::Left) };
+  enum { is_inner_left = (InnerP == Kokkos::Iterate::Left) };
   typedef typename std::conditional< is_inner_left, Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
   typedef Kokkos::ViewTraits< T[N0][N1][N2][N3][N4][N5] , array_layout , P ... > traits ;
   typedef Kokkos::View< T[N0][N1][N2][N3][N4][N5] , array_layout , P ... > type ;
@@ -664,7 +664,7 @@ struct ViewMapping
 };
 
 // Rank 7
-template< typename T , Kokkos::Pattern::Iterate OuterP , Kokkos::Pattern::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7
+template< typename T , Kokkos::Iterate OuterP , Kokkos::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7
         , class ... P
         , typename iType0 , typename iType1 , typename iType2 , typename iType3 , typename iType4 , typename iType5 , typename iType6
         >
@@ -683,8 +683,8 @@ struct ViewMapping
   typedef Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true>  src_layout ;
   typedef Kokkos::ViewTraits< T******* , src_layout , P... > src_traits ;
 
-  enum { is_outer_left = (OuterP == Kokkos::Pattern::Iterate::Left) };
-  enum { is_inner_left = (InnerP == Kokkos::Pattern::Iterate::Left) };
+  enum { is_outer_left = (OuterP == Kokkos::Iterate::Left) };
+  enum { is_inner_left = (InnerP == Kokkos::Iterate::Left) };
   typedef typename std::conditional< is_inner_left, Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
   typedef Kokkos::ViewTraits< T[N0][N1][N2][N3][N4][N5][N6] , array_layout , P ... > traits ;
   typedef Kokkos::View< T[N0][N1][N2][N3][N4][N5][N6] , array_layout , P ... > type ;
@@ -719,7 +719,7 @@ struct ViewMapping
 };
 
 // Rank 8
-template< typename T , Kokkos::Pattern::Iterate OuterP , Kokkos::Pattern::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7
+template< typename T , Kokkos::Iterate OuterP , Kokkos::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7
         , class ... P
         , typename iType0 , typename iType1 , typename iType2 , typename iType3 , typename iType4 , typename iType5 , typename iType6 , typename iType7
         >
@@ -739,8 +739,8 @@ struct ViewMapping
   typedef Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true>  src_layout ;
   typedef Kokkos::ViewTraits< T******** , src_layout , P... > src_traits ;
 
-  enum { is_outer_left = (OuterP == Kokkos::Pattern::Iterate::Left) };
-  enum { is_inner_left = (InnerP == Kokkos::Pattern::Iterate::Left) };
+  enum { is_outer_left = (OuterP == Kokkos::Iterate::Left) };
+  enum { is_inner_left = (InnerP == Kokkos::Iterate::Left) };
   typedef typename std::conditional< is_inner_left, Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
   typedef Kokkos::ViewTraits< T[N0][N1][N2][N3][N4][N5][N6][N7] , array_layout , P ... > traits ;
   typedef Kokkos::View< T[N0][N1][N2][N3][N4][N5][N6][N7] , array_layout , P ... > type ;
@@ -784,11 +784,11 @@ struct ViewMapping
 namespace Kokkos {
 
 // Rank 2
-template< typename T , Kokkos::Pattern::Iterate OuterP , Kokkos::Pattern::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7 
+template< typename T , Kokkos::Iterate OuterP , Kokkos::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7 
         , class ... P 
         >
 KOKKOS_INLINE_FUNCTION
-Kokkos::View< T[N0][N1] , typename std::conditional< (InnerP == Kokkos::Pattern::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type , P... >
+Kokkos::View< T[N0][N1] , typename std::conditional< (InnerP == Kokkos::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type , P... >
 tile_subview( const Kokkos::View<T**, Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true>, P...> & src
             , const size_t i_tile0
             , const size_t i_tile1
@@ -796,7 +796,7 @@ tile_subview( const Kokkos::View<T**, Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2
 {
   // Force the specialized ViewMapping for extracting a tile
   // by using the first subview argument as the layout.
-  typedef typename std::conditional< (InnerP == Kokkos::Pattern::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
+  typedef typename std::conditional< (InnerP == Kokkos::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
   typedef Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true> SrcLayout ;
 
   return Kokkos::View< T[N0][N1] , array_layout , P... >
@@ -804,11 +804,11 @@ tile_subview( const Kokkos::View<T**, Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2
 }
 
 // Rank 3
-template< typename T , Kokkos::Pattern::Iterate OuterP , Kokkos::Pattern::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7 
+template< typename T , Kokkos::Iterate OuterP , Kokkos::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7 
         , class ... P 
         >
 KOKKOS_INLINE_FUNCTION
-Kokkos::View< T[N0][N1][N2] , typename std::conditional< (InnerP == Kokkos::Pattern::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type , P... >
+Kokkos::View< T[N0][N1][N2] , typename std::conditional< (InnerP == Kokkos::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type , P... >
 tile_subview( const Kokkos::View<T***, Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true>, P...> & src
             , const size_t i_tile0
             , const size_t i_tile1
@@ -817,7 +817,7 @@ tile_subview( const Kokkos::View<T***, Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N
 {
   // Force the specialized ViewMapping for extracting a tile
   // by using the first subview argument as the layout.
-  typedef typename std::conditional< (InnerP == Kokkos::Pattern::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
+  typedef typename std::conditional< (InnerP == Kokkos::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
   typedef Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true> SrcLayout ;
 
   return Kokkos::View< T[N0][N1][N2] , array_layout , P... >
@@ -825,11 +825,11 @@ tile_subview( const Kokkos::View<T***, Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N
 }
 
 // Rank 4
-template< typename T , Kokkos::Pattern::Iterate OuterP , Kokkos::Pattern::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7 
+template< typename T , Kokkos::Iterate OuterP , Kokkos::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7 
         , class ... P 
         >
 KOKKOS_INLINE_FUNCTION
-Kokkos::View< T[N0][N1][N2][N3] , typename std::conditional< (InnerP == Kokkos::Pattern::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type , P... >
+Kokkos::View< T[N0][N1][N2][N3] , typename std::conditional< (InnerP == Kokkos::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type , P... >
 tile_subview( const Kokkos::View<T****, Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true>, P...> & src
             , const size_t i_tile0
             , const size_t i_tile1
@@ -839,7 +839,7 @@ tile_subview( const Kokkos::View<T****, Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,
 {
   // Force the specialized ViewMapping for extracting a tile
   // by using the first subview argument as the layout.
-  typedef typename std::conditional< (InnerP == Kokkos::Pattern::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
+  typedef typename std::conditional< (InnerP == Kokkos::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
   typedef Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true> SrcLayout ;
 
   return Kokkos::View< T[N0][N1][N2][N3] , array_layout , P... >
@@ -847,11 +847,11 @@ tile_subview( const Kokkos::View<T****, Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,
 }
 
 // Rank 5
-template< typename T , Kokkos::Pattern::Iterate OuterP , Kokkos::Pattern::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7 
+template< typename T , Kokkos::Iterate OuterP , Kokkos::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7 
         , class ... P 
         >
 KOKKOS_INLINE_FUNCTION
-Kokkos::View< T[N0][N1][N2][N3][N4] , typename std::conditional< (InnerP == Kokkos::Pattern::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type , P... >
+Kokkos::View< T[N0][N1][N2][N3][N4] , typename std::conditional< (InnerP == Kokkos::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type , P... >
 tile_subview( const Kokkos::View<T*****, Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true>, P...> & src
             , const size_t i_tile0
             , const size_t i_tile1
@@ -862,7 +862,7 @@ tile_subview( const Kokkos::View<T*****, Kokkos::LayoutTiled<OuterP,InnerP,N0,N1
 {
   // Force the specialized ViewMapping for extracting a tile
   // by using the first subview argument as the layout.
-  typedef typename std::conditional< (InnerP == Kokkos::Pattern::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
+  typedef typename std::conditional< (InnerP == Kokkos::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
   typedef Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true> SrcLayout ;
 
   return Kokkos::View< T[N0][N1][N2][N3][N4] , array_layout , P... >
@@ -870,11 +870,11 @@ tile_subview( const Kokkos::View<T*****, Kokkos::LayoutTiled<OuterP,InnerP,N0,N1
 }
 
 // Rank 6
-template< typename T , Kokkos::Pattern::Iterate OuterP , Kokkos::Pattern::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7 
+template< typename T , Kokkos::Iterate OuterP , Kokkos::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7 
         , class ... P 
         >
 KOKKOS_INLINE_FUNCTION
-Kokkos::View< T[N0][N1][N2][N3][N4][N5] , typename std::conditional< (InnerP == Kokkos::Pattern::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type , P... >
+Kokkos::View< T[N0][N1][N2][N3][N4][N5] , typename std::conditional< (InnerP == Kokkos::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type , P... >
 tile_subview( const Kokkos::View<T******, Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true>, P...> & src
             , const size_t i_tile0
             , const size_t i_tile1
@@ -886,7 +886,7 @@ tile_subview( const Kokkos::View<T******, Kokkos::LayoutTiled<OuterP,InnerP,N0,N
 {
   // Force the specialized ViewMapping for extracting a tile
   // by using the first subview argument as the layout.
-  typedef typename std::conditional< (InnerP == Kokkos::Pattern::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
+  typedef typename std::conditional< (InnerP == Kokkos::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
   typedef Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true> SrcLayout ;
 
   return Kokkos::View< T[N0][N1][N2][N3][N4][N5] , array_layout , P... >
@@ -894,11 +894,11 @@ tile_subview( const Kokkos::View<T******, Kokkos::LayoutTiled<OuterP,InnerP,N0,N
 }
 
 // Rank 7
-template< typename T , Kokkos::Pattern::Iterate OuterP , Kokkos::Pattern::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7 
+template< typename T , Kokkos::Iterate OuterP , Kokkos::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7 
         , class ... P 
         >
 KOKKOS_INLINE_FUNCTION
-Kokkos::View< T[N0][N1][N2][N3][N4][N5][N6] , typename std::conditional< (InnerP == Kokkos::Pattern::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type , P... >
+Kokkos::View< T[N0][N1][N2][N3][N4][N5][N6] , typename std::conditional< (InnerP == Kokkos::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type , P... >
 tile_subview( const Kokkos::View<T*******, Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true>, P...> & src
             , const size_t i_tile0
             , const size_t i_tile1
@@ -911,7 +911,7 @@ tile_subview( const Kokkos::View<T*******, Kokkos::LayoutTiled<OuterP,InnerP,N0,
 {
   // Force the specialized ViewMapping for extracting a tile
   // by using the first subview argument as the layout.
-  typedef typename std::conditional< (InnerP == Kokkos::Pattern::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
+  typedef typename std::conditional< (InnerP == Kokkos::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
   typedef Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true> SrcLayout ;
 
   return Kokkos::View< T[N0][N1][N2][N3][N4][N5][N6] , array_layout , P... >
@@ -919,11 +919,11 @@ tile_subview( const Kokkos::View<T*******, Kokkos::LayoutTiled<OuterP,InnerP,N0,
 }
 
 // Rank 8
-template< typename T , Kokkos::Pattern::Iterate OuterP , Kokkos::Pattern::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7 
+template< typename T , Kokkos::Iterate OuterP , Kokkos::Iterate InnerP , unsigned N0 , unsigned N1 , unsigned N2 , unsigned N3 , unsigned N4 , unsigned N5 , unsigned N6 , unsigned N7 
         , class ... P 
         >
 KOKKOS_INLINE_FUNCTION
-Kokkos::View< T[N0][N1][N2][N3][N4][N5][N6][N7] , typename std::conditional< (InnerP == Kokkos::Pattern::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type , P... >
+Kokkos::View< T[N0][N1][N2][N3][N4][N5][N6][N7] , typename std::conditional< (InnerP == Kokkos::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type , P... >
 tile_subview( const Kokkos::View<T********, Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true>, P...> & src
             , const size_t i_tile0
             , const size_t i_tile1
@@ -937,7 +937,7 @@ tile_subview( const Kokkos::View<T********, Kokkos::LayoutTiled<OuterP,InnerP,N0
 {
   // Force the specialized ViewMapping for extracting a tile
   // by using the first subview argument as the layout.
-  typedef typename std::conditional< (InnerP == Kokkos::Pattern::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
+  typedef typename std::conditional< (InnerP == Kokkos::Iterate::Left), Kokkos::LayoutLeft, Kokkos::LayoutRight >::type array_layout;
   typedef Kokkos::LayoutTiled<OuterP,InnerP,N0,N1,N2,N3,N4,N5,N6,N7,true> SrcLayout ;
 
   return Kokkos::View< T[N0][N1][N2][N3][N4][N5][N6][N7] , array_layout , P... >

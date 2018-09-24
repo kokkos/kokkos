@@ -70,22 +70,22 @@ struct TestViewLayoutTiled {
   static constexpr int T7 = 4;
 
   // Rank 2
-  typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Left, Kokkos::Pattern::Iterate::Left, T0, T1>   LayoutLL_2D_2x4;
-  typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Right, Kokkos::Pattern::Iterate::Left, T0, T1>  LayoutRL_2D_2x4;
-  typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Left, Kokkos::Pattern::Iterate::Right, T0, T1>  LayoutLR_2D_2x4;
-  typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Right, Kokkos::Pattern::Iterate::Right, T0, T1> LayoutRR_2D_2x4;
+  typedef Kokkos::LayoutTiled<Kokkos::Iterate::Left, Kokkos::Iterate::Left, T0, T1>   LayoutLL_2D_2x4;
+  typedef Kokkos::LayoutTiled<Kokkos::Iterate::Right, Kokkos::Iterate::Left, T0, T1>  LayoutRL_2D_2x4;
+  typedef Kokkos::LayoutTiled<Kokkos::Iterate::Left, Kokkos::Iterate::Right, T0, T1>  LayoutLR_2D_2x4;
+  typedef Kokkos::LayoutTiled<Kokkos::Iterate::Right, Kokkos::Iterate::Right, T0, T1> LayoutRR_2D_2x4;
 
   // Rank 3
-  typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Left, Kokkos::Pattern::Iterate::Left, T0, T1, T2>   LayoutLL_3D_2x4x4;
-  typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Right, Kokkos::Pattern::Iterate::Left, T0, T1, T2>  LayoutRL_3D_2x4x4;
-  typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Left, Kokkos::Pattern::Iterate::Right, T0, T1, T2>  LayoutLR_3D_2x4x4;
-  typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Right, Kokkos::Pattern::Iterate::Right, T0, T1, T2> LayoutRR_3D_2x4x4;
+  typedef Kokkos::LayoutTiled<Kokkos::Iterate::Left, Kokkos::Iterate::Left, T0, T1, T2>   LayoutLL_3D_2x4x4;
+  typedef Kokkos::LayoutTiled<Kokkos::Iterate::Right, Kokkos::Iterate::Left, T0, T1, T2>  LayoutRL_3D_2x4x4;
+  typedef Kokkos::LayoutTiled<Kokkos::Iterate::Left, Kokkos::Iterate::Right, T0, T1, T2>  LayoutLR_3D_2x4x4;
+  typedef Kokkos::LayoutTiled<Kokkos::Iterate::Right, Kokkos::Iterate::Right, T0, T1, T2> LayoutRR_3D_2x4x4;
 
   // Rank 4
-  typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Left, Kokkos::Pattern::Iterate::Left, T0, T1, T2, T3>   LayoutLL_4D_2x4x4x2;
-  typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Right, Kokkos::Pattern::Iterate::Left, T0, T1, T2, T3>  LayoutRL_4D_2x4x4x2;
-  typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Left, Kokkos::Pattern::Iterate::Right, T0, T1, T2, T3>  LayoutLR_4D_2x4x4x2;
-  typedef Kokkos::LayoutTiled<Kokkos::Pattern::Iterate::Right, Kokkos::Pattern::Iterate::Right, T0, T1, T2, T3> LayoutRR_4D_2x4x4x2;
+  typedef Kokkos::LayoutTiled<Kokkos::Iterate::Left, Kokkos::Iterate::Left, T0, T1, T2, T3>   LayoutLL_4D_2x4x4x2;
+  typedef Kokkos::LayoutTiled<Kokkos::Iterate::Right, Kokkos::Iterate::Left, T0, T1, T2, T3>  LayoutRL_4D_2x4x4x2;
+  typedef Kokkos::LayoutTiled<Kokkos::Iterate::Left, Kokkos::Iterate::Right, T0, T1, T2, T3>  LayoutLR_4D_2x4x4x2;
+  typedef Kokkos::LayoutTiled<Kokkos::Iterate::Right, Kokkos::Iterate::Right, T0, T1, T2, T3> LayoutRR_4D_2x4x4x2;
 
 
 #define DEBUG_VERBOSE_OUTPUT 0
