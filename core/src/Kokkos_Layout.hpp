@@ -246,7 +246,6 @@ struct LayoutTileLeft {
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-/// LayoutTiled Specializations
 enum class Iterate
 {
   Default,
@@ -254,50 +253,48 @@ enum class Iterate
   Right   // Right indices stride fastest
 };
 
-// To check for tiled layout
+// To check for LayoutTiled
 // This is to hide extra compile-time 'identifier' info within the LayoutTiled class by not relying on template specialization to include the ArgN*'s
 template < typename LayoutTiledCheck, class Enable = void >
-struct check_layout_is_tiled : std::false_type {};
+struct is_layouttiled : std::false_type {};
 
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
 template < typename LayoutTiledCheck >
-struct check_layout_is_tiled< LayoutTiledCheck, typename std::enable_if<LayoutTiledCheck::is_array_layout_tiled>::type > : std::true_type {};
-// End tiled layout meta-function
+struct is_layouttiled< LayoutTiledCheck, typename std::enable_if<LayoutTiledCheck::is_array_layout_tiled>::type > : std::true_type {};
 
+
+/// LayoutTiled
 // Must have Rank >= 2
 // TODO: Possibly allow default iterate patterns by specializing for each rank
 template < Kokkos::Iterate OuterP, Kokkos::Iterate InnerP,
            unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 = 0,  unsigned ArgN3 = 0,  unsigned ArgN4 = 0,  unsigned ArgN5 = 0,  unsigned ArgN6 = 0,  unsigned ArgN7 = 0, 
            bool IsPowerOfTwo = 
-#if 1
-           true
-#else
            ( Impl::is_integral_power_of_two(ArgN0) &&
-                                 Impl::is_integral_power_of_two(ArgN1) &&
-                                 Impl::is_integral_power_of_two(ArgN2) &&
-                                 Impl::is_integral_power_of_two(ArgN3) &&
-                                 Impl::is_integral_power_of_two(ArgN4) &&
-                                 Impl::is_integral_power_of_two(ArgN5) &&
-                                 Impl::is_integral_power_of_two(ArgN6) &&
-                                 Impl::is_integral_power_of_two(ArgN7)
-                               )
-#endif
+             Impl::is_integral_power_of_two(ArgN1) &&
+             (Impl::is_integral_power_of_two(ArgN2) || (ArgN2 == 0) ) &&
+             (Impl::is_integral_power_of_two(ArgN3) || (ArgN3 == 0) ) &&
+             (Impl::is_integral_power_of_two(ArgN4) || (ArgN4 == 0) ) &&
+             (Impl::is_integral_power_of_two(ArgN5) || (ArgN5 == 0) ) &&
+             (Impl::is_integral_power_of_two(ArgN6) || (ArgN6 == 0) ) &&
+             (Impl::is_integral_power_of_two(ArgN7) || (ArgN7 == 0) )
+           )
          >
 struct LayoutTiled {
 
+  static_assert( IsPowerOfTwo
+               , "LayoutTiled must be given power-of-two tile dimensions" );
+
 #if 0
-  static_assert( Impl::is_integral_power_of_two(ArgN0) &&
-                 Impl::is_integral_power_of_two(ArgN1) &&
-                 Impl::is_integral_power_of_two(ArgN2) &&
-                 Impl::is_integral_power_of_two(ArgN3) &&
-                 Impl::is_integral_power_of_two(ArgN4) &&
-                 Impl::is_integral_power_of_two(ArgN5) &&
-                 Impl::is_integral_power_of_two(ArgN6) &&
-                 Impl::is_integral_power_of_two(ArgN7)
+  static_assert( (Impl::is_integral_power_of_two(ArgN0) ) &&
+                 (Impl::is_integral_power_of_two(ArgN1) ) &&
+                 (Impl::is_integral_power_of_two(ArgN2) || (ArgN2 == 0) ) &&
+                 (Impl::is_integral_power_of_two(ArgN3) || (ArgN3 == 0) ) &&
+                 (Impl::is_integral_power_of_two(ArgN4) || (ArgN4 == 0) ) &&
+                 (Impl::is_integral_power_of_two(ArgN5) || (ArgN5 == 0) ) &&
+                 (Impl::is_integral_power_of_two(ArgN6) || (ArgN6 == 0) ) &&
+                 (Impl::is_integral_power_of_two(ArgN7) || (ArgN7 == 0) )
                , "LayoutTiled must be given power-of-two tile dimensions" );
 #endif
-
-  //! Tag this class as a kokkos array_layout
-  enum { is_array_tiled_layout = true };
 
   typedef LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, ArgN2, ArgN3, ArgN4, ArgN5, ArgN6, ArgN7, IsPowerOfTwo> array_layout ;
   static constexpr Iterate outer_pattern = OuterP;
@@ -328,14 +325,10 @@ struct LayoutTiled {
                 )
     : dimension { argN0 , argN1 , argN2 , argN3 , argN4 , argN5 , argN6 , argN7 } {}
 };
+#endif
 
-// TODO
-// deep_copy
-// 1. Enhance ViewFillLayoutSelector to handle LayoutTiled
-// 2. CommonSubview - remove usage for LayoutTiled case - will require adding Layout template parameter to ViewRemap; unnecessary with disabled deprecated code
-// 3. view_copy - enhance to allow for LayoutTiled check
-// 4. ViewCopy - use outer/inner layout info from layout iteration selector in the iterate_type i.e. Rank<N,OP,IP>
 
+// For use with view_copy
 template < typename ... Layout >
 struct layout_iterate_type_selector;
 
@@ -357,6 +350,7 @@ struct layout_iterate_type_selector< Kokkos::LayoutStride > {
   static const Kokkos::Iterate inner_iteration_pattern = Kokkos::Iterate::Default ;
 };
 
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
 template < unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 ,  unsigned ArgN4 ,  unsigned ArgN5 ,  unsigned ArgN6 ,  unsigned ArgN7 >
 struct layout_iterate_type_selector< Kokkos::LayoutTiled<Kokkos::Iterate::Left, Kokkos::Iterate::Left, ArgN0, ArgN1, ArgN2, ArgN3, ArgN4, ArgN5, ArgN6, ArgN7, true> > {
   static const Kokkos::Iterate outer_iteration_pattern = Kokkos::Iterate::Left ;
@@ -380,7 +374,7 @@ struct layout_iterate_type_selector< Kokkos::LayoutTiled<Kokkos::Iterate::Right,
   static const Kokkos::Iterate outer_iteration_pattern = Kokkos::Iterate::Right ;
   static const Kokkos::Iterate inner_iteration_pattern = Kokkos::Iterate::Right ;
 };
-
+#endif
 
 } // namespace Kokkos
 

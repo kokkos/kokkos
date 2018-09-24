@@ -44,6 +44,8 @@
 #ifndef KOKKOS_EXPERIMENTAL_VIEWLAYOUTTILE_HPP
 #define KOKKOS_EXPERIMENTAL_VIEWLAYOUTTILE_HPP
 
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
+
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_View.hpp>
 
@@ -53,9 +55,6 @@
 namespace Kokkos {
 
 // View offset and mapping for tiled view's
-
-//template< class L >
-//struct is_array_layout : public std::false_type {};
 
 template < Kokkos::Iterate OuterP, Kokkos::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 >
 struct is_array_layout < Kokkos::LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, 0, 0, 0, 0, 0, 0, true> > : public std::true_type {};
@@ -82,8 +81,8 @@ struct is_array_layout < Kokkos::LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, ArgN2
 template< class L >
 struct is_array_layout_tiled : public std::false_type {};
 
-template < Kokkos::Iterate OuterP, Kokkos::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 ,  unsigned ArgN4 ,  unsigned ArgN5 ,  unsigned ArgN6 ,  unsigned ArgN7 > 
-struct is_array_layout_tiled < Kokkos::LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, ArgN2, ArgN3, ArgN4, ArgN5, ArgN6, ArgN7, true> > : public std::true_type {};
+template < Kokkos::Iterate OuterP, Kokkos::Iterate InnerP, unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 ,  unsigned ArgN3 ,  unsigned ArgN4 ,  unsigned ArgN5 ,  unsigned ArgN6 , unsigned ArgN7 , bool IsPowerTwo >
+struct is_array_layout_tiled < Kokkos::LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, ArgN2, ArgN3, ArgN4, ArgN5, ArgN6, ArgN7, IsPowerTwo> > : public std::true_type {}; // Last template parameter "true" meaning this currently only supports powers-of-two
 
 
 namespace Impl {
@@ -945,7 +944,7 @@ tile_subview( const Kokkos::View<T********, Kokkos::LayoutTiled<OuterP,InnerP,N0
 }
 
 } /* namespace Kokkos */
-
+#endif //!defined(KOKKOS_ENABLE_DEPRECATED_CODE
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 

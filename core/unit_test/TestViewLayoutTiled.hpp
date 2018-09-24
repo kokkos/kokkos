@@ -53,6 +53,7 @@
 
 namespace Test {
 
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
 namespace {
 
 template <typename ExecSpace >
@@ -662,5 +663,5 @@ TEST_F( TEST_CATEGORY , view_layouttiled) {
   TestViewLayoutTiled< TEST_EXECSPACE >::test_view_layout_tiled_3d( 4, 12, 16 );
   TestViewLayoutTiled< TEST_EXECSPACE >::test_view_layout_tiled_4d( 4, 12, 16, 12 );
 }
-
+#endif
 } // namespace Test
