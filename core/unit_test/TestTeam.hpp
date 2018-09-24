@@ -973,7 +973,7 @@ struct TestShmemSize {
 
     size_t size = view_type::shmem_size( d1, d2, d3 );
 
-    ASSERT_EQ( size, d1 * d2 * d3 * sizeof( long ) );
+    ASSERT_EQ( size, (d1 * d2 * d3 + 1)* sizeof( long ) );
 
     test_layout_stride();
   }
