@@ -453,9 +453,9 @@ struct ViewMapping
       typedef typename src_map_type::offset_type  src_offset_type ;
 
       dst = dst_map_type(
-         dst_handle_type( src.m_handle +
-                          ( is_outer_left ? ( (i_tile0 + src.m_offset.m_tile_N0 * i_tile1) << src_offset_type::SHIFT_2T )
-                                          : ( (src.m_offset.m_tile_N1 * i_tile0 + i_tile1) << src_offset_type::SHIFT_2T )
+         dst_handle_type( src.m_impl_handle +
+                          ( is_outer_left ? ( (i_tile0 + src.m_impl_offset.m_tile_N0 * i_tile1) << src_offset_type::SHIFT_2T )
+                                          : ( (src.m_impl_offset.m_tile_N1 * i_tile0 + i_tile1) << src_offset_type::SHIFT_2T )
                           ) // offset to start of the tile
                         )
        , dst_offset_type() );
@@ -500,9 +500,9 @@ struct ViewMapping
       typedef typename src_map_type::offset_type  src_offset_type ;
 
       dst = dst_map_type(
-         dst_handle_type( src.m_handle +
-                          ( is_outer_left ? ( ( i_tile0 + src.m_offset.m_tile_N0 * ( i_tile1 + src.m_offset.m_tile_N1 * i_tile2 ) ) << src_offset_type::SHIFT_3T ) 
-                                          : ( ( src.m_offset.m_tile_N2 * ( src.m_offset.m_tile_N1 * i_tile0 + i_tile1 ) + i_tile2 ) << src_offset_type::SHIFT_3T )
+         dst_handle_type( src.m_impl_handle +
+                          ( is_outer_left ? ( ( i_tile0 + src.m_impl_offset.m_tile_N0 * ( i_tile1 + src.m_impl_offset.m_tile_N1 * i_tile2 ) ) << src_offset_type::SHIFT_3T ) 
+                                          : ( ( src.m_impl_offset.m_tile_N2 * ( src.m_impl_offset.m_tile_N1 * i_tile0 + i_tile1 ) + i_tile2 ) << src_offset_type::SHIFT_3T )
                           )
                         ) // offset to start of the tile
        , dst_offset_type() );
@@ -549,9 +549,9 @@ struct ViewMapping
       typedef typename src_map_type::offset_type  src_offset_type ;
 
       dst = dst_map_type(
-         dst_handle_type( src.m_handle +
-                          ( is_outer_left ? ( ( i_tile0 + src.m_offset.m_tile_N0 * ( i_tile1 + src.m_offset.m_tile_N1 * ( i_tile2 + src.m_offset.m_tile_N2 * i_tile3 ) ) ) << src_offset_type::SHIFT_4T ) 
-                                          : ( ( src.m_offset.m_tile_N3 * ( src.m_offset.m_tile_N2 * ( src.m_offset.m_tile_N1 * i_tile0 + i_tile1 ) + i_tile2 ) + i_tile3 ) << src_offset_type::SHIFT_4T )
+         dst_handle_type( src.m_impl_handle +
+                          ( is_outer_left ? ( ( i_tile0 + src.m_impl_offset.m_tile_N0 * ( i_tile1 + src.m_impl_offset.m_tile_N1 * ( i_tile2 + src.m_impl_offset.m_tile_N2 * i_tile3 ) ) ) << src_offset_type::SHIFT_4T ) 
+                                          : ( ( src.m_impl_offset.m_tile_N3 * ( src.m_impl_offset.m_tile_N2 * ( src.m_impl_offset.m_tile_N1 * i_tile0 + i_tile1 ) + i_tile2 ) + i_tile3 ) << src_offset_type::SHIFT_4T )
                           )
                         ) // offset to start of the tile
        , dst_offset_type() );
@@ -600,9 +600,9 @@ struct ViewMapping
       typedef typename src_map_type::offset_type  src_offset_type ;
 
       dst = dst_map_type(
-         dst_handle_type( src.m_handle +
-                          ( is_outer_left ? ( ( i_tile0 + src.m_offset.m_tile_N0 * ( i_tile1 + src.m_offset.m_tile_N1 * ( i_tile2 + src.m_offset.m_tile_N2 * ( i_tile3 + src.m_offset.m_tile_N3 * i_tile4 ) ) ) ) << src_offset_type::SHIFT_5T ) 
-                                          : ( ( src.m_offset.m_tile_N4 * ( src.m_offset.m_tile_N3 * ( src.m_offset.m_tile_N2 * ( src.m_offset.m_tile_N1 * i_tile0 + i_tile1 ) + i_tile2 ) + i_tile3 ) + i_tile4 ) << src_offset_type::SHIFT_5T )
+         dst_handle_type( src.m_impl_handle +
+                          ( is_outer_left ? ( ( i_tile0 + src.m_impl_offset.m_tile_N0 * ( i_tile1 + src.m_impl_offset.m_tile_N1 * ( i_tile2 + src.m_impl_offset.m_tile_N2 * ( i_tile3 + src.m_impl_offset.m_tile_N3 * i_tile4 ) ) ) ) << src_offset_type::SHIFT_5T ) 
+                                          : ( ( src.m_impl_offset.m_tile_N4 * ( src.m_impl_offset.m_tile_N3 * ( src.m_impl_offset.m_tile_N2 * ( src.m_impl_offset.m_tile_N1 * i_tile0 + i_tile1 ) + i_tile2 ) + i_tile3 ) + i_tile4 ) << src_offset_type::SHIFT_5T )
                           )
                         ) // offset to start of the tile
        , dst_offset_type() );
@@ -653,9 +653,9 @@ struct ViewMapping
       typedef typename src_map_type::offset_type  src_offset_type ;
 
       dst = dst_map_type(
-         dst_handle_type( src.m_handle +
-                          ( is_outer_left ? ( ( i_tile0 + src.m_offset.m_tile_N0 * ( i_tile1 + src.m_offset.m_tile_N1 * ( i_tile2 + src.m_offset.m_tile_N2 * ( i_tile3 + src.m_offset.m_tile_N3 * ( i_tile4 + src.m_offset.m_tile_N4 * i_tile5 ) ) ) ) ) << src_offset_type::SHIFT_6T ) 
-                                          : ( ( src.m_offset.m_tile_N5 * ( src.m_offset.m_tile_N4 * ( src.m_offset.m_tile_N3 * ( src.m_offset.m_tile_N2 * ( src.m_offset.m_tile_N1 * i_tile0 + i_tile1 ) + i_tile2 ) + i_tile3 ) + i_tile4 ) + i_tile5 ) << src_offset_type::SHIFT_6T )
+         dst_handle_type( src.m_impl_handle +
+                          ( is_outer_left ? ( ( i_tile0 + src.m_impl_offset.m_tile_N0 * ( i_tile1 + src.m_impl_offset.m_tile_N1 * ( i_tile2 + src.m_impl_offset.m_tile_N2 * ( i_tile3 + src.m_impl_offset.m_tile_N3 * ( i_tile4 + src.m_impl_offset.m_tile_N4 * i_tile5 ) ) ) ) ) << src_offset_type::SHIFT_6T ) 
+                                          : ( ( src.m_impl_offset.m_tile_N5 * ( src.m_impl_offset.m_tile_N4 * ( src.m_impl_offset.m_tile_N3 * ( src.m_impl_offset.m_tile_N2 * ( src.m_impl_offset.m_tile_N1 * i_tile0 + i_tile1 ) + i_tile2 ) + i_tile3 ) + i_tile4 ) + i_tile5 ) << src_offset_type::SHIFT_6T )
                           )
                         ) // offset to start of the tile
        , dst_offset_type() );
@@ -708,9 +708,9 @@ struct ViewMapping
       typedef typename src_map_type::offset_type  src_offset_type ;
 
       dst = dst_map_type(
-         dst_handle_type( src.m_handle +
-                          ( is_outer_left ? ( ( i_tile0 + src.m_offset.m_tile_N0 * ( i_tile1 + src.m_offset.m_tile_N1 * ( i_tile2 + src.m_offset.m_tile_N2 * ( i_tile3 + src.m_offset.m_tile_N3 * ( i_tile4 + src.m_offset.m_tile_N4 * ( i_tile5 + src.m_offset.m_tile_N5 * i_tile6 ) ) ) ) ) ) << src_offset_type::SHIFT_7T ) 
-                                          : ( ( src.m_offset.m_tile_N6 * ( src.m_offset.m_tile_N5 * ( src.m_offset.m_tile_N4 * ( src.m_offset.m_tile_N3 * ( src.m_offset.m_tile_N2 * ( src.m_offset.m_tile_N1 * i_tile0 + i_tile1 ) + i_tile2 ) + i_tile3 ) + i_tile4 ) + i_tile5 ) + i_tile6 ) << src_offset_type::SHIFT_7T )
+         dst_handle_type( src.m_impl_handle +
+                          ( is_outer_left ? ( ( i_tile0 + src.m_impl_offset.m_tile_N0 * ( i_tile1 + src.m_impl_offset.m_tile_N1 * ( i_tile2 + src.m_impl_offset.m_tile_N2 * ( i_tile3 + src.m_impl_offset.m_tile_N3 * ( i_tile4 + src.m_impl_offset.m_tile_N4 * ( i_tile5 + src.m_impl_offset.m_tile_N5 * i_tile6 ) ) ) ) ) ) << src_offset_type::SHIFT_7T ) 
+                                          : ( ( src.m_impl_offset.m_tile_N6 * ( src.m_impl_offset.m_tile_N5 * ( src.m_impl_offset.m_tile_N4 * ( src.m_impl_offset.m_tile_N3 * ( src.m_impl_offset.m_tile_N2 * ( src.m_impl_offset.m_tile_N1 * i_tile0 + i_tile1 ) + i_tile2 ) + i_tile3 ) + i_tile4 ) + i_tile5 ) + i_tile6 ) << src_offset_type::SHIFT_7T )
                           )
                         ) // offset to start of the tile
        , dst_offset_type() );
@@ -765,9 +765,9 @@ struct ViewMapping
       typedef typename src_map_type::offset_type  src_offset_type ;
 
       dst = dst_map_type(
-         dst_handle_type( src.m_handle +
-                          ( is_outer_left ? ( ( i_tile0 + src.m_offset.m_tile_N0 * ( i_tile1 + src.m_offset.m_tile_N1 * ( i_tile2 + src.m_offset.m_tile_N2 * ( i_tile3 + src.m_offset.m_tile_N3 * ( i_tile4 + src.m_offset.m_tile_N4 * ( i_tile5 + src.m_offset.m_tile_N5 * ( i_tile6 + src.m_offset.m_tile_N6 * i_tile7 ) ) ) ) ) ) ) << src_offset_type::SHIFT_8T ) 
-                                          : ( ( src.m_offset.m_tile_N7 * ( src.m_offset.m_tile_N6 * ( src.m_offset.m_tile_N5 * ( src.m_offset.m_tile_N4 * ( src.m_offset.m_tile_N3 * ( src.m_offset.m_tile_N2 * ( src.m_offset.m_tile_N1 * i_tile0 + i_tile1 ) + i_tile2 ) + i_tile3 ) + i_tile4 ) + i_tile5 ) + i_tile6 ) + i_tile7 ) << src_offset_type::SHIFT_8T )
+         dst_handle_type( src.m_impl_handle +
+                          ( is_outer_left ? ( ( i_tile0 + src.m_impl_offset.m_tile_N0 * ( i_tile1 + src.m_impl_offset.m_tile_N1 * ( i_tile2 + src.m_impl_offset.m_tile_N2 * ( i_tile3 + src.m_impl_offset.m_tile_N3 * ( i_tile4 + src.m_impl_offset.m_tile_N4 * ( i_tile5 + src.m_impl_offset.m_tile_N5 * ( i_tile6 + src.m_impl_offset.m_tile_N6 * i_tile7 ) ) ) ) ) ) ) << src_offset_type::SHIFT_8T ) 
+                                          : ( ( src.m_impl_offset.m_tile_N7 * ( src.m_impl_offset.m_tile_N6 * ( src.m_impl_offset.m_tile_N5 * ( src.m_impl_offset.m_tile_N4 * ( src.m_impl_offset.m_tile_N3 * ( src.m_impl_offset.m_tile_N2 * ( src.m_impl_offset.m_tile_N1 * i_tile0 + i_tile1 ) + i_tile2 ) + i_tile3 ) + i_tile4 ) + i_tile5 ) + i_tile6 ) + i_tile7 ) << src_offset_type::SHIFT_8T )
                           )
                         ) // offset to start of the tile
        , dst_offset_type() );

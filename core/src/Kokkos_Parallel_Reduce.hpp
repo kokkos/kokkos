@@ -1002,7 +1002,8 @@ void parallel_reduce(const std::string& label,
                      typename Impl::enable_if<
                        Kokkos::Impl::is_execution_policy<PolicyType>::value
                      >::type * = 0) {
-  Impl::ParallelReduceAdaptor<PolicyType,FunctorType,const ReturnType>::execute(label,policy,functor,return_value);
+  ReturnType return_value_impl = return_value;
+  Impl::ParallelReduceAdaptor<PolicyType,FunctorType,ReturnType>::execute(label,policy,functor,return_value_impl);
 }
 
 template< class PolicyType, class FunctorType, class ReturnType >

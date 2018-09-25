@@ -41,32 +41,9 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
-#include <cstdlib>
+// Doesn't work right now due to bug with static sized array member
 
-#include <Kokkos_Core.hpp>
-
-#ifdef KOKKOS_ENABLE_ROCM
-#include <rocm/TestROCm_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_CUDA
-#include <cuda/TestCuda_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_OPENMP
-#include <openmp/TestOpenMP_Category.hpp>
-#endif
-//#include <TestReduce.hpp>
-#include <TestMemoryPool.hpp>
-//#include <TestMDRange_b.hpp>
-//#include <TestMDRange_c.hpp>
-//#include <TestMDRange_d.hpp>
-//#include <TestMDRange_e.hpp>
-
-int main( int argc, char *argv[] ) {
-  Kokkos::initialize(argc,argv);
-  ::testing::InitGoogleTest( &argc, argv );
-
-  int result =  RUN_ALL_TESTS();
-  Kokkos::finalize();
-  return result;
-}
+//#include <rocm/TestROCm_Category.hpp>
+//#ifndef KOKKOS_IMPL_ROCM_CLANG_WORKAROUND
+//#include <TestTeamTeamSize.hpp>
+//#endif

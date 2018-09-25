@@ -97,12 +97,18 @@ do
         echo "Invalid compiler by --compiler command: '${COMPILER}'"
         exit
       fi
+      # ... valid compiler, ensure absolute path set 
+      WCOMPATH=`which $COMPILER`
+      COMPDIR=`dirname $WCOMPATH`
+      COMPNAME=`basename $WCOMPATH`
+      COMPILER=${COMPDIR}/${COMPNAME}
       ;;
     --with-options*)
       KOKKOS_OPT="${key#*=}"
       ;;
     --help)
       echo "Kokkos configure options:"
+      echo ""
       echo "--kokkos-path=/Path/To/Kokkos:        Path to the Kokkos root directory."
       echo "--qthreads-path=/Path/To/Qthreads:    Path to Qthreads install directory."
       echo "                                        Overrides path given by --with-qthreads."
@@ -195,7 +201,7 @@ else
 fi
 
 if [ "${KOKKOS_PATH}"  = "${PWD}" ] || [ "${KOKKOS_PATH}"  = "${PWD}/" ]; then
-  echo "Running generate_makefile.sh in the Kokkos root directory is not allowed"
+  echo "Running generate_makefile.bash in the Kokkos root directory is not allowed"
   exit
 fi
 
@@ -204,8 +210,13 @@ KOKKOS_SRC_PATH=${KOKKOS_PATH}
 KOKKOS_SETTINGS="KOKKOS_SRC_PATH=${KOKKOS_SRC_PATH}"
 #KOKKOS_SETTINGS="KOKKOS_PATH=${KOKKOS_PATH}"
 
+# The double [[  ]] in the elif branch is not a typo
 if [ ${#COMPILER} -gt 0 ]; then
   KOKKOS_SETTINGS="${KOKKOS_SETTINGS} CXX=${COMPILER}"
+elif
+   [ ${#COMPILER} -eq 0 ] && [[ ${KOKKOS_DEVICES} =~ .*Cuda.* ]]; then
+  COMPILER="${KOKKOS_PATH}/bin/nvcc_wrapper"
+  KOKKOS_SETTINGS="${KOKKOS_SETTINGS} CXX=${COMPILER}"   
 fi
 
 if [ ${#KOKKOS_DEVICES} -gt 0 ]; then
@@ -276,7 +287,7 @@ fi
 
 mkdir -p install
 gen_makefile=Makefile.kokkos
-echo "#Makefile to satisfy existens of target kokkos-clean before installing the library" > install/${gen_makefile}
+echo "#Makefile to satisfy existence of target kokkos-clean before installing the library" > install/${gen_makefile}
 echo "kokkos-clean:" >> install/${gen_makefile}
 echo "" >> install/${gen_makefile}
 mkdir -p core
