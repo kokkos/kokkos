@@ -2014,7 +2014,6 @@ create_mirror_view_and_copy(const Space& , const Kokkos::DynRankView<T,P...> & s
   , typename std::enable_if<!Impl::MirrorDRViewType<Space,T,P ...>::is_same_memspace>::type* = 0 ) {
   using Mirror = typename Impl::MirrorDRViewType<Space,T,P ...>::view_type;
   std::string label = name.empty() ? src.label() : name;
-  auto reconstructed_layout = Impl::reconstructLayout(src.layout(), src.rank());
   auto mirror = Mirror( Kokkos::ViewAllocateWithoutInitializing(label), Impl::reconstructLayout(src.layout(), src.rank()) );
   deep_copy(mirror, src);
   return mirror;
