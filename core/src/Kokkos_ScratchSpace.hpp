@@ -45,6 +45,7 @@
 #define KOKKOS_SCRATCHSPACE_HPP
 
 #include <cstdio>
+#include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Concepts.hpp>
 
@@ -62,7 +63,7 @@ public:
 
   // Alignment of memory chunks returned by 'get'
   // must be a power of two
-  enum { ALIGN = 8 };
+  enum { ALIGN = KOKKOS_MEMORY_ALIGNMENT };
 
 private:
 
