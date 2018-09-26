@@ -891,14 +891,15 @@ void cuda_intra_block_reduce_scan( const FunctorType & functor ,
  *
  *  Global reduce result is in the last threads' 'shared_data' location.
  */
+
 template< bool DoScan , class FunctorType , class ArgTag >
 __device__
-bool cuda_single_inter_block_reduce_scan( const FunctorType     & functor ,
-                                          const Cuda::size_type   block_id ,
-                                          const Cuda::size_type   block_count ,
-                                          Cuda::size_type * const shared_data ,
-                                          Cuda::size_type * const global_data ,
-                                          Cuda::size_type * const global_flags )
+bool cuda_single_inter_block_reduce_scan2( const FunctorType     & functor ,
+                                    const Cuda::size_type   block_id ,
+                                    const Cuda::size_type   block_count ,
+                                    Cuda::size_type * const shared_data ,
+                                    Cuda::size_type * const global_data ,
+                                    Cuda::size_type * const global_flags )
 {
   typedef Cuda::size_type                  size_type ;
   typedef FunctorValueTraits< FunctorType , ArgTag >  ValueTraits ;
@@ -906,11 +907,7 @@ bool cuda_single_inter_block_reduce_scan( const FunctorType     & functor ,
   typedef FunctorValueInit<   FunctorType , ArgTag >  ValueInit ;
   typedef FunctorValueOps<    FunctorType , ArgTag >  ValueOps ;
 
-  if(!DoScan && ValueTraits::StaticValueSize)
-    return Kokkos::Impl::CudaReductionsFunctor<FunctorType,ArgTag,false,(ValueTraits::StaticValueSize>16)>::scalar_inter_block_reduction(functor,block_id,block_count,shared_data,global_data,global_flags);
-
   typedef typename ValueTraits::pointer_type    pointer_type ;
-  //typedef typename ValueTraits::reference_type  reference_type ;
 
   // '__ffs' = position of the least significant bit set to 1.
   // 'blockDim.y' is guaranteed to be a power of two so this
@@ -933,12 +930,7 @@ bool cuda_single_inter_block_reduce_scan( const FunctorType     & functor ,
     size_type * const shared = shared_data + word_count.value * BlockSizeMask ;
     size_type * const global = global_data + word_count.value * block_id ;
 
-//#if (__CUDA_ARCH__ < 500)
     for ( int i = int(threadIdx.y) ; i < int(word_count.value) ; i += int(blockDim.y) ) { global[i] = shared[i] ; }
-//#else
-//    for ( size_type i = 0 ; i < word_count.value ; i += 1 ) { global[i] = shared[i] ; }
-//#endif
-
   }
 
   // Contributing blocks note that their contribution has been completed via an atomic-increment flag
@@ -978,6 +970,22 @@ bool cuda_single_inter_block_reduce_scan( const FunctorType     & functor ,
   }
 
   return is_last_block ;
+}
+
+template< bool DoScan , class FunctorType , class ArgTag >
+__device__
+bool cuda_single_inter_block_reduce_scan( const FunctorType     & functor ,
+                                          const Cuda::size_type   block_id ,
+                                          const Cuda::size_type   block_count ,
+                                          Cuda::size_type * const shared_data ,
+                                          Cuda::size_type * const global_data ,
+                                          Cuda::size_type * const global_flags )
+{
+  typedef FunctorValueTraits< FunctorType , ArgTag >  ValueTraits ;
+  if(!DoScan && ValueTraits::StaticValueSize)
+    return Kokkos::Impl::CudaReductionsFunctor<FunctorType,ArgTag,false,(ValueTraits::StaticValueSize>16)>::scalar_inter_block_reduction(functor,block_id,block_count,shared_data,global_data,global_flags);
+  else
+    return cuda_single_inter_block_reduce_scan2<DoScan, FunctorType, ArgTag>(functor, block_id, block_count, shared_data, global_data, global_flags);
 }
 
 // Size in bytes required for inter block reduce or scan
