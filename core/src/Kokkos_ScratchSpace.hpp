@@ -157,7 +157,14 @@ public:
         printf ("ScratchMemorySpace<...>::get_shmem: Failed to allocate "
                 "%ld byte(s); remaining capacity is %ld byte(s)\n", long(size),
                 long(m_end_L0-m_iter_L0));
-        #endif // KOKKOS_DEBUG
+        #else // KOKKOS_DEBUG
+          #if defined(__CUDA_ARCH__) && defined(KOKKOS_COMPILER_CLANG)
+            #if KOKKOS_COMPILER_CLANG==600
+              printf("ScratchMemorySpace<...>::get_shmem: Failed to allocate:"
+                     "%i %i %li %p %p %p\n",blockIdx.x,threadIdx.x,size,previous,m_iter_L0,m_end_L0);
+            #endif
+          #endif
+        #endif
         tmp = 0;
       }
       return tmp;
@@ -177,7 +184,14 @@ public:
         printf ("ScratchMemorySpace<...>::get_shmem: Failed to allocate "
                 "%ld byte(s); remaining capacity is %ld byte(s)\n", long(size),
                 long(m_end_L1-m_iter_L1));
-        #endif // KOKKOS_DEBUG
+        #else // KOKKOS_DEBUG
+          #if defined(__CUDA_ARCH__) && defined(KOKKOS_COMPILER_CLANG)
+            #if KOKKOS_COMPILER_CLANG==600
+              printf("ScratchMemorySpace<...>::get_shmem: Failed to allocate:"
+                     "%i %i %li %p %p %p\n",blockIdx.x,threadIdx.x,size,previous,m_iter_L0,m_end_L0);
+            #endif
+          #endif
+        #endif
         tmp = 0;
       }
       return tmp;
