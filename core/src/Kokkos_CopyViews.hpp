@@ -655,30 +655,22 @@ void view_copy(const DstType& dst, const SrcType& src) {
   int64_t strides[DstType::Rank+1];
   dst.stride(strides);
   Kokkos::Iterate iterate;
-//  Kokkos::Iterate iterate_inner;
   if        ( Kokkos::is_layouttiled<typename DstType::array_layout>::value ) {
     iterate = Kokkos::layout_iterate_type_selector<typename DstType::array_layout>::outer_iteration_pattern;
-//    iterate_inner = Kokkos::layout_iterate_type_selector::inner_iteration_pattern;
   } else if        ( std::is_same<typename DstType::array_layout,Kokkos::LayoutRight>::value ) {
     iterate = Kokkos::Iterate::Right;
-//    iterate_inner = Kokkos::Iterate::Right;
   } else if ( std::is_same<typename DstType::array_layout,Kokkos::LayoutLeft>::value ) {
     iterate = Kokkos::Iterate::Left;
-//    iterate_inner = Kokkos::Iterate::Left;
   } else if ( std::is_same<typename DstType::array_layout,Kokkos::LayoutStride>::value ) {
     if( strides[0] > strides[DstType::Rank-1] )
       iterate = Kokkos::Iterate::Right;
-//      iterate_inner = Kokkos::Iterate::Right;
     else
       iterate = Kokkos::Iterate::Left;
-//      iterate_inner = Kokkos::Iterate::Left;
   } else {
     if( std::is_same<typename DstType::execution_space::array_layout, Kokkos::LayoutRight>::value )
       iterate = Kokkos::Iterate::Right;
-//      iterate_inner = Kokkos::Iterate::Right;
     else
       iterate = Kokkos::Iterate::Left;
-//      iterate_inner = Kokkos::Iterate::Left;
   }
 
   if( (dst.span() >= size_t(std::numeric_limits<int>::max())) ||
