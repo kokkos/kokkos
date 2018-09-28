@@ -29,7 +29,7 @@ export JENKINS_DO_PTHREAD=OFF
 export JENKINS_DO_SERIAL=OFF
 export JENKINS_DO_COMPLEX=OFF
 
-export JENKINS_ARCH="Power8,Kepler37"
+export JENKINS_ARCH="Power8"
 export JENKINS_ARCH_CXX_FLAG="-mcpu=power8"
 export JENKINS_ARCH_C_FLAG="-mcpu=power8"
 export BLAS_LIBRARIES="${BLAS_ROOT}/lib/libblas.a;gfortran;gomp"
