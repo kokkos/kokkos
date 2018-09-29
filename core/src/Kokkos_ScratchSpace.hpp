@@ -144,7 +144,7 @@ public:
     if(level == 0) {
 
       char* previous = m_iter_L0;
-      const ptrdiff_t missalign = ptrdiff_t(m_iter_L0)%alignment;
+      const ptrdiff_t missalign = size_t(m_iter_L0)%alignment;
       if(missalign) m_iter_L0 += alignment-missalign;
 
       void* tmp = m_iter_L0 + m_offset * size;
@@ -157,21 +157,14 @@ public:
         printf ("ScratchMemorySpace<...>::get_shmem: Failed to allocate "
                 "%ld byte(s); remaining capacity is %ld byte(s)\n", long(size),
                 long(m_end_L0-m_iter_L0));
-        #else // KOKKOS_DEBUG
-          #if defined(__CUDA_ARCH__) && defined(KOKKOS_COMPILER_CLANG)
-            #if KOKKOS_COMPILER_CLANG==600
-              printf("ScratchMemorySpace<...>::get_shmem: Failed to allocate:"
-                     "%i %i %li %p %p %p\n",blockIdx.x,threadIdx.x,size,previous,m_iter_L0,m_end_L0);
-            #endif
-          #endif
-        #endif
+        #endif // KOKKOS_DEBUG
         tmp = 0;
       }
       return tmp;
     } else {
 
       char* previous = m_iter_L1;
-      const ptrdiff_t missalign =  ptrdiff_t(m_iter_L1)%alignment;
+      const ptrdiff_t missalign =  size_t(m_iter_L1)%alignment;
       if(missalign) m_iter_L1 += alignment-missalign;
 
       void* tmp = m_iter_L1 + m_offset * size;
@@ -184,14 +177,7 @@ public:
         printf ("ScratchMemorySpace<...>::get_shmem: Failed to allocate "
                 "%ld byte(s); remaining capacity is %ld byte(s)\n", long(size),
                 long(m_end_L1-m_iter_L1));
-        #else // KOKKOS_DEBUG
-          #if defined(__CUDA_ARCH__) && defined(KOKKOS_COMPILER_CLANG)
-            #if KOKKOS_COMPILER_CLANG==600
-              printf("ScratchMemorySpace<...>::get_shmem: Failed to allocate:"
-                     "%i %i %li %p %p %p\n",blockIdx.x,threadIdx.x,size,previous,m_iter_L0,m_end_L0);
-            #endif
-          #endif
-        #endif
+        #endif // KOKKOS_DEBUG
         tmp = 0;
       }
       return tmp;
