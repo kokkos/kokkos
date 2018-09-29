@@ -138,7 +138,6 @@ public:
   template<class FunctorType>
   int team_size_max( const FunctorType& f, const ParallelForTag& ) const {
     typedef Impl::ParallelFor< FunctorType , TeamPolicy<Properties...> > closure_type;
-    typedef Impl::FunctorValueTraits< FunctorType , typename traits::work_tag > functor_value_traits;
     int block_size = Kokkos::Impl::cuda_get_max_block_size< closure_type, typename traits::launch_bounds >( f ,(size_t) vector_length(),
         (size_t) team_scratch_size(0) + 2*sizeof(double), (size_t) thread_scratch_size(0) + sizeof(double) );
     return block_size/vector_length();
@@ -179,7 +178,6 @@ public:
   template<class FunctorType>
   int team_size_recommended( const FunctorType& f, const ParallelForTag& ) const {
     typedef Impl::ParallelFor< FunctorType , TeamPolicy<Properties...> > closure_type;
-    typedef Impl::FunctorValueTraits< FunctorType , typename traits::work_tag > functor_value_traits;
     int block_size = Kokkos::Impl::cuda_get_opt_block_size< closure_type, typename traits::launch_bounds >( f ,(size_t) vector_length(),
         (size_t) team_scratch_size(0) + 2*sizeof(double), (size_t) thread_scratch_size(0) + sizeof(double));
     return block_size/vector_length();

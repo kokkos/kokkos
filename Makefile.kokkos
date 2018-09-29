@@ -396,6 +396,7 @@ tmp := $(call kokkos_append_header,"/* Execution Spaces */")
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_CUDA")
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_COMPILER_CUDA_VERSION $(KOKKOS_INTERNAL_COMPILER_NVCC_VERSION)")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
