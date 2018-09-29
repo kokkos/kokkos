@@ -22,13 +22,6 @@ if [[ "$HOSTNAME" =~ .*bowman.* ]]; then
   module load git
 fi
 
-if [[ "$HOSTNAME" == n* ]]; then # Warning: very generic name
-  if [[ "$PROCESSOR" = "aarch64" ]]; then
-    MACHINE=sullivan
-    module load git
-  fi
-fi
-
 if [[ "$HOSTNAME" == *blake* ]]; then # Warning: very generic name
   MACHINE=blake
   module load git
@@ -36,11 +29,6 @@ fi
 
 if [[ "$HOSTNAME" == apollo\.* ]]; then
   MACHINE=apollo
-  module load git
-fi
-
-if [[ "$HOSTNAME" == sullivan ]]; then
-  MACHINE=sullivan
   module load git
 fi
 
