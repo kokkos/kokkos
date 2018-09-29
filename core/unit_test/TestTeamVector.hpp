@@ -227,7 +227,9 @@ struct functor_team_for {
 
   functor_team_for( Kokkos::View< int, Kokkos::LayoutLeft, ExecutionSpace > flag_ ) : flag( flag_ ) {}
 
-  unsigned team_shmem_size( int team_size ) const { return team_size * 13 * sizeof( Scalar ) + 8; }
+  typedef typename ExecutionSpace::scratch_memory_space shmem_space;
+  typedef Kokkos::View< Scalar*, shmem_space, Kokkos::MemoryUnmanaged > shared_int;
+  unsigned team_shmem_size( int team_size ) const { return shared_int::shmem_size(team_size*13); }
 
   KOKKOS_INLINE_FUNCTION
   void operator()( typename policy_type::member_type team ) const {
@@ -290,7 +292,9 @@ struct functor_team_reduce {
 
   functor_team_reduce( Kokkos::View< int, Kokkos::LayoutLeft, ExecutionSpace > flag_ ) : flag( flag_ ) {}
 
-  unsigned team_shmem_size( int team_size ) const { return team_size * 13 * sizeof( Scalar ) + 8; }
+  typedef typename ExecutionSpace::scratch_memory_space shmem_space;
+  typedef Kokkos::View< Scalar*, shmem_space, Kokkos::MemoryUnmanaged > shared_int;
+  unsigned team_shmem_size( int team_size ) const { return shared_int::shmem_size(team_size*13); }
 
   KOKKOS_INLINE_FUNCTION
   void operator()( typename policy_type::member_type team ) const {
@@ -333,7 +337,9 @@ struct functor_team_reduce_reducer {
 
   functor_team_reduce_reducer( Kokkos::View< int, Kokkos::LayoutLeft, ExecutionSpace > flag_ ) : flag( flag_ ) {}
 
-  unsigned team_shmem_size( int team_size ) const { return team_size * 13 * sizeof( Scalar ) + 8; }
+  typedef typename ExecutionSpace::scratch_memory_space shmem_space;
+  typedef Kokkos::View< Scalar*, shmem_space, Kokkos::MemoryUnmanaged > shared_int;
+  unsigned team_shmem_size( int team_size ) const { return shared_int::shmem_size(team_size*13); }
 
   KOKKOS_INLINE_FUNCTION
   void operator()( typename policy_type::member_type team ) const {
@@ -376,7 +382,9 @@ struct functor_team_vector_for {
 
   functor_team_vector_for( Kokkos::View< int, Kokkos::LayoutLeft, ExecutionSpace > flag_ ) : flag( flag_ ) {}
 
-  unsigned team_shmem_size( int team_size ) const { return team_size * 13 * sizeof( Scalar ) + 8; }
+  typedef typename ExecutionSpace::scratch_memory_space shmem_space;
+  typedef Kokkos::View< Scalar*, shmem_space, Kokkos::MemoryUnmanaged > shared_int;
+  unsigned team_shmem_size( int team_size ) const { return shared_int::shmem_size(team_size*13); }
 
   KOKKOS_INLINE_FUNCTION
   void operator()( typename policy_type::member_type team ) const {
@@ -442,7 +450,9 @@ struct functor_team_vector_reduce {
   Kokkos::View< int, Kokkos::LayoutLeft, ExecutionSpace > flag;
   functor_team_vector_reduce( Kokkos::View< int, Kokkos::LayoutLeft, ExecutionSpace > flag_ ) : flag( flag_ ) {}
 
-  unsigned team_shmem_size( int team_size ) const { return team_size * 13 * sizeof( Scalar ) + 8; }
+  typedef typename ExecutionSpace::scratch_memory_space shmem_space;
+  typedef Kokkos::View< Scalar*, shmem_space, Kokkos::MemoryUnmanaged > shared_int;
+  unsigned team_shmem_size( int team_size ) const { return shared_int::shmem_size(team_size*13); }
 
   KOKKOS_INLINE_FUNCTION
   void operator()( typename policy_type::member_type team ) const {
@@ -485,7 +495,9 @@ struct functor_team_vector_reduce_reducer {
 
   functor_team_vector_reduce_reducer( Kokkos::View< int, Kokkos::LayoutLeft, ExecutionSpace > flag_ ) : flag( flag_ ) {}
 
-  unsigned team_shmem_size( int team_size ) const { return team_size * 13 * sizeof( Scalar ) + 8; }
+  typedef typename ExecutionSpace::scratch_memory_space shmem_space;
+  typedef Kokkos::View< Scalar*, shmem_space, Kokkos::MemoryUnmanaged > shared_int;
+  unsigned team_shmem_size( int team_size ) const { return shared_int::shmem_size(team_size*13); }
 
   KOKKOS_INLINE_FUNCTION
   void operator()( typename policy_type::member_type team ) const {
@@ -568,12 +580,12 @@ struct functor_vec_for {
 
   functor_vec_for( Kokkos::View< int, Kokkos::LayoutLeft, ExecutionSpace > flag_ ) : flag( flag_ ) {}
 
-  unsigned team_shmem_size( int team_size ) const { return team_size * 13 * sizeof( Scalar ) + 8; }
+  typedef typename ExecutionSpace::scratch_memory_space shmem_space;
+  typedef Kokkos::View< Scalar*, shmem_space, Kokkos::MemoryUnmanaged > shared_int;
+  unsigned team_shmem_size( int team_size ) const { return shared_int::shmem_size(team_size*13); }
 
   KOKKOS_INLINE_FUNCTION
   void operator()( typename policy_type::member_type team ) const {
-    typedef typename ExecutionSpace::scratch_memory_space shmem_space;
-    typedef Kokkos::View< Scalar*, shmem_space, Kokkos::MemoryUnmanaged > shared_int;
 
     shared_int values = shared_int( team.team_shmem(), team.team_size() * 13 );
 
