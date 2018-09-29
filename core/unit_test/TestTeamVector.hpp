@@ -233,10 +233,7 @@ struct functor_team_for {
 
   KOKKOS_INLINE_FUNCTION
   void operator()( typename policy_type::member_type team ) const {
-    typedef typename ExecutionSpace::scratch_memory_space shmem_space;
-    typedef Kokkos::View< Scalar*, shmem_space, Kokkos::MemoryUnmanaged > shared_int;
-    typedef typename shared_int::size_type size_type;
-
+    typedef typename shmem_space::size_type size_type;
     const size_type shmemSize = team.team_size() * 13;
     shared_int values = shared_int( team.team_shmem(), shmemSize );
 
@@ -388,8 +385,6 @@ struct functor_team_vector_for {
 
   KOKKOS_INLINE_FUNCTION
   void operator()( typename policy_type::member_type team ) const {
-    typedef typename ExecutionSpace::scratch_memory_space shmem_space;
-    typedef Kokkos::View< Scalar*, shmem_space, Kokkos::MemoryUnmanaged > shared_int;
     typedef typename shared_int::size_type size_type;
 
     const size_type shmemSize = team.team_size() * 13;

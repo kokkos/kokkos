@@ -623,7 +623,7 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, true> {
 
     if( warp_id == 0) {
       ValueInit::init( functor , &value );
-      for(int i=threadIdx.y*blockDim.x+threadIdx.x; i<blockDim.y*blockDim.x/32; i+=32)
+      for(unsigned int i=threadIdx.y*blockDim.x+threadIdx.x; i<blockDim.y*blockDim.x/32; i+=32)
         ValueJoin::join( functor , &value,&shared_team_buffer_element[i]);
       scalar_intra_warp_reduction(functor,value,false,32,*my_global_team_buffer_element);
     }
@@ -647,7 +647,7 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, true> {
 
     scalar_intra_block_reduction(functor,value,true,my_global_team_buffer_element,shared_elements,shared_team_buffer_elements);
     __syncthreads();
-    int num_teams_done = 0;
+    unsigned int num_teams_done = 0;
     if(threadIdx.x + threadIdx.y == 0) {
       __threadfence();
       num_teams_done = Kokkos::atomic_fetch_add(global_flags,1)+1;
@@ -719,7 +719,7 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
     __syncthreads();
 
     if( warp_id == 0) {
-      const int delta = (threadIdx.y*blockDim.x+threadIdx.x)*32;
+      const unsigned int delta = (threadIdx.y*blockDim.x+threadIdx.x)*32;
       if(delta<blockDim.x*blockDim.y)
         *my_shared_team_buffer_element = shared_team_buffer_element[delta];
       KOKKOS_IMPL_CUDA_SYNCWARP;   
@@ -747,7 +747,7 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
     scalar_intra_block_reduction(functor,value,true,my_global_team_buffer_element,shared_elements,shared_team_buffer_elements);
     __syncthreads();
 
-    int num_teams_done = 0;
+    unsigned int num_teams_done = 0;
     if(threadIdx.x + threadIdx.y == 0) {
       __threadfence();
       num_teams_done = Kokkos::atomic_fetch_add(global_flags,1)+1;
