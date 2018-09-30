@@ -946,18 +946,18 @@ public:
     }
   }
 
-  template< class HostViewType >
+  template< class ViewType >
   ParallelReduce( const FunctorType  & arg_functor
                 , const Policy       & arg_policy
-                , const HostViewType & arg_result
+                , const ViewType & arg_result
                 , typename std::enable_if<
-                   Kokkos::is_view< HostViewType >::value
+                   Kokkos::is_view< ViewType >::value
                 ,void*>::type = NULL)
   : m_functor( arg_functor )
   , m_policy(  arg_policy )
   , m_reducer( InvalidType() )
   , m_result_ptr( arg_result.data() )
-  , m_result_ptr_device_accessible(MemorySpaceAccess< Kokkos::CudaSpace , typename HostViewType::memory_space>::accessible ) 
+  , m_result_ptr_device_accessible(MemorySpaceAccess< Kokkos::CudaSpace , typename ViewType::memory_space>::accessible )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
@@ -970,7 +970,7 @@ public:
   , m_policy(  arg_policy )
   , m_reducer( reducer )
   , m_result_ptr( reducer.view().data() )
-  , m_result_ptr_device_accessible(MemorySpaceAccess< Kokkos::CudaSpace , typename ReducerType::result_view_type::memory_space>::accessible ) 
+  , m_result_ptr_device_accessible(MemorySpaceAccess< Kokkos::CudaSpace , typename ReducerType::result_view_type::memory_space>::accessible )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
@@ -1018,6 +1018,7 @@ public:
   const Policy        m_policy ; // used for workrange and nwork
   const ReducerType   m_reducer ;
   const pointer_type  m_result_ptr ;
+  const bool          m_result_ptr_device_accessible ;
   size_type *         m_scratch_space ;
   size_type *         m_scratch_flags ;
   size_type *         m_unified_space ;
@@ -1072,7 +1073,8 @@ public:
 
       // This is the final block with the final result at the final threads' location
       size_type * const shared = kokkos_impl_cuda_shared_memory<size_type>() + ( blockDim.y - 1 ) * word_count.value ;
-      size_type * const global = m_unified_space ? m_unified_space : m_scratch_space ;
+      size_type * const global = m_result_ptr_device_accessible? reinterpret_cast<size_type*>(m_result_ptr) :
+                                 ( m_unified_space ? m_unified_space : m_scratch_space );
 
       if ( threadIdx.y == 0 ) {
         Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTagFwd >::final( ReducerConditional::select(m_functor , m_reducer) , shared );
@@ -1154,16 +1156,18 @@ public:
 
       CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
 
-      Cuda::fence();
+      if(!m_result_ptr_device_accessible) {
+        Cuda::fence();
 
-      if ( m_result_ptr ) {
-        if ( m_unified_space ) {
-          const int count = ValueTraits::value_count( ReducerConditional::select(m_functor , m_reducer)  );
-          for ( int i = 0 ; i < count ; ++i ) { m_result_ptr[i] = pointer_type(m_unified_space)[i] ; }
-        }
-        else {
-          const int size = ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer)  );
-          DeepCopy<HostSpace,CudaSpace>( m_result_ptr , m_scratch_space , size );
+        if ( m_result_ptr ) {
+          if ( m_unified_space ) {
+            const int count = ValueTraits::value_count( ReducerConditional::select(m_functor , m_reducer)  );
+            for ( int i = 0 ; i < count ; ++i ) { m_result_ptr[i] = pointer_type(m_unified_space)[i] ; }
+          }
+          else {
+            const int size = ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer)  );
+            DeepCopy<HostSpace,CudaSpace>( m_result_ptr , m_scratch_space , size );
+          }
         }
       }
     }
@@ -1174,17 +1178,18 @@ public:
     }
   }
 
-  template< class HostViewType >
+  template< class ViewType >
   ParallelReduce( const FunctorType  & arg_functor
                 , const Policy       & arg_policy
-                , const HostViewType & arg_result
+                , const ViewType & arg_result
                 , typename std::enable_if<
-                   Kokkos::is_view< HostViewType >::value
+                   Kokkos::is_view< ViewType >::value
                 ,void*>::type = NULL)
   : m_functor( arg_functor )
   , m_policy(  arg_policy )
   , m_reducer( InvalidType() )
   , m_result_ptr( arg_result.data() )
+  , m_result_ptr_device_accessible(MemorySpaceAccess< Kokkos::CudaSpace , typename ViewType::memory_space>::accessible )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
@@ -1197,6 +1202,7 @@ public:
   , m_policy(  arg_policy )
   , m_reducer( reducer )
   , m_result_ptr( reducer.view().data() )
+  , m_result_ptr_device_accessible(MemorySpaceAccess< Kokkos::CudaSpace , typename ReducerType::result_view_type::memory_space>::accessible )
   , m_scratch_space( 0 )
   , m_scratch_flags( 0 )
   , m_unified_space( 0 )
