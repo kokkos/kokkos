@@ -48,7 +48,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	OBJ_CUDA += TestCudaUVM_ViewMapping_a.o TestCudaUVM_ViewMapping_b.o TestCudaUVM_ViewMapping_subview.o
 	OBJ_CUDA += TestCudaHostPinned_ViewCopy.o TestCudaHostPinned_ViewAPI_a.o TestCudaHostPinned_ViewAPI_b.o TestCudaHostPinned_ViewAPI_c.o TestCudaHostPinned_ViewAPI_d.o TestCudaHostPinned_ViewAPI_e.o
 	OBJ_CUDA += TestCudaHostPinned_ViewMapping_a.o TestCudaHostPinned_ViewMapping_b.o TestCudaHostPinned_ViewMapping_subview.o
-    OBJ_CUDA += TestCuda_View_64bit.o
+	OBJ_CUDA += TestCuda_View_64bit.o
 	OBJ_CUDA += TestCuda_ViewOfClass.o
 	OBJ_CUDA += TestCuda_SubView_a.o TestCuda_SubView_b.o
 	OBJ_CUDA += TestCuda_SubView_c01.o TestCuda_SubView_c02.o TestCuda_SubView_c03.o
@@ -57,6 +57,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	OBJ_CUDA += TestCuda_SubView_c10.o TestCuda_SubView_c11.o TestCuda_SubView_c12.o
 	OBJ_CUDA += TestCuda_SubView_c13.o
 	OBJ_CUDA += TestCuda_Reductions.o TestCuda_Scan.o
+	OBJ_CUDA += TestCuda_Reductions_DeviceView.o
 	OBJ_CUDA += TestCuda_Reducers_a.o TestCuda_Reducers_b.o TestCuda_Reducers_c.o TestCuda_Reducers_d.o
 	OBJ_CUDA += TestCuda_Complex.o
 	OBJ_CUDA += TestCuda_AtomicOperations_int.o TestCuda_AtomicOperations_unsignedint.o TestCuda_AtomicOperations_longint.o 
@@ -143,6 +144,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 	OBJ_THREADS += TestThreads_SubView_c07.o TestThreads_SubView_c08.o TestThreads_SubView_c09.o
 	OBJ_THREADS += TestThreads_SubView_c10.o TestThreads_SubView_c11.o TestThreads_SubView_c12.o
 	OBJ_THREADS += TestThreads_Reductions.o TestThreads_Scan.o
+	OBJ_THREADS += TestThreads_Reductions_DeviceView.o
 	OBJ_THREADS += TestThreads_Reducers_a.o TestThreads_Reducers_b.o TestThreads_Reducers_c.o TestThreads_Reducers_d.o
 	OBJ_THREADS += TestThreads_Complex.o
 	OBJ_THREADS += TestThreads_AtomicOperations_int.o TestThreads_AtomicOperations_unsignedint.o TestThreads_AtomicOperations_longint.o 
@@ -174,6 +176,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	OBJ_OPENMP += TestOpenMP_SubView_c10.o TestOpenMP_SubView_c11.o TestOpenMP_SubView_c12.o
 	OBJ_OPENMP += TestOpenMP_SubView_c13.o
 	OBJ_OPENMP += TestOpenMP_Reductions.o TestOpenMP_Scan.o
+	OBJ_OPENMP += TestOpenMP_Reductions_DeviceView.o
 	OBJ_OPENMP += TestOpenMP_Reducers_a.o TestOpenMP_Reducers_b.o TestOpenMP_Reducers_c.o TestOpenMP_Reducers_d.o
 	OBJ_OPENMP += TestOpenMP_Complex.o
 	OBJ_OPENMP += TestOpenMP_AtomicOperations_int.o TestOpenMP_AtomicOperations_unsignedint.o TestOpenMP_AtomicOperations_longint.o 
@@ -263,6 +266,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
         OBJ_SERIAL += TestSerial_SubView_c10.o TestSerial_SubView_c11.o TestSerial_SubView_c12.o
         OBJ_SERIAL += TestSerial_SubView_c13.o
         OBJ_SERIAL += TestSerial_Reductions.o TestSerial_Scan.o
+	OBJ_SERIAL += TestSerial_Reductions_DeviceView.o
     	OBJ_SERIAL += TestSerial_Reducers_a.o TestSerial_Reducers_b.o TestSerial_Reducers_c.o TestSerial_Reducers_d.o
         OBJ_SERIAL += TestSerial_Complex.o
 	    OBJ_SERIAL += TestSerial_AtomicOperations_int.o TestSerial_AtomicOperations_unsignedint.o TestSerial_AtomicOperations_longint.o 
