@@ -43,4 +43,3 @@
 
 #include <serial/TestSerial_Category.hpp>
 #include <TestReduceDeviceView.hpp>
-#include <TestCXX11Deduction.hpp>
