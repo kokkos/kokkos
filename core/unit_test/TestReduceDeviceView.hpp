@@ -1,6 +1,18 @@
 #include<Kokkos_Core.hpp>
 
 namespace Test {
+namespace {
+
+struct TestIsAsynchFunctor {
+  Kokkos::View<double,TEST_EXECSPACE> atomic_test;
+  TestIsAsynchFunctor(Kokkos::View<double,TEST_EXECSPACE> atomic_test_):atomic_test(atomic_test_){}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int) const {
+    Kokkos::atomic_add(&atomic_test(),1.0);
+  }
+};
+
 template<class PolicyType, class ReduceFunctor>
 void test_reduce_device_view(int64_t N, PolicyType policy, ReduceFunctor functor) {
      
@@ -12,9 +24,8 @@ void test_reduce_device_view(int64_t N, PolicyType policy, ReduceFunctor functor
      Kokkos::Timer timer;     
 
      // Establish whether execspace is asynchronous
-     Kokkos::parallel_for("Test::ReduceDeviceView::TestIsAsynch",Kokkos::RangePolicy<TEST_EXECSPACE>(0,1000000), KOKKOS_LAMBDA (const int) {
-       Kokkos::atomic_add(&atomic_test(),1.0);
-     });
+     Kokkos::parallel_for("Test::ReduceDeviceView::TestIsAsynch",Kokkos::RangePolicy<TEST_EXECSPACE>(0,1000000),
+       TestIsAsynchFunctor(atomic_test));
      double time0 = timer.seconds();
      timer.reset();
      Kokkos::fence();
@@ -74,24 +85,12 @@ struct RangePolicyFunctor {
   }
 };
 
-TEST_F( TEST_CATEGORY, reduce_device_view_range_policy )
-{
-  int N=1000*1024*1024;
-  test_reduce_device_view(N,Kokkos::RangePolicy<TEST_EXECSPACE>(0,N),RangePolicyFunctor());
-}
-
 struct MDRangePolicyFunctor {
   KOKKOS_INLINE_FUNCTION
   void operator() (const int, const int, const int, int64_t& lsum) const {
     lsum += 1;
   }
 };
-
-TEST_F( TEST_CATEGORY, reduce_device_view_mdrange_policy )
-{
-  int N=1000*1024*1024;
-  test_reduce_device_view(N,Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<3>>({0,0,0},{1000,1024,1024}),MDRangePolicyFunctor());
-}
 
 struct TeamPolicyFunctor {
   int M;
@@ -104,11 +103,25 @@ struct TeamPolicyFunctor {
   }
 };
 
+} // namespace
+
+TEST_F( TEST_CATEGORY, reduce_device_view_range_policy )
+{
+  int N=1000*1024*1024;
+  test_reduce_device_view(N,Kokkos::RangePolicy<TEST_EXECSPACE>(0,N),RangePolicyFunctor());
+}
+
+TEST_F( TEST_CATEGORY, reduce_device_view_mdrange_policy )
+{
+  int N=1000*1024*1024;
+  test_reduce_device_view(N,Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<3>>({0,0,0},{1000,1024,1024}),MDRangePolicyFunctor());
+}
+
 TEST_F( TEST_CATEGORY, reduce_device_view_team_policy )
 {
   int N=1000*1024*1024;
   test_reduce_device_view(N,Kokkos::TeamPolicy<TEST_EXECSPACE>(1000*1024,Kokkos::AUTO),TeamPolicyFunctor(1024));
 }
 
-}
+} // namespace Test
 
