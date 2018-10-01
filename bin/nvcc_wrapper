@@ -74,6 +74,9 @@ dry_run=0
 host_only=0
 host_only_args=""
 
+# Just run version on host compiler
+get_host_version=0
+
 # Enable workaround for CUDA 6.5 for pragma ident 
 replace_pragma_ident=0
 
@@ -108,6 +111,10 @@ do
   #run host compilation only
   --host-only)
     host_only=1
+    ;;
+  #get the host version only
+  --host-version)
+    get_host_version=1
     ;;
   #replace '#pragma ident' with '#ident' this is needed to compile OpenMPI due to a configure script bug and a non standardized behaviour of pragma with macros
   --replace-pragma-ident)
@@ -220,6 +227,15 @@ do
     fi
     shift
     ;;
+  #Handle -+ (same as -x c++, specifically used for xl compilers, but mutually exclusive with -x. So replace it with -x c++)
+  -+)
+    if [ $first_xcompiler_arg -eq 1 ]; then
+      xcompiler_args="-x,c++"
+      first_xcompiler_arg=0
+    else
+      xcompiler_args="$xcompiler_args,-x,c++"
+    fi
+    ;;
   #Handle -ccbin (if its not set we can set it to a default value)
   -ccbin)
     cuda_args="$cuda_args $1 $2"
@@ -291,6 +307,12 @@ do
 
   shift
 done
+
+# Only print host compiler version
+if [ $get_host_version -eq 1 ]; then
+  $host_compiler --version
+  exit
+fi
 
 #Remove duplicate object files
 if [ $remove_duplicate_link_files -eq 1 ]; then
