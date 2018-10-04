@@ -71,11 +71,13 @@ void test_reduce_device_view(int64_t N, PolicyType policy, ReduceFunctor functor
      double time_fence3 = timer.seconds();
 
      ASSERT_EQ(N,scalar_result); 
-     if(is_async)
+     if(is_async) {
        ASSERT_TRUE(time1<time_fence1);
-     if(is_async)
+     }
+     if(is_async) {
        ASSERT_TRUE(time2<time_fence2);
-     ASSERT_TRUE(time3>time_fence3);
+       ASSERT_TRUE(time3>time_fence3);
+     }
   }
 
 struct RangePolicyFunctor {
