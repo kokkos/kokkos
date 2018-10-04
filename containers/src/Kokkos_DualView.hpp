@@ -316,15 +316,30 @@ public:
     t_dev,
     t_host>::type& view () const
   {
+    #ifndef KOKKOS_ENABLE_DEPRECATED_CODE
+    constexpr bool device_is_memspace  = std::is_same<Device,typename Device::memory_space>::value;
+    constexpr bool device_is_execspace = std::is_same<Device,typename Device::execution_space>::value;
+    constexpr bool device_exec_is_t_dev_exec  = std::is_same<typename Device::execution_space,typename t_dev::execution_space>::value;
+    constexpr bool device_mem_is_t_dev_mem    = std::is_same<typename Device::memory_space,typename t_dev::memory_space>::value;
+    constexpr bool device_exec_is_t_host_exec  = std::is_same<typename Device::execution_space,typename t_host::execution_space>::value;
+    constexpr bool device_mem_is_t_host_mem    = std::is_same<typename Device::memory_space,typename t_host::memory_space>::value;
+    constexpr bool device_is_t_host_device  = std::is_same<typename Device::execution_space,typename t_host::device_type>::value;
+    constexpr bool device_is_t_dev_device    = std::is_same<typename Device::memory_space,typename t_host::device_type>::value;
+
     static_assert(
-      std::is_same<
-        typename t_dev::memory_space,
-        typename Device::memory_space>::value
-      ||
-      std::is_same<
-        typename t_host::memory_space,
-        typename Device::memory_space>::value,
-      "Template parameter to .view() must exactly match one of the DualView's memory spaces");
+        device_is_t_dev_device || device_is_t_host_device ||
+        (device_is_memspace  && (device_mem_is_t_dev_mem   || device_mem_is_t_host_mem) ) ||
+        (device_is_execspace && (device_exec_is_t_dev_exec || device_exec_is_t_host_exec) ) ||
+        (
+          (!device_is_execspace && !device_is_memspace) && (
+            (device_mem_is_t_dev_mem   || device_mem_is_t_host_mem)  ||
+            (device_exec_is_t_dev_exec || device_exec_is_t_host_exec)
+          )
+        )
+        ,
+        "Template parameter to .view() must exactly match one of the DualView's device types or one of the execution or memory spaces");
+    #endif
+
     return Impl::if_c<
       std::is_same<
         typename t_dev::memory_space,
