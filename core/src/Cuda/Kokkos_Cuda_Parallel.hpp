@@ -790,7 +790,7 @@ public:
   size_type *         m_scratch_flags ;
   size_type *         m_unified_space ;
 
-  // Shall we use the shfl based reduction or not (only use it for static sized types of more than 128bit
+  // Shall we use the shfl based reduction or not (only use it for static sized types of more than 128bit)
   enum { UseShflReduction = false };//((sizeof(value_type)>2*sizeof(double)) && ValueTraits::StaticValueSize) };
   // Some crutch to do function overloading
 private:
@@ -1026,7 +1026,7 @@ public:
   typedef typename Kokkos::Impl::Reduce::DeviceIterateTile<Policy::rank, Policy, FunctorType, typename Policy::work_tag, reference_type> DeviceIteratePattern;
 
   // Shall we use the shfl based reduction or not (only use it for static sized types of more than 128bit
-  enum { UseShflReduction = ((sizeof(value_type)>2*sizeof(double)) && ValueTraits::StaticValueSize) };
+  enum { UseShflReduction = ((sizeof(value_type)>2*sizeof(double)) && (ValueTraits::StaticValueSize!=0)) };
   // Some crutch to do function overloading
 private:
   typedef double DummyShflReductionType;
@@ -1245,7 +1245,7 @@ public:
   typedef FunctorType      functor_type ;
   typedef Cuda::size_type  size_type ;
 
-  enum { UseShflReduction = (true && ValueTraits::StaticValueSize) };
+  enum { UseShflReduction = (true && (ValueTraits::StaticValueSize!=0)) };
 
 private:
   typedef double DummyShflReductionType;
