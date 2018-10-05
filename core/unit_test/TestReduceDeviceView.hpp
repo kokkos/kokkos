@@ -15,6 +15,8 @@ struct TestIsAsynchFunctor {
 
 template<class PolicyType, class ReduceFunctor>
 void test_reduce_device_view(int64_t N, PolicyType policy, ReduceFunctor functor) {
+
+     using ExecSpace = TEST_EXECSPACE;
      
      Kokkos::View<int64_t,TEST_EXECSPACE> result("Result");
      Kokkos::View<double,TEST_EXECSPACE> atomic_test("Atomic");
@@ -28,7 +30,7 @@ void test_reduce_device_view(int64_t N, PolicyType policy, ReduceFunctor functor
        TestIsAsynchFunctor(atomic_test));
      double time0 = timer.seconds();
      timer.reset();
-     Kokkos::fence();
+     ExecSpace::execution_space::fence();
      double time_fence0 = timer.seconds(); 
      Kokkos::deep_copy(result,0);
      timer.reset();
@@ -40,7 +42,7 @@ void test_reduce_device_view(int64_t N, PolicyType policy, ReduceFunctor functor
      double time1 = timer.seconds();
      // Check whether it was asyncronous
      timer.reset();
-     Kokkos::fence();
+     ExecSpace::execution_space::fence();
      double time_fence1 = timer.seconds();    
      Kokkos::deep_copy(reducer_result,result);    
      Kokkos::deep_copy(result,0);
@@ -53,7 +55,7 @@ void test_reduce_device_view(int64_t N, PolicyType policy, ReduceFunctor functor
      double time2 = timer.seconds();
      // Check whether it was asyncronous
      timer.reset();
-     Kokkos::fence();
+     ExecSpace::execution_space::fence();
      double time_fence2 = timer.seconds();    
      Kokkos::deep_copy(view_result,result);    
      Kokkos::deep_copy(result,0);
@@ -67,15 +69,17 @@ void test_reduce_device_view(int64_t N, PolicyType policy, ReduceFunctor functor
 
      // Check whether it was asyncronous
      timer.reset();
-     Kokkos::fence();
+     ExecSpace::execution_space::fence();
      double time_fence3 = timer.seconds();
 
      ASSERT_EQ(N,scalar_result); 
-     if(is_async)
+     if(is_async) {
        ASSERT_TRUE(time1<time_fence1);
-     if(is_async)
+     }
+     if(is_async) {
        ASSERT_TRUE(time2<time_fence2);
-     ASSERT_TRUE(time3>time_fence3);
+       ASSERT_TRUE(time3>time_fence3);
+     }
   }
 
 struct RangePolicyFunctor {
