@@ -44,9 +44,9 @@ kokkos_fixup_sed_impl = sed \
 		> $1.tmp && mv -f $1.tmp $1
 
 $(KOKKOS_PKGCONFIG): $(KOKKOS_PATH)/core/src/$(KOKKOS_PKGCONFIG).in
-	@sed -e 's|@PREFIX@|$(PREFIX)|g' \
+	@sed -e 's|@CMAKE_INSTALL_PREFIX@|$(PREFIX)|g' \
 	    -e 's|@KOKKOS_CXXFLAGS@|$(patsubst -I%,,$(KOKKOS_CXXFLAGS))|g' \
-	    -e 's|@KOKKOS_EXTRA_LIBS@|$(KOKKOS_EXTRA_LIBS)|g' \
+	    -e 's|@KOKKOS_EXTRA_LIBS_LIST@|$(KOKKOS_EXTRA_LIBS)|g' \
 	    -e 's|@KOKKOS_LINK_FLAGS@|$(KOKKOS_LINK_FLAGS)|g' \
 	     $< > $@
 
