@@ -28,11 +28,8 @@ env:
 
 # Apple GCC does not support OpenMP.  GCC with OpenMP requires Homebrew.
 # Apple Clang does not support OpenMP.  Clang with OpenMP requires Homebrew.
-# Clang OpenMP support is not always available.
 matrix:
   exclude:
-    - compiler: clang
-      env: THREADING="openmp"
     - os: osx
       env: THREADING="openmp"
     - os: osx
@@ -42,6 +39,8 @@ script:
   - export OMP_NUM_THREADS=2
   - export OMP_PLACES=threads
   - export OMP_PROC_BIND=spread
+  # LD_LIBRARY_PATH workaround to find clang's libomp: https://github.com/travis-ci/travis-ci/issues/8613 
+  - if [[ ${CC} = clang ]]; then export LD_LIBRARY_PATH=/usr/local/clang/lib${LD_LIBRARY_PATH:+:}$LD_LIBRARY_PATH; fi 
   - mkdir build
   - cd build
   - ../generate_makefile.bash --compiler=$CXX --with-$THREADING --with-options=compiler_warnings
