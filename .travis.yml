@@ -45,5 +45,5 @@ script:
   - mkdir build
   - cd build
   - ../generate_makefile.bash --compiler=$CXX --with-$THREADING --with-options=compiler_warnings
-  - make
-  - make test
+  - make KOKKOS_INTERNAL_GCC_TOOLCHAIN=/usr
+  - make test KOKKOS_INTERNAL_GCC_TOOLCHAIN=/usr
