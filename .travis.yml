@@ -27,6 +27,15 @@ matrix:
     - os: osx
       compiler: gcc
 
+before_script:
+  - if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
+      brew update;
+      export HOMEBREW_NO_AUTO_UPDATE=1;
+      brew ls --versions ccache   > /dev/null || brew install ccache;
+      export PATH=/usr/local/opt/ccache/libexec:$PATH;
+    fi
+  - ccache -z
+
 script:
   - export OMP_NUM_THREADS=2
   - export OMP_PLACES=threads
@@ -38,3 +47,6 @@ script:
   - ../generate_makefile.bash --compiler=$CXX --with-$THREADING --with-options=compiler_warnings
   - make KOKKOS_INTERNAL_GCC_TOOLCHAIN=/usr
   - make test KOKKOS_INTERNAL_GCC_TOOLCHAIN=/usr
+
+after_success:
+  - ccache -s
