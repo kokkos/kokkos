@@ -18,6 +18,9 @@ compiler:
   - gcc
   - clang
 
+cache:
+  - ccache
+
 env:
   - THREADING="serial"
   - THREADING="openmp"
