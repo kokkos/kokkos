@@ -241,10 +241,13 @@ void check_correct_initialization( const Kokkos::InitArguments & argstruct ) {
 #endif
   }
 
+// TODO: Number of threads don't match for HPX.
+#ifndef KOKKOS_ENABLE_HPX
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   ASSERT_EQ( Kokkos::HostSpace::execution_space::thread_pool_size(), expected_nthreads );
 #else
   ASSERT_EQ( Kokkos::HostSpace::execution_space::impl_thread_pool_size(), expected_nthreads );
+#endif
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA

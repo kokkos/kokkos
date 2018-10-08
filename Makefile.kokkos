@@ -1145,16 +1145,24 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/HPX/*.cpp)
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/HPX/*.hpp)
+  # TODO: Include only the necessary flags.
   ifneq ($(HPX_PATH),)
-    KOKKOS_CXXFLAGS += -I$(HPX_PATH)/include
-    KOKKOS_LDFLAGS += -L$(HPX_PATH)/lib
-    KOKKOS_CXXLDFLAGS += -L$(HPX_PATH)/lib
-    KOKKOS_TPL_INCLUDE_DIRS += $(HPX_PATH)/include
-    KOKKOS_TPL_LIBRARY_DIRS += $(HPX_PATH)/lib64
+    ifeq ($(KOKKOS_INTERNAL_ENABLE_DEBUG), 1)
+      KOKKOS_CXXFLAGS += $(shell PKG_CONFIG_PATH=$(HPX_PATH)/lib/pkgconfig pkg-config --cflags hpx_application_debug)
+      #KOKKOS_LDFLAGS += $(shell PKG_CONFIG_PATH=$(HPX_PATH)/lib/pkgconfig pkg-config --libs hpx_application_debug)
+      KOKKOS_CXXLDFLAGS += $(shell PKG_CONFIG_PATH=$(HPX_PATH)/lib/pkgconfig pkg-config --libs hpx_application_debug)
+      KOKKOS_TPL_INCLUDE_DIRS += $(HPX_PATH)/include
+      KOKKOS_TPL_LIBRARY_DIRS += $(HPX_PATH)/lib
+      KOKKOS_LIBS += $(shell PKG_CONFIG_PATH=$(HPX_PATH)/lib/pkgconfig pkg-config --libs hpx_application_debug)
+    else
+      KOKKOS_CXXFLAGS += $(shell PKG_CONFIG_PATH=$(HPX_PATH)/lib/pkgconfig pkg-config --cflags hpx_application)
+      #KOKKOS_LDFLAGS += $(shell PKG_CONFIG_PATH=$(HPX_PATH)/lib/pkgconfig pkg-config --libs hpx_application)
+      KOKKOS_CXXLDFLAGS += $(shell PKG_CONFIG_PATH=$(HPX_PATH)/lib/pkgconfig pkg-config --libs hpx_application)
+      KOKKOS_TPL_INCLUDE_DIRS += $(HPX_PATH)/include
+      KOKKOS_TPL_LIBRARY_DIRS += $(HPX_PATH)/lib
+      KOKKOS_LIBS += $(shell PKG_CONFIG_PATH=$(HPX_PATH)/lib/pkgconfig pkg-config --libs hpx_application)
+    endif
   endif
-  # TODO: Use pkgconfig
-  KOKKOS_LIBS += -lhpx
-  KOKKOS_TPL_LIBRARY_NAMES += hpx
 endif
 
 # Explicitly set the GCC Toolchain for Clang.

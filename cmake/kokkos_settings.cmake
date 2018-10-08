@@ -246,6 +246,10 @@ if(KOKKOS_CMAKE_VERBOSE)
     message(STATUS "  KOKKOS_MEMKIND_DIR: ${KOKKOS_MEMKIND_DIR}")
   endif()
 
+  if(KOKKOS_HPX_DIR)
+    message(STATUS "  KOKKOS_HPX_DIR: ${KOKKOS_HPX_DIR}")
+  endif()
+
   message(STATUS "")
   message(STATUS "Final kokkos settings variable:")
   message(STATUS "  ${KOKKOS_SETTINGS}")
