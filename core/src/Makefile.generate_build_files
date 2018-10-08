@@ -106,6 +106,7 @@ generate_build_settings: $(KOKKOS_CONFIG_HEADER) $(KOKKOS_PKGCONFIG)
 	@$(call kokkos_append_var,KOKKOS_INTERNAL_USE_PTHREADS,'STRING ""')
 	@$(call kokkos_append_var,KOKKOS_INTERNAL_USE_SERIAL,'STRING ""')
 	@$(call kokkos_append_var,KOKKOS_INTERNAL_USE_ROCM,'STRING ""')
+	@$(call kokkos_append_var,KOKKOS_INTERNAL_USE_HPX,'STRING ""')
 	@$(call kokkos_append_var,KOKKOS_INTERNAL_USE_QTHREADS,'STRING ""') # Not in original cmake gen
 	@$(call kokkos_append_cmakefile "mark_as_advanced(KOKKOS_HEADERS KOKKOS_SRC KOKKOS_INTERNAL_USE_CUDA KOKKOS_INTERNAL_USE_OPENMP KOKKOS_INTERNAL_USE_PTHREADS KOKKOS_INTERNAL_USE_SERIAL)")
 	@$(call kokkos_append_makefile,"")

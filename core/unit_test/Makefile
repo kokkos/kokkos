@@ -9,6 +9,7 @@ vpath %.cpp ${KOKKOS_PATH}/core/unit_test/threads
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/openmp
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/openmptarget
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/qthreads
+vpath %.cpp ${KOKKOS_PATH}/core/unit_test/hpx
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/cuda
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/rocm
 
@@ -259,6 +260,42 @@ ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
 	TEST_TARGETS += test-qthreads
 endif
 
+# TODO: Enable tests as they start working.
+ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
+	OBJ_HPX = UnitTestMainInit.o gtest-all.o
+	OBJ_HPX += TestHPX_Init.o
+# OBJ_HPX += TestHPX_SharedAlloc.o
+#	OBJ_HPX += TestHPX_RangePolicy.o
+# OBJ_HPX += TestHPX_View_64bit.o
+#	OBJ_HPX += TestHPX_ViewAPI_a.o TestHPX_ViewAPI_b.o TestHPX_ViewAPI_c.o TestHPX_ViewAPI_d.o TestHPX_ViewAPI_e.o
+#	OBJ_HPX += TestHPX_ViewMapping_a.o TestHPX_ViewMapping_b.o TestHPX_ViewMapping_subview.o
+#	OBJ_HPX += TestHPX_ViewOfClass.o
+#	OBJ_HPX += TestHPX_SubView_a.o TestHPX_SubView_b.o
+#	OBJ_HPX += TestHPX_SubView_c01.o TestHPX_SubView_c02.o TestHPX_SubView_c03.o
+#	OBJ_HPX += TestHPX_SubView_c04.o TestHPX_SubView_c05.o TestHPX_SubView_c06.o
+#	OBJ_HPX += TestHPX_SubView_c07.o TestHPX_SubView_c08.o TestHPX_SubView_c09.o
+#	OBJ_HPX += TestHPX_SubView_c10.o TestHPX_SubView_c11.o TestHPX_SubView_c12.o
+#	OBJ_HPX += TestHPX_SubView_c13.o
+#	OBJ_HPX += TestHPX_Reductions.o TestHPX_Scan.o
+# OBJ_HPX += TestHPX_Reducers_a.o TestHPX_Reducers_b.o TestHPX_Reducers_c.o TestHPX_Reducers_d.o
+#	OBJ_HPX += TestHPX_Complex.o
+#	OBJ_HPX += TestHPX_AtomicOperations_int.o TestHPX_AtomicOperations_unsignedint.o TestHPX_AtomicOperations_longint.o 
+#	OBJ_HPX += TestHPX_AtomicOperations_unsignedlongint.o TestHPX_AtomicOperations_longlongint.o TestHPX_AtomicOperations_double.o TestHPX_AtomicOperations_float.o
+#	OBJ_HPX += TestHPX_AtomicViews.o TestHPX_Atomics.o
+	OBJ_HPX += TestHPX_Team.o TestHPX_TeamScratch.o
+#	OBJ_HPX += TestHPX_TeamReductionScan.o
+#	OBJ_HPX += TestHPX_Other.o
+#	OBJ_HPX += TestHPX_MDRange_a.o TestHPX_MDRange_b.o TestHPX_MDRange_c.o TestHPX_MDRange_d.o TestHPX_MDRange_e.o
+#	OBJ_HPX += TestHPX_Crs.o
+#	OBJ_HPX += TestHPX_Task.o TestHPX_WorkGraph.o
+#	OBJ_HPX += TestHPX_UniqueToken.o
+
+	TARGETS += KokkosCore_UnitTest_HPX
+  TARGETS += KokkosCore_UnitTest_HPXInterOp
+
+	TEST_TARGETS += test-hpx
+endif
+
 ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
         OBJ_SERIAL = UnitTestMainInit.o gtest-all.o
         OBJ_SERIAL += TestSerial_Init.o
@@ -365,6 +402,12 @@ KokkosCore_UnitTest_Qthreads: $(OBJ_QTHREADS) $(KOKKOS_LINK_DEPENDS)
 KokkosCore_UnitTest_Qthreads2: $(OBJ_QTHREADS2) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_QTHREADS2) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Qthreads2
 
+KokkosCore_UnitTest_HPX: $(OBJ_HPX) $(KOKKOS_LINK_DEPENDS)
+	$(LINK) $(EXTRA_PATH) $(OBJ_HPX) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_HPX
+
+KokkosCore_UnitTest_HPXInterOp: UnitTestMain.o gtest-all.o TestHPX_InterOp.o
+	$(LINK) $(EXTRA_PATH) UnitTestMain.o gtest-all.o TestHPX_InterOp.o $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_HPXInterOp
+
 KokkosCore_UnitTest_HWLOC: $(OBJ_HWLOC) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_HWLOC) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_HWLOC
 
@@ -411,6 +454,10 @@ test-serial: KokkosCore_UnitTest_Serial
 test-qthreads: KokkosCore_UnitTest_Qthreads KokkosCore_UnitTest_Qthreads2
 	./KokkosCore_UnitTest_Qthreads
 	./KokkosCore_UnitTest_Qthreads2
+
+test-hpx: KokkosCore_UnitTest_HPX
+	./KokkosCore_UnitTest_HPX
+	./KokkosCore_UnitTest_HPXInterOp
 
 test-hwloc: KokkosCore_UnitTest_HWLOC
 	./KokkosCore_UnitTest_HWLOC

@@ -85,7 +85,8 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
   }
 
   // Protect declarations, to prevent "unused variable" warnings.
-#if defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_THREADS ) || defined( KOKKOS_ENABLE_OPENMPTARGET )
+#if defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_THREADS ) ||\
+    defined( KOKKOS_ENABLE_OPENMPTARGET ) || defined ( KOKKOS_ENABLE_HPX )
   const int num_threads = args.num_threads;
 #endif
 #if defined( KOKKOS_ENABLE_THREADS ) || defined( KOKKOS_ENABLE_OPENMPTARGET )
@@ -157,6 +158,29 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
   }
   else {
     //std::cout << "Kokkos::initialize() fyi: Pthread enabled but not initialized" << std::endl ;
+  }
+#endif
+
+#if defined( KOKKOS_ENABLE_HPX )
+  if( std::is_same< Kokkos::HPX , Kokkos::DefaultExecutionSpace >::value ||
+      std::is_same< Kokkos::HPX , Kokkos::HostSpace::execution_space >::value ) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+      if(num_threads>0) {
+          Kokkos::HPX::initialize(num_threads);
+      } else {
+          Kokkos::HPX::initialize();
+      }
+#else
+      if(num_threads>0) {
+          Kokkos::HPX::impl_initialize(num_threads);
+      } else {
+          Kokkos::HPX::impl_initialize();
+      }
+#endif
+      //std::cout << "Kokkos::initialize() fyi: HPX enabled and initialized" << std::endl ;
+  }
+  else {
+      //std::cout << "Kokkos::initialize() fyi: HPX enabled but not initialized" << std::endl ;
   }
 #endif
 
