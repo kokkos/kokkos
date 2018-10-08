@@ -41,8 +41,12 @@ script:
   - export OMP_PLACES=threads
   - export OMP_PROC_BIND=spread
   # LD_LIBRARY_PATH workaround to find clang's libomp: https://github.com/travis-ci/travis-ci/issues/8613 
-  - if [[ ${CC} = clang ]]; then export LD_LIBRARY_PATH=/usr/local/clang/lib${LD_LIBRARY_PATH:+:}$LD_LIBRARY_PATH; fi 
-  - if [[ ${TRAVIS_OS_NAME} = linux ]]; then ln -s /usr/bin/ccache $HOME/bin/clang++; fi 
+  - if [[ ${CC} = clang ]]; then export LD_LIBRARY_PATH=/usr/local/clang/lib${LD_LIBRARY_PATH:+:}$LD_LIBRARY_PATH; fi
+  # enable ccache for clang on linux and add CCACHE_CPP2 to avoid 'Argument unused during compilation -I...' warning
+  - if [[ ${TRAVIS_OS_NAME} = linux && ${CC} = clang ]]; then
+      ln -s /usr/bin/ccache $HOME/bin/clang++;
+      export CCACHE_CPP2=yes;
+    fi
   - mkdir build
   - cd build
   - ../generate_makefile.bash --compiler=$CXX --with-$THREADING --with-options=compiler_warnings
