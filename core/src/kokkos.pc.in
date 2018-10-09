@@ -55,7 +55,7 @@
 # CMakeLists.txt:
 # find_package(PkgConfig)
 # pkg_check_modules(KOKKOS IMPORTED_TARGET kokkos)
-# target_link_libraries(<lib> PkgConfig::kokkos)
+# target_link_libraries(<lib> PkgConfig::KOKKOS)
 
 prefix=@CMAKE_INSTALL_PREFIX@
 libdir=${prefix}/lib
