@@ -56,20 +56,17 @@ namespace Kokkos {
 
 // Forward declarations used in Impl::TaskQueue
 
-template< typename Arg1 = void , typename Arg2 = void >
-class Future ;
+template <typename ValueType, typename Scheduler>
+class BasicFuture;
 
-template< typename Space >
-class TaskScheduler ;
-
-template< typename Space >
-void wait( TaskScheduler< Space > const & );
+template <class Space, class Queue>
+class BasicTaskScheduler;
 
 template< typename Space >
 struct is_scheduler : public std::false_type {};
 
-template< typename Space >
-struct is_scheduler< TaskScheduler< Space > > : public std::true_type {};
+template<class Space, class Queue>
+struct is_scheduler<BasicTaskScheduler<Space, Queue>> : public std::true_type {};
 
 enum class TaskPriority : int {
   High = 0,
@@ -101,7 +98,28 @@ namespace Impl {
 template< typename Space , typename ResultType , typename FunctorType >
 class TaskBase ;
 
+template< typename Space >
+class TaskQueue ;
+
+template< typename Space >
+class TaskQueueSpecialization ;
+
+template< typename ResultType >
+class TaskResult;
+
 } // namespace Impl
+} // namespace Kokkos
+
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+
+template< typename Space >
+using TaskScheduler = BasicTaskScheduler<Space, Impl::TaskQueue<Space>> ;
+
+template<class Space, class QueueType>
+void wait(BasicTaskScheduler<Space, QueueType> const&);
+
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------

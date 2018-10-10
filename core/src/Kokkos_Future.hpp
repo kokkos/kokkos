@@ -54,6 +54,8 @@
 //----------------------------------------------------------------------------
 
 #include <impl/Kokkos_TaskQueue.hpp>
+#include <impl/Kokkos_TaskResult.hpp>
+#include <impl/Kokkos_TaskBase.hpp>
 
 #include <Kokkos_Concepts.hpp> // is_space
 
@@ -62,59 +64,43 @@
 
 namespace Kokkos {
 
-/**
- *
- *  Future< space >  // value_type == void
- *  Future< value >  // space == Default
- *  Future< value , space >
- *
- */
-template< typename Arg1 , typename Arg2 >
-class Future {
+template <typename ValueType, typename Scheduler>
+class BasicFuture {
 private:
 
-  template< typename > friend class TaskScheduler ;
-  template< typename , typename > friend class Future ;
+  template< typename , typename > friend class BasicTaskScheduler ;
+  template< typename , typename > friend class BasicFuture ;
   template< typename , typename , typename > friend class Impl::TaskBase ;
 
-  enum { Arg1_is_space  = Kokkos::is_space< Arg1 >::value };
-  enum { Arg2_is_space  = Kokkos::is_space< Arg2 >::value };
-  enum { Arg1_is_value  = ! Arg1_is_space &&
-      ! std::is_same< Arg1 , void >::value };
-  enum { Arg2_is_value  = ! Arg2_is_space &&
-      ! std::is_same< Arg2 , void >::value };
-
-  static_assert( ! ( Arg1_is_space && Arg2_is_space )
-    , "Future cannot be given two spaces" );
-
-  static_assert( ! ( Arg1_is_value && Arg2_is_value )
-    , "Future cannot be given two value types" );
-
-  using ValueType =
-  typename std::conditional< Arg1_is_value , Arg1 ,
-    typename std::conditional< Arg2_is_value , Arg2 , void
-    >::type >::type ;
-
-  using Space =
-  typename std::conditional< Arg1_is_space , Arg1 ,
-    typename std::conditional< Arg2_is_space , Arg2 , void
-    >::type >::type ;
-
-  using task_base  = Impl::TaskBase< void , void , void > ;
-  using queue_type = Impl::TaskQueue< Space > ;
-
-  task_base * m_task ;
-
-  KOKKOS_INLINE_FUNCTION explicit
-  Future( task_base * task ) : m_task(0)
-  { if ( task ) queue_type::assign( & m_task , task ); }
 
   //----------------------------------------
 
 public:
 
-  using execution_space = typename Space::execution_space ;
-  using value_type      = ValueType ;
+  //----------------------------------------
+
+  using scheduler_type = Scheduler;
+  using queue_type = typename scheduler_type::queue_type;
+  using execution_space = typename scheduler_type::execution_space;
+  using value_type = ValueType;
+
+  //----------------------------------------
+
+private:
+
+  //----------------------------------------
+
+  using task_base  = Impl::TaskBase< void , void , void > ;
+
+  task_base * m_task ;
+
+  KOKKOS_INLINE_FUNCTION explicit
+  BasicFuture( task_base * task ) : m_task(0)
+  { if ( task ) queue_type::assign( & m_task , task ); }
+
+  //----------------------------------------
+
+public:
 
   //----------------------------------------
 
@@ -134,24 +120,27 @@ public:
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
-  ~Future() { clear(); }
+  ~BasicFuture() { clear(); }
 
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
-  constexpr Future() noexcept : m_task(0) {}
+  BasicFuture() noexcept : m_task(nullptr) { }
 
   KOKKOS_INLINE_FUNCTION
-  Future( Future && rhs )
-    : m_task( rhs.m_task ) { rhs.m_task = 0 ; }
+  BasicFuture( BasicFuture && rhs ) noexcept
+    : m_task( rhs.m_task )
+  {
+    rhs.m_task = 0;
+  }
 
   KOKKOS_INLINE_FUNCTION
-  Future( const Future & rhs )
+  BasicFuture( const BasicFuture & rhs )
     : m_task(0)
   { if ( rhs.m_task ) queue_type::assign( & m_task , rhs.m_task ); }
 
   KOKKOS_INLINE_FUNCTION
-  Future & operator = ( Future && rhs )
+  BasicFuture& operator=(BasicFuture&& rhs) noexcept
   {
     clear();
     m_task = rhs.m_task ;
@@ -160,7 +149,7 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
-  Future & operator = ( const Future & rhs )
+  BasicFuture& operator=(BasicFuture const& rhs)
   {
     if ( m_task || rhs.m_task ) queue_type::assign( & m_task , rhs.m_task );
     return *this ;
@@ -168,72 +157,73 @@ public:
 
   //----------------------------------------
 
-  template< class A1 , class A2 >
+  template <class T, class S>
   KOKKOS_INLINE_FUNCTION
-  Future( Future<A1,A2> && rhs )
+  BasicFuture(BasicFuture<T, S>&& rhs) noexcept // NOLINT(google-explicit-constructor)
     : m_task( rhs.m_task )
   {
     static_assert
-      ( std::is_same< Space , void >::value ||
-          std::is_same< Space , typename Future<A1,A2>::Space >::value
+      ( std::is_same<scheduler_type, void>::value ||
+          std::is_same<scheduler_type, S>::value
         , "Assigned Futures must have the same space" );
 
     static_assert
       ( std::is_same< value_type , void >::value ||
-          std::is_same< value_type , typename Future<A1,A2>::value_type >::value
+          std::is_same<value_type, T>::value
         , "Assigned Futures must have the same value_type" );
 
     rhs.m_task = 0 ;
   }
 
-  template< class A1 , class A2 >
+  template <class T, class S>
   KOKKOS_INLINE_FUNCTION
-  Future( const Future<A1,A2> & rhs )
-    : m_task(0)
+  BasicFuture(BasicFuture<T, S> const& rhs) // NOLINT(google-explicit-constructor)
+    : m_task(nullptr)
   {
     static_assert
-      ( std::is_same< Space , void >::value ||
-          std::is_same< Space , typename Future<A1,A2>::Space >::value
+      ( std::is_same<scheduler_type, void>::value ||
+          std::is_same<scheduler_type, S>::value
         , "Assigned Futures must have the same space" );
 
     static_assert
       ( std::is_same< value_type , void >::value ||
-          std::is_same< value_type , typename Future<A1,A2>::value_type >::value
+          std::is_same<value_type, T>::value
         , "Assigned Futures must have the same value_type" );
 
     if ( rhs.m_task ) queue_type::assign( & m_task , rhs.m_task );
   }
 
-  template< class A1 , class A2 >
+  template <class T, class S>
   KOKKOS_INLINE_FUNCTION
-  Future & operator = ( const Future<A1,A2> & rhs )
+  BasicFuture&
+  operator=(BasicFuture<T, S> const& rhs)
   {
     static_assert
-      ( std::is_same< Space , void >::value ||
-          std::is_same< Space , typename Future<A1,A2>::Space >::value
+      ( std::is_same<scheduler_type, void>::value ||
+          std::is_same<scheduler_type, S>::value
         , "Assigned Futures must have the same space" );
 
     static_assert
       ( std::is_same< value_type , void >::value ||
-          std::is_same< value_type , typename Future<A1,A2>::value_type >::value
+          std::is_same<value_type, T>::value
         , "Assigned Futures must have the same value_type" );
 
     if ( m_task || rhs.m_task ) queue_type::assign( & m_task , rhs.m_task );
     return *this ;
   }
 
-  template< class A1 , class A2 >
+  template<class T, class S>
   KOKKOS_INLINE_FUNCTION
-  Future & operator = ( Future<A1,A2> && rhs )
+  BasicFuture& operator=(BasicFuture<T, S>&& rhs)
   {
     static_assert
-      ( std::is_same< Space , void >::value ||
-          std::is_same< Space , typename Future<A1,A2>::Space >::value
+      ( std::is_same<scheduler_type, void>::value ||
+          std::is_same<scheduler_type, S>::value
         , "Assigned Futures must have the same space" );
 
     static_assert
       ( std::is_same< value_type , void >::value ||
-          std::is_same< value_type , typename Future<A1,A2>::value_type >::value
+          std::is_same<value_type, T>::value
         , "Assigned Futures must have the same value_type" );
 
     clear();
@@ -263,14 +253,62 @@ public:
 template< typename , typename ExecSpace = void >
 struct is_future : public std::false_type {};
 
-template< typename Arg1 , typename Arg2 , typename ExecSpace >
-struct is_future< Future<Arg1,Arg2> , ExecSpace >
-  : public std::integral_constant
-    < bool ,
-      ( std::is_same< ExecSpace , void >::value ||
-        std::is_same< ExecSpace
-          , typename Future<Arg1,Arg2>::execution_space >::value )
-    > {};
+template<typename ValueType, typename Scheduler, typename ExecSpace>
+struct is_future<BasicFuture<ValueType, Scheduler>, ExecSpace>
+  : std::integral_constant<bool,
+      std::is_same<ExecSpace, typename Scheduler::execution_space>::value
+      || std::is_void<ExecSpace>::value
+    >
+{};
+
+
+namespace Impl {
+
+template <class Arg1, class Arg2>
+class ResolveFutureArgOrder {
+private:
+  enum { Arg1_is_space = Kokkos::is_space<Arg1>::value };
+  enum { Arg2_is_space = Kokkos::is_space<Arg2>::value };
+  enum { Arg1_is_value = !Arg1_is_space && !std::is_same<Arg1, void>::value };
+  enum { Arg2_is_value = !Arg2_is_space && !std::is_same<Arg2, void>::value };
+
+  static_assert(
+    ! ( Arg1_is_space && Arg2_is_space ),
+    "Future cannot be given two spaces"
+  );
+
+  static_assert(
+    ! ( Arg1_is_value && Arg2_is_value ),
+    "Future cannot be given two value types"
+  );
+
+  using value_type =
+    typename std::conditional<Arg1_is_value, Arg1,
+      typename std::conditional<Arg2_is_value, Arg2, void>::type
+    >::type;
+
+  using execution_space =
+    typename std::conditional<Arg1_is_space, Arg1,
+      typename std::conditional<Arg2_is_space, Arg2, void>::type
+    >::type::execution_space;
+
+public:
+
+  using type = BasicFuture<value_type, TaskScheduler<execution_space>>;
+
+};
+
+} // end namespace Impl
+
+/**
+ *
+ *  Future< space >  // value_type == void
+ *  Future< value >  // space == Default
+ *  Future< value , space >
+ *
+ */
+template <class Arg1 = void, class Arg2 = void>
+using Future = typename Impl::ResolveFutureArgOrder<Arg1, Arg2>::type;
 
 } // namespace Kokkos
 

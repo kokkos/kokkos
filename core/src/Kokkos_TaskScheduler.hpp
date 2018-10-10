@@ -65,13 +65,21 @@
 
 namespace Kokkos {
 
-template< typename ExecSpace >
-class TaskScheduler
+template<class ExecSpace, class QueueType>
+class BasicTaskScheduler
 {
+public:
+
+  using execution_space = ExecSpace;
+  using queue_type = QueueType;
+  using memory_space = typename queue_type::memory_space;
+  using memory_pool = typename queue_type::memory_pool;
+  using member_type =
+    typename Kokkos::Impl::TaskQueueSpecialization<ExecSpace>::member_type;
+
 private:
 
   using track_type = Kokkos::Impl::SharedAllocationTracker ;
-  using queue_type = Kokkos::Impl::TaskQueue< ExecSpace > ;
   using task_base  = Impl::TaskBase< void , void , void > ;
 
   track_type   m_track ;
@@ -81,32 +89,27 @@ private:
 
 public:
 
-  using execution_space  = ExecSpace ;
-  using memory_space     = typename queue_type::memory_space ;
-  using memory_pool      = typename queue_type::memory_pool ;
-  using member_type      =
-    typename Kokkos::Impl::TaskQueueSpecialization< ExecSpace >::member_type ;
 
   KOKKOS_INLINE_FUNCTION
-  TaskScheduler() : m_track(), m_queue(0) {}
+  BasicTaskScheduler() : m_track(), m_queue(0) {}
 
   KOKKOS_INLINE_FUNCTION
-  TaskScheduler( TaskScheduler && rhs )
+  BasicTaskScheduler( BasicTaskScheduler && rhs ) noexcept
     : m_track( rhs.m_track ), m_queue( rhs.m_queue ) {}
 
   KOKKOS_INLINE_FUNCTION
-  TaskScheduler( TaskScheduler const & rhs )
+  BasicTaskScheduler( BasicTaskScheduler const & rhs )
     : m_track( rhs.m_track ), m_queue( rhs.m_queue ) {}
 
   KOKKOS_INLINE_FUNCTION
-  TaskScheduler & operator = ( TaskScheduler && rhs ) noexcept
+  BasicTaskScheduler & operator = ( BasicTaskScheduler && rhs ) noexcept
     { m_track = rhs.m_track ; m_queue =  rhs.m_queue ; return *this ; }
 
   KOKKOS_INLINE_FUNCTION
-  TaskScheduler & operator = ( TaskScheduler const & rhs )
+  BasicTaskScheduler & operator = ( BasicTaskScheduler const & rhs )
     { m_track = rhs.m_track ; m_queue =  rhs.m_queue ; return *this ; }
 
-  explicit TaskScheduler( memory_pool const & arg_memory_pool ) noexcept
+  explicit BasicTaskScheduler( memory_pool const & arg_memory_pool ) noexcept
     : m_track()
     , m_queue(0)
     {
@@ -127,13 +130,13 @@ public:
       m_track.assign_allocated_record_to_uninitialized( record );
     }
 
-  TaskScheduler( memory_space const & arg_memory_space
+  BasicTaskScheduler( memory_space const & arg_memory_space
                , size_t const mempool_capacity
                , unsigned const mempool_min_block_size  // = 1u << 6
                , unsigned const mempool_max_block_size  // = 1u << 10
                , unsigned const mempool_superblock_size // = 1u << 12
                )
-    : TaskScheduler( memory_pool( arg_memory_space
+    : BasicTaskScheduler( memory_pool( arg_memory_space
                                 , mempool_capacity
                                 , mempool_min_block_size
                                 , mempool_max_block_size
@@ -238,11 +241,11 @@ public:
       return f ;
     }
 
-  template< typename FunctorType , typename A1 , typename A2 >
+  template<typename FunctorType, typename ValueType, typename Scheduler>
   KOKKOS_FUNCTION static
   void
   respawn( FunctorType         * arg_self
-         , Future<A1,A2> const & arg_dependence
+         , BasicFuture<ValueType,Scheduler> const & arg_dependence
          , TaskPriority  const & arg_priority
          )
     {
@@ -266,7 +269,7 @@ public:
   KOKKOS_FUNCTION static
   void
   respawn( FunctorType         * arg_self
-         , TaskScheduler const &
+         , BasicTaskScheduler const &
          , TaskPriority  const & arg_priority
          )
     {
@@ -290,10 +293,10 @@ public:
   /**\brief  Return a future that is complete
    *         when all input futures are complete.
    */
-  template< typename A1 , typename A2 >
+  template<typename ValueType, typename TaskScheduler>
   KOKKOS_FUNCTION static
   Future< execution_space >
-  when_all( Future< A1 , A2 > const arg[] , int narg )
+  when_all(BasicFuture<ValueType, TaskScheduler> const arg[], int narg)
     {
       using future_type = Future< execution_space > ;
 
@@ -436,9 +439,9 @@ public:
 
   //----------------------------------------
 
-  template< typename S >
+  template<class S, class Q>
   friend
-  void Kokkos::wait( Kokkos::TaskScheduler< S > const & );
+  void wait(Kokkos::BasicTaskScheduler<S, Q> const&);
 
 };
 
@@ -465,7 +468,7 @@ TaskTeam( T            const & arg
 {
   static_assert( Kokkos::is_future<T>::value ||
                  Kokkos::is_scheduler<T>::value
-               , "Kokkos TaskTeam argument must be Future or TaskScheduler" );
+               , "Kokkos TaskTeam argument must be Future or BasicTaskScheduler" );
 
   return
     Kokkos::Impl::TaskPolicyData
@@ -475,11 +478,11 @@ TaskTeam( T            const & arg
       >( arg , arg_priority );
 }
 
-template< typename E , typename F >
+template<typename E, typename Q, typename F>
 Kokkos::Impl::
   TaskPolicyData< Kokkos::Impl::TaskBase<void,void,void>::TaskTeam , F >
 KOKKOS_INLINE_FUNCTION
-TaskTeam( TaskScheduler<E> const & arg_scheduler
+TaskTeam( BasicTaskScheduler<E, Q> const & arg_scheduler
         , F                const & arg_future
         , typename std::enable_if< Kokkos::is_future<F>::value ,
             TaskPriority >::type const & arg_priority = TaskPriority::Regular
@@ -506,7 +509,7 @@ TaskSingle( T            const & arg
 {
   static_assert( Kokkos::is_future<T>::value ||
                  Kokkos::is_scheduler<T>::value
-               , "Kokkos TaskSingle argument must be Future or TaskScheduler" );
+               , "Kokkos TaskSingle argument must be Future or BasicTaskScheduler" );
 
   return
     Kokkos::Impl::TaskPolicyData
@@ -516,11 +519,11 @@ TaskSingle( T            const & arg
       >( arg , arg_priority );
 }
 
-template< typename E , typename F >
+template <typename E, typename Q, typename F>
 Kokkos::Impl::
   TaskPolicyData< Kokkos::Impl::TaskBase<void,void,void>::TaskSingle , F >
 KOKKOS_INLINE_FUNCTION
-TaskSingle( TaskScheduler<E> const & arg_scheduler
+TaskSingle( BasicTaskScheduler<E, Q> const & arg_scheduler
           , F                const & arg_future
           , typename std::enable_if< Kokkos::is_future<F>::value ,
               TaskPriority >::type const & arg_priority = TaskPriority::Regular
@@ -550,7 +553,8 @@ host_spawn( Impl::TaskPolicyData<TaskEnum,DepFutureType> const & arg_policy
           )
 {
   using exec_space = typename DepFutureType::execution_space ;
-  using scheduler  = TaskScheduler< exec_space > ;
+  using queue_type = typename DepFutureType::queue_type;
+  using scheduler = BasicTaskScheduler<exec_space, queue_type>;
 
   typedef Impl::TaskBase< exec_space
                         , typename FunctorType::value_type
@@ -587,7 +591,8 @@ task_spawn( Impl::TaskPolicyData<TaskEnum,DepFutureType> const & arg_policy
           )
 {
   using exec_space = typename DepFutureType::execution_space ;
-  using scheduler  = TaskScheduler< exec_space > ;
+  using queue_type = typename DepFutureType::queue_type;
+  using scheduler = BasicTaskScheduler<exec_space, queue_type>;
 
   typedef Impl::TaskBase< exec_space
                         , typename FunctorType::value_type
@@ -628,30 +633,30 @@ respawn( FunctorType         * arg_self
                  Kokkos::is_scheduler<T>::value
                , "Kokkos respawn argument must be Future or TaskScheduler" );
 
-  TaskScheduler< typename T::execution_space >::
-    respawn( arg_self , arg , arg_priority );
+  BasicTaskScheduler<typename T::execution_space, typename T::queue_type>::respawn(
+    arg_self , arg , arg_priority
+  );
 }
 
 //----------------------------------------------------------------------------
 
-template< typename A1 , typename A2 >
+template<typename ValueType, typename Scheduler>
 KOKKOS_INLINE_FUNCTION
-Future< typename Future< A1 , A2 >::execution_space >
-when_all( Future< A1 , A2 > const arg[]
-        , int                     narg
-        )
+Future<typename BasicFuture<ValueType, Scheduler>::execution_space>
+when_all(BasicFuture<ValueType, Scheduler> const arg[], int narg)
 {
-  return TaskScheduler< typename Future<A1,A2>::execution_space >::
-    when_all( arg , narg );
+  return BasicFuture<ValueType, Scheduler>::scheduler_type::when_all(arg, narg);
 }
 
 //----------------------------------------------------------------------------
 // Wait for all runnable tasks to complete
 
-template< typename ExecSpace >
+template<class ExecSpace, class QueueType>
 inline
-void wait( TaskScheduler< ExecSpace > const & scheduler )
-{ scheduler.m_queue->execute(); }
+void wait(BasicTaskScheduler<ExecSpace, QueueType> const& scheduler)
+{
+  scheduler.m_queue->execute();
+}
 
 } // namespace Kokkos
 
