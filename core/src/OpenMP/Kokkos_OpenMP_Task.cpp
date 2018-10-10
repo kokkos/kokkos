@@ -162,6 +162,9 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
 
             // If 0 == m_ready_count then set task = 0
 
+            // DSH: This is where the end sentinel is assigned and thus where the
+            // multi-queue implementation would need to try work stealing and
+            // check for quiescence before exiting the loop
             task = 0 < *((volatile int *) & queue->m_ready_count) ? end : 0 ;
 
             // Attempt to acquire a task

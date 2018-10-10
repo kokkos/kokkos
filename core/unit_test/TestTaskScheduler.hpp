@@ -299,6 +299,7 @@ struct TestTaskTeam {
   void operator()( typename sched_type::member_type & member )
   {
     const long end   = nvalue + 1;
+    // begin = max(end - SPAN, 0);
     const long begin = 0 < end - SPAN ? end - SPAN : 0;
 
     if ( 0 < begin && future.is_null() ) {

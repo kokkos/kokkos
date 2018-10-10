@@ -57,6 +57,19 @@
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+
+// forward declaration
+template <class ExecutionSpace, class MemorySpace>
+class Device;
+
+// forward declaration
+template <class>
+class TaskScheduler;
+
+// forward declaration
+template <class DeviceType>
+class MemoryPool;
+
 namespace Impl {
 
 template< class Space , typename ResultType , class FunctorType >
@@ -188,15 +201,15 @@ public:
 
   KOKKOS_INLINE_FUNCTION constexpr
   TaskBase()
-    : m_apply(      0 )
-    , m_queue(      0 )
-    , m_wait(       0 )
-    , m_next(       0 )
-    , m_ref_count(  0 )
+    : m_apply( nullptr )
+    , m_queue( nullptr )
+    , m_wait( nullptr )
+    , m_next( nullptr )
+    , m_ref_count( 0 )
     , m_alloc_size( 0 )
-    , m_dep_count(  0 )
-    , m_task_type(  0 )
-    , m_priority(   0 )
+    , m_dep_count( 0 )
+    , m_task_type( 0 )
+    , m_priority( 0 )
     {}
 
   //----------------------------------------
