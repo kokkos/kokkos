@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TASKSCHEDULER_FWD_HPP
-#define KOKKOS_TASKSCHEDULER_FWD_HPP
+#ifndef KOKKOS_IMPL_TASKPOLICYDATA_HPP
+#define KOKKOS_IMPL_TASKPOLICYDATA_HPP
 
 //----------------------------------------------------------------------------
 
@@ -50,62 +50,66 @@
 #if defined( KOKKOS_ENABLE_TASKDAG )
 
 #include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_TaskScheduler_fwd.hpp>
+
 //----------------------------------------------------------------------------
-
-namespace Kokkos {
-
-// Forward declarations used in Impl::TaskQueue
-
-template< typename Arg1 = void , typename Arg2 = void >
-class Future ;
-
-template< typename Space >
-class TaskScheduler ;
-
-template< typename Space >
-void wait( TaskScheduler< Space > const & );
-
-template< typename Space >
-struct is_scheduler : public std::false_type {};
-
-template< typename Space >
-struct is_scheduler< TaskScheduler< Space > > : public std::true_type {};
-
-enum class TaskPriority : int {
-  High = 0,
-  Regular = 1,
-  Low = 2
-};
-
-} // namespace Kokkos
-
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
 namespace Impl {
 
-/*\brief  Implementation data for task data management, access, and execution.
- *
- *  CRTP Inheritance structure to allow static_cast from the
- *  task root type and a task's FunctorType.
- *
- *    TaskBase< Space , ResultType , FunctorType >
- *      : TaskBase< Space , ResultType , void >
- *      , FunctorType
- *      { ... };
- *
- *    TaskBase< Space , ResultType , void >
- *      : TaskBase< Space , void , void >
- *      { ... };
- */
-template< typename Space , typename ResultType , typename FunctorType >
-class TaskBase ;
+//----------------------------------------------------------------------------
+
+template< int TaskEnum , typename DepFutureType >
+struct TaskPolicyData
+{
+  using execution_space = typename DepFutureType::execution_space ;
+  using scheduler_type  = TaskScheduler< execution_space > ;
+
+  enum : int { m_task_type = TaskEnum };
+
+  scheduler_type const * m_scheduler ;
+  DepFutureType  const   m_dependence ;
+  int                    m_priority ;
+
+  TaskPolicyData() = delete ;
+  TaskPolicyData( TaskPolicyData && ) = default ;
+  TaskPolicyData( TaskPolicyData const & ) = default ;
+  TaskPolicyData & operator = ( TaskPolicyData && ) = default ;
+  TaskPolicyData & operator = ( TaskPolicyData const & ) = default ;
+
+  KOKKOS_INLINE_FUNCTION
+  TaskPolicyData( DepFutureType        const & arg_future
+                , Kokkos::TaskPriority const & arg_priority )
+    : m_scheduler( 0 )
+    , m_dependence( arg_future )
+    , m_priority( static_cast<int>( arg_priority ) )
+    {}
+
+  KOKKOS_INLINE_FUNCTION
+  TaskPolicyData( scheduler_type       const & arg_scheduler
+                , Kokkos::TaskPriority const & arg_priority )
+    : m_scheduler( & arg_scheduler )
+    , m_dependence()
+    , m_priority( static_cast<int>( arg_priority ) )
+    {}
+
+  KOKKOS_INLINE_FUNCTION
+  TaskPolicyData( scheduler_type       const & arg_scheduler
+                , DepFutureType        const & arg_future
+                , Kokkos::TaskPriority const & arg_priority )
+    : m_scheduler( & arg_scheduler )
+    , m_dependence( arg_future )
+    , m_priority( static_cast<int>( arg_priority ) )
+    {}
+};
 
 } // namespace Impl
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
-#endif /* #ifndef KOKKOS_TASKSCHEDULER_FWD_HPP */
+#endif /* #ifndef KOKKOS_IMPL_TASKPOLICYDATA_HPP */
 
