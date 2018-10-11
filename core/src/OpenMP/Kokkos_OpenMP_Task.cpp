@@ -48,6 +48,7 @@
 
 #include <impl/Kokkos_TaskQueue_impl.hpp>
 #include <impl/Kokkos_HostThreadTeam.hpp>
+#include <cassert>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -100,14 +101,16 @@ public:
 
 //----------------------------------------------------------------------------
 
-void TaskQueueSpecialization< Kokkos::OpenMP >::execute
-  ( TaskQueue< Kokkos::OpenMP > * const queue )
+void TaskQueueSpecialization< Kokkos::OpenMP >::execute(
+  queue_type* const queue, scheduler_type scheduler
+)
 {
   using task_root_type  = TaskBase< void , void , void > ;
-  using Member          = Impl::HostThreadTeamMember< execution_space > ;
 
   static task_root_type * const end =
     (task_root_type *) task_root_type::EndTag ;
+
+  constexpr task_root_type* no_more_tasks_sentinel = nullptr;
 
 
   HostThreadTeamData & team_data_single =
@@ -126,6 +129,8 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
                               , 0 /* team shared buffer */
                               , 0 /* thread local buffer */
                               );
+  assert(pool_size % team_size == 0);
+  queue->initialize_team_queues(pool_size / team_size);
 
   #pragma omp parallel num_threads(pool_size)
   {
@@ -135,14 +140,15 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
     // entire pool to insure proper initialization of the team
     // rendezvous mechanism before a team rendezvous can be performed.
 
+    // organize_team() returns true if this is an active team member
     if ( self.organize_team( team_size ) ) {
 
-      Member single_exec( team_data_single );
-      Member team_exec( self );
+      member_type single_exec(scheduler, team_data_single);
+      member_type team_exec(scheduler, self);
 
       // Loop until all queues are empty and no tasks in flight
 
-      task_root_type * task = 0 ;
+      task_root_type * task = no_more_tasks_sentinel;
 
       do {
         // Each team lead attempts to acquire either a thread team task
@@ -154,7 +160,7 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
 
           do {
 
-            if ( 0 != task && end != task ) {
+            if ( task != no_more_tasks_sentinel && task != end ) {
               // team member #0 completes the previously executed task,
               // completion may delete the task
               queue->complete( task );
@@ -165,7 +171,13 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
             // DSH: This is where the end sentinel is assigned and thus where the
             // multi-queue implementation would need to try work stealing and
             // check for quiescence before exiting the loop
-            task = 0 < *((volatile int *) & queue->m_ready_count) ? end : 0 ;
+            // TODO shouldn't this be just an atomic load acquire?  This isn't potentially device code...
+            if( *((volatile int *) & queue->m_ready_count) > 0 ) {
+              task = end;
+            }
+            else {
+              task = queue->attempt_to_steal_task();
+            }
 
             // Attempt to acquire a task
             // Loop by priority and then type
@@ -178,17 +190,20 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
             // If still tasks are still executing
             // and no task could be acquired
             // then continue this leader loop
-            leader_loop = end == task ;
-
-            if ( ( ! leader_loop ) &&
-                 ( 0 != task ) &&
+            if(task == end) {
+              leader_loop = true;
+            }
+            else if ( ( task != no_more_tasks_sentinel ) &&
                  ( task_root_type::TaskSingle == task->m_task_type ) ) {
 
               // if a single thread task then execute now
 
-              (*task->m_apply)( task , & single_exec );
+              (*task->m_apply)(task, &single_exec);
 
-              leader_loop = true ;
+              leader_loop = true;
+            }
+            else {
+              leader_loop = false;
             }
           } while ( leader_loop );
         }
@@ -198,13 +213,13 @@ void TaskQueueSpecialization< Kokkos::OpenMP >::execute
 
         team_exec.team_broadcast( task , 0);
 
-        if ( 0 != task ) { // Thread Team Task
+        if ( task != no_more_tasks_sentinel ) { // Thread Team Task
 
           (*task->m_apply)( task , & team_exec );
 
           // The m_apply function performs a barrier
         }
-      } while( 0 != task );
+      } while( task != no_more_tasks_sentinel );
     }
     self.disband_team();
   }

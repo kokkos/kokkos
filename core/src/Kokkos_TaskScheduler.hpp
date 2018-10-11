@@ -74,8 +74,8 @@ public:
   using queue_type = QueueType;
   using memory_space = typename queue_type::memory_space;
   using memory_pool = typename queue_type::memory_pool;
-  using member_type =
-    typename Kokkos::Impl::TaskQueueSpecialization<ExecSpace>::member_type;
+  using specialization = Impl::TaskQueueSpecialization<ExecSpace>;
+  using member_type = typename specialization::member_type;
 
 private:
 
@@ -655,7 +655,9 @@ template<class ExecSpace, class QueueType>
 inline
 void wait(BasicTaskScheduler<ExecSpace, QueueType> const& scheduler)
 {
-  scheduler.m_queue->execute();
+  using scheduler_type = BasicTaskScheduler<ExecSpace, QueueType>;
+  scheduler_type::specialization::execute(scheduler.m_queue, scheduler);
+  //scheduler.m_queue->execute();
 }
 
 } // namespace Kokkos

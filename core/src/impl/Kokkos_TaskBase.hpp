@@ -144,7 +144,7 @@ public:
 
   template<typename, typename> friend class Kokkos::BasicTaskScheduler ;
 
-  typedef TaskQueue< void > queue_type ;
+  using queue_type = TaskQueueBase;
 
   typedef void (* function_type) ( TaskBase * , void * );
 

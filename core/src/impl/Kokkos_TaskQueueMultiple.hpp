@@ -43,8 +43,8 @@
 
 // Experimental unified task-data parallel manycore LDRD
 
-#ifndef KOKKOS_IMPL_TASKQUEUE_HPP
-#define KOKKOS_IMPL_TASKQUEUE_HPP
+#ifndef KOKKOS_IMPL_TASKQUEUEMULTIPLE_HPP
+#define KOKKOS_IMPL_TASKQUEUEMULTIPLE_HPP
 
 #include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_TASKDAG )
@@ -57,6 +57,7 @@
 
 #include <impl/Kokkos_TaskBase.hpp>
 #include <impl/Kokkos_TaskResult.hpp>
+#include <impl/Kokkos_TaskQueue.hpp>
 
 #include <impl/Kokkos_Memory_Fence.hpp>
 #include <impl/Kokkos_Atomic_Increment.hpp>
@@ -72,7 +73,34 @@
 namespace Kokkos {
 namespace Impl {
 
-class TaskQueueBase {};
+template <class ExecSpace>
+struct TeamSpecificQueueRecord : TaskQueueBase {
+  // This really needs to be an optional<TaskQueue<ExecSpace>>
+  union {
+    char uninitialized;
+    TaskQueue<ExecSpace> queue_single;
+  } queue_single = 0;
+  int league_rank = static_cast<int>(KOKKOS_INVALID_INDEX);
+};
+
+template< typename ExecSpace >
+class LeagueQueueCollection {
+private:
+
+  using execution_space = ExecSpace;
+  using specialization = TaskQueueSpecialization<execution_space>;
+
+  TeamSpecificQueueRecord<ExecSpace> m_queues[specialization::max_league_size];
+
+public:
+  LeagueQueueCollection() = delete;
+  LeagueQueueCollection(LeagueQueueCollection const&) = delete;
+  LeagueQueueCollection(LeagueQueueCollection&&) = delete;
+  LeagueQueueCollection& operator=(LeagueQueueCollection const&) = delete;
+  LeagueQueueCollection& operator=(LeagueQueueCollection&&) = delete;
+  ~LeagueQueueCollection() = delete;
+};
+
 
 /** \brief  Manage task allocation, deallocation, and scheduling.
  *
@@ -80,22 +108,22 @@ class TaskQueueBase {};
  *  All other aspects of task management have shared implementation.
  */
 template< typename ExecSpace >
-class TaskQueue : public TaskQueueBase {
+class TaskQueueMultiple {
 private:
 
   friend class TaskQueueSpecialization< ExecSpace > ;
   template <class, class>
   friend class Kokkos::BasicTaskScheduler;
 
-  using execution_space = ExecSpace ;
-  using specialization  = TaskQueueSpecialization< execution_space > ;
-  using memory_space    = typename specialization::memory_space ;
-  using device_type     = Kokkos::Device< execution_space , memory_space > ;
-  using memory_pool     = Kokkos::MemoryPool< device_type > ;
-  using task_root_type  = Kokkos::Impl::TaskBase<void,void,void> ;
+  using execution_space = ExecSpace;
+  using specialization = TaskQueueSpecialization<execution_space>;
+  using memory_space = typename specialization::memory_space;
+  using device_type = Kokkos::Device<execution_space, memory_space>;
+  using memory_pool = Kokkos::MemoryPool<device_type>;
+  using task_root_type = Kokkos::Impl::TaskBase<void, void, void>;
 
   struct Destroy {
-    TaskQueue * m_queue ;
+    TaskQueueMultiple * m_queue ;
     void destroy_shared_allocation();
   };
 
@@ -103,25 +131,27 @@ private:
 
   enum : int { NumQueue = 3 };
 
-  // Queue is organized as [ priority ][ type ]
+  memory_pool m_memory ;
 
-  memory_pool               m_memory ;
-  task_root_type * volatile m_ready[ NumQueue ][ 2 ];
-  long                      m_accum_alloc ; // Accumulated number of allocations
-  int                       m_count_alloc ; // Current number of allocations
-  int                       m_max_alloc ;   // Maximum number of allocations
-  int                       m_ready_count ; // Number of ready or executing
+
+  //task_root_type * volatile m_ready[ NumQueue ][ 2 ];
+  //long                      m_accum_alloc ; // Accumulated number of allocations
+  //int                       m_count_alloc ; // Current number of allocations
+  //int                       m_max_alloc ;   // Maximum number of allocations
+  //int                       m_ready_count ; // Number of ready or executing
 
   //----------------------------------------
 
-  ~TaskQueue();
-  TaskQueue() = delete ;
-  TaskQueue( TaskQueue && ) = delete ;
-  TaskQueue( TaskQueue const & ) = delete ;
-  TaskQueue & operator = ( TaskQueue && ) = delete ;
-  TaskQueue & operator = ( TaskQueue const & ) = delete ;
+  ~TaskQueueMultiple();
+  TaskQueueMultiple() = delete ;
+  TaskQueueMultiple( TaskQueueMultiple && ) = delete ;
+  TaskQueueMultiple( TaskQueueMultiple const & ) = delete ;
+  TaskQueueMultiple & operator = ( TaskQueueMultiple && ) = delete ;
+  TaskQueueMultiple & operator = ( TaskQueueMultiple const & ) = delete ;
 
-  TaskQueue( const memory_pool & arg_memory_pool );
+  explicit TaskQueueMultiple( const memory_pool & arg_memory_pool );
+
+  void initialize_team_queues(int league_size);
 
   // Schedule a task
   //   Precondition:
@@ -175,13 +205,7 @@ public:
 #endif
     }
 
-  KOKKOS_INLINE_FUNCTION
-  void initialize_team_queues(int pool_size) const noexcept { }
-
-  KOKKOS_INLINE_FUNCTION
-  task_root_type* attempt_to_steal_task() const noexcept { return nullptr; }
-
-  //void execute() { specialization::execute( this ); }
+  void execute() { specialization::execute( this ); }
 
   template< typename FunctorType >
   void proc_set_apply( typename task_root_type::function_type * ptr )
@@ -271,5 +295,5 @@ public:
 //----------------------------------------------------------------------------
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
-#endif /* #ifndef KOKKOS_IMPL_TASKQUEUE_HPP */
+#endif /* #ifndef KOKKOS_IMPL_TASKQUEUEMULTIPLE_HPP */
 

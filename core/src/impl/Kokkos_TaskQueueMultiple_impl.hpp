@@ -41,98 +41,45 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TASKSCHEDULER_FWD_HPP
-#define KOKKOS_TASKSCHEDULER_FWD_HPP
-
-//----------------------------------------------------------------------------
+#ifndef KOKKOS_IMPL_TASKQUEUEMULTIPLE_IMPL_HPP
+#define KOKKOS_IMPL_TASKQUEUEMULTIPLE_IMPL_HPP
 
 #include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_TASKDAG )
 
-#include <Kokkos_Core_fwd.hpp>
-//----------------------------------------------------------------------------
+#include <impl/Kokkos_TaskQueueMultiple.hpp>
 
-namespace Kokkos {
-
-// Forward declarations used in Impl::TaskQueue
-
-template <typename ValueType, typename Scheduler>
-class BasicFuture;
-
-template <class Space, class Queue>
-class BasicTaskScheduler;
-
-template< typename Space >
-struct is_scheduler : public std::false_type {};
-
-template<class Space, class Queue>
-struct is_scheduler<BasicTaskScheduler<Space, Queue>> : public std::true_type {};
-
-enum class TaskPriority : int {
-  High = 0,
-  Regular = 1,
-  Low = 2
-};
-
-} // namespace Kokkos
-
-//----------------------------------------------------------------------------
+#define KOKKOS_IMPL_DEBUG_TASKDAG_SCHEDULING_MULTIPLE 0
 
 namespace Kokkos {
 namespace Impl {
 
-/*\brief  Implementation data for task data management, access, and execution.
- *
- *  CRTP Inheritance structure to allow static_cast from the
- *  task root type and a task's FunctorType.
- *
- *    TaskBase< Space , ResultType , FunctorType >
- *      : TaskBase< Space , ResultType , void >
- *      , FunctorType
- *      { ... };
- *
- *    TaskBase< Space , ResultType , void >
- *      : TaskBase< Space , void , void >
- *      { ... };
- */
-template< typename Space , typename ResultType , typename FunctorType >
-class TaskBase ;
+//----------------------------------------------------------------------------
 
-class TaskQueueBase;
-
-template< typename Space >
-class TaskQueue ;
-
-template< typename Space >
-class TaskQueueMultiple ;
-
-template< typename ResultType >
-class TaskResult;
-
-} // namespace Impl
-} // namespace Kokkos
+template< typename ExecSpace >
+TaskQueueMultiple<ExecSpace>::TaskQueueMultiple(
+  typename TaskQueueMultiple<ExecSpace>::memory_pool const& arg_memory_pool
+)
+  : m_memory(arg_memory_pool)
+{ }
 
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-
-template< typename Space >
-using TaskScheduler = BasicTaskScheduler<Space, Impl::TaskQueue<Space>> ;
-
-template<class Space, class QueueType>
-void wait(BasicTaskScheduler<Space, QueueType> const&);
-
-namespace Impl {
-
-template<typename Space>
-class TaskQueueSpecialization;
-
-} // end namespace Impl
-
-} // namespace Kokkos
+template< typename ExecSpace >
+void TaskQueueMultiple<ExecSpace>::initialize_team_queues(int league_size) {
+  for(int iteam = 0; iteam < league_size; ++iteam) {
+    new (&m_queues[iteam]) TeamSpecificQueueRecord<ExecSpace>{
+      TaskQueue<ExecSpace>(m_memory),
+      iteam
+    };
+  }
+}
 
 //----------------------------------------------------------------------------
+
+} /* namespace Impl */
+} /* namespace Kokkos */
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
-#endif /* #ifndef KOKKOS_TASKSCHEDULER_FWD_HPP */
+#endif /* #ifndef KOKKOS_IMPL_TASKQUEUEMULTIPLE_IMPL_HPP */
 

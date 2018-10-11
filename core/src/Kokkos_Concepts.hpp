@@ -105,9 +105,9 @@ namespace Kokkos {
   template< typename T > struct is_ ## CONCEPT { \
   private: \
     template< typename , typename = std::true_type > struct have : std::false_type {}; \
-    template< typename U > struct have<U,typename std::is_same< \
-     typename std::remove_cv<U>::type, \
-     typename std::remove_cv<typename U:: CONCEPT>::type \
+    template< typename U > struct have<U,typename std::is_base_of< \
+     typename std::remove_cv<typename U:: CONCEPT>::type, \
+     typename std::remove_cv<U>::type \
    >::type> : std::true_type {}; \
   public: \
     enum { value = is_ ## CONCEPT::template have<T>::value }; \
@@ -138,6 +138,8 @@ KOKKOS_IMPL_IS_CONCEPT( iteration_pattern )
 KOKKOS_IMPL_IS_CONCEPT( schedule_type )
 KOKKOS_IMPL_IS_CONCEPT( index_type )
 KOKKOS_IMPL_IS_CONCEPT( launch_bounds )
+KOKKOS_IMPL_IS_CONCEPT( thread_team_member )
+KOKKOS_IMPL_IS_CONCEPT( host_thread_team_member )
 
 }
 
