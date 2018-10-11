@@ -47,7 +47,11 @@
 #include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_TASKDAG )
 
+#include <Kokkos_TaskScheduler_fwd.hpp>
+
 #include <impl/Kokkos_TaskQueue.hpp>
+#include <Kokkos_Serial.hpp>
+#include <impl/Kokkos_HostThreadTeam.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -57,22 +61,113 @@ namespace Impl {
 
 //----------------------------------------------------------------------------
 
-template<>
-class TaskQueueSpecialization< Kokkos::Serial >
+template<class Scheduler>
+class TaskQueueSpecializationConstrained<
+  Scheduler,
+  typename std::enable_if<
+    std::is_same<typename Scheduler::execution_space, Kokkos::Serial>::value
+  >::type
+>
 {
 public:
 
-  using execution_space = Kokkos::Serial ;
-  using memory_space    = Kokkos::HostSpace ;
-  using queue_type      = Kokkos::Impl::TaskQueue< execution_space > ;
-  using task_base_type  = Kokkos::Impl::TaskBase< void , void , void > ;
-  using member_type     = Kokkos::Impl::HostThreadTeamMember< execution_space > ;
+  using execution_space = Kokkos::Serial;
+  using memory_space = Kokkos::HostSpace;
+  using scheduler_type = Scheduler;
+  using queue_type = typename scheduler_type::queue_type;
+  using task_base_type = typename scheduler_type::task_base;
+  using member_type = TaskTeamMemberAdapter<
+    HostThreadTeamMember<Kokkos::Serial>, scheduler_type
+  >;
 
   static
-  void iff_single_thread_recursive_execute( queue_type * const );
+  void iff_single_thread_recursive_execute( queue_type * const queue ) {
+    task_base_type * const end = (task_base_type *) task_base_type::EndTag ;
+
+    Impl::HostThreadTeamData * const data = Impl::serial_get_thread_team_data();
+
+    member_type exec( *data );
+
+    // Loop until no runnable task
+
+    task_base_type * task = end ;
+
+    do {
+
+      task = end ;
+
+      for ( int i = 0 ; i < queue_type::NumQueue && end == task ; ++i ) {
+        for ( int j = 0 ; j < 2 && end == task ; ++j ) {
+          task = queue_type::pop_ready_task( & queue->m_ready[i][j] );
+        }
+      }
+
+      if ( end == task ) break ;
+
+      (*task->m_apply)( task , & exec );
+
+      queue->complete( task );
+
+    } while(1);
+
+  }
 
   static
-  void execute( queue_type * const );
+  void execute(scheduler_type const& scheduler)
+  {
+    task_base_type * const end = (task_base_type *) task_base_type::EndTag ;
+
+    // Set default buffers
+    serial_resize_thread_team_data(
+      0,   /* global reduce buffer */
+      512, /* team reduce buffer */
+      0,   /* team shared buffer */
+      0    /* thread local buffer */
+    );
+
+    auto* const queue = scheduler.m_queue;
+
+    Impl::HostThreadTeamData * const data = Impl::serial_get_thread_team_data();
+
+    member_type exec( *data );
+
+    // Loop until all queues are empty
+    while ( 0 < queue->m_ready_count ) {
+
+      task_base_type * task = end ;
+
+      for ( int i = 0 ; i < queue_type::NumQueue && end == task ; ++i ) {
+        for ( int j = 0 ; j < 2 && end == task ; ++j ) {
+          task = queue_type::pop_ready_task( & queue->m_ready[i][j] );
+        }
+      }
+
+      if ( end != task ) {
+
+        // pop_ready_task resulted in lock == task->m_next
+        // In the executing state
+
+        (*task->m_apply)( task , & exec );
+
+#if 0
+        printf( "TaskQueue<Serial>::executed: 0x%lx { 0x%lx 0x%lx %d %d %d }\n"
+        , uintptr_t(task)
+        , uintptr_t(task->m_wait)
+        , uintptr_t(task->m_next)
+        , task->m_task_type
+        , task->m_priority
+        , task->m_ref_count );
+#endif
+
+        // If a respawn then re-enqueue otherwise the task is complete
+        // and all tasks waiting on this task are updated.
+        queue->complete( task );
+      }
+      else if ( 0 != queue->m_ready_count ) {
+        Kokkos::abort("TaskQueue<Serial>::execute ERROR: ready_count");
+      }
+    }
+  }
 
   template< typename TaskType >
   static

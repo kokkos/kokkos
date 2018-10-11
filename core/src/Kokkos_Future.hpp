@@ -70,7 +70,8 @@ private:
 
   template< typename , typename > friend class BasicTaskScheduler ;
   template< typename , typename > friend class BasicFuture ;
-  template< typename , typename , typename > friend class Impl::TaskBase ;
+  friend class Impl::TaskBase ;
+  template< typename , typename , typename > friend class Impl::Task ;
 
 
   //----------------------------------------
@@ -90,7 +91,7 @@ private:
 
   //----------------------------------------
 
-  using task_base  = Impl::TaskBase< void , void , void > ;
+  using task_base  = Impl::TaskBase;
 
   task_base * m_task ;
 

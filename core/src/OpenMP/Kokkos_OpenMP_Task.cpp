@@ -48,6 +48,7 @@
 
 #include <impl/Kokkos_TaskQueue_impl.hpp>
 #include <impl/Kokkos_HostThreadTeam.hpp>
+#include <OpenMP/Kokkos_OpenMP_Task.hpp>
 #include <cassert>
 
 //----------------------------------------------------------------------------
@@ -58,215 +59,42 @@ namespace Impl {
 
 template class TaskQueue< Kokkos::OpenMP > ;
 
-class HostThreadTeamDataSingleton : private HostThreadTeamData {
-private:
-
-  HostThreadTeamDataSingleton() : HostThreadTeamData()
-    {
-      Kokkos::OpenMP::memory_space space ;
-      const size_t num_pool_reduce_bytes  =   32 ;
-      const size_t num_team_reduce_bytes  =   32 ;
-      const size_t num_team_shared_bytes  = 1024 ;
-      const size_t num_thread_local_bytes = 1024 ;
-      const size_t alloc_bytes =
-        HostThreadTeamData::scratch_size( num_pool_reduce_bytes
-                                        , num_team_reduce_bytes
-                                        , num_team_shared_bytes
-                                        , num_thread_local_bytes );
-
-      HostThreadTeamData::scratch_assign
-        ( space.allocate( alloc_bytes )
-        , alloc_bytes
-        , num_pool_reduce_bytes
-        , num_team_reduce_bytes
-        , num_team_shared_bytes
-        , num_thread_local_bytes );
-    }
-
-  ~HostThreadTeamDataSingleton()
-    {
-      Kokkos::OpenMP::memory_space space ;
-      space.deallocate( HostThreadTeamData::scratch_buffer()
-                      , HostThreadTeamData::scratch_bytes() );
-    }
-
-public:
-
-  static HostThreadTeamData & singleton()
-    {
-      static HostThreadTeamDataSingleton s ;
-      return s ;
-    }
-};
-
-//----------------------------------------------------------------------------
-
-void TaskQueueSpecialization< Kokkos::OpenMP >::execute(
-  queue_type* const queue, scheduler_type scheduler
-)
+HostThreadTeamData& HostThreadTeamDataSingleton::singleton()
 {
-  using task_root_type  = TaskBase< void , void , void > ;
-
-  static task_root_type * const end =
-    (task_root_type *) task_root_type::EndTag ;
-
-  constexpr task_root_type* no_more_tasks_sentinel = nullptr;
-
-
-  HostThreadTeamData & team_data_single =
-    HostThreadTeamDataSingleton::singleton();
-
-  Impl::OpenMPExec * instance = t_openmp_instance;
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  const int pool_size = OpenMP::thread_pool_size();
-#else
-  const int pool_size = OpenMP::impl_thread_pool_size();
-#endif
-
-  const int team_size = 1;  // Threads per core
-  instance->resize_thread_data( 0 /* global reduce buffer */
-                              , 512 * team_size /* team reduce buffer */
-                              , 0 /* team shared buffer */
-                              , 0 /* thread local buffer */
-                              );
-  assert(pool_size % team_size == 0);
-  queue->initialize_team_queues(pool_size / team_size);
-
-  #pragma omp parallel num_threads(pool_size)
-  {
-    Impl::HostThreadTeamData & self = *(instance->get_thread_data());
-
-    // Organizing threads into a team performs a barrier across the
-    // entire pool to insure proper initialization of the team
-    // rendezvous mechanism before a team rendezvous can be performed.
-
-    // organize_team() returns true if this is an active team member
-    if ( self.organize_team( team_size ) ) {
-
-      member_type single_exec(scheduler, team_data_single);
-      member_type team_exec(scheduler, self);
-
-      // Loop until all queues are empty and no tasks in flight
-
-      task_root_type * task = no_more_tasks_sentinel;
-
-      do {
-        // Each team lead attempts to acquire either a thread team task
-        // or a single thread task for the team.
-
-        if ( 0 == team_exec.team_rank() ) {
-
-          bool leader_loop = false ;
-
-          do {
-
-            if ( task != no_more_tasks_sentinel && task != end ) {
-              // team member #0 completes the previously executed task,
-              // completion may delete the task
-              queue->complete( task );
-            }
-
-            // If 0 == m_ready_count then set task = 0
-
-            // DSH: This is where the end sentinel is assigned and thus where the
-            // multi-queue implementation would need to try work stealing and
-            // check for quiescence before exiting the loop
-            // TODO shouldn't this be just an atomic load acquire?  This isn't potentially device code...
-            if( *((volatile int *) & queue->m_ready_count) > 0 ) {
-              task = end;
-            }
-            else {
-              task = queue->attempt_to_steal_task();
-            }
-
-            // Attempt to acquire a task
-            // Loop by priority and then type
-            for ( int i = 0 ; i < queue_type::NumQueue && end == task ; ++i ) {
-              for ( int j = 0 ; j < 2 && end == task ; ++j ) {
-                task = queue_type::pop_ready_task( & queue->m_ready[i][j] );
-              }
-            }
-
-            // If still tasks are still executing
-            // and no task could be acquired
-            // then continue this leader loop
-            if(task == end) {
-              leader_loop = true;
-            }
-            else if ( ( task != no_more_tasks_sentinel ) &&
-                 ( task_root_type::TaskSingle == task->m_task_type ) ) {
-
-              // if a single thread task then execute now
-
-              (*task->m_apply)(task, &single_exec);
-
-              leader_loop = true;
-            }
-            else {
-              leader_loop = false;
-            }
-          } while ( leader_loop );
-        }
-
-        // Team lead either found 0 == m_ready_count or a team task
-        // Team lead broadcast acquired task:
-
-        team_exec.team_broadcast( task , 0);
-
-        if ( task != no_more_tasks_sentinel ) { // Thread Team Task
-
-          (*task->m_apply)( task , & team_exec );
-
-          // The m_apply function performs a barrier
-        }
-      } while( task != no_more_tasks_sentinel );
-    }
-    self.disband_team();
-  }
+  static HostThreadTeamDataSingleton s;
+  return s;
 }
 
-void TaskQueueSpecialization< Kokkos::OpenMP >::
-  iff_single_thread_recursive_execute
-    ( TaskQueue< Kokkos::OpenMP > * const queue )
+HostThreadTeamDataSingleton::HostThreadTeamDataSingleton()
+  : HostThreadTeamData()
 {
-  using task_root_type  = TaskBase< void , void , void > ;
-  using Member          = Impl::HostThreadTeamMember< execution_space > ;
+  Kokkos::OpenMP::memory_space space ;
+  const size_t num_pool_reduce_bytes  =   32 ;
+  const size_t num_team_reduce_bytes  =   32 ;
+  const size_t num_team_shared_bytes  = 1024 ;
+  const size_t num_thread_local_bytes = 1024 ;
+  const size_t alloc_bytes =
+    HostThreadTeamData::scratch_size( num_pool_reduce_bytes
+      , num_team_reduce_bytes
+      , num_team_shared_bytes
+      , num_thread_local_bytes );
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  if ( 1 == OpenMP::thread_pool_size() )
-#else
-  if ( 1 == OpenMP::impl_thread_pool_size() )
-#endif
-  {
+  HostThreadTeamData::scratch_assign
+    ( space.allocate( alloc_bytes )
+      , alloc_bytes
+      , num_pool_reduce_bytes
+      , num_team_reduce_bytes
+      , num_team_shared_bytes
+      , num_thread_local_bytes );
+}
 
-    task_root_type * const end = (task_root_type *) task_root_type::EndTag ;
-
-    HostThreadTeamData & team_data_single =
-      HostThreadTeamDataSingleton::singleton();
-
-    Member single_exec( team_data_single );
-
-    task_root_type * task = end ;
-
-    do {
-
-      task = end ;
-
-      // Loop by priority and then type
-      for ( int i = 0 ; i < queue_type::NumQueue && end == task ; ++i ) {
-        for ( int j = 0 ; j < 2 && end == task ; ++j ) {
-          task = queue_type::pop_ready_task( & queue->m_ready[i][j] );
-        }
-      }
-
-      if ( end == task ) break ;
-
-      (*task->m_apply)( task , & single_exec );
-
-      queue->complete( task );
-
-    } while(1);
-  }
+HostThreadTeamDataSingleton::~HostThreadTeamDataSingleton()
+{
+  Kokkos::OpenMP::memory_space space ;
+  space.deallocate(
+    HostThreadTeamData::scratch_buffer(),
+    static_cast<size_t>(HostThreadTeamData::scratch_bytes())
+  );
 }
 
 }} /* namespace Kokkos::Impl */

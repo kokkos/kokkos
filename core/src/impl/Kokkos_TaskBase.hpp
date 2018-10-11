@@ -134,8 +134,7 @@ namespace Impl {
  *      m_next == LockTag: not a member of a wait queue
  *
  */
-template<>
-class TaskBase< void , void , void >
+class TaskBase
 {
 public:
 
@@ -144,14 +143,14 @@ public:
 
   template<typename, typename> friend class Kokkos::BasicTaskScheduler ;
 
-  using queue_type = TaskQueueBase;
+  using scheduler_type = TaskSchedulerBase;
 
   typedef void (* function_type) ( TaskBase * , void * );
 
   // sizeof(TaskBase) == 48
 
   function_type  m_apply ;       ///< Apply function pointer
-  queue_type   * m_queue ;       ///< Pointer to queue
+  scheduler_type const* m_scheduler ;  ///< Pointer to the scheduler
   TaskBase     * m_wait ;        ///< Linked list of tasks waiting on this
   TaskBase     * m_next ;        ///< Waiting linked-list next
   int32_t        m_ref_count ;   ///< Reference count
@@ -174,7 +173,7 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr
   TaskBase()
     : m_apply( nullptr )
-    , m_queue( nullptr )
+    , m_scheduler( nullptr )
     , m_wait( nullptr )
     , m_next( nullptr )
     , m_ref_count( 0 )
@@ -227,8 +226,8 @@ public:
 
 };
 
-static_assert( sizeof(TaskBase<void,void,void>) == 48
-             , "Verifying expected sizeof(TaskBase<void,void,void>)" );
+static_assert( sizeof(TaskBase) == 48
+             , "Verifying expected sizeof(TaskBase)" );
 
 } /* namespace Impl */
 } /* namespace Kokkos */
@@ -239,27 +238,27 @@ static_assert( sizeof(TaskBase<void,void,void>) == 48
 namespace Kokkos {
 namespace Impl {
 
-template< class ExecSpace , typename ResultType , class FunctorType >
-class TaskBase
-  : public TaskBase< void , void , void >
+template< class Scheduler, typename ResultType , class FunctorType >
+class Task
+  : public TaskBase
   , public FunctorType
 {
-private:
-
-  TaskBase() = delete ;
-  TaskBase( TaskBase && ) = delete ;
-  TaskBase( const TaskBase & ) = delete ;
-  TaskBase & operator = ( TaskBase && ) = delete ;
-  TaskBase & operator = ( const TaskBase & ) = delete ;
 
 public:
 
-  using root_type       = TaskBase< void , void , void > ;
-  using functor_type    = FunctorType ;
-  using result_type     = ResultType ;
+  Task() = delete ;
+  Task( Task && ) = delete ;
+  Task( const Task & ) = delete ;
+  Task & operator = ( Task && ) = delete ;
+  Task & operator = ( const Task & ) = delete ;
 
-  using specialization  = TaskQueueSpecialization< ExecSpace > ;
-  using member_type     = typename specialization::member_type ;
+
+  using root_type = TaskBase;
+  using functor_type = FunctorType ;
+  using result_type = ResultType ;
+
+  using specialization = TaskQueueSpecialization<Scheduler> ;
+  using member_type = typename specialization::member_type ;
 
   KOKKOS_INLINE_FUNCTION
   void apply_functor( member_type * const member , void * )
@@ -274,7 +273,7 @@ public:
   KOKKOS_FUNCTION static
   void apply( root_type * root , void * exec )
     {
-      TaskBase    * const task   = static_cast< TaskBase * >( root );
+      Task* const task = static_cast< Task * >( root );
       member_type * const member = reinterpret_cast< member_type * >( exec );
       result_type * const result = TaskResult< result_type >::ptr( task );
 
@@ -303,11 +302,11 @@ public:
 
   // Constructor for runnable task
   KOKKOS_INLINE_FUNCTION constexpr
-  TaskBase( FunctorType && arg_functor )
+  Task( FunctorType && arg_functor )
     : root_type() , functor_type( arg_functor ) {}
 
   KOKKOS_INLINE_FUNCTION
-  ~TaskBase() {}
+  ~Task() {}
 };
 
 } /* namespace Impl */

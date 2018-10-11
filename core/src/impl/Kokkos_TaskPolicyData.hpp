@@ -64,7 +64,7 @@ template< int TaskEnum , typename DepFutureType >
 struct TaskPolicyData
 {
   using execution_space = typename DepFutureType::execution_space ;
-  using scheduler_type  = TaskScheduler< execution_space > ;
+  using scheduler_type  = TaskSchedulerBase;
 
   enum : int { m_task_type = TaskEnum };
 

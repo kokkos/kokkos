@@ -57,7 +57,7 @@ namespace {
 template< typename TaskType >
 __global__
 void set_cuda_task_base_apply_function_pointer
-  ( TaskBase<void,void,void>::function_type * ptr )
+  ( TaskBase::function_type * ptr )
 { *ptr = TaskType::apply ; }
 
 }

@@ -79,20 +79,22 @@ class TaskQueueBase {};
  *  Task execution is deferred to the TaskQueueSpecialization.
  *  All other aspects of task management have shared implementation.
  */
-template< typename ExecSpace >
+template< typename ExecSpace, typename MemorySpace >
 class TaskQueue : public TaskQueueBase {
 private:
 
-  friend class TaskQueueSpecialization< ExecSpace > ;
+  template <class>
+  friend class TaskQueueSpecialization;
+  template <class, class>
+  friend class TaskQueueSpecializationConstrained;
   template <class, class>
   friend class Kokkos::BasicTaskScheduler;
 
-  using execution_space = ExecSpace ;
-  using specialization  = TaskQueueSpecialization< execution_space > ;
-  using memory_space    = typename specialization::memory_space ;
-  using device_type     = Kokkos::Device< execution_space , memory_space > ;
-  using memory_pool     = Kokkos::MemoryPool< device_type > ;
-  using task_root_type  = Kokkos::Impl::TaskBase<void,void,void> ;
+  using execution_space = ExecSpace;
+  using memory_space = MemorySpace;
+  using device_type = Kokkos::Device< execution_space , memory_space > ;
+  using memory_pool = Kokkos::MemoryPool< device_type > ;
+  using task_root_type = Kokkos::Impl::TaskBase;
 
   struct Destroy {
     TaskQueue * m_queue ;
@@ -165,15 +167,17 @@ private:
 
 public:
 
-  // If and only if the execution space is a single thread
-  // then execute ready tasks.
-  KOKKOS_INLINE_FUNCTION
-  void iff_single_thread_recursive_execute()
-    {
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-      specialization::iff_single_thread_recursive_execute( this );
-#endif
-    }
+//  // If and only if the execution space is a single thread
+//  // then execute ready tasks.
+//  KOKKOS_INLINE_FUNCTION
+//  void iff_single_thread_recursive_execute()
+//    {
+//#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
+//      using specialization =
+//        TaskQueueSpecialization<BasicTaskScheduler<ExecSpace, TaskQueue>>;
+//      specialization::iff_single_thread_recursive_execute( this );
+//#endif
+//    }
 
   KOKKOS_INLINE_FUNCTION
   void initialize_team_queues(int pool_size) const noexcept { }
@@ -186,6 +190,8 @@ public:
   template< typename FunctorType >
   void proc_set_apply( typename task_root_type::function_type * ptr )
     {
+      using specialization =
+        TaskQueueSpecialization<BasicTaskScheduler<ExecSpace, TaskQueue>>;
       specialization::template proc_set_apply< FunctorType >( ptr );
     }
 
@@ -239,9 +245,7 @@ public:
     {
       using value_type = typename FunctorType::value_type ;
 
-      using task_type = Impl::TaskBase< execution_space
-                                      , value_type
-                                      , FunctorType > ;
+      using task_type = Impl::Task<execution_space, value_type, FunctorType> ;
 
       enum : size_t { align = ( 1 << 4 ) , align_mask = align - 1 };
       enum : size_t { task_size   = sizeof(task_type) };

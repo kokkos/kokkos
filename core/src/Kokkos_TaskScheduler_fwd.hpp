@@ -81,6 +81,8 @@ enum class TaskPriority : int {
 namespace Kokkos {
 namespace Impl {
 
+class TaskBase;
+
 /*\brief  Implementation data for task data management, access, and execution.
  *
  *  CRTP Inheritance structure to allow static_cast from the
@@ -96,11 +98,11 @@ namespace Impl {
  *      { ... };
  */
 template< typename Space , typename ResultType , typename FunctorType >
-class TaskBase ;
+class Task;
 
 class TaskQueueBase;
 
-template< typename Space >
+template< typename Space, typename MemorySpace = typename Space::memory_space >
 class TaskQueue ;
 
 template< typename Space >
@@ -109,12 +111,15 @@ class TaskQueueMultiple ;
 template< typename ResultType >
 class TaskResult;
 
+struct TaskSchedulerBase;
+
 } // namespace Impl
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+
 
 template< typename Space >
 using TaskScheduler = BasicTaskScheduler<Space, Impl::TaskQueue<Space>> ;
@@ -124,8 +129,12 @@ void wait(BasicTaskScheduler<Space, QueueType> const&);
 
 namespace Impl {
 
-template<typename Space>
-class TaskQueueSpecialization;
+template <typename Scheduler, typename EnableIfConstraint=void>
+class TaskQueueSpecializationConstrained { };
+
+template <typename Scheduler>
+struct TaskQueueSpecialization : TaskQueueSpecializationConstrained<Scheduler> { };
+
 
 } // end namespace Impl
 

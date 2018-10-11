@@ -72,14 +72,14 @@ struct TaskResult {
   using reference_type = ResultType & ;
 
   KOKKOS_INLINE_FUNCTION static
-  ResultType * ptr( TaskBase<void,void,void> * task )
+  ResultType * ptr( TaskBase* task )
     {
       return reinterpret_cast< ResultType * >
         ( reinterpret_cast< char * >(task) + task->m_alloc_size - sizeof(ResultType) );
     }
 
   KOKKOS_INLINE_FUNCTION static
-  reference_type get( TaskBase<void,void,void> * task )
+  reference_type get( TaskBase* task )
     { return *ptr( task ); }
 };
 
@@ -91,10 +91,10 @@ struct TaskResult< void > {
   using reference_type = void ;
 
   KOKKOS_INLINE_FUNCTION static
-  void * ptr( TaskBase<void,void,void> * ) { return (void*) 0 ; }
+  void * ptr( TaskBase* ) { return (void*) 0 ; }
 
   KOKKOS_INLINE_FUNCTION static
-  reference_type get( TaskBase<void,void,void> * ) {}
+  reference_type get( TaskBase* ) {}
 };
 
 } /* namespace Impl */
