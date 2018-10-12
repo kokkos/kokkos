@@ -109,6 +109,18 @@ KOKKOS_INTERNAL_COMPILER_CLANG       := $(call kokkos_has_string,$(KOKKOS_CXX_VE
 KOKKOS_INTERNAL_COMPILER_APPLE_CLANG := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),apple-darwin)
 KOKKOS_INTERNAL_COMPILER_HCC         := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),HCC)
 
+# Check Host Compiler if using NVCC through nvcc_wrapper
+ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
+  KOKKOS_INTERNAL_COMPILER_NVCC_WRAPPER := $(strip $(shell echo $(CXX) | grep nvcc_wrapper | wc -l))
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC_WRAPPER), 1)
+
+    KOKKOS_CXX_HOST_VERSION             := $(strip $(shell $(CXX) $(CXXFLAGS) --host-version       2>&1))
+    KOKKOS_INTERNAL_COMPILER_PGI    := $(call kokkos_has_string,$(KOKKOS_CXX_HOST_VERSION),PGI)
+    KOKKOS_INTERNAL_COMPILER_INTEL  := $(call kokkos_has_string,$(KOKKOS_CXX_HOST_VERSION),Intel Corporation)
+    KOKKOS_INTERNAL_COMPILER_CLANG  := $(call kokkos_has_string,$(KOKKOS_CXX_HOST_VERSION),clang)
+  endif
+endif
+
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 2)
   KOKKOS_INTERNAL_COMPILER_CLANG = 1
 endif

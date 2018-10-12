@@ -55,7 +55,11 @@
 #ifdef KOKKOS_ENABLE_OPENMP
 #include <openmp/TestOpenMP_Category.hpp>
 #endif
-#include <TestReduceDeviceView.hpp>
+#ifdef KOKKOS_ENABLE_THREADS
+#include <threads/TestThreads_Category.hpp>
+#endif
+
+#include <TestMemoryPool.hpp>
 
 int main( int argc, char *argv[] ) {
   Kokkos::initialize(argc,argv);
