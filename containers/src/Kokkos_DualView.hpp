@@ -209,7 +209,7 @@ public:
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE
   DualView () = default;
 #else
-  DualView ():modified_flags (t_modified_flags("DualView::modified_flags") {
+  DualView ():modified_flags (t_modified_flags("DualView::modified_flags")) {
     modified_host = t_modified_flag(modified_flags,0);
     modified_device = t_modified_flag(modified_flags,1);
   }
