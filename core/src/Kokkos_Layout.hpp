@@ -332,7 +332,10 @@ struct LayoutTiled {
 
 // For use with view_copy
 template < typename ... Layout >
-struct layout_iterate_type_selector;
+struct layout_iterate_type_selector {
+  static const Kokkos::Iterate outer_iteration_pattern = Kokkos::Iterate::Default ;
+  static const Kokkos::Iterate inner_iteration_pattern = Kokkos::Iterate::Default ;
+};
 
 template <>
 struct layout_iterate_type_selector< Kokkos::LayoutRight > {
