@@ -81,7 +81,7 @@ class TaskQueueBase {};
  */
 template< typename ExecSpace, typename MemorySpace >
 class TaskQueue : public TaskQueueBase {
-private:
+protected:
 
   template <class>
   friend class TaskQueueSpecialization;
@@ -95,6 +95,7 @@ private:
   using device_type = Kokkos::Device< execution_space , memory_space > ;
   using memory_pool = Kokkos::MemoryPool< device_type > ;
   using task_root_type = Kokkos::Impl::TaskBase;
+  using team_queue_type = TaskQueue;
 
   struct Destroy {
     TaskQueue * m_queue ;
@@ -165,6 +166,7 @@ private:
   KOKKOS_FUNCTION static
   void decrement( task_root_type * task );
 
+
 public:
 
 //  // If and only if the execution space is a single thread
@@ -184,6 +186,9 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   task_root_type* attempt_to_steal_task() const noexcept { return nullptr; }
+
+  KOKKOS_INLINE_FUNCTION
+  team_queue_type& get_team_queue(int team_rank) { return *this; }
 
   //void execute() { specialization::execute( this ); }
 

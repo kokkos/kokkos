@@ -166,7 +166,7 @@ public:
     static_assert
       ( std::is_same<scheduler_type, void>::value ||
           std::is_same<scheduler_type, S>::value
-        , "Assigned Futures must have the same space" );
+        , "Assigned Futures must have the same scheduler" );
 
     static_assert
       ( std::is_same< value_type , void >::value ||
@@ -184,7 +184,7 @@ public:
     static_assert
       ( std::is_same<scheduler_type, void>::value ||
           std::is_same<scheduler_type, S>::value
-        , "Assigned Futures must have the same space" );
+        , "Assigned Futures must have the same scheduler" );
 
     static_assert
       ( std::is_same< value_type , void >::value ||
@@ -202,7 +202,7 @@ public:
     static_assert
       ( std::is_same<scheduler_type, void>::value ||
           std::is_same<scheduler_type, S>::value
-        , "Assigned Futures must have the same space" );
+        , "Assigned Futures must have the same scheduler" );
 
     static_assert
       ( std::is_same< value_type , void >::value ||
@@ -220,7 +220,7 @@ public:
     static_assert
       ( std::is_same<scheduler_type, void>::value ||
           std::is_same<scheduler_type, S>::value
-        , "Assigned Futures must have the same space" );
+        , "Assigned Futures must have the same scheduler" );
 
     static_assert
       ( std::is_same< value_type , void >::value ||

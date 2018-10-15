@@ -81,13 +81,13 @@ struct TaskPolicyData
   KOKKOS_INLINE_FUNCTION
   TaskPolicyData( DepFutureType        const & arg_future
                 , Kokkos::TaskPriority const & arg_priority )
-    : m_scheduler( 0 )
+    : m_scheduler( nullptr )
     , m_dependence( arg_future )
     , m_priority( static_cast<int>( arg_priority ) )
     {}
 
   KOKKOS_INLINE_FUNCTION
-  TaskPolicyData( scheduler_type       const & arg_scheduler
+  TaskPolicyData( scheduler_type const& arg_scheduler
                 , Kokkos::TaskPriority const & arg_priority )
     : m_scheduler( & arg_scheduler )
     , m_dependence()
@@ -95,7 +95,7 @@ struct TaskPolicyData
     {}
 
   KOKKOS_INLINE_FUNCTION
-  TaskPolicyData( scheduler_type       const & arg_scheduler
+  TaskPolicyData( scheduler_type const& arg_scheduler
                 , DepFutureType        const & arg_future
                 , Kokkos::TaskPriority const & arg_priority )
     : m_scheduler( & arg_scheduler )

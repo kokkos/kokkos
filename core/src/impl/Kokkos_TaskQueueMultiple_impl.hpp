@@ -54,28 +54,10 @@
 namespace Kokkos {
 namespace Impl {
 
-//----------------------------------------------------------------------------
-
-template< typename ExecSpace >
-TaskQueueMultiple<ExecSpace>::TaskQueueMultiple(
-  typename TaskQueueMultiple<ExecSpace>::memory_pool const& arg_memory_pool
-)
-  : m_memory(arg_memory_pool)
-{ }
-
-//----------------------------------------------------------------------------
-
-template< typename ExecSpace >
-void TaskQueueMultiple<ExecSpace>::initialize_team_queues(int league_size) {
-  for(int iteam = 0; iteam < league_size; ++iteam) {
-    new (&m_queues[iteam]) TeamSpecificQueueRecord<ExecSpace>{
-      TaskQueue<ExecSpace>(m_memory),
-      iteam
-    };
-  }
+template <class ExecSpace, class MemorySpace>
+void TaskQueueMultiple<ExecSpace, MemorySpace>::Destroy::destroy_shared_allocation() {
+  m_queue->get_team_queue(0).~TaskQueueMultiple();
 }
-
-//----------------------------------------------------------------------------
 
 } /* namespace Impl */
 } /* namespace Kokkos */

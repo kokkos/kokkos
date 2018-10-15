@@ -105,7 +105,7 @@ class TaskQueueBase;
 template< typename Space, typename MemorySpace = typename Space::memory_space >
 class TaskQueue ;
 
-template< typename Space >
+template< typename ExecSpace, typename MemSpace = typename ExecSpace::memory_space >
 class TaskQueueMultiple ;
 
 template< typename ResultType >
@@ -120,9 +120,11 @@ struct TaskSchedulerBase;
 
 namespace Kokkos {
 
-
 template< typename Space >
 using TaskScheduler = BasicTaskScheduler<Space, Impl::TaskQueue<Space>> ;
+
+template< typename Space >
+using TaskSchedulerMultiple = BasicTaskScheduler<Space, Impl::TaskQueueMultiple<Space>> ;
 
 template<class Space, class QueueType>
 void wait(BasicTaskScheduler<Space, QueueType> const&);
@@ -134,6 +136,9 @@ class TaskQueueSpecializationConstrained { };
 
 template <typename Scheduler>
 struct TaskQueueSpecialization : TaskQueueSpecializationConstrained<Scheduler> { };
+
+template <int, typename>
+struct TaskPolicyData;
 
 
 } // end namespace Impl

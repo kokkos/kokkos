@@ -72,28 +72,29 @@ long eval_fib( long n )
 
 }
 
-template< typename Space >
+template< typename Scheduler >
 struct TestFib
 {
-  typedef Kokkos::TaskScheduler< Space >  sched_type;
-  typedef Kokkos::Future< long, Space >   future_type;
-  typedef long                            value_type;
+  using sched_type = Scheduler;
+  using future_type = Kokkos::BasicFuture< long, Scheduler >;
+  using value_type = long;
 
-  sched_type  sched;
   future_type fib_m1;
   future_type fib_m2;
   const value_type n;
 
   KOKKOS_INLINE_FUNCTION
-  TestFib( const sched_type & arg_sched, const value_type arg_n )
-    : sched( arg_sched ), fib_m1(), fib_m2(), n( arg_n ) {}
+  TestFib( const value_type arg_n )
+    : fib_m1(), fib_m2(), n( arg_n ) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()( typename sched_type::member_type &, value_type & result )
+  void operator()( typename sched_type::member_type & member, value_type & result )
   {
 #if 0
     printf( "\nTestFib(%ld) %d %d\n", n, int( !fib_m1.is_null() ), int( !fib_m2.is_null() ) );
 #endif
+
+    auto& sched = member.scheduler();
 
     if ( n < 2 ) {
       result = n;
@@ -106,14 +107,14 @@ struct TestFib
       // Spawn lower value at higher priority as it has a shorter
       // path to completion.
 
-      fib_m2 = Kokkos::task_spawn( Kokkos::TaskSingle( sched, Kokkos::TaskPriority::High )
-                                 , TestFib( sched, n - 2 ) );
+      fib_m2 = Kokkos::task_spawn( Kokkos::TaskSingle( member.scheduler(), Kokkos::TaskPriority::High )
+                                 , TestFib( n - 2 ) );
 
-      fib_m1 = Kokkos::task_spawn( Kokkos::TaskSingle( sched )
-                                 , TestFib( sched, n - 1 ) );
+      fib_m1 = Kokkos::task_spawn( Kokkos::TaskSingle( member.scheduler() )
+                                 , TestFib( n - 1 ) );
 
-      Kokkos::Future< Space > dep[] = { fib_m1, fib_m2 };
-      Kokkos::Future< Space > fib_all = Kokkos::when_all( dep, 2 );
+      Kokkos::BasicFuture<void, Scheduler> dep[] = { fib_m1, fib_m2 };
+      Kokkos::BasicFuture<void, Scheduler> fib_all = Kokkos::when_all( dep, 2 );
 
       if ( !fib_m2.is_null() && !fib_m1.is_null() && !fib_all.is_null() ) {
         // High priority to retire this branch.
@@ -150,7 +151,7 @@ struct TestFib
                          , std::min(size_t(SuperBlockSize),MemoryCapacity) );
 
     future_type f = Kokkos::host_spawn( Kokkos::TaskSingle( root_sched )
-                                      , TestFib( root_sched, i ) );
+                                      , TestFib( i ) );
 
     Kokkos::wait( root_sched );
 
@@ -176,28 +177,26 @@ struct TestFib
 
 namespace TestTaskScheduler {
 
-template< class Space >
+template< class Scheduler >
 struct TestTaskDependence {
-  typedef Kokkos::TaskScheduler< Space >  sched_type;
-  typedef Kokkos::Future< Space >         future_type;
-  typedef Kokkos::View< long, Space >     accum_type;
+  typedef Scheduler  sched_type;
+  typedef Kokkos::BasicFuture< void, Scheduler > future_type;
+  typedef Kokkos::View< long, typename sched_type::execution_space >     accum_type;
   typedef void                            value_type;
 
-  sched_type  m_sched;
   accum_type  m_accum;
   long        m_count;
 
   KOKKOS_INLINE_FUNCTION
   TestTaskDependence( long n
-                    , const sched_type & arg_sched
                     , const accum_type & arg_accum )
-    : m_sched( arg_sched )
-    , m_accum( arg_accum )
+    : m_accum( arg_accum )
     , m_count( n ) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()( typename sched_type::member_type & )
+  void operator()( typename sched_type::member_type & member )
   {
+    auto& sched = member.scheduler();
     enum { CHUNK = 8 };
     const int n = CHUNK < m_count ? CHUNK : m_count;
 
@@ -206,14 +205,14 @@ struct TestTaskDependence {
       const int increment = ( m_count + n - 1 ) / n;
 
       future_type f =
-        m_sched.when_all( n , [this,increment]( int i ) {
+        sched.when_all( n , [this,&member,increment]( int i ) {
           const long inc   = increment ;
           const long begin = i * inc ;
           const long count = begin + inc < m_count ? inc : m_count - begin ;
 
           return Kokkos::task_spawn
-            ( Kokkos::TaskSingle( m_sched )
-            , TestTaskDependence( count, m_sched, m_accum ) );
+            ( Kokkos::TaskSingle( member.scheduler() )
+            , TestTaskDependence( count, m_accum ) );
         });
 
       m_count = 0;
@@ -244,7 +243,7 @@ struct TestTaskDependence {
 
     typename accum_type::HostMirror host_accum = Kokkos::create_mirror_view( accum );
 
-    Kokkos::host_spawn( Kokkos::TaskSingle( sched ), TestTaskDependence( n, sched, accum ) );
+    Kokkos::host_spawn( Kokkos::TaskSingle( sched ), TestTaskDependence( n, accum ) );
 
     Kokkos::wait( sched );
 
@@ -654,14 +653,29 @@ TEST_F( TEST_CATEGORY, task_fib )
 {
   const int N = 27 ;
   for ( int i = 0; i < N; ++i ) {
-    TestTaskScheduler::TestFib< TEST_EXECSPACE >::run( i , ( i + 1 ) * ( i + 1 ) * 2000 );
+    TestTaskScheduler::TestFib< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 2000 );
+  }
+}
+
+TEST_F( TEST_CATEGORY, task_fib_multiple )
+{
+  const int N = 27 ;
+  for ( int i = 0; i < N; ++i ) {
+    TestTaskScheduler::TestFib< Kokkos::TaskSchedulerMultiple<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 2000 );
   }
 }
 
 TEST_F( TEST_CATEGORY, task_depend )
 {
   for ( int i = 0; i < 25; ++i ) {
-    TestTaskScheduler::TestTaskDependence< TEST_EXECSPACE >::run( i );
+    TestTaskScheduler::TestTaskDependence< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run( i );
+  }
+}
+
+TEST_F( TEST_CATEGORY, task_depend_multiple )
+{
+  for ( int i = 0; i < 25; ++i ) {
+    TestTaskScheduler::TestTaskDependence< Kokkos::TaskSchedulerMultiple<TEST_EXECSPACE> >::run( i );
   }
 }
 

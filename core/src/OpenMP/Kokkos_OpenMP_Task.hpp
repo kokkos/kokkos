@@ -90,11 +90,9 @@ public:
     Kokkos::Impl::HostThreadTeamMember<execution_space>,
     scheduler_type
   >;
+  using memory_space = Kokkos::HostSpace ;
 
   enum : int { max_league_size = HostThreadTeamData::max_pool_members };
-
-  // Must specify memory space
-  using memory_space = Kokkos::HostSpace ;
 
   static
   void iff_single_thread_recursive_execute( scheduler_type const& scheduler ) {
@@ -168,8 +166,8 @@ public:
       , 0 /* thread local buffer */
     );
     assert(pool_size % team_size == 0);
-    auto* queue = scheduler.m_queue;
-    queue->initialize_team_queues(pool_size / team_size);
+    auto& queue = scheduler.queue();
+    queue.initialize_team_queues(pool_size / team_size);
 
 #pragma omp parallel num_threads(pool_size)
     {
@@ -185,9 +183,12 @@ public:
         member_type single_exec(scheduler, team_data_single);
         member_type team_exec(scheduler, self);
 
+        auto& team_queue = team_exec.scheduler().queue();
+
         // Loop until all queues are empty and no tasks in flight
 
         task_base_type * task = no_more_tasks_sentinel;
+
 
         do {
           // Each team lead attempts to acquire either a thread team task
@@ -202,27 +203,29 @@ public:
               if ( task != no_more_tasks_sentinel && task != end ) {
                 // team member #0 completes the previously executed task,
                 // completion may delete the task
-                queue->complete( task );
+                team_queue.complete( task );
               }
 
               // If 0 == m_ready_count then set task = 0
 
-              // DSH: This is where the end sentinel is assigned and thus where the
-              // multi-queue implementation would need to try work stealing and
-              // check for quiescence before exiting the loop
               // TODO shouldn't this be just an atomic load acquire?  This isn't potentially device code...
-              if( *((volatile int *) & queue->m_ready_count) > 0 ) {
+              if( *((volatile int *) & team_queue.m_ready_count) > 0 ) {
                 task = end;
+                // Attempt to acquire a task
+                // Loop by priority and then type
+                for ( int i = 0 ; i < queue_type::NumQueue && end == task ; ++i ) {
+                  for ( int j = 0 ; j < 2 && end == task ; ++j ) {
+                    task = queue_type::pop_ready_task( & team_queue.m_ready[i][j] );
+                  }
+                }
               }
               else {
-                task = queue->attempt_to_steal_task();
-              }
-
-              // Attempt to acquire a task
-              // Loop by priority and then type
-              for ( int i = 0 ; i < queue_type::NumQueue && end == task ; ++i ) {
-                for ( int j = 0 ; j < 2 && end == task ; ++j ) {
-                  task = queue_type::pop_ready_task( & queue->m_ready[i][j] );
+                // returns nullptr if and only if all other queues have a ready
+                // count of 0 also. Otherwise, returns a task from another queue
+                // or `end` if one couldn't be popped
+                task = team_queue.attempt_to_steal_task();
+                if(task != no_more_tasks_sentinel && task != end) {
+                  std::printf("task stolen on rank %d\n", team_exec.league_rank());
                 }
               }
 
@@ -230,6 +233,9 @@ public:
               // and no task could be acquired
               // then continue this leader loop
               if(task == end) {
+                // this means that the ready task count was not zero, but we
+                // couldn't pop a task (because, for instance, someone else
+                // got there before us
                 leader_loop = true;
               }
               else if ( ( task != no_more_tasks_sentinel ) &&
