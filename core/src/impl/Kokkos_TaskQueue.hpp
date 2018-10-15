@@ -169,18 +169,6 @@ protected:
 
 public:
 
-//  // If and only if the execution space is a single thread
-//  // then execute ready tasks.
-//  KOKKOS_INLINE_FUNCTION
-//  void iff_single_thread_recursive_execute()
-//    {
-//#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-//      using specialization =
-//        TaskQueueSpecialization<BasicTaskScheduler<ExecSpace, TaskQueue>>;
-//      specialization::iff_single_thread_recursive_execute( this );
-//#endif
-//    }
-
   KOKKOS_INLINE_FUNCTION
   void initialize_team_queues(int pool_size) const noexcept { }
 

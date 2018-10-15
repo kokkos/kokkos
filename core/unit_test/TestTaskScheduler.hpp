@@ -259,18 +259,18 @@ struct TestTaskDependence {
 
 namespace TestTaskScheduler {
 
-template< class ExecSpace >
+template< class Scheduler >
 struct TestTaskTeam {
   //enum { SPAN = 8 };
   enum { SPAN = 33 };
   //enum { SPAN = 1 };
 
   typedef void                                value_type;
-  typedef Kokkos::TaskScheduler< ExecSpace >  sched_type;
-  typedef Kokkos::Future< ExecSpace >         future_type;
+  using sched_type = Scheduler;
+  using future_type = Kokkos::BasicFuture<void, sched_type>;
+  using ExecSpace = typename sched_type::execution_space;
   typedef Kokkos::View< long*, ExecSpace >    view_type;
 
-  sched_type   sched;
   future_type  future;
 
   view_type   parfor_result;
@@ -280,14 +280,12 @@ struct TestTaskTeam {
   const long  nvalue;
 
   KOKKOS_INLINE_FUNCTION
-  TestTaskTeam( const sched_type & arg_sched
-              , const view_type  & arg_parfor_result
+  TestTaskTeam( const view_type  & arg_parfor_result
               , const view_type  & arg_parreduce_check
               , const view_type  & arg_parscan_result
               , const view_type  & arg_parscan_check
               , const long         arg_nvalue )
-    : sched( arg_sched )
-    , future()
+    : future()
     , parfor_result( arg_parfor_result )
     , parreduce_check( arg_parreduce_check )
     , parscan_result( arg_parscan_result )
@@ -297,6 +295,7 @@ struct TestTaskTeam {
   KOKKOS_INLINE_FUNCTION
   void operator()( typename sched_type::member_type & member )
   {
+    auto& sched = member.scheduler();
     const long end   = nvalue + 1;
     // begin = max(end - SPAN, 0);
     const long begin = 0 < end - SPAN ? end - SPAN : 0;
@@ -304,8 +303,7 @@ struct TestTaskTeam {
     if ( 0 < begin && future.is_null() ) {
       if ( member.team_rank() == 0 ) {
         future = Kokkos::task_spawn( Kokkos::TaskTeam( sched )
-                                   , TestTaskTeam( sched
-                                                 , parfor_result
+                                   , TestTaskTeam( parfor_result
                                                  , parreduce_check
                                                  , parscan_result
                                                  , parscan_check
@@ -449,8 +447,7 @@ struct TestTaskTeam {
       host_parscan_check = Kokkos::create_mirror_view( root_parscan_check );
 
     future_type f = Kokkos::host_spawn( Kokkos::TaskTeam( root_sched )
-                                      , TestTaskTeam( root_sched
-                                                    , root_parfor_result
+                                      , TestTaskTeam( root_parfor_result
                                                     , root_parreduce_check
                                                     , root_parscan_result
                                                     , root_parscan_check
@@ -492,27 +489,25 @@ struct TestTaskTeam {
   }
 };
 
-template< class ExecSpace >
+template< class Scheduler >
 struct TestTaskTeamValue {
   enum { SPAN = 8 };
 
   typedef long                                     value_type;
-  typedef Kokkos::TaskScheduler< ExecSpace >       sched_type;
-  typedef Kokkos::Future< value_type, ExecSpace >  future_type;
+  using sched_type = Scheduler;
+  using future_type = Kokkos::BasicFuture< value_type, sched_type >;
+  using ExecSpace = typename sched_type::execution_space;
   typedef Kokkos::View< long*, ExecSpace >         view_type;
 
-  sched_type   sched;
   future_type  future;
 
   view_type   result;
   const long  nvalue;
 
   KOKKOS_INLINE_FUNCTION
-  TestTaskTeamValue( const sched_type & arg_sched
-                   , const view_type  & arg_result
+  TestTaskTeamValue( const view_type  & arg_result
                    , const long         arg_nvalue )
-    : sched( arg_sched )
-    , future()
+    : future()
     , result( arg_result )
     , nvalue( arg_nvalue ) {}
 
@@ -523,9 +518,11 @@ struct TestTaskTeamValue {
     const long end   = nvalue + 1;
     const long begin = 0 < end - SPAN ? end - SPAN : 0;
 
+    auto& sched = member.scheduler();
+
     if ( 0 < begin && future.is_null() ) {
       if ( member.team_rank() == 0 ) {
-        future = sched.task_spawn( TestTaskTeamValue( sched, result, begin - 1 )
+        future = sched.task_spawn( TestTaskTeamValue( result, begin - 1 )
                                  , Kokkos::TaskTeam );
 
         assert( !future.is_null() );
@@ -565,7 +562,7 @@ struct TestTaskTeamValue {
 
     typename view_type::HostMirror host_result = Kokkos::create_mirror_view( root_result );
 
-    future_type fv = root_sched.host_spawn( TestTaskTeamValue( root_sched, root_result, n )
+    future_type fv = root_sched.host_spawn( TestTaskTeamValue( root_result, n )
                                           , Kokkos::TaskTeam );
 
     Kokkos::wait( root_sched );
@@ -594,31 +591,30 @@ struct TestTaskTeamValue {
 
 namespace TestTaskScheduler {
 
-template< class Space >
+template< class Scheduler >
 struct TestTaskSpawnWithPool {
-  typedef Kokkos::TaskScheduler< Space >  sched_type;
-  typedef Kokkos::Future< Space >         future_type;
+  using sched_type = Scheduler;
+  using future_type = Kokkos::BasicFuture<void, sched_type>;
   typedef void                            value_type;
+  using Space = typename sched_type::execution_space;
 
-  sched_type   m_sched ;
   int  m_count ;
   Kokkos::MemoryPool<Space> m_pool ;
 
   KOKKOS_INLINE_FUNCTION
-  TestTaskSpawnWithPool( const sched_type & arg_sched
-               , const int & arg_count
-               , const Kokkos::MemoryPool<Space> & arg_pool
-               )
-    : m_sched( arg_sched )
-    , m_count( arg_count )
+  TestTaskSpawnWithPool(
+    const int & arg_count,
+    const Kokkos::MemoryPool<Space> & arg_pool
+  )
+    : m_count( arg_count )
     , m_pool( arg_pool )
     {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()( typename sched_type::member_type & )
+  void operator()( typename sched_type::member_type & member )
   {
     if ( m_count ) {
-      Kokkos::task_spawn( Kokkos::TaskSingle( m_sched ) , TestTaskSpawnWithPool( m_sched , m_count - 1, m_pool ) );
+      Kokkos::task_spawn( Kokkos::TaskSingle( member.scheduler() ) , TestTaskSpawnWithPool( m_count - 1, m_pool ) );
     }
   }
 
@@ -639,7 +635,7 @@ struct TestTaskSpawnWithPool {
 
     using other_memory_space = typename Space::memory_space;
     Kokkos::MemoryPool<Space> pool(other_memory_space(), 10000, 100, 200, 1000);
-    auto f = Kokkos::host_spawn( Kokkos::TaskSingle( sched ), TestTaskSpawnWithPool( sched, 3, pool ) );
+    auto f = Kokkos::host_spawn( Kokkos::TaskSingle( sched ), TestTaskSpawnWithPool( 3, pool ) );
 
     Kokkos::wait( sched );
   }
@@ -681,13 +677,24 @@ TEST_F( TEST_CATEGORY, task_depend_multiple )
 
 TEST_F( TEST_CATEGORY, task_team )
 {
-  TestTaskScheduler::TestTaskTeam< TEST_EXECSPACE >::run( 1000 );
+  TestTaskScheduler::TestTaskTeam< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run( 1000 );
+  //TestTaskScheduler::TestTaskTeamValue< TEST_EXECSPACE >::run( 1000 ); // Put back after testing.
+}
+
+TEST_F( TEST_CATEGORY, task_team_multiple )
+{
+  TestTaskScheduler::TestTaskTeam< Kokkos::TaskSchedulerMultiple<TEST_EXECSPACE> >::run( 1000 );
   //TestTaskScheduler::TestTaskTeamValue< TEST_EXECSPACE >::run( 1000 ); // Put back after testing.
 }
 
 TEST_F( TEST_CATEGORY, task_with_mempool )
 {
-  TestTaskScheduler::TestTaskSpawnWithPool< TEST_EXECSPACE >::run();
+  TestTaskScheduler::TestTaskSpawnWithPool< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run();
+}
+
+TEST_F( TEST_CATEGORY, task_with_mempool_multiple )
+{
+  TestTaskScheduler::TestTaskSpawnWithPool< Kokkos::TaskSchedulerMultiple<TEST_EXECSPACE> >::run();
 }
 
 }
