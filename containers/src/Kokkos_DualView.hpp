@@ -96,6 +96,7 @@ template< class DataType ,
           class Arg3Type = void>
 class DualView : public ViewTraits< DataType , Arg1Type , Arg2Type, Arg3Type >
 {
+template< class , class , class , class > friend class DualView ;
 public:
   //! \name Typedefs for device types and various Kokkos::View specializations.
   //@{
@@ -183,7 +184,7 @@ public:
   //@{
 
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE
-private:
+protected:
   // modified_flags[0] -> host
   // modified_flags[1] -> device
   typedef View<unsigned int[2],LayoutLeft,Kokkos::HostSpace> t_modified_flags;
