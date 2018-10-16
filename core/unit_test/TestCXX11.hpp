@@ -216,7 +216,7 @@ template< class DeviceType, bool PWRTest >
 double ReduceTestFunctor() {
   typedef Kokkos::TeamPolicy< DeviceType > policy_type;
   typedef Kokkos::View< double**, DeviceType > view_type;
-  typedef Kokkos::View< double, typename view_type::host_mirror_space, Kokkos::MemoryUnmanaged > unmanaged_result;
+  typedef Kokkos::View< double, Kokkos::HostSpace, Kokkos::MemoryUnmanaged > unmanaged_result;
 
   view_type a( "A", 100, 5 );
   typename view_type::HostMirror h_a = Kokkos::create_mirror_view( a );
@@ -244,7 +244,7 @@ template< class DeviceType, bool PWRTest >
 double ReduceTestLambda() {
   typedef Kokkos::TeamPolicy< DeviceType > policy_type;
   typedef Kokkos::View< double**, DeviceType > view_type;
-  typedef Kokkos::View< double, typename view_type::host_mirror_space, Kokkos::MemoryUnmanaged > unmanaged_result;
+  typedef Kokkos::View< double, Kokkos::HostSpace, Kokkos::MemoryUnmanaged > unmanaged_result;
 
   view_type a( "A", 100, 5 );
   typename view_type::HostMirror h_a = Kokkos::create_mirror_view( a );
