@@ -404,7 +404,11 @@ public:
         "Template parameter to .sync() must exactly match one of the DualView's device types or one of the execution or memory spaces");
     #endif
 
+    #ifndef KOKKOS_ENABLE_DEPRECATED_CODE
     int dev = -1;
+    #else
+    int dev = 0;
+    #endif
     if(device_is_t_dev_device) dev = 1;
     else if(device_is_t_host_device) dev = 0;
     else {
