@@ -72,6 +72,7 @@ mkdir:
 	mkdir -p $(PREFIX)/bin
 	mkdir -p $(PREFIX)/include
 	mkdir -p $(PREFIX)/lib
+	mkdir -p $(PREFIX)/lib/pkgconfig
 	mkdir -p $(PREFIX)/include/impl
 
 copy-cuda: mkdir
@@ -100,8 +101,9 @@ install: mkdir $(CONDITIONAL_COPIES) build-lib generate_build_settings
 	$(CP) $(COPY_FLAG) $(KOKKOS_HEADERS_INCLUDE_IMPL) $(PREFIX)/include/impl
 	$(CP) $(COPY_FLAG) $(KOKKOS_MAKEFILE)  $(PREFIX)
 	$(CP) $(COPY_FLAG) $(KOKKOS_CMAKEFILE)  $(PREFIX)
+	$(CP) $(COPY_FLAG) $(KOKKOS_PKGCONFIG)  $(PREFIX)/lib/pkgconfig
 	$(CP) $(COPY_FLAG) libkokkos.a $(PREFIX)/lib
 	$(CP) $(COPY_FLAG) $(KOKKOS_CONFIG_HEADER) $(PREFIX)/include
 
 clean: kokkos-clean
-	rm -f $(KOKKOS_MAKEFILE) $(KOKKOS_CMAKEFILE) 
+	rm -f $(KOKKOS_MAKEFILE) $(KOKKOS_CMAKEFILE) $(KOKKOS_PKGCONFIG) 
