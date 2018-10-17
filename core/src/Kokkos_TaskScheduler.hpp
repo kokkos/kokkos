@@ -114,12 +114,18 @@ public:
 
   //----------------------------------------
 
+  KOKKOS_INLINE_FUNCTION
   Scheduler const& scheduler() const noexcept { return m_scheduler; }
+
+  KOKKOS_INLINE_FUNCTION
   Scheduler& scheduler() noexcept { return m_scheduler; }
 
   //----------------------------------------
 
 };
+
+template <class, class>
+class TaskExec;
 
 } // end namespace Impl
 
@@ -155,6 +161,8 @@ private:
   friend class Impl::TaskQueueSpecializationConstrained;
   template <typename, typename>
   friend class Impl::TaskTeamMemberAdapter;
+  template <typename, typename>
+  friend class Impl::TaskExec;
 
   //----------------------------------------
 
@@ -172,7 +180,8 @@ private:
     return { m_track, &m_queue->get_team_queue(team_rank) };
   }
 
-  queue_type& queue() const {
+  KOKKOS_INLINE_FUNCTION
+  constexpr queue_type& queue() const noexcept {
     return *m_queue;
   }
 
@@ -706,13 +715,14 @@ task_spawn( Impl::TaskPolicyData<TaskEnum,DepFutureType> const & arg_policy
   using task_type =
     Impl::Task<scheduler_type, typename FunctorType::value_type, FunctorType>;
 
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST ) && \
-    defined( KOKKOS_ENABLE_CUDA )
+  // TODO figure out why this is here...
+// #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST ) && \
+//     defined( KOKKOS_ENABLE_CUDA )
 
-  static_assert( ! std::is_same< Kokkos::Cuda , exec_space >::value
-               , "Error calling Kokkos::task_spawn for Cuda space within Host code" );
+//   static_assert( ! std::is_same< Kokkos::Cuda , exec_space >::value
+//                , "Error calling Kokkos::task_spawn for Cuda space within Host code" );
 
-#endif
+// #endif
 
   static_assert( TaskEnum == task_type::TaskTeam ||
                  TaskEnum == task_type::TaskSingle

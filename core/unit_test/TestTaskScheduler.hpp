@@ -310,7 +310,7 @@ struct TestTaskTeam {
                                                  , begin - 1 )
                                    );
 
-        #ifndef __HCC_ACCELERATOR__
+        #if !defined(__HCC_ACCELERATOR__) && !defined(__CUDA_ARCH__)
         assert( !future.is_null() );
         #endif
 
@@ -525,7 +525,9 @@ struct TestTaskTeamValue {
         future = sched.task_spawn( TestTaskTeamValue( result, begin - 1 )
                                  , Kokkos::TaskTeam );
 
+        #if !defined(__HCC_ACCELERATOR__) && !defined(__CUDA_ARCH__)
         assert( !future.is_null() );
+        #endif
 
         sched.respawn( this , future );
       }
@@ -665,6 +667,7 @@ TEST_F( TEST_CATEGORY, task_depend )
 {
   for ( int i = 0; i < 25; ++i ) {
     TestTaskScheduler::TestTaskDependence< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run( i );
+    printf("task_depend(%d) finished\n", i);
   }
 }
 

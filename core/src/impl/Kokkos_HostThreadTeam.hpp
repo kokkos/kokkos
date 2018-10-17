@@ -804,7 +804,7 @@ KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct<iType, Member>
 TeamThreadRange( Member const & member, iType const & count,
   typename std::enable_if<
-    Impl::is_host_thread_team_member<Member>::value
+    Impl::is_thread_team_member<Member>::value
   >::type const** = nullptr
 )
 {
@@ -823,7 +823,7 @@ TeamThreadRange(
   iType1 const & begin,
   iType2 const & end,
   typename std::enable_if<
-    Impl::is_host_thread_team_member<Member>::value
+    Impl::is_thread_team_member<Member>::value
   >::type const** = nullptr
 )
 {
@@ -840,7 +840,7 @@ ThreadVectorRange(
   Member const & member,
   iType const & count,
   typename std::enable_if<
-    Impl::is_host_thread_team_member<Member>::value
+    Impl::is_thread_team_member<Member>::value
   >::type const** = nullptr
 )
 {
@@ -855,7 +855,7 @@ ThreadVectorRange(
   iType const & arg_begin,
   iType const & arg_end,
   typename std::enable_if<
-    Impl::is_host_thread_team_member<Member>::value
+    Impl::is_thread_team_member<Member>::value
   >::type const** = nullptr
 )
 {
@@ -1130,47 +1130,65 @@ parallel_scan
 
 //----------------------------------------------------------------------------
 
-template< class Space >
+template< class Member >
 KOKKOS_INLINE_FUNCTION
-Impl::ThreadSingleStruct<Impl::HostThreadTeamMember<Space> >
-PerTeam(const Impl::HostThreadTeamMember<Space> & member )
+Impl::ThreadSingleStruct<Member>
+PerTeam(
+  Member const& member,
+  typename std::enable_if<Impl::is_thread_team_member<Member>::value>::type const** = nullptr
+)
 {
-  return Impl::ThreadSingleStruct<Impl::HostThreadTeamMember<Space> >(member);
+  return Impl::ThreadSingleStruct<Member>(member);
 }
 
-template< class Space >
+template< class Member >
 KOKKOS_INLINE_FUNCTION
-Impl::VectorSingleStruct<Impl::HostThreadTeamMember<Space> >
-PerThread(const Impl::HostThreadTeamMember<Space> & member)
+Impl::VectorSingleStruct<Member>
+PerThread(
+  Member const& member,
+  typename std::enable_if<Impl::is_thread_team_member<Member>::value>::type const** = nullptr
+)
 {
-  return Impl::VectorSingleStruct<Impl::HostThreadTeamMember<Space> >(member);
+  return Impl::VectorSingleStruct<Member>(member);
 }
 
-template< class Space , class FunctorType >
+template< class Member , class FunctorType >
 KOKKOS_INLINE_FUNCTION
-void single( const Impl::ThreadSingleStruct< Impl::HostThreadTeamMember<Space> > & single , const FunctorType & functor )
+typename std::enable_if<
+  Impl::is_host_thread_team_member<Member>::value
+>::type
+single( const Impl::ThreadSingleStruct<Member> & single , const FunctorType & functor )
 {
   // 'single' does not perform a barrier.
   if ( single.team_member.team_rank() == 0 ) functor();
 }
 
-template< class Space , class FunctorType , typename ValueType >
+template< class Member, class FunctorType , typename ValueType >
 KOKKOS_INLINE_FUNCTION
-void single( const Impl::ThreadSingleStruct< Impl::HostThreadTeamMember<Space> > & single , const FunctorType & functor , ValueType & val )
+typename std::enable_if<
+  Impl::is_host_thread_team_member<Member>::value
+>::type
+single( const Impl::ThreadSingleStruct<Member> & single , const FunctorType & functor , ValueType & val )
 {
   single.team_member.team_broadcast( functor , val , 0 );
 }
 
-template< class Space , class FunctorType >
+template< class Member, class FunctorType >
 KOKKOS_INLINE_FUNCTION
-void single( const Impl::VectorSingleStruct< Impl::HostThreadTeamMember<Space> > & , const FunctorType & functor )
+typename std::enable_if<
+  Impl::is_host_thread_team_member<Member>::value
+>::type
+single( const Impl::VectorSingleStruct<Member> & , const FunctorType & functor )
 {
   functor();
 }
 
-template< class Space , class FunctorType , typename ValueType >
+template< class Member, class FunctorType , typename ValueType >
 KOKKOS_INLINE_FUNCTION
-void single( const Impl::VectorSingleStruct< Impl::HostThreadTeamMember<Space> > & , const FunctorType & functor , ValueType & val )
+typename std::enable_if<
+  Impl::is_host_thread_team_member<Member>::value
+>::type
+single( const Impl::VectorSingleStruct<Member> & , const FunctorType & functor , ValueType & val )
 {
   functor(val);
 }

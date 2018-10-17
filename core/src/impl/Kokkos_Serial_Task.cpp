@@ -55,6 +55,8 @@
 namespace Kokkos {
 namespace Impl {
 
+template class TaskQueue<Kokkos::Serial>;
+
 }} /* namespace Kokkos::Impl */
 
 #else

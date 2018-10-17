@@ -61,6 +61,7 @@
 
 #include <impl/Kokkos_Memory_Fence.hpp>
 #include <impl/Kokkos_Atomic_Increment.hpp>
+#include <impl/Kokkos_Atomic_Decrement.hpp>
 
 #include <string>
 #include <typeinfo>
@@ -100,7 +101,6 @@ public:
 
   using team_queue_type = TaskQueueMultiple;
 
-  KOKKOS_INLINE_FUNCTION
   TaskQueueMultiple(
     int arg_league_rank,
     queue_collection_t* arg_other_queues,
@@ -111,7 +111,6 @@ public:
       m_other_queues(arg_other_queues)
   { }
 
-  KOKKOS_INLINE_FUNCTION
   explicit TaskQueueMultiple(
     typename base_t::memory_pool const& arg_memory_pool
   )
@@ -132,7 +131,6 @@ public:
 
   //----------------------------------------
 
-  KOKKOS_INLINE_FUNCTION
   void initialize_team_queues(int arg_league_size) const noexcept {
     m_other_queues->initialize_team_queues(arg_league_size, this->m_memory);
   }
@@ -149,6 +147,10 @@ public:
     TaskBase* rv = nullptr;
     auto* const end_tag = reinterpret_cast<TaskBase*>(TaskBase::EndTag);
 
+    if (m_other_queues == nullptr) {
+      Kokkos::abort("attempted to steal task before queues were initialized!");
+    }
+
     // Loop by priority and then type, and then team
     for ( int i = 0 ; i < base_t::NumQueue; ++i ) {
       for ( int j = 0 ; j < 2; ++j ) {
@@ -161,7 +163,14 @@ public:
             // pop something off of it we shouldn't return a nullptr indicating
             // completion.  rv will be end_tag when the pop fails
             rv = base_t::pop_ready_task(&steal_from.m_ready[i][j]);
-            if(rv != end_tag) return rv;
+            if(rv != end_tag) {
+              // task stolen.
+              // first increment our ready count, then decrement the ready count
+              // on the other queue:
+              Kokkos::atomic_increment(&this->m_ready_count);
+              Kokkos::atomic_decrement(&steal_from.m_ready_count);
+              return rv;
+            }
           }
         }
       }
@@ -227,7 +236,6 @@ public:
       m_size(1)
   { }
 
-  KOKKOS_INLINE_FUNCTION
   void initialize_team_queues(
     int arg_count, memory_pool const& arg_memory_pool
   ) noexcept
@@ -251,9 +259,11 @@ public:
   KOKKOS_INLINE_FUNCTION
   team_queue_type& get_team_queue(int iteam) {
     iteam %= max_num_queues;
+    #if !defined(__HCC_ACCELERATOR__) && !defined(__CUDA_ARCH__)
     assert(initialized());
     assert(iteam < m_size);
     assert(iteam >= 0);
+    #endif
     if(iteam == 0) return *m_rank_zero_queue;
     else return m_queues[iteam-1].initialized;
   }

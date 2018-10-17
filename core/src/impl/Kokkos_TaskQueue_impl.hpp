@@ -41,6 +41,8 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_TASKQUEUE_IMPL_HPP
+#define KOKKOS_IMPL_TASKQUEUE_IMPL_HPP
 #include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_TASKDAG )
 
@@ -680,4 +682,5 @@ void TaskQueue< ExecSpace, MemorySpace>::complete
 } /* namespace Kokkos */
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
+#endif /* #ifndef KOKKOS_IMPL_TASKQUEUE_IMPL_HPP */
 

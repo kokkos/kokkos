@@ -71,26 +71,32 @@ class TaskQueueSpecializationConstrained<
 {
 public:
 
+  // Note: Scheduler may be an incomplete type at class scope (but not inside
+  // of the methods, obviously)
+
   using execution_space = Kokkos::Serial;
   using memory_space = Kokkos::HostSpace;
   using scheduler_type = Scheduler;
-  using queue_type = typename scheduler_type::queue_type;
-  using task_base_type = typename scheduler_type::task_base;
   using member_type = TaskTeamMemberAdapter<
     HostThreadTeamMember<Kokkos::Serial>, scheduler_type
   >;
 
   static
-  void iff_single_thread_recursive_execute( queue_type * const queue ) {
+  void iff_single_thread_recursive_execute(scheduler_type const& scheduler) {
+    using task_base_type = TaskBase;
+    using queue_type = typename scheduler_type::queue_type;
+
     task_base_type * const end = (task_base_type *) task_base_type::EndTag ;
 
     Impl::HostThreadTeamData * const data = Impl::serial_get_thread_team_data();
 
-    member_type exec( *data );
+    member_type exec( scheduler, *data );
 
     // Loop until no runnable task
 
     task_base_type * task = end ;
+
+    auto* const queue = scheduler.m_queue;
 
     do {
 
@@ -115,6 +121,9 @@ public:
   static
   void execute(scheduler_type const& scheduler)
   {
+    using task_base_type = TaskBase;
+    using queue_type = typename scheduler_type::queue_type;
+
     task_base_type * const end = (task_base_type *) task_base_type::EndTag ;
 
     // Set default buffers
@@ -129,7 +138,7 @@ public:
 
     Impl::HostThreadTeamData * const data = Impl::serial_get_thread_team_data();
 
-    member_type exec( *data );
+    member_type exec( scheduler, *data );
 
     // Loop until all queues are empty
     while ( 0 < queue->m_ready_count ) {

@@ -591,8 +591,13 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 
   ifeq ($(KOKKOS_INTERNAL_CUDA_USE_RELOC), 1)
     tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE")
-    KOKKOS_CXXFLAGS += --relocatable-device-code=true
-    KOKKOS_LDFLAGS += --relocatable-device-code=true
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+      KOKKOS_CXXFLAGS += -fcuda-rdc
+      KOKKOS_LDFLAGS += -fcuda-rdc
+    else
+      KOKKOS_CXXFLAGS += --relocatable-device-code=true
+      KOKKOS_LDFLAGS += --relocatable-device-code=true
+    endif
   endif
 
   ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)

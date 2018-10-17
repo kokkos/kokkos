@@ -50,6 +50,13 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#include <Kokkos_Core_fwd.hpp>
+
+#include <impl/Kokkos_TaskBase.hpp>
+#include <Cuda/Kokkos_Cuda_Error.hpp> // CUDA_SAFE_CALL
+
+//----------------------------------------------------------------------------
+
 namespace Kokkos {
 namespace Impl {
 namespace {
@@ -57,31 +64,227 @@ namespace {
 template< typename TaskType >
 __global__
 void set_cuda_task_base_apply_function_pointer
-  ( TaskBase::function_type * ptr )
+  ( Kokkos::Impl::TaskBase::function_type * ptr )
 { *ptr = TaskType::apply ; }
+
+template< typename Scheduler >
+__global__
+void cuda_task_queue_execute( Scheduler scheduler, int32_t shmem_size ) {
+  TaskQueueSpecialization< Scheduler >::driver( std::move(scheduler) , shmem_size );
+}
 
 }
 
-template< class > class TaskExec ;
+template <class, class> class TaskExec ;
 
-template<>
-class TaskQueueSpecialization< Kokkos::Cuda >
+template<class Scheduler>
+class TaskQueueSpecializationConstrained<
+  Scheduler,
+  typename std::enable_if<
+    std::is_same<typename Scheduler::execution_space, Kokkos::Cuda>::value
+  >::type
+>
 {
 public:
 
-  using execution_space = Kokkos::Cuda ;
-  using memory_space    = Kokkos::CudaUVMSpace ;
-  using queue_type      = TaskQueue< execution_space > ;
-  using member_type     = TaskExec< Kokkos::Cuda > ;
+  using scheduler_type = Scheduler;
+  using execution_space = Kokkos::Cuda;
+  using memory_space = Kokkos::CudaUVMSpace;
+  using member_type = TaskExec<Kokkos::Cuda, Scheduler> ;
 
+  KOKKOS_INLINE_FUNCTION
   static
-  void iff_single_thread_recursive_execute( queue_type * const ) {}
+  void iff_single_thread_recursive_execute( scheduler_type const& ) {}
 
   __device__
-  static void driver( queue_type * const , int32_t );
+  static void driver(scheduler_type scheduler, int32_t shmem_per_warp)
+  {
+    using queue_type = typename scheduler_type::queue_type;
+    using task_root_type = TaskBase;
+
+    extern __shared__ int32_t shmem_all[];
+
+    task_root_type* const end = (task_root_type *) task_root_type::EndTag ;
+    task_root_type* const no_more_tasks_sentinel = nullptr;
+
+    int32_t * const warp_shmem =
+      shmem_all + ( threadIdx.z * shmem_per_warp ) / sizeof(int32_t);
+
+    task_root_type * const task_shmem = (task_root_type *) warp_shmem ;
+
+    const int warp_lane = threadIdx.x + threadIdx.y * blockDim.x ;
+
+    member_type single_exec(scheduler, warp_shmem, 1);
+    member_type team_exec(scheduler, warp_shmem, blockDim.y);
+
+    auto& team_queue = team_exec.scheduler().queue();
+
+    task_root_type * task_ptr = no_more_tasks_sentinel;
+
+    // Loop until all queues are empty and no tasks in flight
+
+    do {
+
+      // Each team lead attempts to acquire either a thread team task
+      // or collection of single thread tasks for the team.
+
+      if ( 0 == warp_lane ) {
+
+        if( *((volatile int *) & team_queue.m_ready_count) > 0 ) {
+          task_ptr = end;
+          // Attempt to acquire a task
+          // Loop by priority and then type
+          for ( int i = 0 ; i < queue_type::NumQueue && end == task_ptr ; ++i ) {
+            for ( int j = 0 ; j < 2 && end == task_ptr ; ++j ) {
+              task_ptr = queue_type::pop_ready_task( & team_queue.m_ready[i][j] );
+            }
+          }
+        }
+        else {
+          // returns nullptr if and only if all other queues have a ready
+          // count of 0 also. Otherwise, returns a task from another queue
+          // or `end` if one couldn't be popped
+          task_ptr = team_queue.attempt_to_steal_task();
+          #if 0
+          if(task != no_more_tasks_sentinel && task != end) {
+            std::printf("task stolen on rank %d\n", team_exec.league_rank());
+          }
+          #endif
+        }
+
+  #if 0
+  printf("TaskQueue<Cuda>::driver(%d,%d) task(%lx)\n",threadIdx.z,blockIdx.x
+        , uintptr_t(task_ptr));
+  #endif
+
+      }
+
+      // Synchronize warp with memory fence before broadcasting task pointer:
+
+      // KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN( "A" );
+      KOKKOS_IMPL_CUDA_SYNCWARP ;
+
+      // Broadcast task pointer:
+
+      ((int*) & task_ptr )[0] = KOKKOS_IMPL_CUDA_SHFL( ((int*) & task_ptr )[0] , 0 , 32 );
+      ((int*) & task_ptr )[1] = KOKKOS_IMPL_CUDA_SHFL( ((int*) & task_ptr )[1] , 0 , 32 );
+
+  #if defined( KOKKOS_DEBUG )
+      KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN( "TaskQueue CUDA task_ptr" );
+  #endif
+
+      if ( 0 == task_ptr ) break ; // 0 == queue->m_ready_count
+
+      if ( end != task_ptr ) {
+        queue_type* const task_queue =
+          static_cast<scheduler_type const*>( task_ptr->m_scheduler )->m_queue;
+        if(task_queue != &team_queue) {
+          Kokkos::abort("task is in the wrong queue!");
+        }  
+
+        // Whole warp copy task's closure to/from shared memory.
+        // Use all threads of warp for coalesced read/write.
+
+        int32_t const b = sizeof(task_root_type) / sizeof(int32_t);
+        int32_t const e = *((int32_t volatile *)( & task_ptr->m_alloc_size )) / sizeof(int32_t);
+
+        int32_t volatile * const task_mem = (int32_t volatile *) task_ptr ;
+
+        // copy task closure from global to shared memory:
+
+        for ( int32_t i = warp_lane ; i < e ; i += CudaTraits::WarpSize ) {
+          warp_shmem[i] = task_mem[i] ;
+        }
+
+        // Synchronize threads of the warp and insure memory
+        // writes are visible to all threads in the warp.
+
+        // KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN( "B" );
+        KOKKOS_IMPL_CUDA_SYNCWARP ;
+
+        if ( task_root_type::TaskTeam == task_shmem->m_task_type ) {
+          // Thread Team Task
+          (*task_shmem->m_apply)( task_shmem , & team_exec );
+        }
+        else if ( 0 == threadIdx.y ) {
+          // Single Thread Task
+          (*task_shmem->m_apply)( task_shmem , & single_exec );
+        }
+
+        // Synchronize threads of the warp and insure memory
+        // writes are visible to all threads in the warp.
+
+        // KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN( "C" );
+        KOKKOS_IMPL_CUDA_SYNCWARP ;
+
+        // copy task closure from shared to global memory:
+
+        for ( int32_t i = b + warp_lane ; i < e ; i += CudaTraits::WarpSize ) {
+          task_mem[i] = warp_shmem[i] ;
+        }
+
+        // Synchronize threads of the warp and insure memory
+        // writes are visible to root thread of the warp for
+        // respawn or completion.
+
+        // KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN( "D" );
+        KOKKOS_IMPL_CUDA_SYNCWARP ;
+
+        // If respawn requested copy respawn data back to main memory
+
+        if ( 0 == warp_lane ) {
+
+          if ( ((task_root_type *) task_root_type::LockTag) != task_shmem->m_next ) {
+            ( (volatile task_root_type *) task_ptr )->m_next = task_shmem->m_next ;
+            ( (volatile task_root_type *) task_ptr )->m_priority = task_shmem->m_priority ;
+          }
+
+          team_queue.complete( task_ptr );
+        }
+      }
+    } while(1);
+  }
 
   static
-  void execute( queue_type * const );
+  void execute(scheduler_type const& scheduler)
+  {
+    const int shared_per_warp = 2048 ;
+    const int warps_per_block = 4 ;
+    //const dim3 grid( Kokkos::Impl::cuda_internal_multiprocessor_count() , 1 , 1 );
+    const dim3 grid( 1 , 1 , 1 );
+    const dim3 block( 1 , Kokkos::Impl::CudaTraits::WarpSize , warps_per_block );
+    const int shared_total = shared_per_warp * warps_per_block ;
+    const cudaStream_t stream = 0 ;
+
+    auto& queue = scheduler.queue();
+    queue.initialize_team_queues(warps_per_block);
+
+    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+
+    // Query the stack size, in bytes:
+
+    size_t previous_stack_size = 0 ;
+    CUDA_SAFE_CALL( cudaDeviceGetLimit( & previous_stack_size , cudaLimitStackSize ) );
+
+    // If not large enough then set the stack size, in bytes:
+
+    const size_t larger_stack_size = 2048 ;
+
+    if ( previous_stack_size < larger_stack_size ) {
+      CUDA_SAFE_CALL( cudaDeviceSetLimit( cudaLimitStackSize , larger_stack_size ) );
+    }
+
+    cuda_task_queue_execute<<< grid , block , shared_total , stream >>>( scheduler , shared_per_warp );
+
+    CUDA_SAFE_CALL( cudaGetLastError() );
+
+    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+
+    if ( previous_stack_size < larger_stack_size ) {
+      CUDA_SAFE_CALL( cudaDeviceSetLimit( cudaLimitStackSize , previous_stack_size ) );
+    }
+
+  }
 
   template< typename TaskType >
   static
@@ -136,8 +339,8 @@ namespace Impl {
  *  When executing a single thread task the syncwarp or other
  *  warp synchronizing functions must not be called.
  */
-template<>
-class TaskExec< Kokkos::Cuda >
+template <class Scheduler>
+class TaskExec<Kokkos::Cuda, Scheduler>
 {
 private:
 
@@ -149,23 +352,35 @@ private:
   TaskExec & operator = ( TaskExec const & ) = delete ;
 
   friend class Kokkos::Impl::TaskQueue< Kokkos::Cuda > ;
-  friend class Kokkos::Impl::TaskQueueSpecialization< Kokkos::Cuda > ;
+  template <class, class>
+  friend class Kokkos::Impl::TaskQueueSpecializationConstrained;
 
   int32_t * m_team_shmem ;
   const int m_team_size ;
+  Scheduler m_scheduler;
 
   // If constructed with arg_team_size == 1 the object
   // can only be used by 0 == threadIdx.y.
-  __device__
-  TaskExec( int32_t * arg_team_shmem , int arg_team_size = blockDim.y )
-    : m_team_shmem( arg_team_shmem )
-    , m_team_size( arg_team_size ) {}
+  KOKKOS_INLINE_FUNCTION
+  TaskExec(
+    Scheduler const& parent_scheduler,
+    int32_t* arg_team_shmem,
+    int arg_team_size = blockDim.y
+  )
+    : m_team_shmem(arg_team_shmem),
+      m_team_size(arg_team_size),
+      m_scheduler(parent_scheduler.get_team_scheduler(league_rank()))
+  { }
 
 public:
 
+  using thread_team_member = TaskExec;
+
 #if defined( __CUDA_ARCH__ )
-  __device__ int  team_rank() const { return threadIdx.y ; }
-  __device__ int  team_size() const { return m_team_size ; }
+  __device__ int team_rank() const { return threadIdx.y ; }
+  __device__ int team_size() const { return m_team_size ; }
+  __device__ int league_rank() const { return threadIdx.z; }
+  __device__ int league_size() const { return blockDim.z; }
 
   __device__ void team_barrier() const
     {
@@ -186,12 +401,17 @@ public:
     }
 
 #else
-  __host__ int  team_rank() const { return 0 ; }
-  __host__ int  team_size() const { return 0 ; }
+  __host__ int team_rank() const { return 0 ; }
+  __host__ int team_size() const { return 0 ; }
+  __host__ int league_rank() const { return 0; }
+  __host__ int league_size() const { return 0; }
   __host__ void team_barrier() const {}
   template< class ValueType >
   __host__ void team_broadcast( ValueType & , const int ) const {}
 #endif
+
+  KOKKOS_INLINE_FUNCTION Scheduler const& scheduler() const noexcept { return m_scheduler; }
+  KOKKOS_INLINE_FUNCTION Scheduler& scheduler() noexcept { return m_scheduler; }
 
 };
 
@@ -203,20 +423,22 @@ public:
 namespace Kokkos {
 namespace Impl {
 
-template<typename iType>
-struct TeamThreadRangeBoundariesStruct<iType, TaskExec< Kokkos::Cuda > >
+template<typename iType, typename Scheduler>
+struct TeamThreadRangeBoundariesStruct<iType, TaskExec<Kokkos::Cuda, Scheduler>>
 {
-  typedef iType index_type;
+  using index_type = iType;
+  using member_type = TaskExec<Kokkos::Cuda, Scheduler>;
+
   const iType start ;
   const iType end ;
   const iType increment ;
-  const TaskExec< Kokkos::Cuda > & thread;
+  member_type const& thread;
 
 #if defined( __CUDA_ARCH__ )
 
   __device__ inline
   TeamThreadRangeBoundariesStruct
-    ( const TaskExec< Kokkos::Cuda > & arg_thread, const iType& arg_count)
+    ( member_type const& arg_thread, const iType& arg_count)
     : start( threadIdx.y )
     , end(arg_count)
     , increment( blockDim.y )
@@ -225,7 +447,7 @@ struct TeamThreadRangeBoundariesStruct<iType, TaskExec< Kokkos::Cuda > >
 
   __device__ inline
   TeamThreadRangeBoundariesStruct
-    ( const TaskExec< Kokkos::Cuda > & arg_thread
+    ( member_type const& arg_thread
     , const iType & arg_start
     , const iType & arg_end
     )
@@ -238,10 +460,10 @@ struct TeamThreadRangeBoundariesStruct<iType, TaskExec< Kokkos::Cuda > >
 #else
 
   TeamThreadRangeBoundariesStruct
-    ( const TaskExec< Kokkos::Cuda > & arg_thread, const iType& arg_count);
+    ( member_type const& arg_thread, const iType& arg_count);
 
   TeamThreadRangeBoundariesStruct
-    ( const TaskExec< Kokkos::Cuda > & arg_thread
+    ( member_type const& arg_thread
     , const iType & arg_start
     , const iType & arg_end
     );
@@ -252,20 +474,22 @@ struct TeamThreadRangeBoundariesStruct<iType, TaskExec< Kokkos::Cuda > >
 
 //----------------------------------------------------------------------------
 
-template<typename iType>
-struct ThreadVectorRangeBoundariesStruct<iType, TaskExec< Kokkos::Cuda > >
+template<typename iType, typename Scheduler>
+struct ThreadVectorRangeBoundariesStruct<iType, TaskExec< Kokkos::Cuda, Scheduler > >
 {
-  typedef iType index_type;
+  using index_type = iType;
+  using member_type = TaskExec<Kokkos::Cuda, Scheduler>;
+
   const index_type start ;
   const index_type end ;
   const index_type increment ;
-  const TaskExec< Kokkos::Cuda > & thread;
+  const member_type& thread;
 
 #if defined( __CUDA_ARCH__ )
 
   __device__ inline
   ThreadVectorRangeBoundariesStruct
-    ( const TaskExec< Kokkos::Cuda > & arg_thread, const index_type& arg_count )
+    ( member_type const& arg_thread, const index_type& arg_count )
     : start( threadIdx.x )
     , end(arg_count)
     , increment( blockDim.x )
@@ -274,9 +498,9 @@ struct ThreadVectorRangeBoundariesStruct<iType, TaskExec< Kokkos::Cuda > >
 
   __device__ inline
   ThreadVectorRangeBoundariesStruct
-    ( const TaskExec< Kokkos::Cuda > & arg_thread, const index_type& arg_begin, const index_type& arg_end )
+    ( member_type const& arg_thread, const index_type& arg_begin, const index_type& arg_end )
     : start( arg_begin + threadIdx.x )
-    , end(arg_count)
+    , end(arg_end)
     , increment( blockDim.x )
     , thread(arg_thread)
     {}
@@ -284,10 +508,10 @@ struct ThreadVectorRangeBoundariesStruct<iType, TaskExec< Kokkos::Cuda > >
 #else
 
   ThreadVectorRangeBoundariesStruct
-    ( const TaskExec< Kokkos::Cuda > & arg_thread, const index_type& arg_count );
+    ( member_type const& arg_thread, const index_type& arg_count );
 
   ThreadVectorRangeBoundariesStruct
-    ( const TaskExec< Kokkos::Cuda > & arg_thread, const index_type& arg_begin, const index_type& arg_end);
+    ( member_type const& arg_thread, const index_type& arg_begin, const index_type& arg_end);
 
 #endif
 
@@ -299,69 +523,69 @@ struct ThreadVectorRangeBoundariesStruct<iType, TaskExec< Kokkos::Cuda > >
 
 namespace Kokkos {
 
-template<typename iType>
-KOKKOS_INLINE_FUNCTION
-Impl::TeamThreadRangeBoundariesStruct< iType, Impl::TaskExec< Kokkos::Cuda > >
-TeamThreadRange( const Impl::TaskExec< Kokkos::Cuda > & thread, const iType & count )
-{
-  return Impl::TeamThreadRangeBoundariesStruct< iType, Impl::TaskExec< Kokkos::Cuda > >( thread, count );
-}
+//template<typename iType>
+//KOKKOS_INLINE_FUNCTION
+//Impl::TeamThreadRangeBoundariesStruct< iType, Impl::TaskExec< Kokkos::Cuda > >
+//TeamThreadRange( const Impl::TaskExec< Kokkos::Cuda > & thread, const iType & count )
+//{
+//  return Impl::TeamThreadRangeBoundariesStruct< iType, Impl::TaskExec< Kokkos::Cuda > >( thread, count );
+//}
+//
+//template<typename iType1, typename iType2>
+//KOKKOS_INLINE_FUNCTION
+//Impl::TeamThreadRangeBoundariesStruct
+//  < typename std::common_type<iType1,iType2>::type
+//  , Impl::TaskExec< Kokkos::Cuda > >
+//TeamThreadRange( const Impl::TaskExec< Kokkos::Cuda > & thread
+//               , const iType1 & begin, const iType2 & end )
+//{
+//  typedef typename std::common_type< iType1, iType2 >::type iType;
+//  return Impl::TeamThreadRangeBoundariesStruct< iType, Impl::TaskExec< Kokkos::Cuda > >(
+//           thread, iType(begin), iType(end) );
+//}
+//
+//template<typename iType>
+//KOKKOS_INLINE_FUNCTION
+//Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >
+//ThreadVectorRange( const Impl::TaskExec< Kokkos::Cuda > & thread
+//                 , const iType & count )
+//{
+//  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >(thread,count);
+//}
+//
+//template<typename iType>
+//KOKKOS_INLINE_FUNCTION
+//Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >
+//ThreadVectorRange( const Impl::TaskExec< Kokkos::Cuda > & thread
+//                 , const iType & arg_begin
+//                 , const iType & arg_end )
+//{
+//  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >(thread,arg_begin,arg_end);
+//}
 
-template<typename iType1, typename iType2>
-KOKKOS_INLINE_FUNCTION
-Impl::TeamThreadRangeBoundariesStruct
-  < typename std::common_type<iType1,iType2>::type
-  , Impl::TaskExec< Kokkos::Cuda > >
-TeamThreadRange( const Impl::TaskExec< Kokkos::Cuda > & thread
-               , const iType1 & begin, const iType2 & end )
-{
-  typedef typename std::common_type< iType1, iType2 >::type iType;
-  return Impl::TeamThreadRangeBoundariesStruct< iType, Impl::TaskExec< Kokkos::Cuda > >(
-           thread, iType(begin), iType(end) );
-}
+// KOKKOS_INLINE_FUNCTION
+// Impl::ThreadSingleStruct<Impl::TaskExec< Kokkos::Cuda > >
+// PerTeam(const Impl::TaskExec< Kokkos::Cuda >& thread)
+// {
+//   return Impl::ThreadSingleStruct<Impl::TaskExec< Kokkos::Cuda > >(thread);
+// }
 
-template<typename iType>
-KOKKOS_INLINE_FUNCTION
-Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >
-ThreadVectorRange( const Impl::TaskExec< Kokkos::Cuda > & thread
-                 , const iType & count )
-{
-  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >(thread,count);
-}
-
-template<typename iType>
-KOKKOS_INLINE_FUNCTION
-Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >
-ThreadVectorRange( const Impl::TaskExec< Kokkos::Cuda > & thread
-                 , const iType & arg_begin
-                 , const iType & arg_end )
-{
-  return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >(thread,arg_begin,arg_end);
-}
-
-KOKKOS_INLINE_FUNCTION
-Impl::ThreadSingleStruct<Impl::TaskExec< Kokkos::Cuda > >
-PerTeam(const Impl::TaskExec< Kokkos::Cuda >& thread)
-{
-  return Impl::ThreadSingleStruct<Impl::TaskExec< Kokkos::Cuda > >(thread);
-}
-
-KOKKOS_INLINE_FUNCTION
-Impl::VectorSingleStruct<Impl::TaskExec< Kokkos::Cuda > >
-PerThread(const Impl::TaskExec< Kokkos::Cuda >& thread)
-{
-  return Impl::VectorSingleStruct<Impl::TaskExec< Kokkos::Cuda > >(thread);
-}
+// KOKKOS_INLINE_FUNCTION
+// Impl::VectorSingleStruct<Impl::TaskExec< Kokkos::Cuda > >
+// PerThread(const Impl::TaskExec< Kokkos::Cuda >& thread)
+// {
+//   return Impl::VectorSingleStruct<Impl::TaskExec< Kokkos::Cuda > >(thread);
+// }
 
 /** \brief  Inter-thread parallel_for. Executes lambda(iType i) for each i=0..N-1.
  *
  * The range i=0..N-1 is mapped to all threads of the the calling thread team.
  * This functionality requires C++11 support.
 */
-template<typename iType, class Lambda>
+template<typename iType, class Lambda, class Scheduler>
 KOKKOS_INLINE_FUNCTION
 void parallel_for
-  ( const Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Cuda > >& loop_boundaries
+  ( const Impl::TeamThreadRangeBoundariesStruct<iType,Impl:: TaskExec< Kokkos::Cuda, Scheduler > >& loop_boundaries
   , const Lambda& lambda
   )
 {
@@ -370,10 +594,10 @@ void parallel_for
   }
 }
 
-template< typename iType, class Lambda >
+template< typename iType, class Lambda, class Scheduler >
 KOKKOS_INLINE_FUNCTION
 void parallel_for
-  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda, Scheduler > >& loop_boundaries,
    const Lambda & lambda) {
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i);
@@ -459,10 +683,10 @@ void parallel_reduce
 // blockDim.y == team_size
 // threadIdx.x == position in vec
 // threadIdx.y == member number
-template< typename iType, class Lambda, typename ValueType >
+template< typename iType, class Lambda, typename ValueType, class Scheduler >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
-  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
+  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda, Scheduler > >& loop_boundaries,
    const Lambda & lambda,
    ValueType& initialized_result) {
 
@@ -487,10 +711,10 @@ void parallel_reduce
   }
 }
 
-template< typename iType, class Lambda, typename ReducerType >
+template< typename iType, class Lambda, typename ReducerType, class Scheduler >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
-  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
+  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda, Scheduler > >& loop_boundaries,
    const Lambda & lambda,
    const ReducerType& reducer) {
 
@@ -549,10 +773,10 @@ void parallel_reduce
 // blockDim.y == team_size
 // threadIdx.x == position in vec
 // threadIdx.y == member number
-template< typename iType, class Lambda, typename ValueType >
+template< typename iType, class Lambda, typename ValueType, class Scheduler >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
-  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda, Scheduler > >& loop_boundaries,
    const Lambda & lambda,
    ValueType& initialized_result) {
 
@@ -576,10 +800,10 @@ void parallel_reduce
   }
 }
 
-template< typename iType, class Lambda, typename ReducerType >
+template< typename iType, class Lambda, typename ReducerType, class Scheduler >
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
-  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda, Scheduler > >& loop_boundaries,
    const Lambda & lambda,
    const ReducerType& reducer) {
 
@@ -611,10 +835,10 @@ void parallel_reduce
 // blockDim.y == team_size
 // threadIdx.x == position in vec
 // threadIdx.y == member number
-template< typename iType, class Closure >
+template< typename iType, class Closure, class Scheduler >
 KOKKOS_INLINE_FUNCTION
 void parallel_scan
-  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
+  (const Impl::TeamThreadRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda, Scheduler > >& loop_boundaries,
    const Closure & closure )
 {
   // Extract value_type from closure
@@ -676,10 +900,10 @@ void parallel_scan
 // blockDim.y == team_size
 // threadIdx.x == position in vec
 // threadIdx.y == member number
-template< typename iType, class Closure >
+template< typename iType, class Closure, class Scheduler >
 KOKKOS_INLINE_FUNCTION
 void parallel_scan
-  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda > >& loop_boundaries,
+  (const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::TaskExec< Kokkos::Cuda, Scheduler > >& loop_boundaries,
    const Closure & closure )
 {
   // Extract value_type from closure
@@ -735,25 +959,25 @@ void parallel_scan
 
 namespace Kokkos {
 
-  template<class FunctorType>
+  template<class FunctorType, class Scheduler>
   KOKKOS_INLINE_FUNCTION
-  void single(const Impl::VectorSingleStruct<Impl::TaskExec< Kokkos::Cuda > >& , const FunctorType& lambda) {
+  void single(const Impl::VectorSingleStruct<Impl::TaskExec< Kokkos::Cuda, Scheduler > >& , const FunctorType& lambda) {
 #ifdef __CUDA_ARCH__
     if(threadIdx.x == 0) lambda();
 #endif
   }
   
-  template<class FunctorType>
+  template<class FunctorType, class Scheduler>
   KOKKOS_INLINE_FUNCTION
-  void single(const Impl::ThreadSingleStruct<Impl::TaskExec< Kokkos::Cuda > >& , const FunctorType& lambda) {
+  void single(const Impl::ThreadSingleStruct<Impl::TaskExec< Kokkos::Cuda, Scheduler > >& , const FunctorType& lambda) {
 #ifdef __CUDA_ARCH__
     if(threadIdx.x == 0 && threadIdx.y == 0) lambda();
 #endif
   }
   
-  template<class FunctorType, class ValueType>
+  template<class FunctorType, class ValueType, class Scheduler>
   KOKKOS_INLINE_FUNCTION
-  void single(const Impl::VectorSingleStruct<Impl::TaskExec< Kokkos::Cuda > >& s , const FunctorType& lambda, ValueType& val) {
+  void single(const Impl::VectorSingleStruct<Impl::TaskExec< Kokkos::Cuda, Scheduler > >& s , const FunctorType& lambda, ValueType& val) {
 #ifdef __CUDA_ARCH__
     if(threadIdx.x == 0) lambda(val);
     if ( 1 < s.team_member.team_size() ) {
@@ -762,9 +986,9 @@ namespace Kokkos {
 #endif
   }
   
-  template<class FunctorType, class ValueType>
+  template<class FunctorType, class ValueType, class Scheduler>
   KOKKOS_INLINE_FUNCTION
-  void single(const Impl::ThreadSingleStruct<Impl::TaskExec< Kokkos::Cuda > >& single_struct, const FunctorType& lambda, ValueType& val) {
+  void single(const Impl::ThreadSingleStruct<Impl::TaskExec< Kokkos::Cuda, Scheduler > >& single_struct, const FunctorType& lambda, ValueType& val) {
 #ifdef __CUDA_ARCH__
     if(threadIdx.x == 0 && threadIdx.y == 0) {
       lambda(val);
