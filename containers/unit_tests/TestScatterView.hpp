@@ -80,7 +80,9 @@ void test_scatter_view_config(int n)
     Kokkos::Experimental::contribute(original_view, scatter_view);
   }
 #if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
+  Kokkos::fence();
   auto host_view = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), original_view);
+  Kokkos::fence();
   for (typename decltype(host_view)::size_type i = 0; i < host_view.extent(0); ++i) {
     auto val0 = host_view(i, 0);
     auto val1 = host_view(i, 1);
