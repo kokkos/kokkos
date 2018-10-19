@@ -111,150 +111,35 @@ public:
     std::cout << "HPX backend" << std::endl;
   }
 
-  // TODO: This is probably wrong.
   inline static bool in_parallel(HPX const & = HPX()) noexcept { return false; }
-  inline static void fence(HPX const & = HPX()) noexcept {}
+  inline static void fence(HPX const & = HPX()) noexcept {
+    // TODO: This could keep a list of futures of ongoing tasks and wait for
+    // all to be ready.
+
+    // Can be no-op currently as long as all parallel calls are blocking.
+  }
 
   inline static bool is_asynchronous(HPX const & = HPX()) noexcept {
-    return true;
+    return false;
   }
 
-  // TODO: Can this be omitted?
-  static std::vector<HPX> partition(...) {}
+  static std::vector<HPX> partition(...) {
+    Kokkos::abort("HPX::partition_master: can't partition an HPX instance\n");
+  }
 
-  // TODO: What exactly does the instance represent?
-  static HPX create_instance(...) { return HPX(); }
-
-  // TODO: Can this be omitted?
   template <typename F>
   static void partition_master(F const &f, int requested_num_partitions = 0,
-                               int requested_partition_size = 0) {}
-  // TODO: This can get called before the runtime has been started. Still need
-  // to return a reasonable value at that point.
+                               int requested_partition_size = 0) {
+    if (requested_num_partitions > 1) {
+      Kokkos::abort("HPX::partition_master: can't partition an HPX instance\n");
+    }
+  }
+
   static int concurrency() { return hpx::get_num_worker_threads(); }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  static void initialize(int thread_count) {
-    LOG("HPX::initialize");
-
-    // TODO: Throw exception if initializing twice or from within the runtime?
-
-    hpx::runtime *rt = hpx::get_runtime_ptr();
-    if (rt != nullptr) {
-      LOG("The HPX backend has already been initialized, skipping");
-    } else {
-      std::vector<std::string> config = {"hpx.os_threads=" +
-                                         std::to_string(thread_count)};
-      int argc_hpx = 1;
-      char name[] = "kokkos_hpx";
-      char *argv_hpx[] = {name, nullptr};
-      hpx::start(nullptr, argc_hpx, argv_hpx, config);
-      kokkos_hpx_initialized = true;
-    }
-  }
-
-  static void initialize() {
-    LOG("HPX::initialize");
-
-    hpx::runtime *rt = hpx::get_runtime_ptr();
-    if (rt != nullptr) {
-      LOG("The HPX backend has already been initialized, skipping");
-    } else {
-      int argc_hpx = 1;
-      char name[] = "kokkos_hpx";
-      char *argv_hpx[] = {name, nullptr};
-      hpx::start(nullptr, argc_hpx, argv_hpx);
-      kokkos_hpx_initialized = true;
-    }
-  }
-
-  static bool is_initialized() noexcept {
-    LOG("HPX::is_initialized");
-    return true;
-    hpx::runtime *rt = hpx::get_runtime_ptr();
-    return rt != nullptr;
-  }
-
-  static void finalize() {
-    LOG("HPX::finalize");
-
-    if (kokkos_hpx_initialized) {
-      hpx::runtime *rt = hpx::get_runtime_ptr();
-      if (rt == nullptr) {
-        LOG("HPX::finalize: The backend has been stopped manually");
-      } else {
-        hpx::apply([]() { hpx::finalize(); });
-        hpx::stop();
-      }
-    } else {
-      LOG("HPX::finalize: the runtime was not started through Kokkos, "
-          "skipping");
-    }
-  };
-
-  inline static int thread_pool_size() noexcept {
-    LOG("HPX::thread_pool_size");
-    hpx::runtime *rt = hpx::get_runtime_ptr();
-    if (rt == nullptr) {
-      // TODO: Exit with error?
-      return 0;
-    } else {
-      if (hpx::threads::get_self_ptr() == nullptr) {
-        return concurrency();
-      } else {
-        return hpx::this_thread::get_pool()->get_os_thread_count();
-      }
-    }
-  }
-
-  static int thread_pool_rank() noexcept {
-    LOG("HPX::thread_pool_rank");
-    hpx::runtime *rt = hpx::get_runtime_ptr();
-    if (rt == nullptr) {
-      // TODO: Exit with error?
-      return 0;
-    } else {
-      if (hpx::threads::get_self_ptr() == nullptr) {
-        // TODO: Exit with error?
-        return 0;
-      } else {
-        return hpx::this_thread::get_pool()->get_pool_index();
-      }
-    }
-  }
-
-  // TODO: What is depth? Hierarchical thread pools?
-  inline static int thread_pool_size(int depth) {
-    LOG("HPX::thread_pool_size");
-    return 0;
-  }
-  static void sleep() {
-    LOG("HPX::sleep");
-    // TODO: Suspend the runtime?
-  };
-  static void wake() {
-    LOG("HPX::wake");
-    // TODO: Resume the runtime?
-  };
-  // TODO: How is this different from concurrency?
-  static int get_current_max_threads() noexcept {
-    LOG("HPX::get_current_max_threads");
-    return concurrency();
-  }
-  // TODO: How is this different from concurrency?
-  inline static int max_hardware_threads() noexcept {
-    LOG("HPX::current_max_threads");
-    return concurrency();
-  }
-  static int hardware_thread_id() noexcept {
-    LOG("HPX::hardware_thread_id");
-    return hpx::get_worker_thread_num();
-  }
-#else
+  // NOTE: impl_ is optional
   static void impl_initialize(int thread_count) {
     LOG("HPX::initialize");
-
-    // TODO: Throw exception if initializing twice or from within the runtime?
 
     hpx::runtime *rt = hpx::get_runtime_ptr();
     if (rt != nullptr) {
@@ -347,19 +232,21 @@ public:
       }
     }
   }
+
   inline static int impl_thread_pool_size(int depth) {
     LOG("HPX::impl_thread_pool_size");
     return 0;
   }
+
   inline static int impl_max_hardware_threads() noexcept {
     LOG("HPX::impl_max_hardware_threads");
     return concurrency();
   }
+
   KOKKOS_INLINE_FUNCTION static int impl_hardware_thread_id() noexcept {
     LOG("HPX::impl_hardware_thread_id");
     return hpx::get_worker_thread_num();
   }
-#endif
 
   static constexpr const char *name() noexcept { return "HPX"; }
 };
@@ -388,61 +275,6 @@ struct VerifyExecutionCanAccessMemorySpace<Kokkos::HPX::memory_space,
 } // namespace Impl
 } // namespace Kokkos
 
-// TODO: Is the HPX/HPXExec split necessary? How is it used in other backends?
-// Serial backend does not have the split. Others have it.
-
-// It's meant to hold instance specific data, such as scratch space allocations.
-// Each backend is free to have or not have one. In the case of HPX there is not
-// much value because we want to use a single HPX runtime, and we want it to be
-// possible to call multiple Kokkos parallel functions at the same time. All
-// allocations should thus be local to the particular invocation (meaning to the
-// team member type).
-namespace Kokkos {
-namespace Impl {
-class HPXExec {
-public:
-  friend class Kokkos::HPX;
-  // enum { MAX_THREAD_COUNT = 512 };
-  // TODO: What thread data? Data for each thread. Not really necessary for HPX.
-  // void clear_thread_data() {}
-  // TODO: Is this a resource partition? Check that it satisfies some criteria?
-  // static void validate_partition(const int nthreads, int &num_partitions,
-  //                                int &partition_size) {}
-
-private:
-  HPXExec(int arg_pool_size) {}
-
-  // Don't want to keep team member data globally. Do it locally for each
-  // invocation. More allocations but can overlap parallel regions.
-  ~HPXExec() { /*clear_thread_data();*/
-  }
-
-public:
-  // TODO: What assumptions can be made here? HPX allows arbitrary nesting.
-  // Does this mean all threads can be master threads?
-  static void verify_is_master(const char *const) {}
-
-  // TODO: Thread = worker thread or lightweight thread i.e. task? Seems to be
-  // worker thread. This one isn't really needed because we'll do all the
-  // allocations locally.
-  // void resize_thread_data(size_t pool_reduce_bytes, size_t team_reduce_bytes,
-  //                         size_t team_shared_bytes, size_t
-  //                         thread_local_bytes) {
-  // }
-
-  // This one isn't needed because we'll be doing the allocations locally.
-  // inline HostThreadTeamData *get_thread_data() const noexcept {
-  //   return m_pool[hpx::get_worker_thread_num()];
-  // }
-
-  // This one isn't needed because we'll be doing the allocations locally.
-  // inline HostThreadTeamData *get_thread_data(int i) const noexcept {
-  //   return m_pool[i];
-  // }
-};
-
-} // namespace Impl
-} // namespace Kokkos
 
 // TODO: The use case of a unique token is not clear. Only used in very few
 // places (scatter view?).
