@@ -465,7 +465,7 @@ public:
   void sync( const typename Impl::enable_if<
         ( std::is_same< typename traits::data_type , typename traits::non_const_data_type>::value) ||
         ( std::is_same< Device , int>::value)
-        , int >::type& = 0) const
+        , int >::type& = 0)
   {
     if(modified_flags.data()==NULL) return;
 
@@ -493,7 +493,7 @@ public:
   void sync ( const typename Impl::enable_if<
       ( ! std::is_same< typename traits::data_type , typename traits::non_const_data_type>::value ) ||
       ( std::is_same< Device , int>::value)
-      , int >::type& = 0 ) const
+      , int >::type& = 0 )
   {
     if(modified_flags.data()==NULL) return;
 
@@ -511,7 +511,7 @@ public:
     }
   }
 
-  void sync_host() const {
+  void sync_host() {
     if( ! std::is_same< typename traits::data_type , typename traits::non_const_data_type>::value )
       Impl::throw_runtime_exception("Calling sync_host on a DualView with a const datatype.");
     if(modified_flags.data()==NULL) return;
@@ -520,7 +520,7 @@ public:
     }
   }
 
-  void sync_device() const {
+  void sync_device() {
     if( ! std::is_same< typename traits::data_type , typename traits::non_const_data_type>::value )
       Impl::throw_runtime_exception("Calling sync_device on a DualView with a const datatype.");
     if(modified_flags.data()==NULL) return;
@@ -564,7 +564,7 @@ public:
   /// mark the device's data as modified.  Otherwise, mark the host's
   /// data as modified.
   template<class Device>
-  void modify () const {
+  void modify () {
     if(modified_flags.data()==NULL) return;
     int dev = get_device_side<Device>();
 
@@ -591,7 +591,7 @@ public:
 #endif
   }
 
-  inline void modify_host() const {
+  inline void modify_host() {
     modified_flags(0) = (modified_flags(1) > modified_flags(0) ?
                           modified_flags(1) : modified_flags(0))  + 1;
     #ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
@@ -606,7 +606,7 @@ public:
     #endif
   }
 
-  inline void modify_device() const {
+  inline void modify_device() {
     modified_flags(1) = (modified_flags(1) > modified_flags(0) ?
                           modified_flags(1) : modified_flags(0))  + 1;
     #ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
@@ -621,7 +621,7 @@ public:
     #endif
   }
 
-  inline void clear_sync_state() const {
+  inline void clear_sync_state() {
     if(modified_flags.data()!=NULL) 
       modified_flags(1) = modified_flags(0) = 0;
   }
