@@ -289,27 +289,25 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<Kokkos::HPX::memory_space,
                                            Kokkos::HPX::scratch_memory_space> {
   enum { value = true };
-  // TODO: What is this supposed to do? Does nothing in other backends as well.
   inline static void verify(void) {}
   inline static void verify(const void *) {}
 };
 } // namespace Impl
 } // namespace Kokkos
 
-
-// TODO: The use case of a unique token is not clear. Only used in very few
-// places (scatter view?).
 namespace Kokkos {
 namespace Experimental {
+// Instance specialization is for partitioned instances, Global for the full
+// instance.
 template <> class UniqueToken<HPX, UniqueTokenScope::Instance> {
 public:
   using execution_space = HPX;
   using size_type = int;
   UniqueToken(execution_space const & = execution_space()) noexcept {}
-  // TODO: This could be the number of threads available to HPX.
-  int size() const noexcept { return 0; }
-  // TODO: This could be the worker thread id.
-  int acquire() const noexcept { return 0; }
+
+  // NOTE: Threads are not guaranteed to run where you tell them to run.
+  int size() const noexcept { return hpx::get_num_worker_threads(); }
+  int acquire() const noexcept { return hpx::get_worker_thread_num(); }
   void release(int) const noexcept {}
 };
 
@@ -318,10 +316,10 @@ public:
   using execution_space = HPX;
   using size_type = int;
   UniqueToken(execution_space const & = execution_space()) noexcept {}
-  // TODO: This could be the number of threads available to HPX.
-  int size() const noexcept { return 0; }
-  // TODO: This could be the worker thread id.
-  int acquire() const noexcept { return 0; }
+
+  // NOTE: Threads are not guaranteed to run where you tell them to run.
+  int size() const noexcept { return hpx::get_num_worker_threads(); }
+  int acquire() const noexcept { return hpx::get_worker_thread_num(); }
   void release(int) const noexcept {}
 };
 } // namespace Experimental
