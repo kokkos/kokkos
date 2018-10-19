@@ -260,8 +260,12 @@ public:
     if (rt != nullptr) {
       LOG("The HPX backend has already been initialized, skipping");
     } else {
-      std::vector<std::string> config = {"hpx.os_threads=" +
-                                         std::to_string(thread_count)};
+      std::vector<std::string> config = {
+          "hpx.os_threads=" + std::to_string(thread_count),
+#ifdef KOKKOS_DEBUG
+          "--hpx:attach-debugger=exception",
+#endif
+      };
       int argc_hpx = 1;
       char name[] = "kokkos_hpx";
       char *argv_hpx[] = {name, nullptr};
@@ -277,10 +281,15 @@ public:
     if (rt != nullptr) {
       LOG("The HPX backend has already been initialized, skipping");
     } else {
+      std::vector<std::string> config = {
+#ifdef KOKKOS_DEBUG
+          "--hpx:attach-debugger=exception",
+#endif
+      };
       int argc_hpx = 1;
       char name[] = "kokkos_hpx";
       char *argv_hpx[] = {name, nullptr};
-      hpx::start(nullptr, argc_hpx, argv_hpx);
+      hpx::start(nullptr, argc_hpx, argv_hpx, config);
       kokkos_hpx_initialized = true;
     }
   }
