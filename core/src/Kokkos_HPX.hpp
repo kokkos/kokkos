@@ -1014,7 +1014,7 @@ private:
   using iterate_type =
       typename Kokkos::Impl::HostIterateTile<MDRangePolicy, FunctorType,
                                              WorkTag, reference_type>;
-  HPXExec *m_instance;
+
   const FunctorType m_functor;
   const MDRangePolicy m_mdr_policy;
   const Policy m_policy; // construct as RangePolicy( 0, num_tiles
