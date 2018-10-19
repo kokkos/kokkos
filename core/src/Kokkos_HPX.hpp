@@ -86,6 +86,15 @@
 #include <vector>
 
 
+namespace hpx {
+template <typename F> inline void run_hpx_function(F &&f) {
+  if (hpx::threads::get_self_ptr()) {
+    f();
+  } else {
+      hpx::threads::run_as_hpx_thread(std::move(f));
+  }
+}
+} // namespace hpx
 
 namespace Kokkos {
 
