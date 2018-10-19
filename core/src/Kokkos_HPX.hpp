@@ -742,53 +742,15 @@ private:
 
 public:
   inline void execute() const {
-    auto f = [this]() {
-      // TODO: hpx::get_num_worker_threads() is wrong. Should be pool threads.
-      // TODO: Should restrict number of threads in for_loop.
-      // auto const num_worker_threads = hpx::get_num_worker_threads();
-
-      // This is the easy HPX way to do things.
+    hpx::run_hpx_function([this]() {
       hpx::parallel::for_loop(hpx::parallel::execution::par.with(
-                                  hpx::parallel::execution::guided_chunk_size(
+                                  hpx::parallel::execution::static_chunk_size(
                                       m_policy.chunk_size())),
                               m_policy.begin(), m_policy.end(),
                               [this](typename Policy::member_type const i) {
                                 exec_functor<WorkTag>(m_functor, i);
                               });
-
-      // This is the complicated, manual way to do things.
-      // hpx::parallel::for_loop(
-      //     hpx::parallel::execution::par, 0, num_worker_threads,
-      //     [this, num_worker_threads](std::size_t const t) {
-      //       // TODO: Use utilities that already exist.
-      //       const typename Policy::member_type b = m_policy.begin();
-      //       const typename Policy::member_type e = m_policy.end();
-      //       const typename Policy::member_type n = e - b;
-      //       const typename Policy::member_type chunk_size =
-      //           (n - 1) / num_worker_threads + 1;
-
-      //       const typename Policy::member_type b_local = b + t * chunk_size;
-      //       Member e_local = b + (t + 1) * chunk_size;
-      //       if (e_local > e) {
-      //         e_local = e;
-      //       };
-
-      //       LOG("chunk range in thread " << hpx::get_worker_thread_num()
-      //                                    << " is " << b_local << " to "
-      //                                    << e_local);
-
-      //       for (typename Policy::member_type i = b_local; i < e_local; ++i)
-      //       {
-      //         exec_functor<WorkTag>(m_functor, i);
-      //       }
-      //     });
-    };
-
-    if (hpx::threads::get_self_ptr()) {
-      f();
-    } else {
-      hpx::threads::run_as_hpx_thread(f);
-    }
+    });
   }
 
   inline ParallelFor(const FunctorType &arg_functor, Policy arg_policy)
@@ -813,53 +775,15 @@ private:
 
 public:
   inline void execute() const {
-    auto f = [this]() {
-      // TODO: hpx::get_num_worker_threads() is wrong. Should be pool threads.
-      // TODO: Should restrict number of threads in for_loop.
-      // auto const num_worker_threads = hpx::get_num_worker_threads();
-
-      // This is the easy HPX way to do things.
+    hpx::run_hpx_function([this]() {
       hpx::parallel::for_loop(hpx::parallel::execution::par.with(
-                                  hpx::parallel::execution::guided_chunk_size(
+                                  hpx::parallel::execution::static_chunk_size(
                                       m_policy.chunk_size())),
                               m_policy.begin(), m_policy.end(),
                               [this](typename Policy::member_type const i) {
                                 iterate_type(m_mdr_policy, m_functor)(i);
                               });
-
-      // This is the complicated, manual way to do things.
-      // hpx::parallel::for_loop(
-      //     hpx::parallel::execution::par, 0, num_worker_threads,
-      //     [this, num_worker_threads](std::size_t const t) {
-      //       // TODO: Use utilities that already exist.
-      //       const typename Policy::member_type b = m_policy.begin();
-      //       const typename Policy::member_type e = m_policy.end();
-      //       const typename Policy::member_type n = e - b;
-      //       const typename Policy::member_type chunk_size =
-      //           (n - 1) / num_worker_threads + 1;
-
-      //       const typename Policy::member_type b_local = b + t * chunk_size;
-      //       Member e_local = b + (t + 1) * chunk_size;
-      //       if (e_local > e) {
-      //         e_local = e;
-      //       };
-
-      //       LOG("chunk range in thread " << hpx::get_worker_thread_num()
-      //                                    << " is " << b_local << " to "
-      //                                    << e_local);
-
-      //       for (typename Policy::member_type i = b_local; i < e_local; ++i)
-      //       {
-      //         iterate_type(m_mdr_policy, m_functor)(i);
-      //       }
-      //     });
-    };
-
-    if (hpx::threads::get_self_ptr()) {
-      f();
-    } else {
-      hpx::threads::run_as_hpx_thread(f);
-    }
+    });
   }
 
   inline ParallelFor(const FunctorType &arg_functor, MDRangePolicy arg_policy)
