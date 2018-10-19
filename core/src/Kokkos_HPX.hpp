@@ -322,41 +322,34 @@ namespace Impl {
 // It takes a team policy as an argument in the constructor.
 struct HPXTeamMember {
 private:
-  typedef Kokkos::HPX execution_space;
-  typedef Kokkos::ScratchMemorySpace<Kokkos::HPX> scratch_memory_space;
+  using execution_space = Kokkos::HPX;
+  using scratch_memory_space = Kokkos::ScratchMemorySpace<Kokkos::HPX>;
 
-  // This is the actual shared scratch memory. It has two levels (0, 1).
-  // Relevant on CUDA? KNL? Also contains thread specific scratch memory.
-  // Scratch memory is separate from reduction memory.
+  // This is the actual shared scratch memory. It has two levels (0, 1). Levels
+  // can be allocated from the same place, but have to be separate pieces of
+  // memory. Scratch memory is separate from reduction memory.
   scratch_memory_space m_team_shared;
   // Size of the shared scratch memory.
   std::size_t m_team_shared_size;
 
   // This is the reduction buffer. It contains team_size * 512 bytes. NOTE: This
   // is also "misused" for other purposes. It can be used for the broadcast and
-  // scan operations as well.
+  // scan operations as well. Not needed if team_size = 1.
   char *m_reduce_buffer;
   std::size_t m_reduce_buffer_size;
 
-  // int64_t *m_pool_reduce_buffer; // Exists for OpenMP backend but not used.
-  // int64_t *m_pool_reduce_local_buffer;
-  // int64_t *m_team_reduce_buffer;
-  // int64_t *m_team_reduce_local_buffer;
-  // int64_t *m_team_shared_scratch;
-  // int64_t *m_thread_local_scratch;
-
-  // Self-explanatory.
   int m_league_size;
   int m_league_rank;
   int m_team_size;
   int m_team_rank;
 
-  // This is used to implement the barrier function.
-  std::shared_ptr<hpx::lcos::local::barrier> m_barrier;
+  // This is used to implement the barrier function. This is not needed if team
+  // size is 1.
+  // std::shared_ptr<hpx::lcos::local::barrier> m_barrier;
 
 public:
-  // Returns the team shared scratch memory. Exactly the same as team_scratch(0)
-  // (and team_scratch(1) it seems).
+  // Returns the team shared scratch memory. Exactly the same as
+  // team_scratch(0).
   KOKKOS_INLINE_FUNCTION
   const scratch_memory_space &team_shmem() const {
     return m_team_shared.set_team_thread_mode(0, 1, 0);
@@ -381,30 +374,25 @@ public:
   KOKKOS_INLINE_FUNCTION int team_size() const { return m_team_size; }
 
   template <class... Properties>
-  KOKKOS_INLINE_FUNCTION HPXTeamMember(
-      const TeamPolicyInternal<Kokkos::HPX, Properties...> &policy,
-      const int team_rank, const int league_rank, void *scratch,
-      int scratch_size, char *reduce_buffer, std::size_t reduce_buffer_size,
-      // int64_t *pool_reduce_local_buffer,
-      // int64_t *team_reduce_buffer, int64_t *team_reduce_local_buffer,
-      // int64_t *team_shared_scratch, int64_t *thread_local_scratch,
-      std::shared_ptr<hpx::lcos::local::barrier> barrier)
+  KOKKOS_INLINE_FUNCTION
+  HPXTeamMember(const TeamPolicyInternal<Kokkos::HPX, Properties...> &policy,
+                const int team_rank, const int league_rank, void *scratch,
+                int scratch_size, char *reduce_buffer,
+                std::size_t reduce_buffer_size
+                /*, std::shared_ptr<hpx::lcos::local::barrier> barrier*/)
       : m_team_shared(scratch, scratch_size, scratch, scratch_size),
         m_team_shared_size(scratch_size), m_league_size(policy.league_size()),
         m_league_rank(league_rank), m_team_size(policy.team_size()),
         m_team_rank(team_rank), m_reduce_buffer(reduce_buffer),
-        m_reduce_buffer_size(reduce_buffer_size),
-        // m_pool_reduce_local_buffer(pool_reduce_local_buffer),
-        // m_team_reduce_buffer(pool_team_reduce_buffer),
-        // m_team_reduce_local_buffer(team_reduce_local_buffer),
-        // m_team_shared_scratch(team_shared_scratch),
-        // m_thread_local_scratch(thread_local_scratch),
-        m_barrier(barrier) {}
+        m_reduce_buffer_size(reduce_buffer_size) /*, m_barrier(barrier)*/ {}
 
   // Waits for all team members to reach the barrier. TODO: This should also
   // issue a memory fence!?
+
+  // NOTE: Assume team_size = 1 for now, this is a no-op.
   KOKKOS_INLINE_FUNCTION
-  void team_barrier() const { m_barrier->wait(); }
+  void team_barrier() const { /*m_barrier->wait();*/
+  }
 
   // TODO: Need to understand how the following team_* functions work in
   // relation to nested parallelism and how memory should be allocated to
@@ -424,6 +412,9 @@ public:
 
     // Here we simply get the beginning of the reduce buffer (same on all
     // threads) as the place to store the broadcast value.
+
+    // NOTE: No-op with team_size = 1.
+    /*
     ValueType *const shared_value = (ValueType *)m_reduce_buffer;
 
     team_barrier();
@@ -434,7 +425,7 @@ public:
 
     team_barrier();
 
-    value = *shared_value;
+    value = *shared_value;*/
   }
 
   template <class Closure, class ValueType>
@@ -445,6 +436,9 @@ public:
 
     // Here we simply get the beginning of the reduce buffer (same on all
     // threads) as the place to store the broadcast value.
+
+    // NOTE: (Almost) no-op with team_size = 1.
+    /*
     ValueType *const shared_value = (ValueType *)m_reduce_buffer;
 
     team_barrier();
@@ -456,7 +450,9 @@ public:
 
     team_barrier();
 
-    value = *shared_value;
+    value = *shared_value;*/
+
+    value = f(value);
   }
 
   // TODO
@@ -492,51 +488,58 @@ public:
     //   // TODO: Don't need to do this for team rank 0.
     //   value = *((value_type *)m_reduce_buffer);
     // }
-    Kokkos::abort("HPXTeamMember: team_reduce\n");
+
+    // NOTE: No-op with team_size = 1.
+    return value;
   }
 
-  // TODO
   template <class ReducerType>
   KOKKOS_INLINE_FUNCTION
       typename std::enable_if<is_reducer<ReducerType>::value>::type
       team_reduce(const ReducerType &reducer) const {
+    // if (1 < m_team_size) {
+    //   using value_type = typename ReducerType::value_type;
 
-    if (1 < m_team_size) {
-      using value_type = typename ReducerType::value_type;
+    //   if (0 != m_team_rank) {
+    //     *((value_type *)(m_reduce_buffer + m_team_rank * 512)) =
+    //         reducer.reference();
+    //   }
 
-      if (0 != m_team_rank) {
-        *((value_type *)(m_reduce_buffer + m_team_rank * 512)) =
-            reducer.reference();
-      }
+    //   // Root does not overwrite shared memory until all threads arrive
+    //   // and copy to their local buffer.
+    //   team_barrier();
 
-      // Root does not overwrite shared memory until all threads arrive
-      // and copy to their local buffer.
-      team_barrier();
+    //   if (0 == m_team_rank) {
+    //     for (int i = 1; i < m_team_size; ++i) {
+    //       value_type *const src =
+    //           (value_type *)(m_reduce_buffer + m_team_rank * 512);
 
-      if (0 == m_team_rank) {
-        for (int i = 1; i < m_team_size; ++i) {
-          value_type *const src =
-              (value_type *)(m_reduce_buffer + m_team_rank * 512);
+    //       reducer.join(reducer.reference(), *src);
+    //     }
 
-          reducer.join(reducer.reference(), *src);
-        }
+    //     *((value_type *)m_reduce_buffer) = reducer.reference();
+    //   }
 
-        *((value_type *)m_reduce_buffer) = reducer.reference();
-      }
+    //   team_barrier();
 
-      team_barrier();
+    //   if (0 != m_team_rank) {
+    //     reducer.reference() = *((value_type *)m_reduce_buffer);
+    //   }
+    // }
 
-      if (0 != m_team_rank) {
-        reducer.reference() = *((value_type *)m_reduce_buffer);
-      }
-    }
+    // NOTE: No-op with team_size = 1.
   }
 
-  // TODO
   template <typename Type>
   KOKKOS_INLINE_FUNCTION Type
   team_scan(const Type &value, Type *const global_accum = nullptr) const {
-    Kokkos::abort("HPXTeamMember: team_scan\n");
+    // NOTE: Almost no-op with team_size = 1.
+    // TODO: Is 0 correct for all Types?
+    if (global_accum) {
+      Kokkos::atomic_fetch_add(global_accum, value);
+    }
+
+    return 0;
   }
 };
 
@@ -549,13 +552,8 @@ public:
 template <class... Properties>
 class TeamPolicyInternal<Kokkos::HPX, Properties...>
     : public PolicyTraits<Properties...> {
-  // These are self-explanatory.
   int m_league_size;
   int m_team_size;
-
-  // TODO: What do these do?
-  int m_team_alloc;
-  int m_team_iter;
 
   // TODO: Are these the sizes for the two levels of scratch space? One for
   // team-shared and one for thread-specific scratch space?
@@ -567,42 +565,52 @@ class TeamPolicyInternal<Kokkos::HPX, Properties...>
   // really make sense though for a team policy...? Or does it mean that
   // chunk_size teams will execute immediately after each other without the
   // runtime having to go and get the next team index.
+
+  // NOTE: m_chunk_size contiguous iterations are guaranteed to run on the same
+  // thread. I.e. with league_size = n, team_size = 1 the first m_chunk_size
+  // ranks from league_size will run in a single task, the next m_chunk_size in
+  // another etc. TODO: Need to make sure this is handled correctly in all
+  // parallel functions.
   int m_chunk_size;
 
-  typedef TeamPolicyInternal execution_policy;
-  typedef PolicyTraits<Properties...> traits;
+  using execution_policy = TeamPolicyInternal;
+  using traits = PolicyTraits<Properties...>;
 
 public:
   TeamPolicyInternal &operator=(const TeamPolicyInternal &p){};
 
-  // TODO: This should get number of threads on a single NUMA domain (in
-  // current pool).
   template <class FunctorType>
   inline static int team_size_max(const FunctorType &) {
-    return hpx::get_num_worker_threads();
+    return 1;
+
+    // NOTE: We return 1 for the team size for now (simpler and good enough in
+    // most cases). We could increase team size to the number of hyperthreads at
+    // most. Team size should not be the size of the thread pool.
+
+    // return hpx::get_num_worker_threads();
   }
 
   template <class FunctorType>
   inline static int team_size_recommended(const FunctorType &) {
-    return hpx::get_num_worker_threads();
+    return 1;
   }
 
   template <class FunctorType>
   inline static int team_size_recommended(const FunctorType &, const int &) {
-    return hpx::get_num_worker_threads();
+    return 1;
   }
 
 private:
-  // This is just a helper function to initialize league and team sizes.
   inline void init(const int league_size_request, const int team_size_request) {
     m_league_size = league_size_request;
-    const int max_team_size = hpx::get_num_worker_threads(); // team_size_max();
+    const int max_team_size = 1;
     m_team_size =
         team_size_request > max_team_size ? max_team_size : team_size_request;
+    // TODO: Calculate auto chunk size like in OpenMP backend.
+    m_chunk_size = 16;
   }
 
 public:
-  // These are just self-explanatory accessor functions.
   inline int team_size() const { return m_team_size; }
   inline int league_size() const { return m_league_size; }
 
@@ -633,8 +641,7 @@ public:
                      int /* vector_length_request */ = 1)
       : m_team_scratch_size{0, 0}, m_thread_scratch_size{0, 0},
         m_chunk_size(0) {
-    // TODO: Should we handle Kokkos::AUTO_t differently?
-    init(league_size_request, hpx::get_num_worker_threads());
+    init(league_size_request, 1);
   }
 
   TeamPolicyInternal(int league_size_request, int team_size_request,
@@ -649,47 +656,11 @@ public:
                      int /* vector_length_request */ = 1)
       : m_team_scratch_size{0, 0}, m_thread_scratch_size{0, 0},
         m_chunk_size(0) {
-    init(league_size_request, hpx::get_num_worker_threads());
+    init(league_size_request, 1);
   }
 
-  // TODO: Still don't know what these mean.
-  inline int team_alloc() const { return m_team_alloc; }
-  inline int team_iter() const { return m_team_iter; }
   inline int chunk_size() const { return m_chunk_size; }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  // These return a team policy so that the API becomes "fluent"(?). Can write
-  // code like policy.set_chunk_size(...).set_scratch_size(...).
-  inline TeamPolicyInternal
-  set_chunk_size(typename traits::index_type chunk_size_) const {
-    TeamPolicyInternal p = *this;
-    p.m_chunk_size = chunk_size_;
-    return p;
-  }
-
-  inline TeamPolicyInternal
-  set_scratch_size(const int &level, const PerTeamValue &per_team) const {
-    TeamPolicyInternal p = *this;
-    p.m_team_scratch_size[level] = per_team.value;
-    return p;
-  }
-
-  inline TeamPolicyInternal
-  set_scratch_size(const int &level, const PerThreadValue &per_thread) const {
-    TeamPolicyInternal p = *this;
-    p.m_thread_scratch_size[level] = per_thread.value;
-    return p;
-  }
-
-  inline TeamPolicyInternal
-  set_scratch_size(const int &level, const PerTeamValue &per_team,
-                   const PerThreadValue &per_thread) const {
-    TeamPolicyInternal p = *this;
-    p.m_team_scratch_size[level] = per_team.value;
-    p.m_thread_scratch_size[level] = per_thread.value;
-    return p;
-  }
-#else
   inline TeamPolicyInternal &
   set_chunk_size(typename traits::index_type chunk_size_) {
     m_chunk_size = chunk_size_;
@@ -715,7 +686,6 @@ public:
     m_thread_scratch_size[level] = per_thread.value;
     return *this;
   }
-#endif
 
   typedef HPXTeamMember member_type;
 };
