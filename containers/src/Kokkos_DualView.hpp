@@ -378,6 +378,16 @@ public:
       t_host >::select (d_view , h_view);
   }
 
+  KOKKOS_INLINE_FUNCTION
+  t_host view_host() const {
+    return h_view;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  t_dev view_device() const {
+    return d_view;
+  }
+
   template<class Device>
   static int get_device_side() {
     constexpr bool device_is_memspace  = std::is_same<Device,typename Device::memory_space>::value;
@@ -455,7 +465,7 @@ public:
   void sync( const typename Impl::enable_if<
         ( std::is_same< typename traits::data_type , typename traits::non_const_data_type>::value) ||
         ( std::is_same< Device , int>::value)
-        , int >::type& = 0)
+        , int >::type& = 0) const
   {
     if(modified_flags.data()==NULL) return;
 
@@ -483,7 +493,7 @@ public:
   void sync ( const typename Impl::enable_if<
       ( ! std::is_same< typename traits::data_type , typename traits::non_const_data_type>::value ) ||
       ( std::is_same< Device , int>::value)
-      , int >::type& = 0 )
+      , int >::type& = 0 ) const
   {
     if(modified_flags.data()==NULL) return;
 
@@ -498,6 +508,24 @@ public:
       if ((modified_flags(1) > 0) && (modified_flags(1) >= modified_flags(0))) {
         Impl::throw_runtime_exception("Calling sync on a DualView with a const datatype.");
       }
+    }
+  }
+
+  void sync_host() const {
+    if( ! std::is_same< typename traits::data_type , typename traits::non_const_data_type>::value )
+      Impl::throw_runtime_exception("Calling sync_host on a DualView with a const datatype.");
+    if(modified_flags.data()==NULL) return;
+    if(modified_flags(1) > modified_flags(0)) {
+      deep_copy (h_view, d_view);
+    }
+  }
+
+  void sync_device() const {
+    if( ! std::is_same< typename traits::data_type , typename traits::non_const_data_type>::value )
+      Impl::throw_runtime_exception("Calling sync_device on a DualView with a const datatype.");
+    if(modified_flags.data()==NULL) return;
+    if(modified_flags(0) > modified_flags(1)) {
+      deep_copy (d_view, h_view);
     }
   }
 
@@ -519,13 +547,24 @@ public:
     }
     return false;
   }
+
+  inline bool need_sync_host() const {
+    if(modified_flags.data()==NULL) return false;
+    return modified_flags(0)<modified_flags(1);
+  }
+
+  inline bool need_sync_device() const {
+    if(modified_flags.data()==NULL) return false;
+    return modified_flags(1)<modified_flags(0);
+  }
+
   /// \brief Mark data as modified on the given device \c Device.
   ///
   /// If \c Device is the same as this DualView's device type, then
   /// mark the device's data as modified.  Otherwise, mark the host's
   /// data as modified.
   template<class Device>
-  void modify () {
+  void modify () const {
     if(modified_flags.data()==NULL) return;
     int dev = get_device_side<Device>();
 
@@ -550,6 +589,41 @@ public:
       Kokkos::abort(msg.c_str());
     }
 #endif
+  }
+
+  inline void modify_host() const {
+    modified_flags(0) = (modified_flags(1) > modified_flags(0) ?
+                          modified_flags(1) : modified_flags(0))  + 1;
+    #ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
+    if (modified_flags(0) && modified_flags(1)) {
+      std::string msg = "Kokkos::DualView::modify_host ERROR: ";
+      msg += "Concurrent modification of host and device views ";
+      msg += "in DualView \"";
+      msg += d_view.label();
+      msg += "\"\n";
+      Kokkos::abort(msg.c_str());
+    }
+    #endif
+  }
+
+  inline void modify_device() const {
+    modified_flags(1) = (modified_flags(1) > modified_flags(0) ?
+                          modified_flags(1) : modified_flags(0))  + 1;
+    #ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
+    if (modified_flags(0) && modified_flags(1)) {
+      std::string msg = "Kokkos::DualView::modify_device ERROR: ";
+      msg += "Concurrent modification of host and device views ";
+      msg += "in DualView \"";
+      msg += d_view.label();
+      msg += "\"\n";
+      Kokkos::abort(msg.c_str());
+    }
+    #endif
+  }
+
+  inline void clear_sync_state() const {
+    if(modified_flags.data()!=NULL) 
+      modified_flags(1) = modified_flags(0) = 0;
   }
 
   //@}
