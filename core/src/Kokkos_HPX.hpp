@@ -85,6 +85,18 @@
 #include <stdexcept>
 #include <vector>
 
+#define KOKKOS_HPX_ENABLE_LOG 0
+
+#if KOKKOS_HPX_ENABLE_LOG == 1
+#define LOG(x)                                                                 \
+  {                                                                            \
+    std::stringstream s__;                                                     \
+    s__ << x << std::endl;                                                     \
+    std::cerr << s__.str();                                                    \
+  }
+#else
+#define LOG(...)
+#endif
 
 namespace hpx {
 template <typename F> inline void run_hpx_function(F &&f) {
