@@ -127,6 +127,8 @@ void TaskQueue< ExecSpace, MemorySpace>::decrement
     TaskQueue< ExecSpace, MemorySpace> * const queue =
       static_cast<scheduler_type const * volatile>( t.m_scheduler )->m_queue;
 
+    task->m_destroy(task);
+
     queue->deallocate( task , t.m_alloc_size );
   }
   else if ( count <= 1 ) {

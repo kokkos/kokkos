@@ -81,6 +81,10 @@ struct TaskResult {
   KOKKOS_INLINE_FUNCTION static
   reference_type get( TaskBase* task )
     { return *ptr( task ); }
+
+  KOKKOS_INLINE_FUNCTION static
+  void destroy( TaskBase* task )
+    { get().~ResultType(); }
 };
 
 template<>
@@ -95,6 +99,10 @@ struct TaskResult< void > {
 
   KOKKOS_INLINE_FUNCTION static
   reference_type get( TaskBase* ) {}
+
+  KOKKOS_INLINE_FUNCTION static
+  void destroy( TaskBase* task )
+    { }
 };
 
 } /* namespace Impl */

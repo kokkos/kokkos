@@ -273,9 +273,15 @@ public:
   }
 
   template< typename TaskType >
-  static
-  typename TaskType::function_type
-  get_function_pointer() { return TaskType::apply ; }
+  // TODO specialize this for trivially destructible types
+  static void
+  get_function_pointer(
+    typename TaskType::function_type& ptr,
+    typename TaskType::destroy_type& dtor
+  ) { 
+    ptr = TaskType::apply;
+    dtor = TaskType::destory;
+  }
 };
 
 extern template class TaskQueue< Kokkos::OpenMP > ;

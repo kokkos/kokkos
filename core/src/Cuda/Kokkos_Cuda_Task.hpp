@@ -64,8 +64,11 @@ namespace {
 template< typename TaskType >
 __global__
 void set_cuda_task_base_apply_function_pointer
-  ( Kokkos::Impl::TaskBase::function_type * ptr )
-{ *ptr = TaskType::apply ; }
+  ( Kokkos::Impl::TaskBase::function_type * ptr, Kokkos::Impl::TaskBase::destroy_type* dtor )
+{ 
+  *ptr = TaskType::apply;
+  *dtor = TaskType::destroy;
+}
 
 template< typename Scheduler >
 __global__
@@ -176,11 +179,8 @@ public:
       if ( 0 == task_ptr ) break ; // 0 == queue->m_ready_count
 
       if ( end != task_ptr ) {
-        queue_type* const task_queue =
-          static_cast<scheduler_type const*>( task_ptr->m_scheduler )->m_queue;
-        if(task_queue != &team_queue) {
-          Kokkos::abort("task is in the wrong queue!");
-        }  
+        auto* old_scheduler = task_ptr->m_scheduler;
+        task_ptr->m_scheduler = &scheduler;
 
         // Whole warp copy task's closure to/from shared memory.
         // Use all threads of warp for coalesced read/write.
@@ -241,6 +241,7 @@ public:
 
           team_queue.complete( task_ptr );
         }
+
       }
     } while(1);
   }
@@ -288,17 +289,26 @@ public:
 
   template< typename TaskType >
   static
-  typename TaskType::function_type
-  get_function_pointer()
+  // TODO specialize this for trivially destructible types
+  void
+  get_function_pointer(
+    typename TaskType::function_type& ptr,
+    typename TaskType::destory_type& dtor
+  )
     {
-      using function_type = typename TaskType::function_type ;
+      using function_type = typename TaskType::function_type;
+      using destroy_type = typename TaskType::destroy_type;
 
-      function_type * const ptr =
-        (function_type*) cuda_internal_scratch_unified( sizeof(function_type) );
+      // TODO address alignment concerns
+      ptr =
+        (function_type*) cuda_internal_scratch_unified( 
+          sizeof(function_type) + sizeof(destroy_type)
+        );
+      dtor = (destory_type*) (ptr + sizeof(function_type));
 
       CUDA_SAFE_CALL( cudaDeviceSynchronize() );
 
-      set_cuda_task_base_apply_function_pointer<TaskType><<<1,1>>>(ptr);
+      set_cuda_task_base_apply_function_pointer<TaskType><<<1,1>>>(ptr, dtor);
 
       CUDA_SAFE_CALL( cudaGetLastError() );
       CUDA_SAFE_CALL( cudaDeviceSynchronize() );

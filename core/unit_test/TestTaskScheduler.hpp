@@ -667,7 +667,6 @@ TEST_F( TEST_CATEGORY, task_depend )
 {
   for ( int i = 0; i < 25; ++i ) {
     TestTaskScheduler::TestTaskDependence< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run( i );
-    printf("task_depend(%d) finished\n", i);
   }
 }
 

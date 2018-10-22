@@ -278,6 +278,7 @@ public:
   Kokkos::BasicFuture<typename FunctorType::value_type, scheduler_type>
   spawn( Impl::TaskPolicyData<TaskEnum,DepFutureType> const & arg_policy
        , typename task_base::function_type                    arg_function
+       , typename task_base::destroy_type                    arg_destory
        , FunctorType                                       && arg_functor
        )
     {
@@ -341,7 +342,8 @@ public:
         new ( f.m_task ) task_type( std::forward<FunctorType>(arg_functor) );
 
         f.m_task->m_apply      = arg_function;
-        f.m_task->m_scheduler  = scheduler_ptr;
+        f.m_task->m_destroy    = arg_destory;
+        f.m_task->m_scheduler  = scheduler_ptr; // may need to change before running
         f.m_task->m_next       = arg_policy.m_dependence.m_task;
         f.m_task->m_ref_count  = 2;
         f.m_task->m_alloc_size = alloc_size;
@@ -523,9 +525,10 @@ public:
           const input_type arg_f = func(i);
           if ( 0 != arg_f.m_task ) {
 
-            if ( m_queue != static_cast< BasicTaskScheduler const * >( arg_f.m_task->m_scheduler )->m_queue ) {
-              Kokkos::abort("Kokkos when_all Futures must be in the same scheduler" );
-            }
+            // Not scheduled, so task scheduler is not yet set
+            //if ( m_queue != static_cast< BasicTaskScheduler const * >( arg_f.m_task->m_scheduler )->m_queue ) {
+            //  Kokkos::abort("Kokkos when_all Futures must be in the same scheduler" );
+            //}
             // Increment reference count to track subsequent assignment.
             Kokkos::atomic_increment( &(arg_f.m_task->m_ref_count) );
             dep[i] = arg_f.m_task ;
@@ -685,11 +688,12 @@ host_spawn( Impl::TaskPolicyData<TaskEnum,DepFutureType> const & arg_policy
 
   // May be spawning a Cuda task, must use the specialization
   // to query on-device function pointer.
-  typename task_type::function_type const ptr =
-    Kokkos::Impl::TaskQueueSpecialization< scheduler_type >::
-      template get_function_pointer< task_type >();
+  typename task_type::function_type ptr;
+  typename task_type::destroy_type dtor;
+  Kokkos::Impl::TaskQueueSpecialization< scheduler_type >::
+    template get_function_pointer< task_type >(ptr, dtor);
 
-  return scheduler_type::spawn( arg_policy , ptr , std::move(arg_functor) );
+  return scheduler_type::spawn( arg_policy , ptr , dtor, std::move(arg_functor) );
 }
 
 /**\brief  A task spawns a task with options
@@ -729,8 +733,9 @@ task_spawn( Impl::TaskPolicyData<TaskEnum,DepFutureType> const & arg_policy
                , "Kokkos host_spawn requires TaskTeam or TaskSingle" );
 
   typename task_type::function_type const ptr = task_type::apply ;
+  typename task_type::destroy_type const dtor = task_type::destroy ;
 
-  return scheduler_type::spawn( arg_policy , ptr , std::move(arg_functor) );
+  return scheduler_type::spawn( arg_policy , ptr , dtor, std::move(arg_functor) );
 }
 
 /**\brief  A task respawns itself with options
