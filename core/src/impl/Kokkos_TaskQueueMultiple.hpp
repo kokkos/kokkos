@@ -198,7 +198,7 @@ private:
   using team_scheduler_type = BasicTaskScheduler<ExecSpace, team_queue_type>;
   using specialization = TaskQueueSpecialization<team_scheduler_type>;
 
-  enum : long { max_num_queues = 6 }; //specialization::max_league_size >> 3L };
+  enum : long { max_num_queues = 6 }; //specialization::max_league_size };
 
   // this is a non-owning pointer
   team_queue_type* m_rank_zero_queue = nullptr;

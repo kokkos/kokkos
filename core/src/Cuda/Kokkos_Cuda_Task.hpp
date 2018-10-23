@@ -95,6 +95,8 @@ public:
   using memory_space = Kokkos::CudaUVMSpace;
   using member_type = TaskExec<Kokkos::Cuda, Scheduler> ;
 
+  enum : long { max_league_size = 16 };
+
   KOKKOS_INLINE_FUNCTION
   static
   void iff_single_thread_recursive_execute( scheduler_type const& ) {}
@@ -249,8 +251,8 @@ public:
   {
     const int shared_per_warp = 2048 ;
     const int warps_per_block = 4 ;
-    //const dim3 grid( Kokkos::Impl::cuda_internal_multiprocessor_count() , 1 , 1 );
-    const dim3 grid( 1 , 1 , 1 );
+    const dim3 grid( Kokkos::Impl::cuda_internal_multiprocessor_count() , 1 , 1 );
+    //const dim3 grid( 1 , 1 , 1 );
     const dim3 block( 1 , Kokkos::Impl::CudaTraits::WarpSize , warps_per_block );
     const int shared_total = shared_per_warp * warps_per_block ;
     const cudaStream_t stream = 0 ;
