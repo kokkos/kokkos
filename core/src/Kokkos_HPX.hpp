@@ -1565,6 +1565,33 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   }
 }
 
+template <typename iType, class FunctorType>
+KOKKOS_INLINE_FUNCTION void parallel_scan(
+    Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember> const
+        &loop_boundaries,
+    const FunctorType &lambda) {
+
+  using value_type = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void,
+      FunctorType>::value_type;
+
+  value_type accum = 0;
+
+  // Intra-member scan
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    lambda(i, accum, false);
+  }
+
+  // 'accum' output is the exclusive prefix sum
+  accum = loop_boundaries.thread.team_scan(accum);
+
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    lambda(i, accum, true);
+  }
+}
+
 /** \brief  Intra-thread vector parallel exclusive prefix sum. Executes
  * lambda(iType i, ValueType & val, bool final) for each i=0..N-1.
  *
