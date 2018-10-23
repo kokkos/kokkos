@@ -124,10 +124,12 @@ void TaskQueue< ExecSpace, MemorySpace>::decrement
        ( t.m_next == (task_root_type *) task_root_type::LockTag ) ) {
     // Reference count is zero and task is complete, deallocate.
 
-    TaskQueue< ExecSpace, MemorySpace> * const queue =
-      static_cast<scheduler_type const * volatile>( t.m_scheduler )->m_queue;
+    //TaskQueue< ExecSpace, MemorySpace> * const queue =
+    //  static_cast<scheduler_type const *>( t.m_scheduler )->m_queue;
+    auto* const volatile queue = static_cast<TaskQueue*>(t.m_queue);
 
-    task->m_destroy(task);
+    // TODO fix this! This is a destructor on the device, so it actually needs to be queued.
+    // if(task->m_destroy) task->m_destroy(task);
 
     queue->deallocate( task , t.m_alloc_size );
   }

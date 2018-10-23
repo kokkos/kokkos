@@ -84,7 +84,7 @@ struct TaskResult {
 
   KOKKOS_INLINE_FUNCTION static
   void destroy( TaskBase* task )
-    { get().~ResultType(); }
+    { get(task).~ResultType(); }
 };
 
 template<>

@@ -280,7 +280,7 @@ public:
     typename TaskType::destroy_type& dtor
   ) { 
     ptr = TaskType::apply;
-    dtor = TaskType::destory;
+    dtor = TaskType::destroy;
   }
 };
 

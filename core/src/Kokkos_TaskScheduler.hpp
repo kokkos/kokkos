@@ -278,7 +278,7 @@ public:
   Kokkos::BasicFuture<typename FunctorType::value_type, scheduler_type>
   spawn( Impl::TaskPolicyData<TaskEnum,DepFutureType> const & arg_policy
        , typename task_base::function_type                    arg_function
-       , typename task_base::destroy_type                    arg_destory
+       , typename task_base::destroy_type                    arg_destroy
        , FunctorType                                       && arg_functor
        )
     {
@@ -286,40 +286,46 @@ public:
       using future_type = BasicFuture< value_type , scheduler_type > ;
       using task_type = Impl::Task<BasicTaskScheduler, value_type, FunctorType>;
 
-      BasicTaskScheduler const* scheduler_ptr = nullptr;
+      //BasicTaskScheduler const* scheduler_ptr = nullptr;
+      queue_type* queue_ptr = nullptr;
       if(arg_policy.m_scheduler != nullptr) {
-        scheduler_ptr = static_cast<BasicTaskScheduler const*>(
+        auto* scheduler_ptr = static_cast<BasicTaskScheduler const*>(
           arg_policy.m_scheduler
         );
+        queue_ptr = &scheduler_ptr->queue();
       }
-      else if(arg_policy.m_dependence.m_task != nullptr) {
-        scheduler_ptr = static_cast<BasicTaskScheduler const*>(
-          arg_policy.m_dependence.m_task->m_scheduler
-        );
+      //else if(arg_policy.m_dependence.m_task != nullptr) {
+      //  scheduler_ptr = static_cast<BasicTaskScheduler const*>(
+      //    arg_policy.m_dependence.m_task->m_scheduler
+      //  );
+      //}
+
+      if(queue_ptr == nullptr) {
+        queue_ptr = static_cast<queue_type*>(arg_policy.m_dependence.m_task->m_queue);
       }
 
-      if(scheduler_ptr == nullptr) {
+      if(queue_ptr == nullptr) {
         Kokkos::abort("Kokkos spawn requires scheduler or non-null Future");
         return {}; // should be unreachable
       }
 
-      auto& scheduler = *scheduler_ptr;
-      auto& queue = *scheduler.m_queue;
+      auto& queue = *queue_ptr;
 
-      if (
-        arg_policy.m_dependence.m_task != 0
-        && static_cast<BasicTaskScheduler const*>(
-          arg_policy.m_dependence.m_task->m_scheduler
-        )->m_queue != &queue
-      ) {
-        Kokkos::abort("Kokkos spawn given incompatible scheduler and Future");
-      }
+      //if (
+      //  arg_policy.m_dependence.m_task != 0
+      //  && static_cast<BasicTaskScheduler const*>(
+      //    arg_policy.m_dependence.m_task->m_scheduler
+      //  )->m_queue != &queue
+      //) {
+      //  Kokkos::abort("Kokkos spawn given incompatible scheduler and Future");
+      //}
 
       //----------------------------------------
       // Give single-thread back-ends an opportunity to clear
       // queue of ready tasks before allocating a new task
 
-      specialization::iff_single_thread_recursive_execute(scheduler);
+      // TODO re-enable this
+      //specialization::iff_single_thread_recursive_execute(scheduler);
 
       //----------------------------------------
 
@@ -330,20 +336,20 @@ public:
       const size_t alloc_size =
         queue.template spawn_allocation_size< FunctorType >();
 
-      f.m_task =
-        reinterpret_cast< task_type * >(queue.allocate(alloc_size) );
+      void* task_storage = queue.allocate(alloc_size);
 
-      if ( f.m_task ) {
+      if (task_storage) {
 
         // Placement new construction
         // Reference count starts at two:
         //   +1 for the matching decrement when task is complete
         //   +1 for the future
-        new ( f.m_task ) task_type( std::forward<FunctorType>(arg_functor) );
+        f.m_task = new (task_storage) task_type( std::forward<FunctorType>(arg_functor) );
 
         f.m_task->m_apply      = arg_function;
-        f.m_task->m_destroy    = arg_destory;
-        f.m_task->m_scheduler  = scheduler_ptr; // may need to change before running
+        //f.m_task->m_destroy    = arg_destroy;
+        //f.m_task->m_scheduler  = &f.m_scheduler;
+        f.m_task->m_queue  = queue_ptr;
         f.m_task->m_next       = arg_policy.m_dependence.m_task;
         f.m_task->m_ref_count  = 2;
         f.m_task->m_alloc_size = alloc_size;
@@ -426,7 +432,7 @@ public:
 
         queue_type * queue = 0 ;
 
-        BasicTaskScheduler const* scheduler_ptr = nullptr;
+        //BasicTaskScheduler const* scheduler_ptr = nullptr;
 
         for ( int i = 0 ; i < narg ; ++i ) {
           task_base * const t = arg[i].m_task ;
@@ -434,21 +440,24 @@ public:
             // Increment reference count to track subsequent assignment.
             Kokkos::atomic_increment( &(t->m_ref_count) );
             if ( queue == 0 ) {
-              scheduler_ptr = static_cast< BasicTaskScheduler const* >( t->m_scheduler );
-              queue = scheduler_ptr->m_queue;
+              //scheduler_ptr = static_cast< BasicTaskScheduler const* >( t->m_scheduler );
+              //queue = scheduler_ptr->m_queue;
+              queue = static_cast<queue_type*>(t->m_queue);
             }
-            else if ( queue != static_cast< BasicTaskScheduler const* >(t->m_scheduler)->m_queue ) {
-              Kokkos::abort("Kokkos when_all Futures must be in the same scheduler" );
-            }
+            // TODO reinstate an analog of this check
+            //else if ( queue != static_cast< BasicTaskScheduler const* >(t->m_scheduler)->m_queue ) {
+            //  Kokkos::abort("Kokkos when_all Futures must be in the same scheduler" );
+            //}
           }
         }
 
-        if ( queue != 0 ) {
+        if ( queue != 0 ) { // TODO this should handle the queue == 0 case?
 
           size_t const alloc_size = queue->when_all_allocation_size( narg );
 
           f.m_task =
             reinterpret_cast< task_base * >( queue->allocate( alloc_size ) );
+          //f.m_scheduler = *scheduler_ptr;
 
           if ( f.m_task ) {
 
@@ -458,11 +467,14 @@ public:
 
             new( f.m_task ) task_base();
 
-            f.m_task->m_scheduler = scheduler_ptr;
+            //f.m_task->m_scheduler = &f.m_scheduler;
+            f.m_task->m_queue = queue;
             f.m_task->m_ref_count = 2 ;
             f.m_task->m_alloc_size = static_cast<int32_t>(alloc_size);
             f.m_task->m_dep_count = narg ;
             f.m_task->m_task_type = task_base::Aggregate ;
+            //f.m_task->m_apply = nullptr;
+            //f.m_task->m_destroy = nullptr;
 
             // Assign dependences, reference counts were already incremented
 
@@ -508,13 +520,19 @@ public:
         // +1 to match decrement when task completes
         // +1 for the future
 
-        new( f.m_task ) task_base();
+        // TODO This should be a constructor of future...
 
-        f.m_task->m_scheduler = this;
+        new( f.m_task ) task_base();
+        //f.m_scheduler = *this;
+
+        //f.m_task->m_scheduler = &f.m_scheduler;
+        f.m_task->m_queue = m_queue;
         f.m_task->m_ref_count = 2 ;
         f.m_task->m_alloc_size = static_cast<int32_t>(alloc_size);
         f.m_task->m_dep_count = narg ;
         f.m_task->m_task_type = task_base::Aggregate ;
+        //f.m_task->m_apply = nullptr;
+        //f.m_task->m_destroy = nullptr;
 
         // Assign dependences, reference counts were already incremented
 

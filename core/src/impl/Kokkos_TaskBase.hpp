@@ -144,6 +144,7 @@ public:
   template<typename, typename> friend class Kokkos::BasicTaskScheduler ;
 
   using scheduler_type = TaskSchedulerBase;
+  using queue_type = TaskQueueBase;
 
   typedef void (* function_type) ( TaskBase * , void * );
   typedef void (* destroy_type) ( TaskBase * );
@@ -151,8 +152,8 @@ public:
   // sizeof(TaskBase) == 48
 
   function_type  m_apply ;       ///< Apply function pointer
-  destroy_type   m_destroy ;     ///< Value destructor function pointer
-  scheduler_type const* m_scheduler = nullptr ;  ///< Pointer to the scheduler
+  //scheduler_type const* m_scheduler = nullptr ;  ///< Pointer to the scheduler
+  queue_type* m_queue = nullptr ;  ///< Pointer to the scheduler
   TaskBase     * m_wait ;        ///< Linked list of tasks waiting on this
   TaskBase     * m_next ;        ///< Waiting linked-list next
   int32_t        m_ref_count ;   ///< Reference count
@@ -175,8 +176,7 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr
   TaskBase()
     : m_apply( nullptr )
-    , m_destroy( nullptr )
-    , m_scheduler( nullptr )
+    , m_queue( nullptr )
     , m_wait( nullptr )
     , m_next( nullptr )
     , m_ref_count( 0 )
@@ -229,8 +229,8 @@ public:
 
 };
 
-//static_assert( sizeof(TaskBase) == 48
-//             , "Verifying expected sizeof(TaskBase)" );
+static_assert( sizeof(TaskBase) == 48
+             , "Verifying expected sizeof(TaskBase)" );
 
 } /* namespace Impl */
 } /* namespace Kokkos */
@@ -243,12 +243,9 @@ namespace Impl {
 
 template< class Scheduler, typename ResultType , class FunctorType >
 class Task
-  : public TaskBase
+  : public TaskBase,
+    public FunctorType
 {
-private:
-
-  FunctorType m_functor;
-
 public:
 
   Task() = delete ;
@@ -267,18 +264,18 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void apply_functor( member_type * const member , void * )
-    { m_functor( *member ); }
+    { this->functor_type::operator()( *member ); }
 
   template< typename T >
   KOKKOS_INLINE_FUNCTION
   void apply_functor( member_type * const member
                     , T           * const result )
-    { m_functor( *member , *result ); }
+    { this->functor_type::operator()( *member , *result ); }
 
   KOKKOS_FUNCTION static
   void destroy( root_type * root )
   {
-    result_type::destroy(root);
+    TaskResult<result_type>::destroy(root);
   }
 
   KOKKOS_FUNCTION static
@@ -305,7 +302,7 @@ public:
 
       if ( only_one_thread && !(task->requested_respawn()) ) {
         // Did not respawn, destroy the functor to free memory.
-        task->m_functor->~functor_type();
+        task->FunctorType::~functor_type();
         // Cannot destroy and deallocate the task until its dependences
         // have been processed.
       }
@@ -314,7 +311,7 @@ public:
   // Constructor for runnable task
   KOKKOS_INLINE_FUNCTION constexpr
   Task( FunctorType && arg_functor )
-    : root_type() , functor_type( arg_functor )
+    : root_type() , functor_type( std::move(arg_functor) )
   { }
 
   KOKKOS_INLINE_FUNCTION

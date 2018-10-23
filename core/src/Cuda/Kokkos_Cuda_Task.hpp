@@ -179,8 +179,6 @@ public:
       if ( 0 == task_ptr ) break ; // 0 == queue->m_ready_count
 
       if ( end != task_ptr ) {
-        auto* old_scheduler = task_ptr->m_scheduler;
-        task_ptr->m_scheduler = &scheduler;
 
         // Whole warp copy task's closure to/from shared memory.
         // Use all threads of warp for coalesced read/write.
@@ -293,27 +291,29 @@ public:
   void
   get_function_pointer(
     typename TaskType::function_type& ptr,
-    typename TaskType::destory_type& dtor
+    typename TaskType::destroy_type& dtor
   )
     {
       using function_type = typename TaskType::function_type;
       using destroy_type = typename TaskType::destroy_type;
 
       // TODO address alignment concerns
-      ptr =
-        (function_type*) cuda_internal_scratch_unified( 
-          sizeof(function_type) + sizeof(destroy_type)
-        );
-      dtor = (destory_type*) (ptr + sizeof(function_type));
+      void* storage = cuda_internal_scratch_unified( 
+        sizeof(function_type) + sizeof(destroy_type)
+      );
+      function_type* ptr_ptr = (function_type*)storage;
+      destroy_type* dtor_ptr = (destroy_type*)((char*)storage + sizeof(function_type));
 
       CUDA_SAFE_CALL( cudaDeviceSynchronize() );
 
-      set_cuda_task_base_apply_function_pointer<TaskType><<<1,1>>>(ptr, dtor);
+      set_cuda_task_base_apply_function_pointer<TaskType><<<1,1>>>(ptr_ptr, dtor_ptr);
 
       CUDA_SAFE_CALL( cudaGetLastError() );
       CUDA_SAFE_CALL( cudaDeviceSynchronize() );
 
-      return *ptr ;
+      ptr = *ptr_ptr;
+      dtor = *dtor_ptr;
+
     }
 };
 
