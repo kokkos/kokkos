@@ -1676,6 +1676,7 @@ public:
 
   // Must provide task queue execution function
   static void execute(queue_type *const queue) {
+hpx::run_hpx_function([queue]() {
     static task_base_type *const end = (task_base_type *)task_base_type::EndTag;
     auto num_worker_threads = HPX::impl_max_hardware_threads();
 
@@ -1734,6 +1735,7 @@ public:
             }
           } while (0 != task);
         });
+});
   }
 
   template <typename TaskType>
