@@ -534,8 +534,7 @@
   #if ( 8000 <= CUDA_VERSION ) && defined( KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE )
   #define KOKKOS_ENABLE_TASKDAG
   #endif
-// TODO: HPX does not support task DAGs.
-#elseif !defined(KOKKOS_ENABLE_HPX)
+#else
   #define KOKKOS_ENABLE_TASKDAG
 #endif
 
