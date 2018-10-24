@@ -191,13 +191,6 @@
   #define KOKKOS_LAMBDA                [=] __attribute__((amp,cpu))
 #endif
 
-#if defined( _OPENMP )
-  //  Compiling with OpenMP.
-  //  The value of _OPENMP is an integer value YYYYMM
-  //  where YYYY and MM are the year and month designation
-  //  of the supported OpenMP API version.
-#endif // #if defined( _OPENMP )
-
 //----------------------------------------------------------------------------
 // Mapping compiler built-ins to KOKKOS_COMPILER_*** macros
 
@@ -236,9 +229,14 @@
   #define KOKKOS_COMPILER_CRAYC _CRAYC
 #endif
 
-#if defined( __IBMCPP__ )
-  // IBM C++
+#if   defined( __ibmxl__ )
+  #define KOKKOS_COMPILER_IBM __ibmxl__
+#elif defined( __xlC__ )
+  #define KOKKOS_COMPILER_IBM __xlC__
+#elif defined( __IBMCPP__ )
   #define KOKKOS_COMPILER_IBM __IBMCPP__
+#elif defined( __xlc__ )
+  #define KOKKOS_COMPILER_IBM __xlc__
 #elif defined( __IBMC__ )
   #define KOKKOS_COMPILER_IBM __IBMC__
 #endif
@@ -247,11 +245,18 @@
   #define KOKKOS_COMPILER_APPLECC __APPLE_CC__
 #endif
 
-#if defined( __clang__ ) && !defined( KOKKOS_COMPILER_INTEL )
+#if defined( __clang__ ) && \
+   !defined( KOKKOS_COMPILER_INTEL ) && \
+   !defined( KOKKOS_COMPILER_IBM )
   #define KOKKOS_COMPILER_CLANG __clang_major__*100+__clang_minor__*10+__clang_patchlevel__
 #endif
 
-#if !defined( __clang__ ) && !defined( KOKKOS_COMPILER_INTEL ) &&defined( __GNUC__ )
+#if !defined( __clang__ ) && \
+    !defined( KOKKOS_COMPILER_INTEL ) && \
+    !defined( KOKKOS_COMPILER_IBM ) && \
+    !defined( KOKKOS_COMPILER_CRAYC ) && \
+    !defined( KOKKOS_COMPILER_PGI ) && \
+     defined( __GNUC__ )
   #define KOKKOS_COMPILER_GNU __GNUC__*100+__GNUC_MINOR__*10+__GNUC_PATCHLEVEL__
 
   #if ( 472 > KOKKOS_COMPILER_GNU )
@@ -259,7 +264,7 @@
   #endif
 #endif
 
-#if defined( __PGIC__ ) 
+#if defined( __PGIC__ )
   #define KOKKOS_COMPILER_PGI __PGIC__*100+__PGIC_MINOR__*10+__PGIC_PATCHLEVEL__
 
   #if ( 1540 > KOKKOS_COMPILER_PGI )
@@ -316,7 +321,7 @@
 
   #if defined( KOKKOS_ARCH_AVX512MIC )
       #define KOKKOS_ENABLE_RFO_PREFETCH 1
-  #endif 
+  #endif
 
   #if defined( __MIC__ )
     // Compiling for Xeon Phi
@@ -535,7 +540,37 @@
   #define KOKKOS_IMPL_CTOR_DEFAULT_ARG KOKKOS_INVALID_INDEX
 #endif
 
+#if defined( _OPENMP )
+  //  Compiling with OpenMP.
+  //  The value of _OPENMP is an integer value YYYYMM
+  //  where YYYY and MM are the year and month designation
+  //  of the supported OpenMP API version.
+ #if   _OPENMP >= 201811
+    #define KOKKOS_OPENMP_VERSION 50
+  #elif _OPENMP >= 201511
+    #define KOKKOS_OPENMP_VERSION 45
+  #elif _OPENMP >= 201307
+    #define KOKKOS_OPENMP_VERSION 40
+  #elif _OPENMP >= 201107
+    #define KOKKOS_OPENMP_VERSION 31
+  #elif _OPENMP >= 200805
+    #define KOKKOS_OPENMP_VERSION 30
+  #else
+    #define KOKKOS_OPENMP_VERSION 0
+  #endif
+#else
+  #define KOKKOS_OPENMP_VERSION 0
+#endif //defined( _OPENMP )
 
+#if defined( KOKKOS_ENABLE_OPENMP ) && (KOKKOS_OPENMP_VERSION < 31)
+	#error "Kokkos::OpenMP requires OpenMP 3.1 or greater"
+#endif
+
+#if defined( KOKKOS_ENABLE_OPENMPTARGET ) && (KOKKOS_OPENMP_VERSION < 45)
+	#if !defined( KOKKOS_COMPILER_IBM ) //xlc has target
+		#error "Kokkos::OpenMPTarget requires OpenMP 4.5 or greater"
+	#endif
+#endif
 
 #endif // #ifndef KOKKOS_MACROS_HPP
 
