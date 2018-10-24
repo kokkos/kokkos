@@ -46,7 +46,7 @@
 
 #include <Kokkos_Core.hpp>
 
-#include <impl/Kokkos_HPX_Task.hpp>
+#include <HPX/Kokkos_HPX_Task.hpp>
 #include <impl/Kokkos_TaskQueue_impl.hpp>
 
 //----------------------------------------------------------------------------
