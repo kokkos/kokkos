@@ -435,7 +435,7 @@ public:
 private:
   inline void init(const int league_size_request, const int team_size_request) {
     m_league_size = league_size_request;
-    const int max_team_size = team_size_max();
+    const int max_team_size = 1; // TODO: Can't use team_size_max(...) because it requires a functor as argument.
     m_team_size =
         team_size_request > max_team_size ? max_team_size : team_size_request;
 
