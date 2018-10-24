@@ -94,6 +94,11 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_ETI), 1)
 endif
 endif
 
+ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
+Kokkos_HPX_Task.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/HPX/Kokkos_HPX_Task.cpp
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/HPX/Kokkos_HPX_Task.cpp
+endif
+
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
 Kokkos_OpenMPTarget_Exec.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Exec.cpp
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Exec.cpp
