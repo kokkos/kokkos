@@ -435,11 +435,28 @@ public:
 private:
   inline void init(const int league_size_request, const int team_size_request) {
     m_league_size = league_size_request;
-    const int max_team_size = 1;
+    const int max_team_size = team_size_max();
     m_team_size =
         team_size_request > max_team_size ? max_team_size : team_size_request;
-    // TODO: Calculate auto chunk size like in OpenMP backend.
-    m_chunk_size = 16;
+
+    if (m_chunk_size > 0) {
+      if (!Impl::is_integral_power_of_two(m_chunk_size))
+        Kokkos::abort("TeamPolicy blocking granularity must be power of two");
+    } else {
+      int new_chunk_size = 1;
+      while (new_chunk_size * 4 * HPX::concurrency() < m_league_size) {
+        new_chunk_size *= 2;
+      }
+
+      if (new_chunk_size < 128) {
+        new_chunk_size = 1;
+        while ((new_chunk_size * HPX::concurrency() < m_league_size) &&
+               (new_chunk_size < 128))
+          new_chunk_size *= 2;
+      }
+
+      m_chunk_size = new_chunk_size;
+    }
   }
 
 public:
