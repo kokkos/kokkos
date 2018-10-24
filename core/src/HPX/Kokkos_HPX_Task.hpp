@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_IMPL_SERIAL_TASK_HPP
-#define KOKKOS_IMPL_SERIAL_TASK_HPP
+#ifndef KOKKOS_HPX_HPX_TASK_HPP
+#define KOKKOS_HPX_HPX_TASK_HPP
 
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_TASKDAG)
@@ -75,7 +75,7 @@ public:
   }
 };
 
-extern template class TaskQueue<Kokkos::Serial>;
+extern template class TaskQueue<Kokkos::HPX>;
 
 } // namespace Impl
 } // namespace Kokkos
@@ -84,4 +84,4 @@ extern template class TaskQueue<Kokkos::Serial>;
 //----------------------------------------------------------------------------
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
-#endif /* #ifndef KOKKOS_IMPL_SERIAL_TASK_HPP */
+#endif /* #ifndef KOKKOS_HPX_HPX_TASK_HPP */
