@@ -274,8 +274,8 @@ public:
   UniqueToken(execution_space const & = execution_space()) noexcept {}
 
   // NOTE: Threads are not guaranteed to run where you tell them to run.
-  int size() const noexcept { return hpx::get_num_worker_threads(); }
-  int acquire() const noexcept { return hpx::get_worker_thread_num(); }
+  int size() const noexcept { return HPX::impl_max_hardware_threads(); }
+  int acquire() const noexcept { return HPX::impl_hardware_thread_id(); }
   void release(int) const noexcept {}
 };
 
@@ -286,8 +286,8 @@ public:
   UniqueToken(execution_space const & = execution_space()) noexcept {}
 
   // NOTE: Threads are not guaranteed to run where you tell them to run.
-  int size() const noexcept { return hpx::get_num_worker_threads(); }
-  int acquire() const noexcept { return hpx::get_worker_thread_num(); }
+  int size() const noexcept { return HPX::impl_max_hardware_threads(); }
+  int acquire() const noexcept { return HPX::impl_hardware_thread_id(); }
   void release(int) const noexcept {}
 };
 } // namespace Experimental
