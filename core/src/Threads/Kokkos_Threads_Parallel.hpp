@@ -52,7 +52,6 @@
 
 #include <Kokkos_Parallel.hpp>
 
-#include <impl/Kokkos_StaticAssert.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
@@ -201,7 +200,7 @@ private:
 
   inline static
   void
-  exec_range( const MDRangePolicy & mdr_policy 
+  exec_range( const MDRangePolicy & mdr_policy
             , const FunctorType & functor
             , const Member ibeg , const Member iend )
     {

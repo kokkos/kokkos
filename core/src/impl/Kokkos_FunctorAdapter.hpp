@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -45,6 +45,7 @@
 #define KOKKOS_FUNCTORADAPTER_HPP
 
 #include <cstddef>
+#include <type_traits>
 #include <Kokkos_Core_fwd.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_Tags.hpp>
@@ -1432,7 +1433,10 @@ namespace Impl {
   template<typename ValueType, class JoinOp>
   struct JoinLambdaAdapter<ValueType, JoinOp, decltype( FunctorValueJoinFunction< JoinOp , void >::enable_if( & JoinOp::join ) )> {
     typedef ValueType value_type;
-    typedef StaticAssertSame<ValueType,typename JoinOp::value_type> assert_value_types_match;
+
+    static_assert( std::is_same<ValueType, typename JoinOp::value_type>::value
+                 , "Error: the join operator type does not match the value_type." );
+
     const JoinOp& lambda;
     KOKKOS_INLINE_FUNCTION
     JoinLambdaAdapter(const JoinOp& lambda_):lambda(lambda_) {}

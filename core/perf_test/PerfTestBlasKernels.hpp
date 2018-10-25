@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,13 +36,15 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
 
 #ifndef KOKKOS_BLAS_KERNELS_HPP
 #define KOKKOS_BLAS_KERNELS_HPP
+
+#include <type_traits>
 
 namespace Kokkos {
 
@@ -123,14 +125,8 @@ struct Dot
 {
   typedef typename Device::execution_space execution_space ;
 
-  typedef typename
-    Impl::StaticAssertSame< Impl::unsigned_< 1 > ,
-                            Impl::unsigned_< Type::Rank > >::type ok_rank ;
-
-
-/*  typedef typename
-    Impl::StaticAssertSame< execution_space ,
-                            typename Type::execution_space >::type ok_device ;*/
+  static_assert( std::is_same<Impl::unsigned_<1>, Impl::unsigned_<Type::Rank> >::value
+               , "Error: rank is not 1." );
 
   typedef double value_type ;
 
@@ -164,13 +160,8 @@ struct DotSingle
 {
   typedef typename Device::execution_space execution_space ;
 
-  typedef typename
-    Impl::StaticAssertSame< Impl::unsigned_< 1 > ,
-                            Impl::unsigned_< Type::Rank > >::type ok_rank ;
-
-/*  typedef typename
-    Impl::StaticAssertSame< execution_space ,
-                            typename Type::execution_space >::type ok_device ;*/
+  static_assert( std::is_same<Impl::unsigned_<1>, Impl::unsigned_<Type::Rank> >::value
+               , "Error: rank is not 1." );
 
   typedef double value_type ;
 
@@ -204,25 +195,11 @@ struct Scale
 {
   typedef typename Device::execution_space execution_space ;
 
-/*  typedef typename
-    Impl::StaticAssertSame< execution_space ,
-                            typename ScalarType::execution_space >::type
-      ok_scalar_device ;
+  static_assert( std::is_same<Impl::unsigned_<0>, Impl::unsigned_<ScalarType::Rank> >::value
+               , "Error: ScalarType rank is not 0." );
 
-  typedef typename
-    Impl::StaticAssertSame< execution_space ,
-                            typename VectorType::execution_space >::type
-      ok_vector_device ;*/
-
-  typedef typename
-    Impl::StaticAssertSame< Impl::unsigned_< 0 > ,
-                            Impl::unsigned_< ScalarType::Rank > >::type
-      ok_scalar_rank ;
-
-  typedef typename
-    Impl::StaticAssertSame< Impl::unsigned_< 1 > ,
-                            Impl::unsigned_< VectorType::Rank > >::type
-      ok_vector_rank ;
+  static_assert( std::is_same<Impl::unsigned_<1>, Impl::unsigned_<VectorType::Rank> >::value
+               , "Error: VectorType rank is not 1." );
 
 #if 1
   typename ScalarType::const_type alpha ;
@@ -251,35 +228,14 @@ struct AXPBY
 {
   typedef typename Device::execution_space execution_space ;
 
-/*  typedef typename
-    Impl::StaticAssertSame< execution_space ,
-                            typename ScalarType::execution_space >::type
-      ok_scalar_device ;
+  static_assert( std::is_same<Impl::unsigned_<0>, Impl::unsigned_<ScalarType::Rank> >::value
+               , "Error: ScalarType rank is not 0." );
 
-  typedef typename
-    Impl::StaticAssertSame< execution_space ,
-                            typename ConstVectorType::execution_space >::type
-      ok_const_vector_device ;
+  static_assert( std::is_same<Impl::unsigned_<1>, Impl::unsigned_<ConstVectorType::Rank> >::value
+               , "Error: ConstVectorType rank is not 1." );
 
-  typedef typename
-    Impl::StaticAssertSame< execution_space ,
-                            typename VectorType::execution_space >::type
-      ok_vector_device ;*/
-
-  typedef typename
-    Impl::StaticAssertSame< Impl::unsigned_< 0 > ,
-                            Impl::unsigned_< ScalarType::Rank > >::type
-      ok_scalar_rank ;
-
-  typedef typename
-    Impl::StaticAssertSame< Impl::unsigned_< 1 > ,
-                            Impl::unsigned_< ConstVectorType::Rank > >::type
-      ok_const_vector_rank ;
-
-  typedef typename
-    Impl::StaticAssertSame< Impl::unsigned_< 1 > ,
-                            Impl::unsigned_< VectorType::Rank > >::type
-      ok_vector_rank ;
+  static_assert( std::is_same<Impl::unsigned_<1>, Impl::unsigned_<VectorType::Rank> >::value
+               , "Error: VectorType rank is not 1." );
 
 #if 1
   typename ScalarType::const_type alpha , beta ;

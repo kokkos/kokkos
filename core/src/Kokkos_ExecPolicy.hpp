@@ -46,7 +46,6 @@
 
 #include <Kokkos_Core_fwd.hpp>
 #include <impl/Kokkos_Traits.hpp>
-#include <impl/Kokkos_StaticAssert.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_AnalyzePolicy.hpp>
@@ -292,7 +291,7 @@ private:
   typedef Impl::PolicyTraits<Properties ... > traits;
 
 public:
-  
+
   typedef typename traits::index_type index_type;
 
   //----------------------------------------
@@ -762,7 +761,7 @@ struct ThreadVectorRangeBoundariesStruct {
   enum {increment = 1};
 
   KOKKOS_INLINE_FUNCTION
-  constexpr ThreadVectorRangeBoundariesStruct ( const TeamMemberType, const index_type& count ) noexcept 
+  constexpr ThreadVectorRangeBoundariesStruct ( const TeamMemberType, const index_type& count ) noexcept
   : start( static_cast<index_type>(0) )
   , end( count ) {}
 
@@ -772,7 +771,7 @@ struct ThreadVectorRangeBoundariesStruct {
   , end( count ) {}
 
   KOKKOS_INLINE_FUNCTION
-  constexpr ThreadVectorRangeBoundariesStruct ( const TeamMemberType, const index_type& arg_begin, const index_type& arg_end ) noexcept 
+  constexpr ThreadVectorRangeBoundariesStruct ( const TeamMemberType, const index_type& arg_begin, const index_type& arg_end ) noexcept
   : start( static_cast<index_type>(arg_begin) )
   , end( arg_end ) {}
 
