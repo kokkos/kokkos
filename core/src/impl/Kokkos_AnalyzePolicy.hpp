@@ -59,7 +59,7 @@ template < typename ExecutionSpace   = void
          >
 struct PolicyTraitsBase
 {
-  using type = PolicyTraitsBase< ExecutionSpace, Schedule, WorkTag, IndexType, 
+  using type = PolicyTraitsBase< ExecutionSpace, Schedule, WorkTag, IndexType,
                IterationPattern, LaunchBounds>;
 
   using execution_space   = ExecutionSpace;
@@ -217,10 +217,9 @@ struct AnalyzePolicy<Base>
                                >;
 };
 
+
 template <typename... Traits>
-struct PolicyTraits
-  : public AnalyzePolicy< PolicyTraitsBase<>, Traits... >::type
-{};
+using PolicyTraits = typename AnalyzePolicy< PolicyTraitsBase<>, Traits... >::type;
 
 }} // namespace Kokkos::Impl
 
