@@ -94,6 +94,33 @@ struct LaunchBounds
   static unsigned int constexpr minBperSM {minB};
 };
 
+
+// Execution Policy tags for hierarchical parallelism
+struct ParallelForTag {};
+struct ParallelScanTag {};
+struct ParallelReduceTag {};
+
+
+// ChunkSize (i.e. minimun work size) for Execution Policies
+struct ChunkSize
+{
+  using chunk_size = ChunkSize;
+
+  int value = 0;
+
+  constexpr ChunkSize(int value_) noexcept
+    : value{value_}
+  {}
+
+  constexpr ChunkSize()                     noexcept = default;
+  constexpr ChunkSize( const ChunkSize & )  noexcept = default;
+  constexpr ChunkSize( ChunkSize && )       noexcept = default;
+
+  ChunkSize& operator=( const ChunkSize & ) noexcept = default;
+  ChunkSize& operator=( ChunkSize && )      noexcept = default;
+};
+
+
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
