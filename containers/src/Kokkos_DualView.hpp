@@ -592,33 +592,37 @@ public:
   }
 
   inline void modify_host() {
-    modified_flags(0) = (modified_flags(1) > modified_flags(0) ?
-                          modified_flags(1) : modified_flags(0))  + 1;
-    #ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
-    if (modified_flags(0) && modified_flags(1)) {
-      std::string msg = "Kokkos::DualView::modify_host ERROR: ";
-      msg += "Concurrent modification of host and device views ";
-      msg += "in DualView \"";
-      msg += d_view.label();
-      msg += "\"\n";
-      Kokkos::abort(msg.c_str());
-    }
+    if(modified_flags.data()!=NULL) {
+      modified_flags(0) = (modified_flags(1) > modified_flags(0) ?
+          modified_flags(1) : modified_flags(0))  + 1;
+      #ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
+      if (modified_flags(0) && modified_flags(1)) {
+        std::string msg = "Kokkos::DualView::modify_host ERROR: ";
+        msg += "Concurrent modification of host and device views ";
+        msg += "in DualView \"";
+        msg += d_view.label();
+        msg += "\"\n";
+        Kokkos::abort(msg.c_str());
+      }
     #endif
+    }
   }
 
   inline void modify_device() {
-    modified_flags(1) = (modified_flags(1) > modified_flags(0) ?
-                          modified_flags(1) : modified_flags(0))  + 1;
-    #ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
-    if (modified_flags(0) && modified_flags(1)) {
-      std::string msg = "Kokkos::DualView::modify_device ERROR: ";
-      msg += "Concurrent modification of host and device views ";
-      msg += "in DualView \"";
-      msg += d_view.label();
-      msg += "\"\n";
-      Kokkos::abort(msg.c_str());
+    if(modified_flags.data()!=NULL) {
+      modified_flags(1) = (modified_flags(1) > modified_flags(0) ?
+          modified_flags(1) : modified_flags(0))  + 1;
+      #ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
+      if (modified_flags(0) && modified_flags(1)) {
+        std::string msg = "Kokkos::DualView::modify_device ERROR: ";
+        msg += "Concurrent modification of host and device views ";
+        msg += "in DualView \"";
+        msg += d_view.label();
+        msg += "\"\n";
+        Kokkos::abort(msg.c_str());
+      }
+      #endif
     }
-    #endif
   }
 
   inline void clear_sync_state() {
