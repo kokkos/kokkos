@@ -517,6 +517,7 @@ public:
     if(modified_flags.data()==NULL) return;
     if(modified_flags(1) > modified_flags(0)) {
       deep_copy (h_view, d_view);
+      modified_flags(1) = modified_flags(0) = 0;
     }
   }
 
@@ -526,6 +527,7 @@ public:
     if(modified_flags.data()==NULL) return;
     if(modified_flags(0) > modified_flags(1)) {
       deep_copy (d_view, h_view);
+      modified_flags(1) = modified_flags(0) = 0;
     }
   }
 
