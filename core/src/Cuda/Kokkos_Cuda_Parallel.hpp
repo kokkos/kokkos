@@ -85,10 +85,14 @@ public:
 
   typedef PolicyTraits<Properties ... > traits;
 
+  //! Execution space of this execution policy
+  typedef Kokkos::Cuda  execution_space ;
+
 private:
 
   enum { MAX_WARP = 8 };
 
+  execution_space m_space ;
   int m_league_size ;
   int m_team_size ;
   int m_vector_length ;
@@ -97,9 +101,6 @@ private:
   int m_chunk_size;
 
 public:
-
-  //! Execution space of this execution policy
-  typedef Kokkos::Cuda  execution_space ;
 
   TeamPolicyInternal& operator = (const TeamPolicyInternal& p) {
     m_league_size = p.m_league_size;
@@ -210,6 +211,7 @@ public:
 
   //----------------------------------------
 
+  inline const execution_space & space() const { return m_space ; }
   inline int vector_length()   const { return m_vector_length ; }
   inline int team_size()   const { return m_team_size ; }
   inline int league_size() const { return m_league_size ; }
@@ -225,7 +227,8 @@ public:
   }
 
   TeamPolicyInternal()
-    : m_league_size( 0 )
+    : m_space()
+    , m_league_size( 0 )
     , m_team_size( 0 )
     , m_vector_length( 0 )
     , m_team_scratch_size {0,0}
@@ -234,11 +237,12 @@ public:
    {}
 
   /** \brief  Specify league size, request team size */
-  TeamPolicyInternal( execution_space &
+  TeamPolicyInternal( execution_space & space_
             , int league_size_
             , int team_size_request
             , int vector_length_request = 1 )
-    : m_league_size( league_size_ )
+    : m_space( space_ )
+    , m_league_size( league_size_ )
     , m_team_size( team_size_request )
     , m_vector_length( vector_length_request )
     , m_team_scratch_size {0,0}
@@ -261,11 +265,12 @@ public:
     }
 
   /** \brief  Specify league size, request team size */
-  TeamPolicyInternal( execution_space &
+  TeamPolicyInternal( execution_space & space_
             , int league_size_
             , const Kokkos::AUTO_t & /* team_size_request */
             , int vector_length_request = 1 )
-    : m_league_size( league_size_ )
+    : m_space( space_ )
+    , m_league_size( league_size_ )
     , m_team_size( -1 )
     , m_vector_length( vector_length_request )
     , m_team_scratch_size {0,0}
@@ -285,7 +290,8 @@ public:
   TeamPolicyInternal( int league_size_
             , int team_size_request
             , int vector_length_request = 1 )
-    : m_league_size( league_size_ )
+    : m_space()
+    , m_league_size( league_size_ )
     , m_team_size( team_size_request )
     , m_vector_length ( vector_length_request )
     , m_team_scratch_size {0,0}
@@ -310,7 +316,8 @@ public:
   TeamPolicyInternal( int league_size_
             , const Kokkos::AUTO_t & /* team_size_request */
             , int vector_length_request = 1 )
-    : m_league_size( league_size_ )
+    : m_space()
+    , m_league_size( league_size_ )
     , m_team_size( -1 )
     , m_vector_length ( vector_length_request )
     , m_team_scratch_size {0,0}
@@ -483,7 +490,7 @@ public:
       const dim3 block(  1 , block_size , 1);
       const dim3 grid( std::min( typename Policy::index_type(( nwork + block.y - 1 ) / block.y) , typename Policy::index_type(cuda_internal_maximum_grid_count()) ) , 1 , 1);
 
-      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
+      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 , m_policy.space().cuda_stream() );
     }
 
   ParallelFor( const FunctorType  & arg_functor ,
@@ -534,7 +541,7 @@ public:
           , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks )
           , 1
           );
-      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
+      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 , m_rp.space().cuda_stream() );
     }
     else if ( RP::rank == 3 )
     {
@@ -544,7 +551,7 @@ public:
         , std::min( ( m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1 ) / block.y , maxblocks )
         , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.z - 1 ) / block.z , maxblocks )
         );
-      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
+      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 , m_rp.space().cuda_stream() );
     }
     else if ( RP::rank == 4 )
     {
@@ -556,7 +563,7 @@ public:
         , std::min( ( m_rp.m_upper[2] - m_rp.m_lower[2] + block.y - 1 ) / block.y , maxblocks )
         , std::min( ( m_rp.m_upper[3] - m_rp.m_lower[3] + block.z - 1 ) / block.z , maxblocks )
         );
-      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
+      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 , m_rp.space().cuda_stream() );
     }
     else if ( RP::rank == 5 )
     {
@@ -569,7 +576,7 @@ public:
                   , static_cast<index_type>(maxblocks) )
         , std::min( ( m_rp.m_upper[4] - m_rp.m_lower[4] + block.z - 1 ) / block.z , maxblocks )
         );
-      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
+      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 , m_rp.space().cuda_stream() );
     }
     else if ( RP::rank == 6 )
     {
@@ -583,7 +590,7 @@ public:
         , std::min( static_cast<index_type>( m_rp.m_tile_end[4] * m_rp.m_tile_end[5] )
                   , static_cast<index_type>(maxblocks) )
         );
-      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
+      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 , m_rp.space().cuda_stream() );
     }
     else
     {
@@ -630,6 +637,7 @@ private:
   //
 
   const FunctorType  m_functor ;
+  const Policy       m_policy ;
   const size_type    m_league_size ;
   const size_type    m_team_size ;
   const size_type    m_vector_size ;
@@ -704,7 +712,7 @@ public:
       const dim3 grid( int(m_league_size) , 1 , 1 );
       const dim3 block( int(m_vector_size) , int(m_team_size) , 1 );
 
-      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this, grid, block, shmem_size_total ); // copy to device and execute
+      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this, grid, block, shmem_size_total , m_policy.space().cuda_stream() ); // copy to device and execute
 
     }
 
@@ -712,6 +720,7 @@ public:
              , const Policy       & arg_policy
              )
     : m_functor( arg_functor )
+    , m_policy( arg_policy )
     , m_league_size( arg_policy.league_size() )
     , m_team_size( 0 <= arg_policy.team_size() ? arg_policy.team_size() :
         Kokkos::Impl::cuda_get_opt_block_size< ParallelFor, LaunchBounds >( arg_functor , arg_policy.vector_length(), arg_policy.team_scratch_size(0),arg_policy.thread_scratch_size(0) ) / arg_policy.vector_length() )
@@ -922,7 +931,7 @@ public:
 
       const int shmem = UseShflReduction?0:cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( m_functor , block.y );
 
-      CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
+      CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem , m_policy.space().cuda_stream() ); // copy to device and execute
 
       if(!m_result_ptr_device_accessible) {
         Cuda::fence();
@@ -1154,7 +1163,7 @@ public:
 
       const int shmem = UseShflReduction?0:cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( m_functor , block.y );
 
-      CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
+      CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem , m_policy.space().cuda_stream() ); // copy to device and execute
 
       if(!m_result_ptr_device_accessible) {
         Cuda::fence();
@@ -1261,6 +1270,7 @@ private:
 
   const FunctorType   m_functor ;
   const ReducerType   m_reducer ;
+  const Policy        m_policy ;
   const pointer_type  m_result_ptr ;
   const bool          m_result_ptr_device_accessible ;
   size_type *         m_scratch_space ;
@@ -1421,7 +1431,7 @@ public:
         const dim3 grid( block_count , 1 , 1 );
         const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size ;
 
-        CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem_size_total ); // copy to device and execute
+        CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem_size_total , m_policy.space().cuda_stream() ); // copy to device and execute
 
         if(!m_result_ptr_device_accessible) {
           Cuda::fence();
@@ -1453,6 +1463,7 @@ public:
                                    Kokkos::is_view< ViewType >::value
                                 ,void*>::type = NULL)
   : m_functor( arg_functor )
+  , m_policy( arg_policy )
   , m_reducer( InvalidType() )
   , m_result_ptr( arg_result.data() )
   , m_result_ptr_device_accessible(MemorySpaceAccess< Kokkos::CudaSpace , typename ViewType::memory_space>::accessible )
@@ -1758,7 +1769,7 @@ public:
         const int  shmem = m_shmem_team_begin + m_shmem_team_size ;
 
         // copy to device and execute
-        CudaParallelLaunch<ParallelReduce,LaunchBounds>( *this, grid, block, shmem );
+        CudaParallelLaunch<ParallelReduce,LaunchBounds>( *this, grid, block, shmem , m_policy.space().cuda_stream() );
 
         Cuda::fence();
 
@@ -2147,10 +2158,10 @@ public:
         const int shmem = ValueTraits::value_size( m_functor ) * ( block_size + 2 );
 
         m_final = false ;
-        CudaParallelLaunch< ParallelScan, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
+        CudaParallelLaunch< ParallelScan, LaunchBounds >( *this, grid, block, shmem , m_policy.space().cuda_stream() ); // copy to device and execute
 
         m_final = true ;
-        CudaParallelLaunch< ParallelScan, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
+        CudaParallelLaunch< ParallelScan, LaunchBounds >( *this, grid, block, shmem , m_policy.space().cuda_stream() ); // copy to device and execute
       }
     }
 
@@ -2374,10 +2385,10 @@ public:
         const int shmem = ValueTraits::value_size( m_functor ) * ( block_size + 2 );
 
         m_final = false ;
-        CudaParallelLaunch< ParallelScanWithTotal, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
+        CudaParallelLaunch< ParallelScanWithTotal, LaunchBounds >( *this, grid, block, shmem , m_policy.space().cuda_stream() ); // copy to device and execute
 
         m_final = true ;
-        CudaParallelLaunch< ParallelScanWithTotal, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
+        CudaParallelLaunch< ParallelScanWithTotal, LaunchBounds >( *this, grid, block, shmem , m_policy.space().cuda_stream() ); // copy to device and execute
 
         const int size = ValueTraits::value_size( m_functor );
         DeepCopy<HostSpace,CudaSpace>( &m_returnvalue, m_scratch_space + (grid_x - 1)*size/sizeof(int), size );
