@@ -125,6 +125,8 @@ struct MDRangePolicy
   using traits = Kokkos::Impl::PolicyTraits<Properties ...>;
   using range_policy = RangePolicy<Properties...>;
 
+  typename traits::execution_space m_space;
+
   using impl_range_policy = RangePolicy< typename traits::execution_space
                                        , typename traits::schedule_type
                                        , typename traits::index_type
@@ -192,13 +194,44 @@ struct MDRangePolicy
   static constexpr int Right = static_cast<int>( Iterate::Right );
   static constexpr int Left  = static_cast<int>( Iterate::Left );
 
+  KOKKOS_INLINE_FUNCTION const typename traits::execution_space & space() const { return m_space ; }
+  template < typename LT , typename UT , typename TT = array_index_type >
+  MDRangePolicy(std::initializer_list<LT> const& lower, std::initializer_list<UT> const& upper, std::initializer_list<TT> const& tile = {} )
+    : m_space() {
+    init(lower, upper, tile);
+  }
+
+  template < typename LT , typename UT , typename TT = array_index_type >
+  MDRangePolicy(const typename traits::execution_space & work_space,
+    std::initializer_list<LT> const& lower, std::initializer_list<UT> const& upper, std::initializer_list<TT> const& tile = {} )
+    : m_space( work_space ) {
+    init(lower, upper, tile);
+  }
+
   MDRangePolicy( point_type const& lower, point_type const& upper, tile_type const& tile = tile_type{} )
-    : m_lower(lower)
+    : m_space()
+    , m_lower(lower)
     , m_upper(upper)
     , m_tile(tile)
     , m_num_tiles(1)
-    , m_prod_tile_dims(1)
-  {
+    , m_prod_tile_dims(1) {
+    init();
+  }
+
+  MDRangePolicy( const typename traits::execution_space & work_space,
+    point_type const& lower, point_type const& upper, tile_type const& tile = tile_type{} )
+    : m_space( work_space )
+    , m_lower(lower)
+    , m_upper(upper)
+    , m_tile(tile)
+    , m_num_tiles(1)
+    , m_prod_tile_dims(1) {
+    init();
+  }
+
+private:
+
+  void init() {
     // Host
     if ( true
        #if defined(KOKKOS_ENABLE_CUDA)
@@ -211,7 +244,7 @@ struct MDRangePolicy
     {
       index_type span;
       for (int i=0; i<rank; ++i) {
-        span = upper[i] - lower[i];
+        span = m_upper[i] - m_lower[i];
         if ( m_tile[i] <= 0 ) {
           if (  ((int)inner_direction == (int)Right && (i < rank-1))
               || ((int)inner_direction == (int)Left && (i > 0)) )
@@ -311,11 +344,9 @@ struct MDRangePolicy
     #endif
   }
 
-
   template < typename LT , typename UT , typename TT = array_index_type >
-  MDRangePolicy( std::initializer_list<LT> const& lower, std::initializer_list<UT> const& upper, std::initializer_list<TT> const& tile = {} )
+  void init( std::initializer_list<LT> const& lower, std::initializer_list<UT> const& upper, std::initializer_list<TT> const& tile = {} )
   {
-
     if(static_cast<int>(m_lower.size()) != rank || static_cast<int>(m_upper.size()) != rank)
       Kokkos::abort("MDRangePolicy: Constructor initializer lists have wrong size");
 
