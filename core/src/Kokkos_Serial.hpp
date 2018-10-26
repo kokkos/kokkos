@@ -454,15 +454,15 @@ protected:
 namespace Kokkos {
 namespace Impl {
 
-template< class FunctorType , class ... Traits >
+template< class FunctorType , class Traits >
 class ParallelFor< FunctorType ,
-                   Kokkos::RangePolicy< Traits ... > ,
+                   Kokkos::Impl::RangePolicy< Traits > ,
                    Kokkos::Serial
                  >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Traits ... > Policy ;
+  typedef Kokkos::Impl::RangePolicy< Traits > Policy ;
 
   const FunctorType m_functor ;
   const Policy      m_policy ;
@@ -504,16 +504,16 @@ public:
 
 /*--------------------------------------------------------------------------*/
 
-template< class FunctorType , class ReducerType , class ... Traits >
+template< class FunctorType , class ReducerType , class Traits >
 class ParallelReduce< FunctorType
-                    , Kokkos::RangePolicy< Traits ... >
+                    , Kokkos::Impl::RangePolicy< Traits >
                     , ReducerType
                     , Kokkos::Serial
                     >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Traits ... > Policy ;
+  typedef Kokkos::Impl::RangePolicy< Traits > Policy ;
   typedef typename Policy::work_tag                                  WorkTag ;
 
   typedef Kokkos::Impl::if_c< std::is_same<InvalidType,ReducerType>::value, FunctorType, ReducerType> ReducerConditional;
@@ -625,15 +625,15 @@ public:
 
 /*--------------------------------------------------------------------------*/
 
-template< class FunctorType , class ... Traits >
+template< class FunctorType , class Traits >
 class ParallelScan< FunctorType
-                  , Kokkos::RangePolicy< Traits ... >
+                  , Kokkos::Impl::RangePolicy< Traits >
                   , Kokkos::Serial
                   >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Traits ... > Policy ;
+  typedef Kokkos::Impl::RangePolicy< Traits > Policy ;
   typedef typename Policy::work_tag                                  WorkTag ;
 
   typedef FunctorAnalysis< FunctorPatternInterface::SCAN , Policy , FunctorType > Analysis ;
@@ -702,16 +702,16 @@ public:
 };
 
 /*--------------------------------------------------------------------------*/
-template< class FunctorType , class ReturnType, class ... Traits >
+template< class FunctorType , class ReturnType, class Traits >
 class ParallelScanWithTotal< FunctorType
-                           , Kokkos::RangePolicy< Traits ... >
+                           , Kokkos::Impl::RangePolicy< Traits >
                            , ReturnType
                            , Kokkos::Serial
                            >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Traits ... > Policy ;
+  typedef Kokkos::Impl::RangePolicy< Traits > Policy ;
   typedef typename Policy::work_tag                                  WorkTag ;
 
   typedef FunctorAnalysis< FunctorPatternInterface::SCAN , Policy , FunctorType > Analysis ;

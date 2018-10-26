@@ -62,15 +62,15 @@ namespace Impl {
 
 //----------------------------------------------------------------------------
 
-template< class FunctorType , class ... Traits >
+template< class FunctorType , class Traits >
 class ParallelFor< FunctorType
-                 , Kokkos::RangePolicy< Traits ... >
+                 , Kokkos::Impl::RangePolicy< Traits >
                  , Kokkos::Qthreads
                  >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Traits ... >  Policy ;
+  typedef Kokkos::Impl::RangePolicy< Traits >  Policy ;
 
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::member_type  Member ;
@@ -132,16 +132,16 @@ public:
 
 //----------------------------------------------------------------------------
 
-template< class FunctorType , class ReducerType , class ... Traits >
+template< class FunctorType , class ReducerType , class Traits >
 class ParallelReduce< FunctorType
-                    , Kokkos::RangePolicy< Traits ... >
+                    , Kokkos::Impl::RangePolicy< Traits >
                     , ReducerType
                     , Kokkos::Qthreads
                     >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Traits ... >  Policy ;
+  typedef Kokkos::Impl::RangePolicy< Traits >  Policy ;
 
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::WorkRange    WorkRange ;
@@ -430,15 +430,15 @@ public:
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-template< class FunctorType , class ... Traits >
+template< class FunctorType , class Traits >
 class ParallelScan< FunctorType
-                  , Kokkos::RangePolicy< Traits ... >
+                  , Kokkos::Impl::RangePolicy< Traits >
                   , Kokkos::Qthreads
                   >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Traits ... >  Policy ;
+  typedef Kokkos::Impl::RangePolicy< Traits >  Policy ;
 
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::WorkRange    WorkRange ;

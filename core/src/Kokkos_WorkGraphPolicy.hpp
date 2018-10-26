@@ -120,7 +120,7 @@ public:
    *    return END_TOKEN
    *  else
    *    return COMPLETED_TOKEN
-   *  
+   *
    */
   KOKKOS_INLINE_FUNCTION
   std::int32_t pop_work() const noexcept
@@ -213,7 +213,7 @@ public:
              , arg_graph.numRows() * 2 + 2 )
   {
     { // Initialize
-      using policy_type = RangePolicy<std::int32_t, execution_space, TagInit>;
+      using policy_type = Kokkos::RangePolicy<std::int32_t, execution_space, TagInit>;
       using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
       const closure_type closure(*this, policy_type(0, m_queue.size()));
       closure.execute();
@@ -221,7 +221,7 @@ public:
     }
 
     { // execute-after counts
-      using policy_type = RangePolicy<std::int32_t, execution_space, TagCount>;
+      using policy_type = Kokkos::RangePolicy<std::int32_t, execution_space, TagCount>;
       using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
       const closure_type closure(*this,policy_type(0,m_graph.entries.size()));
       closure.execute();
@@ -229,7 +229,7 @@ public:
     }
 
     { // Scheduling ready tasks
-      using policy_type = RangePolicy<std::int32_t, execution_space, TagReady>;
+      using policy_type = Kokkos::RangePolicy<std::int32_t, execution_space, TagReady>;
       using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
       const closure_type closure(*this,policy_type(0,m_graph.numRows()));
       closure.execute();

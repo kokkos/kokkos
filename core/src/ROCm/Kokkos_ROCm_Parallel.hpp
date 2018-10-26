@@ -271,7 +271,7 @@ public:
   }
 
   static int scratch_size_max(int level) {
-    return level==0 ? 
+    return level==0 ?
       1024*40 : 1024*1204*20;
   }
 
@@ -283,7 +283,7 @@ public:
     typedef Kokkos::ScratchMemorySpace<Kokkos::Experimental::ROCm> scratch_memory_space ;
 
     KOKKOS_INLINE_FUNCTION
-    const scratch_memory_space & team_shmem() const 
+    const scratch_memory_space & team_shmem() const
       { return m_team_shared.set_team_thread_mode(0,1,0); }
     KOKKOS_INLINE_FUNCTION
     const execution_space::scratch_memory_space & team_scratch(const int& level) const
@@ -324,10 +324,10 @@ public:
     ROCmTeamMember( const hc::tiled_index< 1 > & arg_idx, int league_size_,int team_size_, char * shared,  std::size_t shsize, std::size_t scratch_size0, char * scratch_ptr, std::size_t scratch_size1, std::size_t vector_length)
       : m_league_size( league_size_ )
       , m_team_size( team_size_ )
-      , m_team_shared( shared +  
-                          arg_idx.tile[0]*(shsize+scratch_size0), 
-                       (shsize+scratch_size0)*league_size_, 
-                       scratch_ptr + arg_idx.tile[0]*scratch_size1, 
+      , m_team_shared( shared +
+                          arg_idx.tile[0]*(shsize+scratch_size0),
+                       (shsize+scratch_size0)*league_size_,
+                       scratch_ptr + arg_idx.tile[0]*scratch_size1,
                        scratch_size1*league_size_)
       , m_vector_length( vector_length )
       , m_idx( arg_idx )
@@ -340,7 +340,7 @@ public:
 
     template<class ValueType>
     KOKKOS_INLINE_FUNCTION
-    void team_broadcast(const ValueType& value, const int& thread_id ) const 
+    void team_broadcast(const ValueType& value, const int& thread_id ) const
     {
       static_assert(std::is_trivially_default_constructible<ValueType>(), "Only trivial constructible types can be broadcasted");
       tile_static ValueType local_value;
@@ -504,7 +504,7 @@ public:
       reducer.reference() = buffer[0];
     }
 
-    /** \brief  Intra-team vector reduce 
+    /** \brief  Intra-team vector reduce
      *          with intra-team non-deterministic ordering accumulation.
      *
      *  The intra-team accumulation value will, at the end of the
@@ -612,7 +612,7 @@ public:
       }
 
       if ( global_accum )
-      { 
+      {
          if(local == last)
          {
             atomic_fetch_add(global_accum, buffer[local] + value);
@@ -631,7 +631,7 @@ public:
       int _toggle = 0;
       m_idx.barrier.wait();
 
-      if(lid == 0) 
+      if(lid == 0)
       {
          sarray[1][0] = 0;
          sarray[0][0] = 0;
@@ -656,7 +656,7 @@ public:
       }
 
       if ( global_accum )
-      { 
+      {
          if(m_team_size == lp1)
          {
             sarray[toggle][m_team_size] = atomic_fetch_add(global_accum,sarray[toggle][m_team_size]);
@@ -687,13 +687,13 @@ namespace Impl {
 
 //----------------------------------------------------------------------------
 
-template< class FunctorType , class... Traits >
+template< class FunctorType , class Traits >
 class ParallelFor< FunctorType
-                 , Kokkos::RangePolicy< Traits... >, Kokkos::Experimental::ROCm >
+                 , Kokkos::Impl::RangePolicy< Traits >, Kokkos::Experimental::ROCm >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Traits... > Policy ;
+  typedef Kokkos::Impl::RangePolicy< Traits > Policy ;
 
 public:
 
@@ -747,7 +747,7 @@ private:
 
 public:
 
-  KOKKOS_INLINE_FUNCTION 
+  KOKKOS_INLINE_FUNCTION
   void operator()(void) const
     {
        Kokkos::Impl::Refactor::DeviceIterateTile<Policy::rank,Policy,FunctorType,typename Policy::work_tag>(m_rp,m_functor).exec_range();
@@ -881,13 +881,13 @@ public:
 
 //----------------------------------------------------------------------------
 
-template< class FunctorType , class ReducerType, class... Traits >
+template< class FunctorType , class ReducerType, class Traits >
 class ParallelReduce<
-  FunctorType , Kokkos::RangePolicy< Traits... >, ReducerType, Kokkos::Experimental::ROCm >
+  FunctorType , Kokkos::Impl::RangePolicy< Traits >, ReducerType, Kokkos::Experimental::ROCm >
 {
 public:
 
-  typedef Kokkos::RangePolicy< Traits... > Policy ;
+  typedef Kokkos::Impl::RangePolicy< Traits > Policy ;
 
   // TODO: Use generic lambdas instead
   struct invoke_fn
@@ -925,7 +925,7 @@ public:
       }
 
       Kokkos::Impl::reduce_enqueue< Tag >
-        ( total_size 
+        ( total_size
         , f
         , InvalidType{}
         , rocm_capture(invoke_fn{}, total_size)
@@ -952,14 +952,14 @@ public:
 
       if(total_size==0) {
         if (reducer.view().data()) {
-           ValueInit::init( ReducerConditional::select(f,reducer), 
+           ValueInit::init( ReducerConditional::select(f,reducer),
                             reducer.view().data() );
         }
         return;
       }
 
       Kokkos::Impl::reduce_enqueue< Tag >
-        ( total_size 
+        ( total_size
         , f
         , reducer
         , rocm_capture(invoke_fn{}, total_size)
@@ -1036,7 +1036,7 @@ public:
       word_count( (ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) )) / sizeof(value_type) );
       // pointer to shared data accounts for the reserved space at the start
       value_type * const shared = kokkos_impl_rocm_shared_memory<value_type>()
-                                 + 2*sizeof(uint64_t); 
+                                 + 2*sizeof(uint64_t);
 
     {
       reference_type value =
@@ -1177,7 +1177,7 @@ public:
       const int scratch_size0 = policy.scratch_size(0,team_size);
       const int scratch_size1 = policy.scratch_size(1,team_size);
       const int total_size = league_size * team_size ;
-      
+
       typedef Kokkos::Impl::FunctorValueInit< FunctorType, typename Policy::work_tag > ValueInit ;
       if(total_size==0) {
         if (result_view.data()) {
@@ -1197,13 +1197,13 @@ public:
       if(0<scratch_size1)
         scratch = (char *)rocm_device_allocate(scratch_size1 * league_size);
 
-      auto create_team_member = [=](hc::tiled_index<1> idx, tile_desc td) 
-      { 
+      auto create_team_member = [=](hc::tiled_index<1> idx, tile_desc td)
+      {
 
-        return typename Policy::member_type(idx, league_size, td.team_size, 
+        return typename Policy::member_type(idx, league_size, td.team_size,
                                           shared, shared_size, scratch_size0,
-                                          scratch, scratch_size1, 
-                                          vector_length); 
+                                          scratch, scratch_size1,
+                                          vector_length);
       };
 
       Kokkos::Impl::reduce_enqueue< typename Policy::work_tag >
@@ -1213,8 +1213,8 @@ public:
         , rocm_capture(invoke_fn{}, create_team_member)
         , result_view.ptr_on_device()
         , result_view.dimension_0()
-        , team_size 
-        , vector_length 
+        , team_size
+        , vector_length
         , shared_size
       );
 
@@ -1238,7 +1238,7 @@ public:
                                    FunctorType, ReducerType> ReducerConditional;
       if(total_size==0) {
         if (reducer.view().data()) {
-           ValueInit::init( ReducerConditional::select(f,reducer), 
+           ValueInit::init( ReducerConditional::select(f,reducer),
                             reducer.view().data() );
         }
         return;
@@ -1256,9 +1256,9 @@ public:
       if(0<scratch_size1)
         scratch = (char *)rocm_device_allocate(scratch_size1 * league_size);
 
-      auto create_team_member = [=](hc::tiled_index<1> idx, tile_desc td) 
-      { 
-        return typename Policy::member_type(idx, league_size, td.tile_size, shared, shared_size, scratch_size0, scratch, scratch_size1, vector_length); 
+      auto create_team_member = [=](hc::tiled_index<1> idx, tile_desc td)
+      {
+        return typename Policy::member_type(idx, league_size, td.tile_size, shared, shared_size, scratch_size0, scratch, scratch_size1, vector_length);
       };
 
       Kokkos::Impl::reduce_enqueue< typename Policy::work_tag >
@@ -1282,12 +1282,12 @@ public:
 };
 
 
-template< class FunctorType , class... Traits >
-class ParallelScan< FunctorType , Kokkos::RangePolicy< Traits... >, Kokkos::Experimental::ROCm >
+template< class FunctorType , class Traits >
+class ParallelScan< FunctorType , Kokkos::Impl::RangePolicy< Traits >, Kokkos::Experimental::ROCm >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Traits... > Policy;
+  typedef Kokkos::Impl::RangePolicy< Traits > Policy;
   typedef typename Policy::work_tag Tag;
   typedef Kokkos::Impl::FunctorValueTraits< FunctorType, Tag>  ValueTraits;
 
@@ -1313,13 +1313,13 @@ public:
   //----------------------------------------
 };
 
-template< class FunctorType , class ReturnType , class... Traits >
-class ParallelScanWithTotal< FunctorType , Kokkos::RangePolicy< Traits... >,
+template< class FunctorType , class ReturnType , class Traits >
+class ParallelScanWithTotal< FunctorType , Kokkos::Impl::RangePolicy< Traits >,
                              ReturnType, Kokkos::Experimental::ROCm >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Traits... > Policy;
+  typedef Kokkos::Impl::RangePolicy< Traits > Policy;
   typedef typename Policy::work_tag Tag;
   typedef Kokkos::Impl::FunctorValueTraits< FunctorType, Tag>  ValueTraits;
 
@@ -1329,7 +1329,7 @@ public:
 
   inline
   ParallelScanWithTotal( const FunctorType & f
-              , const Policy      & policy 
+              , const Policy      & policy
               , ReturnType        & arg_returnvalue)
   {
     const auto len = policy.end()-policy.begin();
@@ -1366,7 +1366,7 @@ public:
     const auto league_size = policy.league_size();
     const auto team_size = policy.team_size(f);
     const auto len  = league_size * team_size;
-      
+
     if(len == 0) return;
 
     scan_enqueue<Tag>(len, f, [&](hc::tiled_index<1> idx, int n_teams, int n_leagues) { return typename Policy::member_type(idx,n_leagues,n_teams); });
@@ -1668,7 +1668,7 @@ void parallel_for(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ROCm
  * val is performed and put into result. This functionality requires C++11 support.*/
 template< typename iType, class Lambda, typename ValueType >
 KOKKOS_INLINE_FUNCTION
-typename std::enable_if< !Kokkos::is_reducer< ValueType >::value >::type 
+typename std::enable_if< !Kokkos::is_reducer< ValueType >::value >::type
 parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ROCmTeamMember >&
       loop_boundaries, const Lambda & lambda, ValueType& result) {
   result = ValueType();
@@ -1694,7 +1694,7 @@ void parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::R
       loop_boundaries, const Lambda & lambda, const JoinType& join, ValueType& result) {
 
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
-    lambda(i,result);  
+    lambda(i,result);
     loop_boundaries.thread.team_barrier();
   }
   result = loop_boundaries.thread.thread_reduce(result,join);
@@ -1730,7 +1730,7 @@ void parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::R
       loop_boundaries, const Lambda & lambda, const JoinType& join, ReducerType const & reducer) {
 
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
-    lambda(i,reducer.reference());  
+    lambda(i,reducer.reference());
     loop_boundaries.thread.team_barrier();
   }
   reducer.reference() = loop_boundaries.thread.thread_reduce(reducer.reference(),join);

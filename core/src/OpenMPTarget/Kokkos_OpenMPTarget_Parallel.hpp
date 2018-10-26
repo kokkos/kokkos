@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -56,15 +56,15 @@
 namespace Kokkos {
 namespace Impl {
 
-template< class FunctorType , class ... Traits >
+template< class FunctorType , class Traits >
 class ParallelFor< FunctorType
-                 , Kokkos::RangePolicy< Traits ... >
-                 , Kokkos::Experimental::OpenMPTarget 
+                 , Kokkos::Impl::RangePolicy< Traits >
+                 , Kokkos::Experimental::OpenMPTarget
                  >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Traits ...  > Policy ;
+  typedef Kokkos::Impl::RangePolicy< Traits > Policy ;
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::WorkRange    WorkRange ;
   typedef typename Policy::member_type  Member ;
@@ -88,7 +88,7 @@ public:
       OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
       const typename Policy::member_type begin = m_policy.begin();
       const typename Policy::member_type end = m_policy.end();
-      
+
       #pragma omp target teams distribute parallel for map(to:this->m_functor)
       for(int i=begin; i<end; i++)
         m_functor(i);
@@ -134,9 +134,9 @@ struct ParallelReduceSpecialize {
   }
 };
 
-template<class FunctorType, class ReducerType, class PointerType, class ValueType, class ... PolicyArgs>
-struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>, ReducerType, PointerType, ValueType, 0,0> {
-  typedef Kokkos::RangePolicy<PolicyArgs...> PolicyType;
+template<class FunctorType, class ReducerType, class PointerType, class ValueType, class PolicyArgs>
+struct ParallelReduceSpecialize<FunctorType, Kokkos::Impl::RangePolicy<PolicyArgs>, ReducerType, PointerType, ValueType, 0,0> {
+  typedef Kokkos::Impl::RangePolicy<PolicyArgs> PolicyType;
   template< class TagType >
   inline static
   typename std::enable_if< std::is_same< TagType , void >::value >::type
@@ -146,7 +146,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
       OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
       const typename PolicyType::member_type begin = p.begin();
       const typename PolicyType::member_type end = p.end();
-      
+
       ValueType result = ValueType();
       #pragma omp target teams distribute parallel for num_teams(512) map(to:f) map(tofrom:result) reduction(+: result)
       for(int i=begin; i<end; i++)
@@ -170,7 +170,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
       #pragma omp target teams distribute parallel for num_teams(512) map(to:f) map(tofrom: result) reduction(+: result)
       for(int i=begin; i<end; i++)
         f(TagType(),i,result);
-      
+
       *result_ptr=result;
     }
 
@@ -233,14 +233,14 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType, PointerTyp
 
 template< class FunctorType , class ReducerType, class ... Traits >
 class ParallelReduce< FunctorType
-                    , Kokkos::RangePolicy< Traits ...>
+                    , Kokkos::Impl::RangePolicy< Traits >
                     , ReducerType
                     , Kokkos::Experimental::OpenMPTarget
                     >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Traits ... > Policy ;
+  typedef Kokkos::Impl::RangePolicy< Traits > Policy ;
 
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::WorkRange    WorkRange ;
@@ -261,7 +261,7 @@ private:
 
   typedef typename ValueTraits::pointer_type    pointer_type ;
   typedef typename ValueTraits::reference_type  reference_type ;
-  
+
   typedef ParallelReduceSpecialize<FunctorType,Policy,ReducerType,pointer_type,typename ValueTraits::value_type,HasJoin,UseReducer> ParForSpecialize;
 
   const FunctorType   m_functor ;
@@ -269,9 +269,9 @@ private:
   const ReducerType   m_reducer ;
   const pointer_type  m_result_ptr ;
 
-public: 
+public:
   inline void execute() const {
-    ParForSpecialize::execute(m_functor,m_policy,m_result_ptr);    
+    ParForSpecialize::execute(m_functor,m_policy,m_result_ptr);
   }
 
   template< class ViewType >
@@ -318,15 +318,15 @@ public:
 namespace Kokkos {
 namespace Impl {
 
-template< class FunctorType , class ... Traits >
+template< class FunctorType , class Traits >
 class ParallelScan< FunctorType
-                  , Kokkos::RangePolicy< Traits ... >
+                  , Kokkos::Impl::RangePolicy< Traits >
                   , Kokkos::Experimental::OpenMPTarget
                   >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Traits ... > Policy ;
+  typedef Kokkos::Impl::RangePolicy< Traits > Policy ;
 
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::WorkRange    WorkRange ;
@@ -496,7 +496,7 @@ private:
       void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
       #pragma omp target teams distribute parallel for num_teams(league_size) num_threads(team_size*vector_length) schedule(static,1) \
-          map(to:this->m_functor,scratch_ptr) 
+          map(to:this->m_functor,scratch_ptr)
       for(int i=0 ; i<league_size*team_size*vector_length ; i++) {
         typename Policy::member_type team(i/(team_size*vector_length),league_size,team_size,vector_length, scratch_ptr, 0,0);
         m_functor(team);
@@ -548,14 +548,14 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>, 
     {
       OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget parallel_for");
       OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
-      
+
       const int league_size = p.league_size();
       const int team_size = p.team_size();
       const int vector_length = p.vector_length();
       const int nteams = OpenMPTargetExec::MAX_ACTIVE_TEAMS<league_size?OpenMPTargetExec::MAX_ACTIVE_TEAMS:league_size;
-      
+
       OpenMPTargetExec::resize_scratch(0,PolicyType::member_type::TEAM_REDUCE_SIZE,0,0);
-      void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr(); 
+      void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
       ValueType result = ValueType();
       #pragma omp target teams distribute parallel for num_teams(nteams) num_threads(team_size*vector_length) \
@@ -646,7 +646,7 @@ public:
 
   inline
   void execute() const {
-    ParForSpecialize::execute(m_functor,m_policy,m_result_ptr);   
+    ParForSpecialize::execute(m_functor,m_policy,m_result_ptr);
   }
 
   template< class ViewType >
@@ -737,7 +737,7 @@ namespace Impl {
     TeamThreadRange(const Impl::OpenMPTargetExecTeamMember& thread, const iType& count) {
     return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember>(thread,count);
   }
-  
+
   template<typename iType>
   KOKKOS_INLINE_FUNCTION
   Impl::TeamThreadRangeBoundariesStruct<iType,Impl::OpenMPTargetExecTeamMember>

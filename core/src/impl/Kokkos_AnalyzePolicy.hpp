@@ -70,6 +70,27 @@ struct PolicyTraitsBase
   using launch_bounds     = LaunchBounds;
 };
 
+template <class T>
+struct is_policy_traits_base
+  : public std::false_type
+{};
+
+template < typename ExecutionSpace
+         , typename Schedule
+         , typename WorkTag
+         , typename IndexType
+         , typename IterationPattern
+         , typename LaunchBounds
+         >
+struct is_policy_traits_base< PolicyTraitsBase< ExecutionSpace
+                                              , Schedule
+                                              , WorkTag
+                                              , IndexType
+                                              , IterationPattern
+                                              , LaunchBounds
+                                              > >
+  : public std::true_type
+{};
 
 template <typename PolicyBase, typename ExecutionSpace>
 struct SetExecutionSpace

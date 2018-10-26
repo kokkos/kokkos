@@ -292,7 +292,7 @@ struct ReduceDuplicatesBase {
       Kokkos::Profiling::beginParallelFor(std::string("reduce_") + name, 0, &kpID);
     }
 #endif
-    typedef RangePolicy<ExecSpace, size_t> policy_type;
+    typedef Kokkos::RangePolicy<ExecSpace, size_t> policy_type;
     typedef Kokkos::Impl::ParallelFor<Derived, policy_type> closure_type;
     const closure_type closure(*(static_cast<Derived*>(this)), policy_type(0, stride));
     closure.execute();
@@ -335,7 +335,7 @@ struct ResetDuplicatesBase {
       Kokkos::Profiling::beginParallelFor(std::string("reduce_") + name, 0, &kpID);
     }
 #endif
-    typedef RangePolicy<ExecSpace, size_t> policy_type;
+    typedef Kokkos::RangePolicy<ExecSpace, size_t> policy_type;
     typedef Kokkos::Impl::ParallelFor<Derived, policy_type> closure_type;
     const closure_type closure(*(static_cast<Derived*>(this)), policy_type(0, size_in));
     closure.execute();
@@ -926,7 +926,7 @@ private:
 public:
   // do need to allow moves though, for the common
   // auto b = a.access();
-  // that assignments turns into a move constructor call 
+  // that assignments turns into a move constructor call
   inline ScatterAccess(ScatterAccess&& other)
     : view(other.view)
     , thread_id(other.thread_id)

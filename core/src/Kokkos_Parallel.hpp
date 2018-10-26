@@ -207,7 +207,7 @@ void parallel_for( const size_t        work_count
   typedef typename
     Impl::FunctorPolicyExecutionSpace< FunctorType , void >::execution_space
       execution_space ;
-  typedef RangePolicy< execution_space > policy ;
+  typedef Kokkos::RangePolicy< execution_space > policy ;
 
 #if defined(KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
@@ -431,7 +431,7 @@ void parallel_scan( const ExecutionPolicy & policy
   Kokkos::Impl::shared_allocation_tracking_disable();
   Impl::ParallelScan< FunctorType , ExecutionPolicy > closure( functor , policy );
   Kokkos::Impl::shared_allocation_tracking_enable();
-  
+
   closure.execute();
 
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -465,7 +465,7 @@ void parallel_scan( const size_t        work_count
   Kokkos::Impl::shared_allocation_tracking_disable();
   Impl::ParallelScan< FunctorType , policy > closure( functor , policy(0,work_count) );
   Kokkos::Impl::shared_allocation_tracking_enable();
-  
+
   closure.execute();
 
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -486,7 +486,7 @@ void parallel_scan( const std::string& str
   Kokkos::fence();
   std::cout << "KOKKOS_DEBUG Start parallel_scan kernel: " << str << std::endl;
   #endif
-  
+
   ::Kokkos::parallel_scan(policy,functor,str);
 
   #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
@@ -517,7 +517,7 @@ void parallel_scan( const ExecutionPolicy & policy
   Kokkos::Impl::shared_allocation_tracking_disable();
   Impl::ParallelScanWithTotal< FunctorType , ExecutionPolicy, ReturnType > closure( functor, policy, return_value );
   Kokkos::Impl::shared_allocation_tracking_enable();
-  
+
   closure.execute();
 
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -552,7 +552,7 @@ void parallel_scan( const size_t        work_count
   Kokkos::Impl::shared_allocation_tracking_disable();
   Impl::ParallelScanWithTotal< FunctorType, policy, ReturnType > closure( functor, policy(0,work_count), return_value );
   Kokkos::Impl::shared_allocation_tracking_enable();
- 
+
   closure.execute();
 
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -574,7 +574,7 @@ void parallel_scan( const std::string& str
   Kokkos::fence();
   std::cout << "KOKKOS_DEBUG Start parallel_scan kernel: " << str << std::endl;
   #endif
-  
+
   ::Kokkos::parallel_scan(policy,functor,return_value,str);
 
   #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES

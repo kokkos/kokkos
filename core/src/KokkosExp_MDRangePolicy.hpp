@@ -123,9 +123,9 @@ struct MDRangePolicy
   : public Kokkos::Impl::PolicyTraits<Properties ...>
 {
   using traits = Kokkos::Impl::PolicyTraits<Properties ...>;
-  using range_policy = RangePolicy<Properties...>;
+  using range_policy = Kokkos::RangePolicy<Properties...>;
 
-  using impl_range_policy = RangePolicy< typename traits::execution_space
+  using impl_range_policy = Kokkos::RangePolicy< typename traits::execution_space
                                        , typename traits::schedule_type
                                        , typename traits::index_type
                                        > ;
@@ -146,10 +146,10 @@ struct MDRangePolicy
   using array_index_type = long;
   using point_type  = Kokkos::Array<array_index_type,rank>; //was index_type
   using tile_type   = Kokkos::Array<array_index_type,rank>;
-  // If point_type or tile_type is not templated on a signed integral type (if it is unsigned), 
-  // then if user passes in intializer_list of runtime-determined values of 
-  // signed integral type that are not const will receive a compiler error due 
-  // to an invalid case for implicit conversion - 
+  // If point_type or tile_type is not templated on a signed integral type (if it is unsigned),
+  // then if user passes in intializer_list of runtime-determined values of
+  // signed integral type that are not const will receive a compiler error due
+  // to an invalid case for implicit conversion -
   // "conversion from integer or unscoped enumeration type to integer type that cannot represent all values of the original, except where source is a constant expression whose value can be stored exactly in the target type"
   // This would require the user to either pass a matching index_type parameter
   // as template parameter to the MDRangePolicy or static_cast the individual values
@@ -162,7 +162,7 @@ struct MDRangePolicy
   index_type m_prod_tile_dims;
 
 /*
-  // NDE enum impl definition alternative - replace static constexpr int ? 
+  // NDE enum impl definition alternative - replace static constexpr int ?
   enum { outer_direction = static_cast<int> (
       (iteration_pattern::outer_direction != Iterate::Default)
     ? iteration_pattern::outer_direction

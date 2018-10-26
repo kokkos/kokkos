@@ -425,15 +425,15 @@ protected:
 namespace Kokkos {
 namespace Impl {
 
-template< class FunctorType , class ... Traits >
+template< class FunctorType , class Traits >
 class ParallelFor< FunctorType
-                 , Kokkos::RangePolicy< Traits ... >
+                 , Kokkos::Impl::RangePolicy< Traits >
                  , Kokkos::Cuda
                  >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Traits ... > Policy;
+  typedef Kokkos::Impl::RangePolicy< Traits > Policy;
   typedef typename Policy::member_type  Member ;
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::launch_bounds LaunchBounds ;
@@ -746,16 +746,16 @@ public:
 namespace Kokkos {
 namespace Impl {
 
-template< class FunctorType , class ReducerType, class ... Traits >
+template< class FunctorType , class ReducerType, class Traits >
 class ParallelReduce< FunctorType
-                    , Kokkos::RangePolicy< Traits ... >
+                    , Kokkos::Impl::RangePolicy< Traits >
                     , ReducerType
                     , Kokkos::Cuda
                     >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Traits ... >         Policy ;
+  typedef Kokkos::Impl::RangePolicy< Traits >         Policy ;
 
   typedef typename Policy::WorkRange    WorkRange ;
   typedef typename Policy::work_tag     WorkTag ;
@@ -847,7 +847,7 @@ public:
       // This is the final block with the final result at the final threads' location
 
       size_type * const shared = kokkos_impl_cuda_shared_memory<size_type>() + ( blockDim.y - 1 ) * word_count.value ;
-      size_type * const global = m_result_ptr_device_accessible? reinterpret_cast<size_type*>(m_result_ptr) : 
+      size_type * const global = m_result_ptr_device_accessible? reinterpret_cast<size_type*>(m_result_ptr) :
                                  ( m_unified_space ? m_unified_space : m_scratch_space );
 
       if ( threadIdx.y == 0 ) {
@@ -1942,15 +1942,15 @@ public:
 namespace Kokkos {
 namespace Impl {
 
-template< class FunctorType , class ... Traits >
+template< class FunctorType , class Traits >
 class ParallelScan< FunctorType
-                  , Kokkos::RangePolicy< Traits ... >
+                  , Kokkos::Impl::RangePolicy< Traits >
                   , Kokkos::Cuda
                   >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Traits ... >  Policy ;
+  typedef Kokkos::Impl::RangePolicy< Traits >  Policy ;
   typedef typename Policy::member_type  Member ;
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::WorkRange    WorkRange ;
@@ -2165,16 +2165,16 @@ public:
 };
 
 //----------------------------------------------------------------------------
-template< class FunctorType, class ReturnType, class ... Traits >
+template< class FunctorType, class ReturnType, class Traits >
 class ParallelScanWithTotal< FunctorType
-                           , Kokkos::RangePolicy< Traits ... >
+                           , Kokkos::Impl::RangePolicy< Traits >
                            , ReturnType
                            , Kokkos::Cuda
                            >
 {
 private:
 
-  typedef Kokkos::RangePolicy< Traits ... >  Policy ;
+  typedef Kokkos::Impl::RangePolicy< Traits >  Policy ;
   typedef typename Policy::member_type  Member ;
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::WorkRange    WorkRange ;
@@ -2385,7 +2385,7 @@ public:
     }
 
   ParallelScanWithTotal( const FunctorType  & arg_functor ,
-                         const Policy       & arg_policy ,   
+                         const Policy       & arg_policy ,
                          ReturnType         & arg_returnvalue )
   : m_functor( arg_functor )
   , m_policy( arg_policy )

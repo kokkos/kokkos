@@ -188,7 +188,7 @@ class GetCrsTransposeCounts {
   }
   GetCrsTransposeCounts(InCrs const& arg_in, OutCounts const& arg_out):
     in(arg_in),out(arg_out) {
-    using policy_type = RangePolicy<index_type, execution_space>;
+    using policy_type = Kokkos::RangePolicy<index_type, execution_space>;
     using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
     const closure_type closure(*this, policy_type(0, index_type(in.entries.size())));
     closure.execute();
@@ -229,7 +229,7 @@ class CrsRowMapFromCounts {
     m_in(arg_in), m_out(arg_out), m_last_value("last_value") {
   }
   value_type execute() {
-    using policy_type = RangePolicy<index_type, execution_space>;
+    using policy_type = Kokkos::RangePolicy<index_type, execution_space>;
     using closure_type = Kokkos::Impl::ParallelScan<self_type, policy_type>;
     closure_type closure(*this, policy_type(0, m_in.size() + 1));
     closure.execute();
@@ -267,7 +267,7 @@ class FillCrsTransposeEntries {
   FillCrsTransposeEntries(InCrs const& arg_in, OutCrs const& arg_out):
     in(arg_in),out(arg_out),
     counters("counters", arg_out.numRows()) {
-    using policy_type = RangePolicy<index_type, execution_space>;
+    using policy_type = Kokkos::RangePolicy<index_type, execution_space>;
     using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
     const closure_type closure(*this, policy_type(0, index_type(in.numRows())));
     closure.execute();
@@ -421,7 +421,7 @@ struct CountAndFill : public CountAndFillBase<CrsType, Functor> {
     using execution_space = typename CrsType::execution_space;
     this->m_counts = counts_type("counts", nrows);
     {
-    using count_policy_type = RangePolicy<size_type, execution_space, Count>;
+    using count_policy_type = Kokkos::RangePolicy<size_type, execution_space, Count>;
     using count_closure_type =
       Kokkos::Impl::ParallelFor<self_type, count_policy_type>;
     const count_closure_type closure(*this, count_policy_type(0, nrows));
@@ -432,7 +432,7 @@ struct CountAndFill : public CountAndFillBase<CrsType, Functor> {
     this->m_counts = counts_type();
     this->m_crs.entries = entries_type("entries", nentries);
     {
-    using fill_policy_type = RangePolicy<size_type, execution_space, Fill>;
+    using fill_policy_type = Kokkos::RangePolicy<size_type, execution_space, Fill>;
     using fill_closure_type =
       Kokkos::Impl::ParallelFor<self_type, fill_policy_type>;
     const fill_closure_type closure(*this, fill_policy_type(0, nrows));
