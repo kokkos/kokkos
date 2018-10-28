@@ -46,12 +46,13 @@ script:
   - if [[ ${TRAVIS_OS_NAME} = linux && ${CC} = clang ]]; then
       ln -s /usr/bin/ccache $HOME/bin/clang++;
       export CCACHE_CPP2=yes;
+      GENERATE_OPTS="--gcc-toolchain=/usr";
     fi
   - mkdir build
   - cd build
-  - ../generate_makefile.bash --compiler=$CXX --with-$THREADING --with-options=compiler_warnings
-  - make KOKKOS_INTERNAL_GCC_TOOLCHAIN=/usr
-  - make test KOKKOS_INTERNAL_GCC_TOOLCHAIN=/usr
+  - ../generate_makefile.bash --compiler=$CXX --with-$THREADING --with-options=compiler_warnings ${GENERATE_OPTS}
+  - make
+  - make test
 
 after_success:
   - ccache -s
