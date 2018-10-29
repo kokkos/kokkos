@@ -709,7 +709,7 @@ struct TestMultipleDependence {
       int n_checkers = NPerDepth;
       if(m_depth < m_max_depth) {
         n_checkers -= NFanout;
-        for(int i = NFanout; i < NPerDepth; ++i) {
+        for(int i = n_checkers; i < NPerDepth; ++i) {
           m_result_futures[i] = Kokkos::task_spawn(Kokkos::TaskSingle(member.scheduler()),
             TestMultipleDependence{m_depth + 1, m_max_depth, m_dep}
           );
@@ -740,7 +740,7 @@ struct TestMultipleDependence {
   {
     typedef typename sched_type::memory_space memory_space;
 
-    enum { MemoryCapacity = 16000 };
+    enum { MemoryCapacity = 1 << 30 };
     enum { MinBlockSize   =   64 };
     enum { MaxBlockSize   = 1024 };
     enum { SuperBlockSize = 4096 };
@@ -820,7 +820,6 @@ TEST_F( TEST_CATEGORY, task_multiple_depend )
 {
   for ( int i = 2; i < 6; ++i ) {
     TestTaskScheduler::TestMultipleDependence< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run( i );
-    printf("Did depth %d\n", i);
   }
 }
 
