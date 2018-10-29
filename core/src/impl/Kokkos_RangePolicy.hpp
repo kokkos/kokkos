@@ -248,22 +248,31 @@ public:
 
   RangePolicy & auto_chunk_size() noexcept
   {
-    constexpr index_type scale =
-      static_cast<index_type>(100);
+    const index_type concurrency =
+      static_cast<index_type>(execution_space::concurrency());
 
     constexpr index_type zero =
       static_cast<index_type>(0);
 
-    const index_type concurrency =
-      static_cast<index_type>(execution_space::concurrency());
+    constexpr index_type j_scale =
+      static_cast<index_type>(40);
+
+    const index_type J = concurrency > zero
+                       ? concurrency * j_scale
+                       : j_scale
+                       ;
+
+    constexpr index_type k_scale =
+      static_cast<index_type>(100);
 
     const index_type K = concurrency > zero
-                       ? concurrency * scale
-                       : scale
+                       ? concurrency * k_scale
+                       : k_scale
                        ;
 
     int shift = 0;
 
+    while (J < (m_size >> shift) && (shift < 7)) { ++shift; }
     while (K < (m_size >> shift)) { ++shift; }
 
     m_chunk_size = static_cast<index_type>(1) << shift;
