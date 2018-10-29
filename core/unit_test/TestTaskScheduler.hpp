@@ -645,6 +645,123 @@ struct TestTaskSpawnWithPool {
 
 }
 
+//----------------------------------------------------------------------------
+
+
+namespace TestTaskScheduler {
+
+template<class Scheduler>
+struct TestMultipleDependence {
+
+  using sched_type = Scheduler;
+  using future_bool = Kokkos::BasicFuture<bool, sched_type>;
+  using future_int = Kokkos::BasicFuture<int, sched_type>;
+  using value_type = bool;
+  using execution_space = typename sched_type::execution_space;
+
+  enum : int { NPerDepth = 6 };
+  enum : int { NFanout = 3 };
+
+  int m_depth;
+  int m_max_depth;
+  future_int m_dep;
+  future_bool m_result_futures[NPerDepth];
+
+
+  struct TestCheckReady {
+     future_int m_dep;
+     using value_type = bool;
+     KOKKOS_INLINE_FUNCTION
+     void operator()(typename Scheduler::member_type&, bool& value) {
+       // if it was "transiently" ready, this could be false even if we made it a dependence of this task
+       value = m_dep.is_ready();
+       return;
+     }
+  };
+     
+
+  struct TestComputeValue {
+    using value_type = int;
+    KOKKOS_INLINE_FUNCTION
+    void operator()(typename Scheduler::member_type&, int& result) {
+      double value = 0;
+      // keep this one busy for a while
+      for(int i = 0; i < 10000; ++i) {
+        value += std::sqrt(i) / 7.138;
+      }
+      // Do something irrelevant
+      result = *reinterpret_cast<int*>(&value) << 2;
+      return;
+    }
+  };
+
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(typename sched_type::member_type & member, bool& value)
+  {
+    if(m_result_futures[0].is_null()) {
+      if (m_depth == 0) {
+        // Spawn one expensive task at the root
+        m_dep = Kokkos::task_spawn(Kokkos::TaskSingle(member.scheduler()), TestComputeValue{});
+      }
+
+      // Then check for it to be ready in a whole bunch of other tasks that race
+      int n_checkers = NPerDepth;
+      if(m_depth < m_max_depth) {
+        n_checkers -= NFanout;
+        for(int i = NFanout; i < NPerDepth; ++i) {
+          m_result_futures[i] = Kokkos::task_spawn(Kokkos::TaskSingle(member.scheduler()),
+            TestMultipleDependence{m_depth + 1, m_max_depth, m_dep}
+          );
+        }
+      }
+
+      for(int i = 0; i < n_checkers; ++i) {
+        m_result_futures[i] = Kokkos::task_spawn(Kokkos::TaskSingle(m_dep), TestCheckReady{m_dep});
+      }
+      auto done = Kokkos::when_all(m_result_futures, NPerDepth);
+      Kokkos::respawn(this, done);
+
+      return;
+    }
+    else {
+      value = true;
+      for(int i = 0; i < NPerDepth; ++i) {
+        value = value && !m_result_futures[i].is_null();
+        if(value) {
+          value = value && m_result_futures[i].get();
+        }
+      }
+      return;
+    }
+  }
+
+  static void run(int depth)
+  {
+    typedef typename sched_type::memory_space memory_space;
+
+    enum { MemoryCapacity = 16000 };
+    enum { MinBlockSize   =   64 };
+    enum { MaxBlockSize   = 1024 };
+    enum { SuperBlockSize = 4096 };
+
+    sched_type sched( memory_space()
+                    , MemoryCapacity
+                    , MinBlockSize
+                    , MaxBlockSize
+                    , SuperBlockSize );
+
+    auto f = Kokkos::host_spawn( Kokkos::TaskSingle( sched ), TestMultipleDependence{ 0, depth }  );
+
+    Kokkos::wait( sched );
+
+    ASSERT_TRUE( f.get() );
+
+  }
+};
+
+}
+
 namespace Test {
 
 TEST_F( TEST_CATEGORY, task_fib )
@@ -659,7 +776,7 @@ TEST_F( TEST_CATEGORY, task_fib_multiple )
 {
   const int N = 27 ;
   for ( int i = 0; i < N; ++i ) {
-    TestTaskScheduler::TestFib< Kokkos::TaskSchedulerMultiple<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 2000 );
+    TestTaskScheduler::TestFib< Kokkos::TaskSchedulerMultiple<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 8000 );
   }
 }
 
@@ -697,6 +814,14 @@ TEST_F( TEST_CATEGORY, task_with_mempool )
 TEST_F( TEST_CATEGORY, task_with_mempool_multiple )
 {
   TestTaskScheduler::TestTaskSpawnWithPool< Kokkos::TaskSchedulerMultiple<TEST_EXECSPACE> >::run();
+}
+
+TEST_F( TEST_CATEGORY, task_multiple_depend )
+{
+  for ( int i = 2; i < 6; ++i ) {
+    TestTaskScheduler::TestMultipleDependence< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run( i );
+    printf("Did depth %d\n", i);
+  }
 }
 
 }

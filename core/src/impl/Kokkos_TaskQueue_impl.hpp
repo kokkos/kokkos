@@ -207,20 +207,29 @@ bool TaskQueue< ExecSpace, MemorySpace>::push_task
     Kokkos::abort("TaskQueue::push_task ERROR: already a member of another queue" );
   }
 
-  task_root_type * y = *queue ;
+  // store the head of the queue
+  task_root_type * old_head = *queue ;
 
-  while ( lock != y ) {
+  while ( old_head != lock ) {
 
-    next = y ;
+    // set task->next to the head of the queue
+    next = old_head;
 
     // Do not proceed until 'next' has been stored.
     Kokkos::memory_fence();
 
-    task_root_type * const x = y ;
+    // store the old head
+    task_root_type * const old_head_tmp = old_head;
 
-    y = Kokkos::atomic_compare_exchange(queue,y,task);
+    // attempt to swap task with the old head of the queue
+    // as if this were done atomically:
+    //   if(*queue == old_head) {
+    //     *queue = task;
+    //   }
+    //   old_head = *queue;
+    old_head = Kokkos::atomic_compare_exchange(queue, old_head, task);
 
-    if ( x == y ) return true ;
+    if(old_head_tmp == old_head) return true;
   }
 
   // Failed, replace 'task->m_next' value since 'task' remains
@@ -286,6 +295,10 @@ TaskQueue< ExecSpace, MemorySpace>::pop_ready_task
       // the queue and the popped task's m_next.
 
       task_root_type * volatile & next = task->m_next ;
+
+      // This algorithm is not lockfree because a adversarial scheduler could
+      // context switch this thread at this point and the rest of the threads
+      // calling this method would never make forward progress
 
       *queue = next ; next = lock ;
 
@@ -396,6 +409,8 @@ void TaskQueue< ExecSpace, MemorySpace>::schedule_runnable
 
   Kokkos::memory_fence();
 
+  // If we don't have a dependency, or if pushing onto the wait queue of that dependency
+  // failed (since the only time that queue should be locked is when the task is transitioning to complete??!?)
   const bool is_ready =
     ( 0 == dep ) || ( ! push_task( & dep->m_wait , task ) );
 

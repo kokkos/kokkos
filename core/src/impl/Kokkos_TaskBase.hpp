@@ -134,19 +134,38 @@ namespace Impl {
  *      m_next == LockTag: not a member of a wait queue
  *
  */
+
+// class TaskNode
+// {
+
+// public:
+
+//   enum TaskType : int16_t   { TaskTeam = 0 , TaskSingle = 1 , Aggregate = 2 };
+
+// protected:
+
+//   ConcurrentDeque<TaskNode> m_waiting;
+//   int32_t m_alloc_size;
+//   int32_t m_dep_count = 0;
+//   TaskType m_task_type;
+  
+    
+// };
+
+
 class TaskBase
 {
 public:
 
   enum : int16_t   { TaskTeam = 0 , TaskSingle = 1 , Aggregate = 2 };
-  enum : uintptr_t { LockTag = ~uintptr_t(0) , EndTag = ~uintptr_t(1) };
+  enum : uintptr_t { LockTag = ~uintptr_t(0) , EndTag = ~uintptr_t(1), TaskDoneTag = ~uintptr_t(2) };
 
   template<typename, typename> friend class Kokkos::BasicTaskScheduler ;
 
   using scheduler_type = TaskSchedulerBase;
   using queue_type = TaskQueueBase;
 
-  typedef void (* function_type) ( TaskBase * , void * );
+  using function_type = void(*)( TaskBase * , void * );
   typedef void (* destroy_type) ( TaskBase * );
 
   // sizeof(TaskBase) == 48
@@ -302,7 +321,7 @@ public:
 
       if ( only_one_thread && !(task->requested_respawn()) ) {
         // Did not respawn, destroy the functor to free memory.
-        task->FunctorType::~functor_type();
+        task->functor_type::~functor_type();
         // Cannot destroy and deallocate the task until its dependences
         // have been processed.
       }

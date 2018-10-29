@@ -95,6 +95,8 @@ public:
       m_scheduler(std::move(arg_scheduler).get_team_scheduler(this->league_rank()))
   { }
 
+  // (rule of 6 constructors)
+
   KOKKOS_INLINE_FUNCTION
   TaskTeamMemberAdapter() = default;
 

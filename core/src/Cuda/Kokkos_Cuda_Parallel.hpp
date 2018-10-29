@@ -483,7 +483,7 @@ public:
       const dim3 block(  1 , block_size , 1);
       const dim3 grid( std::min( typename Policy::index_type(( nwork + block.y - 1 ) / block.y) , typename Policy::index_type(cuda_internal_maximum_grid_count()) ) , 1 , 1);
 
-      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 );
+      CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0, m_policy.space().cuda_stream() );
     }
 
   ParallelFor( const FunctorType  & arg_functor ,
@@ -491,6 +491,7 @@ public:
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
     { }
+
 };
 
 
