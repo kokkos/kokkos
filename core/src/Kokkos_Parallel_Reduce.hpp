@@ -793,7 +793,7 @@ struct ParallelReduceReturnValue<typename std::enable_if<
 
   static return_type return_value(ReturnType& return_val,
                                   const FunctorType& functor) {
-#ifdef KOKOOS_ENABLE_DEPRECATED_CODE
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     return return_type(return_val,functor.value_count);
 #else
     if ( is_array<ReturnType>::value )

@@ -137,7 +137,7 @@ do
       KOKKOS_CUDA_OPTIONS="--with-cuda-options=${key#*=}"
       ;;
     --with-options*)
-      KOKKOS_OPTIONS="--with-options=enable_large_mem_tests,${key#*=}"
+      KOKKOS_OPTIONS="--with-options=${key#*=}"
       ;;
     --cxxflags-extra*)
       CXX_FLAGS_EXTRA="${key#*=}"

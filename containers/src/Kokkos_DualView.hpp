@@ -378,6 +378,16 @@ public:
       t_host >::select (d_view , h_view);
   }
 
+  KOKKOS_INLINE_FUNCTION
+  t_host view_host() const {
+    return h_view;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  t_dev view_device() const {
+    return d_view;
+  }
+
   template<class Device>
   static int get_device_side() {
     constexpr bool device_is_memspace  = std::is_same<Device,typename Device::memory_space>::value;
@@ -501,6 +511,26 @@ public:
     }
   }
 
+  void sync_host() {
+    if( ! std::is_same< typename traits::data_type , typename traits::non_const_data_type>::value )
+      Impl::throw_runtime_exception("Calling sync_host on a DualView with a const datatype.");
+    if(modified_flags.data()==NULL) return;
+    if(modified_flags(1) > modified_flags(0)) {
+      deep_copy (h_view, d_view);
+      modified_flags(1) = modified_flags(0) = 0;
+    }
+  }
+
+  void sync_device() {
+    if( ! std::is_same< typename traits::data_type , typename traits::non_const_data_type>::value )
+      Impl::throw_runtime_exception("Calling sync_device on a DualView with a const datatype.");
+    if(modified_flags.data()==NULL) return;
+    if(modified_flags(0) > modified_flags(1)) {
+      deep_copy (d_view, h_view);
+      modified_flags(1) = modified_flags(0) = 0;
+    }
+  }
+
   template<class Device>
   bool need_sync() const
   {
@@ -519,6 +549,17 @@ public:
     }
     return false;
   }
+
+  inline bool need_sync_host() const {
+    if(modified_flags.data()==NULL) return false;
+    return modified_flags(0)<modified_flags(1);
+  }
+
+  inline bool need_sync_device() const {
+    if(modified_flags.data()==NULL) return false;
+    return modified_flags(1)<modified_flags(0);
+  }
+
   /// \brief Mark data as modified on the given device \c Device.
   ///
   /// If \c Device is the same as this DualView's device type, then
@@ -550,6 +591,45 @@ public:
       Kokkos::abort(msg.c_str());
     }
 #endif
+  }
+
+  inline void modify_host() {
+    if(modified_flags.data()!=NULL) {
+      modified_flags(0) = (modified_flags(1) > modified_flags(0) ?
+          modified_flags(1) : modified_flags(0))  + 1;
+      #ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
+      if (modified_flags(0) && modified_flags(1)) {
+        std::string msg = "Kokkos::DualView::modify_host ERROR: ";
+        msg += "Concurrent modification of host and device views ";
+        msg += "in DualView \"";
+        msg += d_view.label();
+        msg += "\"\n";
+        Kokkos::abort(msg.c_str());
+      }
+    #endif
+    }
+  }
+
+  inline void modify_device() {
+    if(modified_flags.data()!=NULL) {
+      modified_flags(1) = (modified_flags(1) > modified_flags(0) ?
+          modified_flags(1) : modified_flags(0))  + 1;
+      #ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
+      if (modified_flags(0) && modified_flags(1)) {
+        std::string msg = "Kokkos::DualView::modify_device ERROR: ";
+        msg += "Concurrent modification of host and device views ";
+        msg += "in DualView \"";
+        msg += d_view.label();
+        msg += "\"\n";
+        Kokkos::abort(msg.c_str());
+      }
+      #endif
+    }
+  }
+
+  inline void clear_sync_state() {
+    if(modified_flags.data()!=NULL) 
+      modified_flags(1) = modified_flags(0) = 0;
   }
 
   //@}
