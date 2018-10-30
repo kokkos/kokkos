@@ -260,7 +260,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
 	TEST_TARGETS += test-qthreads
 endif
 
-# TODO: Enable tests as they start working.
 ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
 	OBJ_HPX = UnitTestMainInit.o gtest-all.o
 	OBJ_HPX += TestHPX_Init.o
