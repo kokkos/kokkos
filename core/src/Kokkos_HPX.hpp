@@ -133,6 +133,7 @@ public:
 
   static std::vector<HPX> partition(...) {
     Kokkos::abort("HPX::partition_master: can't partition an HPX instance\n");
+    return std::vector<HPX>();
   }
 
   template <typename F>
