@@ -144,7 +144,18 @@ public:
     }
   }
 
-  static int concurrency() { return hpx::get_num_worker_threads(); }
+  static int concurrency() {
+    hpx::runtime *rt = hpx::get_runtime_ptr();
+    if (rt == nullptr) {
+      return hpx::threads::hardware_concurrency();
+    } else {
+      if (hpx::threads::get_self_ptr() == nullptr) {
+        return hpx::resource::get_thread_pool(0).get_os_thread_count();
+      } else {
+        return hpx::this_thread::get_pool()->get_os_thread_count();
+      }
+    }
+  }
 
   static void impl_initialize(int thread_count) {
     hpx::runtime *rt = hpx::get_runtime_ptr();
@@ -204,7 +215,7 @@ public:
       return 0;
     } else {
       if (hpx::threads::get_self_ptr() == nullptr) {
-        return concurrency();
+        return hpx::resource::get_thread_pool(0).get_os_thread_count();
       } else {
         return hpx::this_thread::get_pool()->get_os_thread_count();
       }
@@ -233,7 +244,7 @@ public:
   }
 
   inline static int impl_max_hardware_threads() noexcept {
-    return concurrency();
+    return hpx::threads::hardware_concurrency();
   }
 
   KOKKOS_INLINE_FUNCTION static int impl_hardware_thread_id() noexcept {
@@ -273,7 +284,9 @@ public:
   using size_type = int;
   UniqueToken(execution_space const & = execution_space()) noexcept {}
 
-  // NOTE: Threads are not guaranteed to run where you tell them to run.
+  // NOTE: Currently this assumes that there is no oversubscription.
+  // hpx::get_num_worker_threads can't be used directly because it may yield
+  // it's task (problematic if called after hpx::get_worker_thread_num).
   int size() const noexcept { return HPX::impl_max_hardware_threads(); }
   int acquire() const noexcept { return HPX::impl_hardware_thread_id(); }
   void release(int) const noexcept {}
@@ -285,7 +298,9 @@ public:
   using size_type = int;
   UniqueToken(execution_space const & = execution_space()) noexcept {}
 
-  // NOTE: Threads are not guaranteed to run where you tell them to run.
+  // NOTE: Currently this assumes that there is no oversubscription.
+  // hpx::get_num_worker_threads can't be used directly because it may yield
+  // it's task (problematic if called after hpx::get_worker_thread_num).
   int size() const noexcept { return HPX::impl_max_hardware_threads(); }
   int acquire() const noexcept { return HPX::impl_hardware_thread_id(); }
   void release(int) const noexcept {}
@@ -684,7 +699,7 @@ public:
   inline void execute() const {
 
     hpx::run_hpx_function([this]() {
-      auto const num_worker_threads = hpx::get_num_worker_threads();
+      auto const num_worker_threads = HPX::concurrency();
 
       const size_t value_size_bytes = Analysis::value_size(
           ReducerConditional::select(m_functor, m_reducer));
@@ -805,7 +820,7 @@ private:
 public:
   inline void execute() const {
     hpx::run_hpx_function([this]() {
-      auto const num_worker_threads = hpx::get_num_worker_threads();
+      auto const num_worker_threads = HPX::concurrency();
       const size_t value_size_bytes = Analysis::value_size(
           ReducerConditional::select(m_functor, m_reducer));
 
@@ -929,7 +944,7 @@ private:
 public:
   inline void execute() const {
     hpx::run_hpx_function([this]() {
-      auto const num_worker_threads = HPX::impl_max_hardware_threads();
+      auto const num_worker_threads = HPX::concurrency();
       const int value_count = Analysis::value_count(m_functor);
       const size_t value_size_bytes = Analysis::value_size(m_functor);
 
@@ -1082,7 +1097,7 @@ private:
 public:
   inline void execute() const {
     hpx::run_hpx_function([this]() {
-      auto const num_worker_threads = HPX::impl_max_hardware_threads();
+      auto const num_worker_threads = HPX::concurrency();
       const int value_count = Analysis::value_count(m_functor);
       const size_t value_size_bytes = Analysis::value_size(m_functor);
 
@@ -1236,7 +1251,7 @@ public:
     hpx::run_hpx_function([this]() {
       auto const team_size = m_policy.team_size();
       auto const league_size = m_policy.league_size();
-      auto const num_worker_threads = HPX::impl_max_hardware_threads();
+      auto const num_worker_threads = HPX::concurrency();
       auto hpx_policy = hpx::parallel::execution::par.with(
           hpx::parallel::execution::static_chunk_size(m_policy.chunk_size()));
 
@@ -1332,7 +1347,7 @@ public:
           ReducerConditional::select(m_functor, m_reducer));
       auto const hpx_policy = hpx::parallel::execution::par.with(
           hpx::parallel::execution::static_chunk_size(m_policy.chunk_size()));
-      auto const num_worker_threads = HPX::impl_max_hardware_threads();
+      auto const num_worker_threads = HPX::concurrency();
 
       static std::unique_ptr<char[]> intermediate_results;
       static std::size_t last_size = 0;
