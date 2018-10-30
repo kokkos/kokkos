@@ -1266,7 +1266,6 @@ public:
       }
       char *scratch_buffer_ptr = scratch_buffer.get();
 
-      printf("team parallel for (allocating lots of team scratch)\n");
       hpx::parallel::for_loop(
           hpx_policy, 0, league_size,
           [this, league_size, team_size, hpx_policy,
@@ -1382,7 +1381,6 @@ public:
       }
       char *scratch_buffer_ptr = scratch_buffer.get();
 
-      printf("team parallel reduce (allocating lots of team scratch)\n");
       hpx::parallel::for_loop(
           hpx_policy, 0, league_size,
           [this, league_size, team_size, scratch_buffer_ptr,
