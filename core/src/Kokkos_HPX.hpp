@@ -79,6 +79,8 @@
 #include <hpx/include/parallel_reduce.hpp>
 #include <hpx/include/run_as.hpp>
 #include <hpx/include/runtime.hpp>
+#include <hpx/util/yield_while.hpp>
+
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -171,6 +173,15 @@ public:
       char name[] = "kokkos_hpx";
       char *argv_hpx[] = {name, nullptr};
       hpx::start(nullptr, argc_hpx, argv_hpx, config);
+
+      // NOTE: Wait for runtime to start. hpx::start returns as soon as
+      // possible, meaning some operations are not allowed immediately
+      // after hpx::start. Notably, hpx::stop needs state_running. This
+      // needs to be fixed in HPX itself.
+      hpx::runtime* rt = hpx::get_runtime_ptr();
+      hpx::util::yield_while([rt]()
+        { return rt->get_state() < hpx::state_running; });
+
       kokkos_hpx_initialized = true;
     }
   }
@@ -188,6 +199,15 @@ public:
       char name[] = "kokkos_hpx";
       char *argv_hpx[] = {name, nullptr};
       hpx::start(nullptr, argc_hpx, argv_hpx, config);
+
+      // NOTE: Wait for runtime to start. hpx::start returns as soon as
+      // possible, meaning some operations are not allowed immediately
+      // after hpx::start. Notably, hpx::stop needs state_running. This
+      // needs to be fixed in HPX itself.
+      hpx::runtime* rt = hpx::get_runtime_ptr();
+      hpx::util::yield_while([rt]()
+        { return rt->get_state() < hpx::state_running; });
+
       kokkos_hpx_initialized = true;
     }
   }
