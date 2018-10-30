@@ -314,6 +314,15 @@ void finalize_internal( const bool all_spaces = false )
   }
 #endif
 
+#if defined( KOKKOS_ENABLE_HPX )
+  if( std::is_same< Kokkos::HPX , Kokkos::DefaultExecutionSpace >::value ||
+      std::is_same< Kokkos::HPX , Kokkos::HostSpace::execution_space >::value ||
+      all_spaces ) {
+    if(Kokkos::HPX::impl_is_initialized())
+      Kokkos::HPX::impl_finalize();
+  }
+#endif
+
 #if defined( KOKKOS_ENABLE_THREADS )
   if( std::is_same< Kokkos::Threads , Kokkos::DefaultExecutionSpace >::value ||
       std::is_same< Kokkos::Threads , Kokkos::HostSpace::execution_space >::value ||
@@ -362,6 +371,10 @@ void fence_internal()
       std::is_same< Kokkos::OpenMP , Kokkos::HostSpace::execution_space >::value ) {
     Kokkos::OpenMP::fence();
   }
+#endif
+
+#if defined( KOKKOS_ENABLE_HPX )
+    Kokkos::HPX::fence();
 #endif
 
 #if defined( KOKKOS_ENABLE_THREADS )
@@ -725,6 +738,12 @@ void print_configuration( std::ostream & out , const bool detail )
 #else
   msg << "no" << std::endl;
 #endif
+  msg << "  KOKKOS_ENABLE_HPX: ";
+#ifdef KOKKOS_ENABLE_HPX
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
   msg << "  KOKKOS_ENABLE_THREADS: ";
 #ifdef KOKKOS_ENABLE_THREADS
   msg << "yes" << std::endl;
@@ -972,6 +991,9 @@ void print_configuration( std::ostream & out , const bool detail )
 #endif
 #ifdef KOKKOS_ENABLE_OPENMP
   OpenMP::print_configuration(msg, detail);
+#endif
+#ifdef KOKKOS_ENABLE_HPX
+  HPX::print_configuration(msg, detail);
 #endif
 #if defined( KOKKOS_ENABLE_THREADS )
   Threads::print_configuration(msg, detail);
