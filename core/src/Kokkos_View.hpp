@@ -2643,6 +2643,7 @@ using Kokkos::is_view ;
 } /* namespace Kokkos */
 
 #include <impl/Kokkos_ViewUniformType.hpp>
+#include <impl/Kokkos_ViewWithProperty.hpp>
 #include <impl/Kokkos_Atomic_View.hpp>
 
 //----------------------------------------------------------------------------
