@@ -830,15 +830,12 @@ struct TestViewMirror
   template< class MemoryTraits >
   void static test_mirror_no_initialize() {
     Kokkos::View< double*, Layout, Kokkos::HostSpace > a_org( "A", 10 );
-    Kokkos::View< double*, Layout, Kokkos::HostSpace, MemoryTraits > a_h = a_org;
+    Kokkos::View< double*, Layout, Kokkos::HostSpace, MemoryTraits > a_h;
     auto a_d = Kokkos::create_mirror_view( DeviceType(), a_h, Kokkos::WithoutInitializing );
     
-    int equal_ptr_h_d = a_h.data() == a_d.data() ? 1 : 0;
-    int is_same_memspace = std::is_same< Kokkos::HostSpace, typename DeviceType::memory_space >::value ? 1 : 0;
-    int is_a_d_init = (a_d.use_count() == 0  && a_d.data() == nullptr) ||
-                       is_same_memspace == 1 ? 1 : 0;
+    int equal_ptr_h_d = (a_h.data() == a_d.data()) ? 1 : 0;
+    constexpr int is_same_memspace = Kokkos::Impl::MirrorViewType<DeviceType,T,P ...>::is_same_memspace;
     
-    ASSERT_EQ( is_a_d_init, 1);
     ASSERT_EQ( equal_ptr_h_d, is_same_memspace);
   }
 
