@@ -415,19 +415,19 @@ struct inclusive_scan_integer_sequence
 namespace Kokkos {
 
 template <class T>
-KOKKOS_INLINE_FUNCTION void swap(T& a, T& b) {
+KOKKOS_INLINE_FUNCTION void kokkos_swap(T& a, T& b) {
   T c{std::move(a)};
   a = std::move(b);
   b = std::move(c);
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION T const& min(T const& a, T const& b) {
+KOKKOS_INLINE_FUNCTION T const& kokkos_min(T const& a, T const& b) {
   return (b < a) ? b : a;
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION T const& max(T const& a, T const& b) {
+KOKKOS_INLINE_FUNCTION T const& kokkos_max(T const& a, T const& b) {
   return (a < b) ? b : a;
 }
 

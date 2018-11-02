@@ -77,7 +77,7 @@ TEST_F( TEST_CATEGORY, swap_min_max )
     swapped = true;
     for (int i = 1; i < n; ++i) {
       if (A[i-1] > A[i]) {
-        Kokkos::swap(A[i-1], A[i]);
+        Kokkos::kokkos_swap(A[i-1], A[i]);
         swapped = false;
       }
     }
@@ -93,8 +93,8 @@ TEST_F( TEST_CATEGORY, swap_min_max )
   // find the min and max values:
   int min_val = 1000, max_val = -1000;
   for (int i = 0; i < n; ++i) {
-    min_val = Kokkos::min(min_val, A[i]);
-    max_val = Kokkos::max(max_val, A[i]);
+    min_val = Kokkos::kokkos_min(min_val, A[i]);
+    max_val = Kokkos::kokkos_max(max_val, A[i]);
   }
   ASSERT_EQ(min_val, 1);
   ASSERT_EQ(max_val, 8);
