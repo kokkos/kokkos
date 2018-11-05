@@ -97,34 +97,60 @@ public:
   typedef View<size_type* , array_layout, device_type> row_map_type;
   typedef View<DataType*  , array_layout, device_type> entries_type;
 
-  row_map_type row_map;
-  entries_type entries;
+  row_map_type row_map {};
+  entries_type entries {};
 
   //! Construct an empty view.
-  Crs() : row_map(), entries() {}
-
-  //! Copy constructor (shallow copy).
-  Crs(const Crs& rhs) : row_map(rhs.row_map), entries(rhs.entries)
-  {}
-
-  template<class EntriesType, class RowMapType>
-  Crs(const RowMapType& row_map_, const EntriesType& entries_) : row_map(row_map_), entries(entries_)
-  {}
-
-  /** \brief  Assign to a view of the rhs array.
-   *          If the old view is the last view
-   *          then allocated memory is deallocated.
-   */
-  Crs& operator= (const Crs& rhs) {
-    row_map = rhs.row_map;
-    entries = rhs.entries;
-    return *this;
+  KOKKOS_INLINE_FUNCTION
+  Crs() 
+  {
   }
 
-  /**  \brief  Destroy this view of the array.
-   *           If the last view then allocated memory is deallocated.
-   */
-  ~Crs() {}
+  //! Copy constructor 
+  KOKKOS_INLINE_FUNCTION
+  Crs(const Crs& rhs) :
+      row_map(rhs.row_map),
+      entries(rhs.entries) 
+  {
+  }
+
+  //! Move constructor
+  KOKKOS_INLINE_FUNCTION
+  Crs(Crs&& rhs) :
+      row_map(std::move(rhs.row_map)),
+      entries(std::move(rhs.entries)) 
+  {
+  }
+    
+
+  template<class EntriesType, class RowMapType>
+  Crs(const RowMapType& row_map_, const EntriesType& entries_) 
+     : row_map(row_map_), entries(entries_)
+  {
+  }
+  
+  //! Assignment operator
+  KOKKOS_INLINE_FUNCTION
+  Crs& operator= (const Crs& rhs)
+  {
+     row_map = rhs.row_map;
+     entries = rhs.entries;
+     return *this;
+  }
+
+  //! Move Assignment operator
+  KOKKOS_INLINE_FUNCTION
+  Crs& operator= ( Crs&& rhs) 
+  {
+     row_map = std::move(rhs.row_map);
+     entries = std::move(rhs.entries);
+     return *this;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  ~Crs() 
+  {
+  }
 
   /**  \brief  Return number of rows in the graph
    */

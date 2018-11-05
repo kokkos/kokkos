@@ -63,11 +63,34 @@ struct CountFillFunctor {
   }
 };
 
+template< class CrsType, class scalarType >
+struct RunUpdateCrsTest {
+
+  CrsType graph {};
+  RunUpdateCrsTest( CrsType g_in ) : graph(g_in)
+  {
+  }
+
+  void run_test() {
+     parallel_for ("TestCrs1", graph.numRows(),*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const scalarType row) const {
+     auto row_map = graph.row_map;
+     auto entries = graph.entries;
+     auto j_end = row_map(row+1)-row_map(row);
+     for (scalarType j = 0; j < j_end; ++j) {
+        entries(row_map(row)+j) = (j+1)*(j+1);
+     }
+  }
+};
+
 template< class ExecSpace >
 void test_count_fill(std::int32_t nrows) {
   Kokkos::Crs<std::int32_t, ExecSpace, void, std::int32_t> graph;
   Kokkos::count_and_fill_crs(graph, nrows, CountFillFunctor<ExecSpace>());
-  ASSERT_EQ(graph.numRows(), nrows);
+  ASSERT_EQ(graph.numRows(), nrows); 
   auto row_map = Kokkos::create_mirror_view(graph.row_map);
   Kokkos::deep_copy(row_map, graph.row_map);
   auto entries = Kokkos::create_mirror_view(graph.entries);
@@ -79,6 +102,35 @@ void test_count_fill(std::int32_t nrows) {
       ASSERT_EQ(entries(row_map(row) + j), j + 1);
     }
   }
+}
+
+// Test Crs Constructor / assignment operation by 
+// using count and fill to create/populate initial graph,
+// then use parallel_for with Crs directly to update content
+// then verify results
+template< class ExecSpace >
+void test_constructor(std::int32_t nrows) {
+
+  typedef Kokkos::Crs<std::int32_t, ExecSpace, void, std::int32_t> crs_int32;
+  crs_int32 graph;
+  Kokkos::count_and_fill_crs(graph, nrows, CountFillFunctor<ExecSpace>());
+  ASSERT_EQ(graph.numRows(), nrows);
+
+  RunUpdateCrsTest<crs_int32, std::int32_t> crstest(graph);  
+  crstest.run_test();
+
+  auto row_map = Kokkos::create_mirror_view(graph.row_map);
+  Kokkos::deep_copy(row_map, graph.row_map);
+  auto entries = Kokkos::create_mirror_view(graph.entries);
+  Kokkos::deep_copy(entries, graph.entries);
+
+  for (std::int32_t row = 0; row < nrows; ++row) {
+    auto n = (row % 4) + 1;
+    ASSERT_EQ(row_map(row + 1) - row_map(row), n);    
+    for (std::int32_t j = 0; j < n; ++j) {
+      ASSERT_EQ(entries(row_map(row) + j), (j + 1)*(j+1));
+    }
+   }
 }
 
 } // anonymous namespace
@@ -94,5 +146,18 @@ TEST_F( TEST_CATEGORY, crs_count_fill )
   test_count_fill<TEST_EXECSPACE>(1000);
   test_count_fill<TEST_EXECSPACE>(10000);
 }
+
+TEST_F( TEST_CATEGORY, crs_copy_constructor )
+{
+  test_constructor<TEST_EXECSPACE>(0);
+  test_constructor<TEST_EXECSPACE>(1);
+  test_constructor<TEST_EXECSPACE>(2);
+  test_constructor<TEST_EXECSPACE>(3);
+  test_constructor<TEST_EXECSPACE>(13);
+  test_constructor<TEST_EXECSPACE>(100);
+  test_constructor<TEST_EXECSPACE>(1000);
+  test_constructor<TEST_EXECSPACE>(10000);
+}
+
 
 } // namespace Test
