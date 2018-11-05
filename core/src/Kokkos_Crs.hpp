@@ -102,7 +102,9 @@ public:
 
   //! Construct an empty view.
   KOKKOS_INLINE_FUNCTION
-  Crs() 
+  Crs() :
+      row_map(),
+      entries() 
   {
   }
 
@@ -129,7 +131,11 @@ public:
   {
   }
   
-  //! Assignment operator
+  /** \brief Assignment operator
+   *         Assign to a view of the rhs array.
+   *         If the old view is the last view
+   *         then allocated memory is deallocated.
+   */
   KOKKOS_INLINE_FUNCTION
   Crs& operator= (const Crs& rhs)
   {
@@ -147,6 +153,9 @@ public:
      return *this;
   }
 
+  /**  \brief  Destroy this view of the array.
+   *           If the last view then allocated memory is deallocated.
+   */
   KOKKOS_INLINE_FUNCTION
   ~Crs() 
   {
