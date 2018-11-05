@@ -125,17 +125,17 @@ public:
   }
     
 
+  /** \brief Assign to a view of the rhs array.
+   *         If the old view is the last view
+   *         then allocated memory is deallocated.
+   */
   template<class EntriesType, class RowMapType>
   Crs(const RowMapType& row_map_, const EntriesType& entries_) 
      : row_map(row_map_), entries(entries_)
   {
   }
   
-  /** \brief Assignment operator
-   *         Assign to a view of the rhs array.
-   *         If the old view is the last view
-   *         then allocated memory is deallocated.
-   */
+  //! Assignement operator
   KOKKOS_INLINE_FUNCTION
   Crs& operator= (const Crs& rhs)
   {
