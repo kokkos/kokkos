@@ -63,7 +63,7 @@ struct CountFillFunctor {
   }
 };
 
-template< class CrsType, class scalarType >
+template< class CrsType, class ExecSpace, class scalarType >
 struct RunUpdateCrsTest {
 
   CrsType graph {};
@@ -72,16 +72,17 @@ struct RunUpdateCrsTest {
   }
 
   void run_test() {
-     parallel_for ("TestCrs1", graph.numRows(),*this);
+     parallel_for ("TestCrs1", Kokkos::RangePolicy<ExecSpace>(0,graph.numRows()),*this);
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const scalarType row) const {
      auto row_map = graph.row_map;
      auto entries = graph.entries;
-     auto j_end = row_map(row+1)-row_map(row);
+     auto j_start = (row >= static_cast<decltype(row)>(row_map.extent(0))) ? 0 : row_map(row);
+     auto j_end = (row+1 >= static_cast<decltype(row)>(row_map.extent(0))) ? 0 : row_map(row+1)-j_start;
      for (scalarType j = 0; j < j_end; ++j) {
-        entries(row_map(row)+j) = (j+1)*(j+1);
+        entries(j_start+j) = (j+1)*(j+1);
      }
   }
 };
@@ -116,7 +117,7 @@ void test_constructor(std::int32_t nrows) {
   Kokkos::count_and_fill_crs(graph, nrows, CountFillFunctor<ExecSpace>());
   ASSERT_EQ(graph.numRows(), nrows);
 
-  RunUpdateCrsTest<crs_int32, std::int32_t> crstest(graph);  
+  RunUpdateCrsTest<crs_int32, ExecSpace, std::int32_t> crstest(graph);  
   crstest.run_test();
 
   auto row_map = Kokkos::create_mirror_view(graph.row_map);
