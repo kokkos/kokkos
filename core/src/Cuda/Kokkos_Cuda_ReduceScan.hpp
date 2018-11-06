@@ -317,32 +317,52 @@ bool cuda_inter_block_reduction( typename FunctorValueTraits< FunctorType , ArgT
         if( id + 1 < int(gridDim.x) )
           join(value, tmp);
       }
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       unsigned int mask = KOKKOS_IMPL_CUDA_ACTIVEMASK;
       int active = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
+#else
+      int active = KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+#endif
       if (int(blockDim.x*blockDim.y) > 2) {
         value_type tmp = Kokkos::shfl_down(value, 2,32);
         if( id + 2 < int(gridDim.x) )
           join(value, tmp);
       }
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
+#else
+      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+#endif
       if (int(blockDim.x*blockDim.y) > 4) {
         value_type tmp = Kokkos::shfl_down(value, 4,32);
         if( id + 4 < int(gridDim.x) )
           join(value, tmp);
       }
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
+#else
+      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+#endif
       if (int(blockDim.x*blockDim.y) > 8) {
         value_type tmp = Kokkos::shfl_down(value, 8,32);
         if( id + 8 < int(gridDim.x) )
           join(value, tmp);
       }
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
+#else
+      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+#endif
       if (int(blockDim.x*blockDim.y) > 16) {
         value_type tmp = Kokkos::shfl_down(value, 16,32);
         if( id + 16 < int(gridDim.x) )
           join(value, tmp);
       }
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
+#else
+      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+#endif
     }
   }
   //The last block has in its thread=0 the global reduction value through "value"
@@ -482,32 +502,52 @@ cuda_inter_block_reduction( const ReducerType& reducer,
         if( id + 1 < int(gridDim.x) )
           reducer.join(value, tmp);
       }
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       unsigned int mask = KOKKOS_IMPL_CUDA_ACTIVEMASK;
       int active = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
+#else
+      int active = KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+#endif
       if (int(blockDim.x*blockDim.y) > 2) {
         value_type tmp = Kokkos::shfl_down(value, 2,32);
         if( id + 2 < int(gridDim.x) )
           reducer.join(value, tmp);
       }
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
+#else
+      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+#endif
       if (int(blockDim.x*blockDim.y) > 4) {
         value_type tmp = Kokkos::shfl_down(value, 4,32);
         if( id + 4 < int(gridDim.x) )
           reducer.join(value, tmp);
       }
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
+#else
+      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+#endif
       if (int(blockDim.x*blockDim.y) > 8) {
         value_type tmp = Kokkos::shfl_down(value, 8,32);
         if( id + 8 < int(gridDim.x) )
           reducer.join(value, tmp);
       }
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
+#else
+      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+#endif
       if (int(blockDim.x*blockDim.y) > 16) {
         value_type tmp = Kokkos::shfl_down(value, 16,32);
         if( id + 16 < int(gridDim.x) )
           reducer.join(value, tmp);
       }
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
+#else
+      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+#endif
     }
   }
 
@@ -583,7 +623,7 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, true> {
 
     if( warp_id == 0) {
       ValueInit::init( functor , &value );
-      for(int i=threadIdx.y*blockDim.x+threadIdx.x; i<blockDim.y*blockDim.x/32; i+=32)
+      for(unsigned int i=threadIdx.y*blockDim.x+threadIdx.x; i<blockDim.y*blockDim.x/32; i+=32)
         ValueJoin::join( functor , &value,&shared_team_buffer_element[i]);
       scalar_intra_warp_reduction(functor,value,false,32,*my_global_team_buffer_element);
     }
@@ -607,7 +647,7 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, true> {
 
     scalar_intra_block_reduction(functor,value,true,my_global_team_buffer_element,shared_elements,shared_team_buffer_elements);
     __syncthreads();
-    int num_teams_done = 0;
+    unsigned int num_teams_done = 0;
     if(threadIdx.x + threadIdx.y == 0) {
       __threadfence();
       num_teams_done = Kokkos::atomic_fetch_add(global_flags,1)+1;
@@ -642,12 +682,19 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
       const bool skip_vector,                  // Skip threads if Kokkos vector lanes are not part of the reduction
       const int width)                         // How much of the warp participates
   {
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
     unsigned mask = width==32?0xffffffff:((1<<width)-1)<<((threadIdx.y*blockDim.x+threadIdx.x)%(32/width))*width;
+#endif
     const int lane_id = (threadIdx.y*blockDim.x+threadIdx.x)%32;
     for(int delta=skip_vector?blockDim.x:1; delta<width; delta*=2) {
-      if(lane_id + delta<32)
+      if(lane_id + delta<32) {
         ValueJoin::join( functor , value, value+delta);
+      }
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       KOKKOS_IMPL_CUDA_SYNCWARP_MASK(mask);
+#else
+      KOKKOS_IMPL_CUDA_SYNCWARP_MASK;
+#endif
     }
     *value=*(value-lane_id);
   }
@@ -672,7 +719,7 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
     __syncthreads();
 
     if( warp_id == 0) {
-      const int delta = (threadIdx.y*blockDim.x+threadIdx.x)*32;
+      const unsigned int delta = (threadIdx.y*blockDim.x+threadIdx.x)*32;
       if(delta<blockDim.x*blockDim.y)
         *my_shared_team_buffer_element = shared_team_buffer_element[delta];
       KOKKOS_IMPL_CUDA_SYNCWARP;   
@@ -700,7 +747,7 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
     scalar_intra_block_reduction(functor,value,true,my_global_team_buffer_element,shared_elements,shared_team_buffer_elements);
     __syncthreads();
 
-    int num_teams_done = 0;
+    unsigned int num_teams_done = 0;
     if(threadIdx.x + threadIdx.y == 0) {
       __threadfence();
       num_teams_done = Kokkos::atomic_fetch_add(global_flags,1)+1;
@@ -844,14 +891,15 @@ void cuda_intra_block_reduce_scan( const FunctorType & functor ,
  *
  *  Global reduce result is in the last threads' 'shared_data' location.
  */
+
 template< bool DoScan , class FunctorType , class ArgTag >
 __device__
-bool cuda_single_inter_block_reduce_scan( const FunctorType     & functor ,
-                                          const Cuda::size_type   block_id ,
-                                          const Cuda::size_type   block_count ,
-                                          Cuda::size_type * const shared_data ,
-                                          Cuda::size_type * const global_data ,
-                                          Cuda::size_type * const global_flags )
+bool cuda_single_inter_block_reduce_scan2( const FunctorType     & functor ,
+                                    const Cuda::size_type   block_id ,
+                                    const Cuda::size_type   block_count ,
+                                    Cuda::size_type * const shared_data ,
+                                    Cuda::size_type * const global_data ,
+                                    Cuda::size_type * const global_flags )
 {
   typedef Cuda::size_type                  size_type ;
   typedef FunctorValueTraits< FunctorType , ArgTag >  ValueTraits ;
@@ -859,11 +907,7 @@ bool cuda_single_inter_block_reduce_scan( const FunctorType     & functor ,
   typedef FunctorValueInit<   FunctorType , ArgTag >  ValueInit ;
   typedef FunctorValueOps<    FunctorType , ArgTag >  ValueOps ;
 
-  if(!DoScan && ValueTraits::StaticValueSize)
-    return Kokkos::Impl::CudaReductionsFunctor<FunctorType,ArgTag,false,(ValueTraits::StaticValueSize>16)>::scalar_inter_block_reduction(functor,block_id,block_count,shared_data,global_data,global_flags);
-
   typedef typename ValueTraits::pointer_type    pointer_type ;
-  //typedef typename ValueTraits::reference_type  reference_type ;
 
   // '__ffs' = position of the least significant bit set to 1.
   // 'blockDim.y' is guaranteed to be a power of two so this
@@ -886,12 +930,7 @@ bool cuda_single_inter_block_reduce_scan( const FunctorType     & functor ,
     size_type * const shared = shared_data + word_count.value * BlockSizeMask ;
     size_type * const global = global_data + word_count.value * block_id ;
 
-//#if (__CUDA_ARCH__ < 500)
     for ( int i = int(threadIdx.y) ; i < int(word_count.value) ; i += int(blockDim.y) ) { global[i] = shared[i] ; }
-//#else
-//    for ( size_type i = 0 ; i < word_count.value ; i += 1 ) { global[i] = shared[i] ; }
-//#endif
-
   }
 
   // Contributing blocks note that their contribution has been completed via an atomic-increment flag
@@ -931,6 +970,22 @@ bool cuda_single_inter_block_reduce_scan( const FunctorType     & functor ,
   }
 
   return is_last_block ;
+}
+
+template< bool DoScan , class FunctorType , class ArgTag >
+__device__
+bool cuda_single_inter_block_reduce_scan( const FunctorType     & functor ,
+                                          const Cuda::size_type   block_id ,
+                                          const Cuda::size_type   block_count ,
+                                          Cuda::size_type * const shared_data ,
+                                          Cuda::size_type * const global_data ,
+                                          Cuda::size_type * const global_flags )
+{
+  typedef FunctorValueTraits< FunctorType , ArgTag >  ValueTraits ;
+  if(!DoScan && ValueTraits::StaticValueSize)
+    return Kokkos::Impl::CudaReductionsFunctor<FunctorType,ArgTag,false,(ValueTraits::StaticValueSize>16)>::scalar_inter_block_reduction(functor,block_id,block_count,shared_data,global_data,global_flags);
+  else
+    return cuda_single_inter_block_reduce_scan2<DoScan, FunctorType, ArgTag>(functor, block_id, block_count, shared_data, global_data, global_flags);
 }
 
 // Size in bytes required for inter block reduce or scan

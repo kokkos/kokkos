@@ -10,6 +10,7 @@ endif
 
 SRC = $(wildcard $(MAKEFILE_PATH)*.cpp)
 HEADERS = $(wildcard $(MAKEFILE_PATH)*.hpp)
+HEADERS = $(wildcard $(MAKEFILE_PATH)/../*.hpp)
 
 vpath %.cpp $(sort $(dir $(SRC)))
 

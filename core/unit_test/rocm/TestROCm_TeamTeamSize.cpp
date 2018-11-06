@@ -41,7 +41,9 @@
 //@HEADER
 */
 
-#include <rocm/TestROCm_Category.hpp>
-#ifndef KOKKOS_IMPL_ROCM_CLANG_WORKAROUND
-#include <TestTeamTeamSize.hpp>
-#endif
+// Doesn't work right now due to bug with static sized array member
+
+//#include <rocm/TestROCm_Category.hpp>
+//#ifndef KOKKOS_IMPL_ROCM_CLANG_WORKAROUND
+//#include <TestTeamTeamSize.hpp>
+//#endif

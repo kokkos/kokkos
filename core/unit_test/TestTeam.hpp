@@ -973,7 +973,7 @@ struct TestShmemSize {
 
     size_t size = view_type::shmem_size( d1, d2, d3 );
 
-    ASSERT_EQ( size, d1 * d2 * d3 * sizeof( long ) );
+    ASSERT_EQ( size, (d1 * d2 * d3 + 1)* sizeof( long ) );
 
     test_layout_stride();
   }
@@ -1077,6 +1077,31 @@ struct TestTeamBroadcast {
       expected_result+= val;
     }
     ASSERT_EQ( size_t( expected_result ), size_t( total ) ); //printf("team_broadcast with funtion object -- expected_result=%d, total=%d\n",expected_result, total);
+  }
+};
+
+template<class ExecSpace>
+struct TestScratchAlignment {
+  struct TestScalar {
+    double x,y,z;
+  };
+  TestScratchAlignment() {
+    test(true);
+    test(false);
+  }
+  typedef Kokkos::View<TestScalar*,typename ExecSpace::scratch_memory_space> ScratchView;
+  typedef Kokkos::View<int*,typename ExecSpace::scratch_memory_space> ScratchViewInt;
+  void test(bool allocate_small) {
+    int shmem_size = ScratchView::shmem_size(11);
+    if(allocate_small) shmem_size += ScratchViewInt::shmem_size(1);
+    Kokkos::parallel_for(Kokkos::TeamPolicy<ExecSpace>(1,1).set_scratch_size(0,Kokkos::PerTeam(shmem_size)),
+     KOKKOS_LAMBDA (const typename Kokkos::TeamPolicy<ExecSpace>::member_type& team) {
+     if(allocate_small) ScratchViewInt p(team.team_scratch(0),1);
+     ScratchView a(team.team_scratch(0),11);
+     if(ptrdiff_t(a.data())%sizeof(TestScalar)!=0)
+       Kokkos::abort("Error: invalid scratch view alignment\n");
+    });
+    Kokkos::fence();
   }
 };
 

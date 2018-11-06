@@ -360,9 +360,7 @@ struct TestMDRange_2D {
 #if !defined(KOKKOS_ENABLE_CUDA) || ( 8000 <= CUDA_VERSION )
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<2>, Kokkos::IndexType<int> > range_type;
-      int s0 = 1;
-      int s1 = 1;
-      range_type range( {{ s0, s1 }}, {{ N0, N1 }}, {{ 3, 3 }} );
+      range_type range( {{ 1, 1 }}, {{ N0, N1 }}, {{ 3, 3 }} );
 
       Kokkos::View< double**, ExecSpace > v_in("v_in", N0, N1 );
 
@@ -942,11 +940,8 @@ struct TestMDRange_3D {
 #if !defined(KOKKOS_ENABLE_CUDA) || ( 8000 <= CUDA_VERSION )
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<3>, Kokkos::IndexType<int> > range_type;
-      int s0 = 1;
-      int s1 = 1;
-      int s2 = 1;
 
-      range_type range( {{ s0, s1, s2 }}, {{ N0, N1, N2 }}, {{ 3, 3, 3 }} );
+      range_type range( {{ 1, 1, 1 }}, {{ N0, N1, N2 }}, {{ 3, 3, 3 }} );
 
       Kokkos::View< double***, ExecSpace > v_in("v_in", N0, N1, N2 );
 
@@ -1512,12 +1507,8 @@ struct TestMDRange_4D {
 #if !defined(KOKKOS_ENABLE_CUDA) || ( 8000 <= CUDA_VERSION )
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<4>, Kokkos::IndexType<int> > range_type;
-      int s0 = 1;
-      int s1 = 1;
-      int s2 = 1;
-      int s3 = 1;
 
-      range_type range( {{ s0, s1, s2, s3 }}, {{ N0, N1, N2, N3 }}, {{ 3, 3, 3, 3 }} );
+      range_type range( {{ 1, 1, 1, 1 }}, {{ N0, N1, N2, N3 }}, {{ 3, 3, 3, 3 }} );
 
       Kokkos::View< double****, ExecSpace > v_in("v_in", N0, N1, N2, N3 );
 
@@ -2103,13 +2094,8 @@ struct TestMDRange_5D {
 #if !defined(KOKKOS_ENABLE_CUDA) || ( 8000 <= CUDA_VERSION )
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<5>, Kokkos::IndexType<int> > range_type;
-      int s0 = 1;
-      int s1 = 1;
-      int s2 = 1;
-      int s3 = 1;
-      int s4 = 1;
 
-      range_type range( {{ s0, s1, s2, s3, s4 }}, {{ N0, N1, N2, N3, N4 }}, {{ 3, 3, 3, 2, 2 }} );
+      range_type range( {{ 1, 1, 1, 1, 1 }}, {{ N0, N1, N2, N3, N4 }}, {{ 3, 3, 3, 2, 2 }} );
 
       Kokkos::View< double*****, ExecSpace > v_in("v_in", N0, N1, N2, N3, N4 );
 
@@ -2626,14 +2612,8 @@ struct TestMDRange_6D {
 #if !defined(KOKKOS_ENABLE_CUDA) || ( 8000 <= CUDA_VERSION )
     {
       typedef typename Kokkos::MDRangePolicy< ExecSpace, Kokkos::Rank<6>, Kokkos::IndexType<int> > range_type;
-      int s0 = 1;
-      int s1 = 1;
-      int s2 = 1;
-      int s3 = 1;
-      int s4 = 1;
-      int s5 = 1;
 
-      range_type range( {{ s0, s1, s2, s3, s4, s5 }}, {{ N0, N1, N2, N3, N4, N5 }}, {{ 3, 3, 3, 2, 2, 1 }} );
+      range_type range( {{ 1, 1, 1, 1, 1, 1 }}, {{ N0, N1, N2, N3, N4, N5 }}, {{ 3, 3, 3, 2, 2, 1 }} );
 
       Kokkos::View< double******, ExecSpace > v_in("v_in", N0, N1, N2, N3, N4, N5 );
 

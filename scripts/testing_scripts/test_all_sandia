@@ -22,13 +22,6 @@ if [[ "$HOSTNAME" =~ .*bowman.* ]]; then
   module load git
 fi
 
-if [[ "$HOSTNAME" == n* ]]; then # Warning: very generic name
-  if [[ "$PROCESSOR" = "aarch64" ]]; then
-    MACHINE=sullivan
-    module load git
-  fi
-fi
-
 if [[ "$HOSTNAME" == *blake* ]]; then # Warning: very generic name
   MACHINE=blake
   module load git
@@ -36,11 +29,6 @@ fi
 
 if [[ "$HOSTNAME" == apollo\.* ]]; then
   MACHINE=apollo
-  module load git
-fi
-
-if [[ "$HOSTNAME" == sullivan ]]; then
-  MACHINE=sullivan
   module load git
 fi
 
@@ -75,11 +63,11 @@ CUDA_BUILD_LIST="Cuda_OpenMP,Cuda_Pthread,Cuda_Serial"
 CUDA_IBM_BUILD_LIST="Cuda_OpenMP,Cuda_Serial"
 
 GCC_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limits,-Wignored-qualifiers,-Wempty-body,-Wclobbered,-Wuninitialized"
-IBM_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limits,-Wuninitialized"
+IBM_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Wsign-compare,-Wtype-limits,-Wuninitialized"
 CLANG_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limits,-Wuninitialized"
 INTEL_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limits,-Wuninitialized"
-#CUDA_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limits,-Wuninitialized"
-CUDA_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Wsign-compare,-Wtype-limits,-Wuninitialized"
+CUDA_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Werror,-Wsign-compare,-Wtype-limits,-Wuninitialized"
+#CUDA_WARNING_FLAGS="-Wall,-Wshadow,-pedantic,-Wsign-compare,-Wtype-limits,-Wuninitialized"
 PGI_WARNING_FLAGS=""
 
 # Default. Machine specific can override.
@@ -149,7 +137,7 @@ do
       KOKKOS_CUDA_OPTIONS="--with-cuda-options=${key#*=}"
       ;;
     --with-options*)
-      KOKKOS_OPTIONS="--with-options=enable_large_mem_tests,${key#*=}"
+      KOKKOS_OPTIONS="--with-options=${key#*=}"
       ;;
     --cxxflags-extra*)
       CXX_FLAGS_EXTRA="${key#*=}"

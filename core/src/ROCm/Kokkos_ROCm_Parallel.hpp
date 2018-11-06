@@ -243,6 +243,15 @@ public:
    return(max);
  }
 
+  template< class FunctorType , class PatternTypeTag>
+  int team_size_max( const FunctorType& functor, PatternTypeTag) {
+    return 256/vector_length();
+  }
+  template< class FunctorType , class PatternTypeTag>
+  int team_size_recommended( const FunctorType& functor, PatternTypeTag) {
+    return 128/vector_length();
+  }
+
   template<class F>
   KOKKOS_INLINE_FUNCTION int team_size(const F& f) const { return (m_team_size > 0) ? m_team_size : team_size_recommended(f); }
   KOKKOS_INLINE_FUNCTION int team_size() const { return (m_team_size > 0) ? m_team_size : Impl::get_max_tile_thread(); ; }
@@ -259,6 +268,11 @@ public:
   }
   inline size_t thread_scratch_size(int level) const {
     return m_thread_scratch_size[level];
+  }
+
+  static int scratch_size_max(int level) {
+    return level==0 ? 
+      1024*40 : 1024*1204*20;
   }
 
   typedef Impl::ROCmTeamMember member_type;

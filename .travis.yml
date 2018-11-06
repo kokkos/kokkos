@@ -6,17 +6,12 @@ os:
   - linux
   - osx
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - cmake
-      - clang
-
 compiler:
   - gcc
   - clang
+
+cache:
+  - ccache
 
 env:
   - THREADING="serial"
@@ -25,22 +20,39 @@ env:
 
 # Apple GCC does not support OpenMP.  GCC with OpenMP requires Homebrew.
 # Apple Clang does not support OpenMP.  Clang with OpenMP requires Homebrew.
-# Clang OpenMP support is not always available.
 matrix:
   exclude:
-    - compiler: clang
-      env: THREADING="openmp"
     - os: osx
       env: THREADING="openmp"
     - os: osx
       compiler: gcc
 
+before_script:
+  - if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
+      brew update;
+      export HOMEBREW_NO_AUTO_UPDATE=1;
+      brew ls --versions ccache   > /dev/null || brew install ccache;
+      export PATH=/usr/local/opt/ccache/libexec:$PATH;
+    fi
+  - ccache -z
+
 script:
   - export OMP_NUM_THREADS=2
   - export OMP_PLACES=threads
   - export OMP_PROC_BIND=spread
+  # LD_LIBRARY_PATH workaround to find clang's libomp: https://github.com/travis-ci/travis-ci/issues/8613 
+  - if [[ ${CC} = clang ]]; then export LD_LIBRARY_PATH=/usr/local/clang/lib${LD_LIBRARY_PATH:+:}$LD_LIBRARY_PATH; fi
+  # enable ccache for clang on linux and add CCACHE_CPP2 to avoid 'Argument unused during compilation -I...' warning
+  - if [[ ${TRAVIS_OS_NAME} = linux && ${CC} = clang ]]; then
+      ln -s /usr/bin/ccache $HOME/bin/clang++;
+      export CCACHE_CPP2=yes;
+      GENERATE_OPTS="--gcc-toolchain=/usr";
+    fi
   - mkdir build
   - cd build
-  - ../generate_makefile.bash --compiler=$CXX --with-$THREADING --with-options=compiler_warnings
+  - ../generate_makefile.bash --compiler=$CXX --with-$THREADING --with-options=compiler_warnings ${GENERATE_OPTS}
   - make
   - make test
+
+after_success:
+  - ccache -s

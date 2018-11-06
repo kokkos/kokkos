@@ -55,12 +55,11 @@
 #ifdef KOKKOS_ENABLE_OPENMP
 #include <openmp/TestOpenMP_Category.hpp>
 #endif
-//#include <TestReduce.hpp>
+#ifdef KOKKOS_ENABLE_THREADS
+#include <threads/TestThreads_Category.hpp>
+#endif
+
 #include <TestMemoryPool.hpp>
-//#include <TestMDRange_b.hpp>
-//#include <TestMDRange_c.hpp>
-//#include <TestMDRange_d.hpp>
-//#include <TestMDRange_e.hpp>
 
 int main( int argc, char *argv[] ) {
   Kokkos::initialize(argc,argv);

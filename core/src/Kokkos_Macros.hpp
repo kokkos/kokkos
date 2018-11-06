@@ -521,6 +521,9 @@
 #if defined ( KOKKOS_ENABLE_CUDA )
   #if ( 9000 <= CUDA_VERSION )
   #define KOKKOS_IMPL_CUDA_VERSION_9_WORKAROUND
+  #if ( __CUDA_ARCH__ )
+    #define KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
+  #endif
   #endif
 #endif
 

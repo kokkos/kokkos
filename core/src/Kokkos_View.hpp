@@ -2372,7 +2372,7 @@ public:
   static inline
   size_t shmem_size( typename traits::array_layout const& arg_layout )
   {
-    return map_type::memory_span( arg_layout );
+    return map_type::memory_span( arg_layout )+sizeof(typename traits::value_type);
   }
 
   explicit KOKKOS_INLINE_FUNCTION
@@ -2380,7 +2380,7 @@ public:
       , const typename traits::array_layout & arg_layout )
     : View( Impl::ViewCtorProp<pointer_type>(
               reinterpret_cast<pointer_type>(
-                arg_space.get_shmem( map_type::memory_span( arg_layout ) ) ) )
+                arg_space.get_shmem_aligned( map_type::memory_span( arg_layout ), sizeof(typename traits::value_type) ) ) )
          , arg_layout )
     {}
 
@@ -2396,11 +2396,11 @@ public:
       , const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG )
     : View( Impl::ViewCtorProp<pointer_type>(
               reinterpret_cast<pointer_type>(
-                arg_space.get_shmem(
+                arg_space.get_shmem_aligned(
                   map_type::memory_span(
                     typename traits::array_layout
                      ( arg_N0 , arg_N1 , arg_N2 , arg_N3
-                     , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) ) ) ) )
+                     , arg_N4 , arg_N5 , arg_N6 , arg_N7 ) ), sizeof(typename traits::value_type) ) ) )
           , typename traits::array_layout
              ( arg_N0 , arg_N1 , arg_N2 , arg_N3
              , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
