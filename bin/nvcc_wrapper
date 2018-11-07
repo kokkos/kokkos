@@ -317,6 +317,7 @@ if [ $host_only -ne 1 ]; then
   fi
 fi
 
+
 # Only print host compiler version
 if [ $get_host_version -eq 1 ]; then
   $host_compiler --version
