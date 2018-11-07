@@ -104,9 +104,9 @@ struct RunUpdateCrsTest {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void updateGraph(const CrsType & graph, const scalarType row) const {
-     auto row_map = graph.row_map;
-     auto entries = graph.entries;
+  void updateGraph(const CrsType & g_in, const scalarType row) const {
+     auto row_map = g_in.row_map;
+     auto entries = g_in.entries;
      auto j_start = row_map(row);
      auto j_end = row_map(row+1)-j_start;
      for (scalarType j = 0; j < j_end; ++j) {
