@@ -97,8 +97,8 @@ public:
   typedef View<size_type* , array_layout, device_type> row_map_type;
   typedef View<DataType*  , array_layout, device_type> entries_type;
 
-  row_map_type row_map {};
-  entries_type entries {};
+  row_map_type row_map;
+  entries_type entries;
 
   //! Construct an empty view.
   KOKKOS_INLINE_FUNCTION
@@ -130,6 +130,7 @@ public:
    *         then allocated memory is deallocated.
    */
   template<class EntriesType, class RowMapType>
+  KOKKOS_INLINE_FUNCTION
   Crs(const RowMapType& row_map_, const EntriesType& entries_) 
      : row_map(row_map_), entries(entries_)
   {
