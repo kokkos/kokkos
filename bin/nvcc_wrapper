@@ -308,6 +308,15 @@ do
   shift
 done
 
+#Check if nvcc exists
+if [ $host_only -ne 1 ]; then
+  var=$(which nvcc )
+  if [ $? -gt 0 ]
+  then
+    exit $?
+  fi
+fi
+
 # Only print host compiler version
 if [ $get_host_version -eq 1 ]; then
   $host_compiler --version
