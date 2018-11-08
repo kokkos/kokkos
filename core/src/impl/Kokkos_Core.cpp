@@ -576,7 +576,7 @@ void initialize(int& narg, char* arg[])
     }
     const char * env_disablewarnings_str = std::getenv("KOKKOS_DISABLE_WARNINGS");
     if (env_disablewarnings_str) {
-		if (strcmp(env_disablewarnings_str,"TRUE") == 0)
+        if (strcmp(env_disablewarnings_str,"TRUE") == 0)
             disable_warnings = true;
         else
             if (disable_warnings)
