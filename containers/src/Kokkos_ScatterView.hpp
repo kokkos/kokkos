@@ -60,6 +60,9 @@ namespace Experimental {
 //TODO: replace this enum with the Kokkos::Sum, etc reducers for parallel_reduce
 enum : int {
   ScatterSum,
+  ScatterProd,
+  ScatterMax,
+  ScatterMin,
 };
 
 enum : int {
@@ -144,39 +147,133 @@ struct DefaultContribution<Kokkos::Cuda, Kokkos::Experimental::ScatterDuplicated
 };
 #endif
 
-/* ScatterValue is the object returned by the access operator() of ScatterAccess,
+/* ScatterValue <Op=ScatterSum> is the object returned by the access operator() of ScatterAccess,
    similar to that returned by an Atomic View, it wraps Kokkos::atomic_add with convenient
    operator+=, etc. */
 template <typename ValueType, int Op, int contribution>
 struct ScatterValue;
 
 template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, Kokkos::Experimental::ScatterNonAtomic> {
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, Kokkos::Experimental::ScatterNonAtomic> :
+  Sum<ValueType,Kokkos::DefaultExecutionSpace> {
   public:
-    KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in) : value( value_in ) {}
-    KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other) : value( other.value ) {}
+    KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in) : 
+       Sum<ValueType,Kokkos::DefaultExecutionSpace>(value_in)
+    {}
+    KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other) : 
+       Sum<ValueType,Kokkos::DefaultExecutionSpace>(other.reference())
+    {}
     KOKKOS_FORCEINLINE_FUNCTION void operator+=(ValueType const& rhs) {
-      value += rhs;
+      this->join( this->reference(), rhs );
     }
     KOKKOS_FORCEINLINE_FUNCTION void operator-=(ValueType const& rhs) {
-      value -= rhs;
+      this->join( this->reference(), -rhs );
     }
-  private:
-    ValueType& value;
+    KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
+      this->join( this->reference(), rhs );
+    }
 };
 
 template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, Kokkos::Experimental::ScatterAtomic> {
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, Kokkos::Experimental::ScatterAtomic> :
+  Sum<ValueType,Kokkos::DefaultExecutionSpace> {
   public:
-    KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in) : value( value_in ) {}
+    KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in) : 
+       Sum<ValueType,Kokkos::DefaultExecutionSpace>(value_in)
+    {}
+
     KOKKOS_FORCEINLINE_FUNCTION void operator+=(ValueType const& rhs) {
-      Kokkos::atomic_add(&value, rhs);
+     this->join(this->reference(), rhs);
     }
     KOKKOS_FORCEINLINE_FUNCTION void operator-=(ValueType const& rhs) {
-      Kokkos::atomic_add(&value, -rhs);
+      this->join(this->reference(), -rhs);
     }
-  private:
-    ValueType& value;
+    
+    KOKKOS_INLINE_FUNCTION
+    void join(ValueType& dest, const ValueType& src)  const {
+      Kokkos::atomic_add(&dest, src);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void join(volatile ValueType& dest, const volatile ValueType& src) const {
+      Kokkos::atomic_add(&dest, src);
+    } 
+
+    KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
+      this->join( this->reference(), rhs );
+    }
+
+};
+
+/* ScatterValue <Op=ScatterProd> is the object returned by the access operator() of ScatterAccess,
+   similar to that returned by an Atomic View, it wraps Kokkos::atomic_add with convenient
+   operator+=, etc. */
+template <typename ValueType, int Op, int contribution>
+struct ScatterValue;
+
+template <typename ValueType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, Kokkos::Experimental::ScatterNonAtomic> :
+  Prod<ValueType,Kokkos::DefaultExecutionSpace> {
+  public:
+    KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in) : 
+       Sum<ValueType,Kokkos::DefaultExecutionSpace>(value_in)
+    {}
+    KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other) : 
+       Sum<ValueType,Kokkos::DefaultExecutionSpace>(other.reference())
+    {}
+    KOKKOS_FORCEINLINE_FUNCTION void operator*=(ValueType const& rhs) {
+      this->join( this->reference(), rhs );
+    }
+    KOKKOS_FORCEINLINE_FUNCTION void operator/=(ValueType const& rhs) {
+      this->join( this->reference(), static_cast<ValueType>(1)/rhs );
+    }
+    KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
+      this->join( this->reference(), rhs );
+    }
+};
+
+template <typename ValueType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, Kokkos::Experimental::ScatterAtomic> :
+  Sum<ValueType,Kokkos::DefaultExecutionSpace> {
+  public:
+    KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in) : 
+       Sum<ValueType,Kokkos::DefaultExecutionSpace>(value_in)
+    {}
+
+    KOKKOS_FORCEINLINE_FUNCTION void operator*=(ValueType const& rhs) {
+     this->join(this->reference(), rhs);
+    }
+    KOKKOS_FORCEINLINE_FUNCTION void operator/=(ValueType const& rhs) {
+      this->join(this->reference(), static_cast<ValueType>(1)/rhs);
+    }
+
+    KOKKOS_FORCEINLINE_FUNCTION 
+    void atomic_prod(ValueType & dest, const ValueType& src) {
+
+        bool success = false;
+        ValueType & dest_old = dest;
+        while(!success) {
+            ValueType & dest_new = dest_old * src;
+            dest_new = Kokkos::atomic_compare_exchange(&dest,dest_old,dest_new);
+            success = (dest_new == dest_old);
+            dest_old = dest_new;
+        }
+    }
+    
+    KOKKOS_INLINE_FUNCTION
+    void join(ValueType& dest, const ValueType& src)  const {
+      atomic_prod(&dest, src);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void join(volatile ValueType& dest, const volatile ValueType& src) const {
+      atomic_prod(&dest, src);
+    } 
+
+    KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
+      this->join( this->reference(), rhs );
+    }
+
 };
 
 /* DuplicatedDataType, given a View DataType, will create a new DataType
@@ -520,8 +617,18 @@ public:
       original_value_type, Op, override_contribution> value_type;
 
   KOKKOS_INLINE_FUNCTION
+  ScatterAccess() :
+    view(view_type())  {
+  }
+
+  KOKKOS_INLINE_FUNCTION
   ScatterAccess(view_type const& view_in)
     : view(view_in)
+  {
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  ~ScatterAccess()
   {
   }
 
@@ -608,7 +715,7 @@ public:
   }
 
   template <int override_contribution = contribution>
-  inline
+  KOKKOS_FORCEINLINE_FUNCTION
   ScatterAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ScatterDuplicated, contribution, override_contribution>
   access() const {
     return ScatterAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight, ScatterDuplicated, contribution, override_contribution>{*this};
@@ -755,7 +862,7 @@ public:
   }
 
   template <int override_contribution = contribution>
-  inline
+  KOKKOS_FORCEINLINE_FUNCTION
   ScatterAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ScatterDuplicated, contribution, override_contribution>
   access() const {
     return ScatterAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft, ScatterDuplicated, contribution, override_contribution>{*this};
@@ -891,12 +998,14 @@ public:
   typedef Kokkos::Impl::Experimental::ScatterValue<
       original_value_type, Op, override_contribution> value_type;
 
-  inline ScatterAccess(view_type const& view_in)
+  KOKKOS_FORCEINLINE_FUNCTION
+  ScatterAccess(view_type const& view_in)
     : view(view_in)
     , thread_id(view_in.unique_token.acquire()) {
   }
 
-  inline ~ScatterAccess() {
+  KOKKOS_FORCEINLINE_FUNCTION
+  ~ScatterAccess() {
     if (thread_id != ~thread_id_type(0)) view.unique_token.release(thread_id);
   }
 
@@ -926,8 +1035,9 @@ private:
 public:
   // do need to allow moves though, for the common
   // auto b = a.access();
-  // that assignments turns into a move constructor call 
-  inline ScatterAccess(ScatterAccess&& other)
+  // that assignments turns into a move constructor call  
+  KOKKOS_FORCEINLINE_FUNCTION
+  ScatterAccess(ScatterAccess&& other)
     : view(other.view)
     , thread_id(other.thread_id)
   {
