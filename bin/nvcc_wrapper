@@ -311,8 +311,8 @@ done
 #Check if nvcc exists
 if [ $host_only -ne 1 ]; then
   var=$(which nvcc )
-  if [ $? -gt 0 ]
-  then
+  if [ $? -gt 0 ]; then
+    echo "Could not find NVCC in PATH"
     exit $?
   fi
 fi
