@@ -532,6 +532,57 @@ void initialize(int& narg, char* arg[])
       iarg++;
     }
 
+    //Read environment variables
+    auto env_num_threads_str = std::getenv("KOKKOS_NUM_THREADS");
+    if (env_num_threads_str) {
+        auto env_num_threads = std::atoi(env_num_threads_str);
+        if ((num_threads != -1)&&(env_num_threads!=num_threads))
+            Impl::throw_runtime_exception("Error: expecting a match between --kokkos-threads and KOKKOS_NUM_THREADS if both are set'. Raised by Kokkos::initialize(int narg, char* argc[]).");
+        else
+            num_threads = env_num_threads;
+    }
+    auto env_numa_str = std::getenv("KOKKOS_NUMA");
+    if (env_numa_str) {
+        auto env_numa = std::atoi(env_numa_str);
+        if ((numa != -1)&&(env_numa!=numa))
+            Impl::throw_runtime_exception("Error: expecting a match between --kokkos-numa and KOKKOS_NUMA if both are set'. Raised by Kokkos::initialize(int narg, char* argc[]).");
+        else
+            numa = env_numa;
+    }
+    auto env_device_str = std::getenv("KOKKOS_DEVICE_ID");
+    if (env_device_str) {
+        auto env_device = std::atoi(env_device_str);
+        if ((device != -1)&&(env_device!=device))
+            Impl::throw_runtime_exception("Error: expecting a match between --kokkos-device and KOKKOS_DEVICE_ID if both are set'. Raised by Kokkos::initialize(int narg, char* argc[]).");
+        else
+            device = env_device;
+    }
+    auto env_ndevices_str = std::getenv("KOKKOS_NUM_DEVICES");
+    if (env_ndevices_str) {
+        auto env_ndevices = std::atoi(env_ndevices_str);
+        if ((ndevices != -1)&&(env_ndevices!=ndevices))
+            Impl::throw_runtime_exception("Error: expecting a match between --kokkos-ndevices and KOKKOS_NUM_DEVICES if both are set'. Raised by Kokkos::initialize(int narg, char* argc[]).");
+        else
+            ndevices = env_ndevices;
+        //Skip device
+        auto env_skip_device_str = std::getenv("KOKKOS_SKIP_DEVICE");
+        if (env_skip_device_str) {
+            auto env_skip_device = std::atoi(env_skip_device_str);
+            if ((skip_device != 9999)&&(env_skip_device!=skip_device))
+                Impl::throw_runtime_exception("Error: expecting a match between --kokkos-ndevices and KOKKOS_SKIP_DEVICE if both are set'. Raised by Kokkos::initialize(int narg, char* argc[]).");
+            else
+                skip_device = env_skip_device;
+        }
+    }
+    const char * env_disablewarnings_str = std::getenv("KOKKOS_DISABLE_WARNINGS");
+    if (env_disablewarnings_str) {
+		if (strcmp(env_disablewarnings_str,"TRUE") == 0)
+            disable_warnings = true;
+        else
+            if (disable_warnings)
+                Impl::throw_runtime_exception("Error: expecting a match between --kokkos-disable-warnings and KOKKOS_DISABLE_WARNINGS if both are set'. Raised by Kokkos::initialize(int narg, char* argc[]).");
+    }
+
     InitArguments arguments;
     arguments.num_threads = num_threads;
     arguments.num_numa = numa;
