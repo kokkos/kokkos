@@ -719,11 +719,11 @@ public:
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   KOKKOS_INLINE_FUNCTION
-  const Kokkos::Impl::ViewMapping< traits , void > &
+  const Kokkos::Impl::ViewMapping< traits , typename traits::specialize > &
   implementation_map() const { return m_map ; }
 #endif
   KOKKOS_INLINE_FUNCTION
-  const Kokkos::Impl::ViewMapping< traits , void > &
+  const Kokkos::Impl::ViewMapping< traits , typename traits::specialize > &
   impl_map() const { return m_map ; }
   KOKKOS_INLINE_FUNCTION
   const Kokkos::Impl::SharedAllocationTracker &
@@ -1965,7 +1965,7 @@ public:
     , m_map()
     {
       typedef typename View<RT,RP...>::traits  SrcTraits ;
-      typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
+      typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , typename traits::specialize >  Mapping ;
       static_assert( Mapping::is_assignable , "Incompatible View copy construction" );
       Mapping::assign( m_map , rhs.m_map , rhs.m_track );
     }
@@ -1975,7 +1975,7 @@ public:
   View & operator = ( const View<RT,RP...> & rhs )
     {
       typedef typename View<RT,RP...>::traits  SrcTraits ;
-      typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , void >  Mapping ;
+      typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , typename traits::specialize >  Mapping ;
       static_assert( Mapping::is_assignable , "Incompatible View copy assignment" );
       Mapping::assign( m_map , rhs.m_map , rhs.m_track );
       m_track.assign( rhs.m_track , traits::is_managed );
@@ -2002,7 +2002,7 @@ public:
 
       typedef typename Mapping::type DstType ;
 
-      static_assert( Kokkos::Impl::ViewMapping< traits , typename DstType::traits , void >::is_assignable
+      static_assert( Kokkos::Impl::ViewMapping< traits , typename DstType::traits , typename traits::specialize >::is_assignable
         , "Subview construction requires compatible view and subview arguments" );
 
       Mapping::assign( m_map, src_view.m_map, arg0 , args... );
@@ -2276,10 +2276,10 @@ public:
     }
   template <class Traits>
   KOKKOS_INLINE_FUNCTION
-  View( const track_type & track,  const Kokkos::Impl::ViewMapping< Traits , void >  &map ) :
+  View( const track_type & track,  const Kokkos::Impl::ViewMapping< Traits , typename Traits::specialize >  &map ) :
   m_track(track), m_map()
   {
-    typedef Kokkos::Impl::ViewMapping< traits , Traits , void >  Mapping ;
+    typedef Kokkos::Impl::ViewMapping< traits , Traits , typename traits::specialize >  Mapping ;
     static_assert( Mapping::is_assignable , "Incompatible View copy construction" );
     Mapping::assign( m_map , map , track );
   }
