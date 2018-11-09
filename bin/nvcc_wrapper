@@ -312,7 +312,7 @@ done
 if [ $host_only -ne 1 ]; then
   var=$(which nvcc )
   if [ $? -gt 0 ]; then
-    echo "Could not find NVCC in PATH"
+    echo "Could not find nvcc in PATH"
     exit $?
   fi
 fi
