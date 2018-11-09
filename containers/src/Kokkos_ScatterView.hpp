@@ -216,10 +216,10 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, Kokkos::Experi
   Prod<ValueType,Kokkos::DefaultExecutionSpace> {
   public:
     KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in) : 
-       Sum<ValueType,Kokkos::DefaultExecutionSpace>(value_in)
+       Prod<ValueType,Kokkos::DefaultExecutionSpace>(value_in)
     {}
     KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other) : 
-       Sum<ValueType,Kokkos::DefaultExecutionSpace>(other.reference())
+       Prod<ValueType,Kokkos::DefaultExecutionSpace>(other.reference())
     {}
     KOKKOS_FORCEINLINE_FUNCTION void operator*=(ValueType const& rhs) {
       this->join( this->reference(), rhs );
@@ -234,10 +234,10 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, Kokkos::Experi
 
 template <typename ValueType>
 struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, Kokkos::Experimental::ScatterAtomic> :
-  Sum<ValueType,Kokkos::DefaultExecutionSpace> {
+  Prod<ValueType,Kokkos::DefaultExecutionSpace> {
   public:
     KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in) : 
-       Sum<ValueType,Kokkos::DefaultExecutionSpace>(value_in)
+       Prod<ValueType,Kokkos::DefaultExecutionSpace>(value_in)
     {}
 
     KOKKOS_FORCEINLINE_FUNCTION void operator*=(ValueType const& rhs) {
@@ -248,13 +248,13 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, Kokkos::Experi
     }
 
     KOKKOS_FORCEINLINE_FUNCTION 
-    void atomic_prod(ValueType & dest, const ValueType& src) {
+    void atomic_prod(ValueType & dest, const ValueType& src) const {
 
         bool success = false;
         ValueType & dest_old = dest;
         while(!success) {
-            ValueType & dest_new = dest_old * src;
-            dest_new = Kokkos::atomic_compare_exchange(&dest,dest_old,dest_new);
+            ValueType dest_new = dest_old * src;
+            dest_new = Kokkos::atomic_compare_exchange<ValueType>(&dest,dest_old,dest_new);
             success = (dest_new == dest_old);
             dest_old = dest_new;
         }
@@ -262,12 +262,12 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, Kokkos::Experi
     
     KOKKOS_INLINE_FUNCTION
     void join(ValueType& dest, const ValueType& src)  const {
-      atomic_prod(&dest, src);
+      atomic_prod(dest, src);
     }
 
     KOKKOS_INLINE_FUNCTION
     void join(volatile ValueType& dest, const volatile ValueType& src) const {
-      atomic_prod(&dest, src);
+      atomic_prod(dest, src);
     } 
 
     KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
@@ -416,6 +416,21 @@ struct ReduceDuplicates<ExecSpace, ValueType, Kokkos::Experimental::ScatterSum> 
   }
 };
 
+template <typename ExecSpace, typename ValueType>
+struct ReduceDuplicates<ExecSpace, ValueType, Kokkos::Experimental::ScatterProd> :
+  public ReduceDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ScatterProd>
+{
+  typedef ReduceDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ScatterProd> Base;
+  ReduceDuplicates(ValueType const* src_in, ValueType* dst_in, size_t stride_in, size_t start_in, size_t n_in, std::string const& name):
+    Base(src_in, dst_in, stride_in, start_in, n_in, name)
+  {}
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
+    for (size_t j = Base::start; j < Base::n; ++j) {
+      Base::dst[i] *= Base::src[i + Base::stride * j];
+    }
+  }
+};
+
 template <typename ExecSpace, typename ValueType, int Op>
 struct ResetDuplicates;
 
@@ -454,6 +469,19 @@ struct ResetDuplicates<ExecSpace, ValueType, Kokkos::Experimental::ScatterSum> :
   {}
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
     Base::data[i] = Kokkos::reduction_identity<ValueType>::sum();
+  }
+};
+
+template <typename ExecSpace, typename ValueType>
+struct ResetDuplicates<ExecSpace, ValueType, Kokkos::Experimental::ScatterProd> :
+  public ResetDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ScatterProd>
+{
+  typedef ResetDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ScatterProd> Base;
+  ResetDuplicates(ValueType* data_in, size_t size_in, std::string const& name):
+    Base(data_in, size_in, name)
+  {}
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
+    Base::data[i] = Kokkos::reduction_identity<ValueType>::prod();
   }
 };
 
