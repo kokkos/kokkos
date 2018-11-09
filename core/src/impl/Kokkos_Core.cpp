@@ -533,41 +533,67 @@ void initialize(int& narg, char* arg[])
     }
 
     //Read environment variables
+    char * endptr;
     auto env_num_threads_str = std::getenv("KOKKOS_NUM_THREADS");
-    if (env_num_threads_str) {
-        auto env_num_threads = std::atoi(env_num_threads_str);
+    if (env_num_threads_str!=nullptr) {
+        errno = 0;
+        auto env_num_threads = std::strtol(env_num_threads_str,&endptr,10);
+        if (endptr== env_num_threads_str) 
+            Impl::throw_runtime_exception("Error: cannot convert KOKKOS_NUM_THREADS to an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
+        if (errno == ERANGE && (env_num_threads == LONG_MAX || env_num_threads == LONG_MIN))
+            Impl::throw_runtime_exception("Error: KOKKOS_NUM_THREADS out of range of representable values by an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
         if ((num_threads != -1)&&(env_num_threads!=num_threads))
             Impl::throw_runtime_exception("Error: expecting a match between --kokkos-threads and KOKKOS_NUM_THREADS if both are set'. Raised by Kokkos::initialize(int narg, char* argc[]).");
         else
             num_threads = env_num_threads;
     }
     auto env_numa_str = std::getenv("KOKKOS_NUMA");
-    if (env_numa_str) {
-        auto env_numa = std::atoi(env_numa_str);
+    if (env_numa_str!=nullptr) {
+        errno = 0;
+        auto env_numa = std::strtol(env_numa_str,&endptr,10);
+        if (endptr== env_numa_str) 
+            Impl::throw_runtime_exception("Error: cannot convert KOKKOS_NUMA to an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
+        if (errno == ERANGE && (env_numa == LONG_MAX || env_numa == LONG_MIN))
+            Impl::throw_runtime_exception("Error: KOKKOS_NUMA out of range of representable values by an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
         if ((numa != -1)&&(env_numa!=numa))
             Impl::throw_runtime_exception("Error: expecting a match between --kokkos-numa and KOKKOS_NUMA if both are set'. Raised by Kokkos::initialize(int narg, char* argc[]).");
         else
             numa = env_numa;
     }
     auto env_device_str = std::getenv("KOKKOS_DEVICE_ID");
-    if (env_device_str) {
-        auto env_device = std::atoi(env_device_str);
+    if (env_device_str!=nullptr) {
+        errno = 0;
+        auto env_device = std::strtol(env_device_str,&endptr,10);
+        if (endptr== env_device_str) 
+            Impl::throw_runtime_exception("Error: cannot convert KOKKOS_DEVICE_ID to an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
+        if (errno == ERANGE && (env_device == LONG_MAX || env_device == LONG_MIN))
+            Impl::throw_runtime_exception("Error: KOKKOS_DEVICE_ID out of range of representable values by an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
         if ((device != -1)&&(env_device!=device))
             Impl::throw_runtime_exception("Error: expecting a match between --kokkos-device and KOKKOS_DEVICE_ID if both are set'. Raised by Kokkos::initialize(int narg, char* argc[]).");
         else
             device = env_device;
     }
     auto env_ndevices_str = std::getenv("KOKKOS_NUM_DEVICES");
-    if (env_ndevices_str) {
-        auto env_ndevices = std::atoi(env_ndevices_str);
+    if (env_ndevices_str!=nullptr) {
+        errno = 0;
+        auto env_ndevices = std::strtol(env_ndevices_str,&endptr,10);
+        if (endptr== env_ndevices_str) 
+            Impl::throw_runtime_exception("Error: cannot convert KOKKOS_NUM_DEVICES to an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
+        if (errno == ERANGE && (env_ndevices == LONG_MAX || env_ndevices == LONG_MIN))
+            Impl::throw_runtime_exception("Error: KOKKOS_NUM_DEVICES out of range of representable values by an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
         if ((ndevices != -1)&&(env_ndevices!=ndevices))
             Impl::throw_runtime_exception("Error: expecting a match between --kokkos-ndevices and KOKKOS_NUM_DEVICES if both are set'. Raised by Kokkos::initialize(int narg, char* argc[]).");
         else
             ndevices = env_ndevices;
         //Skip device
         auto env_skip_device_str = std::getenv("KOKKOS_SKIP_DEVICE");
-        if (env_skip_device_str) {
-            auto env_skip_device = std::atoi(env_skip_device_str);
+        if (env_skip_device_str!=nullptr) {
+            errno = 0;
+            auto env_skip_device = std::strtol(env_skip_device_str,&endptr,10);
+            if (endptr== env_skip_device_str) 
+                Impl::throw_runtime_exception("Error: cannot convert KOKKOS_SKIP_DEVICE to an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
+            if (errno == ERANGE && (env_skip_device == LONG_MAX || env_skip_device == LONG_MIN))
+                Impl::throw_runtime_exception("Error: KOKKOS_SKIP_DEVICE out of range of representable values by an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
             if ((skip_device != 9999)&&(env_skip_device!=skip_device))
                 Impl::throw_runtime_exception("Error: expecting a match between --kokkos-ndevices and KOKKOS_SKIP_DEVICE if both are set'. Raised by Kokkos::initialize(int narg, char* argc[]).");
             else
@@ -575,7 +601,7 @@ void initialize(int& narg, char* arg[])
         }
     }
     const char * env_disablewarnings_str = std::getenv("KOKKOS_DISABLE_WARNINGS");
-    if (env_disablewarnings_str) {
+    if (env_disablewarnings_str!=nullptr) {
         if (strcmp(env_disablewarnings_str,"TRUE") == 0)
             disable_warnings = true;
         else
