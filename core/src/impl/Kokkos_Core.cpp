@@ -49,6 +49,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <stack>
+#include <cerrno>
 
 //----------------------------------------------------------------------------
 
@@ -70,7 +71,12 @@ bool is_unsigned_int(const char* str)
   }
   return true;
 }
-
+void convert_uppercase(char* str)
+{
+  const size_t len = strlen (str);
+  for (size_t i = 0; i < len; ++i)
+    str[i] = toupper(str[i]);
+}
 void initialize_internal(const InitArguments& args)
 {
 // This is an experimental setting
@@ -540,10 +546,10 @@ void initialize(int& narg, char* arg[])
         auto env_num_threads = std::strtol(env_num_threads_str,&endptr,10);
         if (endptr== env_num_threads_str) 
             Impl::throw_runtime_exception("Error: cannot convert KOKKOS_NUM_THREADS to an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
-        if (errno == ERANGE && (env_num_threads == LONG_MAX || env_num_threads == LONG_MIN))
+        if (errno == ERANGE)
             Impl::throw_runtime_exception("Error: KOKKOS_NUM_THREADS out of range of representable values by an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
         if ((num_threads != -1)&&(env_num_threads!=num_threads))
-            Impl::throw_runtime_exception("Error: expecting a match between --kokkos-threads and KOKKOS_NUM_THREADS if both are set'. Raised by Kokkos::initialize(int narg, char* argc[]).");
+            Impl::throw_runtime_exception("Error: expecting a match between --kokkos-threads and KOKKOS_NUM_THREADS if both are set. Raised by Kokkos::initialize(int narg, char* argc[]).");
         else
             num_threads = env_num_threads;
     }
@@ -553,10 +559,10 @@ void initialize(int& narg, char* arg[])
         auto env_numa = std::strtol(env_numa_str,&endptr,10);
         if (endptr== env_numa_str) 
             Impl::throw_runtime_exception("Error: cannot convert KOKKOS_NUMA to an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
-        if (errno == ERANGE && (env_numa == LONG_MAX || env_numa == LONG_MIN))
+        if (errno == ERANGE)
             Impl::throw_runtime_exception("Error: KOKKOS_NUMA out of range of representable values by an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
         if ((numa != -1)&&(env_numa!=numa))
-            Impl::throw_runtime_exception("Error: expecting a match between --kokkos-numa and KOKKOS_NUMA if both are set'. Raised by Kokkos::initialize(int narg, char* argc[]).");
+            Impl::throw_runtime_exception("Error: expecting a match between --kokkos-numa and KOKKOS_NUMA if both are set. Raised by Kokkos::initialize(int narg, char* argc[]).");
         else
             numa = env_numa;
     }
@@ -566,10 +572,10 @@ void initialize(int& narg, char* arg[])
         auto env_device = std::strtol(env_device_str,&endptr,10);
         if (endptr== env_device_str) 
             Impl::throw_runtime_exception("Error: cannot convert KOKKOS_DEVICE_ID to an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
-        if (errno == ERANGE && (env_device == LONG_MAX || env_device == LONG_MIN))
+        if (errno == ERANGE)
             Impl::throw_runtime_exception("Error: KOKKOS_DEVICE_ID out of range of representable values by an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
         if ((device != -1)&&(env_device!=device))
-            Impl::throw_runtime_exception("Error: expecting a match between --kokkos-device and KOKKOS_DEVICE_ID if both are set'. Raised by Kokkos::initialize(int narg, char* argc[]).");
+            Impl::throw_runtime_exception("Error: expecting a match between --kokkos-device and KOKKOS_DEVICE_ID if both are set. Raised by Kokkos::initialize(int narg, char* argc[]).");
         else
             device = env_device;
     }
@@ -579,10 +585,10 @@ void initialize(int& narg, char* arg[])
         auto env_ndevices = std::strtol(env_ndevices_str,&endptr,10);
         if (endptr== env_ndevices_str) 
             Impl::throw_runtime_exception("Error: cannot convert KOKKOS_NUM_DEVICES to an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
-        if (errno == ERANGE && (env_ndevices == LONG_MAX || env_ndevices == LONG_MIN))
+        if (errno == ERANGE)
             Impl::throw_runtime_exception("Error: KOKKOS_NUM_DEVICES out of range of representable values by an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
         if ((ndevices != -1)&&(env_ndevices!=ndevices))
-            Impl::throw_runtime_exception("Error: expecting a match between --kokkos-ndevices and KOKKOS_NUM_DEVICES if both are set'. Raised by Kokkos::initialize(int narg, char* argc[]).");
+            Impl::throw_runtime_exception("Error: expecting a match between --kokkos-ndevices and KOKKOS_NUM_DEVICES if both are set. Raised by Kokkos::initialize(int narg, char* argc[]).");
         else
             ndevices = env_ndevices;
         //Skip device
@@ -592,21 +598,22 @@ void initialize(int& narg, char* arg[])
             auto env_skip_device = std::strtol(env_skip_device_str,&endptr,10);
             if (endptr== env_skip_device_str) 
                 Impl::throw_runtime_exception("Error: cannot convert KOKKOS_SKIP_DEVICE to an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
-            if (errno == ERANGE && (env_skip_device == LONG_MAX || env_skip_device == LONG_MIN))
+            if (errno == ERANGE)
                 Impl::throw_runtime_exception("Error: KOKKOS_SKIP_DEVICE out of range of representable values by an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
             if ((skip_device != 9999)&&(env_skip_device!=skip_device))
-                Impl::throw_runtime_exception("Error: expecting a match between --kokkos-ndevices and KOKKOS_SKIP_DEVICE if both are set'. Raised by Kokkos::initialize(int narg, char* argc[]).");
+                Impl::throw_runtime_exception("Error: expecting a match between --kokkos-ndevices and KOKKOS_SKIP_DEVICE if both are set. Raised by Kokkos::initialize(int narg, char* argc[]).");
             else
                 skip_device = env_skip_device;
         }
     }
-    const char * env_disablewarnings_str = std::getenv("KOKKOS_DISABLE_WARNINGS");
+    char * env_disablewarnings_str = std::getenv("KOKKOS_DISABLE_WARNINGS");
     if (env_disablewarnings_str!=nullptr) {
-        if (strcmp(env_disablewarnings_str,"TRUE") == 0)
+        Impl::convert_uppercase(env_disablewarnings_str);
+        if ((strcmp(env_disablewarnings_str,"TRUE") == 0) || (strcmp(env_disablewarnings_str,"ON") == 0) || (strcmp(env_disablewarnings_str,"1") == 0))
             disable_warnings = true;
         else
             if (disable_warnings)
-                Impl::throw_runtime_exception("Error: expecting a match between --kokkos-disable-warnings and KOKKOS_DISABLE_WARNINGS if both are set'. Raised by Kokkos::initialize(int narg, char* argc[]).");
+                Impl::throw_runtime_exception("Error: expecting a match between --kokkos-disable-warnings and KOKKOS_DISABLE_WARNINGS if both are set. Raised by Kokkos::initialize(int narg, char* argc[]).");
     }
 
     InitArguments arguments;
