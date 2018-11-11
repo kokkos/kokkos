@@ -71,12 +71,6 @@ bool is_unsigned_int(const char* str)
   }
   return true;
 }
-void convert_uppercase(char* str)
-{
-  const size_t len = strlen (str);
-  for (size_t i = 0; i < len; ++i)
-    str[i] = toupper(str[i]);
-}
 void initialize_internal(const InitArguments& args)
 {
 // This is an experimental setting
@@ -608,8 +602,9 @@ void initialize(int& narg, char* arg[])
     }
     char * env_disablewarnings_str = std::getenv("KOKKOS_DISABLE_WARNINGS");
     if (env_disablewarnings_str!=nullptr) {
-        Impl::convert_uppercase(env_disablewarnings_str);
-        if ((strcmp(env_disablewarnings_str,"TRUE") == 0) || (strcmp(env_disablewarnings_str,"ON") == 0) || (strcmp(env_disablewarnings_str,"1") == 0))
+        std::string env_str (env_disablewarnings_str); // deep-copies string
+        for (char& c : env_str) { c = toupper (c); }
+        if ((env_str == "TRUE") || (env_str == "ON") || (env_str == "1"))
             disable_warnings = true;
         else
             if (disable_warnings)
