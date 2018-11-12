@@ -251,15 +251,11 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, Kokkos::Experi
     void atomic_prod(ValueType & dest, const ValueType& src) const {
 
         bool success = false;
-        ValueType orig_val = dest;
-        //ValueType expectedResult = orig_val * src;
         while(!success) {
             ValueType dest_old = dest;
             ValueType dest_new = dest_old * src;
             dest_new = Kokkos::atomic_compare_exchange<ValueType>(&dest,dest_old,dest_new);
             success = ( (dest_new - dest_old)/dest_old <= 1e-15 );
-//            printf("Compare_exchange: (%s), %le, %le, %le\n",
-//                 success ? "true" : "false", dest_new, expectedResult, dest);
         }
     }
     
