@@ -43,7 +43,7 @@
 
 #ifndef KOKKOS_TEST_SCATTER_VIEW_HPP
 #define KOKKOS_TEST_SCATTER_VIEW_HPP
-
+#include <stdio.h>
 #include <Kokkos_ScatterView.hpp>
 
 namespace Test {
@@ -74,6 +74,18 @@ public:
    test_scatter_view_impl_cls(const scatter_view_type& view){
       scatter_view = view;
       scatterSize = 0;
+   }
+
+   void initialize(orig_view_type orig) {
+      auto host_view = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), orig);
+      Kokkos::fence();
+      for (typename decltype(host_view)::size_type i = 0; i < host_view.extent(0); ++i) {
+        host_view(i, 0) = 0.0;
+        host_view(i, 1) = 0.0;
+        host_view(i, 2) = 0.0;
+      }
+      Kokkos::fence();
+      Kokkos::deep_copy(orig, host_view);
    }
 
    void run_parallel(int n) {
@@ -134,6 +146,18 @@ public:
       scatterSize = 0;
    }
 
+   void initialize(orig_view_type orig) {
+      auto host_view = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), orig);
+      Kokkos::fence();
+      for (typename decltype(host_view)::size_type i = 0; i < host_view.extent(0); ++i) {
+        host_view(i, 0) = 1.0;
+        host_view(i, 1) = 1.0;
+        host_view(i, 2) = 1.0;
+      }
+      Kokkos::fence();
+      Kokkos::deep_copy(orig, host_view);
+   }
+
    void run_parallel(int n) {
         scatterSize = n;
         auto policy = Kokkos::RangePolicy<ExecSpace, int>(0, n);
@@ -159,8 +183,9 @@ public:
         auto val0 = host_view(i, 0);
         auto val1 = host_view(i, 1);
         auto val2 = host_view(i, 2);
-        EXPECT_TRUE(std::fabs((val0 - 512.0) / 512.0) < 1e-15);
-        EXPECT_TRUE(std::fabs((val1 - 32.0) / 32.0) < 1e-15);
+        //printf("returned values: %le, %le, %le \n", val0, val1, val2);
+        EXPECT_TRUE(std::fabs((val0 - 65536.0) / 65536.0) < 1e-15);
+        EXPECT_TRUE(std::fabs((val1 - 256.0) / 256.0) < 1e-15);
         EXPECT_TRUE(std::fabs((val2 - 1.0) / 1.0) < 1e-15);
       }
     }
@@ -190,6 +215,7 @@ struct test_scatter_view_config
        > (original_view);
 
      test_scatter_view_impl_cls<ExecSpace, Layout, duplication, contribution, op> scatter_view_test_impl(scatter_view);
+     scatter_view_test_impl.initialize(original_view);
      scatter_view_test_impl.run_parallel(n);
 
      Kokkos::Experimental::contribute(original_view, scatter_view);
@@ -272,8 +298,10 @@ void test_scatter_view(int n)
 #ifdef KOKKOS_ENABLE_SERIAL
   }
 #endif
-
+  fflush(stdout);
+  //printf("running duplicate test \n");
   TestDuplicatedScatterView<ExecSpace, ScatterType> duptest(n);
+  //printf("duplicate test finished \n");
 }
 
 TEST_F( TEST_CATEGORY, scatterview) {
