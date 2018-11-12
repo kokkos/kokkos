@@ -172,6 +172,9 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, Kokkos::Experim
     KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
       this->join( this->reference(), rhs );
     }
+    KOKKOS_FORCEINLINE_FUNCTION void reset() {
+      this->init( this->reference() );
+    }
 };
 
 template <typename ValueType>
@@ -203,6 +206,9 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, Kokkos::Experim
       this->join( this->reference(), rhs );
     }
 
+    KOKKOS_FORCEINLINE_FUNCTION void reset() {
+      this->init( this->reference() );
+    }
 };
 
 /* ScatterValue <Op=ScatterProd> is the object returned by the access operator() of ScatterAccess,
@@ -229,6 +235,9 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, Kokkos::Experi
     }
     KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
       this->join( this->reference(), rhs );
+    }
+    KOKKOS_FORCEINLINE_FUNCTION void reset() {
+      this->init( this->reference() );
     }
 };
 
@@ -271,6 +280,123 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, Kokkos::Experi
 
     KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
       this->join( this->reference(), rhs );
+    }
+    KOKKOS_FORCEINLINE_FUNCTION void reset() {
+      this->init( this->reference() );
+    }
+
+};
+
+template <typename ValueType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, Kokkos::Experimental::ScatterNonAtomic> :
+  Min<ValueType,Kokkos::DefaultExecutionSpace> {
+  public:
+    KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in) : 
+       Min<ValueType,Kokkos::DefaultExecutionSpace>(value_in)
+    {}
+    KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other) : 
+       Min<ValueType,Kokkos::DefaultExecutionSpace>(other.reference())
+    {}
+    KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
+      this->join( this->reference(), rhs );
+    }
+    KOKKOS_FORCEINLINE_FUNCTION void reset() {
+      this->init( this->reference() );
+    }
+};
+
+template <typename ValueType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, Kokkos::Experimental::ScatterAtomic> :
+  Min<ValueType,Kokkos::DefaultExecutionSpace> {
+  public:
+    KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in) : 
+       Min<ValueType,Kokkos::DefaultExecutionSpace>(value_in)
+    {}
+
+    KOKKOS_FORCEINLINE_FUNCTION 
+    void atomic_min(ValueType & dest, const ValueType& src) const {
+
+        bool success = false;
+        while(!success) {
+            ValueType dest_old = dest;
+            ValueType dest_new = ( dest_old > src ) ? src : dest_old;
+            dest_new = Kokkos::atomic_compare_exchange<ValueType>(&dest,dest_old,dest_new);
+            success = ( (dest_new - dest_old)/dest_old <= 1e-15 );
+        }
+    }
+    
+    KOKKOS_INLINE_FUNCTION
+    void join(ValueType& dest, const ValueType& src)  const {
+      atomic_min(dest, src);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void join(volatile ValueType& dest, const volatile ValueType& src) const {
+      atomic_min(dest, src);
+    } 
+
+    KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
+      this->join( this->reference(), rhs );
+    }
+    KOKKOS_FORCEINLINE_FUNCTION void reset() {
+      this->init( this->reference() );
+    }
+
+};
+
+template <typename ValueType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax, Kokkos::Experimental::ScatterNonAtomic> :
+  Max<ValueType,Kokkos::DefaultExecutionSpace> {
+  public:
+    KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in) : 
+       Max<ValueType,Kokkos::DefaultExecutionSpace>(value_in)
+    {}
+    KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other) : 
+       Max<ValueType,Kokkos::DefaultExecutionSpace>(other.reference())
+    {}
+    KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
+      this->join( this->reference(), rhs );
+    }
+    KOKKOS_FORCEINLINE_FUNCTION void reset() {
+      this->init( this->reference() );
+    }
+};
+
+template <typename ValueType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax, Kokkos::Experimental::ScatterAtomic> :
+  Max<ValueType,Kokkos::DefaultExecutionSpace> {
+  public:
+    KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in) : 
+       Max<ValueType,Kokkos::DefaultExecutionSpace>(value_in)
+    {}
+
+    KOKKOS_FORCEINLINE_FUNCTION 
+    void atomic_max(ValueType & dest, const ValueType& src) const {
+
+        bool success = false;
+        while(!success) {
+            ValueType dest_old = dest;
+            ValueType dest_new = ( dest_old < src ) ? src : dest_old;
+            dest_new = Kokkos::atomic_compare_exchange<ValueType>(&dest,dest_old,dest_new);
+            success = ( (dest_new - dest_old)/dest_old <= 1e-15 );
+        }
+    }
+    
+    KOKKOS_INLINE_FUNCTION
+    void join(ValueType& dest, const ValueType& src)  const {
+      atomic_max(dest, src);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void join(volatile ValueType& dest, const volatile ValueType& src) const {
+      atomic_max(dest, src);
+    } 
+
+    KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
+      this->join( this->reference(), rhs );
+    }
+    KOKKOS_FORCEINLINE_FUNCTION void reset() {
+      this->init( this->reference() );
     }
 
 };
@@ -400,35 +526,22 @@ struct ReduceDuplicatesBase {
   }
 };
 
-template <typename ExecSpace, typename ValueType>
-struct ReduceDuplicates<ExecSpace, ValueType, Kokkos::Experimental::ScatterSum> :
-  public ReduceDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ScatterSum>
+template <typename ExecSpace, typename ValueType, int Op>
+struct ReduceDuplicates :
+  public ReduceDuplicatesBase<ExecSpace, ValueType, Op>
 {
-  typedef ReduceDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ScatterSum> Base;
+  typedef ReduceDuplicatesBase<ExecSpace, ValueType, Op> Base;
   ReduceDuplicates(ValueType const* src_in, ValueType* dst_in, size_t stride_in, size_t start_in, size_t n_in, std::string const& name):
     Base(src_in, dst_in, stride_in, start_in, n_in, name)
   {}
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
     for (size_t j = Base::start; j < Base::n; ++j) {
-      Base::dst[i] += Base::src[i + Base::stride * j];
+      ScatterValue<ValueType, Op, Kokkos::Experimental::ScatterNonAtomic> sv(Base::dst[i]);
+      sv.upd( Base::src[i + Base::stride * j] );
     }
   }
 };
 
-template <typename ExecSpace, typename ValueType>
-struct ReduceDuplicates<ExecSpace, ValueType, Kokkos::Experimental::ScatterProd> :
-  public ReduceDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ScatterProd>
-{
-  typedef ReduceDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ScatterProd> Base;
-  ReduceDuplicates(ValueType const* src_in, ValueType* dst_in, size_t stride_in, size_t start_in, size_t n_in, std::string const& name):
-    Base(src_in, dst_in, stride_in, start_in, n_in, name)
-  {}
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
-    for (size_t j = Base::start; j < Base::n; ++j) {
-      Base::dst[i] *= Base::src[i + Base::stride * j];
-    }
-  }
-};
 
 template <typename ExecSpace, typename ValueType, int Op>
 struct ResetDuplicates;
@@ -458,31 +571,20 @@ struct ResetDuplicatesBase {
   }
 };
 
-template <typename ExecSpace, typename ValueType>
-struct ResetDuplicates<ExecSpace, ValueType, Kokkos::Experimental::ScatterSum> :
-  public ResetDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ScatterSum>
+template <typename ExecSpace, typename ValueType, int Op>
+struct ResetDuplicates :
+  public ResetDuplicatesBase<ExecSpace, ValueType, Op>
 {
-  typedef ResetDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ScatterSum> Base;
+  typedef ResetDuplicatesBase<ExecSpace, ValueType, Op> Base;
   ResetDuplicates(ValueType* data_in, size_t size_in, std::string const& name):
     Base(data_in, size_in, name)
   {}
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
-    Base::data[i] = Kokkos::reduction_identity<ValueType>::sum();
+    ScatterValue<ValueType, Op, Kokkos::Experimental::ScatterNonAtomic> sv(Base::data[i]);
+    sv.reset();
   }
 };
 
-template <typename ExecSpace, typename ValueType>
-struct ResetDuplicates<ExecSpace, ValueType, Kokkos::Experimental::ScatterProd> :
-  public ResetDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ScatterProd>
-{
-  typedef ResetDuplicatesBase<ExecSpace, ValueType, Kokkos::Experimental::ScatterProd> Base;
-  ResetDuplicates(ValueType* data_in, size_t size_in, std::string const& name):
-    Base(data_in, size_in, name)
-  {}
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
-    Base::data[i] = Kokkos::reduction_identity<ValueType>::prod();
-  }
-};
 
 }}} // Kokkos::Impl::Experimental
 
