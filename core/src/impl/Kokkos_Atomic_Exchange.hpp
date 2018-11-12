@@ -418,6 +418,23 @@ void atomic_assign( volatile T * const dest_v , const T val )
 
 #endif
 #endif
+
+// dummy for non-CUDA Kokkos headers being processed by NVCC
+#if defined(__CUDA_ARCH__) && !defined(KOKKOS_ENABLE_CUDA)
+template <typename T>
+__inline__ __device__
+T atomic_exchange(volatile T * const, const Kokkos::Impl::identity_t<T>)
+{
+  return T();
+}
+
+template < typename T >
+__inline__ __device__
+void atomic_assign(volatile T * const, const Kokkos::Impl::identity_t<T>)
+{
+}
+#endif
+
 } // namespace Kokkos
 
 #endif

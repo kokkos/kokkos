@@ -308,6 +308,16 @@ T atomic_compare_exchange( volatile T * const dest_v, const T compare, const T v
 #endif
 #endif // !defined ROCM_ATOMICS
 
+// dummy for non-CUDA Kokkos headers being processed by NVCC
+#if defined(__CUDA_ARCH__) && !defined(KOKKOS_ENABLE_CUDA)
+template <typename T>
+__inline__ __device__
+T atomic_compare_exchange(volatile T * const, const Kokkos::Impl::identity_t<T>, const Kokkos::Impl::identity_t<T>)
+{
+  return T();
+}
+#endif
+
 template <typename T>
 KOKKOS_INLINE_FUNCTION
 bool atomic_compare_exchange_strong(volatile T* const dest, const T compare, const T val)
