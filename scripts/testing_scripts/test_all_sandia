@@ -323,6 +323,7 @@ elif [ "$MACHINE" = "apollo" ]; then
   BASE_MODULE_LIST="sems-env,kokkos-env,sems-<COMPILER_NAME>/<COMPILER_VERSION>,kokkos-hwloc/1.10.1/base"
   CUDA_MODULE_LIST="sems-env,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/4.8.4,kokkos-hwloc/1.10.1/base"
   CUDA8_MODULE_LIST="sems-env,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0,kokkos-hwloc/1.10.1/base"
+  CUDA10_MODULE_LIST="sems-env,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0,kokkos-hwloc/1.10.1/base"
 
   CLANG_MODULE_LIST="sems-env,kokkos-env,sems-git,sems-cmake/3.5.2,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/9.0.69"
   CLANG7_MODULE_LIST="sems-env,kokkos-env,sems-git,sems-cmake/3.5.2,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/9.1"
@@ -344,6 +345,7 @@ elif [ "$MACHINE" = "apollo" ]; then
   else
     # Format: (compiler module-list build-list exe-name warning-flag)
     COMPILERS=("cuda/9.1 $CUDA8_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+               "cuda/10.0 $CUDA10_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "clang/6.0 $CLANG_MODULE_LIST $BUILD_LIST_CUDA_CLANG clang++ $CUDA_WARNING_FLAGS"
                "clang/7.0 $CLANG7_MODULE_LIST $BUILD_LIST_CUDA_CLANG clang++ $CUDA_WARNING_FLAGS"
                "clang/3.9.0 $CLANG_MODULE_LIST $BUILD_LIST_CLANG clang++ $CLANG_WARNING_FLAGS"
