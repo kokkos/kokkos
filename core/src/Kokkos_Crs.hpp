@@ -100,30 +100,15 @@ public:
   row_map_type row_map;
   entries_type entries;
 
-  //! Construct an empty view.
-  KOKKOS_INLINE_FUNCTION
-  Crs() :
-      row_map(),
-      entries() 
-  {
-  }
-
-  //! Copy constructor 
-  KOKKOS_INLINE_FUNCTION
-  Crs(const Crs& rhs) :
-      row_map(rhs.row_map),
-      entries(rhs.entries) 
-  {
-  }
-
-  //! Move constructor
-  KOKKOS_INLINE_FUNCTION
-  Crs(Crs&& rhs) :
-      row_map(std::move(rhs.row_map)),
-      entries(std::move(rhs.entries)) 
-  {
-  }
-    
+  /*
+   * Default Constructors, operators and destructor
+   */
+  KOKKOS_FUNCTION Crs() = default;
+  KOKKOS_FUNCTION Crs(Crs const &) = default;
+  KOKKOS_FUNCTION Crs(Crs &&) = default;
+  KOKKOS_FUNCTION Crs& operator=(Crs const &) = default;
+  KOKKOS_FUNCTION Crs& operator=(Crs &&) = default;
+  KOKKOS_FUNCTION ~Crs() = default;
 
   /** \brief Assign to a view of the rhs array.
    *         If the old view is the last view
@@ -133,32 +118,6 @@ public:
   KOKKOS_INLINE_FUNCTION
   Crs(const RowMapType& row_map_, const EntriesType& entries_) 
      : row_map(row_map_), entries(entries_)
-  {
-  }
-  
-  //! Assignement operator
-  KOKKOS_INLINE_FUNCTION
-  Crs& operator= (const Crs& rhs)
-  {
-     row_map = rhs.row_map;
-     entries = rhs.entries;
-     return *this;
-  }
-
-  //! Move Assignment operator
-  KOKKOS_INLINE_FUNCTION
-  Crs& operator= ( Crs&& rhs) 
-  {
-     row_map = std::move(rhs.row_map);
-     entries = std::move(rhs.entries);
-     return *this;
-  }
-
-  /**  \brief  Destroy this view of the array.
-   *           If the last view then allocated memory is deallocated.
-   */
-  KOKKOS_INLINE_FUNCTION
-  ~Crs() 
   {
   }
 
