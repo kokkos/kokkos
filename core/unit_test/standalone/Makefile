@@ -38,6 +38,10 @@ LIB =
 
 include $(KOKKOS_PATH)/Makefile.kokkos
 
+ifeq ($(KOKKOS_INCLUDE_UVM_ALLOC_TEST),yes)
+ KOKKOS_CXXFLAGS += -DINCLUDE_UVM_ALLOC_TEST  
+endif
+
 build: $(EXE)
 
 $(EXE): $(OBJ) $(KOKKOS_LINK_DEPENDS) gtest-all.o

@@ -34,6 +34,10 @@ include $(KOKKOS_PATH)/Makefile.kokkos
 
 KOKKOS_CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/core/unit_test
 
+ifeq ($(KOKKOS_INCLUDE_UVM_ALLOC_TEST),yes)
+ KOKKOS_CXXFLAGS += -DINCLUDE_UVM_ALLOC_TEST  
+endif
+
 TEST_TARGETS =
 TARGETS =
 

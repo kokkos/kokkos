@@ -228,6 +228,7 @@ TEST_F( cuda, uvm )
   }
 }
 
+#ifdef INCLUDE_UVM_ALLOC_TEST
 TEST_F( cuda, uvm_num_allocs )
 {
   // The max number of UVM allocations allowed is 65536.
@@ -288,6 +289,7 @@ TEST_F( cuda, uvm_num_allocs )
 
   #undef MAX_NUM_ALLOCS
 }
+#endif
 
 template< class MemSpace, class ExecSpace >
 struct TestViewCudaAccessible {
