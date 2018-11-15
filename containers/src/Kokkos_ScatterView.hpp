@@ -153,7 +153,7 @@ struct DefaultContribution<Kokkos::Cuda, Kokkos::Experimental::ScatterDuplicated
 
 /* ScatterValue <Op=ScatterSum, contribution=ScatterNonAtomic> is the object returned by the access operator() of ScatterAccess,
    This class inherits from the Sum<> reducer and it wraps join(dest, src) with convenient operator+=, etc. 
-   Note the addition of upd(ValueType const& rhs) and reset()  so that all reducers can have common functions
+   Note the addition of update(ValueType const& rhs) and reset()  so that all reducers can have common functions
    See ReduceDuplicates and ResetDuplicates ) */
 template <typename ValueType, int Op, int contribution>
 struct ScatterValue;
@@ -174,7 +174,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, Kokkos::Experim
     KOKKOS_FORCEINLINE_FUNCTION void operator-=(ValueType const& rhs) {
       this->join( this->reference(), -rhs );
     }
-    KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
+    KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
       this->join( this->reference(), rhs );
     }
     KOKKOS_FORCEINLINE_FUNCTION void reset() {
@@ -184,7 +184,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, Kokkos::Experim
 
 /* ScatterValue <Op=ScatterSum, contribution=ScatterAtomic> is the object returned by the access operator() 
  * of ScatterAccess, similar to that returned by an Atomic View, it wraps Kokkos::atomic_add with convenient
-   operator+=, etc. This version also has the upd(rhs) and reset() functions. */
+   operator+=, etc. This version also has the update(rhs) and reset() functions. */
 template <typename ValueType>
 struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, Kokkos::Experimental::ScatterAtomic> :
   Sum<ValueType,Kokkos::DefaultExecutionSpace> {
@@ -210,7 +210,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, Kokkos::Experim
       Kokkos::atomic_add(&dest, src);
     } 
 
-    KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
+    KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
       this->join( this->reference(), rhs );
     }
 
@@ -221,7 +221,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, Kokkos::Experim
 
 /* ScatterValue <Op=ScatterProd, contribution=ScatterNonAtomic> is the object returned by the access operator() of ScatterAccess,
    This class inherits from the Prod<> reducer and it wraps join(dest, src) with convenient operator*=, etc. 
-   Note the addition of upd(ValueType const& rhs) and reset()  so that all reducers can have common functions
+   Note the addition of update(ValueType const& rhs) and reset()  so that all reducers can have common functions
    See ReduceDuplicates and ResetDuplicates ) */
 template <typename ValueType>
 struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, Kokkos::Experimental::ScatterNonAtomic> :
@@ -239,7 +239,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, Kokkos::Experi
     KOKKOS_FORCEINLINE_FUNCTION void operator/=(ValueType const& rhs) {
       this->join( this->reference(), static_cast<ValueType>(1)/rhs );
     }
-    KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
+    KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
       this->join( this->reference(), rhs );
     }
     KOKKOS_FORCEINLINE_FUNCTION void reset() {
@@ -249,7 +249,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, Kokkos::Experi
 
 /* ScatterValue <Op=ScatterProd, contribution=ScatterAtomic> is the object returned by the access operator() 
  * of ScatterAccess, similar to that returned by an Atomic View, it wraps and atomic_prod with convenient
-   operator*=, etc. atomic_prod uses the atomic_compare_exchange. This version also has the upd(rhs) and reset() functions. */
+   operator*=, etc. atomic_prod uses the atomic_compare_exchange. This version also has the update(rhs) and reset() functions. */
 template <typename ValueType>
 struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, Kokkos::Experimental::ScatterAtomic> :
   Prod<ValueType,Kokkos::DefaultExecutionSpace> {
@@ -287,7 +287,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, Kokkos::Experi
       atomic_prod(dest, src);
     } 
 
-    KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
+    KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
       this->join( this->reference(), rhs );
     }
     KOKKOS_FORCEINLINE_FUNCTION void reset() {
@@ -297,8 +297,8 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, Kokkos::Experi
 };
 
 /* ScatterValue <Op=ScatterMin, contribution=ScatterNonAtomic> is the object returned by the access operator() of ScatterAccess,
-   This class inherits from the Min<> reducer and it wraps join(dest, src) with convenient upd(rhs). 
-   Note the addition of upd(ValueType const& rhs) and reset() are so that all reducers can have a common update function
+   This class inherits from the Min<> reducer and it wraps join(dest, src) with convenient update(rhs). 
+   Note the addition of update(ValueType const& rhs) and reset() are so that all reducers can have a common update function
    See ReduceDuplicates and ResetDuplicates ) */
 template <typename ValueType>
 struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, Kokkos::Experimental::ScatterNonAtomic> :
@@ -310,7 +310,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, Kokkos::Experim
     KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other) : 
        Min<ValueType,Kokkos::DefaultExecutionSpace>(other.reference())
     {}
-    KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
+    KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
       this->join( this->reference(), rhs );
     }
     KOKKOS_FORCEINLINE_FUNCTION void reset() {
@@ -319,7 +319,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, Kokkos::Experim
 };
 
 /* ScatterValue <Op=ScatterMin, contribution=ScatterAtomic> is the object returned by the access operator() 
- * of ScatterAccess, similar to that returned by an Atomic View, it wraps and atomic_min with the upd(rhs)
+ * of ScatterAccess, similar to that returned by an Atomic View, it wraps and atomic_min with the update(rhs)
    function. atomic_min uses the atomic_compare_exchange. This version also has the reset() function */
 template <typename ValueType>
 struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, Kokkos::Experimental::ScatterAtomic> :
@@ -351,7 +351,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, Kokkos::Experim
       atomic_min(dest, src);
     } 
 
-    KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
+    KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
       this->join( this->reference(), rhs );
     }
     KOKKOS_FORCEINLINE_FUNCTION void reset() {
@@ -360,9 +360,9 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, Kokkos::Experim
 
 };
 
-/* ScatterValue <Op=ScatterMax, contribution=ScatterNonAtomic> is the object returned by the access operator() of ScatterAccess,
-   This class inherits from the Max<> reducer and it wraps join(dest, src) with convenient upd(rhs). 
-   Note the addition of upd(ValueType const& rhs) and reset() are so that all reducers can have a common update function
+/* ScatterValue <Op=ScatterMax, contribution=ScatterNonAtomic> is the object returned by the access operataor() of ScatterAccess,
+   This class inherits from the Max<> reducer and it wraps join(dest, src) with convenient update(rhs). 
+   Note the addition of update(ValueType const& rhs) and reset() are so that all reducers can have a common update function
    See ReduceDuplicates and ResetDuplicates ) */
 template <typename ValueType>
 struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax, Kokkos::Experimental::ScatterNonAtomic> :
@@ -374,7 +374,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax, Kokkos::Experim
     KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other) : 
        Max<ValueType,Kokkos::DefaultExecutionSpace>(other.reference())
     {}
-    KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
+    KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
       this->join( this->reference(), rhs );
     }
     KOKKOS_FORCEINLINE_FUNCTION void reset() {
@@ -383,7 +383,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax, Kokkos::Experim
 };
 
 /* ScatterValue <Op=ScatterMax, contribution=ScatterAtomic> is the object returned by the access operator() 
- * of ScatterAccess, similar to that returned by an Atomic View, it wraps and atomic_max with the upd(rhs)
+ * of ScatterAccess, similar to that returned by an Atomic View, it wraps and atomic_max with the update(rhs)
    function. atomic_max uses the atomic_compare_exchange. This version also has the reset() function  */
 template <typename ValueType>
 struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax, Kokkos::Experimental::ScatterAtomic> :
@@ -415,7 +415,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax, Kokkos::Experim
       atomic_max(dest, src);
     } 
 
-    KOKKOS_FORCEINLINE_FUNCTION void upd(ValueType const& rhs) {
+    KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
       this->join( this->reference(), rhs );
     }
     KOKKOS_FORCEINLINE_FUNCTION void reset() {
@@ -551,7 +551,7 @@ struct ReduceDuplicatesBase {
 
 /* ReduceDuplicates -- Perform reduction on destination array using strided source 
  *    Use ScatterValue<> specific to operation to wrap destination array so that
- *    the reduction operation can be accessed via the upd(rhs) function */
+ *    the reduction operation can be accessed via the update(rhs) function */
 template <typename ExecSpace, typename ValueType, int Op>
 struct ReduceDuplicates :
   public ReduceDuplicatesBase<ExecSpace, ValueType, Op>
@@ -563,7 +563,7 @@ struct ReduceDuplicates :
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
     for (size_t j = Base::start; j < Base::n; ++j) {
       ScatterValue<ValueType, Op, Kokkos::Experimental::ScatterNonAtomic> sv(Base::dst[i]);
-      sv.upd( Base::src[i + Base::stride * j] );
+      sv.update( Base::src[i + Base::stride * j] );
     }
   }
 };

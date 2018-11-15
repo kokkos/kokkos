@@ -241,9 +241,9 @@ public:
       auto scatter_access_atomic = scatter_view.template access<Kokkos::Experimental::ScatterAtomic>();
       for (int j = 0; j < 4; ++j) {
         auto k = (i + j) % scatterSize;
-        scatter_access(k, 0).upd((double)(j+1)*4);
-        scatter_access_atomic(k, 1).upd((double)(j+1)*2.0);
-        scatter_access(k, 2).upd((double)(j+1)*1.0);
+        scatter_access(k, 0).update((double)(j+1)*4);
+        scatter_access_atomic(k, 1).update((double)(j+1)*2.0);
+        scatter_access(k, 2).update((double)(j+1)*1.0);
       }
     }
 
@@ -312,9 +312,9 @@ public:
       auto scatter_access_atomic = scatter_view.template access<Kokkos::Experimental::ScatterAtomic>();
       for (int j = 0; j < 4; ++j) {
         auto k = (i + j) % scatterSize;
-        scatter_access(k, 0).upd((double)(j+1)*4);
-        scatter_access_atomic(k, 1).upd((double)(j+1)*2.0);
-        scatter_access(k, 2).upd((double)(j+1)*1.0);
+        scatter_access(k, 0).update((double)(j+1)*4);
+        scatter_access_atomic(k, 1).update((double)(j+1)*2.0);
+        scatter_access(k, 2).update((double)(j+1)*1.0);
       }
     }
 
