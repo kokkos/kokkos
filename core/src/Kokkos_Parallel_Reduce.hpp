@@ -559,7 +559,7 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
-  value_type& reference() {
+  value_type& reference() const {
     return *value;
   }
 
