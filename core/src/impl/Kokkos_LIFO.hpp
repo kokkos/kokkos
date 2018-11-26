@@ -197,7 +197,7 @@ struct LockBasedLIFOCommon
     // not a member of a queue.
 
     // TODO this should have a memory order and not a memory fence
-    LinkedListNodeAccess::mark_as_not_enqueued(*next);
+    LinkedListNodeAccess::mark_as_not_enqueued(node);
 
     // fence to emulate acquire semantics on next
     // Do not proceed until 'next' has been stored.

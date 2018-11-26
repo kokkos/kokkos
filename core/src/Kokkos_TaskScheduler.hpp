@@ -262,6 +262,10 @@ public:
       /* initial_reference_count = */ 2
     );
 
+    if(policy.m_scheduler == nullptr) { // Another way of saying policy was constructed with a future
+      runnable_task->set_predecessor(*policy.m_dependence.m_task);
+    }
+
     rv = future_type(runnable_task);
 
     Kokkos::memory_fence(); // fence to ensure dependent stores are visible
