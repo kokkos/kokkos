@@ -64,6 +64,224 @@
 
 namespace Kokkos {
 
+// For now, hack this in as a partial specialization
+template <typename ValueType, typename ExecutionSpace, typename QueueType>
+class BasicFuture<ValueType, SimpleTaskScheduler<ExecutionSpace, QueueType>>
+{
+public:
+
+  using value_type = ValueType;
+  using execution_space = ExecutionSpace;
+  using scheduler_type = SimpleTaskScheduler<ExecutionSpace, QueueType>;
+  using queue_type = typename scheduler_type::task_queue_type;
+
+private:
+
+  template <class, class>
+  friend class SimpleTaskScheduler;
+  template <class, class>
+  friend class BasicFuture;
+
+  using task_base_type = typename scheduler_type::task_base_type;
+  using task_queue_type = typename scheduler_type::task_queue_type;
+
+  task_base_type* m_task = nullptr;
+
+  KOKKOS_INLINE_FUNCTION
+  explicit
+  BasicFuture(task_base_type* task)
+    : m_task(task)
+  {
+    // TODO restore this? Currently, reference count starts at 2 to account for this
+    //if(task) task->increment_reference_count();
+  }
+
+public:
+
+  KOKKOS_INLINE_FUNCTION
+  BasicFuture() noexcept : m_task(nullptr) { }
+
+  KOKKOS_INLINE_FUNCTION
+  BasicFuture(BasicFuture&& rhs) noexcept
+    : m_task(std::move(rhs.m_task))
+  {
+    rhs.m_task = nullptr;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  BasicFuture(BasicFuture const& rhs)
+    : m_task(rhs.m_task)
+  {
+    if(m_task) m_task->increment_reference_count();
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  BasicFuture& operator=(BasicFuture&& rhs) noexcept
+  {
+    if(m_task != rhs.m_task) {
+      clear();
+      m_task = std::move(rhs.m_task);
+      // rhs.m_task reference count is unchanged, since this is a move
+    }
+    else {
+      // They're the same, but this is a move, so 1 fewer references now
+      rhs.clear();
+    }
+    rhs.m_task = nullptr;
+    return *this ;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  BasicFuture& operator=(BasicFuture const& rhs)
+  {
+    if(m_task != rhs.m_task) {
+      clear();
+      m_task = rhs.m_task;
+      if(m_task != nullptr) { m_task->increment_reference_count(); }
+    }
+    return *this;
+  }
+
+  //----------------------------------------
+
+  template <class T, class S>
+  KOKKOS_INLINE_FUNCTION
+  BasicFuture(BasicFuture<T, S>&& rhs) noexcept // NOLINT(google-explicit-constructor)
+    : m_task(std::move(rhs.m_task))
+  {
+    static_assert(
+      std::is_same<scheduler_type, void>::value ||
+        std::is_same<scheduler_type, S>::value,
+      "Moved Futures must have the same scheduler"
+    );
+
+    static_assert(
+      std::is_same<value_type, void>::value ||
+        std::is_same<value_type, T>::value,
+      "Moved Futures must have the same value_type"
+    );
+
+    // reference counts are unchanged, since this is a move
+    rhs.m_task = nullptr;
+  }
+
+  template <class T, class S>
+  KOKKOS_INLINE_FUNCTION
+  BasicFuture(BasicFuture<T, S> const& rhs) // NOLINT(google-explicit-constructor)
+    : m_task(rhs.m_task)
+  {
+    static_assert(
+      std::is_same<scheduler_type, void>::value ||
+        std::is_same<scheduler_type, S>::value,
+      "Copied Futures must have the same scheduler"
+    );
+
+    static_assert(
+      std::is_same<value_type, void>::value ||
+        std::is_same<value_type, T>::value,
+      "Copied Futures must have the same value_type"
+    );
+
+    if(m_task) m_task->increment_reference_count();
+  }
+
+  template <class T, class S>
+  KOKKOS_INLINE_FUNCTION
+  BasicFuture&
+  operator=(BasicFuture<T, S> const& rhs)
+  {
+    static_assert(
+      std::is_same<scheduler_type, void>::value ||
+        std::is_same<scheduler_type, S>::value,
+      "Assigned Futures must have the same scheduler"
+    );
+
+    static_assert(
+      std::is_same<value_type, void>::value ||
+        std::is_same<value_type, T>::value,
+      "Assigned Futures must have the same value_type"
+    );
+
+    if(m_task != rhs.m_task) {
+      clear();
+      m_task = rhs.m_task;
+      if(m_task != nullptr) { m_task->increment_reference_count(); }
+    }
+    return *this;
+  }
+
+  template<class T, class S>
+  KOKKOS_INLINE_FUNCTION
+  BasicFuture& operator=(BasicFuture<T, S>&& rhs)
+  {
+    static_assert(
+      std::is_same<scheduler_type, void>::value ||
+        std::is_same<scheduler_type, S>::value,
+      "Assigned Futures must have the same scheduler"
+    );
+
+    static_assert(
+      std::is_same<value_type, void>::value ||
+        std::is_same<value_type, T>::value,
+      "Assigned Futures must have the same value_type"
+    );
+
+    if(m_task != rhs.m_task) {
+      clear();
+      m_task = std::move(rhs.m_task);
+      // rhs.m_task reference count is unchanged, since this is a move
+    }
+    else {
+      // They're the same, but this is a move, so 1 fewer references now
+      rhs.clear();
+    }
+    rhs.m_task = nullptr;
+    return *this ;
+  }
+
+  //----------------------------------------
+
+  KOKKOS_INLINE_FUNCTION
+  ~BasicFuture() noexcept { clear(); }
+
+  //----------------------------------------
+
+  KOKKOS_INLINE_FUNCTION
+  void clear() noexcept {
+    if(m_task) {
+      bool should_delete = m_task->decrement_and_check_reference_count();
+      if(should_delete) {
+        static_cast<task_queue_type*>(m_task->ready_queue_base_ptr())
+          ->deallocate(*m_task);
+      }
+    }
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  bool is_null() const noexcept {
+    return m_task == nullptr;
+  }
+
+
+  KOKKOS_INLINE_FUNCTION
+  bool is_ready() const noexcept {
+    return (m_task == nullptr) || m_task->wait_queue_is_consumed();
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  const typename Impl::TaskResult< ValueType >::reference_type
+  get() const
+  {
+    KOKKOS_EXPECTS(is_ready());
+    return Impl::TaskResult<ValueType>::get(m_task);
+  }
+
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// OLD CODE
+////////////////////////////////////////////////////////////////////////////////
+
 template <typename ValueType, typename Scheduler>
 class BasicFuture {
 private:
@@ -262,6 +480,9 @@ struct is_future<BasicFuture<ValueType, Scheduler>, ExecSpace>
     >
 {};
 
+////////////////////////////////////////////////////////////////////////////////
+// END OLD CODE
+////////////////////////////////////////////////////////////////////////////////
 
 namespace Impl {
 

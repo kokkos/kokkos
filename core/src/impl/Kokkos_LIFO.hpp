@@ -55,8 +55,7 @@
 #include <impl/Kokkos_OptionalRef.hpp>
 #include <impl/Kokkos_Error.hpp> // KOKKOS_EXPECTS
 
-#include <impl/Kokkos_Memory_Fence.hpp>
-#include <Kokkos_Atomic.hpp>  // atomic_compare_exchange
+#include <Kokkos_Atomic.hpp>  // atomic_compare_exchange, atomic_fence
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -64,127 +63,111 @@
 namespace Kokkos {
 namespace Impl {
 
-// TODO !!! Tagged pointers to avoid the ABA problems
+struct LinkedListNodeAccess;
 
-//template <class T>
-//class TaggedPointerLockFreeStack {
-//
-//private:
-//
-//  struct Node {
-//    Node* m_next;
-//    T m_value;
-//
-//    template <class... Args>
-//    explicit Node(
-//      InPlaceTag,
-//      Args&&... args
-//    ) : m_next(nullptr),
-//        m_value(std::forward<Args>(args)...)
-//    { }
-//
-//  };
-//
-//public:
-//
-//  // TODO finish this
-//
-//};
+template <
+  uintptr_t NotEnqueuedValue = 0,
+  template <class> class PointerTemplate = std::add_pointer
+>
+struct SimpleSinglyLinkedListNode
+{
 
-} // end namespace Impl
-} // end namespace Kokkos
+private:
 
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
+  using pointer_type = typename PointerTemplate<SimpleSinglyLinkedListNode>::type;
 
-namespace Kokkos {
-namespace Impl {
+  pointer_type m_next = reinterpret_cast<pointer_type>(NotEnqueuedValue);
 
+  // These are private because they are an implementation detail of the queue
+  // and should not get added to the value type's interface via the intrusive
+  // wrapper.
 
-// Saves on some template instantiation by putting type-agnostic parts
-// in a common base class
-struct LockBasedLIFOBase {
+  KOKKOS_INLINE_FUNCTION
+  void mark_as_not_enqueued() noexcept {
+    // TODO memory order
+    // TODO make this an atomic store
+    m_next = NotEnqueuedValue;
+  }
 
+  KOKKOS_INLINE_FUNCTION
+  pointer_type& _next_ptr() noexcept {
+    return m_next;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  pointer_type const& _next_ptr() const noexcept {
+    return m_next;
+  }
+
+  friend struct LinkedListNodeAccess;
+
+public:
+
+  // KOKKOS_CONSTEXPR_14
+  KOKKOS_INLINE_FUNCTION
+  bool is_enqueued() const noexcept {
+    // TODO memory order
+    // TODO make this an atomic load
+    return m_next != reinterpret_cast<pointer_type>(NotEnqueuedValue);
+  }
 
 };
 
 
-// Saves on some template instantiation by putting allocator-agnostic parts
-// in a common base class
-template <class T>
-struct AllocatorAgnosticLockBasedLIFOCommon
-  : public LockBasedLIFOBase
+/// Attorney for LinkedListNode, since user types inherit from it
+struct LinkedListNodeAccess
 {
-  using base_t = LockBasedLIFOBase;
+
+  template <class Node>
+  KOKKOS_INLINE_FUNCTION
+  static void mark_as_not_enqueued(Node& node) noexcept {
+    node.mark_as_not_enqueued();
+  }
+
+  template <class Node>
+  static
+  typename Node::pointer_type&
+  _next_ptr(Node& node) noexcept {
+    return node._next_ptr();
+  }
+
+  template <class Node>
+  static
+  typename Node::pointer_type&
+  _next_ptr(Node const& node) noexcept {
+    return node._next_ptr();
+  }
+
+};
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+template <class T>
+struct LockBasedLIFOCommon
+{
+
   using value_type = T;
 
-  struct Node;
+  using node_type = SimpleSinglyLinkedListNode<>;
 
-  static constexpr Node* LockTag = reinterpret_cast<Node>(~uintptr_t(0));
-  static constexpr Node* EndTag = reinterpret_cast<Node>(~uintptr_t(1));
+  static constexpr uintptr_t LockTag = ~uintptr_t(0);
+  static constexpr uintptr_t EndTag = ~uintptr_t(1);
 
-  // Inherit from T so that we can cast back to a Node upon re-enqueue
-  struct Node
-    : public T
-  {
-    using value_type = T;
-
-    Node* m_next = LockTag;
-
-    template <class... Args>
-    KOKKOS_INLINE_FUNCTION
-    explicit Node(
-      InPlaceTag,
-      Args&&... args
-    ) : value_type(std::forward<Args>(args)...)
-    { }
-
-    // KOKKOS_CONSTEXPR_14
-    KOKKOS_INLINE_FUNCTION
-    bool is_enqueued() const noexcept {
-      // TODO memory order
-      // TODO make this an atomic load
-      return m_next != LockTag;
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    void mark_as_not_enqueued() noexcept {
-      // TODO memory order
-      // TODO make this an atomic store
-      m_next = LockTag;
-    }
-
-  };
-
-};
-
-template <class T, class Allocator>
-struct LockBasedLIFOCommon
-  : public AllocatorAgnosticLockBasedLIFOCommon<T>
-{
-  using base_t = AllocatorAgnosticLockBasedLIFOCommon<T>;
-  using node_type = typename base_t::Node;
-  using allocator_type = typename Allocator::template rebind<node_type>::other;
-
-  using base_t::LockTag;
-  using base_t::EndTag;
-
-  // TODO use EBCO for stateless allocators
-  OwningRawPtr<node_type> m_head = EndTag;
-  allocator_type m_allocator = { };
+  OwningRawPtr<node_type> m_head = (node_type*)EndTag;
 
   KOKKOS_INLINE_FUNCTION
   bool _try_push_node(node_type& node) {
 
     KOKKOS_EXPECTS(!node.is_enqueued());
 
-    auto* volatile & next = node.m_next;
+    auto* volatile & next = LinkedListNodeAccess::_next_ptr(node);
 
     // store the head of the queue in a local variable
     auto* old_head = m_head;
 
     // retry until someone locks the queue or we successfully compare exchange
-    while (old_head != LockTag) {
+    while (old_head != (node_type*)LockTag) {
 
       // TODO this should have a memory order and not a memory fence
 
@@ -194,7 +177,7 @@ struct LockBasedLIFOCommon
       // fence to emulate acquire semantics on next and release semantics on
       // the store of m_head
       // Do not proceed until 'next' has been stored.
-      Kokkos::memory_fence();
+      ::Kokkos::memory_fence();
 
       // store the old head
       auto* const old_head_tmp = old_head;
@@ -205,7 +188,7 @@ struct LockBasedLIFOCommon
       //     *queue = task;
       //   }
       //   old_head = *queue;
-      old_head = Kokkos::atomic_compare_exchange(&m_head, old_head, &node);
+      old_head = ::Kokkos::atomic_compare_exchange(&m_head, old_head, &node);
 
       if(old_head_tmp == old_head) return true;
     }
@@ -214,11 +197,11 @@ struct LockBasedLIFOCommon
     // not a member of a queue.
 
     // TODO this should have a memory order and not a memory fence
-    next->mark_as_not_enqueued();
+    LinkedListNodeAccess::mark_as_not_enqueued(*next);
 
     // fence to emulate acquire semantics on next
     // Do not proceed until 'next' has been stored.
-    Kokkos::memory_fence();
+    ::Kokkos::memory_fence();
 
     return false;
   }
@@ -226,28 +209,35 @@ struct LockBasedLIFOCommon
   bool _is_empty() const noexcept {
     // TODO memory order
     // TODO make this an atomic load
-    return this->m_head == base_t::EndTag;
+    return this->m_head == (node_type*)EndTag;
   }
 
 };
 
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
-
-// TODO use allocator traits for allocation (device not supported by standard library currently)
-
-template <class T, class Allocator>
+template <class T>
 class LockBasedLIFO
-  : private LockBasedLIFOCommon<T, Allocator>
+  : private LockBasedLIFOCommon<T>
 {
+
 private:
 
-  using base_t = LockBasedLIFOCommon<T, Allocator>;
-  using node_type = typename base_t::Node;
+  using base_t = LockBasedLIFOCommon<T>;
+  using node_type = typename base_t::node_type;
 
 public:
 
   using value_type = typename base_t::value_type; // = T
-  using allocator_type = typename base_t::allocator_type;
+  using intrusive_node_base_type = SimpleSinglyLinkedListNode<>;
+
+public:
+
+  static_assert(
+    std::is_base_of<intrusive_node_base_type, value_type>::value,
+    "Intrusive linked-list value_type must be derived from intrusive_node_base_type"
+  );
 
   LockBasedLIFO() = default;
   LockBasedLIFO(LockBasedLIFO const&) = delete;
@@ -266,20 +256,17 @@ public:
   KOKKOS_INLINE_FUNCTION
   OptionalRef<T> pop()
   {
-    using base_t::LockTag;
-    using base_t::EndTag;
-
     // We can't use the static constexpr LockTag directly because
     // atomic_compare_exchange needs to bind a reference to that, and you
     // can't do that with static constexpr variables.
-    auto const* const lock_tag = LockTag;
+    auto* const lock_tag = (node_type*)base_t::LockTag;
 
     // TODO shouldn't this be a relaxed atomic load?
     // start with the return value equal to the head
     auto* rv = this->m_head;
 
     // Retry until the lock is acquired or the queue is empty.
-    while(rv != EndTag) {
+    while(rv != (node_type*)base_t::EndTag) {
 
       // The only possible values for the queue are
       // (1) lock, (2) end, or (3) a valid task.
@@ -288,7 +275,7 @@ public:
       // If queue is locked then just read by guaranteeing the CAS will fail.
       KOKKOS_ASSERT(rv != nullptr);
 
-      if(rv == LockTag) {
+      if(rv == lock_tag) {
         // TODO this should just be an atomic load followed by a continue
         // just set rv to nullptr for now, effectively turning the
         // atomic_compare_exchange below into a load
@@ -315,7 +302,7 @@ public:
         // the queue and the popped task's m_next.
 
         // TODO check whether the volatile is needed here
-        auto* volatile& next = rv->m_next;
+        auto* volatile& next = LinkedListNodeAccess::_next_ptr(*rv); //->m_next;
 
         // This algorithm is not lockfree because a adversarial scheduler could
         // context switch this thread at this point and the rest of the threads
@@ -326,11 +313,11 @@ public:
         this->m_head = next;
 
         // Mark rv as popped by assigning nullptr to the next
-        next->mark_as_not_enqueued();
+        LinkedListNodeAccess::mark_as_not_enqueued(*rv);
 
-        Kokkos::memory_fence();
+        ::Kokkos::memory_fence();
 
-        return { rv };
+        return OptionalRef<T>{ *static_cast<T*>(rv) };
       }
 
       // Otherwise, the CAS got a value that didn't match (either because
@@ -343,41 +330,12 @@ public:
     return { };
   }
 
-  template <class... Args>
   KOKKOS_INLINE_FUNCTION
-  void emplace(Args&&... args)
-    // requires std::is_constructible_v<T, Args&&...>
+  bool push(node_type& node)
   {
-    static_assert(
-      std::is_constructible<T, Args&&...>::value,
-      "value_type must be constructible from arguments to emplace()"
-    );
-
-    // TODO use allocator traits
-    auto* storage = this->m_allocator.allocate(1);
-    auto* node =
-      new ((void*)storage) node_type(InPlaceTag{}, std::forward<Args>(args)...);
-
     while(!this->_try_push_node(node)) { /* retry until success */ }
-  }
-
-  // TODO push() implementation constrained by move-constructibility
-
-  KOKKOS_INLINE_FUNCTION
-  void push_popped_item(OptionalRef<T> ptr) {
-    KOKKOS_ASSERT(ptr.has_value());
-    auto& node = static_cast<node_type&>(*ptr);
-    KOKKOS_ASSERT(!node.is_enqueued());
-    while(!_try_push_node(node)) { }
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void delete_popped_item(OptionalRef<T> ptr) const {
-    KOKKOS_ASSERT(ptr.has_value());
-    auto& to_delete = static_cast<node_type&>(*ptr);
-    KOKKOS_ASSERT(!to_delete.is_enqueued());
-    to_delete.~to_delete();
-    this->m_allocator.deallocate(&to_delete);
+    // for consistency with push interface on other queue types:
+    return true;
   }
 
 };
@@ -392,28 +350,25 @@ public:
  *   - Exactly one thread calls `consume()`, and the call occurs exactly once
  *     in the lifetime of the queue.
  *       + This operation is lock-free (and wait-free w.r.t. producers)
- *   - Any calls to `try_emplace`/`try_push` that happen-before the call to
- *     `consume()` will succeed and return an empty `OptionalRef<T>`.
- *   - Any calls to `try_emplace`/`try_push` for which the single call to
- *     `consume()` happens-before those calls will construct a `T` from their
- *     arguments and return it as a `OptionalRef<T>`, analogous to a popped item.
- *
- *
+ *   - Any calls to `try_push` that happen-before the call to
+ *     `consume()` will succeed and return an true, such that the `consume()`
+ *     call will visit that node.
+ *   - Any calls to `try_push` for which the single call to `consume()`
+ *     happens-before those calls will return false and the node given as
+ *     an argument to `try_push` will not be visited by consume()
  *
  *
  * @tparam T The type of items in the queue
- * @tparam Allocator The allocator used to construct new entries (via `emplace`)
- *                   or to construct new nodes for move or copy construction
- *                   (via `push`, if `T` is move and/or copy constructible)
+ *
  */
-template <class T, class Allocator>
+template <class T>
 class SingleConsumeOperationLIFO
-  : private LockBasedLIFOCommon<T, Allocator>
+  : private LockBasedLIFOCommon<T>
 {
 private:
 
-  using base_t = LockBasedLIFOCommon<T, Allocator>;
-  using node_type = typename base_t::Node;
+  using base_t = LockBasedLIFOCommon<T>;
+  using node_type = typename base_t::node_type;
 
   // Allows us to reuse the existing infrastructure for
   static constexpr auto ConsumedTag = base_t::LockTag;
@@ -421,10 +376,9 @@ private:
 public:
 
   using value_type = typename base_t::value_type; // = T
-  using allocator_type = typename base_t::allocator_type;
 
   KOKKOS_INLINE_FUNCTION
-  SingleConsumeOperationLIFO() = default;
+  SingleConsumeOperationLIFO() noexcept = default;
 
   SingleConsumeOperationLIFO(SingleConsumeOperationLIFO const&) = delete;
   SingleConsumeOperationLIFO(SingleConsumeOperationLIFO&&) = delete;
@@ -441,64 +395,46 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
-  bool consumed() const noexcept {
+  bool is_consumed() const noexcept {
     // TODO memory order?
-    return this->m_head == ConsumedTag;
+    return this->m_head == (node_type*)ConsumedTag;
   }
 
-  template <class... Args>
   KOKKOS_INLINE_FUNCTION
-  OptionalRef<T> try_emplace(Args&&... args)
-    // requires std::is_constructible_v<T, Args&&...>
+  bool try_push(node_type& node)
   {
-    static_assert(
-      std::is_constructible<T, Args&&...>::value,
-      "value_type must be constructible from arguments to emplace()"
-    );
-
-    // TODO use allocator traits
-    auto* storage = this->m_allocator.allocate(1);
-    auto* node =
-      new ((void*)storage) node_type(InPlaceTag{}, std::forward<Args>(args)...);
-
-    auto result = this->_try_push_node(node);
-    if(result.get() == ConsumedTag) {
-      return { node };
-    }
-    else {
-      // Otherwise, the push was successful, so return an empty OptionalRef
-      // indicating such
-      return { };
-    }
+    return this->_try_push_node(node);
+    // Ensures: (return value is true) || (node.is_enqueued() == false);
   }
 
   template <class Function>
   KOKKOS_INLINE_FUNCTION
   void consume(Function&& f) {
+    auto* const consumed_tag = (node_type*)ConsumedTag;
 
     // Swap the Consumed tag into the head of the queue:
 
     // (local variable used for assertion only)
     // TODO this should have memory order release, I think
-    auto old_head = Kokkos::atomic_exchange(&(this->m_head), ConsumedTag);
+    auto old_head = Kokkos::atomic_exchange(&(this->m_head), consumed_tag);
 
     // Assert that the queue wasn't consumed before this
     // This can't be an expects clause because the acquire fence on the read
     // would be a side-effect
-    KOKKOS_ASSERT(old_head != ConsumedTag);
+    KOKKOS_ASSERT(old_head != consumed_tag);
 
     // We now have exclusive access to the queue; loop over it and call
     // the user function
-    while(old_head != base_t::EndTag) {
+    while(old_head != (node_type*)base_t::EndTag) {
 
       // get the Node to make the call with
       auto* call_arg = old_head;
 
       // advance the head
-      old_head = old_head->m_next;
+      old_head = LinkedListNodeAccess::_next_ptr(*old_head);
 
       // Mark as popped before proceeding
-      call_arg->mark_as_not_enqueued();
+      LinkedListNodeAccess::mark_as_not_enqueued(*call_arg);
 
       // Call the user function
       auto& arg = *static_cast<T*>(call_arg);
@@ -516,7 +452,32 @@ public:
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+namespace Kokkos {
+namespace Impl {
+
+struct TaskQueueTraitsLockBased
+{
+
+  // TODO document what concepts these match
+
+  template <class Task>
+  using ready_queue_type = LockBasedLIFO<Task>;
+
+  template <class Task>
+  using waiting_queue_type = SingleConsumeOperationLIFO<Task>;
+
+  template <class Task>
+  using intrusive_task_base_type =
+    typename ready_queue_type<Task>::intrusive_node_base_type;
+};
 
 
+} // end namespace Impl
+} // end namespace Kokkos
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+#endif /* defined KOKKOS_ENABLE_TASKDAG */
 #endif /* #ifndef KOKKOS_IMPL_LIFO_HPP */
 

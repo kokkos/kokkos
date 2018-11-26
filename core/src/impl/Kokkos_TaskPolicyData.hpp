@@ -60,6 +60,8 @@ namespace Impl {
 
 //----------------------------------------------------------------------------
 
+// TODO redo this to have different types for dependence case and scheduler case
+
 template< int TaskEnum , typename DepFutureType >
 struct TaskPolicyData
 {

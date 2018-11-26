@@ -83,6 +83,12 @@ public:
   OptionalRef& operator=(OptionalRef const&) = default;
 
   KOKKOS_INLINE_FUNCTION
+  OptionalRef& operator=(OptionalRef const volatile& other) volatile noexcept
+  {
+    m_value = other.m_value;
+  }
+
+  KOKKOS_INLINE_FUNCTION
   OptionalRef& operator=(OptionalRef&&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -156,10 +162,16 @@ public:
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
+  operator bool() { return m_value != nullptr; }
+
+  KOKKOS_INLINE_FUNCTION
   operator bool() const { return m_value != nullptr; }
 
   KOKKOS_INLINE_FUNCTION
   operator bool() volatile { return m_value != nullptr; }
+
+  KOKKOS_INLINE_FUNCTION
+  bool has_value() { return m_value != nullptr; }
 
   KOKKOS_INLINE_FUNCTION
   bool has_value() const { return m_value != nullptr; }

@@ -60,6 +60,8 @@
 
 #include <impl/Kokkos_Memory_Fence.hpp>
 #include <impl/Kokkos_Atomic_Increment.hpp>
+#include <impl/Kokkos_OptionalRef.hpp>
+#include <impl/Kokkos_LIFO.hpp>
 
 #include <string>
 #include <typeinfo>
@@ -72,7 +74,6 @@
 namespace Kokkos {
 namespace Impl {
 
-class TaskQueueBase {};
 
 /** \brief  Manage task allocation, deallocation, and scheduling.
  *
@@ -261,8 +262,6 @@ public:
 
 } /* namespace Impl */
 } /* namespace Kokkos */
-
-
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

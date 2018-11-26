@@ -60,6 +60,9 @@ template <typename ValueType, typename Scheduler>
 class BasicFuture;
 
 template <class Space, class Queue>
+class SimpleTaskScheduler;
+
+template <class Space, class Queue>
 class BasicTaskScheduler;
 
 template< typename Space >
@@ -67,6 +70,9 @@ struct is_scheduler : public std::false_type {};
 
 template<class Space, class Queue>
 struct is_scheduler<BasicTaskScheduler<Space, Queue>> : public std::true_type {};
+
+template<class Space, class Queue>
+struct is_scheduler<SimpleTaskScheduler<Space, Queue>> : public std::true_type {};
 
 enum class TaskPriority : int {
   High = 0,
@@ -80,6 +86,9 @@ enum class TaskPriority : int {
 
 namespace Kokkos {
 namespace Impl {
+
+template <class TaskQueueTraits>
+class TaskNode;
 
 class TaskBase;
 
@@ -103,10 +112,15 @@ class Task;
 class TaskQueueBase;
 
 template< typename Space, typename MemorySpace = typename Space::memory_space >
-class TaskQueue ;
+class TaskQueue;
 
 template< typename ExecSpace, typename MemSpace = typename ExecSpace::memory_space >
 class TaskQueueMultiple ;
+
+template< typename ExecSpace, typename MemSpace, typename TaskQueueTraits>
+class SingleTaskQueue;
+
+struct TaskQueueTraitsLockBased;
 
 template< typename ResultType >
 class TaskResult;
@@ -126,10 +140,15 @@ using TaskScheduler = BasicTaskScheduler<Space, Impl::TaskQueue<Space>> ;
 template< typename Space >
 using TaskSchedulerMultiple = BasicTaskScheduler<Space, Impl::TaskQueueMultiple<Space>> ;
 
+template< typename Space >
+using NewTaskScheduler = SimpleTaskScheduler<Space, Impl::SingleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsLockBased>>;
+
 template<class Space, class QueueType>
 void wait(BasicTaskScheduler<Space, QueueType> const&);
 
 namespace Impl {
+
+class TaskQueueBase { };
 
 template <typename Scheduler, typename EnableIfConstraint=void>
 class TaskQueueSpecializationConstrained { };

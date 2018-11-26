@@ -73,6 +73,130 @@ public:
 
 };
 
+// Hack this as a partial specialization for now
+template <class QueueType>
+class TaskQueueSpecialization<
+  SimpleTaskScheduler<Kokkos::OpenMP, QueueType>
+>
+{
+public:
+
+  using execution_space = Kokkos::OpenMP;
+  using scheduler_type = SimpleTaskScheduler<Kokkos::OpenMP, QueueType>;
+  using member_type = TaskTeamMemberAdapter<
+    Kokkos::Impl::HostThreadTeamMember<execution_space>,
+    scheduler_type
+  >;
+  using memory_space = Kokkos::HostSpace;
+
+  enum : int { max_league_size = HostThreadTeamData::max_pool_members };
+
+  // TODO boost blocking
+
+  // Must provide task queue execution function
+  static void execute(scheduler_type const& scheduler)
+  {
+    using task_base_type = typename scheduler_type::task_base_type;
+    using task_queue_type = typename scheduler_type::task_queue_type;
+
+    HostThreadTeamData& team_data_single = HostThreadTeamDataSingleton::singleton();
+
+    Impl::OpenMPExec* instance = t_openmp_instance;
+    const int pool_size = OpenMP::impl_thread_pool_size();
+
+    const int team_size = 1;  // Threads per core
+    instance->resize_thread_data(
+      0, /* global reduce buffer */
+      512 * team_size, /* team reduce buffer */
+      0, /* team shared buffer */
+      0 /* thread local buffer */
+    );
+    assert(pool_size % team_size == 0);
+
+    auto& queue = scheduler.queue();
+
+    //queue.initialize_team_queues(pool_size / team_size);
+
+    #pragma omp parallel num_threads(pool_size)
+    {
+      Impl::HostThreadTeamData & self = *(instance->get_thread_data());
+
+      // Organizing threads into a team performs a barrier across the
+      // entire pool to insure proper initialization of the team
+      // rendezvous mechanism before a team rendezvous can be performed.
+
+      // organize_team() returns true if this is an active team member
+      if(self.organize_team(team_size)) {
+
+        member_type single_exec(scheduler, team_data_single);
+        member_type team_exec(scheduler, self);
+
+        auto& team_queue = team_exec.scheduler().queue();
+
+        auto current_task = OptionalRef<task_base_type>(nullptr);
+
+        while(not team_queue.is_done()) {
+
+          // Each team lead attempts to acquire either a thread team task
+          // or a single thread task for the team.
+          if(team_exec.team_rank() == 0) {
+
+            // pop a task off
+            current_task = team_queue.pop_ready_task();
+
+            // loop while either:
+            //   - there's no task ready (but quiescence is not reached), or
+            //   - the most recently popped task is a single task
+            while((not current_task) || current_task->is_single_runnable()) {
+
+              if(current_task) {
+                KOKKOS_ASSERT(current_task->is_single_runnable());
+                current_task->as_runnable_task().run(single_exec);
+                // Respawns are handled in the complete function
+                team_queue.complete(current_task->as_runnable_task());
+              }
+
+              // break out of the team leader loop if the queue is quiesced
+              if(team_queue.is_done()) {
+                current_task = nullptr;
+                break;
+              }
+
+              // otherwise, pop off another task and continue
+              current_task = team_queue.pop_ready_task();
+
+              // TODO add back in task stealing hook here
+            }
+          }
+
+          // Otherwise, make sure everyone in the team has the same task
+          team_exec.team_broadcast(current_task, 0);
+
+          if(current_task) {
+            KOKKOS_ASSERT(current_task->is_team_runnable());
+            current_task->as_runnable_task().run(team_exec);
+            // Respawns are handled in the complete function
+            team_queue.complete(current_task->as_runnable_task());
+          }
+
+        }
+      }
+      self.disband_team();
+    } // end pragma omp parallel
+  }
+
+  // TODO specialize this for trivially destructible types
+  template <typename TaskType>
+  static void
+  get_function_pointer(
+    typename TaskType::function_type& ptr,
+    typename TaskType::destroy_type& dtor
+  ) {
+    ptr = TaskType::apply;
+    dtor = TaskType::destroy;
+  }
+};
+
 
 template<class Scheduler>
 class TaskQueueSpecializationConstrained<

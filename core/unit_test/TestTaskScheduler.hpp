@@ -124,9 +124,9 @@ struct TestFib
 #if 1
         printf( "TestFib(%ld) insufficient memory alloc_capacity(%d) task_max(%d) task_accum(%ld)\n"
                , n
-               , sched.allocation_capacity()
-               , sched.allocated_task_count_max()
-               , sched.allocated_task_count_accum()
+               , 0 //sched.allocation_capacity()
+               , 0 //sched.allocated_task_count_max()
+               , 0 //sched.allocated_task_count_accum()
                );
 #endif
 
@@ -780,6 +780,14 @@ TEST_F( TEST_CATEGORY, task_fib_multiple )
   }
 }
 
+TEST_F( TEST_CATEGORY, task_fib_new )
+{
+  const int N = 27 ;
+  for ( int i = 0; i < N; ++i ) {
+    TestTaskScheduler::TestFib< Kokkos::NewTaskScheduler<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 2000 );
+  }
+}
+
 TEST_F( TEST_CATEGORY, task_depend )
 {
   for ( int i = 0; i < 25; ++i ) {
@@ -791,6 +799,13 @@ TEST_F( TEST_CATEGORY, task_depend_multiple )
 {
   for ( int i = 0; i < 25; ++i ) {
     TestTaskScheduler::TestTaskDependence< Kokkos::TaskSchedulerMultiple<TEST_EXECSPACE> >::run( i );
+  }
+}
+
+TEST_F( TEST_CATEGORY, task_depend_new )
+{
+  for ( int i = 0; i < 25; ++i ) {
+    TestTaskScheduler::TestTaskDependence< Kokkos::NewTaskScheduler<TEST_EXECSPACE> >::run( i );
   }
 }
 
@@ -806,6 +821,11 @@ TEST_F( TEST_CATEGORY, task_team_multiple )
   //TestTaskScheduler::TestTaskTeamValue< TEST_EXECSPACE >::run( 1000 ); // Put back after testing.
 }
 
+TEST_F( TEST_CATEGORY, task_team_new )
+{
+  TestTaskScheduler::TestTaskTeam< Kokkos::NewTaskScheduler<TEST_EXECSPACE> >::run( 1000 );
+}
+
 TEST_F( TEST_CATEGORY, task_with_mempool )
 {
   TestTaskScheduler::TestTaskSpawnWithPool< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run();
@@ -816,10 +836,22 @@ TEST_F( TEST_CATEGORY, task_with_mempool_multiple )
   TestTaskScheduler::TestTaskSpawnWithPool< Kokkos::TaskSchedulerMultiple<TEST_EXECSPACE> >::run();
 }
 
+TEST_F( TEST_CATEGORY, task_with_mempool_new )
+{
+  TestTaskScheduler::TestTaskSpawnWithPool< Kokkos::NewTaskScheduler<TEST_EXECSPACE> >::run();
+}
+
 TEST_F( TEST_CATEGORY, task_multiple_depend )
 {
   for ( int i = 2; i < 6; ++i ) {
     TestTaskScheduler::TestMultipleDependence< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run( i );
+  }
+}
+
+TEST_F( TEST_CATEGORY, task_multiple_depend_new )
+{
+  for ( int i = 2; i < 6; ++i ) {
+    TestTaskScheduler::TestMultipleDependence< Kokkos::NewTaskScheduler<TEST_EXECSPACE> >::run( i );
   }
 }
 

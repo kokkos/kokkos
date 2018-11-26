@@ -71,6 +71,14 @@ struct TaskResult {
 
   using reference_type = ResultType & ;
 
+  template <class CountType>
+  KOKKOS_INLINE_FUNCTION static
+  ResultType * ptr( PoolAllocatedObjectBase<CountType>* task )
+  {
+    return reinterpret_cast< ResultType * >
+    ( reinterpret_cast< char * >(task) + task->get_allocation_size() - sizeof(ResultType) );
+  }
+
   KOKKOS_INLINE_FUNCTION static
   ResultType * ptr( TaskBase* task )
     {
@@ -82,9 +90,20 @@ struct TaskResult {
   reference_type get( TaskBase* task )
     { return *ptr( task ); }
 
+  template <class TaskQueueTraits>
+  KOKKOS_INLINE_FUNCTION static
+  reference_type get( TaskNode<TaskQueueTraits>* task )
+  { return *ptr( task ); }
+
   KOKKOS_INLINE_FUNCTION static
   void destroy( TaskBase* task )
     { get(task).~ResultType(); }
+
+
+  template <class TaskQueueTraits>
+  KOKKOS_INLINE_FUNCTION static
+  void destroy( TaskNode<TaskQueueTraits>* task )
+  { get(task).~ResultType(); }
 };
 
 template<>
@@ -94,8 +113,18 @@ struct TaskResult< void > {
 
   using reference_type = void ;
 
+  template <class TaskQueueTraits>
   KOKKOS_INLINE_FUNCTION static
-  void * ptr( TaskBase* ) { return (void*) 0 ; }
+  void* ptr( TaskNode<TaskQueueTraits>* task )
+  { return nullptr; }
+
+  KOKKOS_INLINE_FUNCTION static
+  void * ptr( TaskBase* ) { return (void*) nullptr ; }
+
+  template <class TaskQueueTraits>
+  KOKKOS_INLINE_FUNCTION static
+  reference_type get( TaskNode<TaskQueueTraits>* task )
+  { /* Should never be called */ }
 
   KOKKOS_INLINE_FUNCTION static
   reference_type get( TaskBase* ) {}
@@ -103,6 +132,11 @@ struct TaskResult< void > {
   KOKKOS_INLINE_FUNCTION static
   void destroy( TaskBase* task )
     { }
+
+  template <class TaskQueueTraits>
+  KOKKOS_INLINE_FUNCTION static
+  void destroy( TaskNode<TaskQueueTraits>* task )
+  { }
 };
 
 } /* namespace Impl */
