@@ -86,7 +86,7 @@ private:
   void mark_as_not_enqueued() noexcept {
     // TODO memory order
     // TODO make this an atomic store
-    m_next = NotEnqueuedValue;
+    m_next = (pointer_type)NotEnqueuedValue;
   }
 
   KOKKOS_INLINE_FUNCTION

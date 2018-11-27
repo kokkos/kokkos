@@ -126,7 +126,7 @@ struct TestFib
                , n
                , 0 //sched.allocation_capacity()
                , 0 //sched.allocated_task_count_max()
-               , 0 //sched.allocated_task_count_accum()
+               , 0l //sched.allocated_task_count_accum()
                );
 #endif
 

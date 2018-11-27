@@ -83,9 +83,10 @@ public:
   OptionalRef& operator=(OptionalRef const&) = default;
 
   KOKKOS_INLINE_FUNCTION
-  OptionalRef& operator=(OptionalRef const volatile& other) volatile noexcept
+  OptionalRef volatile& operator=(OptionalRef const volatile& other) volatile noexcept
   {
     m_value = other.m_value;
+    return *this;
   }
 
   KOKKOS_INLINE_FUNCTION
