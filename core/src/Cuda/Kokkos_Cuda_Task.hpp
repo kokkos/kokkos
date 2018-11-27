@@ -64,7 +64,7 @@ namespace {
 template< typename TaskType >
 __global__
 void set_cuda_task_base_apply_function_pointer
-  ( Kokkos::Impl::TaskBase::function_type * ptr, Kokkos::Impl::TaskBase::destroy_type* dtor )
+  ( typename TaskType::function_type * ptr, typename TaskType::destroy_type* dtor )
 { 
   *ptr = TaskType::apply;
   *dtor = TaskType::destroy;
@@ -79,6 +79,193 @@ void cuda_task_queue_execute( Scheduler scheduler, int32_t shmem_size ) {
 }
 
 template <class, class> class TaskExec ;
+
+template<class QueueType>
+class TaskQueueSpecialization<
+  SimpleTaskScheduler<Kokkos::Cuda, QueueType>
+>
+{
+public:
+
+  using scheduler_type = SimpleTaskScheduler<Kokkos::Cuda, QueueType>;
+  using execution_space = Kokkos::Cuda;
+  using memory_space = Kokkos::CudaUVMSpace;
+  using member_type = TaskExec<Kokkos::Cuda, scheduler_type> ;
+
+  enum : long { max_league_size = 16 };
+
+  KOKKOS_INLINE_FUNCTION
+  static
+  void iff_single_thread_recursive_execute( scheduler_type const& ) {}
+
+  __device__
+  static void driver(scheduler_type scheduler, int32_t shmem_per_warp)
+  {
+    using queue_type = typename scheduler_type::task_queue_type;
+    using task_base_type = typename scheduler_type::task_base_type;
+
+    extern __shared__ int32_t shmem_all[];
+
+    int32_t* const warp_shmem = shmem_all + (threadIdx.z * shmem_per_warp) / sizeof(int32_t);
+
+    task_base_type* const shared_memory_task_copy = (task_base_type*)warp_shmem;
+
+    const int warp_lane = threadIdx.x + threadIdx.y * blockDim.x;
+
+    member_type single_exec(scheduler, warp_shmem, 1);
+    member_type team_exec(scheduler, warp_shmem, blockDim.y);
+
+    auto& team_queue = team_exec.scheduler().queue();
+
+    auto current_task = OptionalRef<task_base_type>();
+
+    // Loop until all queues are empty and no tasks in flight
+    while(not team_queue.is_done()) {
+
+      if(warp_lane == 0) {  // should be (?) same as team_exec.team_rank() == 0
+        // pop off a task
+        current_task = team_queue.pop_ready_task();
+
+        // TODO attempt to steal task here
+      }
+
+      // Broadcast task pointer:
+
+      // Sync before the broadcast
+      KOKKOS_IMPL_CUDA_SYNCWARP;
+      
+      // pretend it's an int* for shuffle purposes
+      ((int*) &current_task)[0] = KOKKOS_IMPL_CUDA_SHFL(((int*) &current_task)[0], 0, 32);
+      ((int*) &current_task)[1] = KOKKOS_IMPL_CUDA_SHFL(((int*) &current_task)[1], 0, 32);
+
+      if(current_task) {
+
+        int32_t const b = sizeof(task_base_type) / sizeof(int32_t);
+        //int32_t const e = *((int32_t volatile *)( &current_task->get_allocation_size() )) / sizeof(int32_t);
+        int32_t const e = current_task->get_allocation_size() / sizeof(int32_t);
+
+        int32_t volatile* const task_mem = (int32_t volatile*)current_task.get();
+
+        // do a coordinated copy of the task closure from global to shared memory:
+        for(int32_t i = warp_lane; i < e; i += CudaTraits::WarpSize) {
+          warp_shmem[i] = task_mem[i];
+        }
+
+        // Synchronize threads of the warp and insure memory
+        // writes are visible to all threads in the warp.
+        KOKKOS_IMPL_CUDA_SYNCWARP;
+
+        if(shared_memory_task_copy->is_team_runnable()) {
+          // Thread Team Task
+          shared_memory_task_copy->as_runnable_task().run(team_exec);
+        }
+        else if(threadIdx.y == 0) {
+          // TODO (??) Shouldn't this be warp_lane == 0 ???
+          // Single Thread Task
+          shared_memory_task_copy->as_runnable_task().run(single_exec);
+        }
+
+        // Synchronize threads of the warp and insure memory
+        // writes are visible to all threads in the warp.
+
+        KOKKOS_IMPL_CUDA_SYNCWARP;
+
+        // copy task closure from shared to global memory:
+        for (int32_t i = b + warp_lane; i < e; i += CudaTraits::WarpSize) {
+          task_mem[i] = warp_shmem[i];
+        }
+
+        // Synchronize threads of the warp and insure memory
+        // writes are visible to root thread of the warp for
+        // respawn or completion.
+
+        KOKKOS_IMPL_CUDA_SYNCWARP;
+
+
+        if (warp_lane == 0) {
+          // TODO is this necessary???? Isn't this done above??
+          //// If respawn requested copy respawn data back to main memory
+          //if ( ((task_root_type *) task_root_type::LockTag) != task_shmem->m_next ) {
+          //  ( (volatile task_root_type *) task_ptr )->m_next = task_shmem->m_next ;
+          //  ( (volatile task_root_type *) task_ptr )->m_priority = task_shmem->m_priority ;
+          //}
+
+          team_queue.complete(current_task->as_runnable_task());
+        }
+
+      }
+    }
+  }
+
+  static
+  void execute(scheduler_type const& scheduler)
+  {
+    const int shared_per_warp = 2048 ;
+    const int warps_per_block = 4 ;
+    const dim3 grid( Kokkos::Impl::cuda_internal_multiprocessor_count() , 1 , 1 );
+    const dim3 block( 1 , Kokkos::Impl::CudaTraits::WarpSize , warps_per_block );
+    const int shared_total = shared_per_warp * warps_per_block ;
+    const cudaStream_t stream = 0 ;
+
+    auto& queue = scheduler.queue();
+    //queue.initialize_team_queues(warps_per_block);
+
+    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+
+    // Query the stack size, in bytes:
+
+    size_t previous_stack_size = 0 ;
+    CUDA_SAFE_CALL( cudaDeviceGetLimit( & previous_stack_size , cudaLimitStackSize ) );
+
+    // If not large enough then set the stack size, in bytes:
+
+    const size_t larger_stack_size = 2048 ;
+
+    if ( previous_stack_size < larger_stack_size ) {
+      CUDA_SAFE_CALL( cudaDeviceSetLimit( cudaLimitStackSize , larger_stack_size ) );
+    }
+
+    cuda_task_queue_execute<<< grid , block , shared_total , stream >>>( scheduler , shared_per_warp );
+
+    CUDA_SAFE_CALL( cudaGetLastError() );
+
+    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+
+    if ( previous_stack_size < larger_stack_size ) {
+      CUDA_SAFE_CALL( cudaDeviceSetLimit( cudaLimitStackSize , previous_stack_size ) );
+    }
+  }
+
+  template <typename TaskType>
+  static
+  // TODO specialize this for trivially destructible types
+  void
+  get_function_pointer(
+    typename TaskType::function_type& ptr,
+    typename TaskType::destroy_type& dtor
+  )
+  {
+    using function_type = typename TaskType::function_type;
+    using destroy_type = typename TaskType::destroy_type;
+
+    // TODO address alignment concerns
+    void* storage = cuda_internal_scratch_unified( 
+      sizeof(function_type) + sizeof(destroy_type)
+    );
+    function_type* ptr_ptr = (function_type*)storage;
+    destroy_type* dtor_ptr = (destroy_type*)((char*)storage + sizeof(function_type));
+
+    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+
+    set_cuda_task_base_apply_function_pointer<TaskType><<<1,1>>>(ptr_ptr, dtor_ptr);
+
+    CUDA_SAFE_CALL( cudaGetLastError() );
+    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+
+    ptr = *ptr_ptr;
+    dtor = *dtor_ptr;
+  }
+};
 
 template<class Scheduler>
 class TaskQueueSpecializationConstrained<
@@ -157,11 +344,6 @@ public:
           #endif
         }
 
-  #if 0
-  printf("TaskQueue<Cuda>::driver(%d,%d) task(%lx)\n",threadIdx.z,blockIdx.x
-        , uintptr_t(task_ptr));
-  #endif
-
       }
 
       // Synchronize warp with memory fence before broadcasting task pointer:
@@ -174,9 +356,9 @@ public:
       ((int*) & task_ptr )[0] = KOKKOS_IMPL_CUDA_SHFL( ((int*) & task_ptr )[0] , 0 , 32 );
       ((int*) & task_ptr )[1] = KOKKOS_IMPL_CUDA_SHFL( ((int*) & task_ptr )[1] , 0 , 32 );
 
-  #if defined( KOKKOS_DEBUG )
+      #if defined( KOKKOS_DEBUG )
       KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN( "TaskQueue CUDA task_ptr" );
-  #endif
+      #endif
 
       if ( 0 == task_ptr ) break ; // 0 == queue->m_ready_count
 
@@ -366,6 +548,8 @@ private:
   friend class Kokkos::Impl::TaskQueue< Kokkos::Cuda > ;
   template <class, class>
   friend class Kokkos::Impl::TaskQueueSpecializationConstrained;
+  template <class>
+  friend class Kokkos::Impl::TaskQueueSpecialization;
 
   int32_t * m_team_shmem ;
   const int m_team_size ;

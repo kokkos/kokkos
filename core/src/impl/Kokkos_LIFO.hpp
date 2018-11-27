@@ -125,6 +125,7 @@ struct LinkedListNodeAccess
   }
 
   template <class Node>
+  KOKKOS_INLINE_FUNCTION
   static
   typename Node::pointer_type&
   _next_ptr(Node& node) noexcept {
@@ -132,6 +133,7 @@ struct LinkedListNodeAccess
   }
 
   template <class Node>
+  KOKKOS_INLINE_FUNCTION
   static
   typename Node::pointer_type&
   _next_ptr(Node const& node) noexcept {

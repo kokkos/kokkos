@@ -97,6 +97,7 @@ private:
     void* pointer;
   };
 
+  KOKKOS_INLINE_FUNCTION
   _allocation_result
   _do_pool_allocate(allocation_size_type requested_size) {
     KOKKOS_EXPECTS(requested_size >= 0);

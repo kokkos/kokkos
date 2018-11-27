@@ -386,6 +386,7 @@ public:
   }
 
   template <class TeamMember>
+  KOKKOS_INLINE_FUNCTION
   void run(TeamMember& member) {
     (*m_apply)(this, &member);
   }
@@ -419,6 +420,7 @@ private:
   using member_type = typename specialization::member_type;
   using result_type = ResultType;
   using functor_type = FunctorType;
+  using storage_base_type = TaskResultStorage<ResultType>;
 
 public:
 
@@ -432,7 +434,8 @@ public:
   ) : base_t(
         std::forward<Args>(args)...
       ),
-      functor_type(std::move(functor))
+      functor_type(std::move(functor)),
+      storage_base_type()
   { }
 
   KOKKOS_INLINE_FUNCTION

@@ -170,14 +170,16 @@ public:
   // TODO other constructors
 
   // Note that this is an expression of shallow constness
+  KOKKOS_INLINE_FUNCTION
   task_queue_type& queue() const
   {
     KOKKOS_EXPECTS(m_queue != nullptr);
     return *m_queue;
   }
 
-  SimpleTaskScheduler&
-  get_team_scheduler(int rank_in_league) noexcept { return *this; }
+  KOKKOS_INLINE_FUNCTION
+  SimpleTaskScheduler const&
+  get_team_scheduler(int rank_in_league) const noexcept { return *this; }
 
   explicit
   SimpleTaskScheduler(memory_pool const& pool)
