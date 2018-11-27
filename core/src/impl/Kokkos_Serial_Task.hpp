@@ -59,6 +59,78 @@
 namespace Kokkos {
 namespace Impl {
 
+template<class QueueType>
+class TaskQueueSpecialization<
+  SimpleTaskScheduler<Kokkos::Serial, QueueType>
+>
+{
+public:
+
+  // Note: Scheduler may be an incomplete type at class scope (but not inside
+  // of the methods, obviously)
+
+  using execution_space = Kokkos::Serial;
+  using memory_space = Kokkos::HostSpace;
+  using scheduler_type = SimpleTaskScheduler<Kokkos::Serial, QueueType>;
+  using member_type = TaskTeamMemberAdapter<
+    HostThreadTeamMember<Kokkos::Serial>, scheduler_type
+  >;
+
+  static
+  void execute(scheduler_type const& scheduler)
+  {
+    using task_base_type = typename scheduler_type::task_base_type;
+    using task_queue_type = typename scheduler_type::task_queue_type;
+
+    // Set default buffers
+    serial_resize_thread_team_data(
+      0,   /* global reduce buffer */
+      512, /* team reduce buffer */
+      0,   /* team shared buffer */
+      0    /* thread local buffer */
+    );
+
+    Impl::HostThreadTeamData& self = *Impl::serial_get_thread_team_data();
+
+    auto& queue = scheduler.queue();
+
+    member_type member(scheduler, self);
+
+    auto& team_queue = member.scheduler().queue();
+
+    auto current_task = OptionalRef<task_base_type>(nullptr);
+
+    while(not team_queue.is_done()) {
+
+      // Each team lead attempts to acquire either a thread team task
+      // or a single thread task for the team.
+
+      // pop a task off
+      current_task = team_queue.pop_ready_task();
+
+      // run the task
+      if(current_task) {
+        current_task->as_runnable_task().run(member);
+        // Respawns are handled in the complete function
+        team_queue.complete(current_task->as_runnable_task());
+      }
+
+    }
+
+  }
+
+  template <typename TaskType>
+  static void
+  get_function_pointer(
+    typename TaskType::function_type& ptr,
+    typename TaskType::destroy_type& dtor
+  )
+  {
+    ptr = TaskType::apply;
+    dtor = TaskType::destroy;
+  }
+};
+
 //----------------------------------------------------------------------------
 
 template<class Scheduler>
@@ -178,10 +250,16 @@ public:
     }
   }
 
-  template< typename TaskType >
-  static
-  typename TaskType::function_type
-  get_function_pointer() { return TaskType::apply ; }
+  template <typename TaskType>
+  static void
+  get_function_pointer(
+    typename TaskType::function_type& ptr,
+    typename TaskType::destroy_type& dtor
+  )
+  {
+    ptr = TaskType::apply;
+    dtor = TaskType::destroy;
+  }
 };
 
 extern template class TaskQueue< Kokkos::Serial > ;

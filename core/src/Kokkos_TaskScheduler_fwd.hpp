@@ -148,6 +148,8 @@ void wait(BasicTaskScheduler<Space, QueueType> const&);
 
 namespace Impl {
 
+struct TaskSchedulerBase { };
+
 class TaskQueueBase { };
 
 template <typename Scheduler, typename EnableIfConstraint=void>

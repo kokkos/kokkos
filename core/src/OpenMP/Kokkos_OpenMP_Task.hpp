@@ -165,7 +165,6 @@ public:
               // otherwise, pop off another task and continue
               current_task = team_queue.pop_ready_task();
 
-              // TODO add back in task stealing hook here
             }
           }
 
