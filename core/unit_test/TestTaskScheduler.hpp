@@ -687,7 +687,7 @@ struct TestMultipleDependence {
       double value = 0;
       // keep this one busy for a while
       for(int i = 0; i < 10000; ++i) {
-        value += std::sqrt(i) / 7.138;
+        value += i * i / 7.138 / value;
       }
       // Do something irrelevant
       result = *reinterpret_cast<int*>(&value) << 2;
