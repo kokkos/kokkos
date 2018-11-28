@@ -224,16 +224,30 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   RunnableTaskBase<TaskQueueTraits>&
-  as_runnable_task() {
+  as_runnable_task() & {
     KOKKOS_EXPECTS(this->is_runnable());
     return static_cast<RunnableTaskBase<TaskQueueTraits>&>(*this);
   }
 
   KOKKOS_INLINE_FUNCTION
+  RunnableTaskBase<TaskQueueTraits>&&
+  as_runnable_task() && {
+    KOKKOS_EXPECTS(this->is_runnable());
+    return static_cast<RunnableTaskBase<TaskQueueTraits>&&>(*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
   AggregateTask<TaskQueueTraits>&
-  as_aggregate() {
+  as_aggregate() & {
     KOKKOS_EXPECTS(this->is_aggregate());
     return static_cast<AggregateTask<TaskQueueTraits>&>(*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  AggregateTask<TaskQueueTraits>&&
+  as_aggregate() && {
+    KOKKOS_EXPECTS(this->is_aggregate());
+    return static_cast<AggregateTask<TaskQueueTraits>&&>(*this);
   }
 
   KOKKOS_INLINE_FUNCTION

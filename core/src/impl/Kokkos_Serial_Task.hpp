@@ -112,7 +112,7 @@ public:
       if(current_task) {
         current_task->as_runnable_task().run(member);
         // Respawns are handled in the complete function
-        team_queue.complete(current_task->as_runnable_task());
+        team_queue.complete((*std::move(current_task)).as_runnable_task());
       }
 
     }

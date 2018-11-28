@@ -110,21 +110,27 @@ public:
   //----------------------------------------
   
   KOKKOS_INLINE_FUNCTION
-  T& operator*() {
+  T& operator*() & {
     KOKKOS_EXPECTS(this->has_value());
     return *m_value;
   }
    
   KOKKOS_INLINE_FUNCTION
-  T const& operator*() const {
+  T const& operator*() const & {
     KOKKOS_EXPECTS(this->has_value());
     return *m_value;
   }
 
   KOKKOS_INLINE_FUNCTION
-  T volatile& operator*() volatile {
+  T volatile& operator*() volatile & {
     KOKKOS_EXPECTS(this->has_value());
     return *m_value;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  T&& operator*() && {
+    KOKKOS_EXPECTS(this->has_value());
+    return std::move(*m_value);
   }
 
   KOKKOS_INLINE_FUNCTION

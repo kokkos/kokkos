@@ -153,7 +153,9 @@ public:
                 KOKKOS_ASSERT(current_task->is_single_runnable());
                 current_task->as_runnable_task().run(single_exec);
                 // Respawns are handled in the complete function
-                team_queue.complete(current_task->as_runnable_task());
+                team_queue.complete(
+                  (*std::move(current_task)).as_runnable_task()
+                );
               }
 
               // break out of the team leader loop if the queue is quiesced
@@ -175,7 +177,7 @@ public:
             KOKKOS_ASSERT(current_task->is_team_runnable());
             current_task->as_runnable_task().run(team_exec);
             // Respawns are handled in the complete function
-            team_queue.complete(current_task->as_runnable_task());
+            team_queue.complete((*std::move(current_task)).as_runnable_task());
           }
 
         }

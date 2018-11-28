@@ -190,7 +190,7 @@ public:
           //  ( (volatile task_root_type *) task_ptr )->m_priority = task_shmem->m_priority ;
           //}
 
-          team_queue.complete(current_task->as_runnable_task());
+          team_queue.complete((*std::move(current_task)).as_runnable_task());
         }
 
       }

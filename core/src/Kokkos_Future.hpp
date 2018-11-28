@@ -85,7 +85,7 @@ private:
   using task_base_type = typename scheduler_type::task_base_type;
   using task_queue_type = typename scheduler_type::task_queue_type;
 
-  task_base_type* m_task = nullptr;
+  OwningRawPtr<task_base_type> m_task = nullptr;
 
   KOKKOS_INLINE_FUNCTION
   explicit
@@ -252,7 +252,7 @@ public:
       bool should_delete = m_task->decrement_and_check_reference_count();
       if(should_delete) {
         static_cast<task_queue_type*>(m_task->ready_queue_base_ptr())
-          ->deallocate(*m_task);
+          ->deallocate(std::move(*m_task));
       }
     }
   }

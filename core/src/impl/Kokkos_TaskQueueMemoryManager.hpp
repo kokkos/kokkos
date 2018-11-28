@@ -79,13 +79,15 @@ template <
 class TaskQueueMemoryManager
   : public TaskQueueBase
 {
-private:
+public:
 
   using execution_space = ExecSpace;
   using memory_space = MemorySpace;
   using device_type = Kokkos::Device<execution_space, memory_space>;
   using memory_pool = Kokkos::MemoryPool<device_type>;
   using allocation_size_type = int32_t;
+
+private:
 
   memory_pool m_pool;
   int64_t m_accum_alloc = 0;
@@ -112,8 +114,6 @@ private:
       void* data = m_pool.allocate(static_cast<size_t>(requested_size));
       return { data != nullptr, data };
     }
-
-
   }
 
   template <class T, class... Args>
@@ -207,7 +207,7 @@ public:
 
   template <class CountType>
   KOKKOS_FUNCTION
-  void deallocate(PoolAllocatedObjectBase<CountType> const& obj)
+  void deallocate(PoolAllocatedObjectBase<CountType>&& obj)
   {
     m_pool.deallocate((void*)&obj, 1);
     Kokkos::atomic_decrement(&m_count_alloc); // memory_order_relaxed

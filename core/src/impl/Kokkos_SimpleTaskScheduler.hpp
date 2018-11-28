@@ -68,6 +68,23 @@
 
 namespace Kokkos {
 
+namespace Impl {
+
+// TODO move this
+template <class T>
+struct DefaultDestroy {
+  T* managed_object;
+  KOKKOS_FUNCTION
+  void destroy_shared_allocation() {
+    managed_object->~T();
+  }
+};
+
+} // end namespace Impl
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
 template <class ExecSpace, class QueueType>
   // requires ExecutionSpace<ExecSpace> && TaskQueue<QueueType>
 class SimpleTaskScheduler : public Impl::TaskSchedulerBase {
@@ -209,7 +226,7 @@ public:
 
     Kokkos::memory_fence(); // fence to ensure dependent stores are visible
 
-    queue.schedule_runnable(*runnable_task);
+    queue.schedule_runnable(std::move(*runnable_task));
     // note that task may be already completed even here, so don't touch it again
 
     return rv;
@@ -316,7 +333,7 @@ public:
 
         Kokkos::memory_fence(); // we're touching very questionable memory, so be sure to fence
 
-        queue.schedule_aggregate(*aggregate_task);
+        queue.schedule_aggregate(std::move(*aggregate_task));
         // the aggregate may be processed at any time, so don't touch it after this
       }
     }
@@ -369,7 +386,7 @@ public:
 
     Kokkos::memory_fence();
 
-    m_queue->schedule_aggregate(*aggregate_task);
+    m_queue->schedule_aggregate(std::move(*aggregate_task));
     // This could complete at any moment, so don't touch anything after this
 
     return rv;

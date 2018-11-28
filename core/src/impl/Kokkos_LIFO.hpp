@@ -340,6 +340,13 @@ public:
     return true;
   }
 
+  KOKKOS_INLINE_FUNCTION
+  bool push(node_type&& node)
+  {
+    // Just forward to the lvalue version
+    return push(node);
+  }
+
 };
 
 
@@ -440,7 +447,7 @@ public:
 
       // Call the user function
       auto& arg = *static_cast<T*>(call_arg);
-      f(arg);
+      f(std::move(arg));
 
     }
 
