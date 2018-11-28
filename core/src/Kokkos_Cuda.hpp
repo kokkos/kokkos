@@ -165,7 +165,9 @@ public:
   //--------------------------------------------------
   //! \name  Cuda space instances
 
+  KOKKOS_INLINE_FUNCTION
   ~Cuda() {}
+
   Cuda();
   explicit Cuda( const int instance_id );
 
@@ -229,8 +231,8 @@ public:
 
 private:
 
-  int          m_device ;
-  cudaStream_t m_stream ;
+  int          m_device = 0;
+  cudaStream_t m_stream = nullptr;
 };
 
 } // namespace Kokkos

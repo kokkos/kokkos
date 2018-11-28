@@ -53,7 +53,7 @@
 
 #include <Kokkos_MemoryPool.hpp>
 
-#include <impl/Kokkos_TaskBase.hpp>
+#include <impl/Kokkos_TaskNode.hpp>
 #include <impl/Kokkos_TaskResult.hpp>
 
 #include <impl/Kokkos_TaskQueueMemoryManager.hpp>
@@ -267,26 +267,40 @@ public:
   template <class TaskQueueTraits>
   KOKKOS_FUNCTION
   void
-  schedule_aggregate(AggregateTask<TaskQueueTraits>&& task) {
+  schedule_aggregate(AggregateTask<TaskQueueTraits>&& aggregate) {
+    // Because the aggregate is being scheduled, should not be in any queue
+    KOKKOS_EXPECTS(not aggregate.is_enqueued());
 
     bool incomplete_dependence_found = false;
 
-    auto predecessor_ptrs = task.aggregate_dependences();
+    for(auto*& predecessor_ptr_ref : aggregate) {
 
-    for(int i = task.dependence_count() - 1; i >= 0 && !incomplete_dependence_found; --i) {
-      // swap the task pointer onto the stack; doesn't need to be done
-      // atomically because we have exclusive access to the aggregate here
-      // TODO document that we expect exclusive access to `task` in this function
-      auto pred_ptr = predecessor_ptrs[i];
-      predecessor_ptrs[i] = nullptr;
-
-      // if a previous scheduling operation hasn't already set the predecessorendence
+      // if a previous scheduling operation hasn't already set the predecessor
       // to nullptr, try to enqueue the aggregate into the predecessorendence's waiting
       // queue
-      if(pred_ptr != nullptr) {
-        // If adding task to the waiting queue succeeds, the predecessor is not
+      if(predecessor_ptr_ref != nullptr) {
+
+        // Swap the pointer onto the stack and set the one in the aggregate VLA
+        // to nullptr before we try to add it to the waiting queue so that some
+        // other thread doesn't also get to here and find the pointer to be
+        // not null (since as soon as we try and schedule the aggregate, we
+        // potentially lose exclusive access to it if that enqueueing operation
+        // succeeds.  The swap doesn't need to happen atomically since we have
+        // exclusive access to aggregate until an insertion succeeds
+        auto* predecessor_ptr = std::move(predecessor_ptr_ref);
+
+        // TODO I think this needs to be a store release so that it doesn't get reordered after the queue insertion
+        predecessor_ptr_ref = nullptr;
+
+        // TODO remove this fence in favor of memory orders
+        Kokkos::memory_fence();
+
+        // If adding the aggregate to the waiting queue succeeds, the predecessor is not
         // complete
-        bool pred_not_ready = pred_ptr->try_add_waiting(task);
+        bool pred_not_ready = predecessor_ptr->try_add_waiting(aggregate);
+
+        // NOTE! At this point it is unsafe to access aggregate (unless the
+        // enqueueing failed, so we can't use move semantics to expire it)
 
         // we found an incomplete dependence, so we can't make task's successors
         // ready yet
@@ -294,17 +308,24 @@ public:
 
         // the reference count for the predecessor was incremented when we put
         // it into the predecessor list, so decrement it here
-        bool should_delete = pred_ptr->decrement_and_check_reference_count();
+        bool should_delete = predecessor_ptr->decrement_and_check_reference_count();
         if(should_delete) {
           // TODO better encapsulation of this!
-          _self().deallocate(std::move(*pred_ptr));
+          _self().deallocate(std::move(*predecessor_ptr));
         }
+
+        // Stop the loop if we found an incomplete dependence
+        if(incomplete_dependence_found) break;
       }
     }
 
+    // NOTE: it's not safe to access aggregate any more if an incomplete dependence
+    // was found, because some other thread could have already popped it off
+    // of another waiting queue
+
     if(not incomplete_dependence_found) {
       // all of the predecessors were completed, so we can complete `task`
-      _self().complete(std::move(task));
+      _self().complete(std::move(aggregate));
     }
     // Note!! task may have been deleted at this point, so don't add anything here!
   }

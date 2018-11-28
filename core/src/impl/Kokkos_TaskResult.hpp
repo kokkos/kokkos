@@ -53,6 +53,7 @@
 #include <Kokkos_Core_fwd.hpp>
 
 #include <impl/Kokkos_TaskBase.hpp>
+#include <impl/Kokkos_TaskNode.hpp>
 
 #include <string>
 #include <typeinfo>

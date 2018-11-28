@@ -80,6 +80,151 @@ struct DefaultDestroy {
   }
 };
 
+
+// TODO move this!
+
+template <class ExecutionSpace>
+class NonEmptyExecutionSpaceInstanceStorage {
+private:
+
+  ExecutionSpace m_instance;
+
+protected:
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr explicit
+  NonEmptyExecutionSpaceInstanceStorage(ExecutionSpace const& arg_execution_space)
+    : m_instance(arg_execution_space)
+  { }
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr explicit
+  NonEmptyExecutionSpaceInstanceStorage(ExecutionSpace&& arg_execution_space)
+    : m_instance(std::move(arg_execution_space))
+  { }
+
+  KOKKOS_INLINE_FUNCTION
+  ExecutionSpace& execution_space_instance() & { return m_instance; }
+
+  KOKKOS_INLINE_FUNCTION
+  ExecutionSpace const& execution_space_instance() const & { return m_instance; }
+
+  KOKKOS_INLINE_FUNCTION
+  ExecutionSpace&& execution_space_instance() && { return std::move(m_instance); }
+
+};
+
+template <class ExecutionSpace>
+class EmptyExecutionSpaceInstanceStorage {
+protected:
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr explicit
+  EmptyExecutionSpaceInstanceStorage(ExecutionSpace const& arg_execution_space)
+  { }
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr explicit
+  EmptyExecutionSpaceInstanceStorage(ExecutionSpace&& arg_execution_space)
+  { }
+
+  KOKKOS_INLINE_FUNCTION
+  ExecutionSpace& execution_space_instance() &
+  {
+    return *reinterpret_cast<ExecutionSpace*>(this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  ExecutionSpace const& execution_space_instance() const &
+  {
+    return *reinterpret_cast<ExecutionSpace const*>(this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  ExecutionSpace&& execution_space_instance() &&
+  {
+    return std::move(reinterpret_cast<ExecutionSpace*>(this));
+  }
+};
+
+template <class ExecutionSpace>
+using ExecutionSpaceInstanceStorage = typename std::conditional<
+  std::is_empty<ExecutionSpace>::value,
+  EmptyExecutionSpaceInstanceStorage<ExecutionSpace>,
+  NonEmptyExecutionSpaceInstanceStorage<ExecutionSpace>
+>::type;
+
+template <class MemorySpace>
+class NonEmptyMemorySpaceInstanceStorage {
+private:
+
+  MemorySpace m_instance;
+
+protected:
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr explicit
+  NonEmptyMemorySpaceInstanceStorage(MemorySpace const& arg_memory_space)
+    : m_instance(arg_memory_space)
+  { }
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr explicit
+  NonEmptyMemorySpaceInstanceStorage(MemorySpace&& arg_memory_space)
+    : m_instance(std::move(arg_memory_space))
+  { }
+
+  KOKKOS_INLINE_FUNCTION
+  MemorySpace& memory_space_instance() & { return m_instance; }
+
+  KOKKOS_INLINE_FUNCTION
+  MemorySpace const& memory_space_instance() const & { return m_instance; }
+
+  KOKKOS_INLINE_FUNCTION
+  MemorySpace&& memory_space_instance() && { return std::move(m_instance); }
+
+};
+
+template <class MemorySpace>
+class EmptyMemorySpaceInstanceStorage {
+protected:
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr explicit
+  EmptyMemorySpaceInstanceStorage(MemorySpace const& arg_memory_space)
+  { }
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr explicit
+  EmptyMemorySpaceInstanceStorage(MemorySpace&& arg_memory_space)
+  { }
+
+  KOKKOS_INLINE_FUNCTION
+  MemorySpace& memory_space_instance() &
+  {
+    return *reinterpret_cast<MemorySpace*>(this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  MemorySpace const& memory_space_instance() const &
+  {
+    return *reinterpret_cast<MemorySpace const*>(this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  MemorySpace&& memory_space_instance() &&
+  {
+    return std::move(reinterpret_cast<MemorySpace*>(this));
+  }
+};
+
+template <class MemorySpace>
+using MemorySpaceInstanceStorage = typename std::conditional<
+  std::is_empty<MemorySpace>::value,
+  EmptyMemorySpaceInstanceStorage<MemorySpace>,
+  NonEmptyMemorySpaceInstanceStorage<MemorySpace>
+>::type;
+
 } // end namespace Impl
 
 //----------------------------------------------------------------------------
@@ -87,7 +232,11 @@ struct DefaultDestroy {
 
 template <class ExecSpace, class QueueType>
   // requires ExecutionSpace<ExecSpace> && TaskQueue<QueueType>
-class SimpleTaskScheduler : public Impl::TaskSchedulerBase {
+class SimpleTaskScheduler
+  : public Impl::TaskSchedulerBase,
+    private Impl::ExecutionSpaceInstanceStorage<ExecSpace>,
+    private Impl::MemorySpaceInstanceStorage<typename QueueType::memory_space>
+{
 public:
 
   using scheduler_type = SimpleTaskScheduler; // tag as scheduler concept
@@ -112,6 +261,8 @@ private:
   friend class BasicFuture;
 
   using track_type = Kokkos::Impl::SharedAllocationTracker;
+  using execution_space_storage = Impl::ExecutionSpaceInstanceStorage<execution_space>;
+  using memory_space_storage = Impl::MemorySpaceInstanceStorage<memory_space>;
 
   track_type m_track;
   task_queue_type* m_queue = nullptr;
@@ -122,7 +273,12 @@ public:
   // <editor-fold desc="Constructors, destructor, and assignment"> {{{2
 
   explicit
-  SimpleTaskScheduler(memory_pool const& pool)
+  SimpleTaskScheduler(
+    execution_space const& arg_execution_space,
+    memory_space const& arg_memory_space,
+    memory_pool const& arg_memory_pool
+  ) : execution_space_storage(arg_execution_space),
+      memory_space_storage(arg_memory_space)
   {
     // TODO better encapsulation of this pattern
     using record_type = Impl::SharedAllocationRecord<
@@ -133,10 +289,22 @@ public:
     auto* record = record_type::allocate(
       memory_space(), "TaskQueue", sizeof(task_queue_type)
     );
-    m_queue = new (record->data()) task_queue_type(pool);
+    m_queue = new (record->data()) task_queue_type(arg_memory_pool);
     record->m_destroy.managed_object = m_queue;
     m_track.assign_allocated_record_to_uninitialized(record);
   }
+
+  explicit
+  SimpleTaskScheduler(
+    execution_space const& arg_execution_space,
+    memory_pool const& pool
+  ) : SimpleTaskScheduler(arg_execution_space, memory_space{}, pool)
+  { /* forwarding ctor, must be empty */ }
+
+  explicit
+  SimpleTaskScheduler(memory_pool const& pool)
+    : SimpleTaskScheduler(execution_space{}, memory_space{}, pool)
+  { /* forwarding ctor, must be empty */ }
 
   SimpleTaskScheduler(
     memory_space const & arg_memory_space,
@@ -145,11 +313,13 @@ public:
     unsigned const mempool_max_block_size, // = 1u << 10
     unsigned const mempool_superblock_size // = 1u << 12
   ) : SimpleTaskScheduler(
-    memory_pool(
-      arg_memory_space, mempool_capacity, mempool_min_block_size,
-      mempool_max_block_size, mempool_superblock_size
-    )
-  )
+        execution_space{},
+        arg_memory_space,
+        memory_pool(
+          arg_memory_space, mempool_capacity, mempool_min_block_size,
+          mempool_max_block_size, mempool_superblock_size
+        )
+      )
   { /* forwarding ctor, must be empty */ }
 
   // </editor-fold> end Constructors, destructor, and assignment }}}2
@@ -324,11 +494,8 @@ public:
 
         rv = future_type(aggregate_task);
 
-        // get the VLA-emulated storage for the aggregate predecessors
-        auto* predecessor_ptr_storage = aggregate_task->aggregate_dependences();
-
         for(int i_pred = 0; i_pred < n_predecessors; ++i_pred) {
-          predecessor_ptr_storage[i_pred] = predecessors[i_pred].m_task;
+          aggregate_task->vla_value_at(i_pred) = predecessors[i_pred].m_task;
         }
 
         Kokkos::memory_fence(); // we're touching very questionable memory, so be sure to fence
@@ -367,15 +534,13 @@ public:
 
     auto rv = future_type(aggregate_task);
 
-    auto* predecessor_ptr_storage = aggregate_task->aggregate_dependences();
-
     for(int i_call = 0; i_call < n_calls; ++i_call) {
 
       auto generated_future = func(i_call);
 
       if(generated_future.m_task != nullptr) {
         generated_future.m_task->increment_reference_count();
-        predecessor_ptr_storage[i_call] = generated_future.m_task;
+        aggregate_task->vla_value_at(i_call) = generated_future.m_task;
 
         KOKKOS_ASSERT(m_queue == generated_future.m_task->ready_queue_base_ptr()
           && "Queue mismatch in when_all"
