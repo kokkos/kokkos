@@ -60,6 +60,44 @@
 namespace Kokkos {
 namespace Impl {
 
+template <
+  class Derived,
+  class VLAValueType,
+  class EntryCountType = int32_t
+>
+struct ObjectWithVLAEmulation;
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+/** @brief Attorney to enable private CRTP inheritance from ObjectWithVLAEmulation
+ */
+struct VLAEmulationAccess {
+private:
+
+  template <class, class, class>
+  friend struct ObjectWithVLAEmulation;
+
+  template <class Derived, class VLAValueType, class EntryCountType>
+  KOKKOS_FORCEINLINE_FUNCTION
+  static constexpr Derived*
+  _cast_to_derived(ObjectWithVLAEmulation<Derived, VLAValueType, EntryCountType>* base) noexcept
+  {
+    return static_cast<Derived*>(base);
+  }
+
+  template <class Derived, class VLAValueType, class EntryCountType>
+  KOKKOS_FORCEINLINE_FUNCTION
+  static constexpr Derived const*
+  _cast_to_derived(ObjectWithVLAEmulation<Derived, VLAValueType, EntryCountType> const* base) noexcept
+  {
+    return static_cast<Derived const*>(base);
+  }
+
+};
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
 /** @brief A CRTP base class for a type that includes a variable-length array by allocation
  *
@@ -76,7 +114,7 @@ namespace Impl {
 template <
   class Derived,
   class VLAValueType,
-  class EntryCountType = int32_t
+  class EntryCountType /* = int32_t */
 >
 struct ObjectWithVLAEmulation {
 public:
@@ -96,22 +134,30 @@ private:
 
   vla_entry_count_type m_num_entries;
 
+  // CRTP boilerplate
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  /* KOKKOS_CONSTEXPR_14 */
+  Derived* _this() noexcept { return VLAEmulationAccess::_cast_to_derived(this); }
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  /* KOKKOS_CONSTEXPR_14 */
+  Derived const* _this() const noexcept { return VLAEmulationAccess::_cast_to_derived(this); }
+
   // Note: can't be constexpr because of reinterpret_cast
-  KOKKOS_INLINE_FUNCTION
-  vla_value_type* _vla_pointer() {
+  KOKKOS_FORCEINLINE_FUNCTION
+  /* KOKKOS_CONSTEXPR_14 */
+  vla_value_type* _vla_pointer() noexcept {
     // The data starts right after the aligned storage of Derived
-    return reinterpret_cast<vla_value_type*>(
-      static_cast<Derived*>(this) + 1
-    );
+    return reinterpret_cast<vla_value_type*>(_this() + 1);
   }
 
   // Note: can't be constexpr because of reinterpret_cast
-  KOKKOS_INLINE_FUNCTION
-  vla_value_type const* _vla_pointer() const {
+  KOKKOS_FORCEINLINE_FUNCTION
+  /* KOKKOS_CONSTEXPR_14 */
+  vla_value_type const* _vla_pointer() const noexcept {
     // The data starts right after the aligned storage of Derived
-    return reinterpret_cast<vla_value_type const*>(
-      static_cast<Derived const*>(this) + 1
-    );
+    return reinterpret_cast<vla_value_type const*>(_this() + 1);
   }
 
 public:

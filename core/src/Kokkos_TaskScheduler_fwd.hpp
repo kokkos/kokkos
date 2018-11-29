@@ -120,6 +120,9 @@ class TaskQueueMultiple ;
 template< typename ExecSpace, typename MemSpace, typename TaskQueueTraits>
 class SingleTaskQueue;
 
+template< typename ExecSpace, typename MemSpace, typename TaskQueueTraits>
+class MultipleTaskQueue;
+
 struct TaskQueueTraitsLockBased;
 
 template< typename ResultType >
@@ -142,6 +145,9 @@ using TaskSchedulerMultiple = BasicTaskScheduler<Space, Impl::TaskQueueMultiple<
 
 template< typename Space >
 using NewTaskScheduler = SimpleTaskScheduler<Space, Impl::SingleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsLockBased>>;
+
+template< typename Space >
+using NewTaskSchedulerMultiple = SimpleTaskScheduler<Space, Impl::MultipleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsLockBased>>;
 
 template<class Space, class QueueType>
 void wait(BasicTaskScheduler<Space, QueueType> const&);

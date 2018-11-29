@@ -788,6 +788,14 @@ TEST_F( TEST_CATEGORY, task_fib_new )
   }
 }
 
+TEST_F( TEST_CATEGORY, task_fib_new_multiple )
+{
+  const int N = 27 ;
+  for ( int i = 0; i < N; ++i ) {
+    TestTaskScheduler::TestFib< Kokkos::NewTaskSchedulerMultiple<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 2000 );
+  }
+}
+
 TEST_F( TEST_CATEGORY, task_depend )
 {
   for ( int i = 0; i < 25; ++i ) {
@@ -809,6 +817,13 @@ TEST_F( TEST_CATEGORY, task_depend_new )
   }
 }
 
+TEST_F( TEST_CATEGORY, task_depend_new_multiple )
+{
+  for ( int i = 0; i < 25; ++i ) {
+    TestTaskScheduler::TestTaskDependence< Kokkos::NewTaskSchedulerMultiple<TEST_EXECSPACE> >::run( i );
+  }
+}
+
 TEST_F( TEST_CATEGORY, task_team )
 {
   TestTaskScheduler::TestTaskTeam< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run( 1000 );
@@ -826,6 +841,11 @@ TEST_F( TEST_CATEGORY, task_team_new )
   TestTaskScheduler::TestTaskTeam< Kokkos::NewTaskScheduler<TEST_EXECSPACE> >::run( 1000 );
 }
 
+TEST_F( TEST_CATEGORY, task_team_new_multiple )
+{
+  TestTaskScheduler::TestTaskTeam< Kokkos::NewTaskSchedulerMultiple<TEST_EXECSPACE> >::run( 1000 );
+}
+
 TEST_F( TEST_CATEGORY, task_with_mempool )
 {
   TestTaskScheduler::TestTaskSpawnWithPool< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run();
@@ -841,6 +861,11 @@ TEST_F( TEST_CATEGORY, task_with_mempool_new )
   TestTaskScheduler::TestTaskSpawnWithPool< Kokkos::NewTaskScheduler<TEST_EXECSPACE> >::run();
 }
 
+TEST_F( TEST_CATEGORY, task_with_mempool_new_multiple )
+{
+  TestTaskScheduler::TestTaskSpawnWithPool< Kokkos::NewTaskSchedulerMultiple<TEST_EXECSPACE> >::run();
+}
+
 TEST_F( TEST_CATEGORY, task_multiple_depend )
 {
   for ( int i = 2; i < 6; ++i ) {
@@ -852,6 +877,13 @@ TEST_F( TEST_CATEGORY, task_multiple_depend_new )
 {
   for ( int i = 2; i < 6; ++i ) {
     TestTaskScheduler::TestMultipleDependence< Kokkos::NewTaskScheduler<TEST_EXECSPACE> >::run( i );
+  }
+}
+
+TEST_F( TEST_CATEGORY, task_multiple_depend_new_multiple )
+{
+  for ( int i = 2; i < 6; ++i ) {
+    TestTaskScheduler::TestMultipleDependence< Kokkos::NewTaskSchedulerMultiple<TEST_EXECSPACE> >::run( i );
   }
 }
 

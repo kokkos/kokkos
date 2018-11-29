@@ -77,12 +77,49 @@ namespace Impl {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-template <
-  class ExecSpace,
-  class MemorySpace,
-  class TaskQueueTraits
->
-class MultipleTaskQueueTeamQueue;
+template <class TaskQueueTraits>
+struct MultipleTaskQueueTeamEntry {
+public:
+
+  using task_base_type = TaskNode<TaskQueueTraits>;
+  using runnable_task_base_type = RunnableTaskBase<TaskQueueTraits>;
+  using ready_queue_type = typename TaskQueueTraits::template ready_queue_type<task_base_type>;
+
+private:
+
+  // Number of allowed priorities
+  static constexpr int NumPriorities = 3;
+
+  ready_queue_type m_ready_queues[NumPriorities][2];
+
+public:
+
+  OptionalRef<task_base_type>
+  pop_ready_task()
+  {
+    auto return_value = OptionalRef<task_base_type>{};
+    for(int i_priority = 0; i_priority < NumPriorities; ++i_priority) {
+      // Check for a team task with this priority
+      return_value = m_ready_queues[i_priority][TaskTeam].pop();
+      if(return_value) return return_value;
+
+      // Check for a single task with this priority
+      return_value = m_ready_queues[i_priority][TaskSingle].pop();
+      if(return_value) return return_value;
+    }
+    return return_value;
+  }
+
+  ready_queue_type&
+  team_queue_for(runnable_task_base_type const& task)
+  {
+    return m_ready_queues[int(task.get_priority())][int(task.get_task_type())];
+  }
+
+};
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
 template <
   class ExecSpace,
@@ -94,21 +131,49 @@ class MultipleTaskQueue
     public TaskQueueCommonMixin<MultipleTaskQueue<ExecSpace, MemorySpace, TaskQueueTraits>>,
     private ObjectWithVLAEmulation<
       MultipleTaskQueue<ExecSpace, MemorySpace, TaskQueueTraits>,
-      MultipleTaskQueueTeamQueue<ExecSpace, MemorySpace, TaskQueueTraits>
+      MultipleTaskQueueTeamEntry<TaskQueueTraits>
     >
 {
 private:
 
   using base_t = TaskQueueMemoryManager<ExecSpace, MemorySpace>;
   using common_mixin_t = TaskQueueCommonMixin<MultipleTaskQueue>;
+  using vla_emulation_base_t = ObjectWithVLAEmulation<
+    MultipleTaskQueue<ExecSpace, MemorySpace, TaskQueueTraits>,
+    MultipleTaskQueueTeamEntry<TaskQueueTraits>
+  >;
 
-  template <class, class, class>
-  friend class MultipleTaskQueueTeamEntry;
+  // Allow private inheritance from ObjectWithVLAEmulation
+  friend struct VLAEmulationAccess;
 
   struct SchedulingInfo {
     using team_queue_id_t = int32_t;
     static constexpr team_queue_id_t NoAssociatedTeam = -1;
     team_queue_id_t team_association = NoAssociatedTeam;
+
+    KOKKOS_INLINE_FUNCTION
+    constexpr explicit SchedulingInfo(team_queue_id_t association) noexcept
+      : team_association(association)
+    { }
+
+    KOKKOS_INLINE_FUNCTION
+    SchedulingInfo() = default;
+
+    KOKKOS_INLINE_FUNCTION
+    SchedulingInfo(SchedulingInfo const&) = default;
+
+    KOKKOS_INLINE_FUNCTION
+    SchedulingInfo(SchedulingInfo&&) = default;
+
+    KOKKOS_INLINE_FUNCTION
+    SchedulingInfo& operator=(SchedulingInfo const&) = default;
+
+    KOKKOS_INLINE_FUNCTION
+    SchedulingInfo& operator=(SchedulingInfo&&) = default;
+
+    KOKKOS_INLINE_FUNCTION
+    ~SchedulingInfo() = default;
+
   };
 
 public:
@@ -131,8 +196,17 @@ public:
   using aggregate_task_type = AggregateTask<TaskQueueTraits>;
 
   // Number of allowed priorities
-  static constexpr int NumQueue = 3;
+  static constexpr int NumPriorities = 3;
 
+  KOKKOS_INLINE_FUNCTION
+  constexpr typename vla_emulation_base_t::vla_entry_count_type
+  n_queues() const noexcept { return this->n_vla_entries(); }
+
+  // TODO !!!!query this using a property of the execution space rather than using a constexpr member
+  // This should query a customization point that defaults to the recommended
+  // league size (which should probably also be a property-based customization
+  // point)
+  static constexpr int num_team_queues = 6;
 
 public:
 
@@ -145,9 +219,13 @@ public:
   MultipleTaskQueue& operator=(MultipleTaskQueue const&) = delete;
   MultipleTaskQueue& operator=(MultipleTaskQueue&&) = delete;
 
-  explicit
-  MultipleTaskQueue(typename base_t::memory_pool const& arg_memory_pool)
-    : base_t(arg_memory_pool)
+  MultipleTaskQueue(
+    typename base_t::execution_space const& arg_execution_space,
+    typename base_t::memory_space const&,
+    typename base_t::memory_pool const& arg_memory_pool
+  ) : base_t(arg_memory_pool),
+      // TODO !!!!query this using a property of the execution space rather than using a constexpr member
+      vla_emulation_base_t(num_team_queues)
   { }
 
   ~MultipleTaskQueue() = default;
@@ -198,8 +276,11 @@ public:
       auto stolen_from = team_association;
 
       // loop through the rest of the teams and try to steal
-      for(auto isteal = team_association+1; isteal != team_association; ++isteal) {
-        isteal %= this->n_vla_entries();
+      for(
+        auto isteal = (team_association + 1) % this->n_queues();
+        isteal != team_association;
+        isteal = (isteal + 1) % this->n_queues()
+      ) {
         return_value = this->vla_value_at(isteal).pop_ready_task();
         if(return_value) {
           stolen_from = isteal;
@@ -221,52 +302,32 @@ public:
   }
 
 
+  // TODO make this a property-based customization point
+  KOKKOS_INLINE_FUNCTION
+  scheduling_info_type
+  initial_scheduling_info_for_team(int rank_in_league) const noexcept {
+    return scheduling_info_type{
+      typename scheduling_info_type::team_queue_id_t(rank_in_league % n_queues())
+    };
+  }
+
+  // TODO make this a property-based customization point
+  static /* KOKKOS_CONSTEXPR_14 */ size_t
+  task_queue_allocation_size(
+    typename base_t::execution_space const& exec_space,
+    typename base_t::memory_space const&,
+    typename base_t::memory_pool const&
+  )
+  {
+    // TODO !!!!query this using a property of the execution space rather than using a constexpr member
+
+    return vla_emulation_base_t::required_allocation_size(
+      /* num_vla_entries = */ num_team_queues
+    );
+  }
 
 };
 
-template <
-  class TaskQueueTraits
->
-struct TeamQueueInfo {
-public:
-
-  using task_base_type = TaskNode<TaskQueueTraits>;
-  using runnable_task_base_type = RunnableTaskBase<TaskQueueTraits>;
-  using ready_queue_type = typename TaskQueueTraits::template ready_queue_type<task_base_type>;
-
-private:
-
-  // Number of allowed priorities
-  static constexpr int NumQueue = 3;
-
-  ready_queue_type m_ready_queues[NumQueue][2];
-
-public:
-
-  OptionalRef<task_base_type>
-  pop_ready_task()
-  {
-    auto return_value = OptionalRef<task_base_type>{};
-    for(int i_priority = 0; i_priority < NumQueue; ++i_priority) {
-      // Check for a team task with this priority
-      return_value = m_ready_queues[i_priority][TaskTeam].pop();
-      if(return_value) return return_value;
-
-      // Check for a single task with this priority
-      return_value = m_ready_queues[i_priority][TaskSingle].pop();
-      if(return_value) return return_value;
-    }
-    return return_value;
-  }
-
-  ready_queue_type&
-  team_queue_for(runnable_task_base_type const& task)
-  {
-    return m_ready_queues[int(task.get_priority())][int(task.get_task_type())];
-  }
-
-
-};
 
 } /* namespace Impl */
 } /* namespace Kokkos */

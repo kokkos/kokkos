@@ -391,6 +391,31 @@ public:
       predecessor.template scheduling_info_as<scheduling_info_type>();
   }
 
+  template <
+    class ExecutionSpace,
+    class MemorySpace,
+    class MemoryPool
+  >
+  static /* KOKKOS_CONSTEXPR_14 */ size_t
+  task_queue_allocation_size(
+    ExecutionSpace const&,
+    MemorySpace const&,
+    MemoryPool const&
+  )
+    // requires Same<ExecutionSpace, typename Derived::execution_space>
+    //            && Same<MemorySpace, typename Derived::memory_space>
+    //            && Same<MemoryPool, typename Derived::memory_pool>
+  {
+    static_assert(
+      std::is_same<ExecutionSpace, typename Derived::execution_space>::value
+        && std::is_same<MemorySpace, typename Derived::memory_space>::value
+        && std::is_same<MemoryPool, typename Derived::memory_pool>::value,
+      "Type mismatch in task_queue_allocation_size customization point"
+    );
+
+    return sizeof(Derived);
+  }
+
   // </editor-fold> end Scheduling }}}2
   //----------------------------------------------------------------------------
 

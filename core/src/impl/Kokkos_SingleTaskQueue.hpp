@@ -131,7 +131,11 @@ public:
   SingleTaskQueue& operator=(SingleTaskQueue&&) = delete;
 
   explicit
-  SingleTaskQueue(typename base_t::memory_pool const& arg_memory_pool)
+  SingleTaskQueue(
+    typename base_t::execution_space const&,
+    typename base_t::memory_space const&,
+    typename base_t::memory_pool const& arg_memory_pool
+  )
     : base_t(arg_memory_pool)
   { }
 
@@ -145,6 +149,7 @@ public:
   // </editor-fold> end Constructors, destructors, and assignment }}}2
   //----------------------------------------------------------------------------
 
+  // Not absolutely necessary, but makes the error message more readable
   using common_mixin_t::schedule_runnable;
 
   KOKKOS_FUNCTION

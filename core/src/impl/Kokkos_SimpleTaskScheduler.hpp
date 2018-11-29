@@ -59,6 +59,7 @@
 #include <Kokkos_Future.hpp>
 #include <impl/Kokkos_TaskQueue.hpp>
 #include <impl/Kokkos_SingleTaskQueue.hpp>
+#include <impl/Kokkos_MultipleTaskQueue.hpp>
 #include <impl/Kokkos_TaskQueueMultiple.hpp>
 #include <impl/Kokkos_TaskPolicyData.hpp>
 #include <impl/Kokkos_TaskTeamMember.hpp>
@@ -286,16 +287,29 @@ public:
   ) : execution_space_storage(arg_execution_space),
       memory_space_storage(arg_memory_space)
   {
+    // Ask the task queue how much space it needs (usually will just be
+    // sizeof(task_queue_type), but some queues may need additional storage
+    // dependent on runtime conditions or properties of the execution space)
+    auto const allocation_size = task_queue_type::task_queue_allocation_size(
+      arg_execution_space,
+      arg_memory_space,
+      arg_memory_pool
+    );
+
     // TODO better encapsulation of this pattern
     using record_type = Impl::SharedAllocationRecord<
       memory_space, Impl::DefaultDestroy<task_queue_type>
     >;
 
-    // Allocate space for the
+    // Allocate space for the task queue
     auto* record = record_type::allocate(
-      memory_space(), "TaskQueue", sizeof(task_queue_type)
+      memory_space(), "TaskQueue", allocation_size
     );
-    m_queue = new (record->data()) task_queue_type(arg_memory_pool);
+    m_queue = new (record->data()) task_queue_type(
+      arg_execution_space,
+      arg_memory_space,
+      arg_memory_pool
+    );
     record->m_destroy.managed_object = m_queue;
     m_track.assign_allocated_record_to_uninitialized(record);
   }

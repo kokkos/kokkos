@@ -527,6 +527,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   ~RunnableTask() = delete;
 
+  KOKKOS_INLINE_FUNCTION
   void update_scheduling_info(
     member_type& member
   ) {
