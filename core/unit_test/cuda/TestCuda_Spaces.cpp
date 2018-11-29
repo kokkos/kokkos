@@ -228,7 +228,10 @@ TEST_F( cuda, uvm )
   }
 }
 
-#ifdef INCLUDE_UVM_ALLOC_TEST
+/* Removing UVM Allocs Test due to added time to complete overall unit test
+ * The issue verified with this unit test appears to no longer be an 
+ * problem.  Refer to github issue 1880 for more details
+ *
 TEST_F( cuda, uvm_num_allocs )
 {
   // The max number of UVM allocations allowed is 65536.
@@ -289,7 +292,7 @@ TEST_F( cuda, uvm_num_allocs )
 
   #undef MAX_NUM_ALLOCS
 }
-#endif
+*/
 
 template< class MemSpace, class ExecSpace >
 struct TestViewCudaAccessible {
