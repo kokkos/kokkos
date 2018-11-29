@@ -109,15 +109,25 @@ public:
 
 private:
 
+  // This would be more readable with a lambda, but that comes with
+  // all the baggage associated with a lambda (compilation times, bugs with
+  // nvcc, etc.), so we'll use a simple little helper functor here.
+  template <class TaskQueueTraits>
   struct _schedule_waiting_tasks_operation {
+    TaskNode<TaskQueueTraits> const& m_predecessor;
     Derived& m_queue;
-    template <class TaskQueueTraits>
     KOKKOS_INLINE_FUNCTION
     void operator()(TaskNode<TaskQueueTraits>&& task) const noexcept
       // requires Same<TaskType, Derived::task_base_type>
     {
       if(task.is_runnable()) // KOKKOS_LIKELY
       {
+        if(m_predecessor.is_runnable()) {
+          m_queue.update_scheduling_info_from_completed_predecessor(
+            /* ready_task = */ task.as_runnable_task(),
+            /* predecessor = */ m_predecessor.as_runnable_task()
+          );
+        }
         m_queue.schedule_runnable(std::move(task).as_runnable_task());
       }
       else {
@@ -131,10 +141,14 @@ protected:
   template <class TaskQueueTraits>
   KOKKOS_FUNCTION
   void _complete_finished_task(TaskNode<TaskQueueTraits>&& task) {
-    // This would be more readable with a lambda, but that comes with
-    // all the baggage associated with a lambda (compilation times, bugs with
-    // nvcc, etc.), so we'll use a simple little helper functor here.
-    task.consume_wait_queue(_schedule_waiting_tasks_operation{_self()});
+    using scheduling_info_type = typename Derived::scheduling_info_type;
+    scheduling_info_type* scheduling_info_ptr = nullptr;
+    task.consume_wait_queue(
+      _schedule_waiting_tasks_operation<TaskQueueTraits>{
+        task,
+        _self()
+      }
+    );
     bool should_delete = task.decrement_and_check_reference_count();
     if(should_delete) {
       _self().deallocate(std::move(task));
@@ -208,6 +222,7 @@ protected:
   )
   {
     bool task_is_ready = true;
+    bool scheduling_info_updated = false;
 
     if(task.has_predecessor()) {
       // save the predecessor into a local variable, then clear it from the
@@ -220,6 +235,12 @@ protected:
       // making this a release store would also do this
       task.clear_predecessor();
 
+      // do this before enqueueing and potentially losing exclusive access to task
+      bool task_is_respawning = task.get_respawn_flag();
+
+      // clear the respawn flag, since we're handling the respawn (if any) here
+      task.set_respawn_flag(false);
+
       // TODO remove this fence in favor of memory orders
       Kokkos::memory_fence(); // for now
 
@@ -227,10 +248,23 @@ protected:
       // the predecessor is already done
       bool predecessor_not_ready = predecessor.try_add_waiting(task);
 
+      // NOTE: if the predecessor was not ready and the task was enqueued,
+      // we've lost exclusive access and should nt touch task again
+
       // If the predecessor is not done, then task is not ready
       task_is_ready = not predecessor_not_ready;
 
-      if(task.get_respawn_flag()) {
+      if(task_is_ready and predecessor.is_runnable()) {
+        // this is our last chance to update the scheduling info before
+        // predecessor is potentially deleted
+        _self().update_scheduling_info_from_completed_predecessor(
+          /* ready_task = */ task,
+          /* predecessor = */ predecessor.as_runnable_task()
+        );
+        scheduling_info_updated = true;
+      }
+
+      if(task_is_respawning) {
         // Reference count for predecessor was incremented when
         // respawn called set_dependency()
         // so that if predecessor completed prior to the
@@ -247,11 +281,13 @@ protected:
       // here
     }
 
-    // clear the respawn flag, since we handled the respawn (if any) here
-    task.set_respawn_flag(false);
-
+    if(scheduling_info_updated) {
+      // We need to go back to the queue itself and see if it wants to schedule
+      // somewhere else
+      _self().schedule_runnable(std::move(task));
+    }
     // Put it in the appropriate ready queue if it's ready
-    if(task_is_ready) {
+    else if(task_is_ready) {
       // Increment the ready count
       _self()._increment_ready_count();
       // and enqueue the task
@@ -263,6 +299,18 @@ protected:
   }
 
 public:
+
+  template <class TaskQueueTraits>
+  KOKKOS_FUNCTION
+  void
+  schedule_runnable(RunnableTaskBase<TaskQueueTraits>&& task) {
+    // just forward to the version that takes info as a parameter with the
+    // task's info
+    _self().schedule_runnable(
+      std::move(task),
+      task.template scheduling_info_as<typename Derived::scheduling_info_type>()
+    );
+  }
 
   template <class TaskQueueTraits>
   KOKKOS_FUNCTION
@@ -328,6 +376,19 @@ public:
       _self().complete(std::move(aggregate));
     }
     // Note!! task may have been deleted at this point, so don't add anything here!
+  }
+
+  // Provide a sensible default that can be overridden
+  template <class TaskQueueTraits>
+  void update_scheduling_info_from_completed_predecessor(
+    RunnableTaskBase<TaskQueueTraits>& ready_task,
+    RunnableTaskBase<TaskQueueTraits> const& predecessor
+  ) {
+    // by default, tell a ready task to use the scheduling info of its most
+    // recent predecessor
+    using scheduling_info_type = typename Derived::scheduling_info_type;
+    ready_task.template scheduling_info_as<scheduling_info_type>() =
+      predecessor.template scheduling_info_as<scheduling_info_type>();
   }
 
   // </editor-fold> end Scheduling }}}2

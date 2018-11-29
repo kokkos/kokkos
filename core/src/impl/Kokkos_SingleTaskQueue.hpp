@@ -91,12 +91,16 @@ private:
   using base_t = TaskQueueMemoryManager<ExecSpace, MemorySpace>;
   using common_mixin_t = TaskQueueCommonMixin<SingleTaskQueue>;
 
+  struct SchedulingInfo { };
+
 public:
 
   using task_queue_type = SingleTaskQueue; // mark as task_queue concept
   using task_queue_traits = TaskQueueTraits;
   using task_base_type = TaskNode<TaskQueueTraits>;
   using ready_queue_type = typename TaskQueueTraits::template ready_queue_type<task_base_type>;
+
+  using scheduling_info_type = SchedulingInfo;
 
   using runnable_task_base_type = RunnableTaskBase<TaskQueueTraits>;
 
@@ -141,10 +145,14 @@ public:
   // </editor-fold> end Constructors, destructors, and assignment }}}2
   //----------------------------------------------------------------------------
 
+  using common_mixin_t::schedule_runnable;
 
   KOKKOS_FUNCTION
   void
-  schedule_runnable(runnable_task_base_type&& task) {
+  schedule_runnable(
+    runnable_task_base_type&& task,
+    scheduling_info_type const& info
+  ) {
     this->_schedule_runnable_to_queue(
       std::move(task),
       m_ready_queues[int(task.get_priority())][int(task.get_task_type())]
@@ -155,7 +163,9 @@ public:
 
   KOKKOS_FUNCTION
   OptionalRef<task_base_type>
-  pop_ready_task()
+  pop_ready_task(
+    scheduling_info_type const& info
+  )
   {
     OptionalRef<task_base_type> return_value;
     // always loop in order of priority first, then prefer team tasks over single tasks
@@ -173,6 +183,10 @@ public:
     // if nothing was found, return a default-constructed (empty) OptionalRef
     return return_value;
   }
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr scheduling_info_type
+  initial_scheduling_info_for_team(int) const noexcept { return { }; }
 
 };
 

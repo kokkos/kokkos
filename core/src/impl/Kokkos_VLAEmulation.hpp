@@ -97,14 +97,18 @@ private:
   vla_entry_count_type m_num_entries;
 
   // Note: can't be constexpr because of reinterpret_cast
+  KOKKOS_INLINE_FUNCTION
   vla_value_type* _vla_pointer() {
+    // The data starts right after the aligned storage of Derived
     return reinterpret_cast<vla_value_type*>(
       static_cast<Derived*>(this) + 1
     );
   }
 
   // Note: can't be constexpr because of reinterpret_cast
+  KOKKOS_INLINE_FUNCTION
   vla_value_type const* _vla_pointer() const {
+    // The data starts right after the aligned storage of Derived
     return reinterpret_cast<vla_value_type const*>(
       static_cast<Derived const*>(this) + 1
     );

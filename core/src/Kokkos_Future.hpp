@@ -84,8 +84,10 @@ private:
 
   using task_base_type = typename scheduler_type::task_base_type;
   using task_queue_type = typename scheduler_type::task_queue_type;
+  using scheduling_info_type = typename scheduler_type::scheduling_info_type;
 
   OwningRawPtr<task_base_type> m_task = nullptr;
+  scheduling_info_type m_info; // TODO: [[no_unique_address]] emulation
 
   KOKKOS_INLINE_FUNCTION
   explicit

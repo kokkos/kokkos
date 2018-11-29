@@ -245,6 +245,9 @@ public:
   using memory_space = typename task_queue_type::memory_space;
   using memory_pool = typename task_queue_type::memory_pool;
 
+  // For the simple scheduling case, we need nothing more than what the queue needs
+  using scheduling_info_type = typename task_queue_type::scheduling_info_type;
+
   using specialization = Impl::TaskQueueSpecialization<SimpleTaskScheduler>;
 
   using member_type = typename specialization::member_type;
@@ -254,6 +257,8 @@ public:
 
   using task_base_type = typename task_queue_type::task_base_type;
   using runnable_task_base_type = typename task_queue_type::runnable_task_base_type;
+
+  using task_queue_traits = typename QueueType::task_queue_traits;
 
 private:
 
@@ -266,6 +271,7 @@ private:
 
   track_type m_track;
   task_queue_type* m_queue = nullptr;
+  scheduling_info_type m_info; // TODO [[no_unique_address]] emulation
 
 public:
 
@@ -334,8 +340,20 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
-  SimpleTaskScheduler const&
-  get_team_scheduler(int rank_in_league) const noexcept { return *this; }
+  SimpleTaskScheduler
+  get_team_scheduler(int rank_in_league) const noexcept
+  {
+    KOKKOS_EXPECTS(m_queue != nullptr);
+    auto rv = SimpleTaskScheduler{ *this };
+    rv.m_info = m_queue->initial_scheduling_info_for_team(rank_in_league);
+    return rv;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  scheduling_info_type& scheduling_info() { return m_info; }
+
+  KOKKOS_INLINE_FUNCTION
+  scheduling_info_type const& scheduling_info() const { return m_info; }
 
   // TODO Refactor to make this a member function and remove the queue pointer from task
   template <
@@ -357,17 +375,35 @@ public:
     using task_type = typename task_queue_type::template runnable_task_type<
       FunctorType, scheduler_type
     >;
+    using scheduling_info_storage_type =
+      Impl::SchedulingInfoStorage<task_queue_traits, typename task_queue_type::scheduling_info_type>;
 
     task_queue_type* queue_ptr = nullptr;
+    scheduling_info_type scheduling_info;
+
+    bool has_predecessor = false;
 
     if(policy.m_scheduler != nullptr) {
+      // No predecessor, so just use the scheduling info from the scheduler
       auto& scheduler = *static_cast<scheduler_type const*>(policy.m_scheduler);
       queue_ptr = &scheduler.queue();
+      scheduling_info = scheduler.scheduling_info();
     }
     else {
+      has_predecessor = true;
+      auto task_ptr = policy.m_dependence.m_task;
+      KOKKOS_ASSERT(task_ptr != nullptr);
       queue_ptr = static_cast<task_queue_type*>(
-        policy.m_dependence.m_task->ready_queue_base_ptr()
+        task_ptr->ready_queue_base_ptr()
       );
+
+      if(not task_ptr->is_runnable()) {
+        // If the predecessor is not runnable, the scheduling info is contained
+        // in the future rather than the task itself, so propagate it here.
+        // (otherwise, it will get propagated when the predecessor becomes
+        // or by the queue if the predecessor is already ready)
+        scheduling_info = policy.m_dependence.m_info;
+      }
     }
 
     KOKKOS_ASSERT(queue_ptr != nullptr);
@@ -379,7 +415,7 @@ public:
     // Reference count starts at two:
     //   +1 for the matching decrement when task is complete
     //   +1 for the future
-    auto* runnable_task = queue.template allocate_and_construct<task_type>(
+    auto& runnable_task = *queue.template allocate_and_construct<task_type>(
       /* functor = */ std::forward<FunctorType>(functor),
       /* apply_function_ptr = */ apply_function_ptr,
       /* task_type = */ Impl::TaskType(policy.m_task_type),
@@ -387,16 +423,18 @@ public:
       /* queue_base = */ &queue,
       /* initial_reference_count = */ 2
     );
+    rv.m_info = scheduling_info;
 
-    if(policy.m_scheduler == nullptr) { // Another way of saying policy was constructed with a future
-      runnable_task->set_predecessor(*policy.m_dependence.m_task);
+    if(has_predecessor) {
+      runnable_task.set_predecessor(*policy.m_dependence.m_task);
     }
 
-    rv = future_type(runnable_task);
+    rv = future_type(&runnable_task);
+    rv.m_info = scheduling_info;
 
     Kokkos::memory_fence(); // fence to ensure dependent stores are visible
 
-    queue.schedule_runnable(std::move(*runnable_task));
+    queue.schedule_runnable(std::move(runnable_task), scheduling_info);
     // note that task may be already completed even here, so don't touch it again
 
     return rv;
@@ -443,6 +481,8 @@ public:
   KOKKOS_FUNCTION
   static BasicFuture<void, scheduler_type>
   when_all(BasicFuture<ValueType, scheduler_type> const predecessors[], int n_predecessors) {
+
+    // TODO!!! propagate scheduling info
 
     using future_type = BasicFuture<void, scheduler_type>;
 
@@ -513,6 +553,8 @@ public:
   BasicFuture<void, scheduler_type>
   when_all(int n_calls, F&& func)
   {
+    // TODO!!! propagate scheduling info
+
     using future_type = BasicFuture<void, scheduler_type>;
     // later this should be std::invoke_result_t
     using generated_type = decltype(func(0));

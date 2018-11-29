@@ -85,7 +85,7 @@ public:
   using memory_space = MemorySpace;
   using device_type = Kokkos::Device<execution_space, memory_space>;
   using memory_pool = Kokkos::MemoryPool<device_type>;
-  using allocation_size_type = int32_t;
+  using allocation_size_type = size_t;
 
 private:
 
@@ -184,16 +184,20 @@ public:
   allocate_and_construct_with_vla_emulation(allocation_size_type n_vla_entries, Args&&... args)
     // requires
     //   std::is_base_of_v<PoolAllocatedObjectBase<typename memory_pool::size_type>, T>
-    //     && std::is_constructible_v<T, Args&&..., allocation_size_type>
+    //     && std::is_base_of<ObjectWithVLAEmulation<T, VLAValueType>, T>::value
+    //     && std::is_constructible_v<T, allocation_size_type, Args&&...>
   {
+
+
     static_assert(
-      alignof(T) >= alignof(VLAValueType),
+      std::is_base_of<ObjectWithVLAEmulation<T, VLAValueType>, T>::value,
       "Can't append emulated variable length array of type with greater alignment than"
       "  the type to which the VLA is being appended"
     );
 
-    auto const allocation_size = sizeof(T) + sizeof(VLAValueType) * n_vla_entries;
+    using vla_emulation_base = ObjectWithVLAEmulation<T, VLAValueType>;
 
+    auto const allocation_size = vla_emulation_base::required_allocation_size(n_vla_entries);
     auto result = _do_pool_allocate(allocation_size);
 
     KOKKOS_ASSERT(result.success && "Memory allocation failure");

@@ -69,6 +69,7 @@ namespace Impl {
 
 enum TaskType : int16_t   { TaskTeam = 0 , TaskSingle = 1 , Aggregate = 2 };
 
+//==============================================================================
 
 /** Intrusive base class for things allocated with a Kokkos::MemoryPool
  *
@@ -103,6 +104,8 @@ public:
   CountType get_allocation_size() const noexcept { return m_alloc_size; }
 
 };
+
+//==============================================================================
 
 
 // TODO move this?
@@ -154,6 +157,8 @@ class AggregateTask;
 
 template <class TaskQueueTraits>
 class RunnableTaskBase;
+
+//==============================================================================
 
 template <class TaskQueueTraits>
 class TaskNode
@@ -233,6 +238,13 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
+  RunnableTaskBase<TaskQueueTraits> const&
+  as_runnable_task() const & {
+    KOKKOS_EXPECTS(this->is_runnable());
+    return static_cast<RunnableTaskBase<TaskQueueTraits> const&>(*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
   RunnableTaskBase<TaskQueueTraits>&&
   as_runnable_task() && {
     KOKKOS_EXPECTS(this->is_runnable());
@@ -290,6 +302,7 @@ public:
 
 };
 
+//==============================================================================
 
 template <class TaskQueueTraits>
 class AggregateTask
@@ -310,7 +323,7 @@ private:
 public:
 
   template <class... Args>
-  // requires std::is_constructible_v<base_t, Args&&...>
+    // requires std::is_constructible_v<base_t, Args&&...>
   KOKKOS_INLINE_FUNCTION
   constexpr explicit
   AggregateTask(
@@ -330,6 +343,10 @@ public:
 
 };
 
+//==============================================================================
+
+template <class BaseClass, class SchedulingInfo>
+struct SchedulingInfoStorage;
 
 template <class TaskQueueTraits>
 class RunnableTaskBase
@@ -376,6 +393,27 @@ public:
   KOKKOS_INLINE_FUNCTION
   void clear_predecessor() { m_predecessor = nullptr; }
 
+  template <class SchedulingInfo>
+  KOKKOS_INLINE_FUNCTION
+  SchedulingInfo&
+  scheduling_info_as()
+  {
+    using info_storage_type = SchedulingInfoStorage<RunnableTaskBase, SchedulingInfo>;
+
+    return static_cast<info_storage_type*>(this)->scheduling_info();
+  }
+
+  template <class SchedulingInfo>
+  KOKKOS_INLINE_FUNCTION
+  SchedulingInfo const&
+  scheduling_info_as() const
+  {
+    using info_storage_type = SchedulingInfoStorage<RunnableTaskBase, SchedulingInfo>;
+
+    return static_cast<info_storage_type const*>(this)->scheduling_info();
+  }
+
+
   KOKKOS_INLINE_FUNCTION
   task_base_type& get_predecessor() const {
     KOKKOS_EXPECTS(m_predecessor != nullptr);
@@ -400,6 +438,8 @@ public:
   }
 };
 
+//==============================================================================
+
 template <class ResultType>
 struct TaskResultStorage {
   ResultType m_value;
@@ -409,6 +449,36 @@ struct TaskResultStorage {
 template <>
 struct TaskResultStorage<void> { };
 
+//==============================================================================
+
+template <class BaseType, class SchedulingInfo>
+class SchedulingInfoStorage
+  : public BaseType // must be first base class for allocation reasons!!!
+{
+
+private:
+
+  using base_t = BaseType;
+  using scheduling_info_type = SchedulingInfo;
+  scheduling_info_type m_info; // TODO [[no_unique_address]] emulation
+
+public:
+
+  using base_t::base_t;
+
+  KOKKOS_INLINE_FUNCTION
+  scheduling_info_type& scheduling_info() & { return m_info; }
+
+  KOKKOS_INLINE_FUNCTION
+  scheduling_info_type const& scheduling_info() const & { return m_info; }
+
+  KOKKOS_INLINE_FUNCTION
+  scheduling_info_type&& scheduling_info() && { return std::move(m_info); }
+
+};
+
+//==============================================================================
+
 template <
   class TaskQueueTraits,
   class Scheduler,
@@ -416,19 +486,27 @@ template <
   class FunctorType
 >
 class RunnableTask
-  : public RunnableTaskBase<TaskQueueTraits>, // must be first base class for allocation reasons!!!
+  : public SchedulingInfoStorage<
+      RunnableTaskBase<TaskQueueTraits>,
+      typename Scheduler::task_queue_type::scheduling_info_type
+    >, // must be first base class
     public FunctorType,
     public TaskResultStorage<ResultType>
 {
 private:
 
-  using base_t = RunnableTaskBase<TaskQueueTraits>;
+  using base_t =
+    SchedulingInfoStorage<
+      RunnableTaskBase<TaskQueueTraits>,
+      typename Scheduler::task_queue_type::scheduling_info_type
+    >;
   using task_base_type = TaskNode<TaskQueueTraits>;
-  using specialization = TaskQueueSpecialization<Scheduler>;
+  using scheduler_type = Scheduler;
+  using specialization = TaskQueueSpecialization<scheduler_type>;
   using member_type = typename specialization::member_type;
   using result_type = ResultType;
   using functor_type = FunctorType;
-  using storage_base_type = TaskResultStorage<ResultType>;
+  using storage_base_type = TaskResultStorage<result_type>;
 
 public:
 
@@ -449,10 +527,17 @@ public:
   KOKKOS_INLINE_FUNCTION
   ~RunnableTask() = delete;
 
+  void update_scheduling_info(
+    member_type& member
+  ) {
+    // TODO call a queue-specific hook here; for now, this info is already updated elsewhere
+    // this->scheduling_info() = member.scheduler().scheduling_info();
+  }
 
   KOKKOS_INLINE_FUNCTION
   void apply_functor(member_type* member, void*)
   {
+    update_scheduling_info(*member);
     this->functor_type::operator()(*member);
   }
 
@@ -460,6 +545,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   void apply_functor(member_type* member, T* const result)
   {
+    update_scheduling_info(*member);
     this->functor_type::operator()(*member, *result);
   }
 
@@ -472,8 +558,8 @@ public:
   KOKKOS_FUNCTION static
   void apply(task_base_type* self, void* member_as_void)
   {
-    RunnableTask* const task = static_cast<RunnableTask*>(self);
-    member_type* const member = reinterpret_cast<member_type*>(member_as_void);
+    auto* const task = static_cast<RunnableTask*>(self);
+    auto* const member = reinterpret_cast<member_type*>(member_as_void);
     result_type* const result = TaskResult< result_type >::ptr( task );
 
     // Task may be serial or team.

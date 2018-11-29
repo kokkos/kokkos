@@ -131,43 +131,44 @@ public:
         member_type single_exec(scheduler, team_data_single);
         member_type team_exec(scheduler, self);
 
-        auto& team_queue = team_exec.scheduler().queue();
+        auto& team_scheduler = team_exec.scheduler();
 
         auto current_task = OptionalRef<task_base_type>(nullptr);
 
-        while(not team_queue.is_done()) {
+        while(not queue.is_done()) {
 
           // Each team lead attempts to acquire either a thread team task
           // or a single thread task for the team.
           if(team_exec.team_rank() == 0) {
 
-            // pop a task off
-            current_task = team_queue.pop_ready_task();
+            // loop while both:
+            //   - the queue is not done
+            //   - the most recently popped task is a single task or empty
+            while(not queue.is_done()) {
 
-            // loop while either:
-            //   - there's no task ready (but quiescence is not reached), or
-            //   - the most recently popped task is a single task
-            while((not current_task) || current_task->is_single_runnable()) {
+              current_task = queue.pop_ready_task(team_scheduler.scheduling_info());
 
               if(current_task) {
-                KOKKOS_ASSERT(current_task->is_single_runnable());
-                current_task->as_runnable_task().run(single_exec);
-                // Respawns are handled in the complete function
-                team_queue.complete(
-                  (*std::move(current_task)).as_runnable_task()
-                );
-              }
 
-              // break out of the team leader loop if the queue is quiesced
-              if(team_queue.is_done()) {
-                current_task = nullptr;
-                break;
-              }
+                if(current_task->is_team_runnable()) {
+                  // break out of the team leader loop to run the team task
+                  break;
+                }
+                else {
+                  KOKKOS_ASSERT(current_task->is_single_runnable());
+                  current_task->as_runnable_task().run(single_exec);
+                  // Respawns are handled in the complete function
+                  queue.complete(
+                    (*std::move(current_task)).as_runnable_task()
+                  );
+                }
 
-              // otherwise, pop off another task and continue
-              current_task = team_queue.pop_ready_task();
+              } // end if current_task is not null
 
-            }
+              current_task = nullptr;
+
+            } // end team leader loop
+
           }
 
           // Otherwise, make sure everyone in the team has the same task
@@ -177,7 +178,7 @@ public:
             KOKKOS_ASSERT(current_task->is_team_runnable());
             current_task->as_runnable_task().run(team_exec);
             // Respawns are handled in the complete function
-            team_queue.complete((*std::move(current_task)).as_runnable_task());
+            queue.complete((*std::move(current_task)).as_runnable_task());
           }
 
         }
