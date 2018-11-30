@@ -55,7 +55,7 @@
 #include <Kokkos_Cuda.hpp>
 #include <Kokkos_CudaSpace.hpp>
 
-#include <Cuda/Kokkos_Cuda_Internal.hpp>
+//#include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <impl/Kokkos_Error.hpp>
 
 #if defined(KOKKOS_ENABLE_PROFILING)

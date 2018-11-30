@@ -55,9 +55,9 @@
 #include <utility>
 #include <Kokkos_Parallel.hpp>
 
-#include <Cuda/Kokkos_CudaExec.hpp>
+#include <Cuda/Kokkos_Cuda_KernelLaunch.hpp>
 #include <Cuda/Kokkos_Cuda_ReduceScan.hpp>
-#include <Cuda/Kokkos_Cuda_Internal.hpp>
+#include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <Cuda/Kokkos_Cuda_Locks.hpp>
 #include <Kokkos_Vectorization.hpp>
 #include <Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
