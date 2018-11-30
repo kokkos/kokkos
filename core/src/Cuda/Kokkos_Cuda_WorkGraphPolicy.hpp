@@ -104,7 +104,7 @@ public:
     const int shared = 0 ;
     const cudaStream_t stream = 0 ;
 
-    Kokkos::Impl::CudaParallelLaunch<Self>(*this, grid, block, shared, stream);
+    Kokkos::Impl::CudaParallelLaunch<Self>(*this, grid, block, shared, Cuda().impl_internal_space_instance() );
   }
 
   inline

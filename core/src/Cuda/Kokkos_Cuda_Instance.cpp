@@ -511,6 +511,9 @@ CudaInternal::scratch_flags( const Cuda::size_type size )
 
     typedef Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > Record ;
 
+    if( m_scratchFlags )
+      Record::decrement( Record::get_record( m_scratchFlags ) );
+
     Record * const r = Record::allocate( Kokkos::CudaSpace()
                                        , "InternalScratchFlags"
                                        , ( sizeof( ScratchGrain ) * m_scratchFlagsCount ) );
@@ -534,6 +537,9 @@ CudaInternal::scratch_space( const Cuda::size_type size )
 
      typedef Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > Record ;
 
+     if( m_scratchSpace )
+       Record::decrement( Record::get_record( m_scratchSpace ) );
+
      Record * const r = Record::allocate( Kokkos::CudaSpace()
                                         , "InternalScratchSpace"
                                         , ( sizeof( ScratchGrain ) * m_scratchSpaceCount ) );
@@ -556,6 +562,9 @@ CudaInternal::scratch_unified( const Cuda::size_type size )
 
     typedef Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaHostPinnedSpace , void > Record ;
 
+    if( m_scratchUnified )
+      Record::decrement( Record::get_record( m_scratchUnified ) );
+
     Record * const r = Record::allocate( Kokkos::CudaHostPinnedSpace()
                                        , "InternalScratchUnified"
                                        , ( sizeof( ScratchGrain ) * m_scratchUnifiedCount ) );
@@ -566,6 +575,31 @@ CudaInternal::scratch_unified( const Cuda::size_type size )
   }
 
   return m_scratchUnified ;
+}
+
+Cuda::size_type *
+CudaInternal::scratch_functor( const Cuda::size_type size )
+{
+  if ( verify_is_initialized("scratch_functor") &&
+       m_scratchFunctorSize < size ) {
+
+    m_scratchFunctorSize = size ;
+
+    typedef Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , void > Record ;
+
+    if( m_scratchFunctor )
+      Record::decrement( Record::get_record( m_scratchFunctor ) );
+
+    Record * const r = Record::allocate( Kokkos::CudaSpace()
+                                       , "InternalScratchFunctor"
+                                       , m_scratchFunctorSize );
+
+    Record::increment( r );
+
+    m_scratchFunctor = reinterpret_cast<size_type *>( r->data() );
+  }
+
+  return m_scratchFunctor ;
 }
 
 //----------------------------------------------------------------------------
@@ -718,19 +752,10 @@ void Cuda::impl_finalize()
 }
 
 Cuda::Cuda()
-  : m_device( Impl::CudaInternal::singleton().m_cudaDev )
-  , m_stream( 0 )
+  : m_space_instance( &Impl::CudaInternal::singleton() )
 {
   Impl::CudaInternal::singleton().verify_is_initialized( "Cuda instance constructor" );
 }
-
-Cuda::Cuda( const int instance_id )
-  : m_device( Impl::CudaInternal::singleton().m_cudaDev )
-  , m_stream(
-      Impl::CudaInternal::singleton().verify_is_initialized( "Cuda instance constructor" )
-        ? Impl::CudaInternal::singleton().m_stream
-        : 0 )
-{}
 
 void Cuda::print_configuration( std::ostream & s , const bool )
 { Impl::CudaInternal::singleton().print_configuration( s ); }
@@ -747,6 +772,10 @@ void Cuda::fence()
 }
 
 const char* Cuda::name() { return "Cuda"; }
+
+cudaStream_t Cuda::cuda_stream() const { return m_space_instance->m_stream ; }
+int          Cuda::cuda_device() const { return m_space_instance->m_cudaDev ; }
+
 
 } // namespace Kokkos
 

@@ -67,6 +67,7 @@
 namespace Kokkos {
 namespace Impl {
 class CudaExec ;
+class CudaInternal ;
 } // namespace Impl
 } // namespace Kokkos
 
@@ -167,7 +168,6 @@ public:
 
   ~Cuda() {}
   Cuda();
-  explicit Cuda( const int instance_id );
 
   Cuda( Cuda && ) = default ;
   Cuda( const Cuda & ) = default ;
@@ -219,18 +219,18 @@ public:
    */
   static std::vector<unsigned> detect_device_arch();
 
-  cudaStream_t cuda_stream() const { return m_stream ; }
-  int          cuda_device() const { return m_device ; }
+  cudaStream_t cuda_stream() const;
+  int          cuda_device() const;
 
   //@}
   //--------------------------------------------------------------------------
 
   static const char* name();
 
+  inline Impl::CudaInternal* impl_internal_space_instance() const { return m_space_instance; }
 private:
 
-  int          m_device ;
-  cudaStream_t m_stream ;
+  Impl::CudaInternal* m_space_instance;
 };
 
 } // namespace Kokkos
@@ -303,6 +303,7 @@ struct VerifyExecutionCanAccessMemorySpace
 /*--------------------------------------------------------------------------*/
 
 #include <Cuda/Kokkos_Cuda_KernelLaunch.hpp>
+#include <Cuda/Kokkos_Cuda_Instance.hpp>
 #include <Cuda/Kokkos_Cuda_View.hpp>
 #include <Cuda/Kokkos_Cuda_Team.hpp>
 #include <Cuda/Kokkos_Cuda_Parallel.hpp>
