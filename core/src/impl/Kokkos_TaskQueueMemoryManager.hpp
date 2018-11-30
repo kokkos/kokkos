@@ -102,7 +102,7 @@ private:
   KOKKOS_INLINE_FUNCTION
   _allocation_result
   _do_pool_allocate(allocation_size_type requested_size) {
-    KOKKOS_EXPECTS(requested_size >= 0);
+    // KOKKOS_EXPECTS(requested_size >= 0); generates a warning when allocation_size_type is unsigned
     if(requested_size == 0 ) {
       return { true, nullptr };
     }
@@ -167,6 +167,8 @@ public:
     //     && std::is_constructible_v<T, Args&&..., allocation_size_type>
   {
     constexpr auto allocation_size = sizeof(T);
+
+
     auto result = _do_pool_allocate(allocation_size);
 
     KOKKOS_ASSERT(result.success && "Memory allocation failure");

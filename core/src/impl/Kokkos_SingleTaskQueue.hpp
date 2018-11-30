@@ -110,7 +110,7 @@ public:
     task_queue_traits, Scheduler, typename Functor::value_type, Functor
   >;
 
-  using aggregate_task_type = AggregateTask<TaskQueueTraits>;
+  using aggregate_task_type = AggregateTask<task_queue_traits, scheduling_info_type>;
 
   // Number of allowed priorities
   static constexpr int NumQueue = 3;

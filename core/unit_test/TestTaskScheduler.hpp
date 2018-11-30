@@ -792,7 +792,7 @@ TEST_F( TEST_CATEGORY, task_fib_new_multiple )
 {
   const int N = 27 ;
   for ( int i = 0; i < N; ++i ) {
-    TestTaskScheduler::TestFib< Kokkos::NewTaskSchedulerMultiple<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 2000 );
+    TestTaskScheduler::TestFib< Kokkos::NewTaskSchedulerMultiple<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 64000 );
   }
 }
 

@@ -115,18 +115,17 @@ public:
     member_type single_exec(scheduler, warp_shmem, 1);
     member_type team_exec(scheduler, warp_shmem, blockDim.y);
 
-    auto& team_queue = team_exec.scheduler().queue();
+    auto& queue = scheduler.queue();
+    auto& team_scheduler = team_exec.scheduler();
 
     auto current_task = OptionalRef<task_base_type>();
 
     // Loop until all queues are empty and no tasks in flight
-    while(not team_queue.is_done()) {
+    while(not queue.is_done()) {
 
       if(warp_lane == 0) {  // should be (?) same as team_exec.team_rank() == 0
         // pop off a task
-        current_task = team_queue.pop_ready_task();
-
-        // TODO attempt to steal task here
+        current_task = queue.pop_ready_task(team_scheduler.scheduling_info());
       }
 
       // Broadcast task pointer:
@@ -190,7 +189,7 @@ public:
           //  ( (volatile task_root_type *) task_ptr )->m_priority = task_shmem->m_priority ;
           //}
 
-          team_queue.complete((*std::move(current_task)).as_runnable_task());
+          queue.complete((*std::move(current_task)).as_runnable_task());
         }
 
       }
@@ -266,6 +265,9 @@ public:
     dtor = *dtor_ptr;
   }
 };
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
 template<class Scheduler>
 class TaskQueueSpecializationConstrained<
@@ -440,7 +442,7 @@ public:
     const cudaStream_t stream = 0 ;
 
     auto& queue = scheduler.queue();
-    queue.initialize_team_queues(warps_per_block);
+    queue.initialize_team_queues(warps_per_block * grid.x);
 
     CUDA_SAFE_CALL( cudaDeviceSynchronize() );
 
@@ -575,8 +577,9 @@ public:
 #if defined( __CUDA_ARCH__ )
   __device__ int team_rank() const { return threadIdx.y ; }
   __device__ int team_size() const { return m_team_size ; }
-  __device__ int league_rank() const { return threadIdx.z; }
-  __device__ int league_size() const { return blockDim.z; }
+  //__device__ int league_rank() const { return threadIdx.z; }
+  __device__ int league_rank() const { return blockIdx.x * blockDim.z + threadIdx.z; }
+  __device__ int league_size() const { return blockDim.z * gridDim.x; }
 
   __device__ void team_barrier() const
     {

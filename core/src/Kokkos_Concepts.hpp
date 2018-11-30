@@ -109,6 +109,10 @@ namespace Kokkos {
      typename std::remove_cv<typename U:: CONCEPT>::type, \
      typename std::remove_cv<U>::type \
    >::type> : std::true_type {}; \
+    template< typename U > struct have<U,typename std::is_base_of< \
+     typename std::remove_cv<typename U:: CONCEPT ## _type>::type, \
+     typename std::remove_cv<U>::type \
+   >::type> : std::true_type {}; \
   public: \
     enum { value = is_ ## CONCEPT::template have<T>::value }; \
   };

@@ -94,6 +94,26 @@ private:
 
 public:
 
+  KOKKOS_INLINE_FUNCTION
+  OptionalRef<task_base_type>
+  try_to_steal_ready_task()
+  {
+    auto return_value = OptionalRef<task_base_type>{};
+    // prefer lower priority tasks when stealing
+    for(int i_priority = NumPriorities-1; i_priority >= 0; --i_priority) {
+      // Check for a single task with this priority
+      return_value = m_ready_queues[i_priority][TaskSingle].pop();
+      if(return_value) return return_value;
+
+      // Check for a team task with this priority
+      return_value = m_ready_queues[i_priority][TaskTeam].pop();
+      if(return_value) return return_value;
+
+    }
+    return return_value;
+  }
+
+  KOKKOS_INLINE_FUNCTION
   OptionalRef<task_base_type>
   pop_ready_task()
   {
@@ -110,6 +130,7 @@ public:
     return return_value;
   }
 
+  KOKKOS_INLINE_FUNCTION
   ready_queue_type&
   team_queue_for(runnable_task_base_type const& task)
   {
@@ -126,7 +147,7 @@ template <
   class MemorySpace,
   class TaskQueueTraits
 >
-class MultipleTaskQueue
+class MultipleTaskQueue final
   : public TaskQueueMemoryManager<ExecSpace, MemorySpace>,
     public TaskQueueCommonMixin<MultipleTaskQueue<ExecSpace, MemorySpace, TaskQueueTraits>>,
     private ObjectWithVLAEmulation<
@@ -150,6 +171,8 @@ private:
     using team_queue_id_t = int32_t;
     static constexpr team_queue_id_t NoAssociatedTeam = -1;
     team_queue_id_t team_association = NoAssociatedTeam;
+
+    using scheduling_info_type = SchedulingInfo;
 
     KOKKOS_INLINE_FUNCTION
     constexpr explicit SchedulingInfo(team_queue_id_t association) noexcept
@@ -193,7 +216,7 @@ public:
     task_queue_traits, Scheduler, typename Functor::value_type, Functor
   >;
 
-  using aggregate_task_type = AggregateTask<TaskQueueTraits>;
+  using aggregate_task_type = AggregateTask<task_queue_traits, scheduling_info_type>;
 
   // Number of allowed priorities
   static constexpr int NumPriorities = 3;
@@ -206,7 +229,7 @@ public:
   // This should query a customization point that defaults to the recommended
   // league size (which should probably also be a property-based customization
   // point)
-  static constexpr int num_team_queues = 6;
+  static constexpr int num_team_queues = 64;
 
 public:
 
@@ -281,7 +304,7 @@ public:
         isteal != team_association;
         isteal = (isteal + 1) % this->n_queues()
       ) {
-        return_value = this->vla_value_at(isteal).pop_ready_task();
+        return_value = this->vla_value_at(isteal).try_to_steal_ready_task();
         if(return_value) {
           stolen_from = isteal;
           break;

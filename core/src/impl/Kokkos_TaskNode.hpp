@@ -56,6 +56,7 @@
 
 #include <impl/Kokkos_VLAEmulation.hpp>
 #include <impl/Kokkos_LIFO.hpp>
+#include <Kokkos_Concepts.hpp>
 
 #include <string>
 #include <typeinfo>
@@ -152,7 +153,7 @@ public:
 
 };
 
-template <class TaskQueueTraits>
+template <class TaskQueueTraits, class SchedulingInfo>
 class AggregateTask;
 
 template <class TaskQueueTraits>
@@ -251,18 +252,28 @@ public:
     return static_cast<RunnableTaskBase<TaskQueueTraits>&&>(*this);
   }
 
+  template <class SchedulingInfo>
   KOKKOS_INLINE_FUNCTION
-  AggregateTask<TaskQueueTraits>&
+  AggregateTask<TaskQueueTraits, SchedulingInfo>&
   as_aggregate() & {
     KOKKOS_EXPECTS(this->is_aggregate());
-    return static_cast<AggregateTask<TaskQueueTraits>&>(*this);
+    return static_cast<AggregateTask<TaskQueueTraits, SchedulingInfo>&>(*this);
   }
 
+  template <class SchedulingInfo>
   KOKKOS_INLINE_FUNCTION
-  AggregateTask<TaskQueueTraits>&&
+  AggregateTask<TaskQueueTraits, SchedulingInfo> const&
+  as_aggregate() const & {
+    KOKKOS_EXPECTS(this->is_aggregate());
+    return static_cast<AggregateTask<TaskQueueTraits, SchedulingInfo> const&>(*this);
+  }
+
+  template <class SchedulingInfo>
+  KOKKOS_INLINE_FUNCTION
+  AggregateTask<TaskQueueTraits, SchedulingInfo>&&
   as_aggregate() && {
     KOKKOS_EXPECTS(this->is_aggregate());
-    return static_cast<AggregateTask<TaskQueueTraits>&&>(*this);
+    return static_cast<AggregateTask<TaskQueueTraits, SchedulingInfo>&&>(*this);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -304,23 +315,67 @@ public:
 
 //==============================================================================
 
-template <class TaskQueueTraits>
-class AggregateTask
-  : public TaskNode<TaskQueueTraits>, // must be first base class for allocation reasons!!!
+template <class BaseClass, class SchedulingInfo>
+struct SchedulingInfoStorage;
+
+//==============================================================================
+
+template <class BaseType, class SchedulingInfo>
+class SchedulingInfoStorage
+  : public BaseType // must be first base class for allocation reasons!!!
+{
+
+private:
+
+  using base_t = BaseType;
+  using scheduling_info_type = SchedulingInfo;
+  scheduling_info_type m_info; // TODO [[no_unique_address]] emulation
+
+public:
+
+  using base_t::base_t;
+
+  KOKKOS_INLINE_FUNCTION
+  scheduling_info_type& scheduling_info() & { return m_info; }
+
+  KOKKOS_INLINE_FUNCTION
+  scheduling_info_type const& scheduling_info() const & { return m_info; }
+
+  KOKKOS_INLINE_FUNCTION
+  scheduling_info_type&& scheduling_info() && { return std::move(m_info); }
+
+};
+
+
+//==============================================================================
+
+template <class TaskQueueTraits, class SchedulingInfo>
+class AggregateTask final
+  : public SchedulingInfoStorage<
+      TaskNode<TaskQueueTraits>,
+      SchedulingInfo
+    >, // must be first base class for allocation reasons!!!
     public ObjectWithVLAEmulation<
-      AggregateTask<TaskQueueTraits>, OwningRawPtr<TaskNode<TaskQueueTraits>>
+      AggregateTask<TaskQueueTraits, SchedulingInfo>,
+      OwningRawPtr<TaskNode<TaskQueueTraits>>
     >
 {
 private:
 
-  using base_t = TaskNode<TaskQueueTraits>;
+  using base_t = SchedulingInfoStorage<
+    TaskNode<TaskQueueTraits>,
+    SchedulingInfo
+  >;
   using vla_base_t = ObjectWithVLAEmulation<
-    AggregateTask<TaskQueueTraits>, OwningRawPtr<TaskNode<TaskQueueTraits>>
+    AggregateTask<TaskQueueTraits, SchedulingInfo>,
+    OwningRawPtr<TaskNode<TaskQueueTraits>>
   >;
 
   using task_base_type = TaskNode<TaskQueueTraits>;
 
 public:
+
+  using aggregate_task_type = AggregateTask; // concept marker
 
   template <class... Args>
     // requires std::is_constructible_v<base_t, Args&&...>
@@ -340,13 +395,12 @@ public:
   KOKKOS_INLINE_FUNCTION
   int32_t dependence_count() const { return this->n_vla_entries(); }
 
-
 };
+
+//KOKKOS_IMPL_IS_CONCEPT(aggregate_task);
 
 //==============================================================================
 
-template <class BaseClass, class SchedulingInfo>
-struct SchedulingInfoStorage;
 
 template <class TaskQueueTraits>
 class RunnableTaskBase
@@ -361,6 +415,7 @@ public:
   using task_base_type = TaskNode<TaskQueueTraits>;
   using function_type = void(*)( task_base_type * , void * );
   using destroy_type = void(*)( task_base_type * );
+  using runnable_task_type = RunnableTaskBase;
 
 private:
 
@@ -438,6 +493,8 @@ public:
   }
 };
 
+//KOKKOS_IMPL_IS_CONCEPT(runnable_task);
+
 //==============================================================================
 
 template <class ResultType>
@@ -448,34 +505,6 @@ struct TaskResultStorage {
 
 template <>
 struct TaskResultStorage<void> { };
-
-//==============================================================================
-
-template <class BaseType, class SchedulingInfo>
-class SchedulingInfoStorage
-  : public BaseType // must be first base class for allocation reasons!!!
-{
-
-private:
-
-  using base_t = BaseType;
-  using scheduling_info_type = SchedulingInfo;
-  scheduling_info_type m_info; // TODO [[no_unique_address]] emulation
-
-public:
-
-  using base_t::base_t;
-
-  KOKKOS_INLINE_FUNCTION
-  scheduling_info_type& scheduling_info() & { return m_info; }
-
-  KOKKOS_INLINE_FUNCTION
-  scheduling_info_type const& scheduling_info() const & { return m_info; }
-
-  KOKKOS_INLINE_FUNCTION
-  scheduling_info_type&& scheduling_info() && { return std::move(m_info); }
-
-};
 
 //==============================================================================
 
@@ -589,6 +618,8 @@ public:
 };
 
 } /* namespace Impl */
+
+
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------

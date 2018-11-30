@@ -120,18 +120,30 @@ private:
     void operator()(TaskNode<TaskQueueTraits>&& task) const noexcept
       // requires Same<TaskType, Derived::task_base_type>
     {
+      using scheduling_info_type = typename Derived::scheduling_info_type;
       if(task.is_runnable()) // KOKKOS_LIKELY
       {
+        // TODO check this outside of the loop ?
         if(m_predecessor.is_runnable()) {
           m_queue.update_scheduling_info_from_completed_predecessor(
             /* ready_task = */ task.as_runnable_task(),
             /* predecessor = */ m_predecessor.as_runnable_task()
           );
         }
+        else {
+          KOKKOS_ASSERT(m_predecessor.is_aggregate());
+          m_queue.update_scheduling_info_from_completed_predecessor(
+            /* ready_task = */ task.as_runnable_task(),
+            /* predecessor = */ m_predecessor.template as_aggregate<scheduling_info_type>()
+          );
+        }
         m_queue.schedule_runnable(std::move(task).as_runnable_task());
       }
       else {
-        m_queue.schedule_aggregate(std::move(task).as_aggregate());
+        // The scheduling info update happens inside of schedule_aggregate
+        m_queue.schedule_aggregate(
+          std::move(task).template as_aggregate<scheduling_info_type>()
+        );
       }
     }
   };
@@ -142,7 +154,6 @@ protected:
   KOKKOS_FUNCTION
   void _complete_finished_task(TaskNode<TaskQueueTraits>&& task) {
     using scheduling_info_type = typename Derived::scheduling_info_type;
-    scheduling_info_type* scheduling_info_ptr = nullptr;
     task.consume_wait_queue(
       _schedule_waiting_tasks_operation<TaskQueueTraits>{
         task,
@@ -196,10 +207,10 @@ public:
     _decrement_ready_count();
   }
 
-  template <class TaskQueueTraits>
+  template <class TaskQueueTraits, class SchedulingInfo>
   KOKKOS_FUNCTION
   void
-  complete(AggregateTask<TaskQueueTraits>&& task) {
+  complete(AggregateTask<TaskQueueTraits, SchedulingInfo>&& task) {
     // TODO old code has a ifndef __HCC_ACCELERATOR__ here; figure out why
     _complete_finished_task(std::move(task));
   }
@@ -213,6 +224,8 @@ public:
 
 protected:
 
+  // This isn't actually generic; the template parameters are just to keep
+  // Derived from having to be complete
   template <class TaskQueueTraits, class ReadyQueueType>
   KOKKOS_INLINE_FUNCTION
   void
@@ -300,6 +313,8 @@ protected:
 
 public:
 
+  // This isn't actually generic; the template parameters are just to keep
+  // Derived from having to be complete
   template <class TaskQueueTraits>
   KOKKOS_FUNCTION
   void
@@ -312,12 +327,22 @@ public:
     );
   }
 
-  template <class TaskQueueTraits>
+  // This isn't actually generic; the template parameters are just to keep
+  // Derived from having to be complete
+  template <class TaskQueueTraits, class SchedulingInfo>
   KOKKOS_FUNCTION
   void
-  schedule_aggregate(AggregateTask<TaskQueueTraits>&& aggregate) {
+  schedule_aggregate(AggregateTask<TaskQueueTraits, SchedulingInfo>&& aggregate)
+    // requires is_aggregate_task<std::decay_t<AggregateTaskType>>::value
+  {
     // Because the aggregate is being scheduled, should not be in any queue
     KOKKOS_EXPECTS(not aggregate.is_enqueued());
+
+    using scheduling_info_type = typename Derived::scheduling_info_type;
+    static_assert(
+      std::is_same<SchedulingInfo, scheduling_info_type>::value,
+      "SchedulingInfo type mismatch!"
+    );
 
     bool incomplete_dependence_found = false;
 
@@ -354,6 +379,23 @@ public:
         // ready yet
         incomplete_dependence_found = pred_not_ready;
 
+        if(not pred_not_ready) {
+          // A predecessor was done, and we didn't enqueue the aggregate
+          // Update the aggregate's scheduling info (we still have exclusive
+          // access to it here)
+          if(predecessor_ptr->is_runnable()) {
+            _self().update_scheduling_info_from_completed_predecessor(
+              aggregate, predecessor_ptr->as_runnable_task()
+            );
+          }
+          else {
+            KOKKOS_ASSERT(predecessor_ptr->is_aggregate());
+            _self().update_scheduling_info_from_completed_predecessor(
+              aggregate, (*predecessor_ptr).template as_aggregate<scheduling_info_type>()
+            );
+          }
+        }
+
         // the reference count for the predecessor was incremented when we put
         // it into the predecessor list, so decrement it here
         bool should_delete = predecessor_ptr->decrement_and_check_reference_count();
@@ -380,15 +422,57 @@ public:
 
   // Provide a sensible default that can be overridden
   template <class TaskQueueTraits>
+  KOKKOS_INLINE_FUNCTION
   void update_scheduling_info_from_completed_predecessor(
     RunnableTaskBase<TaskQueueTraits>& ready_task,
     RunnableTaskBase<TaskQueueTraits> const& predecessor
-  ) {
+  ) const {
     // by default, tell a ready task to use the scheduling info of its most
     // recent predecessor
     using scheduling_info_type = typename Derived::scheduling_info_type;
     ready_task.template scheduling_info_as<scheduling_info_type>() =
       predecessor.template scheduling_info_as<scheduling_info_type>();
+  }
+
+  // Provide a sensible default that can be overridden
+  template <class SchedulingInfo, class TaskQueueTraits>
+  KOKKOS_INLINE_FUNCTION
+  void update_scheduling_info_from_completed_predecessor(
+    AggregateTask<TaskQueueTraits, SchedulingInfo>& aggregate,
+    RunnableTaskBase<TaskQueueTraits> const& predecessor
+  ) const {
+    // by default, tell a ready task to use the scheduling info of its most
+    // recent predecessor
+    using scheduling_info_type = typename Derived::scheduling_info_type;
+    aggregate.scheduling_info() =
+      predecessor.template scheduling_info_as<scheduling_info_type>();
+  }
+
+  // Provide a sensible default that can be overridden
+  template <class SchedulingInfo, class TaskQueueTraits>
+  KOKKOS_INLINE_FUNCTION
+  void update_scheduling_info_from_completed_predecessor(
+    AggregateTask<TaskQueueTraits, SchedulingInfo>& aggregate,
+    AggregateTask<TaskQueueTraits, SchedulingInfo> const& predecessor
+  ) const {
+    // by default, tell a ready task to use the scheduling info of its most
+    // recent predecessor
+    using scheduling_info_type = typename Derived::scheduling_info_type;
+    aggregate.scheduling_info() = predecessor.scheduling_info();
+  }
+
+  // Provide a sensible default that can be overridden
+  template <class SchedulingInfo, class TaskQueueTraits>
+  KOKKOS_INLINE_FUNCTION
+  void update_scheduling_info_from_completed_predecessor(
+    RunnableTaskBase<TaskQueueTraits>& ready_task,
+    AggregateTask<TaskQueueTraits, SchedulingInfo> const& predecessor
+  ) const {
+    // by default, tell a ready task to use the scheduling info of its most
+    // recent predecessor
+    using scheduling_info_type = typename Derived::scheduling_info_type;
+    ready_task.template scheduling_info_as<scheduling_info_type>() =
+      predecessor.scheduling_info();
   }
 
   template <

@@ -177,8 +177,14 @@ public:
           if(current_task) {
             KOKKOS_ASSERT(current_task->is_team_runnable());
             current_task->as_runnable_task().run(team_exec);
-            // Respawns are handled in the complete function
-            queue.complete((*std::move(current_task)).as_runnable_task());
+
+            if(team_exec.team_rank() == 0) {
+              // Respawns are handled in the complete function
+              queue.complete(
+                (*std::move(current_task)).as_runnable_task()
+              );
+            }
+
           }
 
         }
