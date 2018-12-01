@@ -296,7 +296,7 @@ CudaInternal & CudaInternal::singleton()
   return self ;
 }
 
-void CudaInternal::initialize( int cuda_device_id , int stream_count )
+void CudaInternal::initialize( int cuda_device_id , cudaStream_t stream )
 {
   if ( was_finalized ) Kokkos::abort("Calling Cuda::initialize after Cuda::finalize is illegal\n");
   was_initialized = 1;
@@ -492,7 +492,10 @@ void CudaInternal::initialize( int cuda_device_id , int stream_count )
   #endif
 
   // Init the array for used for arbitrarily sized atomics
-  Impl::initialize_host_cuda_lock_arrays();
+  if(stream == 0)
+    Impl::initialize_host_cuda_lock_arrays();
+
+  m_stream = stream;
 }
 
 //----------------------------------------------------------------------------
@@ -620,6 +623,8 @@ void CudaInternal::finalize()
     RecordCuda::decrement( RecordCuda::get_record( m_scratchSpace ) );
     RecordHost::decrement( RecordHost::get_record( m_scratchUnified ) );
     RecordCuda::decrement( RecordCuda::get_record( m_scratchConcurrentBitset ) );
+    if(m_scratchFunctorSize>0)
+    RecordCuda::decrement( RecordCuda::get_record( m_scratchFunctor ) );
 
     m_cudaDev             = -1 ;
     m_multiProcCount      = 0 ;
@@ -701,7 +706,7 @@ void Cuda::initialize( const Cuda::SelectDevice config , size_t num_instances )
 void Cuda::impl_initialize( const Cuda::SelectDevice config , size_t num_instances )
 #endif
 {
-  Impl::CudaInternal::singleton().initialize( config.cuda_device_id , num_instances );
+  Impl::CudaInternal::singleton().initialize( config.cuda_device_id , 0 );
 
   #if defined(KOKKOS_ENABLE_PROFILING)
     Kokkos::Profiling::initialize();
@@ -755,6 +760,13 @@ Cuda::Cuda()
   : m_space_instance( &Impl::CudaInternal::singleton() )
 {
   Impl::CudaInternal::singleton().verify_is_initialized( "Cuda instance constructor" );
+}
+
+Cuda::Cuda(cudaStream_t stream)
+  :   m_space_instance(new Impl::CudaInternal)
+{
+  Impl::CudaInternal::singleton().verify_is_initialized( "Cuda instance constructor" );
+  m_space_instance->initialize(Impl::CudaInternal::singleton().m_cudaDev,stream);
 }
 
 void Cuda::print_configuration( std::ostream & s , const bool )

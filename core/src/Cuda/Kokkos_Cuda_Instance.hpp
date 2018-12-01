@@ -99,7 +99,7 @@ public:
   int is_initialized() const
     { return 0 != m_scratchSpace && 0 != m_scratchFlags ; }
 
-  void initialize( int cuda_device_id , int stream_count );
+  void initialize( int cuda_device_id , cudaStream_t stream = 0 );
   void finalize();
 
   void print_configuration( std::ostream & ) const ;
@@ -122,6 +122,7 @@ public:
     , m_scratchSpace( 0 )
     , m_scratchFlags( 0 )
     , m_scratchUnified( 0 )
+    , m_scratchFunctorSize( 0 )
     , m_scratchFunctor( 0 )
     , m_scratchConcurrentBitset( 0 )
     , m_stream( 0 )

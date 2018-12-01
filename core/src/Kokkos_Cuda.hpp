@@ -174,6 +174,8 @@ public:
   Cuda & operator = ( Cuda && ) = default ;
   Cuda & operator = ( const Cuda & ) = default ;
 
+  Cuda(cudaStream_t stream);
+
   //--------------------------------------------------------------------------
   //! \name Device-specific functions
   //@{
