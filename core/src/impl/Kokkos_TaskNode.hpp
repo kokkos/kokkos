@@ -56,6 +56,7 @@
 
 #include <impl/Kokkos_VLAEmulation.hpp>
 #include <impl/Kokkos_LIFO.hpp>
+#include <impl/Kokkos_EBO.hpp>
 #include <Kokkos_Concepts.hpp>
 
 #include <string>
@@ -322,27 +323,36 @@ struct SchedulingInfoStorage;
 
 template <class BaseType, class SchedulingInfo>
 class SchedulingInfoStorage
-  : public BaseType // must be first base class for allocation reasons!!!
+  : public BaseType, // must be first base class for allocation reasons!!!
+    private NoUniqueAddressMemberEmulation<SchedulingInfo>
 {
 
 private:
 
   using base_t = BaseType;
   using scheduling_info_type = SchedulingInfo;
-  scheduling_info_type m_info; // TODO [[no_unique_address]] emulation
 
 public:
 
   using base_t::base_t;
 
   KOKKOS_INLINE_FUNCTION
-  scheduling_info_type& scheduling_info() & { return m_info; }
+  scheduling_info_type& scheduling_info() &
+  {
+    return this->no_unique_address_data_member();
+  }
 
   KOKKOS_INLINE_FUNCTION
-  scheduling_info_type const& scheduling_info() const & { return m_info; }
+  scheduling_info_type const& scheduling_info() const &
+  {
+    return this->no_unique_address_data_member();
+  }
 
   KOKKOS_INLINE_FUNCTION
-  scheduling_info_type&& scheduling_info() && { return std::move(m_info); }
+  scheduling_info_type&& scheduling_info() &&
+  {
+    return std::move(*this).no_unique_address_data_member();
+  }
 
 };
 

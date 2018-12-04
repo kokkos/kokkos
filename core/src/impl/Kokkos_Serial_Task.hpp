@@ -96,23 +96,21 @@ public:
 
     member_type member(scheduler, self);
 
-    auto& team_queue = member.scheduler().queue();
-
     auto current_task = OptionalRef<task_base_type>(nullptr);
 
-    while(not team_queue.is_done()) {
+    while(not queue.is_done()) {
 
       // Each team lead attempts to acquire either a thread team task
       // or a single thread task for the team.
 
       // pop a task off
-      current_task = team_queue.pop_ready_task();
+      current_task = queue.pop_ready_task(scheduler.scheduling_info());
 
       // run the task
       if(current_task) {
         current_task->as_runnable_task().run(member);
         // Respawns are handled in the complete function
-        team_queue.complete((*std::move(current_task)).as_runnable_task());
+        queue.complete((*std::move(current_task)).as_runnable_task());
       }
 
     }

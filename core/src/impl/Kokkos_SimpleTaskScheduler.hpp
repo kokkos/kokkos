@@ -63,6 +63,7 @@
 #include <impl/Kokkos_TaskQueueMultiple.hpp>
 #include <impl/Kokkos_TaskPolicyData.hpp>
 #include <impl/Kokkos_TaskTeamMember.hpp>
+#include <impl/Kokkos_EBO.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -82,149 +83,84 @@ struct DefaultDestroy {
 };
 
 
-// TODO move this!
-
 template <class ExecutionSpace>
-class NonEmptyExecutionSpaceInstanceStorage {
+class ExecutionSpaceInstanceStorage
+  : private NoUniqueAddressMemberEmulation<ExecutionSpace>
+{
 private:
 
-  ExecutionSpace m_instance;
+  using base_t = NoUniqueAddressMemberEmulation<ExecutionSpace>;
 
 protected:
 
   KOKKOS_INLINE_FUNCTION
   constexpr explicit
-  NonEmptyExecutionSpaceInstanceStorage(ExecutionSpace const& arg_execution_space)
-    : m_instance(arg_execution_space)
+  ExecutionSpaceInstanceStorage(ExecutionSpace const& arg_execution_space)
   { }
 
   KOKKOS_INLINE_FUNCTION
   constexpr explicit
-  NonEmptyExecutionSpaceInstanceStorage(ExecutionSpace&& arg_execution_space)
-    : m_instance(std::move(arg_execution_space))
-  { }
-
-  KOKKOS_INLINE_FUNCTION
-  ExecutionSpace& execution_space_instance() & { return m_instance; }
-
-  KOKKOS_INLINE_FUNCTION
-  ExecutionSpace const& execution_space_instance() const & { return m_instance; }
-
-  KOKKOS_INLINE_FUNCTION
-  ExecutionSpace&& execution_space_instance() && { return std::move(m_instance); }
-
-};
-
-template <class ExecutionSpace>
-class EmptyExecutionSpaceInstanceStorage {
-protected:
-
-  KOKKOS_INLINE_FUNCTION
-  constexpr explicit
-  EmptyExecutionSpaceInstanceStorage(ExecutionSpace const& arg_execution_space)
-  { }
-
-  KOKKOS_INLINE_FUNCTION
-  constexpr explicit
-  EmptyExecutionSpaceInstanceStorage(ExecutionSpace&& arg_execution_space)
+  ExecutionSpaceInstanceStorage(ExecutionSpace&& arg_execution_space)
   { }
 
   KOKKOS_INLINE_FUNCTION
   ExecutionSpace& execution_space_instance() &
   {
-    return *reinterpret_cast<ExecutionSpace*>(this);
+    return this->no_unique_address_data_member();
   }
 
   KOKKOS_INLINE_FUNCTION
   ExecutionSpace const& execution_space_instance() const &
   {
-    return *reinterpret_cast<ExecutionSpace const*>(this);
+    return this->no_unique_address_data_member();
   }
 
   KOKKOS_INLINE_FUNCTION
   ExecutionSpace&& execution_space_instance() &&
   {
-    return std::move(reinterpret_cast<ExecutionSpace*>(this));
+    return std::move(*this).no_unique_address_data_member();
   }
 };
 
-template <class ExecutionSpace>
-using ExecutionSpaceInstanceStorage = typename std::conditional<
-  std::is_empty<ExecutionSpace>::value,
-  EmptyExecutionSpaceInstanceStorage<ExecutionSpace>,
-  NonEmptyExecutionSpaceInstanceStorage<ExecutionSpace>
->::type;
 
 template <class MemorySpace>
-class NonEmptyMemorySpaceInstanceStorage {
+class MemorySpaceInstanceStorage
+  : private NoUniqueAddressMemberEmulation<MemorySpace>
+{
 private:
 
-  MemorySpace m_instance;
+  using base_t = NoUniqueAddressMemberEmulation<MemorySpace>;
 
 protected:
 
   KOKKOS_INLINE_FUNCTION
   constexpr explicit
-  NonEmptyMemorySpaceInstanceStorage(MemorySpace const& arg_memory_space)
-    : m_instance(arg_memory_space)
+  MemorySpaceInstanceStorage(MemorySpace const& arg_memory_space)
   { }
 
   KOKKOS_INLINE_FUNCTION
   constexpr explicit
-  NonEmptyMemorySpaceInstanceStorage(MemorySpace&& arg_memory_space)
-    : m_instance(std::move(arg_memory_space))
-  { }
-
-  KOKKOS_INLINE_FUNCTION
-  MemorySpace& memory_space_instance() & { return m_instance; }
-
-  KOKKOS_INLINE_FUNCTION
-  MemorySpace const& memory_space_instance() const & { return m_instance; }
-
-  KOKKOS_INLINE_FUNCTION
-  MemorySpace&& memory_space_instance() && { return std::move(m_instance); }
-
-};
-
-template <class MemorySpace>
-class EmptyMemorySpaceInstanceStorage {
-protected:
-
-  KOKKOS_INLINE_FUNCTION
-  constexpr explicit
-  EmptyMemorySpaceInstanceStorage(MemorySpace const& arg_memory_space)
-  { }
-
-  KOKKOS_INLINE_FUNCTION
-  constexpr explicit
-  EmptyMemorySpaceInstanceStorage(MemorySpace&& arg_memory_space)
+  MemorySpaceInstanceStorage(MemorySpace&& arg_memory_space)
   { }
 
   KOKKOS_INLINE_FUNCTION
   MemorySpace& memory_space_instance() &
   {
-    return *reinterpret_cast<MemorySpace*>(this);
+    return this->no_unique_address_data_member();
   }
 
   KOKKOS_INLINE_FUNCTION
   MemorySpace const& memory_space_instance() const &
   {
-    return *reinterpret_cast<MemorySpace const*>(this);
+    return this->no_unique_address_data_member();
   }
 
   KOKKOS_INLINE_FUNCTION
   MemorySpace&& memory_space_instance() &&
   {
-    return std::move(reinterpret_cast<MemorySpace*>(this));
+    return std::move(*this).no_unique_address_data_member();
   }
 };
-
-template <class MemorySpace>
-using MemorySpaceInstanceStorage = typename std::conditional<
-  std::is_empty<MemorySpace>::value,
-  EmptyMemorySpaceInstanceStorage<MemorySpace>,
-  NonEmptyMemorySpaceInstanceStorage<MemorySpace>
->::type;
 
 } // end namespace Impl
 
@@ -362,6 +298,9 @@ public:
     rv.m_info = m_queue->initial_scheduling_info_for_team(rank_in_league);
     return rv;
   }
+
+  KOKKOS_INLINE_FUNCTION
+  execution_space const& get_execution_space() const { return this->execution_space_instance(); }
 
   KOKKOS_INLINE_FUNCTION
   scheduling_info_type& scheduling_info() { return m_info; }
