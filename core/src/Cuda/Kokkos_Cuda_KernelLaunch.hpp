@@ -419,7 +419,7 @@ struct CudaParallelLaunch< DriverType
       else {
         CUDA_SAFE_CALL(
           cudaFuncSetCacheConfig
-            ( cuda_parallel_launch_local_memory
+            ( cuda_parallel_launch_constant_or_global_memory
                 < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >
             , ( shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1 )
             ) );
@@ -478,7 +478,7 @@ struct CudaParallelLaunch< DriverType
       else {
         CUDA_SAFE_CALL(
           cudaFuncSetCacheConfig
-            ( cuda_parallel_launch_local_memory< DriverType >
+            ( cuda_parallel_launch_constant_or_global_memory< DriverType >
             , ( shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1 )
             ) );
       }
