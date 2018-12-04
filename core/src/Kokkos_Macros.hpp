@@ -292,6 +292,8 @@
     #define KOKKOS_MEMORY_ALIGNMENT 64
   #endif
 
+  #define KOKKOS_RESTRICT __restrict__
+
   #ifndef KOKKOS_IMPL_ALIGN_PTR
     #define KOKKOS_IMPL_ALIGN_PTR(size) __attribute__((align_value(size)))
   #endif
@@ -384,6 +386,8 @@
     #define KOKKOS_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
   #endif
 
+  #define KOKKOS_RESTRICT __restrict__
+
   #if !defined( KOKKOS_ENABLE_ASM ) && !defined( __PGIC__ ) && \
       ( defined( __amd64 ) || defined( __amd64__ ) || \
         defined( __x86_64 ) || defined( __x86_64__ ) || \
@@ -426,9 +430,11 @@
 #endif
 
 //----------------------------------------------------------------------------
-// Define restrict macro to always emit restrict keyword
+// Define empty macro for restrict if necessary:
 
-#define KOKKOS_RESTRICT __restrict__
+#if !defined( KOKKOS_RESTRICT )
+  #define KOKKOS_RESTRICT
+#endif
 
 //----------------------------------------------------------------------------
 // Define Macro for alignment:
