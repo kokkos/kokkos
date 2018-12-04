@@ -292,8 +292,6 @@
     #define KOKKOS_MEMORY_ALIGNMENT 64
   #endif
 
-  #define KOKKOS_RESTRICT __restrict__
-
   #ifndef KOKKOS_IMPL_ALIGN_PTR
     #define KOKKOS_IMPL_ALIGN_PTR(size) __attribute__((align_value(size)))
   #endif
@@ -428,11 +426,9 @@
 #endif
 
 //----------------------------------------------------------------------------
-// Define empty macro for restrict if necessary:
+// Define restrict macro to always emit restrict keyword
 
-#if !defined( KOKKOS_RESTRICT )
-  #define KOKKOS_RESTRICT
-#endif
+#define KOKKOS_RESTRICT __restrict__
 
 //----------------------------------------------------------------------------
 // Define Macro for alignment:
