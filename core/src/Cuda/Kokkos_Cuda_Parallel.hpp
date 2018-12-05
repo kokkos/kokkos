@@ -913,7 +913,12 @@ public:
   unsigned local_block_size( const FunctorType & f )
     {
       unsigned n = CudaTraits::WarpSize * 8 ;
-      while ( n && CudaTraits::SharedMemoryCapacity < cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( f , n ) ) { n >>= 1 ; }
+      int shmem_size = cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( f , n );
+      while ( (n && (CudaTraits::SharedMemoryCapacity < shmem_size)) ||
+          (n > Kokkos::Impl::cuda_get_max_block_size< ParallelReduce, LaunchBounds>( f , 1, shmem_size , 0 ))) {
+        n >>= 1 ;
+        shmem_size = cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( f , n );
+      }
       return n ;
     }
 
@@ -1137,7 +1142,12 @@ public:
   unsigned local_block_size( const FunctorType & f )
     {
       unsigned n = CudaTraits::WarpSize * 8 ;
-      while ( n && CudaTraits::SharedMemoryCapacity < cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( f , n ) ) { n >>= 1 ; }
+      int shmem_size = cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( f , n );
+      while ( (n && (CudaTraits::SharedMemoryCapacity < shmem_size)) ||
+          (n > Kokkos::Impl::cuda_get_max_block_size< ParallelReduce, LaunchBounds>( f , 1, shmem_size , 0 ))) {
+        n >>= 1 ;
+        shmem_size = cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( f , n );
+      }
       return n ;
     }
 
