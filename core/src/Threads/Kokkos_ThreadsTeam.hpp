@@ -734,7 +734,7 @@ public:
   inline int team_iter() const { return m_team_iter ; }
 
   /** \brief  Specify league size, request team size */
-  TeamPolicyInternal( typename traits::execution_space &
+  TeamPolicyInternal( const typename traits::execution_space &
             , int league_size_request
             , int team_size_request
             , int vector_length_request = 1 )
@@ -747,7 +747,7 @@ public:
     { init(league_size_request,team_size_request); (void) vector_length_request; }
 
   /** \brief  Specify league size, request team size */
-  TeamPolicyInternal( typename traits::execution_space &
+  TeamPolicyInternal( const typename traits::execution_space &
             , int league_size_request
             , const Kokkos::AUTO_t & /* team_size_request */
             , int /* vector_length_request */ = 1 )

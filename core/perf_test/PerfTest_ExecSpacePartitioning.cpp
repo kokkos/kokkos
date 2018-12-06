@@ -108,7 +108,6 @@ TEST_F( default_exec, overlap_range_policy ) {
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel4",
        Kokkos::RangePolicy<TEST_EXECSPACE>(space,0,N), f);
    Kokkos::fence();
-   double time_start = timer.seconds();
 
    timer.reset();
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel5",
@@ -161,7 +160,6 @@ TEST_F( default_exec, overlap_mdrange_policy ) {
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel4",
        Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>(space,{0,0},{N,R}), f);
    Kokkos::fence();
-   double time_start = timer.seconds();
 
    timer.reset();
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel5",
@@ -214,7 +212,6 @@ TEST_F( default_exec, overlap_team_policy ) {
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel4",
        Kokkos::TeamPolicy<TEST_EXECSPACE>(space,N,Kokkos::AUTO), f);
    Kokkos::fence();
-   double time_start = timer.seconds();
 
    timer.reset();
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel5",

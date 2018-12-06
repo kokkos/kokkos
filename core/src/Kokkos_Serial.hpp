@@ -302,7 +302,7 @@ public:
         20*1024*1024);
   }
   /** \brief  Specify league size, request team size */
-  TeamPolicyInternal( execution_space &
+  TeamPolicyInternal( const execution_space &
             , int league_size_request
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE
             , int team_size_request
@@ -320,7 +320,7 @@ public:
       #endif
     }
 
-  TeamPolicyInternal( execution_space &
+  TeamPolicyInternal( const execution_space &
             , int league_size_request
             , const Kokkos::AUTO_t & /* team_size_request */
             , int /* vector_length_request */ = 1 )

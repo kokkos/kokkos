@@ -89,13 +89,13 @@ private:
 
   enum { MAX_WARP = 8 };
 
+  typename traits::execution_space m_space;
   int m_league_size ;
   int m_team_size ;
   int m_vector_length ;
   int m_team_scratch_size[2] ;
   int m_thread_scratch_size[2] ;
   int m_chunk_size;
-  typename traits::execution_space m_space;
 
 public:
 
@@ -241,11 +241,11 @@ public:
    {}
 
   /** \brief  Specify league size, request team size */
-  TeamPolicyInternal( const execution_space space
+  TeamPolicyInternal( const execution_space space_
             , int league_size_
             , int team_size_request
             , int vector_length_request = 1 )
-    : m_space( space )
+    : m_space( space_ )
     , m_league_size( league_size_ )
     , m_team_size( team_size_request )
     , m_vector_length( vector_length_request )
@@ -269,11 +269,11 @@ public:
     }
 
   /** \brief  Specify league size, request team size */
-  TeamPolicyInternal( const execution_space space
+  TeamPolicyInternal( const execution_space space_
             , int league_size_
             , const Kokkos::AUTO_t & /* team_size_request */
             , int vector_length_request = 1 )
-    : m_space( space )
+    : m_space( space_ )
     , m_league_size( league_size_ )
     , m_team_size( -1 )
     , m_vector_length( vector_length_request )
@@ -915,7 +915,7 @@ public:
       unsigned n = CudaTraits::WarpSize * 8 ;
       int shmem_size = cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( f , n );
       while ( (n && (CudaTraits::SharedMemoryCapacity < shmem_size)) ||
-          (n > Kokkos::Impl::cuda_get_max_block_size< ParallelReduce, LaunchBounds>( f , 1, shmem_size , 0 ))) {
+          (n > static_cast<unsigned>(Kokkos::Impl::cuda_get_max_block_size< ParallelReduce, LaunchBounds>( f , 1, shmem_size , 0 )))) {
         n >>= 1 ;
         shmem_size = cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( f , n );
       }
@@ -1144,7 +1144,7 @@ public:
       unsigned n = CudaTraits::WarpSize * 8 ;
       int shmem_size = cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( f , n );
       while ( (n && (CudaTraits::SharedMemoryCapacity < shmem_size)) ||
-          (n > Kokkos::Impl::cuda_get_max_block_size< ParallelReduce, LaunchBounds>( f , 1, shmem_size , 0 ))) {
+          (n > static_cast<unsigned>(Kokkos::Impl::cuda_get_max_block_size< ParallelReduce, LaunchBounds>( f , 1, shmem_size , 0 )))) {
         n >>= 1 ;
         shmem_size = cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( f , n );
       }

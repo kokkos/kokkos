@@ -132,31 +132,31 @@ TEST_F( cuda, raw_cuda_streams )
   cudaMalloc(&p,sizeof(int)*100);
 
   {
-  Kokkos::Cuda cuda(stream);
+  Kokkos::Cuda cuda0(stream);
   Kokkos::View<int*,Kokkos::CudaSpace>
     v(p,100);
-  Kokkos::deep_copy(cuda,v,5);
+  Kokkos::deep_copy(cuda0,v,5);
   int sum;
 
   Kokkos::parallel_for("Test::cuda::raw_cuda_stream::Range",
-      Kokkos::RangePolicy<Kokkos::Cuda>(cuda,0,100),FunctorRange(v));
+      Kokkos::RangePolicy<Kokkos::Cuda>(cuda0,0,100),FunctorRange(v));
   Kokkos::parallel_reduce("Test::cuda::raw_cuda_stream::RangeReduce",
-      Kokkos::RangePolicy<Kokkos::Cuda,Kokkos::LaunchBounds<128,2>>(cuda,0,100),FunctorRangeReduce(v),sum);
-  cuda.fence();
+      Kokkos::RangePolicy<Kokkos::Cuda,Kokkos::LaunchBounds<128,2>>(cuda0,0,100),FunctorRangeReduce(v),sum);
+  cuda0.fence();
   ASSERT_EQ(600,sum);
 
   Kokkos::parallel_for("Test::cuda::raw_cuda_stream::MDRange",
-      Kokkos::MDRangePolicy<Kokkos::Cuda,Kokkos::Rank<2>>(cuda,{0,0},{10,10}),FunctorMDRange(v));
+      Kokkos::MDRangePolicy<Kokkos::Cuda,Kokkos::Rank<2>>(cuda0,{0,0},{10,10}),FunctorMDRange(v));
   Kokkos::parallel_reduce("Test::cuda::raw_cuda_stream::MDRangeReduce",
-      Kokkos::MDRangePolicy<Kokkos::Cuda,Kokkos::Rank<2>,Kokkos::LaunchBounds<128,2>>(cuda,{0,0},{10,10}),FunctorMDRangeReduce(v),sum);
-  cuda.fence();
+      Kokkos::MDRangePolicy<Kokkos::Cuda,Kokkos::Rank<2>,Kokkos::LaunchBounds<128,2>>(cuda0,{0,0},{10,10}),FunctorMDRangeReduce(v),sum);
+  cuda0.fence();
   ASSERT_EQ(700,sum);
 
   Kokkos::parallel_for("Test::cuda::raw_cuda_stream::Team",
-      Kokkos::TeamPolicy<Kokkos::Cuda>(cuda,10,10),FunctorTeam(v));
+      Kokkos::TeamPolicy<Kokkos::Cuda>(cuda0,10,10),FunctorTeam(v));
   Kokkos::parallel_reduce("Test::cuda::raw_cuda_stream::Team",
-      Kokkos::TeamPolicy<Kokkos::Cuda,Kokkos::LaunchBounds<128,2>>(cuda,10,10),FunctorTeamReduce(v),sum);
-  cuda.fence();
+      Kokkos::TeamPolicy<Kokkos::Cuda,Kokkos::LaunchBounds<128,2>>(cuda0,10,10),FunctorTeamReduce(v),sum);
+  cuda0.fence();
   ASSERT_EQ(800,sum);
 
   }

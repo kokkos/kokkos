@@ -208,7 +208,7 @@ public:
   }
 
   /** \brief  Specify league size, request team size */
-  TeamPolicyInternal( typename traits::execution_space &
+  TeamPolicyInternal( const typename traits::execution_space &
             , int league_size_request
             , int team_size_request
             , int /* vector_length_request */ = 1 )
@@ -217,7 +217,7 @@ public:
             , m_chunk_size(0)
     { init( league_size_request , team_size_request ); }
 
-  TeamPolicyInternal( typename traits::execution_space &
+  TeamPolicyInternal( const typename traits::execution_space &
             , int league_size_request
             , const Kokkos::AUTO_t & /* team_size_request */
             , int /* vector_length_request */ = 1)
