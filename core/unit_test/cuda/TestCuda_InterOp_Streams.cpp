@@ -143,7 +143,6 @@ TEST_F( cuda, raw_cuda_streams )
   Kokkos::parallel_reduce("Test::cuda::raw_cuda_stream::RangeReduce",
       Kokkos::RangePolicy<Kokkos::Cuda,Kokkos::LaunchBounds<128,2>>(cuda,0,100),FunctorRangeReduce(v),sum);
   cuda.fence();
-  Kokkos::fence();
   ASSERT_EQ(600,sum);
 
   Kokkos::parallel_for("Test::cuda::raw_cuda_stream::MDRange",

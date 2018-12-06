@@ -531,11 +531,11 @@ public:
   TeamPolicy& operator = (const TeamPolicy&) = default;
 
   /** \brief  Construct policy with the given instance of the execution space */
-  TeamPolicy( const typename traits::execution_space & , int league_size_request , int team_size_request , int vector_length_request = 1 )
-    : internal_policy(typename traits::execution_space(),league_size_request,team_size_request, vector_length_request) {first_arg = false;}
+  TeamPolicy( const typename traits::execution_space & space , int league_size_request , int team_size_request , int vector_length_request = 1 )
+    : internal_policy(space,league_size_request,team_size_request, vector_length_request) {first_arg = false;}
 
-  TeamPolicy( const typename traits::execution_space & , int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 )
-    : internal_policy(typename traits::execution_space(),league_size_request,Kokkos::AUTO(), vector_length_request) {first_arg = false;}
+  TeamPolicy( const typename traits::execution_space & space, int league_size_request , const Kokkos::AUTO_t & , int vector_length_request = 1 )
+    : internal_policy(space,league_size_request,Kokkos::AUTO(), vector_length_request) {first_arg = false;}
 
   /** \brief  Construct policy with the default instance of the execution space */
   TeamPolicy( int league_size_request , int team_size_request , int vector_length_request = 1 )
