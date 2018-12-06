@@ -438,10 +438,20 @@ struct CudaParallelLaunch< DriverType
       }
 
       // Invoke the driver function on the device
-
+#ifdef KOKKOS_IMPL_EXPERIMENTAL_CUDA_COMPILE_TIME_CONSTANT_GLOBAL_LAUNCH
+      if(cuda_instance->m_stream != 0)
+      cuda_parallel_launch_global_memory
+        < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >
+          <<< grid , block , shmem , cuda_instance->m_stream >>>( driver_ptr );
+      else
+      cuda_parallel_launch_constant_memory
+        < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >
+          <<< grid , block , shmem , cuda_instance->m_stream >>>();
+#else
       cuda_parallel_launch_constant_or_global_memory
         < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >
           <<< grid , block , shmem , cuda_instance->m_stream >>>( driver_ptr );
+#endif
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       CUDA_SAFE_CALL( cudaGetLastError() );
@@ -495,9 +505,19 @@ struct CudaParallelLaunch< DriverType
           kokkos_impl_cuda_constant_memory_buffer, &driver, sizeof(DriverType) );
       }
 
-      // Invoke the driver function on the device
+#ifdef KOKKOS_IMPL_EXPERIMENTAL_CUDA_COMPILE_TIME_CONSTANT_GLOBAL_LAUNCH
+      if(cuda_instance->m_stream != 0)
+      cuda_parallel_launch_global_memory
+        < DriverType >
+          <<< grid , block , shmem , cuda_instance->m_stream >>>( driver_ptr );
+      else
+      cuda_parallel_launch_constant_memory
+        < DriverType >
+          <<< grid , block , shmem , cuda_instance->m_stream >>>();
+#else
       cuda_parallel_launch_constant_or_global_memory< DriverType >
           <<< grid , block , shmem , cuda_instance->m_stream >>>( driver_ptr );
+#endif
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       CUDA_SAFE_CALL( cudaGetLastError() );
