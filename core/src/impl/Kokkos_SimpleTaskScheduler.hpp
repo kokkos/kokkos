@@ -95,11 +95,14 @@ protected:
 
   KOKKOS_INLINE_FUNCTION
   constexpr explicit
-  ExecutionSpaceInstanceStorage(ExecutionSpace const& arg_execution_space) = delete;
+  ExecutionSpaceInstanceStorage(ExecutionSpace const& arg_execution_space)
+    : base_t(arg_execution_space)
+  { }
 
   KOKKOS_INLINE_FUNCTION
   constexpr explicit
   ExecutionSpaceInstanceStorage(ExecutionSpace&& arg_execution_space)
+    : base_t(std::move(arg_execution_space))
   { }
 
   KOKKOS_INLINE_FUNCTION
@@ -133,11 +136,14 @@ private:
 protected:
 
   KOKKOS_INLINE_FUNCTION
-  MemorySpaceInstanceStorage(MemorySpace const& arg_memory_space) = delete;
+  MemorySpaceInstanceStorage(MemorySpace const& arg_memory_space)
+    : base_t(arg_memory_space)
+  { }
 
   KOKKOS_INLINE_FUNCTION
   constexpr explicit
   MemorySpaceInstanceStorage(MemorySpace&& arg_memory_space)
+    : base_t(arg_memory_space)
   { }
 
   KOKKOS_INLINE_FUNCTION
