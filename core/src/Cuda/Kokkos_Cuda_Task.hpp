@@ -125,7 +125,7 @@ public:
 
       if(warp_lane == 0) {  // should be (?) same as team_exec.team_rank() == 0
         // pop off a task
-        current_task = queue.pop_ready_task(team_scheduler.scheduling_info());
+        current_task = queue.pop_ready_task(team_scheduler.team_scheduler_info());
       }
 
       // Broadcast task pointer:
@@ -189,7 +189,10 @@ public:
           //  ( (volatile task_root_type *) task_ptr )->m_priority = task_shmem->m_priority ;
           //}
 
-          queue.complete((*std::move(current_task)).as_runnable_task());
+          queue.complete(
+            (*std::move(current_task)).as_runnable_task(),
+            team_scheduler.team_scheduler_info()
+          );
         }
 
       }

@@ -91,7 +91,8 @@ private:
   using base_t = TaskQueueMemoryManager<ExecSpace, MemorySpace>;
   using common_mixin_t = TaskQueueCommonMixin<SingleTaskQueue>;
 
-  struct SchedulingInfo { };
+  struct EmptyTeamSchedulerInfo { };
+  struct EmptyTaskSchedulingInfo { };
 
 public:
 
@@ -100,7 +101,8 @@ public:
   using task_base_type = TaskNode<TaskQueueTraits>;
   using ready_queue_type = typename TaskQueueTraits::template ready_queue_type<task_base_type>;
 
-  using scheduling_info_type = SchedulingInfo;
+  using team_scheduler_info_type = EmptyTeamSchedulerInfo;
+  using task_scheduling_info_type = EmptyTaskSchedulingInfo;
 
   using runnable_task_base_type = RunnableTaskBase<TaskQueueTraits>;
 
@@ -110,7 +112,7 @@ public:
     task_queue_traits, Scheduler, typename Functor::value_type, Functor
   >;
 
-  using aggregate_task_type = AggregateTask<task_queue_traits, scheduling_info_type>;
+  using aggregate_task_type = AggregateTask<task_queue_traits, task_scheduling_info_type>;
 
   // Number of allowed priorities
   static constexpr int NumQueue = 3;
@@ -149,18 +151,16 @@ public:
   // </editor-fold> end Constructors, destructors, and assignment }}}2
   //----------------------------------------------------------------------------
 
-  // Not absolutely necessary, but makes the error message more readable
-  using common_mixin_t::schedule_runnable;
-
   KOKKOS_FUNCTION
   void
   schedule_runnable(
     runnable_task_base_type&& task,
-    scheduling_info_type const& info
+    team_scheduler_info_type const& info
   ) {
     this->_schedule_runnable_to_queue(
       std::move(task),
-      m_ready_queues[int(task.get_priority())][int(task.get_task_type())]
+      m_ready_queues[int(task.get_priority())][int(task.get_task_type())],
+      info
     );
     // Task may be enqueued and may be run at any point; don't touch it (hence
     // the use of move semantics)
@@ -169,7 +169,7 @@ public:
   KOKKOS_FUNCTION
   OptionalRef<task_base_type>
   pop_ready_task(
-    scheduling_info_type const& info
+    team_scheduler_info_type const& info
   )
   {
     OptionalRef<task_base_type> return_value;
@@ -190,8 +190,8 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
-  constexpr scheduling_info_type
-  initial_scheduling_info_for_team(int) const noexcept { return { }; }
+  constexpr team_scheduler_info_type
+  initial_team_scheduler_info(int) const noexcept { return { }; }
 
 };
 

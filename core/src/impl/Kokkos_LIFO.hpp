@@ -54,6 +54,7 @@
 #include <Kokkos_PointerOwnership.hpp>
 #include <impl/Kokkos_OptionalRef.hpp>
 #include <impl/Kokkos_Error.hpp> // KOKKOS_EXPECTS
+#include <impl/Kokkos_LinkedListNode.hpp>
 
 #include <Kokkos_Atomic.hpp>  // atomic_compare_exchange, atomic_fence
 
@@ -62,85 +63,6 @@
 
 namespace Kokkos {
 namespace Impl {
-
-struct LinkedListNodeAccess;
-
-template <
-  uintptr_t NotEnqueuedValue = 0,
-  template <class> class PointerTemplate = std::add_pointer
->
-struct SimpleSinglyLinkedListNode
-{
-
-private:
-
-  using pointer_type = typename PointerTemplate<SimpleSinglyLinkedListNode>::type;
-
-  pointer_type m_next = reinterpret_cast<pointer_type>(NotEnqueuedValue);
-
-  // These are private because they are an implementation detail of the queue
-  // and should not get added to the value type's interface via the intrusive
-  // wrapper.
-
-  KOKKOS_INLINE_FUNCTION
-  void mark_as_not_enqueued() noexcept {
-    // TODO memory order
-    // TODO make this an atomic store
-    m_next = (pointer_type)NotEnqueuedValue;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  pointer_type& _next_ptr() noexcept {
-    return m_next;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  pointer_type const& _next_ptr() const noexcept {
-    return m_next;
-  }
-
-  friend struct LinkedListNodeAccess;
-
-public:
-
-  // KOKKOS_CONSTEXPR_14
-  KOKKOS_INLINE_FUNCTION
-  bool is_enqueued() const noexcept {
-    // TODO memory order
-    // TODO make this an atomic load
-    return m_next != reinterpret_cast<pointer_type>(NotEnqueuedValue);
-  }
-
-};
-
-
-/// Attorney for LinkedListNode, since user types inherit from it
-struct LinkedListNodeAccess
-{
-
-  template <class Node>
-  KOKKOS_INLINE_FUNCTION
-  static void mark_as_not_enqueued(Node& node) noexcept {
-    node.mark_as_not_enqueued();
-  }
-
-  template <class Node>
-  KOKKOS_INLINE_FUNCTION
-  static
-  typename Node::pointer_type&
-  _next_ptr(Node& node) noexcept {
-    return node._next_ptr();
-  }
-
-  template <class Node>
-  KOKKOS_INLINE_FUNCTION
-  static
-  typename Node::pointer_type&
-  _next_ptr(Node const& node) noexcept {
-    return node._next_ptr();
-  }
-
-};
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -163,7 +85,7 @@ struct LockBasedLIFOCommon
 
     KOKKOS_EXPECTS(!node.is_enqueued());
 
-    auto* volatile & next = LinkedListNodeAccess::_next_ptr(node);
+    auto* volatile & next = LinkedListNodeAccess::next_ptr(node);
 
     // store the head of the queue in a local variable
     auto* old_head = m_head;
@@ -256,7 +178,7 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
-  OptionalRef<T> pop()
+  OptionalRef<T> pop(bool abort_on_locked = false)
   {
     // We can't use the static constexpr LockTag directly because
     // atomic_compare_exchange needs to bind a reference to that, and you
@@ -282,6 +204,9 @@ public:
         // just set rv to nullptr for now, effectively turning the
         // atomic_compare_exchange below into a load
         rv = nullptr;
+        if(abort_on_locked) {
+          break;
+        }
       }
 
       auto* const old_rv = rv;
@@ -304,7 +229,7 @@ public:
         // the queue and the popped task's m_next.
 
         // TODO check whether the volatile is needed here
-        auto* volatile& next = LinkedListNodeAccess::_next_ptr(*rv); //->m_next;
+        auto* volatile& next = LinkedListNodeAccess::next_ptr(*rv); //->m_next;
 
         // This algorithm is not lockfree because a adversarial scheduler could
         // context switch this thread at this point and the rest of the threads
@@ -330,6 +255,14 @@ public:
 
     // Return an empty OptionalRef by calling the default constructor
     return { };
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  OptionalRef<T>
+  steal()
+  {
+    // TODO do this with fewer retries
+    return pop(/* abort_on_locked = */ true);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -440,7 +373,7 @@ public:
       auto* call_arg = old_head;
 
       // advance the head
-      old_head = LinkedListNodeAccess::_next_ptr(*old_head);
+      old_head = LinkedListNodeAccess::next_ptr(*old_head);
 
       // Mark as popped before proceeding
       LinkedListNodeAccess::mark_as_not_enqueued(*call_arg);

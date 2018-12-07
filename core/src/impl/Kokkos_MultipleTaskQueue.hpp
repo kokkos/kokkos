@@ -47,7 +47,6 @@
 #include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_TASKDAG )
 
-
 #include <Kokkos_TaskScheduler_fwd.hpp>
 #include <Kokkos_Core_fwd.hpp>
 
@@ -102,11 +101,11 @@ public:
     // prefer lower priority tasks when stealing
     for(int i_priority = NumPriorities-1; i_priority >= 0; --i_priority) {
       // Check for a single task with this priority
-      return_value = m_ready_queues[i_priority][TaskSingle].pop();
+      return_value = m_ready_queues[i_priority][TaskSingle].steal();
       if(return_value) return return_value;
 
       // Check for a team task with this priority
-      return_value = m_ready_queues[i_priority][TaskTeam].pop();
+      return_value = m_ready_queues[i_priority][TaskTeam].steal();
       if(return_value) return return_value;
 
     }
@@ -167,37 +166,39 @@ private:
   // Allow private inheritance from ObjectWithVLAEmulation
   friend struct VLAEmulationAccess;
 
-  struct SchedulingInfo {
+  struct SchedulerInfo {
     using team_queue_id_t = int32_t;
     static constexpr team_queue_id_t NoAssociatedTeam = -1;
     team_queue_id_t team_association = NoAssociatedTeam;
 
-    using scheduling_info_type = SchedulingInfo;
+    using scheduler_info_type = SchedulerInfo;
 
     KOKKOS_INLINE_FUNCTION
-    constexpr explicit SchedulingInfo(team_queue_id_t association) noexcept
+    constexpr explicit SchedulerInfo(team_queue_id_t association) noexcept
       : team_association(association)
     { }
 
     KOKKOS_INLINE_FUNCTION
-    SchedulingInfo() = default;
+    SchedulerInfo() = default;
 
     KOKKOS_INLINE_FUNCTION
-    SchedulingInfo(SchedulingInfo const&) = default;
+    SchedulerInfo(SchedulerInfo const&) = default;
 
     KOKKOS_INLINE_FUNCTION
-    SchedulingInfo(SchedulingInfo&&) = default;
+    SchedulerInfo(SchedulerInfo&&) = default;
 
     KOKKOS_INLINE_FUNCTION
-    SchedulingInfo& operator=(SchedulingInfo const&) = default;
+    SchedulerInfo& operator=(SchedulerInfo const&) = default;
 
     KOKKOS_INLINE_FUNCTION
-    SchedulingInfo& operator=(SchedulingInfo&&) = default;
+    SchedulerInfo& operator=(SchedulerInfo&&) = default;
 
     KOKKOS_INLINE_FUNCTION
-    ~SchedulingInfo() = default;
+    ~SchedulerInfo() = default;
 
   };
+
+  struct EmptyTaskSchedulingInfo { };
 
 public:
 
@@ -206,7 +207,8 @@ public:
   using task_base_type = TaskNode<TaskQueueTraits>;
   using ready_queue_type = typename TaskQueueTraits::template ready_queue_type<task_base_type>;
 
-  using scheduling_info_type = SchedulingInfo;
+  using task_scheduling_info_type = EmptyTaskSchedulingInfo;
+  using team_scheduler_info_type = SchedulerInfo;
 
   using runnable_task_base_type = RunnableTaskBase<TaskQueueTraits>;
 
@@ -216,7 +218,7 @@ public:
     task_queue_traits, Scheduler, typename Functor::value_type, Functor
   >;
 
-  using aggregate_task_type = AggregateTask<task_queue_traits, scheduling_info_type>;
+  using aggregate_task_type = AggregateTask<task_queue_traits, task_scheduling_info_type>;
 
   // Number of allowed priorities
   static constexpr int NumPriorities = 3;
@@ -229,7 +231,7 @@ public:
   // This should query a customization point that defaults to the recommended
   // league size (which should probably also be a property-based customization
   // point)
-  static constexpr int num_team_queues = 64;
+  static constexpr int num_team_queues = 4;
 
 public:
 
@@ -256,22 +258,21 @@ public:
   // </editor-fold> end Constructors, destructors, and assignment }}}2
   //----------------------------------------------------------------------------
 
-  using common_mixin_t::schedule_runnable;
-
   KOKKOS_FUNCTION
   void
   schedule_runnable(
     runnable_task_base_type&& task,
-    scheduling_info_type const& info
+    team_scheduler_info_type const& info
   ) {
     auto team_association = info.team_association;
-    if(team_association == scheduling_info_type::NoAssociatedTeam) {
-      // TODO maybe do a round robin here instead?
+    // Should only not be assigned if this is a host spawn...
+    if(team_association == team_scheduler_info_type::NoAssociatedTeam) {
       team_association = 0;
     }
     this->_schedule_runnable_to_queue(
       std::move(task),
-      this->vla_value_at(team_association).team_queue_for(task)
+      this->vla_value_at(team_association).team_queue_for(task),
+      info
     );
     // Task may be enqueued and may be run at any point; don't touch it (hence
     // the use of move semantics)
@@ -280,23 +281,20 @@ public:
   KOKKOS_FUNCTION
   OptionalRef<task_base_type>
   pop_ready_task(
-    scheduling_info_type const& info
+    team_scheduler_info_type const& info
   )
   {
+    KOKKOS_EXPECTS(info.team_association != team_scheduler_info_type::NoAssociatedTeam);
+
     auto return_value = OptionalRef<task_base_type>{};
     auto team_association = info.team_association;
-    if(team_association == scheduling_info_type::NoAssociatedTeam) {
-      // TODO maybe do a round robin here instead?
-      team_association = 0;
-    }
+
     // always loop in order of priority first, then prefer team tasks over single tasks
     auto& team_queue_info = this->vla_value_at(team_association);
 
     return_value = team_queue_info.pop_ready_task();
 
     if(not return_value) {
-
-      auto stolen_from = team_association;
 
       // loop through the rest of the teams and try to steal
       for(
@@ -305,20 +303,17 @@ public:
         isteal = (isteal + 1) % this->n_queues()
       ) {
         return_value = this->vla_value_at(isteal).try_to_steal_ready_task();
-        if(return_value) {
-          stolen_from = isteal;
-          break;
-        }
+        if(return_value) { break; }
       }
 
       // if a task was stolen successfully, update the scheduling info
-      if(return_value) {
-        // Note that this won't update any associated futures, so don't trust
-        // the scheduling info from a future to a runnable task
-        return_value->as_runnable_task()
-          .template scheduling_info_as<scheduling_info_type>()
-            .team_association = stolen_from;
-      }
+      //if(return_value) {
+      //  // Note that this won't update any associated futures, so don't trust
+      //  // the scheduling info from a future to a runnable task
+      //  return_value->as_runnable_task()
+      //    .template scheduling_info_as<task_scheduling_info_type>()
+      //      .team_association = info.team_association;
+      //}
     }
     // if nothing was found, return a default-constructed (empty) OptionalRef
     return return_value;
@@ -327,10 +322,10 @@ public:
 
   // TODO make this a property-based customization point
   KOKKOS_INLINE_FUNCTION
-  scheduling_info_type
-  initial_scheduling_info_for_team(int rank_in_league) const noexcept {
-    return scheduling_info_type{
-      typename scheduling_info_type::team_queue_id_t(rank_in_league % n_queues())
+  team_scheduler_info_type
+  initial_team_scheduler_info(int rank_in_league) const noexcept {
+    return team_scheduler_info_type{
+      typename team_scheduler_info_type::team_queue_id_t(rank_in_league % n_queues())
     };
   }
 

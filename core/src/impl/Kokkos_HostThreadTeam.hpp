@@ -494,8 +494,8 @@ public:
   constexpr HostThreadTeamMember( HostThreadTeamData & arg_data ) noexcept
     : m_scratch( arg_data.team_shared() , arg_data.team_shared_bytes() )
     , m_data( arg_data )
-    , m_league_rank(0)
-    , m_league_size(1)
+    , m_league_rank(arg_data.m_league_rank)
+    , m_league_size(arg_data.m_league_size)
     {}
 
   constexpr HostThreadTeamMember( HostThreadTeamData & arg_data

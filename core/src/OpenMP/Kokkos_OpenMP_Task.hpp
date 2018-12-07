@@ -128,7 +128,7 @@ public:
       // organize_team() returns true if this is an active team member
       if(self.organize_team(team_size)) {
 
-        member_type single_exec(scheduler, team_data_single);
+        member_type single_exec(scheduler, self);
         member_type team_exec(scheduler, self);
 
         auto& team_scheduler = team_exec.scheduler();
@@ -146,7 +146,7 @@ public:
             //   - the most recently popped task is a single task or empty
             while(not queue.is_done()) {
 
-              current_task = queue.pop_ready_task(team_scheduler.scheduling_info());
+              current_task = queue.pop_ready_task(team_scheduler.team_scheduler_info());
 
               if(current_task) {
 
@@ -159,7 +159,8 @@ public:
                   current_task->as_runnable_task().run(single_exec);
                   // Respawns are handled in the complete function
                   queue.complete(
-                    (*std::move(current_task)).as_runnable_task()
+                    (*std::move(current_task)).as_runnable_task(),
+                    team_scheduler.team_scheduler_info()
                   );
                 }
 
@@ -181,7 +182,8 @@ public:
             if(team_exec.team_rank() == 0) {
               // Respawns are handled in the complete function
               queue.complete(
-                (*std::move(current_task)).as_runnable_task()
+                (*std::move(current_task)).as_runnable_task(),
+                team_scheduler.team_scheduler_info()
               );
             }
 

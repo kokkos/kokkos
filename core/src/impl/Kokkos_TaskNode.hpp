@@ -56,6 +56,7 @@
 
 #include <impl/Kokkos_VLAEmulation.hpp>
 #include <impl/Kokkos_LIFO.hpp>
+#include <impl/Kokkos_LockfreeDeque.hpp>
 #include <impl/Kokkos_EBO.hpp>
 #include <Kokkos_Concepts.hpp>
 
@@ -195,7 +196,7 @@ public:
   constexpr
   TaskNode(
     TaskType task_type,
-    priority_type priority,
+    TaskPriority priority,
     TaskQueueBase* queue_base,
     reference_count_size_type initial_reference_count,
     pool_allocation_size_type allocation_size
@@ -207,7 +208,7 @@ public:
       ),
       m_wait_queue(),
       m_task_type(task_type),
-      m_priority(priority),
+      m_priority(static_cast<priority_type>(priority)),
       m_ready_queue_base(queue_base)
   { }
 
@@ -330,26 +331,26 @@ class SchedulingInfoStorage
 private:
 
   using base_t = BaseType;
-  using scheduling_info_type = SchedulingInfo;
+  using task_scheduling_info_type = SchedulingInfo;
 
 public:
 
   using base_t::base_t;
 
   KOKKOS_INLINE_FUNCTION
-  scheduling_info_type& scheduling_info() &
+  task_scheduling_info_type& scheduling_info() &
   {
     return this->no_unique_address_data_member();
   }
 
   KOKKOS_INLINE_FUNCTION
-  scheduling_info_type const& scheduling_info() const &
+  task_scheduling_info_type const& scheduling_info() const &
   {
     return this->no_unique_address_data_member();
   }
 
   KOKKOS_INLINE_FUNCTION
-  scheduling_info_type&& scheduling_info() &&
+  task_scheduling_info_type&& scheduling_info() &&
   {
     return std::move(*this).no_unique_address_data_member();
   }
@@ -396,7 +397,7 @@ public:
     Args&&... args
   ) : base_t(
         TaskType::Aggregate,
-        (typename base_t::priority_type)TaskPriority::Regular, // all aggregates are regular priority
+        TaskPriority::Regular, // all aggregates are regular priority
         std::forward<Args>(args)...
       ),
       vla_base_t(aggregate_predecessor_count)
@@ -527,7 +528,7 @@ template <
 class RunnableTask
   : public SchedulingInfoStorage<
       RunnableTaskBase<TaskQueueTraits>,
-      typename Scheduler::task_queue_type::scheduling_info_type
+      typename Scheduler::task_queue_type::task_scheduling_info_type
     >, // must be first base class
     public FunctorType,
     public TaskResultStorage<ResultType>
@@ -537,7 +538,7 @@ private:
   using base_t =
     SchedulingInfoStorage<
       RunnableTaskBase<TaskQueueTraits>,
-      typename Scheduler::task_queue_type::scheduling_info_type
+      typename Scheduler::task_queue_type::task_scheduling_info_type
     >;
   using task_base_type = TaskNode<TaskQueueTraits>;
   using scheduler_type = Scheduler;

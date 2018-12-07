@@ -107,14 +107,14 @@ struct TestFib
       // Spawn lower value at higher priority as it has a shorter
       // path to completion.
 
-      fib_m2 = Kokkos::task_spawn( Kokkos::TaskSingle( member.scheduler(), Kokkos::TaskPriority::High )
+      fib_m2 = Kokkos::task_spawn( Kokkos::TaskSingle( sched, Kokkos::TaskPriority::High )
                                  , TestFib( n - 2 ) );
 
-      fib_m1 = Kokkos::task_spawn( Kokkos::TaskSingle( member.scheduler() )
+      fib_m1 = Kokkos::task_spawn( Kokkos::TaskSingle( sched )
                                  , TestFib( n - 1 ) );
 
       Kokkos::BasicFuture<void, Scheduler> dep[] = { fib_m1, fib_m2 };
-      Kokkos::BasicFuture<void, Scheduler> fib_all = Kokkos::when_all( dep, 2 );
+      Kokkos::BasicFuture<void, Scheduler> fib_all = sched.when_all( dep, 2 );
 
       if ( !fib_m2.is_null() && !fib_m1.is_null() && !fib_all.is_null() ) {
         // High priority to retire this branch.
@@ -717,9 +717,9 @@ struct TestMultipleDependence {
       }
 
       for(int i = 0; i < n_checkers; ++i) {
-        m_result_futures[i] = Kokkos::task_spawn(Kokkos::TaskSingle(m_dep), TestCheckReady{m_dep});
+        m_result_futures[i] = member.scheduler().spawn(Kokkos::TaskSingle(m_dep), TestCheckReady{m_dep});
       }
-      auto done = Kokkos::when_all(m_result_futures, NPerDepth);
+      auto done = member.scheduler().when_all(m_result_futures, NPerDepth);
       Kokkos::respawn(this, done);
 
       return;
