@@ -95,8 +95,7 @@ protected:
 
   KOKKOS_INLINE_FUNCTION
   constexpr explicit
-  ExecutionSpaceInstanceStorage(ExecutionSpace const& arg_execution_space)
-  { }
+  ExecutionSpaceInstanceStorage(ExecutionSpace const& arg_execution_space) = delete;
 
   KOKKOS_INLINE_FUNCTION
   constexpr explicit
@@ -134,9 +133,7 @@ private:
 protected:
 
   KOKKOS_INLINE_FUNCTION
-  constexpr explicit
-  MemorySpaceInstanceStorage(MemorySpace const& arg_memory_space)
-  { }
+  MemorySpaceInstanceStorage(MemorySpace const& arg_memory_space) = delete;
 
   KOKKOS_INLINE_FUNCTION
   constexpr explicit
@@ -287,6 +284,8 @@ public:
 
   //----------------------------------------------------------------------------
   // <editor-fold desc="Constructors, destructor, and assignment"> {{{2
+
+  SimpleTaskScheduler() = delete;
 
   explicit
   SimpleTaskScheduler(

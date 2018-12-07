@@ -93,6 +93,7 @@ public:
     Impl::HostThreadTeamData& self = *Impl::serial_get_thread_team_data();
 
     auto& queue = scheduler.queue();
+    auto team_scheduler = scheduler.get_team_scheduler(0);
 
     member_type member(scheduler, self);
 
@@ -104,13 +105,16 @@ public:
       // or a single thread task for the team.
 
       // pop a task off
-      current_task = queue.pop_ready_task(scheduler.scheduling_info());
+      current_task = queue.pop_ready_task(team_scheduler.team_scheduler_info());
 
       // run the task
       if(current_task) {
         current_task->as_runnable_task().run(member);
         // Respawns are handled in the complete function
-        queue.complete((*std::move(current_task)).as_runnable_task());
+        queue.complete(
+          (*std::move(current_task)).as_runnable_task(),
+          team_scheduler.team_scheduler_info()
+        );
       }
 
     }

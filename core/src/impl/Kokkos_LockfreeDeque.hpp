@@ -118,7 +118,7 @@ private:
 
     KOKKOS_INLINE_FUNCTION
     fixed_size_circular_buffer grow() {
-      Kokkos::abort("circular buffer is fixed size only for now");
+      Kokkos::abort("Circular buffer is fixed size only for now; can't grow");
       return {};
     }
 

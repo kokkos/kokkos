@@ -148,8 +148,14 @@ struct EBOBaseImpl<T, false> {
 
   // TODO noexcept in the right places?
 
+  // We need to make this only get generated if it's used so that it doesn't
+  // generate a host call from device code
+  template <
+    class _forceGenerateOnFirstUse = void,
+    class=typename std::enable_if<std::is_void<_forceGenerateOnFirstUse>::value>::type
+  >
   KOKKOS_FORCEINLINE_FUNCTION
-  EBOBaseImpl() = default;
+  EBOBaseImpl() : m_ebo_object() { }
 
   KOKKOS_FORCEINLINE_FUNCTION
   EBOBaseImpl(EBOBaseImpl const&) = default;

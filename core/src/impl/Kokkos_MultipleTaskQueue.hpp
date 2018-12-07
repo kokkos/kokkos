@@ -231,7 +231,7 @@ public:
   // This should query a customization point that defaults to the recommended
   // league size (which should probably also be a property-based customization
   // point)
-  static constexpr int num_team_queues = 4;
+  static constexpr int num_team_queues = 8;
 
 public:
 
