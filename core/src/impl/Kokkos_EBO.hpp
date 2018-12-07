@@ -74,17 +74,13 @@ struct EBOBaseImpl<T, true> {
     >::type(0)
   >
   KOKKOS_FORCEINLINE_FUNCTION
-  EBOBaseImpl(
+  explicit EBOBaseImpl(
     Args&&... args
-  ) noexcept(noexcept(ebo_base_t(std::forward<Args>(args)...)))
+  ) noexcept(noexcept(T(std::forward<Args>(args)...)))
   {
     // still call the constructor
-    auto intentionally_unused = T(std::forward<Args>(args)...);
+    T(std::forward<Args>(args)...);
   }
-
-  // TODO noexcept in the right places?
-  KOKKOS_FORCEINLINE_FUNCTION
-  EBOBaseImpl() = default;
 
   KOKKOS_FORCEINLINE_FUNCTION
   EBOBaseImpl(EBOBaseImpl const&) = default;
@@ -140,22 +136,13 @@ struct EBOBaseImpl<T, false> {
     >::type(0)
   >
   KOKKOS_FORCEINLINE_FUNCTION
-  EBOBaseImpl(
+  explicit EBOBaseImpl(
     Args&&... args
   ) noexcept(noexcept(T(std::forward<Args>(args)...)))
     : m_ebo_object(std::forward<Args>(args)...)
   { }
 
   // TODO noexcept in the right places?
-
-  // We need to make this only get generated if it's used so that it doesn't
-  // generate a host call from device code
-  template <
-    class _forceGenerateOnFirstUse = void,
-    class=typename std::enable_if<std::is_void<_forceGenerateOnFirstUse>::value>::type
-  >
-  KOKKOS_FORCEINLINE_FUNCTION
-  EBOBaseImpl() : m_ebo_object() { }
 
   KOKKOS_FORCEINLINE_FUNCTION
   EBOBaseImpl(EBOBaseImpl const&) = default;
