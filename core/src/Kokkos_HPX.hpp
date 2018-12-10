@@ -732,7 +732,7 @@ public:
         intermediate_results.reset(
             new char[num_worker_threads * value_size_bytes]);
         last_size = num_worker_threads * value_size_bytes;
-      } else if (last_size < num_worker_threads * value_size_bytes) {
+      } else if (last_size < static_cast<std::size_t>(num_worker_threads * value_size_bytes)) {
         intermediate_results.reset(
             new char[num_worker_threads * value_size_bytes]);
         last_size = num_worker_threads * value_size_bytes;
@@ -852,7 +852,7 @@ public:
         intermediate_results.reset(
             new char[num_worker_threads * value_size_bytes]);
         last_size = num_worker_threads * value_size_bytes;
-      } else if (last_size < num_worker_threads * value_size_bytes) {
+      } else if (last_size < static_cast<std::size_t>(num_worker_threads * value_size_bytes)) {
         intermediate_results.reset(
             new char[num_worker_threads * value_size_bytes]);
         last_size = num_worker_threads * value_size_bytes;
@@ -979,7 +979,7 @@ public:
         intermediate_results_2.reset(
             new char[num_worker_threads * value_size_bytes]);
         last_size = num_worker_threads * value_size_bytes;
-      } else if (last_size < num_worker_threads * value_size_bytes) {
+      } else if (last_size < static_cast<std::size_t>(num_worker_threads * value_size_bytes)) {
         intermediate_results_1.reset(
             new char[num_worker_threads * value_size_bytes]);
         intermediate_results_2.reset(
@@ -1130,7 +1130,7 @@ public:
         intermediate_results_2.reset(
             new char[num_worker_threads * value_size_bytes]);
         last_size = num_worker_threads * value_size_bytes;
-      } else if (last_size < num_worker_threads * value_size_bytes) {
+      } else if (last_size < static_cast<std::size_t>(num_worker_threads * value_size_bytes)) {
         intermediate_results_1.reset(
             new char[num_worker_threads * value_size_bytes]);
         intermediate_results_2.reset(
@@ -1280,7 +1280,7 @@ public:
       if (scratch_buffer.get() == nullptr) {
         scratch_buffer.reset(new char[num_worker_threads * m_shared]);
         last_size = num_worker_threads * m_shared;
-      } else if (last_size < num_worker_threads * m_shared) {
+      } else if (last_size < static_cast<std::size_t>(num_worker_threads * m_shared)) {
         scratch_buffer.reset(new char[num_worker_threads * m_shared]);
         last_size = num_worker_threads * m_shared;
       }
@@ -1373,7 +1373,7 @@ public:
         intermediate_results.reset(
             new char[num_worker_threads * value_size_bytes]);
         last_size = num_worker_threads * value_size_bytes;
-      } else if (last_size < num_worker_threads * value_size_bytes) {
+      } else if (last_size < static_cast<std::size_t>(num_worker_threads * value_size_bytes)) {
         intermediate_results.reset(
             new char[num_worker_threads * value_size_bytes]);
         last_size = num_worker_threads * value_size_bytes;
