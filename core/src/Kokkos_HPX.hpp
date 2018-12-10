@@ -433,8 +433,6 @@ class TeamPolicyInternal<Kokkos::HPX, Properties...>
   using traits = PolicyTraits<Properties...>;
 
 public:
-  TeamPolicyInternal &operator=(const TeamPolicyInternal &p){};
-
   // NOTE: Max size is 1 for simplicity. In most cases more than 1 is not
   // necessary on CPU. Implement later if there is a need.
   template <class FunctorType>
