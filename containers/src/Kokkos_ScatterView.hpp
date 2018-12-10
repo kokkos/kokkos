@@ -121,6 +121,21 @@ struct DefaultContribution<Kokkos::OpenMP, Kokkos::Experimental::ScatterDuplicat
 };
 #endif
 
+#ifdef KOKKOS_ENABLE_HPX
+template <>
+struct DefaultDuplication<Kokkos::HPX> {
+  enum : int { value = Kokkos::Experimental::ScatterDuplicated };
+};
+template <>
+struct DefaultContribution<Kokkos::HPX, Kokkos::Experimental::ScatterNonDuplicated> {
+  enum : int { value = Kokkos::Experimental::ScatterAtomic };
+};
+template <>
+struct DefaultContribution<Kokkos::HPX, Kokkos::Experimental::ScatterDuplicated> {
+  enum : int { value = Kokkos::Experimental::ScatterNonAtomic };
+};
+#endif
+
 #ifdef KOKKOS_ENABLE_THREADS
 template <>
 struct DefaultDuplication<Kokkos::Threads> {
