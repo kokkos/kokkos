@@ -233,7 +233,7 @@ elif [ "$MACHINE" = "white" ]; then
 
   BASE_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>"
   IBM_MODULE_LIST="<COMPILER_NAME>/xl/<COMPILER_VERSION>"
-  CUDA_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.2.0,ibm/xl/16.1.0"
+  CUDA_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.2.0,ibm/xl/16.1.1"
 
   # Don't do pthread on white.
   GCC_BUILD_LIST="OpenMP,Serial,OpenMP_Serial"
@@ -241,7 +241,7 @@ elif [ "$MACHINE" = "white" ]; then
   # Format: (compiler module-list build-list exe-name warning-flag)
   COMPILERS=("gcc/6.4.0 $BASE_MODULE_LIST $IBM_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "gcc/7.2.0 $BASE_MODULE_LIST $IBM_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-             "ibm/16.1.0 $IBM_MODULE_LIST $IBM_BUILD_LIST xlC $IBM_WARNING_FLAGS"
+             "ibm/16.1.1 $IBM_MODULE_LIST $IBM_BUILD_LIST xlC $IBM_WARNING_FLAGS"
              "cuda/9.2.88 $CUDA_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
   )
 
