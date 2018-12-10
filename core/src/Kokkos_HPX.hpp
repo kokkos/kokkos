@@ -178,7 +178,9 @@ public:
       // possible, meaning some operations are not allowed immediately
       // after hpx::start. Notably, hpx::stop needs state_running. This
       // needs to be fixed in HPX itself.
-      hpx::runtime* rt = hpx::get_runtime_ptr();
+
+      // Get runtime pointer again after it has been started.
+      rt = hpx::get_runtime_ptr();
       hpx::util::yield_while([rt]()
         { return rt->get_state() < hpx::state_running; });
 
@@ -204,7 +206,9 @@ public:
       // possible, meaning some operations are not allowed immediately
       // after hpx::start. Notably, hpx::stop needs state_running. This
       // needs to be fixed in HPX itself.
-      hpx::runtime* rt = hpx::get_runtime_ptr();
+
+      // Get runtime pointer again after it has been started.
+      rt = hpx::get_runtime_ptr();
       hpx::util::yield_while([rt]()
         { return rt->get_state() < hpx::state_running; });
 
@@ -1029,8 +1033,6 @@ public:
         pointer_type ptr_2_prev = (pointer_type)(
             &intermediate_results_2_ptr[(i - 1) * value_size_bytes]);
 
-        pointer_type ptr_1 =
-            (pointer_type)(&intermediate_results_1_ptr[i * value_size_bytes]);
         pointer_type ptr_2 =
             (pointer_type)(&intermediate_results_2_ptr[i * value_size_bytes]);
 
@@ -1290,7 +1292,6 @@ public:
           hpx_policy, 0, league_size,
           [this, league_size, team_size, hpx_policy,
            scratch_buffer_ptr](std::size_t const league_rank) {
-            // std::unique_ptr<char[]> scratch_buffer(new char[m_shared]);
             exec_functor<WorkTag>(
                 m_functor,
                 Member(m_policy, 0, league_rank,
@@ -1409,8 +1410,6 @@ public:
             std::size_t t = HPX::impl_hardware_thread_id();
             reference_type update = reference_type_cast<reference_type>{}(
                 &intermediate_results_ptr[t * value_size_bytes]);
-
-            // std::unique_ptr<char[]> scratch_buffer(new char[m_shared]);
 
             exec_functor<WorkTag>(m_functor,
                                   Member(m_policy, 0, league_rank,
