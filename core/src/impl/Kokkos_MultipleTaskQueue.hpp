@@ -231,7 +231,7 @@ public:
   // This should query a customization point that defaults to the recommended
   // league size (which should probably also be a property-based customization
   // point)
-  static constexpr int num_team_queues = 8;
+  //static constexpr int num_team_queues = 8;
 
 public:
 
@@ -249,8 +249,12 @@ public:
     typename base_t::memory_space const&,
     typename base_t::memory_pool const& arg_memory_pool
   ) : base_t(arg_memory_pool),
-      // TODO !!!!query this using a property of the execution space rather than using a constexpr member
-      vla_emulation_base_t(num_team_queues)
+      vla_emulation_base_t(
+        Impl::TaskQueueSpecialization<
+          // TODO avoid referencing SimpleTaskScheduler directly?
+          SimpleTaskScheduler<typename base_t::execution_space, MultipleTaskQueue>
+        >::get_max_team_count(arg_execution_space)
+      )
   { }
 
   ~MultipleTaskQueue() = default;
@@ -306,14 +310,8 @@ public:
         if(return_value) { break; }
       }
 
-      // if a task was stolen successfully, update the scheduling info
-      //if(return_value) {
-      //  // Note that this won't update any associated futures, so don't trust
-      //  // the scheduling info from a future to a runnable task
-      //  return_value->as_runnable_task()
-      //    .template scheduling_info_as<task_scheduling_info_type>()
-      //      .team_association = info.team_association;
-      //}
+      // Note that this is where we'd update the task's scheduling info, if it
+      // weren't empty
     }
     // if nothing was found, return a default-constructed (empty) OptionalRef
     return return_value;
@@ -337,10 +335,14 @@ public:
     typename base_t::memory_pool const&
   )
   {
-    // TODO !!!!query this using a property of the execution space rather than using a constexpr member
+    using specialization =
+      Impl::TaskQueueSpecialization<
+        // TODO avoid referencing SimpleTaskScheduler directly?
+        SimpleTaskScheduler<typename base_t::execution_space, MultipleTaskQueue>
+      >;
 
     return vla_emulation_base_t::required_allocation_size(
-      /* num_vla_entries = */ num_team_queues
+      /* num_vla_entries = */ specialization::get_max_team_count(exec_space)
     );
   }
 

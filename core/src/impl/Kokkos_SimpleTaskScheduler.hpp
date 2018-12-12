@@ -178,6 +178,7 @@ class SimpleTaskScheduler
     private Impl::MemorySpaceInstanceStorage<typename QueueType::memory_space>
 {
 public:
+  // TODO (maybe?) don't force QueueType to be complete here
 
   using scheduler_type = SimpleTaskScheduler; // tag as scheduler concept
   using execution_space = ExecSpace;

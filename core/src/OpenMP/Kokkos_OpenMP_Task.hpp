@@ -101,8 +101,9 @@ public:
 
     HostThreadTeamData& team_data_single = HostThreadTeamDataSingleton::singleton();
 
+    // TODO use scheduler.get_execution_space().impl() (or something like that)
     Impl::OpenMPExec* instance = t_openmp_instance;
-    const int pool_size = OpenMP::impl_thread_pool_size();
+    const int pool_size = get_max_team_count(scheduler.get_execution_space());
 
     const int team_size = 1;  // Threads per core
     instance->resize_thread_data(
@@ -193,6 +194,11 @@ public:
       }
       self.disband_team();
     } // end pragma omp parallel
+  }
+
+  static uint32_t
+  get_max_team_count(execution_space const& espace) {
+    return static_cast<uint32_t>(espace.impl_thread_pool_size());
   }
 
   // TODO specialize this for trivially destructible types

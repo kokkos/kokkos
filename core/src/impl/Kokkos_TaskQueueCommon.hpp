@@ -431,7 +431,8 @@ public:
   void update_scheduling_info_from_completed_predecessor(
     RunnableTaskBase<TaskQueueTraits>& ready_task,
     RunnableTaskBase<TaskQueueTraits> const& predecessor
-  ) const {
+  ) const
+  {
     // by default, tell a ready task to use the scheduling info of its most
     // recent predecessor
     using task_scheduling_info_type = typename Derived::task_scheduling_info_type;
@@ -445,7 +446,8 @@ public:
   void update_scheduling_info_from_completed_predecessor(
     AggregateTask<TaskQueueTraits, SchedulingInfo>& aggregate,
     RunnableTaskBase<TaskQueueTraits> const& predecessor
-  ) const {
+  ) const
+  {
     // by default, tell a ready task to use the scheduling info of its most
     // recent predecessor
     using task_scheduling_info_type = typename Derived::task_scheduling_info_type;
@@ -459,7 +461,8 @@ public:
   void update_scheduling_info_from_completed_predecessor(
     AggregateTask<TaskQueueTraits, SchedulingInfo>& aggregate,
     AggregateTask<TaskQueueTraits, SchedulingInfo> const& predecessor
-  ) const {
+  ) const
+  {
     // by default, tell a ready task to use the scheduling info of its most
     // recent predecessor
     using task_scheduling_info_type = typename Derived::task_scheduling_info_type;
@@ -472,7 +475,8 @@ public:
   void update_scheduling_info_from_completed_predecessor(
     RunnableTaskBase<TaskQueueTraits>& ready_task,
     AggregateTask<TaskQueueTraits, SchedulingInfo> const& predecessor
-  ) const {
+  ) const
+  {
     // by default, tell a ready task to use the scheduling info of its most
     // recent predecessor
     using task_scheduling_info_type = typename Derived::task_scheduling_info_type;
@@ -485,7 +489,8 @@ public:
   void initialize_scheduling_info_from_predecessor(
     TaskNode<TaskQueueTraits>& task,
     TaskNode<TaskQueueTraits>& predecessor
-  ) const {
+  ) const
+  {
     /* do nothing by default */
   }
 
@@ -494,10 +499,10 @@ public:
   void initialize_scheduling_info_from_team_scheduler_info(
     TaskNode<TaskQueueTraits>& task,
     TeamSchedulerInfo const& info
-  ) const {
+  ) const
+  {
     /* do nothing by default */
   }
-
 
   template <
     class ExecutionSpace,

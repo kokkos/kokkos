@@ -93,10 +93,17 @@ public:
   using member_type = TaskExec<Kokkos::Cuda, scheduler_type> ;
 
   enum : long { max_league_size = 16 };
+  enum : int { warps_per_block = 4 };
 
   KOKKOS_INLINE_FUNCTION
   static
   void iff_single_thread_recursive_execute( scheduler_type const& ) {}
+
+  static int get_max_team_count(
+    execution_space const&
+  ) {
+    return Kokkos::Impl::cuda_internal_multiprocessor_count() * warps_per_block;
+  }
 
   __device__
   static void driver(scheduler_type scheduler, int32_t shmem_per_warp)
@@ -203,14 +210,17 @@ public:
   void execute(scheduler_type const& scheduler)
   {
     const int shared_per_warp = 2048 ;
-    const int warps_per_block = 4 ;
     const dim3 grid( Kokkos::Impl::cuda_internal_multiprocessor_count() , 1 , 1 );
     const dim3 block( 1 , Kokkos::Impl::CudaTraits::WarpSize , warps_per_block );
     const int shared_total = shared_per_warp * warps_per_block ;
     const cudaStream_t stream = 0 ;
 
+    KOKKOS_ASSERT(
+      grid.x * grid.y * grid.z * block.x * block.y * block.z
+        == get_max_team_count(scheduler.get_execution_space()) * Kokkos::Impl::CudaTraits::WarpSize
+    );
+
     auto& queue = scheduler.queue();
-    //queue.initialize_team_queues(warps_per_block);
 
     CUDA_SAFE_CALL( cudaDeviceSynchronize() );
 
