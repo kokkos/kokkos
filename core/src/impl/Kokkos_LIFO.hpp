@@ -411,6 +411,9 @@ struct TaskQueueTraitsLockBased
   template <class Task>
   using intrusive_task_base_type =
     typename ready_queue_type<Task>::intrusive_node_base_type;
+
+  static constexpr auto ready_queue_insertion_may_fail = false;
+
 };
 
 

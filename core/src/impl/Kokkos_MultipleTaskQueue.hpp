@@ -76,6 +76,28 @@ namespace Impl {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+// A *non*-concurrent linked list of tasks that failed to be enqueued
+// (We can't reuse the wait queue for this because of the semantics of that
+// queue that require it to be popped exactly once, and if a task has failed
+// to be enqueued, it has already been marked ready)
+template <class TaskQueueTraits>
+struct FailedQueueInsertionLinkedListSchedulingInfo {
+  using task_base_type = TaskNode<TaskQueueTraits>;
+  task_base_type* next = nullptr;
+};
+
+struct EmptyTaskSchedulingInfo { };
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+template <
+  class ExecSpace,
+  class MemorySpace,
+  class TaskQueueTraits
+>
+class MultipleTaskQueue;
+
 template <class TaskQueueTraits>
 struct MultipleTaskQueueTeamEntry {
 public:
@@ -83,6 +105,12 @@ public:
   using task_base_type = TaskNode<TaskQueueTraits>;
   using runnable_task_base_type = RunnableTaskBase<TaskQueueTraits>;
   using ready_queue_type = typename TaskQueueTraits::template ready_queue_type<task_base_type>;
+  using task_queue_traits = TaskQueueTraits;
+  using task_scheduling_info_type = typename std::conditional<
+    TaskQueueTraits::ready_queue_insertion_may_fail,
+    FailedQueueInsertionLinkedListSchedulingInfo<TaskQueueTraits>,
+    EmptyTaskSchedulingInfo
+  >::type;
 
 private:
 
@@ -91,7 +119,64 @@ private:
 
   ready_queue_type m_ready_queues[NumPriorities][2];
 
+  task_base_type* m_failed_heads[NumPriorities][2] = { };
+
+  KOKKOS_INLINE_FUNCTION
+  task_base_type*&
+  failed_head_for(runnable_task_base_type const& task)
+  {
+    return m_failed_heads[int(task.get_priority())][int(task.get_task_type())];
+  }
+
+  template <class _always_void=void>
+  KOKKOS_INLINE_FUNCTION
+  OptionalRef<task_base_type>
+  _pop_failed_insertion(
+    int priority, TaskType type,
+    typename std::enable_if<
+      task_queue_traits::ready_queue_insertion_may_fail
+        and std::is_void<_always_void>::value,
+      void*
+    >::type = nullptr
+  ) {
+    auto* rv_ptr = m_failed_heads[priority][(int)type];
+    if(rv_ptr) {
+      m_failed_heads[priority][(int)type] =
+        rv_ptr->as_runnable_task()
+          .template scheduling_info_as<task_scheduling_info_type>()
+            .next;
+      return OptionalRef<task_base_type>{ *rv_ptr };
+    }
+    else {
+      return OptionalRef<task_base_type>{ nullptr };
+    }
+  }
+
+  template <class _always_void=void>
+  KOKKOS_INLINE_FUNCTION
+  OptionalRef<task_base_type>
+  _pop_failed_insertion(
+    int priority, TaskType type,
+    typename std::enable_if<
+      not task_queue_traits::ready_queue_insertion_may_fail
+        and std::is_void<_always_void>::value,
+      void*
+    >::type = nullptr
+  ) {
+    return OptionalRef<task_base_type>{ nullptr };
+  }
+
 public:
+
+  KOKKOS_INLINE_FUNCTION
+  MultipleTaskQueueTeamEntry() {
+    for(int iPriority = 0; iPriority < NumPriorities; ++iPriority) {
+      for(int iType = 0; iType < 2; ++iType) {
+        m_failed_heads[iType][iPriority] = nullptr;
+      }
+    }
+  }
+
 
   KOKKOS_INLINE_FUNCTION
   OptionalRef<task_base_type>
@@ -118,12 +203,13 @@ public:
   {
     auto return_value = OptionalRef<task_base_type>{};
     for(int i_priority = 0; i_priority < NumPriorities; ++i_priority) {
-      // Check for a team task with this priority
-      return_value = m_ready_queues[i_priority][TaskTeam].pop();
+      return_value = _pop_failed_insertion(i_priority, TaskTeam);
+      if(not return_value) return_value = m_ready_queues[i_priority][TaskTeam].pop();
       if(return_value) return return_value;
 
       // Check for a single task with this priority
-      return_value = m_ready_queues[i_priority][TaskSingle].pop();
+      return_value = _pop_failed_insertion(i_priority, TaskSingle);
+      if(not return_value) return_value = m_ready_queues[i_priority][TaskSingle].pop();
       if(return_value) return return_value;
     }
     return return_value;
@@ -135,6 +221,126 @@ public:
   {
     return m_ready_queues[int(task.get_priority())][int(task.get_task_type())];
   }
+
+
+  template <class _always_void=void>
+  KOKKOS_INLINE_FUNCTION
+  void do_handle_failed_insertion(
+    runnable_task_base_type&& task,
+    typename std::enable_if<
+      task_queue_traits::ready_queue_insertion_may_fail
+        and std::is_void<_always_void>::value,
+      void*
+    >::type = nullptr
+  )
+  {
+    // failed insertions, if they happen, must be from the only thread that
+    // is allowed to push to m_ready_queues, so this linked-list insertion is not
+    // concurrent
+    auto& node = task.template scheduling_info_as<task_scheduling_info_type>();
+    auto*& head = failed_head_for(task);
+    node.next = head;
+    head = &task;
+  }
+
+  template <class _always_void=void>
+  KOKKOS_INLINE_FUNCTION
+  void do_handle_failed_insertion(
+    runnable_task_base_type&& task,
+    typename std::enable_if<
+      not task_queue_traits::ready_queue_insertion_may_fail
+        and std::is_void<_always_void>::value,
+      void*
+    >::type = nullptr
+  )
+  {
+    Kokkos::abort("should be unreachable!");
+  }
+
+
+  template <class _always_void=void>
+  KOKKOS_INLINE_FUNCTION
+  void
+  flush_failed_insertions(
+    int priority,
+    int task_type,
+    typename std::enable_if<
+      task_queue_traits::ready_queue_insertion_may_fail
+        and std::is_void<_always_void>::value, // just to make this dependent on template parameter
+      int
+    >::type = 0
+  ) {
+    // TODO this somethimes gets some things out of LIFO order, which may be undesirable (but not a bug)
+
+
+    auto*& failed_head = m_failed_heads[priority][task_type];
+    auto& team_queue = m_ready_queues[priority][task_type];
+
+    while(failed_head != nullptr) {
+      bool success = team_queue.push(*failed_head);
+      if(success) {
+        // Step to the next linked list element
+        failed_head = failed_head->as_runnable_task()
+          .template scheduling_info_as<task_scheduling_info_type>().next;
+      }
+      else {
+        // no more room, stop traversing and leave the head where it is
+        break;
+      }
+    }
+  }
+
+
+  template <class _always_void=void>
+  KOKKOS_INLINE_FUNCTION
+  void
+  flush_failed_insertions(
+    int, int,
+    typename std::enable_if<
+      not task_queue_traits::ready_queue_insertion_may_fail
+        and std::is_void<_always_void>::value, // just to make this dependent on template parameter
+      int
+    >::type = 0
+  ) { }
+
+
+  KOKKOS_INLINE_FUNCTION
+  void
+  flush_all_failed_insertions() {
+    for(int iPriority = 0; iPriority < NumPriorities; ++iPriority) {
+      flush_failed_insertions(iPriority, (int)TaskType::TaskTeam);
+      flush_failed_insertions(iPriority, (int)TaskType::TaskSingle);
+    }
+  }
+
+
+  template <class TeamSchedulerInfo, class ExecutionSpace, class MemorySpace>
+  KOKKOS_INLINE_FUNCTION
+  void
+  do_schedule_runnable(
+    MultipleTaskQueue<ExecutionSpace, MemorySpace, TaskQueueTraits>& queue,
+    RunnableTaskBase<TaskQueueTraits>&& task,
+    TeamSchedulerInfo const& info
+
+  ) {
+    // Push on any nodes that failed to enqueue
+    auto& team_queue = team_queue_for(task);
+    auto priority = task.get_priority();
+    auto task_type = task.get_task_type();
+
+    // First schedule the task
+    queue.schedule_runnable_to_queue(
+      std::move(task),
+      team_queue,
+      info
+    );
+
+    // Task may be enqueued and may be run at any point; don't touch it (hence
+    // the use of move semantics)
+    flush_failed_insertions((int)priority, (int)task_type);
+  }
+
+
 
 };
 
@@ -154,6 +360,13 @@ class MultipleTaskQueue final
       MultipleTaskQueueTeamEntry<TaskQueueTraits>
     >
 {
+public:
+
+  using task_queue_type = MultipleTaskQueue; // mark as task_queue concept
+  using task_queue_traits = TaskQueueTraits;
+  using task_base_type = TaskNode<TaskQueueTraits>;
+  using ready_queue_type = typename TaskQueueTraits::template ready_queue_type<task_base_type>;
+
 private:
 
   using base_t = TaskQueueMemoryManager<ExecSpace, MemorySpace>;
@@ -198,16 +411,13 @@ private:
 
   };
 
-  struct EmptyTaskSchedulingInfo { };
-
 public:
 
-  using task_queue_type = MultipleTaskQueue; // mark as task_queue concept
-  using task_queue_traits = TaskQueueTraits;
-  using task_base_type = TaskNode<TaskQueueTraits>;
-  using ready_queue_type = typename TaskQueueTraits::template ready_queue_type<task_base_type>;
-
-  using task_scheduling_info_type = EmptyTaskSchedulingInfo;
+  using task_scheduling_info_type = typename std::conditional<
+    TaskQueueTraits::ready_queue_insertion_may_fail,
+    FailedQueueInsertionLinkedListSchedulingInfo<TaskQueueTraits>,
+    EmptyTaskSchedulingInfo
+  >::type;
   using team_scheduler_info_type = SchedulerInfo;
 
   using runnable_task_base_type = RunnableTaskBase<TaskQueueTraits>;
@@ -226,12 +436,6 @@ public:
   KOKKOS_INLINE_FUNCTION
   constexpr typename vla_emulation_base_t::vla_entry_count_type
   n_queues() const noexcept { return this->n_vla_entries(); }
-
-  // TODO !!!!query this using a property of the execution space rather than using a constexpr member
-  // This should query a customization point that defaults to the recommended
-  // league size (which should probably also be a property-based customization
-  // point)
-  //static constexpr int num_team_queues = 8;
 
 public:
 
@@ -273,11 +477,7 @@ public:
     if(team_association == team_scheduler_info_type::NoAssociatedTeam) {
       team_association = 0;
     }
-    this->_schedule_runnable_to_queue(
-      std::move(task),
-      this->vla_value_at(team_association).team_queue_for(task),
-      info
-    );
+    this->vla_value_at(team_association).do_schedule_runnable(*this, std::move(task), info);
     // Task may be enqueued and may be run at any point; don't touch it (hence
     // the use of move semantics)
   }
@@ -296,6 +496,10 @@ public:
     // always loop in order of priority first, then prefer team tasks over single tasks
     auto& team_queue_info = this->vla_value_at(team_association);
 
+    if(task_queue_traits::ready_queue_insertion_may_fail) {
+      team_queue_info.flush_all_failed_insertions();
+    }
+
     return_value = team_queue_info.pop_ready_task();
 
     if(not return_value) {
@@ -310,8 +514,14 @@ public:
         if(return_value) { break; }
       }
 
-      // Note that this is where we'd update the task's scheduling info, if it
-      // weren't empty
+      //if(return_value) {
+      //  return_value->as_runnable_task()
+      //    .template scheduling_info_as<task_scheduling_info_type>()
+      //      .next = nullptr;
+      //  Kokkos::memory_fence(); // store release; this may not be necessary
+      //}
+
+      // Note that this is where we'd update the task's scheduling info
     }
     // if nothing was found, return a default-constructed (empty) OptionalRef
     return return_value;
@@ -346,6 +556,59 @@ public:
     );
   }
 
+  // Provide a sensible default that can be overridden
+  KOKKOS_INLINE_FUNCTION
+  void update_scheduling_info_from_completed_predecessor(
+    runnable_task_base_type& ready_task,
+    runnable_task_base_type const& predecessor
+  ) const
+  {
+    // Do nothing; we're using the extra storage for the failure linked list
+  }
+
+  // Provide a sensible default that can be overridden
+  KOKKOS_INLINE_FUNCTION
+  void update_scheduling_info_from_completed_predecessor(
+    aggregate_task_type& aggregate,
+    runnable_task_base_type const& predecessor
+  ) const
+  {
+    // Do nothing; we're using the extra storage for the failure linked list
+  }
+
+  // Provide a sensible default that can be overridden
+  KOKKOS_INLINE_FUNCTION
+  void update_scheduling_info_from_completed_predecessor(
+    aggregate_task_type& aggregate,
+    aggregate_task_type const& predecessor
+  ) const
+  {
+    // Do nothing; we're using the extra storage for the failure linked list
+  }
+
+  // Provide a sensible default that can be overridden
+  KOKKOS_INLINE_FUNCTION
+  void update_scheduling_info_from_completed_predecessor(
+    runnable_task_base_type& ready_task,
+    aggregate_task_type const& predecessor
+  ) const
+  {
+    // Do nothing; we're using the extra storage for the failure linked list
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void
+  handle_failed_ready_queue_insertion(
+    runnable_task_base_type&& task,
+    ready_queue_type&,
+    team_scheduler_info_type const& info
+  ) {
+    KOKKOS_EXPECTS(info.team_association != team_scheduler_info_type::NoAssociatedTeam);
+
+    this->vla_value_at(info.team_association).do_handle_failed_insertion(
+      std::move(task)
+    );
+  }
 };
 
 

@@ -113,66 +113,6 @@ public:
 
 };
 
-template <
-  uintptr_t NotEnqueuedValue = 0,
-  template <class> class PointerTemplate = std::add_pointer
->
-struct DoublySinglyLinkedListNode
-{
-
-private:
-
-  using pointer_type = typename PointerTemplate<DoublySinglyLinkedListNode>::type;
-
-  pointer_type m_next = reinterpret_cast<pointer_type>(NotEnqueuedValue);
-  pointer_type m_prev = reinterpret_cast<pointer_type>(NotEnqueuedValue);
-
-  // These are private because they are an implementation detail of the queue
-  // and should not get added to the value type's interface via the intrusive
-  // wrapper.
-
-  KOKKOS_INLINE_FUNCTION
-  void mark_as_not_enqueued() noexcept {
-    // TODO memory order
-    // TODO make this an atomic store
-    m_next = (pointer_type)NotEnqueuedValue;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  pointer_type& _next_ptr() noexcept {
-    return m_next;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  pointer_type const& _next_ptr() const noexcept {
-    return m_next;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  pointer_type& _prev_ptr() noexcept {
-    return m_prev;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  pointer_type const& _prev_ptr() const noexcept {
-    return m_prev;
-  }
-
-  friend struct LinkedListNodeAccess;
-
-public:
-
-  // KOKKOS_CONSTEXPR_14
-  KOKKOS_INLINE_FUNCTION
-  bool is_enqueued() const noexcept {
-    // TODO memory order
-    // TODO make this an atomic load
-    return m_next != reinterpret_cast<pointer_type>(NotEnqueuedValue);
-  }
-
-};
-
-
 /// Attorney for LinkedListNode, since user types inherit from it
 struct LinkedListNodeAccess
 {

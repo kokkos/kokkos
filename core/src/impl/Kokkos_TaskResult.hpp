@@ -101,10 +101,10 @@ struct TaskResult {
     { get(task).~ResultType(); }
 
 
-  template <class TaskQueueTraits>
-  KOKKOS_INLINE_FUNCTION static
-  void destroy( TaskNode<TaskQueueTraits>* task )
-  { get(task).~ResultType(); }
+  //template <class TaskQueueTraits>
+  //KOKKOS_INLINE_FUNCTION static
+  //void destroy( TaskNode<TaskQueueTraits>* task )
+  //{ get(task).~ResultType(); }
 };
 
 template<>
@@ -134,10 +134,10 @@ struct TaskResult< void > {
   void destroy( TaskBase* task )
     { }
 
-  template <class TaskQueueTraits>
-  KOKKOS_INLINE_FUNCTION static
-  void destroy( TaskNode<TaskQueueTraits>* task )
-  { }
+  //template <class TaskQueueTraits>
+  //KOKKOS_INLINE_FUNCTION static
+  //void destroy( TaskNode<TaskQueueTraits>* task )
+  //{ }
 };
 
 } /* namespace Impl */

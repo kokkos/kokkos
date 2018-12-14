@@ -70,7 +70,7 @@
 namespace Kokkos {
 namespace Impl {
 
-enum TaskType : int16_t   { TaskTeam = 0 , TaskSingle = 1 , Aggregate = 2 };
+enum TaskType : int16_t   { TaskTeam = 0 , TaskSingle = 1 , Aggregate = 2, TaskSpecial = -1 };
 
 //==============================================================================
 
@@ -489,12 +489,21 @@ public:
   KOKKOS_INLINE_FUNCTION
   void set_predecessor(task_base_type& predecessor)
   {
-    KOKKOS_EXPECTS(m_predecessor == nullptr);
+    KOKKOS_EXPECTS(m_predecessor == nullptr || &predecessor == m_predecessor);
     // Increment the reference count so that predecessor doesn't go away
     // before this task is enqueued.
     // (should be memory order acquire)
     predecessor.increment_reference_count();
     m_predecessor = &predecessor;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void acquire_predecessor_from(runnable_task_type& other)
+  {
+    KOKKOS_EXPECTS(m_predecessor == nullptr || other.m_predecessor == m_predecessor);
+    // since we're transfering, no need to modify the reference count
+    m_predecessor = other.m_predecessor;
+    other.m_predecessor = nullptr;
   }
 
   template <class TeamMember>
@@ -509,13 +518,16 @@ public:
 //==============================================================================
 
 template <class ResultType>
-struct TaskResultStorage {
-  ResultType m_value;
-  ResultType& reference() { return m_value; }
+struct TaskResultStorage
+{
+  ResultType m_value = ResultType{};
 };
 
 template <>
-struct TaskResultStorage<void> { };
+struct TaskResultStorage<void>
+{
+
+};
 
 //==============================================================================
 
@@ -526,7 +538,8 @@ template <
   class FunctorType
 >
 class RunnableTask
-  : public SchedulingInfoStorage<
+  : // using nesting of base classes to control layout
+    public SchedulingInfoStorage<
       RunnableTaskBase<TaskQueueTraits>,
       typename Scheduler::task_queue_type::task_scheduling_info_type
     >, // must be first base class
@@ -535,18 +548,22 @@ class RunnableTask
 {
 private:
 
-  using base_t =
-    SchedulingInfoStorage<
-      RunnableTaskBase<TaskQueueTraits>,
-      typename Scheduler::task_queue_type::task_scheduling_info_type
-    >;
-  using task_base_type = TaskNode<TaskQueueTraits>;
+  using runnable_task_base_type = RunnableTaskBase<TaskQueueTraits>;
   using scheduler_type = Scheduler;
+  using scheduling_info_type =
+      typename scheduler_type::task_scheduling_info_type;
+  using scheduling_info_storage_base =
+    SchedulingInfoStorage<
+      runnable_task_base_type,
+      scheduling_info_type
+    >;
+  using base_t = scheduling_info_storage_base;
+
+  using task_base_type = TaskNode<TaskQueueTraits>;
   using specialization = TaskQueueSpecialization<scheduler_type>;
   using member_type = typename specialization::member_type;
   using result_type = ResultType;
   using functor_type = FunctorType;
-  using storage_base_type = TaskResultStorage<result_type>;
 
 public:
 
@@ -560,8 +577,7 @@ public:
   ) : base_t(
         std::forward<Args>(args)...
       ),
-      functor_type(std::move(functor)),
-      storage_base_type()
+      functor_type(std::move(functor))
   { }
 
   KOKKOS_INLINE_FUNCTION
@@ -582,26 +598,29 @@ public:
     this->functor_type::operator()(*member);
   }
 
-  template< typename T >
+  template <typename T>
   KOKKOS_INLINE_FUNCTION
-  void apply_functor(member_type* member, T* const result)
+  void apply_functor(member_type* member, T* val)
   {
     update_scheduling_info(*member);
-    this->functor_type::operator()(*member, *result);
+    //this->functor_type::operator()(*member, *val);
+    this->functor_type::operator()(*member, *val);
   }
 
   KOKKOS_FUNCTION static
   void destroy( task_base_type * root )
   {
-    TaskResult<result_type>::destroy(root);
+    //TaskResult<result_type>::destroy(root);
   }
 
   KOKKOS_FUNCTION static
   void apply(task_base_type* self, void* member_as_void)
   {
-    auto* const task = static_cast<RunnableTask*>(self);
+    auto* const task = static_cast<
+      Impl::RunnableTask<TaskQueueTraits, Scheduler, ResultType, FunctorType>*
+    >(self);
     auto* const member = reinterpret_cast<member_type*>(member_as_void);
-    result_type* const result = TaskResult< result_type >::ptr( task );
+    //result_type* const result = TaskResult< result_type >::ptr( task );
 
     // Task may be serial or team.
     // If team then must synchronize before querying if respawn was requested.
@@ -614,7 +633,7 @@ public:
       0 == member->team_rank();
 #endif
 
-    task->apply_functor(member, result);
+    task->apply_functor(member, TaskResult<result_type>::ptr(task));
 
     member->team_barrier();
 

@@ -110,6 +110,12 @@ public:
   {
     using queue_type = typename scheduler_type::task_queue_type;
     using task_base_type = typename scheduler_type::task_base_type;
+    using runnable_task_base_type = typename scheduler_type::runnable_task_base_type;
+    using scheduling_info_storage_type =
+      SchedulingInfoStorage<
+        runnable_task_base_type,
+        typename scheduler_type::task_scheduling_info_type
+      >;
 
     extern __shared__ int32_t shmem_all[];
 
@@ -146,9 +152,13 @@ public:
 
       if(current_task) {
 
-        int32_t const b = sizeof(task_base_type) / sizeof(int32_t);
-        //int32_t const e = *((int32_t volatile *)( &current_task->get_allocation_size() )) / sizeof(int32_t);
+        int32_t const b = sizeof(scheduling_info_storage_type) / sizeof(int32_t);
+        static_assert(
+          sizeof(scheduling_info_storage_type) % sizeof(int32_t) == 0,
+          "bad task size"
+        );
         int32_t const e = current_task->get_allocation_size() / sizeof(int32_t);
+        KOKKOS_ASSERT(current_task->get_allocation_size() % sizeof(int32_t) == 0);
 
         int32_t volatile* const task_mem = (int32_t volatile*)current_task.get();
 
@@ -189,12 +199,16 @@ public:
 
 
         if (warp_lane == 0) {
-          // TODO is this necessary???? Isn't this done above??
-          //// If respawn requested copy respawn data back to main memory
-          //if ( ((task_root_type *) task_root_type::LockTag) != task_shmem->m_next ) {
-          //  ( (volatile task_root_type *) task_ptr )->m_next = task_shmem->m_next ;
-          //  ( (volatile task_root_type *) task_ptr )->m_priority = task_shmem->m_priority ;
-          //}
+          // If respawn requested copy respawn data back to main memory
+          if(shared_memory_task_copy->as_runnable_task().get_respawn_flag()) {
+            if(shared_memory_task_copy->as_runnable_task().has_predecessor()) {
+              current_task->as_runnable_task().acquire_predecessor_from(
+                shared_memory_task_copy->as_runnable_task()
+              );
+            }
+            current_task->set_priority(shared_memory_task_copy->get_priority());
+            current_task->as_runnable_task().set_respawn_flag();
+          }
 
           queue.complete(
             (*std::move(current_task)).as_runnable_task(),

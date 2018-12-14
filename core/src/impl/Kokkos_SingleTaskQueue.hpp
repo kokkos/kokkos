@@ -157,7 +157,7 @@ public:
     runnable_task_base_type&& task,
     team_scheduler_info_type const& info
   ) {
-    this->_schedule_runnable_to_queue(
+    this->schedule_runnable_to_queue(
       std::move(task),
       m_ready_queues[int(task.get_priority())][int(task.get_task_type())],
       info

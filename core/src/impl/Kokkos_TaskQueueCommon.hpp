@@ -237,14 +237,14 @@ public:
   //----------------------------------------------------------------------------
   // <editor-fold desc="Scheduling"> {{{2
 
-protected:
+public:
 
   // This isn't actually generic; the template parameters are just to keep
   // Derived from having to be complete
   template <class TaskQueueTraits, class ReadyQueueType, class TeamSchedulerInfo>
   KOKKOS_INLINE_FUNCTION
   void
-  _schedule_runnable_to_queue(
+  schedule_runnable_to_queue(
     RunnableTaskBase<TaskQueueTraits>&& task,
     ReadyQueueType& ready_queue,
     TeamSchedulerInfo const& info
@@ -320,14 +320,29 @@ protected:
       // Increment the ready count
       _self()._increment_ready_count();
       // and enqueue the task
-      ready_queue.push(std::move(task));
+      // (can't move because the task isn't expired unless the push succeeds
+      bool push_success = ready_queue.push(task);
+      if(not push_success) {
+        _self().handle_failed_ready_queue_insertion(
+          std::move(task), ready_queue, info
+        );
+      }
     }
 
     // Task may be enqueued and may be run at any point; don't touch it (hence
     // the use of move semantics)
   }
 
-public:
+  template <class TaskQueueTraits, class ReadyQueueType, class TeamSchedulerInfo>
+  KOKKOS_INLINE_FUNCTION
+  void
+  handle_failed_ready_queue_insertion(
+    RunnableTaskBase<TaskQueueTraits>&& task,
+    ReadyQueueType& ready_queue,
+    TeamSchedulerInfo const& info
+  ) {
+    Kokkos::abort("Unhandled failure of ready task queue insertion!\n");
+  }
 
   // This isn't actually generic; the template parameters are just to keep
   // Derived from having to be complete

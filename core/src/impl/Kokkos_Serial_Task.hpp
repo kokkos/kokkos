@@ -121,6 +121,12 @@ public:
 
   }
 
+  static constexpr uint32_t
+  get_max_team_count(execution_space const&) noexcept
+  {
+    return 1;
+  }
+
   template <typename TaskType>
   static void
   get_function_pointer(

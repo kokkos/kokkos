@@ -495,16 +495,18 @@ public:
           // TODO figure out if this reference count increment is necessary
           predecessor_task_ptr->increment_reference_count();
 
-          auto* pred_queue_ptr = static_cast<task_queue_type*>(
-            predecessor_task_ptr->ready_queue_base_ptr()
-          );
+          //auto* pred_queue_ptr = static_cast<task_queue_type*>(
+          //  predecessor_task_ptr->ready_queue_base_ptr()
+          //);
 
-          if(queue_ptr == nullptr) {
-            queue_ptr = pred_queue_ptr;
-          }
-          else {
-            KOKKOS_ASSERT(queue_ptr == pred_queue_ptr && "Queue mismatch in when_all");
-          }
+          //if(queue_ptr == nullptr) {
+          //  queue_ptr = pred_queue_ptr;
+          //}
+          //else {
+          //  KOKKOS_ASSERT(queue_ptr == pred_queue_ptr && "Queue mismatch in when_all");
+          //}
+
+          queue_ptr = m_queue;
         }
 
       } // end loop over predecessors

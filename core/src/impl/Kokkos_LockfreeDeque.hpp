@@ -127,7 +127,7 @@ private:
 
   };
 
-  fixed_size_circular_buffer<16> m_array;
+  fixed_size_circular_buffer<128> m_array;
   size_type m_top = 0;
   size_type m_bottom = 0;
 
@@ -171,14 +171,14 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
-  void push(node_type&& node)
+  bool push(node_type&& node)
   {
     // Just forward to the lvalue version
-    push(node);
+    return push(node);
   }
 
   KOKKOS_INLINE_FUNCTION
-  void push(node_type& node)
+  bool push(node_type& node)
   {
     auto b = m_bottom; // memory order relaxed
     auto t = m_top; // TODO: memory order acquire!
@@ -186,12 +186,14 @@ public:
     auto& a = m_array;
     if(b - t > a->size - 1) {
       /* queue is full, resize */
-      m_array = a->grow();
-      a = m_array;
+      //m_array = a->grow();
+      //a = m_array;
+      return false;
     }
     a->buffer[b % a->size] = &node; // relaxed
     Kokkos::memory_fence(); // TODO: memory order release
     m_bottom = b + 1; // relaxed store
+    return true;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -205,7 +207,7 @@ public:
     if(t < b) {
       /* Non-empty queue */
       auto& a = m_array; // TODO: technically consume ordered, but acquire should be fine
-      Kokkos::memory_fence(); // TODO memory order instead of fence
+      Kokkos::load_fence(); // TODO memory order instead of fence
       return_value = *static_cast<T*>(a->buffer[t % a->size]); // relaxed
       Kokkos::memory_fence(); // TODO memory order instead of fence
       if(not Kokkos::atomic_compare_exchange_strong(&m_top, t, t+1)) { // TODO memory orders: seq_cst, relaxed
@@ -231,6 +233,8 @@ struct TaskQueueTraitsChaseLev {
   template <class Task>
   using intrusive_task_base_type =
     typename ready_queue_type<Task>::node_type;
+
+  static constexpr auto ready_queue_insertion_may_fail = true;
 
 };
 

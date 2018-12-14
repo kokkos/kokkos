@@ -75,6 +75,7 @@ public:
   using scheduler_type = SimpleTaskScheduler<ExecutionSpace, QueueType>;
   using queue_type = typename scheduler_type::task_queue_type;
 
+
 private:
 
   template <class, class>
@@ -84,6 +85,9 @@ private:
 
   using task_base_type = typename scheduler_type::task_base_type;
   using task_queue_type = typename scheduler_type::task_queue_type;
+
+  using task_queue_traits = typename scheduler_type::task_queue_traits;
+  using task_scheduling_info_type = typename scheduler_type::task_scheduling_info_type;
 
   OwningRawPtr<task_base_type> m_task = nullptr;
 
