@@ -89,6 +89,17 @@ private:
   using task_queue_traits = typename scheduler_type::task_queue_traits;
   using task_scheduling_info_type = typename scheduler_type::task_scheduling_info_type;
 
+  using result_storage_type =
+    Impl::TaskResultStorage<
+      ValueType,
+      Impl::SchedulingInfoStorage<
+        Impl::RunnableTaskBase<task_queue_traits>,
+        task_scheduling_info_type
+      >
+    >;
+
+
+
   OwningRawPtr<task_base_type> m_task = nullptr;
 
   KOKKOS_INLINE_FUNCTION
@@ -277,7 +288,8 @@ public:
   get() const
   {
     KOKKOS_EXPECTS(is_ready());
-    return Impl::TaskResult<ValueType>::get(m_task);
+    return static_cast<result_storage_type*>(m_task)->value_reference();
+    //return Impl::TaskResult<ValueType>::get(m_task);
   }
 
 };

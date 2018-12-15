@@ -90,9 +90,10 @@ public:
 private:
 
   memory_pool m_pool;
-  int64_t m_accum_alloc = 0;
-  int32_t m_count_alloc = 0;
-  int32_t m_max_alloc = 0;
+  // TODO re-enable this with a flag in the type
+  //long m_accum_alloc = 0;
+  int m_count_alloc = 0;
+  int m_max_alloc = 0;
 
   struct _allocation_result {
     bool success;
@@ -107,11 +108,14 @@ private:
       return { true, nullptr };
     }
     else {
-      Kokkos::atomic_increment(&m_accum_alloc); // memory_order_relaxed
+      void* data = m_pool.allocate(static_cast<size_t>(requested_size));
+
+      // TODO re-enable this with a flag in the type
+      //Kokkos::atomic_increment(&m_accum_alloc); // memory_order_relaxed
       Kokkos::atomic_increment(&m_count_alloc); // memory_order_relaxed
       // TODO this isn't thread safe...
       if(m_max_alloc < m_count_alloc) m_max_alloc = m_count_alloc;
-      void* data = m_pool.allocate(static_cast<size_t>(requested_size));
+
       return { data != nullptr, data };
     }
   }
@@ -181,7 +185,7 @@ public:
   }
 
   template <class T, class VLAValueType, class... Args>
-  KOKKOS_FUNCTION
+  KOKKOS_INLINE_FUNCTION
   T*
   allocate_and_construct_with_vla_emulation(allocation_size_type n_vla_entries, Args&&... args)
     // requires
@@ -212,7 +216,7 @@ public:
   }
 
   template <class CountType>
-  KOKKOS_FUNCTION
+  KOKKOS_INLINE_FUNCTION
   void deallocate(PoolAllocatedObjectBase<CountType>&& obj)
   {
     m_pool.deallocate((void*)&obj, 1);

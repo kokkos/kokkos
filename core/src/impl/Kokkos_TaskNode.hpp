@@ -189,6 +189,7 @@ private:
 
   TaskType m_task_type;  // size 2
   priority_type m_priority; // size 2
+  bool m_is_respawning = false;
 
 public:
 
@@ -313,6 +314,12 @@ public:
     return (TaskPriority)m_priority;
   }
 
+  KOKKOS_INLINE_FUNCTION
+  bool get_respawn_flag() const { return m_is_respawning; }
+
+  KOKKOS_INLINE_FUNCTION
+  void set_respawn_flag(bool value = true) { m_is_respawning = value; }
+
 };
 
 //==============================================================================
@@ -361,7 +368,7 @@ public:
 //==============================================================================
 
 template <class TaskQueueTraits, class SchedulingInfo>
-class AggregateTask final
+class alignas(16) AggregateTask final
   : public SchedulingInfoStorage<
       TaskNode<TaskQueueTraits>,
       SchedulingInfo
@@ -432,7 +439,6 @@ private:
 
   function_type m_apply;
   task_base_type* m_predecessor = nullptr;
-  bool m_is_respawning = false;
 
 public:
 
@@ -446,12 +452,6 @@ public:
   ) : base_t(std::forward<Args>(args)...),
       m_apply(apply_function_ptr)
   { }
-
-  KOKKOS_INLINE_FUNCTION
-  bool get_respawn_flag() const { return m_is_respawning; }
-
-  KOKKOS_INLINE_FUNCTION
-  void set_respawn_flag(bool value = true) { m_is_respawning = value; }
 
   KOKKOS_INLINE_FUNCTION
   bool has_predecessor() const { return m_predecessor != nullptr; }
@@ -517,15 +517,53 @@ public:
 
 //==============================================================================
 
-template <class ResultType>
-struct TaskResultStorage
+template <class ResultType, class Base>
+class TaskResultStorage : public Base
 {
-  ResultType m_value = ResultType{};
+private:
+
+  using base_t = Base;
+
+  alignas(Base) ResultType m_value = ResultType{};
+
+
+public:
+
+  using base_t::base_t;
+
+  KOKKOS_INLINE_FUNCTION
+  ResultType* value_pointer() {
+    // Over-alignment makes this a non-standard-layout class,
+    // so alignas() doesn't work
+    //static_assert(
+    //  offsetof(TaskResultStorage, m_value) == sizeof(Base),
+    //  "TaskResultStorage must be POD for layout purposes"
+    //);
+    return &m_value;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  ResultType& value_reference() { return m_value; }
+
 };
 
-template <>
-struct TaskResultStorage<void>
+
+template <class Base>
+class TaskResultStorage<void, Base> : public Base
 {
+private:
+
+  using base_t = Base;
+
+public:
+
+  using base_t::base_t;
+
+  KOKKOS_INLINE_FUNCTION
+  void* value_pointer() noexcept { return nullptr; }
+
+  KOKKOS_INLINE_FUNCTION
+  void value_reference() noexcept { }
 
 };
 
@@ -537,14 +575,17 @@ template <
   class ResultType,
   class FunctorType
 >
-class RunnableTask
-  : // using nesting of base classes to control layout
-    public SchedulingInfoStorage<
-      RunnableTaskBase<TaskQueueTraits>,
-      typename Scheduler::task_queue_type::task_scheduling_info_type
+class alignas(16) RunnableTask
+  : // using nesting of base classes to control layout; multiple empty base classes
+    // may not be ABI compatible with CUDA on Windows
+    public TaskResultStorage<
+      ResultType,
+      SchedulingInfoStorage<
+        RunnableTaskBase<TaskQueueTraits>,
+        typename Scheduler::task_queue_type::task_scheduling_info_type
+      >
     >, // must be first base class
-    public FunctorType,
-    public TaskResultStorage<ResultType>
+    public FunctorType
 {
 private:
 
@@ -553,9 +594,12 @@ private:
   using scheduling_info_type =
       typename scheduler_type::task_scheduling_info_type;
   using scheduling_info_storage_base =
-    SchedulingInfoStorage<
-      runnable_task_base_type,
-      scheduling_info_type
+    TaskResultStorage<
+      ResultType,
+      SchedulingInfoStorage<
+        runnable_task_base_type,
+        scheduling_info_type
+      >
     >;
   using base_t = scheduling_info_storage_base;
 
@@ -616,11 +660,17 @@ public:
   KOKKOS_FUNCTION static
   void apply(task_base_type* self, void* member_as_void)
   {
-    auto* const task = static_cast<
-      Impl::RunnableTask<TaskQueueTraits, Scheduler, ResultType, FunctorType>*
-    >(self);
+    using task_type = Impl::RunnableTask<TaskQueueTraits, Scheduler, ResultType, FunctorType>*;
+    auto* const task = static_cast<task_type>(self);
     auto* const member = reinterpret_cast<member_type*>(member_as_void);
-    //result_type* const result = TaskResult< result_type >::ptr( task );
+
+    // Now that we're over-aligning the result storage, this isn't a problem any more
+    //static_assert(std::is_standard_layout<task_type>::value,
+    //  "Tasks must be standard layout"
+    //);
+    //static_assert(std::is_pod<task_type>::value,
+    //  "Tasks must be PODs"
+    //);
 
     // Task may be serial or team.
     // If team then must synchronize before querying if respawn was requested.
@@ -633,7 +683,8 @@ public:
       0 == member->team_rank();
 #endif
 
-    task->apply_functor(member, TaskResult<result_type>::ptr(task));
+    //task->apply_functor(member, TaskResult<result_type>::ptr(task));
+    task->apply_functor(member, task->value_pointer());
 
     member->team_barrier();
 

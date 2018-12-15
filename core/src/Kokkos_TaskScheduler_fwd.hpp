@@ -148,7 +148,10 @@ template< typename Space >
 using NewTaskScheduler = SimpleTaskScheduler<Space, Impl::SingleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsLockBased>>;
 
 template< typename Space >
-using NewTaskSchedulerMultiple = SimpleTaskScheduler<Space, Impl::MultipleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsChaseLev>>;
+using NewTaskSchedulerMultiple = SimpleTaskScheduler<Space, Impl::MultipleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsLockBased>>;
+
+template< typename Space >
+using ChaseLevTaskScheduler = SimpleTaskScheduler<Space, Impl::MultipleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsChaseLev>>;
 
 template<class Space, class QueueType>
 void wait(BasicTaskScheduler<Space, QueueType> const&);

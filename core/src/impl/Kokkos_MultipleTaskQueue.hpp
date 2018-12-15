@@ -514,13 +514,6 @@ public:
         if(return_value) { break; }
       }
 
-      //if(return_value) {
-      //  return_value->as_runnable_task()
-      //    .template scheduling_info_as<task_scheduling_info_type>()
-      //      .next = nullptr;
-      //  Kokkos::memory_fence(); // store release; this may not be necessary
-      //}
-
       // Note that this is where we'd update the task's scheduling info
     }
     // if nothing was found, return a default-constructed (empty) OptionalRef

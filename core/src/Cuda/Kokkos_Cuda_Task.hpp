@@ -152,7 +152,7 @@ public:
 
       if(current_task) {
 
-        int32_t const b = sizeof(scheduling_info_storage_type) / sizeof(int32_t);
+        int32_t b = sizeof(scheduling_info_storage_type) / sizeof(int32_t);
         static_assert(
           sizeof(scheduling_info_storage_type) % sizeof(int32_t) == 0,
           "bad task size"
@@ -185,6 +185,9 @@ public:
         // writes are visible to all threads in the warp.
 
         KOKKOS_IMPL_CUDA_SYNCWARP;
+
+        //if(warp_lane < b % CudaTraits::WarpSize) b += CudaTraits::WarpSize;
+        //b -= b % CudaTraits::WarpSize;
 
         // copy task closure from shared to global memory:
         for (int32_t i = b + warp_lane; i < e; i += CudaTraits::WarpSize) {

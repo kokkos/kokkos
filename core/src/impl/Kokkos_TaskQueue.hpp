@@ -111,7 +111,7 @@ protected:
 
   memory_pool               m_memory ;
   task_root_type * volatile m_ready[ NumQueue ][ 2 ];
-  long                      m_accum_alloc ; // Accumulated number of allocations
+  //long                      m_accum_alloc ; // Accumulated number of allocations
   int                       m_count_alloc ; // Current number of allocations
   int                       m_max_alloc ;   // Maximum number of allocations
   int                       m_ready_count ; // Number of ready or executing

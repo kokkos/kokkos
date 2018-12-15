@@ -66,9 +66,9 @@ TaskQueue< ExecSpace, MemorySpace>::TaskQueue
   ( typename TaskQueue< ExecSpace, MemorySpace>::memory_pool const & arg_memory_pool )
   : m_memory( arg_memory_pool )
   , m_ready()
-  , m_accum_alloc(0)
-  , m_count_alloc(0)
-  , m_max_alloc(0)
+  //, m_accum_alloc(0)
+  //, m_count_alloc(0)
+  //, m_max_alloc(0)
   , m_ready_count(0)
 {
   for ( int i = 0 ; i < NumQueue ; ++i ) {
@@ -153,12 +153,12 @@ void * TaskQueue< ExecSpace, MemorySpace>::allocate( size_t n )
 {
   void * const p = m_memory.allocate(n);
 
-  if ( p ) {
-    Kokkos::atomic_increment( & m_accum_alloc );
-    Kokkos::atomic_increment( & m_count_alloc );
+  //if ( p ) {
+    //Kokkos::atomic_increment( & m_accum_alloc );
+    //Kokkos::atomic_increment( & m_count_alloc );
 
-    if ( m_max_alloc < m_count_alloc ) m_max_alloc = m_count_alloc ;
-  }
+    //if ( m_max_alloc < m_count_alloc ) m_max_alloc = m_count_alloc ;
+  //}
 
   return p ;
 }
@@ -168,7 +168,7 @@ KOKKOS_FUNCTION
 void TaskQueue< ExecSpace, MemorySpace>::deallocate( void * p , size_t n )
 {
   m_memory.deallocate( p , n );
-  Kokkos::atomic_decrement( & m_count_alloc );
+  //Kokkos::atomic_decrement( & m_count_alloc );
 }
 
 //----------------------------------------------------------------------------
