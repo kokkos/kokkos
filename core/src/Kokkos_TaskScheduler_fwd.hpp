@@ -124,6 +124,8 @@ template< typename ExecSpace, typename MemSpace, typename TaskQueueTraits>
 class MultipleTaskQueue;
 
 struct TaskQueueTraitsLockBased;
+
+template <size_t CircularBufferSize=64>
 struct TaskQueueTraitsChaseLev;
 
 template< typename ResultType >
@@ -151,7 +153,7 @@ template< typename Space >
 using NewTaskSchedulerMultiple = SimpleTaskScheduler<Space, Impl::MultipleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsLockBased>>;
 
 template< typename Space >
-using ChaseLevTaskScheduler = SimpleTaskScheduler<Space, Impl::MultipleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsChaseLev>>;
+using ChaseLevTaskScheduler = SimpleTaskScheduler<Space, Impl::MultipleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsChaseLev<>>>;
 
 template<class Space, class QueueType>
 void wait(BasicTaskScheduler<Space, QueueType> const&);

@@ -796,6 +796,14 @@ TEST_F( TEST_CATEGORY, task_fib_new_multiple )
   }
 }
 
+TEST_F( TEST_CATEGORY, task_fib_chase_lev )
+{
+  const int N = 27 ;
+  for ( int i = 0; i < N; ++i ) {
+    TestTaskScheduler::TestFib< Kokkos::ChaseLevTaskScheduler<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 64000 );
+  }
+}
+
 TEST_F( TEST_CATEGORY, task_depend )
 {
   for ( int i = 0; i < 25; ++i ) {
@@ -821,6 +829,13 @@ TEST_F( TEST_CATEGORY, task_depend_new_multiple )
 {
   for ( int i = 0; i < 25; ++i ) {
     TestTaskScheduler::TestTaskDependence< Kokkos::NewTaskSchedulerMultiple<TEST_EXECSPACE> >::run( i );
+  }
+}
+
+TEST_F( TEST_CATEGORY, task_depend_chase_lev )
+{
+  for ( int i = 0; i < 25; ++i ) {
+    TestTaskScheduler::TestTaskDependence< Kokkos::ChaseLevTaskScheduler<TEST_EXECSPACE> >::run( i );
   }
 }
 
@@ -884,6 +899,13 @@ TEST_F( TEST_CATEGORY, task_multiple_depend_new_multiple )
 {
   for ( int i = 2; i < 6; ++i ) {
     TestTaskScheduler::TestMultipleDependence< Kokkos::NewTaskSchedulerMultiple<TEST_EXECSPACE> >::run( i );
+  }
+}
+
+TEST_F( TEST_CATEGORY, task_multiple_depend_chases_lev )
+{
+  for ( int i = 2; i < 6; ++i ) {
+    TestTaskScheduler::TestMultipleDependence< Kokkos::ChaseLevTaskScheduler<TEST_EXECSPACE> >::run( i );
   }
 }
 

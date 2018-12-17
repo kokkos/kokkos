@@ -56,7 +56,7 @@
 
 #include <impl/Kokkos_VLAEmulation.hpp>
 #include <impl/Kokkos_LIFO.hpp>
-#include <impl/Kokkos_LockfreeDeque.hpp>
+#include <impl/Kokkos_ChaseLev.hpp>
 #include <impl/Kokkos_EBO.hpp>
 #include <Kokkos_Concepts.hpp>
 

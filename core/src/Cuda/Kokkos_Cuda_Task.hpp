@@ -404,6 +404,8 @@ public:
 
         int32_t volatile * const task_mem = (int32_t volatile *) task_ptr ;
 
+        KOKKOS_ASSERT(e * sizeof(int32_t) < shmem_per_warp);
+
         // copy task closure from global to shared memory:
 
         for ( int32_t i = warp_lane ; i < e ; i += CudaTraits::WarpSize ) {

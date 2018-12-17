@@ -74,7 +74,8 @@ namespace Impl {
  */
 template <
   class T,
-  class SizeType = int32_t
+  class SizeType = int32_t,
+  size_t CircularBufferSize = 64
 >
 struct ChaseLevDeque {
 public:
@@ -86,35 +87,13 @@ public:
 
 private:
 
-
-  // TODO use VLA emulation here?
-  //struct circular_buffer {
-
-  //  T** buffer = nullptr;
-  //  size_type size;
-
-  //  KOKKOS_INLINE_FUNCTION
-  //  explicit
-  //  circular_buffer(size_type arg_size) noexcept
-  //    : size(arg_size)
-  //  { }
+  // TODO variable size circular buffer?
 
 
-  //  circular_buffer* grow() {
-  //    // abort for now
-  //    std::abort();
-  //    return nullptr;
-  //  }
-
-  //};
-
-
-  //circular_buffer* m_array = nullptr;
-  template <size_type MaxSize>
   struct fixed_size_circular_buffer {
 
-    node_type* buffer[MaxSize] = { nullptr };
-    static constexpr auto size = MaxSize;
+    node_type* buffer[CircularBufferSize] = { nullptr };
+    static constexpr auto size = CircularBufferSize;
 
     KOKKOS_INLINE_FUNCTION
     fixed_size_circular_buffer grow() {
@@ -127,7 +106,7 @@ private:
 
   };
 
-  fixed_size_circular_buffer<128> m_array;
+  fixed_size_circular_buffer m_array;
   size_type m_top = 0;
   size_type m_bottom = 0;
 
@@ -222,10 +201,11 @@ public:
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+template <size_t CircularBufferSize>
 struct TaskQueueTraitsChaseLev {
 
   template <class Task>
-  using ready_queue_type = ChaseLevDeque<Task>;
+  using ready_queue_type = ChaseLevDeque<Task, int32_t, CircularBufferSize>;
 
   template <class Task>
   using waiting_queue_type = SingleConsumeOperationLIFO<Task>;

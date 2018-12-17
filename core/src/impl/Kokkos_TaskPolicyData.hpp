@@ -184,53 +184,6 @@ public:
 
 };
 
-
-// TODO redo this to have different types for dependence case and scheduler case
-
-template< int TaskEnum , typename DepFutureType >
-struct TaskPolicyData
-{
-  using execution_space = typename DepFutureType::execution_space ;
-  using scheduler_type  = TaskSchedulerBase;
-
-  enum : int { m_task_type = TaskEnum };
-
-  scheduler_type const * m_scheduler ;
-  DepFutureType  const   m_dependence ;
-  int                    m_priority ;
-
-  TaskPolicyData() = delete ;
-  TaskPolicyData( TaskPolicyData && ) = default ;
-  TaskPolicyData( TaskPolicyData const & ) = default ;
-  TaskPolicyData & operator = ( TaskPolicyData && ) = default ;
-  TaskPolicyData & operator = ( TaskPolicyData const & ) = default ;
-
-  KOKKOS_INLINE_FUNCTION
-  TaskPolicyData( DepFutureType        const & arg_future
-                , Kokkos::TaskPriority const & arg_priority )
-    : m_scheduler( nullptr )
-    , m_dependence( arg_future )
-    , m_priority( static_cast<int>( arg_priority ) )
-    {}
-
-  KOKKOS_INLINE_FUNCTION
-  TaskPolicyData( scheduler_type const& arg_scheduler
-                , Kokkos::TaskPriority const & arg_priority )
-    : m_scheduler( & arg_scheduler )
-    , m_dependence()
-    , m_priority( static_cast<int>( arg_priority ) )
-    {}
-
-  KOKKOS_INLINE_FUNCTION
-  TaskPolicyData( scheduler_type const& arg_scheduler
-                , DepFutureType        const & arg_future
-                , Kokkos::TaskPriority const & arg_priority )
-    : m_scheduler( & arg_scheduler )
-    , m_dependence( arg_future )
-    , m_priority( static_cast<int>( arg_priority ) )
-    {}
-};
-
 } // namespace Impl
 } // namespace Kokkos
 
