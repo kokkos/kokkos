@@ -230,9 +230,6 @@ T atomic_fetch_oper( const Oper& op, volatile T * const dest ,
   typename Kokkos::Impl::enable_if<
                 ( sizeof(T) != 4 )
              && ( sizeof(T) != 8 )
-          #if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-             && ( sizeof(T) != 16 )
-          #endif
            , const T >::type val )
 {
 
