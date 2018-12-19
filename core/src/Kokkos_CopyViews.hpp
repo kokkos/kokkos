@@ -1498,7 +1498,6 @@ void deep_copy
        ((dst_type::rank < 7) || (dst.stride_6() == src.stride_6())) &&
        ((dst_type::rank < 8) || (dst.stride_7() == src.stride_7()))
     ) {
-//printf("HELLO\n");
     const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
     Kokkos::fence();
     if((void*)dst.data()!=(void*)src.data()) {
@@ -1507,7 +1506,6 @@ void deep_copy
     }
     Kokkos::fence();
   } else {
-//printf("HELLO --\n");
     Kokkos::fence();
     Impl::view_copy(dst, src);
     Kokkos::fence();
@@ -1525,11 +1523,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const TeamType& team, const View<DT
                                                                                              unsigned(ViewTraits<ST,SP...>::rank) == 1
                                                                                            )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0);
+    const size_t N = dst.extent(0);
     //if(team.team_rank() == 0) //printf("local_deep_copy: teampolicy, rank 1\n");
     team.team_barrier();
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, N), [&] (const int& i) {
@@ -1545,7 +1543,7 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const TeamType& team, const View<DT
                                                                                              unsigned(ViewTraits<ST,SP...>::rank) == 2
                                                                                            )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
@@ -1557,7 +1555,7 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const TeamType& team, const View<DT
     //        dst(i,j) =  src(i,j);
     //    });
     //});
-    const int N = dst.extent(0)*dst.extent(1); //if(team.team_rank() == 0) //printf("local_deep_copy: teampolicy, rank 2\n");
+    const size_t N = dst.extent(0)*dst.extent(1); //if(team.team_rank() == 0) //printf("local_deep_copy: teampolicy, rank 2\n");
     team.team_barrier();    
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, N), [&] (const int& i) {
         int i0 = i%dst.extent(0);
@@ -1574,11 +1572,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const TeamType& team, const View<DT
                                                                                              unsigned(ViewTraits<ST,SP...>::rank) == 3
                                                                                            )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2); //if(team.team_rank() == 0) //printf("local_deep_copy: teampolicy, rank 3\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2); //if(team.team_rank() == 0) //printf("local_deep_copy: teampolicy, rank 3\n");
     team.team_barrier();    
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, N), [&] (const int& i) {
         int i0   = i%dst.extent(0);
@@ -1597,11 +1595,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const TeamType& team, const View<DT
                                                                                              unsigned(ViewTraits<ST,SP...>::rank) == 4
                                                                                            )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3); //if(team.team_rank() == 0) //printf("local_deep_copy: teampolicy, rank 4\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3); //if(team.team_rank() == 0) //printf("local_deep_copy: teampolicy, rank 4\n");
     team.team_barrier();    
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, N), [&] (const int& i) {
         int i0   = i%dst.extent(0);
@@ -1622,11 +1620,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const TeamType& team, const View<DT
                                                                                              unsigned(ViewTraits<ST,SP...>::rank) == 5
                                                                                            )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4); //if(team.team_rank() == 0) //printf("local_deep_copy: teampolicy, rank 5\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4); //if(team.team_rank() == 0) //printf("local_deep_copy: teampolicy, rank 5\n");
     team.team_barrier();    
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, N), [&] (const int& i) {
         int i0   = i%dst.extent(0);
@@ -1649,11 +1647,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const TeamType& team, const View<DT
                                                                                              unsigned(ViewTraits<ST,SP...>::rank) == 6
                                                                                            )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4)*dst.extent(5); //if(team.team_rank() == 0) //printf("local_deep_copy: teampolicy, rank 6\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4)*dst.extent(5); //if(team.team_rank() == 0) //printf("local_deep_copy: teampolicy, rank 6\n");
     team.team_barrier();    
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, N), [&] (const int& i) {
         int i0   = i%dst.extent(0);
@@ -1678,11 +1676,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const TeamType& team, const View<DT
                                                                                              unsigned(ViewTraits<ST,SP...>::rank) == 7
                                                                                            )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4)*dst.extent(5)*dst.extent(6); //if(team.team_rank() == 0) //printf("local_deep_copy: teampolicy, rank 7\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4)*dst.extent(5)*dst.extent(6); //if(team.team_rank() == 0) //printf("local_deep_copy: teampolicy, rank 7\n");
     team.team_barrier();    
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, N), [&] (const int& i) {
         int i0   = i%dst.extent(0);
@@ -1716,12 +1714,12 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
                                                                        !(std::is_same< typename View<DT,DP...>::memory_space, Kokkos::HostSpace >::value)
                                                                      )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
     //printf("dst.span_is_contiguous()=%d\n",dst.span_is_contiguous());
-    const int N = dst.extent(0); //printf("local_deep_copy: rangepolicy, rank 1\n");
+    const size_t N = dst.extent(0); //printf("local_deep_copy: rangepolicy, rank 1\n");
     #pragma unroll
     for(int i=0;i<N;++i){
         dst(i) = src(i);
@@ -1736,11 +1734,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
                                                                        !(std::is_same< typename View<DT,DP...>::memory_space, Kokkos::HostSpace >::value)
                                                                      )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1); //printf("local_deep_copy: rangepolicy, rank 2\n");
+    const size_t N = dst.extent(0)*dst.extent(1); //printf("local_deep_copy: rangepolicy, rank 2\n");
     #pragma unroll	
     for(int i=0;i<N;++i){
         int i0 = i%dst.extent(0);
@@ -1757,11 +1755,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
                                                                        !(std::is_same< typename View<DT,DP...>::memory_space, Kokkos::HostSpace >::value)
                                                                      )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2); //printf("local_deep_copy: rangepolicy, rank 3\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2); //printf("local_deep_copy: rangepolicy, rank 3\n");
     #pragma unroll
     for(int i=0;i<N;++i){
         int i0   = i%dst.extent(0);
@@ -1780,11 +1778,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
                                                                        !(std::is_same< typename View<DT,DP...>::memory_space, Kokkos::HostSpace >::value)
                                                                      )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3); //printf("local_deep_copy: rangepolicy, rank 4\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3); //printf("local_deep_copy: rangepolicy, rank 4\n");
     #pragma unroll
     for(int i=0;i<N;++i){
         int i0   = i%dst.extent(0);
@@ -1805,11 +1803,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
                                                                        !(std::is_same< typename View<DT,DP...>::memory_space, Kokkos::HostSpace >::value)
                                                                      )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4); //printf("local_deep_copy: rangepolicy, rank 5\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4); //printf("local_deep_copy: rangepolicy, rank 5\n");
     #pragma unroll
     for(int i=0;i<N;++i){
         int i0   = i%dst.extent(0);
@@ -1832,11 +1830,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
                                                                        !(std::is_same< typename View<DT,DP...>::memory_space, Kokkos::HostSpace >::value)
                                                                      )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4)*dst.extent(5); //printf("local_deep_copy: rangepolicy, rank 6\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4)*dst.extent(5); //printf("local_deep_copy: rangepolicy, rank 6\n");
     #pragma unroll
     for(int i=0;i<N;++i){
         int i0   = i%dst.extent(0);
@@ -1861,11 +1859,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
                                                                        !(std::is_same< typename View<DT,DP...>::memory_space, Kokkos::HostSpace >::value)
                                                                      )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4)*dst.extent(5)*dst.extent(6); //printf("local_deep_copy: rangepolicy, rank 7\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4)*dst.extent(5)*dst.extent(6); //printf("local_deep_copy: rangepolicy, rank 7\n");
     #pragma unroll
     for(int i=0;i<N;++i){
         int i0   = i%dst.extent(0);
@@ -1885,14 +1883,14 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
 }
 //----------------------------------------------------------------------------
 template< class DT , class ... DP , class ST , class ... SP >
-void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,  
+void inline local_deep_copy (const View<DT,DP...> & dst,  
                                              const View<ST,SP...> & src,
                                              typename std::enable_if<( (unsigned(ViewTraits<DT,DP...>::rank) != 0 && 
                                                                         unsigned(ViewTraits<ST,SP...>::rank) != 0) &&    
                                                                         std::is_same< typename View<DT,DP...>::memory_space, Kokkos::HostSpace >::value
                                                                      )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
@@ -1905,11 +1903,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const TeamType& team, const View<DT
                                                                    typename ViewTraits<DT,DP...>::const_value_type & value,
                                                                    typename std::enable_if<( unsigned(ViewTraits<DT,DP...>::rank) == 1 )>::type * = 0 )
 {
-     if(dst.data() == NULL ) {
+     if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0); //if(team.team_rank() == 0) //printf("local_fill: teampolicy, rank 1\n");
+    const size_t N = dst.extent(0); //if(team.team_rank() == 0) //printf("local_fill: teampolicy, rank 1\n");
     team.team_barrier();
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, N), [&] (const int& i) {
         dst(i) =  value;
@@ -1922,11 +1920,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const TeamType& team, const View<DT
                                                                    typename ViewTraits<DT,DP...>::const_value_type & value,
                                                                    typename std::enable_if<( unsigned(ViewTraits<DT,DP...>::rank) == 2 )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1); //if(team.team_rank() == 0) //printf("local_fill: teampolicy, rank 2\n");
+    const size_t N = dst.extent(0)*dst.extent(1); //if(team.team_rank() == 0) //printf("local_fill: teampolicy, rank 2\n");
     team.team_barrier();    
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, N), [&] (const int& i) {
         int i0 = i%dst.extent(0);
@@ -1941,11 +1939,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const TeamType& team, const View<DT
                                                                    typename ViewTraits<DT,DP...>::const_value_type & value,
                                                                    typename std::enable_if<( unsigned(ViewTraits<DT,DP...>::rank) == 3 )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2); //if(team.team_rank() == 0) //printf("local_fill: teampolicy, rank 3\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2); //if(team.team_rank() == 0) //printf("local_fill: teampolicy, rank 3\n");
     team.team_barrier();    
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, N), [&] (const int& i) {
         int i0   = i%dst.extent(0);
@@ -1962,11 +1960,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const TeamType& team, const View<DT
                                                                    typename ViewTraits<DT,DP...>::const_value_type & value,
                                                                    typename std::enable_if<( unsigned(ViewTraits<DT,DP...>::rank) == 4 )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3); //if(team.team_rank() == 0) //printf("local_fill: teampolicy, rank 4\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3); //if(team.team_rank() == 0) //printf("local_fill: teampolicy, rank 4\n");
     team.team_barrier();    
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, N), [&] (const int& i) {
         int i0   = i%dst.extent(0);
@@ -1985,11 +1983,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const TeamType& team, const View<DT
                                                                    typename ViewTraits<DT,DP...>::const_value_type & value,
                                                                    typename std::enable_if<( unsigned(ViewTraits<DT,DP...>::rank) == 5 )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4); //if(team.team_rank() == 0) //printf("local_fill: teampolicy, rank 5\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4); //if(team.team_rank() == 0) //printf("local_fill: teampolicy, rank 5\n");
     team.team_barrier();    
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, N), [&] (const int& i) {
         int i0   = i%dst.extent(0);
@@ -2010,11 +2008,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const TeamType& team, const View<DT
                                                                    typename ViewTraits<DT,DP...>::const_value_type & value,
                                                                    typename std::enable_if<( unsigned(ViewTraits<DT,DP...>::rank) == 6 )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4)*dst.extent(5); //if(team.team_rank() == 0) //printf("local_fill: teampolicy, rank 6\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4)*dst.extent(5); //if(team.team_rank() == 0) //printf("local_fill: teampolicy, rank 6\n");
     team.team_barrier();    
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, N), [&] (const int& i) {
         int i0   = i%dst.extent(0);
@@ -2037,11 +2035,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const TeamType& team, const View<DT
                                                                    typename ViewTraits<DT,DP...>::const_value_type & value,
                                                                    typename std::enable_if<( unsigned(ViewTraits<DT,DP...>::rank) == 7 )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4)*dst.extent(5)*dst.extent(6); //if(team.team_rank() == 0) //printf("local_fill: teampolicy, rank 7\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4)*dst.extent(5)*dst.extent(6); //if(team.team_rank() == 0) //printf("local_fill: teampolicy, rank 7\n");
     team.team_barrier();    
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, N), [&] (const int& i) {
         int i0   = i%dst.extent(0);
@@ -2068,12 +2066,12 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
                                                                        !(std::is_same< typename View<DT,DP...>::memory_space, Kokkos::HostSpace >::value)
                                                                      )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
     //printf("dst.span_is_contiguous()=%d\n",dst.span_is_contiguous());
-    const int N = dst.extent(0); //printf("local_fill: rangepolicy, rank 1\n");
+    const size_t N = dst.extent(0); //printf("local_fill: rangepolicy, rank 1\n");
     #pragma unroll
     for(int i=0;i<N;++i){
         dst(i) = value;
@@ -2087,11 +2085,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
                                                                        !(std::is_same< typename View<DT,DP...>::memory_space, Kokkos::HostSpace >::value)
                                                                      )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1); //printf("local_fill: rangepolicy, rank 2\n");
+    const size_t N = dst.extent(0)*dst.extent(1); //printf("local_fill: rangepolicy, rank 2\n");
     #pragma unroll
     for(int i=0;i<N;++i){
         int i0 = i%dst.extent(0);
@@ -2107,11 +2105,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
                                                                        !(std::is_same< typename View<DT,DP...>::memory_space, Kokkos::HostSpace >::value)
                                                                      )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2); //printf("local_fill: rangepolicy, rank 3\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2); //printf("local_fill: rangepolicy, rank 3\n");
     #pragma unroll
     for(int i=0;i<N;++i){
         int i0   = i%dst.extent(0);
@@ -2129,11 +2127,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
                                                                        !(std::is_same< typename View<DT,DP...>::memory_space, Kokkos::HostSpace >::value)
                                                                      )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3); //printf("local_fill: rangepolicy, rank 4\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3); //printf("local_fill: rangepolicy, rank 4\n");
     #pragma unroll
     for(int i=0;i<N;++i){
         int i0   = i%dst.extent(0);
@@ -2153,11 +2151,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
                                                                        !(std::is_same< typename View<DT,DP...>::memory_space, Kokkos::HostSpace >::value)
                                                                      )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4); //printf("local_fill: rangepolicy, rank 5\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4); //printf("local_fill: rangepolicy, rank 5\n");
     #pragma unroll
     for(int i=0;i<N;++i){
         int i0   = i%dst.extent(0);
@@ -2179,11 +2177,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
                                                                        !(std::is_same< typename View<DT,DP...>::memory_space, Kokkos::HostSpace >::value)
                                                                      )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4)*dst.extent(5); //printf("local_fill: rangepolicy, rank 6\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4)*dst.extent(5); //printf("local_fill: rangepolicy, rank 6\n");
     #pragma unroll
     for(int i=0;i<N;++i){
         int i0   = i%dst.extent(0);
@@ -2207,11 +2205,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
                                                                        !(std::is_same< typename View<DT,DP...>::memory_space, Kokkos::HostSpace >::value)
                                                                      )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
-    const int N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4)*dst.extent(5)*dst.extent(6); //printf("local_fill: rangepolicy, rank 7\n");
+    const size_t N = dst.extent(0)*dst.extent(1)*dst.extent(2)*dst.extent(3)*dst.extent(4)*dst.extent(5)*dst.extent(6); //printf("local_fill: rangepolicy, rank 7\n");
     #pragma unroll
     for(int i=0;i<N;++i){
         int i0   = i%dst.extent(0);
@@ -2231,13 +2229,13 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
 }
 //----------------------------------------------------------------------------
 template< class DT , class ... DP >
-void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,  
+void inline local_deep_copy (const View<DT,DP...> & dst,  
                                              typename ViewTraits<DT,DP...>::const_value_type & value,
                                              typename std::enable_if<( unsigned(ViewTraits<DT,DP...>::rank) != 0 &&
                                                                        std::is_same< typename View<DT,DP...>::memory_space, Kokkos::HostSpace >::value
                                                                      )>::type * = 0 )
 {
-    if(dst.data() == NULL ) {
+    if( dst.data() == nullptr ) {
         //Kokkos::fence();
         return;
     }
