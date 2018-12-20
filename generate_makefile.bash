@@ -130,6 +130,7 @@ do
       echo "--arch=[OPT]:  Set target architectures. Options are:"
       echo "               [AMD]"
       echo "                 AMDAVX          = AMD CPU"
+      echo "                 EPYC            = AMD EPYC Zen-Core CPU"
       echo "               [ARM]"
       echo "                 ARMv80          = ARMv8.0 Compatible CPU"
       echo "                 ARMv81          = ARMv8.1 Compatible CPU"
