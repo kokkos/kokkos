@@ -525,6 +525,7 @@ public:
   inline
   void execute() const
   {
+    if(m_rp.m_num_tiles==0) return;
     const array_index_type maxblocks = static_cast<array_index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount);
     if ( RP::rank == 2 )
     {
