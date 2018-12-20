@@ -162,6 +162,7 @@ namespace Impl {
 
       // Test deep_copy
       Kokkos::deep_copy( b, a );
+      b.template sync<typename ViewType::host_mirror_space>();
 
       // Perform same checks on b as done on a
       // Check device view is initialized as expected
