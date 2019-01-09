@@ -1148,13 +1148,15 @@ ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
   # TODO: CXXFLAGS needs libs as well, but leads to warnings about unused linker flags.
   ifneq ($(HPX_PATH),)
     ifeq ($(KOKKOS_INTERNAL_ENABLE_DEBUG), 1)
-      KOKKOS_CXXFLAGS += $(shell PKG_CONFIG_PATH=$(HPX_PATH)/lib/pkgconfig pkg-config --libs --cflags hpx_application_debug)
+      KOKKOS_CXXFLAGS += $(shell PKG_CONFIG_PATH=$(HPX_PATH)/lib/pkgconfig pkg-config --cflags hpx_application_debug)
+      KOKKOS_CXXFLAGS += -Wl,"$(shell PKG_CONFIG_PATH=$(HPX_PATH)/lib/pkgconfig pkg-config --libs hpx_application_debug)"
       KOKKOS_CXXLDFLAGS += $(shell PKG_CONFIG_PATH=$(HPX_PATH)/lib/pkgconfig pkg-config --libs hpx_application_debug)
       #KOKKOS_TPL_INCLUDE_DIRS += $(HPX_PATH)/include
       #KOKKOS_TPL_LIBRARY_DIRS += $(HPX_PATH)/lib
       KOKKOS_LIBS += $(shell PKG_CONFIG_PATH=$(HPX_PATH)/lib/pkgconfig pkg-config --libs hpx_application_debug)
     else
-      KOKKOS_CXXFLAGS += $(shell PKG_CONFIG_PATH=$(HPX_PATH)/lib/pkgconfig pkg-config --libs --cflags hpx_application)
+      KOKKOS_CXXFLAGS += $(shell PKG_CONFIG_PATH=$(HPX_PATH)/lib/pkgconfig pkg-config --cflags hpx_application)
+      KOKKOS_CXXFLAGS += -Wl,"$(shell PKG_CONFIG_PATH=$(HPX_PATH)/lib/pkgconfig pkg-config --libs hpx_application)"
       KOKKOS_CXXLDFLAGS += $(shell PKG_CONFIG_PATH=$(HPX_PATH)/lib/pkgconfig pkg-config --libs hpx_application)
       #KOKKOS_TPL_INCLUDE_DIRS += $(HPX_PATH)/include
       #KOKKOS_TPL_LIBRARY_DIRS += $(HPX_PATH)/lib
@@ -1162,13 +1164,15 @@ ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
     endif
   else
     ifeq ($(KOKKOS_INTERNAL_ENABLE_DEBUG), 1)
-      KOKKOS_CXXFLAGS += $(shell pkg-config --libs --cflags hpx_application_debug)
+      KOKKOS_CXXFLAGS += $(shell pkg-config --cflags hpx_application_debug)
+      KOKKOS_CXXFLAGS += -Wl,"$(shell pkg-config --libs hpx_application_debug)"
       KOKKOS_CXXLDFLAGS += $(shell pkg-config --libs hpx_application_debug)
       #KOKKOS_TPL_INCLUDE_DIRS += $(HPX_PATH)/include
       #KOKKOS_TPL_LIBRARY_DIRS += $(HPX_PATH)/lib
       KOKKOS_LIBS += $(shell pkg-config --libs hpx_application_debug)
     else
-      KOKKOS_CXXFLAGS += $(shell pkg-config --libs --cflags hpx_application)
+      KOKKOS_CXXFLAGS += $(shell pkg-config --cflags hpx_application)
+      KOKKOS_CXXFLAGS += -Wl,"$(shell pkg-config --libs hpx_application)"
       KOKKOS_CXXLDFLAGS += $(shell pkg-config --libs hpx_application)
       #KOKKOS_TPL_INCLUDE_DIRS += $(HPX_PATH)/include
       #KOKKOS_TPL_LIBRARY_DIRS += $(HPX_PATH)/lib
