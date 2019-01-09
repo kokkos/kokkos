@@ -1539,46 +1539,10 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda, ValueType &result) {
-
-  result = ValueType();
-
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    ValueType tmp = ValueType();
-    lambda(i, tmp);
-    result += tmp;
+    lambda(i, result);
   }
-
-  result =
-      loop_boundaries.thread.team_reduce(result, Impl::JoinAdd<ValueType>());
-}
-
-/** \brief  Intra-thread vector parallel_reduce. Executes lambda(iType i,
- * ValueType & val) for each i=0..N-1.
- *
- * The range i=0..N-1 is mapped to all vector lanes of the the calling thread
- * and a reduction of val is performed using JoinType(ValueType& val, const
- * ValueType& update) and put into init_result. The input value of init_result
- * is used as initializer for temporary variables of ValueType. Therefore the
- * input value should be the neutral element with respect to the join operation
- * (e.g. '0 for +-' or '1 for *'). This functionality requires C++11 support.*/
-template <typename iType, class Lambda, typename ValueType, class JoinType>
-KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
-        &loop_boundaries,
-    const Lambda &lambda, const JoinType &join, ValueType &init_result) {
-
-  ValueType result = init_result;
-
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
-    ValueType tmp = ValueType();
-    lambda(i, tmp);
-    join(result, tmp);
-  }
-
-  init_result = loop_boundaries.thread.team_reduce(
-      result, Impl::JoinLambdaAdapter<ValueType, JoinType>(join));
 }
 
 /** \brief  Intra-thread vector parallel_for. Executes lambda(iType i) for each
@@ -1595,8 +1559,9 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 #pragma ivdep
 #endif
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment)
+       i += loop_boundaries.increment) {
     lambda(i);
+  }
 }
 
 /** \brief  Intra-thread vector parallel_reduce. Executes lambda(iType i,
@@ -1610,15 +1575,12 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda, ValueType &result) {
-  result = ValueType();
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    ValueType tmp = ValueType();
-    lambda(i, tmp);
-    result += tmp;
+    lambda(i, result);
   }
 }
 
@@ -1635,19 +1597,15 @@ template <typename iType, class Lambda, typename ValueType, class JoinType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
-    const Lambda &lambda, const JoinType &join, ValueType &init_result) {
+    const Lambda &lambda, const JoinType &join, ValueType &result) {
 
-  ValueType result = init_result;
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    ValueType tmp = ValueType();
-    lambda(i, tmp);
-    join(result, tmp);
+    lambda(i, result);
   }
-  init_result = result;
 }
 
 template <typename iType, class Lambda, typename ReducerType>
@@ -1664,8 +1622,6 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
        i += loop_boundaries.increment) {
     lambda(i, reducer.reference());
   }
-
-  loop_boundaries.thread.team_reduce(reducer);
 }
 
 template <typename iType, class Lambda, typename ReducerType>
@@ -1753,8 +1709,7 @@ template <class FunctorType>
 KOKKOS_INLINE_FUNCTION void
 single(const Impl::ThreadSingleStruct<Impl::HPXTeamMember> &single_struct,
        const FunctorType &lambda) {
-  if (single_struct.team_member.team_rank() == 0)
-    lambda();
+  lambda();
 }
 
 template <class FunctorType, class ValueType>
@@ -1768,10 +1723,7 @@ template <class FunctorType, class ValueType>
 KOKKOS_INLINE_FUNCTION void
 single(const Impl::ThreadSingleStruct<Impl::HPXTeamMember> &single_struct,
        const FunctorType &lambda, ValueType &val) {
-  if (single_struct.team_member.team_rank() == 0) {
-    lambda(val);
-  }
-  single_struct.team_member.team_broadcast(val, 0);
+  lambda(val);
 }
 
 } // namespace Kokkos
