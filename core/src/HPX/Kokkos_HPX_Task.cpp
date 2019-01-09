@@ -59,7 +59,7 @@ template class TaskQueue<Kokkos::HPX>;
 
 void TaskQueueSpecialization<Kokkos::HPX>::execute(
     TaskQueue<Kokkos::HPX> *const queue) {
-  hpx::run_hpx_function([queue]() {
+  Kokkos::Impl::run_hpx_function([queue]() {
     static task_base_type *const end = (task_base_type *)task_base_type::EndTag;
     auto num_worker_threads = HPX::impl_max_hardware_threads();
 
