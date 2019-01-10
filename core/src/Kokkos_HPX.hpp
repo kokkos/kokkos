@@ -115,21 +115,59 @@ template <typename F> inline void run_hpx_function(F &&f) {
     hpx::threads::run_as_hpx_thread(std::move(f));
   }
 }
+constexpr std::size_t cache_line_size = 64;
 
 inline void pad_to_cache_line(std::size_t &size) {
-  size = ((size + 63) / 64) * 64;
+  size = ((size + cache_line_size - 1) / cache_line_size) * cache_line_size;
 }
+
+class thread_buffer {
+  static constexpr std::size_t m_cache_line_size = 64;
+
+  std::size_t m_num_threads;
+  std::size_t m_size_per_thread;
+  std::size_t m_size_total;
+  std::unique_ptr<char[]> m_data;
+
+  void pad_to_cache_line(std::size_t &size) {
+    size = ((size + m_cache_line_size - 1) / m_cache_line_size) *
+           m_cache_line_size;
+  }
+
+public:
+  thread_buffer()
+      : m_num_threads(0), m_size_per_thread(0), m_size_total(0),
+        m_data(nullptr) {}
+  thread_buffer(const std::size_t num_threads, std::size_t &size_per_thread) {
+    resize(num_threads, size_per_thread);
+  }
+
+  void resize(const std::size_t num_threads, std::size_t &size_per_thread) {
+    pad_to_cache_line(size_per_thread);
+
+    m_num_threads = num_threads;
+    m_size_per_thread = size_per_thread;
+    std::size_t size_total_new = m_num_threads * m_size_per_thread;
+
+    if (m_size_total < size_total_new) {
+      m_data.reset(new char[m_size_total]);
+      m_size_total = size_total_new;
+    }
+  }
+
+  char *get(std::size_t thread_num) {
+    assert(thread_num < m_num_threads);
+    assert(m_data.get() != nullptr);
+    return &m_data.get()[thread_num * m_size_per_thread];
+  }
+};
 } // namespace Impl
 
-static bool kokkos_hpx_initialized = false;
-
-// This represents the HPX runtime instance. It can be stateful and keep track
-// of an instance of its own, but in this case it should probably just be a way
-// to access properties of the HPX runtime through a common API (as defined by
-// Kokkos). Can in principle create as many of these as we want and all can
-// access the same HPX runtime (there can only be one in any case). Most methods
-// are static.
 class HPX {
+private:
+  static bool m_hpx_initialized;
+  static Impl::thread_buffer m_buffer;
+
 public:
   using execution_space = HPX;
   using memory_space = HostSpace;
@@ -138,22 +176,16 @@ public:
   using size_type = memory_space::size_type;
   using scratch_memory_space = ScratchMemorySpace<HPX>;
 
-  inline HPX() noexcept {}
-  static void print_configuration(std::ostream &, const bool verbose = false) {
+  HPX() noexcept {}
+  static void print_configuration(std::ostream &,
+                                  const bool /* verbose */ = false) {
     std::cout << "HPX backend" << std::endl;
   }
 
-  inline static bool in_parallel(HPX const & = HPX()) noexcept { return false; }
-  inline static void fence(HPX const & = HPX()) noexcept {
-    // TODO: This could keep a list of futures of ongoing tasks and wait for
-    // all to be ready.
+  static bool in_parallel(HPX const & = HPX()) noexcept { return false; }
+  static void fence(HPX const & = HPX()) noexcept {}
 
-    // Can be no-op currently as long as all parallel calls are blocking.
-  }
-
-  inline static bool is_asynchronous(HPX const & = HPX()) noexcept {
-    return false;
-  }
+  static bool is_asynchronous(HPX const & = HPX()) noexcept { return false; }
 
   static std::vector<HPX> partition(...) {
     Kokkos::abort("HPX::partition_master: can't partition an HPX instance\n");
@@ -168,94 +200,13 @@ public:
     }
   }
 
-  static int concurrency() {
-    hpx::runtime *rt = hpx::get_runtime_ptr();
-    if (rt == nullptr) {
-      return hpx::threads::hardware_concurrency();
-    } else {
-      if (hpx::threads::get_self_ptr() == nullptr) {
-        return hpx::resource::get_thread_pool(0).get_os_thread_count();
-      } else {
-        return hpx::this_thread::get_pool()->get_os_thread_count();
-      }
-    }
-  }
+  static int concurrency();
+  static void impl_initialize(int thread_count);
+  static void impl_initialize();
+  static bool impl_is_initialized() noexcept;
+  static void impl_finalize();
 
-  static void impl_initialize(int thread_count) {
-    hpx::runtime *rt = hpx::get_runtime_ptr();
-    if (rt != nullptr) {
-    } else {
-      std::vector<std::string> config = {
-          "hpx.os_threads=" + std::to_string(thread_count),
-#ifdef KOKKOS_DEBUG
-          "--hpx:attach-debugger=exception",
-#endif
-      };
-      int argc_hpx = 1;
-      char name[] = "kokkos_hpx";
-      char *argv_hpx[] = {name, nullptr};
-      hpx::start(nullptr, argc_hpx, argv_hpx, config);
-
-      // NOTE: Wait for runtime to start. hpx::start returns as soon as
-      // possible, meaning some operations are not allowed immediately
-      // after hpx::start. Notably, hpx::stop needs state_running. This
-      // needs to be fixed in HPX itself.
-
-      // Get runtime pointer again after it has been started.
-      rt = hpx::get_runtime_ptr();
-      hpx::util::yield_while(
-          [rt]() { return rt->get_state() < hpx::state_running; });
-
-      kokkos_hpx_initialized = true;
-    }
-  }
-
-  static void impl_initialize() {
-    hpx::runtime *rt = hpx::get_runtime_ptr();
-    if (rt != nullptr) {
-    } else {
-      std::vector<std::string> config = {
-#ifdef KOKKOS_DEBUG
-          "--hpx:attach-debugger=exception",
-#endif
-      };
-      int argc_hpx = 1;
-      char name[] = "kokkos_hpx";
-      char *argv_hpx[] = {name, nullptr};
-      hpx::start(nullptr, argc_hpx, argv_hpx, config);
-
-      // NOTE: Wait for runtime to start. hpx::start returns as soon as
-      // possible, meaning some operations are not allowed immediately
-      // after hpx::start. Notably, hpx::stop needs state_running. This
-      // needs to be fixed in HPX itself.
-
-      // Get runtime pointer again after it has been started.
-      rt = hpx::get_runtime_ptr();
-      hpx::util::yield_while(
-          [rt]() { return rt->get_state() < hpx::state_running; });
-
-      kokkos_hpx_initialized = true;
-    }
-  }
-
-  static bool impl_is_initialized() noexcept {
-    hpx::runtime *rt = hpx::get_runtime_ptr();
-    return rt != nullptr;
-  }
-
-  static void impl_finalize() {
-    if (kokkos_hpx_initialized) {
-      hpx::runtime *rt = hpx::get_runtime_ptr();
-      if (rt == nullptr) {
-      } else {
-        hpx::apply([]() { hpx::finalize(); });
-        hpx::stop();
-      }
-    } else {
-    }
-  };
-
-  inline static int impl_thread_pool_size() noexcept {
+  static int impl_thread_pool_size() noexcept {
     hpx::runtime *rt = hpx::get_runtime_ptr();
     if (rt == nullptr) {
       return 0;
@@ -281,7 +232,7 @@ public:
     }
   }
 
-  inline static int impl_thread_pool_size(int depth) {
+  static int impl_thread_pool_size(int depth) {
     if (depth == 0) {
       return impl_thread_pool_size();
     } else {
@@ -289,19 +240,19 @@ public:
     }
   }
 
-  inline static int impl_max_hardware_threads() noexcept {
+  static int impl_max_hardware_threads() noexcept {
     return hpx::threads::hardware_concurrency();
   }
 
-  KOKKOS_INLINE_FUNCTION static int impl_hardware_thread_id() noexcept {
+  static int impl_hardware_thread_id() noexcept {
     return hpx::get_worker_thread_num();
   }
 
   static constexpr const char *name() noexcept { return "HPX"; }
+  static Impl::thread_buffer &get_buffer() noexcept { return m_buffer; }
 };
 } // namespace Kokkos
 
-// These apparently need revising on the Kokkos side. Keep same as OpenMP.
 namespace Kokkos {
 namespace Impl {
 template <>
