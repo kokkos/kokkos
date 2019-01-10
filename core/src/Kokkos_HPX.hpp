@@ -99,7 +99,7 @@
 // In the long run 0 should be the preferred implementation, but until HPX is
 // improved 1 will be the default.
 #ifndef KOKKOS_HPX_IMPLEMENTATION
-#define KOKKOS_HPX_IMPLEMENTATION 0
+#define KOKKOS_HPX_IMPLEMENTATION 1
 #endif
 
 #if (KOKKOS_HPX_IMPLEMENTATION < 0) || (KOKKOS_HPX_IMPLEMENTATION > 1)
