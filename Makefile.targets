@@ -99,6 +99,9 @@ Kokkos_HPX.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/HPX/Kokkos_HPX.cpp
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/HPX/Kokkos_HPX.cpp
 Kokkos_HPX_Task.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/HPX/Kokkos_HPX_Task.cpp
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/HPX/Kokkos_HPX_Task.cpp
+ifeq ($(KOKKOS_INTERNAL_USE_HDF5), 1)
+Kokkos_HDF5Space.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/impl/Kokkos_HDF5Space.cpp
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/impl/Kokkos_HDF5Space.cpp
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)

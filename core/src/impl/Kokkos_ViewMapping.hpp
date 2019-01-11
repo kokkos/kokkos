@@ -2486,12 +2486,53 @@ namespace Impl {
  */
 template< class ExecSpace
         , class ValueType
+        , class MemorySpace
+        , class Enable = void
         , bool IsScalar = std::is_scalar< ValueType >::value
         >
 struct ViewValueFunctor ;
 
-template< class ExecSpace , class ValueType >
-struct ViewValueFunctor< ExecSpace , ValueType , false /* is_scalar */ >
+template< class ExecSpace , class ValueType , class MemorySpace >
+struct ViewValueFunctor< ExecSpace , ValueType , MemorySpace , 
+           typename std::enable_if< std::is_same <MemorySpace, Kokkos::Experimental::HDF5Space>::value, void >::type , false >
+{
+
+  ViewValueFunctor() = default ;
+  ViewValueFunctor( const ViewValueFunctor & ) = default ;
+  ViewValueFunctor & operator = ( const ViewValueFunctor & ) = default ;
+
+  ViewValueFunctor( ExecSpace   const & arg_space
+                  , ValueType * const arg_ptr
+                  , size_t      const arg_n )
+    {}
+
+  void construct_shared_allocation() {}
+
+  void destroy_shared_allocation() {}
+};
+
+template< class ExecSpace , class ValueType , class MemorySpace >
+struct ViewValueFunctor< ExecSpace , ValueType , MemorySpace , 
+           typename std::enable_if< std::is_same <MemorySpace, Kokkos::Experimental::HDF5Space>::value, void >::type , true >
+{
+
+  ViewValueFunctor() = default ;
+  ViewValueFunctor( const ViewValueFunctor & ) = default ;
+  ViewValueFunctor & operator = ( const ViewValueFunctor & ) = default ;
+
+  ViewValueFunctor( ExecSpace   const & arg_space
+                  , ValueType * const arg_ptr
+                  , size_t      const arg_n )
+    {}
+
+  void construct_shared_allocation() {}
+
+  void destroy_shared_allocation() {}
+};
+
+template< class ExecSpace , class ValueType, class MemorySpace >
+struct ViewValueFunctor< ExecSpace , ValueType , MemorySpace , 
+           typename std::enable_if< !std::is_same <MemorySpace, Kokkos::Experimental::HDF5Space>::value, void >::type , false >
 {
   typedef Kokkos::RangePolicy< ExecSpace > PolicyType ;
   typedef typename ExecSpace::execution_space Exec;
@@ -2554,8 +2595,9 @@ struct ViewValueFunctor< ExecSpace , ValueType , false /* is_scalar */ >
 };
 
 
-template< class ExecSpace , class ValueType >
-struct ViewValueFunctor< ExecSpace , ValueType , true /* is_scalar */ >
+template< class ExecSpace , class ValueType , class MemorySpace >
+struct ViewValueFunctor< ExecSpace , ValueType , MemorySpace , 
+           typename std::enable_if< !std::is_same <MemorySpace, Kokkos::Experimental::HDF5Space>::value, void >::type , true >
 {
   typedef Kokkos::RangePolicy< ExecSpace > PolicyType ;
 
@@ -2841,7 +2883,7 @@ public:
     typedef typename alloc_prop::execution_space  execution_space ;
     typedef typename Traits::memory_space         memory_space ;
     typedef typename Traits::value_type           value_type ;
-    typedef ViewValueFunctor< execution_space , value_type > functor_type ;
+    typedef ViewValueFunctor< execution_space , value_type , memory_space > functor_type ;
     typedef Kokkos::Impl::SharedAllocationRecord< memory_space , functor_type > record_type ;
 
     // Query the mapping for byte-size of allocation.
