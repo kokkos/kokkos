@@ -307,5 +307,9 @@ struct DeepCopy< HostSpace, HostSpace, ExecutionSpace > {
 
 } // namespace Kokkos
 
+#ifdef KOKKOS_ENABLE_HDF5
+   #include <impl/Kokkos_HDF5Space.hpp>
+#endif
+
 #endif // #define KOKKOS_HOSTSPACE_HPP
 

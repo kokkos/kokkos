@@ -337,6 +337,11 @@ namespace Kokkos{
     using Kokkos::MinMaxScalar;
     using Kokkos::MinMaxLocScalar;
     using Kokkos::ValLocScalar;
+
+
+#ifdef KOKKOS_ENABLE_HDF5
+    class HDF5Space;
+#endif
   }
 }
 #endif

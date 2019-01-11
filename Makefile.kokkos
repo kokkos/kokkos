@@ -60,6 +60,7 @@ KOKKOS_INTERNAL_CUDA_USE_UVM := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),
 KOKKOS_INTERNAL_CUDA_USE_RELOC := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),rdc)
 KOKKOS_INTERNAL_CUDA_USE_LAMBDA := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),enable_lambda)
 KOKKOS_INTERNAL_ENABLE_ETI := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_eti)
+KOKKOS_INTERNAL_USE_HDF5 := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_hdf5)
 
 
 # Check for Kokkos Host Execution Spaces one of which must be on.
@@ -381,6 +382,9 @@ ifneq ($(KOKKOS_CMAKE), yes)
   # CXXLDFLAGS is used together with CXXFLAGS in a combined compile/link command
   KOKKOS_CXXLDFLAGS = -L$(shell pwd)
 endif
+ifeq ($(KOKKOS_INTERNAL_USE_HDF5), 1)
+  KOKKOS_LIBS = -lhdf5
+endif
 KOKKOS_LINK_FLAGS = 
 KOKKOS_SRC =
 KOKKOS_HEADERS =
@@ -464,6 +468,10 @@ ifeq ($(KOKKOS_INTERNAL_USE_ISA_POWERPCBE), 1)
   tmp := $(call kokkos_append_header,"\#ifndef __CUDA_ARCH__")
   tmp := $(call kokkos_append_header,"\#define KOKKOS_USE_ISA_POWERPCBE")
   tmp := $(call kokkos_append_header,"\#endif")
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_HDF5), 1)
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_HDF5")
 endif
 
 tmp := $(call kokkos_append_header,"/* General Settings */")

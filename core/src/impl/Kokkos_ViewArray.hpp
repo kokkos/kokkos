@@ -302,7 +302,7 @@ public:
 
     typedef typename alloc_prop::execution_space  execution_space ;
     typedef typename Traits::memory_space         memory_space ;
-    typedef ViewValueFunctor< execution_space , scalar_type > functor_type ;
+    typedef ViewValueFunctor< execution_space , scalar_type , memory_space > functor_type ;
     typedef Kokkos::Impl::SharedAllocationRecord< memory_space , functor_type > record_type ;
 
     // Query the mapping for byte-size of allocation.
