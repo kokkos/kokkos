@@ -566,35 +566,31 @@ private:
   const Policy m_policy;
 
   template <class TagType>
-  inline static
-      typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_functor(const FunctorType &functor, const Member iwork) {
+  static typename std::enable_if<std::is_same<TagType, void>::value>::type
+  exec_functor(const FunctorType &functor, const Member iwork) {
     functor(iwork);
   }
 
   template <class TagType>
-  inline static
-      typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_functor(const FunctorType &functor, const Member iwork) {
+  static typename std::enable_if<!std::is_same<TagType, void>::value>::type
+  exec_functor(const FunctorType &functor, const Member iwork) {
     const TagType t{};
     functor(t, iwork);
   }
 
   template <class TagType>
-  inline static
-      typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_functor_range(const FunctorType &functor, const Member iwork_begin,
-                         const Member iwork_end) {
+  static typename std::enable_if<std::is_same<TagType, void>::value>::type
+  exec_functor_range(const FunctorType &functor, const Member iwork_begin,
+                     const Member iwork_end) {
     for (Member iwork = iwork_begin; iwork < iwork_end; ++iwork) {
       functor(iwork);
     }
   }
 
   template <class TagType>
-  inline static
-      typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_functor_range(const FunctorType &functor, const Member iwork_begin,
-                         const Member iwork_end) {
+  static typename std::enable_if<!std::is_same<TagType, void>::value>::type
+  exec_functor_range(const FunctorType &functor, const Member iwork_begin,
+                     const Member iwork_end) {
     const TagType t{};
     for (Member iwork = iwork_begin; iwork < iwork_end; ++iwork) {
       functor(t, iwork);
@@ -602,9 +598,8 @@ private:
   }
 
 public:
-  inline void execute() const {
+  void execute() const {
     Kokkos::Impl::run_hpx_function([this]() {
-
 #if KOKKOS_HPX_IMPLEMENTATION == 0
       hpx::parallel::for_loop(hpx::parallel::execution::par.with(
                                   hpx::parallel::execution::static_chunk_size(
