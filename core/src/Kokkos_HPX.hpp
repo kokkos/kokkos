@@ -610,31 +610,23 @@ public:
                               });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
-      auto const begin = m_policy.begin();
-      auto const end = m_policy.end();
-      auto const n = end - begin;
-      auto const chunk_size = m_policy.chunk_size();
-      auto const num_chunks = (n - 1) / chunk_size + 1;
-
-      std::atomic<std::size_t> c(0);
+      hpx::lcos::local::counting_semaphore sem(0);
       std::size_t num_tasks = 0;
 
-      for (typename Policy::member_type chunk_rank = 0; chunk_rank < num_chunks;
-           ++chunk_rank) {
-        hpx::apply([this, chunk_rank, chunk_size, begin, end, &c]() {
+      for (typename Policy::member_type begin = m_policy.begin();
+           begin < m_policy.end(); begin += m_policy.chunk_size()) {
+        hpx::apply([this, begin, &sem]() {
           exec_functor_range<WorkTag>(
-              m_functor, begin + chunk_rank * chunk_size,
-              (std::min)(end, begin + (chunk_rank + 1) * chunk_size));
+              m_functor, begin,
+              (std::min)(m_policy.end(), begin + m_policy.chunk_size()));
 
-          ++c;
+          sem.signal(1);
         });
 
         ++num_tasks;
       }
 
-      hpx::util::yield_while([&c, num_tasks]() { return c < num_tasks; },
-                             nullptr, hpx::threads::pending, false);
-
+      sem.wait(num_tasks);
 #endif
     });
   }
@@ -672,34 +664,24 @@ public:
                               });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
-      auto const begin = m_policy.begin();
-      auto const end = m_policy.end();
-      auto const n = end - begin;
-      auto const chunk_size = m_policy.chunk_size();
-      auto const num_chunks = (n - 1) / chunk_size + 1;
-
-      std::atomic<std::size_t> c(0);
+      hpx::lcos::local::counting_semaphore sem(0);
       std::size_t num_tasks = 0;
 
-      for (typename Policy::member_type chunk_rank = 0; chunk_rank < num_chunks;
-           ++chunk_rank) {
-        hpx::apply([this, chunk_rank, chunk_size, begin, end, &c]() {
-          auto iwork_begin = begin + chunk_rank * chunk_size;
-          auto iwork_end =
-              (std::min)(end, begin + (chunk_rank + 1) * chunk_size);
-          for (Member iwork = iwork_begin; iwork < iwork_end; ++iwork) {
+      for (typename Policy::member_type begin = m_policy.begin();
+           begin < m_policy.end(); begin += m_policy.chunk_size()) {
+        hpx::apply([this, begin, &sem]() {
+          auto end = (std::min)(m_policy.end(), begin + m_policy.chunk_size());
+          for (Member iwork = begin; iwork < end; ++iwork) {
             iterate_type(m_mdr_policy, m_functor)(iwork);
           }
 
-          ++c;
+          sem.signal(1);
         });
 
         ++num_tasks;
       }
 
-      hpx::util::yield_while([&c, num_tasks]() { return c < num_tasks; },
-                             nullptr, hpx::threads::pending, false);
-
+      sem.wait(num_tasks);
 #endif
     });
   }
