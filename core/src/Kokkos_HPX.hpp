@@ -729,6 +729,7 @@ private:
                                   WorkTag, void>::type;
   using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
   using ValueJoin = Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
+  using ValueOps = Kokkos::Impl::FunctorValueOps<ReducerTypeFwd, WorkTagFwd>;
   using value_type = typename Analysis::value_type;
   using pointer_type = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
@@ -783,29 +784,15 @@ public:
 
       std::size_t value_size_bytes = Analysis::value_size(
           ReducerConditional::select(m_functor, m_reducer));
-      Impl::pad_to_cache_line(value_size_bytes);
 
-      static std::unique_ptr<char[]> intermediate_results;
-      static std::size_t last_size = 0;
-      if (intermediate_results.get() == nullptr) {
-        intermediate_results.reset(
-            new char[num_worker_threads * value_size_bytes]);
-        last_size = num_worker_threads * value_size_bytes;
-      } else if (last_size < static_cast<std::size_t>(num_worker_threads *
-                                                      value_size_bytes)) {
-        intermediate_results.reset(
-            new char[num_worker_threads * value_size_bytes]);
-        last_size = num_worker_threads * value_size_bytes;
-      }
-      char *intermediate_results_ptr = intermediate_results.get();
+      thread_buffer &intermediate_results = HPX::get_buffer();
+      intermediate_results.resize(num_worker_threads, value_size_bytes);
 
       hpx::parallel::for_loop(
           hpx::parallel::execution::par, 0, num_worker_threads,
-          [this, intermediate_results_ptr, value_size_bytes](std::size_t t) {
-            ValueInit::init(
-                ReducerConditional::select(m_functor, m_reducer),
-                (pointer_type)(
-                    &intermediate_results_ptr[t * value_size_bytes]));
+          [this, &intermediate_results](std::size_t t) {
+            ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
+                            (pointer_type)(intermediate_results.get(t)));
           });
 
       // TODO: Do tree reduction?
@@ -814,55 +801,51 @@ public:
       hpx::parallel::for_loop(
           hpx::parallel::execution::par.with(s), m_policy.begin(),
           m_policy.end(),
-          [this, intermediate_results_ptr, value_size_bytes,
+          [this, &intermediate_results,
            num_worker_threads](typename Policy::member_type const i) {
-            reference_type update = reference_type_cast<reference_type>{}(
-                &intermediate_results_ptr[HPX::impl_hardware_thread_id() *
-                                          value_size_bytes]);
+            reference_type update = ValueOps::reference((pointer_type)(
+                intermediate_results.get(HPX::impl_hardware_thread_id())));
             exec_functor<WorkTag>(m_functor, i, update);
           });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
-      std::atomic<std::size_t> c(0);
+      hpx::lcos::local::counting_semaphore sem(0);
       std::size_t num_tasks = 0;
 
       for (Member chunk_begin = m_policy.begin(); chunk_begin < m_policy.end();
            chunk_begin += m_policy.chunk_size()) {
-        hpx::apply([this, &intermediate_results_ptr, chunk_begin,
-                    value_size_bytes, &c]() {
-          reference_type update = reference_type_cast<reference_type>{}(
-              &intermediate_results_ptr[HPX::impl_hardware_thread_id() *
-                                        value_size_bytes]);
+        hpx::apply([this, &intermediate_results, chunk_begin, &sem]() {
+          reference_type update = ValueOps::reference((pointer_type)(
+              intermediate_results.get(HPX::impl_hardware_thread_id())));
           this->template exec_range<WorkTag>(
               update, chunk_begin,
               (std::min)(m_policy.end(), chunk_begin + m_policy.chunk_size()));
 
-          ++c;
+          sem.signal(1);
         });
 
         ++num_tasks;
       }
 
-      hpx::util::yield_while([&c, num_tasks]() { return c < num_tasks; });
+      sem.wait(num_tasks);
 #endif
 
       for (int i = 1; i < num_worker_threads; ++i) {
-        ValueJoin::join(
-            ReducerConditional::select(m_functor, m_reducer),
-            (pointer_type)(intermediate_results_ptr),
-            (pointer_type)(&intermediate_results_ptr[i * value_size_bytes]));
+        ValueJoin::join(ReducerConditional::select(m_functor, m_reducer),
+                        (pointer_type)(intermediate_results.get(0)),
+                        (pointer_type)(intermediate_results.get(i)));
       }
 
       Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
           ReducerConditional::select(m_functor, m_reducer),
-          (pointer_type)(intermediate_results_ptr));
+          (pointer_type)(intermediate_results.get(0)));
 
       if (m_result_ptr != nullptr) {
         const int n = Analysis::value_count(
             ReducerConditional::select(m_functor, m_reducer));
 
         for (int j = 0; j < n; ++j) {
-          m_result_ptr[j] = ((pointer_type)(intermediate_results_ptr))[j];
+          m_result_ptr[j] = ((pointer_type)(intermediate_results.get(0)))[j];
         }
       }
     });
