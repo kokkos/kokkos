@@ -43,6 +43,8 @@
 
 #include <Kokkos_HPX.hpp>
 
+#include <hpx/util/yield_while.hpp>
+
 namespace Kokkos {
 
 bool HPX::m_hpx_initialized = false;

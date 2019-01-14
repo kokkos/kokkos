@@ -79,7 +79,6 @@
 #include <hpx/include/parallel_reduce.hpp>
 #include <hpx/include/run_as.hpp>
 #include <hpx/include/runtime.hpp>
-#include <hpx/util/yield_while.hpp>
 
 #include <iostream>
 #include <memory>
