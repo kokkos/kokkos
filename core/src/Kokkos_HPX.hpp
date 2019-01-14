@@ -404,8 +404,8 @@ class TeamPolicyInternal<Kokkos::HPX, Properties...>
 
   int m_league_size;
   int m_team_size;
-  size_t m_team_scratch_size[2];
-  size_t m_thread_scratch_size[2];
+  std::size_t m_team_scratch_size[2];
+  std::size_t m_thread_scratch_size[2];
   int m_chunk_size;
 
 public:
@@ -765,7 +765,7 @@ public:
   inline void execute() const {
 
     Kokkos::Impl::run_hpx_function([this]() {
-      auto const num_worker_threads = HPX::concurrency();
+      const auto num_worker_threads = HPX::concurrency();
 
       std::size_t value_size_bytes = Analysis::value_size(
           ReducerConditional::select(m_functor, m_reducer));
@@ -1283,9 +1283,9 @@ private:
 public:
   inline void execute() const {
     Kokkos::Impl::run_hpx_function([this]() {
-      auto const league_size = m_policy.league_size();
-      auto const chunk_size = m_policy.chunk_size();
-      auto const num_worker_threads = HPX::concurrency();
+      const auto league_size = m_policy.league_size();
+      const auto chunk_size = m_policy.chunk_size();
+      const auto num_worker_threads = HPX::concurrency();
       auto hpx_policy = hpx::parallel::execution::par.with(
           hpx::parallel::execution::static_chunk_size(chunk_size));
 
@@ -1303,7 +1303,7 @@ public:
           });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
-      auto const num_chunks = (league_size - 1) / chunk_size + 1;
+      const auto num_chunks = (league_size - 1) / chunk_size + 1;
       hpx::lcos::local::counting_semaphore sem(0);
 
       for (std::size_t chunk_rank = 0; chunk_rank < std::size_t(num_chunks);
@@ -1361,8 +1361,8 @@ private:
   const int m_league;
   const Policy m_policy;
   const ReducerType m_reducer;
+  const std::size_t m_shared;
   pointer_type m_result_ptr;
-  std::size_t m_shared;
 
   template <class TagType>
   inline static
@@ -1384,9 +1384,9 @@ private:
 public:
   inline void execute() const {
     Kokkos::Impl::run_hpx_function([this]() {
-      auto const league_size = m_policy.league_size();
-      auto const chunk_size = m_policy.chunk_size();
-      auto const num_worker_threads = HPX::concurrency();
+      const auto league_size = m_policy.league_size();
+      const auto chunk_size = m_policy.chunk_size();
+      const auto num_worker_threads = HPX::concurrency();
       const std::size_t value_size_bytes = Analysis::value_size(
           ReducerConditional::select(m_functor, m_reducer));
 
@@ -1397,11 +1397,11 @@ public:
           hpx::parallel::execution::par, 0, num_worker_threads,
           [this, &buffer](std::size_t t) {
             ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                            (pointer_type)(buffer.get(t)));
+                            reinterpret_cast<pointer_type>(buffer.get(t)));
           });
 
 #if KOKKOS_HPX_IMPLEMENTATION == 0
-      auto const hpx_policy = hpx::parallel::execution::par.with(
+      const auto hpx_policy = hpx::parallel::execution::par.with(
           hpx::parallel::execution::static_chunk_size(chunk_size));
 
       hpx::parallel::for_loop(
@@ -1420,7 +1420,7 @@ public:
           });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
-      auto const num_chunks = (league_size - 1) / chunk_size + 1;
+      const auto num_chunks = (league_size - 1) / chunk_size + 1;
       hpx::lcos::local::counting_semaphore sem(0);
 
       for (std::size_t chunk_rank = 0; chunk_rank < std::size_t(num_chunks);
