@@ -892,29 +892,15 @@ public:
       auto const num_worker_threads = HPX::concurrency();
       std::size_t value_size_bytes = Analysis::value_size(
           ReducerConditional::select(m_functor, m_reducer));
-      Impl::pad_to_cache_line(value_size_bytes);
 
-      static std::unique_ptr<char[]> intermediate_results;
-      static std::size_t last_size = 0;
-      if (intermediate_results.get() == nullptr) {
-        intermediate_results.reset(
-            new char[num_worker_threads * value_size_bytes]);
-        last_size = num_worker_threads * value_size_bytes;
-      } else if (last_size < static_cast<std::size_t>(num_worker_threads *
-                                                      value_size_bytes)) {
-        intermediate_results.reset(
-            new char[num_worker_threads * value_size_bytes]);
-        last_size = num_worker_threads * value_size_bytes;
-      }
-      char *intermediate_results_ptr = intermediate_results.get();
+      thread_buffer &intermediate_results = HPX::get_buffer();
+      intermediate_results.resize(num_worker_threads, value_size_bytes);
 
       hpx::parallel::for_loop(
           hpx::parallel::execution::par, 0, num_worker_threads,
-          [this, intermediate_results_ptr, value_size_bytes](std::size_t t) {
-            ValueInit::init(
-                ReducerConditional::select(m_functor, m_reducer),
-                (pointer_type)(
-                    &intermediate_results_ptr[t * value_size_bytes]));
+          [this, &intermediate_results](std::size_t t) {
+            ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
+                            (pointer_type)(intermediate_results.get(t)));
           });
 
 #if KOKKOS_HPX_IMPLEMENTATION == 0
@@ -922,11 +908,9 @@ public:
       hpx::parallel::for_loop(
           hpx::parallel::execution::par.with(s), m_policy.begin(),
           m_policy.end(),
-          [this, intermediate_results_ptr,
-           value_size_bytes](typename Policy::member_type const i) {
+          [this, &intermediate_results](typename Policy::member_type const i) {
             reference_type update = ValueOps::reference((pointer_type)(
-                &intermediate_results_ptr[HPX::impl_hardware_thread_id() *
-                                          value_size_bytes]));
+                intermediate_results.get(HPX::impla_hardware_thread_id())));
             iterate_type(m_mdr_policy, m_functor, update)(i);
           });
 
@@ -936,11 +920,9 @@ public:
 
       for (Member chunk_begin = m_policy.begin(); chunk_begin < m_policy.end();
            chunk_begin += m_policy.chunk_size()) {
-        hpx::apply([this, &intermediate_results_ptr, chunk_begin,
-                    value_size_bytes, &sem]() {
+        hpx::apply([this, &intermediate_results, chunk_begin, &sem]() {
           reference_type update = ValueOps::reference((pointer_type)(
-              &intermediate_results_ptr[HPX::impl_hardware_thread_id() *
-                                        value_size_bytes]));
+              intermediate_results.get(HPX::impl_hardware_thread_id())));
           auto chunk_end =
               (std::min)(m_policy.end(), chunk_begin + m_policy.chunk_size());
 
@@ -958,22 +940,21 @@ public:
 #endif
 
       for (int i = 1; i < num_worker_threads; ++i) {
-        ValueJoin::join(
-            ReducerConditional::select(m_functor, m_reducer),
-            (pointer_type)(intermediate_results_ptr),
-            (pointer_type)(&intermediate_results_ptr[i * value_size_bytes]));
+        ValueJoin::join(ReducerConditional::select(m_functor, m_reducer),
+                        (pointer_type)(intermediate_results.get(0)),
+                        (pointer_type)(intermediate_results.get(i)));
       }
 
       Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
           ReducerConditional::select(m_functor, m_reducer),
-          (pointer_type)(intermediate_results_ptr));
+          (pointer_type)(intermediate_results.get(0)));
 
       if (m_result_ptr != nullptr) {
         const int n = Analysis::value_count(
             ReducerConditional::select(m_functor, m_reducer));
 
         for (int j = 0; j < n; ++j) {
-          m_result_ptr[j] = ((pointer_type)(intermediate_results_ptr))[j];
+          m_result_ptr[j] = ((pointer_type)(intermediate_results.get(0)))[j];
         }
       }
     });
@@ -1041,41 +1022,22 @@ private:
 public:
   inline void execute() const {
     Kokkos::Impl::run_hpx_function([this]() {
-      auto const num_worker_threads = HPX::concurrency();
+      const auto num_worker_threads = HPX::concurrency();
       const int value_count = Analysis::value_count(m_functor);
-      size_t value_size_bytes = Analysis::value_size(m_functor);
-      Impl::pad_to_cache_line(value_size_bytes);
+      const std::size_t value_size_bytes = Analysis::value_size(m_functor);
+      std::size_t thread_size_bytes = 2 * value_size_bytes;
 
-      static std::unique_ptr<char[]> intermediate_results_1;
-      static std::unique_ptr<char[]> intermediate_results_2;
-      static std::size_t last_size = 0;
-      if (intermediate_results_1.get() == nullptr) {
-        intermediate_results_1.reset(
-            new char[num_worker_threads * value_size_bytes]);
-        intermediate_results_2.reset(
-            new char[num_worker_threads * value_size_bytes]);
-        last_size = num_worker_threads * value_size_bytes;
-      } else if (last_size < static_cast<std::size_t>(num_worker_threads *
-                                                      value_size_bytes)) {
-        intermediate_results_1.reset(
-            new char[num_worker_threads * value_size_bytes]);
-        intermediate_results_2.reset(
-            new char[num_worker_threads * value_size_bytes]);
-        last_size = num_worker_threads * value_size_bytes;
-      }
-      char *intermediate_results_1_ptr = intermediate_results_1.get();
-      char *intermediate_results_2_ptr = intermediate_results_2.get();
+      thread_buffer &intermediate_results = HPX::get_buffer();
+      intermediate_results.resize(num_worker_threads, thread_size_bytes);
 
       hpx::parallel::execution::static_chunk_size s(1);
 
       hpx::parallel::for_loop(
           hpx::parallel::execution::par.with(s), 0, num_worker_threads,
-          [this, intermediate_results_1_ptr, num_worker_threads, value_count,
+          [this, &intermediate_results, num_worker_threads, value_count,
            value_size_bytes](std::size_t const t) {
             reference_type update_sum = ValueInit::init(
-                m_functor,
-                (pointer_type)(
-                    &intermediate_results_1_ptr[t * value_size_bytes]));
+                m_functor, (pointer_type)(intermediate_results.get(t)));
 
             const WorkRange range(m_policy, t, num_worker_threads);
             for (typename Policy::member_type i = range.begin();
@@ -1084,16 +1046,16 @@ public:
             }
           });
 
-      ValueInit::init(m_functor, (pointer_type)(intermediate_results_2_ptr));
+      ValueInit::init(m_functor, (pointer_type)(intermediate_results.get(0) +
+                                                value_size_bytes));
 
       for (int i = 1; i < num_worker_threads; ++i) {
-        pointer_type ptr_1_prev = (pointer_type)(
-            &intermediate_results_1_ptr[(i - 1) * value_size_bytes]);
-        pointer_type ptr_2_prev = (pointer_type)(
-            &intermediate_results_2_ptr[(i - 1) * value_size_bytes]);
-
+        pointer_type ptr_1_prev =
+            (pointer_type)(intermediate_results.get(i - 1));
+        pointer_type ptr_2_prev =
+            (pointer_type)(intermediate_results.get(i - 1) + value_size_bytes);
         pointer_type ptr_2 =
-            (pointer_type)(&intermediate_results_2_ptr[i * value_size_bytes]);
+            (pointer_type)(intermediate_results.get(i) + value_size_bytes);
 
         for (int j = 0; j < value_count; ++j) {
           ptr_2[j] = ptr_2_prev[j];
@@ -1107,10 +1069,10 @@ public:
       // iterations.
       hpx::parallel::for_loop(
           hpx::parallel::execution::par.with(s), 0, num_worker_threads,
-          [this, intermediate_results_2_ptr, num_worker_threads, value_count,
+          [this, &intermediate_results, num_worker_threads, value_count,
            value_size_bytes](std::size_t const t) {
-            reference_type update_base = ValueOps::reference((pointer_type)(
-                &intermediate_results_2_ptr[t * value_size_bytes]));
+            reference_type update_base = ValueOps::reference(
+                (pointer_type)(intermediate_results.get(t) + value_size_bytes));
 
             const WorkRange range(m_policy, t, num_worker_threads);
             for (typename Policy::member_type i = range.begin();
@@ -1131,6 +1093,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 private:
   using Policy = Kokkos::RangePolicy<Traits...>;
   using WorkTag = typename Policy::work_tag;
+  using WorkRange = typename Policy::WorkRange;
   using Member = typename Policy::member_type;
   using Analysis =
       FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType>;
@@ -1165,75 +1128,40 @@ private:
 public:
   inline void execute() const {
     Kokkos::Impl::run_hpx_function([this]() {
-      auto const num_worker_threads = HPX::concurrency();
+      const auto num_worker_threads = HPX::concurrency();
       const int value_count = Analysis::value_count(m_functor);
-      size_t value_size_bytes = Analysis::value_size(m_functor);
-      Impl::pad_to_cache_line(value_size_bytes);
+      const std::size_t value_size_bytes = Analysis::value_size(m_functor);
+      std::size_t thread_size_bytes = 2 * value_size_bytes;
 
-      static std::unique_ptr<char[]> intermediate_results_1;
-      static std::unique_ptr<char[]> intermediate_results_2;
-      static std::size_t last_size = 0;
-      if (intermediate_results_1.get() == nullptr) {
-        intermediate_results_1.reset(
-            new char[num_worker_threads * value_size_bytes]);
-        intermediate_results_2.reset(
-            new char[num_worker_threads * value_size_bytes]);
-        last_size = num_worker_threads * value_size_bytes;
-      } else if (last_size < static_cast<std::size_t>(num_worker_threads *
-                                                      value_size_bytes)) {
-        intermediate_results_1.reset(
-            new char[num_worker_threads * value_size_bytes]);
-        intermediate_results_2.reset(
-            new char[num_worker_threads * value_size_bytes]);
-        last_size = num_worker_threads * value_size_bytes;
-      }
-      char *intermediate_results_1_ptr = intermediate_results_1.get();
-      char *intermediate_results_2_ptr = intermediate_results_2.get();
+      thread_buffer &intermediate_results = HPX::get_buffer();
+      intermediate_results.resize(num_worker_threads, thread_size_bytes);
 
       hpx::parallel::execution::static_chunk_size s(1);
 
       hpx::parallel::for_loop(
           hpx::parallel::execution::par.with(s), 0, num_worker_threads,
-          [this, intermediate_results_1_ptr, num_worker_threads, value_count,
+          [this, &intermediate_results, num_worker_threads, value_count,
            value_size_bytes](std::size_t const t) {
             reference_type update_sum = ValueInit::init(
-                m_functor,
-                (pointer_type)(
-                    &intermediate_results_1_ptr[t * value_size_bytes]));
+                m_functor, (pointer_type)(intermediate_results.get(t)));
 
-            // TODO: Use utilities that already exist.
-            const typename Policy::member_type b = m_policy.begin();
-            const typename Policy::member_type e = m_policy.end();
-
-            const typename Policy::member_type n = e - b;
-            if (n == 0) {
-              return;
-            }
-
-            const typename Policy::member_type chunk_size =
-                (n - 1) / num_worker_threads + 1;
-
-            const typename Policy::member_type b_local = b + t * chunk_size;
-            Member e_local = b + (t + 1) * chunk_size;
-            if (e_local > e) {
-              e_local = e;
-            };
-
-            for (typename Policy::member_type i = b_local; i < e_local; ++i) {
+            const WorkRange range(m_policy, t, num_worker_threads);
+            for (typename Policy::member_type i = range.begin();
+                 i < range.end(); ++i) {
               exec_functor<WorkTag>(m_functor, i, update_sum, false);
             }
           });
 
-      ValueInit::init(m_functor, (pointer_type)(intermediate_results_2_ptr));
+      ValueInit::init(m_functor, (pointer_type)(intermediate_results.get(0) +
+                                                value_size_bytes));
 
       for (int i = 1; i < num_worker_threads; ++i) {
-        pointer_type ptr_1_prev = (pointer_type)(
-            &intermediate_results_1_ptr[(i - 1) * value_size_bytes]);
-        pointer_type ptr_2_prev = (pointer_type)(
-            &intermediate_results_2_ptr[(i - 1) * value_size_bytes]);
-
+        pointer_type ptr_1_prev =
+            (pointer_type)(intermediate_results.get(i - 1));
+        pointer_type ptr_2_prev =
+            (pointer_type)(intermediate_results.get(i - 1) + value_size_bytes);
         pointer_type ptr_2 =
-            (pointer_type)(&intermediate_results_2_ptr[i * value_size_bytes]);
+            (pointer_type)(intermediate_results.get(i) + value_size_bytes);
 
         for (int j = 0; j < value_count; ++j) {
           ptr_2[j] = ptr_2_prev[j];
@@ -1247,24 +1175,14 @@ public:
       // iterations.
       hpx::parallel::for_loop(
           hpx::parallel::execution::par.with(s), 0, num_worker_threads,
-          [this, intermediate_results_2_ptr, num_worker_threads, value_count,
+          [this, &intermediate_results, num_worker_threads, value_count,
            value_size_bytes](std::size_t const t) {
-            reference_type update_base = ValueOps::reference((pointer_type)(
-                &intermediate_results_2_ptr[t * value_size_bytes]));
+            reference_type update_base = ValueOps::reference(
+                (pointer_type)(intermediate_results.get(t) + value_size_bytes));
 
-            // TODO: Use utilities that already exist.
-            const typename Policy::member_type b = m_policy.begin();
-            const typename Policy::member_type e = m_policy.end();
-            const typename Policy::member_type n = e - b;
-            const typename Policy::member_type chunk_size =
-                (n - 1) / num_worker_threads + 1;
-            const typename Policy::member_type b_local = b + t * chunk_size;
-            Member e_local = b + (t + 1) * chunk_size;
-            if (e_local > e) {
-              e_local = e;
-            };
-
-            for (typename Policy::member_type i = b_local; i < e_local; ++i) {
+            const WorkRange range(m_policy, t, num_worker_threads);
+            for (typename Policy::member_type i = range.begin();
+                 i < range.end(); ++i) {
               exec_functor<WorkTag>(m_functor, i, update_base, true);
             }
 
@@ -1321,11 +1239,9 @@ private:
                          const int shared, char *scratch_buffer_ptr,
                          const std::size_t league_rank_begin,
                          const std::size_t league_rank_end) {
-    char *local_scratch_buffer_ptr =
-        &scratch_buffer_ptr[HPX::impl_hardware_thread_id() * shared];
     for (std::size_t league_rank = league_rank_begin;
          league_rank < league_rank_end; ++league_rank) {
-      functor(Member(policy, 0, league_rank, local_scratch_buffer_ptr, shared));
+      functor(Member(policy, 0, league_rank, scratch_buffer_ptr, shared));
     }
   }
 
@@ -1336,13 +1252,10 @@ private:
                          const int shared, char *scratch_buffer_ptr,
                          const std::size_t league_rank_begin,
                          const std::size_t league_rank_end) {
-    char *local_scratch_buffer_ptr =
-        &scratch_buffer_ptr[HPX::impl_hardware_thread_id() * shared];
     const TagType t{};
     for (std::size_t league_rank = league_rank_begin;
          league_rank < league_rank_end; ++league_rank) {
-      functor(t,
-              Member(policy, 0, league_rank, local_scratch_buffer_ptr, shared));
+      functor(t, Member(policy, 0, league_rank, scratch_buffer_ptr, shared));
     }
   }
 
@@ -1354,32 +1267,20 @@ public:
       auto const num_worker_threads = HPX::concurrency();
       auto hpx_policy = hpx::parallel::execution::par.with(
           hpx::parallel::execution::static_chunk_size(chunk_size));
-      std::size_t m_shared_padded = m_shared;
-      Impl::pad_to_cache_line(m_shared_padded);
 
-      static std::unique_ptr<char[]> scratch_buffer;
-      static std::size_t last_size = 0;
-      if (scratch_buffer.get() == nullptr) {
-        scratch_buffer.reset(new char[num_worker_threads * m_shared_padded]);
-        last_size = num_worker_threads * m_shared_padded;
-      } else if (last_size < static_cast<std::size_t>(num_worker_threads *
-                                                      m_shared_padded)) {
-        scratch_buffer.reset(new char[num_worker_threads * m_shared_padded]);
-        last_size = num_worker_threads * m_shared_padded;
-      }
-      char *scratch_buffer_ptr = scratch_buffer.get();
+      std::size_t buffer_size = m_shared;
+      thread_buffer &buffer = HPX::get_buffer();
+      buffer.resize(num_worker_threads, buffer_size);
 
 #if KOKKOS_HPX_IMPLEMENTATION == 0
       hpx::parallel::for_loop(
           hpx_policy, 0, league_size,
-          [this, hpx_policy, m_shared_padded,
-           scratch_buffer_ptr](std::size_t const league_rank) {
+          [this, hpx_policy, &buffer,
+           buffer_size](std::size_t const league_rank) {
             exec_functor<WorkTag>(
-                m_functor,
-                Member(m_policy, 0, league_rank,
-                       &scratch_buffer_ptr[HPX::impl_hardware_thread_id() *
-                                           m_shared_padded],
-                       m_shared_padded));
+                m_functor, Member(m_policy, 0, league_rank,
+                                  buffer.get(HPX::impl_hardware_thread_id()),
+                                  buffer_size));
           });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
@@ -1388,10 +1289,11 @@ public:
 
       for (std::size_t chunk_rank = 0; chunk_rank < std::size_t(num_chunks);
            ++chunk_rank) {
-        hpx::apply([this, scratch_buffer_ptr, chunk_rank, chunk_size,
-                    league_size, m_shared_padded, &sem]() {
+        hpx::apply([this, &buffer, buffer_size, chunk_rank, chunk_size,
+                    league_size, &sem]() {
           exec_functor_range<WorkTag>(
-              m_functor, m_policy, m_shared_padded, scratch_buffer_ptr,
+              m_functor, m_policy, buffer_size,
+              buffer.get(HPX::impl_hardware_thread_id()),
               chunk_rank * chunk_size,
               (std::min)(static_cast<long unsigned int>(league_size),
                          (chunk_rank + 1) * chunk_size));
@@ -1465,47 +1367,20 @@ public:
     Kokkos::Impl::run_hpx_function([this]() {
       auto const league_size = m_policy.league_size();
       auto const chunk_size = m_policy.chunk_size();
-
-      size_t value_size_bytes = Analysis::value_size(
-          ReducerConditional::select(m_functor, m_reducer));
-      Impl::pad_to_cache_line(value_size_bytes);
       auto const num_worker_threads = HPX::concurrency();
+      const std::size_t value_size_bytes = Analysis::value_size(
+          ReducerConditional::select(m_functor, m_reducer));
+      std::size_t thread_size_bytes = value_size_bytes + m_shared;
 
-      static std::unique_ptr<char[]> intermediate_results;
-      static std::size_t last_size = 0;
-      if (intermediate_results.get() == nullptr) {
-        intermediate_results.reset(
-            new char[num_worker_threads * value_size_bytes]);
-        last_size = num_worker_threads * value_size_bytes;
-      } else if (last_size < static_cast<std::size_t>(num_worker_threads *
-                                                      value_size_bytes)) {
-        intermediate_results.reset(
-            new char[num_worker_threads * value_size_bytes]);
-        last_size = num_worker_threads * value_size_bytes;
-      }
-      char *intermediate_results_ptr = intermediate_results.get();
+      thread_buffer &intermediate_results = HPX::get_buffer();
+      intermediate_results.resize(num_worker_threads, thread_size_bytes);
 
       hpx::parallel::for_loop(
           hpx::parallel::execution::par, 0, num_worker_threads,
-          [this, intermediate_results_ptr, value_size_bytes](std::size_t t) {
-            ValueInit::init(
-                ReducerConditional::select(m_functor, m_reducer),
-                (pointer_type)(
-                    &intermediate_results_ptr[t * value_size_bytes]));
+          [this, &intermediate_results](std::size_t t) {
+            ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
+                            (pointer_type)(intermediate_results.get(t)));
           });
-
-      static std::unique_ptr<char[]> scratch_buffer;
-      static std::size_t last_size_scratch = 0;
-      std::size_t m_shared_padded = m_shared;
-      Impl::pad_to_cache_line(m_shared_padded);
-      if (scratch_buffer.get() == nullptr) {
-        scratch_buffer.reset(new char[num_worker_threads * m_shared_padded]);
-        last_size_scratch = num_worker_threads * value_size_bytes;
-      } else if (last_size_scratch < num_worker_threads * value_size_bytes) {
-        scratch_buffer.reset(new char[num_worker_threads * m_shared_padded]);
-        last_size_scratch = num_worker_threads * value_size_bytes;
-      }
-      char *scratch_buffer_ptr = scratch_buffer.get();
 
 #if KOKKOS_HPX_IMPLEMENTATION == 0
       auto const hpx_policy = hpx::parallel::execution::par.with(
@@ -1513,17 +1388,17 @@ public:
 
       hpx::parallel::for_loop(
           hpx_policy, 0, league_size,
-          [this, league_size, scratch_buffer_ptr, intermediate_results_ptr,
-           value_size_bytes, m_shared_padded](std::size_t const league_rank) {
+          [this, league_size, &intermediate_results,
+           value_size_bytes](std::size_t const league_rank) {
             std::size_t t = HPX::impl_hardware_thread_id();
-            reference_type update = ValueOps::reference((pointer_type)(
-                &intermediate_results_ptr[t * value_size_bytes]));
+            reference_type update = ValueOps::reference(
+                (pointer_type)(intermediate_results.get(t)));
 
             exec_functor<WorkTag>(
                 m_functor,
                 Member(m_policy, 0, league_rank,
-                       &scratch_buffer_ptr[t * m_shared_padded],
-                       m_shared_padded),
+                       intermediate_results.get(t) + value_size_bytes,
+                       m_shared),
                 update);
           });
 
@@ -1533,14 +1408,13 @@ public:
 
       for (std::size_t chunk_rank = 0; chunk_rank < std::size_t(num_chunks);
            ++chunk_rank) {
-        hpx::apply([this, scratch_buffer_ptr, intermediate_results_ptr,
-                    chunk_rank, chunk_size, league_size, value_size_bytes,
-                    m_shared_padded, &sem]() {
+        hpx::apply([this, &intermediate_results, chunk_rank, chunk_size,
+                    league_size, value_size_bytes, &sem]() {
           std::size_t t = HPX::impl_hardware_thread_id();
-          reference_type update = ValueOps::reference(
-              (pointer_type)(&intermediate_results_ptr[t * value_size_bytes]));
+          reference_type update =
+              ValueOps::reference((pointer_type)(intermediate_results.get(t)));
           char *scratch_buffer_local_ptr =
-              &scratch_buffer_ptr[t * m_shared_padded];
+              intermediate_results.get(t) + value_size_bytes;
 
           auto league_rank_begin = chunk_rank * chunk_size;
           auto league_rank_end =
@@ -1551,8 +1425,7 @@ public:
                league_rank < league_rank_end; ++league_rank) {
             exec_functor<WorkTag>(m_functor,
                                   Member(m_policy, 0, league_rank,
-                                         scratch_buffer_local_ptr,
-                                         m_shared_padded),
+                                         scratch_buffer_local_ptr, m_shared),
                                   update);
           }
 
@@ -1564,11 +1437,10 @@ public:
 #endif
 
       const pointer_type ptr =
-          reinterpret_cast<pointer_type>(intermediate_results_ptr);
+          reinterpret_cast<pointer_type>(intermediate_results.get(0));
       for (int t = 1; t < num_worker_threads; ++t) {
-        ValueJoin::join(
-            ReducerConditional::select(m_functor, m_reducer), ptr,
-            (pointer_type)(&intermediate_results_ptr[t * value_size_bytes]));
+        ValueJoin::join(ReducerConditional::select(m_functor, m_reducer), ptr,
+                        (pointer_type)(intermediate_results.get(t)));
       }
 
       Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
