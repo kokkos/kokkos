@@ -105,9 +105,9 @@ struct TestCheckPointView {
 
 TEST_F( TEST_CATEGORY , view_checkpoint_tests ) {
   TestCheckPointView< TEST_EXECSPACE >::test_view_chkpt(10,10);
-  remove("/home/jsmiles/Development/cpview2");
+  //remove("/home/jsmiles/Development/cpview2");
   TestCheckPointView< TEST_EXECSPACE >::test_view_chkpt(100,100);
-  remove("/home/jsmiles/Development/cpview2");
+  //remove("/home/jsmiles/Development/cpview2");
 }
 
 #endif

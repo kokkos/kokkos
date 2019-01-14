@@ -46,7 +46,7 @@ namespace Experimental {
           hsize_t chunk[1];
           chunk[0] = min(chunk_size, data_size);
           H5Pset_chunk(pid, 1, chunk);
-          m_did = H5Dcreate(m_fid, data_set.c_str(), H5T_NATIVE_INT, fsid, 
+          m_did = H5Dcreate(m_fid, data_set.c_str(), H5T_NATIVE_CHAR, fsid, 
                              H5P_DEFAULT, pid, H5P_DEFAULT );
           if (m_did == 0) {
               printf("Error creating dataset\n");
@@ -66,6 +66,29 @@ namespace Experimental {
           if (m_did == 0) {
              printf("Error creating dataset\n");
              return -1;
+          } else {
+              int nFileOk = 0;
+              hid_t dtype  = H5Dget_type(m_did);
+              hid_t dspace = H5Dget_space(m_did);
+              int rank = H5Sget_simple_extent_ndims(dspace);
+              if ( H5Tequal(dtype, H5T_NATIVE_CHAR) > 0 && rank == 1 ) {     
+                 hsize_t test_dims[1];
+                 herr_t status  = H5Sget_simple_extent_dims(dspace, test_dims, NULL);
+                 if (status != 1 || test_dims[0] != data_size) {
+                    printf("dims don't match: %d, %d \n", (int)status, (int)test_dims[0] );
+                    nFileOk = -1;
+                 }
+              } else {
+                 printf("datatype and rank don't match, %d, %d \n", (int)dtype, rank);
+                 nFileOk = -1;
+              }
+
+              if (nFileOk != 0) {
+                  printf("HDF5: existing file does not match requested attributes \n");
+                  close_file();
+                  remove(file_path.c_str());
+                  return open_file();                  
+             }            
           }
       } else {
          printf("open_file: file handle already set .\n");
@@ -91,7 +114,7 @@ namespace Experimental {
             printf("reading %d, %d \n", offset[0], count[0]);
             herr_t status = H5Sselect_hyperslab(fsid, H5S_SELECT_SET, offset, NULL, count, NULL);
             status = H5Sselect_hyperslab(m_mid, H5S_SELECT_SET, doffset, NULL, count, NULL);
-            status = H5Dread(m_did, H5T_NATIVE_INT, m_mid, fsid, H5P_DEFAULT, &ptr[i]);
+            status = H5Dread(m_did, H5T_NATIVE_CHAR, m_mid, fsid, H5P_DEFAULT, &ptr[i]);
             if (status == 0) {
                dataRead += min(stepSize, dest_size-i);
             } else {
@@ -131,7 +154,7 @@ namespace Experimental {
                return m_written;
             }
             hid_t pid = H5Pcreate(H5P_DATASET_XFER);
-            status = H5Dwrite(m_did, H5T_NATIVE_INT, m_mid, fsid, pid, &ptr[i]);
+            status = H5Dwrite(m_did, H5T_NATIVE_CHAR, m_mid, fsid, pid, &ptr[i]);
             if (status == 0) {
                m_written+= min(stepSize, (src_size - i));
             } else {
