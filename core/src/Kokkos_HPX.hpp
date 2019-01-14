@@ -150,7 +150,7 @@ public:
     std::size_t size_total_new = m_num_threads * m_size_per_thread;
 
     if (m_size_total < size_total_new) {
-      m_data.reset(new char[m_size_total]);
+      m_data.reset(new char[size_total_new]);
       m_size_total = size_total_new;
     }
   }
