@@ -600,21 +600,28 @@ private:
 public:
   void execute() const {
     Kokkos::Impl::run_hpx_function([this]() {
+
 #if KOKKOS_HPX_IMPLEMENTATION == 0
-      hpx::parallel::for_loop(
-          hpx::parallel::execution::par.with(
-              hpx::parallel::execution::static_chunk_size(
-                  m_policy.chunk_size())),
-          m_policy.begin(), m_policy.end(),
-          [this](const Member i) { execute_functor<WorkTag>(m_functor, i); });
+      using hpx::parallel::execution::par;
+      using hpx::parallel::execution::static_chunk_size;
+      using hpx::parallel::for_loop;
+
+      for_loop(execution::par.with(
+                   execution::static_chunk_size(m_policy.chunk_size())),
+               m_policy.begin(), m_policy.end(), [this](const Member i) {
+                 execute_functor<WorkTag>(m_functor, i);
+               });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
-      hpx::lcos::local::counting_semaphore sem(0);
+      using hpx::apply;
+      using hpx::lcos::local::counting_semaphore;
+
+      counting_semaphore sem(0);
       std::size_t num_tasks = 0;
 
       for (Member i_begin = m_policy.begin(); i_begin < m_policy.end();
            i_begin += m_policy.chunk_size()) {
-        hpx::apply([this, i_begin, &sem]() {
+        apply([this, &sem, i_begin]() {
           const Member i_end =
               (std::min)(i_begin + m_policy.chunk_size(), m_policy.end());
           execute_functor_range<WorkTag>(m_functor, i_begin, i_end);
@@ -654,20 +661,25 @@ public:
   inline void execute() const {
     Kokkos::Impl::run_hpx_function([this]() {
 #if KOKKOS_HPX_IMPLEMENTATION == 0
-      hpx::parallel::for_loop(
-          hpx::parallel::execution::par.with(
-              hpx::parallel::execution::static_chunk_size(
-                  m_policy.chunk_size())),
-          m_policy.begin(), m_policy.end(),
-          [this](const Member i) { iterate_type(m_mdr_policy, m_functor)(i); });
+      using hpx::parallel::execution::par;
+      using hpx::parallel::execution::static_chunk_size;
+      using hpx::parallel::for_loop;
+
+      for_loop(par.with(static_chunk_size(m_policy.chunk_size())),
+               m_policy.begin(), m_policy.end(), [this](const Member i) {
+                 iterate_type(m_mdr_policy, m_functor)(i);
+               });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
-      hpx::lcos::local::counting_semaphore sem(0);
+      using hpx::apply;
+      using hpx::lcos::local::counting_semaphore;
+
+      counting_semaphore sem(0);
       std::size_t num_tasks = 0;
 
       for (Member i_begin = m_policy.begin(); i_begin < m_policy.end();
            i_begin += m_policy.chunk_size()) {
-        hpx::apply([this, &sem, i_begin]() {
+        apply([this, &sem, i_begin]() {
           const Member i_end =
               (std::min)(i_begin + m_policy.chunk_size(), m_policy.end());
           for (Member i = i_begin; i < i_end; ++i) {
@@ -764,31 +776,34 @@ public:
   inline void execute() const {
 
     Kokkos::Impl::run_hpx_function([this]() {
-      const auto num_worker_threads = HPX::concurrency();
+      const int num_worker_threads = HPX::concurrency();
 
-      std::size_t value_size_bytes = Analysis::value_size(
+      std::size_t value_size = Analysis::value_size(
           ReducerConditional::select(m_functor, m_reducer));
 
       thread_buffer &buffer = HPX::get_buffer();
-      buffer.resize(num_worker_threads, value_size_bytes);
+      buffer.resize(num_worker_threads, value_size);
 
-      hpx::parallel::for_loop(
-          hpx::parallel::execution::par, 0, num_worker_threads,
-          [this, &buffer](std::size_t t) {
-            ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                            reinterpret_cast<pointer_type>(buffer.get(t)));
-          });
+      using hpx::parallel::execution::par;
+      using hpx::parallel::execution::static_chunk_size;
+      using hpx::parallel::for_loop;
+
+      for_loop(par, 0, num_worker_threads, [this, &buffer](std::size_t t) {
+        ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
+                        reinterpret_cast<pointer_type>(buffer.get(t)));
+      });
 
       // TODO: parallel::for_loop with reduction
       // NOTE: At least works for simple types, not tested for cases where
       // reference_type is a pointer.
 
-      // hpx::parallel::execution::static_chunk_size s(m_policy.chunk_size());
+      // using hpx::parallel::execution::static_chunk_size;
+      // using hpx::parallel::reduction;
+      //
       // value_type init{};
-      // hpx::parallel::for_loop(
-      //     hpx::parallel::execution::par.with(s), m_policy.begin(),
-      //     m_policy.end(),
-      //     hpx::parallel::reduction(
+      // for_loop(
+      //     par.with(static_chunk_size(m_policy.chunk_size())),
+      //     m_policy.begin(), m_policy.end(), reduction(
       //         ValueOps::reference(reinterpret_cast<pointer_type>(buffer.get(0))),
       //         init,
       //         [this](reference_type a, reference_type b) {
@@ -803,23 +818,25 @@ public:
       //     });
 
 #if KOKKOS_HPX_IMPLEMENTATION == 0
-      hpx::parallel::execution::static_chunk_size s(m_policy.chunk_size());
-      hpx::parallel::for_loop(
-          hpx::parallel::execution::par.with(s), m_policy.begin(),
-          m_policy.end(), [this, &buffer, num_worker_threads](const Member i) {
-            reference_type update =
-                ValueOps::reference(reinterpret_cast<pointer_type>(
-                    buffer.get(HPX::impl_hardware_thread_id())));
-            execute_functor<WorkTag>(m_functor, i, update);
-          });
+      for_loop(par.with(static_chunk_size(m_policy.chunk_size())),
+               m_policy.begin(), m_policy.end(),
+               [this, &buffer](const Member i) {
+                 reference_type update =
+                     ValueOps::reference(reinterpret_cast<pointer_type>(
+                         buffer.get(HPX::impl_hardware_thread_id())));
+                 execute_functor<WorkTag>(m_functor, i, update);
+               });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
-      hpx::lcos::local::counting_semaphore sem(0);
+      using hpx::apply;
+      using hpx::lcos::local::counting_semaphore;
+
+      counting_semaphore sem(0);
       std::size_t num_tasks = 0;
 
       for (Member i_begin = m_policy.begin(); i_begin < m_policy.end();
            i_begin += m_policy.chunk_size()) {
-        hpx::apply([this, &buffer, &sem, i_begin]() {
+        apply([this, &buffer, &sem, i_begin]() {
           reference_type update =
               ValueOps::reference(reinterpret_cast<pointer_type>(
                   buffer.get(HPX::impl_hardware_thread_id())));
@@ -910,43 +927,48 @@ private:
 public:
   inline void execute() const {
     Kokkos::Impl::run_hpx_function([this]() {
-      const auto num_worker_threads = HPX::concurrency();
-      const std::size_t value_size_bytes = Analysis::value_size(
+      const int num_worker_threads = HPX::concurrency();
+      const std::size_t value_size = Analysis::value_size(
           ReducerConditional::select(m_functor, m_reducer));
 
       thread_buffer &buffer = HPX::get_buffer();
-      buffer.resize(num_worker_threads, value_size_bytes);
+      buffer.resize(num_worker_threads, value_size);
 
-      hpx::parallel::for_loop(
-          hpx::parallel::execution::par, 0, num_worker_threads,
-          [this, &buffer](std::size_t t) {
-            ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                            reinterpret_cast<pointer_type>(buffer.get(t)));
-          });
+      using hpx::parallel::execution::par;
+      using hpx::parallel::for_loop;
+
+      for_loop(par, 0, num_worker_threads, [this, &buffer](std::size_t t) {
+        ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
+                        reinterpret_cast<pointer_type>(buffer.get(t)));
+      });
 
 #if KOKKOS_HPX_IMPLEMENTATION == 0
-      hpx::parallel::execution::static_chunk_size s(m_policy.chunk_size());
-      hpx::parallel::for_loop(
-          hpx::parallel::execution::par.with(s), m_policy.begin(),
-          m_policy.end(), [this, &buffer](const Member i) {
-            reference_type update =
-                ValueOps::reference(reinterpret_cast<pointer_type>(
-                    buffer.get(HPX::impla_hardware_thread_id())));
-            iterate_type(m_mdr_policy, m_functor, update)(i);
-          });
+      using hpx::parallel::execution::static_chunk_size;
+
+      for_loop(par.with(static_chunk_size(m_policy.chunk_size())),
+               m_policy.begin(), m_policy.end(),
+               [this, &buffer](const Member i) {
+                 reference_type update =
+                     ValueOps::reference(reinterpret_cast<pointer_type>(
+                         buffer.get(HPX::impla_hardware_thread_id())));
+                 iterate_type(m_mdr_policy, m_functor, update)(i);
+               });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
-      hpx::lcos::local::counting_semaphore sem(0);
+      using hpx::apply;
+      using hpx::lcos::local::counting_semaphore;
+
+      counting_semaphore sem(0);
       std::size_t num_tasks = 0;
 
       for (Member i_begin = m_policy.begin(); i_begin < m_policy.end();
            i_begin += m_policy.chunk_size()) {
-        hpx::apply([this, &buffer, &sem, i_begin]() {
+        apply([this, &buffer, &sem, i_begin]() {
           reference_type update =
               ValueOps::reference(reinterpret_cast<pointer_type>(
                   buffer.get(HPX::impl_hardware_thread_id())));
           const Member i_end =
-              (std::min)(m_policy.end(), i_begin + m_policy.chunk_size());
+              (std::min)(i_begin + m_policy.chunk_size(), m_policy.end());
 
           for (Member i = i_begin; i < i_end; ++i) {
             iterate_type(m_mdr_policy, m_functor, update)(i);
@@ -1050,36 +1072,37 @@ private:
 public:
   inline void execute() const {
     Kokkos::Impl::run_hpx_function([this]() {
-      const auto num_worker_threads = HPX::concurrency();
+      const int num_worker_threads = HPX::concurrency();
       const int value_count = Analysis::value_count(m_functor);
-      const std::size_t value_size_bytes = Analysis::value_size(m_functor);
+      const std::size_t value_size = Analysis::value_size(m_functor);
 
       thread_buffer &buffer = HPX::get_buffer();
-      buffer.resize(num_worker_threads, value_size_bytes);
+      buffer.resize(num_worker_threads, value_size);
 
-      hpx::parallel::execution::static_chunk_size s(1);
+      using hpx::parallel::execution::par;
+      using hpx::parallel::execution::static_chunk_size;
+      using hpx::parallel::for_loop;
 
-      hpx::parallel::for_loop(
-          hpx::parallel::execution::par.with(s), 0, num_worker_threads,
-          [this, &buffer, num_worker_threads](std::size_t const t) {
-            reference_type update_sum = ValueInit::init(
-                m_functor, reinterpret_cast<pointer_type>(buffer.get(t)));
+      for_loop(par.with(static_chunk_size(1)), 0, num_worker_threads,
+               [this, &buffer, num_worker_threads](std::size_t const t) {
+                 reference_type update_sum = ValueInit::init(
+                     m_functor, reinterpret_cast<pointer_type>(buffer.get(t)));
 
-            const WorkRange range(m_policy, t, num_worker_threads);
-            execute_functor_range<WorkTag>(m_functor, range.begin(),
-                                           range.end(), update_sum, false);
-          });
+                 const WorkRange range(m_policy, t, num_worker_threads);
+                 execute_functor_range<WorkTag>(m_functor, range.begin(),
+                                                range.end(), update_sum, false);
+               });
 
-      ValueInit::init(m_functor, reinterpret_cast<pointer_type>(
-                                     buffer.get(0) + value_size_bytes));
+      ValueInit::init(m_functor, reinterpret_cast<pointer_type>(buffer.get(0) +
+                                                                value_size));
 
       for (int i = 1; i < num_worker_threads; ++i) {
         pointer_type ptr_1_prev =
             reinterpret_cast<pointer_type>(buffer.get(i - 1));
-        pointer_type ptr_2_prev = reinterpret_cast<pointer_type>(
-            buffer.get(i - 1) + value_size_bytes);
+        pointer_type ptr_2_prev =
+            reinterpret_cast<pointer_type>(buffer.get(i - 1) + value_size);
         pointer_type ptr_2 =
-            reinterpret_cast<pointer_type>(buffer.get(i) + value_size_bytes);
+            reinterpret_cast<pointer_type>(buffer.get(i) + value_size);
 
         for (int j = 0; j < value_count; ++j) {
           ptr_2[j] = ptr_2_prev[j];
@@ -1088,13 +1111,11 @@ public:
         ValueJoin::join(m_functor, ptr_2, ptr_1_prev);
       }
 
-      hpx::parallel::for_loop(
-          hpx::parallel::execution::par.with(s), 0, num_worker_threads,
-          [this, &buffer, num_worker_threads, value_count,
-           value_size_bytes](std::size_t const t) {
-            reference_type update_base =
-                ValueOps::reference(reinterpret_cast<pointer_type>(
-                    buffer.get(t) + value_size_bytes));
+      for_loop(
+          par.with(static_chunk_size(1)), 0, num_worker_threads,
+          [this, &buffer, num_worker_threads, value_size](std::size_t const t) {
+            reference_type update_base = ValueOps::reference(
+                reinterpret_cast<pointer_type>(buffer.get(t) + value_size));
 
             const WorkRange range(m_policy, t, num_worker_threads);
             execute_functor_range<WorkTag>(m_functor, range.begin(),
@@ -1154,36 +1175,37 @@ private:
 public:
   inline void execute() const {
     Kokkos::Impl::run_hpx_function([this]() {
-      const auto num_worker_threads = HPX::concurrency();
+      const int num_worker_threads = HPX::concurrency();
       const int value_count = Analysis::value_count(m_functor);
-      const std::size_t value_size_bytes = Analysis::value_size(m_functor);
+      const std::size_t value_size = Analysis::value_size(m_functor);
 
       thread_buffer &buffer = HPX::get_buffer();
-      buffer.resize(num_worker_threads, 2 * value_size_bytes);
+      buffer.resize(num_worker_threads, 2 * value_size);
 
-      hpx::parallel::execution::static_chunk_size s(1);
+      using hpx::parallel::execution::par;
+      using hpx::parallel::execution::static_chunk_size;
+      using hpx::parallel::for_loop;
 
-      hpx::parallel::for_loop(
-          hpx::parallel::execution::par.with(s), 0, num_worker_threads,
-          [this, &buffer, num_worker_threads](std::size_t const t) {
-            reference_type update_sum = ValueInit::init(
-                m_functor, reinterpret_cast<pointer_type>(buffer.get(t)));
+      for_loop(par.with(static_chunk_size(1)), 0, num_worker_threads,
+               [this, &buffer, num_worker_threads](std::size_t const t) {
+                 reference_type update_sum = ValueInit::init(
+                     m_functor, reinterpret_cast<pointer_type>(buffer.get(t)));
 
-            const WorkRange range(m_policy, t, num_worker_threads);
-            execute_functor_range<WorkTag>(m_functor, range.begin(),
-                                           range.end(), update_sum, false);
-          });
+                 const WorkRange range(m_policy, t, num_worker_threads);
+                 execute_functor_range<WorkTag>(m_functor, range.begin(),
+                                                range.end(), update_sum, false);
+               });
 
-      ValueInit::init(m_functor, reinterpret_cast<pointer_type>(
-                                     buffer.get(0) + value_size_bytes));
+      ValueInit::init(m_functor, reinterpret_cast<pointer_type>(buffer.get(0) +
+                                                                value_size));
 
       for (int i = 1; i < num_worker_threads; ++i) {
         pointer_type ptr_1_prev =
             reinterpret_cast<pointer_type>(buffer.get(i - 1));
-        pointer_type ptr_2_prev = reinterpret_cast<pointer_type>(
-            buffer.get(i - 1) + value_size_bytes);
+        pointer_type ptr_2_prev =
+            reinterpret_cast<pointer_type>(buffer.get(i - 1) + value_size);
         pointer_type ptr_2 =
-            reinterpret_cast<pointer_type>(buffer.get(i) + value_size_bytes);
+            reinterpret_cast<pointer_type>(buffer.get(i) + value_size);
 
         for (int j = 0; j < value_count; ++j) {
           ptr_2[j] = ptr_2_prev[j];
@@ -1195,13 +1217,11 @@ public:
       // NOTE: Doing dynamic scheduling with chunk size etc. doesn't work
       // because the update variable has to be correspond to the same i between
       // iterations.
-      hpx::parallel::for_loop(
-          hpx::parallel::execution::par.with(s), 0, num_worker_threads,
-          [this, &buffer, num_worker_threads, value_count,
-           value_size_bytes](std::size_t const t) {
-            reference_type update_base =
-                ValueOps::reference(reinterpret_cast<pointer_type>(
-                    buffer.get(t) + value_size_bytes));
+      for_loop(
+          par.with(static_chunk_size(1)), 0, num_worker_threads,
+          [this, &buffer, num_worker_threads, value_size](std::size_t const t) {
+            reference_type update_base = ValueOps::reference(
+                reinterpret_cast<pointer_type>(buffer.get(t) + value_size));
 
             const WorkRange range(m_policy, t, num_worker_threads);
             execute_functor_range<WorkTag>(m_functor, range.begin(),
@@ -1288,33 +1308,37 @@ private:
 public:
   inline void execute() const {
     Kokkos::Impl::run_hpx_function([this]() {
-      const auto league_size = m_policy.league_size();
-      const auto chunk_size = m_policy.chunk_size();
-      const auto num_worker_threads = HPX::concurrency();
-      auto hpx_policy = hpx::parallel::execution::par.with(
-          hpx::parallel::execution::static_chunk_size(chunk_size));
+      const int num_worker_threads = HPX::concurrency();
 
       thread_buffer &buffer = HPX::get_buffer();
       buffer.resize(num_worker_threads, m_shared);
 
 #if KOKKOS_HPX_IMPLEMENTATION == 0
-      hpx::parallel::for_loop(
-          hpx_policy, 0, league_size,
-          [this, hpx_policy, &buffer](const int league_rank) {
-            execute_functor<WorkTag>(m_functor, m_policy, league_rank,
-                                     buffer.get(HPX::impl_hardware_thread_id()),
-                                     m_shared);
-          });
+      using hpx::parallel::execution::par;
+      using hpx::parallel::execution::static_chunk_size;
+      using hpx::parallel::for_loop;
+
+      for_loop(par.with(static_chunk_size(chunk_size)), 0,
+               m_policy.league_size(), [this, &buffer](const int league_rank) {
+                 execute_functor<WorkTag>(
+                     m_functor, m_policy, league_rank,
+                     buffer.get(HPX::impl_hardware_thread_id()), m_shared);
+               });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
-      hpx::lcos::local::counting_semaphore sem(0);
+      using hpx::apply;
+      using hpx::lcos::local::counting_semaphore;
+
+      counting_semaphore sem(0);
       std::size_t num_tasks = 0;
 
-      for (int league_rank_begin = 0; league_rank_begin < league_size;
+      for (int league_rank_begin = 0;
+           league_rank_begin < m_policy.league_size();
            league_rank_begin += m_policy.chunk_size()) {
-        hpx::apply([this, &buffer, &sem, league_rank_begin, league_size]() {
-          const int league_rank_end = (std::min)(
-              league_rank_begin + m_policy.chunk_size(), league_size);
+        apply([this, &buffer, &sem, league_rank_begin]() {
+          const int league_rank_end =
+              (std::min)(league_rank_begin + m_policy.chunk_size(),
+                         m_policy.league_size());
           execute_functor_range<WorkTag>(
               m_functor, m_policy, league_rank_begin, league_rank_end,
               buffer.get(HPX::impl_hardware_thread_id()), m_shared);
@@ -1426,47 +1450,49 @@ private:
 public:
   inline void execute() const {
     Kokkos::Impl::run_hpx_function([this]() {
-      const auto league_size = m_policy.league_size();
-      const auto chunk_size = m_policy.chunk_size();
-      const auto num_worker_threads = HPX::concurrency();
-      const std::size_t value_size_bytes = Analysis::value_size(
+      const int league_size = m_policy.league_size();
+      const int chunk_size = m_policy.chunk_size();
+      const int num_worker_threads = HPX::concurrency();
+      const std::size_t value_size = Analysis::value_size(
           ReducerConditional::select(m_functor, m_reducer));
 
       thread_buffer &buffer = HPX::get_buffer();
-      buffer.resize(num_worker_threads, value_size_bytes + m_shared);
+      buffer.resize(num_worker_threads, value_size + m_shared);
 
-      hpx::parallel::for_loop(
-          hpx::parallel::execution::par, 0, num_worker_threads,
-          [this, &buffer](std::size_t t) {
-            ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                            reinterpret_cast<pointer_type>(buffer.get(t)));
-          });
+      using hpx::parallel::execution::par;
+      using hpx::parallel::for_loop;
+
+      for_loop(par, 0, num_worker_threads, [this, &buffer](std::size_t t) {
+        ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
+                        reinterpret_cast<pointer_type>(buffer.get(t)));
+      });
 
 #if KOKKOS_HPX_IMPLEMENTATION == 0
-      const auto hpx_policy = hpx::parallel::execution::par.with(
-          hpx::parallel::execution::static_chunk_size(chunk_size));
+      using hpx::parallel::execution::static_chunk_size;
 
       hpx::parallel::for_loop(
-          hpx_policy, 0, league_size,
-          [this, league_size, &buffer,
-           value_size_bytes](const int league_rank) {
+          par.with(static_chunk_size(chunk_size)), 0, league_size,
+          [this, &buffer, league_size, value_size](const int league_rank) {
             std::size_t t = HPX::impl_hardware_thread_id();
             reference_type update = ValueOps::reference(
                 reinterpret_cast<pointer_type>(buffer.get(t)));
 
             execute_functor<WorkTag>(m_functor, m_policy, league_rank,
-                                     buffer.get(t) + value_size_bytes, m_shared,
+                                     buffer.get(t) + value_size, m_shared,
                                      update);
           });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
-      hpx::lcos::local::counting_semaphore sem(0);
+      using hpx::apply;
+      using hpx::lcos::local::counting_semaphore;
+
+      counting_semaphore sem(0);
       std::size_t num_tasks = 0;
 
       for (int league_rank_begin = 0; league_rank_begin < league_size;
            league_rank_begin += m_policy.chunk_size()) {
-        hpx::apply([this, &buffer, &sem, league_rank_begin, league_size,
-                    value_size_bytes]() {
+        apply([this, &buffer, &sem, league_rank_begin, league_size,
+               value_size]() {
           std::size_t t = HPX::impl_hardware_thread_id();
           reference_type update = ValueOps::reference(
               reinterpret_cast<pointer_type>(buffer.get(t)));
@@ -1474,7 +1500,7 @@ public:
               league_rank_begin + m_policy.chunk_size(), league_size);
           execute_functor_range<WorkTag>(
               m_functor, m_policy, league_rank_begin, league_rank_end,
-              buffer.get(t) + value_size_bytes, m_shared, update);
+              buffer.get(t) + value_size, m_shared, update);
 
           sem.signal(1);
         });
