@@ -349,6 +349,7 @@ namespace Kokkos{
     using Kokkos::ValLocScalar;
 
 
+    class StdFileSpace;
 #ifdef KOKKOS_ENABLE_HDF5
     class HDF5Space;
 #endif

@@ -270,29 +270,6 @@ struct ViewTraits< typename std::enable_if< Kokkos::Impl::is_space<Space>::value
   typedef typename ViewTraits<void,Prop...>::specialize       specialize ;
 };
 
-/*
-#ifdef KOKKOS_ENABLE_HDF5
-template< class MemorySpace , class ... Prop >
-struct ViewTraits< typename std::enable_if< Kokkos::Impl::is_same<MemorySpace, Kokkos::Experimental::HDF5Space>::value >::type , MemorySpace , Prop ... >
-{
-  // Specify Space, memory traits should be the only subsequent argument.
-
-  static_assert( std::is_same< typename ViewTraits<void,Prop...>::execution_space , void >::value &&
-                 std::is_same< typename ViewTraits<void,Prop...>::memory_space    , void >::value &&
-                 std::is_same< typename ViewTraits<void,Prop...>::HostMirrorSpace , void >::value &&
-                 std::is_same< typename ViewTraits<void,Prop...>::array_layout    , void >::value
-               , "Only one View Execution or Memory Space template argument" );
-
-  typedef typename Kokkos::DefaultExecutionSpace            execution_space ;
-  typedef MemorySpace                                       memory_space ;
-  typedef typename Kokkos::HostSpace                        HostMirrorSpace ;
-  typedef typename ViewTraits<void,Prop...>::array_layout   array_layout ;
-  typedef typename ViewTraits<void,Prop...>::memory_traits  memory_traits ;
-  typedef typename ViewTraits<void,Prop...>::specialize     specialize ;
-};
-#endif
-*/
-
 template< class MemoryTraits , class ... Prop >
 struct ViewTraits< typename std::enable_if< Kokkos::Impl::is_memory_traits<MemoryTraits>::value >::type , MemoryTraits , Prop ... >
 {
