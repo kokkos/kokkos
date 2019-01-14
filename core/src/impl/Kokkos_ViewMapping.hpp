@@ -2480,7 +2480,7 @@ struct ViewValueFunctor ;
 
 template< class ExecSpace , class ValueType , class MemorySpace >
 struct ViewValueFunctor< ExecSpace , ValueType , MemorySpace , 
-           typename std::enable_if< std::is_same <MemorySpace, Kokkos::Experimental::HDF5Space>::value, void >::type , false >
+           typename std::enable_if< Kokkos::is_file_space_type<MemorySpace>::value, void >::type , false >
 {
 
   ViewValueFunctor() = default ;
@@ -2499,7 +2499,7 @@ struct ViewValueFunctor< ExecSpace , ValueType , MemorySpace ,
 
 template< class ExecSpace , class ValueType , class MemorySpace >
 struct ViewValueFunctor< ExecSpace , ValueType , MemorySpace , 
-           typename std::enable_if< std::is_same <MemorySpace, Kokkos::Experimental::HDF5Space>::value, void >::type , true >
+           typename std::enable_if< Kokkos::is_file_space_type <MemorySpace>::value, void >::type , true >
 {
 
   ViewValueFunctor() = default ;
@@ -2518,7 +2518,7 @@ struct ViewValueFunctor< ExecSpace , ValueType , MemorySpace ,
 
 template< class ExecSpace , class ValueType, class MemorySpace >
 struct ViewValueFunctor< ExecSpace , ValueType , MemorySpace , 
-           typename std::enable_if< !std::is_same <MemorySpace, Kokkos::Experimental::HDF5Space>::value, void >::type , false >
+           typename std::enable_if< !Kokkos::is_file_space_type <MemorySpace>::value, void >::type , false >
 {
   typedef Kokkos::RangePolicy< ExecSpace > PolicyType ;
   typedef typename ExecSpace::execution_space Exec;
@@ -2583,7 +2583,7 @@ struct ViewValueFunctor< ExecSpace , ValueType , MemorySpace ,
 
 template< class ExecSpace , class ValueType , class MemorySpace >
 struct ViewValueFunctor< ExecSpace , ValueType , MemorySpace , 
-           typename std::enable_if< !std::is_same <MemorySpace, Kokkos::Experimental::HDF5Space>::value, void >::type , true >
+           typename std::enable_if< !Kokkos::is_file_space_type <MemorySpace>::value, void >::type , true >
 {
   typedef Kokkos::RangePolicy< ExecSpace > PolicyType ;
 

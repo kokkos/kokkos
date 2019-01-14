@@ -1,3 +1,4 @@
+
 /*
 //@HEADER
 // ************************************************************************
@@ -40,9 +41,8 @@
 // ************************************************************************
 //@HEADER
 */
-
-#ifndef KOKKOS_HOSTSPACE_HPP
-#define KOKKOS_HOSTSPACE_HPP
+#ifndef __KOKKOS_STD_FILE_SPACE_
+#define __KOKKOS_STD_FILE_SPACE_
 
 #include <cstring>
 #include <string>
@@ -52,55 +52,85 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <Kokkos_MemoryTraits.hpp>
-
-#include <impl/Kokkos_Traits.hpp>
-#include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
+#include <fstream>
 
-/*--------------------------------------------------------------------------*/
-
-namespace Kokkos {
-
-namespace Impl {
-
-/// \brief Initialize lock array for arbitrary size atomics.
-///
-/// Arbitrary atomics are implemented using a hash table of locks
-/// where the hash value is derived from the address of the
-/// object for which an atomic operation is performed.
-/// This function initializes the locks to zero (unset).
-void init_lock_array_host_space();
-
-/// \brief Aquire a lock for the address
-///
-/// This function tries to aquire the lock for the hash value derived
-/// from the provided ptr. If the lock is successfully aquired the
-/// function returns true. Otherwise it returns false.
-bool lock_address_host_space(void* ptr);
-
-/// \brief Release lock for the address
-///
-/// This function releases the lock for the hash value derived
-/// from the provided ptr. This function should only be called
-/// after previously successfully aquiring a lock with
-/// lock_address.
-void unlock_address_host_space( void* ptr );
-
-} // namespace Impl
-
-} // namespace Kokkos
 
 namespace Kokkos {
 
-/// \class HostSpace
-/// \brief Memory management for host memory.
+namespace Experimental {
+
+class KokkosStdFileAccessor : public Kokkos::Impl::SharedAllocationHeader {
+
+
+public:
+   size_t data_size;
+   size_t file_offset;
+   std::string file_path;
+   std::fstream file_strm;
+
+   enum { READ_FILE = 0,
+          WRITE_FILE = 1 };
+
+   KokkosStdFileAccessor() : data_size(0),
+                             file_offset(0),
+                             file_path("") {
+   }
+   KokkosStdFileAccessor(const size_t size, const std::string & path ) : data_size(size),
+                                                                         file_offset(0),
+                                                                         file_path(path) {
+   }
+
+   KokkosStdFileAccessor( const KokkosStdFileAccessor & rhs ) = default;
+   KokkosStdFileAccessor( KokkosStdFileAccessor && rhs ) = default;
+   KokkosStdFileAccessor & operator = ( KokkosStdFileAccessor && ) = default;
+   KokkosStdFileAccessor & operator = ( const KokkosStdFileAccessor & ) = default;
+   KokkosStdFileAccessor( void* ptr ) {
+      KokkosStdFileAccessor * pAcc = static_cast<KokkosStdFileAccessor*>(ptr);
+      if (pAcc) {
+         data_size = pAcc->data_size;
+         file_path = pAcc->file_path;
+         file_offset = pAcc->file_offset;
+      }
+
+   } 
+
+   KokkosStdFileAccessor( void* ptr, const size_t offset ) {
+      KokkosStdFileAccessor * pAcc = static_cast<KokkosStdFileAccessor*>(ptr);
+      if (pAcc) {
+         data_size = pAcc->data_size;
+         file_path = pAcc->file_path;
+         file_offset = offset;
+      }
+   }
+
+   int initialize( const std::string & filepath );
+
+   bool open_file(int read_write = KokkosStdFileAccessor::READ_FILE);
+   void close_file();
+
+   size_t ReadFile(void * dest, const size_t dest_size);
+   
+   size_t WriteFile(const void * src, const size_t src_size);
+
+   void finalize();
+   
+   ~KokkosStdFileAccessor() {
+      finalize();
+   }
+};
+
+
+/// \class StdFileSpace
+/// \brief Memory management for StdFile 
 ///
-/// HostSpace is a memory space that governs host memory.  "Host"
-/// memory means the usual CPU-accessible memory.
-class HostSpace {
+/// StdFileSpace is a memory space that governs access to StdFile data.
+/// 
+class StdFileSpace {
 public:
   //! Tag this class as a kokkos memory space
-  typedef HostSpace  memory_space;
+  typedef Kokkos::Experimental::StdFileSpace  file_space;   // used to uniquely identify file spaces
+  typedef Kokkos::Experimental::StdFileSpace  memory_space;
   typedef size_t     size_type;
 
   /// \typedef execution_space
@@ -131,22 +161,15 @@ public:
   typedef Kokkos::Device< execution_space, memory_space > device_type;
 
   /**\brief  Default memory space instance */
-  HostSpace();
-  HostSpace( HostSpace && rhs ) = default;
-  HostSpace( const HostSpace & rhs ) = default;
-  HostSpace & operator = ( HostSpace && ) = default;
-  HostSpace & operator = ( const HostSpace & ) = default;
-  ~HostSpace() = default;
-
-  /**\brief  Non-default memory space instance to choose allocation mechansim, if available */
-
-  enum AllocationMechanism { STD_MALLOC, POSIX_MEMALIGN, POSIX_MMAP, INTEL_MM_ALLOC };
-
-  explicit
-  HostSpace( const AllocationMechanism & );
+  StdFileSpace();
+  StdFileSpace( StdFileSpace && rhs ) = default;
+  StdFileSpace( const StdFileSpace & rhs ) = default;
+  StdFileSpace & operator = ( StdFileSpace && ) = default;
+  StdFileSpace & operator = ( const StdFileSpace & ) = default;
+  ~StdFileSpace() = default;
 
   /**\brief  Allocate untracked memory in the space */
-  void * allocate( const size_t arg_alloc_size ) const;
+  void * allocate( const size_t arg_alloc_size, const std::string & path ) const;
 
   /**\brief  Deallocate untracked memory in the space */
   void deallocate( void * const arg_alloc_ptr
@@ -156,64 +179,23 @@ public:
   static constexpr const char* name() { return m_name; }
 
 private:
-  AllocationMechanism  m_alloc_mech;
-  static constexpr const char* m_name = "Host";
-  friend class Kokkos::Impl::SharedAllocationRecord< Kokkos::HostSpace, void >;
+  static constexpr const char* m_name = "StdFile";
+  friend class Kokkos::Impl::SharedAllocationRecord< Kokkos::Experimental::StdFileSpace, void >;
 };
 
-} // namespace Kokkos
-
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-
-namespace Impl {
-
-static_assert( Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace, Kokkos::HostSpace >::assignable, "" );
-
-template< typename S >
-struct HostMirror {
-private:
-  // If input execution space can access HostSpace then keep it.
-  // Example: Kokkos::OpenMP can access, Kokkos::Cuda cannot
-  enum { keep_exe = Kokkos::Impl::MemorySpaceAccess
-                      < typename S::execution_space::memory_space, Kokkos::HostSpace >::accessible };
-
-  // If HostSpace can access memory space then keep it.
-  // Example:  Cannot access Kokkos::CudaSpace, can access Kokkos::CudaUVMSpace
-  enum { keep_mem = Kokkos::Impl::MemorySpaceAccess
-                      < Kokkos::HostSpace, typename S::memory_space >::accessible };
-
-public:
-
-  typedef typename std::conditional
-    < keep_exe && keep_mem /* Can keep whole space */
-    , S
-    , typename std::conditional
-        < keep_mem /* Can keep memory space, use default Host execution space */
-        , Kokkos::Device< Kokkos::HostSpace::execution_space
-                        , typename S::memory_space >
-        , Kokkos::HostSpace
-        >::type
-    >::type  Space;
-};
-
-} // namespace Impl
-
-} // namespace Kokkos
-
-//----------------------------------------------------------------------------
+}
+}
 
 namespace Kokkos {
 
 namespace Impl {
 
 template<>
-class SharedAllocationRecord< Kokkos::HostSpace, void >
+class SharedAllocationRecord< Kokkos::Experimental::StdFileSpace, void >
   : public SharedAllocationRecord< void, void >
 {
 private:
-  friend Kokkos::HostSpace;
+  friend Kokkos::Experimental::StdFileSpace;
 
   typedef SharedAllocationRecord< void, void >  RecordBase;
 
@@ -223,17 +205,17 @@ private:
   static void deallocate( RecordBase * );
 
 #ifdef KOKKOS_DEBUG
-  /**\brief  Root record for tracked allocations from this HostSpace instance */
+  /**\brief  Root record for tracked allocations from this StdFileSpace instance */
   static RecordBase s_root_record;
 #endif
 
-  const Kokkos::HostSpace m_space;
+  const Kokkos::Experimental::StdFileSpace m_space;
 
 protected:
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
 
-  SharedAllocationRecord( const Kokkos::HostSpace        & arg_space
+  SharedAllocationRecord( const Kokkos::Experimental::StdFileSpace        & arg_space
                         , const std::string              & arg_label
                         , const size_t                     arg_alloc_size
                         , const RecordBase::function_type  arg_dealloc = & deallocate
@@ -248,7 +230,7 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION static
-  SharedAllocationRecord * allocate( const Kokkos::HostSpace &  arg_space
+  SharedAllocationRecord * allocate( const Kokkos::Experimental::StdFileSpace &  arg_space
                                    , const std::string       &  arg_label
                                    , const size_t               arg_alloc_size
                                    )
@@ -263,7 +245,7 @@ public:
 
   /**\brief  Allocate tracked memory in the space */
   static
-  void * allocate_tracked( const Kokkos::HostSpace & arg_space
+  void * allocate_tracked( const Kokkos::Experimental::StdFileSpace & arg_space
                          , const std::string & arg_label
                          , const size_t arg_alloc_size );
 
@@ -278,36 +260,61 @@ public:
 
   static SharedAllocationRecord * get_record( void * arg_alloc_ptr );
 
-  static void print_records( std::ostream &, const Kokkos::HostSpace &, bool detail = false );
+  static void print_records( std::ostream &, const Kokkos::Experimental::StdFileSpace &, bool detail = false );
 };
 
-} // namespace Impl
 
-} // namespace Kokkos
+template<class ExecutionSpace> struct DeepCopy< Kokkos::Experimental::StdFileSpace , Kokkos::HostSpace , ExecutionSpace >
+{
+  inline
+  DeepCopy( void * dst , const void * src , size_t n )
+  {   
+      Kokkos::Impl::SharedAllocationHeader * pData = (Kokkos::Impl::SharedAllocationHeader*)dst;
+      Kokkos::Experimental::KokkosStdFileAccessor * pAcc = static_cast<Kokkos::Experimental::KokkosStdFileAccessor*>(pData-1);
 
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-
-namespace Impl {
-
-template< class ExecutionSpace >
-struct DeepCopy< HostSpace, HostSpace, ExecutionSpace > {
-  DeepCopy( void * dst, const void * src, size_t n ) {
-    memcpy( dst, src, n );
+      if (pAcc) {
+         pAcc->WriteFile( src, n );
+      }
   }
 
-  DeepCopy( const ExecutionSpace& exec, void * dst, const void * src, size_t n ) {
+  inline
+  DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
+  {
     exec.fence();
-    memcpy( dst, src, n );
+    Kokkos::Impl::SharedAllocationHeader * pData = (Kokkos::Impl::SharedAllocationHeader*)dst;
+    Kokkos::Experimental::KokkosStdFileAccessor * pAcc = static_cast<Kokkos::Experimental::KokkosStdFileAccessor*>(pData-1);
+    if (pAcc) {
+       pAcc->WriteFile( src, n );
+    }
   }
 };
 
-} // namespace Impl
+template<class ExecutionSpace> struct DeepCopy<  Kokkos::HostSpace , Kokkos::Experimental::StdFileSpace , ExecutionSpace >
+{
+  inline
+  DeepCopy( void * dst , const void * src , size_t n )
+  {       
+      Kokkos::Impl::SharedAllocationHeader * pData = (Kokkos::Impl::SharedAllocationHeader*)src;
+      Kokkos::Experimental::KokkosStdFileAccessor * pAcc = static_cast<Kokkos::Experimental::KokkosStdFileAccessor*>(pData-1);
+      if (pAcc) {
+         pAcc->ReadFile( dst, n );
+      }
+  }
 
-} // namespace Kokkos
+  inline
+  DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
+  {
+    exec.fence();
+    Kokkos::Impl::SharedAllocationHeader * pData = (Kokkos::Impl::SharedAllocationHeader*)src;
+    Kokkos::Experimental::KokkosStdFileAccessor * pAcc = static_cast<Kokkos::Experimental::KokkosStdFileAccessor*>(pData - 1);
+    if (pAcc) {
+       pAcc->ReadFile( dst, n );
+    }
+  }
+};
 
-#include <impl/Kokkos_FileSpace.hpp>
+} // Impl
 
-#endif // #define KOKKOS_HOSTSPACE_HPP
+} // Kokkos
 
+#endif

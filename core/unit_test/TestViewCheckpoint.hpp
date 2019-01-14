@@ -53,18 +53,18 @@ namespace {
 
 #ifdef KOKKOS_ENABLE_HDF5
 
-template < typename ExecSpace >
+template < typename ExecSpace, typename CpFileSpace >
 struct TestCheckPointView {
 
 
-   static void test_view_chkpt(int dim0, int dim1) {
+   static void test_view_chkpt(std::string file_name, int dim0, int dim1) {
 
       typedef Kokkos::View<double**,Kokkos::HostSpace> Rank2ViewType;
       Rank2ViewType view_2;
       view_2 = Rank2ViewType("memory_view_2", dim0, dim1);
 
-      typedef Kokkos::Experimental::HDF5Space hdf5_space_type;
-      Kokkos::View<double**,hdf5_space_type> cp_view("/home/jsmiles/Development/cpview2", dim0, dim1);
+      typedef CpFileSpace cp_file_space_type;
+      Kokkos::View<double**,cp_file_space_type> cp_view(file_name, dim0, dim1);
 
       for (int i = 0; i < dim0; i++) {
          for (int j = 0; j < dim1; j++) {
@@ -104,10 +104,14 @@ struct TestCheckPointView {
 #ifdef KOKKOS_ENABLE_HDF5
 
 TEST_F( TEST_CATEGORY , view_checkpoint_tests ) {
-  TestCheckPointView< TEST_EXECSPACE >::test_view_chkpt(10,10);
-  //remove("/home/jsmiles/Development/cpview2");
-  TestCheckPointView< TEST_EXECSPACE >::test_view_chkpt(100,100);
-  //remove("/home/jsmiles/Development/cpview2");
+  TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("/home/jsmiles/Development/cp_view.hdf",10,10);
+  remove("/home/jsmiles/Development/cp_view.hdf");
+  TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("/home/jsmiles/Development/cp_view.hdf",100,100);
+  remove("/home/jsmiles/Development/cp_view.hdf");
+  TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt("/home/jsmiles/Development/cp_view.bin",10,10);
+  remove("/home/jsmiles/Development/cp_view.bin");
+  TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt("/home/jsmiles/Development/cp_view.bin",100,100);
+  remove("/home/jsmiles/Development/cp_view.bin");
 }
 
 #endif

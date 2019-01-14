@@ -106,6 +106,7 @@ public:
 class HDF5Space {
 public:
   //! Tag this class as a kokkos memory space
+  typedef Kokkos::Experimental::HDF5Space  file_space;   // used to uniquely identify file spaces
   typedef Kokkos::Experimental::HDF5Space  memory_space;
   typedef size_t     size_type;
 
