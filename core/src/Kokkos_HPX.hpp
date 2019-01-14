@@ -777,7 +777,7 @@ public:
           hpx::parallel::execution::par, 0, num_worker_threads,
           [this, &buffer](std::size_t t) {
             ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                            (pointer_type)(buffer.get(t)));
+                            reinterpret_cast<pointer_type>(buffer.get(t)));
           });
 
       // TODO: parallel::for_loop with reduction
@@ -790,12 +790,13 @@ public:
       //     hpx::parallel::execution::par.with(s), m_policy.begin(),
       //     m_policy.end(),
       //     hpx::parallel::reduction(
-      //         ValueOps::reference((pointer_type)buffer.get(0)),
+      //         ValueOps::reference(reinterpret_cast<pointer_type>(buffer.get(0))),
       //         init,
       //         [this](reference_type a, reference_type b) {
       //           ValueJoin::join(
       //               ReducerConditional::select(m_functor, m_reducer),
-      //               (pointer_type)(&a), (pointer_type)(&b));
+      //               reinterpret_cast<pointer_type>(&a),
+      //               reinterpret_cast<pointer_type>(&b));
       //           return a;
       //         }),
       //     [this](Member i, reference_type update) {
@@ -809,8 +810,9 @@ public:
           m_policy.end(),
           [this, &buffer,
            num_worker_threads](typename Policy::member_type const i) {
-            reference_type update = ValueOps::reference(
-                (pointer_type)(buffer.get(HPX::impl_hardware_thread_id())));
+            reference_type update =
+                ValueOps::reference(reinterpret_cast<pointer_type>(
+                    buffer.get(HPX::impl_hardware_thread_id())));
             exec_functor<WorkTag>(m_functor, i, update);
           });
 
@@ -821,8 +823,9 @@ public:
       for (Member chunk_begin = m_policy.begin(); chunk_begin < m_policy.end();
            chunk_begin += m_policy.chunk_size()) {
         hpx::apply([this, &buffer, chunk_begin, &sem]() {
-          reference_type update = ValueOps::reference(
-              (pointer_type)(buffer.get(HPX::impl_hardware_thread_id())));
+          reference_type update =
+              ValueOps::reference(reinterpret_cast<pointer_type>(
+                  buffer.get(HPX::impl_hardware_thread_id())));
           this->template exec_range<WorkTag>(
               update, chunk_begin,
               (std::min)(m_policy.end(), chunk_begin + m_policy.chunk_size()));
@@ -838,20 +841,20 @@ public:
 
       for (int i = 1; i < num_worker_threads; ++i) {
         ValueJoin::join(ReducerConditional::select(m_functor, m_reducer),
-                        (pointer_type)(buffer.get(0)),
-                        (pointer_type)(buffer.get(i)));
+                        reinterpret_cast<pointer_type>(buffer.get(0)),
+                        reinterpret_cast<pointer_type>(buffer.get(i)));
       }
 
       Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
           ReducerConditional::select(m_functor, m_reducer),
-          (pointer_type)(buffer.get(0)));
+          reinterpret_cast<pointer_type>(buffer.get(0)));
 
       if (m_result_ptr != nullptr) {
         const int n = Analysis::value_count(
             ReducerConditional::select(m_functor, m_reducer));
 
         for (int j = 0; j < n; ++j) {
-          m_result_ptr[j] = ((pointer_type)(buffer.get(0)))[j];
+          m_result_ptr[j] = reinterpret_cast<pointer_type>(buffer.get(0))[j];
         }
       }
     });
@@ -921,7 +924,7 @@ public:
           hpx::parallel::execution::par, 0, num_worker_threads,
           [this, &buffer](std::size_t t) {
             ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                            (pointer_type)(buffer.get(t)));
+                            reinterpret_cast<pointer_type>(buffer.get(t)));
           });
 
 #if KOKKOS_HPX_IMPLEMENTATION == 0
@@ -930,8 +933,9 @@ public:
           hpx::parallel::execution::par.with(s), m_policy.begin(),
           m_policy.end(),
           [this, &buffer](typename Policy::member_type const i) {
-            reference_type update = ValueOps::reference(
-                (pointer_type)(buffer.get(HPX::impla_hardware_thread_id())));
+            reference_type update =
+                ValueOps::reference(reinterpret_cast<pointer_type>(
+                    buffer.get(HPX::impla_hardware_thread_id())));
             iterate_type(m_mdr_policy, m_functor, update)(i);
           });
 
@@ -942,8 +946,9 @@ public:
       for (Member chunk_begin = m_policy.begin(); chunk_begin < m_policy.end();
            chunk_begin += m_policy.chunk_size()) {
         hpx::apply([this, &buffer, chunk_begin, &sem]() {
-          reference_type update = ValueOps::reference(
-              (pointer_type)(buffer.get(HPX::impl_hardware_thread_id())));
+          reference_type update =
+              ValueOps::reference(reinterpret_cast<pointer_type>(
+                  buffer.get(HPX::impl_hardware_thread_id())));
           auto chunk_end =
               (std::min)(m_policy.end(), chunk_begin + m_policy.chunk_size());
 
@@ -962,20 +967,20 @@ public:
 
       for (int i = 1; i < num_worker_threads; ++i) {
         ValueJoin::join(ReducerConditional::select(m_functor, m_reducer),
-                        (pointer_type)(buffer.get(0)),
-                        (pointer_type)(buffer.get(i)));
+                        reinterpret_cast<pointer_type>(buffer.get(0)),
+                        reinterpret_cast<pointer_type>(buffer.get(i)));
       }
 
       Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
           ReducerConditional::select(m_functor, m_reducer),
-          (pointer_type)(buffer.get(0)));
+          reinterpret_cast<pointer_type>(buffer.get(0)));
 
       if (m_result_ptr != nullptr) {
         const int n = Analysis::value_count(
             ReducerConditional::select(m_functor, m_reducer));
 
         for (int j = 0; j < n; ++j) {
-          m_result_ptr[j] = ((pointer_type)(buffer.get(0)))[j];
+          m_result_ptr[j] = reinterpret_cast<pointer_type>(buffer.get(0))[j];
         }
       }
     });
@@ -1055,8 +1060,8 @@ public:
       hpx::parallel::for_loop(
           hpx::parallel::execution::par.with(s), 0, num_worker_threads,
           [this, &buffer, num_worker_threads](std::size_t const t) {
-            reference_type update_sum =
-                ValueInit::init(m_functor, (pointer_type)(buffer.get(t)));
+            reference_type update_sum = ValueInit::init(
+                m_functor, reinterpret_cast<pointer_type>(buffer.get(t)));
 
             const WorkRange range(m_policy, t, num_worker_threads);
             for (typename Policy::member_type i = range.begin();
@@ -1065,14 +1070,16 @@ public:
             }
           });
 
-      ValueInit::init(m_functor,
-                      (pointer_type)(buffer.get(0) + value_size_bytes));
+      ValueInit::init(m_functor, reinterpret_cast<pointer_type>(
+                                     buffer.get(0) + value_size_bytes));
 
       for (int i = 1; i < num_worker_threads; ++i) {
-        pointer_type ptr_1_prev = (pointer_type)(buffer.get(i - 1));
-        pointer_type ptr_2_prev =
-            (pointer_type)(buffer.get(i - 1) + value_size_bytes);
-        pointer_type ptr_2 = (pointer_type)(buffer.get(i) + value_size_bytes);
+        pointer_type ptr_1_prev =
+            reinterpret_cast<pointer_type>(buffer.get(i - 1));
+        pointer_type ptr_2_prev = reinterpret_cast<pointer_type>(
+            buffer.get(i - 1) + value_size_bytes);
+        pointer_type ptr_2 =
+            reinterpret_cast<pointer_type>(buffer.get(i) + value_size_bytes);
 
         for (int j = 0; j < value_count; ++j) {
           ptr_2[j] = ptr_2_prev[j];
@@ -1085,8 +1092,9 @@ public:
           hpx::parallel::execution::par.with(s), 0, num_worker_threads,
           [this, &buffer, num_worker_threads, value_count,
            value_size_bytes](std::size_t const t) {
-            reference_type update_base = ValueOps::reference(
-                (pointer_type)(buffer.get(t) + value_size_bytes));
+            reference_type update_base =
+                ValueOps::reference(reinterpret_cast<pointer_type>(
+                    buffer.get(t) + value_size_bytes));
 
             const WorkRange range(m_policy, t, num_worker_threads);
             for (typename Policy::member_type i = range.begin();
@@ -1154,8 +1162,8 @@ public:
       hpx::parallel::for_loop(
           hpx::parallel::execution::par.with(s), 0, num_worker_threads,
           [this, &buffer, num_worker_threads](std::size_t const t) {
-            reference_type update_sum =
-                ValueInit::init(m_functor, (pointer_type)(buffer.get(t)));
+            reference_type update_sum = ValueInit::init(
+                m_functor, reinterpret_cast<pointer_type>(buffer.get(t)));
 
             const WorkRange range(m_policy, t, num_worker_threads);
             for (typename Policy::member_type i = range.begin();
@@ -1164,14 +1172,16 @@ public:
             }
           });
 
-      ValueInit::init(m_functor,
-                      (pointer_type)(buffer.get(0) + value_size_bytes));
+      ValueInit::init(m_functor, reinterpret_cast<pointer_type>(
+                                     buffer.get(0) + value_size_bytes));
 
       for (int i = 1; i < num_worker_threads; ++i) {
-        pointer_type ptr_1_prev = (pointer_type)(buffer.get(i - 1));
-        pointer_type ptr_2_prev =
-            (pointer_type)(buffer.get(i - 1) + value_size_bytes);
-        pointer_type ptr_2 = (pointer_type)(buffer.get(i) + value_size_bytes);
+        pointer_type ptr_1_prev =
+            reinterpret_cast<pointer_type>(buffer.get(i - 1));
+        pointer_type ptr_2_prev = reinterpret_cast<pointer_type>(
+            buffer.get(i - 1) + value_size_bytes);
+        pointer_type ptr_2 =
+            reinterpret_cast<pointer_type>(buffer.get(i) + value_size_bytes);
 
         for (int j = 0; j < value_count; ++j) {
           ptr_2[j] = ptr_2_prev[j];
@@ -1187,8 +1197,9 @@ public:
           hpx::parallel::execution::par.with(s), 0, num_worker_threads,
           [this, &buffer, num_worker_threads, value_count,
            value_size_bytes](std::size_t const t) {
-            reference_type update_base = ValueOps::reference(
-                (pointer_type)(buffer.get(t) + value_size_bytes));
+            reference_type update_base =
+                ValueOps::reference(reinterpret_cast<pointer_type>(
+                    buffer.get(t) + value_size_bytes));
 
             const WorkRange range(m_policy, t, num_worker_threads);
             for (typename Policy::member_type i = range.begin();
@@ -1398,8 +1409,8 @@ public:
           [this, league_size, &buffer,
            value_size_bytes](std::size_t const league_rank) {
             std::size_t t = HPX::impl_hardware_thread_id();
-            reference_type update =
-                ValueOps::reference((pointer_type)(buffer.get(t)));
+            reference_type update = ValueOps::reference(
+                reinterpret_cast<pointer_type>(buffer.get(t)));
 
             exec_functor<WorkTag>(m_functor,
                                   Member(m_policy, 0, league_rank,
@@ -1417,8 +1428,8 @@ public:
         hpx::apply([this, &buffer, chunk_rank, chunk_size, league_size,
                     value_size_bytes, &sem]() {
           std::size_t t = HPX::impl_hardware_thread_id();
-          reference_type update =
-              ValueOps::reference((pointer_type)(buffer.get(t)));
+          reference_type update = ValueOps::reference(
+              reinterpret_cast<pointer_type>(buffer.get(t)));
           char *scratch_buffer_local_ptr = buffer.get(t) + value_size_bytes;
 
           auto league_rank_begin = chunk_rank * chunk_size;
@@ -1444,7 +1455,7 @@ public:
       const pointer_type ptr = reinterpret_cast<pointer_type>(buffer.get(0));
       for (int t = 1; t < num_worker_threads; ++t) {
         ValueJoin::join(ReducerConditional::select(m_functor, m_reducer), ptr,
-                        (pointer_type)(buffer.get(t)));
+                        reinterpret_cast<pointer_type>(buffer.get(t)));
       }
 
       Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
