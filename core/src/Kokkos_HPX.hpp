@@ -695,21 +695,6 @@ public:
 
 namespace Kokkos {
 namespace Impl {
-
-template <typename T> struct reference_type_cast;
-
-template <typename T> struct reference_type_cast<T *> {
-  KOKKOS_INLINE_FUNCTION constexpr T *operator()(char *ptr) const noexcept {
-    return reinterpret_cast<T *>(ptr);
-  }
-};
-
-template <typename T> struct reference_type_cast<T &> {
-  KOKKOS_INLINE_FUNCTION constexpr T &operator()(char *ptr) const noexcept {
-    return *(reinterpret_cast<T *>(ptr));
-  }
-};
-
 template <class FunctorType, class ReducerType, class... Traits>
 class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                      Kokkos::HPX> {
@@ -887,6 +872,7 @@ private:
                                   WorkTag, void>::type;
   using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
   using ValueJoin = Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
+  using ValueOps = Kokkos::Impl::FunctorValueOps<ReducerTypeFwd, WorkTagFwd>;
   using pointer_type = typename Analysis::pointer_type;
   using value_type = typename Analysis::value_type;
   using reference_type = typename Analysis::reference_type;
@@ -938,23 +924,23 @@ public:
           m_policy.end(),
           [this, intermediate_results_ptr,
            value_size_bytes](typename Policy::member_type const i) {
-            reference_type update = reference_type_cast<reference_type>{}(
+            reference_type update = ValueOps::reference((pointer_type)(
                 &intermediate_results_ptr[HPX::impl_hardware_thread_id() *
-                                          value_size_bytes]);
+                                          value_size_bytes]));
             iterate_type(m_mdr_policy, m_functor, update)(i);
           });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
-      std::atomic<std::size_t> c(0);
+      hpx::lcos::local::counting_semaphore sem(0);
       std::size_t num_tasks = 0;
 
       for (Member chunk_begin = m_policy.begin(); chunk_begin < m_policy.end();
            chunk_begin += m_policy.chunk_size()) {
         hpx::apply([this, &intermediate_results_ptr, chunk_begin,
-                    value_size_bytes, &c]() {
-          reference_type update = reference_type_cast<reference_type>{}(
+                    value_size_bytes, &sem]() {
+          reference_type update = ValueOps::reference((pointer_type)(
               &intermediate_results_ptr[HPX::impl_hardware_thread_id() *
-                                        value_size_bytes]);
+                                        value_size_bytes]));
           auto chunk_end =
               (std::min)(m_policy.end(), chunk_begin + m_policy.chunk_size());
 
@@ -962,13 +948,13 @@ public:
             iterate_type(m_mdr_policy, m_functor, update)(i);
           }
 
-          ++c;
+          sem.signal(1);
         });
 
         ++num_tasks;
       }
 
-      hpx::util::yield_while([&c, num_tasks]() { return c < num_tasks; });
+      sem.wait(num_tasks);
 #endif
 
       for (int i = 1; i < num_worker_threads; ++i) {
@@ -1021,6 +1007,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::HPX> {
 private:
   using Policy = Kokkos::RangePolicy<Traits...>;
   using WorkTag = typename Policy::work_tag;
+  using WorkRange = typename Policy::WorkRange;
   using Member = typename Policy::member_type;
   using Analysis =
       FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType>;
@@ -1090,25 +1077,9 @@ public:
                 (pointer_type)(
                     &intermediate_results_1_ptr[t * value_size_bytes]));
 
-            // TODO: Use utilities that already exist.
-            const typename Policy::member_type b = m_policy.begin();
-            const typename Policy::member_type e = m_policy.end();
-
-            const typename Policy::member_type n = e - b;
-            if (n == 0) {
-              return;
-            }
-
-            const typename Policy::member_type chunk_size =
-                (n - 1) / num_worker_threads + 1;
-
-            const typename Policy::member_type b_local = b + t * chunk_size;
-            Member e_local = b + (t + 1) * chunk_size;
-            if (e_local > e) {
-              e_local = e;
-            };
-
-            for (typename Policy::member_type i = b_local; i < e_local; ++i) {
+            const WorkRange range(m_policy, t, num_worker_threads);
+            for (typename Policy::member_type i = range.begin();
+                 i < range.end(); ++i) {
               exec_functor<WorkTag>(m_functor, i, update_sum, false);
             }
           });
@@ -1141,19 +1112,9 @@ public:
             reference_type update_base = ValueOps::reference((pointer_type)(
                 &intermediate_results_2_ptr[t * value_size_bytes]));
 
-            // TODO: Use utilities that already exist.
-            const typename Policy::member_type b = m_policy.begin();
-            const typename Policy::member_type e = m_policy.end();
-            const typename Policy::member_type n = e - b;
-            const typename Policy::member_type chunk_size =
-                (n - 1) / num_worker_threads + 1;
-            const typename Policy::member_type b_local = b + t * chunk_size;
-            Member e_local = b + (t + 1) * chunk_size;
-            if (e_local > e) {
-              e_local = e;
-            };
-
-            for (typename Policy::member_type i = b_local; i < e_local; ++i) {
+            const WorkRange range(m_policy, t, num_worker_threads);
+            for (typename Policy::member_type i = range.begin();
+                 i < range.end(); ++i) {
               exec_functor<WorkTag>(m_functor, i, update_base, true);
             }
           });
@@ -1470,6 +1431,7 @@ private:
                                   WorkTag, void>::type;
   using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
   using ValueJoin = Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
+  using ValueOps = Kokkos::Impl::FunctorValueOps<ReducerTypeFwd, WorkTagFwd>;
   using pointer_type = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
   using value_type = typename Analysis::value_type;
@@ -1551,12 +1513,11 @@ public:
 
       hpx::parallel::for_loop(
           hpx_policy, 0, league_size,
-          [this, league_size, scratch_buffer_ptr,
-           intermediate_results_ptr, value_size_bytes,
-           m_shared_padded](std::size_t const league_rank) {
+          [this, league_size, scratch_buffer_ptr, intermediate_results_ptr,
+           value_size_bytes, m_shared_padded](std::size_t const league_rank) {
             std::size_t t = HPX::impl_hardware_thread_id();
-            reference_type update = reference_type_cast<reference_type>{}(
-                &intermediate_results_ptr[t * value_size_bytes]);
+            reference_type update = ValueOps::reference((pointer_type)(
+                &intermediate_results_ptr[t * value_size_bytes]));
 
             exec_functor<WorkTag>(
                 m_functor,
@@ -1576,8 +1537,8 @@ public:
                     chunk_rank, chunk_size, league_size, value_size_bytes,
                     m_shared_padded, &sem]() {
           std::size_t t = HPX::impl_hardware_thread_id();
-          reference_type update = reference_type_cast<reference_type>{}(
-              &intermediate_results_ptr[t * value_size_bytes]);
+          reference_type update = ValueOps::reference(
+              (pointer_type)(&intermediate_results_ptr[t * value_size_bytes]));
           char *scratch_buffer_local_ptr =
               &scratch_buffer_ptr[t * m_shared_padded];
 
