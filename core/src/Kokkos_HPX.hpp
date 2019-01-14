@@ -567,33 +567,33 @@ private:
 
   template <class TagType>
   static typename std::enable_if<std::is_same<TagType, void>::value>::type
-  exec_functor(const FunctorType &functor, const Member iwork) {
-    functor(iwork);
+  execute_functor(const FunctorType &functor, const Member i) {
+    functor(i);
   }
 
   template <class TagType>
   static typename std::enable_if<!std::is_same<TagType, void>::value>::type
-  exec_functor(const FunctorType &functor, const Member iwork) {
+  execute_functor(const FunctorType &functor, const Member i) {
     const TagType t{};
-    functor(t, iwork);
+    functor(t, i);
   }
 
   template <class TagType>
   static typename std::enable_if<std::is_same<TagType, void>::value>::type
-  exec_functor_range(const FunctorType &functor, const Member iwork_begin,
-                     const Member iwork_end) {
-    for (Member iwork = iwork_begin; iwork < iwork_end; ++iwork) {
-      functor(iwork);
+  execute_functor_range(const FunctorType &functor, const Member i_begin,
+                        const Member i_end) {
+    for (Member i = i_begin; i < i_end; ++i) {
+      functor(i);
     }
   }
 
   template <class TagType>
   static typename std::enable_if<!std::is_same<TagType, void>::value>::type
-  exec_functor_range(const FunctorType &functor, const Member iwork_begin,
-                     const Member iwork_end) {
+  execute_functor_range(const FunctorType &functor, const Member i_begin,
+                        const Member i_end) {
     const TagType t{};
-    for (Member iwork = iwork_begin; iwork < iwork_end; ++iwork) {
-      functor(t, iwork);
+    for (Member i = i_begin; i < i_end; ++i) {
+      functor(t, i);
     }
   }
 
@@ -601,24 +601,23 @@ public:
   void execute() const {
     Kokkos::Impl::run_hpx_function([this]() {
 #if KOKKOS_HPX_IMPLEMENTATION == 0
-      hpx::parallel::for_loop(hpx::parallel::execution::par.with(
-                                  hpx::parallel::execution::static_chunk_size(
-                                      m_policy.chunk_size())),
-                              m_policy.begin(), m_policy.end(),
-                              [this](typename Policy::member_type const i) {
-                                exec_functor<WorkTag>(m_functor, i);
-                              });
+      hpx::parallel::for_loop(
+          hpx::parallel::execution::par.with(
+              hpx::parallel::execution::static_chunk_size(
+                  m_policy.chunk_size())),
+          m_policy.begin(), m_policy.end(),
+          [this](const Member i) { execute_functor<WorkTag>(m_functor, i); });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
       hpx::lcos::local::counting_semaphore sem(0);
       std::size_t num_tasks = 0;
 
-      for (typename Policy::member_type begin = m_policy.begin();
-           begin < m_policy.end(); begin += m_policy.chunk_size()) {
-        hpx::apply([this, begin, &sem]() {
-          exec_functor_range<WorkTag>(
-              m_functor, begin,
-              (std::min)(m_policy.end(), begin + m_policy.chunk_size()));
+      for (Member i_begin = m_policy.begin(); i_begin < m_policy.end();
+           i_begin += m_policy.chunk_size()) {
+        hpx::apply([this, i_begin, &sem]() {
+          const Member i_end =
+              (std::min)(i_begin + m_policy.chunk_size(), m_policy.end());
+          execute_functor_range<WorkTag>(m_functor, i_begin, i_end);
 
           sem.signal(1);
         });
@@ -655,24 +654,24 @@ public:
   inline void execute() const {
     Kokkos::Impl::run_hpx_function([this]() {
 #if KOKKOS_HPX_IMPLEMENTATION == 0
-      hpx::parallel::for_loop(hpx::parallel::execution::par.with(
-                                  hpx::parallel::execution::static_chunk_size(
-                                      m_policy.chunk_size())),
-                              m_policy.begin(), m_policy.end(),
-                              [this](typename Policy::member_type const i) {
-                                iterate_type(m_mdr_policy, m_functor)(i);
-                              });
+      hpx::parallel::for_loop(
+          hpx::parallel::execution::par.with(
+              hpx::parallel::execution::static_chunk_size(
+                  m_policy.chunk_size())),
+          m_policy.begin(), m_policy.end(),
+          [this](const Member i) { iterate_type(m_mdr_policy, m_functor)(i); });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
       hpx::lcos::local::counting_semaphore sem(0);
       std::size_t num_tasks = 0;
 
-      for (typename Policy::member_type begin = m_policy.begin();
-           begin < m_policy.end(); begin += m_policy.chunk_size()) {
-        hpx::apply([this, begin, &sem]() {
-          auto end = (std::min)(m_policy.end(), begin + m_policy.chunk_size());
-          for (Member iwork = begin; iwork < end; ++iwork) {
-            iterate_type(m_mdr_policy, m_functor)(iwork);
+      for (Member i_begin = m_policy.begin(); i_begin < m_policy.end();
+           i_begin += m_policy.chunk_size()) {
+        hpx::apply([this, &sem, i_begin]() {
+          const Member i_end =
+              (std::min)(i_begin + m_policy.chunk_size(), m_policy.end());
+          for (Member i = i_begin; i < i_end; ++i) {
+            iterate_type(m_mdr_policy, m_functor)(i);
           }
 
           sem.signal(1);
@@ -727,36 +726,36 @@ private:
   template <class TagType>
   inline static
       typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_functor(const FunctorType &functor, const Member iwork,
-                   reference_type update) {
-    functor(iwork, update);
+      execute_functor(const FunctorType &functor, const Member i,
+                      reference_type update) {
+    functor(i, update);
   }
 
   template <class TagType>
   inline static
       typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_functor(const FunctorType &functor, const Member iwork,
-                   reference_type update) {
+      execute_functor(const FunctorType &functor, const Member i,
+                      reference_type update) {
     const TagType t{};
-    functor(t, iwork, update);
+    functor(t, i, update);
   }
 
   template <class TagType>
   inline typename std::enable_if<std::is_same<TagType, void>::value>::type
-  exec_range(reference_type update, const Member begin,
-             const Member end) const {
-    for (typename Policy::member_type i = begin; i < end; ++i) {
+  execute_functor_range(reference_type update, const Member i_begin,
+                        const Member i_end) const {
+    for (Member i = i_begin; i < i_end; ++i) {
       m_functor(i, update);
     }
   }
 
   template <class TagType>
   inline typename std::enable_if<!std::is_same<TagType, void>::value>::type
-  exec_range(reference_type update, const Member begin,
-             const Member end) const {
+  execute_functor_range(reference_type update, const Member i_begin,
+                        const Member i_end) const {
     const TagType t{};
 
-    for (typename Policy::member_type i = begin; i < end; ++i) {
+    for (Member i = i_begin; i < i_end; ++i) {
       m_functor(t, i, update);
     }
   }
@@ -800,35 +799,33 @@ public:
       //           return a;
       //         }),
       //     [this](Member i, reference_type update) {
-      //       exec_functor<WorkTag>(m_functor, i, update);
+      //       execute_functor<WorkTag>(m_functor, i, update);
       //     });
 
 #if KOKKOS_HPX_IMPLEMENTATION == 0
       hpx::parallel::execution::static_chunk_size s(m_policy.chunk_size());
       hpx::parallel::for_loop(
           hpx::parallel::execution::par.with(s), m_policy.begin(),
-          m_policy.end(),
-          [this, &buffer,
-           num_worker_threads](typename Policy::member_type const i) {
+          m_policy.end(), [this, &buffer, num_worker_threads](const Member i) {
             reference_type update =
                 ValueOps::reference(reinterpret_cast<pointer_type>(
                     buffer.get(HPX::impl_hardware_thread_id())));
-            exec_functor<WorkTag>(m_functor, i, update);
+            execute_functor<WorkTag>(m_functor, i, update);
           });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
       hpx::lcos::local::counting_semaphore sem(0);
       std::size_t num_tasks = 0;
 
-      for (Member chunk_begin = m_policy.begin(); chunk_begin < m_policy.end();
-           chunk_begin += m_policy.chunk_size()) {
-        hpx::apply([this, &buffer, chunk_begin, &sem]() {
+      for (Member i_begin = m_policy.begin(); i_begin < m_policy.end();
+           i_begin += m_policy.chunk_size()) {
+        hpx::apply([this, &buffer, &sem, i_begin]() {
           reference_type update =
               ValueOps::reference(reinterpret_cast<pointer_type>(
                   buffer.get(HPX::impl_hardware_thread_id())));
-          this->template exec_range<WorkTag>(
-              update, chunk_begin,
-              (std::min)(m_policy.end(), chunk_begin + m_policy.chunk_size()));
+          const Member i_end =
+              (std::min)(i_begin + m_policy.chunk_size(), m_policy.end());
+          execute_functor_range<WorkTag>(update, i_begin, i_end);
 
           sem.signal(1);
         });
@@ -931,8 +928,7 @@ public:
       hpx::parallel::execution::static_chunk_size s(m_policy.chunk_size());
       hpx::parallel::for_loop(
           hpx::parallel::execution::par.with(s), m_policy.begin(),
-          m_policy.end(),
-          [this, &buffer](typename Policy::member_type const i) {
+          m_policy.end(), [this, &buffer](const Member i) {
             reference_type update =
                 ValueOps::reference(reinterpret_cast<pointer_type>(
                     buffer.get(HPX::impla_hardware_thread_id())));
@@ -943,16 +939,16 @@ public:
       hpx::lcos::local::counting_semaphore sem(0);
       std::size_t num_tasks = 0;
 
-      for (Member chunk_begin = m_policy.begin(); chunk_begin < m_policy.end();
-           chunk_begin += m_policy.chunk_size()) {
-        hpx::apply([this, &buffer, chunk_begin, &sem]() {
+      for (Member i_begin = m_policy.begin(); i_begin < m_policy.end();
+           i_begin += m_policy.chunk_size()) {
+        hpx::apply([this, &buffer, &sem, i_begin]() {
           reference_type update =
               ValueOps::reference(reinterpret_cast<pointer_type>(
                   buffer.get(HPX::impl_hardware_thread_id())));
-          auto chunk_end =
-              (std::min)(m_policy.end(), chunk_begin + m_policy.chunk_size());
+          const Member i_end =
+              (std::min)(m_policy.end(), i_begin + m_policy.chunk_size());
 
-          for (std::size_t i = chunk_begin; i < std::size_t(chunk_end); ++i) {
+          for (Member i = i_begin; i < i_end; ++i) {
             iterate_type(m_mdr_policy, m_functor, update)(i);
           }
 
@@ -1031,18 +1027,24 @@ private:
   template <class TagType>
   inline static
       typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_functor(const FunctorType &functor, const Member iwork,
-                   reference_type update, const bool final) {
-    functor(iwork, update, final);
+      execute_functor_range(const FunctorType &functor, const Member i_begin,
+                            const Member i_end, reference_type update,
+                            const bool final) {
+    for (Member i = i_begin; i < i_end; ++i) {
+      functor(i, update, final);
+    }
   }
 
   template <class TagType>
   inline static
       typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_functor(const FunctorType &functor, const Member iwork,
-                   reference_type update, const bool final) {
+      execute_functor_range(const FunctorType &functor, const Member i_begin,
+                            const Member i_end, reference_type update,
+                            const bool final) {
     const TagType t{};
-    functor(t, iwork, update, final);
+    for (Member i = i_begin; i < i_end; ++i) {
+      functor(t, i, update, final);
+    }
   }
 
 public:
@@ -1064,10 +1066,8 @@ public:
                 m_functor, reinterpret_cast<pointer_type>(buffer.get(t)));
 
             const WorkRange range(m_policy, t, num_worker_threads);
-            for (typename Policy::member_type i = range.begin();
-                 i < range.end(); ++i) {
-              exec_functor<WorkTag>(m_functor, i, update_sum, false);
-            }
+            execute_functor_range<WorkTag>(m_functor, range.begin(),
+                                           range.end(), update_sum, false);
           });
 
       ValueInit::init(m_functor, reinterpret_cast<pointer_type>(
@@ -1097,10 +1097,8 @@ public:
                     buffer.get(t) + value_size_bytes));
 
             const WorkRange range(m_policy, t, num_worker_threads);
-            for (typename Policy::member_type i = range.begin();
-                 i < range.end(); ++i) {
-              exec_functor<WorkTag>(m_functor, i, update_base, true);
-            }
+            execute_functor_range<WorkTag>(m_functor, range.begin(),
+                                           range.end(), update_base, true);
           });
     });
   }
@@ -1133,18 +1131,24 @@ private:
   template <class TagType>
   inline static
       typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_functor(const FunctorType &functor, const Member iwork,
-                   reference_type update, const bool final) {
-    functor(iwork, update, final);
+      execute_functor_range(const FunctorType &functor, const Member i_begin,
+                            const Member i_end, reference_type update,
+                            const bool final) {
+    for (Member i = i_begin; i < i_end; ++i) {
+      functor(i, update, final);
+    }
   }
 
   template <class TagType>
   inline static
       typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_functor(const FunctorType &functor, const Member iwork,
-                   reference_type update, const bool final) {
+      execute_functor_range(const FunctorType &functor, const Member i_begin,
+                            const Member i_end, reference_type update,
+                            const bool final) {
     const TagType t{};
-    functor(t, iwork, update, final);
+    for (Member i = i_begin; i < i_end; ++i) {
+      functor(t, i, update, final);
+    }
   }
 
 public:
@@ -1166,10 +1170,8 @@ public:
                 m_functor, reinterpret_cast<pointer_type>(buffer.get(t)));
 
             const WorkRange range(m_policy, t, num_worker_threads);
-            for (typename Policy::member_type i = range.begin();
-                 i < range.end(); ++i) {
-              exec_functor<WorkTag>(m_functor, i, update_sum, false);
-            }
+            execute_functor_range<WorkTag>(m_functor, range.begin(),
+                                           range.end(), update_sum, false);
           });
 
       ValueInit::init(m_functor, reinterpret_cast<pointer_type>(
@@ -1202,10 +1204,8 @@ public:
                     buffer.get(t) + value_size_bytes));
 
             const WorkRange range(m_policy, t, num_worker_threads);
-            for (typename Policy::member_type i = range.begin();
-                 i < range.end(); ++i) {
-              exec_functor<WorkTag>(m_functor, i, update_base, true);
-            }
+            execute_functor_range<WorkTag>(m_functor, range.begin(),
+                                           range.end(), update_base, true);
 
             if (t == std::size_t(num_worker_threads - 1)) {
               m_returnvalue = update_base;
@@ -1241,42 +1241,47 @@ private:
   template <class TagType>
   inline static
       typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_functor(const FunctorType &functor, Member &&member) {
-    functor(member);
+      execute_functor(const FunctorType &functor, const Policy &policy,
+                      const int league_rank, char *local_buffer,
+                      const std::size_t local_buffer_size) {
+    functor(Member(policy, 0, league_rank, local_buffer, local_buffer_size));
   }
 
   template <class TagType>
   inline static
       typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_functor(const FunctorType &functor, Member &&member) {
+      execute_functor(const FunctorType &functor, const Policy &policy,
+                      const int league_rank, char *local_buffer,
+                      const std::size_t local_buffer_size) {
     const TagType t{};
-    functor(t, member);
+    functor(t, Member(policy, 0, league_rank, local_buffer, local_buffer_size));
   }
 
   template <class TagType>
   inline static
       typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_functor_range(const FunctorType &functor, const Policy &policy,
-                         const int shared, char *scratch_buffer_ptr,
-                         const std::size_t league_rank_begin,
-                         const std::size_t league_rank_end) {
-    for (std::size_t league_rank = league_rank_begin;
-         league_rank < league_rank_end; ++league_rank) {
-      functor(Member(policy, 0, league_rank, scratch_buffer_ptr, shared));
+      execute_functor_range(const FunctorType &functor, const Policy &policy,
+                            const int league_rank_begin,
+                            const int league_rank_end, char *local_buffer,
+                            const std::size_t local_buffer_size) {
+    for (int league_rank = league_rank_begin; league_rank < league_rank_end;
+         ++league_rank) {
+      functor(Member(policy, 0, league_rank, local_buffer, local_buffer_size));
     }
   }
 
   template <class TagType>
   inline static
       typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_functor_range(const FunctorType &functor, const Policy &policy,
-                         const int shared, char *scratch_buffer_ptr,
-                         const std::size_t league_rank_begin,
-                         const std::size_t league_rank_end) {
+      execute_functor_range(const FunctorType &functor, const Policy &policy,
+                            const int league_rank_begin,
+                            const int league_rank_end, char *local_buffer,
+                            const std::size_t local_buffer_size) {
     const TagType t{};
-    for (std::size_t league_rank = league_rank_begin;
-         league_rank < league_rank_end; ++league_rank) {
-      functor(t, Member(policy, 0, league_rank, scratch_buffer_ptr, shared));
+    for (int league_rank = league_rank_begin; league_rank < league_rank_end;
+         ++league_rank) {
+      functor(t,
+              Member(policy, 0, league_rank, local_buffer, local_buffer_size));
     }
   }
 
@@ -1295,33 +1300,32 @@ public:
 #if KOKKOS_HPX_IMPLEMENTATION == 0
       hpx::parallel::for_loop(
           hpx_policy, 0, league_size,
-          [this, hpx_policy, &buffer](std::size_t const league_rank) {
-            exec_functor<WorkTag>(
-                m_functor,
-                Member(m_policy, 0, league_rank,
-                       buffer.get(HPX::impl_hardware_thread_id()), m_shared));
+          [this, hpx_policy, &buffer](const int league_rank) {
+            execute_functor<WorkTag>(m_functor, m_policy, league_rank,
+                                     buffer.get(HPX::impl_hardware_thread_id()),
+                                     m_shared);
           });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
-      const auto num_chunks = (league_size - 1) / chunk_size + 1;
       hpx::lcos::local::counting_semaphore sem(0);
+      std::size_t num_tasks = 0;
 
-      for (std::size_t chunk_rank = 0; chunk_rank < std::size_t(num_chunks);
-           ++chunk_rank) {
-        hpx::apply(
-            [this, &buffer, chunk_rank, chunk_size, league_size, &sem]() {
-              exec_functor_range<WorkTag>(
-                  m_functor, m_policy, m_shared,
-                  buffer.get(HPX::impl_hardware_thread_id()),
-                  chunk_rank * chunk_size,
-                  (std::min)(static_cast<long unsigned int>(league_size),
-                             (chunk_rank + 1) * chunk_size));
+      for (int league_rank_begin = 0; league_rank_begin < league_size;
+           league_rank_begin += m_policy.chunk_size()) {
+        hpx::apply([this, &buffer, &sem, league_rank_begin, league_size]() {
+          const int league_rank_end = (std::min)(
+              league_rank_begin + m_policy.chunk_size(), league_size);
+          execute_functor_range<WorkTag>(
+              m_functor, m_policy, league_rank_begin, league_rank_end,
+              buffer.get(HPX::impl_hardware_thread_id()), m_shared);
 
-              sem.signal(1);
-            });
+          sem.signal(1);
+        });
+
+        ++num_tasks;
       }
 
-      sem.wait(num_chunks);
+      sem.wait(num_tasks);
 #endif
     });
   }
@@ -1367,18 +1371,56 @@ private:
   template <class TagType>
   inline static
       typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_functor(const FunctorType &functor, Member &&member,
-                   reference_type &update) {
-    functor(member, update);
+      execute_functor(const FunctorType &functor, const Policy &policy,
+                      const int league_rank, char *local_buffer,
+                      const std::size_t local_buffer_size,
+                      reference_type update) {
+    functor(Member(policy, 0, league_rank, local_buffer, local_buffer_size),
+            update);
   }
 
   template <class TagType>
   inline static
       typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_functor(const FunctorType &functor, Member &&member,
-                   reference_type &update) {
+      execute_functor(const FunctorType &functor, const Policy &policy,
+                      const int league_rank, char *local_buffer,
+                      const std::size_t local_buffer_size,
+                      reference_type update) {
     const TagType t{};
-    functor(t, member, update);
+    functor(t, Member(policy, 0, league_rank, local_buffer, local_buffer_size),
+            update);
+  }
+
+  template <class TagType>
+  inline static
+      typename std::enable_if<std::is_same<TagType, void>::value>::type
+      execute_functor_range(const FunctorType &functor, const Policy &policy,
+                            const int league_rank_begin,
+                            const int league_rank_end, char *local_buffer,
+                            const std::size_t local_buffer_size,
+                            reference_type update) {
+    for (int league_rank = league_rank_begin; league_rank < league_rank_end;
+         ++league_rank) {
+      functor(Member(policy, 0, league_rank, local_buffer, local_buffer_size),
+              update);
+    }
+  }
+
+  template <class TagType>
+  inline static
+      typename std::enable_if<!std::is_same<TagType, void>::value>::type
+      execute_functor_range(const FunctorType &functor, const Policy &policy,
+                            const int league_rank_begin,
+                            const int league_rank_end, char *local_buffer,
+                            const std::size_t local_buffer_size,
+                            reference_type update) {
+    const TagType t{};
+    for (int league_rank = league_rank_begin; league_rank < league_rank_end;
+         ++league_rank) {
+      functor(t,
+              Member(policy, 0, league_rank, local_buffer, local_buffer_size),
+              update);
+    }
   }
 
 public:
@@ -1407,49 +1449,40 @@ public:
       hpx::parallel::for_loop(
           hpx_policy, 0, league_size,
           [this, league_size, &buffer,
-           value_size_bytes](std::size_t const league_rank) {
+           value_size_bytes](const int league_rank) {
             std::size_t t = HPX::impl_hardware_thread_id();
             reference_type update = ValueOps::reference(
                 reinterpret_cast<pointer_type>(buffer.get(t)));
 
-            exec_functor<WorkTag>(m_functor,
-                                  Member(m_policy, 0, league_rank,
-                                         buffer.get(t) + value_size_bytes,
-                                         m_shared),
-                                  update);
+            execute_functor<WorkTag>(m_functor, m_policy, league_rank,
+                                     buffer.get(t) + value_size_bytes, m_shared,
+                                     update);
           });
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
-      const auto num_chunks = (league_size - 1) / chunk_size + 1;
       hpx::lcos::local::counting_semaphore sem(0);
+      std::size_t num_tasks = 0;
 
-      for (std::size_t chunk_rank = 0; chunk_rank < std::size_t(num_chunks);
-           ++chunk_rank) {
-        hpx::apply([this, &buffer, chunk_rank, chunk_size, league_size,
-                    value_size_bytes, &sem]() {
+      for (int league_rank_begin = 0; league_rank_begin < league_size;
+           league_rank_begin += m_policy.chunk_size()) {
+        hpx::apply([this, &buffer, &sem, league_rank_begin, league_size,
+                    value_size_bytes]() {
           std::size_t t = HPX::impl_hardware_thread_id();
           reference_type update = ValueOps::reference(
               reinterpret_cast<pointer_type>(buffer.get(t)));
-          char *scratch_buffer_local_ptr = buffer.get(t) + value_size_bytes;
-
-          auto league_rank_begin = chunk_rank * chunk_size;
-          auto league_rank_end =
-              (std::min)(static_cast<long unsigned int>(league_size),
-                         (chunk_rank + 1) * chunk_size);
-
-          for (std::size_t league_rank = league_rank_begin;
-               league_rank < league_rank_end; ++league_rank) {
-            exec_functor<WorkTag>(m_functor,
-                                  Member(m_policy, 0, league_rank,
-                                         scratch_buffer_local_ptr, m_shared),
-                                  update);
-          }
+          const int league_rank_end = (std::min)(
+              league_rank_begin + m_policy.chunk_size(), league_size);
+          execute_functor_range<WorkTag>(
+              m_functor, m_policy, league_rank_begin, league_rank_end,
+              buffer.get(t) + value_size_bytes, m_shared, update);
 
           sem.signal(1);
         });
+
+        ++num_tasks;
       }
 
-      sem.wait(num_chunks);
+      sem.wait(num_tasks);
 #endif
 
       const pointer_type ptr = reinterpret_cast<pointer_type>(buffer.get(0));
@@ -1511,11 +1544,11 @@ KOKKOS_INLINE_FUNCTION
 template <typename iType1, typename iType2>
 KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<
     typename std::common_type<iType1, iType2>::type, Impl::HPXTeamMember>
-TeamThreadRange(const Impl::HPXTeamMember &thread, const iType1 &begin,
-                const iType2 &end) {
+TeamThreadRange(const Impl::HPXTeamMember &thread, const iType1 &i_begin,
+                const iType2 &i_end) {
   using iType = typename std::common_type<iType1, iType2>::type;
   return Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>(
-      thread, iType(begin), iType(end));
+      thread, iType(i_begin), iType(i_end));
 }
 
 template <typename iType>
@@ -1529,10 +1562,10 @@ KOKKOS_INLINE_FUNCTION
 template <typename iType>
 KOKKOS_INLINE_FUNCTION
     Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>
-    ThreadVectorRange(const Impl::HPXTeamMember &thread, const iType &arg_begin,
-                      const iType &arg_end) {
+    ThreadVectorRange(const Impl::HPXTeamMember &thread, const iType &i_begin,
+                      const iType &i_end) {
   return Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>(
-      thread, arg_begin, arg_end);
+      thread, i_begin, i_end);
 }
 
 KOKKOS_INLINE_FUNCTION
