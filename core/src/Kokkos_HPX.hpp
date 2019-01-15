@@ -1077,47 +1077,53 @@ public:
       const std::size_t value_size = Analysis::value_size(m_functor);
 
       thread_buffer &buffer = HPX::get_buffer();
-      buffer.resize(num_worker_threads, value_size);
+      buffer.resize(num_worker_threads, 2 * value_size);
 
+      using hpx::lcos::local::barrier;
       using hpx::parallel::execution::par;
       using hpx::parallel::execution::static_chunk_size;
       using hpx::parallel::for_loop;
 
-      for_loop(par.with(static_chunk_size(1)), 0, num_worker_threads,
-               [this, &buffer, num_worker_threads](std::size_t const t) {
-                 reference_type update_sum = ValueInit::init(
-                     m_functor, reinterpret_cast<pointer_type>(buffer.get(t)));
-
-                 const WorkRange range(m_policy, t, num_worker_threads);
-                 execute_functor_range<WorkTag>(m_functor, range.begin(),
-                                                range.end(), update_sum, false);
-               });
-
-      ValueInit::init(m_functor, reinterpret_cast<pointer_type>(buffer.get(0) +
-                                                                value_size));
-
-      for (int i = 1; i < num_worker_threads; ++i) {
-        pointer_type ptr_1_prev =
-            reinterpret_cast<pointer_type>(buffer.get(i - 1));
-        pointer_type ptr_2_prev =
-            reinterpret_cast<pointer_type>(buffer.get(i - 1) + value_size);
-        pointer_type ptr_2 =
-            reinterpret_cast<pointer_type>(buffer.get(i) + value_size);
-
-        for (int j = 0; j < value_count; ++j) {
-          ptr_2[j] = ptr_2_prev[j];
-        }
-
-        ValueJoin::join(m_functor, ptr_2, ptr_1_prev);
-      }
+      barrier bar(num_worker_threads);
 
       for_loop(
           par.with(static_chunk_size(1)), 0, num_worker_threads,
-          [this, &buffer, num_worker_threads, value_size](std::size_t const t) {
+          [this, &buffer, &bar, num_worker_threads, value_count,
+           value_size](std::size_t const t) {
+            reference_type update_sum = ValueInit::init(
+                m_functor, reinterpret_cast<pointer_type>(buffer.get(t)));
+
+            const WorkRange range(m_policy, t, num_worker_threads);
+            execute_functor_range<WorkTag>(m_functor, range.begin(),
+                                           range.end(), update_sum, false);
+
+            bar.wait();
+
+            if (t == 0) {
+              ValueInit::init(m_functor, reinterpret_cast<pointer_type>(
+                                             buffer.get(0) + value_size));
+
+              for (int i = 1; i < num_worker_threads; ++i) {
+                pointer_type ptr_1_prev =
+                    reinterpret_cast<pointer_type>(buffer.get(i - 1));
+                pointer_type ptr_2_prev = reinterpret_cast<pointer_type>(
+                    buffer.get(i - 1) + value_size);
+                pointer_type ptr_2 =
+                    reinterpret_cast<pointer_type>(buffer.get(i) + value_size);
+
+                for (int j = 0; j < value_count; ++j) {
+                  ptr_2[j] = ptr_2_prev[j];
+                }
+
+                ValueJoin::join(m_functor, ptr_2, ptr_1_prev);
+              }
+            }
+
+            bar.wait();
+
             reference_type update_base = ValueOps::reference(
                 reinterpret_cast<pointer_type>(buffer.get(t) + value_size));
 
-            const WorkRange range(m_policy, t, num_worker_threads);
             execute_functor_range<WorkTag>(m_functor, range.begin(),
                                            range.end(), update_base, true);
           });
@@ -1182,48 +1188,51 @@ public:
       thread_buffer &buffer = HPX::get_buffer();
       buffer.resize(num_worker_threads, 2 * value_size);
 
+      using hpx::lcos::local::barrier;
       using hpx::parallel::execution::par;
       using hpx::parallel::execution::static_chunk_size;
       using hpx::parallel::for_loop;
 
-      for_loop(par.with(static_chunk_size(1)), 0, num_worker_threads,
-               [this, &buffer, num_worker_threads](std::size_t const t) {
-                 reference_type update_sum = ValueInit::init(
-                     m_functor, reinterpret_cast<pointer_type>(buffer.get(t)));
+      barrier bar(num_worker_threads);
 
-                 const WorkRange range(m_policy, t, num_worker_threads);
-                 execute_functor_range<WorkTag>(m_functor, range.begin(),
-                                                range.end(), update_sum, false);
-               });
-
-      ValueInit::init(m_functor, reinterpret_cast<pointer_type>(buffer.get(0) +
-                                                                value_size));
-
-      for (int i = 1; i < num_worker_threads; ++i) {
-        pointer_type ptr_1_prev =
-            reinterpret_cast<pointer_type>(buffer.get(i - 1));
-        pointer_type ptr_2_prev =
-            reinterpret_cast<pointer_type>(buffer.get(i - 1) + value_size);
-        pointer_type ptr_2 =
-            reinterpret_cast<pointer_type>(buffer.get(i) + value_size);
-
-        for (int j = 0; j < value_count; ++j) {
-          ptr_2[j] = ptr_2_prev[j];
-        }
-
-        ValueJoin::join(m_functor, ptr_2, ptr_1_prev);
-      }
-
-      // NOTE: Doing dynamic scheduling with chunk size etc. doesn't work
-      // because the update variable has to be correspond to the same i between
-      // iterations.
       for_loop(
           par.with(static_chunk_size(1)), 0, num_worker_threads,
-          [this, &buffer, num_worker_threads, value_size](std::size_t const t) {
+          [this, &buffer, &bar, num_worker_threads, value_count,
+           value_size](std::size_t const t) {
+            reference_type update_sum = ValueInit::init(
+                m_functor, reinterpret_cast<pointer_type>(buffer.get(t)));
+
+            const WorkRange range(m_policy, t, num_worker_threads);
+            execute_functor_range<WorkTag>(m_functor, range.begin(),
+                                           range.end(), update_sum, false);
+
+            bar.wait();
+
+            if (t == 0) {
+              ValueInit::init(m_functor, reinterpret_cast<pointer_type>(
+                                             buffer.get(0) + value_size));
+
+              for (int i = 1; i < num_worker_threads; ++i) {
+                pointer_type ptr_1_prev =
+                    reinterpret_cast<pointer_type>(buffer.get(i - 1));
+                pointer_type ptr_2_prev = reinterpret_cast<pointer_type>(
+                    buffer.get(i - 1) + value_size);
+                pointer_type ptr_2 =
+                    reinterpret_cast<pointer_type>(buffer.get(i) + value_size);
+
+                for (int j = 0; j < value_count; ++j) {
+                  ptr_2[j] = ptr_2_prev[j];
+                }
+
+                ValueJoin::join(m_functor, ptr_2, ptr_1_prev);
+              }
+            }
+
+            bar.wait();
+
             reference_type update_base = ValueOps::reference(
                 reinterpret_cast<pointer_type>(buffer.get(t) + value_size));
 
-            const WorkRange range(m_policy, t, num_worker_threads);
             execute_functor_range<WorkTag>(m_functor, range.begin(),
                                            range.end(), update_base, true);
 
