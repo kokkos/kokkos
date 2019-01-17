@@ -49,6 +49,9 @@ namespace Kokkos {
 
 bool HPX::m_hpx_initialized = false;
 Impl::thread_buffer HPX::m_buffer;
+#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
+hpx::future<void> HPX::m_future = hpx::make_ready_future<void>();
+#endif
 
 int HPX::concurrency() {
   hpx::runtime *rt = hpx::get_runtime_ptr();
