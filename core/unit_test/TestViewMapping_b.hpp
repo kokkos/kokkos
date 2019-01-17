@@ -103,6 +103,7 @@ struct TestViewMappingAtomic {
     long error_count = -1;
 
     Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace, TagVerify >( 0, N ), *this, error_count );
+    Kokkos::fence();
 
     ASSERT_EQ( 0, error_count );
 
@@ -121,6 +122,7 @@ struct TestViewMappingAtomic {
         if ( x_host( i ) != int( i ) ) ++tmp_error_count ;
       }
     }, error_count);
+    Kokkos::fence();
 
     ASSERT_EQ( 0 , error_count );
     Kokkos::deep_copy( x, x_host );
