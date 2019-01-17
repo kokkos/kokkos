@@ -64,14 +64,14 @@ void TaskQueueSpecialization<Kokkos::HPX>::execute(
     auto num_worker_threads = HPX::impl_max_hardware_threads();
 
     auto single_policy = TeamPolicyInternal<Kokkos::HPX>(num_worker_threads, 1);
-    member_type single_exec(
-        single_policy, 0 /* team_rank */, 0 /* league_rank */,
-        nullptr /* scratch_buffer.get() */, 0 /* m_shared */);
+    member_type single_exec(single_policy, 0, 0, nullptr, 0);
 
-    hpx::parallel::for_loop(
-        hpx::parallel::execution::par.with(
-            hpx::parallel::execution::static_chunk_size(1)),
-        0, num_worker_threads,
+    using hpx::parallel::execution::par;
+    using hpx::parallel::execution::static_chunk_size;
+    using hpx::parallel::for_loop;
+
+    for_loop(
+        par.with(static_chunk_size(1)), 0, num_worker_threads,
         [&single_exec, num_worker_threads, queue](const std::size_t t) {
           auto team_policy =
               TeamPolicyInternal<Kokkos::HPX>(num_worker_threads, 1);
