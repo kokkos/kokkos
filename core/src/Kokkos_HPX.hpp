@@ -121,7 +121,7 @@ class thread_buffer {
   std::size_t m_num_threads;
   std::size_t m_size_per_thread;
   std::size_t m_size_total;
-  std::unique_ptr<char[]> m_data;
+  char *m_data;
 
   void pad_to_cache_line(std::size_t &size) {
     size = ((size + m_cache_line_size - 1) / m_cache_line_size) *
@@ -137,6 +137,11 @@ public:
     resize(num_threads, size_per_thread);
   }
 
+  thread_buffer(const thread_buffer &) = delete;
+  thread_buffer(thread_buffer &&) = delete;
+  thread_buffer &operator=(const thread_buffer &) = delete;
+  thread_buffer &operator=(thread_buffer) = delete;
+
   void resize(const std::size_t num_threads,
               const std::size_t size_per_thread) {
     m_num_threads = num_threads;
@@ -147,15 +152,16 @@ public:
     std::size_t size_total_new = m_num_threads * m_size_per_thread;
 
     if (m_size_total < size_total_new) {
-      m_data.reset(new char[size_total_new]);
+      delete[] m_data;
+      m_data = new char[size_total_new];
       m_size_total = size_total_new;
     }
   }
 
   char *get(std::size_t thread_num) {
     assert(thread_num < m_num_threads);
-    assert(m_data.get() != nullptr);
-    return &m_data.get()[thread_num * m_size_per_thread];
+    assert(m_data != nullptr);
+    return &m_data[thread_num * m_size_per_thread];
   }
 
   std::size_t size_per_thread() const noexcept { return m_size_per_thread; }
