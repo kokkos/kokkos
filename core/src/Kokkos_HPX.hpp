@@ -778,6 +778,75 @@ private:
     }
   }
 
+  struct alignas(64) value_type_wrapper {
+    std::size_t m_value_size;
+    char* m_value_buffer;
+
+    value_type_wrapper() : m_value_size(0), m_value_buffer(nullptr) {}
+
+    value_type_wrapper(const std::size_t value_size)
+        : m_value_size(value_size), m_value_buffer(new char[m_value_size]) {}
+
+    value_type_wrapper(const value_type_wrapper &other)
+        : m_value_size(0), m_value_buffer(nullptr) {
+      if (this != &other) {
+        m_value_buffer = new char[other.m_value_size];
+        m_value_size = other.m_value_size;
+
+        std::copy(other.m_value_buffer, other.m_value_buffer + m_value_size,
+                  m_value_buffer);
+      }
+    }
+
+    ~value_type_wrapper() { delete[] m_value_buffer; }
+
+    value_type_wrapper(value_type_wrapper &&other)
+        : m_value_size(0), m_value_buffer(nullptr) {
+      if (this != &other) {
+        m_value_buffer = other.m_value_buffer;
+        m_value_size = other.m_value_size;
+
+        other.m_value_buffer = nullptr;
+        other.m_value_size = 0;
+      }
+    }
+
+    value_type_wrapper &operator=(const value_type_wrapper &other) {
+      if (this != &other) {
+        delete[] m_value_buffer;
+        m_value_buffer = new char[other.m_value_size];
+        m_value_size = other.m_value_size;
+
+        std::copy(other.m_value_buffer, other.m_value_buffer + m_value_size,
+                  m_value_buffer);
+      }
+
+      return *this;
+    }
+
+    value_type_wrapper &operator=(value_type_wrapper &&other) {
+      if (this != &other) {
+        delete[] m_value_buffer;
+        m_value_buffer = other.m_value_buffer;
+        m_value_size = other.m_value_size;
+
+        other.m_value_buffer = nullptr;
+        other.m_value_size = 0;
+      }
+
+      return *this;
+    }
+
+    pointer_type pointer() const {
+      return reinterpret_cast<pointer_type>(m_value_buffer);
+    }
+
+    reference_type reference() const {
+      return ValueOps::reference(
+          reinterpret_cast<pointer_type>(m_value_buffer));
+    }
+  };
+
 public:
   inline void execute() const {
 
@@ -787,53 +856,52 @@ public:
       std::size_t value_size = Analysis::value_size(
           ReducerConditional::select(m_functor, m_reducer));
 
+      using hpx::parallel::execution::par;
+      using hpx::parallel::for_loop;
+
+#if KOKKOS_HPX_IMPLEMENTATION == 0
+      // NOTE: This version makes the most use of HPX functionality, but
+      // requires the struct value_type_wrapper to handle different
+      // reference_types. It is also significantly slower than the version
+      // below due to not reusing the buffer used by other functions.
+      using hpx::parallel::execution::static_chunk_size;
+      using hpx::parallel::reduction;
+
+      value_size = ((value_size + 64 - 1) / 64) * 64;
+
+      value_type_wrapper final_value(value_size);
+      value_type_wrapper identity(value_size);
+
+      ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
+                      final_value.pointer());
+      ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
+                      identity.pointer());
+
+      for_loop(par.with(static_chunk_size(m_policy.chunk_size())),
+               m_policy.begin(), m_policy.end(),
+               reduction(final_value, identity,
+                         [this](value_type_wrapper &a,
+                                value_type_wrapper &b) -> value_type_wrapper & {
+                           ValueJoin::join(
+                               ReducerConditional::select(m_functor, m_reducer),
+                               a.pointer(), b.pointer());
+                           return a;
+                         }),
+               [this](Member i, value_type_wrapper &update) {
+                 execute_functor<WorkTag>(m_functor, i, update.reference());
+               });
+
+      pointer_type final_value_ptr = final_value.pointer();
+
+#elif KOKKOS_HPX_IMPLEMENTATION == 1
       thread_buffer &buffer = HPX::get_buffer();
       buffer.resize(num_worker_threads, value_size);
-
-      using hpx::parallel::execution::par;
-      using hpx::parallel::execution::static_chunk_size;
-      using hpx::parallel::for_loop;
 
       for_loop(par, 0, num_worker_threads, [this, &buffer](std::size_t t) {
         ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
                         reinterpret_cast<pointer_type>(buffer.get(t)));
       });
 
-      // TODO: parallel::for_loop with reduction
-      // NOTE: At least works for simple types, not tested for cases where
-      // reference_type is a pointer.
-
-      // using hpx::parallel::execution::static_chunk_size;
-      // using hpx::parallel::reduction;
-      //
-      // value_type init{};
-      // for_loop(
-      //     par.with(static_chunk_size(m_policy.chunk_size())),
-      //     m_policy.begin(), m_policy.end(), reduction(
-      //         ValueOps::reference(reinterpret_cast<pointer_type>(buffer.get(0))),
-      //         init,
-      //         [this](reference_type a, reference_type b) {
-      //           ValueJoin::join(
-      //               ReducerConditional::select(m_functor, m_reducer),
-      //               reinterpret_cast<pointer_type>(&a),
-      //               reinterpret_cast<pointer_type>(&b));
-      //           return a;
-      //         }),
-      //     [this](Member i, reference_type update) {
-      //       execute_functor<WorkTag>(m_functor, i, update);
-      //     });
-
-#if KOKKOS_HPX_IMPLEMENTATION == 0
-      for_loop(par.with(static_chunk_size(m_policy.chunk_size())),
-               m_policy.begin(), m_policy.end(),
-               [this, &buffer](const Member i) {
-                 reference_type update =
-                     ValueOps::reference(reinterpret_cast<pointer_type>(
-                         buffer.get(HPX::impl_hardware_thread_id())));
-                 execute_functor<WorkTag>(m_functor, i, update);
-               });
-
-#elif KOKKOS_HPX_IMPLEMENTATION == 1
       using hpx::apply;
       using hpx::lcos::local::counting_semaphore;
 
@@ -857,7 +925,6 @@ public:
       }
 
       sem.wait(num_tasks);
-#endif
 
       for (int i = 1; i < num_worker_threads; ++i) {
         ValueJoin::join(ReducerConditional::select(m_functor, m_reducer),
@@ -865,16 +932,19 @@ public:
                         reinterpret_cast<pointer_type>(buffer.get(i)));
       }
 
+      pointer_type final_value_ptr =
+          reinterpret_cast<pointer_type>(buffer.get(0));
+#endif
+
       Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
-          ReducerConditional::select(m_functor, m_reducer),
-          reinterpret_cast<pointer_type>(buffer.get(0)));
+          ReducerConditional::select(m_functor, m_reducer), final_value_ptr);
 
       if (m_result_ptr != nullptr) {
         const int n = Analysis::value_count(
             ReducerConditional::select(m_functor, m_reducer));
 
         for (int j = 0; j < n; ++j) {
-          m_result_ptr[j] = reinterpret_cast<pointer_type>(buffer.get(0))[j];
+          m_result_ptr[j] = final_value_ptr[j];
         }
       }
     });
