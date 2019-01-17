@@ -52,12 +52,15 @@ do
         QTHREADS_PATH="${key#*=}"
       fi
       ;;
-    --with-hpx*)
+    --with-hpx)
       KOKKOS_DEVICES="${KOKKOS_DEVICES},HPX"
       if [ -z "$HPX_PATH" ]; then
         HPX_PATH="${key#*=}"
       fi
       ;;
+    --with-hpx-options*)
+        KOKKOS_HPX_OPT="${key#*=}"
+        ;;
     --with-devices*)
       DEVICES="${key#*=}"
       KOKKOS_DEVICES="${KOKKOS_DEVICES},${DEVICES}"
@@ -195,6 +198,8 @@ do
       echo "                                "
       echo "--with-cuda-options=[OPT]:    Additional options to CUDA:"
       echo "                                force_uvm, use_ldg, enable_lambda, rdc"
+      echo "--with-hpx-options=[OPT]:     Additional options to HPX:"
+      echo "                                enable_async_dispatch"
       echo "--gcc-toolchain=/Path/To/GccRoot:  Set the gcc toolchain to use with clang (e.g. /usr)" 
       echo "--make-j=[NUM]:               DEPRECATED: call make with appropriate"
       echo "                                -j flag"
@@ -301,6 +306,10 @@ fi
 
 if [ ${#KOKKOS_CUDA_OPT} -gt 0 ]; then
   KOKKOS_SETTINGS="${KOKKOS_SETTINGS} KOKKOS_CUDA_OPTIONS=${KOKKOS_CUDA_OPT}"
+fi
+
+if [ ${#KOKKOS_HPX_OPT} -gt 0 ]; then
+    KOKKOS_SETTINGS="${KOKKOS_SETTINGS} KOKKOS_HPX_OPTIONS=${KOKKOS_HPX_OPT}"
 fi
 
 if [ ${#KOKKOS_GCC_TOOLCHAIN} -gt 0 ]; then

@@ -27,6 +27,10 @@ KOKKOS_CMAKE ?= "no"
 # Options: force_uvm,use_ldg,rdc,enable_lambda
 KOKKOS_CUDA_OPTIONS ?= ""
 
+# Default settings specific options.
+# Options: enable_async_dispatch
+KOKKOS_HPX_OPTIONS ?= ""
+
 # Return a 1 if a string contains a substring and 0 if not
 # Note the search string should be without '"'
 # Example: $(call kokkos_has_string,"hwloc,librt",hwloc)
@@ -63,6 +67,7 @@ KOKKOS_INTERNAL_CUDA_USE_LDG := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),
 KOKKOS_INTERNAL_CUDA_USE_UVM := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),force_uvm)
 KOKKOS_INTERNAL_CUDA_USE_RELOC := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),rdc)
 KOKKOS_INTERNAL_CUDA_USE_LAMBDA := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),enable_lambda)
+KOKKOS_INTERNAL_HPX_ENABLE_ASYNC_DISPATCH := $(call kokkos_has_string,$(KOKKOS_HPX_OPTIONS),enable_async_dispatch)
 KOKKOS_INTERNAL_ENABLE_ETI := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_eti)
 
 
@@ -632,6 +637,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 
   ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
     tmp := $(call kokkos_append_header,"\#define KOKKOS_IMPL_CUDA_CLANG_WORKAROUND")
+  endif
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
+  ifeq ($(KOKKOS_INTERNAL_HPX_ENABLE_ASYNC_DISPATCH), 1)
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_HPX_ASYNC_DISPATCH")
   endif
 endif
 
