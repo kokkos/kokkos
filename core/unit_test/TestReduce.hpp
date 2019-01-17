@@ -270,6 +270,8 @@ public:
       Kokkos::parallel_reduce( nwork, functor_type( nwork ), result[i] );
     }
 
+    Kokkos::fence();
+
     for ( unsigned i = 0; i < Repeat; ++i ) {
       for ( unsigned j = 0; j < Count; ++j ) {
         const unsigned long correct = 0 == j % 3 ? nw : nsum;
@@ -300,6 +302,8 @@ public:
         Kokkos::parallel_reduce( "Reduce", nwork, functor_type( nwork ), result[i] );
       }
     }
+
+    Kokkos::fence();
 
     for ( unsigned i = 0; i < Repeat; ++i ) {
       for ( unsigned j = 0; j < Count; ++j ) {
@@ -346,6 +350,8 @@ public:
       }
     }
 
+    Kokkos::fence();
+
     for ( unsigned i = 0; i < Repeat; ++i ) {
       for ( unsigned j = 0; j < Count; ++j ) {
         const unsigned long correct = 0 == j % 3 ? nw : nsum;
@@ -371,6 +377,8 @@ public:
         Kokkos::parallel_reduce( "Reduce", nwork, functor_type( nwork, Count ), result[i] );
       }
     }
+
+    Kokkos::fence();
 
     for ( unsigned i = 0; i < Repeat; ++i ) {
       for ( unsigned j = 0; j < Count; ++j ) {
@@ -411,6 +419,8 @@ public:
       }
 
     }
+
+    Kokkos::fence();
 
     for ( unsigned i = 0; i < Repeat; ++i ) {
       for ( unsigned j = 0; j < Count; ++j ) {
@@ -460,6 +470,8 @@ public:
       else {
         Kokkos::parallel_reduce( str, nw, functor_type( nw, count ), host_result.data() );
       }
+
+      Kokkos::fence();
 
       for ( unsigned j = 0; j < count; ++j ) {
         const unsigned long correct = 0 == j % 3 ? nw : nsum;

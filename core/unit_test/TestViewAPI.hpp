@@ -144,6 +144,7 @@ struct TestViewOperator_LeftAndRight< DataType, DeviceType, 8 >
     int error_flag = 0;
 
     Kokkos::parallel_reduce( 1, *this, error_flag );
+    Kokkos::fence();
 
     ASSERT_EQ( error_flag, 0 );
   }
@@ -236,6 +237,7 @@ struct TestViewOperator_LeftAndRight< DataType, DeviceType, 7 >
     int error_flag = 0;
 
     Kokkos::parallel_reduce( 1, *this, error_flag );
+    Kokkos::fence();
 
     ASSERT_EQ( error_flag, 0 );
   }
@@ -316,6 +318,7 @@ struct TestViewOperator_LeftAndRight< DataType, DeviceType, 6 >
     int error_flag = 0;
 
     Kokkos::parallel_reduce( 1, *this, error_flag );
+    Kokkos::fence();
 
     ASSERT_EQ( error_flag, 0 );
   }
@@ -399,6 +402,7 @@ struct TestViewOperator_LeftAndRight< DataType, DeviceType, 5 >
     int error_flag = 0;
 
     Kokkos::parallel_reduce( 1, *this, error_flag );
+    Kokkos::fence();
 
     ASSERT_EQ( error_flag, 0 );
   }
@@ -481,6 +485,7 @@ struct TestViewOperator_LeftAndRight< DataType, DeviceType, 4 >
     int error_flag = 0;
 
     Kokkos::parallel_reduce( 1, *this, error_flag );
+    Kokkos::fence();
 
     ASSERT_EQ( error_flag, 0 );
   }
@@ -560,6 +565,7 @@ struct TestViewOperator_LeftAndRight< DataType, DeviceType, 3 >
     int error_flag = 0;
 
     Kokkos::parallel_reduce( 1, *this, error_flag );
+    Kokkos::fence();
 
     ASSERT_EQ( error_flag, 0 );
   }
@@ -649,6 +655,7 @@ struct TestViewOperator_LeftAndRight< DataType, DeviceType, 2 >
     int error_flag = 0;
 
     Kokkos::parallel_reduce( 1, *this, error_flag );
+    Kokkos::fence();
 
     ASSERT_EQ( error_flag, 0 );
   }
@@ -737,6 +744,7 @@ struct TestViewOperator_LeftAndRight< DataType, DeviceType, 1 >
     int error_flag = 0;
 
     Kokkos::parallel_reduce( 1, *this, error_flag );
+    Kokkos::fence();
 
     ASSERT_EQ( error_flag, 0 );
   }
@@ -909,7 +917,7 @@ public:
   }
 
   static void run_test_view_operator_a() {
-    {TestViewOperator< T, device > f; Kokkos::parallel_for(int(N0),f);}
+    {TestViewOperator< T, device > f; Kokkos::parallel_for(int(N0),f); Kokkos::fence();}
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
     TestViewOperator_LeftAndRight< int[2][3][4][2][3][4], device >f6; f6.testit();
     TestViewOperator_LeftAndRight< int[2][3][4][2][3], device >f5; f5.testit();

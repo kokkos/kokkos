@@ -155,9 +155,11 @@ struct TestTeamPolicy {
     long total = 0;
 
     Kokkos::parallel_reduce( policy_type( league_size, team_size ), functor, total );
+    Kokkos::fence();
     ASSERT_EQ( size_t( ( N - 1 ) * ( N ) ) / 2, size_t( total ) );
 
     Kokkos::parallel_reduce( policy_type_reduce( league_size, team_size ), functor, total );
+    Kokkos::fence();
     ASSERT_EQ( ( size_t( N ) * size_t( N + 1 ) ) / 2, size_t( total ) );
   }
 };
