@@ -24,6 +24,7 @@ list(APPEND KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST
      Cuda_Relocatable_Device_Code
      Cuda_UVM
      Cuda_LDG_Intrinsic
+     HPX_ASYNC_DISPATCH
      Debug
      Debug_DualView_Modify_Check
      Debug_Bounds_Check
@@ -173,6 +174,19 @@ set(KOKKOS_INTERNAL_LDG_INTRINSIC use_ldg)
 set(KOKKOS_INTERNAL_UVM force_uvm)
 set(KOKKOS_INTERNAL_RELOCATABLE_DEVICE_CODE rdc)
 set(KOKKOS_INTERNAL_LAMBDA enable_lambda)
+
+
+#-------------------------------------------------------------------------------
+# List of possible Options for HPX
+#-------------------------------------------------------------------------------
+# From Makefile.kokkos: Options: enable_async_dispatch
+set(KOKKOS_HPX_OPTIONS_LIST)
+list(APPEND KOKKOS_HPX_OPTIONS_LIST
+    ASYNC_DISPATCH # enable_async_dispatch
+    )
+
+# Map of cmake variables to Makefile variables
+set(KOKKOS_INTERNAL_ENABLE_ASYNC_DISPATCH enable_async_dispatch)
 
 
 #-------------------------------------------------------------------------------
@@ -358,6 +372,18 @@ set(KOKKOS_ENABLE_CUDA_LAMBDA ${KOKKOS_INTERNAL_ENABLE_CUDA_LAMBDA_DEFAULT} CACH
 
 
 #-------------------------------------------------------------------------------
+#------------------------------- KOKKOS_HPX_OPTIONS ----------------------------
+#-------------------------------------------------------------------------------
+
+# CUDA options.
+# Set Defaults
+set_kokkos_default_default(HPX_ASYNC_DISPATCH OFF)
+
+# Set actual options
+set(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH ${KOKKOS_INTERNAL_ENABLE_HPX_ASYNC_DISPATCH_DEFAULT} CACHE BOOL "Enable HPX async dispatch.") 
+
+
+#-------------------------------------------------------------------------------
 #----------------------- HOST ARCH AND LEGACY TRIBITS --------------------------
 #-------------------------------------------------------------------------------
 
@@ -390,4 +416,3 @@ foreach(opt ${KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST})
     SET(Kokkos_ENABLE_${opt} ${KOKKOS_ENABLE_${OPT}} CACHE BOOL "CamelCase Compatibility setting for KOKKOS_ENABLE_${OPT}")
   ENDIF()
 endforeach()
-
