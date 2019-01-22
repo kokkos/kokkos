@@ -60,8 +60,11 @@ struct TestRange {
   struct VerifyInitTag {};
   struct ResetTag {};
   struct VerifyResetTag {};
+  struct OffsetTag {};
+  struct VerifyOffsetTag {};
 
-  int N; 
+  int N;
+  static const int offset = 13;
   TestRange( const size_t N_ )
     : m_flags( Kokkos::ViewAllocateWithoutInitializing( "flags" ), N_ ), N(N_)
     {}
@@ -117,6 +120,18 @@ struct TestRange {
       if ( int( 2 * i ) != host_flags( i ) ) ++error_count;
     }
     ASSERT_EQ( error_count, int( 0 ) );
+
+    Kokkos::parallel_for( Kokkos::RangePolicy< ExecSpace, ScheduleType, OffsetTag >( offset, N + offset ), *this );
+    Kokkos::parallel_for( std::string("TestKernelFor"), Kokkos::RangePolicy<ExecSpace, ScheduleType, VerifyOffsetTag>( 0, N ), *this);
+
+    Kokkos::deep_copy(host_flags, m_flags);
+
+    error_count = 0;
+    for (int i = 0; i < N; ++i) {
+      if (i + offset != host_flags(i))
+        ++error_count;
+    }
+    ASSERT_EQ(error_count, int(0));
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -144,9 +159,19 @@ struct TestRange {
     }
   }
 
-  //----------------------------------------
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const OffsetTag &, const int i) const {
+    m_flags(i - offset) = i;
+  }
 
-  struct OffsetTag {};
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const VerifyOffsetTag &, const int i) const {
+    if (i + offset != m_flags(i)) {
+      printf("TestRange::test_for error at %d != %d\n", i + offset, m_flags(i));
+    }
+  }
+
+  //----------------------------------------
 
   void test_reduce( )
   {
