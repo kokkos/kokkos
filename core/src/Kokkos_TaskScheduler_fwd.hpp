@@ -141,16 +141,16 @@ struct TaskSchedulerBase;
 namespace Kokkos {
 
 template< typename Space >
-using TaskScheduler = BasicTaskScheduler<Space, Impl::TaskQueue<Space>> ;
+using DeprecatedTaskScheduler = BasicTaskScheduler<Space, Impl::TaskQueue<Space>> ;
 
 template< typename Space >
-using TaskSchedulerMultiple = BasicTaskScheduler<Space, Impl::TaskQueueMultiple<Space>> ;
+using DeprecatedTaskSchedulerMultiple = BasicTaskScheduler<Space, Impl::TaskQueueMultiple<Space>> ;
 
 template< typename Space >
-using NewTaskScheduler = SimpleTaskScheduler<Space, Impl::SingleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsLockBased>>;
+using TaskScheduler = SimpleTaskScheduler<Space, Impl::SingleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsLockBased>>;
 
 template< typename Space >
-using NewTaskSchedulerMultiple = SimpleTaskScheduler<Space, Impl::MultipleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsLockBased>>;
+using TaskSchedulerMultiple = SimpleTaskScheduler<Space, Impl::MultipleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsLockBased>>;
 
 template< typename Space >
 using ChaseLevTaskScheduler = SimpleTaskScheduler<Space, Impl::MultipleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsChaseLev<>>>;
