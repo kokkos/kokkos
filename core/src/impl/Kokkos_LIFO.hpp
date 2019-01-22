@@ -93,7 +93,7 @@ struct LockBasedLIFOCommon
     // retry until someone locks the queue or we successfully compare exchange
     while (old_head != (node_type*)LockTag) {
 
-      // TODO this should have a memory order and not a memory fence
+      // TODO @tasking @memory_order DSH this should have a memory order and not a memory fence
 
       // set task->next to the head of the queue
       next = old_head;
@@ -120,7 +120,7 @@ struct LockBasedLIFOCommon
     // Failed, replace 'task->m_next' value since 'task' remains
     // not a member of a queue.
 
-    // TODO this should have a memory order and not a memory fence
+    // TODO @tasking @memory_order DSH this should have a memory order and not a memory fence
     LinkedListNodeAccess::mark_as_not_enqueued(node);
 
     // fence to emulate acquire semantics on next
@@ -131,8 +131,7 @@ struct LockBasedLIFOCommon
   }
 
   bool _is_empty() const noexcept {
-    // TODO memory order
-    // TODO make this an atomic load
+    // TODO @tasking @memory_order DSH make this an atomic load with memory order
     return this->m_head == (node_type*)EndTag;
   }
 
@@ -173,7 +172,7 @@ public:
 
 
   bool empty() const noexcept {
-    // TODO memory order
+    // TODO @tasking @memory_order DSH memory order
     return this->_is_empty();
   }
 
@@ -185,7 +184,7 @@ public:
     // can't do that with static constexpr variables.
     auto* const lock_tag = (node_type*)base_t::LockTag;
 
-    // TODO shouldn't this be a relaxed atomic load?
+    // TODO @tasking @memory_order DSH shouldn't this be a relaxed atomic load?
     // start with the return value equal to the head
     auto* rv = this->m_head;
 
@@ -200,7 +199,7 @@ public:
       KOKKOS_ASSERT(rv != nullptr);
 
       if(rv == lock_tag) {
-        // TODO this should just be an atomic load followed by a continue
+        // TODO @tasking @memory_order DSH this should just be an atomic load followed by a continue
         // just set rv to nullptr for now, effectively turning the
         // atomic_compare_exchange below into a load
         rv = nullptr;
@@ -211,7 +210,7 @@ public:
 
       auto* const old_rv = rv;
 
-      // TODO this should be a weak compare exchange in a loop
+      // TODO @tasking @memory_order DSH this should be a weak compare exchange in a loop
       rv = Kokkos::atomic_compare_exchange(&(this->m_head), old_rv, lock_tag);
 
       if(rv == old_rv) {
@@ -228,14 +227,14 @@ public:
         // This thread has exclusive access to
         // the queue and the popped task's m_next.
 
-        // TODO check whether the volatile is needed here
+        // TODO @tasking @memory_order DSH check whether the volatile is needed here
         auto* volatile& next = LinkedListNodeAccess::next_ptr(*rv); //->m_next;
 
         // This algorithm is not lockfree because a adversarial scheduler could
         // context switch this thread at this point and the rest of the threads
         // calling this method would never make forward progress
 
-        // TODO I think this needs to be a atomic store release (and the memory fence needs to be removed)
+        // TODO @tasking @memory_order DSH I think this needs to be a atomic store release (and the memory fence needs to be removed)
         // Lock is released here
         this->m_head = next;
 
@@ -261,7 +260,7 @@ public:
   OptionalRef<T>
   steal()
   {
-    // TODO do this with fewer retries
+    // TODO @tasking @optimization DSH do this with fewer retries
     return pop(/* abort_on_locked = */ true);
   }
 
@@ -332,13 +331,13 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   bool empty() const noexcept {
-    // TODO memory order
+    // TODO @tasking @memory_order DSH memory order
     return this->_is_empty();
   }
 
   KOKKOS_INLINE_FUNCTION
   bool is_consumed() const noexcept {
-    // TODO memory order?
+    // TODO @tasking @memory_order DSH memory order?
     return this->m_head == (node_type*)ConsumedTag;
   }
 
@@ -357,7 +356,7 @@ public:
     // Swap the Consumed tag into the head of the queue:
 
     // (local variable used for assertion only)
-    // TODO this should have memory order release, I think
+    // TODO @tasking @memory_order DSH this should have memory order release, I think
     auto old_head = Kokkos::atomic_exchange(&(this->m_head), consumed_tag);
 
     // Assert that the queue wasn't consumed before this
@@ -400,7 +399,7 @@ namespace Impl {
 struct TaskQueueTraitsLockBased
 {
 
-  // TODO document what concepts these match
+  // TODO @tasking @documentation DSH document what concepts these match
 
   template <class Task>
   using ready_queue_type = LockBasedLIFO<Task>;

@@ -72,7 +72,7 @@ namespace Kokkos {
 
 namespace Impl {
 
-// TODO move this
+// TODO @tasking @cleanup move this
 template <class T>
 struct DefaultDestroy {
   T* managed_object;
@@ -175,10 +175,11 @@ template <class ExecSpace, class QueueType>
 class SimpleTaskScheduler
   : public Impl::TaskSchedulerBase,
     private Impl::ExecutionSpaceInstanceStorage<ExecSpace>,
-    private Impl::MemorySpaceInstanceStorage<typename QueueType::memory_space>
+    private Impl::MemorySpaceInstanceStorage<typename QueueType::memory_space>,
+    private Impl::NoUniqueAddressMemberEmulation<typename QueueType::team_scheduler_info_type>
 {
 public:
-  // TODO (maybe?) don't force QueueType to be complete here
+  // TODO @tasking @generalization (maybe?) don't force QueueType to be complete here
 
   using scheduler_type = SimpleTaskScheduler; // tag as scheduler concept
   using execution_space = ExecSpace;
@@ -212,10 +213,10 @@ private:
   using track_type = Kokkos::Impl::SharedAllocationTracker;
   using execution_space_storage = Impl::ExecutionSpaceInstanceStorage<execution_space>;
   using memory_space_storage = Impl::MemorySpaceInstanceStorage<memory_space>;
+  using team_scheduler_info_storage = Impl::NoUniqueAddressMemberEmulation<team_scheduler_info_type>;
 
   track_type m_track;
   task_queue_type* m_queue = nullptr;
-  team_scheduler_info_type m_info; // TODO [[no_unique_address]] emulation
 
   KOKKOS_INLINE_FUNCTION
   static constexpr task_base_type* _get_task_ptr(std::nullptr_t) { return nullptr; }
@@ -311,7 +312,7 @@ public:
       arg_memory_pool
     );
 
-    // TODO better encapsulation of this pattern
+    // TODO @tasking @generalization DSH better encapsulation of the SharedAllocationRecord pattern
     using record_type = Impl::SharedAllocationRecord<
       memory_space, Impl::DefaultDestroy<task_queue_type>
     >;
@@ -374,7 +375,7 @@ public:
   {
     KOKKOS_EXPECTS(m_queue != nullptr);
     auto rv = SimpleTaskScheduler{ *this };
-    rv.m_info = m_queue->initial_team_scheduler_info(rank_in_league);
+    rv.team_scheduler_info() = m_queue->initial_team_scheduler_info(rank_in_league);
     return rv;
   }
 
@@ -382,10 +383,16 @@ public:
   execution_space const& get_execution_space() const { return this->execution_space_instance(); }
 
   KOKKOS_INLINE_FUNCTION
-  team_scheduler_info_type& team_scheduler_info() { return m_info; }
+  team_scheduler_info_type& team_scheduler_info() &
+  {
+    return this->team_scheduler_info_storage::no_unique_address_data_member();
+  }
 
   KOKKOS_INLINE_FUNCTION
-  team_scheduler_info_type const& team_scheduler_info() const { return m_info; }
+  team_scheduler_info_type const& team_scheduler_info() const &
+  {
+    return this->team_scheduler_info_storage::no_unique_address_data_member();
+  }
 
   template <int TaskEnum, typename DepFutureType, typename FunctorType>
   KOKKOS_FUNCTION
@@ -432,7 +439,6 @@ public:
     );
   }
 
-  // TODO Refactor to make this a member function and remove the queue pointer from task
   template <class FunctorType, class ValueType, class Scheduler>
   KOKKOS_FUNCTION
   static void
@@ -475,7 +481,7 @@ public:
   future_type<void>
   when_all(BasicFuture<ValueType, scheduler_type> const predecessors[], int n_predecessors) {
 
-    // TODO propagate scheduling info
+    // TODO @tasking @generalization DSH propagate scheduling info
 
     using task_type = typename task_queue_type::aggregate_task_type;
 
@@ -490,22 +496,14 @@ public:
 
         auto* predecessor_task_ptr = predecessors[i_pred].m_task;
 
-        if(predecessor_task_ptr != nullptr) { // TODO figure out when this is allowed to be nullptr
+        if(predecessor_task_ptr != nullptr) {
+          // TODO @tasking @cleanup DSH figure out when this is allowed to be nullptr (if at all anymore)
+
           // Increment reference count to track subsequent assignment.
-          // TODO figure out if this reference count increment is necessary
+          // TODO @tasking @optimization DSH figure out if this reference count increment is necessary
           predecessor_task_ptr->increment_reference_count();
 
-          //auto* pred_queue_ptr = static_cast<task_queue_type*>(
-          //  predecessor_task_ptr->ready_queue_base_ptr()
-          //);
-
-          //if(queue_ptr == nullptr) {
-          //  queue_ptr = pred_queue_ptr;
-          //}
-          //else {
-          //  KOKKOS_ASSERT(queue_ptr == pred_queue_ptr && "Queue mismatch in when_all");
-          //}
-
+          // TODO @tasking @cleanup DSH we should just set a boolean here instead to make this more readable
           queue_ptr = m_queue;
         }
 
@@ -546,16 +544,20 @@ public:
   BasicFuture<void, scheduler_type>
   when_all(int n_calls, F&& func)
   {
-    // TODO propagate scheduling info
+    // TODO @tasking @generalization DSH propagate scheduling info?
 
     using future_type = BasicFuture<void, scheduler_type>;
     // later this should be std::invoke_result_t
     using generated_type = decltype(func(0));
     using task_type = typename task_queue_type::aggregate_task_type;
 
-    // TODO check for scheduler compatibility
-    static_assert(is_future<generated_type>::value,
-      "when_all function must return a Kokkos::Future"
+    static_assert(
+      is_future<generated_type>::value,
+      "when_all function must return a Kokkos future (an instance of Kokkos::BasicFuture)"
+    );
+    static_assert(
+      std::is_base_of<scheduler_type, typename generated_type::scheduler_type>::value,
+      "when_all function must return a Kokkos::BasicFuture of a compatible scheduler type"
     );
 
     auto* aggregate_task = m_queue->template allocate_and_construct_with_vla_emulation<

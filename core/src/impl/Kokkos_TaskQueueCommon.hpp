@@ -93,7 +93,7 @@ public:
   TaskQueueCommonMixin()
     : m_ready_count(0)
   {
-    // TODO figure out if I need this store to be atomic
+    // TODO @tasking @memory_order DSH figure out if I need this store to be atomic
   }
 
   ~TaskQueueCommonMixin() {
@@ -124,7 +124,7 @@ private:
       using task_scheduling_info_type = typename Derived::task_scheduling_info_type;
       if(task.is_runnable()) // KOKKOS_LIKELY
       {
-        // TODO check this outside of the loop ?
+        // TODO @tasking @optimiazation DSH check this outside of the loop ?
         if(m_predecessor.is_runnable()) {
           m_queue.update_scheduling_info_from_completed_predecessor(
             /* ready_task = */ task.as_runnable_task(),
@@ -176,13 +176,13 @@ protected:
 
   KOKKOS_INLINE_FUNCTION
   void _increment_ready_count() {
-    // TODO memory order
+    // TODO @tasking @memory_order DSH memory order
     Kokkos::atomic_increment(&this->m_ready_count);
   }
 
   KOKKOS_INLINE_FUNCTION
   void _decrement_ready_count() {
-    // TODO memory order
+    // TODO @tasking @memory_order DSH memory order
     Kokkos::atomic_decrement(&this->m_ready_count);
   }
 
@@ -190,7 +190,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   bool is_done() const noexcept {
-    // TODO Memory order, instead of volatile
+    // TODO @tasking @memory_order DSH Memory order, instead of volatile
     return (*(volatile int*)(&m_ready_count)) == 0;
   }
 
@@ -215,7 +215,7 @@ public:
     // or the next waiting queue, in the case of an aggregate), and the
     // ready count has been incremented for each of those, preventing
     // quiescence.  Thus, it's safe to decrement the ready count here.
-    // TODO memory order? (probably release)
+    // TODO @tasking @memory_order DSH memory order? (probably release)
     _decrement_ready_count();
   }
 
@@ -226,7 +226,7 @@ public:
     AggregateTask<TaskQueueTraits, SchedulingInfo>&& task,
     TeamSchedulerInfo const& info
   ) {
-    // TODO old code has a ifndef __HCC_ACCELERATOR__ here; figure out why
+    // TODO @tasking DSH old code has a ifndef __HCC_ACCELERATOR__ here; figure out why
     _complete_finished_task(std::move(task), info);
   }
 
@@ -258,7 +258,7 @@ public:
       // task before adding it to the wait queue of the predecessor
       // (We have exclusive access to the task's predecessor, so we don't need
       // to do this atomically)
-      // TODO document that we expect exclusive access to `task` in this function
+      // TODO @tasking @internal_documentation DSH document that we expect exclusive access to `task` in this function
       auto& predecessor = task.get_predecessor();
       // This needs a load/store fence here, technically
       // making this a release store would also do this
@@ -270,7 +270,7 @@ public:
       // clear the respawn flag, since we're handling the respawn (if any) here
       task.set_respawn_flag(false);
 
-      // TODO remove this fence in favor of memory orders
+      // TODO @tasking @memory_order DSH remove this fence in favor of memory orders
       Kokkos::memory_fence(); // for now
 
       // Try to add the task to the predecessor's waiting queue.  If it fails,
@@ -302,7 +302,7 @@ public:
         // which may deallocate it.
         bool should_delete = predecessor.decrement_and_check_reference_count();
         if(should_delete) {
-          // TODO better encapsulation of this!
+          // TODO @tasking @cleanup DSH better encapsulation of this!
           _self().deallocate(std::move(predecessor));
         }
       }
@@ -382,10 +382,10 @@ public:
         // exclusive access to aggregate until an insertion succeeds
         auto* predecessor_ptr = std::move(predecessor_ptr_ref);
 
-        // TODO I think this needs to be a store release so that it doesn't get reordered after the queue insertion
+        // TODO @tasking @memory_order DSH I think this needs to be a store release so that it doesn't get reordered after the queue insertion
         predecessor_ptr_ref = nullptr;
 
-        // TODO remove this fence in favor of memory orders
+        // TODO @tasking @memory_order DSH remove this fence in favor of memory orders
         Kokkos::memory_fence();
 
         // If adding the aggregate to the waiting queue succeeds, the predecessor is not
@@ -420,7 +420,7 @@ public:
         // it into the predecessor list, so decrement it here
         bool should_delete = predecessor_ptr->decrement_and_check_reference_count();
         if(should_delete) {
-          // TODO better encapsulation of this!
+          // TODO @tasking @cleanup DSH better encapsulation of this!
           _self().deallocate(std::move(*predecessor_ptr));
         }
 

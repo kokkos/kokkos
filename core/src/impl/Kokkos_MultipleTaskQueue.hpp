@@ -270,7 +270,7 @@ public:
       int
     >::type = 0
   ) {
-    // TODO this somethimes gets some things out of LIFO order, which may be undesirable (but not a bug)
+    // TODO @tasking @minor DSH this somethimes gets some things out of LIFO order, which may be undesirable (but not a bug)
 
 
     auto*& failed_head = m_failed_heads[priority][task_type];
@@ -455,7 +455,7 @@ public:
   ) : base_t(arg_memory_pool),
       vla_emulation_base_t(
         Impl::TaskQueueSpecialization<
-          // TODO avoid referencing SimpleTaskScheduler directly?
+          // TODO @tasking @generalization DSH avoid referencing SimpleTaskScheduler directly?
           SimpleTaskScheduler<typename base_t::execution_space, MultipleTaskQueue>
         >::get_max_team_count(arg_execution_space)
       )
@@ -521,7 +521,7 @@ public:
   }
 
 
-  // TODO make this a property-based customization point
+  // TODO @tasking @generalization DSH make this a property-based customization point
   KOKKOS_INLINE_FUNCTION
   team_scheduler_info_type
   initial_team_scheduler_info(int rank_in_league) const noexcept {
@@ -530,7 +530,7 @@ public:
     };
   }
 
-  // TODO make this a property-based customization point
+  // TODO @tasking @generalization DSH make this a property-based customization point
   static /* KOKKOS_CONSTEXPR_14 */ size_t
   task_queue_allocation_size(
     typename base_t::execution_space const& exec_space,
@@ -540,7 +540,7 @@ public:
   {
     using specialization =
       Impl::TaskQueueSpecialization<
-        // TODO avoid referencing SimpleTaskScheduler directly?
+        // TODO @tasking @generalization DSH avoid referencing SimpleTaskScheduler directly?
         SimpleTaskScheduler<typename base_t::execution_space, MultipleTaskQueue>
       >;
 

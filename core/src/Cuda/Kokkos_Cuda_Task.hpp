@@ -176,7 +176,7 @@ public:
           shared_memory_task_copy->as_runnable_task().run(team_exec);
         }
         else if(threadIdx.y == 0) {
-          // TODO (??) Shouldn't this be warp_lane == 0 ???
+          // TODO @tasking @optimization DSH Change this to warp_lane == 0 when we allow blockDim.x to be more than 1
           // Single Thread Task
           shared_memory_task_copy->as_runnable_task().run(single_exec);
         }
@@ -267,7 +267,7 @@ public:
 
   template <typename TaskType>
   static
-  // TODO specialize this for trivially destructible types
+  // TODO @tasking @optimiazation DSH specialize this for trivially destructible types
   void
   get_function_pointer(
     typename TaskType::function_type& ptr,
@@ -277,7 +277,7 @@ public:
     using function_type = typename TaskType::function_type;
     using destroy_type = typename TaskType::destroy_type;
 
-    // TODO address alignment concerns
+    // TODO @tasking @minor DSH make sure there aren't any alignment concerns?
     void* storage = cuda_internal_scratch_unified( 
       sizeof(function_type) + sizeof(destroy_type)
     );
@@ -505,7 +505,6 @@ public:
 
   template< typename TaskType >
   static
-  // TODO specialize this for trivially destructible types
   void
   get_function_pointer(
     typename TaskType::function_type& ptr,
@@ -515,8 +514,7 @@ public:
       using function_type = typename TaskType::function_type;
       using destroy_type = typename TaskType::destroy_type;
 
-      // TODO address alignment concerns
-      void* storage = cuda_internal_scratch_unified( 
+      void* storage = cuda_internal_scratch_unified(
         sizeof(function_type) + sizeof(destroy_type)
       );
       function_type* ptr_ptr = (function_type*)storage;
@@ -921,7 +919,7 @@ void parallel_reduce
    const Lambda & lambda,
    ValueType& initialized_result) {
 
-  //TODO what is the point of creating this temporary?
+  //TODO @internal_documentation what is the point of creating this temporary?
   ValueType result = initialized_result;
   for( iType i = loop_boundaries.start; i < loop_boundaries.end; i+=loop_boundaries.increment) {
     lambda(i,result);
@@ -950,7 +948,7 @@ void parallel_reduce
    const ReducerType& reducer) {
 
   typedef typename ReducerType::value_type ValueType;
-  //TODO what is the point of creating this temporary?
+  //TODO @internal_documentation what is the point of creating this temporary?
   ValueType result = ValueType();
   reducer.init(result);
 

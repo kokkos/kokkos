@@ -84,8 +84,7 @@ private:
 
   KOKKOS_INLINE_FUNCTION
   void mark_as_not_enqueued() noexcept {
-    // TODO memory order
-    // TODO make this an atomic store
+    // TODO @tasking @memory_order DSH make this an atomic store with memory order
     m_next = (pointer_type)NotEnqueuedValue;
   }
 
@@ -106,8 +105,7 @@ public:
   // KOKKOS_CONSTEXPR_14
   KOKKOS_INLINE_FUNCTION
   bool is_enqueued() const noexcept {
-    // TODO memory order
-    // TODO make this an atomic load
+    // TODO @tasking @memory_order DSH make this an atomic load with memory order
     return m_next != reinterpret_cast<pointer_type>(NotEnqueuedValue);
   }
 

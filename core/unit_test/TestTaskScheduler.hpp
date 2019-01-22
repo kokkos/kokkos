@@ -766,42 +766,47 @@ namespace Test {
 
 TEST_F( TEST_CATEGORY, task_fib )
 {
-  const int N = 27 ;
-  for ( int i = 0; i < N; ++i ) {
+  //const int N = 27 ;
+  //for ( int i = 0; i < N; ++i ) {
+  int i = 30;
     TestTaskScheduler::TestFib< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 2000 );
-  }
+  //}
 }
 
 TEST_F( TEST_CATEGORY, task_fib_multiple )
 {
-  const int N = 27 ;
-  for ( int i = 0; i < N; ++i ) {
+//  const int N = 27 ;
+//  for ( int i = 0; i < N; ++i ) {
+    int i = 30;
     TestTaskScheduler::TestFib< Kokkos::TaskSchedulerMultiple<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 8000 );
-  }
+//  }
 }
 
 TEST_F( TEST_CATEGORY, task_fib_new )
 {
-  const int N = 27 ;
-  for ( int i = 0; i < N; ++i ) {
+//  const int N = 27 ;
+//  for ( int i = 0; i < N; ++i ) {
+  int i = 30;
     TestTaskScheduler::TestFib< Kokkos::NewTaskScheduler<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 2000 );
-  }
+//  }
 }
 
 TEST_F( TEST_CATEGORY, task_fib_new_multiple )
 {
-  const int N = 27 ;
-  for ( int i = 0; i < N; ++i ) {
+//  const int N = 27 ;
+//  for ( int i = 0; i < N; ++i ) {
+  int i = 30;
     TestTaskScheduler::TestFib< Kokkos::NewTaskSchedulerMultiple<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 64000 );
-  }
+//  }
 }
 
 TEST_F( TEST_CATEGORY, task_fib_chase_lev )
 {
-  const int N = 27 ;
-  for ( int i = 0; i < N; ++i ) {
+//  const int N = 27 ;
+//  for ( int i = 0; i < N; ++i ) {
+  int i = 30;
     TestTaskScheduler::TestFib< Kokkos::ChaseLevTaskScheduler<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 64000 );
-  }
+//  }
 }
 
 TEST_F( TEST_CATEGORY, task_depend )

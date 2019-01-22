@@ -65,6 +65,7 @@
 namespace Kokkos {
 
 // For now, hack this in as a partial specialization
+// TODO @tasking @cleanup Make this the "normal" class template and make the old code the specialization
 template <typename ValueType, typename ExecutionSpace, typename QueueType>
 class BasicFuture<ValueType, SimpleTaskScheduler<ExecutionSpace, QueueType>>
 {
@@ -107,8 +108,8 @@ private:
   BasicFuture(task_base_type* task)
     : m_task(task)
   {
-    // TODO restore this? Currently, reference count starts at 2 to account for this
-    //if(task) task->increment_reference_count();
+    // Note: reference count starts at 2 to account for initial increment
+    // TODO @tasking @minor DSH verify reference count here and/or encapsulate starting reference count closer to here
   }
 
 public:

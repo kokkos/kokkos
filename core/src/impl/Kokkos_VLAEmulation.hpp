@@ -99,7 +99,7 @@ private:
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-/** @brief A CRTP base class for a type that includes a variable-length array by allocation
+/** \brief A CRTP base class for a type that includes a variable-length array by allocation
  *
  *  The storage for the derived type must be allocated manually and the objects
  *  (both derived type and VLA objects) must be constructed with placement new.
@@ -108,7 +108,7 @@ private:
  *  Note: Though most uses of this currently delete the copy and move constructor
  *  in the `Derived` type, this type is intended to have value semantics.
  *
- *  @todo elaborate on implications of value semantics for this class template
+ *  \todo @documentation elaborate on implications of value semantics for this class template
  *
  */
 template <
@@ -127,8 +127,8 @@ public:
   using const_iterator = typename std::add_const<VLAValueType>::type*;
 
 
-  // TODO require that Derived be marked final? (note that std::is_final is C++14)
-  // TODO delete non-placement operator new for Derived type?
+  // TODO @tasking @minor DSH require that Derived be marked final? (note that std::is_final is C++14)
+  // TODO @tasking @minor DSH delete non-placement operator new for Derived type?
 
 private:
 
@@ -172,8 +172,8 @@ public:
   //----------------------------------------------------------------------------
   // <editor-fold desc="Constructors, destructor, and assignment"> {{{2
 
-  // TODO specialization for trivially constructible VLAValueType?
-  // TODO constrained this to default contructible vla_value_types
+  // TODO @tasking @optimization DSH specialization for trivially constructible VLAValueType?
+  // TODO @tasking @minor DSH SFINAE-out this constructor for non-default contructible vla_value_types
   KOKKOS_INLINE_FUNCTION
   explicit
   ObjectWithVLAEmulation(vla_entry_count_type num_entries)
@@ -201,7 +201,6 @@ public:
     }
   }
 
-  // TODO specialization for trivially destructible VLAValueType?
   KOKKOS_INLINE_FUNCTION
   ~ObjectWithVLAEmulation()
     noexcept(noexcept(std::declval<vla_value_type>().~vla_value_type()))
@@ -209,9 +208,9 @@ public:
     for(auto&& value : *this) { value.~vla_value_type(); }
   }
 
-  // TODO constrained analogs for move and copy ctors and assignment ops
-  // TODO forwarding in_place constructor
-  // TODO initializer_list constructor?
+  // TODO @tasking @new_feature DSH constrained analogs for move and copy ctors and assignment ops
+  // TODO @tasking @new_feature DSH forwarding in_place constructor
+  // TODO @tasking @new_feature DSH initializer_list constructor?
 
   // </editor-fold> end Constructors, destructor, and assignment }}}2
   //----------------------------------------------------------------------------

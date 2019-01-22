@@ -87,7 +87,7 @@ public:
 
 private:
 
-  // TODO variable size circular buffer?
+  // TODO @tasking @new_feature DSH variable size circular buffer?
 
 
   struct fixed_size_circular_buffer {
@@ -115,25 +115,25 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   bool empty() const {
-    // TODO memory order
+    // TODO @tasking @memory_order DSH memory order
     return m_top > m_bottom - 1;
   }
 
   KOKKOS_INLINE_FUNCTION
   OptionalRef<T>
   pop() {
-    auto b = m_bottom - 1; // TODO atomic load as relaxed
-    auto& a = m_array; // TODO atomic load relaxed
-    m_bottom = b; // TODO atomic store relaxed
+    auto b = m_bottom - 1; // TODO @tasking @memory_order DSH atomic load as relaxed
+    auto& a = m_array; // TODO @tasking @memory_order DSH atomic load relaxed
+    m_bottom = b; // TODO @tasking @memory_order DSH atomic store relaxed
     Kokkos::memory_fence(); // memory order seq_cst
-    auto t = m_top; // TODO atomic load relaxed
+    auto t = m_top; // TODO @tasking @memory_order DSH atomic load relaxed
     OptionalRef<T> return_value;
     if(t <= b) {
       /* non-empty queue */
-      return_value = *static_cast<T*>(a->buffer[b % a->size]); // TODO relaxed load
+      return_value = *static_cast<T*>(a->buffer[b % a->size]); // TODO @tasking @memory_order DSH relaxed load
       if(t == b) {
         /* single last element in the queue. */
-        // TODO memory orders instead of fence
+        // TODO @tasking @memory_order DSH memory orders instead of fence
         Kokkos::memory_fence();
         if(not Kokkos::atomic_compare_exchange_strong(&m_top, t, t+1)) { // memory orders: seq_cst, relaxed
           /* failed race, someone else stole it */
@@ -160,8 +160,8 @@ public:
   bool push(node_type& node)
   {
     auto b = m_bottom; // memory order relaxed
-    auto t = m_top; // TODO: memory order acquire!
-    Kokkos::memory_fence(); // TODO: memory order instead of fence here
+    auto t = m_top; // TODO @tasking @memory_order DSH: memory order acquire!
+    Kokkos::memory_fence(); // TODO @tasking @memory_order DSH: memory order instead of fence here
     auto& a = m_array;
     if(b - t > a->size - 1) {
       /* queue is full, resize */
@@ -170,7 +170,7 @@ public:
       return false;
     }
     a->buffer[b % a->size] = &node; // relaxed
-    Kokkos::memory_fence(); // TODO: memory order release
+    Kokkos::memory_fence(); // TODO @tasking @memory_order DSH: memory order release
     m_bottom = b + 1; // relaxed store
     return true;
   }
@@ -178,18 +178,18 @@ public:
   KOKKOS_INLINE_FUNCTION
   OptionalRef<T>
   steal() {
-    auto t = m_top; // TODO: atomic load acquire
+    auto t = m_top; // TODO @tasking @memory_order DSH: atomic load acquire
     Kokkos::memory_fence(); // seq_cst fence, so why does the above need to be acquire?
-    auto b = m_bottom; // TODO: atomic load acquire
-    Kokkos::memory_fence(); // TODO memory order instead of fence here
+    auto b = m_bottom; // TODO @tasking @memory_order DSH: atomic load acquire
+    Kokkos::memory_fence(); // TODO @tasking @memory_order DSH memory order instead of fence here
     OptionalRef<T> return_value;
     if(t < b) {
       /* Non-empty queue */
-      auto& a = m_array; // TODO: technically consume ordered, but acquire should be fine
-      Kokkos::load_fence(); // TODO memory order instead of fence
+      auto& a = m_array; // TODO @tasking @memory_order DSH: technically consume ordered, but acquire should be fine
+      Kokkos::load_fence(); // TODO @tasking @memory_order DSH memory order instead of fence
       return_value = *static_cast<T*>(a->buffer[t % a->size]); // relaxed
-      Kokkos::memory_fence(); // TODO memory order instead of fence
-      if(not Kokkos::atomic_compare_exchange_strong(&m_top, t, t+1)) { // TODO memory orders: seq_cst, relaxed
+      Kokkos::memory_fence(); // TODO @tasking @memory_order DSH memory order instead of fence
+      if(not Kokkos::atomic_compare_exchange_strong(&m_top, t, t+1)) { // TODO @tasking @memory_order DSH memory orders: seq_cst, relaxed
         return_value = nullptr;
       }
     }

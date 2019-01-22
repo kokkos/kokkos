@@ -142,7 +142,7 @@ struct EBOBaseImpl<T, false> {
     : m_ebo_object(std::forward<Args>(args)...)
   { }
 
-  // TODO noexcept in the right places?
+  // TODO @tasking @minor DSH noexcept in the right places?
 
   KOKKOS_FORCEINLINE_FUNCTION
   EBOBaseImpl(EBOBaseImpl const&) = default;

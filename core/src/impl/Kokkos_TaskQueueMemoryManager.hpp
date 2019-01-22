@@ -90,7 +90,7 @@ public:
 private:
 
   memory_pool m_pool;
-  // TODO re-enable this with a flag in the type
+  // TODO @tasking @generalization DSH re-enable this with a flag in the type
   //long m_accum_alloc = 0;
   int m_count_alloc = 0;
   int m_max_alloc = 0;
@@ -110,10 +110,9 @@ private:
     else {
       void* data = m_pool.allocate(static_cast<size_t>(requested_size));
 
-      // TODO re-enable this with a flag in the type
       //Kokkos::atomic_increment(&m_accum_alloc); // memory_order_relaxed
       Kokkos::atomic_increment(&m_count_alloc); // memory_order_relaxed
-      // TODO this isn't thread safe...
+      // TODO @tasking @minor DSH make this thread safe? (otherwise, it's just an approximation, which is probably fine...)
       if(m_max_alloc < m_count_alloc) m_max_alloc = m_count_alloc;
 
       return { data != nullptr, data };
@@ -130,7 +129,7 @@ private:
       "TaskQueueMemoryManager can only allocate objects with PoolAllocatedObjectBase base class"
     );
 
-    // TODO figure out why this isn't working
+    // TODO @tasking DSH figure out why this isn't working
     //static_assert(
     //  std::is_constructible<T, Args..., int32_t>::value,
     //  "TaskQueueMemoryManager can't construct object of the requested type from the "

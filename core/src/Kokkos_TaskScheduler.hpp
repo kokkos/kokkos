@@ -166,23 +166,12 @@ private:
     using future_type = BasicFuture< value_type , scheduler_type > ;
     using task_type = Impl::Task<BasicTaskScheduler, value_type, FunctorType>;
 
-    //BasicTaskScheduler const* scheduler_ptr = nullptr;
-
-    //if (
-    //  arg_policy.m_dependence.m_task != 0
-    //  && static_cast<BasicTaskScheduler const*>(
-    //    arg_policy.m_dependence.m_task->m_scheduler
-    //  )->m_queue != &queue
-    //) {
-    //  Kokkos::abort("Kokkos spawn given incompatible scheduler and Future");
-    //}
-
     //----------------------------------------
     // Give single-thread back-ends an opportunity to clear
     // queue of ready tasks before allocating a new task
 
-    // TODO re-enable this
-    //specialization::iff_single_thread_recursive_execute(scheduler);
+    // TODO @tasking @optimization DSH re-enable this, maybe?
+    // specialization::iff_single_thread_recursive_execute(scheduler);
 
     //----------------------------------------
 
@@ -236,7 +225,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   BasicTaskScheduler( BasicTaskScheduler && rhs ) noexcept
-    : m_track(rhs.m_track), // TODO should this be moved?
+    : m_track(rhs.m_track),  // probably should be a move, but this is deprecated code anyway
       m_queue(std::move(rhs.m_queue))
   { }
 
@@ -249,7 +238,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   BasicTaskScheduler& operator=(BasicTaskScheduler&& rhs) noexcept
   {
-    m_track = rhs.m_track; // TODO should this be moved?
+    m_track = rhs.m_track;  // probably should be a move, but this is deprecated code anyway
     m_queue = std::move(rhs.m_queue);
     return *this;
   }
@@ -430,7 +419,7 @@ public:
         }
       }
 
-      if ( queue != 0 ) { // TODO this should handle the queue == 0 case?
+      if ( queue != 0 ) { // this should probably handle the queue == 0 case, but this is deprecated code anyway
 
         size_t const alloc_size = queue->when_all_allocation_size( narg );
 
@@ -495,8 +484,6 @@ public:
         // Reference count starts at two:
         // +1 to match decrement when task completes
         // +1 for the future
-
-        // TODO This should be a constructor of future...
 
         new( f.m_task ) task_base();
         //f.m_scheduler = *this;

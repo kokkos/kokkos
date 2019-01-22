@@ -88,7 +88,7 @@ public:
       Scheduler
     >::type arg_scheduler,
     Args&&... args
-  ) // TODO noexcept specification
+  ) // TODO @tasking @minor DSH noexcept specification
     : TeamMember(std::forward<Args>(args)...),
       m_scheduler(std::move(arg_scheduler).get_team_scheduler(this->league_rank()))
   { }

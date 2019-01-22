@@ -128,7 +128,8 @@ void TaskQueue< ExecSpace, MemorySpace>::decrement
     //  static_cast<scheduler_type const *>( t.m_scheduler )->m_queue;
     auto* const volatile queue = static_cast<TaskQueue*>(t.m_queue);
 
-    // TODO fix this! This is a destructor on the device, so it actually needs to be queued.
+    // TODO @tasking @minor DSH this should call the destructor for a non-trivially destructible type (possibly just ignore this in the old version, though?)
+    // (Can't just do this; it needs to be queued since it's device code
     // if(task->m_destroy) task->m_destroy(task);
 
     queue->deallocate( task , t.m_alloc_size );

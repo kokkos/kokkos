@@ -111,7 +111,7 @@ public:
 //==============================================================================
 
 
-// TODO move this?
+// TODO @tasking @cleanup DSH move this?
 template <class CountType = int32_t>
 class ReferenceCountedBase {
 public:
@@ -129,7 +129,7 @@ public:
   ReferenceCountedBase(reference_count_size_type initial_reference_count)
     : m_ref_count(initial_reference_count)
   {
-    // KOKKOS_EXPECTS(initial_reference_count > 0);
+    KOKKOS_EXPECTS(initial_reference_count > 0);
   }
 
   /** Decrement the reference count,
@@ -139,7 +139,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   bool decrement_and_check_reference_count()
   {
-    // TODO memory order
+    // TODO @tasking @memory_order DSH memory order
     auto old_count = Kokkos::atomic_fetch_add(&m_ref_count, -1);
 
     KOKKOS_ASSERT(old_count > 0 && "reference count greater less than zero!");
@@ -184,7 +184,7 @@ private:
 
   waiting_queue_type m_wait_queue; // size 8+
 
-  // TODO eliminate this???
+  // TODO @tasking @cleanup DSH eliminate this, or make its purpose a bit more clear.  It's only used in BasicFuture, and only for deallocation purposes
   TaskQueueBase* m_ready_queue_base;
 
   TaskType m_task_type;  // size 2
@@ -293,7 +293,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   bool wait_queue_is_consumed() const noexcept {
-    // TODO memory order
+    // TODO @tasking @memory_order DSH memory order
     return m_wait_queue.is_consumed();
   }
 
@@ -548,6 +548,7 @@ public:
 };
 
 
+// TODO @tasking @optimization DSH optimization for empty types (in addition to void)
 template <class Base>
 class TaskResultStorage<void, Base> : public Base
 {
@@ -631,7 +632,7 @@ public:
   void update_scheduling_info(
     member_type& member
   ) {
-    // TODO call a queue-specific hook here; for now, this info is already updated elsewhere
+    // TODO @tasking @generalization DSH call a queue-specific hook here; for now, this info is already updated elsewhere
     // this->scheduling_info() = member.scheduler().scheduling_info();
   }
 

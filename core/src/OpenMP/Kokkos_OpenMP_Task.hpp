@@ -74,6 +74,7 @@ public:
 };
 
 // Hack this as a partial specialization for now
+// TODO @tasking @cleanup DSH Make this the general class template and make the old code the partial specialization
 template <class QueueType>
 class TaskQueueSpecialization<
   SimpleTaskScheduler<Kokkos::OpenMP, QueueType>
@@ -91,8 +92,6 @@ public:
 
   enum : int { max_league_size = HostThreadTeamData::max_pool_members };
 
-  // TODO boost blocking
-
   // Must provide task queue execution function
   static void execute(scheduler_type const& scheduler)
   {
@@ -101,7 +100,7 @@ public:
 
     HostThreadTeamData& team_data_single = HostThreadTeamDataSingleton::singleton();
 
-    // TODO use scheduler.get_execution_space().impl() (or something like that)
+    // TODO @tasking @generalization DSH use scheduler.get_execution_space().impl() (or something like that) instead of the thread-local variable
     Impl::OpenMPExec* instance = t_openmp_instance;
     const int pool_size = get_max_team_count(scheduler.get_execution_space());
 
@@ -201,7 +200,7 @@ public:
     return static_cast<uint32_t>(espace.impl_thread_pool_size());
   }
 
-  // TODO specialize this for trivially destructible types
+  // TODO @tasking @optimization DSH specialize this for trivially destructible types
   template <typename TaskType>
   static void
   get_function_pointer(
@@ -348,7 +347,6 @@ public:
 
               // If 0 == m_ready_count then set task = 0
 
-              // TODO shouldn't this be just an atomic load acquire?  This isn't potentially device code...
               if( *((volatile int *) & team_queue.m_ready_count) > 0 ) {
                 task = end;
                 // Attempt to acquire a task
@@ -413,7 +411,6 @@ public:
   }
 
   template< typename TaskType >
-  // TODO specialize this for trivially destructible types
   static void
   get_function_pointer(
     typename TaskType::function_type& ptr,
