@@ -199,10 +199,10 @@ public:
 #endif
 
   static bool is_asynchronous(HPX const & = HPX()) noexcept {
-#if KOKKOS_ENABLE_HPX_ASYNC_DISPATCH
-      return true;
+#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
+    return true;
 #else
-      return false;
+    return false;
 #endif
   }
 
