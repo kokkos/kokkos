@@ -289,7 +289,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
 	OBJ_HPX += TestHPX_MDRange_a.o TestHPX_MDRange_b.o TestHPX_MDRange_c.o TestHPX_MDRange_d.o TestHPX_MDRange_e.o
 	OBJ_HPX += TestHPX_Crs.o
 	OBJ_HPX += TestHPX_Task.o
-#	OBJ_HPX += TestHPX_WorkGraph.o
+	OBJ_HPX += TestHPX_WorkGraph.o
 	OBJ_HPX += TestHPX_UniqueToken.o
 
 	TARGETS += KokkosCore_UnitTest_HPX

@@ -592,7 +592,7 @@ IF(Kokkos_ENABLE_HPX)
       hpx/TestHPX_ViewMapping_subview.cpp
       hpx/TestHPX_ViewOfClass.cpp
       hpx/TestHPX_Crs.cpp
-      #hpx/TestHPX_WorkGraph.cpp
+      hpx/TestHPX_WorkGraph.cpp
       hpx/TestHPX_UniqueToken.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1

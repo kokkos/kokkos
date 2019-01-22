@@ -255,9 +255,8 @@ public:
 #include "Threads/Kokkos_Threads_WorkGraphPolicy.hpp"
 #endif
 
-// TODO: HPX backend does not support work graphs yet.
 #ifdef KOKKOS_ENABLE_HPX
-// #include "HPX/Kokkos_HPX_WorkGraphPolicy.hpp"
+#include "HPX/Kokkos_HPX_WorkGraphPolicy.hpp"
 #endif
 
 #endif /* #define KOKKOS_WORKGRAPHPOLICY_HPP */
