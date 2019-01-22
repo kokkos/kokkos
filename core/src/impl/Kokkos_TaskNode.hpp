@@ -129,7 +129,8 @@ public:
   ReferenceCountedBase(reference_count_size_type initial_reference_count)
     : m_ref_count(initial_reference_count)
   {
-    KOKKOS_EXPECTS(initial_reference_count > 0);
+    // This can't be here because it breaks constexpr
+    // KOKKOS_EXPECTS(initial_reference_count > 0);
   }
 
   /** Decrement the reference count,
