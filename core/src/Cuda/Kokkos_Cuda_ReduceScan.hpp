@@ -321,7 +321,7 @@ bool cuda_inter_block_reduction( typename FunctorValueTraits< FunctorType , ArgT
       unsigned int mask = KOKKOS_IMPL_CUDA_ACTIVEMASK;
       int active = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
 #else
-      int active = KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+      int active = KOKKOS_IMPL_CUDA_BALLOT(1);
 #endif
       if (int(blockDim.x*blockDim.y) > 2) {
         value_type tmp = Kokkos::shfl_down(value, 2,32);
@@ -331,7 +331,7 @@ bool cuda_inter_block_reduction( typename FunctorValueTraits< FunctorType , ArgT
 #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
 #else
-      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+      active += KOKKOS_IMPL_CUDA_BALLOT(1);
 #endif
       if (int(blockDim.x*blockDim.y) > 4) {
         value_type tmp = Kokkos::shfl_down(value, 4,32);
@@ -341,7 +341,7 @@ bool cuda_inter_block_reduction( typename FunctorValueTraits< FunctorType , ArgT
 #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
 #else
-      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+      active += KOKKOS_IMPL_CUDA_BALLOT(1);
 #endif
       if (int(blockDim.x*blockDim.y) > 8) {
         value_type tmp = Kokkos::shfl_down(value, 8,32);
@@ -351,7 +351,7 @@ bool cuda_inter_block_reduction( typename FunctorValueTraits< FunctorType , ArgT
 #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
 #else
-      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+      active += KOKKOS_IMPL_CUDA_BALLOT(1);
 #endif
       if (int(blockDim.x*blockDim.y) > 16) {
         value_type tmp = Kokkos::shfl_down(value, 16,32);
@@ -361,7 +361,7 @@ bool cuda_inter_block_reduction( typename FunctorValueTraits< FunctorType , ArgT
 #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
 #else
-      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+      active += KOKKOS_IMPL_CUDA_BALLOT(1);
 #endif
     }
   }
@@ -506,7 +506,7 @@ cuda_inter_block_reduction( const ReducerType& reducer,
       unsigned int mask = KOKKOS_IMPL_CUDA_ACTIVEMASK;
       int active = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
 #else
-      int active = KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+      int active = KOKKOS_IMPL_CUDA_BALLOT(1);
 #endif
       if (int(blockDim.x*blockDim.y) > 2) {
         value_type tmp = Kokkos::shfl_down(value, 2,32);
@@ -516,7 +516,7 @@ cuda_inter_block_reduction( const ReducerType& reducer,
 #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
 #else
-      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+      active += KOKKOS_IMPL_CUDA_BALLOT(1);
 #endif
       if (int(blockDim.x*blockDim.y) > 4) {
         value_type tmp = Kokkos::shfl_down(value, 4,32);
@@ -526,7 +526,7 @@ cuda_inter_block_reduction( const ReducerType& reducer,
 #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
 #else
-      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+      active += KOKKOS_IMPL_CUDA_BALLOT(1);
 #endif
       if (int(blockDim.x*blockDim.y) > 8) {
         value_type tmp = Kokkos::shfl_down(value, 8,32);
@@ -536,7 +536,7 @@ cuda_inter_block_reduction( const ReducerType& reducer,
 #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
 #else
-      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+      active += KOKKOS_IMPL_CUDA_BALLOT(1);
 #endif
       if (int(blockDim.x*blockDim.y) > 16) {
         value_type tmp = Kokkos::shfl_down(value, 16,32);
@@ -546,7 +546,7 @@ cuda_inter_block_reduction( const ReducerType& reducer,
 #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
 #else
-      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+      active += KOKKOS_IMPL_CUDA_BALLOT(1);
 #endif
     }
   }
