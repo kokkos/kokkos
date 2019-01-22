@@ -222,6 +222,7 @@ int main( int argc , char* argv[] )
                         );
 
     Kokkos::wait( sched );
+    Kokkos::fence();
 
     test_result = f.get();
 
@@ -257,6 +258,7 @@ int main( int argc , char* argv[] )
                           );
 
       Kokkos::wait( sched );
+      Kokkos::fence();
       auto this_time = timer.seconds();
       min_time = std::min(min_time, this_time);
       time_sum += this_time;

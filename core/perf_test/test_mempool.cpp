@@ -126,6 +126,8 @@ struct TestFunctor {
 
       Kokkos::parallel_reduce( policy(0,range_iter), *this , result );
 
+      Kokkos::fence();
+
       if ( result == long(ptrs.extent(0)) ) return true;
       pool.print_state( std::cerr );
       return false;
@@ -153,6 +155,7 @@ struct TestFunctor {
       typedef Kokkos::RangePolicy< ExecSpace , TagDel > policy ;
 
       Kokkos::parallel_for( policy(0,range_iter), *this );
+      Kokkos::fence();
     }
 
   //----------------------------------------
@@ -189,6 +192,7 @@ struct TestFunctor {
       long error_count = 0 ;
 
       Kokkos::parallel_reduce( policy(0,range_iter), *this , error_count );
+      Kokkos::fence();
 
       return 0 == error_count ;
     }

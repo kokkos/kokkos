@@ -96,6 +96,7 @@ void run_resizeview_tests123(int N, int R) {
         a1_ptr[i] = a_ptr[i];
       });
     }
+    Kokkos::fence();
     time_raw = timer.seconds()/R;
   }
   #endif
@@ -144,6 +145,7 @@ void run_resizeview_tests45(int N, int R) {
         a1_ptr[i] = a_ptr[i];
       });
     }
+    Kokkos::fence();
     time_raw = timer.seconds()/R;
   }
   #endif
@@ -182,6 +184,7 @@ void run_resizeview_tests6(int N, int R) {
         a1_ptr[i] = a_ptr[i];
       });
     }
+    Kokkos::fence();
     time_raw = timer.seconds()/R;
   }
   #endif
@@ -219,6 +222,7 @@ void run_resizeview_tests7(int N, int R) {
         a1_ptr[i] = a_ptr[i];
       });
     }
+    Kokkos::fence();
     time_raw = timer.seconds()/R;
   }
   #endif
@@ -256,6 +260,7 @@ void run_resizeview_tests8(int N, int R) {
         a1_ptr[i] = a_ptr[i];
       });
     }
+    Kokkos::fence();
     time_raw = timer.seconds()/R;
   }
   #endif
