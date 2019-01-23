@@ -84,7 +84,7 @@ public:
 
     counting_semaphore sem(0);
 
-    for (std::size_t thread = 0; thread < num_worker_threads; ++thread) {
+    for (int thread = 0; thread < num_worker_threads; ++thread) {
       apply([this, &sem]() {
         std::int32_t w = m_policy.pop_work();
         while (w != Policy::COMPLETED_TOKEN) {

@@ -413,22 +413,22 @@ public:
   void team_barrier() const {}
 
   template <class ValueType>
-  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType &value,
-                                             const int &thread_id) const {
+  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType &,
+                                             const int &_id) const {
     static_assert(std::is_trivially_default_constructible<ValueType>(),
                   "Only trivial constructible types can be broadcasted");
   }
 
   template <class Closure, class ValueType>
-  KOKKOS_INLINE_FUNCTION void team_broadcast(const Closure &f, ValueType &value,
-                                             const int &thread_id) const {
+  KOKKOS_INLINE_FUNCTION void team_broadcast(const Closure &, ValueType &,
+                                             const int &) const {
     static_assert(std::is_trivially_default_constructible<ValueType>(),
                   "Only trivial constructible types can be broadcasted");
   }
 
   template <class ValueType, class JoinOp>
   KOKKOS_INLINE_FUNCTION ValueType team_reduce(const ValueType &value,
-                                               const JoinOp &op_in) const {
+                                               const JoinOp &) const {
     return value;
   }
 
