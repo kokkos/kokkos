@@ -2065,7 +2065,7 @@ private:
       #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       KOKKOS_IMPL_CUDA_SYNCWARP_MASK(MASK);
       #else
-      KOKKOS_IMPL_CUDA_SYNCWARP_MASK;
+      KOKKOS_IMPL_CUDA_SYNCWARP;
       #endif
       if ( CudaTraits::WarpSize < word_count.value ) { __syncthreads(); } // Protect against large scan values.
 
@@ -2292,7 +2292,7 @@ private:
       #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       KOKKOS_IMPL_CUDA_SYNCWARP_MASK(MASK);
       #else
-      KOKKOS_IMPL_CUDA_SYNCWARP_MASK;
+      KOKKOS_IMPL_CUDA_SYNCWARP;
       #endif
       if ( CudaTraits::WarpSize < word_count.value ) { __syncthreads(); } // Protect against large scan values.
 
