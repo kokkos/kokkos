@@ -74,46 +74,33 @@ private:
   }
 
 public:
-  void execute() const {
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-    // NOTE: This potentially leads to two copies. Can't capture with
-    // `*this` because it is C++17. Can't capture with `this_copy =
-    // std::move(this_copy)` because it is C++14.
-    auto this_copy = *this;
-    Kokkos::Impl::run_hpx_function([this_copy]() { this_copy.execute_task(); });
-#else
-    Kokkos::Impl::run_hpx_function([this]() { execute_task(); });
-#endif
-  }
+  void execute() const { dispatch_execute_task(this); }
 
   void execute_task() const {
-    Kokkos::Impl::run_hpx_function([this]() {
-      const int num_worker_threads = HPX::concurrency();
+    const int num_worker_threads = HPX::concurrency();
 
-      using hpx::apply;
-      using hpx::lcos::local::counting_semaphore;
+    using hpx::apply;
+    using hpx::lcos::local::counting_semaphore;
 
-      counting_semaphore sem(0);
-      const std::size_t num_tasks = num_worker_threads;
+    counting_semaphore sem(0);
 
-      for (std::size_t task = 0; task < num_tasks; ++task) {
-          apply([this, &sem]() {
-          std::int32_t w = m_policy.pop_work();
-          while (w != Policy::COMPLETED_TOKEN) {
-            if (w != Policy::END_TOKEN) {
-              execute_functor<WorkTag>(w);
-              m_policy.completed_work(w);
-            }
-
-            w = m_policy.pop_work();
+    for (std::size_t thread = 0; thread < num_worker_threads; ++thread) {
+      apply([this, &sem]() {
+        std::int32_t w = m_policy.pop_work();
+        while (w != Policy::COMPLETED_TOKEN) {
+          if (w != Policy::END_TOKEN) {
+            execute_functor<WorkTag>(w);
+            m_policy.completed_work(w);
           }
 
-          sem.signal(1);
-        });
-      }
+          w = m_policy.pop_work();
+        }
 
-      sem.wait(num_tasks);
-    });
+        sem.signal(1);
+      });
+    }
+
+    sem.wait(num_worker_threads);
   }
 
   inline ParallelFor(const FunctorType &arg_functor, const Policy &arg_policy)
