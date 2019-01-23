@@ -70,9 +70,9 @@ void TaskQueueSpecialization<Kokkos::HPX>::execute(queue_type *const queue) {
 
 void TaskQueueSpecialization<Kokkos::HPX>::execute_task() const {
   static task_base_type *const end = (task_base_type *)task_base_type::EndTag;
-  auto num_worker_threads = HPX::concurrency();
+  const int num_worker_threads = HPX::concurrency();
 
-  auto single_policy = TeamPolicyInternal<Kokkos::HPX>(num_worker_threads, 1);
+  TeamPolicyInternal<Kokkos::HPX> single_policy(num_worker_threads, 1);
   member_type single_exec(single_policy, 0, 0, nullptr, 0);
 
   using hpx::apply;
@@ -80,9 +80,9 @@ void TaskQueueSpecialization<Kokkos::HPX>::execute_task() const {
 
   counting_semaphore sem(0);
 
-  for (std::size_t thread = 0; thread < num_worker_threads; ++thread) {
+  for (int thread = 0; thread < num_worker_threads; ++thread) {
     apply([this, &sem, &single_exec, num_worker_threads, thread]() {
-      auto team_policy = TeamPolicyInternal<Kokkos::HPX>(num_worker_threads, 1);
+      TeamPolicyInternal<Kokkos::HPX> team_policy(num_worker_threads, 1);
       member_type team_exec(team_policy, 0, thread, nullptr, 0);
 
       task_base_type *task = nullptr;
@@ -133,7 +133,7 @@ void TaskQueueSpecialization<Kokkos::HPX>::execute_task() const {
 }
 
 void TaskQueueSpecialization<Kokkos::HPX>::iff_single_thread_recursive_execute(
-    queue_type *const queue) {}
+    queue_type *const) {}
 
 } // namespace Impl
 } // namespace Kokkos
