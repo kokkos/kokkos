@@ -276,17 +276,28 @@ public:
 };
 
 namespace Impl {
-template <typename F> inline void run_hpx_function(F &&f) {
+template <typename Closure>
+inline void dispatch_execute_task(Closure *closure) {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-  hpx::future<void> &fut = HPX::impl_get_future();
-  // NOTE: We can schedule work from the main thread. However, we can't wait on
-  // the future.
-  fut = fut.then([f = std::forward<F>(f)](hpx::future<void> &&) { f(); });
+  if (hpx::threads::get_self_ptr() == nullptr) {
+    hpx::threads::run_as_hpx_thread([closure]() {
+      hpx::future<void> &fut = HPX::impl_get_future();
+      Closure closure_copy = *closure;
+      fut = fut.then([closure_copy](hpx::future<void> &&) {
+        closure_copy.execute_task();
+      });
+    });
+  } else {
+    hpx::future<void> &fut = HPX::impl_get_future();
+    Closure closure_copy = *closure;
+    fut = fut.then(
+        [closure_copy](hpx::future<void> &&) { closure_copy.execute_task(); });
+  }
 #else
   if (hpx::threads::get_self_ptr() == nullptr) {
-    hpx::threads::run_as_hpx_thread(f);
+    hpx::threads::run_as_hpx_thread([closure]() { closure->execute_task(); });
   } else {
-    f();
+    closure->execute_task();
   }
 #endif
 }
@@ -638,15 +649,7 @@ private:
   }
 
 public:
-  void execute() const {
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-    auto this_copy = *this;
-    Kokkos::Impl::run_hpx_function(
-        [this_copy = std::move(this_copy)]() { this_copy.execute_task(); });
-#else
-    Kokkos::Impl::run_hpx_function([this]() { execute_task(); });
-#endif
-  }
+  void execute() const { Kokkos::Impl::dispatch_execute_task(this); }
 
   void execute_task() const {
 #if KOKKOS_HPX_IMPLEMENTATION == 0
@@ -705,15 +708,7 @@ private:
   const Policy m_policy;
 
 public:
-  void execute() const {
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-    auto this_copy = *this;
-    Kokkos::Impl::run_hpx_function(
-        [this_copy = std::move(this_copy)]() { this_copy.execute_task(); });
-#else
-    Kokkos::Impl::run_hpx_function([this]() { execute_task(); });
-#endif
-  }
+  void execute() const { dispatch_execute_task(this); }
 
   inline void execute_task() const {
 #if KOKKOS_HPX_IMPLEMENTATION == 0
@@ -897,15 +892,7 @@ private:
   };
 
 public:
-  void execute() const {
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-    auto this_copy = *this;
-    Kokkos::Impl::run_hpx_function(
-        [this_copy = std::move(this_copy)]() { this_copy.execute_task(); });
-#else
-    Kokkos::Impl::run_hpx_function([this]() { execute_task(); });
-#endif
-  }
+  void execute() const { dispatch_execute_task(this); }
 
   inline void execute_task() const {
     const int num_worker_threads = HPX::concurrency();
@@ -1057,15 +1044,7 @@ private:
   const pointer_type m_result_ptr;
 
 public:
-  void execute() const {
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-    auto this_copy = *this;
-    Kokkos::Impl::run_hpx_function(
-        [this_copy = std::move(this_copy)]() { this_copy.execute_task(); });
-#else
-    Kokkos::Impl::run_hpx_function([this]() { execute_task(); });
-#endif
-  }
+  void execute() const { dispatch_execute_task(this); }
 
   inline void execute_task() const {
     const int num_worker_threads = HPX::concurrency();
@@ -1209,15 +1188,7 @@ private:
   }
 
 public:
-  void execute() const {
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-    auto this_copy = *this;
-    Kokkos::Impl::run_hpx_function(
-        [this_copy = std::move(this_copy)]() { this_copy.execute_task(); });
-#else
-    Kokkos::Impl::run_hpx_function([this]() { execute_task(); });
-#endif
-  }
+  void execute() const { dispatch_execute_task(this); }
 
   inline void execute_task() const {
     const int num_worker_threads = HPX::concurrency();
@@ -1325,15 +1296,7 @@ private:
   }
 
 public:
-  void execute() const {
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-    auto this_copy = *this;
-    Kokkos::Impl::run_hpx_function(
-        [this_copy = std::move(this_copy)]() { this_copy.execute_task(); });
-#else
-    Kokkos::Impl::run_hpx_function([this]() { execute_task(); });
-#endif
-  }
+  void execute() const { dispatch_execute_task(this); }
 
   inline void execute_task() const {
     const int num_worker_threads = HPX::concurrency();
@@ -1468,15 +1431,7 @@ private:
   }
 
 public:
-  void execute() const {
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-    auto this_copy = *this;
-    Kokkos::Impl::run_hpx_function(
-        [this_copy = std::move(this_copy)]() { this_copy.execute_task(); });
-#else
-    Kokkos::Impl::run_hpx_function([this]() { execute_task(); });
-#endif
-  }
+  void execute() const { dispatch_execute_task(this); }
 
   inline void execute_task() const {
     const int num_worker_threads = HPX::concurrency();
@@ -1616,15 +1571,7 @@ private:
   }
 
 public:
-  void execute() const {
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-    auto this_copy = *this;
-    Kokkos::Impl::run_hpx_function(
-        [this_copy = std::move(this_copy)]() { this_copy.execute_task(); });
-#else
-    Kokkos::Impl::run_hpx_function([this]() { execute_task(); });
-#endif
-  }
+  void execute() const { dispatch_execute_task(this); }
 
   inline void execute_task() const {
     const int league_size = m_policy.league_size();

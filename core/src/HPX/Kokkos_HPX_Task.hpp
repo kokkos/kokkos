@@ -68,11 +68,15 @@ public:
   static void iff_single_thread_recursive_execute(queue_type *const);
 
   static void execute(queue_type *const);
+  void execute_task() const;
 
   template <typename TaskType>
   static typename TaskType::function_type get_function_pointer() {
     return TaskType::apply;
   }
+
+private:
+  queue_type *queue;
 };
 
 extern template class TaskQueue<Kokkos::HPX>;
