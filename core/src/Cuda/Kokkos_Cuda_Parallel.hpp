@@ -536,6 +536,7 @@ public:
   inline
   void execute() const
   {
+    if(m_rp.m_num_tiles==0) return;
     const array_index_type maxblocks = static_cast<array_index_type>(Kokkos::Impl::CudaTraits::UpperBoundGridCount);
     if ( RP::rank == 2 )
     {
@@ -1729,7 +1730,7 @@ private:
       #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       KOKKOS_IMPL_CUDA_SYNCWARP_MASK(MASK);
       #else
-      KOKKOS_IMPL_CUDA_SYNCWARP_MASK;
+      KOKKOS_IMPL_CUDA_SYNCWARP;
       #endif
       if ( CudaTraits::WarpSize < word_count.value ) { __syncthreads(); } // Protect against large scan values.
 
@@ -1956,7 +1957,7 @@ private:
       #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
       KOKKOS_IMPL_CUDA_SYNCWARP_MASK(MASK);
       #else
-      KOKKOS_IMPL_CUDA_SYNCWARP_MASK;
+      KOKKOS_IMPL_CUDA_SYNCWARP;
       #endif
       if ( CudaTraits::WarpSize < word_count.value ) { __syncthreads(); } // Protect against large scan values.
 

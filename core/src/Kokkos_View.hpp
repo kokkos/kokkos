@@ -618,13 +618,18 @@ public:
   template< typename iType >
   KOKKOS_INLINE_FUNCTION constexpr
   typename std::enable_if< std::is_integral<iType>::value , size_t >::type
-  extent( const iType & r ) const
+  extent( const iType & r ) const noexcept
     { return m_map.extent(r); }
+
+  static KOKKOS_INLINE_FUNCTION constexpr
+  size_t
+  static_extent( const unsigned r ) noexcept
+    { return map_type::static_extent(r); }
 
   template< typename iType >
   KOKKOS_INLINE_FUNCTION constexpr
   typename std::enable_if< std::is_integral<iType>::value , int >::type
-  extent_int( const iType & r ) const
+  extent_int( const iType & r ) const noexcept
     { return static_cast<int>(m_map.extent(r)); }
 
   KOKKOS_INLINE_FUNCTION constexpr
