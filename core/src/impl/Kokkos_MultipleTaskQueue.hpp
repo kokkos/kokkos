@@ -379,6 +379,8 @@ private:
   // Allow private inheritance from ObjectWithVLAEmulation
   friend struct VLAEmulationAccess;
 
+public:
+
   struct SchedulerInfo {
     using team_queue_id_t = int32_t;
     static constexpr team_queue_id_t NoAssociatedTeam = -1;
@@ -410,8 +412,6 @@ private:
     ~SchedulerInfo() = default;
 
   };
-
-public:
 
   using task_scheduling_info_type = typename std::conditional<
     TaskQueueTraits::ready_queue_insertion_may_fail,
