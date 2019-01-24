@@ -157,10 +157,6 @@ public:
 
 public:
 
-  static_assert(
-    std::is_base_of<intrusive_node_base_type, value_type>::value,
-    "Intrusive linked-list value_type must be derived from intrusive_node_base_type"
-  );
 
   LockBasedLIFO() = default;
   LockBasedLIFO(LockBasedLIFO const&) = delete;
@@ -179,6 +175,12 @@ public:
   KOKKOS_INLINE_FUNCTION
   OptionalRef<T> pop(bool abort_on_locked = false)
   {
+    // Put this in here to avoid requiring value_type to be complete until now.
+    static_assert(
+      std::is_base_of<intrusive_node_base_type, value_type>::value,
+      "Intrusive linked-list value_type must be derived from intrusive_node_base_type"
+    );
+
     // We can't use the static constexpr LockTag directly because
     // atomic_compare_exchange needs to bind a reference to that, and you
     // can't do that with static constexpr variables.

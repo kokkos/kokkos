@@ -690,7 +690,7 @@ struct TestMultipleDependence {
         value += i * i / 7.138 / value;
       }
       // Do something irrelevant
-      result = *reinterpret_cast<int*>(&value) << 2;
+      result = int(value) << 2;
       return;
     }
   };
