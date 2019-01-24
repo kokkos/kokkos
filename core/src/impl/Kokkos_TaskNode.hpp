@@ -209,9 +209,9 @@ public:
         /* initial_reference_count = */ initial_reference_count
       ),
       m_wait_queue(),
+      m_ready_queue_base(queue_base),
       m_task_type(task_type),
-      m_priority(static_cast<priority_type>(priority)),
-      m_ready_queue_base(queue_base)
+      m_priority(static_cast<priority_type>(priority))
   { }
 
   TaskNode() = delete;
@@ -326,7 +326,7 @@ public:
 //==============================================================================
 
 template <class BaseClass, class SchedulingInfo>
-struct SchedulingInfoStorage;
+class SchedulingInfoStorage;
 
 //==============================================================================
 

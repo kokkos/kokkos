@@ -83,10 +83,12 @@ public:
   OptionalRef& operator=(OptionalRef const&) = default;
 
   KOKKOS_INLINE_FUNCTION
-  OptionalRef volatile& operator=(OptionalRef const volatile& other) volatile noexcept
+  // Can't return a reference to volatile OptionalRef, since GCC issues a warning about
+  // reference to volatile not accessing the underlying value
+  void
+  operator=(OptionalRef const volatile& other) volatile noexcept
   {
     m_value = other.m_value;
-    return *this;
   }
 
   KOKKOS_INLINE_FUNCTION

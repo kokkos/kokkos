@@ -480,7 +480,6 @@ public:
   {
     // by default, tell a ready task to use the scheduling info of its most
     // recent predecessor
-    using task_scheduling_info_type = typename Derived::task_scheduling_info_type;
     aggregate.scheduling_info() = predecessor.scheduling_info();
   }
 

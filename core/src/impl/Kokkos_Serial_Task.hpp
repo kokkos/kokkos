@@ -80,7 +80,6 @@ public:
   void execute(scheduler_type const& scheduler)
   {
     using task_base_type = typename scheduler_type::task_base_type;
-    using task_queue_type = typename scheduler_type::task_queue_type;
 
     // Set default buffers
     serial_resize_thread_team_data(

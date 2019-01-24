@@ -254,7 +254,7 @@ public:
   constexpr int size() const noexcept { return m_size; }
 
   KOKKOS_INLINE_FUNCTION
-  constexpr bool initialized() const noexcept { return m_size != KOKKOS_INVALID_INDEX; }
+  constexpr bool initialized() const noexcept { return m_size != int(KOKKOS_INVALID_INDEX); }
 
   KOKKOS_INLINE_FUNCTION
   team_queue_type& get_team_queue(int iteam) {

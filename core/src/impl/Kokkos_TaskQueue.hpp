@@ -85,7 +85,7 @@ class TaskQueue : public TaskQueueBase {
 protected:
 
   template <class>
-  friend class TaskQueueSpecialization;
+  friend struct TaskQueueSpecialization;
   template <class, class>
   friend class TaskQueueSpecializationConstrained;
   template <class, class>

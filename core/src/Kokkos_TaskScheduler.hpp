@@ -110,7 +110,7 @@ private:
   template <typename, typename>
   friend class Impl::TaskQueue;
   template <typename>
-  friend class Impl::TaskQueueSpecialization;
+  friend struct Impl::TaskQueueSpecialization;
   template <typename, typename>
   friend class Impl::TaskQueueSpecializationConstrained;
   template <typename, typename>
@@ -162,9 +162,8 @@ private:
     FunctorType&& arg_functor
   )
   {
-    using value_type  = typename FunctorType::value_type ;
-    using future_type = BasicFuture< value_type , scheduler_type > ;
-    using task_type = Impl::Task<BasicTaskScheduler, value_type, FunctorType>;
+    using functor_future_type = future_type_for_functor<typename std::decay<FunctorType>::type>;
+    using task_type = Impl::Task<BasicTaskScheduler, typename functor_future_type::value_type, FunctorType>;
 
     //----------------------------------------
     // Give single-thread back-ends an opportunity to clear
@@ -175,7 +174,7 @@ private:
 
     //----------------------------------------
 
-    future_type f ;
+    functor_future_type f ;
 
     // Allocate task from memory pool
 
@@ -398,9 +397,8 @@ public:
   BasicFuture< void, scheduler_type >
   when_all(BasicFuture<ValueType, BasicTaskScheduler> const arg[], int narg)
   {
-    using future_type = BasicFuture< void, scheduler_type > ;
 
-    future_type f ;
+    future_type<void> f ;
 
     if ( narg ) {
 
@@ -465,12 +463,11 @@ public:
   when_all( int narg , F const func )
     {
       using input_type  = decltype( func(0) );
-      using future_type = BasicFuture< void, scheduler_type > ;
 
       static_assert( is_future< input_type >::value
                    , "Functor must return a Kokkos::Future" );
 
-      future_type f ;
+      future_type<void> f ;
 
       if ( 0 == narg ) return f ;
 

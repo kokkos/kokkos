@@ -245,7 +245,7 @@ private:
   {
     KOKKOS_EXPECTS(m_queue != nullptr);
 
-    using future_type = future_type_for_functor<typename std::decay<FunctorType>::type>;
+    using functor_future_type = future_type_for_functor<typename std::decay<FunctorType>::type>;
     using task_type = typename task_queue_type::template runnable_task_type<
       FunctorType, scheduler_type
     >;
@@ -274,7 +274,7 @@ private:
       );
     }
 
-    auto rv = future_type(&runnable_task);
+    auto rv = functor_future_type(&runnable_task);
 
     Kokkos::memory_fence(); // fence to ensure dependent stores are visible
 
@@ -541,12 +541,11 @@ public:
 
   template <class F>
   KOKKOS_FUNCTION
-  BasicFuture<void, scheduler_type>
+  future_type<void>
   when_all(int n_calls, F&& func)
   {
     // TODO @tasking @generalization DSH propagate scheduling info?
 
-    using future_type = BasicFuture<void, scheduler_type>;
     // later this should be std::invoke_result_t
     using generated_type = decltype(func(0));
     using task_type = typename task_queue_type::aggregate_task_type;
@@ -569,7 +568,7 @@ public:
       /* initial_reference_count = */ 2
     );
 
-    auto rv = future_type(aggregate_task);
+    auto rv = future_type<void>(aggregate_task);
 
     for(int i_call = 0; i_call < n_calls; ++i_call) {
 

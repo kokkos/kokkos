@@ -129,7 +129,7 @@ template <size_t CircularBufferSize=64>
 struct TaskQueueTraitsChaseLev;
 
 template< typename ResultType >
-class TaskResult;
+struct TaskResult;
 
 struct TaskSchedulerBase;
 

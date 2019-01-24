@@ -93,7 +93,7 @@ private:
   struct fixed_size_circular_buffer {
 
     node_type* buffer[CircularBufferSize] = { nullptr };
-    static constexpr auto size = CircularBufferSize;
+    static constexpr auto size = size_type(CircularBufferSize);
 
     KOKKOS_INLINE_FUNCTION
     fixed_size_circular_buffer grow() {

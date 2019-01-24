@@ -96,14 +96,17 @@ public:
   static void execute(scheduler_type const& scheduler)
   {
     using task_base_type = typename scheduler_type::task_base_type;
-    using task_queue_type = typename scheduler_type::task_queue_type;
 
-    HostThreadTeamData& team_data_single = HostThreadTeamDataSingleton::singleton();
+    // Unused; ChaseLev queue still needs worker ID even in single case (so we need to use
+    // the thread data from inside of the parallel region.  Team size is fixed at 1 for now
+    // anyway
+    //HostThreadTeamData& team_data_single = HostThreadTeamDataSingleton::singleton();
 
     // TODO @tasking @generalization DSH use scheduler.get_execution_space().impl() (or something like that) instead of the thread-local variable
     Impl::OpenMPExec* instance = t_openmp_instance;
     const int pool_size = get_max_team_count(scheduler.get_execution_space());
 
+    // TODO @tasking @new_feature DSH allow team sizes other than 1
     const int team_size = 1;  // Threads per core
     instance->resize_thread_data(
       0, /* global reduce buffer */
