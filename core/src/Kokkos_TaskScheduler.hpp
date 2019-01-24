@@ -402,7 +402,7 @@ public:
 
     if ( narg ) {
 
-      queue_type* queue = m_queue;
+      queue_type* q = m_queue;
 
       //BasicTaskScheduler const* scheduler_ptr = nullptr;
 
@@ -411,18 +411,18 @@ public:
         if ( nullptr != t ) {
           // Increment reference count to track subsequent assignment.
           Kokkos::atomic_increment( &(t->m_ref_count) );
-          if(queue != static_cast< queue_type const* >(t->m_queue)) {
+          if(q != static_cast< queue_type const* >(t->m_queue)) {
             Kokkos::abort("Kokkos when_all Futures must be in the same scheduler" );
           }
         }
       }
 
-      if ( queue != 0 ) { // this should probably handle the queue == 0 case, but this is deprecated code anyway
+      if ( q != 0 ) { // this should probably handle the queue == 0 case, but this is deprecated code anyway
 
-        size_t const alloc_size = queue->when_all_allocation_size( narg );
+        size_t const alloc_size = q->when_all_allocation_size( narg );
 
         f.m_task =
-          reinterpret_cast< task_base * >( queue->allocate( alloc_size ) );
+          reinterpret_cast< task_base * >( q->allocate( alloc_size ) );
         //f.m_scheduler = *scheduler_ptr;
 
         if ( f.m_task ) {
@@ -433,7 +433,7 @@ public:
 
           new( f.m_task ) task_base();
 
-          f.m_task->m_queue = queue;
+          f.m_task->m_queue = q;
           f.m_task->m_ref_count = 2 ;
           f.m_task->m_alloc_size = static_cast<int32_t>(alloc_size);
           f.m_task->m_dep_count = narg ;
@@ -448,7 +448,7 @@ public:
 
           Kokkos::memory_fence();
 
-          queue->schedule_aggregate( f.m_task );
+          q->schedule_aggregate( f.m_task );
           // this when_all may be processed at any moment
         }
       }

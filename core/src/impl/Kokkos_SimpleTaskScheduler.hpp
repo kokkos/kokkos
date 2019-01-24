@@ -512,14 +512,14 @@ public:
       // This only represents a non-ready future if at least one of the predecessors
       // has a task (and thus, a queue)
       if(queue_ptr != nullptr) {
-        auto& queue = *queue_ptr;
+        auto& q = *queue_ptr;
 
-        auto* aggregate_task_ptr = queue.template allocate_and_construct_with_vla_emulation<
+        auto* aggregate_task_ptr = q.template allocate_and_construct_with_vla_emulation<
           task_type, task_base_type*
         >(
           /* n_vla_entries = */ n_predecessors,
           /* aggregate_predecessor_count = */ n_predecessors,
-          /* queue_base = */ &queue,
+          /* queue_base = */ &q,
           /* initial_reference_count = */ 2
         );
 
@@ -531,7 +531,7 @@ public:
 
         Kokkos::memory_fence(); // we're touching very questionable memory, so be sure to fence
 
-        queue.schedule_aggregate(std::move(*aggregate_task_ptr), team_scheduler_info());
+        q.schedule_aggregate(std::move(*aggregate_task_ptr), team_scheduler_info());
         // the aggregate may be processed at any time, so don't touch it after this
       }
     }

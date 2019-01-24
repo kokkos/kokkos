@@ -461,8 +461,6 @@ public:
       )
   { }
 
-  ~MultipleTaskQueue() = default;
-
   // </editor-fold> end Constructors, destructors, and assignment }}}2
   //----------------------------------------------------------------------------
 
