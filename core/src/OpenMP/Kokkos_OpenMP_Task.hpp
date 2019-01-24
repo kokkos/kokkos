@@ -197,7 +197,11 @@ public:
 
   static uint32_t
   get_max_team_count(execution_space const& espace) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+    return static_cast<uint32_t>(espace.thread_pool_size());
+#else
     return static_cast<uint32_t>(espace.impl_thread_pool_size());
+#endif
   }
 
   // TODO @tasking @optimization DSH specialize this for trivially destructible types
