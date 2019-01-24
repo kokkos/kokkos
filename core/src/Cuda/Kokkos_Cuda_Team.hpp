@@ -290,7 +290,7 @@ public:
       // Intra vector lane shuffle reduction:
       typename ReducerType::value_type tmp ( reducer.reference() );
 
-      unsigned mask = blockDim.x==32?0xffffffff:((1<<blockDim.x)-1)<<(threadIdx.y*blockDim.x);
+      unsigned mask = blockDim.x==32?0xffffffff:((1<<blockDim.x)-1)<<((threadIdx.y%(32/blockDim.x))*blockDim.x);
 
       for ( int i = blockDim.x ; ( i >>= 1 ) ; ) {
         cuda_shfl_down( reducer.reference() , tmp , i , blockDim.x , mask );
