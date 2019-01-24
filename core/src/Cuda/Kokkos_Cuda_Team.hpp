@@ -742,7 +742,7 @@ void parallel_for
   #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
   KOKKOS_IMPL_CUDA_SYNCWARP_MASK(blockDim.x==32?0xffffffff:((1<<blockDim.x)-1)<<(threadIdx.y%(32/blockDim.x))*blockDim.x);
   #else
-  KOKKOS_IMPL_CUDA_SYNCWARP_MASK;
+  KOKKOS_IMPL_CUDA_SYNCWARP;
   #endif
 #endif
 }
@@ -915,7 +915,7 @@ void single(const Impl::VectorSingleStruct<Impl::CudaTeamMember>& , const Functo
   #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
   KOKKOS_IMPL_CUDA_SYNCWARP_MASK(blockDim.x==32?0xffffffff:((1<<blockDim.x)-1)<<(threadIdx.y%(32/blockDim.x))*blockDim.x);
   #else
-  KOKKOS_IMPL_CUDA_SYNCWARP_MASK;
+  KOKKOS_IMPL_CUDA_SYNCWARP;
   #endif
 #endif
 }
@@ -928,7 +928,7 @@ void single(const Impl::ThreadSingleStruct<Impl::CudaTeamMember>& , const Functo
   #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
   KOKKOS_IMPL_CUDA_SYNCWARP_MASK(blockDim.x==32?0xffffffff:((1<<blockDim.x)-1)<<(threadIdx.y%(32/blockDim.x))*blockDim.x);
   #else
-  KOKKOS_IMPL_CUDA_SYNCWARP_MASK;
+  KOKKOS_IMPL_CUDA_SYNCWARP;
   #endif
 #endif
 }
