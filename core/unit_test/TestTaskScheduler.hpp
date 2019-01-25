@@ -662,6 +662,19 @@ struct TestMultipleDependence {
   enum : int { NPerDepth = 6 };
   enum : int { NFanout = 3 };
 
+  // xlC doesn't like incomplete aggregate constructors, so we have do do this manually:
+  TestMultipleDependence(int depth, int max_depth)
+    : m_depth(depth),
+      m_max_depth(max_depth)
+  { }
+
+  // xlC doesn't like incomplete aggregate constructors, so we have do do this manually:
+  TestMultipleDependence(int depth, int max_depth, future_int dep)
+    : m_depth(depth),
+      m_max_depth(max_depth),
+      m_dep(dep)
+  { }
+
   int m_depth;
   int m_max_depth;
   future_int m_dep;
