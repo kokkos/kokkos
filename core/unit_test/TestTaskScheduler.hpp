@@ -677,8 +677,8 @@ struct TestMultipleDependence {
 
   int m_depth;
   int m_max_depth;
-  future_int m_dep;
-  future_bool m_result_futures[NPerDepth];
+  future_int m_dep = { };
+  future_bool m_result_futures[NPerDepth] = { };
 
 
   struct TestCheckReady {
