@@ -119,7 +119,7 @@ private:
 
   ready_queue_type m_ready_queues[NumPriorities][2];
 
-  task_base_type* m_failed_heads[NumPriorities][2] = { };
+  task_base_type* m_failed_heads[NumPriorities][2];
 
   KOKKOS_INLINE_FUNCTION
   task_base_type*&
