@@ -152,7 +152,9 @@ public:
 
   char *get(std::size_t thread_num) {
     assert(thread_num < m_num_threads);
-    assert(m_data != nullptr);
+    if (m_data == nullptr) {
+      return nullptr;
+    }
     return &m_data[thread_num * m_size_per_thread];
   }
 
