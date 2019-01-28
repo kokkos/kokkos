@@ -1446,8 +1446,8 @@ public:
     using hpx::parallel::execution::par;
     using hpx::parallel::execution::static_chunk_size;
 
-    for_loop(par.with(static_chunk_size(chunk_size)), 0, m_policy.league_size(),
-             [this, &buffer](const int league_rank) {
+    for_loop(par.with(static_chunk_size(m_policy.chunk_size())), 0,
+             m_policy.league_size(), [this, &buffer](const int league_rank) {
                execute_functor<WorkTag>(
                    m_functor, m_policy, league_rank,
                    buffer.get(HPX::impl_hardware_thread_id()), m_shared);
@@ -1576,8 +1576,6 @@ public:
   void execute() const { dispatch_execute_task(this); }
 
   inline void execute_task() const {
-    const int league_size = m_policy.league_size();
-    const int chunk_size = m_policy.chunk_size();
     const int num_worker_threads = HPX::concurrency();
     const std::size_t value_size =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
@@ -1597,8 +1595,9 @@ public:
     using hpx::parallel::execution::static_chunk_size;
 
     hpx::parallel::for_loop(
-        par.with(static_chunk_size(chunk_size)), 0, league_size,
-        [this, &buffer, league_size, value_size](const int league_rank) {
+        par.with(static_chunk_size(m_policy.chunk_size())), 0,
+        m_policy.league_size(),
+        [this, &buffer, value_size](const int league_rank) {
           std::size_t t = HPX::impl_hardware_thread_id();
           reference_type update = ValueOps::reference(
               reinterpret_cast<pointer_type>(buffer.get(t)));
@@ -1615,15 +1614,14 @@ public:
     counting_semaphore sem(0);
     std::size_t num_tasks = 0;
 
-    for (int league_rank_begin = 0; league_rank_begin < league_size;
+    for (int league_rank_begin = 0; league_rank_begin < m_policy.league_size();
          league_rank_begin += m_policy.chunk_size()) {
-      apply([this, &buffer, &sem, league_rank_begin, league_size,
-             value_size]() {
+      apply([this, &buffer, &sem, league_rank_begin, value_size]() {
         std::size_t t = HPX::impl_hardware_thread_id();
         reference_type update =
             ValueOps::reference(reinterpret_cast<pointer_type>(buffer.get(t)));
-        const int league_rank_end =
-            (std::min)(league_rank_begin + m_policy.chunk_size(), league_size);
+        const int league_rank_end = (std::min)(
+            league_rank_begin + m_policy.chunk_size(), m_policy.league_size());
         execute_functor_range<WorkTag>(
             m_functor, m_policy, league_rank_begin, league_rank_end,
             buffer.get(t) + value_size, m_shared, update);
