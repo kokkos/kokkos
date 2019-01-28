@@ -1514,8 +1514,8 @@ private:
   const int m_league;
   const Policy m_policy;
   const ReducerType m_reducer;
-  const std::size_t m_shared;
   pointer_type m_result_ptr;
+  const std::size_t m_shared;
 
   template <class TagType>
   inline static
