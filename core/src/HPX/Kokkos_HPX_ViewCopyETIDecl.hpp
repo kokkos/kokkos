@@ -41,12 +41,12 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_OPENMP_VIEWETIDECL_HPP
-#define KOKKOS_OPENMP_VIEWETIDECL_HPP
+#ifndef KOKKOS_HPX_VIEWETIDECL_HPP
+#define KOKKOS_HPX_VIEWETIDECL_HPP
 
 namespace Kokkos {
 namespace Impl {
-#define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_EXECSPACE Kokkos::HPX
+#define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_EXECSPACE Kokkos::Experimental::HPX
 
 #include<eti/common/Kokkos_ViewFillCopyETIDecl_Macros.hpp>
 

@@ -69,17 +69,17 @@ protected:
 
 #define HPX_RANDOM_XORSHIFT64( num_draws )                                \
   TEST_F( hpx, Random_XorShift64 ) {   \
-      Impl::test_random<Kokkos::Random_XorShift64_Pool<Kokkos::HPX> >(num_draws);                                   \
+      Impl::test_random<Kokkos::Random_XorShift64_Pool<Kokkos::Experimental::HPX> >(num_draws); \
   }
 
 #define HPX_RANDOM_XORSHIFT1024( num_draws )                                \
   TEST_F( hpx, Random_XorShift1024 ) {   \
-      Impl::test_random<Kokkos::Random_XorShift1024_Pool<Kokkos::HPX> >(num_draws);                                   \
+      Impl::test_random<Kokkos::Random_XorShift1024_Pool<Kokkos::Experimental::HPX> >(num_draws); \
   }
 
 #define HPX_SORT_UNSIGNED( size )                                \
   TEST_F( hpx, SortUnsigned ) {   \
-      Impl::test_sort< Kokkos::HPX, unsigned >(size);                                   \
+      Impl::test_sort< Kokkos::Experimental::HPX, unsigned >(size); \
   }
 
 HPX_RANDOM_XORSHIFT64( 10240000 )

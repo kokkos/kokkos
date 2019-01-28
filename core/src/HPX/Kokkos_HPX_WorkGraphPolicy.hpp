@@ -52,7 +52,7 @@ namespace Impl {
 
 template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
-                  Kokkos::HPX> {
+                  Kokkos::Experimental::HPX> {
 private:
   using Policy = Kokkos::WorkGraphPolicy<Traits...>;
   using WorkTag = typename Policy::work_tag;
@@ -77,7 +77,7 @@ public:
   void execute() const { dispatch_execute_task(this); }
 
   void execute_task() const {
-    const int num_worker_threads = HPX::concurrency();
+    const int num_worker_threads = Experimental::HPX::concurrency();
 
     using hpx::apply;
     using hpx::lcos::local::counting_semaphore;
