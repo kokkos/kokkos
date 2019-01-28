@@ -1755,6 +1755,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda, ValueType &result) {
+  result = ValueType();
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
     lambda(i, result);
@@ -1791,6 +1792,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda, ValueType &result) {
+  result = ValueType();
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
@@ -1814,7 +1816,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda, const JoinType &join, ValueType &result) {
-
+  result = ValueType();
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
@@ -1830,7 +1832,6 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
         &loop_boundaries,
     const Lambda &lambda, const ReducerType &reducer) {
   reducer.init(reducer.reference());
-
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
@@ -1846,7 +1847,6 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
         &loop_boundaries,
     const Lambda &lambda, const ReducerType &reducer) {
   reducer.init(reducer.reference());
-
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
@@ -1865,20 +1865,20 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
       Kokkos::Impl::FunctorPatternInterface::SCAN, void,
       FunctorType>::value_type;
 
-  value_type accum = 0;
+  value_type scan_val = value_type();
 
   // Intra-member scan
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    lambda(i, accum, false);
+    lambda(i, scan_val, false);
   }
 
-  // 'accum' output is the exclusive prefix sum
-  accum = loop_boundaries.thread.team_scan(accum);
+  // 'scan_val' output is the exclusive prefix sum
+  scan_val = loop_boundaries.thread.team_scan(scan_val);
 
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    lambda(i, accum, true);
+    lambda(i, scan_val, true);
   }
 }
 
