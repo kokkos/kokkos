@@ -46,6 +46,7 @@
 #include <hpx/util/yield_while.hpp>
 
 namespace Kokkos {
+namespace Experimental {
 
 bool HPX::m_hpx_initialized = false;
 Impl::thread_buffer HPX::m_buffer;
@@ -140,4 +141,5 @@ void HPX::impl_finalize() {
   }
 }
 
+} // namespace Experimental
 } // namespace Kokkos

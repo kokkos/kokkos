@@ -58,21 +58,23 @@
 namespace Kokkos {
 namespace Impl {
 
-template class TaskQueue<Kokkos::HPX>;
+template class TaskQueue<Kokkos::Experimental::HPX>;
 
-void TaskQueueSpecialization<Kokkos::HPX>::execute(queue_type *const queue) {
+void TaskQueueSpecialization<Kokkos::Experimental::HPX>::execute(
+    queue_type *const queue) {
   // NOTE: We create an instance so that we can use dispatch_execute_task. This
   // is not necessarily the most efficient, but can be improved later.
-  TaskQueueSpecialization<Kokkos::HPX> task_queue;
+  TaskQueueSpecialization<Kokkos::Experimental::HPX> task_queue;
   task_queue.queue = queue;
   Kokkos::Impl::dispatch_execute_task(&task_queue);
 }
 
-void TaskQueueSpecialization<Kokkos::HPX>::execute_task() const {
+void TaskQueueSpecialization<Kokkos::Experimental::HPX>::execute_task() const {
   static task_base_type *const end = (task_base_type *)task_base_type::EndTag;
-  const int num_worker_threads = HPX::concurrency();
+  const int num_worker_threads = Experimental::HPX::concurrency();
 
-  TeamPolicyInternal<Kokkos::HPX> single_policy(num_worker_threads, 1);
+  TeamPolicyInternal<Kokkos::Experimental::HPX> single_policy(
+      num_worker_threads, 1);
   member_type single_exec(single_policy, 0, 0, nullptr, 0);
 
   using hpx::apply;
@@ -82,7 +84,8 @@ void TaskQueueSpecialization<Kokkos::HPX>::execute_task() const {
 
   for (int thread = 0; thread < num_worker_threads; ++thread) {
     apply([this, &sem, &single_exec, num_worker_threads, thread]() {
-      TeamPolicyInternal<Kokkos::HPX> team_policy(num_worker_threads, 1);
+      TeamPolicyInternal<Kokkos::Experimental::HPX> team_policy(
+          num_worker_threads, 1);
       member_type team_exec(team_policy, 0, thread, nullptr, 0);
 
       task_base_type *task = nullptr;
@@ -132,8 +135,8 @@ void TaskQueueSpecialization<Kokkos::HPX>::execute_task() const {
   sem.wait(num_worker_threads);
 }
 
-void TaskQueueSpecialization<Kokkos::HPX>::iff_single_thread_recursive_execute(
-    queue_type *const) {}
+void TaskQueueSpecialization<Kokkos::Experimental::HPX>::
+    iff_single_thread_recursive_execute(queue_type *const) {}
 
 } // namespace Impl
 } // namespace Kokkos

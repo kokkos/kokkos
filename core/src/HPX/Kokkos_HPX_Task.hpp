@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_HPX_HPX_TASK_HPP
-#define KOKKOS_HPX_HPX_TASK_HPP
+#ifndef KOKKOS_HPX_TASK_HPP
+#define KOKKOS_HPX_TASK_HPP
 
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_TASKDAG)
@@ -57,9 +57,9 @@ namespace Impl {
 
 //----------------------------------------------------------------------------
 
-template <> class TaskQueueSpecialization<Kokkos::HPX> {
+template <> class TaskQueueSpecialization<Kokkos::Experimental::HPX> {
 public:
-  using execution_space = Kokkos::HPX;
+  using execution_space = Kokkos::Experimental::HPX;
   using memory_space = Kokkos::HostSpace;
   using queue_type = Kokkos::Impl::TaskQueue<execution_space>;
   using task_base_type = Kokkos::Impl::TaskBase<void, void, void>;
@@ -79,7 +79,7 @@ private:
   queue_type *queue;
 };
 
-extern template class TaskQueue<Kokkos::HPX>;
+extern template class TaskQueue<Kokkos::Experimental::HPX>;
 
 } // namespace Impl
 } // namespace Kokkos
@@ -88,4 +88,4 @@ extern template class TaskQueue<Kokkos::HPX>;
 //----------------------------------------------------------------------------
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
-#endif /* #ifndef KOKKOS_HPX_HPX_TASK_HPP */
+#endif /* #ifndef KOKKOS_HPX_TASK_HPP */

@@ -162,12 +162,12 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
 #endif
 
 #if defined( KOKKOS_ENABLE_HPX )
-  if( std::is_same< Kokkos::HPX , Kokkos::DefaultExecutionSpace >::value ||
-      std::is_same< Kokkos::HPX , Kokkos::HostSpace::execution_space >::value ) {
+  if( std::is_same< Kokkos::Experimental::HPX , Kokkos::DefaultExecutionSpace >::value ||
+      std::is_same< Kokkos::Experimental::HPX , Kokkos::HostSpace::execution_space >::value ) {
       if(num_threads>0) {
-          Kokkos::HPX::impl_initialize(num_threads);
+        Kokkos::Experimental::HPX::impl_initialize(num_threads);
       } else {
-          Kokkos::HPX::impl_initialize();
+        Kokkos::Experimental::HPX::impl_initialize();
       }
       //std::cout << "Kokkos::initialize() fyi: HPX enabled and initialized" << std::endl ;
   }
@@ -315,11 +315,11 @@ void finalize_internal( const bool all_spaces = false )
 #endif
 
 #if defined( KOKKOS_ENABLE_HPX )
-  if( std::is_same< Kokkos::HPX , Kokkos::DefaultExecutionSpace >::value ||
-      std::is_same< Kokkos::HPX , Kokkos::HostSpace::execution_space >::value ||
+  if( std::is_same< Kokkos::Experimental::HPX , Kokkos::DefaultExecutionSpace >::value ||
+      std::is_same< Kokkos::Experimental::HPX , Kokkos::HostSpace::execution_space >::value ||
       all_spaces ) {
-    if(Kokkos::HPX::impl_is_initialized())
-      Kokkos::HPX::impl_finalize();
+    if(Kokkos::Experimental::HPX::impl_is_initialized())
+      Kokkos::Experimental::HPX::impl_finalize();
   }
 #endif
 
@@ -374,7 +374,7 @@ void fence_internal()
 #endif
 
 #if defined( KOKKOS_ENABLE_HPX )
-    Kokkos::HPX::fence();
+  Kokkos::Experimental::HPX::fence();
 #endif
 
 #if defined( KOKKOS_ENABLE_THREADS )
@@ -993,7 +993,7 @@ void print_configuration( std::ostream & out , const bool detail )
   OpenMP::print_configuration(msg, detail);
 #endif
 #ifdef KOKKOS_ENABLE_HPX
-  HPX::print_configuration(msg, detail);
+  Experimental::HPX::print_configuration(msg, detail);
 #endif
 #if defined( KOKKOS_ENABLE_THREADS )
   Threads::print_configuration(msg, detail);

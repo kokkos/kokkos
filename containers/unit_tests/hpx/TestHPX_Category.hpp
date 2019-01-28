@@ -60,6 +60,6 @@ protected:
 } // namespace Test
 
 #define TEST_CATEGORY hpx
-#define TEST_EXECSPACE Kokkos::HPX
+#define TEST_EXECSPACE Kokkos::Experimental::HPX
 
 #endif

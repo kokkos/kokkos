@@ -50,7 +50,7 @@
  *  KOKKOS_ENABLE_CUDA                Kokkos::Cuda execution and memory spaces
  *  KOKKOS_ENABLE_THREADS             Kokkos::Threads execution space
  *  KOKKOS_ENABLE_QTHREADS            Kokkos::Qthreads execution space
- *  KOKKOS_ENABLE_HPX                 Kokkos::HPX execution space
+ *  KOKKOS_ENABLE_HPX                 Kokkos::Experimental::HPX execution space
  *  KOKKOS_ENABLE_OPENMP              Kokkos::OpenMP execution space
  *  KOKKOS_ENABLE_OPENMPTARGET        Kokkos::Experimental::OpenMPTarget execution space
  *  KOKKOS_ENABLE_HWLOC               HWLOC library is available.

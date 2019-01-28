@@ -845,7 +845,7 @@ public:
 
 #ifdef KOKKOS_ENABLE_HPX
     team_size = 1;
-    if (!std::is_same<execution_space, Kokkos::HPX>::value)
+    if (!std::is_same<execution_space, Kokkos::Experimental::HPX>::value)
     {
         team_size = 1;
     }
