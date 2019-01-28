@@ -924,8 +924,6 @@ public:
     using hpx::parallel::reduction;
     using hpx::parallel::execution::static_chunk_size;
 
-    // value_size = ((value_size + 64 - 1) / 64) * 64;
-
     value_type_wrapper final_value(value_size);
     value_type_wrapper identity(value_size);
 
