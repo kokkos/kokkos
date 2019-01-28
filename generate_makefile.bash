@@ -508,12 +508,11 @@ echo -e "\t\$(MAKE) -C containers/performance_tests" >> Makefile
 echo -e "\t\$(MAKE) -C algorithms/unit_tests" >> Makefile
 if [ ${KOKKOS_DO_EXAMPLES} -gt 0 ]; then
 $()
-# TODO: Disabled for now. Can't find some header files with HPX enabled.
-#echo -e "\t\$(MAKE) -C example/fixture" >> Makefile
-#echo -e "\t\$(MAKE) -C example/feint" >> Makefile
-#echo -e "\t\$(MAKE) -C example/fenl" >> Makefile
-#echo -e "\t\$(MAKE) -C example/make_buildlink build" >> Makefile
-#echo -e "\t\$(MAKE) -C example/tutorial build" >> Makefile
+echo -e "\t\$(MAKE) -C example/fixture" >> Makefile
+echo -e "\t\$(MAKE) -C example/feint" >> Makefile
+echo -e "\t\$(MAKE) -C example/fenl" >> Makefile
+echo -e "\t\$(MAKE) -C example/make_buildlink build" >> Makefile
+echo -e "\t\$(MAKE) -C example/tutorial build" >> Makefile
 fi
 echo "" >> Makefile
 echo "test: build-test" >> Makefile
