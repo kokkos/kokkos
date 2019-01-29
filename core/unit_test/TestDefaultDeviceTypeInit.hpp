@@ -222,6 +222,14 @@ void check_correct_initialization( const Kokkos::InitArguments & argstruct ) {
       expected_nthreads = 1;
     }
 #endif
+
+#ifdef KOKKOS_ENABLE_HPX
+    // HPX uses all cores on machine by default. Skip this test.
+    if ( std::is_same< Kokkos::DefaultExecutionSpace, Kokkos::Experimental::HPX >::value ||
+         std::is_same< Kokkos::DefaultHostExecutionSpace, Kokkos::Experimental::HPX >::value ) {
+      return;
+    }
+#endif
   }
 
   int expected_numa = argstruct.num_numa;
@@ -241,13 +249,10 @@ void check_correct_initialization( const Kokkos::InitArguments & argstruct ) {
 #endif
   }
 
-// TODO: Number of threads don't match for HPX.
-#ifndef KOKKOS_ENABLE_HPX
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   ASSERT_EQ( Kokkos::HostSpace::execution_space::thread_pool_size(), expected_nthreads );
 #else
   ASSERT_EQ( Kokkos::HostSpace::execution_space::impl_thread_pool_size(), expected_nthreads );
-#endif
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA
