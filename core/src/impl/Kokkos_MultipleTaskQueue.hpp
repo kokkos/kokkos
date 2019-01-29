@@ -172,7 +172,7 @@ public:
   MultipleTaskQueueTeamEntry() {
     for(int iPriority = 0; iPriority < NumPriorities; ++iPriority) {
       for(int iType = 0; iType < 2; ++iType) {
-        m_failed_heads[iType][iPriority] = nullptr;
+        m_failed_heads[iPriority][iType] = nullptr;
       }
     }
   }
