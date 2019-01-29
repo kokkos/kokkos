@@ -69,8 +69,7 @@ int HPX::concurrency() {
 
 void HPX::impl_initialize(int thread_count) {
   hpx::runtime *rt = hpx::get_runtime_ptr();
-  if (rt != nullptr) {
-  } else {
+  if (rt == nullptr) {
     std::vector<std::string> config = {
         "hpx.os_threads=" + std::to_string(thread_count),
 #ifdef KOKKOS_DEBUG
@@ -98,8 +97,7 @@ void HPX::impl_initialize(int thread_count) {
 
 void HPX::impl_initialize() {
   hpx::runtime *rt = hpx::get_runtime_ptr();
-  if (rt != nullptr) {
-  } else {
+  if (rt == nullptr) {
     std::vector<std::string> config = {
 #ifdef KOKKOS_DEBUG
         "--hpx:attach-debugger=exception",
@@ -132,12 +130,13 @@ bool HPX::impl_is_initialized() noexcept {
 void HPX::impl_finalize() {
   if (m_hpx_initialized) {
     hpx::runtime *rt = hpx::get_runtime_ptr();
-    if (rt == nullptr) {
-    } else {
+    if (rt != nullptr) {
       hpx::apply([]() { hpx::finalize(); });
       hpx::stop();
+    } else {
+      Kokkos::abort("Kokkos::Experimental::HPX::impl_finalize: Kokkos started "
+                    "HPX but something else already stopped HPX\n");
     }
-  } else {
   }
 }
 
