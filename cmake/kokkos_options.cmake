@@ -236,7 +236,7 @@ IF(Trilinos_ENABLE_Kokkos)
   ELSE()
     set_kokkos_default_default(QTHREADS OFF)
   ENDIF()
-  IF(TPL_ENABLE_HPX OR Trilinos_ENABLE_HPX)
+  IF(TPL_ENABLE_HPX)
     set_kokkos_default_default(HPX ON)
   ELSE()
     set_kokkos_default_default(HPX OFF)
@@ -375,12 +375,12 @@ set(KOKKOS_ENABLE_CUDA_LAMBDA ${KOKKOS_INTERNAL_ENABLE_CUDA_LAMBDA_DEFAULT} CACH
 #------------------------------- KOKKOS_HPX_OPTIONS ----------------------------
 #-------------------------------------------------------------------------------
 
-# CUDA options.
+# HPX options.
 # Set Defaults
 set_kokkos_default_default(HPX_ASYNC_DISPATCH OFF)
 
 # Set actual options
-set(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH ${KOKKOS_INTERNAL_ENABLE_HPX_ASYNC_DISPATCH_DEFAULT} CACHE BOOL "Enable HPX async dispatch.") 
+set(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH ${KOKKOS_INTERNAL_ENABLE_HPX_ASYNC_DISPATCH_DEFAULT} CACHE BOOL "Enable HPX async dispatch.")
 
 
 #-------------------------------------------------------------------------------
