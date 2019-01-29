@@ -669,8 +669,7 @@ public:
     using hpx::parallel::execution::par;
     using hpx::parallel::execution::static_chunk_size;
 
-    for_loop(execution::par.with(
-                 execution::static_chunk_size(m_policy.chunk_size())),
+    for_loop(par.with(static_chunk_size(m_policy.chunk_size())),
              m_policy.begin(), m_policy.end(), [this](const Member i) {
                execute_functor<WorkTag>(m_functor, i);
              });
@@ -701,7 +700,7 @@ public:
 
   inline ParallelFor(const FunctorType &arg_functor, Policy arg_policy)
       : m_functor(arg_functor), m_policy(arg_policy) {}
-}; // namespace Impl
+};
 
 template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
@@ -763,7 +762,7 @@ public:
   inline ParallelFor(const FunctorType &arg_functor, MDRangePolicy arg_policy)
       : m_functor(arg_functor), m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)) {}
-}; // namespace Impl
+};
 } // namespace Impl
 } // namespace Kokkos
 
@@ -1080,7 +1079,7 @@ public:
              m_policy.begin(), m_policy.end(), [this, &buffer](const Member i) {
                reference_type update = ValueOps::reference(
                    reinterpret_cast<pointer_type>(buffer.get(
-                       Experimental::HPX::impla_hardware_thread_id())));
+                       Experimental::HPX::impl_hardware_thread_id())));
                iterate_type(m_mdr_policy, m_functor, update)(i);
              });
 
@@ -1261,7 +1260,7 @@ public:
 
   inline ParallelScan(const FunctorType &arg_functor, const Policy &arg_policy)
       : m_functor(arg_functor), m_policy(arg_policy) {}
-}; // namespace Impl
+};
 
 template <class FunctorType, class ReturnType, class... Traits>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
@@ -1376,7 +1375,7 @@ public:
                                ReturnType &arg_returnvalue)
       : m_functor(arg_functor), m_policy(arg_policy),
         m_returnvalue(arg_returnvalue) {}
-}; // namespace Impl
+};
 } // namespace Impl
 } // namespace Kokkos
 
@@ -1497,7 +1496,7 @@ public:
         m_shared(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                  FunctorTeamShmemSize<FunctorType>::value(
                      arg_functor, arg_policy.team_size())) {}
-}; // namespace Impl
+};
 
 template <class FunctorType, class ReducerType, class... Properties>
 class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
@@ -1814,39 +1813,12 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   }
 }
 
-/** \brief  Intra-thread vector parallel_reduce. Executes lambda(iType i,
- * ValueType & val) for each i=0..N-1.
- *
- * The range i=0..N-1 is mapped to all vector lanes of the the calling thread
- * and a reduction of val is performed using JoinType(ValueType& val, const
- * ValueType& update) and put into init_result. The input value of init_result
- * is used as initializer for temporary variables of ValueType. Therefore the
- * input value should be the neutral element with respect to the join operation
- * (e.g. '0 for +-' or '1 for *'). This functionality requires C++11 support.*/
-template <typename iType, class Lambda, typename ValueType, class JoinType>
-KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>
-        &loop_boundaries,
-    const Lambda &lambda, const JoinType &join, ValueType &result) {
-  result = ValueType();
-#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-#pragma ivdep
-#endif
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
-    lambda(i, result);
-  }
-}
-
 template <typename iType, class Lambda, typename ReducerType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda, const ReducerType &reducer) {
   reducer.init(reducer.reference());
-#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-#pragma ivdep
-#endif
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
     lambda(i, reducer.reference());
