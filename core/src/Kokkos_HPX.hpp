@@ -128,6 +128,7 @@ public:
                 const std::size_t size_per_thread) {
     resize(num_threads, size_per_thread);
   }
+  ~thread_buffer() { delete[] m_data; }
 
   thread_buffer(const thread_buffer &) = delete;
   thread_buffer(thread_buffer &&) = delete;
@@ -834,10 +835,12 @@ private:
     }
   }
 
-  struct alignas(64) value_type_wrapper {
+  class value_type_wrapper {
+  private:
     std::size_t m_value_size;
     char *m_value_buffer;
 
+  public:
     value_type_wrapper() : m_value_size(0), m_value_buffer(nullptr) {}
 
     value_type_wrapper(const std::size_t value_size)
