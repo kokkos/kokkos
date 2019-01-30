@@ -2302,7 +2302,7 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
         for(size_t i0=0;i0<dst.extent(0);++i0)
             for(size_t i1=0;i1<dst.extent(1);++i1)
                 for(size_t i2=0;i2<dst.extent(2);++i2)
-                    for(int i3=0;i3<dst.extent(3);++i3)
+                    for(size_t i3=0;i3<dst.extent(3);++i3)
                         for(size_t i4=0;i4<dst.extent(4);++i4)
                             for(size_t i5=0;i5<dst.extent(5);++i5)
                                 for(size_t i6=0;i6<dst.extent(6);++i6)
