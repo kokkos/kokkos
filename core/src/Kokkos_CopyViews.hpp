@@ -1552,8 +1552,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_contiguous(const TeamType& team, con
 //----------------------------------------------------------------------------
 template< class DT , class ... DP , class ST , class ... SP >
 void KOKKOS_INLINE_FUNCTION local_deep_copy_contiguous(const View<DT,DP...> & dst, const View<ST,SP...> & src) {
-    #pragma unroll
-    for(int i=0;i<src.span();++i) {
+    
+    for(size_t i=0;i<src.span();++i) {
         dst.data()[i] = src.data()[i];
     }
 }
@@ -1789,8 +1789,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
 
     const size_t N = dst.extent(0);
 
-    #pragma unroll
-    for(int i=0;i<N;++i){
+    
+    for(size_t i=0;i<N;++i){
         dst(i) = src(i);
     }
 }
@@ -1809,9 +1809,9 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
     if ( dst.span_is_contiguous() && src.span_is_contiguous() ) {
         local_deep_copy_contiguous(dst,src);
     } else {
-        #pragma unroll
-        for(int i0=0;i0<dst.extent(0);++i0)
-            for(int i1=0;i1<dst.extent(1);++i1)
+        
+        for(size_t i0=0;i0<dst.extent(0);++i0)
+            for(size_t i1=0;i1<dst.extent(1);++i1)
                 dst(i0,i1) = src(i0,i1);
     }
 }
@@ -1830,10 +1830,10 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
     if ( dst.span_is_contiguous() && src.span_is_contiguous() ) {
         local_deep_copy_contiguous(dst,src);
     } else {
-        #pragma unroll
-        for(int i0=0;i0<dst.extent(0);++i0)
-            for(int i1=0;i1<dst.extent(1);++i1)
-                for(int i2=0;i2<dst.extent(2);++i2)
+        
+        for(size_t i0=0;i0<dst.extent(0);++i0)
+            for(size_t i1=0;i1<dst.extent(1);++i1)
+                for(size_t i2=0;i2<dst.extent(2);++i2)
                     dst(i0,i1,i2) = src(i0,i1,i2);
     }
 }
@@ -1852,11 +1852,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
     if ( dst.span_is_contiguous() && src.span_is_contiguous() ) {
         local_deep_copy_contiguous(dst,src);
     } else {
-        #pragma unroll
-        for(int i0=0;i0<dst.extent(0);++i0)
-            for(int i1=0;i1<dst.extent(1);++i1)
-                for(int i2=0;i2<dst.extent(2);++i2)
-                    for(int i3=0;i3<dst.extent(3);++i3)
+        
+        for(size_t i0=0;i0<dst.extent(0);++i0)
+            for(size_t i1=0;i1<dst.extent(1);++i1)
+                for(size_t i2=0;i2<dst.extent(2);++i2)
+                    for(size_t i3=0;i3<dst.extent(3);++i3)
                         dst(i0,i1,i2,i3) = src(i0,i1,i2,i3);
     }
 }
@@ -1875,12 +1875,12 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
     if ( dst.span_is_contiguous() && src.span_is_contiguous() ) {
         local_deep_copy_contiguous(dst,src);
     } else {
-        #pragma unroll
-        for(int i0=0;i0<dst.extent(0);++i0)
-            for(int i1=0;i1<dst.extent(1);++i1)
-                for(int i2=0;i2<dst.extent(2);++i2)
-                    for(int i3=0;i3<dst.extent(3);++i3)
-                        for(int i4=0;i4<dst.extent(4);++i4)
+        
+        for(size_t i0=0;i0<dst.extent(0);++i0)
+            for(size_t i1=0;i1<dst.extent(1);++i1)
+                for(size_t i2=0;i2<dst.extent(2);++i2)
+                    for(size_t i3=0;i3<dst.extent(3);++i3)
+                        for(size_t i4=0;i4<dst.extent(4);++i4)
                             dst(i0,i1,i2,i3,i4) = src(i0,i1,i2,i3,i4);
     }
 }
@@ -1899,13 +1899,13 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
     if ( dst.span_is_contiguous() && src.span_is_contiguous() ) {
         local_deep_copy_contiguous(dst,src);
     } else {
-        #pragma unroll
-        for(int i0=0;i0<dst.extent(0);++i0)
-            for(int i1=0;i1<dst.extent(1);++i1)
-                for(int i2=0;i2<dst.extent(2);++i2)
-                    for(int i3=0;i3<dst.extent(3);++i3)
-                        for(int i4=0;i4<dst.extent(4);++i4)
-                            for(int i5=0;i5<dst.extent(5);++i5)
+        
+        for(size_t i0=0;i0<dst.extent(0);++i0)
+            for(size_t i1=0;i1<dst.extent(1);++i1)
+                for(size_t i2=0;i2<dst.extent(2);++i2)
+                    for(size_t i3=0;i3<dst.extent(3);++i3)
+                        for(size_t i4=0;i4<dst.extent(4);++i4)
+                            for(size_t i5=0;i5<dst.extent(5);++i5)
                                 dst(i0,i1,i2,i3,i4,i5) = src(i0,i1,i2,i3,i4,i5);
     }
 }
@@ -1924,14 +1924,14 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
     if ( dst.span_is_contiguous() && src.span_is_contiguous() ) {
         local_deep_copy_contiguous(dst,src);
     } else {
-        #pragma unroll
-        for(int i0=0;i0<dst.extent(0);++i0)
-            for(int i1=0;i1<dst.extent(1);++i1)
-                for(int i2=0;i2<dst.extent(2);++i2)
-                    for(int i3=0;i3<dst.extent(3);++i3)
-                        for(int i4=0;i4<dst.extent(4);++i4)
-                            for(int i5=0;i5<dst.extent(5);++i5)
-                                for(int i6=0;i6<dst.extent(6);++i6)
+        
+        for(size_t i0=0;i0<dst.extent(0);++i0)
+            for(size_t i1=0;i1<dst.extent(1);++i1)
+                for(size_t i2=0;i2<dst.extent(2);++i2)
+                    for(size_t i3=0;i3<dst.extent(3);++i3)
+                        for(size_t i4=0;i4<dst.extent(4);++i4)
+                            for(size_t i5=0;i5<dst.extent(5);++i5)
+                                for(size_t i6=0;i6<dst.extent(6);++i6)
                                     dst(i0,i1,i2,i3,i4,i5,i6) = src(i0,i1,i2,i3,i4,i5,i6);
     }
 }
@@ -1947,8 +1947,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_contiguous(const TeamType& team, con
 //----------------------------------------------------------------------------
 template< class DT , class ... DP >
 void KOKKOS_INLINE_FUNCTION local_deep_copy_contiguous(const View<DT,DP...> & dst, typename ViewTraits<DT,DP...>::const_value_type & value) {
-    #pragma unroll
-    for(int i=0;i<dst.span();++i) {
+    
+    for(size_t i=0;i<dst.span();++i) {
         dst.data()[i] = value;
     }
 }
@@ -2169,8 +2169,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
 
     const size_t N = dst.extent(0);
 
-    #pragma unroll
-    for(int i=0;i<N;++i){
+    
+    for(size_t i=0;i<N;++i){
         dst(i) = value;
     }
 }
@@ -2188,9 +2188,9 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
     if ( dst.span_is_contiguous() ) {
         local_deep_copy_contiguous(dst,value);
     } else {
-        #pragma unroll
-        for(int i0=0;i0<dst.extent(0);++i0)
-            for(int i1=0;i1<dst.extent(1);++i1)
+        
+        for(size_t i0=0;i0<dst.extent(0);++i0)
+            for(size_t i1=0;i1<dst.extent(1);++i1)
                 dst(i0,i1) = value;
     }
 }
@@ -2208,10 +2208,10 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
     if ( dst.span_is_contiguous() ) {
         local_deep_copy_contiguous(dst,value);
     } else {
-        #pragma unroll
-        for(int i0=0;i0<dst.extent(0);++i0)
-            for(int i1=0;i1<dst.extent(1);++i1)
-                for(int i2=0;i2<dst.extent(2);++i2)
+        
+        for(size_t i0=0;i0<dst.extent(0);++i0)
+            for(size_t i1=0;i1<dst.extent(1);++i1)
+                for(size_t i2=0;i2<dst.extent(2);++i2)
                     dst(i0,i1,i2) = value;
     }
 }
@@ -2229,11 +2229,11 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
     if ( dst.span_is_contiguous() ) {
         local_deep_copy_contiguous(dst,value);
     } else {
-        #pragma unroll
-        for(int i0=0;i0<dst.extent(0);++i0)
-            for(int i1=0;i1<dst.extent(1);++i1)
-                for(int i2=0;i2<dst.extent(2);++i2)
-                    for(int i3=0;i3<dst.extent(3);++i3)
+        
+        for(size_t i0=0;i0<dst.extent(0);++i0)
+            for(size_t i1=0;i1<dst.extent(1);++i1)
+                for(size_t i2=0;i2<dst.extent(2);++i2)
+                    for(size_t i3=0;i3<dst.extent(3);++i3)
                         dst(i0,i1,i2,i3) = value;
     }
 }
@@ -2251,12 +2251,12 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
     if ( dst.span_is_contiguous() ) {
         local_deep_copy_contiguous(dst,value);
     } else {
-        #pragma unroll
-        for(int i0=0;i0<dst.extent(0);++i0)
-            for(int i1=0;i1<dst.extent(1);++i1)
-                for(int i2=0;i2<dst.extent(2);++i2)
-                    for(int i3=0;i3<dst.extent(3);++i3)
-                        for(int i4=0;i4<dst.extent(4);++i4)
+        
+        for(size_t i0=0;i0<dst.extent(0);++i0)
+            for(size_t i1=0;i1<dst.extent(1);++i1)
+                for(size_t i2=0;i2<dst.extent(2);++i2)
+                    for(size_t i3=0;i3<dst.extent(3);++i3)
+                        for(size_t i4=0;i4<dst.extent(4);++i4)
                             dst(i0,i1,i2,i3,i4) = value;
     }
 }
@@ -2274,13 +2274,13 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
     if ( dst.span_is_contiguous() ) {
         local_deep_copy_contiguous(dst,value);
     } else {
-        #pragma unroll
-        for(int i0=0;i0<dst.extent(0);++i0)
-            for(int i1=0;i1<dst.extent(1);++i1)
-                for(int i2=0;i2<dst.extent(2);++i2)
-                    for(int i3=0;i3<dst.extent(3);++i3)
-                        for(int i4=0;i4<dst.extent(4);++i4)
-                            for(int i5=0;i5<dst.extent(5);++i5)
+        
+        for(size_t i0=0;i0<dst.extent(0);++i0)
+            for(size_t i1=0;i1<dst.extent(1);++i1)
+                for(size_t i2=0;i2<dst.extent(2);++i2)
+                    for(size_t i3=0;i3<dst.extent(3);++i3)
+                        for(size_t i4=0;i4<dst.extent(4);++i4)
+                            for(size_t i5=0;i5<dst.extent(5);++i5)
                                 dst(i0,i1,i2,i3,i4,i5) = value;
     }
 }
@@ -2298,14 +2298,14 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
     if ( dst.span_is_contiguous() ) {
         local_deep_copy_contiguous(dst,value);
     } else {
-        #pragma unroll
-        for(int i0=0;i0<dst.extent(0);++i0)
-            for(int i1=0;i1<dst.extent(1);++i1)
-                for(int i2=0;i2<dst.extent(2);++i2)
+        
+        for(size_t i0=0;i0<dst.extent(0);++i0)
+            for(size_t i1=0;i1<dst.extent(1);++i1)
+                for(size_t i2=0;i2<dst.extent(2);++i2)
                     for(int i3=0;i3<dst.extent(3);++i3)
-                        for(int i4=0;i4<dst.extent(4);++i4)
-                            for(int i5=0;i5<dst.extent(5);++i5)
-                                for(int i6=0;i6<dst.extent(6);++i6)
+                        for(size_t i4=0;i4<dst.extent(4);++i4)
+                            for(size_t i5=0;i5<dst.extent(5);++i5)
+                                for(size_t i6=0;i6<dst.extent(6);++i6)
                                     dst(i0,i1,i2,i3,i4,i5,i6) = value;
     }
 }
