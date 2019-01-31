@@ -802,22 +802,22 @@ TEST_F( TEST_CATEGORY , local_deepcopy_teampolicy_layoutleft )
     printf("impl_test_local_deepcopy_teampolicy_rank_3\n");
     impl_test_local_deepcopy_teampolicy_rank_3<ExecSpace,ViewType>(11);
   }
-  { //Rank-4
-    printf("impl_test_local_deepcopy_teampolicy_rank_4\n");
-    impl_test_local_deepcopy_teampolicy_rank_4<ExecSpace,ViewType>(11);
-  }
-  { //Rank-5
-    printf("impl_test_local_deepcopy_teampolicy_rank_5\n");
-    impl_test_local_deepcopy_teampolicy_rank_5<ExecSpace,ViewType>(11);
-  }
-  { //Rank-6
-    printf("impl_test_local_deepcopy_teampolicy_rank_6\n");
-    impl_test_local_deepcopy_teampolicy_rank_6<ExecSpace,ViewType>(11);
-  }
-  { //Rank-7
-    printf("impl_test_local_deepcopy_teampolicy_rank_7\n");
-    impl_test_local_deepcopy_teampolicy_rank_7<ExecSpace,ViewType>(11);
-  }
+  //{ //Rank-4
+  //  printf("impl_test_local_deepcopy_teampolicy_rank_4\n");
+  //  impl_test_local_deepcopy_teampolicy_rank_4<ExecSpace,ViewType>(11);
+  //}
+  //{ //Rank-5
+  //  printf("impl_test_local_deepcopy_teampolicy_rank_5\n");
+  //  impl_test_local_deepcopy_teampolicy_rank_5<ExecSpace,ViewType>(11);
+  //}
+  //{ //Rank-6
+  //  printf("impl_test_local_deepcopy_teampolicy_rank_6\n");
+  //  impl_test_local_deepcopy_teampolicy_rank_6<ExecSpace,ViewType>(11);
+  //}
+  //{ //Rank-7
+  //  printf("impl_test_local_deepcopy_teampolicy_rank_7\n");
+  //  impl_test_local_deepcopy_teampolicy_rank_7<ExecSpace,ViewType>(11);
+  //}
 }
 //-------------------------------------------------------------------------------------------------------------
 TEST_F( TEST_CATEGORY , local_deepcopy_rangepolicy_layoutleft )
@@ -837,22 +837,22 @@ TEST_F( TEST_CATEGORY , local_deepcopy_rangepolicy_layoutleft )
     printf("impl_test_local_deepcopy_rangepolicy_rank_3\n");
     impl_test_local_deepcopy_rangepolicy_rank_3<ExecSpace,ViewType>(11);
   }
-  { //Rank-4
-    printf("impl_test_local_deepcopy_rangepolicy_rank_4\n");
-    impl_test_local_deepcopy_rangepolicy_rank_4<ExecSpace,ViewType>(11);
-  }
-  { //Rank-5
-    printf("impl_test_local_deepcopy_rangepolicy_rank_5\n");
-    impl_test_local_deepcopy_rangepolicy_rank_5<ExecSpace,ViewType>(11);
-  }
-  { //Rank-6
-    printf("impl_test_local_deepcopy_rangepolicy_rank_6\n");
-    impl_test_local_deepcopy_rangepolicy_rank_6<ExecSpace,ViewType>(11);
-  }
-  { //Rank-7
-    printf("impl_test_local_deepcopy_rangepolicy_rank_7\n");
-    impl_test_local_deepcopy_rangepolicy_rank_7<ExecSpace,ViewType>(11);
-  }
+  //{ //Rank-4
+  //  printf("impl_test_local_deepcopy_rangepolicy_rank_4\n");
+  //  impl_test_local_deepcopy_rangepolicy_rank_4<ExecSpace,ViewType>(11);
+  //}
+  //{ //Rank-5
+  //  printf("impl_test_local_deepcopy_rangepolicy_rank_5\n");
+  //  impl_test_local_deepcopy_rangepolicy_rank_5<ExecSpace,ViewType>(11);
+  //}
+  //{ //Rank-6
+  //  printf("impl_test_local_deepcopy_rangepolicy_rank_6\n");
+  //  impl_test_local_deepcopy_rangepolicy_rank_6<ExecSpace,ViewType>(11);
+  //}
+  //{ //Rank-7
+  //  printf("impl_test_local_deepcopy_rangepolicy_rank_7\n");
+  //  impl_test_local_deepcopy_rangepolicy_rank_7<ExecSpace,ViewType>(11);
+  //}
 }
 //-------------------------------------------------------------------------------------------------------------
 TEST_F( TEST_CATEGORY , local_deepcopy_teampolicy_layoutright )
@@ -872,22 +872,22 @@ TEST_F( TEST_CATEGORY , local_deepcopy_teampolicy_layoutright )
     printf("impl_test_local_deepcopy_teampolicy_rank_3\n");
     impl_test_local_deepcopy_teampolicy_rank_3<ExecSpace,ViewType>(11);
   }
-  { //Rank-4
-    printf("impl_test_local_deepcopy_teampolicy_rank_4\n");
-    impl_test_local_deepcopy_teampolicy_rank_4<ExecSpace,ViewType>(11);
-  }
-  { //Rank-5
-    printf("impl_test_local_deepcopy_teampolicy_rank_5\n");
-    impl_test_local_deepcopy_teampolicy_rank_5<ExecSpace,ViewType>(11);
-  }
-  { //Rank-6
-    printf("impl_test_local_deepcopy_teampolicy_rank_6\n");
-    impl_test_local_deepcopy_teampolicy_rank_6<ExecSpace,ViewType>(11);
-  }
-  { //Rank-7
-    printf("impl_test_local_deepcopy_teampolicy_rank_7\n");
-    impl_test_local_deepcopy_teampolicy_rank_7<ExecSpace,ViewType>(11);
-  }
+  //{ //Rank-4
+  //  printf("impl_test_local_deepcopy_teampolicy_rank_4\n");
+  //  impl_test_local_deepcopy_teampolicy_rank_4<ExecSpace,ViewType>(11);
+  //}
+  //{ //Rank-5
+  //  printf("impl_test_local_deepcopy_teampolicy_rank_5\n");
+  //  impl_test_local_deepcopy_teampolicy_rank_5<ExecSpace,ViewType>(11);
+  //}
+  //{ //Rank-6
+  //  printf("impl_test_local_deepcopy_teampolicy_rank_6\n");
+  //  impl_test_local_deepcopy_teampolicy_rank_6<ExecSpace,ViewType>(11);
+  //}
+  //{ //Rank-7
+  //  printf("impl_test_local_deepcopy_teampolicy_rank_7\n");
+  //  impl_test_local_deepcopy_teampolicy_rank_7<ExecSpace,ViewType>(11);
+  //}
 }
 //-------------------------------------------------------------------------------------------------------------
 TEST_F( TEST_CATEGORY , local_deepcopy_rangepolicy_layoutright )
@@ -907,22 +907,22 @@ TEST_F( TEST_CATEGORY , local_deepcopy_rangepolicy_layoutright )
     printf("impl_test_local_deepcopy_rangepolicy_rank_3\n");
     impl_test_local_deepcopy_rangepolicy_rank_3<ExecSpace,ViewType>(11);
   }
-  { //Rank-4
-    printf("impl_test_local_deepcopy_rangepolicy_rank_4\n");
-    impl_test_local_deepcopy_rangepolicy_rank_4<ExecSpace,ViewType>(11);
-  }
-  { //Rank-5
-    printf("impl_test_local_deepcopy_rangepolicy_rank_5\n");
-    impl_test_local_deepcopy_rangepolicy_rank_5<ExecSpace,ViewType>(11);
-  }
-  { //Rank-6
-    printf("impl_test_local_deepcopy_rangepolicy_rank_6\n");
-    impl_test_local_deepcopy_rangepolicy_rank_6<ExecSpace,ViewType>(11);
-  }
-  { //Rank-7
-    printf("impl_test_local_deepcopy_rangepolicy_rank_7\n");
-    impl_test_local_deepcopy_rangepolicy_rank_7<ExecSpace,ViewType>(11);
-  }
+  //{ //Rank-4
+  //  printf("impl_test_local_deepcopy_rangepolicy_rank_4\n");
+  //  impl_test_local_deepcopy_rangepolicy_rank_4<ExecSpace,ViewType>(11);
+  //}
+  //{ //Rank-5
+  //  printf("impl_test_local_deepcopy_rangepolicy_rank_5\n");
+  //  impl_test_local_deepcopy_rangepolicy_rank_5<ExecSpace,ViewType>(11);
+  //}
+  //{ //Rank-6
+  //  printf("impl_test_local_deepcopy_rangepolicy_rank_6\n");
+  //  impl_test_local_deepcopy_rangepolicy_rank_6<ExecSpace,ViewType>(11);
+  //}
+  //{ //Rank-7
+  //  printf("impl_test_local_deepcopy_rangepolicy_rank_7\n");
+  //  impl_test_local_deepcopy_rangepolicy_rank_7<ExecSpace,ViewType>(11);
+  //}
 }
 
 }
