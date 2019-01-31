@@ -183,7 +183,7 @@ struct TestRange {
     // sum( 0 .. N-1 )
     ASSERT_EQ( size_t( ( N - 1 ) * ( N ) / 2 ), size_t( total ) );
 
-    Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace, ScheduleType, OffsetTag>( 0, N ), *this, total );
+    Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace, ScheduleType, OffsetTag>( offset, N+offset ), *this, total );
     // sum( 1 .. N )
     ASSERT_EQ( size_t( ( N ) * ( N + 1 ) / 2 ), size_t( total ) );
   }
@@ -194,7 +194,7 @@ struct TestRange {
 
   KOKKOS_INLINE_FUNCTION
   void operator()( const OffsetTag &, const int i, value_type & update ) const
-  { update += 1 + m_flags( i ); }
+  { update += 1 + m_flags( i-offset ); }
 
   //----------------------------------------
 
