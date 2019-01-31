@@ -348,7 +348,7 @@ struct DeepCopy< HostSpace, HostSpace, ExecutionSpace > {
     {
 
       // first thread out handles the remainder
-      #pragma omp single
+      #pragma omp single nowait
       {
         // the initial dst and src are correct, only copy remainder bytes
         memcpy(dst,src,remainder);
