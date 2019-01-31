@@ -665,20 +665,31 @@ struct TestMultipleDependence {
   // xlC doesn't like incomplete aggregate constructors, so we have do do this manually:
   TestMultipleDependence(int depth, int max_depth)
     : m_depth(depth),
-      m_max_depth(max_depth)
-  { }
+      m_max_depth(max_depth),
+      m_dep()
+  { 
+    // gcc 4.8 has an internal compile error when I give the initializer in the class, so I have do do it here
+    for(int i = 0; i < NPerDepth; ++i) {
+      m_result_futures[NPerDepth] = future_bool();
+    }
+  }
 
   // xlC doesn't like incomplete aggregate constructors, so we have do do this manually:
   TestMultipleDependence(int depth, int max_depth, future_int dep)
     : m_depth(depth),
       m_max_depth(max_depth),
       m_dep(dep)
-  { }
+  { 
+    // gcc 4.8 has an internal compile error when I give the initializer in the class, so I have do do it here
+    for(int i = 0; i < NPerDepth; ++i) {
+      m_result_futures[NPerDepth] = future_bool();
+    }
+  }
 
   int m_depth;
   int m_max_depth;
-  future_int m_dep = { };
-  future_bool m_result_futures[NPerDepth] = { };
+  future_int m_dep;
+  future_bool m_result_futures[NPerDepth];
 
 
   struct TestCheckReady {
@@ -724,7 +735,7 @@ struct TestMultipleDependence {
         n_checkers -= NFanout;
         for(int i = n_checkers; i < NPerDepth; ++i) {
           m_result_futures[i] = Kokkos::task_spawn(Kokkos::TaskSingle(member.scheduler()),
-            TestMultipleDependence{m_depth + 1, m_max_depth, m_dep}
+            TestMultipleDependence<Scheduler>(m_depth + 1, m_max_depth, m_dep)
           );
         }
       }
@@ -764,7 +775,7 @@ struct TestMultipleDependence {
                     , MaxBlockSize
                     , SuperBlockSize );
 
-    auto f = Kokkos::host_spawn( Kokkos::TaskSingle( sched ), TestMultipleDependence{ 0, depth }  );
+    auto f = Kokkos::host_spawn( Kokkos::TaskSingle( sched ), TestMultipleDependence<Scheduler>( 0, depth )  );
 
     Kokkos::wait( sched );
 
