@@ -791,31 +791,24 @@ TEST_F( TEST_CATEGORY , local_deepcopy_teampolicy_layoutleft )
   typedef Kokkos::View<double********,Kokkos::LayoutLeft,ExecSpace> ViewType;
   
   { //Rank-1
-    printf("impl_test_local_deepcopy_teampolicy_rank_1\n");
     impl_test_local_deepcopy_teampolicy_rank_1<ExecSpace,ViewType>(8);
   }
   { //Rank-2
-     printf("impl_test_local_deepcopy_teampolicy_rank_2\n");
     impl_test_local_deepcopy_teampolicy_rank_2<ExecSpace,ViewType>(8);
   }
   { //Rank-3
-    printf("impl_test_local_deepcopy_teampolicy_rank_3\n");
     impl_test_local_deepcopy_teampolicy_rank_3<ExecSpace,ViewType>(8);
   }
   { //Rank-4
-    printf("impl_test_local_deepcopy_teampolicy_rank_4\n");
     impl_test_local_deepcopy_teampolicy_rank_4<ExecSpace,ViewType>(8);
   }
   { //Rank-5
-    printf("impl_test_local_deepcopy_teampolicy_rank_5\n");
     impl_test_local_deepcopy_teampolicy_rank_5<ExecSpace,ViewType>(8);
   }
   { //Rank-6
-    printf("impl_test_local_deepcopy_teampolicy_rank_6\n");
     impl_test_local_deepcopy_teampolicy_rank_6<ExecSpace,ViewType>(8);
   }
   { //Rank-7
-    printf("impl_test_local_deepcopy_teampolicy_rank_7\n");
     impl_test_local_deepcopy_teampolicy_rank_7<ExecSpace,ViewType>(8);
   }
 }
@@ -826,31 +819,24 @@ TEST_F( TEST_CATEGORY , local_deepcopy_rangepolicy_layoutleft )
   typedef Kokkos::View<double********,Kokkos::LayoutLeft,ExecSpace> ViewType;
 
   { //Rank-1
-    printf("impl_test_local_deepcopy_rangepolicy_rank_1\n");
     impl_test_local_deepcopy_rangepolicy_rank_1<ExecSpace,ViewType>(8);
   }
   { //Rank-2
-    printf("impl_test_local_deepcopy_rangepolicy_rank_2\n");
     impl_test_local_deepcopy_rangepolicy_rank_2<ExecSpace,ViewType>(8);
   }
   { //Rank-3
-    printf("impl_test_local_deepcopy_rangepolicy_rank_3\n");
     impl_test_local_deepcopy_rangepolicy_rank_3<ExecSpace,ViewType>(8);
   }
   { //Rank-4
-    printf("impl_test_local_deepcopy_rangepolicy_rank_4\n");
     impl_test_local_deepcopy_rangepolicy_rank_4<ExecSpace,ViewType>(8);
   }
   { //Rank-5
-    printf("impl_test_local_deepcopy_rangepolicy_rank_5\n");
     impl_test_local_deepcopy_rangepolicy_rank_5<ExecSpace,ViewType>(8);
   }
   { //Rank-6
-    printf("impl_test_local_deepcopy_rangepolicy_rank_6\n");
     impl_test_local_deepcopy_rangepolicy_rank_6<ExecSpace,ViewType>(8);
   }
   { //Rank-7
-    printf("impl_test_local_deepcopy_rangepolicy_rank_7\n");
     impl_test_local_deepcopy_rangepolicy_rank_7<ExecSpace,ViewType>(8);
   }
 }
@@ -861,31 +847,24 @@ TEST_F( TEST_CATEGORY , local_deepcopy_teampolicy_layoutright )
   typedef Kokkos::View<double********,Kokkos::LayoutRight,ExecSpace> ViewType;
 
   { //Rank-1
-    printf("impl_test_local_deepcopy_teampolicy_rank_1\n");
     impl_test_local_deepcopy_teampolicy_rank_1<ExecSpace,ViewType>(8);
   }
   { //Rank-2
-    printf("impl_test_local_deepcopy_teampolicy_rank_2\n");
     impl_test_local_deepcopy_teampolicy_rank_2<ExecSpace,ViewType>(8);
   }
   { //Rank-3
-    printf("impl_test_local_deepcopy_teampolicy_rank_3\n");
     impl_test_local_deepcopy_teampolicy_rank_3<ExecSpace,ViewType>(8);
   }
   { //Rank-4
-    printf("impl_test_local_deepcopy_teampolicy_rank_4\n");
     impl_test_local_deepcopy_teampolicy_rank_4<ExecSpace,ViewType>(8);
   }
   { //Rank-5
-    printf("impl_test_local_deepcopy_teampolicy_rank_5\n");
     impl_test_local_deepcopy_teampolicy_rank_5<ExecSpace,ViewType>(8);
   }
   { //Rank-6
-    printf("impl_test_local_deepcopy_teampolicy_rank_6\n");
     impl_test_local_deepcopy_teampolicy_rank_6<ExecSpace,ViewType>(8);
   }
   { //Rank-7
-    printf("impl_test_local_deepcopy_teampolicy_rank_7\n");
     impl_test_local_deepcopy_teampolicy_rank_7<ExecSpace,ViewType>(8);
   }
 }
@@ -896,31 +875,24 @@ TEST_F( TEST_CATEGORY , local_deepcopy_rangepolicy_layoutright )
   typedef Kokkos::View<double********,Kokkos::LayoutRight,ExecSpace> ViewType;
 
   { //Rank-1
-    printf("impl_test_local_deepcopy_rangepolicy_rank_1\n");
     impl_test_local_deepcopy_rangepolicy_rank_1<ExecSpace,ViewType>(8);
   }
   { //Rank-2
-    printf("impl_test_local_deepcopy_rangepolicy_rank_2\n");
     impl_test_local_deepcopy_rangepolicy_rank_2<ExecSpace,ViewType>(8);
   }
   { //Rank-3
-    printf("impl_test_local_deepcopy_rangepolicy_rank_3\n");
     impl_test_local_deepcopy_rangepolicy_rank_3<ExecSpace,ViewType>(8);
   }
   { //Rank-4
-    printf("impl_test_local_deepcopy_rangepolicy_rank_4\n");
     impl_test_local_deepcopy_rangepolicy_rank_4<ExecSpace,ViewType>(8);
   }
   { //Rank-5
-    printf("impl_test_local_deepcopy_rangepolicy_rank_5\n");
     impl_test_local_deepcopy_rangepolicy_rank_5<ExecSpace,ViewType>(8);
   }
   { //Rank-6
-    printf("impl_test_local_deepcopy_rangepolicy_rank_6\n");
     impl_test_local_deepcopy_rangepolicy_rank_6<ExecSpace,ViewType>(8);
   }
   { //Rank-7
-    printf("impl_test_local_deepcopy_rangepolicy_rank_7\n");
     impl_test_local_deepcopy_rangepolicy_rank_7<ExecSpace,ViewType>(8);
   }
 }
