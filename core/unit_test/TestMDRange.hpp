@@ -537,7 +537,6 @@ struct TestMDRange_2D {
 
       TestMDRange_2D::HostViewType h_view = Kokkos::create_mirror_view( v );
       Kokkos::deep_copy( h_view, v );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = s0; i < N0; ++i )
@@ -571,7 +570,6 @@ struct TestMDRange_2D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = s0; i < N0; ++i )
@@ -601,7 +599,6 @@ struct TestMDRange_2D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -630,7 +627,6 @@ struct TestMDRange_2D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -660,7 +656,6 @@ struct TestMDRange_2D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -690,7 +685,6 @@ struct TestMDRange_2D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -720,7 +714,6 @@ struct TestMDRange_2D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -750,7 +743,6 @@ struct TestMDRange_2D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -780,7 +772,6 @@ struct TestMDRange_2D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -810,7 +801,6 @@ struct TestMDRange_2D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -1012,7 +1002,6 @@ struct TestMDRange_3D {
       // check parallel_for results correct with InitTag
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
       for ( int j = 0; j < N1; ++j )
@@ -1147,7 +1136,6 @@ struct TestMDRange_3D {
 
       TestMDRange_3D::HostViewType h_view = Kokkos::create_mirror_view( v );
       Kokkos::deep_copy( h_view, v );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = s0; i < N0; ++i )
@@ -1179,7 +1167,6 @@ struct TestMDRange_3D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -1213,7 +1200,6 @@ struct TestMDRange_3D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = s0; i < N0; ++i )
@@ -1245,7 +1231,6 @@ struct TestMDRange_3D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -1276,7 +1261,6 @@ struct TestMDRange_3D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -1307,7 +1291,6 @@ struct TestMDRange_3D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -1338,7 +1321,6 @@ struct TestMDRange_3D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -1369,7 +1351,6 @@ struct TestMDRange_3D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -1400,7 +1381,6 @@ struct TestMDRange_3D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -1601,7 +1581,6 @@ struct TestMDRange_4D {
       // check parallel_for results correct with InitTag
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
       for ( int j = 0; j < N1; ++j )
@@ -1740,7 +1719,6 @@ struct TestMDRange_4D {
 
       TestMDRange_4D::HostViewType h_view = Kokkos::create_mirror_view( v );
       Kokkos::deep_copy( h_view, v );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = s0; i < N0; ++i )
@@ -1773,7 +1751,6 @@ struct TestMDRange_4D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -1809,7 +1786,6 @@ struct TestMDRange_4D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = s0; i < N0; ++i )
@@ -1842,7 +1818,6 @@ struct TestMDRange_4D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -1875,7 +1850,6 @@ struct TestMDRange_4D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -1908,7 +1882,6 @@ struct TestMDRange_4D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -1941,7 +1914,6 @@ struct TestMDRange_4D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -1974,7 +1946,6 @@ struct TestMDRange_4D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -2007,7 +1978,6 @@ struct TestMDRange_4D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -2210,7 +2180,6 @@ struct TestMDRange_5D {
       // check parallel_for results correct with InitTag
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
       for ( int j = 0; j < N1; ++j )
@@ -2264,7 +2233,6 @@ struct TestMDRange_5D {
 
       TestMDRange_5D::HostViewType h_view = Kokkos::create_mirror_view( v );
       Kokkos::deep_copy( h_view, v );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = s0; i < N0; ++i )
@@ -2298,7 +2266,6 @@ struct TestMDRange_5D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -2336,7 +2303,6 @@ struct TestMDRange_5D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = s0; i < N0; ++i )
@@ -2370,7 +2336,6 @@ struct TestMDRange_5D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -2404,7 +2369,6 @@ struct TestMDRange_5D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -2438,7 +2402,6 @@ struct TestMDRange_5D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -2472,7 +2435,6 @@ struct TestMDRange_5D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -2506,7 +2468,6 @@ struct TestMDRange_5D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -2540,7 +2501,6 @@ struct TestMDRange_5D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -2745,7 +2705,6 @@ struct TestMDRange_6D {
       // check parallel_for results correct with InitTag
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
       for ( int j = 0; j < N1; ++j )
@@ -2801,7 +2760,6 @@ struct TestMDRange_6D {
 
       TestMDRange_6D::HostViewType h_view = Kokkos::create_mirror_view( v );
       Kokkos::deep_copy( h_view, v );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = s0; i < N0; ++i )
@@ -2836,7 +2794,6 @@ struct TestMDRange_6D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -2876,7 +2833,6 @@ struct TestMDRange_6D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = s0; i < N0; ++i )
@@ -2911,7 +2867,6 @@ struct TestMDRange_6D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -2946,7 +2901,6 @@ struct TestMDRange_6D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -2981,7 +2935,6 @@ struct TestMDRange_6D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -3016,7 +2969,6 @@ struct TestMDRange_6D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -3051,7 +3003,6 @@ struct TestMDRange_6D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
@@ -3086,7 +3037,6 @@ struct TestMDRange_6D {
 
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
       Kokkos::deep_copy( h_view, functor.input_view );
-      Kokkos::fence();
 
       int counter = 0;
       for ( int i = 0; i < N0; ++i )
