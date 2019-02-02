@@ -296,11 +296,13 @@ namespace Kokkos {
 
 namespace Impl {
 
+#define PAR_DEEP_COPY_USE_MEMCPY
+
 template< class ExecutionSpace >
 struct DeepCopy< HostSpace, HostSpace, ExecutionSpace > {
   DeepCopy( void * dst, const void * src, size_t n ) {
     constexpr size_t page_sz_ = 4*1024;
-    constexpr size_t pages_per_chunk = 2*page_sz_;
+    constexpr size_t pages_per_chunk = page_sz_/2;
 
     // I can't use exec_space::concurrency here (or can I?)
     // this may require specializing for each execSpace...
@@ -364,7 +366,7 @@ struct DeepCopy< HostSpace, HostSpace, ExecutionSpace > {
         const size_t my_offset = i * pages_per_chunk;
         if (my_offset < new_n ) {
           const unsigned char * my_dst = pg_aligned_start + ((uintptr_t) my_offset);
-          unsigned char * my_src = (unsigned char *) (((uintptr_t) corrected_src_from_pg_aligned_dst) + ((uintptr_t) my_offset));
+          const unsigned char * my_src = (unsigned char *) (((uintptr_t) corrected_src_from_pg_aligned_dst) + ((uintptr_t) my_offset));
           const size_t my_n = (pages_per_chunk+my_offset) < new_n ? pages_per_chunk : new_n - my_offset;
           #ifdef JJE_DEBUG_PAR_DEEPCOPY
           #pragma omp critical
@@ -383,7 +385,12 @@ struct DeepCopy< HostSpace, HostSpace, ExecutionSpace > {
               fprintf(stderr, "src[%d] = %d, dst[%d] =  %d\n", i, (int) (((int64_t*)my_src)[i]), i, (int) (((int64_t*)my_dst)[i]));
           }
           #else
+          #ifdef PAR_DEEP_COPY_USE_MEMCPY
           memcpy( (void*) my_dst, (void*) my_src, my_n );
+          #else
+            #pragma message("using for copy")
+            for(int k=0; k < my_n; ++k) my_dst[k] = my_src[k];
+          #endif
           #endif
        }
       }
