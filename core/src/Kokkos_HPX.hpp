@@ -798,6 +798,8 @@ private:
   const ReducerType m_reducer;
   const pointer_type m_result_ptr;
 
+  bool m_force_synchronous;
+
   template <class TagType>
   inline static
       typename std::enable_if<std::is_same<TagType, void>::value>::type
@@ -907,7 +909,12 @@ private:
   };
 
 public:
-  void execute() const { dispatch_execute_task(this); }
+  void execute() const {
+    dispatch_execute_task(this);
+    if (m_force_synchronous) {
+      Experimental::HPX::fence();
+    }
+  }
 
   inline void execute_task() const {
     const int num_worker_threads = Experimental::HPX::concurrency();
@@ -1014,12 +1021,14 @@ public:
                                   !Kokkos::is_reducer_type<ReducerType>::value,
                               void *>::type = NULL)
       : m_functor(arg_functor), m_policy(arg_policy), m_reducer(InvalidType()),
-        m_result_ptr(arg_view.data()) {}
+        m_result_ptr(arg_view.data()),
+        m_force_synchronous(!arg_view.impl_track().has_record()) {}
 
   inline ParallelReduce(const FunctorType &arg_functor, Policy arg_policy,
                         const ReducerType &reducer)
       : m_functor(arg_functor), m_policy(arg_policy), m_reducer(reducer),
-        m_result_ptr(reducer.view().data()) {}
+        m_result_ptr(reducer.view().data()),
+        m_force_synchronous(!reducer.view().impl_track().has_record()) {}
 };
 
 template <class FunctorType, class ReducerType, class... Traits>
@@ -1056,8 +1065,15 @@ private:
   const ReducerType m_reducer;
   const pointer_type m_result_ptr;
 
+  bool m_force_synchronous;
+
 public:
-  void execute() const { dispatch_execute_task(this); }
+  void execute() const {
+    dispatch_execute_task(this);
+    if (m_force_synchronous) {
+      Experimental::HPX::fence();
+    }
+  }
 
   inline void execute_task() const {
     const int num_worker_threads = Experimental::HPX::concurrency();
@@ -1144,13 +1160,15 @@ public:
                               void *>::type = NULL)
       : m_functor(arg_functor), m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)),
-        m_reducer(InvalidType()), m_result_ptr(arg_view.data()) {}
+        m_reducer(InvalidType()), m_result_ptr(arg_view.data()),
+        m_force_synchronous(!arg_view.impl_track().has_record()) {}
 
   inline ParallelReduce(const FunctorType &arg_functor,
                         MDRangePolicy arg_policy, const ReducerType &reducer)
       : m_functor(arg_functor), m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)),
-        m_reducer(reducer), m_result_ptr(reducer.view().data()) {}
+        m_reducer(reducer), m_result_ptr(reducer.view().data()),
+        m_force_synchronous(!reducer.view().impl_track().has_record()) {}
 };
 } // namespace Impl
 } // namespace Kokkos
@@ -1531,6 +1549,8 @@ private:
   pointer_type m_result_ptr;
   const std::size_t m_shared;
 
+  bool m_force_synchronous;
+
   template <class TagType>
   inline static
       typename std::enable_if<std::is_same<TagType, void>::value>::type
@@ -1587,7 +1607,12 @@ private:
   }
 
 public:
-  void execute() const { dispatch_execute_task(this); }
+  void execute() const {
+    dispatch_execute_task(this);
+    if (m_force_synchronous) {
+      Experimental::HPX::fence();
+    }
+  }
 
   inline void execute_task() const {
     const int num_worker_threads = Experimental::HPX::concurrency();
@@ -1680,7 +1705,8 @@ public:
         m_result_ptr(arg_result.data()),
         m_shared(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                  FunctorTeamShmemSize<FunctorType>::value(
-                     m_functor, arg_policy.team_size())) {}
+                     m_functor, arg_policy.team_size())),
+        m_force_synchronous(!arg_result.impl_track().has_record()) {}
 
   inline ParallelReduce(const FunctorType &arg_functor, Policy arg_policy,
                         const ReducerType &reducer)
@@ -1689,7 +1715,8 @@ public:
         m_result_ptr(reducer.view().data()),
         m_shared(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                  FunctorTeamShmemSize<FunctorType>::value(
-                     arg_functor, arg_policy.team_size())) {}
+                     arg_functor, arg_policy.team_size())),
+        m_force_synchronous(!reducer.view().impl_track().has_record()) {}
 };
 } // namespace Impl
 } // namespace Kokkos
