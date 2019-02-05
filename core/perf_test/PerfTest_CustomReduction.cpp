@@ -77,8 +77,6 @@ void custom_reduction_test(int N, int R, int num_trials) {
     if(team_max>lmax) lmax = team_max;
   },Kokkos::Max<Scalar>(max));
 
-  Kokkos::fence();
-
   // Timing
   Kokkos::Timer timer;
   for(int r = 0; r<num_trials; r++) {
@@ -99,7 +97,6 @@ void custom_reduction_test(int N, int R, int num_trials) {
       if(team_max>lmax) lmax = team_max;
     },Kokkos::Max<Scalar>(max));
   }
-  Kokkos::fence();
   double time = timer.seconds();
   printf("%e %e %e\n",time,1.0*N*R*num_trials*sizeof(Scalar)/time/1024/1024/1024,max);
 }

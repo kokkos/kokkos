@@ -133,7 +133,6 @@ void test( const size_t dim0, const size_t dim1 )
   ptrdiff_t error = 0;
 
   Kokkos::parallel_reduce( Kokkos::RangePolicy< Space, size_t >( 0, tile_dim0 * tile_dim1 ), functor_type( array ), error );
-  Kokkos::fence();
 
   EXPECT_EQ( error, ptrdiff_t( 0 ) );
 }

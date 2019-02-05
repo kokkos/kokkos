@@ -201,7 +201,6 @@ struct TestViewMappingSubview
 
     long error_count = -1;
     Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, 1 ), *this, error_count );
-    Kokkos::fence();
 
     ASSERT_EQ( error_count, 0 );
   }

@@ -449,7 +449,6 @@ struct TestReduceCombinatoricalInstantiation {
 
     double value = 0;
     Kokkos::parallel_reduce( args..., value );
-    Kokkos::fence();
     ASSERT_EQ( expected_result, value );
 
     result_view() = 0;

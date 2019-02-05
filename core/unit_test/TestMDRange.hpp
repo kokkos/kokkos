@@ -130,7 +130,6 @@ struct TestMDRange_ReduceArray_2D {
 
       double sums[ array_size ];
       parallel_reduce( range, functor, sums );
-      Kokkos::fence();
 
       // Check output
       //printf("Array Reduce result. N0 = %d  N1 = %d  N0*N1 = %d  sums[0] = %lf  sums[1] = %lf \n", N0, N1, N0*N1, sums[0], sums[1]);
@@ -218,7 +217,6 @@ struct TestMDRange_ReduceArray_3D {
 
       double sums[ array_size ];
       parallel_reduce( range, functor, sums );
-      Kokkos::fence();
 
       ASSERT_EQ( sums[0], 6 * N0 * N1 * N2 );
       ASSERT_EQ( sums[1], 3 * N0 * N1 * N2 );
@@ -281,7 +279,6 @@ struct TestMDRange_2D {
             lsum+=1.0;
           }
         , sum );
-      Kokkos::fence();
       ASSERT_EQ( sum, N0 * N1 );
     }
 #endif
@@ -299,7 +296,6 @@ struct TestMDRange_2D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 );
     }
@@ -421,7 +417,6 @@ struct TestMDRange_2D {
 
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 9 * N0 * N1 );
     }
@@ -438,7 +433,6 @@ struct TestMDRange_2D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 );
     }
@@ -455,7 +449,6 @@ struct TestMDRange_2D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 );
     }
@@ -472,7 +465,6 @@ struct TestMDRange_2D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 );
     }
@@ -489,7 +481,6 @@ struct TestMDRange_2D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 );
     }
@@ -506,7 +497,6 @@ struct TestMDRange_2D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 );
     }
@@ -875,7 +865,6 @@ struct TestMDRange_3D {
             lsum+=1.0;
           }
         , sum );
-      Kokkos::fence();
       ASSERT_EQ( sum, N0 * N1 * N2 );
     }
 #endif
@@ -896,7 +885,6 @@ struct TestMDRange_3D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * (N0 - s0) * (N1 - s1) * (N2 - s2) );
     }
@@ -1020,7 +1008,6 @@ struct TestMDRange_3D {
 
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 9 * N0 * N1 * N2 );
     }
@@ -1037,7 +1024,6 @@ struct TestMDRange_3D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 );
     }
@@ -1054,7 +1040,6 @@ struct TestMDRange_3D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 );
     }
@@ -1071,7 +1056,6 @@ struct TestMDRange_3D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 );
     }
@@ -1088,7 +1072,6 @@ struct TestMDRange_3D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 );
     }
@@ -1105,7 +1088,6 @@ struct TestMDRange_3D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 );
     }
@@ -1455,7 +1437,6 @@ struct TestMDRange_4D {
             lsum+=1.0;
           }
         , sum );
-      Kokkos::fence();
       ASSERT_EQ( sum, N0 * N1 * N2 * N3 );
     }
 #endif
@@ -1477,7 +1458,6 @@ struct TestMDRange_4D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * (N0 - s0) * (N1 - s1) * (N2 - s2) * (N3 - s3) );
     }
@@ -1600,7 +1580,6 @@ struct TestMDRange_4D {
 
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 9 * N0 * N1 * N2 * N3 );
     }
@@ -1617,7 +1596,6 @@ struct TestMDRange_4D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 * N3 );
     }
@@ -1634,7 +1612,6 @@ struct TestMDRange_4D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 * N3 );
     }
@@ -1651,7 +1628,6 @@ struct TestMDRange_4D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 * N3 );
     }
@@ -1668,7 +1644,6 @@ struct TestMDRange_4D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 * N3 );
     }
@@ -1685,7 +1660,6 @@ struct TestMDRange_4D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 * N3 );
     }
@@ -2053,7 +2027,6 @@ struct TestMDRange_5D {
             lsum+=1.0;
           }
         , sum );
-      Kokkos::fence();
       ASSERT_EQ( sum, N0 * N1 * N2 * N3 * N4 );
     }
 #endif
@@ -2076,7 +2049,6 @@ struct TestMDRange_5D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * (N0 - s0) * (N1 - s1) * (N2 - s2) * (N3 - s3) * (N4 - s4) );
     }
@@ -2200,7 +2172,6 @@ struct TestMDRange_5D {
 
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 9 * N0 * N1 * N2 * N3 * N4 );
     }
@@ -2577,7 +2548,6 @@ struct TestMDRange_6D {
             lsum+=1.0;
           }
         , sum );
-      Kokkos::fence();
       ASSERT_EQ( sum, N0 * N1 * N2 * N3 * N4 * N5 );
     }
 #endif
@@ -2601,7 +2571,6 @@ struct TestMDRange_6D {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * (N0 - s0) * (N1 - s1) * (N2 - s2) * (N3 - s3) * (N4 - s4) * (N5 - s5) );
     }
@@ -2726,7 +2695,6 @@ struct TestMDRange_6D {
 
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 9 * N0 * N1 * N2 * N3 * N4 * N5 );
     }
@@ -3111,7 +3079,6 @@ struct TestMDRange_2D_NegIdx {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * (upper[0] - lower[0]) * (upper[1] - lower[1]) );
     }
@@ -3169,7 +3136,6 @@ struct TestMDRange_3D_NegIdx {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * (upper[0] - lower[0]) * (upper[1] - lower[1]) * (upper[2] - lower[2]) );
     }
@@ -3228,7 +3194,6 @@ struct TestMDRange_4D_NegIdx {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * (upper[0] - lower[0]) * (upper[1] - lower[1]) * (upper[2] - lower[2]) * (upper[3] - lower[3]) );
     }
@@ -3288,7 +3253,6 @@ struct TestMDRange_5D_NegIdx {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * (upper[0] - lower[0]) * (upper[1] - lower[1]) * (upper[2] - lower[2]) * (upper[3] - lower[3]) * (upper[4] - lower[4]) );
     }
@@ -3349,7 +3313,6 @@ struct TestMDRange_6D_NegIdx {
       parallel_for( range, functor );
       double sum = 0.0;
       parallel_reduce( range, functor, sum );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * (upper[0] - lower[0]) * (upper[1] - lower[1]) * (upper[2] - lower[2]) * (upper[3] - lower[3]) * (upper[4] - lower[4]) * (upper[5] - lower[5]) );
     }
