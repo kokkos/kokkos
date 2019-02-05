@@ -180,7 +180,6 @@ struct TestRange {
     Kokkos::parallel_for( Kokkos::RangePolicy< ExecSpace, ScheduleType >( 0, N ), *this );
 
     Kokkos::parallel_reduce( "TestKernelReduce", Kokkos::RangePolicy< ExecSpace, ScheduleType >( 0, N ), *this, total );
-    Kokkos::fence();
 
     // sum( 0 .. N-1 )
     ASSERT_EQ( size_t( ( N - 1 ) * ( N ) / 2 ), size_t( total ) );
@@ -253,7 +252,6 @@ struct TestRange {
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), KOKKOS_LAMBDA( const int & i, int & lsum ) {
         lsum += ( a( i ) != ( i < N / 2 ? 1 : 10000 ) );
       }, error );
-      Kokkos::fence();
 
       ASSERT_EQ( error, 0 );
 
@@ -288,14 +286,12 @@ struct TestRange {
 #endif
         lsum++;
       }, sum );
-      Kokkos::fence();
       ASSERT_EQ( sum, N );
 
       int error = 0;
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), KOKKOS_LAMBDA( const int & i, int & lsum ) {
         lsum += ( a( i ) != ( i < N / 2 ? 1 : 10000 ) );
       }, error );
-      Kokkos::fence();
       ASSERT_EQ( error, 0 );
 
       if ( ( ExecSpace::concurrency() > (int) 1 ) && ( N > static_cast<int>( 4 * ExecSpace::concurrency() ) ) ) {

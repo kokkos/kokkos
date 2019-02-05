@@ -155,7 +155,6 @@ void test_concurrent_bitset( int bit_count )
     ( Kokkos::RangePolicy< DeviceType , typename Functor::TagAcquire >(0,n)
     , Functor( bit_count_lg2 , bitset , acquired )
     , total );
-  Kokkos::fence();
 
   ASSERT_EQ( bit_count , total );
 
@@ -168,7 +167,6 @@ void test_concurrent_bitset( int bit_count )
     ( Kokkos::RangePolicy< DeviceType , typename Functor::TagReacquire >(0,n)
     , Functor( bit_count_lg2 , bitset , acquired )
     , total_reacquire );
-  Kokkos::fence();
 
   ASSERT_EQ( total_release , total_reacquire );
 

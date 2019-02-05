@@ -1214,7 +1214,6 @@ struct TestViewMapOperator {
     long error_count;
     Kokkos::RangePolicy< typename ViewType::execution_space > range( 0, v.extent(0) );
     Kokkos::parallel_reduce( range, *this, error_count );
-    Kokkos::fence();
     ASSERT_EQ( 0, error_count );
 }
 };

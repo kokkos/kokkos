@@ -112,7 +112,6 @@ struct TestViewOperator_LeftAndRight< DataType, DeviceType, 1 >
     int error_flag = 0;
 
     Kokkos::parallel_reduce( 1, driver, error_flag );
-    Kokkos::fence();
 
     ASSERT_EQ( error_flag, 0 );
   }

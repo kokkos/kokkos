@@ -326,7 +326,6 @@ void test_memory_pool_v2( const bool print_statistics
       , functor
       , result
       );
-    Kokkos::fence();
 
     pool.get_usage_statistics( stats );
 
@@ -344,7 +343,6 @@ void test_memory_pool_v2( const bool print_statistics
       , functor
       , ndel
       );
-    Kokkos::fence();
 
     pool.get_usage_statistics( stats );
 
@@ -360,7 +358,6 @@ void test_memory_pool_v2( const bool print_statistics
       , functor
       , result
       );
-    Kokkos::fence();
 
     pool.get_usage_statistics( stats );
 
@@ -378,7 +375,6 @@ void test_memory_pool_v2( const bool print_statistics
       , functor
       , result
       );
-    Kokkos::fence();
 
     pool.get_usage_statistics( stats );
 
@@ -485,7 +481,6 @@ void test_memory_pool_corners( const bool print_statistics
       , functor_type( pool , ptrs , 64 , 4 )
       , err
       );
-    Kokkos::fence();
 
     if ( print_statistics || err ) {
 
@@ -507,7 +502,6 @@ void test_memory_pool_corners( const bool print_statistics
       , functor_type( pool , ptrs , 64 , 1 )
       , err
       );
-    Kokkos::fence();
 
     if ( print_statistics || err ) {
 
