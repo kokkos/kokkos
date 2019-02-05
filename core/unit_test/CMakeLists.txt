@@ -12,7 +12,7 @@ ENDIF()
 
 SET(GTEST_SOURCE_DIR ${${PARENT_PACKAGE_NAME}_SOURCE_DIR}/tpls/gtest)
 # TODO get the C++ standard flag from KOKKOS_CXX_STANDARD
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_PTHREAD=0")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_PTHREAD=0 -std=c++11")
 
 INCLUDE_DIRECTORIES(${GTEST_SOURCE_DIR})
 TRIBITS_ADD_LIBRARY(
@@ -21,17 +21,6 @@ TRIBITS_ADD_LIBRARY(
   SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
   TESTONLY
   )
-
-IF(NOT KOKKOS_HAS_TRILINOS)
-target_compile_options(
-  kokkos_gtest
-  PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${KOKKOS_CXX_FLAGS}>
-)
-target_link_libraries(
-  kokkos_gtest
-  PUBLIC ${KOKKOS_LD_FLAGS}
-)
-ENDIF()
 
 #
 # Define the tests
@@ -53,8 +42,6 @@ IF(Kokkos_ENABLE_Serial)
         serial/TestSerial_AtomicOperations_longlongint.cpp
         serial/TestSerial_AtomicOperations_double.cpp
         serial/TestSerial_AtomicOperations_float.cpp
-        serial/TestSerial_AtomicOperations_complexdouble.cpp
-        serial/TestSerial_AtomicOperations_complexfloat.cpp
         serial/TestSerial_AtomicViews.cpp
         serial/TestSerial_Atomics.cpp
       COMM serial mpi
@@ -191,8 +178,6 @@ IF(Kokkos_ENABLE_Serial)
         serial/TestSerial_AtomicOperations_longlongint.cpp
         serial/TestSerial_AtomicOperations_double.cpp
         serial/TestSerial_AtomicOperations_float.cpp
-        serial/TestSerial_AtomicOperations_complexdouble.cpp
-        serial/TestSerial_AtomicOperations_complexfloat.cpp
         serial/TestSerial_AtomicViews.cpp
         serial/TestSerial_Atomics.cpp
         serial/TestSerial_Complex.cpp
@@ -261,8 +246,6 @@ IF(Kokkos_ENABLE_Pthread)
       threads/TestThreads_AtomicOperations_longlongint.cpp
       threads/TestThreads_AtomicOperations_double.cpp
       threads/TestThreads_AtomicOperations_float.cpp
-      threads/TestThreads_AtomicOperations_complexdouble.cpp
-      threads/TestThreads_AtomicOperations_complexfloat.cpp
       threads/TestThreads_AtomicViews.cpp
       threads/TestThreads_Atomics.cpp
       threads/TestThreads_Complex.cpp
@@ -330,8 +313,6 @@ IF(Kokkos_ENABLE_OpenMP)
         openmp/TestOpenMP_AtomicOperations_longlongint.cpp
         openmp/TestOpenMP_AtomicOperations_double.cpp
         openmp/TestOpenMP_AtomicOperations_float.cpp
-        openmp/TestOpenMP_AtomicOperations_complexdouble.cpp
-        openmp/TestOpenMP_AtomicOperations_complexfloat.cpp
         openmp/TestOpenMP_AtomicViews.cpp
         openmp/TestOpenMP_Atomics.cpp
       COMM serial mpi
@@ -479,8 +460,6 @@ IF(Kokkos_ENABLE_OpenMP)
         openmp/TestOpenMP_AtomicOperations_longlongint.cpp
         openmp/TestOpenMP_AtomicOperations_double.cpp
         openmp/TestOpenMP_AtomicOperations_float.cpp
-        openmp/TestOpenMP_AtomicOperations_complexdouble.cpp
-        openmp/TestOpenMP_AtomicOperations_complexfloat.cpp
         openmp/TestOpenMP_AtomicViews.cpp
         openmp/TestOpenMP_Atomics.cpp
         openmp/TestOpenMP_Complex.cpp
@@ -545,83 +524,6 @@ IF(Kokkos_ENABLE_OpenMP)
       TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
     )
   ENDIF()
-ENDIF()
-
-IF(Kokkos_ENABLE_HPX)
-  TRIBITS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HPX
-    SOURCES
-      UnitTestMainInit.cpp
-      hpx/TestHPX_AtomicOperations_int.cpp
-      hpx/TestHPX_AtomicOperations_unsignedint.cpp
-      hpx/TestHPX_AtomicOperations_longint.cpp
-      hpx/TestHPX_AtomicOperations_unsignedlongint.cpp
-      hpx/TestHPX_AtomicOperations_longlongint.cpp
-      hpx/TestHPX_AtomicOperations_double.cpp
-      hpx/TestHPX_AtomicOperations_float.cpp
-      hpx/TestHPX_AtomicViews.cpp
-      hpx/TestHPX_Atomics.cpp
-      hpx/TestHPX_Complex.cpp
-      hpx/TestHPX_Init.cpp
-      hpx/TestHPX_MDRange_a.cpp
-      hpx/TestHPX_MDRange_b.cpp
-      hpx/TestHPX_MDRange_c.cpp
-      hpx/TestHPX_MDRange_d.cpp
-      hpx/TestHPX_MDRange_e.cpp
-      hpx/TestHPX_Other.cpp
-      hpx/TestHPX_RangePolicy.cpp
-      hpx/TestHPX_Reductions.cpp
-      hpx/TestHPX_Reducers_a.cpp
-      hpx/TestHPX_Reducers_b.cpp
-      hpx/TestHPX_Reducers_c.cpp
-      hpx/TestHPX_Reducers_d.cpp
-      hpx/TestHPX_Scan.cpp
-      hpx/TestHPX_SharedAlloc.cpp
-      hpx/TestHPX_SubView_a.cpp
-      hpx/TestHPX_SubView_b.cpp
-      hpx/TestHPX_SubView_c01.cpp
-      hpx/TestHPX_SubView_c02.cpp
-      hpx/TestHPX_SubView_c03.cpp
-      hpx/TestHPX_SubView_c04.cpp
-      hpx/TestHPX_SubView_c05.cpp
-      hpx/TestHPX_SubView_c06.cpp
-      hpx/TestHPX_SubView_c07.cpp
-      hpx/TestHPX_SubView_c08.cpp
-      hpx/TestHPX_SubView_c09.cpp
-      hpx/TestHPX_SubView_c10.cpp
-      hpx/TestHPX_SubView_c11.cpp
-      hpx/TestHPX_SubView_c12.cpp
-      hpx/TestHPX_SubView_c13.cpp
-      hpx/TestHPX_Task.cpp
-      hpx/TestHPX_Team.cpp
-      hpx/TestHPX_TeamReductionScan.cpp
-      hpx/TestHPX_ViewAPI_a.cpp
-      hpx/TestHPX_ViewAPI_b.cpp
-      hpx/TestHPX_ViewAPI_c.cpp
-      hpx/TestHPX_ViewAPI_d.cpp
-      hpx/TestHPX_ViewAPI_e.cpp
-      hpx/TestHPX_ViewMapping_a.cpp
-      hpx/TestHPX_ViewMapping_b.cpp
-      hpx/TestHPX_ViewMapping_subview.cpp
-      hpx/TestHPX_ViewOfClass.cpp
-      hpx/TestHPX_Crs.cpp
-      hpx/TestHPX_WorkGraph.cpp
-      hpx/TestHPX_UniqueToken.cpp
-    COMM serial mpi
-    NUM_MPI_PROCS 1
-    FAIL_REGULAR_EXPRESSION "  FAILED  "
-    TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
-  )
-  TRIBITS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HPXInterOp
-    SOURCES
-      UnitTestMain.cpp
-      hpx/TestHPX_InterOp.cpp
-    COMM serial mpi
-    NUM_MPI_PROCS 1
-    FAIL_REGULAR_EXPRESSION "  FAILED  "
-    TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
-  )
 ENDIF()
 
 IF(Kokkos_ENABLE_Qthreads)
@@ -697,8 +599,6 @@ IF(Kokkos_ENABLE_Cuda)
       cuda/TestCuda_AtomicOperations_longlongint.cpp
       cuda/TestCuda_AtomicOperations_double.cpp
       cuda/TestCuda_AtomicOperations_float.cpp
-      cuda/TestCuda_AtomicOperations_complexdouble.cpp
-      cuda/TestCuda_AtomicOperations_complexfloat.cpp
       cuda/TestCuda_AtomicViews.cpp
       cuda/TestCuda_Atomics.cpp
       cuda/TestCuda_Complex.cpp
@@ -755,19 +655,10 @@ IF(Kokkos_ENABLE_Cuda)
     TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
   )
   TRIBITS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_CudaInterOpInit
+    UnitTest_CudaInterOp
     SOURCES
       UnitTestMain.cpp
       cuda/TestCuda_InterOp_Init.cpp
-    COMM serial mpi
-    NUM_MPI_PROCS 1
-    FAIL_REGULAR_EXPRESSION "  FAILED  "
-    TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
-  )
-  TRIBITS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_CudaInterOpStreams
-    SOURCES
-      UnitTestMain.cpp
       cuda/TestCuda_InterOp_Streams.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
@@ -855,40 +746,3 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
   FAIL_REGULAR_EXPRESSION "  FAILED  "
     TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
 )
-
-#
-# Compile-only tests
-#
-FUNCTION(KOKKOS_ADD_COMPILE_TEST TEST_NAME)
-
-  SET(options LINK_KOKKOS)
-  SET(oneValueArgs)
-  SET(multiValueArgs)
-
-  CMAKE_PARSE_ARGUMENTS(PARSE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-  IF(PARSE_LINK_KOKKOS)
-    SET(libs ${TEST_LINK_TARGETS})
-  ELSE()
-    SET(libs)
-  ENDIF()
-
-  TRIBITS_ADD_EXECUTABLE(
-    ${TEST_NAME}
-    TESTONLY
-    COMM serial
-    TESTONLYLIBS ${libs}
-    ${PARSE_UNPARSED_ARGUMENTS}
-  )
-
-  target_compile_options(
-    ${PACKAGE_NAME}_${TEST_NAME}
-    PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${KOKKOS_CXX_FLAGS}>
-  )
-  target_link_libraries(
-    ${PACKAGE_NAME}_${TEST_NAME}
-    PUBLIC ${KOKKOS_LD_FLAGS}
-  )
-
-ENDFUNCTION()
-
