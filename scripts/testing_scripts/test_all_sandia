@@ -851,7 +851,6 @@ single_build_and_test() {
       comment="$comment run_time=$(($run_end_time-$build_end_time))"
     fi
   else
-    #TODO load cmake module if necessary
     local cmake_flags=$(get_cmake_flags $compiler $build $build_type)
     run_cmd cmake ${cmake_flags} ${KOKKOS_PATH} &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
     local targets
@@ -865,18 +864,33 @@ single_build_and_test() {
     fi
     local target
     local -i build_start_time=$(date +%s)
+    local any_built=False
     for target in $targets ; do
-      run_cmd make VERBOSE=1 -j 48 ${target} >& ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
+      local check_exists=$(make --dry-run ${target} 2>&1 | grep "No rule to make target \`${target}'")
+      if [[ "$check_exists" == *"No rule to make target"*  ]]; then
+        comment="$comment (skipped build of $target -- does not exist)"
+      else
+        run_cmd make VERBOSE=1 -j 48 ${target} >& ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
+        any_built=True
+      fi
     done
     local -i build_end_time=$(date +%s)
-    comment="build_time=$(($build_end_time-$build_start_time))"
+    comment="$comment build_time=$(($build_end_time-$build_start_time))"
 
     if [[ "$BUILD_ONLY" == False ]]; then
-      for target in $targets ; do
-        run_cmd ${CMAKE_TARGET_DIRECTORY}/$target >& ${desc}.test.log || { report_and_log_test_result 1 ${desc} test && return 0; }
-      done
-      local -i run_end_time=$(date +%s)
-      comment="$comment run_time=$(($run_end_time-$build_end_time))"
+      if [[ "$any_built" == True ]]; then
+        for target in $targets ; do
+          if [[ -f ${CMAKE_TARGET_DIRECTORY}/$target ]]; then
+            run_cmd ${CMAKE_TARGET_DIRECTORY}/$target >& ${desc}.test.log || { report_and_log_test_result 1 ${desc} test && return 0; }
+          else
+            comment="$comment (skipped run of $target -- does not exist)"
+          fi
+        done
+        local -i run_end_time=$(date +%s)
+        comment="$comment run_time=$(($run_end_time-$build_end_time))"
+      else
+        comment="$comment (all runs skipped)"
+      fi
     fi
 
   fi
