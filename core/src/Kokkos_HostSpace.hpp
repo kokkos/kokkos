@@ -302,7 +302,16 @@ template< class ExecutionSpace >
 struct DeepCopy< HostSpace, HostSpace, ExecutionSpace > {
   DeepCopy( void * dst, const void * src, size_t n ) {
     constexpr size_t page_sz_ = 4*1024;
-    constexpr size_t pages_per_chunk = page_sz_/2;
+
+    constexpr size_t bytes_per_chunk = page_sz_/2;
+    // on KNL avoid having each thread requesting whole pages of memcpy
+    // on HSW, this may be equal to bytes_per_chunk
+    constexpr size_t thread_bytes_per_block = bytes_per_chunk; //page_sz_/2;
+
+    if( n < bytes_per_chunk)  {
+      memcpy( dst, src, n );
+      return;
+    }
 
     // I can't use exec_space::concurrency here (or can I?)
     // this may require specializing for each execSpace...
@@ -312,7 +321,7 @@ struct DeepCopy< HostSpace, HostSpace, ExecutionSpace > {
       const int nthreads = 1;
     #endif
 
-    if( (n < 2*page_sz_) || (nthreads == 1) ) {
+    if(nthreads == 1) {
       memcpy( dst, src, n );
       return;
     }
@@ -334,7 +343,7 @@ struct DeepCopy< HostSpace, HostSpace, ExecutionSpace > {
     const size_t remainder = (size_t ) (pg_aligned_start - ((unsigned char *) dst) );
     const unsigned char * corrected_src_from_pg_aligned_dst = (unsigned char *) (((uintptr_t) src) + remainder);
     const size_t new_n =  (n-remainder);
-    const size_t chunks = (new_n / pages_per_chunk ) + 1;
+    const size_t chunks = (new_n / bytes_per_chunk ) + 1;
 
     #ifdef JJE_DEBUG_PAR_DEEPCOPY
     fprintf(stderr, "pg_aligned_start %p\n", pg_aligned_start);
@@ -363,11 +372,15 @@ struct DeepCopy< HostSpace, HostSpace, ExecutionSpace > {
       #pragma omp for nowait
       for(size_t i=0; i < chunks; ++i)
       {
-        const size_t my_offset = i * pages_per_chunk;
-        if (my_offset < new_n ) {
+        // global offset
+        //for( size_t my_offset = i * bytes_per_chunk; my_offset < new_n; my_offset += thread_bytes_per_block)
+
+        const size_t my_offset = i * bytes_per_chunk;
+        if (my_offset < new_n)
+        {
           const unsigned char * my_dst = pg_aligned_start + ((uintptr_t) my_offset);
           const unsigned char * my_src = (unsigned char *) (((uintptr_t) corrected_src_from_pg_aligned_dst) + ((uintptr_t) my_offset));
-          const size_t my_n = (pages_per_chunk+my_offset) < new_n ? pages_per_chunk : new_n - my_offset;
+          const size_t my_n = (my_offset + thread_bytes_per_block) < new_n ? thread_bytes_per_block : new_n - my_offset;
           #ifdef JJE_DEBUG_PAR_DEEPCOPY
           #pragma omp critical
           {
