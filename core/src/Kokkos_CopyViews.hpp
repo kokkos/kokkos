@@ -1540,6 +1540,7 @@ void deep_copy
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+namespace Experimental {
 /** \brief  A local deep copy between views of the default specialization, compatible type,
  *          same non-zero rank.
  */
@@ -2309,6 +2310,7 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy (const View<DT,DP...> & dst,
                                     dst(i0,i1,i2,i3,i4,i5,i6) = value;
     }
 }
+} /* namespace Experimental */
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------

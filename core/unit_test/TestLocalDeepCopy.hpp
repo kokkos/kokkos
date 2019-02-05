@@ -75,7 +75,7 @@ namespace Test {
       int lid = teamMember.league_rank();// returns a number between 0 and N
       auto subSrc = Kokkos::subview(A, 1, 1, 1, 1, 1, 1, lid, Kokkos::ALL());
       auto subDst = Kokkos::subview(B, 1, 1, 1, 1, 1, 1, lid, Kokkos::ALL());
-      Kokkos::local_deep_copy(teamMember,subDst,subSrc);
+      Kokkos::Experimental::local_deep_copy(teamMember,subDst,subSrc);
     });
 
     Kokkos::deep_copy( h_A, A );
@@ -94,7 +94,7 @@ namespace Test {
     Kokkos::parallel_for( team_policy( N, Kokkos::AUTO ), KOKKOS_LAMBDA ( const member_type &teamMember ) {
       int lid = teamMember.league_rank();// returns a number between 0 and N      
       auto subDst = Kokkos::subview(B, 1, 1, 1, 1, 1, 1, lid, Kokkos::ALL());
-      Kokkos::local_deep_copy(teamMember,subDst,20.0);
+      Kokkos::Experimental::local_deep_copy(teamMember,subDst,20.0);
     });
 
     Kokkos::deep_copy( h_B, B );
@@ -130,7 +130,7 @@ namespace Test {
       int lid = teamMember.league_rank();// returns a number between 0 and N
       auto subSrc = Kokkos::subview(A, 1, 1, 1, 1, 1, lid, Kokkos::ALL(), Kokkos::ALL());
       auto subDst = Kokkos::subview(B, 1, 1, 1, 1, 1, lid, Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(teamMember,subDst,subSrc);
+      Kokkos::Experimental::local_deep_copy(teamMember,subDst,subSrc);
     });
 
     Kokkos::deep_copy( h_A, A );
@@ -149,7 +149,7 @@ namespace Test {
     Kokkos::parallel_for( team_policy( N, Kokkos::AUTO ), KOKKOS_LAMBDA ( const member_type &teamMember ) {
       int lid = teamMember.league_rank();// returns a number between 0 and N      
       auto subDst = Kokkos::subview(B, 1, 1, 1, 1, 1, lid, Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(teamMember,subDst,20.0);
+      Kokkos::Experimental::local_deep_copy(teamMember,subDst,20.0);
     });
 
     Kokkos::deep_copy( h_B, B );
@@ -185,7 +185,7 @@ namespace Test {
       int lid = teamMember.league_rank();// returns a number between 0 and N
       auto subSrc = Kokkos::subview(A, 1, 1, 1, 1, lid, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
       auto subDst = Kokkos::subview(B, 1, 1, 1, 1, lid, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(teamMember,subDst,subSrc);
+      Kokkos::Experimental::local_deep_copy(teamMember,subDst,subSrc);
     });
 
     Kokkos::deep_copy( h_A, A );
@@ -204,7 +204,7 @@ namespace Test {
     Kokkos::parallel_for( team_policy( N, Kokkos::AUTO ), KOKKOS_LAMBDA ( const member_type &teamMember ) {
       int lid = teamMember.league_rank();// returns a number between 0 and N      
       auto subDst = Kokkos::subview(B, 1, 1, 1, 1, lid, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(teamMember,subDst,20.0);
+      Kokkos::Experimental::local_deep_copy(teamMember,subDst,20.0);
     });
 
     Kokkos::deep_copy( h_B, B );
@@ -240,7 +240,7 @@ namespace Test {
       int lid = teamMember.league_rank();// returns a number between 0 and N
       auto subSrc = Kokkos::subview(A, 1, 1, 1, lid, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
       auto subDst = Kokkos::subview(B, 1, 1, 1, lid, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(teamMember,subDst,subSrc);
+      Kokkos::Experimental::local_deep_copy(teamMember,subDst,subSrc);
     });
 
     Kokkos::deep_copy( h_A, A );
@@ -259,7 +259,7 @@ namespace Test {
     Kokkos::parallel_for( team_policy( N, Kokkos::AUTO ), KOKKOS_LAMBDA ( const member_type &teamMember ) {
       int lid = teamMember.league_rank();// returns a number between 0 and N      
       auto subDst = Kokkos::subview(B, 1, 1, 1, lid, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(teamMember,subDst,20.0);
+      Kokkos::Experimental::local_deep_copy(teamMember,subDst,20.0);
     });
 
     Kokkos::deep_copy( h_B, B );
@@ -295,7 +295,7 @@ namespace Test {
       int lid = teamMember.league_rank();// returns a number between 0 and N
       auto subSrc = Kokkos::subview(A, 1, 1, lid, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
       auto subDst = Kokkos::subview(B, 1, 1, lid, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(teamMember,subDst,subSrc);
+      Kokkos::Experimental::local_deep_copy(teamMember,subDst,subSrc);
     });
 
     Kokkos::deep_copy( h_A, A );
@@ -314,7 +314,7 @@ namespace Test {
     Kokkos::parallel_for( team_policy( N, Kokkos::AUTO ), KOKKOS_LAMBDA ( const member_type &teamMember ) {
       int lid = teamMember.league_rank();// returns a number between 0 and N      
       auto subDst = Kokkos::subview(B, 1, 1, lid, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(teamMember,subDst,20.0);
+      Kokkos::Experimental::local_deep_copy(teamMember,subDst,20.0);
     });
 
     Kokkos::deep_copy( h_B, B );
@@ -350,7 +350,7 @@ namespace Test {
       int lid = teamMember.league_rank();// returns a number between 0 and N
       auto subSrc = Kokkos::subview(A, 1, lid, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
       auto subDst = Kokkos::subview(B, 1, lid, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(teamMember,subDst,subSrc);
+      Kokkos::Experimental::local_deep_copy(teamMember,subDst,subSrc);
     });
 
     Kokkos::deep_copy( h_A, A );
@@ -369,7 +369,7 @@ namespace Test {
     Kokkos::parallel_for( team_policy( N, Kokkos::AUTO ), KOKKOS_LAMBDA ( const member_type &teamMember ) {
       int lid = teamMember.league_rank();// returns a number between 0 and N      
       auto subDst = Kokkos::subview(B, 1, lid, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(teamMember,subDst,20.0);
+      Kokkos::Experimental::local_deep_copy(teamMember,subDst,20.0);
     });
 
     Kokkos::deep_copy( h_B, B );
@@ -404,7 +404,7 @@ namespace Test {
       int lid = teamMember.league_rank();// returns a number between 0 and N
       auto subSrc = Kokkos::subview(A, lid, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
       auto subDst = Kokkos::subview(B, lid, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(teamMember,subDst,subSrc);
+      Kokkos::Experimental::local_deep_copy(teamMember,subDst,subSrc);
     });
 
     Kokkos::deep_copy( h_A, A );
@@ -423,7 +423,7 @@ namespace Test {
     Kokkos::parallel_for( team_policy( N, Kokkos::AUTO ), KOKKOS_LAMBDA ( const member_type &teamMember ) {
       int lid = teamMember.league_rank();// returns a number between 0 and N      
       auto subDst = Kokkos::subview(B, lid, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(teamMember,subDst,20.0);
+      Kokkos::Experimental::local_deep_copy(teamMember,subDst,20.0);
     });
 
     Kokkos::deep_copy( h_B, B );
@@ -455,7 +455,7 @@ namespace Test {
     Kokkos::parallel_for( Kokkos::RangePolicy<ExecSpace>(0,N), KOKKOS_LAMBDA ( const int& i ) {
       auto subSrc = Kokkos::subview(A, 1, 1, 1, 1, 1, 1, i, Kokkos::ALL());
       auto subDst = Kokkos::subview(B, 1, 1, 1, 1, 1, 1, i, Kokkos::ALL());
-      Kokkos::local_deep_copy(subDst,subSrc);
+      Kokkos::Experimental::local_deep_copy(subDst,subSrc);
     });
 
     Kokkos::deep_copy( h_A, A );
@@ -473,7 +473,7 @@ namespace Test {
 
     Kokkos::parallel_for( Kokkos::RangePolicy<ExecSpace>(0,N), KOKKOS_LAMBDA ( const int& i ) {      
       auto subDst = Kokkos::subview(B, 1, 1, 1, 1, 1, 1, i, Kokkos::ALL());
-      Kokkos::local_deep_copy(subDst,20.0);
+      Kokkos::Experimental::local_deep_copy(subDst,20.0);
     });
 
     Kokkos::deep_copy( h_B, B );
@@ -505,7 +505,7 @@ namespace Test {
     Kokkos::parallel_for( Kokkos::RangePolicy<ExecSpace>(0,N), KOKKOS_LAMBDA ( const int& i ) {
       auto subSrc = Kokkos::subview(A, 1, 1, 1, 1, 1, i, Kokkos::ALL(), Kokkos::ALL());
       auto subDst = Kokkos::subview(B, 1, 1, 1, 1, 1, i, Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(subDst,subSrc);
+      Kokkos::Experimental::local_deep_copy(subDst,subSrc);
     });
 
     Kokkos::deep_copy( h_A, A );
@@ -523,7 +523,7 @@ namespace Test {
 
     Kokkos::parallel_for( Kokkos::RangePolicy<ExecSpace>(0,N), KOKKOS_LAMBDA ( const int& i ) {      
       auto subDst = Kokkos::subview(B, 1, 1, 1, 1, 1, i, Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(subDst,20.0);
+      Kokkos::Experimental::local_deep_copy(subDst,20.0);
     });
 
     Kokkos::deep_copy( h_B, B );
@@ -555,7 +555,7 @@ namespace Test {
     Kokkos::parallel_for( Kokkos::RangePolicy<ExecSpace>(0,N), KOKKOS_LAMBDA ( const int& i ) {
       auto subSrc = Kokkos::subview(A, 1, 1, 1, 1, i, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
       auto subDst = Kokkos::subview(B, 1, 1, 1, 1, i, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(subDst,subSrc);
+      Kokkos::Experimental::local_deep_copy(subDst,subSrc);
     });
 
     Kokkos::deep_copy( h_A, A );
@@ -573,7 +573,7 @@ namespace Test {
 
     Kokkos::parallel_for( Kokkos::RangePolicy<ExecSpace>(0,N), KOKKOS_LAMBDA ( const int& i ) {
       auto subDst = Kokkos::subview(B, 1, 1, 1, 1, i, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(subDst,20.0);
+      Kokkos::Experimental::local_deep_copy(subDst,20.0);
     });
 
     Kokkos::deep_copy( h_B, B );
@@ -605,7 +605,7 @@ namespace Test {
     Kokkos::parallel_for( Kokkos::RangePolicy<ExecSpace>(0,N), KOKKOS_LAMBDA ( const int& i ) {
       auto subSrc = Kokkos::subview(A, 1, 1, 1, i, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
       auto subDst = Kokkos::subview(B, 1, 1, 1, i, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(subDst,subSrc);
+      Kokkos::Experimental::local_deep_copy(subDst,subSrc);
     });
 
     Kokkos::deep_copy( h_A, A );
@@ -623,7 +623,7 @@ namespace Test {
 
     Kokkos::parallel_for( Kokkos::RangePolicy<ExecSpace>(0,N), KOKKOS_LAMBDA ( const int& i ) {
       auto subDst = Kokkos::subview(B, 1, 1, 1, i, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(subDst,20.0);
+      Kokkos::Experimental::local_deep_copy(subDst,20.0);
     });
 
     Kokkos::deep_copy( h_B, B );
@@ -655,7 +655,7 @@ namespace Test {
     Kokkos::parallel_for( Kokkos::RangePolicy<ExecSpace>(0,N), KOKKOS_LAMBDA ( const int& i ) {
       auto subSrc = Kokkos::subview(A, 1, 1, i, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
       auto subDst = Kokkos::subview(B, 1, 1, i, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(subDst,subSrc);
+      Kokkos::Experimental::local_deep_copy(subDst,subSrc);
     });
 
     Kokkos::deep_copy( h_A, A );
@@ -673,7 +673,7 @@ namespace Test {
 
     Kokkos::parallel_for( Kokkos::RangePolicy<ExecSpace>(0,N), KOKKOS_LAMBDA ( const int& i ) {
       auto subDst = Kokkos::subview(B, 1, 1, i, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(subDst,20.0);
+      Kokkos::Experimental::local_deep_copy(subDst,20.0);
     });
 
     Kokkos::deep_copy( h_B, B );
@@ -705,7 +705,7 @@ namespace Test {
     Kokkos::parallel_for( Kokkos::RangePolicy<ExecSpace>(0,N), KOKKOS_LAMBDA ( const int& i ) {
       auto subSrc = Kokkos::subview(A, 1, i, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
       auto subDst = Kokkos::subview(B, 1, i, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(subDst,subSrc);
+      Kokkos::Experimental::local_deep_copy(subDst,subSrc);
     });
 
     Kokkos::deep_copy( h_A, A );
@@ -723,7 +723,7 @@ namespace Test {
 
     Kokkos::parallel_for( Kokkos::RangePolicy<ExecSpace>(0,N), KOKKOS_LAMBDA ( const int& i ) {
       auto subDst = Kokkos::subview(B, 1, i, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(subDst,20.0);
+      Kokkos::Experimental::local_deep_copy(subDst,20.0);
     });
 
     Kokkos::deep_copy( h_B, B );
@@ -754,7 +754,7 @@ namespace Test {
     Kokkos::parallel_for( Kokkos::RangePolicy<ExecSpace>(0,N), KOKKOS_LAMBDA ( const int& i ) {
       auto subSrc = Kokkos::subview(A, i, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
       auto subDst = Kokkos::subview(B, i, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(subDst,subSrc);
+      Kokkos::Experimental::local_deep_copy(subDst,subSrc);
     });
 
     Kokkos::deep_copy( h_A, A );
@@ -772,7 +772,7 @@ namespace Test {
 
     Kokkos::parallel_for( Kokkos::RangePolicy<ExecSpace>(0,N), KOKKOS_LAMBDA ( const int& i ) {
       auto subDst = Kokkos::subview(B, i, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-      Kokkos::local_deep_copy(subDst,20.0);
+      Kokkos::Experimental::local_deep_copy(subDst,20.0);
     });
 
     Kokkos::deep_copy( h_B, B );
