@@ -79,19 +79,25 @@ struct IndexType
   using type = T;
 };
 
+namespace Experimental {
+  enum { LaunchDefault, CudaLaunchConstantMemory, CudaLaunchLocalMemory, CudaLaunchGlobalMemory };
+}
+
 /**\brief Specify Launch Bounds for CUDA execution.
  *
  *  If no launch bounds specified then do not set launch bounds.
  */
 template< unsigned int maxT = 0 /* Max threads per block */
         , unsigned int minB = 0 /* Min blocks per SM */
+        , unsigned int LaunchMechanism = Experimental::LaunchDefault // How to launch kernels
         >
 struct LaunchBounds
 {
   using launch_bounds = LaunchBounds;
-  using type = LaunchBounds<maxT,minB>;
+  using type = LaunchBounds<maxT,minB, LaunchMechanism>;
   static unsigned int constexpr maxTperB {maxT};
   static unsigned int constexpr minBperSM {minB};
+  static unsigned int constexpr launch_mechanism {LaunchMechanism};
 };
 
 } // namespace Kokkos

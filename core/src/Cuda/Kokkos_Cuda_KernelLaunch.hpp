@@ -174,16 +174,22 @@ static void cuda_parallel_launch_constant_or_global_memory( const DriverType* dr
 
 template < class DriverType
          , class LaunchBounds = Kokkos::LaunchBounds<>
-         , int LaunchMechanism = ( CudaTraits::ConstantMemoryUseThreshold < sizeof(DriverType) )?2:1 >
+         , int LaunchMechanism =
+             LaunchBounds::launch_mechanism == Kokkos::Experimental::LaunchDefault ?
+             (( CudaTraits::ConstantMemoryUseThreshold < sizeof(DriverType) )?
+                   Kokkos::Experimental::CudaLaunchConstantMemory:Kokkos::Experimental::CudaLaunchLocalMemory):
+             LaunchBounds::launch_mechanism>
 struct CudaParallelLaunch ;
 
 template < class DriverType
          , unsigned int MaxThreadsPerBlock
-         , unsigned int MinBlocksPerSM >
+         , unsigned int MinBlocksPerSM
+         , unsigned int SetLaunchMechanism >
 struct CudaParallelLaunch< DriverType
                          , Kokkos::LaunchBounds< MaxThreadsPerBlock 
-                                               , MinBlocksPerSM >
-                         , 0 >
+                                               , MinBlocksPerSM
+                                               , SetLaunchMechanism >
+                         , Kokkos::Experimental::CudaLaunchConstantMemory >
 {
   inline
   CudaParallelLaunch( const DriverType & driver
@@ -236,10 +242,10 @@ struct CudaParallelLaunch< DriverType
   }
 };
 
-template < class DriverType >
+template < class DriverType, unsigned int SetLaunchMechanism>
 struct CudaParallelLaunch< DriverType
-                         , Kokkos::LaunchBounds<>
-                         , 0 >
+                         , Kokkos::LaunchBounds<0,0,SetLaunchMechanism>
+                         , Kokkos::Experimental::CudaLaunchConstantMemory >
 {
   inline
   CudaParallelLaunch( const DriverType & driver
@@ -292,11 +298,13 @@ struct CudaParallelLaunch< DriverType
 
 template < class DriverType
          , unsigned int MaxThreadsPerBlock
-         , unsigned int MinBlocksPerSM >
+         , unsigned int MinBlocksPerSM
+         , unsigned int SetLaunchMechanism >
 struct CudaParallelLaunch< DriverType
                          , Kokkos::LaunchBounds< MaxThreadsPerBlock 
-                                               , MinBlocksPerSM >
-                         , 1 >
+                                               , MinBlocksPerSM
+                                               , SetLaunchMechanism >
+                         , Kokkos::Experimental::CudaLaunchLocalMemory >
 {
   inline
   CudaParallelLaunch( const DriverType & driver
@@ -342,10 +350,10 @@ struct CudaParallelLaunch< DriverType
   }
 };
 
-template < class DriverType >
+template < class DriverType, unsigned int SetLaunchMechanism>
 struct CudaParallelLaunch< DriverType
-                         , Kokkos::LaunchBounds<>
-                         , 1 >
+                         , Kokkos::LaunchBounds<0,0,SetLaunchMechanism>
+                         , Kokkos::Experimental::CudaLaunchLocalMemory >
 {
   inline
   CudaParallelLaunch( const DriverType & driver
@@ -391,11 +399,13 @@ struct CudaParallelLaunch< DriverType
 
 template < class DriverType
          , unsigned int MaxThreadsPerBlock
-         , unsigned int MinBlocksPerSM >
+         , unsigned int MinBlocksPerSM
+         , unsigned int SetLaunchMechanism >
 struct CudaParallelLaunch< DriverType
                          , Kokkos::LaunchBounds< MaxThreadsPerBlock
-                                               , MinBlocksPerSM >
-                         , 2 >
+                                               , MinBlocksPerSM
+                                               , SetLaunchMechanism >
+                         , Kokkos::Experimental::CudaLaunchGlobalMemory >
 {
   inline
   CudaParallelLaunch( const DriverType & driver
@@ -429,29 +439,13 @@ struct CudaParallelLaunch< DriverType
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
 
       DriverType* driver_ptr = NULL;
-      if(cuda_instance->m_stream != 0) {
-        driver_ptr = reinterpret_cast<DriverType*>(cuda_instance->scratch_functor(sizeof(DriverType)));
-        cudaMemcpyAsync(driver_ptr,&driver, sizeof(DriverType), cudaMemcpyDefault, cuda_instance->m_stream);
-      } else {
-        cudaMemcpyToSymbol(
-          kokkos_impl_cuda_constant_memory_buffer, &driver, sizeof(DriverType) );
-      }
+      driver_ptr = reinterpret_cast<DriverType*>(cuda_instance->scratch_functor(sizeof(DriverType)));
+      cudaMemcpyAsync(driver_ptr,&driver, sizeof(DriverType), cudaMemcpyDefault, cuda_instance->m_stream);
 
       // Invoke the driver function on the device
-#ifdef KOKKOS_IMPL_EXPERIMENTAL_CUDA_COMPILE_TIME_CONSTANT_GLOBAL_LAUNCH
-      if(cuda_instance->m_stream != 0)
       cuda_parallel_launch_global_memory
         < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >
           <<< grid , block , shmem , cuda_instance->m_stream >>>( driver_ptr );
-      else
-      cuda_parallel_launch_constant_memory
-        < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >
-          <<< grid , block , shmem , cuda_instance->m_stream >>>();
-#else
-      cuda_parallel_launch_constant_or_global_memory
-        < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >
-          <<< grid , block , shmem , cuda_instance->m_stream >>>( driver_ptr );
-#endif
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       CUDA_SAFE_CALL( cudaGetLastError() );
@@ -461,10 +455,10 @@ struct CudaParallelLaunch< DriverType
   }
 };
 
-template < class DriverType >
+template < class DriverType, unsigned int SetLaunchMechanism>
 struct CudaParallelLaunch< DriverType
-                         , Kokkos::LaunchBounds<>
-                         , 2 >
+                         , Kokkos::LaunchBounds<0,0,SetLaunchMechanism>
+                         , Kokkos::Experimental::CudaLaunchGlobalMemory >
 {
   inline
   CudaParallelLaunch( const DriverType & driver
@@ -497,27 +491,11 @@ struct CudaParallelLaunch< DriverType
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
 
       DriverType* driver_ptr = NULL;
-      if(cuda_instance->m_stream != 0) {
-        driver_ptr = reinterpret_cast<DriverType*>(cuda_instance->scratch_functor(sizeof(DriverType)));
-        cudaMemcpyAsync(driver_ptr,&driver, sizeof(DriverType), cudaMemcpyDefault, cuda_instance->m_stream);
-      } else {
-        cudaMemcpyToSymbol(
-          kokkos_impl_cuda_constant_memory_buffer, &driver, sizeof(DriverType) );
-      }
+      driver_ptr = reinterpret_cast<DriverType*>(cuda_instance->scratch_functor(sizeof(DriverType)));
+      cudaMemcpyAsync(driver_ptr,&driver, sizeof(DriverType), cudaMemcpyDefault, cuda_instance->m_stream);
 
-#ifdef KOKKOS_IMPL_EXPERIMENTAL_CUDA_COMPILE_TIME_CONSTANT_GLOBAL_LAUNCH
-      if(cuda_instance->m_stream != 0)
-      cuda_parallel_launch_global_memory
-        < DriverType >
+      cuda_parallel_launch_global_memory< DriverType >
           <<< grid , block , shmem , cuda_instance->m_stream >>>( driver_ptr );
-      else
-      cuda_parallel_launch_constant_memory
-        < DriverType >
-          <<< grid , block , shmem , cuda_instance->m_stream >>>();
-#else
-      cuda_parallel_launch_constant_or_global_memory< DriverType >
-          <<< grid , block , shmem , cuda_instance->m_stream >>>( driver_ptr );
-#endif
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       CUDA_SAFE_CALL( cudaGetLastError() );
