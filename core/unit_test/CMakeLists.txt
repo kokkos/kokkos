@@ -12,7 +12,7 @@ ENDIF()
 
 SET(GTEST_SOURCE_DIR ${${PARENT_PACKAGE_NAME}_SOURCE_DIR}/tpls/gtest)
 # TODO get the C++ standard flag from KOKKOS_CXX_STANDARD
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_PTHREAD=0 -std=c++11")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_PTHREAD=0")
 
 INCLUDE_DIRECTORIES(${GTEST_SOURCE_DIR})
 TRIBITS_ADD_LIBRARY(
@@ -21,6 +21,14 @@ TRIBITS_ADD_LIBRARY(
   SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
   TESTONLY
   )
+target_compile_options(
+  kokkos_gtest
+  PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${KOKKOS_CXX_FLAGS}>
+)
+target_link_libraries(
+  kokkos_gtest
+  PUBLIC ${KOKKOS_LD_FLAGS}
+)
 
 #
 # Define the tests
