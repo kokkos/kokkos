@@ -670,7 +670,7 @@ struct TestMultipleDependence {
   { 
     // gcc 4.8 has an internal compile error when I give the initializer in the class, so I have do do it here
     for(int i = 0; i < NPerDepth; ++i) {
-      m_result_futures[NPerDepth] = future_bool();
+      m_result_futures[i] = future_bool();
     }
   }
 
@@ -682,7 +682,7 @@ struct TestMultipleDependence {
   { 
     // gcc 4.8 has an internal compile error when I give the initializer in the class, so I have do do it here
     for(int i = 0; i < NPerDepth; ++i) {
-      m_result_futures[NPerDepth] = future_bool();
+      m_result_futures[i] = future_bool();
     }
   }
 
