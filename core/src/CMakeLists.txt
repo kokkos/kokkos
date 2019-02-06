@@ -70,6 +70,16 @@ IF(KOKKOS_LEGACY_TRIBITS)
   INSTALL(FILES ${HEADERS_CUDA} DESTINATION ${TRILINOS_INCDIR}/Cuda/)
 
   #-----------------------------------------------------------------------------
+
+  FILE(GLOB HEADERS_PROPERTIES Properties/*.hpp)
+  FILE(GLOB SOURCES_PROPERTIES Properties/*.cpp)
+
+  LIST(APPEND HEADERS_PRIVATE ${HEADERS_PROPERTIES} )
+  LIST(APPEND SOURCES         ${SOURCES_PROPERTIES} )
+
+  INSTALL(FILES ${HEADERS_PROPERTIES} DESTINATION ${TRILINOS_INCDIR}/Properties/)
+
+  #-----------------------------------------------------------------------------
   FILE(GLOB HEADERS_QTHREADS Qthreads/*.hpp)
   FILE(GLOB SOURCES_QTHREADS Qthreads/*.cpp)
 

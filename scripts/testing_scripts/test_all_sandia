@@ -786,6 +786,7 @@ single_build_and_test() {
       comment="$comment run_time=$(($run_end_time-$build_end_time))"
     fi
   else
+    comment=""
     local cmake_flags=$(get_cmake_flags $compiler $build $build_type)
     run_cmd cmake ${cmake_flags} ${KOKKOS_PATH} &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
     local targets
@@ -846,7 +847,11 @@ get_cmake_flags() {
   local cmake_flags="${CMAKE_FLAGS_EXTRA}"
 
   # Add the compiler
-  cmake_flags="${cmake_flags} -DCMAKE_CXX_COMPILER=$(which ${compiler_exe})";
+  if [[ "$compiler_exe" = *nvcc_wrapper* ]]; then
+    cmake_flags="${cmake_flags} -DCMAKE_CXX_COMPILER=${compiler_exe}";
+  else
+    cmake_flags="${cmake_flags} -DCMAKE_CXX_COMPILER=$(which ${compiler_exe})";
+  fi
 
   # Add the build type
   if [[ "$build_type" = *debug* ]]; then
@@ -878,6 +883,11 @@ get_cmake_flags() {
   cmake_flags="${cmake_flags} -DCMAKE_CXX_FLAGS=\"${cxxflags}\""
 
   #TODO LD flags
+
+  # add kokkos arch
+  if [[ ! -z $ARCH_FLAG ]]; then
+    cmake_flags="$cmake_flags -DKOKKOS_ARCH=${ARCH_FLAG#--arch=}"
+  fi
 
   echo "${cmake_flags}"
   return 0
