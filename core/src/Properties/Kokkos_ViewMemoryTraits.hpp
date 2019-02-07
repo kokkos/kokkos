@@ -54,10 +54,11 @@
 
 // TODO these should include forward declarations, not implementations
 #include <Kokkos_ExecPolicy.hpp>
+#include <Kokkos_View.hpp>
 
 namespace Kokkos {
 namespace Experimental {
-namespace ExecutionPolicyProperties {
+namespace ViewProperties {
 
 struct memory_traits_t
   : Kokkos::Impl::MultiFlagPropertyBase<
@@ -119,39 +120,112 @@ public:
 
   struct unmanaged_t
     : base_t::template enumerator<unmanaged_t, MemoryTraitsFlags::Unmanaged>
-  { };
+  {
+    static constexpr auto flag = MemoryTraitsFlags::Unmanaged;
+  };
 
   static constexpr auto unmanaged = unmanaged_t { };
 
   struct random_access_t
     : base_t::template enumerator<random_access_t, MemoryTraitsFlags::RandomAccess>
-  { };
+  {
+    static constexpr auto flag = MemoryTraitsFlags::RandomAccess;
+  };
 
   static constexpr auto random_access = random_access_t { };
 
   struct atomic_t
     : base_t::template enumerator<atomic_t, MemoryTraitsFlags::Atomic>
-  { };
+  {
+    static constexpr auto flag = MemoryTraitsFlags::Atomic;
+  };
 
   static constexpr auto atomic = atomic_t { };
 
   struct restrict_t
     : base_t::template enumerator<restrict_t, MemoryTraitsFlags::Restrict>
-  { };
+  {
+    static constexpr auto flag = MemoryTraitsFlags::Restrict;
+  };
 
   static constexpr auto restrict = restrict_t { };
 
   struct aligned_t
     : base_t::template enumerator<aligned_t, MemoryTraitsFlags::Aligned>
-  { };
+  {
+    static constexpr auto flag = MemoryTraitsFlags::Aligned;
+  };
 
   static constexpr auto aligned = aligned_t { };
 };
 
-
-} // end namespace ExecutionPolicyProperties
-
+} // end namespace ViewProperties
 } // end namespace Experimental
+
+namespace Impl {
+
+template <class Trait>
+using _is_memory_traits_prop_archetype = decltype(Trait::flag);
+
+template <class Trait>
+using is_memory_traits_property = is_detected_exact<
+  Kokkos::MemoryTraitsFlags, _is_memory_traits_prop_archetype, Trait
+>;
+
+template <class ViewType, class MemTraitsProp, class=void>
+struct MakeAnalogousViewWithTraits;
+
+template <class, Kokkos::MemoryTraitsFlags Flag>
+struct AddMemoryTrait;
+
+template <unsigned Flags, Kokkos::MemoryTraitsFlags NewFlag>
+struct AddMemoryTrait<MemoryTraits<Flags>, NewFlag>
+{
+  using type = MemoryTraits<Flags | NewFlag>;
+};
+
+template <class MemTraitsProp, class DataType, class... ViewProperties>
+struct MakeAnalogousViewWithTraits<
+  Kokkos::View<DataType, ViewProperties...>, MemTraitsProp,
+  typename std::enable_if<is_memory_traits_property<MemTraitsProp>::value>::type
+>
+{
+  using view_type = Kokkos::View<ViewProperties...>;
+  using type = Kokkos::View<
+    DataType,
+    typename view_type::array_layout,
+    typename view_type::memory_space,
+    typename Impl::AddMemoryTrait<
+      typename view_type::memory_traits, MemTraitsProp::flag
+    >::type
+  >;
+};
+
+} // end namespace Impl
+
+template <class MemoryTraitsProperty, class... ViewProperties>
+KOKKOS_INLINE_FUNCTION
+typename std::enable_if<
+  Impl::is_memory_traits_property<MemoryTraitsProperty>::value,
+  Impl::MakeAnalogousViewWithTraits<Kokkos::View<ViewProperties...>, MemoryTraitsProperty>
+>::type::type
+require_property(Kokkos::View<ViewProperties...> const& view, MemoryTraitsProperty)
+{
+  return { view };
+}
+
+template <class MemoryTraitsProperty, class... ViewProperties>
+KOKKOS_INLINE_FUNCTION
+typename std::enable_if<
+  Impl::is_memory_traits_property<MemoryTraitsProperty>::value,
+  Impl::MakeAnalogousViewWithTraits<Kokkos::View<ViewProperties...>, MemoryTraitsProperty>
+>::type::type
+require_property(Kokkos::View<ViewProperties...>&& view, MemoryTraitsProperty)
+{
+  return { std::move(view); };
+}
+
+
 } // end namespace Kokkos
 
 #endif //KOKKOS_PROPERTIES_VIEWMEMORYTRAITS_HPP
