@@ -67,14 +67,25 @@ struct EBOBaseImpl;
 template <class T>
 struct EBOBaseImpl<T, true> {
 
-  template <class... Args,
+  KOKKOS_FORCEINLINE_FUNCTION
+  constexpr EBOBaseImpl() noexcept = default;
+
+  template <
+    class Arg,
+    class... Args,
     int=typename std::enable_if<
-      std::is_constructible<T, Args...>::value,
+      std::is_constructible<T, Args...>::value
+      // Exclude this constructor from the copy/move candidates
+      // (this is necessary because it has different semantics with C++14 and beyond constexpr)
+      && not std::is_base_of<EBOBaseImpl, typename std::decay<Arg>::type>::value,
       int
     >::type(0)
   >
   KOKKOS_FORCEINLINE_FUNCTION
-  explicit EBOBaseImpl(
+  KOKKOS_CONSTEXPR_14
+  explicit
+  EBOBaseImpl(
+    Arg&& arg,
     Args&&... args
   ) noexcept(noexcept(T(std::forward<Args>(args)...)))
   {
@@ -83,26 +94,30 @@ struct EBOBaseImpl<T, true> {
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  EBOBaseImpl(EBOBaseImpl const&) = default;
+  constexpr EBOBaseImpl(EBOBaseImpl const&) = default;
 
   KOKKOS_FORCEINLINE_FUNCTION
-  EBOBaseImpl(EBOBaseImpl&&) = default;
+  constexpr EBOBaseImpl(EBOBaseImpl&&) = default;
 
   KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_CONSTEXPR_14
   EBOBaseImpl& operator=(EBOBaseImpl const&) = default;
 
   KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_CONSTEXPR_14
   EBOBaseImpl& operator=(EBOBaseImpl&&) = default;
 
   KOKKOS_FORCEINLINE_FUNCTION
   ~EBOBaseImpl() = default;
 
   KOKKOS_INLINE_FUNCTION
+  KOKKOS_CONSTEXPR_14
   T& _ebo_data_member() & {
     return *reinterpret_cast<T*>(this);
   }
 
   KOKKOS_INLINE_FUNCTION
+  constexpr
   T const& _ebo_data_member() const & {
     return *reinterpret_cast<T const*>(this);
   }
@@ -118,6 +133,7 @@ struct EBOBaseImpl<T, true> {
   }
 
   KOKKOS_INLINE_FUNCTION
+  KOKKOS_CONSTEXPR_14
   T&& _ebo_data_member() && {
     return std::move(*reinterpret_cast<T*>(this));
   }
@@ -136,7 +152,8 @@ struct EBOBaseImpl<T, false> {
     >::type(0)
   >
   KOKKOS_FORCEINLINE_FUNCTION
-  explicit EBOBaseImpl(
+  constexpr explicit
+  EBOBaseImpl(
     Args&&... args
   ) noexcept(noexcept(T(std::forward<Args>(args)...)))
     : m_ebo_object(std::forward<Args>(args)...)
@@ -145,15 +162,19 @@ struct EBOBaseImpl<T, false> {
   // TODO @tasking @minor DSH noexcept in the right places?
 
   KOKKOS_FORCEINLINE_FUNCTION
+  constexpr
   EBOBaseImpl(EBOBaseImpl const&) = default;
 
   KOKKOS_FORCEINLINE_FUNCTION
+  constexpr
   EBOBaseImpl(EBOBaseImpl&&) = default;
 
   KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_CONSTEXPR_14
   EBOBaseImpl& operator=(EBOBaseImpl const&) = default;
 
   KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_CONSTEXPR_14
   EBOBaseImpl& operator=(EBOBaseImpl&&) = default;
 
   KOKKOS_FORCEINLINE_FUNCTION
@@ -203,11 +224,13 @@ public:
   using ebo_base_t::ebo_base_t;
 
   KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_CONSTEXPR_14
   T& no_unique_address_data_member() & {
     return this->ebo_base_t::_ebo_data_member();
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
+  constexpr
   T const& no_unique_address_data_member() const & {
     return this->ebo_base_t::_ebo_data_member();
   }
@@ -223,6 +246,7 @@ public:
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_CONSTEXPR_14
   T&& no_unique_address_data_member() && {
     return this->ebo_base_t::_ebo_data_member();
   }
