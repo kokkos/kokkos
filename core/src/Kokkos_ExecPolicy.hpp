@@ -804,10 +804,10 @@ struct VectorSingleStruct {
  *  This policy is used together with a parallel pattern as a nested layer within a kernel launched
  *  with the TeamPolicy. This variant expects a single count. So the range is (0,count].
  */
-template<typename iType, class TeamMemberType>
+template<typename iType, class TeamMemberType, class _never_use_this_overload>
 KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct<iType,TeamMemberType>
-TeamThreadRange( const TeamMemberType&, const iType& count );
+TeamThreadRange( const TeamMemberType&, const iType& count ) = delete;
 
 /** \brief  Execution policy for parallel work over a threads within a team.
  *
@@ -815,10 +815,10 @@ TeamThreadRange( const TeamMemberType&, const iType& count );
  *  This policy is used together with a parallel pattern as a nested layer within a kernel launched
  *  with the TeamPolicy. This variant expects a begin and end. So the range is (begin,end].
  */
-template<typename iType1, typename iType2, class TeamMemberType>
+template<typename iType1, typename iType2, class TeamMemberType, class _never_use_this_overload>
 KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct<typename std::common_type<iType1, iType2>::type, TeamMemberType>
-TeamThreadRange( const TeamMemberType&, const iType1& begin, const iType2& end );
+TeamThreadRange( const TeamMemberType&, const iType1& begin, const iType2& end ) = delete;
 
 /** \brief  Execution policy for a vector parallel loop.
  *
@@ -826,15 +826,15 @@ TeamThreadRange( const TeamMemberType&, const iType1& begin, const iType2& end )
  *  This policy is used together with a parallel pattern as a nested layer within a kernel launched
  *  with the TeamPolicy. This variant expects a single count. So the range is (0,count].
  */
-template<typename iType, class TeamMemberType>
+template<typename iType, class TeamMemberType, class _never_use_this_overload>
 KOKKOS_INLINE_FUNCTION
 Impl::ThreadVectorRangeBoundariesStruct<iType,TeamMemberType>
-ThreadVectorRange( const TeamMemberType&, const iType& count );
+ThreadVectorRange( const TeamMemberType&, const iType& count ) = delete;
 
-template<typename iType, class TeamMemberType>
+template<typename iType, class TeamMemberType, class _never_use_this_overload>
 KOKKOS_INLINE_FUNCTION
 Impl::ThreadVectorRangeBoundariesStruct<iType,TeamMemberType>
-ThreadVectorRange( const TeamMemberType&, const iType& arg_begin, const iType& arg_end );
+ThreadVectorRange( const TeamMemberType&, const iType& arg_begin, const iType& arg_end ) = delete;
 
 #if defined(KOKKOS_ENABLE_PROFILING)
 namespace Impl {

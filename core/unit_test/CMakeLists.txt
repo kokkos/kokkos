@@ -29,69 +29,208 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 
 IF(Kokkos_ENABLE_Serial)
-  TRIBITS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_Serial
-    SOURCES
-      UnitTestMainInit.cpp
-      serial/TestSerial_AtomicOperations_int.cpp
-      serial/TestSerial_AtomicOperations_unsignedint.cpp
-      serial/TestSerial_AtomicOperations_longint.cpp
-      serial/TestSerial_AtomicOperations_unsignedlongint.cpp
-      serial/TestSerial_AtomicOperations_longlongint.cpp
-      serial/TestSerial_AtomicOperations_double.cpp
-      serial/TestSerial_AtomicOperations_float.cpp
-      serial/TestSerial_AtomicViews.cpp
-      serial/TestSerial_Atomics.cpp
-      serial/TestSerial_Complex.cpp
-      serial/TestSerial_Init.cpp
-      serial/TestSerial_MDRange_a.cpp
-      serial/TestSerial_MDRange_b.cpp
-      serial/TestSerial_MDRange_c.cpp
-      serial/TestSerial_MDRange_d.cpp
-      serial/TestSerial_MDRange_e.cpp
-      serial/TestSerial_Other.cpp
-      serial/TestSerial_RangePolicy.cpp
-      serial/TestSerial_Reductions.cpp
-      serial/TestSerial_Reducers_a.cpp
-      serial/TestSerial_Reducers_b.cpp
-      serial/TestSerial_Reducers_c.cpp
-      serial/TestSerial_Reducers_d.cpp
-      serial/TestSerial_Scan.cpp
-      serial/TestSerial_SharedAlloc.cpp
-      serial/TestSerial_SubView_a.cpp
-      serial/TestSerial_SubView_b.cpp
-      serial/TestSerial_SubView_c01.cpp
-      serial/TestSerial_SubView_c02.cpp
-      serial/TestSerial_SubView_c03.cpp
-      serial/TestSerial_SubView_c04.cpp
-      serial/TestSerial_SubView_c05.cpp
-      serial/TestSerial_SubView_c06.cpp
-      serial/TestSerial_SubView_c07.cpp
-      serial/TestSerial_SubView_c08.cpp
-      serial/TestSerial_SubView_c09.cpp
-      serial/TestSerial_SubView_c10.cpp
-      serial/TestSerial_SubView_c11.cpp
-      serial/TestSerial_SubView_c12.cpp
-      serial/TestSerial_SubView_c13.cpp
-      serial/TestSerial_Team.cpp
-      serial/TestSerial_TeamReductionScan.cpp
-      serial/TestSerial_TeamScratch.cpp
-      serial/TestSerial_ViewAPI_a.cpp
-      serial/TestSerial_ViewAPI_b.cpp
-      serial/TestSerial_ViewAPI_c.cpp
-      serial/TestSerial_ViewAPI_d.cpp
-      serial/TestSerial_ViewAPI_e.cpp
-      serial/TestSerial_ViewMapping_a.cpp
-      serial/TestSerial_ViewMapping_b.cpp
-      serial/TestSerial_ViewMapping_subview.cpp
-      serial/TestSerial_ViewOfClass.cpp
-      serial/TestSerial_Crs.cpp
-      serial/TestSerial_WorkGraph.cpp
-    COMM serial mpi
-    NUM_MPI_PROCS 1
-    FAIL_REGULAR_EXPRESSION "  FAILED  "
-    TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
-  )
+  IF(KOKKOS_SEPARATE_TESTS)
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_Serial_Atomics
+      SOURCES
+        UnitTestMainInit.cpp
+        serial/TestSerial_AtomicOperations_int.cpp
+        serial/TestSerial_AtomicOperations_unsignedint.cpp
+        serial/TestSerial_AtomicOperations_longint.cpp
+        serial/TestSerial_AtomicOperations_unsignedlongint.cpp
+        serial/TestSerial_AtomicOperations_longlongint.cpp
+        serial/TestSerial_AtomicOperations_double.cpp
+        serial/TestSerial_AtomicOperations_float.cpp
+        serial/TestSerial_AtomicViews.cpp
+        serial/TestSerial_Atomics.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_Serial_SubView
+      SOURCES
+        UnitTestMainInit.cpp
+        serial/TestSerial_SubView_a.cpp
+        serial/TestSerial_SubView_b.cpp
+        serial/TestSerial_SubView_c01.cpp
+        serial/TestSerial_SubView_c02.cpp
+        serial/TestSerial_SubView_c03.cpp
+        serial/TestSerial_SubView_c04.cpp
+        serial/TestSerial_SubView_c05.cpp
+        serial/TestSerial_SubView_c06.cpp
+        serial/TestSerial_SubView_c07.cpp
+        serial/TestSerial_SubView_c08.cpp
+        serial/TestSerial_SubView_c09.cpp
+        serial/TestSerial_SubView_c10.cpp
+        serial/TestSerial_SubView_c11.cpp
+        serial/TestSerial_SubView_c12.cpp
+        serial/TestSerial_SubView_c13.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_Serial_ViewAPI
+      SOURCES
+        UnitTestMainInit.cpp
+        serial/TestSerial_ViewAPI_a.cpp
+        serial/TestSerial_ViewAPI_b.cpp
+        serial/TestSerial_ViewAPI_c.cpp
+        serial/TestSerial_ViewAPI_d.cpp
+        serial/TestSerial_ViewAPI_e.cpp
+        serial/TestSerial_ViewOfClass.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_Serial_ViewMapping
+      SOURCES
+        UnitTestMainInit.cpp
+        serial/TestSerial_ViewMapping_a.cpp
+        serial/TestSerial_ViewMapping_b.cpp
+        serial/TestSerial_ViewMapping_subview.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_Serial_Reducers
+      SOURCES
+        UnitTestMainInit.cpp
+        serial/TestSerial_Reductions.cpp
+        serial/TestSerial_Reducers_a.cpp
+        serial/TestSerial_Reducers_b.cpp
+        serial/TestSerial_Reducers_c.cpp
+        serial/TestSerial_Reducers_d.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_Serial_MDRange
+      SOURCES
+        UnitTestMainInit.cpp
+        serial/TestSerial_MDRange_a.cpp
+        serial/TestSerial_MDRange_b.cpp
+        serial/TestSerial_MDRange_c.cpp
+        serial/TestSerial_MDRange_d.cpp
+        serial/TestSerial_MDRange_e.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_Serial_Team
+      SOURCES
+        UnitTestMainInit.cpp
+        serial/TestSerial_Team.cpp
+        serial/TestSerial_TeamReductionScan.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_Serial_Tasking
+      SOURCES
+        UnitTestMainInit.cpp
+        serial/TestSerial_Task.cpp
+        serial/TestSerial_WorkGraph.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_Serial_Misc
+      SOURCES
+        UnitTestMainInit.cpp
+        serial/TestSerial_Complex.cpp
+        serial/TestSerial_Init.cpp
+        serial/TestSerial_Other.cpp
+        serial/TestSerial_RangePolicy.cpp
+        serial/TestSerial_Scan.cpp
+        serial/TestSerial_SharedAlloc.cpp
+        serial/TestSerial_Crs.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+  ELSE()
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_Serial
+      SOURCES
+        UnitTestMainInit.cpp
+        serial/TestSerial_AtomicOperations_int.cpp
+        serial/TestSerial_AtomicOperations_unsignedint.cpp
+        serial/TestSerial_AtomicOperations_longint.cpp
+        serial/TestSerial_AtomicOperations_unsignedlongint.cpp
+        serial/TestSerial_AtomicOperations_longlongint.cpp
+        serial/TestSerial_AtomicOperations_double.cpp
+        serial/TestSerial_AtomicOperations_float.cpp
+        serial/TestSerial_AtomicViews.cpp
+        serial/TestSerial_Atomics.cpp
+        serial/TestSerial_Complex.cpp
+        serial/TestSerial_Init.cpp
+        serial/TestSerial_MDRange_a.cpp
+        serial/TestSerial_MDRange_b.cpp
+        serial/TestSerial_MDRange_c.cpp
+        serial/TestSerial_MDRange_d.cpp
+        serial/TestSerial_MDRange_e.cpp
+        serial/TestSerial_Other.cpp
+        serial/TestSerial_RangePolicy.cpp
+        serial/TestSerial_Reductions.cpp
+        serial/TestSerial_Reducers_a.cpp
+        serial/TestSerial_Reducers_b.cpp
+        serial/TestSerial_Reducers_c.cpp
+        serial/TestSerial_Reducers_d.cpp
+        serial/TestSerial_Scan.cpp
+        serial/TestSerial_SharedAlloc.cpp
+        serial/TestSerial_SubView_a.cpp
+        serial/TestSerial_SubView_b.cpp
+        serial/TestSerial_SubView_c01.cpp
+        serial/TestSerial_SubView_c02.cpp
+        serial/TestSerial_SubView_c03.cpp
+        serial/TestSerial_SubView_c04.cpp
+        serial/TestSerial_SubView_c05.cpp
+        serial/TestSerial_SubView_c06.cpp
+        serial/TestSerial_SubView_c07.cpp
+        serial/TestSerial_SubView_c08.cpp
+        serial/TestSerial_SubView_c09.cpp
+        serial/TestSerial_SubView_c10.cpp
+        serial/TestSerial_SubView_c11.cpp
+        serial/TestSerial_SubView_c12.cpp
+        serial/TestSerial_SubView_c13.cpp
+        serial/TestSerial_Task.cpp
+        serial/TestSerial_Team.cpp
+        serial/TestSerial_TeamReductionScan.cpp
+        serial/TestSerial_TeamScratch.cpp
+        serial/TestSerial_ViewAPI_a.cpp
+        serial/TestSerial_ViewAPI_b.cpp
+        serial/TestSerial_ViewAPI_c.cpp
+        serial/TestSerial_ViewAPI_d.cpp
+        serial/TestSerial_ViewAPI_e.cpp
+        serial/TestSerial_ViewMapping_a.cpp
+        serial/TestSerial_ViewMapping_b.cpp
+        serial/TestSerial_ViewMapping_subview.cpp
+        serial/TestSerial_ViewOfClass.cpp
+        serial/TestSerial_Crs.cpp
+        serial/TestSerial_WorkGraph.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+  ENDIF()
 ENDIF()
 
 IF(Kokkos_ENABLE_Pthread)
@@ -161,80 +300,229 @@ IF(Kokkos_ENABLE_Pthread)
 ENDIF()
 
 IF(Kokkos_ENABLE_OpenMP)
-  TRIBITS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_OpenMP
-    SOURCES
-      UnitTestMainInit.cpp
-      openmp/TestOpenMP_AtomicOperations_int.cpp
-      openmp/TestOpenMP_AtomicOperations_unsignedint.cpp
-      openmp/TestOpenMP_AtomicOperations_longint.cpp
-      openmp/TestOpenMP_AtomicOperations_unsignedlongint.cpp
-      openmp/TestOpenMP_AtomicOperations_longlongint.cpp
-      openmp/TestOpenMP_AtomicOperations_double.cpp
-      openmp/TestOpenMP_AtomicOperations_float.cpp
-      openmp/TestOpenMP_AtomicViews.cpp
-      openmp/TestOpenMP_Atomics.cpp
-      openmp/TestOpenMP_Complex.cpp
-      openmp/TestOpenMP_Init.cpp
-      openmp/TestOpenMP_MDRange_a.cpp
-      openmp/TestOpenMP_MDRange_b.cpp
-      openmp/TestOpenMP_MDRange_c.cpp
-      openmp/TestOpenMP_MDRange_d.cpp
-      openmp/TestOpenMP_MDRange_e.cpp
-      openmp/TestOpenMP_Other.cpp
-      openmp/TestOpenMP_RangePolicy.cpp
-      openmp/TestOpenMP_Reductions.cpp
-      openmp/TestOpenMP_Reducers_a.cpp
-      openmp/TestOpenMP_Reducers_b.cpp
-      openmp/TestOpenMP_Reducers_c.cpp
-      openmp/TestOpenMP_Reducers_d.cpp
-      openmp/TestOpenMP_Scan.cpp
-      openmp/TestOpenMP_SharedAlloc.cpp
-      openmp/TestOpenMP_SubView_a.cpp
-      openmp/TestOpenMP_SubView_b.cpp
-      openmp/TestOpenMP_SubView_c01.cpp
-      openmp/TestOpenMP_SubView_c02.cpp
-      openmp/TestOpenMP_SubView_c03.cpp
-      openmp/TestOpenMP_SubView_c04.cpp
-      openmp/TestOpenMP_SubView_c05.cpp
-      openmp/TestOpenMP_SubView_c06.cpp
-      openmp/TestOpenMP_SubView_c07.cpp
-      openmp/TestOpenMP_SubView_c08.cpp
-      openmp/TestOpenMP_SubView_c09.cpp
-      openmp/TestOpenMP_SubView_c10.cpp
-      openmp/TestOpenMP_SubView_c11.cpp
-      openmp/TestOpenMP_SubView_c12.cpp
-      openmp/TestOpenMP_SubView_c13.cpp
-      openmp/TestOpenMP_Task.cpp
-      openmp/TestOpenMP_Team.cpp
-      openmp/TestOpenMP_TeamReductionScan.cpp
-      openmp/TestOpenMP_ViewAPI_a.cpp
-      openmp/TestOpenMP_ViewAPI_b.cpp
-      openmp/TestOpenMP_ViewAPI_c.cpp
-      openmp/TestOpenMP_ViewAPI_d.cpp
-      openmp/TestOpenMP_ViewAPI_e.cpp
-      openmp/TestOpenMP_ViewMapping_a.cpp
-      openmp/TestOpenMP_ViewMapping_b.cpp
-      openmp/TestOpenMP_ViewMapping_subview.cpp
-      openmp/TestOpenMP_ViewOfClass.cpp
-      openmp/TestOpenMP_Crs.cpp
-      openmp/TestOpenMP_WorkGraph.cpp
-      openmp/TestOpenMP_UniqueToken.cpp
-    COMM serial mpi
-    NUM_MPI_PROCS 1
-    FAIL_REGULAR_EXPRESSION "  FAILED  "
-    TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
-  )
-  TRIBITS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_OpenMPInterOp
-    SOURCES
-      UnitTestMain.cpp
-      openmp/TestOpenMP_InterOp.cpp
-    COMM serial mpi
-    NUM_MPI_PROCS 1
-    FAIL_REGULAR_EXPRESSION "  FAILED  "
-    TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
-  )
+  IF(KOKKOS_SEPARATE_TESTS)
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_OpenMP_Atomics
+      SOURCES
+        UnitTestMainInit.cpp
+        openmp/TestOpenMP_AtomicOperations_int.cpp
+        openmp/TestOpenMP_AtomicOperations_unsignedint.cpp
+        openmp/TestOpenMP_AtomicOperations_longint.cpp
+        openmp/TestOpenMP_AtomicOperations_unsignedlongint.cpp
+        openmp/TestOpenMP_AtomicOperations_longlongint.cpp
+        openmp/TestOpenMP_AtomicOperations_double.cpp
+        openmp/TestOpenMP_AtomicOperations_float.cpp
+        openmp/TestOpenMP_AtomicViews.cpp
+        openmp/TestOpenMP_Atomics.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_OpenMP_SubView
+      SOURCES
+        UnitTestMainInit.cpp
+        openmp/TestOpenMP_SubView_a.cpp
+        openmp/TestOpenMP_SubView_b.cpp
+        openmp/TestOpenMP_SubView_c01.cpp
+        openmp/TestOpenMP_SubView_c02.cpp
+        openmp/TestOpenMP_SubView_c03.cpp
+        openmp/TestOpenMP_SubView_c04.cpp
+        openmp/TestOpenMP_SubView_c05.cpp
+        openmp/TestOpenMP_SubView_c06.cpp
+        openmp/TestOpenMP_SubView_c07.cpp
+        openmp/TestOpenMP_SubView_c08.cpp
+        openmp/TestOpenMP_SubView_c09.cpp
+        openmp/TestOpenMP_SubView_c10.cpp
+        openmp/TestOpenMP_SubView_c11.cpp
+        openmp/TestOpenMP_SubView_c12.cpp
+        openmp/TestOpenMP_SubView_c13.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_OpenMP_ViewAPI
+      SOURCES
+        UnitTestMainInit.cpp
+        openmp/TestOpenMP_ViewAPI_a.cpp
+        openmp/TestOpenMP_ViewAPI_b.cpp
+        openmp/TestOpenMP_ViewAPI_c.cpp
+        openmp/TestOpenMP_ViewAPI_d.cpp
+        openmp/TestOpenMP_ViewAPI_e.cpp
+        openmp/TestOpenMP_ViewOfClass.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_OpenMP_ViewMapping
+      SOURCES
+        UnitTestMainInit.cpp
+        openmp/TestOpenMP_ViewMapping_a.cpp
+        openmp/TestOpenMP_ViewMapping_b.cpp
+        openmp/TestOpenMP_ViewMapping_subview.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_OpenMP_Reducers
+      SOURCES
+        UnitTestMainInit.cpp
+        openmp/TestOpenMP_Reductions.cpp
+        openmp/TestOpenMP_Reducers_a.cpp
+        openmp/TestOpenMP_Reducers_b.cpp
+        openmp/TestOpenMP_Reducers_c.cpp
+        openmp/TestOpenMP_Reducers_d.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_OpenMP_MDRange
+      SOURCES
+        UnitTestMainInit.cpp
+        openmp/TestOpenMP_MDRange_a.cpp
+        openmp/TestOpenMP_MDRange_b.cpp
+        openmp/TestOpenMP_MDRange_c.cpp
+        openmp/TestOpenMP_MDRange_d.cpp
+        openmp/TestOpenMP_MDRange_e.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_OpenMP_Team
+      SOURCES
+        UnitTestMainInit.cpp
+        openmp/TestOpenMP_Team.cpp
+        openmp/TestOpenMP_TeamReductionScan.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_OpenMP_Tasking
+      SOURCES
+        UnitTestMainInit.cpp
+        openmp/TestOpenMP_Task.cpp
+        openmp/TestOpenMP_WorkGraph.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_OpenMP_Misc
+      SOURCES
+        UnitTestMainInit.cpp
+        openmp/TestOpenMP_Complex.cpp
+        openmp/TestOpenMP_Init.cpp
+        openmp/TestOpenMP_Other.cpp
+        openmp/TestOpenMP_RangePolicy.cpp
+        openmp/TestOpenMP_Scan.cpp
+        openmp/TestOpenMP_SharedAlloc.cpp
+        openmp/TestOpenMP_Crs.cpp
+        openmp/TestOpenMP_UniqueToken.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_OpenMPInterOp
+      SOURCES
+        UnitTestMain.cpp
+        openmp/TestOpenMP_InterOp.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+  ELSE()
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_OpenMP
+      SOURCES
+        UnitTestMainInit.cpp
+        openmp/TestOpenMP_AtomicOperations_int.cpp
+        openmp/TestOpenMP_AtomicOperations_unsignedint.cpp
+        openmp/TestOpenMP_AtomicOperations_longint.cpp
+        openmp/TestOpenMP_AtomicOperations_unsignedlongint.cpp
+        openmp/TestOpenMP_AtomicOperations_longlongint.cpp
+        openmp/TestOpenMP_AtomicOperations_double.cpp
+        openmp/TestOpenMP_AtomicOperations_float.cpp
+        openmp/TestOpenMP_AtomicViews.cpp
+        openmp/TestOpenMP_Atomics.cpp
+        openmp/TestOpenMP_Complex.cpp
+        openmp/TestOpenMP_Init.cpp
+        openmp/TestOpenMP_MDRange_a.cpp
+        openmp/TestOpenMP_MDRange_b.cpp
+        openmp/TestOpenMP_MDRange_c.cpp
+        openmp/TestOpenMP_MDRange_d.cpp
+        openmp/TestOpenMP_MDRange_e.cpp
+        openmp/TestOpenMP_Other.cpp
+        openmp/TestOpenMP_RangePolicy.cpp
+        openmp/TestOpenMP_Reductions.cpp
+        openmp/TestOpenMP_Reducers_a.cpp
+        openmp/TestOpenMP_Reducers_b.cpp
+        openmp/TestOpenMP_Reducers_c.cpp
+        openmp/TestOpenMP_Reducers_d.cpp
+        openmp/TestOpenMP_Scan.cpp
+        openmp/TestOpenMP_SharedAlloc.cpp
+        openmp/TestOpenMP_SubView_a.cpp
+        openmp/TestOpenMP_SubView_b.cpp
+        openmp/TestOpenMP_SubView_c01.cpp
+        openmp/TestOpenMP_SubView_c02.cpp
+        openmp/TestOpenMP_SubView_c03.cpp
+        openmp/TestOpenMP_SubView_c04.cpp
+        openmp/TestOpenMP_SubView_c05.cpp
+        openmp/TestOpenMP_SubView_c06.cpp
+        openmp/TestOpenMP_SubView_c07.cpp
+        openmp/TestOpenMP_SubView_c08.cpp
+        openmp/TestOpenMP_SubView_c09.cpp
+        openmp/TestOpenMP_SubView_c10.cpp
+        openmp/TestOpenMP_SubView_c11.cpp
+        openmp/TestOpenMP_SubView_c12.cpp
+        openmp/TestOpenMP_SubView_c13.cpp
+        openmp/TestOpenMP_Task.cpp
+        openmp/TestOpenMP_Team.cpp
+        openmp/TestOpenMP_TeamReductionScan.cpp
+        openmp/TestOpenMP_ViewAPI_a.cpp
+        openmp/TestOpenMP_ViewAPI_b.cpp
+        openmp/TestOpenMP_ViewAPI_c.cpp
+        openmp/TestOpenMP_ViewAPI_d.cpp
+        openmp/TestOpenMP_ViewAPI_e.cpp
+        openmp/TestOpenMP_ViewMapping_a.cpp
+        openmp/TestOpenMP_ViewMapping_b.cpp
+        openmp/TestOpenMP_ViewMapping_subview.cpp
+        openmp/TestOpenMP_ViewOfClass.cpp
+        openmp/TestOpenMP_Crs.cpp
+        openmp/TestOpenMP_WorkGraph.cpp
+        openmp/TestOpenMP_UniqueToken.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_OpenMPInterOp
+      SOURCES
+        UnitTestMain.cpp
+        openmp/TestOpenMP_InterOp.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+  ENDIF()
 ENDIF()
 
 IF(Kokkos_ENABLE_Qthreads)
