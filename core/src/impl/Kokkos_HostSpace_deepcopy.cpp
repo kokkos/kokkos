@@ -1,15 +1,4 @@
-#ifdef JJE_DEBUG_PAR_DEEPCOPY
-  #include <cstdio>
-#endif
-
-// for memcpy
-#include <cstring>
-
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
-#define PAR_DEEP_COPY_USE_MEMCPY
+#include "Kokkos_HostSpace_deepcopy.hpp"
 
 namespace Kokkos {
 

@@ -6,6 +6,9 @@
 #include <omp.h>
 #endif
 
+#include <cstring> // memcpy
+#include <cstdint> // uintptr_t
+
 #define PAR_DEEP_COPY_USE_MEMCPY
 
 namespace Kokkos {
