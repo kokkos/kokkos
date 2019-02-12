@@ -80,7 +80,42 @@ struct IndexType
 };
 
 namespace Experimental {
-  enum { LaunchDefault, CudaLaunchConstantMemory, CudaLaunchLocalMemory, CudaLaunchGlobalMemory };
+  struct WorkItemProperty {
+    template<unsigned long Property>
+    struct ImplWorkItemProperty {
+      static const unsigned value = Property;
+      using work_item_property = ImplWorkItemProperty<Property>;
+    };
+
+    constexpr static const ImplWorkItemProperty<0> None = ImplWorkItemProperty<0>();
+    constexpr static const ImplWorkItemProperty<1> HintLightWeight = ImplWorkItemProperty<1>();
+    constexpr static const ImplWorkItemProperty<2> HintHeavyWeight = ImplWorkItemProperty<2>();
+    constexpr static const ImplWorkItemProperty<4> HintRegular = ImplWorkItemProperty<4>();
+    constexpr static const ImplWorkItemProperty<8> HintIrregular = ImplWorkItemProperty<8>();
+    typedef ImplWorkItemProperty<0> None_t;
+    typedef ImplWorkItemProperty<1> HintLightWeight_t;
+    typedef ImplWorkItemProperty<2> HintHeavyWeight_t;
+    typedef ImplWorkItemProperty<4> HintRegular_t;
+    typedef ImplWorkItemProperty<8> HintIrregular_t;
+  };
+
+template<unsigned long pv1, unsigned long pv2>
+inline constexpr WorkItemProperty::ImplWorkItemProperty<pv1|pv2> operator |
+  (WorkItemProperty::ImplWorkItemProperty<pv1>, WorkItemProperty::ImplWorkItemProperty<pv2>) {
+  return WorkItemProperty::ImplWorkItemProperty<pv1|pv2>();
+}
+
+template<unsigned long pv1, unsigned long pv2>
+inline constexpr WorkItemProperty::ImplWorkItemProperty<pv1&pv2> operator &
+  (WorkItemProperty::ImplWorkItemProperty<pv1>, WorkItemProperty::ImplWorkItemProperty<pv2>) {
+  return WorkItemProperty::ImplWorkItemProperty<pv1&pv2>();
+}
+
+template<unsigned long pv1, unsigned long pv2>
+inline constexpr bool operator == (WorkItemProperty::ImplWorkItemProperty<pv1>, WorkItemProperty::ImplWorkItemProperty<pv2>) {
+  return pv1 ==  pv2;
+}
+
 }
 
 /**\brief Specify Launch Bounds for CUDA execution.
@@ -89,15 +124,13 @@ namespace Experimental {
  */
 template< unsigned int maxT = 0 /* Max threads per block */
         , unsigned int minB = 0 /* Min blocks per SM */
-        , unsigned int LaunchMechanism = Experimental::LaunchDefault // How to launch kernels
         >
 struct LaunchBounds
 {
   using launch_bounds = LaunchBounds;
-  using type = LaunchBounds<maxT,minB, LaunchMechanism>;
+  using type = LaunchBounds<maxT,minB>;
   static unsigned int constexpr maxTperB {maxT};
   static unsigned int constexpr minBperSM {minB};
-  static unsigned int constexpr launch_mechanism {LaunchMechanism};
 };
 
 } // namespace Kokkos
@@ -127,6 +160,9 @@ KOKKOS_IMPL_IS_CONCEPT( execution_space )
 KOKKOS_IMPL_IS_CONCEPT( execution_policy )
 KOKKOS_IMPL_IS_CONCEPT( array_layout )
 KOKKOS_IMPL_IS_CONCEPT( reducer )
+namespace Experimental {
+KOKKOS_IMPL_IS_CONCEPT( work_item_property )
+}
 
 namespace Impl {
 

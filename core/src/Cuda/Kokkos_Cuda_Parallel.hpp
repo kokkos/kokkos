@@ -442,9 +442,10 @@ class ParallelFor< FunctorType
                  , Kokkos::Cuda
                  >
 {
+public:
+  typedef Kokkos::RangePolicy< Traits ... > Policy;
 private:
 
-  typedef Kokkos::RangePolicy< Traits ... > Policy;
   typedef typename Policy::member_type  Member ;
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::launch_bounds LaunchBounds ;
@@ -512,8 +513,9 @@ class ParallelFor< FunctorType
                  , Kokkos::Cuda
                  >
 {
-private:
+public:
   typedef Kokkos::MDRangePolicy< Traits ...  > Policy ;
+private:
   using RP = Policy;
   typedef typename Policy::array_index_type array_index_type;
   typedef typename Policy::index_type index_type;
@@ -620,9 +622,10 @@ class ParallelFor< FunctorType
                  , Kokkos::Cuda
                  >
 {
+public:
+  typedef TeamPolicyInternal< Kokkos::Cuda , Properties ... >   Policy ;
 private:
 
-  typedef TeamPolicyInternal< Kokkos::Cuda , Properties ... >   Policy ;
   typedef typename Policy::member_type  Member ;
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::launch_bounds  LaunchBounds ;
@@ -767,9 +770,10 @@ class ParallelReduce< FunctorType
                     , Kokkos::Cuda
                     >
 {
+public:
+  typedef Kokkos::RangePolicy< Traits ... >         Policy ;
 private:
 
-  typedef Kokkos::RangePolicy< Traits ... >         Policy ;
 
   typedef typename Policy::WorkRange    WorkRange ;
   typedef typename Policy::work_tag     WorkTag ;
@@ -1005,9 +1009,10 @@ class ParallelReduce< FunctorType
                     , Kokkos::Cuda
                     >
 {
+public:
+  typedef Kokkos::MDRangePolicy< Traits ... > Policy ;
 private:
 
-  typedef Kokkos::MDRangePolicy< Traits ... > Policy ;
   typedef typename Policy::array_index_type                 array_index_type;
   typedef typename Policy::index_type                       index_type;
 
@@ -1243,9 +1248,10 @@ class ParallelReduce< FunctorType
                     , Kokkos::Cuda
                     >
 {
+public:
+  typedef TeamPolicyInternal< Kokkos::Cuda, Properties ... >  Policy ;
 private:
 
-  typedef TeamPolicyInternal< Kokkos::Cuda, Properties ... >  Policy ;
   typedef typename Policy::member_type  Member ;
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::launch_bounds     LaunchBounds ;

@@ -91,14 +91,18 @@ template<class ... Properties>
 class RangePolicy
   : public Impl::PolicyTraits<Properties ... >
 {
-private:
+public:
   typedef Impl::PolicyTraits<Properties ... > traits;
+private:
 
   typename traits::execution_space m_space ;
   typename traits::index_type  m_begin ;
   typename traits::index_type  m_end ;
   typename traits::index_type  m_granularity ;
   typename traits::index_type  m_granularity_mask ;
+
+  template<class ... OtherProperties>
+  friend class RangePolicy;
 
 public:
   //! Tag this class as an execution policy
@@ -117,6 +121,15 @@ public:
 
   RangePolicy(const RangePolicy&) = default;
   RangePolicy(RangePolicy&&) = default;
+
+  template<class ... OtherProperties>
+  RangePolicy(const RangePolicy<OtherProperties...> p) {
+    m_space = p.m_space;
+    m_begin = p.m_begin;
+    m_end = p.m_end;
+    m_granularity = p.m_granularity;
+    m_granularity_mask = p.m_granularity_mask;
+  }
 
   inline RangePolicy() : m_space(), m_begin(0), m_end(0) {}
 
@@ -277,6 +290,31 @@ public:
   };
 };
 
+namespace Experimental {
+
+namespace Impl {
+  template<class Property,class Policy>
+  struct PolicyPropertyAdaptor;
+
+  template<unsigned long P, class ... Properties>
+  struct PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,RangePolicy<Properties...>> {
+    typedef RangePolicy<Properties...> policy_in_t;
+    typedef RangePolicy<typename policy_in_t::traits::execution_space,
+                        typename policy_in_t::traits::schedule_type,
+                        typename policy_in_t::traits::work_tag,
+                        typename policy_in_t::traits::index_type,
+                        typename policy_in_t::traits::iteration_pattern,
+                        typename policy_in_t::traits::launch_bounds,
+                        WorkItemProperty::ImplWorkItemProperty<P>> policy_out_t;
+  };
+}
+
+template<class PolicyType,unsigned long P>
+constexpr typename Impl::PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,PolicyType>::policy_out_t
+  require(const PolicyType p, WorkItemProperty::ImplWorkItemProperty<P>){
+    return typename Impl::PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,PolicyType>::policy_out_t(p);
+}
+}
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------

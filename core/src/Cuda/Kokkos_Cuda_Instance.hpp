@@ -20,13 +20,14 @@ struct CudaTraits {
   enum { ConstantMemoryCapacity = 0x010000 /* 64k bytes */ };
   enum { ConstantMemoryUsage    = 0x008000 /* 32k bytes */ };
   enum { ConstantMemoryCache    = 0x002000 /*  8k bytes */ };
+  enum { KernelArgumentLimit    = 0x001000 /*  4k bytes */ };
 
   typedef unsigned long
     ConstantGlobalBufferType[ ConstantMemoryUsage / sizeof(unsigned long) ];
 
 #if defined(KOKKOS_ARCH_VOLTA) || \
     defined(KOKKOS_ARCH_PASCAL)
-  enum { ConstantMemoryUseThreshold = 0x000000 /* 0 bytes -> always use constant (or global)*/ };
+  enum { ConstantMemoryUseThreshold = 0x000200 /* 0 bytes -> always use constant (or global)*/ };
 #else
   enum { ConstantMemoryUseThreshold = 0x000200 /* 512 bytes */ };
 #endif

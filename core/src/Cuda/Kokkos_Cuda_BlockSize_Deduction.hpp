@@ -58,13 +58,8 @@ struct CudaGetMaxBlockSize;
 template<class DriverType, class LaunchBounds>
 int cuda_get_max_block_size(const typename DriverType::functor_type & f, const size_t vector_length,
                             const size_t shmem_extra_block, const size_t shmem_extra_thread) {
-  return CudaGetMaxBlockSize<DriverType,LaunchBounds,
-      LaunchBounds::launch_mechanism ==
-          //Kokkos::Experimental::LaunchDefault ?
-                   //(( CudaTraits::ConstantMemoryUseThreshold < sizeof(DriverType) )?
-                   //      Kokkos::Experimental::CudaLaunchConstantMemory:Kokkos::Experimental::CudaLaunchLocalMemory):
-                   //LaunchBounds::launch_mechanism
-                   (CudaTraits::ConstantMemoryUseThreshold < sizeof(DriverType))
+  return CudaGetMaxBlockSize<DriverType,LaunchBounds
+          , true
       >::get_block_size(f,vector_length, shmem_extra_block,shmem_extra_thread);
 }
 
@@ -257,8 +252,8 @@ int cuda_get_opt_block_size(const typename DriverType::functor_type & f, const s
       >::get_block_size(f,vector_length,shmem_extra_block,shmem_extra_thread);
 }
 
-template<class DriverType,unsigned int LaunchMechanism>
-struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds<0,0,LaunchMechanism>,true> {
+template<class DriverType>
+struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds<0,0>,true> {
   static int get_block_size(const typename DriverType::functor_type & f, const size_t vector_length,
                             const size_t shmem_extra_block, const size_t shmem_extra_thread) {
     int blockSize=16;
@@ -287,8 +282,8 @@ struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds<0,0,LaunchMechanism>,
   }
 };
 
-template<class DriverType,unsigned int LaunchMechanism>
-struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds<0,0,LaunchMechanism>,false> {
+template<class DriverType>
+struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds<0,0>,false> {
   static int get_block_size(const typename DriverType::functor_type & f, const size_t vector_length,
                             const size_t shmem_extra_block, const size_t shmem_extra_thread) {
     int blockSize=16;
@@ -317,8 +312,8 @@ struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds<0,0,LaunchMechanism>,
   }
 };
 
-template<class DriverType, unsigned int MaxThreadsPerBlock, unsigned int MinBlocksPerSM, unsigned int LaunchMechanism>
-struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds< MaxThreadsPerBlock, MinBlocksPerSM , LaunchMechanism>,true> {
+template<class DriverType, unsigned int MaxThreadsPerBlock, unsigned int MinBlocksPerSM>
+struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds< MaxThreadsPerBlock, MinBlocksPerSM>,true> {
   static int get_block_size(const typename DriverType::functor_type & f, const size_t vector_length,
                             const size_t shmem_extra_block, const size_t shmem_extra_thread) {
     int blockSize=16;
@@ -352,8 +347,8 @@ struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds< MaxThreadsPerBlock, 
   }
 };
 
-template<class DriverType, unsigned int MaxThreadsPerBlock, unsigned int MinBlocksPerSM, unsigned int LaunchMechanism>
-struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds< MaxThreadsPerBlock, MinBlocksPerSM, LaunchMechanism >,false> {
+template<class DriverType, unsigned int MaxThreadsPerBlock, unsigned int MinBlocksPerSM>
+struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds< MaxThreadsPerBlock, MinBlocksPerSM >,false> {
   static int get_block_size(const typename DriverType::functor_type & f, const size_t vector_length,
                             const size_t shmem_extra_block, const size_t shmem_extra_thread) {
     int blockSize=16;

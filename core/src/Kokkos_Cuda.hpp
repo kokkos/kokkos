@@ -52,6 +52,7 @@
 #include <iosfwd>
 #include <vector>
 
+#include <impl/Kokkos_AnalyzePolicy.hpp>
 #include <Kokkos_CudaSpace.hpp>
 
 #include <Kokkos_Parallel.hpp>
@@ -75,6 +76,23 @@ class CudaInternal ;
 
 namespace Kokkos {
 
+namespace Impl {
+  namespace Experimental {
+    enum class CudaLaunchMechanism:unsigned{Default=0,ConstantMemory=1,GlobalMemory=2,LocalMemory=4};
+
+    inline CudaLaunchMechanism operator | (CudaLaunchMechanism p1, CudaLaunchMechanism p2) {
+      return static_cast<CudaLaunchMechanism>(static_cast<unsigned>(p1) |  static_cast<unsigned>(p2));
+    }
+    inline CudaLaunchMechanism operator & (CudaLaunchMechanism p1, CudaLaunchMechanism p2) {
+      return static_cast<CudaLaunchMechanism>(static_cast<unsigned>(p1) &  static_cast<unsigned>(p2));
+    }
+
+    template<CudaLaunchMechanism l>
+    struct CudaDispatchProperties {
+      CudaLaunchMechanism launch_mechanism = l;
+    };
+  }
+}
 /// \class Cuda
 /// \brief Kokkos Execution Space that uses CUDA to run on GPUs.
 ///
