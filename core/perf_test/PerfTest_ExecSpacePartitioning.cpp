@@ -97,31 +97,55 @@ TEST_F( default_exec, overlap_range_policy ) {
        Kokkos::RangePolicy<TEST_EXECSPACE>(0,N), FunctorRange(M,R,a));
 
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel1",
-       Kokkos::RangePolicy<TEST_EXECSPACE>(space1,0,N), f);
+       Kokkos::Experimental::require(
+           Kokkos::RangePolicy<TEST_EXECSPACE>(space1,0,N),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel2",
-       Kokkos::RangePolicy<TEST_EXECSPACE>(space2,0,N), f);
+       Kokkos::Experimental::require(
+           Kokkos::RangePolicy<TEST_EXECSPACE>(space2,0,N),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::fence();
 
    Kokkos::Timer timer;
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel3",
-       Kokkos::RangePolicy<TEST_EXECSPACE>(space,0,N), f);
+       Kokkos::Experimental::require(
+           Kokkos::RangePolicy<TEST_EXECSPACE>(space,0,N),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel4",
-       Kokkos::RangePolicy<TEST_EXECSPACE>(space,0,N), f);
+       Kokkos::Experimental::require(
+           Kokkos::RangePolicy<TEST_EXECSPACE>(space,0,N),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::fence();
 
    timer.reset();
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel5",
-       Kokkos::RangePolicy<TEST_EXECSPACE>(space1,0,N), FunctorRange(M,R,a));
+       Kokkos::Experimental::require(
+           Kokkos::RangePolicy<TEST_EXECSPACE>(space1,0,N),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , FunctorRange(M,R,a));
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel6",
-       Kokkos::RangePolicy<TEST_EXECSPACE>(space2,0,N), FunctorRange(M,R,a));
+       Kokkos::Experimental::require(
+           Kokkos::RangePolicy<TEST_EXECSPACE>(space2,0,N),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , FunctorRange(M,R,a));
    Kokkos::fence();
    double time_overlap = timer.seconds();
 
    timer.reset();
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel7",
-       Kokkos::RangePolicy<TEST_EXECSPACE>(space,0,N), f);
+       Kokkos::Experimental::require(
+           Kokkos::RangePolicy<TEST_EXECSPACE>(space,0,N),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel8",
-       Kokkos::RangePolicy<TEST_EXECSPACE>(space,0,N), f);
+       Kokkos::Experimental::require(
+           Kokkos::RangePolicy<TEST_EXECSPACE>(space,0,N),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::fence();
    double time_end = timer.seconds();
 
@@ -146,34 +170,61 @@ TEST_F( default_exec, overlap_mdrange_policy ) {
    Kokkos::View<double**,TEST_EXECSPACE> a("A",N,M);
    FunctorMDRange f(M,R,a);
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel0",
-       Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>({0,0},{N,R}), FunctorMDRange(M,R,a));
+       Kokkos::Experimental::require(
+           Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>({0,0},{N,R}),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , FunctorMDRange(M,R,a));
 
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel1",
-       Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>(space1,{0,0},{N,R}), f);
+       Kokkos::Experimental::require(
+           Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>(space1,{0,0},{N,R}),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel2",
-       Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>(space2,{0,0},{N,R}), f);
+       Kokkos::Experimental::require(
+           Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>(space2,{0,0},{N,R}),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::fence();
 
    Kokkos::Timer timer;
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel3",
-       Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>(space,{0,0},{N,R}), f);
+       Kokkos::Experimental::require(
+           Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>(space,{0,0},{N,R}),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel4",
-       Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>(space,{0,0},{N,R}), f);
+       Kokkos::Experimental::require(
+           Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>(space,{0,0},{N,R}),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::fence();
 
    timer.reset();
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel5",
-       Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>(space1,{0,0},{N,R}), FunctorMDRange(M,R,a));
+       Kokkos::Experimental::require(
+           Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>(space1,{0,0},{N,R}),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , FunctorMDRange(M,R,a));
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel6",
-       Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>(space2,{0,0},{N,R}), FunctorMDRange(M,R,a));
+       Kokkos::Experimental::require(
+           Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>(space2,{0,0},{N,R}),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , FunctorMDRange(M,R,a));
    Kokkos::fence();
    double time_overlap = timer.seconds();
 
    timer.reset();
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel7",
-       Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>(space,{0,0},{N,R}), f);
+       Kokkos::Experimental::require(
+           Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>(space,{0,0},{N,R}),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel8",
-       Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>(space,{0,0},{N,R}), f);
+       Kokkos::Experimental::require(
+           Kokkos::MDRangePolicy<TEST_EXECSPACE,Kokkos::Rank<2>>(space,{0,0},{N,R}),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::fence();
    double time_end = timer.seconds();
 
@@ -198,34 +249,61 @@ TEST_F( default_exec, overlap_team_policy ) {
    Kokkos::View<double**,Kokkos::LayoutRight,TEST_EXECSPACE> a("A",N,M);
    FunctorTeam f(M,R,a);
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel0",
-       Kokkos::TeamPolicy<TEST_EXECSPACE>(N,Kokkos::AUTO), FunctorTeam(M,R,a));
+       Kokkos::Experimental::require(
+           Kokkos::TeamPolicy<TEST_EXECSPACE>(N,Kokkos::AUTO),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , FunctorTeam(M,R,a));
 
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel1",
-       Kokkos::TeamPolicy<TEST_EXECSPACE>(space1,N,Kokkos::AUTO), f);
+       Kokkos::Experimental::require(
+           Kokkos::TeamPolicy<TEST_EXECSPACE>(space1,N,Kokkos::AUTO),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel2",
-       Kokkos::TeamPolicy<TEST_EXECSPACE>(space2,N,Kokkos::AUTO), f);
+       Kokkos::Experimental::require(
+           Kokkos::TeamPolicy<TEST_EXECSPACE>(space2,N,Kokkos::AUTO),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::fence();
 
    Kokkos::Timer timer;
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel3",
-       Kokkos::TeamPolicy<TEST_EXECSPACE>(space,N,Kokkos::AUTO), f);
+       Kokkos::Experimental::require(
+           Kokkos::TeamPolicy<TEST_EXECSPACE>(space,N,Kokkos::AUTO),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel4",
-       Kokkos::TeamPolicy<TEST_EXECSPACE>(space,N,Kokkos::AUTO), f);
+       Kokkos::Experimental::require(
+           Kokkos::TeamPolicy<TEST_EXECSPACE>(space,N,Kokkos::AUTO),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::fence();
 
    timer.reset();
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel5",
-       Kokkos::TeamPolicy<TEST_EXECSPACE>(space1,N,Kokkos::AUTO), FunctorTeam(M,R,a));
+       Kokkos::Experimental::require(
+           Kokkos::TeamPolicy<TEST_EXECSPACE>(space1,N,Kokkos::AUTO),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , FunctorTeam(M,R,a));
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel6",
-       Kokkos::TeamPolicy<TEST_EXECSPACE>(space2,N,Kokkos::AUTO), FunctorTeam(M,R,a));
+       Kokkos::Experimental::require(
+           Kokkos::TeamPolicy<TEST_EXECSPACE>(space2,N,Kokkos::AUTO),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , FunctorTeam(M,R,a));
    Kokkos::fence();
    double time_overlap = timer.seconds();
 
    timer.reset();
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel7",
-       Kokkos::TeamPolicy<TEST_EXECSPACE>(space,N,Kokkos::AUTO), f);
+       Kokkos::Experimental::require(
+           Kokkos::TeamPolicy<TEST_EXECSPACE>(space,N,Kokkos::AUTO),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::parallel_for("default_exec::overlap_range_policy::kernel8",
-       Kokkos::TeamPolicy<TEST_EXECSPACE>(space,N,Kokkos::AUTO), f);
+       Kokkos::Experimental::require(
+           Kokkos::TeamPolicy<TEST_EXECSPACE>(space,N,Kokkos::AUTO),
+           Kokkos::Experimental::WorkItemProperty::HintLightWeight)
+       , f);
    Kokkos::fence();
    double time_end = timer.seconds();
 
