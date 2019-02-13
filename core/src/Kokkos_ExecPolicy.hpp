@@ -290,31 +290,6 @@ public:
   };
 };
 
-namespace Experimental {
-
-namespace Impl {
-  template<class Property,class Policy>
-  struct PolicyPropertyAdaptor;
-
-  template<unsigned long P, class ... Properties>
-  struct PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,RangePolicy<Properties...>> {
-    typedef RangePolicy<Properties...> policy_in_t;
-    typedef RangePolicy<typename policy_in_t::traits::execution_space,
-                        typename policy_in_t::traits::schedule_type,
-                        typename policy_in_t::traits::work_tag,
-                        typename policy_in_t::traits::index_type,
-                        typename policy_in_t::traits::iteration_pattern,
-                        typename policy_in_t::traits::launch_bounds,
-                        WorkItemProperty::ImplWorkItemProperty<P>> policy_out_t;
-  };
-}
-
-template<class PolicyType,unsigned long P>
-constexpr typename Impl::PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,PolicyType>::policy_out_t
-  require(const PolicyType p, WorkItemProperty::ImplWorkItemProperty<P>){
-    return typename Impl::PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,PolicyType>::policy_out_t(p);
-}
-}
 } // namespace Kokkos
 
 //----------------------------------------------------------------------------
@@ -561,9 +536,12 @@ class TeamPolicy: public
        typename Impl::PolicyTraits<Properties ... >::execution_space,
        Properties ...> internal_policy;
 
-  typedef Impl::PolicyTraits<Properties ... > traits;
+  template<class ... OtherProperties>
+  friend class TeamPolicy;
 
 public:
+  typedef Impl::PolicyTraits<Properties ... > traits;
+
   typedef TeamPolicy execution_policy;
 
   TeamPolicy& operator = (const TeamPolicy&) = default;
@@ -655,6 +633,11 @@ public:
     set(args...);
   }
 #endif
+
+  template<class ... OtherProperties>
+  TeamPolicy(const TeamPolicy<OtherProperties...> p):internal_policy(p) {
+    first_arg = p.first_arg;
+  }
 
 private:
   bool first_arg;
@@ -915,5 +898,44 @@ struct ParallelConstructName<FunctorType, TagType, false> {
 
 } // namespace Kokkos
 
+namespace Kokkos {
+namespace Experimental {
+
+namespace Impl {
+  template<class Property,class Policy>
+  struct PolicyPropertyAdaptor;
+
+  template<unsigned long P, class ... Properties>
+  struct PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,RangePolicy<Properties...>> {
+    typedef RangePolicy<Properties...> policy_in_t;
+    typedef RangePolicy<typename policy_in_t::traits::execution_space,
+                        typename policy_in_t::traits::schedule_type,
+                        typename policy_in_t::traits::work_tag,
+                        typename policy_in_t::traits::index_type,
+                        typename policy_in_t::traits::iteration_pattern,
+                        typename policy_in_t::traits::launch_bounds,
+                        WorkItemProperty::ImplWorkItemProperty<P>> policy_out_t;
+  };
+
+  template<unsigned long P, class ... Properties>
+  struct PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,TeamPolicy<Properties...>> {
+    typedef TeamPolicy<Properties...> policy_in_t;
+    typedef TeamPolicy<typename policy_in_t::traits::execution_space,
+                        typename policy_in_t::traits::schedule_type,
+                        typename policy_in_t::traits::work_tag,
+                        typename policy_in_t::traits::index_type,
+                        typename policy_in_t::traits::iteration_pattern,
+                        typename policy_in_t::traits::launch_bounds,
+                        WorkItemProperty::ImplWorkItemProperty<P>> policy_out_t;
+  };
+}
+
+template<class PolicyType,unsigned long P>
+constexpr typename Impl::PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,PolicyType>::policy_out_t
+  require(const PolicyType p, WorkItemProperty::ImplWorkItemProperty<P>){
+    return typename Impl::PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,PolicyType>::policy_out_t(p);
+}
+} //Experimental
+} //Kokkos
 #endif /* #define KOKKOS_EXECPOLICY_HPP */
 

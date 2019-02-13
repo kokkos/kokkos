@@ -134,6 +134,9 @@ struct MDRangePolicy
 
   typedef MDRangePolicy execution_policy; // needed for is_execution_space interrogation
 
+  template<class ... OtherProperties>
+  friend class MDRangePolicy;
+
   static_assert( !std::is_same<typename traits::iteration_pattern,void>::value
                , "Kokkos Error: MD iteration pattern not defined" );
 
@@ -228,6 +231,16 @@ struct MDRangePolicy
     , m_prod_tile_dims(1) {
     init();
   }
+
+  template<class ... OtherProperties>
+  MDRangePolicy( const MDRangePolicy<OtherProperties...> p ):
+     m_space(p.m_space),
+     m_lower(p.m_lower),
+     m_upper(p.m_upper),
+     m_tile(p.m_tile),
+     m_tile_end(p.m_tile_end),
+     m_num_tiles(p.m_num_tiles),
+     m_prod_tile_dims(p.m_prod_tile_dims) {}
 
 private:
 
@@ -619,6 +632,27 @@ void md_parallel_reduce( const std::string& str
 
 } } // namespace Kokkos::Experimental
 #endif
+
+namespace Kokkos {
+namespace Experimental {
+namespace Impl {
+
+template<unsigned long P, class ... Properties>
+struct PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,MDRangePolicy<Properties...>> {
+  typedef MDRangePolicy<Properties...> policy_in_t;
+  typedef MDRangePolicy<typename policy_in_t::traits::execution_space,
+                      typename policy_in_t::traits::schedule_type,
+                      typename policy_in_t::traits::work_tag,
+                      typename policy_in_t::traits::index_type,
+                      typename policy_in_t::traits::iteration_pattern,
+                      typename policy_in_t::traits::launch_bounds,
+                      WorkItemProperty::ImplWorkItemProperty<P>> policy_out_t;
+};
+
+}
+}
+}
+
 
 #endif //KOKKOS_CORE_EXP_MD_RANGE_POLICY_HPP
 
