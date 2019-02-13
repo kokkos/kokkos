@@ -261,6 +261,20 @@ public:
     return *this;
   }
 
+  template<class ExecSpace, class ... OtherProperties >
+  friend class TeamPolicyInternal;
+
+  template< class ... OtherProperties >
+  TeamPolicyInternal(const TeamPolicyInternal<Kokkos::Serial,OtherProperties...>& p) {
+    m_league_size = p.m_league_size;
+    m_team_scratch_size[0] = p.m_team_scratch_size[0];
+    m_thread_scratch_size[0] = p.m_thread_scratch_size[0];
+    m_team_scratch_size[1] = p.m_team_scratch_size[1];
+    m_thread_scratch_size[1] = p.m_thread_scratch_size[1];
+    m_chunk_size = p.m_chunk_size;
+  }
+
+
   //----------------------------------------
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   template< class FunctorType >
