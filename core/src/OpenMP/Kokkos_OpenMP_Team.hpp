@@ -239,7 +239,11 @@ public:
             : m_team_scratch_size { 0 , 0 }
             , m_thread_scratch_size { 0 , 0 }
             , m_chunk_size(0)
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+    { init( league_size_request , traits::execution_space::thread_pool_size(2) ); }
+#else
     { init( league_size_request , traits::execution_space::impl_thread_pool_size(2) ); }
+#endif
 
   TeamPolicyInternal( int league_size_request
             , int team_size_request
