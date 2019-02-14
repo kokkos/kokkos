@@ -135,7 +135,7 @@ struct MDRangePolicy
   typedef MDRangePolicy execution_policy; // needed for is_execution_space interrogation
 
   template<class ... OtherProperties>
-  friend class MDRangePolicy;
+  friend struct MDRangePolicy;
 
   static_assert( !std::is_same<typename traits::iteration_pattern,void>::value
                , "Kokkos Error: MD iteration pattern not defined" );

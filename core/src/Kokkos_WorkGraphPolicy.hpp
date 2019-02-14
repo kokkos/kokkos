@@ -55,7 +55,7 @@ class WorkGraphExec;
 namespace Kokkos {
 
 template< class ... Properties >
-class WorkGraphPolicy
+class WorkGraphPolicy: public Kokkos::Impl::PolicyTraits<Properties ... >
 {
 public:
 
@@ -64,7 +64,6 @@ public:
   using traits          = Kokkos::Impl::PolicyTraits<Properties ... >;
   using index_type      = typename traits::index_type;
   using member_type     = index_type;
-  using work_tag        = typename traits::work_tag;
   using execution_space = typename traits::execution_space;
   using memory_space    = typename execution_space::memory_space;
   using graph_type      = Kokkos::Crs<index_type,execution_space,void,index_type>;
