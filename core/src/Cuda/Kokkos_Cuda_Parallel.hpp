@@ -1636,9 +1636,9 @@ class ParallelScan< FunctorType
                   , Kokkos::Cuda
                   >
 {
-private:
-
+public:
   typedef Kokkos::RangePolicy< Traits ... >  Policy ;
+private:
   typedef typename Policy::member_type  Member ;
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::WorkRange    WorkRange ;
@@ -1860,9 +1860,10 @@ class ParallelScanWithTotal< FunctorType
                            , Kokkos::Cuda
                            >
 {
-private:
-
+public:
   typedef Kokkos::RangePolicy< Traits ... >  Policy ;
+
+private:
   typedef typename Policy::member_type  Member ;
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::WorkRange    WorkRange ;
