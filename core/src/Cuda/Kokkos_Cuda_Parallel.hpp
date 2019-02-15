@@ -519,6 +519,7 @@ public:
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
     { }
+
 };
 
 

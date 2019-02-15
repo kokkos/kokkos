@@ -539,6 +539,11 @@
   #define KOKKOS_IMPL_CTOR_DEFAULT_ARG KOKKOS_INVALID_INDEX
 #endif
 
+#if (defined(KOKKOS_ENABLE_CXX14) || defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20))
+  #define KOKKOS_CONSTEXPR_14 constexpr
+#else
+  #define KOKKOS_CONSTEXPR_14
+#endif
 
 
 #endif // #ifndef KOKKOS_MACROS_HPP

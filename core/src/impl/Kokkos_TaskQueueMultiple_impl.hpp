@@ -41,66 +41,27 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_TASKQUEUEMULTIPLE_IMPL_HPP
+#define KOKKOS_IMPL_TASKQUEUEMULTIPLE_IMPL_HPP
+
 #include <Kokkos_Macros.hpp>
-#if defined( KOKKOS_ENABLE_OPENMP ) && defined( KOKKOS_ENABLE_TASKDAG )
+#if defined( KOKKOS_ENABLE_TASKDAG )
 
-#include <Kokkos_Core.hpp>
+#include <impl/Kokkos_TaskQueueMultiple.hpp>
 
-#include <impl/Kokkos_TaskQueue_impl.hpp>
-#include <impl/Kokkos_HostThreadTeam.hpp>
-#include <OpenMP/Kokkos_OpenMP_Task.hpp>
-#include <cassert>
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
+#define KOKKOS_IMPL_DEBUG_TASKDAG_SCHEDULING_MULTIPLE 0
 
 namespace Kokkos {
 namespace Impl {
 
-template class TaskQueue< Kokkos::OpenMP > ;
-
-HostThreadTeamData& HostThreadTeamDataSingleton::singleton()
-{
-  static HostThreadTeamDataSingleton s;
-  return s;
+template <class ExecSpace, class MemorySpace>
+void TaskQueueMultiple<ExecSpace, MemorySpace>::Destroy::destroy_shared_allocation() {
+  m_queue->get_team_queue(0).~TaskQueueMultiple();
 }
 
-HostThreadTeamDataSingleton::HostThreadTeamDataSingleton()
-  : HostThreadTeamData()
-{
-  Kokkos::OpenMP::memory_space space ;
-  const size_t num_pool_reduce_bytes  =   32 ;
-  const size_t num_team_reduce_bytes  =   32 ;
-  const size_t num_team_shared_bytes  = 1024 ;
-  const size_t num_thread_local_bytes = 1024 ;
-  const size_t alloc_bytes =
-    HostThreadTeamData::scratch_size( num_pool_reduce_bytes
-      , num_team_reduce_bytes
-      , num_team_shared_bytes
-      , num_thread_local_bytes );
+} /* namespace Impl */
+} /* namespace Kokkos */
 
-  HostThreadTeamData::scratch_assign
-    ( space.allocate( alloc_bytes )
-      , alloc_bytes
-      , num_pool_reduce_bytes
-      , num_team_reduce_bytes
-      , num_team_shared_bytes
-      , num_thread_local_bytes );
-}
-
-HostThreadTeamDataSingleton::~HostThreadTeamDataSingleton()
-{
-  Kokkos::OpenMP::memory_space space ;
-  space.deallocate(
-    HostThreadTeamData::scratch_buffer(),
-    static_cast<size_t>(HostThreadTeamData::scratch_bytes())
-  );
-}
-
-}} /* namespace Kokkos::Impl */
-
-//----------------------------------------------------------------------------
-#else
-void KOKKOS_CORE_SRC_OPENMP_KOKKOS_OPENMP_TASK_PREVENT_LINK_ERROR() {}
-#endif /* #if defined( KOKKOS_ENABLE_OPENMP ) && defined( KOKKOS_ENABLE_TASKDAG ) */
+#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
+#endif /* #ifndef KOKKOS_IMPL_TASKQUEUEMULTIPLE_IMPL_HPP */
 

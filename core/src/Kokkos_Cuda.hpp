@@ -184,7 +184,9 @@ public:
   //--------------------------------------------------
   //! \name  Cuda space instances
 
+  KOKKOS_INLINE_FUNCTION
   ~Cuda() {}
+
   Cuda();
 
   Cuda( Cuda && ) = default ;

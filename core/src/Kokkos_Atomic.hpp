@@ -90,6 +90,7 @@
 #if ! defined( KOKKOS_ENABLE_GNU_ATOMICS ) && \
     ! defined( KOKKOS_ENABLE_INTEL_ATOMICS ) && \
     ! defined( KOKKOS_ENABLE_OPENMP_ATOMICS ) && \
+    ! defined( KOKKOS_ENABLE_STD_ATOMICS ) && \
     ! defined( KOKKOS_ENABLE_SERIAL_ATOMICS )
 
 // Compiling for non-Cuda atomic implementation has not been pre-selected.
