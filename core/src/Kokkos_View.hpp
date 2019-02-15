@@ -138,6 +138,7 @@ void runtime_check_rank_device(const size_t ,
 #endif
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
 KOKKOS_INLINE_FUNCTION
 void runtime_check_rank_host(const size_t dyn_rank,
                         const bool is_void_spec,
@@ -150,7 +151,6 @@ void runtime_check_rank_host(const size_t dyn_rank,
                         const size_t i6,
                         const size_t i7, const std::string & label ){
 
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
 
   if ( is_void_spec ) {
     const size_t num_passed_args = count_valid_integers(i0, i1, i2, i3,
@@ -163,8 +163,20 @@ void runtime_check_rank_host(const size_t dyn_rank,
       Kokkos::abort(message.c_str()) ;
     }
   }
-#endif
 }
+#else
+KOKKOS_INLINE_FUNCTION
+void runtime_check_rank_host(const size_t ,
+                        const bool ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t , const std::string &){}
+#endif
 #endif
 
 } /* namespace Impl */

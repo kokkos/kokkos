@@ -275,7 +275,7 @@ struct ALL_t {
   constexpr const ALL_t & operator()() const { return *this ; }
 
   KOKKOS_INLINE_FUNCTION
-  constexpr bool operator == ( const ALL_t & right) const { return true;}
+  constexpr bool operator == ( const ALL_t & ) const { return true;}
 };
 
 }} // namespace Kokkos::Impl
@@ -1548,7 +1548,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
   template< class DimRHS >
   KOKKOS_INLINE_FUNCTION
   constexpr ViewOffset
-    ( const ViewOffset< DimRHS , Kokkos::LayoutRight , void > & rhs
+    ( const ViewOffset< DimRHS , Kokkos::LayoutRight , void > &
     , const SubviewExtents< DimRHS::rank , dimension_type::rank > & sub
     )
     : m_dim( sub.range_extent(0) , 0, 0, 0, 0, 0, 0, 0 )
@@ -3062,7 +3062,7 @@ public:
   typedef ViewMapping< SrcTraits , void >  SrcType ;
 
   KOKKOS_INLINE_FUNCTION
-  static bool assignable_layout_check(DstType & dst, const SrcType & src) //Runtime check
+  static bool assignable_layout_check(DstType &, const SrcType & src) //Runtime check
     {
       size_t strides[9];
       bool assignable = true;

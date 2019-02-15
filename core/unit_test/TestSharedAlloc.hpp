@@ -196,7 +196,7 @@ void test_shared_alloc()
         ASSERT_EQ( track.use_count(), 1 );
       }
 
-      Kokkos::parallel_for( range, [=] ( size_t i ) {
+      Kokkos::parallel_for( range, [=] ( size_t ) {
         Tracker local_tracker;
         local_tracker.assign_allocated_record_to_uninitialized( rec );
         ASSERT_GT( rec->use_count(), 1 );
