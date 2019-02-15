@@ -73,7 +73,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	OBJ_CUDA += TestCuda_UniqueToken.o
 	
 	TARGETS += KokkosCore_UnitTest_Cuda
-    TARGETS += KokkosCore_UnitTest_CudaInterOp
+    TARGETS += KokkosCore_UnitTest_CudaInterOpInit
+    TARGETS += KokkosCore_UnitTest_CudaInterOpStreams
 	TEST_TARGETS += test-cuda
 endif
 
@@ -325,8 +326,10 @@ TEST_TARGETS += ${INITTESTS_TEST_TARGETS}
 KokkosCore_UnitTest_Cuda: $(OBJ_CUDA) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_CUDA) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Cuda
 	
-KokkosCore_UnitTest_CudaInterOp: UnitTestMain.o gtest-all.o TestCuda_InterOp.o
-	$(LINK) $(EXTRA_PATH) UnitTestMain.o gtest-all.o TestCuda_InterOp.o $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_CudaInterOp
+KokkosCore_UnitTest_CudaInterOpInit: UnitTestMain.o gtest-all.o TestCuda_InterOp_Init.o
+	$(LINK) $(EXTRA_PATH) UnitTestMain.o gtest-all.o TestCuda_InterOp_Init.o $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_CudaInterOpInit
+KokkosCore_UnitTest_CudaInterOpStreams: UnitTestMain.o gtest-all.o TestCuda_InterOp_Streams.o
+	$(LINK) $(EXTRA_PATH) UnitTestMain.o gtest-all.o TestCuda_InterOp_Streams.o $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_CudaInterOpStreams
 	
 KokkosCore_UnitTest_ROCm: $(OBJ_ROCM) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_ROCM) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_ROCm
@@ -376,7 +379,8 @@ ${INITTESTS_TARGETS}: KokkosCore_UnitTest_DefaultDeviceTypeInit_%: TestDefaultDe
 
 test-cuda: KokkosCore_UnitTest_Cuda
 	./KokkosCore_UnitTest_Cuda
-	./KokkosCore_UnitTest_CudaInterOp
+	./KokkosCore_UnitTest_CudaInterOpInit
+	./KokkosCore_UnitTest_CudaInterOpStreams
 
 test-rocm: KokkosCore_UnitTest_ROCm
 	./KokkosCore_UnitTest_ROCm
