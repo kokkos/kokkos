@@ -159,7 +159,7 @@ TEST_F( default_exec, overlap_range_policy ) {
 }
 
 TEST_F( default_exec, overlap_mdrange_policy ) {
-  int N = 2000;
+  int N = 200;
    int M = 10000;
    int R =  10;
 

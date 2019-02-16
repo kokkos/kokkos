@@ -826,7 +826,7 @@ struct VectorSingleStruct {
  *  with the TeamPolicy. This variant expects a single count. So the range is (0,count].
  */
 template<typename iType, class TeamMemberType, class _never_use_this_overload>
-KOKKOS_INLINE_FUNCTION
+KOKKOS_INLINE_FUNCTION_DELETED
 Impl::TeamThreadRangeBoundariesStruct<iType,TeamMemberType>
 TeamThreadRange( const TeamMemberType&, const iType& count ) = delete;
 
@@ -837,7 +837,7 @@ TeamThreadRange( const TeamMemberType&, const iType& count ) = delete;
  *  with the TeamPolicy. This variant expects a begin and end. So the range is (begin,end].
  */
 template<typename iType1, typename iType2, class TeamMemberType, class _never_use_this_overload>
-KOKKOS_INLINE_FUNCTION
+KOKKOS_INLINE_FUNCTION_DELETED
 Impl::TeamThreadRangeBoundariesStruct<typename std::common_type<iType1, iType2>::type, TeamMemberType>
 TeamThreadRange( const TeamMemberType&, const iType1& begin, const iType2& end ) = delete;
 
@@ -848,12 +848,12 @@ TeamThreadRange( const TeamMemberType&, const iType1& begin, const iType2& end )
  *  with the TeamPolicy. This variant expects a single count. So the range is (0,count].
  */
 template<typename iType, class TeamMemberType, class _never_use_this_overload>
-KOKKOS_INLINE_FUNCTION
+KOKKOS_INLINE_FUNCTION_DELETED
 Impl::ThreadVectorRangeBoundariesStruct<iType,TeamMemberType>
 ThreadVectorRange( const TeamMemberType&, const iType& count ) = delete;
 
 template<typename iType, class TeamMemberType, class _never_use_this_overload>
-KOKKOS_INLINE_FUNCTION
+KOKKOS_INLINE_FUNCTION_DELETED
 Impl::ThreadVectorRangeBoundariesStruct<iType,TeamMemberType>
 ThreadVectorRange( const TeamMemberType&, const iType& arg_begin, const iType& arg_end ) = delete;
 
