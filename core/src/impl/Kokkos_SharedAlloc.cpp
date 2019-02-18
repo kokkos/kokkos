@@ -47,6 +47,7 @@ namespace Kokkos {
 namespace Impl {
 
 __thread int SharedAllocationRecord<void, void>::t_tracking_enabled = 1;
+__thread int SharedAllocationRecord<void, void>::t_duplicates_enabled = 0;
 
 #ifdef KOKKOS_DEBUG
 bool

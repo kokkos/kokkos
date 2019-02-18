@@ -2929,6 +2929,34 @@ public:
 
     return record ;
   }
+
+  //----------------------------------------
+  /*  Allocate and construct mapped array.
+   *  Allocate via shared allocation record and
+   *  return that record for allocation tracking.
+   */
+  Kokkos::Impl::SharedAllocationRecord<> *
+  duplicate_shared( Kokkos::Impl::SharedAllocationRecord< typename Traits::memory_space , void >* orig_rec )  {
+
+     typedef Kokkos::Impl::SharedAllocationRecord< typename Traits::memory_space , void > record_type ;
+
+     std::string label = orig_rec->get_label();
+     label += "_dup";
+
+     // Create shared memory tracking record with allocate memory from the memory space
+     record_type * const record =
+       record_type::allocate( orig_rec->get_space()
+                           , label
+                           , orig_rec->size() );
+
+     m_impl_handle = handle_type( reinterpret_cast< pointer_type >( record->data() ) );
+
+      Kokkos::Impl::DeepCopy<typename Traits::memory_space, typename Traits::memory_space, 
+                             Kokkos::Cuda> ( m_impl_handle, orig_rec->data(), orig_rec->size() );
+
+      return record ;
+    }
+
 };
 
 //----------------------------------------------------------------------------
@@ -3531,7 +3559,7 @@ void view_verify_operator_bounds
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     enum { LEN = 1024 };
     char buffer[ LEN ];
-    const std::string label = tracker.template get_label<MemorySpace>();
+    const std::string label = tracker.get_label();
     int n = snprintf(buffer,LEN,"View bounds error of view %s (",label.c_str());
     view_error_operator_bounds<0>( buffer + n , LEN - n , map , args ... );
     Kokkos::Impl::throw_runtime_exception(std::string(buffer));
