@@ -121,6 +121,8 @@ class CudaSpace;            ///< Memory space on Cuda GPU
 class CudaUVMSpace;         ///< Memory space on Cuda GPU with UVM
 class CudaHostPinnedSpace;  ///< Memory space on Host accessible to Cuda GPU
 class Cuda;                 ///< Execution space for Cuda GPU
+class ResCuda;              ///< Redundant Execution space for Cuda GPU
+class ResCudaSpace;         ///< Redundant space for Resilient Cuda execution
 #endif
 
 #if defined( KOKKOS_ENABLE_ROCM )

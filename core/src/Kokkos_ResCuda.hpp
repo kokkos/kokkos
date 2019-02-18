@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_CUDA_HPP
-#define KOKKOS_CUDA_HPP
+#ifndef KOKKOS_RESCUDA_HPP
+#define KOKKOS_RESCUDA_HPP
 
 #include <Kokkos_Macros.hpp>
 #if defined( KOKKOS_ENABLE_CUDA )
@@ -52,7 +52,7 @@
 #include <iosfwd>
 #include <vector>
 
-#include <impl/Kokkos_AnalyzePolicy.hpp>
+#include <Kokkos_Cuda.hpp>
 #include <Kokkos_CudaSpace.hpp>
 #include <Kokkos_ResCudaSpace.hpp>
 
@@ -66,35 +66,13 @@
 
 /*--------------------------------------------------------------------------*/
 
-namespace Kokkos {
-namespace Impl {
-class CudaExec ;
-class CudaInternal ;
-} // namespace Impl
-} // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
 
-namespace Impl {
-  namespace Experimental {
-    enum class CudaLaunchMechanism:unsigned{Default=0,ConstantMemory=1,GlobalMemory=2,LocalMemory=4};
 
-    constexpr inline CudaLaunchMechanism operator | (CudaLaunchMechanism p1, CudaLaunchMechanism p2) {
-      return static_cast<CudaLaunchMechanism>(static_cast<unsigned>(p1) |  static_cast<unsigned>(p2));
-    }
-    constexpr inline CudaLaunchMechanism operator & (CudaLaunchMechanism p1, CudaLaunchMechanism p2) {
-      return static_cast<CudaLaunchMechanism>(static_cast<unsigned>(p1) &  static_cast<unsigned>(p2));
-    }
-
-    template<CudaLaunchMechanism l>
-    struct CudaDispatchProperties {
-      CudaLaunchMechanism launch_mechanism = l;
-    };
-  }
-}
-/// \class Cuda
+/// \class ResCuda
 /// \brief Kokkos Execution Space that uses CUDA to run on GPUs.
 ///
 /// An "execution space" represents a parallel execution model.  It tells Kokkos
@@ -102,29 +80,29 @@ namespace Impl {
 /// parallel_reduce.  For example, the Threads execution space uses Pthreads or
 /// C++11 threads on a CPU, the OpenMP execution space uses the OpenMP language
 /// extensions, and the Serial execution space executes "parallel" kernels
-/// sequentially.  The Cuda execution space uses NVIDIA's CUDA programming
+/// sequentially.  The ResCuda execution space uses NVIDIA's CUDA programming
 /// model to execute kernels in parallel on GPUs.
-class Cuda {
+class ResCuda : Cuda {
 public:
   //! \name Type declarations that all Kokkos execution spaces must provide.
   //@{
 
   //! Tag this class as a kokkos execution space
-  typedef Cuda                  execution_space ;
+  typedef ResCuda                  execution_space ;
 
 #if defined( KOKKOS_ENABLE_CUDA_UVM )
   //! This execution space's preferred memory space.
-  typedef CudaUVMSpace          memory_space ;
+  typedef ResCudaUVMSpace          memory_space ;
 #else
   //! This execution space's preferred memory space.
-  typedef CudaSpace             memory_space ;
+  typedef ResCudaSpace             memory_space ;
 #endif
 
   //! This execution space preferred device_type
   typedef Kokkos::Device<execution_space,memory_space> device_type;
 
   //! The size_type best suited for this execution space.
-  typedef memory_space::size_type  size_type ;
+  typedef Cuda::size_type  size_type ;
 
   //! This execution space's preferred array layout.
   typedef LayoutLeft            array_layout ;
@@ -147,25 +125,6 @@ public:
 #endif
   }
 
-  /** \brief  Set the device in a "sleep" state.
-   *
-   * This function sets the device in a "sleep" state in which it is
-   * not ready for work.  This may consume less resources than if the
-   * device were in an "awake" state, but it may also take time to
-   * bring the device from a sleep state to be ready for work.
-   *
-   * \return True if the device is in the "sleep" state, else false if
-   *   the device is actively working and could not enter the "sleep"
-   *   state.
-   */
-  static bool sleep();
-
-  /// \brief Wake the device from the 'sleep' state so it is ready for work.
-  ///
-  /// \return True if the device is in the "ready" state, else "false"
-  ///  if the device is actively working (which also means that it's
-  ///  awake).
-  static bool wake();
 
   /// \brief Wait until all dispatched functors complete.
   ///
@@ -183,29 +142,21 @@ public:
 
   //@}
   //--------------------------------------------------
-  //! \name  Cuda space instances
+  //! \name  ResCuda space instances
 
-  KOKKOS_INLINE_FUNCTION
-  ~Cuda() {}
+  ~ResCuda() {}
+  ResCuda();
+  explicit ResCuda( const int instance_id );
 
-  Cuda();
-
-  Cuda( Cuda && ) = default ;
-  Cuda( const Cuda & ) = default ;
-  Cuda & operator = ( Cuda && ) = default ;
-  Cuda & operator = ( const Cuda & ) = default ;
-
-  Cuda(cudaStream_t stream);
+  ResCuda( ResCuda && ) = default ;
+  ResCuda( const ResCuda & ) = default ;
+  ResCuda & operator = ( ResCuda && ) = default ;
+  ResCuda & operator = ( const ResCuda & ) = default ;
 
   //--------------------------------------------------------------------------
   //! \name Device-specific functions
   //@{
 
-  struct SelectDevice {
-    int cuda_device_id ;
-    SelectDevice() : cuda_device_id(0) {}
-    explicit SelectDevice( int id ) : cuda_device_id( id ) {}
-  };
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   //! Free any resources being consumed by the device.
@@ -229,7 +180,7 @@ public:
                         , const size_t num_instances = 1 );
 #endif
 
-  /// \brief Cuda device architecture of the selected device.
+  /// \brief ResCuda device architecture of the selected device.
   ///
   /// This matches the __CUDA_ARCH__ specification.
   static size_type device_arch();
@@ -242,18 +193,14 @@ public:
    */
   static std::vector<unsigned> detect_device_arch();
 
-  cudaStream_t cuda_stream() const;
-  int          cuda_device() const;
+  cudaStream_t cuda_stream() const { return Cuda::cuda_stream() ; }
+  int          cuda_device() const { return Cuda::cuda_device() ; }
 
   //@}
   //--------------------------------------------------------------------------
 
   static const char* name();
 
-  inline Impl::CudaInternal* impl_internal_space_instance() const { return m_space_instance; }
-private:
-
-  Impl::CudaInternal* m_space_instance;
 };
 
 } // namespace Kokkos
@@ -266,8 +213,8 @@ namespace Impl {
 
 template<>
 struct MemorySpaceAccess
-  < Kokkos::CudaSpace
-  , Kokkos::Cuda::scratch_memory_space
+  < Kokkos::ResCudaSpace
+  , Kokkos::ResCuda::scratch_memory_space
   >
 {
   enum { assignable = false };
@@ -278,15 +225,15 @@ struct MemorySpaceAccess
 #if defined( KOKKOS_ENABLE_CUDA_UVM )
 
 // If forcing use of UVM everywhere
-// then must assume that CudaUVMSpace
-// can be a stand-in for CudaSpace.
+// then must assume that ResCudaUVMSpace
+// can be a stand-in for ResCudaSpace.
 // This will fail when a strange host-side execution space
-// that defines CudaUVMSpace as its preferredmemory space.
+// that defines ResCudaUVMSpace as its preferredmemory space.
 
 template<>
 struct MemorySpaceAccess
-  < Kokkos::CudaUVMSpace
-  , Kokkos::Cuda::scratch_memory_space
+  < Kokkos::ResCudaUVMSpace
+  , Kokkos::ResCuda::scratch_memory_space
   >
 {
   enum { assignable = false };
@@ -299,8 +246,8 @@ struct MemorySpaceAccess
 
 template<>
 struct VerifyExecutionCanAccessMemorySpace
-  < Kokkos::CudaSpace
-  , Kokkos::Cuda::scratch_memory_space
+  < Kokkos::ResCudaSpace
+  , Kokkos::ResCuda::scratch_memory_space
   >
 {
   enum { value = true };
@@ -308,16 +255,6 @@ struct VerifyExecutionCanAccessMemorySpace
   KOKKOS_INLINE_FUNCTION static void verify( const void * ) { }
 };
 
-template<>
-struct VerifyExecutionCanAccessMemorySpace
-  < Kokkos::HostSpace
-  , Kokkos::Cuda::scratch_memory_space
-  >
-{
-  enum { value = false };
-  inline static void verify( void ) { CudaSpace::access_error(); }
-  inline static void verify( const void * p ) { CudaSpace::access_error(p); }
-};
 
 } // namespace Impl
 } // namespace Kokkos
@@ -325,15 +262,14 @@ struct VerifyExecutionCanAccessMemorySpace
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#include <Cuda/Kokkos_Cuda_KernelLaunch.hpp>
-#include <Cuda/Kokkos_Cuda_Instance.hpp>
+#include <Cuda/Kokkos_CudaExec.hpp>
 #include <Cuda/Kokkos_Cuda_View.hpp>
 #include <Cuda/Kokkos_Cuda_Team.hpp>
-#include <Cuda/Kokkos_Cuda_Parallel.hpp>
+#include <Cuda/Kokkos_Cuda_ResParallel.hpp>
 #include <Cuda/Kokkos_Cuda_Task.hpp>
 #include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
 
-#include <KokkosExp_MDRangePolicy.hpp>
+//#include <KokkosExp_MDRangePolicy.hpp>
 //----------------------------------------------------------------------------
 
 #endif /* #if defined( KOKKOS_ENABLE_CUDA ) */
