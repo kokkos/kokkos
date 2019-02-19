@@ -24,7 +24,11 @@ void hostspace_openmp_deepcopy(void * dst, const void * src, size_t n) {
 #elif defined (KOKKOS_IMPL_ENABLE_OMP_LOOP_COPY)
 void hostspace_openmp_deepcopy(void *dst, const void * src, size_t n) {
 
-  #warning("Using omp loops")
+  if(n<10*8192) {
+    memcpy(dst,src,n);
+    return;
+  }
+
   if(n%8==0) {
     double* dst_p = (double*)dst;
     const double* src_p = (double*)src;
