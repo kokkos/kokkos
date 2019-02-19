@@ -22,7 +22,7 @@ void hostspace_parallel_deepcopy(void * dst, const void * src, size_t n) {
   } else if(n%4==0) {
     int32_t* dst_p = (int32_t*)dst;
     const int32_t* src_p = (int32_t*)src;
-    Kokkos::parallel_for("Kokkos::Impl::host_space_deepcopy",n,[=](const ptrdiff_t i) {
+    Kokkos::parallel_for("Kokkos::Impl::host_space_deepcopy",n/4,[=](const ptrdiff_t i) {
       dst_p[i] = src_p[i];
     });
   } else {
