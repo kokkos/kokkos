@@ -57,6 +57,9 @@
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
+#if defined( KOKKOS_ENABLE_OPENMP )
+  #include <impl/Kokkos_HostSpace_openmp_deepcopy.hpp>
+#endif
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
@@ -293,15 +296,33 @@ namespace Impl {
 
 template< class ExecutionSpace >
 struct DeepCopy< HostSpace, HostSpace, ExecutionSpace > {
+
   DeepCopy( void * dst, const void * src, size_t n ) {
-    memcpy( dst, src, n );
+    std::memcpy(dst,src,n);
   }
 
   DeepCopy( const ExecutionSpace& exec, void * dst, const void * src, size_t n ) {
     exec.fence();
-    memcpy( dst, src, n );
+    std::memcpy(dst,src,n);
   }
 };
+
+#if defined( KOKKOS_ENABLE_OPENMP )
+template< >
+struct DeepCopy< HostSpace, HostSpace, typename Kokkos::OpenMP > {
+
+  DeepCopy( void * dst, const void * src, size_t n ) {
+    hostspace_openmp_deepcopy(dst,src,n);
+  }
+
+  DeepCopy( const typename Kokkos::OpenMP& exec, void * dst, const void * src, size_t n ) {
+    // I don't think I can do this... I am trying to use a concrete type, but this will only be known
+    // when this header is included elsewhere.
+    //exec.fence();
+    hostspace_openmp_deepcopy(dst,src,n);
+  }
+};
+#endif
 
 } // namespace Impl
 
