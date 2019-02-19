@@ -12,7 +12,7 @@
 namespace Kokkos {
 
 namespace Impl {
-
+#define KOKKOS_IMPL_ENABLE_OMP_LOOP_COPY
 #if defined (KOKKOS_IMPL_ENABLE_OMP_TARGET_COPY)
 void hostspace_openmp_deepcopy(void * dst, const void * src, size_t n) {
   int devid = omp_get_initial_device();
@@ -21,9 +21,12 @@ void hostspace_openmp_deepcopy(void * dst, const void * src, size_t n) {
                     0,
                     devid, devid);
 }
-#elif define (KOKKOS_IMPL_ENABLE_OMP_LOOP_COPY)
+#elif defined (KOKKOS_IMPL_ENABLE_OMP_LOOP_COPY)
 void hostspace_openmp_deepcopy(void *dst, const void * src, size_t n) {
-
+  if(n<10*8192) {
+    memcpy(dst,src,n);
+    return;
+  }
   if(n%8==0) {
     double* dst_p = (double*)dst;
     const double* src_p = (double*)src;
