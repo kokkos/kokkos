@@ -4,15 +4,23 @@ namespace Kokkos {
 
 namespace Impl {
 
+/*
+ * TODO: change casting to whatever C++ likes (reinterpret_cast)
+ *       adjust logic with nthreads==1 to test if inside a parallel region
+ *       the reason for arranging the logic this way, is because
+ *       calling the omp_* API can incur some latency.
+ */
+
 void hostspace_parallel_deepcopy(void * dst, const void * src, size_t n) {
   constexpr size_t page_sz_ = 4*1024;
 
-  constexpr size_t bytes_per_chunk = page_sz_/2;
   // on KNL avoid having each thread requesting whole pages of memcpy
   // on HSW, this may be equal to bytes_per_chunk
-  constexpr size_t thread_bytes_per_block = bytes_per_chunk; //page_sz_/2;
+  constexpr size_t bytes_per_chunk = page_sz_/2;
 
-  if( n < bytes_per_chunk)  {
+  // make sure this is atleast 1 page, so that the calculation
+  // in the remainder below is valid unisgned arithmetic
+  if( n < 3*page_sz_)  {
     std::memcpy( dst, src, n );
     return;
   }
@@ -30,37 +38,36 @@ void hostspace_parallel_deepcopy(void * dst, const void * src, size_t n) {
     return;
   }
 
-  // otherwise, execute a parallel loop over memcpy,
-  // copying pages at a time
-
-  // This line tests if dst is page aligned. We don't 
-  // care about src, since it is readonly.
-  // Effectively, mask out the lower bits that account for page_sz-1.
-  // if the resulting address is the same as dst, then dst is page 
-  // aligned to begin with we also are promised that dst + page_sz 
-  // will always be valid, because we enforce that 2*page_sz the smallest
-  // work allowed in this region of code.
-  const unsigned char * pg_aligned_start = ( (((uintptr_t) dst) & ~(page_sz_-1)) == ((uintptr_t) dst) )
-                                            ? (unsigned char *) dst
-                                            : (unsigned char *)(  (((uintptr_t) dst) & ~(page_sz_-1)) + page_sz_);
-  // handle the remainder. How many bytes are there from dst to pg_aligned_start
-  const size_t remainder = (size_t ) (pg_aligned_start - ((unsigned char *) dst) );
-  const unsigned char * corrected_src_from_pg_aligned_dst = (unsigned char *) (((uintptr_t) src) + remainder);
-  const size_t new_n =  (n-remainder);
-  const size_t chunks = (new_n / bytes_per_chunk ) + 1;
-
-  #ifdef JJE_DEBUG_PAR_DEEPCOPY
-  fprintf(stderr, "pg_aligned_start %p\n", pg_aligned_start);
-  fprintf(stderr, "dest             %p\n", dst);
-  fprintf(stderr, "src              %p\n", src);
-  fprintf(stderr, "remainder        %d\n", (int) remainder);
-  fprintf(stderr, "new_n            %d\n", (int) new_n);
-  fprintf(stderr, "chunks           %d\n", (int) chunks);
-  fprintf(stderr, "n                %d\n", (int) n);
-  #endif
-
   #pragma omp parallel
   {
+    // otherwise, execute a parallel loop over memcpy,
+    // copying pages at a time
+  
+    // This line tests if dst is page aligned. We don't 
+    // care about src, since it is readonly.
+    // Effectively, mask out the lower bits that account for page_sz-1.
+    // if the resulting address is the same as dst, then dst is page 
+    // aligned to begin with we also are promised that dst + page_sz 
+    // will always be valid, because we enforce that 2*page_sz the smallest
+    // work allowed in this region of code.
+    const unsigned char * pg_aligned_start = ( (((uintptr_t) dst) & ~(page_sz_-1)) == ((uintptr_t) dst) )
+                                              ? (unsigned char *) dst
+                                              : (unsigned char *)(  (((uintptr_t) dst) & ~(page_sz_-1)) + page_sz_);
+    // handle the remainder. How many bytes are there from dst to pg_aligned_start
+    const size_t remainder = (size_t ) (pg_aligned_start - ((unsigned char *) dst) );
+    const unsigned char * corrected_src_from_pg_aligned_dst = (unsigned char *) (((uintptr_t) src) + remainder);
+    const size_t new_n =  (n-remainder);
+    const size_t chunks = (new_n / bytes_per_chunk ) + 1;
+  
+    #ifdef JJE_DEBUG_PAR_DEEPCOPY
+    fprintf(stderr, "pg_aligned_start %p\n", pg_aligned_start);
+    fprintf(stderr, "dest             %p\n", dst);
+    fprintf(stderr, "src              %p\n", src);
+    fprintf(stderr, "remainder        %d\n", (int) remainder);
+    fprintf(stderr, "new_n            %d\n", (int) new_n);
+    fprintf(stderr, "chunks           %d\n", (int) chunks);
+    fprintf(stderr, "n                %d\n", (int) n);
+    #endif
 
     // first thread out handles the remainder
     #pragma omp single nowait
@@ -73,18 +80,25 @@ void hostspace_parallel_deepcopy(void * dst, const void * src, size_t n) {
       #endif
     }
 
-    #pragma omp for nowait
+    // per dan sunderland, try nonmonotonic dynamic rather than the default static
+    // ideally, if KNL, then use dynamic
+    // if not use static
+    #pragma omp for nowait schedule(nonmonotonic: dynamic) nowait
+    //#pragma omp for nowait
     for(size_t i=0; i < chunks; ++i)
     {
       // global offset
-      //for( size_t my_offset = i * bytes_per_chunk; my_offset < new_n; my_offset += thread_bytes_per_block)
-
       const size_t my_offset = i * bytes_per_chunk;
+
+      // nothing to do if our block starts past the end
       if (my_offset < new_n)
       {
         const unsigned char * my_dst = pg_aligned_start + ((uintptr_t) my_offset);
         const unsigned char * my_src = (unsigned char *) (((uintptr_t) corrected_src_from_pg_aligned_dst) + ((uintptr_t) my_offset));
-        const size_t my_n = (my_offset + thread_bytes_per_block) < new_n ? thread_bytes_per_block : new_n - my_offset;
+
+        // esnure we do not go past the end new_n is less than my_offset, so new_n - my_offset is safe
+        const size_t my_n = (my_offset + bytes_per_chunk) < new_n ? bytes_per_chunk : new_n - my_offset;
+
         #ifdef JJE_DEBUG_PAR_DEEPCOPY
         #pragma omp critical
         {
