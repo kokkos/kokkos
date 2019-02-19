@@ -21,9 +21,10 @@ void hostspace_openmp_deepcopy(void * dst, const void * src, size_t n) {
                     0,
                     devid, devid);
 }
-#elif define (KOKKOS_IMPL_ENABLE_OMP_LOOP_COPY)
+#elif defined (KOKKOS_IMPL_ENABLE_OMP_LOOP_COPY)
 void hostspace_openmp_deepcopy(void *dst, const void * src, size_t n) {
 
+  #warning("Using omp loops")
   if(n%8==0) {
     double* dst_p = (double*)dst;
     const double* src_p = (double*)src;
@@ -92,7 +93,7 @@ void hostspace_openmp_deepcopy(void * dst, const void * src, size_t n) {
     // aligned to begin with we also are promised that dst + page_sz 
     // will always be valid, because we enforce that 2*page_sz the smallest
     // work allowed in this region of code.
-    const unsigned char * pg_aligned_start = ( (((uintptr_t) dst) & ~(page_sz_-1)) == ((uintptr_t) dst) )
+    unsigned char * pg_aligned_start = ( (((uintptr_t) dst) & ~(page_sz_-1)) == ((uintptr_t) dst) )
                                               ? (unsigned char *) dst
                                               : (unsigned char *)(  (((uintptr_t) dst) & ~(page_sz_-1)) + page_sz_);
     // handle the remainder. How many bytes are there from dst to pg_aligned_start
@@ -100,7 +101,8 @@ void hostspace_openmp_deepcopy(void * dst, const void * src, size_t n) {
     const unsigned char * corrected_src_from_pg_aligned_dst = (unsigned char *) (((uintptr_t) src) + remainder);
     const size_t new_n =  (n-remainder);
     const size_t chunks = (new_n / bytes_per_chunk ) + 1;
-  
+    const int tid = omp_get_thread_num();
+ 
     // first thread out handles the remainder
     #pragma omp single nowait
     {
@@ -125,13 +127,50 @@ void hostspace_openmp_deepcopy(void * dst, const void * src, size_t n) {
       // nothing to do if our block starts past the end
       if (my_offset < new_n)
       {
-        const unsigned char * my_dst = pg_aligned_start + ((uintptr_t) my_offset);
+        unsigned char * my_dst = pg_aligned_start + ((uintptr_t) my_offset);
         const unsigned char * my_src = (unsigned char *) (((uintptr_t) corrected_src_from_pg_aligned_dst) + ((uintptr_t) my_offset));
 
-        // esnure we do not go past the end new_n is less than my_offset, so new_n - my_offset is safe
-        const size_t my_n = (my_offset + bytes_per_chunk) < new_n ? bytes_per_chunk : new_n - my_offset;
+        // esnure we do not go past the end new_n is greater than my_offset, so new_n - my_offset is safe
+        if ((my_offset + bytes_per_chunk) < new_n) {
+          const size_t my_n = bytes_per_chunk;
 
-        std::memcpy( (void*) my_dst, (void*) my_src, my_n );
+          if (tid%4 == 0) {
+            uint64_t * my_ddst = reinterpret_cast<uint64_t*>(my_dst);
+            const uint64_t * my_dsrc = reinterpret_cast<const uint64_t*>(my_src);
+            
+            for(uint32_t kk=0; kk < my_n/8; kk+=64) {
+              my_ddst[kk] = my_dsrc[kk];
+              my_ddst[kk+1] = my_dsrc[kk+1];
+              my_ddst[kk+2] = my_dsrc[kk+2];
+              my_ddst[kk+3] = my_dsrc[kk+3];
+              my_ddst[kk+4] = my_dsrc[kk+4];
+              my_ddst[kk+5] = my_dsrc[kk+5];
+              my_ddst[kk+7] = my_dsrc[kk+6];
+              my_ddst[kk+7] = my_dsrc[kk+7];
+            }
+          } else if (tid%4 == 1) {
+            double * my_ddst = reinterpret_cast<double*>(my_dst);
+            const double * my_dsrc = reinterpret_cast<const double*>(my_src);
+
+            for(uint32_t kk=0; kk < my_n/8; kk+=64) {
+              my_ddst[kk] = my_dsrc[kk];
+              my_ddst[kk+1] = my_dsrc[kk+1];
+              my_ddst[kk+2] = my_dsrc[kk+2];
+              my_ddst[kk+3] = my_dsrc[kk+3];
+              my_ddst[kk+4] = my_dsrc[kk+4];
+              my_ddst[kk+5] = my_dsrc[kk+5];
+              my_ddst[kk+7] = my_dsrc[kk+6];
+              my_ddst[kk+7] = my_dsrc[kk+7];
+            }
+          } else {
+            std::memcpy( (void*) my_dst, (void*) my_src, my_n );
+          }
+        }
+        else {
+          const size_t my_n = new_n - my_offset;
+          std::memcpy( (void*) my_dst, (void*) my_src, my_n );
+        }
+
      }
     }
   }
