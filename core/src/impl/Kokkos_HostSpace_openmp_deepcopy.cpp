@@ -21,6 +21,35 @@ void hostspace_openmp_deepcopy(void * dst, const void * src, size_t n) {
                     0,
                     devid, devid);
 }
+#elif define (KOKKOS_IMPL_ENABLE_OMP_LOOP_COPY)
+void hostspace_openmp_deepcopy(void *dst, const void * src, size_t n) {
+
+  if(n%8==0) {
+    double* dst_p = (double*)dst;
+    const double* src_p = (double*)src;
+    #pragma omp parallel for
+    for (size_t i = 0; i < n/8; ++i)
+    {
+      dst_p[i] = src_p[i];
+    }
+  } else if(n%4==0) {
+    int32_t* dst_p = (int32_t*)dst;
+    const int32_t* src_p = (int32_t*)src;
+    #pragma omp  parallel for
+    for (size_t i = 0; i < n/4; ++i)
+    {
+      dst_p[i] = src_p[i];
+    }
+  } else {
+    char* dst_p = (char*)dst;
+    const char* src_p = (char*)src;
+    #pragma omp parallel for
+    for (size_t i = 0; i < n; ++i)
+    {
+      dst_p[i] = src_p[i];
+    }
+  }
+}
 #else
 /*
  * TODO: change casting to whatever C++ likes (reinterpret_cast)
