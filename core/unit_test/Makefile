@@ -71,6 +71,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	OBJ_CUDA += TestCuda_Task.o TestCuda_WorkGraph.o
 	OBJ_CUDA += TestCuda_Spaces.o
 	OBJ_CUDA += TestCuda_UniqueToken.o
+	OBJ_CUDA += TestCuda_LocalDeepCopy.o
 	
 	TARGETS += KokkosCore_UnitTest_Cuda
     TARGETS += KokkosCore_UnitTest_CudaInterOpInit
@@ -155,7 +156,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 	OBJ_THREADS += TestThreads_TeamReductionScan.o
 	OBJ_THREADS += TestThreads_Other.o
 	OBJ_THREADS += TestThreads_MDRange_a.o TestThreads_MDRange_b.o TestThreads_MDRange_c.o TestThreads_MDRange_d.o TestThreads_MDRange_e.o
-
+	OBJ_THREADS += TestThreads_LocalDeepCopy.o
+	
 	TARGETS += KokkosCore_UnitTest_Threads
 
 	TEST_TARGETS += test-threads
@@ -190,6 +192,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	OBJ_OPENMP += TestOpenMP_Crs.o
 	OBJ_OPENMP += TestOpenMP_Task.o TestOpenMP_WorkGraph.o
 	OBJ_OPENMP += TestOpenMP_UniqueToken.o
+	OBJ_OPENMP += TestOpenMP_LocalDeepCopy.o
 	
 	TARGETS += KokkosCore_UnitTest_OpenMP
     TARGETS += KokkosCore_UnitTest_OpenMPInterOp
@@ -282,7 +285,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
         endif
         OBJ_SERIAL += TestSerial_Crs.o
         OBJ_SERIAL += TestSerial_Task.o TestSerial_WorkGraph.o
-	
+        OBJ_SERIAL += TestSerial_LocalDeepCopy.o
+		
 	TARGETS += KokkosCore_UnitTest_Serial
 
 	TEST_TARGETS += test-serial
