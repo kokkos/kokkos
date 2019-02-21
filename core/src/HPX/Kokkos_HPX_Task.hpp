@@ -49,10 +49,11 @@
 
 #include <Kokkos_TaskScheduler_fwd.hpp>
 
+#include <HPX/Kokkos_HPX_ChunkedRoundRobinExecutor.hpp>
 #include <Kokkos_HPX.hpp>
 
 #include <hpx/apply.hpp>
-#include <hpx/lcos/local/counting_semaphore.hpp>
+#include <hpx/lcos/local/latch.hpp>
 
 #include <type_traits>
 
@@ -85,7 +86,7 @@ class TaskQueueSpecialization<
   // Must provide task queue execution function
   void execute_task() const {
     using hpx::apply;
-    using hpx::lcos::local::counting_semaphore;
+    using hpx::lcos::local::latch;
     using task_base_type = typename scheduler_type::task_base_type;
 
     const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
@@ -95,10 +96,12 @@ class TaskQueueSpecialization<
 
     auto &queue = scheduler->queue();
 
-    counting_semaphore sem(0);
+    latch num_tasks_remaining(num_worker_threads);
+    ChunkedRoundRobinExecutor exec(num_worker_threads);
 
     for (int thread = 0; thread < num_worker_threads; ++thread) {
-      apply([this, &sem, &queue, &buffer, num_worker_threads, thread]() {
+      apply(exec, [this, &num_tasks_remaining, &queue, &buffer,
+                   num_worker_threads]() {
         // NOTE: This implementation has been simplified based on the
         // assumption that team_size = 1. The HPX backend currently only
         // supports a team size of 1.
@@ -129,11 +132,11 @@ class TaskQueueSpecialization<
           }
         }
 
-        sem.signal(1);
+        num_tasks_remaining.count_down(1);
       });
     }
 
-    sem.wait(num_worker_threads);
+    num_tasks_remaining.wait();
   }
 
   static uint32_t get_max_team_count(execution_space const &espace) {
@@ -210,7 +213,7 @@ class TaskQueueSpecializationConstrained<
   // Must provide task queue execution function
   void execute_task() const {
     using hpx::apply;
-    using hpx::lcos::local::counting_semaphore;
+    using hpx::lcos::local::latch;
     using task_base_type = typename scheduler_type::task_base;
     using queue_type     = typename scheduler_type::queue_type;
 
@@ -224,10 +227,11 @@ class TaskQueueSpecializationConstrained<
     auto &queue = scheduler->queue();
     queue.initialize_team_queues(num_worker_threads);
 
-    counting_semaphore sem(0);
+    latch num_tasks_remaining(num_worker_threads);
+    ChunkedRoundRobinExecutor exec(num_worker_threads);
 
     for (int thread = 0; thread < num_worker_threads; ++thread) {
-      apply([this, &sem, &buffer, num_worker_threads, thread]() {
+      apply(exec, [this, &num_tasks_remaining, &buffer, num_worker_threads]() {
         // NOTE: This implementation has been simplified based on the assumption
         // that team_size = 1. The HPX backend currently only supports a team
         // size of 1.
@@ -266,11 +270,11 @@ class TaskQueueSpecializationConstrained<
           }
         } while (task != no_more_tasks_sentinel);
 
-        sem.signal(1);
+        num_tasks_remaining.count_down(1);
       });
     }
 
-    sem.wait(num_worker_threads);
+    num_tasks_remaining.wait();
   }
 
   template <typename TaskType>
