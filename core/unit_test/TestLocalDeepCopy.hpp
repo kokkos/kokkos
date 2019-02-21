@@ -785,6 +785,9 @@ namespace Test {
     ASSERT_EQ( sum_all, 20.0*N*N*N*N*N*N*N*N );
   }
 //-------------------------------------------------------------------------------------------------------------  
+
+#if defined( KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA )
+#if !defined(KOKKOS_ENABLE_CUDA) || ( 8000 <= CUDA_VERSION )
 TEST_F( TEST_CATEGORY , local_deepcopy_teampolicy_layoutleft )
 {
   typedef TEST_EXECSPACE ExecSpace;
@@ -896,5 +899,6 @@ TEST_F( TEST_CATEGORY , local_deepcopy_rangepolicy_layoutright )
     impl_test_local_deepcopy_rangepolicy_rank_7<ExecSpace,ViewType>(8);
   }
 }
-
+#endif
+#endif
 }
