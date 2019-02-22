@@ -43,6 +43,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	OBJ_CUDA += TestCuda_SharedAlloc.o TestCudaUVM_SharedAlloc.o TestCudaHostPinned_SharedAlloc.o
 	OBJ_CUDA += TestCuda_RangePolicy.o
 	OBJ_CUDA += TestCuda_ViewAPI_a.o TestCuda_ViewAPI_b.o TestCuda_ViewAPI_c.o TestCuda_ViewAPI_d.o TestCuda_ViewAPI_e.o
+	OBJ_CUDA += TestCuda_DeepCopyAlignment.o
 	OBJ_CUDA += TestCuda_ViewMapping_a.o TestCuda_ViewMapping_b.o TestCuda_ViewMapping_subview.o TestCuda_ViewLayoutStrideAssignment.o
 	OBJ_CUDA += TestCudaUVM_ViewCopy.o TestCudaUVM_ViewAPI_a.o TestCudaUVM_ViewAPI_b.o TestCudaUVM_ViewAPI_c.o TestCudaUVM_ViewAPI_d.o TestCudaUVM_ViewAPI_e.o
 	OBJ_CUDA += TestCudaUVM_ViewMapping_a.o TestCudaUVM_ViewMapping_b.o TestCudaUVM_ViewMapping_subview.o
@@ -112,6 +113,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
         OBJ_ROCM += TestROCm_TeamReductionScan.o
         OBJ_ROCM += TestROCm_TeamScratch.o TestROCm_TeamTeamSize.o
         OBJ_ROCM += TestROCm_ViewAPI_a.o TestROCm_ViewAPI_b.o TestROCm_ViewAPI_c.o TestROCm_ViewAPI_d.o TestROCm_ViewAPI_e.o
+	OBJ_ROCM += TestROCm_DeepCopyAlignment.o
         OBJ_ROCM += TestROCm_ViewMapping_a.o
         OBJ_ROCM += TestROCm_ViewMapping_b.o
         OBJ_ROCM += TestROCm_ViewMapping_subview.o
@@ -134,8 +136,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
 	OBJ_THREADS += TestThreads_Init.o
 	OBJ_THREADS += TestThreads_SharedAlloc.o
 	OBJ_THREADS += TestThreads_RangePolicy.o
-    OBJ_THREADS += TestThreads_View_64bit.o
+	OBJ_THREADS += TestThreads_View_64bit.o
 	OBJ_THREADS += TestThreads_ViewAPI_a.o TestThreads_ViewAPI_b.o TestThreads_ViewAPI_c.o TestThreads_ViewAPI_d.o TestThreads_ViewAPI_e.o
+	OBJ_THREADS += TestThreads_DeepCopyAlignment.o
 	OBJ_THREADS += TestThreads_ViewMapping_a.o TestThreads_ViewMapping_b.o TestThreads_ViewMapping_subview.o TestThreads_ViewLayoutStrideAssignment.o
 	OBJ_THREADS += TestThreads_ViewOfClass.o
 	OBJ_THREADS += TestThreads_SubView_a.o TestThreads_SubView_b.o
@@ -165,8 +168,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	OBJ_OPENMP += TestOpenMP_Init.o
 	OBJ_OPENMP += TestOpenMP_SharedAlloc.o
 	OBJ_OPENMP += TestOpenMP_RangePolicy.o
-    OBJ_OPENMP += TestOpenMP_View_64bit.o
+	OBJ_OPENMP += TestOpenMP_View_64bit.o
 	OBJ_OPENMP += TestOpenMP_ViewAPI_a.o TestOpenMP_ViewAPI_b.o TestOpenMP_ViewAPI_c.o TestOpenMP_ViewAPI_d.o TestOpenMP_ViewAPI_e.o
+	OBJ_OPENMP += TestOpenMP_DeepCopyAlignment.o
 	OBJ_OPENMP += TestOpenMP_ViewMapping_a.o TestOpenMP_ViewMapping_b.o TestOpenMP_ViewMapping_subview.o TestOpenMP_ViewLayoutStrideAssignment.o
 	OBJ_OPENMP += TestOpenMP_ViewOfClass.o
 	OBJ_OPENMP += TestOpenMP_SubView_a.o TestOpenMP_SubView_b.o
@@ -202,9 +206,10 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
 	#OBJ_OPENMPTARGET += TestOpenMPTarget_SharedAlloc.o
 	OBJ_OPENMPTARGET += TestOpenMPTarget_RangePolicy.o
 	OBJ_OPENMPTARGET += TestOpenMPTarget_ViewAPI_a.o TestOpenMPTarget_ViewAPI_b.o TestOpenMPTarget_ViewAPI_c.o TestOpenMPTarget_ViewAPI_d.o TestOpenMPTarget_ViewAPI_e.o #Some commented out code
+	OBJ_OPENMPTARGET += TestOpenMPTarget_DeepCopyAlignment.o
 	OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_a.o 
-    OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_b.o 
-    OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_subview.o
+	OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_b.o 
+	OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_subview.o
 	#OBJ_OPENMPTARGET += TestOpenMPTarget_ViewOfClass.o
 	OBJ_OPENMPTARGET += TestOpenMPTarget_SubView_a.o TestOpenMPTarget_SubView_b.o
 	#The following subview tests need something like UVM:
@@ -257,6 +262,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
         OBJ_SERIAL += TestSerial_RangePolicy.o
         OBJ_SERIAL += TestSerial_View_64bit.o
         OBJ_SERIAL += TestSerial_ViewAPI_a.o TestSerial_ViewAPI_b.o TestSerial_ViewAPI_c.o TestSerial_ViewAPI_d.o TestSerial_ViewAPI_e.o
+	OBJ_SERIAL += TestSerial_DeepCopyAlignment.o
         OBJ_SERIAL += TestSerial_ViewMapping_a.o TestSerial_ViewMapping_b.o TestSerial_ViewMapping_subview.o TestSerial_ViewLayoutStrideAssignment.o
         OBJ_SERIAL += TestSerial_ViewOfClass.o
         OBJ_SERIAL += TestSerial_SubView_a.o TestSerial_SubView_b.o
