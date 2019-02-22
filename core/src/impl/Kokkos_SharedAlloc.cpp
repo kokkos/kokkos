@@ -144,8 +144,8 @@ SharedAllocationRecord<void,void>::find( SharedAllocationRecord<void,void> * con
 {
   Kokkos::Impl::throw_runtime_exception("Kokkos::Impl::SharedAllocationRecord::find only works with KOKKOS_DEBUG enabled");
   return nullptr;
-#endif
 }
+#endif
 
 
 /**\brief  Construct and insert into 'arg_root' tracking set.
