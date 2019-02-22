@@ -42,4 +42,7 @@
 */
 
 #include <cuda/TestCuda_Category.hpp>
+#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA) 
 #include <TestDeepCopy.hpp>
+#endif
+
