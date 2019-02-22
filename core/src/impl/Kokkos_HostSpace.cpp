@@ -431,8 +431,8 @@ void SharedAllocationRecord< Kokkos::HostSpace , void >::
 print_records( std::ostream & , const Kokkos::HostSpace & , bool )
 {
   throw_runtime_exception("SharedAllocationRecord<HostSpace>::print_records only works with KOKKOS_DEBUG enabled");
-#endif
 }
+#endif
 
 } // namespace Impl
 } // namespace Kokkos
