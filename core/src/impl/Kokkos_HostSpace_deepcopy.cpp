@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#include "Kokkos_HostSpace_deepcopy.hpp"
 #include "Kokkos_Core.hpp"
+#include "Kokkos_HostSpace_deepcopy.hpp"
 
 namespace Kokkos {
 
@@ -52,7 +52,7 @@ namespace Impl {
 #define KOKKOS_IMPL_HOST_DEEP_COPY_SERIAL_LIMIT 10*8192
 #endif
 
-void hostspace_parallel_deepcopy(void * dst, const void * src, size_t n) {
+void hostspace_parallel_deepcopy(void * dst, const void * src, ptrdiff_t n) {
   if((n<KOKKOS_IMPL_HOST_DEEP_COPY_SERIAL_LIMIT) || (Kokkos::DefaultHostExecutionSpace().concurrency()==1)) {
     std::memcpy(dst,src,n);
     return;
