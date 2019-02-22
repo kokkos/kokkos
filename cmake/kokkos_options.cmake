@@ -202,6 +202,8 @@ set(KOKKOS_SEPARATE_LIBS OFF CACHE BOOL "OFF = kokkos.  ON = kokkoscore, kokkosc
 # Qthreads options.
 set(KOKKOS_QTHREADS_DIR "" CACHE PATH "Location of Qthreads library.")
 
+# Whether to build separate libraries or now
+set(KOKKOS_SEPARATE_TESTS OFF CACHE BOOL "Provide unit test targets with finer granularity.")
 
 #-------------------------------------------------------------------------------
 #------------------------------- KOKKOS_DEVICES --------------------------------

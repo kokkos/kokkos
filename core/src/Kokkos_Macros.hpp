@@ -176,31 +176,6 @@
   #endif
 #endif // #if defined( KOKKOS_ENABLE_CUDA ) && defined( __CUDACC__ )
 
-//----------------------------------------------------------------------------
-// Language info: C++, CUDA, OPENMP
-
-#if defined( KOKKOS_ENABLE_CUDA )
-  // Compiling Cuda code to 'ptx'
-
-  #define KOKKOS_FORCEINLINE_FUNCTION  __device__  __host__  __forceinline__
-  #define KOKKOS_INLINE_FUNCTION       __device__  __host__  inline
-  #define KOKKOS_FUNCTION              __device__  __host__
-#endif // #if defined( __CUDA_ARCH__ )
-
-#if defined( KOKKOS_ENABLE_ROCM ) && defined( __HCC__ )
-
-  #define KOKKOS_FORCEINLINE_FUNCTION  __attribute__((amp,cpu)) inline
-  #define KOKKOS_INLINE_FUNCTION       __attribute__((amp,cpu)) inline
-  #define KOKKOS_FUNCTION              __attribute__((amp,cpu))
-  #define KOKKOS_LAMBDA                [=] __attribute__((amp,cpu))
-#endif
-
-#if defined( _OPENMP )
-  //  Compiling with OpenMP.
-  //  The value of _OPENMP is an integer value YYYYMM
-  //  where YYYY and MM are the year and month designation
-  //  of the supported OpenMP API version.
-#endif // #if defined( _OPENMP )
 
 //----------------------------------------------------------------------------
 // Mapping compiler built-ins to KOKKOS_COMPILER_*** macros
@@ -272,6 +247,36 @@
 #endif
 
 //#endif // #if !defined( __CUDA_ARCH__ )
+//----------------------------------------------------------------------------
+// Language info: C++, CUDA, OPENMP
+
+#if defined( KOKKOS_ENABLE_CUDA )
+  // Compiling Cuda code to 'ptx'
+
+  #define KOKKOS_FORCEINLINE_FUNCTION  __device__  __host__  __forceinline__
+  #define KOKKOS_INLINE_FUNCTION       __device__  __host__  inline
+  #define KOKKOS_FUNCTION              __device__  __host__
+  #if defined( KOKKOS_COMPILER_NVCC )
+    #define KOKKOS_INLINE_FUNCTION_DELETED inline
+  #else
+    #define KOKKOS_INLINE_FUNCTION_DELETED __device__  __host__  inline
+  #endif
+#endif // #if defined( __CUDA_ARCH__ )
+
+#if defined( KOKKOS_ENABLE_ROCM ) && defined( __HCC__ )
+
+  #define KOKKOS_FORCEINLINE_FUNCTION  __attribute__((amp,cpu)) inline
+  #define KOKKOS_INLINE_FUNCTION       __attribute__((amp,cpu)) inline
+  #define KOKKOS_FUNCTION              __attribute__((amp,cpu))
+  #define KOKKOS_LAMBDA                [=] __attribute__((amp,cpu))
+#endif
+
+#if defined( _OPENMP )
+  //  Compiling with OpenMP.
+  //  The value of _OPENMP is an integer value YYYYMM
+  //  where YYYY and MM are the year and month designation
+  //  of the supported OpenMP API version.
+#endif // #if defined( _OPENMP )
 
 //----------------------------------------------------------------------------
 // Intel compiler macros
@@ -427,6 +432,9 @@
   #define KOKKOS_FUNCTION /**/
 #endif
 
+#if !defined( KOKKOS_INLINE_FUNCTION_DELETED )
+  #define KOKKOS_INLINE_FUNCTION_DELETED inline
+#endif
 //----------------------------------------------------------------------------
 // Define empty macro for restrict if necessary:
 
@@ -539,6 +547,11 @@
   #define KOKKOS_IMPL_CTOR_DEFAULT_ARG KOKKOS_INVALID_INDEX
 #endif
 
+#if (defined(KOKKOS_ENABLE_CXX14) || defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20))
+  #define KOKKOS_CONSTEXPR_14 constexpr
+#else
+  #define KOKKOS_CONSTEXPR_14
+#endif
 
 
 #endif // #ifndef KOKKOS_MACROS_HPP
