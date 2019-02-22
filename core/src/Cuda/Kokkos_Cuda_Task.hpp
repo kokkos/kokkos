@@ -233,8 +233,8 @@ public:
     const cudaStream_t stream = 0 ;
 
     KOKKOS_ASSERT(
-      grid.x * grid.y * grid.z * block.x * block.y * block.z
-        == get_max_team_count(scheduler.get_execution_space()) * Kokkos::Impl::CudaTraits::WarpSize
+      static_cast<long>(grid.x * grid.y * grid.z * block.x * block.y * block.z)
+        == static_cast<long>(get_max_team_count(scheduler.get_execution_space()) * Kokkos::Impl::CudaTraits::WarpSize)
     );
 
     auto& queue = scheduler.queue();
