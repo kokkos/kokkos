@@ -168,7 +168,7 @@ namespace Experimental {
 class HPX {
 private:
   static bool m_hpx_initialized;
-  static Impl::thread_buffer m_buffer;
+  static Kokkos::Impl::thread_buffer m_buffer;
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
   static hpx::future<void> m_future;
 #endif
@@ -273,7 +273,9 @@ public:
     return hpx::get_worker_thread_num();
   }
 
-  static Impl::thread_buffer &impl_get_buffer() noexcept { return m_buffer; }
+  static Kokkos::Impl::thread_buffer &impl_get_buffer() noexcept {
+    return m_buffer;
+  }
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
   static hpx::future<void> &impl_get_future() noexcept { return m_future; }
 #endif
@@ -550,7 +552,22 @@ public:
   }
 
 public:
-  TeamPolicyInternal(typename traits::execution_space &,
+  template <class ExecSpace, class... OtherProperties>
+  friend class TeamPolicyInternal;
+
+  template <class... OtherProperties>
+  TeamPolicyInternal(
+      const TeamPolicyInternal<Experimental::HPX, OtherProperties...> &p) {
+    m_league_size = p.m_league_size;
+    m_team_size = p.m_team_size;
+    m_team_scratch_size[0] = p.m_team_scratch_size[0];
+    m_thread_scratch_size[0] = p.m_thread_scratch_size[0];
+    m_team_scratch_size[1] = p.m_team_scratch_size[1];
+    m_thread_scratch_size[1] = p.m_thread_scratch_size[1];
+    m_chunk_size = p.m_chunk_size;
+  }
+
+  TeamPolicyInternal(const typename traits::execution_space &,
                      int league_size_request, int team_size_request,
                      int /* vector_length_request */ = 1)
       : m_team_scratch_size{0, 0}, m_thread_scratch_size{0, 0},
@@ -558,7 +575,7 @@ public:
     init(league_size_request, team_size_request);
   }
 
-  TeamPolicyInternal(typename traits::execution_space &,
+  TeamPolicyInternal(const typename traits::execution_space &,
                      int league_size_request,
                      const Kokkos::AUTO_t &team_size_request,
                      int /* vector_length_request */ = 1)
