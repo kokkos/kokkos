@@ -785,6 +785,7 @@ struct TestMultipleDependence {
     auto f = Kokkos::host_spawn( Kokkos::TaskSingle( sched ), TestMultipleDependence<Scheduler>( 0, depth )  );
 
     Kokkos::wait( sched );
+    Kokkos::fence();
 
     ASSERT_TRUE( f.get() );
 

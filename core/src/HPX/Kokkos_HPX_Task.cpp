@@ -46,11 +46,7 @@
 
 #include <Kokkos_Core.hpp>
 
-#include <HPX/Kokkos_HPX_Task.hpp>
 #include <impl/Kokkos_TaskQueue_impl.hpp>
-
-#include <hpx/include/apply.hpp>
-#include <hpx/include/local_lcos.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -59,84 +55,6 @@ namespace Kokkos {
 namespace Impl {
 
 template class TaskQueue<Kokkos::Experimental::HPX>;
-
-void TaskQueueSpecialization<Kokkos::Experimental::HPX>::execute(
-    queue_type *const queue) {
-  // NOTE: We create an instance so that we can use dispatch_execute_task. This
-  // is not necessarily the most efficient, but can be improved later.
-  TaskQueueSpecialization<Kokkos::Experimental::HPX> task_queue;
-  task_queue.queue = queue;
-  Kokkos::Impl::dispatch_execute_task(&task_queue);
-}
-
-void TaskQueueSpecialization<Kokkos::Experimental::HPX>::execute_task() const {
-  static task_base_type *const end = (task_base_type *)task_base_type::EndTag;
-  const int num_worker_threads = Experimental::HPX::concurrency();
-
-  TeamPolicyInternal<Kokkos::Experimental::HPX> single_policy(
-      num_worker_threads, 1);
-  member_type single_exec(single_policy, 0, 0, nullptr, 0);
-
-  using hpx::apply;
-  using hpx::lcos::local::counting_semaphore;
-
-  counting_semaphore sem(0);
-
-  for (int thread = 0; thread < num_worker_threads; ++thread) {
-    apply([this, &sem, &single_exec, num_worker_threads, thread]() {
-      TeamPolicyInternal<Kokkos::Experimental::HPX> team_policy(
-          num_worker_threads, 1);
-      member_type team_exec(team_policy, 0, thread, nullptr, 0);
-
-      task_base_type *task = nullptr;
-
-      do {
-        if (0 == team_exec.team_rank()) {
-
-          bool leader_loop = false;
-
-          do {
-
-            if (0 != task && end != task) {
-              queue->complete(task);
-            }
-
-            task = 0 < *((volatile int *)&queue->m_ready_count) ? end : nullptr;
-
-            for (int i = 0; i < queue_type::NumQueue && end == task; ++i) {
-              for (int j = 0; j < 2 && end == task; ++j) {
-                task = queue_type::pop_ready_task(&queue->m_ready[i][j]);
-              }
-            }
-
-            leader_loop = end == task;
-
-            if ((!leader_loop) && (0 != task) &&
-                (task_base_type::TaskSingle == task->m_task_type)) {
-
-              (*task->m_apply)(task, &single_exec);
-
-              leader_loop = true;
-            }
-          } while (leader_loop);
-        }
-
-        team_exec.team_broadcast(task, 0);
-
-        if (nullptr != task) {
-          (*task->m_apply)(task, &team_exec);
-        }
-      } while (0 != task);
-
-      sem.signal(1);
-    });
-  }
-
-  sem.wait(num_worker_threads);
-}
-
-void TaskQueueSpecialization<Kokkos::Experimental::HPX>::
-    iff_single_thread_recursive_execute(queue_type *const) {}
 
 } // namespace Impl
 } // namespace Kokkos
