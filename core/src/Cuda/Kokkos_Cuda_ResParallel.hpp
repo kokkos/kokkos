@@ -98,6 +98,7 @@ public:
         closureII.execute();
         closureIII.execute();
         Kokkos::fence();
+        Kokkos::ResCudaSpace::combine_duplicates();
     }
 
     ParallelFor( const FunctorType  & arg_functor ,

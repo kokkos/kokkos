@@ -59,11 +59,19 @@
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #endif
 
+#ifdef KOKKOS_ENABLE_CUDA
+   #include <Kokkos_ResCudaSpace.hpp>
+#endif
+
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
 namespace Impl {
+
+
+
 
 template< unsigned I , size_t ... Args >
 struct variadic_size_t
@@ -2935,10 +2943,17 @@ public:
    *  Allocate via shared allocation record and
    *  return that record for allocation tracking.
    */
-  Kokkos::Impl::SharedAllocationRecord<> *
-  duplicate_shared( Kokkos::Impl::SharedAllocationRecord< typename Traits::memory_space , void >* orig_rec )  {
+  template< class mem_space >
+  typename std::enable_if< !Kokkos::Impl::is_resilient_space< mem_space >::value, Kokkos::Impl::SharedAllocationRecord<> * >::type
+  duplicate_shared( Kokkos::Impl::SharedAllocationRecord< mem_space , void >* orig_rec )  { 
+     return orig_rec;
+  }
 
-     typedef Kokkos::Impl::SharedAllocationRecord< typename Traits::memory_space , void > record_type ;
+  template< class mem_space >
+  typename std::enable_if< Kokkos::Impl::is_resilient_space< mem_space >::value, Kokkos::Impl::SharedAllocationRecord<> * >::type
+  duplicate_shared( Kokkos::Impl::SharedAllocationRecord< mem_space , void >* orig_rec )  {
+
+     typedef Kokkos::Impl::SharedAllocationRecord< mem_space , void > record_type ;
 
      std::string label = orig_rec->get_label();
      label += "_dup";
@@ -2951,11 +2966,14 @@ public:
 
      m_impl_handle = handle_type( reinterpret_cast< pointer_type >( record->data() ) );
 
-      Kokkos::Impl::DeepCopy<typename Traits::memory_space, typename Traits::memory_space, 
-                             Kokkos::Cuda> ( m_impl_handle, orig_rec->data(), orig_rec->size() );
+     Kokkos::Impl::DeepCopy<mem_space, mem_space, 
+                             typename mem_space::execution_space> 
+              ( m_impl_handle, orig_rec->data(), orig_rec->size() );
 
-      return record ;
-    }
+     Kokkos::ResCudaSpace::template track_duplicate<typename Traits::value_type>(orig_rec, record);
+
+     return record ;
+   }
 
 };
 

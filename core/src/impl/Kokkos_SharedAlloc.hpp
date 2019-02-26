@@ -50,6 +50,19 @@
 namespace Kokkos {
 namespace Impl {
 
+template<class T, class Enable = void>
+struct is_resilient_space {
+  enum { value = 0 };
+};
+
+template<class T>
+struct is_resilient_space<T,typename std::enable_if<
+                       std::is_same<typename std::remove_cv<T>::type,
+                                    typename std::remove_cv<typename T::resilient_space>::type>::value
+                      >::type> {
+  enum { value = 1 };
+};
+
 template< class MemorySpace = void , class DestroyFunctor = void >
 class SharedAllocationRecord ;
 
@@ -136,6 +149,19 @@ public:
   static void duplicates_enable() { t_duplicates_enabled = 1; }
 
   static void duplicates_disable() { t_duplicates_enabled = 0; }
+
+  template< class MemSpace >
+  inline static
+  typename std::enable_if< ! Kokkos::Impl::is_resilient_space< MemSpace , void >::value >::type
+  track_duplicate_record( SharedAllocationRecord * rec ) {
+  }
+
+  template< class MemSpace >
+  inline static
+  typename std::enable_if< Kokkos::Impl::is_resilient_space< MemSpace , void >::value >::type
+  track_duplicate_record( SharedAllocationRecord * rec ) {
+     MemSpace::track_duplicate ( rec );
+  }
 
   virtual ~SharedAllocationRecord() {}
 

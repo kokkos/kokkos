@@ -509,10 +509,12 @@ public:
   void execute() const
     {
       const typename Policy::index_type nwork = m_policy.end() - m_policy.begin();
+      printf("retrieving the blocksize\n");
       const int block_size = Kokkos::Impl::cuda_get_opt_block_size< ParallelFor, LaunchBounds>( m_functor , 1, 0 , 0 );
       const dim3 block(  1 , block_size , 1);
       const dim3 grid( std::min( typename Policy::index_type(( nwork + block.y - 1 ) / block.y) , typename Policy::index_type(cuda_internal_maximum_grid_count()) ) , 1 , 1);
 
+      printf("calling parallel launch\n");
       CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 , m_policy.space().impl_internal_space_instance() );
     }
 
@@ -520,8 +522,7 @@ public:
                const Policy       & arg_policy )
     : m_functor( arg_functor )
     , m_policy(  arg_policy )
-    { }
-
+    { printf("pf constructor\n"); }
 };
 
 
