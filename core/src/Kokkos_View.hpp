@@ -61,15 +61,12 @@
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA)
-#include <Kokkos_ResCudaSpace.hpp>
-#endif
-
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
 namespace Impl {
+
 
 template< class DataType >
 struct ViewArrayAnalysis ;
@@ -1994,9 +1991,8 @@ public:
    printf("exact copy (%s): tracking disabled = %d \n", m_track.get_label(), m_track.tracking_disabled());
    fflush(stdout);
 
-#ifdef KOKKOS_ENABLE_CUDA
    typedef typename traits::device_type::memory_space specialized_memory_space;
-   if ( std::is_same< Kokkos::ResCudaSpace , specialized_memory_space >::value &&
+   if ( Kokkos::Impl::is_resilient_space< specialized_memory_space >::value &&
         Kokkos::Impl::SharedAllocationRecord<void,void>::duplicates_enabled() ) {
       shared_record_type  *
          record = reinterpret_cast<shared_record_type*>(m_map.duplicate_shared( m_track.template get_record<specialized_memory_space>() ));
@@ -2005,7 +2001,6 @@ public:
        m_track.assign_allocated_record_to_uninitialized( record );
        printf("after duplicate record assigned to tracker: %d \n", m_track.tracking_disabled());
      }
-#endif
   }
 
   KOKKOS_INLINE_FUNCTION

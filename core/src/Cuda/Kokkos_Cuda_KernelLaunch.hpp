@@ -410,6 +410,8 @@ struct CudaParallelLaunch< DriverType
 
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
 
+      printf("invoke functor on device: %ld \n", sizeof(driver));
+
       // Invoke the driver function on the device
       cuda_parallel_launch_local_memory< DriverType >
           <<< grid , block , shmem , cuda_instance->m_stream >>>( driver );
