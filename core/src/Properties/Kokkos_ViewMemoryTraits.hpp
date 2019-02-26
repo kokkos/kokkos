@@ -162,6 +162,8 @@ public:
 } // end namespace ViewProperties
 } // end namespace Experimental
 
+//==============================================================================
+
 namespace Impl {
 
 template <class Trait>
@@ -203,10 +205,14 @@ struct MakeAnalogousViewWithTraits<
 
 } // end namespace Impl
 
+//==============================================================================
+
 template <class MemoryTraitsProperty, class... ViewProperties>
 KOKKOS_INLINE_FUNCTION
 typename std::enable_if<
   Impl::is_memory_traits_property<MemoryTraitsProperty>::value,
+  // To avoid instantiating Kokkos::View with potentially-invalid template parameters,
+  // we get the ::type member of MakeAnalogousViewWithTraits outside of the enable_if
   Impl::MakeAnalogousViewWithTraits<Kokkos::View<ViewProperties...>, MemoryTraitsProperty>
 >::type::type
 require_property(Kokkos::View<ViewProperties...> const& view, MemoryTraitsProperty)
@@ -218,6 +224,8 @@ template <class MemoryTraitsProperty, class... ViewProperties>
 KOKKOS_INLINE_FUNCTION
 typename std::enable_if<
   Impl::is_memory_traits_property<MemoryTraitsProperty>::value,
+  // To avoid instantiating Kokkos::View with potentially-invalid template parameters,
+  // we get the ::type member of MakeAnalogousViewWithTraits outside of the enable_if
   Impl::MakeAnalogousViewWithTraits<Kokkos::View<ViewProperties...>, MemoryTraitsProperty>
 >::type::type
 require_property(Kokkos::View<ViewProperties...>&& view, MemoryTraitsProperty)
