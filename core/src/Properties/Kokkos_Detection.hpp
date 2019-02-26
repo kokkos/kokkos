@@ -62,27 +62,28 @@ KOKKOS_FUNCTION
 decltype(Kokkos::Impl::_declval<T>(0))
 declval() noexcept;
 
-// A void_t implementation that works with gcc-4.9 (workaround for bug 64395
+// A void_t implementation that works with gcc-4.9 (workaround for bug 64395, also in EDG)
 // From: http://stackoverflow.com/questions/35753920/why-does-the-void-t-detection-idiom-not-work-with-gcc-4-9
 namespace _void_t_impl {
 
-template <class... >
-struct make_void { using type = void; };
+template <class U>
+struct make_void {
+  template <class V>
+  struct _make_void_impl {
+    using type = void;
+  };
+  using type = typename _make_void_impl<U>::type;
+};
 
 } // end namepace _void_t_impl
 
-template <class... T>
-using void_t = typename _void_t_impl::make_void<T...>::type;
+template <class T>
+using void_t = typename _void_t_impl::make_void<T>::type;
 
-namespace _void_t_impl {
-
-template <template <class...> class F>
-struct make_void_template { using type = void; };
-
-} // end namepace _void_t_impl
-
-template <template <class...> class F>
-using void_template_t = typename _void_t_impl::make_void_template<F>::type;
+/*
+template <class>
+using void_t = void;
+ */
 
 // Large pieces taken or adapted from http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4436.pdf
 

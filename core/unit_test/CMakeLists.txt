@@ -754,3 +754,45 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
   FAIL_REGULAR_EXPRESSION "  FAILED  "
     TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
 )
+
+#
+# Compile-only tests
+#
+FUNCTION(KOKKOS_ADD_COMPILE_TEST TEST_NAME)
+
+  SET(options LINK_KOKKOS)
+  SET(oneValueArgs)
+  SET(multiValueArgs)
+
+  CMAKE_PARSE_ARGUMENTS(PARSE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  IF(PARSE_LINK_KOKKOS)
+    SET(libs ${TEST_LINK_TARGETS})
+  ELSE()
+    SET(libs)
+  ENDIF()
+
+  TRIBITS_ADD_EXECUTABLE(
+    ${TEST_NAME}
+    TESTONLY
+    COMM serial
+    TESTONLYLIBS ${libs}
+    ${PARSE_UNPARSED_ARGUMENTS}
+  )
+
+  target_compile_options(
+    ${PACKAGE_NAME}_${TEST_NAME}
+    PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${KOKKOS_CXX_FLAGS}>
+  )
+  target_link_libraries(
+    ${PACKAGE_NAME}_${TEST_NAME}
+    PUBLIC ${KOKKOS_LD_FLAGS}
+  )
+
+ENDFUNCTION()
+
+# Note that the detection test doesn't even depend on linking to Kokkos
+KOKKOS_ADD_COMPILE_TEST(
+  CompileTest_Detection
+  SOURCES compile_only/CompileTestDetection.cpp
+)
