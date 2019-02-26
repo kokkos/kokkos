@@ -98,6 +98,7 @@ public:
         closureII.execute();
         closureIII.execute();
         Kokkos::fence();
+        printf("Combining duplicates \n");
         Kokkos::ResCudaSpace::combine_duplicates();
     }
 
