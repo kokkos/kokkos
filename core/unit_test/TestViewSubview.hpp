@@ -1328,6 +1328,54 @@ void test_unmanaged_subview_reset()
     );
 }
 
+//----------------------------------------------------------------------------
+
+template <class T>
+struct get_view_type;
+
+template <class T, class... Args>
+struct get_view_type<
+  Kokkos::View<T, Args...>
+> {
+  using type = T;
+};
+
+template <class Space, class Layout>
+struct TestSubviewStaticSizes
+{
+  Kokkos::View<int*[10][5][2], Layout, Space> a;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()() const noexcept
+  {
+    /* Doesn't actually do anything; just static assertions */
+
+    auto sub_a = Kokkos::subview(a, 0, Kokkos::ALL, Kokkos::ALL, Kokkos::ALL);
+    static_assert(
+      std::is_same<
+        typename get_view_type<decltype(sub_a)>::type,
+        int[10][5][2]
+      >::value,
+      "Subview static sizes not preserved (case 1)!"
+    );
+
+    auto sub_a_2 = Kokkos::subview(a, 0, 0, Kokkos::ALL, Kokkos::ALL);
+    static_assert(
+      std::is_same<
+        typename get_view_type<decltype(sub_a)>::type,
+        int[5][2]
+      >::value,
+      "Subview static sizes not preserved (case 2)!"
+    );
+
+  }
+
+  TestSubviewStaticSizes()
+    : a(20 , 10 , 5 , 2 )
+  {}
+};
+
+
 } // namespace TestViewSubview
 
 #endif
