@@ -1995,6 +1995,7 @@ public:
    typedef typename traits::device_type::memory_space specialized_memory_space;
    if ( Kokkos::Impl::is_resilient_space< specialized_memory_space >::value &&
         Kokkos::Impl::SharedAllocationRecord<void,void>::duplicates_enabled() ) {
+        printf("duplicating shared alloc record.. \n");
       shared_record_type  *
          record = reinterpret_cast<shared_record_type*>(m_map.duplicate_shared( m_track.template get_record<specialized_memory_space>() ));
 

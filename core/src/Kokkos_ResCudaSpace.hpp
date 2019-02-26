@@ -128,45 +128,44 @@ struct MergeFunctor<Type, typename std::enable_if< !std::is_same< Type, float >:
    }
 };
 
-struct DupLstType {
-
-   Kokkos::Impl::SharedAllocationRecord<void,void> * rec;
-   DupLstType * next;
-
-   KOKKOS_INLINE_FUNCTION
-   DupLstType () : next (nullptr), rec (nullptr) {}
-
-};
-
 class DuplicateTracker {
 public:
-   Kokkos::Impl::SharedAllocationRecord<void,void> * original;
-   DupLstType * dup_list;
+   void * original_data;
    int data_type;
+   int dup_cnt;
+   int data_len;
+   void * dup_list[3];
 
    KOKKOS_INLINE_FUNCTION
-   DuplicateTracker() : original(nullptr), dup_list(new DupLstType()) { data_type = get_type_enum<int>::type_id; }
+   DuplicateTracker() : original_data(nullptr) { 
+      data_type = get_type_enum<int>::type_id; 
+      dup_cnt = 0;
+      data_len = 0;
+      for (int i = 0; i < 3; i++) { dup_list[i] = nullptr; }
+   }
    
    KOKKOS_INLINE_FUNCTION
-   DuplicateTracker(int sType) : original(nullptr), dup_list(new DupLstType()) {data_type = sType;}
+   DuplicateTracker(int sType) : original_data(nullptr) {
+      data_type = sType;
+      dup_cnt = 0;
+      data_len = 0;
+      for (int i = 0; i < 3; i++) { dup_list[i] = nullptr; }
+   }
    
    KOKKOS_INLINE_FUNCTION
-   DuplicateTracker(const DuplicateTracker & dt) : original( dt.original ), dup_list(dt.dup_list) {data_type = dt.data_type;}
+   DuplicateTracker(const DuplicateTracker & dt) : original_data( dt.original_data ) {
+      data_type = dt.data_type;
+      dup_cnt = dt.dup_cnt;
+      data_len = dt.data_len;
+      for (int i = 0; i < dup_cnt; i++) { dup_list[i] = dt.dup_list[i]; }
+   }
 
    inline 
    void add_dup( Kokkos::Impl::SharedAllocationRecord<void,void>* dup ) {
-      DupLstType * pWork = dup_list;
-      while (pWork != nullptr) {
-         if (pWork->rec == nullptr) {
-            pWork->rec = dup;
-            break;
-         } else if (pWork->next == nullptr) {
-            pWork->next = new DupLstType();
-            pWork->next->rec = dup;
-            break;
-         } else {
-            pWork = pWork->next;
-         }
+      if (dup_cnt < 3) {
+         dup_list[dup_cnt] = (void*)dup->data();
+         dup_cnt++;
+         printf("duplicate added to list: %d\n", dup_cnt);
       }
    }
 };
@@ -193,19 +192,29 @@ public:
 
    KOKKOS_INLINE_FUNCTION
    void operator ()(const int i) const {
-      rd_type * ptr = (Type*)original->data();      
-      DupLstType * dupOuter = dup_list;
-      for (int j = 0; j < 3 && dupOuter != nullptr; j++) {
-         ptr[i]  =  ((rd_type*)dupOuter->rec->data())[i];
-         DupLstType * dupInner = dupOuter->next;
-         for ( int k = 0; k < 2 && dupInner != nullptr; k++) {
-            rd_type * dup = (rd_type*)dupInner->rec->data();
-            if ( cf.compare( dup[i], ptr[i] ) )  // just need 2 that are the same
-               return;
-            dupInner = dupInner->next;
-         }
-         dupOuter = dupOuter->next;
+      printf("combine dups: %d - %d\n", i, dup_cnt);
+      rd_type * ptr = (Type*)original_data;
+      if (dup_cnt < 3) {
+         printf("must have 3 duplicates!!!!");
+         return;
       }
+      for (int j = 0; j < dup_cnt; j++) {
+         printf("iterating outer: %d - %d \n", i, j);
+         ptr[i]  =  ((rd_type*)dup_list[j])[i];
+         printf("first entry: %d, %d\n",j, (int)ptr[i]);
+         int k = j < dup_cnt-1 ? j+1 : 0;
+         for ( int r = 0; r < 2 ; r++) {
+            printf("iterate inner %d, %d, %d \n", i, j, k);
+            rd_type * dup = ((rd_type*)dup_list[k]);
+            if ( cf.compare( dup[i], ptr[i] ) )  // just need 2 that are the same
+            {
+               printf("match found: %d - %d", i, j);
+               return;
+            }
+            k = k < dup_cnt-1 ? k+1 : 0;
+         }
+      }
+      printf("no match found: %i\n", i);
    }
 
 };
@@ -606,10 +615,13 @@ void ResCudaSpace::track_duplicate( Kokkos::Impl::SharedAllocationRecord<void,vo
      dt_type * dt = nullptr;
      auto loc = duplicate_map.find(SP->get_label());
      if ( loc != duplicate_map.end() ) {
-        dt_type* dt = (dt_type*)loc->second;
+        dt = (dt_type*)loc->second;
+        printf("retrieved existing tracking entry from map: %s\n", SP->get_label().c_str());
      } else {
-        dt_type* dt = new dt_type();
-        dt->original = orig;
+        printf("creating new tracking entry in hash map: %s\n", SP->get_label().c_str());
+        dt = new dt_type();
+        dt->data_len = orig->size();
+        dt->original_data = orig->data();
         duplicate_map[SP->get_label()] = (Kokkos::Experimental::DuplicateTracker*)dt;
      }
      dt->add_dup(dup);

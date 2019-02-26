@@ -105,9 +105,12 @@ namespace Experimental {
    
    template<class Type, class ExecutionSpace>
    void SpecDuplicateTracker<Type, ExecutionSpace>::combine_dups() {
-      int N = original->size() / sizeof(rd_type);
+      
+      int N = data_len / sizeof(rd_type);
       Kokkos::RangePolicy<ExecutionSpace> rp (0,N);
+      printf("invoking parallel combine operation\n");
       Kokkos::parallel_for(rp, *this);
+      Kokkos::fence();
    }
 
 }
@@ -123,6 +126,7 @@ void ResCudaSpace::combine_duplicates() {
    std::map<std::string, Kokkos::Experimental::DuplicateTracker* >::iterator it = ResCudaSpace::duplicate_map.begin();
    while ( it != ResCudaSpace::duplicate_map.end() ) {
        Kokkos::Experimental::DuplicateTracker * dt = it->second;
+       printf("combine duplicates: %d, %d \n", dt->data_type, dt->data_len );
        switch (dt->data_type) {
           case Kokkos::Experimental::ScalarInt: {
              Kokkos::Experimental::SpecDuplicateTracker<int, Kokkos::Cuda>* sp_dt = 
