@@ -50,6 +50,7 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Pair.hpp>
 #include <Kokkos_Layout.hpp>
+#include <Kokkos_Extents.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_ViewCtor.hpp>
@@ -3134,6 +3135,117 @@ public:
 // Subview mapping.
 // Deduce destination view type from source view traits and subview arguments
 
+template <class...>
+class TypeList;
+
+// TODO @refactoring move this somewhere more general
+template <class>
+struct ReverseTypeList;
+
+template <class Head, class... Tail>
+struct ReverseTypeList<TypeList<Head, Tail...>> {
+  template <class... ReversedTail>
+  struct impl {
+    using type = typename ReverseTypeList<TypeList<Tail...>>::template impl<Head, ReversedTail...>::type;
+  };
+  using type = typename impl<>::type;
+};
+
+template <>
+struct ReverseTypeList<TypeList<>> {
+  template <class... ReversedTail>
+  struct impl {
+    using type = TypeList<ReversedTail...>;
+  };
+  using type = TypeList<>;
+};
+
+// TODO @refactoring move this somewhere more general
+template <class T, class=void>
+struct decay_all_extents {
+  using type = T;
+};
+
+template <class T>
+struct decay_all_extents<T,
+  typename std::enable_if<not std::is_same<T, typename std::decay<T>::type>::value>::type
+>
+{ using type = typename decay_all_extents<typename std::decay<T>::type>::type; };
+
+template <class T>
+struct decay_all_extents<T*,
+  typename std::enable_if<not std::is_same<T, typename std::decay<T>::type>::value>::type
+>
+{ using type = typename decay_all_extents<typename std::decay<T>::type>::type*; };
+
+
+template <class, class ValueType, class Exts, class... Args>
+struct SubViewDataTypeImpl;
+
+/* base case */
+template <class ValueType>
+struct SubViewDataTypeImpl<
+  void,
+  ValueType,
+  Experimental::Extents<>
+>
+{ using type = ValueType; };
+
+/* for integral args, subview doesn't have that dimension */
+template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class Integral, class... Args>
+struct SubViewDataTypeImpl<
+  typename std::enable_if<std::is_integral<typename std::decay<Integral>::type>::value>::type,
+  ValueType,
+  Experimental::Extents<Ext, Exts...>,
+  Integral, Args...
+> : SubViewDataTypeImpl<
+      void, ValueType,
+      Experimental::Extents<Exts...>,
+      Args...
+    >
+{ };
+
+
+/* for ALL slice, subview has the same dimension */
+template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class... Args>
+struct SubViewDataTypeImpl<
+  void,
+  ValueType,
+  Experimental::Extents<Ext, Exts...>,
+  ALL_t, Args...
+> : SubViewDataTypeImpl<
+      void, typename ApplyExtent<ValueType, Ext>::type,
+      Experimental::Extents<Exts...>,
+      Args...
+    >
+{ };
+
+
+/* for pair-style slice, subview has dynamic dimension, since pair doesn't give static sizes */
+/* Since we don't allow interleaving of dynamic and static extents, make all of the dimensions to the left dynamic  */
+template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class PairLike, class... Args>
+struct SubViewDataTypeImpl<
+  typename std::enable_if<is_pair_like<PairLike>::value>::type,
+  ValueType,
+  Experimental::Extents<Ext, Exts...>,
+  PairLike, Args...
+> : SubViewDataTypeImpl<
+      void, typename decay_all_extents<ValueType>::type*,
+      Experimental::Extents<Exts...>,
+      Args...
+    >
+{ };
+
+
+template <class ValueType, class Exts, class... Args>
+struct SubViewDataType
+  : SubViewDataTypeImpl<
+      void, ValueType, Exts, Args...
+    >
+{ };
+
+//----------------------------------------------------------------------------
+
 template< class SrcTraits , class ... Args >
 struct ViewMapping
   < typename std::enable_if<(
@@ -3201,17 +3313,25 @@ private:
 
   typedef typename SrcTraits::value_type  value_type ;
 
-  typedef typename std::conditional< rank == 0 , value_type ,
-          typename std::conditional< rank == 1 , value_type * ,
-          typename std::conditional< rank == 2 , value_type ** ,
-          typename std::conditional< rank == 3 , value_type *** ,
-          typename std::conditional< rank == 4 , value_type **** ,
-          typename std::conditional< rank == 5 , value_type ***** ,
-          typename std::conditional< rank == 6 , value_type ****** ,
-          typename std::conditional< rank == 7 , value_type ******* ,
-                                                 value_type ********
-          >::type >::type >::type >::type >::type >::type >::type >::type
-     data_type ;
+  using data_type =
+    typename SubViewDataType<
+      value_type,
+      typename Kokkos::Impl::ParseViewExtents<
+        typename SrcTraits::data_type
+      >::type,
+      Args...
+    >::type;
+  //typedef typename std::conditional< rank == 0 , value_type ,
+  //        typename std::conditional< rank == 1 , value_type * ,
+  //        typename std::conditional< rank == 2 , value_type ** ,
+  //        typename std::conditional< rank == 3 , value_type *** ,
+  //        typename std::conditional< rank == 4 , value_type **** ,
+  //        typename std::conditional< rank == 5 , value_type ***** ,
+  //        typename std::conditional< rank == 6 , value_type ****** ,
+  //        typename std::conditional< rank == 7 , value_type ******* ,
+  //                                               value_type ********
+  //        >::type >::type >::type >::type >::type >::type >::type >::type
+  //   data_type ;
 
 public:
 

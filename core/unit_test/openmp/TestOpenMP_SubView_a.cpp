@@ -101,10 +101,11 @@ TEST_F( TEST_CATEGORY, view_subview_right_3 )
   TestViewSubview::test_right_3< TEST_EXECSPACE >();
 }
 
-TEST_F(TEST_CATEGORY, view_static_subview_sizes)
+TEST_F(TEST_CATEGORY, view_static_tests)
 {
   TestViewSubview::TestSubviewStaticSizes<TEST_EXECSPACE, Kokkos::LayoutLeft>()();
   TestViewSubview::TestSubviewStaticSizes<TEST_EXECSPACE, Kokkos::LayoutRight>()();
+  TestViewSubview::TestExtentsStaticTests<TEST_EXECSPACE>();
 }
 
 } // namespace Test
