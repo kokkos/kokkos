@@ -1482,7 +1482,7 @@ struct TestSubviewStaticSizes
   }
 
   TestSubviewStaticSizes()
-    : a( Kokkos::view_alloc() , 20 , 10 , 5 , 2 )
+    : a( Kokkos::view_alloc() , 20 )
   {}
 };
 
