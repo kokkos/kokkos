@@ -490,7 +490,6 @@ class TypeList;
 
 //----------------------------------------------------------------------------
 
-// TODO @refactoring move this somewhere more general
 template <class>
 struct ReverseTypeList;
 
@@ -512,24 +511,25 @@ struct ReverseTypeList<TypeList<>> {
   using type = TypeList<>;
 };
 
-// TODO @refactoring move this somewhere more general
-template <class T, class=void>
-struct decay_all_extents {
+//----------------------------------------------------------------------------
+
+template <class T>
+struct make_all_extents_into_pointers
+{
   using type = T;
 };
 
-template <class T>
-struct decay_all_extents<T,
-  typename std::enable_if<not std::is_same<T, typename std::decay<T>::type>::value>::type
->
-{ using type = typename decay_all_extents<typename std::decay<T>::type>::type; };
+template <class T, unsigned N>
+struct make_all_extents_into_pointers<T[N]>
+{
+  using type = typename make_all_extents_into_pointers<T>::type*;
+};
 
 template <class T>
-struct decay_all_extents<T*,
-  typename std::enable_if<not std::is_same<T, typename std::decay<T>::type>::value>::type
->
-{ using type = typename decay_all_extents<typename std::decay<T>::type>::type*; };
-
+struct make_all_extents_into_pointers<T*>
+{
+  using type = typename make_all_extents_into_pointers<T>::type*;
+};
 
 } // namespace Impl
 } // namespace Kokkos

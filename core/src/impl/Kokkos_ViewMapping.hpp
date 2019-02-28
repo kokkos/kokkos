@@ -3186,7 +3186,7 @@ struct SubViewDataTypeImpl<
   Experimental::Extents<Ext, Exts...>,
   PairLike, Args...
 > : SubViewDataTypeImpl<
-      void, typename decay_all_extents<ValueType>::type*,
+      void, typename make_all_extents_into_pointers<ValueType>::type*,
       Experimental::Extents<Exts...>,
       Args...
     >
