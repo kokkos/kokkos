@@ -483,6 +483,54 @@ struct is_integral_constant< integral_constant<T,v> > : public true_
   enum { integral_value = v };
 };
 
+//----------------------------------------------------------------------------
+
+template <class...>
+class TypeList;
+
+//----------------------------------------------------------------------------
+
+// TODO @refactoring move this somewhere more general
+template <class>
+struct ReverseTypeList;
+
+template <class Head, class... Tail>
+struct ReverseTypeList<TypeList<Head, Tail...>> {
+  template <class... ReversedTail>
+  struct impl {
+    using type = typename ReverseTypeList<TypeList<Tail...>>::template impl<Head, ReversedTail...>::type;
+  };
+  using type = typename impl<>::type;
+};
+
+template <>
+struct ReverseTypeList<TypeList<>> {
+  template <class... ReversedTail>
+  struct impl {
+    using type = TypeList<ReversedTail...>;
+  };
+  using type = TypeList<>;
+};
+
+// TODO @refactoring move this somewhere more general
+template <class T, class=void>
+struct decay_all_extents {
+  using type = T;
+};
+
+template <class T>
+struct decay_all_extents<T,
+  typename std::enable_if<not std::is_same<T, typename std::decay<T>::type>::value>::type
+>
+{ using type = typename decay_all_extents<typename std::decay<T>::type>::type; };
+
+template <class T>
+struct decay_all_extents<T*,
+  typename std::enable_if<not std::is_same<T, typename std::decay<T>::type>::value>::type
+>
+{ using type = typename decay_all_extents<typename std::decay<T>::type>::type*; };
+
+
 } // namespace Impl
 } // namespace Kokkos
 
