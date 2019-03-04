@@ -141,7 +141,29 @@ namespace Experimental {
 
    }
   
+   // add to map linking file space views with hostspace.
+   void StdFileSpace::track_check_point_mirror( const std::string label, void * dst, void * src, const size_t size ) {
 
+
+   }
+
+   void StdFileSpace::restore_all_views() {
+
+   }
+   
+   void StdFileSpace::restore_view(const std::string name) {
+
+   }
+  
+   void StdFileSpace::checkpoint_views() {
+
+
+   }
+   void StdFileSpace::set_default_path( const std::string path ) {
+
+
+   }
+  
 } // Experimental
 
 } // Kokkos

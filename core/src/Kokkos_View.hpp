@@ -594,6 +594,7 @@ public:
                 typename traits::host_mirror_space >
     host_mirror_type ;
 
+
   /** \brief Unified types */
   typedef typename Impl::ViewUniformType<View,0>::type uniform_type;
   typedef typename Impl::ViewUniformType<View,0>::const_type uniform_const_type;

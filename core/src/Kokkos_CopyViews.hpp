@@ -2058,6 +2058,21 @@ create_mirror(const Space& , const Kokkos::View<T,P...> & src
   return typename Impl::MirrorType<Space,T,P ...>::view_type(src.label(),src.layout());
 }
 
+// Create a mirror in a new space (specialization for different space)
+template<class Space, class T, class ... P>
+typename Impl::MirrorType<Space,T,P ...>::view_type
+create_chkpt_mirror(const Space& , const Kokkos::View<T,P...> & src
+             , typename std::enable_if<
+                 std::is_same< typename ViewTraits<T,P...>::specialize , void >::value
+               >::type * = 0) {
+  typedef typename Impl::MirrorType<Space,T,P ...>::view_type chkpt_mirror_type;
+  typedef typename ViewTraits<T,P...>::value_type chkpt_value_type;
+  chkpt_mirror_type chkpt(src.label(),src.layout());
+  Space::track_check_point_mirror( src.label(), chkpt.data(), src.data(), src.size() * sizeof(chkpt_value_type) );
+
+  return chkpt;
+}
+
 template< class T , class ... P >
 inline
 typename Kokkos::View<T,P...>::HostMirror
