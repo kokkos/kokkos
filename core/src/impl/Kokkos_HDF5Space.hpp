@@ -39,7 +39,7 @@ public:
                           m_did(0),
                           m_mid(0)  {
       rank = 1;
-      chunk_size = 4096;
+      chunk_size = 65536;
       file_offset = 0;
    }
    KokkosHDF5Accessor(const size_t size, const std::string & path ) : data_size(size),
@@ -49,7 +49,10 @@ public:
                                                                       m_did(0),
                                                                       m_mid(0)  {
       rank = 1;
-      chunk_size = 4096;
+      //chunk_size = ( data_size / 20 );
+      chunk_size = 131072;
+      chunk_size = chunk_size < 65536 ? 65536 : chunk_size;
+      chunk_size = chunk_size > 1048576 ? 1048576 : chunk_size;
       file_offset = 0;
    }
 
