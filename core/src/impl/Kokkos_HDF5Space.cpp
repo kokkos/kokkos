@@ -20,8 +20,9 @@ namespace Experimental {
 
    int KokkosHDF5Accessor::open_file( ) { 
 
-       hsize_t dims[1];
-       dims[0] = data_size;
+       hsize_t dims[2];
+       dims[0] = 1;
+       dims[1] = data_size;
 
        if (m_fid == 0  && !file_exists(file_path)) {
  //          printf("creating HDF5 file: %s - %d\n", file_path.c_str(), data_size );
@@ -34,11 +35,12 @@ namespace Experimental {
               return -1;
           }
 
-          hid_t fsid = H5Screate_simple(1, dims, NULL);
+          hid_t fsid = H5Screate_simple(2, dims, NULL);
           pid = H5Pcreate(H5P_DATASET_CREATE);
-          hsize_t chunk[1];
-          chunk[0] = min(chunk_size, data_size);
-          H5Pset_chunk(pid, 1, chunk);
+          /*hsize_t chunk[2];
+          chunk[0] = 1;
+          chunk[1] = min(chunk_size, data_size);
+          H5Pset_chunk(pid, 2, chunk);*/
           m_did = H5Dcreate(m_fid, data_set.c_str(), H5T_NATIVE_CHAR, fsid, 
                              H5P_DEFAULT, pid, H5P_DEFAULT );
           if (m_did == 0) {
@@ -64,10 +66,10 @@ namespace Experimental {
               hid_t dtype  = H5Dget_type(m_did);
               hid_t dspace = H5Dget_space(m_did);
               int rank = H5Sget_simple_extent_ndims(dspace);
-              if ( H5Tequal(dtype, H5T_NATIVE_CHAR) > 0 && rank == 1 ) {     
-                 hsize_t test_dims[1];
+              if ( H5Tequal(dtype, H5T_NATIVE_CHAR) > 0 && rank == 2 ) {     
+                 hsize_t test_dims[2];
                  herr_t status  = H5Sget_simple_extent_dims(dspace, test_dims, NULL);
-                 if (status != 1 || test_dims[0] != data_size) {
+                 if (status != 2 || test_dims[1] != data_size) {
                     printf("HDF5: Dims don't match: %d, %d \n", (int)status, (int)test_dims[0] );
                     nFileOk = -1;
                  }
@@ -95,15 +97,18 @@ namespace Experimental {
    size_t KokkosHDF5Accessor::ReadFile(void * dest, const size_t dest_size) {
       size_t dataRead = 0;
       char* ptr = (char*)dest;
-      hsize_t stepSize = min(dest_size, chunk_size);      
+      hsize_t stepSize = dest_size;      
+      //hsize_t stepSize = min(dest_size, chunk_size);      
       if (open_file() == 0 && m_fid != 0) {
          for (int i = 0; i < dest_size; i+=stepSize) {
-            hsize_t offset[1];
-            hsize_t doffset[1] = {0};
-            hsize_t count[1];
-            offset[0] = i;
-            count[0] = min(stepSize, dest_size-i);
-            m_mid = H5Screate_simple(1, count, NULL);
+            hsize_t offset[2];
+            hsize_t doffset[2] = {0,0};
+            hsize_t count[2];
+            offset[0] = 0;
+            offset[1] = i;
+            count[0] = 1;
+            count[1] = min(stepSize, dest_size-i);
+            m_mid = H5Screate_simple(2, count, NULL);
             hid_t  fsid = H5Dget_space(m_did);
   //            printf("reading %d, %d \n", offset[0], count[0]);
             herr_t status = H5Sselect_hyperslab(fsid, H5S_SELECT_SET, offset, NULL, count, NULL);
@@ -127,22 +132,21 @@ namespace Experimental {
    
    size_t KokkosHDF5Accessor::WriteFile(const void * src, const size_t src_size) {
       size_t m_written = 0;
-      hsize_t stride[1];
-      hsize_t block[1];
-      stride[0] = 1;
-      block[0] = 1;
-      hsize_t stepSize = min(chunk_size, src_size);
+      //hsize_t stepSize = min(chunk_size, src_size);
+      hsize_t stepSize = src_size;
       char* ptr = (char*)src;
  //     printf("write file: %s, %d, %d \n", file_path.c_str(),  m_fid, src_size);
       if (open_file() == 0 && m_fid != 0) {
          for (int i = 0; i < src_size; i+=stepSize) {
-            hsize_t offset[1];
-            offset[0] = i;
-            hsize_t count[1];
-            count[0] = min(stepSize, (src_size - i));
-            m_mid = H5Screate_simple(1, count, NULL);
+            hsize_t offset[2];
+            offset[0] = 0;
+            offset[1] = i;
+            hsize_t count[2];
+            count[0] = 1;
+            count[1] = min(stepSize, (src_size - i));
+            m_mid = H5Screate_simple(2, count, NULL);
             hid_t fsid = H5Dget_space(m_did);
-            herr_t status = H5Sselect_hyperslab(fsid, H5S_SELECT_SET, offset, stride, count, block);
+            herr_t status = H5Sselect_hyperslab(fsid, H5S_SELECT_SET, offset, NULL, count, NULL);
             if (status != 0) {
                printf("Error with write(selecting hyperslab): %d \n", status);
                return m_written;

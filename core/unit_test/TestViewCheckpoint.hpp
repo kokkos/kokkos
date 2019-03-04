@@ -103,14 +103,21 @@ struct TestCheckPointView {
 
 #ifdef KOKKOS_ENABLE_HDF5
 
-TEST_F( TEST_CATEGORY , view_checkpoint_tests ) {
+TEST_F( TEST_CATEGORY , view_checkpoint_hdf5 ) {
   TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("/home/jsmiles/Development/cp_view.hdf",10,10);
   remove("/home/jsmiles/Development/cp_view.hdf");
   TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("/home/jsmiles/Development/cp_view.hdf",100,100);
   remove("/home/jsmiles/Development/cp_view.hdf");
+  TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("/home/jsmiles/Development/cp_view.hdf",10000,10000);
+  remove("/home/jsmiles/Development/cp_view.hdf");
+}
+
+TEST_F( TEST_CATEGORY , view_checkpoint_sio ) {
   TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt("/home/jsmiles/Development/cp_view.bin",10,10);
   remove("/home/jsmiles/Development/cp_view.bin");
   TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt("/home/jsmiles/Development/cp_view.bin",100,100);
+  remove("/home/jsmiles/Development/cp_view.bin");
+  TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt("/home/jsmiles/Development/cp_view.bin",10000,10000);
   remove("/home/jsmiles/Development/cp_view.bin");
 }
 

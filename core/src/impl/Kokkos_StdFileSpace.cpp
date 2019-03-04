@@ -61,10 +61,10 @@ namespace Experimental {
           close_file();
 
        if ( read_write == KokkosStdFileAccessor::WRITE_FILE ) {
-            printf("open StdFile file for write: %s - %d\n", file_path.c_str(), data_size );
+//            printf("open StdFile file for write: %s - %d\n", file_path.c_str(), data_size );
             file_strm.open( file_path.c_str(), std::ios::out | std::ios::trunc | std::ios::binary );
       } else if (read_write == KokkosStdFileAccessor::READ_FILE ) { 
-            printf("open StdFile file for reading: %s - %d\n", file_path.c_str(), data_size );
+//            printf("open StdFile file for reading: %s - %d\n", file_path.c_str(), data_size );
             file_strm.open( file_path.c_str(), std::ios::in | std::ios::binary );
       } else {
          printf("open_file: incorrect read write parameter specified .\n");
