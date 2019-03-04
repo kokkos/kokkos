@@ -207,6 +207,28 @@ namespace Experimental {
        }
 
    }
+   
+   // add to map linking file space views with hostspace.
+   void HDF5Space::track_check_point_mirror( const std::string label, void * dst, void * src, const size_t size ) {
+
+
+   }
+
+   void HDF5Space::restore_all_views() {
+
+   }
+   
+   void HDF5Space::restore_view(const std::string name) {
+
+   }
+  
+   void HDF5Space::checkpoint_views() {
+
+
+   }
+   void HDF5Space::set_default_path( const std::string path ) {
+
+   }
   
 
 } // Experimental
