@@ -2022,6 +2022,28 @@ public:
 };
 #endif
 } // namespace Impl
+
+namespace Experimental {
+   template<class Type, class ExecutionSpace>
+   void SpecDuplicateTracker<Type, ExecutionSpace>::combine_dups() {
+      typedef SpecDuplicateTracker<Type, ExecutionSpace> func_type;
+      typedef Kokkos::RangePolicy<Kokkos::Cuda> exec_policy;
+      
+      int N = data_len / sizeof(rd_type);
+      exec_policy rp (0,N);
+
+      printf("invoking parallel combine operation\n");
+      Kokkos::fence();
+      Kokkos::Impl::shared_allocation_tracking_disable();
+      Kokkos::Impl::ParallelFor< func_type , exec_policy > closure( *this , rp );
+      Kokkos::Impl::shared_allocation_tracking_enable();
+
+      closure.execute();
+      Kokkos::fence();
+
+   }
+}
+
 } // namespace Kokkos
 
 

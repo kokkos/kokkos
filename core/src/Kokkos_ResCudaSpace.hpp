@@ -57,42 +57,6 @@ namespace Kokkos {
 
 namespace Experimental {
 
-enum : int {
-  ScalarInt,
-  ScalarLong,
-  ScalarLongLong,
-  ScalarFloat,
-  ScalarDouble
-};
-
-template<class Type, class T = void>
-struct get_type_enum;
-
-template<class Type>
-struct get_type_enum<Type, typename std::enable_if< std::is_same< Type, int>::value, void >::type >{
-   enum { type_id = ScalarInt };
-};
-
-template<class Type>
-struct get_type_enum<Type, typename std::enable_if< std::is_same< Type, long>::value, void >::type > {
-   enum { type_id = ScalarLong };
-};
-
-template<class Type>
-struct get_type_enum<Type, typename std::enable_if< std::is_same< Type, long long>::value, void >::type > {
-   enum { type_id = ScalarLongLong };
-};
-
-template<class Type>
-struct get_type_enum<Type, typename std::enable_if< std::is_same< Type, float>::value, void >::type > {
-   enum { type_id = ScalarFloat };
-};
-
-template<class Type>
-struct get_type_enum<Type, typename std::enable_if< std::is_same< Type, double>::value, void >::type > {
-   enum { type_id = ScalarDouble };
-};
-
 template<class Type, class Enabled = void>
 struct MergeFunctor;
 
@@ -131,22 +95,14 @@ struct MergeFunctor<Type, typename std::enable_if< !std::is_same< Type, float >:
 class DuplicateTracker {
 public:
    void * original_data;
-   int data_type;
    int dup_cnt;
    int data_len;
    void * dup_list[3];
 
+   virtual ~DuplicateTracker() {}
+
    KOKKOS_INLINE_FUNCTION
    DuplicateTracker() : original_data(nullptr) { 
-      data_type = get_type_enum<int>::type_id; 
-      dup_cnt = 0;
-      data_len = 0;
-      for (int i = 0; i < 3; i++) { dup_list[i] = nullptr; }
-   }
-   
-   KOKKOS_INLINE_FUNCTION
-   DuplicateTracker(int sType) : original_data(nullptr) {
-      data_type = sType;
       dup_cnt = 0;
       data_len = 0;
       for (int i = 0; i < 3; i++) { dup_list[i] = nullptr; }
@@ -154,7 +110,6 @@ public:
    
    KOKKOS_INLINE_FUNCTION
    DuplicateTracker(const DuplicateTracker & dt) : original_data( dt.original_data ) {
-      data_type = dt.data_type;
       dup_cnt = dt.dup_cnt;
       data_len = dt.data_len;
       for (int i = 0; i < dup_cnt; i++) { dup_list[i] = dt.dup_list[i]; }
@@ -168,6 +123,8 @@ public:
          printf("duplicate added to list: %d\n", dup_cnt);
       }
    }
+
+   virtual void combine_dups() = 0;
 };
 
 template<class Type, class ExecutionSpace>
@@ -182,13 +139,13 @@ public:
    functor_type cf;
 
    KOKKOS_INLINE_FUNCTION
-   SpecDuplicateTracker() : DuplicateTracker( get_type_enum<rd_type>::type_id ) { 
+   SpecDuplicateTracker() : DuplicateTracker( ) { 
    }
    KOKKOS_INLINE_FUNCTION
    SpecDuplicateTracker(const SpecDuplicateTracker & rhs) : DuplicateTracker( rhs ), cf(rhs.cf) { 
    }
    
-   void combine_dups(); 
+   virtual void combine_dups();
 
    KOKKOS_INLINE_FUNCTION
    void operator ()(const int i) const {

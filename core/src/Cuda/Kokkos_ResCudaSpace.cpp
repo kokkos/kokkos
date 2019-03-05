@@ -100,20 +100,6 @@ DeepCopy<ResCudaSpace,HostSpace,Cuda>::DeepCopy( const Cuda & instance , void * 
 
 namespace Kokkos {
 
-namespace Experimental {
-
-   
-   template<class Type, class ExecutionSpace>
-   void SpecDuplicateTracker<Type, ExecutionSpace>::combine_dups() {
-      
-      int N = data_len / sizeof(rd_type);
-      Kokkos::RangePolicy<ExecutionSpace> rp (0,N);
-      printf("invoking parallel combine operation\n");
-      Kokkos::parallel_for(rp, *this);
-      Kokkos::fence();
-   }
-
-}
 
 ResCudaSpace::ResCudaSpace()
   : CudaSpace()
@@ -126,42 +112,8 @@ void ResCudaSpace::combine_duplicates() {
    std::map<std::string, Kokkos::Experimental::DuplicateTracker* >::iterator it = ResCudaSpace::duplicate_map.begin();
    while ( it != ResCudaSpace::duplicate_map.end() ) {
        Kokkos::Experimental::DuplicateTracker * dt = it->second;
-       printf("combine duplicates: %d, %d \n", dt->data_type, dt->data_len );
-       switch (dt->data_type) {
-          case Kokkos::Experimental::ScalarInt: {
-             Kokkos::Experimental::SpecDuplicateTracker<int, Kokkos::Cuda>* sp_dt = 
-                   (Kokkos::Experimental::SpecDuplicateTracker<int, Kokkos::Cuda>*)dt;
-             sp_dt->combine_dups();
-             break;
-          }
-          case Kokkos::Experimental::ScalarLong: {
-             Kokkos::Experimental::SpecDuplicateTracker<long, Kokkos::Cuda>* sp_dt = 
-                   (Kokkos::Experimental::SpecDuplicateTracker<long, Kokkos::Cuda>*)dt;
-             sp_dt->combine_dups();
-             break;
-          }
-          case Kokkos::Experimental::ScalarLongLong: {
-             Kokkos::Experimental::SpecDuplicateTracker<long long, Kokkos::Cuda>* sp_dt = 
-                   (Kokkos::Experimental::SpecDuplicateTracker<long long, Kokkos::Cuda>*)dt;
-             sp_dt->combine_dups();
-             break;
-          }
-          case Kokkos::Experimental::ScalarFloat: {
-             Kokkos::Experimental::SpecDuplicateTracker<float, Kokkos::Cuda>* sp_dt = 
-                   (Kokkos::Experimental::SpecDuplicateTracker<float, Kokkos::Cuda>*)dt;
-             sp_dt->combine_dups();
-             break;
-          }
-          case Kokkos::Experimental::ScalarDouble: {
-             Kokkos::Experimental::SpecDuplicateTracker<double, Kokkos::Cuda>* sp_dt = 
-                   (Kokkos::Experimental::SpecDuplicateTracker<double, Kokkos::Cuda>*)dt;
-             sp_dt->combine_dups();
-             break;
-          }
-          default:
-             Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::ResCudaSpace::combine_duplicates ERROR - cannot determine duplicate data type" ) );
-             break;
-       }
+       printf("combine duplicates: %s, %d \n", it->first.c_str(), dt->data_len );
+       dt->combine_dups();
        it++;
    }
 }
