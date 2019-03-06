@@ -112,7 +112,7 @@ struct ViewCtorProp< void , CommonViewAllocProp<Specialize,T> >
   using type = CommonViewAllocProp<Specialize,T> ;
 
   KOKKOS_INLINE_FUNCTION
-  ViewCtorProp( const type & arg ) : value( arg ) {}
+  ViewCtorProp( const type & arg ) : value( arg ) { printf("ViewCtorProp common specialize cast...\n"); fflush(stdout);}
   KOKKOS_INLINE_FUNCTION
   ViewCtorProp( type && arg ) : value( arg ) {}
 
@@ -131,7 +131,7 @@ struct ViewCtorProp< void , std::integral_constant<unsigned,I> >
 
   template< typename P >
   KOKKOS_INLINE_FUNCTION
-  ViewCtorProp( const P & ) {}
+  ViewCtorProp( const P & ) {printf("ViewCtorProp integral constructor...\n"); fflush(stdout);}
 };
 
 /* Property flags have constexpr value */
@@ -150,7 +150,7 @@ struct ViewCtorProp
 
   typedef P type ;
 
-  ViewCtorProp( const type & ) {}
+  ViewCtorProp( const type & ) {printf("ViewCtorProp flags const ...\n"); fflush(stdout);}
 
   static constexpr type value = type();
 };
@@ -168,7 +168,7 @@ struct ViewCtorProp
 
   typedef std::string type ;
 
-  ViewCtorProp( const type & arg ) : value( arg ) {}
+  ViewCtorProp( const type & arg ) : value( arg ) { printf("ViewCtorProp view label cast...\n"); fflush(stdout);}
   ViewCtorProp( type && arg ) : value( arg ) {}
 
   type value ;
@@ -189,7 +189,7 @@ struct ViewCtorProp
 
   typedef Space type ;
 
-  ViewCtorProp( const type & arg ) : value( arg ) {}
+  ViewCtorProp( const type & arg ) : value( arg ) { printf("ViewCtorProp mem space cast...\n"); fflush(stdout);}
 
   type value ;
 };
@@ -205,7 +205,7 @@ struct ViewCtorProp < void , T * >
   typedef T * type ;
 
   KOKKOS_INLINE_FUNCTION
-  ViewCtorProp( const type arg ) : value( arg ) {}
+  ViewCtorProp( const type arg ) : value( arg ) { printf("ViewCtorProp pointer cast...\n"); fflush(stdout);}
 
   type value ;
 };
@@ -248,20 +248,20 @@ public:
   inline
   ViewCtorProp( Args const & ... args )
     : ViewCtorProp< void , P >( args ) ...
-    {}
+    {printf("ViewCtorProp constructor A...\n"); fflush(stdout);}
 
   template< typename ... Args >
   KOKKOS_INLINE_FUNCTION
   ViewCtorProp( pointer_type arg0 , Args const & ... args )
     : ViewCtorProp< void , pointer_type >( arg0 )
     , ViewCtorProp< void , typename ViewCtorProp< void , Args >::type >( args ) ...
-    {}
+    {printf("ViewCtorProp constructor B...\n"); fflush(stdout);}
 
   /* Copy from a matching property subset */
   template< typename ... Args >
   ViewCtorProp( ViewCtorProp< Args ... > const & arg )
     : ViewCtorProp< void , Args >( ((ViewCtorProp<void,Args> const &) arg ) ) ...
-    {}
+    {printf("ViewCtorProp constructor C...\n"); fflush(stdout);}
 };
 
 } /* namespace Impl */

@@ -1,6 +1,6 @@
 # Default settings common options.
 
-# Options: Cuda,ROCm,OpenMP,Pthread,Qthreads,Serial
+# Options: Cuda,ROCm,CilkPlus,OpenMP,Pthread,Qthreads,Serial
 #KOKKOS_DEVICES ?= "OpenMP"
 KOKKOS_DEVICES ?= "Pthread"
 # Options: 
@@ -71,11 +71,14 @@ KOKKOS_INTERNAL_USE_OPENMP := $(call kokkos_has_string,$(subst OpenMPTarget,,$(K
 KOKKOS_INTERNAL_USE_PTHREADS := $(call kokkos_has_string,$(KOKKOS_DEVICES),Pthread)
 KOKKOS_INTERNAL_USE_QTHREADS := $(call kokkos_has_string,$(KOKKOS_DEVICES),Qthreads)
 KOKKOS_INTERNAL_USE_SERIAL := $(call kokkos_has_string,$(KOKKOS_DEVICES),Serial)
+KOKKOS_INTERNAL_USE_CILKPLUS := $(call kokkos_has_string,$(KOKKOS_DEVICES),CilkPlus)
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 0)
   ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 0)
     ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 0)
-      KOKKOS_INTERNAL_USE_SERIAL := 1
+      ifeq ($(KOKKOS_INTERNAL_USE_CILKPLUS), 0)
+        KOKKOS_INTERNAL_USE_SERIAL := 1
+      endif
     endif
   endif
 endif
@@ -381,7 +384,10 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS), 1)
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_WARNINGS)
 endif
 
+ifneq ($(KOKKOS_INTERNAL_USE_CILKPLUS), 1)
 KOKKOS_LIBS = -ldl
+endif
+KOKKOS_LDFLAGS = -L$(shell pwd)
 KOKKOS_TPL_LIBRARY_NAMES += dl
 ifneq ($(KOKKOS_CMAKE), yes)
   KOKKOS_LDFLAGS = -L$(shell pwd)
@@ -441,6 +447,15 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
   tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_SERIAL")
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_CILKPLUS), 1)
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_CILKPLUS")
+endif
+
+ifeq (,$(findstring Emu,$(KOKKOS_DEVICES)))
+  KOKKOS_INTERNAL_USE_EMUCILK := 1
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_EMU")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_TM), 1)
@@ -1081,6 +1096,17 @@ endif
   KOKKOS_TPL_LIBRARY_NAMES += cudart cuda
 endif
 
+ifeq ($(KOKKOS_INTERNAL_USE_CILKPLUS), 1)
+  KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/CilkPlus/*.cpp)
+  KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/CilkPlus/*.hpp)
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL), 1)
+    KOKKOS_CPPFLAGS += -fcilkplus
+  else
+    KOKKOS_CPPFLAGS += -fcilkplus
+    KOKKOS_LIBS += -lcilkrts
+  endif
+endif
+
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
   KOKKOS_SRC += $(KOKKOS_PATH)/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Exec.cpp $(KOKKOS_PATH)/core/src/OpenMPTarget/Kokkos_OpenMPTargetSpace.cpp
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/OpenMPTarget/*.hpp)
@@ -1159,6 +1185,7 @@ ifneq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
   KOKKOS_SRC := $(filter-out $(KOKKOS_PATH)/core/src/impl/Kokkos_Serial.cpp,$(KOKKOS_SRC))
   KOKKOS_SRC := $(filter-out $(KOKKOS_PATH)/core/src/impl/Kokkos_Serial_Task.cpp,$(KOKKOS_SRC))
 endif
+
 
 # With Cygwin functions such as fdopen and fileno are not defined
 # when strict ansi is enabled. strict ansi gets enabled with --std=c++11

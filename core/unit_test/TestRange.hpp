@@ -317,8 +317,8 @@ TEST_F( TEST_CATEGORY, range_for )
   { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >f(2); f.test_for(); }
   { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >f(3); f.test_for(); }
 
-  { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >f(1000); f.test_for(); }
-  { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >f(1001); f.test_for(); }
+  { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >f(100); f.test_for(); }
+  { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >f(101); f.test_for(); }
 }
 
 TEST_F( TEST_CATEGORY, range_reduce )
@@ -329,8 +329,8 @@ TEST_F( TEST_CATEGORY, range_reduce )
   { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >f(2); f.test_reduce(); }
   { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >f(3); f.test_reduce(); }
 
-  { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >f(1000); f.test_reduce(); }
-  { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >f(1001); f.test_reduce(); }
+  { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >f(100); f.test_reduce(); }
+  { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >f(101); f.test_reduce(); }
 }
 
 #ifndef KOKKOS_ENABLE_OPENMPTARGET 
@@ -348,10 +348,10 @@ TEST_F( TEST_CATEGORY, range_scan )
   { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >f(3); f.test_dynamic_policy(); }
 #endif
 
-  { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >f(1000); f.test_scan(); }
-  { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >f(1001); f.test_scan(); }
+  { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >f(100); f.test_scan(); }
+  { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >f(101); f.test_scan(); }
 #if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_ROCM)
-  { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >f(1001); f.test_dynamic_policy(); }
+  { TestRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >f(101); f.test_dynamic_policy(); }
 #endif
 }
 #endif

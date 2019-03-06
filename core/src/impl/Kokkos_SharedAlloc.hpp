@@ -47,8 +47,36 @@
 #include <cstdint>
 #include <string>
 
+#if defined(KOKKOS_ENABLE_EMU)
+   #define KOKKOS_THREAD_PREFIX
+#else
+   #define KOKKOS_THREAD_PREFIX __thread
+#endif
+
 namespace Kokkos {
 namespace Impl {
+
+#ifdef KOKKOS_LOCK_FIRST
+   #define KOKKOS_LOCK_PREFIX
+#else
+   #define KOKKOS_LOCK_PREFIX extern
+#endif
+struct AddrLock {
+   long lock;
+   unsigned long id;
+   AddrLock * pNext;
+   AddrLock() : lock(0), id(0) {
+      pNext = NULL;
+   }
+   AddrLock(unsigned long id_) : lock(0), id(id_) {
+      pNext = NULL;
+   }
+};
+
+KOKKOS_LOCK_PREFIX long list_mutex;
+KOKKOS_LOCK_PREFIX AddrLock * lockList;
+bool lock_addr( unsigned long addr);
+void unlock_addr( unsigned long addr);
 
 template< class MemorySpace = void , class DestroyFunctor = void >
 class SharedAllocationRecord ;
@@ -94,7 +122,9 @@ protected:
   SharedAllocationRecord *       m_prev ;
   SharedAllocationRecord *       m_next ;
 #endif
-  int                            m_count ;
+  volatile long                  m_count ;
+  void (*m_custom_inc) (void*);
+  void* (*m_custom_dec) (void*);
 
   SharedAllocationRecord( SharedAllocationRecord && ) = delete ;
   SharedAllocationRecord( const SharedAllocationRecord & ) = delete ;
@@ -114,7 +144,7 @@ protected:
                         );
 private:
   
-  static __thread int t_tracking_enabled;
+static KOKKOS_THREAD_PREFIX int t_tracking_enabled;
 
 public:
   virtual std::string get_label() const { return std::string("Unmanaged"); }
@@ -143,6 +173,8 @@ public:
     , m_next( this )
 #endif
     , m_count( 0 )
+    , m_custom_inc( nullptr )
+    , m_custom_dec( nullptr )
     {}
 
   static constexpr unsigned maximum_label_length = SharedAllocationHeader::maximum_label_length ;
@@ -158,11 +190,15 @@ public:
   size_t size() const { return m_alloc_size - sizeof(SharedAllocationHeader) ; }
 
   /* Cannot be 'constexpr' because 'm_count' is volatile */
-  int use_count() const { return *static_cast<const volatile int *>(&m_count); }
+  int use_count() const { return (int)*static_cast<const volatile long *>(&m_count); }
 
   /* Increment use count */
   static void increment( SharedAllocationRecord * );
 
+  static void custom_increment( SharedAllocationRecord * );
+
+  static SharedAllocationRecord * custom_decrement( SharedAllocationRecord * );
+  
   /* Decrement use count. If 1->0 then remove from the tracking list and invoke m_dealloc */
   static SharedAllocationRecord * decrement( SharedAllocationRecord * );
 
@@ -222,7 +258,7 @@ private:
     /*  Allocate user memory as [ SharedAllocationHeader , user_memory ] */
     : SharedAllocationRecord< MemorySpace , void >( arg_space , arg_label , arg_alloc , & Kokkos::Impl::deallocate< MemorySpace , DestroyFunctor > )
     , m_destroy()
-    {}
+    {printf("destroy function constructor\n");}
 
   SharedAllocationRecord() = delete ;
   SharedAllocationRecord( const SharedAllocationRecord & ) = delete ;
@@ -241,6 +277,7 @@ public:
                                    , const size_t        arg_alloc
                                    )
     {
+      printf("Shared Alloc const with destroyer\n"); fflush(stdout);
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
       return new SharedAllocationRecord( arg_space , arg_label , arg_alloc );
 #else
@@ -274,11 +311,21 @@ public:
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED	\
   Record::tracking_enabled()
 
-#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT	\
-  if ( ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) Record::increment( m_record );
+#if defined(KOKKOS_ENABLE_EMU)
+   #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT \
+      if ( ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) Record::custom_increment(m_record);
 
-#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT	\
-  if ( ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) Record::decrement( m_record );
+  #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT	\
+      if ( ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) Record::custom_decrement( m_record );
+#else
+
+  #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT  \
+      if ( ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) Record::increment( m_record );
+
+  #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT	\
+      if ( ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) Record::decrement( m_record );
+
+#endif
 
 #else
 
@@ -301,7 +348,11 @@ public:
   void assign_allocated_record_to_uninitialized( Record * arg_record )
     {
       if ( arg_record ) {
+#if defined(KOKKOS_ENABLE_EMU)
+        Record::custom_increment( m_record = arg_record );
+#else
         Record::increment( m_record = arg_record );
+#endif
       }
       else {
         m_record_bits = DO_NOT_DEREF_FLAG ;
@@ -355,7 +406,11 @@ public:
   // Copy:
   KOKKOS_FORCEINLINE_FUNCTION
   ~SharedAllocationTracker()
-    { KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT }
+    { 
+      printf("tracker destructor...\n");
+      fflush(stdout);
+      KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT 
+    }
 
   KOKKOS_FORCEINLINE_FUNCTION
   constexpr SharedAllocationTracker()

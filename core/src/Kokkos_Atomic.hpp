@@ -105,7 +105,10 @@
     defined( KOKKOS_COMPILER_CLANG ) || \
     ( defined ( KOKKOS_COMPILER_NVCC ) )
 
-#define KOKKOS_ENABLE_GNU_ATOMICS
+#if ! defined( KOKKOS_ENABLE_EMU )
+   #define KOKKOS_ENABLE_GNU_ATOMICS
+#endif
+
 
 #elif defined( KOKKOS_COMPILER_INTEL ) || \
       defined( KOKKOS_COMPILER_CRAYC )
@@ -160,6 +163,8 @@ const char * atomic_query_version()
   return "KOKKOS_ENABLE_OPENMP_ATOMICS" ;
 #elif defined( KOKKOS_ENABLE_WINDOWS_ATOMICS )
   return "KOKKOS_ENABLE_WINDOWS_ATOMICS";
+#elif defined( KOKKOS_ENABLE_EMU )
+  return "KOKKOS_ENABLE_EMU";
 #elif defined( KOKKOS_ENABLE_SERIAL_ATOMICS )
   return "KOKKOS_ENABLE_SERIAL_ATOMICS";
 #else

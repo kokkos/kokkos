@@ -323,7 +323,7 @@ public:
     , m_scalars("UnorderedMap scalars")
   {
     if (!is_insertable_map) {
-      throw std::runtime_error("Cannot construct a non-insertable (i.e. const key_type) unordered_map");
+//      throw std::runtime_error("Cannot construct a non-insertable (i.e. const key_type) unordered_map");
     }
 
     Kokkos::deep_copy(m_hash_lists, invalid_index);

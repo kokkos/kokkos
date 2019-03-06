@@ -53,6 +53,10 @@
 #include<Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
 #endif
 
+#if defined(KOKKOS_ENABLE_EMU)
+#include <intrinsics.h>
+#endif
+
 namespace Kokkos {
 
 //----------------------------------------------------------------------------
@@ -189,6 +193,115 @@ void atomic_assign(
 }
 
 #endif
+#endif
+
+#if defined( KOKKOS_ENABLE_EMU )
+
+template<class T>
+inline 
+T local_atomic_exchange( T* dest, const T val ){
+   T orig = *dest;
+   for (; ; ) {
+     if (Impl::lock_addr((unsigned long)dest)) {
+        MIGRATE((void *)dest);
+        ENTER_CRITICAL_SECTION();        
+        orig = *dest;
+        *dest = val;
+        EXIT_CRITICAL_SECTION();
+        Impl::unlock_addr((unsigned long)dest);
+        break;
+     }
+     MIGRATE((void *)dest);
+     RESCHEDULE();
+   }   
+   return orig;
+}
+
+inline
+int atomic_exchange( volatile int * const dest , const int val )
+{
+  return local_atomic_exchange<int>( (int*) dest , val );
+}
+
+inline
+unsigned int atomic_exchange( volatile unsigned int * const dest , const unsigned int val )
+{
+  return local_atomic_exchange<unsigned int>( (unsigned int*) dest , val );
+}
+
+inline
+unsigned long long int atomic_exchange( volatile unsigned long long int * const dest , const unsigned long long int val )
+{
+  return local_atomic_exchange<unsigned long long>( (unsigned long long*) dest , val );
+}
+
+/** \brief  Atomic exchange for any type with compatible size */
+template< typename T >
+inline
+T atomic_exchange(
+  volatile T * const dest ,
+  typename Kokkos::Impl::enable_if< sizeof(T) == sizeof(int) , const T & >::type val )
+{  
+  int tmp = local_atomic_exchange<int>( ((int*)dest) , *((int*)&val) );
+  return *((T*)&tmp);
+}
+
+template< typename T >
+inline
+T atomic_exchange(
+  volatile T * const dest ,
+  typename Kokkos::Impl::enable_if< sizeof(T) != sizeof(int) &&
+                                    sizeof(T) == sizeof(unsigned long long int) , const T & >::type val )
+{
+  typedef unsigned long long int type ;
+  type tmp = local_atomic_exchange<type>( ((type*)dest) , *((type*)&val) );
+  return *((T*)&tmp);
+}
+
+template < typename T >
+inline
+T atomic_exchange( volatile T * const dest ,
+    typename Kokkos::Impl::enable_if<
+                  ( sizeof(T) != 4 )
+               && ( sizeof(T) != 8 )
+             , const T >::type& val )
+{
+  T return_val = local_atomic_exchange<T>((T*)dest, val);
+
+  return return_val;
+}
+/** \brief  Atomic exchange for any type with compatible size */
+template< typename T >
+inline
+void atomic_assign(
+  volatile T * const dest ,
+  typename Kokkos::Impl::enable_if< sizeof(T) == sizeof(int) , const T & >::type val )
+{
+    local_atomic_exchange<int>((int*)dest, val);
+}
+
+template< typename T >
+inline
+void atomic_assign(
+  volatile T * const dest ,
+  typename Kokkos::Impl::enable_if< sizeof(T) != sizeof(int) &&
+                                    sizeof(T) == sizeof(unsigned long long int) , const T & >::type val )
+{
+  typedef unsigned long long int type ;
+  local_atomic_exchange<type>((type*)dest, val);
+}
+
+template< typename T >
+inline
+void atomic_assign(
+  volatile T * const dest ,
+  typename Kokkos::Impl::enable_if< sizeof(T) != sizeof(int) &&
+                                    sizeof(T) != sizeof(unsigned long long int)
+                                  , const T & >::type val )
+{
+  local_atomic_exchange<T>((T*)dest, val);
+}
+
 #endif
 
 //----------------------------------------------------------------------------

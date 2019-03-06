@@ -71,7 +71,7 @@ void test_reduction_deduction()
 {
   typedef TestReductionDeductionFunctor< ExecSpace > Functor;
 
-  const long N = 50;
+  const long N = 10;
   // const long answer  = N % 2 ? ( N * ( ( N + 1 ) / 2 ) ) : ( ( N / 2 ) * ( N + 1 ) );
   const long answerA = N % 2 ? ( ( 2 * N ) * ( ( ( 2 * N ) + 1 ) / 2 ) ) : ( ( ( 2 * N ) / 2 ) * ( ( 2 * N ) + 1 ) );
   const long answerB = N % 2 ? ( ( 3 * N ) * ( ( ( 3 * N ) + 1 ) / 2 ) ) : ( ( ( 3 * N ) / 2 ) * ( ( 3 * N ) + 1 ) );

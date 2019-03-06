@@ -69,7 +69,13 @@ void throw_runtime_exception( const std::string & msg )
   std::ostringstream o ;
   o << msg ;
   traceback_callstack( o );
+#if defined(KOKKOS_ENABLE_EMU)
+  fwrite(o.str().c_str(),1,o.str().length(),stderr);
+  fflush(stderr);
+  ::abort();
+#else
   throw std::runtime_error( o.str() );
+#endif
 }
 
 

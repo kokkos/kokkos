@@ -28,6 +28,10 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   CONDITIONAL_COPIES += copy-cuda
 endif
 
+ifeq ($(KOKKOS_INTERNAL_USE_CILKPLUS), 1)
+  CONDITIONAL_COPIES += copy-cilkplus
+endif
+
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
   CONDITIONAL_COPIES += copy-threads
 endif
@@ -78,6 +82,10 @@ mkdir:
 copy-cuda: mkdir
 	mkdir -p $(PREFIX)/include/Cuda
 	$(CP) $(COPY_FLAG) $(KOKKOS_HEADERS_CUDA) $(PREFIX)/include/Cuda
+
+copy-cilkplus: mkdir
+	mkdir -p $(PREFIX)/include/CilkPlus
+	cp $(COPY_FLAG) $(KOKKOS_HEADERS_CILKPLUS) $(PREFIX)/include/CilkPlus
 
 copy-threads: mkdir
 	mkdir -p $(PREFIX)/include/Threads

@@ -65,6 +65,11 @@ enum MemoryTraitsFlags
   , Atomic = 0x04
   , Restrict = 0x08
   , Aligned = 0x10
+#ifdef KOKKOS_ENABLE_EMU
+  , LocalOnly = 0x20
+  , Replicated = 0x40
+  , ForceRemote= 0x80
+#endif
   };
 
 template < unsigned T >
@@ -77,7 +82,11 @@ struct MemoryTraits {
   enum : bool { Atomic       = (unsigned(0) != (T & unsigned(Kokkos::Atomic))) };
   enum : bool { Restrict     = (unsigned(0) != (T & unsigned(Kokkos::Restrict))) };
   enum : bool { Aligned      = (unsigned(0) != (T & unsigned(Kokkos::Aligned))) };
-
+#ifdef KOKKOS_ENABLE_EMU
+  enum : bool { LocalOnly    = (unsigned(0) != (T & unsigned(Kokkos::LocalOnly))) };
+  enum : bool { Replicated   = (unsigned(0) != (T & unsigned(Kokkos::Replicated))) };
+  enum : bool { ForceRemote  = (unsigned(0) != (T & unsigned(Kokkos::ForceRemote))) };
+#endif
 };
 
 } // namespace Kokkos

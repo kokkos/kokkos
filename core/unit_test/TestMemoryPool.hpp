@@ -605,7 +605,8 @@ void test_memory_pool_huge()
   typedef Kokkos::RangePolicy< execution_space > policy_type ;
 
   functor_type f ;
-  policy_type policy( 0 , functor_type::num_superblock );
+//  policy_type policy( 0 , functor_type::num_superblock );
+  policy_type policy( 0 , 1000 );
 
   long err = 0 ;
 

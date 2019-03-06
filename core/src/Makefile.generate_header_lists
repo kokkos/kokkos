@@ -10,6 +10,10 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   KOKKOS_HEADERS_CUDA += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.hpp)
 endif
 
+ifeq ($(KOKKOS_INTERNAL_USE_CILKPLUS), 1)
+  KOKKOS_HEADERS_CILKPLUS += $(wildcard $(KOKKOS_PATH)/core/src/CilkPlus/*.hpp)
+endif
+
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
   KOKKOS_HEADERS_THREADS += $(wildcard $(KOKKOS_PATH)/core/src/Threads/*.hpp)
 endif

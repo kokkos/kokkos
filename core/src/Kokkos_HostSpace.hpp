@@ -111,23 +111,7 @@ public:
   /// Every memory space has a default execution space.  This is
   /// useful for things like initializing a View (which happens in
   /// parallel using the View's default execution space).
-#if defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP )
-  typedef Kokkos::OpenMP    execution_space;
-#elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS )
-  typedef Kokkos::Threads   execution_space;
-//#elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS )
-//  typedef Kokkos::Qthreads  execution_space;
-#elif defined( KOKKOS_ENABLE_OPENMP )
-  typedef Kokkos::OpenMP    execution_space;
-#elif defined( KOKKOS_ENABLE_THREADS )
-  typedef Kokkos::Threads   execution_space;
-//#elif defined( KOKKOS_ENABLE_QTHREADS )
-//  typedef Kokkos::Qthreads  execution_space;
-#elif defined( KOKKOS_ENABLE_SERIAL )
-  typedef Kokkos::Serial    execution_space;
-#else
-#  error "At least one of the following host execution spaces must be defined: Kokkos::OpenMP, Kokkos::Threads, Kokkos::Qthreads, or Kokkos::Serial.  You might be seeing this message if you disabled the Kokkos::Serial device explicitly using the Kokkos_ENABLE_Serial:BOOL=OFF CMake option, but did not enable any of the other host execution space devices."
-#endif
+  typedef Kokkos::DefaultHostExecutionSpace    execution_space;
 
   //! This memory space preferred device_type
   typedef Kokkos::Device< execution_space, memory_space > device_type;

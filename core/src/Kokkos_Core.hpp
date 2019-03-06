@@ -53,6 +53,10 @@
 #include <Kokkos_Serial.hpp>
 #endif
 
+#if defined( KOKKOS_ENABLE_CILKPLUS )
+#include <Kokkos_CilkPlus.hpp>
+#endif
+
 #if defined( KOKKOS_ENABLE_OPENMP )
 #include <Kokkos_OpenMP.hpp>
 #endif

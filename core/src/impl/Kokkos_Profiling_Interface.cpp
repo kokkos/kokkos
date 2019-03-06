@@ -77,6 +77,7 @@ static destroyProfileSectionFunction destroySectionCallee = nullptr;
 
 static profileEventFunction profileEventCallee = nullptr;
 
+
 SpaceHandle::SpaceHandle(const char* space_name) {
   strncpy(name,space_name,64);
 }
@@ -203,6 +204,9 @@ void markEvent(const std::string& eventName) {
 
 void initialize() {
 
+
+#if ! defined(KOKKOS_ENABLE_EMU)
+
   // Make sure initialize calls happens only once
   static int is_initialized = 0;
   if(is_initialized) return;
@@ -294,6 +298,7 @@ void initialize() {
   }
 
   free(envProfileCopy);
+#endif
 }
 
 void finalize() {

@@ -436,6 +436,7 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,1,iType,KOKKOS_IMPL_COMPILI
 
   typedef Kokkos::RangePolicy<ExecSpace,Kokkos::IndexType<iType>> policy_type;
 
+  KOKKOS_INLINE_FUNCTION
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
     ExecSpace::fence();
     Kokkos::parallel_for("Kokkos::ViewCopy-1D",
@@ -458,6 +459,7 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,2,iType,KOKKOS_IMPL_COMPILI
   typedef Kokkos::Rank<2,outer_iteration_pattern,inner_iteration_pattern> iterate_type;
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
+  KOKKOS_INLINE_FUNCTION
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
     ExecSpace::fence();
     Kokkos::parallel_for("Kokkos::ViewCopy-2D",
@@ -481,6 +483,7 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,3,iType,KOKKOS_IMPL_COMPILI
   typedef Kokkos::Rank<3,outer_iteration_pattern,inner_iteration_pattern> iterate_type;
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
+  KOKKOS_INLINE_FUNCTION
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
     ExecSpace::fence();
     Kokkos::parallel_for("Kokkos::ViewCopy-3D",
@@ -504,6 +507,7 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,4,iType,KOKKOS_IMPL_COMPILI
   typedef Kokkos::Rank<4,outer_iteration_pattern,inner_iteration_pattern> iterate_type;
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
+  KOKKOS_INLINE_FUNCTION
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
     ExecSpace::fence();
     Kokkos::parallel_for("Kokkos::ViewCopy-4D",
@@ -529,6 +533,7 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,5,iType,KOKKOS_IMPL_COMPILI
   typedef Kokkos::Rank<5,outer_iteration_pattern,inner_iteration_pattern> iterate_type;
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
+  KOKKOS_INLINE_FUNCTION
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
     ExecSpace::fence();
     Kokkos::parallel_for("Kokkos::ViewCopy-5D",
@@ -554,6 +559,7 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,6,iType,KOKKOS_IMPL_COMPILI
   typedef Kokkos::Rank<6,outer_iteration_pattern,inner_iteration_pattern> iterate_type;
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
+  KOKKOS_INLINE_FUNCTION
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
     ExecSpace::fence();
     Kokkos::parallel_for("Kokkos::ViewCopy-6D",
@@ -580,6 +586,7 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,7,iType,KOKKOS_IMPL_COMPILI
   typedef Kokkos::Rank<6,outer_iteration_pattern,inner_iteration_pattern> iterate_type;
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
+  KOKKOS_INLINE_FUNCTION
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
     ExecSpace::fence();
     Kokkos::parallel_for("Kokkos::ViewCopy-7D",
@@ -606,6 +613,7 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,8,iType,KOKKOS_IMPL_COMPILI
   typedef Kokkos::Rank<6,outer_iteration_pattern,inner_iteration_pattern> iterate_type;
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
+  KOKKOS_INLINE_FUNCTION
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
     ExecSpace::fence();
     Kokkos::parallel_for("Kokkos::ViewCopy-8D",

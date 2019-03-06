@@ -403,7 +403,7 @@ template <typename DstDevice, typename SrcDevice>
 void deep_copy( Bitset<DstDevice> & dst, Bitset<SrcDevice> const& src)
 {
   if (dst.size() != src.size()) {
-    throw std::runtime_error("Error: Cannot deep_copy bitsets of different sizes!");
+//    throw std::runtime_error("Error: Cannot deep_copy bitsets of different sizes!");
   }
 
   typedef Kokkos::Impl::DeepCopy< typename DstDevice::memory_space, typename SrcDevice::memory_space > raw_deep_copy;
@@ -414,7 +414,7 @@ template <typename DstDevice, typename SrcDevice>
 void deep_copy( Bitset<DstDevice> & dst, ConstBitset<SrcDevice> const& src)
 {
   if (dst.size() != src.size()) {
-    throw std::runtime_error("Error: Cannot deep_copy bitsets of different sizes!");
+//    throw std::runtime_error("Error: Cannot deep_copy bitsets of different sizes!");
   }
 
   typedef Kokkos::Impl::DeepCopy< typename DstDevice::memory_space, typename SrcDevice::memory_space > raw_deep_copy;
@@ -425,7 +425,7 @@ template <typename DstDevice, typename SrcDevice>
 void deep_copy( ConstBitset<DstDevice> & dst, ConstBitset<SrcDevice> const& src)
 {
   if (dst.size() != src.size()) {
-    throw std::runtime_error("Error: Cannot deep_copy bitsets of different sizes!");
+//    throw std::runtime_error("Error: Cannot deep_copy bitsets of different sizes!");
   }
 
   typedef Kokkos::Impl::DeepCopy< typename DstDevice::memory_space, typename SrcDevice::memory_space > raw_deep_copy;

@@ -40,13 +40,60 @@
 // ************************************************************************
 //@HEADER
 */
-
+#define KOKKOS_LOCK_FIRST
 #include <Kokkos_Core.hpp>
 
 namespace Kokkos {
 namespace Impl {
 
-__thread int SharedAllocationRecord<void, void>::t_tracking_enabled = 1;
+AddrLock * getAddrLock(unsigned long addr) {
+   AddrLock * pReturn = NULL;
+   MIGRATE((void *)&list_mutex);
+   if (ATOMIC_CAS(&list_mutex, 1L, 0L) == 0L) {
+      AddrLock * pWork = lockList;
+      while (pWork != NULL) {
+         if (pWork->id == addr) {
+             break;
+         }
+         pWork = pWork->pNext;
+      }
+      if (pWork == NULL) {
+         pWork = new AddrLock(addr);
+         pWork->pNext = lockList;
+         lockList = pWork;
+      }
+      pReturn = pWork;
+      ATOMIC_SWAP( &list_mutex, 0L);
+   }
+   return pReturn;
+}
+
+bool lock_addr( unsigned long addr ) {
+  AddrLock * pWork = getAddrLock( addr );
+  if ( pWork != NULL ) {
+//    printf("obtaining lock %ld: %ld ==> ", addr, pWork->lock);
+    long nReturn = ATOMIC_CAS(&(pWork->lock), 1L, 0L);
+//    printf("%ld \n ", nReturn);
+    return ( nReturn == 0L );
+  }
+  else 
+    return false;
+}
+
+void unlock_addr( unsigned long addr ) {
+  while (true) {
+     AddrLock * pWork = getAddrLock( addr );
+     if ( pWork != NULL ) {
+//       printf("releasing lock %ld: %ld \n", addr, pWork->lock);
+       ATOMIC_SWAP(&(pWork->lock), 0L);
+       break;
+     }
+     RESCHEDULE();
+  }
+}
+
+
+KOKKOS_THREAD_PREFIX int SharedAllocationRecord<void, void>::t_tracking_enabled = 1;
 
 #ifdef KOKKOS_DEBUG
 bool
@@ -170,7 +217,8 @@ SharedAllocationRecord(
 #endif
   , m_count( 0 )
 {
-  if ( 0 != arg_alloc_ptr ) {
+  
+  if ( 0 != m_alloc_ptr ) {
 
 #ifdef KOKKOS_DEBUG
     // Insert into the root double-linked list for tracking
@@ -203,7 +251,7 @@ SharedAllocationRecord(
 
 void
 SharedAllocationRecord< void , void >::
-increment( SharedAllocationRecord< void , void > * arg_record )
+increment( Kokkos::Impl::SharedAllocationRecord< void , void > * arg_record )
 {
   const int old_count = Kokkos::atomic_fetch_add( & arg_record->m_count , 1 );
 
@@ -211,6 +259,31 @@ increment( SharedAllocationRecord< void , void > * arg_record )
     Kokkos::Impl::throw_runtime_exception("Kokkos::Impl::SharedAllocationRecord failed increment");
   }
 }
+
+void 
+SharedAllocationRecord< void , void >::
+custom_increment( Kokkos::Impl::SharedAllocationRecord< void , void > * rec) {
+   if ( rec->m_custom_inc != nullptr ) {
+        rec->m_custom_inc( (void*)rec );
+   } else {
+      SharedAllocationRecord< void , void >::increment( rec );
+   }  
+}
+
+
+SharedAllocationRecord< void , void > *
+SharedAllocationRecord< void , void >::
+custom_decrement( Kokkos::Impl::SharedAllocationRecord< void , void > * rec) {
+   if ( rec->m_custom_dec != nullptr ) {
+        printf("calling m_custom_dec\n");
+        fflush(stdout);
+        return (SharedAllocationRecord< void , void > *)rec->m_custom_dec( (void*)rec );
+   } else {
+      return SharedAllocationRecord< void , void >::decrement(rec);
+   }
+}
+
+
 
 SharedAllocationRecord< void , void > *
 SharedAllocationRecord< void , void >::

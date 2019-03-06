@@ -53,6 +53,12 @@
 #include<Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
 #endif
 
+#if defined(KOKKOS_ENABLE_EMU)
+#include <memoryweb/intrinsics.h>
+#include <mutex>
+#include <map>
+#endif
+
 namespace Kokkos {
 
 //----------------------------------------------------------------------------
@@ -133,6 +139,131 @@ T atomic_compare_exchange( volatile T * const dest , const T & compare ,
   return return_val;
 }
 #endif
+#endif
+
+#if defined( KOKKOS_ENABLE_EMU )
+inline
+int atomic_compare_exchange( volatile int * const dest, const int compare, const int val)
+{ 
+  int return_val;
+  
+  while (true) {
+     if (Impl::lock_addr((unsigned long)dest)) {
+        MIGRATE((void *)dest);
+        ENTER_CRITICAL_SECTION();
+        return_val = *dest;
+        if( return_val == compare ) {
+           *dest = val;
+        }
+        EXIT_CRITICAL_SECTION();
+        Impl::unlock_addr((unsigned long)dest);
+        break;
+     }
+     MIGRATE((void *)dest);
+     RESCHEDULE();
+  }
+  
+  
+  return return_val;
+}
+
+inline
+unsigned int atomic_compare_exchange( volatile unsigned int * const dest, const unsigned int compare, const unsigned int val)
+{ 
+  unsigned int return_val;
+
+  while (true) {
+     if (Impl::lock_addr((unsigned long)dest)) {
+        MIGRATE((void *)dest);
+        ENTER_CRITICAL_SECTION();
+        return_val = *dest;
+        if( return_val == compare ) {
+           *dest = val;
+        }
+        EXIT_CRITICAL_SECTION();
+        Impl::unlock_addr((unsigned long)dest);
+        break;
+     }
+     MIGRATE((void *)dest);
+     RESCHEDULE();
+  }
+  
+  return return_val;
+}
+
+inline
+unsigned long long int atomic_compare_exchange( volatile unsigned long long int * const dest ,
+                                                const unsigned long long int compare ,
+                                                const unsigned long long int val )
+{ 
+  unsigned long long int return_val;
+  while (true) {
+     if (Impl::lock_addr((unsigned long)dest)) {
+        MIGRATE((void *)dest);
+        ENTER_CRITICAL_SECTION();
+        return_val = *dest;
+        if( return_val == compare ) {
+           *dest = val;
+        }
+        EXIT_CRITICAL_SECTION();
+        Impl::unlock_addr((unsigned long)dest);
+        break;
+     }
+     MIGRATE((void *)dest);
+     RESCHEDULE();
+  }
+  return return_val;
+}
+
+template < typename T >
+inline
+T atomic_compare_exchange( volatile T * const dest , const T & compare ,
+  typename Kokkos::Impl::enable_if< sizeof(T) == sizeof(int) , const T & >::type val )
+{
+  const int tmp = atomic_compare_exchange( (int*) dest , *((int*)&compare) , *((int*)&val) );
+  return *((T*)&tmp);
+}
+
+template < typename T >
+inline
+T atomic_compare_exchange( volatile T * const dest , const T & compare ,
+  typename Kokkos::Impl::enable_if< sizeof(T) != sizeof(int) &&
+                                    sizeof(T) == sizeof(unsigned long long int) , const T & >::type val )
+{
+  typedef unsigned long long int type ;
+  const type tmp = atomic_compare_exchange( (type*) dest , *((type*)&compare) , *((type*)&val) );
+  return *((T*)&tmp);
+}
+
+template < typename T >
+inline
+T atomic_compare_exchange( volatile T * const dest , const T & compare ,
+    typename Kokkos::Impl::enable_if<
+                  ( sizeof(T) != 4 )
+               && ( sizeof(T) != 8 )
+             , const T >::type& val )
+{
+  T return_val;
+
+  while (true) {
+     if (Impl::lock_addr((unsigned long)dest)) {
+        MIGRATE((void *)dest);
+        ENTER_CRITICAL_SECTION();
+        return_val = *dest;
+        if( return_val == compare ) {
+           *dest = val;
+        }
+        EXIT_CRITICAL_SECTION();
+        Impl::unlock_addr((unsigned long)dest);
+        break;
+     }
+     MIGRATE((void *)dest);
+     RESCHEDULE();
+  }
+
+  return return_val;
+}
+
 #endif
 
 //----------------------------------------------------------------------------

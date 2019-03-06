@@ -2277,6 +2277,39 @@ public:
 namespace Kokkos {
 namespace Impl {
 
+template<class Traits, class Enable = void>
+struct HandleTypeImpl;
+
+template<class Traits>
+struct HandleTypeImpl< Traits, typename std::enable_if<( Traits::memory_traits::ForceRemote )>::type > {
+
+   typedef typename Traits::value_type value_type;
+
+   value_type * m_ptr;
+
+   KOKKOS_INLINE_FUNCTION
+   HandleTypeImpl() : m_ptr(nullptr) {
+   }
+   
+   KOKKOS_INLINE_FUNCTION
+   HandleTypeImpl(value_type * ptr) : m_ptr(ptr) {
+   }
+
+   KOKKOS_INLINE_FUNCTION
+   HandleTypeImpl( HandleTypeImpl const arg_data_ptr, size_t offset ) : m_ptr( arg_data_ptr.m_ptr + offset ) { 
+   }
+
+   KOKKOS_FORCEINLINE_FUNCTION
+   value_type & operator [](size_t offset) const {
+       value_type * pRef = (value_type *)mw_ptr1to0(&m_ptr[offset]);
+       return *pRef;
+   }   
+
+};
+
+
+
+
 /** \brief  ViewDataHandle provides the type of the 'data handle' which the view
  *          uses to access data with the [] operator. It also provides
  *          an allocate function and a function to extract a raw ptr from the
@@ -2465,6 +2498,44 @@ struct ViewDataHandle< Traits ,
     return handle_type( arg_data_ptr + offset );
   }
 };
+
+#ifdef KOKKOS_ENABLE_EMU
+template< class Traits >
+struct ViewDataHandle< Traits ,
+  typename std::enable_if<(
+                            std::is_same< typename Traits::specialize , void >::value
+                            &&
+                            std::is_same< typename Traits::value_type , long >::value
+                            &&
+                           (Traits::memory_traits::LocalOnly       // These are really mutually exclusive, but the handle_type impl 
+                            ||                                     // will deal with that...
+                            Traits::memory_traits::Replicated
+                            ||
+                            Traits::memory_traits::ForceRemote)
+                          )>::type >
+{
+  typedef typename Traits::value_type  value_type ;
+  typedef HandleTypeImpl< Traits > handle_type ;
+  typedef typename Traits::value_type & return_type ;
+  typedef Kokkos::Impl::SharedAllocationTracker  track_type  ;   // This should actually be specialized on memory traits...
+
+  KOKKOS_INLINE_FUNCTION
+  static handle_type assign( value_type * arg_data_ptr
+                           , track_type const & /*arg_tracker*/ )
+  {
+    printf("assign vdh with pointer \n");
+    return handle_type( arg_data_ptr );
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static handle_type assign( handle_type const arg_data_ptr
+                           , size_t offset )
+  {
+    printf("assign vdh with const handle \n");
+    return handle_type( arg_data_ptr, offset );
+  }
+}; 
+#endif
 }} // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
@@ -2581,6 +2652,8 @@ struct ViewValueFunctor< ExecSpace , ValueType , true /* is_scalar */ >
   void construct_shared_allocation()
     {
       if ( ! space.in_parallel() ) {
+        printf("executing parallel initializer !!!\n");
+        fflush(stdout);
 #if defined(KOKKOS_ENABLE_PROFILING)
         uint64_t kpID = 0;
         if(Kokkos::Profiling::profileLibraryLoaded()) {
@@ -2855,6 +2928,10 @@ public:
 
     const size_t alloc_size =
       ( m_impl_offset.span() * MemorySpanSize + MemorySpanMask ) & ~size_t(MemorySpanMask);
+    
+    long node_id = NODE_ID();
+    printf("View Mapping allocating memory in space: %s - %d, %d  \n", memory_space::name(), alloc_size, node_id );
+    fflush(stdout);
 
     // Create shared memory tracking record with allocate memory from the memory space
     record_type * const record =

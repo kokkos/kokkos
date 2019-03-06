@@ -1,0 +1,10 @@
+Files:
+
+Kokkos_CilkPlus_Team.hpp -> TeamPolicy, TeamMember, ParallelFor etc. for those
+Kokkos_CilkPlus_Range.hpp -> ParallelFor ParallelReduce etc. for RangePolicy
+Kokkos_CilkPlus_Task.hpp -> Tasking -> Depends on Team for nested stuff
+Kokkos_CilkPlus.cpp -> initialize finalize etc. 
+Kokkos_CilkPlus_MDRange.hpp -> ParallelFor/Reduce etc. for MDRangePolicy
+Kokkos_CilkPlus_EmuSpace.cpp -> allocated deallocate etc. 
+
+

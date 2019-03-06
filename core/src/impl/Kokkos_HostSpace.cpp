@@ -99,8 +99,10 @@
 #include <impl/Kokkos_Error.hpp>
 #include <Kokkos_Atomic.hpp>
 
+#if !defined(KOKKOS_ENABLE_EMU)
 #if ( defined( KOKKOS_ENABLE_ASM ) || defined ( KOKKOS_ENABLE_TM ) ) && defined ( KOKKOS_ENABLE_ISA_X86_64 )
 #include <immintrin.h>
+#endif
 #endif
 
 //----------------------------------------------------------------------------
@@ -229,6 +231,7 @@ void * HostSpace::allocate( const size_t arg_alloc_size ) const
     }
 #endif
   }
+
 
   if ( ( ptr == 0 ) || ( reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0) )
        || ( reinterpret_cast<uintptr_t>(ptr) & alignment_mask ) ) {
@@ -456,7 +459,7 @@ void init_lock_array_host_space() {
 }
 
 bool lock_address_host_space(void* ptr) {
-#if defined( KOKKOS_ENABLE_ISA_X86_64 ) && defined ( KOKKOS_ENABLE_TM )
+#if defined( KOKKOS_ENABLE_ISA_X86_64 ) && defined ( KOKKOS_ENABLE_TM ) && !defined(KOKKOS_ENABLE_EMU)
   const unsigned status = _xbegin();
 
   if( _XBEGIN_STARTED == status ) {
@@ -478,13 +481,13 @@ bool lock_address_host_space(void* ptr) {
   return 0 == atomic_compare_exchange( &HOST_SPACE_ATOMIC_LOCKS[
       (( size_t(ptr) >> 2 ) & HOST_SPACE_ATOMIC_MASK) ^ HOST_SPACE_ATOMIC_XOR_MASK] ,
                                   0 , 1);
-#if defined( KOKKOS_ENABLE_ISA_X86_64 ) && defined ( KOKKOS_ENABLE_TM )
+#if defined( KOKKOS_ENABLE_ISA_X86_64 ) && defined ( KOKKOS_ENABLE_TM ) && !defined(KOKKOS_ENABLE_EMU)
   }
 #endif
 }
 
 void unlock_address_host_space(void* ptr) {
-#if defined( KOKKOS_ENABLE_ISA_X86_64 ) && defined ( KOKKOS_ENABLE_TM )
+#if defined( KOKKOS_ENABLE_ISA_X86_64 ) && defined ( KOKKOS_ENABLE_TM )  && !defined(KOKKOS_ENABLE_EMU)
   const unsigned status = _xbegin();
 
   if( _XBEGIN_STARTED == status ) {
@@ -495,7 +498,7 @@ void unlock_address_host_space(void* ptr) {
    atomic_exchange( &HOST_SPACE_ATOMIC_LOCKS[
       (( size_t(ptr) >> 2 ) & HOST_SPACE_ATOMIC_MASK) ^ HOST_SPACE_ATOMIC_XOR_MASK] ,
                     0);
-#if defined( KOKKOS_ENABLE_ISA_X86_64 ) && defined ( KOKKOS_ENABLE_TM )
+#if defined( KOKKOS_ENABLE_ISA_X86_64 ) && defined ( KOKKOS_ENABLE_TM ) && !defined(KOKKOS_ENABLE_EMU)
   }
 #endif
 }

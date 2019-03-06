@@ -169,6 +169,96 @@ T atomic_fetch_sub( volatile T * const dest ,
 }
 #endif
 #endif
+
+#if defined( KOKKOS_ENABLE_EMU )
+// Support for int, unsigned int, unsigned long long int, and float
+template< class T >
+inline 
+T local_atomic_sub ( volatile T * const dest, const T val )
+{
+   T rVal = *dest;
+   for (; ; ) {
+     if (Impl::lock_addr((unsigned long)dest)) {
+        MIGRATE((void *)dest);
+        ENTER_CRITICAL_SECTION();        
+        rVal = *dest;
+        T new_value = rVal - val;
+        *dest = new_value;
+        EXIT_CRITICAL_SECTION();
+        Impl::unlock_addr((unsigned long)dest);
+        break;
+     }
+     MIGRATE((void *)dest);
+     RESCHEDULE();
+   }
+   return rVal;
+}
+
+
+inline
+int atomic_fetch_sub( volatile int * const dest , const int val )
+{ 
+   return local_atomic_sub<int>(dest, val);
+}
+
+inline
+unsigned int atomic_fetch_sub( volatile unsigned int * const dest , const unsigned int val )
+{  
+   return local_atomic_sub<unsigned int>(dest, val);
+}
+
+inline
+unsigned long long int atomic_fetch_sub( volatile unsigned long long int * const dest ,
+                                         const unsigned long long int val )
+{
+   return local_atomic_sub<unsigned long long int>(dest, val);
+}
+
+inline
+float atomic_fetch_sub( volatile float * const dest , const float val )
+{ 
+   return local_atomic_sub<float>(dest, val);
+}
+
+inline
+double atomic_fetch_sub( volatile double * const dest , const double val )
+{ 
+   return local_atomic_sub<double>(dest, val);
+}
+
+
+template < typename T >
+inline
+T atomic_fetch_sub( volatile T * const dest ,
+  typename Kokkos::Impl::enable_if< sizeof(T) == sizeof(int) , const T >::type val )
+{
+   return local_atomic_sub<T>(dest, val);
+}
+
+template < typename T >
+inline
+T atomic_fetch_sub( volatile T * const dest ,
+  typename Kokkos::Impl::enable_if< sizeof(T) != sizeof(int) &&
+                                    sizeof(T) == sizeof(unsigned long long int) , const T >::type val )
+{
+   return local_atomic_sub<T>(dest, val);
+}
+
+//----------------------------------------------------------------------------
+
+template < typename T >
+inline
+T atomic_fetch_sub( volatile T * const dest ,
+    typename Kokkos::Impl::enable_if<
+                  ( sizeof(T) != 4 )
+               && ( sizeof(T) != 8 )
+             , const T >::type& val )
+{
+  return local_atomic_sub<T>(dest, val);
+}
+#endif
+
+
 //----------------------------------------------------------------------------
 #if !defined(KOKKOS_ENABLE_ROCM_ATOMICS)
 #if !defined(__CUDA_ARCH__) || defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)

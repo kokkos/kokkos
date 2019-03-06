@@ -174,6 +174,13 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
 #endif
 #endif
 
+list_mutex = 0;
+lockList = new AddrLock();
+
+#if defined( KOKKOS_ENABLE_CILKPLUS)
+  Kokkos::Experimental::CilkPlus::initialize();
+#endif
+
 #if defined( KOKKOS_ENABLE_OPENMPTARGET )
   if( Impl::is_same< Kokkos::Experimental::OpenMPTarget , Kokkos::DefaultExecutionSpace >::value ) {
     if(num_threads>0) {
@@ -312,6 +319,11 @@ void finalize_internal( const bool all_spaces = false )
   }
 #endif
 
+#if defined( KOKKOS_ENABLE_CILKPLUS )
+  if(Kokkos::Experimental::CilkPlus::is_initialized())
+    Kokkos::Experimental::CilkPlus::finalize();
+#endif
+
 #if defined( KOKKOS_ENABLE_SERIAL )
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   if(Kokkos::Serial::is_initialized())
@@ -352,6 +364,13 @@ void fence_internal()
   if( std::is_same< Kokkos::Threads , Kokkos::DefaultExecutionSpace >::value ||
       std::is_same< Kokkos::Threads , Kokkos::HostSpace::execution_space >::value ) {
     Kokkos::Threads::fence();
+  }
+#endif
+
+#if defined( KOKKOS_ENABLE_CILKPLUS )
+  if( std::is_same< Kokkos::Experimental::CilkPlus , Kokkos::DefaultExecutionSpace >::value ||
+      std::is_same< Kokkos::Experimental::CilkPlus , Kokkos::HostSpace::execution_space >::value ) {
+    Kokkos::Experimental::CilkPlus::fence();
   }
 #endif
 
@@ -962,6 +981,9 @@ void print_configuration( std::ostream & out , const bool detail )
 #endif
 #ifdef KOKKOS_ENABLE_QTHREADS
   Qthreads::print_configuration(msg, detail);
+#endif
+#ifdef KOKKOS_ENABLE_CILKPLUS
+  Experimental::CilkPlus::print_configuration(msg, detail);
 #endif
 #ifdef KOKKOS_ENABLE_SERIAL
   Serial::print_configuration(msg, detail);

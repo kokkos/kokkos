@@ -501,13 +501,13 @@ namespace Test {
 
 TEST_F( TEST_CATEGORY, atomics )
 {
-  const int loop_count = 1e4;
+  const int loop_count = 10000;
 
   ASSERT_TRUE( ( TestAtomic::Loop< int, TEST_EXECSPACE >( loop_count, 1 ) ) );
   ASSERT_TRUE( ( TestAtomic::Loop< int, TEST_EXECSPACE >( loop_count, 2 ) ) );
   ASSERT_TRUE( ( TestAtomic::Loop< int, TEST_EXECSPACE >( loop_count, 3 ) ) );
 
-  ASSERT_TRUE( ( TestAtomic::Loop< unsigned int, TEST_EXECSPACE >( loop_count, 1 ) ) );
+/*  ASSERT_TRUE( ( TestAtomic::Loop< unsigned int, TEST_EXECSPACE >( loop_count, 1 ) ) );
   ASSERT_TRUE( ( TestAtomic::Loop< unsigned int, TEST_EXECSPACE >( loop_count, 2 ) ) );
   ASSERT_TRUE( ( TestAtomic::Loop< unsigned int, TEST_EXECSPACE >( loop_count, 3 ) ) );
 
@@ -529,8 +529,9 @@ TEST_F( TEST_CATEGORY, atomics )
 
   ASSERT_TRUE( ( TestAtomic::Loop< float, TEST_EXECSPACE >( 100, 1 ) ) );
   ASSERT_TRUE( ( TestAtomic::Loop< float, TEST_EXECSPACE >( 100, 2 ) ) );
-  ASSERT_TRUE( ( TestAtomic::Loop< float, TEST_EXECSPACE >( 100, 3 ) ) );
+  ASSERT_TRUE( ( TestAtomic::Loop< float, TEST_EXECSPACE >( 100, 3 ) ) );*/
 
+/*
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 #ifndef KOKKOS_ENABLE_ROCM // ROCM doesn't yet support atomics for >64bit types
   ASSERT_TRUE( ( TestAtomic::Loop< Kokkos::complex<double>, TEST_EXECSPACE >( 1, 1 ) ) );
@@ -545,7 +546,7 @@ TEST_F( TEST_CATEGORY, atomics )
   ASSERT_TRUE( ( TestAtomic::Loop< TestAtomic::SuperScalar<4>, TEST_EXECSPACE >( 100, 2 ) ) );
   ASSERT_TRUE( ( TestAtomic::Loop< TestAtomic::SuperScalar<4>, TEST_EXECSPACE >( 100, 3 ) ) );
 #endif
-#endif
+#endif */
 }
 
 

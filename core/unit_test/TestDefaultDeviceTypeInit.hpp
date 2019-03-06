@@ -90,6 +90,12 @@ char** init_kokkos_args( bool do_threads, bool do_numa, bool do_device, bool do_
       nthreads = 1;
     }
 #endif
+#ifdef KOKKOS_ENABLE_CILKPLUS
+    if ( std::is_same< Kokkos::Experimental::CilkPlus, Kokkos::DefaultExecutionSpace >::value ||
+         std::is_same< Kokkos::Experimental::CilkPlus, Kokkos::DefaultHostExecutionSpace >::value ) {
+      nthreads = 1;
+    }
+#endif
 
     init_args.num_threads = nthreads;
     sprintf( args_kokkos[threads_idx], "--threads=%i", nthreads );
@@ -104,6 +110,13 @@ char** init_kokkos_args( bool do_threads, bool do_numa, bool do_device, bool do_
 #ifdef KOKKOS_ENABLE_SERIAL
     if ( std::is_same< Kokkos::Serial, Kokkos::DefaultExecutionSpace >::value ||
          std::is_same< Kokkos::Serial, Kokkos::DefaultHostExecutionSpace >::value ) {
+      numa = 1;
+    }
+#endif
+
+#ifdef KOKKOS_ENABLE_CILKPLUS
+    if ( std::is_same< Kokkos::Experimental::CilkPlus, Kokkos::DefaultExecutionSpace >::value ||
+         std::is_same< Kokkos::Experimental::CilkPlus, Kokkos::DefaultHostExecutionSpace >::value ) {
       numa = 1;
     }
 #endif
@@ -153,6 +166,12 @@ Kokkos::InitArguments init_initstruct( bool do_threads, bool do_numa, bool do_de
     }
 #endif
 
+#ifdef KOKKOS_ENABLE_CILKPLUS
+    if ( std::is_same< Kokkos::Experimental::CilkPlus, Kokkos::DefaultExecutionSpace >::value ||
+         std::is_same< Kokkos::Experimental::CilkPlus, Kokkos::DefaultHostExecutionSpace >::value ) {
+      nthreads = 1;
+    }
+#endif
     args.num_threads = nthreads;
   }
 
@@ -168,6 +187,15 @@ Kokkos::InitArguments init_initstruct( bool do_threads, bool do_numa, bool do_de
       numa = 1;
     }
 #endif
+
+#ifdef KOKKOS_ENABLE_CILKPLUS
+    if ( std::is_same< Kokkos::Experimental::CilkPlus, Kokkos::DefaultExecutionSpace >::value ||
+         std::is_same< Kokkos::Experimental::CilkPlus, Kokkos::DefaultHostExecutionSpace >::value ) {
+      numa = 1;
+    }
+#endif
+
+
 
     args.num_numa = numa;
   }
@@ -222,6 +250,13 @@ void check_correct_initialization( const Kokkos::InitArguments & argstruct ) {
       expected_nthreads = 1;
     }
 #endif
+
+#ifdef KOKKOS_ENABLE_CILKPLUS
+    if ( std::is_same< Kokkos::DefaultExecutionSpace, Kokkos::Experimental::CilkPlus >::value ||
+         std::is_same< Kokkos::DefaultHostExecutionSpace, Kokkos::Experimental::CilkPlus >::value ) {
+      expected_nthreads = 1;
+    }
+#endif
   }
 
   int expected_numa = argstruct.num_numa;
@@ -237,6 +272,12 @@ void check_correct_initialization( const Kokkos::InitArguments & argstruct ) {
 #ifdef KOKKOS_ENABLE_SERIAL
     if ( std::is_same< Kokkos::DefaultExecutionSpace, Kokkos::Serial >::value ||
          std::is_same< Kokkos::DefaultHostExecutionSpace, Kokkos::Serial >::value )
+      expected_numa = 1;
+#endif
+
+#ifdef KOKKOS_ENABLE_CILKPLUS
+    if ( std::is_same< Kokkos::DefaultExecutionSpace, Kokkos::Experimental::CilkPlus >::value ||
+         std::is_same< Kokkos::DefaultHostExecutionSpace, Kokkos::Experimental::CilkPlus >::value )
       expected_numa = 1;
 #endif
   }

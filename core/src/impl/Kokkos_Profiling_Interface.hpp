@@ -50,6 +50,10 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <string>
 
+#include <impl/Kokkos_Profiling_DeviceInfo.hpp>
+#if ! defined(KOKKOS_ENABLE_EMU)
+#include <dlfcn.h>
+#endif
 #include <iostream>
 #include <cstdlib>
 
