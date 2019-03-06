@@ -441,7 +441,7 @@ void test_scatter_view(int n)
 #endif
   // with hundreds of threads we were running out of memory.
   // limit (n) so that duplication doesn't exceed 8GB
-  constexpr std::size_t maximum_allowed_total_bytes = 8 * 1024 * 1024 * 1024;
+  constexpr std::size_t maximum_allowed_total_bytes = 8ull * 1024ull * 1024ull * 1024ull;
   std::size_t const maximum_allowed_copy_bytes = maximum_allowed_total_bytes / std::size_t(unique_token.size());
   constexpr std::size_t bytes_per_value = sizeof(double) * 3;
   std::size_t const maximum_allowed_copy_values = maximum_allowed_copy_bytes / bytes_per_value;
