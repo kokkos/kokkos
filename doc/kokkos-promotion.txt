@@ -42,6 +42,11 @@ supported compilers. Those machines are:
          nohup ../scripts/test_all_sandia &
          tail -f nohup.out                   # to watch progress
 
+         NOTE: To kill jobs not running in the background (hopefully prevent ghost processes):
+
+             control+z
+             kill -9 %1
+
   1.4. Clone kokkos-kernels develop branch (or just switch to it)
 
          git clone -b develop git@github.com:kokkos/kokkos-kernels.git
@@ -56,6 +61,11 @@ supported compilers. Those machines are:
 
          nohup ../scripts/test_all_sandia &
          tail -f nohup.out                   # to watch progress
+
+         NOTE: To kill jobs not running in the background (hopefully prevent ghost processes):
+
+             control+z
+             kill -9 %1
 
 // -------------------------------------------------------------------------------- //
 
