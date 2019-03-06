@@ -196,7 +196,7 @@ if [ "$MACHINE" = "sems" ]; then
   source /projects/sems/modulefiles/utils/sems-modules-init.sh
 
   # On unnamed sems machines, assume more restricted rhel7 environment
-  # On rhel7 sems machines gcc/7.3.0 and clang/4.0.1 are missing
+  # On rhel7 sems machines gcc/7.3.0, clang/4.0.1, and intel/16.0.3 are missing
   # Remove kokkkos-env module use
 
   BASE_MODULE_LIST="sems-env,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
@@ -224,7 +224,7 @@ if [ "$MACHINE" = "sems" ]; then
                "gcc/6.1.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "intel/15.0.2 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-               "intel/16.0.3 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+               "intel/16.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "intel/17.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "clang/3.6.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/3.7.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
