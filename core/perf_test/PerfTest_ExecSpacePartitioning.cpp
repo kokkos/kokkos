@@ -81,7 +81,7 @@ struct FunctorTeam {
   }
 };
 
-
+#ifndef KOKKOS_ENABLE_DEBUG
 TEST_F( default_exec, overlap_range_policy ) {
   int N = 2000;
    int M = 10000;
@@ -315,4 +315,5 @@ TEST_F( default_exec, overlap_team_policy ) {
    }
    printf("Time TeamPolicy: NonOverlap: %lf Time Overlap: %lf\n",time_end,time_overlap);
 }
+#endif
 }
