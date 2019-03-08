@@ -71,14 +71,16 @@
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
+#include <hpx/apply.hpp>
 #include <hpx/hpx_start.hpp>
-#include <hpx/include/apply.hpp>
-#include <hpx/include/local_lcos.hpp>
-#include <hpx/include/parallel_executor_parameters.hpp>
-#include <hpx/include/parallel_for_loop.hpp>
-#include <hpx/include/parallel_reduce.hpp>
-#include <hpx/include/run_as.hpp>
-#include <hpx/include/runtime.hpp>
+#include <hpx/lcos/local/barrier.hpp>
+#include <hpx/lcos/local/counting_semaphore.hpp>
+#include <hpx/parallel/algorithms/for_loop.hpp>
+#include <hpx/parallel/algorithms/reduce.hpp>
+#include <hpx/parallel/executors/static_chunk_size.hpp>
+#include <hpx/runtime.hpp>
+#include <hpx/runtime/threads/run_as_hpx_thread.hpp>
+#include <hpx/runtime/threads/threadmanager.hpp>
 
 #include <iostream>
 #include <memory>
