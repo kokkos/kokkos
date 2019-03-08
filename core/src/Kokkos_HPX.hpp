@@ -84,6 +84,7 @@
 #include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <type_traits>
 #include <vector>
 
 // There are currently two different implementations for the parallel dispatch

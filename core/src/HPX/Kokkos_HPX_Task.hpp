@@ -79,6 +79,7 @@ public:
     TaskQueueSpecialization<scheduler_type> task_queue;
     task_queue.scheduler = &scheduler;
     Kokkos::Impl::dispatch_execute_task(&task_queue);
+    Experimental::HPX::fence();
   }
 
   // Must provide task queue execution function
@@ -203,6 +204,7 @@ public:
     TaskQueueSpecializationConstrained<scheduler_type> task_queue;
     task_queue.scheduler = &scheduler;
     Kokkos::Impl::dispatch_execute_task(&task_queue);
+    Experimental::HPX::fence();
   }
 
   // Must provide task queue execution function

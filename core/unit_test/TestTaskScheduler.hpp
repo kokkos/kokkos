@@ -154,7 +154,6 @@ struct TestFib
                                       , TestFib( i ) );
 
     Kokkos::wait( root_sched );
-    Kokkos::fence();
 
     ASSERT_EQ( eval_fib( i ), f.get() );
 
@@ -247,7 +246,6 @@ struct TestTaskDependence {
     Kokkos::host_spawn( Kokkos::TaskSingle( sched ), TestTaskDependence( n, accum ) );
 
     Kokkos::wait( sched );
-    Kokkos::fence();
 
     Kokkos::deep_copy( host_accum, accum );
 
@@ -457,7 +455,6 @@ struct TestTaskTeam {
                                       );
 
     Kokkos::wait( root_sched );
-    Kokkos::fence();
 
     Kokkos::deep_copy( host_parfor_result, root_parfor_result );
     Kokkos::deep_copy( host_parreduce_check, root_parreduce_check );
@@ -571,7 +568,6 @@ struct TestTaskTeamValue {
                                           , Kokkos::TaskTeam );
 
     Kokkos::wait( root_sched );
-    Kokkos::fence();
 
     Kokkos::deep_copy( host_result, root_result );
 
@@ -644,7 +640,6 @@ struct TestTaskSpawnWithPool {
     auto f = Kokkos::host_spawn( Kokkos::TaskSingle( sched ), TestTaskSpawnWithPool( 3, pool ) );
 
     Kokkos::wait( sched );
-    Kokkos::fence();
   }
 };
 
@@ -785,7 +780,6 @@ struct TestMultipleDependence {
     auto f = Kokkos::host_spawn( Kokkos::TaskSingle( sched ), TestMultipleDependence<Scheduler>( 0, depth )  );
 
     Kokkos::wait( sched );
-    Kokkos::fence();
 
     ASSERT_TRUE( f.get() );
 
