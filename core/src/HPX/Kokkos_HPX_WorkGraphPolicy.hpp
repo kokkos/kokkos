@@ -44,8 +44,8 @@
 #ifndef KOKKOS_HPX_WORKGRAPHPOLICY_HPP
 #define KOKKOS_HPX_WORKGRAPHPOLICY_HPP
 
-#include <hpx/include/apply.hpp>
-#include <hpx/include/local_lcos.hpp>
+#include <hpx/apply.hpp>
+#include <hpx/lcos/local/counting_semaphore.hpp>
 
 namespace Kokkos {
 namespace Impl {

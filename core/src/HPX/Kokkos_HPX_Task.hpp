@@ -51,8 +51,8 @@
 
 #include <Kokkos_HPX.hpp>
 
-#include <hpx/include/apply.hpp>
-#include <hpx/include/local_lcos.hpp>
+#include <hpx/apply.hpp>
+#include <hpx/lcos/local/counting_semaphore.hpp>
 
 #include <type_traits>
 
