@@ -74,7 +74,10 @@ private:
   }
 
 public:
-  void execute() const { dispatch_execute_task(this); }
+  void execute() const {
+    dispatch_execute_task(this);
+    Experimental::HPX::fence();
+  }
 
   void execute_task() const {
     const int num_worker_threads = Experimental::HPX::concurrency();
