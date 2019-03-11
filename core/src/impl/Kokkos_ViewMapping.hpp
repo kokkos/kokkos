@@ -2739,23 +2739,29 @@ struct ViewValueFunctor;
 
 template <class ExecSpace, class ValueType>
 struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
-  typedef Kokkos::RangePolicy<ExecSpace> PolicyType;
+  struct DestroyTag {};
+  struct ConstructTag {};
+  using construct_policy_t = Kokkos::RangePolicy<ExecSpace, ConstructTag>;
+  using destroy_policy_t   = Kokkos::RangePolicy<ExecSpace, DestroyTag>;
   typedef typename ExecSpace::execution_space Exec;
 
   Exec space;
   ValueType* ptr;
   size_t n;
-  bool destroy;
 
+  template <class _always_void = void>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const size_t i) const {
-    if (destroy) {
-      (ptr + i)->~ValueType();
-    }  // KOKKOS_IMPL_CUDA_CLANG_WORKAROUND this line causes ptax error
-       // __cxa_begin_catch in nested_view unit-test
-    else {
-      new (ptr + i) ValueType();
-    }
+      typename std::enable_if<std::is_void<_always_void>::value>::type
+      operator()(ConstructTag const&, const size_t i) const {
+    new (ptr + i) ValueType();
+  }
+
+  template <class _always_void = void>
+  KOKKOS_INLINE_FUNCTION void operator()(DestroyTag const&,
+                                         const size_t i) const {
+    (ptr + i)->~ValueType();  // KOKKOS_IMPL_CUDA_CLANG_WORKAROUND this line
+                              // causes ptax error __cxa_begin_catch in
+                              // nested_view unit-test
   }
 
   ViewValueFunctor()                        = default;
@@ -2764,22 +2770,21 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
 
   ViewValueFunctor(ExecSpace const& arg_space, ValueType* const arg_ptr,
                    size_t const arg_n)
-      : space(arg_space), ptr(arg_ptr), n(arg_n), destroy(false) {}
+      : space(arg_space), ptr(arg_ptr), n(arg_n) {}
 
-  void execute(bool arg) {
-    destroy = arg;
+  template <class _always_void = void>
+  typename std::enable_if<std::is_void<_always_void>::value>::type
+  execute_construct() {
     if (!space.in_parallel()) {
 #if defined(KOKKOS_ENABLE_PROFILING)
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
-        Kokkos::Profiling::beginParallelFor(
-            (destroy ? "Kokkos::View::destruction"
-                     : "Kokkos::View::initialization"),
-            0, &kpID);
+        Kokkos::Profiling::beginParallelFor("Kokkos::View::initialization", 0,
+                                            &kpID);
       }
 #endif
-      const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
-          *this, PolicyType(0, n));
+      const Kokkos::Impl::ParallelFor<ViewValueFunctor, construct_policy_t>
+          closure(*this, construct_policy_t(0, n));
       closure.execute();
       space.fence();
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -2788,13 +2793,40 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
       }
 #endif
     } else {
-      for (size_t i = 0; i < n; ++i) operator()(i);
+      for (size_t i = 0; i < n; ++i) operator()(ConstructTag{}, i);
     }
   }
 
-  void construct_shared_allocation() { execute(false); }
+  void execute_destroy() {
+    if (!space.in_parallel()) {
+#if defined(KOKKOS_ENABLE_PROFILING)
+      uint64_t kpID = 0;
+      if (Kokkos::Profiling::profileLibraryLoaded()) {
+        Kokkos::Profiling::beginParallelFor("Kokkos::View::destruction", 0,
+                                            &kpID);
+      }
+#endif
+      const Kokkos::Impl::ParallelFor<ViewValueFunctor, destroy_policy_t>
+          closure(*this, destroy_policy_t(0, n));
+      closure.execute();
+      space.fence();
+#if defined(KOKKOS_ENABLE_PROFILING)
+      if (Kokkos::Profiling::profileLibraryLoaded()) {
+        Kokkos::Profiling::endParallelFor(kpID);
+      }
+#endif
+    } else {
+      for (size_t i = 0; i < n; ++i) operator()(DestroyTag{}, i);
+    }
+  }
 
-  void destroy_shared_allocation() { execute(true); }
+  template <class _always_void = void>
+  typename std::enable_if<std::is_void<_always_void>::value>::type
+  construct_shared_allocation() {
+    execute_construct();
+  }
+
+  void destroy_shared_allocation() { execute_destroy(); }
 };
 
 template <class ExecSpace, class ValueType>
@@ -3115,6 +3147,21 @@ class ViewMapping<
   }
 
   //----------------------------------------
+
+  template <class RecordType>
+  static inline void _construct_impl(RecordType* const record, std::true_type) {
+    // Construct values
+    record->m_destroy.construct_shared_allocation();
+  }
+
+  template <class RecordType>
+  static inline void _construct_impl(
+      RecordType* const record,
+      std::false_type) { /* avoid instantiating the default initializer pathway
+                            when WithoutInitializing is given */
+  }
+
+  //----------------------------------------
   /*  Allocate and construct mapped array.
    *  Allocate via shared allocation record and
    *  return that record for allocation tracking.
@@ -3173,7 +3220,8 @@ class ViewMapping<
           (value_type*)m_impl_handle, m_impl_offset.span());
 
       // Construct values
-      record->m_destroy.construct_shared_allocation();
+      _construct_impl(
+          record, std::integral_constant<bool, (bool)alloc_prop::initialize>{});
     }
 
     return record;
