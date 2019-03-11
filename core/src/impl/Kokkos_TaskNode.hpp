@@ -590,20 +590,19 @@ class alignas(16) RunnableTask
     public FunctorType
 {
 private:
+  using base_t = TaskResultStorage<
+    ResultType,
+    SchedulingInfoStorage<
+      RunnableTaskBase<TaskQueueTraits>,
+      typename Scheduler::task_queue_type::task_scheduling_info_type
+    >
+  >;
 
   using runnable_task_base_type = RunnableTaskBase<TaskQueueTraits>;
   using scheduler_type = Scheduler;
   using scheduling_info_type =
       typename scheduler_type::task_scheduling_info_type;
-  using scheduling_info_storage_base =
-    TaskResultStorage<
-      ResultType,
-      SchedulingInfoStorage<
-        runnable_task_base_type,
-        scheduling_info_type
-      >
-    >;
-  using base_t = scheduling_info_storage_base;
+  using scheduling_info_storage_base = base_t;
 
   using task_base_type = TaskNode<TaskQueueTraits>;
   using specialization = TaskQueueSpecialization<scheduler_type>;
