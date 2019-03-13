@@ -90,9 +90,11 @@ public:
   void execute() const
     {
         Kokkos::Impl::shared_allocation_enable_duplicates();
-        Impl::ParallelFor< FunctorType , Policy, Kokkos::Cuda > closureI( m_functor , m_policy );
-        Impl::ParallelFor< FunctorType , Policy, Kokkos::Cuda > closureII( m_functor , m_policy );
-        Impl::ParallelFor< FunctorType , Policy, Kokkos::Cuda > closureIII( m_functor , m_policy );
+        typedef Kokkos::RangePolicy<Kokkos::Cuda> surrogate_policy;
+        surrogate_policy lPolicy(m_policy.begin(), m_policy.end());
+        Impl::ParallelFor< FunctorType , surrogate_policy, Kokkos::Cuda > closureI( m_functor , lPolicy );
+        Impl::ParallelFor< FunctorType , surrogate_policy, Kokkos::Cuda > closureII( m_functor , lPolicy );
+        Impl::ParallelFor< FunctorType , surrogate_policy, Kokkos::Cuda > closureIII( m_functor , lPolicy );
         Kokkos::Impl::shared_allocation_disable_duplicates();
         closureI.execute();
         closureII.execute();

@@ -50,7 +50,7 @@
 #include <Kokkos_Core.hpp>
 
 #include <Cuda/Kokkos_Cuda_Error.hpp>
-#include <Cuda/Kokkos_Cuda_Internal.hpp>
+#include <Cuda/Kokkos_Cuda_Instance.hpp>
 #include <Cuda/Kokkos_Cuda_Locks.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
@@ -115,8 +115,8 @@ ResCuda::ResCuda()
   : Cuda() {
 }
 
-ResCuda::ResCuda( const int instance_id )
-  : Cuda( instance_id )
+ResCuda::ResCuda( cudaStream_t stream )
+  : Cuda( stream )
 {}
 
 void ResCuda::print_configuration( std::ostream & s , const bool )
