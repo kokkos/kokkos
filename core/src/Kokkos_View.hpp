@@ -2137,7 +2137,7 @@ public:
       }
 
       // Copy the input allocation properties with possibly defaulted properties
-      alloc_prop prop_copy( arg_prop );
+      alloc_prop prop( arg_prop );
 
 //------------------------------------------------------------
 #if defined( KOKKOS_ENABLE_CUDA )
