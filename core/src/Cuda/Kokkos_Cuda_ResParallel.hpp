@@ -91,10 +91,18 @@ public:
     {
         Kokkos::Impl::shared_allocation_enable_duplicates();
         typedef Kokkos::RangePolicy<Kokkos::Cuda> surrogate_policy;
-        surrogate_policy lPolicy(m_policy.begin(), m_policy.end());
-        Impl::ParallelFor< FunctorType , surrogate_policy, Kokkos::Cuda > closureI( m_functor , lPolicy );
-        Impl::ParallelFor< FunctorType , surrogate_policy, Kokkos::Cuda > closureII( m_functor , lPolicy );
-        Impl::ParallelFor< FunctorType , surrogate_policy, Kokkos::Cuda > closureIII( m_functor , lPolicy );
+
+        surrogate_policy lPolicy[3];
+        for (int i = 0; i < 3; i++) { 
+           cudaStream_t stream;
+           cudaStreamCreate(&stream);
+           Kokkos::Cuda cuda_inst(stream); 
+           new (&lPolicy[i]) surrogate_policy(cuda_inst, m_policy.begin(), m_policy.end());
+        }
+
+        Impl::ParallelFor< FunctorType , surrogate_policy, Kokkos::Cuda > closureI( m_functor , lPolicy[0] );
+        Impl::ParallelFor< FunctorType , surrogate_policy, Kokkos::Cuda > closureII( m_functor , lPolicy[1] );
+        Impl::ParallelFor< FunctorType , surrogate_policy, Kokkos::Cuda > closureIII( m_functor , lPolicy[2] );
         Kokkos::Impl::shared_allocation_disable_duplicates();
         closureI.execute();
         closureII.execute();
