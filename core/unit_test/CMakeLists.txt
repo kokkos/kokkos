@@ -657,7 +657,8 @@ IF(Kokkos_ENABLE_Cuda)
     UnitTest_CudaInterOp
     SOURCES
       UnitTestMain.cpp
-      cuda/TestCuda_InterOp.cpp
+      cuda/TestCuda_InterOp_Init.cpp
+      cuda/TestCuda_InterOp_Streams.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
     FAIL_REGULAR_EXPRESSION "  FAILED  "
