@@ -178,11 +178,11 @@ public:
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
 
-  static void track_check_point_mirror( const std::string label, void * dst, void * src, const size_t size );
   static void restore_all_views(); 
   static void restore_view(const std::string name);
   static void checkpoint_views();
   static void set_default_path( const std::string path );
+  static std::string s_default_path;
 
 private:
   static constexpr const char* m_name = "StdFile";
@@ -279,7 +279,10 @@ template<class ExecutionSpace> struct DeepCopy< Kokkos::Experimental::StdFileSpa
       Kokkos::Experimental::KokkosStdFileAccessor * pAcc = static_cast<Kokkos::Experimental::KokkosStdFileAccessor*>(pData-1);
 
       if (pAcc) {
+         printf("writing file (%s) of size %d \n", pAcc->file_path.c_str(), n);
          pAcc->WriteFile( src, n );
+      } else {
+         printf("deep copy cannot find file accessor object\n");
       }
   }
 
