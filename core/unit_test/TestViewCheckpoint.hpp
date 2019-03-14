@@ -59,13 +59,13 @@ struct TestCheckPointView {
       return true;
    }
 
-   static void test_view_chkpt( int dim0, int dim1 ) {
+   static void test_view_chkpt( int dim0, int dim1, std::string default_path ) {
        int N = 1;
        typedef Kokkos::LayoutLeft       Layout;
        typedef Kokkos::HostSpace        defaultMemSpace;  // default device
        typedef CpFileSpace              fileSystemSpace;  // file system
 
-       fileSystemSpace::set_default_path("/home/jsmiles/Development/Data");
+       fileSystemSpace::set_default_path(default_path );
        fileSystemSpace fs;
        typedef Kokkos::View<double**, Layout, defaultMemSpace> local_view_type;
 
@@ -108,6 +108,7 @@ struct TestFSDeepCopy {
       typedef Kokkos::View<double**,Kokkos::HostSpace> Rank2ViewType;
       Rank2ViewType view_2;
       view_2 = Rank2ViewType("memory_view_2", dim0, dim1);
+      view_2 = Rank2ViewType("memory_view_3", dim0, dim1);
 
       typedef CpFileSpace cp_file_space_type;
       Kokkos::View<double**,cp_file_space_type> cp_view(file_name, dim0, dim1);
@@ -119,6 +120,7 @@ struct TestFSDeepCopy {
       }
 
       // host_space to ExecSpace
+      printf("copy to file \n");
       Kokkos::deep_copy( cp_view, view_2 );
       Kokkos::fence();
 
@@ -129,6 +131,7 @@ struct TestFSDeepCopy {
       }
 
       // ExecSpace to host_space 
+      printf("copy from file \n");
       Kokkos::deep_copy( view_2, cp_view );
       Kokkos::fence();
 
@@ -157,7 +160,7 @@ TEST_F( TEST_CATEGORY , view_checkpoint_hdf5 ) {
   TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("/home/jsmiles/Development/cp_view.hdf",10000,10000);
   remove("/home/jsmiles/Development/cp_view.hdf");
 
-  TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt(10,10);
+  TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt(10,10,"/home/jsmiles/Development/Data/hdf5");
 }
 
 TEST_F( TEST_CATEGORY , view_checkpoint_sio ) {
@@ -167,7 +170,7 @@ TEST_F( TEST_CATEGORY , view_checkpoint_sio ) {
   remove("/home/jsmiles/Development/cp_view.bin");
   TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt("/home/jsmiles/Development/cp_view.bin",10000,10000);
   remove("/home/jsmiles/Development/cp_view.bin");
-  TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt(10,10);
+  TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt(10,10,"/home/jsmiles/Development/Data/stdfile");
 }
 
 #endif

@@ -1452,7 +1452,7 @@ void deep_copy
 
   if( ( ( (std::ptrdiff_t)dst_start < (std::ptrdiff_t)src_end ) && ( (std::ptrdiff_t)dst_end > (std::ptrdiff_t)src_start ) ) &&
       ( ( dst.span_is_contiguous() && src.span_is_contiguous() ))) {
-    std::string message("Error: Kokkos::deep_copy of overlapping views: ");
+    std::string message("Error: Kokkos::deep_copy of overlapping views A: ");
     message += dst.label(); message += "(";
     message += std::to_string((std::ptrdiff_t)dst_start); message += ",";
     message += std::to_string((std::ptrdiff_t)dst_end); message += ") ";
@@ -2493,7 +2493,7 @@ void deep_copy
   src_value_type* src_end   = src.data() + src.span();
   if( ( ( (std::ptrdiff_t)dst_start < (std::ptrdiff_t)src_end ) && ( (std::ptrdiff_t)dst_end > (std::ptrdiff_t)src_start ) ) &&
       ( ( dst.span_is_contiguous() && src.span_is_contiguous() ))) {
-    std::string message("Error: Kokkos::deep_copy of overlapping views: ");
+    std::string message("Error: Kokkos::deep_copy of overlapping views B: ");
     message += dst.label(); message += "(";
     message += std::to_string((std::ptrdiff_t)dst_start); message += ",";
     message += std::to_string((std::ptrdiff_t)dst_end); message += ") ";
@@ -2892,8 +2892,9 @@ create_chkpt_mirror(const Space& , const Kokkos::View<T,P...> & src
                >::type * = 0) {
   typedef typename Impl::MirrorType<Space,T,P ...>::view_type chkpt_mirror_type;
   typedef typename ViewTraits<T,P...>::value_type chkpt_value_type;
+  printf("creating check point mirror: %s, %s \n", Space::name(), src.label().c_str());
   chkpt_mirror_type chkpt(src.label(),src.layout());
-  Space::track_check_point_mirror( src.label(), chkpt.data(), src.data(), src.size() * sizeof(chkpt_value_type) );
+  Kokkos::Impl::SharedAllocationRecord<void,void>::track_mirror( Space::name(), src.label(), chkpt.data(), src.data() );
 
   return chkpt;
 }

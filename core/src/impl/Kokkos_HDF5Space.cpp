@@ -183,6 +183,7 @@ namespace Experimental {
       close_file();
    }
 
+   std::string HDF5Space::s_default_path = "./";
 
    HDF5Space::HDF5Space() {
 
@@ -190,8 +191,17 @@ namespace Experimental {
 
    /**\brief  Allocate untracked memory in the space */
    void * HDF5Space::allocate( const size_t arg_alloc_size, const std::string & path ) const {
-      KokkosHDF5Accessor * pAcc = new KokkosHDF5Accessor( arg_alloc_size, path );
-      pAcc->initialize( path, "default_dataset" );
+      std::string sFullPath = s_default_path;
+      size_t pos = path.find("/");
+      if ( pos >= 0 && pos < path.length() ) {    // only use the default if there is no path info in the path...
+         sFullPath = path;
+      } else {
+         sFullPath += (std::string)"/";
+         sFullPath += path;
+      }
+      printf("final path: %s \n", sFullPath.c_str());
+      KokkosHDF5Accessor * pAcc = new KokkosHDF5Accessor( arg_alloc_size, sFullPath );
+      pAcc->initialize( sFullPath, "default_dataset" );
       return (void*)pAcc;
 
    }
@@ -208,26 +218,54 @@ namespace Experimental {
 
    }
    
-   // add to map linking file space views with hostspace.
-   void HDF5Space::track_check_point_mirror( const std::string label, void * dst, void * src, const size_t size ) {
-
-
-   }
-
    void HDF5Space::restore_all_views() {
-
+      typedef Kokkos::Impl::SharedAllocationRecord<void,void> base_record;
+      Kokkos::Impl::MirrorTracker * pList = base_record::get_filtered_mirror_list( (std::string)name() );
+      while (pList != nullptr) {
+         Kokkos::Impl::DeepCopy< Kokkos::HostSpace, Kokkos::Experimental::HDF5Space, Kokkos::DefaultHostExecutionSpace >
+                        (((base_record*)pList->src)->data(), ((base_record*)pList->dst)->data(), ((base_record*)pList->src)->size());
+         // delete the records along the way...
+         if (pList->pNext == nullptr) {
+            delete pList;
+            pList = nullptr;
+         } else {
+            pList = pList->pNext;
+            delete pList->pPrev;
+         }
+      }
    }
    
-   void HDF5Space::restore_view(const std::string name) {
-
+   void HDF5Space::restore_view(const std::string lbl) {
+      typedef Kokkos::Impl::SharedAllocationRecord<void,void> base_record;
+      Kokkos::Impl::MirrorTracker * pRes = base_record::get_filtered_mirror_entry( (std::string)name(), lbl );
+      if (pRes != nullptr) {
+         Kokkos::Impl::DeepCopy< Kokkos::HostSpace, Kokkos::Experimental::HDF5Space, Kokkos::DefaultHostExecutionSpace >
+                        (((base_record*)pRes->src)->data(), ((base_record*)pRes->dst)->data(), ((base_record*)pRes->src)->size());
+         delete pRes;
+      }
    }
   
    void HDF5Space::checkpoint_views() {
-
-
+      typedef Kokkos::Impl::SharedAllocationRecord<void,void> base_record;
+      Kokkos::Impl::MirrorTracker * pList = base_record::get_filtered_mirror_list( (std::string)name() );
+      if (pList == nullptr) {
+         printf("memspace %s returned empty list of checkpoint views \n", name());
+      }
+      while (pList != nullptr) {
+         Kokkos::Impl::DeepCopy< Kokkos::Experimental::HDF5Space, Kokkos::HostSpace, Kokkos::DefaultHostExecutionSpace >
+                        (((base_record*)pList->dst)->data(), ((base_record*)pList->src)->data(), ((base_record*)pList->src)->size());
+         // delete the records along the way...
+         if (pList->pNext == nullptr) {
+            delete pList;
+            pList = nullptr;
+         } else {
+            pList = pList->pNext;
+            delete pList->pPrev;
+         }
+      }
    }
    void HDF5Space::set_default_path( const std::string path ) {
-
+      HDF5Space::s_default_path = path;
    }
   
 
@@ -244,6 +282,7 @@ namespace Impl {
 SharedAllocationRecord< void , void >
 SharedAllocationRecord< Kokkos::Experimental::HDF5Space , void >::s_root_record ;
 #endif
+
 
 void
 SharedAllocationRecord< Kokkos::Experimental::HDF5Space , void >::
@@ -342,6 +381,7 @@ reallocate_tracked( void * const arg_alloc_ptr
 
   return r_new->data();
 }
+
 
 SharedAllocationRecord< Kokkos::Experimental::HDF5Space , void > *
 SharedAllocationRecord< Kokkos::Experimental::HDF5Space , void >::get_record( void * alloc_ptr )
