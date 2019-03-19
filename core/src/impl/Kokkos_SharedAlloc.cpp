@@ -275,11 +275,11 @@ MirrorTracker * SharedAllocationRecord< void , void >::mirror_list=nullptr;
 MirrorTracker * SharedAllocationRecord< void , void >::get_filtered_mirror_list( const std::string mem_space ) {
    MirrorTracker * return_list = nullptr;
    if (mirror_list == nullptr) {
-      printf("get_filtered mirror list --- ah there's no list...\n");
+  //    printf("get_filtered mirror list --- ah there's no list...\n");
    }
    MirrorTracker * pSrch = mirror_list;
    while (pSrch != nullptr ) {      
-      printf("searching list: %s, %s \n", pSrch->mem_space_name.c_str(), pSrch->label.c_str());
+//      printf("searching list: %s, %s \n", pSrch->mem_space_name.c_str(), pSrch->label.c_str());
       if ( pSrch->mem_space_name == mem_space ) {
          MirrorTracker * pNew = new MirrorTracker(*pSrch);
          if (return_list == nullptr) {
@@ -323,10 +323,10 @@ void SharedAllocationRecord< void , void >::track_mirror( const std::string mem_
 
    // JSM TODO need some type of locking mechanism here ...
    if ( mirror_list == nullptr ) {
-      printf("initializing new list: %s, %s \n", pTrack->mem_space_name.c_str(), pTrack->label.c_str());
+//      printf("initializing new list: %s, %s \n", pTrack->mem_space_name.c_str(), pTrack->label.c_str());
       mirror_list = pTrack;
    } else {
-      printf("inserting into list: %s, %s \n", pTrack->mem_space_name.c_str(), pTrack->label.c_str());
+//      printf("inserting into list: %s, %s \n", pTrack->mem_space_name.c_str(), pTrack->label.c_str());
       pTrack->pNext = mirror_list;
       mirror_list->pPrev = pTrack;
       mirror_list = pTrack;

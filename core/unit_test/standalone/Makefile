@@ -1,6 +1,7 @@
-KOKKOS_DEVICES=Cuda
+KOKKOS_DEVICES=OpenMP
 KOKKOS_CUDA_OPTIONS=enable_lambda
-KOKKOS_ARCH = "SNB,Kepler35"
+KOKKOS_ARCH = ""
+KOKKOS_OPTIONS="enable_hdf5"
 
 MAKEFILE_PATH := $(subst Makefile,,$(abspath $(lastword $(MAKEFILE_LIST))))
 

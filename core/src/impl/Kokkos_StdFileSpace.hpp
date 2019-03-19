@@ -279,7 +279,7 @@ template<class ExecutionSpace> struct DeepCopy< Kokkos::Experimental::StdFileSpa
       Kokkos::Experimental::KokkosStdFileAccessor * pAcc = static_cast<Kokkos::Experimental::KokkosStdFileAccessor*>(pData-1);
 
       if (pAcc) {
-         printf("writing file (%s) of size %d \n", pAcc->file_path.c_str(), n);
+  //       printf("writing file (%s) of size %d \n", pAcc->file_path.c_str(), n);
          pAcc->WriteFile( src, n );
       } else {
          printf("deep copy cannot find file accessor object\n");
