@@ -663,6 +663,7 @@ struct TestMultipleDependence {
   enum : int { NFanout = 3 };
 
   // xlC doesn't like incomplete aggregate constructors, so we have do do this manually:
+  KOKKOS_INLINE_FUNCTION
   TestMultipleDependence(int depth, int max_depth)
     : m_depth(depth),
       m_max_depth(max_depth),
@@ -675,6 +676,7 @@ struct TestMultipleDependence {
   }
 
   // xlC doesn't like incomplete aggregate constructors, so we have do do this manually:
+  KOKKOS_INLINE_FUNCTION
   TestMultipleDependence(int depth, int max_depth, future_int dep)
     : m_depth(depth),
       m_max_depth(max_depth),
