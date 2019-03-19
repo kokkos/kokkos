@@ -199,7 +199,7 @@ namespace Experimental {
          sFullPath += (std::string)"/";
          sFullPath += path;
       }
-      printf("final path: %s \n", sFullPath.c_str());
+  //    printf("final path: %s \n", sFullPath.c_str());
       KokkosHDF5Accessor * pAcc = new KokkosHDF5Accessor( arg_alloc_size, sFullPath );
       pAcc->initialize( sFullPath, "default_dataset" );
       return (void*)pAcc;

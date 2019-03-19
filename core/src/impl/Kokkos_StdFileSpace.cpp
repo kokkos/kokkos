@@ -126,14 +126,14 @@ namespace Experimental {
    void * StdFileSpace::allocate( const size_t arg_alloc_size, const std::string & path ) const {
       std::string sFullPath = s_default_path;
       size_t pos = path.find("/");
-      printf("adding file accessor: %s, %s, %d \n", s_default_path.c_str(), path.c_str(), (int)pos );
+//      printf("adding file accessor: %s, %s, %d \n", s_default_path.c_str(), path.c_str(), (int)pos );
       if ( pos >= 0 && pos < path.length() ) {    // only use the default if there is no path info in the path...
          sFullPath = path;
       } else {
          sFullPath += (std::string)"/";
          sFullPath += path;
       }
-      printf("final path: %s \n", sFullPath.c_str());
+ //     printf("final path: %s \n", sFullPath.c_str());
       KokkosStdFileAccessor * pAcc = new KokkosStdFileAccessor( arg_alloc_size, sFullPath );
       pAcc->initialize( sFullPath );
       return (void*)pAcc;

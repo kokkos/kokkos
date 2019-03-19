@@ -55,11 +55,14 @@ namespace {
 
 template < typename ExecSpace, typename CpFileSpace >
 struct TestCheckPointView {
-   static bool consistency_check() {
-      return true;
+   static bool consistency_check(int iter) {
+      if (iter == 50) 
+         return false;
+      else
+         return true;
    }
 
-   static void test_view_chkpt( int dim0, int dim1, std::string default_path ) {
+   static void test_view_chkpt( int iter, std::string view_prefix, int dim0, int dim1, std::string default_path ) {
        int N = 1;
        typedef Kokkos::LayoutLeft       Layout;
        typedef Kokkos::HostSpace        defaultMemSpace;  // default device
@@ -69,30 +72,52 @@ struct TestCheckPointView {
        fileSystemSpace fs;
        typedef Kokkos::View<double**, Layout, defaultMemSpace> local_view_type;
 
-       local_view_type A("view_A", dim0, dim1);
-       local_view_type B("view_B", dim0, dim1);
+       std::string viewAName = view_prefix;
+       viewAName += (std::string)"_A";
+       std::string viewBName = view_prefix;
+       viewBName += (std::string)"_B";
+
+       local_view_type A(viewAName, dim0, dim1);
+       local_view_type B(viewBName, dim0, dim1);
        local_view_type::HostMirror h_A = Kokkos::create_mirror_view(A);
        local_view_type::HostMirror h_B = Kokkos::create_mirror_view(B);
 
        auto F_A = Kokkos::create_chkpt_mirror(fs, h_A);
        auto F_B = Kokkos::create_chkpt_mirror(fs, h_B);
 
-       fileSystemSpace::restore_all_views();  // restart from existing…
-       for ( int i = 0; i < N; i++ ) {
+       if ( iter == 0 ) {
+          Kokkos::parallel_for (dim0, KOKKOS_LAMBDA(const int i) {
+              for (int j=0; j< dim1; j++) {
+                 A(i,j) = 0;  B(i,j) = 0;
+              }
+          });
+          Kokkos::deep_copy(h_A, A);  Kokkos::deep_copy(h_B, B);  
+       } else {
+          fileSystemSpace::restore_all_views();  // restart from existing…
+       }
+
+       for ( int r = 0; r < N; r++ ) {
           Kokkos::deep_copy(A, h_A);  Kokkos::deep_copy(B, h_B);
 
           Kokkos::parallel_for (dim0, KOKKOS_LAMBDA(const int i) {
               for (int j=0; j< dim1; j++) {
-                 A(i,j) = i*j;  B(i,j) = i*j*2;
+                 A(i,j) += 1;  B(i,j) += 1;
               }
           });
           Kokkos::deep_copy(h_A, A);  Kokkos::deep_copy(h_B, B);  
 
-          if (!consistency_check()) {
-             fileSystemSpace::restore_view("view_A"); // restore data 
-             fileSystemSpace::restore_view("view_B"); // restore data 
+          if (!consistency_check(iter)) {
+             fileSystemSpace::restore_view(viewAName); // restore data 
+             fileSystemSpace::restore_view(viewBName); // restore data 
           } else {
              fileSystemSpace::checkpoint_views();  // save result
+          }
+       }
+
+       for ( int i = 0; i < dim0; i++ ) {
+          for (int j = 0; j < dim1; j++) {
+             ASSERT_EQ( A(i,j), iter+1 );
+             ASSERT_EQ( B(i,j), iter+1 );
           }
        }
     }
@@ -120,7 +145,7 @@ struct TestFSDeepCopy {
       }
 
       // host_space to ExecSpace
-      printf("copy to file \n");
+      // printf("copy to file \n");
       Kokkos::deep_copy( cp_view, view_2 );
       Kokkos::fence();
 
@@ -131,7 +156,7 @@ struct TestFSDeepCopy {
       }
 
       // ExecSpace to host_space 
-      printf("copy from file \n");
+      // printf("copy from file \n");
       Kokkos::deep_copy( view_2, cp_view );
       Kokkos::fence();
 
@@ -153,24 +178,37 @@ struct TestFSDeepCopy {
 #ifdef KOKKOS_ENABLE_HDF5
 
 TEST_F( TEST_CATEGORY , view_checkpoint_hdf5 ) {
-  TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("/home/jsmiles/Development/cp_view.hdf",10,10);
-  remove("/home/jsmiles/Development/cp_view.hdf");
-  TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("/home/jsmiles/Development/cp_view.hdf",100,100);
-  remove("/home/jsmiles/Development/cp_view.hdf");
-  TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("/home/jsmiles/Development/cp_view.hdf",10000,10000);
-  remove("/home/jsmiles/Development/cp_view.hdf");
+  mkdir("./data", 0777);
+  TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("./data/cp_view.hdf",10,10);
+  remove("./data/cp_view.hdf");
+  TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("./data/cp_view.hdf",100,100);
+  remove("./data/cp_view.hdf");
+  TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("./data/cp_view.hdf",10000,10000);
+  remove("./data/cp_view.hdf");
 
-  TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt(10,10,"/home/jsmiles/Development/Data/hdf5");
+  mkdir("./data/hdf5", 0777);
+  remove("./data/hdf5/view_A");
+  remove("./data/hdf5/view_B");
+  for (int n = 0; n < 10; n++) {
+     TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt(n, "view", 10,10,"./data/hdf5");
+  }
 }
 
 TEST_F( TEST_CATEGORY , view_checkpoint_sio ) {
-  TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt("/home/jsmiles/Development/cp_view.bin",10,10);
-  remove("/home/jsmiles/Development/cp_view.bin");
-  TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt("/home/jsmiles/Development/cp_view.bin",100,100);
-  remove("/home/jsmiles/Development/cp_view.bin");
-  TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt("/home/jsmiles/Development/cp_view.bin",10000,10000);
-  remove("/home/jsmiles/Development/cp_view.bin");
-  TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt(10,10,"/home/jsmiles/Development/Data/stdfile");
+  mkdir("./data", 0777);
+  TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt("./data//cp_view.bin",10,10);
+  remove("./data/cp_view.bin");
+  TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt("./data/cp_view.bin",100,100);
+  remove("./data/cp_view.bin");
+  TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt("./data/cp_view.bin",10000,10000);
+  remove("./data/cp_view.bin");
+
+  mkdir("./data/stdfile", 0777);
+  remove("./data/stdfile/view_A");
+  remove("./data/stdfile/view_B");
+  for (int n = 0; n < 10; n++) {
+     TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt(n, "view", 10,10,"./data/stdfile");
+  }
 }
 
 #endif
