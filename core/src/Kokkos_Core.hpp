@@ -87,6 +87,7 @@
 #include <Kokkos_Atomic.hpp>
 #include <Kokkos_hwloc.hpp>
 #include <Kokkos_Timer.hpp>
+#include <Kokkos_TaskScheduler.hpp>
 
 #include <Kokkos_Complex.hpp>
 
