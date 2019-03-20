@@ -93,7 +93,7 @@ class TaskNode;
 class TaskBase;
 
 /*\brief  Implementation data for task data management, access, and execution.
- *
+ *  (Deprecated)
  *  CRTP Inheritance structure to allow static_cast from the
  *  task root type and a task's FunctorType.
  *
@@ -133,6 +133,24 @@ struct TaskResult;
 
 struct TaskSchedulerBase;
 
+template <class ExecSpace>
+struct default_tasking_memory_space_for_execution_space
+{
+  using type = typename ExecSpace::memory_space;
+};
+
+#if defined( KOKKOS_ENABLE_CUDA )
+template <>
+struct default_tasking_memory_space_for_execution_space<Kokkos::Cuda>
+{
+  using type = Kokkos::CudaUVMSpace;
+};
+#endif
+
+template <class ExecSpace>
+using default_tasking_memory_space_for_execution_space_t =
+  typename default_tasking_memory_space_for_execution_space<ExecSpace>::type;
+
 } // namespace Impl
 } // namespace Kokkos
 
@@ -147,13 +165,34 @@ template< typename Space >
 using DeprecatedTaskSchedulerMultiple = BasicTaskScheduler<Space, Impl::TaskQueueMultiple<Space>> ;
 
 template< typename Space >
-using TaskScheduler = SimpleTaskScheduler<Space, Impl::SingleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsLockBased>>;
+using TaskScheduler = SimpleTaskScheduler<
+  Space,
+  Impl::SingleTaskQueue<
+    Space,
+    Impl::default_tasking_memory_space_for_execution_space_t<Space>,
+    Impl::TaskQueueTraitsLockBased
+  >
+>;
 
 template< typename Space >
-using TaskSchedulerMultiple = SimpleTaskScheduler<Space, Impl::MultipleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsLockBased>>;
+using TaskSchedulerMultiple = SimpleTaskScheduler<
+  Space,
+  Impl::MultipleTaskQueue<
+    Space,
+    Impl::default_tasking_memory_space_for_execution_space_t<Space>,
+    Impl::TaskQueueTraitsLockBased
+  >
+>;
 
 template< typename Space >
-using ChaseLevTaskScheduler = SimpleTaskScheduler<Space, Impl::MultipleTaskQueue<Space, typename Space::memory_space, Impl::TaskQueueTraitsChaseLev<>>>;
+using ChaseLevTaskScheduler = SimpleTaskScheduler<
+  Space,
+  Impl::MultipleTaskQueue<
+    Space,
+    Impl::default_tasking_memory_space_for_execution_space_t<Space>,
+    Impl::TaskQueueTraitsChaseLev<>
+  >
+>;
 
 template<class Space, class QueueType>
 void wait(BasicTaskScheduler<Space, QueueType> const&);
