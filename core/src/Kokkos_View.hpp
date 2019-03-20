@@ -2077,7 +2077,7 @@ public:
       }
 
       // Copy the input allocation properties with possibly defaulted properties
-      alloc_prop prop( arg_prop );
+      alloc_prop aprop( arg_prop );
 
 //------------------------------------------------------------
 #if defined( KOKKOS_ENABLE_CUDA )
@@ -2093,7 +2093,7 @@ public:
 //------------------------------------------------------------
 
       Kokkos::Impl::SharedAllocationRecord<> *
-        record = m_map.allocate_shared( prop , arg_layout );
+        record = m_map.allocate_shared( aprop , arg_layout );
 
 //------------------------------------------------------------
 #if defined( KOKKOS_ENABLE_CUDA )
