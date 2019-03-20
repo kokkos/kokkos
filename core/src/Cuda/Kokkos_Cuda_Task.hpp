@@ -533,7 +533,7 @@ public:
     }
 };
 
-extern template class TaskQueue< Kokkos::Cuda > ;
+extern template class TaskQueue< Kokkos::Cuda, default_tasking_memory_space_for_execution_space_t<Kokkos::Cuda> > ;
 
 }} /* namespace Kokkos::Impl */
 
@@ -577,7 +577,7 @@ private:
   TaskExec & operator = ( TaskExec && ) = delete ;
   TaskExec & operator = ( TaskExec const & ) = delete ;
 
-  friend class Kokkos::Impl::TaskQueue< Kokkos::Cuda > ;
+  friend class Kokkos::Impl::TaskQueue< Kokkos::Cuda, default_tasking_memory_space_for_execution_space_t<Kokkos::Cuda> > ;
   template <class, class>
   friend class Kokkos::Impl::TaskQueueSpecializationConstrained;
   template <class>

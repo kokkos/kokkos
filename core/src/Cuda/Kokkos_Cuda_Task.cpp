@@ -54,8 +54,8 @@
 namespace Kokkos {
 namespace Impl {
 
-template class TaskQueue< Kokkos::Cuda > ;
-template class TaskQueueMultiple< Kokkos::Cuda > ;
+template class TaskQueue< Kokkos::Cuda, Impl::default_tasking_memory_space_for_execution_space_t<Kokkos::Cuda> > ;
+template class TaskQueueMultiple< Kokkos::Cuda, Impl::default_tasking_memory_space_for_execution_space_t<Kokkos::Cuda> > ;
 
 }} /* namespace Kokkos::Impl */
 

@@ -111,11 +111,11 @@ class Task;
 
 class TaskQueueBase;
 
-template< typename Space, typename MemorySpace = typename Space::memory_space >
+template< typename Space, typename MemorySpace>
 class TaskQueue;
 
-template< typename ExecSpace, typename MemSpace = typename ExecSpace::memory_space >
-class TaskQueueMultiple ;
+template< typename ExecSpace, typename MemorySpace>
+class TaskQueueMultiple;
 
 template< typename ExecSpace, typename MemSpace, typename TaskQueueTraits>
 class SingleTaskQueue;
@@ -159,10 +159,16 @@ using default_tasking_memory_space_for_execution_space_t =
 namespace Kokkos {
 
 template< typename Space >
-using DeprecatedTaskScheduler = BasicTaskScheduler<Space, Impl::TaskQueue<Space>> ;
+using DeprecatedTaskScheduler = BasicTaskScheduler<
+  Space,
+  Impl::TaskQueue<Space, Impl::default_tasking_memory_space_for_execution_space_t<Space>>
+>;
 
 template< typename Space >
-using DeprecatedTaskSchedulerMultiple = BasicTaskScheduler<Space, Impl::TaskQueueMultiple<Space>> ;
+using DeprecatedTaskSchedulerMultiple = BasicTaskScheduler<
+  Space,
+  Impl::TaskQueueMultiple<Space, Impl::default_tasking_memory_space_for_execution_space_t<Space>>
+>;
 
 template< typename Space >
 using TaskScheduler = SimpleTaskScheduler<

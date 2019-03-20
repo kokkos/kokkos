@@ -55,7 +55,7 @@
 namespace Kokkos {
 namespace Impl {
 
-template class TaskQueue<Kokkos::Serial>;
+template class TaskQueue<Kokkos::Serial, typename Kokkos::Serial::memory_space>;
 
 }} /* namespace Kokkos::Impl */
 

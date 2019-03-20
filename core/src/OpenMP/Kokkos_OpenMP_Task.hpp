@@ -428,7 +428,7 @@ public:
   }
 };
 
-extern template class TaskQueue< Kokkos::OpenMP > ;
+extern template class TaskQueue< Kokkos::OpenMP, typename Kokkos::OpenMP::memory_space > ;
 
 }} /* namespace Kokkos::Impl */
 
