@@ -340,9 +340,13 @@ public:
   : rhs.m_record_bits)
 
   inline void copy_label(const char * lbl) {
-     for (int i = 0; i < SharedAllocationHeader::maximum_label_length; i++) {
-         m_label[i] = lbl[i];
-         if (m_label[i] == 0) break;
+     if (lbl != nullptr) {
+         for (int i = 0; i < SharedAllocationHeader::maximum_label_length; i++) {
+            m_label[i] = lbl[i];
+            if (m_label[i] == 0) break;
+        }
+     } else {
+        m_label[0] = 0;
      }
   }
 
@@ -430,7 +434,7 @@ public:
       m_record(KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_RECORD_INIT)
     { 
        copy_label(rhs.get_label());
-       rhs.m_record_bits = DO_NOT_DEREF_FLAG ; 
+       rhs.m_record_bits |= DO_NOT_DEREF_FLAG ; 
     }
 
   KOKKOS_FORCEINLINE_FUNCTION
@@ -439,7 +443,10 @@ public:
       auto swap_tmp = m_record_bits;
       m_record_bits = rhs.m_record_bits;
       rhs.m_record_bits = swap_tmp;
-      m_record = KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_RECORD_INIT;
+      auto swap_rec = m_record;
+      m_record = rhs.m_record;
+      rhs.m_record = swap_rec;
+      rhs.m_record_bits |= DO_NOT_DEREF_FLAG ; 
       copy_label(rhs.get_label());
       return *this ;
     }
