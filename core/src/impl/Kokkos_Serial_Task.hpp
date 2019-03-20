@@ -269,7 +269,7 @@ public:
   }
 };
 
-extern template class TaskQueue< Kokkos::Serial > ;
+extern template class TaskQueue< Kokkos::Serial, typename Kokkos::Serial::memory_space > ;
 
 }} /* namespace Kokkos::Impl */
 

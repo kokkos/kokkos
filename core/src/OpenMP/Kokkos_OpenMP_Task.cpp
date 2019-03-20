@@ -57,7 +57,7 @@
 namespace Kokkos {
 namespace Impl {
 
-template class TaskQueue< Kokkos::OpenMP > ;
+template class TaskQueue< Kokkos::OpenMP, typename Kokkos::OpenMP::memory_space > ;
 
 HostThreadTeamData& HostThreadTeamDataSingleton::singleton()
 {
