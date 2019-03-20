@@ -2972,7 +2972,8 @@ public:
               ( m_impl_handle, orig_rec->data(), orig_rec->size() );
 
      printf("track duplicate record: %s \n", label.c_str());
-     Kokkos::ResCudaSpace::template track_duplicate<typename Traits::value_type>(orig_rec, record);
+     //Kokkos::ResCudaSpace::template track_duplicate<typename Traits::value_type>(orig_rec, record);
+     mem_space::template track_duplicate<typename Traits::value_type>(orig_rec, record);
 
      return record ;
    }

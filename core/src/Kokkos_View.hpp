@@ -2153,7 +2153,7 @@ public:
 //------------------------------------------------------------
 
       shared_record_type  *
-        record = reinterpret_cast<shared_record_type*>(m_map.allocate_shared( prop , arg_layout ));
+        record = reinterpret_cast<shared_record_type*>(m_map.allocate_shared( prop_copy , arg_layout ));
 
 //------------------------------------------------------------
 #if defined( KOKKOS_ENABLE_CUDA )
