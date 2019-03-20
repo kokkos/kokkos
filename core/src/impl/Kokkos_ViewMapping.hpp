@@ -58,11 +58,19 @@
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #endif
 
+#ifdef KOKKOS_ENABLE_CUDA
+   #include <Kokkos_ResCudaSpace.hpp>
+#endif
+
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
 namespace Impl {
+
+
+
 
 template< unsigned I , size_t ... Args >
 struct variadic_size_t
@@ -195,7 +203,7 @@ struct ViewDimension
     {}
 
   KOKKOS_INLINE_FUNCTION
-  constexpr size_t extent( const unsigned r ) const
+  constexpr size_t extent( const unsigned r ) const noexcept
     {
       return r == 0 ? N0 : (
              r == 1 ? N1 : (
@@ -205,6 +213,19 @@ struct ViewDimension
              r == 5 ? N5 : (
              r == 6 ? N6 : (
              r == 7 ? N7 : 0 )))))));
+    }
+
+  static KOKKOS_INLINE_FUNCTION
+  constexpr size_t static_extent( const unsigned r ) noexcept
+    {
+      return r == 0 ? ArgN0 : (
+             r == 1 ? ArgN1 : (
+             r == 2 ? ArgN2 : (
+             r == 3 ? ArgN3 : (
+             r == 4 ? ArgN4 : (
+             r == 5 ? ArgN5 : (
+             r == 6 ? ArgN6 : (
+             r == 7 ? ArgN7 : 0 )))))));
     }
 
   template< size_t N >
@@ -262,7 +283,7 @@ struct ALL_t {
   constexpr const ALL_t & operator()() const { return *this ; }
 
   KOKKOS_INLINE_FUNCTION
-  constexpr bool operator == ( const ALL_t & right) const { return true;}
+  constexpr bool operator == ( const ALL_t & ) const { return true;}
 };
 
 }} // namespace Kokkos::Impl
@@ -1535,7 +1556,7 @@ struct ViewOffset< Dimension , Kokkos::LayoutRight
   template< class DimRHS >
   KOKKOS_INLINE_FUNCTION
   constexpr ViewOffset
-    ( const ViewOffset< DimRHS , Kokkos::LayoutRight , void > & rhs
+    ( const ViewOffset< DimRHS , Kokkos::LayoutRight , void > &
     , const SubviewExtents< DimRHS::rank , dimension_type::rank > & sub
     )
     : m_dim( sub.range_extent(0) , 0, 0, 0, 0, 0, 0, 0 )
@@ -2682,6 +2703,12 @@ public:
   KOKKOS_INLINE_FUNCTION constexpr size_t extent( const iType & r ) const
     { return m_impl_offset.m_dim.extent(r); }
 
+  static KOKKOS_INLINE_FUNCTION constexpr size_t static_extent( const unsigned r ) noexcept
+    {
+      using dim_type = typename offset_type::dimension_type;
+      return dim_type::static_extent(r);
+    }
+
   KOKKOS_INLINE_FUNCTION constexpr
   typename Traits::array_layout layout() const
     { return m_impl_offset.layout(); }
@@ -2909,6 +2936,46 @@ public:
 
     return record ;
   }
+
+  //----------------------------------------
+  /*  Allocate and construct mapped array.
+   *  Allocate via shared allocation record and
+   *  return that record for allocation tracking.
+   */
+  template< class mem_space >
+  typename std::enable_if< !Kokkos::Impl::is_resilient_space< mem_space >::value, Kokkos::Impl::SharedAllocationRecord<> * >::type
+  duplicate_shared( Kokkos::Impl::SharedAllocationRecord< mem_space , void >* orig_rec )  { 
+     return orig_rec;
+  }
+
+  template< class mem_space >
+  typename std::enable_if< Kokkos::Impl::is_resilient_space< mem_space >::value, Kokkos::Impl::SharedAllocationRecord<> * >::type
+  duplicate_shared( Kokkos::Impl::SharedAllocationRecord< mem_space , void >* orig_rec )  {
+
+     typedef Kokkos::Impl::SharedAllocationRecord< mem_space , void > record_type ;
+
+     std::string label = orig_rec->get_label();
+     printf("allocating duplicate record: %s \n", label.c_str());
+
+     // Create shared memory tracking record with allocate memory from the memory space
+     record_type * const record =
+       record_type::allocate( orig_rec->get_space()
+                           , label
+                           , orig_rec->size() );
+
+     m_impl_handle = handle_type( reinterpret_cast< pointer_type >( record->data() ) );
+
+     printf("copy duplicate record: %s \n", label.c_str());
+     Kokkos::Impl::DeepCopy<mem_space, mem_space, 
+                             typename mem_space::execution_space> 
+              ( m_impl_handle, orig_rec->data(), orig_rec->size() );
+
+     printf("track duplicate record: %s \n", label.c_str());
+     Kokkos::ResCudaSpace::template track_duplicate<typename Traits::value_type>(orig_rec, record);
+
+     return record ;
+   }
+
 };
 
 //----------------------------------------------------------------------------
@@ -3085,7 +3152,7 @@ public:
   typedef ViewMapping< SrcTraits , void >  SrcType ;
 
   KOKKOS_INLINE_FUNCTION
-  static bool assignable_layout_check(DstType & dst, const SrcType & src) //Runtime check
+  static bool assignable_layout_check(DstType &, const SrcType & src) //Runtime check
     {
       size_t strides[9];
       bool assignable = true;
@@ -3436,7 +3503,7 @@ void view_verify_operator_bounds
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     enum { LEN = 1024 };
     char buffer[ LEN ];
-    const std::string label = tracker.template get_label<MemorySpace>();
+    const std::string label = tracker.get_label();
     int n = snprintf(buffer,LEN,"View bounds error of view %s (",label.c_str());
     view_error_operator_bounds<0>( buffer + n , LEN - n , map , args ... );
     Kokkos::Impl::throw_runtime_exception(std::string(buffer));

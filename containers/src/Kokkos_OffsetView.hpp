@@ -202,8 +202,8 @@ namespace Kokkos {
 
          template <typename iType, typename std::enable_if< std::is_integral<iType>::value, iType>::type = 0>
          KOKKOS_INLINE_FUNCTION
-         int64_t begin(const iType dimension) const {
-            return dimension < Rank ? m_begins[dimension] : 0;
+         int64_t begin(const iType local_dimension) const {
+             return local_dimension < Rank ? m_begins[local_dimension] : 0;
          }
 
          KOKKOS_INLINE_FUNCTION
@@ -211,7 +211,9 @@ namespace Kokkos {
 
          template <typename iType, typename std::enable_if< std::is_integral<iType>::value, iType>::type = 0>
          KOKKOS_INLINE_FUNCTION
-         int64_t end(const iType dimension) const {return begin(dimension) + m_map.extent(dimension);}
+         int64_t end(const iType local_dimension) const {
+             return begin(local_dimension) + m_map.extent(local_dimension);
+         }
 
 
       private:
@@ -1068,7 +1070,7 @@ namespace Kokkos {
             }
 
             // Copy the input allocation properties with possibly defaulted properties
-            alloc_prop prop( arg_prop );
+            alloc_prop prop_copy( arg_prop );
 
             //------------------------------------------------------------
 #if defined( KOKKOS_ENABLE_CUDA )
@@ -1084,7 +1086,7 @@ namespace Kokkos {
             //------------------------------------------------------------
 
             Kokkos::Impl::SharedAllocationRecord<> *
-            record = m_map.allocate_shared( prop , arg_layout );
+            record = m_map.allocate_shared( prop_copy , arg_layout );
 
             //------------------------------------------------------------
 #if defined( KOKKOS_ENABLE_CUDA )

@@ -813,7 +813,7 @@ struct ParallelReduceReturnValue<typename std::enable_if<
   typedef typename return_type::value_type value_type;
 
   static return_type return_value(ReturnType& return_val,
-                                  const FunctorType& functor) {
+                                  const FunctorType&) {
     return return_val;
   }
 };

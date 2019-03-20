@@ -1017,7 +1017,7 @@ void test_view_mapping()
 
     typedef typename Kokkos::Impl::HostMirror< Space >::Space::execution_space host_exec_space;
 
-    Kokkos::parallel_for( Kokkos::RangePolicy< host_exec_space >( 0, 10 ), KOKKOS_LAMBDA ( int i ) {
+    Kokkos::parallel_for( Kokkos::RangePolicy< host_exec_space >( 0, 10 ), KOKKOS_LAMBDA ( int ) {
       // 'a' is captured by copy, and the capture mechanism converts 'a' to an
       // unmanaged copy.  When the parallel dispatch accepts a move for the
       // lambda, this count should become 1.
@@ -1243,6 +1243,13 @@ void test_view_mapping_operator()
 TEST_F( TEST_CATEGORY , view_mapping_operator )
 {
   test_view_mapping_operator< TEST_EXECSPACE >();
+}
+
+TEST_F( TEST_CATEGORY , static_extent )
+{
+  using T = Kokkos::View<double*[2][3]>;
+  ASSERT_EQ( T::static_extent(1), 2 );
+  ASSERT_EQ( T::static_extent(2), 3 );
 }
 
 }

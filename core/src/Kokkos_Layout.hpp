@@ -269,14 +269,14 @@ namespace Experimental {
 template < Kokkos::Iterate OuterP, Kokkos::Iterate InnerP,
            unsigned ArgN0 , unsigned ArgN1 , unsigned ArgN2 = 0,  unsigned ArgN3 = 0,  unsigned ArgN4 = 0,  unsigned ArgN5 = 0,  unsigned ArgN6 = 0,  unsigned ArgN7 = 0, 
            bool IsPowerOfTwo = 
-           ( Impl::is_integral_power_of_two(ArgN0) &&
-             Impl::is_integral_power_of_two(ArgN1) &&
-             (Impl::is_integral_power_of_two(ArgN2) || (ArgN2 == 0) ) &&
-             (Impl::is_integral_power_of_two(ArgN3) || (ArgN3 == 0) ) &&
-             (Impl::is_integral_power_of_two(ArgN4) || (ArgN4 == 0) ) &&
-             (Impl::is_integral_power_of_two(ArgN5) || (ArgN5 == 0) ) &&
-             (Impl::is_integral_power_of_two(ArgN6) || (ArgN6 == 0) ) &&
-             (Impl::is_integral_power_of_two(ArgN7) || (ArgN7 == 0) )
+           ( Kokkos::Impl::is_integral_power_of_two(ArgN0) &&
+               Kokkos::Impl::is_integral_power_of_two(ArgN1) &&
+             (Kokkos::Impl::is_integral_power_of_two(ArgN2) || (ArgN2 == 0) ) &&
+             (Kokkos::Impl::is_integral_power_of_two(ArgN3) || (ArgN3 == 0) ) &&
+             (Kokkos::Impl::is_integral_power_of_two(ArgN4) || (ArgN4 == 0) ) &&
+             (Kokkos::Impl::is_integral_power_of_two(ArgN5) || (ArgN5 == 0) ) &&
+             (Kokkos::Impl::is_integral_power_of_two(ArgN6) || (ArgN6 == 0) ) &&
+             (Kokkos::Impl::is_integral_power_of_two(ArgN7) || (ArgN7 == 0) )
            )
          >
 struct LayoutTiled {

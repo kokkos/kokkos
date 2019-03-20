@@ -52,7 +52,9 @@
 #include <iosfwd>
 #include <vector>
 
+#include <impl/Kokkos_AnalyzePolicy.hpp>
 #include <Kokkos_CudaSpace.hpp>
+#include <Kokkos_ResCudaSpace.hpp>
 
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_TaskScheduler.hpp>
@@ -67,6 +69,7 @@
 namespace Kokkos {
 namespace Impl {
 class CudaExec ;
+class CudaInternal ;
 } // namespace Impl
 } // namespace Kokkos
 
@@ -74,6 +77,23 @@ class CudaExec ;
 
 namespace Kokkos {
 
+namespace Impl {
+  namespace Experimental {
+    enum class CudaLaunchMechanism:unsigned{Default=0,ConstantMemory=1,GlobalMemory=2,LocalMemory=4};
+
+    constexpr inline CudaLaunchMechanism operator | (CudaLaunchMechanism p1, CudaLaunchMechanism p2) {
+      return static_cast<CudaLaunchMechanism>(static_cast<unsigned>(p1) |  static_cast<unsigned>(p2));
+    }
+    constexpr inline CudaLaunchMechanism operator & (CudaLaunchMechanism p1, CudaLaunchMechanism p2) {
+      return static_cast<CudaLaunchMechanism>(static_cast<unsigned>(p1) &  static_cast<unsigned>(p2));
+    }
+
+    template<CudaLaunchMechanism l>
+    struct CudaDispatchProperties {
+      CudaLaunchMechanism launch_mechanism = l;
+    };
+  }
+}
 /// \class Cuda
 /// \brief Kokkos Execution Space that uses CUDA to run on GPUs.
 ///
@@ -165,14 +185,17 @@ public:
   //--------------------------------------------------
   //! \name  Cuda space instances
 
+  KOKKOS_INLINE_FUNCTION
   ~Cuda() {}
+
   Cuda();
-  explicit Cuda( const int instance_id );
 
   Cuda( Cuda && ) = default ;
   Cuda( const Cuda & ) = default ;
   Cuda & operator = ( Cuda && ) = default ;
   Cuda & operator = ( const Cuda & ) = default ;
+
+  Cuda(cudaStream_t stream);
 
   //--------------------------------------------------------------------------
   //! \name Device-specific functions
@@ -219,18 +242,18 @@ public:
    */
   static std::vector<unsigned> detect_device_arch();
 
-  cudaStream_t cuda_stream() const { return m_stream ; }
-  int          cuda_device() const { return m_device ; }
+  cudaStream_t cuda_stream() const;
+  int          cuda_device() const;
 
   //@}
   //--------------------------------------------------------------------------
 
   static const char* name();
 
+  inline Impl::CudaInternal* impl_internal_space_instance() const { return m_space_instance; }
 private:
 
-  int          m_device ;
-  cudaStream_t m_stream ;
+  Impl::CudaInternal* m_space_instance;
 };
 
 } // namespace Kokkos
@@ -302,7 +325,8 @@ struct VerifyExecutionCanAccessMemorySpace
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#include <Cuda/Kokkos_CudaExec.hpp>
+#include <Cuda/Kokkos_Cuda_KernelLaunch.hpp>
+#include <Cuda/Kokkos_Cuda_Instance.hpp>
 #include <Cuda/Kokkos_Cuda_View.hpp>
 #include <Cuda/Kokkos_Cuda_Team.hpp>
 #include <Cuda/Kokkos_Cuda_Parallel.hpp>

@@ -54,59 +54,7 @@
 #include <Cuda/Kokkos_Cuda_abort.hpp>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 #include <Cuda/Kokkos_Cuda_Locks.hpp>
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Impl {
-
-struct CudaTraits {
-  enum { WarpSize       = 32      /* 0x0020 */ };
-  enum { WarpIndexMask  = 0x001f  /* Mask for warpindex */ };
-  enum { WarpIndexShift = 5       /* WarpSize == 1 << WarpShift */ };
-
-  enum { SharedMemoryBanks    = 32      /* Compute device 2.0 */ };
-  enum { SharedMemoryCapacity = 0x0C000 /* 48k shared / 16k L1 Cache */ };
-  enum { SharedMemoryUsage    = 0x04000 /* 16k shared / 48k L1 Cache */ };
-
-  enum { UpperBoundGridCount    = 65535 /* Hard upper bound */ };
-  enum { ConstantMemoryCapacity = 0x010000 /* 64k bytes */ };
-  enum { ConstantMemoryUsage    = 0x008000 /* 32k bytes */ };
-  enum { ConstantMemoryCache    = 0x002000 /*  8k bytes */ };
-
-  typedef unsigned long
-    ConstantGlobalBufferType[ ConstantMemoryUsage / sizeof(unsigned long) ];
-
-  enum { ConstantMemoryUseThreshold = 0x000200 /* 512 bytes */ };
-
-  KOKKOS_INLINE_FUNCTION static
-  CudaSpace::size_type warp_count( CudaSpace::size_type i )
-    { return ( i + WarpIndexMask ) >> WarpIndexShift ; }
-
-  KOKKOS_INLINE_FUNCTION static
-  CudaSpace::size_type warp_align( CudaSpace::size_type i )
-    {
-      enum { Mask = ~CudaSpace::size_type( WarpIndexMask ) };
-      return ( i + WarpIndexMask ) & Mask ;
-    }
-};
-
-//----------------------------------------------------------------------------
-
-CudaSpace::size_type cuda_internal_multiprocessor_count();
-CudaSpace::size_type cuda_internal_maximum_warp_count();
-CudaSpace::size_type cuda_internal_maximum_grid_count();
-CudaSpace::size_type cuda_internal_maximum_shared_words();
-
-CudaSpace::size_type cuda_internal_maximum_concurrent_block_count();
-
-CudaSpace::size_type * cuda_internal_scratch_flags( const CudaSpace::size_type size );
-CudaSpace::size_type * cuda_internal_scratch_space( const CudaSpace::size_type size );
-CudaSpace::size_type * cuda_internal_scratch_unified( const CudaSpace::size_type size );
-
-} // namespace Impl
-} // namespace Kokkos
+#include <Cuda/Kokkos_Cuda_Instance.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -188,32 +136,113 @@ static void cuda_parallel_launch_local_memory( const DriverType driver )
   driver();
 }
 
+template< class DriverType>
+__global__
+static void cuda_parallel_launch_global_memory( const DriverType* driver )
+{
+  driver->operator()();
+}
+
+template< class DriverType, unsigned int maxTperB, unsigned int minBperSM >
+__global__
+__launch_bounds__(maxTperB, minBperSM)
+static void cuda_parallel_launch_global_memory( const DriverType* driver )
+{
+  driver->operator()();
+}
+
+template< class DriverType>
+__global__
+static void cuda_parallel_launch_constant_or_global_memory( const DriverType* driver_ptr )
+{
+  const DriverType & driver = driver_ptr!=NULL ? *driver_ptr :
+    *((const DriverType *) kokkos_impl_cuda_constant_memory_buffer );
+
+  driver();
+}
+
+template< class DriverType, unsigned int maxTperB, unsigned int minBperSM >
+__global__
+__launch_bounds__(maxTperB, minBperSM)
+static void cuda_parallel_launch_constant_or_global_memory( const DriverType* driver_ptr )
+{
+  const DriverType & driver = driver_ptr!=NULL ? *driver_ptr :
+    *((const DriverType *) kokkos_impl_cuda_constant_memory_buffer );
+
+  driver();
+}
+
+template< class DriverType >
+struct DeduceCudaLaunchMechanism {
+  constexpr static const Kokkos::Experimental::WorkItemProperty::HintLightWeight_t light_weight = Kokkos::Experimental::WorkItemProperty::HintLightWeight;
+  constexpr static const Kokkos::Experimental::WorkItemProperty::HintHeavyWeight_t heavy_weight = Kokkos::Experimental::WorkItemProperty::HintHeavyWeight ;
+  constexpr static const typename DriverType::Policy::work_item_property property = typename DriverType::Policy::work_item_property();
+
+  static constexpr const Experimental::CudaLaunchMechanism valid_launch_mechanism =
+      // BuildValidMask
+      (sizeof(DriverType)<CudaTraits::KernelArgumentLimit?
+          Experimental::CudaLaunchMechanism::LocalMemory:Experimental::CudaLaunchMechanism::Default)|
+      (sizeof(DriverType)<CudaTraits::ConstantMemoryUsage?
+          Experimental::CudaLaunchMechanism::ConstantMemory:Experimental::CudaLaunchMechanism::Default)|
+      Experimental::CudaLaunchMechanism::GlobalMemory;
+
+  static constexpr const Experimental::CudaLaunchMechanism requested_launch_mechanism =
+      (((property&light_weight)==light_weight)?
+           Experimental::CudaLaunchMechanism::LocalMemory :
+           Experimental::CudaLaunchMechanism::ConstantMemory)
+    | Experimental::CudaLaunchMechanism::GlobalMemory;
+
+  static constexpr const Experimental::CudaLaunchMechanism default_launch_mechanism =
+      // BuildValidMask
+      (sizeof(DriverType)<CudaTraits::ConstantMemoryUseThreshold)?
+          Experimental::CudaLaunchMechanism::LocalMemory:(
+      (sizeof(DriverType)<CudaTraits::ConstantMemoryUsage)?
+          Experimental::CudaLaunchMechanism::ConstantMemory:
+          Experimental::CudaLaunchMechanism::GlobalMemory);
+
+  //              None                LightWeight    HeavyWeight
+  // F<UseT       LCG LCG L  L        LCG  LG L  L    LCG  CG L  C
+  // UseT<F<KAL   LCG LCG C  C        LCG  LG C  L    LCG  CG C  C
+  // Kal<F<CMU     CG LCG C  C         CG  LG C  G     CG  CG C  C
+  // CMU<F          G LCG G  G          G  LG G  G      G  CG G  G
+  static constexpr const Experimental::CudaLaunchMechanism launch_mechanism =
+      ((property&light_weight)==light_weight)?
+          (sizeof(DriverType)<CudaTraits::KernelArgumentLimit?
+              Experimental::CudaLaunchMechanism::LocalMemory:
+              Experimental::CudaLaunchMechanism::GlobalMemory):(
+        ((property&heavy_weight)==heavy_weight)?
+          (sizeof(DriverType)<CudaTraits::ConstantMemoryUsage?
+              Experimental::CudaLaunchMechanism::ConstantMemory:
+              Experimental::CudaLaunchMechanism::GlobalMemory):
+          (default_launch_mechanism)
+      );
+};
+// Use local memory up to ConstantMemoryUseThreshold
+// Use global memory above ConstantMemoryUsage
+// In between use ConstantMemory
 template < class DriverType
          , class LaunchBounds = Kokkos::LaunchBounds<>
-         , bool Large = ( CudaTraits::ConstantMemoryUseThreshold < sizeof(DriverType) ) >
+         , Experimental::CudaLaunchMechanism LaunchMechanism =
+             DeduceCudaLaunchMechanism<DriverType>::launch_mechanism >
 struct CudaParallelLaunch ;
 
 template < class DriverType
          , unsigned int MaxThreadsPerBlock
-         , unsigned int MinBlocksPerSM >
+         , unsigned int MinBlocksPerSM>
 struct CudaParallelLaunch< DriverType
                          , Kokkos::LaunchBounds< MaxThreadsPerBlock 
                                                , MinBlocksPerSM >
-                         , true >
+                          , Experimental::CudaLaunchMechanism::ConstantMemory>
 {
+  static_assert(sizeof(DriverType)<CudaTraits::ConstantMemoryUsage,"Kokkos Error: Requested CudaLaunchConstantMemory with a Functor larger than 32kB.");
   inline
   CudaParallelLaunch( const DriverType & driver
                     , const dim3       & grid
                     , const dim3       & block
                     , const int          shmem
-                    , const cudaStream_t stream = 0 )
+                    , const CudaInternal* cuda_instance )
   {
     if ( (grid.x != 0) && ( ( block.x * block.y * block.z ) != 0 ) ) {
-
-      if ( sizeof( Kokkos::Impl::CudaTraits::ConstantGlobalBufferType ) <
-           sizeof( DriverType ) ) {
-        Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: Functor is too large") );
-      }
 
       // Fence before changing settings and copying closure
       Kokkos::Cuda::fence();
@@ -234,15 +263,15 @@ struct CudaParallelLaunch< DriverType
       #endif
 
       // Copy functor to constant memory on the device
-      cudaMemcpyToSymbol(
-        kokkos_impl_cuda_constant_memory_buffer, &driver, sizeof(DriverType) );
+      cudaMemcpyToSymbolAsync(
+        kokkos_impl_cuda_constant_memory_buffer, &driver, sizeof(DriverType), 0, cudaMemcpyHostToDevice, cudaStream_t(cuda_instance->m_stream));
 
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
 
       // Invoke the driver function on the device
       cuda_parallel_launch_constant_memory
         < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >
-          <<< grid , block , shmem , stream >>>();
+          <<< grid , block , shmem , cuda_instance->m_stream >>>();
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       CUDA_SAFE_CALL( cudaGetLastError() );
@@ -252,24 +281,20 @@ struct CudaParallelLaunch< DriverType
   }
 };
 
-template < class DriverType >
+template < class DriverType>
 struct CudaParallelLaunch< DriverType
-                         , Kokkos::LaunchBounds<>
-                         , true >
+                         , Kokkos::LaunchBounds<0,0>
+                         , Experimental::CudaLaunchMechanism::ConstantMemory >
 {
+  static_assert(sizeof(DriverType)<CudaTraits::ConstantMemoryUsage,"Kokkos Error: Requested CudaLaunchConstantMemory with a Functor larger than 32kB.");
   inline
   CudaParallelLaunch( const DriverType & driver
                     , const dim3       & grid
                     , const dim3       & block
                     , const int          shmem
-                    , const cudaStream_t stream = 0 )
+                    , const CudaInternal* cuda_instance )
   {
     if ( (grid.x != 0) && ( ( block.x * block.y * block.z ) != 0 ) ) {
-
-      if ( sizeof( Kokkos::Impl::CudaTraits::ConstantGlobalBufferType ) <
-           sizeof( DriverType ) ) {
-        Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: Functor is too large") );
-      }
 
       // Fence before changing settings and copying closure
       Kokkos::Cuda::fence();
@@ -289,14 +314,14 @@ struct CudaParallelLaunch< DriverType
       #endif
 
       // Copy functor to constant memory on the device
-      cudaMemcpyToSymbol(
-        kokkos_impl_cuda_constant_memory_buffer, &driver, sizeof(DriverType) );
+      cudaMemcpyToSymbolAsync(
+        kokkos_impl_cuda_constant_memory_buffer, &driver, sizeof(DriverType), 0, cudaMemcpyHostToDevice, cudaStream_t(cuda_instance->m_stream));
 
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
 
       // Invoke the driver function on the device
       cuda_parallel_launch_constant_memory< DriverType >
-          <<< grid , block , shmem , stream >>>();
+          <<< grid , block , shmem , cuda_instance->m_stream >>>();
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       CUDA_SAFE_CALL( cudaGetLastError() );
@@ -312,21 +337,17 @@ template < class DriverType
 struct CudaParallelLaunch< DriverType
                          , Kokkos::LaunchBounds< MaxThreadsPerBlock 
                                                , MinBlocksPerSM >
-                         , false >
+                         , Experimental::CudaLaunchMechanism::LocalMemory >
 {
+  static_assert(sizeof(DriverType)<CudaTraits::KernelArgumentLimit,"Kokkos Error: Requested CudaLaunchLocalMemory with a Functor larger than 4096 bytes.");
   inline
   CudaParallelLaunch( const DriverType & driver
                     , const dim3       & grid
                     , const dim3       & block
                     , const int          shmem
-                    , const cudaStream_t stream = 0 )
+                    , const CudaInternal* cuda_instance )
   {
     if ( (grid.x != 0) && ( ( block.x * block.y * block.z ) != 0 ) ) {
-
-      if ( sizeof( Kokkos::Impl::CudaTraits::ConstantGlobalBufferType ) <
-           sizeof( DriverType ) ) {
-        Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: Functor is too large") );
-      }
 
       if ( CudaTraits::SharedMemoryCapacity < shmem ) {
         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
@@ -348,7 +369,7 @@ struct CudaParallelLaunch< DriverType
       // Invoke the driver function on the device
       cuda_parallel_launch_local_memory
         < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >
-          <<< grid , block , shmem , stream >>>( driver );
+          <<< grid , block , shmem , cuda_instance->m_stream >>>( driver );
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       CUDA_SAFE_CALL( cudaGetLastError() );
@@ -358,24 +379,20 @@ struct CudaParallelLaunch< DriverType
   }
 };
 
-template < class DriverType >
+template < class DriverType>
 struct CudaParallelLaunch< DriverType
-                         , Kokkos::LaunchBounds<>
-                         , false >
+                         , Kokkos::LaunchBounds<0,0>
+                         , Experimental::CudaLaunchMechanism::LocalMemory >
 {
+  static_assert(sizeof(DriverType)<CudaTraits::KernelArgumentLimit,"Kokkos Error: Requested CudaLaunchLocalMemory with a Functor larger than 4096 bytes.");
   inline
   CudaParallelLaunch( const DriverType & driver
                     , const dim3       & grid
                     , const dim3       & block
                     , const int          shmem
-                    , const cudaStream_t stream = 0 )
+                    , const CudaInternal* cuda_instance )
   {
     if ( (grid.x != 0) && ( ( block.x * block.y * block.z ) != 0 ) ) {
-
-      if ( sizeof( Kokkos::Impl::CudaTraits::ConstantGlobalBufferType ) <
-           sizeof( DriverType ) ) {
-        Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: Functor is too large") );
-      }
 
       if ( CudaTraits::SharedMemoryCapacity < shmem ) {
         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
@@ -393,9 +410,11 @@ struct CudaParallelLaunch< DriverType
 
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
 
+      printf("invoke functor on device: %ld \n", sizeof(driver));
+
       // Invoke the driver function on the device
       cuda_parallel_launch_local_memory< DriverType >
-          <<< grid , block , shmem , stream >>>( driver );
+          <<< grid , block , shmem , cuda_instance->m_stream >>>( driver );
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       CUDA_SAFE_CALL( cudaGetLastError() );
@@ -405,6 +424,101 @@ struct CudaParallelLaunch< DriverType
   }
 };
 
+template < class DriverType
+         , unsigned int MaxThreadsPerBlock
+         , unsigned int MinBlocksPerSM>
+struct CudaParallelLaunch< DriverType
+                         , Kokkos::LaunchBounds< MaxThreadsPerBlock
+                                               , MinBlocksPerSM>
+                         , Experimental::CudaLaunchMechanism::GlobalMemory >
+{
+  inline
+  CudaParallelLaunch( const DriverType & driver
+                    , const dim3       & grid
+                    , const dim3       & block
+                    , const int          shmem
+                    , CudaInternal* cuda_instance )
+  {
+    if ( (grid.x != 0) && ( ( block.x * block.y * block.z ) != 0 ) ) {
+
+      if ( CudaTraits::SharedMemoryCapacity < shmem ) {
+        Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
+      }
+      #ifndef KOKKOS_ARCH_KEPLER
+      // On Kepler the L1 has no benefit since it doesn't cache reads
+      else {
+        CUDA_SAFE_CALL(
+          cudaFuncSetCacheConfig
+            ( cuda_parallel_launch_global_memory
+                < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >
+            , ( shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1 )
+            ) );
+      }
+      #endif
+
+      KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
+
+      DriverType* driver_ptr = NULL;
+      driver_ptr = reinterpret_cast<DriverType*>(cuda_instance->scratch_functor(sizeof(DriverType)));
+      cudaMemcpyAsync(driver_ptr,&driver, sizeof(DriverType), cudaMemcpyDefault, cuda_instance->m_stream);
+
+      // Invoke the driver function on the device
+      cuda_parallel_launch_global_memory
+        < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >
+          <<< grid , block , shmem , cuda_instance->m_stream >>>( driver_ptr );
+
+#if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
+      CUDA_SAFE_CALL( cudaGetLastError() );
+      Kokkos::Cuda::fence();
+#endif
+    }
+  }
+};
+
+template < class DriverType>
+struct CudaParallelLaunch< DriverType
+                         , Kokkos::LaunchBounds<0,0>
+                         , Experimental::CudaLaunchMechanism::GlobalMemory >
+{
+  inline
+  CudaParallelLaunch( const DriverType & driver
+                    , const dim3       & grid
+                    , const dim3       & block
+                    , const int          shmem
+                    , CudaInternal* cuda_instance )
+  {
+    if ( (grid.x != 0) && ( ( block.x * block.y * block.z ) != 0 ) ) {
+
+      if ( CudaTraits::SharedMemoryCapacity < shmem ) {
+        Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
+      }
+      #ifndef KOKKOS_ARCH_KEPLER
+      // On Kepler the L1 has no benefit since it doesn't cache reads
+      else {
+        CUDA_SAFE_CALL(
+          cudaFuncSetCacheConfig
+            ( cuda_parallel_launch_global_memory< DriverType >
+            , ( shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1 )
+            ) );
+      }
+      #endif
+
+      KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
+
+      DriverType* driver_ptr = NULL;
+      driver_ptr = reinterpret_cast<DriverType*>(cuda_instance->scratch_functor(sizeof(DriverType)));
+      cudaMemcpyAsync(driver_ptr,&driver, sizeof(DriverType), cudaMemcpyDefault, cuda_instance->m_stream);
+
+      cuda_parallel_launch_global_memory< DriverType >
+          <<< grid , block , shmem , cuda_instance->m_stream >>>( driver_ptr );
+
+#if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
+      CUDA_SAFE_CALL( cudaGetLastError() );
+      Kokkos::Cuda::fence();
+#endif
+    }
+  }
+};
 //----------------------------------------------------------------------------
 
 } // namespace Impl

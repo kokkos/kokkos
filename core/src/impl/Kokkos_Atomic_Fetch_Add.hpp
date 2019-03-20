@@ -90,10 +90,12 @@ __inline__ __device__
 T atomic_fetch_add( volatile T * const dest ,
   typename Kokkos::Impl::enable_if< sizeof(T) == sizeof(int) , const T >::type val )
 {
-  union U {
+  // to work around a bug in the clang cuda compiler, the name here needs to be
+  // different from the one internal to the other overloads
+  union U1 {
     int i ;
     T t ;
-    KOKKOS_INLINE_FUNCTION U() {};
+    KOKKOS_INLINE_FUNCTION U1() {};
   } assume , oldval , newval ;
 
   oldval.t = *dest ;
@@ -113,10 +115,12 @@ T atomic_fetch_add( volatile T * const dest ,
   typename Kokkos::Impl::enable_if< sizeof(T) != sizeof(int) &&
                                     sizeof(T) == sizeof(unsigned long long int) , const T >::type val )
 {
-  union U {
+  // to work around a bug in the clang cuda compiler, the name here needs to be
+  // different from the one internal to the other overloads
+  union U2 {
     unsigned long long int i ;
     T t ;
-    KOKKOS_INLINE_FUNCTION U() {};
+    KOKKOS_INLINE_FUNCTION U2() {};
   } assume , oldval , newval ;
 
   oldval.t = *dest ;
@@ -147,7 +151,7 @@ T atomic_fetch_add( volatile T * const dest ,
   unsigned int mask = KOKKOS_IMPL_CUDA_ACTIVEMASK;
   unsigned int active = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,1);
 #else
-  unsigned int active = KOKKOS_IMPL_CUDA_BALLOT_MASK(1);
+  unsigned int active = KOKKOS_IMPL_CUDA_BALLOT(1);
 #endif
   unsigned int done_active = 0;
   while (active!=done_active) {
@@ -164,7 +168,7 @@ T atomic_fetch_add( volatile T * const dest ,
 #ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
     done_active = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask,done);
 #else
-    done_active = KOKKOS_IMPL_CUDA_BALLOT_MASK(done);
+    done_active = KOKKOS_IMPL_CUDA_BALLOT(done);
 #endif
   }
   return return_val;

@@ -50,15 +50,28 @@
 namespace Kokkos {
 namespace Impl {
 
+template<class T, class Enable = void>
+struct is_resilient_space {
+  enum { value = 0 };
+};
+
+template<class T>
+struct is_resilient_space<T,typename std::enable_if<
+                       std::is_same<typename std::remove_cv<T>::type,
+                                    typename std::remove_cv<typename T::resilient_space>::type>::value
+                      >::type> {
+  enum { value = 1 };
+};
+
 template< class MemorySpace = void , class DestroyFunctor = void >
 class SharedAllocationRecord ;
 
 class SharedAllocationHeader {
-private:
-
+public:
   typedef SharedAllocationRecord<void,void>  Record ;
-
   static constexpr unsigned maximum_label_length = ( 1u << 7 /* 128 */ ) - sizeof(Record*);
+
+private:
 
   template< class , class > friend class SharedAllocationRecord ;
 
@@ -132,11 +145,13 @@ protected:
 private:
   
   static __thread int t_tracking_enabled;
+  static __thread int t_duplicates_enabled;
 
 public:
   virtual std::string get_label() const { return std::string("Unmanaged"); }
 
   static int tracking_enabled() { return t_tracking_enabled; }
+  static int duplicates_enabled() { return t_duplicates_enabled; }
 
   /**\brief A host process thread claims and disables the
    *        shared allocation tracking flag.
@@ -147,6 +162,23 @@ public:
    *        shared allocation tracking flag.
    */
   static void tracking_enable() { t_tracking_enabled = 1; }
+
+  static void duplicates_enable() { t_duplicates_enabled = 1; }
+
+  static void duplicates_disable() { t_duplicates_enabled = 0; }
+
+  template< class MemSpace >
+  inline static
+  typename std::enable_if< ! Kokkos::Impl::is_resilient_space< MemSpace , void >::value >::type
+  track_duplicate_record( SharedAllocationRecord * rec ) {
+  }
+
+  template< class MemSpace >
+  inline static
+  typename std::enable_if< Kokkos::Impl::is_resilient_space< MemSpace , void >::value >::type
+  track_duplicate_record( SharedAllocationRecord * rec ) {
+     MemSpace::track_duplicate ( rec );
+  }
 
   virtual ~SharedAllocationRecord() {}
 
@@ -278,7 +310,7 @@ public:
 template< class MemorySpace >
 class SharedAllocationRecord<MemorySpace,void> : public SharedAllocationRecord< void , void > {};
 
-union SharedAllocationTracker {
+class SharedAllocationTracker {
 private:
 
   typedef SharedAllocationRecord<void,void>  Record ;
@@ -288,6 +320,7 @@ private:
   // The allocation record resides in Host memory space
   uintptr_t m_record_bits ;
   Record  * m_record ;
+  char m_label[SharedAllocationHeader::maximum_label_length];
 
 public:
 
@@ -300,19 +333,29 @@ public:
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED	\
   Record::tracking_enabled()
 
+#define KOKKOS_IMPL_SHARED_ALLOCATION_DUPLICATES_ENABLED	\
+  Record::duplicates_enabled()
+
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT	\
   if ( ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) Record::increment( m_record );
 
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT	\
   if ( ! ( m_record_bits & DO_NOT_DEREF_FLAG ) ) Record::decrement( m_record );
 
+#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_RECORD_INIT \
+      (Record*)( m_record_bits & ~DO_NOT_DEREF_FLAG )
+
 #else
 
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED  0
 
+#define KOKKOS_IMPL_SHARED_ALLOCATION_DUPLICATES_ENABLED  0
+
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT /* */
 
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT /* */
+
+#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_RECORD_INIT nullptr
 
 #endif
 
@@ -322,15 +365,26 @@ public:
   ? rhs.m_record_bits | DO_NOT_DEREF_FLAG \
   : rhs.m_record_bits)
 
+  inline void copy_label(const char * lbl) {
+     for (int i = 0; i < SharedAllocationHeader::maximum_label_length; i++) {
+         m_label[i] = lbl[i];
+         if (m_label[i] == 0) break;
+     }
+  }
+
   /** \brief  Assign a specialized record */
   inline
   void assign_allocated_record_to_uninitialized( Record * arg_record )
     {
       if ( arg_record ) {
         Record::increment( m_record = arg_record );
+        copy_label(arg_record->get_label().c_str());
+        m_record_bits = (KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED) ? (uintptr_t)m_record : (uintptr_t)m_record & DO_NOT_DEREF_FLAG;
       }
       else {
+        m_record = nullptr;
         m_record_bits = DO_NOT_DEREF_FLAG ;
+        copy_label("");
       }
     }
 
@@ -344,13 +398,11 @@ public:
              : static_cast<SharedAllocationRecord<MemorySpace,void>*>(m_record);
     }
 
-  template< class MemorySpace >
-  std::string get_label() const
+  KOKKOS_FORCEINLINE_FUNCTION
+  const char * get_label() const
     {
-      return ( m_record_bits == DO_NOT_DEREF_FLAG )
-             ? std::string()
-             : reinterpret_cast< SharedAllocationRecord< MemorySpace , void > * >( m_record_bits & ~DO_NOT_DEREF_FLAG )->get_label()
-             ;
+      return ( m_label );
+
     }
 
   KOKKOS_INLINE_FUNCTION
@@ -370,12 +422,18 @@ public:
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
+  int tracking_disabled() const {
+    return (int)((m_record_bits & (DO_NOT_DEREF_FLAG))==DO_NOT_DEREF_FLAG) ? 1 : 0;
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION
   void clear()
     {
       // If this is tracking then must decrement
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
       // Reset to default constructed value.
       m_record_bits = DO_NOT_DEREF_FLAG ;
+      copy_label("");
     }
 
   // Copy:
@@ -385,14 +443,21 @@ public:
 
   KOKKOS_FORCEINLINE_FUNCTION
   constexpr SharedAllocationTracker()
-    : m_record_bits( DO_NOT_DEREF_FLAG ) {}
+    : m_record_bits( DO_NOT_DEREF_FLAG ),
+      m_record(nullptr),
+      m_label {}  {
+   }
 
   // Move:
 
   KOKKOS_FORCEINLINE_FUNCTION
   SharedAllocationTracker( SharedAllocationTracker && rhs )
-    : m_record_bits( rhs.m_record_bits )
-    { rhs.m_record_bits = DO_NOT_DEREF_FLAG ; }
+    : m_record_bits( rhs.m_record_bits ),
+      m_record(KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_RECORD_INIT)
+    { 
+       copy_label(rhs.get_label());
+       rhs.m_record_bits = DO_NOT_DEREF_FLAG ; 
+    }
 
   KOKKOS_FORCEINLINE_FUNCTION
   SharedAllocationTracker & operator = ( SharedAllocationTracker && rhs )
@@ -400,6 +465,8 @@ public:
       auto swap_tmp = m_record_bits;
       m_record_bits = rhs.m_record_bits;
       rhs.m_record_bits = swap_tmp;
+      m_record = KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_RECORD_INIT;
+      copy_label(rhs.get_label());
       return *this ;
     }
 
@@ -407,8 +474,10 @@ public:
 
   KOKKOS_FORCEINLINE_FUNCTION
   SharedAllocationTracker( const SharedAllocationTracker & rhs )
-    : m_record_bits( KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, true) )
+    : m_record_bits( KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, true) ),
+      m_record(KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_RECORD_INIT)
     {
+      copy_label(rhs.get_label());
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
     }
 
@@ -416,8 +485,12 @@ public:
   KOKKOS_FORCEINLINE_FUNCTION
   SharedAllocationTracker( const SharedAllocationTracker & rhs
                          , const bool enable_tracking )
-    : m_record_bits( KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, enable_tracking) )
-    { KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT }
+    : m_record_bits( KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, enable_tracking) ),
+      m_record(KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_RECORD_INIT)
+    { 
+       copy_label(rhs.get_label());
+       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT 
+    }
 
   KOKKOS_FORCEINLINE_FUNCTION
   SharedAllocationTracker & operator = ( const SharedAllocationTracker & rhs )
@@ -425,6 +498,8 @@ public:
       // If this is tracking then must decrement
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
       m_record_bits = KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, true);
+      m_record = KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_RECORD_INIT;
+      copy_label(rhs.get_label());
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
       return *this ;
     }
@@ -436,6 +511,8 @@ public:
     {
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
       m_record_bits = KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, enable_tracking);
+      m_record = KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_RECORD_INIT;
+      copy_label(rhs.get_label());
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
     }
 
