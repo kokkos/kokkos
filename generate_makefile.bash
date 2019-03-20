@@ -20,7 +20,7 @@ do
       ;;
     --with-cuda)
       KOKKOS_DEVICES="${KOKKOS_DEVICES},Cuda"
-      CUDA_PATH_NVCC=`which nvcc`
+      CUDA_PATH_NVCC=$(command -v nvcc)
       CUDA_PATH=${CUDA_PATH_NVCC%/bin/nvcc}
       ;;
     # Catch this before '--with-cuda*'
@@ -86,7 +86,7 @@ do
       ;;
     --compiler*)
       COMPILER="${key#*=}"
-      CNUM=`which ${COMPILER} 2>&1 >/dev/null | grep "no ${COMPILER}" | wc -l`
+      CNUM=$(command -v ${COMPILER} 2>&1 >/dev/null | grep "no ${COMPILER}" | wc -l)
       if [ ${CNUM} -gt 0 ]; then
         echo "Invalid compiler by --compiler command: '${COMPILER}'"
         exit
@@ -95,15 +95,15 @@ do
         echo "Empty compiler specified by --compiler command."
         exit
       fi
-      CNUM=`which ${COMPILER} | grep ${COMPILER} | wc -l`
+      CNUM=$(command -v ${COMPILER} | grep ${COMPILER} | wc -l)
       if [ ${CNUM} -eq 0 ]; then
         echo "Invalid compiler by --compiler command: '${COMPILER}'"
         exit
       fi
       # ... valid compiler, ensure absolute path set 
-      WCOMPATH=`which $COMPILER`
-      COMPDIR=`dirname $WCOMPATH`
-      COMPNAME=`basename $WCOMPATH`
+      WCOMPATH=$(command -v $COMPILER)
+      COMPDIR=$(dirname $WCOMPATH)
+      COMPNAME=$(basename $WCOMPATH)
       COMPILER=${COMPDIR}/${COMPNAME}
       ;;
     --with-options*)
