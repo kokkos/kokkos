@@ -166,8 +166,12 @@ public:
 
 namespace Impl {
 
-template <class Trait>
-using _is_memory_traits_prop_archetype = decltype(Trait::flag);
+//template <class Trait>
+//using _is_memory_traits_prop_archetype = decltype(Trait::flag);
+KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(
+  _is_memory_traits_prop_archetype, Trait,
+  decltype(Trait::flag)
+);
 
 template <class Trait>
 using is_memory_traits_property = is_detected_exact<

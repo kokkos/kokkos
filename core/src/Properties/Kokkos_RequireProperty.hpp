@@ -69,16 +69,24 @@ private:
   struct _not_requirable {
     static constexpr auto is_requirable = false;
   };
-  template <class Prop>
-  using _is_requirable_archetype = decltype(Prop::is_requirable);
+  //template <class Prop>
+  //using _is_requirable_archetype = decltype(Prop::is_requirable);
+  KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(
+    _is_requirable_archetype, Prop,
+    decltype(Prop::is_requirable)
+  );
   template <class Prop>
   using is_requirable_t = detected_or_t<
     _not_requirable, _is_requirable_archetype, Prop
   >;
 
-  template <class T, class Prop>
-  using _has_require_property_method_archetype =
-    decltype(declval<T>().require_property(declval<Prop>()));
+  //template <class T, class Prop>
+  //using _has_require_property_method_archetype =
+  //  decltype(declval<T>().require_property(declval<Prop>()));
+  KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
+    _has_require_property_method_archetype, T, Prop,
+    decltype(declval<T>().require_property(declval<Prop>()))
+  );
   template <class T, class Prop>
   using has_require_property_method =
     is_detected<_has_require_property_method_archetype, T, Prop>;
@@ -86,9 +94,13 @@ private:
   using require_property_method_result =
     detected_t<_has_require_property_method_archetype, T, Prop>;
 
-  template <class T, class Prop>
-  using _has_adl_require_property_archetype =
-    decltype(require_property(declval<T>(), declval<Prop>()));
+  //template <class T, class Prop>
+  //using _has_adl_require_property_archetype =
+  //  decltype(require_property(declval<T>(), declval<Prop>()));
+  KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
+    _has_adl_require_property_archetype, T, Prop,
+    decltype(require_property(declval<T>(), declval<Prop>()))
+  );
   template <class T, class Prop>
   using has_adl_require_property =
     is_detected<_has_adl_require_property_archetype, T, Prop>;

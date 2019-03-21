@@ -68,9 +68,13 @@ private:
     _not_preferable, _is_preferable_archetype, Prop
   >;
 
-  template <class T, class Prop>
-  using _has_prefer_property_method_archetype =
-    decltype(declval<T>().prefer_property(declval<Prop>()));
+  //template <class T, class Prop>
+  //using _has_prefer_property_method_archetype =
+  //  decltype(declval<T>().prefer_property(declval<Prop>()));
+  KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
+    _has_prefer_property_method_archetype, T, Prop,
+    decltype(declval<T>().prefer_property(declval<Prop>()))
+  );
   template <class T, class Prop>
   using has_prefer_property_method =
     is_detected<_has_prefer_property_method_archetype, T, Prop>;
@@ -78,9 +82,13 @@ private:
   using prefer_property_method_result =
     detected_t<_has_prefer_property_method_archetype, T, Prop>;
 
-  template <class T, class Prop>
-  using _has_adl_prefer_property_archetype =
-    decltype(prefer_property(declval<T>(), declval<Prop>()));
+  //template <class T, class Prop>
+  //using _has_adl_prefer_property_archetype =
+  //  decltype(prefer_property(declval<T>(), declval<Prop>()));
+  KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
+    _has_adl_prefer_property_archetype, T, Prop,
+    decltype(prefer_property(declval<T>(), declval<Prop>()))
+  );
   template <class T, class Prop>
   using has_adl_prefer_property =
     is_detected<_has_adl_prefer_property_archetype, T, Prop>;

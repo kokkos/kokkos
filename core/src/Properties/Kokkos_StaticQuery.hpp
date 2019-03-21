@@ -75,9 +75,13 @@ namespace StaticQueryImpl {
 
 // TODO explain this with some comments
 
-template <class T, class Property>
-using _nested_static_query_property_archetype =
-  decltype(Property::template static_query_property<T>::value);
+//template <class T, class Property>
+//using _nested_static_query_property_archetype =
+//  decltype(Property::template static_query_property<T>::value);
+KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
+  _nested_static_query_property_archetype, T, Property,
+  decltype(Property::template static_query_property<T>::value)
+);
 template <class T, class Property>
 using has_nested_static_query_property = is_detected<
   _nested_static_query_property_archetype, T, Property
@@ -88,8 +92,12 @@ using nested_static_query_property_type = detected_t<
 >;
 
 
-template <class T, class Property>
-using _static_query_property_archetype = decltype(T::query(declval<Property>()));
+//template <class T, class Property>
+//using _static_query_property_archetype = decltype(T::query(declval<Property>()));
+KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
+  _static_query_property_archetype, T, Property,
+  decltype(T::query(declval<Property>()))
+);
 template <class T, class Property>
 using _has_static_query_property = is_detected<_static_query_property_archetype, T, Property>;
 template <class T, class Property>
@@ -121,17 +129,25 @@ _do_static_query_property_if_valid_constexpr(
   return _do_static_if_valid(prop);
 }
 
-template <class T, class Property>
-using _constexpr_static_query_property_archetype =
-  decltype(_do_static_query_property_if_valid_constexpr(declval<Property>()));
+//template <class T, class Property>
+//using _constexpr_static_query_property_archetype =
+//  decltype(_do_static_query_property_if_valid_constexpr(declval<Property>()));
+KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
+  _constexpr_static_query_property_archetype, T, Property,
+  decltype(_do_static_query_property_if_valid_constexpr(declval<Property>()))
+);
 template <class T, class Property>
 using has_constexpr_static_query_property = is_detected<
   _constexpr_static_query_property_archetype, T, Property
 >;
 
-template <class T, class Property>
-using _static_query_property_archetype =
-  decltype(Kokkos::Experimental::static_query_property<T, Property>::value);
+//template <class T, class Property>
+//using _static_query_property_archetype =
+//  decltype(Kokkos::Experimental::static_query_property<T, Property>::value);
+KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
+  _static_query_property_archetype, T, Property,
+  decltype(Kokkos::Experimental::static_query_property<T, Property>::value)
+);
 
 } // end namespace StaticQueryImpl
 
