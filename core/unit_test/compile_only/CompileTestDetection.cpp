@@ -152,9 +152,6 @@ KOKKOS_STATIC_TEST(
   is_detected_exact<void, _my_method_archetype_2, MyTestCase1>::value
 );
 
-template <class T, class U, class V>
-nonesuch _my_int_method_archetype_fn(long) { return { }; }
-
 
 //KOKKOS_STATIC_TEST_DETECT_EXPRESSION_T(
 //  MyTestCase1,
@@ -172,17 +169,21 @@ struct OuterClass {
 
   // Things like this don't work with intel or cuda (probably a bug in the EDG frontend)
 
+  //template <class T>
+  //using _inner_method_archetype =
+  //decltype(declval<T>().my_method_with_overloads(declval<U>()));
   KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(
     _inner_method_archetype, T,
     decltype(declval<T>().my_method_with_overloads(declval<U>()))
   );
-  //template <class T>
-  //using _inner_method_archetype =
-  //decltype(declval<T>().my_method_with_overloads(declval<U>()));
 
-  template <class T, class UProtected>
-  using _inner_method_reversed_archetype_protected =
-  decltype(declval<UProtected>().my_method_with_overloads(declval<T>()));
+  //template <class T, class UProtected>
+  //using _inner_method_reversed_archetype_protected =
+  //decltype(declval<UProtected>().my_method_with_overloads(declval<T>()));
+  KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
+    _inner_method_reversed_archetype_protected, T, UProtected,
+    decltype(declval<UProtected>().my_method_with_overloads(declval<T>()))
+  );
 
   template <class T>
   using _inner_method_reversed_archetype = detected_t<
@@ -193,27 +194,22 @@ struct OuterClass {
   // Should be the last overload when T = MyClass and U = C
   //   (since the detected argument type should resolve to the second overload,
   //   which returns B&), and not detected otherwise
-  template <class T>
-  using _overload_nested_dependent_type_archetype = decltype(
-  declval<T>().my_method_with_overloads(
-    declval<detected_t<_inner_method_archetype, T>>()
-  )
+  //template <class T>
+  //using _overload_nested_dependent_type_archetype = decltype(
+  //  declval<T>().my_method_with_overloads(
+  //    declval<detected_t<_inner_method_archetype, T>>()
+  //  )
+  //);
+  KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(
+    _overload_nested_dependent_type_archetype, T,
+    decltype(
+      declval<T>().my_method_with_overloads(
+        declval<detected_t<_inner_method_archetype, T>>()
+      )
+    )
   );
 
-  // This is how to do archetypes to workaround the bug in intel and cuda:
-  template <class T, class USafe>
-  using _inner_method_archetype_safe =
-  decltype(declval<T>().my_method_with_overloads(declval<USafe>()));
-
-  template <class T>
-  using inner_method_detected = is_detected<_inner_method_archetype_safe, T, U>;
-
 };
-
-#ifdef TESTS_THAT_DONT_WORK_ON_INTEL_AND_CUDA
-// These don't work on compilers with EDG frontends, even though they should.
-// I've left them here as an example of what not to do and included a workaround
-// below
 
 // Should be the third overload
 KOKKOS_STATIC_TEST(
@@ -233,11 +229,6 @@ KOKKOS_STATIC_TEST(
     OuterClass<C>::template _overload_nested_dependent_type_archetype,
     MyTestCase1
   >::value
-);
-#endif
-
-KOKKOS_STATIC_TEST(
-  OuterClass<int**>::template inner_method_detected<MyTestCase1>::value
 );
 
 // </editor-fold> end Test method detection }}}1
@@ -262,14 +253,30 @@ my_overloaded_free_function(T);
 
 //------------------------------------------------------------------------------
 
-template <class... Ts>
-using _free_function_archetype = decltype(my_free_function(declval<Ts>()...));
+//template <class... Ts>
+//using _free_function_archetype = decltype(my_free_function(declval<Ts>()...));
+KOKKOS_DECLARE_DETECTION_ARCHETYPE(
+  _free_function_archetype,
+  (class... Ts),
+  (Ts...),
+  decltype(my_free_function(declval<Ts>()...))
+);
 
-template <class... Ts>
-using _free_function_overload_archetype = decltype(my_overloaded_free_function(declval<Ts>()...));
+//template <class... Ts>
+//using _free_function_overload_archetype = decltype(my_overloaded_free_function(declval<Ts>()...));
+KOKKOS_DECLARE_DETECTION_ARCHETYPE(
+  _free_function_overload_archetype,
+  (class... Ts),
+  (Ts...),
+  decltype(my_overloaded_free_function(declval<Ts>()...))
+);
 
-template <class T, class U>
-using _free_function_overload_archetype_workaround = decltype(my_overloaded_free_function(declval<T>(), declval<U>()));
+//template <class T, class U>
+//using _free_function_overload_archetype_workaround = decltype(my_overloaded_free_function(declval<T>(), declval<U>()));
+KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
+  _free_function_overload_archetype_workaround, T, U,
+  decltype(my_overloaded_free_function(declval<T>(), declval<U>()))
+);
 
 KOKKOS_STATIC_TEST(
   is_detected_exact<int, _free_function_archetype, A, B, C>::value
@@ -287,18 +294,17 @@ KOKKOS_STATIC_TEST(
   is_detected_exact<C, _free_function_overload_archetype, B>::value
 );
 
-//KOKKOS_STATIC_TEST(
-//  not is_detected_exact<C, _free_function_overload_archetype, int>::value
-//);
+KOKKOS_STATIC_TEST(
+  not is_detected_exact<C, _free_function_overload_archetype, int>::value
+);
 
-//KOKKOS_STATIC_TEST(
-//  not is_detected<_free_function_overload_archetype, B, A>::value
-//);
+KOKKOS_STATIC_TEST(
+  not is_detected<_free_function_overload_archetype, B, A>::value
+);
 
-//KOKKOS_STATIC_TEST(
-//  not is_detected<_free_function_overload_archetype_workaround, B, A>::value
-//);
+KOKKOS_STATIC_TEST(
+  not is_detected<_free_function_overload_archetype_workaround, B, A>::value
+);
 
 // </editor-fold> end Test free function detection }}}1
 //==============================================================================
-#endif
