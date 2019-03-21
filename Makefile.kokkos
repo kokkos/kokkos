@@ -1214,6 +1214,10 @@ ifneq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
   KOKKOS_SRC := $(filter-out $(KOKKOS_PATH)/core/src/impl/Kokkos_Serial_Task.cpp,$(KOKKOS_SRC))
 endif
 
+ifneq ($(KOKKOS_INTERNAL_USE_HDF5), 1)
+  KOKKOS_SRC := $(filter-out $(KOKKOS_PATH)/core/src/impl/Kokkos_HDF5Space.cpp,$(KOKKOS_SRC))
+endif
+
 # With Cygwin functions such as fdopen and fileno are not defined
 # when strict ansi is enabled. strict ansi gets enabled with --std=c++11
 # though. So we hard undefine it here. Not sure if that has any bad side effects

@@ -51,8 +51,6 @@ namespace Test {
 
 namespace {
 
-#ifdef KOKKOS_ENABLE_HDF5
-
 template < typename ExecSpace, typename CpFileSpace >
 struct TestCheckPointView {
    static bool consistency_check(int iter) {
@@ -128,49 +126,56 @@ template < typename ExecSpace, typename CpFileSpace >
 struct TestFSDeepCopy {
 
 
+   typedef typename ExecSpace::memory_space     memory_space;
+
+
    static void test_view_chkpt(std::string file_name, int dim0, int dim1) {
 
-      typedef Kokkos::View<double**,Kokkos::HostSpace> Rank2ViewType;
+      typedef Kokkos::View<double**,memory_space> Rank2ViewType;
       Rank2ViewType view_2;
       view_2 = Rank2ViewType("memory_view_2", dim0, dim1);
-      view_2 = Rank2ViewType("memory_view_3", dim0, dim1);
+      typename Rank2ViewType::HostMirror h_view_2 = Kokkos::create_mirror(view_2); 
 
+      printf("create filespace view\n");
       typedef CpFileSpace cp_file_space_type;
       Kokkos::View<double**,cp_file_space_type> cp_view(file_name, dim0, dim1);
 
-      for (int i = 0; i < dim0; i++) {
+      printf("invoke initializer on device: %s \n", ExecSpace::name());
+      Kokkos::parallel_for (dim0, KOKKOS_LAMBDA (const int i) {
          for (int j = 0; j < dim1; j++) {
             view_2(i,j) = i + j;
          }
-      }
+      });
+      Kokkos::deep_copy( h_view_2, view_2 );
 
+      printf("copy from host space to filespace view\n");
       // host_space to ExecSpace
       // printf("copy to file \n");
-      Kokkos::deep_copy( cp_view, view_2 );
+      Kokkos::deep_copy( cp_view, h_view_2 );
       Kokkos::fence();
 
-      for (int i = 0; i < dim0; i++) {
+      Kokkos::parallel_for (dim0, KOKKOS_LAMBDA (const int i) {
          for (int j = 0; j < dim1; j++) {
              view_2(i,j) = 0;
          }
-      }
+      });
+      Kokkos::deep_copy( h_view_2, view_2 );
 
+      printf("copy from file space to host space view\n");
       // ExecSpace to host_space 
       // printf("copy from file \n");
-      Kokkos::deep_copy( view_2, cp_view );
+      Kokkos::deep_copy( h_view_2, cp_view );
       Kokkos::fence();
 
       for (int i = 0; i < dim0; i++) {
          for (int j = 0; j < dim1; j++) {
-            ASSERT_EQ(view_2(i,j), i + j);
+            ASSERT_EQ(h_view_2(i,j), i + j);
          }
       }
 
    }
 
 };
-
-#endif
 
 
 } // namespace
@@ -194,6 +199,8 @@ TEST_F( TEST_CATEGORY , view_checkpoint_hdf5 ) {
   }
 }
 
+#endif
+
 TEST_F( TEST_CATEGORY , view_checkpoint_sio ) {
   mkdir("./data", 0777);
   TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt("./data//cp_view.bin",10,10);
@@ -211,5 +218,4 @@ TEST_F( TEST_CATEGORY , view_checkpoint_sio ) {
   }
 }
 
-#endif
 } // namespace Test
