@@ -97,8 +97,12 @@ using namespace Kokkos::Impl;
 //==============================================================================
 // <editor-fold desc="Test member type detection"> {{{1
 
-template <class T>
-using _my_member_type_archetype = typename T::my_member_type;
+//template <class T>
+//using _my_member_type_archetype = typename T::my_member_type;
+KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(
+  _my_member_type_archetype, T,
+  typename T::my_member_type
+);
 
 KOKKOS_STATIC_TEST(
   is_detected<_my_member_type_archetype, MyTestCase1>::value
@@ -118,12 +122,19 @@ KOKKOS_STATIC_TEST(
 //==============================================================================
 // <editor-fold desc="Test method detection"> {{{1
 
+//template <class T>
+//using _my_method_archetype_1 = decltype(T{}.my_method());
+KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(
+  _my_method_archetype_1, T,
+  decltype(T{}.my_method())
+);
 
-template <class T>
-using _my_method_archetype_1 = decltype(T{}.my_method());
-
-template <class T>
-using _my_method_archetype_2 = decltype(declval<T>().my_method());
+//template <class T>
+//using _my_method_archetype_2 = decltype(declval<T>().my_method());
+KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(
+  _my_method_archetype_2, T,
+  decltype(declval<T>().my_method())
+);
 
 KOKKOS_STATIC_TEST(
   is_detected<_my_method_archetype_1, MyTestCase1>::value
@@ -141,79 +152,19 @@ KOKKOS_STATIC_TEST(
   is_detected_exact<void, _my_method_archetype_2, MyTestCase1>::value
 );
 
-template <class T>
-struct identity {
-  using type = T;
-};
+template <class T, class U, class V>
+nonesuch _my_int_method_archetype_fn(long) { return { }; }
 
-template <template <class...> class Op, class... Ts>
-auto _my_func_detector(int)
-  -> identity<Op<Ts...>>
-{ return { }; }
 
-template <template <class...> class Op, class... Ts>
-nonesuch _my_func_detector(long) { return { }; }
-
-template <template <class...> class Op, class... Ts>
-struct _detector_workaround {
-  using type = decltype(_my_func_detector<Op, Ts...>(0));
-  static constexpr auto value = not std::is_same<nonesuch, type>::value;
-};
-
-//template <class T, class U, class V>
-//nonesuch _my_int_method_archetype_fn(long) { return { }; }
-
-//template <class T, class U, class V>
-//auto _my_int_method_archetype_fn(int)
-//  -> decltype(declval<T>().my_int_method(declval<U>(), declval<V>()))
-//{ }
+//KOKKOS_STATIC_TEST_DETECT_EXPRESSION_T(
+//  MyTestCase1,
+//  declval<T>().my_method_with_overloads(declval<C>())
+//);
 //
-//template <class T, class U, class V>
-//nonesuch _my_int_method_archetype_fn(long) { return { }; }
-//
-//template <class T, class V, class U>
-//using _my_int_method_archetype = decltype(_my_int_method_archetype_fn<T, U, V>(0));
-//
-//template <template <class...> class Op, class... Ts>
-//struct _func_detector {
-//  using type = Op<Ts...>;
-//  static constexpr auto value = !std::is_same<type, nonesuch>::value;
-//};
-//
-template <template <class...> class Op, class... Ts>
-using is_detected_workaround = _detector_workaround<Op, Ts...>;
-
-//template <class T, class V, class U>
-//using _my_int_method_arch = decltype(declval<T>().my_int_method(declval<U>(), declval<V>()));
-template <class T, class V, class U>
-using _my_int_method_arch = decltype(T{}.my_int_method(U{}, V{}));
-
-KOKKOS_STATIC_TEST(
-  is_detected_workaround<_my_int_method_arch, MyTestCase1, double, float>::value
-);
-
-KOKKOS_STATIC_TEST(
-  not is_detected_workaround<_my_int_method_arch, MyTestCase1, A, B>::value
-);
-
-
-KOKKOS_STATIC_TEST(
-  is_detected<_my_int_method_arch, MyTestCase1, double, float>::value
-);
-
-KOKKOS_STATIC_TEST(
-  not is_detected<_my_int_method_arch, MyTestCase1, A, B>::value
-);
-
-KOKKOS_STATIC_TEST_DETECT_EXPRESSION_T(
-  MyTestCase1,
-  declval<T>().my_method_with_overloads(declval<C>())
-);
-
-KOKKOS_STATIC_TEST_DETECT_EXPRESSION_T_U(
-  MyTestCase1, C,
-  declval<T>().my_method_with_overloads(declval<U>())
-);
+//KOKKOS_STATIC_TEST_DETECT_EXPRESSION_T_U(
+//  MyTestCase1, C,
+//  declval<T>().my_method_with_overloads(declval<U>())
+//);
 
 
 template <class U>
@@ -221,9 +172,13 @@ struct OuterClass {
 
   // Things like this don't work with intel or cuda (probably a bug in the EDG frontend)
 
-  template <class T>
-  using _inner_method_archetype =
-  decltype(declval<T>().my_method_with_overloads(declval<U>()));
+  KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(
+    _inner_method_archetype, T,
+    decltype(declval<T>().my_method_with_overloads(declval<U>()))
+  );
+  //template <class T>
+  //using _inner_method_archetype =
+  //decltype(declval<T>().my_method_with_overloads(declval<U>()));
 
   template <class T, class UProtected>
   using _inner_method_reversed_archetype_protected =
@@ -346,3 +301,4 @@ KOKKOS_STATIC_TEST(
 
 // </editor-fold> end Test free function detection }}}1
 //==============================================================================
+#endif
