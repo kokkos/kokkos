@@ -2366,17 +2366,17 @@ struct ViewDataHandle< Traits ,
   typedef Kokkos::Impl::SharedAllocationTracker  track_type  ;
 
   KOKKOS_INLINE_FUNCTION
-  static handle_type assign( value_type * arg_data_ptr
+  static value_type* assign( value_type * arg_data_ptr
                            , track_type const & /*arg_tracker*/ )
   {
-    return handle_type( arg_data_ptr );
+    return (value_type*)( arg_data_ptr );
   }
 
   KOKKOS_INLINE_FUNCTION
-  static handle_type assign( handle_type const arg_data_ptr
+  static value_type* assign( handle_type const arg_data_ptr
                            , size_t offset )
   {
-    return handle_type( arg_data_ptr + offset );
+    return (value_type*)( arg_data_ptr + offset );
   }
 };
 
@@ -2446,23 +2446,23 @@ struct ViewDataHandle< Traits ,
   typedef Kokkos::Impl::SharedAllocationTracker  track_type  ;
 
   KOKKOS_INLINE_FUNCTION
-  static handle_type assign( value_type * arg_data_ptr
+  static value_type* assign( value_type * arg_data_ptr
                            , track_type const & /*arg_tracker*/ )
   {
     if ( reinterpret_cast<uintptr_t>(arg_data_ptr) % Impl::MEMORY_ALIGNMENT ) {
       Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
     }
-    return handle_type( arg_data_ptr );
+    return (value_type*)( arg_data_ptr );
   }
 
   KOKKOS_INLINE_FUNCTION
-  static handle_type assign( handle_type const arg_data_ptr
+  static value_type* assign( handle_type const arg_data_ptr
                            , size_t offset )
   {
     if ( reinterpret_cast<uintptr_t>(arg_data_ptr+offset) % Impl::MEMORY_ALIGNMENT ) {
       Kokkos::abort("Assigning NonAligned View or Pointer to Kokkos::View with Aligned attribute");
     }
-    return handle_type( arg_data_ptr + offset );
+    return (value_type*)( arg_data_ptr + offset );
   }
 };
 }} // namespace Kokkos::Impl

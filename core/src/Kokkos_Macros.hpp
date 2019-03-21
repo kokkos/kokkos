@@ -391,6 +391,8 @@
     #define KOKKOS_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
   #endif
 
+  #define KOKKOS_RESTRICT __restrict__
+
   #if !defined( KOKKOS_ENABLE_ASM ) && !defined( __PGIC__ ) && \
       ( defined( __amd64 ) || defined( __amd64__ ) || \
         defined( __x86_64 ) || defined( __x86_64__ ) || \
