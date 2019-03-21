@@ -1,7 +1,9 @@
+##KOKKOS_DEVICES=Cuda
+##KOKKOS_CUDA_OPTIONS=enable_lambda
+##KOKKOS_ARCH = "Volta70"
 KOKKOS_DEVICES=OpenMP
 KOKKOS_CUDA_OPTIONS=enable_lambda
 KOKKOS_ARCH = ""
-KOKKOS_OPTIONS="enable_hdf5"
 
 MAKEFILE_PATH := $(subst Makefile,,$(abspath $(lastword $(MAKEFILE_LIST))))
 
@@ -19,14 +21,15 @@ default: build
 	echo "Start Build"
 
 ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
-CXX = ${KOKKOS_PATH}/bin/nvcc_wrapper
+##CXX = ${KOKKOS_PATH}/bin/nvcc_wrapper
+CXX = clang++
 EXE = test.cuda
 else
 CXX = g++
 EXE = test.host
 endif
 
-CXXFLAGS ?= -O3 -g
+CXXFLAGS ?= -O3 -g 
 override CXXFLAGS += -I$(MAKEFILE_PATH) -I$(KOKKOS_PATH)/core/unit_test -I$(KOKKOS_PATH)/tpls/gtest -DTESTFILE=$(TESTFILE)
 #SRC += $(KOKKOS_PATH)/tpls/gtest/gtest/gtest-all.cc
 
@@ -35,7 +38,7 @@ LINK = ${CXX}
 LINKFLAGS =
 
 OBJ = $(notdir $(SRC:.cpp=.o))
-LIB =
+LIB = -lpthread
 
 include $(KOKKOS_PATH)/Makefile.kokkos
 
