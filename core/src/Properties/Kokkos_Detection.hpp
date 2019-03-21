@@ -41,10 +41,21 @@
 //@HEADER
 */
 
+/**
+ *  Kokkos detection idiom implementation.
+ *
+ *  @todo change the macros in this file over to real detection idiom
+ *        once we drop support for compilers that don't work with it
+ */
+
 #ifndef KOKKOS_PROPERTIES_DETECTION_HPP
 #define KOKKOS_PROPERTIES_DETECTION_HPP
 
 #include <Kokkos_Core_fwd.hpp>
+
+// TODO move this to somewhere more general
+#define KOKKOS_PP_REMOVE_PARENS_IMPL(...) __VA_ARGS__
+#define KOKKOS_PP_REMOVE_PARENS(...) KOKKOS_PP_REMOVE_PARENS_IMPL __VA_ARGS__
 
 namespace Kokkos {
 namespace Impl {
@@ -58,34 +69,21 @@ KOKKOS_FUNCTION
 T _declval(long) noexcept;
 
 template <class T>
+using void_t = void;
+
+template <class T>
 KOKKOS_FUNCTION
 decltype(Kokkos::Impl::_declval<T>(0))
 declval() noexcept;
 
-// A void_t implementation that works with gcc-4.9 (workaround for bug 64395, also in EDG)
-// From: http://stackoverflow.com/questions/35753920/why-does-the-void-t-detection-idiom-not-work-with-gcc-4-9
-namespace _void_t_impl {
-
-template <class U>
-struct make_void {
-  template <class V>
-  struct _make_void_impl {
-    using type = void;
-  };
-  using type = typename _make_void_impl<U>::type;
+struct nonesuch {
+  nonesuch() = delete;
+  ~nonesuch() = delete;
+  nonesuch(nonesuch const&) = delete;
+  void operator=(nonesuch const&) = delete;
 };
 
-} // end namepace _void_t_impl
-
-template <class T>
-using void_t = typename _void_t_impl::make_void<T>::type;
-
-/*
-template <class>
-using void_t = void;
- */
-
-// Large pieces taken or adapted from http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4436.pdf
+#ifdef KOKKOS_COMPILER_SUPPORTS_DETECTION_IDIOM
 
 // primary template handles all types not supporting the archetypal Op
 template <
@@ -110,12 +108,68 @@ struct _detector<Default, void_t<Op<Args...>>, Op, Args...> {
   using type = Op<Args...>;
 };
 
-struct nonesuch {
-  nonesuch() = delete;
-  ~nonesuch() = delete;
-  nonesuch(nonesuch const&) = delete;
-  void operator=(nonesuch const&) = delete;
+#define KOKKOS_DECLARE_DETECTION_ARCHETYPE(name, params, params_no_intro, ...) \
+  template <KOKKOS_PP_REMOVE_PARENS(params)>
+  using name = __VA_ARGS__
+
+
+#else
+
+namespace _detection_impl {
+
+template <
+  class Default,
+  template <class...> class WorkaroundImpl,
+  class... Args
+>
+struct detector_workaround_impl
+{
+  // This could be done with inheritance, but let's just do it this way
+  // to preempt some mistakes that could be made involving that and that
+  // wouldn't work with the "real" detection idiom
+  using _impl = WorkaroundImpl<Default, void, Args...>;
+  using type = typename _impl::type;
+  static constexpr auto value = _impl::value;
 };
+
+} // end namespace _detection_impl
+
+#define KOKKOS_DECLARE_DETECTION_ARCHETYPE(name, params, params_no_intro, ...) \
+  template <class Default, class _k__always_void, KOKKOS_PP_REMOVE_PARENS(params)> \
+  struct name##__impl { \
+    static constexpr bool value = false; \
+    using type = Default; \
+  }; \
+  template <class Default, KOKKOS_PP_REMOVE_PARENS(params)> \
+  struct name##__impl< \
+    Default, ::Kokkos::Impl::void_t<__VA_ARGS__>, \
+    KOKKOS_PP_REMOVE_PARENS(params_no_intro) \
+  > \
+  { \
+    static constexpr bool value = true; \
+    using type = __VA_ARGS__; \
+  }; \
+  template <class Default, class _always_void, KOKKOS_PP_REMOVE_PARENS(params)> \
+  using name = name##__impl<Default, _always_void, KOKKOS_PP_REMOVE_PARENS(params_no_intro)>
+
+template <
+  class Default,
+  class _always_void,
+  template <class...> class Op,
+  class... Args
+>
+using _detector = _detection_impl::detector_workaround_impl<
+  Default, Op, Args...
+>;
+
+#endif
+
+#define KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(name, param, ...) \
+  KOKKOS_DECLARE_DETECTION_ARCHETYPE(name, (class param), (param), __VA_ARGS__)
+
+#define KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(name, param1, param2, ...) \
+  KOKKOS_DECLARE_DETECTION_ARCHETYPE(name, (class param1, class param2), (param1, param2), __VA_ARGS__)
+
 
 template <template <class...> class Op, class... Args>
 using is_detected = _detector<nonesuch, void, Op, Args...>;
@@ -134,7 +188,6 @@ using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
 
 template <class To, template <class...> class Op, class... Args>
 using is_detected_convertible = std::is_convertible<detected_t<Op, Args...>, To>;
-
 } // end namespace Impl
 } // end namespace Kokkos
 
