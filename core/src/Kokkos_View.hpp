@@ -1989,9 +1989,9 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   View( const View & rhs ) : m_track( rhs.m_track, traits::is_managed ), m_map( rhs.m_map ) {
-   printf("exact copy (%s): tracking disabled = %d \n", m_track.get_label(), m_track.tracking_disabled());
-   fflush(stdout);
 
+// This shouldn't and can't be run in cuda device 
+#if !defined(__CUDA_ARCH__)
    typedef typename traits::device_type::memory_space specialized_memory_space;
    if ( Kokkos::Impl::is_resilient_space< specialized_memory_space >::value &&
         Kokkos::Impl::SharedAllocationRecord<void,void>::duplicates_enabled() ) {
@@ -2003,6 +2003,8 @@ public:
        m_track.assign_allocated_record_to_uninitialized( record );
        printf("after duplicate record assigned to tracker: %d \n", m_track.tracking_disabled());
      }
+#endif
+
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -2079,9 +2081,11 @@ public:
   int use_count() const
     { return m_track.use_count(); }
 
-  KOKKOS_INLINE_FUNCTION
+  inline 
   const std::string label() const
-    { return (std::string)m_track.get_label(); }
+    { 
+       return (std::string)m_track.get_label(); 
+    }
 
   //----------------------------------------
   // Allocation according to allocation properties and array layout

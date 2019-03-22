@@ -437,7 +437,7 @@ public:
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
       // Reset to default constructed value.
       m_record_bits = DO_NOT_DEREF_FLAG ;
-      copy_label("");
+      m_label[0] = 0;
     }
 
   // Copy:
@@ -459,7 +459,11 @@ public:
     : m_record_bits( rhs.m_record_bits ),
       m_record(KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_RECORD_INIT)
     { 
+#if defined(__CUDA_ARCH__)
+       m_label[0] = 0;
+#else
        copy_label(rhs.get_label());
+#endif
        rhs.m_record_bits |= DO_NOT_DEREF_FLAG ; 
     }
 
@@ -473,7 +477,11 @@ public:
       m_record = rhs.m_record;
       rhs.m_record = swap_rec;
       rhs.m_record_bits |= DO_NOT_DEREF_FLAG ; 
-      copy_label(rhs.get_label());
+#if defined(__CUDA_ARCH__)
+       m_label[0] = 0;
+#else
+       copy_label(rhs.get_label());
+#endif
       return *this ;
     }
 
@@ -484,7 +492,11 @@ public:
     : m_record_bits( KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, true) ),
       m_record(KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_RECORD_INIT)
     {
-      copy_label(rhs.get_label());
+#if defined(__CUDA_ARCH__)
+       m_label[0] = 0;
+#else
+       copy_label(rhs.get_label());
+#endif
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
     }
 
@@ -495,7 +507,11 @@ public:
     : m_record_bits( KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, enable_tracking) ),
       m_record(KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_RECORD_INIT)
     { 
+#if defined(__CUDA_ARCH__)
+       m_label[0] = 0;
+#else
        copy_label(rhs.get_label());
+#endif
        KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT 
     }
 
@@ -506,7 +522,11 @@ public:
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
       m_record_bits = KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, true);
       m_record = KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_RECORD_INIT;
-      copy_label(rhs.get_label());
+#if defined(__CUDA_ARCH__)
+       m_label[0] = 0;
+#else
+       copy_label(rhs.get_label());
+#endif
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
       return *this ;
     }
@@ -519,7 +539,11 @@ public:
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
       m_record_bits = KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, enable_tracking);
       m_record = KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_RECORD_INIT;
-      copy_label(rhs.get_label());
+#if defined(__CUDA_ARCH__)
+       m_label[0] = 0;
+#else
+       copy_label(rhs.get_label());
+#endif
       KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
     }
 
