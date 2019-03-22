@@ -52,6 +52,7 @@ namespace Experimental {
 
        file_path = filepath;
  //       printf("Initializing StdFile properties: %s - %d\n", file_path.c_str(), data_size );
+       return 0;
 
    }
 
@@ -127,7 +128,7 @@ namespace Experimental {
       std::string sFullPath = s_default_path;
       size_t pos = path.find("/");
 //      printf("adding file accessor: %s, %s, %d \n", s_default_path.c_str(), path.c_str(), (int)pos );
-      if ( pos >= 0 && pos < path.length() ) {    // only use the default if there is no path info in the path...
+      if ( (int)pos >= 0 && pos < (int)path.length() ) {    // only use the default if there is no path info in the path...
          sFullPath = path;
       } else {
          sFullPath += (std::string)"/";
