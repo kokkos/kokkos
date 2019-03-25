@@ -16,8 +16,8 @@ do
       QTHREADS_PATH="${key#*=}"
       ;;
     --hpx-path*)
-        HPX_PATH="${key#*=}"
-        ;;
+      HPX_PATH="${key#*=}"
+      ;;
     --prefix*)
       PREFIX="${key#*=}"
       ;;
@@ -52,15 +52,15 @@ do
         QTHREADS_PATH="${key#*=}"
       fi
       ;;
+    --with-hpx-options*)
+      KOKKOS_HPX_OPT="${key#*=}"
+      ;;
     --with-hpx*)
       KOKKOS_DEVICES="${KOKKOS_DEVICES},HPX"
       if [ -z "$HPX_PATH" ]; then
         HPX_PATH="${key#*=}"
       fi
       ;;
-    --with-hpx-options*)
-        KOKKOS_HPX_OPT="${key#*=}"
-        ;;
     --with-devices*)
       DEVICES="${key#*=}"
       KOKKOS_DEVICES="${KOKKOS_DEVICES},${DEVICES}"
