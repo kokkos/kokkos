@@ -60,6 +60,33 @@ namespace Impl {
 
 namespace RequirePropertyFnImpl {
 
+//template <class T, class Prop>
+//using _has_require_property_method_archetype =
+//  decltype(declval<T>().require_property(declval<Prop>()));
+KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
+  _has_require_property_method_archetype, T, Prop,
+  decltype(declval<T>().require_property(declval<Prop>()))
+);
+template <class T, class Prop>
+using has_require_property_method =
+  is_detected<_has_require_property_method_archetype, T, Prop>;
+template <class T, class Prop>
+using require_property_method_result =
+  detected_t<_has_require_property_method_archetype, T, Prop>;
+
+//template <class T, class Prop>
+//using _has_adl_require_property_archetype =
+//  decltype(require_property(declval<T>(), declval<Prop>()));
+KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
+  _has_adl_require_property_archetype, T, Prop,
+  decltype(require_property(declval<T>(), declval<Prop>()))
+);
+template <class T, class Prop>
+using has_adl_require_property =
+  is_detected<_has_adl_require_property_archetype, T, Prop>;
+template <class T, class Prop>
+using adl_require_property_result =
+  detected_t<_has_adl_require_property_archetype, T, Prop>;
 
 struct RequirePropertyFn
 {
@@ -79,34 +106,12 @@ private:
   using is_requirable_t = detected_or_t<
     _not_requirable, _is_requirable_archetype, Prop
   >;
+  template <class Prop>
+  using is_requirable = std::integral_constant<
+    bool,
+    is_requirable_t<Prop>::is_requirable
+  >;
 
-  //template <class T, class Prop>
-  //using _has_require_property_method_archetype =
-  //  decltype(declval<T>().require_property(declval<Prop>()));
-  KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
-    _has_require_property_method_archetype, T, Prop,
-    decltype(declval<T>().require_property(declval<Prop>()))
-  );
-  template <class T, class Prop>
-  using has_require_property_method =
-    is_detected<_has_require_property_method_archetype, T, Prop>;
-  template <class T, class Prop>
-  using require_property_method_result =
-    detected_t<_has_require_property_method_archetype, T, Prop>;
-
-  //template <class T, class Prop>
-  //using _has_adl_require_property_archetype =
-  //  decltype(require_property(declval<T>(), declval<Prop>()));
-  KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
-    _has_adl_require_property_archetype, T, Prop,
-    decltype(require_property(declval<T>(), declval<Prop>()))
-  );
-  template <class T, class Prop>
-  using has_adl_require_property =
-    is_detected<_has_adl_require_property_archetype, T, Prop>;
-  template <class T, class Prop>
-  using adl_require_property_result =
-    detected_t<_has_adl_require_property_archetype, T, Prop>;
 
 public:
 
@@ -119,7 +124,7 @@ public:
   KOKKOS_FORCEINLINE_FUNCTION
   constexpr
   typename std::enable_if<
-    is_requirable_t<Prop>::value
+    is_requirable<Prop>::value
       && has_require_property_method<T, Prop>::value,
     require_property_method_result<T, Prop>
   >::type
@@ -131,7 +136,7 @@ public:
   KOKKOS_FORCEINLINE_FUNCTION
   constexpr
   typename std::enable_if<
-    is_requirable_t<Prop>::value
+    is_requirable<Prop>::value
       && has_adl_require_property<T, Prop>::value
       && not has_require_property_method<T, Prop>::value,
     adl_require_property_result<T, Prop>
@@ -166,7 +171,7 @@ public:
       (*this)(
         (*this)(std::forward<T>(obj), std::forward<Prop1>(p1)),
         std::forward<Prop2>(p2),
-        std::forward<Props>(props)
+        std::forward<Props>(props)...
       );
   }
 

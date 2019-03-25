@@ -94,7 +94,7 @@ public:
   //----------------------------------------------------------------------------
 
   KOKKOS_INLINE_FUNCTION
-  constexpr explicit
+  constexpr
   memory_traits_t() noexcept = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -159,6 +159,12 @@ public:
   static constexpr auto aligned = aligned_t { };
 };
 
+namespace {
+
+static constexpr auto memory_traits = memory_traits_t{ };
+
+} // end anonymous namespace
+
 } // end namespace ViewProperties
 } // end namespace Experimental
 
@@ -174,7 +180,7 @@ KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(
 );
 
 template <class Trait>
-using is_memory_traits_property = is_detected_exact<
+using is_memory_traits_property = is_detected_convertible<
   Kokkos::MemoryTraitsFlags, _is_memory_traits_prop_archetype, Trait
 >;
 
@@ -196,7 +202,7 @@ struct MakeAnalogousViewWithTraits<
   typename std::enable_if<is_memory_traits_property<MemTraitsProp>::value>::type
 >
 {
-  using view_type = Kokkos::View<ViewProperties...>;
+  using view_type = Kokkos::View<DataType, ViewProperties...>;
   using type = Kokkos::View<
     DataType,
     typename view_type::array_layout,
@@ -234,7 +240,7 @@ typename std::enable_if<
 >::type::type
 require_property(Kokkos::View<ViewProperties...>&& view, MemoryTraitsProperty)
 {
-  return { std::move(view); };
+  return { std::move(view) };
 }
 
 
