@@ -79,7 +79,7 @@ public:
     TaskQueueSpecialization<scheduler_type> task_queue;
     task_queue.scheduler = &scheduler;
     Kokkos::Impl::dispatch_execute_task(&task_queue);
-    Experimental::HPX::fence();
+    Kokkos::Experimental::HPX::fence();
   }
 
   // Must provide task queue execution function
@@ -88,9 +88,9 @@ public:
     using hpx::lcos::local::counting_semaphore;
     using task_base_type = typename scheduler_type::task_base_type;
 
-    const int num_worker_threads = Experimental::HPX::concurrency();
+    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
 
-    thread_buffer &buffer = Experimental::HPX::impl_get_buffer();
+    thread_buffer &buffer = Kokkos::Experimental::HPX::impl_get_buffer();
     buffer.resize(num_worker_threads, 512);
 
     auto &queue = scheduler->queue();
@@ -102,11 +102,11 @@ public:
         // NOTE: This implementation has been simplified based on the
         // assumption that team_size = 1. The HPX backend currently only
         // supports a team size of 1.
-        std::size_t t = Experimental::HPX::impl_hardware_thread_id();
+        std::size_t t = Kokkos::Experimental::HPX::impl_hardware_thread_id();
 
-        buffer.get(Experimental::HPX::impl_hardware_thread_id());
-        HPXTeamMember member(TeamPolicyInternal<Experimental::HPX>(
-                                 Experimental::HPX(), num_worker_threads, 1),
+        buffer.get(Kokkos::Experimental::HPX::impl_hardware_thread_id());
+        HPXTeamMember member(TeamPolicyInternal<Kokkos::Experimental::HPX>(
+                                 Kokkos::Experimental::HPX(), num_worker_threads, 1),
                              0, t, buffer.get(t), 512);
 
         member_type single_exec(*scheduler, member);
@@ -167,12 +167,12 @@ public:
     using task_base_type = typename scheduler_type::task_base;
     using queue_type = typename scheduler_type::queue_type;
 
-    if (1 == Experimental::HPX::concurrency()) {
+    if (1 == Kokkos::Experimental::HPX::concurrency()) {
       task_base_type *const end = (task_base_type *)task_base_type::EndTag;
       task_base_type *task = end;
 
       HPXTeamMember member(
-          TeamPolicyInternal<Experimental::HPX>(Experimental::HPX(), 1, 1), 0,
+          TeamPolicyInternal<Kokkos::Experimental::HPX>(Kokkos::Experimental::HPX(), 1, 1), 0,
           0, nullptr, 0);
       member_type single_exec(scheduler, member);
 
@@ -204,7 +204,7 @@ public:
     TaskQueueSpecializationConstrained<scheduler_type> task_queue;
     task_queue.scheduler = &scheduler;
     Kokkos::Impl::dispatch_execute_task(&task_queue);
-    Experimental::HPX::fence();
+    Kokkos::Experimental::HPX::fence();
   }
 
   // Must provide task queue execution function
@@ -214,11 +214,11 @@ public:
     using task_base_type = typename scheduler_type::task_base;
     using queue_type = typename scheduler_type::queue_type;
 
-    const int num_worker_threads = Experimental::HPX::concurrency();
+    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
     static task_base_type *const end = (task_base_type *)task_base_type::EndTag;
     constexpr task_base_type *no_more_tasks_sentinel = nullptr;
 
-    thread_buffer &buffer = Experimental::HPX::impl_get_buffer();
+    thread_buffer &buffer = Kokkos::Experimental::HPX::impl_get_buffer();
     buffer.resize(num_worker_threads, 512);
 
     auto &queue = scheduler->queue();
@@ -231,11 +231,11 @@ public:
         // NOTE: This implementation has been simplified based on the assumption
         // that team_size = 1. The HPX backend currently only supports a team
         // size of 1.
-        std::size_t t = Experimental::HPX::impl_hardware_thread_id();
+        std::size_t t = Kokkos::Experimental::HPX::impl_hardware_thread_id();
 
-        buffer.get(Experimental::HPX::impl_hardware_thread_id());
-        HPXTeamMember member(TeamPolicyInternal<Experimental::HPX>(
-                                 Experimental::HPX(), num_worker_threads, 1),
+        buffer.get(Kokkos::Experimental::HPX::impl_hardware_thread_id());
+        HPXTeamMember member(TeamPolicyInternal<Kokkos::Experimental::HPX>(
+                                 Kokkos::Experimental::HPX(), num_worker_threads, 1),
                              0, t, buffer.get(t), 512);
 
         member_type single_exec(*scheduler, member);

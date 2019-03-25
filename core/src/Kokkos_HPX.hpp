@@ -214,7 +214,7 @@ public:
   }
 
   static std::vector<HPX> partition(...) {
-    Kokkos::abort("Experimental::HPX::partition_master: can't partition an HPX "
+    Kokkos::abort("Kokkos::Experimental::HPX::partition_master: can't partition an HPX "
                   "instance\n");
     return std::vector<HPX>();
   }
@@ -223,7 +223,7 @@ public:
   static void partition_master(F const &f, int requested_num_partitions = 0,
                                int requested_partition_size = 0) {
     if (requested_num_partitions > 1) {
-      Kokkos::abort("Experimental::HPX::partition_master: can't partition an "
+      Kokkos::abort("Kokkos::Experimental::HPX::partition_master: can't partition an "
                     "HPX instance\n");
     }
   }
@@ -293,14 +293,14 @@ inline void dispatch_execute_task(Closure *closure) {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
   if (hpx::threads::get_self_ptr() == nullptr) {
     hpx::threads::run_as_hpx_thread([closure]() {
-      hpx::future<void> &fut = Experimental::HPX::impl_get_future();
+      hpx::future<void> &fut = Kokkos::Experimental::HPX::impl_get_future();
       Closure closure_copy = *closure;
       fut = fut.then([closure_copy](hpx::future<void> &&) {
         closure_copy.execute_task();
       });
     });
   } else {
-    hpx::future<void> &fut = Experimental::HPX::impl_get_future();
+    hpx::future<void> &fut = Kokkos::Experimental::HPX::impl_get_future();
     Closure closure_copy = *closure;
     fut = fut.then(
         [closure_copy](hpx::future<void> &&) { closure_copy.execute_task(); });
@@ -525,14 +525,14 @@ private:
         Kokkos::abort("TeamPolicy blocking granularity must be power of two");
     } else {
       int new_chunk_size = 1;
-      while (new_chunk_size * 4 * Experimental::HPX::concurrency() <
+      while (new_chunk_size * 4 * Kokkos::Experimental::HPX::concurrency() <
              m_league_size) {
         new_chunk_size *= 2;
       }
 
       if (new_chunk_size < 128) {
         new_chunk_size = 1;
-        while ((new_chunk_size * Experimental::HPX::concurrency() <
+        while ((new_chunk_size * Kokkos::Experimental::HPX::concurrency() <
                 m_league_size) &&
                (new_chunk_size < 128))
           new_chunk_size *= 2;
@@ -560,7 +560,7 @@ public:
 
   template <class... OtherProperties>
   TeamPolicyInternal(
-      const TeamPolicyInternal<Experimental::HPX, OtherProperties...> &p) {
+      const TeamPolicyInternal<Kokkos::Experimental::HPX, OtherProperties...> &p) {
     m_league_size = p.m_league_size;
     m_team_size = p.m_team_size;
     m_team_scratch_size[0] = p.m_team_scratch_size[0];
@@ -931,12 +931,12 @@ public:
   void execute() const {
     dispatch_execute_task(this);
     if (m_force_synchronous) {
-      Experimental::HPX::fence();
+      Kokkos::Experimental::HPX::fence();
     }
   }
 
   inline void execute_task() const {
-    const int num_worker_threads = Experimental::HPX::concurrency();
+    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
 
     std::size_t value_size =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
@@ -977,7 +977,7 @@ public:
     pointer_type final_value_ptr = final_value.pointer();
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
-    thread_buffer &buffer = Experimental::HPX::impl_get_buffer();
+    thread_buffer &buffer = Kokkos::Experimental::HPX::impl_get_buffer();
     buffer.resize(num_worker_threads, value_size);
 
     for_loop(par, 0, num_worker_threads, [this, &buffer](std::size_t t) {
@@ -996,7 +996,7 @@ public:
       apply([this, &buffer, &sem, i_begin]() {
         reference_type update =
             ValueOps::reference(reinterpret_cast<pointer_type>(
-                buffer.get(Experimental::HPX::impl_hardware_thread_id())));
+                buffer.get(Kokkos::Experimental::HPX::impl_hardware_thread_id())));
         const Member i_end =
             (std::min)(i_begin + m_policy.chunk_size(), m_policy.end());
         execute_functor_range<WorkTag>(update, i_begin, i_end);
@@ -1090,16 +1090,16 @@ public:
   void execute() const {
     dispatch_execute_task(this);
     if (m_force_synchronous) {
-      Experimental::HPX::fence();
+      Kokkos::Experimental::HPX::fence();
     }
   }
 
   inline void execute_task() const {
-    const int num_worker_threads = Experimental::HPX::concurrency();
+    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
     const std::size_t value_size =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
 
-    thread_buffer &buffer = Experimental::HPX::impl_get_buffer();
+    thread_buffer &buffer = Kokkos::Experimental::HPX::impl_get_buffer();
     buffer.resize(num_worker_threads, value_size);
 
     using hpx::parallel::for_loop;
@@ -1117,7 +1117,7 @@ public:
              m_policy.begin(), m_policy.end(), [this, &buffer](const Member i) {
                reference_type update = ValueOps::reference(
                    reinterpret_cast<pointer_type>(buffer.get(
-                       Experimental::HPX::impl_hardware_thread_id())));
+                       Kokkos::Experimental::HPX::impl_hardware_thread_id())));
                iterate_type(m_mdr_policy, m_functor, update)(i);
              });
 
@@ -1133,7 +1133,7 @@ public:
       apply([this, &buffer, &sem, i_begin]() {
         reference_type update =
             ValueOps::reference(reinterpret_cast<pointer_type>(
-                buffer.get(Experimental::HPX::impl_hardware_thread_id())));
+                buffer.get(Kokkos::Experimental::HPX::impl_hardware_thread_id())));
         const Member i_end =
             (std::min)(i_begin + m_policy.chunk_size(), m_policy.end());
 
@@ -1242,11 +1242,11 @@ public:
   void execute() const { dispatch_execute_task(this); }
 
   inline void execute_task() const {
-    const int num_worker_threads = Experimental::HPX::concurrency();
+    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
     const int value_count = Analysis::value_count(m_functor);
     const std::size_t value_size = Analysis::value_size(m_functor);
 
-    thread_buffer &buffer = Experimental::HPX::impl_get_buffer();
+    thread_buffer &buffer = Kokkos::Experimental::HPX::impl_get_buffer();
     buffer.resize(num_worker_threads, 2 * value_size);
 
     using hpx::lcos::local::barrier;
@@ -1350,11 +1350,11 @@ public:
   void execute() const { dispatch_execute_task(this); }
 
   inline void execute_task() const {
-    const int num_worker_threads = Experimental::HPX::concurrency();
+    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
     const int value_count = Analysis::value_count(m_functor);
     const std::size_t value_size = Analysis::value_size(m_functor);
 
-    thread_buffer &buffer = Experimental::HPX::impl_get_buffer();
+    thread_buffer &buffer = Kokkos::Experimental::HPX::impl_get_buffer();
     buffer.resize(num_worker_threads, 2 * value_size);
 
     using hpx::lcos::local::barrier;
@@ -1486,9 +1486,9 @@ public:
   void execute() const { dispatch_execute_task(this); }
 
   inline void execute_task() const {
-    const int num_worker_threads = Experimental::HPX::concurrency();
+    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
 
-    thread_buffer &buffer = Experimental::HPX::impl_get_buffer();
+    thread_buffer &buffer = Kokkos::Experimental::HPX::impl_get_buffer();
     buffer.resize(num_worker_threads, m_shared);
 
 #if KOKKOS_HPX_IMPLEMENTATION == 0
@@ -1500,7 +1500,7 @@ public:
              m_policy.league_size(), [this, &buffer](const int league_rank) {
                execute_functor<WorkTag>(
                    m_functor, m_policy, league_rank,
-                   buffer.get(Experimental::HPX::impl_hardware_thread_id()),
+                   buffer.get(Kokkos::Experimental::HPX::impl_hardware_thread_id()),
                    m_shared);
              });
 
@@ -1518,7 +1518,7 @@ public:
             league_rank_begin + m_policy.chunk_size(), m_policy.league_size());
         execute_functor_range<WorkTag>(
             m_functor, m_policy, league_rank_begin, league_rank_end,
-            buffer.get(Experimental::HPX::impl_hardware_thread_id()), m_shared);
+            buffer.get(Kokkos::Experimental::HPX::impl_hardware_thread_id()), m_shared);
 
         sem.signal(1);
       });
@@ -1629,16 +1629,16 @@ public:
   void execute() const {
     dispatch_execute_task(this);
     if (m_force_synchronous) {
-      Experimental::HPX::fence();
+      Kokkos::Experimental::HPX::fence();
     }
   }
 
   inline void execute_task() const {
-    const int num_worker_threads = Experimental::HPX::concurrency();
+    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
     const std::size_t value_size =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
 
-    thread_buffer &buffer = Experimental::HPX::impl_get_buffer();
+    thread_buffer &buffer = Kokkos::Experimental::HPX::impl_get_buffer();
     buffer.resize(num_worker_threads, value_size + m_shared);
 
     using hpx::parallel::for_loop;
@@ -1656,7 +1656,7 @@ public:
         par.with(static_chunk_size(m_policy.chunk_size())), 0,
         m_policy.league_size(),
         [this, &buffer, value_size](const int league_rank) {
-          std::size_t t = Experimental::HPX::impl_hardware_thread_id();
+          std::size_t t = Kokkos::Experimental::HPX::impl_hardware_thread_id();
           reference_type update = ValueOps::reference(
               reinterpret_cast<pointer_type>(buffer.get(t)));
 
@@ -1675,7 +1675,7 @@ public:
     for (int league_rank_begin = 0; league_rank_begin < m_policy.league_size();
          league_rank_begin += m_policy.chunk_size()) {
       apply([this, &buffer, &sem, league_rank_begin, value_size]() {
-        std::size_t t = Experimental::HPX::impl_hardware_thread_id();
+        std::size_t t = Kokkos::Experimental::HPX::impl_hardware_thread_id();
         reference_type update =
             ValueOps::reference(reinterpret_cast<pointer_type>(buffer.get(t)));
         const int league_rank_end = (std::min)(

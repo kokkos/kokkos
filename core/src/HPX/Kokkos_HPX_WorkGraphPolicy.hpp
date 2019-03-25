@@ -76,11 +76,11 @@ private:
 public:
   void execute() const {
     dispatch_execute_task(this);
-    Experimental::HPX::fence();
+    Kokkos::Experimental::HPX::fence();
   }
 
   void execute_task() const {
-    const int num_worker_threads = Experimental::HPX::concurrency();
+    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
 
     using hpx::apply;
     using hpx::lcos::local::counting_semaphore;
