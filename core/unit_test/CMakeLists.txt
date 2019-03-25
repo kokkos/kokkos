@@ -447,6 +447,16 @@ IF(Kokkos_ENABLE_OpenMP)
       TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
     )
     TRIBITS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_OpenMP_Properties
+      SOURCES
+      UnitTestMainInit.cpp
+      openmp/TestOpenMP_ViewProperties.cpp
+      COMM serial mpi
+      NUM_MPI_PROCS 1
+      FAIL_REGULAR_EXPRESSION "  FAILED  "
+      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    )
+    TRIBITS_ADD_EXECUTABLE_AND_TEST(
       UnitTest_OpenMPInterOp
       SOURCES
         UnitTestMain.cpp
@@ -513,6 +523,7 @@ IF(Kokkos_ENABLE_OpenMP)
         openmp/TestOpenMP_ViewMapping_b.cpp
         openmp/TestOpenMP_ViewMapping_subview.cpp
         openmp/TestOpenMP_ViewOfClass.cpp
+        openmp/TestOpenMP_ViewProperties.cpp
         openmp/TestOpenMP_Crs.cpp
         openmp/TestOpenMP_WorkGraph.cpp
         openmp/TestOpenMP_UniqueToken.cpp
@@ -795,4 +806,9 @@ ENDFUNCTION()
 KOKKOS_ADD_COMPILE_TEST(
   CompileTest_Detection
   SOURCES compile_only/CompileTestDetection.cpp
+)
+KOKKOS_ADD_COMPILE_TEST(
+  CompileTest_Properties
+  SOURCES compile_only/CompileTestProperties.cpp
+  LINK_KOKKOS
 )
