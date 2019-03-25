@@ -163,7 +163,7 @@ namespace Kokkos {
 //#elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS )
 //  typedef Qthreads DefaultExecutionSpace;
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX )
-  typedef Experimental::HPX DefaultExecutionSpace;
+  typedef Kokkos::Experimental::HPX DefaultExecutionSpace;
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL )
   typedef Serial DefaultExecutionSpace;
 #else
@@ -185,7 +185,7 @@ namespace Kokkos {
 //#elif defined( KOKKOS_ENABLE_QTHREADS )
 //  typedef Qthreads DefaultHostExecutionSpace;
 #elif defined( KOKKOS_ENABLE_HPX )
-  typedef Experimental::HPX DefaultHostExecutionSpace;
+  typedef Kokkos::Experimental::HPX DefaultHostExecutionSpace;
 #elif defined( KOKKOS_ENABLE_SERIAL )
   typedef Serial DefaultHostExecutionSpace;
 #else
