@@ -333,8 +333,8 @@ elif [ "$MACHINE" = "mayer" ]; then
   ARM_MODULE_LIST="<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
 
   # Format: (compiler module-list build-list exe-name warning-flag)
-  COMPILERS=("gcc/7.2.0 $BASE_MODULE_LIST $ARM_GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-             "arm/18.4.0 $ARM_MODULE_LIST $ARM_GCC_BUILD_LIST armclang++ $CLANG_WARNING_FLAGS")
+  COMPILERS=("gnu/7.2.0 $BASE_MODULE_LIST $ARM_GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "arm/19.0.0 $ARM_MODULE_LIST $ARM_GCC_BUILD_LIST armclang++ $CLANG_WARNING_FLAGS")
 
   if [ -z "$ARCH_FLAG" ]; then
     ARCH_FLAG="--arch=ARMv8-TX2"
