@@ -68,6 +68,26 @@
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+namespace Experimental {
+     template< class Type, class MemorySpace >
+     static void track_duplicate( Kokkos::Impl::SharedAllocationRecord<void,void> * orig, Kokkos::Impl::SharedAllocationRecord<void,void> * dup ) {
+        Kokkos::Impl::SharedAllocationRecord<MemorySpace,void> * SP = (Kokkos::Impl::SharedAllocationRecord<MemorySpace,void> *)dup;
+        typedef Kokkos::Experimental::SpecDuplicateTracker<Type, typename MemorySpace::execution_space> dt_type;
+        dt_type * dt = nullptr;
+        auto loc = MemorySpace::duplicate_map.find(SP->get_label());
+        if ( loc != MemorySpace::duplicate_map.end() ) {
+           dt = (dt_type*)loc->second;
+           printf("retrieved existing tracking entry from map: %s\n", SP->get_label().c_str());
+        } else {
+           printf("creating new tracking entry in hash map: %s\n", SP->get_label().c_str());
+           dt = new dt_type();
+           dt->data_len = orig->size();
+           dt->original_data = orig->data();
+           MemorySpace::duplicate_map[SP->get_label()] = (Kokkos::Experimental::DuplicateTracker*)dt;
+        }
+        dt->add_dup(dup);
+     }
+}
 namespace Impl {
 
 
@@ -2973,7 +2993,7 @@ public:
 
      printf("track duplicate record: %s \n", label.c_str());
      //Kokkos::ResCudaSpace::template track_duplicate<typename Traits::value_type>(orig_rec, record);
-     mem_space::template track_duplicate<typename Traits::value_type>(orig_rec, record);
+     Kokkos::Experimental::template track_duplicate<typename Traits::value_type, mem_space>(orig_rec, record);
 
      return record ;
    }

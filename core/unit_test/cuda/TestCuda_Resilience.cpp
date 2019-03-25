@@ -43,6 +43,5 @@
 */
 
 #include<cuda/TestCuda_Category.hpp>
-//#include<openmp/TestOpenMP_Category.hpp>
 #include<TestResilience.hpp>
 
