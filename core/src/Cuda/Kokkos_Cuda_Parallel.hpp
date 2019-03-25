@@ -512,7 +512,7 @@ public:
       const dim3 block(  1 , block_size , 1);
       const dim3 grid( std::min( typename Policy::index_type(( nwork + block.y - 1 ) / block.y) , typename Policy::index_type(cuda_internal_maximum_grid_count()) ) , 1 , 1);
 
-      printf("calling parallel launch\n");
+      printf("calling parallel launch: %ld \n", sizeof(*this) );
       CudaParallelLaunch< ParallelFor, LaunchBounds >( *this , grid , block , 0 , m_policy.space().impl_internal_space_instance() );
     }
 

@@ -124,7 +124,7 @@ public:
       }
    }
 
-   virtual void combine_dups() = 0;
+   //virtual void combine_dups() = 0;
 };
 
 template<class Type, class ExecutionSpace>
@@ -134,20 +134,18 @@ public:
    typedef typename std::remove_pointer<nr_type>::type np_type;
    typedef typename std::remove_extent<np_type>::type ne_type;
    typedef typename std::remove_const<ne_type>::type rd_type;
-   typedef MergeFunctor<rd_type> functor_type;
 
-   functor_type cf;
 
    KOKKOS_INLINE_FUNCTION
    SpecDuplicateTracker() : DuplicateTracker( ) { 
    }
    KOKKOS_INLINE_FUNCTION
-   SpecDuplicateTracker(const SpecDuplicateTracker & rhs) : DuplicateTracker( rhs ), cf(rhs.cf) { 
+   SpecDuplicateTracker(const SpecDuplicateTracker & rhs) : DuplicateTracker( rhs )  { 
    }
    
-   virtual void combine_dups();
+   void combine_dups();
 
-   KOKKOS_INLINE_FUNCTION
+/*   KOKKOS_INLINE_FUNCTION
    void operator ()(const int i) const {
       printf("combine dups: %d - %d\n", i, dup_cnt);
       rd_type * ptr = (Type*)original_data;
@@ -173,6 +171,7 @@ public:
       }
       printf("no match found: %i\n", i);
    }
+*/
 
 };
 
@@ -199,11 +198,7 @@ public:
   ResCudaSpace & operator = ( ResCudaSpace && rhs ) = default ;
   ResCudaSpace & operator = ( const ResCudaSpace & rhs ) = default ;
   ~ResCudaSpace() = default ;
-
-  template< class Type >
-  static void track_duplicate( Kokkos::Impl::SharedAllocationRecord<void,void> * orig, Kokkos::Impl::SharedAllocationRecord<void,void> * dup );
   
-  static void combine_duplicates();
   static void clear_duplicates_list();
 
   static std::map<std::string, Kokkos::Experimental::DuplicateTracker * > duplicate_map;
@@ -565,24 +560,6 @@ public:
 } // namespace Impl
 
 
-template< class Type >
-void ResCudaSpace::track_duplicate( Kokkos::Impl::SharedAllocationRecord<void,void> * orig, Kokkos::Impl::SharedAllocationRecord<void,void> * dup ) {
-     Kokkos::Impl::SharedAllocationRecord<ResCudaSpace,void> * SP = (Kokkos::Impl::SharedAllocationRecord<ResCudaSpace,void> *)dup;
-     typedef Kokkos::Experimental::SpecDuplicateTracker<Type, Kokkos::ResCuda> dt_type;
-     dt_type * dt = nullptr;
-     auto loc = duplicate_map.find(SP->get_label());
-     if ( loc != duplicate_map.end() ) {
-        dt = (dt_type*)loc->second;
-        printf("retrieved existing tracking entry from map: %s\n", SP->get_label().c_str());
-     } else {
-        printf("creating new tracking entry in hash map: %s\n", SP->get_label().c_str());
-        dt = new dt_type();
-        dt->data_len = orig->size();
-        dt->original_data = orig->data();
-        duplicate_map[SP->get_label()] = (Kokkos::Experimental::DuplicateTracker*)dt;
-     }
-     dt->add_dup(dup);
-  }
 
 } // namespace Kokkos
 

@@ -108,16 +108,6 @@ ResCudaSpace::ResCudaSpace()
 
 std::map<std::string, Kokkos::Experimental::DuplicateTracker * > ResCudaSpace::duplicate_map;
 
-void ResCudaSpace::combine_duplicates() {
-   std::map<std::string, Kokkos::Experimental::DuplicateTracker* >::iterator it = ResCudaSpace::duplicate_map.begin();
-   while ( it != ResCudaSpace::duplicate_map.end() ) {
-       Kokkos::Experimental::DuplicateTracker * dt = it->second;
-       printf("combine duplicates: %s, %d \n", it->first.c_str(), dt->data_len );
-       dt->combine_dups();
-       it++;
-   }
-}
-
 void ResCudaSpace::clear_duplicates_list() {
    std::map<std::string, Kokkos::Experimental::DuplicateTracker* >::iterator it = ResCudaSpace::duplicate_map.begin();
    while ( it != ResCudaSpace::duplicate_map.end() ) {

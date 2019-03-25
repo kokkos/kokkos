@@ -61,6 +61,20 @@
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+namespace Experimental {
+
+   static void combine_res_duplicates() {
+      std::map<std::string, Kokkos::Experimental::DuplicateTracker* >::iterator it = ResCudaSpace::duplicate_map.begin();
+      while ( it != ResCudaSpace::duplicate_map.end() ) {
+//          Kokkos::Experimental::DuplicateTracker * dt = it->second;
+          Kokkos::Experimental::SpecDuplicateTracker< int*, Kokkos::ResCudaSpace > * dt = 
+                    (Kokkos::Experimental::SpecDuplicateTracker< int*, Kokkos::ResCudaSpace > *)it->second;
+          printf("combine duplicates: %s, %d \n", it->first.c_str(), dt->data_len );
+          dt->combine_dups();
+          it++;
+      }
+   }
+}
 namespace Impl {
 
 template< class FunctorType , class ... Traits >
@@ -109,7 +123,7 @@ public:
         closureIII.execute();
         Kokkos::fence();
         printf("Combining duplicates \n");
-        Kokkos::ResCudaSpace::combine_duplicates();
+        Kokkos::Experimental::combine_res_duplicates();
     }
 
     ParallelFor( const FunctorType  & arg_functor ,
@@ -2034,24 +2048,116 @@ public:
 } // namespace Impl
 
 namespace Experimental {
+
+/*
+template<class DType, class ExecSpace> 
+class CombineFunctor {
+public:
+   typedef Kokkos::View< DType*, ExecSpace, Kokkos::MemoryTraits< Kokkos::Unmanaged > > cf_view_type;
+   typedef MergeFunctor<DType> functor_type;
+   functor_type cf;
+ 
+   cf_view_type orig_view;
+   cf_view_type dup_view[3];
+
+   inline CombineFunctor( DType * orig, DType * d1, DType * d2, DType * d3, size_t len) :
+       orig_view(orig,len), dup_view{}   {
+       dup_view[0] = cf_view_type( d1, len );
+       dup_view[1] = cf_view_type( d2, len );
+       dup_view[2] = cf_view_type( d3, len );
+   }
+
+   KOKKOS_INLINE_FUNCTION 
+   CombineFunctor( const CombineFunctor & rhs ) : orig_view(rhs.orig_view), dup_view{} {
+      for (int i = 0; i < 3; i++)
+          dup_view[i] = rhs.dup_view[i];
+   }
+   
+   KOKKOS_INLINE_FUNCTION
+   void operator ()(const int i) const {
+      printf("combine dups: %d\n", i);
+      for (int j = 0; j < 3; j++) {
+         printf("iterating outer: %d - %d \n", i, j);
+         orig_view(i)  =  dup_view[j](i);
+         printf("first entry: %d, %d\n",j, orig_view(i));
+         int k = j < 2 ? j+1 : 0;
+         for ( int r = 0; r < 2 ; r++) {
+            printf("iterate inner %d, %d, %d \n", i, j, k);
+            if ( cf.compare( dup_view[k](i), orig_view(i) ) )  // just need 2 that are the same
+            {
+               printf("match found: %d - %d\n", i, j);
+               return;
+            }
+            k = k < 2 ? k+1 : 0;
+         }
+      }
+      printf("no match found: %i\n", i);
+   }
+
+};
+*/
+
    template<class Type, class ExecutionSpace>
    void SpecDuplicateTracker<Type, ExecutionSpace>::combine_dups() {
-      typedef SpecDuplicateTracker<Type, ExecutionSpace> func_type;
       typedef Kokkos::RangePolicy<Kokkos::Cuda> exec_policy;
+      //typedef CombineFunctor<rd_type, ExecutionSpace> comb_type;
+      typedef Kokkos::View< rd_type*, ExecutionSpace, Kokkos::MemoryTraits< Kokkos::Unmanaged > > cf_view_type;
+//      typedef MergeFunctor<rd_type> functor_type;
+//      functor_type cf;
       
+      if (dup_cnt != 3) {
+          printf("must have 3 duplicates !!!\n");
+          return;
+      }
       int N = data_len / sizeof(rd_type);
       exec_policy rp (0,N);
+//      comb_type cf( (rd_type*)original_data, (rd_type*)dup_list[0], 
+//                    (rd_type*)dup_list[1], (rd_type*)dup_list[2], N );
 
       printf("invoking parallel combine operation\n");
+
+      cf_view_type orig_view((rd_type*)original_data,N);
+      cf_view_type dup_view1((rd_type*)dup_list[0],N);
+      cf_view_type dup_view2((rd_type*)dup_list[1],N);
+      cf_view_type dup_view3((rd_type*)dup_list[2],N);
+
+      Kokkos::parallel_for( N, KOKKOS_LAMBDA (const int i) {
+         printf("combine dups: %d\n", i);
+         orig_view(i)  =  dup_view1(i);
+//         if ( cf.compare( dup_view2(i), orig_view(i) ) )  // just need 2 that are the same
+         if ( dup_view2(i) == orig_view(i) )  // just need 2 that are the same
+         {
+            printf("match found: %d - 1,2\n", i);
+            return;
+         }
+         orig_view(i)  =  dup_view2(i);
+//         if ( cf.compare( dup_view3(i), orig_view(i) ) )  // just need 2 that are the same
+         if ( dup_view3(i) == orig_view(i) )  // just need 2 that are the same
+         {
+            printf("match found: %d - 1,2\n", i);
+            return;
+         }
+         orig_view(i)  =  dup_view3(i);
+//         if ( cf.compare( dup_view1(i), orig_view(i) ) )  // just need 2 that are the same
+         if ( dup_view1(i) == orig_view(i) )  // just need 2 that are the same
+         {
+            printf("match found: %d - 1,2\n", i);
+            return;
+         }
+         printf("no match found: %i\n", i);
+      });
+
+/*
       Kokkos::fence();
       Kokkos::Impl::shared_allocation_tracking_disable();
-      Kokkos::Impl::ParallelFor< func_type , exec_policy > closure( *this , rp );
+      Kokkos::Impl::ParallelFor< comb_type , exec_policy > closure( cf , rp );
       Kokkos::Impl::shared_allocation_tracking_enable();
-
       closure.execute();
+*/
       Kokkos::fence();
 
    }
+
 }
 
 } // namespace Kokkos
