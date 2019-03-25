@@ -52,7 +52,7 @@ do
         QTHREADS_PATH="${key#*=}"
       fi
       ;;
-    --with-hpx)
+    --with-hpx*)
       KOKKOS_DEVICES="${KOKKOS_DEVICES},HPX"
       if [ -z "$HPX_PATH" ]; then
         HPX_PATH="${key#*=}"
