@@ -111,7 +111,7 @@ std::map<std::string, Kokkos::Experimental::DuplicateTracker * > ResCudaSpace::d
 void ResCudaSpace::clear_duplicates_list() {
    std::map<std::string, Kokkos::Experimental::DuplicateTracker* >::iterator it = ResCudaSpace::duplicate_map.begin();
    while ( it != ResCudaSpace::duplicate_map.end() ) {
-       Kokkos::Experimental::DuplicateTracker* dt = (Kokkos::Experimental::DuplicateTracker*)it->second;
+       Kokkos::Experimental::DuplicateTracker* dt = static_cast<Kokkos::Experimental::DuplicateTracker*>(it->second);
        delete dt;
        duplicate_map.erase(it);
    }

@@ -99,23 +99,23 @@ public:
    int data_len;
    void * dup_list[3];
 
-   virtual ~DuplicateTracker() {}
+   inline __host__ virtual ~DuplicateTracker() {}
 
-   KOKKOS_INLINE_FUNCTION
+   inline __host__
    DuplicateTracker() : original_data(nullptr) { 
       dup_cnt = 0;
       data_len = 0;
       for (int i = 0; i < 3; i++) { dup_list[i] = nullptr; }
    }
    
-   KOKKOS_INLINE_FUNCTION
+   inline __host__
    DuplicateTracker(const DuplicateTracker & dt) : original_data( dt.original_data ) {
       dup_cnt = dt.dup_cnt;
       data_len = dt.data_len;
       for (int i = 0; i < dup_cnt; i++) { dup_list[i] = dt.dup_list[i]; }
    }
 
-   inline 
+   inline __host__
    void add_dup( Kokkos::Impl::SharedAllocationRecord<void,void>* dup ) {
       if (dup_cnt < 3) {
          dup_list[dup_cnt] = (void*)dup->data();
@@ -124,7 +124,9 @@ public:
       }
    }
 
-   //virtual void combine_dups() = 0;
+   inline __host__
+   virtual void combine_dups() {
+   }
 };
 
 template<class Type, class ExecutionSpace>
@@ -135,43 +137,16 @@ public:
    typedef typename std::remove_extent<np_type>::type ne_type;
    typedef typename std::remove_const<ne_type>::type rd_type;
 
-
-   KOKKOS_INLINE_FUNCTION
+   inline __host__
    SpecDuplicateTracker() : DuplicateTracker( ) { 
    }
-   KOKKOS_INLINE_FUNCTION
+
+   inline __host__
    SpecDuplicateTracker(const SpecDuplicateTracker & rhs) : DuplicateTracker( rhs )  { 
    }
    
-   void combine_dups();
-
-/*   KOKKOS_INLINE_FUNCTION
-   void operator ()(const int i) const {
-      printf("combine dups: %d - %d\n", i, dup_cnt);
-      rd_type * ptr = (Type*)original_data;
-      if (dup_cnt < 3) {
-         printf("must have 3 duplicates!!!!");
-         return;
-      }
-      for (int j = 0; j < dup_cnt; j++) {
-         printf("iterating outer: %d - %d \n", i, j);
-         ptr[i]  =  ((rd_type*)dup_list[j])[i];
-         printf("first entry: %d, %d\n",j, (int)ptr[i]);
-         int k = j < dup_cnt-1 ? j+1 : 0;
-         for ( int r = 0; r < 2 ; r++) {
-            printf("iterate inner %d, %d, %d \n", i, j, k);
-            rd_type * dup = ((rd_type*)dup_list[k]);
-            if ( cf.compare( dup[i], ptr[i] ) )  // just need 2 that are the same
-            {
-               printf("match found: %d - %d", i, j);
-               return;
-            }
-            k = k < dup_cnt-1 ? k+1 : 0;
-         }
-      }
-      printf("no match found: %i\n", i);
-   }
-*/
+   inline __host__
+   virtual void combine_dups();
 
 };
 
