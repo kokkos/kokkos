@@ -98,6 +98,7 @@ public:
    int dup_cnt;
    int data_len;
    void * dup_list[3];
+   void * func_ptr;
 
    inline __host__ virtual ~DuplicateTracker() {}
 
@@ -125,7 +126,7 @@ public:
    }
 
    inline __host__
-   virtual void combine_dups() {
+   void combine_dups() {
    }
 };
 
@@ -145,8 +146,9 @@ public:
    SpecDuplicateTracker(const SpecDuplicateTracker & rhs) : DuplicateTracker( rhs )  { 
    }
    
-   inline __host__
-   virtual void combine_dups();
+   __host__
+   void combine_dups();
+
 
 };
 

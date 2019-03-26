@@ -66,9 +66,9 @@ namespace Experimental {
    static void combine_res_duplicates() {
       std::map<std::string, Kokkos::Experimental::DuplicateTracker* >::iterator it = ResCudaSpace::duplicate_map.begin();
       while ( it != ResCudaSpace::duplicate_map.end() ) {
-          Kokkos::Experimental::DuplicateTracker * dt = it->second;
-//          Kokkos::Experimental::SpecDuplicateTracker< int*, Kokkos::ResCudaSpace > * dt = 
-//                    (Kokkos::Experimental::SpecDuplicateTracker< int*, Kokkos::ResCudaSpace > *)it->second;
+//          Kokkos::Experimental::DuplicateTracker * dt = it->second;
+          Kokkos::Experimental::SpecDuplicateTracker< int*, Kokkos::ResCudaSpace > * dt = 
+                    (Kokkos::Experimental::SpecDuplicateTracker< int*, Kokkos::ResCudaSpace > *)it->second;
           printf("combine duplicates: %s, %d \n", it->first.c_str(), dt->data_len );
           dt->combine_dups();
           it++;
@@ -2050,53 +2050,6 @@ public:
 namespace Experimental {
 
 
-template<class DType, class ExecSpace> 
-class CombineFunctor {
-public:
-   typedef Kokkos::View< DType*, ExecSpace, Kokkos::MemoryTraits< Kokkos::Unmanaged > > cf_view_type;
-   typedef MergeFunctor<DType> functor_type;
-   functor_type cf;
- 
-   cf_view_type orig_view;
-   cf_view_type dup_view[3];
-
-   inline __host__ __device__ CombineFunctor( DType * orig, DType * d1, DType * d2, DType * d3, size_t len) :
-       orig_view(orig,len), dup_view{}   {
-       dup_view[0] = cf_view_type( d1, len );
-       dup_view[1] = cf_view_type( d2, len );
-       dup_view[2] = cf_view_type( d3, len );
-   }
-
-   KOKKOS_INLINE_FUNCTION 
-   CombineFunctor( const CombineFunctor & rhs ) : orig_view(rhs.orig_view), dup_view{} {
-      for (int i = 0; i < 3; i++)
-          dup_view[i] = rhs.dup_view[i];
-   }
-   
-   KOKKOS_INLINE_FUNCTION
-   void operator ()(const int i) const {
-      printf("combine dups: %d\n", i);
-      for (int j = 0; j < 3; j++) {
-         printf("iterating outer: %d - %d \n", i, j);
-         orig_view(i)  =  dup_view[j](i);
-         printf("first entry: %d, %d\n",j, orig_view(i));
-         int k = j < 2 ? j+1 : 0;
-         for ( int r = 0; r < 2 ; r++) {
-            printf("iterate inner %d, %d, %d \n", i, j, k);
-            if ( cf.compare( dup_view[k](i), orig_view(i) ) )  // just need 2 that are the same
-            {
-               printf("match found: %d - %d\n", i, j);
-               return;
-            }
-            k = k < 2 ? k+1 : 0;
-         }
-      }
-      printf("no match found: %i\n", i);
-   }
-
-};
-
-
    template<class Type, class ExecutionSpace>
    void SpecDuplicateTracker<Type, ExecutionSpace>::combine_dups() {
       typedef Kokkos::RangePolicy<Kokkos::Cuda> exec_policy;
@@ -2107,17 +2060,36 @@ public:
           return;
       }
       int N = data_len / sizeof(rd_type);
-      exec_policy rp (0,N);
       comb_type cf( static_cast<rd_type*>(original_data), static_cast<rd_type*>(dup_list[0]), 
                     static_cast<rd_type*>(dup_list[1]), static_cast<rd_type*>(dup_list[2]), N );
 
       printf("invoking parallel combine operation\n");
 
+      printf("retrieving the blocksize\n");
+      const int block_size = 1024;
+      const dim3 block(  1 , block_size , 1);
+      const dim3 grid( ( N + block.y - 1 ) / block.y , 1 , 1);
+      Kokkos::Cuda spc;
+
+      void * args[1];
+      args[0] = &cf;
+
+      printf("launching kernel: %ld \n", sizeof(cf) );
+      launch_comb_dup_kernel< comb_type >
+          <<< grid , block , 0 , spc.cuda_stream() >>> ( cf );
+//      cudaError_t cErr = cudaLaunchKernel(func_ptr, grid, block, args, 0, spc.cuda_stream() ); 
+      
+     
+      cudaError_t cErr = cudaGetLastError();
+      printf("return from kernel: %d \n", (int) cErr );
+/*
       Kokkos::fence();
+      exec_policy rp (0,N);
       Kokkos::Impl::shared_allocation_tracking_disable();
       Kokkos::Impl::ParallelFor< comb_type , exec_policy > closure( cf , rp );
       Kokkos::Impl::shared_allocation_tracking_enable();
       closure.execute();
+*/
       Kokkos::fence();
 
    }
