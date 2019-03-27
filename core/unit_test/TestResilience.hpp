@@ -1,6 +1,17 @@
-
 #include <Kokkos_Core.hpp>
 
+//KOKKOS_DECLARE_RESILENCE_OBJECTS(int)
+//
+//
+/*
+namespace Kokkos {
+namespace Experimental {
+   template __global__ static void launch_comb_dup_kernel<CombineFunctor<int, Kokkos::ResCuda> >(
+                                                                        CombineFunctor<int, Kokkos::ResCuda> );
+
+   template<> void * CombineFunctor<int, Kokkos::ResCuda>::s_dup_kernel = (void*)&launch_comb_dup_kernel< CombineFunctor<int, Kokkos::ResCuda> >;
+} }
+*/
 namespace Test {
 
 struct ResSurrogate {
@@ -53,6 +64,8 @@ struct TestResilientRange {
 
   void test_for()
   {
+//     printf("dup kernel ptr start = %08x \n", Kokkos::Experimental::CombineFunctor<int, Kokkos::ResCuda>::s_dup_kernel);
+
 //     view_type m_data ( Kokkos::ViewAllocateWithoutInitializing( "data" ), N );
      view_type m_data ( "data", N );
 //     test_type t_data ( "test", N );

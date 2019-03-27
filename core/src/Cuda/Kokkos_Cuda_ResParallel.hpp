@@ -66,9 +66,9 @@ namespace Experimental {
    static void combine_res_duplicates() {
       std::map<std::string, Kokkos::Experimental::DuplicateTracker* >::iterator it = ResCudaSpace::duplicate_map.begin();
       while ( it != ResCudaSpace::duplicate_map.end() ) {
-//          Kokkos::Experimental::DuplicateTracker * dt = it->second;
-          Kokkos::Experimental::SpecDuplicateTracker< int*, Kokkos::ResCudaSpace > * dt = 
-                    (Kokkos::Experimental::SpecDuplicateTracker< int*, Kokkos::ResCudaSpace > *)it->second;
+          Kokkos::Experimental::DuplicateTracker * dt = it->second;
+//          Kokkos::Experimental::SpecDuplicateTracker< int*, Kokkos::ResCudaSpace > * dt = 
+//                    (Kokkos::Experimental::SpecDuplicateTracker< int*, Kokkos::ResCudaSpace > *)it->second;
           printf("combine duplicates: %s, %d \n", it->first.c_str(), dt->data_len );
           dt->combine_dups();
           it++;
@@ -2053,14 +2053,13 @@ namespace Experimental {
    template<class Type, class ExecutionSpace>
    void SpecDuplicateTracker<Type, ExecutionSpace>::combine_dups() {
       typedef Kokkos::RangePolicy<Kokkos::Cuda> exec_policy;
-      typedef CombineFunctor<rd_type, ExecutionSpace> comb_type;
       
       if (dup_cnt != 3) {
           printf("must have 3 duplicates !!!\n");
           return;
       }
       int N = data_len / sizeof(rd_type);
-      comb_type cf( static_cast<rd_type*>(original_data), static_cast<rd_type*>(dup_list[0]), 
+      m_cf.load_ptrs( static_cast<rd_type*>(original_data), static_cast<rd_type*>(dup_list[0]), 
                     static_cast<rd_type*>(dup_list[1]), static_cast<rd_type*>(dup_list[2]), N );
 
       printf("invoking parallel combine operation\n");
@@ -2072,15 +2071,15 @@ namespace Experimental {
       Kokkos::Cuda spc;
 
       void * args[1];
-      args[0] = &cf;
+      args[0] = &m_cf;
 
-      printf("launching kernel: %ld \n", sizeof(cf) );
-      launch_comb_dup_kernel< comb_type >
-          <<< grid , block , 0 , spc.cuda_stream() >>> ( cf );
-//      cudaError_t cErr = cudaLaunchKernel(func_ptr, grid, block, args, 0, spc.cuda_stream() ); 
+      printf("launching kernel: %ld \n", sizeof(m_cf) );
+//      launch_comb_dup_kernel< comb_type >
+//          <<< grid , block , 0 , spc.cuda_stream() >>> ( cf );
+      cudaError_t cErr = cudaLaunchKernel(func_ptr, grid, block, args, 0, spc.cuda_stream() ); 
       
      
-      cudaError_t cErr = cudaGetLastError();
+//      cudaError_t cErr = cudaGetLastError();
       printf("return from kernel: %d \n", (int) cErr );
 /*
       Kokkos::fence();
