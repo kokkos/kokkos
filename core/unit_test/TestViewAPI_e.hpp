@@ -194,6 +194,7 @@ inline void test_anonymous_space() {
       d_anon_dyn_view(j) += 42;
     }
   });
+  Kokkos::fence();
 #endif
 }
 

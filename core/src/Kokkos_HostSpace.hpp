@@ -308,6 +308,7 @@ struct DeepCopy< HostSpace, HostSpace, ExecutionSpace > {
   DeepCopy( const ExecutionSpace& exec, void * dst, const void * src, size_t n ) {
     exec.fence();
     hostspace_parallel_deepcopy(dst,src,n);
+    exec.fence();
   }
 };
 

@@ -373,6 +373,7 @@ struct test_scatter_view_config
         scatter_view_def persistent_view("persistent", n);
         auto result_view = persistent_view.subview();
         contribute(result_view, persistent_view);
+        Kokkos::fence();
      }
    }
 
