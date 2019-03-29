@@ -505,7 +505,7 @@ enum { sizeScratchGrain = sizeof(ScratchGrain) };
 
 
 Cuda::size_type *
-CudaInternal::scratch_flags( const Cuda::size_type size )
+CudaInternal::scratch_flags( const Cuda::size_type size ) const 
 {
   if ( verify_is_initialized("scratch_flags") && m_scratchFlagsCount * sizeScratchGrain < size ) {
 
@@ -532,7 +532,7 @@ CudaInternal::scratch_flags( const Cuda::size_type size )
 }
 
 Cuda::size_type *
-CudaInternal::scratch_space( const Cuda::size_type size )
+CudaInternal::scratch_space( const Cuda::size_type size ) const 
 {
   if ( verify_is_initialized("scratch_space") && m_scratchSpaceCount * sizeScratchGrain < size ) {
 
@@ -556,7 +556,7 @@ CudaInternal::scratch_space( const Cuda::size_type size )
 }
 
 Cuda::size_type *
-CudaInternal::scratch_unified( const Cuda::size_type size )
+CudaInternal::scratch_unified( const Cuda::size_type size ) const
 {
   if ( verify_is_initialized("scratch_unified") &&
        m_scratchUnifiedSupported && m_scratchUnifiedCount * sizeScratchGrain < size ) {
@@ -581,7 +581,7 @@ CudaInternal::scratch_unified( const Cuda::size_type size )
 }
 
 Cuda::size_type *
-CudaInternal::scratch_functor( const Cuda::size_type size )
+CudaInternal::scratch_functor( const Cuda::size_type size ) const
 {
   if ( verify_is_initialized("scratch_functor") &&
        m_scratchFunctorSize < size ) {
@@ -670,14 +670,14 @@ Cuda::size_type cuda_internal_maximum_grid_count()
 Cuda::size_type cuda_internal_maximum_shared_words()
 { return CudaInternal::singleton().m_maxSharedWords ; }
 
-Cuda::size_type * cuda_internal_scratch_space( const Cuda::size_type size )
-{ return CudaInternal::singleton().scratch_space( size ); }
+Cuda::size_type * cuda_internal_scratch_space( const Cuda& instance, const Cuda::size_type size )
+{ return instance.impl_internal_space_instance()->scratch_space( size ); }
 
-Cuda::size_type * cuda_internal_scratch_flags( const Cuda::size_type size )
-{ return CudaInternal::singleton().scratch_flags( size ); }
+Cuda::size_type * cuda_internal_scratch_flags( const Cuda& instance, const Cuda::size_type size )
+{ return instance.impl_internal_space_instance()->scratch_flags( size ); }
 
-Cuda::size_type * cuda_internal_scratch_unified( const Cuda::size_type size )
-{ return CudaInternal::singleton().scratch_unified( size ); }
+Cuda::size_type * cuda_internal_scratch_unified( const Cuda& instance, const Cuda::size_type size )
+{ return instance.impl_internal_space_instance()->scratch_unified( size ); }
 
 
 } // namespace Impl

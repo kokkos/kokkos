@@ -53,9 +53,9 @@ CudaSpace::size_type cuda_internal_maximum_shared_words();
 
 CudaSpace::size_type cuda_internal_maximum_concurrent_block_count();
 
-CudaSpace::size_type * cuda_internal_scratch_flags( const CudaSpace::size_type size );
-CudaSpace::size_type * cuda_internal_scratch_space( const CudaSpace::size_type size );
-CudaSpace::size_type * cuda_internal_scratch_unified( const CudaSpace::size_type size );
+CudaSpace::size_type * cuda_internal_scratch_flags( const Cuda&, const CudaSpace::size_type size );
+CudaSpace::size_type * cuda_internal_scratch_space( const Cuda&, const CudaSpace::size_type size );
+CudaSpace::size_type * cuda_internal_scratch_unified( const Cuda&, const CudaSpace::size_type size );
 
 } // namespace Impl
 } // namespace Kokkos
@@ -82,16 +82,16 @@ public:
   unsigned    m_maxBlock ;
   unsigned    m_maxSharedWords ;
   uint32_t    m_maxConcurrency ;
-  size_type   m_scratchSpaceCount ;
-  size_type   m_scratchFlagsCount ;
-  size_type   m_scratchUnifiedCount ;
-  size_type   m_scratchFunctorSize ;
+  mutable size_type   m_scratchSpaceCount ;
+  mutable size_type   m_scratchFlagsCount ;
+  mutable size_type   m_scratchUnifiedCount ;
+  mutable size_type   m_scratchFunctorSize ;
   size_type   m_scratchUnifiedSupported ;
   size_type   m_streamCount ;
-  size_type * m_scratchSpace ;
-  size_type * m_scratchFlags ;
-  size_type * m_scratchUnified ;
-  size_type * m_scratchFunctor ;
+  mutable size_type * m_scratchSpace ;
+  mutable size_type * m_scratchFlags ;
+  mutable size_type * m_scratchUnified ;
+  mutable size_type * m_scratchFunctor ;
   uint32_t  * m_scratchConcurrentBitset ;
   cudaStream_t m_stream ;
 
@@ -134,10 +134,10 @@ public:
     , m_stream( 0 )
     {}
 
-  size_type * scratch_space( const size_type size );
-  size_type * scratch_flags( const size_type size );
-  size_type * scratch_unified( const size_type size );
-  size_type * scratch_functor( const size_type size );
+  size_type * scratch_space( const size_type size ) const ;
+  size_type * scratch_flags( const size_type size ) const ;
+  size_type * scratch_unified( const size_type size ) const ;
+  size_type * scratch_functor( const size_type size ) const ;
 };
 
 } // Namespace Impl

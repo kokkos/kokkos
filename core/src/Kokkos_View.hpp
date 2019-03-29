@@ -2019,7 +2019,7 @@ public:
   template< class RT , class ... RP , class Arg0 , class ... Args >
   KOKKOS_INLINE_FUNCTION
   View( const View< RT , RP... > & src_view
-      , const Arg0 & arg0 , Args ... args )
+      , const Arg0 arg0 , Args ... args )
     : m_track( src_view.m_track , traits::is_managed )
     , m_map()
     {
