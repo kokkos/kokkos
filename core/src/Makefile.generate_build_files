@@ -6,6 +6,7 @@
 KOKKOS_MAKEFILE=Makefile.kokkos
 KOKKOS_CMAKEFILE=kokkos_generated_settings.cmake
 KOKKOS_PKGCONFIG=kokkos.pc
+KOKKOS_CMAKECONFIG=kokkos-config.cmake
 
 ifeq ($(KOKKOS_DEBUG),"no")
   KOKKOS_DEBUG_CMAKE = OFF
@@ -50,13 +51,20 @@ $(KOKKOS_PKGCONFIG): $(KOKKOS_PATH)/core/src/$(KOKKOS_PKGCONFIG).in
 	    -e 's|@KOKKOS_LINK_FLAGS@|$(KOKKOS_LINK_FLAGS)|g' \
 	     $< > $@
 
+$(KOKKOS_CMAKECONFIG): $(KOKKOS_PATH)/core/cmake/$(KOKKOS_CMAKECONFIG).in
+	@sed -e 's|@KOKKOS_INSTALL_PREFIX@|$(PREFIX)|g' \
+	    -e 's|@KOKKOS_CXXFLAGS@|$(patsubst -I%,,$(KOKKOS_CXXFLAGS))|g' \
+	    -e 's|@KOKKOS_EXTRA_LIBS_LIST@|$(KOKKOS_EXTRA_LIBS)|g' \
+	    -e 's|@KOKKOS_LINK_FLAGS@|$(KOKKOS_LINK_FLAGS)|g' \
+	     $< > $@
+
 kokkos_fixup_sed = $(call kokkos_fixup_sed_impl,$(KOKKOS_MAKEFILE)); $(call kokkos_fixup_sed_impl,$(KOKKOS_CMAKEFILE))
 
 #This function should be used for variables whose values are different in GNU Make versus CMake,
 #especially lists which are delimited by commas in one case and semicolons in another
 kokkos_append_gmakevar = $(call kokkos_appendvar_makefile,$1); $(call kokkos_append_gmakevar_cmakefile,$1,$2)
 
-generate_build_settings: $(KOKKOS_CONFIG_HEADER) $(KOKKOS_PKGCONFIG)
+generate_build_settings: $(KOKKOS_CONFIG_HEADER) $(KOKKOS_PKGCONFIG) $(KOKKOS_CMAKECONFIG)
 	@rm -f $(KOKKOS_MAKEFILE)
 	@rm -f $(KOKKOS_CMAKEFILE)
 	@$(call kokkos_append_string, "#Global Settings used to generate this library")
