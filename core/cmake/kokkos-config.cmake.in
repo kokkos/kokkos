@@ -29,3 +29,37 @@ set_target_properties(Kokkos::kokkos PROPERTIES
   INTERFACE_COMPILE_OPTIONS "${KOKKOS_COMPILE_OPTIONS}"
   INTERFACE_LINK_OPTIONS "${KOKKOS_LINK_OPTIONS}"
 )
+
+#   This function makes sure that kokkos was built with the requested backends
+#   and target architectures and generates a fatal error if it was not.
+#
+#   kokkos_check_requested(
+#     [DEVICES <devices>...] # Set of backends (e.g. "OpenMP" and/or "Cuda")
+#     [ARCH <archs>...]      # Target architectures (e.g. "Power9" and/or "Volta70")
+#   )
+function(kokkos_check_requested)
+  cmake_parse_arguments(_KOKKOS_REQUESTED "" "" "DEVICES;ARCH" ${ARGN})
+  set(_KOKKOS_REQUESTED_ARGS)
+  foreach(_X DEVICES ARCH)
+    if(_KOKKOS_REQUESTED_${_X})
+      list(APPEND _KOKKOS_REQUESTED_ARGS ${_X})
+    endif()
+  endforeach()
+  set(_KOKKOS_CHECK_REQUESTED_SUCCESS TRUE)
+  foreach(_X ${_KOKKOS_REQUESTED_ARGS})
+    foreach(_requested ${_KOKKOS_REQUESTED_${_X}})
+      foreach(_provided ${KOKKOS_${_X}})
+        if(_requested STREQUAL _provided)
+          string(REPLACE ";" " " ${_requested} "${_KOKKOS_REQUESTED_${_X}}")
+        endif()
+      endforeach()
+    endforeach()
+    find_package_handle_standard_args("KOKKOS_${_X}" DEFAULT_MSG ${_KOKKOS_REQUESTED_${_X}})
+    if(NOT KOKKOS_${_X}_FOUND)
+      set(_KOKKOS_CHECK_REQUESTED_SUCCESS FALSE)
+    endif()
+  endforeach()
+  if(NOT _KOKKOS_CHECK_REQUESTED_SUCCESS)
+    message(FATAL_ERROR "Kokkos does NOT provide all backends and/or architectures requested")
+  endif()
+endfunction()
