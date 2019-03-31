@@ -4,6 +4,7 @@ set(KOKKOS_COMPILE_OPTIONS @KOKKOS_CXXFLAGS@)
 set(KOKKOS_LINK_OPTIONS @KOKKOS_LINK_FLAGS@)
 set(KOKKOS_DEVICES @KOKKOS_DEVICES@)
 set(KOKKOS_ARCH @KOKKOS_ARCH@)
+set(KOKKOS_CXX_STANDARD @KOKKOS_CXX_STANDARD@)
 
 # Replace comma separators with semicolons
 foreach(_var KOKKOS_DEVICES KOKKOS_ARCH)
@@ -12,6 +13,31 @@ foreach(_var KOKKOS_DEVICES KOKKOS_ARCH)
     message("${_var} = \"${${_var}}\"")
   endif()
 endforeach()
+
+# Find out what C++ standard to use
+if(KOKKOS_CXX_STANDARD STREQUAL c++11)
+  set(KOKKOS_COMPILE_FEATURES cxx_std_11)
+elseif(KOKKOS_CXX_STANDARD STREQUAL c++14)
+  set(KOKKOS_COMPILE_FEATURES cxx_std_14)
+elseif(KOKKOS_CXX_STANDARD STREQUAL c++17)
+  set(KOKKOS_COMPILE_FEATURES cxx_std_17)
+else()
+  message(WARNING "kokkos cxx standard not supported")
+endif()
+
+# Remove flag that set the C++ standard from the compile options
+set(_COMPILE_OPTIONS)
+foreach(_opt ${KOKKOS_COMPILE_OPTIONS})
+  if(_opt MATCHES "c\\+\\+")
+    if(Kokkos_DEBUG)
+      message("Removing \"${_opt}\" flag from kokkos compile options")
+    endif()
+  else()
+    list(APPEND _COMPILE_OPTIONS ${_opt})
+  endif()
+endforeach()
+set(KOKKOS_COMPILE_OPTIONS ${_COMPILE_OPTIONS})
+unset(_COMPILE_OPTIONS)
 
 # Find the headers and library
 find_path(KOKKOS_INCLUDE_DIR Kokkos_Core.hpp PATHS ${KOKKOS_INSTALL_PREFIX}/include NO_DEFAULT_PATH)
@@ -28,6 +54,7 @@ set_target_properties(Kokkos::kokkos PROPERTIES
   INTERFACE_LINK_DIRECTORIES "${KOKKOS_LIBRARY_DIR}"
   INTERFACE_COMPILE_OPTIONS "${KOKKOS_COMPILE_OPTIONS}"
   INTERFACE_LINK_OPTIONS "${KOKKOS_LINK_OPTIONS}"
+  INTERFACE_COMPILE_FEATURES "${KOKKOS_COMPILE_FEATURES}"
 )
 
 #   This function makes sure that kokkos was built with the requested backends
