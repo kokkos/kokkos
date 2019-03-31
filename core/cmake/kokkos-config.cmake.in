@@ -2,6 +2,16 @@ set(KOKKOS_INSTALL_PREFIX @KOKKOS_INSTALL_PREFIX@)
 set(KOKKOS_LINK_LIBS -lkokkos @KOKKOS_EXTRA_LIBS_LIST@)
 set(KOKKOS_COMPILE_OPTIONS @KOKKOS_CXXFLAGS@)
 set(KOKKOS_LINK_OPTIONS @KOKKOS_LINK_FLAGS@)
+set(KOKKOS_DEVICES @KOKKOS_DEVICES@)
+set(KOKKOS_ARCH @KOKKOS_ARCH@)
+
+# Replace comma separators with semicolons
+foreach(_var KOKKOS_DEVICES KOKKOS_ARCH)
+  string(REPLACE "," ";" ${_var} "${${_var}}")
+  if(Kokkos_DEBUG)
+    message("${_var} = \"${${_var}}\"")
+  endif()
+endforeach()
 
 # Find the headers and library
 find_path(KOKKOS_INCLUDE_DIR Kokkos_Core.hpp PATHS ${KOKKOS_INSTALL_PREFIX}/include NO_DEFAULT_PATH)

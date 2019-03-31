@@ -56,6 +56,8 @@ $(KOKKOS_CMAKECONFIG): $(KOKKOS_PATH)/core/cmake/$(KOKKOS_CMAKECONFIG).in
 	    -e 's|@KOKKOS_CXXFLAGS@|$(patsubst -I%,,$(KOKKOS_CXXFLAGS))|g' \
 	    -e 's|@KOKKOS_EXTRA_LIBS_LIST@|$(KOKKOS_EXTRA_LIBS)|g' \
 	    -e 's|@KOKKOS_LINK_FLAGS@|$(KOKKOS_LINK_FLAGS)|g' \
+	    -e 's|@KOKKOS_DEVICES@|$(KOKKOS_DEVICES)|g' \
+	    -e 's|@KOKKOS_ARCH@|$(KOKKOS_ARCH)|g' \
 	     $< > $@
 
 kokkos_fixup_sed = $(call kokkos_fixup_sed_impl,$(KOKKOS_MAKEFILE)); $(call kokkos_fixup_sed_impl,$(KOKKOS_CMAKEFILE))
