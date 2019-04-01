@@ -823,7 +823,6 @@ namespace Test {
 // ( modified from kokkos-tutorials/GTC2016/Exercises/ThreeLevelPar )
 
 #if ( ! defined( KOKKOS_ENABLE_CUDA ) ) || (defined( KOKKOS_ENABLE_CUDA_LAMBDA ) && (8000 <= CUDA_VERSION))
-
 template< typename ScalarType, class DeviceType >
 class TestTripleNestedReduce
 {
@@ -962,6 +961,8 @@ TEST_F( TEST_CATEGORY, triple_nested_parallelism )
   }
 #endif
   TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 16, 16 );
+  TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 16, 33 );
+  TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 16, 19 );
 #ifdef KOKKOS_ENABLE_ROCM // ROCm doesn't support team sizes not powers of two
   if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::ROCm>::value)
 #endif
