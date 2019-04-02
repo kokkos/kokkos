@@ -105,9 +105,10 @@ public:
         std::size_t t = Kokkos::Experimental::HPX::impl_hardware_thread_id();
 
         buffer.get(Kokkos::Experimental::HPX::impl_hardware_thread_id());
-        HPXTeamMember member(TeamPolicyInternal<Kokkos::Experimental::HPX>(
-                                 Kokkos::Experimental::HPX(), num_worker_threads, 1),
-                             0, t, buffer.get(t), 512);
+        HPXTeamMember member(
+            TeamPolicyInternal<Kokkos::Experimental::HPX>(
+                Kokkos::Experimental::HPX(), num_worker_threads, 1),
+            0, t, buffer.get(t), 512);
 
         member_type single_exec(*scheduler, member);
         member_type &team_exec = single_exec;
@@ -171,9 +172,9 @@ public:
       task_base_type *const end = (task_base_type *)task_base_type::EndTag;
       task_base_type *task = end;
 
-      HPXTeamMember member(
-          TeamPolicyInternal<Kokkos::Experimental::HPX>(Kokkos::Experimental::HPX(), 1, 1), 0,
-          0, nullptr, 0);
+      HPXTeamMember member(TeamPolicyInternal<Kokkos::Experimental::HPX>(
+                               Kokkos::Experimental::HPX(), 1, 1),
+                           0, 0, nullptr, 0);
       member_type single_exec(scheduler, member);
 
       do {
@@ -234,9 +235,10 @@ public:
         std::size_t t = Kokkos::Experimental::HPX::impl_hardware_thread_id();
 
         buffer.get(Kokkos::Experimental::HPX::impl_hardware_thread_id());
-        HPXTeamMember member(TeamPolicyInternal<Kokkos::Experimental::HPX>(
-                                 Kokkos::Experimental::HPX(), num_worker_threads, 1),
-                             0, t, buffer.get(t), 512);
+        HPXTeamMember member(
+            TeamPolicyInternal<Kokkos::Experimental::HPX>(
+                Kokkos::Experimental::HPX(), num_worker_threads, 1),
+            0, t, buffer.get(t), 512);
 
         member_type single_exec(*scheduler, member);
         member_type &team_exec = single_exec;
@@ -283,7 +285,9 @@ private:
   const scheduler_type *scheduler;
 };
 
-extern template class TaskQueue<Kokkos::Experimental::HPX>;
+extern template class TaskQueue<
+    Kokkos::Experimental::HPX,
+    typename Kokkos::Experimental::HPX::memory_space>;
 
 } // namespace Impl
 } // namespace Kokkos
