@@ -50,6 +50,7 @@
 #include <Kokkos_CudaSpace.hpp>
 #include <cmath>
 #include <map>
+#include <typeinfo>
 
 /*--------------------------------------------------------------------------*/
 
@@ -99,6 +100,10 @@ public:
    int data_len;
    void * dup_list[3];
    void * func_ptr;
+
+   static std::map<std::string, void*> kernel_func_list;
+   static void add_kernel_func ( std::string name, void * func_ptr );
+   static void * get_kernel_func ( std::string name );
 
    inline __host__ virtual ~DuplicateTracker() {}
 
@@ -606,13 +611,7 @@ namespace Experimental {
        if ( iwork <  cf.get_len() )
           cf.exec(iwork);
   }
-/*
-   template __global__ static void launch_comb_dup_kernel<CombineFunctor<int, Kokkos::ResCuda> >(
-                                                                        CombineFunctor<int, Kokkos::ResCuda> );
 
-   template<> void * CombineFunctor<int, Kokkos::ResCuda>::s_dup_kernel = (void*)&launch_comb_dup_kernel< CombineFunctor<int, Kokkos::ResCuda> >;
-*/
-   static void (*pLaunch)(const CombineFunctor<int, Kokkos::ResCuda>) = &launch_comb_dup_kernel<CombineFunctor<int, Kokkos::ResCuda> >; 
  
   template< class Type, class MemorySpace >
   static void track_duplicate( Kokkos::Impl::SharedAllocationRecord<void,void> * orig, Kokkos::Impl::SharedAllocationRecord<void,void> * dup ) {
@@ -628,7 +627,8 @@ namespace Experimental {
     } else {
        dt = new dt_type();
        //printf("dup_kernel ptr = %08x \n", comb_type::s_dup_kernel); 
-       dt->func_ptr = (void*)pLaunch; // comb_type::s_dup_kernel;
+       //dt->func_ptr = (void*)pLaunch; // comb_type::s_dup_kernel;
+       dt->func_ptr = DuplicateTracker::get_kernel_func( typeid(Type).name() );
        dt->data_len = orig->size();
        dt->original_data = orig->data();
        MemorySpace::duplicate_map[SP->get_label()] = static_cast<Kokkos::Experimental::DuplicateTracker*>(dt);
@@ -640,11 +640,17 @@ namespace Experimental {
 
 } // namespace Kokkos
 
-/*
-#define KOKKOS_DECLARE_RESILIENCE_OBJECTS(data_type) \
-   static void (*Kokkos::Experimental::pLaunch)(const Kokkos:Experimental::CombineFunctor<data_type, Kokkos::ResCuda>) = \
-                        &Kokkos::Experimental::launch_comb_dup_kernel<Kokkos::Experimental::CombineFunctor<data_type, Kokkos::ResCuda> >; 
-*/
+#define KOKKOS_MAKE_RESILIENCE_FUNC_NAME( id ) id##_resilience_func
+
+#define KOKKOS_DECLARE_RESILIENCE_OBJECTS(data_type, id) \
+   template __global__ static void Kokkos::Experimental::launch_comb_dup_kernel<Kokkos::Experimental::CombineFunctor<data_type, Kokkos::ResCuda> >( \
+                                                                Kokkos::Experimental::CombineFunctor<data_type, Kokkos::ResCuda> ); \
+   void * KOKKOS_MAKE_RESILIENCE_FUNC_NAME(id) = (void*)&Kokkos::Experimental::launch_comb_dup_kernel<Kokkos::Experimental::CombineFunctor<data_type, Kokkos::ResCuda> >; 
+
+#define KOKKOS_ADD_RESILIENCE_OBJECTS(data_type, id) \
+   Kokkos::Experimental::DuplicateTracker::add_kernel_func( typeid(data_type).name(), KOKKOS_MAKE_RESILIENCE_FUNC_NAME( id )); 
+
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 

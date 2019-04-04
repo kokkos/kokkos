@@ -3,15 +3,6 @@
 //KOKKOS_DECLARE_RESILENCE_OBJECTS(int)
 //
 //
-/*
-namespace Kokkos {
-namespace Experimental {
-   template __global__ static void launch_comb_dup_kernel<CombineFunctor<int, Kokkos::ResCuda> >(
-                                                                        CombineFunctor<int, Kokkos::ResCuda> );
-
-   template<> void * CombineFunctor<int, Kokkos::ResCuda>::s_dup_kernel = (void*)&launch_comb_dup_kernel< CombineFunctor<int, Kokkos::ResCuda> >;
-} }
-*/
 namespace Test {
 
 struct ResSurrogate {
@@ -48,11 +39,11 @@ struct testCopy {
 
 
 
-template< class ExecSpace, class ScheduleType >
+template< class ExecSpace, class ScheduleType, class DataType >
 struct TestResilientRange {
   typedef int value_type; ///< typedef required for the parallel_reduce
 
-  typedef Kokkos::View< int*, Kokkos::ResCudaSpace > view_type;
+  typedef Kokkos::View< DataType*, Kokkos::ResCudaSpace > view_type;
 //  typedef Kokkos::View< int*, Kokkos::HostSpace > test_type;
 //  typedef Kokkos::View< int*, Kokkos::HostSpace > view_type;
 
@@ -102,7 +93,9 @@ struct TestResilientRange {
 
 TEST_F( TEST_CATEGORY, range_for_resilience )
 {
-  { TestResilientRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >f(10); f.test_for(); }
+  KOKKOS_ADD_RESILIENCE_OBJECTS(int,int);
+
+  { TestResilientRange< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>, int >f(10); f.test_for(); }
 }
 
 } //namespace Test
