@@ -21,6 +21,8 @@ TRIBITS_ADD_LIBRARY(
   SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
   TESTONLY
   )
+
+IF(NOT KOKKOS_HAS_TRILINOS)
 target_compile_options(
   kokkos_gtest
   PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${KOKKOS_CXX_FLAGS}>
@@ -29,6 +31,7 @@ target_link_libraries(
   kokkos_gtest
   PUBLIC ${KOKKOS_LD_FLAGS}
 )
+ENDIF()
 
 #
 # Define the tests
