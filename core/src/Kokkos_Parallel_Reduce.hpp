@@ -73,14 +73,15 @@ public:
 
 private:
   result_view_type value;
+  bool references_scalar_v;
 
 public:
 
   KOKKOS_INLINE_FUNCTION
-  Sum(value_type& value_): value(&value_) {}
+  Sum(value_type& value_): value(&value_),references_scalar_v(true) {}
 
   KOKKOS_INLINE_FUNCTION
-  Sum(const result_view_type& value_): value(value_) {}
+  Sum(const result_view_type& value_): value(value_),references_scalar_v(false) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -107,6 +108,11 @@ public:
   result_view_type view() const {
     return value;
   }
+
+  KOKKOS_INLINE_FUNCTION
+  bool references_scalar() const {
+    return references_scalar_v;
+  }
 };
 
 template<class Scalar, class Space>
@@ -120,14 +126,15 @@ public:
 
 private:
   result_view_type value;
+  bool references_scalar_v;
 
 public:
 
   KOKKOS_INLINE_FUNCTION
-  Prod(value_type& value_): value(&value_) {}
+  Prod(value_type& value_): value(&value_),references_scalar_v(true) {}
 
   KOKKOS_INLINE_FUNCTION
-  Prod(const result_view_type& value_): value(value_) {}
+  Prod(const result_view_type& value_): value(value_),references_scalar_v(false) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -154,6 +161,11 @@ public:
   result_view_type view() const {
     return value;
   }
+
+  KOKKOS_INLINE_FUNCTION
+  bool references_scalar() const {
+    return references_scalar_v;
+  }
 };
 
 template<class Scalar, class Space>
@@ -167,14 +179,15 @@ public:
 
 private:
   result_view_type value;
+  bool references_scalar_v;
 
 public:
 
   KOKKOS_INLINE_FUNCTION
-  Min(value_type& value_): value(&value_) {}
+  Min(value_type& value_): value(&value_),references_scalar_v(true) {}
 
   KOKKOS_INLINE_FUNCTION
-  Min(const result_view_type& value_): value(value_) {}
+  Min(const result_view_type& value_): value(value_),references_scalar_v(false) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -203,6 +216,11 @@ public:
   result_view_type view() const {
     return value;
   }
+
+  KOKKOS_INLINE_FUNCTION
+  bool references_scalar() const {
+    return references_scalar_v;
+  }
 };
 
 template<class Scalar, class Space>
@@ -216,14 +234,15 @@ public:
 
 private:
   result_view_type value;
+  bool references_scalar_v;
 
 public:
 
   KOKKOS_INLINE_FUNCTION
-  Max(value_type& value_): value(&value_) {}
+  Max(value_type& value_): value(&value_),references_scalar_v(true) {}
 
   KOKKOS_INLINE_FUNCTION
-  Max(const result_view_type& value_): value(value_) {}
+  Max(const result_view_type& value_): value(value_),references_scalar_v(false) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -253,6 +272,11 @@ public:
   result_view_type view() const {
     return value;
   }
+
+  KOKKOS_INLINE_FUNCTION
+  bool references_scalar() const {
+    return references_scalar_v;
+  }
 };
 
 template<class Scalar, class Space>
@@ -266,14 +290,15 @@ public:
 
 private:
   result_view_type value;
+  bool references_scalar_v;
 
 public:
 
   KOKKOS_INLINE_FUNCTION
-  LAnd(value_type& value_): value(&value_) {}
+  LAnd(value_type& value_): value(&value_),references_scalar_v(true) {}
 
   KOKKOS_INLINE_FUNCTION
-  LAnd(const result_view_type& value_): value(value_) {}
+  LAnd(const result_view_type& value_): value(value_),references_scalar_v(false) {}
 
   KOKKOS_INLINE_FUNCTION
   void join(value_type& dest, const value_type& src)  const {
@@ -299,6 +324,11 @@ public:
   result_view_type view() const {
     return value;
   }
+
+  KOKKOS_INLINE_FUNCTION
+  bool references_scalar() const {
+    return references_scalar_v;
+  }
 };
 
 template<class Scalar, class Space>
@@ -312,14 +342,15 @@ public:
 
 private:
   result_view_type value;
+  bool references_scalar_v;
 
 public:
 
   KOKKOS_INLINE_FUNCTION
-  LOr(value_type& value_): value(&value_) {}
+  LOr(value_type& value_): value(&value_),references_scalar_v(true) {}
 
   KOKKOS_INLINE_FUNCTION
-  LOr(const result_view_type& value_): value(value_) {}
+  LOr(const result_view_type& value_): value(value_),references_scalar_v(false) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -346,6 +377,11 @@ public:
   result_view_type view() const {
     return value;
   }
+
+  KOKKOS_INLINE_FUNCTION
+  bool references_scalar() const {
+    return references_scalar_v;
+  }
 };
 
 template<class Scalar, class Space>
@@ -359,14 +395,15 @@ public:
 
 private:
   result_view_type value;
+  bool references_scalar_v;
 
 public:
 
   KOKKOS_INLINE_FUNCTION
-  BAnd(value_type& value_): value(&value_) {}
+  BAnd(value_type& value_): value(&value_),references_scalar_v(true) {}
 
   KOKKOS_INLINE_FUNCTION
-  BAnd(const result_view_type& value_): value(value_) {}
+  BAnd(const result_view_type& value_): value(value_),references_scalar_v(false) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -393,6 +430,11 @@ public:
   result_view_type view() const {
     return value;
   }
+
+  KOKKOS_INLINE_FUNCTION
+  bool references_scalar() const {
+    return references_scalar_v;
+  }
 };
 
 template<class Scalar, class Space>
@@ -406,14 +448,15 @@ public:
 
 private:
   result_view_type value;
+  bool references_scalar_v;
 
 public:
 
   KOKKOS_INLINE_FUNCTION
-  BOr(value_type& value_): value(&value_) {}
+  BOr(value_type& value_): value(&value_),references_scalar_v(true) {}
 
   KOKKOS_INLINE_FUNCTION
-  BOr(const result_view_type& value_): value(value_) {}
+  BOr(const result_view_type& value_): value(value_),references_scalar_v(false) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -439,6 +482,11 @@ public:
   KOKKOS_INLINE_FUNCTION
   result_view_type view() const {
     return value;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  bool references_scalar() const {
+    return references_scalar_v;
   }
 };
 
@@ -475,14 +523,15 @@ public:
 
 private:
   result_view_type value;
+  bool references_scalar_v;
 
 public:
 
   KOKKOS_INLINE_FUNCTION
-  MinLoc(value_type& value_): value(&value_) {}
+  MinLoc(value_type& value_): value(&value_),references_scalar_v(true) {}
 
   KOKKOS_INLINE_FUNCTION
-  MinLoc(const result_view_type& value_): value(value_) {}
+  MinLoc(const result_view_type& value_): value(value_),references_scalar_v(false) {}
 
 
   //Required
@@ -513,6 +562,11 @@ public:
   result_view_type view() const {
     return value;
   }
+
+  KOKKOS_INLINE_FUNCTION
+  bool references_scalar() const {
+    return references_scalar_v;
+  }
 };
 
 template<class Scalar, class Index, class Space>
@@ -530,14 +584,15 @@ public:
 
 private:
   result_view_type value;
+  bool references_scalar_v;
 
 public:
 
   KOKKOS_INLINE_FUNCTION
-  MaxLoc(value_type& value_): value(&value_) {}
+  MaxLoc(value_type& value_): value(&value_),references_scalar_v(true) {}
 
   KOKKOS_INLINE_FUNCTION
-  MaxLoc(const result_view_type& value_): value(value_) {}
+  MaxLoc(const result_view_type& value_): value(value_),references_scalar_v(false) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -566,6 +621,11 @@ public:
   KOKKOS_INLINE_FUNCTION
   result_view_type view() const {
     return value;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  bool references_scalar() const {
+    return references_scalar_v;
   }
 };
 
@@ -600,14 +660,15 @@ public:
 
 private:
   result_view_type value;
+  bool references_scalar_v;
 
 public:
 
   KOKKOS_INLINE_FUNCTION
-  MinMax(value_type& value_): value(&value_) {}
+  MinMax(value_type& value_): value(&value_),references_scalar_v(true) {}
 
   KOKKOS_INLINE_FUNCTION
-  MinMax(const result_view_type& value_): value(value_) {}
+  MinMax(const result_view_type& value_): value(value_),references_scalar_v(false) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -644,6 +705,11 @@ public:
   KOKKOS_INLINE_FUNCTION
   result_view_type view() const {
     return value;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  bool references_scalar() const {
+    return references_scalar_v;
   }
 };
 
@@ -684,14 +750,15 @@ public:
 
 private:
   result_view_type value;
+  bool references_scalar_v;
 
 public:
 
   KOKKOS_INLINE_FUNCTION
-  MinMaxLoc(value_type& value_): value(&value_) {}
+  MinMaxLoc(value_type& value_): value(&value_),references_scalar_v(true) {}
 
   KOKKOS_INLINE_FUNCTION
-  MinMaxLoc(const result_view_type& value_): value(value_) {}
+  MinMaxLoc(const result_view_type& value_): value(value_),references_scalar_v(false) {}
 
   //Required
   KOKKOS_INLINE_FUNCTION
@@ -734,6 +801,11 @@ public:
   KOKKOS_INLINE_FUNCTION
   result_view_type view() const {
     return value;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  bool references_scalar() const {
+    return references_scalar_v;
   }
 };
 }
@@ -908,6 +980,37 @@ struct ParallelReducePolicyType<typename std::enable_if<std::is_integral<PolicyT
     \param return_argument A return argument which can be a scalar, a View, or a ReducerStruct. This argument can be left out if the functor has a final function.
 */
 
+// Parallel Reduce Blocking behavior
+
+namespace Impl {
+template <typename T>
+  struct ReducerHasTestReferenceFunction
+  {
+    template <typename E> static std::true_type test_func( decltype(&E::references_scalar) ) ;
+    template <typename E> static std::false_type test_func(...);
+
+    enum { value = std::is_same<std::true_type,decltype(test_func<T>(0))>::value };
+  };
+
+  template<class T, bool is_reducer =  ReducerHasTestReferenceFunction<T>::value>
+  struct ParallelReduceFence {
+    static void fence(const T&) {
+      Kokkos::fence();
+    }
+  };
+  template<class ... Args>
+  struct ParallelReduceFence<View<Args...>, false> {
+    static void fence(const View<Args...>) {};
+  };
+  template<class T>
+  struct ParallelReduceFence<T,true> {
+    static void fence(const T& reducer) {
+      if(reducer.references_scalar())
+        Kokkos::fence();
+    }
+  };
+}
+
 /** \brief  Parallel reduction
  *
  * parallel_reduce performs parallel reductions with arbitrary functions - i.e.
@@ -959,6 +1062,7 @@ void parallel_reduce(const std::string& label,
                        Kokkos::Impl::is_execution_policy<PolicyType>::value
                      >::type * = 0) {
   Impl::ParallelReduceAdaptor<PolicyType,FunctorType,ReturnType>::execute(label,policy,functor,return_value);
+  Impl::ParallelReduceFence<ReturnType>::fence(return_value);
 }
 
 template< class PolicyType, class FunctorType, class ReturnType >
@@ -970,6 +1074,7 @@ void parallel_reduce(const PolicyType& policy,
                        Kokkos::Impl::is_execution_policy<PolicyType>::value
                      >::type * = 0) {
   Impl::ParallelReduceAdaptor<PolicyType,FunctorType,ReturnType>::execute("",policy,functor,return_value);
+  Impl::ParallelReduceFence<ReturnType>::fence(return_value);
 }
 
 template< class FunctorType, class ReturnType >
@@ -979,6 +1084,7 @@ void parallel_reduce(const size_t& policy,
                      ReturnType& return_value) {
   typedef typename Impl::ParallelReducePolicyType<void,size_t,FunctorType>::policy_type policy_type;
   Impl::ParallelReduceAdaptor<policy_type,FunctorType,ReturnType>::execute("",policy_type(0,policy),functor,return_value);
+  Impl::ParallelReduceFence<ReturnType>::fence(return_value);
 }
 
 template< class FunctorType, class ReturnType >
@@ -989,6 +1095,7 @@ void parallel_reduce(const std::string& label,
                      ReturnType& return_value) {
   typedef typename Impl::ParallelReducePolicyType<void,size_t,FunctorType>::policy_type policy_type;
   Impl::ParallelReduceAdaptor<policy_type,FunctorType,ReturnType>::execute(label,policy_type(0,policy),functor,return_value);
+  Impl::ParallelReduceFence<ReturnType>::fence(return_value);
 }
 
 // ReturnValue as View or Reducer: take by copy to allow for inline construction
@@ -1004,6 +1111,7 @@ void parallel_reduce(const std::string& label,
                      >::type * = 0) {
   ReturnType return_value_impl = return_value;
   Impl::ParallelReduceAdaptor<PolicyType,FunctorType,ReturnType>::execute(label,policy,functor,return_value_impl);
+  Impl::ParallelReduceFence<ReturnType>::fence(return_value);
 }
 
 template< class PolicyType, class FunctorType, class ReturnType >
@@ -1016,6 +1124,7 @@ void parallel_reduce(const PolicyType& policy,
                      >::type * = 0) {
   ReturnType return_value_impl = return_value;
   Impl::ParallelReduceAdaptor<PolicyType,FunctorType,ReturnType>::execute("",policy,functor,return_value_impl);
+  Impl::ParallelReduceFence<ReturnType>::fence(return_value);
 }
 
 template< class FunctorType, class ReturnType >
@@ -1026,6 +1135,7 @@ void parallel_reduce(const size_t& policy,
   typedef typename Impl::ParallelReducePolicyType<void,size_t,FunctorType>::policy_type policy_type;
   ReturnType return_value_impl = return_value;
   Impl::ParallelReduceAdaptor<policy_type,FunctorType,ReturnType>::execute("",policy_type(0,policy),functor,return_value_impl);
+  Impl::ParallelReduceFence<ReturnType>::fence(return_value);
 }
 
 template< class FunctorType, class ReturnType >
@@ -1037,6 +1147,7 @@ void parallel_reduce(const std::string& label,
   typedef typename Impl::ParallelReducePolicyType<void,size_t,FunctorType>::policy_type policy_type;
   ReturnType return_value_impl = return_value;
   Impl::ParallelReduceAdaptor<policy_type,FunctorType,ReturnType>::execute(label,policy_type(0,policy),functor,return_value_impl);
+  Impl::ParallelReduceFence<ReturnType>::fence(return_value);
 }
 
 // No Return Argument
