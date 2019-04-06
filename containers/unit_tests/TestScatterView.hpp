@@ -43,7 +43,7 @@
 
 #ifndef KOKKOS_TEST_SCATTER_VIEW_HPP
 #define KOKKOS_TEST_SCATTER_VIEW_HPP
-#include <stdio.h>
+
 #include <Kokkos_ScatterView.hpp>
 
 namespace Test {
@@ -183,7 +183,6 @@ public:
         auto val0 = host_view(i, 0);
         auto val1 = host_view(i, 1);
         auto val2 = host_view(i, 2);
-        //printf("returned values: %le, %le, %le \n", val0, val1, val2);
         EXPECT_TRUE(std::fabs((val0 - 65536.0) / 65536.0) < 1e-15);
         EXPECT_TRUE(std::fabs((val1 - 256.0) / 256.0) < 1e-15);
         EXPECT_TRUE(std::fabs((val2 - 1.0) / 1.0) < 1e-15);
@@ -254,7 +253,6 @@ public:
         auto val0 = host_view(i, 0);
         auto val1 = host_view(i, 1);
         auto val2 = host_view(i, 2);
-        //printf("returned values: %le, %le, %le \n", val0, val1, val2);
         EXPECT_TRUE(std::fabs((val0 - 4.0) / 4.0) < 1e-15);
         EXPECT_TRUE(std::fabs((val1 - 2.0) / 2.0) < 1e-15);
         EXPECT_TRUE(std::fabs((val2 - 1.0) / 1.0) < 1e-15);
@@ -325,7 +323,6 @@ public:
         auto val0 = host_view(i, 0);
         auto val1 = host_view(i, 1);
         auto val2 = host_view(i, 2);
-        //printf("returned values: %le, %le, %le \n", val0, val1, val2);
         EXPECT_TRUE(std::fabs((val0 - 16.0) / 16.0) < 1e-15);
         EXPECT_TRUE(std::fabs((val1 - 8.0) / 8.0) < 1e-15);
         EXPECT_TRUE(std::fabs((val2 - 4.0) / 4.0) < 1e-15);
@@ -376,6 +373,7 @@ struct test_scatter_view_config
         scatter_view_def persistent_view("persistent", n);
         auto result_view = persistent_view.subview();
         contribute(result_view, persistent_view);
+        Kokkos::fence();
      }
    }
 
@@ -442,10 +440,14 @@ void test_scatter_view(int n)
 #ifdef KOKKOS_ENABLE_SERIAL
   }
 #endif
-  fflush(stdout);
-  //printf("running duplicate test \n");
+  // with hundreds of threads we were running out of memory.
+  // limit (n) so that duplication doesn't exceed 8GB
+  constexpr std::size_t maximum_allowed_total_bytes = 8ull * 1024ull * 1024ull * 1024ull;
+  std::size_t const maximum_allowed_copy_bytes = maximum_allowed_total_bytes / std::size_t(unique_token.size());
+  constexpr std::size_t bytes_per_value = sizeof(double) * 3;
+  std::size_t const maximum_allowed_copy_values = maximum_allowed_copy_bytes / bytes_per_value;
+  n = std::min(n, int(maximum_allowed_copy_values));
   TestDuplicatedScatterView<ExecSpace, ScatterType> duptest(n);
-  //printf("duplicate test finished \n");
 }
 
 TEST_F( TEST_CATEGORY, scatterview) {
@@ -454,17 +456,16 @@ TEST_F( TEST_CATEGORY, scatterview) {
   test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterProd>(10);
   test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterMin>(10);
   test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterMax>(10);
+  // tests were timing out in DEBUG mode, reduce the amount of work
 #ifdef KOKKOS_ENABLE_DEBUG
-  test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterSum>(100000);
-  test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterProd>(100000);
-  test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterMin>(100000);
-  test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterMax>(100000);
+  int big_n = 100 * 1000;
 #else
-  test_scatter_view<TEST_EXECSPACE,Kokkos::Experimental::ScatterSum>(10000000);
-  test_scatter_view<TEST_EXECSPACE,Kokkos::Experimental::ScatterProd>(10000000);
-  test_scatter_view<TEST_EXECSPACE,Kokkos::Experimental::ScatterMin>(10000000);
-  test_scatter_view<TEST_EXECSPACE,Kokkos::Experimental::ScatterMax>(10000000);
+  int big_n = 10 * 1000 * 1000;
 #endif
+  test_scatter_view<TEST_EXECSPACE,Kokkos::Experimental::ScatterSum>(big_n);
+  test_scatter_view<TEST_EXECSPACE,Kokkos::Experimental::ScatterProd>(big_n);
+  test_scatter_view<TEST_EXECSPACE,Kokkos::Experimental::ScatterMin>(big_n);
+  test_scatter_view<TEST_EXECSPACE,Kokkos::Experimental::ScatterMax>(big_n);
 #endif
 }
 

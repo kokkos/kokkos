@@ -1509,14 +1509,14 @@ namespace Kokkos {
 template<typename iType>
 KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct<iType,Impl::ROCmTeamMember>
-  TeamThreadRange(const Impl::ROCmTeamMember& thread, const iType& count) {
+  TeamThreadRange(const Impl::ROCmTeamMember& thread, iType count) {
   return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::ROCmTeamMember>(thread,count);
 }
 
 template<typename iType1,typename iType2>
 KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct<typename std::common_type< iType1, iType2 >::type,Impl::ROCmTeamMember>
-  TeamThreadRange(const Impl::ROCmTeamMember& thread, const iType1& begin, const iType2& end) {
+  TeamThreadRange(const Impl::ROCmTeamMember& thread, iType1 begin, iType2 end) {
   typedef typename std::common_type< iType1, iType2 >::type iType;
   return Impl::TeamThreadRangeBoundariesStruct<iType,Impl::ROCmTeamMember>(thread,begin,end);
 }
@@ -1524,14 +1524,14 @@ Impl::TeamThreadRangeBoundariesStruct<typename std::common_type< iType1, iType2 
 template<typename iType>
 KOKKOS_INLINE_FUNCTION
 Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ROCmTeamMember >
-  ThreadVectorRange(const Impl::ROCmTeamMember& thread, const iType& count) {
+  ThreadVectorRange(const Impl::ROCmTeamMember& thread, iType count) {
   return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ROCmTeamMember >(thread,count);
 }
 
 template<typename iType>
 KOKKOS_INLINE_FUNCTION
 Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ROCmTeamMember >
-  ThreadVectorRange(const Impl::ROCmTeamMember& thread, const iType& arg_begin, const iType& arg_end) {
+  ThreadVectorRange(const Impl::ROCmTeamMember& thread, iType arg_begin, iType arg_end) {
   return Impl::ThreadVectorRangeBoundariesStruct<iType,Impl::ROCmTeamMember >(thread,arg_begin,arg_end);
 }
 

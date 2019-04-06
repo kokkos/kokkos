@@ -54,7 +54,8 @@
 namespace Kokkos {
 namespace Impl {
 
-template class TaskQueue<Kokkos::Experimental::HPX>;
+template class TaskQueue<Kokkos::Experimental::HPX,
+                         Kokkos::Experimental::HPX::memory_space>;
 
 } // namespace Impl
 } // namespace Kokkos

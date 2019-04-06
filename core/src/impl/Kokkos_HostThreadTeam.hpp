@@ -802,7 +802,9 @@ namespace Kokkos {
 template<typename iType, typename Member>
 KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct<iType, Member>
-TeamThreadRange( Member const & member, iType const & count,
+TeamThreadRange(
+  Member const & member,
+  iType count,
   typename std::enable_if<
     Impl::is_thread_team_member<Member>::value
   >::type const** = nullptr
@@ -820,8 +822,8 @@ Impl::TeamThreadRangeBoundariesStruct<
 >
 TeamThreadRange(
   Member const & member,
-  iType1 const & begin,
-  iType2 const & end,
+  iType1 begin,
+  iType2 end,
   typename std::enable_if<
     Impl::is_thread_team_member<Member>::value
   >::type const** = nullptr
@@ -838,7 +840,7 @@ KOKKOS_INLINE_FUNCTION
 Impl::ThreadVectorRangeBoundariesStruct<iType, Member>
 ThreadVectorRange(
   Member const & member,
-  iType const & count,
+  iType count,
   typename std::enable_if<
     Impl::is_thread_team_member<Member>::value
   >::type const** = nullptr
@@ -852,8 +854,8 @@ KOKKOS_INLINE_FUNCTION
 Impl::ThreadVectorRangeBoundariesStruct<iType, Member>
 ThreadVectorRange(
   Member const & member,
-  iType const & arg_begin,
-  iType const & arg_end,
+  iType arg_begin,
+  iType arg_end,
   typename std::enable_if<
     Impl::is_thread_team_member<Member>::value
   >::type const** = nullptr
