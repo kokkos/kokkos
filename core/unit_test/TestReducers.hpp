@@ -304,12 +304,10 @@ struct TestReducers {
       Kokkos::Sum< Scalar > reducer_scalar( sum_scalar );
       
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( sum_scalar, reference_sum );
      
       sum_scalar = init;
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace , ReducerTag >( 0, N ), f_tag, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( sum_scalar, reference_sum );
 
       Scalar sum_scalar_view = reducer_scalar.reference();
@@ -353,12 +351,10 @@ struct TestReducers {
       Kokkos::Prod< Scalar > reducer_scalar( prod_scalar );
    
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( prod_scalar, reference_prod );
       
       prod_scalar = init;
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace , ReducerTag >( 0, N ), f_tag, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( prod_scalar, reference_prod );
 
       Scalar prod_scalar_view = reducer_scalar.reference();
@@ -403,12 +399,10 @@ struct TestReducers {
       Kokkos::Min< Scalar > reducer_scalar( min_scalar );
      
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( min_scalar, reference_min );
 
       min_scalar = init;
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace , ReducerTag >( 0, N ), f_tag, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( min_scalar, reference_min );
 
       Scalar min_scalar_view = reducer_scalar.reference();
@@ -453,12 +447,10 @@ struct TestReducers {
       Kokkos::Max< Scalar > reducer_scalar( max_scalar );
 
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( max_scalar, reference_max );
 
       max_scalar = init;
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace , ReducerTag >( 0, N ), f_tag, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( max_scalar, reference_max );
 
       Scalar max_scalar_view = reducer_scalar.reference();
@@ -512,13 +504,11 @@ struct TestReducers {
       Kokkos::MinLoc< Scalar, int > reducer_scalar( min_scalar );
 
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( min_scalar.val, reference_min );
       ASSERT_EQ( min_scalar.loc, reference_loc );
 
       min_scalar = value_type();
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace , ReducerTag >( 0, N ), f_tag, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( min_scalar.val, reference_min );
       ASSERT_EQ( min_scalar.loc, reference_loc );
 
@@ -575,13 +565,11 @@ struct TestReducers {
       Kokkos::MaxLoc< Scalar, int > reducer_scalar( max_scalar );
 
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( max_scalar.val, reference_max );
       ASSERT_EQ( max_scalar.loc, reference_loc );
 
       max_scalar = value_type();
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace , ReducerTag >( 0, N ), f_tag, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( max_scalar.val, reference_max );
       ASSERT_EQ( max_scalar.loc, reference_loc );
 
@@ -654,7 +642,6 @@ struct TestReducers {
        Kokkos::MinMaxLoc< Scalar, int > reducer_scalar( minmax_scalar );
 
        Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar );
-       Kokkos::fence();
        ASSERT_EQ( minmax_scalar.min_val, reference_min );
 
        for ( int i = 0; i < N; i++ ) {
@@ -676,7 +663,6 @@ struct TestReducers {
 
        minmax_scalar = value_type();
        Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace , ReducerTag >( 0, N ), f_tag, reducer_scalar );
-       Kokkos::fence();
        ASSERT_EQ( minmax_scalar.min_val, reference_min );
 
        for ( int i = 0; i < N; i++ ) {
@@ -745,12 +731,10 @@ struct TestReducers {
       Kokkos::BAnd< Scalar > reducer_scalar( band_scalar );
 
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( band_scalar, reference_band );
 
       band_scalar = init;
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace , ReducerTag >( 0, N ), f_tag, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( band_scalar, reference_band );
 
       Scalar band_scalar_view = reducer_scalar.reference();
@@ -795,12 +779,10 @@ struct TestReducers {
       Kokkos::BOr< Scalar > reducer_scalar( bor_scalar );
 
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( bor_scalar, reference_bor );
 
       bor_scalar = init;
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace , ReducerTag >( 0, N ), f_tag, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( bor_scalar, reference_bor );
 
       Scalar bor_scalar_view = reducer_scalar.reference();
@@ -844,12 +826,10 @@ struct TestReducers {
       Kokkos::LAnd< Scalar > reducer_scalar( land_scalar );
 
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( land_scalar, reference_land );
 
       land_scalar = init;
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace , ReducerTag >( 0, N ), f_tag, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( land_scalar, reference_land );
 
       Scalar land_scalar_view = reducer_scalar.reference();
@@ -893,12 +873,10 @@ struct TestReducers {
       Kokkos::LOr< Scalar > reducer_scalar( lor_scalar );
 
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace >( 0, N ), f, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( lor_scalar, reference_lor );
 
       lor_scalar = init;
       Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace , ReducerTag >( 0, N ), f_tag, reducer_scalar );
-      Kokkos::fence();
       ASSERT_EQ( lor_scalar, reference_lor );
 
       Scalar lor_scalar_view = reducer_scalar.reference();

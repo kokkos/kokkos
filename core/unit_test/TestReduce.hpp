@@ -409,6 +409,7 @@ public:
       else {
         Kokkos::parallel_reduce( "TestKernelReduce", nwork, functor_type( nwork, Count ), result[i] );
       }
+
     }
 
     for ( unsigned i = 0; i < Repeat; ++i ) {

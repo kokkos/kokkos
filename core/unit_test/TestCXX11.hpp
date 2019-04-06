@@ -100,7 +100,6 @@ double AddTestFunctor() {
   else {
     Kokkos::parallel_for( policy_type( 25, Kokkos::AUTO ), FunctorAddTest< DeviceType >( a, b ) );
   }
-  Kokkos::fence();
   Kokkos::deep_copy( h_b, b );
 
   double result = 0;
@@ -155,7 +154,6 @@ double AddTestLambda() {
       }
     });
   }
-  Kokkos::fence();
   Kokkos::deep_copy( h_b, b );
 
   double result = 0;

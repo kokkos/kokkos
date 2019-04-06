@@ -81,11 +81,9 @@ void test_reduction_deduction()
   // ASSERT_EQ( answer, result );
 
   Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace, TestReductionDeductionTagA >( 0, N ), Functor(), result );
-
   ASSERT_EQ( answerA, result );
 
   Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace, TestReductionDeductionTagB >( 0, N ), Functor(), result );
-
   ASSERT_EQ( answerB, result );
 }
 

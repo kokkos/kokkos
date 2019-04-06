@@ -315,7 +315,6 @@ struct TestMDRange_2D {
       Kokkos::Sum< value_type > reducer_scalar( sum );
 
       parallel_reduce( range, functor, reducer_scalar );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * (N0 - s0) * (N1 - s1) );
     }
@@ -334,7 +333,6 @@ struct TestMDRange_2D {
       Kokkos::Sum< value_type > reducer_scalar( sum );
 
       parallel_reduce( "rank2-reducer-label", range, functor, reducer_scalar );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * (N0 - s0) * (N1 - s1) );
     }
@@ -378,7 +376,6 @@ struct TestMDRange_2D {
             min_val = fmin( v_in(i,j), min_val );
           }
         , reducer_scalar);
-      Kokkos::fence();
 
       ASSERT_EQ( min, 4.0 );
     }
@@ -395,7 +392,6 @@ struct TestMDRange_2D {
       TestMDRange_2D functor( N0, N1 );
 
       parallel_for( range, functor );
-      Kokkos::fence();
 
       // check parallel_for results correct with InitTag
       HostViewType h_view = Kokkos::create_mirror_view( functor.input_view );
@@ -902,7 +898,6 @@ struct TestMDRange_3D {
       Kokkos::Sum< value_type > reducer_scalar( sum );
 
       parallel_reduce( range, functor, reducer_scalar );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 );
     }
@@ -919,7 +914,6 @@ struct TestMDRange_3D {
       Kokkos::Sum< value_type > reducer_scalar( sum );
 
       parallel_reduce( "rank3-reducer-label", range, functor, reducer_scalar );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 );
     }
@@ -963,7 +957,6 @@ struct TestMDRange_3D {
             min_val = (v_in(i,j,k) < min_val) ? v_in(i,j,k) : min_val;
           }
         , Kokkos::Min<double>(min) );
-      Kokkos::fence();
 
       if((N0-1)*(N1-1)*(N2-1)>0)
         ASSERT_EQ( min, 8.0 );
@@ -1475,7 +1468,6 @@ struct TestMDRange_4D {
       Kokkos::Sum< value_type > reducer_scalar( sum );
 
       parallel_reduce( range, functor, reducer_scalar );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 * N3 );
     }
@@ -1493,7 +1485,6 @@ struct TestMDRange_4D {
       Kokkos::Sum< value_type > reducer_scalar( sum );
 
       parallel_reduce( "rank4-reducer-label", range, functor, reducer_scalar );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 * N3 );
     }
@@ -1539,7 +1530,6 @@ struct TestMDRange_4D {
             min_val = (v_in(i,j,k,l) < min_val) ? v_in(i,j,k,l) : min_val;
           }
         , Kokkos::Min<double>(min) );
-      Kokkos::fence();
 
       ASSERT_EQ( min, 16.0 );
     }
@@ -2066,7 +2056,6 @@ struct TestMDRange_5D {
       Kokkos::Sum< value_type > reducer_scalar( sum );
 
       parallel_reduce( range, functor, reducer_scalar );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 * N3 * N4 );
     }
@@ -2084,7 +2073,6 @@ struct TestMDRange_5D {
       Kokkos::Sum< value_type > reducer_scalar( sum );
 
       parallel_reduce( "rank5-reducer-label", range, functor, reducer_scalar );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 * N3 * N4 );
     }
@@ -2130,7 +2118,6 @@ struct TestMDRange_5D {
             min_val = (v_in(i,j,k,l,m) < min_val) ? v_in(i,j,k,l,m) : min_val;
           }
         , Kokkos::Min<double>(min) );
-      Kokkos::fence();
 
       ASSERT_EQ( min, 32.0 );
     }
@@ -2588,7 +2575,6 @@ struct TestMDRange_6D {
       Kokkos::Sum< value_type > reducer_scalar( sum );
 
       parallel_reduce( range, functor, reducer_scalar );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 * N3 * N4 * N5 );
     }
@@ -2606,7 +2592,6 @@ struct TestMDRange_6D {
       Kokkos::Sum< value_type > reducer_scalar( sum );
 
       parallel_reduce( "rank6-reducer-label", range, functor, reducer_scalar );
-      Kokkos::fence();
 
       ASSERT_EQ( sum, 2 * N0 * N1 * N2 * N3 * N4 * N5 );
     }
@@ -2652,7 +2637,6 @@ struct TestMDRange_6D {
             min_val = (v_in(i,j,k,l,m,n) < min_val) ? v_in(i,j,k,l,m,n) : min_val;
           }
         , Kokkos::Min<double>(min) );
-      Kokkos::fence();
 
       ASSERT_EQ( min, 64.0 );
     }

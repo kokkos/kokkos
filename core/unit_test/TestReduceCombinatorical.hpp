@@ -469,7 +469,6 @@ struct TestReduceCombinatoricalInstantiation {
 
     value = 0;
     CallParallelReduce( args..., Test::ReduceCombinatorical::AddPlus< double >( value ) );
-    Kokkos::fence();
     if ( ( Kokkos::DefaultExecutionSpace::concurrency() > 1 ) && ( ExecSpace::concurrency() > 1 ) ) {
       ASSERT_TRUE( expected_result < value );
     }
@@ -483,7 +482,6 @@ struct TestReduceCombinatoricalInstantiation {
     value = 0;
     Test::ReduceCombinatorical::AddPlus< double > add( value );
     CallParallelReduce( args..., add );
-    Kokkos::fence();
     if ( ( Kokkos::DefaultExecutionSpace::concurrency() > 1 ) && ( ExecSpace::concurrency() > 1 ) ) {
       ASSERT_TRUE( expected_result < value );
     }
