@@ -930,9 +930,6 @@ private:
 public:
   void execute() const {
     dispatch_execute_task(this);
-    if (m_force_synchronous) {
-      Kokkos::Experimental::HPX::fence();
-    }
   }
 
   inline void execute_task() const {
@@ -1089,9 +1086,6 @@ private:
 public:
   void execute() const {
     dispatch_execute_task(this);
-    if (m_force_synchronous) {
-      Kokkos::Experimental::HPX::fence();
-    }
   }
 
   inline void execute_task() const {
@@ -1628,9 +1622,6 @@ private:
 public:
   void execute() const {
     dispatch_execute_task(this);
-    if (m_force_synchronous) {
-      Kokkos::Experimental::HPX::fence();
-    }
   }
 
   inline void execute_task() const {
