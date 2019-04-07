@@ -391,7 +391,7 @@ elif [ "$MACHINE" = "apollo" ]; then
   CLANG_MODULE_LIST="sems-env,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/9.0.69"
   CLANG7_MODULE_LIST="sems-env,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/9.1"
   NVCC_MODULE_LIST="sems-env,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0"
-  HPX_MODULE_LIST="sems-env,kokkos-env,hpx/1.2.1,sems-gcc/6.1.0"
+  HPX_MODULE_LIST="sems-env,kokkos-env,hpx/1.2.1,sems-gcc/6.1.0,binutils"
 
   BUILD_LIST_CUDA_NVCC="Cuda_Serial,Cuda_OpenMP"
   BUILD_LIST_CUDA_CLANG="Cuda_Serial,Cuda_Pthread"
