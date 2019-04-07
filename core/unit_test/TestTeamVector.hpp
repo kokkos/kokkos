@@ -843,6 +843,14 @@ public:
     if( team_size > size_type(DeviceType::execution_space::concurrency()))
       team_size = size_type(DeviceType::execution_space::concurrency());
 
+#ifdef KOKKOS_ENABLE_HPX
+    team_size = 1;
+    if (!std::is_same<execution_space, Kokkos::Experimental::HPX>::value)
+    {
+        team_size = 1;
+    }
+#endif
+
     //typedef Kokkos::LayoutLeft Layout;
     typedef Kokkos::LayoutRight Layout;
 

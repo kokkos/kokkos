@@ -951,9 +951,9 @@ public:
       if ( nwork ) {
         const int block_size = local_block_size( m_functor );
 
-        m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_size /* block_size == max block_count */ );
-        m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
-        m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) );
+        m_scratch_space = cuda_internal_scratch_space( m_policy.space(), ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_size /* block_size == max block_count */ );
+        m_scratch_flags = cuda_internal_scratch_flags( m_policy.space(), sizeof(size_type) );
+        m_unified_space = cuda_internal_scratch_unified( m_policy.space(), ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) );
 
         // REQUIRED ( 1 , N , 1 )
         const dim3 block( 1 , block_size , 1 );
@@ -1189,9 +1189,9 @@ public:
         block_size = (block_size > suggested_blocksize) ? block_size : suggested_blocksize ; //Note: block_size must be less than or equal to 512
 
 
-        m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_size /* block_size == max block_count */ );
-        m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
-        m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) );
+        m_scratch_space = cuda_internal_scratch_space( m_policy.space(), ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_size /* block_size == max block_count */ );
+        m_scratch_flags = cuda_internal_scratch_flags( m_policy.space(), sizeof(size_type) );
+        m_unified_space = cuda_internal_scratch_unified( m_policy.space(), ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) );
 
         // REQUIRED ( 1 , N , 1 )
         const dim3 block( 1 , block_size , 1 );
@@ -1459,9 +1459,9 @@ public:
         const int block_count = UseShflReduction? std::min( m_league_size , size_type(1024*32) )
           :std::min( m_league_size , m_team_size );
 
-        m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_count );
-        m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) );
-        m_unified_space = cuda_internal_scratch_unified( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) );
+        m_scratch_space = cuda_internal_scratch_space(m_policy.space(), ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) * block_count );
+        m_scratch_flags = cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type) );
+        m_unified_space = cuda_internal_scratch_unified( m_policy.space(),ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) );
 
         const dim3 block( m_vector_size , m_team_size , 1 );
         const dim3 grid( block_count , 1 , 1 );
@@ -1828,8 +1828,8 @@ public:
         // How many block are really needed for this much work:
         const int grid_x = ( nwork + work_per_block - 1 ) / work_per_block ;
 
-        m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( m_functor ) * grid_x );
-        m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) * 1 );
+        m_scratch_space = cuda_internal_scratch_space( m_policy.space(), ValueTraits::value_size( m_functor ) * grid_x );
+        m_scratch_flags = cuda_internal_scratch_flags( m_policy.space(), sizeof(size_type) * 1 );
 
         const dim3 grid( grid_x , 1 , 1 );
         const dim3 block( 1 , block_size , 1 ); // REQUIRED DIMENSIONS ( 1 , N , 1 )
@@ -2056,8 +2056,8 @@ public:
         // How many block are really needed for this much work:
         const int grid_x = ( nwork + work_per_block - 1 ) / work_per_block ;
 
-        m_scratch_space = cuda_internal_scratch_space( ValueTraits::value_size( m_functor ) * grid_x );
-        m_scratch_flags = cuda_internal_scratch_flags( sizeof(size_type) * 1 );
+        m_scratch_space = cuda_internal_scratch_space( m_policy.space(), ValueTraits::value_size( m_functor ) * grid_x );
+        m_scratch_flags = cuda_internal_scratch_flags( m_policy.space(), sizeof(size_type) * 1 );
 
         const dim3 grid( grid_x , 1 , 1 );
         const dim3 block( 1 , block_size , 1 ); // REQUIRED DIMENSIONS ( 1 , N , 1 )

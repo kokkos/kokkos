@@ -279,6 +279,7 @@ public:
 
     // TODO @tasking @minor DSH make sure there aren't any alignment concerns?
     void* storage = cuda_internal_scratch_unified( 
+      Kokkos::Cuda(),
       sizeof(function_type) + sizeof(destroy_type)
     );
     function_type* ptr_ptr = (function_type*)storage;
@@ -515,6 +516,7 @@ public:
       using destroy_type = typename TaskType::destroy_type;
 
       void* storage = cuda_internal_scratch_unified(
+        Kokkos::Cuda(),
         sizeof(function_type) + sizeof(destroy_type)
       );
       function_type* ptr_ptr = (function_type*)storage;

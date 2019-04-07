@@ -1300,6 +1300,7 @@ void test_layoutleft_to_layoutleft() {
     check.offset_0 = 16;
     check.offset_2 = 0;
     Kokkos::parallel_for( Kokkos::RangePolicy< typename Space::execution_space >( 0, b.extent( 0 ) * b.extent( 1 ) * b.extent( 2 ) ), check );
+    Kokkos::fence();
   }
 
   {
@@ -1316,6 +1317,7 @@ void test_layoutleft_to_layoutleft() {
     check.offset_0 = 16;
     check.offset_2 = 1;
     Kokkos::parallel_for( Kokkos::RangePolicy< typename Space::execution_space >( 0, b.extent( 0 ) * b.extent( 1 ) * b.extent( 2 ) ), check );
+    Kokkos::fence();
   }
 
   {
@@ -1333,6 +1335,7 @@ void test_layoutleft_to_layoutleft() {
     check.offset_2 = 1;
     check.index = 1;
     Kokkos::parallel_for( Kokkos::RangePolicy< typename Space::execution_space >( 0, b.extent( 0 ) * b.extent( 1 ) * b.extent( 2 ) ), check );
+    Kokkos::fence();
   }
 }
 
@@ -1354,6 +1357,7 @@ void test_layoutright_to_layoutright() {
     check.offset_0 = 16;
     check.offset_2 = 0;
     Kokkos::parallel_for( Kokkos::RangePolicy< typename Space::execution_space >( 0, b.extent( 0 ) * b.extent( 1 ) * b.extent( 2 ) ), check );
+    Kokkos::fence();
   }
 
   {
@@ -1371,6 +1375,7 @@ void test_layoutright_to_layoutright() {
     check.offset_2 = 0;
     check.index = 1;
     Kokkos::parallel_for( Kokkos::RangePolicy< typename Space::execution_space >( 0, b.extent( 0 ) * b.extent( 1 ) * b.extent( 2 ) ), check );
+    Kokkos::fence();
   }
 }
 

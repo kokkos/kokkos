@@ -9,4 +9,5 @@ ${SCRIPT_PATH}/generate_view_copy_cpp_files_iterate OpenMP OpenMP
 ${SCRIPT_PATH}/generate_view_copy_cpp_files_iterate Threads Threads
 ${SCRIPT_PATH}/generate_view_copy_cpp_files_iterate Cuda Cuda
 ${SCRIPT_PATH}/generate_view_copy_cpp_files_iterate "Experimental::ROCm" ROCm
+${SCRIPT_PATH}/generate_view_copy_cpp_files_iterate "Experimental::HPX" HPX
 

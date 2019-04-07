@@ -1650,6 +1650,7 @@ struct DynRankViewRemap {
       typedef Kokkos::RangePolicy< ExecSpace > Policy ;
       const Kokkos::Impl::ParallelFor< DynRankViewRemap , Policy > closure( *this , Policy( 0 , n0 ) );
       closure.execute();
+      // Kokkos::fence(); // ??
     }
 
   KOKKOS_INLINE_FUNCTION

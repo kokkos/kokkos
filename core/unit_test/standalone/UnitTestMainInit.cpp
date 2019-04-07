@@ -58,8 +58,10 @@
 #ifdef KOKKOS_ENABLE_THREADS
 #include <threads/TestThreads_Category.hpp>
 #endif
-
-#include <TestMemoryPool.hpp>
+#ifdef KOKKOS_ENABLE_HPX
+#include <hpx/TestHPX_Category.hpp>
+#endif
+#include <TestMDRange_a.hpp>
 
 int main( int argc, char *argv[] ) {
   Kokkos::initialize(argc,argv);
