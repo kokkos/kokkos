@@ -117,7 +117,7 @@ struct FunctorTeamReduce {
     for(int r=0;r<R;r++) {
       double val;
       Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team,M), [&] (const int j, double& tmp2) {
-        tmp2 + a(i,j);
+        tmp2 += a(i,j);
       },val);
       tmp+=val;
     }
@@ -222,6 +222,9 @@ TEST_F( default_exec, overlap_range_policy ) {
        , fr, result);   
    double time_not_fenced = timer.seconds();
    Kokkos::fence();
+   if(SpaceInstance<TEST_EXECSPACE>::overlap()) {
+     ASSERT_TRUE(time_fenced>2.0*time_not_fenced);
+   }
 
    timer.reset();
    Kokkos::parallel_reduce("default_exec::overlap_range_policy::kernel_reduce",
@@ -366,6 +369,9 @@ TEST_F( default_exec, overlap_mdrange_policy ) {
        , fr, result);   
    double time_not_fenced = timer.seconds();
    Kokkos::fence();
+   if(SpaceInstance<TEST_EXECSPACE>::overlap()) {
+     ASSERT_TRUE(time_fenced>2.0*time_not_fenced);
+   }
 
    timer.reset();
    Kokkos::parallel_reduce("default_exec::overlap_mdrange_policy::kernel_reduce",
@@ -511,7 +517,9 @@ TEST_F( default_exec, overlap_team_policy ) {
        , fr, result);   
    double time_not_fenced = timer.seconds();
    Kokkos::fence();
-
+   if(SpaceInstance<TEST_EXECSPACE>::overlap()) {
+     ASSERT_TRUE(time_fenced>2.0*time_not_fenced);
+   }
    timer.reset();
    Kokkos::parallel_reduce("default_exec::overlap_team_policy::kernel_reduce",
        Kokkos::Experimental::require(
