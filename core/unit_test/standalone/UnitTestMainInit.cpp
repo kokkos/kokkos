@@ -61,7 +61,7 @@
 #ifdef KOKKOS_ENABLE_HPX
 #include <hpx/TestHPX_Category.hpp>
 #endif
-#include <TestMDRange_a.hpp>
+#include <TestTeamVector.hpp>
 
 int main( int argc, char *argv[] ) {
   Kokkos::initialize(argc,argv);
