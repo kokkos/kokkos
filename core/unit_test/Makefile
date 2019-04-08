@@ -375,9 +375,9 @@ TEST_TARGETS += ${INITTESTS_TEST_TARGETS}
 KokkosCore_UnitTest_Cuda: $(OBJ_CUDA) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_CUDA) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Cuda
 	
-KokkosCore_UnitTest_CudaInterOpInit: UnitTestMain.o gtest-all.o TestCuda_InterOp_Init.o
+KokkosCore_UnitTest_CudaInterOpInit: UnitTestMain.o gtest-all.o TestCuda_InterOp_Init.o $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) UnitTestMain.o gtest-all.o TestCuda_InterOp_Init.o $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_CudaInterOpInit
-KokkosCore_UnitTest_CudaInterOpStreams: UnitTestMain.o gtest-all.o TestCuda_InterOp_Streams.o
+KokkosCore_UnitTest_CudaInterOpStreams: UnitTestMain.o gtest-all.o TestCuda_InterOp_Streams.o $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) UnitTestMain.o gtest-all.o TestCuda_InterOp_Streams.o $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_CudaInterOpStreams
 	
 KokkosCore_UnitTest_ROCm: $(OBJ_ROCM) $(KOKKOS_LINK_DEPENDS)
@@ -389,7 +389,7 @@ KokkosCore_UnitTest_Threads: $(OBJ_THREADS) $(KOKKOS_LINK_DEPENDS)
 KokkosCore_UnitTest_OpenMP: $(OBJ_OPENMP) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_OPENMP) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_OpenMP
 
-KokkosCore_UnitTest_OpenMPInterOp: UnitTestMain.o gtest-all.o TestOpenMP_InterOp.o
+KokkosCore_UnitTest_OpenMPInterOp: UnitTestMain.o gtest-all.o TestOpenMP_InterOp.o $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) UnitTestMain.o gtest-all.o TestOpenMP_InterOp.o $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_OpenMPInterOp
 
 KokkosCore_UnitTest_OpenMPTarget: $(OBJ_OPENMPTARGET) $(KOKKOS_LINK_DEPENDS)
@@ -407,7 +407,7 @@ KokkosCore_UnitTest_Qthreads2: $(OBJ_QTHREADS2) $(KOKKOS_LINK_DEPENDS)
 KokkosCore_UnitTest_HPX: $(OBJ_HPX) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_HPX) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_HPX
 
-KokkosCore_UnitTest_HPXInterOp: UnitTestMain.o gtest-all.o TestHPX_InterOp.o
+KokkosCore_UnitTest_HPXInterOp: UnitTestMain.o gtest-all.o TestHPX_InterOp.o $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) UnitTestMain.o gtest-all.o TestHPX_InterOp.o $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_HPXInterOp
 
 KokkosCore_UnitTest_HWLOC: $(OBJ_HWLOC) $(KOKKOS_LINK_DEPENDS)
