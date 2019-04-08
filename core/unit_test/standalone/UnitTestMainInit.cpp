@@ -61,6 +61,11 @@
 #ifdef KOKKOS_ENABLE_HPX
 #include <hpx/TestHPX_Category.hpp>
 #endif
+#ifndef TEST_EXECSPACE
+#ifdef KOKKOS_ENABLE_SERIAL
+#include <serial/TestSerial_Category.hpp>
+#endif
+#endif 
 #include <TestTeamVector.hpp>
 
 int main( int argc, char *argv[] ) {

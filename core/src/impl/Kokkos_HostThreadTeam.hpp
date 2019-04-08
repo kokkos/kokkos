@@ -681,6 +681,8 @@ public:
           // Copy from root member's buffer:
           reducer.reference() = *((value_type*) m_data.team_reduce());
         }
+      } else {
+        reducer.reference() = contribution;
       }
     }
 #else
