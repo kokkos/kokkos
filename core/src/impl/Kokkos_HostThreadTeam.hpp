@@ -634,6 +634,12 @@ public:
   KOKKOS_INLINE_FUNCTION
   typename std::enable_if< is_reducer< ReducerType >::value >::type
   team_reduce( ReducerType const & reducer ) const noexcept
+  { team_reduce(reducer,reducer.reference()); }
+
+  template< typename ReducerType >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< is_reducer< ReducerType >::value >::type
+  team_reduce( ReducerType const & reducer, typename ReducerType::value_type contribution ) const noexcept
 #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
     {
       if ( 1 < m_data.m_team_size ) {
@@ -644,7 +650,7 @@ public:
           // Non-root copies to their local buffer:
           /*reducer.copy( (value_type*) m_data.team_reduce_local()
                       , reducer.data() );*/
-          *((value_type*) m_data.team_reduce_local()) = reducer.reference();
+          *((value_type*) m_data.team_reduce_local()) = contribution;
         }
 
         // Root does not overwrite shared memory until all threads arrive
@@ -660,12 +666,13 @@ public:
             value_type * const src =
               (value_type*) m_data.team_member(i)->team_reduce_local();
 
-            reducer.join( reducer.reference(), *src);
+            reducer.join( contribution, *src);
           }
 
           // Copy result to root member's buffer:
           // reducer.copy( (value_type*) m_data.team_reduce() , reducer.data() );
-          *((value_type*) m_data.team_reduce()) = reducer.reference();
+          *((value_type*) m_data.team_reduce()) = contribution;
+          reducer.reference() = contribution;
           m_data.team_rendezvous_release();
           // This thread released all other threads from 'team_rendezvous'
           // with a return value of 'false'
@@ -923,15 +930,16 @@ parallel_reduce
   , Reducer  const & reducer
   )
 {
-  reducer.init( reducer.reference() );
+  typename Reducer::value_type value;
+  reducer.init( value );
 
   for( iType i = loop_boundaries.start
      ; i <  loop_boundaries.end
      ; i += loop_boundaries.increment ) {
-    closure( i , reducer.reference() );
+    closure( i , value );
   }
-
-  loop_boundaries.thread.team_reduce( reducer );
+  
+  loop_boundaries.thread.team_reduce( reducer, value );
 }
 
 template< typename iType, typename Closure, typename ValueType, typename Member >
@@ -947,9 +955,9 @@ parallel_reduce
   , ValueType      & result
   )
 {
-  Sum<ValueType> reducer( result );
-
-  reducer.init( result );
+  ValueType val;
+  Sum<ValueType> reducer( val );
+  reducer.init( val );
 
   for( iType i = loop_boundaries.start
      ; i <  loop_boundaries.end
@@ -958,6 +966,7 @@ parallel_reduce
   }
 
   loop_boundaries.thread.team_reduce( reducer );
+  result = reducer.reference();
 }
 
 /*template< typename iType, class Space
