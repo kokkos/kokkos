@@ -113,9 +113,9 @@ public:
         auto val0 = host_view(i, 0);
         auto val1 = host_view(i, 1);
         auto val2 = host_view(i, 2);
-        EXPECT_TRUE(std::fabs((val0 - 84.0) / 84.0) < 1e-15);
-        EXPECT_TRUE(std::fabs((val1 - 40.0) / 40.0) < 1e-15);
-        EXPECT_TRUE(std::fabs((val2 - 20.0) / 20.0) < 1e-15);
+        EXPECT_TRUE(std::fabs((val0 - 84.0) / 84.0) < 1e-14);
+        EXPECT_TRUE(std::fabs((val1 - 40.0) / 40.0) < 1e-14);
+        EXPECT_TRUE(std::fabs((val2 - 20.0) / 20.0) < 1e-14);
       }
     }
 };
@@ -183,9 +183,9 @@ public:
         auto val0 = host_view(i, 0);
         auto val1 = host_view(i, 1);
         auto val2 = host_view(i, 2);
-        EXPECT_TRUE(std::fabs((val0 - 65536.0) / 65536.0) < 1e-15);
-        EXPECT_TRUE(std::fabs((val1 - 256.0) / 256.0) < 1e-15);
-        EXPECT_TRUE(std::fabs((val2 - 1.0) / 1.0) < 1e-15);
+        EXPECT_TRUE(std::fabs((val0 - 65536.0) / 65536.0) < 1e-14);
+        EXPECT_TRUE(std::fabs((val1 - 256.0) / 256.0) < 1e-14);
+        EXPECT_TRUE(std::fabs((val2 - 1.0) / 1.0) < 1e-14);
       }
     }
 };
@@ -253,9 +253,9 @@ public:
         auto val0 = host_view(i, 0);
         auto val1 = host_view(i, 1);
         auto val2 = host_view(i, 2);
-        EXPECT_TRUE(std::fabs((val0 - 4.0) / 4.0) < 1e-15);
-        EXPECT_TRUE(std::fabs((val1 - 2.0) / 2.0) < 1e-15);
-        EXPECT_TRUE(std::fabs((val2 - 1.0) / 1.0) < 1e-15);
+        EXPECT_TRUE(std::fabs((val0 - 4.0) / 4.0) < 1e-14);
+        EXPECT_TRUE(std::fabs((val1 - 2.0) / 2.0) < 1e-14);
+        EXPECT_TRUE(std::fabs((val2 - 1.0) / 1.0) < 1e-14);
       }
     }
 };
@@ -323,9 +323,9 @@ public:
         auto val0 = host_view(i, 0);
         auto val1 = host_view(i, 1);
         auto val2 = host_view(i, 2);
-        EXPECT_TRUE(std::fabs((val0 - 16.0) / 16.0) < 1e-15);
-        EXPECT_TRUE(std::fabs((val1 - 8.0) / 8.0) < 1e-15);
-        EXPECT_TRUE(std::fabs((val2 - 4.0) / 4.0) < 1e-15);
+        EXPECT_TRUE(std::fabs((val0 - 16.0) / 16.0) < 1e-14);
+        EXPECT_TRUE(std::fabs((val1 - 8.0) / 8.0) < 1e-14);
+        EXPECT_TRUE(std::fabs((val2 - 4.0) / 4.0) < 1e-14);
       }
     }
 };
