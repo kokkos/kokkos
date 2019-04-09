@@ -743,10 +743,19 @@ IF(Kokkos_ENABLE_Cuda)
     TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
   )
   TRIBITS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_CudaInterOp
+    UnitTest_CudaInterOpInit
     SOURCES
       UnitTestMain.cpp
       cuda/TestCuda_InterOp_Init.cpp
+    COMM serial mpi
+    NUM_MPI_PROCS 1
+    FAIL_REGULAR_EXPRESSION "  FAILED  "
+    TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+  )
+  TRIBITS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_CudaInterOpStreams
+    SOURCES
+      UnitTestMain.cpp
       cuda/TestCuda_InterOp_Streams.cpp
     COMM serial mpi
     NUM_MPI_PROCS 1
