@@ -807,8 +807,8 @@ KOKKOS_ADD_COMPILE_TEST(
   CompileTest_Detection
   SOURCES compile_only/CompileTestDetection.cpp
 )
-KOKKOS_ADD_COMPILE_TEST(
-  CompileTest_Properties
-  SOURCES compile_only/CompileTestProperties.cpp
-  LINK_KOKKOS
-)
+#KOKKOS_ADD_COMPILE_TEST(
+#  CompileTest_Properties
+#  SOURCES compile_only/CompileTestProperties.cpp
+#  LINK_KOKKOS
+#)
