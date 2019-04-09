@@ -337,8 +337,10 @@ int main( int argc , char ** argv )
         << " -target-pid " << my_os_pid << " &";
     if (p_rank == 0)
       std::cout << cmd.str() << std::endl;
-    system(cmd.str().c_str());
-    system("sleep 10");
+    int error = system(cmd.str().c_str());
+    if(error) printf("System Call Result: %i\n",error);
+    error = system("sleep 10");
+    if(error) printf("System Call Result: %i\n",error);
   }
 
   if ( ! cmdline[ CMD_ERROR ] && ! cmdline[ CMD_ECHO ] ) {
