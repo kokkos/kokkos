@@ -46,7 +46,7 @@
 
 namespace Test {
 
-__global__ void offset(int* p) {
+__global__ void offset_streams(int* p) {
   int idx = blockIdx.x*blockDim.x + threadIdx.x;
   if(idx<100) {
     p[idx]+=idx;
@@ -161,7 +161,7 @@ TEST_F( cuda, raw_cuda_streams )
 
   }
   Kokkos::finalize();
-  offset<<<100,64,0,stream>>>(p);
+  offset_streams<<<100,64,0,stream>>>(p);
   CUDA_SAFE_CALL( cudaDeviceSynchronize());
   cudaStreamDestroy(stream);
 
