@@ -1042,37 +1042,6 @@ parallel_reduce
   }
 }
 
-/** \brief  Intra-thread vector parallel_reduce.
- *
- *  Executes lambda(iType i, ValueType & val) for each i=[0..N)
- *
- *  The range [0..N) is mapped to all vector lanes of the the
- *  calling thread and a reduction of val is performed using
- *  JoinType(ValueType& val, const ValueType& update)
- *  and put into init_result.
- *  The input value of init_result is used as initializer for
- *  temporary variables of ValueType. Therefore * the input
- *  value should be the neutral element with respect to the
- *  join operation (e.g. '0 for +-' or * '1 for *').
- */
-template< typename iType, class Lambda, class JoinType, typename ValueType, typename Member >
-KOKKOS_INLINE_FUNCTION
-typename std::enable_if<
-  Impl::is_host_thread_team_member<Member>::value
->::type
-parallel_reduce
-  (const Impl::ThreadVectorRangeBoundariesStruct<iType, Member>& loop_boundaries,
-   const Lambda & lambda,
-   const JoinType & join,
-   ValueType& result)
-{
-  for( iType i =  loop_boundaries.start ;
-             i <  loop_boundaries.end ;
-             i += loop_boundaries.increment ) {
-    lambda(i,result);
-  }
-}
-
 //----------------------------------------------------------------------------
 
 template< typename iType, class Closure, class Member >
