@@ -446,16 +446,16 @@ IF(Kokkos_ENABLE_OpenMP)
       FAIL_REGULAR_EXPRESSION "  FAILED  "
       TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
     )
-    TRIBITS_ADD_EXECUTABLE_AND_TEST(
-      UnitTest_OpenMP_Properties
-      SOURCES
-      UnitTestMainInit.cpp
-      openmp/TestOpenMP_ViewProperties.cpp
-      COMM serial mpi
-      NUM_MPI_PROCS 1
-      FAIL_REGULAR_EXPRESSION "  FAILED  "
-      TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
-    )
+    #TRIBITS_ADD_EXECUTABLE_AND_TEST(
+    #  UnitTest_OpenMP_Properties
+    #  SOURCES
+    #  UnitTestMainInit.cpp
+    #  openmp/TestOpenMP_ViewProperties.cpp
+    #  COMM serial mpi
+    #  NUM_MPI_PROCS 1
+    #  FAIL_REGULAR_EXPRESSION "  FAILED  "
+    #  TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
+    #)
     TRIBITS_ADD_EXECUTABLE_AND_TEST(
       UnitTest_OpenMPInterOp
       SOURCES
