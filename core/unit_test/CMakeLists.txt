@@ -523,7 +523,7 @@ IF(Kokkos_ENABLE_OpenMP)
         openmp/TestOpenMP_ViewMapping_b.cpp
         openmp/TestOpenMP_ViewMapping_subview.cpp
         openmp/TestOpenMP_ViewOfClass.cpp
-        openmp/TestOpenMP_ViewProperties.cpp
+        #openmp/TestOpenMP_ViewProperties.cpp
         openmp/TestOpenMP_Crs.cpp
         openmp/TestOpenMP_WorkGraph.cpp
         openmp/TestOpenMP_UniqueToken.cpp
