@@ -109,7 +109,7 @@ struct _detector<Default, void_t<Op<Args...>>, Op, Args...> {
 };
 
 #define KOKKOS_DECLARE_DETECTION_ARCHETYPE(name, params, params_no_intro, ...) \
-  template <KOKKOS_PP_REMOVE_PARENS(params)>
+  template <KOKKOS_PP_REMOVE_PARENS(params)> \
   using name = __VA_ARGS__
 
 
@@ -169,6 +169,15 @@ using _detector = _detection_impl::detector_workaround_impl<
 
 #define KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(name, param1, param2, ...) \
   KOKKOS_DECLARE_DETECTION_ARCHETYPE(name, (class param1, class param2), (param1, param2), __VA_ARGS__)
+
+#define KOKKOS_DECLARE_DETECTION_ARCHETYPE_3PARAMS(name, param1, param2, param3, ...) \
+  KOKKOS_DECLARE_DETECTION_ARCHETYPE(name, (class param1, class param2, class param3), (param1, param2, param3), __VA_ARGS__)
+
+#define KOKKOS_DECLARE_DETECTION_ARCHETYPE_4PARAMS(name, param1, param2, param3, param4, ...) \
+  KOKKOS_DECLARE_DETECTION_ARCHETYPE(name, (class param1, class param2, class param3, class param4), (param1, param2, param3, param4), __VA_ARGS__)
+
+#define KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM_VARIADIC(name, param, params, ...) \
+  KOKKOS_DECLARE_DETECTION_ARCHETYPE(name, (class param, class... params), (param, params...), __VA_ARGS__)
 
 
 template <template <class...> class Op, class... Args>

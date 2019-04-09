@@ -553,6 +553,12 @@
   #define KOKKOS_CONSTEXPR_14
 #endif
 
+// TODO Add to this list as compiler bugs are fixed
+#if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) || defined(KOKKOS_COMPILER_APPLECC))
+// Should be able to add KOKKOS_COMPILER_INTEL >= 1603
+// May need to add KOKKOS_COMPILER_GNU >= 500 (or whatever the 5.0 version is)
+#  define KOKKOS_COMPILER_SUPPORTS_DETECTION_IDIOM
+#endif
 
 #endif // #ifndef KOKKOS_MACROS_HPP
 
