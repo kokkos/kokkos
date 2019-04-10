@@ -72,9 +72,12 @@ private:
 
   enum { TEAM_REDUCE_SIZE = 512 };
 
+public:
   typedef Kokkos::Threads execution_space ;
-  typedef execution_space::scratch_memory_space space ;
+  typedef execution_space::scratch_memory_space scratch_memory_space ;
 
+private:
+  typedef execution_space::scratch_memory_space space ;
   ThreadsExec * const   m_exec ;
   ThreadsExec * const * m_team_base ; ///< Base for team fan-in
   space                 m_team_shared ;

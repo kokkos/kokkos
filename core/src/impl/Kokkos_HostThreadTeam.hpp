@@ -479,6 +479,7 @@ class HostThreadTeamMember {
 public:
 
   using scratch_memory_space = typename HostExecSpace::scratch_memory_space ;
+  using execution_space = HostExecSpace;
   using thread_team_member = HostThreadTeamMember;
   using host_thread_team_member = HostThreadTeamMember;
 

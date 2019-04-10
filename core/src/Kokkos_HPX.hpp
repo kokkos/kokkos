@@ -373,11 +373,12 @@ namespace Kokkos {
 namespace Impl {
 
 struct HPXTeamMember {
-private:
+public:
   using execution_space = Kokkos::Experimental::HPX;
   using scratch_memory_space =
       Kokkos::ScratchMemorySpace<Kokkos::Experimental::HPX>;
 
+private:
   scratch_memory_space m_team_shared;
   std::size_t m_team_shared_size;
 

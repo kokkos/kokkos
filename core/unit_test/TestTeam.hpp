@@ -72,6 +72,7 @@ struct TestTeamPolicy {
     const int tid = member.team_rank() + member.team_size() * member.league_rank();
 
     m_flags( member.team_rank(), member.league_rank() ) = tid;
+    static_assert((std::is_same<typename team_member::execution_space,ExecSpace>::value),"TeamMember::execution_space is not the same as TeamPolicy<>::execution_space");
   }
 
   KOKKOS_INLINE_FUNCTION
