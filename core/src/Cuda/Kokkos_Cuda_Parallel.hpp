@@ -73,6 +73,9 @@
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+
+extern bool show_warnings() noexcept;
+
 namespace Impl {
 
 template< class ... Properties >
@@ -220,6 +223,25 @@ public:
     { return Impl::CudaTraits::WarpSize; }
 
   inline static
+  int verify_requested_vector_length( int requested_vector_length ) {
+      int test_vector_length = std::min( requested_vector_length, vector_length_max() );
+
+      // Allow only power-of-two vector_length
+      if ( !(is_integral_power_of_two( test_vector_length ) ) ) {
+         int test_pow2 = 1;
+         for (int i = 0; i < 5; i++) {
+            test_pow2 = test_pow2 << 1;
+            if (test_pow2 > test_vector_length) {
+               break;
+            }
+         }
+         test_vector_length = test_pow2 >> 1;
+      }
+
+      return test_vector_length;
+  }
+
+  inline static
   int scratch_size_max(int level)
     { return (level==0?
         1024*40:             // 48kB is the max for CUDA, but we need some for team_member.reduce etc.
@@ -264,16 +286,11 @@ public:
     : m_space( space_ )
     , m_league_size( league_size_ )
     , m_team_size( team_size_request )
-    , m_vector_length( vector_length_request )
+    , m_vector_length( verify_requested_vector_length(vector_length_request) )
     , m_team_scratch_size {0,0}
     , m_thread_scratch_size {0,0}
     , m_chunk_size ( 32 )
     {
-      // Allow only power-of-two vector_length
-      if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
-        Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
-      }
-
       // Make sure league size is permissable
       if(league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
         Impl::throw_runtime_exception( "Requested too large league_size for TeamPolicy on Cuda execution space.");
@@ -292,16 +309,11 @@ public:
     : m_space( space_ )
     , m_league_size( league_size_ )
     , m_team_size( -1 )
-    , m_vector_length( vector_length_request )
+    , m_vector_length( verify_requested_vector_length(vector_length_request) )
     , m_team_scratch_size {0,0}
     , m_thread_scratch_size {0,0}
     , m_chunk_size ( 32 )
     {
-      // Allow only power-of-two vector_length
-      if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
-        Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
-      }
-
       // Make sure league size is permissable
       if(league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
         Impl::throw_runtime_exception( "Requested too large league_size for TeamPolicy on Cuda execution space.");
@@ -313,16 +325,11 @@ public:
     : m_space( typename traits::execution_space() )
     , m_league_size( league_size_ )
     , m_team_size( team_size_request )
-    , m_vector_length ( vector_length_request )
+    , m_vector_length ( verify_requested_vector_length(vector_length_request) )
     , m_team_scratch_size {0,0}
     , m_thread_scratch_size {0,0}
     , m_chunk_size ( 32 )
     {
-      // Allow only power-of-two vector_length
-      if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
-        Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
-      }
-
       // Make sure league size is permissable
       if(league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
         Impl::throw_runtime_exception( "Requested too large league_size for TeamPolicy on Cuda execution space.");
@@ -339,16 +346,11 @@ public:
     : m_space( typename traits::execution_space() )
     , m_league_size( league_size_ )
     , m_team_size( -1 )
-    , m_vector_length ( vector_length_request )
+    , m_vector_length ( verify_requested_vector_length(vector_length_request) )
     , m_team_scratch_size {0,0}
     , m_thread_scratch_size {0,0}
     , m_chunk_size ( 32 )
     {
-      // Allow only power-of-two vector_length
-      if ( ! Kokkos::Impl::is_integral_power_of_two( vector_length_request ) ) {
-        Impl::throw_runtime_exception( "Requested non-power-of-two vector length for TeamPolicy.");
-      }
-
       // Make sure league size is permissable
       if(league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
         Impl::throw_runtime_exception( "Requested too large league_size for TeamPolicy on Cuda execution space.");
