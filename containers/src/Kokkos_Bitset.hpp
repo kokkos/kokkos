@@ -108,6 +108,7 @@ public:
   }
 
   /// assignment
+  KOKKOS_FORCEINLINE_FUNCTION
   Bitset<Device> & operator = (Bitset<Device> const & rhs)
   {
     this->m_size = rhs.m_size;
@@ -118,6 +119,7 @@ public:
   }
 
   /// copy constructor
+  KOKKOS_FORCEINLINE_FUNCTION
   Bitset( Bitset<Device> const & rhs)
     : m_size( rhs.m_size )
     , m_last_block_mask( rhs.m_last_block_mask )
