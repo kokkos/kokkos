@@ -238,12 +238,6 @@ public:
          test_vector_length = test_pow2 >> 1;
       }
 
-      if ( Kokkos::show_warnings() && ( test_vector_length != requested_vector_length ) ) {
-           std::cerr << "Kokkos::Cuda::TeamPolicyInternal WARNING: requested vector length ( " 
-                     << requested_vector_length << " ) invalid.  using vector length = "
-                << test_vector_length << " instead." << std::endl ;
-      }
-
       return test_vector_length;
   }
 
