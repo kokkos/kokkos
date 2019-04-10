@@ -101,10 +101,12 @@ struct CudaJoinFunctor {
  *  total available shared memory must be partitioned among teams.
  */
 class CudaTeamMember {
-private:
 
+public:
   typedef Kokkos::Cuda                           execution_space ;
   typedef execution_space::scratch_memory_space  scratch_memory_space ;
+
+private:
 
   mutable void        * m_team_reduce ;
   scratch_memory_space  m_team_shared ;
