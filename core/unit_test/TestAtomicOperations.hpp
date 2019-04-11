@@ -536,7 +536,9 @@ bool DivAtomicTest( T i0, T i1 )
 
   bool passed = true;
 
-  if ( (resSerial-res)*(resSerial-res) > 1e-10 ) {
+  using std::abs;
+  using Kokkos::abs;
+  if ( abs( (resSerial-res) * 1.) > 1e-5 ) {
     passed = false;
 
     std::cout << "Loop<"

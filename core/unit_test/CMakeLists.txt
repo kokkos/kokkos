@@ -53,6 +53,8 @@ IF(Kokkos_ENABLE_Serial)
         serial/TestSerial_AtomicOperations_longlongint.cpp
         serial/TestSerial_AtomicOperations_double.cpp
         serial/TestSerial_AtomicOperations_float.cpp
+        serial/TestSerial_AtomicOperations_complexdouble.cpp
+        serial/TestSerial_AtomicOperations_complexfloat.cpp
         serial/TestSerial_AtomicViews.cpp
         serial/TestSerial_Atomics.cpp
       COMM serial mpi
@@ -189,6 +191,8 @@ IF(Kokkos_ENABLE_Serial)
         serial/TestSerial_AtomicOperations_longlongint.cpp
         serial/TestSerial_AtomicOperations_double.cpp
         serial/TestSerial_AtomicOperations_float.cpp
+        serial/TestSerial_AtomicOperations_complexdouble.cpp
+        serial/TestSerial_AtomicOperations_complexfloat.cpp
         serial/TestSerial_AtomicViews.cpp
         serial/TestSerial_Atomics.cpp
         serial/TestSerial_Complex.cpp
@@ -257,6 +261,8 @@ IF(Kokkos_ENABLE_Pthread)
       threads/TestThreads_AtomicOperations_longlongint.cpp
       threads/TestThreads_AtomicOperations_double.cpp
       threads/TestThreads_AtomicOperations_float.cpp
+      threads/TestThreads_AtomicOperations_complexdouble.cpp
+      threads/TestThreads_AtomicOperations_complexfloat.cpp
       threads/TestThreads_AtomicViews.cpp
       threads/TestThreads_Atomics.cpp
       threads/TestThreads_Complex.cpp
@@ -324,6 +330,8 @@ IF(Kokkos_ENABLE_OpenMP)
         openmp/TestOpenMP_AtomicOperations_longlongint.cpp
         openmp/TestOpenMP_AtomicOperations_double.cpp
         openmp/TestOpenMP_AtomicOperations_float.cpp
+        openmp/TestOpenMP_AtomicOperations_complexdouble.cpp
+        openmp/TestOpenMP_AtomicOperations_complexfloat.cpp
         openmp/TestOpenMP_AtomicViews.cpp
         openmp/TestOpenMP_Atomics.cpp
       COMM serial mpi
@@ -471,6 +479,8 @@ IF(Kokkos_ENABLE_OpenMP)
         openmp/TestOpenMP_AtomicOperations_longlongint.cpp
         openmp/TestOpenMP_AtomicOperations_double.cpp
         openmp/TestOpenMP_AtomicOperations_float.cpp
+        openmp/TestOpenMP_AtomicOperations_complexdouble.cpp
+        openmp/TestOpenMP_AtomicOperations_complexfloat.cpp
         openmp/TestOpenMP_AtomicViews.cpp
         openmp/TestOpenMP_Atomics.cpp
         openmp/TestOpenMP_Complex.cpp
@@ -687,6 +697,8 @@ IF(Kokkos_ENABLE_Cuda)
       cuda/TestCuda_AtomicOperations_longlongint.cpp
       cuda/TestCuda_AtomicOperations_double.cpp
       cuda/TestCuda_AtomicOperations_float.cpp
+      cuda/TestCuda_AtomicOperations_complexdouble.cpp
+      cuda/TestCuda_AtomicOperations_complexfloat.cpp
       cuda/TestCuda_AtomicViews.cpp
       cuda/TestCuda_Atomics.cpp
       cuda/TestCuda_Complex.cpp
