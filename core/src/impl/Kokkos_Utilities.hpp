@@ -412,6 +412,19 @@ struct inclusive_scan_integer_sequence
 template <typename T>
 using identity_t = T;
 
+template <class T>
+using remove_cvref_t =
+  typename std::remove_cv<
+    typename std::remove_reference<T>::type
+  >::type;
+
+/**
+ *  A wrapper for creating an unevaluated context (via decltype) that can be
+ *  conjunctioned with other boolean requirements
+ */
+template <class T>
+struct make_requirement : std::true_type { };
+
 }} // namespace Kokkos::Impl
 
 

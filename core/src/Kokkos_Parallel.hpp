@@ -61,6 +61,7 @@
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
+#include <Patterns/ParallelReduce/Kokkos_Parallel_Reduce.hpp>
 
 #ifdef KOKKOS_DEBUG
 #include<iostream>

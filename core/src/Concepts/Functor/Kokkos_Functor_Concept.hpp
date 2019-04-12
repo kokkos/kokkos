@@ -44,11 +44,17 @@
 #ifndef KOKKOS_CONCEPTS_FUNCTOR_KOKKOS_FUNCTOR_CONCEPT_HPP
 #define KOKKOS_CONCEPTS_FUNCTOR_KOKKOS_FUNCTOR_CONCEPT_HPP
 
+#include <Concepts/Kokkos_Concepts_Common.hpp>
+#include <Concepts/ExecutionPolicy/Kokkos_ExecutionPolicy_Concept.hpp>
+
 #include <Properties/Kokkos_Detection.hpp>
 
 namespace Kokkos {
 namespace Impl {
 namespace Concepts {
+
+//==============================================================================
+// <editor-fold desc="functor_invocable_with"> {{{1
 
 KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM_VARIADIC(
   _invocable_with_archetype, F, ArgTypes,
@@ -57,37 +63,98 @@ KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM_VARIADIC(
   )
 );
 
-KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(
-  _functor_execution_space_archetype, F,
-  typename F::execution_space
-);
+template <class F, class... Args>
+struct functor_is_invocable_with
+  : std::integral_constant<bool,
+      is_detected_t<_invocable_with_archetype, F, Args...>::value
+    > { };
 
-KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(
-  _intrusive_shmem_size_archetype, F,
-  decltype(
-    declval<F>().shmem_size(int())
-  )
-);
+template <class F, class... Args>
+struct functor_invocation_result
+  : is_detected<_invocable_with_archetype, F, Args...>
+{ };
 
-KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(
-  _intrusive_team_shmem_size_archetype, F,
-  decltype(
-    declval<F>().team_shmem_size(int())
-  )
-);
+template <class F, class... Args>
+using functor_invocation_result_t = typename functor_invocation_result<F, Args...>::type;
+
+// </editor-fold> end functor_invocable_with }}}1
+//==============================================================================
+
+
+//==============================================================================
+// <editor-fold desc="functor_invoke_with_policy"> {{{1
+
+template <class Policy, class F, class... Args>
+KOKKOS_FORCEINLINE_FUNCTION
+typename std::enable_if<
+  execution_policy_has_work_tag<Policy>::value
+  && functor_is_invocable_with<F, execution_policy_work_tag_t<Policy>, Args...>::value,
+  functor_invocation_result_t<F, execution_policy_work_tag_t<Policy>, Args...>
+>::type
+functor_invoke_with_policy(Policy const&, F&& f, Args&&... args)
+  noexcept(noexcept(
+    Impl::forward<F>(f)(
+      execution_policy_work_tag_t<Policy>{}, Impl::forward<Args>(args)...
+    )
+  ))
+{
+  return
+    Impl::forward<F>(f)(
+      execution_policy_work_tag_t<Policy>{}, Impl::forward<Args>(args)...
+    );
+}
+
+template <class Policy, class F, class... Args>
+KOKKOS_FORCEINLINE_FUNCTION
+typename std::enable_if<
+  !execution_policy_has_work_tag<Policy>::value
+    && functor_is_invocable_with<F, Args...>::value,
+  functor_invocation_result_t<F, Args...>
+>::type
+functor_invoke_with_policy(Policy const&, F&& f, Args&&... args)
+  noexcept(noexcept(Impl::forward<F>(f)(Impl::forward<Args>(args)...)))
+{
+  return Impl::forward<F>(f)(Impl::forward<Args>(args)...);
+}
+
+// </editor-fold> end functor_invoke_with_policy }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="functor_execution_space"> {{{1
+
+/**
+ *  `functor_execution_space<F>::type is `F::execution_space` if valid and an
+ *  unspecified type otherwise.
+ */
+template <class F>
+struct functor_execution_space :
+  detected_or<Kokkos::DefaultExecutionSpace, _intrusive_execution_space_archetype, F> { };
+
+template <class F>
+using functor_execution_space_t = typename functor_execution_space<F>::type;
+
+/**
+ *  Mostly just a readability alias for `functor_execution_space`, but in situations
+ *  where we want a boolean result.  The readability alias is desirable here
+ *  because this will show up in user compilation error messages.
+ */
+template <class F>
+struct functor_has_execution_space :
+  std::integral_constant<bool, functor_execution_space<F>::value> { };
+
+
+// </editor-fold> end functor_execution_space }}}1
+//==============================================================================
 
 //==============================================================================
 // <editor-fold desc="functor_value_type"> {{{1
 
 // Not part of the base concept, but used in multiple derived concepts
-KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(
-  _intrusive_value_type, F,
-  typename F::value_type
-);
 
 /**
- *  `functor_value_type<F>::type` is `F::value_type` if valid and unspecified
- *  otherwise.
+ *  `functor_value_type<F>::type` is `F::value_type` if valid and an unspecified
+ *  type otherwise.
  */
 template <class F>
 struct functor_value_type :
@@ -109,5 +176,7 @@ struct functor_has_value_type :
 } // end namespace Concepts
 } // end namespace Impl
 } // end namespace Kokkos
+
+#include <Concepts/Functor/impl/Kokkos_Functor_TeamShmemSize.hpp>
 
 #endif //KOKKOS_CONCEPTS_FUNCTOR_KOKKOS_FUNCTOR_CONCEPT_HPP

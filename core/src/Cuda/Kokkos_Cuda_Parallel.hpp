@@ -848,12 +848,6 @@ public:
 
   __device__ inline
   void operator() () const {
-/*    run(Kokkos::Impl::if_c<UseShflReduction, DummyShflReductionType, DummySHMEMReductionType>::select(1,1.0) );
-  }
-
-  __device__ inline
-  void run(const DummySHMEMReductionType& ) const
-  {*/
     const integral_nonzero_constant< size_type , ValueTraits::StaticValueSize / sizeof(size_type) >
       word_count( ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer) ) / sizeof(size_type) );
 

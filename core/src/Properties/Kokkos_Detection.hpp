@@ -183,6 +183,17 @@ using _detector = _detection_impl::detector_workaround_impl<
 template <template <class...> class Op, class... Args>
 using is_detected = _detector<nonesuch, void, Op, Args...>;
 
+/**
+ *  A version of `is_detected` that is guaranteed to have a `::type` that is
+ *  either `std::true_type` or `std::false_type`.  This is so that using this
+ *  with something that expects boolean type traits and asks for `::type`
+ *  doesn't get the surprising results that would occur with `is_detected`,
+ *  which returns the detected type.
+ */
+template <template <class...> class Op, class... Args>
+using is_detected_t =
+  std::integral_constant<bool, _detector<nonesuch, void, Op, Args...>::value>;
+
 template <template <class...> class Op, class... Args>
 using detected_t = typename is_detected<Op, Args...>::type;
 
@@ -195,8 +206,34 @@ using detected_or_t = typename detected_or<Default, Op, Args...>::type;
 template <class Expected, template<class...> class Op, class... Args>
 using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
 
+/**
+ *  A version of `is_detected_exact` that is guaranteed to have a `::type` that is
+ *  either `std::true_type` or `std::false_type`.  This is so that using this
+ *  with something that expects boolean type traits and asks for `::type`
+ *  doesn't get the surprising results that would occur with `is_detected_exact`,
+ *  which returns the detected type.
+ */
+template <class Expected, template <class...> class Op, class... Args>
+using is_detected_exact_t =
+  std::integral_constant<bool,
+    is_detected_exact<Expected, Op, Args...>::value
+  >;
+
 template <class To, template <class...> class Op, class... Args>
 using is_detected_convertible = std::is_convertible<detected_t<Op, Args...>, To>;
+
+/**
+ *  A version of `is_detected_convertible` that is guaranteed to have a `::type` that is
+ *  either `std::true_type` or `std::false_type`.  This is so that using this
+ *  with something that expects boolean type traits and asks for `::type`
+ *  doesn't get the surprising results that would occur with `is_detected_convertible`,
+ *  which returns the detected type.
+ */
+template <class To, template <class...> class Op, class... Args>
+using is_detected_convertible_t =
+  std::integral_constant<bool,
+    std::is_convertible<detected_t<Op, Args...>, To>::value
+  >;
 } // end namespace Impl
 } // end namespace Kokkos
 

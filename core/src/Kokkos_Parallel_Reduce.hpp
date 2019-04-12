@@ -947,6 +947,7 @@ struct ParallelReducePolicyType<typename std::enable_if<std::is_integral<PolicyT
  * \endcode
  */
 
+#ifdef KOKKOS_OLD_PARALLEL_REDUCE
 // ReturnValue is scalar or array: take by reference
 
 template< class PolicyType, class FunctorType, class ReturnType >
@@ -1138,6 +1139,7 @@ void parallel_reduce(const std::string& label,
 
   Impl::ParallelReduceAdaptor<policy_type,FunctorType,result_view_type>::execute(label,policy_type(0,policy),functor,result_view);
 }
+#endif
 
 } //namespace Kokkos
 
