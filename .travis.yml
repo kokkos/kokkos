@@ -50,7 +50,7 @@ script:
     fi
   - mkdir build
   - cd build
-  - ../generate_makefile.bash --compiler=$CXX --with-$THREADING --with-options=compiler_warnings ${GENERATE_OPTS}
+  - ../generate_makefile.bash --compiler=$CXX --with-$THREADING --with-options=compiler_warnings --cxxflags="-O3 -Werror" ${GENERATE_OPTS}
   - make
   - make test
 

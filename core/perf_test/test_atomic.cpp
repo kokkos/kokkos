@@ -85,7 +85,7 @@ struct ZeroFunctor{
   typedef typename Kokkos::View<T,execution_space>::HostMirror h_type;
   type data;
   KOKKOS_INLINE_FUNCTION
-  void operator()(int i) const {
+  void operator()(int) const {
     data() = 0;
   }
 };
@@ -101,7 +101,7 @@ struct AddFunctor{
   type data;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int i) const {
+  void operator()(int) const {
     Kokkos::atomic_fetch_add(&data(),(T)1);
   }
 };
@@ -132,7 +132,7 @@ struct AddNonAtomicFunctor{
   type data;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int i) const {
+  void operator()(int) const {
     data()+=(T)1;
   }
 };
@@ -178,7 +178,7 @@ struct CASFunctor{
   type data;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int i) const {
+  void operator()(int) const {
 	  T old = data();
 	  T newval, assumed;
 	  do {
@@ -217,7 +217,7 @@ struct CASNonAtomicFunctor{
   type data;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int i) const {
+  void operator()(int) const {
 	  volatile T assumed;
 	  volatile T newval;
 	  bool fail=1;

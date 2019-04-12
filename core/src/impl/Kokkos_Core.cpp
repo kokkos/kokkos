@@ -85,7 +85,8 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
   }
 
   // Protect declarations, to prevent "unused variable" warnings.
-#if defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_THREADS ) || defined( KOKKOS_ENABLE_OPENMPTARGET )
+#if defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_THREADS ) ||\
+    defined( KOKKOS_ENABLE_OPENMPTARGET ) || defined ( KOKKOS_ENABLE_HPX )
   const int num_threads = args.num_threads;
 #endif
 #if defined( KOKKOS_ENABLE_THREADS ) || defined( KOKKOS_ENABLE_OPENMPTARGET )
@@ -157,6 +158,21 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
   }
   else {
     //std::cout << "Kokkos::initialize() fyi: Pthread enabled but not initialized" << std::endl ;
+  }
+#endif
+
+#if defined( KOKKOS_ENABLE_HPX )
+  if( std::is_same< Kokkos::Experimental::HPX , Kokkos::DefaultExecutionSpace >::value ||
+      std::is_same< Kokkos::Experimental::HPX , Kokkos::HostSpace::execution_space >::value ) {
+      if(num_threads>0) {
+        Kokkos::Experimental::HPX::impl_initialize(num_threads);
+      } else {
+        Kokkos::Experimental::HPX::impl_initialize();
+      }
+      //std::cout << "Kokkos::initialize() fyi: HPX enabled and initialized" << std::endl ;
+  }
+  else {
+      //std::cout << "Kokkos::initialize() fyi: HPX enabled but not initialized" << std::endl ;
   }
 #endif
 
@@ -298,6 +314,15 @@ void finalize_internal( const bool all_spaces = false )
   }
 #endif
 
+#if defined( KOKKOS_ENABLE_HPX )
+  if( std::is_same< Kokkos::Experimental::HPX , Kokkos::DefaultExecutionSpace >::value ||
+      std::is_same< Kokkos::Experimental::HPX , Kokkos::HostSpace::execution_space >::value ||
+      all_spaces ) {
+    if(Kokkos::Experimental::HPX::impl_is_initialized())
+      Kokkos::Experimental::HPX::impl_finalize();
+  }
+#endif
+
 #if defined( KOKKOS_ENABLE_THREADS )
   if( std::is_same< Kokkos::Threads , Kokkos::DefaultExecutionSpace >::value ||
       std::is_same< Kokkos::Threads , Kokkos::HostSpace::execution_space >::value ||
@@ -346,6 +371,10 @@ void fence_internal()
       std::is_same< Kokkos::OpenMP , Kokkos::HostSpace::execution_space >::value ) {
     Kokkos::OpenMP::fence();
   }
+#endif
+
+#if defined( KOKKOS_ENABLE_HPX )
+  Kokkos::Experimental::HPX::fence();
 #endif
 
 #if defined( KOKKOS_ENABLE_THREADS )
@@ -709,6 +738,12 @@ void print_configuration( std::ostream & out , const bool detail )
 #else
   msg << "no" << std::endl;
 #endif
+  msg << "  KOKKOS_ENABLE_HPX: ";
+#ifdef KOKKOS_ENABLE_HPX
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
   msg << "  KOKKOS_ENABLE_THREADS: ";
 #ifdef KOKKOS_ENABLE_THREADS
   msg << "yes" << std::endl;
@@ -956,6 +991,9 @@ void print_configuration( std::ostream & out , const bool detail )
 #endif
 #ifdef KOKKOS_ENABLE_OPENMP
   OpenMP::print_configuration(msg, detail);
+#endif
+#ifdef KOKKOS_ENABLE_HPX
+  Experimental::HPX::print_configuration(msg, detail);
 #endif
 #if defined( KOKKOS_ENABLE_THREADS )
   Threads::print_configuration(msg, detail);

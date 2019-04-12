@@ -1060,7 +1060,7 @@ public:
       }
 
       // Copy the input allocation properties with possibly defaulted properties
-      alloc_prop prop( arg_prop );
+      alloc_prop prop_copy( arg_prop );
 
 //------------------------------------------------------------
 #if defined( KOKKOS_ENABLE_CUDA )
@@ -1076,7 +1076,7 @@ public:
 //------------------------------------------------------------
 
       Kokkos::Impl::SharedAllocationRecord<> *
-        record = m_map.allocate_shared( prop , Impl::DynRankDimTraits<typename traits::specialize>::template createLayout<traits, P...>(arg_prop, arg_layout) );
+        record = m_map.allocate_shared( prop_copy, Impl::DynRankDimTraits<typename traits::specialize>::template createLayout<traits, P...>(arg_prop, arg_layout) );
 
 //------------------------------------------------------------
 #if defined( KOKKOS_ENABLE_CUDA )
@@ -1650,6 +1650,7 @@ struct DynRankViewRemap {
       typedef Kokkos::RangePolicy< ExecSpace > Policy ;
       const Kokkos::Impl::ParallelFor< DynRankViewRemap , Policy > closure( *this , Policy( 0 , n0 ) );
       closure.execute();
+      // Kokkos::fence(); // ??
     }
 
   KOKKOS_INLINE_FUNCTION

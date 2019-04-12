@@ -97,6 +97,7 @@ std::size_t count_valid_integers(const IntType i0,
 
 }
 
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
 KOKKOS_INLINE_FUNCTION
 void runtime_check_rank_device(const size_t dyn_rank,
                         const bool is_void_spec,
@@ -109,8 +110,6 @@ void runtime_check_rank_device(const size_t dyn_rank,
                         const size_t i6,
                         const size_t i7 ){
 
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
-
   if ( is_void_spec ) {
     const size_t num_passed_args = count_valid_integers(i0, i1, i2, i3,
         i4, i5, i6, i7);
@@ -121,10 +120,25 @@ void runtime_check_rank_device(const size_t dyn_rank,
 
     }
   }
-#endif
 }
+#else
+KOKKOS_INLINE_FUNCTION
+void runtime_check_rank_device(const size_t ,
+                        const bool ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t  ){
+
+}
+#endif
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
 KOKKOS_INLINE_FUNCTION
 void runtime_check_rank_host(const size_t dyn_rank,
                         const bool is_void_spec,
@@ -137,7 +151,6 @@ void runtime_check_rank_host(const size_t dyn_rank,
                         const size_t i6,
                         const size_t i7, const std::string & label ){
 
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
 
   if ( is_void_spec ) {
     const size_t num_passed_args = count_valid_integers(i0, i1, i2, i3,
@@ -150,8 +163,20 @@ void runtime_check_rank_host(const size_t dyn_rank,
       Kokkos::abort(message.c_str()) ;
     }
   }
-#endif
 }
+#else
+KOKKOS_INLINE_FUNCTION
+void runtime_check_rank_host(const size_t ,
+                        const bool ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t ,
+                        const size_t , const std::string &){}
+#endif
 #endif
 
 } /* namespace Impl */
@@ -1994,7 +2019,7 @@ public:
   template< class RT , class ... RP , class Arg0 , class ... Args >
   KOKKOS_INLINE_FUNCTION
   View( const View< RT , RP... > & src_view
-      , const Arg0 & arg0 , Args ... args )
+      , const Arg0 arg0 , Args ... args )
     : m_track( src_view.m_track , traits::is_managed )
     , m_map()
     {
@@ -2077,7 +2102,7 @@ public:
       }
 
       // Copy the input allocation properties with possibly defaulted properties
-      alloc_prop prop( arg_prop );
+      alloc_prop prop_copy( arg_prop );
 
 //------------------------------------------------------------
 #if defined( KOKKOS_ENABLE_CUDA )
@@ -2093,7 +2118,7 @@ public:
 //------------------------------------------------------------
 
       Kokkos::Impl::SharedAllocationRecord<> *
-        record = m_map.allocate_shared( prop , arg_layout );
+        record = m_map.allocate_shared( prop_copy , arg_layout );
 
 //------------------------------------------------------------
 #if defined( KOKKOS_ENABLE_CUDA )

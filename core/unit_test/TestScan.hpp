@@ -96,6 +96,7 @@ struct TestScan {
 
     long long int total = 0;
     Kokkos::parallel_scan( N, *this, total );
+
     run_check( size_t( ( N+1 )*N/2 ), size_t( total ) );
     check_error();
   }
@@ -109,6 +110,8 @@ struct TestScan {
     errors = errors_a;
     
     Kokkos::parallel_scan( exec_policy( Start , N ) , *this );
+    Kokkos::fence();
+
     check_error();
   }
 
