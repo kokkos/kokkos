@@ -467,7 +467,12 @@ template <
   class FunctorType,
   class ResultTypeOrReducer
 >
-inline void
+inline
+typename std::enable_if<
+  // Needed for ambiguity with, e.g., TeamThreadBoundaryStruct overloads
+  is_execution_policy<Impl::remove_cvref_t<PolicyType>>::value
+    || std::is_convertible<PolicyType, size_t>::value
+>::type
 parallel_reduce(
   PolicyType&& policy,
   FunctorType&& functor,
