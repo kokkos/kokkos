@@ -95,9 +95,6 @@
 #include <functional>
 #include <iosfwd>
 
-#include <Properties/Kokkos_ViewMemoryTraits.hpp>
-#include <Properties/Kokkos_RequireProperty.hpp>
-#include <Properties/Kokkos_QueryProperty.hpp>
 
 //----------------------------------------------------------------------------
 

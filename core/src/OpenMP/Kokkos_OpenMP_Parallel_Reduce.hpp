@@ -246,7 +246,7 @@ private:
   {
     auto begin = ibeg + m_policy.begin();
     auto end = iend + m_policy.begin();
-    for(Member iwork = ibeg; iwork < iend; ++iwork) {
+    for(Member iwork = begin; iwork < end; ++iwork) {
       Concepts::functor_invoke_with_policy(
         m_policy, m_functor, iwork, update
       );
@@ -338,7 +338,7 @@ private:
   {
     auto begin = ibeg + m_policy.begin();
     auto end = iend + m_policy.begin();
-    for(Member iwork = ibeg; iwork < end; ++iwork) {
+    for(Member iwork = begin; iwork < end; ++iwork) {
       iterate_type(m_mdr_policy, m_functor, update)(iwork);
     }
   }
