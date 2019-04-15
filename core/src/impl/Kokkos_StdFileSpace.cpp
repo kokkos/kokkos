@@ -128,7 +128,7 @@ namespace Experimental {
       std::string sFullPath = s_default_path;
       size_t pos = path.find("/");
 //      printf("adding file accessor: %s, %s, %d \n", s_default_path.c_str(), path.c_str(), (int)pos );
-      if ( (int)pos >= 0 && pos < (int)path.length() ) {    // only use the default if there is no path info in the path...
+      if ( (int)pos >= 0 && (int)pos < (int)path.length() ) {    // only use the default if there is no path info in the path...
          sFullPath = path;
       } else {
          sFullPath += (std::string)"/";
@@ -187,7 +187,7 @@ namespace Experimental {
          printf("memspace %s returned empty list of checkpoint views \n", name());
       }
       while (pList != nullptr) {
-      typedef Kokkos::Impl::SharedAllocationRecord<void,void> base_record;
+ //     typedef Kokkos::Impl::SharedAllocationRecord<void,void> base_record;
          Kokkos::Impl::DeepCopy< Kokkos::Experimental::StdFileSpace, Kokkos::HostSpace, Kokkos::DefaultHostExecutionSpace >
                         (((base_record*)pList->dst)->data(), ((base_record*)pList->src)->data(), ((base_record*)pList->src)->size());
          // delete the records along the way...

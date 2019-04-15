@@ -613,8 +613,9 @@ namespace Experimental {
   }
 
  
-  template< class Type, class MemorySpace >
-  static void track_duplicate( Kokkos::Impl::SharedAllocationRecord<void,void> * orig, Kokkos::Impl::SharedAllocationRecord<void,void> * dup ) {
+  template< class Type>
+  static void track_duplicate<Type, Kokkos::ResCudaSpace> ( Kokkos::Impl::SharedAllocationRecord<void,void> * orig, Kokkos::Impl::SharedAllocationRecord<void,void> * dup ) {
+    using MemorySpace Kokkos::ResCudaSpace;
     Kokkos::Impl::SharedAllocationRecord<MemorySpace,void> * SP = static_cast<Kokkos::Impl::SharedAllocationRecord<MemorySpace,void> *>(dup);
     typedef Kokkos::Experimental::SpecDuplicateTracker<Type, typename MemorySpace::execution_space> dt_type;
     typedef CombineFunctor<typename dt_type::rd_type, typename MemorySpace::execution_space> comb_type;

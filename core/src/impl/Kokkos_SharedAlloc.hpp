@@ -367,7 +367,7 @@ public:
 
   inline void copy_label(const char * lbl) {
      if (lbl != nullptr) {
-         for (int i = 0; i < SharedAllocationHeader::maximum_label_length; i++) {
+         for (int i = 0; i < (int)SharedAllocationHeader::maximum_label_length; i++) {
             m_label[i] = lbl[i];
             if (m_label[i] == 0) break;
         }
@@ -555,6 +555,14 @@ public:
 
 
 } /* namespace Impl */
+
+namespace Experimental {
+
+  template< class Type, class MemorySpace >
+  static void track_duplicate( Kokkos::Impl::SharedAllocationRecord<void,void> * orig, Kokkos::Impl::SharedAllocationRecord<void,void> * dup ) {
+  }
+}
+
 } /* namespace Kokkos */
 
 #endif
