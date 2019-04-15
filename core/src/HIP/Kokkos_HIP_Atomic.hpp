@@ -243,23 +243,24 @@ namespace Kokkos {
 */
   KOKKOS_INLINE_FUNCTION
   int atomic_fetch_add (volatile int * dest, const int& val) {
-    return atomicAdd(static_cast<int*>(dest),val);
+    return atomicAdd(const_cast<int*>(dest),val);
   }
   
   KOKKOS_INLINE_FUNCTION
   unsigned int atomic_fetch_add(unsigned int* dest, const unsigned int& val) {
-    return atomicAdd(static_cast<unsigned int*>(dest),val);
+    return atomicAdd(const_cast<unsigned int*>(dest),val);
   }
 
   KOKKOS_INLINE_FUNCTION
-  unsigned long atomic_fetch_add(volatile unsigned long* dest, const unsigned long& val) {
-    return atomicAdd(static_cast<unsigned long*>(dest),val);
+  unsigned long long atomic_fetch_add(volatile unsigned long long* dest, const unsigned long long& val) {
+    return atomicAdd(const_cast<unsigned long long*>(dest),val);
   }
 
-  KOKKOS_INLINE_FUNCTION
-  int64_t atomic_fetch_add(volatile int64_t* dest, const int64_t& val) {
-    return atomicAdd(static_cast<int64_t*>(dest),val);
-  }
+  // Not implemented in HIP
+ // KOKKOS_INLINE_FUNCTION
+ // int64_t atomic_fetch_add(volatile int64_t* dest, const int64_t& val) {
+ //   return atomicAdd(const_cast<int64_t*>(dest),val);
+ // }
 /*
   KOKKOS_INLINE_FUNCTION
   char atomic_fetch_add(volatile char * dest, const char& val) {
