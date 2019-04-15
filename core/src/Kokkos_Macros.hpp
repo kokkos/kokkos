@@ -332,6 +332,9 @@
 
   #if defined( __MIC__ )
     // Compiling for Xeon Phi
+    #if (KOKKOS_COMPILER_INTEL < 1800) && !defined(KOKKOS_KNL_USE_ASM_WORKAROUND)
+      #define KOKKOS_KNL_USE_ASM_WORKAROUND 1
+    #endif
   #endif
 #endif
 
