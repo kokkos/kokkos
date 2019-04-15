@@ -409,6 +409,13 @@ public:
 
     }
 
+    template< class MemorySpace >
+    std::string get_label() const {
+       return ( m_record_bits == DO_NOT_DEREF_FLAG )
+              ? std::string()
+              : reinterpret_cast< SharedAllocationRecord< MemorySpace , void > * >( m_record_bits & ~DO_NOT_DEREF_FLAG )->get_label()
+              ;
+    }
   KOKKOS_INLINE_FUNCTION
   int use_count() const
     {
