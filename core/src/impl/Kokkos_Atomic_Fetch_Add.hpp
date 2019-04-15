@@ -210,25 +210,6 @@ int atomic_fetch_add( volatile int * const dest , const int val )
 }
 #endif
 
-#if defined( KOKKOS_ENABLE_ASM ) && (defined(KOKKOS_ENABLE_ISA_X86_64) || defined(KOKKOS_KNL_USE_ASM_WORKAROUND))
-inline
-long int atomic_fetch_add( volatile long int * const dest , const long int val )
-{
-#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
-  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
-#endif
-  long int original = val;
-
-  __asm__ __volatile__(
-  	"lock xaddl %1, %0"
-        : "+m" (*dest), "+r" (original)
-        : "m" (*dest), "r" (original)
-        : "memory"
-        );
-
-  return original;
-}
-#else
 inline
 long int atomic_fetch_add( volatile long int * const dest , const long int val )
 { 
@@ -237,7 +218,6 @@ long int atomic_fetch_add( volatile long int * const dest , const long int val )
 #endif
   return __sync_fetch_and_add(dest,val);
 }
-#endif
 
 #if defined( KOKKOS_ENABLE_GNU_ATOMICS )
 
