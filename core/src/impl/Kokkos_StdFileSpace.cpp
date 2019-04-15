@@ -128,7 +128,11 @@ namespace Experimental {
       std::string sFullPath = s_default_path;
       size_t pos = path.find("/");
 //      printf("adding file accessor: %s, %s, %d \n", s_default_path.c_str(), path.c_str(), (int)pos );
+<<<<<<< HEAD
       if ( (int)pos >= 0 && (int)pos < (int)path.length() ) {    // only use the default if there is no path info in the path...
+=======
+      if ( (int)pos >= 0 && pos < (int)path.length() ) {    // only use the default if there is no path info in the path...
+>>>>>>> origin/kokkos-resilience
          sFullPath = path;
       } else {
          sFullPath += (std::string)"/";

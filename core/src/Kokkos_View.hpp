@@ -2170,7 +2170,6 @@ public:
       
       // Setup and initialization complete, start tracking
       m_track.assign_allocated_record_to_uninitialized( record );
-
       printf("after alloc record assigned to tracker: %d \n", m_track.tracking_disabled());
     }
 
