@@ -95,7 +95,7 @@ template <
   class ExecSpace,
   class MemorySpace,
   class TaskQueueTraits,
-  class
+  class MemoryPool
 >
 class MultipleTaskQueue;
 

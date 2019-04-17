@@ -243,7 +243,7 @@ public:
         // Mark rv as popped by assigning nullptr to the next
         LinkedListNodeAccess::mark_as_not_enqueued(*rv);
 
-        ::Kokkos::memory_fence();
+        Kokkos::memory_fence();
 
         return OptionalRef<T>{ *static_cast<T*>(rv) };
       }
@@ -356,6 +356,7 @@ public:
     auto* const consumed_tag = (node_type*)ConsumedTag;
 
     // Swap the Consumed tag into the head of the queue:
+    Kokkos::memory_fence();
 
     // (local variable used for assertion only)
     // TODO @tasking @memory_order DSH this should have memory order release, I think

@@ -97,6 +97,7 @@ public:
   }
 
   ~TaskQueueCommonMixin() {
+    KOKKOS_EXPECTS((Kokkos::memory_fence(), m_ready_count < 1));
     KOKKOS_EXPECTS(m_ready_count == 0);
   }
 
@@ -184,6 +185,7 @@ protected:
   void _decrement_ready_count() {
     // TODO @tasking @memory_order DSH memory order
     Kokkos::atomic_decrement(&this->m_ready_count);
+    Kokkos::memory_fence();
   }
 
 public:

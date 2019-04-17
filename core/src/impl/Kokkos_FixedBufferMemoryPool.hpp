@@ -53,14 +53,19 @@
 namespace Kokkos {
 namespace Impl {
 
-template <class DeviceType, size_t Size, size_t Align=1>
+template <
+  class DeviceType,
+  size_t Size,
+  size_t Align=1,
+  class SizeType = typename DeviceType::execution_space::size_type
+>
 class FixedBlockSizeMemoryPool
   : private MemorySpaceInstanceStorage<typename DeviceType::memory_space>
 {
 public:
 
   using memory_space = typename DeviceType::memory_space;
-  using size_type = typename DeviceType::execution_space::size_type;
+  using size_type = SizeType;
 
 private:
 
@@ -73,13 +78,22 @@ private:
   static constexpr auto actual_size = sizeof(Block);
 
   // TODO shared allocation tracker
+  // TODO @optimization put the index values on different cache lines (CPU) or pages (GPU)?
 
-  tracker_type m_tracker;
-  size_type m_num_blocks;
-  size_type m_first_free_idx;
-  size_type m_last_free_idx;
-  Kokkos::OwningRawPtr<Block> m_first_block;
-  Kokkos::OwningRawPtr<size_type> m_free_indices;
+  tracker_type m_tracker = { };
+  size_type m_num_blocks = 0;
+  size_type m_first_free_idx = 0;
+  size_type m_last_free_idx = 0;
+  Kokkos::OwningRawPtr<Block> m_first_block = nullptr;
+  Kokkos::OwningRawPtr<size_type> m_free_indices = nullptr;
+
+  enum : size_type { IndexInUse = ~size_type(0) };
+
+  void _swap_indices(size_type& x, size_type& y) {
+    x = x ^ y;
+    y = y ^ x;
+    x = x ^ y;
+  }
 
 public:
 
@@ -92,22 +106,26 @@ public:
       m_first_free_idx(0),
       m_last_free_idx(num_blocks)
   {
-    // TODO alignment!!!
+    // TODO alignment?
     auto block_record = record_type::allocate(
       mem_space, "FixedBlockSizeMemPool_blocks", num_blocks * sizeof(Block)
     );
+    KOKKOS_ASSERT(intptr_t(block_record->data()) % Align == 0);
     m_tracker.assign_allocated_record_to_uninitialized(block_record);
     m_first_block = (Block*)block_record->data();
 
     auto idx_record = record_type::allocate(
       mem_space, "FixedBlockSizeMemPool_blocks", num_blocks * sizeof(size_type)
     );
+    KOKKOS_ASSERT(intptr_t(idx_record->data()) % alignof(size_type) == 0);
     m_tracker.assign_allocated_record_to_uninitialized(idx_record);
     m_free_indices = (size_type*)idx_record->data();
 
     for(size_type i = 0; i < num_blocks; ++i) {
       m_free_indices[i] = i;
     }
+
+    Kokkos::memory_fence();
   }
 
   // For compatibility with MemoryPool<>
@@ -124,16 +142,28 @@ public:
   KOKKOS_INLINE_FUNCTION FixedBlockSizeMemoryPool& operator=(FixedBlockSizeMemoryPool&&) = default;
   KOKKOS_INLINE_FUNCTION FixedBlockSizeMemoryPool& operator=(FixedBlockSizeMemoryPool const&) = default;
 
+
   KOKKOS_INLINE_FUNCTION
   void* allocate(size_type alloc_size) const noexcept
   {
     KOKKOS_EXPECTS(alloc_size <= Size);
     Kokkos::memory_fence();
-    auto free_idx_idx = Kokkos::atomic_fetch_add((volatile size_type*)&m_first_free_idx, size_type(1));
-    free_idx_idx %= m_num_blocks;
-    // TODO check that it's not past the last free index!
-    auto free_idx = m_free_indices[free_idx_idx];
-    return (void*)&m_first_block[free_idx];
+    auto free_idx_counter = Kokkos::atomic_fetch_add((volatile size_type*)&m_first_free_idx, size_type(1));
+    auto free_idx_idx = free_idx_counter % m_num_blocks;
+
+    // We don't have exclusive access to m_free_indices[free_idx_idx] because
+    // the allocate counter might have lapped us since we incremented it
+    auto current_free_idx = m_free_indices[free_idx_idx];
+    size_type free_idx = IndexInUse;
+    free_idx =
+      Kokkos::atomic_compare_exchange(&m_free_indices[free_idx_idx], current_free_idx, free_idx);
+
+    if(free_idx == IndexInUse) {
+      return nullptr;
+    }
+    else {
+      return (void*)&m_first_block[free_idx];
+    }
   }
 
   KOKKOS_INLINE_FUNCTION
