@@ -103,7 +103,7 @@ public:
       mem_space, "FixedBlockSizeMemPool_blocks", num_blocks * sizeof(size_type)
     );
     m_tracker.assign_allocated_record_to_uninitialized(idx_record);
-    m_free_indices = (Block*)block_record->data();
+    m_free_indices = (size_type*)idx_record->data();
 
     for(size_type i = 0; i < num_blocks; ++i) {
       m_free_indices[i] = i;
@@ -129,7 +129,7 @@ public:
   {
     KOKKOS_EXPECTS(alloc_size <= Size);
     Kokkos::memory_fence();
-    auto free_idx_idx = Kokkos::atomic_fetch_add(&m_first_free_idx, 1);
+    auto free_idx_idx = Kokkos::atomic_fetch_add((volatile size_type*)&m_first_free_idx, size_type(1));
     free_idx_idx %= m_num_blocks;
     // TODO check that it's not past the last free index!
     auto free_idx = m_free_indices[free_idx_idx];
@@ -144,7 +144,7 @@ public:
 
     KOKKOS_EXPECTS(offset % actual_size == 0 && offset/actual_size < m_num_blocks);
 
-    auto last_idx_idx = Kokkos::atomic_fetch_add(&m_last_free_idx, 1);
+    auto last_idx_idx = Kokkos::atomic_fetch_add((volatile size_type*)&m_last_free_idx, size_type(1));
     last_idx_idx %= m_num_blocks;
     m_free_indices[last_idx_idx] = offset / actual_size;
     Kokkos::memory_fence();

@@ -127,7 +127,9 @@ template<
 >
 class SingleTaskQueue;
 
-template< typename ExecSpace, typename MemSpace, typename TaskQueueTraits>
+template< typename ExecSpace, typename MemSpace, typename TaskQueueTraits,
+  class MemoryPool = Kokkos::MemoryPool<Kokkos::Device<ExecSpace, MemSpace>>
+>
 class MultipleTaskQueue;
 
 struct TaskQueueTraitsLockBased;

@@ -85,7 +85,7 @@ public:
   using execution_space = ExecSpace;
   using memory_space = MemorySpace;
   using device_type = Kokkos::Device<execution_space, memory_space>;
-  using memory_pool = Kokkos::MemoryPool<device_type>;
+  using memory_pool = MemoryPool;
   using allocation_size_type = size_t;
 
 private:

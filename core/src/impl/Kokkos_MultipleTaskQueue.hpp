@@ -94,7 +94,8 @@ struct EmptyTaskSchedulingInfo { };
 template <
   class ExecSpace,
   class MemorySpace,
-  class TaskQueueTraits
+  class TaskQueueTraits,
+  class
 >
 class MultipleTaskQueue;
 
@@ -350,13 +351,14 @@ public:
 template <
   class ExecSpace,
   class MemorySpace,
-  class TaskQueueTraits
+  class TaskQueueTraits,
+  class MemoryPool
 >
 class MultipleTaskQueue final
-  : public TaskQueueMemoryManager<ExecSpace, MemorySpace>,
-    public TaskQueueCommonMixin<MultipleTaskQueue<ExecSpace, MemorySpace, TaskQueueTraits>>,
+  : public TaskQueueMemoryManager<ExecSpace, MemorySpace, MemoryPool>,
+    public TaskQueueCommonMixin<MultipleTaskQueue<ExecSpace, MemorySpace, TaskQueueTraits, MemoryPool>>,
     private ObjectWithVLAEmulation<
-      MultipleTaskQueue<ExecSpace, MemorySpace, TaskQueueTraits>,
+      MultipleTaskQueue<ExecSpace, MemorySpace, TaskQueueTraits, MemoryPool>,
       MultipleTaskQueueTeamEntry<TaskQueueTraits>
     >
 {
@@ -369,10 +371,10 @@ public:
 
 private:
 
-  using base_t = TaskQueueMemoryManager<ExecSpace, MemorySpace>;
+  using base_t = TaskQueueMemoryManager<ExecSpace, MemorySpace, MemoryPool>;
   using common_mixin_t = TaskQueueCommonMixin<MultipleTaskQueue>;
   using vla_emulation_base_t = ObjectWithVLAEmulation<
-    MultipleTaskQueue<ExecSpace, MemorySpace, TaskQueueTraits>,
+    MultipleTaskQueue<ExecSpace, MemorySpace, TaskQueueTraits, MemoryPool>,
     MultipleTaskQueueTeamEntry<TaskQueueTraits>
   >;
 
