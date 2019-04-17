@@ -380,7 +380,7 @@ endif
 #CPPFLAGS is now unused
 KOKKOS_CPPFLAGS =
 ifneq ($(KOKKOS_CMAKE), yes)
-  KOKKOS_CXXFLAGS = -I./ -I$(KOKKOS_PATH)/core/src -I$(KOKKOS_PATH)/containers/src -I$(KOKKOS_PATH)/algorithms/src -I$(KOKKOS_ETI_PATH)
+  KOKKOS_CPPFLAGS = -I./ -I$(KOKKOS_PATH)/core/src -I$(KOKKOS_PATH)/containers/src -I$(KOKKOS_PATH)/algorithms/src -I$(KOKKOS_ETI_PATH)
 endif
 KOKKOS_TPL_INCLUDE_DIRS =
 KOKKOS_TPL_LIBRARY_DIRS =
@@ -531,17 +531,17 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_PROFILING_LOAD_PRINT), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HWLOC), 1)
-  ifneq ($(HWLOC_PATH),)
-    ifneq ($(KOKKOS_CMAKE), yes)
-      KOKKOS_CXXFLAGS += -I$(HWLOC_PATH)/include
+  ifneq ($(KOKKOS_CMAKE), yes)
+    ifneq ($(HWLOC_PATH),)
+      KOKKOS_CPPFLAGS += -I$(HWLOC_PATH)/include
+      KOKKOS_LDFLAGS += -L$(HWLOC_PATH)/lib
+      KOKKOS_CXXLDFLAGS += -L$(HWLOC_PATH)/lib
+      KOKKOS_TPL_INCLUDE_DIRS += $(HWLOC_PATH)/include
+      KOKKOS_TPL_LIBRARY_DIRS += $(HWLOC_PATH)/lib
     endif
-    KOKKOS_LDFLAGS += -L$(HWLOC_PATH)/lib
-    KOKKOS_CXXLDFLAGS += -L$(HWLOC_PATH)/lib
-    KOKKOS_TPL_INCLUDE_DIRS += $(HWLOC_PATH)/include
-    KOKKOS_TPL_LIBRARY_DIRS += $(HWLOC_PATH)/lib
+    KOKKOS_LIBS += -lhwloc
+    KOKKOS_TPL_LIBRARY_NAMES += hwloc
   endif
-  KOKKOS_LIBS += -lhwloc
-  KOKKOS_TPL_LIBRARY_NAMES += hwloc
   tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_HWLOC")
 endif
 
@@ -552,17 +552,17 @@ ifeq ($(KOKKOS_INTERNAL_USE_LIBRT), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_MEMKIND), 1)
-  ifneq ($(MEMKIND_PATH),)
-    ifneq ($(KOKKOS_CMAKE), yes)
-      KOKKOS_CXXFLAGS += -I$(MEMKIND_PATH)/include
+  ifneq ($(KOKKOS_CMAKE), yes)
+    ifneq ($(MEMKIND_PATH),)
+      KOKKOS_CPPFLAGS += -I$(MEMKIND_PATH)/include
+      KOKKOS_LDFLAGS += -L$(MEMKIND_PATH)/lib
+      KOKKOS_CXXLDFLAGS += -L$(MEMKIND_PATH)/lib
+      KOKKOS_TPL_INCLUDE_DIRS += $(MEMKIND_PATH)/include
+      KOKKOS_TPL_LIBRARY_DIRS += $(MEMKIND_PATH)/lib
     endif
-    KOKKOS_LDFLAGS += -L$(MEMKIND_PATH)/lib
-    KOKKOS_CXXLDFLAGS += -L$(MEMKIND_PATH)/lib
-    KOKKOS_TPL_INCLUDE_DIRS += $(MEMKIND_PATH)/include
-    KOKKOS_TPL_LIBRARY_DIRS += $(MEMKIND_PATH)/lib
+    KOKKOS_LIBS += -lmemkind -lnuma
+    KOKKOS_TPL_LIBRARY_NAMES += memkind numa
   endif
-  KOKKOS_LIBS += -lmemkind -lnuma
-  KOKKOS_TPL_LIBRARY_NAMES += memkind numa
   tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_HBWSPACE")
 endif
 
@@ -1141,17 +1141,17 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Qthreads/*.cpp)
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Qthreads/*.hpp)
-  ifneq ($(QTHREADS_PATH),)
-    ifneq ($(KOKKOS_CMAKE), yes)
-      KOKKOS_CXXFLAGS += -I$(QTHREADS_PATH)/include
+  ifneq ($(KOKKOS_CMAKE), yes)
+    ifneq ($(QTHREADS_PATH),)
+      KOKKOS_CPPFLAGS += -I$(QTHREADS_PATH)/include
+      KOKKOS_LDFLAGS += -L$(QTHREADS_PATH)/lib
+      KOKKOS_CXXLDFLAGS += -L$(QTHREADS_PATH)/lib
+      KOKKOS_TPL_INCLUDE_DIRS += $(QTHREADS_PATH)/include
+      KOKKOS_TPL_LIBRARY_DIRS += $(QTHREADS_PATH)/lib64
     endif
-    KOKKOS_LDFLAGS += -L$(QTHREADS_PATH)/lib
-    KOKKOS_CXXLDFLAGS += -L$(QTHREADS_PATH)/lib
-    KOKKOS_TPL_INCLUDE_DIRS += $(QTHREADS_PATH)/include
-    KOKKOS_TPL_LIBRARY_DIRS += $(QTHREADS_PATH)/lib64
+    KOKKOS_LIBS += -lqthread
+    KOKKOS_TPL_LIBRARY_NAMES += qthread
   endif
-  KOKKOS_LIBS += -lqthread
-  KOKKOS_TPL_LIBRARY_NAMES += qthread
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)

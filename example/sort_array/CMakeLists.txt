@@ -6,9 +6,8 @@ SET(SOURCES "")
 
 FILE(GLOB SOURCES *.cpp)
 
-TRIBITS_ADD_EXECUTABLE(
+KOKKOS_ADD_EXECUTABLE(
   sort_array
   SOURCES ${SOURCES}
-  COMM serial mpi
-  )
+)
 

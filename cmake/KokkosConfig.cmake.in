@@ -4,15 +4,33 @@
 #  Kokkos_LIBRARIES    - libraries to link against
 
 # Compute paths
+@PACKAGE_INIT@
+
 GET_FILENAME_COMPONENT(Kokkos_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 SET(Kokkos_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
 
-# Our library dependencies (contains definitions for IMPORTED targets)
-IF(NOT TARGET kokkos AND NOT Kokkos_BINARY_DIR)
-  INCLUDE("${Kokkos_CMAKE_DIR}/KokkosTargets.cmake")
-ENDIF()
+INCLUDE("${Kokkos_CMAKE_DIR}/KokkosTargets.cmake")
+
 
 # These are IMPORTED targets created by KokkosTargets.cmake
 SET(Kokkos_LIBRARY_DIRS @INSTALL_LIB_DIR@)
-SET(Kokkos_LIBRARIES @Kokkos_LIBRARIES_NAMES@)
+SET(Kokkos_LIBRARIES @KOKKOS_LIBRARIES@)
+SET(Kokkos_SEPARATE_LIBS @KOKKOS_SEPARATE_LIBS@)
 SET(Kokkos_TPL_LIBRARIES @KOKKOS_LIBS@)
+
+if (${Kokkos_FIND_VERSION_MINOR})
+  if (${Kokkos_FIND_VERSION_MINOR} LESS ${Kokkos_VERSION_MINOR})
+    FOREACH(LIB ${Kokkos_LIBRARIES})
+      set_property(TARGET ${LIB} APPEND PROPERTY
+         INTERFACE_COMPILE_DEFINITIONS "KOKKOS_ENABLE_DEPRECATED_CODE"
+      )
+    ENDFOREACH()
+  endif()
+endif()
+
+FUNCTION(TARGET_LINK_KOKKOS TARGET)
+FOREACH(LIB ${Kokkos_LIBRARIES})
+  TARGET_LINK_LIBRARIES(${TARGET} ${ARGN} ${LIB})
+ENDFOREACH()
+ENDFUNCTION(TARGET_LINK_KOKKOS)
+

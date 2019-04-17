@@ -10,8 +10,8 @@ FILE( GLOB SOURCES *.cpp )
 
 LIST( APPEND SOURCES ../fixture/BoxElemPart.cpp )
 
-TRIBITS_ADD_EXECUTABLE(
+KOKKOS_ADD_EXECUTABLE(
   fenl
   SOURCES ${SOURCES}
-  COMM serial mpi
-  )
+)
+
