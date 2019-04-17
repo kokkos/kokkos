@@ -85,6 +85,10 @@ enum class TaskPriority : int {
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+
+template <class Device>
+class MemoryPool;
+
 namespace Impl {
 
 template <class TaskQueueTraits>
@@ -117,7 +121,10 @@ class TaskQueue;
 template< typename ExecSpace, typename MemorySpace>
 class TaskQueueMultiple;
 
-template< typename ExecSpace, typename MemSpace, typename TaskQueueTraits>
+template<
+  typename ExecSpace, typename MemSpace, typename TaskQueueTraits,
+  class MemoryPool = Kokkos::MemoryPool<Kokkos::Device<ExecSpace, MemSpace>>
+>
 class SingleTaskQueue;
 
 template< typename ExecSpace, typename MemSpace, typename TaskQueueTraits>

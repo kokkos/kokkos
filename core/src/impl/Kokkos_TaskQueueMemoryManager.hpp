@@ -74,7 +74,8 @@ namespace Impl {
 
 template <
   class ExecSpace,
-  class MemorySpace
+  class MemorySpace,
+  class MemoryPool = Kokkos::MemoryPool<Kokkos::Device<ExecSpace, MemorySpace>>
 >
 class TaskQueueMemoryManager
   : public TaskQueueBase
