@@ -315,11 +315,11 @@ public:
   }
 
 
-  template <class TeamSchedulerInfo, class ExecutionSpace, class MemorySpace>
+  template <class TeamSchedulerInfo, class ExecutionSpace, class MemorySpace, class MemoryPool>
   KOKKOS_INLINE_FUNCTION
   void
   do_schedule_runnable(
-    MultipleTaskQueue<ExecutionSpace, MemorySpace, TaskQueueTraits>& queue,
+    MultipleTaskQueue<ExecutionSpace, MemorySpace, TaskQueueTraits, MemoryPool>& queue,
     RunnableTaskBase<TaskQueueTraits>&& task,
     TeamSchedulerInfo const& info
 
