@@ -177,6 +177,20 @@
   #if ( 10000 > CUDA_VERSION )
     #define KOKKOS_ENABLE_PRE_CUDA_10_DEPRECATION_API
   #endif
+
+  #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 700)
+    // PTX atomics with memory order semantics are only available on volta and later
+    #if !defined(KOKKOS_DISABLE_CUDA_ASM)
+      #if !defined(KOKKOS_ENABLE_CUDA_ASM)
+        #define KOKKOS_ENABLE_CUDA_ASM
+        #if !defined(KOKKOS_DISABLE_CUDA_ASM_ATOMICS)
+          #define KOKKOS_ENABLE_CUDA_ASM_ATOMICS
+        #endif
+      #endif
+    #endif
+  #endif
+
+
 #endif // #if defined( KOKKOS_ENABLE_CUDA ) && defined( __CUDACC__ )
 
 
@@ -429,7 +443,7 @@
 // Define function marking macros if compiler specific macros are undefined:
 
 #if !defined( KOKKOS_FORCEINLINE_FUNCTION )
-  #define KOKKOS_FORCEINLINE_FUNCTION  inline
+  define KOKKOS_FORCEINLINE_FUNCTION  inline
 #endif
 
 #if !defined( KOKKOS_INLINE_FUNCTION )

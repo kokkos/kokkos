@@ -122,24 +122,21 @@ public:
   KOKKOS_INLINE_FUNCTION
   OptionalRef<T>
   pop() {
-    auto b = m_bottom - 1; // TODO @tasking @memory_order DSH atomic load as relaxed
-    auto& a = m_array; // TODO @tasking @memory_order DSH atomic load relaxed
-    m_bottom = b; // TODO @tasking @memory_order DSH atomic store relaxed
+    auto b = m_bottom - 1; // atomic load relaxed
+    auto& a = m_array; // atomic load relaxed
+    m_bottom = b; // atomic store relaxed
     Kokkos::memory_fence(); // memory order seq_cst
-    auto t = m_top; // TODO @tasking @memory_order DSH atomic load relaxed
+    auto t = m_top; // atomic load relaxed
     OptionalRef<T> return_value;
     if(t <= b) {
       /* non-empty queue */
-      return_value = *static_cast<T*>(a->buffer[b % a->size]); // TODO @tasking @memory_order DSH relaxed load
+      return_value = *static_cast<T*>(a->buffer[b % a->size]); // relaxed load
       if(t == b) {
         /* single last element in the queue. */
-        // TODO @tasking @memory_order DSH memory orders instead of fence
-        Kokkos::memory_fence();
-        if(not Kokkos::atomic_compare_exchange_strong(&m_top, t, t+1)) { // memory orders: seq_cst, relaxed
+        if(not Impl::atomic_compare_exchange_strong(&m_top, t, t+1, memory_order_seq_cst, memory_order_relaxed)) {
           /* failed race, someone else stole it */
           return_value = nullptr;
         }
-        Kokkos::memory_fence();
         m_bottom = b + 1; // memory order relaxed
       }
     } else {
@@ -160,8 +157,7 @@ public:
   bool push(node_type& node)
   {
     auto b = m_bottom; // memory order relaxed
-    auto t = m_top; // TODO @tasking @memory_order DSH: memory order acquire!
-    Kokkos::memory_fence(); // TODO @tasking @memory_order DSH: memory order instead of fence here
+    auto t = Impl::atomic_load(&m_top, memory_order_acquire);
     auto& a = m_array;
     if(b - t > a->size - 1) {
       /* queue is full, resize */
@@ -170,8 +166,7 @@ public:
       return false;
     }
     a->buffer[b % a->size] = &node; // relaxed
-    Kokkos::memory_fence(); // TODO @tasking @memory_order DSH: memory order release
-    m_bottom = b + 1; // relaxed store
+    Impl::atomic_store(&m_bottom, b + 1, memory_order_release);
     return true;
   }
 
@@ -180,16 +175,14 @@ public:
   steal() {
     auto t = m_top; // TODO @tasking @memory_order DSH: atomic load acquire
     Kokkos::memory_fence(); // seq_cst fence, so why does the above need to be acquire?
-    auto b = m_bottom; // TODO @tasking @memory_order DSH: atomic load acquire
-    Kokkos::memory_fence(); // TODO @tasking @memory_order DSH memory order instead of fence here
+    auto b = Impl::atomic_load(&m_bottom, memory_order_acquire);
     OptionalRef<T> return_value;
     if(t < b) {
       /* Non-empty queue */
       auto& a = m_array; // TODO @tasking @memory_order DSH: technically consume ordered, but acquire should be fine
       Kokkos::load_fence(); // TODO @tasking @memory_order DSH memory order instead of fence
       return_value = *static_cast<T*>(a->buffer[t % a->size]); // relaxed
-      Kokkos::memory_fence(); // TODO @tasking @memory_order DSH memory order instead of fence
-      if(not Kokkos::atomic_compare_exchange_strong(&m_top, t, t+1)) { // TODO @tasking @memory_order DSH memory orders: seq_cst, relaxed
+      if(not Impl::atomic_compare_exchange_strong(&m_top, t, t+1, memory_order_seq_cst, memory_order_relaxed)) {
         return_value = nullptr;
       }
     }
@@ -197,6 +190,16 @@ public:
   }
 
 };
+
+/*
+      // The atomicity of this load was more important in the paper's version
+      // because that version had a circular buffer that could grow.  We're
+      // essentially using the memory order in this version as a fence, which
+      // may be unnecessary
+      auto buffer_ptr = (node_type***)&m_array.buffer;
+      auto a = Impl::atomic_load(buffer_ptr, memory_order_acquire); // technically consume ordered, but acquire should be fine
+      return_value = *static_cast<T*>(a[t % m_array->size]); // relaxed; we'd have to replace the m_array->size if we ever allow growth
+*/
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

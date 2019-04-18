@@ -147,7 +147,6 @@ public:
   void* allocate(size_type alloc_size) const noexcept
   {
     KOKKOS_EXPECTS(alloc_size <= Size);
-    Kokkos::memory_fence();
     auto free_idx_counter = Kokkos::atomic_fetch_add((volatile size_type*)&m_first_free_idx, size_type(1));
     auto free_idx_idx = free_idx_counter % m_num_blocks;
 
@@ -157,6 +156,9 @@ public:
     size_type free_idx = IndexInUse;
     free_idx =
       Kokkos::atomic_compare_exchange(&m_free_indices[free_idx_idx], current_free_idx, free_idx);
+    Kokkos::memory_fence();
+
+    // TODO figure out how to decrement here?
 
     if(free_idx == IndexInUse) {
       return nullptr;
@@ -174,10 +176,10 @@ public:
 
     KOKKOS_EXPECTS(offset % actual_size == 0 && offset/actual_size < m_num_blocks);
 
+    Kokkos::memory_fence();
     auto last_idx_idx = Kokkos::atomic_fetch_add((volatile size_type*)&m_last_free_idx, size_type(1));
     last_idx_idx %= m_num_blocks;
     m_free_indices[last_idx_idx] = offset / actual_size;
-    Kokkos::memory_fence();
   }
 
 };
