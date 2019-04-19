@@ -184,8 +184,6 @@ void parallel_for( const ExecPolicy  & policy
   }
 #endif
 
-  printf("call ParallelFor II\n");
-    fflush(stdout);
     Kokkos::fence();
     Kokkos::Impl::shared_allocation_tracking_disable();
     Impl::ParallelFor< FunctorType , ExecPolicy > closure( functor , policy );
@@ -215,7 +213,6 @@ void parallel_for( const size_t        work_count
 
 #if defined(KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
-  printf("profiling enabled\n");
   if(Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType, void> name(str);
     Kokkos::Profiling::beginParallelFor(name.get(), 0, &kpID);
@@ -223,7 +220,6 @@ void parallel_for( const size_t        work_count
 #endif
 
   Kokkos::Impl::shared_allocation_tracking_disable();
-  printf("call ParallelFor \n");
   Impl::ParallelFor< FunctorType , policy > closure( functor , policy(0,work_count) );
   Kokkos::Impl::shared_allocation_tracking_enable();
 

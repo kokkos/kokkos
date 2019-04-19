@@ -483,7 +483,6 @@ public:
       auto swap_rec = m_record;
       m_record = rhs.m_record;
       rhs.m_record = swap_rec;
-      rhs.m_record_bits |= DO_NOT_DEREF_FLAG ; 
 #if defined(__CUDA_ARCH__)
        m_label[0] = 0;
 #else

@@ -1985,7 +1985,7 @@ public:
   ~View() {}
 
   KOKKOS_INLINE_FUNCTION
-  View() : m_track(), m_map() { printf("empty constructor\n"); }
+  View() : m_track(), m_map() {  }
 
   KOKKOS_INLINE_FUNCTION
   View( const View & rhs ) : m_track( rhs.m_track, traits::is_managed ), m_map( rhs.m_map ) {
@@ -1995,26 +1995,24 @@ public:
    typedef typename traits::device_type::memory_space specialized_memory_space;
    if ( Kokkos::Impl::is_resilient_space< specialized_memory_space >::value &&
         Kokkos::Impl::SharedAllocationRecord<void,void>::duplicates_enabled() ) {
-        printf("duplicating shared alloc record.. \n");
       shared_record_type  *
          record = reinterpret_cast<shared_record_type*>(m_map.duplicate_shared( m_track.template get_record<specialized_memory_space>() ));
 
        // Setup and initialization complete, start tracking
        m_track.assign_allocated_record_to_uninitialized( record );
-       printf("after duplicate record assigned to tracker: %d \n", m_track.tracking_disabled());
      }
 #endif
 
   }
 
   KOKKOS_INLINE_FUNCTION
-  View( View && rhs ) : m_track( std::move(rhs.m_track) ), m_map( std::move(rhs.m_map) ) {printf("exact move constructor");}
+  View( View && rhs ) : m_track( std::move(rhs.m_track) ), m_map( std::move(rhs.m_map) ) {}
 
   KOKKOS_INLINE_FUNCTION
-  View & operator = ( const View & rhs ) { printf("assignment operator (exact) \n"); m_track = rhs.m_track ; m_map = rhs.m_map ; return *this ; }
+  View & operator = ( const View & rhs ) { m_track = rhs.m_track ; m_map = rhs.m_map ; return *this ; }
 
   KOKKOS_INLINE_FUNCTION
-  View & operator = ( View && rhs ) { printf("move operator (exact)\n"); m_track = std::move(rhs.m_track) ; m_map = std::move(rhs.m_map) ; return *this ; }
+  View & operator = ( View && rhs ) { m_track = std::move(rhs.m_track) ; m_map = std::move(rhs.m_map) ; return *this ; }
 
 
 
@@ -2028,7 +2026,6 @@ public:
     : m_track( rhs.m_track , traits::is_managed )
     , m_map()
     {
-      printf("compatibility constructor\n");
       typedef typename View<RT,RP...>::traits  SrcTraits ;
       typedef Kokkos::Impl::ViewMapping< traits , SrcTraits , typename traits::specialize >  Mapping ;
       static_assert( Mapping::is_assignable , "Incompatible View copy construction" );
@@ -2058,7 +2055,6 @@ public:
     : m_track( src_view.m_track , traits::is_managed )
     , m_map()
     {
-      printf("subview constructor\n");
       typedef View< RT , RP... > SrcType ;
 
       typedef Kokkos::Impl::ViewMapping
@@ -2100,7 +2096,6 @@ public:
     : m_track()
     , m_map()
     {
-      printf("layout based constructor: %d \n", m_track.tracking_disabled());
       // Append layout and spaces if not input
       typedef Impl::ViewCtorProp< P ... > alloc_prop_input ;
 
@@ -2170,7 +2165,6 @@ public:
       
       // Setup and initialization complete, start tracking
       m_track.assign_allocated_record_to_uninitialized( record );
-      printf("after alloc record assigned to tracker: %d \n", m_track.tracking_disabled());
     }
 
   KOKKOS_INLINE_FUNCTION
@@ -2191,7 +2185,6 @@ public:
     : m_track() // No memory tracking
     , m_map( arg_prop , arg_layout )
     {
-      printf("no - tracking constructor\n");
       static_assert(
         std::is_same< pointer_type
                     , typename Impl::ViewCtorProp< P... >::pointer_type
@@ -2220,7 +2213,6 @@ public:
               , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
           )
     {
-    printf("property constructor A \n");
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     Impl::runtime_check_rank_host(traits::rank_dynamic, std::is_same<typename traits::specialize,void>::value, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7, label());
@@ -2252,7 +2244,6 @@ public:
               , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
           )
     {
-    printf("property constructor B \n");
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     Impl::runtime_check_rank_host(traits::rank_dynamic, std::is_same<typename traits::specialize,void>::value, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7, label());
@@ -2273,7 +2264,7 @@ public:
           typename traits::array_layout >::type const & arg_layout
       )
     : View( Impl::ViewCtorProp< std::string >( arg_label ) , arg_layout )
-    {printf("empty from layout\n");}
+    {}
 
   // Allocate label and layout, must disambiguate from subview constructor.
   template< typename Label >
@@ -2296,7 +2287,6 @@ public:
               , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
           )
     {
-    printf("property constructor C \n");
       static_assert ( traits::array_layout::is_extent_constructible , "Layout is not extent constructible. A layout object should be passed too.\n" );
 	  
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
@@ -2321,7 +2311,6 @@ public:
           , arg_layout
           )
     {
-    printf("backward comp \n");
 }
 
   explicit inline
@@ -2341,7 +2330,6 @@ public:
               , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
           )
     {
-    printf("without initializing...: %d \n", m_track.tracking_disabled());
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     Impl::runtime_check_rank_host(traits::rank_dynamic, std::is_same<typename traits::specialize,void>::value, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7, label());
@@ -2357,7 +2345,6 @@ public:
   View( const track_type & track,  const Kokkos::Impl::ViewMapping< Traits , typename Traits::specialize >  &map ) :
   m_track(track), m_map()
   {
-    printf("track and map..... \n");
     typedef Kokkos::Impl::ViewMapping< traits , Traits , typename traits::specialize >  Mapping ;
     static_assert( Mapping::is_assignable , "Incompatible View copy construction" );
     Mapping::assign( m_map , map , track );
@@ -2399,7 +2386,6 @@ public:
              , arg_N4 , arg_N5 , arg_N6 , arg_N7 )
           )
     {
-    printf("more prop B..... \n");
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     Impl::runtime_check_rank_host(traits::rank_dynamic, std::is_same<typename traits::specialize,void>::value, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7, label());
@@ -2417,7 +2403,6 @@ public:
     : View( Impl::ViewCtorProp<pointer_type>(arg_ptr) , arg_layout )
     {
 
-    printf("raw pointerp..... \n");
     }
 
   //----------------------------------------
@@ -2464,7 +2449,6 @@ public:
                 arg_space.get_shmem_aligned( map_type::memory_span( arg_layout ), sizeof(typename traits::value_type) ) ) )
          , arg_layout )
     {
-    printf("exec space and layout..... \n");
 }
 
   explicit KOKKOS_INLINE_FUNCTION
@@ -2490,7 +2474,6 @@ public:
        )
     {
 
-    printf("more prop D..... \n");
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     Impl::runtime_check_rank_host(traits::rank_dynamic, std::is_same<typename traits::specialize,void>::value, arg_N0, arg_N1, arg_N2, arg_N3,
                              arg_N4, arg_N5, arg_N6, arg_N7, label());
@@ -2617,14 +2600,12 @@ namespace Impl {
 inline
 void shared_allocation_tracking_disable()
 { 
-   printf("disable tracking ....\n");
    Kokkos::Impl::SharedAllocationRecord<void,void>::tracking_disable(); 
 }
 
 inline
 void shared_allocation_tracking_enable()
 { 
-   printf("enable tracking ....\n");
    Kokkos::Impl::SharedAllocationRecord<void,void>::tracking_enable(); 
 }
 
@@ -2632,14 +2613,12 @@ void shared_allocation_tracking_enable()
 inline
 void shared_allocation_enable_duplicates()
 { 
-   printf("enable duplicates ....\n");
    Kokkos::Impl::SharedAllocationRecord<void,void>::duplicates_enable(); 
 }
 
 inline
 void shared_allocation_disable_duplicates()
 { 
-   printf("disable duplicates ....\n");
    Kokkos::Impl::SharedAllocationRecord<void,void>::duplicates_disable(); 
 }
 
