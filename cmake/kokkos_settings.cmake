@@ -172,8 +172,9 @@ if (CMAKE_CXX_STANDARD)
       set(KOKKOS_CXX_STANDARD "gnu++${CMAKE_CXX_STANDARD}")
     endif()
   endif()
-  set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} "KOKKOS_CXX_STANDARD=\"${KOKKOS_CXX_STANDARD}\"")
 endif()
+#changed - allow user to directly set KOKKOS_CXX_STANDARD
+set(KOKKOS_SETTINGS ${KOKKOS_SETTINGS} "KOKKOS_CXX_STANDARD=\"${KOKKOS_CXX_STANDARD}\"")
 
 # Final form that gets passed to make
 set(KOKKOS_SETTINGS env ${KOKKOS_SETTINGS})
