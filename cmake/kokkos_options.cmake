@@ -22,6 +22,7 @@ list(APPEND KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST
      LIBRT
      Cuda_Lambda
      Cuda_Relocatable_Device_Code
+     Cuda_RDC
      Cuda_UVM
      Cuda_LDG_Intrinsic
      HPX_ASYNC_DISPATCH

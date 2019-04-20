@@ -8,9 +8,14 @@ ENDIF()
 
 # Basic initialization (Used in KOKKOS_SETTINGS)
 set(Kokkos_SOURCE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
+set(KOKKOS_SOURCE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
 set(KOKKOS_SRC_PATH      ${Kokkos_SOURCE_DIR})
 set(KOKKOS_PATH          ${Kokkos_SOURCE_DIR})
 set(KOKKOS_TOP_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
+
+OPTION(KOKKOS_ENABLE_EXPLICIT_INSTANATION "Whether to enable explicit template instantiation"  OFF)
+OPTION(KOKKOS_ENABLE_ETI                  "Whether to enable explicit template instantiation"  OFF)
+OPTION(KOKKOS_ENABLE_Cuda_RDC             "Whether to enable relocatable device code for CUDA" OFF)
 
 IF(NOT KOKKOS_HAS_TRILINOS)
   cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
@@ -28,7 +33,6 @@ SET(CXX_STANDARD_TEST)
 
 IF (KOKKOS_CXX_STANDARD AND CMAKE_CXX_STANDARD)
   #make sure these are consistent
-  message("GOT ${KOKKOS_CXX_STANDARD} AND ${CMAKE_CXX_STANDARD}")
   IF (${KOKKOS_CXX_STANDARD} STREQUAL "c++11")
     IF(NOT ${CMAKE_CXX_STANDARD} STREQUAL "11")
       SET(CXX_STD_ERROR ON)
