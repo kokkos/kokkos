@@ -314,6 +314,9 @@ set(KOKKOS_ENABLE_DEPRECATED_CODE ${KOKKOS_INTERNAL_ENABLE_DEPRECATED_CODE_DEFAU
 set_kokkos_default_default(EXPLICIT_INSTANTIATION OFF)
 set(KOKKOS_ENABLE_EXPLICIT_INSTANTIATION ${KOKKOS_INTERNAL_ENABLE_EXPLICIT_INSTANTIATION_DEFAULT} CACHE BOOL "Enable explicit template instantiation.")
 
+set_kokkos_default_default(ETI OFF)
+set(KOKKOS_ENABLE_ETI ${KOKKOS_INTERNAL_ENABLE_EXPLICIT_INSTANTIATION_DEFAULT} CACHE BOOL "Enable explicit template instantiation.")
+
 #-------------------------------------------------------------------------------
 #------------------------------- KOKKOS_USE_TPLS -------------------------------
 #-------------------------------------------------------------------------------
