@@ -900,10 +900,10 @@ TeamThreadRange( const TeamMemberType&, const iType1& begin, const iType2& end )
  *  This policy is used together with a parallel pattern as a nested layer within a kernel launched
  *  with the TeamPolicy. This variant expects a single count. So the range is (0,count].
  */
-template<typename iType, class TeamMemberType>
+template<typename iType, class TeamMemberType, class _never_use_this_overload>
 KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct<iType,TeamMemberType>
-TeamVectorRange( const TeamMemberType&, const iType& count );
+TeamVectorRange( const TeamMemberType&, const iType& count ) = delete;
 
 /** \brief  Execution policy for parallel work over a threads within a team.
  *
@@ -911,10 +911,10 @@ TeamVectorRange( const TeamMemberType&, const iType& count );
  *  This policy is used together with a parallel pattern as a nested layer within a kernel launched
  *  with the TeamPolicy. This variant expects a begin and end. So the range is (begin,end].
  */
-template<typename iType1, typename iType2, class TeamMemberType>
+template<typename iType1, typename iType2, class TeamMemberType, class _never_use_this_overload>
 KOKKOS_INLINE_FUNCTION
 Impl::TeamThreadRangeBoundariesStruct<typename std::common_type<iType1, iType2>::type, TeamMemberType>
-TeamVectorRange( const TeamMemberType&, const iType1& begin, const iType2& end );
+TeamVectorRange( const TeamMemberType&, const iType1& begin, const iType2& end ) = delete;
 
 /** \brief  Execution policy for a vector parallel loop.
  *
