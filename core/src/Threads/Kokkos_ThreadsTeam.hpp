@@ -902,6 +902,23 @@ TeamThreadRange( const Impl::ThreadsExecTeamMember& thread, const iType1 & begin
   return Impl::TeamThreadRangeBoundariesStruct< iType, Impl::ThreadsExecTeamMember >( thread, iType(begin), iType(end) );
 }
 
+template< typename iType >
+KOKKOS_INLINE_FUNCTION
+Impl::TeamThreadRangeBoundariesStruct< iType, Impl::ThreadsExecTeamMember >
+TeamVectorRange( const Impl::ThreadsExecTeamMember& thread, const iType& count )
+{
+  return Impl::TeamThreadRangeBoundariesStruct< iType, Impl::ThreadsExecTeamMember >( thread, count );
+}
+
+template< typename iType1, typename iType2 >
+KOKKOS_INLINE_FUNCTION
+Impl::TeamThreadRangeBoundariesStruct< typename std::common_type< iType1, iType2 >::type,
+                                       Impl::ThreadsExecTeamMember>
+TeamVectorRange( const Impl::ThreadsExecTeamMember& thread, const iType1 & begin, const iType2 & end )
+{
+  typedef typename std::common_type< iType1, iType2 >::type iType;
+  return Impl::TeamThreadRangeBoundariesStruct< iType, Impl::ThreadsExecTeamMember >( thread, iType(begin), iType(end) );
+}
 
 template<typename iType>
 KOKKOS_INLINE_FUNCTION

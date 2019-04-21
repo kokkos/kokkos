@@ -776,6 +776,59 @@ public:
 };
 
 template<typename iType, class TeamMemberType>
+struct TeamVectorRangeBoundariesStruct {
+private:
+
+  KOKKOS_INLINE_FUNCTION static
+  iType ibegin( const iType & arg_begin
+              , const iType & arg_end
+              , const iType & arg_rank
+              , const iType & arg_size
+              )
+    {
+      return arg_begin + ( ( arg_end - arg_begin + arg_size - 1 ) / arg_size ) * arg_rank ;
+    }
+
+  KOKKOS_INLINE_FUNCTION static
+  iType iend( const iType & arg_begin
+            , const iType & arg_end
+            , const iType & arg_rank
+            , const iType & arg_size
+            )
+    {
+      const iType end_ = arg_begin + ( ( arg_end - arg_begin + arg_size - 1 ) / arg_size ) * ( arg_rank + 1 );
+      return end_ < arg_end ? end_ : arg_end ;
+    }
+
+public:
+
+  typedef iType index_type;
+  const iType start;
+  const iType end;
+  enum {increment = 1};
+  const TeamMemberType& thread;
+
+  KOKKOS_INLINE_FUNCTION
+  TeamVectorRangeBoundariesStruct( const TeamMemberType& arg_thread
+                                 , const iType& arg_end
+                                 )
+    : start( ibegin( 0 , arg_end , arg_thread.team_rank() , arg_thread.team_size() ) )
+    , end(   iend(   0 , arg_end , arg_thread.team_rank() , arg_thread.team_size() ) )
+    , thread( arg_thread )
+    {}
+
+  KOKKOS_INLINE_FUNCTION
+  TeamVectorRangeBoundariesStruct( const TeamMemberType& arg_thread
+                                , const iType& arg_begin
+                                , const iType& arg_end
+                                )
+    : start( ibegin( arg_begin , arg_end , arg_thread.team_rank() , arg_thread.team_size() ) )
+    , end(   iend(   arg_begin , arg_end , arg_thread.team_rank() , arg_thread.team_size() ) )
+    , thread( arg_thread )
+    {}
+};
+
+template<typename iType, class TeamMemberType>
 struct ThreadVectorRangeBoundariesStruct {
   typedef iType index_type;
   const index_type start;
@@ -840,6 +893,28 @@ template<typename iType1, typename iType2, class TeamMemberType, class _never_us
 KOKKOS_INLINE_FUNCTION_DELETED
 Impl::TeamThreadRangeBoundariesStruct<typename std::common_type<iType1, iType2>::type, TeamMemberType>
 TeamThreadRange( const TeamMemberType&, const iType1& begin, const iType2& end ) = delete;
+
+/** \brief  Execution policy for parallel work over a threads within a team.
+ *
+ *  The range is split over all threads in a team. The Mapping scheme depends on the architecture.
+ *  This policy is used together with a parallel pattern as a nested layer within a kernel launched
+ *  with the TeamPolicy. This variant expects a single count. So the range is (0,count].
+ */
+template<typename iType, class TeamMemberType>
+KOKKOS_INLINE_FUNCTION
+Impl::TeamThreadRangeBoundariesStruct<iType,TeamMemberType>
+TeamVectorRange( const TeamMemberType&, const iType& count );
+
+/** \brief  Execution policy for parallel work over a threads within a team.
+ *
+ *  The range is split over all threads in a team. The Mapping scheme depends on the architecture.
+ *  This policy is used together with a parallel pattern as a nested layer within a kernel launched
+ *  with the TeamPolicy. This variant expects a begin and end. So the range is (begin,end].
+ */
+template<typename iType1, typename iType2, class TeamMemberType>
+KOKKOS_INLINE_FUNCTION
+Impl::TeamThreadRangeBoundariesStruct<typename std::common_type<iType1, iType2>::type, TeamMemberType>
+TeamVectorRange( const TeamMemberType&, const iType1& begin, const iType2& end );
 
 /** \brief  Execution policy for a vector parallel loop.
  *

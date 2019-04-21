@@ -847,6 +847,42 @@ TeamThreadRange(
 
 template<typename iType, typename Member>
 KOKKOS_INLINE_FUNCTION
+Impl::TeamThreadRangeBoundariesStruct<iType, Member>
+TeamVectorRange(
+  Member const & member,
+  iType count,
+  typename std::enable_if<
+    Impl::is_thread_team_member<Member>::value
+  >::type const** = nullptr
+)
+{
+  return
+    Impl::TeamThreadRangeBoundariesStruct
+      <iType, Member>(member,0,count);
+}
+
+template<typename iType1, typename iType2, typename Member>
+KOKKOS_INLINE_FUNCTION
+Impl::TeamThreadRangeBoundariesStruct<
+  typename std::common_type< iType1, iType2 >::type, Member
+>
+TeamVectorRange(
+  Member const & member,
+  iType1 begin,
+  iType2 end,
+  typename std::enable_if<
+    Impl::is_thread_team_member<Member>::value
+  >::type const** = nullptr
+)
+{
+  return
+    Impl::TeamThreadRangeBoundariesStruct
+      < typename std::common_type< iType1, iType2 >::type
+      , Member >( member , begin , end );
+}
+
+template<typename iType, typename Member>
+KOKKOS_INLINE_FUNCTION
 Impl::ThreadVectorRangeBoundariesStruct<iType, Member>
 ThreadVectorRange(
   Member const & member,
