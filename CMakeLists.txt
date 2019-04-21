@@ -13,9 +13,6 @@ set(KOKKOS_SRC_PATH      ${Kokkos_SOURCE_DIR})
 set(KOKKOS_PATH          ${Kokkos_SOURCE_DIR})
 set(KOKKOS_TOP_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
-OPTION(KOKKOS_ENABLE_EXPLICIT_INSTANATION "Whether to enable explicit template instantiation"  OFF)
-OPTION(KOKKOS_ENABLE_ETI                  "Whether to enable explicit template instantiation"  OFF)
-OPTION(KOKKOS_ENABLE_Cuda_RDC             "Whether to enable relocatable device code for CUDA" OFF)
 
 IF(NOT KOKKOS_HAS_TRILINOS)
   cmake_minimum_required(VERSION 3.8 FATAL_ERROR)

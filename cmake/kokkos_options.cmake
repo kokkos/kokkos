@@ -61,7 +61,12 @@ foreach(opt ${KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST})
       ENDIF()
     ELSE()
       SET(KOKKOS_INTERNAL_ENABLE_${OPT}_DEFAULT ${Kokkos_ENABLE_${opt}})
+      SET(KOKKOS_ENABLE_${OPT} ${Kokkos_ENABLE_${opt}})
     ENDIF()
+  ELSEIF(DEFINED KOKKOS_ENABLE_${OPT})
+    #if we are here, the lower case version is not defined 
+    #define it to avoid breaking anything later on
+    SET(Kokkos_ENABLE_${opt} ${KOKKOS_ENABLE_${OPT}})
   ENDIF()
 endforeach()
 
@@ -383,26 +388,6 @@ set_kokkos_default_default(HPX_ASYNC_DISPATCH OFF)
 # Set actual options
 set(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH ${KOKKOS_INTERNAL_ENABLE_HPX_ASYNC_DISPATCH_DEFAULT} CACHE BOOL "Enable HPX async dispatch.")
 
-
-#-------------------------------------------------------------------------------
-#----------------------- HOST ARCH AND LEGACY TRIBITS --------------------------
-#-------------------------------------------------------------------------------
-
-# This defines the previous legacy TriBITS builds. 
-set(KOKKOS_LEGACY_TRIBITS False)
-IF ("${KOKKOS_ARCH}" STREQUAL "NOT_SET")
-  set(KOKKOS_ARCH "None")
-  IF(KOKKOS_HAS_TRILINOS)
-    set(KOKKOS_LEGACY_TRIBITS True)
-  ENDIF()
-ENDIF()
-IF (KOKKOS_HAS_TRILINOS)
-  IF (KOKKOS_LEGACY_TRIBITS)
-    message(STATUS "Using the legacy tribits build because KOKKOS_ARCH not set")
-  ELSE()
-    message(STATUS "NOT using the legacy tribits build because KOKKOS_ARCH *is* set")
-  ENDIF()
-ENDIF()
 
 #-------------------------------------------------------------------------------
 #----------------------- Set CamelCase Options if they are not yet set ---------

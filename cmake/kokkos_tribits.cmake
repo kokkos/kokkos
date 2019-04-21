@@ -5,28 +5,42 @@ cmake_policy(SET CMP0054 NEW)
 
 MESSAGE(STATUS "The project name is: ${PROJECT_NAME}")
 
-IF(NOT DEFINED ${PROJECT_NAME}_ENABLE_OpenMP)
-  SET(${PROJECT_NAME}_ENABLE_OpenMP OFF)
-ENDIF()
+#Leave this here for now - but only do for tribits
+#This breaks the standalone CMake
+IF (KOKKOS_HAS_TRILINOS)
+  IF(NOT DEFINED ${PROJECT_NAME}_ENABLE_OpenMP)
+    SET(${PROJECT_NAME}_ENABLE_OpenMP OFF)
+  ENDIF()
 
-IF(NOT DEFINED ${PROJECT_NAME}_ENABLE_HPX)
-  SET(${PROJECT_NAME}_ENABLE_HPX OFF)
-ENDIF()
+  IF(NOT DEFINED ${PROJECT_NAME}_ENABLE_HPX)
+    SET(${PROJECT_NAME}_ENABLE_HPX OFF)
+  ENDIF()
 
-IF(NOT DEFINED ${PROJECT_NAME}_ENABLE_DEBUG)
-  SET(${PROJECT_NAME}_ENABLE_DEBUG OFF)
-ENDIF()
+  IF(NOT DEFINED ${PROJECT_NAME}_ENABLE_DEBUG)
+    SET(${PROJECT_NAME}_ENABLE_DEBUG OFF)
+  ENDIF()
 
-IF(NOT DEFINED ${PROJECT_NAME}_ENABLE_CXX11)
-  SET(${PROJECT_NAME}_ENABLE_CXX11 ON)
-ENDIF()
+  IF(NOT DEFINED ${PROJECT_NAME}_ENABLE_CXX11)
+    SET(${PROJECT_NAME}_ENABLE_CXX11 ON)
+  ENDIF()
 
-IF(NOT DEFINED ${PROJECT_NAME}_ENABLE_TESTS)
-  SET(${PROJECT_NAME}_ENABLE_TESTS OFF)
-ENDIF()
+  IF(NOT DEFINED ${PROJECT_NAME}_ENABLE_TESTS)
+    SET(${PROJECT_NAME}_ENABLE_TESTS OFF)
+  ENDIF()
 
-IF(NOT DEFINED TPL_ENABLE_Pthread)
-  SET(TPL_ENABLE_Pthread OFF)
+  IF(NOT DEFINED TPL_ENABLE_Pthread)
+    SET(TPL_ENABLE_Pthread OFF)
+  ENDIF()
+ELSE()
+  #Don't do any of these yet - because of case nonsense
+  #We should not have any enable variables show up in the cache or bad things will happen
+  #OPTION(Kokkos_ENABLE_EXPLICIT_INSTANATION "Whether to enable explicit template instantiation"  OFF)
+  #OPTION(Kokkos_ENABLE_ETI                  "Whether to enable explicit template instantiation"  OFF)
+  #OPTION(Kokkos_ENABLE_Cuda_RDC             "Whether to enable relocatable device code for CUDA" OFF)
+  #OPTION(Kokkos_ENABLE_OpenMP               "Whether to enable the OpenMP backend"               OFF)
+  #OPTION(Kokkos_ENABLE_HPX                  "Whether to enable the HPX backend"                  OFF)
+  #OPTION(Kokkos_ENABLE_DEBUG                "Whether to enable extra debug checks/prints"        OFF)
+  #OPTION(Kokkos_ENABLE_TESTS                "Whether to enable 
 ENDIF()
 
 FUNCTION(ASSERT_DEFINED VARS)
@@ -423,12 +437,9 @@ else()
 endif()
 ENDMACRO()
 
+
 MACRO(KOKKOS_SETUP_BUILD_ENVIRONMENT)
  if (NOT KOKKOS_HAS_TRILINOS)
-  set(KOKKOS_ENABLE_EXAMPLES OFF CACHE BOOL "Whether to build examples")
-  set(KOKKOS_ENABLE_TESTS    OFF CACHE BOOL "Whether to build tests")
-
-
   #------------ COMPILER AND FEATURE CHECKS ------------------------------------
   include(${KOKKOS_SRC_PATH}/cmake/kokkos_functions.cmake)
   set_kokkos_cxx_compiler()
@@ -682,3 +693,12 @@ MACRO(KOKKOS_ADD_COMPILE_OPTIONS)
 ADD_COMPILE_OPTIONS(${ARGN})
 ENDMACRO()
 
+MACRO(PRINTALL)
+get_cmake_property(_variableNames VARIABLES)
+list (SORT _variableNames)
+foreach (_variableName ${_variableNames})
+  if("${_variableName}" MATCHES "Kokkos" OR "${_variableName}" MATCHES "KOKKOS")
+    message(STATUS "${_variableName}=${${_variableName}}")
+  endif()
+endforeach()
+ENDMACRO(PRINTALL)
