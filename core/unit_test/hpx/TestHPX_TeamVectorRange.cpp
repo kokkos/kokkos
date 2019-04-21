@@ -1,3 +1,4 @@
+
 /*
 //@HEADER
 // ************************************************************************
@@ -41,38 +42,7 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
-#include <cstdlib>
+#include<hpx/TestHPX_Category.hpp>
+#include<TestTeamVectorRange.hpp>
 
-#include <Kokkos_Core.hpp>
 
-#ifdef KOKKOS_ENABLE_ROCM
-#include <rocm/TestROCm_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_CUDA
-#include <cuda/TestCuda_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_OPENMP
-#include <openmp/TestOpenMP_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_THREADS
-#include <threads/TestThreads_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_HPX
-#include <hpx/TestHPX_Category.hpp>
-#endif
-#ifndef TEST_EXECSPACE
-#ifdef KOKKOS_ENABLE_SERIAL
-#include <serial/TestSerial_Category.hpp>
-#endif
-#endif 
-#include <TestTeamVectorRange.hpp>
-
-int main( int argc, char *argv[] ) {
-  Kokkos::initialize(argc,argv);
-  ::testing::InitGoogleTest( &argc, argv );
-
-  int result =  RUN_ALL_TESTS();
-  Kokkos::finalize();
-  return result;
-}
