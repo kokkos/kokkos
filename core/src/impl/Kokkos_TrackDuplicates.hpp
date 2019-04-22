@@ -58,23 +58,23 @@ public:
    static void add_kernel_func ( std::string name, void * func_ptr );
    static void * get_kernel_func ( std::string name );
 
-   inline __host__ virtual ~DuplicateTracker() {}
+   inline virtual ~DuplicateTracker() {}
 
-   inline __host__
+   inline 
    DuplicateTracker() : original_data(nullptr) { 
       dup_cnt = 0;
       data_len = 0;
       for (int i = 0; i < 3; i++) { dup_list[i] = nullptr; }
    }
    
-   inline __host__
+   inline
    DuplicateTracker(const DuplicateTracker & dt) : original_data( dt.original_data ) {
       dup_cnt = dt.dup_cnt;
       data_len = dt.data_len;
       for (int i = 0; i < dup_cnt; i++) { dup_list[i] = dt.dup_list[i]; }
    }
 
-   inline __host__
+   inline 
    void add_dup( Kokkos::Impl::SharedAllocationRecord<void,void>* dup ) {
       if (dup_cnt < 3) {
          dup_list[dup_cnt] = (void*)dup->data();
@@ -83,7 +83,7 @@ public:
       }
    }
 
-   inline __host__
+   inline 
    virtual void combine_dups() {
    }
 };
@@ -100,10 +100,10 @@ public:
 
    static void * s_dup_kernel;
 
-   inline __host__ 
+   inline  
    CombineFunctor() : orig_view(nullptr), dup_view{}, m_len (0) {}
 
-   inline __host__ void load_ptrs( DType * orig, DType * d1, DType * d2, DType * d3, size_t len) {
+   inline void load_ptrs( DType * orig, DType * d1, DType * d2, DType * d3, size_t len) {
        orig_view = orig;
        dup_view[0] = d1;
        dup_view[1] = d2;
@@ -158,15 +158,14 @@ public:
 
    comb_type m_cf;
 
-   inline __host__
+   inline 
    SpecDuplicateTracker() : DuplicateTracker( ), m_cf() { 
    }
 
-   inline __host__
+   inline 
    SpecDuplicateTracker(const SpecDuplicateTracker & rhs) : DuplicateTracker( rhs ), m_cf(rhs.m_cf)  { 
    }
    
-   __host__
    virtual void combine_dups();
 
 };
@@ -175,7 +174,7 @@ public:
   static void track_duplicate ( Kokkos::Impl::SharedAllocationRecord<void,void> * orig, Kokkos::Impl::SharedAllocationRecord<void,void> * dup ) {
     Kokkos::Impl::SharedAllocationRecord<MemorySpace,void> * SP = static_cast<Kokkos::Impl::SharedAllocationRecord<MemorySpace,void> *>(dup);
     typedef Kokkos::Experimental::SpecDuplicateTracker<Type, typename MemorySpace::execution_space> dt_type;
-    typedef CombineFunctor<typename dt_type::rd_type, typename MemorySpace::execution_space> comb_type;
+    //typedef CombineFunctor<typename dt_type::rd_type, typename MemorySpace::execution_space> comb_type;
 
     dt_type * dt = nullptr;
     auto loc = MemorySpace::duplicate_map.find(SP->get_label());
