@@ -768,7 +768,7 @@ parallel_reduce
   }
 
   loop_boundaries.member.team_reduce( reducer , val);
-  reducer.reference() = val;
+  result = reducer.reference();
 #endif
 }
 
