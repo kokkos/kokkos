@@ -455,7 +455,7 @@ bool Test( int test ) {
 
 namespace Test {
 
-TEST_F( TEST_CATEGORY, team_vector )
+TEST_F( TEST_CATEGORY, team_teamvector_range )
 {
   ASSERT_TRUE( ( TestTeamVectorRange::Test< TEST_EXECSPACE >( 0 ) ) );
   ASSERT_TRUE( ( TestTeamVectorRange::Test< TEST_EXECSPACE >( 1 ) ) );
