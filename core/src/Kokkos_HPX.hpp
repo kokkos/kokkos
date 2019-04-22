@@ -1754,6 +1754,24 @@ TeamThreadRange(const Impl::HPXTeamMember &thread, const iType1 &i_begin,
 
 template <typename iType>
 KOKKOS_INLINE_FUNCTION
+    Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
+    TeamVectorRange(const Impl::HPXTeamMember &thread, const iType &count) {
+  return Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>(
+      thread, count);
+}
+
+template <typename iType1, typename iType2>
+KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<
+    typename std::common_type<iType1, iType2>::type, Impl::HPXTeamMember>
+TeamVectorRange(const Impl::HPXTeamMember &thread, const iType1 &i_begin,
+                const iType2 &i_end) {
+  using iType = typename std::common_type<iType1, iType2>::type;
+  return Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>(
+      thread, iType(i_begin), iType(i_end));
+}
+
+template <typename iType>
+KOKKOS_INLINE_FUNCTION
     Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>
     ThreadVectorRange(const Impl::HPXTeamMember &thread, const iType &count) {
   return Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>(
