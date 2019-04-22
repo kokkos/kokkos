@@ -79,17 +79,50 @@ ResCuda::size_type ResCuda::detect_device_count()
 int ResCuda::concurrency()
 { return Cuda::concurrency();}
 
-int ResCuda::is_initialized()
-{ return Cuda::is_initialized(); }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+   int ResCuda::is_initialized()
+   { return Kokkos::Impl::CudaInternal::singleton().is_initialized(); }
 
-void ResCuda::initialize( const Cuda::SelectDevice config , size_t num_instances )
-{
-  Cuda::initialize( config , num_instances );
+   void ResCuda::finalize()
+   {
+      Kokkos::Impl::CudaInternal::singleton().finalize();
 
-  #if defined(KOKKOS_ENABLE_PROFILING)
-    Kokkos::Profiling::initialize();
-  #endif
-}
+      #if defined(KOKKOS_ENABLE_PROFILING)
+        Kokkos::Profiling::finalize();
+      #endif
+   }
+
+   void ResCuda::initialize( const Cuda::SelectDevice config , size_t num_instances )
+   {
+     Kokkos::Impl::CudaInternal::singleton().initialize( config , 0 );
+
+      #if defined(KOKKOS_ENABLE_PROFILING)
+        Kokkos::Profiling::initialize();
+      #endif
+   }
+#else
+  //! Has been initialized
+  int ResCuda::impl_is_initialized() {
+     return Kokkos::Impl::CudaInternal::singleton().is_initialized();
+  }
+
+  void ResCuda::impl_finalize() {
+      Kokkos::Impl::CudaInternal::singleton().finalize();
+
+      #if defined(KOKKOS_ENABLE_PROFILING)
+        Kokkos::Profiling::finalize();
+      #endif
+  }
+
+  void ResCuda::impl_initialize( const SelectDevice config, const size_t num_instances ) {
+     Kokkos::Impl::CudaInternal::singleton().initialize( config.cuda_device_id , 0 );
+
+      #if defined(KOKKOS_ENABLE_PROFILING)
+        Kokkos::Profiling::initialize();
+      #endif
+  }
+#endif
+
 
 std::vector<unsigned>
 ResCuda::detect_device_arch()
@@ -102,14 +135,6 @@ ResCuda::size_type ResCuda::device_arch()
   return Cuda::device_arch() ;
 }
 
-void ResCuda::finalize()
-{
-  Cuda::finalize();
-
-  #if defined(KOKKOS_ENABLE_PROFILING)
-    Kokkos::Profiling::finalize();
-  #endif
-}
 
 ResCuda::ResCuda()
   : Cuda() {
@@ -120,7 +145,7 @@ ResCuda::ResCuda( cudaStream_t stream )
 {}
 
 void ResCuda::print_configuration( std::ostream & s , const bool )
-{ Cuda::print_configuration( s, true ); }
+{ Kokkos::Impl::CudaInternal::singleton().print_configuration( s ); }
 
 void ResCuda::fence()
 {

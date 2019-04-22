@@ -562,14 +562,9 @@ public:
 
 } /* namespace Impl */
 
-namespace Experimental {
-
-  template< class Type, class MemorySpace >
-  static void track_duplicate( Kokkos::Impl::SharedAllocationRecord<void,void> * orig, Kokkos::Impl::SharedAllocationRecord<void,void> * dup ) {
-  }
-}
-
 } /* namespace Kokkos */
+
+#include <impl/Kokkos_TrackDuplicates.hpp>
 
 #endif
 
