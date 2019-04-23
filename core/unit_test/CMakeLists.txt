@@ -674,9 +674,8 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
 # std::terminate.  This means that we can't use
 # KOKKOS_ADD_EXECUTABLE_AND_TEST.  See GitHub issue #2147.
 
-KOKKOS_ADD_EXECUTABLE( push_finalize_hook_terminate
+KOKKOS_ADD_TEST_EXECUTABLE( push_finalize_hook_terminate
   SOURCES UnitTest_PushFinalizeHook_terminate.cpp
-  TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
 )
 
 KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate

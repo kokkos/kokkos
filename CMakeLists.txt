@@ -78,6 +78,7 @@ ENDIF()
 
 
 
+INCLUDE(${KOKKOS_SRC_PATH}/cmake/fake_tribits.cmake)
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tribits.cmake)
 KOKKOS_SETUP_BUILD_ENVIRONMENT()
 

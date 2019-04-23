@@ -62,7 +62,6 @@ FOREACH(DIR ${INSTALL_CMAKE_DIR})
     "${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake"
     DESTINATION ${DIR})
 
-  #This seems not to do anything?
   # Install the export set for use with the install-tree
   INSTALL(EXPORT KokkosTargets DESTINATION ${DIR})
 ENDFOREACH()

@@ -379,6 +379,11 @@ set(KOKKOS_ENABLE_CUDA_UVM ${KOKKOS_INTERNAL_ENABLE_CUDA_UVM_DEFAULT} CACHE BOOL
 set(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE ${KOKKOS_INTERNAL_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE_DEFAULT} CACHE BOOL "Enable relocatable device code for CUDA. (cuda option)")
 set(KOKKOS_ENABLE_CUDA_LAMBDA ${KOKKOS_INTERNAL_ENABLE_CUDA_LAMBDA_DEFAULT} CACHE BOOL "Enable lambdas for CUDA. (cuda option)")
 
+# Make sure KOKKOS_ARCH is set to something
+IF ("${KOKKOS_ARCH}" STREQUAL "NOT_SET")
+  set(KOKKOS_ARCH "None")
+ENDIF()
+
 
 #-------------------------------------------------------------------------------
 #------------------------------- KOKKOS_HPX_OPTIONS ----------------------------
