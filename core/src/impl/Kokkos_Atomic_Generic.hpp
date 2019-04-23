@@ -166,7 +166,7 @@ T atomic_fetch_oper( const Oper& op, volatile T * const dest ,
 
   do {
     assume.i = oldval.i ;
-    newval.t = Oper::apply(assume.t, val) ;
+    newval.t = op.apply(assume.t, val) ;
     oldval.i = Kokkos::atomic_compare_exchange( (unsigned long long int*)dest , assume.i , newval.i );
   } while ( assume.i != oldval.i );
 
@@ -211,7 +211,7 @@ T atomic_fetch_oper( const Oper& op, volatile T * const dest ,
 
   do {
     assume.i = oldval.i ;
-    newval.t = Oper::apply(assume.t, val) ;
+    newval.t = op.apply(assume.t, val) ;
     oldval.i = Kokkos::atomic_compare_exchange( (int*)dest , assume.i , newval.i );
   } while ( assume.i != oldval.i );
 
