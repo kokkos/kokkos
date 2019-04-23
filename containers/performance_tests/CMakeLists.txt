@@ -31,6 +31,6 @@ KOKKOS_ADD_TEST_EXECUTABLE(
 
 KOKKOS_ADD_TEST(
   NAME PerformanceTest
-  EXE  ${EXE_NAME}
+  EXE  PerfTestExec
 )
 
