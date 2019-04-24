@@ -187,7 +187,10 @@ public:
   template <class T, class VLAValueType, class... Args>
   KOKKOS_INLINE_FUNCTION
   T*
-  allocate_and_construct_with_vla_emulation(allocation_size_type n_vla_entries, Args&&... args)
+  allocate_and_construct_with_vla_emulation(
+    allocation_size_type n_vla_entries,
+    Args&&... args
+  )
     // requires
     //   std::is_base_of_v<PoolAllocatedObjectBase<typename memory_pool::size_type>, T>
     //     && std::is_base_of<ObjectWithVLAEmulation<T, VLAValueType>, T>::value
