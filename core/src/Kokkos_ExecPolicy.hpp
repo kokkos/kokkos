@@ -52,6 +52,9 @@
 #include <impl/Kokkos_AnalyzePolicy.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <iostream>
+#if defined(KOKKOS_ENABLE_PROFILING)
+#include <typeinfo>
+#endif // KOKKOS_ENABLE_PROFILING
 
 //----------------------------------------------------------------------------
 
