@@ -13,6 +13,12 @@ set(KOKKOS_SRC_PATH      ${Kokkos_SOURCE_DIR})
 set(KOKKOS_PATH          ${Kokkos_SOURCE_DIR})
 set(KOKKOS_TOP_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
+SET(KOKKOS_COMPILE_OPTIONS)
+SET(KOKKOS_LINK_OPTIONS)
+SET(KOKKOS_CUDA_OPTIONS)
+SET(KOKKOS_CUDAFE_OPTIONS)
+SET(KOKKOS_XCOMPILER_OPTIONS)
+
 
 IF(NOT KOKKOS_HAS_TRILINOS)
   cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
@@ -28,12 +34,10 @@ INCLUDE(${KOKKOS_SRC_PATH}/cmake/fake_tribits.cmake)
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tribits.cmake)
 KOKKOS_SETUP_BUILD_ENVIRONMENT()
 
-SET_PROPERTY(GLOBAL PROPERTY KOKKOS_LIBRARIES_NAMES)
-SET_PROPERTY(GLOBAL PROPERTY KOKKOS_ALL_SOURCES)
-SET_PROPERTY(GLOBAL PROPERTY KOKKOS_BUILD_INTERFACE_INCLUDES)
-SET_PROPERTY(GLOBAL PROPERTY KOKKOS_COMPILE_DEFINITIONS)
 IF (NOT KOKKOS_HAS_TRILINOS AND NOT KOKKOS_SEPARATE_LIBS)
-  SET_PROPERTY(GLOBAL PROPERTY KOKKOS_LIBRARIES_NAMES kokkos)
+  SET(KOKKOS_LIBRARIES_NAMES kokkos)
+ELSE()
+  SET(KOKKOS_LIBRARIES_NAMES kokkoscore kokkoscontainers kokkosalgorithms)
 ENDIF()
 
 
@@ -80,13 +84,9 @@ file(COPY "${Kokkos_GEN_DIR}/KokkosCore_config.h"
   DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" USE_SOURCE_PERMISSIONS)
 install(FILES "${Kokkos_GEN_DIR}/KokkosCore_config.h"
   DESTINATION include)
-file(COPY "${Kokkos_GEN_DIR}/kokkos_generated_settings.cmake"
-  DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" USE_SOURCE_PERMISSIONS)
-
-include(${CMAKE_CURRENT_BINARY_DIR}/kokkos_generated_settings.cmake)
-# Sources come from makefile-generated kokkos_generated_settings.cmake file
-# Enable using the individual sources if needed
-set_kokkos_srcs(KOKKOS_SRC ${KOKKOS_SRC})
+#file(COPY "${Kokkos_GEN_DIR}/kokkos_generated_settings.cmake"
+#  DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" USE_SOURCE_PERMISSIONS)
+#include(${CMAKE_CURRENT_BINARY_DIR}/kokkos_generated_settings.cmake)
 
 #------------------------------------------------------------------------------
 #
@@ -98,7 +98,6 @@ set_kokkos_srcs(KOKKOS_SRC ${KOKKOS_SRC})
 # executables also need nvcc_wrapper.  Thus, we need to install it.
 # If the argument of DESTINATION is a relative path, CMake computes it
 # as relative to ${CMAKE_INSTALL_PATH}.
-
 INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/nvcc_wrapper DESTINATION bin)
 
 
@@ -121,9 +120,8 @@ KOKKOS_EXCLUDE_AUTOTOOLS_FILES()
 KOKKOS_PACKAGE_POSTPROCESS()
 
 IF (NOT KOKKOS_HAS_TRILINOS)
-  IF (NOT KOKKOS_SEPARATE_LIBS)
-    KOKKOS_MAKE_LIBKOKKOS()
-  ENDIF()
+  #just always do it
+  KOKKOS_MAKE_LIBKOKKOS()
   include(${KOKKOS_SRC_PATH}/cmake/kokkos_install.cmake)
 ENDIF()
 

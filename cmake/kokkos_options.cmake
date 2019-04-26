@@ -7,68 +7,99 @@
 ########################## AVAILABLE OPTIONS ###################################
 # Use lists for documentation, verification, and programming convenience
 
-# All CMake options of the type KOKKOS_ENABLE_*
-set(KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST)
-list(APPEND KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST
-     Serial
-     OpenMP
-     Pthread
-     Qthread
-     HPX
-     Cuda
-     ROCm
-     HWLOC
-     MEMKIND
-     LIBRT
-     Cuda_Lambda
-     Cuda_Relocatable_Device_Code
-     Cuda_RDC
-     Cuda_UVM
-     Cuda_LDG_Intrinsic
-     HPX_ASYNC_DISPATCH
-     Debug
-     Debug_DualView_Modify_Check
-     Debug_Bounds_Check
-     Compiler_Warnings
-     Profiling
-     Profiling_Load_Print
-     Aggressive_Vectorization
-     Deprecated_Code
-     Explicit_Instantiation
-     )
+function(KOKKOS_ENABLE_OPTION CAMEL_SUFFIX DEFAULT DOCSTRING)
+  set(CAMEL_NAME Kokkos_ENABLE_${CAMEL_SUFFIX})
+  string(TOUPPER ${CAMEL_NAME} UC_NAME)
+  if (NOT DEFINED KOKKOS_CACHED_${UC_NAME} AND DEFINED ${CAMEL_NAME})
+    #this is our first time through the cmake
+    #we were given the camel case name instead of the UC name we wanted
+    #make darn sure we don't have both an UC and Camel version that differ
+    if (DEFINED ${UC_NAME} AND NOT ${CAMEL_NAME} STREQUAL ${UC_NAME})
+      message(FATAL_ERROR "Given both ${CAMEL_NAME} and ${UC_NAME} with different values")
+    endif()
+    #great, no conflicts - use the camel case name as the default for the UC
+    set(${UC_NAME} ${${CAMEL_NAME}} CACHE BOOL ${DOCSTRING})
+  elseif(DEFINED ${CAMEL_NAME})
+    #this is at least our second configure and we have an existing cache
+    #CMake makes this impossible to distinguish something already in cache
+    #and somthing given explicitly on the command line
+    #at this point, we have no choice but to accept the Camel value and print a warning
+    if (NOT ${CAMEL_NAME} STREQUAL ${UC_NAME})
+      message(WARNING "Overriding ${UC_NAME}=${${UC_NAME}} with ${CAMEL_NAME}=${${CAMEL_NAME}}")
+    endif()
+    #I have to accept the Camel case value - really no choice here - force it
+    set(${UC_NAME} ${${CAMEL_NAME}} CACHE BOOL ${DOCSTRING} FORCE)
+  else() #great, no camel case names - nice and simple
+    set(${UC_NAME} ${DEFAULT} CACHE BOOL ${DOCSTRING})
+  endif()
+  set(KOKKO_CACHED_${UC_NAME} ${${UC_NAME}} CACHE INTERNAL ${DOCSTRING})
 
-#-------------------------------------------------------------------------------
-#------------------------------- Recognize CamelCase Options ---------------------------
-#-------------------------------------------------------------------------------
+  if (${UC_NAME}) #cmake if statements follow really annoying string resolution rules
+    message(STATUS "${UC_NAME}") 
+  endif()
+endfunction()
 
-foreach(opt ${KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST})
-  string(TOUPPER ${opt} OPT )
-  IF(DEFINED Kokkos_ENABLE_${opt})
-    IF(DEFINED KOKKOS_ENABLE_${OPT})
-      IF(NOT ("${KOKKOS_ENABLE_${OPT}}" STREQUAL "${Kokkos_ENABLE_${opt}}"))
-        IF(DEFINED KOKKOS_ENABLE_${OPT}_INTERNAL)
-          MESSAGE(WARNING  "Defined both Kokkos_ENABLE_${opt}=[${Kokkos_ENABLE_${opt}}] and KOKKOS_ENABLE_${OPT}=[${KOKKOS_ENABLE_${OPT}}] and they differ! Could be caused by old CMakeCache Variable. Run CMake again and warning should disappear. If not you are truly setting both variables.")
-          IF(NOT ("${Kokkos_ENABLE_${opt}}" STREQUAL "${KOKKOS_ENABLE_${OPT}_INTERNAL}"))
-            UNSET(KOKKOS_ENABLE_${OPT} CACHE)
-            SET(KOKKOS_ENABLE_${OPT} ${Kokkos_ENABLE_${opt}})
-            MESSAGE(WARNING "SET BOTH VARIABLES KOKKOS_ENABLE_${OPT}: ${KOKKOS_ENABLE_${OPT}}")
-          ELSE()
-            SET(Kokkos_ENABLE_${opt} ${KOKKOS_ENABLE_${OPT}})
-          ENDIF()
-        ELSE()
-          MESSAGE(FATAL_ERROR "Defined both Kokkos_ENABLE_${opt}=[${Kokkos_ENABLE_${opt}}] and KOKKOS_ENABLE_${OPT}=[${KOKKOS_ENABLE_${OPT}}] and they differ!")
-        ENDIF()
-      ENDIF()
-    ELSE()
-      SET(KOKKOS_INTERNAL_ENABLE_${OPT}_DEFAULT ${Kokkos_ENABLE_${opt}})
-      SET(KOKKOS_ENABLE_${OPT} ${Kokkos_ENABLE_${opt}})
-    ENDIF()
-  ELSEIF(DEFINED KOKKOS_ENABLE_${OPT})
-    #if we are here, the lower case version is not defined 
-    #define it to avoid breaking anything later on
-    SET(Kokkos_ENABLE_${opt} ${KOKKOS_ENABLE_${OPT}})
-  ENDIF()
-endforeach()
+KOKKOS_ENABLE_OPTION(TESTS         OFF  "Whether to build serial  backend")
+KOKKOS_ENABLE_OPTION(EXAMPLES      OFF  "Whether to build OpenMP  backend")
+KOKKOS_ENABLE_OPTION(Serial        ON  "Whether to build serial  backend")
+KOKKOS_ENABLE_OPTION(OpenMP        OFF "Whether to build OpenMP  backend")
+KOKKOS_ENABLE_OPTION(Pthread       OFF "Whether to build Pthread backend")
+KOKKOS_ENABLE_OPTION(Cuda          OFF "Whether to build CUDA backend")
+KOKKOS_ENABLE_OPTION(ROCm          OFF "Whether to build AMD ROCm backend")
+KOKKOS_ENABLE_OPTION(HWLOC         OFF "Whether to enable HWLOC features - may also require -DHWLOC_DIR")
+KOKKOS_ENABLE_OPTION(MEMKIND       OFF "Whether to enable MEMKIND featuers - may also require -DMEMKIND_DIR")
+KOKKOS_ENABLE_OPTION(LIBRT         OFF "Whether to enable LIBRT features")
+KOKKOS_ENABLE_OPTION(Cuda_Relocatable_Device_Code  OFF "Whether to enable relocatable device code (RDC) for CUDA")
+KOKKOS_ENABLE_OPTION(Cuda_UVM             OFF "Whether to enable unified virtual memory (UVM) for CUDA")
+KOKKOS_ENABLE_OPTION(Cuda_LDG_Intrinsic   OFF "Whether to use CUDA LDG intrinsics")
+KOKKOS_ENABLE_OPTION(HPX_ASYNC_DISPATCH   OFF "Whether HPX supports asynchronous dispath")
+KOKKOS_ENABLE_OPTION(Debug                OFF "Whether to activate extra debug features - may increase compile times")
+KOKKOS_ENABLE_OPTION(Debug_DualView_Modify_Check OFF "Debug check on dual views")
+KOKKOS_ENABLE_OPTION(Debug_Bounds_Check   OFF "Whether to use bounds checking - will increase runtime") 
+KOKKOS_ENABLE_OPTION(Compiler_Warnings    OFF "Whether to print all compiler warnings")
+KOKKOS_ENABLE_OPTION(Profiling            ON  "Whether to create bindings for profiling tools")
+KOKKOS_ENABLE_OPTION(Profiling_Load_Print OFF "Whether to print information about which profiling tools got loaded")
+KOKKOS_ENABLE_OPTION(Aggressive_Vectorization OFF "Whether to aggressively vectorize loops")
+KOKKOS_ENABLE_OPTION(Deprecated_Code      OFF "Whether to enable deprecated code")
+KOKKOS_ENABLE_OPTION(Explicit_Instantiation OFF 
+  "Whether to explicitly instantiate certain types to lower future compile times")
+SET(KOKKOS_ENABLE_ETI ${KOKKOS_ENABLE_EXPLICIT_INSTANTIATION} CACHE INTERNAL "eti")
+
+IF(Trilinos_ENABLE_Kokkos AND TPL_ENABLE_QTHREAD)             
+SET(QTHR_DEFAULT ON)
+ELSE()
+SET(QTHR_DEFAULT OFF)
+ENDIF()
+KOKKOS_ENABLE_OPTION(Qthread ${QTHR_DEFAULT} 
+  "Whether to build Qthreads backend - may also require -DQTHREAD_DIR")
+
+IF(Trilinos_ENABLE_Kokkos AND TPL_ENABLE_HPX)
+SET(HPX_DEFAULT ON)
+ELSE()
+SET(HPX_DEFAULT OFF)
+ENDIF()
+KOKKOS_ENABLE_OPTION(HPX ${HPX_DEFAULT} "Whether to build HPX backend - may also require -DHPX_DIR")
+
+IF(Trilinos_ENABLE_Kokkos AND Trilinos_ENABLE_OpenMP)
+  SET(OMP_DEFAULT ON)
+ELSE()
+  SET(OMP_DEFAULT OFF)
+ENDIF()
+KOKKOS_ENABLE_OPTION(OpenMP ${OMP_DEFAULT} "Whether to build OpenMP backend")
+
+IF(Trilinos_ENABLE_Kokkos AND TPL_ENABLE_CUDA)
+  SET(CUDA_DEFAULT ON)
+ELSE()
+  SET(CUDA_DEFAULT OFF)
+ENDIF()
+KOKKOS_ENABLE_OPTION(Cuda ${CUDA_DEFAULT} "Whether to build CUDA backend")
+
+IF (DEFINED CUDA_VERSION AND CUDA_VERSION VERSION_GREATER "7.0")
+  SET(LAMBDA_DEFAULT ON)
+ELSE()
+  SET(LAMBDA_DEFAULT OFF)
+ENDIF()
+KOKKOS_ENABLE_OPTION(Cuda_Lambda ${LAMBDA_DEFAULT} "Whether to activate experimental laambda features")
 
 IF(DEFINED Kokkos_ARCH)
   MESSAGE(FATAL_ERROR "Defined Kokkos_ARCH, use KOKKOS_ARCH instead!")
@@ -86,8 +117,8 @@ list(APPEND KOKKOS_ARCH_LIST
      AMDAVX          # (HOST) AMD chip
      ARMv80          # (HOST) ARMv8.0 Compatible CPU
      ARMv81          # (HOST) ARMv8.1 Compatible CPU
-     ARMv8-ThunderX  # (HOST) ARMv8 Cavium ThunderX CPU
-     ARMv8-TX2       # (HOST) ARMv8 Cavium ThunderX2 CPU
+     ARMv8_ThunderX  # (HOST) ARMv8 Cavium ThunderX CPU
+     ARMv8_TX2       # (HOST) ARMv8 Cavium ThunderX2 CPU
      WSM             # (HOST) Intel Westmere CPU
      SNB             # (HOST) Intel Sandy/Ivy Bridge CPUs
      HSW             # (HOST) Intel Haswell CPUs
@@ -113,91 +144,20 @@ list(APPEND KOKKOS_ARCH_LIST
      Volta70         # (GPU) NVIDIA Volta generation CC 7.0
      Volta72         # (GPU) NVIDIA Volta generation CC 7.2
      Turing75         # (GPU) NVIDIA Turing generation CC 7.5
+     Ryzen
+     Epyc
+     Kaveri
+     Carrizo
+     Fiji
+     Vega
+     GFX901
     )
 
-# List of possible device architectures.
-# The case and spelling here needs to match Makefile.kokkos
-set(KOKKOS_DEVICES_LIST)
-# Options: Cuda,ROCm,OpenMP,Pthread,Qthreads,Serial
-list(APPEND KOKKOS_DEVICES_LIST
-    Cuda          # NVIDIA GPU -- see below
-    OpenMP        # OpenMP
-    Pthread       # pthread
-    Qthreads      # qthreads
-    HPX           # HPX
-    Serial        # serial
-    ROCm          # Relocatable device code
-    )
 
-# List of possible TPLs for Kokkos
-# From Makefile.kokkos: Options: hwloc,librt,experimental_memkind
-set(KOKKOS_USE_TPLS_LIST)
-if(APPLE)
-list(APPEND KOKKOS_USE_TPLS_LIST
-    HWLOC          # hwloc
-    MEMKIND        # experimental_memkind
-    )
-else()
-list(APPEND KOKKOS_USE_TPLS_LIST
-    HWLOC          # hwloc
-    LIBRT          # librt
-    MEMKIND        # experimental_memkind
-    )
-endif()
-# Map of cmake variables to Makefile variables
-set(KOKKOS_INTERNAL_HWLOC hwloc)
-set(KOKKOS_INTERNAL_LIBRT librt)
-set(KOKKOS_INTERNAL_MEMKIND experimental_memkind)
-
-# List of possible Advanced options
-set(KOKKOS_OPTIONS_LIST)
-list(APPEND KOKKOS_OPTIONS_LIST
-       AGGRESSIVE_VECTORIZATION    
-       DISABLE_PROFILING          
-       DISABLE_DUALVIEW_MODIFY_CHECK
-       ENABLE_PROFILE_LOAD_PRINT   
-    )
-# Map of cmake variables to Makefile variables
-set(KOKKOS_INTERNAL_LDG_INTRINSIC use_ldg)
-set(KOKKOS_INTERNAL_UVM librt)
-set(KOKKOS_INTERNAL_RELOCATABLE_DEVICE_CODE rdc)
-
-
-#-------------------------------------------------------------------------------
-# List of possible Options for CUDA
-#-------------------------------------------------------------------------------
-# From Makefile.kokkos: Options: use_ldg,force_uvm,rdc
-set(KOKKOS_CUDA_OPTIONS_LIST)
-list(APPEND KOKKOS_CUDA_OPTIONS_LIST
-    LDG_INTRINSIC              # use_ldg
-    UVM                        # force_uvm
-    RELOCATABLE_DEVICE_CODE    # rdc
-    LAMBDA                     # enable_lambda
-    )
-    
-# Map of cmake variables to Makefile variables
-set(KOKKOS_INTERNAL_LDG_INTRINSIC use_ldg)
-set(KOKKOS_INTERNAL_UVM force_uvm)
-set(KOKKOS_INTERNAL_RELOCATABLE_DEVICE_CODE rdc)
-set(KOKKOS_INTERNAL_LAMBDA enable_lambda)
-
-
-#-------------------------------------------------------------------------------
-# List of possible Options for HPX
-#-------------------------------------------------------------------------------
-# From Makefile.kokkos: Options: enable_async_dispatch
-set(KOKKOS_HPX_OPTIONS_LIST)
-list(APPEND KOKKOS_HPX_OPTIONS_LIST
-    ASYNC_DISPATCH # enable_async_dispatch
-    )
-
-# Map of cmake variables to Makefile variables
-set(KOKKOS_INTERNAL_ENABLE_ASYNC_DISPATCH enable_async_dispatch)
-
-
-#-------------------------------------------------------------------------------
-#------------------------------- Create doc strings ----------------------------
-#-------------------------------------------------------------------------------
+FOREACH(Arch ${KOKKOS_ARCH_LIST})
+  STRING(TOUPPER ${Arch} ARCH)
+  SET(KOKKOS_ARCH_${ARCH} OFF CACHE BOOL "Whether to optimize for the ${ARCH} architecture")
+ENDFOREACH()
 
 set(tmpr "\n       ")
 string(REPLACE ";" ${tmpr} KOKKOS_INTERNAL_ARCH_DOCSTR "${KOKKOS_ARCH_LIST}")
@@ -230,183 +190,12 @@ set(KOKKOS_HPX_DIR "" CACHE PATH "Location of HPX library.")
 # Whether to build separate libraries or now
 set(KOKKOS_SEPARATE_TESTS OFF CACHE BOOL "Provide unit test targets with finer granularity.")
 
-#-------------------------------------------------------------------------------
-#------------------------------- KOKKOS_DEVICES --------------------------------
-#-------------------------------------------------------------------------------
-# Figure out default settings
-IF(Trilinos_ENABLE_Kokkos)             
-  set_kokkos_default_default(SERIAL ON)
-  set_kokkos_default_default(PTHREAD OFF)
-  IF(TPL_ENABLE_QTHREAD)
-    set_kokkos_default_default(QTHREADS ${TPL_ENABLE_QTHREAD})
-  ELSE()
-    set_kokkos_default_default(QTHREADS OFF)
-  ENDIF()
-  IF(TPL_ENABLE_HPX)
-    set_kokkos_default_default(HPX ON)
-  ELSE()
-    set_kokkos_default_default(HPX OFF)
-  ENDIF()
-  IF(Trilinos_ENABLE_OpenMP)
-    set_kokkos_default_default(OPENMP ${Trilinos_ENABLE_OpenMP})
-  ELSE()
-    set_kokkos_default_default(OPENMP OFF)
-  ENDIF()
-  IF(TPL_ENABLE_CUDA)
-    set_kokkos_default_default(CUDA ${TPL_ENABLE_CUDA})
-  ELSE()
-    set_kokkos_default_default(CUDA OFF)
-  ENDIF()
-  set_kokkos_default_default(ROCM OFF)
-ELSE()
-  set_kokkos_default_default(SERIAL ON)
-  set_kokkos_default_default(OPENMP OFF)
-  set_kokkos_default_default(PTHREAD OFF)
-  set_kokkos_default_default(QTHREAD OFF)
-  set_kokkos_default_default(HPX OFF)
-  set_kokkos_default_default(CUDA OFF)
-  set_kokkos_default_default(ROCM OFF)
-ENDIF()
-
-# Set which Kokkos backend to use.
-# These are the actual options that define the settings.
-set(KOKKOS_ENABLE_SERIAL ${KOKKOS_INTERNAL_ENABLE_SERIAL_DEFAULT} CACHE BOOL "Whether to enable the Kokkos::Serial device.  This device executes \"parallel\" kernels sequentially on a single CPU thread.  It is enabled by default.  If you disable this device, please enable at least one other CPU device, such as Kokkos::OpenMP or Kokkos::Threads.")
-set(KOKKOS_ENABLE_OPENMP ${KOKKOS_INTERNAL_ENABLE_OPENMP_DEFAULT} CACHE BOOL "Enable OpenMP support in Kokkos." FORCE)
-set(KOKKOS_ENABLE_PTHREAD ${KOKKOS_INTERNAL_ENABLE_PTHREAD_DEFAULT} CACHE BOOL "Enable Pthread support in Kokkos.")
-set(KOKKOS_ENABLE_QTHREADS ${KOKKOS_INTERNAL_ENABLE_QTHREADS_DEFAULT} CACHE BOOL "Enable Qthreads support in Kokkos.")
-set(KOKKOS_ENABLE_HPX ${KOKKOS_INTERNAL_ENABLE_HPX_DEFAULT} CACHE BOOL "Enable HPX support in Kokkos.")
-set(KOKKOS_ENABLE_CUDA ${KOKKOS_INTERNAL_ENABLE_CUDA_DEFAULT} CACHE BOOL "Enable CUDA support in Kokkos.")
-set(KOKKOS_ENABLE_ROCM ${KOKKOS_INTERNAL_ENABLE_ROCM_DEFAULT} CACHE BOOL "Enable ROCm support in Kokkos.")
-
-
-
-#-------------------------------------------------------------------------------
-#------------------------------- KOKKOS DEBUG and PROFILING --------------------
-#-------------------------------------------------------------------------------
-
-# Debug related options enable compiler warnings
-
-set_kokkos_default_default(DEBUG OFF)
-set(KOKKOS_ENABLE_DEBUG ${KOKKOS_INTERNAL_ENABLE_DEBUG_DEFAULT} CACHE BOOL "Enable Kokkos Debug.")
-
-# From Makefile.kokkos: Advanced Options: 
-#compiler_warnings, aggressive_vectorization, disable_profiling, disable_dualview_modify_check, enable_profile_load_print
-set_kokkos_default_default(COMPILER_WARNINGS OFF)
-set(KOKKOS_ENABLE_COMPILER_WARNINGS ${KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS_DEFAULT} CACHE BOOL "Enable compiler warnings.")
-
-set_kokkos_default_default(DEBUG_DUALVIEW_MODIFY_CHECK OFF)
-set(KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK ${KOKKOS_INTERNAL_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK_DEFAULT} CACHE BOOL "Enable dualview modify check.")
-
-# Enable aggressive vectorization.
-set_kokkos_default_default(AGGRESSIVE_VECTORIZATION OFF)
-set(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION ${KOKKOS_INTERNAL_ENABLE_AGGRESSIVE_VECTORIZATION_DEFAULT} CACHE BOOL "Enable aggressive vectorization.")
-
-# Enable profiling.
-set_kokkos_default_default(PROFILING ON)
-set(KOKKOS_ENABLE_PROFILING ${KOKKOS_INTERNAL_ENABLE_PROFILING_DEFAULT} CACHE BOOL "Enable profiling.")
-
-set_kokkos_default_default(PROFILING_LOAD_PRINT OFF)
-set(KOKKOS_ENABLE_PROFILING_LOAD_PRINT ${KOKKOS_INTERNAL_ENABLE_PROFILING_LOAD_PRINT_DEFAULT} CACHE BOOL "Enable profile load print.")
-
-set_kokkos_default_default(DEPRECATED_CODE ON)
-set(KOKKOS_ENABLE_DEPRECATED_CODE ${KOKKOS_INTERNAL_ENABLE_DEPRECATED_CODE_DEFAULT} CACHE BOOL "Enable deprecated code.")
-
-set_kokkos_default_default(EXPLICIT_INSTANTIATION OFF)
-set(KOKKOS_ENABLE_EXPLICIT_INSTANTIATION ${KOKKOS_INTERNAL_ENABLE_EXPLICIT_INSTANTIATION_DEFAULT} CACHE BOOL "Enable explicit template instantiation.")
-
-set_kokkos_default_default(ETI OFF)
-set(KOKKOS_ENABLE_ETI ${KOKKOS_INTERNAL_ENABLE_EXPLICIT_INSTANTIATION_DEFAULT} CACHE BOOL "Enable explicit template instantiation.")
-
-#-------------------------------------------------------------------------------
-#------------------------------- KOKKOS_USE_TPLS -------------------------------
-#-------------------------------------------------------------------------------
-# Enable hwloc library.
-# Figure out default:
-IF(Trilinos_ENABLE_Kokkos AND TPL_ENABLE_HWLOC)
-  set_kokkos_default_default(HWLOC ON)
-ELSE()
-  set_kokkos_default_default(HWLOC OFF)
-ENDIF()
-set(KOKKOS_ENABLE_HWLOC ${KOKKOS_INTERNAL_ENABLE_HWLOC_DEFAULT} CACHE BOOL "Enable hwloc for better process placement.")
 set(KOKKOS_HWLOC_DIR "" CACHE PATH "Location of hwloc library. (kokkos tpl)")
-
-# Enable memkind library.
-set_kokkos_default_default(MEMKIND OFF)
-set(KOKKOS_ENABLE_MEMKIND ${KOKKOS_INTERNAL_ENABLE_MEMKIND_DEFAULT} CACHE BOOL "Enable memkind. (kokkos tpl)")
 set(KOKKOS_MEMKIND_DIR "" CACHE PATH "Location of memkind library. (kokkos tpl)")
-
-# Enable rt library.
-IF(Trilinos_ENABLE_Kokkos)
-  IF(DEFINED TPL_ENABLE_LIBRT)
-    set_kokkos_default_default(LIBRT ${TPL_ENABLE_LIBRT})
-  ELSE()
-    set_kokkos_default_default(LIBRT OFF)
-  ENDIF()
-ELSE()
-  set_kokkos_default_default(LIBRT ON)
-ENDIF()
-set(KOKKOS_ENABLE_LIBRT ${KOKKOS_INTERNAL_ENABLE_LIBRT_DEFAULT} CACHE BOOL "Enable librt for more precise timer.  (kokkos tpl)")
-
-
-#-------------------------------------------------------------------------------
-#------------------------------- KOKKOS_CUDA_OPTIONS ---------------------------
-#-------------------------------------------------------------------------------
-
-# CUDA options.
-# Set Defaults
-set_kokkos_default_default(CUDA_LDG_INTRINSIC_DEFAULT OFF)
-set_kokkos_default_default(CUDA_UVM_DEFAULT OFF)
-set_kokkos_default_default(CUDA_RELOCATABLE_DEVICE_CODE OFF)
-IF(Trilinos_ENABLE_Kokkos)
-  IF(KOKKOS_ENABLE_CUDA)
-    find_package(CUDA)
-  ENDIF()
-  IF (DEFINED CUDA_VERSION)
-    IF (CUDA_VERSION VERSION_GREATER "7.0")
-      set_kokkos_default_default(CUDA_LAMBDA ON)
-    ELSE()
-      set_kokkos_default_default(CUDA_LAMBDA OFF)
-    ENDIF()
-  ENDIF()
-ELSE()
-  set_kokkos_default_default(CUDA_LAMBDA OFF)
-ENDIF()
-
-# Set actual options
 set(KOKKOS_CUDA_DIR "" CACHE PATH "Location of CUDA library.  Defaults to where nvcc installed.")
-set(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC ${KOKKOS_INTERNAL_ENABLE_CUDA_LDG_INTRINSIC_DEFAULT} CACHE BOOL "Enable CUDA LDG. (cuda option)") 
-set(KOKKOS_ENABLE_CUDA_UVM ${KOKKOS_INTERNAL_ENABLE_CUDA_UVM_DEFAULT} CACHE BOOL "Enable CUDA unified virtual memory.")
-set(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE ${KOKKOS_INTERNAL_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE_DEFAULT} CACHE BOOL "Enable relocatable device code for CUDA. (cuda option)")
-set(KOKKOS_ENABLE_CUDA_LAMBDA ${KOKKOS_INTERNAL_ENABLE_CUDA_LAMBDA_DEFAULT} CACHE BOOL "Enable lambdas for CUDA. (cuda option)")
 
 # Make sure KOKKOS_ARCH is set to something
 IF ("${KOKKOS_ARCH}" STREQUAL "NOT_SET")
   set(KOKKOS_ARCH "None")
 ENDIF()
 
-
-#-------------------------------------------------------------------------------
-#------------------------------- KOKKOS_HPX_OPTIONS ----------------------------
-#-------------------------------------------------------------------------------
-
-# HPX options.
-# Set Defaults
-set_kokkos_default_default(HPX_ASYNC_DISPATCH OFF)
-
-# Set actual options
-set(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH ${KOKKOS_INTERNAL_ENABLE_HPX_ASYNC_DISPATCH_DEFAULT} CACHE BOOL "Enable HPX async dispatch.")
-
-
-#-------------------------------------------------------------------------------
-#----------------------- Set CamelCase Options if they are not yet set ---------
-#-------------------------------------------------------------------------------
-
-foreach(opt ${KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST})
-  string(TOUPPER ${opt} OPT )
-  UNSET(KOKKOS_ENABLE_${OPT}_INTERNAL CACHE)
-  SET(KOKKOS_ENABLE_${OPT}_INTERNAL ${KOKKOS_ENABLE_${OPT}} CACHE BOOL INTERNAL)
-  IF(DEFINED KOKKOS_ENABLE_${OPT})
-    UNSET(Kokkos_ENABLE_${opt} CACHE)
-    SET(Kokkos_ENABLE_${opt} ${KOKKOS_ENABLE_${OPT}} CACHE BOOL "CamelCase Compatibility setting for KOKKOS_ENABLE_${OPT}")
-  ENDIF()
-endforeach()
