@@ -549,27 +549,6 @@ public:
 
 } // namespace Kokkos
 
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Experimental {
-
-inline
-int OpenMPTarget::thread_pool_size( int depth )
-{
-  //return Impl::OpenMPTargetExec::pool_size(depth);
-  return omp_get_max_threads();
-}
-
-KOKKOS_INLINE_FUNCTION
-int OpenMPTarget::thread_pool_rank()
-{
-  return omp_get_thread_num();
-}
-
-} // namespace Experimental
-} // namespace Kokkos
 
 
 namespace Kokkos {

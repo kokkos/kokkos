@@ -88,10 +88,10 @@ public:
       OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
       const typename Policy::member_type begin = m_policy.begin();
       const typename Policy::member_type end = m_policy.end();
-      
-      #pragma omp target teams distribute parallel for map(to:this->m_functor)
+      FunctorType a_functor(m_functor);
+      #pragma omp target teams distribute parallel for map(to:a_functor)
       for(int i=begin; i<end; i++)
-        m_functor(i);
+        a_functor(i);
     }
 
 
@@ -105,9 +105,10 @@ public:
       const typename Policy::member_type begin = m_policy.begin();
       const typename Policy::member_type end = m_policy.end();
 
-      #pragma omp target teams distribute parallel for num_threads(128) map(to:this->m_functor)
+      FunctorType a_functor(m_functor);
+      #pragma omp target teams distribute parallel for num_threads(128) map(to:a_functor)
       for(int i=begin; i<end; i++)
-        m_functor(TagType(),i);
+        a_functor(TagType(),i);
     }
 
   inline
@@ -495,8 +496,9 @@ private:
       OpenMPTargetExec::resize_scratch(0,Policy::member_type::TEAM_REDUCE_SIZE,0,0);
       void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
+      FunctorType a_functor(m_functor);
       #pragma omp target teams distribute parallel for num_teams(league_size) num_threads(team_size*vector_length) schedule(static,1) \
-          map(to:this->m_functor,scratch_ptr) 
+          map(to:a_functor,scratch_ptr) 
       for(int i=0 ; i<league_size*team_size*vector_length ; i++) {
         typename Policy::member_type team(i/(team_size*vector_length),league_size,team_size,vector_length, scratch_ptr, 0,0);
         m_functor(team);
@@ -515,11 +517,12 @@ private:
       const int team_size = m_policy.team_size();
       const int vector_length = m_policy.vector_length();
       const int nteams = OpenMPTargetExec::MAX_ACTIVE_TEAMS<league_size?OpenMPTargetExec::MAX_ACTIVE_TEAMS:league_size;
+      FunctorType a_functor(m_functor);
 
       OpenMPTargetExec::resize_scratch(0,Policy::member_type::TEAM_REDUCE_SIZE,0,0);
       void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
       #pragma omp target teams distribute parallel for num_teams(league_size) num_threads(team_size*vector_length) schedule(static,1) \
-         map(to:this->m_functor,scratch_ptr)
+         map(to:a_functor,scratch_ptr)
       for(int i=0 ; i<league_size ; i++) {
         typename Policy::member_type team(i/(team_size*vector_length),league_size,team_size,vector_length, scratch_ptr, 0,0);
         m_functor(TagType(), team);
