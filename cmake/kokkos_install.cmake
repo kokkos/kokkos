@@ -32,24 +32,11 @@ INSTALL (FILES
   DESTINATION ${KOKKOS_HEADER_DIR}
 )
 
-# Add all targets to the build-tree export set
-#export(TARGETS ${Kokkos_LIBRARIES_NAMES}
-#  FILE "${Kokkos_BINARY_DIR}/KokkosTargets.cmake")
-
-# Export the package for use from the build-tree
-# (this registers the build-tree with a global CMake-registry)
-#export(PACKAGE Kokkos)
-
-# Create the KokkosConfig.cmake and KokkosConfigVersion files
-file(RELATIVE_PATH REL_INCLUDE_DIR "${INSTALL_CMAKE_DIR}"
-   "${INSTALL_INCLUDE_DIR}")
-# ... for the build tree
-set(CONF_INCLUDE_DIRS "${Kokkos_SOURCE_DIR}" "${Kokkos_BINARY_DIR}")
-include(CMakePackageConfigHelpers)
-configure_package_config_file(cmake/KokkosConfig.cmake.in
+INCLUDE(CMakePackageConfigHelpers)
+CONFIGURE_PACKAGE_CONFIG_FILE(cmake/KokkosConfig.cmake.in
   "${Kokkos_BINARY_DIR}/KokkosConfig.cmake"
   INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake)
-write_basic_package_version_file("${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake"
+WRITE_BASIC_PACKAGE_VERSION_FILE("${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake"
       VERSION "${Kokkos_VERSION_MAJOR}.${Kokkos_VERSION_MINOR}.${Kokkos_VERSION_PATCH}"
       COMPATIBILITY SameMajorVersion)
 
@@ -63,7 +50,16 @@ FOREACH(DIR ${INSTALL_CMAKE_DIR})
     DESTINATION ${DIR})
 
   # Install the export set for use with the install-tree
-  INSTALL(EXPORT KokkosTargets DESTINATION ${DIR})
+  INSTALL(EXPORT 
+    KokkosDeprecatedTargets 
+    DESTINATION ${DIR}
+  )
+
+  INSTALL(EXPORT 
+    KokkosTargets 
+    NAMESPACE   Kokkos::
+    DESTINATION ${DIR}
+  )
 ENDFOREACH()
 
 # build and install pkgconfig file

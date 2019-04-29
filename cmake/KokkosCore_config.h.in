@@ -5,6 +5,7 @@
 #define KOKKOS_CORE_CONFIG_H
 #endif
 
+/* Execution Spaces */
 #cmakedefine KOKKOS_ENABLE_SERIAL        
 #cmakedefine KOKKOS_ENABLE_OPENMP        
 #cmakedefine KOKKOS_ENABLE_PTHREAD       
@@ -13,6 +14,21 @@
 #cmakedefine KOKKOS_ENABLE_HWLOC         
 #cmakedefine KOKKOS_ENABLE_MEMKIND       
 #cmakedefine KOKKOS_ENABLE_LIBRT         
+
+#ifndef __CUDA_ARCH__
+#cmakedefine KOKKOS_ENABLE_TM
+#cmakedefine KOKKOS_USE_ISA_X86_64
+#cmakedefine KOKKOS_USE_ISA_KNC
+#cmakedefine KOKKOS_USE_ISA_POWERPCLE
+#cmakedefine KOKkOS_USE_ISA_POWERPCBE
+#endif
+
+/* General Settings */
+#cmakedefine KOKKOS_ENABLE_CXX11
+#cmakedefine KOKKOS_ENABLE_CXX14
+#cmakedefine KOKKOS_ENABLE_CXX17
+#cmakedefine KOKKOS_ENABLE_CXX20
+
 #cmakedefine KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
 #cmakedefine KOKKOS_ENABLE_CUDA_UVM             
 #cmakedefine KOKKOS_ENABLE_CUDA_LDG_INTRINSIC   
@@ -28,6 +44,13 @@
 #cmakedefine KOKKOS_ENABLE_EXPLICIT_INSTANTIATION 
 #cmakedefine KOKKOS_ENABLE_ETI
 #cmakedefine KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
+
+/* TPL Settings */
+#cmakedefine KOKKOS_ENABLE_HWLOC
+#cmakedefine KOKKOS_USE_LIBRT
+#cmakedefine KOKKOS_ENABLE_HWBSPACE
+
+#cmakedefine KOKKOS_IMPL_CUDA_CLANG_WORKAROUND
 
 
 #cmakedefine KOKKOS_ARCH_NONE            
