@@ -51,7 +51,6 @@ namespace Experimental {
    int KokkosStdFileAccessor::initialize( const std::string & filepath ) { 
 
        file_path = filepath;
- //       printf("Initializing StdFile properties: %s - %d\n", file_path.c_str(), data_size );
        return 0;
 
    }
@@ -62,21 +61,19 @@ namespace Experimental {
           close_file();
 
        if ( read_write == KokkosStdFileAccessor::WRITE_FILE ) {
-//            printf("open StdFile file for write: %s - %d\n", file_path.c_str(), data_size );
             file_strm.open( file_path.c_str(), std::ios::out | std::ios::trunc | std::ios::binary );
-      } else if (read_write == KokkosStdFileAccessor::READ_FILE ) { 
-//            printf("open StdFile file for reading: %s - %d\n", file_path.c_str(), data_size );
+       } else if (read_write == KokkosStdFileAccessor::READ_FILE ) { 
             file_strm.open( file_path.c_str(), std::ios::in | std::ios::binary );
-      } else {
-         printf("open_file: incorrect read write parameter specified .\n");
-         return -1;
-      }
+       } else {
+            printf("open_file: incorrect read write parameter specified .\n");
+            return -1;
+       }
 
       return file_strm.is_open();
 
    }
 
-   size_t KokkosStdFileAccessor::ReadFile(void * dest, const size_t dest_size) {
+   size_t KokkosStdFileAccessor::ReadFile_impl(void * dest, const size_t dest_size) {
       size_t dataRead = 0;
       char* ptr = (char*)dest;
       if (open_file(KokkosStdFileAccessor::READ_FILE)) {
@@ -93,7 +90,7 @@ namespace Experimental {
 
    }
    
-   size_t KokkosStdFileAccessor::WriteFile(const void * src, const size_t src_size) {
+   size_t KokkosStdFileAccessor::WriteFile_impl(const void * src, const size_t src_size) {
       size_t m_written = 0;
       char* ptr = (char*)src;
       if (open_file(KokkosStdFileAccessor::WRITE_FILE) ) {
@@ -127,28 +124,34 @@ namespace Experimental {
    void * StdFileSpace::allocate( const size_t arg_alloc_size, const std::string & path ) const {
       std::string sFullPath = s_default_path;
       size_t pos = path.find("/");
-//      printf("adding file accessor: %s, %s, %d \n", s_default_path.c_str(), path.c_str(), (int)pos );
       if ( (int)pos >= 0 && (int)pos < (int)path.length() ) {    // only use the default if there is no path info in the path...
          sFullPath = path;
       } else {
          sFullPath += (std::string)"/";
          sFullPath += path;
       }
- //     printf("final path: %s \n", sFullPath.c_str());
       KokkosStdFileAccessor * pAcc = new KokkosStdFileAccessor( arg_alloc_size, sFullPath );
       pAcc->initialize( sFullPath );
-      return (void*)pAcc;
+      KokkosIOInterface * pInt = new KokkosIOInterface;
+      pInt->pAcc = pAcc;
+      return (void*)pInt;
 
    }
 
    /**\brief  Deallocate untracked memory in the space */
    void StdFileSpace::deallocate( void * const arg_alloc_ptr
                              , const size_t arg_alloc_size ) const {
-       KokkosStdFileAccessor * pAcc = static_cast<KokkosStdFileAccessor*>(arg_alloc_ptr);
+       const KokkosIOInterface * pInt = reinterpret_cast<KokkosIOInterface *>(arg_alloc_ptr);
+       if (pInt) {
+          KokkosStdFileAccessor * pAcc = static_cast<KokkosStdFileAccessor*>(pInt->pAcc);
 
-       if (pAcc) {
-          pAcc->finalize();
-          delete pAcc;
+          if (pAcc) {
+             pAcc->finalize();
+             delete pAcc;
+          }
+
+          delete pInt;
+
        }
 
    }

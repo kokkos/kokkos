@@ -136,11 +136,9 @@ struct TestFSDeepCopy {
       view_2 = Rank2ViewType("memory_view_2", dim0, dim1);
       typename Rank2ViewType::HostMirror h_view_2 = Kokkos::create_mirror(view_2); 
 
-      printf("create filespace view\n");
       typedef CpFileSpace cp_file_space_type;
       Kokkos::View<double**,cp_file_space_type> cp_view(file_name, dim0, dim1);
 
-      printf("invoke initializer on device: %s \n", ExecSpace::name());
       Kokkos::parallel_for (dim0, KOKKOS_LAMBDA (const int i) {
          for (int j = 0; j < dim1; j++) {
             view_2(i,j) = i + j;
@@ -148,9 +146,7 @@ struct TestFSDeepCopy {
       });
       Kokkos::deep_copy( h_view_2, view_2 );
 
-      printf("copy from host space to filespace view\n");
       // host_space to ExecSpace
-      // printf("copy to file \n");
       Kokkos::deep_copy( cp_view, h_view_2 );
       Kokkos::fence();
 
@@ -161,9 +157,7 @@ struct TestFSDeepCopy {
       });
       Kokkos::deep_copy( h_view_2, view_2 );
 
-      printf("copy from file space to host space view\n");
       // ExecSpace to host_space 
-      // printf("copy from file \n");
       Kokkos::deep_copy( h_view_2, cp_view );
       Kokkos::fence();
 
@@ -172,6 +166,7 @@ struct TestFSDeepCopy {
             ASSERT_EQ(h_view_2(i,j), i + j);
          }
       }
+
 
    }
 

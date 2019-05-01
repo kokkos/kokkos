@@ -13,9 +13,6 @@ namespace Experimental {
        file_path = filepath;
        data_set = dataset_name;
 
- //       printf("Initializing HDF5 properties: %s - %d\n", file_path.c_str(), data_size );
-
-
    }
 
    int KokkosHDF5Accessor::open_file( ) { 
@@ -25,7 +22,6 @@ namespace Experimental {
        dims[1] = data_size;
 
        if (m_fid == 0  && !file_exists(file_path)) {
- //          printf("creating HDF5 file: %s - %d\n", file_path.c_str(), data_size );
           hid_t pid = H5Pcreate(H5P_FILE_ACCESS);
           m_fid = H5Fcreate( file_path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, pid );
           H5Pclose(pid);
@@ -50,8 +46,6 @@ namespace Experimental {
           H5Pclose(pid);
           H5Sclose(fsid);
       } else if (m_fid == 0) {
-
- //          printf("opening HDF5 file: %s - %d\n", file_path.c_str(), data_size );
           m_fid = H5Fopen( file_path.c_str(), H5F_ACC_RDWR, H5P_DEFAULT );
           if (m_fid == 0) {
              printf("Error opening HDF5 file\n");
@@ -94,7 +88,7 @@ namespace Experimental {
 
    }
 
-   size_t KokkosHDF5Accessor::ReadFile(void * dest, const size_t dest_size) {
+   size_t KokkosHDF5Accessor::ReadFile_impl(void * dest, const size_t dest_size) {
       size_t dataRead = 0;
       char* ptr = (char*)dest;
       hsize_t stepSize = dest_size;      
@@ -110,7 +104,6 @@ namespace Experimental {
             count[1] = min(stepSize, dest_size-i);
             m_mid = H5Screate_simple(2, count, NULL);
             hid_t  fsid = H5Dget_space(m_did);
-  //            printf("reading %d, %d \n", offset[0], count[0]);
             herr_t status = H5Sselect_hyperslab(fsid, H5S_SELECT_SET, offset, NULL, count, NULL);
             status = H5Sselect_hyperslab(m_mid, H5S_SELECT_SET, doffset, NULL, count, NULL);
             status = H5Dread(m_did, H5T_NATIVE_CHAR, m_mid, fsid, H5P_DEFAULT, &ptr[i]);
@@ -120,7 +113,6 @@ namespace Experimental {
                printf("Error with read: %d \n", status);
                return dataRead;
             }
- //            printf("read complete: %d, %d \n", status, dataRead);
             H5Sclose(m_mid);
             H5Sclose(fsid);
          }
@@ -130,12 +122,11 @@ namespace Experimental {
 
    }
    
-   size_t KokkosHDF5Accessor::WriteFile(const void * src, const size_t src_size) {
+   size_t KokkosHDF5Accessor::WriteFile_impl(const void * src, const size_t src_size) {
       size_t m_written = 0;
       //hsize_t stepSize = min(chunk_size, src_size);
       hsize_t stepSize = src_size;
       char* ptr = (char*)src;
- //     printf("write file: %s, %d, %d \n", file_path.c_str(),  m_fid, src_size);
       if (open_file() == 0 && m_fid != 0) {
          for (int i = 0; i < src_size; i+=stepSize) {
             hsize_t offset[2];
@@ -159,7 +150,6 @@ namespace Experimental {
                printf("Error with write: %d \n", status);
                return m_written;
             }
- //            printf("write complete: %d, %d \n", status, m_written);
             H5Sclose(m_mid);
             H5Sclose(fsid);
             H5Pclose(pid);
@@ -199,22 +189,27 @@ namespace Experimental {
          sFullPath += (std::string)"/";
          sFullPath += path;
       }
-  //    printf("final path: %s \n", sFullPath.c_str());
       KokkosHDF5Accessor * pAcc = new KokkosHDF5Accessor( arg_alloc_size, sFullPath );
       pAcc->initialize( sFullPath, "default_dataset" );
-      return (void*)pAcc;
+      KokkosIOInterface * pInt = new KokkosIOInterface;
+      pInt->pAcc = static_cast<KokkosIOAccessor*>(pAcc);
+      return reinterpret_cast<void*>(pInt);
 
    }
 
    /**\brief  Deallocate untracked memory in the space */
    void HDF5Space::deallocate( void * const arg_alloc_ptr
                              , const size_t arg_alloc_size ) const {
-       KokkosHDF5Accessor * pAcc = static_cast<KokkosHDF5Accessor*>(arg_alloc_ptr);
+       const KokkosIOInterface * pInt = reinterpret_cast<KokkosIOInterface *>(arg_alloc_ptr);
+       if (pInt) {
+          KokkosHDF5Accessor * pAcc = static_cast<KokkosHDF5Accessor*>(pInt->pAcc);
 
-       if (pAcc) {
-          pAcc->finalize();
-          delete pAcc;
-       }
+          if (pAcc) {
+             pAcc->finalize();
+             delete pAcc;
+          }
+          delete pInt;
+      }
 
    }
    

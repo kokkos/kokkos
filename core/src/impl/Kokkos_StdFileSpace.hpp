@@ -53,6 +53,7 @@
 #include <Kokkos_Concepts.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
+#include <impl/Kokkos_ExternalIOInterface.hpp>
 #include <fstream>
 
 
@@ -60,25 +61,21 @@ namespace Kokkos {
 
 namespace Experimental {
 
-class KokkosStdFileAccessor : public Kokkos::Impl::SharedAllocationHeader {
+class KokkosStdFileAccessor : public KokkosIOAccessor {
 
 
 public:
-   size_t data_size;
    size_t file_offset;
-   std::string file_path;
    std::fstream file_strm;
 
    enum { READ_FILE = 0,
           WRITE_FILE = 1 };
 
-   KokkosStdFileAccessor() : data_size(0),
-                             file_offset(0),
-                             file_path("") {
+   KokkosStdFileAccessor() : KokkosIOAccessor(),
+                             file_offset(0) {
    }
-   KokkosStdFileAccessor(const size_t size, const std::string & path ) : data_size(size),
-                                                                         file_offset(0),
-                                                                         file_path(path) {
+   KokkosStdFileAccessor(const size_t size, const std::string & path ) : KokkosIOAccessor(size, path, true),
+                                                                         file_offset(0) {
    }
 
    KokkosStdFileAccessor( const KokkosStdFileAccessor & rhs ) = default;
@@ -109,14 +106,13 @@ public:
    bool open_file(int read_write = KokkosStdFileAccessor::READ_FILE);
    void close_file();
 
-   size_t ReadFile(void * dest, const size_t dest_size);
+   virtual size_t ReadFile_impl(void * dest, const size_t dest_size);
    
-   size_t WriteFile(const void * src, const size_t src_size);
+   virtual size_t WriteFile_impl(const void * src, const size_t src_size);
 
    void finalize();
    
-   ~KokkosStdFileAccessor() {
-      finalize();
+   virtual ~KokkosStdFileAccessor() {
    }
 };
 
@@ -274,27 +270,15 @@ template<class ExecutionSpace> struct DeepCopy< Kokkos::Experimental::StdFileSpa
 {
   inline
   DeepCopy( void * dst , const void * src , size_t n )
-  {   
-      Kokkos::Impl::SharedAllocationHeader * pData = (Kokkos::Impl::SharedAllocationHeader*)dst;
-      Kokkos::Experimental::KokkosStdFileAccessor * pAcc = static_cast<Kokkos::Experimental::KokkosStdFileAccessor*>(pData-1);
-
-      if (pAcc) {
-  //       printf("writing file (%s) of size %d \n", pAcc->file_path.c_str(), n);
-         pAcc->WriteFile( src, n );
-      } else {
-         printf("deep copy cannot find file accessor object\n");
-      }
+  {  
+      Kokkos::Experimental::KokkosIOAccessor::transfer_from_host( dst, src, n );
   }
 
   inline
   DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
   {
     exec.fence();
-    Kokkos::Impl::SharedAllocationHeader * pData = (Kokkos::Impl::SharedAllocationHeader*)dst;
-    Kokkos::Experimental::KokkosStdFileAccessor * pAcc = static_cast<Kokkos::Experimental::KokkosStdFileAccessor*>(pData-1);
-    if (pAcc) {
-       pAcc->WriteFile( src, n );
-    }
+    Kokkos::Experimental::KokkosIOAccessor::transfer_from_host( dst, src, n );
   }
 };
 
@@ -303,22 +287,14 @@ template<class ExecutionSpace> struct DeepCopy<  Kokkos::HostSpace , Kokkos::Exp
   inline
   DeepCopy( void * dst , const void * src , size_t n )
   {       
-      Kokkos::Impl::SharedAllocationHeader * pData = (Kokkos::Impl::SharedAllocationHeader*)src;
-      Kokkos::Experimental::KokkosStdFileAccessor * pAcc = static_cast<Kokkos::Experimental::KokkosStdFileAccessor*>(pData-1);
-      if (pAcc) {
-         pAcc->ReadFile( dst, n );
-      }
+     Kokkos::Experimental::KokkosIOAccessor::transfer_to_host( dst, src, n );
   }
 
   inline
   DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
   {
     exec.fence();
-    Kokkos::Impl::SharedAllocationHeader * pData = (Kokkos::Impl::SharedAllocationHeader*)src;
-    Kokkos::Experimental::KokkosStdFileAccessor * pAcc = static_cast<Kokkos::Experimental::KokkosStdFileAccessor*>(pData - 1);
-    if (pAcc) {
-       pAcc->ReadFile( dst, n );
-    }
+    Kokkos::Experimental::KokkosIOAccessor::transfer_to_host( dst, src, n );
   }
 };
 

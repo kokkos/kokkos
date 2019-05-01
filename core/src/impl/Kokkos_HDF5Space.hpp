@@ -11,6 +11,7 @@
 #include <Kokkos_Concepts.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
+#include <impl/Kokkos_ExternalIOInterface.hpp>
 #include <hdf5.h>
 
 
@@ -18,12 +19,10 @@ namespace Kokkos {
 
 namespace Experimental {
 
-class KokkosHDF5Accessor : public Kokkos::Impl::SharedAllocationHeader {
+class KokkosHDF5Accessor : public KokkosIOAccessor {
 
 
 public:
-   size_t data_size;
-   std::string file_path;
    std::string data_set;
    size_t rank;
    size_t chunk_size;
@@ -32,8 +31,7 @@ public:
    hid_t m_did;    
    hid_t m_mid;    
 
-   KokkosHDF5Accessor() : data_size(0),
-                          file_path(""),
+   KokkosHDF5Accessor() : KokkosIOAccessor(),
                           data_set("default_dataset"),
                           m_fid(0),
                           m_did(0),
@@ -42,17 +40,13 @@ public:
       chunk_size = 65536;
       file_offset = 0;
    }
-   KokkosHDF5Accessor(const size_t size, const std::string & path ) : data_size(size),
-                                                                      file_path(path),
+   KokkosHDF5Accessor(const size_t size, const std::string & path ) : KokkosIOAccessor(size, path, true),
                                                                       data_set("default_dataset"),
                                                                       m_fid(0),
                                                                       m_did(0),
                                                                       m_mid(0)  {
       rank = 1;
-      //chunk_size = ( data_size / 20 );
-      chunk_size = 131072;
-      chunk_size = chunk_size < 65536 ? 65536 : chunk_size;
-      chunk_size = chunk_size > 1048576 ? 1048576 : chunk_size;
+      chunk_size = 0;
       file_offset = 0;
    }
 
@@ -68,7 +62,6 @@ public:
          rank = pAcc->rank;
          chunk_size = pAcc->chunk_size;
       }
-
    } 
 
    KokkosHDF5Accessor( void* ptr, const size_t offset ) {
@@ -88,13 +81,13 @@ public:
    int open_file();
    void close_file();
 
-   size_t ReadFile(void * dest, const size_t dest_size);
+   virtual size_t ReadFile_impl(void * dest, const size_t dest_size);
    
-   size_t WriteFile(const void * src, const size_t src_size);
+   virtual size_t WriteFile_impl(const void * src, const size_t src_size);
 
    void finalize();
    
-   ~KokkosHDF5Accessor() {
+   virtual ~KokkosHDF5Accessor() {
       finalize();
    }
 };
@@ -255,24 +248,15 @@ template<class ExecutionSpace> struct DeepCopy< Kokkos::Experimental::HDF5Space 
 {
   inline
   DeepCopy( void * dst , const void * src , size_t n )
-  {   
-      Kokkos::Impl::SharedAllocationHeader * pData = (Kokkos::Impl::SharedAllocationHeader*)dst;
-      Kokkos::Experimental::KokkosHDF5Accessor * pAcc = static_cast<Kokkos::Experimental::KokkosHDF5Accessor*>(pData-1);
-
-      if (pAcc) {
-         pAcc->WriteFile( src, n );
-      }
+  {
+     Kokkos::Experimental::KokkosIOAccessor::transfer_from_host( dst, src, n );
   }
 
   inline
   DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
   {
     exec.fence();
-    Kokkos::Impl::SharedAllocationHeader * pData = (Kokkos::Impl::SharedAllocationHeader*)dst;
-    Kokkos::Experimental::KokkosHDF5Accessor * pAcc = static_cast<Kokkos::Experimental::KokkosHDF5Accessor*>(pData-1);
-    if (pAcc) {
-       pAcc->WriteFile( src, n );
-    }
+    Kokkos::Experimental::KokkosIOAccessor::transfer_from_host( dst, src, n );
   }
 };
 
@@ -281,22 +265,14 @@ template<class ExecutionSpace> struct DeepCopy<  Kokkos::HostSpace , Kokkos::Exp
   inline
   DeepCopy( void * dst , const void * src , size_t n )
   {       
-      Kokkos::Impl::SharedAllocationHeader * pData = (Kokkos::Impl::SharedAllocationHeader*)src;
-      Kokkos::Experimental::KokkosHDF5Accessor * pAcc = static_cast<Kokkos::Experimental::KokkosHDF5Accessor*>(pData-1);
-      if (pAcc) {
-         pAcc->ReadFile( dst, n );
-      }
+    Kokkos::Experimental::KokkosIOAccessor::transfer_to_host( dst, src, n );
   }
 
   inline
   DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
   {
     exec.fence();
-    Kokkos::Impl::SharedAllocationHeader * pData = (Kokkos::Impl::SharedAllocationHeader*)src;
-    Kokkos::Experimental::KokkosHDF5Accessor * pAcc = static_cast<Kokkos::Experimental::KokkosHDF5Accessor*>(pData - 1);
-    if (pAcc) {
-       pAcc->ReadFile( dst, n );
-    }
+    Kokkos::Experimental::KokkosIOAccessor::transfer_to_host( dst, src, n );
   }
 };
 
