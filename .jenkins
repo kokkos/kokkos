@@ -1,0 +1,68 @@
+pipeline {
+    agent {
+        label 'docker'
+    }
+    stages {
+        stage('Build') {
+            parallel {
+                stage('CUDA-9.2-Clang') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.clang'
+                            dir 'scripts/docker'
+                            label 'NVIDIA_Tesla_K40m && nvidia-docker'
+                        }
+                    }
+                    environment {
+                        OPTIONS = '--with-options=compiler_warnings --arch=Kepler35 --compiler=clang++ --with-cuda --with-cuda-options=enable_lambda'
+                    }
+                    steps {
+                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                    }
+                }
+                stage("CUDA-9.2-NVCC") {
+                    agent {
+                        docker {
+                            image 'nvidia/cuda:9.2-devel'
+                            label 'NVIDIA_Tesla_K40m && nvidia-docker'
+                        }
+                    }
+                    environment {
+                        OPTIONS = '--with-options=compiler_warnings --arch=Kepler35 --with-cuda --with-cuda-options=enable_lambda'
+                    }
+                    steps {
+                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                    }
+                }
+                stage("CUDA-10.1-NVCC") {
+                    agent {
+                        docker {
+                            image 'nvidia/cuda:10.1-devel'
+                            label 'NVIDIA_Tesla_K40m && nvidia-docker'
+                        }
+                    }
+                    environment {
+                        OPTIONS = '--with-options=compiler_warnings --arch=Kepler35 --with-cuda --with-cuda-options=enable_lambda,rdc,force_uvm'
+                    }
+                    steps {
+                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                    }
+                }
+                stage("CUDA-10.1-NVCC-DEBUG") {
+                    agent {
+                        docker {
+                            image 'nvidia/cuda:10.1-devel'
+                            label 'NVIDIA_Tesla_K40m && nvidia-docker'
+                        }
+                    }
+                    environment {
+                        OPTIONS = '--with-options=compiler_warnings --arch=Kepler35--with-cuda --with-cuda-options=enable_lambda --debug'
+                    }
+                    steps {
+                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                    }
+                }
+            }
+        }
+    }
+}
