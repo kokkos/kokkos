@@ -60,7 +60,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:9.2-devel'
+                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:10.1-devel'
                             label 'NVIDIA_Tesla_K40m && nvidia-docker'
                         }
                     }
@@ -83,7 +83,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:9.2-devel'
+                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:10.1-devel'
                             label 'NVIDIA_Tesla_K40m && nvidia-docker'
                         }
                     }
