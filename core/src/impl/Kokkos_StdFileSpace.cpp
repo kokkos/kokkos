@@ -60,10 +60,21 @@ namespace Experimental {
        if (file_strm.is_open())
           close_file();
 
+      std::string sFullPath = Kokkos::Experimental::StdFileSpace::s_default_path;
+      size_t pos = file_path.find("/");
+      if ( (int)pos == 0 ) {    // only use the default if there is no absolute path...
+         sFullPath = file_path;
+      } else {
+         // printf("building file path %s, %s \n", sFullPath.c_str(), file_path.c_str() );
+         sFullPath += (std::string)"/";
+         sFullPath += file_path;
+      }
+      // printf("opening file: %s\n", sFullPath.c_str() );
+
        if ( read_write == KokkosStdFileAccessor::WRITE_FILE ) {
-            file_strm.open( file_path.c_str(), std::ios::out | std::ios::trunc | std::ios::binary );
+            file_strm.open( sFullPath.c_str(), std::ios::out | std::ios::trunc | std::ios::binary );
        } else if (read_write == KokkosStdFileAccessor::READ_FILE ) { 
-            file_strm.open( file_path.c_str(), std::ios::in | std::ios::binary );
+            file_strm.open( sFullPath.c_str(), std::ios::in | std::ios::binary );
        } else {
             printf("open_file: incorrect read write parameter specified .\n");
             return -1;
@@ -122,16 +133,8 @@ namespace Experimental {
 
    /**\brief  Allocate untracked memory in the space */
    void * StdFileSpace::allocate( const size_t arg_alloc_size, const std::string & path ) const {
-      std::string sFullPath = s_default_path;
-      size_t pos = path.find("/");
-      if ( (int)pos >= 0 && (int)pos < (int)path.length() ) {    // only use the default if there is no path info in the path...
-         sFullPath = path;
-      } else {
-         sFullPath += (std::string)"/";
-         sFullPath += path;
-      }
-      KokkosStdFileAccessor * pAcc = new KokkosStdFileAccessor( arg_alloc_size, sFullPath );
-      pAcc->initialize( sFullPath );
+      KokkosStdFileAccessor * pAcc = new KokkosStdFileAccessor( arg_alloc_size, path );
+      pAcc->initialize( path );
       KokkosIOInterface * pInt = new KokkosIOInterface;
       pInt->pAcc = pAcc;
       return (void*)pInt;

@@ -2891,9 +2891,15 @@ create_chkpt_mirror(const Space& , const Kokkos::View<T,P...> & src
                  std::is_same< typename ViewTraits<T,P...>::specialize , void >::value
                >::type * = 0) {
   typedef typename Impl::MirrorType<Space,T,P ...>::view_type chkpt_mirror_type;
-  // printf("creating check point mirror: %s, %s \n", Space::name(), src.label().c_str());
-  chkpt_mirror_type chkpt(src.label(),src.layout());
-  Kokkos::Impl::SharedAllocationRecord<void,void>::track_mirror( Space::name(), src.label(), chkpt.data(), src.data() );
+  std::string sLabel = src.label();
+  if ( sLabel.length() == 0 ) {
+     char sTemp[32];
+     sprintf(sTemp, "view_%08x", (unsigned long)src.data());
+     sLabel = sTemp;
+     printf("WARNING: creating checkpoint mirror without a label...generating auto label: %s \n", sLabel.c_str());
+  }
+  chkpt_mirror_type chkpt(sLabel,src.layout());
+  Kokkos::Impl::SharedAllocationRecord<void,void>::track_mirror( Space::name(), sLabel, chkpt.data(), src.data() );
 
   return chkpt;
 }
