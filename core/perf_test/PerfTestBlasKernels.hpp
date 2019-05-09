@@ -124,13 +124,9 @@ struct Dot
   typedef typename Device::execution_space execution_space ;
 
   typedef typename
-    Impl::StaticAssertSame< Impl::unsigned_< 1 > ,
-                            Impl::unsigned_< Type::Rank > >::type ok_rank ;
+    std::is_same< Impl::unsigned_< 1 > ,
+                  Impl::unsigned_< Type::Rank > >::type ok_rank ;
 
-
-/*  typedef typename
-    Impl::StaticAssertSame< execution_space ,
-                            typename Type::execution_space >::type ok_device ;*/
 
   typedef double value_type ;
 
@@ -165,12 +161,8 @@ struct DotSingle
   typedef typename Device::execution_space execution_space ;
 
   typedef typename
-    Impl::StaticAssertSame< Impl::unsigned_< 1 > ,
-                            Impl::unsigned_< Type::Rank > >::type ok_rank ;
-
-/*  typedef typename
-    Impl::StaticAssertSame< execution_space ,
-                            typename Type::execution_space >::type ok_device ;*/
+    std::is_same< Impl::unsigned_< 1 > ,
+                  Impl::unsigned_< Type::Rank > >::type ok_rank ;
 
   typedef double value_type ;
 
@@ -204,24 +196,14 @@ struct Scale
 {
   typedef typename Device::execution_space execution_space ;
 
-/*  typedef typename
-    Impl::StaticAssertSame< execution_space ,
-                            typename ScalarType::execution_space >::type
-      ok_scalar_device ;
-
   typedef typename
-    Impl::StaticAssertSame< execution_space ,
-                            typename VectorType::execution_space >::type
-      ok_vector_device ;*/
-
-  typedef typename
-    Impl::StaticAssertSame< Impl::unsigned_< 0 > ,
-                            Impl::unsigned_< ScalarType::Rank > >::type
+    std::is_same< Impl::unsigned_< 0 > ,
+                  Impl::unsigned_< ScalarType::Rank > >::type
       ok_scalar_rank ;
 
   typedef typename
-    Impl::StaticAssertSame< Impl::unsigned_< 1 > ,
-                            Impl::unsigned_< VectorType::Rank > >::type
+    std::is_same< Impl::unsigned_< 1 > ,
+                  Impl::unsigned_< VectorType::Rank > >::type
       ok_vector_rank ;
 
 #if 1
@@ -251,34 +233,19 @@ struct AXPBY
 {
   typedef typename Device::execution_space execution_space ;
 
-/*  typedef typename
-    Impl::StaticAssertSame< execution_space ,
-                            typename ScalarType::execution_space >::type
-      ok_scalar_device ;
-
   typedef typename
-    Impl::StaticAssertSame< execution_space ,
-                            typename ConstVectorType::execution_space >::type
-      ok_const_vector_device ;
-
-  typedef typename
-    Impl::StaticAssertSame< execution_space ,
-                            typename VectorType::execution_space >::type
-      ok_vector_device ;*/
-
-  typedef typename
-    Impl::StaticAssertSame< Impl::unsigned_< 0 > ,
-                            Impl::unsigned_< ScalarType::Rank > >::type
+    std::is_same< Impl::unsigned_< 0 > ,
+                  Impl::unsigned_< ScalarType::Rank > >::type
       ok_scalar_rank ;
 
   typedef typename
-    Impl::StaticAssertSame< Impl::unsigned_< 1 > ,
-                            Impl::unsigned_< ConstVectorType::Rank > >::type
+    std::is_same< Impl::unsigned_< 1 > ,
+                  Impl::unsigned_< ConstVectorType::Rank > >::type
       ok_const_vector_rank ;
 
   typedef typename
-    Impl::StaticAssertSame< Impl::unsigned_< 1 > ,
-                            Impl::unsigned_< VectorType::Rank > >::type
+    std::is_same< Impl::unsigned_< 1 > ,
+                  Impl::unsigned_< VectorType::Rank > >::type
       ok_vector_rank ;
 
 #if 1

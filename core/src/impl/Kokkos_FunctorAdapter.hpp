@@ -1432,7 +1432,7 @@ namespace Impl {
   template<typename ValueType, class JoinOp>
   struct JoinLambdaAdapter<ValueType, JoinOp, decltype( FunctorValueJoinFunction< JoinOp , void >::enable_if( & JoinOp::join ) )> {
     typedef ValueType value_type;
-    typedef StaticAssertSame<ValueType,typename JoinOp::value_type> assert_value_types_match;
+    typedef typename std::is_same<ValueType,typename JoinOp::value_type>::type assert_value_types_match;
     const JoinOp& lambda;
     KOKKOS_INLINE_FUNCTION
     JoinLambdaAdapter(const JoinOp& lambda_):lambda(lambda_) {}
