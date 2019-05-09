@@ -291,7 +291,7 @@ MirrorTracker * SharedAllocationRecord< void , void >::get_filtered_mirror_list(
    }
    MirrorTracker * pSrch = mirror_list;
    while (pSrch != nullptr ) {      
-//      printf("searching list: %s, %s \n", pSrch->mem_space_name.c_str(), pSrch->label.c_str());
+      // printf("searching list: %s, %s \n", pSrch->mem_space_name.c_str(), pSrch->label.c_str());
       if ( pSrch->mem_space_name == mem_space ) {
          MirrorTracker * pNew = new MirrorTracker(*pSrch);
          if (return_list == nullptr) {
@@ -325,23 +325,38 @@ MirrorTracker * SharedAllocationRecord< void , void >::get_filtered_mirror_entry
 }
 // note that the dst_ and src_pointers are pointing to the data() element of the record...need to extract the record pointer from that
 void SharedAllocationRecord< void , void >::track_mirror( const std::string mem_space, const std::string lbl, void * dst_, void * src_ ) {
-   MirrorTracker * pTrack = new MirrorTracker();
-   pTrack->label = lbl;
+   MirrorTracker * pTrack = nullptr;
+   MirrorTracker * pSrch = mirror_list;
+   while (pSrch != nullptr ) {
+      if ( pSrch->label == lbl ) {
+         pTrack = pSrch;
+         break;
+      }
+      pSrch = pSrch->pNext;
+   }
+   bool bAddToList = false;
+   if ( pTrack == nullptr ) {
+      pTrack = new MirrorTracker();
+      pTrack->label = lbl;
+      bAddToList = true;
+   }
    SharedAllocationHeader * pDstHeader = (((SharedAllocationHeader*)dst_) - 1);
    pTrack->dst = pDstHeader->m_record;
    SharedAllocationHeader * pSrcHeader = (((SharedAllocationHeader*)src_) - 1);
    pTrack->src = pSrcHeader->m_record;
    pTrack->mem_space_name = mem_space;
 
-   // JSM TODO need some type of locking mechanism here ...
-   if ( mirror_list == nullptr ) {
+   if ( bAddToList ) {
+      // JSM TODO need some type of locking mechanism here ...
+      if ( mirror_list == nullptr ) {
 //      printf("initializing new list: %s, %s \n", pTrack->mem_space_name.c_str(), pTrack->label.c_str());
-      mirror_list = pTrack;
-   } else {
+         mirror_list = pTrack;
+      } else {
 //      printf("inserting into list: %s, %s \n", pTrack->mem_space_name.c_str(), pTrack->label.c_str());
-      pTrack->pNext = mirror_list;
-      mirror_list->pPrev = pTrack;
-      mirror_list = pTrack;
+         pTrack->pNext = mirror_list;
+         mirror_list->pPrev = pTrack;
+         mirror_list = pTrack;
+      }
    }
 
 }

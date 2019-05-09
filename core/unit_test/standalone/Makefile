@@ -2,7 +2,7 @@
 ##KOKKOS_CUDA_OPTIONS=enable_lambda
 ##KOKKOS_ARCH = "Volta70"
 KOKKOS_DEVICES=OpenMP
-KOKKOS_CUDA_OPTIONS=enable_lambda
+KOKKOS_OPTIONS=enable_hdf5
 KOKKOS_ARCH = ""
 
 MAKEFILE_PATH := $(subst Makefile,,$(abspath $(lastword $(MAKEFILE_LIST))))
@@ -38,7 +38,7 @@ LINK = ${CXX}
 LINKFLAGS =
 
 OBJ = $(notdir $(SRC:.cpp=.o))
-LIB = -lpthread
+LIB = -lpthread -ldl
 
 include $(KOKKOS_PATH)/Makefile.kokkos
 

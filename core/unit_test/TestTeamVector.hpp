@@ -49,6 +49,12 @@
 #include <cstdint>
 #include <cinttypes>
 
+#ifndef PRId64
+   #define PRId64 "%ld"
+#endif
+#ifndef PRId32
+   #define PRId32 "%d"
+#endif
 namespace TestTeamVector {
 
 struct my_complex {

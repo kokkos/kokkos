@@ -56,10 +56,12 @@ namespace Experimental {
    }
 
    bool KokkosStdFileAccessor::open_file( int read_write ) { 
-
-       if (file_strm.is_open())
-          close_file();
-
+      
+      // printf("open_file: %s, %d\n", file_path.c_str(), read_write );
+      if (file_strm.is_open()) {
+         printf("file was left open...closing\n");
+         close_file();
+      }
       std::string sFullPath = Kokkos::Experimental::StdFileSpace::s_default_path;
       size_t pos = file_path.find("/");
       if ( (int)pos == 0 ) {    // only use the default if there is no absolute path...
@@ -69,7 +71,7 @@ namespace Experimental {
          sFullPath += (std::string)"/";
          sFullPath += file_path;
       }
-      // printf("opening file: %s\n", sFullPath.c_str() );
+      // printf("opening file: %s, %d\n", sFullPath.c_str(), read_write );
 
        if ( read_write == KokkosStdFileAccessor::WRITE_FILE ) {
             file_strm.open( sFullPath.c_str(), std::ios::out | std::ios::trunc | std::ios::binary );
@@ -88,10 +90,13 @@ namespace Experimental {
       size_t dataRead = 0;
       char* ptr = (char*)dest;
       if (open_file(KokkosStdFileAccessor::READ_FILE)) {
+         // printf("reading file: %08x, %ld \n", (unsigned long)dest, dest_size);
          while ( !file_strm.eof() && dataRead < dest_size ) {
             file_strm.read( &ptr[dataRead], dest_size );
             dataRead += file_strm.gcount();
          }
+      } else {
+         printf("WARNING: cannot open file for reading: %s\n", file_path.c_str());
       }
       close_file();
       if (dataRead < dest_size) {
@@ -137,6 +142,7 @@ namespace Experimental {
       pAcc->initialize( path );
       KokkosIOInterface * pInt = new KokkosIOInterface;
       pInt->pAcc = pAcc;
+      // printf("allocate std file: %s, %08x \n", path.c_str(), (unsigned long)pAcc);
       return (void*)pInt;
 
    }
@@ -162,6 +168,7 @@ namespace Experimental {
    void StdFileSpace::restore_all_views() {
       typedef Kokkos::Impl::SharedAllocationRecord<void,void> base_record;
       Kokkos::Impl::MirrorTracker * pList = base_record::get_filtered_mirror_list( (std::string)name() );
+      if (pList == nullptr)  printf("%s::restore views mirror list returned empty list \n", name());
       while (pList != nullptr) {
          Kokkos::Impl::DeepCopy< Kokkos::HostSpace, Kokkos::Experimental::StdFileSpace, Kokkos::DefaultHostExecutionSpace >
                         (((base_record*)pList->src)->data(), ((base_record*)pList->dst)->data(), ((base_record*)pList->src)->size());
@@ -170,8 +177,10 @@ namespace Experimental {
             delete pList;
             pList = nullptr;
          } else {
+            // printf("restore next record: %08x \n", (unsigned long)pList->pNext);
             pList = pList->pNext;
-            delete pList->pPrev;
+            // printf("record: %08x, %08x \n", (unsigned long)pList->src, (unsigned long)pList->dst);
+            if (pList->pPrev != nullptr) delete pList->pPrev;
          }
       }
    }

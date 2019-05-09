@@ -26,10 +26,19 @@ namespace Experimental {
    void KokkosIOAccessor::transfer_to_host ( void * dst, const void * src, size_t size_ ) {
 
       const Kokkos::Impl::SharedAllocationHeader * pData = reinterpret_cast<const Kokkos::Impl::SharedAllocationHeader*>(src);
-      const KokkosIOInterface * pDataII = reinterpret_cast<const KokkosIOInterface*>(pData-1);
-      Kokkos::Experimental::KokkosIOAccessor * pAcc = pDataII->pAcc;
-      if (pAcc) {
-         pAcc->ReadFile( dst, size_ );
+      if (pData != nullptr) {
+         const KokkosIOInterface * pDataII = reinterpret_cast<const KokkosIOInterface*>(pData-1);
+         if ( pDataII != nullptr) {
+            Kokkos::Experimental::KokkosIOAccessor * pAcc = pDataII->pAcc;
+            if (pAcc) {
+               // printf("calling read: %08x, %08x, %ld \n", (unsigned long)pAcc,  (unsigned long)dst, size_ );
+               pAcc->ReadFile( dst, size_ );
+            }
+         } else {
+            printf("IOInterface src is empty!!!\n");
+         }
+      } else {
+         printf("Allocation header for src is empty!!!\n");
       }
    }
 
