@@ -1432,7 +1432,6 @@ namespace Impl {
   template<typename ValueType, class JoinOp>
   struct JoinLambdaAdapter<ValueType, JoinOp, decltype( FunctorValueJoinFunction< JoinOp , void >::enable_if( & JoinOp::join ) )> {
     typedef ValueType value_type;
-//    typedef typename std::is_same<ValueType,typename JoinOp::value_type>::type assert_value_types_match;
     static_assert(
         std::is_same<ValueType,typename JoinOp::value_type>::value,
         "JoinLambdaAdapter static_assert Fail: ValueType != JoinOp::value_type");
