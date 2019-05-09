@@ -44,6 +44,8 @@
 #ifndef KOKKOS_BLAS_KERNELS_HPP
 #define KOKKOS_BLAS_KERNELS_HPP
 
+#include <type_traits>
+
 namespace Kokkos {
 
 template< class ConstVectorType ,
@@ -123,9 +125,10 @@ struct Dot
 {
   typedef typename Device::execution_space execution_space ;
 
-  typedef typename
+  static_assert(
     std::is_same< Impl::unsigned_< 1 > ,
-                  Impl::unsigned_< Type::Rank > >::type ok_rank ;
+                  Impl::unsigned_< Type::Rank > >::value,
+    "Dot static_assert Fail: Rank != 1");
 
 
   typedef double value_type ;
@@ -160,9 +163,10 @@ struct DotSingle
 {
   typedef typename Device::execution_space execution_space ;
 
-  typedef typename
+  static_assert(
     std::is_same< Impl::unsigned_< 1 > ,
-                  Impl::unsigned_< Type::Rank > >::type ok_rank ;
+                  Impl::unsigned_< Type::Rank > >::value,
+    "DotSingle static_assert Fail: Rank != 1");
 
   typedef double value_type ;
 
@@ -196,15 +200,15 @@ struct Scale
 {
   typedef typename Device::execution_space execution_space ;
 
-  typedef typename
+  static_assert(
     std::is_same< Impl::unsigned_< 0 > ,
-                  Impl::unsigned_< ScalarType::Rank > >::type
-      ok_scalar_rank ;
+                  Impl::unsigned_< ScalarType::Rank > >::value,
+    "Scale static_assert Fail: ScalarType::Rank != 0");
 
-  typedef typename
+  static_assert(
     std::is_same< Impl::unsigned_< 1 > ,
-                  Impl::unsigned_< VectorType::Rank > >::type
-      ok_vector_rank ;
+                  Impl::unsigned_< VectorType::Rank > >::value,
+    "Scale static_assert Fail: VectorType::Rank != 1");
 
 #if 1
   typename ScalarType::const_type alpha ;
@@ -233,20 +237,20 @@ struct AXPBY
 {
   typedef typename Device::execution_space execution_space ;
 
-  typedef typename
+  static_assert(
     std::is_same< Impl::unsigned_< 0 > ,
-                  Impl::unsigned_< ScalarType::Rank > >::type
-      ok_scalar_rank ;
+                  Impl::unsigned_< ScalarType::Rank > >::value,
+    "AXPBY static_assert Fail: ScalarType::Rank != 0");
 
-  typedef typename
+  static_assert(
     std::is_same< Impl::unsigned_< 1 > ,
-                  Impl::unsigned_< ConstVectorType::Rank > >::type
-      ok_const_vector_rank ;
+                  Impl::unsigned_< ConstVectorType::Rank > >::value,
+    "AXPBY static_assert Fail: ConstVectorType::Rank != 1");
 
-  typedef typename
+  static_assert(
     std::is_same< Impl::unsigned_< 1 > ,
-                  Impl::unsigned_< VectorType::Rank > >::type
-      ok_vector_rank ;
+                  Impl::unsigned_< VectorType::Rank > >::value,
+    "AXPBY static_assert Fail: VectorType::Rank != 1");
 
 #if 1
   typename ScalarType::const_type alpha , beta ;
