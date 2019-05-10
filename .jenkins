@@ -15,6 +15,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.clang'
                             dir 'scripts/docker'
+                            additionalBuildArgs '--pull'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
@@ -38,7 +39,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:9.2-devel'
+                            additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:9.2-devel'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
@@ -62,7 +63,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:10.1-devel'
+                            additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:10.1-devel'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
@@ -86,7 +87,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:10.1-devel'
+                            additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:10.1-devel'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
