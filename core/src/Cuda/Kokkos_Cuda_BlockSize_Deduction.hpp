@@ -252,6 +252,51 @@ int cuda_get_opt_block_size(const typename DriverType::functor_type & f, const s
       >::get_block_size(f,vector_length,shmem_extra_block,shmem_extra_thread);
 }
 
+template<class FunctorType, class LaunchBounds>
+int cuda_get_opt_block_size(const CudaInternal* cuda_instance, const cudaFuncAttributes& attr, const FunctorType& f, const size_t vector_length,
+    const size_t shmem_block, const size_t shmem_thread) {
+
+  const int min_blocks_per_sm = LaunchBounds::minBperSM == 0 ?
+                                     1 : LaunchBounds::minBperSM ;
+  const int max_threads_per_block = LaunchBounds::maxTperB == 0 ?
+                                     cuda_instance->m_maxThreadsPerBlock : LaunchBounds::maxTperB ;
+
+  const int regs_per_thread = attr.numRegs;
+  const int regs_per_sm = cuda_instance->m_regsPerSM;
+  const int shmem_per_sm = cuda_instance->m_shmemPerSM;
+  const int max_blocks_per_sm = cuda_instance->m_maxBlocksPerSM;
+
+  int block_size = std::min(attr.maxThreadsPerBlock,max_threads_per_block);
+
+  int functor_shmem = FunctorTeamShmemSize< FunctorType  >::value( f , block_size/vector_length );
+  int total_shmem = shmem_block*block_size + shmem_thread*(block_size/vector_length) + functor_shmem + attr.sharedSizeBytes;
+  int max_blocks_regs = regs_per_sm/(regs_per_thread*block_size);
+  int max_blocks_shmem = total_shmem>0?shmem_per_sm/total_shmem:max_blocks_regs;
+  int blocks_per_sm = std::min(max_blocks_regs,max_blocks_shmem);
+  int threads_per_sm = blocks_per_sm * block_size;
+
+  int opt_block_size = (blocks_per_sm>=min_blocks_per_sm) ? block_size : 0;
+  int opt_threads_per_sm = threads_per_sm;
+
+  block_size-=32;
+  while ((block_size>=32)) {
+    functor_shmem = FunctorTeamShmemSize< FunctorType  >::value( f , block_size/vector_length );
+    total_shmem = shmem_block*block_size + shmem_thread*(block_size/vector_length) + functor_shmem + attr.sharedSizeBytes;
+    max_blocks_regs = regs_per_sm/(regs_per_thread*block_size);
+    max_blocks_shmem = total_shmem>0?shmem_per_sm/total_shmem:max_blocks_regs;
+    blocks_per_sm = std::min(max_blocks_regs,max_blocks_shmem);
+    if((blocks_per_sm > min_blocks_per_sm) && (blocks_per_sm < max_blocks_per_sm)) {
+      threads_per_sm = blocks_per_sm * block_size;
+      if(threads_per_sm>opt_threads_per_sm) {
+        opt_block_size = block_size;
+        opt_threads_per_sm = threads_per_sm;
+      }
+    }
+    block_size-=32;
+  }
+  return opt_block_size;
+}
+
 template<class DriverType>
 struct CudaGetOptBlockSize<DriverType,Kokkos::LaunchBounds<0,0>,true> {
   static int get_block_size(const typename DriverType::functor_type & f, const size_t vector_length,
