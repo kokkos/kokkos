@@ -16,6 +16,7 @@ pipeline {
                             filename 'Dockerfile.clang'
                             dir 'scripts/docker'
                             label 'NVIDIA_Tesla_K40m && nvidia-docker'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
                     environment {
@@ -39,6 +40,7 @@ pipeline {
                             dir 'scripts/docker'
                             additionalBuildArgs '--build-arg BASE=nvidia/cuda:9.2-devel'
                             label 'NVIDIA_Tesla_K40m && nvidia-docker'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
                     environment {
@@ -62,6 +64,7 @@ pipeline {
                             dir 'scripts/docker'
                             additionalBuildArgs '--build-arg BASE=nvidia/cuda:10.1-devel'
                             label 'NVIDIA_Tesla_K40m && nvidia-docker'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
                     environment {
@@ -85,6 +88,7 @@ pipeline {
                             dir 'scripts/docker'
                             additionalBuildArgs '--build-arg BASE=nvidia/cuda:10.1-devel'
                             label 'NVIDIA_Tesla_K40m && nvidia-docker'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
                     environment {
