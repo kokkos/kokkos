@@ -15,12 +15,12 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.clang'
                             dir 'scripts/docker'
-                            label 'NVIDIA_Tesla_K40m && nvidia-docker'
+                            label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
                     environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Kepler35 --compiler=/usr/local/bin/clang++ --with-cuda --with-cuda-options=enable_lambda'
+                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --compiler=/usr/local/bin/clang++ --with-cuda --with-cuda-options=enable_lambda'
                     }
                     steps {
                         sh 'ln -s /usr/bin/ccache /usr/local/bin/clang++'
@@ -39,12 +39,12 @@ pipeline {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
                             additionalBuildArgs '--build-arg BASE=nvidia/cuda:9.2-devel'
-                            label 'NVIDIA_Tesla_K40m && nvidia-docker'
+                            label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
                     environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Kepler35 --with-cuda --with-cuda-options=enable_lambda'
+                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --with-cuda --with-cuda-options=enable_lambda'
                     }
                     steps {
                         sh 'ln -s /usr/bin/ccache /usr/local/bin/g++'
@@ -63,12 +63,12 @@ pipeline {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
                             additionalBuildArgs '--build-arg BASE=nvidia/cuda:10.1-devel'
-                            label 'NVIDIA_Tesla_K40m && nvidia-docker'
+                            label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
                     environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Kepler35 --with-cuda --with-cuda-options=enable_lambda,rdc,force_uvm'
+                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --with-cuda --with-cuda-options=enable_lambda,rdc,force_uvm'
                     }
                     steps {
                         sh 'ln -s /usr/bin/ccache /usr/local/bin/g++'
@@ -87,12 +87,12 @@ pipeline {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
                             additionalBuildArgs '--build-arg BASE=nvidia/cuda:10.1-devel'
-                            label 'NVIDIA_Tesla_K40m && nvidia-docker'
+                            label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
                     environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Kepler35--with-cuda --with-cuda-options=enable_lambda --debug'
+                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70--with-cuda --with-cuda-options=enable_lambda --debug'
                     }
                     steps {
                         sh 'ln -s /usr/bin/ccache /usr/local/bin/g++'
