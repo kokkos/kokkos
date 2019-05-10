@@ -125,9 +125,7 @@ struct Dot
 {
   typedef typename Device::execution_space execution_space ;
 
-  static_assert(
-    std::is_same< Impl::unsigned_< 1 > ,
-                  Impl::unsigned_< Type::Rank > >::value,
+  static_assert( static_cast<unsigned>(Type::Rank) == static_cast<unsigned>(1),
     "Dot static_assert Fail: Rank != 1");
 
 
@@ -163,9 +161,7 @@ struct DotSingle
 {
   typedef typename Device::execution_space execution_space ;
 
-  static_assert(
-    std::is_same< Impl::unsigned_< 1 > ,
-                  Impl::unsigned_< Type::Rank > >::value,
+  static_assert( static_cast<unsigned>(Type::Rank) == static_cast<unsigned>(1),
     "DotSingle static_assert Fail: Rank != 1");
 
   typedef double value_type ;
@@ -200,14 +196,10 @@ struct Scale
 {
   typedef typename Device::execution_space execution_space ;
 
-  static_assert(
-    std::is_same< Impl::unsigned_< 0 > ,
-                  Impl::unsigned_< ScalarType::Rank > >::value,
+  static_assert( static_cast<unsigned>(ScalarType::Rank) == static_cast<unsigned>(0),
     "Scale static_assert Fail: ScalarType::Rank != 0");
 
-  static_assert(
-    std::is_same< Impl::unsigned_< 1 > ,
-                  Impl::unsigned_< VectorType::Rank > >::value,
+  static_assert( static_cast<unsigned>(VectorType::Rank) == static_cast<unsigned>(1),
     "Scale static_assert Fail: VectorType::Rank != 1");
 
 #if 1
@@ -237,19 +229,13 @@ struct AXPBY
 {
   typedef typename Device::execution_space execution_space ;
 
-  static_assert(
-    std::is_same< Impl::unsigned_< 0 > ,
-                  Impl::unsigned_< ScalarType::Rank > >::value,
+  static_assert( static_cast<unsigned>(ScalarType::Rank) == static_cast<unsigned>(0),
     "AXPBY static_assert Fail: ScalarType::Rank != 0");
 
-  static_assert(
-    std::is_same< Impl::unsigned_< 1 > ,
-                  Impl::unsigned_< ConstVectorType::Rank > >::value,
+  static_assert( static_cast<unsigned>(ConstVectorType::Rank) == static_cast<unsigned>(1),
     "AXPBY static_assert Fail: ConstVectorType::Rank != 1");
 
-  static_assert(
-    std::is_same< Impl::unsigned_< 1 > ,
-                  Impl::unsigned_< VectorType::Rank > >::value,
+  static_assert( static_cast<unsigned>(VectorType::Rank) == static_cast<unsigned>(1),
     "AXPBY static_assert Fail: VectorType::Rank != 1");
 
 #if 1
