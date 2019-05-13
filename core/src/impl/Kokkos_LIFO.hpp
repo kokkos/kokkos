@@ -359,6 +359,7 @@ public:
 
     // (local variable used for assertion only)
     // TODO @tasking @memory_order DSH this should have memory order release, I think
+    Kokkos::memory_fence();
     auto old_head = Kokkos::atomic_exchange(&(this->m_head), consumed_tag);
 
     // Assert that the queue wasn't consumed before this
