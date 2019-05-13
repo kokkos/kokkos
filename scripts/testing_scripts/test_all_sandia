@@ -436,7 +436,9 @@ elif [ "$MACHINE" = "apollo" ]; then
 
 elif [ "$MACHINE" = "kokkos-dev-2" ]; then
   source /projects/sems/modulefiles/utils/sems-modules-init.sh
-  module use /home/projects/x86-64/modulefiles
+  module use /home/projects/x86-64/modulefiles/local
+  module purge
+  module load sems-env
   module load kokkos-env
 
   module load sems-git
@@ -451,7 +453,7 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
   NVCC_MODULE_LIST="sems-env,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.3.0,kokkos-hwloc/1.10.1/base"
 
   CLANG_MODULE_LIST="sems-env,kokkos-env,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/6.1.0"
-  CLANG8_MODULE_LIST="sems-env,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/10.0,sems-gcc/7.3.0"
+  CLANG8_MODULE_LIST="sems-env,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/10.0"
 
   BUILD_LIST_CUDA_NVCC="Cuda_Serial,Cuda_Pthread"
   BUILD_LIST_CUDA_CLANG="Cuda_Serial,Cuda_OpenMP"
