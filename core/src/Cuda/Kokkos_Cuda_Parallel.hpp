@@ -138,7 +138,7 @@ public:
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   template< class FunctorType >
-  inline static
+  static inline
   int team_size_max( const FunctorType & functor )
     {
       int n = MAX_WARP * Impl::CudaTraits::WarpSize ;
@@ -149,7 +149,7 @@ public:
           /* for team   reduce */ + ( n + 2 ) * sizeof(double)
           /* for team   shared */ + Impl::FunctorTeamShmemSize< FunctorType >::value( functor , n );
 
-        if ( shmem_size < m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock ) break ;
+        if ( shmem_size < traits::execution_space().impl_internal_space_instance()->m_maxShmemPerBlock ) break ;
       }
 
       return n ;
