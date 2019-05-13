@@ -284,6 +284,8 @@ void finalize_internal( const bool all_spaces = false )
       Kokkos::Cuda::impl_finalize();
 #endif
   }
+#else
+  (void)all_spaces;
 #endif
 
 #if defined( KOKKOS_ENABLE_ROCM )

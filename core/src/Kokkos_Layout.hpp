@@ -193,6 +193,9 @@ struct LayoutStride {
     {}
 };
 
+// ==========================================================================
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+
 //----------------------------------------------------------------------------
 /// \struct LayoutTileLeft
 /// \brief Memory layout tag indicating left-to-right (Fortran scheme)
@@ -243,6 +246,8 @@ struct LayoutTileLeft {
     : dimension { argN0 , argN1 , argN2 , argN3 , argN4 , argN5 , argN6 , argN7 } {}
 };
 
+#endif   // KOKKOS_ENABLE_DEPRECATED_CODE
+// ===================================================================================
 
 //////////////////////////////////////////////////////////////////////////////////////
 
