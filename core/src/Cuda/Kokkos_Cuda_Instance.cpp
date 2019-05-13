@@ -383,6 +383,15 @@ void CudaInternal::initialize( int cuda_device_id , cudaStream_t stream )
 
     m_maxBlock = cudaProp.maxGridSize[0] ;
 
+    m_shmemPerSM = cudaProp.sharedMemPerMultiprocessor ;
+    m_maxShmemPerBlock = cudaProp.sharedMemPerBlock ;
+    m_regsPerSM = cudaProp.regsPerMultiprocessor ;
+    m_maxBlocksPerSM = m_cudaArch < 500 ? 16 : (
+                       m_cudaArch < 750 ? 32 : (
+                       m_cudaArch == 750 ? 16 : 32));
+    m_maxThreadsPerSM = cudaProp.maxThreadsPerMultiProcessor ;
+    m_maxThreadsPerBlock = cudaProp.maxThreadsPerBlock ;
+
     //----------------------------------
 
     m_scratchUnifiedSupported = cudaProp.unifiedAddressing ;
@@ -411,10 +420,9 @@ void CudaInternal::initialize( int cuda_device_id , cudaStream_t stream )
     // Concurrent bitset for obtaining unique tokens from within
     // an executing kernel.
     {
-      const unsigned max_threads_per_sm = 2048 ; // up to capability 7.0
 
       m_maxConcurrency =
-        max_threads_per_sm * cudaProp.multiProcessorCount ;
+        m_maxThreadsPerSM * cudaProp.multiProcessorCount ;
 
       const int32_t buffer_bound =
          Kokkos::Impl::concurrent_bitset::buffer_bound( m_maxConcurrency );

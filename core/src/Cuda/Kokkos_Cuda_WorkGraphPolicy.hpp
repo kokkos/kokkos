@@ -103,7 +103,7 @@ public:
     const dim3 block( 1 , Kokkos::Impl::CudaTraits::WarpSize , warps_per_block );
     const int shared = 0 ;
 
-    Kokkos::Impl::CudaParallelLaunch<Self>(*this, grid, block, shared, Cuda().impl_internal_space_instance() );
+    Kokkos::Impl::CudaParallelLaunch<Self>(*this, grid, block, shared, Cuda().impl_internal_space_instance() , false );
   }
 
   inline
