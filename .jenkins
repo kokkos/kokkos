@@ -69,7 +69,7 @@ pipeline {
                         }
                     }
                     environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --with-cuda --with-cuda-options=enable_lambda,rdc,force_uvm'
+                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --with-cuda --with-cuda-options=enable_lambda,force_uvm'
                     }
                     steps {
                         sh 'ln -s /usr/bin/ccache /usr/local/bin/g++'
