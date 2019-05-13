@@ -13,6 +13,10 @@
 #include <Kokkos_MemoryTraits.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <map>
+
 namespace Kokkos {
 
 namespace Experimental {
@@ -53,12 +57,28 @@ public:
    virtual ~KokkosIOAccessor() {
    }
 
+   static std::string resolve_path( std::string path, std::string default_ );
    static void transfer_from_host ( void * dst, const void * src, size_t size_ );
    static void transfer_to_host ( void * dst, const void * src, size_t size_ );
 };
 
 struct KokkosIOInterface : Kokkos::Impl::SharedAllocationHeader {
    KokkosIOAccessor * pAcc;
+};
+
+
+class KokkosIOConfigurationManager {
+public:
+   std::map<std::string, boost::property_tree::ptree> m_config_list;
+   void load_configuration ( std::string path );
+   boost::property_tree::ptree get_config( std::string name ) {
+      return m_config_list[name];
+   }
+
+   static KokkosIOConfigurationManager * get_instance();
+
+   static KokkosIOConfigurationManager * m_Inst;
+
 };
 
 } // Experimental

@@ -6,6 +6,20 @@ namespace Kokkos {
 
 namespace Experimental {
 
+   std::string KokkosIOAccessor::resolve_path( std::string path, std::string default_ ) {
+
+      std::string sFullPath = default_;
+      size_t pos = path.find("/");
+      if ( pos >= 0 && pos < path.length() ) {    // only use the default if there is no path info in the path...
+         sFullPath = path;
+      } else {
+         sFullPath += (std::string)"/";
+         sFullPath += path;
+      }
+
+      return sFullPath;
+
+   }
 
    // Copy from host memory space to designated IO buffer (dst is an instance of KokkosIOAccessor offset by SharedAllocationHeader)
    //                                                      src is the data() pointer from the souce view.
@@ -26,21 +40,45 @@ namespace Experimental {
    void KokkosIOAccessor::transfer_to_host ( void * dst, const void * src, size_t size_ ) {
 
       const Kokkos::Impl::SharedAllocationHeader * pData = reinterpret_cast<const Kokkos::Impl::SharedAllocationHeader*>(src);
-      if (pData != nullptr) {
-         const KokkosIOInterface * pDataII = reinterpret_cast<const KokkosIOInterface*>(pData-1);
-         if ( pDataII != nullptr) {
-            Kokkos::Experimental::KokkosIOAccessor * pAcc = pDataII->pAcc;
-            if (pAcc) {
-               // printf("calling read: %08x, %08x, %ld \n", (unsigned long)pAcc,  (unsigned long)dst, size_ );
-               pAcc->ReadFile( dst, size_ );
-            }
-         } else {
-            printf("IOInterface src is empty!!!\n");
-         }
-      } else {
-         printf("Allocation header for src is empty!!!\n");
+      const KokkosIOInterface * pDataII = reinterpret_cast<const KokkosIOInterface*>(pData-1);
+      Kokkos::Experimental::KokkosIOAccessor * pAcc = pDataII->pAcc;
+      if (pAcc) {
+         pAcc->ReadFile( dst, size_ );
       }
    }
+
+   void KokkosIOConfigurationManager::load_configuration ( std::string path ) {
+
+      if (path.length() == 0 ) {
+         printf("WARNING:KOKKOS_IO_CONFIG not set. loading default setting for HDF5 files access. \n");
+         return;
+      }
+
+      boost::property_tree::ptree pt;
+      boost::property_tree::json_parser::read_json( path, pt );
+
+      for (auto & ar: pt) {         
+         boost::property_tree::ptree ptII = ar.second;
+         std::string name = ptII.get<std::string>("name");
+         m_config_list[name] = ptII;
+      }
+
+   }
+
+   KokkosIOConfigurationManager * KokkosIOConfigurationManager::get_instance() {
+      if (KokkosIOConfigurationManager::m_Inst == nullptr) {
+         KokkosIOConfigurationManager::m_Inst = new KokkosIOConfigurationManager;
+         std::string path;
+         char * config = std::getenv( "KOKKOS_IO_CONFIG" );
+         if (config != nullptr)
+            path = config;
+         printf("loading IOConfigurationManager: %s\n", path.c_str());
+         KokkosIOConfigurationManager::m_Inst->load_configuration(path);
+      }
+      return KokkosIOConfigurationManager::m_Inst;
+   }
+
+   KokkosIOConfigurationManager * KokkosIOConfigurationManager::m_Inst = nullptr;
 
 
 } // Experimental

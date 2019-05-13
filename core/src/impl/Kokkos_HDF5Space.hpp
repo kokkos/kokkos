@@ -19,67 +19,218 @@ namespace Kokkos {
 
 namespace Experimental {
 
+class KokkosHDF5ConfigurationManager  {
+public:
+   class OperationPrimitive {
+    public:
+      enum { OPP_INVALID = 0,
+             OPP_ADD = 1,
+             OPP_SUB = 2,
+             OPP_DIV = 3,
+             OPP_MUL = 4,
+             OPP_MOD = 5 };
+      int type;
+      size_t val;
+      int operation;
+      OperationPrimitive * m_left;
+      OperationPrimitive * m_right;
+
+      int which() { return type; }
+
+      size_t get_val() { return val; }
+      int get_opp() { return operation; }
+
+      OperationPrimitive(  ) : type(0), val(0), operation(0), m_left(nullptr), m_right(nullptr) {}
+      OperationPrimitive( size_t val_ ) : type(1), val(val_), operation(0), m_left(nullptr), m_right(nullptr) {}
+      OperationPrimitive( int op_, OperationPrimitive * left_ ) : type(2), val(-1), operation(op_), m_left(left_)  {}
+
+      OperationPrimitive( const OperationPrimitive & rhs ) = default;
+      OperationPrimitive( OperationPrimitive && rhs ) = default;
+      OperationPrimitive & operator = ( OperationPrimitive && ) = default;
+      OperationPrimitive & operator = ( const OperationPrimitive & ) = default;
+
+      OperationPrimitive( OperationPrimitive * ptr_ ) : type(ptr_->type), val(ptr_->val), operation(ptr_->operation), 
+                                                              m_left(ptr_->m_left), m_right(ptr_->m_right) {}
+
+      ~OperationPrimitive() {
+         if (m_left != nullptr) delete m_left;
+         if (m_right != nullptr) delete m_right;
+      }
+
+      void set_right_opp( OperationPrimitive * rhs) {
+         m_right = rhs;
+      }
+
+      size_t evaluate () {
+         switch ( which() ) {
+            case 0:
+               return 0;
+            case 1:
+               return val;
+            case 2:
+               return per_opp( m_left != nullptr ? m_left->evaluate() : 0 , 
+                               m_right != nullptr ? m_right->evaluate() : 0 );
+            default:
+               return 0;
+         }
+         return 0;
+      }
+
+      size_t per_opp ( size_t left, size_t right ) {
+          switch ( get_opp() ) {
+             case 0:
+                return 0;
+             case 1:
+                return left + right;
+             case 2:
+                return left - right;
+             case 3:
+                return left / right;
+             case 4:
+                return left * right;
+             case 5:
+                return left % right;
+             default:
+                return 0;
+          }
+          return 0;
+      }
+
+      static OperationPrimitive * parse_operator( const std::string & val, OperationPrimitive * left ) {
+         if ( val == "+" ) {
+            return new OperationPrimitive(1,left);
+         } else if ( val == "-" ) {
+            return new OperationPrimitive(2,left);
+         } else if ( val == "/" ) {
+            return new OperationPrimitive(3,left);
+         } else if ( val == "*" ) {
+            return new OperationPrimitive(4,left);
+         } else if ( val == "%" ) {
+            return new OperationPrimitive(5,left);
+         }
+         return new OperationPrimitive(0,left);
+      }
+   };
+
+   enum { LAYOUT_DEFAULT = 0,
+          LAYOUT_CONTIGUOUS = 1,
+          LAYOUT_CHUNK = 2,
+          LAYOUT_REGULAR = 3,
+          LAYOUT_PATTERN = 4 };
+
+   enum { VAR_OFFSET = 1,
+          VAR_COUNT = 2,
+          VAR_BLOCK = 3, 
+          VAR_STRIDE =4 };
+
+   int m_layout;
+   boost::property_tree::ptree m_config;
+
+   OperationPrimitive * resolve_variable( std::string data, std::map<const std::string, size_t> & var_map );
+   OperationPrimitive * resolve_arithmetic( std::string data, std::map<const std::string, size_t> & var_map );
+
+   int get_layout() { return m_layout; }
+
+   boost::property_tree::ptree * get_config() { return &m_config; }
+
+   void set_param_list( int data_scope, std::string var_name, hsize_t var [], std::map<const std::string, size_t> & var_map );
+
+   KokkosHDF5ConfigurationManager( const boost::property_tree::ptree & config_ ) : m_config(config_) { }
+};
+
 class KokkosHDF5Accessor : public KokkosIOAccessor {
 
 
 public:
-   std::string data_set;
-   size_t rank;
-   size_t chunk_size;
-   size_t file_offset;
-   hid_t m_fid;    
-   hid_t m_did;    
-   hid_t m_mid;    
+   std::string data_set;  // name of the dataset
+   size_t rank;           // rank of the dataset
+   hsize_t file_count[4];  // maximum dimensions = 4, default will be 1
+   hsize_t file_offset[4]; // offset of this instance into the file/dataset
+   hsize_t file_stride[4]; // stride defining data pattern
+   hsize_t file_block[4];  // size of the blocks/chunks moved from source view to file
+   hsize_t data_extents[4];// dimensions of the dataset
+   hsize_t local_extents[4];// dimensions of the local memory set
+   hid_t m_fid;           // file space handle
+   hid_t m_did;           // data space handle
+   hid_t m_mid;           // memory space handle
+   size_t mpi_size;
+   size_t mpi_rank;
+   int m_layout;
+   bool m_is_initialized;
 
    KokkosHDF5Accessor() : KokkosIOAccessor(),
                           data_set("default_dataset"),
+                          rank(1),
+                          file_count{1,1,1,1},
+                          file_offset{0,0,0,0},
+                          file_stride{1,0,0,0},
+                          file_block{1,0,0,0},
                           m_fid(0),
                           m_did(0),
-                          m_mid(0)  {
-      rank = 1;
-      chunk_size = 65536;
-      file_offset = 0;
-   }
+                          m_mid(0),
+                          mpi_size(1),
+                          mpi_rank(0),
+                          m_layout(KokkosHDF5ConfigurationManager::LAYOUT_DEFAULT),
+                          m_is_initialized(false)  { }
+
    KokkosHDF5Accessor(const size_t size, const std::string & path ) : KokkosIOAccessor(size, path, true),
                                                                       data_set("default_dataset"),
+                                                                      rank(1),
+                                                                      file_count{1,1,1,1},
+                                                                      file_offset{0,0,0,0},
+                                                                      file_stride{1,0,0,0},
+                                                                      file_block{size,0,0,0},
                                                                       m_fid(0),
                                                                       m_did(0),
-                                                                      m_mid(0)  {
-      rank = 1;
-      chunk_size = 0;
-      file_offset = 0;
-   }
+                                                                      m_mid(0),
+                                                                      mpi_size(1),
+                                                                      mpi_rank(0),
+                                                                      m_layout(KokkosHDF5ConfigurationManager::LAYOUT_DEFAULT),
+                                                                      m_is_initialized(true)  { }
 
    KokkosHDF5Accessor( const KokkosHDF5Accessor & rhs ) = default;
    KokkosHDF5Accessor( KokkosHDF5Accessor && rhs ) = default;
    KokkosHDF5Accessor & operator = ( KokkosHDF5Accessor && ) = default;
    KokkosHDF5Accessor & operator = ( const KokkosHDF5Accessor & ) = default;
-   KokkosHDF5Accessor( void* ptr ) {
-      KokkosHDF5Accessor * pAcc = static_cast<KokkosHDF5Accessor*>(ptr);
-      if (pAcc) {
-         data_size = pAcc->data_size;
-         file_path = pAcc->file_path;
-         rank = pAcc->rank;
-         chunk_size = pAcc->chunk_size;
+   KokkosHDF5Accessor( const KokkosHDF5Accessor & cp_, const size_t size  ) :  m_fid(0), m_did(0), m_mid(0) {
+      data_size = size;
+      file_path = cp_.file_path;
+      data_set = cp_.data_set;
+      rank = cp_.rank;
+      mpi_size = cp_.mpi_size;
+      mpi_rank = cp_.mpi_rank;
+      m_layout = cp_.m_layout;
+      for (int i = 0; i < 4; i++) {
+         file_count[i] = cp_.file_count[i];
+         file_offset[i] = cp_.file_offset[i];
+         file_stride[i] = cp_.file_stride[i];
+         file_block[i] = cp_.file_block[i];
+         data_extents[i] = cp_.data_extents[i];
+         local_extents[i] = cp_.local_extents[i];
       }
+      // need to re-initialize 
+      if (data_size != cp_.data_size) {
+         if (m_layout == KokkosHDF5ConfigurationManager::LAYOUT_DEFAULT) {
+            initialize( size, file_path, data_set ); 
+         } else {
+            initialize( size, file_path, KokkosHDF5ConfigurationManager ( 
+                                 KokkosIOConfigurationManager::get_instance()->get_config(file_path) ) );
+         }
+      }
+      m_is_initialized = true;
    } 
 
-   KokkosHDF5Accessor( void* ptr, const size_t offset ) {
-      KokkosHDF5Accessor * pAcc = static_cast<KokkosHDF5Accessor*>(ptr);
-      if (pAcc) {
-         data_size = pAcc->data_size;
-         file_path = pAcc->file_path;
-         rank = pAcc->rank;
-         chunk_size = pAcc->chunk_size;
-         file_offset = offset;
-      }
-   }
+   int initialize( const size_t size_,
+                   const std::string & filepath, 
+                   KokkosHDF5ConfigurationManager config_ );
 
-   int initialize( const std::string & filepath, 
-               const std::string & dataset_name );
+   int initialize( const size_t size_,
+                   const std::string & filepath, 
+                   const std::string & dataset_name );
 
    int open_file();
    void close_file();
+   bool is_initialized() { return m_is_initialized; }
 
    virtual size_t ReadFile_impl(void * dest, const size_t dest_size);
    
@@ -157,6 +308,8 @@ public:
 
   static void set_default_path( const std::string path );
   static std::string s_default_path;
+
+  static std::map<const std::string, KokkosHDF5Accessor> m_accessor_map;
 
 private:
   static constexpr const char* m_name = "HDF5";
