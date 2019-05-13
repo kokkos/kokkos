@@ -122,6 +122,56 @@ struct TestCheckPointView {
 
 };
 
+
+template < typename ExecSpace, typename CpFileSpace >
+struct TestFSConfig {
+
+   typedef typename ExecSpace::memory_space     memory_space;
+
+   static void test_view_chkpt(std::string file_name, int dim0, int dim1) {
+
+      typedef Kokkos::View<char**,memory_space> Rank2ViewType;
+      Rank2ViewType view_2;
+      view_2 = Rank2ViewType("memory_view_2", dim0, dim1);
+      typename Rank2ViewType::HostMirror h_view_2 = Kokkos::create_mirror(view_2); 
+
+      typedef CpFileSpace cp_file_space_type;
+      cp_file_space_type::set_default_path("./data");
+      Kokkos::View<char**,cp_file_space_type> cp_view(file_name, dim0, dim1);
+
+      Kokkos::parallel_for (dim0, KOKKOS_LAMBDA (const int i) {
+         for (int j = 0; j < dim1; j++) {
+            view_2(i,j) = i * dim0 + j;
+         }
+      });
+      Kokkos::deep_copy( h_view_2, view_2 );
+
+      // host_space to ExecSpace
+      Kokkos::deep_copy( cp_view, h_view_2 );
+      Kokkos::fence();
+
+      Kokkos::parallel_for (dim0, KOKKOS_LAMBDA (const int i) {
+         for (int j = 0; j < dim1; j++) {
+             view_2(i,j) = 0;
+         }
+      });
+      Kokkos::deep_copy( h_view_2, view_2 );
+
+      // ExecSpace to host_space 
+      Kokkos::deep_copy( h_view_2, cp_view );
+      Kokkos::fence();
+
+      for (int i = 0; i < dim0; i++) {
+         for (int j = 0; j < dim1; j++) {
+            ASSERT_EQ(h_view_2(i,j), i * dim0 + j);
+         }
+      }
+
+   }
+
+};
+
+
 template < typename ExecSpace, typename CpFileSpace >
 struct TestFSDeepCopy {
 
@@ -185,6 +235,7 @@ TEST_F( TEST_CATEGORY , view_checkpoint_hdf5 ) {
   remove("./data/cp_view.hdf");
   TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("./data/cp_view.hdf",10000,10000);
   remove("./data/cp_view.hdf");
+  TestFSConfig< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("1D_regular_test",10,10);
 
   mkdir("./data/hdf5", 0777);
   remove("./data/hdf5/view_A");

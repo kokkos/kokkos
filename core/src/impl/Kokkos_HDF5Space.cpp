@@ -14,6 +14,7 @@ namespace Experimental {
                       std::string data, std::map<const std::string, size_t> & var_map ) {
    
       size_t val = var_map[data];
+      printf("variable [%s] returned %d\n", data.c_str(), val);
       return new KokkosHDF5ConfigurationManager::OperationPrimitive(val);
    }
 
@@ -22,6 +23,7 @@ namespace Experimental {
                                                        std::map<const std::string, size_t> & var_map ) {
       KokkosHDF5ConfigurationManager::OperationPrimitive * lhs_op = nullptr;
       for ( size_t n = 0; n< data.length(); ) {
+         printf(" resolve_arithmetic: %d \n", n);
          char c = data.at(n);
          if ( c >= 0x30 && c <= 0x39 ) {
             std::string cur_num = "";
@@ -35,18 +37,27 @@ namespace Experimental {
             }
             lhs_op = new KokkosHDF5ConfigurationManager::OperationPrimitive((std::atoi(cur_num.c_str())));
          } else if (c == '(') {
-            size_t end_pos = data.find_first_of(n,')');
+            size_t end_pos = data.find_first_of(')',n);
             if (end_pos >= 0 && end_pos < data.length()) {
-               lhs_op = resolve_arithmetic ( data.substr(n+1,end_pos - n), var_map );
+               printf("calling resolving arithmetic: %s \n", data.substr(n+1,end_pos-n-1).c_str());
+               lhs_op = resolve_arithmetic ( data.substr(n+1,end_pos-n-1), var_map );
+            } else {
+               printf("syntax error in arithmetic: %s, at %d \n", data.c_str(), n);
+               return nullptr;
             }
             n = end_pos+1;
          } else if (c == '{') {
-            size_t end_pos = data.find_first_of(n,')');
+            size_t end_pos = data.find_first_of('}',n);
             if (end_pos >= 0 && end_pos < data.length()) {
-               lhs_op = resolve_variable( data.substr(n+1,end_pos-n), var_map );
+               printf("resolving variable: %s \n", data.substr(n+1,end_pos-n-1).c_str());
+               lhs_op = resolve_variable( data.substr(n+1,end_pos-n-1), var_map );
+            } else {
+               printf("syntax error in variable name: %s, at %d \n", data.c_str(), n);
+               return nullptr;
             }
             n = end_pos+1;
          } else {
+            printf("parsing rhs: %s \n", data.substr(n,1).c_str());
             KokkosHDF5ConfigurationManager::OperationPrimitive * op = 
                         KokkosHDF5ConfigurationManager::OperationPrimitive::parse_operator(data.substr(n,1),lhs_op);
             n++;
@@ -59,11 +70,14 @@ namespace Experimental {
    
    }
 
-   void KokkosHDF5ConfigurationManager::set_param_list( int data_scope, std::string param_name, hsize_t output [], std::map<const std::string, size_t> & var_map ) {
-      for ( auto & param_list : m_config ) {
+   void KokkosHDF5ConfigurationManager::set_param_list( boost::property_tree::ptree l_config, int data_scope, 
+                       std::string param_name, hsize_t output [], std::map<const std::string, size_t> & var_map ) {
+      printf("set_param_list: %s \n", param_name.c_str());
+      for ( auto & param_list : l_config ) {
           if ( param_list.first == param_name ) {
               int n = 0;    
               for (auto & param : param_list.second ) {
+                 printf("processing param list: %s\n", param.second.get_value<std::string>().c_str());
                  KokkosHDF5ConfigurationManager::OperationPrimitive * opp = resolve_arithmetic( param.second.get_value<std::string>(), var_map ); 
                  if (opp != nullptr) {
                      output[n++] = opp->evaluate();
@@ -93,28 +107,37 @@ namespace Experimental {
    int KokkosHDF5Accessor::initialize( const size_t size_, const std::string & filepath,
                                        KokkosHDF5ConfigurationManager config_ ) { 
 
+       for (int i = 0; i < 4; i++) {
+         file_count[i] = 0;
+         file_offset[i] = 0;
+         file_stride[i] = 0;
+         file_block[i] = 0;
+         data_extents[i] = 0;
+         local_extents[i] = 0;
+       }
+       boost::property_tree::ptree l_config = config_.get_config()->get_child("Layout_Config");
        file_path = filepath;
        data_size = size_;
        std::map<const std::string, size_t> var_list;
        var_list["DATA_SIZE"] = data_size;
        var_list["MPI_SIZE"] = mpi_size;
        var_list["MPI_RANK"] = mpi_rank;
-       config_.set_param_list( 0, "data_extents", data_extents, var_list );
+       config_.set_param_list( l_config, 0, "data_extents", data_extents, var_list );
        var_list["DATA_EXTENTS_1"] = (size_t)data_extents[0];
        var_list["DATA_EXTENTS_2"] = (size_t)data_extents[1];
        var_list["DATA_EXTENTS_3"] = (size_t)data_extents[2];
        var_list["DATA_EXTENTS_4"] = (size_t)data_extents[3];
-       config_.set_param_list( 0, "local_extents", local_extents, var_list );
+       config_.set_param_list( l_config, 0, "local_extents", local_extents, var_list );
        var_list["LOCAL_EXTENTS_1"] = (size_t)local_extents[0];
        var_list["LOCAL_EXTENTS_2"] = (size_t)local_extents[1];
        var_list["LOCAL_EXTENTS_3"] = (size_t)local_extents[2];
        var_list["LOCAL_EXTENTS_4"] = (size_t)local_extents[3];
-       config_.set_param_list( 0, "count", file_count, var_list );
-       config_.set_param_list( 0, "offset", file_offset, var_list );
-       config_.set_param_list( 0, "stride", file_stride, var_list );
-       config_.set_param_list( 0, "block", file_block, var_list );
-       rank = config_.get_config()->get<int>("rank");
-       data_set = config_.get_config()->get<std::string>("data_set");
+       config_.set_param_list( l_config, 0, "count", file_count, var_list );
+       config_.set_param_list( l_config, 0, "offset", file_offset, var_list );
+       config_.set_param_list( l_config, 0, "stride", file_stride, var_list );
+       config_.set_param_list( l_config, 0, "block", file_block, var_list );
+       rank = l_config.get<int>("rank");
+       data_set = l_config.get<std::string>("data_set");
        m_layout = config_.get_layout();
        m_is_initialized = true;
    }
@@ -264,8 +287,9 @@ namespace Experimental {
          for (int i = 0; i < file_count[0]; i++) {
             for (int j = 0; j < file_count[1]; j++) {
                for (int k = 0; k < file_count[2]; k++) {
-                  for (int l = 0; l < file_count[3]; l++) {
+                  for (int l = 0; l < file_count[3]; l++) {           
                      size_t offset_ = i*file_block[0] + j*file_block[1] + k*file_block[2] + l*file_block[3];
+                     printf("write file: %d, %d, %d, %d -- %d \n", i, j, k, l, offset_);
                      hid_t pid = H5Pcreate(H5P_DATASET_XFER);
                      status = H5Dwrite(m_did, H5T_NATIVE_CHAR, m_mid, fsid, pid, &ptr[offset_]);
                      if (status == 0) {

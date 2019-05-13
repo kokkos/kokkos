@@ -133,7 +133,8 @@ public:
 
    boost::property_tree::ptree * get_config() { return &m_config; }
 
-   void set_param_list( int data_scope, std::string var_name, hsize_t var [], std::map<const std::string, size_t> & var_map );
+   void set_param_list( boost::property_tree::ptree l_config, int data_scope, std::string var_name, 
+                        hsize_t var [], std::map<const std::string, size_t> & var_map );
 
    KokkosHDF5ConfigurationManager( const boost::property_tree::ptree & config_ ) : m_config(config_) { }
 };
