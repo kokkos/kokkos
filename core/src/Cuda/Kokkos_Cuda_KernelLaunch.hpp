@@ -240,14 +240,15 @@ struct CudaParallelLaunch< DriverType
                     , const dim3       & grid
                     , const dim3       & block
                     , const int          shmem
-                    , const CudaInternal* cuda_instance )
+                    , const CudaInternal* cuda_instance
+                    , const bool prefer_shmem )
   {
     if ( (grid.x != 0) && ( ( block.x * block.y * block.z ) != 0 ) ) {
 
       // Fence before changing settings and copying closure
       Kokkos::Cuda::fence();
 
-      if ( CudaTraits::SharedMemoryCapacity < shmem ) {
+      if ( cuda_instance->m_maxShmemPerBlock < shmem ) {
         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
       }
       #ifndef KOKKOS_ARCH_KEPLER
@@ -257,7 +258,7 @@ struct CudaParallelLaunch< DriverType
           cudaFuncSetCacheConfig
             ( cuda_parallel_launch_constant_memory
                 < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >
-            , ( shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1 )
+            , ( prefer_shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1 )
             ) );
       }
       #endif
@@ -279,6 +280,13 @@ struct CudaParallelLaunch< DriverType
 #endif
     }
   }
+
+  static cudaFuncAttributes get_cuda_func_attributes() {
+    cudaFuncAttributes attr;
+    cudaFuncGetAttributes(&attr,cuda_parallel_launch_constant_memory
+            < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >);
+    return attr;
+  }
 };
 
 template < class DriverType>
@@ -292,14 +300,15 @@ struct CudaParallelLaunch< DriverType
                     , const dim3       & grid
                     , const dim3       & block
                     , const int          shmem
-                    , const CudaInternal* cuda_instance )
+                    , const CudaInternal* cuda_instance
+                    , const bool prefer_shmem )
   {
     if ( (grid.x != 0) && ( ( block.x * block.y * block.z ) != 0 ) ) {
 
       // Fence before changing settings and copying closure
       Kokkos::Cuda::fence();
 
-      if ( CudaTraits::SharedMemoryCapacity < shmem ) {
+      if ( cuda_instance->m_maxShmemPerBlock < shmem ) {
         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
       }
       #ifndef KOKKOS_ARCH_KEPLER
@@ -308,7 +317,7 @@ struct CudaParallelLaunch< DriverType
         CUDA_SAFE_CALL(
           cudaFuncSetCacheConfig
             ( cuda_parallel_launch_constant_memory< DriverType >
-            , ( shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1 )
+            , ( prefer_shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1 )
             ) );
       }
       #endif
@@ -329,6 +338,13 @@ struct CudaParallelLaunch< DriverType
 #endif
     }
   }
+
+  static cudaFuncAttributes get_cuda_func_attributes() {
+    cudaFuncAttributes attr;
+    cudaFuncGetAttributes(&attr,cuda_parallel_launch_constant_memory
+            < DriverType >);
+    return attr;
+  }
 };
 
 template < class DriverType
@@ -345,11 +361,12 @@ struct CudaParallelLaunch< DriverType
                     , const dim3       & grid
                     , const dim3       & block
                     , const int          shmem
-                    , const CudaInternal* cuda_instance )
+                    , const CudaInternal* cuda_instance
+                    , const bool prefer_shmem )
   {
     if ( (grid.x != 0) && ( ( block.x * block.y * block.z ) != 0 ) ) {
 
-      if ( CudaTraits::SharedMemoryCapacity < shmem ) {
+      if ( cuda_instance->m_maxShmemPerBlock < shmem ) {
         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
       }
       #ifndef KOKKOS_ARCH_KEPLER
@@ -359,7 +376,7 @@ struct CudaParallelLaunch< DriverType
           cudaFuncSetCacheConfig
             ( cuda_parallel_launch_local_memory
                 < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >
-            , ( shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1 )
+            , ( prefer_shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1 )
             ) );
       }
       #endif
@@ -377,6 +394,13 @@ struct CudaParallelLaunch< DriverType
 #endif
     }
   }
+
+  static cudaFuncAttributes get_cuda_func_attributes() {
+    cudaFuncAttributes attr;
+    cudaFuncGetAttributes(&attr,cuda_parallel_launch_local_memory
+            < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >);
+    return attr;
+  }
 };
 
 template < class DriverType>
@@ -390,11 +414,12 @@ struct CudaParallelLaunch< DriverType
                     , const dim3       & grid
                     , const dim3       & block
                     , const int          shmem
-                    , const CudaInternal* cuda_instance )
+                    , const CudaInternal* cuda_instance
+                    , const bool prefer_shmem)
   {
     if ( (grid.x != 0) && ( ( block.x * block.y * block.z ) != 0 ) ) {
 
-      if ( CudaTraits::SharedMemoryCapacity < shmem ) {
+      if ( cuda_instance->m_maxShmemPerBlock < shmem ) {
         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
       }
       #ifndef KOKKOS_ARCH_KEPLER
@@ -403,7 +428,7 @@ struct CudaParallelLaunch< DriverType
         CUDA_SAFE_CALL(
           cudaFuncSetCacheConfig
             ( cuda_parallel_launch_local_memory< DriverType >
-            , ( shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1 )
+            , ( prefer_shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1 )
             ) );
       }
       #endif
@@ -420,6 +445,13 @@ struct CudaParallelLaunch< DriverType
 #endif
     }
   }
+
+  static cudaFuncAttributes get_cuda_func_attributes() {
+    cudaFuncAttributes attr;
+    cudaFuncGetAttributes(&attr,cuda_parallel_launch_local_memory
+            < DriverType >);
+    return attr;
+  }
 };
 
 template < class DriverType
@@ -435,11 +467,12 @@ struct CudaParallelLaunch< DriverType
                     , const dim3       & grid
                     , const dim3       & block
                     , const int          shmem
-                    , CudaInternal* cuda_instance )
+                    , CudaInternal* cuda_instance
+                    , const bool prefer_shmem )
   {
     if ( (grid.x != 0) && ( ( block.x * block.y * block.z ) != 0 ) ) {
 
-      if ( CudaTraits::SharedMemoryCapacity < shmem ) {
+      if ( cuda_instance->m_maxShmemPerBlock < shmem ) {
         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
       }
       #ifndef KOKKOS_ARCH_KEPLER
@@ -449,7 +482,7 @@ struct CudaParallelLaunch< DriverType
           cudaFuncSetCacheConfig
             ( cuda_parallel_launch_global_memory
                 < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >
-            , ( shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1 )
+            , ( prefer_shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1 )
             ) );
       }
       #endif
@@ -471,6 +504,13 @@ struct CudaParallelLaunch< DriverType
 #endif
     }
   }
+  static cudaFuncAttributes get_cuda_func_attributes() {
+    cudaFuncAttributes attr;
+    cudaFuncGetAttributes(&attr,cuda_parallel_launch_global_memory
+            < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >);
+    return attr;
+  }
+
 };
 
 template < class DriverType>
@@ -483,11 +523,12 @@ struct CudaParallelLaunch< DriverType
                     , const dim3       & grid
                     , const dim3       & block
                     , const int          shmem
-                    , CudaInternal* cuda_instance )
+                    , CudaInternal* cuda_instance
+                    , const bool prefer_shmem)
   {
     if ( (grid.x != 0) && ( ( block.x * block.y * block.z ) != 0 ) ) {
 
-      if ( CudaTraits::SharedMemoryCapacity < shmem ) {
+      if ( cuda_instance->m_maxShmemPerBlock < shmem ) {
         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
       }
       #ifndef KOKKOS_ARCH_KEPLER
@@ -496,7 +537,7 @@ struct CudaParallelLaunch< DriverType
         CUDA_SAFE_CALL(
           cudaFuncSetCacheConfig
             ( cuda_parallel_launch_global_memory< DriverType >
-            , ( shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1 )
+            , ( prefer_shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1 )
             ) );
       }
       #endif
@@ -515,6 +556,13 @@ struct CudaParallelLaunch< DriverType
       Kokkos::Cuda::fence();
 #endif
     }
+  }
+
+  static cudaFuncAttributes get_cuda_func_attributes() {
+    cudaFuncAttributes attr;
+    cudaFuncGetAttributes(&attr,cuda_parallel_launch_global_memory
+            < DriverType >);
+    return attr;
   }
 };
 //----------------------------------------------------------------------------
