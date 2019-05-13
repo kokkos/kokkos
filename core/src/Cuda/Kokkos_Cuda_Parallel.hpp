@@ -1834,7 +1834,7 @@ public:
       // 4 warps was 10% faster than 8 warps and 20% faster than 16 warps in unit testing
 
       unsigned n = CudaTraits::WarpSize * 4 ;
-      while ( n && m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock < cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( f , n ) ) { n >>= 1 ; }
+      while ( n && unsigned(m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock) < cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( f , n ) ) { n >>= 1 ; }
       return n ;
     }
 
@@ -2062,7 +2062,7 @@ public:
       // 4 warps was 10% faster than 8 warps and 20% faster than 16 warps in unit testing
 
       unsigned n = CudaTraits::WarpSize * 4 ;
-      while ( n && m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock < cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( f , n ) ) { n >>= 1 ; }
+      while ( n && unsigned(m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock) < cuda_single_inter_block_reduce_scan_shmem<false,FunctorType,WorkTag>( f , n ) ) { n >>= 1 ; }
       return n ;
     }
 
