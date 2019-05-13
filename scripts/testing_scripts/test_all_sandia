@@ -465,7 +465,7 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
                "gcc/9.1 $GCC91_MODULE_LIST "OpenMP,Serial" g++ $GCC_WARNING_FLAGS"
                "intel/18.0.5 $BASE_MODULE_LIST "OpenMP" icpc $INTEL_WARNING_FLAGS"
                "clang/8.0 $CLANG8_MODULE_LIST "Cuda_OpenMP,Pthread_Serial" clang++ $CLANG_WARNING_FLAGS"
-               "cuda/10.1 $CUDA_MODULE_LIST "Cuda_OpenMP" $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+               "cuda/10.1 $NVCC_MODULE_LIST "Cuda_OpenMP" $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
     )
   else
     # Format: (compiler module-list build-list exe-name warning-flag)
