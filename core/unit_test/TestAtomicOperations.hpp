@@ -113,13 +113,13 @@ T MaxAtomic( T i0, T i1 ) {
 
   f_init.data = data;
   Kokkos::parallel_for( 1, f_init );
-  execution_space::fence();
+  execution_space().fence();
 
   struct MaxFunctor< T, execution_space > f( i0, i1 );
 
   f.data = data;
   Kokkos::parallel_for( 1, f );
-  execution_space::fence();
+  execution_space().fence();
 
   Kokkos::deep_copy( h_data, data );
   T val = h_data();
@@ -191,13 +191,13 @@ T MinAtomic( T i0, T i1 ) {
 
   f_init.data = data;
   Kokkos::parallel_for( 1, f_init );
-  execution_space::fence();
+  execution_space().fence();
 
   struct MinFunctor< T, execution_space > f( i0, i1 );
 
   f.data = data;
   Kokkos::parallel_for( 1, f );
-  execution_space::fence();
+  execution_space().fence();
 
   Kokkos::deep_copy( h_data, data );
   T val = h_data();
@@ -268,13 +268,13 @@ T IncAtomic( T i0 ) {
 
   f_init.data = data;
   Kokkos::parallel_for( 1, f_init );
-  execution_space::fence();
+  execution_space().fence();
 
   struct IncFunctor< T, execution_space > f( i0 );
 
   f.data = data;
   Kokkos::parallel_for( 1, f );
-  execution_space::fence();
+  execution_space().fence();
 
   Kokkos::deep_copy( h_data, data );
   T val = h_data();
@@ -345,13 +345,13 @@ T DecAtomic( T i0 ) {
 
   f_init.data = data;
   Kokkos::parallel_for( 1, f_init );
-  execution_space::fence();
+  execution_space().fence();
 
   struct DecFunctor< T, execution_space > f( i0 );
 
   f.data = data;
   Kokkos::parallel_for( 1, f );
-  execution_space::fence();
+  execution_space().fence();
 
   Kokkos::deep_copy( h_data, data );
   T val = h_data();
@@ -423,13 +423,13 @@ T MulAtomic( T i0, T i1 ) {
 
   f_init.data = data;
   Kokkos::parallel_for( 1, f_init );
-  execution_space::fence();
+  execution_space().fence();
 
   struct MulFunctor< T, execution_space > f( i0, i1 );
 
   f.data = data;
   Kokkos::parallel_for( 1, f );
-  execution_space::fence();
+  execution_space().fence();
 
   Kokkos::deep_copy( h_data, data );
   T val = h_data();
@@ -501,13 +501,13 @@ T DivAtomic( T i0, T i1 ) {
 
   f_init.data = data;
   Kokkos::parallel_for( 1, f_init );
-  execution_space::fence();
+  execution_space().fence();
 
   struct DivFunctor< T, execution_space > f( i0, i1 );
 
   f.data = data;
   Kokkos::parallel_for( 1, f );
-  execution_space::fence();
+  execution_space().fence();
 
   Kokkos::deep_copy( h_data, data );
   T val = h_data();
@@ -581,13 +581,13 @@ T ModAtomic( T i0, T i1 ) {
 
   f_init.data = data;
   Kokkos::parallel_for( 1, f_init );
-  execution_space::fence();
+  execution_space().fence();
 
   struct ModFunctor< T, execution_space > f( i0, i1 );
 
   f.data = data;
   Kokkos::parallel_for( 1, f );
-  execution_space::fence();
+  execution_space().fence();
 
   Kokkos::deep_copy( h_data, data );
   T val = h_data();
@@ -659,13 +659,13 @@ T AndAtomic( T i0, T i1 ) {
 
   f_init.data = data;
   Kokkos::parallel_for( 1, f_init );
-  execution_space::fence();
+  execution_space().fence();
 
   struct AndFunctor< T, execution_space > f( i0, i1 );
 
   f.data = data;
   Kokkos::parallel_for( 1, f );
-  execution_space::fence();
+  execution_space().fence();
 
   Kokkos::deep_copy( h_data, data );
   T val = h_data();
@@ -737,13 +737,13 @@ T OrAtomic( T i0, T i1 ) {
 
   f_init.data = data;
   Kokkos::parallel_for( 1, f_init );
-  execution_space::fence();
+  execution_space().fence();
 
   struct OrFunctor< T, execution_space > f( i0, i1 );
 
   f.data = data;
   Kokkos::parallel_for( 1, f );
-  execution_space::fence();
+  execution_space().fence();
 
   Kokkos::deep_copy( h_data, data );
   T val = h_data();
@@ -815,13 +815,13 @@ T XorAtomic( T i0, T i1 ) {
 
   f_init.data = data;
   Kokkos::parallel_for( 1, f_init );
-  execution_space::fence();
+  execution_space().fence();
 
   struct XorFunctor< T, execution_space > f( i0, i1 );
 
   f.data = data;
   Kokkos::parallel_for( 1, f );
-  execution_space::fence();
+  execution_space().fence();
 
   Kokkos::deep_copy( h_data, data );
   T val = h_data();
@@ -893,13 +893,13 @@ T LShiftAtomic( T i0, T i1 ) {
 
   f_init.data = data;
   Kokkos::parallel_for( 1, f_init );
-  execution_space::fence();
+  execution_space().fence();
 
   struct LShiftFunctor< T, execution_space > f( i0, i1 );
 
   f.data = data;
   Kokkos::parallel_for( 1, f );
-  execution_space::fence();
+  execution_space().fence();
 
   Kokkos::deep_copy( h_data, data );
   T val = h_data();
@@ -971,13 +971,13 @@ T RShiftAtomic( T i0, T i1 ) {
 
   f_init.data = data;
   Kokkos::parallel_for( 1, f_init );
-  execution_space::fence();
+  execution_space().fence();
 
   struct RShiftFunctor< T, execution_space > f( i0, i1 );
 
   f.data = data;
   Kokkos::parallel_for( 1, f );
-  execution_space::fence();
+  execution_space().fence();
 
   Kokkos::deep_copy( h_data, data );
   T val = h_data();

@@ -997,7 +997,7 @@ public:
       CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem , m_policy.space().impl_internal_space_instance() , false ); // copy to device and execute
 
       if(!m_result_ptr_device_accessible) {
-        Cuda::fence();
+        Cuda().fence();
 
         if ( m_result_ptr ) {
           if ( m_unified_space ) {
@@ -1235,7 +1235,7 @@ public:
       CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem , m_policy.space().impl_internal_space_instance() , false ); // copy to device and execute
 
       if(!m_result_ptr_device_accessible) {
-        Cuda::fence();
+        Cuda().fence();
 
         if ( m_result_ptr ) {
           if ( m_unified_space ) {
@@ -1502,7 +1502,7 @@ public:
         CudaParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem_size_total , m_policy.space().impl_internal_space_instance() , true ); // copy to device and execute
 
         if(!m_result_ptr_device_accessible) {
-          Cuda::fence();
+          Cuda().fence();
 
           if ( m_result_ptr ) {
             if ( m_unified_space ) {

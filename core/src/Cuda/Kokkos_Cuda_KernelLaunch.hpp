@@ -246,7 +246,7 @@ struct CudaParallelLaunch< DriverType
     if ( (grid.x != 0) && ( ( block.x * block.y * block.z ) != 0 ) ) {
 
       // Fence before changing settings and copying closure
-      Kokkos::Cuda::fence();
+      Kokkos::Cuda().fence();
 
       if ( cuda_instance->m_maxShmemPerBlock < shmem ) {
         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
@@ -276,7 +276,7 @@ struct CudaParallelLaunch< DriverType
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       CUDA_SAFE_CALL( cudaGetLastError() );
-      Kokkos::Cuda::fence();
+      Kokkos::Cuda().fence();
 #endif
     }
   }
@@ -306,7 +306,7 @@ struct CudaParallelLaunch< DriverType
     if ( (grid.x != 0) && ( ( block.x * block.y * block.z ) != 0 ) ) {
 
       // Fence before changing settings and copying closure
-      Kokkos::Cuda::fence();
+      Kokkos::Cuda().fence();
 
       if ( cuda_instance->m_maxShmemPerBlock < shmem ) {
         Kokkos::Impl::throw_runtime_exception( std::string("CudaParallelLaunch FAILED: shared memory request is too large") );
@@ -334,7 +334,7 @@ struct CudaParallelLaunch< DriverType
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       CUDA_SAFE_CALL( cudaGetLastError() );
-      Kokkos::Cuda::fence();
+      Kokkos::Cuda().fence();
 #endif
     }
   }
@@ -390,7 +390,7 @@ struct CudaParallelLaunch< DriverType
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       CUDA_SAFE_CALL( cudaGetLastError() );
-      Kokkos::Cuda::fence();
+      Kokkos::Cuda().fence();
 #endif
     }
   }
@@ -441,7 +441,7 @@ struct CudaParallelLaunch< DriverType
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       CUDA_SAFE_CALL( cudaGetLastError() );
-      Kokkos::Cuda::fence();
+      Kokkos::Cuda().fence();
 #endif
     }
   }
@@ -500,7 +500,7 @@ struct CudaParallelLaunch< DriverType
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       CUDA_SAFE_CALL( cudaGetLastError() );
-      Kokkos::Cuda::fence();
+      Kokkos::Cuda().fence();
 #endif
     }
   }
@@ -553,7 +553,7 @@ struct CudaParallelLaunch< DriverType
 
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
       CUDA_SAFE_CALL( cudaGetLastError() );
-      Kokkos::Cuda::fence();
+      Kokkos::Cuda().fence();
 #endif
     }
   }

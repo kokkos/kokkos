@@ -216,7 +216,7 @@ public:
       using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
       const closure_type closure(*this, policy_type(0, m_queue.size()));
       closure.execute();
-      execution_space::fence();
+      execution_space().fence();
     }
 
     { // execute-after counts
@@ -224,7 +224,7 @@ public:
       using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
       const closure_type closure(*this,policy_type(0,m_graph.entries.size()));
       closure.execute();
-      execution_space::fence();
+      execution_space().fence();
     }
 
     { // Scheduling ready tasks
@@ -232,7 +232,7 @@ public:
       using closure_type = Kokkos::Impl::ParallelFor<self_type, policy_type>;
       const closure_type closure(*this,policy_type(0,m_graph.numRows()));
       closure.execute();
-      execution_space::fence();
+      execution_space().fence();
     }
   }
 };

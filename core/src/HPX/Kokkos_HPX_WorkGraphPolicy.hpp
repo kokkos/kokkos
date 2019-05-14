@@ -76,7 +76,7 @@ private:
 public:
   void execute() const {
     dispatch_execute_task(this);
-    Kokkos::Experimental::HPX::fence();
+    Kokkos::Experimental::HPX().fence();
   }
 
   void execute_task() const {
