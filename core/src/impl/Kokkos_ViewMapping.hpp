@@ -2320,7 +2320,7 @@ struct ViewDataHandle< Traits ,
                             &&
                             std::is_same< typename Traits::specialize , void >::value
                             &&
-                            Traits::memory_traits::Atomic
+                            Traits::memory_traits::is_atomic
                           )>::type >
 {
   typedef typename Traits::value_type  value_type ;
@@ -2349,16 +2349,16 @@ struct ViewDataHandle< Traits ,
   typename std::enable_if<(
                             std::is_same< typename Traits::specialize , void >::value
                             &&
-                            (!Traits::memory_traits::Aligned)
+                            (!Traits::memory_traits::is_aligned)
                             &&
-                            Traits::memory_traits::Restrict
+                            Traits::memory_traits::is_restrict
 #ifdef KOKKOS_ENABLE_CUDA
                             &&
                             (!( std::is_same< typename Traits::memory_space,Kokkos::CudaSpace>::value ||
                                 std::is_same< typename Traits::memory_space,Kokkos::CudaUVMSpace>::value ))
 #endif
                             &&
-                            (!Traits::memory_traits::Atomic)
+                            (!Traits::memory_traits::is_atomic)
                           )>::type >
 {
   typedef typename Traits::value_type  value_type ;
@@ -2386,16 +2386,16 @@ struct ViewDataHandle< Traits ,
   typename std::enable_if<(
                             std::is_same< typename Traits::specialize , void >::value
                             &&
-                            Traits::memory_traits::Aligned
+                            Traits::memory_traits::is_aligned
 			    &&
-                            (!Traits::memory_traits::Restrict)
+                            (!Traits::memory_traits::is_restrict)
 #ifdef KOKKOS_ENABLE_CUDA
                             &&
                             (!( std::is_same< typename Traits::memory_space,Kokkos::CudaSpace>::value ||
                                 std::is_same< typename Traits::memory_space,Kokkos::CudaUVMSpace>::value ))
 #endif
                             &&
-                            (!Traits::memory_traits::Atomic)
+                            (!Traits::memory_traits::is_atomic)
                           )>::type >
 {
   typedef typename Traits::value_type  value_type ;
@@ -2429,16 +2429,16 @@ struct ViewDataHandle< Traits ,
   typename std::enable_if<(
                             std::is_same< typename Traits::specialize , void >::value
                             &&
-                            Traits::memory_traits::Aligned
+                            Traits::memory_traits::is_aligned
                             &&
-                            Traits::memory_traits::Restrict
+                            Traits::memory_traits::is_restrict
 #ifdef KOKKOS_ENABLE_CUDA
                             &&
                             (!( std::is_same< typename Traits::memory_space,Kokkos::CudaSpace>::value ||
                                 std::is_same< typename Traits::memory_space,Kokkos::CudaUVMSpace>::value ))
 #endif
                             &&
-                            (!Traits::memory_traits::Atomic)
+                            (!Traits::memory_traits::is_atomic)
                           )>::type >
 {
   typedef typename Traits::value_type  value_type ;
