@@ -295,6 +295,9 @@ CudaInternal & CudaInternal::singleton()
   static CudaInternal self ;
   return self ;
 }
+void CudaInternal::fence() const {
+  cudaStreamSynchronize(m_stream);
+}
 
 void CudaInternal::initialize( int cuda_device_id , cudaStream_t stream )
 {
@@ -471,7 +474,7 @@ void CudaInternal::initialize( int cuda_device_id , cudaStream_t stream )
     if( Kokkos::show_warnings() && !cuda_launch_blocking() ) {
       std::cerr << "Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default" << std::endl;
       std::cerr << "                                  without setting CUDA_LAUNCH_BLOCKING=1." << std::endl;
-      std::cerr << "                                  The code must call Cuda::fence() after each kernel" << std::endl;
+      std::cerr << "                                  The code must call Cuda().fence() after each kernel" << std::endl;
       std::cerr << "                                  or will likely crash when accessing data on the host." << std::endl;
     }
 
@@ -786,10 +789,20 @@ bool Cuda::sleep() { return false ; }
 bool Cuda::wake() { return true ; }
 #endif
 
-void Cuda::fence()
+void Cuda::impl_static_fence()
 {
   Kokkos::Impl::cuda_device_synchronize();
 }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+void Cuda::fence() {
+  impl_static_fence();
+}
+#else
+void Cuda::fence() const {
+  m_space_instance->fence();
+}
+#endif
 
 const char* Cuda::name() { return "Cuda"; }
 
