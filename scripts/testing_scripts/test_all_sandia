@@ -450,7 +450,7 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
 
   BASE_MODULE_LIST="sems-env,kokkos-env,kokkos-hwloc/1.10.1/base,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
   GCC91_MODULE_LIST="sems-env,kokkos-env,kokkos-hwloc/1.10.1/base,<COMPILER_NAME>/<COMPILER_VERSION>"
-  NVCC_MODULE_LIST="sems-env,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.3.0,kokkos-hwloc/1.10.1/base"
+  NVCC_MODULE_LIST="sems-env,kokkos-env,kokkos-hwloc/1.10.1/base,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.3.0"
 
   CLANG_MODULE_LIST="sems-env,kokkos-env,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/6.1.0"
   CLANG8_MODULE_LIST="sems-env,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/10.0"
