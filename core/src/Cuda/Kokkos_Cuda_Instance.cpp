@@ -295,6 +295,9 @@ CudaInternal & CudaInternal::singleton()
   static CudaInternal self ;
   return self ;
 }
+void CudaInternal::fence() const {
+  cudaStreamSynchronize(m_stream);
+}
 
 void CudaInternal::initialize( int cuda_device_id , cudaStream_t stream )
 {
@@ -786,9 +789,21 @@ bool Cuda::sleep() { return false ; }
 bool Cuda::wake() { return true ; }
 #endif
 
-void Cuda::fence()
+void Cuda::impl_static_fence()
 {
   Kokkos::Impl::cuda_device_synchronize();
+}
+
+void Cuda::fence()
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+const
+#endif
+{
+  #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+  impl_static_fence();
+  #else
+  m_space_instance->fence();
+  #endif
 }
 
 const char* Cuda::name() { return "Cuda"; }

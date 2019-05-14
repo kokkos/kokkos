@@ -113,6 +113,8 @@ public:
 
   void print_configuration( std::ostream & ) const ;
 
+  void fence() const ;
+
   ~CudaInternal();
 
   CudaInternal()
