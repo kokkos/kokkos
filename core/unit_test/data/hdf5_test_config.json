@@ -26,12 +26,16 @@
          "data_set":"regular_test",
          "rank":1,
          "layout":"REGULAR",
-         "data_extents":["{DATA_SIZE}"],
+         "data_extents":["{DATA_SIZE}*{MPI_SIZE}"],
          "local_extents":["{DATA_SIZE}"],
-         "offset":["{MPI_RANK}*({DATA_SIZE/2})"],
+         "offset":["{MPI_RANK}*({DATA_SIZE}/2)"],
          "stride":["({DATA_SIZE}/2)*{MPI_SIZE}"],
          "count":["2","1","1","1"],
-         "block":["{DATA_SIZE}/2"]
+         "block":["{DATA_SIZE}/2"],
+         "local_offset":["0","0","0","0"],
+         "local_stride":["{DATA_SIZE}/2","1","1","1"],
+         "local_count":["2","1","1","1"],
+         "local_block":["{DATA_SIZE}/2","1","1","1"]
       }
    },
    {

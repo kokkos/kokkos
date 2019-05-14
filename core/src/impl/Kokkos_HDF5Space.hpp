@@ -118,11 +118,6 @@ public:
           LAYOUT_REGULAR = 3,
           LAYOUT_PATTERN = 4 };
 
-   enum { VAR_OFFSET = 1,
-          VAR_COUNT = 2,
-          VAR_BLOCK = 3, 
-          VAR_STRIDE =4 };
-
    int m_layout;
    boost::property_tree::ptree m_config;
 
@@ -136,7 +131,22 @@ public:
    void set_param_list( boost::property_tree::ptree l_config, int data_scope, std::string var_name, 
                         hsize_t var [], std::map<const std::string, size_t> & var_map );
 
-   KokkosHDF5ConfigurationManager( const boost::property_tree::ptree & config_ ) : m_config(config_) { }
+   KokkosHDF5ConfigurationManager( const boost::property_tree::ptree & config_ ) : m_config(config_) { 
+       boost::property_tree::ptree l_config = config_.get_child("Layout_Config");
+       std::string sLayout  = l_config.get<std::string>("layout");
+       if (sLayout == "CONTIGUOUS") {
+           m_layout = LAYOUT_CONTIGUOUS;
+       } else if (sLayout == "REGULAR") {
+           m_layout = LAYOUT_REGULAR;
+       } else if (sLayout == "CHUNK") {
+           m_layout = LAYOUT_CHUNK;
+       } else if (sLayout == "PATTERN") {
+           m_layout = LAYOUT_PATTERN;
+       } else {
+           m_layout = LAYOUT_DEFAULT;
+       }
+
+   }
 };
 
 class KokkosHDF5Accessor : public KokkosIOAccessor {
@@ -151,11 +161,15 @@ public:
    hsize_t file_block[4];  // size of the blocks/chunks moved from source view to file
    hsize_t data_extents[4];// dimensions of the dataset
    hsize_t local_extents[4];// dimensions of the local memory set
+   hsize_t local_count[4];  // maximum dimensions = 4, default will be 1
+   hsize_t local_offset[4]; // offset in local data
+   hsize_t local_stride[4]; // stride defining data pattern in local data
+   hsize_t local_block[4];  // size of the blocks/chunks moved from source
    hid_t m_fid;           // file space handle
    hid_t m_did;           // data space handle
    hid_t m_mid;           // memory space handle
-   size_t mpi_size;
-   size_t mpi_rank;
+   int mpi_size;
+   int mpi_rank;
    int m_layout;
    bool m_is_initialized;
 
@@ -164,8 +178,12 @@ public:
                           rank(1),
                           file_count{1,1,1,1},
                           file_offset{0,0,0,0},
-                          file_stride{1,0,0,0},
-                          file_block{1,0,0,0},
+                          file_stride{1,1,1,1},
+                          file_block{1,1,1,1},
+                          local_count{1,1,1,1},
+                          local_offset{0,0,0,0},
+                          local_stride{1,1,1,1},
+                          local_block{1,1,1,1},
                           m_fid(0),
                           m_did(0),
                           m_mid(0),
@@ -179,8 +197,12 @@ public:
                                                                       rank(1),
                                                                       file_count{1,1,1,1},
                                                                       file_offset{0,0,0,0},
-                                                                      file_stride{1,0,0,0},
-                                                                      file_block{size,0,0,0},
+                                                                      file_stride{1,1,1,1},
+                                                                      file_block{size,1,1,1},
+                                                                      local_count{1,1,1,1},
+                                                                      local_offset{0,0,0,0},
+                                                                      local_stride{1,1,1,1},
+                                                                      local_block{size,1,1,1},
                                                                       m_fid(0),
                                                                       m_did(0),
                                                                       m_mid(0),
@@ -208,6 +230,10 @@ public:
          file_block[i] = cp_.file_block[i];
          data_extents[i] = cp_.data_extents[i];
          local_extents[i] = cp_.local_extents[i];
+         local_count[i] = cp_.local_count[i];
+         local_offset[i] = cp_.local_offset[i];
+         local_stride[i] = cp_.local_stride[i];
+         local_block[i] = cp_.local_block[i];
       }
       // need to re-initialize 
       if (data_size != cp_.data_size) {

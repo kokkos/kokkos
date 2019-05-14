@@ -74,6 +74,14 @@ struct TestCheckPointView {
        viewAName += (std::string)"_A";
        std::string viewBName = view_prefix;
        viewBName += (std::string)"_B";
+#ifdef KOKKOS_ENABLE_HDF5_PARALLEL 
+       char buff[16];
+       int mpi_rank = 0;
+       MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+       sprintf( buff, ".%d", mpi_rank );
+       viewAName += (std::string)buff;
+       viewBName += (std::string)buff;
+#endif
 
        local_view_type A(viewAName, dim0, dim1);
        local_view_type B(viewBName, dim0, dim1);
@@ -145,6 +153,9 @@ struct TestFSConfig {
          }
       });
       Kokkos::deep_copy( h_view_2, view_2 );
+#ifdef KOKKOS_ENABLE_HDF5_PARALLEL
+      MPI_Barrier(MPI_COMM_WORLD);
+#endif
 
       // host_space to ExecSpace
       Kokkos::deep_copy( cp_view, h_view_2 );
@@ -160,6 +171,10 @@ struct TestFSConfig {
       // ExecSpace to host_space 
       Kokkos::deep_copy( h_view_2, cp_view );
       Kokkos::fence();
+
+#ifdef KOKKOS_ENABLE_HDF5_PARALLEL
+      MPI_Barrier(MPI_COMM_WORLD);
+#endif
 
       for (int i = 0; i < dim0; i++) {
          for (int j = 0; j < dim1; j++) {
@@ -229,17 +244,25 @@ struct TestFSDeepCopy {
 
 TEST_F( TEST_CATEGORY , view_checkpoint_hdf5 ) {
   mkdir("./data", 0777);
-  TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("./data/cp_view.hdf",10,10);
-  remove("./data/cp_view.hdf");
+  std::string file_name = "./data/cp_view.hdf";
+#ifdef KOKKOS_ENABLE_HDF5_PARALLEL 
+  char buff[16];
+  int mpi_rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+  sprintf( buff, ".%d", mpi_rank );
+  file_name += (std::string)buff;
+#endif
+  TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt(file_name,10,10);
+  remove("./data/cp_view.hdf*");
   TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("./data/cp_view.hdf",100,100);
-  remove("./data/cp_view.hdf");
+  remove("./data/cp_view.hdf*");
   TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("./data/cp_view.hdf",10000,10000);
-  remove("./data/cp_view.hdf");
+  remove("./data/cp_view.hdf*"); 
   TestFSConfig< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt("1D_regular_test",10,10);
 
   mkdir("./data/hdf5", 0777);
-  remove("./data/hdf5/view_A");
-  remove("./data/hdf5/view_B");
+  remove("./data/hdf5/view_A*");
+  remove("./data/hdf5/view_B*");
   for (int n = 0; n < 10; n++) {
      TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::HDF5Space >::test_view_chkpt(n, "view", 10,10,"./data/hdf5");
   }
@@ -247,6 +270,7 @@ TEST_F( TEST_CATEGORY , view_checkpoint_hdf5 ) {
 
 #endif
 
+#ifndef KOKKOS_ENABLE_HDF5_PARALLEL 
 TEST_F( TEST_CATEGORY , view_checkpoint_sio ) {
   mkdir("./data", 0777);
   TestFSDeepCopy< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt("./data//cp_view.bin",10,10);
@@ -262,6 +286,7 @@ TEST_F( TEST_CATEGORY , view_checkpoint_sio ) {
   for (int n = 0; n < 10; n++) {
      TestCheckPointView< TEST_EXECSPACE, Kokkos::Experimental::StdFileSpace >::test_view_chkpt(n, "view", 10,10,"./data/stdfile");
   }
-}
+} 
+#endif
 
 } // namespace Test

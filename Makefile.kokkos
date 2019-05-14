@@ -71,6 +71,7 @@ KOKKOS_INTERNAL_CUDA_USE_LAMBDA := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTION
 KOKKOS_INTERNAL_HPX_ENABLE_ASYNC_DISPATCH := $(call kokkos_has_string,$(KOKKOS_HPX_OPTIONS),enable_async_dispatch)
 KOKKOS_INTERNAL_ENABLE_ETI := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_eti)
 KOKKOS_INTERNAL_USE_HDF5 := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_hdf5)
+KOKKOS_INTERNAL_USE_HDF5_PARALLEL := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_hdf5_parallel)
 
 
 # Check for Kokkos Host Execution Spaces one of which must be on.
@@ -492,6 +493,9 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HDF5), 1)
   tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_HDF5")
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_HDF5_PARALLEL), 1)
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_HDF5_PARALLEL")
 endif
 
 tmp := $(call kokkos_append_header,"/* General Settings */")
