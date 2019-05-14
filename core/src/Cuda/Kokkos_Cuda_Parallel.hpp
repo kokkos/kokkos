@@ -149,7 +149,7 @@ public:
           /* for team   reduce */ + ( n + 2 ) * sizeof(double)
           /* for team   shared */ + Impl::FunctorTeamShmemSize< FunctorType >::value( functor , n );
 
-        if ( shmem_size < traits::execution_space().impl_internal_space_instance()->m_maxShmemPerBlock ) break ;
+        if ( shmem_size < typename traits::execution_space().impl_internal_space_instance()->m_maxShmemPerBlock ) break ;
       }
 
       return n ;
