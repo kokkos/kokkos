@@ -75,7 +75,7 @@ struct DynRankDimTraits {
                            , const size_t N4
                            , const size_t N5
                            , const size_t N6
-                           , const size_t N7 )
+                           , const size_t /* N7 */)
   {
     return
       (   (N6 == unspecified && N5 == unspecified && N4 == unspecified && N3 == unspecified && N2 == unspecified && N1 == unspecified && N0 == unspecified) ? 0
@@ -106,7 +106,7 @@ struct DynRankDimTraits {
   // Extra overload to match that for specialize types v2
   template <typename Layout, typename ... P>
   KOKKOS_INLINE_FUNCTION
-  static size_t computeRank( const Kokkos::Impl::ViewCtorProp<P...>& prop, const Layout& layout )
+  static size_t computeRank( const Kokkos::Impl::ViewCtorProp<P...>& /* prop */, const Layout& layout )
   {
     return computeRank(layout);
   }
@@ -155,7 +155,7 @@ struct DynRankDimTraits {
   // Extra overload to match that for specialize types
   template <typename Traits, typename ... P>
   KOKKOS_INLINE_FUNCTION
-  static typename std::enable_if< (std::is_same<typename Traits::array_layout , Kokkos::LayoutRight>::value || std::is_same<typename Traits::array_layout , Kokkos::LayoutLeft>::value || std::is_same<typename Traits::array_layout , Kokkos::LayoutStride>::value) , typename Traits::array_layout >::type createLayout( const Kokkos::Impl::ViewCtorProp<P...>& prop, const typename Traits::array_layout& layout )
+  static typename std::enable_if< (std::is_same<typename Traits::array_layout , Kokkos::LayoutRight>::value || std::is_same<typename Traits::array_layout , Kokkos::LayoutLeft>::value || std::is_same<typename Traits::array_layout , Kokkos::LayoutStride>::value) , typename Traits::array_layout >::type createLayout( const Kokkos::Impl::ViewCtorProp<P...>& /* prop */, const typename Traits::array_layout& layout )
   {
     return createLayout( layout );
   }
@@ -1070,7 +1070,7 @@ public:
       // Fence using the trait's executon space (which will be Kokkos::Cuda)
       // to avoid incomplete type errors from usng Kokkos::Cuda directly.
       if ( std::is_same< Kokkos::CudaUVMSpace , typename traits::device_type::memory_space >::value ) {
-        traits::device_type::memory_space::execution_space::fence();
+        typename traits::device_type::memory_space::execution_space().fence();
       }
 #endif
 //------------------------------------------------------------
@@ -1081,7 +1081,7 @@ public:
 //------------------------------------------------------------
 #if defined( KOKKOS_ENABLE_CUDA )
       if ( std::is_same< Kokkos::CudaUVMSpace , typename traits::device_type::memory_space >::value ) {
-        traits::device_type::memory_space::execution_space::fence();
+        typename traits::device_type::memory_space::execution_space().fence();
       }
 #endif
 //------------------------------------------------------------
@@ -1609,7 +1609,7 @@ struct DynRankViewFill {
 
       closure.execute();
 
-      execution_space::fence();
+      execution_space().fence();
     }
 };
 

@@ -191,19 +191,27 @@ public:
   }
 
   static bool in_parallel(HPX const & = HPX()) noexcept { return false; }
-  static void fence(HPX const & = HPX())
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-  {
-    if (hpx::threads::get_self_ptr() == nullptr) {
-      hpx::threads::run_as_hpx_thread([]() { impl_get_future().wait(); });
-    } else {
-      impl_get_future().wait();
+  static void impl_static_fence(HPX const & = HPX())
+  #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
+    {
+      if (hpx::threads::get_self_ptr() == nullptr) {
+        hpx::threads::run_as_hpx_thread([]() { impl_get_future().wait(); });
+      } else {
+        impl_get_future().wait();
+      }
     }
+  #else
+        noexcept {
+    }
+  #endif
+
+  #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+  static void fence(HPX const & = HPX()) {
+  #else
+  void fence() const {
+  #endif
+    impl_static_fence();
   }
-#else
-      noexcept {
-  }
-#endif
 
   static bool is_asynchronous(HPX const & = HPX()) noexcept {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)

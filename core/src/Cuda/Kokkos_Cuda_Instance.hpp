@@ -12,12 +12,6 @@ struct CudaTraits {
   enum { WarpIndexMask  = 0x001f  /* Mask for warpindex */ };
   enum { WarpIndexShift = 5       /* WarpSize == 1 << WarpShift */ };
 
-  enum { SharedMemoryBanks    = 32      /* Compute device 2.0 */ };
-  enum { SharedMemoryCapacity = 0x0C000 /* 48k shared / 16k L1 Cache */ };
-  enum { SharedMemoryUsage    = 0x04000 /* 16k shared / 48k L1 Cache */ };
-
-  enum { UpperBoundGridCount    = 65535 /* Hard upper bound */ };
-  enum { ConstantMemoryCapacity = 0x010000 /* 64k bytes */ };
   enum { ConstantMemoryUsage    = 0x008000 /* 32k bytes */ };
   enum { ConstantMemoryCache    = 0x002000 /*  8k bytes */ };
   enum { KernelArgumentLimit    = 0x001000 /*  4k bytes */ };
@@ -76,12 +70,21 @@ public:
   typedef Cuda::size_type size_type ;
 
   int         m_cudaDev ;
+
+  // Device Properties
   int         m_cudaArch ;
   unsigned    m_multiProcCount ;
   unsigned    m_maxWarpCount ;
   unsigned    m_maxBlock ;
   unsigned    m_maxSharedWords ;
   uint32_t    m_maxConcurrency ;
+  int         m_shmemPerSM ;
+  int         m_maxShmemPerBlock ;
+  int         m_regsPerSM ;
+  int         m_maxBlocksPerSM ;
+  int         m_maxThreadsPerSM ;
+  int         m_maxThreadsPerBlock ;
+
   mutable size_type   m_scratchSpaceCount ;
   mutable size_type   m_scratchFlagsCount ;
   mutable size_type   m_scratchUnifiedCount ;
@@ -110,6 +113,8 @@ public:
 
   void print_configuration( std::ostream & ) const ;
 
+  void fence() const ;
+
   ~CudaInternal();
 
   CudaInternal()
@@ -120,6 +125,12 @@ public:
     , m_maxBlock( 0 )
     , m_maxSharedWords( 0 )
     , m_maxConcurrency( 0 )
+    , m_shmemPerSM( 0 )
+    , m_maxShmemPerBlock( 0 )
+    , m_regsPerSM( 0 )
+    , m_maxBlocksPerSM( 0 )
+    , m_maxThreadsPerSM( 0 )
+    , m_maxThreadsPerBlock( 0 )
     , m_scratchSpaceCount( 0 )
     , m_scratchFlagsCount( 0 )
     , m_scratchUnifiedCount( 0 )

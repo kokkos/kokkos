@@ -186,9 +186,9 @@ struct ViewFill<ViewType,Layout,ExecSpace,1,iType,KOKKOS_IMPL_COMPILING_LIBRARY>
   typedef Kokkos::RangePolicy<ExecSpace,Kokkos::IndexType<iType>> policy_type;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_):a(a_),val(val_) {
-    ExecSpace::fence();
+    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewFill-1D",policy_type(0,a.extent(0)),*this);
-    ExecSpace::fence();
+    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -206,10 +206,10 @@ struct ViewFill<ViewType,Layout,ExecSpace,2,iType,KOKKOS_IMPL_COMPILING_LIBRARY>
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_):a(a_),val(val_) {
-    ExecSpace::fence();
+    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewFill-2D",
        policy_type({0,0},{a.extent(0),a.extent(1)}),*this);
-    ExecSpace::fence();
+    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -227,10 +227,10 @@ struct ViewFill<ViewType,Layout,ExecSpace,3,iType,KOKKOS_IMPL_COMPILING_LIBRARY>
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_):a(a_),val(val_) {
-    ExecSpace::fence();
+    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewFill-3D",
        policy_type({0,0,0},{a.extent(0),a.extent(1),a.extent(2)}),*this);
-    ExecSpace::fence();
+    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -248,10 +248,10 @@ struct ViewFill<ViewType,Layout,ExecSpace,4,iType,KOKKOS_IMPL_COMPILING_LIBRARY>
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_):a(a_),val(val_) {
-    ExecSpace::fence();
+    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewFill-4D",
        policy_type({0,0,0,0},{a.extent(0),a.extent(1),a.extent(2),a.extent(3)}),*this);
-    ExecSpace::fence();
+    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -269,10 +269,10 @@ struct ViewFill<ViewType,Layout,ExecSpace,5,iType,KOKKOS_IMPL_COMPILING_LIBRARY>
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_):a(a_),val(val_) {
-    ExecSpace::fence();
+    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewFill-5D",
        policy_type({0,0,0,0,0},{a.extent(0),a.extent(1),a.extent(2),a.extent(3),a.extent(4)}),*this);
-    ExecSpace::fence();
+    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -290,10 +290,10 @@ struct ViewFill<ViewType,Layout,ExecSpace,6,iType,KOKKOS_IMPL_COMPILING_LIBRARY>
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_):a(a_),val(val_) {
-    ExecSpace::fence();
+    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewFill-6D",
        policy_type({0,0,0,0,0,0},{a.extent(0),a.extent(1),a.extent(2),a.extent(3),a.extent(4),a.extent(5)}),*this);
-    ExecSpace::fence();
+    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -311,11 +311,11 @@ struct ViewFill<ViewType,Layout,ExecSpace,7,iType,KOKKOS_IMPL_COMPILING_LIBRARY>
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_):a(a_),val(val_) {
-    ExecSpace::fence();
+    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewFill-7D",
        policy_type({0,0,0,0,0,0},{a.extent(0),a.extent(1),a.extent(2),a.extent(3),
                                   a.extent(5),a.extent(6)}),*this);
-    ExecSpace::fence();
+    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -335,11 +335,11 @@ struct ViewFill<ViewType,Layout,ExecSpace,8,iType,KOKKOS_IMPL_COMPILING_LIBRARY>
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_):a(a_),val(val_) {
-    ExecSpace::fence();
+    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewFill-8D",
        policy_type({0,0,0,0,0,0},{a.extent(0),a.extent(1),a.extent(3),
                                   a.extent(5),a.extent(6),a.extent(7)}),*this);
-    ExecSpace::fence();
+    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -437,10 +437,10 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,1,iType,KOKKOS_IMPL_COMPILI
   typedef Kokkos::RangePolicy<ExecSpace,Kokkos::IndexType<iType>> policy_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
-    ExecSpace::fence();
+    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewCopy-1D",
        policy_type(0,a.extent(0)),*this);
-    ExecSpace::fence();
+    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -459,10 +459,10 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,2,iType,KOKKOS_IMPL_COMPILI
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
-    ExecSpace::fence();
+    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewCopy-2D",
        policy_type({0,0},{a.extent(0),a.extent(1)}),*this);
-    ExecSpace::fence();
+    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -482,10 +482,10 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,3,iType,KOKKOS_IMPL_COMPILI
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
-    ExecSpace::fence();
+    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewCopy-3D",
        policy_type({0,0,0},{a.extent(0),a.extent(1),a.extent(2)}),*this);
-    ExecSpace::fence();
+    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -505,11 +505,11 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,4,iType,KOKKOS_IMPL_COMPILI
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
-    ExecSpace::fence();
+    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewCopy-4D",
        policy_type({0,0,0,0},{a.extent(0),a.extent(1),a.extent(2),
                               a.extent(3)}),*this);
-    ExecSpace::fence();
+    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -530,11 +530,11 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,5,iType,KOKKOS_IMPL_COMPILI
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
-    ExecSpace::fence();
+    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewCopy-5D",
        policy_type({0,0,0,0,0},{a.extent(0),a.extent(1),a.extent(2),
                                 a.extent(3),a.extent(4)}),*this);
-    ExecSpace::fence();
+    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -555,11 +555,11 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,6,iType,KOKKOS_IMPL_COMPILI
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
-    ExecSpace::fence();
+    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewCopy-6D",
        policy_type({0,0,0,0,0,0},{a.extent(0),a.extent(1),a.extent(2),
                                   a.extent(3),a.extent(4),a.extent(5)}),*this);
-    ExecSpace::fence();
+    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -581,11 +581,11 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,7,iType,KOKKOS_IMPL_COMPILI
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
-    ExecSpace::fence();
+    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewCopy-7D",
        policy_type({0,0,0,0,0,0},{a.extent(0),a.extent(1),a.extent(3),
                                   a.extent(4),a.extent(5),a.extent(6)}),*this);
-    ExecSpace::fence();
+    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -607,11 +607,11 @@ struct ViewCopy<ViewTypeA,ViewTypeB,Layout,ExecSpace,8,iType,KOKKOS_IMPL_COMPILI
   typedef Kokkos::MDRangePolicy<ExecSpace,iterate_type,Kokkos::IndexType<iType>> policy_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_):a(a_),b(b_) {
-    ExecSpace::fence();
+    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewCopy-8D",
        policy_type({0,0,0,0,0,0},{a.extent(0),a.extent(1),a.extent(3),
                                   a.extent(5),a.extent(6),a.extent(7)}),*this);
-    ExecSpace::fence();
+    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -2335,10 +2335,10 @@ void deep_copy
                   typename ViewTraits<DT,DP...>::value_type >::value
     , "deep_copy requires non-const type" );
 
-  ExecSpace::fence();
+  ExecSpace().fence();
   typedef typename View<DT,DP...>::uniform_runtime_nomemspace_type ViewTypeUniform;
   Kokkos::Impl::ViewFill< ViewTypeUniform >( dst , value );
-  ExecSpace::fence();
+  ExecSpace().fence();
 }
 
 /** \brief  Deep copy into a value in Host memory from a view.  */
