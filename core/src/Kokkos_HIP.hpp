@@ -70,6 +70,9 @@
 
 namespace Kokkos {
 namespace Experimental {
+namespace Impl {
+class HIPInternal;
+}
 /// \class HIP
 /// \brief Kokkos device for multicore processors in the host memory space.
 class HIP {
@@ -118,13 +121,14 @@ public:
   static bool wake() ;
 
   /** \brief Wait until all dispatched functors complete. A noop for OpenMP. */
-  static void fence() ;
+  static void impl_static_fence() ;
+  void fence();
 
   /// \brief Print configuration information to the given output stream.
   static void print_configuration( std::ostream & , const bool detail = false );
 
   /// \brief Free any resources being consumed by the device.
-  static void finalize() ;
+  static void impl_finalize() ;
 
   /** \brief  Initialize the device.
    *
@@ -135,11 +139,11 @@ public:
     explicit SelectDevice( int id ) : hip_device_id( id+1 ) {}
   };
 
-  int          hip_device() const { return m_device ; }
+  int          hip_device() const;
 
-  static void initialize( const SelectDevice = SelectDevice());
+  static void impl_initialize( const SelectDevice = SelectDevice());
 
-  static int is_initialized();
+  static int impl_is_initialized();
 
 //  static size_type device_arch();
 
@@ -148,8 +152,10 @@ public:
 
   static int concurrency() ;
   static const char* name();
+
+  inline Impl::HIPInternal* impl_internal_space_instance() const { return m_space_instance; }
 private:
-  int          m_device ;
+  Impl::HIPInternal* m_space_instance ;
 
 };
 }
@@ -196,9 +202,8 @@ struct VerifyExecutionCanAccessMemorySpace
 
 
 
-
-
-//#include <HIP/Kokkos_HIP_Parallel.hpp>
+#include <HIP/Kokkos_HIP_Instance.hpp>
+#include <HIP/Kokkos_HIP_Parallel_Range.hpp>
 
 #endif
 #endif

@@ -244,10 +244,10 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
 #if defined( KOKKOS_ENABLE_HIP )
   if( std::is_same< Kokkos::Experimental::HIP , Kokkos::DefaultExecutionSpace >::value || 0 < use_gpu ) {
     if (use_gpu > -1) {
-      Kokkos::Experimental::HIP::initialize( Kokkos::Experimental::HIP::SelectDevice( use_gpu ));
+      Kokkos::Experimental::HIP::impl_initialize( Kokkos::Experimental::HIP::SelectDevice( use_gpu ));
     }
     else {
-      Kokkos::Experimental::HIP::initialize();
+      Kokkos::Experimental::HIP::impl_initialize();
     }
     std::cout << "Kokkos::initialize() fyi: ROCm enabled and initialized" << std::endl ;
   }
@@ -308,8 +308,8 @@ void finalize_internal( const bool all_spaces = false )
 
 #if defined( KOKKOS_ENABLE_HIP )
   if( std::is_same< Kokkos::Experimental::HIP , Kokkos::DefaultExecutionSpace >::value || all_spaces ) {
-    if(Kokkos::Experimental::HIP::is_initialized())
-      Kokkos::Experimental::HIP::finalize();
+    if(Kokkos::Experimental::HIP::impl_is_initialized())
+      Kokkos::Experimental::HIP::impl_finalize();
   }
 #endif
 #if defined( KOKKOS_ENABLE_OPENMPTARGET )
@@ -387,7 +387,7 @@ void fence_internal()
 
 #if defined( KOKKOS_ENABLE_HIP )
   if( std::is_same< Kokkos::Experimental::HIP , Kokkos::DefaultExecutionSpace >::value ) {
-    Kokkos::Experimental::HIP::fence();
+    Kokkos::Experimental::HIP().fence();
   }
 #endif
 

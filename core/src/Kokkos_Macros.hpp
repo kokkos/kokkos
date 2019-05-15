@@ -500,6 +500,7 @@
 // There is zero or one default execution space specified.
 
 #if 1 < ( ( defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA ) ? 1 : 0 ) + \
+          ( defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP ) ? 1 : 0 ) + \
           ( defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM ) ? 1 : 0 ) + \
           ( defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET ) ? 1 : 0 ) + \
           ( defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP ) ? 1 : 0 ) + \
@@ -522,6 +523,8 @@
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL )
 #elif defined( KOKKOS_ENABLE_CUDA )
   #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA
+#elif defined( KOKKOS_ENABLE_HIP )
+  #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP
 #elif defined( KOKKOS_ENABLE_ROCM )
   #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM
 #elif defined( KOKKOS_ENABLE_OPENMPTARGET )
@@ -545,7 +548,7 @@
   #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
 #elif   defined( __HCC__ ) && defined( __HCC_ACCELERATOR__ ) && defined( KOKKOS_ENABLE_ROCM )
   #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_ROCM_GPU
-#elif   defined( __HIPCC__ ) && defined( __HCC_ACCELERATOR__ ) && defined( KOKKOS_ENABLE_HIP )
+#elif   defined( __HIPCC__ ) && (defined( __HCC_ACCELERATOR__ ) || defined(__CUDA_ARCH__)) && defined( KOKKOS_ENABLE_HIP )
   #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU
 #else
   #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST

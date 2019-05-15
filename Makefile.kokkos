@@ -935,6 +935,14 @@ endif
 
 # Figure out the architecture flag for Cuda.
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
+   KOKKOS_INTERNAL_USE_CUDA_ARCH=1
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
+   ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
+     KOKKOS_INTERNAL_USE_CUDA_ARCH=1
+   endif
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_CUDA_ARCH), 1)
   ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
     KOKKOS_INTERNAL_CUDA_ARCH_FLAG=-arch
   else ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
@@ -1011,6 +1019,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
       KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)
     endif
+  endif
+  ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
+    KOKKOS_CXXFLAGS += --expt-extended-lambda  
   endif
 endif
 
