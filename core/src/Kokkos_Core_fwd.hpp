@@ -216,6 +216,8 @@ namespace Impl {
 typedef Kokkos::CudaSpace  ActiveExecutionMemorySpace;
 #elif defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_ROCM_GPU )
 typedef Kokkos::HostSpace  ActiveExecutionMemorySpace ;
+#elif defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU )
+typedef Kokkos::Experimental::HIPSpace  ActiveExecutionMemorySpace ;
 #elif defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
 typedef Kokkos::HostSpace  ActiveExecutionMemorySpace;
 #else
