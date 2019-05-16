@@ -1,3 +1,4 @@
+#include <HIP/Kokkos_HIP_Error.hpp>
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
@@ -120,16 +121,12 @@ struct HIPParallelLaunch< DriverType
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
 */
       // Invoke the driver function on the device
-      printf("%i %i %i | %i %i %i | %i\n",grid.x,grid.y,grid.z,block.x,block.y,block.z,shmem);
-      printf("Pre Launch Error: %s\n",hipGetErrorName(hipGetLastError()));
       hip_parallel_launch_local_memory< DriverType >
-          ///<<< grid , block , shmem , hip_instance->m_stream >>>( driver );
-          <<<40,256>>>(driver);
+          <<< grid , block , shmem , hip_instance->m_stream >>>( driver );
 
       Kokkos::Experimental::HIP().fence();
-      printf("Post Launch Error: %s\n",hipGetErrorName(hipGetLastError()));
 #if defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
-//      CUDA_SAFE_CALL( hipGetLastError() );
+      HIP_SAFE_CALL( hipGetLastError() );
       Kokkos::HIP().fence();
 #endif
     }

@@ -436,14 +436,32 @@ bool HIP::wake() { return true ; }
 
 void HIP::fence()
 {
-  hipDeviceSynchronize();
+  HIP_SAFE_CALL( hipDeviceSynchronize() );
 }
 
 int HIP::hip_device() const { return impl_internal_space_instance()->m_hipDev; }
 const char* HIP::name() { return "HIP"; }
 
 } // namespace Experimental
+
+namespace Impl {
+void hip_device_synchronize()
+{
+  HIP_SAFE_CALL( hipDeviceSynchronize() );
+}
+
+void hip_internal_error_throw( hipError_t e , const char * name, const char * file, const int line )
+{
+  std::ostringstream out ;
+  out << name << " error( " << hipGetErrorName(e) << "): " << hipGetErrorString(e);
+  if (file) {
+    out << " " << file << ":" << line;
+  }
+  throw_runtime_exception( out.str() );
+}
+}
 } // namespace Kokkos
+
 
 #endif // KOKKOS_ENABLE_HIP
 //----------------------------------------------------------------------------
