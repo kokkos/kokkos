@@ -302,4 +302,5 @@ template<class ExecutionSpace> struct DeepCopy<  Kokkos::HostSpace , Kokkos::Exp
 
 } // Kokkos
 
+#include <impl/Kokkos_DirectoryManagement.h>
 #endif
