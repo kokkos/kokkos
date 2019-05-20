@@ -14,14 +14,14 @@ struct DirectoryManager {
 
    template<typename D>
    inline static constexpr std::string ensure_directory_exists( const std::string dir, D d ) {
-      printf("last call creating dir: %s \n", dir.c_str());
+      //printf("last call creating dir: %s \n", dir.c_str());
       mkdir(dir.c_str(),S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
       if( errno == EEXIST || errno == 0 ) {
          std::string path = dir;
          std::stringstream iter_num;
          iter_num << d << "/";
          path += iter_num.str();
-         printf("final dir: %s \n", path.c_str());
+         //printf("final dir: %s \n", path.c_str());
          mkdir(path.c_str(),S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
          if( errno == EEXIST || errno == 0 ) {
             return path;
@@ -37,7 +37,7 @@ struct DirectoryManager {
 
    template<typename D, typename ...Dargs>
    inline static constexpr std::string ensure_directory_exists( const std::string dir, D d, Dargs... dargs) {
-      printf("recursive dir call: %s \n", dir.c_str());
+     // printf("recursive dir call: %s \n", dir.c_str());
       mkdir(dir.c_str(),S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
       if( errno == EEXIST || errno == 0 ) {
          std::string path = dir;
