@@ -403,6 +403,19 @@ public:
     return this->team_scheduler_info_storage::no_unique_address_data_member();
   }
 
+  //----------------------------------------------------------------------------
+
+  // For backwards compatibility purposes
+  KOKKOS_INLINE_FUNCTION
+  Kokkos::Impl::OptionalRef<memory_pool>
+  memory() const noexcept
+  {
+    if(m_queue != nullptr) return m_queue->get_memory_pool();
+    else return nullptr;
+  }
+
+  //----------------------------------------------------------------------------
+
   template <int TaskEnum, typename DepFutureType, typename FunctorType>
   KOKKOS_FUNCTION
   static
