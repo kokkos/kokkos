@@ -647,6 +647,94 @@ struct TestTaskSpawnWithPool {
 
 //----------------------------------------------------------------------------
 
+namespace TestTaskScheduler {
+
+template< class Scheduler >
+struct TestTaskCtorsDevice {
+  using sched_type = Scheduler;
+  using future_type = Kokkos::BasicFuture<void, sched_type>;
+  using value_type = void;
+  using Space = typename sched_type::execution_space;
+
+  int m_count;
+
+  KOKKOS_INLINE_FUNCTION
+  TestTaskCtorsDevice(const int & arg_count) : m_count(arg_count) { }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(typename sched_type::member_type& member )
+  {
+    if(m_count == 5) {
+      Kokkos::task_spawn(
+        Kokkos::TaskSingle(member.scheduler()),
+        TestTaskCtorsDevice(m_count - 1)
+      );
+    }
+    else if(m_count == 4) {
+      sched_type s;  // default construct
+      sched_type s2 = s; // copy construct from default constructed
+      s = member.scheduler(); // move assignment
+      Kokkos::task_spawn(
+        Kokkos::TaskSingle(s),
+        TestTaskCtorsDevice(m_count - 1)
+      );
+    }
+    else if(m_count == 3) {
+      sched_type s;  // default construct
+      sched_type s2 = s; // copy construct from default constructed
+      sched_type s3 = member.scheduler(); // move construct from member.scheduler();
+      Kokkos::task_spawn(
+        Kokkos::TaskSingle(s3),
+        TestTaskCtorsDevice(m_count - 1)
+      );
+    }
+    else if(m_count == 2) {
+      sched_type s;  // default construct
+      s = member.scheduler(); // assign from member.scheduler();
+      Kokkos::task_spawn(
+        Kokkos::TaskSingle(s),
+        TestTaskCtorsDevice(m_count - 1)
+      );
+    }
+    else if(m_count == 1) {
+      sched_type s = member.scheduler(); // move construct from member.scheduler();
+      sched_type s2 = s; // copy construct from s
+      Kokkos::task_spawn(
+        Kokkos::TaskSingle(s2),
+        TestTaskCtorsDevice(m_count - 1)
+      );
+    }
+  }
+
+  static void run()
+  {
+    typedef typename sched_type::memory_space memory_space;
+
+    enum { MemoryCapacity = 16000 };
+    enum { MinBlockSize   =   64 };
+    enum { MaxBlockSize   = 1024 };
+    enum { SuperBlockSize = 4096 };
+
+    sched_type sched(
+      memory_space(), MemoryCapacity, MinBlockSize, MaxBlockSize, SuperBlockSize
+    );
+
+    auto f = Kokkos::host_spawn(
+      Kokkos::TaskSingle(sched),
+      TestTaskCtorsDevice(5)
+    );
+
+    Kokkos::wait(sched);
+
+    // TODO assertions and sanity checks
+
+  }
+};
+
+}
+
+//----------------------------------------------------------------------------
+
 
 namespace TestTaskScheduler {
 
