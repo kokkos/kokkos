@@ -95,6 +95,12 @@ protected:
 
   KOKKOS_INLINE_FUNCTION
   constexpr explicit
+  ExecutionSpaceInstanceStorage()
+    : base_t()
+  { }
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr explicit
   ExecutionSpaceInstanceStorage(ExecutionSpace const& arg_execution_space)
     : base_t(arg_execution_space)
   { }
@@ -134,6 +140,11 @@ private:
   using base_t = NoUniqueAddressMemberEmulation<MemorySpace>;
 
 protected:
+
+  KOKKOS_INLINE_FUNCTION
+  MemorySpaceInstanceStorage()
+    : base_t()
+  { }
 
   KOKKOS_INLINE_FUNCTION
   MemorySpaceInstanceStorage(MemorySpace const& arg_memory_space)
@@ -293,7 +304,7 @@ public:
   //----------------------------------------------------------------------------
   // <editor-fold desc="Constructors, destructor, and assignment"> {{{2
 
-  SimpleTaskScheduler() = delete;
+  SimpleTaskScheduler() = default;
 
   explicit
   SimpleTaskScheduler(

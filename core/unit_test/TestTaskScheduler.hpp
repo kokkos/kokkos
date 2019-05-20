@@ -788,154 +788,46 @@ struct TestMultipleDependence {
 
 }
 
-namespace Test {
+//----------------------------------------------------------------------------
 
-TEST_F( TEST_CATEGORY, task_fib )
-{
-  const int N = 27 ;
-  for ( int i = 0; i < N; ++i ) {
-    TestTaskScheduler::TestFib< Kokkos::DeprecatedTaskScheduler<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 2000 );
-  }
-}
+#define KOKKOS_PP_CAT_IMPL(x, y) x ## y
+#define KOKKOS_TEST_WITH_SUFFIX(x, y) KOKKOS_PP_CAT_IMPL(x, y)
 
-TEST_F( TEST_CATEGORY, task_fib_multiple )
-{
-  const int N = 27 ;
-  for ( int i = 0; i < N; ++i ) {
-    TestTaskScheduler::TestFib< Kokkos::DeprecatedTaskSchedulerMultiple<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 8000 );
-  }
-}
+#define TEST_SCHEDULER_SUFFIX _deprecated
+#define TEST_SCHEDULER Kokkos::DeprecatedTaskScheduler<TEST_EXECSPACE>
+#include "TestTaskScheduler_single.hpp"
+#undef TEST_SCHEDULER
+#undef TEST_SCHEDULER_SUFFIX
 
-TEST_F( TEST_CATEGORY, task_fib_new )
-{
-  const int N = 27 ;
-  for ( int i = 0; i < N; ++i ) {
-    TestTaskScheduler::TestFib< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 2000 );
-  }
-}
+#define TEST_SCHEDULER_SUFFIX _deprecated_multiple
+#define TEST_SCHEDULER Kokkos::DeprecatedTaskSchedulerMultiple<TEST_EXECSPACE>
+#include "TestTaskScheduler_single.hpp"
+#undef TEST_SCHEDULER
+#undef TEST_SCHEDULER_SUFFIX
 
-TEST_F( TEST_CATEGORY, task_fib_new_multiple )
-{
-  const int N = 27 ;
-  for ( int i = 0; i < N; ++i ) {
-    TestTaskScheduler::TestFib< Kokkos::TaskSchedulerMultiple<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 64000 );
-  }
-}
 
-TEST_F( TEST_CATEGORY, task_fib_chase_lev )
-{
-  const int N = 27 ;
-  for ( int i = 0; i < N; ++i ) {
-    TestTaskScheduler::TestFib< Kokkos::ChaseLevTaskScheduler<TEST_EXECSPACE> >::run( i , ( i + 1 ) * ( i + 1 ) * 64000 );
-  }
-}
+#define TEST_SCHEDULER_SUFFIX _single
+#define TEST_SCHEDULER Kokkos::TaskScheduler<TEST_EXECSPACE>
+#include "TestTaskScheduler_single.hpp"
+#undef TEST_SCHEDULER
+#undef TEST_SCHEDULER_SUFFIX
 
-TEST_F( TEST_CATEGORY, task_depend )
-{
-  for ( int i = 0; i < 25; ++i ) {
-    TestTaskScheduler::TestTaskDependence< Kokkos::DeprecatedTaskScheduler<TEST_EXECSPACE> >::run( i );
-  }
-}
+#define TEST_SCHEDULER_SUFFIX _multiple
+#define TEST_SCHEDULER Kokkos::TaskSchedulerMultiple<TEST_EXECSPACE>
+#include "TestTaskScheduler_single.hpp"
+#undef TEST_SCHEDULER
+#undef TEST_SCHEDULER_SUFFIX
 
-TEST_F( TEST_CATEGORY, task_depend_multiple )
-{
-  for ( int i = 0; i < 25; ++i ) {
-    TestTaskScheduler::TestTaskDependence< Kokkos::DeprecatedTaskSchedulerMultiple<TEST_EXECSPACE> >::run( i );
-  }
-}
 
-TEST_F( TEST_CATEGORY, task_depend_new )
-{
-  for ( int i = 0; i < 25; ++i ) {
-    TestTaskScheduler::TestTaskDependence< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run( i );
-  }
-}
+#define TEST_SCHEDULER_SUFFIX _chase_lev
+#define TEST_SCHEDULER Kokkos::ChaseLevTaskScheduler<TEST_EXECSPACE>
+#include "TestTaskScheduler_single.hpp"
+#undef TEST_SCHEDULER
+#undef TEST_SCHEDULER_SUFFIX
 
-TEST_F( TEST_CATEGORY, task_depend_new_multiple )
-{
-  for ( int i = 0; i < 25; ++i ) {
-    TestTaskScheduler::TestTaskDependence< Kokkos::TaskSchedulerMultiple<TEST_EXECSPACE> >::run( i );
-  }
-}
 
-TEST_F( TEST_CATEGORY, task_depend_chase_lev )
-{
-  for ( int i = 0; i < 25; ++i ) {
-    TestTaskScheduler::TestTaskDependence< Kokkos::ChaseLevTaskScheduler<TEST_EXECSPACE> >::run( i );
-  }
-}
-
-TEST_F( TEST_CATEGORY, task_team )
-{
-  TestTaskScheduler::TestTaskTeam< Kokkos::DeprecatedTaskScheduler<TEST_EXECSPACE> >::run( 1000 );
-  //TestTaskScheduler::TestTaskTeamValue< TEST_EXECSPACE >::run( 1000 ); // Put back after testing.
-}
-
-TEST_F( TEST_CATEGORY, task_team_multiple )
-{
-  TestTaskScheduler::TestTaskTeam< Kokkos::DeprecatedTaskSchedulerMultiple<TEST_EXECSPACE> >::run( 1000 );
-  //TestTaskScheduler::TestTaskTeamValue< TEST_EXECSPACE >::run( 1000 ); // Put back after testing.
-}
-
-TEST_F( TEST_CATEGORY, task_team_new )
-{
-  TestTaskScheduler::TestTaskTeam< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run( 1000 );
-}
-
-TEST_F( TEST_CATEGORY, task_team_new_multiple )
-{
-  TestTaskScheduler::TestTaskTeam< Kokkos::TaskSchedulerMultiple<TEST_EXECSPACE> >::run( 1000 );
-}
-
-TEST_F( TEST_CATEGORY, task_with_mempool )
-{
-  TestTaskScheduler::TestTaskSpawnWithPool< Kokkos::DeprecatedTaskScheduler<TEST_EXECSPACE> >::run();
-}
-
-TEST_F( TEST_CATEGORY, task_with_mempool_multiple )
-{
-  TestTaskScheduler::TestTaskSpawnWithPool< Kokkos::DeprecatedTaskSchedulerMultiple<TEST_EXECSPACE> >::run();
-}
-
-TEST_F( TEST_CATEGORY, task_with_mempool_new )
-{
-  TestTaskScheduler::TestTaskSpawnWithPool< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run();
-}
-
-TEST_F( TEST_CATEGORY, task_with_mempool_new_multiple )
-{
-  TestTaskScheduler::TestTaskSpawnWithPool< Kokkos::TaskSchedulerMultiple<TEST_EXECSPACE> >::run();
-}
-
-TEST_F( TEST_CATEGORY, task_multiple_depend )
-{
-  for ( int i = 2; i < 6; ++i ) {
-    TestTaskScheduler::TestMultipleDependence< Kokkos::DeprecatedTaskScheduler<TEST_EXECSPACE> >::run( i );
-  }
-}
-
-TEST_F( TEST_CATEGORY, task_multiple_depend_new )
-{
-  for ( int i = 2; i < 6; ++i ) {
-    TestTaskScheduler::TestMultipleDependence< Kokkos::TaskScheduler<TEST_EXECSPACE> >::run( i );
-  }
-}
-
-TEST_F( TEST_CATEGORY, task_multiple_depend_new_multiple )
-{
-  for ( int i = 2; i < 6; ++i ) {
-    TestTaskScheduler::TestMultipleDependence< Kokkos::TaskSchedulerMultiple<TEST_EXECSPACE> >::run( i );
-  }
-}
-
-TEST_F( TEST_CATEGORY, task_multiple_depend_chases_lev )
-{
-  for ( int i = 2; i < 6; ++i ) {
-    TestTaskScheduler::TestMultipleDependence< Kokkos::ChaseLevTaskScheduler<TEST_EXECSPACE> >::run( i );
-  }
-}
-
-}
+#undef KOKKOS_TEST_WITH_SUFFIX
+#undef KOKKOS_PP_CAT_IMPL
 
 #endif // #if defined( KOKKOS_ENABLE_TASKDAG )
 #endif // #ifndef KOKKOS_UNITTEST_TASKSCHEDULER_HPP
