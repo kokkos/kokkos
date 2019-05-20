@@ -85,15 +85,14 @@ struct DefaultDestroy {
 
 template <class ExecutionSpace>
 class ExecutionSpaceInstanceStorage
-  : private NoUniqueAddressMemberEmulation<ExecutionSpace>
+  : private NoUniqueAddressMemberEmulation<ExecutionSpace, DefaultCtorNotOnDevice>
 {
 private:
 
-  using base_t = NoUniqueAddressMemberEmulation<ExecutionSpace>;
+  using base_t = NoUniqueAddressMemberEmulation<ExecutionSpace, DefaultCtorNotOnDevice>;
 
 protected:
 
-  KOKKOS_INLINE_FUNCTION
   constexpr explicit
   ExecutionSpaceInstanceStorage()
     : base_t()
@@ -133,15 +132,14 @@ protected:
 
 template <class MemorySpace>
 class MemorySpaceInstanceStorage
-  : private NoUniqueAddressMemberEmulation<MemorySpace>
+  : private NoUniqueAddressMemberEmulation<MemorySpace, DefaultCtorNotOnDevice>
 {
 private:
 
-  using base_t = NoUniqueAddressMemberEmulation<MemorySpace>;
+  using base_t = NoUniqueAddressMemberEmulation<MemorySpace, DefaultCtorNotOnDevice>;
 
 protected:
 
-  KOKKOS_INLINE_FUNCTION
   MemorySpaceInstanceStorage()
     : base_t()
   { }

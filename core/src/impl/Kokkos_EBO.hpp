@@ -61,25 +61,67 @@
 namespace Kokkos {
 namespace Impl {
 
-template <class T, bool>
+template <int I>
+struct NotOnDeviceCtorDisambiguator { };
+
+template <class... Args>
+struct NoCtorsNotOnDevice : std::false_type { };
+
+template <class... Args>
+struct DefaultCtorNotOnDevice : std::false_type { };
+
+template <>
+struct DefaultCtorNotOnDevice<> : std::true_type { };
+
+template <class T, bool Empty, template <class...> class CtorNotOnDevice = NoCtorsNotOnDevice>
 struct EBOBaseImpl;
 
-template <class T>
-struct EBOBaseImpl<T, true> {
+template <class T, template <class...> class CtorNotOnDevice>
+struct EBOBaseImpl<T, true, CtorNotOnDevice> {
 
+  template <
+    class _ignored=void,
+    typename std::enable_if<
+      std::is_void<_ignored>::value
+      && !CtorNotOnDevice<>::value,
+      int
+    >::type = 0
+  >
   KOKKOS_FORCEINLINE_FUNCTION
-  constexpr EBOBaseImpl() noexcept = default;
+  KOKKOS_CONSTEXPR_14
+  EBOBaseImpl() noexcept {
+    // still call the constructor
+    T();
+  }
+
+  template <
+    class _ignored=void,
+    typename std::enable_if<
+      std::is_void<_ignored>::value
+        && CtorNotOnDevice<>::value,
+      long
+    >::type = 0
+  >
+  inline
+  KOKKOS_CONSTEXPR_14
+  EBOBaseImpl() noexcept {
+    // still call the constructor
+    T();
+  }
 
   template <
     class Arg,
     class... Args,
-    int=typename std::enable_if<
-      std::is_constructible<T, Args...>::value
+    class _ignored = void,
+    typename std::enable_if<
+      std::is_void<_ignored>::value
+      && std::is_constructible<T, Arg, Args...>::value
       // Exclude this constructor from the copy/move candidates
       // (this is necessary because it has different semantics with C++14 and beyond constexpr)
-      && not std::is_base_of<EBOBaseImpl, typename std::decay<Arg>::type>::value,
+      && !std::is_base_of<EBOBaseImpl, typename std::decay<Arg>::type>::value
+      && !CtorNotOnDevice<Arg, Args...>::value,
       int
-    >::type(0)
+    >::type = 0
   >
   KOKKOS_FORCEINLINE_FUNCTION
   KOKKOS_CONSTEXPR_14
@@ -90,7 +132,33 @@ struct EBOBaseImpl<T, true> {
   ) noexcept(noexcept(T(std::forward<Args>(args)...)))
   {
     // still call the constructor
-    T(std::forward<Args>(args)...);
+    T(std::forward<Arg>(arg), std::forward<Args>(args)...);
+  }
+
+  template <
+    class Arg,
+    class... Args,
+    class _ignored=void,
+    typename std::enable_if<
+      std::is_void<_ignored>::value
+      && std::is_constructible<T, Arg, Args...>::value
+      // Exclude this constructor from the copy/move candidates
+      // (this is necessary because it has different semantics with C++14 and beyond constexpr)
+      && !std::is_base_of<EBOBaseImpl, typename std::decay<Arg>::type>::value
+      && CtorNotOnDevice<Arg, Args...>::value,
+      long
+    >::type = 0
+  >
+  inline
+  KOKKOS_CONSTEXPR_14
+  explicit
+  EBOBaseImpl(
+    Arg&& arg,
+    Args&&... args
+  ) noexcept(noexcept(T(std::forward<Arg>(arg), std::forward<Args>(args)...)))
+  {
+    // still call the constructor
+    T(std::forward<Arg>(arg), std::forward<Args>(args)...);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
@@ -140,16 +208,20 @@ struct EBOBaseImpl<T, true> {
 
 };
 
-template <class T>
-struct EBOBaseImpl<T, false> {
+template <class T, template <class...> class CTorsNotOnDevice>
+struct EBOBaseImpl<T, false, CTorsNotOnDevice> {
 
   T m_ebo_object;
 
-  template <class... Args,
-    int=typename std::enable_if<
-      std::is_constructible<T, Args...>::value,
+  template <
+    class... Args,
+    class _ignored=void,
+    typename std::enable_if<
+      std::is_void<_ignored>::value
+        && !CTorsNotOnDevice<Args...>::value
+        && std::is_constructible<T, Args...>::value,
       int
-    >::type(0)
+    >::type = 0
   >
   KOKKOS_FORCEINLINE_FUNCTION
   constexpr explicit
@@ -158,6 +230,25 @@ struct EBOBaseImpl<T, false> {
   ) noexcept(noexcept(T(std::forward<Args>(args)...)))
     : m_ebo_object(std::forward<Args>(args)...)
   { }
+
+  template <
+    class... Args,
+    class _ignored=void,
+    typename std::enable_if<
+      std::is_void<_ignored>::value
+        && CTorsNotOnDevice<Args...>::value
+        && std::is_constructible<T, Args...>::value,
+      long
+    >::type = 0
+  >
+  inline
+  constexpr explicit
+  EBOBaseImpl(
+    Args&&... args
+  ) noexcept(noexcept(T(std::forward<Args>(args)...)))
+    : m_ebo_object(std::forward<Args>(args)...)
+  { }
+
 
   // TODO @tasking @minor DSH noexcept in the right places?
 
@@ -211,13 +302,13 @@ struct EBOBaseImpl<T, false> {
  *
  * @tparam T
  */
-template <class T>
+template <class T, template <class...> class CtorsNotOnDevice=NoCtorsNotOnDevice>
 struct StandardLayoutNoUniqueAddressMemberEmulation
-  : EBOBaseImpl<T, std::is_empty<T>::value>
+  : EBOBaseImpl<T, std::is_empty<T>::value, CtorsNotOnDevice>
 {
 private:
 
-  using ebo_base_t = EBOBaseImpl<T, std::is_empty<T>::value>;
+  using ebo_base_t = EBOBaseImpl<T, std::is_empty<T>::value, CtorsNotOnDevice>;
 
 public:
 
@@ -256,13 +347,13 @@ public:
  *
  * @tparam T
  */
-template <class T>
+template <class T, template <class...> class CtorsNotOnDevice=NoCtorsNotOnDevice>
 class NoUniqueAddressMemberEmulation
-  : private StandardLayoutNoUniqueAddressMemberEmulation<T>
+  : private StandardLayoutNoUniqueAddressMemberEmulation<T, CtorsNotOnDevice>
 {
 private:
 
-  using base_t = StandardLayoutNoUniqueAddressMemberEmulation<T>;
+  using base_t = StandardLayoutNoUniqueAddressMemberEmulation<T, CtorsNotOnDevice>;
 
 public:
 

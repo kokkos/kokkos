@@ -664,35 +664,25 @@ struct TestTaskCtorsDevice {
   KOKKOS_INLINE_FUNCTION
   void operator()(typename sched_type::member_type& member )
   {
-    if(m_count == 5) {
+    // Note: Default construction on the device is not allowed
+    if(m_count == 4) {
       Kokkos::task_spawn(
         Kokkos::TaskSingle(member.scheduler()),
         TestTaskCtorsDevice(m_count - 1)
       );
     }
-    else if(m_count == 4) {
-      sched_type s;  // default construct
-      sched_type s2 = s; // copy construct from default constructed
+    else if(m_count == 3) {
+      sched_type s = member.scheduler(); // move construct
       s = member.scheduler(); // move assignment
       Kokkos::task_spawn(
         Kokkos::TaskSingle(s),
         TestTaskCtorsDevice(m_count - 1)
       );
     }
-    else if(m_count == 3) {
-      sched_type s;  // default construct
-      sched_type s2 = s; // copy construct from default constructed
+    else if(m_count == 2) {
       sched_type s3 = member.scheduler(); // move construct from member.scheduler();
       Kokkos::task_spawn(
         Kokkos::TaskSingle(s3),
-        TestTaskCtorsDevice(m_count - 1)
-      );
-    }
-    else if(m_count == 2) {
-      sched_type s;  // default construct
-      s = member.scheduler(); // assign from member.scheduler();
-      Kokkos::task_spawn(
-        Kokkos::TaskSingle(s),
         TestTaskCtorsDevice(m_count - 1)
       );
     }
@@ -708,7 +698,7 @@ struct TestTaskCtorsDevice {
 
   static void run()
   {
-    typedef typename sched_type::memory_space memory_space;
+    using memory_space = typename sched_type::memory_space;
 
     enum { MemoryCapacity = 16000 };
     enum { MinBlockSize   =   64 };
@@ -721,7 +711,7 @@ struct TestTaskCtorsDevice {
 
     auto f = Kokkos::host_spawn(
       Kokkos::TaskSingle(sched),
-      TestTaskCtorsDevice(5)
+      TestTaskCtorsDevice(4)
     );
 
     Kokkos::wait(sched);
