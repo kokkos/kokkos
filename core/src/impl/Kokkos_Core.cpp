@@ -92,7 +92,7 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
 #if defined( KOKKOS_ENABLE_THREADS ) || defined( KOKKOS_ENABLE_OPENMPTARGET )
   const int use_numa = args.num_numa;
 #endif
-#if defined( KOKKOS_ENABLE_CUDA ) || defined( KOKKOS_ENABLE_ROCM )
+#if defined( KOKKOS_ENABLE_CUDA ) || defined( KOKKOS_ENABLE_ROCM ) || defined( KOKKOS_ENABLE_SYCL)
   int use_gpu = args.device_id;
   const int ndevices = args.ndevices;
   const int skip_device = args.skip_device;
@@ -241,6 +241,16 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
   }
 #endif
 
+#if defined( KOKKOS_ENABLE_SYCL )
+  if( std::is_same< Kokkos::Experimental::SYCL , Kokkos::DefaultExecutionSpace >::value || 0 < use_gpu ) {
+    if (use_gpu > -1) {
+      Kokkos::Experimental::SYCL::impl_initialize( Kokkos::Experimental::SYCL::SelectDevice( use_gpu ));
+    }
+    else {
+      Kokkos::Experimental::SYCL::impl_initialize();
+    }
+  }
+#endif
 #if defined(KOKKOS_ENABLE_PROFILING)
     Kokkos::Profiling::initialize();
 #endif
@@ -295,6 +305,12 @@ void finalize_internal( const bool all_spaces = false )
   }
 #endif
 
+#if defined( KOKKOS_ENABLE_SYCL )
+  if( std::is_same< Kokkos::Experimental::SYCL , Kokkos::DefaultExecutionSpace >::value || all_spaces ) {
+    if(Kokkos::Experimental::SYCL::impl_is_initialized())
+      Kokkos::Experimental::SYCL::impl_finalize();
+  }
+#endif
 #if defined( KOKKOS_ENABLE_OPENMPTARGET )
   if( std::is_same< Kokkos::Experimental::OpenMPTarget , Kokkos::DefaultExecutionSpace >::value || all_spaces ) {
     if(Kokkos::Experimental::OpenMPTarget::is_initialized())
@@ -365,6 +381,12 @@ void fence_internal()
 #if defined( KOKKOS_ENABLE_ROCM )
   if( std::is_same< Kokkos::Experimental::ROCm , Kokkos::DefaultExecutionSpace >::value ) {
     Kokkos::Experimental::ROCm().fence();
+  }
+#endif
+
+#if defined( KOKKOS_ENABLE_SYCL )
+  if( std::is_same< Kokkos::Experimental::SYCL , Kokkos::DefaultExecutionSpace >::value ) {
+    Kokkos::Experimental::SYCL().fence();
   }
 #endif
 

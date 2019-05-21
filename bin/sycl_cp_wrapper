@@ -1,0 +1,57 @@
+#!/bin/bash
+FLAGS=""
+dry_run=0
+host_compiler=clang++
+
+cpp_file=""
+
+while [ $# -gt 0 ]
+do
+  case $1 in
+    #show the executed command
+    --show)
+      dry_run=1
+    ;;
+    --version)
+      compute++ --version
+      exit
+    ;;
+    -ccbin)
+      shift
+      host_compiler=$1
+    ;;
+    #Source files
+    *.cpp|*.cxx|*.cc|*.C|*.c++)
+      cpp_file="$1"
+    ;;
+    #All other arguments
+    *)
+     FLAGS+=" $1"
+    ;; 
+  esac
+  shift
+done
+
+SYCLFLAGS="-sycl -intelspirmetadata -sycl-target spir64"
+
+sycl_file_full=`echo ${cpp_file} | sed 's|\.cpp|\.sycl|g'`
+sycl_file=`echo $(basename "${sycl_file_full%.*}")`.sycl
+
+link=`echo ${#cpp_file}`
+
+if [ ${dry_run} -eq 1 ]; then
+  if [ ${link} -eq 0 ]; then
+    echo "${host_compiler} ${FLAGS}"
+  else
+    echo "compute++ ${SYCLFLAGS} ${FLAGS} ${cpp_file}"
+    echo "${host_compiler} ${FLAGS} -include ${sycl_file} ${cpp_file}"
+  fi
+else
+  if [ ${link} -eq 0 ]; then
+    ${host_compiler} ${FLAGS}
+  else
+    compute++ ${SYCLFLAGS} ${FLAGS} ${cpp_file}
+    ${host_compiler} ${FLAGS} -include ${sycl_file} ${cpp_file}
+  fi
+fi
+

@@ -47,6 +47,9 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
   CONDITIONAL_COPIES += copy-rocm
 endif
+ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
+  CONDITIONAL_COPIES += copy-sycl
+endif
 
 ifeq ($(KOKKOS_OS),CYGWIN)
   COPY_FLAG = -u
@@ -102,6 +105,10 @@ copy-hpx: mkdir
 copy-rocm: mkdir
 	mkdir -p $(PREFIX)/include/ROCm
 	$(CP) $(COPY_FLAG) $(KOKKOS_HEADERS_ROCM) $(PREFIX)/include/ROCm
+
+copy-sycl: mkdir
+	mkdir -p $(PREFIX)/include/SYCL
+	$(CP) $(COPY_FLAG) $(KOKKOS_HEADERS_SYCL) $(PREFIX)/include/SYCL
 
 install: mkdir $(CONDITIONAL_COPIES) build-lib generate_build_settings
 	$(CP) $(COPY_FLAG) $(NVCC_WRAPPER) $(PREFIX)/bin

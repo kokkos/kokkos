@@ -136,6 +136,13 @@ class ROCm ;                 ///< Execution space for ROCm GPU
 }
 #endif
 
+#if defined( KOKKOS_ENABLE_SYCL )
+namespace Experimental {
+class SYCLSpace ;            ///< Memory space on SYCL GPU
+class SYCL ;                 ///< Execution space for SYCL GPU
+}
+#endif
+
 template<class ExecutionSpace, class MemorySpace>
 struct Device;
 
@@ -154,6 +161,8 @@ namespace Kokkos {
   typedef Cuda DefaultExecutionSpace;
 #elif defined ( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET )
   typedef Experimental::OpenMPTarget DefaultExecutionSpace ;
+#elif defined ( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL )
+  typedef Experimental::SYCL DefaultExecutionSpace ;
 #elif defined ( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM )
   typedef Experimental::ROCm DefaultExecutionSpace ;
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP )
@@ -207,6 +216,8 @@ namespace Impl {
 typedef Kokkos::CudaSpace  ActiveExecutionMemorySpace;
 #elif defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_ROCM_GPU )
 typedef Kokkos::HostSpace  ActiveExecutionMemorySpace ;
+#elif defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_GPU )
+typedef Kokkos::Experimental::SYCLSpace  ActiveExecutionMemorySpace ;
 #elif defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
 typedef Kokkos::HostSpace  ActiveExecutionMemorySpace;
 #else
