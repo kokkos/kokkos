@@ -17,9 +17,11 @@ private:
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::launch_bounds LaunchBounds ;
 
+public:
   const FunctorType  m_functor ;
   const Policy       m_policy ;
 
+private:
   ParallelFor() = delete ;
   ParallelFor & operator = ( const ParallelFor & ) = delete ;
 
@@ -45,6 +47,7 @@ public:
   inline
   void execute() const
     {
+      Kokkos::Experimental::Impl::sycl_launch(*this);
     }
 
   ParallelFor( const FunctorType  & arg_functor ,

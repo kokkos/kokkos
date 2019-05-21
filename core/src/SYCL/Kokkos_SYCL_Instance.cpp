@@ -431,6 +431,7 @@ bool SYCL::wake() { return true ; }
 
 void SYCL::fence()
 {
+  m_space_instance->m_queue->wait();
   //SYCL_SAFE_CALL( syclDeviceSynchronize() );
 }
 
