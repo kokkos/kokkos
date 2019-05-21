@@ -79,87 +79,55 @@ struct EBOBaseImpl;
 template <class T, template <class...> class CtorNotOnDevice>
 struct EBOBaseImpl<T, true, CtorNotOnDevice> {
 
-  template <
-    class _ignored=void,
-    typename std::enable_if<
-      std::is_void<_ignored>::value
-      && !CtorNotOnDevice<>::value,
-      int
-    >::type = 0
-  >
+  /*
+   * Workaround for constexpr in C++11: we need to still call T(args...), but we
+   * can't do so in the body of a constexpr function (in C++11), and there's no
+   * data member to construct into. But we can construct into an argument
+   * of a delegating constructor...
+   */
+  // TODO @minor DSH the destructor gets called too early with this workaround
+  struct _constexpr_14_workaround_tag { };
+  struct _constexpr_14_workaround_no_device_tag { };
   KOKKOS_FORCEINLINE_FUNCTION
-  KOKKOS_CONSTEXPR_14
-  EBOBaseImpl() noexcept {
-    // still call the constructor
-    T();
-  }
+  constexpr EBOBaseImpl(_constexpr_14_workaround_tag, T&&) noexcept { }
+  inline constexpr EBOBaseImpl(_constexpr_14_workaround_no_device_tag, T&&) noexcept { }
 
   template <
-    class _ignored=void,
-    typename std::enable_if<
-      std::is_void<_ignored>::value
-        && CtorNotOnDevice<>::value,
-      long
-    >::type = 0
-  >
-  inline
-  KOKKOS_CONSTEXPR_14
-  EBOBaseImpl() noexcept {
-    // still call the constructor
-    T();
-  }
-
-  template <
-    class Arg,
     class... Args,
     class _ignored = void,
     typename std::enable_if<
       std::is_void<_ignored>::value
-      && std::is_constructible<T, Arg, Args...>::value
-      // Exclude this constructor from the copy/move candidates
-      // (this is necessary because it has different semantics with C++14 and beyond constexpr)
-      && !std::is_base_of<EBOBaseImpl, typename std::decay<Arg>::type>::value
-      && !CtorNotOnDevice<Arg, Args...>::value,
+      && std::is_constructible<T, Args...>::value
+      && !CtorNotOnDevice<Args...>::value,
       int
     >::type = 0
   >
   KOKKOS_FORCEINLINE_FUNCTION
-  KOKKOS_CONSTEXPR_14
-  explicit
+  constexpr explicit
   EBOBaseImpl(
-    Arg&& arg,
     Args&&... args
   ) noexcept(noexcept(T(std::forward<Args>(args)...)))
-  {
     // still call the constructor
-    T(std::forward<Arg>(arg), std::forward<Args>(args)...);
-  }
+    : EBOBaseImpl(_constexpr_14_workaround_tag{}, T(std::forward<Args>(args)...))
+  { }
 
   template <
-    class Arg,
     class... Args,
     class _ignored=void,
     typename std::enable_if<
       std::is_void<_ignored>::value
-      && std::is_constructible<T, Arg, Args...>::value
-      // Exclude this constructor from the copy/move candidates
-      // (this is necessary because it has different semantics with C++14 and beyond constexpr)
-      && !std::is_base_of<EBOBaseImpl, typename std::decay<Arg>::type>::value
-      && CtorNotOnDevice<Arg, Args...>::value,
+      && std::is_constructible<T, Args...>::value
+      && CtorNotOnDevice<Args...>::value,
       long
     >::type = 0
   >
-  inline
-  KOKKOS_CONSTEXPR_14
-  explicit
+  inline constexpr explicit
   EBOBaseImpl(
-    Arg&& arg,
     Args&&... args
-  ) noexcept(noexcept(T(std::forward<Arg>(arg), std::forward<Args>(args)...)))
-  {
+  ) noexcept(noexcept(T(std::forward<Args>(args)...)))
     // still call the constructor
-    T(std::forward<Arg>(arg), std::forward<Args>(args)...);
-  }
+    : EBOBaseImpl(_constexpr_14_workaround_no_device_tag{}, T(std::forward<Args>(args)...))
+  { }
 
   KOKKOS_FORCEINLINE_FUNCTION
   constexpr EBOBaseImpl(EBOBaseImpl const&) = default;
@@ -258,7 +226,7 @@ struct EBOBaseImpl<T, false, CTorsNotOnDevice> {
 
   KOKKOS_FORCEINLINE_FUNCTION
   constexpr
-  EBOBaseImpl(EBOBaseImpl&&) = default;
+  EBOBaseImpl(EBOBaseImpl&&) noexcept = default;
 
   KOKKOS_FORCEINLINE_FUNCTION
   KOKKOS_CONSTEXPR_14

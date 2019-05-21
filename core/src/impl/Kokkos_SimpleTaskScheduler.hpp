@@ -405,12 +405,13 @@ public:
 
   //----------------------------------------------------------------------------
 
-  // For backwards compatibility purposes
+  // For backwards compatibility purposes only
   KOKKOS_INLINE_FUNCTION
-  Kokkos::Impl::OptionalRef<memory_pool>
-  memory() const noexcept
+  KOKKOS_DEPRECATED_FUNCTION
+  memory_pool*
+  memory() const noexcept KOKKOS_DEPRECATED_FUNCTION_TRAILING_ATTRIBUTE
   {
-    if(m_queue != nullptr) return m_queue->get_memory_pool();
+    if(m_queue != nullptr) return &(m_queue->get_memory_pool());
     else return nullptr;
   }
 
