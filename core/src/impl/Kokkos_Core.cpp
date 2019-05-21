@@ -169,7 +169,7 @@ int get_ctest_gpu(const char* local_rank_str) {
 namespace {
 
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM) || \
-    defined(KOKKOS_ENABLE_HIP)
+    defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 int get_gpu(const InitArguments& args) {
   int use_gpu           = args.device_id;
   const int ndevices    = args.ndevices;
@@ -238,7 +238,7 @@ void initialize_backends(const InitArguments& args) {
   const int use_numa = args.num_numa;
 #endif
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM) || \
-    defined(KOKKOS_ENABLE_HIP)
+    defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   int use_gpu = get_gpu(args);
 #endif  // defined( KOKKOS_ENABLE_CUDA )
 
@@ -303,7 +303,7 @@ void initialize_backends(const InitArguments& args) {
 
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
   if (std::is_same<Kokkos::Experimental::OpenMPTarget,
-                   Kokkos::DefaultExecutionSpace>::value) {
+                    Kokkos::DefaultExecutionSpace>::value) {
     Kokkos::Experimental::OpenMPTarget().impl_initialize();
     // std::cout << "Kokkos::initialize() fyi: OpenMP enabled and initialized"
     // << std::endl ;
@@ -353,6 +353,20 @@ void initialize_backends(const InitArguments& args) {
     }
   }
 #endif
+
+#if defined(KOKKOS_ENABLE_SYCL)
+  if (std::is_same<Kokkos::Experimental::SYCL,
+                   Kokkos::DefaultExecutionSpace>::value ||
+      0 < use_gpu) {
+    if (use_gpu > -1)
+      Kokkos::Experimental::SYCL::impl_initialize(
+          Kokkos::Experimental::SYCL::SYCLDevice(cl::sycl::gpu_selector()));
+    else
+      Kokkos::Experimental::SYCL::impl_initialize(
+          Kokkos::Experimental::SYCL::SYCLDevice(cl::sycl::cpu_selector()));
+  }
+#endif
+
 }
 
 void initialize_profiling(const InitArguments&) {
@@ -430,6 +444,16 @@ void finalize_internal(const bool all_spaces = false) {
       Kokkos::Experimental::HIP::impl_finalize();
   }
 #endif
+
+#if defined(KOKKOS_ENABLE_SYCL)
+  if (std::is_same<Kokkos::Experimental::SYCL,
+                   Kokkos::DefaultExecutionSpace>::value ||
+      all_spaces) {
+    if (Kokkos::Experimental::SYCL::impl_is_initialized())
+      Kokkos::Experimental::SYCL::impl_finalize();
+  }
+#endif
+
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
   if (std::is_same<Kokkos::Experimental::OpenMPTarget,
                    Kokkos::DefaultExecutionSpace>::value ||
@@ -478,19 +502,24 @@ void finalize_internal(const bool all_spaces = false) {
 
 void fence_internal() {
 #if defined(KOKKOS_ENABLE_CUDA)
-  Kokkos::Cuda::impl_static_fence();
+    Kokkos::Cuda::impl_static_fence();
 #endif
 
 #if defined(KOKKOS_ENABLE_ROCM)
-  Kokkos::Experimental::ROCm().fence();
+    Kokkos::Experimental::ROCm().fence();
 #endif
 
 #if defined(KOKKOS_ENABLE_HIP)
   Kokkos::Experimental::HIP().fence();
 #endif
 
+#if defined(KOKKOS_ENABLE_SYCL)
+    Kokkos::Experimental::SYCL().fence();
+  }
+#endif
+
 #if defined(KOKKOS_ENABLE_OPENMP)
-  Kokkos::OpenMP::impl_static_fence();
+    Kokkos::OpenMP::impl_static_fence();
 #endif
 
 #if defined(KOKKOS_ENABLE_HPX)
@@ -498,11 +527,11 @@ void fence_internal() {
 #endif
 
 #if defined(KOKKOS_ENABLE_THREADS)
-  Kokkos::Threads::impl_static_fence();
+    Kokkos::Threads::impl_static_fence();
 #endif
 
 #if defined(KOKKOS_ENABLE_SERIAL)
-  Kokkos::Serial::impl_static_fence();
+    Kokkos::Serial::impl_static_fence();
 #endif
 }
 
@@ -711,8 +740,8 @@ void parse_command_line_arguments(int& narg, char* arg[],
 )";
       std::cout << help_message << std::endl;
 
-      // Remove the --kokkos-help argument from the list but leave --help
-      if (check_arg(arg[iarg], "--kokkos-help")) {
+      // Remove the --kokkos-help argument from the list but leave --ndevices
+      if (strcmp(arg[iarg], "--kokkos-help") == 0) {
         for (int k = iarg; k < narg - 1; k++) {
           arg[k] = arg[k + 1];
         }
@@ -805,24 +834,24 @@ void parse_environment_variables(InitArguments& arguments) {
           "Raised by Kokkos::initialize(int narg, char* argc[]).");
     }
     int rdevices = -1;
-    if (env_ndevices_str != nullptr) {
-      auto env_ndevices = std::strtol(env_ndevices_str, &endptr, 10);
-      if (endptr == env_ndevices_str)
-        Impl::throw_runtime_exception(
-            "Error: cannot convert KOKKOS_NUM_DEVICES to an integer. Raised by "
-            "Kokkos::initialize(int narg, char* argc[]).");
-      if (errno == ERANGE)
-        Impl::throw_runtime_exception(
-            "Error: KOKKOS_NUM_DEVICES out of range of representable values by "
+  if (env_ndevices_str != nullptr) {
+    auto env_ndevices = std::strtol(env_ndevices_str, &endptr, 10);
+    if (endptr == env_ndevices_str)
+      Impl::throw_runtime_exception(
+          "Error: cannot convert KOKKOS_NUM_DEVICES to an integer. Raised by "
+          "Kokkos::initialize(int narg, char* argc[]).");
+    if (errno == ERANGE)
+      Impl::throw_runtime_exception(
+          "Error: KOKKOS_NUM_DEVICES out of range of representable values by "
             "an integer. Raised by Kokkos::initialize(int narg, char* "
             "argc[]).");
-      if ((ndevices != -1) && (env_ndevices != ndevices))
-        Impl::throw_runtime_exception(
-            "Error: expecting a match between --kokkos-ndevices and "
-            "KOKKOS_NUM_DEVICES if both are set. Raised by "
-            "Kokkos::initialize(int narg, char* argc[]).");
-      else
-        ndevices = env_ndevices;
+    if ((ndevices != -1) && (env_ndevices != ndevices))
+      Impl::throw_runtime_exception(
+          "Error: expecting a match between --kokkos-ndevices and "
+          "KOKKOS_NUM_DEVICES if both are set. Raised by "
+          "Kokkos::initialize(int narg, char* argc[]).");
+    else
+      ndevices = env_ndevices;
     } else {  // you set KOKKOS_RAND_DEVICES
       auto env_rdevices = std::strtol(env_rdevices_str, &endptr, 10);
       if (endptr == env_ndevices_str)
@@ -994,6 +1023,12 @@ void print_configuration(std::ostream& out, const bool detail) {
 #else
   msg << "no" << std::endl;
 #endif
+  msg << "  KOKKOS_ENABLE_SYCL: ";
+#ifdef KOKKOS_ENABLE_SYCL
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
   msg << "  KOKKOS_ENABLE_OPENMP: ";
 #ifdef KOKKOS_ENABLE_OPENMP
   msg << "yes" << std::endl;
@@ -1028,6 +1063,12 @@ void print_configuration(std::ostream& out, const bool detail) {
 #endif
   msg << "  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP: ";
 #ifdef KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
+  msg << "  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL: ";
+#ifdef KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL
   msg << "yes" << std::endl;
 #else
   msg << "no" << std::endl;
@@ -1248,6 +1289,9 @@ void print_configuration(std::ostream& out, const bool detail) {
 #endif
 #ifdef KOKKOS_ENABLE_HIP
   Experimental::HIP::print_configuration(msg, detail);
+#endif
+#ifdef KOKKOS_ENABLE_HIP
+  Experimental::SYCL::print_configuration(msg, detail);
 #endif
 #ifdef KOKKOS_ENABLE_OPENMP
   OpenMP::print_configuration(msg, detail);

@@ -5,7 +5,7 @@ KOKKOS_VERSION_MINOR = 1
 KOKKOS_VERSION_PATCH = 1
 KOKKOS_VERSION = $(shell echo $(KOKKOS_VERSION_MAJOR)*10000+$(KOKKOS_VERSION_MINOR)*100+$(KOKKOS_VERSION_PATCH) | bc)
 
-# Options: Cuda,HIP,ROCm,OpenMP,Pthread,Serial
+# Options: Cuda,HIP,SYCLROCm,OpenMP,Pthread,Serial
 #KOKKOS_DEVICES ?= "OpenMP"
 KOKKOS_DEVICES ?= "Pthread"
 # Options: 
@@ -94,15 +94,16 @@ KOKKOS_INTERNAL_USE_SERIAL := $(call kokkos_has_string,$(KOKKOS_DEVICES),Serial)
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 0)
   ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 0)
-    ifeq ($(KOKKOS_INTERNAL_USE_HPX), 0)
-      KOKKOS_INTERNAL_USE_SERIAL := 1
+      ifeq ($(KOKKOS_INTERNAL_USE_HPX), 0)
+        KOKKOS_INTERNAL_USE_SERIAL := 1
+      endif
     endif
-  endif
 endif
 
 # Check for other Execution Spaces.
 KOKKOS_INTERNAL_USE_CUDA := $(call kokkos_has_string,$(KOKKOS_DEVICES),Cuda)
 KOKKOS_INTERNAL_USE_HIP := $(call kokkos_has_string,$(KOKKOS_DEVICES),HIP)
+KOKKOS_INTERNAL_USE_SYCL := $(call kokkos_has_string,$(KOKKOS_DEVICES),SYCL)
 KOKKOS_INTERNAL_USE_OPENMPTARGET := $(call kokkos_has_string,$(KOKKOS_DEVICES),OpenMPTarget)
 
 KOKKOS_DEVICELIST =
@@ -123,6 +124,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
   KOKKOS_DEVICELIST += HIP
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
+  KOKKOS_DEVICELIST += SYCL
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
   KOKKOS_DEVICELIST += OPENMPTARGET
@@ -162,6 +166,8 @@ KOKKOS_INTERNAL_COMPILER_CLANG       := $(call kokkos_has_string,$(KOKKOS_CXX_VE
 KOKKOS_INTERNAL_COMPILER_APPLE_CLANG := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),Apple LLVM)
 KOKKOS_INTERNAL_COMPILER_HCC         := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),HCC)
 KOKKOS_INTERNAL_COMPILER_GCC         := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),GCC)
+KOKKOS_INTERNAL_COMPILER_COMPUTEPP   := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),Codeplay)
+KOKKOS_INTERNAL_COMPILER_DPCPP       := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),DPC)
 
 # Check Host Compiler if using NVCC through nvcc_wrapper
 ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
@@ -173,6 +179,21 @@ ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
     KOKKOS_INTERNAL_COMPILER_INTEL  := $(call kokkos_has_string,$(KOKKOS_CXX_HOST_VERSION),Intel Corporation)
     KOKKOS_INTERNAL_COMPILER_CLANG  := $(call kokkos_has_string,$(KOKKOS_CXX_HOST_VERSION),clang)
   endif
+endif
+
+ifeq ($(KOKKOS_INTERNAL_COMPILER_COMPUTEPP), 1)
+  KOKKOS_INTERNAL_COMPUTEPP_PATH := $(shell which compute++)
+  ifeq ($(origin COMPUTEPP_PATH), undefined)
+    COMPUTEPP_PATH = $(KOKKOS_INTERNAL_COMPUTEPP_PATH:/bin/compute++=)
+  endif
+  ifeq ($(COMPUTEPP_PATH),)
+    COMPUTEPP_PATH = $(KOKKOS_INTERNAL_COMPUTEPP_PATH:/bin/compute++=)
+  endif
+  KOKKOS_INTERNAL_COMPILER_CLANG = 1
+endif
+
+ifeq ($(KOKKOS_INTERNAL_COMPILER_DPCPP), 1)
+  KOKKOS_INTERNAL_COMPILER_CLANG = 1
 endif
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 2)
@@ -340,9 +361,9 @@ KOKKOS_INTERNAL_USE_ARCH_NVIDIA := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_KEPLE
                                               + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL53) \
                                               + $(KOKKOS_INTERNAL_USE_ARCH_PASCAL61)  \
                                               + $(KOKKOS_INTERNAL_USE_ARCH_PASCAL60)  \
-                                              + $(KOKKOS_INTERNAL_USE_ARCH_VOLTA70)   \
-                                              + $(KOKKOS_INTERNAL_USE_ARCH_VOLTA72)   \
-                                              + $(KOKKOS_INTERNAL_USE_ARCH_TURING75)  \
+											  + $(KOKKOS_INTERNAL_USE_ARCH_VOLTA70) \
+											  + $(KOKKOS_INTERNAL_USE_ARCH_VOLTA72) \
+											  + $(KOKKOS_INTERNAL_USE_ARCH_TURING75) \
                                               + $(KOKKOS_INTERNAL_USE_ARCH_AMPERE80))
 
 #SEK: This seems like a bug to me
@@ -477,6 +498,10 @@ ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
   tmp := $(call kokkos_append_header,'$H''define KOKKOS_ENABLE_HIP')
 endif
 
+ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
+  tmp := $(call kokkos_append_header,'\#define KOKKOS_ENABLE_SYCL')
+endif
+
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
   tmp := $(call kokkos_append_header,'$H''define KOKKOS_ENABLE_OPENMPTARGET')
   ifeq ($(KOKKOS_INTERNAL_COMPILER_GCC), 1)
@@ -598,15 +623,15 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HWLOC), 1)
   ifneq ($(KOKKOS_CMAKE), yes)
-    ifneq ($(HWLOC_PATH),)
+  ifneq ($(HWLOC_PATH),)
       KOKKOS_CPPFLAGS += -I$(HWLOC_PATH)/include
       KOKKOS_LIBDIRS += -L$(HWLOC_PATH)/lib
-      KOKKOS_CXXLDFLAGS += -L$(HWLOC_PATH)/lib
-      KOKKOS_TPL_INCLUDE_DIRS += $(HWLOC_PATH)/include
-      KOKKOS_TPL_LIBRARY_DIRS += $(HWLOC_PATH)/lib
-    endif
-    KOKKOS_LIBS += -lhwloc
-    KOKKOS_TPL_LIBRARY_NAMES += hwloc
+    KOKKOS_CXXLDFLAGS += -L$(HWLOC_PATH)/lib
+    KOKKOS_TPL_INCLUDE_DIRS += $(HWLOC_PATH)/include
+    KOKKOS_TPL_LIBRARY_DIRS += $(HWLOC_PATH)/lib
+  endif
+  KOKKOS_LIBS += -lhwloc
+  KOKKOS_TPL_LIBRARY_NAMES += hwloc
   endif
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_HWLOC")
 endif
@@ -619,15 +644,15 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_MEMKIND), 1)
   ifneq ($(KOKKOS_CMAKE), yes)
-    ifneq ($(MEMKIND_PATH),)
+  ifneq ($(MEMKIND_PATH),)
       KOKKOS_CPPFLAGS += -I$(MEMKIND_PATH)/include
       KOKKOS_LIBDIRS += -L$(MEMKIND_PATH)/lib
-      KOKKOS_CXXLDFLAGS += -L$(MEMKIND_PATH)/lib
-      KOKKOS_TPL_INCLUDE_DIRS += $(MEMKIND_PATH)/include
-      KOKKOS_TPL_LIBRARY_DIRS += $(MEMKIND_PATH)/lib
-    endif
-    KOKKOS_LIBS += -lmemkind -lnuma
-    KOKKOS_TPL_LIBRARY_NAMES += memkind numa
+    KOKKOS_CXXLDFLAGS += -L$(MEMKIND_PATH)/lib
+    KOKKOS_TPL_INCLUDE_DIRS += $(MEMKIND_PATH)/include
+    KOKKOS_TPL_LIBRARY_DIRS += $(MEMKIND_PATH)/lib
+  endif
+  KOKKOS_LIBS += -lmemkind -lnuma
+  KOKKOS_TPL_LIBRARY_NAMES += memkind numa
   endif
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_HBWSPACE")
 endif
@@ -1254,6 +1279,24 @@ ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
   endif
   KOKKOS_TPL_LIBRARY_NAMES += hpx
 endif
+
+# Add SYCL specific flags
+ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
+  KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/SYCL/*.cpp)
+  KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/SYCL/*.hpp)
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_COMPUTEPP), 1)
+    KOKKOS_CPPFLAGS += -I$(COMPUTEPP_PATH)/include
+    KOKKOS_CPPFLAGS += -I$(OPENCL_PATH)/include
+    KOKKOS_LDFLAGS  += -L$(COMPUTEPP_PATH)/lib
+    KOKKOS_LIBS     += -lComputeCpp -lOpenCL
+  endif
+
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_DPCPP), 1)
+    KOKKOS_CPPFLAGS += -fsycl -fsycl-unnamed-lambda -DSYCL_JUST_DONT_NAME_KERNELS
+    KOKKOS_LDFLAGS += -fsycl
+    KOKKOS_LIBS  += -lOpenCL -lsycl
+  endif 
+endif 
 
 # Explicitly set the GCC Toolchain for Clang.
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)

@@ -82,6 +82,10 @@
 #include <Kokkos_HIP.hpp>
 #endif
 
+#if defined( KOKKOS_ENABLE_SYCL )
+#include <Kokkos_SYCL.hpp>
+#endif
+
 #include <Kokkos_AnonymousSpace.hpp>
 #include <Kokkos_Pair.hpp>
 #include <Kokkos_MemoryPool.hpp>
