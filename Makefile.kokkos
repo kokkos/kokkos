@@ -1221,8 +1221,10 @@ endif
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
   KOKKOS_INTERNAL_GCC_PATH = $(shell which g++)
   KOKKOS_INTERNAL_GCC_TOOLCHAIN = $(KOKKOS_INTERNAL_GCC_PATH:/bin/g++=)
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_COMPUTECPP), 0)
   KOKKOS_CXXFLAGS += --gcc-toolchain=$(KOKKOS_INTERNAL_GCC_TOOLCHAIN)
   KOKKOS_LDFLAGS += --gcc-toolchain=$(KOKKOS_INTERNAL_GCC_TOOLCHAIN)
+  endif
 endif
 
 # Don't include Kokkos_HBWSpace.cpp if not using MEMKIND to avoid a link warning.
