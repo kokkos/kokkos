@@ -1,5 +1,6 @@
 #include<SYCL/Kokkos_SYCL_KernelLaunch.hpp>
-
+#include <algorithm>
+#include <functional>
 namespace Kokkos {
 namespace Impl {
 
@@ -40,14 +41,21 @@ public:
   typedef FunctorType functor_type ;
 
   inline
-  void operator()(void) const
+  void operator()(cl::sycl::item<1> item) const
     {
+      int id = item.get_linear_id();
+      m_functor(id);
     }
 
   inline
   void execute() const
     {
+      /*#ifdef SYCL_USE_BIND_LAUNCH
+      m_policy.space().impl_internal_space_instance()->m_queue->submit(
+        std::bind(Kokkos::Experimental::Impl::sycl_launch_bind<ParallelFor>,this,std::placeholders::_1));
+      #else      */
       Kokkos::Experimental::Impl::sycl_launch(*this);
+//      #endif
     }
 
   ParallelFor( const FunctorType  & arg_functor ,
