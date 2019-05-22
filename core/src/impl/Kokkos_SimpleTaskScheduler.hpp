@@ -480,7 +480,7 @@ public:
     task.set_respawn_flag(true);
   }
 
-  template <class FunctorType, class ValueType, class Scheduler>
+  template <class FunctorType>
   KOKKOS_FUNCTION
   static void
   respawn(
