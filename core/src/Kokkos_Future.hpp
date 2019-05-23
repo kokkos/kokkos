@@ -271,6 +271,7 @@ public:
           ->deallocate(std::move(*m_task));
       }
     }
+    m_task = nullptr;
   }
 
   KOKKOS_INLINE_FUNCTION
