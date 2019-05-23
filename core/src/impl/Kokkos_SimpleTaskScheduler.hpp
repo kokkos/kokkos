@@ -276,6 +276,7 @@ private:
         runnable_task, *arg_predecessor_task
       );
       runnable_task.set_predecessor(*arg_predecessor_task);
+      arg_predecessor_task->decrement_and_check_reference_count();
     }
     else {
       m_queue->initialize_scheduling_info_from_team_scheduler_info(
