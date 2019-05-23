@@ -153,8 +153,8 @@ public:
     if(m_task != rhs.m_task) {
       clear();
       m_task = rhs.m_task;
-      if(m_task != nullptr) { m_task->increment_reference_count(); }
     }
+    if(m_task != nullptr) { m_task->increment_reference_count(); }
     return *this;
   }
 
@@ -255,9 +255,6 @@ public:
     return *this ;
   }
 
-  //----------------------------------------
-
-  KOKKOS_INLINE_FUNCTION
   ~BasicFuture() noexcept { clear(); }
 
   //----------------------------------------
