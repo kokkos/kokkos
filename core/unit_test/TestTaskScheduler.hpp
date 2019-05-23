@@ -150,12 +150,18 @@ struct TestFib
                          , std::min(size_t(MaxBlockSize),MemoryCapacity)
                          , std::min(size_t(SuperBlockSize),MemoryCapacity) );
 
-    future_type f = Kokkos::host_spawn( Kokkos::TaskSingle( root_sched )
-                                      , TestFib( i ) );
+    {
+      future_type f = Kokkos::host_spawn( Kokkos::TaskSingle( root_sched )
+                                        , TestFib( i ) );
 
-    Kokkos::wait( root_sched );
+      Kokkos::wait( root_sched );
 
-    ASSERT_EQ( eval_fib( i ), f.get() );
+      ASSERT_EQ( eval_fib( i ), f.get() );
+    }
+
+    ASSERT_EQ(root_sched.queue().allocation_count(), 0);
+
+
 
 #if 0
     fprintf( stdout, "\nTestFib::run(%d) spawn_size(%d) when_all_size(%d) alloc_capacity(%d) task_max(%d) task_accum(%ld)\n"
