@@ -52,6 +52,9 @@
 #include <cmath>
 
 
+//==============================================================================
+// <editor-fold desc="TestFib"> {{{1
+
 namespace TestTaskScheduler {
 
 namespace {
@@ -179,7 +182,13 @@ struct TestFib
 
 } // namespace TestTaskScheduler
 
+// </editor-fold> end TestFib }}}1
+//==============================================================================
+
 //----------------------------------------------------------------------------
+
+//==============================================================================
+// <editor-fold desc="TestTaskDependence"> {{{1
 
 namespace TestTaskScheduler {
 
@@ -260,6 +269,9 @@ struct TestTaskDependence {
 };
 
 } // namespace TestTaskScheduler
+
+// </editor-fold> end TestTaskDependence }}}1
+//==============================================================================
 
 //----------------------------------------------------------------------------
 
