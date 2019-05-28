@@ -173,7 +173,7 @@ void SYCLInternal::initialize( int sycl_device_id  )
 
     //Kokkos::Impl::sycl_device_synchronize();
 
-    m_queue = new cl::sycl::queue(cl::sycl::host_selector{});
+    m_queue = new cl::sycl::queue(cl::sycl::cpu_selector());
 /*
     // Query what compute capability architecture a kernel executes:
     m_syclArch = sycl_kernel_arch();
