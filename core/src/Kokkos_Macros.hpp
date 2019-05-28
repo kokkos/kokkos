@@ -241,7 +241,7 @@
   #endif
 #endif
 
-#if defined( __PGIC__ ) 
+#if defined( __PGIC__ )
   #define KOKKOS_COMPILER_PGI __PGIC__*100+__PGIC_MINOR__*10+__PGIC_PATCHLEVEL__
 
   #if ( 1540 > KOKKOS_COMPILER_PGI )
@@ -565,6 +565,12 @@
   #define KOKKOS_CONSTEXPR_14
 #endif
 
+
+// DJS 05/28/2019: Bugfix: Issue 2155
+// Use KOKKOS_ENABLE_CUDA_LDG_INTRINSIC to avoid memory leak in RandomAccess View
+#if defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC)
+ #define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
+#endif
 
 #endif // #ifndef KOKKOS_MACROS_HPP
 
