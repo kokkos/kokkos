@@ -407,8 +407,8 @@ public:
   //----------------------------------------------------------------------------
 
   // For backwards compatibility purposes only
-  KOKKOS_INLINE_FUNCTION
   KOKKOS_DEPRECATED_FUNCTION
+  KOKKOS_INLINE_FUNCTION
   memory_pool*
   memory() const noexcept KOKKOS_DEPRECATED_FUNCTION_TRAILING_ATTRIBUTE
   {
