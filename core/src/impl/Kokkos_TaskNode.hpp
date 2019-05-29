@@ -684,6 +684,9 @@ public:
       0 == member->team_rank();
 #endif
 
+    // Ensure that the respawn flag is set to zero
+    self->set_respawn_flag(false);
+
     //task->apply_functor(member, TaskResult<result_type>::ptr(task));
     task->apply_functor(member, task->value_pointer());
 
