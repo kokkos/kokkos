@@ -255,6 +255,7 @@ public:
     return *this ;
   }
 
+  KOKKOS_INLINE_FUNCTION
   ~BasicFuture() noexcept { clear(); }
 
   //----------------------------------------

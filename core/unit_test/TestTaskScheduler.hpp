@@ -113,7 +113,7 @@ struct TestFib
       fib_m2 = Kokkos::task_spawn( Kokkos::TaskSingle( sched, Kokkos::TaskPriority::High )
                                  , TestFib( n - 2 ) );
 
-      fib_m1 = Kokkos::task_spawn( Kokkos::TaskSingle( sched, fib_m2 )
+      fib_m1 = Kokkos::task_spawn( Kokkos::TaskSingle( sched )
                                  , TestFib( n - 1 ) );
 
       Kokkos::BasicFuture<void, Scheduler> dep[] = { fib_m1, fib_m2 };
