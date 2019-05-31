@@ -406,15 +406,17 @@ public:
 
   //----------------------------------------------------------------------------
 
+  #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   // For backwards compatibility purposes only
-  KOKKOS_DEPRECATED_FUNCTION
+  KOKKOS_DEPRECATED
   KOKKOS_INLINE_FUNCTION
   memory_pool*
-  memory() const noexcept KOKKOS_DEPRECATED_FUNCTION_TRAILING_ATTRIBUTE
+  memory() const noexcept KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
   {
     if(m_queue != nullptr) return &(m_queue->get_memory_pool());
     else return nullptr;
   }
+  #endif
 
   //----------------------------------------------------------------------------
 
