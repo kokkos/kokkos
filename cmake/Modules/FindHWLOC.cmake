@@ -17,9 +17,9 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(HWLOC DEFAULT_MSG
                                   HWLOC_INCLUDE_DIR HWLOC_LIBRARIES)
 
-add_library(Kokkos::hwloc UNKNOWN IMPORTED)
+add_library(hwloc UNKNOWN IMPORTED)
 
-set_target_properties(Kokkos::hwloc PROPERTIES
+set_target_properties(hwloc PROPERTIES
   INTERFACE_COMPILE_FEATURES ""
   INTERFACE_COMPILE_OPTIONS ""
   INTERFACE_INCLUDE_DIRECTORIES "${HWLOC_INCLUDE_DIR}"

@@ -17,9 +17,9 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Memkind DEFAULT_MSG
   MEMKIND_INCLUDE_DIR MEMKIND_LIBRARIES)
 
-add_library(Kokkos::memkind UNKNOWN IMPORTED)
+add_library(memkind UNKNOWN IMPORTED)
 
-set_target_properties(Kokkos::memkind PROPERTIES
+set_target_properties(memkind PROPERTIES
   INTERFACE_COMPILE_FEATURES ""
   INTERFACE_COMPILE_OPTIONS ""
   INTERFACE_INCLUDE_DIRECTORIES "${MEMKIND_INCLUDE_DIR}"
