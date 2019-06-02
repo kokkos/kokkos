@@ -31,7 +31,7 @@ FUNCTION(kokkos_option CAMEL_SUFFIX DEFAULT TYPE DOCSTRING)
     SET(${UC_NAME} ${DEFAULT} CACHE ${TYPE} ${DOCSTRING})
   ENDIF()
   #STORE A Value in the cache to identify whether this is the 1st configure
-  SET(${CACHE_NAME} ${${UC_NAME}} CACHE ${TYPE} ${DOCSTRING} FORCE)
+  SET(${CACHE_NAME} ${${UC_NAME}} CACHE INTERNAL ${DOCSTRING} FORCE)
 
   IF (${UC_NAME}) #cmake if statements follow really annoying string resolution rules
     MESSAGE(STATUS "${UC_NAME}=${${UC_NAME}}") 

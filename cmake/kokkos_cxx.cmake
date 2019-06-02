@@ -7,12 +7,24 @@ FUNCTION(kokkos_set_cxx_standard_feature standard)
   #CMake's way of telling us that the standard (or extension)
   #flags are supported is the extension/standard variables
   IF (CMAKE_CXX_EXTENSIONS AND ${EXTENSION_NAME})
+    MESSAGE(STATUS "Using ${${FEATURE_NAME}} for C++${standard} extensions")
     GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE ${FEATURE_NAME})
   ELSEIF(NOT CMAKE_CXX_EXTENSIONS AND ${STANDARD_NAME})
+    MESSAGE(STATUS "Using ${${STANDARD_NAME}} for C++${standard} standard")
     GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE ${FEATURE_NAME})
   ELSE()
     #nope, we can't do anything here
+    MESSAGE(STATUS "C++${standard} is not supported as a compiler feature - choosing custom flags")
     GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE "")
+  ENDIF()
+
+  IF(NOT ${FEATURE_NAME} IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+    IF (KOKKOS_CXX_COMPILER_ID STREQUAL "NVIDIA")
+      MESSAGE(STATUS "nvcc_wrapper does not support TARGET_COMPILE_FEATURES")
+      GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE "")
+    ELSE()
+      MESSAGE(FATAL_ERROR "Compiler ${KOKKOS_CXX_COMPILER_ID} should support ${FEATURE_NAME}, but CMake reports feature not supported")
+    ENDIF()
   ENDIF()
 ENDFUNCTION(kokkos_set_cxx_standard_feature)
 
@@ -27,12 +39,14 @@ EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} --version
                 OUTPUT_VARIABLE INTERNAL_HAVE_COMPILER_NVCC
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+
 STRING(REGEX REPLACE "^ +" ""
        INTERNAL_HAVE_COMPILER_NVCC ${INTERNAL_HAVE_COMPILER_NVCC})
 
+
 IF(INTERNAL_HAVE_COMPILER_NVCC)
   # SET the compiler id to nvcc.  We use the value used by CMake 3.8.
-  SET(KOKKOS_CXX_COMPILER_ID NVIDIA CACHE STRING INTERNAL)
+  SET(KOKKOS_CXX_COMPILER_ID NVIDIA CACHE STRING INTERNAL FORCE)
 
   # SET nvcc's compiler version.
   EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} --version
@@ -117,9 +131,14 @@ ENDIF()
 kokkos_option(CXX_STANDARD "" STRING "The C++ standard for Kokkos to use: c++11, c++14, or c++17")
 
 IF (NOT KOKKOS_CXX_STANDARD AND NOT CMAKE_CXX_STANDARD)
-  SET(KOKKOS_CXX_STANDARD "11" CACHE STRING "C++ standard")
+  MESSAGE("Setting default Kokkos CXX standard to 11")
+  SET(KOKKOS_CXX_STANDARD "11" CACHE STRING "C++ standard" FORCE)
+  SET(CMAKE_CXX_STANDARD "11" CACHE STRING "C++ standard" FORCE)
 ELSEIF(NOT KOKKOS_CXX_STANDARD)
-  SET(KOKKOS_CXX_STANDARD ${CMAKE_CXX_STANDARD} CACHE STRING "C++ standard")
+  MESSAGE("Setting default Kokkos CXX standard to ${CMAKE_CXX_STANDARD}")
+  SET(KOKKOS_CXX_STANDARD ${CMAKE_CXX_STANDARD} CACHE STRING "C++ standard" FORCE)
+ELSEIF(NOT CMAKE_CXX_STANDARD)
+  SET(CMAKE_CXX_STANDARD ${KOKKOS_CXX_STANDARD} CACHE STRING "C++ standard" FORCE)
 ENDIF()
 
 
@@ -158,9 +177,12 @@ ENDIF()
 IF (KOKKOS_CXX_STANDARD AND CMAKE_CXX_STANDARD)
   #make sure these are consistent
   IF (NOT KOKKOS_CXX_STANDARD STREQUAL CMAKE_CXX_STANDARD)
-    MESSAGE(FATAL_ERROR "Specified both CMAKE_CXX_STANDARD and KOKKOS_CXX_STANDARD, but they don't match")
+    MESSAGE(WARNING "Specified both CMAKE_CXX_STANDARD and KOKKOS_CXX_STANDARD, but they don't match")
+    SET(CMAKE_CXX_STANDARD ${KOKKOS_CXX_STANDARD} CACHE STRING "C++ standard" FORCE)
   ENDIF()
 ENDIF()
+
+get_property(CMAKE_CXX_KNOWN_FEATURES GLOBAL PROPERTY CMAKE_CXX_KNOWN_FEATURES)
 
 IF (KOKKOS_CXX_STANDARD STREQUAL "11" )
   kokkos_set_cxx_standard_feature(11)
@@ -174,10 +196,18 @@ ELSEIF(KOKKOS_CXX_STANDARD STREQUAL "17")
 ELSEIF(KOKKOS_CXX_STANDARD STREQUAL "98")
   MESSAGE(FATAL_ERROR "Kokkos requires C++11 or newer!")
 ELSE()
+  #set to empty
+  GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE "")
+  IF (KOKKOS_CXX_COMPILER_ID STREQUAL "NVIDIA")
+    MESSAGE(FATAL_ERROR "nvcc_wrapper does not support intermediate standards (1Y,1Z,2A) - must use 11, 14, or 17")
+  ENDIF()
+  #okay, this is funky - kill this variable
+  #this value is not really valid as a cmake variable
+  UNSET(CMAKE_CXX_STANDARD CACHE)
   IF     (KOKKOS_CXX_STANDARD STREQUAL "1Y")
     GLOBAL_SET(KOKKOS_ENABLE_CXX14 ON)
   ELSEIF (KOKKOS_CXX_STANDARD STREQUAL "1Z")
-    GLOBAL_SET(KOKKOS_ENABLE_CXX1Z ON)
+    GLOBAL_SET(KOKKOS_ENABLE_CXX17 ON)
   ELSEIF (KOKKOS_CXX_STANDARD STREQUAL "2A")
     GLOBAL_SET(KOKKOS_ENABLE_CXX20 ON)
   ENDIF()
@@ -207,7 +237,7 @@ IF (NOT KOKKOS_CXX_STANDARD_FEATURE)
   IF (NOT CXX_STD_FLAGS_ACCEPTED)
     MESSAGE(FATAL_ERROR "${KOKKOS_CXX_COMPILER_ID} did not accept ${KOKKOS_CXX_STANDARD_FLAG}. You likely need to reduce the level of the C++ standard from ${KOKKOS_CXX_STANDARD}")
   ELSE()
-    MESSAGE("Compiler features not supported, but ${KOKKOS_CXX_COMPILER_ID} accepts ${KOKKOS_CXX_STANDARD_FLAG}")
+    MESSAGE(STATUS "Compiler features not supported, but ${KOKKOS_CXX_COMPILER_ID} accepts ${KOKKOS_CXX_STANDARD_FLAG}")
   ENDIF()
 ENDIF()
 
