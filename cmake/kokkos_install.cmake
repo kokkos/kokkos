@@ -27,11 +27,6 @@ FOREACH(p LIB BIN INCLUDE CMAKE)
   ENDIF()
 ENDFOREACH()
 
-INSTALL (FILES
-  ${Kokkos_BINARY_DIR}/KokkosCore_config.h
-  DESTINATION ${KOKKOS_HEADER_DIR}
-)
-
 INCLUDE(CMakePackageConfigHelpers)
 CONFIGURE_PACKAGE_CONFIG_FILE(cmake/KokkosConfig.cmake.in
   "${Kokkos_BINARY_DIR}/KokkosConfig.cmake"
@@ -67,5 +62,5 @@ CONFIGURE_FILE(core/src/kokkos.pc.in kokkos.pc @ONLY)
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/kokkos.pc DESTINATION lib/pkgconfig)
 
 CONFIGURE_FILE(cmake/KokkosCore_config.h.in KokkosCore_config.h @ONLY)
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/KokkosCore_config.h DESTINATION include)
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/KokkosCore_config.h DESTINATION ${KOKKOS_HEADER_DIR})
 

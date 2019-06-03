@@ -7,10 +7,10 @@ FUNCTION(kokkos_set_cxx_standard_feature standard)
   #CMake's way of telling us that the standard (or extension)
   #flags are supported is the extension/standard variables
   IF (CMAKE_CXX_EXTENSIONS AND ${EXTENSION_NAME})
-    MESSAGE(STATUS "Using ${${FEATURE_NAME}} for C++${standard} extensions")
+    MESSAGE(STATUS "Using ${${FEATURE_NAME}} for C++${standard} extensions as feature")
     GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE ${FEATURE_NAME})
   ELSEIF(NOT CMAKE_CXX_EXTENSIONS AND ${STANDARD_NAME})
-    MESSAGE(STATUS "Using ${${STANDARD_NAME}} for C++${standard} standard")
+    MESSAGE(STATUS "Using ${${STANDARD_NAME}} for C++${standard} standard as feature")
     GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE ${FEATURE_NAME})
   ELSE()
     #nope, we can't do anything here
@@ -130,19 +130,6 @@ ENDIF()
 
 kokkos_option(CXX_STANDARD "" STRING "The C++ standard for Kokkos to use: c++11, c++14, or c++17")
 
-IF (NOT KOKKOS_CXX_STANDARD AND NOT CMAKE_CXX_STANDARD)
-  MESSAGE("Setting default Kokkos CXX standard to 11")
-  SET(KOKKOS_CXX_STANDARD "11" CACHE STRING "C++ standard" FORCE)
-  SET(CMAKE_CXX_STANDARD "11" CACHE STRING "C++ standard" FORCE)
-ELSEIF(NOT KOKKOS_CXX_STANDARD)
-  MESSAGE("Setting default Kokkos CXX standard to ${CMAKE_CXX_STANDARD}")
-  SET(KOKKOS_CXX_STANDARD ${CMAKE_CXX_STANDARD} CACHE STRING "C++ standard" FORCE)
-ELSEIF(NOT CMAKE_CXX_STANDARD)
-  SET(CMAKE_CXX_STANDARD ${KOKKOS_CXX_STANDARD} CACHE STRING "C++ standard" FORCE)
-ENDIF()
-
-
-
 
 # Set CXX standard flags
 SET(KOKKOS_ENABLE_CXX11 OFF CACHE INTERNAL "Enable C++11 flags")
@@ -173,11 +160,22 @@ IF (KOKKOS_CXX_STANDARD)
   ENDIF()
 ENDIF()
 
+IF (NOT KOKKOS_CXX_STANDARD AND NOT CMAKE_CXX_STANDARD)
+  MESSAGE("Setting default Kokkos CXX standard to 11")
+  SET(KOKKOS_CXX_STANDARD "11" CACHE STRING "C++ standard" FORCE)
+  SET(CMAKE_CXX_STANDARD "11" CACHE STRING "C++ standard" FORCE)
+ELSEIF(NOT KOKKOS_CXX_STANDARD)
+  MESSAGE("Setting default Kokkos CXX standard to ${CMAKE_CXX_STANDARD}")
+  SET(KOKKOS_CXX_STANDARD ${CMAKE_CXX_STANDARD} CACHE STRING "C++ standard" FORCE)
+ELSEIF(NOT CMAKE_CXX_STANDARD)
+  SET(CMAKE_CXX_STANDARD ${KOKKOS_CXX_STANDARD} CACHE STRING "C++ standard" FORCE)
+ENDIF()
+
 
 IF (KOKKOS_CXX_STANDARD AND CMAKE_CXX_STANDARD)
   #make sure these are consistent
   IF (NOT KOKKOS_CXX_STANDARD STREQUAL CMAKE_CXX_STANDARD)
-    MESSAGE(WARNING "Specified both CMAKE_CXX_STANDARD and KOKKOS_CXX_STANDARD, but they don't match")
+    MESSAGE(WARNING "Specified both CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} and KOKKOS_CXX_STANDARD=${KOKKOS_CXX_STANDARD}, but they don't match")
     SET(CMAKE_CXX_STANDARD ${KOKKOS_CXX_STANDARD} CACHE STRING "C++ standard" FORCE)
   ENDIF()
 ENDIF()
