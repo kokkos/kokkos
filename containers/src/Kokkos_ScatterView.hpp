@@ -1050,9 +1050,13 @@ public:
   }
 
   template <typename ... RP>
-  void contribute_into(View<DataType, RP...> const& dest) const
+  void contribute_into(View<RP...> const& dest) const
   {
-    typedef View<DataType, RP...> dest_type;
+    typedef View<RP...> dest_type;
+    static_assert(std::is_same<
+        typename dest_type::value_type,
+        typename original_view_type::non_const_value_type>::value,
+        "ScatterView deep_copy destination has wrong value_type");
     static_assert(std::is_same<
         typename dest_type::array_layout,
         Kokkos::LayoutLeft>::value,
