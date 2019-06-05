@@ -486,6 +486,18 @@ struct DuplicatedDataType<T*, Kokkos::LayoutLeft> {
   typedef typename DuplicatedDataType<T, Kokkos::LayoutLeft>::value_type* value_type;
 };
 
+/* Insert integer argument pack into array */
+
+template<class T>
+void args_to_array(size_t* array, int pos, T dim0) {
+  array[pos] = dim0;
+}
+template<class T, class ... Dims>
+void args_to_array(size_t* array, int pos, T dim0, Dims ... dims) {
+  array[pos] = dim0;
+  args_to_array(array,pos+1,dims...);
+}
+
 /* Slice is just responsible for stuffing the correct number of Kokkos::ALL
    arguments on the correct side of the index in a call to subview() to get a
    subview where the index specified is the largest-stride one. */
@@ -1009,14 +1021,14 @@ public:
   : unique_token()
   {
     size_t arg_N[8] = {
-      original_view.extent(0),
-      original_view.extent(1),
-      original_view.extent(2),
-      original_view.extent(3),
-      original_view.extent(4),
-      original_view.extent(5),
-      original_view.extent(6),
-      0
+      original_view.rank>0?original_view.extent(0):KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      original_view.rank>1?original_view.extent(1):KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      original_view.rank>2?original_view.extent(2):KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      original_view.rank>3?original_view.extent(3):KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      original_view.rank>4?original_view.extent(4):KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      original_view.rank>5?original_view.extent(5):KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      original_view.rank>6?original_view.extent(6):KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      KOKKOS_IMPL_CTOR_DEFAULT_ARG
     };
     arg_N[internal_view_type::rank - 1] = unique_token.size();
     internal_view = internal_view_type(
@@ -1028,9 +1040,23 @@ public:
   }
 
   template <typename ... Dims>
-  ScatterView(std::string const& name, Dims ... dims)
-  : internal_view(Kokkos::ViewAllocateWithoutInitializing(name), dims ..., unique_token.size())
-  {
+  ScatterView(std::string const& name, Dims ... dims) {
+    original_view_type original_view;
+    size_t arg_N[8] = {
+      original_view.rank>0?original_view.static_extent(0):KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      original_view.rank>1?original_view.static_extent(1):KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      original_view.rank>2?original_view.static_extent(2):KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      original_view.rank>3?original_view.static_extent(3):KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      original_view.rank>4?original_view.static_extent(4):KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      original_view.rank>5?original_view.static_extent(5):KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      original_view.rank>6?original_view.static_extent(6):KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      KOKKOS_IMPL_CTOR_DEFAULT_ARG
+    };
+    Kokkos::Impl::Experimental::args_to_array(arg_N,0,dims ...);
+    arg_N[internal_view_type::rank - 1] = unique_token.size();
+    internal_view = internal_view_type(Kokkos::ViewAllocateWithoutInitializing(name),
+     arg_N[0], arg_N[1], arg_N[2], arg_N[3],
+     arg_N[4], arg_N[5], arg_N[6], arg_N[7]);
     reset();
   }
 
